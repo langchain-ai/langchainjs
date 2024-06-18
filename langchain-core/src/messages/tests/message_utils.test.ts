@@ -54,7 +54,7 @@ test("mergeMessageRuns works", () => {
   expect(mergedMessages).toEqual([
     new SystemMessage("you're a good assistant."),
     new HumanMessage({
-      content: "what's your favorite colorwait your favorite food",
+      content: "what's your favorite color\nwait your favorite food",
       id: "foo",
     }),
     new AIMessage({

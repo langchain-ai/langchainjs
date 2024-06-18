@@ -330,12 +330,12 @@ export function filterMessages(
  *   new HumanMessage({ content: "wait your favorite food", id: "bar" }),
  *   new AIMessage({
  *     content: "my favorite colo",
- *     toolCalls: [new ToolCall({ name: "blah_tool", args: { x: 2 }, id: "123" })],
+ *     tool_calls: [{ name: "blah_tool", args: { x: 2 }, id: "123" }],
  *     id: "baz",
  *   }),
  *   new AIMessage({
  *     content: [{ type: "text", text: "my favorite dish is lasagna" }],
- *     toolCalls: [new ToolCall({ name: "blah_tool", args: { x: -10 }, id: "456" })],
+ *     tool_calls: [{ name: "blah_tool", args: { x: -10 }, id: "456" }],
  *     id: "blur",
  *   }),
  * ];
@@ -347,17 +347,20 @@ export function filterMessages(
  * ```typescript
  * [
  *   new SystemMessage("you're a good assistant."),
- *   new HumanMessage({ content: "what's your favorite color\nwait your favorite food", id: "foo" }),
+ *   new HumanMessage({
+ *     content: "what's your favorite colorwait your favorite food",
+ *     id: "foo",
+ *   }),
  *   new AIMessage({
  *     content: [
- *       "my favorite colo",
- *       { type: "text", text: "my favorite dish is lasagna" }
+ *       { type: "text", text: "my favorite colo" },
+ *       { type: "text", text: "my favorite dish is lasagna" },
  *     ],
- *     toolCalls: [
- *       new ToolCall({ name: "blah_tool", args: { x: 2 }, id: "123" }),
- *       new ToolCall({ name: "blah_tool", args: { x: -10 }, id: "456" })
+ *     tool_calls: [
+ *       { name: "blah_tool", args: { x: 2 }, id: "123" },
+ *       { name: "blah_tool", args: { x: -10 }, id: "456" },
  *     ],
- *     id: "baz"
+ *     id: "baz",
  *   }),
  * ]
  * ```
@@ -381,6 +384,9 @@ export function mergeMessageRuns(messages: BaseMessage[]): BaseMessage[] {
       const lastChunk = msgToChunk(last);
       const currChunk = msgToChunk(curr);
       const mergedChunks = lastChunk.concat(currChunk);
+      if (typeof lastChunk.content === "string" && typeof currChunk.content === "string") {
+        mergedChunks.content = `${lastChunk.content}\n${currChunk.content}`;
+      }
       merged.push(chunkToMsg(mergedChunks));
     }
   }
