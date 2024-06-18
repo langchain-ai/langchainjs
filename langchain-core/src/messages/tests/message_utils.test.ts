@@ -22,7 +22,6 @@ test("filterMessages works", () => {
     includeTypes: ["system"],
     excludeIds: ["bar"],
   });
-  console.log(filteredMessages);
   expect(filteredMessages).toEqual([
     new SystemMessage("you're a good assistant."),
     new HumanMessage({
@@ -33,7 +32,7 @@ test("filterMessages works", () => {
   ]);
 });
 
-test.only("mergeMessageRuns works", () => {
+test("mergeMessageRuns works", () => {
   const messages = [
     new SystemMessage("you're a good assistant."),
     new HumanMessage({ content: "what's your favorite color", id: "foo" }),
@@ -52,25 +51,12 @@ test.only("mergeMessageRuns works", () => {
 
   const mergedMessages = mergeMessageRuns(messages);
   expect(mergedMessages).toHaveLength(3);
-  const [firstMessage, secondMessage, thirdMessage] = mergedMessages;
-  if (!firstMessage || !secondMessage || !thirdMessage) {
-    throw new Error("Something went wrong");
-  } else if (
-    !(firstMessage instanceof SystemMessage) ||
-    !(secondMessage instanceof HumanMessage) ||
-    !(thirdMessage instanceof AIMessage)
-  ) {
-    throw new Error("Something went wrong with instanceof checks.");
-  }
-  expect(firstMessage).toEqual(new SystemMessage("you're a good assistant."));
-  expect(secondMessage).toEqual(
+  expect(mergedMessages).toEqual([
+    new SystemMessage("you're a good assistant."),
     new HumanMessage({
       content: "what's your favorite colorwait your favorite food",
       id: "foo",
-    })
-  );
-  console.log(thirdMessage);
-  expect(thirdMessage).toEqual(
+    }),
     new AIMessage({
       content: [
         { type: "text", text: "my favorite colo" },
@@ -81,6 +67,6 @@ test.only("mergeMessageRuns works", () => {
         { name: "blah_tool", args: { x: -10 }, id: "456" },
       ],
       id: "baz",
-    })
-  );
+    }),
+  ]);
 });

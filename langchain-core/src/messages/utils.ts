@@ -381,48 +381,7 @@ export function mergeMessageRuns(messages: BaseMessage[]): BaseMessage[] {
       const lastChunk = msgToChunk(last);
       const currChunk = msgToChunk(curr);
       const mergedChunks = lastChunk.concat(currChunk);
-      const chunkAsMessage = chunkToMsg(mergedChunks);
-      if (mergedChunks._getType() === "ai") {
-        console.log("mergedChunks - ai", mergedChunks);
-        console.log("swapped to msg", chunkAsMessage);
-      }
-      merged.push(chunkAsMessage);
-      // if (
-      //   typeof lastChunk.content === "string" &&
-      //   typeof currChunk.content === "string"
-      // ) {
-      //   lastChunk.content += `\n${currChunk.content}`;
-      // } else if (
-      //   Array.isArray(lastChunk.content) &&
-      //   Array.isArray(currChunk.content)
-      // ) {
-      //   lastChunk.content = [...lastChunk.content, ...currChunk.content];
-      // } else if (
-      //   Array.isArray(lastChunk.content) &&
-      //   typeof currChunk.content === "string"
-      // ) {
-      //   lastChunk.content.push({
-      //     type: "text",
-      //     text: currChunk.content,
-      //   });
-      // } else if (
-      //   Array.isArray(currChunk.content) &&
-      //   typeof lastChunk.content === "string"
-      // ) {
-      //   lastChunk.content = [
-      //     ...currChunk.content,
-      //     { type: "text", text: lastChunk.content },
-      //   ];
-      // } else {
-      //   throw new Error(
-      //     `Unknown message content types received. ${JSON.stringify(
-      //       { lastChunk, currChunk },
-      //       null,
-      //       2
-      //     )}`
-      //   );
-      // }
-      // merged.push(chunkToMsg(lastChunk));
+      merged.push(chunkToMsg(mergedChunks));
     }
   }
   return merged;
