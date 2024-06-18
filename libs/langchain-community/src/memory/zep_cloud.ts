@@ -32,7 +32,7 @@ export const zepMemoryContextToSystemPrompt = (memory: Memory) => {
   }
 
   return systemPrompt;
-}
+};
 
 // We are condensing the Zep context into a human message in order to satisfy
 // some models' input requirements and allow more flexibility for devs.
@@ -56,25 +56,29 @@ export const condenseZepMemoryIntoHumanMessage = (memory: Memory) => {
 export const zepMemoryToMessages = (memory: Memory) => {
   const systemPrompt = zepMemoryContextToSystemPrompt(memory);
 
-  let messages: BaseMessage[] =
-    systemPrompt
-      ? [new SystemMessage(systemPrompt)]
-      : [];
+  let messages: BaseMessage[] = systemPrompt
+    ? [new SystemMessage(systemPrompt)]
+    : [];
 
   if (memory && memory.messages) {
     messages = messages.concat(
-      memory.messages.filter(m => m.content).map((message) => {
-        const { content, role, roleType } = message;
-        const messageContent = content as string;
-        if (roleType === "user") {
-          return new HumanMessage(messageContent);
-        } else if (role === "assistant") {
-          return new AIMessage(messageContent);
-        } else {
-          // default to generic ChatMessage
-          return new ChatMessage(messageContent, (roleType ?? role) as string);
-        }
-      })
+      memory.messages
+        .filter((m) => m.content)
+        .map((message) => {
+          const { content, role, roleType } = message;
+          const messageContent = content as string;
+          if (roleType === "user") {
+            return new HumanMessage(messageContent);
+          } else if (role === "assistant") {
+            return new AIMessage(messageContent);
+          } else {
+            // default to generic ChatMessage
+            return new ChatMessage(
+              messageContent,
+              (roleType ?? role) as string
+            );
+          }
+        })
     );
   }
 
@@ -210,15 +214,19 @@ export class ZepCloudMemory
 
     if (this.returnMessages) {
       return {
-        [this.memoryKey]: this.separateMessages ? zepMemoryToMessages(memory) : [condenseZepMemoryIntoHumanMessage(memory)],
+        [this.memoryKey]: this.separateMessages
+          ? zepMemoryToMessages(memory)
+          : [condenseZepMemoryIntoHumanMessage(memory)],
       };
     }
     return {
-      [this.memoryKey]: this.separateMessages ? getBufferString(
-        zepMemoryToMessages(memory),
-        this.humanPrefix,
-        this.aiPrefix
-      ) : condenseZepMemoryIntoHumanMessage(memory).content,
+      [this.memoryKey]: this.separateMessages
+        ? getBufferString(
+            zepMemoryToMessages(memory),
+            this.humanPrefix,
+            this.aiPrefix
+          )
+        : condenseZepMemoryIntoHumanMessage(memory).content,
     };
   }
 

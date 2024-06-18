@@ -7,7 +7,10 @@ import {
   HumanMessage,
   MessageType,
 } from "@langchain/core/messages";
-import { condenseZepMemoryIntoHumanMessage, zepMemoryToMessages } from "../../memory/zep_cloud.js";
+import {
+  condenseZepMemoryIntoHumanMessage,
+  zepMemoryToMessages,
+} from "../../memory/zep_cloud.js";
 
 export const getZepMessageRoleType = (role: MessageType): RoleType => {
   switch (role) {
@@ -106,7 +109,9 @@ export class ZepCloudChatMessageHistory
       return [];
     }
 
-    return this.separateMessages ? zepMemoryToMessages(memory) : [condenseZepMemoryIntoHumanMessage(memory)];
+    return this.separateMessages
+      ? zepMemoryToMessages(memory)
+      : [condenseZepMemoryIntoHumanMessage(memory)];
   }
 
   async addAIChatMessage(
