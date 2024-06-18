@@ -4,6 +4,7 @@ import {
   isBaseMessage,
   StoredMessage,
   StoredMessageV1,
+  MessageType,
 } from "./base.js";
 import { HumanMessage, HumanMessageChunk } from "./human.js";
 import { AIMessage, AIMessageChunk } from "./ai.js";
@@ -183,4 +184,110 @@ export function convertToChunk(message: BaseMessage) {
   } else {
     throw new Error("Unknown message type.");
   }
+}
+
+const _isMessageType = (msg: BaseMessage, types: (MessageType | BaseMessage)[]) => {
+  const typesAsStrings = [...new Set<string>(types?.map((t) => {
+    if (typeof t === "string") {
+      return t;
+    }
+    return t._getType();
+  }))];
+  const msgType = msg._getType();
+  console.log("comparing", msgType, typesAsStrings)
+  return typesAsStrings.some((t) => t === msgType);
+};
+
+/**
+ * Filter messages based on name, type or id.
+ *
+ * @param {BaseMessage[]} messages Sequence of BaseMessage objects to filter.
+ * @param options Optional filtering options.
+ * @param {string[] | undefined} options.includeNames Message names to include.
+ * @param {string[] | undefined} options.excludeNames Messages names to exclude.
+ * @param {(MessageType | BaseMessage)[] | undefined} options.includeTypes Message types to include. Can be specified as string names (e.g.
+ *     "system", "human", "ai", ...) or as BaseMessage classes (e.g.
+ *     SystemMessage, HumanMessage, AIMessage, ...).
+ * @param {(MessageType | BaseMessage)[] | undefined} options.excludeTypes Message types to exclude. Can be specified as string names (e.g.
+ *     "system", "human", "ai", ...) or as BaseMessage classes (e.g.
+ *     SystemMessage, HumanMessage, AIMessage, ...).
+ * @param {string[] | undefined} options.includeIds Message IDs to include.
+ * @param {string[] | undefined} options.excludeIds Message IDs to exclude.
+ * @returns A list of Messages that meets at least one of the include conditions and none
+ *     of the exclude conditions. If no include conditions are specified then
+ *     anything that is not explicitly excluded will be included.
+ * @throws {Error} If two incompatible arguments are provided.
+ *
+ * @example
+ * ```typescript
+ * import { filterMessages, AIMessage, HumanMessage, SystemMessage } from "@langchain/core/messages";
+ *
+ * const messages = [
+ *   new SystemMessage("you're a good assistant."),
+ *   new HumanMessage({ content: "what's your name", id: "foo", name: "example_user" }),
+ *   new AIMessage({ content: "steve-o", id: "bar", name: "example_assistant" }),
+ *   new HumanMessage({ content: "what's your favorite color", id: "baz" }),
+ *   new AIMessage({ content: "silicon blue" , id: "blah" }),
+ * ];
+ *
+ * filterMessages(messages, {
+ *   includeNames: ["example_user", "example_assistant"],
+ *   includeTypes: ["system"],
+ *   excludeIds: ["bar"],
+ * });
+ * ```
+ *
+ * The above example would return:
+ * ```typescript
+ * [
+ *   new SystemMessage("you're a good assistant."),
+ *   new HumanMessage({ content: "what's your name", id: "foo", name: "example_user" }),
+ * ]
+ * ```
+ */
+export function filterMessages(
+  messages: BaseMessage[],
+  options: {
+    includeNames?: string[];
+    excludeNames?: string[];
+    includeTypes?: (MessageType | BaseMessage)[];
+    excludeTypes?: (MessageType | BaseMessage)[];
+    includeIds?: string[];
+    excludeIds?: string[];
+  } = {}
+): BaseMessage[] {
+  const {
+    includeNames,
+    excludeNames,
+    includeTypes,
+    excludeTypes,
+    includeIds,
+    excludeIds,
+  } = options;
+
+  const filtered: BaseMessage[] = [];
+  
+
+  for (const msg of messages) {
+    if (excludeNames && msg.name && excludeNames.includes(msg.name)) {
+      continue;
+    } else if (excludeTypes && _isMessageType(msg, excludeTypes)) {
+      continue;
+    } else if (excludeIds && msg.id && excludeIds.includes(msg.id)) {
+      continue;
+    }
+
+    // default to inclusion when no inclusion criteria given.
+    if (!(includeTypes || includeIds || includeNames)) {
+      filtered.push(msg);
+    } else if (includeNames && msg.name && includeNames.some((iName) => iName === msg.name)) {
+      filtered.push(msg);
+    } else if (includeTypes && _isMessageType(msg, includeTypes)) {
+      filtered.push(msg);
+    } else if (includeIds && msg.id && includeIds.some((id) => id === msg.id)) {
+      filtered.push(msg);
+    }
+  }
+
+  return filtered;
 }
