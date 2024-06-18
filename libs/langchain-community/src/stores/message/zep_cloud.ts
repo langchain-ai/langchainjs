@@ -36,7 +36,9 @@ interface ZepMemoryInput {
   memoryType: Zep.MemoryGetRequestMemoryType;
   humanPrefix?: string;
   aiPrefix?: string;
-  separateMessages: boolean;
+  // Whether to return separate messages for chat history with a SystemMessage containing (facts and summary) or return a single HumanMessage with the entire memory context.
+  // Defaults to false (return a single HumanMessage) in order to allow more flexibility with different models.
+  separateMessages?: boolean;
 }
 
 /**
