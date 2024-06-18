@@ -186,7 +186,7 @@ export default function Feedback() {
     });
     if (error) {
       console.error("Failed to add feedback details", error);
-      throw error;
+      return;
     }
     setFeedbackDetailsSent(true);
   };
@@ -249,6 +249,7 @@ export default function Feedback() {
                   marginLeft: "408px",
                   marginTop: "12px",
                 }}
+                type="submit"
               >
                 Submit
               </button>
