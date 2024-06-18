@@ -110,7 +110,10 @@ const getIpAddress = async () => {
 
 export default function Feedback() {
   const { setCookie, checkCookie } = useCookie();
+  const [feedbackId, setFeedbackId] = useState(null);
   const [feedbackSent, setFeedbackSent] = useState(false);
+  const [feedbackDetailsSent, setFeedbackDetailsSent] = useState(false);
+  const [inProgress, setInProgress] = useState(false);
   const { siteConfig } = useDocusaurusContext();
   const [pathname, setPathname] = useState("");
 
@@ -145,10 +148,11 @@ export default function Feedback() {
         project: LANGCHAIN_PROJECT_NAME,
       };
 
-      const { error } = await supabase.from("feedback").insert(data);
+      const { id, error } = await supabase.from("feedback").insert(data);
       if (error) {
         throw error;
       }
+      setFeedbackId(id);
     } catch (e) {
       console.error("Failed to send feedback", {
         e,
@@ -159,6 +163,34 @@ export default function Feedback() {
     // Set a cookie to prevent feedback from being sent multiple times
     setCookie(cookieName, window.location.pathname, 1);
     setFeedbackSent(true);
+  };
+
+  const handleFeedbackDetails = async (e) => {
+    e.preventDefault();
+    if (inProgress) {
+      return;
+    }
+    if (!feedbackId) {
+      setFeedbackDetailsSent(true);
+      return;
+    }
+    setInProgress(true);
+    const details = e.target.elements
+      .namedItem("details")
+      ?.value.slice(0, 1024);
+    if (!details) {
+      return;
+    }
+    const { error } = await supabase
+      .from("feedback")
+      .update({ details })
+      .eq("id", feedbackId);
+    setInProgress(false);
+    if (error) {
+      console.error("Failed to update feedback", error);
+      throw error;
+    }
+    setFeedbackDetailsSent(true);
   };
 
   useEffect(() => {
@@ -197,12 +229,34 @@ export default function Feedback() {
   const newGithubIssueURL = pathname
     ? `https://github.com/langchain-ai/langchainjs/issues/new?assignees=&labels=03+-+Documentation&projects=&template=documentation.yml&title=DOC%3A+%3CIssue+related+to+${pathname}%3E`
     : "https://github.com/langchain-ai/langchainjs/issues/new?assignees=&labels=03+-+Documentation&projects=&template=documentation.yml&title=DOC%3A+%3CPlease+write+a+comprehensive+title+after+the+%27DOC%3A+%27+prefix%3E";
-
   return (
     <div style={{ display: "flex", flexDirection: "column" }}>
       <hr />
       {feedbackSent ? (
-        <h4>Thanks for your feedback!</h4>
+        <>
+          <h4>Thanks for your feedback!</h4>
+          {!feedbackDetailsSent && feedbackId && (
+            <form
+              style={{ display: "flex", flexDirection: "column" }}
+              onSubmit={handleFeedbackDetails}
+            >
+              <h4>Do you have any specific comments?</h4>
+              <textarea
+                name="details"
+                style={{ width: "480px", height: "120px" }}
+              />
+              <button
+                style={{
+                  width: "72px",
+                  marginLeft: "408px",
+                  marginTop: "12px",
+                }}
+              >
+                Submit
+              </button>
+            </form>
+          )}
+        </>
       ) : (
         <>
           <h4>Was this page helpful?</h4>
@@ -248,7 +302,7 @@ export default function Feedback() {
       )}
       <br />
       <h4>
-        You can leave detailed feedback{" "}
+        You can also leave detailed feedback{" "}
         <a target="_blank" href={newGithubIssueURL} rel="noreferrer">
           on GitHub
         </a>
