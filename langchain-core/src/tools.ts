@@ -419,8 +419,6 @@ export function tool<RunInput extends ZodAny = ZodAny>(
     name: fields.name,
     description,
     schema: schema as RunInput,
-    func: (input, _runManager, config) => {
-      return Promise.resolve(func(input, config));
-    },
+    func: async (input, _runManager, config) => func(input, config),
   });
 }

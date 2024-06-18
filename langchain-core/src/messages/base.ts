@@ -53,7 +53,7 @@ export type MessageContentComplex =
   | MessageContentText
   | MessageContentImageUrl
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  | (Record<string, any> & { type?: "text" | "image_url" | "tool" | string })
+  | (Record<string, any> & { type?: "text" | "image_url" | string })
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   | (Record<string, any> & { type?: never });
 
