@@ -658,6 +658,7 @@ Most modules in LangChain include the `.stream()` method as an ergonomic streami
 ```ts
 import { ChatAnthropic } from "@langchain/anthropic";
 import { concat } from "@langchain/core/utils/stream";
+import type { AIMessageChunk } from "@langchain/core/messages";
 
 const model = new ChatAnthropic({ model: "claude-3-sonnet-20240229" });
 
@@ -673,6 +674,8 @@ for await (const chunk of stream) {
     gathered = concat(gathered, chunk);
   }
 }
+
+console.log(gathered);
 ```
 
 For models (or other components) that don't support streaming natively, this iterator would just yield a single chunk, but
@@ -1084,6 +1087,24 @@ Table columns:
 | Code      | [many languages](/docs/how_to/code_splitter/)                           | Code (Python, JS) specific characters |               | Splits text based on characters specific to coding languages. 15 different languages are available to choose from.                                          |
 | Token     | [many classes](/docs/how_to/split_by_token/)                            | Tokens                                |               | Splits text on tokens. There exist a few different ways to measure tokens.                                                                                  |
 | Character | [CharacterTextSplitter](/docs/how_to/character_text_splitter/)          | A user defined character              |               | Splits text based on a user defined character. One of the simpler methods.                                                                                  |
+
+### Evaluation
+
+<span data-heading-keywords="evaluation,evaluate"></span>
+
+Evaluation is the process of assessing the performance and effectiveness of your LLM-powered applications.
+It involves testing the model's responses against a set of predefined criteria or benchmarks to ensure it meets the desired quality standards and fulfills the intended purpose.
+This process is vital for building reliable applications.
+
+![](/img/langsmith_evaluate.png)
+
+[LangSmith](https://docs.smith.langchain.com/) helps with this process in a few ways:
+
+- It makes it easier to create and curate datasets via its tracing and annotation features
+- It provides an evaluation framework that helps you define metrics and run your app against your dataset
+- It allows you to track results over time and automatically run your evaluators on a schedule or as part of CI/Code
+
+To learn more, check out [this LangSmith guide](https://docs.smith.langchain.com/concepts/evaluation).
 
 ### Generative UI
 
