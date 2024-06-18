@@ -120,7 +120,7 @@ describe.only("trimMessages can trim", () => {
     return count;
   }
 
-  it.only("First 30 tokens, not allowing partial messages", async () => {
+  it("First 30 tokens, not allowing partial messages", async () => {
     const trimmedMessages = await trimMessages(messages, {
       maxTokens: 30,
       tokenCounter: dummyTokenCounter,
@@ -138,7 +138,7 @@ describe.only("trimMessages can trim", () => {
     ]);
   });
 
-  it.only("First 30 tokens, allowing partial messages", async () => {
+  it("First 30 tokens, allowing partial messages", async () => {
     const trimmedMessages = await trimMessages(messages, {
       maxTokens: 30,
       tokenCounter: dummyTokenCounter,
@@ -162,7 +162,7 @@ describe.only("trimMessages can trim", () => {
     ]);
   });
 
-  it.only("First 30 tokens, allowing partial messages, have to end on HumanMessage", async () => {
+  it("First 30 tokens, allowing partial messages, have to end on HumanMessage", async () => {
     const trimmedMessages = await trimMessages(messages, {
       maxTokens: 30,
       tokenCounter: dummyTokenCounter,
@@ -183,7 +183,7 @@ describe.only("trimMessages can trim", () => {
     ]);
   });
 
-  it.only("Last 30 tokens, including system message, not allowing partial messages", async () => {
+  it("Last 30 tokens, including system message, not allowing partial messages", async () => {
     const trimmedMessages = await trimMessages(messages, {
       maxTokens: 30,
       includeSystem: true,

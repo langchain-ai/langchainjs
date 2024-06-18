@@ -823,7 +823,7 @@ async function _firstMaxTokens(
     options;
   let messagesCopy = [...messages];
   let idx = 0;
-  for (let i = 0; i < messagesCopy.length; i++) {
+  for (let i = 0; i < messagesCopy.length; i += 1) {
     const remainingMessages = i > 0 ? messagesCopy.slice(0, -i) : messagesCopy;
     if ((await tokenCounter(remainingMessages)) <= maxTokens) {
       idx = messagesCopy.length - i;
@@ -843,15 +843,23 @@ async function _firstMaxTokens(
       if (partialStrategy === "last") {
         excluded.content = [...excluded.content].reverse();
       }
-      for (let _ = 1; _ < numBlock; _++) {
-        excluded.content = excluded.content.slice(0, -1);
-        if (
-          (await tokenCounter([...messagesCopy.slice(0, idx), excluded])) <=
-          maxTokens
-        ) {
-          messagesCopy = [...messagesCopy.slice(0, idx), excluded];
-          idx++;
+      for (let i = 1; i <= numBlock; i += 1) {
+        const partialContent = excluded.content.slice(0, i);
+        const fields = Object.fromEntries(
+          Object.entries(excluded).filter(
+            ([k]) => k !== "type" && !k.startsWith("lc_")
+          )
+        ) as BaseMessageFields;
+        const updatedMessage = switchTypeToMessage(excluded._getType(), {
+          ...fields,
+          content: partialContent,
+        });
+        const slicedMessages = [...messagesCopy.slice(0, idx), updatedMessage];
+        if ((await tokenCounter(slicedMessages)) <= maxTokens) {
+          messagesCopy = slicedMessages;
+          idx += 1;
           includedPartial = true;
+        } else {
           break;
         }
       }
@@ -881,7 +889,7 @@ async function _firstMaxTokens(
         if (partialStrategy === "last") {
           splitTexts.reverse();
         }
-        for (let _ = 0; _ < numSplits - 1; _++) {
+        for (let _ = 0; _ < numSplits - 1; _ += 1) {
           splitTexts.pop();
           excluded.content = splitTexts.join("");
           if (
@@ -892,7 +900,7 @@ async function _firstMaxTokens(
               excluded.content = [...splitTexts].reverse().join("");
             }
             messagesCopy = [...messagesCopy.slice(0, idx), excluded];
-            idx++;
+            idx += 1;
             break;
           }
         }
@@ -903,7 +911,7 @@ async function _firstMaxTokens(
   if (endOn) {
     const endOnArr = Array.isArray(endOn) ? endOn : [endOn];
     while (idx > 0 && !_isMessageType(messagesCopy[idx - 1], endOnArr)) {
-      idx--;
+      idx -= 1;
     }
   }
 
@@ -1163,10 +1171,10 @@ function chunkToMsg(chunk: BaseMessageChunk): BaseMessage {
   return msg;
 }
 
-const defaultTextSplitter = (text: string): Promise<string[]> => {
+function defaultTextSplitter(text: string): Promise<string[]> {
   const splits = text.split("\n");
   return Promise.resolve([
-    ...splits.slice(0, -1).map((s) => s + "\n"),
+    ...splits.slice(0, -1).map((s) => `${s}\n`),
     splits[splits.length - 1],
   ]);
-};
+}
