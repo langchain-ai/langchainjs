@@ -34,10 +34,8 @@ export class ToolInputParsingException extends Error {
   }
 }
 
-export interface StructuredToolInterface<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  T extends ZodAny = ZodAny
-> extends RunnableInterface<
+export interface StructuredToolInterface<T extends ZodAny = ZodAny>
+  extends RunnableInterface<
     (z.output<T> extends string ? string : never) | z.input<T>,
     string
   > {
@@ -74,7 +72,6 @@ export interface StructuredToolInterface<
  * Base class for Tools that accept input of any shape defined by a Zod schema.
  */
 export abstract class StructuredTool<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   T extends ZodAny = ZodAny
 > extends BaseLangChain<
   (z.output<T> extends string ? string : never) | z.input<T>,
@@ -241,10 +238,8 @@ export interface DynamicToolInput extends BaseDynamicToolInput {
 /**
  * Interface for the input parameters of the DynamicStructuredTool class.
  */
-export interface DynamicStructuredToolInput<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  T extends ZodAny = ZodAny
-> extends BaseDynamicToolInput {
+export interface DynamicStructuredToolInput<T extends ZodAny = ZodAny>
+  extends BaseDynamicToolInput {
   func: (
     input: z.infer<T>,
     runManager?: CallbackManagerForToolRun,
@@ -306,7 +301,6 @@ export class DynamicTool extends Tool {
  * provided function when the tool is called.
  */
 export class DynamicStructuredTool<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   T extends ZodAny = ZodAny
 > extends StructuredTool<T> {
   static lc_name() {
