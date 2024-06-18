@@ -5,6 +5,9 @@ import {
   StoredMessage,
   StoredMessageV1,
   MessageType,
+  BaseMessageChunk,
+  BaseMessageFields,
+  MessageContentComplex,
 } from "./base.js";
 import { HumanMessage, HumanMessageChunk } from "./human.js";
 import { AIMessage, AIMessageChunk } from "./ai.js";
@@ -19,7 +22,11 @@ import {
   FunctionMessageChunk,
   FunctionMessageFieldsWithName,
 } from "./function.js";
-import { ToolMessage, ToolMessageFieldsWithToolCallId } from "./tool.js";
+import {
+  ToolMessage,
+  ToolMessageChunk,
+  ToolMessageFieldsWithToolCallId,
+} from "./tool.js";
 
 export function coerceMessageLikeToMessage(
   messageLike: BaseMessageLike
@@ -301,3 +308,288 @@ export function filterMessages(
 
   return filtered;
 }
+
+/**
+ * Merge consecutive Messages of the same type.
+ *
+ * **NOTE**: ToolMessages are not merged, as each has a distinct tool call id that
+ * can't be merged.
+ *
+ * @param {BaseMessage[]} messages Sequence of Message-like objects to merge.
+ * @returns List of BaseMessages with consecutive runs of message types merged into single
+ *     messages. If two messages being merged both have string contents, the merged
+ *     content is a concatenation of the two strings with a new-line separator. If at
+ *     least one of the messages has a list of content blocks, the merged content is a
+ *     list of content blocks.
+ *
+ * @example
+ * ```typescript
+ * import { mergeMessageRuns, AIMessage, HumanMessage, SystemMessage, ToolCall } from "@langchain/core/messages";
+ *
+ * const messages = [
+ *   new SystemMessage("you're a good assistant."),
+ *   new HumanMessage({ content: "what's your favorite color", id: "foo" }),
+ *   new HumanMessage({ content: "wait your favorite food", id: "bar" }),
+ *   new AIMessage({
+ *     content: "my favorite colo",
+ *     toolCalls: [new ToolCall({ name: "blah_tool", args: { x: 2 }, id: "123" })],
+ *     id: "baz",
+ *   }),
+ *   new AIMessage({
+ *     content: [{ type: "text", text: "my favorite dish is lasagna" }],
+ *     toolCalls: [new ToolCall({ name: "blah_tool", args: { x: -10 }, id: "456" })],
+ *     id: "blur",
+ *   }),
+ * ];
+ *
+ * mergeMessageRuns(messages);
+ * ```
+ *
+ * The above example would return:
+ * ```typescript
+ * [
+ *   new SystemMessage("you're a good assistant."),
+ *   new HumanMessage({ content: "what's your favorite color\nwait your favorite food", id: "foo" }),
+ *   new AIMessage({
+ *     content: [
+ *       "my favorite colo",
+ *       { type: "text", text: "my favorite dish is lasagna" }
+ *     ],
+ *     toolCalls: [
+ *       new ToolCall({ name: "blah_tool", args: { x: 2 }, id: "123" }),
+ *       new ToolCall({ name: "blah_tool", args: { x: -10 }, id: "456" })
+ *     ],
+ *     id: "baz"
+ *   }),
+ * ]
+ * ```
+ */
+export function mergeMessageRuns(messages: BaseMessage[]): BaseMessage[] {
+  if (!messages.length) {
+    return [];
+  }
+  const merged: BaseMessage[] = [];
+  for (const msg of messages) {
+    const curr = msg; // Create a shallow copy of the message
+    const last = merged.pop() || null;
+    if (!last) {
+      merged.push(curr);
+    } else if (
+      curr._getType() === "tool" ||
+      !(curr._getType() === last._getType())
+    ) {
+      merged.push(last, curr);
+    } else {
+      const lastChunk = msgToChunk(last);
+      const currChunk = msgToChunk(curr);
+      if (
+        typeof lastChunk.content === "string" &&
+        typeof currChunk.content === "string"
+      ) {
+        lastChunk.content += `\n${currChunk.content}`;
+      } else if (
+        Array.isArray(lastChunk.content) &&
+        Array.isArray(currChunk.content)
+      ) {
+        lastChunk.content = [...lastChunk.content, ...currChunk.content];
+      } else if (Array.isArray(lastChunk.content)) {
+        lastChunk.content.push(currChunk.content as MessageContentComplex);
+      } else {
+        lastChunk.content = Array.isArray(lastChunk.content)
+          ? [...lastChunk.content, currChunk.content]
+          : [lastChunk.content, currChunk.content];
+      }
+      merged.push(chunkToMsg(lastChunk));
+    }
+  }
+  return merged;
+}
+
+type MessageUnion =
+  | typeof HumanMessage
+  | typeof AIMessage
+  | typeof SystemMessage
+  | typeof ChatMessage
+  | typeof FunctionMessage
+  | typeof ToolMessage;
+type MessageChunkUnion =
+  | typeof HumanMessageChunk
+  | typeof AIMessageChunk
+  | typeof SystemMessageChunk
+  | typeof FunctionMessageChunk
+  | typeof ToolMessageChunk
+  | typeof ChatMessageChunk;
+
+const _MSG_CHUNK_MAP: Record<
+  MessageType,
+  {
+    message: MessageUnion;
+    messageChunk: MessageChunkUnion;
+  }
+> = {
+  human: {
+    message: HumanMessage,
+    messageChunk: HumanMessageChunk,
+  },
+  ai: {
+    message: AIMessage,
+    messageChunk: AIMessageChunk,
+  },
+  system: {
+    message: SystemMessage,
+    messageChunk: SystemMessageChunk,
+  },
+  tool: {
+    message: ToolMessage,
+    messageChunk: ToolMessageChunk,
+  },
+  function: {
+    message: FunctionMessage,
+    messageChunk: FunctionMessageChunk,
+  },
+  generic: {
+    message: ChatMessage,
+    messageChunk: ChatMessageChunk,
+  },
+};
+
+function switchTypeToMessage(
+  messageType: MessageType,
+  fields: BaseMessageFields
+): BaseMessage;
+function switchTypeToMessage(
+  messageType: MessageType,
+  fields: BaseMessageFields,
+  returnChunk: true
+): BaseMessageChunk;
+function switchTypeToMessage(
+  messageType: MessageType,
+  fields: BaseMessageFields,
+  returnChunk?: boolean
+): BaseMessageChunk | BaseMessage {
+  let chunk: BaseMessageChunk | undefined;
+  let msg: BaseMessage | undefined;
+
+  switch (messageType) {
+    case "human":
+      if (returnChunk) {
+        chunk = new HumanMessageChunk(fields);
+      } else {
+        msg = new HumanMessage(fields);
+      }
+      break;
+    case "ai":
+      if (returnChunk) {
+        chunk = new AIMessageChunk(fields);
+      } else {
+        msg = new AIMessage(fields);
+      }
+      break;
+    case "system":
+      if (returnChunk) {
+        chunk = new SystemMessageChunk(fields);
+      } else {
+        msg = new SystemMessage(fields);
+      }
+      break;
+    case "tool":
+      if ("tool_call_id" in fields) {
+        if (returnChunk) {
+          chunk = new ToolMessageChunk(
+            fields as ToolMessageFieldsWithToolCallId
+          );
+        } else {
+          msg = new ToolMessage(fields as ToolMessageFieldsWithToolCallId);
+        }
+      } else {
+        throw new Error(
+          "Can not convert ToolMessage to ToolMessageChunk if 'tool_call_id' field is not defined."
+        );
+      }
+      break;
+    case "function":
+      if (returnChunk) {
+        chunk = new FunctionMessageChunk(fields);
+      } else {
+        if (!fields.name) {
+          throw new Error("FunctionMessage must have a 'name' field");
+        }
+        msg = new FunctionMessage(fields as FunctionMessageFieldsWithName);
+      }
+      break;
+    case "generic":
+      if ("role" in fields) {
+        if (returnChunk) {
+          chunk = new ChatMessageChunk(fields as ChatMessageFieldsWithRole);
+        } else {
+          msg = new ChatMessage(fields as ChatMessageFieldsWithRole);
+        }
+      } else {
+        throw new Error(
+          "Can not convert ChatMessage to ChatMessageChunk if 'role' field is not defined."
+        );
+      }
+      break;
+    default:
+      throw new Error(`Unrecognized message type ${messageType}`);
+  }
+
+  if (returnChunk && chunk) {
+    return chunk;
+  }
+  if (msg) {
+    return msg;
+  }
+  throw new Error(`Unrecognized message type ${messageType}`);
+}
+
+function msgToChunk(message: BaseMessage): BaseMessageChunk {
+  const msgType = message._getType();
+  let chunk: BaseMessageChunk | undefined;
+  const fields = Object.fromEntries(
+    Object.entries(message).filter(([k]) => k !== "type")
+  ) as BaseMessageFields;
+
+  if (msgType in _MSG_CHUNK_MAP) {
+    chunk = switchTypeToMessage(msgType, fields, true);
+  }
+
+  if (!chunk) {
+    throw new Error(
+      `Unrecognized message class ${msgType}. Supported classes are ${Object.keys(
+        _MSG_CHUNK_MAP
+      )}`
+    );
+  }
+
+  return chunk;
+}
+
+function chunkToMsg(chunk: BaseMessageChunk): BaseMessage {
+  const chunkType = chunk._getType();
+  let msg: BaseMessage | undefined;
+  const fields = Object.fromEntries(
+    Object.entries(chunk).filter(
+      ([k]) => !["type", "toolCallChunks"].includes(k)
+    )
+  ) as BaseMessageFields;
+
+  if (chunkType in _MSG_CHUNK_MAP) {
+    msg = switchTypeToMessage(chunkType, fields);
+  }
+
+  if (!msg) {
+    throw new Error(
+      `Unrecognized message chunk class ${chunkType}. Supported classes are ${Object.keys(
+        _MSG_CHUNK_MAP
+      )}`
+    );
+  }
+
+  return msg;
+}
+
+// const defaultTextSplitter = (text: string): string[] => {
+//   const splits = text.split("\n");
+//   return [...splits.slice(0, -1).map((s) => s + "\n"), splits[splits.length - 1]];
+// };

@@ -32,3 +32,7 @@ test("filterMessages works", () => {
     }),
   ]);
 });
+
+/**
+ * TODO: test mergeMessageRuns
+ */
