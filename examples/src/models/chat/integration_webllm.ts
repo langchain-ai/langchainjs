@@ -19,6 +19,10 @@ const model = new ChatWebLLM({
   },
 });
 
+await model.initialize((progress: Record<string, unknown>) => {
+  console.log(progress);
+});
+
 // Call the model with a message and await the response.
 const response = await model.invoke([
   new HumanMessage({ content: "What is 1 + 1?" }),
