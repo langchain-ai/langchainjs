@@ -186,15 +186,22 @@ export function convertToChunk(message: BaseMessage) {
   }
 }
 
-const _isMessageType = (msg: BaseMessage, types: (MessageType | BaseMessage)[]) => {
-  const typesAsStrings = [...new Set<string>(types?.map((t) => {
-    if (typeof t === "string") {
-      return t;
-    }
-    return t._getType();
-  }))];
+const _isMessageType = (
+  msg: BaseMessage,
+  types: (MessageType | BaseMessage)[]
+) => {
+  const typesAsStrings = [
+    ...new Set<string>(
+      types?.map((t) => {
+        if (typeof t === "string") {
+          return t;
+        }
+        return t._getType();
+      })
+    ),
+  ];
   const msgType = msg._getType();
-  console.log("comparing", msgType, typesAsStrings)
+  console.log("comparing", msgType, typesAsStrings);
   return typesAsStrings.some((t) => t === msgType);
 };
 
@@ -266,7 +273,6 @@ export function filterMessages(
   } = options;
 
   const filtered: BaseMessage[] = [];
-  
 
   for (const msg of messages) {
     if (excludeNames && msg.name && excludeNames.includes(msg.name)) {
@@ -280,7 +286,11 @@ export function filterMessages(
     // default to inclusion when no inclusion criteria given.
     if (!(includeTypes || includeIds || includeNames)) {
       filtered.push(msg);
-    } else if (includeNames && msg.name && includeNames.some((iName) => iName === msg.name)) {
+    } else if (
+      includeNames &&
+      msg.name &&
+      includeNames.some((iName) => iName === msg.name)
+    ) {
       filtered.push(msg);
     } else if (includeTypes && _isMessageType(msg, includeTypes)) {
       filtered.push(msg);
