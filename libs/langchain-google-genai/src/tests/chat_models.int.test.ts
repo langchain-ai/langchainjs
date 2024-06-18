@@ -17,6 +17,8 @@ import { StructuredTool } from "@langchain/core/tools";
 import { z } from "zod";
 import { FunctionDeclarationSchemaType } from "@google/generative-ai";
 import { ChatGoogleGenerativeAI } from "../chat_models.js";
+import { zodToJsonSchema } from "zod-to-json-schema";
+import { removeAdditionalProperties } from "../utils/zod_to_genai_parameters.js";
 
 const dummyToolResponse = `[{"title":"Weather in New York City","url":"https://www.weatherapi.com/","content":"{'location': {'name': 'New York', 'region': 'New York', 'country': 'United States of America', 'lat': 40.71, 'lon': -74.01, 'tz_id': 'America/New_York', 'localtime_epoch': 1718659486, 'localtime': '2024-06-17 17:24'}, 'current': {'last_updated_epoch': 1718658900, 'last_updated': '2024-06-17 17:15', 'temp_c': 27.8, 'temp_f': 82.0, 'is_day': 1, 'condition': {'text': 'Partly cloudy', 'icon': '//cdn.weatherapi.com/weather/64x64/day/116.png', 'code': 1003}, 'wind_mph': 2.2, 'wind_kph': 3.6, 'wind_degree': 159, 'wind_dir': 'SSE', 'pressure_mb': 1021.0, 'pressure_in': 30.15, 'precip_mm': 0.0, 'precip_in': 0.0, 'humidity': 58, 'cloud': 25, 'feelslike_c': 29.0, 'feelslike_f': 84.2, 'windchill_c': 26.9, 'windchill_f': 80.5, 'heatindex_c': 27.9, 'heatindex_f': 82.2, 'dewpoint_c': 17.1, 'dewpoint_f': 62.8, 'vis_km': 16.0, 'vis_miles': 9.0, 'uv': 7.0, 'gust_mph': 18.3, 'gust_kph': 29.4}}","score":0.98192,"raw_content":null},{"title":"New York, NY Monthly Weather | AccuWeather","url":"https://www.accuweather.com/en/us/new-york/10021/june-weather/349727","content":"Get the monthly weather forecast for New York, NY, including daily high/low, historical averages, to help you plan ahead.","score":0.97504,"raw_content":null}]`;
 
@@ -503,3 +505,37 @@ test("Invoke token count usage_metadata", async () => {
     res.usage_metadata.input_tokens + res.usage_metadata.output_tokens
   );
 });
+
+test("removeAdditionalProperties can remove all instances of additionalProperties", async () => {
+  function extractKeys(obj: Record<string, any>, keys: string[] = []) {
+    for (const key in obj) {
+      keys.push(key);
+      if (typeof obj[key] === 'object' && obj[key] !== null) {
+        extractKeys(obj[key], keys);
+      }
+    }
+    return keys;
+  }
+
+  const idealResponseSchema = z.object({
+    idealResponse: z.string().optional().describe("The ideal response to the question"),
+  })
+  const questionSchema = z.object({
+    question: z.string().describe("Question text"),
+    type: z.enum(['singleChoice', 'multiChoice']).describe("Question type"),
+    options: z.array(z.string()).describe("List of possible answers"),
+    correctAnswer: z.string().optional().describe("correct answer from the possible answers"),
+    idealResponses: z.array(idealResponseSchema).describe("Array of ideal responses to the question")
+  });
+  
+  const schema = z.object({
+    questions: z.array(questionSchema).describe("Array of question objects")
+  });
+
+  const parsedSchemaArr = removeAdditionalProperties(zodToJsonSchema(schema));
+  const arrSchemaKeys = extractKeys(parsedSchemaArr);
+  expect(arrSchemaKeys.find((key) => key === 'additionalProperties')).toBeUndefined();
+  const parsedSchemaObj = removeAdditionalProperties(zodToJsonSchema(schema));
+  const arrSchemaObj = extractKeys(parsedSchemaObj);
+  expect(arrSchemaObj.find((key) => key === 'additionalProperties')).toBeUndefined();
+})

@@ -14,37 +14,33 @@ export interface GenerativeAIJsonSchema extends Record<string, unknown> {
 
 export interface GenerativeAIJsonSchemaDirty extends GenerativeAIJsonSchema {
   properties?: Record<string, GenerativeAIJsonSchemaDirty>;
+  items?: {
+    type: string;
+    properties?: Record<string, GenerativeAIJsonSchemaDirty>;
+    required?: string[];
+    additionalProperties?: boolean;
+  }
   additionalProperties?: boolean;
 }
 
-function removeAdditionalProperties(
-  schema: GenerativeAIJsonSchemaDirty
-): GenerativeAIJsonSchema {
-  const updatedSchema: GenerativeAIJsonSchemaDirty = { ...schema };
-  if (Object.hasOwn(updatedSchema, "additionalProperties")) {
-    delete updatedSchema.additionalProperties;
-  }
-  if (updatedSchema.properties) {
-    const keys = Object.keys(updatedSchema.properties);
-    removeProperties(updatedSchema.properties, keys, 0);
-  }
+export function removeAdditionalProperties(obj: Record<string, any>): GenerativeAIJsonSchema {
+  if (typeof obj === 'object' && obj !== null) {
+    if ("additionalProperties" in obj && typeof obj.additionalProperties === "boolean") {
+      delete obj.additionalProperties;
+    }
 
-  return updatedSchema;
-}
-
-function removeProperties(
-  properties: GenerativeAIJsonSchemaDirty["properties"],
-  keys: string[],
-  index: number
-): void {
-  if (index >= keys.length || !properties) {
-    return;
+    for (const key in obj) {
+      if (key in obj) {
+        if (Array.isArray(obj[key])) {
+          obj[key] = obj[key].map(removeAdditionalProperties);
+        } else if (typeof obj[key] === 'object' && obj[key] !== null) {
+          obj[key] = removeAdditionalProperties(obj[key]);
+        }
+      }
+    }
   }
 
-  const key = keys[index];
-  // eslint-disable-next-line no-param-reassign
-  properties[key] = removeAdditionalProperties(properties[key]);
-  removeProperties(properties, keys, index + 1);
+  return obj as GenerativeAIJsonSchema;
 }
 
 export function zodToGenerativeAIParameters(
@@ -54,7 +50,7 @@ export function zodToGenerativeAIParameters(
   // GenerativeAI doesn't accept either the $schema or additionalProperties
   // attributes, so we need to explicitly remove them.
   const jsonSchema = removeAdditionalProperties(
-    zodToJsonSchema(zodObj) as GenerativeAIJsonSchemaDirty
+    zodToJsonSchema(zodObj)
   );
   const { $schema, ...rest } = jsonSchema;
 
