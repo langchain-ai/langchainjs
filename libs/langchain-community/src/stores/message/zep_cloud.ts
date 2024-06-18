@@ -7,7 +7,7 @@ import {
   HumanMessage,
   MessageType,
 } from "@langchain/core/messages";
-import { condenseZepMemoryIntoHumanMessage } from "../../memory/zep_cloud.js";
+import { condenseZepMemoryIntoHumanMessage, zepMemoryToMessages } from "../../memory/zep_cloud.js";
 
 export const getZepMessageRoleType = (role: MessageType): RoleType => {
   switch (role) {
@@ -36,6 +36,7 @@ interface ZepMemoryInput {
   memoryType: Zep.MemoryGetRequestMemoryType;
   humanPrefix?: string;
   aiPrefix?: string;
+  separateMessages: boolean;
 }
 
 /**
@@ -61,6 +62,8 @@ export class ZepCloudChatMessageHistory
 
   aiPrefix = "ai";
 
+  separateMessages = false;
+
   constructor(fields: ZepMemoryInput) {
     super();
     this.sessionId = fields.sessionId;
@@ -71,6 +74,9 @@ export class ZepCloudChatMessageHistory
     }
     if (fields.aiPrefix) {
       this.aiPrefix = fields.aiPrefix;
+    }
+    if (fields.separateMessages) {
+      this.separateMessages = fields.separateMessages;
     }
   }
 
@@ -98,7 +104,7 @@ export class ZepCloudChatMessageHistory
       return [];
     }
 
-    return [condenseZepMemoryIntoHumanMessage(memory)];
+    return this.separateMessages ? zepMemoryToMessages(memory) : [condenseZepMemoryIntoHumanMessage(memory)];
   }
 
   async addAIChatMessage(
