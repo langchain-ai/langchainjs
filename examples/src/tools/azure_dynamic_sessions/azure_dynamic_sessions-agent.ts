@@ -1,6 +1,6 @@
 import type { ChatPromptTemplate } from "@langchain/core/prompts";
 import { pull } from "langchain/hub";
-import { AgentExecutor, createOpenAIFunctionsAgent } from "langchain/agents";
+import { AgentExecutor, createToolCallingAgent } from "langchain/agents";
 import { SessionsPythonREPLTool } from "@langchain/azure-dynamic-sessions";
 import { AzureChatOpenAI } from "@langchain/openai";
 
@@ -19,12 +19,10 @@ const llm = new AzureChatOpenAI({
 
 // Get the prompt to use - you can modify this!
 // If you want to see the prompt in full, you can at:
-// https://smith.langchain.com/hub/hwchase17/openai-functions-agent
-const prompt = await pull<ChatPromptTemplate>(
-  "hwchase17/openai-functions-agent"
-);
+// https://smith.langchain.com/hub/jacob/tool-calling-agent
+const prompt = await pull<ChatPromptTemplate>("jacob/tool-calling-agent");
 
-const agent = await createOpenAIFunctionsAgent({
+const agent = await createToolCallingAgent({
   llm,
   tools,
   prompt,
