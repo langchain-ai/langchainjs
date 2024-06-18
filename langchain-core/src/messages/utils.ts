@@ -1,3 +1,7 @@
+import { BaseDocumentTransformer } from "../documents/transformers.js";
+import { BaseLanguageModel } from "../language_models/base.js";
+import { Runnable, RunnableLambda } from "../runnables/base.js";
+import { AIMessage, AIMessageChunk, AIMessageChunkFields } from "./ai.js";
 import {
   BaseMessageLike,
   BaseMessage,
@@ -5,30 +9,26 @@ import {
   StoredMessage,
   StoredMessageV1,
   MessageType,
-  BaseMessageChunk,
   BaseMessageFields,
+  BaseMessageChunk,
 } from "./base.js";
-import { HumanMessage, HumanMessageChunk } from "./human.js";
-import { AIMessage, AIMessageChunk, AIMessageChunkFields } from "./ai.js";
-import { SystemMessage, SystemMessageChunk } from "./system.js";
 import {
   ChatMessage,
-  ChatMessageChunk,
   ChatMessageFieldsWithRole,
+  ChatMessageChunk,
 } from "./chat.js";
 import {
   FunctionMessage,
-  FunctionMessageChunk,
   FunctionMessageFieldsWithName,
+  FunctionMessageChunk,
 } from "./function.js";
+import { HumanMessage, HumanMessageChunk } from "./human.js";
+import { SystemMessage, SystemMessageChunk } from "./system.js";
 import {
   ToolMessage,
-  ToolMessageChunk,
   ToolMessageFieldsWithToolCallId,
+  ToolMessageChunk,
 } from "./tool.js";
-import { BaseLanguageModel } from "../language_models/base.js";
-import { BaseDocumentTransformer } from "../documents/transformers.js";
-import { Runnable, RunnableLambda } from "../../runnables.js";
 
 export function coerceMessageLikeToMessage(
   messageLike: BaseMessageLike
@@ -178,8 +178,21 @@ export function convertToChunk(message: BaseMessage) {
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
     return new HumanMessageChunk({ ...message });
   } else if (type === "ai") {
+    let aiChunkFields: AIMessageChunkFields = {
+      ...message,
+    };
+    if ("tool_calls" in aiChunkFields) {
+      aiChunkFields = {
+        ...aiChunkFields,
+        tool_call_chunks: aiChunkFields.tool_calls?.map((tc) => ({
+          ...tc,
+          index: undefined,
+          args: JSON.stringify(tc.args),
+        })),
+      };
+    }
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
-    return new AIMessageChunk({ ...message });
+    return new AIMessageChunk({ ...aiChunkFields });
   } else if (type === "system") {
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
     return new SystemMessageChunk({ ...message });
@@ -384,8 +397,8 @@ export function mergeMessageRuns(messages: BaseMessage[]): BaseMessage[] {
     ) {
       merged.push(last, curr);
     } else {
-      const lastChunk = msgToChunk(last);
-      const currChunk = msgToChunk(curr);
+      const lastChunk = convertToChunk(last) as BaseMessageChunk;
+      const currChunk = convertToChunk(curr) as BaseMessageChunk;
       const mergedChunks = lastChunk.concat(currChunk);
       if (
         typeof lastChunk.content === "string" &&
@@ -830,7 +843,6 @@ async function _firstMaxTokens(
       break;
     }
   }
-
   if (idx < messagesCopy.length - 1 && partialStrategy) {
     let includedPartial = false;
     if (Array.isArray(messagesCopy[idx].content)) {
@@ -840,11 +852,15 @@ async function _firstMaxTokens(
       }
 
       const numBlock = excluded.content.length;
-      if (partialStrategy === "last") {
-        excluded.content = [...excluded.content].reverse();
-      }
+      const reversedContent =
+        partialStrategy === "last"
+          ? [...excluded.content].reverse()
+          : excluded.content;
       for (let i = 1; i <= numBlock; i += 1) {
-        const partialContent = excluded.content.slice(0, i);
+        const partialContent =
+          partialStrategy === "first"
+            ? reversedContent.slice(0, i)
+            : reversedContent.slice(-i);
         const fields = Object.fromEntries(
           Object.entries(excluded).filter(
             ([k]) => k !== "type" && !k.startsWith("lc_")
@@ -864,7 +880,7 @@ async function _firstMaxTokens(
         }
       }
       if (includedPartial && partialStrategy === "last") {
-        excluded.content = [...excluded.content].reverse();
+        excluded.content = [...reversedContent].reverse();
       }
     }
     if (!includedPartial) {
@@ -1121,30 +1137,6 @@ function switchTypeToMessage(
     return msg;
   }
   throw new Error(`Unrecognized message type ${messageType}`);
-}
-
-function msgToChunk(message: BaseMessage): BaseMessageChunk {
-  const msgType = message._getType();
-  let chunk: BaseMessageChunk | undefined;
-  const fields = Object.fromEntries(
-    Object.entries(message).filter(
-      ([k]) => k !== "type" && !k.startsWith("lc_")
-    )
-  ) as BaseMessageFields;
-
-  if (msgType in _MSG_CHUNK_MAP) {
-    chunk = switchTypeToMessage(msgType, fields, true);
-  }
-
-  if (!chunk) {
-    throw new Error(
-      `Unrecognized message class ${msgType}. Supported classes are ${Object.keys(
-        _MSG_CHUNK_MAP
-      )}`
-    );
-  }
-
-  return chunk;
 }
 
 function chunkToMsg(chunk: BaseMessageChunk): BaseMessage {

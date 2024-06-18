@@ -72,7 +72,7 @@ test("mergeMessageRuns works", () => {
   ]);
 });
 
-describe.only("trimMessages can trim", () => {
+describe("trimMessages can trim", () => {
   const messages = [
     new SystemMessage("This is a 4 token text. The full message is 10 tokens."),
     new HumanMessage({
@@ -273,6 +273,7 @@ describe.only("trimMessages can trim", () => {
     });
 
     expect(trimmedMessages).toHaveLength(3);
+    console.log(trimmedMessages);
     expect(trimmedMessages).toEqual([
       new SystemMessage(
         "This is a 4 token text. The full message is 10 tokens."
