@@ -114,7 +114,6 @@ export default function Feedback() {
   const [feedbackId, setFeedbackId] = useState(null);
   const [feedbackSent, setFeedbackSent] = useState(false);
   const [feedbackDetailsSent, setFeedbackDetailsSent] = useState(false);
-  const [inProgress, setInProgress] = useState(false);
   const { siteConfig } = useDocusaurusContext();
   const [pathname, setPathname] = useState("");
 
@@ -167,14 +166,10 @@ export default function Feedback() {
 
   const handleFeedbackDetails = async (e) => {
     e.preventDefault();
-    if (inProgress) {
-      return;
-    }
     if (!feedbackId) {
       setFeedbackDetailsSent(true);
       return;
     }
-    setInProgress(true);
     const details = e.target.elements
       .namedItem("details")
       ?.value.slice(0, 1024);
@@ -189,7 +184,6 @@ export default function Feedback() {
       feedback_id: feedbackId,
       details,
     });
-    setInProgress(false);
     if (error) {
       console.error("Failed to add feedback details", error);
       throw error;
