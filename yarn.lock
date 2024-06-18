@@ -9603,7 +9603,7 @@ __metadata:
     "@langchain/standard-tests": 0.0.0
     "@layerup/layerup-security": ^1.5.12
     "@mendable/firecrawl-js": ^0.0.13
-    "@mlc-ai/web-llm": ^0.2.46
+    "@mlc-ai/web-llm": 0.2.46
     "@mozilla/readability": ^0.4.4
     "@neondatabase/serverless": ^0.9.1
     "@notionhq/client": ^2.2.10
@@ -9770,7 +9770,7 @@ __metadata:
     "@huggingface/inference": ^2.6.4
     "@layerup/layerup-security": ^1.5.12
     "@mendable/firecrawl-js": ^0.0.13
-    "@mlc-ai/web-llm": "*"
+    "@mlc-ai/web-llm": 0.2.46
     "@mozilla/readability": "*"
     "@neondatabase/serverless": "*"
     "@notionhq/client": ^2.2.10
@@ -10998,7 +10998,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@mlc-ai/web-llm@npm:^0.2.46":
+"@mlc-ai/web-llm@npm:0.2.46":
   version: 0.2.46
   resolution: "@mlc-ai/web-llm@npm:0.2.46"
   dependencies:
