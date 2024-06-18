@@ -60,6 +60,7 @@ import type {
   OpenAIChatInput,
   OpenAICoreRequestOptions,
   LegacyOpenAIInput,
+  OpenAIInput,
 } from "./types.js";
 import { type OpenAIEndpointConfig, getEndpoint } from "./utils/azure.js";
 import { wrapOpenAIClientError } from "./utils/openai.js";
@@ -249,7 +250,8 @@ function convertMessagesToOpenAIParams(messages: BaseMessage[]) {
 
 export interface ChatOpenAICallOptions
   extends OpenAICallOptions,
-    BaseFunctionCallOptions {
+    BaseFunctionCallOptions,
+    Pick<OpenAIInput, "streamUsage"> {
   tools?: StructuredToolInterface[] | OpenAIClient.ChatCompletionTool[];
   tool_choice?: OpenAIClient.ChatCompletionToolChoiceOption;
   promptIndex?: number;
@@ -257,6 +259,8 @@ export interface ChatOpenAICallOptions
   seed?: number;
   /**
    * Additional options to pass to streamed completions.
+   *
+   * stream_options, if provided takes precedence over streamUsage.
    */
   stream_options?: {
     /**
@@ -381,7 +385,7 @@ export class ChatOpenAI<
 
   streaming = false;
 
-  streamOptions = { includeUsage: false };
+  streamUsage = true;
 
   maxTokens?: number;
 
@@ -479,7 +483,7 @@ export class ChatOpenAI<
     this.user = fields?.user;
 
     this.streaming = fields?.streaming ?? false;
-    this.streamOptions = fields?.streamOptions ?? { includeUsage: false };
+    this.streamUsage = fields?.streamUsage ?? this.streamUsage;
 
     if (this.azureOpenAIApiKey || this.azureADTokenProvider) {
       if (!this.azureOpenAIApiInstanceName && !this.azureOpenAIBasePath) {
@@ -576,7 +580,7 @@ export class ChatOpenAI<
       ...(options?.stream_options !== undefined
         ? { stream_options: options.stream_options }
         : {
-            stream_options: { include_usage: this.streamOptions.includeUsage },
+            stream_options: { include_usage: this.streamUsage },
           }),
       parallel_tool_calls: options?.parallel_tool_calls,
       ...this.modelKwargs,
