@@ -14,12 +14,6 @@ export interface GenerativeAIJsonSchema extends Record<string, unknown> {
 
 export interface GenerativeAIJsonSchemaDirty extends GenerativeAIJsonSchema {
   properties?: Record<string, GenerativeAIJsonSchemaDirty>;
-  items?: {
-    type: string;
-    properties?: Record<string, GenerativeAIJsonSchemaDirty>;
-    required?: string[];
-    additionalProperties?: boolean;
-  };
   additionalProperties?: boolean;
 }
 
