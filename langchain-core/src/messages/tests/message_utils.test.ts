@@ -72,7 +72,7 @@ test("mergeMessageRuns works", () => {
   ]);
 });
 
-describe("trimMessages can trim", () => {
+const messagesAndTokenCounterFactory = () => {
   const messages = [
     new SystemMessage("This is a 4 token text. The full message is 10 tokens."),
     new HumanMessage({
@@ -96,7 +96,7 @@ describe("trimMessages can trim", () => {
     }),
   ];
 
-  function dummyTokenCounter(messages: BaseMessage[]): number {
+  const dummyTokenCounter = (messages: BaseMessage[]): number => {
     // treat each message like it adds 3 default tokens at the beginning
     // of the message and at the end of the message. 3 + 4 + 3 = 10 tokens
     // per message.
@@ -118,9 +118,17 @@ describe("trimMessages can trim", () => {
       }
     }
     return count;
-  }
+  };
 
+  return {
+    messages,
+    dummyTokenCounter,
+  };
+};
+
+describe("trimMessages can trim", () => {
   it("First 30 tokens, not allowing partial messages", async () => {
+    const { messages, dummyTokenCounter } = messagesAndTokenCounterFactory();
     const trimmedMessages = await trimMessages(messages, {
       maxTokens: 30,
       tokenCounter: dummyTokenCounter,
@@ -139,6 +147,7 @@ describe("trimMessages can trim", () => {
   });
 
   it("First 30 tokens, allowing partial messages", async () => {
+    const { messages, dummyTokenCounter } = messagesAndTokenCounterFactory();
     const trimmedMessages = await trimMessages(messages, {
       maxTokens: 30,
       tokenCounter: dummyTokenCounter,
@@ -163,6 +172,7 @@ describe("trimMessages can trim", () => {
   });
 
   it("First 30 tokens, allowing partial messages, have to end on HumanMessage", async () => {
+    const { messages, dummyTokenCounter } = messagesAndTokenCounterFactory();
     const trimmedMessages = await trimMessages(messages, {
       maxTokens: 30,
       tokenCounter: dummyTokenCounter,
@@ -184,6 +194,7 @@ describe("trimMessages can trim", () => {
   });
 
   it("Last 30 tokens, including system message, not allowing partial messages", async () => {
+    const { messages, dummyTokenCounter } = messagesAndTokenCounterFactory();
     const trimmedMessages = await trimMessages(messages, {
       maxTokens: 30,
       includeSystem: true,
@@ -208,6 +219,7 @@ describe("trimMessages can trim", () => {
   });
 
   it("Last 40 tokens, including system message, allowing partial messages", async () => {
+    const { messages, dummyTokenCounter } = messagesAndTokenCounterFactory();
     const trimmedMessages = await trimMessages(messages, {
       maxTokens: 40,
       tokenCounter: dummyTokenCounter,
@@ -237,6 +249,7 @@ describe("trimMessages can trim", () => {
   });
 
   it("Last 30 tokens, including system message, allowing partial messages, end on HumanMessage", async () => {
+    const { messages, dummyTokenCounter } = messagesAndTokenCounterFactory();
     const trimmedMessages = await trimMessages(messages, {
       maxTokens: 30,
       tokenCounter: dummyTokenCounter,
@@ -263,6 +276,7 @@ describe("trimMessages can trim", () => {
   });
 
   it("Last 40 tokens, including system message, allowing partial messages, start on HumanMessage", async () => {
+    const { messages, dummyTokenCounter } = messagesAndTokenCounterFactory();
     const trimmedMessages = await trimMessages(messages, {
       maxTokens: 40,
       tokenCounter: dummyTokenCounter,

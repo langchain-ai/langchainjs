@@ -971,6 +971,7 @@ async function _lastMaxTokens(
   }
 
   const swappedSystem = includeSystem && messages[0]._getType() === "system";
+  console.log("swappedSystem"), swappedSystem;
   let reversed_ = swappedSystem
     ? messages.slice(0, 1).concat(messages.slice(1).reverse())
     : messages.reverse();
