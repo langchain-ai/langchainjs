@@ -1,4 +1,4 @@
-import { UnstructuredDirectoryLoader } from "langchain/document_loaders/fs/unstructured";
+import { UnstructuredDirectoryLoader } from "@langchain/community/document_loaders/fs/unstructured";
 
 const options = {
   apiKey: "MY_API_KEY",

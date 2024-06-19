@@ -1,4 +1,4 @@
-import { AzureBlobStorageFileLoader } from "langchain/document_loaders/web/azure_blob_storage_file";
+import { AzureBlobStorageFileLoader } from "@langchain/community/document_loaders/web/azure_blob_storage_file";
 
 const loader = new AzureBlobStorageFileLoader({
   azureConfig: {

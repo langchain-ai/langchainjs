@@ -6,7 +6,7 @@ async function test() {
   const { HNSWLib } = await import("@langchain/community/vectorstores/hnswlib");
   const { HuggingFaceTransformersEmbeddings } = await import("@langchain/community/embeddings/hf_transformers");
   const { Document } = await import("@langchain/core/documents");
-  const { CSVLoader } = await import("langchain/document_loaders/fs/csv");
+  const { CSVLoader } = await import("@langchain/community/document_loaders/fs/csv");
 
   // Test exports
   assert(typeof OpenAI === "function");
