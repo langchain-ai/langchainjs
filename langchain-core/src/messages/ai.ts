@@ -279,7 +279,6 @@ export class AIMessageChunk extends BaseMessageChunk {
       };
       combinedFields.usage_metadata = usage_metadata;
     }
-    console.log("new combinedFields", combinedFields);
     return new AIMessageChunk(combinedFields);
   }
 }

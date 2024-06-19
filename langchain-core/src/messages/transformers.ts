@@ -27,17 +27,38 @@ import {
 } from "./tool.js";
 import { convertToChunk } from "./utils.js";
 
-const _isMessageType = (
-  msg: BaseMessage,
-  types: (MessageType | BaseMessage)[]
-) => {
+type MessageUnion =
+  | typeof HumanMessage
+  | typeof AIMessage
+  | typeof SystemMessage
+  | typeof ChatMessage
+  | typeof FunctionMessage
+  | typeof ToolMessage;
+type MessageChunkUnion =
+  | typeof HumanMessageChunk
+  | typeof AIMessageChunk
+  | typeof SystemMessageChunk
+  | typeof FunctionMessageChunk
+  | typeof ToolMessageChunk
+  | typeof ChatMessageChunk;
+type MessageTypeOrClass = MessageType | MessageUnion | MessageChunkUnion;
+
+const _isMessageType = (msg: BaseMessage, types: MessageTypeOrClass[]) => {
   const typesAsStrings = [
     ...new Set<string>(
       types?.map((t) => {
         if (typeof t === "string") {
           return t;
         }
-        return t._getType();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const instantiatedMsgClass = new (t as any)({});
+        if (
+          !("_getType" in instantiatedMsgClass) ||
+          typeof instantiatedMsgClass._getType !== "function"
+        ) {
+          throw new Error("Invalid type provided.");
+        }
+        return instantiatedMsgClass._getType();
       })
     ),
   ];
@@ -45,23 +66,44 @@ const _isMessageType = (
   return typesAsStrings.some((t) => t === msgType);
 };
 
+export interface FilterMessagesFields {
+  /**
+   * @param {string[] | undefined} includeNames Message names to include.
+   */
+  includeNames?: string[];
+  /**
+   * @param {string[] | undefined} excludeNames Messages names to exclude.
+   */
+  excludeNames?: string[];
+  /**
+   * @param {(MessageType | BaseMessage)[] | undefined} includeTypes Message types to include. Can be specified as string names (e.g.
+   *     "system", "human", "ai", ...) or as BaseMessage classes (e.g.
+   *     SystemMessage, HumanMessage, AIMessage, ...).
+   */
+  includeTypes?: MessageTypeOrClass[];
+  /**
+   * @param {(MessageType | BaseMessage)[] | undefined} excludeTypes Message types to exclude. Can be specified as string names (e.g.
+   *     "system", "human", "ai", ...) or as BaseMessage classes (e.g.
+   *     SystemMessage, HumanMessage, AIMessage, ...).
+   */
+  excludeTypes?: MessageTypeOrClass[];
+  /**
+   * @param {string[] | undefined} includeIds Message IDs to include.
+   */
+  includeIds?: string[];
+  /**
+   * @param {string[] | undefined} excludeIds Message IDs to exclude.
+   */
+  excludeIds?: string[];
+}
+
 /**
  * Filter messages based on name, type or id.
  *
- * @param {BaseMessage[]} messages Sequence of BaseMessage objects to filter.
- * @param options Optional filtering options.
- * @param {string[] | undefined} options.includeNames Message names to include.
- * @param {string[] | undefined} options.excludeNames Messages names to exclude.
- * @param {(MessageType | BaseMessage)[] | undefined} options.includeTypes Message types to include. Can be specified as string names (e.g.
- *     "system", "human", "ai", ...) or as BaseMessage classes (e.g.
- *     SystemMessage, HumanMessage, AIMessage, ...).
- * @param {(MessageType | BaseMessage)[] | undefined} options.excludeTypes Message types to exclude. Can be specified as string names (e.g.
- *     "system", "human", "ai", ...) or as BaseMessage classes (e.g.
- *     SystemMessage, HumanMessage, AIMessage, ...).
- * @param {string[] | undefined} options.includeIds Message IDs to include.
- * @param {string[] | undefined} options.excludeIds Message IDs to exclude.
+ * @param {BaseMessage[] | FilterMessagesFields} messagesOrOptions - Either an array of BaseMessage objects to filter or the filtering options. If an array is provided, the `options` parameter should also be supplied. If filtering options are provided, a RunnableLambda is returned.
+ * @param {FilterMessagesFields} [options] - Optional filtering options. Should only be provided if `messagesOrOptions` is an array of BaseMessage objects.
  * @returns A list of Messages that meets at least one of the include conditions and none
- *     of the exclude conditions. If no include conditions are specified then
+ *     of the exclude conditions, or a RunnableLambda which does the same. If no include conditions are specified then
  *     anything that is not explicitly excluded will be included.
  * @throws {Error} If two incompatible arguments are provided.
  *
@@ -93,15 +135,27 @@ const _isMessageType = (
  * ```
  */
 export function filterMessages(
+  options?: FilterMessagesFields
+): Runnable<BaseMessage[], BaseMessage[]>;
+export function filterMessages(
   messages: BaseMessage[],
-  options: {
-    includeNames?: string[];
-    excludeNames?: string[];
-    includeTypes?: (MessageType | BaseMessage)[];
-    excludeTypes?: (MessageType | BaseMessage)[];
-    includeIds?: string[];
-    excludeIds?: string[];
-  } = {}
+  options?: FilterMessagesFields
+): BaseMessage[];
+export function filterMessages(
+  messagesOrOptions?: BaseMessage[] | FilterMessagesFields,
+  options?: FilterMessagesFields
+): BaseMessage[] | Runnable<BaseMessage[], BaseMessage[]> {
+  if (Array.isArray(messagesOrOptions)) {
+    return _filterMessages(messagesOrOptions, options);
+  }
+  return RunnableLambda.from((input: BaseMessage[]): BaseMessage[] => {
+    return _filterMessages(input, messagesOrOptions);
+  });
+}
+
+function _filterMessages(
+  messages: BaseMessage[],
+  options: FilterMessagesFields = {}
 ): BaseMessage[] {
   const {
     includeNames,
@@ -148,9 +202,9 @@ export function filterMessages(
  * **NOTE**: ToolMessages are not merged, as each has a distinct tool call id that
  * can't be merged.
  *
- * @param {BaseMessage[]} messages Sequence of Message-like objects to merge.
+ * @param {BaseMessage[] | undefined} messages Sequence of Message-like objects to merge. Optional. If not provided, a RunnableLambda is returned.
  * @returns List of BaseMessages with consecutive runs of message types merged into single
- *     messages. If two messages being merged both have string contents, the merged
+ *     messages, or a RunnableLambda which returns a list of BaseMessages If two messages being merged both have string contents, the merged
  *     content is a concatenation of the two strings with a new-line separator. If at
  *     least one of the messages has a list of content blocks, the merged content is a
  *     list of content blocks.
@@ -200,7 +254,18 @@ export function filterMessages(
  * ]
  * ```
  */
-export function mergeMessageRuns(messages: BaseMessage[]): BaseMessage[] {
+export function mergeMessageRuns(): Runnable<BaseMessage[], BaseMessage[]>;
+export function mergeMessageRuns(messages: BaseMessage[]): BaseMessage[];
+export function mergeMessageRuns(
+  messages?: BaseMessage[]
+): BaseMessage[] | Runnable<BaseMessage[], BaseMessage[]> {
+  if (Array.isArray(messages)) {
+    return _mergeMessageRuns(messages);
+  }
+  return RunnableLambda.from(_mergeMessageRuns);
+}
+
+function _mergeMessageRuns(messages: BaseMessage[]): BaseMessage[] {
   if (!messages.length) {
     return [];
   }
@@ -268,23 +333,23 @@ export interface TrimMessagesFields {
    */
   allowPartial?: boolean;
   /**
-   * @param {MessageType | BaseMessage | (MessageType | BaseMessage)[]} [endOn] The message type to end on.
+   * @param {MessageTypeOrClass | MessageTypeOrClass[]} [endOn] The message type to end on.
    * If specified then every message after the last occurrence of this type is ignored.
    * If `strategy === "last"` then this is done before we attempt to get the last `maxTokens`.
    * If `strategy === "first"` then this is done after we get the first `maxTokens`.
    * Can be specified as string names (e.g. "system", "human", "ai", ...) or as `BaseMessage` classes
    * (e.g. `SystemMessage`, `HumanMessage`, `AIMessage`, ...). Can be a single type or an array of types.
    */
-  endOn?: MessageType | BaseMessage | (MessageType | BaseMessage)[];
+  endOn?: MessageTypeOrClass | MessageTypeOrClass[];
   /**
-   * @param {MessageType | BaseMessage | (MessageType | BaseMessage)[]} [startOn] The message type to start on.
+   * @param {MessageTypeOrClass | MessageTypeOrClass[]} [startOn] The message type to start on.
    * Should only be specified if `strategy: "last"`. If specified then every message before the first occurrence
    * of this type is ignored. This is done after we trim the initial messages to the last `maxTokens`.
    * Does not apply to a `SystemMessage` at index 0 if `includeSystem: true`.
    * Can be specified as string names (e.g. "system", "human", "ai", ...) or as `BaseMessage` classes
    * (e.g. `SystemMessage`, `HumanMessage`, `AIMessage`, ...). Can be a single type or an array of types.
    */
-  startOn?: MessageType | BaseMessage | (MessageType | BaseMessage)[];
+  startOn?: MessageTypeOrClass | MessageTypeOrClass[];
   /**
    * @param {boolean} [includeSystem=false] Whether to keep the `SystemMessage` if there is one at index 0.
    * Should only be specified if `strategy: "last"`.
@@ -556,15 +621,29 @@ export interface TrimMessagesFields {
  * ]
  * ```
  */
-export async function trimMessages(
+export function trimMessages(
+  options: TrimMessagesFields
+): Runnable<BaseMessage[], BaseMessage[]>;
+export function trimMessages(
   messages: BaseMessage[],
   options: TrimMessagesFields
-): Promise<BaseMessage[] | Runnable<BaseMessage[], BaseMessage[]>> {
-  if (messages.length) {
+): Promise<BaseMessage[]>;
+export function trimMessages(
+  messagesOrOptions: BaseMessage[] | TrimMessagesFields,
+  options?: TrimMessagesFields
+): Promise<BaseMessage[]> | Runnable<BaseMessage[], BaseMessage[]> {
+  if (Array.isArray(messagesOrOptions)) {
+    const messages = messagesOrOptions;
+    if (!options) {
+      throw new Error("Options parameter is required when providing messages.");
+    }
     return _trimMessagesHelper(messages, options);
+  } else {
+    const trimmerOptions = messagesOrOptions;
+    return RunnableLambda.from((input: BaseMessage[]) =>
+      _trimMessagesHelper(input, trimmerOptions)
+    );
   }
-  const trimmer = (input: BaseMessage[]) => _trimMessagesHelper(input, options);
-  return RunnableLambda.from(trimmer);
 }
 
 async function _trimMessagesHelper(
@@ -648,7 +727,7 @@ async function _firstMaxTokens(
     tokenCounter: (messages: BaseMessage[]) => Promise<number>;
     textSplitter: (text: string) => Promise<string[]>;
     partialStrategy?: "first" | "last";
-    endOn?: MessageType | BaseMessage | (MessageType | BaseMessage)[];
+    endOn?: MessageTypeOrClass | MessageTypeOrClass[];
   }
 ): Promise<BaseMessage[]> {
   const { maxTokens, tokenCounter, textSplitter, partialStrategy, endOn } =
@@ -767,8 +846,8 @@ async function _lastMaxTokens(
      * @default {false}
      */
     includeSystem?: boolean;
-    startOn?: MessageType | BaseMessage | (MessageType | BaseMessage)[];
-    endOn?: MessageType | BaseMessage | (MessageType | BaseMessage)[];
+    startOn?: MessageTypeOrClass | MessageTypeOrClass[];
+    endOn?: MessageTypeOrClass | MessageTypeOrClass[];
   }
 ): Promise<BaseMessage[]> {
   const {
@@ -806,21 +885,6 @@ async function _lastMaxTokens(
     return reversed_.reverse();
   }
 }
-
-type MessageUnion =
-  | typeof HumanMessage
-  | typeof AIMessage
-  | typeof SystemMessage
-  | typeof ChatMessage
-  | typeof FunctionMessage
-  | typeof ToolMessage;
-type MessageChunkUnion =
-  | typeof HumanMessageChunk
-  | typeof AIMessageChunk
-  | typeof SystemMessageChunk
-  | typeof FunctionMessageChunk
-  | typeof ToolMessageChunk
-  | typeof ChatMessageChunk;
 
 const _MSG_CHUNK_MAP: Record<
   MessageType,

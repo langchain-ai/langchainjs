@@ -1,4 +1,4 @@
-import { test, expect } from "@jest/globals";
+import { it, expect } from "@jest/globals";
 import {
   filterMessages,
   mergeMessageRuns,
@@ -9,8 +9,8 @@ import { HumanMessage } from "../human.js";
 import { SystemMessage } from "../system.js";
 import { BaseMessage } from "../base.js";
 
-test("filterMessages works", () => {
-  const messages = [
+describe("filterMessage", () => {
+  const getMessages = () => [
     new SystemMessage("you're a good assistant."),
     new HumanMessage({
       content: "what's your name",
@@ -22,23 +22,62 @@ test("filterMessages works", () => {
     new AIMessage({ content: "silicon blue", id: "blah" }),
   ];
 
-  const filteredMessages = filterMessages(messages, {
-    includeNames: ["example_user", "example_assistant"],
-    includeTypes: ["system"],
-    excludeIds: ["bar"],
+  it("works", () => {
+    const messages = getMessages();
+    const filteredMessages = filterMessages(messages, {
+      includeNames: ["example_user", "example_assistant"],
+      includeTypes: ["system"],
+      excludeIds: ["bar"],
+    });
+    expect(filteredMessages).toEqual([
+      new SystemMessage("you're a good assistant."),
+      new HumanMessage({
+        content: "what's your name",
+        id: "foo",
+        name: "example_user",
+      }),
+    ]);
   });
-  expect(filteredMessages).toEqual([
-    new SystemMessage("you're a good assistant."),
-    new HumanMessage({
-      content: "what's your name",
-      id: "foo",
-      name: "example_user",
-    }),
-  ]);
+
+  it("can filter messages based on class types", () => {
+    const messages = getMessages();
+
+    const filteredMessages = filterMessages(messages, {
+      includeTypes: [HumanMessage, AIMessage],
+    });
+    expect(filteredMessages).toHaveLength(4);
+    expect(filteredMessages).toEqual([
+      new HumanMessage({
+        content: "what's your name",
+        id: "foo",
+        name: "example_user",
+      }),
+      new AIMessage({
+        content: "steve-o",
+        id: "bar",
+        name: "example_assistant",
+      }),
+      new HumanMessage({ content: "what's your favorite color", id: "baz" }),
+      new AIMessage({ content: "silicon blue", id: "blah" }),
+    ]);
+  });
+
+  it("returns a runnable if no messages are passed", () => {
+    const filteredMessagesRunnable = filterMessages();
+    expect(filteredMessagesRunnable).toBeDefined();
+    expect(filteredMessagesRunnable.lc_namespace).toEqual([
+      "langchain_core",
+      "runnables",
+    ]);
+    expect("func" in filteredMessagesRunnable).toBeTruthy();
+    // `func` is protected, so we need to cast it to any to access it
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    expect(typeof (filteredMessagesRunnable as any).func).toBe("function");
+  });
 });
 
-test("mergeMessageRuns works", () => {
-  const messages = [
+describe("mergeMessageRuns", () => {
+  const getMessages = () => [
     new SystemMessage("you're a good assistant."),
     new HumanMessage({ content: "what's your favorite color", id: "foo" }),
     new HumanMessage({ content: "wait your favorite food", id: "bar" }),
@@ -54,83 +93,103 @@ test("mergeMessageRuns works", () => {
     }),
   ];
 
-  const mergedMessages = mergeMessageRuns(messages);
-  expect(mergedMessages).toHaveLength(3);
-  expect(mergedMessages).toEqual([
-    new SystemMessage("you're a good assistant."),
-    new HumanMessage({
-      content: "what's your favorite color\nwait your favorite food",
-      id: "foo",
-    }),
-    new AIMessage({
-      content: [
-        { type: "text", text: "my favorite colo" },
-        { type: "text", text: "my favorite dish is lasagna" },
-      ],
-      tool_calls: [
-        { name: "blah_tool", args: { x: 2 }, id: "123" },
-        { name: "blah_tool", args: { x: -10 }, id: "456" },
-      ],
-      id: "baz",
-    }),
-  ]);
+  it("works", () => {
+    const messages = getMessages();
+
+    const mergedMessages = mergeMessageRuns(messages);
+    expect(mergedMessages).toHaveLength(3);
+    expect(mergedMessages).toEqual([
+      new SystemMessage("you're a good assistant."),
+      new HumanMessage({
+        content: "what's your favorite color\nwait your favorite food",
+        id: "foo",
+      }),
+      new AIMessage({
+        content: [
+          { type: "text", text: "my favorite colo" },
+          { type: "text", text: "my favorite dish is lasagna" },
+        ],
+        tool_calls: [
+          { name: "blah_tool", args: { x: 2 }, id: "123" },
+          { name: "blah_tool", args: { x: -10 }, id: "456" },
+        ],
+        id: "baz",
+      }),
+    ]);
+  });
+
+  it("returns a runnable if no messages are passed", () => {
+    const mergedMessages = mergeMessageRuns();
+    expect(mergedMessages).toBeDefined();
+    expect(mergedMessages.lc_namespace).toEqual([
+      "langchain_core",
+      "runnables",
+    ]);
+    expect("func" in mergedMessages).toBeTruthy();
+    // `func` is protected, so we need to cast it to any to access it
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    expect(typeof (mergedMessages as any).func).toBe("function");
+  });
 });
 
-const messagesAndTokenCounterFactory = () => {
-  const messages = [
-    new SystemMessage("This is a 4 token text. The full message is 10 tokens."),
-    new HumanMessage({
-      content: "This is a 4 token text. The full message is 10 tokens.",
-      id: "first",
-    }),
-    new AIMessage({
-      content: [
-        { type: "text", text: "This is the FIRST 4 token block." },
-        { type: "text", text: "This is the SECOND 4 token block." },
-      ],
-      id: "second",
-    }),
-    new HumanMessage({
-      content: "This is a 4 token text. The full message is 10 tokens.",
-      id: "third",
-    }),
-    new AIMessage({
-      content: "This is a 4 token text. The full message is 10 tokens.",
-      id: "fourth",
-    }),
-  ];
-
-  const dummyTokenCounter = (messages: BaseMessage[]): number => {
-    // treat each message like it adds 3 default tokens at the beginning
-    // of the message and at the end of the message. 3 + 4 + 3 = 10 tokens
-    // per message.
-
-    const defaultContentLen = 4;
-    const defaultMsgPrefixLen = 3;
-    const defaultMsgSuffixLen = 3;
-
-    let count = 0;
-    for (const msg of messages) {
-      if (typeof msg.content === "string") {
-        count += defaultMsgPrefixLen + defaultContentLen + defaultMsgSuffixLen;
-      }
-      if (Array.isArray(msg.content)) {
-        count +=
-          defaultMsgPrefixLen +
-          msg.content.length * defaultContentLen +
-          defaultMsgSuffixLen;
-      }
-    }
-    return count;
-  };
-
-  return {
-    messages,
-    dummyTokenCounter,
-  };
-};
-
 describe("trimMessages can trim", () => {
+  const messagesAndTokenCounterFactory = () => {
+    const messages = [
+      new SystemMessage(
+        "This is a 4 token text. The full message is 10 tokens."
+      ),
+      new HumanMessage({
+        content: "This is a 4 token text. The full message is 10 tokens.",
+        id: "first",
+      }),
+      new AIMessage({
+        content: [
+          { type: "text", text: "This is the FIRST 4 token block." },
+          { type: "text", text: "This is the SECOND 4 token block." },
+        ],
+        id: "second",
+      }),
+      new HumanMessage({
+        content: "This is a 4 token text. The full message is 10 tokens.",
+        id: "third",
+      }),
+      new AIMessage({
+        content: "This is a 4 token text. The full message is 10 tokens.",
+        id: "fourth",
+      }),
+    ];
+
+    const dummyTokenCounter = (messages: BaseMessage[]): number => {
+      // treat each message like it adds 3 default tokens at the beginning
+      // of the message and at the end of the message. 3 + 4 + 3 = 10 tokens
+      // per message.
+
+      const defaultContentLen = 4;
+      const defaultMsgPrefixLen = 3;
+      const defaultMsgSuffixLen = 3;
+
+      let count = 0;
+      for (const msg of messages) {
+        if (typeof msg.content === "string") {
+          count +=
+            defaultMsgPrefixLen + defaultContentLen + defaultMsgSuffixLen;
+        }
+        if (Array.isArray(msg.content)) {
+          count +=
+            defaultMsgPrefixLen +
+            msg.content.length * defaultContentLen +
+            defaultMsgSuffixLen;
+        }
+      }
+      return count;
+    };
+
+    return {
+      messages,
+      dummyTokenCounter,
+    };
+  };
+
   it("First 30 tokens, not allowing partial messages", async () => {
     const { messages, dummyTokenCounter } = messagesAndTokenCounterFactory();
     const trimmedMessages = await trimMessages(messages, {
@@ -305,5 +364,70 @@ describe("trimMessages can trim", () => {
         id: "fourth",
       }),
     ]);
+  });
+
+  it("can filter (startOn) with message classes", async () => {
+    const { messages, dummyTokenCounter } = messagesAndTokenCounterFactory();
+    const trimmedMessages = await trimMessages(messages, {
+      maxTokens: 40,
+      tokenCounter: dummyTokenCounter,
+      startOn: [HumanMessage],
+    });
+    expect(trimmedMessages).toHaveLength(2);
+    expect(trimmedMessages).toEqual([
+      new HumanMessage({
+        content: "This is a 4 token text. The full message is 10 tokens.",
+        id: "third",
+      }),
+      new AIMessage({
+        content: "This is a 4 token text. The full message is 10 tokens.",
+        id: "fourth",
+      }),
+    ]);
+  });
+
+  it("can filter (endOn) with message classes", async () => {
+    const { messages, dummyTokenCounter } = messagesAndTokenCounterFactory();
+    const trimmedMessages = await trimMessages(messages, {
+      maxTokens: 40,
+      tokenCounter: dummyTokenCounter,
+      endOn: [HumanMessage],
+    });
+    console.log(trimmedMessages);
+    expect(trimmedMessages).toHaveLength(3);
+    expect(trimmedMessages).toEqual([
+      new HumanMessage({
+        content: "This is a 4 token text. The full message is 10 tokens.",
+        id: "first",
+      }),
+      new AIMessage({
+        content: [
+          { type: "text", text: "This is the FIRST 4 token block." },
+          { type: "text", text: "This is the SECOND 4 token block." },
+        ],
+        id: "second",
+      }),
+      new HumanMessage({
+        content: "This is a 4 token text. The full message is 10 tokens.",
+        id: "third",
+      }),
+    ]);
+  });
+
+  it("can return a runnable if empty array is passed", () => {
+    const { dummyTokenCounter } = messagesAndTokenCounterFactory();
+    const trimmedMessages = trimMessages({
+      maxTokens: 40,
+      tokenCounter: dummyTokenCounter,
+    });
+    expect(trimmedMessages).toBeDefined();
+    expect(trimmedMessages.lc_namespace).toEqual([
+      "langchain_core",
+      "runnables",
+    ]);
+    expect("func" in trimmedMessages).toBeTruthy();
+    // `func` is protected, so we need to cast it to any to access it
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    expect(typeof (trimmedMessages as any).func).toBe("function");
   });
 });
