@@ -62,6 +62,14 @@ import StatefulChatExample from "@examples/models/chat/cohere/stateful_conversat
 You can see the LangSmith traces from this example [here](https://smith.langchain.com/public/8e67b05a-4e63-414e-ac91-a91acf21b262/r) and [here](https://smith.langchain.com/public/50fabc25-46fe-4727-a59c-7e4eb0de8e70/r)
 :::
 
+### Tools
+
+The Cohere API supports tool calling, along with multi-hop-tool calling. The following example demonstrates how to call tools:
+
+import CohereToolCaling from "@examples/models/chat/cohere/tool_calling.ts";
+
+<CodeBlock language="typescript">{CohereToolCaling}</CodeBlock>
+
 ### RAG
 
 Cohere also comes out of the box with RAG support.

@@ -1,7 +1,10 @@
 /* eslint-disable no-promise-executor-return */
 import { test, expect } from "@jest/globals";
-import { AIMessageChunk, HumanMessage } from "@langchain/core/messages";
+import { AIMessageChunk, HumanMessage, ToolMessage } from "@langchain/core/messages";
 import { ChatCohere } from "../chat_models.js";
+import { z } from "zod";
+import { DynamicStructuredTool } from "@langchain/core/tools";
+import { convertToCohereTool } from "@langchain/core/utils/function_calling";
 
 test("ChatCohere can invoke", async () => {
   const model = new ChatCohere();
@@ -139,4 +142,53 @@ test("Invoke token count usage_metadata", async () => {
   expect(res.usage_metadata.total_tokens).toBe(
     res.usage_metadata.input_tokens + res.usage_metadata.output_tokens
   );
+});
+
+test("Test model tool calling", async () => {
+  const model = new ChatCohere({
+    model: "command-r-plus",
+    temperature: 0,
+  });
+  const webSearchTool = new DynamicStructuredTool({
+    name: "web_search",
+    description: "Search the web and return the answer",
+    schema: z.object({
+      search_query: z.string().describe("The search query to surf the internet for"),
+    }) as any,
+    func: async ({ search_query }) => {
+      return `${search_query}`;
+    },
+  });
+
+  const tools = [webSearchTool];
+  const modelWithTools = model.bind({
+    tools: tools.map(convertToCohereTool),
+  });
+  
+  let messages = [new HumanMessage("Who is the president of Singapore?? USE TOOLS TO SEARCH INTERNET!!!!")];
+  const res = await modelWithTools.invoke(
+    messages,
+  );
+  console.log(res);
+  expect(res?.usage_metadata).toBeDefined();
+  if (!res?.usage_metadata) {
+    return;
+  }
+  expect(res.usage_metadata.total_tokens).toBe(
+    res.usage_metadata.input_tokens + res.usage_metadata.output_tokens
+  );
+  expect(res.tool_calls).toBeDefined();
+  expect(res.tool_calls?.length).toBe(1);
+  let tool_id = res.response_metadata.toolCalls[0].id;
+  messages.push(res)
+  messages.push(new ToolMessage("Aidan Gomez is the president of Singapore", tool_id,  "web_search"));
+  const resWithToolResults = await modelWithTools.invoke(
+    messages,
+  );
+  console.log(resWithToolResults);
+  expect(resWithToolResults?.usage_metadata).toBeDefined();
+  if (!resWithToolResults?.usage_metadata) {
+    return;
+  }
+  expect(resWithToolResults.content).toContain("Aidan Gomez");
 });

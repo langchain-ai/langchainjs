@@ -69,5 +69,9 @@
       "eslint --cache --fix"
     ],
     "*.md": "prettier --config .prettierrc --write"
+  },
+  "dependencies": {
+    "jest-cli": "^29.7.0",
+    "zod": "^3.23.8"
   }
 }
