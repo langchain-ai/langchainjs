@@ -244,6 +244,7 @@ export class AIMessageChunk extends BaseMessageChunk {
         chunk.response_metadata
       ),
       tool_call_chunks: [],
+      id: this.id ?? chunk.id,
     };
     if (
       this.tool_call_chunks !== undefined ||
