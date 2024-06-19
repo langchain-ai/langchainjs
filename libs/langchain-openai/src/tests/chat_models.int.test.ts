@@ -827,28 +827,3 @@ test("streaming: true tokens can be found in usage_metadata field", async () => 
   expect(response?.usage_metadata?.output_tokens).toBeGreaterThan(0);
   expect(response?.usage_metadata?.total_tokens).toBeGreaterThan(0);
 });
-
-test("populates ID field on AIMessage", async () => {
-  const model = new ChatOpenAI();
-  const response = await model.invoke("Hell");
-  console.log({
-    invokeId: response.id,
-  });
-  expect(response.id?.length).toBeGreaterThan(1);
-  expect(response?.id?.startsWith("chatcmpl-")).toBe(true);
-
-  // Streaming
-  let finalChunk: AIMessageChunk | undefined;
-  for await (const chunk of await model.stream("Hell")) {
-    if (!finalChunk) {
-      finalChunk = chunk;
-    } else {
-      finalChunk = finalChunk.concat(chunk);
-    }
-  }
-  console.log({
-    streamId: finalChunk?.id,
-  });
-  expect(finalChunk?.id?.length).toBeGreaterThan(1);
-  expect(finalChunk?.id?.startsWith("chatcmpl-")).toBe(true);
-});

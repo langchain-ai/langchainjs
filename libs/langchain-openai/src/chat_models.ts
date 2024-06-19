@@ -126,8 +126,7 @@ export function messageToOpenAIRole(message: BaseMessage): OpenAIRoleEnum {
 }
 
 function openAIResponseToChatMessage(
-  message: OpenAIClient.Chat.Completions.ChatCompletionMessage,
-  messageId: string
+  message: OpenAIClient.Chat.Completions.ChatCompletionMessage
 ): BaseMessage {
   const rawToolCalls: OpenAIToolCall[] | undefined = message.tool_calls as
     | OpenAIToolCall[]
@@ -152,7 +151,6 @@ function openAIResponseToChatMessage(
           function_call: message.function_call,
           tool_calls: rawToolCalls,
         },
-        id: messageId,
       });
     }
     default:
@@ -163,7 +161,6 @@ function openAIResponseToChatMessage(
 function _convertDeltaToMessageChunk(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   delta: Record<string, any>,
-  messageId: string,
   defaultRole?: OpenAIRoleEnum
 ) {
   const role = delta.role ?? defaultRole;
@@ -198,7 +195,6 @@ function _convertDeltaToMessageChunk(
       content,
       tool_call_chunks: toolCallChunks,
       additional_kwargs,
-      id: messageId,
     });
   } else if (role === "system") {
     return new SystemMessageChunk({ content });
@@ -625,7 +621,7 @@ export class ChatOpenAI<
       if (!delta) {
         continue;
       }
-      const chunk = _convertDeltaToMessageChunk(delta, data.id, defaultRole);
+      const chunk = _convertDeltaToMessageChunk(delta, defaultRole);
       defaultRole = delta.role ?? defaultRole;
       const newTokenIndices = {
         prompt: options.promptIndex ?? 0,
@@ -774,8 +770,7 @@ export class ChatOpenAI<
         const generation: ChatGeneration = {
           text,
           message: openAIResponseToChatMessage(
-            part.message ?? { role: "assistant" },
-            data.id
+            part.message ?? { role: "assistant" }
           ),
         };
         generation.generationInfo = {
