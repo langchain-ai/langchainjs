@@ -5,7 +5,7 @@ const { ChatPromptTemplate } = require("@langchain/core/prompts");
 const { MemoryVectorStore } = require("langchain/vectorstores/memory");
 const { OpenAIEmbeddings } = require("@langchain/openai");
 const { Document } = require("@langchain/core/documents");
-const { CSVLoader } = require("langchain/document_loaders/fs/csv");
+const { CSVLoader } = require("@langchain/community/document_loaders/fs/csv");
 
 async function test() {
   // Test exports

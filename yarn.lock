@@ -20186,6 +20186,7 @@ __metadata:
     swc-loader: ^0.2.3
     typedoc: ^0.24.4
     typedoc-plugin-markdown: next
+    uuid: ^9.0.0
     webpack: ^5.75.0
     yaml-loader: ^0.8.0
   languageName: unknown
