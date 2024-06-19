@@ -1,5 +1,9 @@
 import { test, expect } from "@jest/globals";
-import { filterMessages, mergeMessageRuns, trimMessages } from "../utils.js";
+import {
+  filterMessages,
+  mergeMessageRuns,
+  trimMessages,
+} from "../transformers.js";
 import { AIMessage } from "../ai.js";
 import { HumanMessage } from "../human.js";
 import { SystemMessage } from "../system.js";

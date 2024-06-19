@@ -31,6 +31,7 @@ export const config = {
     memory: "memory",
     messages: "messages/index",
     "messages/tool": "messages/tool",
+    "messages/utils": "messages/transformers",
     output_parsers: "output_parsers/index",
     "output_parsers/openai_tools": "output_parsers/openai_tools/index",
     "output_parsers/openai_functions": "output_parsers/openai_functions/index",
