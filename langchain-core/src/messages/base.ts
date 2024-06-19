@@ -175,6 +175,12 @@ export abstract class BaseMessage
   /** Response metadata. For example: response headers, logprobs, token counts. */
   response_metadata: NonNullable<BaseMessageFields["response_metadata"]>;
 
+  /**
+   * An optional unique identifier for the message. This should ideally be
+   * provided by the provider/model which created the message.
+   */
+  id?: string;
+
   /** The type of the message. */
   abstract _getType(): MessageType;
 
