@@ -33,6 +33,10 @@ export interface WebBaseLoaderParams extends AsyncCallerParams {
    * The text decoder to use to decode the response. Defaults to UTF-8.
    */
   textDecoder?: TextDecoder;
+  /**
+   * The headers to use in the fetch request.
+   */
+  headers?: Headers;
 }
 
 /**
@@ -58,13 +62,16 @@ export class CheerioWebBaseLoader
 
   textDecoder?: TextDecoder;
 
+  headers?: Headers;
+
   constructor(public webPath: string, fields?: WebBaseLoaderParams) {
     super();
-    const { timeout, selector, textDecoder, ...rest } = fields ?? {};
+    const { timeout, selector, textDecoder, headers, ...rest } = fields ?? {};
     this.timeout = timeout ?? 10000;
     this.caller = new AsyncCaller(rest);
     this.selector = selector ?? "body";
     this.textDecoder = textDecoder;
+    this.headers = headers;
   }
 
   /**
@@ -92,11 +99,13 @@ export class CheerioWebBaseLoader
     caller: AsyncCaller,
     timeout: number | undefined,
     textDecoder?: TextDecoder,
-    options?: CheerioOptions
+    options?: CheerioOptions,
+    headers?: Headers
   ): Promise<CheerioAPI> {
     const { load } = await CheerioWebBaseLoader.imports();
     const response = await caller.call(fetch, url, {
       signal: timeout ? AbortSignal.timeout(timeout) : undefined,
+      headers: headers
     });
     const html =
       textDecoder?.decode(await response.arrayBuffer()) ??
@@ -114,7 +123,8 @@ export class CheerioWebBaseLoader
       this.webPath,
       this.caller,
       this.timeout,
-      this.textDecoder
+      this.textDecoder,
+      this.headers
     );
   }
 
