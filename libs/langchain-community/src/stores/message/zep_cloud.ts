@@ -36,7 +36,7 @@ export const getZepMessageRoleType = (role: MessageType): RoleType => {
 interface ZepMemoryInput {
   sessionId: string;
   client: ZepClient;
-  memoryType: Zep.MemoryGetRequestMemoryType;
+  memoryType: Zep.MemoryType;
   humanPrefix?: string;
   aiPrefix?: string;
   // Whether to return separate messages for chat history with a SystemMessage containing (facts and summary) or return a single HumanMessage with the entire memory context.
@@ -61,7 +61,7 @@ export class ZepCloudChatMessageHistory
 
   client: ZepClient;
 
-  memoryType: Zep.MemoryGetRequestMemoryType;
+  memoryType: Zep.MemoryType;
 
   humanPrefix = "human";
 

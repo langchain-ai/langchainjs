@@ -101,7 +101,7 @@ export interface ZepCloudMemoryInput extends BaseChatMemoryInput {
 
   apiKey: string;
 
-  memoryType?: Zep.MemoryGetRequestMemoryType;
+  memoryType?: Zep.MemoryType;
 
   // Whether to return separate messages for chat history with a SystemMessage containing (facts and summary) or return a single HumanMessage with the entire memory context.
   // Defaults to false (return a single HumanMessage) in order to allow more flexibility with different models.
@@ -162,7 +162,7 @@ export class ZepCloudMemory
 
   zepClient: ZepClient;
 
-  memoryType: Zep.MemoryGetRequestMemoryType;
+  memoryType: Zep.MemoryType;
 
   separateMessages: boolean;
 
