@@ -49,14 +49,14 @@ jobs:
         os: [ubuntu-latest]
         node-version: [18.x, 20.x]
         package: [anthropic, azure-openai, cloudflare, cohere, community, exa, google-common, google-gauth, google-genai, google-vertexai, google-vertexai-web, google-webauth, groq, mistralai, mongo, nomic, openai, pinecone, qdrant, redis, textsplitters, weaviate, yandex]
-        # See Node.js release schedule at https://nodejs.org/en/about/releases/
-        # include:
-          # - os: windows-latest
-          #   node-version: 20.x
-          # - os: macos-latest
-          #   node-version: 20.x
+        include:
+          - package: anthropic
+            run_if: contains(needs.get-changed-files.outputs.changed_files, 'langchain-core/') || contains(needs.get-changed-files.outputs.changed_files, 'libs/langchain-anthropic/')
+          - package: azure-openai
+            run_if: contains(needs.get-changed-files.outputs.changed_files, 'langchain-core/') || contains(needs.get-changed-files.outputs.changed_files, 'libs/langchain-azure-openai/')
+          # Add more package conditions as needed
     runs-on: ${{ matrix.os }}
-    if: contains(needs.get-changed-files.outputs.changed_files, 'langchain-core/') || contains(needs.get-changed-files.outputs.changed_files, 'libs/langchain-${{ matrix.package }}/')
+    if: matrix.run_if
     env:
       PUPPETEER_SKIP_DOWNLOAD: "true"
       PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
