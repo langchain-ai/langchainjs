@@ -4,7 +4,7 @@ import { PGVectorStore } from "@langchain/community/vectorstores/pgvector";
 import { PoolConfig } from "pg";
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { CharacterTextSplitter } from "@langchain/textsplitters";
-import { BaseDocumentLoader } from "langchain/document_loaders/base";
+import { BaseDocumentLoader } from "@langchain/community/document_loaders/base";
 
 // First, follow set-up instructions at
 // https://js.langchain.com/docs/modules/indexes/vector_stores/integrations/pgvector

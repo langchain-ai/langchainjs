@@ -1,4 +1,4 @@
-import { NotionDBLoader } from "langchain/document_loaders/web/notiondb";
+import { NotionDBLoader } from "@langchain/community/document_loaders/web/notiondb";
 
 const loader = new NotionDBLoader({
   pageSizeLimit: 10,
