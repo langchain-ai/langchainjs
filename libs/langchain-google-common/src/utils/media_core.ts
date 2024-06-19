@@ -1,70 +1,93 @@
 import {BaseStore} from "@langchain/core/stores";
 
-export interface BlobParameters {
+export interface MediaBlobParameters {
 
-  data?: string | Uint8Array;
-
-  encoding?: string;
+  data?: Blob;
 
   metadata?: Record<string, unknown>;
-
-  mimetype?: string;
 
   path?: string;
 
 }
 
-export class Blob implements BlobParameters {
-  data?: string | Uint8Array;
-
-  encoding: string = "utf-8";
+export class MediaBlob implements MediaBlobParameters {
+  data?: Blob;
 
   metadata?: Record<string, unknown>;
 
-  mimetype?: string;
-
   path?: string;
 
-  constructor(params?: BlobParameters) {
-    this.encoding = params?.encoding ?? this.encoding;
+  constructor(params?: MediaBlobParameters) {
     this.data = params?.data;
     this.metadata = params?.metadata;
-    this.mimetype = params?.mimetype;
     this.path = params?.path;
   }
 
-  toDataUrl(): string {
-    const data = this.data ?? "";
-    const data64 = typeof data === 'string'
-      ? btoa(data)
-      : btoa(String.fromCharCode(...data));
-    const mimetype = this.mimetype ?? "application/octet-stream";
-    return `data:${mimetype};base64,${data64}`;
+  get dataType(): string {
+    return this.data?.type ?? "";
   }
 
-  toUri(): string {
-    return this.path ?? this.toDataUrl();
+  get encoding(): string {
+    const charsetEquals = this.dataType.indexOf("charset=");
+    return charsetEquals === -1
+      ? "utf-8"
+      : this.dataType.substring(charsetEquals+8);
+  }
+
+  get mimetype(): string {
+    const semicolon = this.dataType.indexOf(";");
+    return semicolon === -1
+      ? this.dataType
+      : this.dataType.substring(0, semicolon);
+  }
+
+  /*
+   * Based on https://stackoverflow.com/a/67551175/1405634
+   */
+  async toDataUrl(): Promise<string> {
+    const data = this.data ?? new Blob([]);
+    const dataBuffer = await data.arrayBuffer();
+    const dataArray = new Uint8Array(dataBuffer);
+    const data64 = btoa(String.fromCharCode(...dataArray));
+    return `data:${this.mimetype};base64,${data64}`;
+  }
+
+  async toUri(): Promise<string> {
+    return this.path ?? await this.toDataUrl();
+  }
+
+  async encode(): Promise<{encoded: string, encoding: string}> {
+    const dataUrl = await this.toDataUrl();
+    const comma = dataUrl.indexOf(',');
+    const encoded = dataUrl.substring(comma+1);
+    const encoding: string = dataUrl.indexOf("base64") > -1
+      ? "base64"
+      : "8bit";
+    return {
+      encoded,
+      encoding,
+    }
   }
 
 }
 
-export abstract class BlobStore extends BaseStore<string, Blob> {
+export abstract class BlobStore extends BaseStore<string, MediaBlob> {
   lc_namespace = ["langchain", "google-common"];  // FIXME - What should this be? And why?
 
-  _realKey(key: string | Blob): string {
+  async _realKey(key: string | MediaBlob): Promise<string> {
     return typeof key === 'string'
       ? key
-      : key.toUri();
+      : await key.toUri();
   }
 
-  async store(blob: Blob): Promise<Blob> {
-    const key = blob.toUri();
+  async store(blob: MediaBlob): Promise<MediaBlob> {
+    const key = await blob.toUri();
     await this.mset([[key, blob]]);
     return blob;
   }
 
-  async fetch(key: string | Blob): Promise<Blob | undefined> {
-    const realKey = this._realKey(key);
+  async fetch(key: string | MediaBlob): Promise<MediaBlob | undefined> {
+    const realKey = await this._realKey(key);
     const ret = await this.mget([realKey])
     return ret?.[0];
   }
@@ -73,9 +96,9 @@ export abstract class BlobStore extends BaseStore<string, Blob> {
 
 export class BackedBlobStore extends BlobStore {
 
-  backingStore: BaseStore<string, Blob>;
+  backingStore: BaseStore<string, MediaBlob>;
 
-  constructor(backingStore: BaseStore<string, Blob>) {
+  constructor(backingStore: BaseStore<string, MediaBlob>) {
     super();
     this.backingStore = backingStore;
   }
@@ -84,11 +107,11 @@ export class BackedBlobStore extends BlobStore {
     return this.backingStore.mdelete(keys);
   }
 
-  mget(keys: string[]): Promise<(Blob | undefined)[]> {
+  mget(keys: string[]): Promise<(MediaBlob | undefined)[]> {
     return this.backingStore.mget(keys);
   }
 
-  mset(keyValuePairs: [string, Blob][]): Promise<void> {
+  mset(keyValuePairs: [string, MediaBlob][]): Promise<void> {
     return this.backingStore.mset(keyValuePairs);
   }
 
@@ -104,8 +127,8 @@ export class SimpleWebBlobStore extends BlobStore {
     throw new Error("Not implemented for SimpleWebBlobStore");
   }
 
-  async _fetch(url: string): Promise<Blob | undefined> {
-    const ret = new Blob({
+  async _fetch(url: string): Promise<MediaBlob | undefined> {
+    const ret = new MediaBlob({
       path: url,
     });
     const metadata: Record<string,unknown> = {};
@@ -123,26 +146,14 @@ export class SimpleWebBlobStore extends BlobStore {
 
     metadata.ok = res.ok;
     if (res.ok) {
-      ret.data = await res.text();
-
-      const mimetype = res.headers.get("Content-Type") || "application/octet-stream";
-      const colon = mimetype.indexOf(";")
-      if (colon < 0) {
-        ret.mimetype = mimetype;
-      } else {
-        ret.mimetype = mimetype.substring(0, colon);
-        const charsetIndex = mimetype.indexOf("charset=");
-        if (charsetIndex > -1) {
-          ret.encoding = mimetype.substring(charsetIndex+8);
-        }
-      }
+      ret.data = await res.blob();
     }
 
     ret.metadata = metadata;
     return ret;
   }
 
-  async mget(keys: string[]): Promise<(Blob | undefined)[]> {
+  async mget(keys: string[]): Promise<(MediaBlob | undefined)[]> {
     const blobMap = keys.map(this._fetch);
     return await Promise.all(blobMap);
   }
@@ -151,7 +162,7 @@ export class SimpleWebBlobStore extends BlobStore {
     this._notImplementedException();
   }
 
-  async mset(_keyValuePairs: [string, Blob][]): Promise<void> {
+  async mset(_keyValuePairs: [string, MediaBlob][]): Promise<void> {
     this._notImplementedException();
   }
 

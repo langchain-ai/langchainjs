@@ -18,7 +18,7 @@ import type {
   GeminiSafetySetting,
   GeminiTool,
   GeminiFunctionDeclaration,
-  GoogleAIModelRequestParams,
+  GoogleAIModelRequestParams, GoogleRawResponse,
 } from "./types.js";
 import {
   GoogleAbstractedClient,
@@ -86,17 +86,16 @@ export abstract class GoogleConnection<
     return {};
   }
 
-  async _request(
+  async _buildOpts(
     data: unknown | undefined,
-    options: CallOptions,
+    _options: CallOptions,
     requestHeaders: Record<string,string> = {},
-  ): Promise<ResponseType> {
+  ): Promise<GoogleAbstractedClientOps> {
     const url = await this.buildUrl();
     const method = this.buildMethod();
     const infoHeaders = (await this._clientInfoHeaders()) ?? {};
     const additionalHeaders = (await this.additionalHeaders()) ?? {};
     const headers = {
-      // FIXME - evaluate the order of these header inclusions
       ...infoHeaders,
       ...additionalHeaders,
       ...requestHeaders,
@@ -115,13 +114,32 @@ export abstract class GoogleConnection<
     } else {
       opts.responseType = "json";
     }
+    return opts;
+  }
 
+  async _request(
+    data: unknown | undefined,
+    options: CallOptions,
+    requestHeaders: Record<string,string> = {},
+  ): Promise<ResponseType> {
+    const opts = await this._buildOpts(data, options, requestHeaders);
     const callResponse = await this.caller.callWithOptions(
       { signal: options?.signal },
       async () => this.client.request(opts)
     );
     const response: unknown = callResponse; // Done for typecast safety, I guess
     return <ResponseType>response;
+  }
+}
+
+export abstract class GoogleRawConnection<
+  CallOptions extends AsyncCallerCallOptions,
+> extends GoogleConnection<CallOptions, GoogleRawResponse> {
+
+  async _buildOpts(data: unknown | undefined, _options: CallOptions, requestHeaders: Record<string, string> = {}): Promise<GoogleAbstractedClientOps> {
+    const opts = await super._buildOpts(data, _options, requestHeaders);
+    opts.responseType = "arraybuffer";
+    return opts;
   }
 }
 

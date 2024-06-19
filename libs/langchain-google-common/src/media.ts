@@ -1,5 +1,5 @@
 import {AsyncCaller, AsyncCallerCallOptions, AsyncCallerParams} from "@langchain/core/utils/async_caller";
-import { Blob, BlobStore } from "./utils/media_core.js";
+import { MediaBlob, BlobStore } from "./utils/media_core.js";
 import {GoogleConnectionParams, GoogleRawResponse, GoogleResponse} from "./types.js";
 import { GoogleHostConnection } from "./connection.js";
 import {GoogleAbstractedClient, GoogleAbstractedClientOpsMethod} from "./auth.js";
@@ -23,18 +23,13 @@ export abstract class GoogleUploadConnection <
     super(fields, caller, client);
   }
 
-  _body(
+  async _body(
     separator: string,
-    data: string | Uint8Array,
-    contentType: string,
+    data: MediaBlob,
     metadata: Record<string,unknown>,
-  ): string {
-    let contentTransferEncoding = "8bit";
-    let dataEncoded = data;
-    if (Array.isArray(data)) {
-      contentTransferEncoding = "base64";
-      dataEncoded = btoa(String.fromCharCode(...data));
-    }
+  ): Promise<string> {
+    const contentType = data.mimetype;
+    const {encoded, encoding} = await data.encode();
     const body = [
       `--${separator}`,
       "Content-Type: application/json; charset=UTF-8",
@@ -43,22 +38,22 @@ export abstract class GoogleUploadConnection <
       "",
       `--${separator}`,
       `Content-Type: ${contentType}`,
-      `Content-Transfer-Encoding: ${contentTransferEncoding}`,
+      `Content-Transfer-Encoding: ${encoding}`,
       "",
-      dataEncoded,
+      encoded,
       `--${separator}--`,
     ];
+    console.log('body', body.join("\n"));
     return body.join("\n");
   }
 
   async request(
-    data: string | Uint8Array,
+    data: MediaBlob,
     metadata: Record<string,unknown>,
     options: CallOptions,
   ): Promise<ResponseType> {
     const separator = `separator-${Date.now()}`;
-    const contentType: string = metadata.contentType as string ?? "application/octet-stream";
-    const body = this._body(separator, data, contentType, metadata);
+    const body = await this._body(separator, data, metadata);
     const requestHeaders = {
       "Content-Type": `multipart/related; boundary=${separator}`,
     }
@@ -103,16 +98,13 @@ export abstract class BlobStoreGoogle<
 
   abstract buildClient(fields?: BlobStoreGoogleParams<AuthOptions>): GoogleAbstractedClient;
 
-  abstract buildSetMetadata([key, blob]: [string, Blob]): Record<string, unknown>;
+  abstract buildSetMetadata([key, blob]: [string, MediaBlob]): Record<string, unknown>;
 
-  abstract buildSetConnection([key, blob]: [string, Blob]):
+  abstract buildSetConnection([key, blob]: [string, MediaBlob]):
     GoogleUploadConnection<AsyncCallerCallOptions, ResponseType, AuthOptions>;
 
-  async _set(keyValuePair: [string, Blob]): Promise<void> {
+  async _set(keyValuePair: [string, MediaBlob]): Promise<void> {
     const [_key, blob] = keyValuePair;
-    const data = blob.data ?? "";
-    console.log('this',this);
-    console.log('this.buildSetMetadata', this.buildSetMetadata);
     const setMetadata = this.buildSetMetadata(keyValuePair);
     const metadata = {
       contentType: blob.mimetype,
@@ -120,10 +112,10 @@ export abstract class BlobStoreGoogle<
     }
     const options = {};
     const connection = this.buildSetConnection(keyValuePair);
-    await connection.request(data, metadata, options);
+    await connection.request(blob, metadata, options);
   }
 
-  async mset(keyValuePairs: [string, Blob][]): Promise<void> {
+  async mset(keyValuePairs: [string, MediaBlob][]): Promise<void> {
     const ret = keyValuePairs.map(keyValue => this._set(keyValue));
     await Promise.all(ret);
   }
@@ -141,10 +133,11 @@ export abstract class BlobStoreGoogle<
   abstract buildGetDataConnection(key: string):
     GoogleDownloadConnection<AsyncCallerCallOptions, GoogleRawResponse, AuthOptions>;
 
-  async _getData(key: string): Promise<Uint8Array> {
+  async _getData(key: string): Promise<Blob> {
     const connection = this.buildGetDataConnection(key);
     const options = {};
     const response = await connection.request(options);
+    console.log('response',response);
     return response.data;
   }
 
@@ -152,23 +145,21 @@ export abstract class BlobStoreGoogle<
     return metadata.contentType as string;
   }
 
-  async _get(key: string): Promise<Blob | undefined> {
+  async _get(key: string): Promise<MediaBlob | undefined> {
     const metadata = await this._getMetadata(key);
     const data = await this._getData(key);
     if (data && metadata) {
-      const mimetype = this._getMimetypeFromMetadata(metadata);
-      return new Blob({
+      return new MediaBlob({
         path: key,
         data,
         metadata,
-        mimetype,
       })
     } else {
       return undefined;
     }
   }
 
-  async mget(keys: string[]): Promise<(Blob | undefined)[]> {
+  async mget(keys: string[]): Promise<(MediaBlob | undefined)[]> {
     const ret = keys.map(key => this._get(key));
     return await Promise.all(ret);
   }
@@ -334,7 +325,7 @@ export abstract class BlobStoreGoogleCloudStorageBase<AuthOptions>
     super(fields);
   }
 
-  buildSetConnection([key, _blob]: [string, Blob]): GoogleUploadConnection<AsyncCallerCallOptions, GoogleCloudStorageResponse, AuthOptions> {
+  buildSetConnection([key, _blob]: [string, MediaBlob]): GoogleUploadConnection<AsyncCallerCallOptions, GoogleCloudStorageResponse, AuthOptions> {
     const params: GoogleCloudStorageUploadConnectionParams<AuthOptions> = {
       uri: key,
     }
@@ -343,7 +334,7 @@ export abstract class BlobStoreGoogleCloudStorageBase<AuthOptions>
     );
   }
 
-  buildSetMetadata([key, blob]: [string, Blob]): Record<string, unknown> {
+  buildSetMetadata([key, blob]: [string, MediaBlob]): Record<string, unknown> {
     const uri = new GoogleCloudStorageUri(key);
     const ret: GoogleCloudStorageObject = {
       name: uri.path,

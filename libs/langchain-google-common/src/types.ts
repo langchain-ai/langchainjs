@@ -136,7 +136,7 @@ export interface GoogleResponse {
 }
 
 export interface GoogleRawResponse extends GoogleResponse {
-  data: Uint8Array;
+  data: Blob;
 }
 
 export interface GeminiPartText {

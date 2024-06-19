@@ -3,7 +3,7 @@ import { GooglePlatformType } from "./types.js";
 
 export type GoogleAbstractedClientOpsMethod = "GET" | "POST" | "DELETE";
 
-export type GoogleAbstractedClientOpsResponseType = "json" | "stream";
+export type GoogleAbstractedClientOpsResponseType = "json" | "stream" | "arraybuffer";
 
 export type GoogleAbstractedClientOps = {
   url?: string;
@@ -27,6 +27,14 @@ export abstract class GoogleAbstractedFetchClient
   abstract getProjectId(): Promise<string>;
 
   abstract request(opts: GoogleAbstractedClientOps): unknown;
+
+  async _buildData(res: Response, opts: GoogleAbstractedClientOps) {
+    switch (opts.responseType) {
+      case "json": return res.json();
+      case "stream": return new ReadableJsonStream(res.body);
+      default: return res.blob();
+    }
+  }
 
   async _request(
     url: string | undefined,
@@ -62,11 +70,9 @@ export abstract class GoogleAbstractedFetchClient
       throw error;
     }
 
+    const data = await this._buildData(res, opts);
     return {
-      data:
-        opts.responseType === "json"
-          ? await res.json()
-          : new ReadableJsonStream(res.body),
+      data,
       config: {},
       status: res.status,
       statusText: res.statusText,
