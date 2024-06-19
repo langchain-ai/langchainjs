@@ -1,4 +1,4 @@
-import { type BaseMessage, type BaseMessageChunk  } from "./messages/base.js";
+import { type BaseMessage, type BaseMessageChunk } from "./messages/base.js";
 
 export const RUN_KEY = "__run";
 

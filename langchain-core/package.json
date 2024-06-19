@@ -266,15 +266,6 @@
       "import": "./messages/tool.js",
       "require": "./messages/tool.cjs"
     },
-    "./messages/utils": {
-      "types": {
-        "import": "./messages/utils.d.ts",
-        "require": "./messages/utils.d.cts",
-        "default": "./messages/utils.d.ts"
-      },
-      "import": "./messages/utils.js",
-      "require": "./messages/utils.cjs"
-    },
     "./output_parsers": {
       "types": {
         "import": "./output_parsers.d.ts",
@@ -679,10 +670,6 @@
     "messages/tool.js",
     "messages/tool.d.ts",
     "messages/tool.d.cts",
-    "messages/utils.cjs",
-    "messages/utils.js",
-    "messages/utils.d.ts",
-    "messages/utils.d.cts",
     "output_parsers.cjs",
     "output_parsers.js",
     "output_parsers.d.ts",

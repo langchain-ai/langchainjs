@@ -12,9 +12,7 @@ import {
   type BaseMessageLike,
   type MessageContent,
 } from "../messages/base.js";
-import {
-  coerceMessageLikeToMessage,
-} from "../messages/utils.js";
+import { coerceMessageLikeToMessage } from "../messages/utils.js";
 import { type LLMResult } from "../outputs.js";
 import { CallbackManager, Callbacks } from "../callbacks/manager.js";
 import { AsyncCaller, AsyncCallerParams } from "../utils/async_caller.js";

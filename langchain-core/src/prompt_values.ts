@@ -1,11 +1,7 @@
 import { Serializable } from "./load/serializable.js";
-import {
-  type BaseMessage,
-} from "./messages/base.js";
-import { HumanMessage, } from "./messages/human.js";
-import {
-  getBufferString,
-} from "./messages/utils.js";
+import { type BaseMessage } from "./messages/base.js";
+import { HumanMessage } from "./messages/human.js";
+import { getBufferString } from "./messages/utils.js";
 
 export interface BasePromptValueInterface extends Serializable {
   toString(): string;
