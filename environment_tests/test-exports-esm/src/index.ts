@@ -5,7 +5,7 @@ import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
 import { HuggingFaceTransformersEmbeddings } from "@langchain/community/embeddings/hf_transformers";
 import { Document } from "@langchain/core/documents";
-import { CSVLoader } from "langchain/document_loaders/fs/csv";
+import { CSVLoader } from "@langchain/community/document_loaders/fs/csv";
 
 async function test(useAzure: boolean = false) {
   // Test exports

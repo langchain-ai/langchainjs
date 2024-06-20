@@ -1,5 +1,5 @@
 import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
-import { SearchApiLoader } from "langchain/document_loaders/web/searchapi";
+import { SearchApiLoader } from "@langchain/community/document_loaders/web/searchapi";
 import { TokenTextSplitter } from "@langchain/textsplitters";
 import { FaissStore } from "@langchain/community/vectorstores/faiss";
 import { createRetrievalChain } from "langchain/chains/retrieval";

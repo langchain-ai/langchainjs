@@ -90,6 +90,7 @@ export class ChatMessageChunk extends BaseMessageChunk {
         chunk.response_metadata
       ),
       role: this.role,
+      id: this.id ?? chunk.id,
     });
   }
 }
