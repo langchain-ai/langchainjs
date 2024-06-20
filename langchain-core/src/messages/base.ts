@@ -11,6 +11,7 @@ export interface StoredMessageData {
   /** Response metadata. For example: response headers, logprobs, token counts. */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   response_metadata?: Record<string, any>;
+  id?: string;
 }
 
 export interface StoredMessage {
