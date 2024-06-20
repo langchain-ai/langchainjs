@@ -24,7 +24,7 @@ import {
   HumanMessage,
   SystemMessage,
 } from "../../messages/index.js";
-import { DynamicStructuredTool, DynamicTool } from "../../tools.js";
+import { DynamicStructuredTool, DynamicTool, tool } from "../../tools.js";
 import { Document } from "../../documents/document.js";
 import { PromptTemplate } from "../../prompts/prompt.js";
 import { GenerationChunk } from "../../outputs.js";
@@ -1814,6 +1814,76 @@ test("Runnable streamEvents method with simple tools", async () => {
     },
     {
       data: { output: JSON.stringify({ x: 1, y: "2" }) },
+      event: "on_tool_end",
+      metadata: {},
+      name: "with_parameters",
+      run_id: expect.any(String),
+      tags: [],
+    },
+  ]);
+});
+
+test("Runnable streamEvents method with tools that return objects", async () => {
+  const adderFunc = (_params: { x: number; y: number }) => {
+    return JSON.stringify({ sum: 3 });
+  };
+  const parameterlessTool = tool(adderFunc, {
+    name: "parameterless",
+  });
+  const events = [];
+  const eventStream = parameterlessTool.streamEvents({}, { version: "v2" });
+  for await (const event of eventStream) {
+    events.push(event);
+  }
+
+  expect(events).toEqual([
+    {
+      data: { input: {} },
+      event: "on_tool_start",
+      metadata: {},
+      name: "parameterless",
+      run_id: expect.any(String),
+      tags: [],
+    },
+    {
+      data: {
+        output: JSON.stringify({ sum: 3 }),
+      },
+      event: "on_tool_end",
+      metadata: {},
+      name: "parameterless",
+      run_id: expect.any(String),
+      tags: [],
+    },
+  ]);
+
+  const adderTool = tool(adderFunc, {
+    name: "with_parameters",
+    description: "A tool that does nothing",
+    schema: z.object({
+      x: z.number(),
+      y: z.number(),
+    }),
+  });
+  const events2 = [];
+  const eventStream2 = adderTool.streamEvents(
+    { x: 1, y: 2 },
+    { version: "v2" }
+  );
+  for await (const event of eventStream2) {
+    events2.push(event);
+  }
+  expect(events2).toEqual([
+    {
+      data: { input: { x: 1, y: 2 } },
+      event: "on_tool_start",
+      metadata: {},
+      name: "with_parameters",
+      run_id: expect.any(String),
+      tags: [],
+    },
+    {
+      data: { output: JSON.stringify({ sum: 3 }) },
       event: "on_tool_end",
       metadata: {},
       name: "with_parameters",

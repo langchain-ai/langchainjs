@@ -1,6 +1,6 @@
 import * as uuid from "uuid";
 import type { ChainValues } from "../utils/types/index.js";
-import type { BaseMessage } from "../messages/index.js";
+import type { BaseMessage } from "../messages/base.js";
 import type { AgentAction, AgentFinish } from "../agents.js";
 import type {
   ChatGenerationChunk,

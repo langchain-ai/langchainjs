@@ -1,5 +1,6 @@
 import { test, expect } from "@jest/globals";
 import { PromptTemplate } from "../prompt.js";
+import { parseTemplate } from "../template.js";
 
 test("Single input variable.", async () => {
   const template = "This is a {{foo}} test.";
@@ -90,4 +91,25 @@ yo
 hello
 is a test.`);
   expect(promptWithRepeats.inputVariables).toEqual(["foo"]);
+});
+
+test("Escaped variables", async () => {
+  const template = `test: {{{text}}}`;
+  const parsed = parseTemplate(template, "mustache");
+  expect(parsed[0]).toStrictEqual({
+    type: "literal",
+    text: "test: ",
+  });
+  expect(parsed[1]).toStrictEqual({
+    type: "variable",
+    name: "text",
+  });
+
+  const promptTemplate = PromptTemplate.fromTemplate(template, {
+    templateFormat: "mustache",
+  });
+  const result = await promptTemplate.invoke({
+    text: `hello i have a "quote`,
+  });
+  expect(result.value).toBe(`test: hello i have a "quote`);
 });

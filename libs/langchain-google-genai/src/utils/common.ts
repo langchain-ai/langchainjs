@@ -4,13 +4,15 @@ import {
   Part,
   type FunctionDeclarationsTool as GoogleGenerativeAIFunctionDeclarationsTool,
   type FunctionDeclaration as GenerativeAIFunctionDeclaration,
+  POSSIBLE_ROLES,
+  FunctionResponsePart,
+  FunctionCallPart,
 } from "@google/generative-ai";
 import {
   AIMessage,
   AIMessageChunk,
   BaseMessage,
   ChatMessage,
-  MessageContent,
   MessageContentComplex,
   UsageMetadata,
   isBaseMessage,
@@ -22,12 +24,16 @@ import {
 } from "@langchain/core/outputs";
 import { StructuredToolInterface } from "@langchain/core/tools";
 import { isStructuredTool } from "@langchain/core/utils/function_calling";
+import { ToolCallChunk } from "@langchain/core/messages/tool";
 import { zodToGenerativeAIParameters } from "./zod_to_genai_parameters.js";
 
 export function getMessageAuthor(message: BaseMessage) {
   const type = message._getType();
   if (ChatMessage.isInstance(message)) {
     return message.role;
+  }
+  if (type === "tool") {
+    return type;
   }
   return message.name ?? type;
 }
@@ -38,7 +44,9 @@ export function getMessageAuthor(message: BaseMessage) {
  * @param model The model to use for mapping.
  * @returns The message type mapped to a Google Generative AI chat author.
  */
-export function convertAuthorToRole(author: string) {
+export function convertAuthorToRole(
+  author: string
+): (typeof POSSIBLE_ROLES)[number] {
   switch (author) {
     /**
      *  Note: Gemini currently is not supporting system messages
@@ -50,6 +58,9 @@ export function convertAuthorToRole(author: string) {
     case "system":
     case "human":
       return "user";
+    case "tool":
+    case "function":
+      return "function";
     default:
       throw new Error(`Unknown / unsupported author: ${author}`);
   }
@@ -69,53 +80,88 @@ function messageContentMedia(content: MessageContentComplex): Part {
 }
 
 export function convertMessageContentToParts(
-  content: MessageContent,
+  message: BaseMessage,
   isMultimodalModel: boolean
 ): Part[] {
-  if (typeof content === "string") {
-    return [{ text: content }];
+  if (typeof message.content === "string" && message.content !== "") {
+    return [{ text: message.content }];
   }
 
-  return content.map((c) => {
-    if (c.type === "text") {
-      return {
-        text: c.text,
-      };
-    }
+  let functionCalls: FunctionCallPart[] = [];
+  let functionResponses: FunctionResponsePart[] = [];
+  let messageParts: Part[] = [];
 
-    if (c.type === "image_url") {
-      if (!isMultimodalModel) {
-        throw new Error(`This model does not support images`);
-      }
-      let source;
-      if (typeof c.image_url === "string") {
-        source = c.image_url;
-      } else if (typeof c.image_url === "object" && "url" in c.image_url) {
-        source = c.image_url.url;
-      } else {
-        throw new Error("Please provide image as base64 encoded data URL");
-      }
-      const [dm, data] = source.split(",");
-      if (!dm.startsWith("data:")) {
-        throw new Error("Please provide image as base64 encoded data URL");
-      }
-
-      const [mimeType, encoding] = dm.replace(/^data:/, "").split(";");
-      if (encoding !== "base64") {
-        throw new Error("Please provide image as base64 encoded data URL");
-      }
-
-      return {
-        inlineData: {
-          data,
-          mimeType,
+  if (
+    "tool_calls" in message &&
+    Array.isArray(message.tool_calls) &&
+    message.tool_calls.length > 0
+  ) {
+    functionCalls = message.tool_calls.map((tc) => ({
+      functionCall: {
+        name: tc.name,
+        args: tc.args,
+      },
+    }));
+  } else if (message._getType() === "tool" && message.name && message.content) {
+    functionResponses = [
+      {
+        functionResponse: {
+          name: message.name,
+          response: message.content,
         },
-      };
-    } else if (c.type === "media") {
-      return messageContentMedia(c);
-    }
-    throw new Error(`Unknown content type ${(c as { type: string }).type}`);
-  });
+      },
+    ];
+  } else if (Array.isArray(message.content)) {
+    messageParts = message.content.map((c) => {
+      if (c.type === "text") {
+        return {
+          text: c.text,
+        };
+      }
+
+      if (c.type === "image_url") {
+        if (!isMultimodalModel) {
+          throw new Error(`This model does not support images`);
+        }
+        let source;
+        if (typeof c.image_url === "string") {
+          source = c.image_url;
+        } else if (typeof c.image_url === "object" && "url" in c.image_url) {
+          source = c.image_url.url;
+        } else {
+          throw new Error("Please provide image as base64 encoded data URL");
+        }
+        const [dm, data] = source.split(",");
+        if (!dm.startsWith("data:")) {
+          throw new Error("Please provide image as base64 encoded data URL");
+        }
+
+        const [mimeType, encoding] = dm.replace(/^data:/, "").split(";");
+        if (encoding !== "base64") {
+          throw new Error("Please provide image as base64 encoded data URL");
+        }
+
+        return {
+          inlineData: {
+            data,
+            mimeType,
+          },
+        };
+      } else if (c.type === "media") {
+        return messageContentMedia(c);
+      } else if (c.type === "tool_use") {
+        return {
+          functionCall: {
+            name: c.name,
+            args: c.input,
+          },
+        };
+      }
+      throw new Error(`Unknown content type ${(c as { type: string }).type}`);
+    });
+  }
+
+  return [...messageParts, ...functionCalls, ...functionResponses];
 }
 
 export function convertBaseMessagesToContent(
@@ -147,10 +193,7 @@ export function convertBaseMessagesToContent(
         );
       }
 
-      const parts = convertMessageContentToParts(
-        message.content,
-        isMultimodalModel
-      );
+      const parts = convertMessageContentToParts(message, isMultimodalModel);
 
       if (acc.mergeWithPreviousContent) {
         const prevContent = acc.content[acc.content.length - 1];
@@ -166,8 +209,13 @@ export function convertBaseMessagesToContent(
           content: acc.content,
         };
       }
+      let actualRole = role;
+      if (actualRole === "function") {
+        // GenerativeAI API will throw an error if the role is not "user" or "model."
+        actualRole = "user";
+      }
       const content: Content = {
-        role,
+        role: actualRole,
         parts,
       };
       return {
@@ -224,26 +272,39 @@ export function mapGenerateContentResultToChatResult(
 
 export function convertResponseContentToChatGenerationChunk(
   response: EnhancedGenerateContentResponse,
-  extra?: {
-    usageMetadata: UsageMetadata | undefined;
+  extra: {
+    usageMetadata?: UsageMetadata | undefined;
+    index: number;
   }
 ): ChatGenerationChunk | null {
   if (!response.candidates || response.candidates.length === 0) {
     return null;
   }
+  const functionCalls = response.functionCalls();
   const [candidate] = response.candidates;
   const { content, ...generationInfo } = candidate;
   const text = content?.parts[0]?.text ?? "";
 
+  const toolCallChunks: ToolCallChunk[] = [];
+  if (functionCalls) {
+    toolCallChunks.push(
+      ...functionCalls.map((fc) => ({
+        ...fc,
+        args: JSON.stringify(fc.args),
+        index: extra.index,
+      }))
+    );
+  }
   return new ChatGenerationChunk({
     text,
     message: new AIMessageChunk({
       content: text,
       name: !content ? undefined : content.role,
+      tool_call_chunks: toolCallChunks,
       // Each chunk can have unique "generationInfo", and merging strategy is unclear,
       // so leave blank for now.
       additional_kwargs: {},
-      usage_metadata: extra?.usageMetadata,
+      usage_metadata: extra.usageMetadata,
     }),
     generationInfo,
   });
