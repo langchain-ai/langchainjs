@@ -184,12 +184,6 @@ export abstract class BaseMessage
   /** The type of the message. */
   abstract _getType(): MessageType;
 
-  /**
-   * An optional unique identifier for the message. This should ideally be
-   * provided by the provider/model which created the message.
-   */
-  id?: string;
-
   constructor(
     fields: string | BaseMessageFields,
     /** @deprecated */

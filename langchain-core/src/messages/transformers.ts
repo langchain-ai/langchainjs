@@ -27,21 +27,21 @@ import {
 } from "./tool.js";
 import { convertToChunk } from "./utils.js";
 
-type MessageUnion =
+export type MessageUnion =
   | typeof HumanMessage
   | typeof AIMessage
   | typeof SystemMessage
   | typeof ChatMessage
   | typeof FunctionMessage
   | typeof ToolMessage;
-type MessageChunkUnion =
+export type MessageChunkUnion =
   | typeof HumanMessageChunk
   | typeof AIMessageChunk
   | typeof SystemMessageChunk
   | typeof FunctionMessageChunk
   | typeof ToolMessageChunk
   | typeof ChatMessageChunk;
-type MessageTypeOrClass = MessageType | MessageUnion | MessageChunkUnion;
+export type MessageTypeOrClass = MessageType | MessageUnion | MessageChunkUnion;
 
 const _isMessageType = (msg: BaseMessage, types: MessageTypeOrClass[]) => {
   const typesAsStrings = [
@@ -290,17 +290,15 @@ function _mergeMessageRuns(messages: BaseMessage[]): BaseMessage[] {
       ) {
         mergedChunks.content = `${lastChunk.content}\n${currChunk.content}`;
       }
-      merged.push(chunkToMsg(mergedChunks));
+      merged.push(_chunkToMsg(mergedChunks));
     }
   }
   return merged;
 }
 
-/**
- * Since we can not import from `@langchain/textsplitters` we need
- * to reconstruct the interface here.
- */
-interface TextSplitterInterface extends BaseDocumentTransformer {
+// Since we can not import from `@langchain/textsplitters` we need
+// to reconstruct the interface here.
+interface _TextSplitterInterface extends BaseDocumentTransformer {
   splitText(text: string): Promise<string[]>;
 }
 
@@ -367,7 +365,7 @@ export interface TrimMessagesFields {
   textSplitter?:
     | ((text: string) => string[])
     | ((text: string) => Promise<string[]>)
-    | TextSplitterInterface;
+    | _TextSplitterInterface;
 }
 
 /**
@@ -764,7 +762,7 @@ async function _firstMaxTokens(
             ([k]) => k !== "type" && !k.startsWith("lc_")
           )
         ) as BaseMessageFields;
-        const updatedMessage = switchTypeToMessage(excluded._getType(), {
+        const updatedMessage = _switchTypeToMessage(excluded._getType(), {
           ...fields,
           content: partialContent,
         });
@@ -919,16 +917,16 @@ const _MSG_CHUNK_MAP: Record<
   },
 };
 
-function switchTypeToMessage(
+function _switchTypeToMessage(
   messageType: MessageType,
   fields: BaseMessageFields
 ): BaseMessage;
-function switchTypeToMessage(
+function _switchTypeToMessage(
   messageType: MessageType,
   fields: BaseMessageFields,
   returnChunk: true
 ): BaseMessageChunk;
-function switchTypeToMessage(
+function _switchTypeToMessage(
   messageType: MessageType,
   fields: BaseMessageFields,
   returnChunk?: boolean
@@ -1022,7 +1020,7 @@ function switchTypeToMessage(
   throw new Error(`Unrecognized message type ${messageType}`);
 }
 
-function chunkToMsg(chunk: BaseMessageChunk): BaseMessage {
+function _chunkToMsg(chunk: BaseMessageChunk): BaseMessage {
   const chunkType = chunk._getType();
   let msg: BaseMessage | undefined;
   const fields = Object.fromEntries(
@@ -1032,7 +1030,7 @@ function chunkToMsg(chunk: BaseMessageChunk): BaseMessage {
   ) as BaseMessageFields;
 
   if (chunkType in _MSG_CHUNK_MAP) {
-    msg = switchTypeToMessage(chunkType, fields);
+    msg = _switchTypeToMessage(chunkType, fields);
   }
 
   if (!msg) {
@@ -1046,7 +1044,13 @@ function chunkToMsg(chunk: BaseMessageChunk): BaseMessage {
   return msg;
 }
 
-function defaultTextSplitter(text: string): Promise<string[]> {
+/**
+ * The default text splitter function that splits text by newlines.
+ *
+ * @param {string} text
+ * @returns A promise that resolves to an array of strings split by newlines.
+ */
+export function defaultTextSplitter(text: string): Promise<string[]> {
   const splits = text.split("\n");
   return Promise.resolve([
     ...splits.slice(0, -1).map((s) => `${s}\n`),
