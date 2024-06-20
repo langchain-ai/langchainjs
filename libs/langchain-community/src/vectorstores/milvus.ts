@@ -281,7 +281,11 @@ export class Milvus extends VectorStore {
       : await this.client.upsert(params);
 
     if (insertResp.status.error_code !== ErrorCode.SUCCESS) {
-      throw new Error(`Error ${this.autoId ? 'inserting' : 'upserting'} data: ${JSON.stringify(insertResp)}`);
+      throw new Error(
+        `Error ${
+          this.autoId ? "inserting" : "upserting"
+        } data: ${JSON.stringify(insertResp)}`
+      );
     }
     await this.client.flushSync({ collection_names: [this.collectionName] });
   }

@@ -1,8 +1,8 @@
 import { test, expect, afterAll, beforeAll } from "@jest/globals";
 import { ErrorCode, MilvusClient } from "@zilliz/milvus2-sdk-node";
 import { OpenAIEmbeddings } from "@langchain/openai";
-import { Milvus } from "../milvus.js";
 import { Document } from "@langchain/core/documents";
+import { Milvus } from "../milvus.js";
 
 let collectionName: string;
 let embeddings: OpenAIEmbeddings;
@@ -64,7 +64,7 @@ Harmonic Labyrinth of the dreaded Majotaur?`,
     { id: 5, other: objA },
   ]);
 
-  const resultThree = await milvus.similaritySearch(query, 1, "id == \"1\"");
+  const resultThree = await milvus.similaritySearch(query, 1, 'id == "1"');
   const resultThreeMetadatas = resultThree.map(({ metadata }) => metadata);
   expect(resultThreeMetadatas).toEqual([{ id: 1, other: objB }]);
 });
@@ -114,7 +114,7 @@ Harmonic Labyrinth of the dreaded Majotaur?`,
     { id: 5, other: objA },
   ]);
 
-  const resultThree = await milvus.similaritySearch(query, 1, "id == \"1\"");
+  const resultThree = await milvus.similaritySearch(query, 1, 'id == "1"');
   const resultThreeMetadatas = resultThree.map(({ metadata }) => metadata);
   expect(resultThreeMetadatas).toEqual([{ id: 1, other: objB }]);
 });
@@ -143,7 +143,7 @@ test.skip("Test Milvus.fromExistingCollection", async () => {
   expect(resultTwoMetadatas[1].id).toEqual(4);
   expect(resultTwoMetadatas[2].id).toEqual(5);
 
-  const resultThree = await milvus.similaritySearch(query, 1, "id == \"1\"");
+  const resultThree = await milvus.similaritySearch(query, 1, 'id == "1"');
   const resultThreeMetadatas = resultThree.map(({ metadata }) => metadata);
   expect(resultThreeMetadatas.length).toBe(1);
   expect(resultThreeMetadatas[0].id).toEqual(1);
@@ -205,24 +205,25 @@ test.skip("Test Milvus.deleteData with ids", async () => {
 
 test.skip("Test Milvus.addDocuments with auto ID", async () => {
   const vectorstore = new Milvus(embeddings, {
-    collectionName: `test_collection_${Math.random().toString(36).substring(7)}`,
+    collectionName: `test_collection_${Math.random()
+      .toString(36)
+      .substring(7)}`,
     clientConfig: {
       address: MILVUS_ADDRESS,
       token: MILVUS_TOKEN,
-    }
-});
+    },
+  });
 
   await vectorstore.addDocuments([
     new Document({
-       pageContent: 'test',
-       metadata: { test: 'a' }
-     })
+      pageContent: "test",
+      metadata: { test: "a" },
+    }),
   ]);
 
   const result = await vectorstore.similaritySearch("test", 1);
   const resultMetadatas = result.map(({ metadata }) => metadata);
   expect(resultMetadatas.length).toBe(1);
-
 });
 
 afterAll(async () => {
