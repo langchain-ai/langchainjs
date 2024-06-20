@@ -86,7 +86,7 @@ export class CheerioWebBaseLoader
     timeout: number | undefined,
     textDecoder?: TextDecoder,
     options?: CheerioOptions & {
-      headers: Headers;
+      headers?: Headers;
     }
   ): Promise<CheerioAPI[]> {
     return Promise.all(
@@ -102,7 +102,7 @@ export class CheerioWebBaseLoader
     timeout: number | undefined,
     textDecoder?: TextDecoder,
     options?: CheerioOptions & {
-      headers: Headers;
+      headers?: Headers;
     }
   ): Promise<CheerioAPI> {
     const { headers, ...cheerioOptions } = options ?? {};
