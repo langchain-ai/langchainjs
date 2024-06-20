@@ -106,6 +106,11 @@ export type BaseMessageFields = {
   /** Response metadata. For example: response headers, logprobs, token counts. */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   response_metadata?: Record<string, any>;
+  /**
+   * An optional unique identifier for the message. This should ideally be
+   * provided by the provider/model which created the message.
+   */
+  id?: string;
 };
 
 export function mergeContent(
@@ -170,6 +175,12 @@ export abstract class BaseMessage
   /** Response metadata. For example: response headers, logprobs, token counts. */
   response_metadata: NonNullable<BaseMessageFields["response_metadata"]>;
 
+  /**
+   * An optional unique identifier for the message. This should ideally be
+   * provided by the provider/model which created the message.
+   */
+  id?: string;
+
   /** The type of the message. */
   abstract _getType(): MessageType;
 
@@ -200,6 +211,7 @@ export abstract class BaseMessage
     this.content = fields.content;
     this.additional_kwargs = fields.additional_kwargs;
     this.response_metadata = fields.response_metadata;
+    this.id = fields.id;
   }
 
   toDict(): StoredMessage {

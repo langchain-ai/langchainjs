@@ -1,4 +1,4 @@
-import { ObsidianLoader } from "langchain/document_loaders/fs/obsidian";
+import { ObsidianLoader } from "@langchain/community/document_loaders/fs/obsidian";
 
 export const run = async () => {
   const loader = new ObsidianLoader(

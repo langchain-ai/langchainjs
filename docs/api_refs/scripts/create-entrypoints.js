@@ -42,7 +42,8 @@ async function main() {
   const workspaces = fs
     .readdirSync("../../libs/")
     .filter((dir) => dir.startsWith("langchain-"))
-    .map((dir) => path.join("../../libs/", dir, "/langchain.config.js"));
+    .map((dir) => path.join("../../libs/", dir, "/langchain.config.js"))
+    .filter((configPath) => fs.existsSync(configPath));
   const configFiles = [
     "../../langchain/langchain.config.js",
     "../../langchain-core/langchain.config.js",

@@ -1,3 +1,4 @@
+import { AIMessage, AIMessageChunk, AIMessageChunkFields } from "./ai.js";
 import {
   BaseMessageLike,
   BaseMessage,
@@ -5,19 +6,18 @@ import {
   StoredMessage,
   StoredMessageV1,
 } from "./base.js";
-import { HumanMessage, HumanMessageChunk } from "./human.js";
-import { AIMessage, AIMessageChunk } from "./ai.js";
-import { SystemMessage, SystemMessageChunk } from "./system.js";
 import {
   ChatMessage,
-  ChatMessageChunk,
   ChatMessageFieldsWithRole,
+  ChatMessageChunk,
 } from "./chat.js";
 import {
   FunctionMessage,
-  FunctionMessageChunk,
   FunctionMessageFieldsWithName,
+  FunctionMessageChunk,
 } from "./function.js";
+import { HumanMessage, HumanMessageChunk } from "./human.js";
+import { SystemMessage, SystemMessageChunk } from "./system.js";
 import { ToolMessage, ToolMessageFieldsWithToolCallId } from "./tool.js";
 
 export function coerceMessageLikeToMessage(
@@ -168,8 +168,21 @@ export function convertToChunk(message: BaseMessage) {
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
     return new HumanMessageChunk({ ...message });
   } else if (type === "ai") {
+    let aiChunkFields: AIMessageChunkFields = {
+      ...message,
+    };
+    if ("tool_calls" in aiChunkFields) {
+      aiChunkFields = {
+        ...aiChunkFields,
+        tool_call_chunks: aiChunkFields.tool_calls?.map((tc) => ({
+          ...tc,
+          index: undefined,
+          args: JSON.stringify(tc.args),
+        })),
+      };
+    }
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
-    return new AIMessageChunk({ ...message });
+    return new AIMessageChunk({ ...aiChunkFields });
   } else if (type === "system") {
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
     return new SystemMessageChunk({ ...message });

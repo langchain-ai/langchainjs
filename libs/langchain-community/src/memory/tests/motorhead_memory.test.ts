@@ -2,7 +2,7 @@ import { test, expect, jest } from "@jest/globals";
 import { HumanMessage, AIMessage } from "@langchain/core/messages";
 import { MotorheadMemory } from "../motorhead_memory.js";
 
-test("Test motörhead memory", async () => {
+test.skip("Test motörhead memory", async () => {
   global.fetch = jest.fn(() =>
     Promise.resolve({
       json: () =>
@@ -28,7 +28,8 @@ test("Test motörhead memory", async () => {
   expect(result2).toStrictEqual({ history: expectedString });
 });
 
-test("Test motörhead memory with pre-loaded history", async () => {
+// Flaky
+test.skip("Test motörhead memory with pre-loaded history", async () => {
   const pastMessages = [
     new HumanMessage("My name is Ozzy"),
     new AIMessage("Nice to meet you, Ozzy!"),

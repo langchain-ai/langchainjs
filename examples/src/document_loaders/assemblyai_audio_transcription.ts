@@ -2,7 +2,7 @@ import {
   AudioTranscriptLoader,
   // AudioTranscriptParagraphsLoader,
   // AudioTranscriptSentencesLoader
-} from "langchain/document_loaders/web/assemblyai";
+} from "@langchain/community/document_loaders/web/assemblyai";
 
 // You can also use a local file path and the loader will upload it to AssemblyAI for you.
 const audioUrl = "https://storage.googleapis.com/aai-docs-samples/espn.m4a";
