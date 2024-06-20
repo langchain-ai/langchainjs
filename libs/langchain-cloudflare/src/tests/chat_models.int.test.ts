@@ -8,6 +8,8 @@ import {
   SystemMessagePromptTemplate,
 } from "@langchain/core/prompts";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
+import { zodToJsonSchema } from "zod-to-json-schema";
+import { z } from "zod";
 import { ChatCloudflareWorkersAI } from "../chat_models.js";
 
 describe("ChatCloudflareWorkersAI", () => {
@@ -22,6 +24,15 @@ describe("ChatCloudflareWorkersAI", () => {
     const chat = new ChatCloudflareWorkersAI();
     const message = new HumanMessage("Hello!");
     const res = await chat.generate([[message]]);
+    console.log(JSON.stringify(res, null, 2));
+  });
+
+  test("invoke", async () => {
+    const chat = new ChatCloudflareWorkersAI();
+    const message = new HumanMessage("Hello!");
+    const res = await chat.invoke([message]);
+    expect(typeof res.content).toBe("string");
+    expect(res.content.length).toBeGreaterThan(1);
     console.log(JSON.stringify(res, null, 2));
   });
 
@@ -127,5 +138,34 @@ describe("ChatCloudflareWorkersAI", () => {
     ]);
 
     console.log(responseA.generations);
+  });
+
+  test("Can bind and invoke tools", async () => {
+    const model = new ChatCloudflareWorkersAI({
+      model: "@hf/nousresearch/hermes-2-pro-mistral-7b",
+    });
+    const tools = [
+      {
+        name: "get_weather",
+        description: "Get the weather",
+        parameters: zodToJsonSchema(
+          z.object({
+            location: z
+              .string()
+              .describe("The location to get the weather for"),
+          })
+        ),
+      },
+    ];
+    const modelWithTools = model.bindTools(tools);
+    const result = await modelWithTools.invoke([
+      new HumanMessage("What's the weather in San Francisco?"),
+    ]);
+    expect(result).toBeDefined();
+    expect(result.tool_calls).toHaveLength(1);
+    if (!result.tool_calls) {
+      return;
+    }
+    expect(result.tool_calls[0].name).toBe("get_weather");
   });
 });

@@ -22,9 +22,11 @@ class ChatCloudflareWorkersAIStandardIntegrationTests extends ChatModelIntegrati
     }
     super({
       Cls: ChatCloudflareWorkersAI,
-      chatModelHasToolCalling: false,
+      chatModelHasToolCalling: true,
       chatModelHasStructuredOutput: false,
-      constructorArgs: {},
+      constructorArgs: {
+        model: "@hf/nousresearch/hermes-2-pro-mistral-7b",
+      },
     });
   }
 
@@ -41,6 +43,14 @@ class ChatCloudflareWorkersAIStandardIntegrationTests extends ChatModelIntegrati
       "testUsageMetadata",
       "ChatCloudflareWorkersAI",
       "Usage metadata tokens is not currently supported."
+    );
+  }
+
+  async testToolMessageHistoriesListContent() {
+    this.skipTestMessage(
+      "testToolMessageHistoriesListContent",
+      "ChatCloudflareWorkersAI",
+      "Not implemented."
     );
   }
 }

@@ -7204,10 +7204,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@cloudflare/workers-types@npm:^4.20231218.0":
-  version: 4.20231218.0
-  resolution: "@cloudflare/workers-types@npm:4.20231218.0"
-  checksum: b7e50a76ee8e9d662227bbb74798b93b6102acc224f1071a9c99a9adb419ad0b3bdabf7561e7e1b4a320a6a4616badeecdfb1848fbdaada197c7b37d845b8774
+"@cloudflare/workers-types@npm:^4.20240614.0":
+  version: 4.20240614.0
+  resolution: "@cloudflare/workers-types@npm:4.20240614.0"
+  checksum: 7db0dff4146deb4ba5424828fa1d5363b1725a0094136d3cb61fd2b5cedc97e369caa8a3e29aacca80760675a66630cabf6a7e25999046cf5243ccb142841046
   languageName: node
   linkType: hard
 
@@ -9465,7 +9465,7 @@ __metadata:
   resolution: "@langchain/cloudflare@workspace:libs/langchain-cloudflare"
   dependencies:
     "@cloudflare/ai": ^1.0.47
-    "@cloudflare/workers-types": ^4.20231218.0
+    "@cloudflare/workers-types": ^4.20240614.0
     "@jest/globals": ^29.5.0
     "@langchain/core": ">0.1.0 <0.3.0"
     "@langchain/scripts": ~0.0.14
@@ -9492,6 +9492,8 @@ __metadata:
     ts-jest: ^29.1.0
     typescript: <5.2.0
     uuid: ^9.0.1
+    zod: ^3.22.4
+    zod-to-json-schema: ^3.22.3
   languageName: unknown
   linkType: soft
 
