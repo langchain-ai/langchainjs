@@ -60,7 +60,6 @@ import type {
   OpenAIChatInput,
   OpenAICoreRequestOptions,
   LegacyOpenAIInput,
-  OpenAIInput,
 } from "./types.js";
 import { type OpenAIEndpointConfig, getEndpoint } from "./utils/azure.js";
 import { wrapOpenAIClientError } from "./utils/openai.js";
@@ -250,8 +249,7 @@ function convertMessagesToOpenAIParams(messages: BaseMessage[]) {
 
 export interface ChatOpenAICallOptions
   extends OpenAICallOptions,
-    BaseFunctionCallOptions,
-    Pick<OpenAIInput, "streamUsage"> {
+    BaseFunctionCallOptions {
   tools?: StructuredToolInterface[] | OpenAIClient.ChatCompletionTool[];
   tool_choice?: OpenAIClient.ChatCompletionToolChoiceOption;
   promptIndex?: number;
@@ -259,8 +257,7 @@ export interface ChatOpenAICallOptions
   seed?: number;
   /**
    * Additional options to pass to streamed completions.
-   *
-   * stream_options, if provided takes precedence over streamUsage.
+   * If provided takes precedence over "streamUsage" set at initialization time.
    */
   stream_options?: {
     /**
