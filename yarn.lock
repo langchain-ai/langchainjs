@@ -8679,6 +8679,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@google-cloud/firestore@npm:^7.8.0":
+  version: 7.8.0
+  resolution: "@google-cloud/firestore@npm:7.8.0"
+  dependencies:
+    fast-deep-equal: ^3.1.1
+    functional-red-black-tree: ^1.0.1
+    google-gax: ^4.3.3
+    protobufjs: ^7.2.6
+  checksum: fbdd2b9687e7bad770d031000ca319d5041e601d3ed25863e3cf6a979b56c0c30f09ad435de0fecc49f105a547692d16a5cff4aad9ed3d39c51ddc08a482cee1
+  languageName: node
+  linkType: hard
+
 "@google-cloud/paginator@npm:^5.0.0":
   version: 5.0.0
   resolution: "@google-cloud/paginator@npm:5.0.0"
@@ -10194,6 +10206,40 @@ __metadata:
     uuid: ^9.0.0
     zod: ^3.22.4
     zod-to-json-schema: ^3.22.4
+  languageName: unknown
+  linkType: soft
+
+"@langchain/google-firestore@workspace:libs/langchain-google-firestore":
+  version: 0.0.0-use.local
+  resolution: "@langchain/google-firestore@workspace:libs/langchain-google-firestore"
+  dependencies:
+    "@google-cloud/firestore": ^7.8.0
+    "@jest/globals": ^29.5.0
+    "@langchain/core": ">0.1.0 <0.3.0"
+    "@langchain/scripts": ~0.0.14
+    "@swc/core": ^1.3.90
+    "@swc/jest": ^0.2.29
+    "@tsconfig/recommended": ^1.0.3
+    "@typescript-eslint/eslint-plugin": ^6.12.0
+    "@typescript-eslint/parser": ^6.12.0
+    dotenv: ^16.3.1
+    dpdm: ^3.12.0
+    eslint: ^8.33.0
+    eslint-config-airbnb-base: ^15.0.0
+    eslint-config-prettier: ^8.6.0
+    eslint-plugin-import: ^2.27.5
+    eslint-plugin-no-instanceof: ^1.0.1
+    eslint-plugin-prettier: ^4.2.1
+    flat: ^6.0.1
+    google-auth-library: ^9.11.0
+    jest: ^29.5.0
+    jest-environment-node: ^29.6.4
+    prettier: ^2.8.3
+    release-it: ^15.10.1
+    rollup: ^4.5.2
+    ts-jest: ^29.1.0
+    typescript: <5.2.0
+    uuid: ^9.0.1
   languageName: unknown
   linkType: soft
 
@@ -24107,6 +24153,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"flat@npm:^6.0.1":
+  version: 6.0.1
+  resolution: "flat@npm:6.0.1"
+  bin:
+    flat: cli.js
+  checksum: c7a5f2e7e3ba0bec28b9c3aca27e68ff74df446df15cdb77ddef9e3d4fd0e9321ca52e49ca8b861c46157215006666b0dad25457f231083fc7bd2f7fcb67d7eb
+  languageName: node
+  linkType: hard
+
 "flatbuffers@npm:23.3.3":
   version: 23.3.3
   resolution: "flatbuffers@npm:23.3.3"
@@ -25084,6 +25139,20 @@ __metadata:
   languageName: node
   linkType: hard
 
+"google-auth-library@npm:^9.11.0":
+  version: 9.11.0
+  resolution: "google-auth-library@npm:9.11.0"
+  dependencies:
+    base64-js: ^1.3.0
+    ecdsa-sig-formatter: ^1.0.11
+    gaxios: ^6.1.1
+    gcp-metadata: ^6.1.0
+    gtoken: ^7.0.0
+    jws: ^4.0.0
+  checksum: 984d344b5e0a21ea1e097d06e27173035619c0e8f89a363e538b445adb1414b79e938b56b4432aa36fda074c5922fa6a34f9b64734765c01dff73c45c8568554
+  languageName: node
+  linkType: hard
+
 "google-gax@npm:^4.0.3":
   version: 4.3.3
   resolution: "google-gax@npm:4.3.3"
@@ -25121,6 +25190,26 @@ __metadata:
     retry-request: ^7.0.0
     uuid: ^9.0.1
   checksum: 2471ab0ce4fd74bd2510eac31e7285d20879dc93df104d2fcd4b11ef3cbba8c482d63a41d8e7c7c5804ffd0bc185f902b8190ee363dfca80f4cd45c4dfcf9a57
+  languageName: node
+  linkType: hard
+
+"google-gax@npm:^4.3.3":
+  version: 4.3.6
+  resolution: "google-gax@npm:4.3.6"
+  dependencies:
+    "@grpc/grpc-js": ~1.10.3
+    "@grpc/proto-loader": ^0.7.13
+    "@types/long": ^4.0.0
+    abort-controller: ^3.0.0
+    duplexify: ^4.0.0
+    google-auth-library: ^9.3.0
+    node-fetch: ^2.6.1
+    object-hash: ^3.0.0
+    proto3-json-serializer: ^2.0.0
+    protobufjs: 7.3.0
+    retry-request: ^7.0.0
+    uuid: ^9.0.1
+  checksum: 8240b356386f95393aa0e837f1307e7c21bf4d5ac89db5b6b48df822e3dab7bda742ef1bb9d9e18603baf6ac5aed3a1c16b46df623321a5650164d1009d49c21
   languageName: node
   linkType: hard
 
@@ -33141,7 +33230,7 @@ __metadata:
     "@protobufjs/utf8": ^1.1.0
     "@types/node": ">=13.7.0"
     long: ^5.0.0
-  checksum: 3c62e48f7d50017ac3b0dcd2a58e617cf858f9fba56a488bd48b9aa3482893a75540052dbcb3c12dfbaab42b1d04964611175faf06bdadcd33a4ebac982a511e
+  checksum: bc7008ec736b0ab68677ced957b7ccbfc96ccd31f10d8a09d41408d8bf432a6132387acca71e657c652d98aaf7bd2a373f355a377762cff1ed04f0def8477c69
   languageName: node
   linkType: hard
 
