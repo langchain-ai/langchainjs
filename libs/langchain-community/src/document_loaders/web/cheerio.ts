@@ -85,7 +85,9 @@ export class CheerioWebBaseLoader
     caller: AsyncCaller,
     timeout: number | undefined,
     textDecoder?: TextDecoder,
-    options?: CheerioOptions
+    options?: CheerioOptions & {
+      headers: Headers;
+    }
   ): Promise<CheerioAPI[]> {
     return Promise.all(
       urls.map((url) =>
@@ -99,9 +101,11 @@ export class CheerioWebBaseLoader
     caller: AsyncCaller,
     timeout: number | undefined,
     textDecoder?: TextDecoder,
-    options?: CheerioOptions,
-    headers?: Headers
+    options?: CheerioOptions & {
+      headers: Headers;
+    }
   ): Promise<CheerioAPI> {
+    const { headers, ...cheerioOptions } = options ?? {};
     const { load } = await CheerioWebBaseLoader.imports();
     const response = await caller.call(fetch, url, {
       signal: timeout ? AbortSignal.timeout(timeout) : undefined,
@@ -110,7 +114,7 @@ export class CheerioWebBaseLoader
     const html =
       textDecoder?.decode(await response.arrayBuffer()) ??
       (await response.text());
-    return load(html, options);
+    return load(html, cheerioOptions);
   }
 
   /**
@@ -119,12 +123,13 @@ export class CheerioWebBaseLoader
    * @returns A Promise that resolves to a CheerioAPI instance.
    */
   async scrape(): Promise<CheerioAPI> {
+    const options = { headers: this.headers };
     return CheerioWebBaseLoader._scrape(
       this.webPath,
       this.caller,
       this.timeout,
       this.textDecoder,
-      this.headers
+      options
     );
   }
 
