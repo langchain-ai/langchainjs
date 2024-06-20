@@ -119,7 +119,7 @@ test("Deserialisation and serialisation of messages with ID", async () => {
   const messageId = "uuid-1234";
 
   const message = new AIMessage({
-    content: 'The sky is blue because...',
+    content: "The sky is blue because...",
     id: messageId,
   });
 
