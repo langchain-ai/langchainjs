@@ -41,7 +41,7 @@
     "zod-to-json-schema": "^3.22.3"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20240614.0",
+    "@cloudflare/workers-types": "^4.20231218.0",
     "@jest/globals": "^29.5.0",
     "@langchain/scripts": "~0.0.14",
     "@langchain/standard-tests": "0.0.0",

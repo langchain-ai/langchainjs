@@ -7204,7 +7204,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@cloudflare/workers-types@npm:^4.20240614.0":
+"@cloudflare/workers-types@npm:^4.20231218.0":
   version: 4.20240614.0
   resolution: "@cloudflare/workers-types@npm:4.20240614.0"
   checksum: 7db0dff4146deb4ba5424828fa1d5363b1725a0094136d3cb61fd2b5cedc97e369caa8a3e29aacca80760675a66630cabf6a7e25999046cf5243ccb142841046
@@ -9465,7 +9465,7 @@ __metadata:
   resolution: "@langchain/cloudflare@workspace:libs/langchain-cloudflare"
   dependencies:
     "@cloudflare/ai": ^1.0.47
-    "@cloudflare/workers-types": ^4.20240614.0
+    "@cloudflare/workers-types": ^4.20231218.0
     "@jest/globals": ^29.5.0
     "@langchain/core": ">0.1.0 <0.3.0"
     "@langchain/scripts": ~0.0.14
