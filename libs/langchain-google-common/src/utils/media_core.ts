@@ -182,3 +182,82 @@ export class SimpleWebBlobStore extends BlobStore {
     yield "";
   }
 }
+
+export interface MediaManagerConfiguration {
+  /**
+   * A map from the alias name to the canonical MediaBlob for that name
+   */
+  aliasStore: BlobStore;
+
+  /**
+   * The definitive store for the MediaBlob
+   */
+  canonicalStore: BlobStore;
+
+  /**
+   * BlobStore that can resolve a URL into the MediaBlob to save
+   * in the canonical store. A SimpleWebBlobStore is used if not provided.
+   */
+  resolver?: BlobStore;
+}
+
+/**
+ * Responsible for converting a URI (typically a web URL) into a MediaBlob.
+ * Allows for aliasing / caching of the requested URI and what it resolves to.
+ * This MediaBlob is expected to be usable to provide to an LLM, either
+ * through the Base64 of the media or through a canonical URI that the LLM
+ * supports.
+ */
+export abstract class MediaManager {
+
+  aliasStore: BlobStore;
+
+  canonicalStore: BlobStore;
+
+  resolver: BlobStore;
+
+  constructor(config: MediaManagerConfiguration) {
+    this.aliasStore = config.aliasStore;
+    this.canonicalStore = config.canonicalStore;
+    this.resolver = config.resolver || new SimpleWebBlobStore();
+  }
+
+  /**
+   * Given a MediaBlob that has been resolved from the original URL,
+   * come up with the path that should be used to store it in
+   * the canonical store.
+   * @param resolvedBlob
+   */
+  abstract _getCanonicalPath(resolvedBlob: MediaBlob): string;
+
+  async _isInvalid(blob: MediaBlob | undefined): Promise<boolean> {
+    return (typeof blob === "undefined");
+  }
+
+  /**
+   * Given the non-canonical URI, load what is at this URI and save it
+   * in the canonical store.
+   * @param uri The URI to resolve using the resolver
+   * @return A canonical MediaBlob for this URI
+   */
+  async _resolveCanonical(uri: string): Promise<MediaBlob> {
+    const resolvedBlob = await this.resolver.fetch(uri);
+    if (resolvedBlob) {
+      const canonicalPath = this._getCanonicalPath(resolvedBlob);
+      resolvedBlob.path = canonicalPath;
+      const canonicalBlob = await this.canonicalStore.store(resolvedBlob);
+      await this.aliasStore.mset([[uri, canonicalBlob]]);
+      return canonicalBlob;
+    } else {
+      return new MediaBlob();
+    }
+  }
+
+  async getMediaBlob(uri: string): Promise<MediaBlob> {
+    const aliasBlob = await this.aliasStore.fetch(uri);
+    const ret = await this._isInvalid(aliasBlob)
+      ? await this._resolveCanonical(uri)
+      : aliasBlob as MediaBlob;
+    return ret;
+  }
+}
