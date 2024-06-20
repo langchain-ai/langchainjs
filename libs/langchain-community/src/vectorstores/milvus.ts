@@ -34,13 +34,13 @@ export interface MilvusLibArgs {
   indexCreateOptions?: IndexCreateOptions
 }
 
-interface IndexCreateOptions {
+export interface IndexCreateOptions {
   index_type: IndexType,
   metric_type: MetricType,
   params?: keyValueObj;
 }
 
-type MetricType = "L2" | "IP" | "COSINE";
+export type MetricType = "L2" | "IP" | "COSINE";
 
 /**
  * Type representing the type of index used in the Milvus database.
