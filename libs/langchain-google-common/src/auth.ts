@@ -3,7 +3,7 @@ import { GooglePlatformType } from "./types.js";
 
 export type GoogleAbstractedClientOpsMethod = "GET" | "POST" | "DELETE";
 
-export type GoogleAbstractedClientOpsResponseType = "json" | "stream" | "arraybuffer";
+export type GoogleAbstractedClientOpsResponseType = "json" | "stream" | "blob";
 
 export type GoogleAbstractedClientOps = {
   url?: string;
@@ -55,7 +55,11 @@ export abstract class GoogleAbstractedFetchClient
       },
     };
     if (opts.data !== undefined) {
-      fetchOptions.body = JSON.stringify(opts.data);
+      if (typeof opts.data === "string") {
+        fetchOptions.body = opts.data;
+      } else {
+        fetchOptions.body = JSON.stringify(opts.data);
+      }
     }
 
     const res = await fetch(url, fetchOptions);
