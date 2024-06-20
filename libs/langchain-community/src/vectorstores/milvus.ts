@@ -7,6 +7,7 @@ import {
   FieldType,
   ClientConfig,
   InsertReq,
+  keyValueObj
 } from "@zilliz/milvus2-sdk-node";
 
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
@@ -30,7 +31,16 @@ export interface MilvusLibArgs {
   textFieldMaxLength?: number;
   clientConfig?: ClientConfig;
   autoId?: boolean;
+  indexCreateOptions?: IndexCreateOptions
 }
+
+interface IndexCreateOptions {
+  index_type: IndexType,
+  metric_type: MetricType,
+  params?: keyValueObj;
+}
+
+type MetricType = "L2" | "IP" | "COSINE";
 
 /**
  * Type representing the type of index used in the Milvus database.
@@ -144,6 +154,17 @@ export class Milvus extends VectorStore {
       password = "",
       ssl,
     } = args.clientConfig || {};
+
+    // index create params
+    const { indexCreateOptions } = args;
+    if (indexCreateOptions) {
+      this.indexCreateParams = {
+        metric_type: indexCreateOptions.metric_type,
+        index_type: indexCreateOptions.index_type,
+        params: JSON.stringify(indexCreateOptions.params),
+      };
+      this.indexSearchParams = JSON.stringify(this.indexParams[indexCreateOptions.index_type].params);
+    }
 
     // combine args clientConfig and env variables
     const clientConfig: ClientConfig = {
