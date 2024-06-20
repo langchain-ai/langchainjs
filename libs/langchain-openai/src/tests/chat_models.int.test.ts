@@ -831,10 +831,9 @@ test("streaming: true tokens can be found in usage_metadata field", async () => 
 test("streaming: true with streamUsage tokens can be found in usage_metadata field", async () => {
   const model = new ChatOpenAI({
     streaming: true,
-  });
-  const response = await model.invoke("Hello, how are you?", {
     streamUsage: true,
   });
+  const response = await model.invoke("Hello, how are you?", {});
   console.log({
     usage_metadata: response?.usage_metadata,
   });
@@ -848,10 +847,10 @@ test("streaming: true with streamUsage tokens can be found in usage_metadata fie
 test("streaming: streamUsage will not override stream_options", async () => {
   const model = new ChatOpenAI({
     streaming: true,
+    streamUsage: true,
   });
   const response = await model.invoke("Hello, how are you?", {
     stream_options: { include_usage: false },
-    streamUsage: true,
   });
   console.log({
     usage_metadata: response?.usage_metadata,
