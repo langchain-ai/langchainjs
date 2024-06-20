@@ -276,9 +276,12 @@ export class Milvus extends VectorStore {
     if (this.partitionName !== undefined) {
       params.partition_name = this.partitionName;
     }
-    const insertResp = await this.client.upsert(params);
+    const insertResp = this.autoId
+      ? await this.client.insert(params)
+      : await this.client.upsert(params);
+
     if (insertResp.status.error_code !== ErrorCode.SUCCESS) {
-      throw new Error(`Error upserting data: ${JSON.stringify(insertResp)}`);
+      throw new Error(`Error ${this.autoId ? 'inserting' : 'upserting'} data: ${JSON.stringify(insertResp)}`);
     }
     await this.client.flushSync({ collection_names: [this.collectionName] });
   }
