@@ -107,3 +107,23 @@ test("Deserialisation and serialisation of tool_call_id", async () => {
   const deserialized: ToolMessage = await load(JSON.stringify(message), config);
   expect(deserialized).toEqual(message);
 });
+
+test("Deserialisation and serialisation of messages with ID", async () => {
+  const config = {
+    importMap: { messages: { AIMessage } },
+    optionalImportEntrypoints: [],
+    optionalImportsMap: {},
+    secretsMap: {},
+  };
+
+  const messageId = "uuid-1234";
+
+  const message = new AIMessage({
+    content: "The sky is blue because...",
+    id: messageId,
+  });
+
+  const deserialized: AIMessage = await load(JSON.stringify(message), config);
+  expect(deserialized).toEqual(message);
+  expect(deserialized.id).toBe(messageId);
+});
