@@ -1,7 +1,7 @@
 import {AsyncCaller, AsyncCallerCallOptions, AsyncCallerParams} from "@langchain/core/utils/async_caller";
 import { MediaBlob, BlobStore } from "./utils/media_core.js";
 import {GoogleConnectionParams, GoogleRawResponse, GoogleResponse} from "./types.js";
-import { GoogleHostConnection } from "./connection.js";
+import {GoogleHostConnection, GoogleRawConnection} from "./connection.js";
 import {GoogleAbstractedClient, GoogleAbstractedClientOpsMethod} from "./auth.js";
 
 export interface GoogleUploadConnectionParams<AuthOptions> extends GoogleConnectionParams<AuthOptions> {
@@ -43,7 +43,6 @@ export abstract class GoogleUploadConnection <
       encoded,
       `--${separator}--`,
     ];
-    console.log('body', body.join("\n"));
     return body.join("\n");
   }
 
@@ -74,6 +73,23 @@ export abstract class GoogleDownloadConnection<
     return this._request(undefined, options);
   }
 }
+
+export abstract class GoogleDownloadRawConnection<
+    CallOptions extends AsyncCallerCallOptions,
+    AuthOptions
+  >
+  extends GoogleRawConnection<CallOptions, AuthOptions>
+{
+
+  buildMethod(): GoogleAbstractedClientOpsMethod {
+    return "GET";
+  }
+
+  async request(options: CallOptions): Promise<GoogleRawResponse> {
+    return this._request(undefined, options);
+  }
+}
+
 
 export interface BlobStoreGoogleParams<AuthOptions>
   extends GoogleConnectionParams<AuthOptions>, AsyncCallerParams
@@ -131,13 +147,12 @@ export abstract class BlobStoreGoogle<
   }
 
   abstract buildGetDataConnection(key: string):
-    GoogleDownloadConnection<AsyncCallerCallOptions, GoogleRawResponse, AuthOptions>;
+    GoogleDownloadRawConnection<AsyncCallerCallOptions, AuthOptions>;
 
   async _getData(key: string): Promise<Blob> {
     const connection = this.buildGetDataConnection(key);
     const options = {};
     const response = await connection.request(options);
-    console.log('response',response);
     return response.data;
   }
 
@@ -313,6 +328,33 @@ export class GoogleCloudStorageDownloadConnection<ResponseType extends GoogleRes
 
 }
 
+export interface GoogleCloudStorageRawConnectionParams<AuthOptions>
+  extends GoogleCloudStorageConnectionParams, GoogleConnectionParams<AuthOptions>
+{}
+
+export class GoogleCloudStorageRawConnection<AuthOptions>
+  extends GoogleDownloadRawConnection<AsyncCallerCallOptions, AuthOptions>
+{
+
+  uri: GoogleCloudStorageUri;
+
+  constructor(
+    fields: GoogleCloudStorageRawConnectionParams<AuthOptions>,
+    caller: AsyncCaller,
+    client: GoogleAbstractedClient
+  ) {
+    super(fields, caller, client);
+    this.uri = new GoogleCloudStorageUri(fields.uri)
+  }
+
+  async buildUrl(): Promise<string> {
+    const path = encodeURIComponent(this.uri.path);
+    const ret = `https://storage.googleapis.com/storage/${this.apiVersion}/b/${this.uri.bucket}/o/${path}?alt=media`;
+    return ret;
+  }
+
+}
+
 export interface BlobStoreGoogleCloudStorageBaseParams<AuthOptions>
   extends BlobStoreGoogleParams<AuthOptions>
 {}
@@ -357,13 +399,11 @@ export abstract class BlobStoreGoogleCloudStorageBase<AuthOptions>
   }
 
 
-  buildGetDataConnection(key: string): GoogleDownloadConnection<AsyncCallerCallOptions, GoogleRawResponse, AuthOptions> {
-    const params: GoogleCloudStorageDownloadConnectionParams<AuthOptions> = {
+  buildGetDataConnection(key: string): GoogleDownloadRawConnection<AsyncCallerCallOptions, AuthOptions> {
+    const params: GoogleCloudStorageRawConnectionParams<AuthOptions> = {
       uri: key,
-      method: "GET",
-      alt: "media",
     }
-    return new GoogleCloudStorageDownloadConnection<GoogleRawResponse, AuthOptions>(
+    return new GoogleCloudStorageRawConnection<AuthOptions>(
       params, this.caller, this.client
     )
   }
