@@ -26,3 +26,15 @@ import UnifiedModelParamsTooltip from "@mdx_components/unified_model_params_tool
 <UnifiedModelParamsTooltip></UnifiedModelParamsTooltip>
 
 <CodeBlock language="typescript">{Example}</CodeBlock>
+
+### Tool calling
+
+:::note
+Tool calling is only available in `@langchain/cloudflare` version `0.0.7` and above.
+:::
+
+Cloudflare's API now supports tool calling! The below example demonstrates how to invoke and stream tool calls.
+
+import ToolCalling from "@examples/models/chat/integration_cloudflare_tools.ts";
+
+<CodeBlock language="typescript">{ToolCalling}</CodeBlock>
