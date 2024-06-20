@@ -2,7 +2,7 @@
 import { expect, test } from "@jest/globals";
 import { z } from "zod";
 import { zodToGeminiParameters } from "../utils/zod_to_gemini_parameters.js";
-import {MediaBlob, SimpleWebBlobStore} from "../utils/media_core.js";
+import { MediaBlob, SimpleWebBlobStore } from "../utils/media_core.js";
 
 test("zodToGeminiParameters can convert zod schema to gemini schema", () => {
   const zodSchema = z
@@ -83,28 +83,29 @@ test("zodToGeminiParameters removes additional properties from arrays", () => {
 });
 
 describe("MediaBlob and BlobStore", () => {
-
   test("MediaBlob plain", async () => {
-    const blob = new Blob(["This is a test"], {type: "text/plain"});
+    const blob = new Blob(["This is a test"], { type: "text/plain" });
     const mblob = new MediaBlob({
-      data: blob
+      data: blob,
     });
     expect(mblob.dataType).toEqual("text/plain");
     expect(mblob.mimetype).toEqual("text/plain");
     expect(mblob.encoding).toEqual("utf-8");
     expect(await mblob.asString()).toEqual("This is a test");
-  })
+  });
 
   test("MediaBlob charset", async () => {
-    const blob = new Blob(["This is a test"], {type: "text/plain; charset=US-ASCII"});
+    const blob = new Blob(["This is a test"], {
+      type: "text/plain; charset=US-ASCII",
+    });
     const mblob = new MediaBlob({
-      data: blob
+      data: blob,
     });
     expect(mblob.dataType).toEqual("text/plain; charset=us-ascii");
     expect(mblob.mimetype).toEqual("text/plain");
     expect(mblob.encoding).toEqual("us-ascii");
     expect(await mblob.asString()).toEqual("This is a test");
-  })
+  });
 
   test("SimpleWebBlobStore fetch", async () => {
     const webStore = new SimpleWebBlobStore();
@@ -116,6 +117,5 @@ describe("MediaBlob and BlobStore", () => {
     expect(exampleBlob?.metadata).toBeDefined();
     expect(exampleBlob?.metadata?.ok).toBeTruthy();
     expect(exampleBlob?.metadata?.status).toEqual(200);
-  })
-
-})
+  });
+});

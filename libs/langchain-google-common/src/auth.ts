@@ -30,9 +30,12 @@ export abstract class GoogleAbstractedFetchClient
 
   async _buildData(res: Response, opts: GoogleAbstractedClientOps) {
     switch (opts.responseType) {
-      case "json": return res.json();
-      case "stream": return new ReadableJsonStream(res.body);
-      default: return res.blob();
+      case "json":
+        return res.json();
+      case "stream":
+        return new ReadableJsonStream(res.body);
+      default:
+        return res.blob();
     }
   }
 

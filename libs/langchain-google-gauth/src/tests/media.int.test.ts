@@ -1,19 +1,20 @@
 import fs from "fs/promises";
 import { test } from "@jest/globals";
 import { MediaBlob } from "@langchain/google-common";
-import {BlobStoreGoogleCloudStorage, BlobStoreGoogleCloudStorageParams} from "../media.js";
+import {
+  BlobStoreGoogleCloudStorage,
+  BlobStoreGoogleCloudStorageParams,
+} from "../media.js";
 
 describe("GAuth GCS store", () => {
-
   test("save text no-metadata", async () => {
     const uri = `gs://test-langchainjs/text/test-${Date.now()}-nm`;
-    const content="This is a test";
+    const content = "This is a test";
     const blob = new MediaBlob({
       path: uri,
-      data: new Blob([content], {type: "text/plain"}),
-    })
-    const config: BlobStoreGoogleCloudStorageParams = {
-    }
+      data: new Blob([content], { type: "text/plain" }),
+    });
+    const config: BlobStoreGoogleCloudStorageParams = {};
     const blobStore = new BlobStoreGoogleCloudStorage(config);
     const storedBlob = await blobStore.store(blob);
     // console.log(storedBlob);
@@ -27,17 +28,16 @@ describe("GAuth GCS store", () => {
 
   test("save text with-metadata", async () => {
     const uri = `gs://test-langchainjs/text/test-${Date.now()}-wm`;
-    const content="This is a test";
+    const content = "This is a test";
     const blob = new MediaBlob({
       path: uri,
-      data: new Blob([content], {type: "text/plain"}),
+      data: new Blob([content], { type: "text/plain" }),
       metadata: {
-        "alpha": "one",
-        "bravo": "two",
-      }
-    })
-    const config: BlobStoreGoogleCloudStorageParams = {
-    }
+        alpha: "one",
+        bravo: "two",
+      },
+    });
+    const config: BlobStoreGoogleCloudStorageParams = {};
     const blobStore = new BlobStoreGoogleCloudStorage(config);
     const storedBlob = await blobStore.store(blob);
     // console.log(storedBlob);
@@ -54,15 +54,14 @@ describe("GAuth GCS store", () => {
   test("save image no-metadata", async () => {
     const filename = `src/tests/data/blue-square.png`;
     const dataBuffer = await fs.readFile(filename);
-    const data = new Blob([dataBuffer], {type:"image/png"});
+    const data = new Blob([dataBuffer], { type: "image/png" });
 
     const uri = `gs://test-langchainjs/image/test-${Date.now()}-nm`;
     const blob = new MediaBlob({
       path: uri,
       data,
-    })
-    const config: BlobStoreGoogleCloudStorageParams = {
-    }
+    });
+    const config: BlobStoreGoogleCloudStorageParams = {};
     const blobStore = new BlobStoreGoogleCloudStorage(config);
     const storedBlob = await blobStore.store(blob);
     // console.log(storedBlob);
@@ -72,11 +71,9 @@ describe("GAuth GCS store", () => {
     expect(storedBlob.metadata?.kind).toEqual("storage#object");
   });
 
-
-  test("get text no-metadata", async ()=> {
+  test("get text no-metadata", async () => {
     const uri: string = "gs://test-langchainjs/text/test-nm";
-    const config: BlobStoreGoogleCloudStorageParams = {
-    }
+    const config: BlobStoreGoogleCloudStorageParams = {};
     const blobStore = new BlobStoreGoogleCloudStorage(config);
     const blob = await blobStore.fetch(uri);
     // console.log(blob);
@@ -86,12 +83,11 @@ describe("GAuth GCS store", () => {
     expect(blob?.metadata).not.toHaveProperty("metadata");
     expect(blob?.size).toEqual(14);
     expect(blob?.metadata?.kind).toEqual("storage#object");
-  })
+  });
 
-  test("get text with-metadata", async ()=> {
+  test("get text with-metadata", async () => {
     const uri: string = "gs://test-langchainjs/text/test-wm";
-    const config: BlobStoreGoogleCloudStorageParams = {
-    }
+    const config: BlobStoreGoogleCloudStorageParams = {};
     const blobStore = new BlobStoreGoogleCloudStorage(config);
     const blob = await blobStore.fetch(uri);
     // console.log(blob);
@@ -103,12 +99,11 @@ describe("GAuth GCS store", () => {
     expect(blob?.metadata?.metadata?.bravo).toEqual("two");
     expect(blob?.size).toEqual(14);
     expect(blob?.metadata?.kind).toEqual("storage#object");
-  })
+  });
 
-  test("get image no-metadata", async ()=> {
+  test("get image no-metadata", async () => {
     const uri: string = "gs://test-langchainjs/image/test-nm";
-    const config: BlobStoreGoogleCloudStorageParams = {
-    }
+    const config: BlobStoreGoogleCloudStorageParams = {};
     const blobStore = new BlobStoreGoogleCloudStorage(config);
     const blob = await blobStore.fetch(uri);
     // console.log(storedBlob);
@@ -116,6 +111,5 @@ describe("GAuth GCS store", () => {
     expect(blob?.size).toEqual(176);
     expect(blob?.mimetype).toEqual("image/png");
     expect(blob?.metadata?.kind).toEqual("storage#object");
-  })
-
-})
+  });
+});

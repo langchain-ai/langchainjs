@@ -18,7 +18,8 @@ import type {
   GeminiSafetySetting,
   GeminiTool,
   GeminiFunctionDeclaration,
-  GoogleAIModelRequestParams, GoogleRawResponse,
+  GoogleAIModelRequestParams,
+  GoogleRawResponse,
 } from "./types.js";
 import {
   GoogleAbstractedClient,
@@ -82,14 +83,14 @@ export abstract class GoogleConnection<
     return this.constructor.name;
   }
 
-  async additionalHeaders(): Promise<Record<string,string>> {
+  async additionalHeaders(): Promise<Record<string, string>> {
     return {};
   }
 
   async _buildOpts(
     data: unknown | undefined,
     _options: CallOptions,
-    requestHeaders: Record<string,string> = {},
+    requestHeaders: Record<string, string> = {}
   ): Promise<GoogleAbstractedClientOps> {
     const url = await this.buildUrl();
     const method = this.buildMethod();
@@ -120,7 +121,7 @@ export abstract class GoogleConnection<
   async _request(
     data: unknown | undefined,
     options: CallOptions,
-    requestHeaders: Record<string,string> = {},
+    requestHeaders: Record<string, string> = {}
   ): Promise<ResponseType> {
     const opts = await this._buildOpts(data, options, requestHeaders);
     const callResponse = await this.caller.callWithOptions(
@@ -183,14 +184,16 @@ export abstract class GoogleRawConnection<
   CallOptions extends AsyncCallerCallOptions,
   AuthOptions
 > extends GoogleHostConnection<CallOptions, GoogleRawResponse, AuthOptions> {
-
-  async _buildOpts(data: unknown | undefined, _options: CallOptions, requestHeaders: Record<string, string> = {}): Promise<GoogleAbstractedClientOps> {
+  async _buildOpts(
+    data: unknown | undefined,
+    _options: CallOptions,
+    requestHeaders: Record<string, string> = {}
+  ): Promise<GoogleAbstractedClientOps> {
     const opts = await super._buildOpts(data, _options, requestHeaders);
     opts.responseType = "blob";
     return opts;
   }
 }
-
 
 export abstract class GoogleAIConnection<
     CallOptions extends BaseLanguageModelCallOptions,

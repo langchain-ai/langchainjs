@@ -1,13 +1,11 @@
-import {BaseStore} from "@langchain/core/stores";
+import { BaseStore } from "@langchain/core/stores";
 
 export interface MediaBlobParameters {
-
   data?: Blob;
 
   metadata?: Record<string, unknown>;
 
   path?: string;
-
 }
 
 /**
@@ -40,7 +38,7 @@ export class MediaBlob implements MediaBlobParameters {
     const charsetEquals = this.dataType.indexOf("charset=");
     return charsetEquals === -1
       ? "utf-8"
-      : this.dataType.substring(charsetEquals+8);
+      : this.dataType.substring(charsetEquals + 8);
   }
 
   get mimetype(): string {
@@ -63,22 +61,19 @@ export class MediaBlob implements MediaBlobParameters {
   }
 
   async asUri(): Promise<string> {
-    return this.path ?? await this.asDataUrl();
+    return this.path ?? (await this.asDataUrl());
   }
 
-  async encode(): Promise<{encoded: string, encoding: string}> {
+  async encode(): Promise<{ encoded: string; encoding: string }> {
     const dataUrl = await this.asDataUrl();
-    const comma = dataUrl.indexOf(',');
-    const encoded = dataUrl.substring(comma+1);
-    const encoding: string = dataUrl.indexOf("base64") > -1
-      ? "base64"
-      : "8bit";
+    const comma = dataUrl.indexOf(",");
+    const encoded = dataUrl.substring(comma + 1);
+    const encoding: string = dataUrl.indexOf("base64") > -1 ? "base64" : "8bit";
     return {
       encoded,
       encoding,
-    }
+    };
   }
-
 }
 
 /**
@@ -94,30 +89,26 @@ export class MediaBlob implements MediaBlobParameters {
  * implemented should be documented and throw an Error if called.
  */
 export abstract class BlobStore extends BaseStore<string, MediaBlob> {
-  lc_namespace = ["langchain", "google-common"];  // FIXME - What should this be? And why?
+  lc_namespace = ["langchain", "google-common"]; // FIXME - What should this be? And why?
 
   async _realKey(key: string | MediaBlob): Promise<string> {
-    return typeof key === 'string'
-      ? key
-      : await key.asUri();
+    return typeof key === "string" ? key : await key.asUri();
   }
 
   async store(blob: MediaBlob): Promise<MediaBlob> {
     const key = await blob.asUri();
     await this.mset([[key, blob]]);
-    return await this.fetch(blob) || blob;
+    return (await this.fetch(blob)) || blob;
   }
 
   async fetch(key: string | MediaBlob): Promise<MediaBlob | undefined> {
     const realKey = await this._realKey(key);
-    const ret = await this.mget([realKey])
+    const ret = await this.mget([realKey]);
     return ret?.[0];
   }
-
 }
 
 export class BackedBlobStore extends BlobStore {
-
   backingStore: BaseStore<string, MediaBlob>;
 
   constructor(backingStore: BaseStore<string, MediaBlob>) {
@@ -140,11 +131,9 @@ export class BackedBlobStore extends BlobStore {
   yieldKeys(prefix: string | undefined): AsyncGenerator<string> {
     return this.backingStore.yieldKeys(prefix);
   }
-
 }
 
 export class SimpleWebBlobStore extends BlobStore {
-
   _notImplementedException() {
     throw new Error("Not implemented for SimpleWebBlobStore");
   }
@@ -153,15 +142,15 @@ export class SimpleWebBlobStore extends BlobStore {
     const ret = new MediaBlob({
       path: url,
     });
-    const metadata: Record<string,unknown> = {};
+    const metadata: Record<string, unknown> = {};
     const fetchOptions = {
       method: "GET",
-    }
+    };
     const res = await fetch(url, fetchOptions);
     metadata.status = res.status;
 
-    const headers: Record<string,string> = {};
-    for (const [key,value] of res.headers.entries()) {
+    const headers: Record<string, string> = {};
+    for (const [key, value] of res.headers.entries()) {
       headers[key] = value;
     }
     metadata.headers = headers;
@@ -192,6 +181,4 @@ export class SimpleWebBlobStore extends BlobStore {
     this._notImplementedException();
     yield "";
   }
-
 }
-
