@@ -169,7 +169,7 @@ export class AIMessageChunk extends BaseMessageChunk {
     } else if (fields.tool_call_chunks === undefined) {
       initParams = {
         ...fields,
-        tool_calls: [],
+        tool_calls: fields.tool_calls ?? [],
         invalid_tool_calls: [],
         tool_call_chunks: [],
       };
