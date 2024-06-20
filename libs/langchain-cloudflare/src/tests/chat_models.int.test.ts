@@ -144,7 +144,7 @@ describe("ChatCloudflareWorkersAI", () => {
     console.log(responseA.generations);
   });
 
-  test.only("Can bind and invoke tools", async () => {
+  test("Can bind and invoke tools", async () => {
     const model = new ChatCloudflareWorkersAI({
       model: "@hf/nousresearch/hermes-2-pro-mistral-7b",
     });
