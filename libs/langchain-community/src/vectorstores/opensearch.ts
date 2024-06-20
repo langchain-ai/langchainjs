@@ -450,4 +450,43 @@ export class OpenSearchVectorStore extends VectorStore {
 
     await this.client.indices.delete({ index: this.indexName });
   }
+
+  
+
+async keywordSearchWithScore(
+  query: string,
+  k: number,
+  filter?: OpenSearchFilter | undefined
+): Promise<[Document, number][]> {
+  const search: RequestParams.Search = {
+    index: this.indexName,
+    body: {
+      query: {
+        bool: {
+          filter: { bool: this.buildMetadataTerms(filter) },
+          must: [
+            {
+              match: {
+                [this.textFieldName]: query,
+              },
+            },
+          ],
+        },
+      },
+      size: k,
+    },
+  };
+
+  try {
+    const response = await this.client.search(search);
+    return response.body.hits.hits.map((hit: any) => [
+      hit._source as Document,
+      hit._score as number,
+    ]);
+  } catch (error) {
+    console.error('Error performing keyword search:', error);
+    throw error;
+  }
+}
+
 }
