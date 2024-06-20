@@ -1,5 +1,9 @@
 import { describe, test } from "@jest/globals";
-import { ChatMessage, HumanMessage } from "@langchain/core/messages";
+import {
+  AIMessageChunk,
+  ChatMessage,
+  HumanMessage,
+} from "@langchain/core/messages";
 import {
   PromptTemplate,
   ChatPromptTemplate,
@@ -167,5 +171,41 @@ describe("ChatCloudflareWorkersAI", () => {
       return;
     }
     expect(result.tool_calls[0].name).toBe("get_weather");
+  });
+
+  test("Can bind and stream tools", async () => {
+    const model = new ChatCloudflareWorkersAI({
+      model: "@hf/nousresearch/hermes-2-pro-mistral-7b",
+    });
+    const tools = [
+      {
+        name: "get_weather",
+        description: "Get the weather",
+        parameters: zodToJsonSchema(
+          z.object({
+            location: z
+              .string()
+              .describe("The location to get the weather for"),
+          })
+        ),
+      },
+    ];
+    const modelWithTools = model.bindTools(tools);
+    let finalChunk: AIMessageChunk | undefined;
+    for await (const chunk of await modelWithTools.stream([
+      new HumanMessage("What's the weather in San Francisco?"),
+    ])) {
+      if (!finalChunk) {
+        finalChunk = chunk;
+      } else {
+        finalChunk = finalChunk.concat(chunk);
+      }
+    }
+    expect(finalChunk).toBeDefined();
+    expect(finalChunk?.tool_calls).toHaveLength(1);
+    if (!finalChunk?.tool_calls) {
+      return;
+    }
+    expect(finalChunk.tool_calls[0].name).toBe("get_weather");
   });
 });

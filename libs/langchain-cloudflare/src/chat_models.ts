@@ -95,6 +95,9 @@ function convertToCloudflareTools(tools: Tool[]): CloudflareTool[] {
   );
 }
 
+const TOOL_CALL_START_TOKEN = "<tool_call>";
+const TOOL_CALL_END_TOKEN = "</tool_call><|im_end|>";
+
 /**
  * An interface defining the options for a Cloudflare Workers AI call. It extends
  * the BaseLanguageModelCallOptions interface.
@@ -281,16 +284,55 @@ export class ChatCloudflareWorkersAI
     const stream = convertEventStreamToIterableReadableDataStream(
       response.body
     );
+    let fullMessage: string = "";
     for await (const chunk of stream) {
       if (chunk !== "[DONE]") {
         const parsedChunk = JSON.parse(chunk);
+        const message = new AIMessageChunk({ content: parsedChunk.response });
         const generationChunk = new ChatGenerationChunk({
-          message: new AIMessageChunk({ content: parsedChunk.response }),
+          message,
           text: parsedChunk.response,
         });
         yield generationChunk;
         // eslint-disable-next-line no-void
         void runManager?.handleLLMNewToken(generationChunk.text ?? "");
+        fullMessage += parsedChunk.response;
+      }
+    }
+
+    if (
+      fullMessage.startsWith(TOOL_CALL_START_TOKEN) &&
+      fullMessage.endsWith(TOOL_CALL_END_TOKEN)
+    ) {
+      const toolCallJsonString = fullMessage
+        .split(TOOL_CALL_START_TOKEN)[1]
+        .split(TOOL_CALL_END_TOKEN)[0];
+      try {
+        const cleanedJsonString = toolCallJsonString
+          .replace(/'/g, '"')
+          .replace(/(\w+):/g, '"$1":');
+        const parsedToolCall: CloudflareToolResponse =
+          JSON.parse(cleanedJsonString);
+
+        yield new ChatGenerationChunk({
+          message: new AIMessageChunk({
+            content: "",
+            tool_call_chunks: [
+              {
+                name: parsedToolCall.name,
+                index: undefined,
+                id: undefined,
+                args: JSON.stringify(parsedToolCall.arguments),
+              },
+            ],
+          }),
+          text: "",
+        });
+      } catch (e) {
+        console.error(e);
+        throw new Error(
+          `Unable to parse tool call response JSON: ${toolCallJsonString}`
+        );
       }
     }
   }
