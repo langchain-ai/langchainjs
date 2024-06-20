@@ -92,6 +92,7 @@ describe("MediaBlob and BlobStore", () => {
     expect(mblob.dataType).toEqual("text/plain");
     expect(mblob.mimetype).toEqual("text/plain");
     expect(mblob.encoding).toEqual("utf-8");
+    expect(await mblob.asString()).toEqual("This is a test");
   })
 
   test("MediaBlob charset", async () => {
@@ -102,6 +103,7 @@ describe("MediaBlob and BlobStore", () => {
     expect(mblob.dataType).toEqual("text/plain; charset=us-ascii");
     expect(mblob.mimetype).toEqual("text/plain");
     expect(mblob.encoding).toEqual("us-ascii");
+    expect(await mblob.asString()).toEqual("This is a test");
   })
 
   test("SimpleWebBlobStore fetch", async () => {

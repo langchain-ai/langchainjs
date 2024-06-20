@@ -1,9 +1,9 @@
 import fs from "fs/promises";
 import { test } from "@jest/globals";
 import { MediaBlob } from "@langchain/google-common";
-import {BlobStoreGoogleCloudStorage, BlobStoreGoogleCloudStorageParams} from "../media.js";
+import { BlobStoreGoogleCloudStorage, BlobStoreGoogleCloudStorageParams } from "../media.js";
 
-describe("GAuth GCS store", () => {
+describe("Google Webauth GCS store", () => {
 
   test("save text no-metadata", async () => {
     const uri = `gs://test-langchainjs/text/test-${Date.now()}-nm`;

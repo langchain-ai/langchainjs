@@ -13,7 +13,7 @@ export class BlobStoreGoogleCloudStorage
   extends BlobStoreGoogleCloudStorageBase<GoogleAuthOptions>
 {
 
-  buildClient(fields: BlobStoreGoogleCloudStorageParams | undefined): GoogleAbstractedClient {
+  buildClient(fields?: BlobStoreGoogleCloudStorageParams): GoogleAbstractedClient {
     return new GAuthClient(fields);
   }
 

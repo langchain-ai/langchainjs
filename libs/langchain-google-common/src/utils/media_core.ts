@@ -10,10 +10,15 @@ export interface MediaBlobParameters {
 
 }
 
+/**
+ * Represents a chunk of data that can be identified by the path where the
+ * data is (or will be) located, along with optional metadata about the data.
+ */
 export class MediaBlob implements MediaBlobParameters {
   data?: Blob;
 
-  metadata?: Record<string, unknown>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  metadata?: Record<string, any>;
 
   path?: string;
 
@@ -21,6 +26,10 @@ export class MediaBlob implements MediaBlobParameters {
     this.data = params?.data;
     this.metadata = params?.metadata;
     this.path = params?.path;
+  }
+
+  get size(): number {
+    return this.data?.size ?? 0;
   }
 
   get dataType(): string {
@@ -41,23 +50,24 @@ export class MediaBlob implements MediaBlobParameters {
       : this.dataType.substring(0, semicolon);
   }
 
-  /*
-   * Based on https://stackoverflow.com/a/67551175/1405634
-   */
-  async toDataUrl(): Promise<string> {
+  async asString(): Promise<string> {
     const data = this.data ?? new Blob([]);
     const dataBuffer = await data.arrayBuffer();
     const dataArray = new Uint8Array(dataBuffer);
-    const data64 = btoa(String.fromCharCode(...dataArray));
+    return String.fromCharCode(...dataArray);
+  }
+
+  async asDataUrl(): Promise<string> {
+    const data64 = btoa(await this.asString());
     return `data:${this.mimetype};base64,${data64}`;
   }
 
-  async toUri(): Promise<string> {
-    return this.path ?? await this.toDataUrl();
+  async asUri(): Promise<string> {
+    return this.path ?? await this.asDataUrl();
   }
 
   async encode(): Promise<{encoded: string, encoding: string}> {
-    const dataUrl = await this.toDataUrl();
+    const dataUrl = await this.asDataUrl();
     const comma = dataUrl.indexOf(',');
     const encoded = dataUrl.substring(comma+1);
     const encoding: string = dataUrl.indexOf("base64") > -1
@@ -71,19 +81,31 @@ export class MediaBlob implements MediaBlobParameters {
 
 }
 
+/**
+ * A specialized Store that is designed to handle MediaBlobs and use the
+ * key that is included in the blob to determine exactly how it is stored.
+ *
+ * The full details of a MediaBlob may be changed when it is stored.
+ * For example, it may get additional or different Metadata. This should be
+ * what is returned when the store() method is called.
+ *
+ * Although BlobStore extends BaseStore, not all of the methods from
+ * BaseStore may be implemented (or even possible). Those that are not
+ * implemented should be documented and throw an Error if called.
+ */
 export abstract class BlobStore extends BaseStore<string, MediaBlob> {
   lc_namespace = ["langchain", "google-common"];  // FIXME - What should this be? And why?
 
   async _realKey(key: string | MediaBlob): Promise<string> {
     return typeof key === 'string'
       ? key
-      : await key.toUri();
+      : await key.asUri();
   }
 
   async store(blob: MediaBlob): Promise<MediaBlob> {
-    const key = await blob.toUri();
+    const key = await blob.asUri();
     await this.mset([[key, blob]]);
-    return blob;
+    return await this.fetch(blob) || blob;
   }
 
   async fetch(key: string | MediaBlob): Promise<MediaBlob | undefined> {
