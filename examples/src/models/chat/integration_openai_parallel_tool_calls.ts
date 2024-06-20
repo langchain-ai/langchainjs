@@ -17,7 +17,7 @@ const calculatorSchema = z
   .describe("A tool to perform basic arithmetic operations");
 const weatherSchema = z
   .object({
-    city: z.enum(["add", "subtract", "multiply", "divide"]),
+    city: z.string(),
   })
   .describe("A tool to get the weather in a city");
 
