@@ -85,7 +85,9 @@ const mustacheTemplateToNodes = (
     if (temp[0] === "name") {
       const name = temp[1].includes(".") ? temp[1].split(".")[0] : temp[1];
       return { type: "variable", name };
-    } else if (temp[0] === "#") {
+    } else if (["#", "&"].includes(temp[0])) {
+      // # represents a section, "&" represents an unescaped variable.
+      // These should both be considered variables.
       return { type: "variable", name: temp[1] };
     } else {
       return { type: "literal", text: temp[1] };

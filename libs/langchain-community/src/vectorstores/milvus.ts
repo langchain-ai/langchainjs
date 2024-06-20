@@ -7,6 +7,7 @@ import {
   FieldType,
   ClientConfig,
   InsertReq,
+  keyValueObj,
 } from "@zilliz/milvus2-sdk-node";
 
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
@@ -30,7 +31,16 @@ export interface MilvusLibArgs {
   textFieldMaxLength?: number;
   clientConfig?: ClientConfig;
   autoId?: boolean;
+  indexCreateOptions?: IndexCreateOptions;
 }
+
+export interface IndexCreateOptions {
+  index_type: IndexType;
+  metric_type: MetricType;
+  params?: keyValueObj;
+}
+
+export type MetricType = "L2" | "IP" | "COSINE";
 
 /**
  * Type representing the type of index used in the Milvus database.
@@ -145,6 +155,19 @@ export class Milvus extends VectorStore {
       ssl,
     } = args.clientConfig || {};
 
+    // index create params
+    const { indexCreateOptions } = args;
+    if (indexCreateOptions) {
+      this.indexCreateParams = {
+        metric_type: indexCreateOptions.metric_type,
+        index_type: indexCreateOptions.index_type,
+        params: JSON.stringify(indexCreateOptions.params),
+      };
+      this.indexSearchParams = JSON.stringify(
+        this.indexParams[indexCreateOptions.index_type].params
+      );
+    }
+
     // combine args clientConfig and env variables
     const clientConfig: ClientConfig = {
       ...(args.clientConfig || {}),
@@ -163,13 +186,18 @@ export class Milvus extends VectorStore {
   /**
    * Adds documents to the Milvus database.
    * @param documents Array of Document instances to be added to the database.
+   * @param options Optional parameter that can include specific IDs for the documents.
    * @returns Promise resolving to void.
    */
-  async addDocuments(documents: Document[]): Promise<void> {
+  async addDocuments(
+    documents: Document[],
+    options?: { ids?: string[] }
+  ): Promise<void> {
     const texts = documents.map(({ pageContent }) => pageContent);
     await this.addVectors(
       await this.embeddings.embedDocuments(texts),
-      documents
+      documents,
+      options
     );
   }
 
@@ -177,9 +205,14 @@ export class Milvus extends VectorStore {
    * Adds vectors to the Milvus database.
    * @param vectors Array of vectors to be added to the database.
    * @param documents Array of Document instances associated with the vectors.
+   * @param options Optional parameter that can include specific IDs for the documents.
    * @returns Promise resolving to void.
    */
-  async addVectors(vectors: number[][], documents: Document[]): Promise<void> {
+  async addVectors(
+    vectors: number[][],
+    documents: Document[],
+    options?: { ids?: string[] }
+  ): Promise<void> {
     if (vectors.length === 0) {
       return;
     }
@@ -187,6 +220,8 @@ export class Milvus extends VectorStore {
     if (this.partitionName !== undefined) {
       await this.ensurePartition();
     }
+
+    const documentIds = options?.ids ?? [];
 
     const insertDatas: InsertRow[] = [];
     // eslint-disable-next-line no-plusplus
@@ -200,7 +235,9 @@ export class Milvus extends VectorStore {
       this.fields.forEach((field) => {
         switch (field) {
           case this.primaryField:
-            if (!this.autoId) {
+            if (documentIds[index] !== undefined) {
+              data[field] = documentIds[index];
+            } else if (!this.autoId) {
               if (doc.metadata[this.primaryField] === undefined) {
                 throw new Error(
                   `The Collection's primaryField is configured with autoId=false, thus its value must be provided through metadata.`
@@ -239,9 +276,9 @@ export class Milvus extends VectorStore {
     if (this.partitionName !== undefined) {
       params.partition_name = this.partitionName;
     }
-    const insertResp = await this.client.insert(params);
+    const insertResp = await this.client.upsert(params);
     if (insertResp.status.error_code !== ErrorCode.SUCCESS) {
-      throw new Error(`Error inserting data: ${JSON.stringify(insertResp)}`);
+      throw new Error(`Error upserting data: ${JSON.stringify(insertResp)}`);
     }
     await this.client.flushSync({ collection_names: [this.collectionName] });
   }
@@ -396,14 +433,26 @@ export class Milvus extends VectorStore {
 
     fieldList.push(...createFieldTypeForMetadata(documents, this.primaryField));
 
-    fieldList.push(
-      {
+    if (this.autoId) {
+      fieldList.push({
         name: this.primaryField,
         description: "Primary key",
         data_type: DataType.Int64,
         is_primary_key: true,
-        autoID: this.autoId,
-      },
+        autoID: true,
+      });
+    } else {
+      fieldList.push({
+        name: this.primaryField,
+        description: "Primary key",
+        data_type: DataType.VarChar,
+        is_primary_key: true,
+        autoID: false,
+        max_length: 65535,
+      });
+    }
+
+    fieldList.push(
       {
         name: this.textField,
         description: "Text field",
@@ -437,7 +486,6 @@ export class Milvus extends VectorStore {
     });
 
     if (createRes.error_code !== ErrorCode.SUCCESS) {
-      console.log(createRes);
       throw new Error(`Failed to create collection: ${createRes}`);
     }
 
@@ -558,7 +606,7 @@ export class Milvus extends VectorStore {
    * @param params Object containing a filter to apply to the deletion.
    * @returns Promise resolving to void.
    */
-  async delete(params: { filter: string }): Promise<void> {
+  async delete(params: { filter?: string; ids?: string[] }): Promise<void> {
     const hasColResp = await this.client.hasCollection({
       collection_name: this.collectionName,
     });
@@ -571,15 +619,28 @@ export class Milvus extends VectorStore {
       );
     }
 
-    const { filter } = params;
+    const { filter, ids } = params;
 
-    const deleteResp = await this.client.deleteEntities({
-      collection_name: this.collectionName,
-      expr: filter,
-    });
+    if (filter && !ids) {
+      const deleteResp = await this.client.deleteEntities({
+        collection_name: this.collectionName,
+        expr: filter,
+      });
 
-    if (deleteResp.status.error_code !== ErrorCode.SUCCESS) {
-      throw new Error(`Error deleting data: ${JSON.stringify(deleteResp)}`);
+      if (deleteResp.status.error_code !== ErrorCode.SUCCESS) {
+        throw new Error(`Error deleting data: ${JSON.stringify(deleteResp)}`);
+      }
+    } else if (!filter && ids && ids.length > 0) {
+      const deleteResp = await this.client.delete({
+        collection_name: this.collectionName,
+        ids,
+      });
+
+      if (deleteResp.status.error_code !== ErrorCode.SUCCESS) {
+        throw new Error(
+          `Error deleting data with ids: ${JSON.stringify(deleteResp)}`
+        );
+      }
     }
   }
 }
