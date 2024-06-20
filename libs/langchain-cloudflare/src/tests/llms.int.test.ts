@@ -27,7 +27,7 @@ test("generate with streaming true", async () => {
   expect(tokens.join("")).toEqual(res);
 });
 
-test("Test CloudflareWorkersAI streaming", async () => {
+test("Test CloudflareWorkersAI streamingg", async () => {
   const model = new CloudflareWorkersAI({});
   const stream = await model.stream("What is 2 + 2?");
   const chunks = [];
