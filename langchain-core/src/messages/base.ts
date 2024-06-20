@@ -5,6 +5,8 @@ export interface StoredMessageData {
   content: string;
   role: string | undefined;
   name: string | undefined;
+  /** An optional unique identifier for the message. */
+  id: string | undefined;
   tool_call_id: string | undefined;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   additional_kwargs?: Record<string, any>;
@@ -98,6 +100,11 @@ export interface ToolCall {
 export type BaseMessageFields = {
   content: MessageContent;
   name?: string;
+  /**
+   * An optional unique identifier for the message. This should ideally be
+   * provided by the provider/model which created the message.
+   */
+  id?: string;
   additional_kwargs?: {
     function_call?: FunctionCall;
     tool_calls?: ToolCall[];
@@ -169,6 +176,12 @@ export abstract class BaseMessage
   /** The name of the message sender in a multi-user chat. */
   name?: string;
 
+  /**
+   * An optional unique identifier for the message. This should ideally be
+   * provided by the provider/model which created the message.
+   */
+  id?: string;
+
   /** Additional keyword arguments */
   additional_kwargs: NonNullable<BaseMessageFields["additional_kwargs"]>;
 
@@ -206,7 +219,12 @@ export abstract class BaseMessage
       // eslint-disable-next-line no-param-reassign
       fields.response_metadata = {};
     }
+    if (!fields.id) {
+      // eslint-disable-next-line no-param-reassign
+      fields.id = undefined;
+    }
     super(fields);
+    this.id = fields.id;
     this.name = fields.name;
     this.content = fields.content;
     this.additional_kwargs = fields.additional_kwargs;

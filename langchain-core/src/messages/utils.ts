@@ -97,6 +97,7 @@ function mapV1MessageToStoredMessage(
         role: v1Message.role,
         name: undefined,
         tool_call_id: undefined,
+        id: undefined,
       },
     };
   }
