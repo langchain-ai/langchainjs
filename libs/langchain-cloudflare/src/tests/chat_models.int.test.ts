@@ -144,7 +144,7 @@ describe("ChatCloudflareWorkersAI", () => {
     console.log(responseA.generations);
   });
 
-  test("Can bind and invoke tools", async () => {
+  test.only("Can bind and invoke tools", async () => {
     const model = new ChatCloudflareWorkersAI({
       model: "@hf/nousresearch/hermes-2-pro-mistral-7b",
     });
@@ -195,6 +195,7 @@ describe("ChatCloudflareWorkersAI", () => {
     for await (const chunk of await modelWithTools.stream([
       new HumanMessage("What's the weather in San Francisco?"),
     ])) {
+      // console.log("chunk: ", chunk)
       if (!finalChunk) {
         finalChunk = chunk;
       } else {

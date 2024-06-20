@@ -47,50 +47,12 @@ const stream = await modelWithTools.stream(inputMessages);
 
 let finalChunk: AIMessageChunk | undefined;
 for await (const chunk of stream) {
-  console.log("chunk: ", chunk.content);
   if (!finalChunk) {
     finalChunk = chunk;
   } else {
     finalChunk = finalChunk.concat(chunk);
   }
 }
-
-/*
-chunk:  <
-chunk:  tool
-chunk:  _
-chunk:  call
-chunk:  >
-chunk:  \n
-chunk:  {'
-chunk:  arguments
-chunk:  ':
-chunk:   {'
-chunk:  input
-chunk:  ':
-chunk:   '
-chunk:  N
-chunk:  orth
-chunk:   P
-chunk:  ole
-chunk:  '},
-chunk:   '
-chunk:  name
-chunk:  ':
-chunk:   '
-chunk:  get
-chunk:  _
-chunk:  we
-chunk:  ather
-chunk:  '}
-chunk:  \n
-chunk:  </
-chunk:  tool
-chunk:  _
-chunk:  call
-chunk:  >
-chunk:  <|im_end|>
-*/
 
 console.log(finalChunk?.tool_calls);
 

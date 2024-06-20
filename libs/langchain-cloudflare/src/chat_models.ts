@@ -26,7 +26,7 @@ import { ToolCall } from "@langchain/core/messages/tool";
 import { convertEventStreamToIterableReadableDataStream } from "./utils/event_source_parse.js";
 import type { CloudflareWorkersAIInput } from "./llms.js";
 
-type CloudflareTool = {
+export type CloudflareTool = {
   name: string;
   description: string;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -62,13 +62,14 @@ function convertToCloudflareTools(tools: Tool[]): CloudflareTool[] {
     }));
   }
   if (
-    tools.every((t) =>
-      Boolean(
-        "type" in t &&
+    tools.every(
+      (t) =>
+        !!(
+          "type" in t &&
           t.type === "function" &&
           "function" in t &&
           typeof t.function === "object"
-      )
+        )
     )
   ) {
     return (tools as ToolDefinition[]).map((tc) => ({
@@ -79,13 +80,14 @@ function convertToCloudflareTools(tools: Tool[]): CloudflareTool[] {
     }));
   }
   if (
-    tools.every((t) =>
-      Boolean(
-        "name" in t &&
+    tools.every(
+      (t) =>
+        !!(
+          "name" in t &&
           "description" in t &&
           "parameters" in t &&
           typeof t.parameters === "object"
-      )
+        )
     )
   ) {
     return tools as CloudflareTool[];
@@ -94,9 +96,6 @@ function convertToCloudflareTools(tools: Tool[]): CloudflareTool[] {
     "Unsupported tool type received. Must be a list of structured tools, OpenAI tools, or Cloudflare tools."
   );
 }
-
-const TOOL_CALL_START_TOKEN = "<tool_call>";
-const TOOL_CALL_END_TOKEN = "</tool_call><|im_end|>";
 
 /**
  * An interface defining the options for a Cloudflare Workers AI call. It extends
@@ -277,6 +276,15 @@ export class ChatCloudflareWorkersAI
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
+    if (options.tools?.length) {
+      const invokeResult = await this._generate(messages, options, runManager);
+      yield new ChatGenerationChunk({
+        message: invokeResult.generations[0].message as AIMessageChunk,
+        text: invokeResult.generations[0].text,
+      });
+      return;
+    }
+
     const response = await this._request(messages, options, true);
     if (!response.body) {
       throw new Error("Empty response from Cloudflare. Please try again.");
@@ -284,11 +292,12 @@ export class ChatCloudflareWorkersAI
     const stream = convertEventStreamToIterableReadableDataStream(
       response.body
     );
-    let fullMessage: string = "";
     for await (const chunk of stream) {
       if (chunk !== "[DONE]") {
         const parsedChunk = JSON.parse(chunk);
-        const message = new AIMessageChunk({ content: parsedChunk.response });
+        const message = new AIMessageChunk({
+          content: parsedChunk.response,
+        });
         const generationChunk = new ChatGenerationChunk({
           message,
           text: parsedChunk.response,
@@ -296,43 +305,6 @@ export class ChatCloudflareWorkersAI
         yield generationChunk;
         // eslint-disable-next-line no-void
         void runManager?.handleLLMNewToken(generationChunk.text ?? "");
-        fullMessage += parsedChunk.response;
-      }
-    }
-
-    if (
-      fullMessage.startsWith(TOOL_CALL_START_TOKEN) &&
-      fullMessage.endsWith(TOOL_CALL_END_TOKEN)
-    ) {
-      const toolCallJsonString = fullMessage
-        .split(TOOL_CALL_START_TOKEN)[1]
-        .split(TOOL_CALL_END_TOKEN)[0];
-      try {
-        const cleanedJsonString = toolCallJsonString
-          .replace(/'/g, '"')
-          .replace(/(\w+):/g, '"$1":');
-        const parsedToolCall: CloudflareToolResponse =
-          JSON.parse(cleanedJsonString);
-
-        yield new ChatGenerationChunk({
-          message: new AIMessageChunk({
-            content: "",
-            tool_call_chunks: [
-              {
-                name: parsedToolCall.name,
-                index: undefined,
-                id: undefined,
-                args: JSON.stringify(parsedToolCall.arguments),
-              },
-            ],
-          }),
-          text: "",
-        });
-      } catch (e) {
-        console.error(e);
-        throw new Error(
-          `Unable to parse tool call response JSON: ${toolCallJsonString}`
-        );
       }
     }
   }
@@ -384,7 +356,7 @@ export class ChatCloudflareWorkersAI
     runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
     // Handle streaming
-    if (this.streaming) {
+    if (this.streaming && !options.tools?.length) {
       const stream = this._streamResponseChunks(messages, options, runManager);
       let finalResult: ChatGenerationChunk | undefined;
       for await (const chunk of stream) {

@@ -1,4 +1,4 @@
-import { Ai } from "@cloudflare/ai/dist/ai.js";
+import { Ai } from "@cloudflare/ai";
 import { Fetcher } from "@cloudflare/workers-types";
 import { Embeddings, EmbeddingsParams } from "@langchain/core/embeddings";
 import { chunkArray } from "@langchain/core/utils/chunk_array";
