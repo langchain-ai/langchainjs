@@ -8,7 +8,7 @@ import { tool } from "@langchain/core/tools";
 import { z } from "zod";
 
 const model = new ChatCloudflareWorkersAI({
-  model: "@cf/meta/llama-2-7b-chat-int8", // Default value
+  model: "@hf/nousresearch/hermes-2-pro-mistral-7b",
   cloudflareAccountId: process.env.CLOUDFLARE_ACCOUNT_ID,
   cloudflareApiToken: process.env.CLOUDFLARE_API_TOKEN,
   // Pass a custom base URL to use Cloudflare AI Gateway
@@ -40,14 +40,14 @@ const response = await modelWithTools.invoke(inputMessages);
 console.log(response.tool_calls);
 
 /*
-
+[ { name: 'get_weather', args: { input: 'North Pole' } } ]
 */
 
-const stream = await model.stream(inputMessages);
+const stream = await modelWithTools.stream(inputMessages);
 
 let finalChunk: AIMessageChunk | undefined;
 for await (const chunk of stream) {
-  console.log(chunk.content);
+  console.log("chunk: ", chunk.content);
   if (!finalChunk) {
     finalChunk = chunk;
   } else {
@@ -55,7 +55,47 @@ for await (const chunk of stream) {
   }
 }
 
+/*
+chunk:  <
+chunk:  tool
+chunk:  _
+chunk:  call
+chunk:  >
+chunk:  \n
+chunk:  {'
+chunk:  arguments
+chunk:  ':
+chunk:   {'
+chunk:  input
+chunk:  ':
+chunk:   '
+chunk:  N
+chunk:  orth
+chunk:   P
+chunk:  ole
+chunk:  '},
+chunk:   '
+chunk:  name
+chunk:  ':
+chunk:   '
+chunk:  get
+chunk:  _
+chunk:  we
+chunk:  ather
+chunk:  '}
+chunk:  \n
+chunk:  </
+chunk:  tool
+chunk:  _
+chunk:  call
+chunk:  >
+chunk:  <|im_end|>
+*/
+
 console.log(finalChunk?.tool_calls);
 
 /*
- */
+[
+  { name: 'get_weather', args: { input: 'North Pole' }, id: undefined }
+]
+*/
