@@ -24,16 +24,14 @@ export function convertToOpenAIFunction(
  * function to convert the schema of the `StructuredTool` into a JSON
  * schema, which is then used as the parameters for the Cohere function.
  */
-
-/** @ignore */
 export function convertToCohereTool(
   tool: StructuredToolInterface
-): any {
+): {name: string, description: string, parameterDefinitions: Record<string, any>} { /* eslint-disable-line  @typescript-eslint/no-explicit-any */
   const parameterDefinitionsFromZod = zodToJsonSchema(tool.schema);
   const parameterDefinitionsProperties = "properties" in parameterDefinitionsFromZod ? parameterDefinitionsFromZod.properties : {};
-  const parameterDefinitionsRequired = "required" in parameterDefinitionsFromZod ? parameterDefinitionsFromZod.required : [];
+  let parameterDefinitionsRequired = "required" in parameterDefinitionsFromZod ? parameterDefinitionsFromZod.required : [];
 
-  const parameterDefinitionsFinal: Record<string, any> = {};
+  const parameterDefinitionsFinal: Record<string, any> = {}; /* eslint-disable-line  @typescript-eslint/no-explicit-any */
 
   // Iterate through all properties
   Object.keys(parameterDefinitionsProperties).forEach(propertyName => {

@@ -264,12 +264,6 @@ export class ChatCohere<
     options: this["ParsedCallOptions"]): Cohere.ChatRequest {
 
       const params = this.invocationParams(options);
-      if (!(
-        messages[messages.length - 1] instanceof ToolMessage ||
-        messages[messages.length - 1] instanceof HumanMessage
-      )) {
-        throw new Error("The last message must be a ToolMessage or HumanMessage");
-      }
       
       let toolResults = this.messagesToCohereToolResultsCurrChatTurn(messages);
       let chatHistory = []
