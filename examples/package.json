@@ -29,7 +29,7 @@
     "@elastic/elasticsearch": "^8.4.0",
     "@faker-js/faker": "^8.4.1",
     "@getmetal/metal-sdk": "^4.0.0",
-    "@getzep/zep-cloud": "~1.0.0",
+    "@getzep/zep-cloud": "^1.0.6",
     "@getzep/zep-js": "^0.9.0",
     "@gomomento/sdk": "^1.51.1",
     "@google/generative-ai": "^0.7.0",
