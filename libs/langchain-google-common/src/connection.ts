@@ -132,17 +132,6 @@ export abstract class GoogleConnection<
   }
 }
 
-export abstract class GoogleRawConnection<
-  CallOptions extends AsyncCallerCallOptions,
-> extends GoogleConnection<CallOptions, GoogleRawResponse> {
-
-  async _buildOpts(data: unknown | undefined, _options: CallOptions, requestHeaders: Record<string, string> = {}): Promise<GoogleAbstractedClientOps> {
-    const opts = await super._buildOpts(data, _options, requestHeaders);
-    opts.responseType = "arraybuffer";
-    return opts;
-  }
-}
-
 export abstract class GoogleHostConnection<
     CallOptions extends AsyncCallerCallOptions,
     ResponseType extends GoogleResponse,
@@ -189,6 +178,19 @@ export abstract class GoogleHostConnection<
     return "POST";
   }
 }
+
+export abstract class GoogleRawConnection<
+  CallOptions extends AsyncCallerCallOptions,
+  AuthOptions
+> extends GoogleHostConnection<CallOptions, GoogleRawResponse, AuthOptions> {
+
+  async _buildOpts(data: unknown | undefined, _options: CallOptions, requestHeaders: Record<string, string> = {}): Promise<GoogleAbstractedClientOps> {
+    const opts = await super._buildOpts(data, _options, requestHeaders);
+    opts.responseType = "blob";
+    return opts;
+  }
+}
+
 
 export abstract class GoogleAIConnection<
     CallOptions extends BaseLanguageModelCallOptions,
