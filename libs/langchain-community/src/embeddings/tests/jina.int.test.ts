@@ -30,3 +30,11 @@ test("Test JinaEmbeddings concurrency", async () => {
     undefined
   );
 });
+
+test("Test JinaEmbeddings.embedImages", async () => {
+  const embeddings = new JinaEmbeddings();
+  const res = await embeddings.embedImages([
+    "https://avatars.githubusercontent.com/u/126733545?v=4",
+  ]);
+  expect(typeof res[0][0]).toBe("number");
+});

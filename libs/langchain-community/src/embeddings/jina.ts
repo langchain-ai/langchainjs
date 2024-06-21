@@ -155,9 +155,7 @@ export class JinaEmbeddings extends Embeddings implements JinaEmbeddingsParams {
    * @returns A Promise that resolves to an array of embeddings.
    */
   async embedImages(uris: string[]): Promise<number[][]> {
-    const input = uris.map((uri) =>
-      isLocal(uri) ? { bytes: getBytesStr(uri) } : { url: uri }
-    );
+    const input = uris.map((uri) => (isLocal(uri) ? getBytesStr(uri) : uri));
     return this._embed(input);
   }
 }
