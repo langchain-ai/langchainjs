@@ -1,4 +1,5 @@
 import { BaseStore } from "@langchain/core/stores";
+import {v4 as uuidv4} from "uuid";
 
 export interface MediaBlobParameters {
   data?: Blob;
@@ -76,6 +77,50 @@ export class MediaBlob implements MediaBlobParameters {
   }
 }
 
+export interface BlobStoreStoreOptions {
+
+  /**
+   * If the path is missing or invalid in the blob, how should we create
+   * a new path?
+   * Subclasses may define their own methods, but the following are supported
+   * by default:
+   * - Undefined or an emtpy string: Never replace
+   * - "prefixPath": Use the default prefix for the BlobStore and get the
+   *   unique portion from the URL. The original path is stored in the metadata
+   * - "prefixUuid": Use the default prefix for the BlobStore and get the
+   *   unique portion from a generated UUID. The original path is stored
+   *   in the metadata
+   */
+  replacePathMethod?: string;
+
+  /**
+   * If either "prefixPath" or "prefixUuid" is used, what prefix should be used?
+   */
+  replacePathPrefix?: string;
+
+}
+
+export interface BlobStoreFetchOptions {
+
+  /**
+   * If the blob is not found when fetching, what should we do?
+   * Subclasses may define their own methods, but the following are supported
+   * by default:
+   * - Undefined or an empty string: return undefined
+   * - "emptyBlob": return a new MediaBlob that has the path set, but nothing else.
+   */
+  handleMissingBlobMethod?: string;
+
+}
+
+export interface BlobStoreOptions {
+
+  defaultStoreOptions?: BlobStoreStoreOptions;
+
+  defaultFetchOptions?: BlobStoreFetchOptions;
+
+}
+
 /**
  * A specialized Store that is designed to handle MediaBlobs and use the
  * key that is included in the blob to determine exactly how it is stored.
@@ -91,29 +136,126 @@ export class MediaBlob implements MediaBlobParameters {
 export abstract class BlobStore extends BaseStore<string, MediaBlob> {
   lc_namespace = ["langchain", "google-common"]; // FIXME - What should this be? And why?
 
+  defaultStoreOptions: BlobStoreStoreOptions;
+
+  defaultFetchOptions: BlobStoreFetchOptions;
+
+  constructor (opts?: BlobStoreOptions) {
+    super(opts);
+    this.defaultStoreOptions = opts?.defaultStoreOptions ?? {};
+    this.defaultFetchOptions = opts?.defaultFetchOptions ?? {};
+  }
+
   async _realKey(key: string | MediaBlob): Promise<string> {
     return typeof key === "string" ? key : await key.asUri();
   }
 
-  async store(blob: MediaBlob): Promise<MediaBlob> {
-    const key = await blob.asUri();
-    await this.mset([[key, blob]]);
-    return (await this.fetch(blob)) || blob;
+  /**
+   * Is the path set in the MediaBlob supported by this BlobStore?
+   * Subclasses must implement and evaluate `blob.path` to make this
+   * determination.
+   * Although this is async, this is expected to be a relatively fast operation
+   * (ie - you shouldn't make network calls).
+   * @param blob The blob to test
+   * @param opts Any options (if needed) that may be used to determine if it is valid
+   * @return If the string represented by blob.path is supported.
+   */
+  abstract _hasValidPath(blob: MediaBlob, opts?: BlobStoreStoreOptions): Promise<boolean>;
+
+  _blobPathSuffix(blob: MediaBlob): string {
+    // Get the path currently set and make sure we treat it as a string
+    const blobPath = `${blob.path}`;
+
+    // Advance past the first set of /
+    let pathStart = blobPath.indexOf("/")+1;
+    while (blobPath.charAt(pathStart) === "/") {
+      pathStart +=1;
+    }
+
+    // We will use the rest as the path for a replacement
+    return blobPath.substring(pathStart);
   }
 
-  async fetch(key: string | MediaBlob): Promise<MediaBlob | undefined> {
+  async _newBlob(oldBlob: MediaBlob, newPath: string): Promise<MediaBlob> {
+    const oldPath = oldBlob.path;
+    const metadata = oldBlob?.metadata ?? {};
+    metadata.lanchainOldPath = oldPath;
+    const newBlob = new MediaBlob({
+      ...oldBlob,
+      metadata,
+      path: newPath,
+    });
+    return newBlob;
+  }
+
+  async _validBlobPrefixPath(blob: MediaBlob, opts?: BlobStoreStoreOptions): Promise<MediaBlob> {
+    const prefix = opts?.replacePathPrefix ?? "";
+    const suffix = this._blobPathSuffix(blob);
+    const newPath = `${prefix}${suffix}`;
+    return this._newBlob(blob, newPath);
+  }
+
+  async _validBlobPrefixUuid(blob: MediaBlob, opts?: BlobStoreStoreOptions): Promise<MediaBlob> {
+    const prefix = opts?.replacePathPrefix ?? "";
+    const suffix = uuidv4();   // TODO - option to specify version?
+    const newPath = `${prefix}${suffix}`;
+    return this._newBlob(blob, newPath);
+  }
+
+    /**
+   * Based on the blob and options, return a blob that has a valid path
+   * that can be saved.
+   * @param blob
+   * @param opts
+   */
+  async _validStoreBlob(blob: MediaBlob, opts?: BlobStoreStoreOptions): Promise<MediaBlob> {
+    if (await this._hasValidPath(blob, opts)) {
+      return blob;
+    }
+    switch (opts?.replacePathMethod) {
+      case "prefixPath": return this._validBlobPrefixPath(blob, opts);
+      case "prefixUuid": return this._validBlobPrefixUuid(blob, opts);
+      default: return blob;
+    }
+  }
+
+  async store(blob: MediaBlob, opts: BlobStoreStoreOptions = {}): Promise<MediaBlob> {
+    const allOpts: BlobStoreStoreOptions = {...this.defaultStoreOptions, ...opts};
+    const key = await blob.asUri();
+    const validBlob = await this._validStoreBlob(blob, allOpts);
+    await this.mset([[key, validBlob]]);
+    return (await this.fetch(validBlob)) || blob;
+  }
+
+  async _missingFetchBlobEmpty(path: string, _opts?: BlobStoreFetchOptions): Promise<MediaBlob> {
+    return new MediaBlob({path});
+  }
+
+  async _missingFetchBlob(path: string, opts?: BlobStoreFetchOptions): Promise<MediaBlob | undefined> {
+    switch (opts?.handleMissingBlobMethod) {
+      case "emptyBlob": return this._missingFetchBlobEmpty(path, opts);
+      default: return undefined;
+    }
+  }
+
+  async fetch(key: string | MediaBlob, opts: BlobStoreFetchOptions = {}): Promise<MediaBlob | undefined> {
+    const allOpts: BlobStoreFetchOptions = {...this.defaultFetchOptions, ...opts};
     const realKey = await this._realKey(key);
     const ret = await this.mget([realKey]);
-    return ret?.[0];
+    return ret?.[0] ?? await this._missingFetchBlob(realKey, allOpts);
   }
+}
+
+export interface BackedBlobStoreOptions extends BlobStoreOptions {
+  backingStore: BaseStore<string, MediaBlob>;
 }
 
 export class BackedBlobStore extends BlobStore {
   backingStore: BaseStore<string, MediaBlob>;
 
-  constructor(backingStore: BaseStore<string, MediaBlob>) {
-    super();
-    this.backingStore = backingStore;
+  constructor(opts: BackedBlobStoreOptions) {
+    super(opts);
+    this.backingStore = opts.backingStore;
   }
 
   mdelete(keys: string[]): Promise<void> {
@@ -131,11 +273,26 @@ export class BackedBlobStore extends BlobStore {
   yieldKeys(prefix: string | undefined): AsyncGenerator<string> {
     return this.backingStore.yieldKeys(prefix);
   }
+
+  _hasValidPath(_blob: MediaBlob, _opts?: BlobStoreStoreOptions): Promise<boolean> {
+    return Promise.resolve(true);
+  }
+
 }
 
 export class SimpleWebBlobStore extends BlobStore {
   _notImplementedException() {
     throw new Error("Not implemented for SimpleWebBlobStore");
+  }
+
+  _hasValidPath(blob: MediaBlob, _opts?: BlobStoreStoreOptions): Promise<boolean> {
+    const {path} = blob;
+    if (path) {
+      const ret = path?.startsWith("http://") || path?.startsWith("https://");
+      return Promise.resolve(ret);
+    } else {
+      return Promise.resolve(false);
+    }
   }
 
   async _fetch(url: string): Promise<MediaBlob | undefined> {
@@ -219,16 +376,8 @@ export abstract class MediaManager {
   constructor(config: MediaManagerConfiguration) {
     this.aliasStore = config.aliasStore;
     this.canonicalStore = config.canonicalStore;
-    this.resolver = config.resolver || new SimpleWebBlobStore();
+    this.resolver = config.resolver || new SimpleWebBlobStore({});
   }
-
-  /**
-   * Given a MediaBlob that has been resolved from the original URL,
-   * come up with the path that should be used to store it in
-   * the canonical store.
-   * @param resolvedBlob
-   */
-  abstract _getCanonicalPath(resolvedBlob: MediaBlob): string;
 
   async _isInvalid(blob: MediaBlob | undefined): Promise<boolean> {
     return (typeof blob === "undefined");
@@ -243,8 +392,6 @@ export abstract class MediaManager {
   async _resolveCanonical(uri: string): Promise<MediaBlob> {
     const resolvedBlob = await this.resolver.fetch(uri);
     if (resolvedBlob) {
-      const canonicalPath = this._getCanonicalPath(resolvedBlob);
-      resolvedBlob.path = canonicalPath;
       const canonicalBlob = await this.canonicalStore.store(resolvedBlob);
       await this.aliasStore.mset([[uri, canonicalBlob]]);
       return canonicalBlob;

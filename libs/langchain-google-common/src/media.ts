@@ -3,7 +3,12 @@ import {
   AsyncCallerCallOptions,
   AsyncCallerParams,
 } from "@langchain/core/utils/async_caller";
-import { MediaBlob, BlobStore } from "./utils/media_core.js";
+import {
+  MediaBlob,
+  BlobStore,
+  BlobStoreOptions,
+  BlobStoreStoreOptions,
+} from "./utils/media_core.js";
 import {
   GoogleConnectionParams,
   GoogleRawResponse,
@@ -94,7 +99,9 @@ export abstract class GoogleDownloadRawConnection<
 
 export interface BlobStoreGoogleParams<AuthOptions>
   extends GoogleConnectionParams<AuthOptions>,
-    AsyncCallerParams {}
+    AsyncCallerParams,
+    BlobStoreOptions
+  {}
 
 export abstract class BlobStoreGoogle<
   ResponseType extends GoogleResponse,
@@ -249,6 +256,10 @@ export class GoogleCloudStorageUri {
     this.path = bucketAndPath.path;
   }
 
+  get uri() {
+    return `gs://${this.bucket}/${this.path}`
+  }
+
   get isValid() {
     return (
       typeof this.bucket !== "undefined" && typeof this.path !== "undefined"
@@ -371,13 +382,31 @@ export class GoogleCloudStorageRawConnection<
 }
 
 export interface BlobStoreGoogleCloudStorageBaseParams<AuthOptions>
-  extends BlobStoreGoogleParams<AuthOptions> {}
+  extends BlobStoreGoogleParams<AuthOptions> {
+
+  uriPrefix: GoogleCloudStorageUri;
+
+}
 
 export abstract class BlobStoreGoogleCloudStorageBase<
   AuthOptions
 > extends BlobStoreGoogle<GoogleCloudStorageResponse, AuthOptions> {
+
   constructor(fields: BlobStoreGoogleCloudStorageBaseParams<AuthOptions>) {
     super(fields);
+    this.defaultStoreOptions = {
+      ...this.defaultStoreOptions,
+      replacePathPrefix: fields.uriPrefix.uri,
+    }
+  }
+
+  _hasValidPath(blob: MediaBlob, opts?: BlobStoreStoreOptions): Promise<boolean> {
+    const path = blob.path ?? "";
+    const prefix = opts?.replacePathPrefix ?? "";
+    if (path.startsWith(prefix)) {
+      return Promise.resolve(true);
+    }
+    return Promise.resolve(false);
   }
 
   buildSetConnection([key, _blob]: [string, MediaBlob]): GoogleUploadConnection<
