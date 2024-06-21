@@ -386,7 +386,7 @@ export class ChatOpenAI<
 
   streaming = false;
 
-  streamUsage = false;
+  streamUsage = true;
 
   maxTokens?: number;
 
@@ -570,10 +570,7 @@ export class ChatOpenAI<
       stop: options?.stop ?? this.stopSequences,
       user: this.user,
       // if include_usage is set or streamUsage then stream must be set to true.
-      stream:
-        options?.stream_options?.include_usage || this.streamUsage
-          ? true
-          : this.streaming,
+      stream: this.streaming,
       functions: options?.functions,
       function_call: options?.function_call,
       tools: isStructuredToolArray(options?.tools)
@@ -584,11 +581,9 @@ export class ChatOpenAI<
       seed: options?.seed,
       ...(options?.stream_options !== undefined
         ? { stream_options: options.stream_options }
-        : {
-            stream_options: {
-              include_usage: this.streamUsage && this.streaming,
-            },
-          }),
+        : this.streamUsage && this.streaming
+        ? { stream_options: { include_usage: true } }
+        : {}),
       parallel_tool_calls: options?.parallel_tool_calls,
       ...this.modelKwargs,
     };
