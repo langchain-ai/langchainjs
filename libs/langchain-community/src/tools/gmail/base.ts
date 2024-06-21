@@ -63,7 +63,7 @@ export abstract class GmailBaseTool extends StructuredTool {
       credentials.clientEmail,
       credentials.privateKey,
       credentials.keyfile,
-      credentials.subject,
+      credentials.subject
     );
   }
 
