@@ -152,3 +152,21 @@ See a [usage example for the Azure Files](/docs/integrations/document_loaders/we
 ```typescript
 import { AzureBlobStorageFileLoader } from "@langchain/community/document_loaders/web/azure_blob_storage_file";
 ```
+
+## Tools
+
+### Azure Container Apps Dynamic Sessions
+
+> [Azure Container Apps dynamic sessions](https://learn.microsoft.com/azure/container-apps/sessions) provide fast access to secure sandboxed environments that are ideal for running code or applications that require strong isolation from other workloads.
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/azure-dynamic-sessions
+```
+
+See a [usage example](/docs/integrations/tools/azure_dynamic_sessions).
+
+```typescript
+import { SessionsPythonREPLTool } from "@langchain/azure-dynamic-sessions";
+```
