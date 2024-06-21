@@ -12,8 +12,6 @@ import { AIMessageChunk } from "@langchain/core/messages";
 import {
   BaseLanguageModelInput,
   StructuredOutputMethodOptions,
-  ToolDefinition,
-  isOpenAITool,
 } from "@langchain/core/language_models/base";
 import type { z } from "zod";
 import {
@@ -57,10 +55,7 @@ import type {
   GeminiFunctionDeclaration,
   GeminiFunctionSchema,
 } from "./types.js";
-import {
-  jsonSchemaToGeminiParameters,
-  zodToGeminiParameters,
-} from "./utils/zod_to_gemini_parameters.js";
+import { zodToGeminiParameters } from "./utils/zod_to_gemini_parameters.js";
 
 class ChatConnection<AuthOptions> extends AbstractGoogleLLMConnection<
   BaseMessage[],
@@ -159,11 +154,7 @@ export interface ChatGoogleBaseInput<AuthOptions>
     Pick<GoogleAIBaseLanguageModelCallOptions, "streamUsage"> {}
 
 function convertToGeminiTools(
-  structuredTools: (
-    | StructuredToolInterface
-    | Record<string, unknown>
-    | ToolDefinition
-  )[]
+  structuredTools: (StructuredToolInterface | Record<string, unknown>)[]
 ): GeminiTool[] {
   return [
     {
@@ -175,17 +166,6 @@ function convertToGeminiTools(
               name: structuredTool.name,
               description: structuredTool.description,
               parameters: jsonSchema as GeminiFunctionSchema,
-            };
-          }
-          if (isOpenAITool(structuredTool)) {
-            return {
-              name: structuredTool.function.name,
-              description:
-                structuredTool.function.description ??
-                `A function available to call.`,
-              parameters: jsonSchemaToGeminiParameters(
-                structuredTool.function.parameters
-              ),
             };
           }
           return structuredTool as unknown as GeminiFunctionDeclaration;
@@ -313,11 +293,7 @@ export abstract class ChatGoogleBase<AuthOptions>
   }
 
   override bindTools(
-    tools: (
-      | StructuredToolInterface
-      | Record<string, unknown>
-      | ToolDefinition
-    )[],
+    tools: (StructuredToolInterface | Record<string, unknown>)[],
     kwargs?: Partial<GoogleAIBaseLanguageModelCallOptions>
   ): Runnable<
     BaseLanguageModelInput,
