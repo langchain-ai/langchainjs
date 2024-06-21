@@ -163,13 +163,26 @@ export abstract class BlobStore extends BaseStore<string, MediaBlob> {
    * Is the path set in the MediaBlob supported by this BlobStore?
    * Subclasses must implement and evaluate `blob.path` to make this
    * determination.
+   *
    * Although this is async, this is expected to be a relatively fast operation
    * (ie - you shouldn't make network calls).
+   *
+   * The default implementation assumes that undefined blob.paths are invalid
+   * and then uses the replacePathPrefix (or an empty string) as an assumed path
+   * to start with.
+   *
    * @param blob The blob to test
    * @param opts Any options (if needed) that may be used to determine if it is valid
    * @return If the string represented by blob.path is supported.
    */
-  abstract _hasValidPath(blob: MediaBlob, opts?: BlobStoreStoreOptions): Promise<boolean>;
+  _hasValidPath(blob: MediaBlob, opts?: BlobStoreStoreOptions): Promise<boolean> {
+    const path = blob.path ?? "";
+    const prefix = opts?.replacePathPrefix ?? "";
+    if (typeof blob.path !== "undefined" && path.startsWith(prefix)) {
+      return Promise.resolve(true);
+    }
+    return Promise.resolve(false);
+  }
 
   _blobPathSuffix(blob: MediaBlob): string {
     // Get the path currently set and make sure we treat it as a string
@@ -281,10 +294,6 @@ export class BackedBlobStore extends BlobStore {
 
   yieldKeys(prefix: string | undefined): AsyncGenerator<string> {
     return this.backingStore.yieldKeys(prefix);
-  }
-
-  _hasValidPath(_blob: MediaBlob, _opts?: BlobStoreStoreOptions): Promise<boolean> {
-    return Promise.resolve(true);
   }
 
 }

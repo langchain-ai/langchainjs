@@ -7,7 +7,6 @@ import {
   MediaBlob,
   BlobStore,
   BlobStoreOptions,
-  BlobStoreStoreOptions,
 } from "./utils/media_core.js";
 import {
   GoogleConnectionParams,
@@ -398,15 +397,6 @@ export abstract class BlobStoreGoogleCloudStorageBase<
       ...this.defaultStoreOptions,
       replacePathPrefix: fields.uriPrefix.uri,
     }
-  }
-
-  _hasValidPath(blob: MediaBlob, opts?: BlobStoreStoreOptions): Promise<boolean> {
-    const path = blob.path ?? "";
-    const prefix = opts?.replacePathPrefix ?? "";
-    if (path.startsWith(prefix)) {
-      return Promise.resolve(true);
-    }
-    return Promise.resolve(false);
   }
 
   buildSetConnection([key, _blob]: [string, MediaBlob]): GoogleUploadConnection<
