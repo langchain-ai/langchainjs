@@ -10551,7 +10551,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/openai@>0.1.0 <0.3.0, @langchain/openai@workspace:*, @langchain/openai@workspace:^, @langchain/openai@workspace:libs/langchain-openai":
+"@langchain/openai@>=0.1.0 <0.3.0, @langchain/openai@workspace:*, @langchain/openai@workspace:^, @langchain/openai@workspace:libs/langchain-openai":
   version: 0.0.0-use.local
   resolution: "@langchain/openai@workspace:libs/langchain-openai"
   dependencies:
@@ -28531,7 +28531,7 @@ __metadata:
     "@jest/globals": ^29.5.0
     "@langchain/cohere": ^0.0.8
     "@langchain/core": ~0.2.0
-    "@langchain/openai": ">0.1.0 <0.3.0"
+    "@langchain/openai": ">=0.1.0 <0.3.0"
     "@langchain/scripts": ~0.0.14
     "@langchain/textsplitters": ~0.0.0
     "@mendable/firecrawl-js": ^0.0.13
