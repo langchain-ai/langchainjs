@@ -26,11 +26,11 @@ import { StructuredToolInterface } from "@langchain/core/tools";
 import { isStructuredTool } from "@langchain/core/utils/function_calling";
 import { isOpenAITool } from "@langchain/core/utils/is_openai_tool";
 import { ToolDefinition } from "@langchain/core/language_models/base";
+import { ToolCallChunk } from "@langchain/core/messages/tool";
 import {
   jsonSchemaToGeminiParameters,
   zodToGenerativeAIParameters,
 } from "./zod_to_genai_parameters.js";
-import { ToolCallChunk } from "@langchain/core/messages/tool";
 
 export function getMessageAuthor(message: BaseMessage) {
   const type = message._getType();
