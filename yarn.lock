@@ -7169,10 +7169,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@cloudflare/ai@npm:1.2.2":
-  version: 1.2.2
-  resolution: "@cloudflare/ai@npm:1.2.2"
-  checksum: a4431f989cf4bae7a8182b7d7131b2f0c100e240e2a4edda6d54f78d1c4807a72a351084cd37cc35ce6a7985dcf4e76c0f34e2f50a87443b60d1f7aaeafd6614
+"@cloudflare/ai@npm:1.0.47":
+  version: 1.0.47
+  resolution: "@cloudflare/ai@npm:1.0.47"
+  checksum: a9e371f789256bb5795c0cb60d975749b07d6cb50141b997da6b5c94380ddf18e851cba518e246414fcab4239d8f4438c5fe29172e6f06c136be3be19a3b65e0
   languageName: node
   linkType: hard
 
@@ -9470,7 +9470,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@langchain/cloudflare@workspace:libs/langchain-cloudflare"
   dependencies:
-    "@cloudflare/ai": 1.2.2
+    "@cloudflare/ai": 1.0.47
     "@cloudflare/workers-types": ^4.20231218.0
     "@jest/globals": ^29.5.0
     "@langchain/core": ">0.1.0 <0.3.0"
@@ -9563,7 +9563,7 @@ __metadata:
     "@azure/storage-blob": ^12.15.0
     "@browserbasehq/sdk": ^1.1.5
     "@clickhouse/client": ^0.2.5
-    "@cloudflare/ai": ^1.0.12
+    "@cloudflare/ai": 1.0.47
     "@cloudflare/workers-types": ^4.20230922.0
     "@datastax/astra-db-ts": ^1.0.1
     "@elastic/elasticsearch": ^8.4.0

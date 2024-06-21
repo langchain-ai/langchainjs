@@ -62,7 +62,7 @@
     "voy-search@0.6.2": "patch:voy-search@npm%3A0.6.2#./.yarn/patches/voy-search-npm-0.6.2-d4aca30a0e.patch",
     "@langchain/core": "workspace:*",
     "better-sqlite3": "9.4.0",
-    "@cloudflare/ai": "1.2.2"
+    "@cloudflare/ai": "1.0.47"
   },
   "lint-staged": {
     "**/*.{ts,tsx}": [

@@ -63,7 +63,7 @@
     "@azure/storage-blob": "^12.15.0",
     "@browserbasehq/sdk": "^1.1.5",
     "@clickhouse/client": "^0.2.5",
-    "@cloudflare/ai": "^1.0.12",
+    "@cloudflare/ai": "1.0.47",
     "@cloudflare/workers-types": "^4.20230922.0",
     "@datastax/astra-db-ts": "^1.0.1",
     "@elastic/elasticsearch": "^8.4.0",
