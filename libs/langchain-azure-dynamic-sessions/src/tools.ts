@@ -1,6 +1,4 @@
 import { promises as fs } from "node:fs";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
 import { Tool } from "@langchain/core/tools";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import {
@@ -12,28 +10,9 @@ import { v4 as uuidv4 } from "uuid";
 const userAgentPrefix = "langchainjs-azure-dynamic-sessions";
 
 let userAgent = "";
-async function getuserAgentSuffix(): Promise<string> {
-  try {
-    if (!userAgent) {
-      let currentDir;
-      try {
-        currentDir = __dirname;
-      } catch (e) {
-        // Workaround to make the build compatible with both ESM and CJS
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        currentDir = path.dirname(fileURLToPath(import.meta.url));
-      }
-
-      const data = await fs.readFile(
-        path.join(currentDir, "..", "package.json"),
-        "utf8"
-      );
-      const json = await JSON.parse(data);
-      userAgent = `${userAgentPrefix} ${json.name}/${json.version} (Language=JavaScript; node.js/${process.version}; ${process.platform}; ${process.arch})`;
-    }
-  } catch (e) {
-    userAgent = `${userAgentPrefix} (Language=JavaScript)`;
+async function getUserAgentSuffix(): Promise<string> {
+  if (!userAgent) {
+    userAgent = `${userAgentPrefix} (Language=JavaScript; node.js/${process.version}; ${process.platform}; ${process.arch})`;
   }
   return userAgent;
 }
@@ -151,7 +130,7 @@ export class SessionsPythonREPLTool extends Tool {
     const headers = {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
-      "User-Agent": await getuserAgentSuffix(),
+      "User-Agent": await getUserAgentSuffix(),
     };
     const body = JSON.stringify({
       properties: {
@@ -188,7 +167,7 @@ export class SessionsPythonREPLTool extends Tool {
     const apiUrl = this._buildUrl("files/upload");
     const headers = {
       Authorization: `Bearer ${token}`,
-      "User-Agent": await getuserAgentSuffix(),
+      "User-Agent": await getUserAgentSuffix(),
     };
     const formData = new FormData();
     formData.append("file", params.data, params.remoteFilename);
@@ -212,7 +191,7 @@ export class SessionsPythonREPLTool extends Tool {
     const apiUrl = this._buildUrl(`files/content/${params.remoteFilename}`);
     const headers = {
       Authorization: `Bearer ${token}`,
-      "User-Agent": await getuserAgentSuffix(),
+      "User-Agent": await getUserAgentSuffix(),
     };
 
     const response = await fetch(apiUrl, {
@@ -232,7 +211,7 @@ export class SessionsPythonREPLTool extends Tool {
     const apiUrl = this._buildUrl("files");
     const headers = {
       Authorization: `Bearer ${token}`,
-      "User-Agent": await getuserAgentSuffix(),
+      "User-Agent": await getUserAgentSuffix(),
     };
 
     const response = await fetch(apiUrl, {
