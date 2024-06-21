@@ -120,5 +120,8 @@
     "prettier": "^2.8.3",
     "tsx": "^3.12.3",
     "typescript": "~5.1.6"
+  },
+  "resolutions": {
+    "@langchain/openai": "workspace:*"
   }
 }

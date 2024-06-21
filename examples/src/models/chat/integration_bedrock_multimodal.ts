@@ -2,7 +2,6 @@ import * as fs from "node:fs/promises";
 
 import { BedrockChat } from "@langchain/community/chat_models/bedrock";
 // Or, from web environments:
-
 // import { BedrockChat } from "@langchain/community/chat_models/bedrock/web";
 import { HumanMessage } from "@langchain/core/messages";
 
