@@ -24,7 +24,10 @@ import {
 } from "@langchain/core/outputs";
 import { StructuredToolInterface } from "@langchain/core/tools";
 import { isStructuredTool } from "@langchain/core/utils/function_calling";
-import { ToolDefinition, isOpenAITool } from "@langchain/core/language_models/base";
+import {
+  ToolDefinition,
+  isOpenAITool,
+} from "@langchain/core/language_models/base";
 import { ToolCallChunk } from "@langchain/core/messages/tool";
 import {
   jsonSchemaToGeminiParameters,
