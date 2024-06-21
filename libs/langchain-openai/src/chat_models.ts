@@ -553,6 +553,12 @@ export class ChatOpenAI<
         )
       );
     }
+    let streamOptionsConfig = {};
+    if (options?.stream_options !== undefined) {
+      streamOptionsConfig = { stream_options: options.stream_options };
+    } else if (this.streamUsage && this.streaming) {
+      streamOptionsConfig = { stream_options: { include_usage: true } };
+    }
     const params: Omit<
       OpenAIClient.Chat.ChatCompletionCreateParams,
       "messages"
@@ -579,11 +585,7 @@ export class ChatOpenAI<
       tool_choice: options?.tool_choice,
       response_format: options?.response_format,
       seed: options?.seed,
-      ...(options?.stream_options !== undefined
-        ? { stream_options: options.stream_options }
-        : this.streamUsage && this.streaming
-        ? { stream_options: { include_usage: true } }
-        : {}),
+      ...streamOptionsConfig,
       parallel_tool_calls: options?.parallel_tool_calls,
       ...this.modelKwargs,
     };
