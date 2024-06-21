@@ -6,7 +6,7 @@ import { getEnvironmentVariable } from "@langchain/core/utils/env";
 /**
  * The default Jina API URL for embedding requests.
  */
-const JINA_API_URL: string = "https://api.jina.ai/v1/embeddings";
+const JINA_API_URL = "https://api.jina.ai/v1/embeddings";
 
 /**
  * Check if a URL is a local file.
@@ -43,6 +43,7 @@ export interface JinaEmbeddingsResponse {
 
 export class JinaEmbeddings extends Embeddings implements JinaEmbeddingsParams {
   apiKey: string;
+
   modelName: string;
 
   constructor(fields?: Partial<JinaEmbeddingsParams> & { verbose?: boolean }) {
@@ -52,7 +53,10 @@ export class JinaEmbeddings extends Embeddings implements JinaEmbeddingsParams {
     };
     super(fieldsWithDefaults);
 
-    const apiKey = fieldsWithDefaults?.apiKey || getEnvironmentVariable("JINA_API_KEY") || getEnvironmentVariable("JINA_AUTH_TOKEN");
+    const apiKey =
+      fieldsWithDefaults?.apiKey ||
+      getEnvironmentVariable("JINA_API_KEY") ||
+      getEnvironmentVariable("JINA_AUTH_TOKEN");
 
     if (!apiKey) {
       throw new Error("Jina API key not found");
@@ -113,7 +117,9 @@ export class JinaEmbeddings extends Embeddings implements JinaEmbeddingsParams {
    * @returns A Promise that resolves to an array of embeddings.
    */
   async embedImages(uris: string[]): Promise<number[][]> {
-    const input = uris.map((uri) => (isLocal(uri) ? { bytes: getBytesStr(uri) } : { url: uri }));
+    const input = uris.map((uri) =>
+      isLocal(uri) ? { bytes: getBytesStr(uri) } : { url: uri }
+    );
     return this._embed(input);
   }
 }
