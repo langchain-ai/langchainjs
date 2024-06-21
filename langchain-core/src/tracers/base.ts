@@ -3,7 +3,7 @@ import { KVMap, BaseRun } from "langsmith/schemas";
 import type { ChainValues } from "../utils/types/index.js";
 import type { AgentAction, AgentFinish } from "../agents.js";
 import type { LLMResult } from "../outputs.js";
-import type { BaseMessage } from "../messages/index.js";
+import type { BaseMessage } from "../messages/base.js";
 import { Serialized } from "../load/serializable.js";
 import {
   BaseCallbackHandler,

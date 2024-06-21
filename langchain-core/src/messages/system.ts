@@ -43,6 +43,7 @@ export class SystemMessageChunk extends BaseMessageChunk {
         this.response_metadata,
         chunk.response_metadata
       ),
+      id: this.id ?? chunk.id,
     });
   }
 }

@@ -17,34 +17,34 @@ export interface GenerativeAIJsonSchemaDirty extends GenerativeAIJsonSchema {
   additionalProperties?: boolean;
 }
 
-function removeAdditionalProperties(
-  schema: GenerativeAIJsonSchemaDirty
+export function removeAdditionalProperties(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  obj: Record<string, any>
 ): GenerativeAIJsonSchema {
-  const updatedSchema: GenerativeAIJsonSchemaDirty = { ...schema };
-  if (Object.hasOwn(updatedSchema, "additionalProperties")) {
-    delete updatedSchema.additionalProperties;
-  }
-  if (updatedSchema.properties) {
-    const keys = Object.keys(updatedSchema.properties);
-    removeProperties(updatedSchema.properties, keys, 0);
+  if (typeof obj === "object" && obj !== null) {
+    const newObj = { ...obj };
+
+    if (
+      "additionalProperties" in newObj &&
+      typeof newObj.additionalProperties === "boolean"
+    ) {
+      delete newObj.additionalProperties;
+    }
+
+    for (const key in newObj) {
+      if (key in newObj) {
+        if (Array.isArray(newObj[key])) {
+          newObj[key] = newObj[key].map(removeAdditionalProperties);
+        } else if (typeof newObj[key] === "object" && newObj[key] !== null) {
+          newObj[key] = removeAdditionalProperties(newObj[key]);
+        }
+      }
+    }
+
+    return newObj as GenerativeAIJsonSchema;
   }
 
-  return updatedSchema;
-}
-
-function removeProperties(
-  properties: GenerativeAIJsonSchemaDirty["properties"],
-  keys: string[],
-  index: number
-): void {
-  if (index >= keys.length || !properties) {
-    return;
-  }
-
-  const key = keys[index];
-  // eslint-disable-next-line no-param-reassign
-  properties[key] = removeAdditionalProperties(properties[key]);
-  removeProperties(properties, keys, index + 1);
+  return obj as GenerativeAIJsonSchema;
 }
 
 export function zodToGenerativeAIParameters(
@@ -53,9 +53,7 @@ export function zodToGenerativeAIParameters(
 ): GenerativeAIFunctionDeclarationSchema {
   // GenerativeAI doesn't accept either the $schema or additionalProperties
   // attributes, so we need to explicitly remove them.
-  const jsonSchema = removeAdditionalProperties(
-    zodToJsonSchema(zodObj) as GenerativeAIJsonSchemaDirty
-  );
+  const jsonSchema = removeAdditionalProperties(zodToJsonSchema(zodObj));
   const { $schema, ...rest } = jsonSchema;
 
   return rest as GenerativeAIFunctionDeclarationSchema;

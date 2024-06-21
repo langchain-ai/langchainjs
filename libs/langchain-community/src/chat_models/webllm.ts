@@ -63,7 +63,9 @@ export class ChatWebLLM extends SimpleChatModel<WebLLMCallOptions> {
     this.chatOptions = inputs.chatOptions;
     this.model = inputs.model;
     this.temperature = inputs.temperature;
-    this.engine = new webllm.MLCEngine();
+    this.engine = new webllm.MLCEngine({
+      appConfig: this.appConfig,
+    });
   }
 
   _llmType() {
@@ -74,15 +76,11 @@ export class ChatWebLLM extends SimpleChatModel<WebLLMCallOptions> {
     if (progressCallback !== undefined) {
       this.engine.setInitProgressCallback(progressCallback);
     }
-    await this.reload(this.model, this.chatOptions, this.appConfig);
+    await this.reload(this.model, this.chatOptions);
   }
 
-  async reload(
-    modelId: string,
-    newChatOpts?: webllm.ChatOptions,
-    newAppConfig?: webllm.AppConfig
-  ) {
-    await this.engine.reload(modelId, newChatOpts, newAppConfig);
+  async reload(modelId: string, newChatOpts?: webllm.ChatOptions) {
+    await this.engine.reload(modelId, newChatOpts);
   }
 
   async *_streamResponseChunks(

@@ -27,6 +27,7 @@
     "@langchain/core": "workspace:*",
     "@langchain/openai": "workspace:*",
     "@tsconfig/recommended": "^1.0.2",
+    "@xenova/transformers": "^2.5.4",
     "d3-dsv": "2",
     "hnswlib-node": "^3.0.0",
     "langchain": "workspace:*",

@@ -29,8 +29,8 @@ export class PostgresRecordManager implements RecordManagerInterface {
     this.pool = pool || new pg.Pool(postgresConnectionOptions);
     this.tableName = tableName || "upsertion_records";
     this.finalTableName = config.schema
-      ? `"${config.schema}"."${tableName}"`
-      : `"${tableName}"`;
+      ? `"${config.schema}"."${this.tableName}"`
+      : `"${this.tableName}"`;
   }
 
   async createSchema(): Promise<void> {
