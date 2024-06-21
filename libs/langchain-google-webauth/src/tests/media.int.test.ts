@@ -1,6 +1,9 @@
 import fs from "fs/promises";
 import { test } from "@jest/globals";
-import { MediaBlob } from "@langchain/google-common";
+import {
+  GoogleCloudStorageUri,
+  MediaBlob,
+} from "@langchain/google-common";
 import {
   BlobStoreGoogleCloudStorage,
   BlobStoreGoogleCloudStorageParams,
@@ -8,13 +11,16 @@ import {
 
 describe("Google Webauth GCS store", () => {
   test("save text no-metadata", async () => {
+    const uriPrefix = new GoogleCloudStorageUri("gs://test-langchainjs/");
     const uri = `gs://test-langchainjs/text/test-${Date.now()}-nm`;
     const content = "This is a test";
     const blob = new MediaBlob({
       path: uri,
       data: new Blob([content], { type: "text/plain" }),
     });
-    const config: BlobStoreGoogleCloudStorageParams = {};
+    const config: BlobStoreGoogleCloudStorageParams = {
+      uriPrefix,
+    };
     const blobStore = new BlobStoreGoogleCloudStorage(config);
     const storedBlob = await blobStore.store(blob);
     // console.log(storedBlob);
@@ -27,6 +33,7 @@ describe("Google Webauth GCS store", () => {
   });
 
   test("save text with-metadata", async () => {
+    const uriPrefix = new GoogleCloudStorageUri("gs://test-langchainjs/");
     const uri = `gs://test-langchainjs/text/test-${Date.now()}-wm`;
     const content = "This is a test";
     const blob = new MediaBlob({
@@ -37,7 +44,9 @@ describe("Google Webauth GCS store", () => {
         bravo: "two",
       },
     });
-    const config: BlobStoreGoogleCloudStorageParams = {};
+    const config: BlobStoreGoogleCloudStorageParams = {
+      uriPrefix,
+    };
     const blobStore = new BlobStoreGoogleCloudStorage(config);
     const storedBlob = await blobStore.store(blob);
     // console.log(storedBlob);
@@ -56,12 +65,15 @@ describe("Google Webauth GCS store", () => {
     const dataBuffer = await fs.readFile(filename);
     const data = new Blob([dataBuffer], { type: "image/png" });
 
+    const uriPrefix = new GoogleCloudStorageUri("gs://test-langchainjs/");
     const uri = `gs://test-langchainjs/image/test-${Date.now()}-nm`;
     const blob = new MediaBlob({
       path: uri,
       data,
     });
-    const config: BlobStoreGoogleCloudStorageParams = {};
+    const config: BlobStoreGoogleCloudStorageParams = {
+      uriPrefix,
+    };
     const blobStore = new BlobStoreGoogleCloudStorage(config);
     const storedBlob = await blobStore.store(blob);
     // console.log(storedBlob);
@@ -72,8 +84,11 @@ describe("Google Webauth GCS store", () => {
   });
 
   test("get text no-metadata", async () => {
+    const uriPrefix = new GoogleCloudStorageUri("gs://test-langchainjs/");
     const uri: string = "gs://test-langchainjs/text/test-nm";
-    const config: BlobStoreGoogleCloudStorageParams = {};
+    const config: BlobStoreGoogleCloudStorageParams = {
+      uriPrefix,
+    };
     const blobStore = new BlobStoreGoogleCloudStorage(config);
     const blob = await blobStore.fetch(uri);
     // console.log(blob);
@@ -86,8 +101,11 @@ describe("Google Webauth GCS store", () => {
   });
 
   test("get text with-metadata", async () => {
+    const uriPrefix = new GoogleCloudStorageUri("gs://test-langchainjs/");
     const uri: string = "gs://test-langchainjs/text/test-wm";
-    const config: BlobStoreGoogleCloudStorageParams = {};
+    const config: BlobStoreGoogleCloudStorageParams = {
+      uriPrefix,
+    };
     const blobStore = new BlobStoreGoogleCloudStorage(config);
     const blob = await blobStore.fetch(uri);
     // console.log(blob);
@@ -102,8 +120,11 @@ describe("Google Webauth GCS store", () => {
   });
 
   test("get image no-metadata", async () => {
+    const uriPrefix = new GoogleCloudStorageUri("gs://test-langchainjs/");
     const uri: string = "gs://test-langchainjs/image/test-nm";
-    const config: BlobStoreGoogleCloudStorageParams = {};
+    const config: BlobStoreGoogleCloudStorageParams = {
+      uriPrefix,
+    };
     const blobStore = new BlobStoreGoogleCloudStorage(config);
     const blob = await blobStore.fetch(uri);
     // console.log(storedBlob);

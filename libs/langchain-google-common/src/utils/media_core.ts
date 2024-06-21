@@ -1,5 +1,6 @@
+import { v4 as uuidv4 } from "uuid";
 import { BaseStore } from "@langchain/core/stores";
-import {v4 as uuidv4} from "uuid";
+import { Serializable } from "@langchain/core/load/serializable";
 
 export interface MediaBlobParameters {
   data?: Blob;
@@ -13,7 +14,14 @@ export interface MediaBlobParameters {
  * Represents a chunk of data that can be identified by the path where the
  * data is (or will be) located, along with optional metadata about the data.
  */
-export class MediaBlob implements MediaBlobParameters {
+export class MediaBlob
+  extends Serializable   // FIXME - I'm not sure this serializes or deserializes correctly
+  implements MediaBlobParameters
+{
+  lc_serializable = true;
+
+  lc_namespace = ["langchain", "google-common"]; // FIXME - What should this be? And why?
+
   data?: Blob;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -22,6 +30,7 @@ export class MediaBlob implements MediaBlobParameters {
   path?: string;
 
   constructor(params?: MediaBlobParameters) {
+    super(params);
     this.data = params?.data;
     this.metadata = params?.metadata;
     this.path = params?.path;

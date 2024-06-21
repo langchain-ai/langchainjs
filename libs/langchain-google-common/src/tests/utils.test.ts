@@ -107,6 +107,14 @@ describe("MediaBlob and BlobStore", () => {
     expect(await mblob.asString()).toEqual("This is a test");
   });
 
+  test("MediaBlob serialize", async () => {
+    const blob = new Blob(["This is a test"], { type: "text/plain" });
+    const mblob = new MediaBlob({
+      data: blob,
+    });
+    console.log(mblob.toJSON());
+  });
+
   test("SimpleWebBlobStore fetch", async () => {
     const webStore = new SimpleWebBlobStore();
     const exampleBlob = await webStore.fetch("http://example.com/");
