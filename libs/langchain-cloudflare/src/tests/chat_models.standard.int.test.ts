@@ -23,7 +23,7 @@ class ChatCloudflareWorkersAIStandardIntegrationTests extends ChatModelIntegrati
     super({
       Cls: ChatCloudflareWorkersAI,
       chatModelHasToolCalling: true,
-      chatModelHasStructuredOutput: false,
+      chatModelHasStructuredOutput: true,
       constructorArgs: {
         model: "@hf/nousresearch/hermes-2-pro-mistral-7b",
       },

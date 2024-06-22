@@ -3,10 +3,11 @@ import {
   SimpleChatModel,
   type BaseChatModelParams,
 } from "@langchain/core/language_models/chat_models";
-import type {
-  BaseLanguageModelCallOptions,
-  BaseLanguageModelInput,
-  ToolDefinition,
+import {
+  isOpenAITool,
+  type BaseLanguageModelCallOptions,
+  type BaseLanguageModelInput,
+  type ToolDefinition,
 } from "@langchain/core/language_models/base";
 import {
   AIMessage,
@@ -61,17 +62,7 @@ function convertToCloudflareTools(tools: Tool[]): CloudflareTool[] {
       parameters: zodToJsonSchema(tc.schema),
     }));
   }
-  if (
-    tools.every(
-      (t) =>
-        !!(
-          "type" in t &&
-          t.type === "function" &&
-          "function" in t &&
-          typeof t.function === "object"
-        )
-    )
-  ) {
+  if (tools.every(isOpenAITool)) {
     return (tools as ToolDefinition[]).map((tc) => ({
       name: tc.function.name,
       description:
