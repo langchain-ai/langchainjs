@@ -82,6 +82,27 @@ export const getModelContextSize = (modelName: string): number => {
   }
 };
 
+/**
+ * Whether or not the input matches the OpenAI tool definition.
+ * @param {unknown} tool The input to check.
+ * @returns {boolean} Whether the input is an OpenAI tool definition.
+ */
+export function isOpenAITool(tool: unknown): tool is ToolDefinition {
+  if (typeof tool !== "object" || !tool) return false;
+  if (
+    "type" in tool &&
+    tool.type === "function" &&
+    "function" in tool &&
+    typeof tool.function === "object" &&
+    tool.function &&
+    "name" in tool.function &&
+    "parameters" in tool.function
+  ) {
+    return true;
+  }
+  return false;
+}
+
 interface CalculateMaxTokenProps {
   prompt: string;
   modelName: TiktokenModel;

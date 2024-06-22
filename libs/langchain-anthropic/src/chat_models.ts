@@ -25,9 +25,11 @@ import {
   type BaseChatModelParams,
 } from "@langchain/core/language_models/chat_models";
 import {
-  StructuredOutputMethodOptions,
+  type StructuredOutputMethodOptions,
   type BaseLanguageModelCallOptions,
-  BaseLanguageModelInput,
+  type BaseLanguageModelInput,
+  type ToolDefinition,
+  isOpenAITool,
 } from "@langchain/core/language_models/base";
 import { StructuredToolInterface } from "@langchain/core/tools";
 import { zodToJsonSchema } from "zod-to-json-schema";
@@ -40,20 +42,15 @@ import {
 import { isZodSchema } from "@langchain/core/utils/types";
 import { ToolCall } from "@langchain/core/messages/tool";
 import { z } from "zod";
+import type {
+  MessageCreateParams,
+  Tool as AnthropicTool,
+} from "@anthropic-ai/sdk/resources/index.mjs";
 import {
   AnthropicToolsOutputParser,
   extractToolCalls,
 } from "./output_parsers.js";
 import { AnthropicToolResponse } from "./types.js";
-
-type AnthropicTool = {
-  name: string;
-  description: string;
-  /**
-   * JSON schema.
-   */
-  input_schema: Record<string, unknown>;
-};
 
 type AnthropicMessage = Anthropic.MessageParam;
 type AnthropicMessageCreateParams = Anthropic.MessageCreateParamsNonStreaming;
@@ -71,7 +68,12 @@ type AnthropicToolChoice =
 export interface ChatAnthropicCallOptions
   extends BaseLanguageModelCallOptions,
     Pick<AnthropicInput, "streamUsage"> {
-  tools?: (StructuredToolInterface | AnthropicTool)[];
+  tools?: (
+    | StructuredToolInterface
+    | AnthropicTool
+    | Record<string, unknown>
+    | ToolDefinition
+  )[];
   /**
    * Whether or not to specify what tool the model should use
    * @default "auto"
@@ -563,21 +565,34 @@ export class ChatAnthropicMessages<
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if ((tools as any[]).every((tool) => isOpenAITool(tool))) {
+      // Formatted as OpenAI tool, convert to Anthropic tool
+      return (tools as ToolDefinition[]).map((tc) => ({
+        name: tc.function.name,
+        description: tc.function.description,
+        input_schema: tc.function.parameters as AnthropicTool.InputSchema,
+      }));
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     if ((tools as any[]).some((tool) => isAnthropicTool(tool))) {
-      throw new Error(
-        `Can not pass in a mix of AnthropicTools and StructuredTools`
-      );
+      throw new Error(`Can not pass in a mix of tool schemas to ChatAnthropic`);
     }
 
     return (tools as StructuredToolInterface[]).map((tool) => ({
       name: tool.name,
       description: tool.description,
-      input_schema: zodToJsonSchema(tool.schema),
+      input_schema: zodToJsonSchema(tool.schema) as AnthropicTool.InputSchema,
     }));
   }
 
   override bindTools(
-    tools: (AnthropicTool | StructuredToolInterface)[],
+    tools: (
+      | AnthropicTool
+      | Record<string, unknown>
+      | StructuredToolInterface
+      | ToolDefinition
+    )[],
     kwargs?: Partial<CallOptions>
   ): Runnable<BaseLanguageModelInput, AIMessageChunk, CallOptions> {
     return this.bind({
@@ -597,10 +612,9 @@ export class ChatAnthropicMessages<
   > &
     Kwargs {
     let tool_choice:
-      | {
-          type: string;
-          name?: string;
-        }
+      | MessageCreateParams.ToolChoiceAuto
+      | MessageCreateParams.ToolChoiceAny
+      | MessageCreateParams.ToolChoiceTool
       | undefined;
     if (options?.tool_choice) {
       if (options?.tool_choice === "any") {
@@ -739,7 +753,10 @@ export class ChatAnthropicMessages<
           if (data?.usage !== undefined) {
             usageData.output_tokens += data.usage.output_tokens;
           }
-        } else if (data.type === "content_block_delta") {
+        } else if (
+          data.type === "content_block_delta" &&
+          data.delta.type === "text_delta"
+        ) {
           const content = data.delta?.text;
           if (content !== undefined) {
             yield new ChatGenerationChunk({
@@ -976,7 +993,7 @@ export class ChatAnthropicMessages<
           name: functionName,
           description:
             jsonSchema.description ?? "A function available to call.",
-          input_schema: jsonSchema,
+          input_schema: jsonSchema as AnthropicTool.InputSchema,
         },
       ];
       outputParser = new AnthropicToolsOutputParser({
@@ -998,7 +1015,7 @@ export class ChatAnthropicMessages<
         anthropicTools = {
           name: functionName,
           description: schema.description ?? "",
-          input_schema: schema,
+          input_schema: schema as AnthropicTool.InputSchema,
         };
       }
       tools = [anthropicTools];
