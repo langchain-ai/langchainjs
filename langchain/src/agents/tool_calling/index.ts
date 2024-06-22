@@ -8,6 +8,7 @@ import {
   ToolsAgentStep,
 } from "./output_parser.js";
 import { formatToToolMessages } from "../format_scratchpad/tool_calling.js";
+import { ToolDefinition } from "@langchain/core/language_models/base";
 
 /**
  * Params used by the createOpenAIToolsAgent function.
@@ -20,7 +21,7 @@ export type CreateToolCallingAgentParams = {
    */
   llm: BaseChatModel;
   /** Tools this agent has access to. */
-  tools: StructuredToolInterface[];
+  tools: StructuredToolInterface[] | ToolDefinition[];
   /** The prompt to use, must have an input key of `agent_scratchpad`. */
   prompt: ChatPromptTemplate;
   /**
