@@ -10401,7 +10401,7 @@ __metadata:
   resolution: "@langchain/groq@workspace:libs/langchain-groq"
   dependencies:
     "@jest/globals": ^29.5.0
-    "@langchain/core": ">0.1.56 <0.3.0"
+    "@langchain/core": ">=0.2.9 <0.3.0"
     "@langchain/openai": "workspace:^"
     "@langchain/scripts": ~0.0.14
     "@langchain/standard-tests": 0.0.0
