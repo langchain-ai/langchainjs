@@ -12,9 +12,11 @@ class BedrockChatStandardUnitTests extends ChatModelUnitTests<
   constructor() {
     super({
       Cls: BedrockChat,
-      chatModelHasToolCalling: false,
-      chatModelHasStructuredOutput: false,
-      constructorArgs: {},
+      chatModelHasToolCalling: true,
+      chatModelHasStructuredOutput: true,
+      constructorArgs: {
+        model: "anthropic.claude-3-sonnet-20240229-v1:0",
+      },
     });
     process.env.BEDROCK_AWS_SECRET_ACCESS_KEY = "test";
     process.env.BEDROCK_AWS_ACCESS_KEY_ID = "test";

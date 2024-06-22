@@ -37,6 +37,18 @@ To make creating packages like this easier, we offer the [`create-langchain-inte
 $ npx create-langchain-integration
 ```
 
+After creating the new integration package, you should add it to the [`unit-tests-integrations.yml`](./.github/workflows/unit-tests-integrations.yml) GitHub action workflow so that it is tested in CI. To do this, simply add the integration name inside the `jobs.unit-tests.strategy.matrix.package` array:
+
+```yaml
+jobs:
+  unit-tests:
+    name: Unit Tests
+    strategy:
+      matrix:
+        package: [anthropic, azure-openai, cloudflare, <your package name>]
+        ...
+```
+
 ### Want to add a feature that's already in Python?
 
 If you're interested in contributing a feature that's already in the [LangChain Python repo](https://github.com/langchain-ai/langchain) and you'd like some help getting started, you can try pasting code snippets and classes into the [LangChain Python to JS translator](https://langchain-translator.vercel.app/).

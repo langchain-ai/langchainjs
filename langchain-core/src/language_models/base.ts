@@ -11,8 +11,8 @@ import {
   type BaseMessage,
   type BaseMessageLike,
   type MessageContent,
-  coerceMessageLikeToMessage,
-} from "../messages/index.js";
+} from "../messages/base.js";
+import { coerceMessageLikeToMessage } from "../messages/utils.js";
 import { type LLMResult } from "../outputs.js";
 import { CallbackManager, Callbacks } from "../callbacks/manager.js";
 import { AsyncCaller, AsyncCallerParams } from "../utils/async_caller.js";
@@ -81,6 +81,27 @@ export const getModelContextSize = (modelName: string): number => {
       return 4097;
   }
 };
+
+/**
+ * Whether or not the input matches the OpenAI tool definition.
+ * @param {unknown} tool The input to check.
+ * @returns {boolean} Whether the input is an OpenAI tool definition.
+ */
+export function isOpenAITool(tool: unknown): tool is ToolDefinition {
+  if (typeof tool !== "object" || !tool) return false;
+  if (
+    "type" in tool &&
+    tool.type === "function" &&
+    "function" in tool &&
+    typeof tool.function === "object" &&
+    tool.function &&
+    "name" in tool.function &&
+    "parameters" in tool.function
+  ) {
+    return true;
+  }
+  return false;
+}
 
 interface CalculateMaxTokenProps {
   prompt: string;

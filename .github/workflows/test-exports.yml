@@ -1,6 +1,15 @@
 name: Environment tests
 
 on:
+  pull_request:
+    # Only run workflow if files in these directories are changed
+    paths:
+      - 'langchain/**'
+      - 'langchain-core/**'
+      - 'libs/langchain-anthropic/**'
+      - 'libs/langchain-community/**'
+      - 'libs/langchain-openai/**'
+      - 'examples/**'
   workflow_dispatch: # Allows triggering the workflow manually in GitHub UI
   workflow_call: # Allows triggering the workflow from another workflow
 

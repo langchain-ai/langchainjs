@@ -4,7 +4,7 @@ import { ChatVertexAI } from "@langchain/google-vertexai";
 
 const model = new ChatVertexAI({
   temperature: 0.7,
-  model: "gemini-1.0-pro",
+  model: "gemini-1.5-flash-001",
 });
 
 const response = await model.invoke("Why is the ocean blue?");

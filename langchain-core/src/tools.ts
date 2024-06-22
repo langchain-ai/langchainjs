@@ -10,7 +10,10 @@ import {
   type BaseLangChainParams,
 } from "./language_models/base.js";
 import { ensureConfig, type RunnableConfig } from "./runnables/config.js";
-import type { RunnableInterface } from "./runnables/base.js";
+import type { RunnableFunc, RunnableInterface } from "./runnables/base.js";
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type ZodAny = z.ZodObject<any, any, any, any>;
 
 /**
  * Parameters for the Tool classes.
@@ -31,10 +34,8 @@ export class ToolInputParsingException extends Error {
   }
 }
 
-export interface StructuredToolInterface<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  T extends z.ZodObject<any, any, any, any> = z.ZodObject<any, any, any, any>
-> extends RunnableInterface<
+export interface StructuredToolInterface<T extends ZodAny = ZodAny>
+  extends RunnableInterface<
     (z.output<T> extends string ? string : never) | z.input<T>,
     string
   > {
@@ -71,8 +72,7 @@ export interface StructuredToolInterface<
  * Base class for Tools that accept input of any shape defined by a Zod schema.
  */
 export abstract class StructuredTool<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  T extends z.ZodObject<any, any, any, any> = z.ZodObject<any, any, any, any>
+  T extends ZodAny = ZodAny
 > extends BaseLangChain<
   (z.output<T> extends string ? string : never) | z.input<T>,
   string
@@ -238,10 +238,8 @@ export interface DynamicToolInput extends BaseDynamicToolInput {
 /**
  * Interface for the input parameters of the DynamicStructuredTool class.
  */
-export interface DynamicStructuredToolInput<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  T extends z.ZodObject<any, any, any, any> = z.ZodObject<any, any, any, any>
-> extends BaseDynamicToolInput {
+export interface DynamicStructuredToolInput<T extends ZodAny = ZodAny>
+  extends BaseDynamicToolInput {
   func: (
     input: z.infer<T>,
     runManager?: CallbackManagerForToolRun,
@@ -303,9 +301,8 @@ export class DynamicTool extends Tool {
  * provided function when the tool is called.
  */
 export class DynamicStructuredTool<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  T extends z.ZodObject<any, any, any, any> = z.ZodObject<any, any, any, any>
-> extends StructuredTool {
+  T extends ZodAny = ZodAny
+> extends StructuredTool<T> {
   static lc_name() {
     return "DynamicStructuredTool";
   }
@@ -314,7 +311,7 @@ export class DynamicStructuredTool<
 
   description: string;
 
-  func: DynamicStructuredToolInput["func"];
+  func: DynamicStructuredToolInput<T>["func"];
 
   schema: T;
 
@@ -363,4 +360,59 @@ export abstract class BaseToolkit {
   getTools(): StructuredToolInterface[] {
     return this.tools;
   }
+}
+
+/**
+ * Parameters for the tool function.
+ * @template {ZodAny} RunInput The input schema for the tool.
+ */
+interface ToolWrapperParams<RunInput extends ZodAny = ZodAny>
+  extends ToolParams {
+  /**
+   * The name of the tool. If using with an LLM, this
+   * will be passed as the tool name.
+   */
+  name: string;
+  /**
+   * The description of the tool.
+   * @default `${fields.name} tool`
+   */
+  description?: string;
+  /**
+   * The input schema for the tool. If using an LLM, this
+   * will be passed as the tool schema to generate arguments
+   * for.
+   */
+  schema?: RunInput;
+}
+
+/**
+ * Creates a new StructuredTool instance with the provided function, name, description, and schema.
+ * @function
+ * @template {ZodAny} RunInput The input schema for the tool.
+ *
+ * @param {RunnableFunc<RunInput, string>} func - The function to invoke when the tool is called.
+ * @param fields - An object containing the following properties:
+ * @param {string} fields.name The name of the tool.
+ * @param {string | undefined} fields.description The description of the tool. Defaults to either the description on the Zod schema, or `${fields.name} tool`.
+ * @param {z.ZodObject<any, any, any, any>} fields.schema The Zod schema defining the input for the tool.
+ *
+ * @returns {StructuredTool<RunInput, string>} A new StructuredTool instance.
+ */
+export function tool<RunInput extends ZodAny = ZodAny>(
+  func: RunnableFunc<z.infer<RunInput>, string>,
+  fields: ToolWrapperParams<RunInput>
+) {
+  const schema =
+    fields.schema ??
+    z.object({ input: z.string().optional() }).transform((obj) => obj.input);
+
+  const description =
+    fields.description ?? schema.description ?? `${fields.name} tool`;
+  return new DynamicStructuredTool<RunInput>({
+    name: fields.name,
+    description,
+    schema: schema as RunInput,
+    func: async (input, _runManager, config) => func(input, config),
+  });
 }
