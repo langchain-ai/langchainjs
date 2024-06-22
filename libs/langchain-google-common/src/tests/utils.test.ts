@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { expect, test } from "@jest/globals";
+import {beforeEach, expect, test} from "@jest/globals";
 import { InMemoryStore } from "@langchain/core/stores";
 import { z } from "zod";
 import { zodToGeminiParameters } from "../utils/zod_to_gemini_parameters.js";
 import {
   BackedBlobStore,
-  MediaBlob,
+  MediaBlob, MediaManager,
   SimpleWebBlobStore,
 } from "../utils/media_core.js";
 
@@ -281,6 +281,98 @@ describe("media core", () => {
       expect(storedBlob?.metadata?.langchainOldPath).toEqual(path);
     })
 
+
+  });
+
+  describe("MediaManager", () => {
+
+    class MemStore extends InMemoryStore<MediaBlob> {
+      get length() {
+        return Object.keys(this.store).length;
+      }
+    }
+
+    let mediaManager: MediaManager;
+    let aliasMemory: MemStore;
+    let canonicalMemory: MemStore;
+    let resolverMemory: MemStore;
+
+    async function store(path: string, text: string): Promise<void>{
+      const blob = new MediaBlob({
+        data: new Blob([text], {type:"text/plain"}),
+        path,
+      })
+      await mediaManager.resolver.store(blob)
+    }
+
+    beforeEach(async () => {
+      aliasMemory = new MemStore();
+      const aliasStore = new BackedBlobStore({
+        backingStore: aliasMemory,
+        defaultFetchOptions: {
+          actionIfBlobMissing: undefined
+        }
+      });
+      canonicalMemory = new MemStore();
+      const canonicalStore = new BackedBlobStore({
+        backingStore: canonicalMemory,
+        defaultStoreOptions: {
+          pathPrefix: "canonical://store/",
+          actionIfInvalid: "prefixPath",
+        },
+        defaultFetchOptions: {
+          actionIfBlobMissing: undefined,
+        }
+      });
+      resolverMemory = new MemStore();
+      const resolver = new BackedBlobStore({
+        backingStore: resolverMemory,
+        defaultFetchOptions: {
+          actionIfBlobMissing: "emptyBlob",
+        }
+      });
+      mediaManager = new MediaManager({
+        aliasStore,
+        canonicalStore,
+        resolver,
+      })
+      await store("resolve://host/foo", "fooing");
+      await store("resolve://host2/bar/baz", "barbazing");
+    })
+
+    test("environment", async () => {
+      expect(resolverMemory.length).toEqual(2);
+      const fooBlob = await mediaManager.resolver.fetch("resolve://host/foo");
+      expect(await fooBlob?.asString()).toEqual("fooing");
+    })
+
+    test("simple", async () => {
+      const uri = "resolve://host/foo";
+      const curi = "canonical://store/host/foo";
+      const blob = await mediaManager.getMediaBlob(uri);
+      expect(await blob?.asString()).toEqual("fooing");
+      expect(blob?.path).toEqual(curi);
+
+      // In the alias store,
+      // we should be able to fetch it by the resolve uri, but the
+      // path in the blob itself should be the canonical uri
+      expect(aliasMemory.length).toEqual(1);
+      const aliasBlob = await mediaManager.aliasStore.fetch(uri);
+      expect(aliasBlob).toBeDefined();
+      expect(aliasBlob?.path).toEqual(curi);
+      expect(await aliasBlob?.asString()).toEqual("fooing");
+
+      // For the canonical store,
+      // fetching it by the resolve uri should fail
+      // but fetching it by the canonical uri should succeed
+      expect(canonicalMemory.length).toEqual(1);
+      const canonicalBlobU = await mediaManager.canonicalStore.fetch(uri);
+      expect(canonicalBlobU).toBeUndefined();
+      const canonicalBlob = await mediaManager.canonicalStore.fetch(curi);
+      expect(canonicalBlob).toBeDefined();
+      expect(canonicalBlob?.path).toEqual(curi);
+      expect(await canonicalBlob?.asString()).toEqual("fooing");
+    })
 
   })
 });

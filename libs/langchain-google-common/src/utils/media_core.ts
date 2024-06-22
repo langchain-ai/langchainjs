@@ -252,11 +252,11 @@ export abstract class BlobStore extends BaseStore<string, MediaBlob> {
 
   async store(blob: MediaBlob, opts: BlobStoreStoreOptions = {}): Promise<MediaBlob | undefined> {
     const allOpts: BlobStoreStoreOptions = {...this.defaultStoreOptions, ...opts};
-    const key = await blob.asUri();
     const validBlob = await this._validStoreBlob(blob, allOpts);
     if (typeof validBlob !== "undefined") {
-      await this.mset([[key, validBlob]]);
-      return (await this.fetch(key)) || blob;
+      const validKey = await validBlob.asUri();
+      await this.mset([[validKey, validBlob]]);
+      return (await this.fetch(validKey));
     }
     return undefined;
   }
@@ -395,7 +395,7 @@ export interface MediaManagerConfiguration {
  * through the Base64 of the media or through a canonical URI that the LLM
  * supports.
  */
-export abstract class MediaManager {
+export class MediaManager {
 
   aliasStore: BlobStore;
 
