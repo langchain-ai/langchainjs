@@ -168,7 +168,7 @@ describe("media core", () => {
       const store = new BackedBlobStore({
         backingStore,
         defaultFetchOptions: {
-          handleMissingBlobMethod: "emptyBlob",
+          actionIfBlobMissing: "emptyBlob",
         }
       });
       const path = "simple://foo"
@@ -183,23 +183,22 @@ describe("media core", () => {
       const store = new BackedBlobStore({
         backingStore,
         defaultFetchOptions: {
-          handleMissingBlobMethod: "emptyBlob",
+          actionIfBlobMissing: "emptyBlob",
         }
       });
       const path = "simple://foo"
       const fetchedBlob = await store.fetch(path, {
-        handleMissingBlobMethod: "",
+        actionIfBlobMissing: undefined,
       });
       expect(fetchedBlob).toBeUndefined();
     })
 
-    test("check prefixPath", async () => {
+    test("invalid undefined", async () => {
       const backingStore = new InMemoryStore<MediaBlob>();
       const store = new BackedBlobStore({
         backingStore,
         defaultStoreOptions: {
-          replacePathMethod: "prefixPath",
-          replacePathPrefix: "example://bar/"
+          pathPrefix: "example://bar/"
         }
       });
       const path = "simple://foo"
@@ -209,18 +208,58 @@ describe("media core", () => {
         path,
       })
       const storedBlob = await store.store(blob);
-      expect(storedBlob.path).toEqual("example://bar/foo");
-      expect(await storedBlob.asString()).toEqual("This is a test");
-      expect(storedBlob.metadata?.langchainOldPath).toEqual(path);
+      expect(storedBlob).toBeUndefined();
     })
 
-    test("check prefixUuid", async () => {
+    test("invalid ignore", async () => {
       const backingStore = new InMemoryStore<MediaBlob>();
       const store = new BackedBlobStore({
         backingStore,
         defaultStoreOptions: {
-          replacePathMethod: "prefixUuid",
-          replacePathPrefix: "example://bar/"
+          actionIfInvalid: "ignore",
+          pathPrefix: "example://bar/"
+        }
+      });
+      const path = "simple://foo"
+      const data = new Blob(["This is a test"], {type:"text/plain"});
+      const blob = new MediaBlob({
+        data,
+        path,
+      })
+      const storedBlob = await store.store(blob);
+      expect(storedBlob).toBeDefined();
+      expect(storedBlob?.path).toEqual(path);
+      expect(storedBlob?.metadata).toBeUndefined();
+    })
+
+    test("invalid prefixPath", async () => {
+      const backingStore = new InMemoryStore<MediaBlob>();
+      const store = new BackedBlobStore({
+        backingStore,
+        defaultStoreOptions: {
+          actionIfInvalid: "prefixPath",
+          pathPrefix: "example://bar/"
+        }
+      });
+      const path = "simple://foo"
+      const data = new Blob(["This is a test"], {type:"text/plain"});
+      const blob = new MediaBlob({
+        data,
+        path,
+      })
+      const storedBlob = await store.store(blob);
+      expect(storedBlob?.path).toEqual("example://bar/foo");
+      expect(await storedBlob?.asString()).toEqual("This is a test");
+      expect(storedBlob?.metadata?.langchainOldPath).toEqual(path);
+    })
+
+    test("invalid prefixUuid", async () => {
+      const backingStore = new InMemoryStore<MediaBlob>();
+      const store = new BackedBlobStore({
+        backingStore,
+        defaultStoreOptions: {
+          actionIfInvalid: "prefixUuid",
+          pathPrefix: "example://bar/"
         }
       });
       const path = "simple://foo"
@@ -235,11 +274,11 @@ describe("media core", () => {
         metadata,
       })
       const storedBlob = await store.store(blob);
-      expect(storedBlob.path).toMatch(/example:\/\/bar\/[a-f0-9]{8}(-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i);
-      expect(storedBlob.size).toEqual(14);
-      expect(await storedBlob.asString()).toEqual("This is a test");
-      expect(storedBlob.metadata?.alpha).toEqual("one");
-      expect(storedBlob.metadata?.langchainOldPath).toEqual(path);
+      expect(storedBlob?.path).toMatch(/example:\/\/bar\/[a-f0-9]{8}(-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i);
+      expect(storedBlob?.size).toEqual(14);
+      expect(await storedBlob?.asString()).toEqual("This is a test");
+      expect(storedBlob?.metadata?.alpha).toEqual("one");
+      expect(storedBlob?.metadata?.langchainOldPath).toEqual(path);
     })
 
 

@@ -395,7 +395,7 @@ export abstract class BlobStoreGoogleCloudStorageBase<
     super(fields);
     this.defaultStoreOptions = {
       ...this.defaultStoreOptions,
-      replacePathPrefix: fields.uriPrefix.uri,
+      pathPrefix: fields.uriPrefix.uri,
     }
   }
 

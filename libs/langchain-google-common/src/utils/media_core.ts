@@ -86,6 +86,11 @@ export class MediaBlob
   }
 }
 
+export type ActionIfInvalidAction =
+  | "ignore"
+  | "prefixPath"
+  | "prefixUuid"
+
 export interface BlobStoreStoreOptions {
 
   /**
@@ -93,21 +98,26 @@ export interface BlobStoreStoreOptions {
    * a new path?
    * Subclasses may define their own methods, but the following are supported
    * by default:
-   * - Undefined or an emtpy string: Never replace
+   * - Undefined or an emtpy string: Reject the blob
+   * - "ignore": Attempt to store it anyway (but this may fail)
    * - "prefixPath": Use the default prefix for the BlobStore and get the
    *   unique portion from the URL. The original path is stored in the metadata
    * - "prefixUuid": Use the default prefix for the BlobStore and get the
    *   unique portion from a generated UUID. The original path is stored
    *   in the metadata
    */
-  replacePathMethod?: string;
+  actionIfInvalid?: ActionIfInvalidAction;
 
   /**
-   * If either "prefixPath" or "prefixUuid" is used, what prefix should be used?
+   * The expected prefix for URIs that are stored.
+   * This may be used to test if a MediaBlob is valid and used to create a new
+   * path if "prefixPath" or "prefixUuid" is set for actionIfInvalid.
    */
-  replacePathPrefix?: string;
+  pathPrefix?: string;
 
 }
+
+export type ActionIfBlobMissingAction = "emptyBlob";
 
 export interface BlobStoreFetchOptions {
 
@@ -118,7 +128,7 @@ export interface BlobStoreFetchOptions {
    * - Undefined or an empty string: return undefined
    * - "emptyBlob": return a new MediaBlob that has the path set, but nothing else.
    */
-  handleMissingBlobMethod?: string;
+  actionIfBlobMissing?: ActionIfBlobMissingAction;
 
 }
 
@@ -177,7 +187,7 @@ export abstract class BlobStore extends BaseStore<string, MediaBlob> {
    */
   _hasValidPath(blob: MediaBlob, opts?: BlobStoreStoreOptions): Promise<boolean> {
     const path = blob.path ?? "";
-    const prefix = opts?.replacePathPrefix ?? "";
+    const prefix = opts?.pathPrefix ?? "";
     const isPrefixed = typeof blob.path !== "undefined" && path.startsWith(prefix);
     return Promise.resolve(isPrefixed)
   }
@@ -209,14 +219,14 @@ export abstract class BlobStore extends BaseStore<string, MediaBlob> {
   }
 
   async _validBlobPrefixPath(blob: MediaBlob, opts?: BlobStoreStoreOptions): Promise<MediaBlob> {
-    const prefix = opts?.replacePathPrefix ?? "";
+    const prefix = opts?.pathPrefix ?? "";
     const suffix = this._blobPathSuffix(blob);
     const newPath = `${prefix}${suffix}`;
     return this._newBlob(blob, newPath);
   }
 
   async _validBlobPrefixUuid(blob: MediaBlob, opts?: BlobStoreStoreOptions): Promise<MediaBlob> {
-    const prefix = opts?.replacePathPrefix ?? "";
+    const prefix = opts?.pathPrefix ?? "";
     const suffix = uuidv4();   // TODO - option to specify version?
     const newPath = `${prefix}${suffix}`;
     return this._newBlob(blob, newPath);
@@ -228,23 +238,27 @@ export abstract class BlobStore extends BaseStore<string, MediaBlob> {
    * @param blob
    * @param opts
    */
-  async _validStoreBlob(blob: MediaBlob, opts?: BlobStoreStoreOptions): Promise<MediaBlob> {
+  async _validStoreBlob(blob: MediaBlob, opts?: BlobStoreStoreOptions): Promise<MediaBlob | undefined> {
     if (await this._hasValidPath(blob, opts)) {
       return blob;
     }
-    switch (opts?.replacePathMethod) {
+    switch (opts?.actionIfInvalid) {
+      case "ignore": return blob;
       case "prefixPath": return this._validBlobPrefixPath(blob, opts);
       case "prefixUuid": return this._validBlobPrefixUuid(blob, opts);
-      default: return blob;
+      default: return undefined;
     }
   }
 
-  async store(blob: MediaBlob, opts: BlobStoreStoreOptions = {}): Promise<MediaBlob> {
+  async store(blob: MediaBlob, opts: BlobStoreStoreOptions = {}): Promise<MediaBlob | undefined> {
     const allOpts: BlobStoreStoreOptions = {...this.defaultStoreOptions, ...opts};
     const key = await blob.asUri();
     const validBlob = await this._validStoreBlob(blob, allOpts);
-    await this.mset([[key, validBlob]]);
-    return (await this.fetch(key)) || blob;
+    if (typeof validBlob !== "undefined") {
+      await this.mset([[key, validBlob]]);
+      return (await this.fetch(key)) || blob;
+    }
+    return undefined;
   }
 
   async _missingFetchBlobEmpty(path: string, _opts?: BlobStoreFetchOptions): Promise<MediaBlob> {
@@ -252,7 +266,7 @@ export abstract class BlobStore extends BaseStore<string, MediaBlob> {
   }
 
   async _missingFetchBlob(path: string, opts?: BlobStoreFetchOptions): Promise<MediaBlob | undefined> {
-    switch (opts?.handleMissingBlobMethod) {
+    switch (opts?.actionIfBlobMissing) {
       case "emptyBlob": return this._missingFetchBlobEmpty(path, opts);
       default: return undefined;
     }
@@ -405,18 +419,20 @@ export abstract class MediaManager {
    * @param uri The URI to resolve using the resolver
    * @return A canonical MediaBlob for this URI
    */
-  async _resolveCanonical(uri: string): Promise<MediaBlob> {
+  async _resolveCanonical(uri: string): Promise<MediaBlob | undefined> {
     const resolvedBlob = await this.resolver.fetch(uri);
     if (resolvedBlob) {
       const canonicalBlob = await this.canonicalStore.store(resolvedBlob);
-      await this.aliasStore.mset([[uri, canonicalBlob]]);
+      if (typeof canonicalBlob !== "undefined") {
+        await this.aliasStore.mset([[uri, canonicalBlob]]);
+      }
       return canonicalBlob;
     } else {
       return new MediaBlob();
     }
   }
 
-  async getMediaBlob(uri: string): Promise<MediaBlob> {
+  async getMediaBlob(uri: string): Promise<MediaBlob | undefined> {
     const aliasBlob = await this.aliasStore.fetch(uri);
     const ret = await this._isInvalid(aliasBlob)
       ? await this._resolveCanonical(uri)
