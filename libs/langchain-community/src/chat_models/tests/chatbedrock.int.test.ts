@@ -443,5 +443,45 @@ test.skip(".bind tools", async () => {
   if (!response.tool_calls?.[0]) {
     throw new Error("No tool calls found in response");
   }
-  expect(response.tool_calls[0].args.city.toLowerCase()).toBe("san francisco");
+  const { tool_calls } = response;
+  expect(tool_calls[0].name.toLowerCase()).toBe("weather_tool");
+});
+
+test.skip(".bindTools with openai tool format", async () => {
+  const weatherTool = z
+    .object({
+      city: z.string().describe("The city to get the weather for"),
+      state: z.string().describe("The state to get the weather for").optional(),
+    })
+    .describe("Get the weather for a city");
+  const model = new BedrockChatWeb({
+    region: process.env.BEDROCK_AWS_REGION,
+    model: "anthropic.claude-3-sonnet-20240229-v1:0",
+    maxRetries: 0,
+    credentials: {
+      secretAccessKey: process.env.BEDROCK_AWS_SECRET_ACCESS_KEY!,
+      accessKeyId: process.env.BEDROCK_AWS_ACCESS_KEY_ID!,
+    },
+  });
+  const modelWithTools = model.bind({
+    tools: [
+      {
+        type: "function",
+        function: {
+          name: "weather_tool",
+          description: weatherTool.description,
+          parameters: zodToJsonSchema(weatherTool),
+        },
+      },
+    ],
+  });
+  const response = await modelWithTools.invoke(
+    "Whats the weather like in san francisco?"
+  );
+  console.log(response);
+  if (!response.tool_calls?.[0]) {
+    throw new Error("No tool calls found in response");
+  }
+  const { tool_calls } = response;
+  expect(tool_calls[0].name.toLowerCase()).toBe("weather_tool");
 });

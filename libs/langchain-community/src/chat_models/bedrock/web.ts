@@ -13,13 +13,10 @@ import {
 } from "@langchain/core/language_models/chat_models";
 import {
   BaseLanguageModelInput,
-  StructuredOutputMethodOptions,
+  ToolDefinition,
+  isOpenAITool,
 } from "@langchain/core/language_models/base";
-import {
-  Runnable,
-  RunnablePassthrough,
-  RunnableSequence,
-} from "@langchain/core/runnables";
+import { Runnable } from "@langchain/core/runnables";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import {
   AIMessageChunk,
@@ -39,16 +36,13 @@ import { isStructuredTool } from "@langchain/core/utils/function_calling";
 import { ToolCall } from "@langchain/core/messages/tool";
 import { zodToJsonSchema } from "zod-to-json-schema";
 
-import { type z } from "zod";
-import { BaseLLMOutputParser } from "@langchain/core/output_parsers";
-import { isZodSchema } from "@langchain/core/utils/types";
 import type { SerializedFields } from "../../load/map_keys.js";
 import {
   BaseBedrockInput,
   BedrockLLMInputOutputAdapter,
   type CredentialType,
 } from "../../utils/bedrock/index.js";
-import { BedrockChatToolsOutputParser } from "../../output_parsers/bedrock.js";
+import { isAnthropicTool } from "../../utils/bedrock/anthropic.js";
 
 type AnthropicTool = Record<string, unknown>;
 
@@ -112,23 +106,43 @@ export function convertMessagesToPrompt(
   throw new Error(`Provider ${provider} does not support chat.`);
 }
 
-function formatTools(
-  tools: (StructuredToolInterface | AnthropicTool)[]
-): AnthropicTool[] {
-  return tools.map((tool) => {
-    if (isStructuredTool(tool)) {
-      return {
-        name: tool.name,
-        description: tool.description,
-        input_schema: zodToJsonSchema(tool.schema),
-      };
-    }
-    return tool;
-  });
+function formatTools(tools: BedrockChatCallOptions["tools"]): AnthropicTool[] {
+  if (!tools || !tools.length) {
+    return [];
+  }
+  if (tools.every((tc) => isStructuredTool(tc))) {
+    return (tools as StructuredToolInterface[]).map((tc) => ({
+      name: tc.name,
+      description: tc.description,
+      input_schema: zodToJsonSchema(tc.schema),
+    }));
+  }
+  if (tools.every((tc) => isOpenAITool(tc))) {
+    return (tools as ToolDefinition[]).map((tc) => ({
+      name: tc.function.name,
+      description: tc.function.description,
+      input_schema: tc.function.parameters,
+    }));
+  }
+
+  if (tools.every((tc) => isAnthropicTool(tc))) {
+    return tools as AnthropicTool[];
+  }
+
+  if (
+    tools.some((tc) => isStructuredTool(tc)) ||
+    tools.some((tc) => isOpenAITool(tc)) ||
+    tools.some((tc) => isAnthropicTool(tc))
+  ) {
+    throw new Error(
+      "All tools passed to BedrockChat must be of the same type."
+    );
+  }
+  throw new Error("Invalid tool format received.");
 }
 
 export interface BedrockChatCallOptions extends BaseChatModelCallOptions {
-  tools?: (StructuredToolInterface | AnthropicTool)[];
+  tools?: (StructuredToolInterface | AnthropicTool | ToolDefinition)[];
 }
 
 export interface BedrockChatFields
@@ -730,7 +744,7 @@ export class BedrockChat
   }
 
   override bindTools(
-    tools: (StructuredToolInterface | AnthropicTool)[],
+    tools: (StructuredToolInterface | AnthropicTool | ToolDefinition)[],
     _kwargs?: Partial<this["ParsedCallOptions"]>
   ): Runnable<
     BaseLanguageModelInput,
@@ -745,126 +759,6 @@ export class BedrockChat
     }
     this._anthropicTools = formatTools(tools);
     return this;
-  }
-
-  withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
-  >(
-    outputSchema:
-      | z.ZodType<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      | Record<string, any>,
-    config?: StructuredOutputMethodOptions<false>
-  ): Runnable<BaseLanguageModelInput, RunOutput>;
-
-  withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
-  >(
-    outputSchema:
-      | z.ZodType<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      | Record<string, any>,
-    config?: StructuredOutputMethodOptions<true>
-  ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
-
-  withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
-  >(
-    outputSchema:
-      | z.ZodType<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      | Record<string, any>,
-    config?: StructuredOutputMethodOptions<boolean>
-  ):
-    | Runnable<BaseLanguageModelInput, RunOutput>
-    | Runnable<
-        BaseLanguageModelInput,
-        { raw: BaseMessage; parsed: RunOutput }
-      > {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const schema: z.ZodType<RunOutput> | Record<string, any> = outputSchema;
-    const name = config?.name;
-    const method = config?.method;
-    const includeRaw = config?.includeRaw;
-    if (method === "jsonMode") {
-      throw new Error(
-        `BedrockChat only supports "functionCalling" as a method.`
-      );
-    }
-
-    let functionName = name ?? "extract";
-    let outputParser: BaseLLMOutputParser<RunOutput>;
-    let tools: AnthropicTool[];
-    if (isZodSchema(schema)) {
-      const jsonSchema = zodToJsonSchema(schema);
-      tools = [
-        {
-          name: functionName,
-          description:
-            jsonSchema.description ?? "A function available to call.",
-          input_schema: jsonSchema,
-        },
-      ];
-      outputParser = new BedrockChatToolsOutputParser({
-        returnSingle: true,
-        keyName: functionName,
-        zodSchema: schema,
-      });
-    } else {
-      let anthropicTools: AnthropicTool;
-      if (
-        typeof schema.name === "string" &&
-        typeof schema.description === "string" &&
-        typeof schema.input_schema === "object" &&
-        schema.input_schema != null
-      ) {
-        anthropicTools = schema as AnthropicTool;
-        functionName = schema.name;
-      } else {
-        anthropicTools = {
-          name: functionName,
-          description: schema.description ?? "",
-          input_schema: schema,
-        };
-      }
-      tools = [anthropicTools];
-      outputParser = new BedrockChatToolsOutputParser<RunOutput>({
-        returnSingle: true,
-        keyName: functionName,
-      });
-    }
-    const llm = this.bindTools(tools);
-
-    if (!includeRaw) {
-      return llm.pipe(outputParser).withConfig({
-        runName: "BedrockChatStructuredOutput",
-      }) as Runnable<BaseLanguageModelInput, RunOutput>;
-    }
-
-    const parserAssign = RunnablePassthrough.assign({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      parsed: (input: any, config) => outputParser.invoke(input.raw, config),
-    });
-    const parserNone = RunnablePassthrough.assign({
-      parsed: () => null,
-    });
-    const parsedWithFallback = parserAssign.withFallbacks({
-      fallbacks: [parserNone],
-    });
-    return RunnableSequence.from<
-      BaseLanguageModelInput,
-      { raw: BaseMessage; parsed: RunOutput }
-    >([
-      {
-        raw: llm,
-      },
-      parsedWithFallback,
-    ]).withConfig({
-      runName: "StructuredOutputRunnable",
-    });
   }
 }
 
