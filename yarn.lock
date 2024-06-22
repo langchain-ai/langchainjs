@@ -7181,7 +7181,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@cloudflare/ai@npm:^1.0.12":
+"@cloudflare/ai@npm:1.0.12":
   version: 1.0.12
   resolution: "@cloudflare/ai@npm:1.0.12"
   dependencies:
@@ -7190,7 +7190,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@cloudflare/ai@npm:^1.0.47":
+"@cloudflare/ai@npm:1.0.47":
   version: 1.0.47
   resolution: "@cloudflare/ai@npm:1.0.47"
   checksum: a9e371f789256bb5795c0cb60d975749b07d6cb50141b997da6b5c94380ddf18e851cba518e246414fcab4239d8f4438c5fe29172e6f06c136be3be19a3b65e0
@@ -9498,7 +9498,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@langchain/cloudflare@workspace:libs/langchain-cloudflare"
   dependencies:
-    "@cloudflare/ai": ^1.0.47
+    "@cloudflare/ai": 1.0.47
     "@cloudflare/workers-types": ^4.20231218.0
     "@jest/globals": ^29.5.0
     "@langchain/core": ">0.1.0 <0.3.0"
@@ -9591,7 +9591,7 @@ __metadata:
     "@azure/storage-blob": ^12.15.0
     "@browserbasehq/sdk": ^1.1.5
     "@clickhouse/client": ^0.2.5
-    "@cloudflare/ai": ^1.0.12
+    "@cloudflare/ai": 1.0.12
     "@cloudflare/workers-types": ^4.20230922.0
     "@datastax/astra-db-ts": ^1.0.1
     "@elastic/elasticsearch": ^8.4.0
@@ -15744,14 +15744,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/json-schema@npm:*, @types/json-schema@npm:^7.0.11, @types/json-schema@npm:^7.0.4, @types/json-schema@npm:^7.0.5, @types/json-schema@npm:^7.0.6, @types/json-schema@npm:^7.0.8":
+"@types/json-schema@npm:*, @types/json-schema@npm:^7.0.4, @types/json-schema@npm:^7.0.5, @types/json-schema@npm:^7.0.8":
   version: 7.0.13
   resolution: "@types/json-schema@npm:7.0.13"
   checksum: 345df21a678fa72fb389f35f33de77833d09d4a142bb2bcb27c18690efa4cf70fc2876e43843cefb3fbdb9fcb12cd3e970a90936df30f53bbee899865ff605ab
   languageName: node
   linkType: hard
 
-"@types/json-schema@npm:^7.0.12":
+"@types/json-schema@npm:^7.0.11, @types/json-schema@npm:^7.0.12, @types/json-schema@npm:^7.0.6":
   version: 7.0.15
   resolution: "@types/json-schema@npm:7.0.15"
   checksum: 97ed0cb44d4070aecea772b7b2e2ed971e10c81ec87dd4ecc160322ffa55ff330dace1793489540e3e318d90942064bb697cc0f8989391797792d919737b3b98
@@ -15808,10 +15808,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/lodash@npm:^4, @types/lodash@npm:^4.14.182":
+"@types/lodash@npm:^4":
   version: 4.14.199
   resolution: "@types/lodash@npm:4.14.199"
   checksum: e68d1fcbbfce953ed87b296a628573f62939227bcda0c934954e862b421e8a34c5e71cad6fea27b9980567909e6a4698f09025692958e36d64ea9ed99ec6fb2e
+  languageName: node
+  linkType: hard
+
+"@types/lodash@npm:^4.14.182":
+  version: 4.17.5
+  resolution: "@types/lodash@npm:4.17.5"
+  checksum: 3c9bb15772509f0ecb40428531863dbc3f064f2bf34bbccc2ce2b2923c69fb0868aec7e357b1d97fd0d7f7e435a014ea5c1adef8a64715529887179c97a5a823
   languageName: node
   linkType: hard
 
@@ -19350,15 +19357,15 @@ __metadata:
   linkType: hard
 
 "cli-color@npm:^2.0.2":
-  version: 2.0.3
-  resolution: "cli-color@npm:2.0.3"
+  version: 2.0.4
+  resolution: "cli-color@npm:2.0.4"
   dependencies:
     d: ^1.0.1
-    es5-ext: ^0.10.61
+    es5-ext: ^0.10.64
     es6-iterator: ^2.0.3
     memoizee: ^0.4.15
     timers-ext: ^0.1.7
-  checksum: b1c5f3d0ec29cbe22be7a01d90bd0cfa080ffed6f1c321ea20ae3f10c6041f0e411e28ee2b98025945bee3548931deed1ae849b53c21b523ba74efef855cd73d
+  checksum: ac78b5440520072b0220db7ef32958c640f8197c777e0981c6c94233039ab3891dcf5ccfc1fee52f55aa9debb9703d5191657d95e2e135f0a42d2bb737ab9030
   languageName: node
   linkType: hard
 
@@ -21060,6 +21067,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"d@npm:^1.0.2":
+  version: 1.0.2
+  resolution: "d@npm:1.0.2"
+  dependencies:
+    es5-ext: ^0.10.64
+    type: ^2.7.2
+  checksum: 775db1e8ced6707cddf64a5840522fcf5475d38ef49a5d615be0ac47f86ef64d15f5a73de1522b09327cc466d4dc35ea83dbfeed456f7a0fdcab138deb800355
+  languageName: node
+  linkType: hard
+
 "dagre-d3-es@npm:7.0.9":
   version: 7.0.9
   resolution: "dagre-d3-es@npm:7.0.9"
@@ -22342,7 +22359,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"es5-ext@npm:^0.10.35, es5-ext@npm:^0.10.46, es5-ext@npm:^0.10.50, es5-ext@npm:^0.10.53, es5-ext@npm:^0.10.61, es5-ext@npm:~0.10.14, es5-ext@npm:~0.10.2, es5-ext@npm:~0.10.46":
+"es5-ext@npm:^0.10.35, es5-ext@npm:^0.10.50":
   version: 0.10.62
   resolution: "es5-ext@npm:0.10.62"
   dependencies:
@@ -22350,6 +22367,18 @@ __metadata:
     es6-symbol: ^3.1.3
     next-tick: ^1.1.0
   checksum: 25f42f6068cfc6e393cf670bc5bba249132c5f5ec2dd0ed6e200e6274aca2fed8e9aec8a31c76031744c78ca283c57f0b41c7e737804c6328c7b8d3fbcba7983
+  languageName: node
+  linkType: hard
+
+"es5-ext@npm:^0.10.46, es5-ext@npm:^0.10.62, es5-ext@npm:^0.10.64, es5-ext@npm:~0.10.14, es5-ext@npm:~0.10.2":
+  version: 0.10.64
+  resolution: "es5-ext@npm:0.10.64"
+  dependencies:
+    es6-iterator: ^2.0.3
+    es6-symbol: ^3.1.3
+    esniff: ^2.0.1
+    next-tick: ^1.1.0
+  checksum: 01179fab0769fdbef213062222f99d0346724dbaccf04b87c0e6ee7f0c97edabf14be647ca1321f0497425ea7145de0fd278d1b3f3478864b8933e7136a5c645
   languageName: node
   linkType: hard
 
@@ -23213,6 +23242,18 @@ __metadata:
   bin:
     eslint: bin/eslint.js
   checksum: 6212173691d90b1bc94dd3d640e1f210374b30c3905fc0a15e501cf71c6ca52aa3d80ea7a9a245adaaed26d6019169e01fb6881b3f2885b188d37069c749308c
+  languageName: node
+  linkType: hard
+
+"esniff@npm:^2.0.1":
+  version: 2.0.1
+  resolution: "esniff@npm:2.0.1"
+  dependencies:
+    d: ^1.0.1
+    es5-ext: ^0.10.62
+    event-emitter: ^0.3.5
+    type: ^2.7.2
+  checksum: d814c0e5c39bce9925b2e65b6d8767af72c9b54f35a65f9f3d6e8c606dce9aebe35a9599d30f15b0807743f88689f445163cfb577a425de4fb8c3c5bc16710cc
   languageName: node
   linkType: hard
 
@@ -28055,8 +28096,8 @@ __metadata:
   linkType: hard
 
 "json-schema-to-typescript@npm:^13.1.1":
-  version: 13.1.1
-  resolution: "json-schema-to-typescript@npm:13.1.1"
+  version: 13.1.2
+  resolution: "json-schema-to-typescript@npm:13.1.2"
   dependencies:
     "@bcherny/json-schema-ref-parser": 10.0.5-fork
     "@types/json-schema": ^7.0.11
@@ -28074,7 +28115,7 @@ __metadata:
     prettier: ^2.6.2
   bin:
     json2ts: dist/src/cli.js
-  checksum: e6d894741703c27e0fae4a30b860fdd063439b78b5f98175203a6fe0c1152e2f6a5c4be34fbb2bc460ca50e14d8514cb3da3979d4f912bf2c6fada2f97b551b8
+  checksum: a4a782d294246cb77b8ab83d129208babe84faa471f6210b564a018e46db9dbea0ed7bf1efa1ae22022550688c073c80b96b06e726ed4374f6bce92ddf0c6c47
   languageName: node
   linkType: hard
 
@@ -29760,18 +29801,18 @@ __metadata:
   linkType: hard
 
 "memoizee@npm:^0.4.15":
-  version: 0.4.15
-  resolution: "memoizee@npm:0.4.15"
+  version: 0.4.17
+  resolution: "memoizee@npm:0.4.17"
   dependencies:
-    d: ^1.0.1
-    es5-ext: ^0.10.53
+    d: ^1.0.2
+    es5-ext: ^0.10.64
     es6-weak-map: ^2.0.3
     event-emitter: ^0.3.5
     is-promise: ^2.2.2
     lru-queue: ^0.1.0
     next-tick: ^1.1.0
     timers-ext: ^0.1.7
-  checksum: 4065d94416dbadac56edf5947bf342beca0e9f051f33ad60d7c4baf3f6ca0f3c6fdb770c5caed5a89c0ceaf9121428582f396445d591785281383d60aa883418
+  checksum: 9f2fa3f55d3b053ddfb7f2ce47ea3f51aa88d4425fa3aee0daf48bd41ecb8f1787b2150b14bcf745d8c4be8e2c07da614d857e11f79a6951420bbb0029b05a9c
   languageName: node
   linkType: hard
 
@@ -30543,7 +30584,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"next-tick@npm:1, next-tick@npm:^1.1.0":
+"next-tick@npm:^1.1.0":
   version: 1.1.0
   resolution: "next-tick@npm:1.1.0"
   checksum: 83b5cf36027a53ee6d8b7f9c0782f2ba87f4858d977342bfc3c20c21629290a2111f8374d13a81221179603ffc4364f38374b5655d17b6a8f8a8c77bdea4fe8b
@@ -36458,12 +36499,12 @@ __metadata:
   linkType: hard
 
 "timers-ext@npm:^0.1.7":
-  version: 0.1.7
-  resolution: "timers-ext@npm:0.1.7"
+  version: 0.1.8
+  resolution: "timers-ext@npm:0.1.8"
   dependencies:
-    es5-ext: ~0.10.46
-    next-tick: 1
-  checksum: ef3f27a0702a88d885bcbb0317c3e3ecd094ce644da52e7f7d362394a125d9e3578292a8f8966071a980d8abbc3395725333b1856f3ae93835b46589f700d938
+    es5-ext: ^0.10.64
+    next-tick: ^1.1.0
+  checksum: 7d37f90bdcee900aa4ba13e983905e2d16538bb13d38315f1ea3670656d91e7898f018909caedc8ebe964974ddeb3eedb5ffdc21f2329e34e6bcc353d0ee2903
   languageName: node
   linkType: hard
 
