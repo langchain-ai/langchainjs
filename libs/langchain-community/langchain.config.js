@@ -27,7 +27,7 @@ export const config = {
     "pdf-parse/lib/pdf.js/v1.10.100/build/pdf.js",
     "web-auth-library/google",
     "notion-to-md/build/utils/notion.js",
-    "@getzep/zep-cloud/api",
+    "@getzep/zep-cloud/api"
   ],
   entrypoints: {
     load: "load/index",
@@ -188,8 +188,7 @@ export const config = {
     // callbacks
     "callbacks/handlers/llmonitor": "callbacks/handlers/llmonitor",
     "callbacks/handlers/lunary": "callbacks/handlers/lunary",
-    "callbacks/handlers/upstash_ratelimit":
-      "callbacks/handlers/upstash_ratelimit",
+    "callbacks/handlers/upstash_ratelimit": "callbacks/handlers/upstash_ratelimit",
     // retrievers
     "retrievers/amazon_kendra": "retrievers/amazon_kendra",
     "retrievers/amazon_knowledge_base": "retrievers/amazon_knowledge_base",
@@ -314,12 +313,11 @@ export const config = {
       "experimental/multimodal_embeddings/googlevertexai",
     "experimental/hubs/makersuite/googlemakersuitehub":
       "experimental/hubs/makersuite/googlemakersuitehub",
-    "experimental/chat_models/ollama_functions":
-      "experimental/chat_models/ollama_functions",
+    "experimental/chat_models/ollama_functions": "experimental/chat_models/ollama_functions",
     // chains
     "chains/graph_qa/cypher": "chains/graph_qa/cypher",
     // tracers
-    "tracers/datadog": "tracers/datadog",
+    "tracers/datadog": "tracers/datadog"
   },
   requiresOptionalDependency: [
     "tools/aws_sfn",
@@ -515,7 +513,7 @@ export const config = {
     "experimental/multimodal_embeddings/googlevertexai",
     "experimental/hubs/makersuite/googlemakersuitehub",
     // chains
-    "chains/graph_qa/cypher",
+    "chains/graph_qa/cypher"
   ],
   packageSuffix: "community",
   tsConfigPath: resolve("./tsconfig.json"),
