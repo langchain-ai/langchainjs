@@ -2068,6 +2068,15 @@
       "import": "./callbacks/handlers/upstash_ratelimit.js",
       "require": "./callbacks/handlers/upstash_ratelimit.cjs"
     },
+    "./callbacks/tracers/datadog": {
+      "types": {
+        "import": "./callbacks/tracers/datadog.d.ts",
+        "require": "./callbacks/tracers/datadog.d.cts",
+        "default": "./callbacks/tracers/datadog.d.ts"
+      },
+      "import": "./callbacks/tracers/datadog.js",
+      "require": "./callbacks/tracers/datadog.cjs"
+    },
     "./retrievers/amazon_kendra": {
       "types": {
         "import": "./retrievers/amazon_kendra.d.ts",
@@ -3013,15 +3022,6 @@
       "import": "./chains/graph_qa/cypher.js",
       "require": "./chains/graph_qa/cypher.cjs"
     },
-    "./tracers/datadog": {
-      "types": {
-        "import": "./tracers/datadog.d.ts",
-        "require": "./tracers/datadog.d.cts",
-        "default": "./tracers/datadog.d.ts"
-      },
-      "import": "./tracers/datadog.js",
-      "require": "./tracers/datadog.cjs"
-    },
     "./package.json": "./package.json"
   },
   "files": [
@@ -3634,6 +3634,10 @@
     "callbacks/handlers/upstash_ratelimit.js",
     "callbacks/handlers/upstash_ratelimit.d.ts",
     "callbacks/handlers/upstash_ratelimit.d.cts",
+    "callbacks/tracers/datadog.cjs",
+    "callbacks/tracers/datadog.js",
+    "callbacks/tracers/datadog.d.ts",
+    "callbacks/tracers/datadog.d.cts",
     "retrievers/amazon_kendra.cjs",
     "retrievers/amazon_kendra.js",
     "retrievers/amazon_kendra.d.ts",
@@ -4053,10 +4057,6 @@
     "chains/graph_qa/cypher.cjs",
     "chains/graph_qa/cypher.js",
     "chains/graph_qa/cypher.d.ts",
-    "chains/graph_qa/cypher.d.cts",
-    "tracers/datadog.cjs",
-    "tracers/datadog.js",
-    "tracers/datadog.d.ts",
-    "tracers/datadog.d.cts"
+    "chains/graph_qa/cypher.d.cts"
   ]
 }

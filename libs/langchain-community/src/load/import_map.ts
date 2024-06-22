@@ -54,6 +54,7 @@ export * as chat_models__moonshot from "../chat_models/moonshot.js";
 export * as chat_models__ollama from "../chat_models/ollama.js";
 export * as chat_models__togetherai from "../chat_models/togetherai.js";
 export * as chat_models__yandex from "../chat_models/yandex.js";
+export * as callbacks__tracers__datadog from "../callbacks/tracers/datadog.js";
 export * as retrievers__chaindesk from "../retrievers/chaindesk.js";
 export * as retrievers__databerry from "../retrievers/databerry.js";
 export * as retrievers__remote from "../retrievers/remote/index.js";
@@ -76,4 +77,3 @@ export * as document_loaders__web__sort_xyz_blockchain from "../document_loaders
 export * as utils__event_source_parse from "../utils/event_source_parse.js";
 export * as experimental__graph_transformers__llm from "../experimental/graph_transformers/llm.js";
 export * as experimental__chat_models__ollama_functions from "../experimental/chat_models/ollama_functions.js";
-export * as tracers__datadog from "../tracers/datadog.js";

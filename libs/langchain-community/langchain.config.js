@@ -189,6 +189,7 @@ export const config = {
     "callbacks/handlers/llmonitor": "callbacks/handlers/llmonitor",
     "callbacks/handlers/lunary": "callbacks/handlers/lunary",
     "callbacks/handlers/upstash_ratelimit": "callbacks/handlers/upstash_ratelimit",
+    "callbacks/tracers/datadog": "callbacks/tracers/datadog",
     // retrievers
     "retrievers/amazon_kendra": "retrievers/amazon_kendra",
     "retrievers/amazon_knowledge_base": "retrievers/amazon_knowledge_base",
@@ -315,9 +316,7 @@ export const config = {
       "experimental/hubs/makersuite/googlemakersuitehub",
     "experimental/chat_models/ollama_functions": "experimental/chat_models/ollama_functions",
     // chains
-    "chains/graph_qa/cypher": "chains/graph_qa/cypher",
-    // tracers
-    "tracers/datadog": "tracers/datadog"
+    "chains/graph_qa/cypher": "chains/graph_qa/cypher"
   },
   requiresOptionalDependency: [
     "tools/aws_sfn",

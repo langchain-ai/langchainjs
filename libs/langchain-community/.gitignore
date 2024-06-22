@@ -606,6 +606,10 @@ callbacks/handlers/upstash_ratelimit.cjs
 callbacks/handlers/upstash_ratelimit.js
 callbacks/handlers/upstash_ratelimit.d.ts
 callbacks/handlers/upstash_ratelimit.d.cts
+callbacks/tracers/datadog.cjs
+callbacks/tracers/datadog.js
+callbacks/tracers/datadog.d.ts
+callbacks/tracers/datadog.d.cts
 retrievers/amazon_kendra.cjs
 retrievers/amazon_kendra.js
 retrievers/amazon_kendra.d.ts
@@ -1026,10 +1030,6 @@ chains/graph_qa/cypher.cjs
 chains/graph_qa/cypher.js
 chains/graph_qa/cypher.d.ts
 chains/graph_qa/cypher.d.cts
-tracers/datadog.cjs
-tracers/datadog.js
-tracers/datadog.d.ts
-tracers/datadog.d.cts
 node_modules
 dist
 .yarn
