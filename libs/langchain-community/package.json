@@ -3013,6 +3013,15 @@
       "import": "./chains/graph_qa/cypher.js",
       "require": "./chains/graph_qa/cypher.cjs"
     },
+    "./tracers/datadog": {
+      "types": {
+        "import": "./tracers/datadog.d.ts",
+        "require": "./tracers/datadog.d.cts",
+        "default": "./tracers/datadog.d.ts"
+      },
+      "import": "./tracers/datadog.js",
+      "require": "./tracers/datadog.cjs"
+    },
     "./package.json": "./package.json"
   },
   "files": [
@@ -4044,6 +4053,10 @@
     "chains/graph_qa/cypher.cjs",
     "chains/graph_qa/cypher.js",
     "chains/graph_qa/cypher.d.ts",
-    "chains/graph_qa/cypher.d.cts"
+    "chains/graph_qa/cypher.d.cts",
+    "tracers/datadog.cjs",
+    "tracers/datadog.js",
+    "tracers/datadog.d.ts",
+    "tracers/datadog.d.cts"
   ]
 }

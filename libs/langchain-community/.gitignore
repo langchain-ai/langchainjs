@@ -1026,6 +1026,10 @@ chains/graph_qa/cypher.cjs
 chains/graph_qa/cypher.js
 chains/graph_qa/cypher.d.ts
 chains/graph_qa/cypher.d.cts
+tracers/datadog.cjs
+tracers/datadog.js
+tracers/datadog.d.ts
+tracers/datadog.d.cts
 node_modules
 dist
 .yarn

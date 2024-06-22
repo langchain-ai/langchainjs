@@ -171,7 +171,7 @@ export class DatadogLLMObsTracer
       });
     }
 
-    return spans.filter((span) => span !== null);
+    return spans.flatMap(span => (span ? [span] : []));
   }
 
   protected formatRequestBody(
