@@ -1,5 +1,5 @@
 import { OpenAI } from "@langchain/openai";
-import { DatadogLLMObsTracer } from "@/libs/llm-monitoring";
+import { DatadogLLMObsTracer } from "@langchain/community/tracers/datadog";
 
 /**
  * This example demonstrates how to use the DatadogLLMObsTracer with the OpenAI model.
