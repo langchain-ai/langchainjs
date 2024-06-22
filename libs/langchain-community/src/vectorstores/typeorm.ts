@@ -216,13 +216,9 @@ export class TypeORMVectorStore extends VectorStore {
    */
   async ensureTableInDatabase(): Promise<void> {
     await this.appDataSource.query("CREATE EXTENSION IF NOT EXISTS vector;");
-    await this.appDataSource.query(
-      'CREATE EXTENSION IF NOT EXISTS "uuid-ossp";'
-    );
-
     await this.appDataSource.query(`
       CREATE TABLE IF NOT EXISTS ${this.tableName} (
-        "id" uuid NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY,
+        "id" uuid NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
         "pageContent" text,
         metadata jsonb,
         embedding vector
