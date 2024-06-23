@@ -53,11 +53,11 @@ export interface DatadogLLMObsSpan {
 export interface DatadogLLMObsRequestBody {
   data: {
     type: "span";
-    session_id?: string;
     attributes: {
       ml_app: string;
       tags: string[];
       spans: DatadogLLMObsSpan[];
+      session_id?: string;
     };
   };
 }
@@ -181,13 +181,13 @@ export class DatadogLLMObsTracer
     return {
       data: {
         type: "span",
-        session_id: this.sessionId,
         attributes: {
           ml_app: this.mlApp,
           tags: Object.entries(this.tags)
             .filter(([, value]) => value)
             .map(([key, value]) => `${key}:${value}`),
           spans,
+          session_id: this.sessionId,
         },
       },
     };

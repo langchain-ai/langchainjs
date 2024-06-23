@@ -124,11 +124,11 @@ test("Test llm span with message input", async () => {
   const requestBody: DatadogLLMObsRequestBody = {
     data: {
       type: "span",
-      session_id: "test",
       attributes: {
         ml_app: "test",
         tags: ["env:test", "service:test", "user_handle:test", "user_id:test"],
         spans: [compareSpan],
+        session_id: "test",
       },
     },
   };
@@ -184,11 +184,11 @@ test("Test llm span with prompt input", async () => {
   const requestBody: DatadogLLMObsRequestBody = {
     data: {
       type: "span",
-      session_id: "test",
       attributes: {
         ml_app: "test",
         tags: ["env:test", "service:test", "user_handle:test", "user_id:test"],
         spans: [compareSpan],
+        session_id: "test",
       },
     },
   };
@@ -240,11 +240,11 @@ test("Test workflow span", async () => {
   const requestBody: DatadogLLMObsRequestBody = {
     data: {
       type: "span",
-      session_id: "test",
       attributes: {
         ml_app: "test",
         tags: ["env:test", "service:test", "user_handle:test", "user_id:test"],
         spans: [compareSpan],
+        session_id: "test",
       },
     },
   };
@@ -295,11 +295,11 @@ test("Test tool span", async () => {
   const requestBody: DatadogLLMObsRequestBody = {
     data: {
       type: "span",
-      session_id: "test",
       attributes: {
         ml_app: "test",
         tags: ["env:test", "service:test", "user_handle:test", "user_id:test"],
         spans: [compareSpan],
+        session_id: "test",
       },
     },
   };
@@ -361,11 +361,11 @@ test("Test retrieval span", async () => {
   const requestBody: DatadogLLMObsRequestBody = {
     data: {
       type: "span",
-      session_id: "test",
       attributes: {
         ml_app: "test",
         tags: ["env:test", "service:test", "user_handle:test", "user_id:test"],
         spans: [compareSpan],
+        session_id: "test",
       },
     },
   };
