@@ -24,12 +24,12 @@ describe("Google Webauth GCS store", () => {
     const blobStore = new BlobStoreGoogleCloudStorage(config);
     const storedBlob = await blobStore.store(blob);
     // console.log(storedBlob);
-    expect(storedBlob.path).toEqual(uri);
-    expect(await storedBlob.asString()).toEqual(content);
-    expect(storedBlob.mimetype).toEqual("text/plain");
-    expect(storedBlob.metadata).not.toHaveProperty("metadata");
-    expect(storedBlob.size).toEqual(content.length);
-    expect(storedBlob.metadata?.kind).toEqual("storage#object");
+    expect(storedBlob?.path).toEqual(uri);
+    expect(await storedBlob?.asString()).toEqual(content);
+    expect(storedBlob?.mimetype).toEqual("text/plain");
+    expect(storedBlob?.metadata).not.toHaveProperty("metadata");
+    expect(storedBlob?.size).toEqual(content.length);
+    expect(storedBlob?.metadata?.kind).toEqual("storage#object");
   });
 
   test("save text with-metadata", async () => {
@@ -50,14 +50,14 @@ describe("Google Webauth GCS store", () => {
     const blobStore = new BlobStoreGoogleCloudStorage(config);
     const storedBlob = await blobStore.store(blob);
     // console.log(storedBlob);
-    expect(storedBlob.path).toEqual(uri);
-    expect(await storedBlob.asString()).toEqual(content);
-    expect(storedBlob.mimetype).toEqual("text/plain");
-    expect(storedBlob.metadata).toHaveProperty("metadata");
-    expect(storedBlob.metadata?.metadata?.alpha).toEqual("one");
-    expect(storedBlob.metadata?.metadata?.bravo).toEqual("two");
-    expect(storedBlob.size).toEqual(content.length);
-    expect(storedBlob.metadata?.kind).toEqual("storage#object");
+    expect(storedBlob?.path).toEqual(uri);
+    expect(await storedBlob?.asString()).toEqual(content);
+    expect(storedBlob?.mimetype).toEqual("text/plain");
+    expect(storedBlob?.metadata).toHaveProperty("metadata");
+    expect(storedBlob?.metadata?.metadata?.alpha).toEqual("one");
+    expect(storedBlob?.metadata?.metadata?.bravo).toEqual("two");
+    expect(storedBlob?.size).toEqual(content.length);
+    expect(storedBlob?.metadata?.kind).toEqual("storage#object");
   });
 
   test("save image no-metadata", async () => {
@@ -77,10 +77,10 @@ describe("Google Webauth GCS store", () => {
     const blobStore = new BlobStoreGoogleCloudStorage(config);
     const storedBlob = await blobStore.store(blob);
     // console.log(storedBlob);
-    expect(storedBlob.path).toEqual(uri);
-    expect(storedBlob.size).toEqual(176);
-    expect(storedBlob.mimetype).toEqual("image/png");
-    expect(storedBlob.metadata?.kind).toEqual("storage#object");
+    expect(storedBlob?.path).toEqual(uri);
+    expect(storedBlob?.size).toEqual(176);
+    expect(storedBlob?.mimetype).toEqual("image/png");
+    expect(storedBlob?.metadata?.kind).toEqual("storage#object");
   });
 
   test("get text no-metadata", async () => {
