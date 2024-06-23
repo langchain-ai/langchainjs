@@ -2,13 +2,13 @@ import { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { StructuredToolInterface } from "@langchain/core/tools";
 import { RunnablePassthrough } from "@langchain/core/runnables";
+import { ToolDefinition } from "@langchain/core/language_models/base";
 import { AgentRunnableSequence } from "../agent.js";
 import {
   ToolCallingAgentOutputParser,
   ToolsAgentStep,
 } from "./output_parser.js";
 import { formatToToolMessages } from "../format_scratchpad/tool_calling.js";
-import { ToolDefinition } from "@langchain/core/language_models/base";
 
 /**
  * Params used by the createOpenAIToolsAgent function.
