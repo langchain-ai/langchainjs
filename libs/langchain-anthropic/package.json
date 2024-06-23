@@ -1,6 +1,6 @@
 {
   "name": "@langchain/anthropic",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Anthropic integrations for LangChain.js",
   "type": "module",
   "engines": {
@@ -35,8 +35,8 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.21.0",
-    "@langchain/core": ">=0.2.5 <0.3.0",
+    "@anthropic-ai/sdk": "^0.22.0",
+    "@langchain/core": ">=0.2.9 <0.3.0",
     "fast-xml-parser": "^4.3.5",
     "zod": "^3.22.4",
     "zod-to-json-schema": "^3.22.4"
@@ -45,7 +45,7 @@
     "@jest/globals": "^29.5.0",
     "@langchain/community": "workspace:*",
     "@langchain/scripts": "~0.0.14",
-    "@langchain/standard-tests": "workspace:*",
+    "@langchain/standard-tests": "0.0.0",
     "@swc/core": "^1.3.90",
     "@swc/jest": "^0.2.29",
     "dpdm": "^3.12.0",
@@ -61,6 +61,7 @@
     "prettier": "^2.8.3",
     "release-it": "^15.10.1",
     "rimraf": "^5.0.1",
+    "ts-jest": "^29.1.0",
     "typescript": "~5.1.6"
   },
   "publishConfig": {

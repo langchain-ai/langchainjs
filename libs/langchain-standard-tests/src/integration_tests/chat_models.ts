@@ -10,6 +10,7 @@ import {
 } from "@langchain/core/messages";
 import { z } from "zod";
 import { StructuredTool } from "@langchain/core/tools";
+import { zodToJsonSchema } from "zod-to-json-schema";
 import {
   BaseChatModelsTests,
   BaseChatModelsTestsFields,
@@ -36,6 +37,29 @@ class AdderTool extends StructuredTool {
   }
 }
 
+interface ChatModelIntegrationTestsFields<
+  CallOptions extends BaseChatModelCallOptions = BaseChatModelCallOptions,
+  OutputMessageType extends BaseMessageChunk = BaseMessageChunk,
+  ConstructorArgs extends RecordStringAny = RecordStringAny
+> extends BaseChatModelsTestsFields<
+    CallOptions,
+    OutputMessageType,
+    ConstructorArgs
+  > {
+  /**
+   * Override the default AIMessage response type
+   * to check for.
+   * @default AIMessage
+   */
+  invokeResponseType?: typeof AIMessage | typeof AIMessageChunk;
+  /**
+   * The ID to set for function calls.
+   * Set this field to override the default function ID.
+   * @default "abc123"
+   */
+  functionId?: string;
+}
+
 export abstract class ChatModelIntegrationTests<
   CallOptions extends BaseChatModelCallOptions = BaseChatModelCallOptions,
   OutputMessageType extends BaseMessageChunk = BaseMessageChunk,
@@ -43,22 +67,19 @@ export abstract class ChatModelIntegrationTests<
 > extends BaseChatModelsTests<CallOptions, OutputMessageType, ConstructorArgs> {
   functionId = "abc123";
 
+  invokeResponseType: typeof AIMessage | typeof AIMessageChunk = AIMessage;
+
   constructor(
-    fields: BaseChatModelsTestsFields<
+    fields: ChatModelIntegrationTestsFields<
       CallOptions,
       OutputMessageType,
       ConstructorArgs
-    > & {
-      /**
-       * The ID to set for function calls.
-       * Set this field to override the default function ID.
-       * @default "abc123"
-       */
-      functionId?: string;
-    }
+    >
   ) {
     super(fields);
     this.functionId = fields.functionId ?? this.functionId;
+    this.invokeResponseType =
+      fields.invokeResponseType ?? this.invokeResponseType;
   }
 
   async testInvoke(
@@ -67,7 +88,7 @@ export abstract class ChatModelIntegrationTests<
     const chatModel = new this.Cls(this.constructorArgs);
     const result = await chatModel.invoke("Hello", callOptions);
     expect(result).toBeDefined();
-    expect(result).toBeInstanceOf(AIMessage);
+    expect(result).toBeInstanceOf(this.invokeResponseType);
     expect(typeof result.content).toBe("string");
     expect(result.content.length).toBeGreaterThan(0);
   }
@@ -98,7 +119,7 @@ export abstract class ChatModelIntegrationTests<
     expect(batchResults.length).toBe(2);
     for (const result of batchResults) {
       expect(result).toBeDefined();
-      expect(result).toBeInstanceOf(AIMessage);
+      expect(result).toBeInstanceOf(this.invokeResponseType);
       expect(typeof result.content).toBe("string");
       expect(result.content.length).toBeGreaterThan(0);
     }
@@ -115,7 +136,7 @@ export abstract class ChatModelIntegrationTests<
     ];
     const result = await chatModel.invoke(messages, callOptions);
     expect(result).toBeDefined();
-    expect(result).toBeInstanceOf(AIMessage);
+    expect(result).toBeInstanceOf(this.invokeResponseType);
     expect(typeof result.content).toBe("string");
     expect(result.content.length).toBeGreaterThan(0);
   }
@@ -126,7 +147,7 @@ export abstract class ChatModelIntegrationTests<
     const chatModel = new this.Cls(this.constructorArgs);
     const result = await chatModel.invoke("Hello", callOptions);
     expect(result).toBeDefined();
-    expect(result).toBeInstanceOf(AIMessage);
+    expect(result).toBeInstanceOf(this.invokeResponseType);
     if (!("usage_metadata" in result)) {
       throw new Error("result is not an instance of AIMessage");
     }
@@ -211,7 +232,7 @@ export abstract class ChatModelIntegrationTests<
       messagesStringContent,
       callOptions
     );
-    expect(resultStringContent).toBeInstanceOf(AIMessage);
+    expect(resultStringContent).toBeInstanceOf(this.invokeResponseType);
   }
 
   /**
@@ -269,7 +290,7 @@ export abstract class ChatModelIntegrationTests<
       messagesListContent,
       callOptions
     );
-    expect(resultListContent).toBeInstanceOf(AIMessage);
+    expect(resultListContent).toBeInstanceOf(this.invokeResponseType);
   }
 
   /**
@@ -317,7 +338,7 @@ export abstract class ChatModelIntegrationTests<
       messagesStringContent,
       callOptions
     );
-    expect(resultStringContent).toBeInstanceOf(AIMessage);
+    expect(resultStringContent).toBeInstanceOf(this.invokeResponseType);
   }
 
   async testWithStructuredOutput() {
@@ -358,11 +379,43 @@ export abstract class ChatModelIntegrationTests<
     });
 
     const resultStringContent = await modelWithTools.invoke("What is 1 + 2");
-    expect(resultStringContent.raw).toBeInstanceOf(AIMessage);
+    expect(resultStringContent.raw).toBeInstanceOf(this.invokeResponseType);
     expect(resultStringContent.parsed.a).toBeDefined();
     expect([1, 2].includes(resultStringContent.parsed.a)).toBeTruthy();
     expect(resultStringContent.parsed.b).toBeDefined();
     expect([1, 2].includes(resultStringContent.parsed.b)).toBeTruthy();
+  }
+
+  async testBindToolsWithOpenAIFormattedTools() {
+    if (!this.chatModelHasToolCalling) {
+      console.log("Test requires tool calling. Skipping...");
+      return;
+    }
+
+    const model = new this.Cls(this.constructorArgs);
+    if (!model.bindTools) {
+      throw new Error(
+        "bindTools undefined. Cannot test OpenAI formatted tool calls."
+      );
+    }
+    const modelWithTools = model.bindTools([
+      {
+        type: "function",
+        function: {
+          name: "math_addition",
+          description: adderSchema.description,
+          parameters: zodToJsonSchema(adderSchema),
+        },
+      },
+    ]);
+
+    const result: AIMessage = await modelWithTools.invoke("What is 1 + 2");
+    expect(result.tool_calls).toHaveLength(1);
+    if (!result.tool_calls) {
+      throw new Error("result.tool_calls is undefined");
+    }
+    const { tool_calls } = result;
+    expect(tool_calls[0].name).toBe("math_addition");
   }
 
   /**
@@ -449,6 +502,13 @@ export abstract class ChatModelIntegrationTests<
     } catch (e: any) {
       allTestsPassed = false;
       console.error("testWithStructuredOutputIncludeRaw failed", e);
+    }
+
+    try {
+      await this.testBindToolsWithOpenAIFormattedTools();
+    } catch (e: any) {
+      allTestsPassed = false;
+      console.error("testBindToolsWithOpenAIFormattedTools failed", e);
     }
 
     return allTestsPassed;

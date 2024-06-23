@@ -11,7 +11,7 @@ module.exports = {
     project: "./tsconfig.json",
     sourceType: "module",
   },
-  plugins: ["@typescript-eslint", "no-instanceof"],
+  plugins: ["@typescript-eslint", "no-instanceof", "eslint-plugin-jest"],
   ignorePatterns: [
     ".eslintrc.cjs",
     "scripts",
@@ -61,6 +61,7 @@ module.exports = {
     "func-names": 0,
     "no-lonely-if": 0,
     "prefer-rest-params": 0,
+    'jest/no-focused-tests': 'error',
     "new-cap": ["error", { properties: false, capIsNew: false }],
   },
   overrides: [

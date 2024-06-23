@@ -88,6 +88,7 @@ export class ToolMessageChunk extends BaseMessageChunk {
         chunk.response_metadata
       ),
       tool_call_id: this.tool_call_id,
+      id: this.id ?? chunk.id,
     });
   }
 }

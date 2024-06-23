@@ -234,6 +234,10 @@ llms/cohere.cjs
 llms/cohere.js
 llms/cohere.d.ts
 llms/cohere.d.cts
+llms/deepinfra.cjs
+llms/deepinfra.js
+llms/deepinfra.d.ts
+llms/deepinfra.d.cts
 llms/fireworks.cjs
 llms/fireworks.js
 llms/fireworks.d.ts
@@ -510,6 +514,10 @@ chat_models/cloudflare_workersai.cjs
 chat_models/cloudflare_workersai.js
 chat_models/cloudflare_workersai.d.ts
 chat_models/cloudflare_workersai.d.cts
+chat_models/deepinfra.cjs
+chat_models/deepinfra.js
+chat_models/deepinfra.d.ts
+chat_models/deepinfra.d.cts
 chat_models/fireworks.cjs
 chat_models/fireworks.js
 chat_models/fireworks.d.ts

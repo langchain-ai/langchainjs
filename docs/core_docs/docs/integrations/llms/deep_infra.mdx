@@ -1,0 +1,25 @@
+---
+sidebar_label: Deep Infra
+---
+
+import CodeBlock from "@theme/CodeBlock";
+
+# DeepInfra
+
+LangChain supports LLMs hosted by [Deep Infra](https://deepinfra.com/) through the `DeepInfra` wrapper.
+First, you'll need to install the `@langchain/community` package:
+
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/community
+```
+
+You'll need to obtain an API key and set it as an environment variable named `DEEPINFRA_API_TOKEN`
+(or pass it into the constructor), then call the model as shown below:
+
+import Example from "@examples/models/llm/deepinfra.ts";
+
+<CodeBlock language="typescript">{Example}</CodeBlock>

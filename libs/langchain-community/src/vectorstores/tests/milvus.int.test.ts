@@ -1,6 +1,7 @@
 import { test, expect, afterAll, beforeAll } from "@jest/globals";
 import { ErrorCode, MilvusClient } from "@zilliz/milvus2-sdk-node";
 import { OpenAIEmbeddings } from "@langchain/openai";
+import { Document } from "@langchain/core/documents";
 import { Milvus } from "../milvus.js";
 
 let collectionName: string;
@@ -63,7 +64,7 @@ Harmonic Labyrinth of the dreaded Majotaur?`,
     { id: 5, other: objA },
   ]);
 
-  const resultThree = await milvus.similaritySearch(query, 1, "id == 1");
+  const resultThree = await milvus.similaritySearch(query, 1, 'id == "1"');
   const resultThreeMetadatas = resultThree.map(({ metadata }) => metadata);
   expect(resultThreeMetadatas).toEqual([{ id: 1, other: objB }]);
 });
@@ -92,7 +93,12 @@ Harmonic Labyrinth of the dreaded Majotaur?`,
   ];
   const milvus = await Milvus.fromTexts(texts, metadatas, embeddings, {
     collectionName,
-    url: MILVUS_ADDRESS,
+    autoId: false,
+    primaryField: "id",
+    clientConfig: {
+      address: MILVUS_ADDRESS,
+      token: MILVUS_TOKEN,
+    },
   });
 
   const query = "who is achilles?";
@@ -108,7 +114,7 @@ Harmonic Labyrinth of the dreaded Majotaur?`,
     { id: 5, other: objA },
   ]);
 
-  const resultThree = await milvus.similaritySearch(query, 1, "id == 1");
+  const resultThree = await milvus.similaritySearch(query, 1, 'id == "1"');
   const resultThreeMetadatas = resultThree.map(({ metadata }) => metadata);
   expect(resultThreeMetadatas).toEqual([{ id: 1, other: objB }]);
 });
@@ -116,6 +122,12 @@ Harmonic Labyrinth of the dreaded Majotaur?`,
 test.skip("Test Milvus.fromExistingCollection", async () => {
   const milvus = await Milvus.fromExistingCollection(embeddings, {
     collectionName,
+    autoId: false,
+    primaryField: "id",
+    clientConfig: {
+      address: MILVUS_ADDRESS,
+      token: MILVUS_TOKEN,
+    },
   });
 
   const query = "who is achilles?";
@@ -131,29 +143,87 @@ test.skip("Test Milvus.fromExistingCollection", async () => {
   expect(resultTwoMetadatas[1].id).toEqual(4);
   expect(resultTwoMetadatas[2].id).toEqual(5);
 
-  const resultThree = await milvus.similaritySearch(query, 1, "id == 1");
+  const resultThree = await milvus.similaritySearch(query, 1, 'id == "1"');
   const resultThreeMetadatas = resultThree.map(({ metadata }) => metadata);
   expect(resultThreeMetadatas.length).toBe(1);
   expect(resultThreeMetadatas[0].id).toEqual(1);
 });
 
-test.skip("Test Milvus.deleteData", async () => {
+test.skip("Test Milvus.deleteData with filter", async () => {
   const milvus = await Milvus.fromExistingCollection(embeddings, {
     collectionName,
+    autoId: false,
+    primaryField: "id",
+    clientConfig: {
+      address: MILVUS_ADDRESS,
+      token: MILVUS_TOKEN,
+    },
   });
 
   const query = "who is achilles?";
   const result = await milvus.similaritySearch(query, 1);
   const resultMetadatas = result.map(({ metadata }) => metadata);
-  const primaryId = resultMetadatas[0].langchain_primaryid;
+  const primaryId = resultMetadatas[0].id;
   expect(resultMetadatas.length).toBe(1);
   expect(resultMetadatas[0].id).toEqual(1);
 
-  await milvus.delete({ filter: `langchain_primaryid in [${primaryId}]` });
+  await milvus.delete({ filter: `id in ["${primaryId}"]` });
 
   const resultTwo = await milvus.similaritySearch(query, 1);
   const resultTwoMetadatas = resultTwo.map(({ metadata }) => metadata);
-  expect(resultTwoMetadatas[0].id).not.toEqual(1);
+  expect(resultTwoMetadatas[0].id).not.toEqual(primaryId);
+});
+
+test.skip("Test Milvus.deleteData with ids", async () => {
+  const milvus = await Milvus.fromExistingCollection(embeddings, {
+    collectionName,
+    autoId: false,
+    primaryField: "id",
+    clientConfig: {
+      address: MILVUS_ADDRESS,
+      token: MILVUS_TOKEN,
+    },
+  });
+
+  const query = "who is tortoise?";
+  const result = await milvus.similaritySearch(query, 3);
+  const resultMetadatas = result.map(({ metadata }) => metadata);
+  const primaryIds = resultMetadatas.map((rm) => rm.id);
+  expect(resultMetadatas.length).toBe(3);
+  expect(resultMetadatas[0].id).toEqual(3);
+  expect(resultMetadatas[1].id).toEqual(2);
+  expect(resultMetadatas[2].id).toEqual(5);
+
+  await milvus.delete({ ids: primaryIds });
+
+  const resultTwo = await milvus.similaritySearch(query, 3);
+  const resultTwoMetadatas = resultTwo.map(({ metadata }) => metadata);
+  expect(resultTwoMetadatas[0].id).not.toEqual(3);
+  expect(resultTwoMetadatas[0].id).not.toEqual(2);
+  expect(resultTwoMetadatas[0].id).not.toEqual(5);
+});
+
+test.skip("Test Milvus.addDocuments with auto ID", async () => {
+  const vectorstore = new Milvus(embeddings, {
+    collectionName: `test_collection_${Math.random()
+      .toString(36)
+      .substring(7)}`,
+    clientConfig: {
+      address: MILVUS_ADDRESS,
+      token: MILVUS_TOKEN,
+    },
+  });
+
+  await vectorstore.addDocuments([
+    new Document({
+      pageContent: "test",
+      metadata: { test: "a" },
+    }),
+  ]);
+
+  const result = await vectorstore.similaritySearch("test", 1);
+  const resultMetadatas = result.map(({ metadata }) => metadata);
+  expect(resultMetadatas.length).toBe(1);
 });
 
 afterAll(async () => {

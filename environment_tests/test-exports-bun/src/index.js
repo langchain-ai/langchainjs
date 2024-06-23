@@ -5,7 +5,7 @@ import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { MemoryVectorStore } from "langchain/vectorstores/memory";
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { Document } from "@langchain/core/documents";
-import { CSVLoader } from "langchain/document_loaders/fs/csv";
+import { CSVLoader } from "@langchain/community/document_loaders/fs/csv";
 import { CallbackManager } from "@langchain/core/callbacks/manager";
 
 // Test exports

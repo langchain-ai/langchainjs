@@ -14,7 +14,7 @@ class BedrockChatStandardIntegrationTests extends ChatModelIntegrationTests<
     super({
       Cls: BedrockChat,
       chatModelHasToolCalling: true,
-      chatModelHasStructuredOutput: false,
+      chatModelHasStructuredOutput: true,
       constructorArgs: {
         region,
         model: "anthropic.claude-3-sonnet-20240229-v1:0",

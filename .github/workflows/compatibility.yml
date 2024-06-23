@@ -4,9 +4,10 @@ on:
   push:
     branches: ["main"]
   pull_request:
-    # Do not run this workflow if only docs changed.
+    # Do not run this workflow if only docs/examples changed.
     paths-ignore:
       - 'docs/**'
+      - 'examples/**'
   workflow_dispatch:  # Allows triggering the workflow manually in GitHub UI
 
 # If another push to the same PR or branch happens while this workflow is still running,
@@ -28,8 +29,27 @@ env:
 # Run a separate job for each check in the docker-compose file,
 # so that they run in parallel instead of overwhelming the default 2 CPU runner.
 jobs:
-  test-langchain-with-latest-deps:
+  get-changed-files:
     runs-on: ubuntu-latest
+    outputs:
+      changed_files: ${{ steps.get_changes.outputs.changed_files }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 2
+      - name: Get changes
+        id: get_changes
+        run: |
+          echo "changed_files<<EOF" >> $GITHUB_OUTPUT
+          git diff --name-only -r HEAD^1 HEAD | while read line; do printf "%s\n" "$line"; done >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+  # LangChain
+  langchain-latest-deps:
+    runs-on: ubuntu-latest
+    needs: get-changed-files
+    if: contains(needs.get-changed-files.outputs.changed_files, 'langchain/') || contains(needs.get-changed-files.outputs.changed_files, 'langchain-core/') || contains(needs.get-changed-files.outputs.changed_files, 'libs/langchain-openai/') || contains(needs.get-changed-files.outputs.changed_files, 'libs/langchain-textsplitters/')
     steps:
       - uses: actions/checkout@v4
       - name: Use Node.js ${{ env.NODE_VERSION }}
@@ -38,10 +58,12 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: "yarn"
       - name: Test LangChain with latest deps
-        run: docker compose -f dependency_range_tests/docker-compose.yml run test-langchain-with-latest-deps
+        run: docker compose -f dependency_range_tests/docker-compose.yml run langchain-latest-deps
 
-  test-langchain-with-lowest-deps:
+  langchain-lowest-deps:
     runs-on: ubuntu-latest
+    needs: get-changed-files
+    if: contains(needs.get-changed-files.outputs.changed_files, 'langchain/')
     steps:
       - uses: actions/checkout@v4
       - name: Use Node.js ${{ env.NODE_VERSION }}
@@ -50,4 +72,189 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: "yarn"
       - name: Test LangChain with lowest deps
-        run: docker compose -f dependency_range_tests/docker-compose.yml run test-langchain-with-lowest-deps
+        run: docker compose -f dependency_range_tests/docker-compose.yml run langchain-lowest-deps
+
+  # Community
+  community-latest-deps:
+    runs-on: ubuntu-latest
+    needs: get-changed-files
+    if: contains(needs.get-changed-files.outputs.changed_files, 'langchain-core/') || contains(needs.get-changed-files.outputs.changed_files, 'libs/langchain-openai/') || contains(needs.get-changed-files.outputs.changed_files, 'libs/langchain-community/')
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "yarn"
+      - name: Install dependencies
+        run: yarn install --immutable
+      - name: Build `@langchain/standard-tests`
+        run: yarn build --filter=@langchain/standard-tests
+      - name: Test `@langchain/community` with latest deps
+        run: docker compose -f dependency_range_tests/docker-compose.yml run community-latest-deps
+
+  community-lowest-deps:
+    runs-on: ubuntu-latest
+    needs: get-changed-files
+    if: contains(needs.get-changed-files.outputs.changed_files, 'libs/langchain-community/')
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "yarn"
+      - name: Install dependencies
+        run: yarn install --immutable
+      - name: Build `@langchain/standard-tests`
+        run: yarn build --filter=@langchain/standard-tests
+      - name: Test `@langchain/community` with lowest deps
+        run: docker compose -f dependency_range_tests/docker-compose.yml run community-lowest-deps
+
+  # OpenAI
+  openai-latest-deps:
+    runs-on: ubuntu-latest
+    needs: get-changed-files
+    if: contains(needs.get-changed-files.outputs.changed_files, 'langchain-core/') || contains(needs.get-changed-files.outputs.changed_files, 'libs/langchain-openai/')
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "yarn"
+      - name: Install dependencies
+        run: yarn install --immutable
+      - name: Build `@langchain/standard-tests`
+        run: yarn build --filter=@langchain/standard-tests
+      - name: Test `@langchain/openai` with latest deps
+        run: docker compose -f dependency_range_tests/docker-compose.yml run openai-latest-deps
+
+  openai-lowest-deps:
+    runs-on: ubuntu-latest
+    needs: get-changed-files
+    if: contains(needs.get-changed-files.outputs.changed_files, 'libs/langchain-openai/')
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "yarn"
+      - name: Install dependencies
+        run: yarn install --immutable
+      - name: Build `@langchain/standard-tests`
+        run: yarn build --filter=@langchain/standard-tests
+      - name: Test `@langchain/openai` with lowest deps
+        run: docker compose -f dependency_range_tests/docker-compose.yml run openai-lowest-deps
+
+  # Anthropic
+  anthropic-latest-deps:
+    runs-on: ubuntu-latest
+    needs: get-changed-files
+    if: contains(needs.get-changed-files.outputs.changed_files, 'langchain-core/') || contains(needs.get-changed-files.outputs.changed_files, 'libs/langchain-anthropic/')
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "yarn"
+      - name: Install dependencies
+        run: yarn install --immutable
+      - name: Build `@langchain/standard-tests`
+        run: yarn build --filter=@langchain/standard-tests
+      - name: Test `@langchain/anthropic` with latest deps
+        run: docker compose -f dependency_range_tests/docker-compose.yml run anthropic-latest-deps
+
+  anthropic-lowest-deps:
+    runs-on: ubuntu-latest
+    needs: get-changed-files
+    if: contains(needs.get-changed-files.outputs.changed_files, 'libs/langchain-anthropic/')
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "yarn"
+      - name: Install dependencies
+        run: yarn install --immutable
+      - name: Build `@langchain/standard-tests`
+        run: yarn build --filter=@langchain/standard-tests
+      - name: Test `@langchain/anthropic` with lowest deps
+        run: docker compose -f dependency_range_tests/docker-compose.yml run anthropic-lowest-deps
+
+  # Google VertexAI
+  google-vertexai-latest-deps:
+    runs-on: ubuntu-latest
+    needs: get-changed-files
+    if: contains(needs.get-changed-files.outputs.changed_files, 'langchain-core/') || contains(needs.get-changed-files.outputs.changed_files, 'libs/langchain-google-vertexai/') || contains(needs.get-changed-files.outputs.changed_files, 'libs/langchain-google-gauth/') || contains(needs.get-changed-files.outputs.changed_files, 'libs/langchain-google-common/')
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "yarn"
+      - name: Install dependencies
+        run: yarn install --immutable
+      - name: Build `@langchain/standard-tests`
+        run: yarn build --filter=@langchain/standard-tests
+      - name: Test `@langchain/google-vertexai` with latest deps
+        run: docker compose -f dependency_range_tests/docker-compose.yml run google-vertexai-latest-deps
+
+  google-vertexai-lowest-deps:
+    runs-on: ubuntu-latest
+    needs: get-changed-files
+    if: contains(needs.get-changed-files.outputs.changed_files, 'libs/langchain-google-vertexai/')
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "yarn"
+      - name: Install dependencies
+        run: yarn install --immutable
+      - name: Build `@langchain/standard-tests`
+        run: yarn build --filter=@langchain/standard-tests
+      - name: Test `@langchain/google-vertexai` with lowest deps
+        run: docker compose -f dependency_range_tests/docker-compose.yml run google-vertexai-lowest-deps
+
+  # Cohere
+  cohere-latest-deps:
+    runs-on: ubuntu-latest
+    needs: get-changed-files
+    if: contains(needs.get-changed-files.outputs.changed_files, 'langchain-core/') || contains(needs.get-changed-files.outputs.changed_files, 'libs/langchain-cohere/')
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "yarn"
+      - name: Install dependencies
+        run: yarn install --immutable
+      - name: Build `@langchain/standard-tests`
+        run: yarn build --filter=@langchain/standard-tests
+      - name: Test `@langchain/cohere` with latest deps
+        run: docker compose -f dependency_range_tests/docker-compose.yml run cohere-latest-deps
+
+  cohere-lowest-deps:
+    runs-on: ubuntu-latest
+    needs: get-changed-files
+    if: contains(needs.get-changed-files.outputs.changed_files, 'libs/langchain-cohere/')
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "yarn"
+      - name: Install dependencies
+        run: yarn install --immutable
+      - name: Build `@langchain/standard-tests`
+        run: yarn build --filter=@langchain/standard-tests
+      - name: Test `@langchain/cohere` with lowest deps
+        run: docker compose -f dependency_range_tests/docker-compose.yml run cohere-lowest-deps

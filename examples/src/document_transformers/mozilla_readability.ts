@@ -1,4 +1,4 @@
-import { CheerioWebBaseLoader } from "langchain/document_loaders/web/cheerio";
+import { CheerioWebBaseLoader } from "@langchain/community/document_loaders/web/cheerio";
 import { MozillaReadabilityTransformer } from "@langchain/community/document_transformers/mozilla_readability";
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 

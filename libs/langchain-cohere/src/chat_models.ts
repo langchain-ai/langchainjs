@@ -38,7 +38,9 @@ export interface ChatCohereInput extends BaseChatModelParams {
   model?: string;
   /**
    * What sampling temperature to use, between 0.0 and 2.0.
-   * Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic.
+   * Higher values like 0.8 will make the output more random,
+   * while lower values like 0.2 will make it more focused
+   * and deterministic.
    * @default {0.3}
    */
   temperature?: number;
@@ -47,6 +49,14 @@ export interface ChatCohereInput extends BaseChatModelParams {
    * @default {false}
    */
   streaming?: boolean;
+  /**
+   * Whether or not to include token usage when streaming.
+   * This will include an extra chunk at the end of the stream
+   * with `eventType: "stream-end"` and the token usage in
+   * `usage_metadata`.
+   * @default {true}
+   */
+  streamUsage?: boolean;
 }
 
 interface TokenUsage {
@@ -58,11 +68,12 @@ interface TokenUsage {
 export interface CohereChatCallOptions
   extends BaseLanguageModelCallOptions,
     Partial<Omit<Cohere.ChatRequest, "message">>,
-    Partial<Omit<Cohere.ChatStreamRequest, "message">> {}
+    Partial<Omit<Cohere.ChatStreamRequest, "message">>,
+    Pick<ChatCohereInput, "streamUsage"> {}
 
 function convertMessagesToCohereMessages(
   messages: Array<BaseMessage>
-): Array<Cohere.ChatMessage> {
+): Array<Cohere.Message> {
   const getRole = (role: MessageType) => {
     switch (role) {
       case "system":
@@ -113,7 +124,7 @@ function convertMessagesToCohereMessages(
 export class ChatCohere<
     CallOptions extends CohereChatCallOptions = CohereChatCallOptions
   >
-  extends BaseChatModel<CallOptions>
+  extends BaseChatModel<CallOptions, AIMessageChunk>
   implements ChatCohereInput
 {
   static lc_name() {
@@ -130,6 +141,8 @@ export class ChatCohere<
 
   streaming = false;
 
+  streamUsage: boolean = true;
+
   constructor(fields?: ChatCohereInput) {
     super(fields ?? {});
 
@@ -144,6 +157,7 @@ export class ChatCohere<
     this.model = fields?.model ?? this.model;
     this.temperature = fields?.temperature ?? this.temperature;
     this.streaming = fields?.streaming ?? this.streaming;
+    this.streamUsage = fields?.streamUsage ?? this.streamUsage;
   }
 
   getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
@@ -193,8 +207,14 @@ export class ChatCohere<
     const cohereMessages = convertMessagesToCohereMessages(messages);
     // The last message in the array is the most recent, all other messages
     // are apart of the chat history.
-    const { message } = cohereMessages[cohereMessages.length - 1];
-    const chatHistory: Cohere.ChatMessage[] = [];
+    const lastMessage = cohereMessages[cohereMessages.length - 1];
+    if (lastMessage.role === "TOOL") {
+      throw new Error(
+        "Cohere does not support tool messages as the most recent message in chat history."
+      );
+    }
+    const { message } = lastMessage;
+    const chatHistory: Cohere.Message[] = [];
     if (cohereMessages.length > 1) {
       chatHistory.push(...cohereMessages.slice(0, -1));
     }
@@ -241,25 +261,22 @@ export class ChatCohere<
         }
       );
 
-    if ("token_count" in response) {
-      const {
-        response_tokens: completionTokens,
-        prompt_tokens: promptTokens,
-        total_tokens: totalTokens,
-      } = response.token_count as Record<string, number>;
+    if (response.meta?.tokens) {
+      const { inputTokens, outputTokens } = response.meta.tokens;
 
-      if (completionTokens) {
+      if (outputTokens) {
         tokenUsage.completionTokens =
-          (tokenUsage.completionTokens ?? 0) + completionTokens;
+          (tokenUsage.completionTokens ?? 0) + outputTokens;
       }
 
-      if (promptTokens) {
-        tokenUsage.promptTokens = (tokenUsage.promptTokens ?? 0) + promptTokens;
+      if (inputTokens) {
+        tokenUsage.promptTokens = (tokenUsage.promptTokens ?? 0) + inputTokens;
       }
 
-      if (totalTokens) {
-        tokenUsage.totalTokens = (tokenUsage.totalTokens ?? 0) + totalTokens;
-      }
+      tokenUsage.totalTokens =
+        (tokenUsage.totalTokens ?? 0) +
+        (tokenUsage.promptTokens ?? 0) +
+        (tokenUsage.completionTokens ?? 0);
     }
 
     const generationInfo: Record<string, unknown> = { ...response };
@@ -271,6 +288,11 @@ export class ChatCohere<
         message: new AIMessage({
           content: response.text,
           additional_kwargs: generationInfo,
+          usage_metadata: {
+            input_tokens: tokenUsage.promptTokens ?? 0,
+            output_tokens: tokenUsage.completionTokens ?? 0,
+            total_tokens: tokenUsage.totalTokens ?? 0,
+          },
         }),
         generationInfo,
       },
@@ -290,8 +312,14 @@ export class ChatCohere<
     const cohereMessages = convertMessagesToCohereMessages(messages);
     // The last message in the array is the most recent, all other messages
     // are apart of the chat history.
-    const { message } = cohereMessages[cohereMessages.length - 1];
-    const chatHistory: Cohere.ChatMessage[] = [];
+    const lastMessage = cohereMessages[cohereMessages.length - 1];
+    if (lastMessage.role === "TOOL") {
+      throw new Error(
+        "Cohere does not support tool messages as the most recent message in chat history."
+      );
+    }
+    const { message } = lastMessage;
+    const chatHistory: Cohere.Message[] = [];
     if (cohereMessages.length > 1) {
       chatHistory.push(...cohereMessages.slice(0, -1));
     }
@@ -317,7 +345,9 @@ export class ChatCohere<
       if (chunk.eventType === "text-generation") {
         yield new ChatGenerationChunk({
           text: chunk.text,
-          message: new AIMessageChunk({ content: chunk.text }),
+          message: new AIMessageChunk({
+            content: chunk.text,
+          }),
         });
         await runManager?.handleLLMNewToken(chunk.text);
       } else if (chunk.eventType !== "stream-end") {
@@ -333,6 +363,30 @@ export class ChatCohere<
           }),
           generationInfo: {
             ...chunk,
+          },
+        });
+      } else if (
+        chunk.eventType === "stream-end" &&
+        (this.streamUsage || options.streamUsage)
+      ) {
+        // stream-end events contain the final token count
+        const input_tokens = chunk.response.meta?.tokens?.inputTokens ?? 0;
+        const output_tokens = chunk.response.meta?.tokens?.outputTokens ?? 0;
+        yield new ChatGenerationChunk({
+          text: "",
+          message: new AIMessageChunk({
+            content: "",
+            additional_kwargs: {
+              eventType: "stream-end",
+            },
+            usage_metadata: {
+              input_tokens,
+              output_tokens,
+              total_tokens: input_tokens + output_tokens,
+            },
+          }),
+          generationInfo: {
+            eventType: "stream-end",
           },
         });
       }

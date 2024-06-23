@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.2.5",
+  "version": "0.2.6",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -580,7 +580,7 @@
     "clean": "rm -rf .turbo dist/",
     "prepack": "yarn build",
     "release": "release-it --only-version --config .release-it.json",
-    "test": "yarn run build:deps && NODE_OPTIONS=--experimental-vm-modules jest --testPathIgnorePatterns=\\.int\\.test.ts --testTimeout 30000 --maxWorkers=50%",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest --testPathIgnorePatterns=\\.int\\.test.ts --testTimeout 30000 --maxWorkers=50%",
     "test:watch": "yarn run build:deps && NODE_OPTIONS=--experimental-vm-modules jest --watch --testPathIgnorePatterns=\\.int\\.test.ts",
     "test:integration": "yarn run build:deps && NODE_OPTIONS=--experimental-vm-modules jest --testPathPattern=\\.int\\.test.ts --testTimeout 100000 --maxWorkers=50%",
     "test:single": "yarn run build:deps && NODE_OPTIONS=--experimental-vm-modules yarn run jest --config jest.config.cjs --testTimeout 100000",
@@ -885,7 +885,7 @@
   },
   "dependencies": {
     "@langchain/core": "~0.2.0",
-    "@langchain/openai": "~0.1.0",
+    "@langchain/openai": ">=0.1.0 <0.3.0",
     "@langchain/textsplitters": "~0.0.0",
     "binary-extensions": "^2.2.0",
     "js-tiktoken": "^1.0.12",
