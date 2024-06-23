@@ -220,6 +220,7 @@ test("Test workflow span", async () => {
     outputs: {
       output: "test",
     },
+    tags: ["seq:test"]
   };
 
   const compareSpan: DatadogLLMObsSpan = {
@@ -227,12 +228,13 @@ test("Test workflow span", async () => {
     meta: {
       kind: "workflow",
       input: {
-        value: JSON.stringify({ question: "test" }),
+        value: JSON.stringify(run.inputs),
       },
       output: {
-        value: JSON.stringify("test"),
+        value: JSON.stringify(run.outputs?.output),
       },
     },
+    tags: run.tags
   };
 
   const requestBody: DatadogLLMObsRequestBody = {
@@ -256,6 +258,7 @@ test("Test workflow span", async () => {
   });
 
   const { body } = (fetch as jest.Mock).mock.calls[0][1] as { body: string };
+
   const parsedBody = JSON.parse(body) as DatadogLLMObsRequestBody;
   expect(parsedBody).toMatchObject(
     requestBody as unknown as Record<string, unknown>
@@ -281,10 +284,10 @@ test("Test tool span", async () => {
     meta: {
       kind: "tool",
       input: {
-        value: JSON.stringify({ input: { query: "test" } }),
+        value: JSON.stringify(run.inputs),
       },
       output: {
-        value: JSON.stringify("test"),
+        value: JSON.stringify(run.outputs?.output),
       },
     },
   };
@@ -340,7 +343,7 @@ test("Test retrieval span", async () => {
     meta: {
       kind: "retrieval",
       input: {
-        value: JSON.stringify({ input: { query: "test" } }),
+        value: JSON.stringify(run.inputs),
       },
       output: {
         documents: [

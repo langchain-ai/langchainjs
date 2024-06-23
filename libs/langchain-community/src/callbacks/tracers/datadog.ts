@@ -38,6 +38,7 @@ export interface DatadogLLMObsSpan {
   duration: number;
   error: number;
   status: string;
+  tags?: string[];
   meta: {
     kind: DatadogLLMObsSpanKind;
     model_name?: string;
@@ -365,6 +366,7 @@ export class DatadogLLMObsTracer
       name: spanName,
       error: spanError,
       status: spanStatus,
+      tags: [...(run.tags?.length ? run.tags : [])],
       meta,
       start_ns: startTimeNs,
       duration: durationNs,
