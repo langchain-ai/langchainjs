@@ -2,6 +2,7 @@ import type { BaseLLMParams } from "@langchain/core/language_models/llms";
 import { BaseLanguageModelCallOptions } from "@langchain/core/language_models/base";
 import { StructuredToolInterface } from "@langchain/core/tools";
 import type { JsonStream } from "./utils/stream.js";
+import { GeminiAPIConfig } from "./utils/index.js";
 
 /**
  * Parameters needed to setup the client connection.
@@ -117,7 +118,8 @@ export interface GoogleAIBaseLLMInput<AuthOptions>
   extends BaseLLMParams,
     GoogleConnectionParams<AuthOptions>,
     GoogleAIModelParams,
-    GoogleAISafetyParams {}
+    GoogleAISafetyParams,
+    GeminiAPIConfig {}
 
 export interface GoogleAIBaseLanguageModelCallOptions
   extends BaseLanguageModelCallOptions,

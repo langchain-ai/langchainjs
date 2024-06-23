@@ -27,6 +27,7 @@ import {
   GoogleAbstractedClientOpsMethod,
 } from "./auth.js";
 import { zodToGeminiParameters } from "./utils/zod_to_gemini_parameters.js";
+import { getGeminiAPI } from "./utils/index.js";
 
 export abstract class GoogleConnection<
   CallOptions extends AsyncCallerCallOptions,
@@ -209,6 +210,8 @@ export abstract class GoogleAIConnection<
 
   client: GoogleAbstractedClient;
 
+  api;  // FIXME: Make this a real type
+
   constructor(
     fields: GoogleAIBaseLLMInput<AuthOptions> | undefined,
     caller: AsyncCaller,
@@ -219,6 +222,7 @@ export abstract class GoogleAIConnection<
     this.client = client;
     this.modelName = fields?.model ?? fields?.modelName ?? this.model;
     this.model = this.modelName;
+    this.api = getGeminiAPI(fields);
   }
 
   get modelFamily(): GoogleLLMModelFamily {

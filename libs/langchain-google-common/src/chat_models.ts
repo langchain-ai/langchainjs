@@ -39,12 +39,7 @@ import {
   copyAndValidateModelParamsInto,
 } from "./utils/common.js";
 import { AbstractGoogleLLMConnection } from "./connection.js";
-import {
-  baseMessageToContent,
-  safeResponseToChatGeneration,
-  safeResponseToChatResult,
-  DefaultGeminiSafetyHandler,
-} from "./utils/gemini.js";
+import { DefaultGeminiSafetyHandler } from "./utils/gemini.js";
 import { ApiKeyGoogleAuth, GoogleAbstractedClient } from "./auth.js";
 import { JsonStream } from "./utils/stream.js";
 import { ensureParams } from "./utils/failed_handler.js";
@@ -105,7 +100,7 @@ class ChatConnection<AuthOptions> extends AbstractGoogleLLMConnection<
   ): GeminiContent[] {
     return input
       .map((msg, i) =>
-        baseMessageToContent(msg, input[i - 1], this.useSystemInstruction)
+        this.api.baseMessageToContent(msg, input[i - 1], this.useSystemInstruction)
       )
       .reduce((acc, cur) => {
         // Filter out the system content, since those don't belong
@@ -130,7 +125,7 @@ class ChatConnection<AuthOptions> extends AbstractGoogleLLMConnection<
         // if it appears anywhere else, it should be an error.
         if (index === 0) {
           // eslint-disable-next-line prefer-destructuring
-          ret = baseMessageToContent(message, undefined, true)[0];
+          ret = this.api.baseMessageToContent(message, undefined, true)[0];
         } else {
           throw new Error(
             "System messages are only permitted as the first passed message."
@@ -323,7 +318,7 @@ export abstract class ChatGoogleBase<AuthOptions>
       parameters,
       options
     );
-    const ret = safeResponseToChatResult(response, this.safetyHandler);
+    const ret = this.connection.api.safeResponseToChatResult(response, this.safetyHandler);
     return ret;
   }
 
@@ -350,7 +345,7 @@ export abstract class ChatGoogleBase<AuthOptions>
       const output = await stream.nextChunk();
       const chunk =
         output !== null
-          ? safeResponseToChatGeneration({ data: output }, this.safetyHandler)
+          ? this.connection.api.safeResponseToChatGeneration({ data: output }, this.safetyHandler)
           : new ChatGenerationChunk({
               text: "",
               generationInfo: { finishReason: "stop" },
