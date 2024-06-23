@@ -13,6 +13,7 @@ import {
   type ToolsAgentStep,
 } from "./output_parser.js";
 import { AgentRunnableSequence } from "../agent.js";
+import { ToolDefinition } from "@langchain/core/language_models/base";
 
 export { OpenAIToolsAgentOutputParser, type ToolsAgentStep };
 
@@ -35,7 +36,7 @@ export type CreateOpenAIToolsAgentParams = {
     }
   >;
   /** Tools this agent has access to. */
-  tools: StructuredToolInterface[];
+  tools: StructuredToolInterface[] | ToolDefinition[];
   /** The prompt to use, must have an input key of `agent_scratchpad`. */
   prompt: ChatPromptTemplate;
   /**

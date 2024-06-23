@@ -1,8 +1,10 @@
 import { zodToJsonSchema, JsonSchema7ObjectType } from "zod-to-json-schema";
 import type { StructuredToolInterface } from "@langchain/core/tools";
-import type {
-  BaseLanguageModel,
-  BaseLanguageModelInterface,
+import {
+  isOpenAITool,
+  type BaseLanguageModel,
+  type BaseLanguageModelInterface,
+  type ToolDefinition,
 } from "@langchain/core/language_models/base";
 import { RunnablePassthrough } from "@langchain/core/runnables";
 import type { BasePromptTemplate } from "@langchain/core/prompts";
@@ -239,7 +241,7 @@ export type CreateStructuredChatAgentParams = {
   /** LLM to use as the agent. */
   llm: BaseLanguageModelInterface;
   /** Tools this agent has access to. */
-  tools: StructuredToolInterface[];
+  tools: StructuredToolInterface[] | ToolDefinition[];
   /**
    * The prompt to use. Must have input keys for
    * `tools`, `tool_names`, and `agent_scratchpad`.
@@ -324,7 +326,12 @@ export async function createStructuredChatAgent({
       )}`
     );
   }
-  const toolNames = tools.map((tool) => tool.name);
+  let toolNames: string[] = [];
+  if (tools.every(isOpenAITool)) {
+    toolNames = tools.map((tool) => tool.function.name);
+  } else {
+    toolNames = tools.map((tool) => tool.name);
+  }
   const partialedPrompt = await prompt.partial({
     tools: renderTextDescriptionAndArgs(tools),
     tool_names: toolNames.join(", "),
