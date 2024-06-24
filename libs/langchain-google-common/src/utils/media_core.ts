@@ -65,9 +65,12 @@ export class MediaBlob
     return String.fromCharCode(...dataArray);
   }
 
+  async asBase64(): Promise<string> {
+    return btoa(await this.asString());
+  }
+
   async asDataUrl(): Promise<string> {
-    const data64 = btoa(await this.asString());
-    return `data:${this.mimetype};base64,${data64}`;
+    return `data:${this.mimetype};base64,${await this.asBase64()}`;
   }
 
   async asUri(): Promise<string> {
