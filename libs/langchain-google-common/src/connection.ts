@@ -268,14 +268,14 @@ export abstract class GoogleAIConnection<
   abstract formatData(
     input: MessageType,
     parameters: GoogleAIModelRequestParams
-  ): unknown;
+  ): Promise<unknown>;
 
   async request(
     input: MessageType,
     parameters: GoogleAIModelRequestParams,
     options: CallOptions
   ): Promise<GoogleLLMResponse> {
-    const data = this.formatData(input, parameters);
+    const data = await this.formatData(input, parameters);
     const response = await this._request(data, options);
     return response;
   }
@@ -305,7 +305,7 @@ export abstract class AbstractGoogleLLMConnection<
   abstract formatContents(
     input: MessageType,
     parameters: GoogleAIModelRequestParams
-  ): GeminiContent[];
+  ): Promise<GeminiContent[]>;
 
   formatGenerationConfig(
     _input: MessageType,
@@ -328,10 +328,10 @@ export abstract class AbstractGoogleLLMConnection<
     return parameters.safetySettings ?? [];
   }
 
-  formatSystemInstruction(
+  async formatSystemInstruction(
     _input: MessageType,
     _parameters: GoogleAIModelRequestParams
-  ): GeminiContent {
+  ): Promise<GeminiContent> {
     return {} as GeminiContent;
   }
 
@@ -386,15 +386,15 @@ export abstract class AbstractGoogleLLMConnection<
     }
   }
 
-  formatData(
+  async formatData(
     input: MessageType,
     parameters: GoogleAIModelRequestParams
-  ): GeminiRequest {
-    const contents = this.formatContents(input, parameters);
+  ): Promise<GeminiRequest> {
+    const contents = await this.formatContents(input, parameters);
     const generationConfig = this.formatGenerationConfig(input, parameters);
     const tools = this.formatTools(input, parameters);
     const safetySettings = this.formatSafetySettings(input, parameters);
-    const systemInstruction = this.formatSystemInstruction(input, parameters);
+    const systemInstruction = await this.formatSystemInstruction(input, parameters);
 
     const ret: GeminiRequest = {
       contents,

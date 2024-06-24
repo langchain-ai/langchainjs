@@ -33,11 +33,11 @@ class GoogleLLMConnection<AuthOptions> extends AbstractGoogleLLMConnection<
   MessageContent,
   AuthOptions
 > {
-  formatContents(
+  async formatContents(
     input: MessageContent,
     _parameters: GoogleAIModelParams
-  ): GeminiContent[] {
-    const parts = this.api.messageContentToParts(input);
+  ): Promise<GeminiContent[]> {
+    const parts = await this.api.messageContentToParts(input);
     const contents: GeminiContent[] = [
       {
         role: "user", // Required by Vertex AI

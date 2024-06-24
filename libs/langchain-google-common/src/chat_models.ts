@@ -39,7 +39,7 @@ import {
   copyAndValidateModelParamsInto,
 } from "./utils/common.js";
 import { AbstractGoogleLLMConnection } from "./connection.js";
-import { DefaultGeminiSafetyHandler } from "./utils/gemini.js";
+import {DefaultGeminiSafetyHandler, GeminiAPIConfig} from "./utils/gemini.js";
 import { ApiKeyGoogleAuth, GoogleAbstractedClient } from "./auth.js";
 import { JsonStream } from "./utils/stream.js";
 import { ensureParams } from "./utils/failed_handler.js";
@@ -94,14 +94,18 @@ class ChatConnection<AuthOptions> extends AbstractGoogleLLMConnection<
     return true;
   }
 
-  formatContents(
+  async formatContents(
     input: BaseMessage[],
     _parameters: GoogleAIModelParams
-  ): GeminiContent[] {
-    return input
+  ): Promise<GeminiContent[]> {
+
+    const inputPromises = input
       .map((msg, i) =>
         this.api.baseMessageToContent(msg, input[i - 1], this.useSystemInstruction)
-      )
+      );
+    const inputs = await Promise.all(inputPromises);
+
+    return inputs
       .reduce((acc, cur) => {
         // Filter out the system content, since those don't belong
         // in the actual content.
@@ -110,29 +114,30 @@ class ChatConnection<AuthOptions> extends AbstractGoogleLLMConnection<
       }, []);
   }
 
-  formatSystemInstruction(
+  async formatSystemInstruction(
     input: BaseMessage[],
     _parameters: GoogleAIModelParams
-  ): GeminiContent {
+  ): Promise<GeminiContent> {
     if (!this.useSystemInstruction) {
       return {} as GeminiContent;
     }
 
     let ret = {} as GeminiContent;
-    input.forEach((message, index) => {
+    for (let index=0; index<input.length; index+=1) {
+      const message = input[index];
       if (message._getType() === "system") {
         // For system types, we only want it if it is the first message,
         // if it appears anywhere else, it should be an error.
         if (index === 0) {
           // eslint-disable-next-line prefer-destructuring
-          ret = this.api.baseMessageToContent(message, undefined, true)[0];
+          ret = (await this.api.baseMessageToContent(message, undefined, true))[0];
         } else {
           throw new Error(
             "System messages are only permitted as the first passed message."
           );
         }
       }
-    });
+    }
 
     return ret;
   }
@@ -145,7 +150,8 @@ export interface ChatGoogleBaseInput<AuthOptions>
   extends BaseChatModelParams,
     GoogleConnectionParams<AuthOptions>,
     GoogleAIModelParams,
-    GoogleAISafetyParams {}
+    GoogleAISafetyParams,
+    GeminiAPIConfig {}
 
 function convertToGeminiTools(
   structuredTools: (StructuredToolInterface | Record<string, unknown>)[]

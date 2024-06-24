@@ -33,7 +33,7 @@ import type {
   GeminiPartFunctionCall,
 } from "../types.js";
 import { GoogleAISafetyError } from "./safety.js";
-import {MediaManager} from "./media_core.js";
+import {MediaBlob, MediaManager} from "./media_core.js";
 
 export interface FunctionCall {
   name: string;
@@ -74,7 +74,7 @@ export interface GeminiAPIConfig {
 }
 
 export function getGeminiAPI(
-  _config?: GeminiAPIConfig
+  config?: GeminiAPIConfig
 ) {
 
   function messageContentText(
@@ -116,10 +116,23 @@ export function getGeminiAPI(
     }
   }
 
-  function messageContentMedia(
+  async function blobToFileData(blob: MediaBlob): Promise<GeminiPartFileData> {
+    return {
+      fileData: {
+        fileUri: blob.path!,
+        mimeType: blob.mimetype,
+      }
+    }
+  }
+
+  async function fileUriContentToBlob(uri: string): Promise<MediaBlob | undefined> {
+    return config?.mediaManager?.getMediaBlob(uri);
+  }
+
+  async function messageContentMedia(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     content: Record<string, any>
-  ): GeminiPartInlineData | GeminiPartFileData {
+  ): Promise<GeminiPartInlineData | GeminiPartFileData> {
     if ("mimeType" in content && "data" in content) {
       return {
         inlineData: {
@@ -134,14 +147,50 @@ export function getGeminiAPI(
           fileUri: content.fileUri,
         },
       };
+    } else {
+      const uri = content.fileUri;
+      const blob = await fileUriContentToBlob(uri);
+      if (blob) {
+        return await blobToFileData(blob);
+      }
     }
 
     throw new Error("Invalid media content");
   }
 
-  function messageContentToParts(content: MessageContent): GeminiPart[] {
+  async function messageContentComplexToPart(content: MessageContentComplex): Promise<GeminiPart | null> {
+    switch (content.type) {
+      case "text":
+        if ("text" in content) {
+          return messageContentText(content as MessageContentText);
+        }
+        break;
+      case "image_url":
+        if ("image_url" in content) {
+          // Type guard for MessageContentImageUrl
+          return messageContentImageUrl(content as MessageContentImageUrl);
+        }
+        break;
+      case "media":
+        return await messageContentMedia(content);
+      default:
+        throw new Error(
+          `Unsupported type received while converting message to message parts`
+        );
+    }
+    throw new Error(
+      `Cannot coerce "${content.type}" message part into a string.`
+    );
+  }
+
+  async function messageContentComplexToParts(content: MessageContentComplex[]): Promise<(GeminiPart | null)[]> {
+    const contents = content.map(messageContentComplexToPart);
+    return Promise.all(contents);
+  }
+
+  async function messageContentToParts(content: MessageContent): Promise<GeminiPart[]> {
     // Convert a string to a text type MessageContent if needed
-    const messageContent: MessageContent =
+    const messageContent: MessageContentComplex[] =
       typeof content === "string"
         ? [
           {
@@ -151,32 +200,11 @@ export function getGeminiAPI(
         ]
         : content;
 
-    // eslint-disable-next-line array-callback-return
-    const parts: GeminiPart[] = messageContent
-      .map((content) => {
-        switch (content.type) {
-          case "text":
-            if ("text" in content) {
-              return messageContentText(content as MessageContentText);
-            }
-            break;
-          case "image_url":
-            if ("image_url" in content) {
-              // Type guard for MessageContentImageUrl
-              return messageContentImageUrl(content as MessageContentImageUrl);
-            }
-            break;
-          case "media":
-            return messageContentMedia(content);
-          default:
-            throw new Error(
-              `Unsupported type received while converting message to message parts`
-            );
-        }
-        throw new Error(
-          `Cannot coerce "${content.type}" message part into a string.`
-        );
-      })
+    // Get all of the parts, even those that don't correctly resolve
+    const allParts = await messageContentComplexToParts(messageContent);
+
+    // Remove any invalid parts
+    const parts: GeminiPart[] = allParts
       .reduce((acc: GeminiPart[], val: GeminiPart | null | undefined) => {
         if (val) {
           return [...acc, val];
@@ -218,11 +246,11 @@ export function getGeminiAPI(
     return ret;
   }
 
-  function roleMessageToContent(
+  async function roleMessageToContent(
     role: GeminiRole,
     message: BaseMessage
-  ): GeminiContent[] {
-    const contentParts: GeminiPart[] = messageContentToParts(message.content);
+  ): Promise<GeminiContent[]> {
+    const contentParts: GeminiPart[] = await messageContentToParts(message.content);
     let toolParts: GeminiPart[];
     if (isAIMessage(message) && !!message.tool_calls?.length) {
       toolParts = message.tool_calls.map(
@@ -245,15 +273,15 @@ export function getGeminiAPI(
     ];
   }
 
-  function systemMessageToContent(
+  async function systemMessageToContent(
     message: SystemMessage,
     useSystemInstruction: boolean
-  ): GeminiContent[] {
+  ): Promise<GeminiContent[]> {
     return useSystemInstruction
       ? roleMessageToContent("system", message)
       : [
-        ...roleMessageToContent("user", message),
-        ...roleMessageToContent("model", new AIMessage("Ok")),
+        ...await roleMessageToContent("user", message),
+        ...await roleMessageToContent("model", new AIMessage("Ok")),
       ];
   }
 
@@ -311,11 +339,11 @@ export function getGeminiAPI(
     }
   }
 
-  function baseMessageToContent(
+  async function baseMessageToContent(
     message: BaseMessage,
     prevMessage: BaseMessage | undefined,
     useSystemInstruction: boolean
-  ): GeminiContent[] {
+  ): Promise<GeminiContent[]> {
     const type = message._getType();
     switch (type) {
       case "system":

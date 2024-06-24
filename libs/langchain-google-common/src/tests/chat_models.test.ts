@@ -1,4 +1,4 @@
-import { expect, test } from "@jest/globals";
+import {expect, test} from "@jest/globals";
 import {
   AIMessage,
   BaseMessage,
@@ -9,12 +9,14 @@ import {
   SystemMessage,
   ToolMessage,
 } from "@langchain/core/messages";
+import {InMemoryStore} from "@langchain/core/stores";
 
 import { ChatGoogleBase, ChatGoogleBaseInput } from "../chat_models.js";
 import { authOptions, MockClient, MockClientAuthInfo, mockId } from "./mock.js";
 import { GeminiTool, GoogleAIBaseLLMInput } from "../types.js";
 import { GoogleAbstractedClient } from "../auth.js";
 import { GoogleAISafetyError } from "../utils/safety.js";
+import {BackedBlobStore, MediaBlob, MediaManager} from "../utils/media_core.js";
 
 class ChatGoogle extends ChatGoogleBase<MockClientAuthInfo> {
   constructor(fields?: ChatGoogleBaseInput<MockClientAuthInfo>) {
@@ -513,10 +515,6 @@ describe("Mock ChatGoogle", () => {
     expect(caught).toEqual(true);
   });
 
-  /*
-   * Images aren't supported (yet) by Gemini, but a one-round with
-   * image should work ok.
-   */
   test("3. invoke - images", async () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const record: Record<string, any> = {};
@@ -528,7 +526,7 @@ describe("Mock ChatGoogle", () => {
     };
     const model = new ChatGoogle({
       authOptions,
-      model: "gemini-pro-vision",
+      model: "gemini-1.5-flash",
     });
 
     const message: MessageContentComplex[] = [
@@ -562,6 +560,196 @@ describe("Mock ChatGoogle", () => {
 
     expect(result.content).toBe("A blue square.");
   });
+
+  test("3. invoke - media - invalid", async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-3-mock.json",
+    };
+    const model = new ChatGoogle({
+      authOptions,
+      model: "gemini-1.5-flash",
+    });
+
+    const message: MessageContentComplex[] = [
+      {
+        type: "text",
+        text: "What is in this image?",
+      },
+      {
+        type: "media",
+        fileUri: "mock://example.com/blue-box.png",
+      },
+    ];
+
+    const messages: BaseMessage[] = [
+      new HumanMessageChunk({ content: message }),
+    ];
+
+    try {
+      const result = await model.invoke(messages);
+      expect(result).toBeUndefined();
+    } catch (e) {
+      expect((e as Error).message).toEqual("Invalid media content");
+    }
+
+  });
+
+  test("3. invoke - media - no manager", async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-3-mock.json",
+    };
+    const model = new ChatGoogle({
+      authOptions,
+      model: "gemini-1.5-flash",
+    });
+
+    const message: MessageContentComplex[] = [
+      {
+        type: "text",
+        text: "What is in this image?",
+      },
+      {
+        type: "media",
+        fileUri: "mock://example.com/blue-box.png",
+        mimeType: "image/png",
+      },
+    ];
+
+    const messages: BaseMessage[] = [
+      new HumanMessageChunk({ content: message }),
+    ];
+
+    const result = await model.invoke(messages);
+
+    console.log(JSON.stringify(record.opts, null, 1));
+
+    expect(record.opts).toHaveProperty("data");
+    expect(record.opts.data).toHaveProperty("contents");
+    expect(record.opts.data.contents).toHaveLength(1);
+    expect(record.opts.data.contents[0]).toHaveProperty("parts");
+
+    const parts = record?.opts?.data?.contents[0]?.parts;
+    expect(parts).toHaveLength(2);
+    expect(parts[0]).toHaveProperty("text");
+    expect(parts[1]).toHaveProperty("fileData");
+    expect(parts[1].fileData).toHaveProperty("mimeType");
+    expect(parts[1].fileData).toHaveProperty("fileUri");
+
+    expect(result.content).toBe("A blue square.");
+  });
+
+  test("3. invoke - media - manager", async () => {
+
+    class MemStore extends InMemoryStore<MediaBlob> {
+      get length() {
+        return Object.keys(this.store).length;
+      }
+    }
+
+    const aliasMemory = new MemStore();
+    const aliasStore = new BackedBlobStore({
+      backingStore: aliasMemory,
+      defaultFetchOptions: {
+        actionIfBlobMissing: undefined
+      }
+    });
+    const canonicalMemory = new MemStore();
+    const canonicalStore = new BackedBlobStore({
+      backingStore: canonicalMemory,
+      defaultStoreOptions: {
+        pathPrefix: "canonical://store/",
+        actionIfInvalid: "prefixPath",
+      },
+      defaultFetchOptions: {
+        actionIfBlobMissing: undefined,
+      }
+    });
+    const resolverMemory = new MemStore();
+    const resolver = new BackedBlobStore({
+      backingStore: resolverMemory,
+      defaultFetchOptions: {
+        actionIfBlobMissing: "emptyBlob",
+      }
+    });
+    const mediaManager = new MediaManager({
+      aliasStore,
+      canonicalStore,
+      resolver,
+    })
+
+    async function store(path: string, text: string): Promise<void>{
+      const type = path.endsWith(".png")
+        ? "image/png"
+        : "text/plain";
+      const blob = new MediaBlob({
+        data: new Blob([text], {type}),
+        path,
+      })
+      await mediaManager.resolver.store(blob)
+    }
+    await store("resolve://host/foo", "fooing");
+    await store("resolve://host2/bar/baz", "barbazing");
+    await store("resolve://host/foo/blue-box.png", "png");
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-3-mock.json",
+    };
+    const model = new ChatGoogle({
+      authOptions,
+      model: "gemini-1.5-flash",
+      mediaManager,
+    });
+
+    const message: MessageContentComplex[] = [
+      {
+        type: "text",
+        text: "What is in this image?",
+      },
+      {
+        type: "media",
+        fileUri: "resolve://host/foo/blue-box.png",
+      },
+    ];
+
+    const messages: BaseMessage[] = [
+      new HumanMessageChunk({ content: message }),
+    ];
+
+    const result = await model.invoke(messages);
+
+    console.log(JSON.stringify(record.opts, null, 1));
+
+    expect(record.opts).toHaveProperty("data");
+    expect(record.opts.data).toHaveProperty("contents");
+    expect(record.opts.data.contents).toHaveLength(1);
+    expect(record.opts.data.contents[0]).toHaveProperty("parts");
+
+    const parts = record?.opts?.data?.contents[0]?.parts;
+    expect(parts).toHaveLength(2);
+    expect(parts[0]).toHaveProperty("text");
+    expect(parts[1]).toHaveProperty("fileData");
+    expect(parts[1].fileData).toHaveProperty("mimeType");
+    expect(parts[1].fileData.mimeType).toEqual("image/png");
+    expect(parts[1].fileData).toHaveProperty("fileUri");
+    expect(parts[1].fileData.fileUri).toEqual("canonical://store/host/foo/blue-box.png");
+
+    expect(result.content).toBe("A blue square.");
+  })
 
   test("4. Functions Bind - Gemini format request", async () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
