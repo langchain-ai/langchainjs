@@ -6,10 +6,9 @@ import {
   AudioTranscriptLoader,
   AudioTranscriptParagraphsLoader,
   AudioTranscriptSentencesLoader,
-} from "../web/assemblyai.js";
+} from "../web/assemblyai.ts";
 
 const transcriptId = process.env.ASSEMBLYAI_TRANSCRIPT_ID!;
-console.log(transcriptId);
 
 describe.skip("AssemblyAI", () => {
   test("Invalid API key", async () => {

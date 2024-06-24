@@ -11,9 +11,15 @@ import {
 import { Document } from "@langchain/core/documents";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { BaseDocumentLoader } from "@langchain/core/document_loaders/base";
-import { AssemblyAIOptions } from "../../types/assemblyai-types.js";
+import { AssemblyAIOptions } from "../../types/assemblyai-types.ts";
 
-export type * from "../../types/assemblyai-types.js";
+export type * from "../../types/assemblyai-types.ts";
+
+const defaultOptions = {
+  userAgent: {
+    integration: { name: "LangChainJS", version: "1.0.1" },
+  },
+};
 
 /**
  * Base class for AssemblyAI loaders.
@@ -39,7 +45,10 @@ abstract class AssemblyAILoader extends BaseDocumentLoader {
       throw new Error("No AssemblyAI API key provided");
     }
 
-    this.client = new AssemblyAI(options as BaseServiceParams);
+    this.client = new AssemblyAI({
+      ...defaultOptions,
+      ...options,
+    } as BaseServiceParams);
   }
 }
 
