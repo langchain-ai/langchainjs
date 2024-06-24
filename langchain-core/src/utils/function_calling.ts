@@ -24,26 +24,40 @@ export function convertToOpenAIFunction(
  * function to convert the schema of the `StructuredTool` into a JSON
  * schema, which is then used as the parameters for the Cohere function.
  */
-export function convertToCohereTool(
-  tool: StructuredToolInterface
-): {name: string, description: string, parameterDefinitions: Record<string, any>} { /* eslint-disable-line  @typescript-eslint/no-explicit-any */
+export function convertToCohereTool(tool: StructuredToolInterface): {
+  name: string;
+  description: string;
+  parameterDefinitions: Record<
+    string,
+    any /* eslint-disable-line  @typescript-eslint/no-explicit-any */
+  >;
+} {
   const parameterDefinitionsFromZod = zodToJsonSchema(tool.schema);
-  const parameterDefinitionsProperties = "properties" in parameterDefinitionsFromZod ? parameterDefinitionsFromZod.properties : {};
-  let parameterDefinitionsRequired = "required" in parameterDefinitionsFromZod ? parameterDefinitionsFromZod.required : [];
+  const parameterDefinitionsProperties =
+    "properties" in parameterDefinitionsFromZod
+      ? parameterDefinitionsFromZod.properties
+      : {};
+  let parameterDefinitionsRequired =
+    "required" in parameterDefinitionsFromZod
+      ? parameterDefinitionsFromZod.required
+      : [];
 
-  const parameterDefinitionsFinal: Record<string, any> = {}; /* eslint-disable-line  @typescript-eslint/no-explicit-any */
+  /* eslint-disable-next-line  @typescript-eslint/no-explicit-any */
+  const parameterDefinitionsFinal: Record<string, any> = {};
 
   // Iterate through all properties
-  Object.keys(parameterDefinitionsProperties).forEach(propertyName => {
+  Object.keys(parameterDefinitionsProperties).forEach((propertyName) => {
     // Create the property in the new object
-    parameterDefinitionsFinal[propertyName] = parameterDefinitionsProperties[propertyName];
+    parameterDefinitionsFinal[propertyName] =
+      parameterDefinitionsProperties[propertyName];
     // Set the required property based on the 'required' array
     if (parameterDefinitionsRequired === undefined) {
       parameterDefinitionsRequired = [];
     }
-    parameterDefinitionsFinal[propertyName].required = parameterDefinitionsRequired.includes(propertyName);
+    parameterDefinitionsFinal[propertyName].required =
+      parameterDefinitionsRequired.includes(propertyName);
   });
-  
+
   return {
     name: tool.name,
     description: tool.description,

@@ -9,7 +9,7 @@
       "ES2022.Object",
       "DOM"
     ],
-    "module": "NodeNext",
+    "module": "ES2020",
     "moduleResolution": "nodenext",
     "esModuleInterop": true,
     "declaration": true,

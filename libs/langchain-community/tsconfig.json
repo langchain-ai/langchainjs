@@ -5,7 +5,7 @@
     "rootDir": "./src",
     "target": "ES2021",
     "lib": ["ES2021", "ES2022.Object", "DOM"],
-    "module": "NodeNext",
+    "module": "ES2020",
     "moduleResolution": "nodenext",
     "esModuleInterop": true,
     "declaration": true,

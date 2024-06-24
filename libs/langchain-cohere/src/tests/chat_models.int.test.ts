@@ -1,10 +1,14 @@
 /* eslint-disable no-promise-executor-return */
 import { test, expect } from "@jest/globals";
-import { AIMessageChunk, HumanMessage, ToolMessage } from "@langchain/core/messages";
-import { ChatCohere } from "../chat_models.js";
+import {
+  AIMessageChunk,
+  HumanMessage,
+  ToolMessage,
+} from "@langchain/core/messages";
 import { z } from "zod";
 import { DynamicStructuredTool } from "@langchain/core/tools";
 import { convertToCohereTool } from "@langchain/core/utils/function_calling";
+import { ChatCohere } from "../chat_models.js";
 
 test("ChatCohere can invoke", async () => {
   const model = new ChatCohere();
@@ -153,22 +157,24 @@ test("Test model tool calling", async () => {
     name: "web_search",
     description: "Search the web and return the answer",
     schema: z.object({
-      search_query: z.string().describe("The search query to surf the internet for"),
-    }) as any,
-    func: async ({ search_query }) => {
-      return `${search_query}`;
-    },
+      search_query: z
+        .string()
+        .describe("The search query to surf the internet for"),
+    }) as any /* eslint-disable-line  @typescript-eslint/no-explicit-any */,
+    func: async ({ search_query }) => `${search_query}`,
   });
 
   const tools = [webSearchTool];
   const modelWithTools = model.bind({
     tools: tools.map(convertToCohereTool),
   });
-  
-  let messages = [new HumanMessage("Who is the president of Singapore?? USE TOOLS TO SEARCH INTERNET!!!!")];
-  const res = await modelWithTools.invoke(
-    messages,
-  );
+
+  const messages = [
+    new HumanMessage(
+      "Who is the president of Singapore?? USE TOOLS TO SEARCH INTERNET!!!!"
+    ),
+  ];
+  const res = await modelWithTools.invoke(messages);
   console.log(res);
   expect(res?.usage_metadata).toBeDefined();
   if (!res?.usage_metadata) {
@@ -179,12 +185,16 @@ test("Test model tool calling", async () => {
   );
   expect(res.tool_calls).toBeDefined();
   expect(res.tool_calls?.length).toBe(1);
-  let tool_id = res.response_metadata.toolCalls[0].id;
-  messages.push(res)
-  messages.push(new ToolMessage("Aidan Gomez is the president of Singapore", tool_id,  "web_search"));
-  const resWithToolResults = await modelWithTools.invoke(
-    messages,
+  const tool_id = res.response_metadata.toolCalls[0].id;
+  messages.push(res);
+  messages.push(
+    new ToolMessage(
+      "Aidan Gomez is the president of Singapore",
+      tool_id,
+      "web_search"
+    )
   );
+  const resWithToolResults = await modelWithTools.invoke(messages);
   console.log(resWithToolResults);
   expect(resWithToolResults?.usage_metadata).toBeDefined();
   if (!resWithToolResults?.usage_metadata) {
