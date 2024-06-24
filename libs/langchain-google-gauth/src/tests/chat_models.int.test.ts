@@ -12,13 +12,14 @@ import {
   ToolMessage,
 } from "@langchain/core/messages";
 import { InMemoryStore } from "@langchain/core/stores";
-import { BlobStoreGoogleCloudStorage } from "@langchain/google-gauth";
-import { ChatVertexAI } from "../chat_models.js";
+import {BackedBlobStore, GoogleCloudStorageUri, MediaManager, SimpleWebBlobStore} from "@langchain/google-common";
 import { GeminiTool } from "../types.js";
+import {ChatGoogle} from "../chat_models.js";
+import {BlobStoreGoogleCloudStorage} from "../media.js";
 
 describe("GAuth Chat", () => {
   test("invoke", async () => {
-    const model = new ChatVertexAI();
+    const model = new ChatGoogle();
     try {
       const res = await model.invoke("What is 1 + 1?");
       expect(res).toBeDefined();
@@ -49,7 +50,7 @@ describe("GAuth Chat", () => {
   });
 
   test("generate", async () => {
-    const model = new ChatVertexAI();
+    const model = new ChatGoogle();
     try {
       const messages: BaseMessage[] = [
         new SystemMessage(
@@ -89,7 +90,7 @@ describe("GAuth Chat", () => {
   });
 
   test("stream", async () => {
-    const model = new ChatVertexAI();
+    const model = new ChatGoogle();
     try {
       const input: BaseLanguageModelInput = new ChatPromptValue([
         new SystemMessage(
@@ -142,7 +143,7 @@ describe("GAuth Chat", () => {
         ],
       },
     ];
-    const model = new ChatVertexAI().bind({ tools });
+    const model = new ChatGoogle().bind({ tools });
     const result = await model.invoke("Run a test on the cobalt project");
     expect(result).toHaveProperty("content");
     expect(result.content).toBe("");
@@ -186,7 +187,7 @@ describe("GAuth Chat", () => {
         ],
       },
     ];
-    const model = new ChatVertexAI().bind({ tools });
+    const model = new ChatGoogle().bind({ tools });
     const toolResult = {
       testPassed: true,
     };
@@ -230,7 +231,7 @@ describe("GAuth Chat", () => {
         required: ["location"],
       },
     };
-    const model = new ChatVertexAI().withStructuredOutput(tool);
+    const model = new ChatGoogle().withStructuredOutput(tool);
     const result = await model.invoke("What is the weather in Paris?");
     expect(result).toHaveProperty("location");
   });
@@ -251,7 +252,7 @@ describe("GAuth Chat", () => {
       canonicalStore,
       resolver,
     })
-    const model = new ChatVertexAI({
+    const model = new ChatGoogle({
       modelName: "gemini-1.5-flash",
       mediaManager,
     });
