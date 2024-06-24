@@ -26,6 +26,17 @@ function isWithStructuredOutput(
   );
 }
 
+function isBindTools(x: unknown): x is {
+  bindTools: (...arg: unknown[]) => Runnable;
+} {
+  return (
+    typeof x === "object" &&
+    x != null &&
+    "bindTools" in x &&
+    typeof x.bindTools === "function"
+  );
+}
+
 function isRunnableBinding(x: unknown): x is RunnableBinding<unknown, unknown> {
   return (
     typeof x === "object" &&
@@ -84,7 +95,8 @@ export class StructuredPrompt<
 
     if (
       isRunnableBinding(coerceable) &&
-      isWithStructuredOutput(coerceable.bound)
+      isWithStructuredOutput(coerceable.bound) &&
+      isBindTools(coerceable.bound)
     ) {
       return super.pipe(
         coerceable.bound
