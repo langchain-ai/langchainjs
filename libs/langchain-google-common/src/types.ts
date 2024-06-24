@@ -152,7 +152,6 @@ export interface GeminiPartInlineData {
   };
 }
 
-// Vertex AI only
 export interface GeminiPartFileData {
   fileData: {
     mimeType: string;
