@@ -6,6 +6,12 @@ export interface DocumentInput<
 
   metadata?: Metadata;
 
+  /**
+   * An optional identifier for the document.
+   * 
+   * Ideally this should be unique across the document collection and formatted 
+   * as a UUID, but this will not be enforced.
+   */
   id?: string;
 }
 
@@ -17,6 +23,12 @@ export interface DocumentInterface<
 
   metadata: Metadata;
 
+  /**
+   * An optional identifier for the document.
+   * 
+   * Ideally this should be unique across the document collection and formatted 
+   * as a UUID, but this will not be enforced.
+   */
   id?: string;
 }
 
@@ -32,14 +44,13 @@ export class Document<
 
   metadata: Metadata;
 
+  // This field is optional at the moment, but may become a required field
+  // in the future (wil be assigned automatically if not provided).
   /**
    * An optional identifier for the document.
    * 
    * Ideally this should be unique across the document collection and formatted 
    * as a UUID, but this will not be enforced.
-   * 
-   * This field is optional at the moment, but may become a required field
-   * in the future (wil be assigned automatically if not provided).
    */
   id?: string;
 
