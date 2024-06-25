@@ -110,7 +110,7 @@ export abstract class BlobStoreGoogle<
 
   client: GoogleAbstractedClient;
 
-  constructor(fields: BlobStoreGoogleParams<AuthOptions>) {
+  constructor(fields?: BlobStoreGoogleParams<AuthOptions>) {
     super(fields);
     this.caller = new AsyncCaller(fields ?? {});
     this.client = this.buildClient(fields);
@@ -391,8 +391,11 @@ export abstract class BlobStoreGoogleCloudStorageBase<
   AuthOptions
 > extends BlobStoreGoogle<GoogleCloudStorageResponse, AuthOptions> {
 
+  params: BlobStoreGoogleCloudStorageBaseParams<AuthOptions>
+
   constructor(fields: BlobStoreGoogleCloudStorageBaseParams<AuthOptions>) {
     super(fields);
+    this.params = fields;
     this.defaultStoreOptions = {
       ...this.defaultStoreOptions,
       pathPrefix: fields.uriPrefix.uri,
@@ -405,6 +408,7 @@ export abstract class BlobStoreGoogleCloudStorageBase<
     AuthOptions
   > {
     const params: GoogleCloudStorageUploadConnectionParams<AuthOptions> = {
+      ...this.params,
       uri: key,
     };
     return new GoogleCloudStorageUploadConnection<AuthOptions>(
@@ -472,4 +476,154 @@ export abstract class BlobStoreGoogleCloudStorageBase<
       AuthOptions
     >(params, this.caller, this.client);
   }
+}
+
+export type AIStudioFileState = "PROCESSING" | "ACTIVE" | "FAILED" | "STATE_UNSPECIFIED";
+
+export type AIStudioFileVideoMetadata = {
+  videoMetadata: {
+    videoDuration: string,   // Duration in seconds, possibly with fractional, ending in "s"
+  }
+}
+
+export type AIStudioFileMetadata = AIStudioFileVideoMetadata;
+
+export interface AIStudioFileObject {
+  name?: string,
+  displayName?: string,
+  mimeType?: string,
+  sizeBytes?: string,      // int64 format
+  createTime?: string,     // timestamp format
+  updateTime?: string,     // timestamp format
+  expirationTime?: string, // timestamp format
+  sha256Hash?: string,     // base64 encoded
+  uri?: string,
+  state?: AIStudioFileState,
+  error?: {
+    code: number,
+    message: string,
+    details: Record<string,unknown>[],
+  },
+  metadata?: AIStudioFileMetadata,
+}
+
+export class AIStudioMediaBlob extends MediaBlob {
+
+  _valueAsDate(value: string): Date {
+    if (!value) {
+      return new Date(0);
+    }
+    return new Date(value);
+  }
+
+  _metadataFieldAsDate(field: string): Date {
+    return this._valueAsDate(this.metadata?.[field]);
+  }
+
+  get createDate(): Date {
+    return this._metadataFieldAsDate("createTime");
+  }
+
+  get updateDate(): Date {
+    return this._metadataFieldAsDate("updateTime");
+  }
+
+  get expirationDate(): Date {
+    return this._metadataFieldAsDate("expirationTime");
+  }
+
+  get isExpired(): boolean {
+    const now = (new Date()).toISOString();
+    const exp = this.metadata?.expirationTime ?? now;
+    return exp <= now;
+  }
+}
+
+export interface AIStudioFileResponse extends GoogleResponse {
+  data: AIStudioFileObject;
+}
+
+export interface AIStudioFileConnectionParams {}
+
+export interface AIStudioFileUploadConnectionParams<AuthOptions>
+  extends GoogleUploadConnectionParams<AuthOptions>,
+    AIStudioFileConnectionParams {}
+
+export class AIStudioFileUploadConnection<
+  AuthOptions
+> extends GoogleUploadConnection<
+  AsyncCallerCallOptions,
+  AIStudioFileResponse,
+  AuthOptions
+> {
+  async buildUrl(): Promise<string> {
+    return `https://generativelanguage.googleapis.com/upload/${this.apiVersion}/files`;
+  }
+}
+
+export interface AIStudioFileDownloadConnectionParams<AuthOptions>
+  extends AIStudioFileConnectionParams,
+    GoogleConnectionParams<AuthOptions> {
+  method: GoogleAbstractedClientOpsMethod;
+  name: string;
+}
+
+export class AIStudioFileDownloadConnection<
+  ResponseType extends GoogleResponse,
+  AuthOptions
+> extends GoogleDownloadConnection<AsyncCallerCallOptions, ResponseType, AuthOptions> {
+
+  method: GoogleAbstractedClientOpsMethod;
+
+  name: string;
+
+  constructor(
+    fields: AIStudioFileDownloadConnectionParams<AuthOptions>,
+    caller: AsyncCaller,
+    client: GoogleAbstractedClient
+  ) {
+    super(fields, caller, client);
+    this.method = fields.method;
+    this.name = fields.name;
+  }
+
+  buildMethod(): GoogleAbstractedClientOpsMethod {
+    return this.method
+  }
+
+  async buildUrl(): Promise<string> {
+    return `https://generativelanguage.googleapis.com/${this.apiVersion}/files/${this.name}`;
+  }
+}
+
+export interface BlobStoreAIStudioFileBaseParams<AuthOptions>
+  extends BlobStoreGoogleParams<AuthOptions> {}
+
+export abstract class BlobStoreAIStudioFileBase<
+  AuthOptions
+> extends BlobStoreGoogle<AIStudioFileResponse, AuthOptions> {
+
+  params?: BlobStoreAIStudioFileBaseParams<AuthOptions>;
+
+  constructor(fields?: BlobStoreAIStudioFileBaseParams<AuthOptions>) {
+    super(fields);
+    this.params = fields;
+  }
+
+  buildSetConnection([_key, _blob]: [string, MediaBlob]): GoogleUploadConnection<AsyncCallerCallOptions, AIStudioFileResponse, AuthOptions> {
+    return new AIStudioFileUploadConnection(
+      this.params,
+      this.caller,
+      this.client,
+    )
+  }
+
+  buildSetMetadata([key, blob]: [string, MediaBlob]): Record<string, unknown> {
+    return {
+      displayName: key,
+      mimeType: blob.mimetype,
+    }
+  }
+
+  // TODO: Continue here
 }
