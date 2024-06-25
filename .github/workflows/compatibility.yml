@@ -111,6 +111,19 @@ jobs:
       - name: Test `@langchain/community` with lowest deps
         run: docker compose -f dependency_range_tests/docker-compose.yml run community-lowest-deps
 
+  community-npm-install:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: Build `@langchain/standard-tests`
+        run: yarn build --filter=@langchain/standard-tests
+      - name: Test npm install on `@langchain/community`
+        run: docker compose -f dependency_range_tests/docker-compose.yml run community-npm-install
+
   # OpenAI
   openai-latest-deps:
     runs-on: ubuntu-latest
