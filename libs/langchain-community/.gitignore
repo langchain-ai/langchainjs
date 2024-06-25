@@ -1010,6 +1010,10 @@ utils/cassandra.cjs
 utils/cassandra.js
 utils/cassandra.d.ts
 utils/cassandra.d.cts
+experimental/callbacks/handlers/datadog.cjs
+experimental/callbacks/handlers/datadog.js
+experimental/callbacks/handlers/datadog.d.ts
+experimental/callbacks/handlers/datadog.d.cts
 experimental/graph_transformers/llm.cjs
 experimental/graph_transformers/llm.js
 experimental/graph_transformers/llm.d.ts

@@ -308,6 +308,7 @@ export const config = {
     "utils/event_source_parse": "utils/event_source_parse",
     "utils/cassandra": "utils/cassandra",
     // experimental
+    "experimental/callbacks/handlers/datadog": "experimental/callbacks/handlers/datadog",
     "experimental/graph_transformers/llm":
       "experimental/graph_transformers/llm",
     "experimental/multimodal_embeddings/googlevertexai":
