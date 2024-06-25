@@ -21,7 +21,10 @@ test("Test MultiFileLoader", async () => {
       baseDirectory,
       "Star_Wars_The_Clone_Wars_S06E07_Crisis_at_the_Heart.csv"
     ),
-    path.resolve(baseDirectory, "Star_Wars_The_Clone_Wars_S06E07_Crisis_at_the_Heart.json"),
+    path.resolve(
+      baseDirectory,
+      "Star_Wars_The_Clone_Wars_S06E07_Crisis_at_the_Heart.json"
+    ),
     path.resolve(baseDirectory, "complex.json"),
     path.resolve(baseDirectory, "example.txt"),
     path.resolve(baseDirectory, "example_separator.csv"),

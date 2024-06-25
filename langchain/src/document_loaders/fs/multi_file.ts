@@ -1,7 +1,6 @@
-import type { extname as ExtnameT, resolve as ResolveT } from "node:path";
-import type { stat as StatT } from "node:fs/promises";
+import { extname, resolve } from "node:path";
+import { stat } from "node:fs/promises";
 import { Document } from "@langchain/core/documents";
-import { getEnv } from "@langchain/core/utils/env";
 import { BaseDocumentLoader } from "../base.js";
 import { type LoadersMapping, UnknownHandling } from "./directory.js";
 
@@ -53,7 +52,6 @@ export class MultiFileLoader extends BaseDocumentLoader {
    * @returns A promise that resolves to an array of loaded documents.
    */
   public async load(): Promise<Document[]> {
-    const { stat, extname, resolve } = await MultiFileLoader.imports();
     const documents: Document[] = [];
 
     for (const filePath of this.filePaths) {
@@ -85,29 +83,5 @@ export class MultiFileLoader extends BaseDocumentLoader {
     }
 
     return documents;
-  }
-
-  /**
-   * Imports the necessary functions from the `node:path` and
-   * `node:fs/promises` modules. It is used to dynamically import the
-   * functions when needed. If the import fails, it throws an error
-   * indicating that the modules failed to load.
-   * @returns A promise that resolves to an object containing the imported functions.
-   */
-  static async imports(): Promise<{
-    stat: typeof StatT;
-    extname: typeof ExtnameT;
-    resolve: typeof ResolveT;
-  }> {
-    try {
-      const { extname, resolve } = await import("node:path");
-      const { stat } = await import("node:fs/promises");
-      return { stat, extname, resolve };
-    } catch (e) {
-      console.error(e);
-      throw new Error(
-        `Failed to load fs/promises. MultiFileLoader available only on environment 'node'. It appears you are running environment '${getEnv()}'. See https://<link to docs> for alternatives.`
-      );
-    }
   }
 }
