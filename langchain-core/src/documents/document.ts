@@ -44,8 +44,9 @@ export class Document<
 
   metadata: Metadata;
 
-  // This field is optional at the moment, but may become a required field
-  // in the future (wil be assigned automatically if not provided).
+  // The ID field is optional at the moment.
+  // It will likely become required in a future major release after
+  // it has been adopted by enough vectorstore implementations.
   /**
    * An optional identifier for the document.
    *
