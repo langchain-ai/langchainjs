@@ -677,4 +677,55 @@ export class PGVectorStore extends VectorStore {
     this.client?.release();
     return this.pool.end();
   }
+
+  /**
+   * Method to create the HNSW index on the vector column.
+   *
+   * @param dimensions - Defines the number of dimensions in your vector data type, up to 2000. For example, use 1536 for OpenAI's text-embedding-ada-002 and Amazon's amazon.titan-embed-text-v1 models.
+   * @param m - The max number of connections per layer (16 by default). Index build time improves with smaller values, while higher values can speed up search queries.
+   * @param efConstruction -  The size of the dynamic candidate list for constructing the graph (64 by default). A higher value can potentially improve the index quality at the cost of index build time.
+   * @param distanceFunction -  The distance function name you want to use, is automatically selected based on the distanceStrategy.
+   * @returns Promise that resolves with the query response of creating the index.
+   */
+  async createHnswIndex(config: {
+    dimensions: number;
+    m?: number;
+    efConstruction?: number;
+    distanceFunction?: string;
+  }): Promise<void> {
+    let idxDistanceFunction = config?.distanceFunction || "vector_cosine_ops";
+
+    switch (this.distanceStrategy) {
+      case "cosine":
+        idxDistanceFunction = "vector_cosine_ops";
+        break;
+      case "innerProduct":
+        idxDistanceFunction = "vector_ip_ops";
+        break;
+      case "euclidean":
+        idxDistanceFunction = "vector_l2_ops";
+        break;
+      default:
+        throw new Error(`Unknown distance strategy: ${this.distanceStrategy}`);
+    }
+
+    const createIndexQuery = `CREATE INDEX IF NOT EXISTS ${
+      this.vectorColumnName
+    }_embedding_hnsw_idx
+        ON ${this.computedTableName} USING hnsw ((${
+      this.vectorColumnName
+    }::vector(${config.dimensions})) ${idxDistanceFunction})
+        WITH (
+            m=${config?.m || 16},
+            ef_construction=${config?.efConstruction || 64}
+        );`;
+
+    try {
+      await this.pool.query(createIndexQuery);
+    } catch (e) {
+      console.error(
+        `Failed to create HNSW index on table ${this.computedTableName}, error: ${e}`
+      );
+    }
+  }
 }
