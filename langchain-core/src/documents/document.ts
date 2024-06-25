@@ -8,8 +8,8 @@ export interface DocumentInput<
 
   /**
    * An optional identifier for the document.
-   * 
-   * Ideally this should be unique across the document collection and formatted 
+   *
+   * Ideally this should be unique across the document collection and formatted
    * as a UUID, but this will not be enforced.
    */
   id?: string;
@@ -25,8 +25,8 @@ export interface DocumentInterface<
 
   /**
    * An optional identifier for the document.
-   * 
-   * Ideally this should be unique across the document collection and formatted 
+   *
+   * Ideally this should be unique across the document collection and formatted
    * as a UUID, but this will not be enforced.
    */
   id?: string;
@@ -48,8 +48,8 @@ export class Document<
   // in the future (wil be assigned automatically if not provided).
   /**
    * An optional identifier for the document.
-   * 
-   * Ideally this should be unique across the document collection and formatted 
+   *
+   * Ideally this should be unique across the document collection and formatted
    * as a UUID, but this will not be enforced.
    */
   id?: string;
