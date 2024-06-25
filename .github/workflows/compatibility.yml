@@ -119,6 +119,9 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: ${{ env.NODE_VERSION }}
+          cache: "yarn"
+      - name: Install dependencies
+        run: yarn install --immutable
       - name: Build `@langchain/standard-tests`
         run: yarn build --filter=@langchain/standard-tests
       - name: Test npm install on `@langchain/community`
