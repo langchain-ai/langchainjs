@@ -7,7 +7,7 @@ import {
   DatadogLLMObsRequestBody,
   DatadogLLMObsSpan,
   DatadogLLMObsTracer,
-} from "../tracers/datadog.js";
+} from "../datadog.js";
 
 const _DATE = 1620000000000;
 const _END_DATE = _DATE + 1000;
@@ -220,7 +220,7 @@ test("Test workflow span", async () => {
     outputs: {
       output: "test",
     },
-    tags: ["seq:test"]
+    tags: ["seq:test"],
   };
 
   const compareSpan: DatadogLLMObsSpan = {
@@ -234,7 +234,7 @@ test("Test workflow span", async () => {
         value: JSON.stringify(run.outputs?.output),
       },
     },
-    tags: run.tags
+    tags: run.tags,
   };
 
   const requestBody: DatadogLLMObsRequestBody = {

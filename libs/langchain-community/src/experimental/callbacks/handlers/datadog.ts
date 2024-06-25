@@ -1,8 +1,7 @@
 import { BaseCallbackHandlerInput } from "@langchain/core/callbacks/base";
 import { BaseTracer, Run } from "@langchain/core/tracers/base";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
-import { Document } from "langchain/document";
-
+import { Document } from "@langchain/core/documents";
 import { BaseMessage } from "@langchain/core/messages";
 import { ChatGeneration } from "@langchain/core/outputs";
 import { KVMap } from "langsmith/schemas";
@@ -172,7 +171,7 @@ export class DatadogLLMObsTracer
       });
     }
 
-    return spans.flatMap(span => (span ? [span] : []));
+    return spans.flatMap((span) => (span ? [span] : []));
   }
 
   protected formatRequestBody(

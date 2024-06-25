@@ -53,6 +53,8 @@ docs/tutorials/classification.md
 docs/tutorials/classification.mdx
 docs/tutorials/chatbot.md
 docs/tutorials/chatbot.mdx
+docs/how_to/trim_messages.md
+docs/how_to/trim_messages.mdx
 docs/how_to/tools_prompting.md
 docs/how_to/tools_prompting.mdx
 docs/how_to/tools_builtin.md
@@ -117,6 +119,8 @@ docs/how_to/multimodal_inputs.md
 docs/how_to/multimodal_inputs.mdx
 docs/how_to/migrate_agent.md
 docs/how_to/migrate_agent.mdx
+docs/how_to/merge_message_runs.md
+docs/how_to/merge_message_runs.mdx
 docs/how_to/logprobs.md
 docs/how_to/logprobs.mdx
 docs/how_to/lcel_cheatsheet.md
@@ -131,6 +135,8 @@ docs/how_to/graph_constructing.md
 docs/how_to/graph_constructing.mdx
 docs/how_to/functions.md
 docs/how_to/functions.mdx
+docs/how_to/filter_messages.md
+docs/how_to/filter_messages.mdx
 docs/how_to/few_shot_examples_chat.md
 docs/how_to/few_shot_examples_chat.mdx
 docs/how_to/few_shot_examples.md
