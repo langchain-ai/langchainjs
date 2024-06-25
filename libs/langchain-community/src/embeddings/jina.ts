@@ -45,7 +45,7 @@ export interface JinaEmbeddingsParams extends EmbeddingsParams {
    * The model ID to use for generating embeddings.
    * Default: `jina-embeddings-v2-base-en`
    */
-  modelName?: string;
+  model?: string;
 }
 
 /**
@@ -78,7 +78,7 @@ export interface JinaEmbeddingsResponse {
 export class JinaEmbeddings extends Embeddings implements JinaEmbeddingsParams {
   apiKey: string;
 
-  modelName: string;
+  model: string;
 
   /**
    * Constructor for the JinaEmbeddings class.
@@ -86,7 +86,7 @@ export class JinaEmbeddings extends Embeddings implements JinaEmbeddingsParams {
    */
   constructor(fields?: Partial<JinaEmbeddingsParams> & { verbose?: boolean }) {
     const fieldsWithDefaults = {
-      modelName: "jina-embeddings-v2-base-en",
+      model: "jina-embeddings-v2-base-en",
       ...fields,
     };
     super(fieldsWithDefaults);
@@ -100,7 +100,7 @@ export class JinaEmbeddings extends Embeddings implements JinaEmbeddingsParams {
       throw new Error("Jina API key not found");
     }
 
-    this.modelName = fieldsWithDefaults?.modelName ?? this.modelName;
+    this.model = fieldsWithDefaults?.model ?? this.model;
     this.apiKey = apiKey;
   }
 
@@ -116,7 +116,7 @@ export class JinaEmbeddings extends Embeddings implements JinaEmbeddingsParams {
         Authorization: `Bearer ${this.apiKey}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ input, model: this.modelName }),
+      body: JSON.stringify({ input, model: this.model }),
     });
 
     const json = (await response.json()) as JinaEmbeddingsResponse;

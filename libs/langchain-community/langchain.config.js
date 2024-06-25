@@ -337,6 +337,7 @@ export const config = {
     "embeddings/tensorflow",
     "embeddings/hf",
     "embeddings/hf_transformers",
+    "embeddings/jina",
     "embeddings/llama_cpp",
     "embeddings/gradient_ai",
     "embeddings/premai",

@@ -35,7 +35,7 @@ import { JinaEmbeddings } from "@langchain/community/embeddings/jina";
 
 const embeddings = new JinaEmbeddings({
   apiToken: "YOUR_API_TOKEN",
-  modelName: "jina-embeddings-v2-base-en", // Optional, defaults to "jina-embeddings-v2-base-en"
+  model: "jina-embeddings-v2-base-en", // Optional, defaults to "jina-embeddings-v2-base-en"
 });
 ```
 
@@ -90,7 +90,7 @@ import { JinaEmbeddings } from "@langchain/community/embeddings/jina";
 
 const embeddings = new JinaEmbeddings({
   apiToken: "YOUR_API_TOKEN",
-  modelName: "jina-embeddings-v2-base-en",
+  model: "jina-embeddings-v2-base-en",
 });
 
 async function runExample() {
