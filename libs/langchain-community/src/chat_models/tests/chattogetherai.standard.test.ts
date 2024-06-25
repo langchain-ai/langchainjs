@@ -11,8 +11,8 @@ class ChatTogetherAIStandardUnitTests extends ChatModelUnitTests<
   constructor() {
     super({
       Cls: ChatTogetherAI,
-      chatModelHasToolCalling: false,
-      chatModelHasStructuredOutput: false,
+      chatModelHasToolCalling: true,
+      chatModelHasStructuredOutput: true,
       constructorArgs: {},
     });
     process.env.TOGETHER_AI_API_KEY = "test";

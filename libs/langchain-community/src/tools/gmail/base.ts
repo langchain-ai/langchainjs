@@ -8,6 +8,7 @@ export interface GmailBaseToolParams {
     clientEmail?: string;
     privateKey?: string;
     keyfile?: string;
+    subject?: string;
   };
   scopes?: string[];
 }
@@ -25,6 +26,9 @@ export abstract class GmailBaseTool extends StructuredTool {
       keyfile: z
         .string()
         .default(getEnvironmentVariable("GMAIL_KEYFILE") ?? ""),
+      subject: z
+        .string()
+        .default(getEnvironmentVariable("GMAIL_SUBJECT") ?? ""),
     })
     .refine(
       (credentials) =>
@@ -58,7 +62,8 @@ export abstract class GmailBaseTool extends StructuredTool {
       scopes,
       credentials.clientEmail,
       credentials.privateKey,
-      credentials.keyfile
+      credentials.keyfile,
+      credentials.subject
     );
   }
 
@@ -66,9 +71,10 @@ export abstract class GmailBaseTool extends StructuredTool {
     scopes: string[],
     email: string,
     key?: string,
-    keyfile?: string
+    keyfile?: string,
+    subject?: string
   ) {
-    const auth = new google.auth.JWT(email, keyfile, key, scopes);
+    const auth = new google.auth.JWT(email, keyfile, key, scopes, subject);
 
     return google.gmail({ version: "v1", auth });
   }

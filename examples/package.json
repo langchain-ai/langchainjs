@@ -34,6 +34,7 @@
     "@gomomento/sdk": "^1.51.1",
     "@google/generative-ai": "^0.7.0",
     "@langchain/anthropic": "workspace:*",
+    "@langchain/azure-dynamic-sessions": "workspace:^",
     "@langchain/azure-openai": "workspace:*",
     "@langchain/cloudflare": "workspace:*",
     "@langchain/cohere": "workspace:*",
