@@ -1087,6 +1087,15 @@
       "import": "./embeddings/hf_transformers.js",
       "require": "./embeddings/hf_transformers.cjs"
     },
+    "./embeddings/jina": {
+      "types": {
+        "import": "./embeddings/jina.d.ts",
+        "require": "./embeddings/jina.d.cts",
+        "default": "./embeddings/jina.d.ts"
+      },
+      "import": "./embeddings/jina.js",
+      "require": "./embeddings/jina.cjs"
+    },
     "./embeddings/llama_cpp": {
       "types": {
         "import": "./embeddings/llama_cpp.d.ts",
@@ -2968,6 +2977,15 @@
       "import": "./utils/cassandra.js",
       "require": "./utils/cassandra.cjs"
     },
+    "./experimental/callbacks/handlers/datadog": {
+      "types": {
+        "import": "./experimental/callbacks/handlers/datadog.d.ts",
+        "require": "./experimental/callbacks/handlers/datadog.d.cts",
+        "default": "./experimental/callbacks/handlers/datadog.d.ts"
+      },
+      "import": "./experimental/callbacks/handlers/datadog.js",
+      "require": "./experimental/callbacks/handlers/datadog.cjs"
+    },
     "./experimental/graph_transformers/llm": {
       "types": {
         "import": "./experimental/graph_transformers/llm.d.ts",
@@ -3189,6 +3207,10 @@
     "embeddings/hf_transformers.js",
     "embeddings/hf_transformers.d.ts",
     "embeddings/hf_transformers.d.cts",
+    "embeddings/jina.cjs",
+    "embeddings/jina.js",
+    "embeddings/jina.d.ts",
+    "embeddings/jina.d.cts",
     "embeddings/llama_cpp.cjs",
     "embeddings/llama_cpp.js",
     "embeddings/llama_cpp.d.ts",
@@ -4025,6 +4047,10 @@
     "utils/cassandra.js",
     "utils/cassandra.d.ts",
     "utils/cassandra.d.cts",
+    "experimental/callbacks/handlers/datadog.cjs",
+    "experimental/callbacks/handlers/datadog.js",
+    "experimental/callbacks/handlers/datadog.d.ts",
+    "experimental/callbacks/handlers/datadog.d.cts",
     "experimental/graph_transformers/llm.cjs",
     "experimental/graph_transformers/llm.js",
     "experimental/graph_transformers/llm.d.ts",

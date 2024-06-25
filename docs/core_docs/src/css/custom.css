@@ -101,7 +101,8 @@ nav, h1, h2, h3, h4 {
 /* Override `beta` color */
 .beta::after {
   content: "Beta";
-  color: #58006e;
+  color: #fff;
+  background: #58006e;
   border: 1px solid #58006e;
 }
 
@@ -114,7 +115,8 @@ nav, h1, h2, h3, h4 {
 /* Override `web-only` color */
 .web-only::after {
   content: "Web-only";
-  color: #0a0072;
+  color: #fff;
+  background: #0a0072;
   border: 1px solid #0a0072;
 }
 
