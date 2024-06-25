@@ -12,7 +12,7 @@ This package, along with the main LangChain package, depends on [`@langchain/cor
 
 ## Authentication
 
-To use this package, you need a mixedbread ai API key. You can obtain your API key by signing up at [mixedbread ai](https://mixedbread.ai/signup).
+To use this package, you need a mixedbread ai API key. You can obtain your API key by signing up at [mixedbread ai](https://mixedbread.ai).
 
 Either set the `MXBAI_API_KEY` environment variable to your mixedbread ai API key, or pass it as the `apiKey` option to the constructor of the class you are using.
 
@@ -39,7 +39,7 @@ Learn more: [Reranking API](https://mixedbread.ai/docs/reranking)
 const reranker = new MixedbreadAIReranker({ apiKey: 'your-api-key' });
 const documents = [{ pageContent: "To bake bread you need flour" }, { pageContent: "To bake bread you need yeast" }];
 const query = "What do you need to bake bread?";
-const result = await reranker.rerankDocuments(documents, query);
+const result = await reranker.compressDocuments(documents, query);
 console.log(result);
 ```
 
