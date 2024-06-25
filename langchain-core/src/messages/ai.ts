@@ -128,6 +128,14 @@ export class AIMessage extends BaseMessage {
   _getType(): MessageType {
     return "ai";
   }
+
+  toString(): string {
+    const idString = this.id ? `id: ${this.id}\n` : "";
+    const nameString = this.name ? `name: ${this.name}\n` : "";
+    const contentString = `content: ${typeof this.content === "string" ? this.content : JSON.stringify(this.content)}`;
+    const toolCallsString = (this.tool_calls?.length ?? 0) > 0 ? `\ntool_calls: ${JSON.stringify(this.tool_calls)}` : "";
+    return `AIMessage: ${idString}${nameString}${contentString}${toolCallsString}`
+  }
 }
 
 export function isAIMessage(x: BaseMessage): x is AIMessage {
@@ -280,5 +288,13 @@ export class AIMessageChunk extends BaseMessageChunk {
       combinedFields.usage_metadata = usage_metadata;
     }
     return new AIMessageChunk(combinedFields);
+  }
+
+  toString(): string {
+    const idString = this.id ? `id: ${this.id}\n` : "";
+    const nameString = this.name ? `name: ${this.name}\n` : "";
+    const contentString = `content: ${typeof this.content === "string" ? this.content : JSON.stringify(this.content)}`;
+    const toolCallsString = (this.tool_calls?.length ?? 0) > 0 ? `\ntool_calls: ${JSON.stringify(this.tool_calls)}` : "";
+    return `AIMessageChunk: ${idString}${nameString}${contentString}${toolCallsString}`
   }
 }

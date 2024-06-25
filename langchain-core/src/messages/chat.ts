@@ -48,6 +48,14 @@ export class ChatMessage
   static isInstance(message: BaseMessage): message is ChatMessage {
     return message._getType() === "generic";
   }
+
+  toString(): string {
+    const idString = this.id ? `id: ${this.id}\n` : "";
+    const roleString = `role: ${this.role}\n`;
+    const nameString = this.name ? `name: ${this.name}\n` : "";
+    const contentString = `content: ${typeof this.content === "string" ? this.content : JSON.stringify(this.content)}`;
+    return `ChatMessage: ${idString}${roleString}${nameString}${contentString}`
+  }
 }
 
 /**
@@ -92,5 +100,13 @@ export class ChatMessageChunk extends BaseMessageChunk {
       role: this.role,
       id: this.id ?? chunk.id,
     });
+  }
+
+  toString(): string {
+    const idString = this.id ? `id: ${this.id}\n` : "";
+    const roleString = `role: ${this.role}\n`;
+    const nameString = this.name ? `name: ${this.name}\n` : "";
+    const contentString = `content: ${typeof this.content === "string" ? this.content : JSON.stringify(this.content)}`;
+    return `ChatMessageChunk: ${idString}${roleString}${nameString}${contentString}`
   }
 }

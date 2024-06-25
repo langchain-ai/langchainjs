@@ -42,6 +42,14 @@ export class FunctionMessage extends BaseMessage {
   _getType(): MessageType {
     return "function";
   }
+
+  toString(): string {
+    const idString = this.id ? `id: ${this.id}\n` : "";
+    const nameString = this.name ? `name: ${this.name}\n` : "";
+    const contentString = `content: ${typeof this.content === "string" ? this.content : JSON.stringify(this.content)}\n`;
+    const functionCallString = this.additional_kwargs.function_call ? `function_call: ${JSON.stringify(this.additional_kwargs.function_call)}` : "";
+    return `FunctionMessage: ${idString}${nameString}${contentString}${functionCallString}`
+  }
 }
 
 /**
@@ -71,5 +79,13 @@ export class FunctionMessageChunk extends BaseMessageChunk {
       name: this.name ?? "",
       id: this.id ?? chunk.id,
     });
+  }
+
+  toString(): string {
+    const idString = this.id ? `id: ${this.id}\n` : "";
+    const nameString = this.name ? `name: ${this.name}\n` : "";
+    const contentString = `content: ${typeof this.content === "string" ? this.content : JSON.stringify(this.content)}\n`;
+    const functionCallString = this.additional_kwargs.function_call ? `function_call: ${JSON.stringify(this.additional_kwargs.function_call)}` : "";
+    return `FunctionMessageChunk: ${idString}${nameString}${contentString}${functionCallString}`
   }
 }

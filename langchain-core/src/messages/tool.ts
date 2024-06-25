@@ -54,6 +54,14 @@ export class ToolMessage extends BaseMessage {
   static isInstance(message: BaseMessage): message is ToolMessage {
     return message._getType() === "tool";
   }
+
+  toString(): string {
+    const idString = `tool_call_id: ${this.tool_call_id}\n`;
+    const contentString = `content: ${typeof this.content === "string" ? this.content : JSON.stringify(this.content)}`;
+    const nameString = this.name ? `name: ${this.name}\n` : "";
+
+    return `ToolMessage: ${idString}${nameString}${contentString}`
+  }
 }
 
 /**
@@ -90,6 +98,21 @@ export class ToolMessageChunk extends BaseMessageChunk {
       tool_call_id: this.tool_call_id,
       id: this.id ?? chunk.id,
     });
+  }
+
+  toString(): string {
+    let contentString = "";
+    let idString = "";
+    if (typeof this.content === "string") {
+      contentString = `content: ${this.content}`;
+      idString = `tool_call_id: ${this.tool_call_id}\n`;
+    } else {
+      contentString = `content: ${JSON.stringify(this.content)}`;
+      idString = `tool_call_id: ${this.tool_call_id}\n`;
+    }
+    const nameString = this.name ? `name: ${this.name}\n` : "";
+
+    return `ToolMessageChunk: ${idString}${nameString}${contentString}`
   }
 }
 

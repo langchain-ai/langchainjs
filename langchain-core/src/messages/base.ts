@@ -222,6 +222,8 @@ export abstract class BaseMessage
         .kwargs as StoredMessageData,
     };
   }
+
+  abstract toString(): string;
 }
 
 // TODO: Deprecate when SDK typing is updated

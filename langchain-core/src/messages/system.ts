@@ -17,6 +17,13 @@ export class SystemMessage extends BaseMessage {
   _getType(): MessageType {
     return "system";
   }
+
+  toString(): string {
+    const idString = this.id ? `id: ${this.id}\n` : "";
+    const nameString = this.name ? `name: ${this.name}\n` : "";
+    const contentString = `content: ${typeof this.content === "string" ? this.content : JSON.stringify(this.content)}`;
+    return `SystemMessage: ${idString}${nameString}${contentString}`
+  }
 }
 
 /**
@@ -45,5 +52,12 @@ export class SystemMessageChunk extends BaseMessageChunk {
       ),
       id: this.id ?? chunk.id,
     });
+  }
+
+  toString(): string {
+    const idString = this.id ? `id: ${this.id}\n` : "";
+    const nameString = this.name ? `name: ${this.name}\n` : "";
+    const contentString = `content: ${typeof this.content === "string" ? this.content : JSON.stringify(this.content)}`;
+    return `SystemMessageChunk: ${idString}${nameString}${contentString}`
   }
 }

@@ -17,6 +17,13 @@ export class HumanMessage extends BaseMessage {
   _getType(): MessageType {
     return "human";
   }
+
+  toString(): string {
+    const idString = this.id ? `id: ${this.id}\n` : "";
+    const nameString = this.name ? `name: ${this.name}\n` : "";
+    const contentString = `content: ${typeof this.content === "string" ? this.content : JSON.stringify(this.content)}`;
+    return `HumanMessage: ${idString}${nameString}${contentString}`
+  }
 }
 
 /**
@@ -45,5 +52,12 @@ export class HumanMessageChunk extends BaseMessageChunk {
       ),
       id: this.id ?? chunk.id,
     });
+  }
+
+  toString(): string {
+    const idString = this.id ? `id: ${this.id}\n` : "";
+    const nameString = this.name ? `name: ${this.name}\n` : "";
+    const contentString = `content: ${typeof this.content === "string" ? this.content : JSON.stringify(this.content)}`;
+    return `HumanMessageChunk: ${idString}${nameString}${contentString}`
   }
 }

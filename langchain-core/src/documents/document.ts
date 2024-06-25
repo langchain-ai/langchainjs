@@ -33,4 +33,10 @@ export class Document<
       fields.pageContent !== undefined ? fields.pageContent.toString() : "";
     this.metadata = fields.metadata ?? ({} as Metadata);
   }
+
+  toString(): string {
+    const metadataStr = Object.values(this.metadata).length > 0 ? `\nmetadata: ${JSON.stringify(this.metadata)}` : "";
+    const pageContentStr = `content: ${this.pageContent}`;
+    return `${pageContentStr}${metadataStr}`
+  }
 }
