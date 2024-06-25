@@ -7,6 +7,7 @@ import {
   FieldType,
   ClientConfig,
   InsertReq,
+  keyValueObj,
 } from "@zilliz/milvus2-sdk-node";
 
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
@@ -30,7 +31,16 @@ export interface MilvusLibArgs {
   textFieldMaxLength?: number;
   clientConfig?: ClientConfig;
   autoId?: boolean;
+  indexCreateOptions?: IndexCreateOptions;
 }
+
+export interface IndexCreateOptions {
+  index_type: IndexType;
+  metric_type: MetricType;
+  params?: keyValueObj;
+}
+
+export type MetricType = "L2" | "IP" | "COSINE";
 
 /**
  * Type representing the type of index used in the Milvus database.
@@ -145,6 +155,19 @@ export class Milvus extends VectorStore {
       ssl,
     } = args.clientConfig || {};
 
+    // index create params
+    const { indexCreateOptions } = args;
+    if (indexCreateOptions) {
+      this.indexCreateParams = {
+        metric_type: indexCreateOptions.metric_type,
+        index_type: indexCreateOptions.index_type,
+        params: JSON.stringify(indexCreateOptions.params),
+      };
+      this.indexSearchParams = JSON.stringify(
+        this.indexParams[indexCreateOptions.index_type].params
+      );
+    }
+
     // combine args clientConfig and env variables
     const clientConfig: ClientConfig = {
       ...(args.clientConfig || {}),
@@ -253,9 +276,16 @@ export class Milvus extends VectorStore {
     if (this.partitionName !== undefined) {
       params.partition_name = this.partitionName;
     }
-    const insertResp = await this.client.upsert(params);
+    const insertResp = this.autoId
+      ? await this.client.insert(params)
+      : await this.client.upsert(params);
+
     if (insertResp.status.error_code !== ErrorCode.SUCCESS) {
-      throw new Error(`Error upserting data: ${JSON.stringify(insertResp)}`);
+      throw new Error(
+        `Error ${
+          this.autoId ? "inserting" : "upserting"
+        } data: ${JSON.stringify(insertResp)}`
+      );
     }
     await this.client.flushSync({ collection_names: [this.collectionName] });
   }

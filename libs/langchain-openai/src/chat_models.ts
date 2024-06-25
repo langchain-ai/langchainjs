@@ -126,7 +126,8 @@ export function messageToOpenAIRole(message: BaseMessage): OpenAIRoleEnum {
 }
 
 function openAIResponseToChatMessage(
-  message: OpenAIClient.Chat.Completions.ChatCompletionMessage
+  message: OpenAIClient.Chat.Completions.ChatCompletionMessage,
+  messageId: string
 ): BaseMessage {
   const rawToolCalls: OpenAIToolCall[] | undefined = message.tool_calls as
     | OpenAIToolCall[]
@@ -151,6 +152,7 @@ function openAIResponseToChatMessage(
           function_call: message.function_call,
           tool_calls: rawToolCalls,
         },
+        id: messageId,
       });
     }
     default:
@@ -161,6 +163,7 @@ function openAIResponseToChatMessage(
 function _convertDeltaToMessageChunk(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   delta: Record<string, any>,
+  messageId: string,
   defaultRole?: OpenAIRoleEnum
 ) {
   const role = delta.role ?? defaultRole;
@@ -195,6 +198,7 @@ function _convertDeltaToMessageChunk(
       content,
       tool_call_chunks: toolCallChunks,
       additional_kwargs,
+      id: messageId,
     });
   } else if (role === "system") {
     return new SystemMessageChunk({ content });
@@ -257,6 +261,7 @@ export interface ChatOpenAICallOptions
   seed?: number;
   /**
    * Additional options to pass to streamed completions.
+   * If provided takes precedence over "streamUsage" set at initialization time.
    */
   stream_options?: {
     /**
@@ -381,6 +386,8 @@ export class ChatOpenAI<
 
   streaming = false;
 
+  streamUsage = true;
+
   maxTokens?: number;
 
   logprobs?: boolean;
@@ -477,6 +484,7 @@ export class ChatOpenAI<
     this.user = fields?.user;
 
     this.streaming = fields?.streaming ?? false;
+    this.streamUsage = fields?.streamUsage ?? this.streamUsage;
 
     if (this.azureOpenAIApiKey || this.azureADTokenProvider) {
       if (!this.azureOpenAIApiInstanceName && !this.azureOpenAIBasePath) {
@@ -545,6 +553,12 @@ export class ChatOpenAI<
         )
       );
     }
+    let streamOptionsConfig = {};
+    if (options?.stream_options !== undefined) {
+      streamOptionsConfig = { stream_options: options.stream_options };
+    } else if (this.streamUsage && this.streaming) {
+      streamOptionsConfig = { stream_options: { include_usage: true } };
+    }
     const params: Omit<
       OpenAIClient.Chat.ChatCompletionCreateParams,
       "messages"
@@ -561,6 +575,7 @@ export class ChatOpenAI<
       logit_bias: this.logitBias,
       stop: options?.stop ?? this.stopSequences,
       user: this.user,
+      // if include_usage is set or streamUsage then stream must be set to true.
       stream: this.streaming,
       functions: options?.functions,
       function_call: options?.function_call,
@@ -570,9 +585,7 @@ export class ChatOpenAI<
       tool_choice: options?.tool_choice,
       response_format: options?.response_format,
       seed: options?.seed,
-      ...(options?.stream_options !== undefined
-        ? { stream_options: options.stream_options }
-        : {}),
+      ...streamOptionsConfig,
       parallel_tool_calls: options?.parallel_tool_calls,
       ...this.modelKwargs,
     };
@@ -621,7 +634,7 @@ export class ChatOpenAI<
       if (!delta) {
         continue;
       }
-      const chunk = _convertDeltaToMessageChunk(delta, defaultRole);
+      const chunk = _convertDeltaToMessageChunk(delta, data.id, defaultRole);
       defaultRole = delta.role ?? defaultRole;
       const newTokenIndices = {
         prompt: options.promptIndex ?? 0,
@@ -770,7 +783,8 @@ export class ChatOpenAI<
         const generation: ChatGeneration = {
           text,
           message: openAIResponseToChatMessage(
-            part.message ?? { role: "assistant" }
+            part.message ?? { role: "assistant" },
+            data.id
           ),
         };
         generation.generationInfo = {
