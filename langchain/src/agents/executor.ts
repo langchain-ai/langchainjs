@@ -174,12 +174,15 @@ export class AgentExecutorIterator
       this.runManager = await callbackManager?.handleChainStart(
         this.agentExecutor.toJSON(),
         this.inputs,
-        undefined,
+        this.config?.runId,
         undefined,
         this.tags ?? this.config?.tags,
         this.metadata ?? this.config?.metadata,
         this.runName ?? this.config?.runName
       );
+      if (this.config !== undefined) {
+        delete this.config.runId;
+      }
     }
   }
 
@@ -234,9 +237,7 @@ export class AgentExecutorIterator
           this.intermediateSteps,
           runManager
         );
-        if (this.runManager) {
-          await this.runManager.handleChainEnd(output);
-        }
+        await this.runManager?.handleChainEnd(output);
         await this.setFinalOutputs(output);
       }
     }
@@ -256,6 +257,7 @@ export class AgentExecutorIterator
       this.runManager
     );
     await this.setFinalOutputs(returnedOutput);
+    await this.runManager?.handleChainEnd(returnedOutput);
     return returnedOutput;
   }
 

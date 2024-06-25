@@ -25,7 +25,7 @@ LangChain supports several different types of integrations with third-party prov
 
 We welcome such contributions, but ask that you read our dedicated [integration contribution guide](https://github.com/langchain-ai/langchainjs/blob/main/.github/contributing/INTEGRATIONS.md) for specific details and patterns to consider before opening a pull request.
 
-You can also check out the [guide on extending LangChain.js](https://js.langchain.com/docs/guides/extending_langchain/) in our docs.
+You can also check out the [guides on extending LangChain.js](https://js.langchain.com/v0.2/docs/how_to/#custom) in our docs.
 
 #### Integration packages
 
@@ -35,6 +35,18 @@ To make creating packages like this easier, we offer the [`create-langchain-inte
 
 ```bash
 $ npx create-langchain-integration
+```
+
+After creating the new integration package, you should add it to the [`unit-tests-integrations.yml`](./.github/workflows/unit-tests-integrations.yml) GitHub action workflow so that it is tested in CI. To do this, simply add the integration name inside the `jobs.unit-tests.strategy.matrix.package` array:
+
+```yaml
+jobs:
+  unit-tests:
+    name: Unit Tests
+    strategy:
+      matrix:
+        package: [anthropic, azure-openai, cloudflare, <your package name>]
+        ...
 ```
 
 ### Want to add a feature that's already in Python?

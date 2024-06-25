@@ -4,12 +4,13 @@ import {
 } from "../utils/fast-json-patch/index.js";
 import { BaseTracer, type Run } from "./base.js";
 import {
+  BaseCallbackHandler,
   BaseCallbackHandlerInput,
   HandleLLMNewTokenCallbackFields,
 } from "../callbacks/base.js";
 import { IterableReadableStream } from "../utils/stream.js";
 import { ChatGenerationChunk, GenerationChunk } from "../outputs.js";
-import { AIMessageChunk } from "../messages/index.js";
+import { AIMessageChunk } from "../messages/ai.js";
 import type { StreamEvent, StreamEventData } from "./event_stream.js";
 
 export type { StreamEvent, StreamEventData };
@@ -129,6 +130,10 @@ export interface LogStreamCallbackHandlerInput
   excludeTags?: string[];
   _schemaFormat?: SchemaFormat;
 }
+
+export const isLogStreamHandler = (
+  handler: BaseCallbackHandler
+): handler is LogStreamCallbackHandler => handler.name === "log_stream_tracer";
 
 /**
  * Extract standardized inputs from a run.

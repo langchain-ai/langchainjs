@@ -3,10 +3,12 @@ import {
   ChatCompletionResponse,
   Function as MistralAIFunction,
   ToolCalls as MistralAIToolCalls,
-  ToolChoice as MistralAIToolChoice,
   ResponseFormat,
   ChatCompletionResponseChunk,
-  ToolType,
+  ChatRequest,
+  Tool as MistralAITool,
+  Message as MistralAIMessage,
+  TokenUsage as MistralAITokenUsage,
 } from "@mistralai/mistralai";
 import {
   MessageType,
@@ -44,7 +46,6 @@ import {
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { NewTokenIndices } from "@langchain/core/callbacks/base";
 import { StructuredTool, StructuredToolInterface } from "@langchain/core/tools";
-import { convertToOpenAITool } from "@langchain/core/utils/function_calling";
 import { z } from "zod";
 import {
   type BaseLLMOutputParser,
@@ -70,47 +71,31 @@ interface TokenUsage {
   totalTokens?: number;
 }
 
-type MistralAIInputMessage = {
-  role: string;
-  name?: string;
-  content: string | string[];
-  tool_calls?: MistralAIToolCalls[];
-};
+export type MistralAIToolChoice = "auto" | "any" | "none";
 
 type MistralAIToolInput = { type: string; function: MistralAIFunction };
-
-type MistralAIChatCompletionOptions = {
-  model: string;
-  messages: Array<{
-    role: string;
-    name?: string;
-    content: string | string[];
-    tool_calls?: MistralAIToolCalls[];
-  }>;
-  tools?: Array<MistralAIToolInput>;
-  temperature?: number;
-  maxTokens?: number;
-  topP?: number;
-  randomSeed?: number;
-  safeMode?: boolean;
-  safePrompt?: boolean;
-  toolChoice?: MistralAIToolChoice;
-  responseFormat?: ResponseFormat;
-};
-
 interface MistralAICallOptions
   extends Omit<BaseLanguageModelCallOptions, "stop"> {
   response_format?: {
     type: "text" | "json_object";
   };
-  tools: StructuredToolInterface[] | MistralAIToolInput[];
+  tools: StructuredToolInterface[] | MistralAIToolInput[] | MistralAITool[];
   tool_choice?: MistralAIToolChoice;
+  /**
+   * Whether or not to include token usage in the stream.
+   * @default {true}
+   */
+  streamUsage?: boolean;
 }
+
+export interface ChatMistralAICallOptions extends MistralAICallOptions {}
 
 /**
  * Input to chat model class.
  */
-export interface ChatMistralAIInput extends BaseChatModelParams {
+export interface ChatMistralAIInput
+  extends BaseChatModelParams,
+    Pick<ChatMistralAICallOptions, "streamUsage"> {
   /**
    * The API key to use.
    * @default {process.env.MISTRAL_API_KEY}
@@ -178,7 +163,7 @@ export interface ChatMistralAIInput extends BaseChatModelParams {
 
 function convertMessagesToMistralMessages(
   messages: Array<BaseMessage>
-): Array<MistralAIInputMessage> {
+): Array<MistralAIMessage> {
   const getRole = (role: MessageType) => {
     switch (role) {
       case "human":
@@ -212,7 +197,7 @@ function convertMessagesToMistralMessages(
   const getTools = (message: BaseMessage): MistralAIToolCalls[] | undefined => {
     if (isAIMessage(message) && !!message.tool_calls?.length) {
       return message.tool_calls
-        .map((toolCall) => ({ ...toolCall, id: "null" }))
+        .map((toolCall) => ({ ...toolCall, id: toolCall.id }))
         .map(convertLangChainToolCallToOpenAI) as MistralAIToolCalls[];
     }
     if (!message.additional_kwargs.tool_calls?.length) {
@@ -221,8 +206,8 @@ function convertMessagesToMistralMessages(
     const toolCalls: Omit<OpenAIToolCall, "index">[] =
       message.additional_kwargs.tool_calls;
     return toolCalls?.map((toolCall) => ({
-      id: "null",
-      type: "function" as ToolType.function,
+      id: toolCall.id,
+      type: "function",
       function: toolCall.function,
     }));
   };
@@ -235,11 +220,12 @@ function convertMessagesToMistralMessages(
       content,
       tool_calls: toolCalls,
     };
-  });
+  }) as MistralAIMessage[];
 }
 
 function mistralAIResponseToChatMessage(
-  choice: ChatCompletionResponse["choices"][0]
+  choice: ChatCompletionResponse["choices"][0],
+  usage?: MistralAITokenUsage
 ): BaseMessage {
   const { message } = choice;
   // MistralAI SDK does not include tool_calls in the non
@@ -270,8 +256,20 @@ function mistralAIResponseToChatMessage(
         tool_calls: toolCalls,
         invalid_tool_calls: invalidToolCalls,
         additional_kwargs: {
-          tool_calls: rawToolCalls,
+          tool_calls: rawToolCalls.length
+            ? rawToolCalls.map((toolCall) => ({
+                ...toolCall,
+                type: "function",
+              }))
+            : undefined,
         },
+        usage_metadata: usage
+          ? {
+              input_tokens: usage.prompt_tokens,
+              output_tokens: usage.completion_tokens,
+              total_tokens: usage.total_tokens,
+            }
+          : undefined,
       });
     }
     default:
@@ -279,12 +277,27 @@ function mistralAIResponseToChatMessage(
   }
 }
 
-function _convertDeltaToMessageChunk(delta: {
-  role?: string | undefined;
-  content?: string | undefined;
-  tool_calls?: MistralAIToolCalls[] | undefined;
-}) {
+function _convertDeltaToMessageChunk(
+  delta: {
+    role?: string | undefined;
+    content?: string | undefined;
+    tool_calls?: MistralAIToolCalls[] | undefined;
+  },
+  usage?: MistralAITokenUsage | null
+) {
   if (!delta.content && !delta.tool_calls) {
+    if (usage) {
+      return new AIMessageChunk({
+        content: "",
+        usage_metadata: usage
+          ? {
+              input_tokens: usage.prompt_tokens,
+              output_tokens: usage.completion_tokens,
+              total_tokens: usage.total_tokens,
+            }
+          : undefined,
+      });
+    }
     return null;
   }
   // Our merge additional kwargs util function will throw unless there
@@ -331,6 +344,13 @@ function _convertDeltaToMessageChunk(delta: {
       content,
       tool_call_chunks: toolCallChunks,
       additional_kwargs,
+      usage_metadata: usage
+        ? {
+            input_tokens: usage.prompt_tokens,
+            output_tokens: usage.completion_tokens,
+            total_tokens: usage.total_tokens,
+          }
+        : undefined,
     });
   } else if (role === "tool") {
     return new ToolMessageChunk({
@@ -350,8 +370,18 @@ function _convertDeltaToMessageChunk(delta: {
 
 function _convertStructuredToolToMistralTool(
   tools: StructuredToolInterface[]
-): MistralAIToolInput[] {
-  return tools.map((tool) => convertToOpenAITool(tool) as MistralAIToolInput);
+): MistralAITool[] {
+  return tools.map((tool) => {
+    const description = tool.description ?? `Tool: ${tool.name}`;
+    return {
+      type: "function",
+      function: {
+        name: tool.name,
+        description,
+        parameters: zodToJsonSchema(tool.schema),
+      },
+    };
+  });
 }
 
 /**
@@ -397,6 +427,8 @@ export class ChatMistralAI<
 
   lc_serializable = true;
 
+  streamUsage = true;
+
   constructor(fields?: ChatMistralAIInput) {
     super(fields ?? {});
     const apiKey = fields?.apiKey ?? getEnvironmentVariable("MISTRAL_API_KEY");
@@ -417,9 +449,10 @@ export class ChatMistralAI<
     this.seed = this.randomSeed;
     this.modelName = fields?.model ?? fields?.modelName ?? this.model;
     this.model = this.modelName;
+    this.streamUsage = fields?.streamUsage ?? this.streamUsage;
   }
 
-  protected getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
+  getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
     const params = this.invocationParams(options);
     return {
       ls_provider: "mistral",
@@ -439,17 +472,27 @@ export class ChatMistralAI<
    */
   invocationParams(
     options?: this["ParsedCallOptions"]
-  ): Omit<MistralAIChatCompletionOptions, "messages"> {
+  ): Omit<ChatRequest, "messages"> {
     const { response_format, tools, tool_choice } = options ?? {};
-    const mistralAITools = tools
+    const mistralAITools: Array<MistralAITool> | undefined = tools
       ?.map((tool) => {
         if ("lc_namespace" in tool) {
           return _convertStructuredToolToMistralTool([tool]);
         }
-        return tool;
+        if (!tool.function.description) {
+          return {
+            type: "function",
+            function: {
+              name: tool.function.name,
+              description: `Tool: ${tool.function.name}`,
+              parameters: tool.function.parameters,
+            },
+          } as MistralAITool;
+        }
+        return tool as MistralAITool;
       })
       .flat();
-    const params: Omit<MistralAIChatCompletionOptions, "messages"> = {
+    const params: Omit<ChatRequest, "messages"> = {
       model: this.model,
       tools: mistralAITools,
       temperature: this.temperature,
@@ -484,21 +527,21 @@ export class ChatMistralAI<
 
   /**
    * Calls the MistralAI API with retry logic in case of failures.
-   * @param {MistralAIChatCompletionOptions} input The input to send to the MistralAI API.
+   * @param {ChatRequest} input The input to send to the MistralAI API.
    * @returns {Promise<MistralAIChatCompletionResult | AsyncGenerator<MistralAIChatCompletionResult>>} The response from the MistralAI API.
    */
   async completionWithRetry(
-    input: MistralAIChatCompletionOptions,
+    input: ChatRequest,
     streaming: true
   ): Promise<AsyncGenerator<ChatCompletionResponseChunk>>;
 
   async completionWithRetry(
-    input: MistralAIChatCompletionOptions,
+    input: ChatRequest,
     streaming: false
   ): Promise<ChatCompletionResponse>;
 
   async completionWithRetry(
-    input: MistralAIChatCompletionOptions,
+    input: ChatRequest,
     streaming: boolean
   ): Promise<
     ChatCompletionResponse | AsyncGenerator<ChatCompletionResponseChunk>
@@ -598,7 +641,7 @@ export class ChatMistralAI<
       const text = part.message?.content ?? "";
       const generation: ChatGeneration = {
         text,
-        message: mistralAIResponseToChatMessage(part),
+        message: mistralAIResponseToChatMessage(part, response?.usage),
       };
       if (part.finish_reason) {
         generation.generationInfo = { finish_reason: part.finish_reason };
@@ -641,7 +684,11 @@ export class ChatMistralAI<
         prompt: 0,
         completion: choice.index ?? 0,
       };
-      const message = _convertDeltaToMessageChunk(delta);
+      const shouldStreamUsage = this.streamUsage || options.streamUsage;
+      const message = _convertDeltaToMessageChunk(
+        delta,
+        shouldStreamUsage ? data.usage : null
+      );
       if (message === null) {
         // Do not yield a chunk if the message is empty
         continue;

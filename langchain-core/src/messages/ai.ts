@@ -18,6 +18,25 @@ import {
 export type AIMessageFields = BaseMessageFields & {
   tool_calls?: ToolCall[];
   invalid_tool_calls?: InvalidToolCall[];
+  usage_metadata?: UsageMetadata;
+};
+
+/**
+ * Usage metadata for a message, such as token counts.
+ */
+export type UsageMetadata = {
+  /**
+   * The count of input (or prompt) tokens.
+   */
+  input_tokens: number;
+  /**
+   * The count of output (or completion) tokens
+   */
+  output_tokens: number;
+  /**
+   * The total token count
+   */
+  total_tokens: number;
 };
 
 /**
@@ -29,6 +48,11 @@ export class AIMessage extends BaseMessage {
   tool_calls?: ToolCall[] = [];
 
   invalid_tool_calls?: InvalidToolCall[] = [];
+
+  /**
+   * If provided, token usage information associated with the message.
+   */
+  usage_metadata?: UsageMetadata;
 
   get lc_aliases(): Record<string, string> {
     // exclude snake case conversion to pascal case
@@ -94,6 +118,7 @@ export class AIMessage extends BaseMessage {
       this.invalid_tool_calls =
         initParams.invalid_tool_calls ?? this.invalid_tool_calls;
     }
+    this.usage_metadata = initParams.usage_metadata;
   }
 
   static lc_name() {
@@ -127,6 +152,11 @@ export class AIMessageChunk extends BaseMessageChunk {
 
   tool_call_chunks?: ToolCallChunk[] = [];
 
+  /**
+   * If provided, token usage information associated with the message.
+   */
+  usage_metadata?: UsageMetadata;
+
   constructor(fields: string | AIMessageChunkFields) {
     let initParams: AIMessageChunkFields;
     if (typeof fields === "string") {
@@ -139,7 +169,7 @@ export class AIMessageChunk extends BaseMessageChunk {
     } else if (fields.tool_call_chunks === undefined) {
       initParams = {
         ...fields,
-        tool_calls: [],
+        tool_calls: fields.tool_calls ?? [],
         invalid_tool_calls: [],
         tool_call_chunks: [],
       };
@@ -177,10 +207,11 @@ export class AIMessageChunk extends BaseMessageChunk {
     // properties with initializers, so we have to check types twice.
     super(initParams);
     this.tool_call_chunks =
-      initParams?.tool_call_chunks ?? this.tool_call_chunks;
-    this.tool_calls = initParams?.tool_calls ?? this.tool_calls;
+      initParams.tool_call_chunks ?? this.tool_call_chunks;
+    this.tool_calls = initParams.tool_calls ?? this.tool_calls;
     this.invalid_tool_calls =
-      initParams?.invalid_tool_calls ?? this.invalid_tool_calls;
+      initParams.invalid_tool_calls ?? this.invalid_tool_calls;
+    this.usage_metadata = initParams.usage_metadata;
   }
 
   get lc_aliases(): Record<string, string> {
@@ -213,6 +244,7 @@ export class AIMessageChunk extends BaseMessageChunk {
         chunk.response_metadata
       ),
       tool_call_chunks: [],
+      id: this.id ?? chunk.id,
     };
     if (
       this.tool_call_chunks !== undefined ||
@@ -225,6 +257,27 @@ export class AIMessageChunk extends BaseMessageChunk {
       if (rawToolCalls !== undefined && rawToolCalls.length > 0) {
         combinedFields.tool_call_chunks = rawToolCalls;
       }
+    }
+    if (
+      this.usage_metadata !== undefined ||
+      chunk.usage_metadata !== undefined
+    ) {
+      const left: UsageMetadata = this.usage_metadata ?? {
+        input_tokens: 0,
+        output_tokens: 0,
+        total_tokens: 0,
+      };
+      const right: UsageMetadata = chunk.usage_metadata ?? {
+        input_tokens: 0,
+        output_tokens: 0,
+        total_tokens: 0,
+      };
+      const usage_metadata: UsageMetadata = {
+        input_tokens: left.input_tokens + right.input_tokens,
+        output_tokens: left.output_tokens + right.output_tokens,
+        total_tokens: left.total_tokens + right.total_tokens,
+      };
+      combinedFields.usage_metadata = usage_metadata;
     }
     return new AIMessageChunk(combinedFields);
   }

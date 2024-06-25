@@ -1,0 +1,92 @@
+name: Standard Tests (Integration)
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 13 * * *'
+
+jobs:
+  standard-tests:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        package: [anthropic, cohere, google-genai, groq, mistralai]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js 18.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+          cache: "yarn"
+      - name: Install dependencies
+        run: yarn install --immutable --mode=skip-build
+      - name: Run standard tests (integration) for ${{ matrix.package }}
+        run: yarn test:standard:int --filter=@langchain/${{ matrix.package }}
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          COHERE_API_KEY: ${{ secrets.COHERE_API_KEY }}
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
+
+  # The `@langchain/openai` package contains standard tests for ChatOpenAI and AzureChatOpenAI
+  # We want to run these separately, so we need to pass the exact path for each test, which means
+  # we need separate jobs for each test.
+  standard-tests-openai:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js 18.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+          cache: "yarn"
+      - name: Install dependencies
+        run: yarn install --immutable --mode=skip-build
+      - name: Build `@langchain/openai`
+        run: yarn build --filter=@langchain/openai
+      - name: Run standard tests (integration) for ChatOpenAI
+        run: yarn workspace @langchain/openai test:single src/tests/chat_models.standard.int.test.ts
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+
+  standard-tests-azure-openai:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js 18.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+          cache: "yarn"
+      - name: Install dependencies
+        run: yarn install --immutable --mode=skip-build
+      - name: Build `@langchain/openai`
+        run: yarn build --filter=@langchain/openai
+      - name: Run standard tests (integration) for `@langchain/openai` AzureChatOpenAI
+        run: yarn workspace @langchain/openai test:single src/tests/azure/chat_models.standard.int.test.ts
+        env:
+          AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
+          AZURE_OPENAI_API_DEPLOYMENT_NAME: "chat"
+          AZURE_OPENAI_API_VERSION: ${{ secrets.AZURE_OPENAI_API_VERSION }}
+          AZURE_OPENAI_BASE_PATH: ${{ secrets.AZURE_OPENAI_BASE_PATH }}
+
+  standard-tests-bedrock:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js 18.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+          cache: "yarn"
+      - name: Install dependencies
+        run: yarn install --immutable --mode=skip-build
+      - name: Build `@langchain/community`
+        run: yarn build --filter=@langchain/community
+      - name: Run standard tests (integration) for `@langchain/community` BedrockChat
+        run: yarn workspace @langchain/community test:single src/chat_models/tests/chatbedrock.standard.int.test.ts
+        env:
+          BEDROCK_AWS_REGION: "us-east-1"
+          BEDROCK_AWS_SECRET_ACCESS_KEY: ${{ secrets.BEDROCK_AWS_SECRET_ACCESS_KEY }}
+          BEDROCK_AWS_ACCESS_KEY_ID: ${{ secrets.BEDROCK_AWS_ACCESS_KEY_ID }}

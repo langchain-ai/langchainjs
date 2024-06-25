@@ -1,6 +1,7 @@
 version: "3"
 services:
-  test-langchain-with-latest-deps:
+  # LangChain
+  langchain-latest-deps:
     image: node:18
     environment:
       PUPPETEER_SKIP_DOWNLOAD: "true"
@@ -10,8 +11,8 @@ services:
     volumes:
       - ../langchain:/langchain
       - ./scripts:/scripts
-    command: bash /scripts/test-langchain-with-latest-deps.sh
-  test-langchain-with-lowest-deps:
+    command: bash /scripts/langchain/test-with-latest-deps.sh
+  langchain-lowest-deps:
     image: node:18
     environment:
       PUPPETEER_SKIP_DOWNLOAD: "true"
@@ -21,12 +22,154 @@ services:
     volumes:
       - ../langchain:/langchain
       - ./scripts:/scripts
-    command: bash /scripts/test-langchain-with-lowest-deps.sh
-  success:
-    image: alpine:3.14
-    command: echo "Success"
-    depends_on:
-      test-langchain-with-latest-deps:
-        condition: service_completed_successfully
-      test-langchain-with-lowest-deps:
-        condition: service_completed_successfully
+    command: bash /scripts/langchain/test-with-lowest-deps.sh
+  
+  # Community
+  community-latest-deps:
+    image: node:18
+    environment:
+      PUPPETEER_SKIP_DOWNLOAD: "true"
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
+      COHERE_API_KEY: ${COHERE_API_KEY}
+    working_dir: /app
+    volumes:
+      - ../turbo.json:/turbo.json
+      - ../package.json:/package.json
+      - ../libs/langchain-standard-tests:/libs/langchain-standard-tests
+      - ../libs/langchain-community:/libs/langchain-community
+      - ./scripts:/scripts
+    command: bash /scripts/with_standard_tests/community/test-with-latest-deps.sh
+  community-lowest-deps:
+    image: node:18
+    environment:
+      PUPPETEER_SKIP_DOWNLOAD: "true"
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
+      COHERE_API_KEY: ${COHERE_API_KEY}
+    working_dir: /app
+    volumes:
+      - ../turbo.json:/turbo.json
+      - ../package.json:/package.json
+      - ../libs/langchain-standard-tests:/libs/langchain-standard-tests
+      - ../libs/langchain-community:/libs/langchain-community
+      - ./scripts:/scripts
+    command: bash /scripts/with_standard_tests/community/test-with-lowest-deps.sh
+
+  # OpenAI
+  openai-latest-deps:
+    image: node:18
+    environment:
+      PUPPETEER_SKIP_DOWNLOAD: "true"
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
+      COHERE_API_KEY: ${COHERE_API_KEY}
+    working_dir: /app
+    volumes:
+      - ../turbo.json:/turbo.json
+      - ../package.json:/package.json
+      - ../libs/langchain-standard-tests:/libs/langchain-standard-tests
+      - ../libs/langchain-openai:/libs/langchain-openai
+      - ./scripts:/scripts
+    command: bash /scripts/with_standard_tests/openai/test-with-latest-deps.sh
+  openai-lowest-deps:
+    image: node:18
+    environment:
+      PUPPETEER_SKIP_DOWNLOAD: "true"
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
+      COHERE_API_KEY: ${COHERE_API_KEY}
+    working_dir: /app
+    volumes:
+      - ../turbo.json:/turbo.json
+      - ../package.json:/package.json
+      - ../libs/langchain-standard-tests:/libs/langchain-standard-tests
+      - ../libs/langchain-openai:/libs/langchain-openai
+      - ./scripts:/scripts
+    command: bash /scripts/with_standard_tests/openai/test-with-lowest-deps.sh
+
+  # Anthropic
+  anthropic-latest-deps:
+    image: node:18
+    environment:
+      PUPPETEER_SKIP_DOWNLOAD: "true"
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
+      COHERE_API_KEY: ${COHERE_API_KEY}
+    working_dir: /app
+    volumes:
+      - ../turbo.json:/turbo.json
+      - ../package.json:/package.json
+      - ../libs/langchain-standard-tests:/libs/langchain-standard-tests
+      - ../libs/langchain-anthropic:/libs/langchain-anthropic
+      - ./scripts:/scripts
+    command: bash /scripts/with_standard_tests/anthropic/test-with-latest-deps.sh
+  anthropic-lowest-deps:
+    image: node:18
+    environment:
+      PUPPETEER_SKIP_DOWNLOAD: "true"
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
+      COHERE_API_KEY: ${COHERE_API_KEY}
+    working_dir: /app
+    volumes:
+      - ../turbo.json:/turbo.json
+      - ../package.json:/package.json
+      - ../libs/langchain-standard-tests:/libs/langchain-standard-tests
+      - ../libs/langchain-anthropic:/libs/langchain-anthropic
+      - ./scripts:/scripts
+    command: bash /scripts/with_standard_tests/anthropic/test-with-lowest-deps.sh
+
+  # Google VertexAI
+  google-vertexai-latest-deps:
+    image: node:18
+    environment:
+      PUPPETEER_SKIP_DOWNLOAD: "true"
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
+      COHERE_API_KEY: ${COHERE_API_KEY}
+    working_dir: /app
+    volumes:
+      - ../turbo.json:/turbo.json
+      - ../package.json:/package.json
+      - ../libs/langchain-standard-tests:/libs/langchain-standard-tests
+      - ../libs/langchain-google-vertexai:/libs/langchain-google-vertexai
+      - ./scripts:/scripts
+    command: bash /scripts/with_standard_tests/google-vertexai/test-with-latest-deps.sh
+  google-vertexai-lowest-deps:
+    image: node:18
+    environment:
+      PUPPETEER_SKIP_DOWNLOAD: "true"
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
+      COHERE_API_KEY: ${COHERE_API_KEY}
+    working_dir: /app
+    volumes:
+      - ../turbo.json:/turbo.json
+      - ../package.json:/package.json
+      - ../libs/langchain-standard-tests:/libs/langchain-standard-tests
+      - ../libs/langchain-google-vertexai:/libs/langchain-google-vertexai
+      - ./scripts:/scripts
+    command: bash /scripts/with_standard_tests/google-vertexai/test-with-lowest-deps.sh
+
+  # Cohere
+  cohere-latest-deps:
+    image: node:18
+    environment:
+      PUPPETEER_SKIP_DOWNLOAD: "true"
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
+      COHERE_API_KEY: ${COHERE_API_KEY}
+    working_dir: /app
+    volumes:
+      - ../turbo.json:/turbo.json
+      - ../package.json:/package.json
+      - ../libs/langchain-standard-tests:/libs/langchain-standard-tests
+      - ../libs/langchain-cohere:/libs/langchain-cohere
+      - ./scripts:/scripts
+    command: bash /scripts/with_standard_tests/cohere/test-with-latest-deps.sh
+  cohere-lowest-deps:
+    image: node:18
+    environment:
+      PUPPETEER_SKIP_DOWNLOAD: "true"
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
+      COHERE_API_KEY: ${COHERE_API_KEY}
+    working_dir: /app
+    volumes:
+      - ../turbo.json:/turbo.json
+      - ../package.json:/package.json
+      - ../libs/langchain-standard-tests:/libs/langchain-standard-tests
+      - ../libs/langchain-cohere:/libs/langchain-cohere
+      - ./scripts:/scripts
+    command: bash /scripts/with_standard_tests/cohere/test-with-lowest-deps.sh

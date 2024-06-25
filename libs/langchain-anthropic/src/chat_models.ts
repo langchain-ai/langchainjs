@@ -11,6 +11,7 @@ import {
   ToolMessage,
   isAIMessage,
   MessageContent,
+  UsageMetadata,
 } from "@langchain/core/messages";
 import {
   ChatGeneration,
@@ -24,9 +25,11 @@ import {
   type BaseChatModelParams,
 } from "@langchain/core/language_models/chat_models";
 import {
-  StructuredOutputMethodOptions,
+  type StructuredOutputMethodOptions,
   type BaseLanguageModelCallOptions,
-  BaseLanguageModelInput,
+  type BaseLanguageModelInput,
+  type ToolDefinition,
+  isOpenAITool,
 } from "@langchain/core/language_models/base";
 import { StructuredToolInterface } from "@langchain/core/tools";
 import { zodToJsonSchema } from "zod-to-json-schema";
@@ -39,20 +42,15 @@ import {
 import { isZodSchema } from "@langchain/core/utils/types";
 import { ToolCall } from "@langchain/core/messages/tool";
 import { z } from "zod";
+import type {
+  MessageCreateParams,
+  Tool as AnthropicTool,
+} from "@anthropic-ai/sdk/resources/index.mjs";
 import {
   AnthropicToolsOutputParser,
   extractToolCalls,
 } from "./output_parsers.js";
 import { AnthropicToolResponse } from "./types.js";
-
-type AnthropicTool = {
-  name: string;
-  description: string;
-  /**
-   * JSON schema.
-   */
-  input_schema: Record<string, unknown>;
-};
 
 type AnthropicMessage = Anthropic.MessageParam;
 type AnthropicMessageCreateParams = Anthropic.MessageCreateParamsNonStreaming;
@@ -67,8 +65,15 @@ type AnthropicToolChoice =
     }
   | "any"
   | "auto";
-interface ChatAnthropicCallOptions extends BaseLanguageModelCallOptions {
-  tools?: (StructuredToolInterface | AnthropicTool)[];
+export interface ChatAnthropicCallOptions
+  extends BaseLanguageModelCallOptions,
+    Pick<AnthropicInput, "streamUsage"> {
+  tools?: (
+    | StructuredToolInterface
+    | AnthropicTool
+    | Record<string, unknown>
+    | ToolDefinition
+  )[];
   /**
    * Whether or not to specify what tool the model should use
    * @default "auto"
@@ -101,11 +106,25 @@ function anthropicResponseToChatMessages(
   messages: AnthropicMessageResponse[],
   additionalKwargs: Record<string, unknown>
 ): ChatGeneration[] {
+  const usage: Record<string, number> | null | undefined =
+    additionalKwargs.usage as Record<string, number> | null | undefined;
+  const usageMetadata =
+    usage != null
+      ? {
+          input_tokens: usage.input_tokens ?? 0,
+          output_tokens: usage.output_tokens ?? 0,
+          total_tokens: (usage.input_tokens ?? 0) + (usage.output_tokens ?? 0),
+        }
+      : undefined;
   if (messages.length === 1 && messages[0].type === "text") {
     return [
       {
         text: messages[0].text,
-        message: new AIMessage(messages[0].text, additionalKwargs),
+        message: new AIMessage({
+          content: messages[0].text,
+          additional_kwargs: additionalKwargs,
+          usage_metadata: usageMetadata,
+        }),
       },
     ];
   } else {
@@ -118,6 +137,7 @@ function anthropicResponseToChatMessages(
           content: messages as any,
           additional_kwargs: additionalKwargs,
           tool_calls: toolCalls,
+          usage_metadata: usageMetadata,
         }),
       },
     ];
@@ -196,6 +216,12 @@ export interface AnthropicInput {
    * `anthropic.messages`} that are not explicitly specified on this class.
    */
   invocationKwargs?: Kwargs;
+
+  /**
+   * Whether or not to include token usage data in streamed chunks.
+   * @default true
+   */
+  streamUsage?: boolean;
 }
 
 /**
@@ -470,6 +496,8 @@ export class ChatAnthropicMessages<
   // Used for streaming requests
   protected streamingClient: Anthropic;
 
+  streamUsage = true;
+
   constructor(fields?: Partial<AnthropicInput> & BaseChatModelParams) {
     super(fields ?? {});
 
@@ -501,12 +529,13 @@ export class ChatAnthropicMessages<
 
     this.streaming = fields?.streaming ?? false;
     this.clientOptions = fields?.clientOptions ?? {};
+    this.streamUsage = fields?.streamUsage ?? this.streamUsage;
   }
 
-  protected getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
+  getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
     const params = this.invocationParams(options);
     return {
-      ls_provider: "openai",
+      ls_provider: "anthropic",
       ls_model_name: this.model,
       ls_model_type: "chat",
       ls_temperature: params.temperature ?? undefined,
@@ -536,21 +565,34 @@ export class ChatAnthropicMessages<
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if ((tools as any[]).every((tool) => isOpenAITool(tool))) {
+      // Formatted as OpenAI tool, convert to Anthropic tool
+      return (tools as ToolDefinition[]).map((tc) => ({
+        name: tc.function.name,
+        description: tc.function.description,
+        input_schema: tc.function.parameters as AnthropicTool.InputSchema,
+      }));
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     if ((tools as any[]).some((tool) => isAnthropicTool(tool))) {
-      throw new Error(
-        `Can not pass in a mix of AnthropicTools and StructuredTools`
-      );
+      throw new Error(`Can not pass in a mix of tool schemas to ChatAnthropic`);
     }
 
     return (tools as StructuredToolInterface[]).map((tool) => ({
       name: tool.name,
       description: tool.description,
-      input_schema: zodToJsonSchema(tool.schema),
+      input_schema: zodToJsonSchema(tool.schema) as AnthropicTool.InputSchema,
     }));
   }
 
   override bindTools(
-    tools: (AnthropicTool | StructuredToolInterface)[],
+    tools: (
+      | AnthropicTool
+      | Record<string, unknown>
+      | StructuredToolInterface
+      | ToolDefinition
+    )[],
     kwargs?: Partial<CallOptions>
   ): Runnable<BaseLanguageModelInput, AIMessageChunk, CallOptions> {
     return this.bind({
@@ -570,10 +612,9 @@ export class ChatAnthropicMessages<
   > &
     Kwargs {
     let tool_choice:
-      | {
-          type: string;
-          name?: string;
-        }
+      | MessageCreateParams.ToolChoiceAuto
+      | MessageCreateParams.ToolChoiceAny
+      | MessageCreateParams.ToolChoiceTool
       | undefined;
     if (options?.tool_choice) {
       if (options?.tool_choice === "any") {
@@ -676,25 +717,46 @@ export class ChatAnthropicMessages<
             }
           }
           usageData = usage;
+          let usageMetadata: UsageMetadata | undefined;
+          if (this.streamUsage || options.streamUsage) {
+            usageMetadata = {
+              input_tokens: usage.input_tokens,
+              output_tokens: usage.output_tokens,
+              total_tokens: usage.input_tokens + usage.output_tokens,
+            };
+          }
           yield new ChatGenerationChunk({
             message: new AIMessageChunk({
               content: "",
               additional_kwargs: filteredAdditionalKwargs,
+              usage_metadata: usageMetadata,
             }),
             text: "",
           });
         } else if (data.type === "message_delta") {
+          let usageMetadata: UsageMetadata | undefined;
+          if (this.streamUsage || options.streamUsage) {
+            usageMetadata = {
+              input_tokens: data.usage.output_tokens,
+              output_tokens: 0,
+              total_tokens: data.usage.output_tokens,
+            };
+          }
           yield new ChatGenerationChunk({
             message: new AIMessageChunk({
               content: "",
               additional_kwargs: { ...data.delta },
+              usage_metadata: usageMetadata,
             }),
             text: "",
           });
           if (data?.usage !== undefined) {
             usageData.output_tokens += data.usage.output_tokens;
           }
-        } else if (data.type === "content_block_delta") {
+        } else if (
+          data.type === "content_block_delta" &&
+          data.delta.type === "text_delta"
+        ) {
           const content = data.delta?.text;
           if (content !== undefined) {
             yield new ChatGenerationChunk({
@@ -708,10 +770,19 @@ export class ChatAnthropicMessages<
           }
         }
       }
+      let usageMetadata: UsageMetadata | undefined;
+      if (this.streamUsage || options.streamUsage) {
+        usageMetadata = {
+          input_tokens: usageData.input_tokens,
+          output_tokens: usageData.output_tokens,
+          total_tokens: usageData.input_tokens + usageData.output_tokens,
+        };
+      }
       yield new ChatGenerationChunk({
         message: new AIMessageChunk({
           content: "",
           additional_kwargs: { usage: usageData },
+          usage_metadata: usageMetadata,
         }),
         text: "",
       });
@@ -754,6 +825,7 @@ export class ChatAnthropicMessages<
       content,
       additionalKwargs
     );
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { role: _role, type: _type, ...rest } = additionalKwargs;
     return { generations, llmOutput: rest };
   }
@@ -921,7 +993,7 @@ export class ChatAnthropicMessages<
           name: functionName,
           description:
             jsonSchema.description ?? "A function available to call.",
-          input_schema: jsonSchema,
+          input_schema: jsonSchema as AnthropicTool.InputSchema,
         },
       ];
       outputParser = new AnthropicToolsOutputParser({
@@ -943,7 +1015,7 @@ export class ChatAnthropicMessages<
         anthropicTools = {
           name: functionName,
           description: schema.description ?? "",
-          input_schema: schema,
+          input_schema: schema as AnthropicTool.InputSchema,
         };
       }
       tools = [anthropicTools];

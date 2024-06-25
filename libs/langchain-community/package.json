@@ -1,6 +1,6 @@
 {
   "name": "@langchain/community",
-  "version": "0.2.3",
+  "version": "0.2.13",
   "description": "Third-party integrations for LangChain.js",
   "type": "module",
   "engines": {
@@ -16,38 +16,33 @@
   "scripts": {
     "build": "yarn turbo:command build:internal --filter=@langchain/community",
     "build:internal": "yarn lc-build:v2 --create-entrypoints --pre --tree-shaking --gen-maps",
-    "build:deps": "yarn run turbo:command build --filter=@langchain/core --filter=@langchain/openai --filter=langchain --filter=@langchain/anthropic --concurrency=1",
-    "build:esm": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist/ && rm -rf dist/tests dist/**/tests",
-    "build:cjs": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist-cjs/ -p tsconfig.cjs.json && yarn move-cjs-to-dist && rm -rf dist-cjs",
-    "build:watch": "yarn create-entrypoints && tsc --outDir dist/ --watch",
-    "build:scripts": "yarn create-entrypoints && yarn check-tree-shaking",
     "lint:eslint": "NODE_OPTIONS=--max-old-space-size=4096 eslint --cache --ext .ts,.js src/",
     "lint:dpdm": "dpdm --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
     "lint": "yarn lint:eslint && yarn lint:dpdm",
     "lint:fix": "yarn lint:eslint --fix && yarn lint:dpdm",
     "clean": "rm -rf .turbo dist/",
     "prepack": "yarn build",
-    "test": "yarn run build:deps && NODE_OPTIONS=--experimental-vm-modules jest --testPathIgnorePatterns=\\.int\\.test.ts --testTimeout 30000 --maxWorkers=50%",
-    "test:watch": "yarn run build:deps && NODE_OPTIONS=--experimental-vm-modules jest --watch --testPathIgnorePatterns=\\.int\\.test.ts",
-    "test:single": "yarn run build:deps && NODE_OPTIONS=--experimental-vm-modules yarn run jest --config jest.config.cjs --testTimeout 100000",
-    "test:integration": "NODE_OPTIONS=--experimental-vm-modules jest --testPathPattern=\\.int\\.test.ts --testTimeout 100000 --maxWorkers=50%",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest --testPathIgnorePatterns=\\.int\\.test.ts --testTimeout 30000 --maxWorkers=50%",
+    "test:watch": "NODE_OPTIONS=--experimental-vm-modules jest --watch --testPathIgnorePatterns=\\.int\\.test.ts",
+    "test:single": "NODE_OPTIONS=--experimental-vm-modules yarn run jest --config jest.config.cjs --testTimeout 100000",
+    "test:int": "NODE_OPTIONS=--experimental-vm-modules jest --testPathPattern=\\.int\\.test.ts --testTimeout 100000 --maxWorkers=50%",
+    "test:standard:unit": "NODE_OPTIONS=--experimental-vm-modules jest --testPathPattern=\\.standard\\.test.ts --testTimeout 100000 --maxWorkers=50%",
+    "test:standard:int": "NODE_OPTIONS=--experimental-vm-modules jest --testPathPattern=\\.standard\\.int\\.test.ts --testTimeout 100000 --maxWorkers=50%",
+    "test:standard": "yarn test:standard:unit && yarn test:standard:int",
     "format": "prettier --config .prettierrc --write \"src\"",
-    "format:check": "prettier --config .prettierrc --check \"src\"",
-    "move-cjs-to-dist": "yarn lc-build --config ./langchain.config.js --move-cjs-dist",
-    "create-entrypoints": "yarn lc-build --config ./langchain.config.js --create-entrypoints",
-    "check-tree-shaking": "yarn lc-build --config ./langchain.config.js --tree-shaking"
+    "format:check": "prettier --config .prettierrc --check \"src\""
   },
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@langchain/core": "~0.2.0",
-    "@langchain/openai": "~0.0.28",
+    "@langchain/core": "~0.2.9",
+    "@langchain/openai": "~0.1.0",
     "binary-extensions": "^2.2.0",
     "expr-eval": "^2.0.2",
     "flat": "^5.0.2",
     "js-yaml": "^4.1.0",
-    "langchain": "~0.2.0",
-    "langsmith": "~0.1.1",
+    "langchain": "0.2.3",
+    "langsmith": "~0.1.30",
     "uuid": "^9.0.0",
     "zod": "^3.22.3",
     "zod-to-json-schema": "^3.22.5"
@@ -68,13 +63,13 @@
     "@azure/storage-blob": "^12.15.0",
     "@browserbasehq/sdk": "^1.1.5",
     "@clickhouse/client": "^0.2.5",
-    "@cloudflare/ai": "^1.0.12",
+    "@cloudflare/ai": "1.0.12",
     "@cloudflare/workers-types": "^4.20230922.0",
     "@datastax/astra-db-ts": "^1.0.1",
     "@elastic/elasticsearch": "^8.4.0",
     "@faker-js/faker": "^7.6.0",
     "@getmetal/metal-sdk": "^4.0.0",
-    "@getzep/zep-cloud": "~1.0.0",
+    "@getzep/zep-cloud": "^1.0.6",
     "@getzep/zep-js": "^0.9.0",
     "@gomomento/sdk": "^1.51.1",
     "@gomomento/sdk-core": "^1.51.1",
@@ -84,9 +79,10 @@
     "@huggingface/inference": "^2.6.4",
     "@jest/globals": "^29.5.0",
     "@langchain/scripts": "~0.0.14",
+    "@langchain/standard-tests": "0.0.0",
     "@layerup/layerup-security": "^1.5.12",
     "@mendable/firecrawl-js": "^0.0.13",
-    "@mlc-ai/web-llm": "^0.2.35",
+    "@mlc-ai/web-llm": "0.2.46",
     "@mozilla/readability": "^0.4.4",
     "@neondatabase/serverless": "^0.9.1",
     "@notionhq/client": "^2.2.10",
@@ -111,7 +107,8 @@
     "@tensorflow/tfjs-converter": "^3.6.0",
     "@tensorflow/tfjs-core": "^3.6.0",
     "@tsconfig/recommended": "^1.0.2",
-    "@types/better-sqlite3": "^7.6.9",
+    "@types/better-sqlite3": "^7.6.10",
+    "@types/crypto-js": "^4.2.2",
     "@types/flat": "^5.0.2",
     "@types/html-to-text": "^9",
     "@types/jsdom": "^21.1.1",
@@ -127,16 +124,16 @@
     "@typescript-eslint/parser": "^5.58.0",
     "@upstash/ratelimit": "^1.1.3",
     "@upstash/redis": "^1.20.6",
-    "@upstash/vector": "^1.0.7",
+    "@upstash/vector": "^1.1.1",
     "@vercel/kv": "^0.2.3",
     "@vercel/postgres": "^0.5.0",
     "@writerai/writer-sdk": "^0.40.2",
     "@xata.io/client": "^0.28.0",
     "@xenova/transformers": "^2.5.4",
-    "@zilliz/milvus2-sdk-node": ">=2.2.11",
+    "@zilliz/milvus2-sdk-node": ">=2.3.5",
     "apify-client": "^2.7.1",
     "assemblyai": "^4.0.0",
-    "better-sqlite3": "^9.4.0",
+    "better-sqlite3": ">=9.4.0 <12.0.0",
     "cassandra-driver": "^4.7.2",
     "cborg": "^4.1.1",
     "cheerio": "^1.0.0-rc.12",
@@ -147,6 +144,7 @@
     "cohere-ai": ">=6.0.0",
     "convex": "^1.3.1",
     "couchbase": "^4.3.0",
+    "crypto-js": "^4.2.0",
     "d3-dsv": "^2.0.0",
     "datastore-core": "^9.2.9",
     "discord.js": "^14.14.1",
@@ -203,7 +201,7 @@
     "sonix-speech-recognition": "^2.1.1",
     "srt-parser-2": "^1.2.3",
     "ts-jest": "^29.1.0",
-    "typeorm": "^0.3.12",
+    "typeorm": "^0.3.20",
     "typescript": "~5.1.6",
     "typesense": "^1.5.3",
     "usearch": "^1.1.1",
@@ -233,17 +231,17 @@
     "@datastax/astra-db-ts": "^1.0.0",
     "@elastic/elasticsearch": "^8.4.0",
     "@getmetal/metal-sdk": "*",
-    "@getzep/zep-cloud": "~1.0.0",
+    "@getzep/zep-cloud": "^1.0.6",
     "@getzep/zep-js": "^0.9.0",
     "@gomomento/sdk": "^1.51.1",
     "@gomomento/sdk-core": "^1.51.1",
-    "@google-ai/generativelanguage": "^2.5.0",
+    "@google-ai/generativelanguage": "*",
     "@google-cloud/storage": "^6.10.1 || ^7.7.0",
     "@gradientai/nodejs-sdk": "^1.2.0",
     "@huggingface/inference": "^2.6.4",
     "@layerup/layerup-security": "^1.5.12",
     "@mendable/firecrawl-js": "^0.0.13",
-    "@mlc-ai/web-llm": "^0.2.35",
+    "@mlc-ai/web-llm": "0.2.46",
     "@mozilla/readability": "*",
     "@neondatabase/serverless": "*",
     "@notionhq/client": "^2.2.10",
@@ -266,16 +264,16 @@
     "@tensorflow/tfjs-core": "*",
     "@upstash/ratelimit": "^1.1.3",
     "@upstash/redis": "^1.20.6",
-    "@upstash/vector": "^1.0.7",
+    "@upstash/vector": "^1.1.1",
     "@vercel/kv": "^0.2.3",
     "@vercel/postgres": "^0.5.0",
     "@writerai/writer-sdk": "^0.40.2",
     "@xata.io/client": "^0.28.0",
     "@xenova/transformers": "^2.5.4",
-    "@zilliz/milvus2-sdk-node": ">=2.2.7",
+    "@zilliz/milvus2-sdk-node": ">=2.3.5",
     "apify-client": "^2.7.1",
     "assemblyai": "^4.0.0",
-    "better-sqlite3": "^9.4.0",
+    "better-sqlite3": ">=9.4.0 <12.0.0",
     "cassandra-driver": "^4.7.2",
     "cborg": "^4.1.1",
     "cheerio": "^1.0.0-rc.12",
@@ -286,6 +284,7 @@
     "cohere-ai": "*",
     "convex": "^1.3.1",
     "couchbase": "^4.3.0",
+    "crypto-js": "^4.2.0",
     "d3-dsv": "^2.0.0",
     "discord.js": "^14.14.1",
     "dria": "^0.0.3",
@@ -293,7 +292,7 @@
     "epub2": "^3.0.1",
     "faiss-node": "^0.5.1",
     "firebase-admin": "^11.9.0 || ^12.0.0",
-    "google-auth-library": "^9.10.0",
+    "google-auth-library": "*",
     "googleapis": "^126.0.1",
     "hnswlib-node": "^3.0.0",
     "html-to-text": "^9.0.5",
@@ -324,7 +323,7 @@
     "replicate": "^0.29.4",
     "sonix-speech-recognition": "^2.1.1",
     "srt-parser-2": "^1.2.3",
-    "typeorm": "^0.3.12",
+    "typeorm": "^0.3.20",
     "typesense": "^1.5.3",
     "usearch": "^1.1.1",
     "vectordb": "^0.1.4",
@@ -547,6 +546,9 @@
       "optional": true
     },
     "couchbase": {
+      "optional": true
+    },
+    "crypto-js": {
       "optional": true
     },
     "d3-dsv": {
@@ -1022,6 +1024,15 @@
       "import": "./embeddings/cohere.js",
       "require": "./embeddings/cohere.cjs"
     },
+    "./embeddings/deepinfra": {
+      "types": {
+        "import": "./embeddings/deepinfra.d.ts",
+        "require": "./embeddings/deepinfra.d.cts",
+        "default": "./embeddings/deepinfra.d.ts"
+      },
+      "import": "./embeddings/deepinfra.js",
+      "require": "./embeddings/deepinfra.cjs"
+    },
     "./embeddings/fireworks": {
       "types": {
         "import": "./embeddings/fireworks.d.ts",
@@ -1076,6 +1087,15 @@
       "import": "./embeddings/hf_transformers.js",
       "require": "./embeddings/hf_transformers.cjs"
     },
+    "./embeddings/jina": {
+      "types": {
+        "import": "./embeddings/jina.d.ts",
+        "require": "./embeddings/jina.d.cts",
+        "default": "./embeddings/jina.d.ts"
+      },
+      "import": "./embeddings/jina.js",
+      "require": "./embeddings/jina.cjs"
+    },
     "./embeddings/llama_cpp": {
       "types": {
         "import": "./embeddings/llama_cpp.d.ts",
@@ -1120,6 +1140,24 @@
       },
       "import": "./embeddings/tensorflow.js",
       "require": "./embeddings/tensorflow.cjs"
+    },
+    "./embeddings/tencent_hunyuan": {
+      "types": {
+        "import": "./embeddings/tencent_hunyuan.d.ts",
+        "require": "./embeddings/tencent_hunyuan.d.cts",
+        "default": "./embeddings/tencent_hunyuan.d.ts"
+      },
+      "import": "./embeddings/tencent_hunyuan.js",
+      "require": "./embeddings/tencent_hunyuan.cjs"
+    },
+    "./embeddings/tencent_hunyuan/web": {
+      "types": {
+        "import": "./embeddings/tencent_hunyuan/web.d.ts",
+        "require": "./embeddings/tencent_hunyuan/web.d.cts",
+        "default": "./embeddings/tencent_hunyuan/web.d.ts"
+      },
+      "import": "./embeddings/tencent_hunyuan/web.js",
+      "require": "./embeddings/tencent_hunyuan/web.cjs"
     },
     "./embeddings/togetherai": {
       "types": {
@@ -1201,6 +1239,15 @@
       },
       "import": "./llms/cohere.js",
       "require": "./llms/cohere.cjs"
+    },
+    "./llms/deepinfra": {
+      "types": {
+        "import": "./llms/deepinfra.d.ts",
+        "require": "./llms/deepinfra.d.cts",
+        "default": "./llms/deepinfra.d.ts"
+      },
+      "import": "./llms/deepinfra.js",
+      "require": "./llms/deepinfra.cjs"
     },
     "./llms/fireworks": {
       "types": {
@@ -1823,6 +1870,15 @@
       "import": "./chat_models/cloudflare_workersai.js",
       "require": "./chat_models/cloudflare_workersai.cjs"
     },
+    "./chat_models/deepinfra": {
+      "types": {
+        "import": "./chat_models/deepinfra.d.ts",
+        "require": "./chat_models/deepinfra.d.cts",
+        "default": "./chat_models/deepinfra.d.ts"
+      },
+      "import": "./chat_models/deepinfra.js",
+      "require": "./chat_models/deepinfra.cjs"
+    },
     "./chat_models/fireworks": {
       "types": {
         "import": "./chat_models/fireworks.d.ts",
@@ -1939,6 +1995,24 @@
       },
       "import": "./chat_models/premai.js",
       "require": "./chat_models/premai.cjs"
+    },
+    "./chat_models/tencent_hunyuan": {
+      "types": {
+        "import": "./chat_models/tencent_hunyuan.d.ts",
+        "require": "./chat_models/tencent_hunyuan.d.cts",
+        "default": "./chat_models/tencent_hunyuan.d.ts"
+      },
+      "import": "./chat_models/tencent_hunyuan.js",
+      "require": "./chat_models/tencent_hunyuan.cjs"
+    },
+    "./chat_models/tencent_hunyuan/web": {
+      "types": {
+        "import": "./chat_models/tencent_hunyuan/web.d.ts",
+        "require": "./chat_models/tencent_hunyuan/web.d.cts",
+        "default": "./chat_models/tencent_hunyuan/web.d.ts"
+      },
+      "import": "./chat_models/tencent_hunyuan/web.js",
+      "require": "./chat_models/tencent_hunyuan/web.cjs"
     },
     "./chat_models/togetherai": {
       "types": {
@@ -2903,6 +2977,15 @@
       "import": "./utils/cassandra.js",
       "require": "./utils/cassandra.cjs"
     },
+    "./experimental/callbacks/handlers/datadog": {
+      "types": {
+        "import": "./experimental/callbacks/handlers/datadog.d.ts",
+        "require": "./experimental/callbacks/handlers/datadog.d.cts",
+        "default": "./experimental/callbacks/handlers/datadog.d.ts"
+      },
+      "import": "./experimental/callbacks/handlers/datadog.js",
+      "require": "./experimental/callbacks/handlers/datadog.cjs"
+    },
     "./experimental/graph_transformers/llm": {
       "types": {
         "import": "./experimental/graph_transformers/llm.d.ts",
@@ -3096,6 +3179,10 @@
     "embeddings/cohere.js",
     "embeddings/cohere.d.ts",
     "embeddings/cohere.d.cts",
+    "embeddings/deepinfra.cjs",
+    "embeddings/deepinfra.js",
+    "embeddings/deepinfra.d.ts",
+    "embeddings/deepinfra.d.cts",
     "embeddings/fireworks.cjs",
     "embeddings/fireworks.js",
     "embeddings/fireworks.d.ts",
@@ -3120,6 +3207,10 @@
     "embeddings/hf_transformers.js",
     "embeddings/hf_transformers.d.ts",
     "embeddings/hf_transformers.d.cts",
+    "embeddings/jina.cjs",
+    "embeddings/jina.js",
+    "embeddings/jina.d.ts",
+    "embeddings/jina.d.cts",
     "embeddings/llama_cpp.cjs",
     "embeddings/llama_cpp.js",
     "embeddings/llama_cpp.d.ts",
@@ -3140,6 +3231,14 @@
     "embeddings/tensorflow.js",
     "embeddings/tensorflow.d.ts",
     "embeddings/tensorflow.d.cts",
+    "embeddings/tencent_hunyuan.cjs",
+    "embeddings/tencent_hunyuan.js",
+    "embeddings/tencent_hunyuan.d.ts",
+    "embeddings/tencent_hunyuan.d.cts",
+    "embeddings/tencent_hunyuan/web.cjs",
+    "embeddings/tencent_hunyuan/web.js",
+    "embeddings/tencent_hunyuan/web.d.ts",
+    "embeddings/tencent_hunyuan/web.d.cts",
     "embeddings/togetherai.cjs",
     "embeddings/togetherai.js",
     "embeddings/togetherai.d.ts",
@@ -3176,6 +3275,10 @@
     "llms/cohere.js",
     "llms/cohere.d.ts",
     "llms/cohere.d.cts",
+    "llms/deepinfra.cjs",
+    "llms/deepinfra.js",
+    "llms/deepinfra.d.ts",
+    "llms/deepinfra.d.cts",
     "llms/fireworks.cjs",
     "llms/fireworks.js",
     "llms/fireworks.d.ts",
@@ -3452,6 +3555,10 @@
     "chat_models/cloudflare_workersai.js",
     "chat_models/cloudflare_workersai.d.ts",
     "chat_models/cloudflare_workersai.d.cts",
+    "chat_models/deepinfra.cjs",
+    "chat_models/deepinfra.js",
+    "chat_models/deepinfra.d.ts",
+    "chat_models/deepinfra.d.cts",
     "chat_models/fireworks.cjs",
     "chat_models/fireworks.js",
     "chat_models/fireworks.d.ts",
@@ -3504,6 +3611,14 @@
     "chat_models/premai.js",
     "chat_models/premai.d.ts",
     "chat_models/premai.d.cts",
+    "chat_models/tencent_hunyuan.cjs",
+    "chat_models/tencent_hunyuan.js",
+    "chat_models/tencent_hunyuan.d.ts",
+    "chat_models/tencent_hunyuan.d.cts",
+    "chat_models/tencent_hunyuan/web.cjs",
+    "chat_models/tencent_hunyuan/web.js",
+    "chat_models/tencent_hunyuan/web.d.ts",
+    "chat_models/tencent_hunyuan/web.d.cts",
     "chat_models/togetherai.cjs",
     "chat_models/togetherai.js",
     "chat_models/togetherai.d.ts",
@@ -3932,6 +4047,10 @@
     "utils/cassandra.js",
     "utils/cassandra.d.ts",
     "utils/cassandra.d.cts",
+    "experimental/callbacks/handlers/datadog.cjs",
+    "experimental/callbacks/handlers/datadog.js",
+    "experimental/callbacks/handlers/datadog.d.ts",
+    "experimental/callbacks/handlers/datadog.d.cts",
     "experimental/graph_transformers/llm.cjs",
     "experimental/graph_transformers/llm.js",
     "experimental/graph_transformers/llm.d.ts",

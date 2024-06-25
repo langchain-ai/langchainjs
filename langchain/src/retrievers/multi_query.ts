@@ -196,7 +196,8 @@ export class MultiQueryRetriever extends BaseRetriever {
     if (this.documentCompressor && uniqueDocuments.length) {
       outputDocs = await this.documentCompressor.compressDocuments(
         uniqueDocuments,
-        question
+        question,
+        runManager?.getChild()
       );
       if (this.documentCompressorFilteringFn) {
         outputDocs = this.documentCompressorFilteringFn(outputDocs);

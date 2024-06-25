@@ -3,6 +3,7 @@
 
 import * as url from "node:url";
 import * as path from "node:path";
+import { readFile } from "node:fs/promises";
 import { test, expect } from "@jest/globals";
 import {
   UnstructuredDirectoryLoader,
@@ -21,6 +22,34 @@ test.skip("Test Unstructured base loader", async () => {
   };
 
   const loader = new UnstructuredLoader(filePath, options);
+  const docs = await loader.load();
+
+  expect(docs.length).toBe(3);
+  for (const doc of docs) {
+    expect(typeof doc.pageContent).toBe("string");
+  }
+});
+
+test.skip("Test Unstructured base loader with buffer", async () => {
+  const filePath = path.resolve(
+    path.dirname(url.fileURLToPath(import.meta.url)),
+    "./example_data/example.txt"
+  );
+
+  const options = {
+    apiKey: process.env.UNSTRUCTURED_API_KEY!,
+  };
+
+  const buffer = await readFile(filePath);
+  const fileName = "example.txt";
+
+  const loader = new UnstructuredLoader(
+    {
+      buffer,
+      fileName,
+    },
+    options
+  );
   const docs = await loader.load();
 
   expect(docs.length).toBe(3);

@@ -11,6 +11,7 @@ import { DynamicStructuredTool, StructuredTool } from "@langchain/core/tools";
 import { z } from "zod";
 import {
   AIMessage,
+  AIMessageChunk,
   BaseMessage,
   HumanMessage,
   ToolMessage,
@@ -20,7 +21,7 @@ import { ChatMistralAI } from "../chat_models.js";
 
 test("Test ChatMistralAI can invoke", async () => {
   const model = new ChatMistralAI({
-    modelName: "mistral-tiny",
+    model: "mistral-tiny",
   });
   const prompt = ChatPromptTemplate.fromMessages([
     ["system", "You are a helpful assistant"],
@@ -71,7 +72,7 @@ test("Can call tools using structured tools", async () => {
   }
 
   const model = new ChatMistralAI({
-    modelName: "mistral-large",
+    model: "mistral-large-latest",
   }).bind({
     tools: [new Calculator()],
   });
@@ -120,7 +121,7 @@ test("Can call tools", async () => {
   ];
 
   const model = new ChatMistralAI({
-    modelName: "mistral-large",
+    model: "mistral-large-latest",
   }).bind({
     tools,
   });
@@ -170,7 +171,7 @@ test("Can call .stream with tool calling", async () => {
   }
 
   const model = new ChatMistralAI({
-    modelName: "mistral-large",
+    model: "mistral-large-latest",
   }).bind({
     tools: [new Calculator()],
   });
@@ -208,7 +209,7 @@ test("Can call .stream with tool calling", async () => {
 
 test("Can use json mode response format", async () => {
   const model = new ChatMistralAI({
-    modelName: "mistral-large",
+    model: "mistral-large-latest",
   }).bind({
     response_format: {
       type: "json_object",
@@ -235,7 +236,7 @@ To use a calculator respond with valid JSON containing a single key: 'calculator
 
 test("Can call .stream with json mode", async () => {
   const model = new ChatMistralAI({
-    modelName: "mistral-large",
+    model: "mistral-large-latest",
   }).bind({
     response_format: {
       type: "json_object",
@@ -294,7 +295,7 @@ test("Can stream and concat responses for a complex tool", async () => {
   }
 
   const model = new ChatMistralAI({
-    modelName: "mistral-large",
+    model: "mistral-large-latest",
   }).bind({
     tools: [new PersonTraits()],
   });
@@ -332,7 +333,7 @@ test("Can stream and concat responses for a complex tool", async () => {
 
 test("Few shotting with tool calls", async () => {
   const chat = new ChatMistralAI({
-    modelName: "mistral-large",
+    model: "mistral-large-latest",
     temperature: 0,
   }).bind({
     tools: [
@@ -385,7 +386,7 @@ describe("withStructuredOutput", () => {
   test("withStructuredOutput zod schema function calling", async () => {
     const model = new ChatMistralAI({
       temperature: 0,
-      modelName: "mistral-large",
+      model: "mistral-large-latest",
     });
 
     const calculatorSchema = z
@@ -421,7 +422,7 @@ describe("withStructuredOutput", () => {
   test("withStructuredOutput zod schema JSON mode", async () => {
     const model = new ChatMistralAI({
       temperature: 0,
-      modelName: "mistral-large",
+      model: "mistral-large-latest",
     });
 
     const calculatorSchema = z.object({
@@ -459,7 +460,7 @@ describe("withStructuredOutput", () => {
   test("withStructuredOutput JSON schema function calling", async () => {
     const model = new ChatMistralAI({
       temperature: 0,
-      modelName: "mistral-large",
+      model: "mistral-large-latest",
     });
 
     const calculatorSchema = z
@@ -496,7 +497,7 @@ describe("withStructuredOutput", () => {
   test("withStructuredOutput OpenAI function definition function calling", async () => {
     const model = new ChatMistralAI({
       temperature: 0,
-      modelName: "mistral-large",
+      model: "mistral-large-latest",
     });
 
     const calculatorSchema = z
@@ -531,7 +532,7 @@ describe("withStructuredOutput", () => {
   test("withStructuredOutput JSON schema JSON mode", async () => {
     const model = new ChatMistralAI({
       temperature: 0,
-      modelName: "mistral-large",
+      model: "mistral-large-latest",
     });
 
     const calculatorSchema = z.object({
@@ -569,7 +570,7 @@ describe("withStructuredOutput", () => {
   test("withStructuredOutput includeRaw true", async () => {
     const model = new ChatMistralAI({
       temperature: 0,
-      modelName: "mistral-large",
+      model: "mistral-large-latest",
     });
 
     const calculatorSchema = z
@@ -642,7 +643,7 @@ describe("withStructuredOutput", () => {
   test("Model is compatible with OpenAI tools agent and Agent Executor", async () => {
     const llm: BaseChatModel = new ChatMistralAI({
       temperature: 0,
-      modelName: "mistral-large-latest",
+      model: "mistral-large-latest",
     });
 
     const systemMessage = SystemMessagePromptTemplate.fromTemplate(
@@ -822,4 +823,162 @@ describe("ChatMistralAI aborting", () => {
     }
     expect(didError).toBeTruthy();
   });
+});
+
+describe("codestral-latest", () => {
+  test("Test ChatMistralAI can invoke codestral-latest", async () => {
+    const model = new ChatMistralAI({
+      model: "codestral-latest",
+    });
+    const prompt = ChatPromptTemplate.fromMessages([
+      ["system", "You are a helpful assistant"],
+      ["human", "{input}"],
+    ]);
+    const response = await prompt.pipe(model).invoke({
+      input: "How can I log 'Hello, World!' in Python?",
+    });
+    console.log("response", response);
+    expect(response.content.length).toBeGreaterThan(1);
+    expect((response.content as string).toLowerCase()).toContain("hello");
+    expect((response.content as string).toLowerCase()).toContain("world");
+  });
+
+  test("Test ChatMistralAI can stream codestral-latest", async () => {
+    const model = new ChatMistralAI({
+      model: "codestral-latest",
+    });
+    const prompt = ChatPromptTemplate.fromMessages([
+      ["system", "You are a helpful assistant"],
+      ["human", "{input}"],
+    ]);
+    const response = await prompt.pipe(model).stream({
+      input: "How can I log 'Hello, World!' in Python?",
+    });
+    let itters = 0;
+    let fullMessage = "";
+    for await (const item of response) {
+      console.log(item);
+      itters += 1;
+      fullMessage += item.content;
+    }
+    console.log("fullMessage", fullMessage);
+    expect(itters).toBeGreaterThan(1);
+    expect(fullMessage.toLowerCase()).toContain("hello");
+    expect(fullMessage.toLowerCase()).toContain("world");
+  });
+
+  test("Can call tools using structured tools codestral-latest", async () => {
+    class CodeSandbox extends StructuredTool {
+      name = "code_sandbox";
+
+      description =
+        "A tool which can run Python code in an isolated environment";
+
+      schema = z.object({
+        code: z
+          .string()
+          .describe(
+            "The Python code to execute. Must only contain valid Python code."
+          ),
+      });
+
+      async _call(input: z.infer<typeof this.schema>) {
+        return JSON.stringify(input, null, 2);
+      }
+    }
+
+    const model = new ChatMistralAI({
+      model: "codestral-latest",
+    }).bind({
+      tools: [new CodeSandbox()],
+      tool_choice: "any",
+    });
+
+    const prompt = ChatPromptTemplate.fromMessages([
+      ["system", "You are an excellent python engineer."],
+      ["human", "{input}"],
+    ]);
+
+    const chain = prompt.pipe(model);
+    const response = await chain.invoke({
+      input:
+        "Write a function that takes in a single argument and logs it to the console. Ensure the code is in Python.",
+    });
+    console.log(response);
+    expect("tool_calls" in response.additional_kwargs).toBe(true);
+    console.log(response.additional_kwargs.tool_calls?.[0]);
+    if (!response.additional_kwargs.tool_calls?.[0]) {
+      throw new Error("No tool call found");
+    }
+    const sandboxTool = response.additional_kwargs.tool_calls[0];
+    expect(sandboxTool.function.name).toBe("code_sandbox");
+    const parsedArgs = JSON.parse(sandboxTool.function.arguments);
+    expect(parsedArgs.code).toBeDefined();
+    console.log(parsedArgs.code);
+  });
+});
+
+test("Stream token count usage_metadata", async () => {
+  const model = new ChatMistralAI({
+    model: "codestral-latest",
+    temperature: 0,
+  });
+  let res: AIMessageChunk | null = null;
+  for await (const chunk of await model.stream(
+    "Why is the sky blue? Be concise."
+  )) {
+    if (!res) {
+      res = chunk;
+    } else {
+      res = res.concat(chunk);
+    }
+  }
+  console.log(res);
+  expect(res?.usage_metadata).toBeDefined();
+  if (!res?.usage_metadata) {
+    return;
+  }
+  expect(res.usage_metadata.input_tokens).toBe(13);
+  expect(res.usage_metadata.output_tokens).toBeGreaterThan(10);
+  expect(res.usage_metadata.total_tokens).toBe(
+    res.usage_metadata.input_tokens + res.usage_metadata.output_tokens
+  );
+});
+
+test("streamUsage excludes token usage", async () => {
+  const model = new ChatMistralAI({
+    model: "codestral-latest",
+    temperature: 0,
+    streamUsage: false,
+  });
+  let res: AIMessageChunk | null = null;
+  for await (const chunk of await model.stream(
+    "Why is the sky blue? Be concise."
+  )) {
+    if (!res) {
+      res = chunk;
+    } else {
+      res = res.concat(chunk);
+    }
+  }
+  console.log(res);
+  expect(res?.usage_metadata).not.toBeDefined();
+});
+
+test("Invoke token count usage_metadata", async () => {
+  const model = new ChatMistralAI({
+    model: "codestral-latest",
+    temperature: 0,
+  });
+  const res = await model.invoke("Why is the sky blue? Be concise.");
+  console.log(res);
+  expect(res?.usage_metadata).toBeDefined();
+  if (!res?.usage_metadata) {
+    return;
+  }
+  expect(res.usage_metadata.input_tokens).toBe(13);
+  expect(res.usage_metadata.output_tokens).toBeGreaterThan(10);
+  expect(res.usage_metadata.total_tokens).toBe(
+    res.usage_metadata.input_tokens + res.usage_metadata.output_tokens
+  );
 });

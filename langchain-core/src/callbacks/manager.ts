@@ -10,7 +10,8 @@ import {
 } from "./base.js";
 import { ConsoleCallbackHandler } from "../tracers/console.js";
 import { getTracingV2CallbackHandler } from "../tracers/initialize.js";
-import { type BaseMessage, getBufferString } from "../messages/index.js";
+import { type BaseMessage } from "../messages/base.js";
+import { getBufferString } from "../messages/utils.js";
 import { getEnvironmentVariable } from "../utils/env.js";
 import {
   LangChainTracer,
@@ -551,7 +552,7 @@ export class CallbackManager
 
   name = "callback_manager";
 
-  public readonly _parentRunId?: string;
+  public _parentRunId?: string;
 
   constructor(
     parentRunId?: string,
@@ -984,7 +985,8 @@ export class CallbackManager
       getEnvironmentVariable("LANGCHAIN_VERBOSE") === "true" ||
       options?.verbose;
     const tracingV2Enabled =
-      getEnvironmentVariable("LANGCHAIN_TRACING_V2") === "true";
+      getEnvironmentVariable("LANGCHAIN_TRACING_V2") === "true" ||
+      getEnvironmentVariable("LANGSMITH_TRACING") === "true";
 
     const tracingEnabled =
       tracingV2Enabled ||
@@ -1009,7 +1011,13 @@ export class CallbackManager
         )
       ) {
         if (tracingV2Enabled) {
-          callbackManager.addHandler(await getTracingV2CallbackHandler(), true);
+          const tracerV2 = await getTracingV2CallbackHandler();
+          callbackManager.addHandler(tracerV2, true);
+
+          // handoff between langchain and langsmith/traceable
+          // override the parent run ID
+          callbackManager._parentRunId =
+            tracerV2.getTraceableRunTree()?.id ?? callbackManager._parentRunId;
         }
       }
     }

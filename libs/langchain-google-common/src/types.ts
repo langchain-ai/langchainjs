@@ -122,7 +122,14 @@ export interface GoogleAIBaseLLMInput<AuthOptions>
 export interface GoogleAIBaseLanguageModelCallOptions
   extends BaseLanguageModelCallOptions,
     GoogleAIModelRequestParams,
-    GoogleAISafetyParams {}
+    GoogleAISafetyParams {
+  /**
+   * Whether or not to include usage data, like token counts
+   * in the streamed response chunks.
+   * @default true
+   */
+  streamUsage?: boolean;
+}
 
 /**
  * Input to LLM class.
@@ -295,6 +302,7 @@ export type GeminiJsonSchema = Record<string, unknown> & {
 };
 
 export interface GeminiJsonSchemaDirty extends GeminiJsonSchema {
+  items?: GeminiJsonSchemaDirty;
   properties?: Record<string, GeminiJsonSchemaDirty>;
   additionalProperties?: boolean;
 }

@@ -6,20 +6,15 @@ import {
   AIMessageChunk,
   BaseMessage,
   BaseMessageChunk,
+  BaseMessageLike,
   HumanMessage,
-  MessageContentComplex,
-  MessageContentText,
   SystemMessage,
+  ToolMessage,
 } from "@langchain/core/messages";
 import { ChatVertexAI } from "../chat_models.js";
-import { VertexAI } from "../llms.js";
+import { GeminiTool } from "../types.js";
 
 describe("GAuth Chat", () => {
-  test("platform", async () => {
-    const model = new VertexAI();
-    expect(model.platform).toEqual("gcp");
-  });
-
   test("invoke", async () => {
     const model = new ChatVertexAI();
     try {
@@ -29,9 +24,14 @@ describe("GAuth Chat", () => {
 
       const aiMessage = res as AIMessageChunk;
       expect(aiMessage.content).toBeDefined();
+
+      expect(typeof aiMessage.content).toBe("string");
+      const text = aiMessage.content as string;
+      expect(text).toMatch(/(1 + 1 (equals|is|=) )?2.? ?/);
+
+      /*
       expect(aiMessage.content.length).toBeGreaterThan(0);
       expect(aiMessage.content[0]).toBeDefined();
-
       const content = aiMessage.content[0] as MessageContentComplex;
       expect(content).toHaveProperty("type");
       expect(content.type).toEqual("text");
@@ -39,6 +39,7 @@ describe("GAuth Chat", () => {
       const textContent = content as MessageContentText;
       expect(textContent.text).toBeDefined();
       expect(textContent.text).toEqual("2");
+      */
     } catch (e) {
       console.error(e);
       throw e;
@@ -62,6 +63,12 @@ describe("GAuth Chat", () => {
 
       const aiMessage = res as AIMessageChunk;
       expect(aiMessage.content).toBeDefined();
+
+      expect(typeof aiMessage.content).toBe("string");
+      const text = aiMessage.content as string;
+      expect(["H", "T"]).toContainEqual(text);
+
+      /*
       expect(aiMessage.content.length).toBeGreaterThan(0);
       expect(aiMessage.content[0]).toBeDefined();
 
@@ -72,6 +79,7 @@ describe("GAuth Chat", () => {
       const textContent = content as MessageContentText;
       expect(textContent.text).toBeDefined();
       expect(["H", "T"]).toContainEqual(textContent.text);
+      */
     } catch (e) {
       console.error(e);
       throw e;
@@ -109,4 +117,181 @@ describe("GAuth Chat", () => {
       throw e;
     }
   });
+
+  test("function", async () => {
+    const tools: GeminiTool[] = [
+      {
+        functionDeclarations: [
+          {
+            name: "test",
+            description:
+              "Run a test with a specific name and get if it passed or failed",
+            parameters: {
+              type: "object",
+              properties: {
+                testName: {
+                  type: "string",
+                  description: "The name of the test that should be run.",
+                },
+              },
+              required: ["testName"],
+            },
+          },
+        ],
+      },
+    ];
+    const model = new ChatVertexAI().bind({ tools });
+    const result = await model.invoke("Run a test on the cobalt project");
+    expect(result).toHaveProperty("content");
+    expect(result.content).toBe("");
+    const args = result?.lc_kwargs?.additional_kwargs;
+    expect(args).toBeDefined();
+    expect(args).toHaveProperty("tool_calls");
+    expect(Array.isArray(args.tool_calls)).toBeTruthy();
+    expect(args.tool_calls).toHaveLength(1);
+    const call = args.tool_calls[0];
+    expect(call).toHaveProperty("type");
+    expect(call.type).toBe("function");
+    expect(call).toHaveProperty("function");
+    const func = call.function;
+    expect(func).toBeDefined();
+    expect(func).toHaveProperty("name");
+    expect(func.name).toBe("test");
+    expect(func).toHaveProperty("arguments");
+    expect(typeof func.arguments).toBe("string");
+    expect(func.arguments.replaceAll("\n", "")).toBe('{"testName":"cobalt"}');
+  });
+
+  test("function reply", async () => {
+    const tools: GeminiTool[] = [
+      {
+        functionDeclarations: [
+          {
+            name: "test",
+            description:
+              "Run a test with a specific name and get if it passed or failed",
+            parameters: {
+              type: "object",
+              properties: {
+                testName: {
+                  type: "string",
+                  description: "The name of the test that should be run.",
+                },
+              },
+              required: ["testName"],
+            },
+          },
+        ],
+      },
+    ];
+    const model = new ChatVertexAI().bind({ tools });
+    const toolResult = {
+      testPassed: true,
+    };
+    const messages: BaseMessageLike[] = [
+      new HumanMessage("Run a test on the cobalt project."),
+      new AIMessage("", {
+        tool_calls: [
+          {
+            id: "test",
+            type: "function",
+            function: {
+              name: "test",
+              arguments: '{"testName":"cobalt"}',
+            },
+          },
+        ],
+      }),
+      new ToolMessage(JSON.stringify(toolResult), "test"),
+    ];
+    const res = await model.stream(messages);
+    const resArray: BaseMessageChunk[] = [];
+    for await (const chunk of res) {
+      resArray.push(chunk);
+    }
+    console.log(JSON.stringify(resArray, null, 2));
+  });
+
+  test("withStructuredOutput", async () => {
+    const tool = {
+      name: "get_weather",
+      description:
+        "Get the weather of a specific location and return the temperature in Celsius.",
+      parameters: {
+        type: "object",
+        properties: {
+          location: {
+            type: "string",
+            description: "The name of city to get the weather for.",
+          },
+        },
+        required: ["location"],
+      },
+    };
+    const model = new ChatVertexAI().withStructuredOutput(tool);
+    const result = await model.invoke("What is the weather in Paris?");
+    expect(result).toHaveProperty("location");
+  });
+});
+
+test("Stream token count usage_metadata", async () => {
+  const model = new ChatVertexAI({
+    temperature: 0,
+  });
+  let res: AIMessageChunk | null = null;
+  for await (const chunk of await model.stream(
+    "Why is the sky blue? Be concise."
+  )) {
+    if (!res) {
+      res = chunk;
+    } else {
+      res = res.concat(chunk);
+    }
+  }
+  console.log(res);
+  expect(res?.usage_metadata).toBeDefined();
+  if (!res?.usage_metadata) {
+    return;
+  }
+  expect(res.usage_metadata.input_tokens).toBe(9);
+  expect(res.usage_metadata.output_tokens).toBeGreaterThan(10);
+  expect(res.usage_metadata.total_tokens).toBe(
+    res.usage_metadata.input_tokens + res.usage_metadata.output_tokens
+  );
+});
+
+test("streamUsage excludes token usage", async () => {
+  const model = new ChatVertexAI({
+    temperature: 0,
+    streamUsage: false,
+  });
+  let res: AIMessageChunk | null = null;
+  for await (const chunk of await model.stream(
+    "Why is the sky blue? Be concise."
+  )) {
+    if (!res) {
+      res = chunk;
+    } else {
+      res = res.concat(chunk);
+    }
+  }
+  console.log(res);
+  expect(res?.usage_metadata).not.toBeDefined();
+});
+
+test("Invoke token count usage_metadata", async () => {
+  const model = new ChatVertexAI({
+    temperature: 0,
+  });
+  const res = await model.invoke("Why is the sky blue? Be concise.");
+  console.log(res);
+  expect(res?.usage_metadata).toBeDefined();
+  if (!res?.usage_metadata) {
+    return;
+  }
+  expect(res.usage_metadata.input_tokens).toBe(9);
+  expect(res.usage_metadata.output_tokens).toBeGreaterThan(10);
+  expect(res.usage_metadata.total_tokens).toBe(
+    res.usage_metadata.input_tokens + res.usage_metadata.output_tokens
+  );
 });
