@@ -20,8 +20,8 @@ export interface DocumentInterface<
  * Interface for interacting with a document.
  */
 export class Document<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  Metadata extends Record<string, any> = Record<string, any>
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    Metadata extends Record<string, any> = Record<string, any>
 > implements DocumentInput, DocumentInterface
 {
   pageContent: string;
@@ -29,9 +29,9 @@ export class Document<
   metadata: Metadata;
 
   constructor(fields: DocumentInput<Metadata>) {
-    this.pageContent = fields.pageContent
+    this.pageContent = fields.pageContent !== undefined
       ? fields.pageContent.toString()
-      : this.pageContent;
+      : "";
     this.metadata = fields.metadata ?? ({} as Metadata);
   }
 }
