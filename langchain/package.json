@@ -286,6 +286,10 @@
     "document_loaders/fs/directory.js",
     "document_loaders/fs/directory.d.ts",
     "document_loaders/fs/directory.d.cts",
+    "document_loaders/fs/multi_file.cjs",
+    "document_loaders/fs/multi_file.js",
+    "document_loaders/fs/multi_file.d.ts",
+    "document_loaders/fs/multi_file.d.cts",
     "document_loaders/fs/buffer.cjs",
     "document_loaders/fs/buffer.js",
     "document_loaders/fs/buffer.d.ts",
@@ -1539,6 +1543,15 @@
       },
       "import": "./document_loaders/fs/directory.js",
       "require": "./document_loaders/fs/directory.cjs"
+    },
+    "./document_loaders/fs/multi_file": {
+      "types": {
+        "import": "./document_loaders/fs/multi_file.d.ts",
+        "require": "./document_loaders/fs/multi_file.d.cts",
+        "default": "./document_loaders/fs/multi_file.d.ts"
+      },
+      "import": "./document_loaders/fs/multi_file.js",
+      "require": "./document_loaders/fs/multi_file.cjs"
     },
     "./document_loaders/fs/buffer": {
       "types": {
