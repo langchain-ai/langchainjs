@@ -1,5 +1,5 @@
 {
-  "name": "@langchain/mixedbreadai",
+  "name": "@langchain/mixedbread-ai",
   "version": "0.1.0",
   "description": "mixedbread ai integration for LangChain.js",
   "type": "module",
@@ -12,7 +12,7 @@
     "type": "git",
     "url": "git@github.com:langchain-ai/langchainjs.git"
   },
-  "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-mixedbreadai/",
+  "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-mixedbread-ai/",
   "scripts": {
     "build": "yarn turbo:command build:internal --filter=@langchain/mixedbread-ai",
     "build:internal": "yarn lc-build:v2 --create-entrypoints --pre --tree-shaking",
