@@ -1,5 +1,3 @@
-import { BaseLanguageModel } from "../language_models/base.js";
-import { BaseChatModel } from "../language_models/chat_models.js";
 import { ChatPromptValueInterface } from "../prompt_values.js";
 import {
   RunnableLike,
@@ -24,18 +22,7 @@ function isWithStructuredOutput(
     typeof x === "object" &&
     x != null &&
     "withStructuredOutput" in x &&
-    x.withStructuredOutput !== BaseLanguageModel.prototype.withStructuredOutput
-  );
-}
-
-function isBindTools(x: unknown): x is {
-  bindTools: (...arg: unknown[]) => Runnable;
-} {
-  return (
-    typeof x === "object" &&
-    x != null &&
-    "bindTools" in x &&
-    x.bindTools !== BaseChatModel.prototype.bindTools
+    typeof x.withStructuredOutput === "function"
   );
 }
 
@@ -97,8 +84,7 @@ export class StructuredPrompt<
 
     if (
       isRunnableBinding(coerceable) &&
-      isWithStructuredOutput(coerceable.bound) &&
-      isBindTools(coerceable.bound)
+      isWithStructuredOutput(coerceable.bound)
     ) {
       return super.pipe(
         coerceable.bound
