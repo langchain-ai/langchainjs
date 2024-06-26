@@ -74,5 +74,6 @@ export * as document_loaders__web__searchapi from "../document_loaders/web/searc
 export * as document_loaders__web__serpapi from "../document_loaders/web/serpapi.js";
 export * as document_loaders__web__sort_xyz_blockchain from "../document_loaders/web/sort_xyz_blockchain.js";
 export * as utils__event_source_parse from "../utils/event_source_parse.js";
+export * as experimental__callbacks__handlers__datadog from "../experimental/callbacks/handlers/datadog.js";
 export * as experimental__graph_transformers__llm from "../experimental/graph_transformers/llm.js";
 export * as experimental__chat_models__ollama_functions from "../experimental/chat_models/ollama_functions.js";

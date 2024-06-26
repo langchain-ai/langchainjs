@@ -58,3 +58,18 @@ export function zodToGenerativeAIParameters(
 
   return rest as GenerativeAIFunctionDeclarationSchema;
 }
+
+export function jsonSchemaToGeminiParameters(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  schema: Record<string, any>
+): GenerativeAIFunctionDeclarationSchema {
+  // Gemini doesn't accept either the $schema or additionalProperties
+  // attributes, so we need to explicitly remove them.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const jsonSchema = removeAdditionalProperties(
+    schema as GenerativeAIJsonSchemaDirty
+  );
+  const { $schema, ...rest } = jsonSchema;
+
+  return rest as GenerativeAIFunctionDeclarationSchema;
+}

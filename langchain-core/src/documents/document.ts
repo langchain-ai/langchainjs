@@ -29,9 +29,8 @@ export class Document<
   metadata: Metadata;
 
   constructor(fields: DocumentInput<Metadata>) {
-    this.pageContent = fields.pageContent
-      ? fields.pageContent.toString()
-      : this.pageContent;
+    this.pageContent =
+      fields.pageContent !== undefined ? fields.pageContent.toString() : "";
     this.metadata = fields.metadata ?? ({} as Metadata);
   }
 }
