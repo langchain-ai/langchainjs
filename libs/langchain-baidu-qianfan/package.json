@@ -1,7 +1,7 @@
 {
-  "name": "@langchain/qianfan",
+  "name": "@langchain/baidu-qianfan",
   "version": "0.0.1",
-  "description": "Qianfan integration for LangChain.js",
+  "description": "Baidu Qianfan integration for LangChain.js",
   "type": "module",
   "engines": {
     "node": ">=18"
@@ -12,9 +12,9 @@
     "type": "git",
     "url": "git@github.com:langchain-ai/langchainjs.git"
   },
-  "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-qianfan/",
+  "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-baidu-qianfan/",
   "scripts": {
-    "build": "yarn turbo:command build:internal --filter=@langchain/qianfan",
+    "build": "yarn turbo:command build:internal --filter=@langchain/baidu-qianfan",
     "build:internal": "yarn lc-build:v2 --create-entrypoints --pre --tree-shaking",
     "lint:eslint": "NODE_OPTIONS=--max-old-space-size=4096 eslint --cache --ext .ts,.js src/",
     "lint:dpdm": "dpdm --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",

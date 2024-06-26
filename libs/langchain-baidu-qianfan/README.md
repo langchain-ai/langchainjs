@@ -1,12 +1,12 @@
-# @langchain/qianfan
+# @langchain/baidu-qianfan
 
-This package contains the LangChain.js integrations for Qianfan via the qianfan/sdk package.
+This package contains the LangChain.js integrations for Baidu Qianfan via the qianfan/sdk package.
 
 
 ## Installation
 
 ```bash npm2yarn
-npm install @langchain/qianfan
+npm install @langchain/baidu-qianfan
 ```
 
 ## Chat models
@@ -23,7 +23,7 @@ export QIANFAN_SECRET_KEY=""
 ```
 
 ```typescript
-import { ChatBaiduQianfan } from "@langchain/qianfan";
+import { ChatBaiduQianfan } from "@langchain/baidu-qianfan";
 import { HumanMessage } from "@langchain/core/messages";
 
 const chat = new ChatBaiduQianfan({
@@ -35,7 +35,7 @@ const res = await chat.invoke([message]);
 ```
 
 ```typescript
-import { BaiduQianfanEmbeddings } from "@langchain/qianfan";
+import { BaiduQianfanEmbeddings } from "@langchain/baidu-qianfan";
 
 const embeddings = new BaiduQianfanEmbeddings();
 const res = await embeddings.embedQuery("Introduce the city Beijing");

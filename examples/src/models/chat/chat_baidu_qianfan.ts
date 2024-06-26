@@ -1,4 +1,4 @@
-import { ChatBaiduQianfan } from "@langchain/qianfan";
+import { ChatBaiduQianfan } from "@langchain/baidu-qianfan";
 import { HumanMessage } from "@langchain/core/messages";
 
 const chat = new ChatBaiduQianfan({

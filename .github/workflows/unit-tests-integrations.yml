@@ -48,7 +48,7 @@ jobs:
       matrix:
         os: [ubuntu-latest]
         node-version: [18.x, 20.x]
-        package: [anthropic, azure-openai, cloudflare, cohere, community, exa, google-common, google-gauth, google-genai, google-vertexai, google-vertexai-web, google-webauth, groq, mistralai, mongo, nomic, openai, pinecone, qdrant, redis, textsplitters, weaviate, yandex, qianfan]
+        package: [anthropic, azure-openai, cloudflare, cohere, community, exa, google-common, google-gauth, google-genai, google-vertexai, google-vertexai-web, google-webauth, groq, mistralai, mongo, nomic, openai, pinecone, qdrant, redis, textsplitters, weaviate, yandex, baidu-qianfan]
         # See Node.js release schedule at https://nodejs.org/en/about/releases/
         # include:
           # - os: windows-latest

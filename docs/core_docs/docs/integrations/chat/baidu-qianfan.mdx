@@ -10,14 +10,14 @@ import CodeBlock from "@theme/CodeBlock";
 
 Baidu Qianfan SDK(https://cloud.baidu.com/doc/WENXINWORKSHOP/s/wlmhm7vuo)
 
-You'll first need to install the [`@langchain/qianfan`](https://www.npmjs.com/package/@langchain/qianfan) package:
+You'll first need to install the [`@langchain/baidu-qianfan`](https://www.npmjs.com/package/@langchain/baidu-qianfan) package:
 
 import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
 
 <IntegrationInstallTooltip></IntegrationInstallTooltip>
 
 ```bash npm2yarn
-npm install @langchain/qianfan
+npm install @langchain/baidu-qianfan
 ```
 
 Available models: `ERNIE-Bot`,`ERNIE-Bot-turbo`,`ERNIE-Bot-4`,`ERNIE-Speed-8K`,`ERNIE-Speed-128K`,`ERNIE-4.0-8K`,
@@ -26,7 +26,7 @@ Available models: `ERNIE-Bot`,`ERNIE-Bot-turbo`,`ERNIE-Bot-4`,`ERNIE-Speed-8K`,`
 
 ## Usage
 
-import ChatBaiduQianfanExample from "@examples/models/chat/chat_qianfan.ts";
+import ChatBaiduQianfanExample from "@examples/models/chat/chat_baidu_qianfan.ts";
 
 <CodeBlock language="typescript">{ChatBaiduQianfanExample}</CodeBlock>
 
@@ -34,6 +34,6 @@ import ChatBaiduQianfanExample from "@examples/models/chat/chat_qianfan.ts";
 
 Qianfan's API also supports streaming token responses. The example below demonstrates how to use this feature.
 
-import ChatBaiduQianfanStreamExample from "@examples/models/chat/chat_stream_qianfan.ts";
+import ChatBaiduQianfanStreamExample from "@examples/models/chat/chat_stream_baidu_qianfan.ts";
 
 <CodeBlock language="typescript">{ChatBaiduQianfanStreamExample}</CodeBlock>
