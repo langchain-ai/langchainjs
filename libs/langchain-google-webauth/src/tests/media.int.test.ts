@@ -5,6 +5,7 @@ import {
   MediaBlob,
 } from "@langchain/google-common";
 import {
+  BlobStoreAIStudioFile,
   BlobStoreGoogleCloudStorage,
   BlobStoreGoogleCloudStorageParams,
 } from "../media.js";
@@ -134,3 +135,18 @@ describe("Google Webauth GCS store", () => {
     expect(blob?.metadata?.kind).toEqual("storage#object");
   });
 });
+
+describe("Google APIKey AIStudioBlobStore", () => {
+  test("save image no metadata", async () => {
+    const filename = `src/tests/data/blue-square.png`;
+    const dataBuffer = await fs.readFile(filename);
+    const data = new Blob([dataBuffer], { type: "image/png" });
+    const blob = new MediaBlob({
+      path: filename,
+      data,
+    });
+    const blobStore = new BlobStoreAIStudioFile();
+    const storedBlob = await blobStore.store(blob);
+    console.log(storedBlob);
+  })
+})

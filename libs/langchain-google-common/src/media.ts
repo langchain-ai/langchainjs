@@ -3,6 +3,7 @@ import {
   AsyncCallerCallOptions,
   AsyncCallerParams,
 } from "@langchain/core/utils/async_caller";
+import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import {
   MediaBlob,
   BlobStore,
@@ -15,6 +16,7 @@ import {
 } from "./types.js";
 import { GoogleHostConnection, GoogleRawConnection } from "./connection.js";
 import {
+  ApiKeyGoogleAuth,
   GoogleAbstractedClient,
   GoogleAbstractedClientOpsMethod,
 } from "./auth.js";
@@ -22,7 +24,7 @@ import {
 export interface GoogleUploadConnectionParams<AuthOptions>
   extends GoogleConnectionParams<AuthOptions> {}
 
-export abstract class GoogleUploadConnection<
+export abstract class GoogleMultipartUploadConnection<
   CallOptions extends AsyncCallerCallOptions,
   ResponseType extends GoogleResponse,
   AuthOptions
@@ -67,6 +69,7 @@ export abstract class GoogleUploadConnection<
     const body = await this._body(separator, data, metadata);
     const requestHeaders = {
       "Content-Type": `multipart/related; boundary=${separator}`,
+      "X-Goog-Upload-Protocol": "multipart",
     };
     const response = this._request(body, options, requestHeaders);
     return response;
@@ -128,18 +131,22 @@ export abstract class BlobStoreGoogle<
   abstract buildSetConnection([key, blob]: [
     string,
     MediaBlob
-  ]): GoogleUploadConnection<AsyncCallerCallOptions, ResponseType, AuthOptions>;
+  ]): GoogleMultipartUploadConnection<AsyncCallerCallOptions, ResponseType, AuthOptions>;
 
-  async _set(keyValuePair: [string, MediaBlob]): Promise<void> {
+  async _set(keyValuePair: [string, MediaBlob]): Promise<ResponseType> {
     const [_key, blob] = keyValuePair;
     const setMetadata = this.buildSetMetadata(keyValuePair);
+    /*
     const metadata = {
       contentType: blob.mimetype,
       ...setMetadata,
     };
+    */
+    const metadata = setMetadata;
     const options = {};
     const connection = this.buildSetConnection(keyValuePair);
-    await connection.request(blob, metadata, options);
+    const response = await connection.request(blob, metadata, options);
+    return response;
   }
 
   async mset(keyValuePairs: [string, MediaBlob][]): Promise<void> {
@@ -291,7 +298,7 @@ export interface GoogleCloudStorageUploadConnectionParams<AuthOptions>
 
 export class GoogleCloudStorageUploadConnection<
   AuthOptions
-> extends GoogleUploadConnection<
+> extends GoogleMultipartUploadConnection<
   AsyncCallerCallOptions,
   GoogleCloudStorageResponse,
   AuthOptions
@@ -402,7 +409,7 @@ export abstract class BlobStoreGoogleCloudStorageBase<
     }
   }
 
-  buildSetConnection([key, _blob]: [string, MediaBlob]): GoogleUploadConnection<
+  buildSetConnection([key, _blob]: [string, MediaBlob]): GoogleMultipartUploadConnection<
     AsyncCallerCallOptions,
     GoogleCloudStorageResponse,
     AuthOptions
@@ -539,9 +546,27 @@ export class AIStudioMediaBlob extends MediaBlob {
   }
 }
 
-export interface AIStudioFileResponse extends GoogleResponse {
+export interface AIStudioFileGetResponse extends GoogleResponse {
   data: AIStudioFileObject;
 }
+
+export interface AIStudioFileSaveResponse extends GoogleResponse {
+  data: {
+    file: AIStudioFileObject,
+  }
+}
+
+export interface AIStudioFileListResponse extends GoogleResponse {
+  data: {
+    files: AIStudioFileObject[],
+    nextPageToken: string,
+  }
+}
+
+export type AIStudioFileResponse =
+  | AIStudioFileGetResponse
+  | AIStudioFileSaveResponse
+  | AIStudioFileListResponse;
 
 export interface AIStudioFileConnectionParams {}
 
@@ -551,11 +576,14 @@ export interface AIStudioFileUploadConnectionParams<AuthOptions>
 
 export class AIStudioFileUploadConnection<
   AuthOptions
-> extends GoogleUploadConnection<
+> extends GoogleMultipartUploadConnection<
   AsyncCallerCallOptions,
-  AIStudioFileResponse,
+  AIStudioFileSaveResponse,
   AuthOptions
 > {
+
+  apiVersion = "v1beta";
+
   async buildUrl(): Promise<string> {
     return `https://generativelanguage.googleapis.com/upload/${this.apiVersion}/files`;
   }
@@ -576,6 +604,8 @@ export class AIStudioFileDownloadConnection<
   method: GoogleAbstractedClientOpsMethod;
 
   name: string;
+
+  apiVersion = "v1beta";
 
   constructor(
     fields: AIStudioFileDownloadConnectionParams<AuthOptions>,
@@ -606,11 +636,65 @@ export abstract class BlobStoreAIStudioFileBase<
   params?: BlobStoreAIStudioFileBaseParams<AuthOptions>;
 
   constructor(fields?: BlobStoreAIStudioFileBaseParams<AuthOptions>) {
-    super(fields);
-    this.params = fields;
+    const params: BlobStoreAIStudioFileBaseParams<AuthOptions> = {
+      defaultStoreOptions: {
+        pathPrefix: "https://generativelanguage.googleapis.com/v1beta/files/",
+        actionIfInvalid: "removePath",
+      },
+      ...fields,
+    };
+    super(params);
+    this.params = params;
   }
 
-  buildSetConnection([_key, _blob]: [string, MediaBlob]): GoogleUploadConnection<AsyncCallerCallOptions, AIStudioFileResponse, AuthOptions> {
+  _pathToName(path: string): string {
+    return path.split("/").pop() ?? path;
+  }
+
+  abstract buildAbstractedClient(
+    fields?: BlobStoreGoogleParams<AuthOptions>
+  ): GoogleAbstractedClient;
+
+  buildApiKeyClient(apiKey: string): GoogleAbstractedClient {
+    return new ApiKeyGoogleAuth(apiKey);
+  }
+
+  buildApiKey(fields?: BlobStoreGoogleParams<AuthOptions>): string | undefined {
+    return fields?.apiKey ?? getEnvironmentVariable("GOOGLE_API_KEY");
+  }
+
+  buildClient(
+    fields?: BlobStoreGoogleParams<AuthOptions>
+  ): GoogleAbstractedClient {
+    const apiKey = this.buildApiKey(fields);
+    if (apiKey) {
+      return this.buildApiKeyClient(apiKey);
+    } else {
+      // TODO: Test that you can use OAuth to access
+      return this.buildAbstractedClient(fields);
+    }
+  }
+
+  async _set([key, blob]: [string, MediaBlob]): Promise<AIStudioFileSaveResponse> {
+    const response = await super._set([key, blob]) as AIStudioFileSaveResponse;
+
+    // The response should contain the name (and valid URI), so we need to
+    // update the blob with this. We can't return a new blob, since mset()
+    // doesn't return anything.
+    console.log('response.data', response.data);
+    /* eslint-disable no-param-reassign */
+    const file = response.data?.file ?? {};
+    blob.path = file.uri;
+    blob.metadata = {
+      ...blob.metadata,
+      ...file,
+    }
+    /* eslint-enable no-param-reassign */
+
+    return response;
+  }
+
+  buildSetConnection([_key, _blob]: [string, MediaBlob]): GoogleMultipartUploadConnection<AsyncCallerCallOptions, AIStudioFileResponse, AuthOptions> {
     return new AIStudioFileUploadConnection(
       this.params,
       this.caller,
@@ -618,12 +702,56 @@ export abstract class BlobStoreAIStudioFileBase<
     )
   }
 
-  buildSetMetadata([key, blob]: [string, MediaBlob]): Record<string, unknown> {
+  buildSetMetadata([_key, _blob]: [string, MediaBlob]): Record<string, unknown> {
     return {
-      displayName: key,
-      mimeType: blob.mimetype,
+      // displayName: key,
+      // mimeType: blob.mimetype,
     }
   }
 
-  // TODO: Continue here
+  buildGetMetadataConnection(key: string): GoogleDownloadConnection<AsyncCallerCallOptions, AIStudioFileResponse, AuthOptions> {
+    const params: AIStudioFileDownloadConnectionParams<AuthOptions> = {
+      ...this.params,
+      method: "GET",
+      name: this._pathToName(key),
+    }
+    return new AIStudioFileDownloadConnection<
+      AIStudioFileResponse,
+      AuthOptions
+    >(params, this.caller, this.client);
+  }
+
+  buildGetDataConnection(_key: string): GoogleDownloadRawConnection<AsyncCallerCallOptions, AuthOptions> {
+    throw new Error("AI Studio File API does not provide data")
+  }
+
+  async _get(key: string): Promise<MediaBlob | undefined> {
+    const metadata = await this._getMetadata(key);
+    if (metadata) {
+      const contentType = metadata?.mimeType as string ?? "application/octet-stream";
+      // TODO - Get the actual data (and other metadata) from an optional backing store
+      const data = new Blob([], {type:contentType});
+
+      return new MediaBlob({
+        path: key,
+        data,
+        metadata,
+      });
+    } else {
+      return undefined;
+    }
+  }
+
+  buildDeleteConnection(key: string): GoogleDownloadConnection<AsyncCallerCallOptions, AIStudioFileResponse, AuthOptions> {
+    const params: AIStudioFileDownloadConnectionParams<AuthOptions> = {
+      ...this.params,
+      method: "DELETE",
+      name: this._pathToName(key),
+    }
+    return new AIStudioFileDownloadConnection<
+      AIStudioFileResponse,
+      AuthOptions
+    >(params, this.caller, this.client);
+  }
+
 }

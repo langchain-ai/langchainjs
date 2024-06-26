@@ -1,6 +1,8 @@
 import {
   BlobStoreGoogleCloudStorageBase,
   BlobStoreGoogleCloudStorageBaseParams,
+  BlobStoreAIStudioFileBase,
+  BlobStoreAIStudioFileBaseParams,
   GoogleAbstractedClient,
 } from "@langchain/google-common";
 import { GoogleAuthOptions } from "google-auth-library";
@@ -12,6 +14,17 @@ export interface BlobStoreGoogleCloudStorageParams
 export class BlobStoreGoogleCloudStorage extends BlobStoreGoogleCloudStorageBase<GoogleAuthOptions> {
   buildClient(
     fields?: BlobStoreGoogleCloudStorageParams
+  ): GoogleAbstractedClient {
+    return new GAuthClient(fields);
+  }
+}
+
+export interface BlobStoreAIStudioFileParams
+  extends BlobStoreAIStudioFileBaseParams<GoogleAuthOptions> {}
+
+export class BlobStoreAIStudioFile extends BlobStoreAIStudioFileBase<GoogleAuthOptions> {
+  buildAbstractedClient(
+    fields?: BlobStoreAIStudioFileParams
   ): GoogleAbstractedClient {
     return new GAuthClient(fields);
   }

@@ -93,6 +93,7 @@ export type ActionIfInvalidAction =
   | "ignore"
   | "prefixPath"
   | "prefixUuid"
+  | "removePath"
 
 export interface BlobStoreStoreOptions {
 
@@ -209,15 +210,19 @@ export abstract class BlobStore extends BaseStore<string, MediaBlob> {
     return blobPath.substring(pathStart);
   }
 
-  async _newBlob(oldBlob: MediaBlob, newPath: string): Promise<MediaBlob> {
+  async _newBlob(oldBlob: MediaBlob, newPath?: string): Promise<MediaBlob> {
     const oldPath = oldBlob.path;
     const metadata = oldBlob?.metadata ?? {};
     metadata.langchainOldPath = oldPath;
     const newBlob = new MediaBlob({
       ...oldBlob,
       metadata,
-      path: newPath,
     });
+    if (newPath) {
+      newBlob.path = newPath;
+    } else if (newBlob.path) {
+      delete newBlob.path;
+    }
     return newBlob;
   }
 
@@ -235,7 +240,11 @@ export abstract class BlobStore extends BaseStore<string, MediaBlob> {
     return this._newBlob(blob, newPath);
   }
 
-    /**
+  async _validBlobRemovePath(blob: MediaBlob, _opts?: BlobStoreStoreOptions): Promise<MediaBlob> {
+    return this._newBlob(blob, undefined);
+  }
+
+  /**
    * Based on the blob and options, return a blob that has a valid path
    * that can be saved.
    * @param blob
@@ -249,6 +258,7 @@ export abstract class BlobStore extends BaseStore<string, MediaBlob> {
       case "ignore": return blob;
       case "prefixPath": return this._validBlobPrefixPath(blob, opts);
       case "prefixUuid": return this._validBlobPrefixUuid(blob, opts);
+      case "removePath": return this._validBlobRemovePath(blob, opts);
       default: return undefined;
     }
   }
@@ -259,7 +269,8 @@ export abstract class BlobStore extends BaseStore<string, MediaBlob> {
     if (typeof validBlob !== "undefined") {
       const validKey = await validBlob.asUri();
       await this.mset([[validKey, validBlob]]);
-      return (await this.fetch(validKey));
+      const savedKey = await validBlob.asUri();
+      return (await this.fetch(savedKey));
     }
     return undefined;
   }
