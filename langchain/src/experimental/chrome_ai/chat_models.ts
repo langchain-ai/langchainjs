@@ -136,28 +136,22 @@ export class ChatChromeAI extends SimpleChatModel<ChromeAICallOptions> {
       throw new Error("Session not found. Please call `.initialize()` first.");
     }
     const textPrompt = formatPrompt(messages);
-
+  
     const stream = this.session.promptStreaming(textPrompt);
-    const reader = stream.getReader();
-
-    try {
-      let previousLength = 0;
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        const newContent = value.slice(previousLength);
-        previousLength = value.length;
-        yield new ChatGenerationChunk({
-          text: newContent,
-          message: new AIMessageChunk({
-            content: newContent,
-            additional_kwargs: {},
-          }),
-        });
-        await runManager?.handleLLMNewToken(newContent);
-      }
-    } finally {
-      reader.releaseLock();
+    const iterableStream = stream.pipeThrough(new TextDecoderStream()).getIterator();
+  
+    let previousContent = "";
+    for await (const chunk of iterableStream) {
+      const newContent = chunk.slice(previousContent.length);
+      previousContent += newContent;
+      yield new ChatGenerationChunk({
+        text: newContent,
+        message: new AIMessageChunk({
+          content: newContent,
+          additional_kwargs: {},
+        }),
+      });
+      await runManager?.handleLLMNewToken(newContent);
     }
   }
 
