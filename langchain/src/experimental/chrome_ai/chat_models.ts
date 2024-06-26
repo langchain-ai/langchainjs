@@ -25,7 +25,7 @@ export interface AITextSessionOptions {
   temperature: number;
 }
 
-export enum AIModelAvailability {
+export const enum AIModelAvailability {
   Readily = "readily",
   AfterDownload = "after-download",
   No = "no",
@@ -46,9 +46,7 @@ function formatPrompt(messages: BaseMessage[]): string {
           "ChatChromeAI does not support non-string message content."
         );
       }
-      return `<${message._getType()}>\n${
-        message.content
-      }\n</${message._getType()}>`;
+      return `${message._getType()}: ${message.content}`;
     })
     .join("\n");
 }

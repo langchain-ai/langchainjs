@@ -68,6 +68,7 @@ const experimental_babyagi = require("langchain/experimental/babyagi");
 const experimental_generative_agents = require("langchain/experimental/generative_agents");
 const experimental_plan_and_execute = require("langchain/experimental/plan_and_execute");
 const experimental_chains_violation_of_expectations = require("langchain/experimental/chains/violation_of_expectations");
+const experimental_chat_models_chrome_ai = require("langchain/experimental/chat_models/chrome_ai");
 const experimental_masking = require("langchain/experimental/masking");
 const experimental_prompts_custom_format = require("langchain/experimental/prompts/custom_format");
 const evaluation = require("langchain/evaluation");

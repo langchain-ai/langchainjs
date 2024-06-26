@@ -68,6 +68,7 @@ export * from "langchain/experimental/babyagi";
 export * from "langchain/experimental/generative_agents";
 export * from "langchain/experimental/plan_and_execute";
 export * from "langchain/experimental/chains/violation_of_expectations";
+export * from "langchain/experimental/chat_models/chrome_ai";
 export * from "langchain/experimental/masking";
 export * from "langchain/experimental/prompts/custom_format";
 export * from "langchain/evaluation";

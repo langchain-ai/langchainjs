@@ -1,0 +1,16 @@
+{
+  "name": "chrome_ai",
+  "packageManager": "yarn@3.4.1",
+  "scripts": {
+    "start": "rm -rf ./dist && yarn webpack && yarn http-server -c-1 -p 8080"
+  },
+  "devDependencies": {
+    "http-server": "^14.0.1",
+    "webpack": "^5.92.1",
+    "webpack-cli": "^5.1.4"
+  },
+  "dependencies": {
+    "@langchain/openai": "file:../../../../../libs/langchain-openai",
+    "langchain": "file:../../../../"
+  }
+}

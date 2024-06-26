@@ -190,6 +190,7 @@ export const config = {
     "experimental/plan_and_execute": "experimental/plan_and_execute/index",
     "experimental/chains/violation_of_expectations":
       "experimental/chains/violation_of_expectations/index",
+    "experimental/chat_models/chrome_ai": "experimental/chrome_ai/chat_models",
     "experimental/masking": "experimental/masking/index",
     "experimental/prompts/custom_format": "experimental/prompts/custom_format",
     "experimental/prompts/handlebars": "experimental/prompts/handlebars",

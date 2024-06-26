@@ -510,6 +510,10 @@ experimental/chains/violation_of_expectations.cjs
 experimental/chains/violation_of_expectations.js
 experimental/chains/violation_of_expectations.d.ts
 experimental/chains/violation_of_expectations.d.cts
+experimental/chat_models/chrome_ai.cjs
+experimental/chat_models/chrome_ai.js
+experimental/chat_models/chrome_ai.d.ts
+experimental/chat_models/chrome_ai.d.cts
 experimental/masking.cjs
 experimental/masking.js
 experimental/masking.d.ts

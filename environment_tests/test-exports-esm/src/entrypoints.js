@@ -68,6 +68,7 @@ import * as experimental_babyagi from "langchain/experimental/babyagi";
 import * as experimental_generative_agents from "langchain/experimental/generative_agents";
 import * as experimental_plan_and_execute from "langchain/experimental/plan_and_execute";
 import * as experimental_chains_violation_of_expectations from "langchain/experimental/chains/violation_of_expectations";
+import * as experimental_chat_models_chrome_ai from "langchain/experimental/chat_models/chrome_ai";
 import * as experimental_masking from "langchain/experimental/masking";
 import * as experimental_prompts_custom_format from "langchain/experimental/prompts/custom_format";
 import * as evaluation from "langchain/evaluation";
