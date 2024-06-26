@@ -59,7 +59,13 @@ inputForm.addEventListener("submit", async (event) => {
   console.log(`First Token: ${Math.round(timeToFirstTokenMs)} ms`);
   console.log(`Total Time: ${Math.round(totalTimeMs)} ms`);
   console.log(`Total Tokens: ${numTokens}`);
-  document.getElementById("firstTokenTime").textContent = `First Token: ${Math.round(timeToFirstTokenMs)} ms`;
-  document.getElementById("totalTime").textContent = `Total Time: ${Math.round(totalTimeMs)} ms`;
-  document.getElementById("totalTokens").textContent = `Total Tokens: ${numTokens}`;
+  document.getElementById(
+    "firstTokenTime"
+  ).textContent = `First Token: ${Math.round(timeToFirstTokenMs)} ms`;
+  document.getElementById("totalTime").textContent = `Total Time: ${Math.round(
+    totalTimeMs
+  )} ms`;
+  document.getElementById(
+    "totalTokens"
+  ).textContent = `Total Tokens: ${numTokens}`;
 });

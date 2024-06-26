@@ -99,7 +99,7 @@ export class ChatChromeAI extends SimpleChatModel<ChromeAICallOptions> {
       throw new Error("ChatChromeAI can only be used in the browser.");
     }
 
-    const ai: AI = (window as any).ai;
+    const {ai} = window as any;
     const canCreateTextSession = await ai.canCreateTextSession();
     if (canCreateTextSession === AIModelAvailability.No) {
       throw new Error("The AI model is not available.");
