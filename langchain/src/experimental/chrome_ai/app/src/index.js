@@ -1,7 +1,7 @@
 import { ChatChromeAI } from "langchain/experimental/chat_models/chrome_ai";
 import { encodingForModel } from "@langchain/core/utils/tiktoken";
 
-const model = new ChatChromeAI({ callbacks: {} });
+const model = new ChatChromeAI();
 const destroyButton = document.getElementById("destroyButton");
 const inputForm = document.getElementById("inputForm");
 const submitButton = inputForm.querySelector("button[type='submit']");

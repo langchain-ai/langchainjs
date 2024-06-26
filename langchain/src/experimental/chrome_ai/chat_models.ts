@@ -3,7 +3,10 @@ import {
   type BaseChatModelParams,
 } from "@langchain/core/language_models/chat_models";
 import type { BaseLanguageModelCallOptions } from "@langchain/core/language_models/base";
-import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
+import {
+  CallbackManagerForLLMRun,
+  Callbacks,
+} from "@langchain/core/callbacks/manager";
 import { BaseMessage, AIMessageChunk } from "@langchain/core/messages";
 import { ChatGenerationChunk } from "@langchain/core/outputs";
 import { IterableReadableStream } from "@langchain/core/utils/stream";
@@ -82,10 +85,13 @@ export class ChatChromeAI extends SimpleChatModel<ChromeAICallOptions> {
     return "ChatChromeAI";
   }
 
-  constructor(inputs: ChromeAIInputs) {
-    super(inputs);
-    this.temperature = inputs.temperature ?? this.temperature;
-    this.topK = inputs.topK ?? this.topK;
+  constructor(inputs?: ChromeAIInputs) {
+    super({
+      callbacks: {} as Callbacks,
+      ...inputs,
+    });
+    this.temperature = inputs?.temperature ?? this.temperature;
+    this.topK = inputs?.topK ?? this.topK;
   }
 
   _llmType() {

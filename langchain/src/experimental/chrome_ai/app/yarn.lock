@@ -86,14 +86,14 @@ __metadata:
 
 "@langchain/openai@file:../../../../../libs/langchain-openai::locator=chrome_ai%40workspace%3A.":
   version: 0.2.0
-  resolution: "@langchain/openai@file:../../../../../libs/langchain-openai#../../../../../libs/langchain-openai::hash=0e7c98&locator=chrome_ai%40workspace%3A."
+  resolution: "@langchain/openai@file:../../../../../libs/langchain-openai#../../../../../libs/langchain-openai::hash=1fbca0&locator=chrome_ai%40workspace%3A."
   dependencies:
     "@langchain/core": ">=0.2.8 <0.3.0"
     js-tiktoken: ^1.0.12
     openai: ^4.49.1
     zod: ^3.22.4
     zod-to-json-schema: ^3.22.3
-  checksum: 2b070c3c7195597d4bb85ef8265721ca4eb981a14ead9b65145a9d241402348b6e6950ef8edd0667ee77f574282aff84fa04ceb4d35fa9edfaf666fdc06567d1
+  checksum: bee5a6cebd31e036d531fe00f3fa477bf41f18778931753cf9ed1b3acab35fd2fc2baf0192b5a05e709736ec0a117e73440ce01975a5bde7b902ca58cf708344
   languageName: node
   linkType: hard
 
@@ -1165,7 +1165,7 @@ __metadata:
 
 "langchain@file:../../../../::locator=chrome_ai%40workspace%3A.":
   version: 0.2.7
-  resolution: "langchain@file:../../../../#../../../../::hash=8f772d&locator=chrome_ai%40workspace%3A."
+  resolution: "langchain@file:../../../../#../../../../::hash=4f9e2d&locator=chrome_ai%40workspace%3A."
   dependencies:
     "@langchain/core": ~0.2.0
     "@langchain/openai": ">=0.1.0 <0.3.0"
@@ -1334,7 +1334,7 @@ __metadata:
       optional: true
     youtubei.js:
       optional: true
-  checksum: 81cf69fc35fb79ac4df6a1a4510cd28bad10c4a5e9b7a59c53caff1c75673e375ae80b187a84c5ef1e75814dab140fc928f47cc1985f481b93660b4acb9ef7ce
+  checksum: b5094561ed6a8826c8c8240f492372ba7dd3afdeecce3ec1fdd9c7e85d99428e0e70849d3dc1681e834d378f62f1e7f9f5e407ff3dcbc87287c26191657f9c31
   languageName: node
   linkType: hard
 
