@@ -56,9 +56,6 @@ inputForm.addEventListener("submit", async (event) => {
   const numTokens = encoding.encode(fullMsg).length;
 
   // Update the stat pills
-  console.log(`First Token: ${Math.round(timeToFirstTokenMs)} ms`);
-  console.log(`Total Time: ${Math.round(totalTimeMs)} ms`);
-  console.log(`Total Tokens: ${numTokens}`);
   document.getElementById(
     "firstTokenTime"
   ).textContent = `First Token: ${Math.round(timeToFirstTokenMs)} ms`;
