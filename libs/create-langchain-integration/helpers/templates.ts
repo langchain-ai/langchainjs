@@ -28,8 +28,8 @@ export async function installTemplate({ appName, root }: any) {
   const packageJson: any = JSON.parse(
     await fs.readFile(packageJsonFile, "utf8")
   );
-  packageJson.name = appName;
 
+  packageJson.name = appName;
   if (appName.startsWith("@langchain/")) {
     const integrationName = appName.replace("@langchain/", "");
     packageJson.description = `Integration for LangChain ${integrationName}`;
