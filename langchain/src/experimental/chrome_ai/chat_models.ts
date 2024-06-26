@@ -6,6 +6,7 @@ import type { BaseLanguageModelCallOptions } from "@langchain/core/language_mode
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { BaseMessage, AIMessageChunk } from "@langchain/core/messages";
 import { ChatGenerationChunk } from "@langchain/core/outputs";
+import { IterableReadableStream } from "@langchain/core/utils/stream";
 
 export interface AI {
   canCreateTextSession(): Promise<AIModelAvailability>;
@@ -138,7 +139,7 @@ export class ChatChromeAI extends SimpleChatModel<ChromeAICallOptions> {
     const textPrompt = formatPrompt(messages);
   
     const stream = this.session.promptStreaming(textPrompt);
-    const iterableStream = stream.pipeThrough(new TextDecoderStream()).getIterator();
+    const iterableStream = IterableReadableStream.fromReadableStream(stream);
   
     let previousContent = "";
     for await (const chunk of iterableStream) {
