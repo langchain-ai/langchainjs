@@ -62,7 +62,7 @@ export class CheerioWebBaseLoader
 
   textDecoder?: TextDecoder;
 
-  headers?: Headers;
+  headers?: HeadersInit;
 
   constructor(public webPath: string, fields?: WebBaseLoaderParams) {
     super();
@@ -86,7 +86,7 @@ export class CheerioWebBaseLoader
     timeout: number | undefined,
     textDecoder?: TextDecoder,
     options?: CheerioOptions & {
-      headers?: Headers;
+      headers?: HeadersInit;
     }
   ): Promise<CheerioAPI[]> {
     return Promise.all(
@@ -102,7 +102,7 @@ export class CheerioWebBaseLoader
     timeout: number | undefined,
     textDecoder?: TextDecoder,
     options?: CheerioOptions & {
-      headers?: Headers;
+      headers?: HeadersInit;
     }
   ): Promise<CheerioAPI> {
     const { headers, ...cheerioOptions } = options ?? {};
