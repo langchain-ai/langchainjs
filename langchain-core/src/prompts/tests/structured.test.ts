@@ -4,7 +4,6 @@ import {
   StructuredOutputMethodParams,
   StructuredOutputMethodOptions,
   BaseLanguageModelInput,
-  ToolDefinition,
 } from "../../language_models/base.js";
 import { BaseMessage } from "../../messages/index.js";
 import { Runnable, RunnableLambda } from "../../runnables/base.js";
@@ -12,15 +11,8 @@ import { RunnableConfig } from "../../runnables/config.js";
 import { FakeListChatModel } from "../../utils/testing/index.js";
 import { StructuredPrompt } from "../structured.js";
 import { load } from "../../load/index.js";
-import { StructuredToolInterface } from "../../tools.js";
 
 class FakeStructuredChatModel extends FakeListChatModel {
-  override bindTools(
-    _tools: (StructuredToolInterface | ToolDefinition | Record<string, any>)[]
-  ): Runnable {
-    return this.bind({});
-  }
-
   withStructuredOutput<
     RunOutput extends Record<string, any> = Record<string, any>
   >(
