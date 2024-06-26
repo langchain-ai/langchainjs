@@ -100,7 +100,7 @@ export class ChatChromeAI extends SimpleChatModel<ChromeAICallOptions> {
       throw new Error("ChatChromeAI can only be used in the browser.");
     }
 
-    const {ai} = window as any;
+    const { ai } = window as any;
     const canCreateTextSession = await ai.canCreateTextSession();
     if (canCreateTextSession === AIModelAvailability.No) {
       throw new Error("The AI model is not available.");
@@ -137,10 +137,10 @@ export class ChatChromeAI extends SimpleChatModel<ChromeAICallOptions> {
       throw new Error("Session not found. Please call `.initialize()` first.");
     }
     const textPrompt = formatPrompt(messages);
-  
+
     const stream = this.session.promptStreaming(textPrompt);
     const iterableStream = IterableReadableStream.fromReadableStream(stream);
-  
+
     let previousContent = "";
     for await (const chunk of iterableStream) {
       const newContent = chunk.slice(previousContent.length);
