@@ -46,6 +46,7 @@ export * as vectorstores__vectara from "../vectorstores/vectara.js";
 export * as chat_models__alibaba_tongyi from "../chat_models/alibaba_tongyi.js";
 export * as chat_models__baiduwenxin from "../chat_models/baiduwenxin.js";
 export * as chat_models__cloudflare_workersai from "../chat_models/cloudflare_workersai.js";
+export * as chat_models__chrome_ai from "../chat_models/chrome_ai.js";
 export * as chat_models__deepinfra from "../chat_models/deepinfra.js";
 export * as chat_models__fireworks from "../chat_models/fireworks.js";
 export * as chat_models__friendli from "../chat_models/friendli.js";

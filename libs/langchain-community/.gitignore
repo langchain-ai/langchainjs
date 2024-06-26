@@ -518,6 +518,10 @@ chat_models/cloudflare_workersai.cjs
 chat_models/cloudflare_workersai.js
 chat_models/cloudflare_workersai.d.ts
 chat_models/cloudflare_workersai.d.cts
+chat_models/chrome_ai.cjs
+chat_models/chrome_ai.js
+chat_models/chrome_ai.d.ts
+chat_models/chrome_ai.d.cts
 chat_models/deepinfra.cjs
 chat_models/deepinfra.js
 chat_models/deepinfra.d.ts

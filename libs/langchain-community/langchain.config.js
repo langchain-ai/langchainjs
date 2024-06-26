@@ -166,6 +166,7 @@ export const config = {
     "chat_models/bedrock": "chat_models/bedrock/index",
     "chat_models/bedrock/web": "chat_models/bedrock/web",
     "chat_models/cloudflare_workersai": "chat_models/cloudflare_workersai",
+    "chat_models/chrome_ai": "chat_models/chrome_ai",
     "chat_models/deepinfra": "chat_models/deepinfra",
     "chat_models/fireworks": "chat_models/fireworks",
     "chat_models/friendli": "chat_models/friendli",
