@@ -19,8 +19,8 @@ import {
 export function renderTextDescription(
   tools: StructuredToolInterface[] | ToolDefinition[]
 ): string {
-  if (tools.every(isOpenAITool)) {
-    return tools
+  if ((tools as unknown[]).every(isOpenAITool)) {
+    return (tools as ToolDefinition[])
       .map(
         (tool) =>
           `${tool.function.name}${
@@ -29,7 +29,9 @@ export function renderTextDescription(
       )
       .join("\n");
   }
-  return tools.map((tool) => `${tool.name}: ${tool.description}`).join("\n");
+  return (tools as StructuredToolInterface[])
+    .map((tool) => `${tool.name}: ${tool.description}`)
+    .join("\n");
 }
 
 /**
@@ -46,8 +48,8 @@ export function renderTextDescription(
 export function renderTextDescriptionAndArgs(
   tools: StructuredToolInterface[] | ToolDefinition[]
 ): string {
-  if (tools.every(isOpenAITool)) {
-    return tools
+  if ((tools as unknown[]).every(isOpenAITool)) {
+    return (tools as ToolDefinition[])
       .map(
         (tool) =>
           `${tool.function.name}${
@@ -56,7 +58,7 @@ export function renderTextDescriptionAndArgs(
       )
       .join("\n");
   }
-  return tools
+  return (tools as StructuredToolInterface[])
     .map(
       (tool) =>
         `${tool.name}: ${tool.description}, args: ${JSON.stringify(

@@ -16,6 +16,7 @@ import {
   PromptTemplate,
 } from "@langchain/core/prompts";
 import { AgentStep } from "@langchain/core/agents";
+import { isStructuredTool } from "@langchain/core/utils/function_calling";
 import { LLMChain } from "../../chains/llm_chain.js";
 import { Optional } from "../../types/type-utils.js";
 import {
@@ -241,7 +242,7 @@ export type CreateStructuredChatAgentParams = {
   /** LLM to use as the agent. */
   llm: BaseLanguageModelInterface;
   /** Tools this agent has access to. */
-  tools: StructuredToolInterface[] | ToolDefinition[];
+  tools: (StructuredToolInterface | ToolDefinition)[];
   /**
    * The prompt to use. Must have input keys for
    * `tools`, `tool_names`, and `agent_scratchpad`.
@@ -329,8 +330,12 @@ export async function createStructuredChatAgent({
   let toolNames: string[] = [];
   if (tools.every(isOpenAITool)) {
     toolNames = tools.map((tool) => tool.function.name);
-  } else {
+  } else if (tools.every(isStructuredTool)) {
     toolNames = tools.map((tool) => tool.name);
+  } else {
+    throw new Error(
+      "All tools must be either OpenAI or Structured tools, not a mix."
+    );
   }
   const partialedPrompt = await prompt.partial({
     tools: renderTextDescriptionAndArgs(tools),
