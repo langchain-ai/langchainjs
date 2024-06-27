@@ -54,7 +54,7 @@ export class CloudflareWorkersAIEmbeddings extends Embeddings {
 
     if (!fields.binding) {
       throw new Error(
-        "Must supply a Workers AI bindingg, eg { binding: env.AI }"
+        "Must supply a Workers AI binding, eg { binding: env.AI }"
       );
     }
     this.ai = new Ai(fields.binding);
