@@ -164,7 +164,7 @@ test("populates ID field on AIMessage", async () => {
   expect(finalChunk?.id?.startsWith("chatcmpl-")).toBe(true);
 });
 
-test.only("Test ChatBedrockConverse can invoke tools", async () => {
+test("Test ChatBedrockConverse can invoke tools", async () => {
   const model = new ChatBedrockConverse({
     ...baseConstructorArgs,
   });
@@ -193,4 +193,75 @@ test.only("Test ChatBedrockConverse can invoke tools", async () => {
   console.log("result.tool_calls?.[0]", result.tool_calls?.[0]);
   expect(result.tool_calls?.[0].name).toBe("get_weather");
   expect(result.tool_calls?.[0].id).toBeDefined();
+});
+
+test("Test ChatBedrockConverse can invoke tools with non anthropic model", async () => {
+  const model = new ChatBedrockConverse({
+    ...baseConstructorArgs,
+    model: "cohere.command-r-v1:0",
+  });
+  const tools = [
+    tool(
+      (input) => {
+        console.log("tool", input);
+        return "Hello";
+      },
+      {
+        name: "get_weather",
+        description: "Get the weather",
+        schema: z.object({
+          location: z.string().describe("Location to get the weather for"),
+        }),
+      }
+    ),
+  ];
+  const modelWithTools = model.bindTools(tools);
+  const result = await modelWithTools.invoke([
+    new HumanMessage("Get the weather for London"),
+  ]);
+
+  expect(result.tool_calls).toBeDefined();
+  expect(result.tool_calls).toHaveLength(1);
+  console.log("result.tool_calls?.[0]", result.tool_calls?.[0]);
+  expect(result.tool_calls?.[0].name).toBe("get_weather");
+  expect(result.tool_calls?.[0].id).toBeDefined();
+});
+
+test.only("Test ChatBedrockConverse can stream tools", async () => {
+  const model = new ChatBedrockConverse({
+    ...baseConstructorArgs,
+  });
+  const tools = [
+    tool(
+      (input) => {
+        console.log("tool", input);
+        return "Hello";
+      },
+      {
+        name: "get_weather",
+        description: "Get the weather",
+        schema: z.object({
+          location: z.string().describe("Location to get the weather for"),
+        }),
+      }
+    ),
+  ];
+  const modelWithTools = model.bindTools(tools);
+  const stream = await modelWithTools.stream([
+    new HumanMessage("Get the weather for London"),
+  ]);
+
+  let finalChunk: AIMessageChunk | undefined;
+  for await (const chunk of stream) {
+    if (!finalChunk) {
+      finalChunk = chunk;
+    } else {
+      finalChunk = finalChunk.concat(chunk);
+    }
+  }
+  expect(finalChunk?.tool_calls).toBeDefined();
+  expect(finalChunk?.tool_calls).toHaveLength(1);
+  console.log("result.tool_calls?.[0]", finalChunk?.tool_calls?.[0]);
+  expect(finalChunk?.tool_calls?.[0].name).toBe("get_weather");
+  expect(finalChunk?.tool_calls?.[0].id).toBeDefined();
 });

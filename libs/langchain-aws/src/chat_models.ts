@@ -38,8 +38,9 @@ import {
   convertToBedrockToolChoice,
   convertToConverseMessages,
   convertConverseMessageToLangChainMessage,
-  handleConverseStreamContentBlock,
+  handleConverseStreamContentBlockDelta,
   handleConverseStreamMetadata,
+  handleConverseStreamContentBlockStart,
 } from "./common.js";
 
 /**
@@ -365,8 +366,10 @@ export class ChatBedrockConverse
     const response = await this.client.send(command);
     if (response.stream) {
       for await (const chunk of response.stream) {
-        if (chunk.contentBlockDelta) {
-          const textChatGeneration = handleConverseStreamContentBlock(
+        if (chunk.contentBlockStart) {
+          yield handleConverseStreamContentBlockStart(chunk.contentBlockStart);
+        } else if (chunk.contentBlockDelta) {
+          const textChatGeneration = handleConverseStreamContentBlockDelta(
             chunk.contentBlockDelta
           );
           yield textChatGeneration;

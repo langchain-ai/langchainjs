@@ -20,6 +20,7 @@ import type {
   ConverseResponse,
   ContentBlockDeltaEvent,
   ConverseStreamMetadataEvent,
+  ContentBlockStartEvent,
 } from "@aws-sdk/client-bedrock-runtime";
 import type { DocumentType as __DocumentType } from "@smithy/types";
 import { StructuredToolInterface } from "@langchain/core/tools";
@@ -336,7 +337,7 @@ export function convertConverseMessageToLangChainMessage(
   }
 }
 
-export function handleConverseStreamContentBlock(
+export function handleConverseStreamContentBlockDelta(
   contentBlockDelta: ContentBlockDeltaEvent
 ): ChatGenerationChunk {
   if (!contentBlockDelta.delta) {
@@ -350,13 +351,17 @@ export function handleConverseStreamContentBlock(
       }),
     });
   } else if (contentBlockDelta.delta.toolUse) {
-    console.log("\ntoolUse found. Not currently implemented.\n");
-    console.log(contentBlockDelta.delta.toolUse);
-    // TODO: IMPLEMENT BELOW:
+    const index = contentBlockDelta.contentBlockIndex;
     return new ChatGenerationChunk({
-      text: "contentBlockDelta.delta.text",
+      text: "",
       message: new AIMessageChunk({
-        content: "contentBlockDelta.delta.text",
+        content: "",
+        tool_call_chunks: [
+          {
+            args: contentBlockDelta.delta.toolUse.input,
+            index,
+          },
+        ],
       }),
     });
   } else {
@@ -367,6 +372,28 @@ export function handleConverseStreamContentBlock(
       `Unsupported content block type: ${unsupportedField[0][0]}`
     );
   }
+}
+
+export function handleConverseStreamContentBlockStart(
+  contentBlockStart: ContentBlockStartEvent
+): ChatGenerationChunk {
+  const index = contentBlockStart.contentBlockIndex;
+  if (contentBlockStart.start?.toolUse) {
+    return new ChatGenerationChunk({
+      text: "",
+      message: new AIMessageChunk({
+        content: "",
+        tool_call_chunks: [
+          {
+            name: contentBlockStart.start.toolUse.name,
+            id: contentBlockStart.start.toolUse.toolUseId,
+            index,
+          },
+        ],
+      }),
+    });
+  }
+  throw new Error("Unsupported content block start event.");
 }
 
 export function handleConverseStreamMetadata(
