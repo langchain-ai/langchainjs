@@ -14,6 +14,7 @@ import {
 import type {
   ToolConfiguration,
   Tool as BedrockTool,
+  GuardrailConfiguration,
 } from "@aws-sdk/client-bedrock-runtime";
 import {
   BedrockRuntimeClient,
@@ -118,6 +119,11 @@ export interface ChatBedrockConverseInput
    * @default true
    */
   streamUsage?: boolean;
+
+  /**
+   * Configuration information for a guardrail that you want to use in the request.
+   */
+  guardrailConfig?: GuardrailConfiguration;
 }
 
 export interface ChatBedrockConverseCallOptions
@@ -193,6 +199,8 @@ export class ChatBedrockConverse
 
   streamUsage = true;
 
+  guardrailConfig?: GuardrailConfiguration;
+
   client: BedrockRuntimeClient;
 
   constructor(fields?: ChatBedrockConverseInput) {
@@ -244,6 +252,7 @@ export class ChatBedrockConverse
     this.topP = rest?.topP;
     this.additionalModelRequestFields = rest?.additionalModelRequestFields;
     this.streamUsage = rest?.streamUsage ?? this.streamUsage;
+    this.guardrailConfig = rest?.guardrailConfig;
   }
 
   getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
@@ -304,6 +313,7 @@ export class ChatBedrockConverse
       additionalModelRequestFields:
         this.additionalModelRequestFields ??
         options?.additionalModelRequestFields,
+      guardrailConfig: this.guardrailConfig,
     };
   }
 
