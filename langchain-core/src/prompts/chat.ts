@@ -532,6 +532,7 @@ class _StringImageMessagePromptTemplate<
           imgTemplateObject = new ImagePromptTemplate<InputValues>({
             template: imgTemplate,
             inputVariables,
+            templateFormat: additionalOptions?.templateFormat,
           });
         } else if (typeof imgTemplate === "object") {
           if ("url" in imgTemplate) {
@@ -551,6 +552,7 @@ class _StringImageMessagePromptTemplate<
           imgTemplateObject = new ImagePromptTemplate<InputValues>({
             template: imgTemplate,
             inputVariables,
+            templateFormat: additionalOptions?.templateFormat,
           });
         } else {
           throw new Error("Invalid image template");
