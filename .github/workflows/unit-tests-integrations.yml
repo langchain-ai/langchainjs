@@ -82,7 +82,7 @@ jobs:
     name: Unit Tests
     needs: prepare-matrix
     # Only run this job if there are packages to test
-    if: ${{ needs.prepare-matrix.outputs.matrix_length }} > 0
+    if: needs.prepare-matrix.outputs.matrix_length > 0
     runs-on: ubuntu-latest
     strategy:
       matrix: ${{ fromJson(needs.prepare-matrix.outputs.matrix) }}
