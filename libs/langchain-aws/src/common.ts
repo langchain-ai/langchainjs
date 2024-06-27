@@ -3,7 +3,11 @@ import type {
   BaseMessage,
   UsageMetadata,
 } from "@langchain/core/messages";
-import { AIMessage, ToolMessage } from "@langchain/core/messages";
+import {
+  AIMessage,
+  AIMessageChunk,
+  ToolMessage,
+} from "@langchain/core/messages";
 import type { ToolCall } from "@langchain/core/messages/tool";
 import type { ToolDefinition } from "@langchain/core/language_models/base";
 import { isOpenAITool } from "@langchain/core/language_models/base";
@@ -14,11 +18,14 @@ import type {
   ContentBlock,
   ImageFormat,
   ConverseResponse,
+  ContentBlockDeltaEvent,
+  ConverseStreamMetadataEvent,
 } from "@aws-sdk/client-bedrock-runtime";
 import type { DocumentType as __DocumentType } from "@smithy/types";
 import { StructuredToolInterface } from "@langchain/core/tools";
 import { isStructuredTool } from "@langchain/core/utils/function_calling";
 import { zodToJsonSchema } from "zod-to-json-schema";
+import { ChatGenerationChunk } from "@langchain/core/outputs";
 import { BedrockToolChoice } from "./types.js";
 
 export function extractImageInfo(base64: string): ContentBlock.ImageMember {
@@ -321,4 +328,60 @@ export function convertConverseMessageToLangChainMessage(
       usage_metadata: tokenUsage,
     });
   }
+}
+
+export function handleConverseStreamContentBlock(
+  contentBlockDelta: ContentBlockDeltaEvent
+): ChatGenerationChunk {
+  if (!contentBlockDelta.delta) {
+    throw new Error("No delta found in content block.");
+  }
+  if (contentBlockDelta.delta.text) {
+    return new ChatGenerationChunk({
+      text: contentBlockDelta.delta.text,
+      message: new AIMessageChunk({
+        content: contentBlockDelta.delta.text,
+      }),
+    });
+  } else if (contentBlockDelta.delta.toolUse) {
+    console.log("\ntoolUse found. Not currently implemented.\n");
+    console.log(contentBlockDelta.delta.toolUse);
+    // TODO: IMPLEMENT BELOW:
+    return new ChatGenerationChunk({
+      text: "contentBlockDelta.delta.text",
+      message: new AIMessageChunk({
+        content: "contentBlockDelta.delta.text",
+      }),
+    });
+  } else {
+    const unsupportedField = Object.entries(contentBlockDelta.delta).filter(
+      ([_, value]) => !!value
+    );
+    throw new Error(
+      `Unsupported content block type: ${unsupportedField[0][0]}`
+    );
+  }
+}
+
+export function handleConverseStreamMetadata(
+  metadata: ConverseStreamMetadataEvent
+): ChatGenerationChunk {
+  const inputTokens = metadata.usage?.inputTokens ?? 0;
+  const outputTokens = metadata.usage?.outputTokens ?? 0;
+  const usage_metadata: UsageMetadata = {
+    input_tokens: inputTokens,
+    output_tokens: outputTokens,
+    total_tokens: metadata.usage?.totalTokens ?? inputTokens + outputTokens,
+  };
+  return new ChatGenerationChunk({
+    text: "",
+    message: new AIMessageChunk({
+      content: "",
+      usage_metadata,
+      response_metadata: {
+        // Use the same key as returned from the Converse API
+        metadata,
+      },
+    }),
+  });
 }

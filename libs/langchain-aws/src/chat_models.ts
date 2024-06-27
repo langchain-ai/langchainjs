@@ -36,6 +36,8 @@ import {
   convertToBedrockToolChoice,
   convertToConverseMessages,
   convertConverseMessageToLangChainMessage,
+  handleConverseStreamContentBlock,
+  handleConverseStreamMetadata,
 } from "./common.js";
 
 /**
@@ -344,21 +346,23 @@ export class ChatBedrockConverse
     const response = await this.client.send(command);
     if (response.stream) {
       for await (const chunk of response.stream) {
-        console.log("chunk", JSON.stringify(chunk, null, 2));
-        if ("contentBlockDelta" in chunk && chunk.contentBlockDelta) {
-          // handle contentBlockDelta
+        if (chunk.contentBlockDelta) {
+          const textChatGeneration = handleConverseStreamContentBlock(
+            chunk.contentBlockDelta
+          );
+          yield textChatGeneration;
+          await runManager?.handleLLMNewToken(textChatGeneration.text);
+        } else if (chunk.metadata) {
+          yield handleConverseStreamMetadata(chunk.metadata);
+        } else {
+          yield new ChatGenerationChunk({
+            text: "",
+            message: new AIMessageChunk({
+              content: "",
+              response_metadata: chunk,
+            }),
+          });
         }
-        yield new ChatGenerationChunk({
-          text: "",
-          message: new AIMessageChunk({ content: "" }),
-        });
-        // if (!chunk.done) {
-        //   yield new ChatGenerationChunk({
-        //     text: chunk.response,
-        //     message: new AIMessageChunk({ content: chunk.response }),
-        //   });
-        //   await runManager?.handleLLMNewToken(chunk.response ?? "");
-        // }
       }
     }
   }

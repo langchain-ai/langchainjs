@@ -28,14 +28,15 @@ test("Test ChatBedrockConverse can invoke", async () => {
 test.only("Test ChatBedrockConverse stream method", async () => {
   const model = new ChatBedrockConverse({
     ...baseConstructorArgs,
-    // maxTokens: 50,
+    maxTokens: 50,
   });
   const stream = await model.stream("Print hello world.");
   const chunks = [];
   for await (const chunk of stream) {
-    // console.log(chunk);
     chunks.push(chunk);
   }
+  const finalMessage = chunks.map((c) => c.content).join("");
+  console.log(finalMessage);
   expect(chunks.length).toBeGreaterThan(1);
 });
 
