@@ -73,7 +73,12 @@ export abstract class GoogleAbstractedFetchClient
         `Google request failed with status code ${res.status}: ${resText}`
       );
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (error as any).response = res;
+      (error as any).details = {
+        url,
+        opts,
+        fetchOptions,
+        result: res,
+      };
       throw error;
     }
 
