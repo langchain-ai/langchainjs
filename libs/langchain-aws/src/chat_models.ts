@@ -1,38 +1,22 @@
-import type {
-  MessageContentComplex,
-  BaseMessage,
-  UsageMetadata,
-} from "@langchain/core/messages";
-import {
-  AIMessage,
-  ToolMessage,
-  AIMessageChunk,
-} from "@langchain/core/messages";
-import type { ToolCall } from "@langchain/core/messages/tool";
+import type { BaseMessage } from "@langchain/core/messages";
+import { AIMessageChunk } from "@langchain/core/messages";
 import type {
   ToolDefinition,
   BaseLanguageModelCallOptions,
 } from "@langchain/core/language_models/base";
-import { isOpenAITool } from "@langchain/core/language_models/base";
-import type { AwsCredentialIdentity, Provider } from "@aws-sdk/types";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {
   type BaseChatModelParams,
   BaseChatModel,
 } from "@langchain/core/language_models/chat_models";
 import type {
-  Message as BedrockMessage,
-  SystemContentBlock as BedrockSystemContentBlock,
   ToolConfiguration,
   Tool as BedrockTool,
-  ToolChoice,
-  ContentBlock,
-  ImageFormat,
-  ConverseResponse,
 } from "@aws-sdk/client-bedrock-runtime";
 import {
   BedrockRuntimeClient,
   ConverseCommand,
+  ConverseStreamCommand,
 } from "@aws-sdk/client-bedrock-runtime";
 import { ChatGenerationChunk, ChatResult } from "@langchain/core/outputs";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
@@ -42,321 +26,17 @@ import {
 } from "@aws-sdk/credential-provider-node";
 import type { DocumentType as __DocumentType } from "@smithy/types";
 import { StructuredToolInterface } from "@langchain/core/tools";
-import { isStructuredTool } from "@langchain/core/utils/function_calling";
-import { zodToJsonSchema } from "zod-to-json-schema";
-
-export type CredentialType =
-  | AwsCredentialIdentity
-  | Provider<AwsCredentialIdentity>;
-export type ConverseCommandParams = ConstructorParameters<
-  typeof ConverseCommand
->[0];
-export type BedrockToolChoice =
-  | ToolChoice.AnyMember
-  | ToolChoice.AutoMember
-  | ToolChoice.ToolMember;
-
-function extractImageInfo(base64: string): ContentBlock.ImageMember {
-  // Extract the format from the base64 string
-  const formatMatch = base64.match(/^data:image\/(\w+);base64,/);
-  let format: ImageFormat | undefined;
-  if (formatMatch) {
-    const extractedFormat = formatMatch[1].toLowerCase();
-    if (["gif", "jpeg", "png", "webp"].includes(extractedFormat)) {
-      format = extractedFormat as ImageFormat;
-    }
-  }
-
-  // Remove the data URL prefix if present
-  const base64Data = base64.replace(/^data:image\/\w+;base64,/, "");
-
-  // Convert base64 to Uint8Array
-  const binaryString = atob(base64Data);
-  const bytes = new Uint8Array(binaryString.length);
-  for (let i = 0; i < binaryString.length; i += 1) {
-    bytes[i] = binaryString.charCodeAt(i);
-  }
-
-  return {
-    image: {
-      format,
-      source: {
-        bytes,
-      },
-    },
-  };
-}
-
-function convertToConverseMessages(messages: BaseMessage[]): {
-  converseMessages: BedrockMessage[];
-  converseSystem: BedrockSystemContentBlock[];
-} {
-  const converseSystem: BedrockSystemContentBlock[] = messages
-    .filter((msg) => msg._getType() === "system")
-    .map((msg) => {
-      const text = msg.content;
-      if (typeof text !== "string") {
-        throw new Error("System message content must be a string.");
-      }
-      return { text };
-    });
-  const converseMessages: BedrockMessage[] = messages
-    .filter((msg) => !["system", "tool", "function"].includes(msg._getType()))
-    .map((msg) => {
-      if (msg._getType() === "ai") {
-        const castMsg = msg as AIMessage;
-        if (typeof castMsg.content === "string") {
-          return {
-            role: "assistant",
-            content: [
-              {
-                text: castMsg.content,
-              },
-            ],
-          };
-        } else {
-          if (castMsg.tool_calls && castMsg.tool_calls.length) {
-            return {
-              role: "assistant",
-              content: castMsg.tool_calls.map((tc) => ({
-                toolUse: {
-                  toolUseId: tc.id,
-                  name: tc.name,
-                  input: tc.args,
-                },
-              })),
-            };
-          } else {
-            const contentBlocks: ContentBlock[] = castMsg.content.map(
-              (block) => {
-                if (block.type === "text") {
-                  return {
-                    text: block.text,
-                  };
-                } else {
-                  throw new Error(
-                    `Unsupported content block type: ${block.type}`
-                  );
-                }
-              }
-            );
-            return {
-              role: "assistant",
-              content: contentBlocks,
-            };
-          }
-        }
-      } else if (msg._getType() === "human" || msg._getType() === "generic") {
-        if (typeof msg.content === "string") {
-          return {
-            role: "user",
-            content: [
-              {
-                text: msg.content,
-              },
-            ],
-          };
-        } else {
-          const contentBlocks: ContentBlock[] = msg.content.flatMap((block) => {
-            if (block.type === "image_url") {
-              const base64: string =
-                typeof block.image_url === "string"
-                  ? block.image_url
-                  : block.image_url.url;
-              return extractImageInfo(base64);
-            } else if (block.type === "text") {
-              return {
-                text: block.text,
-              };
-            } else {
-              throw new Error(`Unsupported content block type: ${block.type}`);
-            }
-          });
-          return {
-            role: "user",
-            content: contentBlocks,
-          };
-        }
-      } else if (msg._getType() === "tool") {
-        const castMsg = msg as ToolMessage;
-        if (typeof castMsg.content === "string") {
-          return {
-            role: undefined,
-            content: [
-              {
-                toolResult: {
-                  toolUseId: castMsg.tool_call_id,
-                  content: [
-                    {
-                      text: castMsg.content,
-                    },
-                  ],
-                },
-              },
-            ],
-          };
-        } else {
-          return {
-            role: undefined,
-            content: [
-              {
-                toolResult: {
-                  toolUseId: castMsg.tool_call_id,
-                  content: [
-                    {
-                      json: castMsg.content,
-                    },
-                  ],
-                },
-              },
-            ],
-          };
-        }
-      } else {
-        throw new Error(`Unsupported message type: ${msg._getType()}`);
-      }
-    });
-
-  return { converseMessages, converseSystem };
-}
-
-function isBedrockTool(tool: unknown): tool is BedrockTool {
-  if (typeof tool === "object" && tool && "toolSpec" in tool) {
-    return true;
-  }
-  return false;
-}
-
-function convertToConverseTools(
-  tools: (StructuredToolInterface | ToolDefinition | BedrockTool)[]
-): BedrockTool[] {
-  if (tools.every(isOpenAITool)) {
-    return tools.map((tool) => ({
-      toolSpec: {
-        name: tool.function.name,
-        description: tool.function.description,
-        inputSchema: {
-          json: tool.function.parameters as __DocumentType,
-        },
-      },
-    }));
-  } else if (tools.every(isStructuredTool)) {
-    return tools.map((tool) => ({
-      toolSpec: {
-        name: tool.name,
-        description: tool.description,
-        inputSchema: {
-          json: zodToJsonSchema(tool.schema) as __DocumentType,
-        },
-      },
-    }));
-  } else if (tools.every(isBedrockTool)) {
-    return tools;
-  }
-
-  throw new Error(
-    "Invalid tools passed. Must be an array of StructuredToolInterface, ToolDefinition, or BedrockTool."
-  );
-}
-
-function convertToBedrockToolChoice(
-  toolChoice: string | BedrockToolChoice,
-  tools: BedrockTool[]
-): BedrockToolChoice {
-  if (typeof toolChoice === "string") {
-    switch (toolChoice) {
-      case "any":
-        return {
-          any: {},
-        };
-      case "auto":
-        return {
-          auto: {},
-        };
-      default: {
-        const foundTool = tools.find(
-          (tool) => tool.toolSpec?.name === toolChoice
-        );
-        if (!foundTool) {
-          throw new Error(
-            `Tool with name ${toolChoice} not found in tools list.`
-          );
-        }
-        return {
-          tool: {
-            name: toolChoice,
-          },
-        };
-      }
-    }
-  }
-  return toolChoice;
-}
-
-function convertConverseMessageToLangChainMessage(
-  message: BedrockMessage,
-  responseMetadata: Omit<ConverseResponse, "output">
-): BaseMessage {
-  if (!message.content) {
-    throw new Error("No message content found in response.");
-  }
-  if (message.role !== "assistant") {
-    throw new Error(
-      `Unsupported message role received in ChatBedrockConverse response: ${message.role}`
-    );
-  }
-  let tokenUsage: UsageMetadata | undefined;
-  if (responseMetadata.usage) {
-    const input_tokens = responseMetadata.usage.inputTokens ?? 0;
-    const output_tokens = responseMetadata.usage.outputTokens ?? 0;
-    tokenUsage = {
-      input_tokens,
-      output_tokens,
-      total_tokens:
-        responseMetadata.usage.totalTokens ?? input_tokens + output_tokens,
-    };
-  }
-
-  if (
-    message.content?.length === 1 &&
-    "text" in message.content[0] &&
-    typeof message.content[0].text === "string"
-  ) {
-    return new AIMessage({
-      content: message.content[0].text,
-      response_metadata: responseMetadata,
-      usage_metadata: tokenUsage,
-    });
-  } else {
-    const toolCalls: ToolCall[] = [];
-    const content: MessageContentComplex[] = [];
-    message.content.forEach((c) => {
-      if (
-        "toolUse" in c &&
-        c.toolUse &&
-        c.toolUse.name &&
-        c.toolUse.input &&
-        typeof c.toolUse.input === "object"
-      ) {
-        toolCalls.push({
-          id: c.toolUse.toolUseId,
-          name: c.toolUse.name,
-          args: c.toolUse.input,
-        });
-      } else if ("text" in c && typeof c.text === "string") {
-        content.push({ type: "text", text: c.text });
-      } else {
-        content.push(c);
-      }
-    });
-    return new AIMessage({
-      content: content.length ? content : "",
-      tool_calls: toolCalls.length ? toolCalls : undefined,
-      response_metadata: responseMetadata,
-      usage_metadata: tokenUsage,
-    });
-  }
-}
+import {
+  BedrockToolChoice,
+  ConverseCommandParams,
+  CredentialType,
+} from "./types.js";
+import {
+  convertToConverseTools,
+  convertToBedrockToolChoice,
+  convertToConverseMessages,
+  convertConverseMessageToLangChainMessage,
+} from "./common.js";
 
 /**
  * Inputs for ChatBedrockConverse.
@@ -535,9 +215,8 @@ export class ChatBedrockConverse
 
     this.client = new BedrockRuntimeClient({
       region,
-      ...credentials,
+      credentials,
     });
-
     this.region = region;
     this.model = rest?.model ?? this.model;
     this.streaming = rest?.streaming ?? this.streaming;
@@ -624,7 +303,6 @@ export class ChatBedrockConverse
       ...params,
     });
     const response = await this.client.send(command);
-    console.log("RES", JSON.stringify(response, null, 2));
     const { output, ...responseMetadata } = response;
     if (!output?.message) {
       throw new Error("No message found in Bedrock response.");
@@ -648,21 +326,40 @@ export class ChatBedrockConverse
    * Implement to support streaming.
    * Should yield chunks iteratively.
    */
-  // async *_streamResponseChunks(
-  //   messages: BaseMessage[],
-  //   options: this["ParsedCallOptions"],
-  //   runManager?: CallbackManagerForLLMRun
-  // ): AsyncGenerator<ChatGenerationChunk> {
-  //   // All models have a built in `this.caller` property for retries
-  //   const stream = await this.caller.call(async () => createStreamMethod());
-  //   for await (const chunk of stream) {
-  //     if (!chunk.done) {
-  //       yield new ChatGenerationChunk({
-  //         text: chunk.response,
-  //         message: new AIMessageChunk({ content: chunk.response }),
-  //       });
-  //       await runManager?.handleLLMNewToken(chunk.response ?? "");
-  //     }
-  //   }
-  // }
+  async *_streamResponseChunks(
+    messages: BaseMessage[],
+    options: this["ParsedCallOptions"],
+    runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<ChatGenerationChunk> {
+    const { converseMessages, converseSystem } =
+      convertToConverseMessages(messages);
+    const params = this.invocationParams(options);
+
+    const command = new ConverseStreamCommand({
+      modelId: this.model,
+      messages: converseMessages,
+      system: converseSystem,
+      ...params,
+    });
+    const response = await this.client.send(command);
+    if (response.stream) {
+      for await (const chunk of response.stream) {
+        console.log("chunk", JSON.stringify(chunk, null, 2));
+        if ("contentBlockDelta" in chunk && chunk.contentBlockDelta) {
+          // handle contentBlockDelta
+        }
+        yield new ChatGenerationChunk({
+          text: "",
+          message: new AIMessageChunk({ content: "" }),
+        });
+        // if (!chunk.done) {
+        //   yield new ChatGenerationChunk({
+        //     text: chunk.response,
+        //     message: new AIMessageChunk({ content: chunk.response }),
+        //   });
+        //   await runManager?.handleLLMNewToken(chunk.response ?? "");
+        // }
+      }
+    }
+  }
 }

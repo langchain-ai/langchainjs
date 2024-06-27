@@ -13,7 +13,7 @@ const baseConstructorArgs: Partial<
   },
 };
 
-test.only("Test ChatBedrockConverse can invoke", async () => {
+test("Test ChatBedrockConverse can invoke", async () => {
   const model = new ChatBedrockConverse({
     ...baseConstructorArgs,
     maxTokens: 5,
@@ -23,6 +23,20 @@ test.only("Test ChatBedrockConverse can invoke", async () => {
   expect(typeof res.content).toBe("string");
   expect(res.content.length).toBeGreaterThan(1);
   expect(res.content).not.toContain("world");
+});
+
+test.only("Test ChatBedrockConverse stream method", async () => {
+  const model = new ChatBedrockConverse({
+    ...baseConstructorArgs,
+    // maxTokens: 50,
+  });
+  const stream = await model.stream("Print hello world.");
+  const chunks = [];
+  for await (const chunk of stream) {
+    // console.log(chunk);
+    chunks.push(chunk);
+  }
+  expect(chunks.length).toBeGreaterThan(1);
 });
 
 test("Test ChatBedrockConverse in streaming mode", async () => {
@@ -62,20 +76,6 @@ test("Test ChatBedrockConverse with stop", async () => {
   expect(typeof res.content).toBe("string");
   expect(res.content.length).toBeGreaterThan(1);
   expect(res.content).not.toContain("world");
-});
-
-test("Test ChatBedrockConverse stream method", async () => {
-  const model = new ChatBedrockConverse({
-    ...baseConstructorArgs,
-    maxTokens: 50,
-  });
-  const stream = await model.stream("Print hello world.");
-  const chunks = [];
-  for await (const chunk of stream) {
-    console.log(chunk);
-    chunks.push(chunk);
-  }
-  expect(chunks.length).toBeGreaterThan(1);
 });
 
 // AbortSignal not implemented yet.
