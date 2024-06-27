@@ -11,15 +11,17 @@ const model = new ChatBedrockConverse({
   },
 });
 
-const weatherTool = tool(({ city, state }) => `The weather in ${city}, ${state} is 72°F and sunny`, {
-  name: "weather_tool",
-  description: "Get the weather for a city",
-  schema: z
-  .object({
-    city: z.string().describe("The city to get the weather for"),
-    state: z.string().describe("The state to get the weather for").optional(),
-  })
-});
+const weatherTool = tool(
+  ({ city, state }) => `The weather in ${city}, ${state} is 72°F and sunny`,
+  {
+    name: "weather_tool",
+    description: "Get the weather for a city",
+    schema: z.object({
+      city: z.string().describe("The city to get the weather for"),
+      state: z.string().describe("The state to get the weather for").optional(),
+    }),
+  }
+);
 
 const modelWithTools = model.bindTools([weatherTool]);
 // Optionally, you can bind tools via the `.bind` method:

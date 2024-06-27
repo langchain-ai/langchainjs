@@ -154,7 +154,7 @@ export interface ChatBedrockConverseCallOptions
 
 /**
  * Integration with AWS Bedrock Converse API.
- * 
+ *
  * @example
  * ```typescript
  * import { ChatBedrockConverse } from "@langchain/aws";
@@ -165,7 +165,7 @@ export interface ChatBedrockConverseCallOptions
  *     accessKeyId: process.env.BEDROCK_AWS_ACCESS_KEY_ID!,
  *   },
  * });
- * 
+ *
  * const res = await model.invoke([new HumanMessage("Print hello world")]);
  * ```
  */
