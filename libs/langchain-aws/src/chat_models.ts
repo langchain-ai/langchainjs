@@ -9,6 +9,7 @@ import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {
   type BaseChatModelParams,
   BaseChatModel,
+  LangSmithParams,
 } from "@langchain/core/language_models/chat_models";
 import type {
   ToolConfiguration,
@@ -230,6 +231,18 @@ export class ChatBedrockConverse
     this.endpointHost = rest?.endpointHost;
     this.topP = rest?.topP;
     this.additionalModelRequestFields = rest?.additionalModelRequestFields;
+  }
+
+  getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
+    const params = this.invocationParams(options);
+    return {
+      ls_provider: "amazon_bedrock",
+      ls_model_name: this.model,
+      ls_model_type: "chat",
+      ls_temperature: params.inferenceConfig?.temperature ?? this.temperature,
+      ls_max_tokens: params.inferenceConfig?.maxTokens ?? undefined,
+      ls_stop: options.stop,
+    };
   }
 
   override bindTools(

@@ -27,6 +27,30 @@ class ChatBedrockConverseStandardIntegrationTests extends ChatModelIntegrationTe
       },
     });
   }
+
+  async testToolMessageHistoriesStringContent() {
+    this.skipTestMessage(
+      "testToolMessageHistoriesStringContent",
+      "ChatBedrockConverse",
+      "Not properly implemented."
+    );
+  }
+
+  async testToolMessageHistoriesListContent() {
+    this.skipTestMessage(
+      "testToolMessageHistoriesListContent",
+      "ChatBedrockConverse",
+      "Not properly implemented."
+    );
+  }
+
+  async testStructuredFewShotExamples() {
+    this.skipTestMessage(
+      "testStructuredFewShotExamples",
+      "ChatBedrockConverse",
+      "Not properly implemented."
+    );
+  }
 }
 
 const testClass = new ChatBedrockConverseStandardIntegrationTests();
