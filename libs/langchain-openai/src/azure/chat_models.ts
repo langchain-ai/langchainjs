@@ -53,9 +53,7 @@ export class AzureChatOpenAI extends ChatOpenAI {
   /**
    * Get the parameters used to invoke the model
    */
-  invocationParams(
-    options?: this["ParsedCallOptions"]
-  ) {
+  invocationParams(options?: this["ParsedCallOptions"]) {
     const openaiInvocationParams = super.invocationParams(options);
     // remove the `stream_options` field as it is not supported by the Azure API
     delete openaiInvocationParams.stream_options;
