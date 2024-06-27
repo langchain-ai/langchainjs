@@ -2,6 +2,10 @@ import mustache from "mustache";
 import { MessageContent } from "../messages/index.js";
 import type { InputValues } from "../utils/types/index.js";
 
+// Use unescaped HTML
+// https://github.com/janl/mustache.js?tab=readme-ov-file#variables
+mustache.escape = (text) => text;
+
 /**
  * Type that specifies the format of a template.
  */
