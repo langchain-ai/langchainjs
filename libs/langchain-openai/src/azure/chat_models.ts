@@ -11,6 +11,7 @@ import {
   OpenAIChatInput,
   OpenAICoreRequestOptions,
 } from "../types.js";
+import { OpenAIClient } from "../index.js";
 
 export class AzureChatOpenAI extends ChatOpenAI {
   _llmType(): string {
@@ -48,6 +49,18 @@ export class AzureChatOpenAI extends ChatOpenAI {
     }
 
     super(newFields);
+  }
+
+  /**
+   * Get the parameters used to invoke the model
+   */
+  invocationParams(
+    options?: this["ParsedCallOptions"]
+  ): Omit<OpenAIClient.Chat.ChatCompletionCreateParams, "messages"> {
+    const openaiInvocationParams = super.invocationParams(options);
+    // remove the `stream_options` field as it is not supported by the Azure API
+    delete openaiInvocationParams.stream_options;
+    return openaiInvocationParams;
   }
 
   getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
