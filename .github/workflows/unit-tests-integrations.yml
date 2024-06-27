@@ -9,17 +9,16 @@ on:
   pull_request:
     # Only run when LangChain Core, or integration package code changes.
     paths:
-      - 'langchain-core/**'
-      - 'libs/**/**'
-  workflow_dispatch:  # Allows triggering the workflow manually in GitHub UI
-
+      - "langchain-core/**"
+      - "libs/**/**"
+  workflow_dispatch: # Allows triggering the workflow manually in GitHub UI
 
 # If another push to the same PR or branch happens while this workflow is still running,
 # cancel the earlier run in favor of the next run.
 #
 # There's no point in testing an outdated version of the code. GitHub only allows
 # a limited number of job runners to be active at the same time, so it's better to cancel
-# pointless jobs early so that more useful jobs can run sooner.
+# pointless jobs early so that more useful jobs can run soooooooner.
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -48,7 +47,7 @@ jobs:
       PACKAGES: "anthropic,azure-openai,cloudflare,cohere,core,community,exa,google-common,google-gauth,google-genai,google-vertexai,google-vertexai-web,google-webauth,groq,mistralai,mongo,nomic,openai,pinecone,qdrant,redis,textsplitters,weaviate,yandex"
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
-      matrix_length: ${{ steps.set-matrix.outputs.matrix_length }}    
+      matrix_length: ${{ steps.set-matrix.outputs.matrix_length }}
     steps:
       - id: set-matrix
         run: |
