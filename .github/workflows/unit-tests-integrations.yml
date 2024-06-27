@@ -74,6 +74,7 @@ jobs:
           matrix="$matrix]}"
           matrix_length=$(echo $matrix | jq '.include | length')
           echo "Matrix: $matrix"
+          echo "Matrix length: $matrix_length"
           echo "matrix_length=$matrix_length" >> $GITHUB_OUTPUT
           echo "matrix=$matrix" >> $GITHUB_OUTPUT
 
