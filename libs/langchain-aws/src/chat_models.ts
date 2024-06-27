@@ -111,11 +111,21 @@ export interface ChatBedrockConverseInput
    * @link https://docs.aws.amazon.com/bedrock/latest/userguide/model-parameters.html
    */
   additionalModelRequestFields?: __DocumentType;
+  /**
+   * Whether or not to include usage data, like token counts
+   * in the streamed response chunks. Passing as a call option will
+   * take precedence over the class-level setting.
+   * @default true
+   */
+  streamUsage?: boolean;
 }
 
 export interface ChatBedrockConverseCallOptions
   extends BaseLanguageModelCallOptions,
-    Pick<ChatBedrockConverseInput, "additionalModelRequestFields"> {
+    Pick<
+      ChatBedrockConverseInput,
+      "additionalModelRequestFields" | "streamUsage"
+    > {
   /**
    * A list of stop sequences. A stop sequence is a sequence of characters that causes
    * the model to stop generating the response.
@@ -181,6 +191,8 @@ export class ChatBedrockConverse
 
   additionalModelRequestFields?: __DocumentType;
 
+  streamUsage = true;
+
   client: BedrockRuntimeClient;
 
   constructor(fields?: ChatBedrockConverseInput) {
@@ -231,6 +243,7 @@ export class ChatBedrockConverse
     this.endpointHost = rest?.endpointHost;
     this.topP = rest?.topP;
     this.additionalModelRequestFields = rest?.additionalModelRequestFields;
+    this.streamUsage = rest?.streamUsage ?? this.streamUsage;
   }
 
   getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
@@ -369,7 +382,10 @@ export class ChatBedrockConverse
     const { converseMessages, converseSystem } =
       convertToConverseMessages(messages);
     const params = this.invocationParams(options);
-
+    let { streamUsage } = this;
+    if (options.streamUsage !== undefined) {
+      streamUsage = options.streamUsage;
+    }
     const command = new ConverseStreamCommand({
       modelId: this.model,
       messages: converseMessages,
@@ -388,7 +404,9 @@ export class ChatBedrockConverse
           yield textChatGeneration;
           await runManager?.handleLLMNewToken(textChatGeneration.text);
         } else if (chunk.metadata) {
-          yield handleConverseStreamMetadata(chunk.metadata);
+          yield handleConverseStreamMetadata(chunk.metadata, {
+            streamUsage,
+          });
         } else {
           yield new ChatGenerationChunk({
             text: "",

@@ -284,6 +284,15 @@ export function convertConverseMessageToLangChainMessage(
       `Unsupported message role received in ChatBedrockConverse response: ${message.role}`
     );
   }
+  let requestId: string | undefined;
+  if (
+    "$metadata" in responseMetadata &&
+    responseMetadata.$metadata &&
+    typeof responseMetadata.$metadata === "object" &&
+    "requestId" in responseMetadata.$metadata
+  ) {
+    requestId = responseMetadata.$metadata.requestId as string;
+  }
   let tokenUsage: UsageMetadata | undefined;
   if (responseMetadata.usage) {
     const input_tokens = responseMetadata.usage.inputTokens ?? 0;
@@ -305,6 +314,7 @@ export function convertConverseMessageToLangChainMessage(
       content: message.content[0].text,
       response_metadata: responseMetadata,
       usage_metadata: tokenUsage,
+      id: requestId,
     });
   } else {
     const toolCalls: ToolCall[] = [];
@@ -333,6 +343,7 @@ export function convertConverseMessageToLangChainMessage(
       tool_calls: toolCalls.length ? toolCalls : undefined,
       response_metadata: responseMetadata,
       usage_metadata: tokenUsage,
+      id: requestId,
     });
   }
 }
@@ -397,7 +408,10 @@ export function handleConverseStreamContentBlockStart(
 }
 
 export function handleConverseStreamMetadata(
-  metadata: ConverseStreamMetadataEvent
+  metadata: ConverseStreamMetadataEvent,
+  extra: {
+    streamUsage: boolean;
+  }
 ): ChatGenerationChunk {
   const inputTokens = metadata.usage?.inputTokens ?? 0;
   const outputTokens = metadata.usage?.outputTokens ?? 0;
@@ -410,7 +424,7 @@ export function handleConverseStreamMetadata(
     text: "",
     message: new AIMessageChunk({
       content: "",
-      usage_metadata,
+      usage_metadata: extra.streamUsage ? usage_metadata : undefined,
       response_metadata: {
         // Use the same key as returned from the Converse API
         metadata,

@@ -13,6 +13,7 @@ const baseConstructorArgs: Partial<
     secretAccessKey: process.env.BEDROCK_AWS_SECRET_ACCESS_KEY!,
     accessKeyId: process.env.BEDROCK_AWS_ACCESS_KEY_ID!,
   },
+  maxRetries: 1,
 };
 
 test("Test ChatBedrockConverse can invoke", async () => {
@@ -81,25 +82,6 @@ test("Test ChatBedrockConverse with stop", async () => {
   expect(res.content).not.toContain("world");
 });
 
-// AbortSignal not implemented yet.
-test.skip("Test ChatBedrockConverse stream method with abort", async () => {
-  await expect(async () => {
-    const model = new ChatBedrockConverse({
-      ...baseConstructorArgs,
-      maxTokens: 100,
-    });
-    const stream = await model.stream(
-      "How is your day going? Be extremely verbose.",
-      {
-        signal: AbortSignal.timeout(500),
-      }
-    );
-    for await (const chunk of stream) {
-      console.log(chunk);
-    }
-  }).rejects.toThrow();
-});
-
 test("Test ChatBedrockConverse stream method with early break", async () => {
   const model = new ChatBedrockConverse({
     ...baseConstructorArgs,
@@ -119,7 +101,10 @@ test("Test ChatBedrockConverse stream method with early break", async () => {
 });
 
 test("Streaming tokens can be found in usage_metadata field", async () => {
-  const model = new ChatBedrockConverse();
+  const model = new ChatBedrockConverse({
+    ...baseConstructorArgs,
+    maxTokens: 5,
+  });
   const response = await model.stream("Hello, how are you?");
   let finalResult: AIMessageChunk | undefined;
   for await (const chunk of response) {
@@ -140,28 +125,34 @@ test("Streaming tokens can be found in usage_metadata field", async () => {
 });
 
 test("populates ID field on AIMessage", async () => {
-  const model = new ChatBedrockConverse();
+  const model = new ChatBedrockConverse({
+    ...baseConstructorArgs,
+    maxTokens: 5,
+  });
   const response = await model.invoke("Hell");
   console.log({
     invokeId: response.id,
   });
   expect(response.id?.length).toBeGreaterThan(1);
-  expect(response?.id?.startsWith("chatcmpl-")).toBe(true);
+
+  /**
+   * Bedrock Converse does not include an ID in
+   * the response of a streaming call.
+   */
 
   // Streaming
-  let finalChunk: AIMessageChunk | undefined;
-  for await (const chunk of await model.stream("Hell")) {
-    if (!finalChunk) {
-      finalChunk = chunk;
-    } else {
-      finalChunk = finalChunk.concat(chunk);
-    }
-  }
-  console.log({
-    streamId: finalChunk?.id,
-  });
-  expect(finalChunk?.id?.length).toBeGreaterThan(1);
-  expect(finalChunk?.id?.startsWith("chatcmpl-")).toBe(true);
+  // let finalChunk: AIMessageChunk | undefined;
+  // for await (const chunk of await model.stream("Hell")) {
+  //   if (!finalChunk) {
+  //     finalChunk = chunk;
+  //   } else {
+  //     finalChunk = finalChunk.concat(chunk);
+  //   }
+  // }
+  // console.log({
+  //   streamId: finalChunk?.id,
+  // });
+  // expect(finalChunk?.id?.length).toBeGreaterThan(1);
 });
 
 test("Test ChatBedrockConverse can invoke tools", async () => {
