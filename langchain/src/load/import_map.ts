@@ -59,7 +59,6 @@ export * as experimental__babyagi from "../experimental/babyagi/index.js";
 export * as experimental__generative_agents from "../experimental/generative_agents/index.js";
 export * as experimental__plan_and_execute from "../experimental/plan_and_execute/index.js";
 export * as experimental__chains__violation_of_expectations from "../experimental/chains/violation_of_expectations/index.js";
-export * as experimental__chat_models__chrome_ai from "../experimental/chrome_ai/chat_models.js";
 export * as experimental__masking from "../experimental/masking/index.js";
 export * as experimental__prompts__custom_format from "../experimental/prompts/custom_format.js";
 export * as evaluation from "../evaluation/index.js";

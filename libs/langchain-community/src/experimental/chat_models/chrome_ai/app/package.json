@@ -10,7 +10,7 @@
     "webpack-cli": "^5.1.4"
   },
   "dependencies": {
-    "@langchain/openai": "file:../../../../../libs/langchain-openai",
-    "langchain": "file:../../../../"
+    "@langchain/community": "file:../../../../../",
+    "@langchain/openai": "file:../../../../../../langchain-openai"
   }
 }

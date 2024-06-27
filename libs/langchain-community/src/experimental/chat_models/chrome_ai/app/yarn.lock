@@ -64,7 +64,388 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@langchain/core@npm:>0.2.0 <0.3.0, @langchain/core@npm:>=0.2.8 <0.3.0, @langchain/core@npm:~0.2.0":
+"@langchain/community@file:../../../../../::locator=chrome_ai%40workspace%3A.":
+  version: 0.2.14
+  resolution: "@langchain/community@file:../../../../../#../../../../../::hash=6c19e0&locator=chrome_ai%40workspace%3A."
+  dependencies:
+    "@langchain/core": ~0.2.9
+    "@langchain/openai": ~0.1.0
+    binary-extensions: ^2.2.0
+    expr-eval: ^2.0.2
+    flat: ^5.0.2
+    js-yaml: ^4.1.0
+    langchain: 0.2.3
+    langsmith: ~0.1.30
+    uuid: ^9.0.0
+    zod: ^3.22.3
+    zod-to-json-schema: ^3.22.5
+  peerDependencies:
+    "@aws-crypto/sha256-js": ^5.0.0
+    "@aws-sdk/client-bedrock-agent-runtime": ^3.583.0
+    "@aws-sdk/client-bedrock-runtime": ^3.422.0
+    "@aws-sdk/client-dynamodb": ^3.310.0
+    "@aws-sdk/client-kendra": ^3.352.0
+    "@aws-sdk/client-lambda": ^3.310.0
+    "@aws-sdk/client-s3": ^3.310.0
+    "@aws-sdk/client-sagemaker-runtime": ^3.310.0
+    "@aws-sdk/client-sfn": ^3.310.0
+    "@aws-sdk/credential-provider-node": ^3.388.0
+    "@azure/search-documents": ^12.0.0
+    "@azure/storage-blob": ^12.15.0
+    "@browserbasehq/sdk": "*"
+    "@clickhouse/client": ^0.2.5
+    "@cloudflare/ai": "*"
+    "@datastax/astra-db-ts": ^1.0.0
+    "@elastic/elasticsearch": ^8.4.0
+    "@getmetal/metal-sdk": "*"
+    "@getzep/zep-cloud": ^1.0.6
+    "@getzep/zep-js": ^0.9.0
+    "@gomomento/sdk": ^1.51.1
+    "@gomomento/sdk-core": ^1.51.1
+    "@google-ai/generativelanguage": "*"
+    "@google-cloud/storage": ^6.10.1 || ^7.7.0
+    "@gradientai/nodejs-sdk": ^1.2.0
+    "@huggingface/inference": ^2.6.4
+    "@layerup/layerup-security": ^1.5.12
+    "@mendable/firecrawl-js": ^0.0.13
+    "@mlc-ai/web-llm": 0.2.46
+    "@mozilla/readability": "*"
+    "@neondatabase/serverless": "*"
+    "@notionhq/client": ^2.2.10
+    "@opensearch-project/opensearch": "*"
+    "@pinecone-database/pinecone": "*"
+    "@planetscale/database": ^1.8.0
+    "@premai/prem-sdk": ^0.3.25
+    "@qdrant/js-client-rest": ^1.8.2
+    "@raycast/api": ^1.55.2
+    "@rockset/client": ^0.9.1
+    "@smithy/eventstream-codec": ^2.0.5
+    "@smithy/protocol-http": ^3.0.6
+    "@smithy/signature-v4": ^2.0.10
+    "@smithy/util-utf8": ^2.0.0
+    "@spider-cloud/spider-client": ^0.0.21
+    "@supabase/postgrest-js": ^1.1.1
+    "@supabase/supabase-js": ^2.10.0
+    "@tensorflow-models/universal-sentence-encoder": "*"
+    "@tensorflow/tfjs-converter": "*"
+    "@tensorflow/tfjs-core": "*"
+    "@upstash/ratelimit": ^1.1.3
+    "@upstash/redis": ^1.20.6
+    "@upstash/vector": ^1.1.1
+    "@vercel/kv": ^0.2.3
+    "@vercel/postgres": ^0.5.0
+    "@writerai/writer-sdk": ^0.40.2
+    "@xata.io/client": ^0.28.0
+    "@xenova/transformers": ^2.5.4
+    "@zilliz/milvus2-sdk-node": ">=2.3.5"
+    apify-client: ^2.7.1
+    assemblyai: ^4.0.0
+    better-sqlite3: ">=9.4.0 <12.0.0"
+    cassandra-driver: ^4.7.2
+    cborg: ^4.1.1
+    cheerio: ^1.0.0-rc.12
+    chromadb: "*"
+    closevector-common: 0.1.3
+    closevector-node: 0.1.6
+    closevector-web: 0.1.6
+    cohere-ai: "*"
+    convex: ^1.3.1
+    couchbase: ^4.3.0
+    crypto-js: ^4.2.0
+    d3-dsv: ^2.0.0
+    discord.js: ^14.14.1
+    dria: ^0.0.3
+    duck-duck-scrape: ^2.2.5
+    epub2: ^3.0.1
+    faiss-node: ^0.5.1
+    firebase-admin: ^11.9.0 || ^12.0.0
+    google-auth-library: "*"
+    googleapis: ^126.0.1
+    hnswlib-node: ^3.0.0
+    html-to-text: ^9.0.5
+    ignore: ^5.2.0
+    interface-datastore: ^8.2.11
+    ioredis: ^5.3.2
+    it-all: ^3.0.4
+    jsdom: "*"
+    jsonwebtoken: ^9.0.2
+    llmonitor: ^0.5.9
+    lodash: ^4.17.21
+    lunary: ^0.6.11
+    mammoth: ^1.6.0
+    mongodb: ">=5.2.0"
+    mysql2: ^3.3.3
+    neo4j-driver: "*"
+    node-llama-cpp: "*"
+    notion-to-md: ^3.1.0
+    officeparser: ^4.0.4
+    pdf-parse: 1.1.1
+    pg: ^8.11.0
+    pg-copy-streams: ^6.0.5
+    pickleparser: ^0.2.1
+    playwright: ^1.32.1
+    portkey-ai: ^0.1.11
+    puppeteer: ^19.7.2
+    redis: "*"
+    replicate: ^0.29.4
+    sonix-speech-recognition: ^2.1.1
+    srt-parser-2: ^1.2.3
+    typeorm: ^0.3.20
+    typesense: ^1.5.3
+    usearch: ^1.1.1
+    vectordb: ^0.1.4
+    voy-search: 0.6.2
+    weaviate-ts-client: "*"
+    web-auth-library: ^1.0.3
+    ws: ^8.14.2
+    youtube-transcript: ^1.0.6
+    youtubei.js: ^9.1.0
+  peerDependenciesMeta:
+    "@aws-crypto/sha256-js":
+      optional: true
+    "@aws-sdk/client-bedrock-agent-runtime":
+      optional: true
+    "@aws-sdk/client-bedrock-runtime":
+      optional: true
+    "@aws-sdk/client-dynamodb":
+      optional: true
+    "@aws-sdk/client-kendra":
+      optional: true
+    "@aws-sdk/client-lambda":
+      optional: true
+    "@aws-sdk/client-s3":
+      optional: true
+    "@aws-sdk/client-sagemaker-runtime":
+      optional: true
+    "@aws-sdk/client-sfn":
+      optional: true
+    "@aws-sdk/credential-provider-node":
+      optional: true
+    "@azure/search-documents":
+      optional: true
+    "@azure/storage-blob":
+      optional: true
+    "@browserbasehq/sdk":
+      optional: true
+    "@clickhouse/client":
+      optional: true
+    "@cloudflare/ai":
+      optional: true
+    "@datastax/astra-db-ts":
+      optional: true
+    "@elastic/elasticsearch":
+      optional: true
+    "@getmetal/metal-sdk":
+      optional: true
+    "@getzep/zep-cloud":
+      optional: true
+    "@getzep/zep-js":
+      optional: true
+    "@gomomento/sdk":
+      optional: true
+    "@gomomento/sdk-core":
+      optional: true
+    "@google-ai/generativelanguage":
+      optional: true
+    "@google-cloud/storage":
+      optional: true
+    "@gradientai/nodejs-sdk":
+      optional: true
+    "@huggingface/inference":
+      optional: true
+    "@layerup/layerup-security":
+      optional: true
+    "@mendable/firecrawl-js":
+      optional: true
+    "@mlc-ai/web-llm":
+      optional: true
+    "@mozilla/readability":
+      optional: true
+    "@neondatabase/serverless":
+      optional: true
+    "@notionhq/client":
+      optional: true
+    "@opensearch-project/opensearch":
+      optional: true
+    "@pinecone-database/pinecone":
+      optional: true
+    "@planetscale/database":
+      optional: true
+    "@premai/prem-sdk":
+      optional: true
+    "@qdrant/js-client-rest":
+      optional: true
+    "@raycast/api":
+      optional: true
+    "@rockset/client":
+      optional: true
+    "@smithy/eventstream-codec":
+      optional: true
+    "@smithy/protocol-http":
+      optional: true
+    "@smithy/signature-v4":
+      optional: true
+    "@smithy/util-utf8":
+      optional: true
+    "@spider-cloud/spider-client":
+      optional: true
+    "@supabase/postgrest-js":
+      optional: true
+    "@supabase/supabase-js":
+      optional: true
+    "@tensorflow-models/universal-sentence-encoder":
+      optional: true
+    "@tensorflow/tfjs-converter":
+      optional: true
+    "@tensorflow/tfjs-core":
+      optional: true
+    "@upstash/ratelimit":
+      optional: true
+    "@upstash/redis":
+      optional: true
+    "@upstash/vector":
+      optional: true
+    "@vercel/kv":
+      optional: true
+    "@vercel/postgres":
+      optional: true
+    "@writerai/writer-sdk":
+      optional: true
+    "@xata.io/client":
+      optional: true
+    "@xenova/transformers":
+      optional: true
+    "@zilliz/milvus2-sdk-node":
+      optional: true
+    apify-client:
+      optional: true
+    assemblyai:
+      optional: true
+    better-sqlite3:
+      optional: true
+    cassandra-driver:
+      optional: true
+    cborg:
+      optional: true
+    cheerio:
+      optional: true
+    chromadb:
+      optional: true
+    closevector-common:
+      optional: true
+    closevector-node:
+      optional: true
+    closevector-web:
+      optional: true
+    cohere-ai:
+      optional: true
+    convex:
+      optional: true
+    couchbase:
+      optional: true
+    crypto-js:
+      optional: true
+    d3-dsv:
+      optional: true
+    discord.js:
+      optional: true
+    dria:
+      optional: true
+    duck-duck-scrape:
+      optional: true
+    epub2:
+      optional: true
+    faiss-node:
+      optional: true
+    firebase-admin:
+      optional: true
+    google-auth-library:
+      optional: true
+    googleapis:
+      optional: true
+    hnswlib-node:
+      optional: true
+    html-to-text:
+      optional: true
+    ignore:
+      optional: true
+    interface-datastore:
+      optional: true
+    ioredis:
+      optional: true
+    it-all:
+      optional: true
+    jsdom:
+      optional: true
+    jsonwebtoken:
+      optional: true
+    llmonitor:
+      optional: true
+    lodash:
+      optional: true
+    lunary:
+      optional: true
+    mammoth:
+      optional: true
+    mongodb:
+      optional: true
+    mysql2:
+      optional: true
+    neo4j-driver:
+      optional: true
+    node-llama-cpp:
+      optional: true
+    notion-to-md:
+      optional: true
+    officeparser:
+      optional: true
+    pdf-parse:
+      optional: true
+    pg:
+      optional: true
+    pg-copy-streams:
+      optional: true
+    pickleparser:
+      optional: true
+    playwright:
+      optional: true
+    portkey-ai:
+      optional: true
+    puppeteer:
+      optional: true
+    redis:
+      optional: true
+    replicate:
+      optional: true
+    sonix-speech-recognition:
+      optional: true
+    srt-parser-2:
+      optional: true
+    typeorm:
+      optional: true
+    typesense:
+      optional: true
+    usearch:
+      optional: true
+    vectordb:
+      optional: true
+    voy-search:
+      optional: true
+    weaviate-ts-client:
+      optional: true
+    web-auth-library:
+      optional: true
+    ws:
+      optional: true
+    youtube-transcript:
+      optional: true
+    youtubei.js:
+      optional: true
+  checksum: 337c8e37919b753c7818ca0a722f4d3de79b9df7ba3e5cdac9a40453db4bf13c15025cd9a2b8e64bdb4277ffefe1483e9c3ee1db01db83c0472bbf60e812598b
+  languageName: node
+  linkType: hard
+
+"@langchain/core@npm:>0.1.56 <0.3.0, @langchain/core@npm:>0.2.0 <0.3.0, @langchain/core@npm:>=0.2.5 <0.3.0, @langchain/core@npm:>=0.2.8 <0.3.0, @langchain/core@npm:~0.2.0, @langchain/core@npm:~0.2.9":
   version: 0.2.10
   resolution: "@langchain/core@npm:0.2.10"
   dependencies:
@@ -84,29 +465,42 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@langchain/openai@file:../../../../../libs/langchain-openai::locator=chrome_ai%40workspace%3A.":
-  version: 0.2.0
-  resolution: "@langchain/openai@file:../../../../../libs/langchain-openai#../../../../../libs/langchain-openai::hash=1fbca0&locator=chrome_ai%40workspace%3A."
+"@langchain/openai@file:../../../../../../langchain-openai::locator=chrome_ai%40workspace%3A.":
+  version: 0.2.1
+  resolution: "@langchain/openai@file:../../../../../../langchain-openai#../../../../../../langchain-openai::hash=54b7d6&locator=chrome_ai%40workspace%3A."
   dependencies:
     "@langchain/core": ">=0.2.8 <0.3.0"
     js-tiktoken: ^1.0.12
     openai: ^4.49.1
     zod: ^3.22.4
     zod-to-json-schema: ^3.22.3
-  checksum: bee5a6cebd31e036d531fe00f3fa477bf41f18778931753cf9ed1b3acab35fd2fc2baf0192b5a05e709736ec0a117e73440ce01975a5bde7b902ca58cf708344
+  checksum: 448dfb7a2b99f4d742d2a328e473d59b5a578db05c843b378b0f88c85bdbd540a9f24451e427177915b5da31bed85665ad086c514d36ee20a1b76ac95a957883
   languageName: node
   linkType: hard
 
-"@langchain/openai@npm:>=0.1.0 <0.3.0":
-  version: 0.2.0
-  resolution: "@langchain/openai@npm:0.2.0"
+"@langchain/openai@npm:~0.0.28":
+  version: 0.0.34
+  resolution: "@langchain/openai@npm:0.0.34"
   dependencies:
-    "@langchain/core": ">=0.2.8 <0.3.0"
+    "@langchain/core": ">0.1.56 <0.3.0"
+    js-tiktoken: ^1.0.12
+    openai: ^4.41.1
+    zod: ^3.22.4
+    zod-to-json-schema: ^3.22.3
+  checksum: d2a5568b7fd0507af2510d68cf568945d5c7f6e45f57ac1178f65d0092e0437e7c908e2af3e20b829ce4507f63e71ddc38df7dc35b7e3d21394daa380243e297
+  languageName: node
+  linkType: hard
+
+"@langchain/openai@npm:~0.1.0":
+  version: 0.1.3
+  resolution: "@langchain/openai@npm:0.1.3"
+  dependencies:
+    "@langchain/core": ">=0.2.5 <0.3.0"
     js-tiktoken: ^1.0.12
     openai: ^4.49.1
     zod: ^3.22.4
     zod-to-json-schema: ^3.22.3
-  checksum: 47b7fb04a968bad9a69363eeaf6e7ec956179f49d0317779e5604f3197ac637888bdb2854025f117bf89455bcf2a6cf4fae17a16c21563135ee68a9fee2bbdec
+  checksum: 43aaafad2e1416bc23846c6c5084502025d3972c0b11b2ef2bcefd9da3dc1cd933cdf838c596404584af024adccc26e34476fededed0e614a19b47a4e5a8c8e5
   languageName: node
   linkType: hard
 
@@ -589,9 +983,9 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "chrome_ai@workspace:."
   dependencies:
-    "@langchain/openai": "file:../../../../../libs/langchain-openai"
+    "@langchain/community": "file:../../../../../"
+    "@langchain/openai": "file:../../../../../../langchain-openai"
     http-server: ^14.0.1
-    langchain: "file:../../../../"
     webpack: ^5.92.1
     webpack-cli: ^5.1.4
   languageName: unknown
@@ -813,6 +1207,13 @@ __metadata:
   version: 3.3.0
   resolution: "events@npm:3.3.0"
   checksum: f6f487ad2198aa41d878fa31452f1a3c00958f46e9019286ff4787c84aac329332ab45c9cdc8c445928fc6d7ded294b9e005a7fce9426488518017831b272780
+  languageName: node
+  linkType: hard
+
+"expr-eval@npm:^2.0.2":
+  version: 2.0.2
+  resolution: "expr-eval@npm:2.0.2"
+  checksum: 01862f09b50b17b45a6268b1153280afede99e1b51752a323661f7f4010eaed34cd6c682bf439b7f8a92df6aa82f326f0ce0aa20964d175feee97377fe53921d
   languageName: node
   linkType: hard
 
@@ -1163,19 +1564,19 @@ __metadata:
   languageName: node
   linkType: hard
 
-"langchain@file:../../../../::locator=chrome_ai%40workspace%3A.":
-  version: 0.2.7
-  resolution: "langchain@file:../../../../#../../../../::hash=4f9e2d&locator=chrome_ai%40workspace%3A."
+"langchain@npm:0.2.3":
+  version: 0.2.3
+  resolution: "langchain@npm:0.2.3"
   dependencies:
     "@langchain/core": ~0.2.0
-    "@langchain/openai": ">=0.1.0 <0.3.0"
+    "@langchain/openai": ~0.0.28
     "@langchain/textsplitters": ~0.0.0
     binary-extensions: ^2.2.0
     js-tiktoken: ^1.0.12
     js-yaml: ^4.1.0
     jsonpointer: ^5.0.1
     langchainhub: ~0.0.8
-    langsmith: ~0.1.30
+    langsmith: ~0.1.7
     ml-distance: ^4.0.0
     openapi-types: ^12.1.3
     p-retry: 4
@@ -1227,7 +1628,7 @@ __metadata:
     redis: ^4.6.4
     sonix-speech-recognition: ^2.1.1
     srt-parser-2: ^1.2.3
-    typeorm: ^0.3.20
+    typeorm: ^0.3.12
     weaviate-ts-client: "*"
     web-auth-library: ^1.0.3
     ws: ^8.14.2
@@ -1334,7 +1735,7 @@ __metadata:
       optional: true
     youtubei.js:
       optional: true
-  checksum: b5094561ed6a8826c8c8240f492372ba7dd3afdeecce3ec1fdd9c7e85d99428e0e70849d3dc1681e834d378f62f1e7f9f5e407ff3dcbc87287c26191657f9c31
+  checksum: 92507963c919a2d6c9bc20055b93b1271045ba760f9af340d1fe7ef9a2a3c6382eaf6c622bed16c5680a6bf26553520cbafd13fd94b8e66b176ba31fe8106020
   languageName: node
   linkType: hard
 
@@ -1345,7 +1746,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"langsmith@npm:~0.1.30":
+"langsmith@npm:~0.1.30, langsmith@npm:~0.1.7":
   version: 0.1.34
   resolution: "langsmith@npm:0.1.34"
   dependencies:
@@ -1561,7 +1962,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"openai@npm:^4.49.1":
+"openai@npm:^4.41.1, openai@npm:^4.49.1":
   version: 4.52.1
   resolution: "openai@npm:4.52.1"
   dependencies:
@@ -2204,7 +2605,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"zod-to-json-schema@npm:^3.22.3":
+"zod-to-json-schema@npm:^3.22.3, zod-to-json-schema@npm:^3.22.5":
   version: 3.23.1
   resolution: "zod-to-json-schema@npm:3.23.1"
   peerDependencies:
@@ -2213,7 +2614,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"zod@npm:^3.22.4":
+"zod@npm:^3.22.3, zod@npm:^3.22.4":
   version: 3.23.8
   resolution: "zod@npm:3.23.8"
   checksum: 15949ff82118f59c893dacd9d3c766d02b6fa2e71cf474d5aa888570c469dbf5446ac5ad562bb035bf7ac9650da94f290655c194f4a6de3e766f43febd432c5c

@@ -9,6 +9,7 @@ import CodeBlock from "@theme/CodeBlock";
 :::info
 This feature is **experimental** and is subject to change.
 :::
+
 :::note
 The `Built-in AI Early Preview Program` by Google is currently in beta. To apply for access or find more information, please visit [this link](https://developer.chrome.com/docs/ai/built-in).
 :::
@@ -23,7 +24,7 @@ Once you've been granted access to the program, follow all steps to download the
 Once downloaded, you can start using `ChatChromeAI` in the browser as follows:
 
 ```typescript
-import { ChatChromeAI } from "langchain/experimental/chat_models/chrome_ai";
+import { ChatChromeAI } from "@langchain/community/experimental/chat_models/chrome_ai";
 import { HumanMessage } from "@langchain/core/messages";
 
 const model = new ChatChromeAI({
@@ -55,4 +56,4 @@ for await (const chunk of await model.stream([message])) {
 ```
 
 We also have a simple demo application which you can copy to instantly start running `ChatChromeAI` in your browser.
-Navigate to the [README.md](https://github.com/langchain-ai/langchainjs/tree/main/langchain/src/experimental/chrome_ai/app/README.md) in the `./app` directory of the integration for more instructions.
+Navigate to the [README.md](https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-community/src/experimental/chrome_ai/app/README.md) in the `./app` directory of the integration for more instructions.

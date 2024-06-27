@@ -1,4 +1,4 @@
-import { ChatChromeAI } from "langchain/experimental/chat_models/chrome_ai";
+import { ChatChromeAI } from "@langchain/community/experimental/chat_models/chrome_ai";
 import { encodingForModel } from "@langchain/core/utils/tiktoken";
 
 const model = new ChatChromeAI();
