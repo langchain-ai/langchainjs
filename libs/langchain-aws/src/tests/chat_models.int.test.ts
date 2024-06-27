@@ -227,7 +227,7 @@ test("Test ChatBedrockConverse can invoke tools with non anthropic model", async
   expect(result.tool_calls?.[0].id).toBeDefined();
 });
 
-test.only("Test ChatBedrockConverse can stream tools", async () => {
+test("Test ChatBedrockConverse can stream tools", async () => {
   const model = new ChatBedrockConverse({
     ...baseConstructorArgs,
   });
@@ -264,4 +264,53 @@ test.only("Test ChatBedrockConverse can stream tools", async () => {
   console.log("result.tool_calls?.[0]", finalChunk?.tool_calls?.[0]);
   expect(finalChunk?.tool_calls?.[0].name).toBe("get_weather");
   expect(finalChunk?.tool_calls?.[0].id).toBeDefined();
+});
+
+test("Test ChatBedrockConverse tool_choice works", async () => {
+  const model = new ChatBedrockConverse({
+    ...baseConstructorArgs,
+  });
+  const tools = [
+    tool(
+      (input) => {
+        console.log("tool", input);
+        return "Hello";
+      },
+      {
+        name: "get_weather",
+        description: "Get the weather",
+        schema: z.object({
+          location: z.string().describe("Location to get the weather for"),
+        }),
+      }
+    ),
+    tool(
+      (input) => {
+        console.log("tool", input);
+        return "Hello";
+      },
+      {
+        name: "calculator",
+        description: "Sum two numbers",
+        schema: z.object({
+          a: z.number().describe("First number to sum"),
+          b: z.number().describe("Second number to sum"),
+        }),
+      }
+    ),
+  ];
+  const modelWithTools = model.bindTools(tools, {
+    tool_choice: "get_weather",
+  });
+  const result = await modelWithTools.invoke([
+    new HumanMessage(
+      "What is 261319136 plus 81863183? It is VERY important you tell me the answer to that math problem."
+    ),
+  ]);
+
+  expect(result.tool_calls).toBeDefined();
+  expect(result.tool_calls).toHaveLength(1);
+  console.log("result.tool_calls?.[0]", result.tool_calls?.[0]);
+  expect(result.tool_calls?.[0].name).toBe("get_weather");
+  expect(result.tool_calls?.[0].id).toBeDefined();
 });
