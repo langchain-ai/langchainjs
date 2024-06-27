@@ -11,7 +11,11 @@ import {
   LangSmithParams,
   BaseChatModelCallOptions,
 } from "@langchain/core/language_models/chat_models";
-import { BaseLanguageModelInput } from "@langchain/core/language_models/base";
+import {
+  BaseLanguageModelInput,
+  ToolDefinition,
+  isOpenAITool,
+} from "@langchain/core/language_models/base";
 import { Runnable } from "@langchain/core/runnables";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import {
@@ -32,12 +36,15 @@ import { isStructuredTool } from "@langchain/core/utils/function_calling";
 import { ToolCall } from "@langchain/core/messages/tool";
 import { zodToJsonSchema } from "zod-to-json-schema";
 
+import type { SerializedFields } from "../../load/map_keys.js";
 import {
   BaseBedrockInput,
   BedrockLLMInputOutputAdapter,
   type CredentialType,
 } from "../../utils/bedrock/index.js";
-import type { SerializedFields } from "../../load/map_keys.js";
+import { isAnthropicTool } from "../../utils/bedrock/anthropic.js";
+
+type AnthropicTool = Record<string, unknown>;
 
 const PRELUDE_TOTAL_LENGTH_BYTES = 4;
 
@@ -98,6 +105,49 @@ export function convertMessagesToPrompt(
   }
   throw new Error(`Provider ${provider} does not support chat.`);
 }
+
+function formatTools(tools: BedrockChatCallOptions["tools"]): AnthropicTool[] {
+  if (!tools || !tools.length) {
+    return [];
+  }
+  if (tools.every((tc) => isStructuredTool(tc))) {
+    return (tools as StructuredToolInterface[]).map((tc) => ({
+      name: tc.name,
+      description: tc.description,
+      input_schema: zodToJsonSchema(tc.schema),
+    }));
+  }
+  if (tools.every((tc) => isOpenAITool(tc))) {
+    return (tools as ToolDefinition[]).map((tc) => ({
+      name: tc.function.name,
+      description: tc.function.description,
+      input_schema: tc.function.parameters,
+    }));
+  }
+
+  if (tools.every((tc) => isAnthropicTool(tc))) {
+    return tools as AnthropicTool[];
+  }
+
+  if (
+    tools.some((tc) => isStructuredTool(tc)) ||
+    tools.some((tc) => isOpenAITool(tc)) ||
+    tools.some((tc) => isAnthropicTool(tc))
+  ) {
+    throw new Error(
+      "All tools passed to BedrockChat must be of the same type."
+    );
+  }
+  throw new Error("Invalid tool format received.");
+}
+
+export interface BedrockChatCallOptions extends BaseChatModelCallOptions {
+  tools?: (StructuredToolInterface | AnthropicTool | ToolDefinition)[];
+}
+
+export interface BedrockChatFields
+  extends Partial<BaseBedrockInput>,
+    BaseChatModelParams {}
 
 /**
  * A type of Large Language Model (LLM) that interacts with the Bedrock
@@ -195,7 +245,10 @@ export function convertMessagesToPrompt(
  * runStreaming().catch(console.error);
  * ```
  */
-export class BedrockChat extends BaseChatModel implements BaseBedrockInput {
+export class BedrockChat
+  extends BaseChatModel<BedrockChatCallOptions, AIMessageChunk>
+  implements BaseBedrockInput
+{
   model = "amazon.titan-tg1-large";
 
   region: string;
@@ -234,7 +287,7 @@ export class BedrockChat extends BaseChatModel implements BaseBedrockInput {
     streamProcessingMode: "SYNCHRONOUS" | "ASYNCHRONOUS";
   };
 
-  protected _anthropicTools?: Record<string, unknown>[];
+  protected _anthropicTools?: AnthropicTool[];
 
   get lc_aliases(): Record<string, string> {
     return {
@@ -268,7 +321,7 @@ export class BedrockChat extends BaseChatModel implements BaseBedrockInput {
     return "BedrockChat";
   }
 
-  constructor(fields?: Partial<BaseBedrockInput> & BaseChatModelParams) {
+  constructor(fields?: BedrockChatFields) {
     super(fields ?? {});
 
     this.model = fields?.model ?? this.model;
@@ -318,11 +371,14 @@ export class BedrockChat extends BaseChatModel implements BaseBedrockInput {
   }
 
   override invocationParams(options?: this["ParsedCallOptions"]) {
+    const callOptionTools = formatTools(options?.tools ?? []);
     return {
-      tools: this._anthropicTools,
+      tools: [...(this._anthropicTools ?? []), ...callOptionTools],
       temperature: this.temperature,
       max_tokens: this.maxTokens,
-      stop: options?.stop,
+      stop: options?.stop ?? this.stopSequences,
+      modelKwargs: this.modelKwargs,
+      guardrailConfig: this.guardrailConfig,
     };
   }
 
@@ -340,7 +396,7 @@ export class BedrockChat extends BaseChatModel implements BaseBedrockInput {
 
   async _generate(
     messages: BaseMessage[],
-    options: Partial<BaseChatModelParams>,
+    options: Partial<this["ParsedCallOptions"]>,
     runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
     if (this.streaming) {
@@ -368,7 +424,7 @@ export class BedrockChat extends BaseChatModel implements BaseBedrockInput {
 
   async _generateNonStreaming(
     messages: BaseMessage[],
-    options: Partial<BaseChatModelParams>,
+    options: Partial<this["ParsedCallOptions"]>,
     _runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
     const service = "bedrock-runtime";
@@ -412,26 +468,34 @@ export class BedrockChat extends BaseChatModel implements BaseBedrockInput {
     }
   ) {
     const { bedrockMethod, endpointHost, provider } = fields;
+    const {
+      max_tokens,
+      temperature,
+      stop,
+      modelKwargs,
+      guardrailConfig,
+      tools,
+    } = this.invocationParams(options);
     const inputBody = this.usesMessagesApi
       ? BedrockLLMInputOutputAdapter.prepareMessagesInput(
           provider,
           messages,
-          this.maxTokens,
-          this.temperature,
-          options.stop ?? this.stopSequences,
-          this.modelKwargs,
-          this.guardrailConfig,
-          this._anthropicTools
+          max_tokens,
+          temperature,
+          stop,
+          modelKwargs,
+          guardrailConfig,
+          tools
         )
       : BedrockLLMInputOutputAdapter.prepareInput(
           provider,
           convertMessagesToPromptAnthropic(messages),
-          this.maxTokens,
-          this.temperature,
-          options.stop ?? this.stopSequences,
-          this.modelKwargs,
+          max_tokens,
+          temperature,
+          stop,
+          modelKwargs,
           fields.bedrockMethod,
-          this.guardrailConfig
+          guardrailConfig
         );
 
     const url = new URL(
@@ -680,12 +744,12 @@ export class BedrockChat extends BaseChatModel implements BaseBedrockInput {
   }
 
   override bindTools(
-    tools: (StructuredToolInterface | Record<string, unknown>)[],
-    _kwargs?: Partial<BaseChatModelCallOptions>
+    tools: (StructuredToolInterface | AnthropicTool | ToolDefinition)[],
+    _kwargs?: Partial<this["ParsedCallOptions"]>
   ): Runnable<
     BaseLanguageModelInput,
     BaseMessageChunk,
-    BaseChatModelCallOptions
+    this["ParsedCallOptions"]
   > {
     const provider = this.model.split(".")[0];
     if (provider !== "anthropic") {
@@ -693,16 +757,7 @@ export class BedrockChat extends BaseChatModel implements BaseBedrockInput {
         "Currently, tool calling through Bedrock is only supported for Anthropic models."
       );
     }
-    this._anthropicTools = tools.map((tool) => {
-      if (isStructuredTool(tool)) {
-        return {
-          name: tool.name,
-          description: tool.description,
-          input_schema: zodToJsonSchema(tool.schema),
-        };
-      }
-      return tool;
-    });
+    this._anthropicTools = formatTools(tools);
     return this;
   }
 }

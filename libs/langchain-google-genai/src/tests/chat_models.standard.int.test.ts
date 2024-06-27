@@ -26,46 +26,6 @@ class ChatGoogleGenerativeAIStandardIntegrationTests extends ChatModelIntegratio
       },
     });
   }
-
-  async testUsageMetadataStreaming() {
-    this.skipTestMessage(
-      "testUsageMetadataStreaming",
-      "ChatGoogleGenerativeAI",
-      "Streaming tokens is not currently supported."
-    );
-  }
-
-  async testUsageMetadata() {
-    this.skipTestMessage(
-      "testUsageMetadata",
-      "ChatGoogleGenerativeAI",
-      "Usage metadata tokens is not currently supported."
-    );
-  }
-
-  async testToolMessageHistoriesStringContent() {
-    this.skipTestMessage(
-      "testToolMessageHistoriesStringContent",
-      "ChatGoogleGenerativeAI",
-      "Not implemented."
-    );
-  }
-
-  async testToolMessageHistoriesListContent() {
-    this.skipTestMessage(
-      "testToolMessageHistoriesListContent",
-      "ChatGoogleGenerativeAI",
-      "Not implemented."
-    );
-  }
-
-  async testStructuredFewShotExamples() {
-    this.skipTestMessage(
-      "testStructuredFewShotExamples",
-      "ChatGoogleGenerativeAI",
-      ".bindTools not implemented properly."
-    );
-  }
 }
 
 const testClass = new ChatGoogleGenerativeAIStandardIntegrationTests();

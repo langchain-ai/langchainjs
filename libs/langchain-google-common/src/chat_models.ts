@@ -1,5 +1,5 @@
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
-import { type BaseMessage } from "@langchain/core/messages";
+import { UsageMetadata, type BaseMessage } from "@langchain/core/messages";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 
 import {
@@ -12,6 +12,8 @@ import { AIMessageChunk } from "@langchain/core/messages";
 import {
   BaseLanguageModelInput,
   StructuredOutputMethodOptions,
+  ToolDefinition,
+  isOpenAITool,
 } from "@langchain/core/language_models/base";
 import type { z } from "zod";
 import {
@@ -50,7 +52,10 @@ import type {
   GeminiFunctionDeclaration,
   GeminiFunctionSchema,
 } from "./types.js";
-import { zodToGeminiParameters } from "./utils/zod_to_gemini_parameters.js";
+import {
+  jsonSchemaToGeminiParameters,
+  zodToGeminiParameters,
+} from "./utils/zod_to_gemini_parameters.js";
 
 class ChatConnection<AuthOptions> extends AbstractGoogleLLMConnection<
   BaseMessage[],
@@ -151,10 +156,15 @@ export interface ChatGoogleBaseInput<AuthOptions>
     GoogleConnectionParams<AuthOptions>,
     GoogleAIModelParams,
     GoogleAISafetyParams,
-    GeminiAPIConfig {}
+    GeminiAPIConfig,
+    Pick<GoogleAIBaseLanguageModelCallOptions, "streamUsage"> {}
 
 function convertToGeminiTools(
-  structuredTools: (StructuredToolInterface | Record<string, unknown>)[]
+  structuredTools: (
+    | StructuredToolInterface
+    | Record<string, unknown>
+    | ToolDefinition
+  )[]
 ): GeminiTool[] {
   return [
     {
@@ -166,6 +176,17 @@ function convertToGeminiTools(
               name: structuredTool.name,
               description: structuredTool.description,
               parameters: jsonSchema as GeminiFunctionSchema,
+            };
+          }
+          if (isOpenAITool(structuredTool)) {
+            return {
+              name: structuredTool.function.name,
+              description:
+                structuredTool.function.description ??
+                `A function available to call.`,
+              parameters: jsonSchemaToGeminiParameters(
+                structuredTool.function.parameters
+              ),
             };
           }
           return structuredTool as unknown as GeminiFunctionDeclaration;
@@ -217,6 +238,8 @@ export abstract class ChatGoogleBase<AuthOptions>
 
   safetyHandler: GoogleAISafetyHandler;
 
+  streamUsage = true;
+
   protected connection: ChatConnection<AuthOptions>;
 
   protected streamedConnection: ChatConnection<AuthOptions>;
@@ -227,7 +250,7 @@ export abstract class ChatGoogleBase<AuthOptions>
     copyAndValidateModelParamsInto(fields, this);
     this.safetyHandler =
       fields?.safetyHandler ?? new DefaultGeminiSafetyHandler();
-
+    this.streamUsage = fields?.streamUsage ?? this.streamUsage;
     const client = this.buildClient(fields);
     this.buildConnection(fields ?? {}, client);
   }
@@ -291,7 +314,11 @@ export abstract class ChatGoogleBase<AuthOptions>
   }
 
   override bindTools(
-    tools: (StructuredToolInterface | Record<string, unknown>)[],
+    tools: (
+      | StructuredToolInterface
+      | Record<string, unknown>
+      | ToolDefinition
+    )[],
     kwargs?: Partial<GoogleAIBaseLanguageModelCallOptions>
   ): Runnable<
     BaseLanguageModelInput,
@@ -343,12 +370,24 @@ export abstract class ChatGoogleBase<AuthOptions>
 
     // Get the streaming parser of the response
     const stream = response.data as JsonStream;
-
+    let usageMetadata: UsageMetadata | undefined;
     // Loop until the end of the stream
     // During the loop, yield each time we get a chunk from the streaming parser
     // that is either available or added to the queue
     while (!stream.streamDone) {
       const output = await stream.nextChunk();
+      if (
+        output &&
+        output.usageMetadata &&
+        this.streamUsage !== false &&
+        options.streamUsage !== false
+      ) {
+        usageMetadata = {
+          input_tokens: output.usageMetadata.promptTokenCount,
+          output_tokens: output.usageMetadata.candidatesTokenCount,
+          total_tokens: output.usageMetadata.totalTokenCount,
+        };
+      }
       const chunk =
         output !== null
           ? this.connection.api.safeResponseToChatGeneration({ data: output }, this.safetyHandler)
@@ -357,6 +396,7 @@ export abstract class ChatGoogleBase<AuthOptions>
               generationInfo: { finishReason: "stop" },
               message: new AIMessageChunk({
                 content: "",
+                usage_metadata: usageMetadata,
               }),
             });
       yield chunk;
