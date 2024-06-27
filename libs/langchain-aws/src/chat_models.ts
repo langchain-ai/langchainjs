@@ -3,6 +3,7 @@ import { AIMessageChunk } from "@langchain/core/messages";
 import type {
   ToolDefinition,
   BaseLanguageModelCallOptions,
+  BaseLanguageModelInput,
 } from "@langchain/core/language_models/base";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {
@@ -26,6 +27,7 @@ import {
 } from "@aws-sdk/credential-provider-node";
 import type { DocumentType as __DocumentType } from "@smithy/types";
 import { StructuredToolInterface } from "@langchain/core/tools";
+import { Runnable } from "@langchain/core/runnables";
 import {
   BedrockToolChoice,
   ConverseCommandParams,
@@ -227,6 +229,23 @@ export class ChatBedrockConverse
     this.endpointHost = rest?.endpointHost;
     this.topP = rest?.topP;
     this.additionalModelRequestFields = rest?.additionalModelRequestFields;
+  }
+
+  override bindTools(
+    tools: (
+      | StructuredToolInterface
+      | BedrockTool
+      | ToolDefinition
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      | Record<string, any>
+    )[],
+    kwargs?: Partial<this["ParsedCallOptions"]>
+  ): Runnable<
+    BaseLanguageModelInput,
+    AIMessageChunk,
+    this["ParsedCallOptions"]
+  > {
+    return this.bind({ tools: convertToConverseTools(tools), ...kwargs });
   }
 
   // Replace

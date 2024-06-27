@@ -1,6 +1,8 @@
 /* eslint-disable no-process-env */
 import { test, expect } from "@jest/globals";
 import { AIMessageChunk, HumanMessage } from "@langchain/core/messages";
+import { tool } from "@langchain/core/tools";
+import { z } from "zod";
 import { ChatBedrockConverse } from "../chat_models.js";
 
 const baseConstructorArgs: Partial<
@@ -25,7 +27,7 @@ test("Test ChatBedrockConverse can invoke", async () => {
   expect(res.content).not.toContain("world");
 });
 
-test.only("Test ChatBedrockConverse stream method", async () => {
+test("Test ChatBedrockConverse stream method", async () => {
   const model = new ChatBedrockConverse({
     ...baseConstructorArgs,
     maxTokens: 50,
@@ -160,4 +162,35 @@ test("populates ID field on AIMessage", async () => {
   });
   expect(finalChunk?.id?.length).toBeGreaterThan(1);
   expect(finalChunk?.id?.startsWith("chatcmpl-")).toBe(true);
+});
+
+test.only("Test ChatBedrockConverse can invoke tools", async () => {
+  const model = new ChatBedrockConverse({
+    ...baseConstructorArgs,
+  });
+  const tools = [
+    tool(
+      (input) => {
+        console.log("tool", input);
+        return "Hello";
+      },
+      {
+        name: "get_weather",
+        description: "Get the weather",
+        schema: z.object({
+          location: z.string().describe("Location to get the weather for"),
+        }),
+      }
+    ),
+  ];
+  const modelWithTools = model.bindTools(tools);
+  const result = await modelWithTools.invoke([
+    new HumanMessage("Get the weather for London"),
+  ]);
+
+  expect(result.tool_calls).toBeDefined();
+  expect(result.tool_calls).toHaveLength(1);
+  console.log("result.tool_calls?.[0]", result.tool_calls?.[0]);
+  expect(result.tool_calls?.[0].name).toBe("get_weather");
+  expect(result.tool_calls?.[0].id).toBeDefined();
 });

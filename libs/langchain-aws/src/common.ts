@@ -200,7 +200,13 @@ export function isBedrockTool(tool: unknown): tool is BedrockTool {
 }
 
 export function convertToConverseTools(
-  tools: (StructuredToolInterface | ToolDefinition | BedrockTool)[]
+  tools: (
+    | StructuredToolInterface
+    | ToolDefinition
+    | BedrockTool
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    | Record<string, any>
+  )[]
 ): BedrockTool[] {
   if (tools.every(isOpenAITool)) {
     return tools.map((tool) => ({
