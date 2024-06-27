@@ -154,6 +154,20 @@ export interface ChatBedrockConverseCallOptions
 
 /**
  * Integration with AWS Bedrock Converse API.
+ * 
+ * @example
+ * ```typescript
+ * import { ChatBedrockConverse } from "@langchain/aws";
+ * const model = new ChatBedrockConverse({
+ *   region: process.env.BEDROCK_AWS_REGION ?? "us-east-1",
+ *   credentials: {
+ *     secretAccessKey: process.env.BEDROCK_AWS_SECRET_ACCESS_KEY!,
+ *     accessKeyId: process.env.BEDROCK_AWS_ACCESS_KEY_ID!,
+ *   },
+ * });
+ * 
+ * const res = await model.invoke([new HumanMessage("Print hello world")]);
+ * ```
  */
 export class ChatBedrockConverse
   extends BaseChatModel<ChatBedrockConverseCallOptions, AIMessageChunk>
@@ -380,10 +394,6 @@ export class ChatBedrockConverse
     };
   }
 
-  /**
-   * Implement to support streaming.
-   * Should yield chunks iteratively.
-   */
   async *_streamResponseChunks(
     messages: BaseMessage[],
     options: this["ParsedCallOptions"],
