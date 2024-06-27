@@ -53,7 +53,7 @@ export class CloudflareVectorizeStore extends VectorStore {
     const { index, textKey, ...asyncCallerArgs } = args;
     if (!index) {
       throw new Error(
-        "Must supply a Vectorize index binding, eg { index: env.VECTORIZE }"
+        "Must supply a Vectorize indexx bindingg, eg { index: env.VECTORIZE }"
       );
     }
     this.index = index;
