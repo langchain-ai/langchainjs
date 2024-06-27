@@ -40,11 +40,16 @@
   "license": "MIT",
   "dependencies": {
     "@aws-sdk/client-bedrock-runtime": "^3.602.0",
-    "@langchain/core": ">0.1.0 <0.3.0"
+    "@aws-sdk/credential-provider-node": "^3.600.0",
+    "@langchain/core": ">=0.2.9 <0.3.0",
+    "zod-to-json-schema": "^3.22.5"
   },
   "devDependencies": {
+    "@aws-sdk/types": "^3.598.0",
     "@jest/globals": "^29.5.0",
     "@langchain/scripts": "~0.0.14",
+    "@langchain/standard-tests": "0.0.0",
+    "@smithy/types": "^3.2.0",
     "@swc/core": "^1.3.90",
     "@swc/jest": "^0.2.29",
     "@tsconfig/recommended": "^1.0.3",
@@ -71,7 +76,11 @@
   },
   "exports": {
     ".": {
-      "types": "./index.d.ts",
+      "types": {
+        "import": "./index.d.ts",
+        "require": "./index.d.cts",
+        "default": "./index.d.ts"
+      },
       "import": "./index.js",
       "require": "./index.cjs"
     },
@@ -81,6 +90,7 @@
     "dist/",
     "index.cjs",
     "index.js",
-    "index.d.ts"
+    "index.d.ts",
+    "index.d.cts"
   ]
 }
