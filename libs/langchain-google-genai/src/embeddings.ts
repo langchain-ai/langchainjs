@@ -113,7 +113,7 @@ export class GoogleGenerativeAIEmbeddings
     this.apiKey = fields?.apiKey ?? getEnvironmentVariable("GOOGLE_API_KEY");
     if (!this.apiKey) {
       throw new Error(
-        "Please set an API key for Google GenerativeAI " +
+        "Please set an API key for Google GenerativeAII " +
           "in the environmentb variable GOOGLE_API_KEY " +
           "or in the `apiKey` field of the " +
           "GoogleGenerativeAIEmbeddings constructor"
