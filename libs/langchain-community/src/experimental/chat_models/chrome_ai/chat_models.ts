@@ -38,6 +38,10 @@ export const enum AIModelAvailability {
 export interface ChromeAIInputs extends BaseChatModelParams {
   topK?: number;
   temperature?: number;
+  /**
+   * An optional function to format the prompt before sending it to the model.
+   */
+  promptFormatter?: (messages: BaseMessage[]) => string;
 }
 
 export interface ChromeAICallOptions extends BaseLanguageModelCallOptions {}
@@ -81,6 +85,8 @@ export class ChatChromeAI extends SimpleChatModel<ChromeAICallOptions> {
 
   topK = 40;
 
+  promptFormatter: (messages: BaseMessage[]) => string;
+
   static lc_name() {
     return "ChatChromeAI";
   }
@@ -92,6 +98,7 @@ export class ChatChromeAI extends SimpleChatModel<ChromeAICallOptions> {
     });
     this.temperature = inputs?.temperature ?? this.temperature;
     this.topK = inputs?.topK ?? this.topK;
+    this.promptFormatter = inputs?.promptFormatter ?? formatPrompt;
   }
 
   _llmType() {
@@ -142,7 +149,7 @@ export class ChatChromeAI extends SimpleChatModel<ChromeAICallOptions> {
     if (!this.session) {
       throw new Error("Session not found. Please call `.initialize()` first.");
     }
-    const textPrompt = formatPrompt(messages);
+    const textPrompt = this.promptFormatter(messages);
 
     const stream = this.session.promptStreaming(textPrompt);
     const iterableStream = IterableReadableStream.fromReadableStream(stream);
