@@ -36,7 +36,7 @@ export interface WebBaseLoaderParams extends AsyncCallerParams {
   /**
    * The headers to use in the fetch request.
    */
-  headers?: Headers;
+  headers?: HeadersInit;
 }
 
 /**
