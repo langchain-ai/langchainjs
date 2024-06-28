@@ -800,7 +800,7 @@ export class ChatMistralAI<
               },
             },
           ],
-          tool_choice: "auto",
+          tool_choice: "any",
         } as Partial<CallOptions>);
         outputParser = new JsonOutputKeyToolsParser({
           returnSingle: true,
@@ -830,7 +830,7 @@ export class ChatMistralAI<
               function: openAIFunctionDefinition,
             },
           ],
-          tool_choice: "auto",
+          tool_choice: "any",
         } as Partial<CallOptions>);
         outputParser = new JsonOutputKeyToolsParser<RunOutput>({
           returnSingle: true,
