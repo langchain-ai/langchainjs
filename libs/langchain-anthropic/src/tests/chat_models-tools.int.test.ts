@@ -362,3 +362,21 @@ test("bindTools accepts openai formatted tool", async () => {
   }
   expect(tool_calls[0].name).toBe("get_weather");
 });
+
+test("withStructuredOutput will always force tool usage", async () => {
+  const weatherTool = z.object({
+    location: z.string().describe("The name of city to get the weather for."),
+  }).describe("Get the weather of a specific location and return the temperature in Celsius.")
+  const modelWithTools = model.withStructuredOutput(weatherTool, {
+    name: "get_weather",
+    includeRaw: true
+  });
+  const response = await modelWithTools.invoke("What is the sum of 271623 and 281623? It is VERY important you use a calculator tool to give me the answer.");
+
+  if (!("tool_calls" in response.raw)) {
+    throw new Error("Tool call not found in response")
+  }
+  const castMessage = response.raw as AIMessage;
+  expect(castMessage.tool_calls).toHaveLength(1);
+  expect(castMessage.tool_calls?.[0].name).toBe("get_weather");
+})
