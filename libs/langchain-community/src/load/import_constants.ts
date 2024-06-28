@@ -155,6 +155,7 @@ export const optionalImportEntrypoints: string[] = [
   "langchain_community/document_loaders/web/figma",
   "langchain_community/document_loaders/web/firecrawl",
   "langchain_community/document_loaders/web/github",
+  "langchain_community/document_loaders/web/taskade",
   "langchain_community/document_loaders/web/notionapi",
   "langchain_community/document_loaders/web/pdf",
   "langchain_community/document_loaders/web/recursive_url",
