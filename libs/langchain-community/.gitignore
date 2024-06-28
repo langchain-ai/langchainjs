@@ -1030,6 +1030,10 @@ experimental/chat_models/ollama_functions.cjs
 experimental/chat_models/ollama_functions.js
 experimental/chat_models/ollama_functions.d.ts
 experimental/chat_models/ollama_functions.d.cts
+experimental/chat_models/chrome_ai.cjs
+experimental/chat_models/chrome_ai.js
+experimental/chat_models/chrome_ai.d.ts
+experimental/chat_models/chrome_ai.d.cts
 chains/graph_qa/cypher.cjs
 chains/graph_qa/cypher.js
 chains/graph_qa/cypher.d.ts
