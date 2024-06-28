@@ -786,11 +786,7 @@ test("Finish reason is 'stop'", async () => {
 
 test("Streaming tokens can be found in usage_metadata field", async () => {
   const model = new ChatOpenAI();
-  const response = await model.stream("Hello, how are you?", {
-    stream_options: {
-      include_usage: true,
-    },
-  });
+  const response = await model.stream("Hello, how are you?");
   let finalResult: AIMessageChunk | undefined;
   for await (const chunk of response) {
     if (finalResult) {
