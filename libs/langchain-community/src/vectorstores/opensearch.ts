@@ -450,4 +450,58 @@ export class OpenSearchVectorStore extends VectorStore {
 
     await this.client.indices.delete({ index: this.indexName });
   }
+
+  /**
+ * Performs a keyword search on the OpenSearch index and returns the matched documents along with their scores.
+ *
+ * @param {string} query - The keyword query to search for.
+ * @param {number} k - The maximum number of results to return.
+ * @param {OpenSearchFilter} [filter] - An optional filter to apply to the search.
+ * @returns {Promise<[Document, number][]>} - A promise that resolves to an array of tuples, where each tuple contains a document and its corresponding score.
+ * @throws Will throw an error if the search request fails.
+ *
+ * @example
+ * const results = await vectorStore.keywordSearchWithScore('example query', 10);
+ * results.forEach(([document, score]) => {
+ *   console.log('Document:', document);
+ *   console.log('Score:', score);
+ * });
+ */
+
+async keywordSearchWithScore(
+  query: string,
+  k: number,
+  filter?: OpenSearchFilter | undefined
+): Promise<[Document, number][]> {
+  const search: RequestParams.Search = {
+    index: this.indexName,
+    body: {
+      query: {
+        bool: {
+          filter: { bool: this.buildMetadataTerms(filter) },
+          must: [
+            {
+              match: {
+                [this.textFieldName]: query,
+              },
+            },
+          ],
+        },
+      },
+      size: k,
+    },
+  };
+
+  try {
+    const response = await this.client.search(search);
+    return response.body.hits.hits.map((hit: any) => [
+      hit._source as Document,
+      hit._score as number,
+    ]);
+  } catch (error) {
+    console.error('Error performing keyword search:', error);
+    throw error;
+  }
+}
+
 }
