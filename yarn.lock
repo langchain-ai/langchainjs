@@ -29532,7 +29532,7 @@ __metadata:
     "@gomomento/sdk-core": ^1.51.1
     "@jest/globals": ^29.5.0
     "@langchain/cohere": ^0.0.8
-    "@langchain/core": ~0.2.0
+    "@langchain/core": ">=0.2.9 <0.3.0"
     "@langchain/openai": ">=0.1.0 <0.3.0"
     "@langchain/scripts": ~0.0.14
     "@langchain/textsplitters": ~0.0.0
