@@ -158,6 +158,7 @@ export interface ChatBedrockConverseCallOptions
  * @example
  * ```typescript
  * import { ChatBedrockConverse } from "@langchain/aws";
+ *
  * const model = new ChatBedrockConverse({
  *   region: process.env.BEDROCK_AWS_REGION ?? "us-east-1",
  *   credentials: {
