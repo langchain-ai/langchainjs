@@ -40,7 +40,7 @@ The field you need depends on the package manager you're using, but we recommend
 
 LangChain Community contains third-party integrations that implement the base interfaces defined in LangChain Core, making them ready-to-use in any LangChain application.
 
-![LangChain Stack](../../docs/core_docs/static/img/langchain_stack_feb_2024.webp)
+![LangChain Stack](../../docs/core_docs/static/svg/langchain_stack_062024.svg)
 
 ## 📕 Releases & Versioning
 
