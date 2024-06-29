@@ -1,7 +1,5 @@
 import type { BaseLanguageModelCallOptions } from "@langchain/core/language_models/base";
-import {
-  CallbackManagerForLLMRun,
-} from "@langchain/core/callbacks/manager";
+import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { GenerationChunk } from "@langchain/core/outputs";
 import { IterableReadableStream } from "@langchain/core/utils/stream";
 import { BaseLLMParams, LLM } from "@langchain/core/language_models/llms";
@@ -84,7 +82,13 @@ export class ChromeAI extends LLM<ChromeAICallOptions> {
     }
 
     const { ai } = window as any;
-    const canCreateTextSession: AIModelAvailability = await ai.canCreateTextSession();
+    if (ai === undefined) {
+      throw new Error(
+        "Could not initialize ChromeAI instance. Make sure you are running a version of Chrome with the proper experimental flags enabled."
+      );
+    }
+    const canCreateTextSession: AIModelAvailability =
+      await ai.canCreateTextSession();
     if (canCreateTextSession === "no") {
       throw new Error("The AI model is not available.");
     } else if (canCreateTextSession === "after-download") {
