@@ -316,7 +316,7 @@ export const config = {
     "experimental/hubs/makersuite/googlemakersuitehub":
       "experimental/hubs/makersuite/googlemakersuitehub",
     "experimental/chat_models/ollama_functions": "experimental/chat_models/ollama_functions",
-    "experimental/chat_models/chrome_ai": "experimental/chat_models/chrome_ai/chat_models",
+    "experimental/llms/chrome_ai": "experimental/llms/chrome_ai",
     // chains
     "chains/graph_qa/cypher": "chains/graph_qa/cypher"
   },

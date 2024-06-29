@@ -3022,14 +3022,14 @@
       "import": "./experimental/chat_models/ollama_functions.js",
       "require": "./experimental/chat_models/ollama_functions.cjs"
     },
-    "./experimental/chat_models/chrome_ai": {
+    "./experimental/llms/chrome_ai": {
       "types": {
-        "import": "./experimental/chat_models/chrome_ai.d.ts",
-        "require": "./experimental/chat_models/chrome_ai.d.cts",
-        "default": "./experimental/chat_models/chrome_ai.d.ts"
+        "import": "./experimental/llms/chrome_ai.d.ts",
+        "require": "./experimental/llms/chrome_ai.d.cts",
+        "default": "./experimental/llms/chrome_ai.d.ts"
       },
-      "import": "./experimental/chat_models/chrome_ai.js",
-      "require": "./experimental/chat_models/chrome_ai.cjs"
+      "import": "./experimental/llms/chrome_ai.js",
+      "require": "./experimental/llms/chrome_ai.cjs"
     },
     "./chains/graph_qa/cypher": {
       "types": {
@@ -4076,10 +4076,10 @@
     "experimental/chat_models/ollama_functions.js",
     "experimental/chat_models/ollama_functions.d.ts",
     "experimental/chat_models/ollama_functions.d.cts",
-    "experimental/chat_models/chrome_ai.cjs",
-    "experimental/chat_models/chrome_ai.js",
-    "experimental/chat_models/chrome_ai.d.ts",
-    "experimental/chat_models/chrome_ai.d.cts",
+    "experimental/llms/chrome_ai.cjs",
+    "experimental/llms/chrome_ai.js",
+    "experimental/llms/chrome_ai.d.ts",
+    "experimental/llms/chrome_ai.d.cts",
     "chains/graph_qa/cypher.cjs",
     "chains/graph_qa/cypher.js",
     "chains/graph_qa/cypher.d.ts",

@@ -1,15 +1,10 @@
-import {
-  SimpleChatModel,
-  type BaseChatModelParams,
-} from "@langchain/core/language_models/chat_models";
 import type { BaseLanguageModelCallOptions } from "@langchain/core/language_models/base";
 import {
   CallbackManagerForLLMRun,
-  Callbacks,
 } from "@langchain/core/callbacks/manager";
-import { BaseMessage, AIMessageChunk } from "@langchain/core/messages";
-import { ChatGenerationChunk } from "@langchain/core/outputs";
+import { GenerationChunk } from "@langchain/core/outputs";
 import { IterableReadableStream } from "@langchain/core/utils/stream";
+import { BaseLLMParams, LLM } from "@langchain/core/language_models/llms";
 
 export interface AI {
   canCreateTextSession(): Promise<AIModelAvailability>;
@@ -29,35 +24,14 @@ export interface AITextSessionOptions {
   temperature: number;
 }
 
-export const enum AIModelAvailability {
-  Readily = "readily",
-  AfterDownload = "after-download",
-  No = "no",
-}
+export type AIModelAvailability = "readily" | "after-download" | "no";
 
-export interface ChromeAIInputs extends BaseChatModelParams {
+export interface ChromeAIInputs extends BaseLLMParams {
   topK?: number;
   temperature?: number;
-  /**
-   * An optional function to format the prompt before sending it to the model.
-   */
-  promptFormatter?: (messages: BaseMessage[]) => string;
 }
 
 export interface ChromeAICallOptions extends BaseLanguageModelCallOptions {}
-
-function formatPrompt(messages: BaseMessage[]): string {
-  return messages
-    .map((message) => {
-      if (typeof message.content !== "string") {
-        throw new Error(
-          "ChatChromeAI does not support non-string message content."
-        );
-      }
-      return `${message._getType()}: ${message.content}`;
-    })
-    .join("\n");
-}
 
 /**
  * To use this model you need to have the `Built-in AI Early Preview Program`
@@ -78,14 +52,12 @@ function formatPrompt(messages: BaseMessage[]): string {
  * ]);
  * ```
  */
-export class ChatChromeAI extends SimpleChatModel<ChromeAICallOptions> {
+export class ChatChromeAI extends LLM<ChromeAICallOptions> {
   session?: AITextSession;
 
   temperature = 0.5;
 
   topK = 40;
-
-  promptFormatter: (messages: BaseMessage[]) => string;
 
   static lc_name() {
     return "ChatChromeAI";
@@ -93,16 +65,14 @@ export class ChatChromeAI extends SimpleChatModel<ChromeAICallOptions> {
 
   constructor(inputs?: ChromeAIInputs) {
     super({
-      callbacks: {} as Callbacks,
       ...inputs,
     });
     this.temperature = inputs?.temperature ?? this.temperature;
     this.topK = inputs?.topK ?? this.topK;
-    this.promptFormatter = inputs?.promptFormatter ?? formatPrompt;
   }
 
   _llmType() {
-    return "chrome-ai";
+    return "chrome_ai";
   }
 
   /**
@@ -114,10 +84,10 @@ export class ChatChromeAI extends SimpleChatModel<ChromeAICallOptions> {
     }
 
     const { ai } = window as any;
-    const canCreateTextSession = await ai.canCreateTextSession();
-    if (canCreateTextSession === AIModelAvailability.No) {
+    const canCreateTextSession: AIModelAvailability = await ai.canCreateTextSession();
+    if (canCreateTextSession === "no") {
       throw new Error("The AI model is not available.");
-    } else if (canCreateTextSession === AIModelAvailability.AfterDownload) {
+    } else if (canCreateTextSession === "after-download") {
       throw new Error("The AI model is not yet downloaded.");
     }
 
@@ -142,41 +112,36 @@ export class ChatChromeAI extends SimpleChatModel<ChromeAICallOptions> {
   }
 
   async *_streamResponseChunks(
-    messages: BaseMessage[],
+    prompt: string,
     _options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
-  ): AsyncGenerator<ChatGenerationChunk> {
+  ): AsyncGenerator<GenerationChunk> {
     if (!this.session) {
-      throw new Error("Session not found. Please call `.initialize()` first.");
+      await this.initialize();
     }
-    const textPrompt = this.promptFormatter(messages);
 
-    const stream = this.session.promptStreaming(textPrompt);
+    const stream = this.session!.promptStreaming(prompt);
     const iterableStream = IterableReadableStream.fromReadableStream(stream);
 
     let previousContent = "";
     for await (const chunk of iterableStream) {
       const newContent = chunk.slice(previousContent.length);
       previousContent += newContent;
-      yield new ChatGenerationChunk({
+      yield new GenerationChunk({
         text: newContent,
-        message: new AIMessageChunk({
-          content: newContent,
-          additional_kwargs: {},
-        }),
       });
       await runManager?.handleLLMNewToken(newContent);
     }
   }
 
   async _call(
-    messages: BaseMessage[],
+    prompt: string,
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<string> {
     const chunks = [];
     for await (const chunk of this._streamResponseChunks(
-      messages,
+      prompt,
       options,
       runManager
     )) {
