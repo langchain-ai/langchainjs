@@ -40,8 +40,8 @@ export interface ChromeAICallOptions extends BaseLanguageModelCallOptions {}
  *
  * @example
  * ```typescript
- * // Initialize the ChatChromeAI model.
- * const model = new ChatChromeAI({
+ * // Initialize the ChromeAI model.
+ * const model = new ChromeAI({
  *   temperature: 0.5, // Optional. Default is 0.5.
  *   topK: 40, // Optional. Default is 40.
  * });
@@ -52,7 +52,7 @@ export interface ChromeAICallOptions extends BaseLanguageModelCallOptions {}
  * ]);
  * ```
  */
-export class ChatChromeAI extends LLM<ChromeAICallOptions> {
+export class ChromeAI extends LLM<ChromeAICallOptions> {
   session?: AITextSession;
 
   temperature = 0.5;
@@ -60,7 +60,7 @@ export class ChatChromeAI extends LLM<ChromeAICallOptions> {
   topK = 40;
 
   static lc_name() {
-    return "ChatChromeAI";
+    return "ChromeAI";
   }
 
   constructor(inputs?: ChromeAIInputs) {
@@ -80,7 +80,7 @@ export class ChatChromeAI extends LLM<ChromeAICallOptions> {
    */
   async initialize() {
     if (typeof window === "undefined") {
-      throw new Error("ChatChromeAI can only be used in the browser.");
+      throw new Error("ChromeAI can only be used in the browser.");
     }
 
     const { ai } = window as any;

@@ -60,6 +60,10 @@
     {
       "source": "/docs/langsmith(/?)",
       "destination": "https://docs.smith.langchain.com/"
-    }
+    },
+    {
+      "source": "/v0.2/docs/integrations/chat/chrome_ai(/?)",
+      "destination": "/v0.2/docs/integrations/llms/chrome_ai/"
+    },
   ]
 }

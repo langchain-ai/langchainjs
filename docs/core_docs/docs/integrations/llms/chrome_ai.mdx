@@ -1,0 +1,52 @@
+---
+sidebar_label: ChromeAI
+---
+
+import CodeBlock from "@theme/CodeBlock";
+
+# ChromeAI
+
+:::info
+This feature is **experimental** and is subject to change.
+:::
+
+:::note
+The `Built-in AI Early Preview Program` by Google is currently in beta. To apply for access or find more information, please visit [this link](https://developer.chrome.com/docs/ai/built-in).
+:::
+
+ChromeAI leverages the webGPU and Gemini Nano to run LLMs directly in the browser, without the need for an internet connection.
+This allows for running faster and private models without ever having data leave the consumers device.
+
+## Getting started
+
+Once you've been granted access to the program, follow all steps to download the model.
+
+Once downloaded, you can start using `ChromeAI` in the browser as follows:
+
+```typescript
+import { ChromeAI } from "@langchain/community/experimental/llms/chrome_ai";
+import { HumanMessage } from "@langchain/core/messages";
+
+const model = new ChromeAI({
+  temperature: 0.5, // Optional, defaults to 0.5
+  topK: 40, // Optional, defaults to 40
+});
+
+const response = await model.invoke("Write me a short poem please");
+```
+
+### Streaming
+
+`ChromeAI` also supports streaming chunks:
+
+```typescript
+let output: string | undefined = undefined;
+for await (const chunk of await model.stream([message])) {
+  if (!output) {
+    output = chunk;
+  } else {
+    output = output + chunk;
+  }
+  console.log(output);
+}
+```
