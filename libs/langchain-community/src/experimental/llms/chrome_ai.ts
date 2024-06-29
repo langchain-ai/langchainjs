@@ -74,15 +74,22 @@ export class ChromeAI extends LLM<ChromeAICallOptions> {
   }
 
   /**
-   * Initialize the model. This method must be called before calling `.invoke()`.
+   * Initialize the model. This method may be called before invoking the model
+   * to set up a chat session in advance.
    */
   async initialize() {
-    if (typeof window === "undefined") {
-      throw new Error("ChromeAI can only be used in the browser.");
-    }
-
-    const { ai } = window as any;
-    if (ai === undefined) {
+    let ai: any;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if (typeof window !== "undefined" && (window as any).ai !== undefined) {
+      // Browser context
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ai = (window as any).ai;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } else if (typeof self !== undefined && (self as any).ai !== undefined) {
+      // Worker context
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ai = (self as any).ai;
+    } else {
       throw new Error(
         "Could not initialize ChromeAI instance. Make sure you are running a version of Chrome with the proper experimental flags enabled."
       );
@@ -124,6 +131,7 @@ export class ChromeAI extends LLM<ChromeAICallOptions> {
       await this.initialize();
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const stream = this.session!.promptStreaming(prompt);
     const iterableStream = IterableReadableStream.fromReadableStream(stream);
 
