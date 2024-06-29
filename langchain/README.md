@@ -51,7 +51,7 @@ The LangChain libraries themselves are made up of several different packages.
 
 Integrations may also be split into their own compatible packages.
 
-![LangChain Stack](https://github.com/langchain-ai/langchainjs/blob/main/docs/core_docs/static/img/langchain_stack_feb_2024.webp)
+![LangChain Stack](https://github.com/langchain-ai/langchainjs/blob/main/docs/core_docs/static/svg/langchain_stack_062024.svg)
 
 This library aims to assist in the development of those types of applications. Common examples of these applications include:
 

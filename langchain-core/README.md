@@ -85,7 +85,7 @@ Rather than having to write multiple implementations for all of those, LCEL allo
 
 For more check out the [LCEL docs](https://js.langchain.com/v0.2/docs/concepts#langchain-expression-language).
 
-![LangChain Stack](../docs/core_docs/static/img/langchain_stack_feb_2024.webp)
+![LangChain Stack](../docs/core_docs/static/svg/langchain_stack_062024.svg)
 
 ## 📕 Releases & Versioning
 
