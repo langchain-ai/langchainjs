@@ -76,6 +76,7 @@ export const config = {
     "embeddings/gradient_ai": "embeddings/gradient_ai",
     "embeddings/hf": "embeddings/hf",
     "embeddings/hf_transformers": "embeddings/hf_transformers",
+    "embeddings/jina": "embeddings/jina",
     "embeddings/llama_cpp": "embeddings/llama_cpp",
     "embeddings/minimax": "embeddings/minimax",
     "embeddings/ollama": "embeddings/ollama",
@@ -307,6 +308,7 @@ export const config = {
     "utils/event_source_parse": "utils/event_source_parse",
     "utils/cassandra": "utils/cassandra",
     // experimental
+    "experimental/callbacks/handlers/datadog": "experimental/callbacks/handlers/datadog",
     "experimental/graph_transformers/llm":
       "experimental/graph_transformers/llm",
     "experimental/multimodal_embeddings/googlevertexai":
@@ -314,6 +316,7 @@ export const config = {
     "experimental/hubs/makersuite/googlemakersuitehub":
       "experimental/hubs/makersuite/googlemakersuitehub",
     "experimental/chat_models/ollama_functions": "experimental/chat_models/ollama_functions",
+    "experimental/llms/chrome_ai": "experimental/llms/chrome_ai",
     // chains
     "chains/graph_qa/cypher": "chains/graph_qa/cypher"
   },
@@ -336,6 +339,7 @@ export const config = {
     "embeddings/tensorflow",
     "embeddings/hf",
     "embeddings/hf_transformers",
+    "embeddings/jina",
     "embeddings/llama_cpp",
     "embeddings/gradient_ai",
     "embeddings/premai",

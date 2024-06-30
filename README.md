@@ -39,19 +39,20 @@ LangChain is written in TypeScript and can be used in:
 - **Reason**: rely on a language model to reason (about how to answer based on provided context, what actions to take, etc.)
 
 This framework consists of several parts.
-- **LangChain Libraries**: The Python and JavaScript libraries. Contains interfaces and integrations for a myriad of components, a basic runtime for combining these components into chains and agents, and off-the-shelf implementations of chains and agents.
-- **[LangChain Templates](https://github.com/langchain-ai/langchain/tree/master/templates)**: (currently Python-only) A collection of easily deployable reference architectures for a wide variety of tasks.
-- **[LangServe](https://github.com/langchain-ai/langserve)**: (currently Python-only) A library for deploying LangChain chains as a REST API.
-- **[LangSmith](https://smith.langchain.com)**: A developer platform that lets you debug, test, evaluate, and monitor chains built on any LLM framework and seamlessly integrates with LangChain.
+- **Open-source libraries**: Build your applications using LangChain's open-source [building blocks](https://js.langchain.com/v0.2/docs/concepts#langchain-expression-language), [components](https://js.langchain.com/v0.2/docs/concepts), and [third-party integrations](https://js.langchain.com/v0.2/docs/integrations/platforms/).
+Use [LangGraph.js](https://js.langchain.com/v0.2/docs/concepts/#langgraphjs) to build stateful agents with first-class streaming and human-in-the-loop support.
+- **Productionization**: Use [LangSmith](https://docs.smith.langchain.com/) to inspect, monitor and evaluate your chains, so that you can continuously optimize and deploy with confidence.
+- **Deployment**: Turn your LangGraph applications into production-ready APIs and Assistants with [LangGraph Cloud](https://langchain-ai.github.io/langgraph/cloud/) (currently Python-only).
 
 The LangChain libraries themselves are made up of several different packages.
 - **[`@langchain/core`](https://github.com/langchain-ai/langchainjs/blob/main/langchain-core)**: Base abstractions and LangChain Expression Language.
 - **[`@langchain/community`](https://github.com/langchain-ai/langchainjs/blob/main/libs/langchain-community)**: Third party integrations.
 - **[`langchain`](https://github.com/langchain-ai/langchainjs/blob/main/langchain)**: Chains, agents, and retrieval strategies that make up an application's cognitive architecture.
+- **[LangGraph.js](https://langchain-ai.github.io/langgraphjs/)**: A library for building robust and stateful multi-actor applications with LLMs by modeling steps as edges and nodes in a graph. Integrates smoothly with LangChain, but can be used without it.
 
 Integrations may also be split into their own compatible packages.
 
-![LangChain Stack](https://github.com/langchain-ai/langchainjs/blob/main/docs/core_docs/static/img/langchain_stack_feb_2024.webp)
+![LangChain Stack](https://github.com/langchain-ai/langchainjs/blob/main/docs/core_docs/static/svg/langchain_stack_062024.svg)
 
 This library aims to assist in the development of those types of applications. Common examples of these applications include:
 
@@ -86,7 +87,7 @@ Data Augmented Generation involves specific types of chains that first interact 
 
 **🤖 Agents:**
 
-Agents involve an LLM making decisions about which Actions to take, taking that Action, seeing an Observation, and repeating that until done. LangChain provides a standard interface for agents, a selection of agents to choose from, and examples of end-to-end agents.
+Agents allow an LLM autonomy over how a task is accomplished. Agents make decisions about which Actions to take, then take that Action, observe the result, and repeat until the task is complete. LangChain provides a [standard interface for agents](https://js.langchain.com/v0.2/docs/concepts/#agents), along with [LangGraph.js](https://github.com/langchain-ai/langgraphjs/) for building custom agents.
 
 ## 📖 Documentation
 

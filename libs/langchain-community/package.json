@@ -1,6 +1,6 @@
 {
   "name": "@langchain/community",
-  "version": "0.2.13",
+  "version": "0.2.16",
   "description": "Third-party integrations for LangChain.js",
   "type": "module",
   "engines": {
@@ -35,7 +35,7 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@langchain/core": "~0.2.9",
+    "@langchain/core": "~0.2.11",
     "@langchain/openai": "~0.1.0",
     "binary-extensions": "^2.2.0",
     "expr-eval": "^2.0.2",
@@ -1086,6 +1086,15 @@
       },
       "import": "./embeddings/hf_transformers.js",
       "require": "./embeddings/hf_transformers.cjs"
+    },
+    "./embeddings/jina": {
+      "types": {
+        "import": "./embeddings/jina.d.ts",
+        "require": "./embeddings/jina.d.cts",
+        "default": "./embeddings/jina.d.ts"
+      },
+      "import": "./embeddings/jina.js",
+      "require": "./embeddings/jina.cjs"
     },
     "./embeddings/llama_cpp": {
       "types": {
@@ -2968,6 +2977,15 @@
       "import": "./utils/cassandra.js",
       "require": "./utils/cassandra.cjs"
     },
+    "./experimental/callbacks/handlers/datadog": {
+      "types": {
+        "import": "./experimental/callbacks/handlers/datadog.d.ts",
+        "require": "./experimental/callbacks/handlers/datadog.d.cts",
+        "default": "./experimental/callbacks/handlers/datadog.d.ts"
+      },
+      "import": "./experimental/callbacks/handlers/datadog.js",
+      "require": "./experimental/callbacks/handlers/datadog.cjs"
+    },
     "./experimental/graph_transformers/llm": {
       "types": {
         "import": "./experimental/graph_transformers/llm.d.ts",
@@ -3003,6 +3021,15 @@
       },
       "import": "./experimental/chat_models/ollama_functions.js",
       "require": "./experimental/chat_models/ollama_functions.cjs"
+    },
+    "./experimental/llms/chrome_ai": {
+      "types": {
+        "import": "./experimental/llms/chrome_ai.d.ts",
+        "require": "./experimental/llms/chrome_ai.d.cts",
+        "default": "./experimental/llms/chrome_ai.d.ts"
+      },
+      "import": "./experimental/llms/chrome_ai.js",
+      "require": "./experimental/llms/chrome_ai.cjs"
     },
     "./chains/graph_qa/cypher": {
       "types": {
@@ -3189,6 +3216,10 @@
     "embeddings/hf_transformers.js",
     "embeddings/hf_transformers.d.ts",
     "embeddings/hf_transformers.d.cts",
+    "embeddings/jina.cjs",
+    "embeddings/jina.js",
+    "embeddings/jina.d.ts",
+    "embeddings/jina.d.cts",
     "embeddings/llama_cpp.cjs",
     "embeddings/llama_cpp.js",
     "embeddings/llama_cpp.d.ts",
@@ -4025,6 +4056,10 @@
     "utils/cassandra.js",
     "utils/cassandra.d.ts",
     "utils/cassandra.d.cts",
+    "experimental/callbacks/handlers/datadog.cjs",
+    "experimental/callbacks/handlers/datadog.js",
+    "experimental/callbacks/handlers/datadog.d.ts",
+    "experimental/callbacks/handlers/datadog.d.cts",
     "experimental/graph_transformers/llm.cjs",
     "experimental/graph_transformers/llm.js",
     "experimental/graph_transformers/llm.d.ts",
@@ -4041,6 +4076,10 @@
     "experimental/chat_models/ollama_functions.js",
     "experimental/chat_models/ollama_functions.d.ts",
     "experimental/chat_models/ollama_functions.d.cts",
+    "experimental/llms/chrome_ai.cjs",
+    "experimental/llms/chrome_ai.js",
+    "experimental/llms/chrome_ai.d.ts",
+    "experimental/llms/chrome_ai.d.cts",
     "chains/graph_qa/cypher.cjs",
     "chains/graph_qa/cypher.js",
     "chains/graph_qa/cypher.d.ts",

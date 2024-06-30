@@ -6,7 +6,11 @@ import {
   BasePromptTemplateInput,
   TypedPromptInputValues,
 } from "./base.js";
-import { TemplateFormat, checkValidTemplate } from "./template.js";
+import {
+  TemplateFormat,
+  checkValidTemplate,
+  renderTemplate,
+} from "./template.js";
 
 /**
  * Inputs to create a {@link ImagePromptTemplate}
@@ -125,13 +129,7 @@ export class ImagePromptTemplate<
     const formatted: Record<string, any> = {};
     for (const [key, value] of Object.entries(this.template)) {
       if (typeof value === "string") {
-        formatted[key] = value.replace(/{([^{}]*)}/g, (match, group) => {
-          const replacement = values[group];
-          return typeof replacement === "string" ||
-            typeof replacement === "number"
-            ? String(replacement)
-            : match;
-        });
+        formatted[key] = renderTemplate(value, this.templateFormat, values);
       } else {
         formatted[key] = value;
       }
