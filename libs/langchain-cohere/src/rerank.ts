@@ -29,7 +29,7 @@ export interface CohereRerankArgs {
  * Document compressor that uses `Cohere Rerank API`.
  */
 export class CohereRerank extends BaseDocumentCompressor {
-  model = "rerank-english-v2.0";
+  model: string | undefined;
 
   topN = 3;
 
@@ -48,6 +48,11 @@ export class CohereRerank extends BaseDocumentCompressor {
       token,
     });
     this.model = fields?.model ?? this.model;
+    if (!this.model) {
+      throw new Error(
+        "Model not specified for CohereRerank instance. Please provide a model name from the options here: https://docs.cohere.com/reference/rerank"
+      );
+    }
     this.topN = fields?.topN ?? this.topN;
     this.maxChunksPerDoc = fields?.maxChunksPerDoc;
   }

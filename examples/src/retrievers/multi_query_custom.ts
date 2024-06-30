@@ -1,5 +1,5 @@
 import { MemoryVectorStore } from "langchain/vectorstores/memory";
-import { CohereEmbeddings } from "@langchain/community/embeddings/cohere";
+import { CohereEmbeddings } from "@langchain/cohere";
 import { MultiQueryRetriever } from "langchain/retrievers/multi_query";
 import { LLMChain } from "langchain/chains";
 import { pull } from "langchain/hub";
@@ -53,7 +53,7 @@ const vectorstore = await MemoryVectorStore.fromTexts(
     "Mitochondrien bestehen aus Lipiden",
   ],
   [{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }, { id: 5 }],
-  new CohereEmbeddings()
+  new CohereEmbeddings({model: "embed-english-v3.0",})
 );
 const model = new ChatAnthropic({});
 const llmChain = new LLMChain({
