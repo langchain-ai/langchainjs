@@ -1,3 +1,4 @@
+/* eslint-disable no-restricted-globals */
 import type { BaseLanguageModelCallOptions } from "@langchain/core/language_models/base";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { GenerationChunk } from "@langchain/core/outputs";
@@ -78,6 +79,7 @@ export class ChromeAI extends LLM<ChromeAICallOptions> {
    * to set up a chat session in advance.
    */
   async initialize() {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let ai: any;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     if (typeof window !== "undefined" && (window as any).ai !== undefined) {
