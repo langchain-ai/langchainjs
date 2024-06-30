@@ -1,6 +1,6 @@
 # @langchain/mixedbread-ai
 
-This package contains the LangChain.js integrations for the [mixedbread ai API](https://mixedbread.ai/).
+This package contains the LangChain.js integrations for the [Mixedbread AI API](https://mixedbread.ai/).
 
 ## Installation
 
@@ -12,13 +12,13 @@ This package, along with the main LangChain package, depends on [`@langchain/cor
 
 ## Authentication
 
-To use this package, you need a mixedbread ai API key. You can obtain your API key by signing up at [mixedbread ai](https://mixedbread.ai).
+To use this package, you need a Mixedbread AI API key. You can obtain your API key by signing up at [Mixedbread AI](https://mixedbread.ai).
 
-Either set the `MXBAI_API_KEY` environment variable to your mixedbread ai API key, or pass it as the `apiKey` option to the constructor of the class you are using.
+Either set the `MXBAI_API_KEY` environment variable to your Mixedbread AI API key, or pass it as the `apiKey` option to the constructor of the class you are using.
 
 ## Embeddings
 
-This package provides access to the different embedding models provided by the mixedbread ai API, such as the "mixedbread-ai/mxbai-embed-large-v1" model.
+This package provides access to the different embedding models provided by the Mixedbread AI API, such as the "mixedbread-ai/mxbai-embed-large-v1" model.
 
 Learn more: [Embeddings API](https://mixedbread.ai/docs/embeddings)
 
@@ -31,7 +31,7 @@ console.log(result);
 
 ## Reranking
 
-This package provides access to the reranking API provided by mixedbread ai. It allows you to rerank a list of documents based on a query. Available models include "mixedbread-ai/mxbai-rerank-large-v1".
+This package provides access to the reranking API provided by Mixedbread AI. It allows you to rerank a list of documents based on a query. Available models include "mixedbread-ai/mxbai-rerank-large-v1".
 
 Learn more: [Reranking API](https://mixedbread.ai/docs/reranking)
 

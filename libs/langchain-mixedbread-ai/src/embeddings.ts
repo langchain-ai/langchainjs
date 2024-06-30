@@ -1,7 +1,8 @@
-import { MixedbreadAIClient, MixedbreadAI } from "@mixedbread-ai/sdk";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { Embeddings, type EmbeddingsParams } from "@langchain/core/embeddings";
 import { chunkArray } from "@langchain/core/utils/chunk_array";
+
+import { MixedbreadAIClient, MixedbreadAI } from "@mixedbread-ai/sdk";
 
 type EmbeddingsRequestWithoutInput = Omit<MixedbreadAI.EmbeddingsRequest, "input">;
 
@@ -35,7 +36,7 @@ export interface MixedbreadAIEmbeddingsParams extends EmbeddingsParams, Omit<Emb
 }
 
 /**
- * Class for generating embeddings using the mixedbread ai API.
+ * Class for generating embeddings using the Mixedbread AI API.
  *
  * This class leverages the model "mixedbread-ai/mxbai-embed-large-v1" to generate
  * embeddings for text documents. The embeddings can be used for various NLP tasks
@@ -149,7 +150,7 @@ export class MixedbreadAIEmbeddings extends Embeddings {
   }
 
   /**
-   * Private method to make a request to the mixedbread ai API to generate embeddings. Handles retry logic.
+   * Private method to make a request to the Mixedbread AI API to generate embeddings. Handles retry logic.
    * @param {string | string[]} input - A string or an array of strings to generate embeddings for.
    * @returns {Promise<number[][]>} A Promise that resolves to the API response.
    */

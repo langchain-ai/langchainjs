@@ -1,6 +1,7 @@
 import { DocumentInterface } from "@langchain/core/documents";
 import { BaseDocumentCompressor } from "@langchain/core/retrievers/document_compressors";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
+
 import { MixedbreadAIClient, MixedbreadAI } from "@mixedbread-ai/sdk";
 
 type RerankingRequestWithoutInput = Omit<MixedbreadAI.RerankingRequest, "query" | "input">;
@@ -35,9 +36,9 @@ export interface MixedbreadAIRerankParams extends Omit<RerankingRequestWithoutIn
 }
 
 /**
- * Document compressor that uses mixedbread ai's rerank API.
+ * Document compressor that uses Mixedbread AI's rerank API.
  *
- * This class utilizes mixedbread ai's rerank model to reorder a set of documents based on their relevance
+ * This class utilizes Mixedbread AI's reranking model to reorder a set of documents based on their relevance
  * to a given query. The reranked documents are then used for various applications like search results refinement.
  *
  * @example
@@ -89,7 +90,7 @@ export class MixedbreadAIReranker extends BaseDocumentCompressor {
 
     const apiKey = params?.apiKey ?? getEnvironmentVariable("MXBAI_API_KEY");
     if (!apiKey) {
-      throw new Error("mixedbread API key not found. Either provide it in the constructor or set the 'MXBAI_API_KEY' environment variable.");
+      throw new Error("Mixedbread AI API key not found. Either provide it in the constructor or set the 'MXBAI_API_KEY' environment variable.");
     }
 
     this.maxRetries = params?.maxRetries ?? 3;
@@ -106,7 +107,7 @@ export class MixedbreadAIReranker extends BaseDocumentCompressor {
   }
 
   /**
-   * Compress documents using mixedbread ai's reranking API.
+   * Compress documents using Mixedbread AI's reranking API.
    *
    * @param {DocumentInterface[]} documents - A list of documents to compress.
    * @param {string} query - The query to use for compressing the documents.
@@ -143,7 +144,7 @@ export class MixedbreadAIReranker extends BaseDocumentCompressor {
   }
 
   /**
-   * Reranks a list of documents based on their relevance to a query using the mixedbread ai API.
+   * Reranks a list of documents based on their relevance to a query using the Mixedbread AI API.
    * Returns an ordered list of documents sorted by their relevance to the provided query.
    * @param {Array<string> | DocumentInterface[] | Array<Record<string, unknown>>} documents - A list of documents as strings, DocumentInterfaces, or objects with a `pageContent` key.
    * @param {string} query - The query to use for reranking the documents.

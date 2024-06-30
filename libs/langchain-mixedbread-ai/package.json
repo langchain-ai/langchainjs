@@ -1,7 +1,7 @@
 {
   "name": "@langchain/mixedbread-ai",
   "version": "0.1.0",
-  "description": "mixedbread ai integration for LangChain.js",
+  "description": "Mixedbread AI integration for LangChain.js",
   "type": "module",
   "engines": {
     "node": ">=18"
