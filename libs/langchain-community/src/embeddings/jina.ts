@@ -109,6 +109,7 @@ export class JinaEmbeddings extends Embeddings implements JinaEmbeddingsParams {
    * @param input - An array of strings or objects to generate embeddings for.
    * @returns A Promise that resolves to an array of embeddings.
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private async _embed(input: any): Promise<number[][]> {
     const response = await fetch(JINA_API_URL, {
       method: "POST",

@@ -12,8 +12,8 @@ import useBaseUrl from "@docusaurus/useBaseUrl";
 <ThemedImage
   alt="Diagram outlining the hierarchical organization of the LangChain framework, displaying the interconnected parts across multiple layers."
   sources={{
-    light: useBaseUrl("/svg/langchain_stack.svg"),
-    dark: useBaseUrl("/svg/langchain_stack_dark.svg"),
+    light: useBaseUrl("/svg/langchain_stack_062024.svg"),
+    dark: useBaseUrl("/svg/langchain_stack_062024_dark.svg"),
   }}
   title="LangChain Framework Overview"
 />
@@ -104,11 +104,11 @@ and is an integral part of LangServe.
 As your chains get more and more complex, it becomes increasingly important to understand what exactly is happening at every step.
 With LCEL, **all** steps are automatically logged to [LangSmith](https://docs.smith.langchain.com) for maximum observability and debuggability.
 
-### Interface
+### Runnable interface {#interface}
 
-<span data-heading-keywords="invoke"></span>
+<span data-heading-keywords="invoke,runnable"></span>
 
-To make it as easy as possible to create custom chains, we've implemented a ["Runnable"](https://v02.api.js.langchain.com/classes/langchain_core_runnables.Runnable.html) protocol.
+To make it as easy as possible to create custom chains, we've implemented a ["Runnable"](https://api.js.langchain.com/classes/langchain_core_runnables.Runnable.html) protocol.
 Many LangChain components implement the `Runnable` protocol, including chat models, LLMs, output parsers, retrievers, prompt templates, and more. There are also several useful primitives for working with runnables, which you can read about below.
 
 This is a standard interface, which makes it easy to define custom chains as well as invoke them in a standard way.
@@ -1137,6 +1137,17 @@ This process is vital for building reliable applications.
 - It allows you to track results over time and automatically run your evaluators on a schedule or as part of CI/Code
 
 To learn more, check out [this LangSmith guide](https://docs.smith.langchain.com/concepts/evaluation).
+
+### Tracing
+
+<span data-heading-keywords="trace,tracing"></span>
+
+A trace is essentially a series of steps that your application takes to go from input to output.
+Traces contain individual steps called `runs`. These can be individual calls from a model, retriever,
+tool, or sub-chains.
+Tracing gives you observability inside your chains and agents, and is vital in diagnosing issues.
+
+For a deeper dive, check out [this LangSmith conceptual guide](https://docs.smith.langchain.com/concepts/tracing).
 
 ### Generative UI
 
