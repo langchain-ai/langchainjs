@@ -9,7 +9,6 @@ Looking for the Python version? Check out [LangChain](https://github.com/langcha
 
 To help you ship LangChain apps to production faster, check out [LangSmith](https://smith.langchain.com).
 [LangSmith](https://smith.langchain.com) is a unified developer platform for building, testing, and monitoring LLM applications.
-Fill out [this form](https://airtable.com/appwQzlErAS2qiP0L/shrGtGaVBVAz7NcV2) to get on the waitlist or speak with our sales team.
 
 ## ⚡️ Quick Install
 
