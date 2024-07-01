@@ -62,7 +62,16 @@ export class MediaBlob
     const data = this.data ?? new Blob([]);
     const dataBuffer = await data.arrayBuffer();
     const dataArray = new Uint8Array(dataBuffer);
-    return String.fromCharCode(...dataArray);
+
+    // Need to handle the array in smaller chunks to deal with stack size limits
+    let ret = '';
+    const chunkSize = 102400;
+    for (let i = 0; i < dataArray.length; i += chunkSize) {
+      const chunk = dataArray.subarray(i, i + chunkSize);
+      ret += String.fromCharCode(...chunk);
+    }
+
+    return ret;
   }
 
   async asBase64(): Promise<string> {
