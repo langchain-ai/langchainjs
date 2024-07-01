@@ -198,9 +198,10 @@ export class ChatBaiduQianfan
 
   get lc_secrets(): { [key: string]: string } | undefined {
     return {
-      baiduApiKey: "BAIDU_API_KEY",
-      apiKey: "BAIDU_API_KEY",
-      baiduSecretKey: "BAIDU_SECRET_KEY",
+      qianfanAK: "QIANFAN_AK",
+      qianfanSK: "QIANFAN_SK",
+      qianfanAccessKey: "QIANFAN_ACCESS_KEY",
+      qianfanSecretKey: "QIANFAN_SECRET_KEY",
     };
   }
 
@@ -209,12 +210,6 @@ export class ChatBaiduQianfan
   }
 
   lc_serializable = true;
-
-  baiduApiKey?: string;
-
-  apiKey?: string;
-
-  baiduSecretKey?: string;
 
   streaming = false;
 
@@ -225,8 +220,6 @@ export class ChatBaiduQianfan
   modelName = "ERNIE-Bot-turbo";
 
   model = "ERNIE-Bot-turbo";
-
-  apiUrl: string;
 
   temperature?: number | undefined;
 
@@ -356,7 +349,6 @@ export class ChatBaiduQianfan
               messages: messagesMapped,
             },
             true,
-            options?.signal,
             (event) => {
               resolved = true;
               resolve(event.data);
@@ -374,7 +366,6 @@ export class ChatBaiduQianfan
             messages: messagesMapped,
           },
           false,
-          options?.signal
         ).then((data) => {
           if (data?.error_code) {
             throw new Error(data?.error_msg);
@@ -417,7 +408,6 @@ export class ChatBaiduQianfan
   async completionWithRetry(
     request: ChatCompletionRequest,
     stream: boolean,
-    signal?: AbortSignal,
     onmessage?: (event: MessageEvent) => void
   ) {
     const makeCompletionRequest = async () => {
