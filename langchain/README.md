@@ -104,4 +104,3 @@ Please report any security issues or concerns following our [security guidelines
 ## 🖇️ Relationship with Python LangChain
 
 This is built to integrate as seamlessly as possible with the [LangChain Python package](https://github.com/langchain-ai/langchain). Specifically, this means all objects (prompts, LLMs, chains, etc) are designed in a way where they can be serialized and shared between languages.
-
