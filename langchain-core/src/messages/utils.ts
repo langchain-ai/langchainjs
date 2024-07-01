@@ -5,6 +5,7 @@ import {
   isBaseMessage,
   StoredMessage,
   StoredMessageV1,
+  MessageContent,
 } from "./base.js";
 import {
   ChatMessage,
@@ -20,15 +21,13 @@ import { HumanMessage, HumanMessageChunk } from "./human.js";
 import { SystemMessage, SystemMessageChunk } from "./system.js";
 import { ToolMessage, ToolMessageFieldsWithToolCallId } from "./tool.js";
 
-export function coerceMessageLikeToMessage(
-  messageLike: BaseMessageLike
-): BaseMessage {
-  if (typeof messageLike === "string") {
-    return new HumanMessage(messageLike);
-  } else if (isBaseMessage(messageLike)) {
-    return messageLike;
-  }
-  const [type, content] = messageLike;
+function _constructMessageFromParams({
+  content,
+  type,
+}: {
+  content: MessageContent;
+  type: string;
+}) {
   if (type === "human" || type === "user") {
     return new HumanMessage({ content });
   } else if (type === "ai" || type === "assistant") {
@@ -39,6 +38,23 @@ export function coerceMessageLikeToMessage(
     throw new Error(
       `Unable to coerce message from array: only human, AI, or system message coercion is currently supported.`
     );
+  }
+}
+
+export function coerceMessageLikeToMessage(
+  messageLike: BaseMessageLike
+): BaseMessage {
+  if (typeof messageLike === "string") {
+    return new HumanMessage(messageLike);
+  } else if (isBaseMessage(messageLike)) {
+    return messageLike;
+  }
+  if (Array.isArray(messageLike)) {
+    const [type, content] = messageLike;
+    return _constructMessageFromParams({ type, content });
+  } else {
+    const { type, content } = messageLike;
+    return _constructMessageFromParams({ type, content });
   }
 }
 

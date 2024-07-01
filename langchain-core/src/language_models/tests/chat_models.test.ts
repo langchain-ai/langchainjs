@@ -5,6 +5,20 @@ import { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { FakeChatModel, FakeListChatModel } from "../../utils/testing/index.js";
 
+test("Test ChatModel accepts array shorthand for messages", async () => {
+  const model = new FakeChatModel({});
+  const response = await model.invoke([["human", "Hello there!"]]);
+  expect(response.content).toEqual("Hello there!");
+});
+
+test("Test ChatModel accepts object shorthand for messages", async () => {
+  const model = new FakeChatModel({});
+  const response = await model.invoke([
+    { type: "human", content: "Hello there!", additionalField: true },
+  ]);
+  expect(response.content).toEqual("Hello there!");
+});
+
 test("Test ChatModel uses callbacks", async () => {
   const model = new FakeChatModel({});
   let acc = "";

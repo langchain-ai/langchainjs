@@ -323,6 +323,51 @@ test("Test MessagesPlaceholder shorthand in a chat prompt template", async () =>
   ]);
 });
 
+test("Test MessagesPlaceholder shorthand in a chat prompt template with OpenAI object format", async () => {
+  const prompt = ChatPromptTemplate.fromMessages([["placeholder", "{foo}"]]);
+  const messages = await prompt.formatMessages({
+    foo: [
+      {
+        type: "system",
+        content: "some initial content",
+      },
+      {
+        type: "human",
+        content: [
+          {
+            text: "page: 1\ndescription: One Purchase Flow\ntimestamp: '2024-06-04T14:46:46.062Z'\ntype: navigate\nscreenshot_present: true\n",
+            type: "text",
+          },
+          {
+            text: "page: 3\ndescription: intent_str=buy,mode_str=redirect,screenName_str=order-completed,\ntimestamp: '2024-06-04T14:46:58.846Z'\ntype: Screen View\nscreenshot_present: false\n",
+            type: "text",
+          },
+        ],
+      },
+      {
+        type: "assistant",
+        content: "some captivating response",
+      },
+    ],
+  });
+  expect(messages).toEqual([
+    new SystemMessage("some initial content"),
+    new HumanMessage({
+      content: [
+        {
+          text: "page: 1\ndescription: One Purchase Flow\ntimestamp: '2024-06-04T14:46:46.062Z'\ntype: navigate\nscreenshot_present: true\n",
+          type: "text",
+        },
+        {
+          text: "page: 3\ndescription: intent_str=buy,mode_str=redirect,screenName_str=order-completed,\ntimestamp: '2024-06-04T14:46:58.846Z'\ntype: Screen View\nscreenshot_present: false\n",
+          type: "text",
+        },
+      ],
+    }),
+    new AIMessage("some captivating response"),
+  ]);
+});
+
 test("Test using partial", async () => {
   const userPrompt = new PromptTemplate({
     template: "{foo}{bar}",
