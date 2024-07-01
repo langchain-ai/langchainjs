@@ -183,7 +183,10 @@ export abstract class GoogleBaseLLM<AuthOptions>
   ): Promise<string> {
     const parameters = copyAIModelParams(this, options);
     const result = await this.connection.request(prompt, parameters, options);
-    const ret = this.connection.api.safeResponseToString(result, this.safetyHandler);
+    const ret = this.connection.api.safeResponseToString(
+      result,
+      this.safetyHandler
+    );
     return ret;
   }
 
@@ -261,7 +264,10 @@ export abstract class GoogleBaseLLM<AuthOptions>
       {},
       options as BaseLanguageModelCallOptions
     );
-    const ret = this.connection.api.safeResponseToBaseMessage(result, this.safetyHandler);
+    const ret = this.connection.api.safeResponseToBaseMessage(
+      result,
+      this.safetyHandler
+    );
     return ret;
   }
 

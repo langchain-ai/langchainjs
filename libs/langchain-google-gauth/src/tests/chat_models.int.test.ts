@@ -7,15 +7,22 @@ import {
   BaseMessage,
   BaseMessageChunk,
   BaseMessageLike,
-  HumanMessage, HumanMessageChunk, MessageContentComplex,
+  HumanMessage,
+  HumanMessageChunk,
+  MessageContentComplex,
   SystemMessage,
   ToolMessage,
 } from "@langchain/core/messages";
 import { InMemoryStore } from "@langchain/core/stores";
-import {BackedBlobStore, GoogleCloudStorageUri, MediaManager, SimpleWebBlobStore} from "@langchain/google-common";
+import {
+  BackedBlobStore,
+  GoogleCloudStorageUri,
+  MediaManager,
+  SimpleWebBlobStore,
+} from "@langchain/google-common";
 import { GeminiTool } from "../types.js";
-import {ChatGoogle} from "../chat_models.js";
-import {BlobStoreGoogleCloudStorage} from "../media.js";
+import { ChatGoogle } from "../chat_models.js";
+import { BlobStoreGoogleCloudStorage } from "../media.js";
 
 describe("GAuth Chat", () => {
   test("invoke", async () => {
@@ -238,20 +245,20 @@ describe("GAuth Chat", () => {
 
   test("media - fileData", async () => {
     const aliasStore = new BackedBlobStore({
-      backingStore: new InMemoryStore()
+      backingStore: new InMemoryStore(),
     });
     const canonicalStore = new BlobStoreGoogleCloudStorage({
       uriPrefix: new GoogleCloudStorageUri("gs://test-langchainjs/mediatest/"),
       defaultStoreOptions: {
         actionIfInvalid: "prefixPath",
-      }
-    })
+      },
+    });
     const resolver = new SimpleWebBlobStore();
     const mediaManager = new MediaManager({
       aliasStore,
       canonicalStore,
       resolver,
-    })
+    });
     const model = new ChatGoogle({
       modelName: "gemini-1.5-flash",
       mediaManager,
@@ -286,10 +293,9 @@ describe("GAuth Chat", () => {
       expect(typeof aiMessage.content).toBe("string");
       const text = aiMessage.content as string;
       expect(text).toMatch(/LangChain/);
-
     } catch (e) {
       console.error(e);
       throw e;
     }
-  })
+  });
 });

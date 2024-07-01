@@ -41,7 +41,7 @@ import {
   copyAndValidateModelParamsInto,
 } from "./utils/common.js";
 import { AbstractGoogleLLMConnection } from "./connection.js";
-import {DefaultGeminiSafetyHandler, GeminiAPIConfig} from "./utils/gemini.js";
+import { DefaultGeminiSafetyHandler, GeminiAPIConfig } from "./utils/gemini.js";
 import { ApiKeyGoogleAuth, GoogleAbstractedClient } from "./auth.js";
 import { JsonStream } from "./utils/stream.js";
 import { ensureParams } from "./utils/failed_handler.js";
@@ -103,20 +103,21 @@ class ChatConnection<AuthOptions> extends AbstractGoogleLLMConnection<
     input: BaseMessage[],
     _parameters: GoogleAIModelParams
   ): Promise<GeminiContent[]> {
-
-    const inputPromises: Promise<GeminiContent[]>[] = input
-      .map((msg, i) =>
-        this.api.baseMessageToContent(msg, input[i - 1], this.useSystemInstruction)
-      );
+    const inputPromises: Promise<GeminiContent[]>[] = input.map((msg, i) =>
+      this.api.baseMessageToContent(
+        msg,
+        input[i - 1],
+        this.useSystemInstruction
+      )
+    );
     const inputs = await Promise.all(inputPromises);
 
-    return inputs
-      .reduce((acc, cur) => {
-        // Filter out the system content, since those don't belong
-        // in the actual content.
-        const hasNoSystem = cur.every((content) => content.role !== "system");
-        return hasNoSystem ? [...acc, ...cur] : acc;
-      }, []);
+    return inputs.reduce((acc, cur) => {
+      // Filter out the system content, since those don't belong
+      // in the actual content.
+      const hasNoSystem = cur.every((content) => content.role !== "system");
+      return hasNoSystem ? [...acc, ...cur] : acc;
+    }, []);
   }
 
   async formatSystemInstruction(
@@ -128,14 +129,16 @@ class ChatConnection<AuthOptions> extends AbstractGoogleLLMConnection<
     }
 
     let ret = {} as GeminiContent;
-    for (let index=0; index<input.length; index+=1) {
+    for (let index = 0; index < input.length; index += 1) {
       const message = input[index];
       if (message._getType() === "system") {
         // For system types, we only want it if it is the first message,
         // if it appears anywhere else, it should be an error.
         if (index === 0) {
           // eslint-disable-next-line prefer-destructuring
-          ret = (await this.api.baseMessageToContent(message, undefined, true))[0];
+          ret = (
+            await this.api.baseMessageToContent(message, undefined, true)
+          )[0];
         } else {
           throw new Error(
             "System messages are only permitted as the first passed message."
@@ -351,7 +354,10 @@ export abstract class ChatGoogleBase<AuthOptions>
       parameters,
       options
     );
-    const ret = this.connection.api.safeResponseToChatResult(response, this.safetyHandler);
+    const ret = this.connection.api.safeResponseToChatResult(
+      response,
+      this.safetyHandler
+    );
     return ret;
   }
 
@@ -390,7 +396,10 @@ export abstract class ChatGoogleBase<AuthOptions>
       }
       const chunk =
         output !== null
-          ? this.connection.api.safeResponseToChatGeneration({ data: output }, this.safetyHandler)
+          ? this.connection.api.safeResponseToChatGeneration(
+              { data: output },
+              this.safetyHandler
+            )
           : new ChatGenerationChunk({
               text: "",
               generationInfo: { finishReason: "stop" },

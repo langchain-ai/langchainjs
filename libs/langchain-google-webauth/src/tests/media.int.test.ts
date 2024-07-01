@@ -1,9 +1,6 @@
 import fs from "fs/promises";
 import { test } from "@jest/globals";
-import {
-  GoogleCloudStorageUri,
-  MediaBlob,
-} from "@langchain/google-common";
+import { GoogleCloudStorageUri, MediaBlob } from "@langchain/google-common";
 import {
   BlobStoreAIStudioFile,
   BlobStoreGoogleCloudStorage,
@@ -152,10 +149,10 @@ describe("Google APIKey AIStudioBlobStore", () => {
     // The blob itself is expected to have no data right now,
     // but this will hopefully change in the future.
     expect(storedBlob?.size).toEqual(0);
-    expect(storedBlob?.dataType).toEqual('image/png');
-    expect(storedBlob?.metadata?.sizeBytes).toEqual('176');
-    expect(storedBlob?.metadata?.state).toEqual('ACTIVE');
-  })
+    expect(storedBlob?.dataType).toEqual("image/png");
+    expect(storedBlob?.metadata?.sizeBytes).toEqual("176");
+    expect(storedBlob?.metadata?.state).toEqual("ACTIVE");
+  });
 
   test("save video with retry", async () => {
     const filename = `src/tests/data/rainbow.mp4`;
@@ -172,11 +169,11 @@ describe("Google APIKey AIStudioBlobStore", () => {
     // The blob itself is expected to have no data right now,
     // but this will hopefully change in the future.
     expect(storedBlob?.size).toEqual(0);
-    expect(storedBlob?.dataType).toEqual('video/mp4');
-    expect(storedBlob?.metadata?.sizeBytes).toEqual('1020253');
-    expect(storedBlob?.metadata?.state).toEqual('ACTIVE');
-    expect(storedBlob?.metadata?.videoMetadata?.videoDuration).toEqual('8s');
-  })
+    expect(storedBlob?.dataType).toEqual("video/mp4");
+    expect(storedBlob?.metadata?.sizeBytes).toEqual("1020253");
+    expect(storedBlob?.metadata?.state).toEqual("ACTIVE");
+    expect(storedBlob?.metadata?.videoMetadata?.videoDuration).toEqual("8s");
+  });
 
   test("save video no retry", async () => {
     const filename = `src/tests/data/rainbow.mp4`;
@@ -195,9 +192,9 @@ describe("Google APIKey AIStudioBlobStore", () => {
     // The blob itself is expected to have no data right now,
     // but this will hopefully change in the future.
     expect(storedBlob?.size).toEqual(0);
-    expect(storedBlob?.dataType).toEqual('video/mp4');
-    expect(storedBlob?.metadata?.sizeBytes).toEqual('1020253');
-    expect(storedBlob?.metadata?.state).toEqual('PROCESSING');
+    expect(storedBlob?.dataType).toEqual("video/mp4");
+    expect(storedBlob?.metadata?.sizeBytes).toEqual("1020253");
+    expect(storedBlob?.metadata?.state).toEqual("PROCESSING");
     expect(storedBlob?.metadata?.videoMetadata).toBeUndefined();
-  })
-})
+  });
+});

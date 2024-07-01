@@ -210,7 +210,8 @@ export abstract class GoogleAIConnection<
 
   client: GoogleAbstractedClient;
 
-  api;  // FIXME: Make this a real type
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  api: any; // FIXME: Make this a real type
 
   constructor(
     fields: GoogleAIBaseLLMInput<AuthOptions> | undefined,
@@ -394,7 +395,10 @@ export abstract class AbstractGoogleLLMConnection<
     const generationConfig = this.formatGenerationConfig(input, parameters);
     const tools = this.formatTools(input, parameters);
     const safetySettings = this.formatSafetySettings(input, parameters);
-    const systemInstruction = await this.formatSystemInstruction(input, parameters);
+    const systemInstruction = await this.formatSystemInstruction(
+      input,
+      parameters
+    );
 
     const ret: GeminiRequest = {
       contents,

@@ -34,7 +34,7 @@ import type {
   GeminiPartFunctionCall,
 } from "../types.js";
 import { GoogleAISafetyError } from "./safety.js";
-import {MediaBlob, MediaManager} from "./media_core.js";
+import { MediaBlob, MediaManager } from "./media_core.js";
 
 export interface FunctionCall {
   name: string;
@@ -71,13 +71,10 @@ const extractMimeType = (
 };
 
 export interface GeminiAPIConfig {
-  mediaManager?: MediaManager,
+  mediaManager?: MediaManager;
 }
 
-export function getGeminiAPI(
-  config?: GeminiAPIConfig
-) {
-
+export function getGeminiAPI(config?: GeminiAPIConfig) {
   function messageContentText(
     content: MessageContentText
   ): GeminiPartText | null {
@@ -122,11 +119,13 @@ export function getGeminiAPI(
       fileData: {
         fileUri: blob.path!,
         mimeType: blob.mimetype,
-      }
-    }
+      },
+    };
   }
 
-  async function fileUriContentToBlob(uri: string): Promise<MediaBlob | undefined> {
+  async function fileUriContentToBlob(
+    uri: string
+  ): Promise<MediaBlob | undefined> {
     return config?.mediaManager?.getMediaBlob(uri);
   }
 
@@ -159,7 +158,9 @@ export function getGeminiAPI(
     throw new Error("Invalid media content");
   }
 
-  async function messageContentComplexToPart(content: MessageContentComplex): Promise<GeminiPart | null> {
+  async function messageContentComplexToPart(
+    content: MessageContentComplex
+  ): Promise<GeminiPart | null> {
     switch (content.type) {
       case "text":
         if ("text" in content) {
@@ -184,35 +185,41 @@ export function getGeminiAPI(
     );
   }
 
-  async function messageContentComplexToParts(content: MessageContentComplex[]): Promise<(GeminiPart | null)[]> {
+  async function messageContentComplexToParts(
+    content: MessageContentComplex[]
+  ): Promise<(GeminiPart | null)[]> {
     const contents = content.map(messageContentComplexToPart);
     return Promise.all(contents);
   }
 
-  async function messageContentToParts(content: MessageContent): Promise<GeminiPart[]> {
+  async function messageContentToParts(
+    content: MessageContent
+  ): Promise<GeminiPart[]> {
     // Convert a string to a text type MessageContent if needed
     const messageContent: MessageContentComplex[] =
       typeof content === "string"
         ? [
-          {
-            type: "text",
-            text: content,
-          },
-        ]
+            {
+              type: "text",
+              text: content,
+            },
+          ]
         : content;
 
     // Get all of the parts, even those that don't correctly resolve
     const allParts = await messageContentComplexToParts(messageContent);
 
     // Remove any invalid parts
-    const parts: GeminiPart[] = allParts
-      .reduce((acc: GeminiPart[], val: GeminiPart | null | undefined) => {
+    const parts: GeminiPart[] = allParts.reduce(
+      (acc: GeminiPart[], val: GeminiPart | null | undefined) => {
         if (val) {
           return [...acc, val];
         } else {
           return acc;
         }
-      }, []);
+      },
+      []
+    );
 
     return parts;
   }
@@ -251,7 +258,9 @@ export function getGeminiAPI(
     role: GeminiRole,
     message: BaseMessage
   ): Promise<GeminiContent[]> {
-    const contentParts: GeminiPart[] = await messageContentToParts(message.content);
+    const contentParts: GeminiPart[] = await messageContentToParts(
+      message.content
+    );
     let toolParts: GeminiPart[];
     if (isAIMessage(message) && !!message.tool_calls?.length) {
       toolParts = message.tool_calls.map(
@@ -281,9 +290,9 @@ export function getGeminiAPI(
     return useSystemInstruction
       ? roleMessageToContent("system", message)
       : [
-        ...await roleMessageToContent("user", message),
-        ...await roleMessageToContent("model", new AIMessage("Ok")),
-      ];
+          ...(await roleMessageToContent("user", message)),
+          ...(await roleMessageToContent("model", new AIMessage("Ok"))),
+        ];
   }
 
   function toolMessageToContent(
@@ -294,15 +303,15 @@ export function getGeminiAPI(
       typeof message.content === "string"
         ? message.content
         : message.content.reduce(
-          (acc: string, content: MessageContentComplex) => {
-            if (content.type === "text") {
-              return acc + content.text;
-            } else {
-              return acc;
-            }
-          },
-          ""
-        );
+            (acc: string, content: MessageContentComplex) => {
+              if (content.type === "text") {
+                return acc + content.text;
+              } else {
+                return acc;
+              }
+            },
+            ""
+          );
     // Hacky :(
     const responseName =
       (isAIMessage(prevMessage) && !!prevMessage.tool_calls?.length
@@ -317,7 +326,7 @@ export function getGeminiAPI(
             {
               functionResponse: {
                 name: responseName,
-                response: {content},
+                response: { content },
               },
             },
           ],
@@ -331,7 +340,7 @@ export function getGeminiAPI(
             {
               functionResponse: {
                 name: responseName,
-                response: {content: contentStr},
+                response: { content: contentStr },
               },
             },
           ],
@@ -428,7 +437,9 @@ export function getGeminiAPI(
     };
   }
 
-  function functionCallPartToToolRaw(part: GeminiPartFunctionCall): ToolCallRaw {
+  function functionCallPartToToolRaw(
+    part: GeminiPartFunctionCall
+  ): ToolCallRaw {
     return {
       id: uuidv4().replace(/-/g, ""),
       type: "function",
@@ -620,8 +631,8 @@ export function getGeminiAPI(
       const combinedContent = ret.map((item) => item.message.content).join("");
       const combinedText = ret.map((item) => item.text).join("");
       const toolCallChunks = ret[
-      ret.length - 1
-        ]?.message.additional_kwargs?.tool_calls?.map((toolCall, i) => ({
+        ret.length - 1
+      ]?.message.additional_kwargs?.tool_calls?.map((toolCall, i) => ({
         name: toolCall.function.name,
         args: toolCall.function.arguments,
         id: toolCall.id,
@@ -693,9 +704,7 @@ export function getGeminiAPI(
     return fields;
   }
 
-  function responseToBaseMessage(
-    response: GoogleLLMResponse
-  ): BaseMessage {
+  function responseToBaseMessage(response: GoogleLLMResponse): BaseMessage {
     const fields = responseToBaseMessageFields(response);
     return new AIMessage(fields);
   }
@@ -730,7 +739,7 @@ export function getGeminiAPI(
     chunkToString,
     safeResponseToBaseMessage,
     safeResponseToChatResult,
-  }
+  };
 }
 
 export function validateGeminiParams(params: GoogleAIModelParams): void {

@@ -1,20 +1,27 @@
-import {StructuredTool} from "@langchain/core/tools";
-import {z} from "zod";
-import {test} from "@jest/globals";
+import { StructuredTool } from "@langchain/core/tools";
+import { z } from "zod";
+import { test } from "@jest/globals";
 import {
   AIMessage,
   AIMessageChunk,
   BaseMessage,
   BaseMessageChunk,
-  HumanMessage, HumanMessageChunk, MessageContentComplex,
-  SystemMessage, ToolMessage
+  HumanMessage,
+  HumanMessageChunk,
+  MessageContentComplex,
+  SystemMessage,
+  ToolMessage,
 } from "@langchain/core/messages";
-import {BaseLanguageModelInput} from "@langchain/core/language_models/base";
-import {ChatPromptValue} from "@langchain/core/prompt_values";
-import {BackedBlobStore, MediaManager, SimpleWebBlobStore} from "@langchain/google-common";
-import {InMemoryStore} from "@langchain/core/stores";
-import {ChatGoogle} from "../chat_models.js";
-import {BlobStoreAIStudioFile} from "../media.js";
+import { BaseLanguageModelInput } from "@langchain/core/language_models/base";
+import { ChatPromptValue } from "@langchain/core/prompt_values";
+import {
+  BackedBlobStore,
+  MediaManager,
+  SimpleWebBlobStore,
+} from "@langchain/google-common";
+import { InMemoryStore } from "@langchain/core/stores";
+import { ChatGoogle } from "../chat_models.js";
+import { BlobStoreAIStudioFile } from "../media.js";
 
 class WeatherTool extends StructuredTool {
   schema = z.object({
@@ -190,16 +197,15 @@ describe("Google APIKey Chat", () => {
 
   test("media - fileData", async () => {
     const aliasStore = new BackedBlobStore({
-      backingStore: new InMemoryStore()
+      backingStore: new InMemoryStore(),
     });
-    const canonicalStore = new BlobStoreAIStudioFile({
-    })
+    const canonicalStore = new BlobStoreAIStudioFile({});
     const resolver = new SimpleWebBlobStore();
     const mediaManager = new MediaManager({
       aliasStore,
       canonicalStore,
       resolver,
-    })
+    });
     const model = new ChatGoogle({
       modelName: "gemini-1.5-flash",
       apiVersion: "v1beta",
@@ -236,12 +242,11 @@ describe("Google APIKey Chat", () => {
       const text = aiMessage.content as string;
       expect(text).toMatch(/LangChain/);
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       console.error(e);
-      console.error(JSON.stringify(e.details,null,1));
+      console.error(JSON.stringify(e.details, null, 1));
       throw e;
     }
-  })
-
+  });
 });

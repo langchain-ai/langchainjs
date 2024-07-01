@@ -4,11 +4,7 @@ import {
   AsyncCallerParams,
 } from "@langchain/core/utils/async_caller";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
-import {
-  MediaBlob,
-  BlobStore,
-  BlobStoreOptions,
-} from "./utils/media_core.js";
+import { MediaBlob, BlobStore, BlobStoreOptions } from "./utils/media_core.js";
 import {
   GoogleConnectionParams,
   GoogleRawResponse,
@@ -102,8 +98,7 @@ export abstract class GoogleDownloadRawConnection<
 export interface BlobStoreGoogleParams<AuthOptions>
   extends GoogleConnectionParams<AuthOptions>,
     AsyncCallerParams,
-    BlobStoreOptions
-  {}
+    BlobStoreOptions {}
 
 export abstract class BlobStoreGoogle<
   ResponseType extends GoogleResponse,
@@ -131,7 +126,11 @@ export abstract class BlobStoreGoogle<
   abstract buildSetConnection([key, blob]: [
     string,
     MediaBlob
-  ]): GoogleMultipartUploadConnection<AsyncCallerCallOptions, ResponseType, AuthOptions>;
+  ]): GoogleMultipartUploadConnection<
+    AsyncCallerCallOptions,
+    ResponseType,
+    AuthOptions
+  >;
 
   async _set(keyValuePair: [string, MediaBlob]): Promise<ResponseType> {
     const [_key, blob] = keyValuePair;
@@ -263,7 +262,7 @@ export class GoogleCloudStorageUri {
   }
 
   get uri() {
-    return `gs://${this.bucket}/${this.path}`
+    return `gs://${this.bucket}/${this.path}`;
   }
 
   get isValid() {
@@ -389,16 +388,13 @@ export class GoogleCloudStorageRawConnection<
 
 export interface BlobStoreGoogleCloudStorageBaseParams<AuthOptions>
   extends BlobStoreGoogleParams<AuthOptions> {
-
   uriPrefix: GoogleCloudStorageUri;
-
 }
 
 export abstract class BlobStoreGoogleCloudStorageBase<
   AuthOptions
 > extends BlobStoreGoogle<GoogleCloudStorageResponse, AuthOptions> {
-
-  params: BlobStoreGoogleCloudStorageBaseParams<AuthOptions>
+  params: BlobStoreGoogleCloudStorageBaseParams<AuthOptions>;
 
   constructor(fields: BlobStoreGoogleCloudStorageBaseParams<AuthOptions>) {
     super(fields);
@@ -406,10 +402,13 @@ export abstract class BlobStoreGoogleCloudStorageBase<
     this.defaultStoreOptions = {
       ...this.defaultStoreOptions,
       pathPrefix: fields.uriPrefix.uri,
-    }
+    };
   }
 
-  buildSetConnection([key, _blob]: [string, MediaBlob]): GoogleMultipartUploadConnection<
+  buildSetConnection([key, _blob]: [
+    string,
+    MediaBlob
+  ]): GoogleMultipartUploadConnection<
     AsyncCallerCallOptions,
     GoogleCloudStorageResponse,
     AuthOptions
@@ -485,37 +484,40 @@ export abstract class BlobStoreGoogleCloudStorageBase<
   }
 }
 
-export type AIStudioFileState = "PROCESSING" | "ACTIVE" | "FAILED" | "STATE_UNSPECIFIED";
+export type AIStudioFileState =
+  | "PROCESSING"
+  | "ACTIVE"
+  | "FAILED"
+  | "STATE_UNSPECIFIED";
 
 export type AIStudioFileVideoMetadata = {
   videoMetadata: {
-    videoDuration: string,   // Duration in seconds, possibly with fractional, ending in "s"
-  }
-}
+    videoDuration: string; // Duration in seconds, possibly with fractional, ending in "s"
+  };
+};
 
 export type AIStudioFileMetadata = AIStudioFileVideoMetadata;
 
 export interface AIStudioFileObject {
-  name?: string,
-  displayName?: string,
-  mimeType?: string,
-  sizeBytes?: string,      // int64 format
-  createTime?: string,     // timestamp format
-  updateTime?: string,     // timestamp format
-  expirationTime?: string, // timestamp format
-  sha256Hash?: string,     // base64 encoded
-  uri?: string,
-  state?: AIStudioFileState,
+  name?: string;
+  displayName?: string;
+  mimeType?: string;
+  sizeBytes?: string; // int64 format
+  createTime?: string; // timestamp format
+  updateTime?: string; // timestamp format
+  expirationTime?: string; // timestamp format
+  sha256Hash?: string; // base64 encoded
+  uri?: string;
+  state?: AIStudioFileState;
   error?: {
-    code: number,
-    message: string,
-    details: Record<string,unknown>[],
-  },
-  metadata?: AIStudioFileMetadata,
+    code: number;
+    message: string;
+    details: Record<string, unknown>[];
+  };
+  metadata?: AIStudioFileMetadata;
 }
 
 export class AIStudioMediaBlob extends MediaBlob {
-
   _valueAsDate(value: string): Date {
     if (!value) {
       return new Date(0);
@@ -540,7 +542,7 @@ export class AIStudioMediaBlob extends MediaBlob {
   }
 
   get isExpired(): boolean {
-    const now = (new Date()).toISOString();
+    const now = new Date().toISOString();
     const exp = this.metadata?.expirationTime ?? now;
     return exp <= now;
   }
@@ -552,15 +554,15 @@ export interface AIStudioFileGetResponse extends GoogleResponse {
 
 export interface AIStudioFileSaveResponse extends GoogleResponse {
   data: {
-    file: AIStudioFileObject,
-  }
+    file: AIStudioFileObject;
+  };
 }
 
 export interface AIStudioFileListResponse extends GoogleResponse {
   data: {
-    files: AIStudioFileObject[],
-    nextPageToken: string,
-  }
+    files: AIStudioFileObject[];
+    nextPageToken: string;
+  };
 }
 
 export type AIStudioFileResponse =
@@ -581,7 +583,6 @@ export class AIStudioFileUploadConnection<
   AIStudioFileSaveResponse,
   AuthOptions
 > {
-
   apiVersion = "v1beta";
 
   async buildUrl(): Promise<string> {
@@ -599,8 +600,11 @@ export interface AIStudioFileDownloadConnectionParams<AuthOptions>
 export class AIStudioFileDownloadConnection<
   ResponseType extends GoogleResponse,
   AuthOptions
-> extends GoogleDownloadConnection<AsyncCallerCallOptions, ResponseType, AuthOptions> {
-
+> extends GoogleDownloadConnection<
+  AsyncCallerCallOptions,
+  ResponseType,
+  AuthOptions
+> {
   method: GoogleAbstractedClientOpsMethod;
 
   name: string;
@@ -618,7 +622,7 @@ export class AIStudioFileDownloadConnection<
   }
 
   buildMethod(): GoogleAbstractedClientOpsMethod {
-    return this.method
+    return this.method;
   }
 
   async buildUrl(): Promise<string> {
@@ -634,7 +638,6 @@ export interface BlobStoreAIStudioFileBaseParams<AuthOptions>
 export abstract class BlobStoreAIStudioFileBase<
   AuthOptions
 > extends BlobStoreGoogle<AIStudioFileResponse, AuthOptions> {
-
   params?: BlobStoreAIStudioFileBaseParams<AuthOptions>;
 
   retryTime: number = 1000;
@@ -683,17 +686,23 @@ export abstract class BlobStoreAIStudioFileBase<
   async _regetMetadata(key: string): Promise<AIStudioFileObject> {
     // Sleep for some time period
     // eslint-disable-next-line no-promise-executor-return
-    await new Promise(resolve => setTimeout(resolve, this.retryTime));
+    await new Promise((resolve) => setTimeout(resolve, this.retryTime));
 
     // Fetch the latest metadata
     return this._getMetadata(key);
   }
 
-  async _set([key, blob]: [string, MediaBlob]): Promise<AIStudioFileSaveResponse> {
-    const response = await super._set([key, blob]) as AIStudioFileSaveResponse;
+  async _set([key, blob]: [
+    string,
+    MediaBlob
+  ]): Promise<AIStudioFileSaveResponse> {
+    const response = (await super._set([
+      key,
+      blob,
+    ])) as AIStudioFileSaveResponse;
 
     // console.log('response.data', response.data);
-    let file = response.data?.file ?? {state:"FAILED"};
+    let file = response.data?.file ?? { state: "FAILED" };
     while (file.state === "PROCESSING" && file.uri && this.retryTime > 0) {
       file = await this._regetMetadata(file.uri);
     }
@@ -706,49 +715,68 @@ export abstract class BlobStoreAIStudioFileBase<
     blob.metadata = {
       ...blob.metadata,
       ...file,
-    }
+    };
     /* eslint-enable no-param-reassign */
 
     return response;
   }
 
-  buildSetConnection([_key, _blob]: [string, MediaBlob]): GoogleMultipartUploadConnection<AsyncCallerCallOptions, AIStudioFileResponse, AuthOptions> {
+  buildSetConnection([_key, _blob]: [
+    string,
+    MediaBlob
+  ]): GoogleMultipartUploadConnection<
+    AsyncCallerCallOptions,
+    AIStudioFileResponse,
+    AuthOptions
+  > {
     return new AIStudioFileUploadConnection(
       this.params,
       this.caller,
-      this.client,
-    )
+      this.client
+    );
   }
 
-  buildSetMetadata([_key, _blob]: [string, MediaBlob]): Record<string, unknown> {
+  buildSetMetadata([_key, _blob]: [string, MediaBlob]): Record<
+    string,
+    unknown
+  > {
     return {
       // displayName: key,
       // mimeType: blob.mimetype,
-    }
+    };
   }
 
-  buildGetMetadataConnection(key: string): GoogleDownloadConnection<AsyncCallerCallOptions, AIStudioFileResponse, AuthOptions> {
+  buildGetMetadataConnection(
+    key: string
+  ): GoogleDownloadConnection<
+    AsyncCallerCallOptions,
+    AIStudioFileResponse,
+    AuthOptions
+  > {
     const params: AIStudioFileDownloadConnectionParams<AuthOptions> = {
       ...this.params,
       method: "GET",
       name: this._pathToName(key),
-    }
+    };
     return new AIStudioFileDownloadConnection<
       AIStudioFileResponse,
       AuthOptions
     >(params, this.caller, this.client);
   }
 
-  buildGetDataConnection(_key: string): GoogleDownloadRawConnection<AsyncCallerCallOptions, AuthOptions> {
-    throw new Error("AI Studio File API does not provide data")
+  buildGetDataConnection(
+    _key: string
+  ): GoogleDownloadRawConnection<AsyncCallerCallOptions, AuthOptions> {
+    throw new Error("AI Studio File API does not provide data");
   }
 
   async _get(key: string): Promise<MediaBlob | undefined> {
     const metadata = await this._getMetadata(key);
     if (metadata) {
-      const contentType = metadata?.mimeType as string ?? "application/octet-stream";
+      const contentType =
+        (metadata?.mimeType as string) ?? "application/octet-stream";
       // TODO - Get the actual data (and other metadata) from an optional backing store
-      const data = new Blob([], {type:contentType});
+      const data = new Blob([], { type: contentType });
 
       return new MediaBlob({
         path: key,
@@ -760,16 +788,21 @@ export abstract class BlobStoreAIStudioFileBase<
     }
   }
 
-  buildDeleteConnection(key: string): GoogleDownloadConnection<AsyncCallerCallOptions, AIStudioFileResponse, AuthOptions> {
+  buildDeleteConnection(
+    key: string
+  ): GoogleDownloadConnection<
+    AsyncCallerCallOptions,
+    AIStudioFileResponse,
+    AuthOptions
+  > {
     const params: AIStudioFileDownloadConnectionParams<AuthOptions> = {
       ...this.params,
       method: "DELETE",
       name: this._pathToName(key),
-    }
+    };
     return new AIStudioFileDownloadConnection<
       AIStudioFileResponse,
       AuthOptions
     >(params, this.caller, this.client);
   }
-
 }

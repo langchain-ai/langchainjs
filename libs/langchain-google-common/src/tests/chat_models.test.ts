@@ -1,4 +1,4 @@
-import {expect, test} from "@jest/globals";
+import { expect, test } from "@jest/globals";
 import {
   AIMessage,
   BaseMessage,
@@ -9,14 +9,18 @@ import {
   SystemMessage,
   ToolMessage,
 } from "@langchain/core/messages";
-import {InMemoryStore} from "@langchain/core/stores";
+import { InMemoryStore } from "@langchain/core/stores";
 
 import { ChatGoogleBase, ChatGoogleBaseInput } from "../chat_models.js";
 import { authOptions, MockClient, MockClientAuthInfo, mockId } from "./mock.js";
 import { GeminiTool, GoogleAIBaseLLMInput } from "../types.js";
 import { GoogleAbstractedClient } from "../auth.js";
 import { GoogleAISafetyError } from "../utils/safety.js";
-import {BackedBlobStore, MediaBlob, MediaManager} from "../utils/media_core.js";
+import {
+  BackedBlobStore,
+  MediaBlob,
+  MediaManager,
+} from "../utils/media_core.js";
 
 class ChatGoogle extends ChatGoogleBase<MockClientAuthInfo> {
   constructor(fields?: ChatGoogleBaseInput<MockClientAuthInfo>) {
@@ -596,7 +600,6 @@ describe("Mock ChatGoogle", () => {
     } catch (e) {
       expect((e as Error).message).toEqual("Invalid media content");
     }
-
   });
 
   test("3. invoke - media - no manager", async () => {
@@ -649,7 +652,6 @@ describe("Mock ChatGoogle", () => {
   });
 
   test("3. invoke - media - manager", async () => {
-
     class MemStore extends InMemoryStore<MediaBlob> {
       get length() {
         return Object.keys(this.store).length;
@@ -660,8 +662,8 @@ describe("Mock ChatGoogle", () => {
     const aliasStore = new BackedBlobStore({
       backingStore: aliasMemory,
       defaultFetchOptions: {
-        actionIfBlobMissing: undefined
-      }
+        actionIfBlobMissing: undefined,
+      },
     });
     const canonicalMemory = new MemStore();
     const canonicalStore = new BackedBlobStore({
@@ -672,30 +674,28 @@ describe("Mock ChatGoogle", () => {
       },
       defaultFetchOptions: {
         actionIfBlobMissing: undefined,
-      }
+      },
     });
     const resolverMemory = new MemStore();
     const resolver = new BackedBlobStore({
       backingStore: resolverMemory,
       defaultFetchOptions: {
         actionIfBlobMissing: "emptyBlob",
-      }
+      },
     });
     const mediaManager = new MediaManager({
       aliasStore,
       canonicalStore,
       resolver,
-    })
+    });
 
-    async function store(path: string, text: string): Promise<void>{
-      const type = path.endsWith(".png")
-        ? "image/png"
-        : "text/plain";
+    async function store(path: string, text: string): Promise<void> {
+      const type = path.endsWith(".png") ? "image/png" : "text/plain";
       const blob = new MediaBlob({
-        data: new Blob([text], {type}),
+        data: new Blob([text], { type }),
         path,
-      })
-      await mediaManager.resolver.store(blob)
+      });
+      await mediaManager.resolver.store(blob);
     }
     await store("resolve://host/foo", "fooing");
     await store("resolve://host2/bar/baz", "barbazing");
@@ -746,10 +746,12 @@ describe("Mock ChatGoogle", () => {
     expect(parts[1].fileData).toHaveProperty("mimeType");
     expect(parts[1].fileData.mimeType).toEqual("image/png");
     expect(parts[1].fileData).toHaveProperty("fileUri");
-    expect(parts[1].fileData.fileUri).toEqual("canonical://store/host/foo/blue-box.png");
+    expect(parts[1].fileData.fileUri).toEqual(
+      "canonical://store/host/foo/blue-box.png"
+    );
 
     expect(result.content).toBe("A blue square.");
-  })
+  });
 
   test("4. Functions Bind - Gemini format request", async () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

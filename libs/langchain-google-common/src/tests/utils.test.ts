@@ -1,11 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import {beforeEach, expect, test} from "@jest/globals";
+import { beforeEach, expect, test } from "@jest/globals";
 import { InMemoryStore } from "@langchain/core/stores";
 import { z } from "zod";
 import { zodToGeminiParameters } from "../utils/zod_to_gemini_parameters.js";
 import {
   BackedBlobStore,
-  MediaBlob, MediaManager,
+  MediaBlob,
+  MediaManager,
   SimpleWebBlobStore,
 } from "../utils/media_core.js";
 
@@ -87,7 +88,7 @@ describe("zodToGeminiParameters", () => {
       expect((arrayItemsSchema as any).additionalProperties).toBeUndefined();
     }
   });
-})
+});
 
 describe("media core", () => {
   test("MediaBlob plain", async () => {
@@ -135,33 +136,32 @@ describe("media core", () => {
   });
 
   describe("BackedBlobStore", () => {
-
     test("simple", async () => {
       const backingStore = new InMemoryStore<MediaBlob>();
       const store = new BackedBlobStore({
-        backingStore
+        backingStore,
       });
-      const data = new Blob(["This is a test"], {type:"text/plain"});
-      const path = "simple://foo"
+      const data = new Blob(["This is a test"], { type: "text/plain" });
+      const path = "simple://foo";
       const blob = new MediaBlob({
         data,
         path,
-      })
+      });
       const storedBlob = await store.store(blob);
       expect(storedBlob).toBeDefined();
       const fetchedBlob = await store.fetch(path);
       expect(fetchedBlob).toBeDefined();
-    })
+    });
 
     test("missing undefined", async () => {
       const backingStore = new InMemoryStore<MediaBlob>();
       const store = new BackedBlobStore({
-        backingStore
+        backingStore,
       });
-      const path = "simple://foo"
+      const path = "simple://foo";
       const fetchedBlob = await store.fetch(path);
       expect(fetchedBlob).toBeUndefined();
-    })
+    });
 
     test("missing emptyBlob defaultConfig", async () => {
       const backingStore = new InMemoryStore<MediaBlob>();
@@ -169,14 +169,14 @@ describe("media core", () => {
         backingStore,
         defaultFetchOptions: {
           actionIfBlobMissing: "emptyBlob",
-        }
+        },
       });
-      const path = "simple://foo"
+      const path = "simple://foo";
       const fetchedBlob = await store.fetch(path);
       expect(fetchedBlob).toBeDefined();
       expect(fetchedBlob?.size).toEqual(0);
       expect(fetchedBlob?.path).toEqual(path);
-    })
+    });
 
     test("missing undefined fetch", async () => {
       const backingStore = new InMemoryStore<MediaBlob>();
@@ -184,32 +184,32 @@ describe("media core", () => {
         backingStore,
         defaultFetchOptions: {
           actionIfBlobMissing: "emptyBlob",
-        }
+        },
       });
-      const path = "simple://foo"
+      const path = "simple://foo";
       const fetchedBlob = await store.fetch(path, {
         actionIfBlobMissing: undefined,
       });
       expect(fetchedBlob).toBeUndefined();
-    })
+    });
 
     test("invalid undefined", async () => {
       const backingStore = new InMemoryStore<MediaBlob>();
       const store = new BackedBlobStore({
         backingStore,
         defaultStoreOptions: {
-          pathPrefix: "example://bar/"
-        }
+          pathPrefix: "example://bar/",
+        },
       });
-      const path = "simple://foo"
-      const data = new Blob(["This is a test"], {type:"text/plain"});
+      const path = "simple://foo";
+      const data = new Blob(["This is a test"], { type: "text/plain" });
       const blob = new MediaBlob({
         data,
         path,
-      })
+      });
       const storedBlob = await store.store(blob);
       expect(storedBlob).toBeUndefined();
-    })
+    });
 
     test("invalid ignore", async () => {
       const backingStore = new InMemoryStore<MediaBlob>();
@@ -217,20 +217,20 @@ describe("media core", () => {
         backingStore,
         defaultStoreOptions: {
           actionIfInvalid: "ignore",
-          pathPrefix: "example://bar/"
-        }
+          pathPrefix: "example://bar/",
+        },
       });
-      const path = "simple://foo"
-      const data = new Blob(["This is a test"], {type:"text/plain"});
+      const path = "simple://foo";
+      const data = new Blob(["This is a test"], { type: "text/plain" });
       const blob = new MediaBlob({
         data,
         path,
-      })
+      });
       const storedBlob = await store.store(blob);
       expect(storedBlob).toBeDefined();
       expect(storedBlob?.path).toEqual(path);
       expect(storedBlob?.metadata).toBeUndefined();
-    })
+    });
 
     test("invalid prefixPath", async () => {
       const backingStore = new InMemoryStore<MediaBlob>();
@@ -238,20 +238,20 @@ describe("media core", () => {
         backingStore,
         defaultStoreOptions: {
           actionIfInvalid: "prefixPath",
-          pathPrefix: "example://bar/"
-        }
+          pathPrefix: "example://bar/",
+        },
       });
-      const path = "simple://foo"
-      const data = new Blob(["This is a test"], {type:"text/plain"});
+      const path = "simple://foo";
+      const data = new Blob(["This is a test"], { type: "text/plain" });
       const blob = new MediaBlob({
         data,
         path,
-      })
+      });
       const storedBlob = await store.store(blob);
       expect(storedBlob?.path).toEqual("example://bar/foo");
       expect(await storedBlob?.asString()).toEqual("This is a test");
       expect(storedBlob?.metadata?.langchainOldPath).toEqual(path);
-    })
+    });
 
     test("invalid prefixUuid", async () => {
       const backingStore = new InMemoryStore<MediaBlob>();
@@ -259,33 +259,32 @@ describe("media core", () => {
         backingStore,
         defaultStoreOptions: {
           actionIfInvalid: "prefixUuid",
-          pathPrefix: "example://bar/"
-        }
+          pathPrefix: "example://bar/",
+        },
       });
-      const path = "simple://foo"
-      const data = new Blob(["This is a test"], {type:"text/plain"});
+      const path = "simple://foo";
+      const data = new Blob(["This is a test"], { type: "text/plain" });
       const metadata = {
         alpha: "one",
         bravo: "two",
-      }
+      };
       const blob = new MediaBlob({
         data,
         path,
         metadata,
-      })
+      });
       const storedBlob = await store.store(blob);
-      expect(storedBlob?.path).toMatch(/example:\/\/bar\/[a-f0-9]{8}(-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i);
+      expect(storedBlob?.path).toMatch(
+        /example:\/\/bar\/[a-f0-9]{8}(-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i
+      );
       expect(storedBlob?.size).toEqual(14);
       expect(await storedBlob?.asString()).toEqual("This is a test");
       expect(storedBlob?.metadata?.alpha).toEqual("one");
       expect(storedBlob?.metadata?.langchainOldPath).toEqual(path);
-    })
-
-
+    });
   });
 
   describe("MediaManager", () => {
-
     class MemStore extends InMemoryStore<MediaBlob> {
       get length() {
         return Object.keys(this.store).length;
@@ -297,12 +296,12 @@ describe("media core", () => {
     let canonicalMemory: MemStore;
     let resolverMemory: MemStore;
 
-    async function store(path: string, text: string): Promise<void>{
+    async function store(path: string, text: string): Promise<void> {
       const blob = new MediaBlob({
-        data: new Blob([text], {type:"text/plain"}),
+        data: new Blob([text], { type: "text/plain" }),
         path,
-      })
-      await mediaManager.resolver.store(blob)
+      });
+      await mediaManager.resolver.store(blob);
     }
 
     beforeEach(async () => {
@@ -310,8 +309,8 @@ describe("media core", () => {
       const aliasStore = new BackedBlobStore({
         backingStore: aliasMemory,
         defaultFetchOptions: {
-          actionIfBlobMissing: undefined
-        }
+          actionIfBlobMissing: undefined,
+        },
       });
       canonicalMemory = new MemStore();
       const canonicalStore = new BackedBlobStore({
@@ -322,29 +321,29 @@ describe("media core", () => {
         },
         defaultFetchOptions: {
           actionIfBlobMissing: undefined,
-        }
+        },
       });
       resolverMemory = new MemStore();
       const resolver = new BackedBlobStore({
         backingStore: resolverMemory,
         defaultFetchOptions: {
           actionIfBlobMissing: "emptyBlob",
-        }
+        },
       });
       mediaManager = new MediaManager({
         aliasStore,
         canonicalStore,
         resolver,
-      })
+      });
       await store("resolve://host/foo", "fooing");
       await store("resolve://host2/bar/baz", "barbazing");
-    })
+    });
 
     test("environment", async () => {
       expect(resolverMemory.length).toEqual(2);
       const fooBlob = await mediaManager.resolver.fetch("resolve://host/foo");
       expect(await fooBlob?.asString()).toEqual("fooing");
-    })
+    });
 
     test("simple", async () => {
       const uri = "resolve://host/foo";
@@ -372,7 +371,6 @@ describe("media core", () => {
       expect(canonicalBlob).toBeDefined();
       expect(canonicalBlob?.path).toEqual(curi);
       expect(await canonicalBlob?.asString()).toEqual("fooing");
-    })
-
-  })
+    });
+  });
 });
