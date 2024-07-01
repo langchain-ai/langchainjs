@@ -104,7 +104,7 @@ class ChatConnection<AuthOptions> extends AbstractGoogleLLMConnection<
     _parameters: GoogleAIModelParams
   ): Promise<GeminiContent[]> {
 
-    const inputPromises = input
+    const inputPromises: Promise<GeminiContent[]>[] = input
       .map((msg, i) =>
         this.api.baseMessageToContent(msg, input[i - 1], this.useSystemInstruction)
       );
