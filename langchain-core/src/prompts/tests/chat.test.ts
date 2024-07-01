@@ -368,6 +368,15 @@ test("Test MessagesPlaceholder shorthand in a chat prompt template with OpenAI o
   ]);
 });
 
+test("Test MessagesPlaceholder with invalid shorthand should throw", async () => {
+  const prompt = ChatPromptTemplate.fromMessages([["placeholder", "{foo}"]]);
+  expect(() =>
+    prompt.formatMessages({
+      foo: [{ badFormatting: true }],
+    })
+  ).toThrow();
+});
+
 test("Test using partial", async () => {
   const userPrompt = new PromptTemplate({
     template: "{foo}{bar}",

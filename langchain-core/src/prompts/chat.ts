@@ -142,7 +142,7 @@ export class MessagesPlaceholder<
       return [];
     } else if (!input) {
       const error = new Error(
-        `Error: Field "${this.variableName}" in prompt uses a MessagesPlaceholder, which expects an array of BaseMessages as an input value. Received: undefined`
+        `Field "${this.variableName}" in prompt uses a MessagesPlaceholder, which expects an array of BaseMessages as an input value. Received: undefined`
       );
       error.name = "InputFormatError";
       throw error;
@@ -155,11 +155,16 @@ export class MessagesPlaceholder<
       } else {
         formattedMessages = [coerceMessageLikeToMessage(input)];
       }
-    } catch (e) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (e: any) {
       const readableInput =
         typeof input === "string" ? input : JSON.stringify(input, null, 2);
       const error = new Error(
-        `Error: Field "${this.variableName}" in prompt uses a MessagesPlaceholder, which expects an array of BaseMessages or coerceable objects as an input value. Received: ${readableInput}`
+        [
+          `Field "${this.variableName}" in prompt uses a MessagesPlaceholder, which expects an array of BaseMessages or coerceable values as input.`,
+          `Received value: ${readableInput}`,
+          `Additional message: ${e.message}`,
+        ].join("\n\n")
       );
       error.name = "InputFormatError";
       throw error;
