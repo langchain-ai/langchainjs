@@ -17,10 +17,6 @@ You can use npm, yarn, or pnpm to install LangChain.js
 
 `npm install -S langchain` or `yarn add langchain` or `pnpm add langchain`
 
-```typescript
-import { ChatOpenAI } from "langchain/chat_models/openai";
-```
-
 ## 🌐 Supported Environments
 
 LangChain is written in TypeScript and can be used in:
@@ -60,7 +56,6 @@ This library aims to assist in the development of those types of applications. C
 
 - [Documentation](https://js.langchain.com/v0.2/docs/tutorials/rag/)
 - End-to-end Example: [Doc-Chatbot](https://github.com/dissorial/doc-chatbot)
-
 
 **💬 Chatbots**
 
