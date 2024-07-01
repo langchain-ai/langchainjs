@@ -627,13 +627,17 @@ export class AIStudioFileDownloadConnection<
 }
 
 export interface BlobStoreAIStudioFileBaseParams<AuthOptions>
-  extends BlobStoreGoogleParams<AuthOptions> {}
+  extends BlobStoreGoogleParams<AuthOptions> {
+  retryTime?: number;
+}
 
 export abstract class BlobStoreAIStudioFileBase<
   AuthOptions
 > extends BlobStoreGoogle<AIStudioFileResponse, AuthOptions> {
 
   params?: BlobStoreAIStudioFileBaseParams<AuthOptions>;
+
+  retryTime: number = 1000;
 
   constructor(fields?: BlobStoreAIStudioFileBaseParams<AuthOptions>) {
     const params: BlobStoreAIStudioFileBaseParams<AuthOptions> = {
@@ -645,6 +649,7 @@ export abstract class BlobStoreAIStudioFileBase<
     };
     super(params);
     this.params = params;
+    this.retryTime = params?.retryTime ?? this.retryTime ?? 1000;
   }
 
   _pathToName(path: string): string {
@@ -675,15 +680,28 @@ export abstract class BlobStoreAIStudioFileBase<
     }
   }
 
+  async _regetMetadata(key: string): Promise<AIStudioFileObject> {
+    // Sleep for some time period
+    // eslint-disable-next-line no-promise-executor-return
+    await new Promise(resolve => setTimeout(resolve, this.retryTime));
+
+    // Fetch the latest metadata
+    return this._getMetadata(key);
+  }
+
   async _set([key, blob]: [string, MediaBlob]): Promise<AIStudioFileSaveResponse> {
     const response = await super._set([key, blob]) as AIStudioFileSaveResponse;
+
+    // console.log('response.data', response.data);
+    let file = response.data?.file ?? {state:"FAILED"};
+    while (file.state === "PROCESSING" && file.uri && this.retryTime > 0) {
+      file = await this._regetMetadata(file.uri);
+    }
 
     // The response should contain the name (and valid URI), so we need to
     // update the blob with this. We can't return a new blob, since mset()
     // doesn't return anything.
-    console.log('response.data', response.data);
     /* eslint-disable no-param-reassign */
-    const file = response.data?.file ?? {};
     blob.path = file.uri;
     blob.metadata = {
       ...blob.metadata,

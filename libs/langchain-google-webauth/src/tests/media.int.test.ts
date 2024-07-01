@@ -148,5 +148,56 @@ describe("Google APIKey AIStudioBlobStore", () => {
     const blobStore = new BlobStoreAIStudioFile();
     const storedBlob = await blobStore.store(blob);
     console.log(storedBlob);
+
+    // The blob itself is expected to have no data right now,
+    // but this will hopefully change in the future.
+    expect(storedBlob?.size).toEqual(0);
+    expect(storedBlob?.dataType).toEqual('image/png');
+    expect(storedBlob?.metadata?.sizeBytes).toEqual('176');
+    expect(storedBlob?.metadata?.state).toEqual('ACTIVE');
+  })
+
+  test("save video with retry", async () => {
+    const filename = `src/tests/data/rainbow.mp4`;
+    const dataBuffer = await fs.readFile(filename);
+    const data = new Blob([dataBuffer], { type: "video/mp4" });
+    const blob = new MediaBlob({
+      path: filename,
+      data,
+    });
+    const blobStore = new BlobStoreAIStudioFile();
+    const storedBlob = await blobStore.store(blob);
+    console.log(storedBlob);
+
+    // The blob itself is expected to have no data right now,
+    // but this will hopefully change in the future.
+    expect(storedBlob?.size).toEqual(0);
+    expect(storedBlob?.dataType).toEqual('video/mp4');
+    expect(storedBlob?.metadata?.sizeBytes).toEqual('1020253');
+    expect(storedBlob?.metadata?.state).toEqual('ACTIVE');
+    expect(storedBlob?.metadata?.videoMetadata?.videoDuration).toEqual('8s');
+  })
+
+  test("save video no retry", async () => {
+    const filename = `src/tests/data/rainbow.mp4`;
+    const dataBuffer = await fs.readFile(filename);
+    const data = new Blob([dataBuffer], { type: "video/mp4" });
+    const blob = new MediaBlob({
+      path: filename,
+      data,
+    });
+    const blobStore = new BlobStoreAIStudioFile({
+      retryTime: -1,
+    });
+    const storedBlob = await blobStore.store(blob);
+    console.log(storedBlob);
+
+    // The blob itself is expected to have no data right now,
+    // but this will hopefully change in the future.
+    expect(storedBlob?.size).toEqual(0);
+    expect(storedBlob?.dataType).toEqual('video/mp4');
+    expect(storedBlob?.metadata?.sizeBytes).toEqual('1020253');
+    expect(storedBlob?.metadata?.state).toEqual('PROCESSING');
+    expect(storedBlob?.metadata?.videoMetadata).toBeUndefined();
   })
 })
