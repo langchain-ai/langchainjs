@@ -9,17 +9,12 @@ Looking for the Python version? Check out [LangChain](https://github.com/langcha
 
 To help you ship LangChain apps to production faster, check out [LangSmith](https://smith.langchain.com).
 [LangSmith](https://smith.langchain.com) is a unified developer platform for building, testing, and monitoring LLM applications.
-Fill out [this form](https://airtable.com/appwQzlErAS2qiP0L/shrGtGaVBVAz7NcV2) to get on the waitlist or speak with our sales team.
 
 ## ⚡️ Quick Install
 
 You can use npm, yarn, or pnpm to install LangChain.js
 
 `npm install -S langchain` or `yarn add langchain` or `pnpm add langchain`
-
-```typescript
-import { ChatOpenAI } from "langchain/chat_models/openai";
-```
 
 ## 🌐 Supported Environments
 
@@ -60,7 +55,6 @@ This library aims to assist in the development of those types of applications. C
 
 - [Documentation](https://js.langchain.com/v0.2/docs/tutorials/rag/)
 - End-to-end Example: [Doc-Chatbot](https://github.com/dissorial/doc-chatbot)
-
 
 **💬 Chatbots**
 
@@ -109,4 +103,3 @@ Please report any security issues or concerns following our [security guidelines
 ## 🖇️ Relationship with Python LangChain
 
 This is built to integrate as seamlessly as possible with the [LangChain Python package](https://github.com/langchain-ai/langchain). Specifically, this means all objects (prompts, LLMs, chains, etc) are designed in a way where they can be serialized and shared between languages.
-
