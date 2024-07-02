@@ -98,7 +98,6 @@ export class RedisChatMessageHistory extends BaseListChatMessageHistory {
     await this.ensureReadiness();
     const rawStoredMessages = await this.client.lRange(this.sessionId, 0, -1);
     const orderedMessages = rawStoredMessages
-      .reverse()
       .map((message) => JSON.parse(message));
     return mapStoredMessagesToChatMessages(orderedMessages);
   }
@@ -111,7 +110,7 @@ export class RedisChatMessageHistory extends BaseListChatMessageHistory {
   async addMessage(message: BaseMessage): Promise<void> {
     await this.ensureReadiness();
     const messageToAdd = mapChatMessagesToStoredMessages([message]);
-    await this.client.lPush(this.sessionId, JSON.stringify(messageToAdd[0]));
+    await this.client.rPush(this.sessionId, JSON.stringify(messageToAdd[0]));
     if (this.sessionTTL) {
       await this.client.expire(this.sessionId, this.sessionTTL);
     }
