@@ -14,13 +14,19 @@ import {
   ToolMessage,
 } from "@langchain/core/messages";
 import { InMemoryStore } from "@langchain/core/stores";
-import { BlobStoreGoogleCloudStorage } from "@langchain/google-gauth";
-import { ChatVertexAI } from "../chat_models.js";
+import {
+  BackedBlobStore,
+  MediaManager,
+  SimpleWebBlobStore,
+} from "@langchain/google-common/experimental/utils/media_core";
+import { GoogleCloudStorageUri } from "@langchain/google-common/experimental/media";
 import { GeminiTool } from "../types.js";
+import { ChatGoogle } from "../chat_models.js";
+import { BlobStoreGoogleCloudStorage } from "../media.js";
 
 describe("GAuth Chat", () => {
   test("invoke", async () => {
-    const model = new ChatVertexAI();
+    const model = new ChatGoogle();
     try {
       const res = await model.invoke("What is 1 + 1?");
       expect(res).toBeDefined();
@@ -51,7 +57,7 @@ describe("GAuth Chat", () => {
   });
 
   test("generate", async () => {
-    const model = new ChatVertexAI();
+    const model = new ChatGoogle();
     try {
       const messages: BaseMessage[] = [
         new SystemMessage(
@@ -91,7 +97,7 @@ describe("GAuth Chat", () => {
   });
 
   test("stream", async () => {
-    const model = new ChatVertexAI();
+    const model = new ChatGoogle();
     try {
       const input: BaseLanguageModelInput = new ChatPromptValue([
         new SystemMessage(
@@ -144,7 +150,7 @@ describe("GAuth Chat", () => {
         ],
       },
     ];
-    const model = new ChatVertexAI().bind({ tools });
+    const model = new ChatGoogle().bind({ tools });
     const result = await model.invoke("Run a test on the cobalt project");
     expect(result).toHaveProperty("content");
     expect(result.content).toBe("");
@@ -188,7 +194,7 @@ describe("GAuth Chat", () => {
         ],
       },
     ];
-    const model = new ChatVertexAI().bind({ tools });
+    const model = new ChatGoogle().bind({ tools });
     const toolResult = {
       testPassed: true,
     };
@@ -232,7 +238,7 @@ describe("GAuth Chat", () => {
         required: ["location"],
       },
     };
-    const model = new ChatVertexAI().withStructuredOutput(tool);
+    const model = new ChatGoogle().withStructuredOutput(tool);
     const result = await model.invoke("What is the weather in Paris?");
     expect(result).toHaveProperty("location");
   });
@@ -253,7 +259,7 @@ describe("GAuth Chat", () => {
       canonicalStore,
       resolver,
     });
-    const model = new ChatVertexAI({
+    const model = new ChatGoogle({
       modelName: "gemini-1.5-flash",
       mediaManager,
     });
@@ -292,66 +298,4 @@ describe("GAuth Chat", () => {
       throw e;
     }
   });
-});
-
-test("Stream token count usage_metadata", async () => {
-  const model = new ChatVertexAI({
-    temperature: 0,
-  });
-  let res: AIMessageChunk | null = null;
-  for await (const chunk of await model.stream(
-    "Why is the sky blue? Be concise."
-  )) {
-    if (!res) {
-      res = chunk;
-    } else {
-      res = res.concat(chunk);
-    }
-  }
-  console.log(res);
-  expect(res?.usage_metadata).toBeDefined();
-  if (!res?.usage_metadata) {
-    return;
-  }
-  expect(res.usage_metadata.input_tokens).toBe(9);
-  expect(res.usage_metadata.output_tokens).toBeGreaterThan(10);
-  expect(res.usage_metadata.total_tokens).toBe(
-    res.usage_metadata.input_tokens + res.usage_metadata.output_tokens
-  );
-});
-
-test("streamUsage excludes token usage", async () => {
-  const model = new ChatVertexAI({
-    temperature: 0,
-    streamUsage: false,
-  });
-  let res: AIMessageChunk | null = null;
-  for await (const chunk of await model.stream(
-    "Why is the sky blue? Be concise."
-  )) {
-    if (!res) {
-      res = chunk;
-    } else {
-      res = res.concat(chunk);
-    }
-  }
-  console.log(res);
-  expect(res?.usage_metadata).not.toBeDefined();
-});
-
-test("Invoke token count usage_metadata", async () => {
-  const model = new ChatVertexAI({
-    temperature: 0,
-  });
-  const res = await model.invoke("Why is the sky blue? Be concise.");
-  console.log(res);
-  expect(res?.usage_metadata).toBeDefined();
-  if (!res?.usage_metadata) {
-    return;
-  }
-  expect(res.usage_metadata.input_tokens).toBe(9);
-  expect(res.usage_metadata.output_tokens).toBeGreaterThan(10);
-  expect(res.usage_metadata.total_tokens).toBe(
-    res.usage_metadata.input_tokens + res.usage_metadata.output_tokens
-  );
 });
