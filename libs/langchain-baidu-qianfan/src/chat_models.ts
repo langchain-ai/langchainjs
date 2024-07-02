@@ -15,7 +15,10 @@ import {
 } from "@langchain/core/outputs";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
-import { convertEventStreamToIterableReadableDataStream } from "../utils/event_source_parse.js";
+import { convertEventStreamToIterableReadableDataStream } from "@langchain/core/utils/event_source_parse";
+import { ChatCompletion } from "@baiducloud/qianfan";
+
+import { isValidModel } from "./utils.js";
 
 /**
  * Type representing the role of a message in the Wenxin chat model.
@@ -65,7 +68,7 @@ interface ChatCompletionResponse {
 }
 
 /**
- * Interface defining the input to the ChatBaiduWenxin class.
+ * Interface defining the input to the ChatBaiduQianfan class.
  */
 declare interface BaiduWenxinChatInput {
   /**
@@ -91,22 +94,28 @@ declare interface BaiduWenxinChatInput {
   userId?: string;
 
   /**
-   * API key to use when making requests. Defaults to the value of
-   * `BAIDU_API_KEY` environment variable.
-   * Alias for `apiKey`
+   * Access key to use when making requests by Qianfan SDK. Defaults to the value of
+   * `QIANFAN_KEY` environment variable.
    */
-  baiduApiKey?: string;
-  /**
-   * API key to use when making requests. Defaults to the value of
-   * `BAIDU_API_KEY` environment variable.
-   */
-  apiKey?: string;
+  qianfanAK?: string;
 
   /**
-   * Secret key to use when making requests. Defaults to the value of
-   * `BAIDU_SECRET_KEY` environment variable.
+   * Secret key to use when making requests by Qianfan SDK. Defaults to the value of
+   * `QIANFAN_KEY` environment variable.
    */
-  baiduSecretKey?: string;
+  qianfanSK?: string;
+
+  /**
+   * Access key to use when making requests by Qianfan SDK with auth. Defaults to the value of
+   * `QIANFAN_ACCESS_KEY` environment variable.
+   */
+  qianfanAccessKey?: string;
+
+  /**
+   * Secret key to use when making requests by Qianfan SDK with auth. Defaults to the value of
+   * `QIANFAN_SECRET_KEY` environment variable.
+   */
+  qianfanSecretKey?: string;
 
   /** Amount of randomness injected into the response. Ranges
    * from 0 to 1 (0 is not included). Use temp closer to 0 for analytical /
@@ -124,13 +133,6 @@ declare interface BaiduWenxinChatInput {
    * from 1.0 to 2.0. Defaults to 1.0.
    */
   penaltyScore?: number;
-}
-
-/**
- * Interface maps model names and their API endpoints.
- */
-interface Models {
-  [key: string]: string;
 }
 
 /**
@@ -173,41 +175,21 @@ function messageToWenxinRole(message: BaseMessage): WenxinMessageRole {
 }
 
 /**
- * @deprecated Install and import from @langchain/baidu-qianfan instead.
  * Wrapper around Baidu ERNIE large language models that use the Chat endpoint.
  *
- * To use you should have the `BAIDU_API_KEY` and `BAIDU_SECRET_KEY`
+ * To use you should have the `QIANFAN_AK` and `QIANFAN_SK`
  * environment variable set.
  *
  * @augments BaseLLM
  * @augments BaiduERNIEInput
- * @example
- * ```typescript
- * const ernieTurbo = new ChatBaiduWenxin({
- *   apiKey: "YOUR-API-KEY",
- *   baiduSecretKey: "YOUR-SECRET-KEY",
- * });
- *
- * const ernie = new ChatBaiduWenxin({
- *   model: "ERNIE-Bot",
- *   temperature: 1,
- *   apiKey: "YOUR-API-KEY",
- *   baiduSecretKey: "YOUR-SECRET-KEY",
- * });
- *
- * const messages = [new HumanMessage("Hello")];
- *
- * let res = await ernieTurbo.call(messages);
- *
- * res = await ernie.call(messages);
  * ```
  */
-export class ChatBaiduWenxin
+export class ChatBaiduQianfan
   extends BaseChatModel
   implements BaiduWenxinChatInput
 {
   static lc_name() {
-    return "ChatBaiduWenxin";
+    return "ChatBaiduQianfan";
   }
 
   get callKeys(): string[] {
@@ -216,9 +198,10 @@ export class ChatBaiduWenxin
 
   get lc_secrets(): { [key: string]: string } | undefined {
     return {
-      baiduApiKey: "BAIDU_API_KEY",
-      apiKey: "BAIDU_API_KEY",
-      baiduSecretKey: "BAIDU_SECRET_KEY",
+      qianfanAK: "QIANFAN_AK",
+      qianfanSK: "QIANFAN_SK",
+      qianfanAccessKey: "QIANFAN_ACCESS_KEY",
+      qianfanSecretKey: "QIANFAN_SECRET_KEY",
     };
   }
 
@@ -227,14 +210,6 @@ export class ChatBaiduWenxin
   }
 
   lc_serializable = true;
-
-  baiduApiKey?: string;
-
-  apiKey?: string;
-
-  baiduSecretKey?: string;
-
-  accessToken: string;
 
   streaming = false;
 
@@ -246,30 +221,63 @@ export class ChatBaiduWenxin
 
   model = "ERNIE-Bot-turbo";
 
-  apiUrl: string;
-
   temperature?: number | undefined;
 
   topP?: number | undefined;
 
   penaltyScore?: number | undefined;
 
+  client?: any;
+
+  qianfanAK?: string;
+
+  qianfanSK?: string;
+
+  qianfanAccessKey?: string;
+
+  qianfanSecretKey?: string;
+
   constructor(fields?: Partial<BaiduWenxinChatInput> & BaseChatModelParams) {
     super(fields ?? {});
+    
+    this.modelName = fields?.model ?? fields?.modelName ?? this.model;
+    this.model = this.modelName;
 
-    this.baiduApiKey =
-      fields?.apiKey ??
-      fields?.baiduApiKey ??
-      getEnvironmentVariable("BAIDU_API_KEY");
-    if (!this.baiduApiKey) {
-      throw new Error("Baidu API key not found");
+    if (!isValidModel(this.model)) {
+      throw new Error(`Invalid model name: ${this.model}`);
     }
-    this.apiKey = this.baiduApiKey;
 
-    this.baiduSecretKey =
-      fields?.baiduSecretKey ?? getEnvironmentVariable("BAIDU_SECRET_KEY");
-    if (!this.baiduSecretKey) {
-      throw new Error("Baidu Secret key not found");
+    this.qianfanAK =
+      fields?.qianfanAK ??
+      getEnvironmentVariable("QIANFAN_AK");
+
+    this.qianfanSK =
+      fields?.qianfanSK ??
+      getEnvironmentVariable("QIANFAN_SK");
+
+    this.qianfanAccessKey =
+      fields?.qianfanAccessKey ??
+      getEnvironmentVariable("QIANFAN_ACCESS_KEY");
+
+    this.qianfanSecretKey =
+      fields?.qianfanSecretKey ??
+        getEnvironmentVariable("QIANFAN_SECRET_KEY");
+
+    // 优先使用安全认证AK/SK鉴权
+    if (this.qianfanAccessKey && this.qianfanSecretKey) {
+      this.client = new ChatCompletion({
+        QIANFAN_ACCESS_KEY: this.qianfanAccessKey,
+        QIANFAN_SECRET_KEY: this.qianfanSecretKey
+      });
+    }
+    else if (this.qianfanAK && this.qianfanSK) {
+      this.client = new ChatCompletion({
+        QIANFAN_AK: this.qianfanAK,
+        QIANFAN_SK: this.qianfanSK
+      });
+    }
+    else {
+      throw new Error("Please provide AK/SK");
     }
 
     this.streaming = fields?.streaming ?? this.streaming;
@@ -278,61 +286,6 @@ export class ChatBaiduWenxin
     this.temperature = fields?.temperature ?? this.temperature;
     this.topP = fields?.topP ?? this.topP;
     this.penaltyScore = fields?.penaltyScore ?? this.penaltyScore;
-
-    this.modelName = fields?.model ?? fields?.modelName ?? this.model;
-    this.model = this.modelName;
-
-    const models: Models = {
-      "ERNIE-Bot": "completions",
-      "ERNIE-Bot-turbo": "eb-instant",
-      "ERNIE-Bot-4": "completions_pro",
-      "ERNIE-Speed-8K": "ernie_speed",
-      "ERNIE-Speed-128K": "ernie-speed-128k",
-      "ERNIE-4.0-8K": "completions_pro",
-      "ERNIE-4.0-8K-Preview": "ernie-4.0-8k-preview",
-      "ERNIE-3.5-8K": "completions",
-      "ERNIE-3.5-8K-Preview": "ernie-3.5-8k-preview",
-      "ERNIE-Lite-8K": "eb-instant",
-      "ERNIE-Tiny-8K": "ernie-tiny-8k",
-      "ERNIE-Character-8K": "ernie-char-8k",
-      "ERNIE Speed-AppBuilder": "ai_apaas",
-    };
-    if (this.model in models) {
-      this.apiUrl = `https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/${
-        models[this.model]
-      }`;
-    } else {
-      throw new Error(`Invalid model name: ${this.model}`);
-    }
-  }
-
-  /**
-   * Method that retrieves the access token for making requests to the Baidu
-   * API.
-   * @param options Optional parsed call options.
-   * @returns The access token for making requests to the Baidu API.
-   */
-  async getAccessToken(options?: this["ParsedCallOptions"]) {
-    const url = `https://aip.baidubce.com/oauth/2.0/token?grant_type=client_credentials&client_id=${this.apiKey}&client_secret=${this.baiduSecretKey}`;
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      signal: options?.signal,
-    });
-    if (!response.ok) {
-      const text = await response.text();
-      const error = new Error(
-        `Baidu get access token failed with status code ${response.status}, response: ${text}`
-      );
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (error as any).response = response;
-      throw error;
-    }
-    const json = await response.json();
-    return json.access_token;
   }
 
   /**
@@ -388,68 +341,17 @@ export class ChatBaiduWenxin
 
     const data = params.stream
       ? await new Promise<ChatCompletionResponse>((resolve, reject) => {
-          let response: ChatCompletionResponse;
-          let rejected = false;
-          let resolved = false;
+        let rejected = false;
+        let resolved = false;
           this.completionWithRetry(
             {
               ...params,
               messages: messagesMapped,
             },
             true,
-            options?.signal,
             (event) => {
-              const data = JSON.parse(event.data);
-
-              if (data?.error_code) {
-                if (rejected) {
-                  return;
-                }
-                rejected = true;
-                reject(new Error(data?.error_msg));
-                return;
-              }
-
-              const message = data as {
-                id: string;
-                object: string;
-                created: number;
-                sentence_id?: number;
-                is_end: boolean;
-                result: string;
-                need_clear_history: boolean;
-                usage: TokenUsage;
-              };
-
-              // on the first message set the response properties
-              if (!response) {
-                response = {
-                  id: message.id,
-                  object: message.object,
-                  created: message.created,
-                  result: message.result,
-                  need_clear_history: message.need_clear_history,
-                  usage: message.usage,
-                };
-              } else {
-                response.result += message.result;
-                response.created = message.created;
-                response.need_clear_history = message.need_clear_history;
-                response.usage = message.usage;
-              }
-
-              // TODO this should pass part.index to the callback
-              // when that's supported there
-              // eslint-disable-next-line no-void
-              void runManager?.handleLLMNewToken(message.result ?? "");
-
-              if (message.is_end) {
-                if (resolved || rejected) {
-                  return;
-                }
-                resolved = true;
-                resolve(response);
-              }
+              resolved = true;
+              resolve(event.data);
             }
           ).catch((error) => {
             if (!rejected) {
@@ -464,7 +366,6 @@ export class ChatBaiduWenxin
             messages: messagesMapped,
           },
           false,
-          options?.signal
         ).then((data) => {
           if (data?.error_code) {
             throw new Error(data?.error_msg);
@@ -507,139 +408,64 @@ export class ChatBaiduWenxin
   async completionWithRetry(
     request: ChatCompletionRequest,
     stream: boolean,
-    signal?: AbortSignal,
     onmessage?: (event: MessageEvent) => void
   ) {
-    // The first run will get the accessToken
-    if (!this.accessToken) {
-      this.accessToken = await this.getAccessToken();
-    }
-
-    const findFirstNewlineIndex = (data: Uint8Array) => {
-      for (let i = 0; i < data.length; ) {
-        if (data[i] === 10) return i;
-        if ((data[i] & 0b11100000) === 0b11000000) {
-          i += 2;
-        } else if ((data[i] & 0b11110000) === 0b11100000) {
-          i += 3;
-        } else if ((data[i] & 0b11111000) === 0b11110000) {
-          i += 4;
-        } else {
-          i += 1;
-        }
-      }
-      return -1;
-    };
-
     const makeCompletionRequest = async () => {
-      const url = `${this.apiUrl}?access_token=${this.accessToken}`;
-      const response = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(request),
-        signal,
-      });
+      console.log(request)
+      const response = await this.client.chat({
+        messages: request.messages,
+        stream
+      }, this.model);
 
       if (!stream) {
-        return response.json();
+        return response;
       } else {
-        if (response.body) {
-          // response will not be a stream if an error occurred
-          if (
-            !response.headers
-              .get("content-type")
-              ?.startsWith("text/event-stream")
-          ) {
-            onmessage?.(
-              new MessageEvent("message", {
-                data: await response.text(),
-              })
-            );
-            return;
-          }
-
-          const reader = response.body.getReader();
-
-          const decoder = new TextDecoder("utf-8");
-          let dataArrayBuffer = new Uint8Array(0);
-
-          let continueReading = true;
-          while (continueReading) {
-            const { done, value } = await reader.read();
-            if (done) {
-              continueReading = false;
-              break;
-            }
-            // merge the data first then decode in case of the Chinese characters are split between chunks
-            const mergedArray = new Uint8Array(
-              dataArrayBuffer.length + value.length
-            );
-            mergedArray.set(dataArrayBuffer);
-            mergedArray.set(value, dataArrayBuffer.length);
-            dataArrayBuffer = mergedArray;
-
-            let continueProcessing = true;
-            while (continueProcessing) {
-              const newlineIndex = findFirstNewlineIndex(dataArrayBuffer);
-              if (newlineIndex === -1) {
-                continueProcessing = false;
-                break;
-              }
-
-              const lineArrayBuffer = dataArrayBuffer.slice(
-                0,
-                findFirstNewlineIndex(dataArrayBuffer)
-              );
-              const line = decoder.decode(lineArrayBuffer);
-              dataArrayBuffer = dataArrayBuffer.slice(
-                findFirstNewlineIndex(dataArrayBuffer) + 1
-              );
-
-              if (line.startsWith("data:")) {
-                const event = new MessageEvent("message", {
-                  data: line.slice("data:".length).trim(),
-                });
-                onmessage?.(event);
-              }
-            }
+        let streamResponse = {} as {
+          id: string;
+          object: string;
+          created: number;
+          sentence_id?: number;
+          result: string;
+          need_clear_history: boolean;
+          usage: TokenUsage;
+        };
+        for await (const message of response as AsyncIterableIterator<any>) {
+          // 返回结果
+          if (!streamResponse) {
+            streamResponse = {
+              id: message.id,
+              object: message.object,
+              created: message.created,
+              result: message.result,
+              need_clear_history: message.need_clear_history,
+              usage: message.usage,
+            };
+          } else {
+            streamResponse.result += message.result;
+            streamResponse.created = message.created;
+            streamResponse.need_clear_history = message.need_clear_history;
+            streamResponse.usage = message.usage;
           }
         }
+        const event = new MessageEvent("message", {
+          data: streamResponse,
+        });
+        onmessage?.(event);
       }
     };
+
     return this.caller.call(makeCompletionRequest);
   }
 
-  private async getFullApiUrl() {
-    if (!this.accessToken) {
-      this.accessToken = await this.getAccessToken();
-    }
-    return `${this.apiUrl}?access_token=${this.accessToken}`;
-  }
-
-  private async createWenxinStream(
-    request: ChatCompletionRequest,
-    signal?: AbortSignal
+  private async createStream(
+    request: ChatCompletionRequest
   ) {
-    const url = await this.getFullApiUrl();
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        Accept: "text/event-stream",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(request),
-      signal,
-    });
+    const response = await this.client.chat({
+      messages: request.messages,
+      stream: true
+    }, this.model);
 
-    if (!response.body) {
-      throw new Error(
-        "Could not begin Wenxin stream. Please check the given URL and try again."
-      );
-    }
-
-    return convertEventStreamToIterableReadableDataStream(response.body);
+    return convertEventStreamToIterableReadableDataStream(response);
   }
 
   private _deserialize(json: string) {
@@ -671,13 +497,13 @@ export class ChatBaiduWenxin
     }
     const messagesMapped = this._ensureMessages(messages);
 
+
     const stream = await this.caller.call(async () =>
-      this.createWenxinStream(
+      this.createStream(
         {
           ...parameters,
           messages: messagesMapped,
-        },
-        options?.signal
+        }
       )
     );
 
@@ -700,7 +526,7 @@ export class ChatBaiduWenxin
   }
 
   _llmType() {
-    return "baiduwenxin";
+    return "baiduqianfan";
   }
 
   /** @ignore */
