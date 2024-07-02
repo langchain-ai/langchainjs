@@ -41,7 +41,7 @@
   "dependencies": {
     "@langchain/core": ">0.1.0 <0.3.0",
     "@qdrant/js-client-rest": "^1.9.0",
-    "uuid": "^9.0.1"
+    "uuid": "^10.0.0"
   },
   "devDependencies": {
     "@faker-js/faker": "^8.4.1",

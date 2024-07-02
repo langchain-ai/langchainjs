@@ -900,7 +900,7 @@
     "ml-distance": "^4.0.0",
     "openapi-types": "^12.1.3",
     "p-retry": "4",
-    "uuid": "^9.0.0",
+    "uuid": "^10.0.0",
     "yaml": "^2.2.1",
     "zod": "^3.22.4",
     "zod-to-json-schema": "^3.22.3"

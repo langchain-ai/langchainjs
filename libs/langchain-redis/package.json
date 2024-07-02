@@ -67,7 +67,7 @@
     "rollup": "^4.5.2",
     "ts-jest": "^29.1.0",
     "typescript": "<5.2.0",
-    "uuid": "^9.0.1"
+    "uuid": "^10.0.0"
   },
   "publishConfig": {
     "access": "public"

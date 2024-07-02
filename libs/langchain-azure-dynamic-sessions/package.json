@@ -40,7 +40,7 @@
   "dependencies": {
     "@azure/identity": "^4.2.0",
     "@langchain/core": "~0.2",
-    "uuid": "^9.0.1"
+    "uuid": "^10.0.0"
   },
   "devDependencies": {
     "@jest/globals": "^29.5.0",
