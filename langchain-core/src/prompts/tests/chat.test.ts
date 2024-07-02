@@ -302,7 +302,7 @@ test("Test MessagesPlaceholder not optional", async () => {
   });
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   await expect(prompt.formatMessages({} as any)).rejects.toThrow(
-    'Error: Field "foo" in prompt uses a MessagesPlaceholder, which expects an array of BaseMessages as an input value. Received: undefined'
+    'Field "foo" in prompt uses a MessagesPlaceholder, which expects an array of BaseMessages as an input value. Received: undefined'
   );
 });
 
@@ -323,7 +323,7 @@ test("Test MessagesPlaceholder shorthand in a chat prompt template", async () =>
   ]);
 });
 
-test("Test MessagesPlaceholder shorthand in a chat prompt template with OpenAI object format", async () => {
+test("Test MessagesPlaceholder shorthand in a chat prompt template with object format", async () => {
   const prompt = ChatPromptTemplate.fromMessages([["placeholder", "{foo}"]]);
   const messages = await prompt.formatMessages({
     foo: [
@@ -370,11 +370,11 @@ test("Test MessagesPlaceholder shorthand in a chat prompt template with OpenAI o
 
 test("Test MessagesPlaceholder with invalid shorthand should throw", async () => {
   const prompt = ChatPromptTemplate.fromMessages([["placeholder", "{foo}"]]);
-  expect(() =>
+  await expect(() =>
     prompt.formatMessages({
       foo: [{ badFormatting: true }],
     })
-  ).toThrow();
+  ).rejects.toThrow();
 });
 
 test("Test using partial", async () => {
