@@ -320,8 +320,8 @@ export type BaseMessageLike =
   | BaseMessage
   | ({
       type: MessageType | "user" | "assistant" | "placeholder";
-      content: MessageContent;
-    } & Record<string, unknown>)
+    } & BaseMessageFields &
+      Record<string, unknown>)
   | [
       StringWithAutocomplete<
         MessageType | "user" | "assistant" | "placeholder"

@@ -50,8 +50,7 @@ export function coerceMessageLikeToMessage(
     const [type, content] = messageLike;
     return _constructMessageFromParams({ type, content });
   } else {
-    const { type, content } = messageLike;
-    return _constructMessageFromParams({ type, content });
+    return _constructMessageFromParams(messageLike);
   }
 }
 
