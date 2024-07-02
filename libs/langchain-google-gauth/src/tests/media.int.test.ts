@@ -1,7 +1,7 @@
 import fs from "fs/promises";
 import { test } from "@jest/globals";
-import {GoogleCloudStorageUri} from "@langchain/google-common/experimental/media";
-import {MediaBlob} from "@langchain/google-common/experimental/utils/media_core";
+import { GoogleCloudStorageUri } from "@langchain/google-common/experimental/media";
+import { MediaBlob } from "@langchain/google-common/experimental/utils/media_core";
 import {
   BlobStoreGoogleCloudStorage,
   BlobStoreGoogleCloudStorageParams,

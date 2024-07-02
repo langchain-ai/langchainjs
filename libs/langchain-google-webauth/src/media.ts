@@ -6,7 +6,7 @@ import {
   BlobStoreAIStudioFileBase,
   BlobStoreAIStudioFileBaseParams,
   BlobStoreGoogleCloudStorageBase,
-  BlobStoreGoogleCloudStorageBaseParams
+  BlobStoreGoogleCloudStorageBaseParams,
 } from "@langchain/google-common/experimental/media";
 import { WebGoogleAuth, WebGoogleAuthOptions } from "./auth.js";
 
