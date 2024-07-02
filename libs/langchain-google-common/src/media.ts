@@ -701,7 +701,6 @@ export abstract class BlobStoreAIStudioFileBase<
       blob,
     ])) as AIStudioFileSaveResponse;
 
-    // console.log('response.data', response.data);
     let file = response.data?.file ?? { state: "FAILED" };
     while (file.state === "PROCESSING" && file.uri && this.retryTime > 0) {
       file = await this._regetMetadata(file.uri);
@@ -741,8 +740,6 @@ export abstract class BlobStoreAIStudioFileBase<
     unknown
   > {
     return {
-      // displayName: key,
-      // mimeType: blob.mimetype,
     };
   }
 
