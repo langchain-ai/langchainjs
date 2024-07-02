@@ -20,8 +20,8 @@ jobs:
           cache: "yarn"
       - name: Install dependencies
         run: yarn install --immutable --mode=skip-build
-      - name: Run standard tests (integration) for ${{ matrix.package }}
-        run: yarn test:standard:int --filter=@langchain/${{ matrix.package }}
+      - name: Run integration tests for ${{ matrix.package }}
+        run: yarn test:int --filter=@langchain/${{ matrix.package }}
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           COHERE_API_KEY: ${{ secrets.COHERE_API_KEY }}
@@ -45,8 +45,8 @@ jobs:
         run: yarn install --immutable --mode=skip-build
       - name: Build `@langchain/openai`
         run: yarn build --filter=@langchain/openai
-      - name: Run standard tests (integration) for ChatOpenAI
-        run: yarn workspace @langchain/openai test:single src/tests/chat_models.standard.int.test.ts
+      - name: Run integration tests for ChatOpenAI
+        run: yarn workspace @langchain/openai test:single src/tests/chat_models_structured_output.int.test.ts src/tests/chat_models-extended.int.test.ts src/tests/chat_models-vision.int.test.ts src/tests/chat_models.int.test.ts src/tests/chat_models.standard.int.test.ts
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
@@ -63,8 +63,8 @@ jobs:
         run: yarn install --immutable --mode=skip-build
       - name: Build `@langchain/openai`
         run: yarn build --filter=@langchain/openai
-      - name: Run standard tests (integration) for `@langchain/openai` AzureChatOpenAI
-        run: yarn workspace @langchain/openai test:single src/tests/azure/chat_models.standard.int.test.ts
+      - name: Run integration tests for `@langchain/openai` AzureChatOpenAI
+        run: yarn workspace @langchain/openai test:single src/tests/azure/chat_models.standard.int.test.ts src/tests/azure/chat_models.int.test.ts
         env:
           AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
           AZURE_OPENAI_API_DEPLOYMENT_NAME: "chat"

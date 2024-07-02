@@ -156,7 +156,7 @@ export abstract class BaseLLM<
       });
       try {
         for await (const chunk of this._streamResponseChunks(
-          input.toString(),
+          prompt.toString(),
           callOptions,
           runManagers?.[0]
         )) {
