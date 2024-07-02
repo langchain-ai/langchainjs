@@ -113,6 +113,7 @@ export type UnstructuredLoaderOptions = {
   combineUnderNChars?: number;
   newAfterNChars?: number;
   maxCharacters?: number;
+  extractImageBlockTypes?: string[];
 };
 
 export type UnstructuredDirectoryLoaderOptions = UnstructuredLoaderOptions & {
@@ -178,6 +179,8 @@ export class UnstructuredLoader extends BaseDocumentLoader {
 
   private maxCharacters?: number;
 
+  private extractImageBlockTypes?: string[];
+
   constructor(
     filepathOrBufferOptions: string | UnstructuredMemoryLoaderOptions,
     unstructuredOptions: UnstructuredLoaderOptions | string = {}
@@ -221,6 +224,7 @@ export class UnstructuredLoader extends BaseDocumentLoader {
       this.combineUnderNChars = options.combineUnderNChars;
       this.newAfterNChars = options.newAfterNChars;
       this.maxCharacters = options.maxCharacters;
+      this.extractImageBlockTypes = options.extractImageBlockTypes;
     }
   }
 
@@ -286,6 +290,13 @@ export class UnstructuredLoader extends BaseDocumentLoader {
     }
     if (this.maxCharacters !== undefined) {
       formData.append("max_characters", String(this.maxCharacters));
+    }
+
+    if (this.extractImageBlockTypes !== undefined) {
+      formData.append(
+        "extract_image_block_types",
+        JSON.stringify(this.extractImageBlockTypes)
+      );
     }
 
     const headers = {
