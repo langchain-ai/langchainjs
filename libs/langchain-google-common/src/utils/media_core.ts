@@ -217,7 +217,10 @@ export abstract class BlobStore extends BaseStore<string, MediaBlob> {
     return blobPath.substring(pathStart);
   }
 
-  protected async _newBlob(oldBlob: MediaBlob, newPath?: string): Promise<MediaBlob> {
+  protected async _newBlob(
+    oldBlob: MediaBlob,
+    newPath?: string
+  ): Promise<MediaBlob> {
     const oldPath = oldBlob.path;
     const metadata = oldBlob?.metadata ?? {};
     metadata.langchainOldPath = oldPath;

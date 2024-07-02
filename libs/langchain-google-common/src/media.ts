@@ -739,8 +739,7 @@ export abstract class BlobStoreAIStudioFileBase<
     string,
     unknown
   > {
-    return {
-    };
+    return {};
   }
 
   buildGetMetadataConnection(
