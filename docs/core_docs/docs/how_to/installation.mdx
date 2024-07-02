@@ -36,7 +36,7 @@ By default, the dependencies needed to do that are NOT installed. You will need 
 We'll show how to do that in the next sections of this guide.
 
 Please also see the section on [installing integration packages](/docs/how_to/installation/#installing-integration-packages)
-for some special considerations.
+for some special considerations when installing LangChain packages.
 
 ## Ecosystem packages
 
@@ -49,6 +49,10 @@ A directed arrow indicates that the source package depends on the target package
 When installing a package, you do not need to explicitly install that package's explicit dependencies (such as `@langchain/core`).
 However, you may choose to if you are using a feature only available in a certain version of that dependency.
 If you do, you should make sure that the installed or pinned version is compatible with any other integration packages you use.
+
+**Note:** It is important that your app only uses one version of `@langchain/core`. Common package managers may introduce additional versions
+when resolving dependencies, even if you don't intend this. See [this section on installing integration packages](/docs/how_to/installation/#installing-integration-packages)
+for more information and ways to remedy this.
 
 ### @langchain/community
 
@@ -129,6 +133,8 @@ If you are using `yarn`:
   }
 }
 ```
+
+You can also try running the [`yarn dedupe`](https://yarnpkg.com/cli/dedupe) command.
 
 Or for `npm`:
 
