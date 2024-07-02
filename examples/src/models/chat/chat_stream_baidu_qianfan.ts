@@ -4,8 +4,8 @@ import { HumanMessage } from "@langchain/core/messages";
 const chat = new ChatBaiduQianfan({
   qianfanAccessKey: process.env.QIANFAN_ACCESS_KEY,
   qianfanSecretKey: process.env.QIANFAN_SECRET_KEY,
-  model: 'ERNIE-Bot-turbo',
-  streaming: true
+  model: "ERNIE-Bot-turbo",
+  streaming: true,
 });
 
 const message = new HumanMessage("等额本金和等额本息有什么区别？");
