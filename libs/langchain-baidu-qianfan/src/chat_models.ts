@@ -227,6 +227,7 @@ export class ChatBaiduQianfan
 
   penaltyScore?: number | undefined;
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   client?: any;
 
   qianfanAK?: string;
@@ -424,6 +425,7 @@ export class ChatBaiduQianfan
           need_clear_history: boolean;
           usage: TokenUsage;
         };
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         for await (const message of response as AsyncIterableIterator<any>) {
           // 返回结果
           if (!streamResponse) {

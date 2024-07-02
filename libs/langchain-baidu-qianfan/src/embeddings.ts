@@ -69,7 +69,8 @@ export class BaiduQianfanEmbeddings
 
   accessToken: string;
 
-  embeddingIns: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  embeddings: any;
 
   constructor(
     fields?: Partial<BaiduQianfanEmbeddingsParams> & {
@@ -99,12 +100,12 @@ export class BaiduQianfanEmbeddings
 
     // 优先使用安全认证AK/SK鉴权
     if (this.qianfanAccessKey && this.qianfanSecretKey) {
-      this.embeddingIns = new Embedding({
+      this.embeddings = new Embedding({
         QIANFAN_ACCESS_KEY: this.qianfanAccessKey,
         QIANFAN_SECRET_KEY: this.qianfanSecretKey,
       });
     } else if (this.qianfanAK && this.qianfanSK) {
-      this.embeddingIns = new Embedding({
+      this.embeddings = new Embedding({
         QIANFAN_AK: this.qianfanAK,
         QIANFAN_SK: this.qianfanSK,
       });
@@ -200,7 +201,7 @@ export class BaiduQianfanEmbeddings
    */
   private async embeddingWithRetry(body: EmbeddingCreateParams) {
     const embeddingData: EmbeddingResponse | EmbeddingErrorResponse =
-      await this.embeddingIns.embedding(body, this.modelName);
+      await this.embeddings.embedding(body, this.modelName);
 
     if ("error_code" in embeddingData && embeddingData.error_code) {
       throw new Error(
