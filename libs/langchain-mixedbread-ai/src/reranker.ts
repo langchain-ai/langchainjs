@@ -4,13 +4,17 @@ import { getEnvironmentVariable } from "@langchain/core/utils/env";
 
 import { MixedbreadAIClient, MixedbreadAI } from "@mixedbread-ai/sdk";
 
-type RerankingRequestWithoutInput = Omit<MixedbreadAI.RerankingRequest, "query" | "input">;
+type RerankingRequestWithoutInput = Omit<
+  MixedbreadAI.RerankingRequest,
+  "query" | "input"
+>;
 
 /**
  * Interface extending RerankingRequestWithoutInput with additional
  * parameters specific to the MixedbreadAIRerank class.
  */
-export interface MixedbreadAIRerankParams extends Omit<RerankingRequestWithoutInput, "model"> {
+export interface MixedbreadAIRerankParams
+  extends Omit<RerankingRequestWithoutInput, "model"> {
   /**
    * The model to use for reranking. For example "default" or "mixedbread-ai/mxbai-rerank-large-v1".
    * @default {"default"}
@@ -47,7 +51,7 @@ export interface MixedbreadAIRerankParams extends Omit<RerankingRequestWithoutIn
  * const query = "What do you need to bake bread?";
  * const result = await reranker.compressDocuments(documents, query);
  * console.log(result);
- * 
+ *
  * @example
  * const reranker = new MixedbreadAIReranker({
  *   apiKey: 'your-api-key',
@@ -90,7 +94,9 @@ export class MixedbreadAIReranker extends BaseDocumentCompressor {
 
     const apiKey = params?.apiKey ?? getEnvironmentVariable("MXBAI_API_KEY");
     if (!apiKey) {
-      throw new Error("Mixedbread AI API key not found. Either provide it in the constructor or set the 'MXBAI_API_KEY' environment variable.");
+      throw new Error(
+        "Mixedbread AI API key not found. Either provide it in the constructor or set the 'MXBAI_API_KEY' environment variable."
+      );
     }
 
     this.maxRetries = params?.maxRetries ?? 3;
@@ -159,7 +165,10 @@ export class MixedbreadAIReranker extends BaseDocumentCompressor {
    * console.log(result);
    */
   async rerank(
-    documents: Array<string> | DocumentInterface[] | Array<Record<string, unknown>>,
+    documents:
+      | Array<string>
+      | DocumentInterface[]
+      | Array<Record<string, unknown>>,
     query: string,
     options?: RerankingRequestWithoutInput
   ): Promise<Array<MixedbreadAI.RankedDocument>> {
@@ -167,18 +176,22 @@ export class MixedbreadAIReranker extends BaseDocumentCompressor {
       return [];
     }
 
-    const input = (typeof documents[0] === "object" && "pageContent" in documents[0]) ?
-      (documents as DocumentInterface[]).map((doc) => doc.pageContent) :
-      (documents as Array<string>);
+    const input =
+      typeof documents[0] === "object" && "pageContent" in documents[0]
+        ? (documents as DocumentInterface[]).map((doc) => doc.pageContent)
+        : (documents as Array<string>);
 
-    const result = await this.client.reranking({
-      query,
-      input,
-      ...this.requestParams,
-      ...options,
-    }, {
-      maxRetries: this.maxRetries,
-    });
+    const result = await this.client.reranking(
+      {
+        query,
+        input,
+        ...this.requestParams,
+        ...options,
+      },
+      {
+        maxRetries: this.maxRetries,
+      }
+    );
 
     return result.data;
   }

@@ -1,6 +1,6 @@
 # Mixedbread AI Embeddings
 
-The `MixedbreadAIEmbeddings` class uses the Mixedbread AI API to generate text embeddings. This guide will walk you through setting up and using the `MixedbreadAIEmbeddings` class, helping you integrate it into your project effectively.
+The `MixedbreadAIEmbeddings` class uses the [Mixedbread AI](https://mixedbread.ai/) API to generate text embeddings. This guide will walk you through setting up and using the `MixedbreadAIEmbeddings` class, helping you integrate it into your project effectively.
 
 ## Installation
 
@@ -28,7 +28,9 @@ Here’s how to create an instance of `MixedbreadAIEmbeddings`:
 import { MixedbreadAIEmbeddings } from "@langchain/mixedbread-ai";
 
 const embeddings = new MixedbreadAIEmbeddings({
-  apiKey: "YOUR_API_KEY"
+  apiKey: "YOUR_API_KEY",
+  // Optionally specify model
+  // model: "mixedbread-ai/mxbai-embed-large-v1",
 });
 ```
 
@@ -54,7 +56,6 @@ To generate embeddings for multiple documents, use the `embedDocuments` method. 
 ```typescript
 const documents = ["Baking bread is fun", "I love baking"];
 
-
 const embeddingsArray = await embeddings.embedDocuments(documents);
 console.log(embeddingsArray);
 ```
@@ -67,7 +68,7 @@ You can customize the SDK by passing additional parameters.
 const customEmbeddings = new MixedbreadAIEmbeddings({
   apiKey: "YOUR_API_KEY",
   baseUrl: "...",
-  maxRetries: 6
+  maxRetries: 6,
 });
 ```
 
@@ -79,6 +80,6 @@ If the API key is not provided and cannot be found in the environment variables,
 try {
   const embeddings = new MixedbreadAIEmbeddings();
 } catch (error) {
-  console.error(error)
+  console.error(error);
 }
 ```

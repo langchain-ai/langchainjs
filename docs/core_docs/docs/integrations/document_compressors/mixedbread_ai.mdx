@@ -2,11 +2,15 @@
 
 ## Overview
 
-This guide will help you integrate and use the Mixedbread AI reranking API. The reranking API allows you to reorder a list of documents based on a given query, improving the relevance of search results or any ranked list.
+This guide will help you integrate and use the [Mixedbread AI](https://mixedbread.ai/) reranking API. The reranking API allows you to reorder a list of documents based on a given query, improving the relevance of search results or any ranked list.
 
 ## Installation
 
-To get started, install the `@langchain/mixedbread-ai` package along with the main LangChain package:
+To get started, install the `@langchain/mixedbread-ai` package:
+
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
 
 ```bash
 npm install @langchain/mixedbread-ai
@@ -22,28 +26,28 @@ The `MixedbreadAIReranker` class provides access to the reranking API. Here’s 
 
 1. **Import the Class**: First, import the `MixedbreadAIReranker` class from the package.
 
-    ```typescript
-    import { MixedbreadAIReranker } from '@langchain/mixedbread-ai';
-    ```
+```typescript
+import { MixedbreadAIReranker } from "@langchain/mixedbread-ai";
+```
 
 2. **Instantiate the Class**: Create an instance of `MixedbreadAIReranker` with your API key.
 
-    ```typescript
-    const reranker = new MixedbreadAIReranker({ apiKey: 'your-api-key' });
-    ```
+```typescript
+const reranker = new MixedbreadAIReranker({ apiKey: "your-api-key" });
+```
 
 3. **Rerank Documents**: Use the `rerankDocuments` method to reorder documents based on a query.
 
-    ```typescript
-    const documents = [
-        { pageContent: "To bake bread you need flour" },
-        { pageContent: "To bake bread you need yeast" },
-        { pageContent: "To eat bread you need nothing but good taste" }
-    ];
-    const query = "What do you need to bake bread?";
-    const result = await reranker.compressDocuments(documents, query);
-    console.log(result);
-    ```
+```typescript
+const documents = [
+  { pageContent: "To bake bread you need flour" },
+  { pageContent: "To bake bread you need yeast" },
+  { pageContent: "To eat bread you need nothing but good taste" },
+];
+const query = "What do you need to bake bread?";
+const result = await reranker.compressDocuments(documents, query);
+console.log(result);
+```
 
 ## Additional Resources
 

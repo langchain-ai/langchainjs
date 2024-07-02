@@ -6,14 +6,16 @@ const query = "What is the capital of France?";
 
 const documents = [
   new Document({
-    pageContent: "Bread is a staple food prepared from a dough of flour and water",
+    pageContent:
+      "Bread is a staple food prepared from a dough of flour and water",
   }),
   new Document({
     pageContent:
       "There are many types of bread, such as baguette, focaccia, and sourdough, and they are all delicious.",
   }),
   new Document({
-    pageContent: "And it is usually baked, such as the models from mixedbread ai",
+    pageContent:
+      "And it is usually baked, such as the models from mixedbread ai",
   }),
 ];
 

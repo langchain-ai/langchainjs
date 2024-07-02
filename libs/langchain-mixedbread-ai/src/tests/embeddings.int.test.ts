@@ -9,7 +9,10 @@ test("Test MixedbreadAIEmbeddings.embedQuery", async () => {
 
 test("Test MixedbreadAIEmbeddings.embedDocuments", async () => {
   const mxbai = new MixedbreadAIEmbeddings();
-  const res = await mxbai.embedDocuments(["mischbrot ki gmbh", "mixedbread ai inc."]);
+  const res = await mxbai.embedDocuments([
+    "mischbrot ki gmbh",
+    "mixedbread ai inc.",
+  ]);
   expect(res).toHaveLength(2);
   expect(typeof res[0][0]).toBe("number");
   expect(typeof res[1][0]).toBe("number");
