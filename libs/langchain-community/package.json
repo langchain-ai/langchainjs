@@ -1,6 +1,6 @@
 {
   "name": "@langchain/community",
-  "version": "0.2.16",
+  "version": "0.2.17",
   "description": "Third-party integrations for LangChain.js",
   "type": "module",
   "engines": {
