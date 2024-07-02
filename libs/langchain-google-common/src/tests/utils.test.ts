@@ -8,7 +8,7 @@ import {
   MediaBlob,
   MediaManager,
   SimpleWebBlobStore,
-} from "../utils/media_core.js";
+} from "../experimental/utils/media_core.js";
 
 describe("zodToGeminiParameters", () => {
   test("can convert zod schema to gemini schema", () => {

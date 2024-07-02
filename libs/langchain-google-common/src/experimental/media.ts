@@ -9,13 +9,13 @@ import {
   GoogleConnectionParams,
   GoogleRawResponse,
   GoogleResponse,
-} from "./types.js";
-import { GoogleHostConnection, GoogleRawConnection } from "./connection.js";
+} from "../types.js";
+import { GoogleHostConnection, GoogleRawConnection } from "../connection.js";
 import {
   ApiKeyGoogleAuth,
   GoogleAbstractedClient,
   GoogleAbstractedClientOpsMethod,
-} from "./auth.js";
+} from "../auth.js";
 
 export interface GoogleUploadConnectionParams<AuthOptions>
   extends GoogleConnectionParams<AuthOptions> {}

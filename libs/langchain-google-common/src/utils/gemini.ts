@@ -34,7 +34,7 @@ import type {
   GeminiPartFunctionCall,
 } from "../types.js";
 import { GoogleAISafetyError } from "./safety.js";
-import { MediaBlob, MediaManager } from "./media_core.js";
+import { MediaBlob, MediaManager } from "../experimental/utils/media_core.js";
 
 export interface FunctionCall {
   name: string;

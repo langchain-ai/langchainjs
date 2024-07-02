@@ -16,10 +16,10 @@ import {
 import { InMemoryStore } from "@langchain/core/stores";
 import {
   BackedBlobStore,
-  GoogleCloudStorageUri,
   MediaManager,
   SimpleWebBlobStore,
-} from "@langchain/google-common";
+} from "@langchain/google-common/experimental/utils/media_core";
+import { GoogleCloudStorageUri } from "@langchain/google-common/experimental/media";
 import { GeminiTool } from "../types.js";
 import { ChatGoogle } from "../chat_models.js";
 import { BlobStoreGoogleCloudStorage } from "../media.js";

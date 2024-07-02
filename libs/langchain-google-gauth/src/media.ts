@@ -1,10 +1,10 @@
+import { GoogleAbstractedClient } from "@langchain/google-common";
 import {
   BlobStoreGoogleCloudStorageBase,
   BlobStoreGoogleCloudStorageBaseParams,
   BlobStoreAIStudioFileBase,
   BlobStoreAIStudioFileBaseParams,
-  GoogleAbstractedClient,
-} from "@langchain/google-common";
+} from "@langchain/google-common/experimental/media";
 import { GoogleAuthOptions } from "google-auth-library";
 import { GAuthClient } from "./auth.js";
 

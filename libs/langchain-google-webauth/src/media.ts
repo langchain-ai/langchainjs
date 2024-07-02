@@ -1,11 +1,13 @@
 import {
-  BlobStoreAIStudioFileBase,
-  BlobStoreAIStudioFileBaseParams,
-  BlobStoreGoogleCloudStorageBase,
-  BlobStoreGoogleCloudStorageBaseParams,
   GoogleAbstractedClient,
   GoogleBaseLLMInput,
 } from "@langchain/google-common";
+import {
+  BlobStoreAIStudioFileBase,
+  BlobStoreAIStudioFileBaseParams,
+  BlobStoreGoogleCloudStorageBase,
+  BlobStoreGoogleCloudStorageBaseParams
+} from "@langchain/google-common/experimental/media";
 import { WebGoogleAuth, WebGoogleAuthOptions } from "./auth.js";
 
 export interface BlobStoreGoogleCloudStorageParams

@@ -18,7 +18,7 @@ import {
   BackedBlobStore,
   MediaManager,
   SimpleWebBlobStore,
-} from "@langchain/google-common";
+} from "@langchain/google-common/experimental/utils/media_core";
 import { InMemoryStore } from "@langchain/core/stores";
 import { ChatGoogle } from "../chat_models.js";
 import { BlobStoreAIStudioFile } from "../media.js";

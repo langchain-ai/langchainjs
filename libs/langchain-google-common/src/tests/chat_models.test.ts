@@ -20,7 +20,7 @@ import {
   BackedBlobStore,
   MediaBlob,
   MediaManager,
-} from "../utils/media_core.js";
+} from "../experimental/utils/media_core.js";
 
 class ChatGoogle extends ChatGoogleBase<MockClientAuthInfo> {
   constructor(fields?: ChatGoogleBaseInput<MockClientAuthInfo>) {
