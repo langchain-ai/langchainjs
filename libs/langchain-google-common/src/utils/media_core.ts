@@ -172,7 +172,7 @@ export abstract class BlobStore extends BaseStore<string, MediaBlob> {
     this.defaultFetchOptions = opts?.defaultFetchOptions ?? {};
   }
 
-  async _realKey(key: string | MediaBlob): Promise<string> {
+  protected async _realKey(key: string | MediaBlob): Promise<string> {
     return typeof key === "string" ? key : await key.asUri();
   }
 
@@ -192,7 +192,7 @@ export abstract class BlobStore extends BaseStore<string, MediaBlob> {
    * @param opts Any options (if needed) that may be used to determine if it is valid
    * @return If the string represented by blob.path is supported.
    */
-  _hasValidPath(
+  protected _hasValidPath(
     blob: MediaBlob,
     opts?: BlobStoreStoreOptions
   ): Promise<boolean> {
@@ -203,7 +203,7 @@ export abstract class BlobStore extends BaseStore<string, MediaBlob> {
     return Promise.resolve(isPrefixed);
   }
 
-  _blobPathSuffix(blob: MediaBlob): string {
+  protected _blobPathSuffix(blob: MediaBlob): string {
     // Get the path currently set and make sure we treat it as a string
     const blobPath = `${blob.path}`;
 
@@ -217,7 +217,7 @@ export abstract class BlobStore extends BaseStore<string, MediaBlob> {
     return blobPath.substring(pathStart);
   }
 
-  async _newBlob(oldBlob: MediaBlob, newPath?: string): Promise<MediaBlob> {
+  protected async _newBlob(oldBlob: MediaBlob, newPath?: string): Promise<MediaBlob> {
     const oldPath = oldBlob.path;
     const metadata = oldBlob?.metadata ?? {};
     metadata.langchainOldPath = oldPath;
@@ -233,7 +233,7 @@ export abstract class BlobStore extends BaseStore<string, MediaBlob> {
     return newBlob;
   }
 
-  async _validBlobPrefixPath(
+  protected async _validBlobPrefixPath(
     blob: MediaBlob,
     opts?: BlobStoreStoreOptions
   ): Promise<MediaBlob> {
@@ -243,7 +243,7 @@ export abstract class BlobStore extends BaseStore<string, MediaBlob> {
     return this._newBlob(blob, newPath);
   }
 
-  async _validBlobPrefixUuid(
+  protected async _validBlobPrefixUuid(
     blob: MediaBlob,
     opts?: BlobStoreStoreOptions
   ): Promise<MediaBlob> {
@@ -253,7 +253,7 @@ export abstract class BlobStore extends BaseStore<string, MediaBlob> {
     return this._newBlob(blob, newPath);
   }
 
-  async _validBlobRemovePath(
+  protected async _validBlobRemovePath(
     blob: MediaBlob,
     _opts?: BlobStoreStoreOptions
   ): Promise<MediaBlob> {
@@ -266,7 +266,7 @@ export abstract class BlobStore extends BaseStore<string, MediaBlob> {
    * @param blob
    * @param opts
    */
-  async _validStoreBlob(
+  protected async _validStoreBlob(
     blob: MediaBlob,
     opts?: BlobStoreStoreOptions
   ): Promise<MediaBlob | undefined> {
@@ -305,14 +305,14 @@ export abstract class BlobStore extends BaseStore<string, MediaBlob> {
     return undefined;
   }
 
-  async _missingFetchBlobEmpty(
+  protected async _missingFetchBlobEmpty(
     path: string,
     _opts?: BlobStoreFetchOptions
   ): Promise<MediaBlob> {
     return new MediaBlob({ path });
   }
 
-  async _missingFetchBlob(
+  protected async _missingFetchBlob(
     path: string,
     opts?: BlobStoreFetchOptions
   ): Promise<MediaBlob | undefined> {
