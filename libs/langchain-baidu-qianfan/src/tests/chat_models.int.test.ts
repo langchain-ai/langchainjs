@@ -5,7 +5,7 @@ import { ChatBaiduQianfan } from "../chat_models.js";
 
 test("invoke", async () => {
   const chat = new ChatBaiduQianfan({
-    model: 'ERNIE-Bot-turbo'
+    model: "ERNIE-Bot-turbo",
   });
   const message = new HumanMessage("北京天气");
   const res = await chat.invoke([message]);
@@ -15,7 +15,7 @@ test("invoke", async () => {
 
 test("invokeWithStream", async () => {
   const chat = new ChatBaiduQianfan({
-    model: 'ERNIE-Bot-turbo',
+    model: "ERNIE-Bot-turbo",
     streaming: true,
   });
   const message = new HumanMessage("等额本金和等额本息有什么区别？");

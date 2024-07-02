@@ -84,35 +84,31 @@ export class BaiduQianfanEmbeddings
     super(fieldsWithDefaults);
 
     this.qianfanAK =
-      fieldsWithDefaults?.qianfanAK ??
-      getEnvironmentVariable("QIANFAN_AK");
+      fieldsWithDefaults?.qianfanAK ?? getEnvironmentVariable("QIANFAN_AK");
 
     this.qianfanSK =
-      fieldsWithDefaults?.qianfanSK ??
-      getEnvironmentVariable("QIANFAN_SK");
+      fieldsWithDefaults?.qianfanSK ?? getEnvironmentVariable("QIANFAN_SK");
 
     this.qianfanAccessKey =
       fieldsWithDefaults?.qianfanAccessKey ??
       getEnvironmentVariable("QIANFAN_ACCESS_KEY");
 
     this.qianfanSecretKey =
-        fieldsWithDefaults?.qianfanSecretKey ??
-        getEnvironmentVariable("QIANFAN_SECRET_KEY");
+      fieldsWithDefaults?.qianfanSecretKey ??
+      getEnvironmentVariable("QIANFAN_SECRET_KEY");
 
     // 优先使用安全认证AK/SK鉴权
     if (this.qianfanAccessKey && this.qianfanSecretKey) {
       this.embeddingIns = new Embedding({
         QIANFAN_ACCESS_KEY: this.qianfanAccessKey,
-        QIANFAN_SECRET_KEY: this.qianfanSecretKey
+        QIANFAN_SECRET_KEY: this.qianfanSecretKey,
       });
-    }
-    else if (this.qianfanAK && this.qianfanSK) {
+    } else if (this.qianfanAK && this.qianfanSK) {
       this.embeddingIns = new Embedding({
         QIANFAN_AK: this.qianfanAK,
-        QIANFAN_SK: this.qianfanSK
+        QIANFAN_SK: this.qianfanSK,
       });
-    }
-    else {
+    } else {
       throw new Error("Please provide AK/SK");
     }
 
@@ -203,7 +199,8 @@ export class BaiduQianfanEmbeddings
    * @returns Promise that resolves to the response from the API.
    */
   private async embeddingWithRetry(body: EmbeddingCreateParams) {
-    const embeddingData: EmbeddingResponse | EmbeddingErrorResponse = await this.embeddingIns.embedding(body, this.modelName);
+    const embeddingData: EmbeddingResponse | EmbeddingErrorResponse =
+      await this.embeddingIns.embedding(body, this.modelName);
 
     if ("error_code" in embeddingData && embeddingData.error_code) {
       throw new Error(

@@ -21,15 +21,15 @@ import { ChatCompletion } from "@baiducloud/qianfan";
 import { isValidModel } from "./utils.js";
 
 /**
- * Type representing the role of a message in the Wenxin chat model.
+ * Type representing the role of a message in the Qianfan chat model.
  */
-export type WenxinMessageRole = "assistant" | "user";
+export type QianfanRole = "assistant" | "user";
 
 /**
- * Interface representing a message in the Wenxin chat model.
+ * Interface representing a message in the Qianfan chat model.
  */
-interface WenxinMessage {
-  role: WenxinMessageRole;
+interface Qianfan {
+  role: QianfanRole;
   content: string;
 }
 
@@ -46,7 +46,7 @@ interface TokenUsage {
  * Interface representing a request for a chat completion.
  */
 interface ChatCompletionRequest {
-  messages: WenxinMessage[];
+  messages: Qianfan[];
   stream?: boolean;
   user_id?: string;
   temperature?: number;
@@ -70,7 +70,7 @@ interface ChatCompletionResponse {
 /**
  * Interface defining the input to the ChatBaiduQianfan class.
  */
-declare interface BaiduWenxinChatInput {
+declare interface BaiduQianfanChatInput {
   /**
    * Model name to use. Available options are: ERNIE-Bot, ERNIE-Bot-turbo, ERNIE-Bot-4
    * Alias for `model`
@@ -86,7 +86,7 @@ declare interface BaiduWenxinChatInput {
   streaming?: boolean;
 
   /** Messages to pass as a prefix to the prompt */
-  prefixMessages?: WenxinMessage[];
+  prefixMessages?: Qianfan[];
 
   /**
    * ID of the end-user who made requests.
@@ -145,15 +145,15 @@ function extractGenericMessageCustomRole(message: ChatMessage) {
     console.warn(`Unknown message role: ${message.role}`);
   }
 
-  return message.role as WenxinMessageRole;
+  return message.role as QianfanRole;
 }
 
 /**
- * Function that converts a base message to a Wenxin message role.
+ * Function that converts a base message to a Qianfan message role.
  * @param message Base message to convert.
- * @returns The Wenxin message role.
+ * @returns The Qianfan message role.
  */
-function messageToWenxinRole(message: BaseMessage): WenxinMessageRole {
+function messageToQianfanRole(message: BaseMessage): QianfanRole {
   const type = message._getType();
   switch (type) {
     case "ai":
@@ -186,7 +186,7 @@ function messageToWenxinRole(message: BaseMessage): WenxinMessageRole {
  */
 export class ChatBaiduQianfan
   extends BaseChatModel
-  implements BaiduWenxinChatInput
+  implements BaiduQianfanChatInput
 {
   static lc_name() {
     return "ChatBaiduQianfan";
@@ -213,7 +213,7 @@ export class ChatBaiduQianfan
 
   streaming = false;
 
-  prefixMessages?: WenxinMessage[];
+  prefixMessages?: Qianfan[];
 
   userId?: string;
 
@@ -237,9 +237,9 @@ export class ChatBaiduQianfan
 
   qianfanSecretKey?: string;
 
-  constructor(fields?: Partial<BaiduWenxinChatInput> & BaseChatModelParams) {
+  constructor(fields?: Partial<BaiduQianfanChatInput> & BaseChatModelParams) {
     super(fields ?? {});
-    
+
     this.modelName = fields?.model ?? fields?.modelName ?? this.model;
     this.model = this.modelName;
 
@@ -247,36 +247,28 @@ export class ChatBaiduQianfan
       throw new Error(`Invalid model name: ${this.model}`);
     }
 
-    this.qianfanAK =
-      fields?.qianfanAK ??
-      getEnvironmentVariable("QIANFAN_AK");
+    this.qianfanAK = fields?.qianfanAK ?? getEnvironmentVariable("QIANFAN_AK");
 
-    this.qianfanSK =
-      fields?.qianfanSK ??
-      getEnvironmentVariable("QIANFAN_SK");
+    this.qianfanSK = fields?.qianfanSK ?? getEnvironmentVariable("QIANFAN_SK");
 
     this.qianfanAccessKey =
-      fields?.qianfanAccessKey ??
-      getEnvironmentVariable("QIANFAN_ACCESS_KEY");
+      fields?.qianfanAccessKey ?? getEnvironmentVariable("QIANFAN_ACCESS_KEY");
 
     this.qianfanSecretKey =
-      fields?.qianfanSecretKey ??
-        getEnvironmentVariable("QIANFAN_SECRET_KEY");
+      fields?.qianfanSecretKey ?? getEnvironmentVariable("QIANFAN_SECRET_KEY");
 
     // 优先使用安全认证AK/SK鉴权
     if (this.qianfanAccessKey && this.qianfanSecretKey) {
       this.client = new ChatCompletion({
         QIANFAN_ACCESS_KEY: this.qianfanAccessKey,
-        QIANFAN_SECRET_KEY: this.qianfanSecretKey
+        QIANFAN_SECRET_KEY: this.qianfanSecretKey,
       });
-    }
-    else if (this.qianfanAK && this.qianfanSK) {
+    } else if (this.qianfanAK && this.qianfanSK) {
       this.client = new ChatCompletion({
         QIANFAN_AK: this.qianfanAK,
-        QIANFAN_SK: this.qianfanSK
+        QIANFAN_SK: this.qianfanSK,
       });
-    }
-    else {
+    } else {
       throw new Error("Please provide AK/SK");
     }
 
@@ -311,9 +303,9 @@ export class ChatBaiduQianfan
     };
   }
 
-  private _ensureMessages(messages: BaseMessage[]): WenxinMessage[] {
+  private _ensureMessages(messages: BaseMessage[]): Qianfan[] {
     return messages.map((message) => ({
-      role: messageToWenxinRole(message),
+      role: messageToQianfanRole(message),
       content: message.text,
     }));
   }
@@ -321,14 +313,14 @@ export class ChatBaiduQianfan
   /** @ignore */
   async _generate(
     messages: BaseMessage[],
-    options?: this["ParsedCallOptions"],
+    _options?: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
     const tokenUsage: TokenUsage = {};
 
     const params = this.invocationParams();
 
-    // Wenxin requires the system message to be put in the params, not messages array
+    // Qianfan requires the system message to be put in the params, not messages array
     const systemMessage = messages.find(
       (message) => message._getType() === "system"
     );
@@ -341,8 +333,7 @@ export class ChatBaiduQianfan
 
     const data = params.stream
       ? await new Promise<ChatCompletionResponse>((resolve, reject) => {
-        let rejected = false;
-        let resolved = false;
+          let rejected = false;
           this.completionWithRetry(
             {
               ...params,
@@ -350,8 +341,9 @@ export class ChatBaiduQianfan
             },
             true,
             (event) => {
-              resolved = true;
               resolve(event.data);
+              // eslint-disable-next-line no-void
+              void runManager?.handleLLMNewToken(event.data ?? "");
             }
           ).catch((error) => {
             if (!rejected) {
@@ -365,7 +357,7 @@ export class ChatBaiduQianfan
             ...params,
             messages: messagesMapped,
           },
-          false,
+          false
         ).then((data) => {
           if (data?.error_code) {
             throw new Error(data?.error_msg);
@@ -411,11 +403,14 @@ export class ChatBaiduQianfan
     onmessage?: (event: MessageEvent) => void
   ) {
     const makeCompletionRequest = async () => {
-      console.log(request)
-      const response = await this.client.chat({
-        messages: request.messages,
-        stream
-      }, this.model);
+      console.log(request);
+      const response = await this.client.chat(
+        {
+          messages: request.messages,
+          stream,
+        },
+        this.model
+      );
 
       if (!stream) {
         return response;
@@ -457,13 +452,14 @@ export class ChatBaiduQianfan
     return this.caller.call(makeCompletionRequest);
   }
 
-  private async createStream(
-    request: ChatCompletionRequest
-  ) {
-    const response = await this.client.chat({
-      messages: request.messages,
-      stream: true
-    }, this.model);
+  private async createStream(request: ChatCompletionRequest) {
+    const response = await this.client.chat(
+      {
+        messages: request.messages,
+        stream: true,
+      },
+      this.model
+    );
 
     return convertEventStreamToIterableReadableDataStream(response);
   }
@@ -478,7 +474,7 @@ export class ChatBaiduQianfan
 
   async *_streamResponseChunks(
     messages: BaseMessage[],
-    options?: this["ParsedCallOptions"],
+    _options?: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
     const parameters = {
@@ -486,7 +482,7 @@ export class ChatBaiduQianfan
       stream: true,
     };
 
-    // Wenxin requires the system message to be put in the params, not messages array
+    // Qianfan requires the system message to be put in the params, not messages array
     const systemMessage = messages.find(
       (message) => message._getType() === "system"
     );
@@ -497,14 +493,11 @@ export class ChatBaiduQianfan
     }
     const messagesMapped = this._ensureMessages(messages);
 
-
     const stream = await this.caller.call(async () =>
-      this.createStream(
-        {
-          ...parameters,
-          messages: messagesMapped,
-        }
-      )
+      this.createStream({
+        ...parameters,
+        messages: messagesMapped,
+      })
     );
 
     for await (const chunk of stream) {
@@ -527,10 +520,5 @@ export class ChatBaiduQianfan
 
   _llmType() {
     return "baiduqianfan";
-  }
-
-  /** @ignore */
-  _combineLLMOutput() {
-    return [];
   }
 }
