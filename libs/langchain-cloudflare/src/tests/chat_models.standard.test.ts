@@ -16,7 +16,7 @@ class ChatCloudflareWorkersAIStandardUnitTests extends ChatModelUnitTests<
     super({
       Cls: ChatCloudflareWorkersAI,
       chatModelHasToolCalling: false,
-      chatModelHasStructuredOutput: false,
+      chatModelHasStructuredOutput: true,
       constructorArgs: {},
     });
   }
