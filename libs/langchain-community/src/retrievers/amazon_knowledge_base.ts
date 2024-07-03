@@ -2,6 +2,7 @@ import {
   RetrieveCommand,
   BedrockAgentRuntimeClient,
   BedrockAgentRuntimeClientConfig,
+  RetrievalFilter,
 } from "@aws-sdk/client-bedrock-agent-runtime";
 
 import { BaseRetriever } from "@langchain/core/retrievers";
@@ -78,7 +79,7 @@ export class AmazonKnowledgeBaseRetriever extends BaseRetriever {
     return res;
   }
 
-  async queryKnowledgeBase(query: string, topK: number) {
+  async queryKnowledgeBase(query: string, topK: number, filter?: RetrievalFilter) {
     const retrieveCommand = new RetrieveCommand({
       knowledgeBaseId: this.knowledgeBaseId,
       retrievalQuery: {
@@ -87,6 +88,7 @@ export class AmazonKnowledgeBaseRetriever extends BaseRetriever {
       retrievalConfiguration: {
         vectorSearchConfiguration: {
           numberOfResults: topK,
+          filter,
         },
       },
     });
