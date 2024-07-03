@@ -37,6 +37,7 @@
     "@langchain/aws": "workspace:*",
     "@langchain/azure-dynamic-sessions": "workspace:^",
     "@langchain/azure-openai": "workspace:*",
+    "@langchain/baidu-qianfan": "workspace:*",
     "@langchain/cloudflare": "workspace:*",
     "@langchain/cohere": "workspace:*",
     "@langchain/community": "workspace:*",

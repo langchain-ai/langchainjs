@@ -1,11 +1,11 @@
 import { Embeddings, type EmbeddingsParams } from "@langchain/core/embeddings";
 import { chunkArray } from "@langchain/core/utils/chunk_array";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
+import { Embedding } from "@baiducloud/qianfan";
 
-/** @deprecated Install and import from @langchain/baidu-qianfan instead. */
 export interface BaiduQianfanEmbeddingsParams extends EmbeddingsParams {
   /** Model name to use */
-  modelName: "embedding-v1" | "bge_large_zh" | "bge-large-en" | "tao-8k";
+  modelName: "Embedding-V1" | "bge-large-zh" | "bge-large-en" | "tao-8k";
 
   /**
    * Timeout to use when making requests to BaiduQianfan.
@@ -53,46 +53,65 @@ export class BaiduQianfanEmbeddings
   extends Embeddings
   implements BaiduQianfanEmbeddingsParams
 {
-  modelName: BaiduQianfanEmbeddingsParams["modelName"] = "embedding-v1";
+  modelName: BaiduQianfanEmbeddingsParams["modelName"] = "Embedding-V1";
 
   batchSize = 16;
 
   stripNewLines = true;
 
-  baiduApiKey: string;
+  qianfanAK: string | undefined;
 
-  baiduSecretKey: string;
+  qianfanSK: string | undefined;
+
+  qianfanAccessKey: string | undefined;
+
+  qianfanSecretKey: string | undefined;
 
   accessToken: string;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  embeddings: any;
 
   constructor(
     fields?: Partial<BaiduQianfanEmbeddingsParams> & {
       verbose?: boolean;
-      baiduApiKey?: string;
-      baiduSecretKey?: string;
+      qianfanAK?: string;
+      qianfanSK?: string;
+      qianfanAccessKey?: string;
+      qianfanSecretKey?: string;
     }
   ) {
     const fieldsWithDefaults = { maxConcurrency: 2, ...fields };
     super(fieldsWithDefaults);
 
-    const baiduApiKey =
-      fieldsWithDefaults?.baiduApiKey ??
-      getEnvironmentVariable("BAIDU_API_KEY");
+    this.qianfanAK =
+      fieldsWithDefaults?.qianfanAK ?? getEnvironmentVariable("QIANFAN_AK");
 
-    const baiduSecretKey =
-      fieldsWithDefaults?.baiduSecretKey ??
-      getEnvironmentVariable("BAIDU_SECRET_KEY");
+    this.qianfanSK =
+      fieldsWithDefaults?.qianfanSK ?? getEnvironmentVariable("QIANFAN_SK");
 
-    if (!baiduApiKey) {
-      throw new Error("Baidu API key not found");
+    this.qianfanAccessKey =
+      fieldsWithDefaults?.qianfanAccessKey ??
+      getEnvironmentVariable("QIANFAN_ACCESS_KEY");
+
+    this.qianfanSecretKey =
+      fieldsWithDefaults?.qianfanSecretKey ??
+      getEnvironmentVariable("QIANFAN_SECRET_KEY");
+
+    // 优先使用安全认证AK/SK鉴权
+    if (this.qianfanAccessKey && this.qianfanSecretKey) {
+      this.embeddings = new Embedding({
+        QIANFAN_ACCESS_KEY: this.qianfanAccessKey,
+        QIANFAN_SECRET_KEY: this.qianfanSecretKey,
+      });
+    } else if (this.qianfanAK && this.qianfanSK) {
+      this.embeddings = new Embedding({
+        QIANFAN_AK: this.qianfanAK,
+        QIANFAN_SK: this.qianfanSK,
+      });
+    } else {
+      throw new Error("Please provide AK/SK");
     }
-
-    if (!baiduSecretKey) {
-      throw new Error("Baidu Secret key not found");
-    }
-
-    this.baiduApiKey = baiduApiKey;
-    this.baiduSecretKey = baiduSecretKey;
 
     this.modelName = fieldsWithDefaults?.modelName ?? this.modelName;
 
@@ -181,59 +200,17 @@ export class BaiduQianfanEmbeddings
    * @returns Promise that resolves to the response from the API.
    */
   private async embeddingWithRetry(body: EmbeddingCreateParams) {
-    if (!this.accessToken) {
-      this.accessToken = await this.getAccessToken();
+    const embeddingData: EmbeddingResponse | EmbeddingErrorResponse =
+      await this.embeddings.embedding(body, this.modelName);
+
+    if ("error_code" in embeddingData && embeddingData.error_code) {
+      throw new Error(
+        `${embeddingData.error_code}: ${embeddingData.error_msg}`
+      );
     }
 
-    return fetch(
-      `https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/embeddings/${this.modelName}?access_token=${this.accessToken}`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(body),
-      }
-    ).then(async (response) => {
-      const embeddingData: EmbeddingResponse | EmbeddingErrorResponse =
-        await response.json();
-
-      if ("error_code" in embeddingData && embeddingData.error_code) {
-        throw new Error(
-          `${embeddingData.error_code}: ${embeddingData.error_msg}`
-        );
-      }
-
-      return (embeddingData as EmbeddingResponse).data.map(
-        ({ embedding }) => embedding
-      );
-    });
-  }
-
-  /**
-   * Method that retrieves the access token for making requests to the Baidu
-   * API.
-   * @returns The access token for making requests to the Baidu API.
-   */
-  private async getAccessToken() {
-    const url = `https://aip.baidubce.com/oauth/2.0/token?grant_type=client_credentials&client_id=${this.baiduApiKey}&client_secret=${this.baiduSecretKey}`;
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-    });
-    if (!response.ok) {
-      const text = await response.text();
-      const error = new Error(
-        `Baidu get access token failed with status code ${response.status}, response: ${text}`
-      );
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (error as any).response = response;
-      throw error;
-    }
-    const json = await response.json();
-    return json.access_token;
+    return (embeddingData as EmbeddingResponse).data.map(
+      ({ embedding }) => embedding
+    );
   }
 }
