@@ -42,7 +42,7 @@
     "@langchain/core": ">0.2.0 <0.3.0",
     "@pinecone-database/pinecone": "^2.2.0",
     "flat": "^5.0.2",
-    "uuid": "9.0.1"
+    "uuid": "^9.0.0"
   },
   "devDependencies": {
     "@faker-js/faker": "^8.3.1",

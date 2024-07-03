@@ -5466,7 +5466,7 @@ __metadata:
     rollup: ^4.5.2
     ts-jest: ^29.1.0
     typescript: <5.2.0
-    uuid: 9.0.1
+    uuid: ^9.0.0
   languageName: unknown
   linkType: soft
 
@@ -5534,7 +5534,7 @@ __metadata:
     rollup: ^4.5.2
     ts-jest: ^29.1.0
     typescript: <5.2.0
-    uuid: 9.0.1
+    uuid: ^9.0.0
   languageName: unknown
   linkType: soft
 
@@ -5616,7 +5616,7 @@ __metadata:
     "@huggingface/inference": ^2.6.4
     "@jest/globals": ^29.5.0
     "@langchain/core": ~0.2.11
-    "@langchain/langgraph": ^0.0.25
+    "@langchain/langgraph": ~0.0.26
     "@langchain/openai": ~0.1.0
     "@langchain/scripts": ~0.0.14
     "@langchain/standard-tests": 0.0.0
@@ -5751,7 +5751,7 @@ __metadata:
     typescript: ~5.1.6
     typesense: ^1.5.3
     usearch: ^1.1.1
-    uuid: 9.0.1
+    uuid: ^9.0.0
     vectordb: ^0.1.4
     voy-search: 0.6.2
     weaviate-ts-client: ^1.4.0
@@ -6161,7 +6161,7 @@ __metadata:
     release-it: ^15.10.1
     rimraf: ^5.0.1
     typescript: ~5.1.6
-    uuid: 9.0.1
+    uuid: ^9.0.0
     web-streams-polyfill: ^3.3.3
     zod: ^3.22.4
     zod-to-json-schema: ^3.22.3
@@ -6238,7 +6238,7 @@ __metadata:
     rollup: ^4.5.2
     ts-jest: ^29.1.0
     typescript: <5.2.0
-    uuid: 9.0.1
+    uuid: ^9.0.0
     zod: ^3.22.4
     zod-to-json-schema: ^3.22.4
   languageName: unknown
@@ -6446,7 +6446,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/langgraph@npm:^0.0.25, @langchain/langgraph@npm:latest":
+"@langchain/langgraph@npm:latest":
   version: 0.0.25
   resolution: "@langchain/langgraph@npm:0.0.25"
   dependencies:
@@ -6458,6 +6458,21 @@ __metadata:
     better-sqlite3:
       optional: true
   checksum: 320b065f33ac692666764f31fd958b182d77de8bfaea37b608e60e18042be5750da142e21efca4a127248814c98b67b548089d17b11627b3ff8241186a4f2ee5
+  languageName: node
+  linkType: hard
+
+"@langchain/langgraph@npm:~0.0.26":
+  version: 0.0.26
+  resolution: "@langchain/langgraph@npm:0.0.26"
+  dependencies:
+    "@langchain/core": ">0.1.61 <0.3.0"
+    uuid: ^10.0.0
+  peerDependencies:
+    better-sqlite3: ^9.5.0
+  peerDependenciesMeta:
+    better-sqlite3:
+      optional: true
+  checksum: 82ad770597fc389d704395657c800fd6c1745a82677cc836c722827dc9473f9f6f06babf4aa22e394b3b7d3456a7ce52db6d206fb7e0f02dacc8f8a98580f74c
   languageName: node
   linkType: hard
 
@@ -6491,7 +6506,7 @@ __metadata:
     rollup: ^4.5.2
     ts-jest: ^29.1.0
     typescript: <5.2.0
-    uuid: 9.0.1
+    uuid: ^9.0.0
     zod: ^3.22.4
     zod-to-json-schema: ^3.22.4
   languageName: unknown
@@ -6527,7 +6542,7 @@ __metadata:
     rollup: ^4.5.2
     ts-jest: ^29.1.0
     typescript: <5.2.0
-    uuid: 9.0.1
+    uuid: ^9.0.0
   languageName: unknown
   linkType: soft
 
@@ -6655,7 +6670,7 @@ __metadata:
     rollup: ^4.5.2
     ts-jest: ^29.1.0
     typescript: <5.2.0
-    uuid: 9.0.1
+    uuid: ^9.0.0
   languageName: unknown
   linkType: soft
 
@@ -6689,7 +6704,7 @@ __metadata:
     rollup: ^4.5.2
     ts-jest: ^29.1.0
     typescript: <5.2.0
-    uuid: 9.0.1
+    uuid: ^9.0.0
   languageName: unknown
   linkType: soft
 
@@ -6723,7 +6738,7 @@ __metadata:
     rollup: ^4.5.2
     ts-jest: ^29.1.0
     typescript: <5.2.0
-    uuid: 9.0.1
+    uuid: ^9.0.0
   languageName: unknown
   linkType: soft
 
@@ -6856,7 +6871,7 @@ __metadata:
     rollup: ^4.5.2
     ts-jest: ^29.1.0
     typescript: <5.2.0
-    uuid: 9.0.1
+    uuid: ^9.0.0
     weaviate-ts-client: ^2.0.0
   languageName: unknown
   linkType: soft
@@ -15183,7 +15198,7 @@ __metadata:
     swc-loader: ^0.2.3
     typedoc: ^0.24.4
     typedoc-plugin-markdown: next
-    uuid: 9.0.1
+    uuid: ^9.0.0
     webpack: ^5.75.0
     yaml-loader: ^0.8.0
   languageName: unknown
@@ -18431,7 +18446,7 @@ __metadata:
     typeorm: ^0.3.20
     typescript: ~5.1.6
     typesense: ^1.5.3
-    uuid: 9.0.1
+    uuid: ^9.0.0
     vectordb: ^0.1.4
     voy-search: 0.6.2
     weaviate-ts-client: ^2.0.0
@@ -24080,7 +24095,7 @@ __metadata:
     ts-jest: ^29.1.0
     typeorm: ^0.3.20
     typescript: ~5.1.6
-    uuid: 9.0.1
+    uuid: ^9.0.0
     weaviate-ts-client: ^2.0.0
     web-auth-library: ^1.0.3
     wikipedia: ^2.1.2
@@ -24265,7 +24280,7 @@ __metadata:
     semver: ^7.5.4
     turbo: ^1.13.3
     typescript: ~5.1.6
-    uuid: 9.0.1
+    uuid: ^9.0.0
   languageName: unknown
   linkType: soft
 
@@ -34754,15 +34769,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"uuid@npm:9.0.1, uuid@npm:^9.0.0, uuid@npm:^9.0.1":
-  version: 9.0.1
-  resolution: "uuid@npm:9.0.1"
-  bin:
-    uuid: dist/bin/uuid
-  checksum: 39931f6da74e307f51c0fb463dc2462807531dc80760a9bff1e35af4316131b4fc3203d16da60ae33f07fdca5b56f3f1dd662da0c99fea9aaeab2004780cc5f4
-  languageName: node
-  linkType: hard
-
 "uuid@npm:^10.0.0":
   version: 10.0.0
   resolution: "uuid@npm:10.0.0"
@@ -34778,6 +34784,15 @@ __metadata:
   bin:
     uuid: dist/bin/uuid
   checksum: 5575a8a75c13120e2f10e6ddc801b2c7ed7d8f3c8ac22c7ed0c7b2ba6383ec0abda88c905085d630e251719e0777045ae3236f04c812184b7c765f63a70e58df
+  languageName: node
+  linkType: hard
+
+"uuid@npm:^9.0.0, uuid@npm:^9.0.1":
+  version: 9.0.1
+  resolution: "uuid@npm:9.0.1"
+  bin:
+    uuid: dist/bin/uuid
+  checksum: 39931f6da74e307f51c0fb463dc2462807531dc80760a9bff1e35af4316131b4fc3203d16da60ae33f07fdca5b56f3f1dd662da0c99fea9aaeab2004780cc5f4
   languageName: node
   linkType: hard
 

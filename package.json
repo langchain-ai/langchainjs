@@ -72,6 +72,6 @@
     "*.md": "prettier --config .prettierrc --write"
   },
   "dependencies": {
-    "uuid": "9.0.1"
+    "uuid": "^9.0.0"
   }
 }
