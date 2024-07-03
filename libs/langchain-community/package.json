@@ -43,7 +43,7 @@
     "js-yaml": "^4.1.0",
     "langchain": "0.2.3",
     "langsmith": "~0.1.30",
-    "uuid": "^10.0.0",
+    "uuid": "9.0.1",
     "zod": "^3.22.3",
     "zod-to-json-schema": "^3.22.5"
   },
@@ -78,7 +78,7 @@
     "@gradientai/nodejs-sdk": "^1.2.0",
     "@huggingface/inference": "^2.6.4",
     "@jest/globals": "^29.5.0",
-    "@langchain/langgraph": "^0.0.25",
+    "@langchain/langgraph": "~0.0.26",
     "@langchain/scripts": "~0.0.14",
     "@langchain/standard-tests": "0.0.0",
     "@layerup/layerup-security": "^1.5.12",

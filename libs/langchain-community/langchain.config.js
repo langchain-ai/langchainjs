@@ -318,7 +318,9 @@ export const config = {
     "experimental/chat_models/ollama_functions": "experimental/chat_models/ollama_functions",
     "experimental/llms/chrome_ai": "experimental/llms/chrome_ai",
     // chains
-    "chains/graph_qa/cypher": "chains/graph_qa/cypher"
+    "chains/graph_qa/cypher": "chains/graph_qa/cypher",
+    // langgraph checkpointers
+    "langgraph/checkpointers/vercel_kv": "langgraph/checkpointers/vercel_kv"
   },
   requiresOptionalDependency: [
     "tools/aws_sfn",
@@ -515,7 +517,9 @@ export const config = {
     "experimental/multimodal_embeddings/googlevertexai",
     "experimental/hubs/makersuite/googlemakersuitehub",
     // chains
-    "chains/graph_qa/cypher"
+    "chains/graph_qa/cypher",
+    // langgraph checkpointers
+    "langgraph/checkpointers/vercel_kv"
   ],
   packageSuffix: "community",
   tsConfigPath: resolve("./tsconfig.json"),

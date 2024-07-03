@@ -48,6 +48,7 @@
     "@tsconfig/recommended": "^1.0.2",
     "@types/jest": "^29.5.3",
     "@types/semver": "^7",
+    "@types/uuid": "^9",
     "commander": "^11.1.0",
     "dotenv": "^16.0.3",
     "lint-staged": "^13.1.1",
@@ -69,5 +70,8 @@
       "eslint --cache --fix"
     ],
     "*.md": "prettier --config .prettierrc --write"
+  },
+  "dependencies": {
+    "uuid": "9.0.1"
   }
 }

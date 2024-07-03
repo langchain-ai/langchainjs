@@ -50,7 +50,7 @@
     "mustache": "^4.2.0",
     "p-queue": "^6.6.2",
     "p-retry": "4",
-    "uuid": "^10.0.0",
+    "uuid": "9.0.1",
     "zod": "^3.22.4",
     "zod-to-json-schema": "^3.22.3"
   },
