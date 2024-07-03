@@ -37,7 +37,7 @@
   "dependencies": {
     "@cloudflare/ai": "1.0.47",
     "@langchain/core": ">0.1.0 <0.3.0",
-    "uuid": "^9.0.0"
+    "uuid": "^9.0.1"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20231218.0",
