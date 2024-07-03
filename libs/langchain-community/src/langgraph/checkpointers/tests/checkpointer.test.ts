@@ -1,17 +1,12 @@
 /* eslint-disable no-process-env */
 
-import { v6 } from "uuid";
-import { describe, it, expect, jest } from "@jest/globals";
+import { describe, it, expect } from "@jest/globals";
 import { Checkpoint } from "@langchain/langgraph";
 import { VercelKVSaver } from "../vercel_kv.js";
 
-function uuid6(clockseq: number): string {
-  return v6({ clockseq });
-}
-
 const checkpoint1: Checkpoint = {
   v: 1,
-  id: uuid6(-1),
+  id: "1ef390c8-3ed9-6132-ffff-12d236274621",
   ts: "2024-04-19T17:19:07.952Z",
   channel_values: {
     someKey1: "someValue1",
@@ -28,7 +23,7 @@ const checkpoint1: Checkpoint = {
 
 const checkpoint2: Checkpoint = {
   v: 1,
-  id: uuid6(1),
+  id: "1ef390c8-3ed9-6133-8001-419c612dad04",
   ts: "2024-04-20T17:19:07.952Z",
   channel_values: {
     someKey1: "someValue2",
@@ -51,10 +46,9 @@ if (!process.env.VERCEL_KV_API_URL || !process.env.VERCEL_KV_API_TOKEN) {
 
 describe("VercelKVSaver", () => {
   it("should save and retrieve checkpoints correctly", async () => {
-    
     const vercelSaver = new VercelKVSaver({
-      url: process.env.VERCEL_KV_API_URL,
-      token: !process.env.VERCEL_KV_API_TOKEN,
+      url: process.env.VERCEL_KV_API_URL!,
+      token: process.env.VERCEL_KV_API_TOKEN!,
     });
 
     // save checkpoint
