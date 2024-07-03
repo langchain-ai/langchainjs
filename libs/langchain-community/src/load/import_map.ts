@@ -77,3 +77,4 @@ export * as utils__event_source_parse from "../utils/event_source_parse.js";
 export * as experimental__callbacks__handlers__datadog from "../experimental/callbacks/handlers/datadog.js";
 export * as experimental__graph_transformers__llm from "../experimental/graph_transformers/llm.js";
 export * as experimental__chat_models__ollama_functions from "../experimental/chat_models/ollama_functions.js";
+export * as experimental__llms__chrome_ai from "../experimental/llms/chrome_ai.js";

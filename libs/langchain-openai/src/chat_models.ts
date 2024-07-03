@@ -483,9 +483,6 @@ export class ChatOpenAI<
     this.stopSequences = this?.stop;
     this.user = fields?.user;
 
-    this.streaming = fields?.streaming ?? false;
-    this.streamUsage = fields?.streamUsage ?? this.streamUsage;
-
     if (this.azureOpenAIApiKey || this.azureADTokenProvider) {
       if (!this.azureOpenAIApiInstanceName && !this.azureOpenAIBasePath) {
         throw new Error("Azure OpenAI API instance name not found");
@@ -497,7 +494,12 @@ export class ChatOpenAI<
         throw new Error("Azure OpenAI API version not found");
       }
       this.apiKey = this.apiKey ?? "";
+      // Streaming usage is not supported by Azure deployments, so default to false
+      this.streamUsage = false;
     }
+
+    this.streaming = fields?.streaming ?? false;
+    this.streamUsage = fields?.streamUsage ?? this.streamUsage;
 
     this.clientConfig = {
       apiKey: this.apiKey,
