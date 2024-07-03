@@ -4,7 +4,7 @@ import { getEnvironmentVariable } from "@langchain/core/utils/env";
 
 export interface BaiduQianfanEmbeddingsParams extends EmbeddingsParams {
   /** Model name to use */
-  modelName: "embedding-v1" | "bge_large_zh" | "bge-large-en" | "tao-8k";
+  modelName: "embedding-v1" | "bge_large_zh" | "bge_large_en" | "tao-8k";
 
   /**
    * Timeout to use when making requests to BaiduQianfan.
