@@ -7,7 +7,7 @@ import type {
   Edge,
 } from "./types.js";
 import { isRunnableInterface } from "./utils.js";
-import { drawMermaid } from "./graph_mermaid.js";
+import { drawMermaid, drawMermaidPng } from "./graph_mermaid.js";
 
 const MAX_DATA_DISPLAY_NAME_LENGTH = 42;
 
@@ -199,6 +199,19 @@ export class Graph {
       curveStyle,
       nodeColors,
       wrapLabelNWords,
+    });
+  }
+
+  async drawMermaidPng(params?: {
+    withStyles?: boolean;
+    curveStyle?: string;
+    nodeColors?: Record<string, string>;
+    wrapLabelNWords?: number;
+    backgroundColor?: string;
+  }): Promise<Blob> {
+    const mermaidSyntax = this.drawMermaid(params);
+    return drawMermaidPng(mermaidSyntax, {
+      backgroundColor: params?.backgroundColor,
     });
   }
 }

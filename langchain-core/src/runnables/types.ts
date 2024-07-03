@@ -71,6 +71,5 @@ export interface Edge {
 
 export interface Node {
   id: string;
-
   data: RunnableIOSchema | RunnableInterface;
 }

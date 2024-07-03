@@ -95,15 +95,10 @@ graph TD;
 \tFakeLLM([FakeLLM]):::otherclass;
 \tCommaSeparatedListOutputParser([CommaSeparatedListOutputParser]):::otherclass;
 \tCommaSeparatedListOutputParserOutput[CommaSeparatedListOutputParserOutput]:::endclass;
-\tend
 \tPromptTemplateInput --> PromptTemplate;
-\tend
 \tPromptTemplate --> FakeLLM;
-\tend
 \tCommaSeparatedListOutputParser --> CommaSeparatedListOutputParserOutput;
-\tend
 \tFakeLLM --> CommaSeparatedListOutputParser;
-end
 \tclassDef startclass fill:#ffdfba;
 \tclassDef endclass fill:#baffc9;
 \tclassDef otherclass fill:#fad7de;
