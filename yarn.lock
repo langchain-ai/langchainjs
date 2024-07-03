@@ -5788,7 +5788,7 @@ __metadata:
     "@google-cloud/storage": ^6.10.1 || ^7.7.0
     "@gradientai/nodejs-sdk": ^1.2.0
     "@huggingface/inference": ^2.6.4
-    "@langchain/langgraph": ^0.0.25
+    "@langchain/langgraph": ~0.0.26
     "@layerup/layerup-security": ^1.5.12
     "@mendable/firecrawl-js": ^0.0.13
     "@mlc-ai/web-llm": 0.2.46
@@ -6690,7 +6690,7 @@ __metadata:
     rollup: ^4.5.2
     ts-jest: ^29.1.0
     typescript: <5.2.0
-    uuid: ^9.0.0
+    uuid: ^9.0.1
   languageName: unknown
   linkType: soft
 
