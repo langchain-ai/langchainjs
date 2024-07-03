@@ -71,9 +71,26 @@ test.skip("Test Unstructured base loader with fast strategy", async () => {
 
   const loader = new UnstructuredLoader(filePath, options);
   const docs = await loader.load();
-
   expect(docs.length).toBeGreaterThan(10);
   expect(typeof docs[0].pageContent).toBe("string");
+});
+
+test.skip("Test Unstructured base loader with extractImageBlockTypes", async () => {
+  const filePath = path.resolve(
+    path.dirname(url.fileURLToPath(import.meta.url)),
+    "./example_data/1706.03762.pdf"
+  );
+
+  const options = {
+    apiKey: process.env.UNSTRUCTURED_API_KEY!,
+    extractImageBlockTypes: ["image"],
+  };
+
+  const loader = new UnstructuredLoader(filePath, options);
+  const docs = await loader.load();
+
+  expect(docs.length).toBeGreaterThan(10);
+  expect(docs.some((item) => item?.metadata?.category === "image")).toBe(true);
 });
 
 test.skip("Test Unstructured directory loader", async () => {
