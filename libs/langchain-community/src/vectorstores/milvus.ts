@@ -32,6 +32,8 @@ export interface MilvusLibArgs {
   clientConfig?: ClientConfig;
   autoId?: boolean;
   indexCreateOptions?: IndexCreateOptions;
+  partitionKey?: string; // doc: https://milvus.io/docs/use-partition-key.md
+  partitionKeyMaxLength?: number;
 }
 
 export interface IndexCreateOptions {
@@ -72,6 +74,7 @@ const MILVUS_PRIMARY_FIELD_NAME = "langchain_primaryid";
 const MILVUS_VECTOR_FIELD_NAME = "langchain_vector";
 const MILVUS_TEXT_FIELD_NAME = "langchain_text";
 const MILVUS_COLLECTION_NAME_PREFIX = "langchain_col";
+const MILVUS_PARTITION_KEY_MAX_LENGTH = 512;
 
 /**
  * Class for interacting with a Milvus database. Extends the VectorStore
@@ -103,6 +106,10 @@ export class Milvus extends VectorStore {
   textField: string;
 
   textFieldMaxLength: number;
+
+  partitionKey?: string;
+
+  partitionKeyMaxLength?: number;
 
   fields: string[];
 
@@ -144,6 +151,9 @@ export class Milvus extends VectorStore {
     this.vectorField = args.vectorField ?? MILVUS_VECTOR_FIELD_NAME;
 
     this.textFieldMaxLength = args.textFieldMaxLength ?? 0;
+
+    this.partitionKey = args.partitionKey;
+    this.partitionKeyMaxLength = args.partitionKeyMaxLength ?? MILVUS_PARTITION_KEY_MAX_LENGTH;
 
     this.fields = [];
 
@@ -438,7 +448,13 @@ export class Milvus extends VectorStore {
   ): Promise<void> {
     const fieldList: FieldType[] = [];
 
-    fieldList.push(...createFieldTypeForMetadata(documents, this.primaryField));
+    fieldList.push(
+      ...createFieldTypeForMetadata(
+        documents,
+        this.primaryField,
+        this.partitionKey
+      )
+    );
 
     if (this.autoId) {
       fieldList.push({
@@ -480,6 +496,16 @@ export class Milvus extends VectorStore {
         },
       }
     );
+
+    if (this.partitionKey) {
+      fieldList.push({
+        name: this.partitionKey,
+        description: "Partition key",
+        data_type: DataType.VarChar,
+        max_length: this.partitionKeyMaxLength,
+        is_partition_key: true,
+      });
+    }
 
     fieldList.forEach((field) => {
       if (!field.autoID) {
@@ -654,7 +680,8 @@ export class Milvus extends VectorStore {
 
 function createFieldTypeForMetadata(
   documents: Document[],
-  primaryFieldName: string
+  primaryFieldName: string,
+  partitionKey?: string
 ): FieldType[] {
   const sampleMetadata = documents[0].metadata;
   let textFieldMaxLength = 0;
@@ -689,10 +716,10 @@ function createFieldTypeForMetadata(
   for (const [key, value] of Object.entries(sampleMetadata)) {
     const type = typeof value;
 
-    if (key === primaryFieldName) {
+    if (key === primaryFieldName || key === partitionKey) {
       /**
-       * skip primary field
-       * because we will create primary field in createCollection
+       * skip primary field and partition key
+       * because we will create primary field and partition key in createCollection
        *  */
     } else if (type === "string") {
       fields.push({
