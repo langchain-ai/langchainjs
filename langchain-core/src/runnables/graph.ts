@@ -1,19 +1,13 @@
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { v4 as uuidv4, validate as isUuid } from "uuid";
-import type { RunnableInterface, RunnableIOSchema } from "./types.js";
+import type {
+  RunnableInterface,
+  RunnableIOSchema,
+  Node,
+  Edge,
+} from "./types.js";
 import { isRunnableInterface } from "./utils.js";
-
-interface Edge {
-  source: string;
-  target: string;
-  data?: string;
-}
-
-interface Node {
-  id: string;
-
-  data: RunnableIOSchema | RunnableInterface;
-}
+import { drawMermaid } from "./graph_mermaid.js";
 
 const MAX_DATA_DISPLAY_NAME_LENGTH = 42;
 
@@ -22,17 +16,12 @@ export function nodeDataStr(node: Node): string {
     return node.id;
   } else if (isRunnableInterface(node.data)) {
     try {
-      let data = node.data.toString();
-      if (
-        data.startsWith("<") ||
-        data[0] !== data[0].toUpperCase() ||
-        data.split("\n").length > 1
-      ) {
-        data = node.data.getName();
-      } else if (data.length > MAX_DATA_DISPLAY_NAME_LENGTH) {
+      let data = node.data.getName();
+      data = data.startsWith("Runnable") ? data.slice("Runnable".length) : data;
+      if (data.length > MAX_DATA_DISPLAY_NAME_LENGTH) {
         data = `${data.substring(0, MAX_DATA_DISPLAY_NAME_LENGTH)}...`;
       }
-      return data.startsWith("Runnable") ? data.slice("Runnable".length) : data;
+      return data;
     } catch (error) {
       return node.data.getName();
     }
@@ -178,5 +167,38 @@ export class Graph {
         this.removeNode(lastNode);
       }
     }
+  }
+
+  drawMermaid(params?: {
+    withStyles?: boolean;
+    curveStyle?: string;
+    nodeColors?: Record<string, string>;
+    wrapLabelNWords?: number;
+  }): string {
+    const {
+      withStyles,
+      curveStyle,
+      nodeColors = { start: "#ffdfba", end: "#baffc9", other: "#fad7de" },
+      wrapLabelNWords,
+    } = params ?? {};
+    const nodes: Record<string, string> = {};
+    for (const node of Object.values(this.nodes)) {
+      nodes[node.id] = nodeDataStr(node);
+    }
+
+    const firstNode = this.firstNode();
+    const firstNodeLabel = firstNode ? nodeDataStr(firstNode) : undefined;
+
+    const lastNode = this.lastNode();
+    const lastNodeLabel = lastNode ? nodeDataStr(lastNode) : undefined;
+
+    return drawMermaid(nodes, this.edges, {
+      firstNodeLabel,
+      lastNodeLabel,
+      withStyles,
+      curveStyle,
+      nodeColors,
+      wrapLabelNWords,
+    });
   }
 }
