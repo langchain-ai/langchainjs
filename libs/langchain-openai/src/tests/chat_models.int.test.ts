@@ -786,11 +786,7 @@ test("Finish reason is 'stop'", async () => {
 
 test("Streaming tokens can be found in usage_metadata field", async () => {
   const model = new ChatOpenAI();
-  const response = await model.stream("Hello, how are you?", {
-    stream_options: {
-      include_usage: true,
-    },
-  });
+  const response = await model.stream("Hello, how are you?");
   let finalResult: AIMessageChunk | undefined;
   for await (const chunk of response) {
     if (finalResult) {
@@ -818,6 +814,33 @@ test("streaming: true tokens can be found in usage_metadata field", async () => 
       include_usage: true,
     },
   });
+  console.log({
+    usage_metadata: response?.usage_metadata,
+  });
+  expect(response).toBeTruthy();
+  expect(response?.usage_metadata).toBeTruthy();
+  expect(response?.usage_metadata?.input_tokens).toBeGreaterThan(0);
+  expect(response?.usage_metadata?.output_tokens).toBeGreaterThan(0);
+  expect(response?.usage_metadata?.total_tokens).toBeGreaterThan(0);
+});
+
+test("streaming: streamUsage will not override stream_options", async () => {
+  const model = new ChatOpenAI({
+    streaming: true,
+  });
+  const response = await model.invoke("Hello, how are you?", {
+    stream_options: { include_usage: false },
+  });
+  console.log({
+    usage_metadata: response?.usage_metadata,
+  });
+  expect(response).toBeTruthy();
+  expect(response?.usage_metadata).toBeFalsy();
+});
+
+test("streaming: streamUsage default is true", async () => {
+  const model = new ChatOpenAI();
+  const response = await model.invoke("Hello, how are you?");
   console.log({
     usage_metadata: response?.usage_metadata,
   });

@@ -261,6 +261,7 @@ export interface ChatOpenAICallOptions
   seed?: number;
   /**
    * Additional options to pass to streamed completions.
+   * If provided takes precedence over "streamUsage" set at initialization time.
    */
   stream_options?: {
     /**
@@ -385,6 +386,8 @@ export class ChatOpenAI<
 
   streaming = false;
 
+  streamUsage = true;
+
   maxTokens?: number;
 
   logprobs?: boolean;
@@ -480,8 +483,6 @@ export class ChatOpenAI<
     this.stopSequences = this?.stop;
     this.user = fields?.user;
 
-    this.streaming = fields?.streaming ?? false;
-
     if (this.azureOpenAIApiKey || this.azureADTokenProvider) {
       if (!this.azureOpenAIApiInstanceName && !this.azureOpenAIBasePath) {
         throw new Error("Azure OpenAI API instance name not found");
@@ -493,7 +494,12 @@ export class ChatOpenAI<
         throw new Error("Azure OpenAI API version not found");
       }
       this.apiKey = this.apiKey ?? "";
+      // Streaming usage is not supported by Azure deployments, so default to false
+      this.streamUsage = false;
     }
+
+    this.streaming = fields?.streaming ?? false;
+    this.streamUsage = fields?.streamUsage ?? this.streamUsage;
 
     this.clientConfig = {
       apiKey: this.apiKey,
@@ -549,6 +555,12 @@ export class ChatOpenAI<
         )
       );
     }
+    let streamOptionsConfig = {};
+    if (options?.stream_options !== undefined) {
+      streamOptionsConfig = { stream_options: options.stream_options };
+    } else if (this.streamUsage && this.streaming) {
+      streamOptionsConfig = { stream_options: { include_usage: true } };
+    }
     const params: Omit<
       OpenAIClient.Chat.ChatCompletionCreateParams,
       "messages"
@@ -565,6 +577,7 @@ export class ChatOpenAI<
       logit_bias: this.logitBias,
       stop: options?.stop ?? this.stopSequences,
       user: this.user,
+      // if include_usage is set or streamUsage then stream must be set to true.
       stream: this.streaming,
       functions: options?.functions,
       function_call: options?.function_call,
@@ -574,9 +587,7 @@ export class ChatOpenAI<
       tool_choice: options?.tool_choice,
       response_format: options?.response_format,
       seed: options?.seed,
-      ...(options?.stream_options !== undefined
-        ? { stream_options: options.stream_options }
-        : {}),
+      ...streamOptionsConfig,
       parallel_tool_calls: options?.parallel_tool_calls,
       ...this.modelKwargs,
     };

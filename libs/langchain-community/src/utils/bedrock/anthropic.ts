@@ -219,3 +219,11 @@ export function formatMessagesForAnthropic(messages: BaseMessage[]): {
     system,
   };
 }
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function isAnthropicTool(
+  tool: unknown
+): tool is Record<string, unknown> {
+  if (typeof tool !== "object" || !tool) return false;
+  return "input_schema" in tool;
+}

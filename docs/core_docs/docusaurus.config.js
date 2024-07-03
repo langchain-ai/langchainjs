@@ -18,7 +18,7 @@ const baseUrl = "/v0.2/";
 /** @type {import('@docusaurus/types').Config} */
 const config = {
   title: "🦜️🔗 Langchain",
-  tagline: "LangChain JS Docs",
+  tagline: "LangChain.js Docs",
   favicon: "img/brand/favicon.png",
   // Set the production url of your site here
   url: "https://js.langchain.com",

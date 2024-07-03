@@ -2,6 +2,7 @@ import { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { StructuredToolInterface } from "@langchain/core/tools";
 import { RunnablePassthrough } from "@langchain/core/runnables";
+import { ToolDefinition } from "@langchain/core/language_models/base";
 import { AgentRunnableSequence } from "../agent.js";
 import {
   ToolCallingAgentOutputParser,
@@ -20,7 +21,7 @@ export type CreateToolCallingAgentParams = {
    */
   llm: BaseChatModel;
   /** Tools this agent has access to. */
-  tools: StructuredToolInterface[];
+  tools: StructuredToolInterface[] | ToolDefinition[];
   /** The prompt to use, must have an input key of `agent_scratchpad`. */
   prompt: ChatPromptTemplate;
   /**

@@ -9,6 +9,10 @@ sidebar_label: Bedrock
 
 ## Setup
 
+:::tip
+The [`ChatBedrockConverse` chat model is now available via `@langchain/aws`](/docs/integrations/chat/bedrock_converse). Access tool calling with more models with this package.
+:::
+
 You'll need to install the `@langchain/community` package:
 
 import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
@@ -56,3 +60,31 @@ Anthropic Claude-3 models hosted on Bedrock have multimodal capabilities and can
 import BedrockMultimodalExample from "@examples/models/chat/integration_bedrock_multimodal.ts";
 
 <CodeBlock language="typescript">{BedrockMultimodalExample}</CodeBlock>
+
+### Tool calling
+
+:::info
+Not all Bedrock models support tool calling. Please refer to the [model documentation](https://docs.aws.amazon.com/bedrock/latest/APIReference/welcome.html) for more information.
+:::
+
+The examples below demonstrate how to use tool calling, along with the `withStructuredOutput` method to easily compose structured output LLM calls.
+
+import ToolCalling from "@examples/models/chat/integration_bedrock_tools.ts";
+
+<CodeBlock language="typescript">{ToolCalling}</CodeBlock>
+
+:::tip
+See the LangSmith trace [here](https://smith.langchain.com/public/003a684d-90eb-406e-a146-8ee5e617921b/r)
+:::
+
+#### `.withStructuredOutput({ ... })`
+
+Using the `.withStructuredOutput` method, you can easily make the LLM return structured output, given only a Zod or JSON schema:
+
+import WSOExample from "@examples/models/chat/integration_bedrock_wso.ts";
+
+<CodeBlock language="typescript">{WSOExample}</CodeBlock>
+
+:::tip
+See the LangSmith trace [here](https://smith.langchain.com/public/1f7b1ad8-e4ac-4965-8ce1-fae06005f3d7/r)
+:::
