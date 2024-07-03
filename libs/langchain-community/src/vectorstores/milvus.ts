@@ -159,7 +159,12 @@ export class Milvus extends VectorStore {
     // Index creation parameters
     const { indexCreateOptions } = args;
     if (indexCreateOptions) {
-      const { metric_type, index_type, params, search_params = {} } = indexCreateOptions;
+      const {
+        metric_type,
+        index_type,
+        params,
+        search_params = {},
+      } = indexCreateOptions;
       this.indexCreateParams = {
         metric_type,
         index_type,
@@ -168,18 +173,18 @@ export class Milvus extends VectorStore {
       this.indexSearchParams = {
         ...DEFAULT_INDEX_SEARCH_PARAMS[index_type].params,
         ...search_params,
-      }
+      };
     } else {
       // Default index creation parameters.
       this.indexCreateParams = {
         index_type: "HNSW",
         metric_type: "L2",
         params: { M: 8, efConstruction: 64 },
-      }
+      };
       // Default index search parameters.
       this.indexSearchParams = {
         ...DEFAULT_INDEX_SEARCH_PARAMS.HNSW.params,
-      }
+      };
     }
 
     // combine args clientConfig and env variables
@@ -513,7 +518,7 @@ export class Milvus extends VectorStore {
     const extraParams = {
       ...this.indexCreateParams,
       params: JSON.stringify(this.indexCreateParams.params),
-    }
+    };
     await this.client.createIndex({
       collection_name: this.collectionName,
       field_name: this.vectorField,
