@@ -137,14 +137,40 @@ export class Graph {
     return found[0];
   }
 
-  extend(graph: Graph): void {
-    // Add all nodes from the other graph, taking care to avoid duplicates
+  /**
+   * Add all nodes and edges from another graph.
+   * Note this doesn't check for duplicates, nor does it connect the graphs.
+   */
+  extend(graph: Graph, prefix: string = "") {
+    let finalPrefix = prefix;
+    const nodeIds = Object.values(graph.nodes).map((node) => node.id);
+    if (nodeIds.every(isUuid)) {
+      finalPrefix = "";
+    }
+
+    const prefixed = (id: string) => {
+      return !!prefix ? `${prefix}:${id}` : id;
+    };
+
     Object.entries(graph.nodes).forEach(([key, value]) => {
-      this.nodes[key] = value;
+      this.nodes[prefixed(key)] = { ...value, id: prefixed(key) };
     });
 
+    const newEdges = graph.edges.map((edge) => {
+      return {
+        ...edge,
+        source: prefixed(edge.source),
+        target: prefixed(edge.target),
+      };
+    });
     // Add all edges from the other graph
-    this.edges = [...this.edges, ...graph.edges];
+    this.edges = [...this.edges, ...newEdges];
+    const first = graph.firstNode();
+    const last = graph.lastNode();
+    return [
+      first ? { id: prefixed(first.id), data: first.data } : undefined,
+      last ? { id: prefixed(last.id), data: last.data } : undefined,
+    ];
   }
 
   trimFirstNode(): void {
