@@ -40,6 +40,8 @@ export interface IndexCreateOptions {
   index_type: IndexType;
   metric_type: MetricType;
   params?: keyValueObj;
+  // index search params
+  search_params?: keyValueObj;
 }
 
 export type MetricType = "L2" | "IP" | "COSINE";
@@ -48,6 +50,7 @@ export type MetricType = "L2" | "IP" | "COSINE";
  * Type representing the type of index used in the Milvus database.
  */
 type IndexType =
+  | "FLAT"
   | "IVF_FLAT"
   | "IVF_SQ8"
   | "IVF_PQ"
@@ -59,10 +62,9 @@ type IndexType =
   | "ANNOY";
 
 /**
- * Interface for the parameters required to create an index in the Milvus
- * database.
+ * Interface for vector search parameters.
  */
-interface IndexParam {
+interface IndexSearchParam {
   params: { nprobe?: number; ef?: number; search_k?: number };
 }
 
@@ -77,6 +79,22 @@ const MILVUS_COLLECTION_NAME_PREFIX = "langchain_col";
 const MILVUS_PARTITION_KEY_MAX_LENGTH = 512;
 
 /**
+ * Default parameters for index searching.
+ */
+const DEFAULT_INDEX_SEARCH_PARAMS: Record<IndexType, IndexSearchParam> = {
+  FLAT: { params: {} },
+  IVF_FLAT: { params: { nprobe: 10 } },
+  IVF_SQ8: { params: { nprobe: 10 } },
+  IVF_PQ: { params: { nprobe: 10 } },
+  HNSW: { params: { ef: 10 } },
+  RHNSW_FLAT: { params: { ef: 10 } },
+  RHNSW_SQ: { params: { ef: 10 } },
+  RHNSW_PQ: { params: { ef: 10 } },
+  IVF_HNSW: { params: { nprobe: 10, ef: 10 } },
+  ANNOY: { params: { search_k: 10 } },
+};
+
+/**
  * Class for interacting with a Milvus database. Extends the VectorStore
  * class.
  */
@@ -87,6 +105,10 @@ export class Milvus extends VectorStore {
       username: "MILVUS_USERNAME",
       password: "MILVUS_PASSWORD",
     };
+  }
+
+  _vectorstoreType(): string {
+    return "milvus";
   }
 
   declare FilterType: string;
@@ -115,33 +137,12 @@ export class Milvus extends VectorStore {
 
   client: MilvusClient;
 
-  indexParams: Record<IndexType, IndexParam> = {
-    IVF_FLAT: { params: { nprobe: 10 } },
-    IVF_SQ8: { params: { nprobe: 10 } },
-    IVF_PQ: { params: { nprobe: 10 } },
-    HNSW: { params: { ef: 10 } },
-    RHNSW_FLAT: { params: { ef: 10 } },
-    RHNSW_SQ: { params: { ef: 10 } },
-    RHNSW_PQ: { params: { ef: 10 } },
-    IVF_HNSW: { params: { nprobe: 10, ef: 10 } },
-    ANNOY: { params: { search_k: 10 } },
-  };
+  indexCreateParams: IndexCreateOptions;
 
-  indexCreateParams = {
-    index_type: "HNSW",
-    metric_type: "L2",
-    params: JSON.stringify({ M: 8, efConstruction: 64 }),
-  };
+  indexSearchParams: keyValueObj;
 
-  indexSearchParams = JSON.stringify({ ef: 64 });
-
-  _vectorstoreType(): string {
-    return "milvus";
-  }
-
-  constructor(embeddings: EmbeddingsInterface, args: MilvusLibArgs) {
+  constructor(public embeddings: EmbeddingsInterface, args: MilvusLibArgs) {
     super(embeddings, args);
-    this.embeddings = embeddings;
     this.collectionName = args.collectionName ?? genCollectionName();
     this.partitionName = args.partitionName;
     this.textField = args.textField ?? MILVUS_TEXT_FIELD_NAME;
@@ -166,17 +167,35 @@ export class Milvus extends VectorStore {
       ssl,
     } = args.clientConfig || {};
 
-    // index create params
+    // Index creation parameters
     const { indexCreateOptions } = args;
     if (indexCreateOptions) {
+      const {
+        metric_type,
+        index_type,
+        params,
+        search_params = {},
+      } = indexCreateOptions;
       this.indexCreateParams = {
-        metric_type: indexCreateOptions.metric_type,
-        index_type: indexCreateOptions.index_type,
-        params: JSON.stringify(indexCreateOptions.params),
+        metric_type,
+        index_type,
+        params,
       };
-      this.indexSearchParams = JSON.stringify(
-        this.indexParams[indexCreateOptions.index_type].params
-      );
+      this.indexSearchParams = {
+        ...DEFAULT_INDEX_SEARCH_PARAMS[index_type].params,
+        ...search_params,
+      };
+    } else {
+      // Default index creation parameters.
+      this.indexCreateParams = {
+        index_type: "HNSW",
+        metric_type: "L2",
+        params: { M: 8, efConstruction: 64 },
+      };
+      // Default index search parameters.
+      this.indexSearchParams = {
+        ...DEFAULT_INDEX_SEARCH_PARAMS.HNSW.params,
+      };
     }
 
     // combine args clientConfig and env variables
@@ -346,9 +365,9 @@ export class Milvus extends VectorStore {
       collection_name: this.collectionName,
       search_params: {
         anns_field: this.vectorField,
-        topk: k.toString(),
+        topk: k,
         metric_type: this.indexCreateParams.metric_type,
-        params: this.indexSearchParams,
+        params: JSON.stringify(this.indexSearchParams),
       },
       output_fields: outputFields,
       vector_type: DataType.FloatVector,
@@ -523,10 +542,14 @@ export class Milvus extends VectorStore {
       throw new Error(`Failed to create collection: ${createRes}`);
     }
 
+    const extraParams = {
+      ...this.indexCreateParams,
+      params: JSON.stringify(this.indexCreateParams.params),
+    };
     await this.client.createIndex({
       collection_name: this.collectionName,
       field_name: this.vectorField,
-      extra_params: this.indexCreateParams,
+      extra_params: extraParams,
     });
   }
 
