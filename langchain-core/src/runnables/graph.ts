@@ -159,7 +159,7 @@ export class Graph {
     }
 
     const prefixed = (id: string) => {
-      return !!finalPrefix ? `${finalPrefix}:${id}` : id;
+      return finalPrefix ? `${finalPrefix}:${id}` : id;
     };
 
     Object.entries(graph.nodes).forEach(([key, value]) => {
