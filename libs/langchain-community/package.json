@@ -3054,6 +3054,15 @@
       "import": "./chains/graph_qa/cypher.js",
       "require": "./chains/graph_qa/cypher.cjs"
     },
+    "./langgraph/checkpointers/vercel_kv": {
+      "types": {
+        "import": "./langgraph/checkpointers/vercel_kv.d.ts",
+        "require": "./langgraph/checkpointers/vercel_kv.d.cts",
+        "default": "./langgraph/checkpointers/vercel_kv.d.ts"
+      },
+      "import": "./langgraph/checkpointers/vercel_kv.js",
+      "require": "./langgraph/checkpointers/vercel_kv.cjs"
+    },
     "./package.json": "./package.json"
   },
   "files": [
@@ -4101,6 +4110,10 @@
     "chains/graph_qa/cypher.cjs",
     "chains/graph_qa/cypher.js",
     "chains/graph_qa/cypher.d.ts",
-    "chains/graph_qa/cypher.d.cts"
+    "chains/graph_qa/cypher.d.cts",
+    "langgraph/checkpointers/vercel_kv.cjs",
+    "langgraph/checkpointers/vercel_kv.js",
+    "langgraph/checkpointers/vercel_kv.d.ts",
+    "langgraph/checkpointers/vercel_kv.d.cts"
   ]
 }
