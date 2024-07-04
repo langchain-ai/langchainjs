@@ -153,7 +153,8 @@ export class Milvus extends VectorStore {
     this.textFieldMaxLength = args.textFieldMaxLength ?? 0;
 
     this.partitionKey = args.partitionKey;
-    this.partitionKeyMaxLength = args.partitionKeyMaxLength ?? MILVUS_PARTITION_KEY_MAX_LENGTH;
+    this.partitionKeyMaxLength =
+      args.partitionKeyMaxLength ?? MILVUS_PARTITION_KEY_MAX_LENGTH;
 
     this.fields = [];
 
