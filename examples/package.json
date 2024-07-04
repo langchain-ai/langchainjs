@@ -69,7 +69,7 @@
     "@rockset/client": "^0.9.1",
     "@supabase/supabase-js": "^2.10.0",
     "@tensorflow/tfjs-backend-cpu": "^4.4.0",
-    "@upstash/redis": "^1.20.6",
+    "@upstash/redis": "^1.32.0",
     "@upstash/vector": "^1.1.1",
     "@vercel/kv": "^0.2.3",
     "@xata.io/client": "^0.28.0",
