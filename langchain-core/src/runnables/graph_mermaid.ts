@@ -114,11 +114,11 @@ export function drawMermaid(
             return acc;
           }, [])
           .join("<br>");
-        if (edge.conditional) {
-          edgeLabel = ` -. ${edgeData} .-> `;
-        } else {
-          edgeLabel = ` -- ${edgeData} --> `;
-        }
+      }
+      if (edge.conditional) {
+        edgeLabel = ` -. ${edgeData} .-> `;
+      } else {
+        edgeLabel = ` -- ${edgeData} --> `;
       }
     } else {
       if (edge.conditional) {
