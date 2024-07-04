@@ -102,6 +102,10 @@ runnables.cjs
 runnables.js
 runnables.d.ts
 runnables.d.cts
+runnables/graph.cjs
+runnables/graph.js
+runnables/graph.d.ts
+runnables/graph.d.cts
 runnables/remote.cjs
 runnables/remote.js
 runnables/remote.d.ts
