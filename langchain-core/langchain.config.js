@@ -38,6 +38,7 @@ export const config = {
     prompts: "prompts/index",
     prompt_values: "prompt_values",
     runnables: "runnables/index",
+    "runnables/graph": "runnables/graph",
     "runnables/remote": "runnables/remote",
     retrievers: "retrievers/index",
     "retrievers/document_compressors": "retrievers/document_compressors/base",

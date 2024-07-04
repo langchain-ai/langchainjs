@@ -329,6 +329,15 @@
       "import": "./runnables.js",
       "require": "./runnables.cjs"
     },
+    "./runnables/graph": {
+      "types": {
+        "import": "./runnables/graph.d.ts",
+        "require": "./runnables/graph.d.cts",
+        "default": "./runnables/graph.d.ts"
+      },
+      "import": "./runnables/graph.js",
+      "require": "./runnables/graph.cjs"
+    },
     "./runnables/remote": {
       "types": {
         "import": "./runnables/remote.d.ts",
@@ -698,6 +707,10 @@
     "runnables.js",
     "runnables.d.ts",
     "runnables.d.cts",
+    "runnables/graph.cjs",
+    "runnables/graph.js",
+    "runnables/graph.d.ts",
+    "runnables/graph.d.cts",
     "runnables/remote.cjs",
     "runnables/remote.js",
     "runnables/remote.d.ts",

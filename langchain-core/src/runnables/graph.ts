@@ -11,7 +11,7 @@ import { drawMermaid, drawMermaidPng } from "./graph_mermaid.js";
 
 const MAX_DATA_DISPLAY_NAME_LENGTH = 42;
 
-export function nodeDataStr(node: Node): string {
+function nodeDataStr(node: Node): string {
   if (!isUuid(node.id)) {
     return node.id;
   } else if (isRunnableInterface(node.data)) {
