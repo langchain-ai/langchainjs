@@ -18406,15 +18406,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@upstash/redis@npm:^1.20.6":
-  version: 1.20.6
-  resolution: "@upstash/redis@npm:1.20.6"
-  dependencies:
-    isomorphic-fetch: ^3.0.0
-  checksum: e4bcf1d61b0fa3dec5b2b730831a0d6939416bdafe1af753479e53b035aa70be49ca96a6f3f52473d488ec896588a0134ee71b4c71f0caecb6454648f2e3bd29
-  languageName: node
-  linkType: hard
-
 "@upstash/redis@npm:^1.28.3":
   version: 1.31.1
   resolution: "@upstash/redis@npm:1.31.1"
@@ -24940,7 +24931,7 @@ __metadata:
     "@types/uuid": ^9
     "@typescript-eslint/eslint-plugin": ^5.51.0
     "@typescript-eslint/parser": ^5.51.0
-    "@upstash/redis": ^1.20.6
+    "@upstash/redis": ^1.32.0
     "@upstash/vector": ^1.1.1
     "@vercel/kv": ^0.2.3
     "@xata.io/client": ^0.28.0
