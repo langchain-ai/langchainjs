@@ -902,6 +902,10 @@ document_loaders/web/github.cjs
 document_loaders/web/github.js
 document_loaders/web/github.d.ts
 document_loaders/web/github.d.cts
+document_loaders/web/taskade.cjs
+document_loaders/web/taskade.js
+document_loaders/web/taskade.d.ts
+document_loaders/web/taskade.d.cts
 document_loaders/web/notionapi.cjs
 document_loaders/web/notionapi.js
 document_loaders/web/notionapi.d.ts
