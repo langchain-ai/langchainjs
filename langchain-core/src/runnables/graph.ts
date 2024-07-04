@@ -103,14 +103,24 @@ export class Graph {
     );
   }
 
-  addEdge(source: Node, target: Node, data?: string): Edge {
+  addEdge(
+    source: Node,
+    target: Node,
+    data?: string,
+    conditional?: boolean
+  ): Edge {
     if (this.nodes[source.id] === undefined) {
       throw new Error(`Source node ${source.id} not in graph`);
     }
     if (this.nodes[target.id] === undefined) {
       throw new Error(`Target node ${target.id} not in graph`);
     }
-    const edge: Edge = { source: source.id, target: target.id, data };
+    const edge: Edge = {
+      source: source.id,
+      target: target.id,
+      data,
+      conditional,
+    };
     this.edges.push(edge);
     return edge;
   }
@@ -149,7 +159,7 @@ export class Graph {
     }
 
     const prefixed = (id: string) => {
-      return !!prefix ? `${prefix}:${id}` : id;
+      return !!finalPrefix ? `${finalPrefix}:${id}` : id;
     };
 
     Object.entries(graph.nodes).forEach(([key, value]) => {
