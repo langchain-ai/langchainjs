@@ -10530,8 +10530,8 @@ __metadata:
     "@types/ws": ^8
     "@typescript-eslint/eslint-plugin": ^5.58.0
     "@typescript-eslint/parser": ^5.58.0
-    "@upstash/ratelimit": ^1.1.3
-    "@upstash/redis": ^1.20.6
+    "@upstash/ratelimit": ^1.2.1
+    "@upstash/redis": ^1.32.0
     "@upstash/vector": ^1.1.1
     "@vercel/kv": ^0.2.3
     "@vercel/postgres": ^0.5.0
@@ -18379,21 +18379,21 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@upstash/core-analytics@npm:^0.0.8":
-  version: 0.0.8
-  resolution: "@upstash/core-analytics@npm:0.0.8"
+"@upstash/core-analytics@npm:^0.0.9":
+  version: 0.0.9
+  resolution: "@upstash/core-analytics@npm:0.0.9"
   dependencies:
     "@upstash/redis": ^1.28.3
-  checksum: c00ee2554fb887217ba8121fd24a5e5b181e3fb8cdd12e489a74925e8328c57c8e86ca5e265e567fdd87d3c2b8be1a2ed0378c6456464f4d8856ba8ea4cd944c
+  checksum: cfb49ce9d7c745a98de2b4e35973855d6311502c90840683dbe4b6a58304d880c6c356c6de275f32cfe5ec5add865a3dfe860c96d989e8a06e823788e90af2b9
   languageName: node
   linkType: hard
 
-"@upstash/ratelimit@npm:^1.1.3":
-  version: 1.1.3
-  resolution: "@upstash/ratelimit@npm:1.1.3"
+"@upstash/ratelimit@npm:^1.2.1":
+  version: 1.2.1
+  resolution: "@upstash/ratelimit@npm:1.2.1"
   dependencies:
-    "@upstash/core-analytics": ^0.0.8
-  checksum: eb33b4401ea0bb5cf845f0f6a3ad3eb726be613abb472ee5e07f649f49589366decd62eee2c32c42fbdfdb243372919c43d3c39119b2beed5db4c08d7e62c6cc
+    "@upstash/core-analytics": ^0.0.9
+  checksum: c23112312c51d91916ab75610a2ad9bd7b8eea41c2f6765eb84e572334eb0a4bc59c2420c9332c22a91e42398570c47ce0231884e6362d56e50057935d5f12f8
   languageName: node
   linkType: hard
 
@@ -18406,21 +18406,21 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@upstash/redis@npm:^1.20.6":
-  version: 1.20.6
-  resolution: "@upstash/redis@npm:1.20.6"
-  dependencies:
-    isomorphic-fetch: ^3.0.0
-  checksum: e4bcf1d61b0fa3dec5b2b730831a0d6939416bdafe1af753479e53b035aa70be49ca96a6f3f52473d488ec896588a0134ee71b4c71f0caecb6454648f2e3bd29
-  languageName: node
-  linkType: hard
-
 "@upstash/redis@npm:^1.28.3":
   version: 1.31.1
   resolution: "@upstash/redis@npm:1.31.1"
   dependencies:
     crypto-js: ^4.2.0
   checksum: 41f898335c222db57c434895c3b1229e763e03b82ad87a5049db18d83112be1113e6a9a183ab61ad814e287c547b7ef26d6bc5943e985eeead35bf84d886b2ae
+  languageName: node
+  linkType: hard
+
+"@upstash/redis@npm:^1.32.0":
+  version: 1.32.0
+  resolution: "@upstash/redis@npm:1.32.0"
+  dependencies:
+    crypto-js: ^4.2.0
+  checksum: 67520363d8c14a15b6d10093f5da406da6e1d114d80f80afddb4067c7bbd521f4d35a13e11c74144848225e82fb76d8757ea306754af9e4e0b3c13dea7fc13a9
   languageName: node
   linkType: hard
 
@@ -24931,7 +24931,7 @@ __metadata:
     "@types/uuid": ^9
     "@typescript-eslint/eslint-plugin": ^5.51.0
     "@typescript-eslint/parser": ^5.51.0
-    "@upstash/redis": ^1.20.6
+    "@upstash/redis": ^1.32.0
     "@upstash/vector": ^1.1.1
     "@vercel/kv": ^0.2.3
     "@xata.io/client": ^0.28.0
