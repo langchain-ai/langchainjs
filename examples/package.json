@@ -99,7 +99,7 @@
     "sqlite3": "^5.1.4",
     "typeorm": "^0.3.20",
     "typesense": "^1.5.3",
-    "uuid": "^9.0.0",
+    "uuid": "^10.0.0",
     "vectordb": "^0.1.4",
     "voy-search": "0.6.2",
     "weaviate-ts-client": "^2.0.0",

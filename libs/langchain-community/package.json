@@ -43,7 +43,7 @@
     "js-yaml": "^4.1.0",
     "langchain": "0.2.3",
     "langsmith": "~0.1.30",
-    "uuid": "^9.0.0",
+    "uuid": "^10.0.0",
     "zod": "^3.22.3",
     "zod-to-json-schema": "^3.22.5"
   },

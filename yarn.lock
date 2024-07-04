@@ -10299,7 +10299,7 @@ __metadata:
     rollup: ^4.5.2
     ts-jest: ^29.1.0
     typescript: <5.2.0
-    uuid: ^9.0.1
+    uuid: ^10.0.0
   languageName: unknown
   linkType: soft
 
@@ -10403,7 +10403,7 @@ __metadata:
     rollup: ^4.5.2
     ts-jest: ^29.1.0
     typescript: <5.2.0
-    uuid: ^9.0.1
+    uuid: ^10.0.0
   languageName: unknown
   linkType: soft
 
@@ -10619,7 +10619,7 @@ __metadata:
     typescript: ~5.1.6
     typesense: ^1.5.3
     usearch: ^1.1.1
-    uuid: ^9.0.0
+    uuid: ^10.0.0
     vectordb: ^0.1.4
     voy-search: 0.6.2
     weaviate-ts-client: ^1.4.0
@@ -11026,7 +11026,7 @@ __metadata:
     release-it: ^15.10.1
     rimraf: ^5.0.1
     typescript: ~5.1.6
-    uuid: ^9.0.0
+    uuid: ^10.0.0
     web-streams-polyfill: ^3.3.3
     zod: ^3.22.4
     zod-to-json-schema: ^3.22.3
@@ -11103,7 +11103,7 @@ __metadata:
     rollup: ^4.5.2
     ts-jest: ^29.1.0
     typescript: <5.2.0
-    uuid: ^9.0.0
+    uuid: ^10.0.0
     zod: ^3.22.4
     zod-to-json-schema: ^3.22.4
   languageName: unknown
@@ -11356,7 +11356,7 @@ __metadata:
     rollup: ^4.5.2
     ts-jest: ^29.1.0
     typescript: <5.2.0
-    uuid: ^9.0.0
+    uuid: ^10.0.0
     zod: ^3.22.4
     zod-to-json-schema: ^3.22.4
   languageName: unknown
@@ -11425,7 +11425,7 @@ __metadata:
     rollup: ^4.5.2
     ts-jest: ^29.1.0
     typescript: <5.2.0
-    uuid: ^9.0.1
+    uuid: ^10.0.0
   languageName: unknown
   linkType: soft
 
@@ -11553,7 +11553,7 @@ __metadata:
     rollup: ^4.5.2
     ts-jest: ^29.1.0
     typescript: <5.2.0
-    uuid: ^9.0.0
+    uuid: ^10.0.0
   languageName: unknown
   linkType: soft
 
@@ -11587,7 +11587,7 @@ __metadata:
     rollup: ^4.5.2
     ts-jest: ^29.1.0
     typescript: <5.2.0
-    uuid: ^9.0.1
+    uuid: ^10.0.0
   languageName: unknown
   linkType: soft
 
@@ -11621,7 +11621,7 @@ __metadata:
     rollup: ^4.5.2
     ts-jest: ^29.1.0
     typescript: <5.2.0
-    uuid: ^9.0.1
+    uuid: ^10.0.0
   languageName: unknown
   linkType: soft
 
@@ -11754,7 +11754,7 @@ __metadata:
     rollup: ^4.5.2
     ts-jest: ^29.1.0
     typescript: <5.2.0
-    uuid: ^9.0.1
+    uuid: ^10.0.0
     weaviate-ts-client: ^2.0.0
   languageName: unknown
   linkType: soft
@@ -21666,7 +21666,7 @@ __metadata:
     swc-loader: ^0.2.3
     typedoc: ^0.24.4
     typedoc-plugin-markdown: next
-    uuid: ^9.0.0
+    uuid: ^10.0.0
     webpack: ^5.75.0
     yaml-loader: ^0.8.0
   languageName: unknown
@@ -24971,7 +24971,7 @@ __metadata:
     typeorm: ^0.3.20
     typescript: ~5.1.6
     typesense: ^1.5.3
-    uuid: ^9.0.0
+    uuid: ^10.0.0
     vectordb: ^0.1.4
     voy-search: 0.6.2
     weaviate-ts-client: ^2.0.0
@@ -30317,7 +30317,7 @@ __metadata:
     ts-jest: ^29.1.0
     typeorm: ^0.3.20
     typescript: ~5.1.6
-    uuid: ^9.0.0
+    uuid: ^10.0.0
     weaviate-ts-client: ^2.0.0
     web-auth-library: ^1.0.3
     wikipedia: ^2.1.2
@@ -39811,6 +39811,15 @@ __metadata:
   version: 1.0.1
   resolution: "utils-merge@npm:1.0.1"
   checksum: c81095493225ecfc28add49c106ca4f09cdf56bc66731aa8dabc2edbbccb1e1bfe2de6a115e5c6a380d3ea166d1636410b62ef216bb07b3feb1cfde1d95d5080
+  languageName: node
+  linkType: hard
+
+"uuid@npm:^10.0.0":
+  version: 10.0.0
+  resolution: "uuid@npm:10.0.0"
+  bin:
+    uuid: dist/bin/uuid
+  checksum: 4b81611ade2885d2313ddd8dc865d93d8dccc13ddf901745edca8f86d99bc46d7a330d678e7532e7ebf93ce616679fb19b2e3568873ac0c14c999032acb25869
   languageName: node
   linkType: hard
 
