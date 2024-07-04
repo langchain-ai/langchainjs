@@ -318,6 +318,10 @@ export abstract class BaseMessageChunk extends BaseMessage {
 
 export type BaseMessageLike =
   | BaseMessage
+  | ({
+      type: MessageType | "user" | "assistant" | "placeholder";
+    } & BaseMessageFields &
+      Record<string, unknown>)
   | [
       StringWithAutocomplete<
         MessageType | "user" | "assistant" | "placeholder"
