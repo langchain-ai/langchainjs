@@ -61,3 +61,15 @@ export interface RunnableInterface<
 
   getName(suffix?: string): string;
 }
+
+export interface Edge {
+  source: string;
+  target: string;
+  data?: string;
+  conditional?: boolean;
+}
+
+export interface Node {
+  id: string;
+  data: RunnableIOSchema | RunnableInterface;
+}
