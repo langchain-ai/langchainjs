@@ -38,12 +38,6 @@ const checkpoint2: Checkpoint = {
   },
 };
 
-if (!process.env.VERCEL_KV_API_URL || !process.env.VERCEL_KV_API_TOKEN) {
-  throw new Error(
-    "VERCEL_KV_API_URL and VERCEL_KV_API_TOKEN must be set in the environment"
-  );
-}
-
 describe("VercelKVSaver", () => {
   it("should save and retrieve checkpoints correctly", async () => {
     const vercelSaver = new VercelKVSaver({
@@ -91,7 +85,7 @@ describe("VercelKVSaver", () => {
       configurable: { thread_id: "1" },
     });
 
-    const checkpointTuples: CheckpointTuple[] = [];
+    const checkpointTuples = [];
 
     for await (const checkpoint of checkpointTupleGenerator) {
       checkpointTuples.push(checkpoint);
