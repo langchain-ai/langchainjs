@@ -258,7 +258,7 @@ describe("media core", () => {
       const store = new BackedBlobStore({
         backingStore,
         defaultStoreOptions: {
-          actionIfInvalid: "prefixUuid",
+          actionIfInvalid: "prefixUuid4",
           pathPrefix: "example://bar/",
         },
       });
