@@ -29870,6 +29870,37 @@ __metadata:
   languageName: node
   linkType: hard
 
+"langchain-ollama@workspace:libs/langchain-ollama":
+  version: 0.0.0-use.local
+  resolution: "langchain-ollama@workspace:libs/langchain-ollama"
+  dependencies:
+    "@jest/globals": ^29.5.0
+    "@langchain/core": ">0.1.0 <0.3.0"
+    "@langchain/scripts": ~0.0.14
+    "@swc/core": ^1.3.90
+    "@swc/jest": ^0.2.29
+    "@tsconfig/recommended": ^1.0.3
+    "@typescript-eslint/eslint-plugin": ^6.12.0
+    "@typescript-eslint/parser": ^6.12.0
+    dotenv: ^16.3.1
+    dpdm: ^3.12.0
+    eslint: ^8.33.0
+    eslint-config-airbnb-base: ^15.0.0
+    eslint-config-prettier: ^8.6.0
+    eslint-plugin-import: ^2.27.5
+    eslint-plugin-no-instanceof: ^1.0.1
+    eslint-plugin-prettier: ^4.2.1
+    jest: ^29.5.0
+    jest-environment-node: ^29.6.4
+    ollama: ^0.5.2
+    prettier: ^2.8.3
+    release-it: ^15.10.1
+    rollup: ^4.5.2
+    ts-jest: ^29.1.0
+    typescript: <5.2.0
+  languageName: unknown
+  linkType: soft
+
 "langchain@npm:0.2.3":
   version: 0.2.3
   resolution: "langchain@npm:0.2.3"
@@ -32982,6 +33013,15 @@ __metadata:
   bin:
     officeparser: officeParser.js
   checksum: bd249cf1f74e460077c5b2eebc154a170f52fad8b75fc5d8f55b262f33e08b2f8411d947c0e4a51cc67987e07ae71d0ee33abaae4948db2840528ddb4bc4d083
+  languageName: node
+  linkType: hard
+
+"ollama@npm:^0.5.2":
+  version: 0.5.2
+  resolution: "ollama@npm:0.5.2"
+  dependencies:
+    whatwg-fetch: ^3.6.20
+  checksum: d824825fcf52dba24e4c99eb7ec1f95075dc2e3c89d89991af7d633a67f4484f43386dd83e70b757ab1d695d7a15c27f0ed87c0ac91d47509836fbec138db85a
   languageName: node
   linkType: hard
 
@@ -40355,6 +40395,13 @@ __metadata:
   version: 3.6.2
   resolution: "whatwg-fetch@npm:3.6.2"
   checksum: ee976b7249e7791edb0d0a62cd806b29006ad7ec3a3d89145921ad8c00a3a67e4be8f3fb3ec6bc7b58498724fd568d11aeeeea1f7827e7e1e5eae6c8a275afed
+  languageName: node
+  linkType: hard
+
+"whatwg-fetch@npm:^3.6.20":
+  version: 3.6.20
+  resolution: "whatwg-fetch@npm:3.6.20"
+  checksum: c58851ea2c4efe5c2235f13450f426824cf0253c1d45da28f45900290ae602a20aff2ab43346f16ec58917d5562e159cd691efa368354b2e82918c2146a519c5
   languageName: node
   linkType: hard
 
