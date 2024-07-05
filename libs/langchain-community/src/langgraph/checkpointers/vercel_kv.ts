@@ -70,23 +70,28 @@ export class VercelKVSaver extends BaseCheckpointSaver {
     limit?: number,
     before?: RunnableConfig
   ): AsyncGenerator<CheckpointTuple> {
-    const thread_id = config.configurable?.thread_id;
+    const thread_id: string = config.configurable?.thread_id;
 
     // LUA script to get keys excluding those starting with "last"
     const luaScript = `
-      local prefix = ARGV[1] .. ':'
-      local keys = redis.call('keys', prefix .. '*')
+      local prefix = ARGV[1]
+      local cursor = '0'
       local result = {}
-      for _, key in ipairs(keys) do
-        if string.sub(key, string.len(prefix) + 1, string.len(prefix) + 4) ~= 'last' then
-          table.insert(result, key)
+      repeat
+        local scanResult = redis.call('SCAN', cursor, 'MATCH', prefix .. '*', 'COUNT', 1000)
+        cursor = scanResult[1]
+        local keys = scanResult[2]
+        for _, key in ipairs(keys) do
+          if key:sub(-5) ~= ':last' then
+            table.insert(result, key)
+          end
         end
-      end
+      until cursor == '0'
       return result
     `;
 
     // Execute the LUA script with the thread_id as an argument
-    const keys: string[] = await this.kv.eval(luaScript, [], thread_id);
+    const keys: string[] = await this.kv.eval(luaScript, [], [thread_id]);
 
     const filteredKeys = keys.filter((key: string) => {
       const [, checkpoint_id] = key.split(":");
