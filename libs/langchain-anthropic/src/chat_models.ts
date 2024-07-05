@@ -1026,7 +1026,10 @@ export class ChatAnthropicMessages<
     }
     const llm = this.bind({
       tools,
-      tool_choice: "any",
+      tool_choice: {
+        type: "tool",
+        name: functionName,
+      },
     } as Partial<CallOptions>);
 
     if (!includeRaw) {

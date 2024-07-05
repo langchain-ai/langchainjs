@@ -36,7 +36,7 @@ By default, the dependencies needed to do that are NOT installed. You will need 
 We'll show how to do that in the next sections of this guide.
 
 Please also see the section on [installing integration packages](/docs/how_to/installation/#installing-integration-packages)
-for some special considerations.
+for some special considerations when installing LangChain packages.
 
 ## Ecosystem packages
 
@@ -49,6 +49,10 @@ A directed arrow indicates that the source package depends on the target package
 When installing a package, you do not need to explicitly install that package's explicit dependencies (such as `@langchain/core`).
 However, you may choose to if you are using a feature only available in a certain version of that dependency.
 If you do, you should make sure that the installed or pinned version is compatible with any other integration packages you use.
+
+**Note:** It is important that your app only uses one version of `@langchain/core`. Common package managers may introduce additional versions
+when resolving dependencies, even if you don't intend this. See [this section on installing integration packages](/docs/how_to/installation/#installing-integration-packages)
+for more information and ways to remedy this.
 
 ### @langchain/community
 
@@ -73,6 +77,8 @@ npm install @langchain/core
 ### LangGraph
 
 [LangGraph.js](https://langchain-ai.github.io/langgraphjs/) is a library for building stateful, multi-actor applications with LLMs.
+It integrates smoothly with LangChain, but can be used without it.
+
 Install with:
 
 ```bash npm2yarn
@@ -128,6 +134,8 @@ If you are using `yarn`:
 }
 ```
 
+You can also try running the [`yarn dedupe`](https://yarnpkg.com/cli/dedupe) command if you are on `yarn` version 2 or higher.
+
 Or for `npm`:
 
 ```json title="npm package.json"
@@ -147,6 +155,8 @@ Or for `npm`:
   }
 }
 ```
+
+You can also try the [`npm dedupe`](https://docs.npmjs.com/cli/commands/npm-dedupe) command.
 
 Or for `pnpm`:
 
@@ -169,6 +179,8 @@ Or for `pnpm`:
   }
 }
 ```
+
+You can also try the [`pnpm dedupe`](https://pnpm.io/cli/dedupe) command.
 
 ## Loading the library
 
