@@ -1,6 +1,6 @@
 /* eslint-disable no-process-env */
 
-import { describe, it, expect } from "@jest/globals";
+import { describe, test, expect } from "@jest/globals";
 import { Checkpoint } from "@langchain/langgraph";
 import { VercelKVSaver } from "../vercel_kv.js";
 
@@ -39,12 +39,12 @@ const checkpoint2: Checkpoint = {
 };
 
 describe("VercelKVSaver", () => {
-  it("should save and retrieve checkpoints correctly", async () => {
-    const vercelSaver = new VercelKVSaver({
-      url: process.env.VERCEL_KV_API_URL!,
-      token: process.env.VERCEL_KV_API_TOKEN!,
-    });
+  const vercelSaver = new VercelKVSaver({
+    url: process.env.VERCEL_KV_API_URL!,
+    token: process.env.VERCEL_KV_API_TOKEN!,
+  });
 
+  test("should save and retrieve checkpoints correctly", async () => {
     // save checkpoint
     const runnableConfig = await vercelSaver.put(
       { configurable: { thread_id: "1" } },
