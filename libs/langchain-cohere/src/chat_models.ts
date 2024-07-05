@@ -362,7 +362,7 @@ export class ChatCohere<
   ): Cohere.ChatRequest {
     const params = this.invocationParams(options);
 
-    const toolResults = this.messagesToCohereToolResultsCurrChatTurn(messages);
+    const toolResults = this._messagesToCohereToolResultsCurrChatTurn(messages);
     const chatHistory = [];
     let messageStr: string = "";
     let tempToolResults: {
@@ -376,7 +376,7 @@ export class ChatCohere<
         // If there are multiple tool messages, then we need to aggregate them into one single tool message to pass into chat history
         if (message._getType().toLowerCase() === "tool") {
           tempToolResults = tempToolResults.concat(
-            this.messageToCohereToolResults(messages, i)
+            this._messageToCohereToolResults(messages, i)
           );
 
           if (
@@ -413,7 +413,7 @@ export class ChatCohere<
         // If there are multiple tool messages, then we need to aggregate them into one single tool message to pass into chat history
         if (message._getType().toLowerCase() === "tool") {
           tempToolResults = tempToolResults.concat(
-            this.messageToCohereToolResults(messages, i)
+            this._messageToCohereToolResults(messages, i)
           );
 
           if (
@@ -464,7 +464,7 @@ export class ChatCohere<
     return currentChatTurnMessages.reverse();
   }
 
-  messagesToCohereToolResultsCurrChatTurn(messages: BaseMessage[]): Array<{
+  private _messagesToCohereToolResultsCurrChatTurn(messages: BaseMessage[]): Array<{
     call: Cohere.ToolCall;
     outputs: ReturnType<typeof convertToDocuments>;
   }> {
@@ -506,7 +506,7 @@ export class ChatCohere<
     return toolResults;
   }
 
-  messageToCohereToolResults(
+  private _messageToCohereToolResults(
     messages: BaseMessage[],
     toolMessageIndex: number
   ): Array<{ call: Cohere.ToolCall; outputs: any }> {
@@ -544,7 +544,7 @@ export class ChatCohere<
     return toolResults;
   }
 
-  formatCohereToolCalls(toolCalls: Cohere.ToolCall[] | null = null): {
+  private _formatCohereToolCalls(toolCalls: Cohere.ToolCall[] | null = null): {
     id: string;
     function: {
       name: string;
@@ -570,7 +570,7 @@ export class ChatCohere<
     return formattedToolCalls;
   }
 
-  convertCohereToolCallToLangchain(
+  private _convertCohereToolCallToLangchain(
     toolCalls: Record<string, any>[]
   ): ToolCall[] {
     return toolCalls.map((toolCall) => ({
@@ -650,11 +650,11 @@ export class ChatCohere<
     if (response.toolCalls && response.toolCalls.length > 0) {
       // Only populate tool_calls when 1) present on the response and
       // 2) has one or more calls.
-      generationInfo.toolCalls = this.formatCohereToolCalls(response.toolCalls);
+      generationInfo.toolCalls = this._formatCohereToolCalls(response.toolCalls);
     }
     let toolCalls: ToolCall[] = [];
     if ("toolCalls" in generationInfo) {
-      toolCalls = this.convertCohereToolCallToLangchain(
+      toolCalls = this._convertCohereToolCallToLangchain(
         generationInfo.toolCalls as Record<string, any>[]
       );
     }
@@ -737,7 +737,7 @@ export class ChatCohere<
         if (chunk.response.toolCalls && chunk.response.toolCalls.length > 0) {
           // Only populate tool_calls when 1) present on the response and
           // 2) has one or more calls.
-          chunkGenerationInfo.toolCalls = this.formatCohereToolCalls(
+          chunkGenerationInfo.toolCalls = this._formatCohereToolCalls(
             chunk.response.toolCalls
           );
         }
