@@ -1,4 +1,4 @@
-import {v1, v4} from "uuid";   // FIXME - it is importing the wrong uuid, so v6 and v7 aren't implemented
+import { v1, v4 } from "uuid"; // FIXME - it is importing the wrong uuid, so v6 and v7 aren't implemented
 import { BaseStore } from "@langchain/core/stores";
 import { Serializable } from "@langchain/core/load/serializable";
 
@@ -249,10 +249,14 @@ export abstract class BlobStore extends BaseStore<string, MediaBlob> {
     return this._newBlob(blob, newPath);
   }
 
-  protected _validBlobPrefixUuidFunction(name: ActionIfInvalidAction | string): string {
+  protected _validBlobPrefixUuidFunction(
+    name: ActionIfInvalidAction | string
+  ): string {
     switch (name) {
-      case "prefixUuid1": return v1();
-      case "prefixUuid4": return v4();
+      case "prefixUuid1":
+        return v1();
+      case "prefixUuid4":
+        return v4();
       // case "prefixUuid6": return v6();
       // case "prefixUuid7": return v7();
       default:
@@ -265,7 +269,9 @@ export abstract class BlobStore extends BaseStore<string, MediaBlob> {
     opts?: BlobStoreStoreOptions
   ): Promise<MediaBlob> {
     const prefix = opts?.pathPrefix ?? "";
-    const suffix = this._validBlobPrefixUuidFunction(opts?.actionIfInvalid ?? "prefixUuid4");
+    const suffix = this._validBlobPrefixUuidFunction(
+      opts?.actionIfInvalid ?? "prefixUuid4"
+    );
     const newPath = `${prefix}${suffix}`;
     return this._newBlob(blob, newPath);
   }
