@@ -1,7 +1,7 @@
 /* eslint-disable no-process-env */
 
 import { describe, test, expect } from "@jest/globals";
-import { Checkpoint } from "@langchain/langgraph";
+import { Checkpoint, CheckpointTuple } from "@langchain/langgraph";
 import { VercelKVSaver } from "../vercel_kv.js";
 
 const checkpoint1: Checkpoint = {
@@ -81,11 +81,11 @@ describe("VercelKVSaver", () => {
       { source: "update", step: -1, writes: null }
     );
     // list checkpoints
-    const checkpointTupleGenerator = await vercelSaver.list({
+    const checkpointTupleGenerator = vercelSaver.list({
       configurable: { thread_id: "1" },
     });
 
-    const checkpointTuples = [];
+    const checkpointTuples: CheckpointTuple[] = [];
 
     for await (const checkpoint of checkpointTupleGenerator) {
       checkpointTuples.push(checkpoint);
