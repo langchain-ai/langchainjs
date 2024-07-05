@@ -136,11 +136,18 @@ export class VercelKVSaver extends BaseCheckpointSaver {
       metadata: this.serde.stringify(metadata),
     };
 
+    // LUA script to set checkpoint data atomically"
+    const luaScript = `
+      local thread_id = ARGV[1]
+      local checkpoint_id = ARGV[2]
+      local row = ARGV[3]
+
+      redis.call('SET', thread_id .. ':' .. checkpoint_id, row)
+      redis.call('SET', thread_id .. ':last', row)
+    `;
+
     // Save the checkpoint and the last checkpoint
-    await Promise.all([
-      this.kv.set(`${thread_id}:${checkpoint.id}`, row),
-      this.kv.set(`${thread_id}:last`, row),
-    ]);
+    await this.kv.eval(luaScript, [], [thread_id, checkpoint.id, row]);
 
     return {
       configurable: {
