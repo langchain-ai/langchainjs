@@ -7,7 +7,6 @@ import {
 } from "@langchain/core/messages";
 import { z } from "zod";
 import { DynamicStructuredTool } from "@langchain/core/tools";
-import { convertToCohereTool } from "@langchain/core/utils/function_calling";
 import { ChatCohere } from "../chat_models.js";
 
 test("ChatCohere can invoke", async () => {
@@ -165,9 +164,7 @@ test("Test model tool calling", async () => {
   });
 
   const tools = [webSearchTool];
-  const modelWithTools = model.bind({
-    tools: tools.map(convertToCohereTool),
-  });
+  const modelWithTools = model.bindTools(tools);
 
   const messages = [
     new HumanMessage(

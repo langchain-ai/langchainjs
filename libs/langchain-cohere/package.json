@@ -38,7 +38,8 @@
     "@langchain/core": ">=0.2.5 <0.3.0",
     "cohere-ai": "^7.10.5",
     "uuid": "^10.0.0",
-    "zod": "^3.23.8"
+    "zod": "^3.23.8",
+    "zod-to-json-schema": "^3.23.1"
   },
   "devDependencies": {
     "@jest/globals": "^29.5.0",

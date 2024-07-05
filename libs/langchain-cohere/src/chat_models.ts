@@ -1,14 +1,16 @@
 import { CohereClient, Cohere } from "cohere-ai";
 
+import { zodToJsonSchema } from "zod-to-json-schema";
 import {
   MessageType,
   type BaseMessage,
   MessageContent,
   AIMessage,
-  HumanMessage,
-  SystemMessage,
 } from "@langchain/core/messages";
-import { type BaseLanguageModelCallOptions } from "@langchain/core/language_models/base";
+import {
+  BaseLanguageModelInput,
+  type BaseLanguageModelCallOptions,
+} from "@langchain/core/language_models/base";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {
   type BaseChatModelParams,
@@ -30,6 +32,8 @@ import {
   ToolCallChunk,
 } from "@langchain/core/messages/tool";
 import * as uuid from "uuid";
+import { StructuredToolInterface } from "@langchain/core/tools";
+import { Runnable } from "@langchain/core/runnables";
 
 /**
  * Input interface for ChatCohere
@@ -161,25 +165,21 @@ function convertMessageToCohereMessage(
     }
     return [];
   };
-  // eslint-disable-next-line no-instanceof/no-instanceof
-  if (message instanceof AIMessage) {
+  if (message._getType().toLowerCase() === "ai") {
     return {
       role: getRole(message._getType()),
       message: getContent(message.content),
       toolCalls: getToolCall(message),
     };
-    // eslint-disable-next-line no-instanceof/no-instanceof
-  } else if (message instanceof ToolMessage) {
+  } else if (message._getType().toLowerCase() === "tool") {
     return {
       role: getRole(message._getType()),
       message: getContent(message.content),
       toolResults,
     };
   } else if (
-    // eslint-disable-next-line no-instanceof/no-instanceof
-    message instanceof HumanMessage ||
-    // eslint-disable-next-line no-instanceof/no-instanceof
-    message instanceof SystemMessage
+    message._getType().toLowerCase() === "human" ||
+    message._getType().toLowerCase() === "system"
   ) {
     return {
       role: getRole(message._getType()),
@@ -190,6 +190,12 @@ function convertMessageToCohereMessage(
       "Got unknown message type. Supported types are AIMessage, ToolMessage, HumanMessage, and SystemMessage"
     );
   }
+}
+
+function isCohereTool(tool: any): boolean {
+  return (
+    "name" in tool && "description" in tool && "parameterDefinitions" in tool
+  );
 }
 
 /**
@@ -282,8 +288,75 @@ export class ChatCohere<
     );
   }
 
+  convertToCohereTool(tool: StructuredToolInterface): {
+    name: string;
+    description: string;
+    parameterDefinitions: Record<
+      string,
+      any
+    >;
+  } {
+    const parameterDefinitionsFromZod = zodToJsonSchema(tool.schema as any);
+    const parameterDefinitionsProperties =
+      "properties" in parameterDefinitionsFromZod
+        ? parameterDefinitionsFromZod.properties
+        : {};
+    let parameterDefinitionsRequired =
+      "required" in parameterDefinitionsFromZod
+        ? parameterDefinitionsFromZod.required
+        : [];
+
+    const parameterDefinitionsFinal: Record<string, any> = {};
+
+    // Iterate through all properties
+    Object.keys(parameterDefinitionsProperties).forEach((propertyName) => {
+      // Create the property in the new object
+      parameterDefinitionsFinal[propertyName] =
+        parameterDefinitionsProperties[propertyName];
+      // Set the required property based on the 'required' array
+      if (parameterDefinitionsRequired === undefined) {
+        parameterDefinitionsRequired = [];
+      }
+      parameterDefinitionsFinal[propertyName].required =
+        parameterDefinitionsRequired.includes(propertyName);
+    });
+
+    return {
+      name: tool.name,
+      description: tool.description,
+      parameterDefinitions: parameterDefinitionsFinal,
+    };
+  }
+
+  override bindTools(
+    tools: (Cohere.Tool | Record<string, unknown> | StructuredToolInterface)[],
+    kwargs?: Partial<CallOptions>
+  ): Runnable<BaseLanguageModelInput, AIMessageChunk, CallOptions> {
+    if (tools.every((tool) => isCohereTool(tool))) {
+      return this.bind({
+        tools: tools.map((tool) => {
+          const tool_typed = tool as Cohere.Tool;
+          return {
+            name: tool_typed.name,
+            description: tool_typed.description,
+            parameterDefinitions: tool_typed.parameterDefinitions,
+          };
+        }),
+        ...kwargs,
+      } as Partial<CallOptions>);
+    }
+
+    return this.bind({
+      tools: tools.map((tool) => {
+        const tool_structured = tool as StructuredToolInterface;
+        return this.convertToCohereTool(tool_structured);
+      }),
+      ...kwargs,
+    } as Partial<CallOptions>);
+  }
+
   /** @ignore */
-  getChatRequest(
+  private _getChatRequest(
     messages: BaseMessage[],
     options: this["ParsedCallOptions"]
   ): Cohere.ChatRequest {
@@ -301,16 +374,14 @@ export class ChatCohere<
       for (let i = 0; i < messages.length - 1; i += 1) {
         const message = messages[i];
         // If there are multiple tool messages, then we need to aggregate them into one single tool message to pass into chat history
-        // eslint-disable-next-line no-instanceof/no-instanceof
-        if (message instanceof ToolMessage) {
+        if (message._getType().toLowerCase() === "tool") {
           tempToolResults = tempToolResults.concat(
             this.messageToCohereToolResults(messages, i)
           );
 
           if (
             i === messages.length - 1 ||
-            // eslint-disable-next-line no-instanceof/no-instanceof
-            !(messages[i + 1] instanceof ToolMessage)
+            !(messages[i + 1]._getType().toLowerCase() === "tool")
           ) {
             const cohere_message = convertMessageToCohereMessage(
               message,
@@ -340,16 +411,14 @@ export class ChatCohere<
         }
 
         // If there are multiple tool messages, then we need to aggregate them into one single tool message to pass into chat history
-        // eslint-disable-next-line no-instanceof/no-instanceof
-        if (message instanceof ToolMessage) {
+        if (message._getType().toLowerCase() === "tool") {
           tempToolResults = tempToolResults.concat(
             this.messageToCohereToolResults(messages, i)
           );
 
           if (
             i === messages.length - 1 ||
-            // eslint-disable-next-line no-instanceof/no-instanceof
-            !(messages[i + 1] instanceof ToolMessage)
+            !(messages[i + 1]._getType().toLowerCase() === "tool")
           ) {
             const cohereMessage = convertMessageToCohereMessage(
               message,
@@ -366,8 +435,7 @@ export class ChatCohere<
       // Add the last human message in the conversation to the message string
       for (let i = messages.length - 1; i >= 0; i -= 1) {
         const message = messages[i];
-        // eslint-disable-next-line no-instanceof/no-instanceof
-        if (message instanceof HumanMessage && message.content) {
+        if (message._getType().toLowerCase() === "human" && message.content) {
           messageStr = message.content.toString();
           break;
         }
@@ -383,14 +451,13 @@ export class ChatCohere<
     return req;
   }
 
-  getCurrChatTurnMessages(messages: BaseMessage[]): BaseMessage[] {
+  private _getCurrChatTurnMessages(messages: BaseMessage[]): BaseMessage[] {
     // Get the messages for the current chat turn.
     const currentChatTurnMessages: BaseMessage[] = [];
     for (let i = messages.length - 1; i >= 0; i -= 1) {
       const message = messages[i];
       currentChatTurnMessages.push(message);
-      // eslint-disable-next-line no-instanceof/no-instanceof
-      if (message instanceof HumanMessage) {
+      if (message._getType().toLowerCase() === "human") {
         break;
       }
     }
@@ -406,7 +473,7 @@ export class ChatCohere<
       call: Cohere.ToolCall;
       outputs: ReturnType<typeof convertToDocuments>;
     }> = [];
-    const currChatTurnMessages = this.getCurrChatTurnMessages(messages);
+    const currChatTurnMessages = this._getCurrChatTurnMessages(messages);
 
     for (const message of currChatTurnMessages) {
       // eslint-disable-next-line no-instanceof/no-instanceof
@@ -522,7 +589,7 @@ export class ChatCohere<
     const tokenUsage: TokenUsage = {};
     // The last message in the array is the most recent, all other messages
     // are apart of the chat history.
-    const request = this.getChatRequest(messages, options);
+    const request = this._getChatRequest(messages, options);
 
     // Handle streaming
     if (this.streaming) {
@@ -619,7 +686,7 @@ export class ChatCohere<
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
-    const request = this.getChatRequest(messages, options);
+    const request = this._getChatRequest(messages, options);
 
     // All models have a built in `this.caller` property for retries
     const stream = await this.caller.call(async () => {
@@ -762,5 +829,3 @@ export class ChatCohere<
 interface CohereLLMOutput {
   estimatedTokenUsage?: TokenUsage;
 }
-
-/* eslint-enable  @typescript-eslint/no-explicit-any */

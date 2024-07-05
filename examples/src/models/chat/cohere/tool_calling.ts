@@ -1,6 +1,5 @@
 import { ChatCohere } from "@langchain/cohere";
 import { HumanMessage } from "@langchain/core/messages";
-import { convertToCohereTool } from "@langchain/core/utils/function_calling";
 import { z } from "zod";
 import { DynamicStructuredTool } from "@langchain/core/tools";
 
@@ -20,9 +19,7 @@ const magicFunctionTool = new DynamicStructuredTool({
 });
 
 const tools = [magicFunctionTool];
-const modelWithTools = model.bind({
-  tools: tools.map(convertToCohereTool),
-});
+const modelWithTools = model.bindTools(tools);
 
 const messages = [new HumanMessage("What is the magic function of number 5?")];
 const response = await modelWithTools.invoke(messages);
