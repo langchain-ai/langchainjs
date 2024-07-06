@@ -11,6 +11,7 @@ import { DynamicStructuredTool, StructuredTool } from "@langchain/core/tools";
 import { z } from "zod";
 import {
   AIMessage,
+  AIMessageChunk,
   BaseMessage,
   HumanMessage,
   ToolMessage,
@@ -915,4 +916,98 @@ describe("codestral-latest", () => {
     expect(parsedArgs.code).toBeDefined();
     console.log(parsedArgs.code);
   });
+});
+
+test("Stream token count usage_metadata", async () => {
+  const model = new ChatMistralAI({
+    model: "codestral-latest",
+    temperature: 0,
+  });
+  let res: AIMessageChunk | null = null;
+  for await (const chunk of await model.stream(
+    "Why is the sky blue? Be concise."
+  )) {
+    if (!res) {
+      res = chunk;
+    } else {
+      res = res.concat(chunk);
+    }
+  }
+  console.log(res);
+  expect(res?.usage_metadata).toBeDefined();
+  if (!res?.usage_metadata) {
+    return;
+  }
+  expect(res.usage_metadata.input_tokens).toBe(13);
+  expect(res.usage_metadata.output_tokens).toBeGreaterThan(10);
+  expect(res.usage_metadata.total_tokens).toBe(
+    res.usage_metadata.input_tokens + res.usage_metadata.output_tokens
+  );
+});
+
+test("streamUsage excludes token usage", async () => {
+  const model = new ChatMistralAI({
+    model: "codestral-latest",
+    temperature: 0,
+    streamUsage: false,
+  });
+  let res: AIMessageChunk | null = null;
+  for await (const chunk of await model.stream(
+    "Why is the sky blue? Be concise."
+  )) {
+    if (!res) {
+      res = chunk;
+    } else {
+      res = res.concat(chunk);
+    }
+  }
+  console.log(res);
+  expect(res?.usage_metadata).not.toBeDefined();
+});
+
+test("Invoke token count usage_metadata", async () => {
+  const model = new ChatMistralAI({
+    model: "codestral-latest",
+    temperature: 0,
+  });
+  const res = await model.invoke("Why is the sky blue? Be concise.");
+  console.log(res);
+  expect(res?.usage_metadata).toBeDefined();
+  if (!res?.usage_metadata) {
+    return;
+  }
+  expect(res.usage_metadata.input_tokens).toBe(13);
+  expect(res.usage_metadata.output_tokens).toBeGreaterThan(10);
+  expect(res.usage_metadata.total_tokens).toBe(
+    res.usage_metadata.input_tokens + res.usage_metadata.output_tokens
+  );
+});
+
+test("withStructuredOutput will always force tool usage", async () => {
+  const model = new ChatMistralAI({
+    temperature: 0,
+    model: "mistral-large-latest",
+  });
+
+  const weatherTool = z
+    .object({
+      location: z.string().describe("The name of city to get the weather for."),
+    })
+    .describe(
+      "Get the weather of a specific location and return the temperature in Celsius."
+    );
+  const modelWithTools = model.withStructuredOutput(weatherTool, {
+    name: "get_weather",
+    includeRaw: true,
+  });
+  const response = await modelWithTools.invoke(
+    "What is the sum of 271623 and 281623? It is VERY important you use a calculator tool to give me the answer."
+  );
+
+  if (!("tool_calls" in response.raw)) {
+    throw new Error("Tool call not found in response");
+  }
+  const castMessage = response.raw as AIMessage;
+  expect(castMessage.tool_calls).toHaveLength(1);
+  expect(castMessage.tool_calls?.[0].name).toBe("get_weather");
 });

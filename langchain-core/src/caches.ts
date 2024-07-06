@@ -1,9 +1,7 @@
 import { insecureHash } from "./utils/hash.js";
 import type { Generation, ChatGeneration } from "./outputs.js";
-import {
-  type StoredGeneration,
-  mapStoredMessageToChatMessage,
-} from "./messages/index.js";
+import { mapStoredMessageToChatMessage } from "./messages/utils.js";
+import { type StoredGeneration } from "./messages/base.js";
 
 /**
  * This cache key should be consistent across all versions of langchain.

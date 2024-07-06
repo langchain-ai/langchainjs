@@ -173,6 +173,7 @@ function messageToWenxinRole(message: BaseMessage): WenxinMessageRole {
 }
 
 /**
+ * @deprecated Install and import from @langchain/baidu-qianfan instead.
  * Wrapper around Baidu ERNIE large language models that use the Chat endpoint.
  *
  * To use you should have the `BAIDU_API_KEY` and `BAIDU_SECRET_KEY`

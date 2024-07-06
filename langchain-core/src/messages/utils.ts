@@ -1,24 +1,42 @@
+import { AIMessage, AIMessageChunk, AIMessageChunkFields } from "./ai.js";
 import {
   BaseMessageLike,
   BaseMessage,
   isBaseMessage,
   StoredMessage,
   StoredMessageV1,
+  BaseMessageFields,
 } from "./base.js";
-import { HumanMessage, HumanMessageChunk } from "./human.js";
-import { AIMessage, AIMessageChunk } from "./ai.js";
-import { SystemMessage, SystemMessageChunk } from "./system.js";
 import {
   ChatMessage,
-  ChatMessageChunk,
   ChatMessageFieldsWithRole,
+  ChatMessageChunk,
 } from "./chat.js";
 import {
   FunctionMessage,
-  FunctionMessageChunk,
   FunctionMessageFieldsWithName,
+  FunctionMessageChunk,
 } from "./function.js";
+import { HumanMessage, HumanMessageChunk } from "./human.js";
+import { SystemMessage, SystemMessageChunk } from "./system.js";
 import { ToolMessage, ToolMessageFieldsWithToolCallId } from "./tool.js";
+
+function _constructMessageFromParams(
+  params: BaseMessageFields & { type: string }
+) {
+  const { type, ...rest } = params;
+  if (type === "human" || type === "user") {
+    return new HumanMessage(rest);
+  } else if (type === "ai" || type === "assistant") {
+    return new AIMessage(rest);
+  } else if (type === "system") {
+    return new SystemMessage(rest);
+  } else {
+    throw new Error(
+      `Unable to coerce message from array: only human, AI, or system message coercion is currently supported.`
+    );
+  }
+}
 
 export function coerceMessageLikeToMessage(
   messageLike: BaseMessageLike
@@ -28,17 +46,11 @@ export function coerceMessageLikeToMessage(
   } else if (isBaseMessage(messageLike)) {
     return messageLike;
   }
-  const [type, content] = messageLike;
-  if (type === "human" || type === "user") {
-    return new HumanMessage({ content });
-  } else if (type === "ai" || type === "assistant") {
-    return new AIMessage({ content });
-  } else if (type === "system") {
-    return new SystemMessage({ content });
+  if (Array.isArray(messageLike)) {
+    const [type, content] = messageLike;
+    return _constructMessageFromParams({ type, content });
   } else {
-    throw new Error(
-      `Unable to coerce message from array: only human, AI, or system message coercion is currently supported.`
-    );
+    return _constructMessageFromParams(messageLike);
   }
 }
 
@@ -168,8 +180,21 @@ export function convertToChunk(message: BaseMessage) {
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
     return new HumanMessageChunk({ ...message });
   } else if (type === "ai") {
+    let aiChunkFields: AIMessageChunkFields = {
+      ...message,
+    };
+    if ("tool_calls" in aiChunkFields) {
+      aiChunkFields = {
+        ...aiChunkFields,
+        tool_call_chunks: aiChunkFields.tool_calls?.map((tc) => ({
+          ...tc,
+          index: undefined,
+          args: JSON.stringify(tc.args),
+        })),
+      };
+    }
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
-    return new AIMessageChunk({ ...message });
+    return new AIMessageChunk({ ...aiChunkFields });
   } else if (type === "system") {
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
     return new SystemMessageChunk({ ...message });

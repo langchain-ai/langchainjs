@@ -340,3 +340,49 @@ test("Can pass tool_choice", async () => {
   expect(input).toBeTruthy();
   expect(input.location).toBeTruthy();
 });
+
+test("bindTools accepts openai formatted tool", async () => {
+  const openaiTool = {
+    type: "function",
+    function: {
+      name: "get_weather",
+      description:
+        "Get the weather of a specific location and return the temperature in Celsius.",
+      parameters: zodToJsonSchema(zodSchema),
+    },
+  };
+  const modelWithTools = model.bindTools([openaiTool]);
+  const response = await modelWithTools.invoke(
+    "Whats the weather like in san francisco?"
+  );
+  expect(response.tool_calls).toHaveLength(1);
+  const { tool_calls } = response;
+  if (!tool_calls) {
+    return;
+  }
+  expect(tool_calls[0].name).toBe("get_weather");
+});
+
+test("withStructuredOutput will always force tool usage", async () => {
+  const weatherTool = z
+    .object({
+      location: z.string().describe("The name of city to get the weather for."),
+    })
+    .describe(
+      "Get the weather of a specific location and return the temperature in Celsius."
+    );
+  const modelWithTools = model.withStructuredOutput(weatherTool, {
+    name: "get_weather",
+    includeRaw: true,
+  });
+  const response = await modelWithTools.invoke(
+    "What is the sum of 271623 and 281623? It is VERY important you use a calculator tool to give me the answer."
+  );
+
+  if (!("tool_calls" in response.raw)) {
+    throw new Error("Tool call not found in response");
+  }
+  const castMessage = response.raw as AIMessage;
+  expect(castMessage.tool_calls).toHaveLength(1);
+  expect(castMessage.tool_calls?.[0].name).toBe("get_weather");
+});

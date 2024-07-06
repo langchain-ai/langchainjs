@@ -7,13 +7,18 @@ import {
   getInputValue,
   getOutputValue,
 } from "@langchain/core/memory";
-import { HumanMessage } from "@langchain/core/messages";
+import {
+  AIMessage,
+  BaseMessage,
+  ChatMessage,
+  getBufferString,
+  HumanMessage,
+  SystemMessage,
+} from "@langchain/core/messages";
 import { BaseChatMemory, BaseChatMemoryInput } from "./chat_memory.js";
 
-// We are condensing the Zep context into a human message in order to satisfy
-// some models' input requirements and allow more flexibility for devs.
-// (for example, Anthropic only supports one system message, and does not support multiple user messages in a row)
-export const condenseZepMemoryIntoHumanMessage = (memory: Memory) => {
+// Extract Summary and Facts from Zep memory, if present and compose a system prompt
+export const zepMemoryContextToSystemPrompt = (memory: Memory) => {
   let systemPrompt = "";
 
   // Extract conversation facts, if present
@@ -26,6 +31,15 @@ export const condenseZepMemoryIntoHumanMessage = (memory: Memory) => {
     systemPrompt += memory.summary.content;
   }
 
+  return systemPrompt;
+};
+
+// We are condensing the Zep context into a human message in order to satisfy
+// some models' input requirements and allow more flexibility for devs.
+// (for example, Anthropic only supports one system message, and does not support multiple user messages in a row)
+export const condenseZepMemoryIntoHumanMessage = (memory: Memory) => {
+  const systemPrompt = zepMemoryContextToSystemPrompt(memory);
+
   let concatMessages = "";
 
   // Add message history to the prompt, if present
@@ -36,6 +50,39 @@ export const condenseZepMemoryIntoHumanMessage = (memory: Memory) => {
   }
 
   return new HumanMessage(`${systemPrompt}\n${concatMessages}`);
+};
+
+// Convert Zep Memory to a list of BaseMessages
+export const zepMemoryToMessages = (memory: Memory) => {
+  const systemPrompt = zepMemoryContextToSystemPrompt(memory);
+
+  let messages: BaseMessage[] = systemPrompt
+    ? [new SystemMessage(systemPrompt)]
+    : [];
+
+  if (memory && memory.messages) {
+    messages = messages.concat(
+      memory.messages
+        .filter((m) => m.content)
+        .map((message) => {
+          const { content, role, roleType } = message;
+          const messageContent = content as string;
+          if (roleType === "user") {
+            return new HumanMessage(messageContent);
+          } else if (role === "assistant") {
+            return new AIMessage(messageContent);
+          } else {
+            // default to generic ChatMessage
+            return new ChatMessage(
+              messageContent,
+              (roleType ?? role) as string
+            );
+          }
+        })
+    );
+  }
+
+  return messages;
 };
 
 /**
@@ -54,7 +101,11 @@ export interface ZepCloudMemoryInput extends BaseChatMemoryInput {
 
   apiKey: string;
 
-  memoryType?: Zep.MemoryGetRequestMemoryType;
+  memoryType?: Zep.MemoryType;
+
+  // Whether to return separate messages for chat history with a SystemMessage containing (facts and summary) or return a single HumanMessage with the entire memory context.
+  // Defaults to false (return a single HumanMessage) in order to allow more flexibility with different models.
+  separateMessages?: boolean;
 }
 
 /**
@@ -111,7 +162,9 @@ export class ZepCloudMemory
 
   zepClient: ZepClient;
 
-  memoryType: Zep.MemoryGetRequestMemoryType;
+  memoryType: Zep.MemoryType;
+
+  separateMessages: boolean;
 
   constructor(fields: ZepCloudMemoryInput) {
     super({
@@ -126,6 +179,7 @@ export class ZepCloudMemory
     this.apiKey = fields.apiKey;
     this.sessionId = fields.sessionId;
     this.memoryType = fields.memoryType ?? "perpetual";
+    this.separateMessages = fields.separateMessages ?? false;
     this.zepClient = new ZepClient({
       apiKey: this.apiKey,
     });
@@ -142,9 +196,6 @@ export class ZepCloudMemory
    * @returns Promise that resolves with the chat history formatted into a list of messages.
    */
   async loadMemoryVariables(values: InputValues): Promise<MemoryVariables> {
-    // use either lastN provided by developer or undefined to use the
-    // server preset.
-
     const memoryType = values.memoryType ?? "perpetual";
     let memory: Memory | null = null;
     try {
@@ -163,11 +214,19 @@ export class ZepCloudMemory
 
     if (this.returnMessages) {
       return {
-        [this.memoryKey]: [condenseZepMemoryIntoHumanMessage(memory)],
+        [this.memoryKey]: this.separateMessages
+          ? zepMemoryToMessages(memory)
+          : [condenseZepMemoryIntoHumanMessage(memory)],
       };
     }
     return {
-      [this.memoryKey]: condenseZepMemoryIntoHumanMessage(memory).content,
+      [this.memoryKey]: this.separateMessages
+        ? getBufferString(
+            zepMemoryToMessages(memory),
+            this.humanPrefix,
+            this.aiPrefix
+          )
+        : condenseZepMemoryIntoHumanMessage(memory).content,
     };
   }
 
