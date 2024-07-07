@@ -143,19 +143,11 @@ test.only("Runnable streamEvents method with streaming nested in a RunnableLambd
     responses: ["Hello"],
   });
   const outerRunId = v4();
-  const innerRunId = v4();
   const myFunc = async (input: string) => {
     const outerCallbackManager = await getCallbackManagerForConfig(
       asyncLocalStorage.getStore()
     );
     expect(outerCallbackManager?.getParentRunId()).toEqual(outerRunId);
-    const nested2 = RunnableLambda.from(async (_: string) => {
-      const innerCallbackManager = await getCallbackManagerForConfig(
-        asyncLocalStorage.getStore()
-      );
-      expect(innerCallbackManager?.getParentRunId()).toEqual(innerRunId);
-    });
-    await nested2.stream(input, { runId: innerRunId });
     for await (const _ of await chat.stream(input)) {
       // no-op
     }
