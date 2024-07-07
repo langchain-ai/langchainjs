@@ -159,14 +159,12 @@ test("Runnable streamEvents method with streaming nested in a RunnableLambda", a
 
     const nestedLambdaWithOverriddenCallbacks = RunnableLambda.from(
       async (_: string, config) => {
-        const innerCallbackManager = await getCallbackManagerForConfig(config);
-        expect(innerCallbackManager?.getParentRunId()).toEqual(innerRunId);
-        expect(config?.callbacks?.handlers).not.toContain(dummyHandler);
+        expect(config?.callbacks).toBeUndefined();
       }
     );
     await nestedLambdaWithOverriddenCallbacks.invoke(input, {
       runId: innerRunId,
-      callbacks: [],
+      callbacks: undefined,
     });
 
     const nestedLambdaWithoutOverriddenCallbacks = RunnableLambda.from(

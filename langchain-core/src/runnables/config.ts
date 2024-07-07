@@ -132,7 +132,6 @@ export function ensureConfig<CallOptions extends RunnableConfig>(
   let empty: RunnableConfig = {
     tags: [],
     metadata: {},
-    callbacks: undefined,
     recursionLimit: 25,
     runId: undefined,
   };
@@ -153,7 +152,7 @@ export function ensureConfig<CallOptions extends RunnableConfig>(
     }
   }
   if (
-    empty.callbacks === undefined &&
+    !Object.prototype.hasOwnProperty.call(empty, "callbacks") &&
     implicitConfig?.callbacks !== undefined
   ) {
     empty.callbacks = implicitConfig.callbacks;
