@@ -68,9 +68,22 @@
   },
   "exports": {
     ".": {
-      "types": "./index.d.ts",
+      "types": {
+        "import": "./index.d.ts",
+        "require": "./index.d.cts",
+        "default": "./index.d.ts"
+      },
       "import": "./index.js",
       "require": "./index.cjs"
+    },
+    "./experimental": {
+      "types": {
+        "import": "./experimental.d.ts",
+        "require": "./experimental.d.cts",
+        "default": "./experimental.d.ts"
+      },
+      "import": "./experimental.js",
+      "require": "./experimental.cjs"
     },
     "./package.json": "./package.json"
   },
@@ -78,6 +91,11 @@
     "dist/",
     "index.cjs",
     "index.js",
-    "index.d.ts"
+    "index.d.ts",
+    "index.d.cts",
+    "experimental.cjs",
+    "experimental.js",
+    "experimental.d.ts",
+    "experimental.d.cts"
   ]
 }

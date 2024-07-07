@@ -13,14 +13,14 @@ For a complete list of supported models and model variants, see the [Ollama mode
 
 ## Setup
 
-Follow [these instructions](https://github.com/jmorganca/ollama) to set up and run a local Ollama instance.
+Follow [these instructions](https://github.com/jmorganca/ollama) to set up and run a local Ollama instance. Then, download the `@langchain/ollama` package.
 
 import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
 
 <IntegrationInstallTooltip></IntegrationInstallTooltip>
 
 ```bash npm2yarn
-npm install @langchain/community
+npm install @langchain/ollama
 ```
 
 ## Usage
@@ -38,7 +38,9 @@ import OllamaJSONModeExample from "@examples/models/chat/integration_ollama_json
 
 <CodeBlock language="typescript">{OllamaJSONModeExample}</CodeBlock>
 
-You can see a simple LangSmith trace of this here: https://smith.langchain.com/public/92aebeca-d701-4de0-a845-f55df04eff04/r
+:::tip
+You can see a simple LangSmith trace of this [here](https://smith.langchain.com/public/1fbd5660-b7fd-41c3-9d3a-a6ecc735277c/r)
+:::
 
 ## Multimodal models
 

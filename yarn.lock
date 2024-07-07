@@ -11462,7 +11462,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/ollama@workspace:libs/langchain-ollama":
+"@langchain/ollama@workspace:*, @langchain/ollama@workspace:libs/langchain-ollama":
   version: 0.0.0-use.local
   resolution: "@langchain/ollama@workspace:libs/langchain-ollama"
   dependencies:
@@ -24940,6 +24940,7 @@ __metadata:
     "@langchain/mistralai": "workspace:*"
     "@langchain/mongodb": "workspace:*"
     "@langchain/nomic": "workspace:*"
+    "@langchain/ollama": "workspace:*"
     "@langchain/openai": "workspace:*"
     "@langchain/pinecone": "workspace:*"
     "@langchain/qdrant": "workspace:*"

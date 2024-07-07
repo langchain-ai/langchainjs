@@ -25,7 +25,7 @@ Follow [these instructions](https://github.com/jmorganca/ollama) to set up and r
 You can initialize this wrapper the same way you'd initialize a standard `ChatOllama` instance:
 
 ```typescript
-import { OllamaFunctions } from "@langchain/community/experimental/chat_models/ollama_functions";
+import { OllamaFunctions } from "@langchain/ollama/experimental";
 
 const model = new OllamaFunctions({
   temperature: 0.1,
@@ -48,7 +48,9 @@ import OllamaFunctionsExtraction from "@examples/models/chat/ollama_functions/ex
 
 <CodeBlock language="typescript">{OllamaFunctionsExtraction}</CodeBlock>
 
-You can see a LangSmith trace of what this looks like here: https://smith.langchain.com/public/31457ea4-71ca-4e29-a1e0-aa80e6828883/r
+:::tip
+You can see a simple LangSmith trace of this [here](https://smith.langchain.com/public/74692bfc-0224-4221-b187-ddbf20d7ecc0/r)
+:::
 
 ## Customization
 

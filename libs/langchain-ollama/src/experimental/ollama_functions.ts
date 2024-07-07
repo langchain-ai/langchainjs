@@ -7,9 +7,9 @@ import {
 import { SystemMessagePromptTemplate } from "@langchain/core/prompts";
 import { BaseFunctionCallOptions } from "@langchain/core/language_models/base";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
-import { type ChatOllamaInput, ChatOllama } from "../../chat_models/ollama.js";
+import { type ChatOllamaInput, ChatOllama } from "../chat_models.js";
 
-const DEFAULT_TOOL_SYSTEM_TEMPLATE = `You have access to the following tools:
+export const DEFAULT_TOOL_SYSTEM_TEMPLATE = `You have access to the following tools:
 {tools}
 You must always select one of the above tools and respond with only a JSON object matching the following schema:
 {{
@@ -17,24 +17,15 @@ You must always select one of the above tools and respond with only a JSON objec
   "tool_input": <parameters for the selected tool, matching the tool's JSON schema>
 }}`;
 
-/**
- * @deprecated Deprecated in favor of the `@langchain/ollama` package. Import from `@langchain/ollama/experimental` instead.
- */
 export interface ChatOllamaFunctionsCallOptions
   extends BaseFunctionCallOptions {}
 
-/**
- * @deprecated Deprecated in favor of the `@langchain/ollama` package. Import from `@langchain/ollama/experimental` instead.
- */
 export type OllamaFunctionsInput = Partial<ChatOllamaInput> &
   BaseChatModelParams & {
     llm?: ChatOllama;
     toolSystemPromptTemplate?: string;
   };
 
-/**
- * @deprecated Deprecated in favor of the `@langchain/ollama` package. Import from `@langchain/ollama/experimental` instead.
- */
 export class OllamaFunctions extends BaseChatModel<ChatOllamaFunctionsCallOptions> {
   llm: ChatOllama;
 
