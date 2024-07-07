@@ -206,7 +206,6 @@ export class AsyncGeneratorWithSetup<
     this.config = params.config;
     this.parentRunId = params.parentRunId;
     this.handlers = params.handlers;
-    console.log("IN SETUP", this.parentRunId, this.handlers);
     // setup is a promise that resolves only after the first iterator value
     // is available. this is useful when setup of several piped generators
     // needs to happen in logical order, ie. in the order in which input to

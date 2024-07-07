@@ -91,7 +91,6 @@ export abstract class BaseTracer extends BaseCallbackHandler {
   }
 
   protected async _startTrace(run: Run) {
-    console.log("STARTING RUN", run, this.runMap);
     const currentDottedOrder = convertToDottedOrderFormat(
       run.start_time,
       run.id,

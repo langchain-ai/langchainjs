@@ -308,12 +308,6 @@ export abstract class Runnable<
     // to surface immediately.
     const config = ensureConfig(options);
     const callbackManager = await getCallbackManagerForConfig(config);
-    console.log(
-      "ABOUT TO STREAM",
-      config,
-      callbackManager?.getParentRunId(),
-      callbackManager?.handlers
-    );
     const wrappedGenerator = new AsyncGeneratorWithSetup({
       generator: this._streamIterator(input, config),
       config,
