@@ -11,10 +11,11 @@ import {
 import { ChatOllama } from "../chat_models.js";
 
 test("test invoke", async () => {
-  const ollama = new ChatOllama({});
-  const result = await ollama.invoke(
-    "What is a good name for a company that makes colorful socks?"
-  );
+  const ollama = new ChatOllama();
+  const result = await ollama.invoke([
+    "human",
+    "What is a good name for a company that makes colorful socks?",
+  ]);
   expect(result).toBeDefined();
   expect(typeof result.content).toBe("string");
   expect(result.content.length).toBeGreaterThan(1);
@@ -127,11 +128,9 @@ AI:`;
 test("Test ChatOllama with an image", async () => {
   const __filename = fileURLToPath(import.meta.url);
   const __dirname = path.dirname(__filename);
-  console.log("__dirname", __dirname);
   const imageData = await fs.readFile(path.join(__dirname, "/data/hotdog.jpg"));
   const chat = new ChatOllama({
     model: "llava",
-    checkModelExists: true,
   });
   const res = await chat.invoke([
     new HumanMessage({

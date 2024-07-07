@@ -1,4 +1,9 @@
-import { MessageContentText, type BaseMessage } from "@langchain/core/messages";
+import {
+  AIMessage,
+  MessageContentText,
+  UsageMetadata,
+  type BaseMessage,
+} from "@langchain/core/messages";
 import { type BaseLanguageModelCallOptions } from "@langchain/core/language_models/base";
 
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
@@ -12,6 +17,7 @@ import { ChatGenerationChunk, ChatResult } from "@langchain/core/outputs";
 import { AIMessageChunk } from "@langchain/core/messages";
 import type {
   ChatRequest as OllamaChatRequest,
+  ChatResponse as OllamaChatResponse,
   Message as OllamaMessage,
 } from "ollama";
 
@@ -144,7 +150,7 @@ export interface ChatOllamaInput extends BaseChatModelParams {
    * exist.
    * @default false
    */
-  checkModelExists?: boolean;
+  checkOrPullModel?: boolean;
   streaming?: boolean;
   numa?: boolean;
   numCtx?: number;
@@ -183,7 +189,22 @@ export interface ChatOllamaInput extends BaseChatModelParams {
 }
 
 /**
- * Integration with a chat model.
+ * Integration with the Ollama SDK.
+ *
+ * @example
+ * ```typescript
+ * import { ChatOllama } from "@langchain/ollama";
+ *
+ * const model = new ChatOllama({
+ *   model: "llama3", // Default model.
+ * });
+ *
+ * const result = await model.invoke([
+ *   "human",
+ *   "What is a good name for a company that makes colorful socks?",
+ * ]);
+ * console.log(result);
+ * ```
  */
 export class ChatOllama
   extends BaseChatModel<ChatOllamaCallOptions, AIMessageChunk>
@@ -262,7 +283,7 @@ export class ChatOllama
 
   client: Ollama;
 
-  checkModelExists = false;
+  checkOrPullModel = false;
 
   constructor(fields?: ChatOllamaInput) {
     super(fields ?? {});
@@ -304,7 +325,7 @@ export class ChatOllama
     this.streaming = fields?.streaming;
     this.format = fields?.format;
     this.keepAlive = fields?.keepAlive ?? this.keepAlive;
-    this.checkModelExists = fields?.checkModelExists ?? this.checkModelExists;
+    this.checkOrPullModel = fields?.checkOrPullModel ?? this.checkOrPullModel;
   }
 
   // Replace
@@ -415,7 +436,7 @@ export class ChatOllama
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
-    if (this.checkModelExists) {
+    if (this.checkOrPullModel) {
       if (!(await this.checkModelExistsOnMachine(this.model))) {
         await this.pull(this.model, {
           logProgress: true,
@@ -423,23 +444,33 @@ export class ChatOllama
       }
     }
 
-    let finalChunk: ChatGenerationChunk | undefined;
+    let finalChunk: AIMessageChunk | undefined;
     for await (const chunk of this._streamResponseChunks(
       messages,
       options,
       runManager
     )) {
       if (!finalChunk) {
-        finalChunk = chunk;
+        finalChunk = chunk.message;
       } else {
-        finalChunk = finalChunk.concat(chunk);
+        finalChunk = finalChunk.concat(chunk.message);
       }
     }
+
+    // Convert from AIMessageChunk to AIMessage since `generate` expects AIMessage.
+    const nonChunkMessage = new AIMessage({
+      content: finalChunk?.content ?? "",
+      response_metadata: finalChunk?.response_metadata,
+      usage_metadata: finalChunk?.usage_metadata,
+    });
     return {
       generations: [
         {
-          text: finalChunk?.text ?? "",
-          message: finalChunk?.message as AIMessageChunk,
+          text:
+            typeof nonChunkMessage.content === "string"
+              ? nonChunkMessage.content
+              : "",
+          message: nonChunkMessage,
         },
       ],
     };
@@ -454,7 +485,7 @@ export class ChatOllama
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
-    if (this.checkModelExists) {
+    if (this.checkOrPullModel) {
       if (!(await this.checkModelExistsOnMachine(this.model))) {
         await this.pull(this.model, {
           logProgress: true,
@@ -465,26 +496,47 @@ export class ChatOllama
     const params = this.invocationParams(options);
     const ollamaMessages = convertToOllamaMessages(messages);
 
-    const stream = this.client.chat({
+    const stream = await this.client.chat({
       ...params,
       messages: ollamaMessages,
       stream: true,
     });
-    for await (const chunk of await stream) {
+
+    let lastMetadata: Omit<OllamaChatResponse, "message"> | undefined;
+    const usageMetadata: UsageMetadata = {
+      input_tokens: 0,
+      output_tokens: 0,
+      total_tokens: 0,
+    };
+
+    for await (const chunk of stream) {
       if (options.signal?.aborted) {
         this.client.abort();
       }
       const { message: responseMessage, ...rest } = chunk;
+      usageMetadata.input_tokens += rest.prompt_eval_count ?? 0;
+      usageMetadata.output_tokens += rest.eval_count ?? 0;
+      usageMetadata.total_tokens =
+        usageMetadata.input_tokens + usageMetadata.output_tokens;
+      lastMetadata = rest;
+
       yield new ChatGenerationChunk({
         text: responseMessage.content,
         message: new AIMessageChunk({
           content: responseMessage.content,
-          response_metadata: {
-            ...rest,
-          },
         }),
       });
       await runManager?.handleLLMNewToken(responseMessage.content);
     }
+
+    // Yield the `response_metadata` as the final chunk.
+    yield new ChatGenerationChunk({
+      text: "",
+      message: new AIMessageChunk({
+        content: "",
+        response_metadata: lastMetadata,
+        usage_metadata: usageMetadata,
+      }),
+    });
   }
 }

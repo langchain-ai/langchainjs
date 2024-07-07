@@ -1,5 +1,5 @@
 {
-  "name": "langchain-ollama",
+  "name": "@langchain/ollama",
   "version": "0.0.0",
   "description": "Ollama integration for LangChain.js",
   "type": "module",
@@ -35,12 +35,13 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@langchain/core": ">0.1.0 <0.3.0",
+    "@langchain/core": ">0.2.14 <0.3.0",
     "ollama": "^0.5.2"
   },
   "devDependencies": {
     "@jest/globals": "^29.5.0",
     "@langchain/scripts": "~0.0.14",
+    "@langchain/standard-tests": "0.0.0",
     "@swc/core": "^1.3.90",
     "@swc/jest": "^0.2.29",
     "@tsconfig/recommended": "^1.0.3",

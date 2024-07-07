@@ -11462,6 +11462,38 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@langchain/ollama@workspace:libs/langchain-ollama":
+  version: 0.0.0-use.local
+  resolution: "@langchain/ollama@workspace:libs/langchain-ollama"
+  dependencies:
+    "@jest/globals": ^29.5.0
+    "@langchain/core": ">0.2.14 <0.3.0"
+    "@langchain/scripts": ~0.0.14
+    "@langchain/standard-tests": 0.0.0
+    "@swc/core": ^1.3.90
+    "@swc/jest": ^0.2.29
+    "@tsconfig/recommended": ^1.0.3
+    "@typescript-eslint/eslint-plugin": ^6.12.0
+    "@typescript-eslint/parser": ^6.12.0
+    dotenv: ^16.3.1
+    dpdm: ^3.12.0
+    eslint: ^8.33.0
+    eslint-config-airbnb-base: ^15.0.0
+    eslint-config-prettier: ^8.6.0
+    eslint-plugin-import: ^2.27.5
+    eslint-plugin-no-instanceof: ^1.0.1
+    eslint-plugin-prettier: ^4.2.1
+    jest: ^29.5.0
+    jest-environment-node: ^29.6.4
+    ollama: ^0.5.2
+    prettier: ^2.8.3
+    release-it: ^15.10.1
+    rollup: ^4.5.2
+    ts-jest: ^29.1.0
+    typescript: <5.2.0
+  languageName: unknown
+  linkType: soft
+
 "@langchain/openai@>=0.1.0 <0.3.0, @langchain/openai@workspace:*, @langchain/openai@workspace:^, @langchain/openai@workspace:libs/langchain-openai":
   version: 0.0.0-use.local
   resolution: "@langchain/openai@workspace:libs/langchain-openai"
@@ -29869,37 +29901,6 @@ __metadata:
   checksum: 9e10b5a1659f9ed8761d38df3c35effabffbd19fc6107324095238e4ef0ff044392cae9ac64a1c2dda26e532426485342226b93806bd97504b174b0dcf04ed81
   languageName: node
   linkType: hard
-
-"langchain-ollama@workspace:libs/langchain-ollama":
-  version: 0.0.0-use.local
-  resolution: "langchain-ollama@workspace:libs/langchain-ollama"
-  dependencies:
-    "@jest/globals": ^29.5.0
-    "@langchain/core": ">0.1.0 <0.3.0"
-    "@langchain/scripts": ~0.0.14
-    "@swc/core": ^1.3.90
-    "@swc/jest": ^0.2.29
-    "@tsconfig/recommended": ^1.0.3
-    "@typescript-eslint/eslint-plugin": ^6.12.0
-    "@typescript-eslint/parser": ^6.12.0
-    dotenv: ^16.3.1
-    dpdm: ^3.12.0
-    eslint: ^8.33.0
-    eslint-config-airbnb-base: ^15.0.0
-    eslint-config-prettier: ^8.6.0
-    eslint-plugin-import: ^2.27.5
-    eslint-plugin-no-instanceof: ^1.0.1
-    eslint-plugin-prettier: ^4.2.1
-    jest: ^29.5.0
-    jest-environment-node: ^29.6.4
-    ollama: ^0.5.2
-    prettier: ^2.8.3
-    release-it: ^15.10.1
-    rollup: ^4.5.2
-    ts-jest: ^29.1.0
-    typescript: <5.2.0
-  languageName: unknown
-  linkType: soft
 
 "langchain@npm:0.2.3":
   version: 0.2.3
