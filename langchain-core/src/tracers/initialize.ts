@@ -23,6 +23,8 @@ export async function getTracingCallbackHandler(
 }
 
 /**
+ * @deprecated Instantiate directly using the LangChainTracer constructor.
+ * 
  * Function that returns an instance of `LangChainTracer`. It does not
  * load any session data.
  * @returns An instance of `LangChainTracer`.
