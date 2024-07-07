@@ -126,8 +126,9 @@ const PRIMITIVES = new Set(["string", "number", "boolean"]);
 export function ensureConfig<CallOptions extends RunnableConfig>(
   config?: CallOptions
 ): CallOptions {
-  const loadedConfig =
-    config ?? AsyncLocalStorageProviderSingleton.getInstance().getStore();
+  const implicitConfig =
+    AsyncLocalStorageProviderSingleton.getInstance().getStore();
+  const loadedConfig = config ?? implicitConfig;
   let empty: RunnableConfig = {
     tags: [],
     metadata: {},
@@ -150,6 +151,12 @@ export function ensureConfig<CallOptions extends RunnableConfig>(
         empty.metadata[key] = loadedConfig.configurable[key];
       }
     }
+  }
+  if (
+    empty.callbacks === undefined &&
+    implicitConfig?.callbacks !== undefined
+  ) {
+    empty.callbacks = implicitConfig.callbacks;
   }
   return empty as CallOptions;
 }

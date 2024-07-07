@@ -5,6 +5,11 @@ import { AsyncLocalStorageProviderSingleton } from "../index.js";
 import { RunnableLambda } from "../../runnables/base.js";
 import { FakeListChatModel } from "../../utils/testing/index.js";
 import { getCallbackManagerForConfig } from "../../runnables/config.js";
+import { BaseCallbackHandler } from "../../callbacks/base.js";
+
+class FakeCallbackHandler extends BaseCallbackHandler {
+  name = `fake-${v4()}`;
+}
 
 test("Config should be automatically populated after setting global async local storage", async () => {
   const inner = RunnableLambda.from((_, config) => config);
@@ -143,11 +148,40 @@ test("Runnable streamEvents method with streaming nested in a RunnableLambda", a
     responses: ["Hello"],
   });
   const outerRunId = v4();
+  const innerRunId = v4();
+  const innerRunId2 = v4();
+  const dummyHandler = new FakeCallbackHandler();
   const myFunc = async (input: string) => {
     const outerCallbackManager = await getCallbackManagerForConfig(
       asyncLocalStorage.getStore()
     );
     expect(outerCallbackManager?.getParentRunId()).toEqual(outerRunId);
+
+    const nestedLambdaWithOverriddenCallbacks = RunnableLambda.from(
+      async (_: string, config) => {
+        const innerCallbackManager = await getCallbackManagerForConfig(config);
+        expect(innerCallbackManager?.getParentRunId()).toEqual(innerRunId);
+        expect(config?.callbacks?.handlers).not.toContain(dummyHandler);
+      }
+    );
+    await nestedLambdaWithOverriddenCallbacks.invoke(input, {
+      runId: innerRunId,
+      callbacks: [],
+    });
+
+    const nestedLambdaWithoutOverriddenCallbacks = RunnableLambda.from(
+      async (_: string, config) => {
+        const innerCallbackManager = await getCallbackManagerForConfig(
+          asyncLocalStorage.getStore()
+        );
+        expect(innerCallbackManager?.getParentRunId()).toEqual(innerRunId2);
+        expect(config?.callbacks?.handlers).toContain(dummyHandler);
+      }
+    );
+    await nestedLambdaWithoutOverriddenCallbacks.invoke(input, {
+      runId: innerRunId2,
+    });
+
     for await (const _ of await chat.stream(input)) {
       // no-op
     }
@@ -159,6 +193,7 @@ test("Runnable streamEvents method with streaming nested in a RunnableLambda", a
   for await (const event of myNestedLambda.streamEvents("hello", {
     version: "v1",
     runId: outerRunId,
+    callbacks: [dummyHandler],
   })) {
     events.push(event);
   }
