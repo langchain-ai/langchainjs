@@ -2320,8 +2320,7 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
     }
     const childConfig = patchConfig(config, {
       callbacks: runManager?.getChild(),
-      recursionLimit:
-        (config?.recursionLimit ?? DEFAULT_RECURSION_LIMIT) - 1,
+      recursionLimit: (config?.recursionLimit ?? DEFAULT_RECURSION_LIMIT) - 1,
     });
     const output = await new Promise<RunOutput | Runnable>(
       (resolve, reject) => {
@@ -2345,15 +2344,15 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
       if (config?.recursionLimit === 0) {
         throw new Error("Recursion limit reached.");
       }
-      const stream = await output.stream(
-        finalChunk as RunInput,
-        childConfig
-      );
+      const stream = await output.stream(finalChunk as RunInput, childConfig);
       for await (const chunk of stream) {
         yield chunk;
       }
     } else if (isAsyncIterable(output)) {
-      for await (const chunk of consumeAsyncIterableInContext(childConfig, output)) {
+      for await (const chunk of consumeAsyncIterableInContext(
+        childConfig,
+        output
+      )) {
         yield chunk as RunOutput;
       }
     } else if (isIterableIterator(output)) {
