@@ -143,7 +143,7 @@ test("Runnable streamEvents method with streaming nested in a RunnableLambda", a
   });
   const outerRunId = v4();
   const myFunc = async (input: string) => {
-    const outerCallbackManager = getCallbackManagerForConfig(
+    const outerCallbackManager = await getCallbackManagerForConfig(
       AsyncLocalStorageProviderSingleton.getRunnableConfig()
     );
     expect(outerCallbackManager?.getParentRunId()).toEqual(outerRunId);

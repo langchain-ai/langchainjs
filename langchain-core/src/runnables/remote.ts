@@ -402,7 +402,7 @@ export class RemoteRunnable<
   ): AsyncGenerator<RunOutput> {
     const [config, kwargs] =
       this._separateRunnableConfigFromCallOptions(options);
-    const callbackManager_ = getCallbackManagerForConfig(options);
+    const callbackManager_ = await getCallbackManagerForConfig(options);
     const runManager = await callbackManager_?.handleChainStart(
       this.toJSON(),
       _coerceToDict(input, "input"),
@@ -473,7 +473,7 @@ export class RemoteRunnable<
   ): AsyncGenerator<RunLogPatch> {
     const [config, kwargs] =
       this._separateRunnableConfigFromCallOptions(options);
-    const callbackManager_ = getCallbackManagerForConfig(options);
+    const callbackManager_ = await getCallbackManagerForConfig(options);
     const runManager = await callbackManager_?.handleChainStart(
       this.toJSON(),
       _coerceToDict(input, "input"),
@@ -545,7 +545,7 @@ export class RemoteRunnable<
     const generator = async function* () {
       const [config, kwargs] =
         outerThis._separateRunnableConfigFromCallOptions(options);
-      const callbackManager_ = getCallbackManagerForConfig(options);
+      const callbackManager_ = await getCallbackManagerForConfig(options);
       const runManager = await callbackManager_?.handleChainStart(
         outerThis.toJSON(),
         _coerceToDict(input, "input"),

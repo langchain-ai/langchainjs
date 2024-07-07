@@ -167,7 +167,7 @@ export function patchConfig<CallOptions extends RunnableConfig>(
   return newConfig;
 }
 
-export function getCallbackManagerForConfig(config?: RunnableConfig) {
+export async function getCallbackManagerForConfig(config?: RunnableConfig) {
   return CallbackManager._configureSync(
     config?.callbacks,
     undefined,

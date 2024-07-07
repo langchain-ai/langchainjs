@@ -357,7 +357,7 @@ export abstract class Runnable<
     options?: Partial<CallOptions> & { runType?: string }
   ) {
     const config = ensureConfig(options);
-    const callbackManager_ = getCallbackManagerForConfig(config);
+    const callbackManager_ = await getCallbackManagerForConfig(config);
     const runManager = await callbackManager_?.handleChainStart(
       this.toJSON(),
       _coerceToDict(input, "input"),
@@ -466,7 +466,7 @@ export abstract class Runnable<
     let finalOutputSupported = true;
 
     const config = ensureConfig(options);
-    const callbackManager_ = getCallbackManagerForConfig(config);
+    const callbackManager_ = await getCallbackManagerForConfig(config);
     async function* wrapInputForTracing() {
       for await (const chunk of inputGenerator) {
         if (finalInputSupported) {
@@ -1660,7 +1660,7 @@ export class RunnableSequence<
 
   async invoke(input: RunInput, options?: RunnableConfig): Promise<RunOutput> {
     const config = ensureConfig(options);
-    const callbackManager_ = getCallbackManagerForConfig(config);
+    const callbackManager_ = await getCallbackManagerForConfig(config);
     const runManager = await callbackManager_?.handleChainStart(
       this.toJSON(),
       _coerceToDict(input, "input"),
@@ -1773,7 +1773,7 @@ export class RunnableSequence<
     input: RunInput,
     options?: RunnableConfig
   ): AsyncGenerator<RunOutput> {
-    const callbackManager_ = getCallbackManagerForConfig(options);
+    const callbackManager_ = await getCallbackManagerForConfig(options);
     const { runId, ...otherOptions } = options ?? {};
     const runManager = await callbackManager_?.handleChainStart(
       this.toJSON(),
@@ -1969,7 +1969,7 @@ export class RunnableMap<
     options?: Partial<RunnableConfig>
   ): Promise<RunOutput> {
     const config = ensureConfig(options);
-    const callbackManager_ = getCallbackManagerForConfig(config);
+    const callbackManager_ = await getCallbackManagerForConfig(config);
     const runManager = await callbackManager_?.handleChainStart(
       this.toJSON(),
       {
@@ -2098,7 +2098,7 @@ export class RunnableTraceable<RunInput, RunOutput> extends Runnable<
 
   async invoke(input: RunInput, options?: Partial<RunnableConfig>) {
     const [config] = this._getOptionsList(options ?? {}, 1);
-    const callbacks = getCallbackManagerForConfig(config);
+    const callbacks = await getCallbackManagerForConfig(config);
 
     return (await this.func(
       patchConfig(config, { callbacks }),
@@ -2431,7 +2431,7 @@ export class RunnableWithFallbacks<RunInput, RunOutput> extends Runnable<
     options?: Partial<RunnableConfig>
   ): Promise<RunOutput> {
     const config = ensureConfig(options);
-    const callbackManager_ = getCallbackManagerForConfig(options);
+    const callbackManager_ = await getCallbackManagerForConfig(options);
     const { runId, ...otherConfigFields } = config;
     const runManager = await callbackManager_?.handleChainStart(
       this.toJSON(),
