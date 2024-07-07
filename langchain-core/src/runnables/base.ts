@@ -2318,15 +2318,19 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
         }
       }
     }
+    const childConfig = patchConfig(config, {
+      callbacks: runManager?.getChild(),
+      recursionLimit: (config?.recursionLimit ?? DEFAULT_RECURSION_LIMIT) - 1,
+    });
     const output = await new Promise<RunOutput | Runnable>(
       (resolve, reject) => {
         void AsyncLocalStorageProviderSingleton.getInstance().run(
-          config,
+          childConfig,
           async () => {
             try {
               const res = await this.func(finalChunk as RunInput, {
-                ...config,
-                config,
+                ...childConfig,
+                config: childConfig,
               });
               resolve(res);
             } catch (e) {
@@ -2340,23 +2344,19 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
       if (config?.recursionLimit === 0) {
         throw new Error("Recursion limit reached.");
       }
-      const stream = await output.stream(
-        finalChunk as RunInput,
-        patchConfig(config, {
-          callbacks: runManager?.getChild(),
-          recursionLimit:
-            (config?.recursionLimit ?? DEFAULT_RECURSION_LIMIT) - 1,
-        })
-      );
+      const stream = await output.stream(finalChunk as RunInput, childConfig);
       for await (const chunk of stream) {
         yield chunk;
       }
     } else if (isAsyncIterable(output)) {
-      for await (const chunk of consumeAsyncIterableInContext(config, output)) {
+      for await (const chunk of consumeAsyncIterableInContext(
+        childConfig,
+        output
+      )) {
         yield chunk as RunOutput;
       }
     } else if (isIterableIterator(output)) {
-      for (const chunk of consumeIteratorInContext(config, output)) {
+      for (const chunk of consumeIteratorInContext(childConfig, output)) {
         yield chunk as RunOutput;
       }
     } else {
