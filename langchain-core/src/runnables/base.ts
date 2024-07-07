@@ -7,10 +7,7 @@ import {
   isTraceableFunction,
 } from "langsmith/singletons/traceable";
 import type { RunnableInterface, RunnableBatchOptions } from "./types.js";
-import {
-  CallbackManager,
-  CallbackManagerForChainRun,
-} from "../callbacks/manager.js";
+import { CallbackManagerForChainRun } from "../callbacks/manager.js";
 import {
   LogStreamCallbackHandler,
   LogStreamCallbackHandlerInput,
@@ -2433,14 +2430,9 @@ export class RunnableWithFallbacks<RunInput, RunOutput> extends Runnable<
     input: RunInput,
     options?: Partial<RunnableConfig>
   ): Promise<RunOutput> {
-    const callbackManager_ = await CallbackManager.configure(
-      options?.callbacks,
-      undefined,
-      options?.tags,
-      undefined,
-      options?.metadata
-    );
-    const { runId, ...otherOptions } = options ?? {};
+    const config = ensureConfig(options);
+    const callbackManager_ = await getCallbackManagerForConfig(options);
+    const { runId, ...otherConfigFields } = config;
     const runManager = await callbackManager_?.handleChainStart(
       this.toJSON(),
       _coerceToDict(input, "input"),
@@ -2448,14 +2440,14 @@ export class RunnableWithFallbacks<RunInput, RunOutput> extends Runnable<
       undefined,
       undefined,
       undefined,
-      otherOptions?.runName
+      otherConfigFields?.runName
     );
     let firstError;
     for (const runnable of this.runnables()) {
       try {
         const output = await runnable.invoke(
           input,
-          patchConfig(otherOptions, { callbacks: runManager?.getChild() })
+          patchConfig(otherConfigFields, { callbacks: runManager?.getChild() })
         );
         await runManager?.handleChainEnd(_coerceToDict(output, "output"));
         return output;
@@ -2500,15 +2492,7 @@ export class RunnableWithFallbacks<RunInput, RunOutput> extends Runnable<
     }
     const configList = this._getOptionsList(options ?? {}, inputs.length);
     const callbackManagers = await Promise.all(
-      configList.map((config) =>
-        CallbackManager.configure(
-          config?.callbacks,
-          undefined,
-          config?.tags,
-          undefined,
-          config?.metadata
-        )
-      )
+      configList.map((config) => getCallbackManagerForConfig(config))
     );
     const runManagers = await Promise.all(
       callbackManagers.map(async (callbackManager, i) => {
