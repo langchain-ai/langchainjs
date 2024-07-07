@@ -54,7 +54,6 @@ export const config = {
     "tracers/tracer_langchain": "tracers/tracer_langchain",
     "tracers/tracer_langchain_v1": "tracers/tracer_langchain_v1",
     "utils/async_caller": "utils/async_caller",
-    "utils/beta_warning": "utils/beta_warning",
     "utils/chunk_array": "utils/chunk_array",
     "utils/env": "utils/env",
     "utils/event_source_parse": "utils/event_source_parse",
