@@ -2333,7 +2333,6 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
         }
       }
     }
-    // pass everywhere?
     const childConfig = patchConfig(config, {
       callbacks: runManager?.getChild(),
       recursionLimit: (config?.recursionLimit ?? DEFAULT_RECURSION_LIMIT) - 1,
