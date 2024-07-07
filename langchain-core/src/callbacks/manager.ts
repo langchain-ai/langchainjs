@@ -9,7 +9,6 @@ import {
   NewTokenIndices,
 } from "./base.js";
 import { ConsoleCallbackHandler } from "../tracers/console.js";
-import { getTracingV2CallbackHandler } from "../tracers/initialize.js";
 import { type BaseMessage } from "../messages/base.js";
 import { getBufferString } from "../messages/utils.js";
 import { getEnvironmentVariable } from "../utils/env.js";
@@ -967,6 +966,27 @@ export class CallbackManager
     localMetadata?: Record<string, unknown>,
     options?: CallbackManagerOptions
   ): Promise<CallbackManager | undefined> {
+    return this._configureSync(
+      inheritableHandlers,
+      localHandlers,
+      inheritableTags,
+      localTags,
+      inheritableMetadata,
+      localMetadata,
+      options
+    );
+  }
+
+  // TODO: Deprecate async method in favor of this one.
+  static _configureSync(
+    inheritableHandlers?: Callbacks,
+    localHandlers?: Callbacks,
+    inheritableTags?: string[],
+    localTags?: string[],
+    inheritableMetadata?: Record<string, unknown>,
+    localMetadata?: Record<string, unknown>,
+    options?: CallbackManagerOptions
+  ) {
     let callbackManager: CallbackManager | undefined;
     if (inheritableHandlers || localHandlers) {
       if (Array.isArray(inheritableHandlers) || !inheritableHandlers) {
@@ -1014,7 +1034,7 @@ export class CallbackManager
         )
       ) {
         if (tracingV2Enabled) {
-          const tracerV2 = await getTracingV2CallbackHandler();
+          const tracerV2 = new LangChainTracer();
           callbackManager.addHandler(tracerV2, true);
 
           // handoff between langchain and langsmith/traceable

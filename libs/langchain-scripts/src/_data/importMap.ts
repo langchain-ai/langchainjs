@@ -627,11 +627,6 @@ export const importMap: Array<DeprecatedEntrypoint> = [
   },
   {
     old: "langchain/callbacks/*",
-    new: "@langchain/core/tracers/initialize",
-    namedImport: "getTracingV2CallbackHandler",
-  },
-  {
-    old: "langchain/callbacks/*",
     new: "@langchain/core/tracers/console",
     namedImport: "ConsoleCallbackHandler",
   },

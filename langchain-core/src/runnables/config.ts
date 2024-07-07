@@ -1,38 +1,10 @@
-import {
-  type BaseCallbackConfig,
-  CallbackManager,
-  ensureHandler,
-} from "../callbacks/manager.js";
+import { CallbackManager, ensureHandler } from "../callbacks/manager.js";
 import { AsyncLocalStorageProviderSingleton } from "../singletons/index.js";
+import { RunnableConfig } from "./types.js";
 
 export const DEFAULT_RECURSION_LIMIT = 25;
 
-export interface RunnableConfig extends BaseCallbackConfig {
-  /**
-   * Runtime values for attributes previously made configurable on this Runnable,
-   * or sub-Runnables.
-   */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  configurable?: Record<string, any>;
-
-  /**
-   * Maximum number of times a call can recurse. If not provided, defaults to 25.
-   */
-  recursionLimit?: number;
-
-  /** Maximum number of parallel calls to make. */
-  maxConcurrency?: number;
-}
-
-export async function getCallbackManagerForConfig(config?: RunnableConfig) {
-  return CallbackManager.configure(
-    config?.callbacks,
-    undefined,
-    config?.tags,
-    undefined,
-    config?.metadata
-  );
-}
+export { type RunnableConfig };
 
 export function mergeConfigs<CallOptions extends RunnableConfig>(
   ...configs: (CallOptions | RunnableConfig | undefined | null)[]
@@ -193,4 +165,14 @@ export function patchConfig<CallOptions extends RunnableConfig>(
     delete newConfig.runId;
   }
   return newConfig;
+}
+
+export function getCallbackManagerForConfig(config?: RunnableConfig) {
+  return CallbackManager._configureSync(
+    config?.callbacks,
+    undefined,
+    config?.tags,
+    undefined,
+    config?.metadata
+  );
 }

@@ -1,9 +1,8 @@
-// Make this a type to override ReadableStream's async iterator type in case
-// the popular web-streams-polyfill is imported - the supplied types
-import { BaseCallbackHandler } from "../callbacks/base.js";
 import { AsyncLocalStorageProviderSingleton } from "../singletons/index.js";
 
-// in this case don't quite match.
+// Make this a type to override ReadableStream's async iterator type in case
+// the popular web-streams-polyfill is imported - the supplied types
+// in that case don't quite match.
 export type IterableReadableStreamInterface<T> = ReadableStream<T> &
   AsyncIterable<T>;
 
@@ -187,10 +186,6 @@ export class AsyncGeneratorWithSetup<
 
   public config?: unknown;
 
-  private parentRunId?: string;
-
-  private handlers?: BaseCallbackHandler[];
-
   private firstResult: Promise<IteratorResult<T>>;
 
   private firstResultUsed = false;
@@ -199,13 +194,9 @@ export class AsyncGeneratorWithSetup<
     generator: AsyncGenerator<T>;
     startSetup?: () => Promise<S>;
     config?: unknown;
-    parentRunId?: string;
-    handlers?: BaseCallbackHandler[];
   }) {
     this.generator = params.generator;
     this.config = params.config;
-    this.parentRunId = params.parentRunId;
-    this.handlers = params.handlers;
     // setup is a promise that resolves only after the first iterator value
     // is available. this is useful when setup of several piped generators
     // needs to happen in logical order, ie. in the order in which input to
@@ -213,7 +204,6 @@ export class AsyncGeneratorWithSetup<
     this.setup = new Promise((resolve, reject) => {
       void AsyncLocalStorageProviderSingleton.runWithConfig(
         params.config,
-        { parentRunId: this.parentRunId, handlers: this.handlers },
         async () => {
           this.firstResult = params.generator.next();
           if (params.startSetup) {
@@ -234,7 +224,6 @@ export class AsyncGeneratorWithSetup<
 
     return AsyncLocalStorageProviderSingleton.runWithConfig(
       this.config,
-      { parentRunId: this.parentRunId, handlers: this.handlers },
       async () => {
         return this.generator.next(...args);
       }
@@ -273,15 +262,11 @@ export async function pipeGeneratorWithSetup<
   ) => AsyncGenerator<U, UReturn, UNext>,
   generator: AsyncGenerator<T, TReturn, TNext>,
   startSetup: () => Promise<S>,
-  parentRunId?: string,
-  handlers?: BaseCallbackHandler[],
   ...args: A
 ) {
   const gen = new AsyncGeneratorWithSetup({
     generator,
     startSetup,
-    parentRunId,
-    handlers,
   });
   const setup = await gen.setup;
   return { output: to(gen, setup, ...args), setup };

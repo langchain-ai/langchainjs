@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { RunTree } from "langsmith";
 import { isTracingEnabled } from "../utils/callbacks.js";
+import { CallbackManager } from "../callbacks/manager.js";
 
 export interface AsyncLocalStorageInterface {
   getStore: () => any | undefined;
@@ -33,12 +34,16 @@ class AsyncLocalStorageProvider {
     return storage.getStore()?.extra?._lc_runnable_config;
   }
 
-  runWithConfig<T>(
-    config: any,
-    options: { parentRunId?: string; handlers?: any[] },
-    callback: () => T
-  ): T {
-    const { parentRunId, handlers } = options;
+  runWithConfig<T>(config: any, callback: () => T): T {
+    const callbackManager = CallbackManager._configureSync(
+      config?.callbacks,
+      undefined,
+      config?.tags,
+      undefined,
+      config?.metadata
+    );
+    const parentRunId = callbackManager?.getParentRunId();
+    const handlers = callbackManager?.handlers;
     const storage = this.getInstance();
     const currentRunTree = storage.getStore();
     let newRunTree;
@@ -49,8 +54,8 @@ class AsyncLocalStorageProvider {
         _lc_runnable_config: config,
       };
     } else {
-      const langChainTracer = handlers?.find(
-        (handler: any) => handler?.name === "langchain_tracer"
+      const langChainTracer: any = handlers?.find(
+        (handler) => handler?.name === "langchain_tracer"
       );
       const tracingEnabled = isTracingEnabled() || !!langChainTracer;
       const parentRun = langChainTracer?.getRun?.(parentRunId);

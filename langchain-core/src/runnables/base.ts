@@ -307,12 +307,9 @@ export abstract class Runnable<
     // Buffer the first streamed chunk to allow for initial errors
     // to surface immediately.
     const config = ensureConfig(options);
-    const callbackManager = await getCallbackManagerForConfig(config);
     const wrappedGenerator = new AsyncGeneratorWithSetup({
       generator: this._streamIterator(input, config),
       config,
-      parentRunId: callbackManager?.getParentRunId(),
-      handlers: callbackManager?.handlers,
     });
     await wrappedGenerator.setup;
     return IterableReadableStream.fromAsyncGenerator(wrappedGenerator);
@@ -360,7 +357,7 @@ export abstract class Runnable<
     options?: Partial<CallOptions> & { runType?: string }
   ) {
     const config = ensureConfig(options);
-    const callbackManager_ = await getCallbackManagerForConfig(config);
+    const callbackManager_ = getCallbackManagerForConfig(config);
     const runManager = await callbackManager_?.handleChainStart(
       this.toJSON(),
       _coerceToDict(input, "input"),
@@ -469,7 +466,7 @@ export abstract class Runnable<
     let finalOutputSupported = true;
 
     const config = ensureConfig(options);
-    const callbackManager_ = await getCallbackManagerForConfig(config);
+    const callbackManager_ = getCallbackManagerForConfig(config);
     async function* wrapInputForTracing() {
       for await (const chunk of inputGenerator) {
         if (finalInputSupported) {
@@ -504,8 +501,6 @@ export abstract class Runnable<
             undefined,
             config.runName ?? this.getName()
           ),
-        callbackManager_?.getParentRunId(),
-        callbackManager_?.handlers,
         config
       );
       delete config.runId;
@@ -1665,7 +1660,7 @@ export class RunnableSequence<
 
   async invoke(input: RunInput, options?: RunnableConfig): Promise<RunOutput> {
     const config = ensureConfig(options);
-    const callbackManager_ = await getCallbackManagerForConfig(config);
+    const callbackManager_ = getCallbackManagerForConfig(config);
     const runManager = await callbackManager_?.handleChainStart(
       this.toJSON(),
       _coerceToDict(input, "input"),
@@ -1778,7 +1773,7 @@ export class RunnableSequence<
     input: RunInput,
     options?: RunnableConfig
   ): AsyncGenerator<RunOutput> {
-    const callbackManager_ = await getCallbackManagerForConfig(options);
+    const callbackManager_ = getCallbackManagerForConfig(options);
     const { runId, ...otherOptions } = options ?? {};
     const runManager = await callbackManager_?.handleChainStart(
       this.toJSON(),
@@ -1974,7 +1969,7 @@ export class RunnableMap<
     options?: Partial<RunnableConfig>
   ): Promise<RunOutput> {
     const config = ensureConfig(options);
-    const callbackManager_ = await getCallbackManagerForConfig(config);
+    const callbackManager_ = getCallbackManagerForConfig(config);
     const runManager = await callbackManager_?.handleChainStart(
       this.toJSON(),
       {
@@ -2103,7 +2098,7 @@ export class RunnableTraceable<RunInput, RunOutput> extends Runnable<
 
   async invoke(input: RunInput, options?: Partial<RunnableConfig>) {
     const [config] = this._getOptionsList(options ?? {}, 1);
-    const callbacks = await getCallbackManagerForConfig(config);
+    const callbacks = getCallbackManagerForConfig(config);
 
     return (await this.func(
       patchConfig(config, { callbacks }),
@@ -2229,13 +2224,8 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
         callbacks: runManager?.getChild(),
         recursionLimit: (config?.recursionLimit ?? DEFAULT_RECURSION_LIMIT) - 1,
       });
-      const tracingData = {
-        parentRunId: runManager?.parentRunId,
-        handlers: runManager?.handlers,
-      };
       void AsyncLocalStorageProviderSingleton.runWithConfig(
         childConfig,
-        tracingData,
         async () => {
           try {
             let output = await this.func(input, {
@@ -2255,7 +2245,6 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
               let finalOutput: RunOutput | undefined;
               for await (const chunk of consumeAsyncIterableInContext(
                 childConfig,
-                tracingData,
                 output
               )) {
                 if (finalOutput === undefined) {
@@ -2275,7 +2264,6 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
               let finalOutput: RunOutput | undefined;
               for (const chunk of consumeIteratorInContext(
                 childConfig,
-                tracingData,
                 output
               )) {
                 if (finalOutput === undefined) {
@@ -2331,15 +2319,10 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
       callbacks: runManager?.getChild(),
       recursionLimit: (config?.recursionLimit ?? DEFAULT_RECURSION_LIMIT) - 1,
     });
-    const tracingData = {
-      parentRunId: runManager?.parentRunId,
-      handlers: runManager?.handlers,
-    };
     const output = await new Promise<RunOutput | Runnable>(
       (resolve, reject) => {
         void AsyncLocalStorageProviderSingleton.runWithConfig(
           childConfig,
-          tracingData,
           async () => {
             try {
               const res = await this.func(finalChunk as RunInput, {
@@ -2365,17 +2348,12 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
     } else if (isAsyncIterable(output)) {
       for await (const chunk of consumeAsyncIterableInContext(
         childConfig,
-        tracingData,
         output
       )) {
         yield chunk as RunOutput;
       }
     } else if (isIterableIterator(output)) {
-      for (const chunk of consumeIteratorInContext(
-        childConfig,
-        tracingData,
-        output
-      )) {
+      for (const chunk of consumeIteratorInContext(childConfig, output)) {
         yield chunk as RunOutput;
       }
     } else {
@@ -2402,12 +2380,9 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
       yield input;
     }
     const config = ensureConfig(options);
-    const callbackManager = await getCallbackManagerForConfig(config);
     const wrappedGenerator = new AsyncGeneratorWithSetup({
       generator: this.transform(generator(), config),
       config,
-      parentRunId: callbackManager?.getParentRunId(),
-      handlers: callbackManager?.handlers,
     });
     await wrappedGenerator.setup;
     return IterableReadableStream.fromAsyncGenerator(wrappedGenerator);
@@ -2456,7 +2431,7 @@ export class RunnableWithFallbacks<RunInput, RunOutput> extends Runnable<
     options?: Partial<RunnableConfig>
   ): Promise<RunOutput> {
     const config = ensureConfig(options);
-    const callbackManager_ = await getCallbackManagerForConfig(options);
+    const callbackManager_ = getCallbackManagerForConfig(options);
     const { runId, ...otherConfigFields } = config;
     const runManager = await callbackManager_?.handleChainStart(
       this.toJSON(),

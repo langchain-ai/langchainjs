@@ -186,7 +186,7 @@ export class RunnableBranch<RunInput = any, RunOutput = any> extends Runnable<
   }
 
   async *_streamIterator(input: RunInput, config?: Partial<RunnableConfig>) {
-    const callbackManager_ = await getCallbackManagerForConfig(config);
+    const callbackManager_ = getCallbackManagerForConfig(config);
     const runManager = await callbackManager_?.handleChainStart(
       this.toJSON(),
       _coerceToDict(input, "input"),
