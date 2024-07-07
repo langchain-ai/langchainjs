@@ -6,6 +6,16 @@ export const DEFAULT_RECURSION_LIMIT = 25;
 
 export { type RunnableConfig };
 
+export async function getCallbackManagerForConfig(config?: RunnableConfig) {
+  return CallbackManager._configureSync(
+    config?.callbacks,
+    undefined,
+    config?.tags,
+    undefined,
+    config?.metadata
+  );
+}
+
 export function mergeConfigs<CallOptions extends RunnableConfig>(
   ...configs: (CallOptions | RunnableConfig | undefined | null)[]
 ): Partial<CallOptions> {
@@ -165,14 +175,4 @@ export function patchConfig<CallOptions extends RunnableConfig>(
     delete newConfig.runId;
   }
   return newConfig;
-}
-
-export async function getCallbackManagerForConfig(config?: RunnableConfig) {
-  return CallbackManager._configureSync(
-    config?.callbacks,
-    undefined,
-    config?.tags,
-    undefined,
-    config?.metadata
-  );
 }
