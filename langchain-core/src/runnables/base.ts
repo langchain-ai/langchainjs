@@ -2453,11 +2453,11 @@ export class RunnableWithFallbacks<RunInput, RunOutput> extends Runnable<
 
   async invoke(
     input: RunInput,
-    config?: Partial<RunnableConfig>
+    options?: Partial<RunnableConfig>
   ): Promise<RunOutput> {
-    const options = ensureConfig(config);
+    const config = ensureConfig(options);
     const callbackManager_ = await getCallbackManagerForConfig(options);
-    const { runId, ...otherOptions } = options ?? {};
+    const { runId, ...otherConfigFields } = config;
     const runManager = await callbackManager_?.handleChainStart(
       this.toJSON(),
       _coerceToDict(input, "input"),
@@ -2465,14 +2465,14 @@ export class RunnableWithFallbacks<RunInput, RunOutput> extends Runnable<
       undefined,
       undefined,
       undefined,
-      otherOptions?.runName
+      otherConfigFields?.runName
     );
     let firstError;
     for (const runnable of this.runnables()) {
       try {
         const output = await runnable.invoke(
           input,
-          patchConfig(otherOptions, { callbacks: runManager?.getChild() })
+          patchConfig(otherConfigFields, { callbacks: runManager?.getChild() })
         );
         await runManager?.handleChainEnd(_coerceToDict(output, "output"));
         return output;
