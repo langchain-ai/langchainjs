@@ -1,5 +1,6 @@
 // Make this a type to override ReadableStream's async iterator type in case
 // the popular web-streams-polyfill is imported - the supplied types
+import { BaseCallbackHandler } from "../callbacks/base.js";
 import { AsyncLocalStorageProviderSingleton } from "../singletons/index.js";
 
 // in this case don't quite match.
@@ -186,6 +187,10 @@ export class AsyncGeneratorWithSetup<
 
   public config?: unknown;
 
+  private parentRunId?: string;
+
+  private handlers?: BaseCallbackHandler[];
+
   private firstResult: Promise<IteratorResult<T>>;
 
   private firstResultUsed = false;
@@ -194,23 +199,31 @@ export class AsyncGeneratorWithSetup<
     generator: AsyncGenerator<T>;
     startSetup?: () => Promise<S>;
     config?: unknown;
+    parentRunId?: string;
+    handlers?: BaseCallbackHandler[];
   }) {
     this.generator = params.generator;
     this.config = params.config;
+    this.parentRunId = params.parentRunId;
+    this.handlers = params.handlers;
+    console.log("IN SETUP", this.parentRunId, this.handlers);
     // setup is a promise that resolves only after the first iterator value
     // is available. this is useful when setup of several piped generators
     // needs to happen in logical order, ie. in the order in which input to
     // to each generator is available.
     this.setup = new Promise((resolve, reject) => {
-      const storage = AsyncLocalStorageProviderSingleton.getInstance();
-      void storage.run(params.config, async () => {
-        this.firstResult = params.generator.next();
-        if (params.startSetup) {
-          this.firstResult.then(params.startSetup).then(resolve, reject);
-        } else {
-          this.firstResult.then((_result) => resolve(undefined as S), reject);
+      void AsyncLocalStorageProviderSingleton.runWithConfig(
+        params.config,
+        { parentRunId: this.parentRunId, handlers: this.handlers },
+        async () => {
+          this.firstResult = params.generator.next();
+          if (params.startSetup) {
+            this.firstResult.then(params.startSetup).then(resolve, reject);
+          } else {
+            this.firstResult.then((_result) => resolve(undefined as S), reject);
+          }
         }
-      });
+      );
     });
   }
 
@@ -220,10 +233,13 @@ export class AsyncGeneratorWithSetup<
       return this.firstResult;
     }
 
-    const storage = AsyncLocalStorageProviderSingleton.getInstance();
-    return storage.run(this.config, async () => {
-      return this.generator.next(...args);
-    });
+    return AsyncLocalStorageProviderSingleton.runWithConfig(
+      this.config,
+      { parentRunId: this.parentRunId, handlers: this.handlers },
+      async () => {
+        return this.generator.next(...args);
+      }
+    );
   }
 
   async return(
@@ -258,9 +274,16 @@ export async function pipeGeneratorWithSetup<
   ) => AsyncGenerator<U, UReturn, UNext>,
   generator: AsyncGenerator<T, TReturn, TNext>,
   startSetup: () => Promise<S>,
+  parentRunId?: string,
+  handlers?: BaseCallbackHandler[],
   ...args: A
 ) {
-  const gen = new AsyncGeneratorWithSetup({ generator, startSetup });
+  const gen = new AsyncGeneratorWithSetup({
+    generator,
+    startSetup,
+    parentRunId,
+    handlers,
+  });
   const setup = await gen.setup;
   return { output: to(gen, setup, ...args), setup };
 }

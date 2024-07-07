@@ -127,7 +127,7 @@ export function ensureConfig<CallOptions extends RunnableConfig>(
   config?: CallOptions
 ): CallOptions {
   const loadedConfig =
-    config ?? AsyncLocalStorageProviderSingleton.getInstance().getStore();
+    config ?? AsyncLocalStorageProviderSingleton.getRunnableConfig();
   let empty: RunnableConfig = {
     tags: [],
     metadata: {},

@@ -20,9 +20,10 @@ import {
 import { consumeCallback } from "./promises.js";
 import { Serialized } from "../load/serializable.js";
 import type { DocumentInterface } from "../documents/document.js";
+import { isTracingEnabled } from "../utils/callbacks.js";
 
 if (
-  /* #__PURE__ */ getEnvironmentVariable("LANGCHAIN_TRACING_V2") === "true" &&
+  /* #__PURE__ */ isTracingEnabled() &&
   /* #__PURE__ */ getEnvironmentVariable("LANGCHAIN_CALLBACKS_BACKGROUND") !==
     "true"
 ) {
@@ -111,7 +112,7 @@ export abstract class BaseCallbackManager {
 /**
  * Base class for run manager in LangChain.
  */
-class BaseRunManager {
+export class BaseRunManager {
   constructor(
     public readonly runId: string,
     public readonly handlers: BaseCallbackHandler[],
@@ -122,6 +123,10 @@ class BaseRunManager {
     protected readonly inheritableMetadata: Record<string, unknown>,
     protected readonly _parentRunId?: string
   ) {}
+
+  get parentRunId() {
+    return this._parentRunId;
+  }
 
   async handleText(text: string): Promise<void> {
     await Promise.all(
@@ -984,9 +989,7 @@ export class CallbackManager
     const verboseEnabled =
       getEnvironmentVariable("LANGCHAIN_VERBOSE") === "true" ||
       options?.verbose;
-    const tracingV2Enabled =
-      getEnvironmentVariable("LANGCHAIN_TRACING_V2") === "true" ||
-      getEnvironmentVariable("LANGSMITH_TRACING") === "true";
+    const tracingV2Enabled = isTracingEnabled();
 
     const tracingEnabled =
       tracingV2Enabled ||

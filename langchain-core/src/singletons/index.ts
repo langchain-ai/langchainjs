@@ -1,4 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { type Client, RunTree } from "langsmith";
+import { isTracingEnabled } from "../utils/callbacks.js";
 
 export interface AsyncLocalStorageInterface {
   getStore: () => any | undefined;
@@ -21,14 +23,68 @@ const mockAsyncLocalStorage = new MockAsyncLocalStorage();
 class AsyncLocalStorageProvider {
   getInstance(): AsyncLocalStorageInterface {
     return (
-      (globalThis as any).__lc_tracing_async_local_storage ??
+      (globalThis as any).__lc_tracing_async_local_storage_v2 ??
       mockAsyncLocalStorage
     );
   }
 
+  getRunnableConfig() {
+    const storage = this.getInstance();
+    return storage.getStore()?.extra?._lc_runnable_config;
+  }
+
+  runWithConfig<T>(
+    config: any,
+    options: { parentRunId?: string; handlers?: any[] },
+    callback: () => T
+  ): T {
+    const { parentRunId, handlers } = options;
+    const storage = this.getInstance();
+    const currentRunTree = storage.getStore();
+    let newRunTree;
+    if (currentRunTree !== undefined && currentRunTree.id === config?.run_id) {
+      newRunTree = currentRunTree;
+      newRunTree.extra = {
+        ...newRunTree.extra,
+        _lc_runnable_config: config,
+      };
+    } else {
+      let parentRun: RunTree | undefined;
+      let projectName: string | undefined;
+      let client: Client | undefined;
+
+      let tracingEnabled = isTracingEnabled();
+
+      console.log("PARENT RUN ID", parentRunId);
+      const langChainTracer = handlers?.find(
+        (handler: any) => handler?.name == "langchain_tracer"
+      );
+
+      parentRun = langChainTracer?.getRun?.(parentRunId);
+      projectName = langChainTracer?.projectName;
+      client = langChainTracer?.client;
+      tracingEnabled = tracingEnabled || !!langChainTracer;
+      newRunTree = new RunTree({
+        client,
+        tracingEnabled,
+        id: config?.run_id,
+        parent_run_id: parentRun?.id,
+        project_name: projectName,
+        name: config?.runName ?? "<langchain_runnable>",
+        extra: {
+          metadata: { ...config?.metadata },
+          _lc_runnable_config: config,
+        },
+      });
+    }
+    // return storage.run({ extra: { _lc_runnable_config: config }}, callback);
+    // console.log("NEW RUN TREE", newRunTree);
+    return storage.run(newRunTree, callback);
+  }
+
   initializeGlobalInstance(instance: AsyncLocalStorageInterface) {
-    if ((globalThis as any).__lc_tracing_async_local_storage === undefined) {
-      (globalThis as any).__lc_tracing_async_local_storage = instance;
+    if ((globalThis as any).__lc_tracing_async_local_storage_v2 === undefined) {
+      (globalThis as any).__lc_tracing_async_local_storage_v2 = instance;
     }
   }
 }
