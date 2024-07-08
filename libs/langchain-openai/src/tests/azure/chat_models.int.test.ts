@@ -25,6 +25,9 @@ import {
 } from "@azure/identity";
 import { AzureChatOpenAI } from "../../azure/chat_models.js";
 
+const originalConsoleLog = console.log;
+console.log = jest.fn();
+
 // Save the original value of the 'LANGCHAIN_CALLBACKS_BACKGROUND' environment variable
 const originalBackground = process.env.LANGCHAIN_CALLBACKS_BACKGROUND;
 
