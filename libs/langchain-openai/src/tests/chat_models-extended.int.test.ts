@@ -29,7 +29,14 @@ test("Test ChatOpenAI seed", async () => {
   const res = await chat.invoke([message]);
   console.log(JSON.stringify(res));
   const res2 = await chat.invoke([message]);
-  expect(res).toEqual(res2);
+  const resAsObject = { ...res };
+  const res2AsObject = { ...res2 };
+  delete resAsObject.id;
+  delete resAsObject.lc_kwargs.id;
+  delete res2AsObject.id;
+  delete res2AsObject.lc_kwargs.id;
+
+  expect(resAsObject).toEqual(res2AsObject);
 });
 
 test("Test ChatOpenAI tool calling", async () => {
