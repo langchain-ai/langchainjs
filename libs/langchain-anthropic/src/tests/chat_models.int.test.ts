@@ -1,6 +1,6 @@
 /* eslint-disable no-process-env */
 
-import { expect, test, jest } from "@jest/globals";
+import { expect, test } from "@jest/globals";
 import { AIMessageChunk, HumanMessage } from "@langchain/core/messages";
 import { ChatPromptValue } from "@langchain/core/prompt_values";
 import {
