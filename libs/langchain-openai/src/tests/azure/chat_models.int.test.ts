@@ -883,12 +883,22 @@ test("Test Azure ChatOpenAI token usage reporting for streaming calls", async ()
   }
 });
 
-test("Test Azure ChatOpenAI with bearer token provider", async () => {
-  const tenantId: string = getEnvironmentVariable("AZURE_TENANT_ID") ?? "";
-  const clientId: string = getEnvironmentVariable("AZURE_CLIENT_ID") ?? "";
-  const clientSecret: string =
-    getEnvironmentVariable("AZURE_CLIENT_SECRET") ?? "";
+// This test should be skipped if the required environment variables are not set
+// instead of failing the test.
+const tenantId: string = getEnvironmentVariable("AZURE_TENANT_ID") ?? "";
+const clientId: string = getEnvironmentVariable("AZURE_CLIENT_ID") ?? "";
+const clientSecret: string =
+  getEnvironmentVariable("AZURE_CLIENT_SECRET") ?? "";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let testFn: any = test;
+if (!tenantId || !clientId || !clientSecret) {
+  console.warn(`One or more required environment variables are not set.
+Skipping "Test Azure ChatOpenAI with bearer token provider".`);
+  testFn = test.skip;
+}
+
+testFn("Test Azure ChatOpenAI with bearer token provider", async () => {
   const credentials = new ClientSecretCredential(
     tenantId,
     clientId,
