@@ -17,7 +17,7 @@ test("Test ChatOpenAI JSON mode", async () => {
   console.log(JSON.stringify(res));
 });
 
-test.only("Test ChatOpenAI seed", async () => {
+test("Test ChatOpenAI seed", async () => {
   const chat = new ChatOpenAI({
     modelName: "gpt-3.5-turbo-1106",
     maxTokens: 128,

@@ -53,108 +53,150 @@ test("Test ChatOpenAI Generate throws when one of the calls fails", async () => 
 });
 
 test("Test ChatOpenAI tokenUsage", async () => {
-  let tokenUsage = {
-    completionTokens: 0,
-    promptTokens: 0,
-    totalTokens: 0,
-  };
+  // Running LangChain callbacks in the background will sometimes cause the callbackManager to execute
+  // after the test/llm call has already finished & returned. Set that environment variable to false
+  // to prevent that from happening.
+  const originalBackground = process.env.LANGCHAIN_CALLBACKS_BACKGROUND;
+  process.env.LANGCHAIN_CALLBACKS_BACKGROUND = "false";
 
-  const model = new ChatOpenAI({
-    modelName: "gpt-3.5-turbo",
-    maxTokens: 10,
-    callbackManager: CallbackManager.fromHandlers({
-      async handleLLMEnd(output: LLMResult) {
-        tokenUsage = output.llmOutput?.tokenUsage;
-      },
-    }),
-  });
-  const message = new HumanMessage("Hello");
-  const res = await model.invoke([message]);
-  console.log({ res });
+  try {
+    let tokenUsage = {
+      completionTokens: 0,
+      promptTokens: 0,
+      totalTokens: 0,
+    };
 
-  expect(tokenUsage.promptTokens).toBeGreaterThan(0);
+    const model = new ChatOpenAI({
+      modelName: "gpt-3.5-turbo",
+      maxTokens: 10,
+      callbackManager: CallbackManager.fromHandlers({
+        async handleLLMEnd(output: LLMResult) {
+          tokenUsage = output.llmOutput?.tokenUsage;
+        },
+      }),
+    });
+    const message = new HumanMessage("Hello");
+    await model.invoke([message]);
+
+    expect(tokenUsage.promptTokens).toBeGreaterThan(0);
+  } finally {
+    // Reset the environment variable
+    process.env.LANGCHAIN_CALLBACKS_BACKGROUND = originalBackground;
+  }
 });
 
 test("Test ChatOpenAI tokenUsage with a batch", async () => {
-  let tokenUsage = {
-    completionTokens: 0,
-    promptTokens: 0,
-    totalTokens: 0,
-  };
+  // Running LangChain callbacks in the background will sometimes cause the callbackManager to execute
+  // after the test/llm call has already finished & returned. Set that environment variable to false
+  // to prevent that from happening.
+  const originalBackground = process.env.LANGCHAIN_CALLBACKS_BACKGROUND;
+  process.env.LANGCHAIN_CALLBACKS_BACKGROUND = "false";
 
-  const model = new ChatOpenAI({
-    temperature: 0,
-    modelName: "gpt-3.5-turbo",
-    callbackManager: CallbackManager.fromHandlers({
-      async handleLLMEnd(output: LLMResult) {
-        tokenUsage = output.llmOutput?.tokenUsage;
-      },
-    }),
-  });
-  const res = await model.generate([
-    [new HumanMessage("Hello")],
-    [new HumanMessage("Hi")],
-  ]);
-  console.log(res);
+  try {
+    let tokenUsage = {
+      completionTokens: 0,
+      promptTokens: 0,
+      totalTokens: 0,
+    };
 
-  expect(tokenUsage.promptTokens).toBeGreaterThan(0);
+    const model = new ChatOpenAI({
+      temperature: 0,
+      modelName: "gpt-3.5-turbo",
+      callbackManager: CallbackManager.fromHandlers({
+        async handleLLMEnd(output: LLMResult) {
+          tokenUsage = output.llmOutput?.tokenUsage;
+        },
+      }),
+    });
+    await model.generate([
+      [new HumanMessage("Hello")],
+      [new HumanMessage("Hi")],
+    ]);
+
+    expect(tokenUsage.promptTokens).toBeGreaterThan(0);
+  } finally {
+    // Reset the environment variable
+    process.env.LANGCHAIN_CALLBACKS_BACKGROUND = originalBackground;
+  }
 });
 
 test("Test ChatOpenAI in streaming mode", async () => {
-  let nrNewTokens = 0;
-  let streamedCompletion = "";
+  // Running LangChain callbacks in the background will sometimes cause the callbackManager to execute
+  // after the test/llm call has already finished & returned. Set that environment variable to false
+  // to prevent that from happening.
+  const originalBackground = process.env.LANGCHAIN_CALLBACKS_BACKGROUND;
+  process.env.LANGCHAIN_CALLBACKS_BACKGROUND = "false";
 
-  const model = new ChatOpenAI({
-    modelName: "gpt-3.5-turbo",
-    streaming: true,
-    maxTokens: 10,
-    callbacks: [
-      {
-        async handleLLMNewToken(token: string) {
-          nrNewTokens += 1;
-          streamedCompletion += token;
+  try {
+    let nrNewTokens = 0;
+    let streamedCompletion = "";
+
+    const model = new ChatOpenAI({
+      modelName: "gpt-3.5-turbo",
+      streaming: true,
+      maxTokens: 10,
+      callbacks: [
+        {
+          async handleLLMNewToken(token: string) {
+            nrNewTokens += 1;
+            streamedCompletion += token;
+          },
         },
-      },
-    ],
-  });
-  const message = new HumanMessage("Hello!");
-  const result = await model.invoke([message]);
-  console.log(result);
+      ],
+    });
+    const message = new HumanMessage("Hello!");
+    const result = await model.invoke([message]);
+    console.log(result);
 
-  expect(nrNewTokens > 0).toBe(true);
-  expect(result.content).toBe(streamedCompletion);
+    expect(nrNewTokens > 0).toBe(true);
+    expect(result.content).toBe(streamedCompletion);
+  } finally {
+    // Reset the environment variable
+    process.env.LANGCHAIN_CALLBACKS_BACKGROUND = originalBackground;
+  }
 }, 10000);
 
 test("Test ChatOpenAI in streaming mode with n > 1 and multiple prompts", async () => {
-  let nrNewTokens = 0;
-  const streamedCompletions = [
-    ["", ""],
-    ["", ""],
-  ];
+  // Running LangChain callbacks in the background will sometimes cause the callbackManager to execute
+  // after the test/llm call has already finished & returned. Set that environment variable to false
+  // to prevent that from happening.
+  const originalBackground = process.env.LANGCHAIN_CALLBACKS_BACKGROUND;
+  process.env.LANGCHAIN_CALLBACKS_BACKGROUND = "false";
 
-  const model = new ChatOpenAI({
-    modelName: "gpt-3.5-turbo",
-    streaming: true,
-    maxTokens: 10,
-    n: 2,
-    callbacks: [
-      {
-        async handleLLMNewToken(token: string, idx: NewTokenIndices) {
-          nrNewTokens += 1;
-          streamedCompletions[idx.prompt][idx.completion] += token;
+  try {
+    let nrNewTokens = 0;
+    const streamedCompletions = [
+      ["", ""],
+      ["", ""],
+    ];
+
+    const model = new ChatOpenAI({
+      modelName: "gpt-3.5-turbo",
+      streaming: true,
+      maxTokens: 10,
+      n: 2,
+      callbacks: [
+        {
+          async handleLLMNewToken(token: string, idx: NewTokenIndices) {
+            nrNewTokens += 1;
+            streamedCompletions[idx.prompt][idx.completion] += token;
+          },
         },
-      },
-    ],
-  });
-  const message1 = new HumanMessage("Hello!");
-  const message2 = new HumanMessage("Bye!");
-  const result = await model.generate([[message1], [message2]]);
-  console.log(result.generations);
+      ],
+    });
+    const message1 = new HumanMessage("Hello!");
+    const message2 = new HumanMessage("Bye!");
+    const result = await model.generate([[message1], [message2]]);
+    console.log(result.generations);
 
-  expect(nrNewTokens > 0).toBe(true);
-  expect(result.generations.map((g) => g.map((gg) => gg.text))).toEqual(
-    streamedCompletions
-  );
+    expect(nrNewTokens > 0).toBe(true);
+    expect(result.generations.map((g) => g.map((gg) => gg.text))).toEqual(
+      streamedCompletions
+    );
+  } finally {
+    // Reset the environment variable
+    process.env.LANGCHAIN_CALLBACKS_BACKGROUND = originalBackground;
+  }
 }, 10000);
 
 test("Test ChatOpenAI prompt value", async () => {
@@ -395,66 +437,77 @@ test("Test ChatOpenAI stream method, timeout error thrown from SDK", async () =>
   }).rejects.toThrow();
 });
 
-test.only("Function calling with streaming", async () => {
-  let finalResult: BaseMessage | undefined;
-  const modelForFunctionCalling = new ChatOpenAI({
-    modelName: "gpt-3.5-turbo",
-    temperature: 0,
-    callbacks: [
-      {
-        handleLLMEnd(output: LLMResult) {
-          finalResult = (output.generations[0][0] as ChatGeneration).message;
-        },
-      },
-    ],
-  });
+test("Function calling with streaming", async () => {
+  // Running LangChain callbacks in the background will sometimes cause the callbackManager to execute
+  // after the test/llm call has already finished & returned. Set that environment variable to false
+  // to prevent that from happening.
+  const originalBackground = process.env.LANGCHAIN_CALLBACKS_BACKGROUND;
+  process.env.LANGCHAIN_CALLBACKS_BACKGROUND = "false";
 
-  const stream = await modelForFunctionCalling.stream(
-    "What is the weather in New York?",
-    {
-      functions: [
+  try {
+    let finalResult: BaseMessage | undefined;
+    const modelForFunctionCalling = new ChatOpenAI({
+      modelName: "gpt-3.5-turbo",
+      temperature: 0,
+      callbacks: [
         {
-          name: "get_current_weather",
-          description: "Get the current weather in a given location",
-          parameters: {
-            type: "object",
-            properties: {
-              location: {
-                type: "string",
-                description: "The city and state, e.g. San Francisco, CA",
-              },
-              unit: { type: "string", enum: ["celsius", "fahrenheit"] },
-            },
-            required: ["location"],
+          handleLLMEnd(output: LLMResult) {
+            finalResult = (output.generations[0][0] as ChatGeneration).message;
           },
         },
       ],
-      function_call: {
-        name: "get_current_weather",
-      },
-    }
-  );
+    });
 
-  const chunks = [];
-  let streamedOutput;
-  for await (const chunk of stream) {
-    chunks.push(chunk);
-    if (!streamedOutput) {
-      streamedOutput = chunk;
-    } else if (chunk) {
-      streamedOutput = streamedOutput.concat(chunk);
+    const stream = await modelForFunctionCalling.stream(
+      "What is the weather in New York?",
+      {
+        functions: [
+          {
+            name: "get_current_weather",
+            description: "Get the current weather in a given location",
+            parameters: {
+              type: "object",
+              properties: {
+                location: {
+                  type: "string",
+                  description: "The city and state, e.g. San Francisco, CA",
+                },
+                unit: { type: "string", enum: ["celsius", "fahrenheit"] },
+              },
+              required: ["location"],
+            },
+          },
+        ],
+        function_call: {
+          name: "get_current_weather",
+        },
+      }
+    );
+
+    const chunks = [];
+    let streamedOutput;
+    for await (const chunk of stream) {
+      chunks.push(chunk);
+      if (!streamedOutput) {
+        streamedOutput = chunk;
+      } else if (chunk) {
+        streamedOutput = streamedOutput.concat(chunk);
+      }
     }
+
+    expect(finalResult).toEqual(streamedOutput);
+    expect(chunks.length).toBeGreaterThan(1);
+    expect(finalResult?.additional_kwargs?.function_call?.name).toBe(
+      "get_current_weather"
+    );
+    console.log(
+      JSON.parse(finalResult?.additional_kwargs?.function_call?.arguments ?? "")
+        .location
+    );
+  } finally {
+    // Reset the environment variable
+    process.env.LANGCHAIN_CALLBACKS_BACKGROUND = originalBackground;
   }
-
-  expect(finalResult).toEqual(streamedOutput);
-  expect(chunks.length).toBeGreaterThan(1);
-  expect(finalResult?.additional_kwargs?.function_call?.name).toBe(
-    "get_current_weather"
-  );
-  console.log(
-    JSON.parse(finalResult?.additional_kwargs?.function_call?.arguments ?? "")
-      .location
-  );
 });
 
 test("ChatOpenAI can cache generations", async () => {
@@ -603,7 +656,7 @@ test("ChatOpenAI should not reuse cache if function call args have changed", asy
   updateSpy.mockRestore();
 });
 
-test.only("Test ChatOpenAI token usage reporting for streaming function calls", async () => {
+test("Test ChatOpenAI token usage reporting for streaming function calls", async () => {
   const humanMessage = "What a beautiful day!";
   const extractionFunctionSchema = {
     name: "extractor",
@@ -685,67 +738,81 @@ Non-streaming: ${JSON.stringify(nonStreamingResult || {})}`);
 });
 
 test("Test ChatOpenAI token usage reporting for streaming calls", async () => {
-  let streamingTokenUsed = -1;
-  let nonStreamingTokenUsed = -1;
-  const systemPrompt = "You are a helpful assistant";
-  const question = "What is the color of the night sky?";
+  // Running LangChain callbacks in the background will sometimes cause the callbackManager to execute
+  // after the test/llm call has already finished & returned. Set that environment variable to false
+  // to prevent that from happening.
+  const originalBackground = process.env.LANGCHAIN_CALLBACKS_BACKGROUND;
+  process.env.LANGCHAIN_CALLBACKS_BACKGROUND = "false";
 
-  const streamingModel = new ChatOpenAI({
-    modelName: "gpt-3.5-turbo",
-    streaming: true,
-    maxRetries: 10,
-    maxConcurrency: 10,
-    temperature: 0,
-    topP: 0,
-    callbacks: [
-      {
-        handleLLMEnd: async (output) => {
-          streamingTokenUsed =
-            output.llmOutput?.estimatedTokenUsage?.totalTokens;
-          console.log("streaming usage", output.llmOutput?.estimatedTokenUsage);
-        },
-        handleLLMError: async (err) => {
-          console.error(err);
-        },
-      },
-    ],
-  });
+  try {
+    let streamingTokenUsed = -1;
+    let nonStreamingTokenUsed = -1;
+    const systemPrompt = "You are a helpful assistant";
+    const question = "What is the color of the night sky?";
 
-  const nonStreamingModel = new ChatOpenAI({
-    modelName: "gpt-3.5-turbo",
-    streaming: false,
-    maxRetries: 10,
-    maxConcurrency: 10,
-    temperature: 0,
-    topP: 0,
-    callbacks: [
-      {
-        handleLLMEnd: async (output) => {
-          nonStreamingTokenUsed = output.llmOutput?.tokenUsage?.totalTokens;
-          console.log("non-streaming usage", output.llmOutput?.estimated);
+    const streamingModel = new ChatOpenAI({
+      modelName: "gpt-3.5-turbo",
+      streaming: true,
+      maxRetries: 10,
+      maxConcurrency: 10,
+      temperature: 0,
+      topP: 0,
+      callbacks: [
+        {
+          handleLLMEnd: async (output) => {
+            streamingTokenUsed =
+              output.llmOutput?.estimatedTokenUsage?.totalTokens;
+            console.log(
+              "streaming usage",
+              output.llmOutput?.estimatedTokenUsage
+            );
+          },
+          handleLLMError: async (err) => {
+            console.error(err);
+          },
         },
-        handleLLMError: async (err) => {
-          console.error(err);
+      ],
+    });
+
+    const nonStreamingModel = new ChatOpenAI({
+      modelName: "gpt-3.5-turbo",
+      streaming: false,
+      maxRetries: 10,
+      maxConcurrency: 10,
+      temperature: 0,
+      topP: 0,
+      callbacks: [
+        {
+          handleLLMEnd: async (output) => {
+            nonStreamingTokenUsed = output.llmOutput?.tokenUsage?.totalTokens;
+            console.log("non-streaming usage", output.llmOutput?.estimated);
+          },
+          handleLLMError: async (err) => {
+            console.error(err);
+          },
         },
-      },
-    ],
-  });
+      ],
+    });
 
-  const [nonStreamingResult, streamingResult] = await Promise.all([
-    nonStreamingModel.generate([
-      [new SystemMessage(systemPrompt), new HumanMessage(question)],
-    ]),
-    streamingModel.generate([
-      [new SystemMessage(systemPrompt), new HumanMessage(question)],
-    ]),
-  ]);
+    const [nonStreamingResult, streamingResult] = await Promise.all([
+      nonStreamingModel.generate([
+        [new SystemMessage(systemPrompt), new HumanMessage(question)],
+      ]),
+      streamingModel.generate([
+        [new SystemMessage(systemPrompt), new HumanMessage(question)],
+      ]),
+    ]);
 
-  expect(streamingTokenUsed).toBeGreaterThan(-1);
-  if (
-    nonStreamingResult.generations[0][0].text ===
-    streamingResult.generations[0][0].text
-  ) {
-    expect(streamingTokenUsed).toEqual(nonStreamingTokenUsed);
+    expect(streamingTokenUsed).toBeGreaterThan(-1);
+    if (
+      nonStreamingResult.generations[0][0].text ===
+      streamingResult.generations[0][0].text
+    ) {
+      expect(streamingTokenUsed).toEqual(nonStreamingTokenUsed);
+    }
+  } finally {
+    // Reset the environment variable
+    process.env.LANGCHAIN_CALLBACKS_BACKGROUND = originalBackground;
   }
 });
 
