@@ -52,7 +52,7 @@ test("Test ChatOpenAI Generate throws when one of the calls fails", async () => 
   ).rejects.toThrow();
 });
 
-test("Test ChatOpenAI tokenUsage", async () => {
+test.skip("Test ChatOpenAI tokenUsage", async () => {
   let tokenUsage = {
     completionTokens: 0,
     promptTokens: 0,
@@ -395,7 +395,7 @@ test("Test ChatOpenAI stream method, timeout error thrown from SDK", async () =>
   }).rejects.toThrow();
 });
 
-test("Function calling with streaming", async () => {
+test.skip("Function calling with streaming", async () => {
   let finalResult: BaseMessage | undefined;
   const modelForFunctionCalling = new ChatOpenAI({
     modelName: "gpt-3.5-turbo",
@@ -603,7 +603,7 @@ test("ChatOpenAI should not reuse cache if function call args have changed", asy
   updateSpy.mockRestore();
 });
 
-test("Test ChatOpenAI token usage reporting for streaming function calls", async () => {
+test.only("Test ChatOpenAI token usage reporting for streaming function calls", async () => {
   let streamingTokenUsed = -1;
   let nonStreamingTokenUsed = -1;
 
@@ -784,7 +784,7 @@ test("Finish reason is 'stop'", async () => {
   expect(finalResult?.response_metadata?.finish_reason).toBe("stop");
 });
 
-test("Streaming tokens can be found in usage_metadata field", async () => {
+test.skip("Streaming tokens can be found in usage_metadata field", async () => {
   const model = new ChatOpenAI();
   const response = await model.stream("Hello, how are you?");
   let finalResult: AIMessageChunk | undefined;

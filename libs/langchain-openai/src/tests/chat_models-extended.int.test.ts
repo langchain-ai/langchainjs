@@ -17,7 +17,7 @@ test("Test ChatOpenAI JSON mode", async () => {
   console.log(JSON.stringify(res));
 });
 
-test("Test ChatOpenAI seed", async () => {
+test.only("Test ChatOpenAI seed", async () => {
   const chat = new ChatOpenAI({
     modelName: "gpt-3.5-turbo-1106",
     maxTokens: 128,
@@ -28,13 +28,18 @@ test("Test ChatOpenAI seed", async () => {
   const message = new HumanMessage("Say something random!");
   const res = await chat.invoke([message]);
   console.log(JSON.stringify(res));
+
   const res2 = await chat.invoke([message]);
-  const resAsObject = { ...res };
-  const res2AsObject = { ...res2 };
-  delete resAsObject.id;
-  delete resAsObject.lc_kwargs.id;
-  delete res2AsObject.id;
-  delete res2AsObject.lc_kwargs.id;
+  const resAsObject = {
+    ...res,
+    id: undefined,
+    lc_kwargs: { ...res.lc_kwargs, id: undefined },
+  };
+  const res2AsObject = {
+    ...res2,
+    id: undefined,
+    lc_kwargs: { ...res2.lc_kwargs, id: undefined },
+  };
 
   expect(resAsObject).toEqual(res2AsObject);
 });

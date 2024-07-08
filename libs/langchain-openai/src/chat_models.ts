@@ -543,7 +543,10 @@ export class ChatOpenAI<
    * Get the parameters used to invoke the model
    */
   invocationParams(
-    options?: this["ParsedCallOptions"]
+    options?: this["ParsedCallOptions"],
+    extra?: {
+      streaming?: boolean
+    }
   ): Omit<OpenAIClient.Chat.ChatCompletionCreateParams, "messages"> {
     function isStructuredToolArray(
       tools?: unknown[]
@@ -558,7 +561,7 @@ export class ChatOpenAI<
     let streamOptionsConfig = {};
     if (options?.stream_options !== undefined) {
       streamOptionsConfig = { stream_options: options.stream_options };
-    } else if (this.streamUsage && this.streaming) {
+    } else if (this.streamUsage && (this.streaming || extra?.streaming)) {
       streamOptionsConfig = { stream_options: { include_usage: true } };
     }
     const params: Omit<
@@ -616,7 +619,9 @@ export class ChatOpenAI<
     const messagesMapped: OpenAICompletionParam[] =
       convertMessagesToOpenAIParams(messages);
     const params = {
-      ...this.invocationParams(options),
+      ...this.invocationParams(options, {
+        streaming: true,
+      }),
       messages: messagesMapped,
       stream: true as const,
     };
