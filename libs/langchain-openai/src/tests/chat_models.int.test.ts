@@ -1,3 +1,5 @@
+/* eslint-disable no-process-env */
+
 import { test, jest, expect } from "@jest/globals";
 import {
   AIMessageChunk,
@@ -18,6 +20,9 @@ import { CallbackManager } from "@langchain/core/callbacks/manager";
 import { NewTokenIndices } from "@langchain/core/callbacks/base";
 import { InMemoryCache } from "@langchain/core/caches";
 import { ChatOpenAI } from "../chat_models.js";
+
+// Save the original value of the 'LANGCHAIN_CALLBACKS_BACKGROUND' environment variable
+const originalBackground = process.env.LANGCHAIN_CALLBACKS_BACKGROUND;
 
 test("Test ChatOpenAI Generate", async () => {
   const chat = new ChatOpenAI({
@@ -56,7 +61,6 @@ test("Test ChatOpenAI tokenUsage", async () => {
   // Running LangChain callbacks in the background will sometimes cause the callbackManager to execute
   // after the test/llm call has already finished & returned. Set that environment variable to false
   // to prevent that from happening.
-  const originalBackground = process.env.LANGCHAIN_CALLBACKS_BACKGROUND;
   process.env.LANGCHAIN_CALLBACKS_BACKGROUND = "false";
 
   try {
@@ -89,7 +93,6 @@ test("Test ChatOpenAI tokenUsage with a batch", async () => {
   // Running LangChain callbacks in the background will sometimes cause the callbackManager to execute
   // after the test/llm call has already finished & returned. Set that environment variable to false
   // to prevent that from happening.
-  const originalBackground = process.env.LANGCHAIN_CALLBACKS_BACKGROUND;
   process.env.LANGCHAIN_CALLBACKS_BACKGROUND = "false";
 
   try {
@@ -124,7 +127,6 @@ test("Test ChatOpenAI in streaming mode", async () => {
   // Running LangChain callbacks in the background will sometimes cause the callbackManager to execute
   // after the test/llm call has already finished & returned. Set that environment variable to false
   // to prevent that from happening.
-  const originalBackground = process.env.LANGCHAIN_CALLBACKS_BACKGROUND;
   process.env.LANGCHAIN_CALLBACKS_BACKGROUND = "false";
 
   try {
@@ -160,7 +162,6 @@ test("Test ChatOpenAI in streaming mode with n > 1 and multiple prompts", async 
   // Running LangChain callbacks in the background will sometimes cause the callbackManager to execute
   // after the test/llm call has already finished & returned. Set that environment variable to false
   // to prevent that from happening.
-  const originalBackground = process.env.LANGCHAIN_CALLBACKS_BACKGROUND;
   process.env.LANGCHAIN_CALLBACKS_BACKGROUND = "false";
 
   try {
@@ -441,7 +442,6 @@ test("Function calling with streaming", async () => {
   // Running LangChain callbacks in the background will sometimes cause the callbackManager to execute
   // after the test/llm call has already finished & returned. Set that environment variable to false
   // to prevent that from happening.
-  const originalBackground = process.env.LANGCHAIN_CALLBACKS_BACKGROUND;
   process.env.LANGCHAIN_CALLBACKS_BACKGROUND = "false";
 
   try {
@@ -741,7 +741,6 @@ test("Test ChatOpenAI token usage reporting for streaming calls", async () => {
   // Running LangChain callbacks in the background will sometimes cause the callbackManager to execute
   // after the test/llm call has already finished & returned. Set that environment variable to false
   // to prevent that from happening.
-  const originalBackground = process.env.LANGCHAIN_CALLBACKS_BACKGROUND;
   process.env.LANGCHAIN_CALLBACKS_BACKGROUND = "false";
 
   try {
