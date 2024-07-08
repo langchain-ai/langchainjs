@@ -88,7 +88,7 @@ test("Test MistralAI in streaming mode", async () => {
   try {
     let nrNewTokens = 0;
     let streamedCompletion = "";
-  
+
     const model = new MistralAI({
       maxTokens: 5,
       model: "codestral-latest",
@@ -104,7 +104,7 @@ test("Test MistralAI in streaming mode", async () => {
       "Log 'Hello world' to the console in javascript: "
     );
     console.log({ res }, "Test MistralAI in streaming mode");
-  
+
     expect(nrNewTokens > 0).toBe(true);
     expect(res).toBe(streamedCompletion);
   } finally {
