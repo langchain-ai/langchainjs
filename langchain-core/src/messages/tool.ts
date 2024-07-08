@@ -8,6 +8,16 @@ import {
 } from "./base.js";
 
 export interface ToolMessageFieldsWithToolCallId extends BaseMessageFields {
+  /**
+   * The raw output of the tool.
+   *
+   * **Not part of the payload sent to the model.** Should only be specified if it is
+   * different from the message content, i.e. if only a subset of the full tool output
+   * is being passed as message content.
+   *
+   * `raw_output` is excluded when serializing the tool message.
+   */
+  raw_output?: unknown;
   tool_call_id: string;
 }
 
@@ -25,6 +35,17 @@ export class ToolMessage extends BaseMessage {
   }
 
   tool_call_id: string;
+
+  /**
+   * The raw output of the tool.
+   *
+   * **Not part of the payload sent to the model.** Should only be specified if it is
+   * different from the message content, i.e. if only a subset of the full tool output
+   * is being passed as message content.
+   *
+   * `raw_output` is excluded when serializing the tool message.
+   */
+  raw_output?: unknown;
 
   constructor(fields: ToolMessageFieldsWithToolCallId);
 
@@ -45,6 +66,7 @@ export class ToolMessage extends BaseMessage {
     }
     super(fields);
     this.tool_call_id = fields.tool_call_id;
+    this.raw_output = fields.raw_output;
   }
 
   _getType(): MessageType {
@@ -63,9 +85,21 @@ export class ToolMessage extends BaseMessage {
 export class ToolMessageChunk extends BaseMessageChunk {
   tool_call_id: string;
 
+  /**
+   * The raw output of the tool.
+   *
+   * **Not part of the payload sent to the model.** Should only be specified if it is
+   * different from the message content, i.e. if only a subset of the full tool output
+   * is being passed as message content.
+   *
+   * `raw_output` is excluded when serializing the tool message.
+   */
+  raw_output?: unknown;
+
   constructor(fields: ToolMessageFieldsWithToolCallId) {
     super(fields);
     this.tool_call_id = fields.tool_call_id;
+    this.raw_output = fields.raw_output;
   }
 
   static lc_name() {
