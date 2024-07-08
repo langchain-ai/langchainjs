@@ -545,7 +545,7 @@ export class ChatOpenAI<
   invocationParams(
     options?: this["ParsedCallOptions"],
     extra?: {
-      streaming?: boolean
+      streaming?: boolean;
     }
   ): Omit<OpenAIClient.Chat.ChatCompletionCreateParams, "messages"> {
     function isStructuredToolArray(

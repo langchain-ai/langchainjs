@@ -52,7 +52,7 @@ test("Test ChatOpenAI Generate throws when one of the calls fails", async () => 
   ).rejects.toThrow();
 });
 
-test.skip("Test ChatOpenAI tokenUsage", async () => {
+test("Test ChatOpenAI tokenUsage", async () => {
   let tokenUsage = {
     completionTokens: 0,
     promptTokens: 0,
@@ -395,7 +395,7 @@ test("Test ChatOpenAI stream method, timeout error thrown from SDK", async () =>
   }).rejects.toThrow();
 });
 
-test.skip("Function calling with streaming", async () => {
+test.only("Function calling with streaming", async () => {
   let finalResult: BaseMessage | undefined;
   const modelForFunctionCalling = new ChatOpenAI({
     modelName: "gpt-3.5-turbo",
@@ -604,9 +604,6 @@ test("ChatOpenAI should not reuse cache if function call args have changed", asy
 });
 
 test.only("Test ChatOpenAI token usage reporting for streaming function calls", async () => {
-  let streamingTokenUsed = -1;
-  let nonStreamingTokenUsed = -1;
-
   const humanMessage = "What a beautiful day!";
   const extractionFunctionSchema = {
     name: "extractor",
@@ -631,60 +628,37 @@ test.only("Test ChatOpenAI token usage reporting for streaming function calls", 
       required: ["tone", "word_count", "chat_response"],
     },
   };
+  const callOptions = {
+    seed: 42,
+    functions: [extractionFunctionSchema],
+    function_call: { name: "extractor" },
+  };
+  const constructorArgs = {
+    model: "gpt-3.5-turbo",
+    temperature: 0,
+  };
 
   const streamingModel = new ChatOpenAI({
-    modelName: "gpt-3.5-turbo",
+    ...constructorArgs,
     streaming: true,
-    maxRetries: 10,
-    maxConcurrency: 10,
-    temperature: 0,
-    topP: 0,
-    callbacks: [
-      {
-        handleLLMEnd: async (output) => {
-          streamingTokenUsed =
-            output.llmOutput?.estimatedTokenUsage?.totalTokens;
-          console.log("streaming usage", output.llmOutput?.estimatedTokenUsage);
-        },
-        handleLLMError: async (err) => {
-          console.error(err);
-        },
-      },
-    ],
-  }).bind({
-    seed: 42,
-    functions: [extractionFunctionSchema],
-    function_call: { name: "extractor" },
-  });
-
+  }).bind(callOptions);
   const nonStreamingModel = new ChatOpenAI({
-    modelName: "gpt-3.5-turbo",
+    ...constructorArgs,
     streaming: false,
-    maxRetries: 10,
-    maxConcurrency: 10,
-    temperature: 0,
-    topP: 0,
-    callbacks: [
-      {
-        handleLLMEnd: async (output) => {
-          nonStreamingTokenUsed = output.llmOutput?.tokenUsage?.totalTokens;
-          console.log("non-streaming usage", output.llmOutput?.tokenUsage);
-        },
-        handleLLMError: async (err) => {
-          console.error(err);
-        },
-      },
-    ],
-  }).bind({
-    seed: 42,
-    functions: [extractionFunctionSchema],
-    function_call: { name: "extractor" },
-  });
+  }).bind(callOptions);
 
   const [nonStreamingResult, streamingResult] = await Promise.all([
     nonStreamingModel.invoke([new HumanMessage(humanMessage)]),
     streamingModel.invoke([new HumanMessage(humanMessage)]),
   ]);
+
+  const tokenUsageStreaming = nonStreamingResult.usage_metadata;
+  const tokenUsageNonStreaming = streamingResult.usage_metadata;
+  if (!tokenUsageStreaming || !tokenUsageNonStreaming) {
+    throw new Error(`Token usage not found in response.
+Streaming: ${JSON.stringify(streamingResult || {})}
+Non-streaming: ${JSON.stringify(nonStreamingResult || {})}`);
+  }
 
   if (
     nonStreamingResult.additional_kwargs.function_call?.arguments &&
@@ -697,11 +671,17 @@ test.only("Test ChatOpenAI token usage reporting for streaming function calls", 
       JSON.parse(streamingResult.additional_kwargs.function_call.arguments)
     );
     if (nonStreamingArguments === streamingArguments) {
-      expect(streamingTokenUsed).toEqual(nonStreamingTokenUsed);
+      expect(tokenUsageStreaming).toEqual(tokenUsageNonStreaming);
     }
   }
 
-  expect(streamingTokenUsed).toBeGreaterThan(-1);
+  expect(tokenUsageStreaming.input_tokens).toBeGreaterThan(0);
+  expect(tokenUsageStreaming.output_tokens).toBeGreaterThan(0);
+  expect(tokenUsageStreaming.total_tokens).toBeGreaterThan(0);
+
+  expect(tokenUsageNonStreaming.input_tokens).toBeGreaterThan(0);
+  expect(tokenUsageNonStreaming.output_tokens).toBeGreaterThan(0);
+  expect(tokenUsageNonStreaming.total_tokens).toBeGreaterThan(0);
 });
 
 test("Test ChatOpenAI token usage reporting for streaming calls", async () => {
@@ -784,7 +764,7 @@ test("Finish reason is 'stop'", async () => {
   expect(finalResult?.response_metadata?.finish_reason).toBe("stop");
 });
 
-test.skip("Streaming tokens can be found in usage_metadata field", async () => {
+test("Streaming tokens can be found in usage_metadata field", async () => {
   const model = new ChatOpenAI();
   const response = await model.stream("Hello, how are you?");
   let finalResult: AIMessageChunk | undefined;
