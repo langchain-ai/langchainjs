@@ -1,6 +1,11 @@
+/* eslint-disable no-process-env */
+
 import { test, expect } from "@jest/globals";
 import { CallbackManager } from "@langchain/core/callbacks/manager";
 import { MistralAI } from "../llms.js";
+
+// Save the original value of the 'LANGCHAIN_CALLBACKS_BACKGROUND' environment variable
+const originalBackground = process.env.LANGCHAIN_CALLBACKS_BACKGROUND;
 
 test("Test MistralAI", async () => {
   const model = new MistralAI({
@@ -75,27 +80,37 @@ test("Test MistralAI with signal in call options", async () => {
 }, 5000);
 
 test("Test MistralAI in streaming mode", async () => {
-  let nrNewTokens = 0;
-  let streamedCompletion = "";
+  // Running LangChain callbacks in the background will sometimes cause the callbackManager to execute
+  // after the test/llm call has already finished & returned. Set that environment variable to false
+  // to prevent that from happening.
+  process.env.LANGCHAIN_CALLBACKS_BACKGROUND = "false";
 
-  const model = new MistralAI({
-    maxTokens: 5,
-    model: "codestral-latest",
-    streaming: true,
-    callbacks: CallbackManager.fromHandlers({
-      async handleLLMNewToken(token: string) {
-        nrNewTokens += 1;
-        streamedCompletion += token;
-      },
-    }),
-  });
-  const res = await model.invoke(
-    "Log 'Hello world' to the console in javascript: "
-  );
-  console.log({ res }, "Test MistralAI in streaming mode");
+  try {
+    let nrNewTokens = 0;
+    let streamedCompletion = "";
 
-  expect(nrNewTokens > 0).toBe(true);
-  expect(res).toBe(streamedCompletion);
+    const model = new MistralAI({
+      maxTokens: 5,
+      model: "codestral-latest",
+      streaming: true,
+      callbacks: CallbackManager.fromHandlers({
+        async handleLLMNewToken(token: string) {
+          nrNewTokens += 1;
+          streamedCompletion += token;
+        },
+      }),
+    });
+    const res = await model.invoke(
+      "Log 'Hello world' to the console in javascript: "
+    );
+    console.log({ res }, "Test MistralAI in streaming mode");
+
+    expect(nrNewTokens > 0).toBe(true);
+    expect(res).toBe(streamedCompletion);
+  } finally {
+    // Reset the environment variable
+    process.env.LANGCHAIN_CALLBACKS_BACKGROUND = originalBackground;
+  }
 });
 
 test("Test MistralAI stream method", async () => {
