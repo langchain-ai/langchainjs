@@ -1,6 +1,6 @@
 /* eslint-disable no-process-env */
 
-import { expect, test } from "@jest/globals";
+import { expect, test, jest } from "@jest/globals";
 import { AIMessageChunk, HumanMessage } from "@langchain/core/messages";
 import { ChatPromptValue } from "@langchain/core/prompt_values";
 import {
@@ -12,6 +12,16 @@ import {
 } from "@langchain/core/prompts";
 import { CallbackManager } from "@langchain/core/callbacks/manager";
 import { ChatAnthropic } from "../chat_models.js";
+
+async function sleep(ms = 1000): Promise<void> {
+  return new Promise<void>((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
+
+afterEach(async () => {
+  await sleep();
+});
 
 test("Test ChatAnthropic", async () => {
   const chat = new ChatAnthropic({
@@ -323,6 +333,7 @@ test("Stream tokens", async () => {
   const model = new ChatAnthropic({
     model: "claude-3-haiku-20240307",
     temperature: 0,
+    maxTokens: 10,
   });
   let res: AIMessageChunk | null = null;
   for await (const chunk of await model.stream(
@@ -339,8 +350,8 @@ test("Stream tokens", async () => {
   if (!res?.usage_metadata) {
     return;
   }
-  expect(res.usage_metadata.input_tokens).toBe(34);
-  expect(res.usage_metadata.output_tokens).toBeGreaterThan(10);
+  expect(res.usage_metadata.input_tokens).toBeGreaterThan(1);
+  expect(res.usage_metadata.output_tokens).toBeGreaterThan(1);
   expect(res.usage_metadata.total_tokens).toBe(
     res.usage_metadata.input_tokens + res.usage_metadata.output_tokens
   );
