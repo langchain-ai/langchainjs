@@ -13,16 +13,6 @@ import {
 import { CallbackManager } from "@langchain/core/callbacks/manager";
 import { ChatAnthropic } from "../chat_models.js";
 
-async function sleep(ms = 1000): Promise<void> {
-  return new Promise<void>((resolve) => {
-    setTimeout(resolve, ms);
-  });
-}
-
-afterEach(async () => {
-  await sleep();
-});
-
 test("Test ChatAnthropic", async () => {
   const chat = new ChatAnthropic({
     modelName: "claude-3-sonnet-20240229",
