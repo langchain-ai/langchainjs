@@ -16,6 +16,7 @@ import {
 import type { SerializedFields } from "../load/map_keys.js";
 import type { DocumentInterface } from "../documents/document.js";
 import { getEnvironmentVariable } from "../utils/env.js";
+import { ToolMessage } from "../messages/tool.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Error = any;
@@ -197,7 +198,7 @@ abstract class BaseCallbackHandlerMethodsClass {
    * Called at the end of a Tool run, with the tool output and the run ID.
    */
   handleToolEnd?(
-    output: string,
+    output: string | ToolMessage,
     runId: string,
     parentRunId?: string,
     tags?: string[]
