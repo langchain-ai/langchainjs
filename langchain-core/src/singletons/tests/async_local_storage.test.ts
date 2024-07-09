@@ -52,7 +52,6 @@ test("Config should be automatically populated after setting global async local 
   );
   const chunks = [];
   for await (const chunk of stream) {
-    console.log(chunk);
     chunks.push(chunk);
   }
   expect(chunks.length).toEqual(1);
@@ -87,7 +86,6 @@ test("Config should be automatically populated after setting global async local 
   );
   const chunks2 = [];
   for await (const chunk of stream2) {
-    console.log(chunk);
     chunks2.push(chunk);
   }
   expect(chunks2.length).toEqual(1);
@@ -131,7 +129,6 @@ test("Config should be automatically populated after setting global async local 
   );
   const events = [];
   for await (const event of eventStream) {
-    console.log(event);
     events.push(event);
   }
   expect(
@@ -159,12 +156,12 @@ test("Runnable streamEvents method with streaming nested in a RunnableLambda", a
 
     const nestedLambdaWithOverriddenCallbacks = RunnableLambda.from(
       async (_: string, config) => {
-        expect(config?.callbacks).toBeUndefined();
+        expect(config?.callbacks?.handlers).toEqual([]);
       }
     );
     await nestedLambdaWithOverriddenCallbacks.invoke(input, {
       runId: innerRunId,
-      callbacks: undefined,
+      callbacks: [],
     });
 
     const nestedLambdaWithoutOverriddenCallbacks = RunnableLambda.from(
