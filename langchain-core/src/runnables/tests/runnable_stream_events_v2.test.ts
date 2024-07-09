@@ -1009,7 +1009,7 @@ test("Chat model that supports streaming, but is invoked, should still emit on_s
       event: "on_chat_model_start",
       name: "my_model",
       run_id: expect.any(String),
-      tags: expect.arrayContaining(["seq:step:2", "my_model", "my_chain"]),
+      tags: expect.arrayContaining(["my_model", "my_chain"]),
       metadata: {
         foo: "bar",
         a: "b",
@@ -1027,7 +1027,7 @@ test("Chat model that supports streaming, but is invoked, should still emit on_s
     {
       event: "on_chat_model_stream",
       run_id: expect.any(String),
-      tags: expect.arrayContaining(["my_chain", "my_model", "seq:step:2"]),
+      tags: expect.arrayContaining(["my_chain", "my_model"]),
       metadata: {
         a: "b",
         foo: "bar",
@@ -1040,7 +1040,7 @@ test("Chat model that supports streaming, but is invoked, should still emit on_s
     {
       event: "on_chat_model_stream",
       run_id: expect.any(String),
-      tags: expect.arrayContaining(["my_chain", "my_model", "seq:step:2"]),
+      tags: expect.arrayContaining(["my_chain", "my_model"]),
       metadata: {
         a: "b",
         foo: "bar",
@@ -1053,7 +1053,7 @@ test("Chat model that supports streaming, but is invoked, should still emit on_s
     {
       event: "on_chat_model_stream",
       run_id: expect.any(String),
-      tags: expect.arrayContaining(["my_chain", "my_model", "seq:step:2"]),
+      tags: expect.arrayContaining(["my_chain", "my_model"]),
       metadata: {
         a: "b",
         foo: "bar",
@@ -1066,7 +1066,7 @@ test("Chat model that supports streaming, but is invoked, should still emit on_s
     {
       event: "on_chat_model_stream",
       run_id: expect.any(String),
-      tags: expect.arrayContaining(["my_chain", "my_model", "seq:step:2"]),
+      tags: expect.arrayContaining(["my_chain", "my_model"]),
       metadata: {
         a: "b",
         foo: "bar",
@@ -1080,7 +1080,7 @@ test("Chat model that supports streaming, but is invoked, should still emit on_s
       event: "on_chat_model_end",
       name: "my_model",
       run_id: expect.any(String),
-      tags: expect.arrayContaining(["seq:step:2", "my_model", "my_chain"]),
+      tags: expect.arrayContaining(["my_model", "my_chain"]),
       metadata: {
         foo: "bar",
         a: "b",
@@ -1227,7 +1227,7 @@ test("Chat model that doesn't support streaming, but is invoked, should emit one
       event: "on_chat_model_start",
       name: "my_model",
       run_id: expect.any(String),
-      tags: expect.arrayContaining(["seq:step:2", "my_model", "my_chain"]),
+      tags: expect.arrayContaining(["my_model", "my_chain"]),
       metadata: {
         foo: "bar",
         a: "b",
@@ -1245,7 +1245,7 @@ test("Chat model that doesn't support streaming, but is invoked, should emit one
     {
       event: "on_chat_model_stream",
       run_id: expect.any(String),
-      tags: expect.arrayContaining(["my_chain", "my_model", "seq:step:2"]),
+      tags: expect.arrayContaining(["my_chain", "my_model"]),
       metadata: {
         a: "b",
         foo: "bar",
@@ -1259,7 +1259,7 @@ test("Chat model that doesn't support streaming, but is invoked, should emit one
       event: "on_chat_model_end",
       name: "my_model",
       run_id: expect.any(String),
-      tags: expect.arrayContaining(["seq:step:2", "my_model", "my_chain"]),
+      tags: expect.arrayContaining(["my_model", "my_chain"]),
       metadata: {
         foo: "bar",
         a: "b",
@@ -1417,7 +1417,7 @@ test("LLM that supports streaming, but is invoked, should still emit on_stream e
         },
       },
       name: "my_model",
-      tags: ["seq:step:2", "my_model", "my_chain"],
+      tags: ["my_model", "my_chain"],
       run_id: expect.any(String),
       metadata: {
         foo: "bar",
@@ -1433,7 +1433,7 @@ test("LLM that supports streaming, but is invoked, should still emit on_stream e
       },
       run_id: expect.any(String),
       name: "my_model",
-      tags: ["seq:step:2", "my_model", "my_chain"],
+      tags: ["my_model", "my_chain"],
       metadata: {
         foo: "bar",
         a: "b",
@@ -1448,7 +1448,7 @@ test("LLM that supports streaming, but is invoked, should still emit on_stream e
       },
       run_id: expect.any(String),
       name: "my_model",
-      tags: ["seq:step:2", "my_model", "my_chain"],
+      tags: ["my_model", "my_chain"],
       metadata: {
         foo: "bar",
         a: "b",
@@ -1463,7 +1463,7 @@ test("LLM that supports streaming, but is invoked, should still emit on_stream e
       },
       run_id: expect.any(String),
       name: "my_model",
-      tags: ["seq:step:2", "my_model", "my_chain"],
+      tags: ["my_model", "my_chain"],
       metadata: {
         foo: "bar",
         a: "b",
@@ -1478,7 +1478,7 @@ test("LLM that supports streaming, but is invoked, should still emit on_stream e
       },
       run_id: expect.any(String),
       name: "my_model",
-      tags: ["seq:step:2", "my_model", "my_chain"],
+      tags: ["my_model", "my_chain"],
       metadata: {
         foo: "bar",
         a: "b",
@@ -1504,7 +1504,7 @@ test("LLM that supports streaming, but is invoked, should still emit on_stream e
       },
       run_id: expect.any(String),
       name: "my_model",
-      tags: ["seq:step:2", "my_model", "my_chain"],
+      tags: ["my_model", "my_chain"],
       metadata: {
         foo: "bar",
         a: "b",
@@ -1654,7 +1654,7 @@ test("LLM that doesn't support streaming, but is invoked, should emit one on_str
         },
       },
       name: "my_model",
-      tags: ["seq:step:2", "my_model", "my_chain"],
+      tags: ["my_model", "my_chain"],
       run_id: expect.any(String),
       metadata: {
         foo: "bar",
@@ -1670,7 +1670,7 @@ test("LLM that doesn't support streaming, but is invoked, should emit one on_str
       },
       run_id: expect.any(String),
       name: "my_model",
-      tags: ["seq:step:2", "my_model", "my_chain"],
+      tags: ["my_model", "my_chain"],
       metadata: {
         foo: "bar",
         a: "b",
@@ -1696,7 +1696,7 @@ test("LLM that doesn't support streaming, but is invoked, should emit one on_str
       },
       run_id: expect.any(String),
       name: "my_model",
-      tags: ["seq:step:2", "my_model", "my_chain"],
+      tags: ["my_model", "my_chain"],
       metadata: {
         foo: "bar",
         a: "b",
