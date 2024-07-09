@@ -1,3 +1,5 @@
+/* eslint-disable no-process-env */
+
 import { test, expect } from "@jest/globals";
 import { LLMResult } from "@langchain/core/outputs";
 import { StringPromptValue } from "@langchain/core/prompt_values";
@@ -5,6 +7,9 @@ import { CallbackManager } from "@langchain/core/callbacks/manager";
 import { NewTokenIndices } from "@langchain/core/callbacks/base";
 import { OpenAIChat } from "../legacy.js";
 import { OpenAI } from "../llms.js";
+
+// Save the original value of the 'LANGCHAIN_CALLBACKS_BACKGROUND' environment variable
+const originalBackground = process.env.LANGCHAIN_CALLBACKS_BACKGROUND;
 
 test("Test OpenAI", async () => {
   const model = new OpenAI({
@@ -140,25 +145,35 @@ test("Test OpenAI with versioned instruct model returns OpenAI", async () => {
 });
 
 test("Test ChatOpenAI tokenUsage", async () => {
-  let tokenUsage = {
-    completionTokens: 0,
-    promptTokens: 0,
-    totalTokens: 0,
-  };
+  // Running LangChain callbacks in the background will sometimes cause the callbackManager to execute
+  // after the test/llm call has already finished & returned. Set that environment variable to false
+  // to prevent that from happening.
+  process.env.LANGCHAIN_CALLBACKS_BACKGROUND = "false";
 
-  const model = new OpenAI({
-    maxTokens: 5,
-    modelName: "gpt-3.5-turbo-instruct",
-    callbackManager: CallbackManager.fromHandlers({
-      async handleLLMEnd(output: LLMResult) {
-        tokenUsage = output.llmOutput?.tokenUsage;
-      },
-    }),
-  });
-  const res = await model.invoke("Hello");
-  console.log({ res });
+  try {
+    let tokenUsage = {
+      completionTokens: 0,
+      promptTokens: 0,
+      totalTokens: 0,
+    };
 
-  expect(tokenUsage.promptTokens).toBe(1);
+    const model = new OpenAI({
+      maxTokens: 5,
+      modelName: "gpt-3.5-turbo-instruct",
+      callbackManager: CallbackManager.fromHandlers({
+        async handleLLMEnd(output: LLMResult) {
+          tokenUsage = output.llmOutput?.tokenUsage;
+        },
+      }),
+    });
+    const res = await model.invoke("Hello");
+    console.log({ res });
+
+    expect(tokenUsage.promptTokens).toBe(1);
+  } finally {
+    // Reset the environment variable
+    process.env.LANGCHAIN_CALLBACKS_BACKGROUND = originalBackground;
+  }
 });
 
 test("Test OpenAI in streaming mode", async () => {

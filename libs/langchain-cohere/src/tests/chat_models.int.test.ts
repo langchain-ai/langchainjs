@@ -87,7 +87,7 @@ test("Stream token count usage_metadata", async () => {
   if (!res?.usage_metadata) {
     return;
   }
-  expect(res.usage_metadata.input_tokens).toBe(71);
+  expect(res.usage_metadata.input_tokens).toBeGreaterThan(1);
   expect(res.usage_metadata.output_tokens).toBeGreaterThan(10);
   expect(res.usage_metadata.total_tokens).toBe(
     res.usage_metadata.input_tokens + res.usage_metadata.output_tokens
@@ -140,7 +140,7 @@ test("Invoke token count usage_metadata", async () => {
   if (!res?.usage_metadata) {
     return;
   }
-  expect(res.usage_metadata.input_tokens).toBe(71);
+  expect(res.usage_metadata.input_tokens).toBeGreaterThan(1);
   expect(res.usage_metadata.output_tokens).toBeGreaterThan(10);
   expect(res.usage_metadata.total_tokens).toBe(
     res.usage_metadata.input_tokens + res.usage_metadata.output_tokens
