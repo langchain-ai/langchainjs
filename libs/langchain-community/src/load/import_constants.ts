@@ -183,4 +183,5 @@ export const optionalImportEntrypoints: string[] = [
   "langchain_community/experimental/multimodal_embeddings/googlevertexai",
   "langchain_community/experimental/hubs/makersuite/googlemakersuitehub",
   "langchain_community/chains/graph_qa/cypher",
+  "langchain_community/langgraph/checkpointers/vercel_kv",
 ];
