@@ -3,7 +3,6 @@ import { ChatPromptTemplate } from "@langchain/core/prompts";
 
 const model = new ChatCohere({
   apiKey: process.env.COHERE_API_KEY, // Default
-  model: "command", // Default
 });
 const prompt = ChatPromptTemplate.fromMessages([
   ["ai", "You are a helpful assistant"],
