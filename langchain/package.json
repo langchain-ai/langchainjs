@@ -677,7 +677,7 @@
     "srt-parser-2": "^1.2.3",
     "ts-jest": "^29.1.0",
     "typeorm": "^0.3.20",
-    "typescript": "~5.1.6",
+    "typescript": "^5.4.5",
     "weaviate-ts-client": "^2.0.0",
     "web-auth-library": "^1.0.3",
     "wikipedia": "^2.1.2",

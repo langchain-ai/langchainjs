@@ -4,8 +4,12 @@
     "outDir": "./dist",
     "rootDir": "./",
     "target": "ES2021",
-    "lib": ["ES2021", "ES2022.Object", "DOM"],
-    "module": "ES2020",
+    "lib": [
+      "ES2021",
+      "ES2022.Object",
+      "DOM"
+    ],
+    "module": "NodeNext",
     "moduleResolution": "nodenext",
     "esModuleInterop": true,
     "declaration": true,
@@ -19,5 +23,9 @@
     "strict": true,
     "resolveJsonModule": true
   },
-  "exclude": ["node_modules", "dist", "template"]
+  "exclude": [
+    "node_modules",
+    "dist",
+    "template"
+  ]
 }

@@ -592,6 +592,26 @@ export async function moveAndRename({
   }
 }
 
+async function buildESM(): Promise<void> {
+  await tryCatchDeleteFile("src/package.json");
+  return asyncSpawn("tsc", ["--outDir", "dist/"]);
+}
+
+async function buildCJS(): Promise<void> {
+  // Required for proper CJS compilation with TS ^5.4.5
+  await fs.promises.writeFile("src/package.json", "{}");
+
+  return asyncSpawn("tsc", ["--outDir", "dist-cjs/", "-p", "tsconfig.cjs.json"]);
+}
+
+async function tryCatchDeleteFile(filePath: string): Promise<void> {
+  try {
+    await fs.promises.unlink(filePath);
+  } catch {
+    // no-op
+  }
+}
+
 export async function buildWithTSup() {
   const {
     shouldCreateEntrypoints,
@@ -622,10 +642,8 @@ export async function buildWithTSup() {
   }
 
   if (shouldCreateEntrypoints) {
-    await Promise.all([
-      asyncSpawn("tsc", ["--outDir", "dist/"]),
-      asyncSpawn("tsc", ["--outDir", "dist-cjs/", "-p", "tsconfig.cjs.json"]),
-    ]);
+    await buildESM();
+    await buildCJS();
     await moveAndRename({
       source: config.cjsSource,
       dest: config.cjsDestination,
@@ -637,6 +655,7 @@ export async function buildWithTSup() {
       rimraf("dist-cjs"),
       rimraf("dist/tests"),
       rimraf("dist/**/tests"),
+      tryCatchDeleteFile("src/package.json"),
     ]);
   }
 
