@@ -135,7 +135,8 @@ export function ensureConfig<CallOptions extends RunnableConfig>(
     runId: undefined,
   };
   if (implicitConfig) {
-    // Don't allow runId to be loaded implicitly
+    // Don't allow runId to be loaded implicitly, as this can cause
+    // child runs to improperly inherit their parents' run ids.
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { runId, ...rest } = implicitConfig;
     empty = { ...empty, ...rest };
