@@ -1101,7 +1101,7 @@ export abstract class Runnable<
   asTool(fields: {
     name?: string;
     description?: string;
-    schema: ZodAny;
+    schema: ZodAny | z.ZodString;
   }): StructuredTool {
     return convertRunnableToTool(this, fields);
   }
@@ -3343,30 +3343,46 @@ export function convertRunnableToTool(
   fields: {
     name?: string;
     description?: string;
-    schema: ZodAny;
+    schema: ZodAny | z.ZodString;
   }
 ): StructuredTool {
   const description =
     fields.description ?? _getDescriptionFromRunnable(fields.schema);
   const name = fields.name ?? runnable.getName();
-  const schema = zodToJsonSchema<"jsonSchema7">(fields.schema);
 
-  if ("type" in schema && schema.type === "object" && "properties" in schema) {
-    // Object input
-    return new DynamicStructuredTool({
-      func: async (input, _runManager, config) =>
-        runnable.invoke(input, config),
-      name,
-      description,
-      schema: fields.schema,
-    });
-  } else {
-    // string input
+  if (fields.schema._def.typeName === z.ZodFirstPartyTypeKind.ZodString) {
     return new DynamicTool({
       func: async (input, _runManager, config) =>
         runnable.invoke(input, config),
       name,
       description,
     });
+  } else {
+    return new DynamicStructuredTool({
+      func: async (input, _runManager, config) =>
+        runnable.invoke(input, config),
+      name,
+      description,
+      schema: fields.schema as ZodAny,
+    });
   }
+
+  // if ("type" in schema && schema.type === "object" && "properties" in schema) {
+  //   // Object input
+  //   return new DynamicStructuredTool({
+  //     func: async (input, _runManager, config) =>
+  //       runnable.invoke(input, config),
+  //     name,
+  //     description,
+  //     schema: fields.schema,
+  //   });
+  // } else {
+  //   // string input
+  //   return new DynamicTool({
+  //     func: async (input, _runManager, config) =>
+  //       runnable.invoke(input, config),
+  //     name,
+  //     description,
+  //   });
+  // }
 }
