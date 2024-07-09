@@ -52,6 +52,8 @@ import {
   isIterableIterator,
   isIterator,
 } from "./iter.js";
+import { StructuredTool, convertRunnableToTool } from "../tools.js";
+import { ZodAny } from "../types/zod.js";
 
 export { type RunnableInterface, RunnableBatchOptions };
 
@@ -1077,6 +1079,25 @@ export abstract class Runnable<
         }),
       ],
     });
+  }
+
+  /**
+   * Convert a runnable to a tool. Return a new instance of either
+   * `StructuredTool` if the input schema requires an object, or
+   * `Tool` if the input schema requires a single string.
+   *
+   * @param fields
+   * @param {string | undefined} [fields.name] The name of the tool. If not provided, it will default to the name of the runnable.
+   * @param {string | undefined} [fields.description] The description of the tool. If not provided, it will default to `Takes {schema}` where `schema` is a JSON string representation of the input schema.
+   * @param {ZodAny} [fields.schema] The Zod schema for the input of the tool.
+   * @returns {StructuredTool}
+   */
+  asTool(fields: {
+    name?: string;
+    description?: string;
+    schema: ZodAny;
+  }): StructuredTool {
+    return convertRunnableToTool(this, fields);
   }
 }
 

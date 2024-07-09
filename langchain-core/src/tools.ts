@@ -10,10 +10,13 @@ import {
   type BaseLangChainParams,
 } from "./language_models/base.js";
 import { ensureConfig, type RunnableConfig } from "./runnables/config.js";
-import type { RunnableFunc, RunnableInterface } from "./runnables/base.js";
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type ZodAny = z.ZodObject<any, any, any, any>;
+import type {
+  Runnable,
+  RunnableFunc,
+  RunnableInterface,
+} from "./runnables/base.js";
+import { type ZodAny } from "./types/zod.js";
+import { zodToJsonSchema } from "zod-to-json-schema";
 
 /**
  * Parameters for the Tool classes.
@@ -415,4 +418,52 @@ export function tool<RunInput extends ZodAny = ZodAny>(
     schema: schema as RunInput,
     func: async (input, _runManager, config) => func(input, config),
   });
+}
+
+/**
+ * Generate a placeholder description of a runnable
+ */
+const _getDescriptionFromRunnable = (schema: Record<string, any>): string => {
+  return `Takes ${JSON.stringify(schema, null, 2)}`;
+};
+
+/**
+ * Given a runnable and a Zod schema, convert the runnable to a tool.
+ *
+ * @param {Runnable} runnable The runnable to convert to a tool.
+ * @param fields
+ * @param {string | undefined} [fields.name] The name of the tool. If not provided, it will default to the name of the runnable.
+ * @param {string | undefined} [fields.description] The description of the tool. If not provided, it will default to `Takes {schema}` where `schema` is a JSON string representation of the input schema.
+ * @param {ZodAny} [fields.schema] The Zod schema for the input of the tool.
+ * @returns {StructuredTool} The tool created from the runnable.
+ */
+export function convertRunnableToTool(
+  runnable: Runnable,
+  fields: {
+    name?: string;
+    description?: string;
+    schema: ZodAny;
+  }
+): StructuredTool {
+  const description =
+    fields.description ?? _getDescriptionFromRunnable(fields.schema);
+  const name = fields.name ?? runnable.getName();
+  const schema = zodToJsonSchema<"jsonSchema7">(fields.schema);
+
+  if ("type" in schema && schema.type === "object" && "properties" in schema) {
+    // Object input
+    return tool(runnable.invoke, {
+      name,
+      description,
+      schema: fields.schema,
+    });
+  } else {
+    // string input
+    return new DynamicTool({
+      func: async (input, _runManager, config) =>
+        runnable.invoke(input, config),
+      name,
+      description,
+    });
+  }
 }
