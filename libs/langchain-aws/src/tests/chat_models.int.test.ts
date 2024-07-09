@@ -1,9 +1,13 @@
 /* eslint-disable no-process-env */
+
 import { test, expect } from "@jest/globals";
 import { AIMessageChunk, HumanMessage } from "@langchain/core/messages";
 import { tool } from "@langchain/core/tools";
 import { z } from "zod";
 import { ChatBedrockConverse } from "../chat_models.js";
+
+// Save the original value of the 'LANGCHAIN_CALLBACKS_BACKGROUND' environment variable
+const originalBackground = process.env.LANGCHAIN_CALLBACKS_BACKGROUND;
 
 const baseConstructorArgs: Partial<
   ConstructorParameters<typeof ChatBedrockConverse>[0]
@@ -44,28 +48,38 @@ test("Test ChatBedrockConverse stream method", async () => {
 });
 
 test("Test ChatBedrockConverse in streaming mode", async () => {
-  let nrNewTokens = 0;
-  let streamedCompletion = "";
+  // Running LangChain callbacks in the background will sometimes cause the callbackManager to execute
+  // after the test/llm call has already finished & returned. Set that environment variable to false
+  // to prevent that from happening.
+  process.env.LANGCHAIN_CALLBACKS_BACKGROUND = "false";
 
-  const model = new ChatBedrockConverse({
-    ...baseConstructorArgs,
-    streaming: true,
-    maxTokens: 10,
-    callbacks: [
-      {
-        async handleLLMNewToken(token: string) {
-          nrNewTokens += 1;
-          streamedCompletion += token;
+  try {
+    let nrNewTokens = 0;
+    let streamedCompletion = "";
+
+    const model = new ChatBedrockConverse({
+      ...baseConstructorArgs,
+      streaming: true,
+      maxTokens: 10,
+      callbacks: [
+        {
+          async handleLLMNewToken(token: string) {
+            nrNewTokens += 1;
+            streamedCompletion += token;
+          },
         },
-      },
-    ],
-  });
-  const message = new HumanMessage("Hello!");
-  const result = await model.invoke([message]);
-  console.log(result);
+      ],
+    });
+    const message = new HumanMessage("Hello!");
+    const result = await model.invoke([message]);
+    console.log(result);
 
-  expect(nrNewTokens > 0).toBe(true);
-  expect(result.content).toBe(streamedCompletion);
+    expect(nrNewTokens > 0).toBe(true);
+    expect(result.content).toBe(streamedCompletion);
+  } finally {
+    // Reset the environment variable
+    process.env.LANGCHAIN_CALLBACKS_BACKGROUND = originalBackground;
+  }
 }, 10000);
 
 test("Test ChatBedrockConverse with stop", async () => {

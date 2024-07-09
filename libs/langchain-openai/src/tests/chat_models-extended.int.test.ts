@@ -28,8 +28,20 @@ test("Test ChatOpenAI seed", async () => {
   const message = new HumanMessage("Say something random!");
   const res = await chat.invoke([message]);
   console.log(JSON.stringify(res));
+
   const res2 = await chat.invoke([message]);
-  expect(res).toEqual(res2);
+  const resAsObject = {
+    ...res,
+    id: undefined,
+    lc_kwargs: { ...res.lc_kwargs, id: undefined },
+  };
+  const res2AsObject = {
+    ...res2,
+    id: undefined,
+    lc_kwargs: { ...res2.lc_kwargs, id: undefined },
+  };
+
+  expect(resAsObject).toEqual(res2AsObject);
 });
 
 test("Test ChatOpenAI tool calling", async () => {
