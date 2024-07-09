@@ -18,7 +18,7 @@
     "@langchain/core": "workspace:*",
     "@langchain/openai": "workspace:*",
     "langchain": "workspace:*",
-    "typescript": "^5.0.0",
+    "typescript": "^5.4.5",
     "vite": "^4.2.0"
   },
   "resolutions": {

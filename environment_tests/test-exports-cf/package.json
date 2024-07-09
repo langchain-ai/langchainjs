@@ -15,7 +15,7 @@
     "langchain": "workspace:*",
     "wrangler": "3.7.0",
     "vitest": "0.34.3",
-    "typescript": "^5.0.3"
+    "typescript": "^5.4.5"
   },
   "private": true,
   "scripts": {
