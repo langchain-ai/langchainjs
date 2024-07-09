@@ -7,10 +7,7 @@ import {
   isTraceableFunction,
 } from "langsmith/singletons/traceable";
 import type { RunnableInterface, RunnableBatchOptions } from "./types.js";
-import {
-  CallbackManager,
-  CallbackManagerForChainRun,
-} from "../callbacks/manager.js";
+import { CallbackManagerForChainRun } from "../callbacks/manager.js";
 import {
   LogStreamCallbackHandler,
   LogStreamCallbackHandlerInput,
@@ -62,11 +59,17 @@ export { type RunnableInterface, RunnableBatchOptions };
 export type RunnableFunc<RunInput, RunOutput> = (
   input: RunInput,
   options?:
-    | ({ config?: RunnableConfig } & RunnableConfig)
+    | ({
+        /** @deprecated Use top-level config fields instead. */
+        config?: RunnableConfig;
+      } & RunnableConfig)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     | Record<string, any>
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    | (Record<string, any> & { config: RunnableConfig } & RunnableConfig)
+    | (Record<string, any> & {
+        /** @deprecated Use top-level config fields instead. */
+        config: RunnableConfig;
+      } & RunnableConfig)
 ) => RunOutput | Promise<RunOutput>;
 
 export type RunnableMapLike<RunInput, RunOutput> = {
@@ -2318,15 +2321,19 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
         }
       }
     }
+    const childConfig = patchConfig(config, {
+      callbacks: runManager?.getChild(),
+      recursionLimit: (config?.recursionLimit ?? DEFAULT_RECURSION_LIMIT) - 1,
+    });
     const output = await new Promise<RunOutput | Runnable>(
       (resolve, reject) => {
         void AsyncLocalStorageProviderSingleton.getInstance().run(
-          config,
+          childConfig,
           async () => {
             try {
               const res = await this.func(finalChunk as RunInput, {
-                ...config,
-                config,
+                ...childConfig,
+                config: childConfig,
               });
               resolve(res);
             } catch (e) {
@@ -2340,23 +2347,19 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
       if (config?.recursionLimit === 0) {
         throw new Error("Recursion limit reached.");
       }
-      const stream = await output.stream(
-        finalChunk as RunInput,
-        patchConfig(config, {
-          callbacks: runManager?.getChild(),
-          recursionLimit:
-            (config?.recursionLimit ?? DEFAULT_RECURSION_LIMIT) - 1,
-        })
-      );
+      const stream = await output.stream(finalChunk as RunInput, childConfig);
       for await (const chunk of stream) {
         yield chunk;
       }
     } else if (isAsyncIterable(output)) {
-      for await (const chunk of consumeAsyncIterableInContext(config, output)) {
+      for await (const chunk of consumeAsyncIterableInContext(
+        childConfig,
+        output
+      )) {
         yield chunk as RunOutput;
       }
     } else if (isIterableIterator(output)) {
-      for (const chunk of consumeIteratorInContext(config, output)) {
+      for (const chunk of consumeIteratorInContext(childConfig, output)) {
         yield chunk as RunOutput;
       }
     } else {
@@ -2433,14 +2436,9 @@ export class RunnableWithFallbacks<RunInput, RunOutput> extends Runnable<
     input: RunInput,
     options?: Partial<RunnableConfig>
   ): Promise<RunOutput> {
-    const callbackManager_ = await CallbackManager.configure(
-      options?.callbacks,
-      undefined,
-      options?.tags,
-      undefined,
-      options?.metadata
-    );
-    const { runId, ...otherOptions } = options ?? {};
+    const config = ensureConfig(options);
+    const callbackManager_ = await getCallbackManagerForConfig(options);
+    const { runId, ...otherConfigFields } = config;
     const runManager = await callbackManager_?.handleChainStart(
       this.toJSON(),
       _coerceToDict(input, "input"),
@@ -2448,14 +2446,14 @@ export class RunnableWithFallbacks<RunInput, RunOutput> extends Runnable<
       undefined,
       undefined,
       undefined,
-      otherOptions?.runName
+      otherConfigFields?.runName
     );
     let firstError;
     for (const runnable of this.runnables()) {
       try {
         const output = await runnable.invoke(
           input,
-          patchConfig(otherOptions, { callbacks: runManager?.getChild() })
+          patchConfig(otherConfigFields, { callbacks: runManager?.getChild() })
         );
         await runManager?.handleChainEnd(_coerceToDict(output, "output"));
         return output;
@@ -2500,15 +2498,7 @@ export class RunnableWithFallbacks<RunInput, RunOutput> extends Runnable<
     }
     const configList = this._getOptionsList(options ?? {}, inputs.length);
     const callbackManagers = await Promise.all(
-      configList.map((config) =>
-        CallbackManager.configure(
-          config?.callbacks,
-          undefined,
-          config?.tags,
-          undefined,
-          config?.metadata
-        )
-      )
+      configList.map((config) => getCallbackManagerForConfig(config))
     );
     const runManagers = await Promise.all(
       callbackManagers.map(async (callbackManager, i) => {

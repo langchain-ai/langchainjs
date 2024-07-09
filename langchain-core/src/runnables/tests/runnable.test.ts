@@ -436,20 +436,20 @@ test("Create a runnable sequence with a static method with invalid output and ca
 test("RunnableSequence can pass config to every step in batched request", async () => {
   let numSeen = 0;
 
-  const addOne = (x: number, options?: { config?: RunnableConfig }) => {
-    if (options?.config?.configurable?.isPresent === true) {
+  const addOne = (x: number, options?: RunnableConfig) => {
+    if (options?.configurable?.isPresent === true) {
       numSeen += 1;
     }
     return x + 1;
   };
-  const addTwo = (x: number, options?: { config?: RunnableConfig }) => {
-    if (options?.config?.configurable?.isPresent === true) {
+  const addTwo = (x: number, options?: RunnableConfig) => {
+    if (options?.configurable?.isPresent === true) {
       numSeen += 1;
     }
     return x + 2;
   };
-  const addThree = (x: number, options?: { config?: RunnableConfig }) => {
-    if (options?.config?.configurable?.isPresent === true) {
+  const addThree = (x: number, options?: RunnableConfig) => {
+    if (options?.configurable?.isPresent === true) {
       numSeen += 1;
     }
     return x + 3;

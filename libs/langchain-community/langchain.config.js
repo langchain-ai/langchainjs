@@ -277,6 +277,7 @@ export const config = {
     "document_loaders/web/figma": "document_loaders/web/figma",
     "document_loaders/web/firecrawl": "document_loaders/web/firecrawl",
     "document_loaders/web/github": "document_loaders/web/github",
+    "document_loaders/web/taskade": "document_loaders/web/taskade",
     "document_loaders/web/notionapi": "document_loaders/web/notionapi",
     "document_loaders/web/pdf": "document_loaders/web/pdf",
     "document_loaders/web/recursive_url": "document_loaders/web/recursive_url",
@@ -316,7 +317,7 @@ export const config = {
     "experimental/hubs/makersuite/googlemakersuitehub":
       "experimental/hubs/makersuite/googlemakersuitehub",
     "experimental/chat_models/ollama_functions": "experimental/chat_models/ollama_functions",
-    "experimental/chat_models/chrome_ai": "experimental/chat_models/chrome_ai/chat_models",
+    "experimental/llms/chrome_ai": "experimental/llms/chrome_ai",
     // chains
     "chains/graph_qa/cypher": "chains/graph_qa/cypher"
   },
@@ -491,6 +492,7 @@ export const config = {
     "document_loaders/web/firecrawl",
     "document_loaders/web/github",
     "document_loaders/web/pdf",
+    "document_loaders/web/taskade",
     "document_loaders/web/notionapi",
     "document_loaders/web/recursive_url",
     "document_loaders/web/s3",

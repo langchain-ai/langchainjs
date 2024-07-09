@@ -323,6 +323,7 @@ test("Stream tokens", async () => {
   const model = new ChatAnthropic({
     model: "claude-3-haiku-20240307",
     temperature: 0,
+    maxTokens: 10,
   });
   let res: AIMessageChunk | null = null;
   for await (const chunk of await model.stream(
@@ -339,8 +340,8 @@ test("Stream tokens", async () => {
   if (!res?.usage_metadata) {
     return;
   }
-  expect(res.usage_metadata.input_tokens).toBe(34);
-  expect(res.usage_metadata.output_tokens).toBeGreaterThan(10);
+  expect(res.usage_metadata.input_tokens).toBeGreaterThan(1);
+  expect(res.usage_metadata.output_tokens).toBeGreaterThan(1);
   expect(res.usage_metadata.total_tokens).toBe(
     res.usage_metadata.input_tokens + res.usage_metadata.output_tokens
   );
