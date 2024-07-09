@@ -59,11 +59,17 @@ export { type RunnableInterface, RunnableBatchOptions };
 export type RunnableFunc<RunInput, RunOutput> = (
   input: RunInput,
   options?:
-    | ({ config?: RunnableConfig } & RunnableConfig)
+    | ({
+        /** @deprecated Use top-level config fields instead. */
+        config?: RunnableConfig;
+      } & RunnableConfig)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     | Record<string, any>
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    | (Record<string, any> & RunnableConfig)
+    | (Record<string, any> & {
+        /** @deprecated Use top-level config fields instead. */
+        config: RunnableConfig;
+      } & RunnableConfig)
 ) => RunOutput | Promise<RunOutput>;
 
 export type RunnableMapLike<RunInput, RunOutput> = {
@@ -2228,7 +2234,10 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
         childConfig,
         async () => {
           try {
-            let output = await this.func(input, childConfig);
+            let output = await this.func(input, {
+              ...childConfig,
+              config: childConfig,
+            });
             if (output && Runnable.isRunnable(output)) {
               if (config?.recursionLimit === 0) {
                 throw new Error("Recursion limit reached.");
@@ -2322,7 +2331,10 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
           childConfig,
           async () => {
             try {
-              const res = await this.func(finalChunk as RunInput, childConfig);
+              const res = await this.func(finalChunk as RunInput, {
+                ...childConfig,
+                config: childConfig,
+              });
               resolve(res);
             } catch (e) {
               reject(e);
