@@ -16,7 +16,7 @@ const config = {
 };
 
 const vercelPostgresStore = await VercelPostgres.initialize(
-  new CohereEmbeddings({model: "embed-english-v3.0",}),
+  new CohereEmbeddings({ model: "embed-english-v3.0" }),
   config
 );
 

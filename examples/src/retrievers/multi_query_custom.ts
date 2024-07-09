@@ -53,7 +53,7 @@ const vectorstore = await MemoryVectorStore.fromTexts(
     "Mitochondrien bestehen aus Lipiden",
   ],
   [{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }, { id: 5 }],
-  new CohereEmbeddings({model: "embed-english-v3.0",})
+  new CohereEmbeddings({ model: "embed-english-v3.0" })
 );
 const model = new ChatAnthropic({});
 const llmChain = new LLMChain({

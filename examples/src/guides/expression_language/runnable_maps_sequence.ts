@@ -12,7 +12,7 @@ import { MemoryVectorStore } from "langchain/vectorstores/memory";
 const model = new ChatAnthropic();
 const vectorstore = await MemoryVectorStore.fromDocuments(
   [{ pageContent: "mitochondria is the powerhouse of the cell", metadata: {} }],
-  new CohereEmbeddings({model: "embed-english-v3.0",})
+  new CohereEmbeddings({ model: "embed-english-v3.0" })
 );
 const retriever = vectorstore.asRetriever();
 const template = `Answer the question based only on the following context:

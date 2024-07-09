@@ -16,7 +16,7 @@ test("Should work with a question input", async () => {
       "mitochondria is made of lipids",
     ],
     [{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }, { id: 5 }],
-    new CohereEmbeddings({model: "embed-english-v3.0",})
+    new CohereEmbeddings({ model: "embed-english-v3.0" })
   );
   const model = new ChatOpenAI({});
   const retriever = MultiQueryRetriever.fromLLM({
@@ -42,7 +42,7 @@ test("Should work with a keyword", async () => {
       "mitochondria is made of lipids",
     ],
     [{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }, { id: 5 }],
-    new CohereEmbeddings({model: "embed-english-v3.0",})
+    new CohereEmbeddings({ model: "embed-english-v3.0" })
   );
   const model = new ChatOpenAI({});
   const retriever = MultiQueryRetriever.fromLLM({
