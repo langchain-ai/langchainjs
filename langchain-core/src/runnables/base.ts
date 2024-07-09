@@ -63,7 +63,7 @@ export type RunnableFunc<RunInput, RunOutput> = (
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     | Record<string, any>
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    | (Record<string, any> & { config: RunnableConfig } & RunnableConfig)
+    | (Record<string, any> & RunnableConfig)
 ) => RunOutput | Promise<RunOutput>;
 
 export type RunnableMapLike<RunInput, RunOutput> = {
@@ -2228,10 +2228,7 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
         childConfig,
         async () => {
           try {
-            let output = await this.func(input, {
-              ...childConfig,
-              config: childConfig,
-            });
+            let output = await this.func(input, childConfig);
             if (output && Runnable.isRunnable(output)) {
               if (config?.recursionLimit === 0) {
                 throw new Error("Recursion limit reached.");
@@ -2325,10 +2322,7 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
           childConfig,
           async () => {
             try {
-              const res = await this.func(finalChunk as RunInput, {
-                ...childConfig,
-                config: childConfig,
-              });
+              const res = await this.func(finalChunk as RunInput, childConfig);
               resolve(res);
             } catch (e) {
               reject(e);

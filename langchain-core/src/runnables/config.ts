@@ -128,34 +128,33 @@ export function ensureConfig<CallOptions extends RunnableConfig>(
 ): CallOptions {
   const implicitConfig =
     AsyncLocalStorageProviderSingleton.getInstance().getStore();
-  const loadedConfig = config ?? implicitConfig;
   let empty: RunnableConfig = {
     tags: [],
     metadata: {},
     recursionLimit: 25,
     runId: undefined,
   };
-  if (loadedConfig) {
-    empty = { ...empty, ...loadedConfig };
+  if (implicitConfig) {
+    // Don't allow runId to be loaded implicitly
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { runId, ...rest } = implicitConfig;
+    empty = { ...empty, ...rest };
   }
-  if (loadedConfig?.configurable) {
-    for (const key of Object.keys(loadedConfig.configurable)) {
+  if (config) {
+    empty = { ...empty, ...config };
+  }
+  if (empty?.configurable) {
+    for (const key of Object.keys(empty.configurable)) {
       if (
-        PRIMITIVES.has(typeof loadedConfig.configurable[key]) &&
+        PRIMITIVES.has(typeof empty.configurable[key]) &&
         !empty.metadata?.[key]
       ) {
         if (!empty.metadata) {
           empty.metadata = {};
         }
-        empty.metadata[key] = loadedConfig.configurable[key];
+        empty.metadata[key] = empty.configurable[key];
       }
     }
-  }
-  if (
-    !Object.prototype.hasOwnProperty.call(empty, "callbacks") &&
-    implicitConfig?.callbacks !== undefined
-  ) {
-    empty.callbacks = implicitConfig.callbacks;
   }
   return empty as CallOptions;
 }
