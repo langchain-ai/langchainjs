@@ -135,11 +135,14 @@ export class ParentDocumentRetriever extends MultiVectorRetriever {
     return parentDocs.slice(0, this.parentK);
   }
 
-  async _storeDocuments(parentDoc: Document, childDocs: Document[], addToDocstore: boolean) {
+  async _storeDocuments(
+    parentDoc: Document,
+    childDocs: Document[],
+    addToDocstore: boolean
+  ) {
     if (this.childDocumentRetriever) {
       await this.childDocumentRetriever.addDocuments(childDocs);
-    }
-    else {
+    } else {
       await this.vectorstore.addDocuments(childDocs);
     }
     if (addToDocstore) {
