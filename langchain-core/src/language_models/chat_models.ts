@@ -33,11 +33,11 @@ import {
 } from "../callbacks/manager.js";
 import type { RunnableConfig } from "../runnables/config.js";
 import type { BaseCache } from "../caches.js";
-import { StructuredToolInterface } from "../tools.js";
 import {
   Runnable,
   RunnableLambda,
   RunnableSequence,
+  type StructuredToolInterface,
 } from "../runnables/base.js";
 import { isStreamEventsHandler } from "../tracers/event_stream.js";
 import { isLogStreamHandler } from "../tracers/log_stream.js";

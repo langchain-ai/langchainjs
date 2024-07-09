@@ -17,7 +17,12 @@ import { type LLMResult } from "../outputs.js";
 import { CallbackManager, Callbacks } from "../callbacks/manager.js";
 import { AsyncCaller, AsyncCallerParams } from "../utils/async_caller.js";
 import { encodingForModel } from "../utils/tiktoken.js";
-import { Runnable, type RunnableInterface } from "../runnables/base.js";
+import {
+  BaseLangChain,
+  BaseLangChainParams,
+  Runnable,
+  type RunnableInterface,
+} from "../runnables/base.js";
 import { RunnableConfig } from "../runnables/config.js";
 
 // https://www.npmjs.com/package/js-tiktoken
@@ -132,58 +137,11 @@ export const calculateMaxTokens = async ({
   return maxTokens - numTokens;
 };
 
-const getVerbosity = () => false;
-
 export type SerializedLLM = {
   _model: string;
   _type: string;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 } & Record<string, any>;
-
-export interface BaseLangChainParams {
-  verbose?: boolean;
-  callbacks?: Callbacks;
-  tags?: string[];
-  metadata?: Record<string, unknown>;
-}
-
-/**
- * Base class for language models, chains, tools.
- */
-export abstract class BaseLangChain<
-    RunInput,
-    RunOutput,
-    CallOptions extends RunnableConfig = RunnableConfig
-  >
-  extends Runnable<RunInput, RunOutput, CallOptions>
-  implements BaseLangChainParams
-{
-  /**
-   * Whether to print out response text.
-   */
-  verbose: boolean;
-
-  callbacks?: Callbacks;
-
-  tags?: string[];
-
-  metadata?: Record<string, unknown>;
-
-  get lc_attributes(): { [key: string]: undefined } | undefined {
-    return {
-      callbacks: undefined,
-      verbose: undefined,
-    };
-  }
-
-  constructor(params: BaseLangChainParams) {
-    super(params);
-    this.verbose = params.verbose ?? getVerbosity();
-    this.callbacks = params.callbacks;
-    this.tags = params.tags ?? [];
-    this.metadata = params.metadata ?? {};
-  }
-}
 
 /**
  * Base interface for language model parameters.
