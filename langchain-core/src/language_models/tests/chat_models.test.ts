@@ -192,7 +192,7 @@ test("Test ChatModel withStructuredOutput new syntax and includeRaw", async () =
   console.log(response.parsed);
 });
 
-test.only("Test ChatModel can cache complex messages", async () => {
+test("Test ChatModel can cache complex messages", async () => {
   const model = new FakeChatModel({
     cache: true,
   });
@@ -209,7 +209,7 @@ test.only("Test ChatModel can cache complex messages", async () => {
     throw new Error("Cache not enabled");
   }
   const prompt = getBufferString([humanMessage]);
-  const llmKey = `_model:"base_chat_model",_type:"fake"`;
+  const llmKey = model._getSerializedCacheKeyParametersForCall({});
   const value = await model.cache.lookup(prompt, llmKey);
   expect(value).toBeDefined();
   if (!value) {

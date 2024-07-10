@@ -1,6 +1,6 @@
 import { test, expect } from "@jest/globals";
 
-import { InMemoryCache } from "../cache/base.js";
+import { InMemoryCache } from "../caches/base.js";
 
 test("InMemoryCache", async () => {
   const cache = new InMemoryCache();
