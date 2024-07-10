@@ -23,7 +23,7 @@ import {
   type BaseLanguageModelParams,
 } from "./base.js";
 import type { RunnableConfig } from "../runnables/config.js";
-import type { BaseCache } from "../caches.js";
+import type { BaseCache } from "../cache/base.js";
 import { isStreamEventsHandler } from "../tracers/event_stream.js";
 import { isLogStreamHandler } from "../tracers/log_stream.js";
 import { concat } from "../utils/stream.js";

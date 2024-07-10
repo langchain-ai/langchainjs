@@ -4,6 +4,8 @@ import { test } from "@jest/globals";
 import { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { FakeChatModel, FakeListChatModel } from "../../utils/testing/index.js";
+import { HumanMessage } from "../../messages/human.js";
+import { getBufferString } from "../../messages/utils.js";
 
 test("Test ChatModel accepts array shorthand for messages", async () => {
   const model = new FakeChatModel({});
@@ -188,4 +190,33 @@ test("Test ChatModel withStructuredOutput new syntax and includeRaw", async () =
   console.log(response.nested.somethingelse);
   // No error
   console.log(response.parsed);
+});
+
+test.only("Test ChatModel can cache complex messages", async () => {
+  const model = new FakeChatModel({
+    cache: true,
+  });
+  const humanMessage = new HumanMessage({
+    content: [
+      {
+        type: "text",
+        text: "Hello there!",
+      },
+    ],
+  });
+  await model.invoke([humanMessage]);
+  if (!model.cache) {
+    throw new Error("Cache not enabled");
+  }
+  const prompt = getBufferString([humanMessage]);
+  const llmKey = `_model:"base_chat_model",_type:"fake"`;
+  const value = await model.cache.lookup(prompt, llmKey);
+  expect(value).toBeDefined();
+  if (!value) {
+    return;
+  }
+  expect(value[0]).toEqual({
+    type: "text",
+    text: "Hello there!",
+  });
 });
