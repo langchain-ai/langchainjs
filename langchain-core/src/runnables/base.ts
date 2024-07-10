@@ -1080,6 +1080,18 @@ export abstract class Runnable<
     });
   }
 
+  /**
+   * Convert a runnable to a tool. Return a new instance of `RunnableToolLike`
+   * which contains the runnable, name, description and schema.
+   *
+   * @template {T extends RunInput = RunInput} RunInput - The input type of the runnable. Should be the same as the `RunInput` type of the runnable.
+   *
+   * @param fields
+   * @param {string | undefined} [fields.name] The name of the tool. If not provided, it will default to the name of the runnable.
+   * @param {string | undefined} [fields.description] The description of the tool. If not provided, it will default to `Takes {schema}` where `schema` is a JSON string representation of the input schema.
+   * @param {z.ZodType<T>} [fields.schema] The Zod schema for the input of the tool. Infers the Zod type from the input type of the runnable.
+   * @returns {RunnableToolLike<z.ZodType<T>, RunOutput>} An instance of `RunnableToolLike` which is a runnable that can be used as a tool.
+   */
   asTool<T extends RunInput = RunInput>(fields: {
     name?: string;
     description?: string;
@@ -2845,7 +2857,7 @@ const _getDescriptionFromRunnable = <RunInput = unknown>(
  * @param fields
  * @param {string | undefined} [fields.name] The name of the tool. If not provided, it will default to the name of the runnable.
  * @param {string | undefined} [fields.description] The description of the tool. If not provided, it will default to `Takes {schema}` where `schema` is a JSON string representation of the input schema.
- * @param {z.ZodType<RunInput>} [fields.schema] The Zod schema for the input of the tool.
+ * @param {z.ZodType<RunInput>} [fields.schema] The Zod schema for the input of the tool. Infers the Zod type from the input type of the runnable.
  * @returns {RunnableToolLike<z.ZodType<RunInput>, RunOutput>} An instance of `RunnableToolLike` which is a runnable that can be used as a tool.
  */
 export function convertRunnableToTool<RunInput, RunOutput>(

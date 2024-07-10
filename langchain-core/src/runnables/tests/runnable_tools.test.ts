@@ -70,3 +70,20 @@ test("Runnable asTool can invoke", async () => {
 
   expect(toolResponse).toBe("barbar");
 });
+
+test("asTool should type error with mismatched schema", async () => {
+  // asTool infers the type of the Zod schema from the existing runnable's RunInput generic.
+  // If the Zod schema does not match the RunInput, it should throw a type error.
+  const schema = z.object({
+    foo: z.string(),
+  });
+  const runnable = RunnableLambda.from<{ bar: string }, string>(
+    (input, config) => {
+      return `${input.bar}${config?.configurable.foo}`;
+    }
+  );
+  runnable.asTool({
+    // @ts-expect-error - Should error. If this does not give a type error, the generics/typing of `asTool` is broken.
+    schema,
+  });
+});
