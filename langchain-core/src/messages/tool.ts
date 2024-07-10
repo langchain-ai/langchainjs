@@ -7,24 +7,23 @@ import {
   type MessageType,
 } from "./base.js";
 
-export interface ToolMessageFieldsWithToolCallId extends BaseMessageFields {
+export interface ToolMessageFieldsWithToolCallId<RawOutput extends any = any>
+  extends BaseMessageFields {
   /**
    * The raw output of the tool.
    *
    * **Not part of the payload sent to the model.** Should only be specified if it is
    * different from the message content, i.e. if only a subset of the full tool output
    * is being passed as message content.
-   *
-   * `raw_output` is excluded when serializing the tool message.
    */
-  raw_output?: unknown;
+  raw_output?: RawOutput;
   tool_call_id: string;
 }
 
 /**
  * Represents a tool message in a conversation.
  */
-export class ToolMessage extends BaseMessage {
+export class ToolMessage<RawOutput extends any = any> extends BaseMessage {
   static lc_name() {
     return "ToolMessage";
   }
@@ -42,12 +41,10 @@ export class ToolMessage extends BaseMessage {
    * **Not part of the payload sent to the model.** Should only be specified if it is
    * different from the message content, i.e. if only a subset of the full tool output
    * is being passed as message content.
-   *
-   * `raw_output` is excluded when serializing the tool message.
    */
-  raw_output?: unknown;
+  raw_output?: RawOutput;
 
-  constructor(fields: ToolMessageFieldsWithToolCallId);
+  constructor(fields: ToolMessageFieldsWithToolCallId<RawOutput>);
 
   constructor(
     fields: string | BaseMessageFields,
@@ -56,7 +53,7 @@ export class ToolMessage extends BaseMessage {
   );
 
   constructor(
-    fields: string | ToolMessageFieldsWithToolCallId,
+    fields: string | ToolMessageFieldsWithToolCallId<RawOutput>,
     tool_call_id?: string,
     name?: string
   ) {
@@ -82,7 +79,9 @@ export class ToolMessage extends BaseMessage {
  * Represents a chunk of a tool message, which can be concatenated
  * with other tool message chunks.
  */
-export class ToolMessageChunk extends BaseMessageChunk {
+export class ToolMessageChunk<
+  RawOutput extends any = any
+> extends BaseMessageChunk {
   tool_call_id: string;
 
   /**
@@ -91,12 +90,10 @@ export class ToolMessageChunk extends BaseMessageChunk {
    * **Not part of the payload sent to the model.** Should only be specified if it is
    * different from the message content, i.e. if only a subset of the full tool output
    * is being passed as message content.
-   *
-   * `raw_output` is excluded when serializing the tool message.
    */
-  raw_output?: unknown;
+  raw_output?: RawOutput;
 
-  constructor(fields: ToolMessageFieldsWithToolCallId) {
+  constructor(fields: ToolMessageFieldsWithToolCallId<RawOutput>) {
     super(fields);
     this.tool_call_id = fields.tool_call_id;
     this.raw_output = fields.raw_output;
