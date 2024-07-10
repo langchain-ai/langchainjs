@@ -5,9 +5,11 @@ import {
   mergeContent,
   _mergeDicts,
   type MessageType,
+  _mergeObj,
 } from "./base.js";
 
-export interface ToolMessageFieldsWithToolCallId<RawOutput extends any = any>
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export interface ToolMessageFieldsWithToolCallId<RawOutput = any>
   extends BaseMessageFields {
   /**
    * The raw output of the tool.
@@ -23,7 +25,8 @@ export interface ToolMessageFieldsWithToolCallId<RawOutput extends any = any>
 /**
  * Represents a tool message in a conversation.
  */
-export class ToolMessage<RawOutput extends any = any> extends BaseMessage {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export class ToolMessage<RawOutput = any> extends BaseMessage {
   static lc_name() {
     return "ToolMessage";
   }
@@ -79,9 +82,8 @@ export class ToolMessage<RawOutput extends any = any> extends BaseMessage {
  * Represents a chunk of a tool message, which can be concatenated
  * with other tool message chunks.
  */
-export class ToolMessageChunk<
-  RawOutput extends any = any
-> extends BaseMessageChunk {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export class ToolMessageChunk<RawOutput = any> extends BaseMessageChunk {
   tool_call_id: string;
 
   /**
@@ -118,6 +120,10 @@ export class ToolMessageChunk<
         this.response_metadata,
         chunk.response_metadata
       ),
+      raw_output:
+        this.raw_output && chunk.raw_output
+          ? _mergeObj<RawOutput>(this.raw_output, chunk.raw_output)
+          : this.raw_output ?? chunk.raw_output,
       tool_call_id: this.tool_call_id,
       id: this.id ?? chunk.id,
     });
