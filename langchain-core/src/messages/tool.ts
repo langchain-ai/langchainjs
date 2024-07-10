@@ -8,9 +8,7 @@ import {
   _mergeObj,
 } from "./base.js";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export interface ToolMessageFieldsWithToolCallId<RawOutput = any>
-  extends BaseMessageFields {
+export interface ToolMessageFieldsWithToolCallId extends BaseMessageFields {
   /**
    * The raw output of the tool.
    *
@@ -18,15 +16,14 @@ export interface ToolMessageFieldsWithToolCallId<RawOutput = any>
    * different from the message content, i.e. if only a subset of the full tool output
    * is being passed as message content.
    */
-  raw_output?: RawOutput;
+  raw_output?: unknown;
   tool_call_id: string;
 }
 
 /**
  * Represents a tool message in a conversation.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export class ToolMessage<RawOutput = any> extends BaseMessage {
+export class ToolMessage extends BaseMessage {
   static lc_name() {
     return "ToolMessage";
   }
@@ -45,9 +42,9 @@ export class ToolMessage<RawOutput = any> extends BaseMessage {
    * different from the message content, i.e. if only a subset of the full tool output
    * is being passed as message content.
    */
-  raw_output?: RawOutput;
+  raw_output?: unknown;
 
-  constructor(fields: ToolMessageFieldsWithToolCallId<RawOutput>);
+  constructor(fields: ToolMessageFieldsWithToolCallId);
 
   constructor(
     fields: string | BaseMessageFields,
@@ -56,7 +53,7 @@ export class ToolMessage<RawOutput = any> extends BaseMessage {
   );
 
   constructor(
-    fields: string | ToolMessageFieldsWithToolCallId<RawOutput>,
+    fields: string | ToolMessageFieldsWithToolCallId,
     tool_call_id?: string,
     name?: string
   ) {
@@ -82,8 +79,7 @@ export class ToolMessage<RawOutput = any> extends BaseMessage {
  * Represents a chunk of a tool message, which can be concatenated
  * with other tool message chunks.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export class ToolMessageChunk<RawOutput = any> extends BaseMessageChunk {
+export class ToolMessageChunk extends BaseMessageChunk {
   tool_call_id: string;
 
   /**
@@ -93,9 +89,9 @@ export class ToolMessageChunk<RawOutput = any> extends BaseMessageChunk {
    * different from the message content, i.e. if only a subset of the full tool output
    * is being passed as message content.
    */
-  raw_output?: RawOutput;
+  raw_output?: unknown;
 
-  constructor(fields: ToolMessageFieldsWithToolCallId<RawOutput>) {
+  constructor(fields: ToolMessageFieldsWithToolCallId) {
     super(fields);
     this.tool_call_id = fields.tool_call_id;
     this.raw_output = fields.raw_output;
@@ -120,7 +116,7 @@ export class ToolMessageChunk<RawOutput = any> extends BaseMessageChunk {
         this.response_metadata,
         chunk.response_metadata
       ),
-      raw_output: _mergeObj<RawOutput>(this.raw_output, chunk.raw_output),
+      raw_output: _mergeObj(this.raw_output, chunk.raw_output),
       tool_call_id: this.tool_call_id,
       id: this.id ?? chunk.id,
     });
