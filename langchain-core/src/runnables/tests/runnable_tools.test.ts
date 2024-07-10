@@ -50,7 +50,6 @@ test("Runnable asTool can invoke", async () => {
   });
   const runnable = RunnableLambda.from<z.infer<typeof schema>, string>(
     (input, config) => {
-      console.log("I am invoked.");
       return `${input.foo}${config?.configurable.foo}`;
     }
   );

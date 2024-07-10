@@ -2800,22 +2800,23 @@ export interface RunnableToolLikeFields<RunInput, RunOutput> {
 
   schema: RunInput;
 
-  func:
-    | ((input: RunInput, config?: RunnableConfig) => RunOutput)
-    | ((input: RunInput, config?: RunnableConfig) => Promise<RunOutput>);
+  runnable: Runnable<RunInput, RunOutput>;
+
+  config?: RunnableConfig;
 }
 
 export class RunnableToolLike<
   RunInput extends z.ZodType = z.ZodType,
   RunOutput = string
-> extends RunnableLambda<z.infer<RunInput>, RunOutput> {
+> extends RunnableBinding<z.infer<RunInput>, RunOutput> {
   description?: string;
 
   schema: RunInput;
 
   constructor(fields: RunnableToolLikeFields<RunInput, RunOutput>) {
     super({
-      func: fields.func,
+      bound: fields.runnable,
+      config: fields.config ?? {},
     });
 
     this.name = fields.name;
@@ -2860,6 +2861,6 @@ export function convertRunnableToTool<RunInput>(
     name,
     description,
     schema: fields.schema,
-    func: runnable.invoke,
+    runnable,
   });
 }
