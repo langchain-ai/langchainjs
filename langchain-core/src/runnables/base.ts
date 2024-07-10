@@ -1089,14 +1089,15 @@ export abstract class Runnable<
 
   /**
    * Convert a runnable to a tool. Return a new instance of either
-   * `StructuredTool` if the input schema requires an object, or
-   * `Tool` if the input schema requires a single string.
+   * `DynamicStructuredTool<z.ZodType<RunInput>>` if the input schema
+   * requires an object, or `DynamicTool` if the input schema requires
+   * a single string.
    *
    * @param fields
    * @param {string | undefined} [fields.name] The name of the tool. If not provided, it will default to the name of the runnable.
    * @param {string | undefined} [fields.description] The description of the tool. If not provided, it will default to `Takes {schema}` where `schema` is a JSON string representation of the input schema.
-   * @param {ZodAny} [fields.schema] The Zod schema for the input of the tool.
-   * @returns {StructuredTool}
+   * @param {z.ZodType<RunInput> | z.ZodString} [fields.schema] The Zod schema for the input of the tool. Either the schema itself or a ZodString.
+   * @returns {DynamicTool | DynamicStructuredTool<z.ZodType<RunInput>>} The tool created from the runnable. DynamicTool if the schema is a ZodString, DynamicStructuredTool if the schema is a ZodType.
    */
   asTool(fields: {
     name?: string;
@@ -3347,15 +3348,16 @@ const _getDescriptionFromRunnable = (schema: Record<string, any>): string => {
 /**
  * Given a runnable and a Zod schema, convert the runnable to a tool.
  *
- * @param {Runnable} runnable The runnable to convert to a tool.
+ * @template RunInput The input schema for the runnable.
+ * @param {Runnable<RunInput, string>} runnable The runnable to convert to a tool.
  * @param fields
  * @param {string | undefined} [fields.name] The name of the tool. If not provided, it will default to the name of the runnable.
  * @param {string | undefined} [fields.description] The description of the tool. If not provided, it will default to `Takes {schema}` where `schema` is a JSON string representation of the input schema.
- * @param {ZodAny} [fields.schema] The Zod schema for the input of the tool.
- * @returns {StructuredTool} The tool created from the runnable.
+ * @param {z.ZodType<RunInput> | z.ZodString} [fields.schema] The Zod schema for the input of the tool. Either the schema itself or a ZodString.
+ * @returns {DynamicTool | DynamicStructuredTool<z.ZodType<RunInput>>} The tool created from the runnable. DynamicTool if the schema is a ZodString, DynamicStructuredTool if the schema is a ZodType.
  */
-function convertRunnableToTool<RunInput>(
-  runnable: Runnable<RunInput, string>,
+export function convertRunnableToTool<RunInput, RunOutput extends string = string>(
+  runnable: Runnable<RunInput, RunOutput>,
   fields: {
     name?: string;
     description?: string;
