@@ -120,10 +120,7 @@ export class ToolMessageChunk<RawOutput = any> extends BaseMessageChunk {
         this.response_metadata,
         chunk.response_metadata
       ),
-      raw_output:
-        this.raw_output && chunk.raw_output
-          ? _mergeObj<RawOutput>(this.raw_output, chunk.raw_output)
-          : this.raw_output ?? chunk.raw_output,
+      raw_output: _mergeObj<RawOutput>(this.raw_output, chunk.raw_output),
       tool_call_id: this.tool_call_id,
       id: this.id ?? chunk.id,
     });

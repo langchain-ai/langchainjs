@@ -307,9 +307,15 @@ export function _mergeLists(left?: any[], right?: any[]) {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function _mergeObj<T = any>(left: T, right: T): T {
+export function _mergeObj<T = any>(
+  left: T | undefined,
+  right: T | undefined
+): T {
+  if (!left && !right) {
+    throw new Error("Cannot merge two undefined objects.");
+  }
   if (!left || !right) {
-    return left || right;
+    return left || (right as T);
   } else if (typeof left !== typeof right) {
     throw new Error(
       `Cannot merge objects of different types.\nLeft ${typeof left}\nRight ${typeof right}`
