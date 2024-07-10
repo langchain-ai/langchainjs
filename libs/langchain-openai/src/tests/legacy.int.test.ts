@@ -1,6 +1,11 @@
+/* eslint-disable no-process-env */
+
 import { expect, test } from "@jest/globals";
 import { CallbackManager } from "@langchain/core/callbacks/manager";
 import { OpenAIChat } from "../legacy.js";
+
+// Save the original value of the 'LANGCHAIN_CALLBACKS_BACKGROUND' environment variable
+const originalBackground = process.env.LANGCHAIN_CALLBACKS_BACKGROUND;
 
 test("Test OpenAI", async () => {
   const model = new OpenAIChat({ modelName: "gpt-3.5-turbo", maxTokens: 10 });
@@ -21,25 +26,35 @@ test("Test OpenAI with prefix messages", async () => {
 });
 
 test("Test OpenAI in streaming mode", async () => {
-  let nrNewTokens = 0;
-  let streamedCompletion = "";
+  // Running LangChain callbacks in the background will sometimes cause the callbackManager to execute
+  // after the test/llm call has already finished & returned. Set that environment variable to false
+  // to prevent that from happening.
+  process.env.LANGCHAIN_CALLBACKS_BACKGROUND = "false";
 
-  const model = new OpenAIChat({
-    maxTokens: 10,
-    modelName: "gpt-3.5-turbo",
-    streaming: true,
-    callbackManager: CallbackManager.fromHandlers({
-      async handleLLMNewToken(token: string) {
-        nrNewTokens += 1;
-        streamedCompletion += token;
-      },
-    }),
-  });
-  const res = await model.invoke("Print hello world");
-  console.log({ res });
+  try {
+    let nrNewTokens = 0;
+    let streamedCompletion = "";
 
-  expect(nrNewTokens > 0).toBe(true);
-  expect(res).toBe(streamedCompletion);
+    const model = new OpenAIChat({
+      maxTokens: 10,
+      modelName: "gpt-3.5-turbo",
+      streaming: true,
+      callbackManager: CallbackManager.fromHandlers({
+        async handleLLMNewToken(token: string) {
+          nrNewTokens += 1;
+          streamedCompletion += token;
+        },
+      }),
+    });
+    const res = await model.invoke("Print hello world");
+    console.log({ res });
+
+    expect(nrNewTokens > 0).toBe(true);
+    expect(res).toBe(streamedCompletion);
+  } finally {
+    // Reset the environment variable
+    process.env.LANGCHAIN_CALLBACKS_BACKGROUND = originalBackground;
+  }
 }, 30000);
 
 test("Test OpenAI with stop", async () => {

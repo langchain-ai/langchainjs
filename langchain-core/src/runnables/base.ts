@@ -59,11 +59,17 @@ export { type RunnableInterface, RunnableBatchOptions };
 export type RunnableFunc<RunInput, RunOutput> = (
   input: RunInput,
   options?:
-    | ({ config?: RunnableConfig } & RunnableConfig)
+    | ({
+        /** @deprecated Use top-level config fields instead. */
+        config?: RunnableConfig;
+      } & RunnableConfig)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     | Record<string, any>
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    | (Record<string, any> & { config: RunnableConfig } & RunnableConfig)
+    | (Record<string, any> & {
+        /** @deprecated Use top-level config fields instead. */
+        config: RunnableConfig;
+      } & RunnableConfig)
 ) => RunOutput | Promise<RunOutput>;
 
 export type RunnableMapLike<RunInput, RunOutput> = {

@@ -399,6 +399,7 @@ test("Test Azure ChatOpenAI stream method, timeout error thrown from SDK", async
       maxTokens: 50,
       modelName: "gpt-3.5-turbo",
       timeout: 1,
+      maxRetries: 0,
     });
     const stream = await model.stream(
       "How is your day going? Be extremely verbose."

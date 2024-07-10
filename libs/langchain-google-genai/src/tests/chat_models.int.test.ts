@@ -1,3 +1,5 @@
+/* eslint-disable no-process-env */
+
 import { test } from "@jest/globals";
 import * as fs from "node:fs/promises";
 import { fileURLToPath } from "node:url";
@@ -17,6 +19,9 @@ import { StructuredTool } from "@langchain/core/tools";
 import { z } from "zod";
 import { FunctionDeclarationSchemaType } from "@google/generative-ai";
 import { ChatGoogleGenerativeAI } from "../chat_models.js";
+
+// Save the original value of the 'LANGCHAIN_CALLBACKS_BACKGROUND' environment variable
+const originalBackground = process.env.LANGCHAIN_CALLBACKS_BACKGROUND;
 
 const dummyToolResponse = `[{"title":"Weather in New York City","url":"https://www.weatherapi.com/","content":"{'location': {'name': 'New York', 'region': 'New York', 'country': 'United States of America', 'lat': 40.71, 'lon': -74.01, 'tz_id': 'America/New_York', 'localtime_epoch': 1718659486, 'localtime': '2024-06-17 17:24'}, 'current': {'last_updated_epoch': 1718658900, 'last_updated': '2024-06-17 17:15', 'temp_c': 27.8, 'temp_f': 82.0, 'is_day': 1, 'condition': {'text': 'Partly cloudy', 'icon': '//cdn.weatherapi.com/weather/64x64/day/116.png', 'code': 1003}, 'wind_mph': 2.2, 'wind_kph': 3.6, 'wind_degree': 159, 'wind_dir': 'SSE', 'pressure_mb': 1021.0, 'pressure_in': 30.15, 'precip_mm': 0.0, 'precip_in': 0.0, 'humidity': 58, 'cloud': 25, 'feelslike_c': 29.0, 'feelslike_f': 84.2, 'windchill_c': 26.9, 'windchill_f': 80.5, 'heatindex_c': 27.9, 'heatindex_f': 82.2, 'dewpoint_c': 17.1, 'dewpoint_f': 62.8, 'vis_km': 16.0, 'vis_miles': 9.0, 'uv': 7.0, 'gust_mph': 18.3, 'gust_kph': 29.4}}","score":0.98192,"raw_content":null},{"title":"New York, NY Monthly Weather | AccuWeather","url":"https://www.accuweather.com/en/us/new-york/10021/june-weather/349727","content":"Get the monthly weather forecast for New York, NY, including daily high/low, historical averages, to help you plan ahead.","score":0.97504,"raw_content":null}]`;
 
@@ -90,62 +95,92 @@ test("Test Google AI multimodal generation", async () => {
 });
 
 test("Test Google AI handleLLMNewToken callback", async () => {
-  const model = new ChatGoogleGenerativeAI({});
-  let tokens = "";
-  const res = await model.call(
-    [new HumanMessage("what is 1 + 1?")],
-    undefined,
-    [
-      {
-        handleLLMNewToken(token: string) {
-          tokens += token;
+  // Running LangChain callbacks in the background will sometimes cause the callbackManager to execute
+  // after the test/llm call has already finished & returned. Set that environment variable to false
+  // to prevent that from happening.
+  process.env.LANGCHAIN_CALLBACKS_BACKGROUND = "false";
+
+  try {
+    const model = new ChatGoogleGenerativeAI({});
+    let tokens = "";
+    const res = await model.call(
+      [new HumanMessage("what is 1 + 1?")],
+      undefined,
+      [
+        {
+          handleLLMNewToken(token: string) {
+            tokens += token;
+          },
         },
-      },
-    ]
-  );
-  console.log({ tokens });
-  const responseContent = typeof res.content === "string" ? res.content : "";
-  expect(tokens).toBe(responseContent);
+      ]
+    );
+    console.log({ tokens });
+    const responseContent = typeof res.content === "string" ? res.content : "";
+    expect(tokens).toBe(responseContent);
+  } finally {
+    // Reset the environment variable
+    process.env.LANGCHAIN_CALLBACKS_BACKGROUND = originalBackground;
+  }
 });
 
 test("Test Google AI handleLLMNewToken callback with streaming", async () => {
-  const model = new ChatGoogleGenerativeAI({});
-  let tokens = "";
-  const res = await model.stream([new HumanMessage("what is 1 + 1?")], {
-    callbacks: [
-      {
-        handleLLMNewToken(token: string) {
-          tokens += token;
+  // Running LangChain callbacks in the background will sometimes cause the callbackManager to execute
+  // after the test/llm call has already finished & returned. Set that environment variable to false
+  // to prevent that from happening.
+  process.env.LANGCHAIN_CALLBACKS_BACKGROUND = "false";
+
+  try {
+    const model = new ChatGoogleGenerativeAI({});
+    let tokens = "";
+    const res = await model.stream([new HumanMessage("what is 1 + 1?")], {
+      callbacks: [
+        {
+          handleLLMNewToken(token: string) {
+            tokens += token;
+          },
         },
-      },
-    ],
-  });
-  console.log({ tokens });
-  let responseContent = "";
-  for await (const streamItem of res) {
-    responseContent += streamItem.content;
+      ],
+    });
+    console.log({ tokens });
+    let responseContent = "";
+    for await (const streamItem of res) {
+      responseContent += streamItem.content;
+    }
+    console.log({ tokens });
+    expect(tokens).toBe(responseContent);
+  } finally {
+    // Reset the environment variable
+    process.env.LANGCHAIN_CALLBACKS_BACKGROUND = originalBackground;
   }
-  console.log({ tokens });
-  expect(tokens).toBe(responseContent);
 });
 
 test("Test Google AI in streaming mode", async () => {
-  const model = new ChatGoogleGenerativeAI({ streaming: true });
-  let tokens = "";
-  let nrNewTokens = 0;
-  const res = await model.invoke([new HumanMessage("Write a haiku?")], {
-    callbacks: [
-      {
-        handleLLMNewToken(token: string) {
-          nrNewTokens += 1;
-          tokens += token;
+  // Running LangChain callbacks in the background will sometimes cause the callbackManager to execute
+  // after the test/llm call has already finished & returned. Set that environment variable to false
+  // to prevent that from happening.
+  process.env.LANGCHAIN_CALLBACKS_BACKGROUND = "false";
+
+  try {
+    const model = new ChatGoogleGenerativeAI({ streaming: true });
+    let tokens = "";
+    let nrNewTokens = 0;
+    const res = await model.invoke([new HumanMessage("Write a haiku?")], {
+      callbacks: [
+        {
+          handleLLMNewToken(token: string) {
+            nrNewTokens += 1;
+            tokens += token;
+          },
         },
-      },
-    ],
-  });
-  console.log({ tokens, nrNewTokens });
-  expect(nrNewTokens > 1).toBe(true);
-  expect(res.content).toBe(tokens);
+      ],
+    });
+    console.log({ tokens, nrNewTokens });
+    expect(nrNewTokens).toBeGreaterThan(1);
+    expect(res.content).toBe(tokens);
+  } finally {
+    // Reset the environment variable
+    process.env.LANGCHAIN_CALLBACKS_BACKGROUND = originalBackground;
+  }
 });
 
 async function fileToBase64(filePath: string): Promise<string> {
