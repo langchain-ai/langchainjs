@@ -197,6 +197,10 @@ test("Test ChatModel can cache complex messages", async () => {
   const model = new FakeChatModel({
     cache: true,
   });
+  if (!model.cache) {
+    throw new Error("Cache not enabled");
+  }
+
   const contentToCache = [
     {
       type: "text",
@@ -206,18 +210,19 @@ test("Test ChatModel can cache complex messages", async () => {
   const humanMessage = new HumanMessage({
     content: contentToCache,
   });
-  await model.invoke([humanMessage]);
-  if (!model.cache) {
-    throw new Error("Cache not enabled");
-  }
+
   const prompt = getBufferString([humanMessage]);
   const llmKey = model._getSerializedCacheKeyParametersForCall({});
+
+  // Invoke model to trigger cache update
+  await model.invoke([humanMessage]);
+
   const value = await model.cache.lookup(prompt, llmKey);
   expect(value).toBeDefined();
-  if (!value) {
-    return;
-  }
+  if (!value) return;
+
   expect(value[0].text).toEqual(JSON.stringify(contentToCache, null, 2));
+
   expect("message" in value[0]).toBeTruthy();
   if (!("message" in value[0])) return;
   const cachedMsg = value[0].message as AIMessage;
