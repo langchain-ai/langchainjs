@@ -1101,9 +1101,22 @@ export abstract class Runnable<
   asTool(fields: {
     name?: string;
     description?: string;
-    schema: ZodAny | z.ZodString;
-  }): StructuredTool {
-    return convertRunnableToTool(this, fields);
+    schema: z.ZodString;
+  }): DynamicTool;
+  asTool(fields: {
+    name?: string;
+    description?: string;
+    schema: z.ZodType<RunInput>;
+  }): DynamicStructuredTool<z.ZodType<RunInput>>;
+  asTool(fields: {
+    name?: string;
+    description?: string;
+    schema: z.ZodType<RunInput> | z.ZodString;
+  }): DynamicTool | DynamicStructuredTool<z.ZodType<RunInput>> {
+    return convertRunnableToTool<RunInput>(
+      this as Runnable<RunInput, string>,
+      fields
+    );
   }
 }
 
@@ -2919,7 +2932,7 @@ type FromFunc<T extends ZodAny = ZodAny> =
  * Base class for Tools that accept input of any shape defined by a Zod schema.
  */
 export abstract class StructuredTool<
-  T extends ZodAny = ZodAny
+  T extends ZodAny | z.ZodType = ZodAny
 > extends BaseLangChain<
   (z.output<T> extends string ? string : never) | z.input<T>,
   string
@@ -3141,8 +3154,9 @@ export interface DynamicToolInput extends BaseDynamicToolInput {
 /**
  * Interface for the input parameters of the DynamicStructuredTool class.
  */
-export interface DynamicStructuredToolInput<T extends ZodAny = ZodAny>
-  extends BaseDynamicToolInput {
+export interface DynamicStructuredToolInput<
+  T extends ZodAny | z.ZodType = ZodAny
+> extends BaseDynamicToolInput {
   func: (
     input: z.infer<T>,
     runManager?: CallbackManagerForToolRun,
@@ -3204,7 +3218,7 @@ export class DynamicTool extends Tool {
  * provided function when the tool is called.
  */
 export class DynamicStructuredTool<
-  T extends ZodAny = ZodAny
+  T extends ZodAny | z.ZodType = ZodAny
 > extends StructuredTool<T> {
   static lc_name() {
     return "DynamicStructuredTool";
@@ -3338,51 +3352,36 @@ const _getDescriptionFromRunnable = (schema: Record<string, any>): string => {
  * @param {ZodAny} [fields.schema] The Zod schema for the input of the tool.
  * @returns {StructuredTool} The tool created from the runnable.
  */
-export function convertRunnableToTool(
-  runnable: Runnable,
+function convertRunnableToTool<RunInput>(
+  runnable: Runnable<RunInput, string>,
   fields: {
     name?: string;
     description?: string;
-    schema: ZodAny | z.ZodString;
+    schema: z.ZodType<RunInput> | z.ZodString;
   }
-): StructuredTool {
+): DynamicTool | DynamicStructuredTool<z.ZodType<RunInput>> {
   const description =
-    fields.description ?? _getDescriptionFromRunnable(fields.schema);
+    fields.description ??
+    _getDescriptionFromRunnable(zodToJsonSchema(fields.schema));
   const name = fields.name ?? runnable.getName();
 
-  if (fields.schema._def.typeName === z.ZodFirstPartyTypeKind.ZodString) {
+  if (
+    "typeName" in fields.schema._def &&
+    fields.schema._def.typeName === z.ZodFirstPartyTypeKind.ZodString
+  ) {
     return new DynamicTool({
       func: async (input, _runManager, config) =>
-        runnable.invoke(input, config),
+        runnable.invoke(input as RunInput, config),
       name,
       description,
     });
   } else {
-    return new DynamicStructuredTool({
+    return new DynamicStructuredTool<z.ZodType<RunInput>>({
       func: async (input, _runManager, config) =>
         runnable.invoke(input, config),
       name,
       description,
-      schema: fields.schema as ZodAny,
+      schema: fields.schema as z.ZodType<RunInput>,
     });
   }
-
-  // if ("type" in schema && schema.type === "object" && "properties" in schema) {
-  //   // Object input
-  //   return new DynamicStructuredTool({
-  //     func: async (input, _runManager, config) =>
-  //       runnable.invoke(input, config),
-  //     name,
-  //     description,
-  //     schema: fields.schema,
-  //   });
-  // } else {
-  //   // string input
-  //   return new DynamicTool({
-  //     func: async (input, _runManager, config) =>
-  //       runnable.invoke(input, config),
-  //     name,
-  //     description,
-  //   });
-  // }
 }
