@@ -82,7 +82,7 @@ export function getBufferString(
       throw new Error(`Got unsupported message type: ${m._getType()}`);
     }
     const nameStr = m.name ? `${m.name}, ` : "";
-    let readableContent =
+    const readableContent =
       typeof m.content === "string"
         ? m.content
         : JSON.stringify(m.content, null, 2);
