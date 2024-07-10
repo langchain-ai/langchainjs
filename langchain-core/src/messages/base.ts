@@ -284,7 +284,6 @@ export function _mergeLists(left?: any[], right?: any[]) {
   } else {
     const merged = [...left];
     for (const item of right) {
-      console.log("item", item);
       if (
         typeof item === "object" &&
         "index" in item &&
