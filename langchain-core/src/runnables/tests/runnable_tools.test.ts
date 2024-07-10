@@ -1,8 +1,8 @@
 import { z } from "zod";
 // DynamicStructuredTool MUST be imported from here and not from tools.js.
 // The `instanceof` check will fail it it's imported from tools.js due to the re-export.
-import { DynamicStructuredTool, RunnableLambda } from "../base.js";
 import { zodToJsonSchema } from "zod-to-json-schema";
+import { DynamicStructuredTool, RunnableLambda } from "../base.js";
 
 test("Runnable asTool works", async () => {
   const schema = z.object({

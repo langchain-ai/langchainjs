@@ -1103,11 +1103,13 @@ export abstract class Runnable<
     description?: string;
     schema: z.ZodString;
   }): DynamicTool;
+
   asTool(fields: {
     name?: string;
     description?: string;
     schema: z.ZodType<RunInput>;
   }): DynamicStructuredTool<z.ZodType<RunInput>>;
+
   asTool(fields: {
     name?: string;
     description?: string;
