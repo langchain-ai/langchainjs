@@ -6,7 +6,6 @@ import {
   type TraceableFunction,
   isTraceableFunction,
 } from "langsmith/singletons/traceable";
-import { zodToJsonSchema } from "zod-to-json-schema";
 import type { RunnableInterface, RunnableBatchOptions } from "./types.js";
 import { CallbackManagerForChainRun } from "../callbacks/manager.js";
 import {
@@ -1088,7 +1087,7 @@ export abstract class Runnable<
    *
    * @param fields
    * @param {string | undefined} [fields.name] The name of the tool. If not provided, it will default to the name of the runnable.
-   * @param {string | undefined} [fields.description] The description of the tool. If not provided, it will default to `Takes {schema}` where `schema` is a JSON string representation of the input schema.
+   * @param {string | undefined} [fields.description] The description of the tool.
    * @param {z.ZodType<T>} [fields.schema] The Zod schema for the input of the tool. Infers the Zod type from the input type of the runnable.
    * @returns {RunnableToolLike<z.ZodType<T>, RunOutput>} An instance of `RunnableToolLike` which is a runnable that can be used as a tool.
    */
@@ -2843,15 +2842,6 @@ export class RunnableToolLike<
 }
 
 /**
- * Generate a placeholder description of a runnable
- */
-const _getDescriptionFromRunnable = <RunInput = unknown>(
-  schema: RunInput
-): string => {
-  return `Takes ${JSON.stringify(schema, null, 2)}`;
-};
-
-/**
  * Given a runnable and a Zod schema, convert the runnable to a tool.
  *
  * @template RunInput The input type for the runnable.
@@ -2860,7 +2850,7 @@ const _getDescriptionFromRunnable = <RunInput = unknown>(
  * @param {Runnable<RunInput, RunOutput>} runnable The runnable to convert to a tool.
  * @param fields
  * @param {string | undefined} [fields.name] The name of the tool. If not provided, it will default to the name of the runnable.
- * @param {string | undefined} [fields.description] The description of the tool. If not provided, it will default to `Takes {schema}` where `schema` is a JSON string representation of the input schema.
+ * @param {string | undefined} [fields.description] The description of the tool.
  * @param {z.ZodType<RunInput>} [fields.schema] The Zod schema for the input of the tool. Infers the Zod type from the input type of the runnable.
  * @returns {RunnableToolLike<z.ZodType<RunInput>, RunOutput>} An instance of `RunnableToolLike` which is a runnable that can be used as a tool.
  */
@@ -2872,15 +2862,13 @@ export function convertRunnableToTool<RunInput, RunOutput>(
     schema: z.ZodType<RunInput>;
   }
 ): RunnableToolLike<z.ZodType<RunInput>, RunOutput> {
-  const description =
-    fields.description ??
-    _getDescriptionFromRunnable(zodToJsonSchema(fields.schema));
+  const { description, schema } = fields;
   const name = fields.name ?? runnable.getName();
 
   return new RunnableToolLike<z.ZodType<RunInput>, RunOutput>({
     name,
     description,
-    schema: fields.schema,
+    schema,
     bound: runnable,
   });
 }

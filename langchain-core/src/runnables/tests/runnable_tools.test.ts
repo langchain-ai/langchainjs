@@ -17,9 +17,6 @@ test("Runnable asTool works", async () => {
 
   expect(tool).toBeInstanceOf(RunnableToolLike);
   expect(tool.schema).toBe(schema);
-  expect(tool.description).toBe(
-    `Takes ${JSON.stringify(zodToJsonSchema(schema), null, 2)}`
-  );
   expect(tool.name).toBe(runnable.getName());
 });
 
