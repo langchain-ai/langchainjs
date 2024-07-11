@@ -67,18 +67,21 @@ export function convertToConverseMessages(messages: BaseMessage[]): {
   const converseSystem: BedrockSystemContentBlock[] = messages
     .filter((msg) => msg._getType() === "system")
     .map((msg) => {
-      const text = msg.content;
-      if (typeof text !== "string") {
-        throw new Error("System message content must be a string.");
+      if (typeof msg.content === "string") {
+        return { text: msg.content };
+      } else if (msg.content.length === 1 && msg.content[0].type === "text") {
+        return { text: msg.content[0].text };
       }
-      return { text };
+      throw new Error(
+        "System message content must be either a string, or a content array containing a single text object."
+      );
     });
   const converseMessages: BedrockMessage[] = messages
-    .filter((msg) => !["system", "tool", "function"].includes(msg._getType()))
+    .filter((msg) => msg._getType() !== "system")
     .map((msg) => {
       if (msg._getType() === "ai") {
         const castMsg = msg as AIMessage;
-        if (typeof castMsg.content === "string") {
+        if (typeof castMsg.content === "string" && castMsg.content !== "") {
           return {
             role: "assistant",
             content: [
@@ -99,16 +102,21 @@ export function convertToConverseMessages(messages: BaseMessage[]): {
                 },
               })),
             };
-          } else {
+          } else if (Array.isArray(castMsg.content)) {
             const contentBlocks: ContentBlock[] = castMsg.content.map(
               (block) => {
-                if (block.type === "text") {
+                if (block.type === "text" && block.text !== "") {
                   return {
                     text: block.text,
                   };
                 } else {
+                  const blockValues = Object.fromEntries(
+                    Object.values(block).filter(([key]) => key !== "type")
+                  );
                   throw new Error(
-                    `Unsupported content block type: ${block.type}`
+                    `Unsupported content block type: ${
+                      block.type
+                    } with content of ${JSON.stringify(blockValues, null, 2)}`
                   );
                 }
               }
@@ -117,10 +125,14 @@ export function convertToConverseMessages(messages: BaseMessage[]): {
               role: "assistant",
               content: contentBlocks,
             };
+          } else {
+            throw new Error(
+              `Invalid message content: empty string. '${msg._getType()}' must contain non-empty content.`
+            );
           }
         }
       } else if (msg._getType() === "human" || msg._getType() === "generic") {
-        if (typeof msg.content === "string") {
+        if (typeof msg.content === "string" && msg.content !== "") {
           return {
             role: "user",
             content: [
@@ -129,7 +141,7 @@ export function convertToConverseMessages(messages: BaseMessage[]): {
               },
             ],
           };
-        } else {
+        } else if (Array.isArray(msg.content)) {
           const contentBlocks: ContentBlock[] = msg.content.flatMap((block) => {
             if (block.type === "image_url") {
               const base64: string =
@@ -149,12 +161,17 @@ export function convertToConverseMessages(messages: BaseMessage[]): {
             role: "user",
             content: contentBlocks,
           };
+        } else {
+          throw new Error(
+            `Invalid message content: empty string. '${msg._getType()}' must contain non-empty content.`
+          );
         }
       } else if (msg._getType() === "tool") {
         const castMsg = msg as ToolMessage;
         if (typeof castMsg.content === "string") {
           return {
-            role: undefined,
+            // Tool use messages are always from the user
+            role: "user",
             content: [
               {
                 toolResult: {
@@ -170,7 +187,8 @@ export function convertToConverseMessages(messages: BaseMessage[]): {
           };
         } else {
           return {
-            role: undefined,
+            // Tool use messages are always from the user
+            role: "user",
             content: [
               {
                 toolResult: {
