@@ -1087,7 +1087,7 @@ export abstract class Runnable<
    *
    * @param fields
    * @param {string | undefined} [fields.name] The name of the tool. If not provided, it will default to the name of the runnable.
-   * @param {string | undefined} [fields.description] The description of the tool.
+   * @param {string | undefined} [fields.description] The description of the tool. Falls back to the description on the Zod schema if not provided, or undefined if neither are provided.
    * @param {z.ZodType<T>} [fields.schema] The Zod schema for the input of the tool. Infers the Zod type from the input type of the runnable.
    * @returns {RunnableToolLike<z.ZodType<T>, RunOutput>} An instance of `RunnableToolLike` which is a runnable that can be used as a tool.
    */
@@ -2852,7 +2852,7 @@ export class RunnableToolLike<
  * @param {Runnable<RunInput, RunOutput>} runnable The runnable to convert to a tool.
  * @param fields
  * @param {string | undefined} [fields.name] The name of the tool. If not provided, it will default to the name of the runnable.
- * @param {string | undefined} [fields.description] The description of the tool.
+ * @param {string | undefined} [fields.description] The description of the tool. Falls back to the description on the Zod schema if not provided, or undefined if neither are provided.
  * @param {z.ZodType<RunInput>} [fields.schema] The Zod schema for the input of the tool. Infers the Zod type from the input type of the runnable.
  * @returns {RunnableToolLike<z.ZodType<RunInput>, RunOutput>} An instance of `RunnableToolLike` which is a runnable that can be used as a tool.
  */
@@ -2864,13 +2864,13 @@ export function convertRunnableToTool<RunInput, RunOutput>(
     schema: z.ZodType<RunInput>;
   }
 ): RunnableToolLike<z.ZodType<RunInput>, RunOutput> {
-  const { description, schema } = fields;
   const name = fields.name ?? runnable.getName();
+  const description = fields.description ?? fields.schema.description;
 
   return new RunnableToolLike<z.ZodType<RunInput>, RunOutput>({
     name,
     description,
-    schema,
+    schema: fields.schema,
     bound: runnable,
   });
 }

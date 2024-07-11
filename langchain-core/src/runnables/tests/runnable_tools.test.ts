@@ -118,3 +118,22 @@ test("asTool can take a single string input", async () => {
   const result = await asTool.invoke("b");
   expect(result).toBe("baz");
 });
+
+test("Runnable asTool uses Zod schema description if not provided", async () => {
+  const description = "Test schema";
+  const schema = z
+    .object({
+      foo: z.string(),
+    })
+    .describe(description);
+  const runnable = RunnableLambda.from<z.infer<typeof schema>, string>(
+    (input, config) => {
+      return `${input.foo}${config?.configurable.foo}`;
+    }
+  );
+  const tool = runnable.asTool({
+    schema,
+  });
+
+  expect(tool.description).toBe(description);
+});
