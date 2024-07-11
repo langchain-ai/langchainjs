@@ -11,6 +11,8 @@ import {
   SystemMessagePromptTemplate,
 } from "@langchain/core/prompts";
 import { CallbackManager } from "@langchain/core/callbacks/manager";
+import { tool } from "@langchain/core/tools";
+import { z } from "zod";
 import { ChatAnthropic } from "../chat_models.js";
 
 test("Test ChatAnthropic", async () => {
@@ -336,6 +338,50 @@ test("Stream tokens", async () => {
     }
   }
   console.log(res);
+  expect(res?.usage_metadata).toBeDefined();
+  if (!res?.usage_metadata) {
+    return;
+  }
+  expect(res.usage_metadata.input_tokens).toBeGreaterThan(1);
+  expect(res.usage_metadata.output_tokens).toBeGreaterThan(1);
+  expect(res.usage_metadata.total_tokens).toBe(
+    res.usage_metadata.input_tokens + res.usage_metadata.output_tokens
+  );
+});
+
+test("Stream tokens with function calling", async () => {
+  const model = new ChatAnthropic({
+    model: "claude-3-haiku-20240307",
+    temperature: 0,
+  });
+
+  const weatherTool = tool(
+    (_) => "The weather in new york is...",
+    {
+      name: "weatherTool",
+      description: "A tool that fetches the weather.",
+      schema: z.object({
+        location: z.string().describe("Get the weather for a given location."),
+      }),
+    }
+  );
+
+  let res: AIMessageChunk | null = null;
+  for await (const chunk of await model
+    .bindTools([weatherTool], {
+      tool_choice: {
+        type: "tool",
+        name: "weatherTool",
+      },
+    })
+    .stream("Whats the weather like in new york")) {
+    if (!res) {
+      res = chunk;
+    } else {
+      res = res.concat(chunk);
+    }
+  }
+  expect(res?.tool_calls?.[0].name).toBe("weatherTool");
   expect(res?.usage_metadata).toBeDefined();
   if (!res?.usage_metadata) {
     return;

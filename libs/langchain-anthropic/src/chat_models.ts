@@ -691,6 +691,7 @@ export class ChatAnthropicMessages<
           content: result.content,
           additional_kwargs: result.additional_kwargs,
           tool_call_chunks: toolCallChunks,
+          usage_metadata: result.usage_metadata,
         }),
         text: generations[0].text,
       });
