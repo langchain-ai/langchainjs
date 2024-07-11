@@ -11032,6 +11032,7 @@ __metadata:
     prettier: ^2.8.3
     release-it: ^15.10.1
     rimraf: ^5.0.1
+    ts-jest: ^29.1.0
     typescript: ~5.1.6
     uuid: ^10.0.0
     web-streams-polyfill: ^3.3.3
@@ -11318,22 +11319,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/langgraph@npm:latest":
-  version: 0.0.18
-  resolution: "@langchain/langgraph@npm:0.0.18"
-  dependencies:
-    "@langchain/core": ^0.1.61
-    uuid: ^9.0.1
-  peerDependencies:
-    better-sqlite3: ^9.5.0
-  peerDependenciesMeta:
-    better-sqlite3:
-      optional: true
-  checksum: dc35aaafc3489d8b30863e31c6564fc10be0bc1cd216d5877cc248a46e3ad508f7faf120e7ead675e0ac7f0ea1deae23bbd239ac0020e6a0c46a129a691c62b5
-  languageName: node
-  linkType: hard
-
-"@langchain/langgraph@npm:~0.0.26":
+"@langchain/langgraph@npm:0.0.26, @langchain/langgraph@npm:~0.0.26":
   version: 0.0.26
   resolution: "@langchain/langgraph@npm:0.0.26"
   dependencies:
@@ -21657,7 +21643,7 @@ __metadata:
     "@docusaurus/preset-classic": 2.4.3
     "@docusaurus/remark-plugin-npm2yarn": 2.4.3
     "@docusaurus/theme-mermaid": 2.4.3
-    "@langchain/langgraph": latest
+    "@langchain/langgraph": 0.0.26
     "@langchain/scripts": "workspace:*"
     "@mdx-js/react": ^1.6.22
     "@supabase/supabase-js": ^2.39.7

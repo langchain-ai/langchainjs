@@ -16,7 +16,7 @@ import {
   ToolDefinition,
   isOpenAITool,
 } from "@langchain/core/language_models/base";
-import { Runnable } from "@langchain/core/runnables";
+import { Runnable, RunnableToolLike } from "@langchain/core/runnables";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import {
   AIMessageChunk,
@@ -142,7 +142,12 @@ function formatTools(tools: BedrockChatCallOptions["tools"]): AnthropicTool[] {
 }
 
 export interface BedrockChatCallOptions extends BaseChatModelCallOptions {
-  tools?: (StructuredToolInterface | AnthropicTool | ToolDefinition)[];
+  tools?: (
+    | StructuredToolInterface
+    | AnthropicTool
+    | ToolDefinition
+    | RunnableToolLike
+  )[];
 }
 
 export interface BedrockChatFields
@@ -744,7 +749,12 @@ export class BedrockChat
   }
 
   override bindTools(
-    tools: (StructuredToolInterface | AnthropicTool | ToolDefinition)[],
+    tools: (
+      | StructuredToolInterface
+      | AnthropicTool
+      | ToolDefinition
+      | RunnableToolLike
+    )[],
     _kwargs?: Partial<this["ParsedCallOptions"]>
   ): Runnable<
     BaseLanguageModelInput,

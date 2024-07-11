@@ -38,6 +38,7 @@ import {
   Runnable,
   RunnablePassthrough,
   RunnableSequence,
+  RunnableToolLike,
 } from "@langchain/core/runnables";
 import { isZodSchema } from "@langchain/core/utils/types";
 import { ToolCall } from "@langchain/core/messages/tool";
@@ -73,6 +74,7 @@ export interface ChatAnthropicCallOptions
     | AnthropicTool
     | Record<string, unknown>
     | ToolDefinition
+    | RunnableToolLike
   )[];
   /**
    * Whether or not to specify what tool the model should use
@@ -594,6 +596,7 @@ export class ChatAnthropicMessages<
       | Record<string, unknown>
       | StructuredToolInterface
       | ToolDefinition
+      | RunnableToolLike
     )[],
     kwargs?: Partial<CallOptions>
   ): Runnable<BaseLanguageModelInput, AIMessageChunk, CallOptions> {

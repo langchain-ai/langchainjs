@@ -11,9 +11,7 @@ import {
 } from "./language_models/base.js";
 import { ensureConfig, type RunnableConfig } from "./runnables/config.js";
 import type { RunnableFunc, RunnableInterface } from "./runnables/base.js";
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type ZodAny = z.ZodObject<any, any, any, any>;
+import { ZodAny } from "./types/zod.js";
 
 /**
  * Parameters for the Tool classes.
