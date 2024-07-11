@@ -444,6 +444,10 @@ export abstract class ChatModelIntegrationTests<
       ...this.constructorArgs,
       cache: true,
     });
+    if (!model.cache) {
+      throw new Error("Cache not enabled");
+    }
+
     const humanMessage = new HumanMessage({
       content: [
         {
@@ -452,13 +456,14 @@ export abstract class ChatModelIntegrationTests<
         },
       ],
     });
-    await model.invoke([humanMessage]);
-    if (!model.cache) {
-      throw new Error("Cache not enabled");
-    }
     const prompt = getBufferString([humanMessage]);
     const llmKey = model._getSerializedCacheKeyParametersForCall({} as any);
+
+    // Invoke the model to trigger a cache update.
+    await model.invoke([humanMessage]);
     const cacheValue = await model.cache.lookup(prompt, llmKey);
+
+    // Ensure only one generation was added to the cache.
     expect(cacheValue !== null).toBeTruthy();
     if (!cacheValue) return;
     expect(cacheValue).toHaveLength(1);
@@ -467,7 +472,7 @@ export abstract class ChatModelIntegrationTests<
     if (!("message" in cacheValue[0])) return;
     const cachedMessage = cacheValue[0].message as AIMessage;
 
-    // Invoke the model again with the same prompt.
+    // Invoke the model again with the same prompt, triggering a cache hit.
     const result = await model.invoke([humanMessage]);
 
     expect(result.content).toBe(cacheValue[0].text);
