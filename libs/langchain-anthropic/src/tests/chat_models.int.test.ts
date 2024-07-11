@@ -355,16 +355,13 @@ test("Stream tokens with function calling", async () => {
     temperature: 0,
   });
 
-  const weatherTool = tool(
-    (_) => "The weather in new york is...",
-    {
-      name: "weatherTool",
-      description: "A tool that fetches the weather.",
-      schema: z.object({
-        location: z.string().describe("Get the weather for a given location."),
-      }),
-    }
-  );
+  const weatherTool = tool((_) => "The weather in new york is...", {
+    name: "weatherTool",
+    description: "A tool that fetches the weather.",
+    schema: z.object({
+      location: z.string().describe("Get the weather for a given location."),
+    }),
+  });
 
   let res: AIMessageChunk | null = null;
   for await (const chunk of await model
