@@ -105,3 +105,20 @@ test("Create a runnable tool directly from RunnableToolLike", async () => {
   const result = await tool.invoke({ foo: "bar" });
   expect(result).toBe(true);
 });
+
+test("asTool can take a single string input", async () => {
+  const firstRunnable = RunnableLambda.from<string, string>((input) => {
+    return `${input  }a`;
+  });
+  const secondRunnable = RunnableLambda.from<string, string>((input) => {
+    return `${input  }z`;
+  });
+
+  const runnable = firstRunnable.pipe(secondRunnable);
+  const asTool = runnable.asTool({
+    schema: z.string(),
+  });
+
+  const result = await asTool.invoke("b");
+  expect(result).toBe("baz");
+});
