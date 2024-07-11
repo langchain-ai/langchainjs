@@ -121,11 +121,16 @@
     "@types/pg-copy-streams": "^1.2.2",
     "@types/uuid": "^9",
     "@types/ws": "^8",
+<<<<<<< HEAD
     "@typescript-eslint/eslint-plugin": "^5.58.0",
     "@typescript-eslint/parser": "^5.58.0",
     "@upstash/ratelimit": "^1.2.1",
     "@upstash/redis": "^1.32.0",
     "@upstash/vector": "^1.1.1",
+=======
+    "@upstash/redis": "^1.20.6",
+    "@upstash/vector": "^1.0.2",
+>>>>>>> 19ef85a6 (modification to oraclevs.ts)
     "@vercel/kv": "^0.2.3",
     "@vercel/postgres": "^0.5.0",
     "@writerai/writer-sdk": "^0.40.2",
@@ -153,8 +158,11 @@
     "dpdm": "^3.12.0",
     "dria": "^0.0.3",
     "duck-duck-scrape": "^2.2.5",
+<<<<<<< HEAD
     "epub2": "^3.0.1",
     "eslint": "^8.33.0",
+=======
+>>>>>>> 19ef85a6 (modification to oraclevs.ts)
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-config-prettier": "^8.6.0",
     "eslint-plugin-import": "^2.27.5",
