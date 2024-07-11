@@ -32,12 +32,13 @@ import {
   type Callbacks,
 } from "../callbacks/manager.js";
 import type { RunnableConfig } from "../runnables/config.js";
-import type { BaseCache } from "../caches.js";
+import type { BaseCache } from "../caches/base.js";
 import { StructuredToolInterface } from "../tools.js";
 import {
   Runnable,
   RunnableLambda,
   RunnableSequence,
+  RunnableToolLike,
 } from "../runnables/base.js";
 import { isStreamEventsHandler } from "../tracers/event_stream.js";
 import { isLogStreamHandler } from "../tracers/log_stream.js";
@@ -163,6 +164,7 @@ export abstract class BaseChatModel<
       | StructuredToolInterface
       | Record<string, unknown>
       | ToolDefinition
+      | RunnableToolLike
     )[],
     kwargs?: Partial<CallOptions>
   ): Runnable<BaseLanguageModelInput, OutputMessageType, CallOptions>;

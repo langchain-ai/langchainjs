@@ -29,7 +29,7 @@ import {
 } from "@aws-sdk/credential-provider-node";
 import type { DocumentType as __DocumentType } from "@smithy/types";
 import { StructuredToolInterface } from "@langchain/core/tools";
-import { Runnable } from "@langchain/core/runnables";
+import { Runnable, RunnableToolLike } from "@langchain/core/runnables";
 import {
   BedrockToolChoice,
   ConverseCommandParams,
@@ -289,6 +289,7 @@ export class ChatBedrockConverse
       | ToolDefinition
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>
+      | RunnableToolLike
     )[],
     kwargs?: Partial<this["ParsedCallOptions"]>
   ): Runnable<

@@ -1,7 +1,7 @@
 import type { Tiktoken, TiktokenModel } from "js-tiktoken/lite";
 
 import { z } from "zod";
-import { type BaseCache, InMemoryCache } from "../caches.js";
+import { type BaseCache, InMemoryCache } from "../caches/base.js";
 import {
   type BasePromptValueInterface,
   StringPromptValue,
@@ -481,7 +481,7 @@ export abstract class BaseLanguageModel<
    * @param callOptions Call options for the model
    * @returns A unique cache key.
    */
-  protected _getSerializedCacheKeyParametersForCall(
+  _getSerializedCacheKeyParametersForCall(
     // TODO: Fix when we remove the RunnableLambda backwards compatibility shim.
     { config, ...callOptions }: CallOptions & { config?: RunnableConfig }
   ): string {

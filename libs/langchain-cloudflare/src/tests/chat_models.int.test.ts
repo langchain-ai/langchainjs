@@ -1,3 +1,5 @@
+/* eslint-disable no-process-env */
+
 import { describe, test } from "@jest/globals";
 import { ChatMessage, HumanMessage } from "@langchain/core/messages";
 import {
@@ -9,6 +11,9 @@ import {
 } from "@langchain/core/prompts";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { ChatCloudflareWorkersAI } from "../chat_models.js";
+
+// Save the original value of the 'LANGCHAIN_CALLBACKS_BACKGROUND' environment variable
+const originalBackground = process.env.LANGCHAIN_CALLBACKS_BACKGROUND;
 
 describe("ChatCloudflareWorkersAI", () => {
   test("call", async () => {
@@ -26,22 +31,32 @@ describe("ChatCloudflareWorkersAI", () => {
   });
 
   test("generate with streaming true", async () => {
-    const chat = new ChatCloudflareWorkersAI({
-      streaming: true,
-    });
-    const message = new HumanMessage("What is 2 + 2?");
-    const tokens: string[] = [];
-    const res = await chat.generate([[message]], {
-      callbacks: [
-        {
-          handleLLMNewToken: (token) => {
-            tokens.push(token);
+    // Running LangChain callbacks in the background will sometimes cause the callbackManager to execute
+    // after the test/llm call has already finished & returned. Set that environment variable to false
+    // to prevent that from happening.
+    process.env.LANGCHAIN_CALLBACKS_BACKGROUND = "false";
+
+    try {
+      const chat = new ChatCloudflareWorkersAI({
+        streaming: true,
+      });
+      const message = new HumanMessage("What is 2 + 2?");
+      const tokens: string[] = [];
+      const res = await chat.generate([[message]], {
+        callbacks: [
+          {
+            handleLLMNewToken: (token) => {
+              tokens.push(token);
+            },
           },
-        },
-      ],
-    });
-    expect(tokens.length).toBeGreaterThan(1);
-    expect(tokens.join("")).toEqual(res.generations[0][0].text);
+        ],
+      });
+      expect(tokens.length).toBeGreaterThan(1);
+      expect(tokens.join("")).toEqual(res.generations[0][0].text);
+    } finally {
+      // Reset the environment variable
+      process.env.LANGCHAIN_CALLBACKS_BACKGROUND = originalBackground;
+    }
   });
 
   test("stream", async () => {

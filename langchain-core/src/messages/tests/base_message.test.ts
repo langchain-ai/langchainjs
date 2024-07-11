@@ -1,6 +1,11 @@
 import { test } from "@jest/globals";
 import { ChatPromptTemplate } from "../../prompts/chat.js";
-import { HumanMessage, AIMessage, ToolMessage } from "../index.js";
+import {
+  HumanMessage,
+  AIMessage,
+  ToolMessage,
+  ToolMessageChunk,
+} from "../index.js";
 import { load } from "../../load/index.js";
 
 test("Test ChatPromptTemplate can format OpenAI content image messages", async () => {
@@ -126,4 +131,65 @@ test("Deserialisation and serialisation of messages with ID", async () => {
   const deserialized: AIMessage = await load(JSON.stringify(message), config);
   expect(deserialized).toEqual(message);
   expect(deserialized.id).toBe(messageId);
+});
+
+test("Can concat raw_output (string) of ToolMessageChunk", () => {
+  const rawOutputOne = "Hello";
+  const rawOutputTwo = " world";
+  const chunk1 = new ToolMessageChunk({
+    content: "Hello",
+    tool_call_id: "1",
+    raw_output: rawOutputOne,
+  });
+  const chunk2 = new ToolMessageChunk({
+    content: " world",
+    tool_call_id: "1",
+    raw_output: rawOutputTwo,
+  });
+
+  const concated = chunk1.concat(chunk2);
+  expect(concated.raw_output).toBe(`${rawOutputOne}${rawOutputTwo}`);
+});
+
+test("Can concat raw_output (array) of ToolMessageChunk", () => {
+  const rawOutputOne = ["Hello", " world"];
+  const rawOutputTwo = ["!!"];
+  const chunk1 = new ToolMessageChunk({
+    content: "Hello",
+    tool_call_id: "1",
+    raw_output: rawOutputOne,
+  });
+  const chunk2 = new ToolMessageChunk({
+    content: " world",
+    tool_call_id: "1",
+    raw_output: rawOutputTwo,
+  });
+
+  const concated = chunk1.concat(chunk2);
+  expect(concated.raw_output).toEqual(["Hello", " world", "!!"]);
+});
+
+test("Can concat raw_output (object) of ToolMessageChunk", () => {
+  const rawOutputOne = {
+    foo: "bar",
+  };
+  const rawOutputTwo = {
+    bar: "baz",
+  };
+  const chunk1 = new ToolMessageChunk({
+    content: "Hello",
+    tool_call_id: "1",
+    raw_output: rawOutputOne,
+  });
+  const chunk2 = new ToolMessageChunk({
+    content: " world",
+    tool_call_id: "1",
+    raw_output: rawOutputTwo,
+  });
+
+  const concated = chunk1.concat(chunk2);
+  expect(concated.raw_output).toEqual({
+    foo: "bar",
+    bar: "baz",
+  });
 });

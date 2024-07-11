@@ -12,9 +12,7 @@ import {
 import { ensureConfig, type RunnableConfig } from "./runnables/config.js";
 import type { RunnableFunc, RunnableInterface } from "./runnables/base.js";
 import type { ToolMessage } from "./messages/tool.js";
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type ZodAny = z.ZodObject<any, any, any, any>;
+import { ZodAny } from "./types/zod.js";
 
 /**
  * Parameters for the Tool classes.

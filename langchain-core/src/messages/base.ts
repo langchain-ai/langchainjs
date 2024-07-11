@@ -305,6 +305,35 @@ export function _mergeLists(left?: any[], right?: any[]) {
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function _mergeObj<T = any>(
+  left: T | undefined,
+  right: T | undefined
+): T {
+  if (!left && !right) {
+    throw new Error("Cannot merge two undefined objects.");
+  }
+  if (!left || !right) {
+    return left || (right as T);
+  } else if (typeof left !== typeof right) {
+    throw new Error(
+      `Cannot merge objects of different types.\nLeft ${typeof left}\nRight ${typeof right}`
+    );
+  } else if (typeof left === "string" && typeof right === "string") {
+    return (left + right) as T;
+  } else if (Array.isArray(left) && Array.isArray(right)) {
+    return _mergeLists(left, right) as T;
+  } else if (typeof left === "object" && typeof right === "object") {
+    return _mergeDicts(left, right) as T;
+  } else if (left === right) {
+    return left;
+  } else {
+    throw new Error(
+      `Can not merge objects of different types.\nLeft ${left}\nRight ${right}`
+    );
+  }
+}
+
 /**
  * Represents a chunk of a message, which can be concatenated with other
  * message chunks. It includes a method `_merge_kwargs_dict()` for merging

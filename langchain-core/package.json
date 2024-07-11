@@ -1,6 +1,6 @@
 {
   "name": "@langchain/core",
-  "version": "0.2.14",
+  "version": "0.2.15",
   "description": "Core LangChain.js abstractions and schemas",
   "type": "module",
   "engines": {
@@ -74,6 +74,7 @@
     "prettier": "^2.8.3",
     "release-it": "^15.10.1",
     "rimraf": "^5.0.1",
+    "ts-jest": "^29.1.0",
     "typescript": "~5.1.6",
     "web-streams-polyfill": "^3.3.3"
   },

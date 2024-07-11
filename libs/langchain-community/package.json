@@ -1,6 +1,6 @@
 {
   "name": "@langchain/community",
-  "version": "0.2.17",
+  "version": "0.2.18",
   "description": "Third-party integrations for LangChain.js",
   "type": "module",
   "engines": {
@@ -78,6 +78,7 @@
     "@gradientai/nodejs-sdk": "^1.2.0",
     "@huggingface/inference": "^2.6.4",
     "@jest/globals": "^29.5.0",
+    "@langchain/langgraph": "~0.0.26",
     "@langchain/scripts": "~0.0.14",
     "@langchain/standard-tests": "0.0.0",
     "@layerup/layerup-security": "^1.5.12",
@@ -239,6 +240,7 @@
     "@google-cloud/storage": "^6.10.1 || ^7.7.0",
     "@gradientai/nodejs-sdk": "^1.2.0",
     "@huggingface/inference": "^2.6.4",
+    "@langchain/langgraph": "~0.0.26",
     "@layerup/layerup-security": "^1.5.12",
     "@mendable/firecrawl-js": "^0.0.13",
     "@mlc-ai/web-llm": "0.2.46",
@@ -411,6 +413,9 @@
       "optional": true
     },
     "@huggingface/inference": {
+      "optional": true
+    },
+    "@langchain/langgraph": {
       "optional": true
     },
     "@layerup/layerup-security": {
@@ -3049,6 +3054,15 @@
       "import": "./chains/graph_qa/cypher.js",
       "require": "./chains/graph_qa/cypher.cjs"
     },
+    "./langgraph/checkpointers/vercel_kv": {
+      "types": {
+        "import": "./langgraph/checkpointers/vercel_kv.d.ts",
+        "require": "./langgraph/checkpointers/vercel_kv.d.cts",
+        "default": "./langgraph/checkpointers/vercel_kv.d.ts"
+      },
+      "import": "./langgraph/checkpointers/vercel_kv.js",
+      "require": "./langgraph/checkpointers/vercel_kv.cjs"
+    },
     "./package.json": "./package.json"
   },
   "files": [
@@ -4096,6 +4110,10 @@
     "chains/graph_qa/cypher.cjs",
     "chains/graph_qa/cypher.js",
     "chains/graph_qa/cypher.d.ts",
-    "chains/graph_qa/cypher.d.cts"
+    "chains/graph_qa/cypher.d.cts",
+    "langgraph/checkpointers/vercel_kv.cjs",
+    "langgraph/checkpointers/vercel_kv.js",
+    "langgraph/checkpointers/vercel_kv.d.ts",
+    "langgraph/checkpointers/vercel_kv.d.cts"
   ]
 }

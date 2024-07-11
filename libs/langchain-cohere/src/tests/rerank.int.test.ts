@@ -20,6 +20,7 @@ const documents = [
 test("CohereRerank can indeed rerank documents with compressDocuments method", async () => {
   const cohereRerank = new CohereRerank({
     apiKey: process.env.COHERE_API_KEY,
+    model: "rerank-english-v2.0",
   });
 
   const rerankedDocuments = await cohereRerank.compressDocuments(
@@ -33,6 +34,7 @@ test("CohereRerank can indeed rerank documents with compressDocuments method", a
 test("CohereRerank can indeed rerank documents with rerank method", async () => {
   const cohereRerank = new CohereRerank({
     apiKey: process.env.COHERE_API_KEY,
+    model: "rerank-english-v2.0",
   });
 
   const rerankedDocuments = await cohereRerank.rerank(

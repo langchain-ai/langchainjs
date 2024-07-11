@@ -126,28 +126,54 @@ const PRIMITIVES = new Set(["string", "number", "boolean"]);
 export function ensureConfig<CallOptions extends RunnableConfig>(
   config?: CallOptions
 ): CallOptions {
-  const loadedConfig =
-    config ?? AsyncLocalStorageProviderSingleton.getInstance().getStore();
+  const implicitConfig =
+    AsyncLocalStorageProviderSingleton.getInstance().getStore();
   let empty: RunnableConfig = {
     tags: [],
     metadata: {},
-    callbacks: undefined,
     recursionLimit: 25,
     runId: undefined,
   };
-  if (loadedConfig) {
-    empty = { ...empty, ...loadedConfig };
+  if (implicitConfig) {
+    // Don't allow runId to be loaded implicitly, as this can cause
+    // child runs to improperly inherit their parents' run ids.
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { runId, ...rest } = implicitConfig;
+    empty = Object.entries(rest).reduce(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (currentConfig: Record<string, any>, [key, value]) => {
+        if (value !== undefined) {
+          // eslint-disable-next-line no-param-reassign
+          currentConfig[key] = value;
+        }
+        return currentConfig;
+      },
+      empty
+    );
   }
-  if (loadedConfig?.configurable) {
-    for (const key of Object.keys(loadedConfig.configurable)) {
+  if (config) {
+    empty = Object.entries(config).reduce(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (currentConfig: Record<string, any>, [key, value]) => {
+        if (value !== undefined) {
+          // eslint-disable-next-line no-param-reassign
+          currentConfig[key] = value;
+        }
+        return currentConfig;
+      },
+      empty
+    );
+  }
+  if (empty?.configurable) {
+    for (const key of Object.keys(empty.configurable)) {
       if (
-        PRIMITIVES.has(typeof loadedConfig.configurable[key]) &&
+        PRIMITIVES.has(typeof empty.configurable[key]) &&
         !empty.metadata?.[key]
       ) {
         if (!empty.metadata) {
           empty.metadata = {};
         }
-        empty.metadata[key] = loadedConfig.configurable[key];
+        empty.metadata[key] = empty.configurable[key];
       }
     }
   }
