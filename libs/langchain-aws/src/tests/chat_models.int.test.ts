@@ -1,7 +1,13 @@
 /* eslint-disable no-process-env */
 
 import { test, expect } from "@jest/globals";
-import { AIMessage, AIMessageChunk, HumanMessage, SystemMessage, ToolMessage } from "@langchain/core/messages";
+import {
+  AIMessage,
+  AIMessageChunk,
+  HumanMessage,
+  SystemMessage,
+  ToolMessage,
+} from "@langchain/core/messages";
 import { tool } from "@langchain/core/tools";
 import { z } from "zod";
 import { ChatBedrockConverse } from "../chat_models.js";
@@ -321,27 +327,32 @@ test("Test ChatBedrockConverse tool_choice works", async () => {
   expect(result.tool_calls?.[0].id).toBeDefined();
 });
 
-test.only("convertToConverseMessages works", () => {
+test("convertToConverseMessages works", () => {
   const messages = [
     new SystemMessage("You're an advanced AI assistant."),
-    new HumanMessage("What's the weather like today in Berkeley, CA? Use weather.com to check."),
+    new HumanMessage(
+      "What's the weather like today in Berkeley, CA? Use weather.com to check."
+    ),
     new AIMessage({
       content: "",
-      tool_calls: [{
-        name: "retrieverTool",
-        args: {
-          url: "https://weather.com",
+      tool_calls: [
+        {
+          name: "retrieverTool",
+          args: {
+            url: "https://weather.com",
+          },
+          id: "123_retriever_tool",
         },
-        id: "123_retriever_tool",
-      }]
+      ],
     }),
     new ToolMessage({
       tool_call_id: "123_retriever_tool",
-      content: "The weather in Berkeley, CA is 70 degrees and sunny."
-    })
-  ]
+      content: "The weather in Berkeley, CA is 70 degrees and sunny.",
+    }),
+  ];
 
-  const { converseMessages, converseSystem } = convertToConverseMessages(messages);
+  const { converseMessages, converseSystem } =
+    convertToConverseMessages(messages);
 
   expect(converseSystem).toHaveLength(1);
   expect(converseSystem[0].text).toBe("You're an advanced AI assistant.");
@@ -349,21 +360,25 @@ test.only("convertToConverseMessages works", () => {
   expect(converseMessages).toHaveLength(3);
 
   const userMsgs = converseMessages.filter((msg) => msg.role === "user");
+  // Length of two because of the first user question, and tool use
+  // messages will have the user role.
   expect(userMsgs).toHaveLength(2);
   const textUserMsg = userMsgs.find((msg) => msg.content?.[0].text);
-  expect(textUserMsg?.content?.[0].text).toBe("What's the weather like today in Berkeley, CA? Use weather.com to check.");
+  expect(textUserMsg?.content?.[0].text).toBe(
+    "What's the weather like today in Berkeley, CA? Use weather.com to check."
+  );
 
   const toolUseUserMsg = userMsgs.find((msg) => msg.content?.[0].toolResult);
   expect(toolUseUserMsg).toBeDefined();
-  if (!toolUseUserMsg) return;
-  expect(toolUseUserMsg.content).toHaveLength(1);
-  if (!toolUseUserMsg.content?.length) return;
+  expect(toolUseUserMsg?.content).toHaveLength(1);
+  if (!toolUseUserMsg?.content?.length) return;
 
   const toolResultContent = toolUseUserMsg.content[0];
   expect(toolResultContent).toBeDefined();
   expect(toolResultContent.toolResult?.toolUseId).toBe("123_retriever_tool");
-  expect(toolResultContent.toolResult?.content?.[0].text).toBe("The weather in Berkeley, CA is 70 degrees and sunny.");
-
+  expect(toolResultContent.toolResult?.content?.[0].text).toBe(
+    "The weather in Berkeley, CA is 70 degrees and sunny."
+  );
 
   const assistantMsg = converseMessages.find((msg) => msg.role === "assistant");
   expect(assistantMsg).toBeDefined();
@@ -376,45 +391,50 @@ test.only("convertToConverseMessages works", () => {
   expect(toolUseContent?.toolUse?.input).toEqual({
     url: "https://weather.com",
   });
-})
+});
 
-test.only("Model can handle empty content messages", async () => {
+test("Model can handle empty content messages", async () => {
   const model = new ChatBedrockConverse({
     ...baseConstructorArgs,
   });
 
-  const retrieverTool = tool((_) => {
-    return "Success"
-  }, {
-    name: "retrieverTool",
-    schema: z.object({
-      url: z.string().describe("The URL to fetch"),
-    }),
-    description: "A tool to fetch data from a URL",
-  })
-  
+  const retrieverTool = tool(
+    (_) => "Success",
+    {
+      name: "retrieverTool",
+      schema: z.object({
+        url: z.string().describe("The URL to fetch"),
+      }),
+      description: "A tool to fetch data from a URL",
+    }
+  );
+
   const messages = [
     new SystemMessage("You're an advanced AI assistant."),
-    new HumanMessage("What's the weather like today in Berkeley, CA? Use weather.com to check."),
+    new HumanMessage(
+      "What's the weather like today in Berkeley, CA? Use weather.com to check."
+    ),
     new AIMessage({
       content: "",
-      tool_calls: [{
-        name: "retrieverTool",
-        args: {
-          url: "https://weather.com",
+      tool_calls: [
+        {
+          name: "retrieverTool",
+          args: {
+            url: "https://weather.com",
+          },
+          id: "123_retriever_tool",
         },
-        id: "123_retriever_tool",
-      }]
+      ],
     }),
     new ToolMessage({
       tool_call_id: "123_retriever_tool",
-      content: "The weather in Berkeley, CA is 70 degrees and sunny."
-    })
-  ]
-  
+      content: "The weather in Berkeley, CA is 70 degrees and sunny.",
+    }),
+  ];
+
   const result = await model.bindTools([retrieverTool]).invoke(messages);
 
   expect(result.content).toBeDefined();
   expect(typeof result.content).toBe("string");
   expect(result.content.length).toBeGreaterThan(1);
-})
+});

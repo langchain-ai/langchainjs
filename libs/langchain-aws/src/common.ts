@@ -72,7 +72,9 @@ export function convertToConverseMessages(messages: BaseMessage[]): {
       } else if (msg.content.length === 1 && msg.content[0].type === "text") {
         return { text: msg.content[0].text };
       }
-      throw new Error("System message content must be either a string, or a content array containing a single text object.");
+      throw new Error(
+        "System message content must be either a string, or a content array containing a single text object."
+      );
     });
   const converseMessages: BedrockMessage[] = messages
     .filter((msg) => msg._getType() !== "system")
@@ -108,9 +110,13 @@ export function convertToConverseMessages(messages: BaseMessage[]): {
                     text: block.text,
                   };
                 } else {
-                  const blockValues = Object.fromEntries(Object.values(block).filter(([key]) => key !== "type"))
+                  const blockValues = Object.fromEntries(
+                    Object.values(block).filter(([key]) => key !== "type")
+                  );
                   throw new Error(
-                    `Unsupported content block type: ${block.type} with content of ${JSON.stringify(blockValues, null, 2)}`
+                    `Unsupported content block type: ${
+                      block.type
+                    } with content of ${JSON.stringify(blockValues, null, 2)}`
                   );
                 }
               }
