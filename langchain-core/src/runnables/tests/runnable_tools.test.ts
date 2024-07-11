@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { zodToJsonSchema } from "zod-to-json-schema";
 import { RunnableLambda, RunnableToolLike } from "../base.js";
 
 test("Runnable asTool works", async () => {
