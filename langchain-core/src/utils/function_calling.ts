@@ -6,8 +6,11 @@ import { Runnable, RunnableToolLike } from "../runnables/base.js";
 /**
  * Formats a `StructuredTool` or `RunnableToolLike` instance into a format
  * that is compatible with OpenAI function calling. It uses the `zodToJsonSchema`
- * function to convert the schema of the `StructuredTool` into a JSON
- * schema, which is then used as the parameters for the OpenAI function.
+ * function to convert the schema of the `StructuredTool` or `RunnableToolLike`
+ * into a JSON schema, which is then used as the parameters for the OpenAI function.
+ *
+ * @param {StructuredToolInterface | RunnableToolLike} tool The tool to convert to an OpenAI function.
+ * @returns {FunctionDefinition} The inputted tool in OpenAI function format.
  */
 export function convertToOpenAIFunction(
   tool: StructuredToolInterface | RunnableToolLike
@@ -23,7 +26,11 @@ export function convertToOpenAIFunction(
  * Formats a `StructuredTool` or `RunnableToolLike` instance into a
  * format that is compatible with OpenAI tool calling. It uses the
  * `zodToJsonSchema` function to convert the schema of the `StructuredTool`
- * into a JSON schema, which is then used as the parameters for the OpenAI tool.
+ * or `RunnableToolLike` into a JSON schema, which is then used as the
+ * parameters for the OpenAI tool.
+ *
+ * @param {StructuredToolInterface | Record<string, any> | RunnableToolLike} tool The tool to convert to an OpenAI tool.
+ * @returns {ToolDefinition} The inputted tool in OpenAI tool format.
  */
 export function convertToOpenAITool(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -38,6 +45,12 @@ export function convertToOpenAITool(
   return tool as ToolDefinition;
 }
 
+/**
+ * Confirm whether the inputted tool is an instance of `StructuredToolInterface`.
+ *
+ * @param {StructuredToolInterface | Record<string, any> | undefined} tool The tool to check if it is an instance of `StructuredToolInterface`.
+ * @returns {tool is StructuredToolInterface} Whether the inputted tool is an instance of `StructuredToolInterface`.
+ */
 export function isStructuredTool(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   tool?: StructuredToolInterface | Record<string, any>
@@ -48,6 +61,12 @@ export function isStructuredTool(
   );
 }
 
+/**
+ * Confirm whether the inputted tool is an instance of `RunnableToolLike`.
+ *
+ * @param {unknown | undefined} tool The tool to check if it is an instance of `RunnableToolLike`.
+ * @returns {tool is RunnableToolLike} Whether the inputted tool is an instance of `RunnableToolLike`.
+ */
 export function isRunnableToolLike(tool?: unknown): tool is RunnableToolLike {
   return (
     tool !== undefined &&
