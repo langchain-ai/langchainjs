@@ -2821,8 +2821,6 @@ export class RunnableToolLike<
   RunInput extends z.ZodType = z.ZodType,
   RunOutput = unknown
 > extends RunnableBinding<z.infer<RunInput>, RunOutput> {
-  lc_runnable_tool_like: true;
-
   name: string;
 
   description?: string;
@@ -2838,6 +2836,10 @@ export class RunnableToolLike<
     this.name = fields.name;
     this.description = fields.description;
     this.schema = fields.schema;
+  }
+
+  static lc_name() {
+    return "RunnableToolLike";
   }
 }
 

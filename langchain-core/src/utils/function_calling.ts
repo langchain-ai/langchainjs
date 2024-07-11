@@ -52,7 +52,8 @@ export function isRunnableToolLike(tool?: unknown): tool is RunnableToolLike {
   return (
     tool !== undefined &&
     Runnable.isRunnable(tool) &&
-    "lc_runnable_tool_like" in tool &&
-    tool.lc_runnable_tool_like === true
+    "lc_name" in tool.constructor &&
+    typeof tool.constructor.lc_name === "function" &&
+    tool.constructor.lc_name() === "RunnableToolLike"
   );
 }
