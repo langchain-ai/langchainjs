@@ -60,14 +60,14 @@ type AnthropicMessageStreamEvent = Anthropic.MessageStreamEvent;
 type AnthropicRequestOptions = Anthropic.RequestOptions;
 type AnthropicToolChoice =
   | {
-      type: "tool";
-      name: string;
-    }
+    type: "tool";
+    name: string;
+  }
   | "any"
   | "auto";
 export interface ChatAnthropicCallOptions
   extends BaseLanguageModelCallOptions,
-    Pick<AnthropicInput, "streamUsage"> {
+  Pick<AnthropicInput, "streamUsage"> {
   tools?: (
     | StructuredToolInterface
     | AnthropicTool
@@ -111,10 +111,10 @@ function anthropicResponseToChatMessages(
   const usageMetadata =
     usage != null
       ? {
-          input_tokens: usage.input_tokens ?? 0,
-          output_tokens: usage.output_tokens ?? 0,
-          total_tokens: (usage.input_tokens ?? 0) + (usage.output_tokens ?? 0),
-        }
+        input_tokens: usage.input_tokens ?? 0,
+        output_tokens: usage.output_tokens ?? 0,
+        total_tokens: (usage.input_tokens ?? 0) + (usage.output_tokens ?? 0),
+      }
       : undefined;
   if (messages.length === 1 && messages[0].type === "text") {
     return [
@@ -440,11 +440,10 @@ function _formatMessagesForAnthropic(messages: BaseMessage[]): {
  * ```
  */
 export class ChatAnthropicMessages<
-    CallOptions extends ChatAnthropicCallOptions = ChatAnthropicCallOptions
-  >
+  CallOptions extends ChatAnthropicCallOptions = ChatAnthropicCallOptions
+>
   extends BaseChatModel<CallOptions, AIMessageChunk>
-  implements AnthropicInput
-{
+  implements AnthropicInput {
   static lc_name() {
     return "ChatAnthropic";
   }
@@ -669,7 +668,8 @@ export class ChatAnthropicMessages<
   ): AsyncGenerator<ChatGenerationChunk> {
     const params = this.invocationParams(options);
     const formattedMessages = _formatMessagesForAnthropic(messages);
-    if (options.tools !== undefined && options.tools.length > 0) {
+    if (options.tools !== undefined && options.tools.length > 0 && false) { // TODO: Remove false
+      // this is no longer needed but I left it here for reference when reviewing..
       const { generations } = await this._generateNonStreaming(
         messages,
         params,
@@ -769,6 +769,50 @@ export class ChatAnthropicMessages<
             await runManager?.handleLLMNewToken(content);
           }
         }
+
+        else if (data.type === 'content_block_start') {
+          // this identifies which tool the agent will call
+          const content = data.content_block;
+          if (content !== undefined && data?.content_block?.id && data?.content_block?.name) {
+            const toolCallChunks = [{
+              name: data.content_block?.name,
+              args: '',
+              id: data.content_block?.id,
+              index: data.index,
+            }]
+
+            yield new ChatGenerationChunk({
+              message: new AIMessageChunk({
+                content: '',
+                additional_kwargs: {},
+                tool_call_chunks: toolCallChunks,
+              }),
+              text: '',
+            });
+          }
+        }
+        else if (
+          data.type === 'content_block_delta' &&
+          data.delta?.type === 'input_json_delta') {
+          // this is the tool call chunks, continuing the params for the content_block_start.
+          const content = data?.delta?.partial_json; // content here is a partial json string.
+
+          if (content !== undefined) {
+            const toolCallChunks = [{
+              args: content,
+              index: data.index
+            }]
+            yield new ChatGenerationChunk({
+              message: new AIMessageChunk({
+                content: '',
+                additional_kwargs: {},
+                tool_call_chunks: toolCallChunks,
+              }),
+              text: content,
+            });
+            await runManager?.handleLLMNewToken(content);
+          }
+        }
       }
       let usageMetadata: UsageMetadata | undefined;
       if (this.streamUsage || options.streamUsage) {
@@ -803,12 +847,12 @@ export class ChatAnthropicMessages<
     const options =
       params.tools !== undefined
         ? {
-            ...requestOptions,
-            headers: {
-              ...requestOptions.headers,
-              "anthropic-beta": "tools-2024-04-04",
-            },
-          }
+          ...requestOptions,
+          headers: {
+            ...requestOptions.headers,
+            "anthropic-beta": "tools-2024-04-04",
+          },
+        }
         : requestOptions;
     const response = await this.completionWithRetry(
       {
@@ -971,9 +1015,9 @@ export class ChatAnthropicMessages<
   ):
     | Runnable<BaseLanguageModelInput, RunOutput>
     | Runnable<
-        BaseLanguageModelInput,
-        { raw: BaseMessage; parsed: RunOutput }
-      > {
+      BaseLanguageModelInput,
+      { raw: BaseMessage; parsed: RunOutput }
+    > {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const schema: z.ZodType<RunOutput> | Record<string, any> = outputSchema;
     const name = config?.name;
@@ -1062,4 +1106,4 @@ export class ChatAnthropicMessages<
   }
 }
 
-export class ChatAnthropic extends ChatAnthropicMessages {}
+export class ChatAnthropic extends ChatAnthropicMessages { }
