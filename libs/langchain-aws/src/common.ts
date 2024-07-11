@@ -27,6 +27,7 @@ import { StructuredToolInterface } from "@langchain/core/tools";
 import { isStructuredTool } from "@langchain/core/utils/function_calling";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { ChatGenerationChunk } from "@langchain/core/outputs";
+import { RunnableToolLike } from "@langchain/core/runnables";
 import { BedrockToolChoice } from "./types.js";
 
 export function extractImageInfo(base64: string): ContentBlock.ImageMember {
@@ -207,6 +208,7 @@ export function convertToConverseTools(
     | BedrockTool
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     | Record<string, any>
+    | RunnableToolLike
   )[]
 ): BedrockTool[] {
   if (tools.every(isOpenAITool)) {

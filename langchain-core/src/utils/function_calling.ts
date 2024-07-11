@@ -1,6 +1,7 @@
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { StructuredToolInterface } from "../tools.js";
 import { FunctionDefinition, ToolDefinition } from "../language_models/base.js";
+import { Runnable, RunnableToolLike } from "../runnables/base.js";
 
 /**
  * Formats a `StructuredTool` instance into a format that is compatible
@@ -9,7 +10,7 @@ import { FunctionDefinition, ToolDefinition } from "../language_models/base.js";
  * schema, which is then used as the parameters for the OpenAI function.
  */
 export function convertToOpenAIFunction(
-  tool: StructuredToolInterface
+  tool: StructuredToolInterface | RunnableToolLike
 ): FunctionDefinition {
   return {
     name: tool.name,
@@ -26,9 +27,9 @@ export function convertToOpenAIFunction(
  */
 export function convertToOpenAITool(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  tool: StructuredToolInterface | Record<string, any>
+  tool: StructuredToolInterface | Record<string, any> | RunnableToolLike
 ): ToolDefinition {
-  if (isStructuredTool(tool)) {
+  if (isStructuredTool(tool) || isRunnableToolLike(tool)) {
     return {
       type: "function",
       function: convertToOpenAIFunction(tool),
@@ -44,5 +45,14 @@ export function isStructuredTool(
   return (
     tool !== undefined &&
     Array.isArray((tool as StructuredToolInterface).lc_namespace)
+  );
+}
+
+export function isRunnableToolLike(tool?: unknown): tool is RunnableToolLike {
+  return (
+    tool !== undefined &&
+    Runnable.isRunnable(tool) &&
+    "lc_runnable_tool_like" in tool &&
+    tool.lc_runnable_tool_like === true
   );
 }

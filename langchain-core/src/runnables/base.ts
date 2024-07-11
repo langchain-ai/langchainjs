@@ -2809,7 +2809,7 @@ export interface RunnableToolLikeArgs<
   RunInput extends z.ZodType = z.ZodType,
   RunOutput = unknown
 > extends Omit<RunnableBindingArgs<z.infer<RunInput>, RunOutput>, "config"> {
-  name?: string;
+  name: string;
 
   description?: string;
 
@@ -2822,6 +2822,10 @@ export class RunnableToolLike<
   RunInput extends z.ZodType = z.ZodType,
   RunOutput = unknown
 > extends RunnableBinding<z.infer<RunInput>, RunOutput> {
+  lc_runnable_tool_like: true;
+
+  name: string;
+
   description?: string;
 
   schema: RunInput;

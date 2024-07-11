@@ -43,6 +43,7 @@ import {
   Runnable,
   RunnablePassthrough,
   RunnableSequence,
+  RunnableToolLike,
 } from "@langchain/core/runnables";
 import {
   BaseLanguageModelInput,
@@ -372,6 +373,7 @@ export class ChatGroq extends BaseChatModel<
       | Record<string, unknown>
       | StructuredToolInterface
       | ToolDefinition
+      | RunnableToolLike
     )[],
     kwargs?: Partial<ChatGroqCallOptions>
   ): Runnable<BaseLanguageModelInput, AIMessageChunk, ChatGroqCallOptions> {

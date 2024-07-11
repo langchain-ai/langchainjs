@@ -62,6 +62,7 @@ import {
   Runnable,
   RunnablePassthrough,
   RunnableSequence,
+  RunnableToolLike,
 } from "@langchain/core/runnables";
 import { zodToJsonSchema } from "zod-to-json-schema";
 
@@ -508,7 +509,11 @@ export class ChatMistralAI<
   }
 
   override bindTools(
-    tools: (Record<string, unknown> | StructuredToolInterface)[],
+    tools: (
+      | Record<string, unknown>
+      | StructuredToolInterface
+      | RunnableToolLike
+    )[],
     kwargs?: Partial<CallOptions>
   ): Runnable<BaseLanguageModelInput, AIMessageChunk, CallOptions> {
     const mistralAITools = tools

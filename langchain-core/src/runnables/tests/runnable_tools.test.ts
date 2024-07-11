@@ -108,10 +108,10 @@ test("Create a runnable tool directly from RunnableToolLike", async () => {
 
 test("asTool can take a single string input", async () => {
   const firstRunnable = RunnableLambda.from<string, string>((input) => {
-    return `${input  }a`;
+    return `${input}a`;
   });
   const secondRunnable = RunnableLambda.from<string, string>((input) => {
-    return `${input  }z`;
+    return `${input}z`;
   });
 
   const runnable = firstRunnable.pipe(secondRunnable);
