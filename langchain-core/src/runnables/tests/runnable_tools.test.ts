@@ -87,3 +87,21 @@ test("asTool should type error with mismatched schema", async () => {
     schema,
   });
 });
+
+test("Create a runnable tool directly from RunnableToolLike", async () => {
+  const schema = z.object({
+    foo: z.string(),
+  });
+  const adderFunc = (_: z.infer<typeof schema>): Promise<boolean> => {
+    return Promise.resolve(true);
+  };
+  const tool = new RunnableToolLike({
+    schema,
+    name: "test",
+    description: "test",
+    bound: RunnableLambda.from(adderFunc),
+  });
+
+  const result = await tool.invoke({ foo: "bar" });
+  expect(result).toBe(true);
+});

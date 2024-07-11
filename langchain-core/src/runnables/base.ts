@@ -2805,7 +2805,7 @@ export class RunnablePick<
   }
 }
 
-export interface RunnableToolLikeFields<
+export interface RunnableToolLikeArgs<
   RunInput extends z.ZodType = z.ZodType,
   RunOutput = unknown
 > extends Omit<RunnableBindingArgs<z.infer<RunInput>, RunOutput>, "config"> {
@@ -2826,7 +2826,7 @@ export class RunnableToolLike<
 
   schema: RunInput;
 
-  constructor(fields: RunnableToolLikeFields<RunInput, RunOutput>) {
+  constructor(fields: RunnableToolLikeArgs<RunInput, RunOutput>) {
     super({
       bound: fields.bound,
       config: fields.config ?? {},
