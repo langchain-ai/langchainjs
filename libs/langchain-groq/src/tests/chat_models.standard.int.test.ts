@@ -44,7 +44,15 @@ class ChatGroqStandardIntegrationTests extends ChatModelIntegrationTests<
     this.skipTestMessage(
       "testToolMessageHistoriesListContent",
       "ChatGroq",
-      "Not properly implemented."
+      "Complex message types not properly implemented"
+    );
+  }
+
+  async testCacheComplexMessageTypes() {
+    this.skipTestMessage(
+      "testCacheComplexMessageTypes",
+      "ChatGroq",
+      "Complex message types not properly implemented"
     );
   }
 }

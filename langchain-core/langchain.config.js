@@ -13,7 +13,7 @@ export const config = {
   internals: [/node\:/, /js-tiktoken/, /langsmith/],
   entrypoints: {
     agents: "agents",
-    caches: "caches",
+    caches: "caches/base",
     "callbacks/base": "callbacks/base",
     "callbacks/manager": "callbacks/manager",
     "callbacks/promises": "callbacks/promises",

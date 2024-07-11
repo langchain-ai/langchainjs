@@ -4,6 +4,9 @@ import { test } from "@jest/globals";
 import { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { FakeChatModel, FakeListChatModel } from "../../utils/testing/index.js";
+import { HumanMessage } from "../../messages/human.js";
+import { getBufferString } from "../../messages/utils.js";
+import { AIMessage } from "../../messages/ai.js";
 
 test("Test ChatModel accepts array shorthand for messages", async () => {
   const model = new FakeChatModel({});
@@ -188,4 +191,40 @@ test("Test ChatModel withStructuredOutput new syntax and includeRaw", async () =
   console.log(response.nested.somethingelse);
   // No error
   console.log(response.parsed);
+});
+
+test("Test ChatModel can cache complex messages", async () => {
+  const model = new FakeChatModel({
+    cache: true,
+  });
+  if (!model.cache) {
+    throw new Error("Cache not enabled");
+  }
+
+  const contentToCache = [
+    {
+      type: "text",
+      text: "Hello there!",
+    },
+  ];
+  const humanMessage = new HumanMessage({
+    content: contentToCache,
+  });
+
+  const prompt = getBufferString([humanMessage]);
+  const llmKey = model._getSerializedCacheKeyParametersForCall({});
+
+  // Invoke model to trigger cache update
+  await model.invoke([humanMessage]);
+
+  const value = await model.cache.lookup(prompt, llmKey);
+  expect(value).toBeDefined();
+  if (!value) return;
+
+  expect(value[0].text).toEqual(JSON.stringify(contentToCache, null, 2));
+
+  expect("message" in value[0]).toBeTruthy();
+  if (!("message" in value[0])) return;
+  const cachedMsg = value[0].message as AIMessage;
+  expect(cachedMsg.content).toEqual(JSON.stringify(contentToCache, null, 2));
 });

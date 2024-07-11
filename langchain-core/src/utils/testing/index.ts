@@ -184,7 +184,14 @@ export class FakeChatModel extends BaseChatModel {
         ],
       };
     }
-    const text = messages.map((m) => m.content).join("\n");
+    const text = messages
+      .map((m) => {
+        if (typeof m.content === "string") {
+          return m.content;
+        }
+        return JSON.stringify(m.content, null, 2);
+      })
+      .join("\n");
     await runManager?.handleLLMNewToken(text);
     return {
       generations: [
