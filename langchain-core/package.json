@@ -41,6 +41,7 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
+    "@rollup/rollup-win32-x64-msvc": "^4.18.1",
     "ansi-styles": "^5.0.0",
     "camelcase": "6",
     "decamelize": "1.2.0",
