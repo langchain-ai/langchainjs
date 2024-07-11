@@ -124,6 +124,7 @@ function anthropicResponseToChatMessages(
           content: messages[0].text,
           additional_kwargs: additionalKwargs,
           usage_metadata: usageMetadata,
+          response_metadata: additionalKwargs,
         }),
       },
     ];
@@ -138,6 +139,7 @@ function anthropicResponseToChatMessages(
           additional_kwargs: additionalKwargs,
           tool_calls: toolCalls,
           usage_metadata: usageMetadata,
+          response_metadata: additionalKwargs,
         }),
       },
     ];
@@ -691,6 +693,8 @@ export class ChatAnthropicMessages<
           content: result.content,
           additional_kwargs: result.additional_kwargs,
           tool_call_chunks: toolCallChunks,
+          usage_metadata: result.usage_metadata,
+          response_metadata: result.response_metadata,
         }),
         text: generations[0].text,
       });
