@@ -75,3 +75,27 @@ import WSOExample from "@examples/models/chat/integration_bedrock_wso_converse.t
 :::tip
 See the LangSmith trace [here](https://smith.langchain.com/public/982940c4-5f96-4168-80c9-99102c3e073a/r)
 :::
+
+### Tool result status
+
+:::note
+This feature is only available in `@langchain/aws` version 0.0.2 and above.
+:::
+
+The Bedrock Converse tool calling API allows for passing a `status` field in the tool result.
+This can be one of `"success"`, or `"error"` to indicate the status of the tool call.
+This can be helpful when building complex tool calling agents/graphs, where you want the agent/graph to handle errors gracefully.
+
+With LangChain, you can pass the `status` field to the Bedrock Converse API via the `raw_output` field on `ToolMessage`.
+
+Below is an example showing how this can work in practice:
+
+import ErrorStatusTool from "@examples/models/chat/integration_bedrock_converse_err_status.ts";
+
+<CodeBlock language="typescript">{ErrorStatusTool}</CodeBlock>
+
+We can see the model handled the error exactly as we intended, with it calling the `error_handler_tool` after it received a tool result with a status of `"error"`!
+
+:::tip
+See the LangSmith trace [here](https://smith.langchain.com/public/8794ac4d-dd17-4bf7-8334-6022e3a6af56/r)
+:::

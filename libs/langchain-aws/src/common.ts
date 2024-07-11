@@ -169,6 +169,15 @@ export function convertToConverseMessages(messages: BaseMessage[]): {
         }
       } else if (msg._getType() === "tool") {
         const castMsg = msg as ToolMessage;
+        let status: "error" | "success" | undefined;
+        if (
+          castMsg.raw_output &&
+          typeof castMsg.raw_output === "object" &&
+          "status" in castMsg.raw_output &&
+          ["error", "success"].includes(castMsg.raw_output.status as string)
+        ) {
+          status = castMsg.raw_output.status as "error" | "success";
+        }
         if (typeof castMsg.content === "string") {
           return {
             // Tool use messages are always from the user
@@ -182,6 +191,7 @@ export function convertToConverseMessages(messages: BaseMessage[]): {
                       text: castMsg.content,
                     },
                   ],
+                  status,
                 },
               },
             ],
@@ -199,6 +209,7 @@ export function convertToConverseMessages(messages: BaseMessage[]): {
                       json: castMsg.content,
                     },
                   ],
+                  status,
                 },
               },
             ],

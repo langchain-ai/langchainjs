@@ -179,23 +179,6 @@ export class ChatBedrockConverse
     return "ChatBedrockConverse";
   }
 
-  /**
-   * Replace with any secrets this class passes to `super`.
-   * See {@link ../../langchain-cohere/src/chat_model.ts} for
-   * an example.
-   */
-  get lc_secrets(): { [key: string]: string } | undefined {
-    return {
-      apiKey: "API_KEY_NAME",
-    };
-  }
-
-  get lc_aliases(): { [key: string]: string } | undefined {
-    return {
-      apiKey: "API_KEY_NAME",
-    };
-  }
-
   model = "anthropic.claude-3-haiku-20240307-v1:0";
 
   streaming = false;
