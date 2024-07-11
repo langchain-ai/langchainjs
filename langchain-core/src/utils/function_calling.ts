@@ -4,8 +4,8 @@ import { FunctionDefinition, ToolDefinition } from "../language_models/base.js";
 import { Runnable, RunnableToolLike } from "../runnables/base.js";
 
 /**
- * Formats a `StructuredTool` instance into a format that is compatible
- * with OpenAI function calling. It uses the `zodToJsonSchema`
+ * Formats a `StructuredTool` or `RunnableToolLike` instance into a format
+ * that is compatible with OpenAI function calling. It uses the `zodToJsonSchema`
  * function to convert the schema of the `StructuredTool` into a JSON
  * schema, which is then used as the parameters for the OpenAI function.
  */
@@ -20,10 +20,10 @@ export function convertToOpenAIFunction(
 }
 
 /**
- * Formats a `StructuredTool` instance into a format that is compatible
- * with OpenAI tool calling. It uses the `zodToJsonSchema`
- * function to convert the schema of the `StructuredTool` into a JSON
- * schema, which is then used as the parameters for the OpenAI tool.
+ * Formats a `StructuredTool` or `RunnableToolLike` instance into a
+ * format that is compatible with OpenAI tool calling. It uses the
+ * `zodToJsonSchema` function to convert the schema of the `StructuredTool`
+ * into a JSON schema, which is then used as the parameters for the OpenAI tool.
  */
 export function convertToOpenAITool(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
