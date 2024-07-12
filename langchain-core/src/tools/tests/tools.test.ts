@@ -23,7 +23,7 @@ test("Tool should throw type error if types are wrong", () => {
   // @ts-expect-error - Error because responseFormat: content makes return type be a string
   tool(
     (_): ContentAndRawOutput => {
-      return ["no-op", true]
+      return ["no-op", true];
     },
     {
       name: "weather",
@@ -35,7 +35,7 @@ test("Tool should throw type error if types are wrong", () => {
   // @ts-expect-error - Error because responseFormat: undefined makes return type be a string
   tool(
     (_): ContentAndRawOutput => {
-      return ["no-op", true]
+      return ["no-op", true];
     },
     {
       name: "weather",
@@ -46,7 +46,7 @@ test("Tool should throw type error if types are wrong", () => {
   // Should pass because we're expecting a `ToolMessage` return type due to `responseFormat: contentAndRawOutput`
   tool(
     (_): ContentAndRawOutput => {
-      return ["no-op", true]
+      return ["no-op", true];
     },
     {
       name: "weather",
@@ -107,8 +107,9 @@ test("Tool should error if responseFormat is contentAndRawOutput but the functio
   });
 
   const weatherTool = tool(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (_): any => {
-      return "str"
+      return "str";
     },
     {
       name: "weather",
@@ -122,14 +123,15 @@ test("Tool should error if responseFormat is contentAndRawOutput but the functio
   }).rejects.toThrow();
 });
 
-test.only("Tool works if responseFormat is contentAndRawOutput and returns a tuple", async () => {
+test("Tool works if responseFormat is contentAndRawOutput and returns a tuple", async () => {
   const weatherSchema = z.object({
     location: z.string(),
   });
 
   const weatherTool = tool(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (input): any => {
-      return ["msg_content", input]
+      return ["msg_content", input];
     },
     {
       name: "weather",
@@ -139,7 +141,7 @@ test.only("Tool works if responseFormat is contentAndRawOutput and returns a tup
   );
 
   const toolResult = await weatherTool.invoke({ location: "San Francisco" });
-  
+
   expect(toolResult).toBeInstanceOf(ToolMessage);
   expect(toolResult.content).toBe("msg_content");
   expect(toolResult.raw_output).toEqual({ location: "San Francisco" });

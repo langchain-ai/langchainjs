@@ -309,9 +309,8 @@ export interface DynamicToolInput extends BaseDynamicToolInput {
 /**
  * Interface for the input parameters of the DynamicStructuredTool class.
  */
-export interface DynamicStructuredToolInput<
-  T extends ZodAny = ZodAny
-> extends BaseDynamicToolInput {
+export interface DynamicStructuredToolInput<T extends ZodAny = ZodAny>
+  extends BaseDynamicToolInput {
   func: (
     input: BaseDynamicToolInput["responseFormat"] extends "contentAndRawOutput"
       ? ToolCall
@@ -492,7 +491,7 @@ interface ToolWrapperParams<RunInput extends ZodAny = ZodAny>
 export function tool<
   RunInput extends ZodAny = ZodAny,
   RunOutput extends ToolMessage = ToolMessage,
-  FuncInput extends z.infer<RunInput> | ToolCall = z.infer<RunInput>,
+  FuncInput extends z.infer<RunInput> | ToolCall = z.infer<RunInput>
 >(
   func: RunnableFunc<FuncInput, ContentAndRawOutput>,
   fields: Omit<ToolWrapperParams<RunInput>, "responseFormat"> & {
@@ -503,7 +502,7 @@ export function tool<
 export function tool<
   RunInput extends ZodAny = ZodAny,
   RunOutput extends string = string,
-  FuncInput extends z.infer<RunInput> | ToolCall = z.infer<RunInput>,
+  FuncInput extends z.infer<RunInput> | ToolCall = z.infer<RunInput>
 >(
   func: RunnableFunc<FuncInput, string>,
   fields: Omit<ToolWrapperParams<RunInput>, "responseFormat"> & {
@@ -515,7 +514,7 @@ export function tool<
   RunInput extends ZodAny = ZodAny,
   RunOutput extends string | ToolMessage = string,
   FuncInput extends z.infer<RunInput> | ToolCall = z.infer<RunInput>,
-  FuncOutput extends string | ContentAndRawOutput = string,
+  FuncOutput extends string | ContentAndRawOutput = string
 >(
   func: RunnableFunc<FuncInput, FuncOutput>,
   fields: ToolWrapperParams<RunInput>
