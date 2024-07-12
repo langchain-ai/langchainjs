@@ -1,13 +1,18 @@
 /* eslint-disable no-process-env */
 
 import { expect, test } from "@jest/globals";
-import { AIMessage, AIMessageChunk, HumanMessage, ToolMessage } from "@langchain/core/messages";
+import {
+  AIMessage,
+  AIMessageChunk,
+  HumanMessage,
+  ToolMessage,
+} from "@langchain/core/messages";
 import { StructuredTool, tool } from "@langchain/core/tools";
 import { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
+import { concat } from "@langchain/core/utils/stream";
 import { ChatAnthropic } from "../chat_models.js";
 import { AnthropicToolResponse } from "../types.js";
-import { concat } from "@langchain/core/utils/stream";
 
 const zodSchema = z
   .object({
@@ -187,7 +192,7 @@ test.only("Can bind & stream AnthropicTools", async () => {
     finalMessage = item;
   }
 
-  console.log("finalMessageConcated", finalMessageConcated)
+  console.log("finalMessageConcated", finalMessageConcated);
 
   if (!finalMessage) {
     throw new Error("No final message returned");
@@ -396,14 +401,11 @@ test("withStructuredOutput will always force tool usage", async () => {
 });
 
 test("Can stream tool calls", async () => {
-  const weatherTool = tool(
-    (_) => "no-op",
-    {
-      name: "get_weather",
-      description: zodSchema.description,
-      schema: zodSchema,
-    }
-  );
+  const weatherTool = tool((_) => "no-op", {
+    name: "get_weather",
+    description: zodSchema.description,
+    schema: zodSchema,
+  });
 
   const modelWithTools = model.bindTools([weatherTool]);
   const stream = await modelWithTools.stream(
