@@ -387,19 +387,24 @@ test("withStructuredOutput will always force tool usage", async () => {
   expect(castMessage.tool_calls?.[0].name).toBe("get_weather");
 });
 
-test.only("Can stream tool calls", async () => {
-  const weatherTool = tool((_) => "no-op", {
-    name: "get_weather",
-    description: zodSchema.description,
-    schema: zodSchema,
-  });
+test("Can stream tool calls", async () => {
+  const weatherTool = tool(
+    (_) => {
+      return "no-op";
+    },
+    {
+      name: "get_weather",
+      description: zodSchema.description,
+      schema: zodSchema,
+    }
+  );
 
   const modelWithTools = model.bindTools([weatherTool]);
   const stream = await modelWithTools.stream(
     "What is the weather in San Francisco CA?"
   );
 
-  const argsStringArr: string[] = [];
+  let argsStringArr: string[] = [];
 
   for await (const chunk of stream) {
     const toolCall = chunk.tool_calls?.[0];
