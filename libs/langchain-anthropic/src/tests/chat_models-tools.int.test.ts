@@ -388,14 +388,11 @@ test("withStructuredOutput will always force tool usage", async () => {
 });
 
 test.only("Can stream tool calls", async () => {
-  const weatherTool = tool(
-    (_) => "no-op",
-    {
-      name: "get_weather",
-      description: zodSchema.description,
-      schema: zodSchema,
-    }
-  );
+  const weatherTool = tool((_) => "no-op", {
+    name: "get_weather",
+    description: zodSchema.description,
+    schema: zodSchema,
+  });
 
   const modelWithTools = model.bindTools([weatherTool]);
   const stream = await modelWithTools.stream(
