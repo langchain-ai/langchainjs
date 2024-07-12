@@ -264,17 +264,13 @@ export function _mergeDicts(
       throw new Error(
         `field[${key}] already exists in the message chunk, but with a different type.`
       );
-    } else if (
-      typeof merged[key] === "string" &&
-      !(key === "type" && merged[key] === value)
-    ) {
+    } else if (typeof merged[key] === "string") {
       if (key === "type") {
         // Do not merge 'type' fields
         continue;
-      } else {
-        merged[key] = (merged[key] as string) + value;
       }
-    } else if (!Array.isArray(merged[key]) && typeof merged[key] === "object") {
+      merged[key] += value;
+    } else if (typeof merged[key] === "object" && !Array.isArray(merged[key])) {
       merged[key] = _mergeDicts(merged[key], value);
     } else if (Array.isArray(merged[key])) {
       merged[key] = _mergeLists(merged[key], value);
