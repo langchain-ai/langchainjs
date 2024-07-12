@@ -173,7 +173,7 @@ test("Can bind & invoke AnthropicTools", async () => {
   expect(input.location).toBeTruthy();
 });
 
-test.only("Can bind & stream AnthropicTools", async () => {
+test("Can bind & stream AnthropicTools", async () => {
   const modelWithTools = model.bind({
     tools: [anthropicTool],
   });
@@ -181,34 +181,26 @@ test.only("Can bind & stream AnthropicTools", async () => {
   const result = await modelWithTools.stream(
     "What is the weather in London today?"
   );
-  let finalMessage;
-  let finalMessageConcated: AIMessageChunk | undefined;
+  let finalMessage: AIMessageChunk | undefined;
   for await (const item of result) {
-    if (!finalMessageConcated) {
-      finalMessageConcated = item;
+    if (!finalMessage) {
+      finalMessage = item;
     } else {
-      finalMessageConcated = concat(finalMessageConcated, item);
+      finalMessage = concat(finalMessage, item);
     }
-    finalMessage = item;
   }
 
-  console.log("finalMessageConcated", finalMessageConcated);
-
+  expect(finalMessage).toBeDefined();
   if (!finalMessage) {
     throw new Error("No final message returned");
   }
 
-  console.log(
-    {
-      tool_calls: JSON.stringify(finalMessage.content, null, 2),
-    },
-    "Can bind & invoke StructuredTools"
-  );
   expect(Array.isArray(finalMessage.content)).toBeTruthy();
   if (!Array.isArray(finalMessage.content)) {
     throw new Error("Content is not an array");
   }
-  let toolCall: AnthropicToolResponse | undefined;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let toolCall: Record<string, any> | undefined;
   finalMessage.content.forEach((item) => {
     if (item.type === "tool_use") {
       toolCall = item as AnthropicToolResponse;
@@ -221,7 +213,7 @@ test.only("Can bind & stream AnthropicTools", async () => {
   const { name, input } = toolCall;
   expect(name).toBe("get_weather");
   expect(input).toBeTruthy();
-  expect(input.location).toBeTruthy();
+  expect(JSON.parse(input).location).toBeTruthy();
 });
 
 test("withStructuredOutput with zod schema", async () => {
@@ -412,23 +404,31 @@ test("Can stream tool calls", async () => {
     "What is the weather in San Francisco CA?"
   );
 
-  const argsStringArr: string[] = [];
-
+  let realToolCallChunkStreams = 0;
+  let prevToolCallChunkArgs = "";
+  let finalChunk: AIMessageChunk | undefined;
   for await (const chunk of stream) {
-    const toolCall = chunk.tool_calls?.[0];
-    if (!toolCall) continue;
-    const stringifiedArgs = JSON.stringify(toolCall.args, null, 2);
-
-    // Push each new "chunk" of args to the array. We'll check the array's
-    // length at the end to verify multiple tool call chunks were streamed.
-    if (argsStringArr[argsStringArr.length - 1] !== stringifiedArgs) {
-      argsStringArr.push(stringifiedArgs);
+    if (!finalChunk) {
+      finalChunk = chunk;
+    } else {
+      finalChunk = concat(finalChunk, chunk);
+    }
+    if (chunk.tool_call_chunks?.[0]?.args) {
+      if (
+        !prevToolCallChunkArgs ||
+        prevToolCallChunkArgs !== chunk.tool_call_chunks[0].args
+      ) {
+        realToolCallChunkStreams += 1;
+      }
+      prevToolCallChunkArgs = chunk.tool_call_chunks[0].args;
     }
   }
 
-  expect(argsStringArr.length).toBeGreaterThan(1);
-  console.log("argsStringArr.length", argsStringArr.length);
-  const finalToolCall = JSON.parse(argsStringArr[argsStringArr.length - 1]);
-  console.log("finalToolCall", finalToolCall);
-  expect(finalToolCall.location).toBeDefined();
+  expect(finalChunk?.tool_calls?.[0]).toBeDefined();
+  if (!finalChunk?.tool_calls?.[0]) {
+    return;
+  }
+  expect(finalChunk?.tool_calls?.[0].name).toBe("get_weather");
+  expect(finalChunk?.tool_calls?.[0].args.location).toBeDefined();
+  expect(realToolCallChunkStreams).toBeGreaterThan(1);
 });

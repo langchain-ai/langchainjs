@@ -33,10 +33,7 @@ import {
 } from "@langchain/core/language_models/base";
 import { StructuredToolInterface } from "@langchain/core/tools";
 import { zodToJsonSchema } from "zod-to-json-schema";
-import {
-  BaseLLMOutputParser,
-  parsePartialJson,
-} from "@langchain/core/output_parsers";
+import { BaseLLMOutputParser } from "@langchain/core/output_parsers";
 import {
   Runnable,
   RunnablePassthrough,
@@ -55,7 +52,6 @@ import {
   extractToolCalls,
 } from "./output_parsers.js";
 import { AnthropicToolResponse } from "./types.js";
-import { concat } from "@langchain/core/utils/stream";
 
 type AnthropicMessage = Anthropic.MessageParam;
 type AnthropicMessageCreateParams = Anthropic.MessageCreateParamsNonStreaming;
@@ -169,7 +165,12 @@ function _makeMessageChunkFromAnthropicEvent(
     coerceContentToString: boolean;
     usageData: { input_tokens: number; output_tokens: number };
   }
-): AIMessageChunk | null {
+): {
+  chunk: AIMessageChunk;
+  usageData: { input_tokens: number; output_tokens: number };
+} | null {
+  let usageDataCopy = { ...fields.usageData };
+
   if (data.type === "message_start") {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { content, usage, ...additionalKwargs } = data.message;
@@ -180,7 +181,7 @@ function _makeMessageChunkFromAnthropicEvent(
         filteredAdditionalKwargs[key] = value;
       }
     }
-    fields.usageData = usage;
+    usageDataCopy = usage;
     let usageMetadata: UsageMetadata | undefined;
     if (fields.streamUsage) {
       usageMetadata = {
@@ -189,11 +190,14 @@ function _makeMessageChunkFromAnthropicEvent(
         total_tokens: usage.input_tokens + usage.output_tokens,
       };
     }
-    return new AIMessageChunk({
-      content: fields.coerceContentToString ? "" : [],
-      additional_kwargs: filteredAdditionalKwargs,
-      usage_metadata: usageMetadata,
-    });
+    return {
+      chunk: new AIMessageChunk({
+        content: fields.coerceContentToString ? "" : [],
+        additional_kwargs: filteredAdditionalKwargs,
+        usage_metadata: usageMetadata,
+      }),
+      usageData: usageDataCopy,
+    };
   } else if (data.type === "message_delta") {
     let usageMetadata: UsageMetadata | undefined;
     if (fields.streamUsage) {
@@ -204,65 +208,75 @@ function _makeMessageChunkFromAnthropicEvent(
       };
     }
     if (data?.usage !== undefined) {
-      fields.usageData.output_tokens += data.usage.output_tokens;
+      usageDataCopy.output_tokens += data.usage.output_tokens;
     }
-
-    return new AIMessageChunk({
-      content: fields.coerceContentToString ? "" : [],
-      additional_kwargs: { ...data.delta },
-      usage_metadata: usageMetadata,
-    });
+    return {
+      chunk: new AIMessageChunk({
+        content: fields.coerceContentToString ? "" : [],
+        additional_kwargs: { ...data.delta },
+        usage_metadata: usageMetadata,
+      }),
+      usageData: usageDataCopy,
+    };
   } else if (
     data.type === "content_block_start" &&
     data.content_block.type === "tool_use"
   ) {
-    return new AIMessageChunk({
-      content: fields.coerceContentToString
-        ? ""
-        : [
-            {
-              index: data.index,
-              ...data.content_block,
-              input: "",
-            },
-          ],
-      additional_kwargs: {},
-    });
+    return {
+      chunk: new AIMessageChunk({
+        content: fields.coerceContentToString
+          ? ""
+          : [
+              {
+                index: data.index,
+                ...data.content_block,
+                input: "",
+              },
+            ],
+        additional_kwargs: {},
+      }),
+      usageData: usageDataCopy,
+    };
   } else if (
     data.type === "content_block_delta" &&
     data.delta.type === "text_delta"
   ) {
     const content = data.delta?.text;
     if (content !== undefined) {
-      return new AIMessageChunk({
-        content: fields.coerceContentToString
-          ? content
-          : [
-              {
-                index: data.index,
-                ...data.delta,
-              },
-            ],
-        additional_kwargs: {},
-      });
+      return {
+        chunk: new AIMessageChunk({
+          content: fields.coerceContentToString
+            ? content
+            : [
+                {
+                  index: data.index,
+                  ...data.delta,
+                },
+              ],
+          additional_kwargs: {},
+        }),
+        usageData: usageDataCopy,
+      };
     }
   } else if (
     data.type === "content_block_delta" &&
     data.delta.type === "input_json_delta"
   ) {
-    // partial JSON incoming!
-    return new AIMessageChunk({
-      content: fields.coerceContentToString
-        ? ""
-        : [
-            {
-              index: data.index,
-              input: data.delta.partial_json,
-              type: data.delta.type,
-            },
-          ],
-      additional_kwargs: {},
-    });
+    return {
+      chunk: new AIMessageChunk({
+        content: fields.coerceContentToString
+          ? ""
+          : [
+              {
+                index: data.index,
+                input: data.delta.partial_json,
+                type: data.delta.type,
+              },
+            ],
+        additional_kwargs: {},
+      }),
+      usageData: usageDataCopy,
+    };
   }
 
   return null;
@@ -799,82 +813,85 @@ export class ChatAnthropicMessages<
       ...formattedMessages,
       stream: true,
     });
-    const usageData = { input_tokens: 0, output_tokens: 0 };
-    let finalChunk: AIMessageChunk | undefined;
-    let aggregateToolCalls: {
-      index: number;
-      type: "tool_use";
-      id: string;
-      name: string;
-      input: string;
-    }[] = [];
-    console.log(aggregateToolCalls.length)
+    let usageData = { input_tokens: 0, output_tokens: 0 };
+
     for await (const data of stream) {
       if (options.signal?.aborted) {
         stream.controller.abort();
         throw new Error("AbortError: User aborted the request.");
       }
-      const chunk = _makeMessageChunkFromAnthropicEvent(data, {
+      const result = _makeMessageChunkFromAnthropicEvent(data, {
         streamUsage: !!(this.streamUsage || options.streamUsage),
         coerceContentToString,
         usageData,
       });
-      if (!chunk) {
+      if (!result) {
         continue;
       }
+      const { chunk, usageData: updatedUsageData } = result;
+      usageData = updatedUsageData;
 
-      if (!finalChunk) {
-        finalChunk = chunk;
-      } else {
-        finalChunk = concat(finalChunk, chunk);
+      let newToolCallChunk: ToolCallChunk | undefined;
+
+      // Initial chunk for tool calls from anthropic contains identifying information like ID and name.
+      // This chunk does not contain any input JSON.
+      const toolUseChunks = Array.isArray(chunk.content)
+        ? chunk.content.find((c) => c.type === "tool_use")
+        : undefined;
+      if (
+        toolUseChunks &&
+        "index" in toolUseChunks &&
+        "name" in toolUseChunks &&
+        "id" in toolUseChunks
+      ) {
+        newToolCallChunk = {
+          args: "",
+          id: toolUseChunks.id,
+          name: toolUseChunks.name,
+          index: toolUseChunks.index,
+        };
       }
 
-      let toolCallChunks: ToolCallChunk[] = [];
-      const toolUseContentBlocks = Array.isArray(finalChunk.content) ? finalChunk.content.filter((item) => item.type === "tool_use") : [];
-      if (toolUseContentBlocks.length) {
-        toolCallChunks = toolUseContentBlocks.flatMap((item) => {
-          if (!("index" in item && "id" in item && "name" in item && "input" in item)) {
-            return [];
-          }
-
-          const parsedPartialJson = parsePartialJson(item.input);
-          if (!parsedPartialJson) {
-            return [];
-          }
-  
-          return {
-            index: item.index,
-            id: item.id,
-            name: item.name,
-            args: JSON.stringify(item.input, null, 2),
+      // Chunks after the initial chunk only contain the index and partial JSON.
+      const inputJsonDeltaChunks = Array.isArray(chunk.content)
+        ? chunk.content.find((c) => c.type === "input_json_delta")
+        : undefined;
+      if (
+        inputJsonDeltaChunks &&
+        "index" in inputJsonDeltaChunks &&
+        "input" in inputJsonDeltaChunks
+      ) {
+        if (typeof inputJsonDeltaChunks.input === "string") {
+          newToolCallChunk = {
+            args: inputJsonDeltaChunks.input,
+            index: inputJsonDeltaChunks.index,
           };
-        });
-        console.log("toolCallChunks.length", toolCallChunks.length)
+        } else {
+          newToolCallChunk = {
+            args: JSON.stringify(inputJsonDeltaChunks.input, null, 2),
+            index: inputJsonDeltaChunks.index,
+          };
+        }
       }
-
-      const newChunk = new AIMessageChunk({
-        content: coerceContentToString ? "" : [],
-        tool_call_chunks: toolCallChunks,
-      });
-      finalChunk = concat(finalChunk, newChunk);
-      console.log("finalChunk.tool_calls", finalChunk.tool_calls)
 
       const token: string | undefined =
         typeof chunk.content === "string" && chunk.content !== ""
           ? chunk.content
           : undefined;
-      token ? await runManager?.handleLLMNewToken(token) : null;
 
       yield new ChatGenerationChunk({
         message: new AIMessageChunk({
           content: chunk.content,
           additional_kwargs: chunk.additional_kwargs,
-          tool_call_chunks: toolCallChunks,
+          tool_call_chunks: newToolCallChunk ? [newToolCallChunk] : undefined,
           usage_metadata: chunk.usage_metadata,
           response_metadata: chunk.response_metadata,
         }),
         text: token ?? "",
       });
+      if (token) {
+        await runManager?.handleLLMNewToken(token);
+      }
     }
     let usageMetadata: UsageMetadata | undefined;
     if (this.streamUsage || options.streamUsage) {
