@@ -28,6 +28,6 @@ const response = await model.invoke(
   }
 );
 console.log("response: ", response.content);
-/**
-response:  Harrison worked as an engineer at Kensho for about 3 years.
- */
+/*
+  response:  Harrison worked as an engineer at Kensho for about 3 years.
+*/

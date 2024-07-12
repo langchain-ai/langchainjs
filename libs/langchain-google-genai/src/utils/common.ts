@@ -29,6 +29,7 @@ import {
   isOpenAITool,
 } from "@langchain/core/language_models/base";
 import { ToolCallChunk } from "@langchain/core/messages/tool";
+import { RunnableToolLike } from "@langchain/core/runnables";
 import {
   jsonSchemaToGeminiParameters,
   zodToGenerativeAIParameters,
@@ -322,6 +323,7 @@ export function convertToGenerativeAITools(
     | StructuredToolInterface
     | Record<string, unknown>
     | ToolDefinition
+    | RunnableToolLike
   )[]
 ): GoogleGenerativeAIFunctionDeclarationsTool[] {
   if (

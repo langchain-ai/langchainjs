@@ -1,17 +1,17 @@
-import { insecureHash } from "./utils/hash.js";
-import type { Generation, ChatGeneration } from "./outputs.js";
-import { mapStoredMessageToChatMessage } from "./messages/utils.js";
-import { type StoredGeneration } from "./messages/base.js";
+import { insecureHash } from "../utils/hash.js";
+import type { Generation, ChatGeneration } from "../outputs.js";
+import { mapStoredMessageToChatMessage } from "../messages/utils.js";
+import { type StoredGeneration } from "../messages/base.js";
 
 /**
- * This cache key should be consistent across all versions of langchain.
- * It is currently NOT consistent across versions of langchain.
+ * This cache key should be consistent across all versions of LangChain.
+ * It is currently NOT consistent across versions of LangChain.
  *
  * A huge benefit of having a remote cache (like redis) is that you can
  * access the cache from different processes/machines. The allows you to
- * seperate concerns and scale horizontally.
+ * separate concerns and scale horizontally.
  *
- * TODO: Make cache key consistent across versions of langchain.
+ * TODO: Make cache key consistent across versions of LangChain.
  */
 export const getCacheKey = (...strings: string[]): string =>
   insecureHash(strings.join("_"));

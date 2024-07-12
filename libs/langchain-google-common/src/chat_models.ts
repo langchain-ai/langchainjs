@@ -20,6 +20,7 @@ import {
   Runnable,
   RunnablePassthrough,
   RunnableSequence,
+  RunnableToolLike,
 } from "@langchain/core/runnables";
 import { JsonOutputKeyToolsParser } from "@langchain/core/output_parsers/openai_tools";
 import { BaseLLMOutputParser } from "@langchain/core/output_parsers";
@@ -163,6 +164,7 @@ function convertToGeminiTools(
     | StructuredToolInterface
     | Record<string, unknown>
     | ToolDefinition
+    | RunnableToolLike
   )[]
 ): GeminiTool[] {
   return [
@@ -317,6 +319,7 @@ export abstract class ChatGoogleBase<AuthOptions>
       | StructuredToolInterface
       | Record<string, unknown>
       | ToolDefinition
+      | RunnableToolLike
     )[],
     kwargs?: Partial<GoogleAIBaseLanguageModelCallOptions>
   ): Runnable<

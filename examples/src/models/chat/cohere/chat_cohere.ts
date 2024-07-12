@@ -13,26 +13,28 @@ const response = await chain.invoke({
   input: "Hello there friend!",
 });
 console.log("response", response);
-/**
-response AIMessage {
-  lc_serializable: true,
-  lc_namespace: [ 'langchain_core', 'messages' ],
-  content: "Hi there! I'm not your friend, but I'm happy to help you in whatever way I can today. How are you doing? Is there anything I can assist you with? I am an AI chatbot capable of generating thorough responses, and I'm designed to have helpful, inclusive conversations with users. \n" +
-    '\n' +
-    "If you have any questions, feel free to ask away, and I'll do my best to provide you with helpful responses. \n" +
-    '\n' +
-    'Would you like me to help you with anything in particular right now?',
-  additional_kwargs: {
-    response_id: 'c6baa057-ef94-4bb0-9c25-3a424963a074',
-    generationId: 'd824fcdc-b922-4ae6-8d45-7b65a21cdd6a',
-    token_count: {
-      prompt_tokens: 66,
-      response_tokens: 104,
-      total_tokens: 170,
-      billed_tokens: 159
+/*
+  response AIMessage {
+    content: 'Hello there! How can I help you today?',
+    name: undefined,
+    additional_kwargs: {
+      response_id: '51ff9e7e-7419-43db-a8e6-17db54805695',
+      generationId: 'f9b507f5-5296-40c5-834c-b1c09e24a0f6',
+      chatHistory: [ [Object], [Object], [Object] ],
+      finishReason: 'COMPLETE',
+      meta: { apiVersion: [Object], billedUnits: [Object], tokens: [Object] }
     },
-    meta: { api_version: [Object], billed_units: [Object] },
-    tool_inputs: null
+    response_metadata: {
+      estimatedTokenUsage: { completionTokens: 10, promptTokens: 78, totalTokens: 88 },
+      response_id: '51ff9e7e-7419-43db-a8e6-17db54805695',
+      generationId: 'f9b507f5-5296-40c5-834c-b1c09e24a0f6',
+      chatHistory: [ [Object], [Object], [Object] ],
+      finishReason: 'COMPLETE',
+      meta: { apiVersion: [Object], billedUnits: [Object], tokens: [Object] }
+    },
+    id: undefined,
+    tool_calls: [],
+    invalid_tool_calls: [],
+    usage_metadata: { input_tokens: 78, output_tokens: 10, total_tokens: 88 }
   }
-}
- */
+*/
