@@ -2,7 +2,7 @@
 
 import { expect, test } from "@jest/globals";
 import { AIMessage, HumanMessage, ToolMessage } from "@langchain/core/messages";
-import { StructuredTool } from "@langchain/core/tools";
+import { StructuredTool, tool } from "@langchain/core/tools";
 import { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { ChatAnthropic } from "../chat_models.js";
@@ -385,4 +385,42 @@ test("withStructuredOutput will always force tool usage", async () => {
   const castMessage = response.raw as AIMessage;
   expect(castMessage.tool_calls).toHaveLength(1);
   expect(castMessage.tool_calls?.[0].name).toBe("get_weather");
+});
+
+test.only("Can stream tool calls", async () => {
+  const weatherTool = tool(
+    (_) => {
+      return "no-op";
+    },
+    {
+      name: "get_weather",
+      description: zodSchema.description,
+      schema: zodSchema,
+    }
+  );
+
+  const modelWithTools = model.bindTools([weatherTool]);
+  const stream = await modelWithTools.stream(
+    "What is the weather in San Francisco CA?"
+  );
+
+  let argsStringArr: string[] = [];
+
+  for await (const chunk of stream) {
+    const toolCall = chunk.tool_calls?.[0];
+    if (!toolCall) continue;
+    const stringifiedArgs = JSON.stringify(toolCall.args, null, 2);
+
+    // Push each new "chunk" of args to the array. We'll check the array's
+    // length at the end to verify multiple tool call chunks were streamed.
+    if (argsStringArr[argsStringArr.length - 1] !== stringifiedArgs) {
+      argsStringArr.push(stringifiedArgs);
+    }
+  }
+
+  expect(argsStringArr.length).toBeGreaterThan(1);
+  console.log("argsStringArr.length", argsStringArr.length)
+  const finalToolCall = JSON.parse(argsStringArr[argsStringArr.length - 1]);
+  console.log("finalToolCall", finalToolCall)
+  expect(finalToolCall.location).toBeDefined();
 });
