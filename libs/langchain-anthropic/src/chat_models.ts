@@ -767,7 +767,7 @@ export class ChatAnthropicMessages<
           args: JSON.stringify(data.content_block.input),
           id: data.content_block.id,
           index: data.index,
-        }
+        };
       } else if (
         data.type === "content_block_delta" &&
         data.delta.type === "input_json_delta" &&

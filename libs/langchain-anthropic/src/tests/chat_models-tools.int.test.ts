@@ -389,9 +389,7 @@ test("withStructuredOutput will always force tool usage", async () => {
 
 test.only("Can stream tool calls", async () => {
   const weatherTool = tool(
-    (_) => {
-      return "no-op";
-    },
+    (_) => "no-op",
     {
       name: "get_weather",
       description: zodSchema.description,
@@ -404,7 +402,7 @@ test.only("Can stream tool calls", async () => {
     "What is the weather in San Francisco CA?"
   );
 
-  let argsStringArr: string[] = [];
+  const argsStringArr: string[] = [];
 
   for await (const chunk of stream) {
     const toolCall = chunk.tool_calls?.[0];
@@ -419,8 +417,8 @@ test.only("Can stream tool calls", async () => {
   }
 
   expect(argsStringArr.length).toBeGreaterThan(1);
-  console.log("argsStringArr.length", argsStringArr.length)
+  console.log("argsStringArr.length", argsStringArr.length);
   const finalToolCall = JSON.parse(argsStringArr[argsStringArr.length - 1]);
-  console.log("finalToolCall", finalToolCall)
+  console.log("finalToolCall", finalToolCall);
   expect(finalToolCall.location).toBeDefined();
 });
