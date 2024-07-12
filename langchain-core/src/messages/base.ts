@@ -127,7 +127,13 @@ export function mergeContent(
     }
     // If both are arrays
   } else if (Array.isArray(secondContent)) {
-    return [...firstContent, ...secondContent];
+    // find and merge all objects with the same "index" and "type" fields.
+    return (
+      _mergeLists(firstContent, secondContent) ?? [
+        ...firstContent,
+        ...secondContent,
+      ]
+    );
     // If the first content is a list and second is a string
   } else {
     // Otherwise, add the second content as a new element of the list
@@ -259,8 +265,12 @@ export function _mergeDicts(
         `field[${key}] already exists in the message chunk, but with a different type.`
       );
     } else if (typeof merged[key] === "string") {
-      merged[key] = (merged[key] as string) + value;
-    } else if (!Array.isArray(merged[key]) && typeof merged[key] === "object") {
+      if (key === "type") {
+        // Do not merge 'type' fields
+        continue;
+      }
+      merged[key] += value;
+    } else if (typeof merged[key] === "object" && !Array.isArray(merged[key])) {
       merged[key] = _mergeDicts(merged[key], value);
     } else if (Array.isArray(merged[key])) {
       merged[key] = _mergeLists(merged[key], value);
@@ -297,6 +307,12 @@ export function _mergeLists(left?: any[], right?: any[]) {
         } else {
           merged.push(item);
         }
+      } else if (
+        typeof item === "object" &&
+        "text" in item &&
+        item.text === ""
+      ) {
+        // Skip empty text blocks
       } else {
         merged.push(item);
       }
