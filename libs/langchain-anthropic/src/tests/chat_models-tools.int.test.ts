@@ -1,12 +1,13 @@
 /* eslint-disable no-process-env */
 
 import { expect, test } from "@jest/globals";
-import { AIMessage, HumanMessage, ToolMessage } from "@langchain/core/messages";
+import { AIMessage, AIMessageChunk, HumanMessage, ToolMessage } from "@langchain/core/messages";
 import { StructuredTool, tool } from "@langchain/core/tools";
 import { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { ChatAnthropic } from "../chat_models.js";
 import { AnthropicToolResponse } from "../types.js";
+import { concat } from "@langchain/core/utils/stream";
 
 const zodSchema = z
   .object({
@@ -167,7 +168,7 @@ test("Can bind & invoke AnthropicTools", async () => {
   expect(input.location).toBeTruthy();
 });
 
-test("Can bind & stream AnthropicTools", async () => {
+test.only("Can bind & stream AnthropicTools", async () => {
   const modelWithTools = model.bind({
     tools: [anthropicTool],
   });
@@ -176,10 +177,17 @@ test("Can bind & stream AnthropicTools", async () => {
     "What is the weather in London today?"
   );
   let finalMessage;
+  let finalMessageConcated: AIMessageChunk | undefined;
   for await (const item of result) {
-    console.log("item", JSON.stringify(item, null, 2));
+    if (!finalMessageConcated) {
+      finalMessageConcated = item;
+    } else {
+      finalMessageConcated = concat(finalMessageConcated, item);
+    }
     finalMessage = item;
   }
+
+  console.log("finalMessageConcated", finalMessageConcated)
 
   if (!finalMessage) {
     throw new Error("No final message returned");
@@ -389,9 +397,7 @@ test("withStructuredOutput will always force tool usage", async () => {
 
 test("Can stream tool calls", async () => {
   const weatherTool = tool(
-    (_) => {
-      return "no-op";
-    },
+    (_) => "no-op",
     {
       name: "get_weather",
       description: zodSchema.description,
@@ -404,7 +410,7 @@ test("Can stream tool calls", async () => {
     "What is the weather in San Francisco CA?"
   );
 
-  let argsStringArr: string[] = [];
+  const argsStringArr: string[] = [];
 
   for await (const chunk of stream) {
     const toolCall = chunk.tool_calls?.[0];
