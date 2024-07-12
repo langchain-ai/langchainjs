@@ -1,6 +1,6 @@
 import { test, expect } from "@jest/globals";
 import { z } from "zod";
-import { ContentAndRawOutput, tool } from "../base.js";
+import { ContentAndRawOutput, tool } from "../index.js";
 import { ToolCall, ToolMessage } from "../../messages/tool.js";
 
 test("Tool should throw type error if types are wrong", () => {

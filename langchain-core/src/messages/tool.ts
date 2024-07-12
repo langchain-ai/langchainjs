@@ -140,20 +140,6 @@ export type ToolCall = {
   type?: "tool_call";
 };
 
-export function toolCall(tc: {
-  name: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  args: Record<string, any>;
-  id?: string;
-}): ToolCall {
-  return {
-    name: tc.name,
-    args: tc.args,
-    id: tc.id,
-    type: "tool_call",
-  };
-}
-
 /**
  * A chunk of a tool call (e.g., as part of a stream).
  * When merging ToolCallChunks (e.g., via AIMessageChunk.__add__),
@@ -216,21 +202,6 @@ export type ToolCallChunk = {
   type?: "tool_call_chunk";
 };
 
-export function toolCallChunk(chunk?: {
-  name?: string;
-  args?: string;
-  id?: string;
-  index?: number;
-}): ToolCallChunk {
-  return {
-    name: chunk?.name,
-    args: chunk?.args,
-    id: chunk?.id,
-    index: chunk?.index,
-    type: "tool_call_chunk",
-  };
-}
-
 export type InvalidToolCall = {
   name?: string;
   args?: string;
@@ -238,21 +209,6 @@ export type InvalidToolCall = {
   error?: string;
   type?: "invalid_tool_call";
 };
-
-export function invalidToolCall(tc?: {
-  name?: string;
-  args?: string;
-  id?: string;
-  error?: string;
-}): InvalidToolCall {
-  return {
-    name: tc?.name,
-    args: tc?.args,
-    id: tc?.id,
-    error: tc?.error,
-    type: "invalid_tool_call",
-  };
-}
 
 export function defaultToolCallParser(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

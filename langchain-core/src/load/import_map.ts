@@ -22,7 +22,7 @@ export * as prompt_values from "../prompt_values.js";
 export * as runnables from "../runnables/index.js";
 export * as retrievers from "../retrievers/index.js";
 export * as stores from "../stores.js";
-export * as tools from "../tools/base.js";
+export * as tools from "../tools/index.js";
 export * as tracers__base from "../tracers/base.js";
 export * as tracers__console from "../tracers/console.js";
 export * as tracers__initialize from "../tracers/initialize.js";

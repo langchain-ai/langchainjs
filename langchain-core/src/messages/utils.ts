@@ -19,11 +19,7 @@ import {
 } from "./function.js";
 import { HumanMessage, HumanMessageChunk } from "./human.js";
 import { SystemMessage, SystemMessageChunk } from "./system.js";
-import {
-  ToolMessage,
-  ToolMessageFieldsWithToolCallId,
-  toolCallChunk as createToolCallChunk,
-} from "./tool.js";
+import { ToolMessage, ToolMessageFieldsWithToolCallId } from "./tool.js";
 
 function _constructMessageFromParams(
   params: BaseMessageFields & { type: string }
@@ -194,13 +190,12 @@ export function convertToChunk(message: BaseMessage) {
     if ("tool_calls" in aiChunkFields) {
       aiChunkFields = {
         ...aiChunkFields,
-        tool_call_chunks: aiChunkFields.tool_calls?.map((tc) =>
-          createToolCallChunk({
-            ...tc,
-            index: undefined,
-            args: JSON.stringify(tc.args),
-          })
-        ),
+        tool_call_chunks: aiChunkFields.tool_calls?.map((tc) => ({
+          ...tc,
+          type: "tool_call_chunk",
+          index: undefined,
+          args: JSON.stringify(tc.args),
+        })),
       };
     }
     // eslint-disable-next-line @typescript-eslint/no-use-before-define

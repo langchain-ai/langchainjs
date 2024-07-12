@@ -24,7 +24,7 @@ import {
   HumanMessage,
   SystemMessage,
 } from "../../messages/index.js";
-import { DynamicStructuredTool, DynamicTool, tool } from "../../tools/base.js";
+import { DynamicStructuredTool, DynamicTool, tool } from "../../tools/index.js";
 import { Document } from "../../documents/document.js";
 import { PromptTemplate } from "../../prompts/prompt.js";
 import { GenerationChunk } from "../../outputs.js";
