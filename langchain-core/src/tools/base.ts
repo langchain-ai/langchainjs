@@ -13,8 +13,12 @@ import { ensureConfig, type RunnableConfig } from "../runnables/config.js";
 import type { RunnableFunc, RunnableInterface } from "../runnables/base.js";
 import { ToolCall, ToolMessage } from "../messages/tool.js";
 import { ZodAny } from "../types/zod.js";
+import { MessageContent } from "../messages/base.js";
 
 export type ResponseFormat = "content" | "contentAndRawOutput";
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type ContentAndRawOutput = [MessageContent, any];
 
 /**
  * Parameters for the Tool classes.
@@ -119,7 +123,7 @@ export abstract class StructuredTool<
     arg: z.output<T>,
     runManager?: CallbackManagerForToolRun,
     config?: RunnableConfig
-  ): Promise<RunOutput>;
+  ): Promise<string | ContentAndRawOutput>;
 
   /**
    * Invokes the tool with the provided input and configuration.
@@ -294,22 +298,19 @@ export interface BaseDynamicToolInput extends ToolParams {
 /**
  * Interface for the input parameters of the DynamicTool class.
  */
-export interface DynamicToolInput<
-  RunOutput extends string | ToolMessage = string
-> extends BaseDynamicToolInput {
+export interface DynamicToolInput extends BaseDynamicToolInput {
   func: (
     input: string,
     runManager?: CallbackManagerForToolRun,
     config?: RunnableConfig
-  ) => Promise<RunOutput>;
+  ) => Promise<string | ContentAndRawOutput>;
 }
 
 /**
  * Interface for the input parameters of the DynamicStructuredTool class.
  */
 export interface DynamicStructuredToolInput<
-  T extends ZodAny = ZodAny,
-  RunOutput extends string | ToolMessage = string
+  T extends ZodAny = ZodAny
 > extends BaseDynamicToolInput {
   func: (
     input: BaseDynamicToolInput["responseFormat"] extends "contentAndRawOutput"
@@ -317,7 +318,7 @@ export interface DynamicStructuredToolInput<
       : z.infer<T>,
     runManager?: CallbackManagerForToolRun,
     config?: RunnableConfig
-  ) => Promise<RunOutput>;
+  ) => Promise<string | ContentAndRawOutput>;
   schema: T;
 }
 
@@ -335,9 +336,9 @@ export class DynamicTool<
 
   description: string;
 
-  func: DynamicToolInput<RunOutput>["func"];
+  func: DynamicToolInput["func"];
 
-  constructor(fields: DynamicToolInput<RunOutput>) {
+  constructor(fields: DynamicToolInput) {
     super(fields);
     this.name = fields.name;
     this.description = fields.description;
@@ -364,7 +365,7 @@ export class DynamicTool<
     input: string,
     runManager?: CallbackManagerForToolRun,
     config?: RunnableConfig
-  ): Promise<RunOutput> {
+  ): Promise<string | ContentAndRawOutput> {
     return this.func(input, runManager, config);
   }
 }
@@ -387,11 +388,11 @@ export class DynamicStructuredTool<
 
   description: string;
 
-  func: DynamicStructuredToolInput<T, RunOutput>["func"];
+  func: DynamicStructuredToolInput<T>["func"];
 
   schema: T;
 
-  constructor(fields: DynamicStructuredToolInput<T, RunOutput>) {
+  constructor(fields: DynamicStructuredToolInput<T>) {
     super(fields);
     this.name = fields.name;
     this.description = fields.description;
@@ -420,7 +421,7 @@ export class DynamicStructuredTool<
     arg: z.output<T> | ToolCall,
     runManager?: CallbackManagerForToolRun,
     config?: RunnableConfig
-  ): Promise<RunOutput> {
+  ): Promise<string | ContentAndRawOutput> {
     return this.func(arg, runManager, config);
   }
 }
@@ -491,9 +492,9 @@ interface ToolWrapperParams<RunInput extends ZodAny = ZodAny>
 export function tool<
   RunInput extends ZodAny = ZodAny,
   RunOutput extends ToolMessage = ToolMessage,
-  FuncInput extends z.infer<RunInput> | ToolCall = z.infer<RunInput>
+  FuncInput extends z.infer<RunInput> | ToolCall = z.infer<RunInput>,
 >(
-  func: RunnableFunc<FuncInput, RunOutput>,
+  func: RunnableFunc<FuncInput, ContentAndRawOutput>,
   fields: Omit<ToolWrapperParams<RunInput>, "responseFormat"> & {
     responseFormat: "contentAndRawOutput";
   }
@@ -502,9 +503,9 @@ export function tool<
 export function tool<
   RunInput extends ZodAny = ZodAny,
   RunOutput extends string = string,
-  FuncInput extends z.infer<RunInput> | ToolCall = z.infer<RunInput>
+  FuncInput extends z.infer<RunInput> | ToolCall = z.infer<RunInput>,
 >(
-  func: RunnableFunc<FuncInput, RunOutput>,
+  func: RunnableFunc<FuncInput, string>,
   fields: Omit<ToolWrapperParams<RunInput>, "responseFormat"> & {
     responseFormat?: "content" | undefined;
   }
@@ -513,9 +514,10 @@ export function tool<
 export function tool<
   RunInput extends ZodAny = ZodAny,
   RunOutput extends string | ToolMessage = string,
-  FuncInput extends z.infer<RunInput> | ToolCall = z.infer<RunInput>
+  FuncInput extends z.infer<RunInput> | ToolCall = z.infer<RunInput>,
+  FuncOutput extends string | ContentAndRawOutput = string,
 >(
-  func: RunnableFunc<FuncInput, RunOutput>,
+  func: RunnableFunc<FuncInput, FuncOutput>,
   fields: ToolWrapperParams<RunInput>
 ): DynamicStructuredTool<RunInput, RunOutput> {
   const schema =
