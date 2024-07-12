@@ -33,7 +33,7 @@ import {
 } from "../callbacks/manager.js";
 import type { RunnableConfig } from "../runnables/config.js";
 import type { BaseCache } from "../caches/base.js";
-import { StructuredToolInterface } from "../tools.js";
+import { StructuredToolInterface } from "../tools/base.js";
 import {
   Runnable,
   RunnableLambda,

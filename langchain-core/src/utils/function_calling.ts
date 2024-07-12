@@ -1,5 +1,5 @@
 import { zodToJsonSchema } from "zod-to-json-schema";
-import { StructuredToolInterface } from "../tools.js";
+import { StructuredToolInterface } from "../tools/base.js";
 import { FunctionDefinition, ToolDefinition } from "../language_models/base.js";
 import { Runnable, RunnableToolLike } from "../runnables/base.js";
 

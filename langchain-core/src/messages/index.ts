@@ -12,4 +12,8 @@ export {
   type ToolMessageFieldsWithToolCallId,
   ToolMessage,
   ToolMessageChunk,
+  type InvalidToolCall,
+  toolCall,
+  toolCallChunk,
+  invalidToolCall,
 } from "./tool.js";

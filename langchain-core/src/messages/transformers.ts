@@ -24,6 +24,7 @@ import {
   ToolMessage,
   ToolMessageChunk,
   ToolMessageFieldsWithToolCallId,
+  toolCallChunk as createToolCallChunk,
 } from "./tool.js";
 import { convertToChunk } from "./utils.js";
 
@@ -950,11 +951,13 @@ function _switchTypeToMessage(
         if ("tool_calls" in aiChunkFields) {
           aiChunkFields = {
             ...aiChunkFields,
-            tool_call_chunks: aiChunkFields.tool_calls?.map((tc) => ({
-              ...tc,
-              index: undefined,
-              args: JSON.stringify(tc.args),
-            })),
+            tool_call_chunks: aiChunkFields.tool_calls?.map((tc) =>
+              createToolCallChunk({
+                ...tc,
+                index: undefined,
+                args: JSON.stringify(tc.args),
+              })
+            ),
           };
         }
         chunk = new AIMessageChunk(aiChunkFields);

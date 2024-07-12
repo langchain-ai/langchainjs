@@ -22,7 +22,7 @@ import {
   SystemMessage,
 } from "../../messages/index.js";
 import { ChatGenerationChunk, GenerationChunk } from "../../outputs.js";
-import { DynamicStructuredTool, DynamicTool } from "../../tools.js";
+import { DynamicStructuredTool, DynamicTool } from "../../tools/base.js";
 import { Document } from "../../documents/document.js";
 
 function reverse(s: string) {

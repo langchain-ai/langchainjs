@@ -2,7 +2,12 @@ import { z } from "zod";
 import { ChatGeneration } from "../../outputs.js";
 import { BaseLLMOutputParser, OutputParserException } from "../base.js";
 import { parsePartialJson } from "../json.js";
-import { InvalidToolCall, ToolCall } from "../../messages/tool.js";
+import {
+  InvalidToolCall,
+  ToolCall,
+  invalidToolCall as createInvalidToolCall,
+  toolCall as createToolCall,
+} from "../../messages/tool.js";
 
 export type ParsedToolCall = {
   id?: string;
@@ -77,7 +82,7 @@ export function parseToolCall(
     parsedToolCall.id = rawToolCall.id;
   }
 
-  return parsedToolCall;
+  return createToolCall(parsedToolCall);
 }
 
 export function convertLangChainToolCallToOpenAI(toolCall: ToolCall) {
@@ -99,12 +104,12 @@ export function makeInvalidToolCall(
   rawToolCall: Record<string, any>,
   errorMsg?: string
 ): InvalidToolCall {
-  return {
+  return createInvalidToolCall({
     name: rawToolCall.function?.name,
     args: rawToolCall.function?.arguments,
     id: rawToolCall.id,
     error: errorMsg,
-  };
+  });
 }
 
 /**
