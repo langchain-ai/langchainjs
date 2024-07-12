@@ -50,7 +50,7 @@ import {
   AnthropicToolsOutputParser,
   extractToolCalls,
 } from "./output_parsers.js";
-import { AnthropicToolResponse } from "./types.js";
+import { AnthropicToolResponse } from './types.js'
 
 type AnthropicMessage = Anthropic.MessageParam;
 type AnthropicMessageCreateParams = Anthropic.MessageCreateParamsNonStreaming;
@@ -695,7 +695,7 @@ export class ChatAnthropicMessages<
         text: generations[0].text,
       });
     } else {
-      const stream = await this.createStreamWithRetry({
+      const stream: any = await this.createStreamWithRetry({
         ...params,
         ...formattedMessages,
         stream: true,
@@ -753,25 +753,8 @@ export class ChatAnthropicMessages<
           if (data?.usage !== undefined) {
             usageData.output_tokens += data.usage.output_tokens;
           }
-        } else if (
-          data.type === "content_block_delta" &&
-          data.delta.type === "text_delta"
-        ) {
-          const content = data.delta?.text;
-          if (content !== undefined) {
-            yield new ChatGenerationChunk({
-              message: new AIMessageChunk({
-                content,
-                additional_kwargs: {},
-              }),
-              text: content,
-            });
-            await runManager?.handleLLMNewToken(content);
-          }
         }
-
-        else if (data.type === 'content_block_start') {
-          // this identifies which tool the agent will call
+        else if (data.type === 'content_block_start') { // this identifies which tool the agent will call
           const content = data.content_block;
           if (content !== undefined && data?.content_block?.id && data?.content_block?.name) {
             const toolCallChunks = [{
@@ -793,8 +776,8 @@ export class ChatAnthropicMessages<
         }
         else if (
           data.type === 'content_block_delta' &&
-          data.delta?.type === 'input_json_delta') {
-          // this is the tool call chunks, continuing the params for the content_block_start.
+          data.delta?.type === 'input_json_delta') { // this is means a tool call stream chunk
+
           const content = data?.delta?.partial_json; // content here is a partial json string.
 
           if (content !== undefined) {
@@ -805,8 +788,24 @@ export class ChatAnthropicMessages<
             yield new ChatGenerationChunk({
               message: new AIMessageChunk({
                 content: '',
-                additional_kwargs: {},
                 tool_call_chunks: toolCallChunks,
+              }),
+              text: '',
+
+            });
+            await runManager?.handleLLMNewToken('');
+          }
+        }
+        else if ( // if the content is text
+          data.type === "content_block_delta" &&
+          data.delta.type === "text_delta"
+        ) {
+          const content = data.delta?.text;
+          if (content !== undefined) {
+            yield new ChatGenerationChunk({
+              message: new AIMessageChunk({
+                content,
+                additional_kwargs: {},
               }),
               text: content,
             });
@@ -814,6 +813,7 @@ export class ChatAnthropicMessages<
           }
         }
       }
+
       let usageMetadata: UsageMetadata | undefined;
       if (this.streamUsage || options.streamUsage) {
         usageMetadata = {
