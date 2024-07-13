@@ -1,11 +1,10 @@
-import type { Pipeline, PretrainedOptions } from "@xenova/transformers";
+import type {
+  Pipeline,
+  PretrainedOptions,
+  FeatureExtractionPipelineOptions,
+} from "@xenova/transformers";
 import { Embeddings, type EmbeddingsParams } from "@langchain/core/embeddings";
 import { chunkArray } from "@langchain/core/utils/chunk_array";
-
-type FeatureExtractionPipelineOptions = {
-  pooling?: string;
-  normalize?: boolean;
-};
 
 export interface HuggingFaceTransformersEmbeddingsParams
   extends EmbeddingsParams {
