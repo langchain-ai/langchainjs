@@ -18,6 +18,9 @@ import { MessageContent } from "../messages/base.js";
 export type ResponseFormat = "content" | "content_and_artifact";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
+type ToolFuncReturnType = any;
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ContentAndArtifact = [MessageContent, any];
 
 /**
@@ -52,7 +55,7 @@ export class ToolInputParsingException extends Error {
 
 export interface StructuredToolInterface<
   T extends ZodAny = ZodAny,
-  RunOutput extends string | ToolMessage = string
+  RunOutput = ToolFuncReturnType
 > extends RunnableInterface<
     (z.output<T> extends string ? string : never) | z.input<T>,
     RunOutput
@@ -91,7 +94,7 @@ export interface StructuredToolInterface<
  */
 export abstract class StructuredTool<
   T extends ZodAny = ZodAny,
-  RunOutput extends string | ToolMessage = string
+  RunOutput = ToolFuncReturnType
 > extends BaseLangChain<
   (z.output<T> extends string ? string : never) | z.input<T> | ToolCall,
   RunOutput
@@ -152,7 +155,6 @@ export abstract class StructuredTool<
       | undefined;
 
     if (_isToolCall(input)) {
-      console.log("is TC");
       tool_call_id = input.id;
       toolInput = input.args;
     } else {
@@ -166,7 +168,7 @@ export abstract class StructuredTool<
         ...ensuredConfig.configurable,
         tool_call_id,
       },
-    }) as Promise<RunOutput>;
+    });
   }
 
   /**
@@ -250,13 +252,13 @@ export abstract class StructuredTool<
       toolCallId,
     });
     await runManager?.handleToolEnd(formattedOutput);
-    return formattedOutput as RunOutput;
+    return formattedOutput;
   }
 }
 
 export interface ToolInterface<
   T extends ZodAny = ZodAny,
-  RunOutput extends string | ToolMessage = string
+  RunOutput = ToolFuncReturnType
 > extends StructuredToolInterface<T, RunOutput> {
   /**
    * @deprecated Use .invoke() instead. Will be removed in 0.3.0.
@@ -277,7 +279,7 @@ export interface ToolInterface<
  * Base class for Tools that accept input as a string.
  */
 export abstract class Tool<
-  RunOutput extends string | ToolMessage = string
+  RunOutput = ToolFuncReturnType
 > extends StructuredTool<ZodAny, RunOutput> {
   schema = z
     .object({ input: z.string().optional() })
@@ -343,7 +345,7 @@ export interface DynamicStructuredToolInput<T extends ZodAny = ZodAny>
  * A tool that can be created dynamically from a function, name, and description.
  */
 export class DynamicTool<
-  RunOutput extends string | ToolMessage = string
+  RunOutput = ToolFuncReturnType
 > extends Tool<RunOutput> {
   static lc_name() {
     return "DynamicTool";
@@ -395,7 +397,7 @@ export class DynamicTool<
  */
 export class DynamicStructuredTool<
   T extends ZodAny = ZodAny,
-  RunOutput extends string | ToolMessage = string
+  RunOutput = ToolFuncReturnType
 > extends StructuredTool<T, RunOutput> {
   static lc_name() {
     return "DynamicStructuredTool";
@@ -459,7 +461,7 @@ export abstract class BaseToolkit {
 /**
  * Parameters for the tool function.
  * @template {ZodAny} RunInput The input schema for the tool.
- * @template {string | ToolMessage} RunOutput The output type for the tool.
+ * @template {any} RunOutput The output type for the tool.
  */
 interface ToolWrapperParams<RunInput extends ZodAny = ZodAny>
   extends ToolParams {
@@ -495,7 +497,7 @@ interface ToolWrapperParams<RunInput extends ZodAny = ZodAny>
  * Creates a new StructuredTool instance with the provided function, name, description, and schema.
  * @function
  * @template {RunInput extends ZodAny = ZodAny} RunInput The input schema for the tool. This corresponds to the input type when the tool is invoked.
- * @template {RunOutput extends string | ToolMessage = string} RunOutput The output type for the tool. This corresponds to the output type when the tool is invoked.
+ * @template {RunOutput = any} RunOutput The output type for the tool. This corresponds to the output type when the tool is invoked.
  * @template {FuncInput extends z.infer<RunInput> | ToolCall = z.infer<RunInput>} FuncInput The input type for the function.
  *
  * @param {RunnableFunc<z.infer<RunInput> | ToolCall, RunOutput>} func - The function to invoke when the tool is called.
@@ -508,29 +510,7 @@ interface ToolWrapperParams<RunInput extends ZodAny = ZodAny>
  */
 export function tool<
   RunInput extends ZodAny = ZodAny,
-  RunOutput extends ToolMessage = ToolMessage,
-  FuncInput extends z.infer<RunInput> | ToolCall = z.infer<RunInput>
->(
-  func: RunnableFunc<FuncInput, ContentAndArtifact>,
-  fields: Omit<ToolWrapperParams<RunInput>, "responseFormat"> & {
-    responseFormat: "content_and_artifact";
-  }
-): DynamicStructuredTool<RunInput, RunOutput>;
-
-export function tool<
-  RunInput extends ZodAny = ZodAny,
-  RunOutput extends string = string,
-  FuncInput extends z.infer<RunInput> | ToolCall = z.infer<RunInput>
->(
-  func: RunnableFunc<FuncInput, string>,
-  fields: Omit<ToolWrapperParams<RunInput>, "responseFormat"> & {
-    responseFormat?: "content" | undefined;
-  }
-): DynamicStructuredTool<RunInput, RunOutput>;
-
-export function tool<
-  RunInput extends ZodAny = ZodAny,
-  RunOutput extends string | ToolMessage = string,
+  RunOutput = ToolFuncReturnType,
   FuncInput extends z.infer<RunInput> | ToolCall = z.infer<RunInput>,
   FuncOutput extends string | ContentAndArtifact = string
 >(
@@ -565,7 +545,7 @@ function _formatToolOutput(params: {
   content: unknown;
   artifact?: unknown;
   toolCallId?: string;
-}): ToolMessage | string {
+}): ToolMessage | ToolFuncReturnType {
   const { content, artifact, toolCallId } = params;
   if (toolCallId) {
     if (
@@ -586,7 +566,7 @@ function _formatToolOutput(params: {
       });
     }
   } else {
-    return typeof content === "string" ? content : _stringify(content);
+    return content;
   }
 }
 

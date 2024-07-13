@@ -20,7 +20,6 @@ import { consumeCallback } from "./promises.js";
 import { Serialized } from "../load/serializable.js";
 import type { DocumentInterface } from "../documents/document.js";
 import { isTracingEnabled } from "../utils/callbacks.js";
-import { ToolMessage } from "../messages/tool.js";
 
 if (
   /* #__PURE__ */ getEnvironmentVariable("LANGCHAIN_TRACING_V2") === "true" &&
@@ -494,7 +493,8 @@ export class CallbackManagerForToolRun
     );
   }
 
-  async handleToolEnd(output: string | ToolMessage): Promise<void> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async handleToolEnd(output: any): Promise<void> {
     await Promise.all(
       this.handlers.map((handler) =>
         consumeCallback(async () => {

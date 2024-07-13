@@ -8,19 +8,6 @@ test("Tool should throw type error if types are wrong", () => {
     location: z.string(),
   });
 
-  // @ts-expect-error - Error because responseFormat: content_and_artifact makes return type ContentAndArtifact
-  tool(
-    (_): string => {
-      return "no-op";
-    },
-    {
-      name: "weather",
-      schema: weatherSchema,
-      responseFormat: "content_and_artifact",
-    }
-  );
-
-  // @ts-expect-error - Error because responseFormat: content makes return type be a string
   tool(
     (_): ContentAndArtifact => {
       return ["no-op", true];
@@ -32,9 +19,8 @@ test("Tool should throw type error if types are wrong", () => {
     }
   );
 
-  // @ts-expect-error - Error because responseFormat: undefined makes return type be a string
   tool(
-    (_): ContentAndArtifact => {
+    (_) => {
       return ["no-op", true];
     },
     {
@@ -107,8 +93,7 @@ test("Tool should error if responseFormat is content_and_artifact but the functi
   });
 
   const weatherTool = tool(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (_): any => {
+    (_) => {
       return "str";
     },
     {
@@ -146,7 +131,33 @@ test("Tool works if responseFormat is content_and_artifact and returns a tuple",
   expect(toolResult).toBe("msg_content");
 });
 
-test("Returns tool message if responseFormat is content_and_artifact and returns a tuple and a tool call is passed in", async () => {
+test("Does not return tool message if responseFormat is content_and_artifact and returns a tuple and a tool call with no id is passed in", async () => {
+  const weatherSchema = z.object({
+    location: z.string(),
+  });
+
+  const weatherTool = tool(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (input): any => {
+      return ["msg_content", input];
+    },
+    {
+      name: "weather",
+      schema: weatherSchema,
+      responseFormat: "content_and_artifact",
+    }
+  );
+
+  const toolResult = await weatherTool.invoke({
+    args: { location: "San Francisco" },
+    name: "weather",
+    type: "tool_call",
+  });
+
+  expect(toolResult).toBe("msg_content");
+});
+
+test("Returns tool message if responseFormat is content_and_artifact and returns a tuple and a tool call with id is passed in", async () => {
   const weatherSchema = z.object({
     location: z.string(),
   });
