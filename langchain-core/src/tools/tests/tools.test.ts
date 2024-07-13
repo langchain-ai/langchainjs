@@ -1,6 +1,6 @@
 import { test, expect } from "@jest/globals";
 import { z } from "zod";
-import { ContentAndRawOutput, tool } from "../index.js";
+import { ContentAndArtifact, tool } from "../index.js";
 import { ToolCall, ToolMessage } from "../../messages/tool.js";
 
 test("Tool should throw type error if types are wrong", () => {
@@ -8,7 +8,7 @@ test("Tool should throw type error if types are wrong", () => {
     location: z.string(),
   });
 
-  // @ts-expect-error - Error because responseFormat: contentAndRawOutput makes return type ContentAndRawOutput
+  // @ts-expect-error - Error because responseFormat: content_and_artifact makes return type ContentAndArtifact
   tool(
     (_): string => {
       return "no-op";
@@ -16,13 +16,13 @@ test("Tool should throw type error if types are wrong", () => {
     {
       name: "weather",
       schema: weatherSchema,
-      responseFormat: "contentAndRawOutput",
+      responseFormat: "content_and_artifact",
     }
   );
 
   // @ts-expect-error - Error because responseFormat: content makes return type be a string
   tool(
-    (_): ContentAndRawOutput => {
+    (_): ContentAndArtifact => {
       return ["no-op", true];
     },
     {
@@ -34,7 +34,7 @@ test("Tool should throw type error if types are wrong", () => {
 
   // @ts-expect-error - Error because responseFormat: undefined makes return type be a string
   tool(
-    (_): ContentAndRawOutput => {
+    (_): ContentAndArtifact => {
       return ["no-op", true];
     },
     {
@@ -43,15 +43,15 @@ test("Tool should throw type error if types are wrong", () => {
     }
   );
 
-  // Should pass because we're expecting a `ToolMessage` return type due to `responseFormat: contentAndRawOutput`
+  // Should pass because we're expecting a `ToolMessage` return type due to `responseFormat: content_and_artifact`
   tool(
-    (_): ContentAndRawOutput => {
+    (_): ContentAndArtifact => {
       return ["no-op", true];
     },
     {
       name: "weather",
       schema: weatherSchema,
-      responseFormat: "contentAndRawOutput",
+      responseFormat: "content_and_artifact",
     }
   );
 
@@ -101,7 +101,7 @@ test("Tool should throw type error if types are wrong", () => {
   );
 });
 
-test("Tool should error if responseFormat is contentAndRawOutput but the function doesn't return a tuple", async () => {
+test("Tool should error if responseFormat is content_and_artifact but the function doesn't return a tuple", async () => {
   const weatherSchema = z.object({
     location: z.string(),
   });
@@ -114,7 +114,7 @@ test("Tool should error if responseFormat is contentAndRawOutput but the functio
     {
       name: "weather",
       schema: weatherSchema,
-      responseFormat: "contentAndRawOutput",
+      responseFormat: "content_and_artifact",
     }
   );
 
@@ -123,7 +123,7 @@ test("Tool should error if responseFormat is contentAndRawOutput but the functio
   }).rejects.toThrow();
 });
 
-test("Tool works if responseFormat is contentAndRawOutput and returns a tuple", async () => {
+test("Tool works if responseFormat is content_and_artifact and returns a tuple", async () => {
   const weatherSchema = z.object({
     location: z.string(),
   });
@@ -136,13 +136,41 @@ test("Tool works if responseFormat is contentAndRawOutput and returns a tuple", 
     {
       name: "weather",
       schema: weatherSchema,
-      responseFormat: "contentAndRawOutput",
+      responseFormat: "content_and_artifact",
     }
   );
 
   const toolResult = await weatherTool.invoke({ location: "San Francisco" });
 
+  expect(toolResult).not.toBeInstanceOf(ToolMessage);
+  expect(toolResult).toBe("msg_content");
+});
+
+test("Returns tool message if responseFormat is content_and_artifact and returns a tuple and a tool call is passed in", async () => {
+  const weatherSchema = z.object({
+    location: z.string(),
+  });
+
+  const weatherTool = tool(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (input): any => {
+      return ["msg_content", input];
+    },
+    {
+      name: "weather",
+      schema: weatherSchema,
+      responseFormat: "content_and_artifact",
+    }
+  );
+
+  const toolResult = await weatherTool.invoke({
+    id: "testid",
+    args: { location: "San Francisco" },
+    name: "weather",
+    type: "tool_call",
+  });
+
   expect(toolResult).toBeInstanceOf(ToolMessage);
   expect(toolResult.content).toBe("msg_content");
-  expect(toolResult.raw_output).toEqual({ location: "San Francisco" });
+  expect(toolResult.artifact).toEqual({ location: "San Francisco" });
 });

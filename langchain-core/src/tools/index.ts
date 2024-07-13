@@ -15,10 +15,10 @@ import { ToolCall, ToolMessage } from "../messages/tool.js";
 import { ZodAny } from "../types/zod.js";
 import { MessageContent } from "../messages/base.js";
 
-export type ResponseFormat = "content" | "contentAndRawOutput";
+export type ResponseFormat = "content" | "content_and_artifact";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type ContentAndRawOutput = [MessageContent, any];
+export type ContentAndArtifact = [MessageContent, any];
 
 /**
  * Parameters for the Tool classes.
@@ -28,8 +28,8 @@ export interface ToolParams extends BaseLangChainParams {
    * The tool response format.
    *
    * If "content" then the output of the tool is interpreted as the contents of a
-   * ToolMessage. If "contentAndRawOutput" then the output is expected to be a
-   * two-tuple corresponding to the (content, raw_output) of a ToolMessage.
+   * ToolMessage. If "content_and_artifact" then the output is expected to be a
+   * two-tuple corresponding to the (content, artifact) of a ToolMessage.
    *
    * @default "content"
    */
@@ -96,7 +96,13 @@ export abstract class StructuredTool<
   (z.output<T> extends string ? string : never) | z.input<T> | ToolCall,
   RunOutput
 > {
+  abstract name: string;
+
+  abstract description: string;
+
   abstract schema: T | z.ZodEffects<T>;
+
+  returnDirect = false;
 
   get lc_namespace() {
     return ["langchain", "tools"];
@@ -106,8 +112,8 @@ export abstract class StructuredTool<
    * The tool response format.
    *
    * If "content" then the output of the tool is interpreted as the contents of a
-   * ToolMessage. If "contentAndRawOutput" then the output is expected to be a
-   * two-tuple corresponding to the (content, raw_output) of a ToolMessage.
+   * ToolMessage. If "content_and_artifact" then the output is expected to be a
+   * two-tuple corresponding to the (content, artifact) of a ToolMessage.
    *
    * @default "content"
    */
@@ -123,7 +129,7 @@ export abstract class StructuredTool<
     arg: z.output<T>,
     runManager?: CallbackManagerForToolRun,
     config?: RunnableConfig
-  ): Promise<string | ContentAndRawOutput>;
+  ): Promise<string | ContentAndArtifact>;
 
   /**
    * Invokes the tool with the provided input and configuration.
@@ -138,8 +144,29 @@ export abstract class StructuredTool<
       | ToolCall,
     config?: RunnableConfig
   ): Promise<RunOutput> {
-    const [toolInput, ensuredConfig] = await _prepRunArgs<T>(input, config);
-    return this.call(toolInput, ensuredConfig) as Promise<RunOutput>;
+    let tool_call_id: string | undefined;
+    let toolInput:
+      | (z.output<T> extends string ? string : never)
+      | z.input<T>
+      | ToolCall
+      | undefined;
+
+    if (_isToolCall(input)) {
+      console.log("is TC");
+      tool_call_id = input.id;
+      toolInput = input.args;
+    } else {
+      toolInput = input;
+    }
+
+    const ensuredConfig = ensureConfig(config);
+    return this.call(toolInput, {
+      ...ensuredConfig,
+      configurable: {
+        ...ensuredConfig.configurable,
+        tool_call_id,
+      },
+    }) as Promise<RunOutput>;
   }
 
   /**
@@ -160,18 +187,13 @@ export abstract class StructuredTool<
     tags?: string[]
   ): Promise<RunOutput> {
     let parsed;
-    // Only parse the input if it's not a ToolCall
-    if (_isToolCall(arg)) {
-      parsed = arg;
-    } else {
-      try {
-        parsed = await this.schema.parseAsync(arg);
-      } catch (e) {
-        throw new ToolInputParsingException(
-          `Received tool input did not match expected schema`,
-          JSON.stringify(arg)
-        );
-      }
+    try {
+      parsed = await this.schema.parseAsync(arg);
+    } catch (e) {
+      throw new ToolInputParsingException(
+        `Received tool input did not match expected schema`,
+        JSON.stringify(arg)
+      );
     }
 
     const config = parseCallbackConfigArg(configArg);
@@ -202,13 +224,13 @@ export abstract class StructuredTool<
       throw e;
     }
     let content;
-    let raw_output;
-    if (this.responseFormat === "contentAndRawOutput") {
+    let artifact;
+    if (this.responseFormat === "content_and_artifact") {
       if (Array.isArray(result) && result.length === 2) {
-        [content, raw_output] = result;
+        [content, artifact] = result;
       } else {
         throw new Error(
-          `Tool response format is "contentAndRawOutput" but the output was not a two-tuple.\nResult: ${JSON.stringify(
+          `Tool response format is "content_and_artifact" but the output was not a two-tuple.\nResult: ${JSON.stringify(
             result
           )}`
         );
@@ -217,23 +239,19 @@ export abstract class StructuredTool<
       content = result;
     }
 
-    let tool_call_id: string | undefined;
-    if (config.callbacks && "configurable" in config.callbacks) {
-      tool_call_id = (
-        config.callbacks.configurable as Record<string, string | undefined>
-      ).tool_call;
+    let toolCallId: string | undefined;
+    if (config && "configurable" in config) {
+      toolCallId = (config.configurable as Record<string, string | undefined>)
+        .tool_call_id;
     }
-    const formattedOutput = _formatOutput(content, raw_output, tool_call_id);
-
+    const formattedOutput = _formatToolOutput({
+      content,
+      artifact,
+      toolCallId,
+    });
     await runManager?.handleToolEnd(formattedOutput);
     return formattedOutput as RunOutput;
   }
-
-  abstract name: string;
-
-  abstract description: string;
-
-  returnDirect = false;
 }
 
 export interface ToolInterface<
@@ -303,7 +321,7 @@ export interface DynamicToolInput extends BaseDynamicToolInput {
     input: string,
     runManager?: CallbackManagerForToolRun,
     config?: RunnableConfig
-  ) => Promise<string | ContentAndRawOutput>;
+  ) => Promise<string | ContentAndArtifact>;
 }
 
 /**
@@ -312,12 +330,12 @@ export interface DynamicToolInput extends BaseDynamicToolInput {
 export interface DynamicStructuredToolInput<T extends ZodAny = ZodAny>
   extends BaseDynamicToolInput {
   func: (
-    input: BaseDynamicToolInput["responseFormat"] extends "contentAndRawOutput"
+    input: BaseDynamicToolInput["responseFormat"] extends "content_and_artifact"
       ? ToolCall
       : z.infer<T>,
     runManager?: CallbackManagerForToolRun,
     config?: RunnableConfig
-  ) => Promise<string | ContentAndRawOutput>;
+  ) => Promise<string | ContentAndArtifact>;
   schema: T;
 }
 
@@ -364,7 +382,7 @@ export class DynamicTool<
     input: string,
     runManager?: CallbackManagerForToolRun,
     config?: RunnableConfig
-  ): Promise<string | ContentAndRawOutput> {
+  ): Promise<string | ContentAndArtifact> {
     return this.func(input, runManager, config);
   }
 }
@@ -420,7 +438,7 @@ export class DynamicStructuredTool<
     arg: z.output<T> | ToolCall,
     runManager?: CallbackManagerForToolRun,
     config?: RunnableConfig
-  ): Promise<string | ContentAndRawOutput> {
+  ): Promise<string | ContentAndArtifact> {
     return this.func(arg, runManager, config);
   }
 }
@@ -465,8 +483,8 @@ interface ToolWrapperParams<RunInput extends ZodAny = ZodAny>
    * The tool response format.
    *
    * If "content" then the output of the tool is interpreted as the contents of a
-   * ToolMessage. If "contentAndRawOutput" then the output is expected to be a
-   * two-tuple corresponding to the (content, raw_output) of a ToolMessage.
+   * ToolMessage. If "content_and_artifact" then the output is expected to be a
+   * two-tuple corresponding to the (content, artifact) of a ToolMessage.
    *
    * @default "content"
    */
@@ -493,9 +511,9 @@ export function tool<
   RunOutput extends ToolMessage = ToolMessage,
   FuncInput extends z.infer<RunInput> | ToolCall = z.infer<RunInput>
 >(
-  func: RunnableFunc<FuncInput, ContentAndRawOutput>,
+  func: RunnableFunc<FuncInput, ContentAndArtifact>,
   fields: Omit<ToolWrapperParams<RunInput>, "responseFormat"> & {
-    responseFormat: "contentAndRawOutput";
+    responseFormat: "content_and_artifact";
   }
 ): DynamicStructuredTool<RunInput, RunOutput>;
 
@@ -514,7 +532,7 @@ export function tool<
   RunInput extends ZodAny = ZodAny,
   RunOutput extends string | ToolMessage = string,
   FuncInput extends z.infer<RunInput> | ToolCall = z.infer<RunInput>,
-  FuncOutput extends string | ContentAndRawOutput = string
+  FuncOutput extends string | ContentAndArtifact = string
 >(
   func: RunnableFunc<FuncInput, FuncOutput>,
   fields: ToolWrapperParams<RunInput>
@@ -543,49 +561,13 @@ function _isToolCall(toolCall?: unknown): toolCall is ToolCall {
   );
 }
 
-async function _prepRunArgs<T extends ZodAny = ZodAny>(
-  input: (z.output<T> extends string ? string : never) | z.input<T> | ToolCall,
-  config?: RunnableConfig
-): Promise<
-  [
-    (z.output<T> extends string ? string : never) | z.input<T> | ToolCall,
-    Record<string, unknown>
-  ]
-> {
-  let tool_call_id: string | undefined;
-  let toolInput:
-    | (z.output<T> extends string ? string : never)
-    | z.input<T>
-    | ToolCall
-    | undefined;
-
-  if (_isToolCall(input)) {
-    tool_call_id = input.id;
-    toolInput = input.args;
-  } else {
-    toolInput = input;
-  }
-
-  const ensuredConfig = ensureConfig(config);
-
-  return [
-    toolInput,
-    {
-      ...ensuredConfig,
-      configurable: {
-        ...ensuredConfig.configurable,
-        tool_call_id,
-      },
-    },
-  ];
-}
-
-function _formatOutput(
-  content: unknown,
-  raw_output?: unknown,
-  tool_call_id?: string
-): ToolMessage | string {
-  if (tool_call_id) {
+function _formatToolOutput(params: {
+  content: unknown;
+  artifact?: unknown;
+  toolCallId?: string;
+}): ToolMessage | string {
+  const { content, artifact, toolCallId } = params;
+  if (toolCallId) {
     if (
       typeof content === "string" ||
       (Array.isArray(content) &&
@@ -593,14 +575,14 @@ function _formatOutput(
     ) {
       return new ToolMessage({
         content,
-        raw_output,
-        tool_call_id,
+        artifact,
+        tool_call_id: toolCallId,
       });
     } else {
       return new ToolMessage({
         content: _stringify(content),
-        raw_output,
-        tool_call_id,
+        artifact,
+        tool_call_id: toolCallId,
       });
     }
   } else {
