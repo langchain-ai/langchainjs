@@ -1,7 +1,7 @@
 import type {
-  Pipeline,
   PretrainedOptions,
   FeatureExtractionPipelineOptions,
+  FeatureExtractionPipeline,
 } from "@xenova/transformers";
 import { Embeddings, type EmbeddingsParams } from "@langchain/core/embeddings";
 import { chunkArray } from "@langchain/core/utils/chunk_array";
@@ -79,7 +79,7 @@ export class HuggingFaceTransformersEmbeddings
 
   pipelineOptions?: FeatureExtractionPipelineOptions;
 
-  private pipelinePromise: Promise<Pipeline>;
+  private pipelinePromise: Promise<FeatureExtractionPipeline>;
 
   constructor(fields?: Partial<HuggingFaceTransformersEmbeddingsParams>) {
     super(fields ?? {});
