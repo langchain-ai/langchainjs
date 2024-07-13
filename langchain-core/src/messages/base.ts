@@ -127,14 +127,12 @@ export function mergeContent(
     }
     // If both are arrays
   } else if (Array.isArray(secondContent)) {
-    // find and merge all objects with the same "index" and "type" fields.
     return (
       _mergeLists(firstContent, secondContent) ?? [
         ...firstContent,
         ...secondContent,
       ]
     );
-    // If the first content is a list and second is a string
   } else {
     // Otherwise, add the second content as a new element of the list
     return [...firstContent, { type: "text", text: secondContent }];
@@ -312,7 +310,8 @@ export function _mergeLists(left?: any[], right?: any[]) {
         "text" in item &&
         item.text === ""
       ) {
-        // Skip empty text blocks
+        // No-op - skip empty text blocks
+        continue;
       } else {
         merged.push(item);
       }
