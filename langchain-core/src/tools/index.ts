@@ -369,7 +369,7 @@ export class DynamicTool<
    * @deprecated Use .invoke() instead. Will be removed in 0.3.0.
    */
   async call(
-    arg: string | undefined | z.input<this["schema"]>,
+    arg: string | undefined | z.input<this["schema"]> | ToolCall,
     configArg?: RunnableConfig | Callbacks
   ): Promise<RunOutput> {
     const config = parseCallbackConfigArg(configArg);

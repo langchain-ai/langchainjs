@@ -114,7 +114,8 @@ export class DallEAPIWrapper extends Tool {
       fields?.responseFormat !== undefined &&
       ["url", "b64_json"].includes(fields.responseFormat)
     ) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any no-param-reassign
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line no-param-reassign
       fields.dallEResponseFormat = fields.responseFormat as any;
       // eslint-disable-next-line no-param-reassign
       fields.responseFormat = "content";
