@@ -15,7 +15,7 @@ import { ToolCall, ToolMessage } from "../messages/tool.js";
 import { ZodAny } from "../types/zod.js";
 import { MessageContent } from "../messages/base.js";
 
-export type ResponseFormat = "content" | "content_and_artifact";
+export type ResponseFormat = "content" | "content_and_artifact" | string;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type ToolFuncReturnType = any;
