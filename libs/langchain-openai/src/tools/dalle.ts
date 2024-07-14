@@ -1,3 +1,4 @@
+/* eslint-disable no-param-reassign */
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { OpenAI as OpenAIClient } from "openai";
 import { Tool, ToolParams } from "@langchain/core/tools";
@@ -115,9 +116,7 @@ export class DallEAPIWrapper extends Tool {
       ["url", "b64_json"].includes(fields.responseFormat)
     ) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      // eslint-disable-next-line no-param-reassign
       fields.dallEResponseFormat = fields.responseFormat as any;
-      // eslint-disable-next-line no-param-reassign
       fields.responseFormat = "content";
     }
     super(fields);
