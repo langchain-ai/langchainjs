@@ -264,7 +264,10 @@ export function mapGenerateContentResultToChatResult(
     text,
     message: new AIMessage({
       content: text,
-      tool_calls: functionCalls,
+      tool_calls: functionCalls?.map((fc) => ({
+        ...fc,
+        type: "tool_call",
+      })),
       additional_kwargs: {
         ...generationInfo,
       },
@@ -300,6 +303,7 @@ export function convertResponseContentToChatGenerationChunk(
         ...fc,
         args: JSON.stringify(fc.args),
         index: extra.index,
+        type: "tool_call_chunk" as const,
       }))
     );
   }
