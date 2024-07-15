@@ -56,5 +56,7 @@ export async function dispatchCustomEvent(
       ].join(" ")
     );
   }
+  // We pass parent id as the current run id here intentionally since events dispatch
+  // from within things like RunnableLambda
   await callbackManager.handleCustomEvent?.(name, payload, parentRunId);
 }
