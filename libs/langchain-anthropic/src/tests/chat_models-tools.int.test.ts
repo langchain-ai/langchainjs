@@ -33,7 +33,6 @@ class WeatherTool extends StructuredTool {
   name = "get_weather";
 
   async _call(input: z.infer<typeof this.schema>) {
-    console.log(`WeatherTool called with input: ${input}`);
     return `The weather in ${input.location} is 25°C`;
   }
 }
@@ -84,7 +83,6 @@ test("Few shotting with tool calls", async () => {
     ),
     new HumanMessage("What did you say the weather was?"),
   ]);
-  console.log(res);
   expect(res.content).toContain("24");
 });
 
@@ -96,12 +94,7 @@ test("Can bind & invoke StructuredTools", async () => {
   const result = await modelWithTools.invoke(
     "What is the weather in SF today?"
   );
-  console.log(
-    {
-      tool_calls: JSON.stringify(result.content, null, 2),
-    },
-    "Can bind & invoke StructuredTools"
-  );
+
   expect(Array.isArray(result.content)).toBeTruthy();
   if (!Array.isArray(result.content)) {
     throw new Error("Content is not an array");
@@ -117,7 +110,7 @@ test("Can bind & invoke StructuredTools", async () => {
   }
   expect(toolCall).toBeTruthy();
   const { name, input } = toolCall;
-  expect(toolCall.input).toEqual(result.tool_calls?.[0].args);
+  expect(input).toEqual(result.tool_calls?.[0].args);
   expect(name).toBe("get_weather");
   expect(input).toBeTruthy();
   expect(input.location).toBeTruthy();
@@ -134,7 +127,6 @@ test("Can bind & invoke StructuredTools", async () => {
     ),
     new HumanMessage("What did you say the weather was?"),
   ]);
-  console.log(result2);
   // This should work, but Anthorpic is too skeptical
   expect(result2.content).toContain("59");
 });
@@ -147,12 +139,7 @@ test("Can bind & invoke AnthropicTools", async () => {
   const result = await modelWithTools.invoke(
     "What is the weather in London today?"
   );
-  console.log(
-    {
-      tool_calls: JSON.stringify(result.content, null, 2),
-    },
-    "Can bind & invoke StructuredTools"
-  );
+
   expect(Array.isArray(result.content)).toBeTruthy();
   if (!Array.isArray(result.content)) {
     throw new Error("Content is not an array");
@@ -201,6 +188,7 @@ test("Can bind & stream AnthropicTools", async () => {
   }
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let toolCall: Record<string, any> | undefined;
+
   finalMessage.content.forEach((item) => {
     if (item.type === "tool_use") {
       toolCall = item as AnthropicToolResponse;
@@ -213,7 +201,7 @@ test("Can bind & stream AnthropicTools", async () => {
   const { name, input } = toolCall;
   expect(name).toBe("get_weather");
   expect(input).toBeTruthy();
-  expect(JSON.parse(input).location).toBeTruthy();
+  expect(input.location).toBeTruthy();
 });
 
 test("withStructuredOutput with zod schema", async () => {
@@ -226,12 +214,6 @@ test("withStructuredOutput with zod schema", async () => {
 
   const result = await modelWithTools.invoke(
     "What is the weather in London today?"
-  );
-  console.log(
-    {
-      result,
-    },
-    "withStructuredOutput with zod schema"
   );
   expect(typeof result.location).toBe("string");
 });
@@ -247,12 +229,7 @@ test("withStructuredOutput with AnthropicTool", async () => {
   const result = await modelWithTools.invoke(
     "What is the weather in London today?"
   );
-  console.log(
-    {
-      result,
-    },
-    "withStructuredOutput with AnthropicTool"
-  );
+
   expect(typeof result.location).toBe("string");
 });
 
@@ -268,12 +245,7 @@ test("withStructuredOutput JSON Schema only", async () => {
   const result = await modelWithTools.invoke(
     "What is the weather in London today?"
   );
-  console.log(
-    {
-      result,
-    },
-    "withStructuredOutput JSON Schema only"
-  );
+
   expect(typeof result.location).toBe("string");
 });
 
@@ -319,12 +291,7 @@ test("Can pass tool_choice", async () => {
   const result = await modelWithTools.invoke(
     "What is the sum of 272818 and 281818?"
   );
-  console.log(
-    {
-      tool_calls: JSON.stringify(result.content, null, 2),
-    },
-    "Can bind & invoke StructuredTools"
-  );
+
   expect(Array.isArray(result.content)).toBeTruthy();
   if (!Array.isArray(result.content)) {
     throw new Error("Content is not an array");
@@ -340,7 +307,7 @@ test("Can pass tool_choice", async () => {
   }
   expect(toolCall).toBeTruthy();
   const { name, input } = toolCall;
-  expect(toolCall.input).toEqual(result.tool_calls?.[0].args);
+  expect(input).toEqual(result.tool_calls?.[0].args);
   expect(name).toBe("get_weather");
   expect(input).toBeTruthy();
   expect(input.location).toBeTruthy();

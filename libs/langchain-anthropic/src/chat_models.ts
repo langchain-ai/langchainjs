@@ -47,6 +47,7 @@ import type {
   MessageCreateParams,
   Tool as AnthropicTool,
 } from "@anthropic-ai/sdk/resources/index.mjs";
+import { concat } from "@langchain/core/utils/stream";
 import {
   AnthropicToolsOutputParser,
   extractToolCalls,
@@ -815,6 +816,8 @@ export class ChatAnthropicMessages<
     });
     let usageData = { input_tokens: 0, output_tokens: 0 };
 
+    let concatenatedChunks: AIMessageChunk | undefined;
+
     for await (const data of stream) {
       if (options.signal?.aborted) {
         stream.controller.abort();
@@ -879,9 +882,61 @@ export class ChatAnthropicMessages<
           ? chunk.content
           : undefined;
 
+      // Remove `tool_use` content types until the last chunk.
+      let toolUseContent:
+        | {
+            id: string;
+            type: "tool_use";
+            name: string;
+            input: Record<string, unknown>;
+          }
+        | undefined;
+      if (!concatenatedChunks) {
+        concatenatedChunks = chunk;
+      } else {
+        concatenatedChunks = concat(concatenatedChunks, chunk);
+      }
+      if (
+        Array.isArray(concatenatedChunks.content) &&
+        concatenatedChunks.content.find((c) => c.type === "tool_use")
+      ) {
+        try {
+          const toolUseMsg = concatenatedChunks.content.find(
+            (c) => c.type === "tool_use"
+          );
+          if (
+            !toolUseMsg ||
+            !(
+              "input" in toolUseMsg ||
+              "name" in toolUseMsg ||
+              "id" in toolUseMsg
+            )
+          )
+            return;
+          const parsedArgs = JSON.parse(toolUseMsg.input);
+          if (parsedArgs) {
+            toolUseContent = {
+              type: "tool_use",
+              id: toolUseMsg.id,
+              name: toolUseMsg.name,
+              input: parsedArgs,
+            };
+          }
+        } catch (_) {
+          // no-op
+        }
+      }
+
+      const chunkContentWithoutToolUse = Array.isArray(chunk.content)
+        ? chunk.content.filter((c) => c.type !== "tool_use")
+        : chunk.content;
+      if (Array.isArray(chunkContentWithoutToolUse) && toolUseContent) {
+        chunkContentWithoutToolUse.push(toolUseContent);
+      }
+
       yield new ChatGenerationChunk({
         message: new AIMessageChunk({
-          content: chunk.content,
+          content: chunkContentWithoutToolUse,
           additional_kwargs: chunk.additional_kwargs,
           tool_call_chunks: newToolCallChunk ? [newToolCallChunk] : undefined,
           usage_metadata: chunk.usage_metadata,
