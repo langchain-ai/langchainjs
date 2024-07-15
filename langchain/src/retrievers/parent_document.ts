@@ -211,7 +211,7 @@ export class ParentDocumentRetriever extends MultiVectorRetriever {
           })
       );
       await this._storeDocuments(
-        { parentDocId: parentDoc },
+        { [parentDocId]: parentDoc },
         taggedSubDocs,
         addToDocstore
       );
