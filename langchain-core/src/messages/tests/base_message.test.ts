@@ -134,43 +134,43 @@ test("Deserialisation and serialisation of messages with ID", async () => {
   expect(deserialized.id).toBe(messageId);
 });
 
-test("Can concat raw_output (string) of ToolMessageChunk", () => {
+test("Can concat artifact (string) of ToolMessageChunk", () => {
   const rawOutputOne = "Hello";
   const rawOutputTwo = " world";
   const chunk1 = new ToolMessageChunk({
     content: "Hello",
     tool_call_id: "1",
-    raw_output: rawOutputOne,
+    artifact: rawOutputOne,
   });
   const chunk2 = new ToolMessageChunk({
     content: " world",
     tool_call_id: "1",
-    raw_output: rawOutputTwo,
+    artifact: rawOutputTwo,
   });
 
   const concated = chunk1.concat(chunk2);
-  expect(concated.raw_output).toBe(`${rawOutputOne}${rawOutputTwo}`);
+  expect(concated.artifact).toBe(`${rawOutputOne}${rawOutputTwo}`);
 });
 
-test("Can concat raw_output (array) of ToolMessageChunk", () => {
+test("Can concat artifact (array) of ToolMessageChunk", () => {
   const rawOutputOne = ["Hello", " world"];
   const rawOutputTwo = ["!!"];
   const chunk1 = new ToolMessageChunk({
     content: "Hello",
     tool_call_id: "1",
-    raw_output: rawOutputOne,
+    artifact: rawOutputOne,
   });
   const chunk2 = new ToolMessageChunk({
     content: " world",
     tool_call_id: "1",
-    raw_output: rawOutputTwo,
+    artifact: rawOutputTwo,
   });
 
   const concated = chunk1.concat(chunk2);
-  expect(concated.raw_output).toEqual(["Hello", " world", "!!"]);
+  expect(concated.artifact).toEqual(["Hello", " world", "!!"]);
 });
 
-test("Can concat raw_output (object) of ToolMessageChunk", () => {
+test("Can concat artifact (object) of ToolMessageChunk", () => {
   const rawOutputOne = {
     foo: "bar",
   };
@@ -180,16 +180,16 @@ test("Can concat raw_output (object) of ToolMessageChunk", () => {
   const chunk1 = new ToolMessageChunk({
     content: "Hello",
     tool_call_id: "1",
-    raw_output: rawOutputOne,
+    artifact: rawOutputOne,
   });
   const chunk2 = new ToolMessageChunk({
     content: " world",
     tool_call_id: "1",
-    raw_output: rawOutputTwo,
+    artifact: rawOutputTwo,
   });
 
   const concated = chunk1.concat(chunk2);
-  expect(concated.raw_output).toEqual({
+  expect(concated.artifact).toEqual({
     foo: "bar",
     bar: "baz",
   });
