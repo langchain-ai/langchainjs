@@ -63,8 +63,9 @@ export interface DallEAPIWrapperParams extends ToolParams {
    */
   dallEResponseFormat?: "url" | "b64_json"
   /**
-   * @deprecated Use dallEResponseFormat instead.
+   * @deprecated Use dallEResponseFormat instead for the Dall-E response type.
    */;
+   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   responseFormat?: any;
   /**
    * A unique identifier representing your end-user, which will help

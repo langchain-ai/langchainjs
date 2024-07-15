@@ -55,7 +55,7 @@ export class ToolInputParsingException extends Error {
 
 export interface StructuredToolInterface<T extends ZodAny = ZodAny>
   extends RunnableInterface<
-    (z.output<T> extends string ? string : never) | z.input<T>,
+    (z.output<T> extends string ? string : never) | z.input<T> | ToolCall,
     ToolReturnType
   > {
   lc_namespace: string[];
