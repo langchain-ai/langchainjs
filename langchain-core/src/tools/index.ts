@@ -247,6 +247,7 @@ export abstract class StructuredTool<
       content,
       artifact,
       toolCallId,
+      name: this.name,
     });
     await runManager?.handleToolEnd(formattedOutput);
     return formattedOutput;
@@ -528,6 +529,7 @@ function _isToolCall(toolCall?: unknown): toolCall is ToolCall {
 
 function _formatToolOutput(params: {
   content: unknown;
+  name: string;
   artifact?: unknown;
   toolCallId?: string;
 }): ToolReturnType {
@@ -542,12 +544,14 @@ function _formatToolOutput(params: {
         content,
         artifact,
         tool_call_id: toolCallId,
+        name: params.name,
       });
     } else {
       return new ToolMessage({
         content: _stringify(content),
         artifact,
         tool_call_id: toolCallId,
+        name: params.name,
       });
     }
   } else {
