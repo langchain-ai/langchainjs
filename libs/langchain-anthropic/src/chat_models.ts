@@ -570,6 +570,7 @@ function extractToolCallChunk(
       id: toolUseChunks.id,
       name: toolUseChunks.name,
       index: toolUseChunks.index,
+      type: "tool_call_chunk",
     };
   }
 
@@ -586,11 +587,13 @@ function extractToolCallChunk(
       newToolCallChunk = {
         args: inputJsonDeltaChunks.input,
         index: inputJsonDeltaChunks.index,
+        type: "tool_call_chunk",
       };
     } else {
       newToolCallChunk = {
         args: JSON.stringify(inputJsonDeltaChunks.input, null, 2),
         index: inputJsonDeltaChunks.index,
+        type: "tool_call_chunk",
       };
     }
   }
