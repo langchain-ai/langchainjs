@@ -132,7 +132,7 @@ export abstract class StructuredTool<
     arg: z.output<T>,
     runManager?: CallbackManagerForToolRun,
     config?: RunnableConfig
-  ): Promise<string | ContentAndArtifact>;
+  ): Promise<RunOutput | ContentAndArtifact>;
 
   /**
    * Invokes the tool with the provided input and configuration.
@@ -384,7 +384,7 @@ export class DynamicTool<
     input: string,
     runManager?: CallbackManagerForToolRun,
     config?: RunnableConfig
-  ): Promise<string | ContentAndArtifact> {
+  ): Promise<ToolFuncReturnType | ContentAndArtifact> {
     return this.func(input, runManager, config);
   }
 }
