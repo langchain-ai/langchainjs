@@ -61,7 +61,11 @@ export interface DallEAPIWrapperParams extends ToolParams {
    * Must be one of "url" or "b64_json".
    * @default "url"
    */
-  dallEResponseFormat?: "url" | "b64_json";
+  dallEResponseFormat?: "url" | "b64_json"
+  /**
+   * @deprecated Use dallEResponseFormat instead.
+   */;
+  responseFormat?: any;
   /**
    * A unique identifier representing your end-user, which will help
    * OpenAI to monitor and detect abuse.

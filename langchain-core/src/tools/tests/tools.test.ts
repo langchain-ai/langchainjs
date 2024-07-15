@@ -64,16 +64,6 @@ test("Tool should throw type error if types are wrong", () => {
     }
   );
 
-  tool<typeof weatherSchema, string>(
-    (_: z.infer<typeof weatherSchema>): string => {
-      return "no-op";
-    },
-    {
-      name: "weather",
-      schema: weatherSchema,
-    }
-  );
-
   // This works because not setting any generics allows it to infer the correct types
   tool(
     (_): string => {
