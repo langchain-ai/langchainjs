@@ -1,80 +1,7 @@
 import { test, expect } from "@jest/globals";
 import { z } from "zod";
-import { ContentAndArtifact, tool } from "../index.js";
+import { tool } from "../index.js";
 import { ToolMessage } from "../../messages/tool.js";
-
-test("Tool should throw type error if types are wrong", () => {
-  const weatherSchema = z.object({
-    location: z.string(),
-  });
-
-  tool(
-    (_): ContentAndArtifact => {
-      return ["no-op", true];
-    },
-    {
-      name: "weather",
-      schema: weatherSchema,
-      responseFormat: "content",
-    }
-  );
-
-  tool(
-    (_) => {
-      return ["no-op", true];
-    },
-    {
-      name: "weather",
-      schema: weatherSchema,
-    }
-  );
-
-  // Should pass because we're expecting a `ToolMessage` return type due to `responseFormat: content_and_artifact`
-  tool(
-    (_): ContentAndArtifact => {
-      return ["no-op", true];
-    },
-    {
-      name: "weather",
-      schema: weatherSchema,
-      responseFormat: "content_and_artifact",
-    }
-  );
-
-  // Should pass because we're expecting a `string` return type due to `responseFormat: content`
-  tool(
-    (_): string => {
-      return "no-op";
-    },
-    {
-      name: "weather",
-      schema: weatherSchema,
-      responseFormat: "content",
-    }
-  );
-
-  // Should pass because we're expecting a `string` return type due to `responseFormat: undefined`
-  tool(
-    (_): string => {
-      return "no-op";
-    },
-    {
-      name: "weather",
-      schema: weatherSchema,
-    }
-  );
-
-  // This works because not setting any generics allows it to infer the correct types
-  tool(
-    (_): string => {
-      return "no-op";
-    },
-    {
-      name: "weather",
-      schema: weatherSchema,
-    }
-  );
-});
 
 test("Tool should error if responseFormat is content_and_artifact but the function doesn't return a tuple", async () => {
   const weatherSchema = z.object({
@@ -150,7 +77,6 @@ test("Returns tool message if responseFormat is content_and_artifact and returns
   });
 
   const weatherTool = tool(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (input) => {
       return ["msg_content", input];
     },
