@@ -33,7 +33,7 @@ import {
 } from "@langchain/core/outputs";
 import { StructuredToolInterface } from "@langchain/core/tools";
 import { isStructuredTool } from "@langchain/core/utils/function_calling";
-import { ToolCall } from "@langchain/core/messages/tool";
+import { ToolCall, ToolCallChunk } from "@langchain/core/messages/tool";
 import { zodToJsonSchema } from "zod-to-json-schema";
 
 import type { SerializedFields } from "../../load/map_keys.js";
@@ -562,12 +562,13 @@ export class BedrockChat
         options
       );
       const result = generations[0].message as AIMessage;
-      const toolCallChunks = result.tool_calls?.map(
+      const toolCallChunks: ToolCallChunk[] | undefined = result.tool_calls?.map(
         (toolCall: ToolCall, index: number) => ({
           name: toolCall.name,
           args: JSON.stringify(toolCall.args),
           id: toolCall.id,
           index,
+          type: "tool_call_chunk",
         })
       );
       yield new ChatGenerationChunk({

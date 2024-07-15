@@ -351,6 +351,7 @@ export function convertConverseMessageToLangChainMessage(
           id: c.toolUse.toolUseId,
           name: c.toolUse.name,
           args: c.toolUse.input,
+          type: "tool_call",
         });
       } else if ("text" in c && typeof c.text === "string") {
         content.push({ type: "text", text: c.text });
@@ -391,6 +392,7 @@ export function handleConverseStreamContentBlockDelta(
           {
             args: contentBlockDelta.delta.toolUse.input,
             index,
+            type: "tool_call_chunk",
           },
         ],
       }),
@@ -419,6 +421,7 @@ export function handleConverseStreamContentBlockStart(
             name: contentBlockStart.start.toolUse.name,
             id: contentBlockStart.start.toolUse.toolUseId,
             index,
+            type: "tool_call_chunk",
           },
         ],
       }),

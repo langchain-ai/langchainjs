@@ -68,6 +68,7 @@ import {
   FunctionDef,
   formatFunctionDefinitions,
 } from "./utils/openai-format-fndef.js";
+import { ToolCallChunk } from "@langchain/core/messages/tool";
 
 export type { AzureOpenAIInput, OpenAICallOptions, OpenAIChatInput };
 
@@ -184,7 +185,7 @@ function _convertDeltaToMessageChunk(
   if (role === "user") {
     return new HumanMessageChunk({ content });
   } else if (role === "assistant") {
-    const toolCallChunks = [];
+    const toolCallChunks: ToolCallChunk[] = [];
     if (Array.isArray(delta.tool_calls)) {
       for (const rawToolCall of delta.tool_calls) {
         toolCallChunks.push({
@@ -192,6 +193,7 @@ function _convertDeltaToMessageChunk(
           args: rawToolCall.function?.arguments,
           id: rawToolCall.id,
           index: rawToolCall.index,
+          type: "tool_call_chunk",
         });
       }
     }
