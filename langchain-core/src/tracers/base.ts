@@ -392,7 +392,8 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     return run;
   }
 
-  async handleToolEnd(output: string, runId: string): Promise<Run> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async handleToolEnd(output: any, runId: string): Promise<Run> {
     const run = this.runMap.get(runId);
     if (!run || run?.run_type !== "tool") {
       throw new Error("No tool run to end");

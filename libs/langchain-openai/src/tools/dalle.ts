@@ -1,3 +1,4 @@
+/* eslint-disable no-param-reassign */
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { OpenAI as OpenAIClient } from "openai";
 import { Tool, ToolParams } from "@langchain/core/tools";
@@ -60,7 +61,12 @@ export interface DallEAPIWrapperParams extends ToolParams {
    * Must be one of "url" or "b64_json".
    * @default "url"
    */
-  responseFormat?: "url" | "b64_json";
+  dallEResponseFormat?: "url" | "b64_json";
+  /**
+   * @deprecated Use dallEResponseFormat instead for the Dall-E response type.
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  responseFormat?: any;
   /**
    * A unique identifier representing your end-user, which will help
    * OpenAI to monitor and detect abuse.
@@ -104,11 +110,20 @@ export class DallEAPIWrapper extends Tool {
     | "1792x1024"
     | "1024x1792" = "1024x1024";
 
-  private responseFormat: "url" | "b64_json" = "url";
+  private dallEResponseFormat: "url" | "b64_json" = "url";
 
   private user?: string;
 
   constructor(fields?: DallEAPIWrapperParams) {
+    // Shim for new base tool param name
+    if (
+      fields?.responseFormat !== undefined &&
+      ["url", "b64_json"].includes(fields.responseFormat)
+    ) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      fields.dallEResponseFormat = fields.responseFormat as any;
+      fields.responseFormat = "content";
+    }
     super(fields);
     const openAIApiKey =
       fields?.apiKey ??
@@ -129,7 +144,8 @@ export class DallEAPIWrapper extends Tool {
     this.quality = fields?.quality ?? this.quality;
     this.n = fields?.n ?? this.n;
     this.size = fields?.size ?? this.size;
-    this.responseFormat = fields?.responseFormat ?? this.responseFormat;
+    this.dallEResponseFormat =
+      fields?.dallEResponseFormat ?? this.dallEResponseFormat;
     this.user = fields?.user;
   }
 
@@ -140,14 +156,14 @@ export class DallEAPIWrapper extends Tool {
       prompt: input,
       n: this.n,
       size: this.size,
-      response_format: this.responseFormat,
+      response_format: this.dallEResponseFormat,
       style: this.style,
       quality: this.quality,
       user: this.user,
     });
 
     let data = "";
-    if (this.responseFormat === "url") {
+    if (this.dallEResponseFormat === "url") {
       [data] = response.data
         .map((item) => item.url)
         .filter((url): url is string => url !== "undefined");
