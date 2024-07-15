@@ -136,7 +136,7 @@ export class ParentDocumentRetriever extends MultiVectorRetriever {
   }
 
   async _storeDocuments(
-    parentDoc: Document,
+    parentDoc: Record<string, Document>,
     childDocs: Document[],
     addToDocstore: boolean
   ) {
@@ -210,7 +210,7 @@ export class ParentDocumentRetriever extends MultiVectorRetriever {
             metadata: { ...subDoc.metadata, [this.idKey]: parentDocId },
           })
       );
-      await this._storeDocuments(parentDoc, taggedSubDocs, addToDocstore);
+      await this._storeDocuments({ parentDocId: parentDoc }, taggedSubDocs, addToDocstore);
     }
   }
 }
