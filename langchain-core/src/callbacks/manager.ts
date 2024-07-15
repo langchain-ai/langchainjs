@@ -863,28 +863,24 @@ export class CallbackManager
   async handleCustomEvent?(
     eventName: string,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    payload: any,
+    data: any,
     runId: string,
-    _parentRunId?: string,
     _tags?: string[],
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    _metadata?: Record<string, any>,
-    runName?: string
+    _metadata?: Record<string, any>
   ): // eslint-disable-next-line @typescript-eslint/no-explicit-any
   Promise<any> {
     await Promise.all(
       this.handlers.map((handler) =>
         consumeCallback(async () => {
-          if (!handler.ignoreRetriever) {
+          if (!handler.ignoreCustomEvent) {
             try {
               await handler.handleCustomEvent?.(
                 eventName,
-                payload,
+                data,
                 runId,
-                this._parentRunId,
                 this.tags,
-                this.metadata,
-                runName
+                this.metadata
               );
             } catch (err) {
               console.error(

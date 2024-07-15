@@ -609,7 +609,7 @@ export class EventStreamCallbackHandler extends BaseTracer {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async handleCustomEvent(eventName: string, payload: any, runId: string) {
+  async handleCustomEvent(eventName: string, data: any, runId: string) {
     const runInfo = this.runInfoMap.get(runId);
     if (runInfo === undefined) {
       throw new Error(
@@ -623,7 +623,7 @@ export class EventStreamCallbackHandler extends BaseTracer {
         name: eventName,
         tags: runInfo.tags,
         metadata: runInfo.metadata,
-        data: payload,
+        data,
       },
       runInfo
     );

@@ -28,7 +28,8 @@ import { DynamicStructuredTool, DynamicTool, tool } from "../../tools.js";
 import { Document } from "../../documents/document.js";
 import { PromptTemplate } from "../../prompts/prompt.js";
 import { GenerationChunk } from "../../outputs.js";
-import { dispatchCustomEvent } from "../../callbacks/dispatch/index.js";
+// Import from web to avoid side-effects from AsyncLocalStorage
+import { dispatchCustomEvent } from "../../callbacks/dispatch/web.js";
 
 function reverse(s: string) {
   // Reverse a string.
@@ -1826,8 +1827,8 @@ test("Runnable streamEvents method with simple tools", async () => {
 
 test("Runnable streamEvents method with a custom event", async () => {
   const lambda = RunnableLambda.from(
-    async (params: { x: number; y: string }) => {
-      await dispatchCustomEvent("testEvent", { someval: "test" });
+    async (params: { x: number; y: string }, config) => {
+      await dispatchCustomEvent("testEvent", { someval: "test" }, config);
       return JSON.stringify({ x: params.x, y: params.y });
     }
   );

@@ -56,13 +56,5 @@ export async function dispatchCustomEvent(
       ].join(" ")
     );
   }
-  await callbackManager.handleCustomEvent?.(
-    name,
-    payload,
-    parentRunId,
-    undefined,
-    undefined,
-    undefined,
-    config?.runName
-  );
+  await callbackManager.handleCustomEvent?.(name, payload, parentRunId);
 }
