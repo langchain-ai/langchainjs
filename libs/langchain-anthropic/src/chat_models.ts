@@ -549,6 +549,113 @@ function _formatMessagesForAnthropic(messages: BaseMessage[]): {
   };
 }
 
+function extractToolCallChunk(
+  chunk: AIMessageChunk
+): ToolCallChunk | undefined {
+  let newToolCallChunk: ToolCallChunk | undefined;
+
+  // Initial chunk for tool calls from anthropic contains identifying information like ID and name.
+  // This chunk does not contain any input JSON.
+  const toolUseChunks = Array.isArray(chunk.content)
+    ? chunk.content.find((c) => c.type === "tool_use")
+    : undefined;
+  if (
+    toolUseChunks &&
+    "index" in toolUseChunks &&
+    "name" in toolUseChunks &&
+    "id" in toolUseChunks
+  ) {
+    newToolCallChunk = {
+      args: "",
+      id: toolUseChunks.id,
+      name: toolUseChunks.name,
+      index: toolUseChunks.index,
+    };
+  }
+
+  // Chunks after the initial chunk only contain the index and partial JSON.
+  const inputJsonDeltaChunks = Array.isArray(chunk.content)
+    ? chunk.content.find((c) => c.type === "input_json_delta")
+    : undefined;
+  if (
+    inputJsonDeltaChunks &&
+    "index" in inputJsonDeltaChunks &&
+    "input" in inputJsonDeltaChunks
+  ) {
+    if (typeof inputJsonDeltaChunks.input === "string") {
+      newToolCallChunk = {
+        args: inputJsonDeltaChunks.input,
+        index: inputJsonDeltaChunks.index,
+      };
+    } else {
+      newToolCallChunk = {
+        args: JSON.stringify(inputJsonDeltaChunks.input, null, 2),
+        index: inputJsonDeltaChunks.index,
+      };
+    }
+  }
+
+  return newToolCallChunk;
+}
+
+function extractToken(chunk: AIMessageChunk): string | undefined {
+  return typeof chunk.content === "string" && chunk.content !== ""
+    ? chunk.content
+    : undefined;
+}
+
+function extractToolUseContent(
+  chunk: AIMessageChunk,
+  concatenatedChunks: AIMessageChunk | undefined
+) {
+  let newConcatenatedChunks = concatenatedChunks;
+  // Remove `tool_use` content types until the last chunk.
+  let toolUseContent:
+    | {
+        id: string;
+        type: "tool_use";
+        name: string;
+        input: Record<string, unknown>;
+      }
+    | undefined;
+  if (!newConcatenatedChunks) {
+    newConcatenatedChunks = chunk;
+  } else {
+    newConcatenatedChunks = concat(newConcatenatedChunks, chunk);
+  }
+  if (
+    Array.isArray(newConcatenatedChunks.content) &&
+    newConcatenatedChunks.content.find((c) => c.type === "tool_use")
+  ) {
+    try {
+      const toolUseMsg = newConcatenatedChunks.content.find(
+        (c) => c.type === "tool_use"
+      );
+      if (
+        !toolUseMsg ||
+        !("input" in toolUseMsg || "name" in toolUseMsg || "id" in toolUseMsg)
+      )
+        return;
+      const parsedArgs = JSON.parse(toolUseMsg.input);
+      if (parsedArgs) {
+        toolUseContent = {
+          type: "tool_use",
+          id: toolUseMsg.id,
+          name: toolUseMsg.name,
+          input: parsedArgs,
+        };
+      }
+    } catch (_) {
+      // no-op
+    }
+  }
+
+  return {
+    toolUseContent,
+    concatenatedChunks: newConcatenatedChunks,
+  };
+}
+
 /**
  * Wrapper around Anthropic large language models.
  *
@@ -823,120 +930,43 @@ export class ChatAnthropicMessages<
         stream.controller.abort();
         throw new Error("AbortError: User aborted the request.");
       }
+
       const result = _makeMessageChunkFromAnthropicEvent(data, {
         streamUsage: !!(this.streamUsage || options.streamUsage),
         coerceContentToString,
         usageData,
       });
-      if (!result) {
-        continue;
-      }
+      if (!result) continue;
+
       const { chunk, usageData: updatedUsageData } = result;
       usageData = updatedUsageData;
 
-      let newToolCallChunk: ToolCallChunk | undefined;
+      const newToolCallChunk = extractToolCallChunk(chunk);
+      // Maintain concatenatedChunks for accessing the complete `tool_use` content block.
+      concatenatedChunks = concatenatedChunks
+        ? concat(concatenatedChunks, chunk)
+        : chunk;
 
-      // Initial chunk for tool calls from anthropic contains identifying information like ID and name.
-      // This chunk does not contain any input JSON.
-      const toolUseChunks = Array.isArray(chunk.content)
-        ? chunk.content.find((c) => c.type === "tool_use")
-        : undefined;
-      if (
-        toolUseChunks &&
-        "index" in toolUseChunks &&
-        "name" in toolUseChunks &&
-        "id" in toolUseChunks
-      ) {
-        newToolCallChunk = {
-          args: "",
-          id: toolUseChunks.id,
-          name: toolUseChunks.name,
-          index: toolUseChunks.index,
-        };
+      let toolUseContent;
+      const extractedContent = extractToolUseContent(chunk, concatenatedChunks);
+      if (extractedContent) {
+        toolUseContent = extractedContent.toolUseContent;
+        concatenatedChunks = extractedContent.concatenatedChunks;
       }
 
-      // Chunks after the initial chunk only contain the index and partial JSON.
-      const inputJsonDeltaChunks = Array.isArray(chunk.content)
-        ? chunk.content.find((c) => c.type === "input_json_delta")
-        : undefined;
-      if (
-        inputJsonDeltaChunks &&
-        "index" in inputJsonDeltaChunks &&
-        "input" in inputJsonDeltaChunks
-      ) {
-        if (typeof inputJsonDeltaChunks.input === "string") {
-          newToolCallChunk = {
-            args: inputJsonDeltaChunks.input,
-            index: inputJsonDeltaChunks.index,
-          };
-        } else {
-          newToolCallChunk = {
-            args: JSON.stringify(inputJsonDeltaChunks.input, null, 2),
-            index: inputJsonDeltaChunks.index,
-          };
-        }
-      }
-
-      const token: string | undefined =
-        typeof chunk.content === "string" && chunk.content !== ""
-          ? chunk.content
-          : undefined;
-
-      // Remove `tool_use` content types until the last chunk.
-      let toolUseContent:
-        | {
-            id: string;
-            type: "tool_use";
-            name: string;
-            input: Record<string, unknown>;
-          }
-        | undefined;
-      if (!concatenatedChunks) {
-        concatenatedChunks = chunk;
-      } else {
-        concatenatedChunks = concat(concatenatedChunks, chunk);
-      }
-      if (
-        Array.isArray(concatenatedChunks.content) &&
-        concatenatedChunks.content.find((c) => c.type === "tool_use")
-      ) {
-        try {
-          const toolUseMsg = concatenatedChunks.content.find(
-            (c) => c.type === "tool_use"
-          );
-          if (
-            !toolUseMsg ||
-            !(
-              "input" in toolUseMsg ||
-              "name" in toolUseMsg ||
-              "id" in toolUseMsg
-            )
-          )
-            return;
-          const parsedArgs = JSON.parse(toolUseMsg.input);
-          if (parsedArgs) {
-            toolUseContent = {
-              type: "tool_use",
-              id: toolUseMsg.id,
-              name: toolUseMsg.name,
-              input: parsedArgs,
-            };
-          }
-        } catch (_) {
-          // no-op
-        }
-      }
-
-      const chunkContentWithoutToolUse = Array.isArray(chunk.content)
+      // Filter partial `tool_use` content, and only add `tool_use` chunks if complete JSON available.
+      const chunkContent = Array.isArray(chunk.content)
         ? chunk.content.filter((c) => c.type !== "tool_use")
         : chunk.content;
-      if (Array.isArray(chunkContentWithoutToolUse) && toolUseContent) {
-        chunkContentWithoutToolUse.push(toolUseContent);
+      if (Array.isArray(chunkContent) && toolUseContent) {
+        chunkContent.push(toolUseContent);
       }
 
+      // Extract the text content token for text field and runManager.
+      const token = extractToken(chunk);
       yield new ChatGenerationChunk({
         message: new AIMessageChunk({
-          content: chunkContentWithoutToolUse,
+          content: chunkContent,
           additional_kwargs: chunk.additional_kwargs,
           tool_call_chunks: newToolCallChunk ? [newToolCallChunk] : undefined,
           usage_metadata: chunk.usage_metadata,
@@ -944,10 +974,12 @@ export class ChatAnthropicMessages<
         }),
         text: token ?? "",
       });
+
       if (token) {
         await runManager?.handleLLMNewToken(token);
       }
     }
+
     let usageMetadata: UsageMetadata | undefined;
     if (this.streamUsage || options.streamUsage) {
       usageMetadata = {
