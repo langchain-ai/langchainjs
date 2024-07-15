@@ -30,6 +30,7 @@ export interface BaseCallbackHandlerInput {
   ignoreChain?: boolean;
   ignoreAgent?: boolean;
   ignoreRetriever?: boolean;
+  ignoreCustomEvent?: boolean;
   _awaitHandler?: boolean;
   raiseError?: boolean;
 }
@@ -259,6 +260,19 @@ abstract class BaseCallbackHandlerMethodsClass {
     tags?: string[]
   ): // eslint-disable-next-line @typescript-eslint/no-explicit-any
   Promise<any> | any;
+
+  handleCustomEvent?(
+    eventName: string,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    payload: any,
+    runId: string,
+    parentRunId?: string,
+    tags?: string[],
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    metadata?: Record<string, any>,
+    name?: string
+  ): // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  Promise<any> | any;
 }
 
 /**
@@ -332,6 +346,8 @@ export abstract class BaseCallbackHandler
 
   ignoreRetriever = false;
 
+  ignoreCustomEvent = false;
+
   raiseError = false;
 
   awaitHandlers =
@@ -345,6 +361,8 @@ export abstract class BaseCallbackHandler
       this.ignoreChain = input.ignoreChain ?? this.ignoreChain;
       this.ignoreAgent = input.ignoreAgent ?? this.ignoreAgent;
       this.ignoreRetriever = input.ignoreRetriever ?? this.ignoreRetriever;
+      this.ignoreCustomEvent =
+        input.ignoreCustomEvent ?? this.ignoreCustomEvent;
       this.raiseError = input.raiseError ?? this.raiseError;
       this.awaitHandlers =
         this.raiseError || (input._awaitHandler ?? this.awaitHandlers);

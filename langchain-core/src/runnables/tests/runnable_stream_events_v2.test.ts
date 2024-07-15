@@ -28,6 +28,7 @@ import { DynamicStructuredTool, DynamicTool, tool } from "../../tools.js";
 import { Document } from "../../documents/document.js";
 import { PromptTemplate } from "../../prompts/prompt.js";
 import { GenerationChunk } from "../../outputs.js";
+import { dispatchCustomEvent } from "../../callbacks/dispatch/index.js";
 
 function reverse(s: string) {
   // Reverse a string.
@@ -1819,6 +1820,57 @@ test("Runnable streamEvents method with simple tools", async () => {
       name: "with_parameters",
       run_id: expect.any(String),
       tags: [],
+    },
+  ]);
+});
+
+test("Runnable streamEvents method with a custom event", async () => {
+  const lambda = RunnableLambda.from(
+    async (params: { x: number; y: string }) => {
+      await dispatchCustomEvent("testEvent", { someval: "test" });
+      return JSON.stringify({ x: params.x, y: params.y });
+    }
+  );
+  const events2 = [];
+  const eventStream2 = await lambda.streamEvents(
+    { x: 1, y: "2" },
+    { version: "v2" }
+  );
+  for await (const event of eventStream2) {
+    events2.push(event);
+  }
+  expect(events2).toEqual([
+    {
+      event: "on_chain_start",
+      data: { input: { x: 1, y: "2" } },
+      name: "RunnableLambda",
+      tags: [],
+      run_id: expect.any(String),
+      metadata: {},
+    },
+    {
+      event: "on_custom_event",
+      run_id: expect.any(String),
+      name: "testEvent",
+      tags: [],
+      metadata: {},
+      data: { someval: "test" },
+    },
+    {
+      event: "on_chain_stream",
+      run_id: expect.any(String),
+      name: "RunnableLambda",
+      tags: [],
+      metadata: {},
+      data: { chunk: '{"x":1,"y":"2"}' },
+    },
+    {
+      event: "on_chain_end",
+      data: { output: '{"x":1,"y":"2"}' },
+      run_id: expect.any(String),
+      name: "RunnableLambda",
+      tags: [],
+      metadata: {},
     },
   ]);
 });

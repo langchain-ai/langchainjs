@@ -860,6 +860,46 @@ export class CallbackManager
     );
   }
 
+  async handleCustomEvent?(
+    eventName: string,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    payload: any,
+    runId: string,
+    _parentRunId?: string,
+    _tags?: string[],
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    _metadata?: Record<string, any>,
+    runName?: string
+  ): // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  Promise<any> {
+    await Promise.all(
+      this.handlers.map((handler) =>
+        consumeCallback(async () => {
+          if (!handler.ignoreRetriever) {
+            try {
+              await handler.handleCustomEvent?.(
+                eventName,
+                payload,
+                runId,
+                this._parentRunId,
+                this.tags,
+                this.metadata,
+                runName
+              );
+            } catch (err) {
+              console.error(
+                `Error in handler ${handler.constructor.name}, handleCustomEvent: ${err}`
+              );
+              if (handler.raiseError) {
+                throw err;
+              }
+            }
+          }
+        }, handler.awaitHandlers)
+      )
+    );
+  }
+
   addHandler(handler: BaseCallbackHandler, inherit = true): void {
     this.handlers.push(handler);
     if (inherit) {

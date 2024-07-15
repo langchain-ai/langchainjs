@@ -15,6 +15,8 @@ export const config = {
     agents: "agents",
     caches: "caches/base",
     "callbacks/base": "callbacks/base",
+    "callbacks/dispatch": "callbacks/dispatch/index",
+    "callbacks/dispatch/web": "callbacks/dispatch/web",
     "callbacks/manager": "callbacks/manager",
     "callbacks/promises": "callbacks/promises",
     chat_history: "chat_history",
