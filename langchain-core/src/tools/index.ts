@@ -18,7 +18,7 @@ import { MessageContent } from "../messages/base.js";
 export type ResponseFormat = "content" | "content_and_artifact" | string;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-type ToolFuncReturnType = any;
+type ToolFuncReturnType = any | ToolMessage;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ContentAndArtifact = [MessageContent, any];
@@ -521,7 +521,7 @@ export function tool<T extends ZodAny = ZodAny, RunOutput = ToolFuncReturnType>(
 
   const description =
     fields.description ?? schema.description ?? `${fields.name} tool`;
-  return new DynamicStructuredTool<T, RunOutput>({
+  return new DynamicStructuredTool({
     name: fields.name,
     description,
     schema: schema as T,

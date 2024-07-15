@@ -113,8 +113,7 @@ test("Tool works if responseFormat is content_and_artifact and returns a tuple",
   });
 
   const weatherTool = tool(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (input): any => {
+    (input) => {
       return ["msg_content", input];
     },
     {
@@ -136,8 +135,7 @@ test("Does not return tool message if responseFormat is content_and_artifact and
   });
 
   const weatherTool = tool(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (input): any => {
+    (input) => {
       return ["msg_content", input];
     },
     {
@@ -163,7 +161,7 @@ test("Returns tool message if responseFormat is content_and_artifact and returns
 
   const weatherTool = tool(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (input): any => {
+    (input) => {
       return ["msg_content", input];
     },
     {
