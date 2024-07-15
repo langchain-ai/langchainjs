@@ -210,7 +210,11 @@ export class ParentDocumentRetriever extends MultiVectorRetriever {
             metadata: { ...subDoc.metadata, [this.idKey]: parentDocId },
           })
       );
-      await this._storeDocuments({ parentDocId: parentDoc }, taggedSubDocs, addToDocstore);
+      await this._storeDocuments(
+        { parentDocId: parentDoc },
+        taggedSubDocs,
+        addToDocstore
+      );
     }
   }
 }
