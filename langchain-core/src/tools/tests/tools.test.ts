@@ -1,7 +1,7 @@
 import { test, expect } from "@jest/globals";
 import { z } from "zod";
 import { ContentAndArtifact, tool } from "../index.js";
-import { ToolCall, ToolMessage } from "../../messages/tool.js";
+import { ToolMessage } from "../../messages/tool.js";
 
 test("Tool should throw type error if types are wrong", () => {
   const weatherSchema = z.object({
@@ -64,8 +64,7 @@ test("Tool should throw type error if types are wrong", () => {
     }
   );
 
-  tool<typeof weatherSchema, string, ToolCall>(
-    // @ts-expect-error - Error because setting the third generic to `ToolCall` makes the input type of the function be `ToolCall`
+  tool<typeof weatherSchema, string>(
     (_: z.infer<typeof weatherSchema>): string => {
       return "no-op";
     },
@@ -77,7 +76,7 @@ test("Tool should throw type error if types are wrong", () => {
 
   // This works because not setting any generics allows it to infer the correct types
   tool(
-    (_: ToolCall): string => {
+    (_): string => {
       return "no-op";
     },
     {

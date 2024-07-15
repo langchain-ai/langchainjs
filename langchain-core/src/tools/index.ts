@@ -318,26 +318,29 @@ export interface BaseDynamicToolInput extends ToolParams {
 /**
  * Interface for the input parameters of the DynamicTool class.
  */
-export interface DynamicToolInput extends BaseDynamicToolInput {
+export interface DynamicToolInput<RunOutput = ToolFuncReturnType>
+  extends BaseDynamicToolInput {
   func: (
     input: string,
     runManager?: CallbackManagerForToolRun,
     config?: RunnableConfig
-  ) => Promise<string | ContentAndArtifact>;
+  ) => Promise<RunOutput | ContentAndArtifact>;
 }
 
 /**
  * Interface for the input parameters of the DynamicStructuredTool class.
  */
-export interface DynamicStructuredToolInput<T extends ZodAny = ZodAny>
-  extends BaseDynamicToolInput {
+export interface DynamicStructuredToolInput<
+  T extends ZodAny = ZodAny,
+  RunOutput = ToolFuncReturnType
+> extends BaseDynamicToolInput {
   func: (
     input: BaseDynamicToolInput["responseFormat"] extends "content_and_artifact"
       ? ToolCall
       : z.infer<T>,
     runManager?: CallbackManagerForToolRun,
     config?: RunnableConfig
-  ) => Promise<string | ContentAndArtifact>;
+  ) => Promise<RunOutput | ContentAndArtifact>;
   schema: T;
 }
 
@@ -440,7 +443,7 @@ export class DynamicStructuredTool<
     arg: z.output<T> | ToolCall,
     runManager?: CallbackManagerForToolRun,
     config?: RunnableConfig
-  ): Promise<string | ContentAndArtifact> {
+  ): Promise<RunOutput | ContentAndArtifact> {
     return this.func(arg, runManager, config);
   }
 }
@@ -508,25 +511,20 @@ interface ToolWrapperParams<RunInput extends ZodAny = ZodAny>
  *
  * @returns {DynamicStructuredTool<RunInput, RunOutput>} A new StructuredTool instance.
  */
-export function tool<
-  RunInput extends ZodAny = ZodAny,
-  RunOutput = ToolFuncReturnType,
-  FuncInput extends z.infer<RunInput> | ToolCall = z.infer<RunInput>,
-  FuncOutput extends string | ContentAndArtifact = string
->(
-  func: RunnableFunc<FuncInput, FuncOutput>,
-  fields: ToolWrapperParams<RunInput>
-): DynamicStructuredTool<RunInput, RunOutput> {
+export function tool<T extends ZodAny = ZodAny, RunOutput = ToolFuncReturnType>(
+  func: RunnableFunc<z.output<T>, RunOutput | ContentAndArtifact>,
+  fields: ToolWrapperParams<T>
+): DynamicStructuredTool<T, RunOutput> {
   const schema =
     fields.schema ??
     z.object({ input: z.string().optional() }).transform((obj) => obj.input);
 
   const description =
     fields.description ?? schema.description ?? `${fields.name} tool`;
-  return new DynamicStructuredTool<RunInput, RunOutput>({
+  return new DynamicStructuredTool<T, RunOutput>({
     name: fields.name,
     description,
-    schema: schema as RunInput,
+    schema: schema as T,
     func: async (input, _runManager, config) => func(input, config),
     responseFormat: fields.responseFormat,
   });
