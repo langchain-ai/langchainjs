@@ -55,6 +55,7 @@ import {
   parseToolCall,
 } from "@langchain/core/output_parsers/openai_tools";
 import { zodToJsonSchema } from "zod-to-json-schema";
+import { ToolCallChunk } from "@langchain/core/messages/tool";
 import type {
   AzureOpenAIInput,
   OpenAICallOptions,
@@ -68,7 +69,6 @@ import {
   FunctionDef,
   formatFunctionDefinitions,
 } from "./utils/openai-format-fndef.js";
-import { ToolCallChunk } from "@langchain/core/messages/tool";
 
 export type { AzureOpenAIInput, OpenAICallOptions, OpenAIChatInput };
 

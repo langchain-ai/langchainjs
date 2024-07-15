@@ -562,15 +562,14 @@ export class BedrockChat
         options
       );
       const result = generations[0].message as AIMessage;
-      const toolCallChunks: ToolCallChunk[] | undefined = result.tool_calls?.map(
-        (toolCall: ToolCall, index: number) => ({
+      const toolCallChunks: ToolCallChunk[] | undefined =
+        result.tool_calls?.map((toolCall: ToolCall, index: number) => ({
           name: toolCall.name,
           args: JSON.stringify(toolCall.args),
           id: toolCall.id,
           index,
           type: "tool_call_chunk",
-        })
-      );
+        }));
       yield new ChatGenerationChunk({
         message: new AIMessageChunk({
           content: result.content,

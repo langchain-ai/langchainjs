@@ -404,15 +404,14 @@ export class ChatGroq extends BaseChatModel<
       ) {
         throw new Error("Could not parse Groq output.");
       }
-      const toolCallChunks: ToolCallChunk[] | undefined = generationMessage.tool_calls?.map(
-        (toolCall, i) => ({
+      const toolCallChunks: ToolCallChunk[] | undefined =
+        generationMessage.tool_calls?.map((toolCall, i) => ({
           name: toolCall.name,
           args: JSON.stringify(toolCall.args),
           id: toolCall.id,
           index: i,
           type: "tool_call_chunk",
-        })
-      );
+        }));
       yield new ChatGenerationChunk({
         message: new AIMessageChunk({
           content: generationMessage.content,

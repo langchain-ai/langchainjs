@@ -21,6 +21,7 @@ import {
   ChatResult,
   Generation,
 } from "@langchain/core/outputs";
+import { ToolCallChunk } from "@langchain/core/messages/tool";
 import type {
   GoogleLLMResponse,
   GoogleAIModelParams,
@@ -35,7 +36,6 @@ import type {
   GeminiPartFunctionCall,
 } from "../types.js";
 import { GoogleAISafetyError } from "./safety.js";
-import { ToolCallChunk } from "@langchain/core/messages/tool";
 
 const extractMimeType = (
   str: string

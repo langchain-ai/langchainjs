@@ -14,7 +14,12 @@ export function extractToolCalls(content: Record<string, any>[]) {
   const toolCalls: ToolCall[] = [];
   for (const block of content) {
     if (block.type === "tool_use") {
-      toolCalls.push({ name: block.name, args: block.input, id: block.id, type: "tool_call" });
+      toolCalls.push({
+        name: block.name,
+        args: block.input,
+        id: block.id,
+        type: "tool_call",
+      });
     }
   }
   return toolCalls;
