@@ -101,15 +101,18 @@ const PRIMITIVES = new Set(["string", "number", "boolean"]);
 
 /**
  * Ensure that a passed config is an object with all required keys present.
- *
- * Note: To make sure async local storage loading works correctly, this
- * should not be called with a default or prepopulated config argument.
  */
 export function ensureConfig<CallOptions extends RunnableConfig>(
   config?: CallOptions
 ): CallOptions {
+  const inheritedConfig =
+    AsyncLocalStorageProviderSingleton.getRunnableConfig();
+
   const loadedConfig =
-    config ?? AsyncLocalStorageProviderSingleton.getRunnableConfig();
+    inheritedConfig && config
+      ? { ...inheritedConfig, ...config }
+      : config ?? inheritedConfig;
+
   let empty: RunnableConfig = {
     tags: [],
     metadata: {},
