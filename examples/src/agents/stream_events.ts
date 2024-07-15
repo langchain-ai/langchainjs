@@ -70,7 +70,11 @@ for await (const event of eventStream) {
   } else if (eventType === "on_tool_start") {
     console.log("\n-----");
     console.log(
-      `Starting tool: ${event.name} with inputs: ${JSON.stringify(event.data.input, null, 2)}`
+      `Starting tool: ${event.name} with inputs: ${JSON.stringify(
+        event.data.input,
+        null,
+        2
+      )}`
     );
   } else if (eventType === "on_tool_end") {
     console.log("\n-----");
