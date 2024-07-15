@@ -36,6 +36,7 @@ export const optionalImportEntrypoints: string[] = [
   "langchain/document_loaders/web/couchbase",
   "langchain/document_loaders/web/youtube",
   "langchain/document_loaders/fs/directory",
+  "langchain/document_loaders/fs/multi_file",
   "langchain/document_loaders/fs/buffer",
   "langchain/document_loaders/fs/chatgpt",
   "langchain/document_loaders/fs/text",

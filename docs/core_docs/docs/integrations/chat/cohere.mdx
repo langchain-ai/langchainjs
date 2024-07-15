@@ -1,15 +1,10 @@
 ---
 sidebar_label: Cohere
-sidebar_class_name: beta
 ---
 
 import CodeBlock from "@theme/CodeBlock";
 
 # ChatCohere
-
-:::info
-The Cohere Chat API is still in beta. This means Cohere may make breaking changes at any time.
-:::
 
 ## Setup
 
@@ -47,6 +42,14 @@ import ChatStreamExample from "@examples/models/chat/cohere/chat_stream_cohere.t
 :::info
 You can see a LangSmith trace of this example [here](https://smith.langchain.com/public/36ae0564-b096-4ec1-9318-1f82fe705fe8/r)
 :::
+
+### Tools
+
+The Cohere API supports tool calling, along with multi-hop-tool calling. The following example demonstrates how to call tools:
+
+import ToolCallingExample from "@examples/models/chat/cohere/tool_calling.ts";
+
+<CodeBlock language="typescript">{ToolCallingExample}</CodeBlock>
 
 ### Stateful conversation API
 

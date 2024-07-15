@@ -94,6 +94,10 @@ Next, lets define our async function inside which contains the agent logic:
     });
 ```
 
+:::tip
+As of `langchain` version `0.2.8`, the `createToolCallingAgent` function now supports [OpenAI-formatted tools](https://api.js.langchain.com/interfaces/langchain_core_language_models_base.ToolDefinition.html).
+:::
+
 Here you can see we're doing a few things:
 
 The first is we're defining our list of tools (in this case we're only using a single tool) and pulling in our prompt from the LangChain prompt hub.
@@ -106,7 +110,7 @@ Finally, we'll call `.streamEvents` and pass our streamed data back to the `stre
 ```typescript action.ts
     const streamingEvents = agentExecutor.streamEvents(
       { input },
-      { version: "v1" },
+      { version: "v2" },
     );
 
     for await (const item of streamingEvents) {

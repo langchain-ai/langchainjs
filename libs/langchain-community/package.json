@@ -1,6 +1,6 @@
 {
   "name": "@langchain/community",
-  "version": "0.2.12",
+  "version": "0.2.18",
   "description": "Third-party integrations for LangChain.js",
   "type": "module",
   "engines": {
@@ -35,7 +35,7 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@langchain/core": "~0.2.9",
+    "@langchain/core": "~0.2.11",
     "@langchain/openai": "~0.1.0",
     "binary-extensions": "^2.2.0",
     "expr-eval": "^2.0.2",
@@ -43,7 +43,7 @@
     "js-yaml": "^4.1.0",
     "langchain": "0.2.3",
     "langsmith": "~0.1.30",
-    "uuid": "^9.0.0",
+    "uuid": "^10.0.0",
     "zod": "^3.22.3",
     "zod-to-json-schema": "^3.22.5"
   },
@@ -78,6 +78,7 @@
     "@gradientai/nodejs-sdk": "^1.2.0",
     "@huggingface/inference": "^2.6.4",
     "@jest/globals": "^29.5.0",
+    "@langchain/langgraph": "~0.0.26",
     "@langchain/scripts": "~0.0.14",
     "@langchain/standard-tests": "0.0.0",
     "@layerup/layerup-security": "^1.5.12",
@@ -122,8 +123,8 @@
     "@types/ws": "^8",
     "@typescript-eslint/eslint-plugin": "^5.58.0",
     "@typescript-eslint/parser": "^5.58.0",
-    "@upstash/ratelimit": "^1.1.3",
-    "@upstash/redis": "^1.20.6",
+    "@upstash/ratelimit": "^1.2.1",
+    "@upstash/redis": "^1.32.0",
     "@upstash/vector": "^1.1.1",
     "@vercel/kv": "^0.2.3",
     "@vercel/postgres": "^0.5.0",
@@ -239,6 +240,7 @@
     "@google-cloud/storage": "^6.10.1 || ^7.7.0",
     "@gradientai/nodejs-sdk": "^1.2.0",
     "@huggingface/inference": "^2.6.4",
+    "@langchain/langgraph": "~0.0.26",
     "@layerup/layerup-security": "^1.5.12",
     "@mendable/firecrawl-js": "^0.0.13",
     "@mlc-ai/web-llm": "0.2.46",
@@ -411,6 +413,9 @@
       "optional": true
     },
     "@huggingface/inference": {
+      "optional": true
+    },
+    "@langchain/langgraph": {
       "optional": true
     },
     "@layerup/layerup-security": {
@@ -1086,6 +1091,15 @@
       },
       "import": "./embeddings/hf_transformers.js",
       "require": "./embeddings/hf_transformers.cjs"
+    },
+    "./embeddings/jina": {
+      "types": {
+        "import": "./embeddings/jina.d.ts",
+        "require": "./embeddings/jina.d.cts",
+        "default": "./embeddings/jina.d.ts"
+      },
+      "import": "./embeddings/jina.js",
+      "require": "./embeddings/jina.cjs"
     },
     "./embeddings/llama_cpp": {
       "types": {
@@ -2725,6 +2739,15 @@
       "import": "./document_loaders/web/github.js",
       "require": "./document_loaders/web/github.cjs"
     },
+    "./document_loaders/web/taskade": {
+      "types": {
+        "import": "./document_loaders/web/taskade.d.ts",
+        "require": "./document_loaders/web/taskade.d.cts",
+        "default": "./document_loaders/web/taskade.d.ts"
+      },
+      "import": "./document_loaders/web/taskade.js",
+      "require": "./document_loaders/web/taskade.cjs"
+    },
     "./document_loaders/web/notionapi": {
       "types": {
         "import": "./document_loaders/web/notionapi.d.ts",
@@ -2968,6 +2991,15 @@
       "import": "./utils/cassandra.js",
       "require": "./utils/cassandra.cjs"
     },
+    "./experimental/callbacks/handlers/datadog": {
+      "types": {
+        "import": "./experimental/callbacks/handlers/datadog.d.ts",
+        "require": "./experimental/callbacks/handlers/datadog.d.cts",
+        "default": "./experimental/callbacks/handlers/datadog.d.ts"
+      },
+      "import": "./experimental/callbacks/handlers/datadog.js",
+      "require": "./experimental/callbacks/handlers/datadog.cjs"
+    },
     "./experimental/graph_transformers/llm": {
       "types": {
         "import": "./experimental/graph_transformers/llm.d.ts",
@@ -3004,6 +3036,15 @@
       "import": "./experimental/chat_models/ollama_functions.js",
       "require": "./experimental/chat_models/ollama_functions.cjs"
     },
+    "./experimental/llms/chrome_ai": {
+      "types": {
+        "import": "./experimental/llms/chrome_ai.d.ts",
+        "require": "./experimental/llms/chrome_ai.d.cts",
+        "default": "./experimental/llms/chrome_ai.d.ts"
+      },
+      "import": "./experimental/llms/chrome_ai.js",
+      "require": "./experimental/llms/chrome_ai.cjs"
+    },
     "./chains/graph_qa/cypher": {
       "types": {
         "import": "./chains/graph_qa/cypher.d.ts",
@@ -3012,6 +3053,15 @@
       },
       "import": "./chains/graph_qa/cypher.js",
       "require": "./chains/graph_qa/cypher.cjs"
+    },
+    "./langgraph/checkpointers/vercel_kv": {
+      "types": {
+        "import": "./langgraph/checkpointers/vercel_kv.d.ts",
+        "require": "./langgraph/checkpointers/vercel_kv.d.cts",
+        "default": "./langgraph/checkpointers/vercel_kv.d.ts"
+      },
+      "import": "./langgraph/checkpointers/vercel_kv.js",
+      "require": "./langgraph/checkpointers/vercel_kv.cjs"
     },
     "./package.json": "./package.json"
   },
@@ -3189,6 +3239,10 @@
     "embeddings/hf_transformers.js",
     "embeddings/hf_transformers.d.ts",
     "embeddings/hf_transformers.d.cts",
+    "embeddings/jina.cjs",
+    "embeddings/jina.js",
+    "embeddings/jina.d.ts",
+    "embeddings/jina.d.cts",
     "embeddings/llama_cpp.cjs",
     "embeddings/llama_cpp.js",
     "embeddings/llama_cpp.d.ts",
@@ -3917,6 +3971,10 @@
     "document_loaders/web/github.js",
     "document_loaders/web/github.d.ts",
     "document_loaders/web/github.d.cts",
+    "document_loaders/web/taskade.cjs",
+    "document_loaders/web/taskade.js",
+    "document_loaders/web/taskade.d.ts",
+    "document_loaders/web/taskade.d.cts",
     "document_loaders/web/notionapi.cjs",
     "document_loaders/web/notionapi.js",
     "document_loaders/web/notionapi.d.ts",
@@ -4025,6 +4083,10 @@
     "utils/cassandra.js",
     "utils/cassandra.d.ts",
     "utils/cassandra.d.cts",
+    "experimental/callbacks/handlers/datadog.cjs",
+    "experimental/callbacks/handlers/datadog.js",
+    "experimental/callbacks/handlers/datadog.d.ts",
+    "experimental/callbacks/handlers/datadog.d.cts",
     "experimental/graph_transformers/llm.cjs",
     "experimental/graph_transformers/llm.js",
     "experimental/graph_transformers/llm.d.ts",
@@ -4041,9 +4103,17 @@
     "experimental/chat_models/ollama_functions.js",
     "experimental/chat_models/ollama_functions.d.ts",
     "experimental/chat_models/ollama_functions.d.cts",
+    "experimental/llms/chrome_ai.cjs",
+    "experimental/llms/chrome_ai.js",
+    "experimental/llms/chrome_ai.d.ts",
+    "experimental/llms/chrome_ai.d.cts",
     "chains/graph_qa/cypher.cjs",
     "chains/graph_qa/cypher.js",
     "chains/graph_qa/cypher.d.ts",
-    "chains/graph_qa/cypher.d.cts"
+    "chains/graph_qa/cypher.d.cts",
+    "langgraph/checkpointers/vercel_kv.cjs",
+    "langgraph/checkpointers/vercel_kv.js",
+    "langgraph/checkpointers/vercel_kv.d.ts",
+    "langgraph/checkpointers/vercel_kv.d.cts"
   ]
 }

@@ -135,6 +135,21 @@ export class ParentDocumentRetriever extends MultiVectorRetriever {
     return parentDocs.slice(0, this.parentK);
   }
 
+  async _storeDocuments(
+    parentDoc: Document,
+    childDocs: Document[],
+    addToDocstore: boolean
+  ) {
+    if (this.childDocumentRetriever) {
+      await this.childDocumentRetriever.addDocuments(childDocs);
+    } else {
+      await this.vectorstore.addDocuments(childDocs);
+    }
+    if (addToDocstore) {
+      await this.docstore.mset(Object.entries(parentDoc));
+    }
+  }
+
   /**
    * Adds documents to the docstore and vectorstores.
    * If a retriever is provided, it will be used to add documents instead of the vectorstore.
@@ -181,8 +196,6 @@ export class ParentDocumentRetriever extends MultiVectorRetriever {
         `Got uneven list of documents and ids.\nIf "ids" is provided, should be same length as "documents".`
       );
     }
-    const embeddedDocs: Document[] = [];
-    const fullDocs: Record<string, Document> = {};
     for (let i = 0; i < parentDocs.length; i += 1) {
       const parentDoc = parentDocs[i];
       const parentDocId = parentDocIds[i];
@@ -197,16 +210,7 @@ export class ParentDocumentRetriever extends MultiVectorRetriever {
             metadata: { ...subDoc.metadata, [this.idKey]: parentDocId },
           })
       );
-      embeddedDocs.push(...taggedSubDocs);
-      fullDocs[parentDocId] = parentDoc;
-    }
-    if (this.childDocumentRetriever) {
-      await this.childDocumentRetriever.addDocuments(embeddedDocs);
-    } else {
-      await this.vectorstore.addDocuments(embeddedDocs);
-    }
-    if (addToDocstore) {
-      await this.docstore.mset(Object.entries(fullDocs));
+      await this._storeDocuments(parentDoc, taggedSubDocs, addToDocstore);
     }
   }
 }

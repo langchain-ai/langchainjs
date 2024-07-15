@@ -5,9 +5,19 @@ import {
   mergeContent,
   _mergeDicts,
   type MessageType,
+  _mergeObj,
 } from "./base.js";
 
 export interface ToolMessageFieldsWithToolCallId extends BaseMessageFields {
+  /**
+   * Artifact of the Tool execution which is not meant to be sent to the model.
+   *
+   * Should only be specified if it is different from the message content, e.g. if only
+   * a subset of the full tool output is being passed as message content but the full
+   * output is needed in other parts of the code.
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  artifact?: any;
   tool_call_id: string;
 }
 
@@ -25,6 +35,16 @@ export class ToolMessage extends BaseMessage {
   }
 
   tool_call_id: string;
+
+  /**
+   * Artifact of the Tool execution which is not meant to be sent to the model.
+   *
+   * Should only be specified if it is different from the message content, e.g. if only
+   * a subset of the full tool output is being passed as message content but the full
+   * output is needed in other parts of the code.
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  artifact?: any;
 
   constructor(fields: ToolMessageFieldsWithToolCallId);
 
@@ -45,6 +65,7 @@ export class ToolMessage extends BaseMessage {
     }
     super(fields);
     this.tool_call_id = fields.tool_call_id;
+    this.artifact = fields.artifact;
   }
 
   _getType(): MessageType {
@@ -63,9 +84,20 @@ export class ToolMessage extends BaseMessage {
 export class ToolMessageChunk extends BaseMessageChunk {
   tool_call_id: string;
 
+  /**
+   * Artifact of the Tool execution which is not meant to be sent to the model.
+   *
+   * Should only be specified if it is different from the message content, e.g. if only
+   * a subset of the full tool output is being passed as message content but the full
+   * output is needed in other parts of the code.
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  artifact?: any;
+
   constructor(fields: ToolMessageFieldsWithToolCallId) {
     super(fields);
     this.tool_call_id = fields.tool_call_id;
+    this.artifact = fields.artifact;
   }
 
   static lc_name() {
@@ -87,6 +119,7 @@ export class ToolMessageChunk extends BaseMessageChunk {
         this.response_metadata,
         chunk.response_metadata
       ),
+      artifact: _mergeObj(this.artifact, chunk.artifact),
       tool_call_id: this.tool_call_id,
       id: this.id ?? chunk.id,
     });
@@ -106,6 +139,8 @@ export type ToolCall = {
   args: Record<string, any>;
 
   id?: string;
+
+  type?: "tool_call";
 };
 
 /**
@@ -166,6 +201,8 @@ export type ToolCallChunk = {
   id?: string;
 
   index?: number;
+
+  type?: "tool_call_chunk";
 };
 
 export type InvalidToolCall = {
@@ -173,6 +210,7 @@ export type InvalidToolCall = {
   args?: string;
   id?: string;
   error?: string;
+  type?: "invalid_tool_call";
 };
 
 export function defaultToolCallParser(

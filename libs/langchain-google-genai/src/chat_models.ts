@@ -33,6 +33,7 @@ import {
   Runnable,
   RunnablePassthrough,
   RunnableSequence,
+  RunnableToolLike,
 } from "@langchain/core/runnables";
 import type { z } from "zod";
 import { isZodSchema } from "@langchain/core/utils/types";
@@ -349,6 +350,7 @@ export class ChatGoogleGenerativeAI
       | StructuredToolInterface
       | Record<string, unknown>
       | ToolDefinition
+      | RunnableToolLike
     )[],
     kwargs?: Partial<GoogleGenerativeAIChatCallOptions>
   ): Runnable<

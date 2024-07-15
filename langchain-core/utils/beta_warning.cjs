@@ -1,0 +1,1 @@
+module.exports = require('../dist/utils/beta_warning.cjs');

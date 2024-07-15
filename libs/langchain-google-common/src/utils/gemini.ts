@@ -707,9 +707,9 @@ export function validateGeminiParams(params: GoogleAIModelParams): void {
 
   if (
     params.temperature &&
-    (params.temperature < 0 || params.temperature > 1)
+    (params.temperature < 0 || params.temperature > 2)
   ) {
-    throw new Error("`temperature` must be in the range of [0.0,1.0]");
+    throw new Error("`temperature` must be in the range of [0.0,2.0]");
   }
 
   if (params.topP && (params.topP < 0 || params.topP > 1)) {

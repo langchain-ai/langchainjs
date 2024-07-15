@@ -62,6 +62,7 @@ import {
   Runnable,
   RunnablePassthrough,
   RunnableSequence,
+  RunnableToolLike,
 } from "@langchain/core/runnables";
 import { zodToJsonSchema } from "zod-to-json-schema";
 
@@ -508,7 +509,11 @@ export class ChatMistralAI<
   }
 
   override bindTools(
-    tools: (Record<string, unknown> | StructuredToolInterface)[],
+    tools: (
+      | Record<string, unknown>
+      | StructuredToolInterface
+      | RunnableToolLike
+    )[],
     kwargs?: Partial<CallOptions>
   ): Runnable<BaseLanguageModelInput, AIMessageChunk, CallOptions> {
     const mistralAITools = tools
@@ -800,7 +805,7 @@ export class ChatMistralAI<
               },
             },
           ],
-          tool_choice: "auto",
+          tool_choice: "any",
         } as Partial<CallOptions>);
         outputParser = new JsonOutputKeyToolsParser({
           returnSingle: true,
@@ -830,7 +835,7 @@ export class ChatMistralAI<
               function: openAIFunctionDefinition,
             },
           ],
-          tool_choice: "auto",
+          tool_choice: "any",
         } as Partial<CallOptions>);
         outputParser = new JsonOutputKeyToolsParser<RunOutput>({
           returnSingle: true,

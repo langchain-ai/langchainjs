@@ -37,16 +37,15 @@ To make creating packages like this easier, we offer the [`create-langchain-inte
 $ npx create-langchain-integration
 ```
 
-After creating the new integration package, you should add it to the [`unit-tests-integrations.yml`](./.github/workflows/unit-tests-integrations.yml) GitHub action workflow so that it is tested in CI. To do this, simply add the integration name inside the `jobs.unit-tests.strategy.matrix.package` array:
+After creating the new integration package, you should add it to the [`unit-tests-integrations.yml`](./.github/workflows/unit-tests-integrations.yml) GitHub action workflow so that it is tested in CI. To do this,simply update the `env` section of the `prepare-matrix` job with your package name inside the `PACKAGES` variable:
 
 ```yaml
-jobs:
-  unit-tests:
-    name: Unit Tests
-    strategy:
-      matrix:
-        package: [anthropic, azure-openai, cloudflare, <your package name>]
-        ...
+prepare-matrix:
+  needs: get-changed-files
+  runs-on: ubuntu-latest
+  env:
+    PACKAGES: "anthropic,azure-openai,cloudflare,<your-package>"
+    ...
 ```
 
 ### Want to add a feature that's already in Python?
@@ -159,6 +158,7 @@ cd libs/langchain-community
 ```
 
 ### Setup
+
 **Prerequisite**: Node version 18+ is required. Please check node version `node -v` and update it if required.
 
 To get started, you will need to install the dependencies for the project. To do so, run:

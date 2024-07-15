@@ -29,8 +29,11 @@
     "test:single": {
       "dependsOn": ["^build", "build"]
     },
-    "test:integration": {
+    "test:int": {
       "dependsOn": ["^build", "build"]
+    },
+    "test:integration": {
+      "dependsOn": ["^build", "build", "test:int"]
     },
     "test:standard:unit": {
       "outputs": [],

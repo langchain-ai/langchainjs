@@ -41,6 +41,7 @@ import {
   Runnable,
   RunnablePassthrough,
   RunnableSequence,
+  RunnableToolLike,
 } from "@langchain/core/runnables";
 import {
   JsonOutputParser,
@@ -483,9 +484,6 @@ export class ChatOpenAI<
     this.stopSequences = this?.stop;
     this.user = fields?.user;
 
-    this.streaming = fields?.streaming ?? false;
-    this.streamUsage = fields?.streamUsage ?? this.streamUsage;
-
     if (this.azureOpenAIApiKey || this.azureADTokenProvider) {
       if (!this.azureOpenAIApiInstanceName && !this.azureOpenAIBasePath) {
         throw new Error("Azure OpenAI API instance name not found");
@@ -497,7 +495,12 @@ export class ChatOpenAI<
         throw new Error("Azure OpenAI API version not found");
       }
       this.apiKey = this.apiKey ?? "";
+      // Streaming usage is not supported by Azure deployments, so default to false
+      this.streamUsage = false;
     }
+
+    this.streaming = fields?.streaming ?? false;
+    this.streamUsage = fields?.streamUsage ?? this.streamUsage;
 
     this.clientConfig = {
       apiKey: this.apiKey,
@@ -528,7 +531,11 @@ export class ChatOpenAI<
   }
 
   override bindTools(
-    tools: (Record<string, unknown> | StructuredToolInterface)[],
+    tools: (
+      | Record<string, unknown>
+      | StructuredToolInterface
+      | RunnableToolLike
+    )[],
     kwargs?: Partial<CallOptions>
   ): Runnable<BaseLanguageModelInput, AIMessageChunk, CallOptions> {
     return this.bind({
@@ -541,7 +548,10 @@ export class ChatOpenAI<
    * Get the parameters used to invoke the model
    */
   invocationParams(
-    options?: this["ParsedCallOptions"]
+    options?: this["ParsedCallOptions"],
+    extra?: {
+      streaming?: boolean;
+    }
   ): Omit<OpenAIClient.Chat.ChatCompletionCreateParams, "messages"> {
     function isStructuredToolArray(
       tools?: unknown[]
@@ -556,7 +566,7 @@ export class ChatOpenAI<
     let streamOptionsConfig = {};
     if (options?.stream_options !== undefined) {
       streamOptionsConfig = { stream_options: options.stream_options };
-    } else if (this.streamUsage && this.streaming) {
+    } else if (this.streamUsage && (this.streaming || extra?.streaming)) {
       streamOptionsConfig = { stream_options: { include_usage: true } };
     }
     const params: Omit<
@@ -614,7 +624,9 @@ export class ChatOpenAI<
     const messagesMapped: OpenAICompletionParam[] =
       convertMessagesToOpenAIParams(messages);
     const params = {
-      ...this.invocationParams(options),
+      ...this.invocationParams(options, {
+        streaming: true,
+      }),
       messages: messagesMapped,
       stream: true as const,
     };
@@ -660,8 +672,7 @@ export class ChatOpenAI<
         generationInfo,
       });
       yield generationChunk;
-      // eslint-disable-next-line no-void
-      void runManager?.handleLLMNewToken(
+      await runManager?.handleLLMNewToken(
         generationChunk.text ?? "",
         newTokenIndices,
         undefined,
