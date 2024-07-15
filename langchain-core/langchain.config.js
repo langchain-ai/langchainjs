@@ -47,7 +47,7 @@ export const config = {
     singletons: "singletons/index",
     stores: "stores",
     "structured_query": "structured_query/index",
-    tools: "tools",
+    tools: "tools/index",
     "tracers/base": "tracers/base",
     "tracers/console": "tracers/console",
     "tracers/initialize": "tracers/initialize",

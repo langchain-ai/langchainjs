@@ -139,6 +139,8 @@ export type ToolCall = {
   args: Record<string, any>;
 
   id?: string;
+
+  type?: "tool_call";
 };
 
 /**
@@ -199,6 +201,8 @@ export type ToolCallChunk = {
   id?: string;
 
   index?: number;
+
+  type?: "tool_call_chunk";
 };
 
 export type InvalidToolCall = {
@@ -206,6 +210,7 @@ export type InvalidToolCall = {
   args?: string;
   id?: string;
   error?: string;
+  type?: "invalid_tool_call";
 };
 
 export function defaultToolCallParser(
