@@ -568,7 +568,7 @@ export class ChatAnthropicMessages<
       return tools as AnthropicTool[];
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-anyx
     if ((tools as any[]).every((tool) => isOpenAITool(tool))) {
       // Formatted as OpenAI tool, convert to Anthropic tool
       return (tools as ToolDefinition[]).map((tc) => ({

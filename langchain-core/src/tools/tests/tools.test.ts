@@ -97,4 +97,5 @@ test("Returns tool message if responseFormat is content_and_artifact and returns
   expect(toolResult).toBeInstanceOf(ToolMessage);
   expect(toolResult.content).toBe("msg_content");
   expect(toolResult.artifact).toEqual({ location: "San Francisco" });
+  expect(toolResult.name).toBe("weather");
 });
