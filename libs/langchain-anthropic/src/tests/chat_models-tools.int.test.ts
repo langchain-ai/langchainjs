@@ -381,6 +381,9 @@ test("Can stream tool calls", async () => {
       finalChunk = concat(finalChunk, chunk);
     }
     if (chunk.tool_call_chunks?.[0]?.args) {
+      // Check if the args have changed since the last chunk.
+      // This helps count the number of unique arg updates in the stream,
+      // ensuring we're receiving multiple chunks with different arg content.
       if (
         !prevToolCallChunkArgs ||
         prevToolCallChunkArgs !== chunk.tool_call_chunks[0].args
