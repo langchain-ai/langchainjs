@@ -952,6 +952,7 @@ function _switchTypeToMessage(
             ...aiChunkFields,
             tool_call_chunks: aiChunkFields.tool_calls?.map((tc) => ({
               ...tc,
+              type: "tool_call_chunk",
               index: undefined,
               args: JSON.stringify(tc.args),
             })),
