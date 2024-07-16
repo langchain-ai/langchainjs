@@ -147,7 +147,7 @@ function openAIResponseToChatMessage(
           invalidToolCalls.push(makeInvalidToolCall(rawToolCall, e.message));
         }
       }
-      let additional_kwargs: Record<string, unknown> = {
+      const additional_kwargs: Record<string, unknown> = {
         function_call: message.function_call,
         tool_calls: rawToolCalls,
       };
