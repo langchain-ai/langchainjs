@@ -36,7 +36,8 @@ export type MessageType =
   | "generic"
   | "system"
   | "function"
-  | "tool";
+  | "tool"
+  | "remove";
 
 export type ImageDetail = "auto" | "low" | "high";
 

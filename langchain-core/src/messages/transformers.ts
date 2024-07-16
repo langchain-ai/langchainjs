@@ -19,6 +19,7 @@ import {
   FunctionMessageFieldsWithName,
 } from "./function.js";
 import { HumanMessage, HumanMessageChunk } from "./human.js";
+import { RemoveMessage } from "./modifier.js";
 import { SystemMessage, SystemMessageChunk } from "./system.js";
 import {
   ToolMessage,
@@ -33,14 +34,16 @@ export type MessageUnion =
   | typeof SystemMessage
   | typeof ChatMessage
   | typeof FunctionMessage
-  | typeof ToolMessage;
+  | typeof ToolMessage
+  | typeof RemoveMessage;
 export type MessageChunkUnion =
   | typeof HumanMessageChunk
   | typeof AIMessageChunk
   | typeof SystemMessageChunk
   | typeof FunctionMessageChunk
   | typeof ToolMessageChunk
-  | typeof ChatMessageChunk;
+  | typeof ChatMessageChunk
+  | typeof RemoveMessage; // RemoveMessage does not have a chunk class.
 export type MessageTypeOrClass = MessageType | MessageUnion | MessageChunkUnion;
 
 const _isMessageType = (msg: BaseMessage, types: MessageTypeOrClass[]) => {
@@ -914,6 +917,10 @@ const _MSG_CHUNK_MAP: Record<
   generic: {
     message: ChatMessage,
     messageChunk: ChatMessageChunk,
+  },
+  remove: {
+    message: RemoveMessage,
+    messageChunk: RemoveMessage,
   },
 };
 
