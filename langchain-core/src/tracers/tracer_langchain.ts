@@ -61,38 +61,9 @@ export class LangChainTracer
     this.exampleId = exampleId;
     this.client = client ?? new Client({});
 
-    // if we're inside traceable, we can obtain the traceable tree
-    // and populate the run map, which is used to correctly
-    // infer dotted order and execution order
     const traceableTree = LangChainTracer.getTraceableRunTree();
     if (traceableTree) {
-      let rootRun: RunTree = traceableTree;
-      const visited = new Set<string>();
-      while (rootRun.parent_run) {
-        if (visited.has(rootRun.id)) break;
-        visited.add(rootRun.id);
-
-        if (!rootRun.parent_run) break;
-        rootRun = rootRun.parent_run as RunTree;
-      }
-      visited.clear();
-
-      const queue = [rootRun];
-      while (queue.length > 0) {
-        const current = queue.shift();
-        if (!current || visited.has(current.id)) continue;
-        visited.add(current.id);
-
-        // @ts-expect-error Types of property 'events' are incompatible.
-        this.runMap.set(current.id, current);
-        if (current.child_runs) {
-          queue.push(...current.child_runs);
-        }
-      }
-
-      this.client = traceableTree.client ?? this.client;
-      this.projectName = traceableTree.project_name ?? this.projectName;
-      this.exampleId = traceableTree.reference_example_id ?? this.exampleId;
+      this.updateFromRunTree(traceableTree);
     }
   }
 
@@ -140,8 +111,37 @@ export class LangChainTracer
     return this.runMap.get(id);
   }
 
+  updateFromRunTree(runTree: RunTree) {
+    let rootRun: RunTree = runTree;
+    const visited = new Set<string>();
+    while (rootRun.parent_run) {
+      if (visited.has(rootRun.id)) break;
+      visited.add(rootRun.id);
+
+      if (!rootRun.parent_run) break;
+      rootRun = rootRun.parent_run as RunTree;
+    }
+    visited.clear();
+
+    const queue = [rootRun];
+    while (queue.length > 0) {
+      const current = queue.shift();
+      if (!current || visited.has(current.id)) continue;
+      visited.add(current.id);
+
+      // @ts-expect-error Types of property 'events' are incompatible.
+      this.runMap.set(current.id, current);
+      if (current.child_runs) {
+        queue.push(...current.child_runs);
+      }
+    }
+
+    this.client = runTree.client ?? this.client;
+    this.projectName = runTree.project_name ?? this.projectName;
+    this.exampleId = runTree.reference_example_id ?? this.exampleId;
+  }
+
   convertToRunTree(id: string): RunTree | undefined {
-    // create a run tree from a run map
     const runTreeMap: Record<string, RunTree> = {};
     const runTreeList: [id: string, dotted_order: string | undefined][] = [];
     for (const [id, run] of this.runMap) {
