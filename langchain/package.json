@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.2.6",
+  "version": "0.2.10",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -286,6 +286,10 @@
     "document_loaders/fs/directory.js",
     "document_loaders/fs/directory.d.ts",
     "document_loaders/fs/directory.d.cts",
+    "document_loaders/fs/multi_file.cjs",
+    "document_loaders/fs/multi_file.js",
+    "document_loaders/fs/multi_file.d.ts",
+    "document_loaders/fs/multi_file.d.cts",
     "document_loaders/fs/buffer.cjs",
     "document_loaders/fs/buffer.js",
     "document_loaders/fs/buffer.d.ts",
@@ -884,7 +888,7 @@
     }
   },
   "dependencies": {
-    "@langchain/core": "~0.2.0",
+    "@langchain/core": ">=0.2.11 <0.3.0",
     "@langchain/openai": ">=0.1.0 <0.3.0",
     "@langchain/textsplitters": "~0.0.0",
     "binary-extensions": "^2.2.0",
@@ -896,7 +900,7 @@
     "ml-distance": "^4.0.0",
     "openapi-types": "^12.1.3",
     "p-retry": "4",
-    "uuid": "^9.0.0",
+    "uuid": "^10.0.0",
     "yaml": "^2.2.1",
     "zod": "^3.22.4",
     "zod-to-json-schema": "^3.22.3"
@@ -1539,6 +1543,15 @@
       },
       "import": "./document_loaders/fs/directory.js",
       "require": "./document_loaders/fs/directory.cjs"
+    },
+    "./document_loaders/fs/multi_file": {
+      "types": {
+        "import": "./document_loaders/fs/multi_file.d.ts",
+        "require": "./document_loaders/fs/multi_file.d.cts",
+        "default": "./document_loaders/fs/multi_file.d.ts"
+      },
+      "import": "./document_loaders/fs/multi_file.js",
+      "require": "./document_loaders/fs/multi_file.cjs"
     },
     "./document_loaders/fs/buffer": {
       "types": {

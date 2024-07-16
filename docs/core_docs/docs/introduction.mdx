@@ -8,9 +8,10 @@ sidebar_position: 0
 
 LangChain simplifies every stage of the LLM application lifecycle:
 
-- **Development**: Build your applications using LangChain's open-source [building blocks](/docs/how_to/#langchain-expression-language-lcel) and [components](/docs/how_to/). Hit the ground running using [third-party integrations](/docs/integrations/platforms/).
-- **Productionization**: Use [LangSmith](https://docs.smith.langchain.com) to inspect, monitor and evaluate your chains, so that you can continuously optimize and deploy with confidence.
-- **Deployment**: Turn any chain into an API with [LangServe](https://www.langchain.com/langserve).
+- **Development**: Build your applications using LangChain's open-source [building blocks](/docs/concepts#langchain-expression-language), [components](/docs/concepts), and [third-party integrations](/docs/integrations/platforms/).
+  Use [LangGraph.js](/docs/concepts/#langgraphjs) to build stateful agents with first-class streaming and human-in-the-loop support.
+- **Productionization**: Use [LangSmith](https://docs.smith.langchain.com/) to inspect, monitor and evaluate your chains, so that you can continuously optimize and deploy with confidence.
+- **Deployment**: Turn your LangGraph applications into production-ready APIs and Assistants with [LangGraph Cloud](https://langchain-ai.github.io/langgraph/cloud/) (currently Python-only).
 
 import ThemedImage from "@theme/ThemedImage";
 import useBaseUrl from "@docusaurus/useBaseUrl";
@@ -18,10 +19,11 @@ import useBaseUrl from "@docusaurus/useBaseUrl";
 <ThemedImage
   alt="Diagram outlining the hierarchical organization of the LangChain framework, displaying the interconnected parts across multiple layers."
   sources={{
-    light: useBaseUrl("/svg/langchain_stack.svg"),
-    dark: useBaseUrl("/svg/langchain_stack_dark.svg"),
+    light: useBaseUrl("/svg/langchain_stack_062024.svg"),
+    dark: useBaseUrl("/svg/langchain_stack_062024_dark.svg"),
   }}
   title="LangChain Framework Overview"
+  style={{ width: "100%" }}
 />
 
 Concretely, the framework consists of the following open-source libraries:
@@ -30,7 +32,7 @@ Concretely, the framework consists of the following open-source libraries:
 - **`@langchain/community`**: Third party integrations.
   - Partner packages (e.g. **`@langchain/openai`**, **`@langchain/anthropic`**, etc.): Some integrations have been further split into their own lightweight packages that only depend on **`@langchain/core`**.
 - **`langchain`**: Chains, agents, and retrieval strategies that make up an application's cognitive architecture.
-- **[langgraph](https://www.langchain.com/langserveh)**: Build robust and stateful multi-actor applications with LLMs by modeling steps as edges and nodes in a graph.
+- **[LangGraph.js](https://langchain-ai.github.io/langgraphjs/)**: Build robust and stateful multi-actor applications with LLMs by modeling steps as edges and nodes in a graph.
 - **[LangSmith](https://docs.smith.langchain.com)**: A developer platform that lets you debug, test, evaluate, and monitor LLM applications.
 
 :::note
@@ -49,8 +51,9 @@ These are the best ones to get started with:
 - [Build a Simple LLM Application](/docs/tutorials/llm_chain)
 - [Build a Chatbot](/docs/tutorials/chatbot)
 - [Build an Agent](/docs/tutorials/agents)
+- [LangGraph.js quickstart](https://langchain-ai.github.io/langgraphjs/tutorials/quickstart/)
 
-Explore the full list of tutorials [here](/docs/tutorials).
+Explore the full list of LangChain tutorials [here](/docs/tutorials), and check out other [LangGraph tutorials here](https://langchain-ai.github.io/langgraphjs/tutorials/).
 
 ## [How-To Guides](/docs/how_to/)
 
@@ -58,9 +61,13 @@ Explore the full list of tutorials [here](/docs/tutorials).
 These how-to guides don't cover topics in depth - you'll find that material in the [Tutorials](/docs/tutorials) and the [API Reference](https://v02.api.js.langchain.com).
 However, these guides will help you quickly accomplish common tasks.
 
+Check out [LangGraph-specific how-tos here](https://langchain-ai.github.io/langgraphjs/how-tos/).
+
 ## [Conceptual Guide](/docs/concepts)
 
 Introductions to all the key parts of LangChain you'll need to know! [Here](/docs/concepts) you'll find high level explanations of all LangChain concepts.
+
+For a deeper dive into LangGraph concepts, check out [this page](https://langchain-ai.github.io/langgraph/concepts/).
 
 ## [API reference](https://api.js.langchain.com)
 

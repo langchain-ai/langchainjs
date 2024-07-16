@@ -24,10 +24,12 @@ import {
   HumanMessage,
   SystemMessage,
 } from "../../messages/index.js";
-import { DynamicStructuredTool, DynamicTool, tool } from "../../tools.js";
+import { DynamicStructuredTool, DynamicTool, tool } from "../../tools/index.js";
 import { Document } from "../../documents/document.js";
 import { PromptTemplate } from "../../prompts/prompt.js";
 import { GenerationChunk } from "../../outputs.js";
+// Import from web to avoid side-effects from AsyncLocalStorage
+import { dispatchCustomEvent } from "../../callbacks/dispatch/web.js";
 
 function reverse(s: string) {
   // Reverse a string.
@@ -1009,7 +1011,7 @@ test("Chat model that supports streaming, but is invoked, should still emit on_s
       event: "on_chat_model_start",
       name: "my_model",
       run_id: expect.any(String),
-      tags: expect.arrayContaining(["seq:step:2", "my_model", "my_chain"]),
+      tags: expect.arrayContaining(["my_model", "my_chain"]),
       metadata: {
         foo: "bar",
         a: "b",
@@ -1027,7 +1029,7 @@ test("Chat model that supports streaming, but is invoked, should still emit on_s
     {
       event: "on_chat_model_stream",
       run_id: expect.any(String),
-      tags: expect.arrayContaining(["my_chain", "my_model", "seq:step:2"]),
+      tags: expect.arrayContaining(["my_chain", "my_model"]),
       metadata: {
         a: "b",
         foo: "bar",
@@ -1040,7 +1042,7 @@ test("Chat model that supports streaming, but is invoked, should still emit on_s
     {
       event: "on_chat_model_stream",
       run_id: expect.any(String),
-      tags: expect.arrayContaining(["my_chain", "my_model", "seq:step:2"]),
+      tags: expect.arrayContaining(["my_chain", "my_model"]),
       metadata: {
         a: "b",
         foo: "bar",
@@ -1053,7 +1055,7 @@ test("Chat model that supports streaming, but is invoked, should still emit on_s
     {
       event: "on_chat_model_stream",
       run_id: expect.any(String),
-      tags: expect.arrayContaining(["my_chain", "my_model", "seq:step:2"]),
+      tags: expect.arrayContaining(["my_chain", "my_model"]),
       metadata: {
         a: "b",
         foo: "bar",
@@ -1066,7 +1068,7 @@ test("Chat model that supports streaming, but is invoked, should still emit on_s
     {
       event: "on_chat_model_stream",
       run_id: expect.any(String),
-      tags: expect.arrayContaining(["my_chain", "my_model", "seq:step:2"]),
+      tags: expect.arrayContaining(["my_chain", "my_model"]),
       metadata: {
         a: "b",
         foo: "bar",
@@ -1080,7 +1082,7 @@ test("Chat model that supports streaming, but is invoked, should still emit on_s
       event: "on_chat_model_end",
       name: "my_model",
       run_id: expect.any(String),
-      tags: expect.arrayContaining(["seq:step:2", "my_model", "my_chain"]),
+      tags: expect.arrayContaining(["my_model", "my_chain"]),
       metadata: {
         foo: "bar",
         a: "b",
@@ -1227,7 +1229,7 @@ test("Chat model that doesn't support streaming, but is invoked, should emit one
       event: "on_chat_model_start",
       name: "my_model",
       run_id: expect.any(String),
-      tags: expect.arrayContaining(["seq:step:2", "my_model", "my_chain"]),
+      tags: expect.arrayContaining(["my_model", "my_chain"]),
       metadata: {
         foo: "bar",
         a: "b",
@@ -1245,7 +1247,7 @@ test("Chat model that doesn't support streaming, but is invoked, should emit one
     {
       event: "on_chat_model_stream",
       run_id: expect.any(String),
-      tags: expect.arrayContaining(["my_chain", "my_model", "seq:step:2"]),
+      tags: expect.arrayContaining(["my_chain", "my_model"]),
       metadata: {
         a: "b",
         foo: "bar",
@@ -1259,7 +1261,7 @@ test("Chat model that doesn't support streaming, but is invoked, should emit one
       event: "on_chat_model_end",
       name: "my_model",
       run_id: expect.any(String),
-      tags: expect.arrayContaining(["seq:step:2", "my_model", "my_chain"]),
+      tags: expect.arrayContaining(["my_model", "my_chain"]),
       metadata: {
         foo: "bar",
         a: "b",
@@ -1417,7 +1419,7 @@ test("LLM that supports streaming, but is invoked, should still emit on_stream e
         },
       },
       name: "my_model",
-      tags: ["seq:step:2", "my_model", "my_chain"],
+      tags: ["my_model", "my_chain"],
       run_id: expect.any(String),
       metadata: {
         foo: "bar",
@@ -1433,7 +1435,7 @@ test("LLM that supports streaming, but is invoked, should still emit on_stream e
       },
       run_id: expect.any(String),
       name: "my_model",
-      tags: ["seq:step:2", "my_model", "my_chain"],
+      tags: ["my_model", "my_chain"],
       metadata: {
         foo: "bar",
         a: "b",
@@ -1448,7 +1450,7 @@ test("LLM that supports streaming, but is invoked, should still emit on_stream e
       },
       run_id: expect.any(String),
       name: "my_model",
-      tags: ["seq:step:2", "my_model", "my_chain"],
+      tags: ["my_model", "my_chain"],
       metadata: {
         foo: "bar",
         a: "b",
@@ -1463,7 +1465,7 @@ test("LLM that supports streaming, but is invoked, should still emit on_stream e
       },
       run_id: expect.any(String),
       name: "my_model",
-      tags: ["seq:step:2", "my_model", "my_chain"],
+      tags: ["my_model", "my_chain"],
       metadata: {
         foo: "bar",
         a: "b",
@@ -1478,7 +1480,7 @@ test("LLM that supports streaming, but is invoked, should still emit on_stream e
       },
       run_id: expect.any(String),
       name: "my_model",
-      tags: ["seq:step:2", "my_model", "my_chain"],
+      tags: ["my_model", "my_chain"],
       metadata: {
         foo: "bar",
         a: "b",
@@ -1504,7 +1506,7 @@ test("LLM that supports streaming, but is invoked, should still emit on_stream e
       },
       run_id: expect.any(String),
       name: "my_model",
-      tags: ["seq:step:2", "my_model", "my_chain"],
+      tags: ["my_model", "my_chain"],
       metadata: {
         foo: "bar",
         a: "b",
@@ -1654,7 +1656,7 @@ test("LLM that doesn't support streaming, but is invoked, should emit one on_str
         },
       },
       name: "my_model",
-      tags: ["seq:step:2", "my_model", "my_chain"],
+      tags: ["my_model", "my_chain"],
       run_id: expect.any(String),
       metadata: {
         foo: "bar",
@@ -1670,7 +1672,7 @@ test("LLM that doesn't support streaming, but is invoked, should emit one on_str
       },
       run_id: expect.any(String),
       name: "my_model",
-      tags: ["seq:step:2", "my_model", "my_chain"],
+      tags: ["my_model", "my_chain"],
       metadata: {
         foo: "bar",
         a: "b",
@@ -1696,7 +1698,7 @@ test("LLM that doesn't support streaming, but is invoked, should emit one on_str
       },
       run_id: expect.any(String),
       name: "my_model",
-      tags: ["seq:step:2", "my_model", "my_chain"],
+      tags: ["my_model", "my_chain"],
       metadata: {
         foo: "bar",
         a: "b",
@@ -1819,6 +1821,122 @@ test("Runnable streamEvents method with simple tools", async () => {
       name: "with_parameters",
       run_id: expect.any(String),
       tags: [],
+    },
+  ]);
+});
+
+test("Runnable streamEvents method with a custom event", async () => {
+  const lambda = RunnableLambda.from(
+    async (params: { x: number; y: string }, config) => {
+      await dispatchCustomEvent("testEvent", { someval: "test" }, config);
+      await dispatchCustomEvent("testEvent", { someval: "test2" }, config);
+      return JSON.stringify({ x: params.x, y: params.y });
+    }
+  );
+  const events = [];
+  const eventStream = await lambda.streamEvents(
+    { x: 1, y: "2" },
+    { version: "v2" }
+  );
+  for await (const event of eventStream) {
+    events.push(event);
+  }
+  expect(events).toEqual([
+    {
+      event: "on_chain_start",
+      data: { input: { x: 1, y: "2" } },
+      name: "RunnableLambda",
+      tags: [],
+      run_id: expect.any(String),
+      metadata: {},
+    },
+    {
+      event: "on_custom_event",
+      run_id: expect.any(String),
+      name: "testEvent",
+      tags: [],
+      metadata: {},
+      data: { someval: "test" },
+    },
+    {
+      event: "on_custom_event",
+      run_id: expect.any(String),
+      name: "testEvent",
+      tags: [],
+      metadata: {},
+      data: { someval: "test2" },
+    },
+    {
+      event: "on_chain_stream",
+      run_id: expect.any(String),
+      name: "RunnableLambda",
+      tags: [],
+      metadata: {},
+      data: { chunk: '{"x":1,"y":"2"}' },
+    },
+    {
+      event: "on_chain_end",
+      data: { output: '{"x":1,"y":"2"}' },
+      run_id: expect.any(String),
+      name: "RunnableLambda",
+      tags: [],
+      metadata: {},
+    },
+  ]);
+});
+
+test("Custom event inside a custom tool", async () => {
+  const customTool = tool(
+    async (params: { x: number; y: string }, config) => {
+      await dispatchCustomEvent("testEvent", { someval: "test" }, config);
+      await dispatchCustomEvent("testEvent", { someval: "test2" }, config);
+      return JSON.stringify({ x: params.x, y: params.y });
+    },
+    {
+      schema: z.object({ x: z.number(), y: z.string() }),
+      name: "testtool",
+    }
+  );
+  const events = [];
+  const eventStream = await customTool.streamEvents(
+    { x: 1, y: "2" },
+    { version: "v2" }
+  );
+  for await (const event of eventStream) {
+    events.push(event);
+  }
+  expect(events).toEqual([
+    {
+      event: "on_tool_start",
+      data: { input: { x: 1, y: "2" } },
+      name: "testtool",
+      tags: [],
+      run_id: expect.any(String),
+      metadata: {},
+    },
+    {
+      event: "on_custom_event",
+      run_id: expect.any(String),
+      name: "testEvent",
+      tags: [],
+      metadata: {},
+      data: { someval: "test" },
+    },
+    {
+      event: "on_custom_event",
+      run_id: expect.any(String),
+      name: "testEvent",
+      tags: [],
+      metadata: {},
+      data: { someval: "test2" },
+    },
+    {
+      event: "on_tool_end",
+      data: { output: '{"x":1,"y":"2"}' },
+      run_id: expect.any(String),
+      name: "testtool",
+      tags: [],
+      metadata: {},
     },
   ]);
 });

@@ -302,7 +302,7 @@ test("Test MessagesPlaceholder not optional", async () => {
   });
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   await expect(prompt.formatMessages({} as any)).rejects.toThrow(
-    'Error: Field "foo" in prompt uses a MessagesPlaceholder, which expects an array of BaseMessages as an input value. Received: undefined'
+    'Field "foo" in prompt uses a MessagesPlaceholder, which expects an array of BaseMessages as an input value. Received: undefined'
   );
 });
 
@@ -321,6 +321,60 @@ test("Test MessagesPlaceholder shorthand in a chat prompt template", async () =>
     new HumanMessage("Hi there!"),
     new AIMessage("how r u"),
   ]);
+});
+
+test("Test MessagesPlaceholder shorthand in a chat prompt template with object format", async () => {
+  const prompt = ChatPromptTemplate.fromMessages([["placeholder", "{foo}"]]);
+  const messages = await prompt.formatMessages({
+    foo: [
+      {
+        type: "system",
+        content: "some initial content",
+      },
+      {
+        type: "human",
+        content: [
+          {
+            text: "page: 1\ndescription: One Purchase Flow\ntimestamp: '2024-06-04T14:46:46.062Z'\ntype: navigate\nscreenshot_present: true\n",
+            type: "text",
+          },
+          {
+            text: "page: 3\ndescription: intent_str=buy,mode_str=redirect,screenName_str=order-completed,\ntimestamp: '2024-06-04T14:46:58.846Z'\ntype: Screen View\nscreenshot_present: false\n",
+            type: "text",
+          },
+        ],
+      },
+      {
+        type: "assistant",
+        content: "some captivating response",
+      },
+    ],
+  });
+  expect(messages).toEqual([
+    new SystemMessage("some initial content"),
+    new HumanMessage({
+      content: [
+        {
+          text: "page: 1\ndescription: One Purchase Flow\ntimestamp: '2024-06-04T14:46:46.062Z'\ntype: navigate\nscreenshot_present: true\n",
+          type: "text",
+        },
+        {
+          text: "page: 3\ndescription: intent_str=buy,mode_str=redirect,screenName_str=order-completed,\ntimestamp: '2024-06-04T14:46:58.846Z'\ntype: Screen View\nscreenshot_present: false\n",
+          type: "text",
+        },
+      ],
+    }),
+    new AIMessage("some captivating response"),
+  ]);
+});
+
+test("Test MessagesPlaceholder with invalid shorthand should throw", async () => {
+  const prompt = ChatPromptTemplate.fromMessages([["placeholder", "{foo}"]]);
+  await expect(() =>
+    prompt.formatMessages({
+      foo: [{ badFormatting: true }],
+    })
+  ).rejects.toThrow();
 });
 
 test("Test using partial", async () => {
