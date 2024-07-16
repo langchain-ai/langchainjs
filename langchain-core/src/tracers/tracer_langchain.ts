@@ -147,4 +147,49 @@ export class LangChainTracer
       return undefined;
     }
   }
+
+  convertToRunTree(id: string): RunTree | undefined {
+    // create a run tree from a run map
+    const runTreeMap: Record<string, RunTree> = {};
+    const runTreeList: [id: string, dotted_order: string | undefined][] = [];
+    for (const [id, run] of this.runMap) {
+      // TODO: this loses object reference equality
+      // wrap it in a proxy to copy properties back to the original run map
+      const runTree = new RunTree({
+        ...run,
+        child_runs: [],
+        parent_run: undefined,
+
+        // inherited properties
+        client: this.client,
+        project_name: this.projectName,
+        reference_example_id: this.exampleId,
+        tracingEnabled: true,
+      });
+
+      runTreeMap[id] = runTree;
+      runTreeList.push([id, run.dotted_order]);
+    }
+
+    runTreeList.sort((a, b) => {
+      if (!a[1] || !b[1]) return 0;
+      return a[1].localeCompare(b[1]);
+    });
+
+    for (const [id] of runTreeList) {
+      const run = this.runMap.get(id);
+      const runTree = runTreeMap[id];
+      if (!run || !runTree) continue;
+
+      if (run.parent_run_id) {
+        const parentRunTree = runTreeMap[run.parent_run_id];
+        if (parentRunTree) {
+          parentRunTree.child_runs.push(runTree);
+          runTree.parent_run = parentRunTree;
+        }
+      }
+    }
+
+    return runTreeMap[id];
+  }
 }
