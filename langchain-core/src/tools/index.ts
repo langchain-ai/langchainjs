@@ -459,7 +459,7 @@ export abstract class BaseToolkit {
  * @template {ZodAny} RunInput The input schema for the tool.
  * @template {any} RunOutput The output type for the tool.
  */
-interface ToolWrapperParams<RunInput extends ZodAny = ZodAny>
+interface ToolWrapperParams<RunInput extends ZodAny | z.ZodString = ZodAny>
   extends ToolParams {
   /**
    * The name of the tool. If using with an LLM, this
@@ -504,20 +504,38 @@ interface ToolWrapperParams<RunInput extends ZodAny = ZodAny>
  *
  * @returns {DynamicStructuredTool<RunInput, RunOutput>} A new StructuredTool instance.
  */
+export function tool<T extends z.ZodString = z.ZodString>(
+  func: RunnableFunc<z.output<T>, ToolReturnType>,
+  fields: ToolWrapperParams<T>
+): DynamicTool
+
 export function tool<T extends ZodAny = ZodAny>(
   func: RunnableFunc<z.output<T>, ToolReturnType>,
   fields: ToolWrapperParams<T>
-): DynamicStructuredTool<T> {
-  const schema =
-    fields.schema ??
-    z.object({ input: z.string().optional() }).transform((obj) => obj.input);
+): DynamicStructuredTool<T>
+
+export function tool<T extends ZodAny = ZodAny>(
+  func: RunnableFunc<z.output<T>, ToolReturnType>,
+  fields: ToolWrapperParams<T>
+): DynamicStructuredTool<T> | DynamicTool {
+
+  // If the schema is not provided, or it's a string schema, create a DynamicTool
+  if (!fields.schema || !fields.schema.shape) {
+    return new DynamicTool({
+      name: fields.name,
+      description: fields.description ?? fields.schema?.description ?? `${fields.name} tool`,
+      responseFormat: fields.responseFormat,
+      func,
+    })
+  }
 
   const description =
-    fields.description ?? schema.description ?? `${fields.name} tool`;
+    fields.description ?? fields.schema.description ?? `${fields.name} tool`;
+
   return new DynamicStructuredTool({
     name: fields.name,
     description,
-    schema: schema as T,
+    schema: fields.schema,
     // TODO: Consider moving into DynamicStructuredTool constructor
     func: async (input, runManager, config) => {
       return new Promise((resolve, reject) => {

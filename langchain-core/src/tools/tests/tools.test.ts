@@ -108,6 +108,7 @@ test("Tool can accept single string input", async () => {
     {
       name: "string_tool",
       description: "A tool that appends 'a' to the input string",
+      schema: z.string(),
     }
   );
 
