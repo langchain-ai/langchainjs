@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { RunTree } from "langsmith";
 import { CallbackManager } from "../callbacks/manager.js";
 import { LangChainTracer } from "../tracers/tracer_langchain.js";
 
@@ -21,6 +22,7 @@ export class MockAsyncLocalStorage implements AsyncLocalStorageInterface {
 const mockAsyncLocalStorage = new MockAsyncLocalStorage();
 
 const TRACING_ALS_KEY = Symbol.for("ls:tracing_async_local_storage");
+const LC_CHILD_KEY = Symbol.for("lc:child_config");
 
 class AsyncLocalStorageProvider {
   getInstance(): AsyncLocalStorageInterface {
@@ -32,7 +34,7 @@ class AsyncLocalStorageProvider {
     // this has the runnable config
     // which means that I should also have an instance of a LangChainTracer
     // with the run map prepopulated
-    return storage.getStore()?.extra?.[Symbol.for("lc:child_config")];
+    return storage.getStore()?.extra?.[LC_CHILD_KEY];
   }
 
   runWithConfig<T>(config: any, callback: () => T): T {
@@ -53,13 +55,10 @@ class AsyncLocalStorageProvider {
     const runTree =
       langChainTracer && parentRunId
         ? langChainTracer.convertToRunTree(parentRunId)
-        : undefined;
+        : new RunTree({ name: "<runnable_lambda>", tracingEnabled: false });
 
     if (runTree) {
-      runTree.extra = {
-        ...runTree.extra,
-        [Symbol.for("lc:child_config")]: config,
-      };
+      runTree.extra = { ...runTree.extra, [LC_CHILD_KEY]: config };
     }
 
     return storage.run(runTree, callback);
