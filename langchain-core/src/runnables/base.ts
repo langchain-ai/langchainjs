@@ -2805,7 +2805,7 @@ export class RunnablePick<
 }
 
 export interface RunnableToolLikeArgs<
-  RunInput extends z.ZodType | z.ZodString = z.ZodType,
+  RunInput extends z.ZodType = z.ZodType,
   RunOutput = unknown
 > extends Omit<RunnableBindingArgs<z.infer<RunInput>, RunOutput>, "config"> {
   name: string;
@@ -2818,7 +2818,7 @@ export interface RunnableToolLikeArgs<
 }
 
 export class RunnableToolLike<
-  RunInput extends z.ZodType | z.ZodString = z.ZodType,
+  RunInput extends z.ZodType = z.ZodType,
   RunOutput = unknown
 > extends RunnableBinding<z.infer<RunInput>, RunOutput> {
   name: string;
