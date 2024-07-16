@@ -920,7 +920,7 @@ const _MSG_CHUNK_MAP: Record<
   },
   remove: {
     message: RemoveMessage,
-    messageChunk: RemoveMessage,
+    messageChunk: RemoveMessage, // RemoveMessage does not have a chunk class.
   },
 };
 
