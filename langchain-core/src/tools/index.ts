@@ -9,11 +9,16 @@ import {
   BaseLangChain,
   type BaseLangChainParams,
 } from "../language_models/base.js";
-import { ensureConfig, type RunnableConfig } from "../runnables/config.js";
+import {
+  ensureConfig,
+  patchConfig,
+  type RunnableConfig,
+} from "../runnables/config.js";
 import type { RunnableFunc, RunnableInterface } from "../runnables/base.js";
 import { ToolCall, ToolMessage } from "../messages/tool.js";
 import { ZodAny } from "../types/zod.js";
 import { MessageContent } from "../messages/base.js";
+import { AsyncLocalStorageProviderSingleton } from "../singletons/index.js";
 
 export type ResponseFormat = "content" | "content_and_artifact" | string;
 
@@ -128,7 +133,7 @@ export abstract class StructuredTool<
   protected abstract _call(
     arg: z.output<T>,
     runManager?: CallbackManagerForToolRun,
-    config?: RunnableConfig
+    parentConfig?: RunnableConfig
   ): Promise<ToolReturnType>;
 
   /**
@@ -375,9 +380,9 @@ export class DynamicTool extends Tool {
   async _call(
     input: string,
     runManager?: CallbackManagerForToolRun,
-    config?: RunnableConfig
+    parentConfig?: RunnableConfig
   ): Promise<ToolReturnType> {
-    return this.func(input, runManager, config);
+    return this.func(input, runManager, parentConfig);
   }
 }
 
@@ -430,9 +435,9 @@ export class DynamicStructuredTool<
   protected _call(
     arg: z.output<T> | ToolCall,
     runManager?: CallbackManagerForToolRun,
-    config?: RunnableConfig
+    parentConfig?: RunnableConfig
   ): Promise<ToolReturnType> {
-    return this.func(arg, runManager, config);
+    return this.func(arg, runManager, parentConfig);
   }
 }
 
@@ -513,7 +518,24 @@ export function tool<T extends ZodAny = ZodAny>(
     name: fields.name,
     description,
     schema: schema as T,
-    func: async (input, _runManager, config) => func(input, config),
+    // TODO: Consider moving into DynamicStructuredTool constructor
+    func: async (input, runManager, config) => {
+      return new Promise((resolve, reject) => {
+        const childConfig = patchConfig(config, {
+          callbacks: runManager?.getChild(),
+        });
+        void AsyncLocalStorageProviderSingleton.getInstance().run(
+          childConfig,
+          async () => {
+            try {
+              resolve(func(input, childConfig));
+            } catch (e) {
+              reject(e);
+            }
+          }
+        );
+      });
+    },
     responseFormat: fields.responseFormat,
   });
 }

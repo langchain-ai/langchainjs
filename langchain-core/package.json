@@ -123,6 +123,24 @@
       "import": "./callbacks/base.js",
       "require": "./callbacks/base.cjs"
     },
+    "./callbacks/dispatch": {
+      "types": {
+        "import": "./callbacks/dispatch.d.ts",
+        "require": "./callbacks/dispatch.d.cts",
+        "default": "./callbacks/dispatch.d.ts"
+      },
+      "import": "./callbacks/dispatch.js",
+      "require": "./callbacks/dispatch.cjs"
+    },
+    "./callbacks/dispatch/web": {
+      "types": {
+        "import": "./callbacks/dispatch/web.d.ts",
+        "require": "./callbacks/dispatch/web.d.cts",
+        "default": "./callbacks/dispatch/web.d.ts"
+      },
+      "import": "./callbacks/dispatch/web.js",
+      "require": "./callbacks/dispatch/web.cjs"
+    },
     "./callbacks/manager": {
       "types": {
         "import": "./callbacks/manager.d.ts",
@@ -607,6 +625,14 @@
     "callbacks/base.js",
     "callbacks/base.d.ts",
     "callbacks/base.d.cts",
+    "callbacks/dispatch.cjs",
+    "callbacks/dispatch.js",
+    "callbacks/dispatch.d.ts",
+    "callbacks/dispatch.d.cts",
+    "callbacks/dispatch/web.cjs",
+    "callbacks/dispatch/web.js",
+    "callbacks/dispatch/web.d.ts",
+    "callbacks/dispatch/web.d.cts",
     "callbacks/manager.cjs",
     "callbacks/manager.js",
     "callbacks/manager.d.ts",
