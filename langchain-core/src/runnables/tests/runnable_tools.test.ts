@@ -137,3 +137,16 @@ test("Runnable asTool uses Zod schema description if not provided", async () => 
 
   expect(tool.description).toBe(description);
 });
+
+test("Runnable asTool can accept a string zod schema", async () => {
+  const lambda = RunnableLambda.from<string, string>((input) => {
+    return `${input}a`;
+  }).asTool({
+    name: "string_tool",
+    description: "A tool that appends 'a' to the input string",
+    schema: z.string(),
+  });
+
+  const result = await lambda.invoke("b");
+  expect(result).toBe("ba");
+})
