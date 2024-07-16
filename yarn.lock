@@ -9620,6 +9620,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@huggingface/jinja@npm:^0.2.2":
+  version: 0.2.2
+  resolution: "@huggingface/jinja@npm:0.2.2"
+  checksum: 8a6e3e287863d437920990afa2ca25d83c51997bd5ba0325ea90633e52469c2d901178cbd758cc362b45ad1c9521fccf372884fd59e58d2916d6b2e5bb15f776
+  languageName: node
+  linkType: hard
+
 "@humanwhocodes/config-array@npm:^0.11.11":
   version: 0.11.11
   resolution: "@humanwhocodes/config-array@npm:0.11.11"
@@ -10541,7 +10548,7 @@ __metadata:
     "@vercel/postgres": ^0.5.0
     "@writerai/writer-sdk": ^0.40.2
     "@xata.io/client": ^0.28.0
-    "@xenova/transformers": ^2.5.4
+    "@xenova/transformers": ^2.17.2
     "@zilliz/milvus2-sdk-node": ">=2.3.5"
     apify-client: ^2.7.1
     assemblyai: ^4.0.0
@@ -10690,7 +10697,7 @@ __metadata:
     "@vercel/postgres": ^0.5.0
     "@writerai/writer-sdk": ^0.40.2
     "@xata.io/client": ^0.28.0
-    "@xenova/transformers": ^2.5.4
+    "@xenova/transformers": ^2.17.2
     "@zilliz/milvus2-sdk-node": ">=2.3.5"
     apify-client: ^2.7.1
     assemblyai: ^4.0.0
@@ -18665,17 +18672,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@xenova/transformers@npm:^2.5.4":
-  version: 2.5.4
-  resolution: "@xenova/transformers@npm:2.5.4"
+"@xenova/transformers@npm:^2.17.2":
+  version: 2.17.2
+  resolution: "@xenova/transformers@npm:2.17.2"
   dependencies:
+    "@huggingface/jinja": ^0.2.2
     onnxruntime-node: 1.14.0
     onnxruntime-web: 1.14.0
     sharp: ^0.32.0
   dependenciesMeta:
     onnxruntime-node:
       optional: true
-  checksum: 67a6e52c2cbc2e9bd2af518c5001bed3351e8ead6199a9e5ec54f4df084348d8cc506d98d1ffdbef7fbe68b447a9a9c0aafb0182808e6df49dac882b474d271b
+  checksum: 5d49219995f401eedab6e0dcde6ad15ce5df0466388448703ca191e083bb0dc95692c1b539827d47399410d089cb078c47c862b0c550e34b54670fc435e83941
   languageName: node
   linkType: hard
 
