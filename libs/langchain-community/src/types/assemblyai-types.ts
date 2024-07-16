@@ -1,5 +1,5 @@
 import { BaseServiceParams } from "assemblyai";
-import { Optional } from "./type-utils.ts";
+import { Optional } from "./type-utils.js";
 
 export type * from "assemblyai";
 

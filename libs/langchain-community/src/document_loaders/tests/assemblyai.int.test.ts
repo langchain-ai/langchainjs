@@ -6,7 +6,7 @@ import {
   AudioTranscriptLoader,
   AudioTranscriptParagraphsLoader,
   AudioTranscriptSentencesLoader,
-} from "../web/assemblyai.ts";
+} from "../web/assemblyai.js";
 
 const transcriptId = process.env.ASSEMBLYAI_TRANSCRIPT_ID!;
 
