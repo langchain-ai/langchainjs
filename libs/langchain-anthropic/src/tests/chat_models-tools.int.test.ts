@@ -8,9 +8,9 @@ import {
   ToolMessage,
 } from "@langchain/core/messages";
 import { StructuredTool, tool } from "@langchain/core/tools";
+import { concat } from "@langchain/core/utils/stream";
 import { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
-import { concat } from "@langchain/core/utils/stream";
 import { ChatAnthropic } from "../chat_models.js";
 import { AnthropicToolResponse } from "../types.js";
 
@@ -163,6 +163,10 @@ test("Can bind & invoke AnthropicTools", async () => {
 test("Can bind & stream AnthropicTools", async () => {
   const modelWithTools = model.bind({
     tools: [anthropicTool],
+    tool_choice: {
+      type: "tool",
+      name: "get_weather",
+    },
   });
 
   const result = await modelWithTools.stream(
@@ -187,21 +191,15 @@ test("Can bind & stream AnthropicTools", async () => {
     throw new Error("Content is not an array");
   }
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let toolCall: Record<string, any> | undefined;
-
-  finalMessage.content.forEach((item) => {
-    if (item.type === "tool_use") {
-      toolCall = item as AnthropicToolResponse;
-    }
-  });
-  if (!toolCall) {
+  const toolCall = finalMessage.tool_calls?.[0];
+  if (toolCall === undefined) {
     throw new Error("No tool call found");
   }
   expect(toolCall).toBeTruthy();
-  const { name, input } = toolCall;
+  const { name, args } = toolCall;
   expect(name).toBe("get_weather");
-  expect(input).toBeTruthy();
-  expect(input.location).toBeTruthy();
+  expect(args).toBeTruthy();
+  expect(args.location).toBeTruthy();
 });
 
 test("withStructuredOutput with zod schema", async () => {
@@ -366,7 +364,12 @@ test("Can stream tool calls", async () => {
     schema: zodSchema,
   });
 
-  const modelWithTools = model.bindTools([weatherTool]);
+  const modelWithTools = model.bindTools([weatherTool], {
+    tool_choice: {
+      type: "tool",
+      name: "get_weather",
+    },
+  });
   const stream = await modelWithTools.stream(
     "What is the weather in San Francisco CA?"
   );
@@ -395,9 +398,6 @@ test("Can stream tool calls", async () => {
   }
 
   expect(finalChunk?.tool_calls?.[0]).toBeDefined();
-  if (!finalChunk?.tool_calls?.[0]) {
-    return;
-  }
   expect(finalChunk?.tool_calls?.[0].name).toBe("get_weather");
   expect(finalChunk?.tool_calls?.[0].args.location).toBeDefined();
   expect(realToolCallChunkStreams).toBeGreaterThan(1);
