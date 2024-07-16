@@ -153,8 +153,10 @@ export class LangChainTracer
     const runTreeMap: Record<string, RunTree> = {};
     const runTreeList: [id: string, dotted_order: string | undefined][] = [];
     for (const [id, run] of this.runMap) {
-      // TODO: this loses object reference equality
-      // wrap it in a proxy to copy properties back to the original run map
+      // by converting the run map to a run tree, we are doing a copy
+      // thus, any mutation performed on the run tree will not be reflected
+      // back in the run map
+      // TODO: Stop using `this.runMap` in favour of LangSmith's `RunTree`
       const runTree = new RunTree({
         ...run,
         child_runs: [],
