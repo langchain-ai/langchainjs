@@ -1,5 +1,4 @@
 import { v4 as uuidv4 } from "uuid";
-import type { RunTree } from "langsmith";
 import { AgentAction, AgentFinish } from "../agents.js";
 import type { ChainValues } from "../utils/types/index.js";
 import { LLMResult } from "../outputs.js";
@@ -21,7 +20,6 @@ import { consumeCallback } from "./promises.js";
 import { Serialized } from "../load/serializable.js";
 import type { DocumentInterface } from "../documents/document.js";
 import { isTracingEnabled } from "../utils/callbacks.js";
-import { AsyncLocalStorageProviderSingleton } from "../singletons/index.js";
 
 if (
   /* #__PURE__ */ isTracingEnabled() &&
@@ -1049,9 +1047,9 @@ export class CallbackManager
       getEnvironmentVariable("LANGCHAIN_VERBOSE") === "true" ||
       options?.verbose;
 
-    const contextRun: RunTree | undefined =
-      AsyncLocalStorageProviderSingleton.getInstance().getStore();
-    const tracingV2Enabled = contextRun?.tracingEnabled || isTracingEnabled();
+    const tracingV2Enabled =
+      LangChainTracer.getTraceableRunTree()?.tracingEnabled ||
+      isTracingEnabled();
 
     const tracingEnabled =
       tracingV2Enabled ||
@@ -1082,7 +1080,8 @@ export class CallbackManager
           // handoff between langchain and langsmith/traceable
           // override the parent run ID
           callbackManager._parentRunId =
-            tracerV2.getTraceableRunTree()?.id ?? callbackManager._parentRunId;
+            LangChainTracer.getTraceableRunTree()?.id ??
+            callbackManager._parentRunId;
         }
       }
     }

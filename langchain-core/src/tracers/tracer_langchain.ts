@@ -64,7 +64,7 @@ export class LangChainTracer
     // if we're inside traceable, we can obtain the traceable tree
     // and populate the run map, which is used to correctly
     // infer dotted order and execution order
-    const traceableTree = this.getTraceableRunTree();
+    const traceableTree = LangChainTracer.getTraceableRunTree();
     if (traceableTree) {
       let rootRun: RunTree = traceableTree;
       const visited = new Set<string>();
@@ -140,14 +140,6 @@ export class LangChainTracer
     return this.runMap.get(id);
   }
 
-  getTraceableRunTree(): RunTree | undefined {
-    try {
-      return getCurrentRunTree();
-    } catch {
-      return undefined;
-    }
-  }
-
   convertToRunTree(id: string): RunTree | undefined {
     // create a run tree from a run map
     const runTreeMap: Record<string, RunTree> = {};
@@ -193,5 +185,13 @@ export class LangChainTracer
     }
 
     return runTreeMap[id];
+  }
+
+  static getTraceableRunTree(): RunTree | undefined {
+    try {
+      return getCurrentRunTree();
+    } catch {
+      return undefined;
+    }
   }
 }
