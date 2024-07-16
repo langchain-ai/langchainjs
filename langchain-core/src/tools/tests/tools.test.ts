@@ -99,3 +99,15 @@ test("Returns tool message if responseFormat is content_and_artifact and returns
   expect(toolResult.artifact).toEqual({ location: "San Francisco" });
   expect(toolResult.name).toBe("weather");
 });
+
+test("Tool can accept single string input", async () => {
+  const stringTool = tool((input: string): string => {
+    return `${input}a`;
+  }, {
+    name: "string_tool",
+    description: "A tool that appends 'a' to the input string",
+  });
+
+  const result = await stringTool.invoke("b");
+  expect(result).toBe("ba");
+});
