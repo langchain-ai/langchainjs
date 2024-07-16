@@ -599,6 +599,7 @@ export class ChatCohere<
       name: toolCall.function.name,
       args: toolCall.function.arguments,
       id: toolCall.id,
+      type: "tool_call",
     }));
   }
 
@@ -775,6 +776,7 @@ export class ChatCohere<
             args: toolCall.function.arguments,
             id: toolCall.id,
             index: toolCall.index,
+            type: "tool_call_chunk",
           }));
         }
 

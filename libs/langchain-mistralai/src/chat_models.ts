@@ -65,6 +65,7 @@ import {
   RunnableToolLike,
 } from "@langchain/core/runnables";
 import { zodToJsonSchema } from "zod-to-json-schema";
+import { ToolCallChunk } from "@langchain/core/messages/tool";
 
 interface TokenUsage {
   completionTokens?: number;
@@ -321,7 +322,7 @@ function _convertDeltaToMessageChunk(
   }
   const content = delta.content ?? "";
   let additional_kwargs;
-  const toolCallChunks = [];
+  const toolCallChunks: ToolCallChunk[] = [];
   if (rawToolCallChunksWithIndex !== undefined) {
     additional_kwargs = {
       tool_calls: rawToolCallChunksWithIndex,
@@ -332,6 +333,7 @@ function _convertDeltaToMessageChunk(
         args: rawToolCallChunk.function?.arguments,
         id: rawToolCallChunk.id,
         index: rawToolCallChunk.index,
+        type: "tool_call_chunk",
       });
     }
   } else {

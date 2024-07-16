@@ -64,6 +64,7 @@ import {
 } from "@langchain/core/output_parsers/openai_tools";
 import { StructuredToolInterface } from "@langchain/core/tools";
 import { convertToOpenAITool } from "@langchain/core/utils/function_calling";
+import { ToolCallChunk } from "@langchain/core/messages/tool";
 
 export interface ChatGroqCallOptions extends BaseChatModelCallOptions {
   headers?: Record<string, string>;
@@ -403,14 +404,14 @@ export class ChatGroq extends BaseChatModel<
       ) {
         throw new Error("Could not parse Groq output.");
       }
-      const toolCallChunks = generationMessage.tool_calls?.map(
-        (toolCall, i) => ({
+      const toolCallChunks: ToolCallChunk[] | undefined =
+        generationMessage.tool_calls?.map((toolCall, i) => ({
           name: toolCall.name,
           args: JSON.stringify(toolCall.args),
           id: toolCall.id,
           index: i,
-        })
-      );
+          type: "tool_call_chunk",
+        }));
       yield new ChatGenerationChunk({
         message: new AIMessageChunk({
           content: generationMessage.content,
