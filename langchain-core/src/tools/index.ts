@@ -507,26 +507,28 @@ interface ToolWrapperParams<RunInput extends ZodAny | z.ZodString = ZodAny>
 export function tool<T extends z.ZodString = z.ZodString>(
   func: RunnableFunc<z.output<T>, ToolReturnType>,
   fields: ToolWrapperParams<T>
-): DynamicTool
+): DynamicTool;
 
 export function tool<T extends ZodAny = ZodAny>(
   func: RunnableFunc<z.output<T>, ToolReturnType>,
   fields: ToolWrapperParams<T>
-): DynamicStructuredTool<T>
+): DynamicStructuredTool<T>;
 
 export function tool<T extends ZodAny = ZodAny>(
   func: RunnableFunc<z.output<T>, ToolReturnType>,
   fields: ToolWrapperParams<T>
 ): DynamicStructuredTool<T> | DynamicTool {
-
   // If the schema is not provided, or it's a string schema, create a DynamicTool
   if (!fields.schema || !fields.schema.shape) {
     return new DynamicTool({
       name: fields.name,
-      description: fields.description ?? fields.schema?.description ?? `${fields.name} tool`,
+      description:
+        fields.description ??
+        fields.schema?.description ??
+        `${fields.name} tool`,
       responseFormat: fields.responseFormat,
       func,
-    })
+    });
   }
 
   const description =
