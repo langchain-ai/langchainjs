@@ -10551,7 +10551,7 @@ __metadata:
     "@xenova/transformers": ^2.17.2
     "@zilliz/milvus2-sdk-node": ">=2.3.5"
     apify-client: ^2.7.1
-    assemblyai: ^4.0.0
+    assemblyai: ^4.6.0
     better-sqlite3: ">=9.4.0 <12.0.0"
     binary-extensions: ^2.2.0
     cassandra-driver: ^4.7.2
@@ -10700,7 +10700,7 @@ __metadata:
     "@xenova/transformers": ^2.17.2
     "@zilliz/milvus2-sdk-node": ">=2.3.5"
     apify-client: ^2.7.1
-    assemblyai: ^4.0.0
+    assemblyai: ^4.6.0
     better-sqlite3: ">=9.4.0 <12.0.0"
     cassandra-driver: ^4.7.2
     cborg: ^4.1.1
@@ -19431,12 +19431,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"assemblyai@npm:^4.0.0":
-  version: 4.0.0
-  resolution: "assemblyai@npm:4.0.0"
+"assemblyai@npm:^4.6.0":
+  version: 4.6.0
+  resolution: "assemblyai@npm:4.6.0"
   dependencies:
-    ws: ^8.13.0
-  checksum: 09a2b2ed4c7269b5ef64dbc81a7c83cdcdfff6ec68f9600c702a416f91858b67c76a047f17c3c86701f0157ea64e51a00e77a1beaf790e6212eacc4e4ae3bd44
+    ws: ^8.17.1
+  checksum: de6da06c7a86939033ef9272691eb7f767712cd4ccb6dea84c492df80f510aadcd806081da876948c23dd87b27d3c04e6dfc841dbb403e7ddd52917a591ef142
   languageName: node
   linkType: hard
 
@@ -30286,7 +30286,7 @@ __metadata:
     "@vercel/kv": ^0.2.3
     "@xata.io/client": ^0.28.0
     apify-client: ^2.7.1
-    assemblyai: ^4.0.0
+    assemblyai: ^4.6.0
     axios: ^0.26.0
     binary-extensions: ^2.2.0
     cheerio: ^1.0.0-rc.12
@@ -30367,7 +30367,7 @@ __metadata:
     "@vercel/kv": ^0.2.3
     "@xata.io/client": ^0.28.0
     apify-client: ^2.7.1
-    assemblyai: ^4.0.0
+    assemblyai: ^4.6.0
     axios: "*"
     cheerio: ^1.0.0-rc.12
     chromadb: "*"
@@ -40809,6 +40809,21 @@ __metadata:
     utf-8-validate:
       optional: true
   checksum: 147ef9eab0251364e1d2c55338ad0efb15e6913923ccbfdf20f7a8a6cb8f88432bcd7f4d8f66977135bfad35575644f9983201c1a361019594a4e53977bf6d4e
+  languageName: node
+  linkType: hard
+
+"ws@npm:^8.17.1":
+  version: 8.18.0
+  resolution: "ws@npm:8.18.0"
+  peerDependencies:
+    bufferutil: ^4.0.1
+    utf-8-validate: ">=5.0.2"
+  peerDependenciesMeta:
+    bufferutil:
+      optional: true
+    utf-8-validate:
+      optional: true
+  checksum: 91d4d35bc99ff6df483bdf029b9ea4bfd7af1f16fc91231a96777a63d263e1eabf486e13a2353970efc534f9faa43bdbf9ee76525af22f4752cbc5ebda333975
   languageName: node
   linkType: hard
 
