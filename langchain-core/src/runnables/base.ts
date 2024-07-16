@@ -1094,7 +1094,7 @@ export abstract class Runnable<
   asTool<T extends RunInput = RunInput>(fields: {
     name?: string;
     description?: string;
-    schema: z.ZodType<T> | z.ZodString;
+    schema: z.ZodType<T>;
   }): RunnableToolLike<z.ZodType<T>, RunOutput> {
     return convertRunnableToTool<T, RunOutput>(this, fields);
   }
@@ -2861,7 +2861,7 @@ export function convertRunnableToTool<RunInput, RunOutput>(
   fields: {
     name?: string;
     description?: string;
-    schema: z.ZodType<RunInput> | z.ZodString;
+    schema: z.ZodType<RunInput>;
   }
 ): RunnableToolLike<z.ZodType<RunInput>, RunOutput> {
   const name = fields.name ?? runnable.getName();
@@ -2870,7 +2870,7 @@ export function convertRunnableToTool<RunInput, RunOutput>(
   return new RunnableToolLike<z.ZodType<RunInput>, RunOutput>({
     name,
     description,
-    schema: fields.schema as z.ZodType<RunInput>,
+    schema: fields.schema,
     bound: runnable,
   });
 }
