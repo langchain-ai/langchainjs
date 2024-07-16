@@ -149,4 +149,4 @@ test("Runnable asTool can accept a string zod schema", async () => {
 
   const result = await lambda.invoke("b");
   expect(result).toBe("ba");
-})
+});

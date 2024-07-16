@@ -101,12 +101,15 @@ test("Returns tool message if responseFormat is content_and_artifact and returns
 });
 
 test("Tool can accept single string input", async () => {
-  const stringTool = tool((input: string): string => {
-    return `${input}a`;
-  }, {
-    name: "string_tool",
-    description: "A tool that appends 'a' to the input string",
-  });
+  const stringTool = tool(
+    (input: string): string => {
+      return `${input}a`;
+    },
+    {
+      name: "string_tool",
+      description: "A tool that appends 'a' to the input string",
+    }
+  );
 
   const result = await stringTool.invoke("b");
   expect(result).toBe("ba");
