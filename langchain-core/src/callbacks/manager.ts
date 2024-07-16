@@ -1,4 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
+import { AsyncLocalStorageProviderSingleton } from "langsmith/singletons/traceable";
 import { AgentAction, AgentFinish } from "../agents.js";
 import type { ChainValues } from "../utils/types/index.js";
 import { LLMResult } from "../outputs.js";
@@ -1009,7 +1010,9 @@ export class CallbackManager
     const verboseEnabled =
       getEnvironmentVariable("LANGCHAIN_VERBOSE") === "true" ||
       options?.verbose;
-    const tracingV2Enabled = isTracingEnabled();
+    const tracingV2Enabled =
+      AsyncLocalStorageProviderSingleton.getInstance().getStore()
+        ?.tracingEnabled || isTracingEnabled();
 
     const tracingEnabled =
       tracingV2Enabled ||
