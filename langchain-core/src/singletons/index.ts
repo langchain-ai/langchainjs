@@ -20,12 +20,11 @@ export class MockAsyncLocalStorage implements AsyncLocalStorageInterface {
 
 const mockAsyncLocalStorage = new MockAsyncLocalStorage();
 
+const TRACING_ALS_KEY = Symbol.for("ls:tracing_async_local_storage");
+
 class AsyncLocalStorageProvider {
   getInstance(): AsyncLocalStorageInterface {
-    return (
-      (globalThis as any).__lc_tracing_async_local_storage_v2 ??
-      mockAsyncLocalStorage
-    );
+    return (globalThis as any)[TRACING_ALS_KEY] ?? mockAsyncLocalStorage;
   }
 
   getRunnableConfig() {
@@ -67,8 +66,8 @@ class AsyncLocalStorageProvider {
   }
 
   initializeGlobalInstance(instance: AsyncLocalStorageInterface) {
-    if ((globalThis as any).__lc_tracing_async_local_storage_v2 === undefined) {
-      (globalThis as any).__lc_tracing_async_local_storage_v2 = instance;
+    if ((globalThis as any)[TRACING_ALS_KEY] === undefined) {
+      (globalThis as any)[TRACING_ALS_KEY] = instance;
     }
   }
 }
