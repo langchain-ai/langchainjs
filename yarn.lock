@@ -9662,7 +9662,7 @@ __metadata:
     "@xenova/transformers": ^2.5.4
     "@zilliz/milvus2-sdk-node": ">=2.3.5"
     apify-client: ^2.7.1
-    assemblyai: ^4.5.0
+    assemblyai: ^4.6.0
     better-sqlite3: ">=9.4.0 <12.0.0"
     binary-extensions: ^2.2.0
     cassandra-driver: ^4.7.2
@@ -9810,7 +9810,7 @@ __metadata:
     "@xenova/transformers": ^2.5.4
     "@zilliz/milvus2-sdk-node": ">=2.3.5"
     apify-client: ^2.7.1
-    assemblyai: ^4.5.0
+    assemblyai: ^4.6.0
     better-sqlite3: ">=9.4.0 <12.0.0"
     cassandra-driver: ^4.7.2
     cborg: ^4.1.1
@@ -18005,12 +18005,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"assemblyai@npm:^4.5.0":
-  version: 4.5.0
-  resolution: "assemblyai@npm:4.5.0"
+"assemblyai@npm:^4.6.0":
+  version: 4.6.0
+  resolution: "assemblyai@npm:4.6.0"
   dependencies:
-    ws: ^8.17.0
-  checksum: 74017cd45ab10f81575045996496a97f62fc6af85491b64c863fd9306c9d282904c9a111103b33ae3a7619dde3ba17324f1a97aa5d1003ed5915ae449ad84771
+    ws: ^8.17.1
+  checksum: de6da06c7a86939033ef9272691eb7f767712cd4ccb6dea84c492df80f510aadcd806081da876948c23dd87b27d3c04e6dfc841dbb403e7ddd52917a591ef142
   languageName: node
   linkType: hard
 
@@ -28597,7 +28597,7 @@ __metadata:
     "@vercel/kv": ^0.2.3
     "@xata.io/client": ^0.28.0
     apify-client: ^2.7.1
-    assemblyai: ^4.5.0
+    assemblyai: ^4.6.0
     axios: ^0.26.0
     binary-extensions: ^2.2.0
     cheerio: ^1.0.0-rc.12
@@ -28678,7 +28678,7 @@ __metadata:
     "@vercel/kv": ^0.2.3
     "@xata.io/client": ^0.28.0
     apify-client: ^2.7.1
-    assemblyai: ^4.5.0
+    assemblyai: ^4.6.0
     axios: "*"
     cheerio: ^1.0.0-rc.12
     chromadb: "*"
@@ -38976,9 +38976,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ws@npm:^8.17.0":
-  version: 8.17.1
-  resolution: "ws@npm:8.17.1"
+"ws@npm:^8.17.1":
+  version: 8.18.0
+  resolution: "ws@npm:8.18.0"
   peerDependencies:
     bufferutil: ^4.0.1
     utf-8-validate: ">=5.0.2"
@@ -38987,7 +38987,7 @@ __metadata:
       optional: true
     utf-8-validate:
       optional: true
-  checksum: 442badcce1f1178ec87a0b5372ae2e9771e07c4929a3180321901f226127f252441e8689d765aa5cfba5f50ac60dd830954afc5aeae81609aefa11d3ddf5cecf
+  checksum: 91d4d35bc99ff6df483bdf029b9ea4bfd7af1f16fc91231a96777a63d263e1eabf486e13a2353970efc534f9faa43bdbf9ee76525af22f4752cbc5ebda333975
   languageName: node
   linkType: hard
 
