@@ -1,10 +1,11 @@
-import { test } from "@jest/globals";
+import { test, describe, it, expect } from "@jest/globals";
 import { ChatPromptTemplate } from "../../prompts/chat.js";
 import {
   HumanMessage,
   AIMessage,
   ToolMessage,
   ToolMessageChunk,
+  AIMessageChunk,
 } from "../index.js";
 import { load } from "../../load/index.js";
 
@@ -191,5 +192,145 @@ test("Can concat artifact (object) of ToolMessageChunk", () => {
   expect(concated.artifact).toEqual({
     foo: "bar",
     bar: "baz",
+  });
+});
+
+describe("Complex AIMessageChunk concat", () => {
+  it("concatenates content arrays of strings", () => {
+    expect(
+      new AIMessageChunk({
+        content: [{ type: "text", text: "I am" }],
+        id: "ai4",
+      }).concat(
+        new AIMessageChunk({ content: [{ type: "text", text: " indeed." }] })
+      )
+    ).toEqual(
+      new AIMessageChunk({
+        id: "ai4",
+        content: [
+          { type: "text", text: "I am" },
+          { type: "text", text: " indeed." },
+        ],
+      })
+    );
+  });
+
+  it("concatenates mixed content arrays", () => {
+    expect(
+      new AIMessageChunk({
+        content: [{ index: 0, type: "text", text: "I am" }],
+      }).concat(
+        new AIMessageChunk({ content: [{ type: "text", text: " indeed." }] })
+      )
+    ).toEqual(
+      new AIMessageChunk({
+        content: [
+          { index: 0, type: "text", text: "I am" },
+          { type: "text", text: " indeed." },
+        ],
+      })
+    );
+  });
+
+  it("merges content arrays with same index", () => {
+    expect(
+      new AIMessageChunk({ content: [{ index: 0, text: "I am" }] }).concat(
+        new AIMessageChunk({ content: [{ index: 0, text: " indeed." }] })
+      )
+    ).toEqual(
+      new AIMessageChunk({ content: [{ index: 0, text: "I am indeed." }] })
+    );
+  });
+
+  it("does not merge when one chunk is missing an index", () => {
+    expect(
+      new AIMessageChunk({ content: [{ index: 0, text: "I am" }] }).concat(
+        new AIMessageChunk({ content: [{ text: " indeed." }] })
+      )
+    ).toEqual(
+      new AIMessageChunk({
+        content: [{ index: 0, text: "I am" }, { text: " indeed." }],
+      })
+    );
+  });
+
+  it("does not create a holey array when there's a gap between indexes", () => {
+    expect(
+      new AIMessageChunk({ content: [{ index: 0, text: "I am" }] }).concat(
+        new AIMessageChunk({ content: [{ index: 2, text: " indeed." }] })
+      )
+    ).toEqual(
+      new AIMessageChunk({
+        content: [
+          { index: 0, text: "I am" },
+          { index: 2, text: " indeed." },
+        ],
+      })
+    );
+  });
+
+  it("does not merge content arrays with separate indexes", () => {
+    expect(
+      new AIMessageChunk({ content: [{ index: 0, text: "I am" }] }).concat(
+        new AIMessageChunk({ content: [{ index: 1, text: " indeed." }] })
+      )
+    ).toEqual(
+      new AIMessageChunk({
+        content: [
+          { index: 0, text: "I am" },
+          { index: 1, text: " indeed." },
+        ],
+      })
+    );
+  });
+
+  it("merges content arrays with same index and type", () => {
+    expect(
+      new AIMessageChunk({
+        content: [{ index: 0, text: "I am", type: "text_block" }],
+      }).concat(
+        new AIMessageChunk({
+          content: [{ index: 0, text: " indeed.", type: "text_block" }],
+        })
+      )
+    ).toEqual(
+      new AIMessageChunk({
+        content: [{ index: 0, text: "I am indeed.", type: "text_block" }],
+      })
+    );
+  });
+
+  it("merges content arrays with same index and different types without updating type", () => {
+    expect(
+      new AIMessageChunk({
+        content: [{ index: 0, text: "I am", type: "text_block" }],
+      }).concat(
+        new AIMessageChunk({
+          content: [{ index: 0, text: " indeed.", type: "text_block_delta" }],
+        })
+      )
+    ).toEqual(
+      new AIMessageChunk({
+        content: [{ index: 0, text: "I am indeed.", type: "text_block" }],
+      })
+    );
+  });
+
+  it("concatenates empty string content and merges other fields", () => {
+    expect(
+      new AIMessageChunk({
+        content: [{ index: 0, type: "text", text: "I am" }],
+      }).concat(
+        new AIMessageChunk({
+          content: [{ type: "text", text: "" }],
+          response_metadata: { extra: "value" },
+        })
+      )
+    ).toEqual(
+      new AIMessageChunk({
+        content: [{ index: 0, type: "text", text: "I am" }],
+        response_metadata: { extra: "value" },
+      })
+    );
   });
 });
