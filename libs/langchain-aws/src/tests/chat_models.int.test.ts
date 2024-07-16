@@ -1,9 +1,19 @@
 /* eslint-disable no-process-env */
+
 import { test, expect } from "@jest/globals";
-import { AIMessageChunk, HumanMessage } from "@langchain/core/messages";
+import {
+  AIMessage,
+  AIMessageChunk,
+  HumanMessage,
+  SystemMessage,
+  ToolMessage,
+} from "@langchain/core/messages";
 import { tool } from "@langchain/core/tools";
 import { z } from "zod";
 import { ChatBedrockConverse } from "../chat_models.js";
+
+// Save the original value of the 'LANGCHAIN_CALLBACKS_BACKGROUND' environment variable
+const originalBackground = process.env.LANGCHAIN_CALLBACKS_BACKGROUND;
 
 const baseConstructorArgs: Partial<
   ConstructorParameters<typeof ChatBedrockConverse>[0]
@@ -44,28 +54,38 @@ test("Test ChatBedrockConverse stream method", async () => {
 });
 
 test("Test ChatBedrockConverse in streaming mode", async () => {
-  let nrNewTokens = 0;
-  let streamedCompletion = "";
+  // Running LangChain callbacks in the background will sometimes cause the callbackManager to execute
+  // after the test/llm call has already finished & returned. Set that environment variable to false
+  // to prevent that from happening.
+  process.env.LANGCHAIN_CALLBACKS_BACKGROUND = "false";
 
-  const model = new ChatBedrockConverse({
-    ...baseConstructorArgs,
-    streaming: true,
-    maxTokens: 10,
-    callbacks: [
-      {
-        async handleLLMNewToken(token: string) {
-          nrNewTokens += 1;
-          streamedCompletion += token;
+  try {
+    let nrNewTokens = 0;
+    let streamedCompletion = "";
+
+    const model = new ChatBedrockConverse({
+      ...baseConstructorArgs,
+      streaming: true,
+      maxTokens: 10,
+      callbacks: [
+        {
+          async handleLLMNewToken(token: string) {
+            nrNewTokens += 1;
+            streamedCompletion += token;
+          },
         },
-      },
-    ],
-  });
-  const message = new HumanMessage("Hello!");
-  const result = await model.invoke([message]);
-  console.log(result);
+      ],
+    });
+    const message = new HumanMessage("Hello!");
+    const result = await model.invoke([message]);
+    console.log(result);
 
-  expect(nrNewTokens > 0).toBe(true);
-  expect(result.content).toBe(streamedCompletion);
+    expect(nrNewTokens > 0).toBe(true);
+    expect(result.content).toBe(streamedCompletion);
+  } finally {
+    // Reset the environment variable
+    process.env.LANGCHAIN_CALLBACKS_BACKGROUND = originalBackground;
+  }
 }, 10000);
 
 test("Test ChatBedrockConverse with stop", async () => {
@@ -304,4 +324,47 @@ test("Test ChatBedrockConverse tool_choice works", async () => {
   console.log("result.tool_calls?.[0]", result.tool_calls?.[0]);
   expect(result.tool_calls?.[0].name).toBe("get_weather");
   expect(result.tool_calls?.[0].id).toBeDefined();
+});
+
+test("Model can handle empty content messages", async () => {
+  const model = new ChatBedrockConverse({
+    ...baseConstructorArgs,
+  });
+
+  const retrieverTool = tool((_) => "Success", {
+    name: "retrieverTool",
+    schema: z.object({
+      url: z.string().describe("The URL to fetch"),
+    }),
+    description: "A tool to fetch data from a URL",
+  });
+
+  const messages = [
+    new SystemMessage("You're an advanced AI assistant."),
+    new HumanMessage(
+      "What's the weather like today in Berkeley, CA? Use weather.com to check."
+    ),
+    new AIMessage({
+      content: "",
+      tool_calls: [
+        {
+          name: "retrieverTool",
+          args: {
+            url: "https://weather.com",
+          },
+          id: "123_retriever_tool",
+        },
+      ],
+    }),
+    new ToolMessage({
+      tool_call_id: "123_retriever_tool",
+      content: "The weather in Berkeley, CA is 70 degrees and sunny.",
+    }),
+  ];
+
+  const result = await model.bindTools([retrieverTool]).invoke(messages);
+
+  expect(result.content).toBeDefined();
+  expect(typeof result.content).toBe("string");
+  expect(result.content.length).toBeGreaterThan(1);
 });

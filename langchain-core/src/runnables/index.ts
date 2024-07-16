@@ -15,6 +15,8 @@ export {
   RunnableAssign,
   RunnablePick,
   _coerceToRunnable,
+  RunnableToolLike,
+  type RunnableToolLikeArgs,
 } from "./base.js";
 export {
   type RunnableBatchOptions,

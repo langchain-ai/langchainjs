@@ -9620,6 +9620,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@huggingface/jinja@npm:^0.2.2":
+  version: 0.2.2
+  resolution: "@huggingface/jinja@npm:0.2.2"
+  checksum: 8a6e3e287863d437920990afa2ca25d83c51997bd5ba0325ea90633e52469c2d901178cbd758cc362b45ad1c9521fccf372884fd59e58d2916d6b2e5bb15f776
+  languageName: node
+  linkType: hard
+
 "@humanwhocodes/config-array@npm:^0.11.11":
   version: 0.11.11
   resolution: "@humanwhocodes/config-array@npm:0.11.11"
@@ -10207,7 +10214,7 @@ __metadata:
     "@anthropic-ai/sdk": ^0.22.0
     "@jest/globals": ^29.5.0
     "@langchain/community": "workspace:*"
-    "@langchain/core": ">=0.2.9 <0.3.0"
+    "@langchain/core": ">=0.2.16 <0.3.0"
     "@langchain/scripts": ~0.0.14
     "@langchain/standard-tests": 0.0.0
     "@swc/core": ^1.3.90
@@ -10241,7 +10248,7 @@ __metadata:
     "@aws-sdk/credential-provider-node": ^3.600.0
     "@aws-sdk/types": ^3.598.0
     "@jest/globals": ^29.5.0
-    "@langchain/core": ">=0.2.9 <0.3.0"
+    "@langchain/core": ">=0.2.16 <0.3.0"
     "@langchain/scripts": ~0.0.14
     "@langchain/standard-tests": 0.0.0
     "@smithy/types": ^3.2.0
@@ -10422,7 +10429,7 @@ __metadata:
   resolution: "@langchain/cohere@workspace:libs/langchain-cohere"
   dependencies:
     "@jest/globals": ^29.5.0
-    "@langchain/core": ">=0.2.5 <0.3.0"
+    "@langchain/core": ">=0.2.16 <0.3.0"
     "@langchain/scripts": ~0.0.14
     "@langchain/standard-tests": 0.0.0
     "@swc/core": ^1.3.90
@@ -10447,6 +10454,9 @@ __metadata:
     rollup: ^4.5.2
     ts-jest: ^29.1.0
     typescript: <5.2.0
+    uuid: ^10.0.0
+    zod: ^3.23.8
+    zod-to-json-schema: ^3.23.1
   languageName: unknown
   linkType: soft
 
@@ -10484,7 +10494,8 @@ __metadata:
     "@gradientai/nodejs-sdk": ^1.2.0
     "@huggingface/inference": ^2.6.4
     "@jest/globals": ^29.5.0
-    "@langchain/core": ~0.2.11
+    "@langchain/core": ">=0.2.16 <0.3.0"
+    "@langchain/langgraph": ~0.0.26
     "@langchain/openai": ~0.1.0
     "@langchain/scripts": ~0.0.14
     "@langchain/standard-tests": 0.0.0
@@ -10537,7 +10548,7 @@ __metadata:
     "@vercel/postgres": ^0.5.0
     "@writerai/writer-sdk": ^0.40.2
     "@xata.io/client": ^0.28.0
-    "@xenova/transformers": ^2.5.4
+    "@xenova/transformers": ^2.17.2
     "@zilliz/milvus2-sdk-node": ">=2.3.5"
     apify-client: ^2.7.1
     assemblyai: ^4.0.0
@@ -10655,6 +10666,7 @@ __metadata:
     "@google-cloud/storage": ^6.10.1 || ^7.7.0
     "@gradientai/nodejs-sdk": ^1.2.0
     "@huggingface/inference": ^2.6.4
+    "@langchain/langgraph": ~0.0.26
     "@layerup/layerup-security": ^1.5.12
     "@mendable/firecrawl-js": ^0.0.13
     "@mlc-ai/web-llm": 0.2.46
@@ -10685,7 +10697,7 @@ __metadata:
     "@vercel/postgres": ^0.5.0
     "@writerai/writer-sdk": ^0.40.2
     "@xata.io/client": ^0.28.0
-    "@xenova/transformers": ^2.5.4
+    "@xenova/transformers": ^2.17.2
     "@zilliz/milvus2-sdk-node": ">=2.3.5"
     apify-client: ^2.7.1
     assemblyai: ^4.0.0
@@ -10801,6 +10813,8 @@ __metadata:
     "@gradientai/nodejs-sdk":
       optional: true
     "@huggingface/inference":
+      optional: true
+    "@langchain/langgraph":
       optional: true
     "@layerup/layerup-security":
       optional: true
@@ -11025,6 +11039,7 @@ __metadata:
     prettier: ^2.8.3
     release-it: ^15.10.1
     rimraf: ^5.0.1
+    ts-jest: ^29.1.0
     typescript: ~5.1.6
     uuid: ^10.0.0
     web-streams-polyfill: ^3.3.3
@@ -11081,7 +11096,7 @@ __metadata:
   resolution: "@langchain/google-common@workspace:libs/langchain-google-common"
   dependencies:
     "@jest/globals": ^29.5.0
-    "@langchain/core": ">=0.2.9 <0.3.0"
+    "@langchain/core": ">=0.2.16 <0.3.0"
     "@langchain/scripts": ~0.0.14
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
@@ -11148,7 +11163,7 @@ __metadata:
   dependencies:
     "@google/generative-ai": ^0.7.0
     "@jest/globals": ^29.5.0
-    "@langchain/core": ">=0.2.9 <0.3.0"
+    "@langchain/core": ">=0.2.16 <0.3.0"
     "@langchain/scripts": ~0.0.14
     "@langchain/standard-tests": 0.0.0
     "@swc/core": ^1.3.90
@@ -11279,7 +11294,7 @@ __metadata:
   resolution: "@langchain/groq@workspace:libs/langchain-groq"
   dependencies:
     "@jest/globals": ^29.5.0
-    "@langchain/core": ">=0.2.9 <0.3.0"
+    "@langchain/core": ">=0.2.16 <0.3.0"
     "@langchain/openai": "workspace:^"
     "@langchain/scripts": ~0.0.14
     "@langchain/standard-tests": 0.0.0
@@ -11311,18 +11326,18 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/langgraph@npm:latest":
-  version: 0.0.18
-  resolution: "@langchain/langgraph@npm:0.0.18"
+"@langchain/langgraph@npm:0.0.26, @langchain/langgraph@npm:~0.0.26":
+  version: 0.0.26
+  resolution: "@langchain/langgraph@npm:0.0.26"
   dependencies:
-    "@langchain/core": ^0.1.61
-    uuid: ^9.0.1
+    "@langchain/core": ">0.1.61 <0.3.0"
+    uuid: ^10.0.0
   peerDependencies:
     better-sqlite3: ^9.5.0
   peerDependenciesMeta:
     better-sqlite3:
       optional: true
-  checksum: dc35aaafc3489d8b30863e31c6564fc10be0bc1cd216d5877cc248a46e3ad508f7faf120e7ead675e0ac7f0ea1deae23bbd239ac0020e6a0c46a129a691c62b5
+  checksum: 82ad770597fc389d704395657c800fd6c1745a82677cc836c722827dc9473f9f6f06babf4aa22e394b3b7d3456a7ce52db6d206fb7e0f02dacc8f8a98580f74c
   languageName: node
   linkType: hard
 
@@ -11331,7 +11346,7 @@ __metadata:
   resolution: "@langchain/mistralai@workspace:libs/langchain-mistralai"
   dependencies:
     "@jest/globals": ^29.5.0
-    "@langchain/core": ">=0.2.5 <0.3.0"
+    "@langchain/core": ">=0.2.16 <0.3.0"
     "@langchain/scripts": ~0.0.14
     "@langchain/standard-tests": 0.0.0
     "@mistralai/mistralai": ^0.4.0
@@ -11468,7 +11483,7 @@ __metadata:
   dependencies:
     "@azure/identity": ^4.2.0
     "@jest/globals": ^29.5.0
-    "@langchain/core": ">=0.2.8 <0.3.0"
+    "@langchain/core": ">=0.2.16 <0.3.0"
     "@langchain/scripts": ~0.0.14
     "@langchain/standard-tests": 0.0.0
     "@swc/core": ^1.3.90
@@ -11920,6 +11935,13 @@ __metadata:
     axios: ^1.6.8
     dotenv: ^16.4.5
   checksum: 9dbc0b6e5d300bb9ef9f45cebd5c0026ac468863984cdc73a57ed6fdf888eaead5f9e2325c6848d03897c72cab195fffb4ce7d832e39696a11216bc53b417b6d
+  languageName: node
+  linkType: hard
+
+"@microsoft/fetch-event-source@npm:^2.0.1":
+  version: 2.0.1
+  resolution: "@microsoft/fetch-event-source@npm:2.0.1"
+  checksum: a50e1c0f33220206967266d0a4bbba0703e2793b079d9f6e6bfd48f71b2115964a803e14cf6e902c6fab321edc084f26022334f5eaacc2cec87f174715d41852
   languageName: node
   linkType: hard
 
@@ -18650,17 +18672,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@xenova/transformers@npm:^2.5.4":
-  version: 2.5.4
-  resolution: "@xenova/transformers@npm:2.5.4"
+"@xenova/transformers@npm:^2.17.2":
+  version: 2.17.2
+  resolution: "@xenova/transformers@npm:2.17.2"
   dependencies:
+    "@huggingface/jinja": ^0.2.2
     onnxruntime-node: 1.14.0
     onnxruntime-web: 1.14.0
     sharp: ^0.32.0
   dependenciesMeta:
     onnxruntime-node:
       optional: true
-  checksum: 67a6e52c2cbc2e9bd2af518c5001bed3351e8ead6199a9e5ec54f4df084348d8cc506d98d1ffdbef7fbe68b447a9a9c0aafb0182808e6df49dac882b474d271b
+  checksum: 5d49219995f401eedab6e0dcde6ad15ce5df0466388448703ca191e083bb0dc95692c1b539827d47399410d089cb078c47c862b0c550e34b54670fc435e83941
   languageName: node
   linkType: hard
 
@@ -21635,9 +21658,10 @@ __metadata:
     "@docusaurus/preset-classic": 2.4.3
     "@docusaurus/remark-plugin-npm2yarn": 2.4.3
     "@docusaurus/theme-mermaid": 2.4.3
-    "@langchain/langgraph": latest
+    "@langchain/langgraph": 0.0.26
     "@langchain/scripts": "workspace:*"
     "@mdx-js/react": ^1.6.22
+    "@microsoft/fetch-event-source": ^2.0.1
     "@supabase/supabase-js": ^2.39.7
     "@swc/core": ^1.3.62
     "@types/cookie": ^0
@@ -41090,7 +41114,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"zod-to-json-schema@npm:^3.23.0":
+"zod-to-json-schema@npm:^3.23.0, zod-to-json-schema@npm:^3.23.1":
   version: 3.23.1
   resolution: "zod-to-json-schema@npm:3.23.1"
   peerDependencies:
@@ -41099,21 +41123,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"zod@npm:^3.22.3, zod@npm:^3.22.4":
-  version: 3.22.4
-  resolution: "zod@npm:3.22.4"
-  checksum: 80bfd7f8039b24fddeb0718a2ec7c02aa9856e4838d6aa4864335a047b6b37a3273b191ef335bf0b2002e5c514ef261ffcda5a589fb084a48c336ffc4cdbab7f
-  languageName: node
-  linkType: hard
-
-"zod@npm:^3.22.5":
-  version: 3.23.4
-  resolution: "zod@npm:3.23.4"
-  checksum: 58f6e298c51d9ae01a1b1a1692ac7f00774b466d9a287a1ff8d61ff1fbe0ae9b0f050ae1cf1a8f71e4c6ccd0333a3cc340f339360fab5f5046cc954d10525a54
-  languageName: node
-  linkType: hard
-
-"zod@npm:^3.23.8":
+"zod@npm:3.23.8":
   version: 3.23.8
   resolution: "zod@npm:3.23.8"
   checksum: 15949ff82118f59c893dacd9d3c766d02b6fa2e71cf474d5aa888570c469dbf5446ac5ad562bb035bf7ac9650da94f290655c194f4a6de3e766f43febd432c5c

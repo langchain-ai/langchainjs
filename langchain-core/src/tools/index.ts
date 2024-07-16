@@ -4,21 +4,45 @@ import {
   CallbackManagerForToolRun,
   Callbacks,
   parseCallbackConfigArg,
-} from "./callbacks/manager.js";
+} from "../callbacks/manager.js";
 import {
   BaseLangChain,
   type BaseLangChainParams,
-} from "./language_models/base.js";
-import { ensureConfig, type RunnableConfig } from "./runnables/config.js";
-import type { RunnableFunc, RunnableInterface } from "./runnables/base.js";
+} from "../language_models/base.js";
+import {
+  ensureConfig,
+  patchConfig,
+  type RunnableConfig,
+} from "../runnables/config.js";
+import type { RunnableFunc, RunnableInterface } from "../runnables/base.js";
+import { ToolCall, ToolMessage } from "../messages/tool.js";
+import { ZodAny } from "../types/zod.js";
+import { MessageContent } from "../messages/base.js";
+import { AsyncLocalStorageProviderSingleton } from "../singletons/index.js";
+
+export type ResponseFormat = "content" | "content_and_artifact" | string;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-type ZodAny = z.ZodObject<any, any, any, any>;
+type ToolReturnType = any;
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type ContentAndArtifact = [MessageContent, any];
 
 /**
  * Parameters for the Tool classes.
  */
-export interface ToolParams extends BaseLangChainParams {}
+export interface ToolParams extends BaseLangChainParams {
+  /**
+   * The tool response format.
+   *
+   * If "content" then the output of the tool is interpreted as the contents of a
+   * ToolMessage. If "content_and_artifact" then the output is expected to be a
+   * two-tuple corresponding to the (content, artifact) of a ToolMessage.
+   *
+   * @default "content"
+   */
+  responseFormat?: ResponseFormat;
+}
 
 /**
  * Custom error class used to handle exceptions related to tool input parsing.
@@ -36,8 +60,8 @@ export class ToolInputParsingException extends Error {
 
 export interface StructuredToolInterface<T extends ZodAny = ZodAny>
   extends RunnableInterface<
-    (z.output<T> extends string ? string : never) | z.input<T>,
-    string
+    (z.output<T> extends string ? string : never) | z.input<T> | ToolCall,
+    ToolReturnType
   > {
   lc_namespace: string[];
 
@@ -55,11 +79,11 @@ export interface StructuredToolInterface<T extends ZodAny = ZodAny>
    * @returns A Promise that resolves with a string.
    */
   call(
-    arg: (z.output<T> extends string ? string : never) | z.input<T>,
+    arg: (z.output<T> extends string ? string : never) | z.input<T> | ToolCall,
     configArg?: Callbacks | RunnableConfig,
     /** @deprecated */
     tags?: string[]
-  ): Promise<string>;
+  ): Promise<ToolReturnType>;
 
   name: string;
 
@@ -74,24 +98,43 @@ export interface StructuredToolInterface<T extends ZodAny = ZodAny>
 export abstract class StructuredTool<
   T extends ZodAny = ZodAny
 > extends BaseLangChain<
-  (z.output<T> extends string ? string : never) | z.input<T>,
-  string
+  (z.output<T> extends string ? string : never) | z.input<T> | ToolCall,
+  ToolReturnType
 > {
+  abstract name: string;
+
+  abstract description: string;
+
   abstract schema: T | z.ZodEffects<T>;
+
+  returnDirect = false;
 
   get lc_namespace() {
     return ["langchain", "tools"];
   }
 
+  /**
+   * The tool response format.
+   *
+   * If "content" then the output of the tool is interpreted as the contents of a
+   * ToolMessage. If "content_and_artifact" then the output is expected to be a
+   * two-tuple corresponding to the (content, artifact) of a ToolMessage.
+   *
+   * @default "content"
+   */
+  responseFormat?: ResponseFormat = "content";
+
   constructor(fields?: ToolParams) {
     super(fields ?? {});
+
+    this.responseFormat = fields?.responseFormat ?? this.responseFormat;
   }
 
   protected abstract _call(
     arg: z.output<T>,
     runManager?: CallbackManagerForToolRun,
-    config?: RunnableConfig
-  ): Promise<string>;
+    parentConfig?: RunnableConfig
+  ): Promise<ToolReturnType>;
 
   /**
    * Invokes the tool with the provided input and configuration.
@@ -100,10 +143,34 @@ export abstract class StructuredTool<
    * @returns A Promise that resolves with a string.
    */
   async invoke(
-    input: (z.output<T> extends string ? string : never) | z.input<T>,
+    input:
+      | (z.output<T> extends string ? string : never)
+      | z.input<T>
+      | ToolCall,
     config?: RunnableConfig
-  ): Promise<string> {
-    return this.call(input, ensureConfig(config));
+  ): Promise<ToolReturnType> {
+    let tool_call_id: string | undefined;
+    let toolInput:
+      | (z.output<T> extends string ? string : never)
+      | z.input<T>
+      | ToolCall
+      | undefined;
+
+    if (_isToolCall(input)) {
+      tool_call_id = input.id;
+      toolInput = input.args;
+    } else {
+      toolInput = input;
+    }
+
+    const ensuredConfig = ensureConfig(config);
+    return this.call(toolInput, {
+      ...ensuredConfig,
+      configurable: {
+        ...ensuredConfig.configurable,
+        tool_call_id,
+      },
+    });
   }
 
   /**
@@ -118,11 +185,11 @@ export abstract class StructuredTool<
    * @returns A Promise that resolves with a string.
    */
   async call(
-    arg: (z.output<T> extends string ? string : never) | z.input<T>,
+    arg: (z.output<T> extends string ? string : never) | z.input<T> | ToolCall,
     configArg?: Callbacks | RunnableConfig,
     /** @deprecated */
     tags?: string[]
-  ): Promise<string> {
+  ): Promise<ToolReturnType> {
     let parsed;
     try {
       parsed = await this.schema.parseAsync(arg);
@@ -132,6 +199,7 @@ export abstract class StructuredTool<
         JSON.stringify(arg)
       );
     }
+
     const config = parseCallbackConfigArg(configArg);
     const callbackManager_ = await CallbackManager.configure(
       config.callbacks,
@@ -159,18 +227,40 @@ export abstract class StructuredTool<
       await runManager?.handleToolError(e);
       throw e;
     }
-    await runManager?.handleToolEnd(result);
-    return result;
+    let content;
+    let artifact;
+    if (this.responseFormat === "content_and_artifact") {
+      if (Array.isArray(result) && result.length === 2) {
+        [content, artifact] = result;
+      } else {
+        throw new Error(
+          `Tool response format is "content_and_artifact" but the output was not a two-tuple.\nResult: ${JSON.stringify(
+            result
+          )}`
+        );
+      }
+    } else {
+      content = result;
+    }
+
+    let toolCallId: string | undefined;
+    if (config && "configurable" in config) {
+      toolCallId = (config.configurable as Record<string, string | undefined>)
+        .tool_call_id;
+    }
+    const formattedOutput = _formatToolOutput({
+      content,
+      artifact,
+      toolCallId,
+      name: this.name,
+    });
+    await runManager?.handleToolEnd(formattedOutput);
+    return formattedOutput;
   }
-
-  abstract name: string;
-
-  abstract description: string;
-
-  returnDirect = false;
 }
 
-export interface ToolInterface extends StructuredToolInterface {
+export interface ToolInterface<T extends ZodAny = ZodAny>
+  extends StructuredToolInterface<T> {
   /**
    * @deprecated Use .invoke() instead. Will be removed in 0.3.0.
    *
@@ -181,15 +271,15 @@ export interface ToolInterface extends StructuredToolInterface {
    * @returns A Promise that resolves with a string.
    */
   call(
-    arg: string | undefined | z.input<this["schema"]>,
+    arg: string | undefined | z.input<this["schema"]> | ToolCall,
     callbacks?: Callbacks | RunnableConfig
-  ): Promise<string>;
+  ): Promise<ToolReturnType>;
 }
 
 /**
  * Base class for Tools that accept input as a string.
  */
-export abstract class Tool extends StructuredTool {
+export abstract class Tool extends StructuredTool<ZodAny> {
   schema = z
     .object({ input: z.string().optional() })
     .transform((obj) => obj.input);
@@ -208,9 +298,9 @@ export abstract class Tool extends StructuredTool {
    * @returns A Promise that resolves with a string.
    */
   call(
-    arg: string | undefined | z.input<this["schema"]>,
+    arg: string | undefined | z.input<this["schema"]> | ToolCall,
     callbacks?: Callbacks | RunnableConfig
-  ): Promise<string> {
+  ): Promise<ToolReturnType> {
     return super.call(
       typeof arg === "string" || !arg ? { input: arg } : arg,
       callbacks
@@ -232,7 +322,7 @@ export interface DynamicToolInput extends BaseDynamicToolInput {
     input: string,
     runManager?: CallbackManagerForToolRun,
     config?: RunnableConfig
-  ) => Promise<string>;
+  ) => Promise<ToolReturnType>;
 }
 
 /**
@@ -241,10 +331,12 @@ export interface DynamicToolInput extends BaseDynamicToolInput {
 export interface DynamicStructuredToolInput<T extends ZodAny = ZodAny>
   extends BaseDynamicToolInput {
   func: (
-    input: z.infer<T>,
+    input: BaseDynamicToolInput["responseFormat"] extends "content_and_artifact"
+      ? ToolCall
+      : z.infer<T>,
     runManager?: CallbackManagerForToolRun,
     config?: RunnableConfig
-  ) => Promise<string>;
+  ) => Promise<ToolReturnType>;
   schema: T;
 }
 
@@ -274,9 +366,9 @@ export class DynamicTool extends Tool {
    * @deprecated Use .invoke() instead. Will be removed in 0.3.0.
    */
   async call(
-    arg: string | undefined | z.input<this["schema"]>,
+    arg: string | undefined | z.input<this["schema"]> | ToolCall,
     configArg?: RunnableConfig | Callbacks
-  ): Promise<string> {
+  ): Promise<ToolReturnType> {
     const config = parseCallbackConfigArg(configArg);
     if (config.runName === undefined) {
       config.runName = this.name;
@@ -288,9 +380,9 @@ export class DynamicTool extends Tool {
   async _call(
     input: string,
     runManager?: CallbackManagerForToolRun,
-    config?: RunnableConfig
-  ): Promise<string> {
-    return this.func(input, runManager, config);
+    parentConfig?: RunnableConfig
+  ): Promise<ToolReturnType> {
+    return this.func(input, runManager, parentConfig);
   }
 }
 
@@ -328,11 +420,11 @@ export class DynamicStructuredTool<
    * @deprecated Use .invoke() instead. Will be removed in 0.3.0.
    */
   async call(
-    arg: z.output<T>,
+    arg: z.output<T> | ToolCall,
     configArg?: RunnableConfig | Callbacks,
     /** @deprecated */
     tags?: string[]
-  ): Promise<string> {
+  ): Promise<ToolReturnType> {
     const config = parseCallbackConfigArg(configArg);
     if (config.runName === undefined) {
       config.runName = this.name;
@@ -341,11 +433,11 @@ export class DynamicStructuredTool<
   }
 
   protected _call(
-    arg: z.output<T>,
+    arg: z.output<T> | ToolCall,
     runManager?: CallbackManagerForToolRun,
-    config?: RunnableConfig
-  ): Promise<string> {
-    return this.func(arg, runManager, config);
+    parentConfig?: RunnableConfig
+  ): Promise<ToolReturnType> {
+    return this.func(arg, runManager, parentConfig);
   }
 }
 
@@ -365,6 +457,7 @@ export abstract class BaseToolkit {
 /**
  * Parameters for the tool function.
  * @template {ZodAny} RunInput The input schema for the tool.
+ * @template {any} RunOutput The output type for the tool.
  */
 interface ToolWrapperParams<RunInput extends ZodAny = ZodAny>
   extends ToolParams {
@@ -384,35 +477,114 @@ interface ToolWrapperParams<RunInput extends ZodAny = ZodAny>
    * for.
    */
   schema?: RunInput;
+  /**
+   * The tool response format.
+   *
+   * If "content" then the output of the tool is interpreted as the contents of a
+   * ToolMessage. If "content_and_artifact" then the output is expected to be a
+   * two-tuple corresponding to the (content, artifact) of a ToolMessage.
+   *
+   * @default "content"
+   */
+  responseFormat?: ResponseFormat;
 }
 
 /**
  * Creates a new StructuredTool instance with the provided function, name, description, and schema.
  * @function
- * @template {ZodAny} RunInput The input schema for the tool.
+ * @template {RunInput extends ZodAny = ZodAny} RunInput The input schema for the tool. This corresponds to the input type when the tool is invoked.
+ * @template {RunOutput = any} RunOutput The output type for the tool. This corresponds to the output type when the tool is invoked.
+ * @template {FuncInput extends z.infer<RunInput> | ToolCall = z.infer<RunInput>} FuncInput The input type for the function.
  *
- * @param {RunnableFunc<RunInput, string>} func - The function to invoke when the tool is called.
+ * @param {RunnableFunc<z.infer<RunInput> | ToolCall, RunOutput>} func - The function to invoke when the tool is called.
  * @param fields - An object containing the following properties:
  * @param {string} fields.name The name of the tool.
  * @param {string | undefined} fields.description The description of the tool. Defaults to either the description on the Zod schema, or `${fields.name} tool`.
  * @param {z.ZodObject<any, any, any, any>} fields.schema The Zod schema defining the input for the tool.
  *
- * @returns {StructuredTool<RunInput, string>} A new StructuredTool instance.
+ * @returns {DynamicStructuredTool<RunInput, RunOutput>} A new StructuredTool instance.
  */
-export function tool<RunInput extends ZodAny = ZodAny>(
-  func: RunnableFunc<z.infer<RunInput>, string>,
-  fields: ToolWrapperParams<RunInput>
-) {
+export function tool<T extends ZodAny = ZodAny>(
+  func: RunnableFunc<z.output<T>, ToolReturnType>,
+  fields: ToolWrapperParams<T>
+): DynamicStructuredTool<T> {
   const schema =
     fields.schema ??
     z.object({ input: z.string().optional() }).transform((obj) => obj.input);
 
   const description =
     fields.description ?? schema.description ?? `${fields.name} tool`;
-  return new DynamicStructuredTool<RunInput>({
+  return new DynamicStructuredTool({
     name: fields.name,
     description,
-    schema: schema as RunInput,
-    func: async (input, _runManager, config) => func(input, config),
+    schema: schema as T,
+    // TODO: Consider moving into DynamicStructuredTool constructor
+    func: async (input, runManager, config) => {
+      return new Promise((resolve, reject) => {
+        const childConfig = patchConfig(config, {
+          callbacks: runManager?.getChild(),
+        });
+        void AsyncLocalStorageProviderSingleton.getInstance().run(
+          childConfig,
+          async () => {
+            try {
+              resolve(func(input, childConfig));
+            } catch (e) {
+              reject(e);
+            }
+          }
+        );
+      });
+    },
+    responseFormat: fields.responseFormat,
   });
+}
+
+function _isToolCall(toolCall?: unknown): toolCall is ToolCall {
+  return !!(
+    toolCall &&
+    typeof toolCall === "object" &&
+    "type" in toolCall &&
+    toolCall.type === "tool_call"
+  );
+}
+
+function _formatToolOutput(params: {
+  content: unknown;
+  name: string;
+  artifact?: unknown;
+  toolCallId?: string;
+}): ToolReturnType {
+  const { content, artifact, toolCallId } = params;
+  if (toolCallId) {
+    if (
+      typeof content === "string" ||
+      (Array.isArray(content) &&
+        content.every((item) => typeof item === "object"))
+    ) {
+      return new ToolMessage({
+        content,
+        artifact,
+        tool_call_id: toolCallId,
+        name: params.name,
+      });
+    } else {
+      return new ToolMessage({
+        content: _stringify(content),
+        artifact,
+        tool_call_id: toolCallId,
+        name: params.name,
+      });
+    }
+  } else {
+    return content;
+  }
+}
+
+function _stringify(content: unknown): string {
+  try {
+    return JSON.stringify(content, null, 2);
+  } catch (_noOp) {
+    return `${content}`;
+  }
 }

@@ -240,9 +240,9 @@ export class RunnableWithMessageHistory<
   async _enterHistory(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     input: any,
-    kwargs?: { config?: RunnableConfig }
+    kwargs?: RunnableConfig
   ): Promise<BaseMessage[]> {
-    const history = kwargs?.config?.configurable?.messageHistory;
+    const history = kwargs?.configurable?.messageHistory;
     const messages = await history.getMessages();
     if (this.historyMessagesKey === undefined) {
       return messages.concat(this._getInputMessages(input));

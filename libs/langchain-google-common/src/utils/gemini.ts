@@ -21,6 +21,7 @@ import {
   ChatResult,
   Generation,
 } from "@langchain/core/outputs";
+import { ToolCallChunk } from "@langchain/core/messages/tool";
 import type {
   GoogleLLMResponse,
   GoogleAIModelParams,
@@ -597,13 +598,14 @@ export function responseToChatGenerations(
   if (ret.every((item) => typeof item.message.content === "string")) {
     const combinedContent = ret.map((item) => item.message.content).join("");
     const combinedText = ret.map((item) => item.text).join("");
-    const toolCallChunks = ret[
+    const toolCallChunks: ToolCallChunk[] | undefined = ret[
       ret.length - 1
     ]?.message.additional_kwargs?.tool_calls?.map((toolCall, i) => ({
       name: toolCall.function.name,
       args: toolCall.function.arguments,
       id: toolCall.id,
       index: i,
+      type: "tool_call_chunk",
     }));
     let usageMetadata: UsageMetadata | undefined;
     if ("usageMetadata" in response.data) {
@@ -653,6 +655,7 @@ export function partsToBaseMessageFields(parts: GeminiPart[]): AIMessageFields {
           name: tool.function.name,
           args: JSON.parse(tool.function.arguments),
           id: tool.id,
+          type: "tool_call",
         });
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (e: any) {
@@ -661,6 +664,7 @@ export function partsToBaseMessageFields(parts: GeminiPart[]): AIMessageFields {
           args: JSON.parse(tool.function.arguments),
           id: tool.id,
           error: e.message,
+          type: "invalid_tool_call",
         });
       }
     }
@@ -707,9 +711,9 @@ export function validateGeminiParams(params: GoogleAIModelParams): void {
 
   if (
     params.temperature &&
-    (params.temperature < 0 || params.temperature > 1)
+    (params.temperature < 0 || params.temperature > 2)
   ) {
-    throw new Error("`temperature` must be in the range of [0.0,1.0]");
+    throw new Error("`temperature` must be in the range of [0.0,2.0]");
   }
 
   if (params.topP && (params.topP < 0 || params.topP > 1)) {

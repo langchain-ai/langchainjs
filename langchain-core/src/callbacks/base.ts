@@ -30,6 +30,7 @@ export interface BaseCallbackHandlerInput {
   ignoreChain?: boolean;
   ignoreAgent?: boolean;
   ignoreRetriever?: boolean;
+  ignoreCustomEvent?: boolean;
   _awaitHandler?: boolean;
   raiseError?: boolean;
 }
@@ -66,7 +67,7 @@ abstract class BaseCallbackHandlerMethodsClass {
     extraParams?: Record<string, unknown>,
     tags?: string[],
     metadata?: Record<string, unknown>,
-    name?: string
+    runName?: string
   ): // eslint-disable-next-line @typescript-eslint/no-explicit-any
   Promise<any> | any;
 
@@ -123,7 +124,7 @@ abstract class BaseCallbackHandlerMethodsClass {
     extraParams?: Record<string, unknown>,
     tags?: string[],
     metadata?: Record<string, unknown>,
-    name?: string
+    runName?: string
   ): // eslint-disable-next-line @typescript-eslint/no-explicit-any
   Promise<any> | any;
 
@@ -139,7 +140,7 @@ abstract class BaseCallbackHandlerMethodsClass {
     tags?: string[],
     metadata?: Record<string, unknown>,
     runType?: string,
-    name?: string
+    runName?: string
   ): // eslint-disable-next-line @typescript-eslint/no-explicit-any
   Promise<any> | any;
 
@@ -178,7 +179,7 @@ abstract class BaseCallbackHandlerMethodsClass {
     parentRunId?: string,
     tags?: string[],
     metadata?: Record<string, unknown>,
-    name?: string
+    runName?: string
   ): // eslint-disable-next-line @typescript-eslint/no-explicit-any
   Promise<any> | any;
 
@@ -197,7 +198,8 @@ abstract class BaseCallbackHandlerMethodsClass {
    * Called at the end of a Tool run, with the tool output and the run ID.
    */
   handleToolEnd?(
-    output: string,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    output: any,
     runId: string,
     parentRunId?: string,
     tags?: string[]
@@ -257,6 +259,17 @@ abstract class BaseCallbackHandlerMethodsClass {
     runId: string,
     parentRunId?: string,
     tags?: string[]
+  ): // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  Promise<any> | any;
+
+  handleCustomEvent?(
+    eventName: string,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    data: any,
+    runId: string,
+    tags?: string[],
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    metadata?: Record<string, any>
   ): // eslint-disable-next-line @typescript-eslint/no-explicit-any
   Promise<any> | any;
 }
@@ -332,6 +345,8 @@ export abstract class BaseCallbackHandler
 
   ignoreRetriever = false;
 
+  ignoreCustomEvent = false;
+
   raiseError = false;
 
   awaitHandlers =
@@ -345,6 +360,8 @@ export abstract class BaseCallbackHandler
       this.ignoreChain = input.ignoreChain ?? this.ignoreChain;
       this.ignoreAgent = input.ignoreAgent ?? this.ignoreAgent;
       this.ignoreRetriever = input.ignoreRetriever ?? this.ignoreRetriever;
+      this.ignoreCustomEvent =
+        input.ignoreCustomEvent ?? this.ignoreCustomEvent;
       this.raiseError = input.raiseError ?? this.raiseError;
       this.awaitHandlers =
         this.raiseError || (input._awaitHandler ?? this.awaitHandlers);

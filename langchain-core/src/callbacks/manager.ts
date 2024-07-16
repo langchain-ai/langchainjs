@@ -494,7 +494,8 @@ export class CallbackManagerForToolRun
     );
   }
 
-  async handleToolEnd(output: string): Promise<void> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async handleToolEnd(output: any): Promise<void> {
     await Promise.all(
       this.handlers.map((handler) =>
         consumeCallback(async () => {
@@ -858,6 +859,42 @@ export class CallbackManager
       this.metadata,
       this.inheritableMetadata,
       this._parentRunId
+    );
+  }
+
+  async handleCustomEvent?(
+    eventName: string,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    data: any,
+    runId: string,
+    _tags?: string[],
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    _metadata?: Record<string, any>
+  ): // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  Promise<any> {
+    await Promise.all(
+      this.handlers.map((handler) =>
+        consumeCallback(async () => {
+          if (!handler.ignoreCustomEvent) {
+            try {
+              await handler.handleCustomEvent?.(
+                eventName,
+                data,
+                runId,
+                this.tags,
+                this.metadata
+              );
+            } catch (err) {
+              console.error(
+                `Error in handler ${handler.constructor.name}, handleCustomEvent: ${err}`
+              );
+              if (handler.raiseError) {
+                throw err;
+              }
+            }
+          }
+        }, handler.awaitHandlers)
+      )
     );
   }
 

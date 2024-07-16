@@ -187,6 +187,7 @@ export class AIMessageChunk extends BaseMessageChunk {
             name: toolCallChunk.name ?? "",
             args: parsedArgs,
             id: toolCallChunk.id,
+            type: "tool_call",
           });
         } catch (e) {
           invalidToolCalls.push({
@@ -194,6 +195,7 @@ export class AIMessageChunk extends BaseMessageChunk {
             args: toolCallChunk.args,
             id: toolCallChunk.id,
             error: "Malformed args.",
+            type: "invalid_tool_call",
           });
         }
       }

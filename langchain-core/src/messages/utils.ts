@@ -82,7 +82,11 @@ export function getBufferString(
       throw new Error(`Got unsupported message type: ${m._getType()}`);
     }
     const nameStr = m.name ? `${m.name}, ` : "";
-    string_messages.push(`${role}: ${nameStr}${m.content}`);
+    const readableContent =
+      typeof m.content === "string"
+        ? m.content
+        : JSON.stringify(m.content, null, 2);
+    string_messages.push(`${role}: ${nameStr}${readableContent}`);
   }
   return string_messages.join("\n");
 }
@@ -188,6 +192,7 @@ export function convertToChunk(message: BaseMessage) {
         ...aiChunkFields,
         tool_call_chunks: aiChunkFields.tool_calls?.map((tc) => ({
           ...tc,
+          type: "tool_call_chunk",
           index: undefined,
           args: JSON.stringify(tc.args),
         })),

@@ -41,6 +41,7 @@ import {
   Runnable,
   RunnablePassthrough,
   RunnableSequence,
+  RunnableToolLike,
 } from "@langchain/core/runnables";
 import {
   JsonOutputParser,
@@ -54,6 +55,7 @@ import {
   parseToolCall,
 } from "@langchain/core/output_parsers/openai_tools";
 import { zodToJsonSchema } from "zod-to-json-schema";
+import { ToolCallChunk } from "@langchain/core/messages/tool";
 import type {
   AzureOpenAIInput,
   OpenAICallOptions,
@@ -183,7 +185,7 @@ function _convertDeltaToMessageChunk(
   if (role === "user") {
     return new HumanMessageChunk({ content });
   } else if (role === "assistant") {
-    const toolCallChunks = [];
+    const toolCallChunks: ToolCallChunk[] = [];
     if (Array.isArray(delta.tool_calls)) {
       for (const rawToolCall of delta.tool_calls) {
         toolCallChunks.push({
@@ -191,6 +193,7 @@ function _convertDeltaToMessageChunk(
           args: rawToolCall.function?.arguments,
           id: rawToolCall.id,
           index: rawToolCall.index,
+          type: "tool_call_chunk",
         });
       }
     }
@@ -530,7 +533,11 @@ export class ChatOpenAI<
   }
 
   override bindTools(
-    tools: (Record<string, unknown> | StructuredToolInterface)[],
+    tools: (
+      | Record<string, unknown>
+      | StructuredToolInterface
+      | RunnableToolLike
+    )[],
     kwargs?: Partial<CallOptions>
   ): Runnable<BaseLanguageModelInput, AIMessageChunk, CallOptions> {
     return this.bind({
@@ -543,7 +550,10 @@ export class ChatOpenAI<
    * Get the parameters used to invoke the model
    */
   invocationParams(
-    options?: this["ParsedCallOptions"]
+    options?: this["ParsedCallOptions"],
+    extra?: {
+      streaming?: boolean;
+    }
   ): Omit<OpenAIClient.Chat.ChatCompletionCreateParams, "messages"> {
     function isStructuredToolArray(
       tools?: unknown[]
@@ -558,7 +568,7 @@ export class ChatOpenAI<
     let streamOptionsConfig = {};
     if (options?.stream_options !== undefined) {
       streamOptionsConfig = { stream_options: options.stream_options };
-    } else if (this.streamUsage && this.streaming) {
+    } else if (this.streamUsage && (this.streaming || extra?.streaming)) {
       streamOptionsConfig = { stream_options: { include_usage: true } };
     }
     const params: Omit<
@@ -616,7 +626,9 @@ export class ChatOpenAI<
     const messagesMapped: OpenAICompletionParam[] =
       convertMessagesToOpenAIParams(messages);
     const params = {
-      ...this.invocationParams(options),
+      ...this.invocationParams(options, {
+        streaming: true,
+      }),
       messages: messagesMapped,
       stream: true as const,
     };
@@ -662,8 +674,7 @@ export class ChatOpenAI<
         generationInfo,
       });
       yield generationChunk;
-      // eslint-disable-next-line no-void
-      void runManager?.handleLLMNewToken(
+      await runManager?.handleLLMNewToken(
         generationChunk.text ?? "",
         newTokenIndices,
         undefined,
