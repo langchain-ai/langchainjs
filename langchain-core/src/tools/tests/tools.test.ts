@@ -101,7 +101,7 @@ test("Returns tool message if responseFormat is content_and_artifact and returns
 });
 
 test("Tool can accept single string input", async () => {
-  const stringTool = tool(
+  const stringTool = tool<z.ZodString>(
     (input: string): string => {
       return `${input}a`;
     },

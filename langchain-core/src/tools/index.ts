@@ -457,8 +457,7 @@ export abstract class BaseToolkit {
 
 /**
  * Parameters for the tool function.
- * @template {ZodObjectAny} RunInput The input schema for the tool.
- * @template {any} RunOutput The output type for the tool.
+ * @template {ZodObjectAny | z.ZodString = ZodObjectAny} RunInput The input schema for the tool. Either any Zod object, or a Zod string.
  */
 interface ToolWrapperParams<
   RunInput extends ZodObjectAny | z.ZodString = ZodObjectAny
@@ -493,18 +492,17 @@ interface ToolWrapperParams<
 
 /**
  * Creates a new StructuredTool instance with the provided function, name, description, and schema.
- * @function
- * @template {RunInput extends ZodObjectAny = ZodObjectAny} RunInput The input schema for the tool. This corresponds to the input type when the tool is invoked.
- * @template {RunOutput = any} RunOutput The output type for the tool. This corresponds to the output type when the tool is invoked.
- * @template {FuncInput extends z.infer<RunInput> | ToolCall = z.infer<RunInput>} FuncInput The input type for the function.
  *
- * @param {RunnableFunc<z.infer<RunInput> | ToolCall, RunOutput>} func - The function to invoke when the tool is called.
- * @param fields - An object containing the following properties:
+ * @function
+ * @template {ZodObjectAny | z.ZodString = ZodObjectAny} T The input schema for the tool. Either any Zod object, or a Zod string.
+ *
+ * @param {RunnableFunc<z.output<T>, ToolReturnType>} func - The function to invoke when the tool is called.
+ * @param {ToolWrapperParams<T>} fields - An object containing the following properties:
  * @param {string} fields.name The name of the tool.
  * @param {string | undefined} fields.description The description of the tool. Defaults to either the description on the Zod schema, or `${fields.name} tool`.
- * @param {z.ZodObject<any, any, any, any>} fields.schema The Zod schema defining the input for the tool.
+ * @param {ZodObjectAny | z.ZodString | undefined} fields.schema The Zod schema defining the input for the tool. If undefined, it will default to a Zod string schema.
  *
- * @returns {DynamicStructuredTool<RunInput, RunOutput>} A new StructuredTool instance.
+ * @returns {DynamicStructuredTool<T>} A new StructuredTool instance.
  */
 export function tool<T extends z.ZodString = z.ZodString>(
   func: RunnableFunc<z.output<T>, ToolReturnType>,
