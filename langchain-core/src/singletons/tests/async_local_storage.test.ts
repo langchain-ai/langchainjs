@@ -166,7 +166,7 @@ test("Runnable streamEvents method with streaming nested in a RunnableLambda", a
     const nestedLambdaWithoutOverriddenCallbacks = RunnableLambda.from(
       async (_: string, config) => {
         const innerCallbackManager = await getCallbackManagerForConfig(
-          asyncLocalStorage.getStore()
+          AsyncLocalStorageProviderSingleton.getRunnableConfig()
         );
         expect(innerCallbackManager?.getParentRunId()).toEqual(innerRunId2);
         expect(config?.callbacks?.handlers).toContain(dummyHandler);
