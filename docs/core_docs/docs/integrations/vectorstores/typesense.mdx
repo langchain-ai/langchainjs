@@ -9,14 +9,17 @@ import IntegrationInstallTooltip from "@mdx_components/integration_install_toolt
 <IntegrationInstallTooltip></IntegrationInstallTooltip>
 
 ```bash npm2yarn
-npm install @langchain/openai
+npm install @langchain/openai @langchain/community
 ```
 
 ```typescript
-import { Typesense, TypesenseConfig } from "langchain/vectorstores/typesense";
+import {
+  Typesense,
+  TypesenseConfig,
+} from "@lanchain/community/vectorstores/typesense";
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { Client } from "typesense";
-import { Document } from "langchain/document";
+import { Document } from "@langchain/core/documents";
 
 const vectorTypesenseClient = new Client({
   nodes: [
