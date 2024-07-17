@@ -549,27 +549,28 @@ export abstract class ChatModelIntegrationTests<
 
     const prompt = ChatPromptTemplate.fromMessages([
       ["system", "You're a helpful assistant. Always use the {toolName} tool."],
-      ["human", `I want to use the UseAPI because it's faster. For the API details use the following:
+      [
+        "human",
+        `I want to use the UseAPI because it's faster. For the API details use the following:
 Service name: {serviceName}
 Endpoint name: {endpointName}
 Parameters: {parameters}
-Extraction path: {extractionPath}`],
-    ])
+Extraction path: {extractionPath}`,
+      ],
+    ]);
 
     const modelWithTools = model.withStructuredOutput(complexSchema, {
       name: toolName,
-    })
+    });
 
-    const result = await prompt.pipe(
-      modelWithTools
-    ).invoke({
+    const result = await prompt.pipe(modelWithTools).invoke({
       toolName,
       serviceName: "MyService",
       endpointName: "MyEndpoint",
       parameters: JSON.stringify({ param1: "value1", param2: "value2" }),
       extractionPath: "Users/johndoe/data",
     });
-  
+
     expect(result.decision).toBeDefined();
     expect(result.explanation).toBeDefined();
     expect(result.apiDetails).toBeDefined();
