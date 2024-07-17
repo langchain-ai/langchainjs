@@ -53,6 +53,9 @@ export type AzureCosmosDBNoSqlCreateContainerOptions = Partial<
 
 /**
  * Initialization options for the Azure CosmosDB for NoSQL database and container.
+ * 
+ * Note that if you provides multiple vector embeddings in the vectorEmbeddingPolicy,
+ * the first one will be used for creating documents and searching.
  */
 export interface AzureCosmosDBNoSQLInitOptions {
   readonly vectorEmbeddingPolicy?: VectorEmbeddingPolicy;
@@ -176,6 +179,11 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
       ];
     }
 
+    this.embeddingKey = vectorEmbeddingPolicy.vectorEmbeddings[0].path.slice(1);
+    if (!this.embeddingKey) {
+      throw new Error("AzureCosmosDBNoSQLVectorStore requires a valid vectorEmbeddings path");
+    }
+
     // Start initialization, but don't wait for it to finish here
     this.initPromise = this.init(client, databaseName, containerName, {
       vectorEmbeddingPolicy,
@@ -246,12 +254,12 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
     vectors: number[][],
     documents: DocumentInterface[]
   ): Promise<string[]> {
+    await this.initPromise;
     const docs = vectors.map((embedding, idx) => ({
       [this.textKey]: documents[idx].pageContent,
       [this.embeddingKey]: embedding,
       [this.metadataKey]: documents[idx].metadata,
     }));
-    await this.initPromise;
 
     const ids: string[] = [];
     const results = await Promise.all(
@@ -433,11 +441,10 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
     const { container } = await database.containers.createIfNotExists({
       ...(initOptions?.createContainerOptions ?? {}),
       indexingPolicy: initOptions?.indexingPolicy,
-      vectorEmbeddingPolicy: initOptions?.vectorEmbeddingPolicy,
+      vectorEmbeddingPolicy,
       id: containerName,
     });
     this.container = container;
-    this.embeddingKey = vectorEmbeddingPolicy.vectorEmbeddings[0].path.slice(1);
   }
 
   /**
