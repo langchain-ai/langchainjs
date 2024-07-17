@@ -503,12 +503,14 @@ export function tool<T extends ZodObjectAny = ZodObjectAny>(
   fields: ToolWrapperParams<T>
 ): DynamicStructuredTool<T>;
 
-export function tool<T extends ZodObjectAny = ZodObjectAny>(
+export function tool<T extends ZodObjectAny | z.ZodString = ZodObjectAny>(
   func: RunnableFunc<z.output<T>, ToolReturnType>,
   fields: ToolWrapperParams<T>
-): DynamicStructuredTool<T> | DynamicTool {
+):
+  | DynamicStructuredTool<T extends ZodObjectAny ? T : ZodObjectAny>
+  | DynamicTool {
   // If the schema is not provided, or it's a string schema, create a DynamicTool
-  if (!fields.schema || !fields.schema.shape) {
+  if (!fields.schema || !("shape" in fields.schema) || !fields.schema.shape) {
     return new DynamicTool({
       name: fields.name,
       description:
@@ -523,10 +525,10 @@ export function tool<T extends ZodObjectAny = ZodObjectAny>(
   const description =
     fields.description ?? fields.schema.description ?? `${fields.name} tool`;
 
-  return new DynamicStructuredTool({
+  return new DynamicStructuredTool<T extends ZodObjectAny ? T : ZodObjectAny>({
     name: fields.name,
     description,
-    schema: fields.schema,
+    schema: fields.schema as T extends ZodObjectAny ? T : ZodObjectAny,
     // TODO: Consider moving into DynamicStructuredTool constructor
     func: async (input, runManager, config) => {
       return new Promise((resolve, reject) => {
