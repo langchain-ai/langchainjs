@@ -129,8 +129,8 @@ export function messageToOpenAIRole(message: BaseMessage): OpenAIRoleEnum {
 
 function openAIResponseToChatMessage(
   message: OpenAIClient.Chat.Completions.ChatCompletionMessage,
-  messageId: string,
-  rawResponse?: OpenAIClient.Chat.Completions.ChatCompletion
+  rawResponse: OpenAIClient.Chat.Completions.ChatCompletion,
+  includeRawResponse?: boolean
 ): BaseMessage {
   const rawToolCalls: OpenAIToolCall[] | undefined = message.tool_calls as
     | OpenAIToolCall[]
@@ -151,7 +151,7 @@ function openAIResponseToChatMessage(
         function_call: message.function_call,
         tool_calls: rawToolCalls,
       };
-      if (rawResponse !== undefined) {
+      if (includeRawResponse !== undefined) {
         additional_kwargs.__raw_response = rawResponse;
       }
       return new AIMessage({
@@ -159,7 +159,7 @@ function openAIResponseToChatMessage(
         tool_calls: toolCalls,
         invalid_tool_calls: invalidToolCalls,
         additional_kwargs,
-        id: messageId,
+        id: rawResponse.id,
       });
     }
     default:
@@ -170,9 +170,9 @@ function openAIResponseToChatMessage(
 function _convertDeltaToMessageChunk(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   delta: Record<string, any>,
-  messageId: string,
+  rawResponse: OpenAIClient.Chat.Completions.ChatCompletionChunk,
   defaultRole?: OpenAIRoleEnum,
-  rawResponse?: OpenAIClient.Chat.Completions.ChatCompletionChunk
+  includeRawResponse?: boolean
 ) {
   const role = delta.role ?? defaultRole;
   const content = delta.content ?? "";
@@ -188,7 +188,7 @@ function _convertDeltaToMessageChunk(
   } else {
     additional_kwargs = {};
   }
-  if (rawResponse !== undefined) {
+  if (includeRawResponse) {
     additional_kwargs.__raw_response = rawResponse;
   }
   if (role === "user") {
@@ -210,7 +210,7 @@ function _convertDeltaToMessageChunk(
       content,
       tool_call_chunks: toolCallChunks,
       additional_kwargs,
-      id: messageId,
+      id: rawResponse.id,
     });
   } else if (role === "system") {
     return new SystemMessageChunk({ content });
@@ -662,9 +662,9 @@ export class ChatOpenAI<
       }
       const chunk = _convertDeltaToMessageChunk(
         delta,
-        data.id,
+        data,
         defaultRole,
-        this.__includeRawResponse ? data : undefined
+        this.__includeRawResponse
       );
       defaultRole = delta.role ?? defaultRole;
       const newTokenIndices = {
@@ -814,8 +814,8 @@ export class ChatOpenAI<
           text,
           message: openAIResponseToChatMessage(
             part.message ?? { role: "assistant" },
-            data.id,
-            this.__includeRawResponse ? data : undefined
+            data,
+            this.__includeRawResponse
           ),
         };
         generation.generationInfo = {
