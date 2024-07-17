@@ -7,14 +7,11 @@ import { Document, DocumentInterface } from "@langchain/core/documents";
 import { maximalMarginalRelevance } from "@langchain/core/utils/math";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import {
-  BulkOperationResponse,
-  BulkOperationType,
   Container,
   ContainerRequest,
   CosmosClient,
   DatabaseRequest,
   IndexingPolicy,
-  OperationInput,
   SqlParameter,
   SqlQuerySpec,
   VectorEmbeddingPolicy,
@@ -53,7 +50,7 @@ export type AzureCosmosDBNoSqlCreateContainerOptions = Partial<
 
 /**
  * Initialization options for the Azure CosmosDB for NoSQL database and container.
- * 
+ *
  * Note that if you provides multiple vector embeddings in the vectorEmbeddingPolicy,
  * the first one will be used for creating documents and searching.
  */
@@ -78,7 +75,6 @@ export interface AzureCosmosDBNoSQLConfig
 }
 
 const USER_AGENT_PREFIX = "langchainjs-azure-cosmosdb-nosql";
-const MAX_BATCH_SIZE = 100;
 
 /**
  * Azure Cosmos DB for NoSQL vCore vector store.
@@ -181,7 +177,9 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
 
     this.embeddingKey = vectorEmbeddingPolicy.vectorEmbeddings[0].path.slice(1);
     if (!this.embeddingKey) {
-      throw new Error("AzureCosmosDBNoSQLVectorStore requires a valid vectorEmbeddings path");
+      throw new Error(
+        "AzureCosmosDBNoSQLVectorStore requires a valid vectorEmbeddings path"
+      );
     }
 
     // Start initialization, but don't wait for it to finish here
@@ -219,9 +217,7 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
     }
 
     if (query) {
-      const { resources } = await this.container.items
-        .query(query/*, { enableCrossPartitionQuery: true }*/)
-        .fetchAll();
+      const { resources } = await this.container.items.query(query).fetchAll();
       ids = resources.map((item) => item.id);
     } else {
       ids = (Array.isArray(params.ids) ? params.ids : [params.ids]) as string[];
@@ -325,20 +321,20 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
     const query = `SELECT TOP @k c.id, ${embeddings}c[@textKey] AS text, c[@metadataKey] AS metadata, VectorDistance(c[@embeddingKey], @vector) AS similarityScore FROM c ${where}ORDER BY VectorDistance(c[@embeddingKey], @vector)`;
 
     const { resources: items } = await this.container.items
-      .query({
-        query,
-        parameters: [
-          ...whereParams,
-          { name: "@k", value: k },
-          { name: "@textKey", value: this.textKey },
-          { name: "@metadataKey", value: this.metadataKey },
-          { name: "@embeddingKey", value: this.embeddingKey },
-          { name: "@vector", value: queryVector },
-        ],
-      }, {
-        maxItemCount: k,
-        // enableCrossPartitionQuery: true,
-      })
+      .query(
+        {
+          query,
+          parameters: [
+            ...whereParams,
+            { name: "@k", value: k },
+            { name: "@textKey", value: this.textKey },
+            { name: "@metadataKey", value: this.metadataKey },
+            { name: "@embeddingKey", value: this.embeddingKey },
+            { name: "@vector", value: queryVector },
+          ],
+        },
+        { maxItemCount: k }
+      )
       .fetchAll();
 
     const docsAndScores = items.map(
@@ -349,8 +345,10 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
             pageContent: item.text,
             metadata: {
               ...(item.metadata ?? {}),
-              ...(filter?.includeEmbeddings ? { [this.embeddingKey]: item.vector } : {}),
-            }
+              ...(filter?.includeEmbeddings
+                ? { [this.embeddingKey]: item.vector }
+                : {}),
+            },
           }),
           item.similarityScore,
         ] as [Document, number]

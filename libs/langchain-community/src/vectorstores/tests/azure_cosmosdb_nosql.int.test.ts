@@ -56,10 +56,13 @@ describe.skip("AzureCosmosDBNoSQLVectorStore", () => {
   });
 
   test("performs similarity search", async () => {
-    const vectorStore = new AzureCosmosDBNoSQLVectorStore(new OpenAIEmbeddings(), {
-      databaseName: DATABASE_NAME,
-      containerName: CONTAINER_NAME,
-    });
+    const vectorStore = new AzureCosmosDBNoSQLVectorStore(
+      new OpenAIEmbeddings(),
+      {
+        databaseName: DATABASE_NAME,
+        containerName: CONTAINER_NAME,
+      }
+    );
 
     expect(vectorStore).toBeDefined();
 
@@ -70,10 +73,7 @@ describe.skip("AzureCosmosDBNoSQLVectorStore", () => {
       { pageContent: "The house is open", metadata: { d: 1, e: 2 } },
     ]);
 
-    const results = await vectorStore.similaritySearch(
-      "sandwich",
-      1
-    );
+    const results = await vectorStore.similaritySearch("sandwich", 1);
 
     expect(results.length).toEqual(1);
     expect(results).toMatchObject([
@@ -116,8 +116,7 @@ describe.skip("AzureCosmosDBNoSQLVectorStore", () => {
 
     const standardRetriever = await vectorStore.asRetriever();
 
-    const standardRetrieverOutput =
-      await standardRetriever.invoke("foo");
+    const standardRetrieverOutput = await standardRetriever.invoke("foo");
     expect(output).toHaveLength(texts.length);
 
     const standardRetrieverActual = standardRetrieverOutput.map(
@@ -146,10 +145,13 @@ describe.skip("AzureCosmosDBNoSQLVectorStore", () => {
   });
 
   test("performs similarity search with filter", async () => {
-    const vectorStore = new AzureCosmosDBNoSQLVectorStore(new OpenAIEmbeddings(), {
-      databaseName: DATABASE_NAME,
-      containerName: CONTAINER_NAME,
-    });
+    const vectorStore = new AzureCosmosDBNoSQLVectorStore(
+      new OpenAIEmbeddings(),
+      {
+        databaseName: DATABASE_NAME,
+        containerName: CONTAINER_NAME,
+      }
+    );
 
     expect(vectorStore).toBeDefined();
 
@@ -160,11 +162,9 @@ describe.skip("AzureCosmosDBNoSQLVectorStore", () => {
       { pageContent: "The house is open", metadata: { d: 1, e: 2 } },
     ]);
 
-    const results = await vectorStore.similaritySearch(
-      "sandwich",
-      1,
-      { filterWhereClause: "c.metadata.d = 1" }
-    );
+    const results = await vectorStore.similaritySearch("sandwich", 1, {
+      filterWhereClause: "c.metadata.d = 1",
+    });
 
     expect(results.length).toEqual(1);
     expect(results).toMatchObject([
@@ -173,10 +173,13 @@ describe.skip("AzureCosmosDBNoSQLVectorStore", () => {
   });
 
   test("performs similarity search including vectors in the results", async () => {
-    const vectorStore = new AzureCosmosDBNoSQLVectorStore(new OpenAIEmbeddings(), {
-      databaseName: DATABASE_NAME,
-      containerName: CONTAINER_NAME,
-    });
+    const vectorStore = new AzureCosmosDBNoSQLVectorStore(
+      new OpenAIEmbeddings(),
+      {
+        databaseName: DATABASE_NAME,
+        containerName: CONTAINER_NAME,
+      }
+    );
 
     expect(vectorStore).toBeDefined();
 
@@ -201,10 +204,13 @@ describe.skip("AzureCosmosDBNoSQLVectorStore", () => {
   });
 
   test("deletes documents by id", async () => {
-    const vectorStore = new AzureCosmosDBNoSQLVectorStore(new OpenAIEmbeddings(), {
-      databaseName: DATABASE_NAME,
-      containerName: CONTAINER_NAME,
-    });
+    const vectorStore = new AzureCosmosDBNoSQLVectorStore(
+      new OpenAIEmbeddings(),
+      {
+        databaseName: DATABASE_NAME,
+        containerName: CONTAINER_NAME,
+      }
+    );
 
     const ids = await vectorStore.addDocuments([
       { pageContent: "This book is about politics", metadata: { a: 1 } },
@@ -224,10 +230,13 @@ describe.skip("AzureCosmosDBNoSQLVectorStore", () => {
   });
 
   test("deletes documents by filter", async () => {
-    const vectorStore = new AzureCosmosDBNoSQLVectorStore(new OpenAIEmbeddings(), {
-      databaseName: DATABASE_NAME,
-      containerName: CONTAINER_NAME,
-    });
+    const vectorStore = new AzureCosmosDBNoSQLVectorStore(
+      new OpenAIEmbeddings(),
+      {
+        databaseName: DATABASE_NAME,
+        containerName: CONTAINER_NAME,
+      }
+    );
 
     await vectorStore.addDocuments([
       { pageContent: "This book is about politics", metadata: { a: 1 } },
@@ -238,10 +247,12 @@ describe.skip("AzureCosmosDBNoSQLVectorStore", () => {
     ]);
 
     // Delete document matching the filter
-    await vectorStore.delete({ filter: {
-      query: "SELECT * FROM c WHERE c.metadata.a = @value",
-      parameters: [{ name: "@value", value: 1 }],
-    } });
+    await vectorStore.delete({
+      filter: {
+        query: "SELECT * FROM c WHERE c.metadata.a = @value",
+        parameters: [{ name: "@value", value: 1 }],
+      },
+    });
 
     const results = await vectorStore.similaritySearch("politics", 10);
 
@@ -250,10 +261,13 @@ describe.skip("AzureCosmosDBNoSQLVectorStore", () => {
   });
 
   test("deletes all documents", async () => {
-    const vectorStore = new AzureCosmosDBNoSQLVectorStore(new OpenAIEmbeddings(), {
-      databaseName: DATABASE_NAME,
-      containerName: CONTAINER_NAME,
-    });
+    const vectorStore = new AzureCosmosDBNoSQLVectorStore(
+      new OpenAIEmbeddings(),
+      {
+        databaseName: DATABASE_NAME,
+        containerName: CONTAINER_NAME,
+      }
+    );
 
     const documents = Array.from({ length: 101 }, (_, i) => ({
       pageContent: `Document ${i}`,
