@@ -71,6 +71,7 @@ export interface AzureCosmosDBNoSQLConfig
   readonly databaseName?: string;
   readonly containerName?: string;
   readonly textKey?: string;
+  readonly metadataKey?: string;
 }
 
 const USER_AGENT_PREFIX = "langchainjs-azure-cosmosdb-nosql";
@@ -101,6 +102,8 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
   private container: Container;
 
   private readonly textKey: string;
+
+  private readonly metadataKey: string;
 
   private embeddingKey: string;
 
@@ -141,6 +144,7 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
     const databaseName = dbConfig.databaseName ?? "vectorSearchDB";
     const containerName = dbConfig.containerName ?? "vectorSearchContainer";
     this.textKey = dbConfig.textKey ?? "text";
+    this.metadataKey = dbConfig.metadataKey ?? "metadata";
     const vectorEmbeddingPolicy = dbConfig.vectorEmbeddingPolicy ?? {
       vectorEmbeddings: [],
     };
@@ -174,8 +178,8 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
 
     // Start initialization, but don't wait for it to finish here
     this.initPromise = this.init(client, databaseName, containerName, {
-      vectorEmbeddingPolicy: dbConfig.vectorEmbeddingPolicy,
-      indexingPolicy: dbConfig.indexingPolicy,
+      vectorEmbeddingPolicy,
+      indexingPolicy,
       createContainerOptions: dbConfig.createContainerOptions,
       createDatabaseOptions: dbConfig.createDatabaseOptions,
     }).catch((error) => {
@@ -245,7 +249,7 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
     const docs = vectors.map((embedding, idx) => ({
       [this.textKey]: documents[idx].pageContent,
       [this.embeddingKey]: embedding,
-      ...documents[idx].metadata,
+      [this.metadataKey]: documents[idx].metadata,
     }));
     await this.initPromise;
 
@@ -318,9 +322,9 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
     }
 
     const embeddings = filter?.includeEmbeddings
-      ? `c.${this.embeddingKey}, `
+      ? `c[@embeddingKey] AS vector, `
       : "";
-    const query = `SELECT TOP @k c.id, ${embeddings}c.@textKey, VectorDistance(c.@embeddingKey, @vector) AS SimilarityScore FROM c${where} ORDER BY VectorDistance(c.@embeddingKey, @vector)`;
+    const query = `SELECT TOP @k c.id, ${embeddings}c[@textKey] AS text, c[@metadataKey] AS metadata, VectorDistance(c[@embeddingKey], @vector) AS similarityScore FROM c${where} ORDER BY VectorDistance(c[@embeddingKey], @vector)`;
 
     const { resources: items } = await this.container.items
       .query({
@@ -329,6 +333,7 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
           ...whereParams,
           { name: "@k", value: k },
           { name: "@textKey", value: this.textKey },
+          { name: "@metadataKey", value: this.metadataKey },
           { name: "@embeddingKey", value: this.embeddingKey },
           { name: "@vector", value: queryVector },
         ],
@@ -338,8 +343,15 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
     const docsAndScores = items.map(
       (item) =>
         [
-          new Document({ pageContent: item[this.textKey], metadata: item }),
-          item.SimilarityScore,
+          new Document({
+            id: item.id,
+            pageContent: item.text,
+            metadata: {
+              ...(item.metadata ?? {}),
+              ...(filter?.includeEmbeddings ? { vector: item.vector } : {}),
+            }
+          }),
+          item.similarityScore,
         ] as [Document, number]
     );
 
