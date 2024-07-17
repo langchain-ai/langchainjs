@@ -215,7 +215,7 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
 
     // Delete all documents
     if (!params.ids && !params.filter) {
-      query = "SELECT * FROM c";
+      query = "SELECT c.id FROM c";
     }
 
     if (query) {
