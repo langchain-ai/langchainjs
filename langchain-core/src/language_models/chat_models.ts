@@ -73,7 +73,24 @@ export type BaseChatModelParams = BaseLanguageModelParams;
 /**
  * Represents the call options for a base chat model.
  */
-export type BaseChatModelCallOptions = BaseLanguageModelCallOptions;
+export type BaseChatModelCallOptions = BaseLanguageModelCallOptions & {
+  /**
+   * Specifies the tool choice for the chat model.
+   * Provide a string representing the name of the
+   * tool (which is not one of `"auto"`, `"any"`, or `"none"`)
+   * the model should use.
+   * `"auto"` will let the model select any of the provided tools, or none.
+   * `"any"` forces the model to use one of the tools provided to it.
+   * `"none"` to not use any tools.
+   * `Record<string, any>` for a provided specific tool_choice schema.
+   * 
+   * Keep in mind not all providers support tool_choice. If `tool_choice`
+   * is passed to a model which does not support it, an error will be thrown.
+   * 
+   * @default "auto"
+   */
+  tool_choice?: string | Record<string, any> | "auto" | "any" | "none";
+}
 
 /**
  * Creates a transform stream for encoding chat message chunks.
