@@ -140,12 +140,17 @@ export function mergeContent(
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function stringifyWithDepthLimit(obj: any, depthLimit: number): string {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   function helper(obj: any, currentDepth: number): any {
-    if (typeof obj !== "object" || obj === null) {
+    if (typeof obj !== "object" || obj === null || obj === undefined) {
       return obj;
     }
     if (currentDepth >= depthLimit) {
+      if (Array.isArray(obj)) {
+        return "[Array]";
+      }
       return "[Object]";
     }
 
@@ -153,7 +158,7 @@ function stringifyWithDepthLimit(obj: any, depthLimit: number): string {
       return obj.map((item) => helper(item, currentDepth + 1));
     }
 
-    const result: any = {};
+    const result: Record<string, unknown> = {};
     for (const key of Object.keys(obj)) {
       result[key] = helper(obj[key], currentDepth + 1);
     }
@@ -267,7 +272,8 @@ export abstract class BaseMessage
   }
 
   toString() {
-    const printable = stringifyWithDepthLimit(this._printableFields, 5);
+    const printable = stringifyWithDepthLimit(this._printableFields, 4);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return `${(this.constructor as any).lc_name()} ${printable}`;
   }
 
