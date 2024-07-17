@@ -535,14 +535,12 @@ export abstract class ChatModelIntegrationTests<
     const complexSchema = z.object({
       decision: z.enum(["UseAPI", "UseFallback"]),
       explanation: z.string(),
-      apiDetails: z
-        .object({
-          serviceName: z.string(),
-          endpointName: z.string(),
-          parameters: z.record(z.unknown()),
-          extractionPath: z.string(),
-        })
-        .optional(),
+      apiDetails: z.object({
+        serviceName: z.string(),
+        endpointName: z.string(),
+        parameters: z.record(z.unknown()),
+        extractionPath: z.string(),
+      }),
     });
     const toolName = "service_tool";
 
@@ -573,7 +571,7 @@ Extraction path: {extractionPath}`,
     expect(result.decision).toBeDefined();
     expect(result.explanation).toBeDefined();
     expect(result.apiDetails).toBeDefined();
-    expect(result.apiDetails).toBeInstanceOf(Object);
+    expect(typeof result.apiDetails === "object").toBeTruthy();
   }
 
   /**
