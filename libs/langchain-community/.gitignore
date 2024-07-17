@@ -330,6 +330,14 @@ vectorstores/azure_cosmosdb.cjs
 vectorstores/azure_cosmosdb.js
 vectorstores/azure_cosmosdb.d.ts
 vectorstores/azure_cosmosdb.d.cts
+vectorstores/azure_cosmosdb_mongodb_vcore.cjs
+vectorstores/azure_cosmosdb_mongodb_vcore.js
+vectorstores/azure_cosmosdb_mongodb_vcore.d.ts
+vectorstores/azure_cosmosdb_mongodb_vcore.d.cts
+vectorstores/azure_cosmosdb_nosql.cjs
+vectorstores/azure_cosmosdb_nosql.js
+vectorstores/azure_cosmosdb_nosql.d.ts
+vectorstores/azure_cosmosdb_nosql.d.cts
 vectorstores/cassandra.cjs
 vectorstores/cassandra.js
 vectorstores/cassandra.d.ts
