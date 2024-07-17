@@ -2,7 +2,6 @@ import type { BaseMessage } from "@langchain/core/messages";
 import { AIMessageChunk } from "@langchain/core/messages";
 import type {
   ToolDefinition,
-  BaseLanguageModelCallOptions,
   BaseLanguageModelInput,
 } from "@langchain/core/language_models/base";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
@@ -10,6 +9,7 @@ import {
   type BaseChatModelParams,
   BaseChatModel,
   LangSmithParams,
+  BaseChatModelCallOptions,
 } from "@langchain/core/language_models/chat_models";
 import type {
   ToolConfiguration,
@@ -124,7 +124,7 @@ export interface ChatBedrockConverseInput
 }
 
 export interface ChatBedrockConverseCallOptions
-  extends BaseLanguageModelCallOptions,
+  extends BaseChatModelCallOptions,
     Pick<
       ChatBedrockConverseInput,
       "additionalModelRequestFields" | "streamUsage"
