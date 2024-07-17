@@ -52,8 +52,7 @@ import {
   isIterableIterator,
   isIterator,
 } from "./iter.js";
-import { ToolInputParsingException } from "../tools/tool_exception.js";
-import { _isToolCall } from "../tools/utils.js";
+import { _isToolCall, ToolInputParsingException } from "../tools/utils.js";
 import { ToolCall } from "../messages/tool.js";
 
 export { type RunnableInterface, RunnableBatchOptions };
