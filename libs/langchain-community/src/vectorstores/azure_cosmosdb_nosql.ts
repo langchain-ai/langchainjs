@@ -114,7 +114,7 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
 
     const connectionString =
       dbConfig.connectionString ??
-      getEnvironmentVariable("AZURE_COSMOSDB_CONNECTION_STRING");
+      getEnvironmentVariable("AZURE_COSMOSDB_NOSQL_CONNECTION_STRING");
 
     if (!dbConfig.client && !connectionString) {
       throw new Error(
