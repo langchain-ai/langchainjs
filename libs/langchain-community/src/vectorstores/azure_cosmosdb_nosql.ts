@@ -239,15 +239,12 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
     }));
     await this.initPromise;
 
-    const operations: OperationInput[] = docs.map((doc) => ({
-      operationType: BulkOperationType.Create,
-      resourceBody: doc,
-    }));
-    const results = await this.container.items.bulk(operations);
-    const ids = results.map(
-      (result) =>
-        (result.resourceBody?.id as string) ?? "error: could not create item"
-    );
+    const ids: string[] = [];
+    const results = await Promise.all(docs.map((doc) => this.container.items.create(doc)));
+
+    for (const result of results) {
+      ids.push(result.resource?.id ?? "error: could not create item");
+    }
 
     return ids;
   }
