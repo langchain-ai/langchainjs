@@ -5,6 +5,24 @@ import { AIMessageChunk } from "@langchain/core/messages";
 import { AzureChatOpenAI } from "../../azure/chat_models.js";
 import { ChatOpenAICallOptions } from "../../chat_models.js";
 
+beforeAll(() => {
+  if (!process.env.AZURE_OPENAI_API_KEY) {
+    process.env.AZURE_OPENAI_API_KEY = process.env.TEST_AZURE_OPENAI_API_KEY;
+  }
+  if (!process.env.AZURE_OPENAI_API_DEPLOYMENT_NAME) {
+    process.env.AZURE_OPENAI_API_DEPLOYMENT_NAME =
+      process.env.TEST_AZURE_OPENAI_API_DEPLOYMENT_NAME;
+  }
+  if (!process.env.AZURE_OPENAI_BASE_PATH) {
+    process.env.AZURE_OPENAI_BASE_PATH =
+      process.env.TEST_AZURE_OPENAI_BASE_PATH;
+  }
+  if (!process.env.AZURE_OPENAI_API_VERSION) {
+    process.env.AZURE_OPENAI_API_VERSION =
+      process.env.TEST_AZURE_OPENAI_API_VERSION;
+  }
+});
+
 class AzureChatOpenAIStandardIntegrationTests extends ChatModelIntegrationTests<
   ChatOpenAICallOptions,
   AIMessageChunk

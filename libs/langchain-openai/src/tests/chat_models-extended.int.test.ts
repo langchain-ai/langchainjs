@@ -291,3 +291,29 @@ test("Few shotting with tool calls", async () => {
   console.log(res);
   expect(res.content).toContain("24");
 });
+
+test("Test ChatOpenAI with raw response", async () => {
+  const chat = new ChatOpenAI({
+    modelName: "gpt-3.5-turbo-1106",
+    maxTokens: 128,
+    __includeRawResponse: true,
+  });
+  const message = new HumanMessage("Hello!");
+  const res = await chat.invoke([message]);
+  expect(res.additional_kwargs.__raw_response).toBeDefined();
+});
+
+test("Test ChatOpenAI with raw response", async () => {
+  const chat = new ChatOpenAI({
+    modelName: "gpt-3.5-turbo-1106",
+    maxTokens: 128,
+    __includeRawResponse: true,
+  });
+  const message = new HumanMessage("Hello!");
+  const stream = await chat.stream([message]);
+  for await (const chunk of stream) {
+    expect(
+      chunk.additional_kwargs.__raw_response || chunk.usage_metadata
+    ).toBeDefined();
+  }
+});
