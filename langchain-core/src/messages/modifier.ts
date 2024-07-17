@@ -28,4 +28,11 @@ export class RemoveMessage extends BaseMessage {
   _getType(): MessageType {
     return "remove";
   }
+
+  override get _printableFields(): Record<string, unknown> {
+    return {
+      ...super._printableFields,
+      id: this.id,
+    };
+  }
 }

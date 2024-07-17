@@ -140,6 +140,29 @@ export function mergeContent(
   }
 }
 
+function stringifyWithDepthLimit(obj: any, depthLimit: number): string {
+  function helper(obj: any, currentDepth: number): any {
+    if (typeof obj !== "object" || obj === null) {
+      return obj;
+    }
+    if (currentDepth >= depthLimit) {
+      return "[Object]";
+    }
+
+    if (Array.isArray(obj)) {
+      return obj.map((item) => helper(item, currentDepth + 1));
+    }
+
+    const result: any = {};
+    for (const key of Object.keys(obj)) {
+      result[key] = helper(obj[key], currentDepth + 1);
+    }
+    return result;
+  }
+
+  return JSON.stringify(helper(obj, 0), null, 2);
+}
+
 /**
  * Base class for all types of messages in a conversation. It includes
  * properties like `content`, `name`, and `additional_kwargs`. It also
@@ -226,6 +249,31 @@ export abstract class BaseMessage
       data: (this.toJSON() as SerializedConstructor)
         .kwargs as StoredMessageData,
     };
+  }
+
+  static lc_name() {
+    return "BaseMessage";
+  }
+
+  // Can't be protected for silly reasons
+  get _printableFields(): Record<string, unknown> {
+    return {
+      id: this.id,
+      content: this.content,
+      name: this.name,
+      additional_kwargs: this.additional_kwargs,
+      response_metadata: this.response_metadata,
+    };
+  }
+
+  toString() {
+    const printable = stringifyWithDepthLimit(this._printableFields, 5);
+    return `${(this.constructor as any).lc_name()} ${printable}`;
+  }
+
+  // Override the default behavior of console.log
+  [Symbol.for("nodejs.util.inspect.custom")]() {
+    return this.toString();
   }
 }
 
