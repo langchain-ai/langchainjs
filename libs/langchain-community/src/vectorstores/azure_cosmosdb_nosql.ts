@@ -219,7 +219,9 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
     }
 
     if (query) {
-      const { resources } = await this.container.items.query(query).fetchAll();
+      const { resources } = await this.container.items
+        .query(query/*, { enableCrossPartitionQuery: true }*/)
+        .fetchAll();
       ids = resources.map((item) => item.id);
     } else {
       ids = (Array.isArray(params.ids) ? params.ids : [params.ids]) as string[];
@@ -229,19 +231,7 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
       return;
     }
 
-    // Split ids into batches
-    const promises: Promise<BulkOperationResponse>[] = [];
-
-    while (ids.length) {
-      const batchIds = ids.splice(0, MAX_BATCH_SIZE);
-      const operations: OperationInput[] = batchIds.map((id) => ({
-        operationType: BulkOperationType.Delete,
-        id,
-      }));
-      promises.push(this.container.items.bulk(operations));
-    }
-
-    await Promise.all(promises);
+    await Promise.all(ids.map((id) => this.container.item(id).delete()));
   }
 
   /**
@@ -345,6 +335,9 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
           { name: "@embeddingKey", value: this.embeddingKey },
           { name: "@vector", value: queryVector },
         ],
+      }, {
+        maxItemCount: k,
+        // enableCrossPartitionQuery: true,
       })
       .fetchAll();
 
