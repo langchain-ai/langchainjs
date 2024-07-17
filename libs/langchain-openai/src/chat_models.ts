@@ -154,11 +154,18 @@ function openAIResponseToChatMessage(
       if (includeRawResponse !== undefined) {
         additional_kwargs.__raw_response = rawResponse;
       }
+      let response_metadata: Record<string, unknown> | undefined = undefined;
+      if (!!rawResponse.system_fingerprint) {
+        response_metadata = {
+          system_fingerprint: rawResponse.system_fingerprint,
+        };
+      }
       return new AIMessage({
         content: message.content || "",
         tool_calls: toolCalls,
         invalid_tool_calls: invalidToolCalls,
         additional_kwargs,
+        response_metadata,
         id: rawResponse.id,
       });
     }
@@ -681,6 +688,9 @@ export class ChatOpenAI<
       const generationInfo: Record<string, any> = { ...newTokenIndices };
       if (choice.finish_reason !== undefined) {
         generationInfo.finish_reason = choice.finish_reason;
+        // Only include system fingerprint in the last chunk for now
+        // to avoid concatenation issues
+        generationInfo.system_fingerprint = data.system_fingerprint;
       }
       if (this.logprobs) {
         generationInfo.logprobs = choice.logprobs;
