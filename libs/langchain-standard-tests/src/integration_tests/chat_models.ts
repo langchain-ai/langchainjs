@@ -520,6 +520,62 @@ export abstract class ChatModelIntegrationTests<
     expect(cacheValue2).toEqual(cacheValue);
   }
 
+  async testInvokeMoreComplexTools() {
+    if (!this.chatModelHasToolCalling) {
+      console.log("Test requires tool calling. Skipping...");
+      return;
+    }
+
+    const model = new this.Cls(this.constructorArgs);
+    if (!model.bindTools) {
+      throw new Error(
+        "bindTools undefined. Cannot test OpenAI formatted tool calls."
+      );
+    }
+
+    const complexSchema = z.object({
+      decision: z.enum(["UseAPI", "UseFallback"]),
+      explanation: z.string(),
+      apiDetails: z
+        .object({
+          serviceName: z.string(),
+          endpointName: z.string(),
+          parameters: z.record(z.unknown()),
+          extractionPath: z.string(),
+        })
+        .optional(),
+    });
+    const toolName = "service_tool";
+
+    const prompt = ChatPromptTemplate.fromMessages([
+      ["system", "You're a helpful assistant. Always use the {toolName} tool."],
+      ["human", `I want to use the UseAPI because it's faster. For the API details use the following:
+Service name: {serviceName}
+Endpoint name: {endpointName}
+Parameters: {parameters}
+Extraction path: {extractionPath}`],
+    ])
+
+    const modelWithTools = model.withStructuredOutput(complexSchema, {
+      name: toolName,
+    })
+
+    const result = await prompt.pipe(
+      modelWithTools
+    ).invoke({
+      toolName,
+      serviceName: "MyService",
+      endpointName: "MyEndpoint",
+      parameters: JSON.stringify({ param1: "value1", param2: "value2" }),
+      extractionPath: "Users/johndoe/data",
+    });
+  
+    expect(result.decision).toBeDefined();
+    expect(result.explanation).toBeDefined();
+    expect(result.apiDetails).toBeDefined();
+    expect(result.apiDetails).toBeInstanceOf(Object);
+  }
+
   /**
    * Run all unit tests for the chat model.
    * Each test is wrapped in a try/catch block to prevent the entire test suite from failing.
@@ -625,6 +681,13 @@ export abstract class ChatModelIntegrationTests<
     } catch (e: any) {
       allTestsPassed = false;
       console.error("testCacheComplexMessageTypes failed", e);
+    }
+
+    try {
+      await this.testInvokeMoreComplexTools();
+    } catch (e: any) {
+      allTestsPassed = false;
+      console.error("testInvokeMoreComplexTools failed", e);
     }
 
     return allTestsPassed;
