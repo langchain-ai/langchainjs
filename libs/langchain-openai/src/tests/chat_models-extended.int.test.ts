@@ -26,10 +26,18 @@ test("Test ChatOpenAI seed", async () => {
     seed: 123454930394983,
   });
   const message = new HumanMessage("Say something random!");
+
   const res = await chat.invoke([message]);
-  console.log(JSON.stringify(res));
 
   const res2 = await chat.invoke([message]);
+
+  expect(res.response_metadata.system_fingerprint).toBeDefined();
+  expect(res2.response_metadata.system_fingerprint).toBeDefined();
+
+  // These are unfortunately not consistently the same
+  delete res.response_metadata.system_fingerprint;
+  delete res2.response_metadata.system_fingerprint;
+
   const resAsObject = {
     ...res,
     id: undefined,
@@ -40,7 +48,6 @@ test("Test ChatOpenAI seed", async () => {
     id: undefined,
     lc_kwargs: { ...res2.lc_kwargs, id: undefined },
   };
-
   expect(resAsObject).toEqual(res2AsObject);
 });
 
