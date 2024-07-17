@@ -41,6 +41,28 @@ import GoogleGenerativeAI from "@examples/models/chat/googlegenerativeai.ts";
 
 ## Tool calling
 
+:::caution
+The Google GenerativeAI package as of version `0.0.23` does not allow tool schemas to contain an object with unknown properties.
+The Google VertexAI package (as of version `0.0.20`) does support this pattern.
+[Click here for the Google VertexAI package documentation](/docs/integrations/chat/google_vertex_ai).
+
+For example, the following Zod schema will throw an error:
+
+```typescript
+const schema = z.object({
+  properties: z.record(z.unknown()), // Not allowed
+});
+```
+
+or
+
+```typescript
+const schema = z.record(z.unknown()); // Not allowed
+```
+
+Instead, you should explicitly define the properties of the object field, or use the Google VertexAI package.
+:::
+
 import GoogleGenerativeAIToolCalling from "@examples/models/chat/googlegenerativeai_tools.ts";
 
 <CodeBlock language="typescript">{GoogleGenerativeAIToolCalling}</CodeBlock>

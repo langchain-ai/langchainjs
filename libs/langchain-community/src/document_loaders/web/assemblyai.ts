@@ -15,6 +15,12 @@ import { AssemblyAIOptions } from "../../types/assemblyai-types.js";
 
 export type * from "../../types/assemblyai-types.js";
 
+const defaultOptions = {
+  userAgent: {
+    integration: { name: "LangChainJS", version: "1.0.1" },
+  },
+};
+
 /**
  * Base class for AssemblyAI loaders.
  */
@@ -39,7 +45,10 @@ abstract class AssemblyAILoader extends BaseDocumentLoader {
       throw new Error("No AssemblyAI API key provided");
     }
 
-    this.client = new AssemblyAI(options as BaseServiceParams);
+    this.client = new AssemblyAI({
+      ...defaultOptions,
+      ...options,
+    } as BaseServiceParams);
   }
 }
 

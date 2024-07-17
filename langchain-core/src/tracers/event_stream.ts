@@ -608,6 +608,27 @@ export class EventStreamCallbackHandler extends BaseTracer {
     );
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async handleCustomEvent(eventName: string, data: any, runId: string) {
+    const runInfo = this.runInfoMap.get(runId);
+    if (runInfo === undefined) {
+      throw new Error(
+        `handleCustomEvent: Run ID ${runId} not found in run map.`
+      );
+    }
+    await this.send(
+      {
+        event: "on_custom_event",
+        run_id: runId,
+        name: eventName,
+        tags: runInfo.tags,
+        metadata: runInfo.metadata,
+        data,
+      },
+      runInfo
+    );
+  }
+
   async finish() {
     const pendingPromises = [...this.tappedPromises.values()];
     void Promise.all(pendingPromises).finally(() => {

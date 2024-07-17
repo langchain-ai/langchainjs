@@ -41,6 +41,7 @@ import {
   Runnable,
   RunnablePassthrough,
   RunnableSequence,
+  RunnableToolLike,
 } from "@langchain/core/runnables";
 import {
   JsonOutputParser,
@@ -54,6 +55,7 @@ import {
   parseToolCall,
 } from "@langchain/core/output_parsers/openai_tools";
 import { zodToJsonSchema } from "zod-to-json-schema";
+import { ToolCallChunk } from "@langchain/core/messages/tool";
 import type {
   AzureOpenAIInput,
   OpenAICallOptions,
@@ -127,7 +129,8 @@ export function messageToOpenAIRole(message: BaseMessage): OpenAIRoleEnum {
 
 function openAIResponseToChatMessage(
   message: OpenAIClient.Chat.Completions.ChatCompletionMessage,
-  messageId: string
+  rawResponse: OpenAIClient.Chat.Completions.ChatCompletion,
+  includeRawResponse?: boolean
 ): BaseMessage {
   const rawToolCalls: OpenAIToolCall[] | undefined = message.tool_calls as
     | OpenAIToolCall[]
@@ -144,15 +147,26 @@ function openAIResponseToChatMessage(
           invalidToolCalls.push(makeInvalidToolCall(rawToolCall, e.message));
         }
       }
+      const additional_kwargs: Record<string, unknown> = {
+        function_call: message.function_call,
+        tool_calls: rawToolCalls,
+      };
+      if (includeRawResponse !== undefined) {
+        additional_kwargs.__raw_response = rawResponse;
+      }
+      let response_metadata: Record<string, unknown> | undefined;
+      if (rawResponse.system_fingerprint) {
+        response_metadata = {
+          system_fingerprint: rawResponse.system_fingerprint,
+        };
+      }
       return new AIMessage({
         content: message.content || "",
         tool_calls: toolCalls,
         invalid_tool_calls: invalidToolCalls,
-        additional_kwargs: {
-          function_call: message.function_call,
-          tool_calls: rawToolCalls,
-        },
-        id: messageId,
+        additional_kwargs,
+        response_metadata,
+        id: rawResponse.id,
       });
     }
     default:
@@ -163,12 +177,13 @@ function openAIResponseToChatMessage(
 function _convertDeltaToMessageChunk(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   delta: Record<string, any>,
-  messageId: string,
-  defaultRole?: OpenAIRoleEnum
+  rawResponse: OpenAIClient.Chat.Completions.ChatCompletionChunk,
+  defaultRole?: OpenAIRoleEnum,
+  includeRawResponse?: boolean
 ) {
   const role = delta.role ?? defaultRole;
   const content = delta.content ?? "";
-  let additional_kwargs;
+  let additional_kwargs: Record<string, unknown>;
   if (delta.function_call) {
     additional_kwargs = {
       function_call: delta.function_call,
@@ -180,10 +195,13 @@ function _convertDeltaToMessageChunk(
   } else {
     additional_kwargs = {};
   }
+  if (includeRawResponse) {
+    additional_kwargs.__raw_response = rawResponse;
+  }
   if (role === "user") {
     return new HumanMessageChunk({ content });
   } else if (role === "assistant") {
-    const toolCallChunks = [];
+    const toolCallChunks: ToolCallChunk[] = [];
     if (Array.isArray(delta.tool_calls)) {
       for (const rawToolCall of delta.tool_calls) {
         toolCallChunks.push({
@@ -191,6 +209,7 @@ function _convertDeltaToMessageChunk(
           args: rawToolCall.function?.arguments,
           id: rawToolCall.id,
           index: rawToolCall.index,
+          type: "tool_call_chunk",
         });
       }
     }
@@ -198,7 +217,7 @@ function _convertDeltaToMessageChunk(
       content,
       tool_call_chunks: toolCallChunks,
       additional_kwargs,
-      id: messageId,
+      id: rawResponse.id,
     });
   } else if (role === "system") {
     return new SystemMessageChunk({ content });
@@ -412,6 +431,8 @@ export class ChatOpenAI<
 
   organization?: string;
 
+  __includeRawResponse?: boolean;
+
   protected client: OpenAIClient;
 
   protected clientConfig: ClientOptions;
@@ -482,6 +503,7 @@ export class ChatOpenAI<
     this.stop = fields?.stopSequences ?? fields?.stop;
     this.stopSequences = this?.stop;
     this.user = fields?.user;
+    this.__includeRawResponse = fields?.__includeRawResponse;
 
     if (this.azureOpenAIApiKey || this.azureADTokenProvider) {
       if (!this.azureOpenAIApiInstanceName && !this.azureOpenAIBasePath) {
@@ -530,7 +552,11 @@ export class ChatOpenAI<
   }
 
   override bindTools(
-    tools: (Record<string, unknown> | StructuredToolInterface)[],
+    tools: (
+      | Record<string, unknown>
+      | StructuredToolInterface
+      | RunnableToolLike
+    )[],
     kwargs?: Partial<CallOptions>
   ): Runnable<BaseLanguageModelInput, AIMessageChunk, CallOptions> {
     return this.bind({
@@ -641,7 +667,12 @@ export class ChatOpenAI<
       if (!delta) {
         continue;
       }
-      const chunk = _convertDeltaToMessageChunk(delta, data.id, defaultRole);
+      const chunk = _convertDeltaToMessageChunk(
+        delta,
+        data,
+        defaultRole,
+        this.__includeRawResponse
+      );
       defaultRole = delta.role ?? defaultRole;
       const newTokenIndices = {
         prompt: options.promptIndex ?? 0,
@@ -657,6 +688,9 @@ export class ChatOpenAI<
       const generationInfo: Record<string, any> = { ...newTokenIndices };
       if (choice.finish_reason !== undefined) {
         generationInfo.finish_reason = choice.finish_reason;
+        // Only include system fingerprint in the last chunk for now
+        // to avoid concatenation issues
+        generationInfo.system_fingerprint = data.system_fingerprint;
       }
       if (this.logprobs) {
         generationInfo.logprobs = choice.logprobs;
@@ -790,7 +824,8 @@ export class ChatOpenAI<
           text,
           message: openAIResponseToChatMessage(
             part.message ?? { role: "assistant" },
-            data.id
+            data,
+            this.__includeRawResponse
           ),
         };
         generation.generationInfo = {

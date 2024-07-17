@@ -427,12 +427,9 @@ export class PrismaVectorStore<
           switch (OpMap[opNameKey]) {
             case OpMap.notIn:
             case OpMap.in: {
-              if (
-                !Array.isArray(value) ||
-                !value.every((v) => typeof v === "string")
-              ) {
+              if (!Array.isArray(value)) {
                 throw new Error(
-                  `Invalid filter: IN operator requires an array of strings. Received: ${JSON.stringify(
+                  `Invalid filter: IN operator requires an array. Received: ${JSON.stringify(
                     value,
                     null,
                     2

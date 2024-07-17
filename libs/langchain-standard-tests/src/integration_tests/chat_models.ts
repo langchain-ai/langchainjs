@@ -7,11 +7,13 @@ import {
   HumanMessage,
   ToolMessage,
   UsageMetadata,
+  getBufferString,
 } from "@langchain/core/messages";
 import { z } from "zod";
 import { StructuredTool } from "@langchain/core/tools";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
+import { RunnableLambda } from "@langchain/core/runnables";
 import {
   BaseChatModelsTests,
   BaseChatModelsTestsFields,
@@ -438,6 +440,86 @@ export abstract class ChatModelIntegrationTests<
     expect(tool_calls[0].name).toBe("math_addition");
   }
 
+  async testBindToolsWithRunnableToolLike() {
+    if (!this.chatModelHasToolCalling) {
+      console.log("Test requires tool calling. Skipping...");
+      return;
+    }
+
+    const model = new this.Cls(this.constructorArgs);
+    if (!model.bindTools) {
+      throw new Error(
+        "bindTools undefined. Cannot test OpenAI formatted tool calls."
+      );
+    }
+
+    const runnableLike = RunnableLambda.from((_) => {
+      // no-op
+    }).asTool({
+      name: "math_addition",
+      description: adderSchema.description,
+      schema: adderSchema,
+    });
+
+    const modelWithTools = model.bindTools([runnableLike]);
+
+    const result: AIMessage = await MATH_ADDITION_PROMPT.pipe(
+      modelWithTools
+    ).invoke({
+      toolName: "math_addition",
+    });
+    expect(result.tool_calls).toHaveLength(1);
+    if (!result.tool_calls) {
+      throw new Error("result.tool_calls is undefined");
+    }
+    const { tool_calls } = result;
+    expect(tool_calls[0].name).toBe("math_addition");
+  }
+
+  async testCacheComplexMessageTypes() {
+    const model = new this.Cls({
+      ...this.constructorArgs,
+      cache: true,
+    });
+    if (!model.cache) {
+      throw new Error("Cache not enabled");
+    }
+
+    const humanMessage = new HumanMessage({
+      content: [
+        {
+          type: "text",
+          text: "Hello there!",
+        },
+      ],
+    });
+    const prompt = getBufferString([humanMessage]);
+    const llmKey = model._getSerializedCacheKeyParametersForCall({} as any);
+
+    // Invoke the model to trigger a cache update.
+    await model.invoke([humanMessage]);
+    const cacheValue = await model.cache.lookup(prompt, llmKey);
+
+    // Ensure only one generation was added to the cache.
+    expect(cacheValue !== null).toBeTruthy();
+    if (!cacheValue) return;
+    expect(cacheValue).toHaveLength(1);
+
+    expect("message" in cacheValue[0]).toBeTruthy();
+    if (!("message" in cacheValue[0])) return;
+    const cachedMessage = cacheValue[0].message as AIMessage;
+
+    // Invoke the model again with the same prompt, triggering a cache hit.
+    const result = await model.invoke([humanMessage]);
+
+    expect(result.content).toBe(cacheValue[0].text);
+    expect(result).toEqual(cachedMessage);
+
+    // Verify a second generation was not added to the cache.
+    const cacheValue2 = await model.cache.lookup(prompt, llmKey);
+    expect(cacheValue2).toEqual(cacheValue);
+  }
+
   /**
    * Run all unit tests for the chat model.
    * Each test is wrapped in a try/catch block to prevent the entire test suite from failing.
@@ -529,6 +611,20 @@ export abstract class ChatModelIntegrationTests<
     } catch (e: any) {
       allTestsPassed = false;
       console.error("testBindToolsWithOpenAIFormattedTools failed", e);
+    }
+
+    try {
+      await this.testBindToolsWithRunnableToolLike();
+    } catch (e: any) {
+      allTestsPassed = false;
+      console.error("testBindToolsWithRunnableToolLike failed", e);
+    }
+
+    try {
+      await this.testCacheComplexMessageTypes();
+    } catch (e: any) {
+      allTestsPassed = false;
+      console.error("testCacheComplexMessageTypes failed", e);
     }
 
     return allTestsPassed;

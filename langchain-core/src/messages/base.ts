@@ -36,7 +36,8 @@ export type MessageType =
   | "generic"
   | "system"
   | "function"
-  | "tool";
+  | "tool"
+  | "remove";
 
 export type ImageDetail = "auto" | "low" | "high";
 
@@ -127,8 +128,12 @@ export function mergeContent(
     }
     // If both are arrays
   } else if (Array.isArray(secondContent)) {
-    return [...firstContent, ...secondContent];
-    // If the first content is a list and second is a string
+    return (
+      _mergeLists(firstContent, secondContent) ?? [
+        ...firstContent,
+        ...secondContent,
+      ]
+    );
   } else {
     // Otherwise, add the second content as a new element of the list
     return [...firstContent, { type: "text", text: secondContent }];
@@ -259,8 +264,12 @@ export function _mergeDicts(
         `field[${key}] already exists in the message chunk, but with a different type.`
       );
     } else if (typeof merged[key] === "string") {
-      merged[key] = (merged[key] as string) + value;
-    } else if (!Array.isArray(merged[key]) && typeof merged[key] === "object") {
+      if (key === "type") {
+        // Do not merge 'type' fields
+        continue;
+      }
+      merged[key] += value;
+    } else if (typeof merged[key] === "object" && !Array.isArray(merged[key])) {
       merged[key] = _mergeDicts(merged[key], value);
     } else if (Array.isArray(merged[key])) {
       merged[key] = _mergeLists(merged[key], value);
@@ -297,11 +306,47 @@ export function _mergeLists(left?: any[], right?: any[]) {
         } else {
           merged.push(item);
         }
+      } else if (
+        typeof item === "object" &&
+        "text" in item &&
+        item.text === ""
+      ) {
+        // No-op - skip empty text blocks
+        continue;
       } else {
         merged.push(item);
       }
     }
     return merged;
+  }
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function _mergeObj<T = any>(
+  left: T | undefined,
+  right: T | undefined
+): T {
+  if (!left && !right) {
+    throw new Error("Cannot merge two undefined objects.");
+  }
+  if (!left || !right) {
+    return left || (right as T);
+  } else if (typeof left !== typeof right) {
+    throw new Error(
+      `Cannot merge objects of different types.\nLeft ${typeof left}\nRight ${typeof right}`
+    );
+  } else if (typeof left === "string" && typeof right === "string") {
+    return (left + right) as T;
+  } else if (Array.isArray(left) && Array.isArray(right)) {
+    return _mergeLists(left, right) as T;
+  } else if (typeof left === "object" && typeof right === "object") {
+    return _mergeDicts(left, right) as T;
+  } else if (left === right) {
+    return left;
+  } else {
+    throw new Error(
+      `Can not merge objects of different types.\nLeft ${left}\nRight ${right}`
+    );
   }
 }
 

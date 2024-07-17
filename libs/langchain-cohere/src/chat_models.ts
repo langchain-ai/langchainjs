@@ -38,7 +38,7 @@ import {
 } from "@langchain/core/messages/tool";
 import * as uuid from "uuid";
 import { StructuredToolInterface } from "@langchain/core/tools";
-import { Runnable } from "@langchain/core/runnables";
+import { Runnable, RunnableToolLike } from "@langchain/core/runnables";
 
 /**
  * Input interface for ChatCohere
@@ -93,6 +93,7 @@ export interface ChatCohereCallOptions
     | Cohere.Tool
     | Record<string, unknown>
     | ToolDefinition
+    | RunnableToolLike
   )[];
 }
 
@@ -369,6 +370,7 @@ export class ChatCohere<
       | Record<string, unknown>
       | StructuredToolInterface
       | ToolDefinition
+      | RunnableToolLike
     )[],
     kwargs?: Partial<CallOptions>
   ): Runnable<BaseLanguageModelInput, AIMessageChunk, CallOptions> {
@@ -597,6 +599,7 @@ export class ChatCohere<
       name: toolCall.function.name,
       args: toolCall.function.arguments,
       id: toolCall.id,
+      type: "tool_call",
     }));
   }
 
@@ -773,6 +776,7 @@ export class ChatCohere<
             args: toolCall.function.arguments,
             id: toolCall.id,
             index: toolCall.index,
+            type: "tool_call_chunk",
           }));
         }
 

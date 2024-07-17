@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import { ChatMistralAI } from "@langchain/mistralai";
-import { DynamicStructuredTool } from "@langchain/core/tools";
+import { tool } from "@langchain/core/tools";
 import { AgentExecutor, createToolCallingAgent } from "langchain/agents";
 
 import { ChatPromptTemplate } from "@langchain/core/prompts";
@@ -19,13 +19,13 @@ const prompt = ChatPromptTemplate.fromMessages([
   ["placeholder", "{agent_scratchpad}"],
 ]);
 
-const currentWeatherTool = new DynamicStructuredTool({
+// Mocked tool
+const currentWeatherTool = tool(async () => "28 °C", {
   name: "get_current_weather",
   description: "Get the current weather in a given location",
   schema: z.object({
     location: z.string().describe("The city and state, e.g. San Francisco, CA"),
   }),
-  func: async () => Promise.resolve("28 °C"),
 });
 
 const agent = await createToolCallingAgent({

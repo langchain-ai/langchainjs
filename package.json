@@ -16,7 +16,7 @@
     "type": "git",
     "url": "https://github.com/langchain-ai/langchainjs.git"
   },
-  "packageManager": "yarn@3.4.1",
+  "packageManager": "yarn@3.5.1",
   "scripts": {
     "build": "turbo build --filter=\"!test-exports-*\"",
     "turbo:command": "turbo",
