@@ -64,7 +64,11 @@ import type {
   LegacyOpenAIInput,
 } from "./types.js";
 import { type OpenAIEndpointConfig, getEndpoint } from "./utils/azure.js";
-import { wrapOpenAIClientError } from "./utils/openai.js";
+import {
+  OpenAIToolChoice,
+  formatToOpenAIToolChoice,
+  wrapOpenAIClientError,
+} from "./utils/openai.js";
 import {
   FunctionDef,
   formatFunctionDefinitions,
@@ -274,7 +278,7 @@ export interface ChatOpenAICallOptions
   extends OpenAICallOptions,
     BaseFunctionCallOptions {
   tools?: StructuredToolInterface[] | OpenAIClient.ChatCompletionTool[];
-  tool_choice?: OpenAIClient.ChatCompletionToolChoiceOption;
+  tool_choice?: OpenAIToolChoice;
   promptIndex?: number;
   response_format?: { type: "json_object" };
   seed?: number;
@@ -613,7 +617,7 @@ export class ChatOpenAI<
       tools: isStructuredToolArray(options?.tools)
         ? options?.tools.map(convertToOpenAITool)
         : options?.tools,
-      tool_choice: options?.tool_choice,
+      tool_choice: formatToOpenAIToolChoice(options?.tool_choice),
       response_format: options?.response_format,
       seed: options?.seed,
       ...streamOptionsConfig,
