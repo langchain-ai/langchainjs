@@ -150,7 +150,9 @@ test("removeAdditionalProperties can remove all instances of additionalPropertie
       })
       .optional(),
   });
-  const parsedAnalysisSchema = removeAdditionalProperties(zodToJsonSchema(analysisSchema));
+  const parsedAnalysisSchema = removeAdditionalProperties(
+    zodToJsonSchema(analysisSchema)
+  );
   const analysisSchemaObj = extractKeys(parsedAnalysisSchema);
   expect(
     analysisSchemaObj.find((key) => key === "additionalProperties")
