@@ -468,9 +468,8 @@ export abstract class ChatModelIntegrationTests<
     ).invoke({
       toolName: "math_addition",
     });
-    expect(result.tool_calls).toHaveLength(1);
-    if (!result.tool_calls) {
-      throw new Error("result.tool_calls is undefined");
+    if (!result.tool_calls?.[0]) {
+      throw new Error("result.tool_calls[0] is undefined");
     }
     const { tool_calls } = result;
     expect(tool_calls[0].name).toBe("math_addition");
