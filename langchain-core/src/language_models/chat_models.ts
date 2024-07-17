@@ -89,7 +89,7 @@ export type BaseChatModelCallOptions = BaseLanguageModelCallOptions & {
    * - An object: A custom schema specifying tool choice parameters. Specific to the provider.
    *
    * Note: Not all providers support tool_choice. An error will be thrown
-   * if used with an unsupporting model.
+   * if used with an unsupported model.
    */
   tool_choice?: ToolChoice;
 };
