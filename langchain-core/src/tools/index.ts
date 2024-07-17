@@ -19,6 +19,10 @@ import { ToolCall, ToolMessage } from "../messages/tool.js";
 import { ZodObjectAny } from "../types/zod.js";
 import { MessageContent } from "../messages/base.js";
 import { AsyncLocalStorageProviderSingleton } from "../singletons/index.js";
+import { ToolInputParsingException } from "./tool_exception.js";
+import { _isToolCall } from "./utils.js";
+
+export { ToolInputParsingException };
 
 export type ResponseFormat = "content" | "content_and_artifact" | string;
 
@@ -42,20 +46,6 @@ export interface ToolParams extends BaseLangChainParams {
    * @default "content"
    */
   responseFormat?: ResponseFormat;
-}
-
-/**
- * Custom error class used to handle exceptions related to tool input parsing.
- * It extends the built-in `Error` class and adds an optional `output`
- * property that can hold the output that caused the exception.
- */
-export class ToolInputParsingException extends Error {
-  output?: string;
-
-  constructor(message: string, output?: string) {
-    super(message);
-    this.output = output;
-  }
 }
 
 export interface StructuredToolInterface<T extends ZodObjectAny = ZodObjectAny>
@@ -558,15 +548,6 @@ export function tool<T extends ZodObjectAny = ZodObjectAny>(
     },
     responseFormat: fields.responseFormat,
   });
-}
-
-function _isToolCall(toolCall?: unknown): toolCall is ToolCall {
-  return !!(
-    toolCall &&
-    typeof toolCall === "object" &&
-    "type" in toolCall &&
-    toolCall.type === "tool_call"
-  );
 }
 
 function _formatToolOutput(params: {

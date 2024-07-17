@@ -11341,6 +11341,22 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@langchain/langgraph@npm:^0.0.28":
+  version: 0.0.28
+  resolution: "@langchain/langgraph@npm:0.0.28"
+  dependencies:
+    "@langchain/core": ">=0.2.16 <0.3.0"
+    uuid: ^10.0.0
+    zod: ^3.23.8
+  peerDependencies:
+    better-sqlite3: ^9.5.0
+  peerDependenciesMeta:
+    better-sqlite3:
+      optional: true
+  checksum: 1465791026ccd6eaa13a2f2d03b8fb9f0972a8c23b9da1cfd581074f413ea60ef860de6d704c6a3b49f7425f23d6ba49c23255167ae83ab7d70dc00cc0560ce2
+  languageName: node
+  linkType: hard
+
 "@langchain/mistralai@workspace:*, @langchain/mistralai@workspace:libs/langchain-mistralai":
   version: 0.0.0-use.local
   resolution: "@langchain/mistralai@workspace:libs/langchain-mistralai"
@@ -24929,6 +24945,7 @@ __metadata:
     "@langchain/google-vertexai": "workspace:*"
     "@langchain/google-vertexai-web": "workspace:*"
     "@langchain/groq": "workspace:*"
+    "@langchain/langgraph": ^0.0.28
     "@langchain/mistralai": "workspace:*"
     "@langchain/mongodb": "workspace:*"
     "@langchain/nomic": "workspace:*"

@@ -52,6 +52,9 @@ import {
   isIterableIterator,
   isIterator,
 } from "./iter.js";
+import { ToolInputParsingException } from "../tools/tool_exception.js";
+import { _isToolCall } from "../tools/utils.js";
+import { ToolCall } from "../messages/tool.js";
 
 export { type RunnableInterface, RunnableBatchOptions };
 
@@ -1095,7 +1098,7 @@ export abstract class Runnable<
     name?: string;
     description?: string;
     schema: z.ZodType<T>;
-  }): RunnableToolLike<z.ZodType<T>, RunOutput> {
+  }): RunnableToolLike<z.ZodType<T | ToolCall>, RunOutput> {
     return convertRunnableToTool<T, RunOutput>(this, fields);
   }
 }
@@ -2828,8 +2831,29 @@ export class RunnableToolLike<
   schema: RunInput;
 
   constructor(fields: RunnableToolLikeArgs<RunInput, RunOutput>) {
+    const sequence = RunnableSequence.from([
+      RunnableLambda.from(async (input) => {
+        let toolInput: z.TypeOf<RunInput>;
+
+        if (_isToolCall(input)) {
+          try {
+            toolInput = await this.schema.parseAsync(input.args);
+          } catch (e) {
+            throw new ToolInputParsingException(
+              `Received tool input did not match expected schema`,
+              JSON.stringify(input.args)
+            );
+          }
+        } else {
+          toolInput = input;
+        }
+        return toolInput;
+      }).withConfig({ runName: `${fields.name}:parse_input` }),
+      fields.bound,
+    ]).withConfig({ runName: fields.name });
+
     super({
-      bound: fields.bound,
+      bound: sequence,
       config: fields.config ?? {},
     });
 
@@ -2863,11 +2887,24 @@ export function convertRunnableToTool<RunInput, RunOutput>(
     description?: string;
     schema: z.ZodType<RunInput>;
   }
-): RunnableToolLike<z.ZodType<RunInput>, RunOutput> {
+): RunnableToolLike<z.ZodType<RunInput | ToolCall>, RunOutput> {
   const name = fields.name ?? runnable.getName();
-  const description = fields.description ?? fields.schema.description;
+  const description = fields.description ?? fields.schema?.description;
 
-  return new RunnableToolLike<z.ZodType<RunInput>, RunOutput>({
+  if (fields.schema.constructor === z.ZodString) {
+    return new RunnableToolLike<z.ZodType<RunInput | ToolCall>, RunOutput>({
+      name,
+      description,
+      schema: z
+        .object({
+          input: z.string(),
+        })
+        .transform((input) => input.input) as z.ZodType,
+      bound: runnable,
+    });
+  }
+
+  return new RunnableToolLike<z.ZodType<RunInput | ToolCall>, RunOutput>({
     name,
     description,
     schema: fields.schema,

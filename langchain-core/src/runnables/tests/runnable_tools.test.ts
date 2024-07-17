@@ -1,5 +1,7 @@
 import { z } from "zod";
 import { RunnableLambda, RunnableToolLike } from "../base.js";
+import { FakeRetriever } from "../../utils/testing/index.js";
+import { Document } from "../../documents/document.js";
 
 test("Runnable asTool works", async () => {
   const schema = z.object({
@@ -149,4 +151,31 @@ test("Runnable asTool can accept a string zod schema", async () => {
 
   const result = await lambda.invoke("b");
   expect(result).toBe("ba");
+});
+
+test("Runnables which dont accept ToolCalls as inputs can accept ToolCalls", async () => {
+  const pageContent = "Dogs are pretty cool, man!";
+  const retriever = new FakeRetriever({
+    output: [
+      new Document({
+        pageContent,
+      }),
+    ],
+  });
+  const tool = retriever.asTool({
+    name: "pet_info_retriever",
+    description: "Get information about pets.",
+    schema: z.string(),
+  });
+
+  const result = await tool.invoke({
+    type: "tool_call",
+    name: "pet_info_retriever",
+    args: {
+      input: "dogs",
+    },
+    id: "string",
+  });
+  expect(result).toHaveLength(1);
+  expect(result[0].pageContent).toBe(pageContent);
 });
