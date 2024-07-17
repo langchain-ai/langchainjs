@@ -349,7 +349,7 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
             pageContent: item.text,
             metadata: {
               ...(item.metadata ?? {}),
-              ...(filter?.includeEmbeddings ? { vector: item.vector } : {}),
+              ...(filter?.includeEmbeddings ? { [this.embeddingKey]: item.vector } : {}),
             }
           }),
           item.similarityScore,
@@ -377,11 +377,16 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
     options: MaxMarginalRelevanceSearchOptions<this["FilterType"]>
   ): Promise<Document[]> {
     const { k, fetchK = 20, lambda = 0.5 } = options;
+    const includeEmbeddingsFlag = options.filter?.includeEmbeddings || false;
 
     const queryEmbedding = await this.embeddings.embedQuery(query);
     const docs = await this.similaritySearchVectorWithScore(
       queryEmbedding,
-      fetchK
+      fetchK,
+      {
+        ...options.filter,
+        includeEmbeddings: true,
+      }
     );
     const embeddingList = docs.map((doc) => doc[0].metadata[this.embeddingKey]);
 
@@ -393,8 +398,15 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
       k
     );
 
-    const mmrDocs = mmrIndexes.map((index) => docs[index][0]);
-    return mmrDocs;
+    return mmrIndexes.map((index) => {
+      const doc = docs[index][0];
+
+      // Remove embeddings if they were not requested originally
+      if (!includeEmbeddingsFlag) {
+        delete doc.metadata[this.embeddingKey];
+      }
+      return doc;
+    });
   }
 
   /**
