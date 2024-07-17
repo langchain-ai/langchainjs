@@ -154,8 +154,8 @@ function openAIResponseToChatMessage(
       if (includeRawResponse !== undefined) {
         additional_kwargs.__raw_response = rawResponse;
       }
-      let response_metadata: Record<string, unknown> | undefined = undefined;
-      if (!!rawResponse.system_fingerprint) {
+      let response_metadata: Record<string, unknown> | undefined;
+      if (rawResponse.system_fingerprint) {
         response_metadata = {
           system_fingerprint: rawResponse.system_fingerprint,
         };
