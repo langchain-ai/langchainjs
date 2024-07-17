@@ -124,7 +124,9 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
 
     if (!dbConfig.client) {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      const [endpoint, key] = connectionString!.split(";");
+      let [endpoint, key] = connectionString!.split(";");
+      endpoint = endpoint.split("=")[1];
+      key = key.split("=")[1];
 
       this.client = new CosmosClient({
         endpoint,
