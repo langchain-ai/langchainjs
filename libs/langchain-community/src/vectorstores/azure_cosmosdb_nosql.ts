@@ -7,6 +7,7 @@ import { Document, DocumentInterface } from "@langchain/core/documents";
 import { maximalMarginalRelevance } from "@langchain/core/utils/math";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import {
+  BulkOperationResponse,
   BulkOperationType,
   Container,
   ContainerRequest,
@@ -73,6 +74,7 @@ export interface AzureCosmosDBNoSQLConfig
 }
 
 const USER_AGENT_PREFIX = "langchainjs-azure-cosmosdb-nosql";
+const MAX_BATCH_SIZE = 100;
 
 /**
  * Azure Cosmos DB for NoSQL vCore vector store.
@@ -215,11 +217,19 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
       return;
     }
 
-    const operations: OperationInput[] = ids.map((id) => ({
-      operationType: BulkOperationType.Delete,
-      id,
-    }));
-    await this.container.items.bulk(operations);
+    // Split ids into batches
+    const promises: Promise<BulkOperationResponse>[] = [];
+
+    while (ids.length) {
+      const batchIds = ids.splice(0, MAX_BATCH_SIZE);
+      const operations: OperationInput[] = batchIds.map((id) => ({
+        operationType: BulkOperationType.Delete,
+        id,
+      }));
+      promises.push(this.container.items.bulk(operations));
+    }
+
+    await Promise.all(promises);
   }
 
   /**
@@ -240,7 +250,9 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
     await this.initPromise;
 
     const ids: string[] = [];
-    const results = await Promise.all(docs.map((doc) => this.container.items.create(doc)));
+    const results = await Promise.all(
+      docs.map((doc) => this.container.items.create(doc))
+    );
 
     for (const result of results) {
       ids.push(result.resource?.id ?? "error: could not create item");
