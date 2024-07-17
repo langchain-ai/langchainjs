@@ -1,7 +1,7 @@
 import type { BaseLLMParams } from "@langchain/core/language_models/llms";
 import { StructuredToolInterface } from "@langchain/core/tools";
-import type { JsonStream } from "./utils/stream.js";
 import type { BaseChatModelCallOptions } from "@langchain/core/language_models/chat_models";
+import type { JsonStream } from "./utils/stream.js";
 
 /**
  * Parameters needed to setup the client connection.

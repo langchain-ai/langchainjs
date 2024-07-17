@@ -347,7 +347,9 @@ export class ChatCohere<
 
   invocationParams(options: this["ParsedCallOptions"]) {
     if (options.tool_choice) {
-      throw new Error("'tool_choice' call option is not supported by ChatCohere.")
+      throw new Error(
+        "'tool_choice' call option is not supported by ChatCohere."
+      );
     }
 
     const params = {

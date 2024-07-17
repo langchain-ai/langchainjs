@@ -340,7 +340,9 @@ export abstract class ChatGoogleBase<AuthOptions>
    */
   override invocationParams(options?: this["ParsedCallOptions"]) {
     if (options?.tool_choice) {
-      throw new Error(`'tool_choice' call option is not supported by ${this.getName()}.`);
+      throw new Error(
+        `'tool_choice' call option is not supported by ${this.getName()}.`
+      );
     }
 
     return copyAIModelParams(this, options);

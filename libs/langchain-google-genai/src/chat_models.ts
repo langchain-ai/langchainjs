@@ -365,7 +365,9 @@ export class ChatGoogleGenerativeAI
     options?: this["ParsedCallOptions"]
   ): Omit<GenerateContentRequest, "contents"> {
     if (options?.tool_choice) {
-      throw new Error("'tool_choice' call option is not supported by ChatGoogleGenerativeAI.")
+      throw new Error(
+        "'tool_choice' call option is not supported by ChatGoogleGenerativeAI."
+      );
     }
 
     const tools = options?.tools as
