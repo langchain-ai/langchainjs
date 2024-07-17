@@ -332,7 +332,7 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
     const embeddings = filter?.includeEmbeddings
       ? `c[@embeddingKey] AS vector, `
       : "";
-    const query = `SELECT TOP @k c.id, ${embeddings}c[@textKey] AS text, c[@metadataKey] AS metadata, VectorDistance(c[@embeddingKey], @vector) AS similarityScore FROM c${where} ORDER BY VectorDistance(c[@embeddingKey], @vector)`;
+    const query = `SELECT TOP @k c.id, ${embeddings}c[@textKey] AS text, c[@metadataKey] AS metadata, VectorDistance(c[@embeddingKey], @vector) AS similarityScore FROM c ${where}ORDER BY VectorDistance(c[@embeddingKey], @vector)`;
 
     const { resources: items } = await this.container.items
       .query({
