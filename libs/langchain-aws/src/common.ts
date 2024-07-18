@@ -405,7 +405,11 @@ export function handleConverseStreamContentBlockDelta(
     });
   } else {
     throw new Error(
-      `Unsupported content block type(s): ${JSON.stringify(contentBlockDelta.delta, null, 2)}`
+      `Unsupported content block type(s): ${JSON.stringify(
+        contentBlockDelta.delta,
+        null,
+        2
+      )}`
     );
   }
 }
