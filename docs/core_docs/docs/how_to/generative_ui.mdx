@@ -15,16 +15,12 @@ The usage is then as follows:
 ```tsx ai/chain.tsx
 "use server";
 
-const tool = new DynamicStructuredTool({
-  // ...
-  func: async (input, config) => {
-    // create a new streamable UI and wire it up to the streamEvents
-    const stream = createRunnableUI(config);
+const tool = tool(
+  async (input, config) => {
+    const stream = await createRunnableUI(config);
     stream.update(<div>Searching...</div>);
 
     const result = await images(input);
-
-    // update the UI element with the rendered results
     stream.done(
       <Images
         images={result.images_results
@@ -35,7 +31,15 @@ const tool = new DynamicStructuredTool({
 
     return `[Returned ${result.images_results.length} images]`;
   },
-});
+  {
+    name: "Images",
+    description: "A tool to search for images. input should be a search query.",
+    schema: z.object({
+      query: z.string().describe("The search query used to search for cats"),
+      limit: z.number().describe("The number of pictures shown to the user"),
+    }),
+  }
+);
 
 // add LLM, prompt, etc...
 
@@ -52,9 +56,18 @@ As of `langchain` version `0.2.8`, the `createToolCallingAgent` function now sup
 :::
 
 ```tsx agent.tsx
-async function agent(inputs: { input: string }) {
+async function agent(inputs: {
+  input: string;
+  chat_history: [role: string, content: string][];
+}) {
   "use server";
-  return streamRunnableUI(agentExecutor, inputs);
+
+  return streamRunnableUI(agentExecutor, {
+    input: inputs.input,
+    chat_history: inputs.chat_history.map(
+      ([role, content]) => new ChatMessage(content, role)
+    ),
+  });
 }
 
 export const EndpointsContext = exposeEndpoints({ agent });

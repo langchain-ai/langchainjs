@@ -64,7 +64,11 @@ import type {
   LegacyOpenAIInput,
 } from "./types.js";
 import { type OpenAIEndpointConfig, getEndpoint } from "./utils/azure.js";
-import { wrapOpenAIClientError } from "./utils/openai.js";
+import {
+  OpenAIToolChoice,
+  formatToOpenAIToolChoice,
+  wrapOpenAIClientError,
+} from "./utils/openai.js";
 import {
   FunctionDef,
   formatFunctionDefinitions,
@@ -129,7 +133,8 @@ export function messageToOpenAIRole(message: BaseMessage): OpenAIRoleEnum {
 
 function openAIResponseToChatMessage(
   message: OpenAIClient.Chat.Completions.ChatCompletionMessage,
-  messageId: string
+  rawResponse: OpenAIClient.Chat.Completions.ChatCompletion,
+  includeRawResponse?: boolean
 ): BaseMessage {
   const rawToolCalls: OpenAIToolCall[] | undefined = message.tool_calls as
     | OpenAIToolCall[]
@@ -146,15 +151,26 @@ function openAIResponseToChatMessage(
           invalidToolCalls.push(makeInvalidToolCall(rawToolCall, e.message));
         }
       }
+      const additional_kwargs: Record<string, unknown> = {
+        function_call: message.function_call,
+        tool_calls: rawToolCalls,
+      };
+      if (includeRawResponse !== undefined) {
+        additional_kwargs.__raw_response = rawResponse;
+      }
+      let response_metadata: Record<string, unknown> | undefined;
+      if (rawResponse.system_fingerprint) {
+        response_metadata = {
+          system_fingerprint: rawResponse.system_fingerprint,
+        };
+      }
       return new AIMessage({
         content: message.content || "",
         tool_calls: toolCalls,
         invalid_tool_calls: invalidToolCalls,
-        additional_kwargs: {
-          function_call: message.function_call,
-          tool_calls: rawToolCalls,
-        },
-        id: messageId,
+        additional_kwargs,
+        response_metadata,
+        id: rawResponse.id,
       });
     }
     default:
@@ -165,12 +181,13 @@ function openAIResponseToChatMessage(
 function _convertDeltaToMessageChunk(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   delta: Record<string, any>,
-  messageId: string,
-  defaultRole?: OpenAIRoleEnum
+  rawResponse: OpenAIClient.Chat.Completions.ChatCompletionChunk,
+  defaultRole?: OpenAIRoleEnum,
+  includeRawResponse?: boolean
 ) {
   const role = delta.role ?? defaultRole;
   const content = delta.content ?? "";
-  let additional_kwargs;
+  let additional_kwargs: Record<string, unknown>;
   if (delta.function_call) {
     additional_kwargs = {
       function_call: delta.function_call,
@@ -181,6 +198,9 @@ function _convertDeltaToMessageChunk(
     };
   } else {
     additional_kwargs = {};
+  }
+  if (includeRawResponse) {
+    additional_kwargs.__raw_response = rawResponse;
   }
   if (role === "user") {
     return new HumanMessageChunk({ content });
@@ -201,7 +221,7 @@ function _convertDeltaToMessageChunk(
       content,
       tool_call_chunks: toolCallChunks,
       additional_kwargs,
-      id: messageId,
+      id: rawResponse.id,
     });
   } else if (role === "system") {
     return new SystemMessageChunk({ content });
@@ -258,7 +278,7 @@ export interface ChatOpenAICallOptions
   extends OpenAICallOptions,
     BaseFunctionCallOptions {
   tools?: StructuredToolInterface[] | OpenAIClient.ChatCompletionTool[];
-  tool_choice?: OpenAIClient.ChatCompletionToolChoiceOption;
+  tool_choice?: OpenAIToolChoice;
   promptIndex?: number;
   response_format?: { type: "json_object" };
   seed?: number;
@@ -415,6 +435,8 @@ export class ChatOpenAI<
 
   organization?: string;
 
+  __includeRawResponse?: boolean;
+
   protected client: OpenAIClient;
 
   protected clientConfig: ClientOptions;
@@ -485,6 +507,7 @@ export class ChatOpenAI<
     this.stop = fields?.stopSequences ?? fields?.stop;
     this.stopSequences = this?.stop;
     this.user = fields?.user;
+    this.__includeRawResponse = fields?.__includeRawResponse;
 
     if (this.azureOpenAIApiKey || this.azureADTokenProvider) {
       if (!this.azureOpenAIApiInstanceName && !this.azureOpenAIBasePath) {
@@ -594,7 +617,7 @@ export class ChatOpenAI<
       tools: isStructuredToolArray(options?.tools)
         ? options?.tools.map(convertToOpenAITool)
         : options?.tools,
-      tool_choice: options?.tool_choice,
+      tool_choice: formatToOpenAIToolChoice(options?.tool_choice),
       response_format: options?.response_format,
       seed: options?.seed,
       ...streamOptionsConfig,
@@ -648,7 +671,12 @@ export class ChatOpenAI<
       if (!delta) {
         continue;
       }
-      const chunk = _convertDeltaToMessageChunk(delta, data.id, defaultRole);
+      const chunk = _convertDeltaToMessageChunk(
+        delta,
+        data,
+        defaultRole,
+        this.__includeRawResponse
+      );
       defaultRole = delta.role ?? defaultRole;
       const newTokenIndices = {
         prompt: options.promptIndex ?? 0,
@@ -664,6 +692,9 @@ export class ChatOpenAI<
       const generationInfo: Record<string, any> = { ...newTokenIndices };
       if (choice.finish_reason !== undefined) {
         generationInfo.finish_reason = choice.finish_reason;
+        // Only include system fingerprint in the last chunk for now
+        // to avoid concatenation issues
+        generationInfo.system_fingerprint = data.system_fingerprint;
       }
       if (this.logprobs) {
         generationInfo.logprobs = choice.logprobs;
@@ -797,7 +828,8 @@ export class ChatOpenAI<
           text,
           message: openAIResponseToChatMessage(
             part.message ?? { role: "assistant" },
-            data.id
+            data,
+            this.__includeRawResponse
           ),
         };
         generation.generationInfo = {

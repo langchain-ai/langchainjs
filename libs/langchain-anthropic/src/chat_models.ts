@@ -21,12 +21,12 @@ import {
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import {
   BaseChatModel,
+  BaseChatModelCallOptions,
   LangSmithParams,
   type BaseChatModelParams,
 } from "@langchain/core/language_models/chat_models";
 import {
   type StructuredOutputMethodOptions,
-  type BaseLanguageModelCallOptions,
   type BaseLanguageModelInput,
   type ToolDefinition,
   isOpenAITool,
@@ -53,6 +53,11 @@ import {
   extractToolCalls,
 } from "./output_parsers.js";
 import { AnthropicToolResponse } from "./types.js";
+import {
+  AnthropicToolChoice,
+  AnthropicToolTypes,
+  handleToolChoice,
+} from "./utils.js";
 
 type AnthropicMessage = Anthropic.MessageParam;
 type AnthropicMessageCreateParams = Anthropic.MessageCreateParamsNonStreaming;
@@ -60,23 +65,11 @@ type AnthropicStreamingMessageCreateParams =
   Anthropic.MessageCreateParamsStreaming;
 type AnthropicMessageStreamEvent = Anthropic.MessageStreamEvent;
 type AnthropicRequestOptions = Anthropic.RequestOptions;
-type AnthropicToolChoice =
-  | {
-      type: "tool";
-      name: string;
-    }
-  | "any"
-  | "auto";
+
 export interface ChatAnthropicCallOptions
-  extends BaseLanguageModelCallOptions,
+  extends BaseChatModelCallOptions,
     Pick<AnthropicInput, "streamUsage"> {
-  tools?: (
-    | StructuredToolInterface
-    | AnthropicTool
-    | Record<string, unknown>
-    | ToolDefinition
-    | RunnableToolLike
-  )[];
+  tools?: AnthropicToolTypes[];
   /**
    * Whether or not to specify what tool the model should use
    * @default "auto"
@@ -132,6 +125,7 @@ function anthropicResponseToChatMessages(
           additional_kwargs: additionalKwargs,
           usage_metadata: usageMetadata,
           response_metadata: additionalKwargs,
+          id: additionalKwargs.id as string,
         }),
       },
     ];
@@ -147,6 +141,7 @@ function anthropicResponseToChatMessages(
           tool_calls: toolCalls,
           usage_metadata: usageMetadata,
           response_metadata: additionalKwargs,
+          id: additionalKwargs.id as string,
         }),
       },
     ];
@@ -196,6 +191,7 @@ function _makeMessageChunkFromAnthropicEvent(
         content: fields.coerceContentToString ? "" : [],
         additional_kwargs: filteredAdditionalKwargs,
         usage_metadata: usageMetadata,
+        id: data.message.id,
       }),
       usageData: usageDataCopy,
     };
@@ -855,24 +851,11 @@ export class ChatAnthropicMessages<
     "messages"
   > &
     Kwargs {
-    let tool_choice:
+    const tool_choice:
       | MessageCreateParams.ToolChoiceAuto
       | MessageCreateParams.ToolChoiceAny
       | MessageCreateParams.ToolChoiceTool
-      | undefined;
-    if (options?.tool_choice) {
-      if (options?.tool_choice === "any") {
-        tool_choice = {
-          type: "any",
-        };
-      } else if (options?.tool_choice === "auto") {
-        tool_choice = {
-          type: "auto",
-        };
-      } else {
-        tool_choice = options?.tool_choice;
-      }
-    }
+      | undefined = handleToolChoice(options?.tool_choice);
 
     return {
       model: this.model,
@@ -974,6 +957,7 @@ export class ChatAnthropicMessages<
           tool_call_chunks: newToolCallChunk ? [newToolCallChunk] : undefined,
           usage_metadata: chunk.usage_metadata,
           response_metadata: chunk.response_metadata,
+          id: chunk.id,
         }),
         text: token ?? "",
       });

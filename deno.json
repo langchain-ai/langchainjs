@@ -9,7 +9,7 @@
     "@langchain/textsplitters": "npm:@langchain/textsplitters",
     "@langchain/google-vertexai-web": "npm:@langchain/google-vertexai-web",
     "@langchain/mistralai": "npm:@langchain/mistralai",
-    "@langchain/core/": "npm:/@langchain/core@latest/",
+    "@langchain/core/": "npm:/@langchain/core@0.2.16/",
     "@langchain/pinecone": "npm:@langchain/pinecone",
     "@langchain/google-common": "npm:@langchain/google-common",
     "@langchain/langgraph": "npm:/@langchain/langgraph@0.0.21",
