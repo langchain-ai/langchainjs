@@ -9,6 +9,7 @@ import {
   UsageMetadata,
 } from "@langchain/core/messages";
 import type { Message as OllamaMessage } from "ollama";
+import { v4 as uuidv4 } from "uuid";
 
 export interface OllamaToolCall {
   type?: "function";
@@ -41,6 +42,7 @@ export function convertOllamaMessagesToLangChain(
       args: JSON.stringify(tc.function.arguments),
       type: "tool_call_chunk",
       index: 0,
+      id: tc.id ?? uuidv4(),
     })),
     response_metadata: extra.responseMetadata,
     usage_metadata: extra.usageMetadata,

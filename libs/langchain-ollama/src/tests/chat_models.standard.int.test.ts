@@ -2,10 +2,10 @@
 import { test, expect } from "@jest/globals";
 import { ChatModelIntegrationTests } from "@langchain/standard-tests";
 import { AIMessageChunk } from "@langchain/core/messages";
-import { ChatOllama, ChatOllamaCallOptions } from "../chat_models.js";
 import { RunnableLambda } from "@langchain/core/runnables";
 import { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
+import { ChatOllama, ChatOllamaCallOptions } from "../chat_models.js";
 
 const currentWeatherName = "get_current_weather";
 const currentWeatherDescription =

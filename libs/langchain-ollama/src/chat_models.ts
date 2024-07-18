@@ -25,11 +25,11 @@ import type {
 import { StructuredToolInterface } from "@langchain/core/tools";
 import { Runnable, RunnableToolLike } from "@langchain/core/runnables";
 import { convertToOpenAITool } from "@langchain/core/utils/function_calling";
+import { concat } from "@langchain/core/utils/stream";
 import {
   convertOllamaMessagesToLangChain,
   convertToOllamaMessages,
 } from "./utils.js";
-import { concat } from "@langchain/core/utils/stream";
 
 export interface ChatOllamaCallOptions extends BaseChatModelCallOptions {
   /**
@@ -258,7 +258,7 @@ export class ChatOllama
 
   // Replace
   _llmType() {
-    return "chat_ollama";
+    return "ollama";
   }
 
   /**

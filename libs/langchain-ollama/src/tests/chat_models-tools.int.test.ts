@@ -52,6 +52,8 @@ test("Ollama can call tools", async () => {
   expect(result.tool_calls?.[0]).toBeDefined();
   if (!result.tool_calls?.[0]) return;
   expect(result.tool_calls[0].name).toBe("get_current_weather");
+  expect(result.tool_calls[0].id).toBeDefined();
+  expect(result.tool_calls[0].id).not.toBe("");
 });
 
 test("Ollama can stream tools", async () => {
@@ -69,6 +71,8 @@ test("Ollama can stream tools", async () => {
   expect(finalChunk.tool_calls?.[0]).toBeDefined();
   if (!finalChunk.tool_calls?.[0]) return;
   expect(finalChunk.tool_calls[0].name).toBe("get_current_weather");
+  expect(finalChunk.tool_calls[0].id).toBeDefined();
+  expect(finalChunk.tool_calls[0].id).not.toBe("");
 });
 
 test("Ollama can call withStructuredOutput", async () => {
@@ -84,4 +88,23 @@ test("Ollama can call withStructuredOutput", async () => {
   expect(result).toBeDefined();
   expect(result.location).toBeDefined();
   expect(result.location).not.toBe("");
+});
+
+test("Ollama can call withStructuredOutput includeRaw", async () => {
+  const model = new ChatOllama({
+    model: "llama3-groq-tool-use",
+    maxRetries: 1,
+  }).withStructuredOutput(weatherTool.schema, {
+    name: weatherTool.name,
+    includeRaw: true,
+  });
+
+  const result = await model.invoke(messageHistory);
+  console.log("WSO", result);
+  expect(result).toBeDefined();
+  expect(result.parsed.location).toBeDefined();
+  expect(result.parsed.location).not.toBe("");
+  expect((result.raw as AIMessage).tool_calls?.[0]).toBeDefined();
+  expect((result.raw as AIMessage).tool_calls?.[0].id).toBeDefined();
+  expect((result.raw as AIMessage).tool_calls?.[0].id).not.toBe("");
 });

@@ -35,8 +35,9 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@langchain/core": ">0.2.14 <0.3.0",
-    "ollama": "^0.5.2"
+    "@langchain/core": ">0.2.17 <0.3.0",
+    "ollama": "^0.5.2",
+    "uuid": "^10.0.0"
   },
   "devDependencies": {
     "@jest/globals": "^29.5.0",
