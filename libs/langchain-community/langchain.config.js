@@ -119,7 +119,6 @@ export const config = {
     "vectorstores/azure_aisearch": "vectorstores/azure_aisearch",
     "vectorstores/azure_cosmosdb": "vectorstores/azure_cosmosdb",
     "vectorstores/azure_cosmosdb_mongodb_vcore": "vectorstores/azure_cosmosdb_mongodb_vcore",
-    "vectorstores/azure_cosmosdb_nosql": "vectorstores/azure_cosmosdb_nosql",
     "vectorstores/cassandra": "vectorstores/cassandra",
     "vectorstores/chroma": "vectorstores/chroma",
     "vectorstores/clickhouse": "vectorstores/clickhouse",

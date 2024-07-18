@@ -41,7 +41,6 @@ export * as llms__ollama from "../llms/ollama.js";
 export * as llms__togetherai from "../llms/togetherai.js";
 export * as llms__yandex from "../llms/yandex.js";
 export * as vectorstores__azure_cosmosdb_mongodb_vcore from "../vectorstores/azure_cosmosdb_mongodb_vcore.js";
-export * as vectorstores__azure_cosmosdb_nosql from "../vectorstores/azure_cosmosdb_nosql.js";
 export * as vectorstores__prisma from "../vectorstores/prisma.js";
 export * as vectorstores__turbopuffer from "../vectorstores/turbopuffer.js";
 export * as vectorstores__vectara from "../vectorstores/vectara.js";
