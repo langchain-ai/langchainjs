@@ -10,12 +10,14 @@ import {
   Container,
   ContainerRequest,
   CosmosClient,
+  CosmosClientOptions,
   DatabaseRequest,
   IndexingPolicy,
   SqlParameter,
   SqlQuerySpec,
   VectorEmbeddingPolicy,
 } from "@azure/cosmos";
+import { DefaultAzureCredential, TokenCredential } from "@azure/identity";
 
 /** Azure Cosmos DB for NoSQL query filter. */
 export type AzureCosmosDBNoSQLQueryFilter = string | SqlQuerySpec;
@@ -68,6 +70,8 @@ export interface AzureCosmosDBNoSQLConfig
   extends AzureCosmosDBNoSQLInitOptions {
   readonly client?: CosmosClient;
   readonly connectionString?: string;
+  readonly endpoint?: string;
+  readonly credentials?: TokenCredential;
   readonly databaseName?: string;
   readonly containerName?: string;
   readonly textKey?: string;
@@ -120,23 +124,34 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
       dbConfig.connectionString ??
       getEnvironmentVariable("AZURE_COSMOSDB_NOSQL_CONNECTION_STRING");
 
-    if (!dbConfig.client && !connectionString) {
+    const endpoint = dbConfig.endpoint ?? getEnvironmentVariable("AZURE_COSMOSDB_NOSQL_ENDPOINT");
+
+    if (!dbConfig.client && !connectionString && !endpoint) {
       throw new Error(
-        "AzureCosmosDBNoSQLVectorStore client or connection string must be set."
+        "AzureCosmosDBNoSQLVectorStore client, connection string or endpoint must be set."
       );
     }
 
     if (!dbConfig.client) {
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      let [endpoint, key] = connectionString!.split(";");
-      [, endpoint] = endpoint.split("=");
-      [, key] = key.split("=");
+      if (connectionString) {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        let [endpoint, key] = connectionString!.split(";");
+        [, endpoint] = endpoint.split("=");
+        [, key] = key.split("=");
 
-      this.client = new CosmosClient({
-        endpoint,
-        key,
-        userAgentSuffix: USER_AGENT_PREFIX,
-      });
+        this.client = new CosmosClient({
+          endpoint,
+          key,
+          userAgentSuffix: USER_AGENT_PREFIX,
+        });
+      } else {
+        // Use managed identity
+        this.client = new CosmosClient({
+          endpoint,
+          aadCredentials: dbConfig.credentials ?? new DefaultAzureCredential(),
+          userAgentSuffix: USER_AGENT_PREFIX,
+        } as CosmosClientOptions);
+      }
     }
 
     const client = dbConfig.client || this.client;

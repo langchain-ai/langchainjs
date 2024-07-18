@@ -25,7 +25,15 @@ import EnvVars from "@examples/indexes/vector_stores/azure_cosmosdb_nosql/.env.e
 
 <CodeBlock language="text">{EnvVars}</CodeBlock>
 
-## Example
+### Using Azure Managed Identity
+
+If you're using Azure Managed Identity, you can configure the credentials like this:
+
+import ManagedIdentityExample from "@examples/indexes/vector_stores/azure_cosmosdb_nosql/azure_cosmosdb_nosql-managed_identity.ts";
+
+<CodeBlock language="typescript">{ManagedIdentityExample}</CodeBlock>
+
+## Usage example
 
 Below is an example that indexes documents from a file in Azure Cosmos DB for NoSQL, runs a vector search query, and finally uses a chain to answer a question in natural language
 based on the retrieved documents.
