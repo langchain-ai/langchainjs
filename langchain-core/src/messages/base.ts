@@ -271,15 +271,22 @@ export abstract class BaseMessage
     };
   }
 
-  toString() {
-    const printable = stringifyWithDepthLimit(this._printableFields, 4);
+  get [Symbol.toStringTag]() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return `${(this.constructor as any).lc_name()} ${printable}`;
+    return (this.constructor as any).lc_name();
   }
 
   // Override the default behavior of console.log
-  [Symbol.for("nodejs.util.inspect.custom")]() {
-    return this.toString();
+  [Symbol.for("nodejs.util.inspect.custom")](depth: number | null) {
+    if (depth === null) {
+      return this;
+    }
+    const printable = stringifyWithDepthLimit(
+      this._printableFields,
+      Math.max(4, depth)
+    );
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return `${(this.constructor as any).lc_name()} ${printable}`;
   }
 }
 
