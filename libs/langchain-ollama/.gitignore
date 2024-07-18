@@ -2,10 +2,6 @@ index.cjs
 index.js
 index.d.ts
 index.d.cts
-experimental.cjs
-experimental.js
-experimental.d.ts
-experimental.d.cts
 node_modules
 dist
 .yarn

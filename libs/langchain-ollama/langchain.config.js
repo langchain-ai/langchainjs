@@ -10,10 +10,9 @@ function abs(relativePath) {
 }
 
 export const config = {
-  internals: [/node\:/, /@langchain\/core\//],
+  internals: [/node\:/, /@langchain\/core\//, 'ollama/browser'],
   entrypoints: {
     index: "index",
-    experimental: "experimental/index",
   },
   requiresOptionalDependency: [],
   tsConfigPath: resolve("./tsconfig.json"),

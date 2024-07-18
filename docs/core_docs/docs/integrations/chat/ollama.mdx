@@ -30,6 +30,28 @@ import OllamaExample from "@examples/models/chat/integration_ollama.ts";
 
 <CodeBlock language="typescript">{OllamaExample}</CodeBlock>
 
+## Tools
+
+Ollama now offers support for native tool calling. The example below demonstrates how you can invoke a tool from an Ollama model.
+
+import OllamaToolsExample from "@examples/models/chat/integration_ollama_tools.ts";
+
+<CodeBlock language="typescript">{OllamaToolsExample}</CodeBlock>
+
+:::tip
+You can see the LangSmith trace of the above example [here](https://smith.langchain.com/public/e98d812b-82cd-43a3-9760-e8a4f418c273/r)
+:::
+
+Since `ChatOllama` supports the `.bindTools()` method, you can also call `.withStructuredOutput()` to get a structured output from the tool.
+
+import OllamaWSOExample from "@examples/models/chat/integration_ollama_wso.ts";
+
+<CodeBlock language="typescript">{OllamaWSOExample}</CodeBlock>
+
+:::tip
+You can see the LangSmith trace of the above example [here](https://smith.langchain.com/public/ed113c53-1299-4814-817e-1157c9eac47e/r)
+:::
+
 ## JSON mode
 
 Ollama also supports a JSON mode that coerces model outputs to only return JSON. Here's an example of how this can be useful for extraction:

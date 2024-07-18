@@ -65,7 +65,7 @@ export interface ChatOllamaInput extends BaseChatModelParams {
   model?: string;
   /**
    * The host URL of the Ollama server.
-   * @default "127.0.0.1:11434"
+   * @default "http://127.0.0.1:11434"
    */
   baseUrl?: string;
   /**
@@ -209,7 +209,7 @@ export class ChatOllama
 
   checkOrPullModel = false;
 
-  baseUrl: string;
+  baseUrl = "http://127.0.0.1:11434";
 
   constructor(fields?: ChatOllamaInput) {
     super(fields ?? {});
@@ -217,7 +217,7 @@ export class ChatOllama
     this.client = new Ollama({
       host: fields?.baseUrl,
     });
-    this.baseUrl = fields?.baseUrl ?? "127.0.0.1:11434";
+    this.baseUrl = fields?.baseUrl ?? this.baseUrl;
 
     this.model = fields?.model ?? this.model;
     this.numa = fields?.numa;
@@ -514,7 +514,7 @@ export class ChatOllama
     return this.caller.callWithOptions(
       { signal: options?.signal },
       async () => {
-        const streamRes = await fetch(`http://${this.baseUrl}/api/chat`, {
+        const streamRes = await fetch(`${this.baseUrl}/api/chat`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

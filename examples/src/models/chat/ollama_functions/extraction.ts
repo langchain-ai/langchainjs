@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
 
-import { OllamaFunctions } from "@langchain/ollama/experimental";
+import { OllamaFunctions } from "@langchain/community/experimental/chat_models/ollama_functions";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { JsonOutputFunctionsParser } from "@langchain/core/output_parsers/openai_functions";
 

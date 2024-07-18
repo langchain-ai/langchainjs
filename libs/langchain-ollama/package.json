@@ -77,15 +77,6 @@
       "import": "./index.js",
       "require": "./index.cjs"
     },
-    "./experimental": {
-      "types": {
-        "import": "./experimental.d.ts",
-        "require": "./experimental.d.cts",
-        "default": "./experimental.d.ts"
-      },
-      "import": "./experimental.js",
-      "require": "./experimental.cjs"
-    },
     "./package.json": "./package.json"
   },
   "files": [
@@ -93,10 +84,6 @@
     "index.cjs",
     "index.js",
     "index.d.ts",
-    "index.d.cts",
-    "experimental.cjs",
-    "experimental.js",
-    "experimental.d.ts",
-    "experimental.d.cts"
+    "index.d.cts"
   ]
 }

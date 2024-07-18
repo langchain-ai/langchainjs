@@ -4,6 +4,10 @@ sidebar_label: Ollama Functions
 
 # Ollama Functions
 
+:::tip
+The LangChain Ollama integration package has official support for tool calling. [Click here to view the documentation](/docs/integrations/chat/ollama#tools).
+:::
+
 LangChain offers an experimental wrapper around open source models run locally via [Ollama](https://github.com/jmorganca/ollama)
 that gives it the same API as OpenAI Functions.
 
@@ -25,7 +29,7 @@ Follow [these instructions](https://github.com/jmorganca/ollama) to set up and r
 You can initialize this wrapper the same way you'd initialize a standard `ChatOllama` instance:
 
 ```typescript
-import { OllamaFunctions } from "@langchain/ollama/experimental";
+import { OllamaFunctions } from "@langchain/community/experimental/chat_models/ollama_functions";
 
 const model = new OllamaFunctions({
   temperature: 0.1,
