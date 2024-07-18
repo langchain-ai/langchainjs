@@ -4,7 +4,11 @@ import { test } from "@jest/globals";
 import { AmazonKnowledgeBaseRetriever } from "../bedrock.js";
 
 test("AmazonKnowledgeBaseRetriever", async () => {
-  if (!process.env.BEDROCK_AWS_REGION || !process.env.BEDROCK_AWS_ACCESS_KEY_ID || !process.env.BEDROCK_AWS_SECRET_ACCESS_KEY) {
+  if (
+    !process.env.BEDROCK_AWS_REGION ||
+    !process.env.BEDROCK_AWS_ACCESS_KEY_ID ||
+    !process.env.BEDROCK_AWS_SECRET_ACCESS_KEY
+  ) {
     throw new Error("Missing environment variables for AWS");
   }
 
