@@ -8,7 +8,7 @@ This package contains the LangChain.js integrations for Ollama via the `ollama` 
 npm install @langchain/ollama
 ```
 
-TODO: add setup instructions for ollama locally
+TODO: add setup instructions for Ollama locally
 
 ## Chat Models
 
@@ -16,7 +16,7 @@ TODO: add setup instructions for ollama locally
 import { ChatOllama } from "@langchain/ollama";
 
 const model = new ChatOllama({
-  model: "todo-add-me",  // Default value.
+  model: "llama3",  // Default value.
 });
 
 const result = await model.invoke(["human", "Hello, how are you?"]);
