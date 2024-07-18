@@ -41,7 +41,7 @@
     "@azure/cosmos": "4.0.1-beta.3",
     "@azure/identity": "^4.2.0",
     "@langchain/core": "~0.2",
-    "mongodb": "latest"
+    "mongodb": "^6.8.0"
   },
   "devDependencies": {
     "@jest/globals": "^29.5.0",
