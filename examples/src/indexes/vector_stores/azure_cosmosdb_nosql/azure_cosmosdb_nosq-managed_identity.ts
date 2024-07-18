@@ -7,5 +7,9 @@ const store = new AzureCosmosDBNoSQLVectorStore(
   {
     // Or use environment variable AZURE_COSMOSDB_NOSQL_ENDPOINT
     endpoint: "https://my-cosmosdb.documents.azure.com:443/",
+
+    // Database and container must already exist
+    databaseName: "my-database",
+    containerName: "my-container",
   }
 );

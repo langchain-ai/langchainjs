@@ -33,6 +33,12 @@ import ManagedIdentityExample from "@examples/indexes/vector_stores/azure_cosmos
 
 <CodeBlock language="typescript">{ManagedIdentityExample}</CodeBlock>
 
+:::info
+
+When using Azure Managed Identity and role-based access control, you must ensure that the database and container have been created beforehand. RBAC does not provide permissions to create databases and containers. You can get more information about the permission model in the [Azure Cosmos DB documentation](https://learn.microsoft.com/azure/cosmos-db/how-to-setup-rbac#permission-model).
+
+:::
+
 ## Usage example
 
 Below is an example that indexes documents from a file in Azure Cosmos DB for NoSQL, runs a vector search query, and finally uses a chain to answer a question in natural language
