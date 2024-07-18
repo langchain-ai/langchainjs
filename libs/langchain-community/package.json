@@ -1452,15 +1452,6 @@
       "import": "./vectorstores/azure_cosmosdb.js",
       "require": "./vectorstores/azure_cosmosdb.cjs"
     },
-    "./vectorstores/azure_cosmosdb_mongodb_vcore": {
-      "types": {
-        "import": "./vectorstores/azure_cosmosdb_mongodb_vcore.d.ts",
-        "require": "./vectorstores/azure_cosmosdb_mongodb_vcore.d.cts",
-        "default": "./vectorstores/azure_cosmosdb_mongodb_vcore.d.ts"
-      },
-      "import": "./vectorstores/azure_cosmosdb_mongodb_vcore.js",
-      "require": "./vectorstores/azure_cosmosdb_mongodb_vcore.cjs"
-    },
     "./vectorstores/cassandra": {
       "types": {
         "import": "./vectorstores/cassandra.d.ts",
@@ -3408,10 +3399,6 @@
     "vectorstores/azure_cosmosdb.js",
     "vectorstores/azure_cosmosdb.d.ts",
     "vectorstores/azure_cosmosdb.d.cts",
-    "vectorstores/azure_cosmosdb_mongodb_vcore.cjs",
-    "vectorstores/azure_cosmosdb_mongodb_vcore.js",
-    "vectorstores/azure_cosmosdb_mongodb_vcore.d.ts",
-    "vectorstores/azure_cosmosdb_mongodb_vcore.d.cts",
     "vectorstores/cassandra.cjs",
     "vectorstores/cassandra.js",
     "vectorstores/cassandra.d.ts",
