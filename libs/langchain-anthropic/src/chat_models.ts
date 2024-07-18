@@ -186,7 +186,6 @@ function _makeMessageChunkFromAnthropicEvent(
         total_tokens: usage.input_tokens + usage.output_tokens,
       };
     }
-    console.log("data.message", data.message);
     return {
       chunk: new AIMessageChunk({
         content: fields.coerceContentToString ? "" : [],
