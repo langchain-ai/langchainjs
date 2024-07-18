@@ -107,29 +107,29 @@ import { AzureAISearchVectorStore } from "@langchain/community/vectorstores/azur
 <IntegrationInstallTooltip></IntegrationInstallTooltip>
 
 ```bash npm2yarn
-npm install @langchain/community @azure/cosmos
+npm install @langchain/azure-cosmosdb
 ```
 
 See a [usage example](/docs/integrations/vectorstores/azure_cosmosdb_nosql).
 
 ```typescript
-import { AzureCosmosDBVectorStore } from "@langchain/community/vectorstores/azure_cosmosdb_nosql";
+import { AzureCosmosDBNoSQLVectorStore } from "azure-cosmosdb";
 ```
 
 ### Azure Cosmos DB for MongoDB vCore
 
-> [Azure Cosmos DB for MongoDB vCore](https://learn.microsoft.com/en-us/azure/cosmos-db/mongodb/vcore/) makes it easy to create a database with full native MongoDB support. You can apply your MongoDB experience and continue to use your favorite MongoDB drivers, SDKs, and tools by pointing your application to the API for MongoDB vCore account’s connection string. Use vector search in Azure Cosmos DB for MongoDB vCore to seamlessly integrate your AI-based applications with your data that’s stored in Azure Cosmos DB.
+> [Azure Cosmos DB for MongoDB vCore](https://learn.microsoft.com/azure/cosmos-db/mongodb/vcore/) makes it easy to create a database with full native MongoDB support. You can apply your MongoDB experience and continue to use your favorite MongoDB drivers, SDKs, and tools by pointing your application to the API for MongoDB vCore account’s connection string. Use vector search in Azure Cosmos DB for MongoDB vCore to seamlessly integrate your AI-based applications with your data that’s stored in Azure Cosmos DB.
 
 <IntegrationInstallTooltip></IntegrationInstallTooltip>
 
 ```bash npm2yarn
-npm install @langchain/community mongodb
+npm install @langchain/azure-cosmosdb
 ```
 
 See a [usage example](/docs/integrations/vectorstores/azure_cosmosdb_mongodb_vcore).
 
 ```typescript
-import { AzureCosmosDBVectorStore } from "@langchain/community/vectorstores/azure_cosmosdb_mongodb_vcore";
+import { AzureCosmosDBMongoDBvCoreVectorStore } from "azure-cosmosdb";
 ```
 
 ## Document loaders
