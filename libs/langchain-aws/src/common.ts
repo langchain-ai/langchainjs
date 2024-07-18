@@ -258,8 +258,14 @@ export function convertToConverseTools(
   );
 }
 
+export type BedrockConverseToolChoice =
+  | "any"
+  | "auto"
+  | string
+  | BedrockToolChoice;
+
 export function convertToBedrockToolChoice(
-  toolChoice: string | BedrockToolChoice,
+  toolChoice: BedrockConverseToolChoice,
   tools: BedrockTool[]
 ): BedrockToolChoice {
   if (typeof toolChoice === "string") {

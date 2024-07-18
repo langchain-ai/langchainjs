@@ -16,9 +16,12 @@ import {
 } from "../runnables/config.js";
 import type { RunnableFunc, RunnableInterface } from "../runnables/base.js";
 import { ToolCall, ToolMessage } from "../messages/tool.js";
-import { ZodAny } from "../types/zod.js";
+import { ZodObjectAny } from "../types/zod.js";
 import { MessageContent } from "../messages/base.js";
 import { AsyncLocalStorageProviderSingleton } from "../singletons/index.js";
+import { _isToolCall, ToolInputParsingException } from "./utils.js";
+
+export { ToolInputParsingException };
 
 export type ResponseFormat = "content" | "content_and_artifact" | string;
 
@@ -44,21 +47,7 @@ export interface ToolParams extends BaseLangChainParams {
   responseFormat?: ResponseFormat;
 }
 
-/**
- * Custom error class used to handle exceptions related to tool input parsing.
- * It extends the built-in `Error` class and adds an optional `output`
- * property that can hold the output that caused the exception.
- */
-export class ToolInputParsingException extends Error {
-  output?: string;
-
-  constructor(message: string, output?: string) {
-    super(message);
-    this.output = output;
-  }
-}
-
-export interface StructuredToolInterface<T extends ZodAny = ZodAny>
+export interface StructuredToolInterface<T extends ZodObjectAny = ZodObjectAny>
   extends RunnableInterface<
     (z.output<T> extends string ? string : never) | z.input<T> | ToolCall,
     ToolReturnType
@@ -96,7 +85,7 @@ export interface StructuredToolInterface<T extends ZodAny = ZodAny>
  * Base class for Tools that accept input of any shape defined by a Zod schema.
  */
 export abstract class StructuredTool<
-  T extends ZodAny = ZodAny
+  T extends ZodObjectAny = ZodObjectAny
 > extends BaseLangChain<
   (z.output<T> extends string ? string : never) | z.input<T> | ToolCall,
   ToolReturnType
@@ -259,7 +248,7 @@ export abstract class StructuredTool<
   }
 }
 
-export interface ToolInterface<T extends ZodAny = ZodAny>
+export interface ToolInterface<T extends ZodObjectAny = ZodObjectAny>
   extends StructuredToolInterface<T> {
   /**
    * @deprecated Use .invoke() instead. Will be removed in 0.3.0.
@@ -279,7 +268,7 @@ export interface ToolInterface<T extends ZodAny = ZodAny>
 /**
  * Base class for Tools that accept input as a string.
  */
-export abstract class Tool extends StructuredTool<ZodAny> {
+export abstract class Tool extends StructuredTool<ZodObjectAny> {
   schema = z
     .object({ input: z.string().optional() })
     .transform((obj) => obj.input);
@@ -328,8 +317,9 @@ export interface DynamicToolInput extends BaseDynamicToolInput {
 /**
  * Interface for the input parameters of the DynamicStructuredTool class.
  */
-export interface DynamicStructuredToolInput<T extends ZodAny = ZodAny>
-  extends BaseDynamicToolInput {
+export interface DynamicStructuredToolInput<
+  T extends ZodObjectAny = ZodObjectAny
+> extends BaseDynamicToolInput {
   func: (
     input: BaseDynamicToolInput["responseFormat"] extends "content_and_artifact"
       ? ToolCall
@@ -393,7 +383,7 @@ export class DynamicTool extends Tool {
  * provided function when the tool is called.
  */
 export class DynamicStructuredTool<
-  T extends ZodAny = ZodAny
+  T extends ZodObjectAny = ZodObjectAny
 > extends StructuredTool<T> {
   static lc_name() {
     return "DynamicStructuredTool";
@@ -456,11 +446,11 @@ export abstract class BaseToolkit {
 
 /**
  * Parameters for the tool function.
- * @template {ZodAny} RunInput The input schema for the tool.
- * @template {any} RunOutput The output type for the tool.
+ * @template {ZodObjectAny | z.ZodString = ZodObjectAny} RunInput The input schema for the tool. Either any Zod object, or a Zod string.
  */
-interface ToolWrapperParams<RunInput extends ZodAny = ZodAny>
-  extends ToolParams {
+interface ToolWrapperParams<
+  RunInput extends ZodObjectAny | z.ZodString = ZodObjectAny
+> extends ToolParams {
   /**
    * The name of the tool. If using with an LLM, this
    * will be passed as the tool name.
@@ -491,33 +481,54 @@ interface ToolWrapperParams<RunInput extends ZodAny = ZodAny>
 
 /**
  * Creates a new StructuredTool instance with the provided function, name, description, and schema.
- * @function
- * @template {RunInput extends ZodAny = ZodAny} RunInput The input schema for the tool. This corresponds to the input type when the tool is invoked.
- * @template {RunOutput = any} RunOutput The output type for the tool. This corresponds to the output type when the tool is invoked.
- * @template {FuncInput extends z.infer<RunInput> | ToolCall = z.infer<RunInput>} FuncInput The input type for the function.
  *
- * @param {RunnableFunc<z.infer<RunInput> | ToolCall, RunOutput>} func - The function to invoke when the tool is called.
- * @param fields - An object containing the following properties:
+ * @function
+ * @template {ZodObjectAny | z.ZodString = ZodObjectAny} T The input schema for the tool. Either any Zod object, or a Zod string.
+ *
+ * @param {RunnableFunc<z.output<T>, ToolReturnType>} func - The function to invoke when the tool is called.
+ * @param {ToolWrapperParams<T>} fields - An object containing the following properties:
  * @param {string} fields.name The name of the tool.
  * @param {string | undefined} fields.description The description of the tool. Defaults to either the description on the Zod schema, or `${fields.name} tool`.
- * @param {z.ZodObject<any, any, any, any>} fields.schema The Zod schema defining the input for the tool.
+ * @param {ZodObjectAny | z.ZodString | undefined} fields.schema The Zod schema defining the input for the tool. If undefined, it will default to a Zod string schema.
  *
- * @returns {DynamicStructuredTool<RunInput, RunOutput>} A new StructuredTool instance.
+ * @returns {DynamicStructuredTool<T>} A new StructuredTool instance.
  */
-export function tool<T extends ZodAny = ZodAny>(
+export function tool<T extends z.ZodString = z.ZodString>(
   func: RunnableFunc<z.output<T>, ToolReturnType>,
   fields: ToolWrapperParams<T>
-): DynamicStructuredTool<T> {
-  const schema =
-    fields.schema ??
-    z.object({ input: z.string().optional() }).transform((obj) => obj.input);
+): DynamicTool;
+
+export function tool<T extends ZodObjectAny = ZodObjectAny>(
+  func: RunnableFunc<z.output<T>, ToolReturnType>,
+  fields: ToolWrapperParams<T>
+): DynamicStructuredTool<T>;
+
+export function tool<T extends ZodObjectAny | z.ZodString = ZodObjectAny>(
+  func: RunnableFunc<z.output<T>, ToolReturnType>,
+  fields: ToolWrapperParams<T>
+):
+  | DynamicStructuredTool<T extends ZodObjectAny ? T : ZodObjectAny>
+  | DynamicTool {
+  // If the schema is not provided, or it's a string schema, create a DynamicTool
+  if (!fields.schema || !("shape" in fields.schema) || !fields.schema.shape) {
+    return new DynamicTool({
+      name: fields.name,
+      description:
+        fields.description ??
+        fields.schema?.description ??
+        `${fields.name} tool`,
+      responseFormat: fields.responseFormat,
+      func,
+    });
+  }
 
   const description =
-    fields.description ?? schema.description ?? `${fields.name} tool`;
-  return new DynamicStructuredTool({
+    fields.description ?? fields.schema.description ?? `${fields.name} tool`;
+
+  return new DynamicStructuredTool<T extends ZodObjectAny ? T : ZodObjectAny>({
     name: fields.name,
     description,
-    schema: schema as T,
+    schema: fields.schema as T extends ZodObjectAny ? T : ZodObjectAny,
     // TODO: Consider moving into DynamicStructuredTool constructor
     func: async (input, runManager, config) => {
       return new Promise((resolve, reject) => {
@@ -538,15 +549,6 @@ export function tool<T extends ZodAny = ZodAny>(
     },
     responseFormat: fields.responseFormat,
   });
-}
-
-function _isToolCall(toolCall?: unknown): toolCall is ToolCall {
-  return !!(
-    toolCall &&
-    typeof toolCall === "object" &&
-    "type" in toolCall &&
-    toolCall.type === "tool_call"
-  );
 }
 
 function _formatToolOutput(params: {

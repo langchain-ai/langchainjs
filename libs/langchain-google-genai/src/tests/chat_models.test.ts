@@ -15,6 +15,19 @@ import {
   convertMessageContentToParts,
 } from "../utils/common.js";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function extractKeys(obj: Record<string, any>, keys: string[] = []) {
+  for (const key in obj) {
+    if (Object.prototype.hasOwnProperty.call(obj, key)) {
+      keys.push(key);
+      if (typeof obj[key] === "object" && obj[key] !== null) {
+        extractKeys(obj[key], keys);
+      }
+    }
+  }
+  return keys;
+}
+
 test("Google AI - `temperature` must be in range [0.0,1.0]", async () => {
   expect(
     () =>
@@ -89,19 +102,6 @@ test("Google AI - `safetySettings` category array must be unique", async () => {
 });
 
 test("removeAdditionalProperties can remove all instances of additionalProperties", async () => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  function extractKeys(obj: Record<string, any>, keys: string[] = []) {
-    for (const key in obj) {
-      if (Object.prototype.hasOwnProperty.call(obj, key)) {
-        keys.push(key);
-        if (typeof obj[key] === "object" && obj[key] !== null) {
-          extractKeys(obj[key], keys);
-        }
-      }
-    }
-    return keys;
-  }
-
   const idealResponseSchema = z.object({
     idealResponse: z
       .string()
@@ -136,6 +136,26 @@ test("removeAdditionalProperties can remove all instances of additionalPropertie
   const arrSchemaObj = extractKeys(parsedSchemaObj);
   expect(
     arrSchemaObj.find((key) => key === "additionalProperties")
+  ).toBeUndefined();
+
+  const analysisSchema = z.object({
+    decision: z.enum(["UseAPI", "UseFallback"]),
+    explanation: z.string(),
+    apiDetails: z
+      .object({
+        serviceName: z.string(),
+        endpointName: z.string(),
+        parameters: z.record(z.unknown()),
+        extractionPath: z.string(),
+      })
+      .optional(),
+  });
+  const parsedAnalysisSchema = removeAdditionalProperties(
+    zodToJsonSchema(analysisSchema)
+  );
+  const analysisSchemaObj = extractKeys(parsedAnalysisSchema);
+  expect(
+    analysisSchemaObj.find((key) => key === "additionalProperties")
   ).toBeUndefined();
 });
 

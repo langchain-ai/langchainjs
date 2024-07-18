@@ -36,7 +36,8 @@ export type MessageType =
   | "generic"
   | "system"
   | "function"
-  | "tool";
+  | "tool"
+  | "remove";
 
 export type ImageDetail = "auto" | "low" | "high";
 
@@ -139,6 +140,34 @@ export function mergeContent(
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function stringifyWithDepthLimit(obj: any, depthLimit: number): string {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  function helper(obj: any, currentDepth: number): any {
+    if (typeof obj !== "object" || obj === null || obj === undefined) {
+      return obj;
+    }
+    if (currentDepth >= depthLimit) {
+      if (Array.isArray(obj)) {
+        return "[Array]";
+      }
+      return "[Object]";
+    }
+
+    if (Array.isArray(obj)) {
+      return obj.map((item) => helper(item, currentDepth + 1));
+    }
+
+    const result: Record<string, unknown> = {};
+    for (const key of Object.keys(obj)) {
+      result[key] = helper(obj[key], currentDepth + 1);
+    }
+    return result;
+  }
+
+  return JSON.stringify(helper(obj, 0), null, 2);
+}
+
 /**
  * Base class for all types of messages in a conversation. It includes
  * properties like `content`, `name`, and `additional_kwargs`. It also
@@ -225,6 +254,39 @@ export abstract class BaseMessage
       data: (this.toJSON() as SerializedConstructor)
         .kwargs as StoredMessageData,
     };
+  }
+
+  static lc_name() {
+    return "BaseMessage";
+  }
+
+  // Can't be protected for silly reasons
+  get _printableFields(): Record<string, unknown> {
+    return {
+      id: this.id,
+      content: this.content,
+      name: this.name,
+      additional_kwargs: this.additional_kwargs,
+      response_metadata: this.response_metadata,
+    };
+  }
+
+  get [Symbol.toStringTag]() {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (this.constructor as any).lc_name();
+  }
+
+  // Override the default behavior of console.log
+  [Symbol.for("nodejs.util.inspect.custom")](depth: number | null) {
+    if (depth === null) {
+      return this;
+    }
+    const printable = stringifyWithDepthLimit(
+      this._printableFields,
+      Math.max(4, depth)
+    );
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return `${(this.constructor as any).lc_name()} ${printable}`;
   }
 }
 
