@@ -15,7 +15,7 @@
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-community/",
   "scripts": {
     "build": "yarn turbo:command build:internal --filter=@langchain/community",
-    "build:internal": "yarn lc-build:v2 --create-entrypoints --pre --tree-shaking --gen-maps",
+    "build:internal": "yarn lc_build_v2 --create-entrypoints --pre --tree-shaking --gen-maps",
     "lint:eslint": "NODE_OPTIONS=--max-old-space-size=4096 eslint --cache --ext .ts,.js src/",
     "lint:dpdm": "dpdm --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
     "lint": "yarn lint:eslint && yarn lint:dpdm",
@@ -79,7 +79,7 @@
     "@huggingface/inference": "^2.6.4",
     "@jest/globals": "^29.5.0",
     "@langchain/langgraph": "~0.0.26",
-    "@langchain/scripts": "~0.0.16",
+    "@langchain/scripts": "~0.0.17",
     "@langchain/standard-tests": "0.0.0",
     "@layerup/layerup-security": "^1.5.12",
     "@mendable/firecrawl-js": "^0.0.13",

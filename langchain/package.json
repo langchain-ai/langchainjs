@@ -570,7 +570,7 @@
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/langchain/",
   "scripts": {
     "build": "yarn turbo:command build:internal --filter=langchain",
-    "build:internal": "yarn lc-build:v2 --create-entrypoints --pre --tree-shaking --gen-maps",
+    "build:internal": "yarn lc_build_v2 --create-entrypoints --pre --tree-shaking --gen-maps",
     "build:deps": "yarn run turbo:command build --filter=@langchain/openai --filter=@langchain/textsplitters --filter=@langchain/cohere --concurrency=1",
     "build:esm": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist/ && rimraf dist/tests dist/**/tests",
     "build:cjs": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist-cjs/ -p tsconfig.cjs.json && yarn move-cjs-to-dist && rimraf dist-cjs",
@@ -610,7 +610,7 @@
     "@gomomento/sdk-core": "^1.51.1",
     "@jest/globals": "^29.5.0",
     "@langchain/cohere": "^0.0.8",
-    "@langchain/scripts": "~0.0.16",
+    "@langchain/scripts": "~0.0.17",
     "@mendable/firecrawl-js": "^0.0.13",
     "@notionhq/client": "^2.2.10",
     "@pinecone-database/pinecone": "^1.1.0",

@@ -1,6 +1,6 @@
 {
   "name": "@langchain/scripts",
-  "version": "0.0.16",
+  "version": "0.0.17",
   "description": "Shared scripts for LangChain.js",
   "type": "module",
   "engines": {
@@ -15,7 +15,7 @@
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-scripts/",
   "bin": {
     "lc-build": "bin/build.js",
-    "lc-build:v2": "bin/build_v2.js"
+    "lc_build_v2": "bin/build_v2.js"
   },
   "scripts": {
     "build": "yarn turbo:command build:internal --filter=@langchain/scripts",
