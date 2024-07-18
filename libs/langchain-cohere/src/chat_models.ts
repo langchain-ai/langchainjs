@@ -14,7 +14,6 @@ import {
   BaseLanguageModelInput,
   ToolDefinition,
   isOpenAITool,
-  type BaseLanguageModelCallOptions,
 } from "@langchain/core/language_models/base";
 import { isStructuredTool } from "@langchain/core/utils/function_calling";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
@@ -22,6 +21,7 @@ import {
   type BaseChatModelParams,
   BaseChatModel,
   LangSmithParams,
+  BaseChatModelCallOptions,
 } from "@langchain/core/language_models/chat_models";
 import {
   ChatGeneration,
@@ -84,7 +84,7 @@ interface TokenUsage {
 }
 
 export interface ChatCohereCallOptions
-  extends BaseLanguageModelCallOptions,
+  extends BaseChatModelCallOptions,
     Partial<Omit<Cohere.ChatRequest, "message" | "tools">>,
     Partial<Omit<Cohere.ChatStreamRequest, "message" | "tools">>,
     Pick<ChatCohereInput, "streamUsage"> {
@@ -346,6 +346,12 @@ export class ChatCohere<
   }
 
   invocationParams(options: this["ParsedCallOptions"]) {
+    if (options.tool_choice) {
+      throw new Error(
+        "'tool_choice' call option is not supported by ChatCohere."
+      );
+    }
+
     const params = {
       model: this.model,
       preamble: options.preamble,

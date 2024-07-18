@@ -2,7 +2,6 @@ import type { BaseMessage } from "@langchain/core/messages";
 import { AIMessageChunk } from "@langchain/core/messages";
 import type {
   ToolDefinition,
-  BaseLanguageModelCallOptions,
   BaseLanguageModelInput,
 } from "@langchain/core/language_models/base";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
@@ -10,6 +9,7 @@ import {
   type BaseChatModelParams,
   BaseChatModel,
   LangSmithParams,
+  BaseChatModelCallOptions,
 } from "@langchain/core/language_models/chat_models";
 import type {
   ToolConfiguration,
@@ -30,11 +30,7 @@ import {
 import type { DocumentType as __DocumentType } from "@smithy/types";
 import { StructuredToolInterface } from "@langchain/core/tools";
 import { Runnable, RunnableToolLike } from "@langchain/core/runnables";
-import {
-  BedrockToolChoice,
-  ConverseCommandParams,
-  CredentialType,
-} from "./types.js";
+import { ConverseCommandParams, CredentialType } from "./types.js";
 import {
   convertToConverseTools,
   convertToBedrockToolChoice,
@@ -43,6 +39,7 @@ import {
   handleConverseStreamContentBlockDelta,
   handleConverseStreamMetadata,
   handleConverseStreamContentBlockStart,
+  BedrockConverseToolChoice,
 } from "./common.js";
 
 /**
@@ -127,7 +124,7 @@ export interface ChatBedrockConverseInput
 }
 
 export interface ChatBedrockConverseCallOptions
-  extends BaseLanguageModelCallOptions,
+  extends BaseChatModelCallOptions,
     Pick<
       ChatBedrockConverseInput,
       "additionalModelRequestFields" | "streamUsage"
@@ -149,7 +146,7 @@ export interface ChatBedrockConverseCallOptions
    * or whether to generate text instead.
    * If a tool name is passed, it will force the model to call that specific tool.
    */
-  tool_choice?: "any" | "auto" | string | BedrockToolChoice;
+  tool_choice?: BedrockConverseToolChoice;
 }
 
 /**

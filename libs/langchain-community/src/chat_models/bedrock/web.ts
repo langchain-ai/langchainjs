@@ -378,6 +378,12 @@ export class BedrockChat
   }
 
   override invocationParams(options?: this["ParsedCallOptions"]) {
+    if (options?.tool_choice) {
+      throw new Error(
+        "'tool_choice' call option is not supported by BedrockChat."
+      );
+    }
+
     const callOptionTools = formatTools(options?.tools ?? []);
     return {
       tools: [...(this._anthropicTools ?? []), ...callOptionTools],

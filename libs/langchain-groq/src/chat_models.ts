@@ -69,7 +69,7 @@ import { ToolCallChunk } from "@langchain/core/messages/tool";
 export interface ChatGroqCallOptions extends BaseChatModelCallOptions {
   headers?: Record<string, string>;
   tools?: OpenAIClient.ChatCompletionTool[];
-  tool_choice?: OpenAIClient.ChatCompletionToolChoiceOption;
+  tool_choice?: OpenAIClient.ChatCompletionToolChoiceOption | "any" | string;
   response_format?: { type: "json_object" };
 }
 
