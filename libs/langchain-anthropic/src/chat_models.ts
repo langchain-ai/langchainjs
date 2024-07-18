@@ -125,6 +125,7 @@ function anthropicResponseToChatMessages(
           additional_kwargs: additionalKwargs,
           usage_metadata: usageMetadata,
           response_metadata: additionalKwargs,
+          id: additionalKwargs.id as string,
         }),
       },
     ];
@@ -140,6 +141,7 @@ function anthropicResponseToChatMessages(
           tool_calls: toolCalls,
           usage_metadata: usageMetadata,
           response_metadata: additionalKwargs,
+          id: additionalKwargs.id as string,
         }),
       },
     ];
@@ -184,11 +186,13 @@ function _makeMessageChunkFromAnthropicEvent(
         total_tokens: usage.input_tokens + usage.output_tokens,
       };
     }
+    console.log("data.message", data.message);
     return {
       chunk: new AIMessageChunk({
         content: fields.coerceContentToString ? "" : [],
         additional_kwargs: filteredAdditionalKwargs,
         usage_metadata: usageMetadata,
+        id: data.message.id,
       }),
       usageData: usageDataCopy,
     };
@@ -954,6 +958,7 @@ export class ChatAnthropicMessages<
           tool_call_chunks: newToolCallChunk ? [newToolCallChunk] : undefined,
           usage_metadata: chunk.usage_metadata,
           response_metadata: chunk.response_metadata,
+          id: chunk.id,
         }),
         text: token ?? "",
       });
