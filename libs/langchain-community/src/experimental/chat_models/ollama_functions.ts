@@ -18,13 +18,13 @@ You must always select one of the above tools and respond with only a JSON objec
 }}`;
 
 /**
- * @deprecated Deprecated in favor of the `@langchain/ollama` package. Import from `@langchain/ollama/experimental` instead.
+ * @deprecated Deprecated in favor of the `@langchain/ollama` package. Import `ChatOllama` from `@langchain/ollama` instead.
  */
 export interface ChatOllamaFunctionsCallOptions
   extends BaseFunctionCallOptions {}
 
 /**
- * @deprecated Deprecated in favor of the `@langchain/ollama` package. Import from `@langchain/ollama/experimental` instead.
+ * @deprecated Deprecated in favor of the `@langchain/ollama` package. Import `ChatOllama` from `@langchain/ollama` instead.
  */
 export type OllamaFunctionsInput = Partial<ChatOllamaInput> &
   BaseChatModelParams & {
@@ -33,7 +33,7 @@ export type OllamaFunctionsInput = Partial<ChatOllamaInput> &
   };
 
 /**
- * @deprecated Deprecated in favor of the `@langchain/ollama` package. Import from `@langchain/ollama/experimental` instead.
+ * @deprecated Deprecated in favor of the `@langchain/ollama` package. Import `ChatOllama` from `@langchain/ollama` instead.
  */
 export class OllamaFunctions extends BaseChatModel<ChatOllamaFunctionsCallOptions> {
   llm: ChatOllama;

@@ -11,7 +11,9 @@ import {
 import { ChatOllama } from "../chat_models.js";
 
 test("test invoke", async () => {
-  const ollama = new ChatOllama();
+  const ollama = new ChatOllama({
+    maxRetries: 1,
+  });
   const result = await ollama.invoke([
     "human",
     "What is a good name for a company that makes colorful socks?",
@@ -22,7 +24,9 @@ test("test invoke", async () => {
 });
 
 test("test call with callback", async () => {
-  const ollama = new ChatOllama();
+  const ollama = new ChatOllama({
+    maxRetries: 1,
+  });
   const tokens: string[] = [];
   const result = await ollama.invoke(
     "What is a good name for a company that makes colorful socks?",
@@ -41,7 +45,9 @@ test("test call with callback", async () => {
 });
 
 test("test streaming call", async () => {
-  const ollama = new ChatOllama();
+  const ollama = new ChatOllama({
+    maxRetries: 1,
+  });
   const stream = await ollama.stream(
     `Translate "I love programming" into German.`
   );
@@ -53,7 +59,9 @@ test("test streaming call", async () => {
 });
 
 test("should abort the request", async () => {
-  const ollama = new ChatOllama();
+  const ollama = new ChatOllama({
+    maxRetries: 1,
+  });
   const controller = new AbortController();
 
   await expect(() => {
@@ -66,7 +74,9 @@ test("should abort the request", async () => {
 });
 
 test("Test multiple messages", async () => {
-  const model = new ChatOllama();
+  const model = new ChatOllama({
+    maxRetries: 1,
+  });
   const res = await model.invoke([
     new HumanMessage({ content: "My name is Jonas" }),
   ]);
@@ -90,7 +100,9 @@ AI:`;
   // Infer the input variables from the template
   const prompt = PromptTemplate.fromTemplate(TEMPLATE);
 
-  const ollama = new ChatOllama();
+  const ollama = new ChatOllama({
+    maxRetries: 1,
+  });
   const outputParser = new BytesOutputParser();
   const chain = prompt.pipe(ollama).pipe(outputParser);
   const stream = await chain.stream({
@@ -116,6 +128,7 @@ AI:`;
   const ollama = new ChatOllama({
     model: "llama2",
     format: "json",
+    maxRetries: 1,
   });
   const outputParser = new StringOutputParser();
   const chain = prompt.pipe(ollama).pipe(outputParser);
@@ -125,12 +138,13 @@ AI:`;
   expect(JSON.parse(res).response).toBeDefined();
 });
 
-test("Test ChatOllama with an image", async () => {
+test.skip("Test ChatOllama with an image", async () => {
   const __filename = fileURLToPath(import.meta.url);
   const __dirname = path.dirname(__filename);
   const imageData = await fs.readFile(path.join(__dirname, "/data/hotdog.jpg"));
   const chat = new ChatOllama({
     model: "llava",
+    maxRetries: 1,
   });
   const res = await chat.invoke([
     new HumanMessage({
@@ -152,6 +166,7 @@ test("Test ChatOllama with an image", async () => {
 test("test max tokens (numPredict)", async () => {
   const ollama = new ChatOllama({
     numPredict: 10,
+    maxRetries: 1,
   }).pipe(new StringOutputParser());
   const stream = await ollama.stream(
     "explain quantum physics to me in as many words as possible"

@@ -11,9 +11,11 @@ class ChatOllamaStandardUnitTests extends ChatModelUnitTests<
   constructor() {
     super({
       Cls: ChatOllama,
-      chatModelHasToolCalling: false,
-      chatModelHasStructuredOutput: false,
-      constructorArgs: {},
+      chatModelHasToolCalling: true,
+      chatModelHasStructuredOutput: true,
+      constructorArgs: {
+        model: "llama3-groq-tool-use",
+      },
     });
   }
 
