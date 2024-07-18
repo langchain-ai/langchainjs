@@ -48,6 +48,7 @@
     "@langchain/google-vertexai": "workspace:*",
     "@langchain/google-vertexai-web": "workspace:*",
     "@langchain/groq": "workspace:*",
+    "@langchain/langgraph": "^0.0.28",
     "@langchain/mistralai": "workspace:*",
     "@langchain/mongodb": "workspace:*",
     "@langchain/nomic": "workspace:*",

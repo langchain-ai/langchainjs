@@ -20,6 +20,7 @@ import {
   Runnable,
   RunnablePassthrough,
   RunnableSequence,
+  RunnableToolLike,
 } from "@langchain/core/runnables";
 import { JsonOutputKeyToolsParser } from "@langchain/core/output_parsers/openai_tools";
 import { BaseLLMOutputParser } from "@langchain/core/output_parsers";
@@ -163,6 +164,7 @@ function convertToGeminiTools(
     | StructuredToolInterface
     | Record<string, unknown>
     | ToolDefinition
+    | RunnableToolLike
   )[]
 ): GeminiTool[] {
   return [
@@ -317,6 +319,7 @@ export abstract class ChatGoogleBase<AuthOptions>
       | StructuredToolInterface
       | Record<string, unknown>
       | ToolDefinition
+      | RunnableToolLike
     )[],
     kwargs?: Partial<GoogleAIBaseLanguageModelCallOptions>
   ): Runnable<
@@ -336,6 +339,12 @@ export abstract class ChatGoogleBase<AuthOptions>
    * Get the parameters used to invoke the model
    */
   override invocationParams(options?: this["ParsedCallOptions"]) {
+    if (options?.tool_choice) {
+      throw new Error(
+        `'tool_choice' call option is not supported by ${this.getName()}.`
+      );
+    }
+
     return copyAIModelParams(this, options);
   }
 

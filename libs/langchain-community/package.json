@@ -1,6 +1,6 @@
 {
   "name": "@langchain/community",
-  "version": "0.2.17",
+  "version": "0.2.19",
   "description": "Third-party integrations for LangChain.js",
   "type": "module",
   "engines": {
@@ -35,7 +35,7 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@langchain/core": "~0.2.11",
+    "@langchain/core": ">=0.2.16 <0.3.0",
     "@langchain/openai": "~0.1.0",
     "binary-extensions": "^2.2.0",
     "expr-eval": "^2.0.2",
@@ -78,6 +78,7 @@
     "@gradientai/nodejs-sdk": "^1.2.0",
     "@huggingface/inference": "^2.6.4",
     "@jest/globals": "^29.5.0",
+    "@langchain/langgraph": "~0.0.26",
     "@langchain/scripts": "~0.0.14",
     "@langchain/standard-tests": "0.0.0",
     "@layerup/layerup-security": "^1.5.12",
@@ -129,10 +130,10 @@
     "@vercel/postgres": "^0.5.0",
     "@writerai/writer-sdk": "^0.40.2",
     "@xata.io/client": "^0.28.0",
-    "@xenova/transformers": "^2.5.4",
+    "@xenova/transformers": "^2.17.2",
     "@zilliz/milvus2-sdk-node": ">=2.3.5",
     "apify-client": "^2.7.1",
-    "assemblyai": "^4.0.0",
+    "assemblyai": "^4.6.0",
     "better-sqlite3": ">=9.4.0 <12.0.0",
     "cassandra-driver": "^4.7.2",
     "cborg": "^4.1.1",
@@ -239,6 +240,7 @@
     "@google-cloud/storage": "^6.10.1 || ^7.7.0",
     "@gradientai/nodejs-sdk": "^1.2.0",
     "@huggingface/inference": "^2.6.4",
+    "@langchain/langgraph": "~0.0.26",
     "@layerup/layerup-security": "^1.5.12",
     "@mendable/firecrawl-js": "^0.0.13",
     "@mlc-ai/web-llm": "0.2.46",
@@ -269,10 +271,10 @@
     "@vercel/postgres": "^0.5.0",
     "@writerai/writer-sdk": "^0.40.2",
     "@xata.io/client": "^0.28.0",
-    "@xenova/transformers": "^2.5.4",
+    "@xenova/transformers": "^2.17.2",
     "@zilliz/milvus2-sdk-node": ">=2.3.5",
     "apify-client": "^2.7.1",
-    "assemblyai": "^4.0.0",
+    "assemblyai": "^4.6.0",
     "better-sqlite3": ">=9.4.0 <12.0.0",
     "cassandra-driver": "^4.7.2",
     "cborg": "^4.1.1",
@@ -411,6 +413,9 @@
       "optional": true
     },
     "@huggingface/inference": {
+      "optional": true
+    },
+    "@langchain/langgraph": {
       "optional": true
     },
     "@layerup/layerup-security": {
@@ -3049,6 +3054,15 @@
       "import": "./chains/graph_qa/cypher.js",
       "require": "./chains/graph_qa/cypher.cjs"
     },
+    "./langgraph/checkpointers/vercel_kv": {
+      "types": {
+        "import": "./langgraph/checkpointers/vercel_kv.d.ts",
+        "require": "./langgraph/checkpointers/vercel_kv.d.cts",
+        "default": "./langgraph/checkpointers/vercel_kv.d.ts"
+      },
+      "import": "./langgraph/checkpointers/vercel_kv.js",
+      "require": "./langgraph/checkpointers/vercel_kv.cjs"
+    },
     "./package.json": "./package.json"
   },
   "files": [
@@ -4096,6 +4110,10 @@
     "chains/graph_qa/cypher.cjs",
     "chains/graph_qa/cypher.js",
     "chains/graph_qa/cypher.d.ts",
-    "chains/graph_qa/cypher.d.cts"
+    "chains/graph_qa/cypher.d.cts",
+    "langgraph/checkpointers/vercel_kv.cjs",
+    "langgraph/checkpointers/vercel_kv.js",
+    "langgraph/checkpointers/vercel_kv.d.ts",
+    "langgraph/checkpointers/vercel_kv.d.cts"
   ]
 }

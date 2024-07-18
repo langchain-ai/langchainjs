@@ -1,6 +1,6 @@
 {
   "name": "@langchain/groq",
-  "version": "0.0.13",
+  "version": "0.0.15",
   "description": "Groq integration for LangChain.js",
   "type": "module",
   "engines": {
@@ -35,8 +35,8 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@langchain/core": ">=0.2.9 <0.3.0",
-    "@langchain/openai": "~0.1.0",
+    "@langchain/core": ">=0.2.16 <0.3.0",
+    "@langchain/openai": "~0.2.4",
     "groq-sdk": "^0.3.2",
     "zod": "^3.22.4",
     "zod-to-json-schema": "^3.22.5"

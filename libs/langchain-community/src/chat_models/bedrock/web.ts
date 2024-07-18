@@ -16,7 +16,7 @@ import {
   ToolDefinition,
   isOpenAITool,
 } from "@langchain/core/language_models/base";
-import { Runnable } from "@langchain/core/runnables";
+import { Runnable, RunnableToolLike } from "@langchain/core/runnables";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import {
   AIMessageChunk,
@@ -33,7 +33,6 @@ import {
 } from "@langchain/core/outputs";
 import { StructuredToolInterface } from "@langchain/core/tools";
 import { isStructuredTool } from "@langchain/core/utils/function_calling";
-import { ToolCall } from "@langchain/core/messages/tool";
 import { zodToJsonSchema } from "zod-to-json-schema";
 
 import type { SerializedFields } from "../../load/map_keys.js";
@@ -42,7 +41,10 @@ import {
   BedrockLLMInputOutputAdapter,
   type CredentialType,
 } from "../../utils/bedrock/index.js";
-import { isAnthropicTool } from "../../utils/bedrock/anthropic.js";
+import {
+  _toolsInParams,
+  isAnthropicTool,
+} from "../../utils/bedrock/anthropic.js";
 
 type AnthropicTool = Record<string, unknown>;
 
@@ -142,7 +144,12 @@ function formatTools(tools: BedrockChatCallOptions["tools"]): AnthropicTool[] {
 }
 
 export interface BedrockChatCallOptions extends BaseChatModelCallOptions {
-  tools?: (StructuredToolInterface | AnthropicTool | ToolDefinition)[];
+  tools?: (
+    | StructuredToolInterface
+    | AnthropicTool
+    | ToolDefinition
+    | RunnableToolLike
+  )[];
 }
 
 export interface BedrockChatFields
@@ -371,6 +378,12 @@ export class BedrockChat
   }
 
   override invocationParams(options?: this["ParsedCallOptions"]) {
+    if (options?.tool_choice) {
+      throw new Error(
+        "'tool_choice' call option is not supported by BedrockChat."
+      );
+    }
+
     const callOptionTools = formatTools(options?.tools ?? []);
     return {
       tools: [...(this._anthropicTools ?? []), ...callOptionTools],
@@ -551,145 +564,122 @@ export class BedrockChat
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
-    if (this._anthropicTools) {
-      const { generations } = await this._generateNonStreaming(
-        messages,
-        options
+    const provider = this.model.split(".")[0];
+    const service = "bedrock-runtime";
+
+    const endpointHost =
+      this.endpointHost ?? `${service}.${this.region}.amazonaws.com`;
+
+    const bedrockMethod =
+      provider === "anthropic" ||
+      provider === "cohere" ||
+      provider === "meta" ||
+      provider === "mistral"
+        ? "invoke-with-response-stream"
+        : "invoke";
+
+    const response = await this._signedFetch(messages, options, {
+      bedrockMethod,
+      endpointHost,
+      provider,
+    });
+
+    if (response.status < 200 || response.status >= 300) {
+      throw Error(
+        `Failed to access underlying url '${endpointHost}': got ${
+          response.status
+        } ${response.statusText}: ${await response.text()}`
       );
-      const result = generations[0].message as AIMessage;
-      const toolCallChunks = result.tool_calls?.map(
-        (toolCall: ToolCall, index: number) => ({
-          name: toolCall.name,
-          args: JSON.stringify(toolCall.args),
-          id: toolCall.id,
-          index,
-        })
-      );
-      yield new ChatGenerationChunk({
-        message: new AIMessageChunk({
-          content: result.content,
-          additional_kwargs: result.additional_kwargs,
-          tool_call_chunks: toolCallChunks,
-        }),
-        text: generations[0].text,
-      });
-      // eslint-disable-next-line no-void
-      void runManager?.handleLLMNewToken(generations[0].text);
-    } else {
-      const provider = this.model.split(".")[0];
-      const service = "bedrock-runtime";
+    }
 
-      const endpointHost =
-        this.endpointHost ?? `${service}.${this.region}.amazonaws.com`;
-
-      const bedrockMethod =
-        provider === "anthropic" ||
-        provider === "cohere" ||
-        provider === "meta" ||
-        provider === "mistral"
-          ? "invoke-with-response-stream"
-          : "invoke";
-
-      const response = await this._signedFetch(messages, options, {
-        bedrockMethod,
-        endpointHost,
-        provider,
-      });
-
-      if (response.status < 200 || response.status >= 300) {
-        throw Error(
-          `Failed to access underlying url '${endpointHost}': got ${
-            response.status
-          } ${response.statusText}: ${await response.text()}`
-        );
-      }
-
-      if (
-        provider === "anthropic" ||
-        provider === "cohere" ||
-        provider === "meta" ||
-        provider === "mistral"
-      ) {
-        const reader = response.body?.getReader();
-        const decoder = new TextDecoder();
-        for await (const chunk of this._readChunks(reader)) {
-          const event = this.codec.decode(chunk);
-          if (
-            (event.headers[":event-type"] !== undefined &&
-              event.headers[":event-type"].value !== "chunk") ||
-            event.headers[":content-type"].value !== "application/json"
-          ) {
-            throw Error(`Failed to get event chunk: got ${chunk}`);
-          }
-          const body = JSON.parse(decoder.decode(event.body));
-          if (body.message) {
-            throw new Error(body.message);
-          }
-          if (body.bytes !== undefined) {
-            const chunkResult = JSON.parse(
-              decoder.decode(
-                Uint8Array.from(atob(body.bytes), (m) => m.codePointAt(0) ?? 0)
-              )
+    if (
+      provider === "anthropic" ||
+      provider === "cohere" ||
+      provider === "meta" ||
+      provider === "mistral"
+    ) {
+      const toolsInParams = !_toolsInParams(options);
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      for await (const chunk of this._readChunks(reader)) {
+        const event = this.codec.decode(chunk);
+        if (
+          (event.headers[":event-type"] !== undefined &&
+            event.headers[":event-type"].value !== "chunk") ||
+          event.headers[":content-type"].value !== "application/json"
+        ) {
+          throw Error(`Failed to get event chunk: got ${chunk}`);
+        }
+        const body = JSON.parse(decoder.decode(event.body));
+        if (body.message) {
+          throw new Error(body.message);
+        }
+        if (body.bytes !== undefined) {
+          const chunkResult = JSON.parse(
+            decoder.decode(
+              Uint8Array.from(atob(body.bytes), (m) => m.codePointAt(0) ?? 0)
+            )
+          );
+          if (this.usesMessagesApi) {
+            const chunk = BedrockLLMInputOutputAdapter.prepareMessagesOutput(
+              provider,
+              chunkResult,
+              {
+                coerceContentToString: toolsInParams,
+              }
             );
-            if (this.usesMessagesApi) {
-              const chunk = BedrockLLMInputOutputAdapter.prepareMessagesOutput(
-                provider,
-                chunkResult
-              );
-              if (chunk === undefined) {
-                continue;
-              }
-              if (
-                provider === "anthropic" &&
-                chunk.generationInfo?.usage !== undefined
-              ) {
-                // Avoid bad aggregation in chunks, rely on final Bedrock data
-                delete chunk.generationInfo.usage;
-              }
-              const finalMetrics =
-                chunk.generationInfo?.["amazon-bedrock-invocationMetrics"];
-              if (
-                finalMetrics != null &&
-                typeof finalMetrics === "object" &&
-                isAIMessage(chunk.message)
-              ) {
-                chunk.message.usage_metadata = {
-                  input_tokens: finalMetrics.inputTokenCount,
-                  output_tokens: finalMetrics.outputTokenCount,
-                  total_tokens:
-                    finalMetrics.inputTokenCount +
-                    finalMetrics.outputTokenCount,
-                };
-              }
-              if (isChatGenerationChunk(chunk)) {
-                yield chunk;
-              }
-              // eslint-disable-next-line no-void
-              void runManager?.handleLLMNewToken(chunk.text);
-            } else {
-              const text = BedrockLLMInputOutputAdapter.prepareOutput(
-                provider,
-                chunkResult
-              );
-              yield new ChatGenerationChunk({
-                text,
-                message: new AIMessageChunk({ content: text }),
-              });
-              // eslint-disable-next-line no-void
-              void runManager?.handleLLMNewToken(text);
+            if (chunk === undefined) {
+              continue;
             }
+            if (
+              provider === "anthropic" &&
+              chunk.generationInfo?.usage !== undefined
+            ) {
+              // Avoid bad aggregation in chunks, rely on final Bedrock data
+              delete chunk.generationInfo.usage;
+            }
+            const finalMetrics =
+              chunk.generationInfo?.["amazon-bedrock-invocationMetrics"];
+            if (
+              finalMetrics != null &&
+              typeof finalMetrics === "object" &&
+              isAIMessage(chunk.message)
+            ) {
+              chunk.message.usage_metadata = {
+                input_tokens: finalMetrics.inputTokenCount,
+                output_tokens: finalMetrics.outputTokenCount,
+                total_tokens:
+                  finalMetrics.inputTokenCount + finalMetrics.outputTokenCount,
+              };
+            }
+            if (isChatGenerationChunk(chunk)) {
+              yield chunk;
+            }
+            // eslint-disable-next-line no-void
+            void runManager?.handleLLMNewToken(chunk.text);
+          } else {
+            const text = BedrockLLMInputOutputAdapter.prepareOutput(
+              provider,
+              chunkResult
+            );
+            yield new ChatGenerationChunk({
+              text,
+              message: new AIMessageChunk({ content: text }),
+            });
+            // eslint-disable-next-line no-void
+            void runManager?.handleLLMNewToken(text);
           }
         }
-      } else {
-        const json = await response.json();
-        const text = BedrockLLMInputOutputAdapter.prepareOutput(provider, json);
-        yield new ChatGenerationChunk({
-          text,
-          message: new AIMessageChunk({ content: text }),
-        });
-        // eslint-disable-next-line no-void
-        void runManager?.handleLLMNewToken(text);
       }
+    } else {
+      const json = await response.json();
+      const text = BedrockLLMInputOutputAdapter.prepareOutput(provider, json);
+      yield new ChatGenerationChunk({
+        text,
+        message: new AIMessageChunk({ content: text }),
+      });
+      // eslint-disable-next-line no-void
+      void runManager?.handleLLMNewToken(text);
     }
   }
 
@@ -744,7 +734,12 @@ export class BedrockChat
   }
 
   override bindTools(
-    tools: (StructuredToolInterface | AnthropicTool | ToolDefinition)[],
+    tools: (
+      | StructuredToolInterface
+      | AnthropicTool
+      | ToolDefinition
+      | RunnableToolLike
+    )[],
     _kwargs?: Partial<this["ParsedCallOptions"]>
   ): Runnable<
     BaseLanguageModelInput,

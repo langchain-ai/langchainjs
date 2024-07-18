@@ -11,8 +11,7 @@ on:
     paths:
       - 'langchain-core/**'
       - 'libs/**/**'
-  workflow_dispatch:  # Allows triggering the workflow manually in GitHub UI
-
+  workflow_dispatch: # Allows triggering the workflow manually in GitHub UI
 
 # If another push to the same PR or branch happens while this workflow is still running,
 # cancel the earlier run in favor of the next run.
@@ -48,6 +47,7 @@ jobs:
       PACKAGES: "anthropic,azure-openai,cloudflare,cohere,core,community,exa,google-common,google-gauth,google-genai,google-vertexai,google-vertexai-web,google-webauth,groq,mistralai,mongo,nomic,openai,pinecone,qdrant,redis,textsplitters,weaviate,yandex,baidu-qianfan"
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
+      matrix_length: ${{ steps.set-matrix.outputs.matrix_length }}
     steps:
       - id: set-matrix
         run: |
@@ -71,14 +71,17 @@ jobs:
             fi
           done
           matrix="$matrix]}"
+          matrix_length=$(echo $matrix | jq '.include | length')
           echo "Matrix: $matrix"
+          echo "Matrix length: $matrix_length"
+          echo "matrix_length=$matrix_length" >> $GITHUB_OUTPUT
           echo "matrix=$matrix" >> $GITHUB_OUTPUT
 
   unit-tests:
     name: Unit Tests
     needs: prepare-matrix
     # Only run this job if there are packages to test
-    if: ${{ fromJson(needs.prepare-matrix.outputs.matrix).include.length != 0 }}
+    if: needs.prepare-matrix.outputs.matrix_length > 0
     runs-on: ubuntu-latest
     strategy:
       matrix: ${{ fromJson(needs.prepare-matrix.outputs.matrix) }}

@@ -3,7 +3,6 @@ import { HumanMessage } from "@langchain/core/messages";
 
 const model = new ChatCohere({
   apiKey: process.env.COHERE_API_KEY, // Default
-  model: "command", // Default
 });
 
 const documents = [
@@ -29,6 +28,6 @@ const response = await model.invoke(
   }
 );
 console.log("response: ", response.content);
-/**
-response:  Harrison worked as an engineer at Kensho for about 3 years.
- */
+/*
+  response:  Harrison worked as an engineer at Kensho for about 3 years.
+*/

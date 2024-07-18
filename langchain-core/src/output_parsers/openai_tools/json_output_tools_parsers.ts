@@ -71,6 +71,7 @@ export function parseToolCall(
   const parsedToolCall: ToolCall = {
     name: rawToolCall.function.name,
     args: functionArgs,
+    type: "tool_call",
   };
 
   if (options?.returnId) {
@@ -104,6 +105,7 @@ export function makeInvalidToolCall(
     args: rawToolCall.function?.arguments,
     id: rawToolCall.id,
     error: errorMsg,
+    type: "invalid_tool_call",
   };
 }
 
