@@ -3,8 +3,10 @@ import {
   HumanMessage,
   AIMessage,
   ToolMessage,
+  AIMessageChunk,
 } from "@langchain/core/messages";
-import { convertToConverseMessages } from "../common.js";
+import { convertToConverseMessages, handleConverseStreamContentBlockDelta } from "../common.js";
+import { concat } from "@langchain/core/utils/stream";
 
 test("convertToConverseMessages works", () => {
   const messages = [
@@ -71,3 +73,36 @@ test("convertToConverseMessages works", () => {
     url: "https://weather.com",
   });
 });
+
+test("Streaming supports empty string chunks", async () => {
+  const contentBlocks = [
+    {
+      contentBlockIndex: 0,
+      delta: {
+        text: "Hello ",
+      }
+    },
+    {
+      contentBlockIndex: 0,
+      delta: {
+        text: "",
+      }
+    },
+    {
+      contentBlockIndex: 0,
+      delta: {
+        text: "world!",
+      }
+    }
+  ]
+
+  let finalChunk: AIMessageChunk | undefined;
+  for (const block of contentBlocks) {
+    const chunk = handleConverseStreamContentBlockDelta(block).message;
+    finalChunk = !finalChunk ? chunk : concat(finalChunk, chunk);
+  }
+
+  expect(finalChunk).toBeDefined();
+  if (!finalChunk) return;
+  expect(finalChunk.content).toBe("Hello world!");
+})

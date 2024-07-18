@@ -381,7 +381,7 @@ export function handleConverseStreamContentBlockDelta(
   if (!contentBlockDelta.delta) {
     throw new Error("No delta found in content block.");
   }
-  if (contentBlockDelta.delta.text) {
+  if (typeof contentBlockDelta.delta.text === "string") {
     return new ChatGenerationChunk({
       text: contentBlockDelta.delta.text,
       message: new AIMessageChunk({
@@ -404,11 +404,8 @@ export function handleConverseStreamContentBlockDelta(
       }),
     });
   } else {
-    const unsupportedField = Object.entries(contentBlockDelta.delta).filter(
-      ([_, value]) => !!value
-    );
     throw new Error(
-      `Unsupported content block type: ${unsupportedField[0][0]}`
+      `Unsupported content block type(s): ${JSON.stringify(contentBlockDelta.delta, null, 2)}`
     );
   }
 }
