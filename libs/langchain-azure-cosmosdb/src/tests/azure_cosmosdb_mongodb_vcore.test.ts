@@ -2,7 +2,7 @@
 import { jest, test, expect } from "@jest/globals";
 import { Document } from "@langchain/core/documents";
 import { FakeEmbeddings } from "@langchain/core/utils/testing";
-import { AzureCosmosDBVectorStore } from "../azure_cosmosdb_mongodb_vcore.js";
+import { AzureCosmosDBMongoDBvCoreVectorStore } from "../azure_cosmosdb_mongodb_vcore.js";
 
 // Mock mongodb client
 const createMockClient = () => ({
@@ -43,10 +43,10 @@ beforeEach(() => {
   embedMock.mockClear();
 });
 
-test("AzureCosmosDBVectorStore works", async () => {
+test("AzureCosmosDBMongoDBvCoreVectorStore works", async () => {
   const client = createMockClient();
   const embeddings = new FakeEmbeddings();
-  const store = new AzureCosmosDBVectorStore(embeddings, {
+  const store = new AzureCosmosDBMongoDBvCoreVectorStore(embeddings, {
     client: client as any,
   });
 
@@ -70,10 +70,10 @@ test("AzureCosmosDBVectorStore works", async () => {
   expect(results).toHaveLength(1);
 });
 
-test("AzureCosmosDBVectorStore manages its index", async () => {
+test("AzureCosmosDBMongoDBvCoreVectorStore manages its index", async () => {
   const client = createMockClient();
   const embeddings = new FakeEmbeddings();
-  const store = new AzureCosmosDBVectorStore(embeddings, {
+  const store = new AzureCosmosDBMongoDBvCoreVectorStore(embeddings, {
     client: client as any,
   });
 
@@ -91,10 +91,10 @@ test("AzureCosmosDBVectorStore manages its index", async () => {
   expect(mockCollection.dropIndex).toHaveBeenCalledTimes(1);
 });
 
-test("AzureCosmosDBVectorStore deletes documents", async () => {
+test("AzureCosmosDBMongoDBvCoreVectorStore deletes documents", async () => {
   const client = createMockClient();
   const embeddings = new FakeEmbeddings();
-  const store = new AzureCosmosDBVectorStore(embeddings, {
+  const store = new AzureCosmosDBMongoDBvCoreVectorStore(embeddings, {
     client: client as any,
   });
 
@@ -115,10 +115,10 @@ test("AzureCosmosDBVectorStore deletes documents", async () => {
   expect(mockCollection.deleteMany.mock.calls[2][0]).toMatchObject({ a: 1 });
 });
 
-test("AzureCosmosDBVectorStore adds vectors", async () => {
+test("AzureCosmosDBMongoDBvCoreVectorStore adds vectors", async () => {
   const client = createMockClient();
   const embeddings = new FakeEmbeddings();
-  const store = new AzureCosmosDBVectorStore(embeddings, {
+  const store = new AzureCosmosDBMongoDBvCoreVectorStore(embeddings, {
     client: client as any,
   });
 
@@ -137,10 +137,10 @@ test("AzureCosmosDBVectorStore adds vectors", async () => {
   expect(mockCollection.insertMany).toHaveBeenCalledTimes(1);
 });
 
-test("AzureCosmosDBVectorStore initializes from texts", async () => {
+test("AzureCosmosDBMongoDBvCoreVectorStore initializes from texts", async () => {
   const client = createMockClient();
   const embeddings = new FakeEmbeddings();
-  const store = await AzureCosmosDBVectorStore.fromTexts(
+  const store = await AzureCosmosDBMongoDBvCoreVectorStore.fromTexts(
     ["test", "hello", "world"],
     {},
     embeddings,
@@ -168,10 +168,10 @@ test("AzureCosmosDBVectorStore initializes from texts", async () => {
   expect(embedMock).toHaveBeenCalledTimes(1);
 });
 
-test("AzureCosmosDBVectorStore initializes from documents", async () => {
+test("AzureCosmosDBMongoDBvCoreVectorStore initializes from documents", async () => {
   const client = createMockClient();
   const embeddings = new FakeEmbeddings();
-  const store = await AzureCosmosDBVectorStore.fromDocuments(
+  const store = await AzureCosmosDBMongoDBvCoreVectorStore.fromDocuments(
     [
       new Document({ pageContent: "house" }),
       new Document({ pageContent: "pool" }),

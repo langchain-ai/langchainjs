@@ -29,7 +29,7 @@ const CONTAINER_NAME = "testContainer";
  *
  * A regular OpenAI key can also be used instead of Azure OpenAI.
  */
-describe.skip("AzureCosmosDBNoSQLVectorStore", () => {
+describe("AzureCosmosDBNoSQLVectorStore", () => {
   beforeEach(async () => {
     expect(process.env.AZURE_COSMOSDB_NOSQL_CONNECTION_STRING).toBeDefined();
 
