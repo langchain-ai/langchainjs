@@ -30545,9 +30545,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"langsmith@npm:^0.1.30, langsmith@npm:~0.1.30, langsmith@npm:~0.1.7":
-  version: 0.1.30
-  resolution: "langsmith@npm:0.1.30"
+"langsmith@npm:0.1.39-rc.0":
+  version: 0.1.39-rc.0
+  resolution: "langsmith@npm:0.1.39-rc.0"
   dependencies:
     "@types/uuid": ^9.0.1
     commander: ^10.0.1
@@ -30565,7 +30565,7 @@ __metadata:
       optional: true
     openai:
       optional: true
-  checksum: 61f4f645b0d95bf0ddec4a275a2fd6859a650569c1ca0d092b318dcabb96fc72d9ae45f35c20d53c2ff6c2d615a2a99f27bb5a974c44ae57c4f359783c26ee99
+  checksum: ab57ce54075fb80d55d230dd3b70f8824733f21b1c5ee52df1ded7671ab51fb406a4235aa0679131bfefe53e1da5a408665c95643ba719f87b0680ee4c4e00d5
   languageName: node
   linkType: hard
 

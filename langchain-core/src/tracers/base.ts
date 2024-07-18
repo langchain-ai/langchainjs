@@ -90,7 +90,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     parentRun.child_runs.push(childRun);
   }
 
-  protected async _startTrace(run: Run) {
+  protected _startTrace(run: Run): Promise<void> {
     const currentDottedOrder = convertToDottedOrderFormat(
       run.start_time,
       run.id,
@@ -126,7 +126,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       storedRun.dotted_order = currentDottedOrder;
     }
     this.runMap.set(storedRun.id, storedRun);
-    await this.onRunCreate?.(storedRun);
+    return this.onRunCreate?.(storedRun) ?? Promise.resolve();
   }
 
   protected async _endTrace(run: Run): Promise<void> {
@@ -154,7 +154,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     return parentRun.child_execution_order + 1;
   }
 
-  async handleLLMStart(
+  handleLLMStart(
     llm: Serialized,
     prompts: string[],
     runId: string,
@@ -190,12 +190,12 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       tags: tags || [],
     };
 
-    await this._startTrace(run);
-    await this.onLLMStart?.(run);
-    return run;
+    return this._startTrace(run)
+      .then(() => this.onLLMStart?.(run))
+      .then(() => run);
   }
 
-  async handleChatModelStart(
+  handleChatModelStart(
     llm: Serialized,
     messages: BaseMessage[][],
     runId: string,
@@ -231,15 +231,15 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       tags: tags || [],
     };
 
-    await this._startTrace(run);
-    await this.onLLMStart?.(run);
-    return run;
+    return this._startTrace(run)
+      .then(() => this.onLLMStart?.(run))
+      .then(() => run);
   }
 
-  async handleLLMEnd(output: LLMResult, runId: string): Promise<Run> {
+  handleLLMEnd(output: LLMResult, runId: string): Promise<Run> {
     const run = this.runMap.get(runId);
     if (!run || run?.run_type !== "llm") {
-      throw new Error("No LLM run to end.");
+      return Promise.reject(new Error("No LLM run to end."));
     }
     run.end_time = Date.now();
     run.outputs = output;
@@ -247,15 +247,15 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       name: "end",
       time: new Date(run.end_time).toISOString(),
     });
-    await this.onLLMEnd?.(run);
-    await this._endTrace(run);
-    return run;
+    return (this.onLLMEnd?.(run) ?? Promise.resolve())
+      .then(() => this._endTrace(run))
+      .then(() => run);
   }
 
-  async handleLLMError(error: unknown, runId: string): Promise<Run> {
+  handleLLMError(error: unknown, runId: string): Promise<Run> {
     const run = this.runMap.get(runId);
     if (!run || run?.run_type !== "llm") {
-      throw new Error("No LLM run to end.");
+      return Promise.reject(new Error("No LLM run to end."));
     }
     run.end_time = Date.now();
     run.error = this.stringifyError(error);
@@ -263,12 +263,12 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       name: "error",
       time: new Date(run.end_time).toISOString(),
     });
-    await this.onLLMError?.(run);
-    await this._endTrace(run);
-    return run;
+    return (this.onLLMError?.(run) ?? Promise.resolve())
+      .then(() => this._endTrace(run))
+      .then(() => run);
   }
 
-  async handleChainStart(
+  handleChainStart(
     chain: Serialized,
     inputs: ChainValues,
     runId: string,
@@ -300,12 +300,12 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       extra: metadata ? { metadata } : {},
       tags: tags || [],
     };
-    await this._startTrace(run);
-    await this.onChainStart?.(run);
-    return run;
+    return this._startTrace(run)
+      .then(() => this.onChainStart?.(run))
+      .then(() => run);
   }
 
-  async handleChainEnd(
+  handleChainEnd(
     outputs: ChainValues,
     runId: string,
     _parentRunId?: string,
@@ -314,7 +314,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
   ): Promise<Run> {
     const run = this.runMap.get(runId);
     if (!run) {
-      throw new Error("No chain run to end.");
+      return Promise.reject(new Error("No chain run to end."));
     }
     run.end_time = Date.now();
     run.outputs = _coerceToDict(outputs, "output");
@@ -325,12 +325,12 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     if (kwargs?.inputs !== undefined) {
       run.inputs = _coerceToDict(kwargs.inputs, "input");
     }
-    await this.onChainEnd?.(run);
-    await this._endTrace(run);
-    return run;
+    return (this.onChainEnd?.(run) ?? Promise.resolve())
+      .then(() => this._endTrace(run))
+      .then(() => run);
   }
 
-  async handleChainError(
+  handleChainError(
     error: unknown,
     runId: string,
     _parentRunId?: string,
@@ -339,7 +339,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
   ): Promise<Run> {
     const run = this.runMap.get(runId);
     if (!run) {
-      throw new Error("No chain run to end.");
+      return Promise.reject(new Error("No chain run to end."));
     }
     run.end_time = Date.now();
     run.error = this.stringifyError(error);
@@ -350,12 +350,12 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     if (kwargs?.inputs !== undefined) {
       run.inputs = _coerceToDict(kwargs.inputs, "input");
     }
-    await this.onChainError?.(run);
-    await this._endTrace(run);
-    return run;
+    return (this.onChainError?.(run) ?? Promise.resolve())
+      .then(() => this._endTrace(run))
+      .then(() => run);
   }
 
-  async handleToolStart(
+  handleToolStart(
     tool: Serialized,
     input: string,
     runId: string,
@@ -387,16 +387,16 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       tags: tags || [],
     };
 
-    await this._startTrace(run);
-    await this.onToolStart?.(run);
-    return run;
+    return this._startTrace(run)
+      .then(() => this.onToolStart?.(run))
+      .then(() => run);
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async handleToolEnd(output: any, runId: string): Promise<Run> {
+  handleToolEnd(output: any, runId: string): Promise<Run> {
     const run = this.runMap.get(runId);
     if (!run || run?.run_type !== "tool") {
-      throw new Error("No tool run to end");
+      return Promise.reject(new Error("No tool run to end"));
     }
     run.end_time = Date.now();
     run.outputs = { output };
@@ -404,15 +404,15 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       name: "end",
       time: new Date(run.end_time).toISOString(),
     });
-    await this.onToolEnd?.(run);
-    await this._endTrace(run);
-    return run;
+    return (this.onToolEnd?.(run) ?? Promise.resolve())
+      .then(() => this._endTrace(run))
+      .then(() => run);
   }
 
-  async handleToolError(error: unknown, runId: string): Promise<Run> {
+  handleToolError(error: unknown, runId: string): Promise<Run> {
     const run = this.runMap.get(runId);
     if (!run || run?.run_type !== "tool") {
-      throw new Error("No tool run to end");
+      return Promise.reject(new Error("No tool run to end"));
     }
     run.end_time = Date.now();
     run.error = this.stringifyError(error);
@@ -420,15 +420,15 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       name: "error",
       time: new Date(run.end_time).toISOString(),
     });
-    await this.onToolError?.(run);
-    await this._endTrace(run);
-    return run;
+    return (this.onToolError?.(run) ?? Promise.resolve())
+      .then(() => this._endTrace(run))
+      .then(() => run);
   }
 
-  async handleAgentAction(action: AgentAction, runId: string): Promise<void> {
+  handleAgentAction(action: AgentAction, runId: string): Promise<void> {
     const run = this.runMap.get(runId);
     if (!run || run?.run_type !== "chain") {
-      return;
+      return Promise.resolve();
     }
     const agentRun = run as AgentRun;
     agentRun.actions = agentRun.actions || [];
@@ -438,23 +438,23 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       time: new Date().toISOString(),
       kwargs: { action },
     });
-    await this.onAgentAction?.(run as AgentRun);
+    return this.onAgentAction?.(run as AgentRun) ?? Promise.resolve();
   }
 
-  async handleAgentEnd(action: AgentFinish, runId: string): Promise<void> {
+  handleAgentEnd(action: AgentFinish, runId: string): Promise<void> {
     const run = this.runMap.get(runId);
     if (!run || run?.run_type !== "chain") {
-      return;
+      return Promise.resolve();
     }
     run.events.push({
       name: "agent_end",
       time: new Date().toISOString(),
       kwargs: { action },
     });
-    await this.onAgentEnd?.(run);
+    return this.onAgentEnd?.(run) ?? Promise.resolve();
   }
 
-  async handleRetrieverStart(
+  handleRetrieverStart(
     retriever: Serialized,
     query: string,
     runId: string,
@@ -486,18 +486,18 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       tags: tags || [],
     };
 
-    await this._startTrace(run);
-    await this.onRetrieverStart?.(run);
-    return run;
+    return this._startTrace(run)
+      .then(() => this.onRetrieverStart?.(run))
+      .then(() => run);
   }
 
-  async handleRetrieverEnd(
+  handleRetrieverEnd(
     documents: Document<Record<string, unknown>>[],
     runId: string
   ): Promise<Run> {
     const run = this.runMap.get(runId);
     if (!run || run?.run_type !== "retriever") {
-      throw new Error("No retriever run to end");
+      return Promise.reject(new Error("No retriever run to end"));
     }
     run.end_time = Date.now();
     run.outputs = { documents };
@@ -505,15 +505,15 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       name: "end",
       time: new Date(run.end_time).toISOString(),
     });
-    await this.onRetrieverEnd?.(run);
-    await this._endTrace(run);
-    return run;
+    return (this.onRetrieverEnd?.(run) ?? Promise.resolve())
+      .then(() => this._endTrace(run))
+      .then(() => run);
   }
 
-  async handleRetrieverError(error: unknown, runId: string): Promise<Run> {
+  handleRetrieverError(error: unknown, runId: string): Promise<Run> {
     const run = this.runMap.get(runId);
     if (!run || run?.run_type !== "retriever") {
-      throw new Error("No retriever run to end");
+      return Promise.reject(new Error("No retriever run to end"));
     }
     run.end_time = Date.now();
     run.error = this.stringifyError(error);
@@ -521,25 +521,25 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       name: "error",
       time: new Date(run.end_time).toISOString(),
     });
-    await this.onRetrieverError?.(run);
-    await this._endTrace(run);
-    return run;
+    return (this.onRetrieverError?.(run) ?? Promise.resolve())
+      .then(() => this._endTrace(run))
+      .then(() => run);
   }
 
-  async handleText(text: string, runId: string): Promise<void> {
+  handleText(text: string, runId: string): Promise<void> {
     const run = this.runMap.get(runId);
     if (!run || run?.run_type !== "chain") {
-      return;
+      return Promise.resolve();
     }
     run.events.push({
       name: "text",
       time: new Date().toISOString(),
       kwargs: { text },
     });
-    await this.onText?.(run);
+    return this.onText?.(run) ?? Promise.resolve();
   }
 
-  async handleLLMNewToken(
+  handleLLMNewToken(
     token: string,
     idx: NewTokenIndices,
     runId: string,
@@ -549,8 +549,8 @@ export abstract class BaseTracer extends BaseCallbackHandler {
   ): Promise<Run> {
     const run = this.runMap.get(runId);
     if (!run || run?.run_type !== "llm") {
-      throw new Error(
-        `Invalid "runId" provided to "handleLLMNewToken" callback.`
+      return Promise.reject(
+        new Error(`Invalid "runId" provided to "handleLLMNewToken" callback.`)
       );
     }
     run.events.push({
@@ -558,8 +558,10 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       time: new Date().toISOString(),
       kwargs: { token, idx, chunk: fields?.chunk },
     });
-    await this.onLLMNewToken?.(run, token, { chunk: fields?.chunk });
-    return run;
+    return (
+      this.onLLMNewToken?.(run, token, { chunk: fields?.chunk }) ??
+      Promise.resolve()
+    ).then(() => run);
   }
 
   // custom event handlers

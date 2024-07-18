@@ -62,6 +62,7 @@
     "voy-search@0.6.2": "patch:voy-search@npm%3A0.6.2#./.yarn/patches/voy-search-npm-0.6.2-d4aca30a0e.patch",
     "@langchain/core": "workspace:*",
     "better-sqlite3": "9.4.0",
+    "langsmith": "0.1.39-rc.0",
     "zod": "3.23.8"
   },
   "lint-staged": {
