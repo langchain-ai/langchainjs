@@ -587,7 +587,11 @@ import { ToolMessage } from "@langchain/core/messages";
 
 const toolCall = aiMessage.tool_calls[0]; // ToolCall(args={...}, id=..., ...)
 const toolOutput = await tool.invoke(toolCall.args);
-const toolMessage = new ToolMessage({ content: toolOutput });
+const toolMessage = new ToolMessage({
+  content: toolOutput,
+  name: toolCall.name,
+  tool_call_id: toolCall.id,
+});
 ```
 
 Note that the `content` field will generally be passed back to the model.
