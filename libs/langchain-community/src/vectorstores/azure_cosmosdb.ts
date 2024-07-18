@@ -1,2 +1,2 @@
-/** @deprecated Use "@langchain/community/vectorstores/azure_cosmosdb_mongodb_vcore" instead */
+/** @deprecated Use "@langchain/azure-cosmos" instead */
 export * from "./azure_cosmosdb_mongodb_vcore.js";
