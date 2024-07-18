@@ -1,10 +1,13 @@
 import {
   AIMessage,
-  MessageContentText,
   UsageMetadata,
   type BaseMessage,
 } from "@langchain/core/messages";
-import { type BaseLanguageModelCallOptions } from "@langchain/core/language_models/base";
+import {
+  BaseLanguageModelInput,
+  ToolDefinition,
+  type BaseLanguageModelCallOptions,
+} from "@langchain/core/language_models/base";
 
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {
@@ -18,101 +21,21 @@ import { AIMessageChunk } from "@langchain/core/messages";
 import type {
   ChatRequest as OllamaChatRequest,
   ChatResponse as OllamaChatResponse,
-  Message as OllamaMessage,
 } from "ollama";
-
-function extractBase64FromDataUrl(dataUrl: string): string {
-  const match = dataUrl.match(/^data:.*?;base64,(.*)$/);
-  return match ? match[1] : "";
-}
-
-function convertToOllamaMessages(messages: BaseMessage[]): OllamaMessage[] {
-  return messages.flatMap((msg) => {
-    if (["human", "generic"].includes(msg._getType())) {
-      if (typeof msg.content === "string") {
-        return {
-          role: "user",
-          content: msg.content,
-        };
-      }
-      return msg.content.map((c) => {
-        if (c.type === "text") {
-          return {
-            role: "user",
-            content: c.text,
-          };
-        } else if (c.type === "image_url") {
-          if (typeof c.image_url === "string") {
-            return {
-              role: "user",
-              content: "",
-              images: [extractBase64FromDataUrl(c.image_url)],
-            };
-          } else if (c.image_url.url && typeof c.image_url.url === "string") {
-            return {
-              role: "user",
-              content: "",
-              images: [extractBase64FromDataUrl(c.image_url.url)],
-            };
-          }
-        }
-        throw new Error(`Unsupported content type: ${c.type}`);
-      });
-    } else if (msg._getType() === "ai") {
-      if (typeof msg.content === "string") {
-        return {
-          role: "assistant",
-          content: msg.content,
-        };
-      } else if (
-        msg.content.every(
-          (c) => c.type === "text" && typeof c.text === "string"
-        )
-      ) {
-        return (msg.content as MessageContentText[]).map((c) => ({
-          role: "assistant",
-          content: c.text,
-        }));
-      } else {
-        throw new Error(
-          `Unsupported content type(s): ${msg.content
-            .map((c) => c.type)
-            .join(", ")}`
-        );
-      }
-    } else if (msg._getType() === "system") {
-      if (typeof msg.content === "string") {
-        return {
-          role: "system",
-          content: msg.content,
-        };
-      } else if (
-        msg.content.every(
-          (c) => c.type === "text" && typeof c.text === "string"
-        )
-      ) {
-        return (msg.content as MessageContentText[]).map((c) => ({
-          role: "system",
-          content: c.text,
-        }));
-      } else {
-        throw new Error(
-          `Unsupported content type(s): ${msg.content
-            .map((c) => c.type)
-            .join(", ")}`
-        );
-      }
-    } else {
-      throw new Error(`Unsupported message type: ${msg._getType()}`);
-    }
-  });
-}
+import { StructuredToolInterface } from "@langchain/core/tools";
+import { Runnable, RunnableToolLike } from "@langchain/core/runnables";
+import { convertToOpenAITool } from "@langchain/core/utils/function_calling";
+import {
+  convertOllamaMessagesToLangChain,
+  convertToOllamaMessages,
+} from "./utils.js";
 
 export interface ChatOllamaCallOptions extends BaseLanguageModelCallOptions {
   /**
    * An array of strings to stop on.
    */
   stop?: string[];
+  tools?: (StructuredToolInterface | RunnableToolLike | ToolDefinition)[];
 }
 
 export interface PullModelOptions {
@@ -142,6 +65,7 @@ export interface ChatOllamaInput extends BaseChatModelParams {
   model?: string;
   /**
    * The host URL of the Ollama server.
+   * @default "127.0.0.1:11434"
    */
   baseUrl?: string;
   /**
@@ -285,12 +209,15 @@ export class ChatOllama
 
   checkOrPullModel = false;
 
+  baseUrl: string;
+
   constructor(fields?: ChatOllamaInput) {
     super(fields ?? {});
 
     this.client = new Ollama({
       host: fields?.baseUrl,
     });
+    this.baseUrl = fields?.baseUrl ?? "127.0.0.1:11434";
 
     this.model = fields?.model ?? this.model;
     this.numa = fields?.numa;
@@ -364,6 +291,16 @@ export class ChatOllama
     }
   }
 
+  override bindTools(
+    tools: (StructuredToolInterface | ToolDefinition | RunnableToolLike)[],
+    kwargs?: Partial<this["ParsedCallOptions"]>
+  ): Runnable<BaseLanguageModelInput, AIMessageChunk, ChatOllamaCallOptions> {
+    return this.bind({
+      tools: tools.map(convertToOpenAITool),
+      ...kwargs,
+    });
+  }
+
   getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
     const params = this.invocationParams(options);
     return {
@@ -378,7 +315,7 @@ export class ChatOllama
 
   invocationParams(
     options?: this["ParsedCallOptions"]
-  ): Omit<OllamaChatRequest, "messages"> {
+  ): Omit<OllamaChatRequest, "messages"> & { tools?: ToolDefinition[] } {
     return {
       model: this.model,
       format: this.format,
@@ -415,6 +352,7 @@ export class ChatOllama
         penalize_newline: this.penalizeNewline,
         stop: options?.stop,
       },
+      tools: options?.tools?.map(convertToOpenAITool),
     };
   }
 
@@ -459,7 +397,9 @@ export class ChatOllama
 
     // Convert from AIMessageChunk to AIMessage since `generate` expects AIMessage.
     const nonChunkMessage = new AIMessage({
+      id: finalChunk?.id,
       content: finalChunk?.content ?? "",
+      tool_calls: finalChunk?.tool_calls,
       response_metadata: finalChunk?.response_metadata,
       usage_metadata: finalChunk?.usage_metadata,
     });
@@ -496,6 +436,38 @@ export class ChatOllama
     const params = this.invocationParams(options);
     const ollamaMessages = convertToOllamaMessages(messages);
 
+    const usageMetadata: UsageMetadata = {
+      input_tokens: 0,
+      output_tokens: 0,
+      total_tokens: 0,
+    };
+
+    if (params.tools && params.tools.length > 0) {
+      const toolResult = await this._generateRawApi(
+        {
+          ...params,
+          tools: params.tools,
+          messages: ollamaMessages,
+        },
+        options
+      );
+
+      const { message: responseMessage, ...rest } = toolResult;
+      usageMetadata.input_tokens += rest.prompt_eval_count ?? 0;
+      usageMetadata.output_tokens += rest.eval_count ?? 0;
+      usageMetadata.total_tokens =
+        usageMetadata.input_tokens + usageMetadata.output_tokens;
+
+      yield new ChatGenerationChunk({
+        text: responseMessage.content,
+        message: convertOllamaMessagesToLangChain(responseMessage, {
+          responseMetadata: rest,
+          usageMetadata,
+        }),
+      });
+      return runManager?.handleLLMNewToken(responseMessage.content);
+    }
+
     const stream = await this.client.chat({
       ...params,
       messages: ollamaMessages,
@@ -503,11 +475,6 @@ export class ChatOllama
     });
 
     let lastMetadata: Omit<OllamaChatResponse, "message"> | undefined;
-    const usageMetadata: UsageMetadata = {
-      input_tokens: 0,
-      output_tokens: 0,
-      total_tokens: 0,
-    };
 
     for await (const chunk of stream) {
       if (options.signal?.aborted) {
@@ -538,5 +505,33 @@ export class ChatOllama
         usage_metadata: usageMetadata,
       }),
     });
+  }
+
+  async _generateRawApi(
+    request: OllamaChatRequest & { tools: ToolDefinition[] },
+    options?: this["ParsedCallOptions"]
+  ): Promise<OllamaChatResponse> {
+    return this.caller.callWithOptions(
+      { signal: options?.signal },
+      async () => {
+        const streamRes = await fetch(`http://${this.baseUrl}/api/chat`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            ...request,
+            stream: false,
+          }),
+        });
+
+        // Ensure the response is ok
+        if (!streamRes.ok) {
+          throw new Error(`HTTP error! status: ${streamRes.status}`);
+        }
+        const streamResJson = await streamRes.json();
+        return streamResJson;
+      }
+    );
   }
 }
