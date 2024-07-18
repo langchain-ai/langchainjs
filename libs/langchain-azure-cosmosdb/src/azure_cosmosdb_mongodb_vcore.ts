@@ -76,7 +76,7 @@ export interface AzureCosmosDBMongoDBvCoreConfig {
 export class AzureCosmosDBMongoDBvCoreVectorStore extends VectorStore {
   get lc_secrets(): { [key: string]: string } {
     return {
-      endpoint: "AZURE_COSMOSDB_MONGODB_VCORE_CONNECTION_STRING",
+      connectionString: "AZURE_COSMOSDB_MONGODB_VCORE_CONNECTION_STRING",
     };
   }
 

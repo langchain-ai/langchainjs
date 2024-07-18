@@ -90,7 +90,7 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
 
   get lc_secrets(): { [key: string]: string } {
     return {
-      endpoint: "AZURE_COSMOSDB_NOSQL_CONNECTION_STRING",
+      connectionString: "AZURE_COSMOSDB_NOSQL_CONNECTION_STRING",
     };
   }
 
