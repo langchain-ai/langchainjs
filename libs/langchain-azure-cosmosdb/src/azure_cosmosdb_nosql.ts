@@ -122,7 +122,7 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
 
     if (!dbConfig.client && !connectionString) {
       throw new Error(
-        "Azure Cosmos DB client or connection string must be set."
+        "AzureCosmosDBNoSQLVectorStore client or connection string must be set."
       );
     }
 
@@ -189,7 +189,7 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
       createContainerOptions: dbConfig.createContainerOptions,
       createDatabaseOptions: dbConfig.createDatabaseOptions,
     }).catch((error) => {
-      console.error("Error during Azure Cosmos DB initialization:", error);
+      console.error("Error during AzureCosmosDBNoSQLVectorStore initialization:", error);
     });
   }
 
