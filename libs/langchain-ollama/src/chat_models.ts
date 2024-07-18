@@ -7,7 +7,6 @@ import {
   BaseLanguageModelInput,
   ToolDefinition,
 } from "@langchain/core/language_models/base";
-
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {
   type BaseChatModelParams,
@@ -21,6 +20,7 @@ import { AIMessageChunk } from "@langchain/core/messages";
 import type {
   ChatRequest as OllamaChatRequest,
   ChatResponse as OllamaChatResponse,
+  Message as OllamaMessage,
 } from "ollama";
 import { StructuredToolInterface } from "@langchain/core/tools";
 import { Runnable, RunnableToolLike } from "@langchain/core/runnables";
@@ -439,7 +439,8 @@ export class ChatOllama
     }
 
     const params = this.invocationParams(options);
-    const ollamaMessages = convertToOllamaMessages(messages);
+    // TODO: remove cast after SDK adds support for tool calls
+    const ollamaMessages = convertToOllamaMessages(messages) as OllamaMessage[];
 
     const usageMetadata: UsageMetadata = {
       input_tokens: 0,

@@ -80,7 +80,8 @@ test("Test multiple messages", async () => {
   const res = await model.invoke([
     new HumanMessage({ content: "My name is Jonas" }),
   ]);
-  console.log({ res });
+  expect(res).toBeDefined();
+  expect(res.content).toBeDefined();
   const res2 = await model.invoke([
     new HumanMessage("My name is Jonas"),
     new AIMessage(
@@ -88,7 +89,9 @@ test("Test multiple messages", async () => {
     ),
     new HumanMessage("What did I say my name was?"),
   ]);
-  console.log({ res2 });
+
+  expect(res2).toBeDefined();
+  expect(res2.content).toBeDefined();
 });
 
 test("should stream through with a bytes output parser", async () => {
@@ -112,7 +115,6 @@ AI:`;
   for await (const chunk of stream) {
     chunks.push(chunk);
   }
-  console.log(chunks.join(""));
   expect(chunks.length).toBeGreaterThan(1);
 });
 
@@ -160,7 +162,8 @@ test.skip("Test ChatOllama with an image", async () => {
       ],
     }),
   ]);
-  console.log({ res });
+  expect(res).toBeDefined();
+  expect(res.content).toBeDefined();
 });
 
 test("test max tokens (numPredict)", async () => {
@@ -178,7 +181,6 @@ test("test max tokens (numPredict)", async () => {
     response += s;
   }
 
-  console.log({ numTokens, response });
   // Ollama doesn't always stream back the exact number of tokens, so we
   // check for a number which is slightly above the `numPredict`.
   expect(numTokens).toBeLessThanOrEqual(12);

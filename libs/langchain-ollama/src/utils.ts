@@ -1,13 +1,18 @@
 import {
+  AIMessage,
   AIMessageChunk,
   BaseMessage,
+  HumanMessage,
   MessageContentText,
+  SystemMessage,
   ToolMessage,
   UsageMetadata,
 } from "@langchain/core/messages";
 import type { Message as OllamaMessage } from "ollama";
 
 export interface OllamaToolCall {
+  type?: "function";
+  id?: string;
   function: {
     name: string;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -15,8 +20,10 @@ export interface OllamaToolCall {
   };
 }
 
-export interface OllamaMessageWithTools extends OllamaMessage {
+export interface OllamaMessageWithTools extends Omit<OllamaMessage, "content"> {
   tool_calls?: OllamaToolCall[];
+  content?: string;
+  tool_call_id?: string;
 }
 
 export function convertOllamaMessagesToLangChain(
@@ -45,94 +52,152 @@ function extractBase64FromDataUrl(dataUrl: string): string {
   return match ? match[1] : "";
 }
 
-export function convertToOllamaMessages(
-  messages: BaseMessage[]
-): OllamaMessage[] {
-  return messages.flatMap((msg) => {
-    if (["human", "generic"].includes(msg._getType())) {
-      if (typeof msg.content === "string") {
+function convertAMessagesToOllama(
+  messages: AIMessage
+): OllamaMessageWithTools[] {
+  if (typeof messages.content === "string") {
+    return [
+      {
+        role: "assistant",
+        content: messages.content,
+      },
+    ];
+  }
+
+  const textFields = messages.content.filter(
+    (c) => c.type === "text" && typeof c.text === "string"
+  );
+  const textMessages = (textFields as MessageContentText[]).map((c) => ({
+    role: "assistant",
+    content: c.text,
+  }));
+  let toolCallMsgs: OllamaMessageWithTools | undefined;
+
+  if (
+    messages.content.find((c) => c.type === "tool_use") &&
+    messages.tool_calls?.length
+  ) {
+    // `tool_use` content types are accepted if the message has tool calls
+    const toolCalls: OllamaToolCall[] | undefined = messages.tool_calls?.map(
+      (tc) => ({
+        id: tc.id,
+        type: "function",
+        function: {
+          name: tc.name,
+          arguments: tc.args,
+        },
+      })
+    );
+
+    if (toolCalls) {
+      toolCallMsgs = {
+        role: "assistant",
+        tool_calls: toolCalls,
+      };
+    }
+  } else if (
+    messages.content.find((c) => c.type === "tool_use") &&
+    !messages.tool_calls?.length
+  ) {
+    throw new Error(
+      "'tool_use' content type is not supported without tool calls."
+    );
+  }
+
+  return [...textMessages, ...(toolCallMsgs ? [toolCallMsgs] : [])];
+}
+
+function convertHumanGenericMessagesToOllama(
+  message: HumanMessage
+): OllamaMessageWithTools[] {
+  if (typeof message.content === "string") {
+    return [
+      {
+        role: "user",
+        content: message.content,
+      },
+    ];
+  }
+  return message.content.map((c) => {
+    if (c.type === "text") {
+      return {
+        role: "user",
+        content: c.text,
+      };
+    } else if (c.type === "image_url") {
+      if (typeof c.image_url === "string") {
         return {
           role: "user",
-          content: msg.content,
+          content: "",
+          images: [extractBase64FromDataUrl(c.image_url)],
+        };
+      } else if (c.image_url.url && typeof c.image_url.url === "string") {
+        return {
+          role: "user",
+          content: "",
+          images: [extractBase64FromDataUrl(c.image_url.url)],
         };
       }
-      return msg.content.map((c) => {
-        if (c.type === "text") {
-          return {
-            role: "user",
-            content: c.text,
-          };
-        } else if (c.type === "image_url") {
-          if (typeof c.image_url === "string") {
-            return {
-              role: "user",
-              content: "",
-              images: [extractBase64FromDataUrl(c.image_url)],
-            };
-          } else if (c.image_url.url && typeof c.image_url.url === "string") {
-            return {
-              role: "user",
-              content: "",
-              images: [extractBase64FromDataUrl(c.image_url.url)],
-            };
-          }
-        }
-        throw new Error(`Unsupported content type: ${c.type}`);
-      });
+    }
+    throw new Error(`Unsupported content type: ${c.type}`);
+  });
+}
+
+function convertSystemMessageToOllama(
+  message: SystemMessage
+): OllamaMessageWithTools[] {
+  if (typeof message.content === "string") {
+    return [
+      {
+        role: "system",
+        content: message.content,
+      },
+    ];
+  } else if (
+    message.content.every(
+      (c) => c.type === "text" && typeof c.text === "string"
+    )
+  ) {
+    return (message.content as MessageContentText[]).map((c) => ({
+      role: "system",
+      content: c.text,
+    }));
+  } else {
+    throw new Error(
+      `Unsupported content type(s): ${message.content
+        .map((c) => c.type)
+        .join(", ")}`
+    );
+  }
+}
+
+function convertToolMessageToOllama(
+  message: ToolMessage
+): OllamaMessageWithTools[] {
+  if (typeof message.content !== "string") {
+    throw new Error("Non string tool message content is not supported");
+  }
+  return [
+    {
+      tool_call_id: message.tool_call_id,
+      role: "tool",
+      content: message.content,
+    },
+  ];
+}
+
+export function convertToOllamaMessages(
+  messages: BaseMessage[]
+): OllamaMessageWithTools[] {
+  return messages.flatMap((msg) => {
+    if (["human", "generic"].includes(msg._getType())) {
+      return convertHumanGenericMessagesToOllama(msg);
     } else if (msg._getType() === "ai") {
-      if (typeof msg.content === "string") {
-        return {
-          role: "assistant",
-          content: msg.content,
-        };
-      } else if (
-        msg.content.every(
-          (c) => c.type === "text" && typeof c.text === "string"
-        )
-      ) {
-        return (msg.content as MessageContentText[]).map((c) => ({
-          role: "assistant",
-          content: c.text,
-        }));
-      } else {
-        throw new Error(
-          `Unsupported content type(s): ${msg.content
-            .map((c) => c.type)
-            .join(", ")}`
-        );
-      }
+      return convertAMessagesToOllama(msg);
     } else if (msg._getType() === "system") {
-      if (typeof msg.content === "string") {
-        return {
-          role: "system",
-          content: msg.content,
-        };
-      } else if (
-        msg.content.every(
-          (c) => c.type === "text" && typeof c.text === "string"
-        )
-      ) {
-        return (msg.content as MessageContentText[]).map((c) => ({
-          role: "system",
-          content: c.text,
-        }));
-      } else {
-        throw new Error(
-          `Unsupported content type(s): ${msg.content
-            .map((c) => c.type)
-            .join(", ")}`
-        );
-      }
+      return convertSystemMessageToOllama(msg);
     } else if (msg._getType() === "tool") {
-      if (typeof msg.content !== "string") {
-        throw new Error("Non string tool message content is not supported");
-      }
-      const castMsg = msg as ToolMessage;
-      return {
-        tool_call_id: castMsg.tool_call_id,
-        role: "tool",
-        content: castMsg.content,
-      };
+      return convertToolMessageToOllama(msg as ToolMessage);
     } else {
       throw new Error(`Unsupported message type: ${msg._getType()}`);
     }
