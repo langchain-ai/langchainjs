@@ -245,6 +245,7 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
       [this.textKey]: documents[idx].pageContent,
       [this.embeddingKey]: embedding,
       [this.metadataKey]: documents[idx].metadata,
+      ...(documents[idx].id ? { id: documents[idx].id } : {}),
     }));
 
     const ids: string[] = [];
