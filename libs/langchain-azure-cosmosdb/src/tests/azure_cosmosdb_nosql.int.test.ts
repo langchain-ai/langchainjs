@@ -6,6 +6,7 @@ import { OpenAIEmbeddings } from "@langchain/openai";
 import { CosmosClient } from "@azure/cosmos";
 
 import { AzureCosmosDBNoSQLVectorStore } from "../azure_cosmosdb_nosql.js";
+import { DefaultAzureCredential } from "@azure/identity";
 
 const DATABASE_NAME = "langchainTestDB";
 const CONTAINER_NAME = "testContainer";
@@ -21,7 +22,7 @@ const CONTAINER_NAME = "testContainer";
  *
  * Once you have the instance running, you need to set the following environment
  * variables before running the test:
- * - AZURE_COSMOSDB_NOSQL_CONNECTION_STRING
+ * - AZURE_COSMOSDB_NOSQL_CONNECTION_STRING or AZURE_COSMOSDB_NOSQL_ENDPOINT
  * - AZURE_OPENAI_API_KEY
  * - AZURE_OPENAI_API_INSTANCE_NAME
  * - AZURE_OPENAI_API_EMBEDDINGS_DEPLOYMENT_NAME
@@ -31,8 +32,6 @@ const CONTAINER_NAME = "testContainer";
  */
 describe("AzureCosmosDBNoSQLVectorStore", () => {
   beforeEach(async () => {
-    expect(process.env.AZURE_COSMOSDB_NOSQL_CONNECTION_STRING).toBeDefined();
-
     // Note: when using Azure OpenAI, you have to also set these variables
     // in addition to the API key:
     // - AZURE_OPENAI_API_INSTANCE_NAME
@@ -42,10 +41,22 @@ describe("AzureCosmosDBNoSQLVectorStore", () => {
       process.env.OPENAI_API_KEY || process.env.AZURE_OPENAI_API_KEY
     ).toBeDefined();
 
-    const client = new CosmosClient(
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      process.env.AZURE_COSMOSDB_NOSQL_CONNECTION_STRING!
-    );
+    let client: CosmosClient;
+
+    if (process.env.AZURE_COSMOSDB_NOSQL_CONNECTION_STRING) {
+      client = new CosmosClient(
+        process.env.AZURE_COSMOSDB_NOSQL_CONNECTION_STRING
+      );
+    } else if (process.env.AZURE_COSMOSDB_NOSQL_ENDPOINT) {
+      client = new CosmosClient({
+        endpoint: process.env.AZURE_COSMOSDB_NOSQL_ENDPOINT,
+        aadCredentials: new DefaultAzureCredential(),
+      });
+    } else {
+      throw new Error(
+        "Please set the environment variable AZURE_COSMOSDB_NOSQL_CONNECTION_STRING or AZURE_COSMOSDB_NOSQL_ENDPOINT"
+      );
+    }
 
     // Make sure the database does not exists
     try {
@@ -282,5 +293,58 @@ describe("AzureCosmosDBNoSQLVectorStore", () => {
     const results = await vectorStore.similaritySearch("document", 10);
 
     expect(results.length).toEqual(0);
+  });
+
+  test("connect using managed identity", async () => {
+    // First initialize using a regular connection string
+    // to create the database and container, as managed identity
+    // with RBAC does not have permission to create them.
+    const vectorStoreCS = new AzureCosmosDBNoSQLVectorStore(
+      new OpenAIEmbeddings(),
+      {
+        databaseName: DATABASE_NAME,
+        containerName: CONTAINER_NAME,
+      }
+    );
+    await vectorStoreCS.addDocuments([{ pageContent: "init", metadata: {} }]);
+
+    
+    let connectionString = process.env.AZURE_COSMOSDB_NOSQL_CONNECTION_STRING;
+    if (connectionString) {
+      // Remove the connection string to test managed identity
+      process.env.AZURE_COSMOSDB_NOSQL_CONNECTION_STRING = "";
+    }
+
+    expect(process.env.AZURE_COSMOSDB_NOSQL_CONNECTION_STRING).toBeFalsy();
+    expect(process.env.AZURE_COSMOSDB_NOSQL_ENDPOINT).toBeDefined();
+
+    const vectorStore = new AzureCosmosDBNoSQLVectorStore(
+      new OpenAIEmbeddings(),
+      {
+        databaseName: DATABASE_NAME,
+        containerName: CONTAINER_NAME,
+      }
+    );
+
+    expect(vectorStore).toBeDefined();
+
+    await vectorStore.addDocuments([
+      { pageContent: "This book is about politics", metadata: { a: 1 } },
+      { pageContent: "Cats sleeps a lot.", metadata: { b: 1 } },
+      { pageContent: "Sandwiches taste good.", metadata: { c: 1 } },
+      { pageContent: "The house is open", metadata: { d: 1, e: 2 } },
+    ]);
+
+    const results = await vectorStore.similaritySearch("sandwich", 1);
+
+    expect(results.length).toEqual(1);
+    expect(results).toMatchObject([
+      { pageContent: "Sandwiches taste good.", metadata: { c: 1 } },
+    ]);
+
+    if (connectionString) {
+      // Restore the connection string
+      process.env.AZURE_COSMOSDB_NOSQL_CONNECTION_STRING = connectionString;
+    }
   });
 });
