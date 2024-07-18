@@ -6,7 +6,6 @@ import {
 import {
   BaseLanguageModelInput,
   ToolDefinition,
-  type BaseLanguageModelCallOptions,
 } from "@langchain/core/language_models/base";
 
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
@@ -14,6 +13,7 @@ import {
   type BaseChatModelParams,
   BaseChatModel,
   LangSmithParams,
+  BaseChatModelCallOptions,
 } from "@langchain/core/language_models/chat_models";
 import { Ollama } from "ollama/browser";
 import { ChatGenerationChunk, ChatResult } from "@langchain/core/outputs";
@@ -30,7 +30,7 @@ import {
   convertToOllamaMessages,
 } from "./utils.js";
 
-export interface ChatOllamaCallOptions extends BaseLanguageModelCallOptions {
+export interface ChatOllamaCallOptions extends BaseChatModelCallOptions {
   /**
    * An array of strings to stop on.
    */
@@ -316,6 +316,10 @@ export class ChatOllama
   invocationParams(
     options?: this["ParsedCallOptions"]
   ): Omit<OllamaChatRequest, "messages"> & { tools?: ToolDefinition[] } {
+    if (options?.tool_choice) {
+      throw new Error("Tool choice is not supported for ChatOllama.");
+    }
+
     return {
       model: this.model,
       format: this.format,
