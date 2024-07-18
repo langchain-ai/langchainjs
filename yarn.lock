@@ -11326,22 +11326,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/langgraph@npm:0.0.26, @langchain/langgraph@npm:~0.0.26":
-  version: 0.0.26
-  resolution: "@langchain/langgraph@npm:0.0.26"
-  dependencies:
-    "@langchain/core": ">0.1.61 <0.3.0"
-    uuid: ^10.0.0
-  peerDependencies:
-    better-sqlite3: ^9.5.0
-  peerDependenciesMeta:
-    better-sqlite3:
-      optional: true
-  checksum: 82ad770597fc389d704395657c800fd6c1745a82677cc836c722827dc9473f9f6f06babf4aa22e394b3b7d3456a7ce52db6d206fb7e0f02dacc8f8a98580f74c
-  languageName: node
-  linkType: hard
-
-"@langchain/langgraph@npm:^0.0.28":
+"@langchain/langgraph@npm:0.0.28, @langchain/langgraph@npm:^0.0.28":
   version: 0.0.28
   resolution: "@langchain/langgraph@npm:0.0.28"
   dependencies:
@@ -11354,6 +11339,21 @@ __metadata:
     better-sqlite3:
       optional: true
   checksum: 1465791026ccd6eaa13a2f2d03b8fb9f0972a8c23b9da1cfd581074f413ea60ef860de6d704c6a3b49f7425f23d6ba49c23255167ae83ab7d70dc00cc0560ce2
+  languageName: node
+  linkType: hard
+
+"@langchain/langgraph@npm:~0.0.26":
+  version: 0.0.26
+  resolution: "@langchain/langgraph@npm:0.0.26"
+  dependencies:
+    "@langchain/core": ">0.1.61 <0.3.0"
+    uuid: ^10.0.0
+  peerDependencies:
+    better-sqlite3: ^9.5.0
+  peerDependenciesMeta:
+    better-sqlite3:
+      optional: true
+  checksum: 82ad770597fc389d704395657c800fd6c1745a82677cc836c722827dc9473f9f6f06babf4aa22e394b3b7d3456a7ce52db6d206fb7e0f02dacc8f8a98580f74c
   languageName: node
   linkType: hard
 
@@ -21674,7 +21674,7 @@ __metadata:
     "@docusaurus/preset-classic": 2.4.3
     "@docusaurus/remark-plugin-npm2yarn": 2.4.3
     "@docusaurus/theme-mermaid": 2.4.3
-    "@langchain/langgraph": 0.0.26
+    "@langchain/langgraph": 0.0.28
     "@langchain/scripts": "workspace:*"
     "@mdx-js/react": ^1.6.22
     "@microsoft/fetch-event-source": ^2.0.1
