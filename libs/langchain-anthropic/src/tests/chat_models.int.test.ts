@@ -11,8 +11,8 @@ import {
   SystemMessagePromptTemplate,
 } from "@langchain/core/prompts";
 import { CallbackManager } from "@langchain/core/callbacks/manager";
-import { ChatAnthropic } from "../chat_models.js";
 import { concat } from "@langchain/core/utils/stream";
+import { ChatAnthropic } from "../chat_models.js";
 
 test("Test ChatAnthropic", async () => {
   const chat = new ChatAnthropic({
@@ -352,7 +352,7 @@ test("id is supplied when invoking", async () => {
   const result = await model.invoke("Hello");
   expect(result.id).toBeDefined();
   expect(result.id).not.toEqual("");
-})
+});
 
 test("id is supplied when streaming", async () => {
   const model = new ChatAnthropic();
@@ -364,4 +364,4 @@ test("id is supplied when streaming", async () => {
   if (!finalChunk) return;
   expect(finalChunk.id).toBeDefined();
   expect(finalChunk.id).not.toEqual("");
-})
+});
