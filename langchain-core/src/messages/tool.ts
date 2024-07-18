@@ -75,6 +75,14 @@ export class ToolMessage extends BaseMessage {
   static isInstance(message: BaseMessage): message is ToolMessage {
     return message._getType() === "tool";
   }
+
+  override get _printableFields(): Record<string, unknown> {
+    return {
+      ...super._printableFields,
+      tool_call_id: this.tool_call_id,
+      artifact: this.artifact,
+    };
+  }
 }
 
 /**
@@ -123,6 +131,14 @@ export class ToolMessageChunk extends BaseMessageChunk {
       tool_call_id: this.tool_call_id,
       id: this.id ?? chunk.id,
     });
+  }
+
+  override get _printableFields(): Record<string, unknown> {
+    return {
+      ...super._printableFields,
+      tool_call_id: this.tool_call_id,
+      artifact: this.artifact,
+    };
   }
 }
 
