@@ -1,4 +1,4 @@
-import { AzureCosmosDBNoSQLVectorStore } from "@langchain/community/vectorstores/azure_cosmosdb_nosql";
+import { AzureCosmosDBNoSQLVectorStore } from "@langchain/azure-cosmosdb";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
 import { createStuffDocumentsChain } from "langchain/chains/combine_documents";
