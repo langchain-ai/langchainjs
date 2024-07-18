@@ -29,6 +29,7 @@ import {
   convertOllamaMessagesToLangChain,
   convertToOllamaMessages,
 } from "./utils.js";
+import { concat } from "@langchain/core/utils/stream";
 
 export interface ChatOllamaCallOptions extends BaseChatModelCallOptions {
   /**
@@ -395,7 +396,7 @@ export class ChatOllama
       if (!finalChunk) {
         finalChunk = chunk.message;
       } else {
-        finalChunk = finalChunk.concat(chunk.message);
+        finalChunk = concat(finalChunk, chunk.message);
       }
     }
 
@@ -492,12 +493,12 @@ export class ChatOllama
       lastMetadata = rest;
 
       yield new ChatGenerationChunk({
-        text: responseMessage.content,
+        text: responseMessage.content ?? "",
         message: new AIMessageChunk({
-          content: responseMessage.content,
+          content: responseMessage.content ?? "",
         }),
       });
-      await runManager?.handleLLMNewToken(responseMessage.content);
+      await runManager?.handleLLMNewToken(responseMessage.content ?? "");
     }
 
     // Yield the `response_metadata` as the final chunk.
