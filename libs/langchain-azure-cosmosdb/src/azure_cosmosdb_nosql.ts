@@ -129,8 +129,8 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
     if (!dbConfig.client) {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       let [endpoint, key] = connectionString!.split(";");
-      endpoint = endpoint.split("=")[1];
-      key = key.split("=")[1];
+      [, endpoint] = endpoint.split("=");
+      [, key] = key.split("=");
 
       this.client = new CosmosClient({
         endpoint,
@@ -189,7 +189,10 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
       createContainerOptions: dbConfig.createContainerOptions,
       createDatabaseOptions: dbConfig.createDatabaseOptions,
     }).catch((error) => {
-      console.error("Error during AzureCosmosDBNoSQLVectorStore initialization:", error);
+      console.error(
+        "Error during AzureCosmosDBNoSQLVectorStore initialization:",
+        error
+      );
     });
   }
 

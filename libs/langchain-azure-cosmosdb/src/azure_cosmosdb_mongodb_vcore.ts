@@ -102,7 +102,10 @@ export class AzureCosmosDBMongoDBvCoreVectorStore extends VectorStore {
     return "azure_cosmosdb_mongodb_vcore";
   }
 
-  constructor(embeddings: EmbeddingsInterface, dbConfig: AzureCosmosDBMongoDBvCoreConfig) {
+  constructor(
+    embeddings: EmbeddingsInterface,
+    dbConfig: AzureCosmosDBMongoDBvCoreConfig
+  ) {
     super(embeddings, dbConfig);
 
     const connectionString =
@@ -134,7 +137,10 @@ export class AzureCosmosDBMongoDBvCoreVectorStore extends VectorStore {
     // Start initialization, but don't wait for it to finish here
     this.initPromise = this.init(client, databaseName, collectionName).catch(
       (error) => {
-        console.error("Error during AzureCosmosDBMongoDBvCoreVectorStore initialization:", error);
+        console.error(
+          "Error during AzureCosmosDBMongoDBvCoreVectorStore initialization:",
+          error
+        );
       }
     );
   }
@@ -449,7 +455,11 @@ export class AzureCosmosDBMongoDBvCoreVectorStore extends VectorStore {
       });
       docs.push(newDoc);
     }
-    return AzureCosmosDBMongoDBvCoreVectorStore.fromDocuments(docs, embeddings, dbConfig);
+    return AzureCosmosDBMongoDBvCoreVectorStore.fromDocuments(
+      docs,
+      embeddings,
+      dbConfig
+    );
   }
 
   /**

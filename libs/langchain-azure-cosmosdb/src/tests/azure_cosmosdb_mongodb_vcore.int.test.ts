@@ -2,8 +2,8 @@
 
 import { test, expect } from "@jest/globals";
 import { MongoClient } from "mongodb";
-import { OpenAIEmbeddings } from "@langchain/openai";
 import { Document } from "@langchain/core/documents";
+import { OpenAIEmbeddings } from "@langchain/openai";
 
 import { AzureCosmosDBMongoDBvCoreVectorStore } from "../azure_cosmosdb_mongodb_vcore.js";
 
@@ -32,7 +32,9 @@ const INDEX_NAME = "vectorSearchIndex";
  */
 describe("AzureCosmosDBMongoDBvCoreVectorStore", () => {
   beforeEach(async () => {
-    expect(process.env.AZURE_COSMOSDB_MONGODB_VCORE_CONNECTION_STRING).toBeDefined();
+    expect(
+      process.env.AZURE_COSMOSDB_MONGODB_VCORE_CONNECTION_STRING
+    ).toBeDefined();
 
     // Note: when using Azure OpenAI, you have to also set these variables
     // in addition to the API key:
@@ -65,14 +67,17 @@ describe("AzureCosmosDBMongoDBvCoreVectorStore", () => {
   });
 
   test("performs similarity search", async () => {
-    const vectorStore = new AzureCosmosDBMongoDBvCoreVectorStore(new OpenAIEmbeddings(), {
-      databaseName: DATABASE_NAME,
-      collectionName: COLLECTION_NAME,
-      indexName: INDEX_NAME,
-      indexOptions: {
-        numLists: 1,
-      },
-    });
+    const vectorStore = new AzureCosmosDBMongoDBvCoreVectorStore(
+      new OpenAIEmbeddings(),
+      {
+        databaseName: DATABASE_NAME,
+        collectionName: COLLECTION_NAME,
+        indexName: INDEX_NAME,
+        indexOptions: {
+          numLists: 1,
+        },
+      }
+    );
 
     expect(vectorStore).toBeDefined();
 
@@ -167,14 +172,17 @@ describe("AzureCosmosDBMongoDBvCoreVectorStore", () => {
   });
 
   test("deletes documents by id", async () => {
-    const vectorStore = new AzureCosmosDBMongoDBvCoreVectorStore(new OpenAIEmbeddings(), {
-      databaseName: DATABASE_NAME,
-      collectionName: COLLECTION_NAME,
-      indexName: INDEX_NAME,
-      indexOptions: {
-        numLists: 1,
-      },
-    });
+    const vectorStore = new AzureCosmosDBMongoDBvCoreVectorStore(
+      new OpenAIEmbeddings(),
+      {
+        databaseName: DATABASE_NAME,
+        collectionName: COLLECTION_NAME,
+        indexName: INDEX_NAME,
+        indexOptions: {
+          numLists: 1,
+        },
+      }
+    );
 
     const ids = await vectorStore.addDocuments([
       { pageContent: "This book is about politics", metadata: { a: 1 } },
@@ -196,14 +204,17 @@ describe("AzureCosmosDBMongoDBvCoreVectorStore", () => {
   });
 
   test("deletes documents by filter", async () => {
-    const vectorStore = new AzureCosmosDBMongoDBvCoreVectorStore(new OpenAIEmbeddings(), {
-      databaseName: DATABASE_NAME,
-      collectionName: COLLECTION_NAME,
-      indexName: INDEX_NAME,
-      indexOptions: {
-        numLists: 1,
-      },
-    });
+    const vectorStore = new AzureCosmosDBMongoDBvCoreVectorStore(
+      new OpenAIEmbeddings(),
+      {
+        databaseName: DATABASE_NAME,
+        collectionName: COLLECTION_NAME,
+        indexName: INDEX_NAME,
+        indexOptions: {
+          numLists: 1,
+        },
+      }
+    );
 
     await vectorStore.addDocuments([
       { pageContent: "This book is about politics", metadata: { a: 1 } },
@@ -225,14 +236,17 @@ describe("AzureCosmosDBMongoDBvCoreVectorStore", () => {
   });
 
   test("deletes all documents", async () => {
-    const vectorStore = new AzureCosmosDBMongoDBvCoreVectorStore(new OpenAIEmbeddings(), {
-      databaseName: DATABASE_NAME,
-      collectionName: COLLECTION_NAME,
-      indexName: INDEX_NAME,
-      indexOptions: {
-        numLists: 1,
-      },
-    });
+    const vectorStore = new AzureCosmosDBMongoDBvCoreVectorStore(
+      new OpenAIEmbeddings(),
+      {
+        databaseName: DATABASE_NAME,
+        collectionName: COLLECTION_NAME,
+        indexName: INDEX_NAME,
+        indexOptions: {
+          numLists: 1,
+        },
+      }
+    );
 
     await vectorStore.addDocuments([
       { pageContent: "This book is about politics", metadata: { a: 1 } },

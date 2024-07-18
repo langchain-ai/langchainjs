@@ -11,7 +11,6 @@ export interface SecretMap {
   AZURE_AISEARCH_ENDPOINT?: string;
   AZURE_AISEARCH_KEY?: string;
   AZURE_COSMOSDB_CONNECTION_STRING?: string;
-  AZURE_COSMOSDB_NOSQL_CONNECTION_STRING?: string;
   BAIDU_API_KEY?: string;
   BAIDU_SECRET_KEY?: string;
   BEDROCK_AWS_ACCESS_KEY_ID?: string;
