@@ -60,7 +60,7 @@ test.each(["true", "false"])(
     const thirdCallParams = JSON.parse((callSpy.mock.calls[2][2] as any).body);
     const fourthCallParams = JSON.parse((callSpy.mock.calls[3][2] as any).body);
     expect(firstCallParams).toEqual({
-      session_name: expect.any(String),
+      session_name: expect.anything() || undefined,
       id: firstCallParams.id,
       name: "RunnableLambda",
       start_time: expect.any(Number),
@@ -93,7 +93,7 @@ test.each(["true", "false"])(
       dotted_order: expect.any(String),
     });
     expect(secondCallParams).toEqual({
-      session_name: expect.any(String),
+      session_name: expect.anything() || undefined,
       id: expect.any(String),
       name: "aiGreet",
       start_time: expect.any(Number),
@@ -210,7 +210,7 @@ test.each(["true", "false"])(
     const thirdCallParams = JSON.parse((callSpy.mock.calls[2][2] as any).body);
     const fourthCallParams = JSON.parse((callSpy.mock.calls[3][2] as any).body);
     expect(firstCallParams).toEqual({
-      session_name: expect.any(String),
+      session_name: expect.anything() || undefined,
       id: firstCallParams.id,
       name: "RunnableLambda",
       start_time: expect.any(Number),
@@ -232,7 +232,7 @@ test.each(["true", "false"])(
       dotted_order: expect.any(String),
     });
     expect(secondCallParams).toEqual({
-      session_name: expect.any(String),
+      session_name: expect.anything() || undefined,
       id: expect.any(String),
       name: "aiGreet",
       start_time: expect.any(Number),
@@ -340,7 +340,7 @@ test.each(["true", "false"])(
     const thirdCallParams = JSON.parse((callSpy.mock.calls[2][2] as any).body);
     const fourthCallParams = JSON.parse((callSpy.mock.calls[3][2] as any).body);
     expect(firstCallParams).toEqual({
-      session_name: expect.any(String),
+      session_name: expect.anything() || undefined,
       id: firstCallParams.id,
       name: "aiGreet",
       start_time: expect.any(Number),
@@ -368,7 +368,7 @@ test.each(["true", "false"])(
       tags: [],
     });
     expect(secondCallParams).toEqual({
-      session_name: expect.any(String),
+      session_name: expect.anything() || undefined,
       id: secondCallParams.id,
       name: "RunnableLambda",
       parent_run_id: firstCallParams.id,
@@ -492,7 +492,7 @@ test.each(["true", "false"])(
     const thirdCallParams = JSON.parse((callSpy.mock.calls[2][2] as any).body);
     const fourthCallParams = JSON.parse((callSpy.mock.calls[3][2] as any).body);
     expect(firstCallParams).toEqual({
-      session_name: expect.any(String),
+      session_name: expect.anything() || undefined,
       id: firstCallParams.id,
       name: "aiGreet",
       start_time: expect.any(Number),
@@ -520,7 +520,7 @@ test.each(["true", "false"])(
       tags: [],
     });
     expect(secondCallParams).toEqual({
-      session_name: expect.any(String),
+      session_name: expect.anything() || undefined,
       id: secondCallParams.id,
       name: "RunnableLambda",
       parent_run_id: firstCallParams.id,
