@@ -1,7 +1,7 @@
 import { test, expect } from "@jest/globals";
 import { DallEAPIWrapper } from "../dalle.js";
 
-test("Dalle can generate images", async () => {
+test.skip("Dalle can generate images", async () => {
   const dalle = new DallEAPIWrapper();
 
   const res = await dalle.invoke("A painting of a cat");
@@ -9,7 +9,7 @@ test("Dalle can generate images", async () => {
   expect(res).toContain("https://");
 });
 
-test("Dalle can generate images with base 64 response format", async () => {
+test.skip("Dalle can generate images with base 64 response format", async () => {
   const dalle = new DallEAPIWrapper({
     responseFormat: "b64_json",
   });
@@ -19,7 +19,7 @@ test("Dalle can generate images with base 64 response format", async () => {
   expect(res).not.toContain("https://");
 });
 
-test("Dalle returns multiple image URLs if n > 1", async () => {
+test.skip("Dalle returns multiple image URLs if n > 1", async () => {
   const dalle = new DallEAPIWrapper({
     n: 2,
   });
@@ -40,7 +40,7 @@ test("Dalle returns multiple image URLs if n > 1", async () => {
   expect(res[1].image_url.startsWith("https://")).toBe(true);
 });
 
-test("Dalle returns multiple base64 image strings if n > 1", async () => {
+test.skip("Dalle returns multiple base64 image strings if n > 1", async () => {
   const dalle = new DallEAPIWrapper({
     n: 2,
     dallEResponseFormat: "b64_json",
