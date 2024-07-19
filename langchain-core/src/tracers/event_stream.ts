@@ -354,7 +354,7 @@ export class EventStreamCallbackHandler extends BaseTracer {
     if (runInfo === undefined) {
       throw new Error(`onLLMNewToken: Run ID ${run.id} not found in run map.`);
     }
-    // Covered by streamed chunks in tapOutputIterable
+    // Top-level streaming events are covered by tapOutputIterable
     if (run.parent_run_id === undefined) {
       return;
     }

@@ -80,7 +80,7 @@ test("Runnable streamEvents method", async () => {
   ]);
 });
 
-test.only("Runnable streamEvents method on a chat model", async () => {
+test("Runnable streamEvents method on a chat model", async () => {
   const model = new FakeListChatModel({
     responses: ["abc"],
   });
@@ -100,7 +100,7 @@ test.only("Runnable streamEvents method on a chat model", async () => {
       tags: [],
     },
     {
-      data: { chunk: new AIMessageChunk({ content: "a" })},
+      data: { chunk: new AIMessageChunk({ content: "a" }) },
       event: "on_chat_model_stream",
       name: "FakeListChatModel",
       metadata: expect.any(Object),
@@ -108,7 +108,7 @@ test.only("Runnable streamEvents method on a chat model", async () => {
       tags: [],
     },
     {
-      data: { chunk: new AIMessageChunk({ content: "b" })},
+      data: { chunk: new AIMessageChunk({ content: "b" }) },
       event: "on_chat_model_stream",
       name: "FakeListChatModel",
       metadata: expect.any(Object),
@@ -116,7 +116,7 @@ test.only("Runnable streamEvents method on a chat model", async () => {
       tags: [],
     },
     {
-      data: { chunk: new AIMessageChunk({ content: "c" })},
+      data: { chunk: new AIMessageChunk({ content: "c" }) },
       event: "on_chat_model_stream",
       name: "FakeListChatModel",
       metadata: expect.any(Object),
@@ -129,7 +129,7 @@ test.only("Runnable streamEvents method on a chat model", async () => {
       name: "FakeListChatModel",
       metadata: expect.any(Object),
       run_id: expect.any(String),
-      tags: []
+      tags: [],
     },
   ]);
 });
