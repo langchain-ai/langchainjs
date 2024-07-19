@@ -31,22 +31,6 @@ At a high-level, the steps of most SQL chain and agent are:
 
 ![SQL Use Case Diagram](/img/sql_usecase.png)
 
-## ⚠️ Security note ⚠️
-
-Building Q&A systems of SQL databases can require executing model-generated SQL queries. There are inherent risks in doing this.
-Make sure that your database connection permissions are always scoped as narrowly as possible for your chain/agent's needs.
-This will mitigate though not eliminate the risks of building a model-driven system. For more on general security best practices, see [here](/docs/security).
-
-## Architecture
-
-At a high-level, the steps of most SQL chain and agent are:
-
-1. **Convert question to SQL query**: Model converts user input to a SQL query.
-2. **Execute SQL query**: Execute the SQL query
-3. **Answer the question**: Model responds to user input using the query results.
-
-![SQL Use Case Diagram](/img/sql_usecase.png)
-
 ## Setup
 
 First, get required packages and set environment variables:
