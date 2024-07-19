@@ -3,11 +3,9 @@ import {
   InvokeModelCommand,
 } from "@aws-sdk/client-bedrock-runtime";
 import { Embeddings, EmbeddingsParams } from "@langchain/core/embeddings";
-import type { CredentialType } from "../utils/bedrock/index.js";
+import { CredentialType } from "./types.js";
 
 /**
- * @deprecated The BedrockEmbeddings integration has been moved to the `@langchain/aws` package. Import from `@langchain/aws` instead.
- *
  * Interface that extends EmbeddingsParams and defines additional
  * parameters specific to the BedrockEmbeddings class.
  */
@@ -30,8 +28,6 @@ export interface BedrockEmbeddingsParams extends EmbeddingsParams {
 }
 
 /**
- * @deprecated The BedrockEmbeddings integration has been moved to the `@langchain/aws` package. Import from `@langchain/aws` instead.
- *
  * Class that extends the Embeddings class and provides methods for
  * generating embeddings using the Bedrock API.
  * @example
