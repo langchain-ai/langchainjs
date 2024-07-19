@@ -6,7 +6,6 @@ import { OpenAI } from "@langchain/openai";
 
 import { SerpAPI } from "@langchain/community/tools/serpapi";
 
-
 export const run = async () => {
   // Define the tools the agent will have access to.
   const tools = [
