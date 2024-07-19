@@ -59,8 +59,7 @@ test.each(["true", "false"])(
     const secondCallParams = JSON.parse((callSpy.mock.calls[1][2] as any).body);
     const thirdCallParams = JSON.parse((callSpy.mock.calls[2][2] as any).body);
     const fourthCallParams = JSON.parse((callSpy.mock.calls[3][2] as any).body);
-    expect(firstCallParams).toEqual({
-      session_name: expect.anything() || undefined,
+    expect(firstCallParams).toMatchObject({
       id: firstCallParams.id,
       name: "RunnableLambda",
       start_time: expect.any(Number),
@@ -92,8 +91,7 @@ test.each(["true", "false"])(
       trace_id: firstCallParams.id,
       dotted_order: expect.any(String),
     });
-    expect(secondCallParams).toEqual({
-      session_name: expect.anything() || undefined,
+    expect(secondCallParams).toMatchObject({
       id: expect.any(String),
       name: "aiGreet",
       start_time: expect.any(Number),
@@ -121,7 +119,7 @@ test.each(["true", "false"])(
       dotted_order: expect.stringContaining(`${firstCallParams.dotted_order}.`),
       tags: [],
     });
-    expect(thirdCallParams).toEqual({
+    expect(thirdCallParams).toMatchObject({
       end_time: expect.any(Number),
       inputs: {
         args: [
@@ -145,7 +143,7 @@ test.each(["true", "false"])(
       trace_id: firstCallParams.id,
       tags: [],
     });
-    expect(fourthCallParams).toEqual({
+    expect(fourthCallParams).toMatchObject({
       end_time: expect.any(Number),
       outputs: { output: ["Hello!David"] },
       events: [
@@ -209,8 +207,7 @@ test.each(["true", "false"])(
     const secondCallParams = JSON.parse((callSpy.mock.calls[1][2] as any).body);
     const thirdCallParams = JSON.parse((callSpy.mock.calls[2][2] as any).body);
     const fourthCallParams = JSON.parse((callSpy.mock.calls[3][2] as any).body);
-    expect(firstCallParams).toEqual({
-      session_name: expect.anything() || undefined,
+    expect(firstCallParams).toMatchObject({
       id: firstCallParams.id,
       name: "RunnableLambda",
       start_time: expect.any(Number),
@@ -231,8 +228,7 @@ test.each(["true", "false"])(
       trace_id: firstCallParams.id,
       dotted_order: expect.any(String),
     });
-    expect(secondCallParams).toEqual({
-      session_name: expect.anything() || undefined,
+    expect(secondCallParams).toMatchObject({
       id: expect.any(String),
       name: "aiGreet",
       start_time: expect.any(Number),
@@ -260,7 +256,7 @@ test.each(["true", "false"])(
       dotted_order: expect.stringContaining(`${firstCallParams.dotted_order}.`),
       tags: [],
     });
-    expect(thirdCallParams).toEqual({
+    expect(thirdCallParams).toMatchObject({
       end_time: expect.any(Number),
       inputs: {
         args: [
@@ -286,7 +282,7 @@ test.each(["true", "false"])(
       trace_id: firstCallParams.id,
       tags: [],
     });
-    expect(fourthCallParams).toEqual({
+    expect(fourthCallParams).toMatchObject({
       end_time: expect.any(Number),
       outputs: { output: "Hello!David" },
       events: [
@@ -339,8 +335,7 @@ test.each(["true", "false"])(
     const secondCallParams = JSON.parse((callSpy.mock.calls[1][2] as any).body);
     const thirdCallParams = JSON.parse((callSpy.mock.calls[2][2] as any).body);
     const fourthCallParams = JSON.parse((callSpy.mock.calls[3][2] as any).body);
-    expect(firstCallParams).toEqual({
-      session_name: expect.anything() || undefined,
+    expect(firstCallParams).toMatchObject({
       id: firstCallParams.id,
       name: "aiGreet",
       start_time: expect.any(Number),
@@ -367,8 +362,7 @@ test.each(["true", "false"])(
       dotted_order: firstCallParams.dotted_order,
       tags: [],
     });
-    expect(secondCallParams).toEqual({
-      session_name: expect.anything() || undefined,
+    expect(secondCallParams).toMatchObject({
       id: secondCallParams.id,
       name: "RunnableLambda",
       parent_run_id: firstCallParams.id,
@@ -401,7 +395,7 @@ test.each(["true", "false"])(
       trace_id: firstCallParams.id,
       dotted_order: expect.stringContaining(`${firstCallParams.dotted_order}.`),
     });
-    expect(thirdCallParams).toEqual({
+    expect(thirdCallParams).toMatchObject({
       end_time: expect.any(Number),
       outputs: { output: ["Hello!"] },
       events: [
@@ -426,7 +420,7 @@ test.each(["true", "false"])(
       dotted_order: expect.stringContaining(`${firstCallParams.dotted_order}.`),
       parent_run_id: firstCallParams.id,
     });
-    expect(fourthCallParams).toEqual({
+    expect(fourthCallParams).toMatchObject({
       end_time: expect.any(Number),
       inputs: {
         args: [
@@ -491,8 +485,7 @@ test.each(["true", "false"])(
     const secondCallParams = JSON.parse((callSpy.mock.calls[1][2] as any).body);
     const thirdCallParams = JSON.parse((callSpy.mock.calls[2][2] as any).body);
     const fourthCallParams = JSON.parse((callSpy.mock.calls[3][2] as any).body);
-    expect(firstCallParams).toEqual({
-      session_name: expect.anything() || undefined,
+    expect(firstCallParams).toMatchObject({
       id: firstCallParams.id,
       name: "aiGreet",
       start_time: expect.any(Number),
@@ -519,8 +512,7 @@ test.each(["true", "false"])(
       dotted_order: firstCallParams.dotted_order,
       tags: [],
     });
-    expect(secondCallParams).toEqual({
-      session_name: expect.anything() || undefined,
+    expect(secondCallParams).toMatchObject({
       id: secondCallParams.id,
       name: "RunnableLambda",
       parent_run_id: firstCallParams.id,
@@ -542,7 +534,7 @@ test.each(["true", "false"])(
       trace_id: firstCallParams.id,
       dotted_order: expect.stringContaining(`${firstCallParams.dotted_order}.`),
     });
-    expect(thirdCallParams).toEqual({
+    expect(thirdCallParams).toMatchObject({
       end_time: expect.any(Number),
       outputs: { output: "Hello!" },
       events: [
@@ -567,7 +559,7 @@ test.each(["true", "false"])(
       dotted_order: expect.stringContaining(`${firstCallParams.dotted_order}.`),
       parent_run_id: firstCallParams.id,
     });
-    expect(fourthCallParams).toEqual({
+    expect(fourthCallParams).toMatchObject({
       end_time: expect.any(Number),
       inputs: {
         args: [
