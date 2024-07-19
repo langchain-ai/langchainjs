@@ -244,6 +244,13 @@ export class EventStreamCallbackHandler extends BaseTracer {
       yield firstChunk.value;
       return;
     }
+    // Match format from handlers below
+    function _formatOutputChunk(eventType: string, data: unknown) {
+      if (eventType === "llm" && typeof data === "string") {
+        return new GenerationChunk({ text: data });
+      }
+      return data;
+    }
     let tappedPromise = this.tappedPromises.get(runId);
     // if we are the first to tap, issue stream events
     if (tappedPromise === undefined) {
@@ -264,7 +271,9 @@ export class EventStreamCallbackHandler extends BaseTracer {
         await this.send(
           {
             ...event,
-            data: { chunk: firstChunk.value },
+            data: {
+              chunk: _formatOutputChunk(runInfo.runType, firstChunk.value),
+            },
           },
           runInfo
         );
@@ -276,7 +285,7 @@ export class EventStreamCallbackHandler extends BaseTracer {
               {
                 ...event,
                 data: {
-                  chunk,
+                  chunk: _formatOutputChunk(runInfo.runType, chunk),
                 },
               },
               runInfo

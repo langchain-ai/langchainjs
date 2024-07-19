@@ -655,18 +655,6 @@ test("Runnable streamEvents method with llm", async () => {
     },
     {
       event: "on_llm_stream",
-      run_id: expect.any(String),
-      name: "my_model",
-      tags: ["my_model"],
-      metadata: {
-        a: "b",
-      },
-      data: {
-        chunk: "h",
-      },
-    },
-    {
-      event: "on_llm_stream",
       data: {
         chunk: {
           text: "e",
@@ -677,18 +665,6 @@ test("Runnable streamEvents method with llm", async () => {
       tags: ["my_model"],
       metadata: {
         a: "b",
-      },
-    },
-    {
-      event: "on_llm_stream",
-      run_id: expect.any(String),
-      name: "my_model",
-      tags: ["my_model"],
-      metadata: {
-        a: "b",
-      },
-      data: {
-        chunk: "e",
       },
     },
     {
@@ -707,18 +683,6 @@ test("Runnable streamEvents method with llm", async () => {
     },
     {
       event: "on_llm_stream",
-      run_id: expect.any(String),
-      name: "my_model",
-      tags: ["my_model"],
-      metadata: {
-        a: "b",
-      },
-      data: {
-        chunk: "y",
-      },
-    },
-    {
-      event: "on_llm_stream",
       data: {
         chunk: {
           text: "!",
@@ -729,18 +693,6 @@ test("Runnable streamEvents method with llm", async () => {
       tags: ["my_model"],
       metadata: {
         a: "b",
-      },
-    },
-    {
-      event: "on_llm_stream",
-      run_id: expect.any(String),
-      name: "my_model",
-      tags: ["my_model"],
-      metadata: {
-        a: "b",
-      },
-      data: {
-        chunk: "!",
       },
     },
     {
