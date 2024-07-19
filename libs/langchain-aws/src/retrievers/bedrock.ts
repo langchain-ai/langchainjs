@@ -1,15 +1,13 @@
 import {
   RetrieveCommand,
   BedrockAgentRuntimeClient,
-  BedrockAgentRuntimeClientConfig,
+  type BedrockAgentRuntimeClientConfig,
 } from "@aws-sdk/client-bedrock-agent-runtime";
 
 import { BaseRetriever } from "@langchain/core/retrievers";
 import { Document } from "@langchain/core/documents";
 
 /**
- * @deprecated The AmazonKnowledgeBaseRetriever integration has been moved to the `@langchain/aws` package. Import from `@langchain/aws` instead.
- *
  * Interface for the arguments required to initialize an
  * AmazonKnowledgeBaseRetriever instance.
  */
@@ -21,8 +19,6 @@ export interface AmazonKnowledgeBaseRetrieverArgs {
 }
 
 /**
- * @deprecated The AmazonKnowledgeBaseRetriever integration has been moved to the `@langchain/aws` package. Import from `@langchain/aws` instead.
- *
  * Class for interacting with Amazon Bedrock Knowledge Bases, a RAG workflow oriented service
  * provided by AWS. Extends the BaseRetriever class.
  * @example

@@ -1,4 +1,4 @@
-import { AmazonKendraRetriever } from "@langchain/community/retrievers/amazon_kendra";
+import { AmazonKendraRetriever } from "@langchain/aws";
 
 const retriever = new AmazonKendraRetriever({
   topK: 10,
