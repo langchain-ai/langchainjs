@@ -158,6 +158,11 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     return parentRun.child_execution_order + 1;
   }
 
+  /**
+   * Create and add a run to the run map for LLM start events.
+   * This must sometimes be done synchronously to avoid race conditions
+   * when callbacks are backgrounded, so we expose it as a separate method here.
+   */
   _createRunForLLMStart(
     llm: Serialized,
     prompts: string[],
@@ -223,6 +228,11 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     return run;
   }
 
+  /**
+   * Create and add a run to the run map for chat model start events.
+   * This must sometimes be done synchronously to avoid race conditions
+   * when callbacks are backgrounded, so we expose it as a separate method here.
+   */
   _createRunForChatModelStart(
     llm: Serialized,
     messages: BaseMessage[][],
@@ -320,6 +330,11 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     return run;
   }
 
+  /**
+   * Create and add a run to the run map for chain start events.
+   * This must sometimes be done synchronously to avoid race conditions
+   * when callbacks are backgrounded, so we expose it as a separate method here.
+   */
   _createRunForChainStart(
     chain: Serialized,
     inputs: ChainValues,
@@ -432,6 +447,11 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     return run;
   }
 
+  /**
+   * Create and add a run to the run map for tool start events.
+   * This must sometimes be done synchronously to avoid race conditions
+   * when callbacks are backgrounded, so we expose it as a separate method here.
+   */
   _createRunForToolStart(
     tool: Serialized,
     input: string,
@@ -553,6 +573,11 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     await this.onAgentEnd?.(run);
   }
 
+  /**
+   * Create and add a run to the run map for retriever start events.
+   * This must sometimes be done synchronously to avoid race conditions
+   * when callbacks are backgrounded, so we expose it as a separate method here.
+   */
   _createRunForRetrieverStart(
     retriever: Serialized,
     query: string,
@@ -596,7 +621,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     metadata?: KVMap,
     name?: string
   ): Promise<Run> {
-    let run =
+    const run =
       this.runMap.get(runId) ??
       this._createRunForRetrieverStart(
         retriever,

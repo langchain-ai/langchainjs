@@ -613,6 +613,9 @@ export class CallbackManager
               return;
             }
             if (isBaseTracer(handler)) {
+              // Create and add run to the run map.
+              // We do this synchronously to avoid race conditions
+              // when callbacks are backgrounded.
               handler._createRunForLLMStart(
                 llm,
                 [prompt],
@@ -683,6 +686,9 @@ export class CallbackManager
               return;
             }
             if (isBaseTracer(handler)) {
+              // Create and add run to the run map.
+              // We do this synchronously to avoid race conditions
+              // when callbacks are backgrounded.
               handler._createRunForChatModelStart(
                 llm,
                 [messageGroup],
@@ -761,6 +767,9 @@ export class CallbackManager
           return;
         }
         if (isBaseTracer(handler)) {
+          // Create and add run to the run map.
+          // We do this synchronously to avoid race conditions
+          // when callbacks are backgrounded.
           handler._createRunForChainStart(
             chain,
             inputs,
@@ -822,6 +831,9 @@ export class CallbackManager
           return;
         }
         if (isBaseTracer(handler)) {
+          // Create and add run to the run map.
+          // We do this synchronously to avoid race conditions
+          // when callbacks are backgrounded.
           handler._createRunForToolStart(
             tool,
             input,
@@ -881,6 +893,9 @@ export class CallbackManager
           return;
         }
         if (isBaseTracer(handler)) {
+          // Create and add run to the run map.
+          // We do this synchronously to avoid race conditions
+          // when callbacks are backgrounded.
           handler._createRunForRetrieverStart(
             retriever,
             query,
