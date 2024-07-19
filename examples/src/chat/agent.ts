@@ -1,14 +1,13 @@
-import { LLMChain } from "langchain/chains";
-import { ChatOpenAI } from "@langchain/openai";
-import { ZeroShotAgent, AgentExecutor } from "langchain/agents";
-import {
-  ChatPromptTemplate,
-  SystemMessagePromptTemplate,
-  HumanMessagePromptTemplate,
-} from "@langchain/core/prompts";
+import { AgentExecutor, createReactAgent } from "langchain/agents";
+import { pull } from "langchain/hub";
+import type { PromptTemplate } from "@langchain/core/prompts";
+
+import { OpenAI } from "@langchain/openai";
+
 import { SerpAPI } from "@langchain/community/tools/serpapi";
 
 export const run = async () => {
+  // Define the tools the agent will have access to.
   const tools = [
     new SerpAPI(process.env.SERPAPI_API_KEY, {
       location: "Austin,Texas,United States",
@@ -17,36 +16,29 @@ export const run = async () => {
     }),
   ];
 
-  const prompt = ZeroShotAgent.createPrompt(tools, {
-    prefix: `Answer the following questions as best you can, but speaking as a pirate might speak. You have access to the following tools:`,
-    suffix: `Begin! Remember to speak as a pirate when giving your final answer. Use lots of "Args"`,
+  // Get the prompt to use - you can modify this!
+  // If you want to see the prompt in full, you can at:
+  // https://smith.langchain.com/hub/hwchase17/react
+  const prompt = await pull<PromptTemplate>("hwchase17/react");
+
+  const llm = new OpenAI({
+    temperature: 0,
   });
 
-  const chatPrompt = ChatPromptTemplate.fromMessages([
-    new SystemMessagePromptTemplate(prompt),
-    HumanMessagePromptTemplate.fromTemplate(`{input}
-
-This was your previous work (but I haven't seen any of it! I only see what you return as final answer):
-{agent_scratchpad}`),
-  ]);
-
-  const chat = new ChatOpenAI({});
-
-  const llmChain = new LLMChain({
-    prompt: chatPrompt,
-    llm: chat,
+  const agent = await createReactAgent({
+    llm,
+    tools,
+    prompt,
   });
 
-  const agent = new ZeroShotAgent({
-    llmChain,
-    allowedTools: tools.map((tool) => tool.name),
+  const agentExecutor = new AgentExecutor({
+    agent,
+    tools,
   });
 
-  const executor = AgentExecutor.fromAgentAndTools({ agent, tools });
-
-  const response = await executor.invoke({
-    input: "How many people live in canada as of 2023?",
+  const result = await agentExecutor.invoke({
+    input: "what is LangChain?",
   });
 
-  console.log(response);
+  console.log(result);
 };
