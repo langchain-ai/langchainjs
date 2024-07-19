@@ -84,7 +84,6 @@ test("Ollama can call withStructuredOutput", async () => {
   });
 
   const result = await model.invoke(messageHistory);
-  console.log("WSO", result);
   expect(result).toBeDefined();
   expect(result.location).toBeDefined();
   expect(result.location).not.toBe("");
@@ -100,7 +99,6 @@ test("Ollama can call withStructuredOutput includeRaw", async () => {
   });
 
   const result = await model.invoke(messageHistory);
-  console.log("WSO", result);
   expect(result).toBeDefined();
   expect(result.parsed.location).toBeDefined();
   expect(result.parsed.location).not.toBe("");

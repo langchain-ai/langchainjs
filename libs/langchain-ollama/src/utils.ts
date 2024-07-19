@@ -8,31 +8,18 @@ import {
   ToolMessage,
   UsageMetadata,
 } from "@langchain/core/messages";
-import type { Message as OllamaMessage } from "ollama";
+import type {
+  Message as OllamaMessage,
+  ToolCall as OllamaToolCall,
+} from "ollama";
 import { v4 as uuidv4 } from "uuid";
 
-export interface OllamaToolCall {
-  type?: "function";
-  id?: string;
-  function: {
-    name: string;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    arguments: Record<string, any>;
-  };
-}
-
-export interface OllamaMessageWithTools extends Omit<OllamaMessage, "content"> {
-  tool_calls?: OllamaToolCall[];
-  content?: string;
-  tool_call_id?: string;
-}
-
 export function convertOllamaMessagesToLangChain(
-  messages: OllamaMessageWithTools,
-  extra: {
+  messages: OllamaMessage,
+  extra?: {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    responseMetadata: Record<string, any>;
-    usageMetadata: UsageMetadata;
+    responseMetadata?: Record<string, any>;
+    usageMetadata?: UsageMetadata;
   }
 ): AIMessageChunk {
   return new AIMessageChunk({
@@ -42,10 +29,10 @@ export function convertOllamaMessagesToLangChain(
       args: JSON.stringify(tc.function.arguments),
       type: "tool_call_chunk",
       index: 0,
-      id: tc.id ?? uuidv4(),
+      id: uuidv4(),
     })),
-    response_metadata: extra.responseMetadata,
-    usage_metadata: extra.usageMetadata,
+    response_metadata: extra?.responseMetadata,
+    usage_metadata: extra?.usageMetadata,
   });
 }
 
@@ -54,9 +41,7 @@ function extractBase64FromDataUrl(dataUrl: string): string {
   return match ? match[1] : "";
 }
 
-function convertAMessagesToOllama(
-  messages: AIMessage
-): OllamaMessageWithTools[] {
+function convertAMessagesToOllama(messages: AIMessage): OllamaMessage[] {
   if (typeof messages.content === "string") {
     return [
       {
@@ -73,7 +58,7 @@ function convertAMessagesToOllama(
     role: "assistant",
     content: c.text,
   }));
-  let toolCallMsgs: OllamaMessageWithTools | undefined;
+  let toolCallMsgs: OllamaMessage | undefined;
 
   if (
     messages.content.find((c) => c.type === "tool_use") &&
@@ -95,6 +80,7 @@ function convertAMessagesToOllama(
       toolCallMsgs = {
         role: "assistant",
         tool_calls: toolCalls,
+        content: "",
       };
     }
   } else if (
@@ -111,7 +97,7 @@ function convertAMessagesToOllama(
 
 function convertHumanGenericMessagesToOllama(
   message: HumanMessage
-): OllamaMessageWithTools[] {
+): OllamaMessage[] {
   if (typeof message.content === "string") {
     return [
       {
@@ -145,9 +131,7 @@ function convertHumanGenericMessagesToOllama(
   });
 }
 
-function convertSystemMessageToOllama(
-  message: SystemMessage
-): OllamaMessageWithTools[] {
+function convertSystemMessageToOllama(message: SystemMessage): OllamaMessage[] {
   if (typeof message.content === "string") {
     return [
       {
@@ -173,15 +157,12 @@ function convertSystemMessageToOllama(
   }
 }
 
-function convertToolMessageToOllama(
-  message: ToolMessage
-): OllamaMessageWithTools[] {
+function convertToolMessageToOllama(message: ToolMessage): OllamaMessage[] {
   if (typeof message.content !== "string") {
     throw new Error("Non string tool message content is not supported");
   }
   return [
     {
-      tool_call_id: message.tool_call_id,
       role: "tool",
       content: message.content,
     },
@@ -190,7 +171,7 @@ function convertToolMessageToOllama(
 
 export function convertToOllamaMessages(
   messages: BaseMessage[]
-): OllamaMessageWithTools[] {
+): OllamaMessage[] {
   return messages.flatMap((msg) => {
     if (["human", "generic"].includes(msg._getType())) {
       return convertHumanGenericMessagesToOllama(msg);

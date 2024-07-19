@@ -21,6 +21,7 @@ import type {
   ChatRequest as OllamaChatRequest,
   ChatResponse as OllamaChatResponse,
   Message as OllamaMessage,
+  Tool as OllamaTool,
 } from "ollama";
 import { StructuredToolInterface } from "@langchain/core/tools";
 import { Runnable, RunnableToolLike } from "@langchain/core/runnables";
@@ -316,7 +317,7 @@ export class ChatOllama
 
   invocationParams(
     options?: this["ParsedCallOptions"]
-  ): Omit<OllamaChatRequest, "messages"> & { tools?: ToolDefinition[] } {
+  ): Omit<OllamaChatRequest, "messages"> {
     if (options?.tool_choice) {
       throw new Error("Tool choice is not supported for ChatOllama.");
     }
@@ -357,7 +358,9 @@ export class ChatOllama
         penalize_newline: this.penalizeNewline,
         stop: options?.stop,
       },
-      tools: options?.tools?.map(convertToOpenAITool),
+      tools: options?.tools?.length
+        ? (options.tools.map(convertToOpenAITool) as OllamaTool[])
+        : undefined,
     };
   }
 
@@ -449,14 +452,11 @@ export class ChatOllama
     };
 
     if (params.tools && params.tools.length > 0) {
-      const toolResult = await this._generateRawApi(
-        {
-          ...params,
-          tools: params.tools,
-          messages: ollamaMessages,
-        },
-        options
-      );
+      const toolResult = await this.client.chat({
+        ...params,
+        messages: ollamaMessages,
+        stream: false, // Ollama currently does not support streaming with tools
+      });
 
       const { message: responseMessage, ...rest } = toolResult;
       usageMetadata.input_tokens += rest.prompt_eval_count ?? 0;
@@ -495,9 +495,7 @@ export class ChatOllama
 
       yield new ChatGenerationChunk({
         text: responseMessage.content ?? "",
-        message: new AIMessageChunk({
-          content: responseMessage.content ?? "",
-        }),
+        message: convertOllamaMessagesToLangChain(responseMessage),
       });
       await runManager?.handleLLMNewToken(responseMessage.content ?? "");
     }
@@ -511,33 +509,5 @@ export class ChatOllama
         usage_metadata: usageMetadata,
       }),
     });
-  }
-
-  async _generateRawApi(
-    request: OllamaChatRequest & { tools: ToolDefinition[] },
-    options?: this["ParsedCallOptions"]
-  ): Promise<OllamaChatResponse> {
-    return this.caller.callWithOptions(
-      { signal: options?.signal },
-      async () => {
-        const streamRes = await fetch(`${this.baseUrl}/api/chat`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            ...request,
-            stream: false,
-          }),
-        });
-
-        // Ensure the response is ok
-        if (!streamRes.ok) {
-          throw new Error(`HTTP error! status: ${streamRes.status}`);
-        }
-        const streamResJson = await streamRes.json();
-        return streamResJson;
-      }
-    );
   }
 }
