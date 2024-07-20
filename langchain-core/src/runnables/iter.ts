@@ -37,7 +37,8 @@ export function* consumeIteratorInContext<T>(
   while (true) {
     const { value, done } = AsyncLocalStorageProviderSingleton.runWithConfig(
       context,
-      iter.next.bind(iter)
+      iter.next.bind(iter),
+      true
     );
     if (done) {
       break;
@@ -56,7 +57,8 @@ export async function* consumeAsyncIterableInContext<T>(
     const { value, done } =
       await AsyncLocalStorageProviderSingleton.runWithConfig(
         context,
-        iterator.next.bind(iter)
+        iterator.next.bind(iter),
+        true
       );
     if (done) {
       break;

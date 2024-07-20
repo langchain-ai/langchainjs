@@ -211,7 +211,8 @@ export class AsyncGeneratorWithSetup<
           } else {
             this.firstResult.then((_result) => resolve(undefined as S), reject);
           }
-        }
+        },
+        true
       );
     });
   }
@@ -226,7 +227,8 @@ export class AsyncGeneratorWithSetup<
       this.config,
       async () => {
         return this.generator.next(...args);
-      }
+      },
+      true
     );
   }
 

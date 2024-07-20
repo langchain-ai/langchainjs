@@ -32,12 +32,16 @@ class AsyncLocalStorageProvider {
   getRunnableConfig() {
     const storage = this.getInstance();
     // this has the runnable config
-    // which means that I should also have an instance of a LangChainTracer
+    // which means that we should also have an instance of a LangChainTracer
     // with the run map prepopulated
     return storage.getStore()?.extra?.[LC_CHILD_KEY];
   }
 
-  runWithConfig<T>(config: any, callback: () => T): T {
+  runWithConfig<T>(
+    config: any,
+    callback: () => T,
+    avoidCreatingRootRunTree?: boolean
+  ): T {
     const callbackManager = CallbackManager._configureSync(
       config?.callbacks,
       undefined,
@@ -52,10 +56,15 @@ class AsyncLocalStorageProvider {
       (handler) => handler?.name === "langchain_tracer"
     ) as LangChainTracer | undefined;
 
-    const runTree =
-      langChainTracer && parentRunId
-        ? langChainTracer.convertToRunTree(parentRunId)
-        : new RunTree({ name: "<runnable_lambda>", tracingEnabled: false });
+    let runTree;
+    if (langChainTracer && parentRunId) {
+      runTree = langChainTracer.convertToRunTree(parentRunId);
+    } else if (!avoidCreatingRootRunTree) {
+      runTree = new RunTree({
+        name: "<runnable_lambda>",
+        tracingEnabled: false,
+      });
+    }
 
     if (runTree) {
       runTree.extra = { ...runTree.extra, [LC_CHILD_KEY]: config };
