@@ -301,6 +301,7 @@ export class UnstructuredLoader extends BaseDocumentLoader {
 
     const headers = {
       "UNSTRUCTURED-API-KEY": this.apiKey ?? "",
+      "Content-Type": "multipart/form-data",
     };
 
     const response = await fetch(this.apiUrl, {
