@@ -52,6 +52,7 @@
     "@langchain/mistralai": "workspace:*",
     "@langchain/mongodb": "workspace:*",
     "@langchain/nomic": "workspace:*",
+    "@langchain/ollama": "workspace:*",
     "@langchain/openai": "workspace:*",
     "@langchain/pinecone": "workspace:*",
     "@langchain/qdrant": "workspace:*",

@@ -4,6 +4,12 @@ sidebar_label: Ollama Functions
 
 # Ollama Functions
 
+:::warning
+
+The LangChain Ollama integration package has official support for tool calling. [Click here to view the documentation](/docs/integrations/chat/ollama#tools).
+
+:::
+
 LangChain offers an experimental wrapper around open source models run locally via [Ollama](https://github.com/jmorganca/ollama)
 that gives it the same API as OpenAI Functions.
 
@@ -48,7 +54,9 @@ import OllamaFunctionsExtraction from "@examples/models/chat/ollama_functions/ex
 
 <CodeBlock language="typescript">{OllamaFunctionsExtraction}</CodeBlock>
 
-You can see a LangSmith trace of what this looks like here: https://smith.langchain.com/public/31457ea4-71ca-4e29-a1e0-aa80e6828883/r
+:::tip
+You can see a simple LangSmith trace of this [here](https://smith.langchain.com/public/74692bfc-0224-4221-b187-ddbf20d7ecc0/r)
+:::
 
 ## Customization
 

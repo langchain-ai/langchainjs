@@ -13,14 +13,14 @@ For a complete list of supported models and model variants, see the [Ollama mode
 
 ## Setup
 
-Follow [these instructions](https://github.com/jmorganca/ollama) to set up and run a local Ollama instance.
+Follow [these instructions](https://github.com/jmorganca/ollama) to set up and run a local Ollama instance. Then, download the `@langchain/ollama` package.
 
 import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
 
 <IntegrationInstallTooltip></IntegrationInstallTooltip>
 
 ```bash npm2yarn
-npm install @langchain/community
+npm install @langchain/ollama
 ```
 
 ## Usage
@@ -30,6 +30,28 @@ import OllamaExample from "@examples/models/chat/integration_ollama.ts";
 
 <CodeBlock language="typescript">{OllamaExample}</CodeBlock>
 
+## Tools
+
+Ollama now offers support for native tool calling. The example below demonstrates how you can invoke a tool from an Ollama model.
+
+import OllamaToolsExample from "@examples/models/chat/integration_ollama_tools.ts";
+
+<CodeBlock language="typescript">{OllamaToolsExample}</CodeBlock>
+
+:::tip
+You can see the LangSmith trace of the above example [here](https://smith.langchain.com/public/940f4279-6825-4d19-9653-4c50d3c70625/r)
+:::
+
+Since `ChatOllama` supports the `.bindTools()` method, you can also call `.withStructuredOutput()` to get a structured output from the tool.
+
+import OllamaWSOExample from "@examples/models/chat/integration_ollama_wso.ts";
+
+<CodeBlock language="typescript">{OllamaWSOExample}</CodeBlock>
+
+:::tip
+You can see the LangSmith trace of the above example [here](https://smith.langchain.com/public/ed113c53-1299-4814-817e-1157c9eac47e/r)
+:::
+
 ## JSON mode
 
 Ollama also supports a JSON mode that coerces model outputs to only return JSON. Here's an example of how this can be useful for extraction:
@@ -38,7 +60,9 @@ import OllamaJSONModeExample from "@examples/models/chat/integration_ollama_json
 
 <CodeBlock language="typescript">{OllamaJSONModeExample}</CodeBlock>
 
-You can see a simple LangSmith trace of this here: https://smith.langchain.com/public/92aebeca-d701-4de0-a845-f55df04eff04/r
+:::tip
+You can see a simple LangSmith trace of this [here](https://smith.langchain.com/public/1fbd5660-b7fd-41c3-9d3a-a6ecc735277c/r)
+:::
 
 ## Multimodal models
 
