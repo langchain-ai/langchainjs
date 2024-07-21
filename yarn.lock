@@ -11502,7 +11502,7 @@ __metadata:
   resolution: "@langchain/ollama@workspace:libs/langchain-ollama"
   dependencies:
     "@jest/globals": ^29.5.0
-    "@langchain/core": ">0.2.17 <0.3.0"
+    "@langchain/core": ">=0.2.17 <0.3.0"
     "@langchain/scripts": ~0.0.14
     "@langchain/standard-tests": 0.0.0
     "@swc/core": ^1.3.90
