@@ -241,6 +241,8 @@ export abstract class ChatGoogleBase<AuthOptions>
 
   streamUsage = true;
 
+  streaming = false;
+
   protected connection: ChatConnection<AuthOptions>;
 
   protected streamedConnection: ChatConnection<AuthOptions>;

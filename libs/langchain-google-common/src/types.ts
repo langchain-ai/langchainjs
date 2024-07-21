@@ -104,6 +104,12 @@ export interface GoogleAIModelParams {
    * @default "text/plain"
    */
   responseMimeType?: GoogleAIResponseMimeType;
+
+  /**
+   * Whether or not to stream.
+   * @default false
+   */
+  streaming?: boolean;
 }
 
 /**

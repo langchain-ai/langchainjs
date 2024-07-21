@@ -914,3 +914,14 @@ test("removeAdditionalProperties can remove all instances of additionalPropertie
     analysisSchemaObj.find((key) => key === "additionalProperties")
   ).toBeUndefined();
 });
+
+test("Can set streaming param", () => {
+  const modelWithStreamingDefault = new ChatGoogle();
+
+  expect(modelWithStreamingDefault.streaming).toBe(false);
+
+  const modelWithStreamingTrue = new ChatGoogle({
+    streaming: true,
+  });
+  expect(modelWithStreamingTrue.streaming).toBe(true);
+})
