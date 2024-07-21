@@ -62,6 +62,7 @@ import {
   jsonSchemaToGeminiParameters,
   zodToGeminiParameters,
 } from "./utils/zod_to_gemini_parameters.js";
+import { concat } from "@langchain/core/utils/stream";
 
 class ChatConnection<AuthOptions> extends AbstractGoogleLLMConnection<
   BaseMessage[],
@@ -353,22 +354,38 @@ export abstract class ChatGoogleBase<AuthOptions>
   async _generate(
     messages: BaseMessage[],
     options: this["ParsedCallOptions"],
-    _runManager: CallbackManagerForLLMRun | undefined
+    runManager: CallbackManagerForLLMRun | undefined
   ): Promise<ChatResult> {
     const parameters = this.invocationParams(options);
+
+    if (this.streaming) {
+      const stream = this._streamResponseChunks(messages, options, runManager);
+      let finalChunk: ChatGenerationChunk | null = null;
+      for await (const chunk of stream) {
+        finalChunk = !finalChunk ? chunk : concat(finalChunk, chunk);
+      }
+      if (!finalChunk) {
+        throw new Error("No chunks were returned from the stream.");
+      }
+      return {
+        generations: [finalChunk]
+      };
+    }
+
     const response = await this.connection.request(
       messages,
       parameters,
       options
     );
     const ret = safeResponseToChatResult(response, this.safetyHandler);
+    await runManager?.handleLLMNewToken(ret.generations[0].text);
     return ret;
   }
 
   async *_streamResponseChunks(
     _messages: BaseMessage[],
     options: this["ParsedCallOptions"],
-    _runManager?: CallbackManagerForLLMRun
+    runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
     // Make the call as a streaming request
     const parameters = this.invocationParams(options);
@@ -410,6 +427,7 @@ export abstract class ChatGoogleBase<AuthOptions>
               }),
             });
       yield chunk;
+      await runManager?.handleLLMNewToken(chunk.text);
     }
   }
 

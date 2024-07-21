@@ -297,3 +297,27 @@ test("Invoke token count usage_metadata", async () => {
     res.usage_metadata.input_tokens + res.usage_metadata.output_tokens
   );
 });
+
+test("Streaming true constructor param will stream", async () => {
+  const modelWithStreaming = new ChatVertexAI({
+    maxOutputTokens: 50,
+    streaming: true,
+  });
+
+  let totalTokenCount = 0;
+  let tokensString = "";
+  const result = await modelWithStreaming.invoke("What is 1 + 1?", {
+    callbacks: [{
+      handleLLMNewToken: (tok) => {
+        totalTokenCount += 1;
+        tokensString += tok;
+      }
+    }]
+  });
+
+  expect(result).toBeDefined();
+  console.log("result.content", result.content)
+  expect(result.content).toBe(tokensString);
+
+  expect(totalTokenCount).toBeGreaterThan(1);
+})
