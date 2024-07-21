@@ -27,6 +27,7 @@ import { BaseLLMOutputParser } from "@langchain/core/output_parsers";
 import { isStructuredTool } from "@langchain/core/utils/function_calling";
 import { AsyncCaller } from "@langchain/core/utils/async_caller";
 import { StructuredToolInterface } from "@langchain/core/tools";
+import { concat } from "@langchain/core/utils/stream";
 import {
   GoogleAIBaseLLMInput,
   GoogleAIModelParams,
@@ -62,7 +63,6 @@ import {
   jsonSchemaToGeminiParameters,
   zodToGeminiParameters,
 } from "./utils/zod_to_gemini_parameters.js";
-import { concat } from "@langchain/core/utils/stream";
 
 class ChatConnection<AuthOptions> extends AbstractGoogleLLMConnection<
   BaseMessage[],
@@ -368,7 +368,7 @@ export abstract class ChatGoogleBase<AuthOptions>
         throw new Error("No chunks were returned from the stream.");
       }
       return {
-        generations: [finalChunk]
+        generations: [finalChunk],
       };
     }
 

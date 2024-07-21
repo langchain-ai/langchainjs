@@ -924,4 +924,4 @@ test("Can set streaming param", () => {
     streaming: true,
   });
   expect(modelWithStreamingTrue.streaming).toBe(true);
-})
+});
