@@ -1,9 +1,12 @@
 // import { test, expect } from "@jest/globals";
-// import { ChatPromptTemplate } from "@langchain/core/prompts";
 // import { TavilySearchResults } from "@langchain/community/tools/tavily_search";
-// import { AgentExecutor, createToolCallingAgent } from "langchain/agents";
 // import { Calculator } from "@langchain/community/tools/calculator";
-// import { ChatMistralAI } from "../index.js";
+// import { BaseChatModel } from "@langchain/core/language_models/chat_models";
+// import { SystemMessagePromptTemplate, HumanMessagePromptTemplate, MessagesPlaceholder, ChatPromptTemplate } from "@langchain/core/prompts";
+// import { DynamicStructuredTool } from "@langchain/core/tools";
+// import { z } from "zod";
+// import { ChatMistralAI } from "../chat_models.js";
+// import { AgentExecutor, createOpenAIToolsAgent, createToolCallingAgent } from "langchain/agents";
 
 // const tool = new TavilySearchResults({ maxResults: 1 });
 // tool.description = tool.description += " You can also use this tool to check the current weather.";
@@ -40,4 +43,52 @@ test("createToolCallingAgent works", async () => {
   // // Length greater than 10 because any less than that would warrant
   // // an investigation into why such a short generation was returned.
   // expect(result.output.length).toBeGreaterThan(10);
+});
+
+test("Model is compatible with OpenAI tools agent and Agent Executor", async () => {
+  // const llm: BaseChatModel = new ChatMistralAI({
+  //   temperature: 0,
+  //   model: "mistral-large-latest",
+  // });
+
+  // const systemMessage = SystemMessagePromptTemplate.fromTemplate(
+  //   "You are an agent capable of retrieving current weather information."
+  // );
+  // const humanMessage = HumanMessagePromptTemplate.fromTemplate("{input}");
+  // const agentScratchpad = new MessagesPlaceholder("agent_scratchpad");
+
+  // const prompt = ChatPromptTemplate.fromMessages([
+  //   systemMessage,
+  //   humanMessage,
+  //   agentScratchpad,
+  // ]);
+
+  // const currentWeatherTool = new DynamicStructuredTool({
+  //   name: "get_current_weather",
+  //   description: "Get the current weather in a given location",
+  //   schema: z.object({
+  //     location: z
+  //       .string()
+  //       .describe("The city and state, e.g. San Francisco, CA"),
+  //   }),
+  //   func: async () => Promise.resolve("28 °C"),
+  // });
+
+  // const agent = await createOpenAIToolsAgent({
+  //   llm,
+  //   tools: [currentWeatherTool],
+  //   prompt,
+  // });
+
+  // const agentExecutor = new AgentExecutor({
+  //   agent,
+  //   tools: [currentWeatherTool],
+  // });
+
+  // const input = "What's the weather like in Paris?";
+  // const { output } = await agentExecutor.invoke({ input });
+
+  // console.log(output);
+  // expect(output).toBeDefined();
+  // expect(output).toContain("The current temperature in Paris is 28 °C");
 });
