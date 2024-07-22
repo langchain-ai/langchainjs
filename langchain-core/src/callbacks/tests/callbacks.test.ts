@@ -1,3 +1,4 @@
+/* eslint-disable no-promise-executor-return */
 import { test, expect } from "@jest/globals";
 import * as uuid from "uuid";
 import { CallbackManager } from "../manager.js";
@@ -201,6 +202,9 @@ test("CallbackManager", async () => {
     new Document({ pageContent: "test", metadata: { test: "test" } }),
   ]);
   await retrieverCb.handleRetrieverError(new Error("test"));
+
+  // In case background mode is on while running this test
+  await new Promise((resolve) => setTimeout(resolve, 100));
 
   for (const handler of [handler1, handler2]) {
     expect(handler.starts).toBe(5);

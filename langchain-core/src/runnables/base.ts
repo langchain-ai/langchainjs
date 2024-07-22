@@ -2298,7 +2298,7 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
         callbacks: runManager?.getChild(),
         recursionLimit: (config?.recursionLimit ?? DEFAULT_RECURSION_LIMIT) - 1,
       });
-      void AsyncLocalStorageProviderSingleton.getInstance().run(
+      void AsyncLocalStorageProviderSingleton.runWithConfig(
         childConfig,
         async () => {
           try {
@@ -2395,7 +2395,7 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
     });
     const output = await new Promise<RunOutput | Runnable>(
       (resolve, reject) => {
-        void AsyncLocalStorageProviderSingleton.getInstance().run(
+        void AsyncLocalStorageProviderSingleton.runWithConfig(
           childConfig,
           async () => {
             try {

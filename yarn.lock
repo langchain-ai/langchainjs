@@ -11033,7 +11033,7 @@ __metadata:
     jest: ^29.5.0
     jest-environment-node: ^29.6.4
     js-tiktoken: ^1.0.12
-    langsmith: ~0.1.30
+    langsmith: ~0.1.39
     ml-distance: ^4.0.0
     ml-matrix: ^6.10.4
     mustache: ^4.2.0
@@ -30397,9 +30397,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"langsmith@npm:^0.1.30, langsmith@npm:~0.1.30":
-  version: 0.1.30
-  resolution: "langsmith@npm:0.1.30"
+"langsmith@npm:^0.1.30, langsmith@npm:~0.1.30, langsmith@npm:~0.1.39":
+  version: 0.1.39
+  resolution: "langsmith@npm:0.1.39"
   dependencies:
     "@types/uuid": ^9.0.1
     commander: ^10.0.1
@@ -30417,7 +30417,7 @@ __metadata:
       optional: true
     openai:
       optional: true
-  checksum: 61f4f645b0d95bf0ddec4a275a2fd6859a650569c1ca0d092b318dcabb96fc72d9ae45f35c20d53c2ff6c2d615a2a99f27bb5a974c44ae57c4f359783c26ee99
+  checksum: df21332662ec3a2d2d5cf915acede52b96aedf2a286259435d683f230af5926500b129cab1f0275450e0d3de6d9d8476e410ac46f5e994beb43f2e2df8a1965f
   languageName: node
   linkType: hard
 
