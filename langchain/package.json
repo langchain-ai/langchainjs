@@ -694,6 +694,16 @@
     "@gomomento/sdk": "^1.51.1",
     "@gomomento/sdk-core": "^1.51.1",
     "@gomomento/sdk-web": "^1.51.1",
+    "@langchain/anthropic": "^0.2.6",
+    "@langchain/aws": "^0.0.4",
+    "@langchain/cohere": "^0.0.8",
+    "@langchain/community": "^0.2.20",
+    "@langchain/google-genai": "^0.0.23",
+    "@langchain/google-vertexai": "^0.0.20",
+    "@langchain/google-vertexai-web": "^0.0.20",
+    "@langchain/groq": "^0.0.15",
+    "@langchain/mistralai": "^0.0.26",
+    "@langchain/ollama": "^0.0.2",
     "@mendable/firecrawl-js": "^0.0.13",
     "@notionhq/client": "^2.2.10",
     "@pinecone-database/pinecone": "*",
@@ -761,6 +771,36 @@
       "optional": true
     },
     "@gomomento/sdk-web": {
+      "optional": true
+    },
+    "@langchain/anthropic": {
+      "optional": true
+    },
+    "@langchain/aws": {
+      "optional": true
+    },
+    "@langchain/cohere": {
+      "optional": true
+    },
+    "@langchain/community": {
+      "optional": true
+    },
+    "@langchain/google-genai": {
+      "optional": true
+    },
+    "@langchain/google-vertexai": {
+      "optional": true
+    },
+    "@langchain/google-vertexai-web": {
+      "optional": true
+    },
+    "@langchain/groq": {
+      "optional": true
+    },
+    "@langchain/mistralai": {
+      "optional": true
+    },
+    "@langchain/ollama": {
       "optional": true
     },
     "@mendable/firecrawl-js": {
@@ -2166,5 +2206,8 @@
       "require": "./schema/prompt_template.cjs"
     },
     "./package.json": "./package.json"
+  },
+  "resolutions": {
+    "langchain": "*"
   }
 }
