@@ -18,7 +18,6 @@ test.skip("Model is compatible with OpenAI tools agent and Agent Executor", asyn
   //   ["human", "{input}"],
   //   ["placeholder", "{agent_scratchpad}"],
   // ]);
-
   // const currentWeatherTool = new DynamicStructuredTool({
   //   name: "get_current_weather",
   //   description: "Get the current weather in a given location",
@@ -29,21 +28,17 @@ test.skip("Model is compatible with OpenAI tools agent and Agent Executor", asyn
   //   }),
   //   func: async () => Promise.resolve("28 °C"),
   // });
-
   // const agent = await createOpenAIToolsAgent({
   //   llm,
   //   tools: [currentWeatherTool],
   //   prompt,
   // });
-
   // const agentExecutor = new AgentExecutor({
   //   agent,
   //   tools: [currentWeatherTool],
   // });
-
   // const input = "What's the weather like in Paris?";
   // const { output } = await agentExecutor.invoke({ input });
-
   // console.log(output);
   // expect(output).toBeDefined();
   // expect(output).toContain("The current temperature in Paris is 28 °C");

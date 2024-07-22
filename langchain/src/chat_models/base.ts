@@ -102,7 +102,9 @@ async function _initChatModelHelper(
       return new ChatGoogleGenerativeAI({ model, ...kwargs });
     }
     case "fireworks": {
-      throw new Error("Dynamic imports from @langchain/community not supported.");
+      throw new Error(
+        "Dynamic imports from @langchain/community not supported."
+      );
       // _checkPackage("@langchain/community/chat_models/fireworks");
       // const { ChatFireworks } = await import(
       //   "@langchain/community/chat_models/fireworks"
@@ -115,7 +117,9 @@ async function _initChatModelHelper(
       return new ChatOllama({ model, ...kwargs });
     }
     case "together": {
-      throw new Error("Dynamic imports from @langchain/community not supported.");
+      throw new Error(
+        "Dynamic imports from @langchain/community not supported."
+      );
       // _checkPackage("@langchain/community/chat_models/togetherai");
       // const { ChatTogetherAI } = await import(
       //   "@langchain/community/chat_models/togetherai"

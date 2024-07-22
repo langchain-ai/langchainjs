@@ -70,15 +70,12 @@ test.skip("Test end to end with MemoryVectorStore", async () => {
   //   })
   // );
   // expect(vectorStore.memoryVectors).toHaveLength(3);
-
   // const resultOne = await vectorStore.similaritySearch("hello world", 1);
   // const resultOneMetadatas = resultOne.map(({ metadata }) => metadata);
   // expect(resultOneMetadatas).toEqual([{ id: 2 }]);
-
   // const resultTwo = await vectorStore.similaritySearch("hello world", 2);
   // const resultTwoMetadatas = resultTwo.map(({ metadata }) => metadata);
   // expect(resultTwoMetadatas).toEqual([{ id: 2 }, { id: 3 }]);
-
   // const resultThree = await vectorStore.similaritySearch("hello world", 3);
   // const resultThreeMetadatas = resultThree.map(({ metadata }) => metadata);
   // expect(resultThreeMetadatas).toEqual([{ id: 2 }, { id: 3 }, { id: 1 }]);
