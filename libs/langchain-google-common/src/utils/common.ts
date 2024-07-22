@@ -45,6 +45,7 @@ export function copyAIModelParamsInto(
     options?.responseMimeType ??
     params?.responseMimeType ??
     target?.responseMimeType;
+  ret.streaming = options?.streaming ?? params?.streaming ?? target?.streaming;
 
   ret.tools = options?.tools;
   // Ensure tools are formatted properly for Gemini

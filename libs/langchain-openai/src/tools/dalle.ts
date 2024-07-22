@@ -2,6 +2,10 @@
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { OpenAI as OpenAIClient } from "openai";
 import { Tool, ToolParams } from "@langchain/core/tools";
+import {
+  MessageContentComplex,
+  MessageContentImageUrl,
+} from "@langchain/core/messages";
 
 /**
  * An interface for the Dall-E API Wrapper.
@@ -149,18 +153,88 @@ export class DallEAPIWrapper extends Tool {
     this.user = fields?.user;
   }
 
+  /**
+   * Processes the API response if multiple images are generated.
+   * Returns a list of MessageContentImageUrl objects. If the response
+   * format is `url`, then the `image_url` field will contain the URL.
+   * If it is `b64_json`, then the `image_url` field will contain an object
+   * with a `url` field with the base64 encoded image.
+   *
+   * @param {OpenAIClient.Images.ImagesResponse[]} response The API response
+   * @returns {MessageContentImageUrl[]}
+   */
+  private processMultipleGeneratedUrls(
+    response: OpenAIClient.Images.ImagesResponse[]
+  ): MessageContentImageUrl[] {
+    if (this.dallEResponseFormat === "url") {
+      return response.flatMap((res) => {
+        const imageUrlContent = res.data
+          .flatMap((item) => {
+            if (!item.url) return [];
+            return {
+              type: "image_url" as const,
+              image_url: item.url,
+            };
+          })
+          .filter(
+            (item) =>
+              item !== undefined &&
+              item.type === "image_url" &&
+              typeof item.image_url === "string" &&
+              item.image_url !== undefined
+          );
+        return imageUrlContent;
+      });
+    } else {
+      return response.flatMap((res) => {
+        const b64Content = res.data
+          .flatMap((item) => {
+            if (!item.b64_json) return [];
+            return {
+              type: "image_url" as const,
+              image_url: {
+                url: item.b64_json,
+              },
+            };
+          })
+          .filter(
+            (item) =>
+              item !== undefined &&
+              item.type === "image_url" &&
+              typeof item.image_url === "object" &&
+              "url" in item.image_url &&
+              typeof item.image_url.url === "string" &&
+              item.image_url.url !== undefined
+          );
+        return b64Content;
+      });
+    }
+  }
+
   /** @ignore */
-  async _call(input: string): Promise<string> {
-    const response = await this.client.images.generate({
+  async _call(input: string): Promise<string | MessageContentComplex[]> {
+    const generateImageFields = {
       model: this.model,
       prompt: input,
-      n: this.n,
+      n: 1,
       size: this.size,
       response_format: this.dallEResponseFormat,
       style: this.style,
       quality: this.quality,
       user: this.user,
-    });
+    };
+
+    if (this.n > 1) {
+      const results = await Promise.all(
+        Array.from({ length: this.n }).map(() =>
+          this.client.images.generate(generateImageFields)
+        )
+      );
+
+      return this.processMultipleGeneratedUrls(results);
+    }
+
+    const response = await this.client.images.generate(generateImageFields);
 
     let data = "";
     if (this.dallEResponseFormat === "url") {
@@ -172,7 +246,6 @@ export class DallEAPIWrapper extends Tool {
         .map((item) => item.b64_json)
         .filter((b64_json): b64_json is string => b64_json !== "undefined");
     }
-
     return data;
   }
 }

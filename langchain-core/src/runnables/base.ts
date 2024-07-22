@@ -762,11 +762,11 @@ export abstract class Runnable<
    * +----------------------+------------------+---------------------------------+-----------------------------------------------+-------------------------------------------------+
    * | on_llm_end           | [model name]     |                                 | 'Hello human!'                                |                                                 |
    * +----------------------+------------------+---------------------------------+-----------------------------------------------+-------------------------------------------------+
-   * | on_chain_start       | format_docs      |                                 |                                               |                                                 |
+   * | on_chain_start       | some_runnable    |                                 |                                               |                                                 |
    * +----------------------+------------------+---------------------------------+-----------------------------------------------+-------------------------------------------------+
-   * | on_chain_stream      | format_docs      | "hello world!, goodbye world!"  |                                               |                                                 |
+   * | on_chain_stream      | some_runnable    | "hello world!, goodbye world!"  |                                               |                                                 |
    * +----------------------+------------------+---------------------------------+-----------------------------------------------+-------------------------------------------------+
-   * | on_chain_end         | format_docs      |                                 | [Document(...)]                               | "hello world!, goodbye world!"                  |
+   * | on_chain_end         | some_runnable    |                                 | [Document(...)]                               | "hello world!, goodbye world!"                  |
    * +----------------------+------------------+---------------------------------+-----------------------------------------------+-------------------------------------------------+
    * | on_tool_start        | some_tool        |                                 | {"x": 1, "y": "2"}                            |                                                 |
    * +----------------------+------------------+---------------------------------+-----------------------------------------------+-------------------------------------------------+
@@ -780,6 +780,52 @@ export abstract class Runnable<
    * +----------------------+------------------+---------------------------------+-----------------------------------------------+-------------------------------------------------+
    * | on_prompt_end        | [template_name]  |                                 | {"question": "hello"}                         | ChatPromptValue(messages: [SystemMessage, ...]) |
    * +----------------------+------------------+---------------------------------+-----------------------------------------------+-------------------------------------------------+
+   *
+   * The "on_chain_*" events are the default for Runnables that don't fit one of the above categories.
+   *
+   * In addition to the standard events above, users can also dispatch custom events.
+   *
+   * Custom events will be only be surfaced with in the `v2` version of the API!
+   *
+   * A custom event has following format:
+   *
+   * +-----------+------+-----------------------------------------------------------------------------------------------------------+
+   * | Attribute | Type | Description                                                                                               |
+   * +===========+======+===========================================================================================================+
+   * | name      | str  | A user defined name for the event.                                                                        |
+   * +-----------+------+-----------------------------------------------------------------------------------------------------------+
+   * | data      | Any  | The data associated with the event. This can be anything, though we suggest making it JSON serializable.  |
+   * +-----------+------+-----------------------------------------------------------------------------------------------------------+
+   *
+   * Here's an example:
+   * @example
+   * ```ts
+   * import { RunnableLambda } from "@langchain/core/runnables";
+   * import { dispatchCustomEvent } from "@langchain/core/callbacks/dispatch";
+   * // Use this import for web environments that don't support "async_hooks"
+   * // and manually pass config to child runs.
+   * // import { dispatchCustomEvent } from "@langchain/core/callbacks/dispatch/web";
+   *
+   * const slowThing = RunnableLambda.from(async (someInput: string) => {
+   *   // Placeholder for some slow operation
+   *   await new Promise((resolve) => setTimeout(resolve, 100));
+   *   await dispatchCustomEvent("progress_event", {
+   *    message: "Finished step 1 of 2",
+   *  });
+   *  await new Promise((resolve) => setTimeout(resolve, 100));
+   *  return "Done";
+   * });
+   *
+   * const eventStream = await slowThing.streamEvents("hello world", {
+   *   version: "v2",
+   * });
+   *
+   * for await (const event of eventStream) {
+   *  if (event.event === "on_custom_event") {
+   *    console.log(event);
+   *  }
+   * }
+   * ```
    */
   streamEvents(
     input: RunInput,
@@ -2252,7 +2298,7 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
         callbacks: runManager?.getChild(),
         recursionLimit: (config?.recursionLimit ?? DEFAULT_RECURSION_LIMIT) - 1,
       });
-      void AsyncLocalStorageProviderSingleton.getInstance().run(
+      void AsyncLocalStorageProviderSingleton.runWithConfig(
         childConfig,
         async () => {
           try {
@@ -2349,7 +2395,7 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
     });
     const output = await new Promise<RunOutput | Runnable>(
       (resolve, reject) => {
-        void AsyncLocalStorageProviderSingleton.getInstance().run(
+        void AsyncLocalStorageProviderSingleton.runWithConfig(
           childConfig,
           async () => {
             try {

@@ -34,9 +34,12 @@ export function* consumeIteratorInContext<T>(
   context: Partial<RunnableConfig> | undefined,
   iter: IterableIterator<T>
 ): IterableIterator<T> {
-  const storage = AsyncLocalStorageProviderSingleton.getInstance();
   while (true) {
-    const { value, done } = storage.run(context, iter.next.bind(iter));
+    const { value, done } = AsyncLocalStorageProviderSingleton.runWithConfig(
+      context,
+      iter.next.bind(iter),
+      true
+    );
     if (done) {
       break;
     } else {
@@ -49,13 +52,14 @@ export async function* consumeAsyncIterableInContext<T>(
   context: Partial<RunnableConfig> | undefined,
   iter: AsyncIterable<T>
 ): AsyncIterableIterator<T> {
-  const storage = AsyncLocalStorageProviderSingleton.getInstance();
   const iterator = iter[Symbol.asyncIterator]();
   while (true) {
-    const { value, done } = await storage.run(
-      context,
-      iterator.next.bind(iter)
-    );
+    const { value, done } =
+      await AsyncLocalStorageProviderSingleton.runWithConfig(
+        context,
+        iterator.next.bind(iter),
+        true
+      );
     if (done) {
       break;
     } else {

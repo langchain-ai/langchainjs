@@ -1,4 +1,4 @@
-import { ChatOllama } from "@langchain/community/chat_models/ollama";
+import { ChatOllama } from "@langchain/ollama";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 
 const prompt = ChatPromptTemplate.fromMessages([
@@ -25,8 +25,12 @@ const result = await chain.invoke({
 console.log(result);
 
 /*
-  AIMessage {
-    content: '{"original": "I love programming", "translated": "Ich liebe das Programmieren"}',
-    additional_kwargs: {}
-  }
+AIMessage {
+  content: '{\n' +
+    '"original": "I love programming",\n' +
+    '"translated": "Ich liebe Programmierung"\n' +
+    '}',
+  response_metadata: { ... },
+  usage_metadata: { ... }
+}
 */
