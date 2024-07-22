@@ -65,6 +65,8 @@ export const config = {
     "chains/retrieval": "chains/retrieval",
     "chains/sql_db": "chains/sql_db/index",
     "chains/graph_qa/cypher": "chains/graph_qa/cypher",
+    // chat models
+    "chat_models": "chat_models/base",
     // embeddings
     "embeddings/cache_backed": "embeddings/cache_backed",
     "embeddings/fake": "embeddings/fake",

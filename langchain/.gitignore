@@ -122,6 +122,10 @@ chains/graph_qa/cypher.cjs
 chains/graph_qa/cypher.js
 chains/graph_qa/cypher.d.ts
 chains/graph_qa/cypher.d.cts
+chat_models.cjs
+chat_models.js
+chat_models.d.ts
+chat_models.d.cts
 embeddings/cache_backed.cjs
 embeddings/cache_backed.js
 embeddings/cache_backed.d.ts

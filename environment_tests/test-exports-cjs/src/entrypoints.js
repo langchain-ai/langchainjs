@@ -20,6 +20,7 @@ const chains_combine_documents_reduce = require("langchain/chains/combine_docume
 const chains_history_aware_retriever = require("langchain/chains/history_aware_retriever");
 const chains_openai_functions = require("langchain/chains/openai_functions");
 const chains_retrieval = require("langchain/chains/retrieval");
+const chat_models = require("langchain/chat_models");
 const embeddings_cache_backed = require("langchain/embeddings/cache_backed");
 const embeddings_fake = require("langchain/embeddings/fake");
 const vectorstores_memory = require("langchain/vectorstores/memory");
