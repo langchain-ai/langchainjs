@@ -1,46 +1,45 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable no-process-env */
+/* eslint-disable no-promise-executor-return */
 
 import { jest } from "@jest/globals";
-import { Client } from "langsmith";
 import { traceable } from "langsmith/traceable";
 
 import { RunnableLambda } from "../../runnables/base.js";
 import { BaseMessage, HumanMessage } from "../../messages/index.js";
-import { LangChainTracer } from "../tracer_langchain.js";
 
-type ClientParams = Exclude<ConstructorParameters<typeof Client>[0], undefined>;
+let fetchMock: any;
 
-const mockClient = (config?: Omit<ClientParams, "autoBatchTracing">) => {
-  const client = new Client({
-    ...config,
-    apiKey: "MOCK",
-    autoBatchTracing: false,
-  });
-  const callSpy = jest
-    .spyOn((client as any).caller, "call")
-    .mockResolvedValue({ ok: true, text: () => "" });
+const originalTracingEnvValue = process.env.LANGCHAIN_TRACING_V2;
 
-  const langChainTracer = new LangChainTracer({
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore Overriden client
-    client,
-  });
+beforeEach(() => {
+  fetchMock = jest
+    .spyOn(global, "fetch")
+    .mockImplementation(() =>
+      Promise.resolve({ ok: true, text: () => "" } as any)
+    );
+  process.env.LANGCHAIN_TRACING_V2 = "true";
+});
 
-  return { client, callSpy, langChainTracer };
-};
+afterEach(() => {
+  jest.restoreAllMocks();
+});
+
+afterAll(() => {
+  process.env.LANGCHAIN_TRACING_V2 = originalTracingEnvValue;
+});
 
 test.each(["true", "false"])(
   "traceables nested within runnables with background callbacks %s",
   async (value) => {
     process.env.LANGCHAIN_CALLBACKS_BACKGROUND = value;
-    const { callSpy, langChainTracer: tracer } = mockClient();
 
     const aiGreet = traceable(
       async (msg: BaseMessage, name = "world") => {
+        await new Promise((resolve) => setTimeout(resolve, 300));
         return msg.content + name;
       },
-      { name: "aiGreet" }
+      { name: "aiGreet", tracingEnabled: true }
     );
 
     const root = RunnableLambda.from(async (messages: BaseMessage[]) => {
@@ -50,15 +49,17 @@ test.each(["true", "false"])(
       return [greetOne];
     });
 
-    await root.invoke([new HumanMessage({ content: "Hello!" })], {
-      callbacks: [tracer],
+    await root.invoke([new HumanMessage({ content: "Hello!" })]);
+
+    const relevantCalls = fetchMock.mock.calls.filter((call: any) => {
+      return call[0].startsWith("https://api.smith.langchain.com/runs");
     });
 
-    expect(callSpy.mock.calls.length).toEqual(4);
-    const firstCallParams = JSON.parse((callSpy.mock.calls[0][2] as any).body);
-    const secondCallParams = JSON.parse((callSpy.mock.calls[1][2] as any).body);
-    const thirdCallParams = JSON.parse((callSpy.mock.calls[2][2] as any).body);
-    const fourthCallParams = JSON.parse((callSpy.mock.calls[3][2] as any).body);
+    expect(relevantCalls.length).toEqual(4);
+    const firstCallParams = JSON.parse((relevantCalls[0][1] as any).body);
+    const secondCallParams = JSON.parse((relevantCalls[1][1] as any).body);
+    const thirdCallParams = JSON.parse((relevantCalls[2][1] as any).body);
+    const fourthCallParams = JSON.parse((relevantCalls[3][1] as any).body);
     expect(firstCallParams).toMatchObject({
       id: firstCallParams.id,
       name: "RunnableLambda",
@@ -174,11 +175,11 @@ test.each(["true", "false"])(
   "streaming traceables nested within runnables with background callbacks %s",
   async (value) => {
     process.env.LANGCHAIN_CALLBACKS_BACKGROUND = value;
-    const { callSpy, langChainTracer: tracer } = mockClient();
 
     const aiGreet = traceable(
       async function* (msg: BaseMessage, name = "world") {
         const res = msg.content + name;
+        await new Promise((resolve) => setTimeout(resolve, 300));
         for (const letter of res.split("")) {
           yield letter;
         }
@@ -191,22 +192,21 @@ test.each(["true", "false"])(
       yield* aiGreet(lastMsg, "David");
     });
 
-    const stream = await root.stream(
-      [new HumanMessage({ content: "Hello!" })],
-      {
-        callbacks: [tracer],
-      }
-    );
+    const stream = await root.stream([new HumanMessage({ content: "Hello!" })]);
 
-    for await (const chunk of stream) {
-      console.log(chunk);
+    for await (const _ of stream) {
+      // Just consume iterator
     }
 
-    expect(callSpy.mock.calls.length).toEqual(4);
-    const firstCallParams = JSON.parse((callSpy.mock.calls[0][2] as any).body);
-    const secondCallParams = JSON.parse((callSpy.mock.calls[1][2] as any).body);
-    const thirdCallParams = JSON.parse((callSpy.mock.calls[2][2] as any).body);
-    const fourthCallParams = JSON.parse((callSpy.mock.calls[3][2] as any).body);
+    const relevantCalls = fetchMock.mock.calls.filter((call: any) => {
+      return call[0].startsWith("https://api.smith.langchain.com/runs");
+    });
+
+    expect(relevantCalls.length).toEqual(4);
+    const firstCallParams = JSON.parse((relevantCalls[0][1] as any).body);
+    const secondCallParams = JSON.parse((relevantCalls[1][1] as any).body);
+    const thirdCallParams = JSON.parse((relevantCalls[2][1] as any).body);
+    const fourthCallParams = JSON.parse((relevantCalls[3][1] as any).body);
     expect(firstCallParams).toMatchObject({
       id: firstCallParams.id,
       name: "RunnableLambda",
@@ -313,10 +313,10 @@ test.each(["true", "false"])(
   "runnables nested within traceables with background callbacks %s",
   async (value) => {
     process.env.LANGCHAIN_CALLBACKS_BACKGROUND = value;
-    const { client, callSpy } = mockClient();
 
     const nested = RunnableLambda.from(async (messages: BaseMessage[]) => {
       const lastMsg = messages.at(-1) as HumanMessage;
+      await new Promise((resolve) => setTimeout(resolve, 300));
       return [lastMsg.content];
     });
 
@@ -325,16 +325,20 @@ test.each(["true", "false"])(
         const contents = await nested.invoke([msg]);
         return contents[0] + name;
       },
-      { name: "aiGreet", client, tracingEnabled: true }
+      { name: "aiGreet", tracingEnabled: true }
     );
 
     await aiGreet(new HumanMessage({ content: "Hello!" }), "mitochondria");
 
-    expect(callSpy.mock.calls.length).toEqual(4);
-    const firstCallParams = JSON.parse((callSpy.mock.calls[0][2] as any).body);
-    const secondCallParams = JSON.parse((callSpy.mock.calls[1][2] as any).body);
-    const thirdCallParams = JSON.parse((callSpy.mock.calls[2][2] as any).body);
-    const fourthCallParams = JSON.parse((callSpy.mock.calls[3][2] as any).body);
+    const relevantCalls = fetchMock.mock.calls.filter((call: any) => {
+      return call[0].startsWith("https://api.smith.langchain.com/runs");
+    });
+
+    expect(relevantCalls.length).toEqual(4);
+    const firstCallParams = JSON.parse((relevantCalls[0][1] as any).body);
+    const secondCallParams = JSON.parse((relevantCalls[1][1] as any).body);
+    const thirdCallParams = JSON.parse((relevantCalls[2][1] as any).body);
+    const fourthCallParams = JSON.parse((relevantCalls[3][1] as any).body);
     expect(firstCallParams).toMatchObject({
       id: firstCallParams.id,
       name: "aiGreet",
@@ -450,12 +454,12 @@ test.each(["true", "false"])(
   "streaming runnables nested within traceables with background callbacks %s",
   async (value) => {
     process.env.LANGCHAIN_CALLBACKS_BACKGROUND = value;
-    const { client, callSpy } = mockClient();
 
     const nested = RunnableLambda.from(async function* (
       messages: BaseMessage[]
     ) {
       const lastMsg = messages.at(-1) as HumanMessage;
+      await new Promise((resolve) => setTimeout(resolve, 300));
       for (const letter of (lastMsg.content as string).split("")) {
         yield letter;
       }
@@ -470,21 +474,25 @@ test.each(["true", "false"])(
           yield letter;
         }
       },
-      { name: "aiGreet", client, tracingEnabled: true }
+      { name: "aiGreet", tracingEnabled: true }
     );
 
-    for await (const chunk of aiGreet(
+    for await (const _ of aiGreet(
       new HumanMessage({ content: "Hello!" }),
       "mitochondria"
     )) {
-      console.log(chunk);
+      // Just consume iterator
     }
 
-    expect(callSpy.mock.calls.length).toEqual(4);
-    const firstCallParams = JSON.parse((callSpy.mock.calls[0][2] as any).body);
-    const secondCallParams = JSON.parse((callSpy.mock.calls[1][2] as any).body);
-    const thirdCallParams = JSON.parse((callSpy.mock.calls[2][2] as any).body);
-    const fourthCallParams = JSON.parse((callSpy.mock.calls[3][2] as any).body);
+    const relevantCalls = fetchMock.mock.calls.filter((call: any) => {
+      return call[0].startsWith("https://api.smith.langchain.com/runs");
+    });
+
+    expect(relevantCalls.length).toEqual(4);
+    const firstCallParams = JSON.parse((relevantCalls[0][1] as any).body);
+    const secondCallParams = JSON.parse((relevantCalls[1][1] as any).body);
+    const thirdCallParams = JSON.parse((relevantCalls[2][1] as any).body);
+    const fourthCallParams = JSON.parse((relevantCalls[3][1] as any).body);
     expect(firstCallParams).toMatchObject({
       id: firstCallParams.id,
       name: "aiGreet",
