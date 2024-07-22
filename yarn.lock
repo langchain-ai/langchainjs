@@ -11587,7 +11587,7 @@ __metadata:
     "@langchain/core": ">0.2.0 <0.3.0"
     "@langchain/openai": "workspace:*"
     "@langchain/scripts": ~0.0.14
-    "@pinecone-database/pinecone": ^2.2.0
+    "@pinecone-database/pinecone": ^3.0.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -12720,15 +12720,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@pinecone-database/pinecone@npm:^2.2.0":
-  version: 2.2.0
-  resolution: "@pinecone-database/pinecone@npm:2.2.0"
+"@pinecone-database/pinecone@npm:^3.0.0":
+  version: 3.0.0
+  resolution: "@pinecone-database/pinecone@npm:3.0.0"
   dependencies:
     "@sinclair/typebox": ^0.29.0
     ajv: ^8.12.0
     cross-fetch: ^3.1.5
     encoding: ^0.1.13
-  checksum: c1844eaa716746a3895871499cbf3fa6ecf20deb0b236999d28285cfb9b438fb053fb41a4c9c17f96b28f0dab9c09be59308476a1534d4a8f35518b761a1a148
+  checksum: 3803c6fead5343e495ccfe177793ed6f58411c2c5efdb1538cdcb0203164ebefb299ed30c8b9c1590d00cafb1dd20e2d06d6b0339159ea237d2939856f377ca9
   languageName: node
   linkType: hard
 
@@ -24986,7 +24986,7 @@ __metadata:
     "@langchain/yandex": "workspace:*"
     "@layerup/layerup-security": ^1.5.12
     "@opensearch-project/opensearch": ^2.2.0
-    "@pinecone-database/pinecone": ^2.2.0
+    "@pinecone-database/pinecone": ^3.0.0
     "@planetscale/database": ^1.8.0
     "@prisma/client": ^4.11.0
     "@qdrant/js-client-rest": ^1.9.0
