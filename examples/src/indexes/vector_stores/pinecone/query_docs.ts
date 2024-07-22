@@ -11,9 +11,19 @@ const pinecone = new Pinecone();
 
 const pineconeIndex = pinecone.Index(process.env.PINECONE_INDEX!);
 
+/**
+ * Pinecone allows you to partition the records in an index into namespaces. 
+ * Queries and other operations are then limited to one namespace, 
+ * so different requests can search different subsets of your index.
+ * Read more about namespaces here: https://docs.pinecone.io/guides/indexes/use-namespaces
+ * 
+ * NOTE: If you have namespace enabled in your Pinecone index, you must provide the namespace when creating the PineconeStore.
+ */
+const namespace = "pinecone";
+
 const vectorStore = await PineconeStore.fromExistingIndex(
   new OpenAIEmbeddings(),
-  { pineconeIndex }
+  { pineconeIndex, namespace }
 );
 
 /* Search the vector DB independently with metadata filters */
