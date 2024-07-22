@@ -73,8 +73,8 @@ export interface RedisVectorStoreConfig {
   createIndexOptions?: Omit<RedisVectorStoreIndexOptions, "PREFIX">; // PREFIX must be set with keyPrefix
   keyPrefix?: string;
   contentKey?: string;
-  metadataKey?: string;
   vectorKey?: string;
+  metadataSchema?: RediSearchSchema;
   filter?: RedisVectorStoreFilterType;
 }
 
@@ -88,12 +88,9 @@ export interface RedisAddOptions {
 }
 
 /**
- * Type for the filter used in the RedisVectorStore. It is an array of
- * strings.
- * If a string is passed instead of an array the value is used directly, this
- * allows custom filters to be passed.
+ * Type for the filter used in the RedisVectorStore. It is a Redis filter setence, such as @field:{value1}.
  */
-export type RedisVectorStoreFilterType = string[] | string;
+export type RedisVectorStoreFilterType = string;
 
 /**
  * Class representing a RedisVectorStore. It extends the VectorStore class
@@ -117,9 +114,9 @@ export class RedisVectorStore extends VectorStore {
 
   contentKey: string;
 
-  metadataKey: string;
-
   vectorKey: string;
+
+  metadataSchema: RediSearchSchema;
 
   filter?: RedisVectorStoreFilterType;
 
@@ -141,8 +138,8 @@ export class RedisVectorStore extends VectorStore {
     };
     this.keyPrefix = _dbConfig.keyPrefix ?? `doc:${this.indexName}:`;
     this.contentKey = _dbConfig.contentKey ?? "content";
-    this.metadataKey = _dbConfig.metadataKey ?? "metadata";
     this.vectorKey = _dbConfig.vectorKey ?? "content_vector";
+    this.metadataSchema = _dbConfig.metadataSchema ?? {};
     this.filter = _dbConfig.filter;
     this.createIndexOptions = {
       ON: "HASH",
@@ -185,6 +182,7 @@ export class RedisVectorStore extends VectorStore {
     if (!vectors.length || !vectors[0].length) {
       throw new Error("No vectors provided");
     }
+
     // check if the index exists and create it if it doesn't
     await this.createIndex(vectors[0].length);
 
@@ -202,11 +200,18 @@ export class RedisVectorStore extends VectorStore {
           ? documents[idx].metadata
           : {};
 
-      multi.hSet(key, {
-        [this.vectorKey]: this.getFloat32Buffer(vector),
-        [this.contentKey]: documents[idx].pageContent,
-        [this.metadataKey]: this.escapeSpecialChars(JSON.stringify(metadata)),
+      var t = {
+          [this.vectorKey]: this.getFloat32Buffer(vector),
+          [this.contentKey]: documents[idx].pageContent,
+      };
+
+      Object.keys(this.metadataSchema).forEach((key) => {
+          if(metadata[key]) {
+              t[key] = (Array.isArray(metadata[key])) ? this.escapeSpecialChars(metadata[key].map((val: any) => val.toString()).join(",")) : this.escapeSpecialChars(metadata[key].toString());
+          }
       });
+
+      multi.hSet(key, t);
 
       // write batch
       if (idx % batchSize === 0) {
@@ -250,11 +255,20 @@ export class RedisVectorStore extends VectorStore {
             result.push([
               new Document({
                 pageContent: (document[this.contentKey] ?? "") as string,
-                metadata: JSON.parse(
-                  this.unEscapeSpecialChars(
-                    (document.metadata ?? "{}") as string
-                  )
-                ),
+                metadata: Object.keys(this.metadataSchema).reduce((acc: any, key) => {
+                  const str: string = this.unEscapeSpecialChars((document[key] || "") as string);
+                  switch(this.metadataSchema[key]) {
+                      case SchemaFieldTypes.NUMERIC:
+                          acc[key] = parseFloat(str);
+                          break;
+                      case SchemaFieldTypes.TAG:
+                          acc[key] = str.split(",");
+                          break;
+                      default:
+                          acc[key] = str;
+                  }
+                  return acc;
+                }, {}),
               }),
               Number(document.vector_score),
             ]);
@@ -361,8 +375,11 @@ export class RedisVectorStore extends VectorStore {
         ...this.indexOptions,
       },
       [this.contentKey]: SchemaFieldTypes.TEXT,
-      [this.metadataKey]: SchemaFieldTypes.TEXT,
     };
+
+    Object.keys(this.metadataSchema).forEach((key) => {
+      schema[key] = this.metadataSchema[key];
+    });
 
     await this.redisClient.ft.create(
       this.indexName,
@@ -407,16 +424,16 @@ export class RedisVectorStore extends VectorStore {
   ): [string, SearchOptions] {
     const vectorScoreField = "vector_score";
 
-    let hybridFields = "*";
+    let hybridFields: string;
     // if a filter is set, modify the hybrid query
-    if (filter && filter.length) {
-      // `filter` is a list of strings, then it's applied using the OR operator in the metadata key
-      // for example: filter = ['foo', 'bar'] => this will filter all metadata containing either 'foo' OR 'bar'
-      hybridFields = `@${this.metadataKey}:(${this.prepareFilter(filter)})`;
+    if (typeof filter === "string") {
+      hybridFields = `${filter}`;
+    } else {
+      hybridFields = "*";
     }
 
     const baseQuery = `${hybridFields} => [KNN ${k} @${this.vectorKey} $vector AS ${vectorScoreField}]`;
-    const returnFields = [this.metadataKey, this.contentKey, vectorScoreField];
+    const returnFields = [...Object.keys(this.metadataSchema), this.contentKey, vectorScoreField];
 
     const options: SearchOptions = {
       PARAMS: {
@@ -432,13 +449,6 @@ export class RedisVectorStore extends VectorStore {
     };
 
     return [baseQuery, options];
-  }
-
-  private prepareFilter(filter: RedisVectorStoreFilterType) {
-    if (Array.isArray(filter)) {
-      return filter.map(this.escapeSpecialChars).join("|");
-    }
-    return filter;
   }
 
   /**
