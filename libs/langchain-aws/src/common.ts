@@ -209,7 +209,29 @@ export function convertToConverseMessages(messages: BaseMessage[]): {
       }
     });
 
-  return { converseMessages, converseSystem };
+  // Combine consecutive user tool result messages into a single message #6173
+  const combinedConverseMessages = converseMessages.reduce<BedrockMessage[]>(
+    (acc, curr) => {
+      const lastMessage = acc[acc.length - 1];
+
+      if (
+        lastMessage &&
+        lastMessage.role === "user" &&
+        lastMessage.content?.some((c) => "toolResult" in c) &&
+        curr.role === "user" &&
+        curr.content?.some((c) => "toolResult" in c)
+      ) {
+        lastMessage.content = lastMessage.content.concat(curr.content);
+      } else {
+        acc.push(curr);
+      }
+
+      return acc;
+    },
+    []
+  );
+
+  return { converseMessages: combinedConverseMessages, converseSystem };
 }
 
 export function isBedrockTool(tool: unknown): tool is BedrockTool {
