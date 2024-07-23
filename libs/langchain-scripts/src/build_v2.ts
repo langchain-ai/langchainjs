@@ -645,6 +645,8 @@ export async function buildWithTSup() {
 
   if (!config) {
     throw new Error("No config found");
+  } else {
+    console.log("--------- CONFIG SUCCESSFULLY LOADED ---------")
   }
   
 
