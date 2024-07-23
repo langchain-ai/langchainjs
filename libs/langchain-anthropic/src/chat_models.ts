@@ -598,9 +598,14 @@ function extractToolCallChunk(
 }
 
 function extractToken(chunk: AIMessageChunk): string | undefined {
-  return typeof chunk.content === "string" && chunk.content !== ""
-    ? chunk.content
-    : undefined;
+  if (typeof chunk.content === "string") {
+    return chunk.content;
+  } else if (Array.isArray(chunk.content) && "input" in chunk.content[0]) {
+    return typeof chunk.content[0].input === "string"
+      ? chunk.content[0].input
+      : JSON.stringify(chunk.content[0].input);
+  }
+  return undefined;
 }
 
 function extractToolUseContent(
