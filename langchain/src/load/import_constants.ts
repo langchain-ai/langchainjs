@@ -10,6 +10,7 @@ export const optionalImportEntrypoints: string[] = [
   "langchain/chains/query_constructor/ir",
   "langchain/chains/sql_db",
   "langchain/chains/graph_qa/cypher",
+  "langchain/chat_models",
   "langchain/document_loaders/web/apify_dataset",
   "langchain/document_loaders/web/assemblyai",
   "langchain/document_loaders/web/azure_blob_storage_container",

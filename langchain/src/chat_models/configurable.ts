@@ -4,6 +4,7 @@ import {
 } from "@langchain/core/language_models/base";
 import {
   BaseChatModel,
+  BaseChatModelParams,
   type BaseChatModelCallOptions,
 } from "@langchain/core/language_models/chat_models";
 import { BaseMessage, type AIMessageChunk } from "@langchain/core/messages";
@@ -32,21 +33,7 @@ import { ChatResult } from "@langchain/core/outputs";
 interface EventStreamCallbackHandlerInput
   extends Omit<LogStreamCallbackHandlerInput, "_schemaFormat"> {}
 
-export type ChatModelProvider =
-  | "openai"
-  | "anthropic"
-  | "azure_openai"
-  | "cohere"
-  | "google_vertexai"
-  | "google_genai"
-  | "ollama"
-  | "together"
-  | "fireworks"
-  | "mistralai"
-  | "groq"
-  | "bedrock";
-
-const _SUPPORTED_PROVIDERS: Array<ChatModelProvider> = [
+const _SUPPORTED_PROVIDERS = [
   "openai",
   "anthropic",
   "azure_openai",
@@ -59,10 +46,15 @@ const _SUPPORTED_PROVIDERS: Array<ChatModelProvider> = [
   "mistralai",
   "groq",
   "bedrock",
-];
+] as const;
+
+export type ChatModelProvider = (typeof _SUPPORTED_PROVIDERS)[number];
 
 // This is needed so when `bindTools` is called on a configurable model, the typing is correct.
-abstract class BaseChatModelWithBindTools extends BaseChatModel {
+abstract class BaseChatModelWithBindTools<
+  CallOptions extends BaseChatModelCallOptions = BaseChatModelCallOptions,
+  OutputMessageType extends AIMessageChunk = AIMessageChunk
+> extends BaseChatModel<CallOptions, OutputMessageType> {
   abstract override bindTools(
     _tools: (
       | StructuredToolInterface
@@ -72,7 +64,11 @@ abstract class BaseChatModelWithBindTools extends BaseChatModel {
     )[],
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     _kwargs?: Record<string, any>
-  ): Runnable<BaseLanguageModelInput, AIMessageChunk, BaseChatModelCallOptions>;
+  ): Runnable<
+    BaseLanguageModelInput,
+    OutputMessageType,
+    this["ParsedCallOptions"]
+  >;
 
   _llmType(): string {
     return "chat_model";
@@ -99,7 +95,7 @@ async function _initChatModelHelper(
   model: string,
   modelProvider?: string,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  kwargs: Record<string, any> = {}
+  params: Record<string, any> = {}
 ): Promise<BaseChatModelWithBindTools> {
   const modelProviderCopy = modelProvider || _attemptInferModelProvider(model);
   if (!modelProviderCopy) {
@@ -112,45 +108,45 @@ async function _initChatModelHelper(
     switch (modelProviderCopy) {
       case "openai": {
         const { ChatOpenAI } = await import("@langchain/openai");
-        return new ChatOpenAI({ model, ...kwargs });
+        return new ChatOpenAI({ model, ...params });
       }
       case "anthropic": {
         const { ChatAnthropic } = await import("@langchain/anthropic");
-        return new ChatAnthropic({ model, ...kwargs });
+        return new ChatAnthropic({ model, ...params });
       }
       case "azure_openai": {
         const { AzureChatOpenAI } = await import("@langchain/openai");
-        return new AzureChatOpenAI({ model, ...kwargs });
+        return new AzureChatOpenAI({ model, ...params });
       }
       case "cohere": {
         const { ChatCohere } = await import("@langchain/cohere");
-        return new ChatCohere({ model, ...kwargs });
+        return new ChatCohere({ model, ...params });
       }
       case "google_vertexai": {
         const { ChatVertexAI } = await import("@langchain/google-vertexai");
-        return new ChatVertexAI({ model, ...kwargs });
+        return new ChatVertexAI({ model, ...params });
       }
       case "google_genai": {
         const { ChatGoogleGenerativeAI } = await import(
           "@langchain/google-genai"
         );
-        return new ChatGoogleGenerativeAI({ model, ...kwargs });
+        return new ChatGoogleGenerativeAI({ model, ...params });
       }
       case "ollama": {
         const { ChatOllama } = await import("@langchain/ollama");
-        return new ChatOllama({ model, ...kwargs });
+        return new ChatOllama({ model, ...params });
       }
       case "mistralai": {
         const { ChatMistralAI } = await import("@langchain/mistralai");
-        return new ChatMistralAI({ model, ...kwargs });
+        return new ChatMistralAI({ model, ...params });
       }
       case "groq": {
         const { ChatGroq } = await import("@langchain/groq");
-        return new ChatGroq({ model, ...kwargs });
+        return new ChatGroq({ model, ...params });
       }
       case "bedrock": {
         const { ChatBedrockConverse } = await import("@langchain/aws");
-        return new ChatBedrockConverse({ model, ...kwargs });
+        return new ChatBedrockConverse({ model, ...params });
       }
       case "fireworks": {
         const { ChatFireworks } = await import(
@@ -161,7 +157,7 @@ async function _initChatModelHelper(
           // @ts-ignore - Can not install as a proper dependency due to circular dependency
           "@langchain/community/chat_models/fireworks"
         );
-        return new ChatFireworks({ model, ...kwargs });
+        return new ChatFireworks({ model, ...params });
       }
       case "together": {
         const { ChatTogetherAI } = await import(
@@ -172,7 +168,7 @@ async function _initChatModelHelper(
           // @ts-ignore - Can not install as a proper dependency due to circular dependency
           "@langchain/community/chat_models/togetherai"
         );
-        return new ChatTogetherAI({ model, ...kwargs });
+        return new ChatTogetherAI({ model, ...params });
       }
       default: {
         const supported = _SUPPORTED_PROVIDERS.join(", ");
@@ -227,7 +223,7 @@ export function _attemptInferModelProvider(
   }
 }
 
-interface ConfigurableModelFields {
+interface ConfigurableModelFields extends BaseChatModelParams {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   defaultConfig?: Record<string, any>;
   /**
@@ -249,7 +245,7 @@ interface ConfigurableModelFields {
 class _ConfigurableModel<
   RunInput extends BaseLanguageModelInput = BaseLanguageModelInput,
   CallOptions extends ConfigurableChatModelCallOptions = ConfigurableChatModelCallOptions
-> extends Runnable<RunInput, AIMessageChunk, CallOptions> {
+> extends BaseChatModelWithBindTools<CallOptions, AIMessageChunk> {
   lc_namespace = ["langchain", "chat_models"];
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -273,7 +269,7 @@ class _ConfigurableModel<
   _queuedMethodOperations: Record<string, any> = {};
 
   constructor(fields: ConfigurableModelFields) {
-    super();
+    super(fields);
     this._defaultConfig = fields.defaultConfig ?? {};
 
     if (fields.configurableFields === "any") {
@@ -322,7 +318,16 @@ class _ConfigurableModel<
     return initializedModel;
   }
 
-  bindTools(
+  async _generate(
+    messages: BaseMessage[],
+    options?: this["ParsedCallOptions"],
+    runManager?: CallbackManagerForLLMRun
+  ): Promise<ChatResult> {
+    const model = await this._model(options);
+    return model._generate(messages, options, runManager);
+  }
+
+  override bindTools(
     tools: (
       | StructuredToolInterface
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -331,9 +336,9 @@ class _ConfigurableModel<
       | RunnableToolLike
     )[],
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    kwargs?: Record<string, any>
+    params?: Record<string, any>
   ): _ConfigurableModel<RunInput, CallOptions> {
-    this._queuedMethodOperations.bindTools = [tools, kwargs];
+    this._queuedMethodOperations.bindTools = [tools, params];
     return new _ConfigurableModel<RunInput, CallOptions>({
       defaultConfig: this._defaultConfig,
       configurableFields: this._configurableFields,
@@ -546,24 +551,17 @@ class _ConfigurableModel<
     },
     streamOptions?: Omit<EventStreamCallbackHandlerInput, "autoClose">
   ): IterableReadableStream<StreamEvent | Uint8Array> {
-    const stream = new TransformStream();
-    const writer = stream.writable.getWriter();
+    const outerThis = this;
+    async function* wrappedGenerator() {
+      const model = await outerThis._model(options);
+      const config = ensureConfig(options);
+      const eventStream = model.streamEvents(input, config, streamOptions);
 
-    void (async () => {
-      try {
-        const model = await this._model(options);
-        const config = ensureConfig(options);
-        const eventStream = model.streamEvents(input, config, streamOptions);
-
-        for await (const chunk of eventStream) {
-          await writer.write(chunk);
-        }
-      } finally {
-        await writer.close();
+      for await (const chunk of eventStream) {
+        yield chunk;
       }
-    })();
-
-    return IterableReadableStream.fromReadableStream(stream.readable);
+    }
+    return IterableReadableStream.fromAsyncGenerator(wrappedGenerator());
   }
 }
 
@@ -576,7 +574,10 @@ export interface InitChatModelFields extends Partial<Record<string, any>> {
 
 export type ConfigurableFields = "any" | string[];
 
-export async function initChatModel(
+export async function initChatModel<
+  RunInput extends BaseLanguageModelInput = BaseLanguageModelInput,
+  CallOptions extends ConfigurableChatModelCallOptions = ConfigurableChatModelCallOptions
+>(
   model: string,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   fields?: Partial<Record<string, any>> & {
@@ -584,9 +585,12 @@ export async function initChatModel(
     configurableFields?: never;
     configPrefix?: string;
   }
-): Promise<BaseChatModelWithBindTools>;
+): Promise<_ConfigurableModel<RunInput, CallOptions>>;
 
-export async function initChatModel(
+export async function initChatModel<
+  RunInput extends BaseLanguageModelInput = BaseLanguageModelInput,
+  CallOptions extends ConfigurableChatModelCallOptions = ConfigurableChatModelCallOptions
+>(
   model: never,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   options?: Partial<Record<string, any>> & {
@@ -594,9 +598,12 @@ export async function initChatModel(
     configurableFields?: never;
     configPrefix?: string;
   }
-): Promise<_ConfigurableModel>;
+): Promise<_ConfigurableModel<RunInput, CallOptions>>;
 
-export async function initChatModel(
+export async function initChatModel<
+  RunInput extends BaseLanguageModelInput = BaseLanguageModelInput,
+  CallOptions extends ConfigurableChatModelCallOptions = ConfigurableChatModelCallOptions
+>(
   model?: string,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   options?: Partial<Record<string, any>> & {
@@ -604,7 +611,7 @@ export async function initChatModel(
     configurableFields?: ConfigurableFields;
     configPrefix?: string;
   }
-): Promise<_ConfigurableModel>;
+): Promise<_ConfigurableModel<RunInput, CallOptions>>;
 
 // ################################# FOR CONTRIBUTORS #################################
 //
@@ -637,7 +644,7 @@ export async function initChatModel(
  *   - "any": All fields are configurable. (See Security Note in description)
  *   - string[]: Specified fields are configurable.
  * @param {string} [fields.configPrefix] - Prefix for configurable fields at runtime.
- * @param {Record<string, any>} [fields.kwargs] - Additional keyword args to pass to the ChatModel constructor.
+ * @param {Record<string, any>} [fields.params] - Additional keyword args to pass to the ChatModel constructor.
  * @returns {Promise<BaseChatModelWithBindTools>} A class which extends BaseChatModelWithBindTools that implements `bindTools` for proper typing.
  * @throws {Error} If modelProvider cannot be inferred or isn't supported.
  * @throws {Error} If the model provider integration package is not installed.
@@ -823,10 +830,8 @@ export async function initChatModel<
     configurableFields?: string[] | "any";
     configPrefix?: string;
   }
-): Promise<
-  BaseChatModelWithBindTools | _ConfigurableModel<RunInput, CallOptions>
-> {
-  const { configurableFields, configPrefix, modelProvider, ...kwargs } = {
+): Promise<_ConfigurableModel<RunInput, CallOptions>> {
+  const { configurableFields, configPrefix, modelProvider, ...params } = {
     configPrefix: "",
     ...(fields ?? {}),
   };
@@ -844,19 +849,27 @@ export async function initChatModel<
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const kwargsCopy: Record<string, any> = { ...kwargs };
+  const paramsCopy: Record<string, any> = { ...params };
 
   if (!configurableFieldsCopy) {
-    return _initChatModelHelper(model ?? "", modelProvider, kwargsCopy);
+    return new _ConfigurableModel<RunInput, CallOptions>({
+      defaultConfig: {
+        ...paramsCopy,
+        model,
+        modelProvider,
+      },
+      configPrefix,
+    });
+    // return _initChatModelHelper(model ?? "", modelProvider, paramsCopy);
   } else {
     if (model) {
-      kwargsCopy.model = model;
+      paramsCopy.model = model;
     }
     if (modelProvider) {
-      kwargsCopy.modelProvider = modelProvider;
+      paramsCopy.modelProvider = modelProvider;
     }
     return new _ConfigurableModel<RunInput, CallOptions>({
-      defaultConfig: kwargsCopy,
+      defaultConfig: paramsCopy,
       configPrefix,
       configurableFields: configurableFieldsCopy,
     });

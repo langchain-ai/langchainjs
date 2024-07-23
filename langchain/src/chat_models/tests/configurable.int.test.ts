@@ -2,7 +2,13 @@
 import { tool } from "@langchain/core/tools";
 import { z } from "zod";
 import { it } from "@jest/globals";
-import { initChatModel } from "../base.js";
+import { initChatModel } from "../configurable.js";
+import { PromptTemplate } from "@langchain/core/prompts";
+import { pull } from "../../hub.js";
+import { AgentExecutor, createReactAgent } from "../../agents/index.js";
+import { RunLogPatch, StreamEvent } from "@langchain/core/tracers/log_stream";
+import { AIMessageChunk } from "@langchain/core/messages";
+import { concat } from "@langchain/core/utils/stream";
 
 // Make copies of API keys and remove them from the environment to avoid conflicts.
 
@@ -218,7 +224,6 @@ test("Can call bindTools", async () => {
   expect(result.tool_calls?.[0].name).toBe("GetWeather");
 });
 
-// Not implemented
 test("Can call withStructuredOutput", async () => {
   const gpt4 = await initChatModel(undefined, {
     modelProvider: "openai",
@@ -415,5 +420,127 @@ describe("Works with all model providers", () => {
     const togetherResult = await together.invoke("what's your name");
     expect(togetherResult).toBeDefined();
     expect(togetherResult.content.length).toBeGreaterThan(0);
+  });
+});
+
+test("Is compatible with agents", async () => {
+  const gpt4 = await initChatModel(undefined, {
+    modelProvider: "openai",
+    temperature: 0.25, // Funky temperature to verify it's being set properly.
+    apiKey: openAIApiKey,
+  });
+
+  const weatherTool = tool(
+    (_) => {
+      // Do something with the input
+      return "The current weather is partly cloudy with a high of 75 degrees.";
+    },
+    {
+      schema: z.string().describe("The city and state, e.g. San Francisco, CA"),
+      name: "GetWeather",
+      description: "Get the current weather in a given location",
+    }
+  );
+
+  const prompt = await pull<PromptTemplate>("hwchase17/react");
+
+  const agent = await createReactAgent({
+    llm: gpt4,
+    tools: [weatherTool],
+    prompt,
+  });
+
+  const agentExecutor = new AgentExecutor({
+    agent,
+    tools: [weatherTool],
+  });
+
+  const result = await agentExecutor.invoke({
+    input:
+      "What's the weather in San Francisco right now? Ensure you use the 'GetWeather' tool to answer.",
+  });
+  expect(result).toHaveProperty("output");
+  expect(result.output).not.toBe("");
+});
+
+describe("Can call base runnable methods", () => {
+  it("can call streamEvents", async () => {
+    const gpt4 = await initChatModel(undefined, {
+      modelProvider: "openai",
+      temperature: 0.25, // Funky temperature to verify it's being set properly.
+      apiKey: openAIApiKey,
+    });
+
+    const stream = gpt4.streamEvents("what's your name", {
+      version: "v2",
+    });
+
+    let events: StreamEvent[] = [];
+    for await (const event of stream) {
+      events.push(event);
+    }
+    // Greater than or equal to three because it should have at least the start, stream, and end events.
+    expect(events.length).toBeGreaterThanOrEqual(3);
+    expect(events[0].event).toBe("on_chat_model_start");
+    expect(events[1].event).toBe("on_chat_model_stream");
+    expect(events[events.length - 1].event).toBe("on_chat_model_end");
+  });
+
+  it("can call streamLog", async () => {
+    const gpt4 = await initChatModel(undefined, {
+      modelProvider: "openai",
+      temperature: 0.25, // Funky temperature to verify it's being set properly.
+      apiKey: openAIApiKey,
+    });
+
+    const stream = gpt4.streamLog("what's your name");
+
+    let runLog: RunLogPatch | undefined;
+    for await (const event of stream) {
+      if (!runLog) {
+        runLog = event;
+      } else {
+        runLog = runLog.concat(event);
+      }
+    }
+    expect(runLog).toBeDefined();
+    if (!runLog) return;
+    expect(runLog.ops.length).toBeGreaterThan(0);
+  });
+
+  it("can call stream", async () => {
+    const gpt4 = await initChatModel(undefined, {
+      modelProvider: "openai",
+      temperature: 0.25, // Funky temperature to verify it's being set properly.
+      apiKey: openAIApiKey,
+    });
+
+    const stream = await gpt4.stream("what's your name");
+    let finalChunk: AIMessageChunk | undefined;
+    for await (const chunk of stream) {
+      finalChunk = !finalChunk ? chunk : concat(finalChunk, chunk);
+    }
+
+    expect(finalChunk).toBeDefined();
+    if (!finalChunk) return;
+    expect(finalChunk.content).not.toBe("");
+  });
+
+  it("can call batch", async () => {
+    const gpt4 = await initChatModel(undefined, {
+      modelProvider: "openai",
+      temperature: 0.25, // Funky temperature to verify it's being set properly.
+      apiKey: openAIApiKey,
+    });
+
+    const batchResult = await gpt4.batch([
+      "what's your name",
+      "what's your name",
+    ]);
+
+    expect(batchResult).toHaveLength(2);
+    if (batchResult.length !== 2) return;
+    expect(batchResult[0].content).not.toBe("");
+    expect(batchResult[1].content).not.toBe("");
   });
 });

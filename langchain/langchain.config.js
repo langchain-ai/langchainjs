@@ -66,7 +66,7 @@ export const config = {
     "chains/sql_db": "chains/sql_db/index",
     "chains/graph_qa/cypher": "chains/graph_qa/cypher",
     // chat models
-    "chat_models": "chat_models/base",
+    "chat_models": "chat_models/configurable",
     // embeddings
     "embeddings/cache_backed": "embeddings/cache_backed",
     "embeddings/fake": "embeddings/fake",
@@ -228,6 +228,7 @@ export const config = {
     "chains/load",
     "chains/sql_db",
     "chains/graph_qa/cypher",
+    "chat_models",
     "llms/load",
     "prompts/load",
     "memory/zep",
