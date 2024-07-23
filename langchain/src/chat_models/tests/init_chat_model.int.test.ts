@@ -1,3 +1,4 @@
+/* eslint-disable no-process-env */
 import { tool } from "@langchain/core/tools";
 import { z } from "zod";
 import { it } from "@jest/globals";
@@ -6,22 +7,22 @@ import { initChatModel } from "../base.js";
 // Make copies of API keys and remove them from the environment to avoid conflicts.
 
 // OpenAI
-let openAIApiKey = process.env.OPENAI_API_KEY;
+const openAIApiKey = process.env.OPENAI_API_KEY;
 process.env.OPENAI_API_KEY = "";
 
 // Azure OpenAI
-let azureOpenAIApiKey = process.env.AZURE_OPENAI_API_KEY;
+const azureOpenAIApiKey = process.env.AZURE_OPENAI_API_KEY;
 process.env.AZURE_OPENAI_API_KEY = "";
-let azureOpenAIApiDevelopmentName =
+const azureOpenAIApiDevelopmentName =
   process.env.AZURE_OPENAI_API_DEPLOYMENT_NAME;
 process.env.AZURE_OPENAI_API_DEPLOYMENT_NAME = "";
-let azureOpenAIApiVersion = process.env.AZURE_OPENAI_API_VERSION;
+const azureOpenAIApiVersion = process.env.AZURE_OPENAI_API_VERSION;
 process.env.AZURE_OPENAI_API_VERSION = "";
-let azureOpenAIBasePath = process.env.AZURE_OPENAI_BASE_PATH;
+const azureOpenAIBasePath = process.env.AZURE_OPENAI_BASE_PATH;
 process.env.AZURE_OPENAI_BASE_PATH = "";
 
 // Google
-let googleApiKey = process.env.GOOGLE_API_KEY;
+const googleApiKey = process.env.GOOGLE_API_KEY;
 process.env.GOOGLE_API_KEY = "";
 
 test("Initialize non-configurable models", async () => {
@@ -298,7 +299,7 @@ describe("Works with all model providers", () => {
 
   it("Can invoke google_genai", async () => {
     // Remove VertexAI env vars to avoid conflict.
-    let googleApplicationCredentials =
+    const googleApplicationCredentials =
       process.env.GOOGLE_APPLICATION_CREDENTIALS;
     process.env.GOOGLE_APPLICATION_CREDENTIALS = "";
     // Re-assign the Google API key for this test.
