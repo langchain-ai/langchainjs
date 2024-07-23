@@ -628,7 +628,10 @@ export async function buildWithTSup() {
     if (!config) {
       console.log("----- trying to load via new URL() -----")
       // Required for cross-platform compatibility.
-      const importPath = new URL('langchain.config.js', import.meta.url).pathname;
+      let importPath = new URL('langchain.config.js', import.meta.url).pathname;
+      if (importPath.endsWith("/dist/langchain.config.js")) {
+        importPath = importPath.replace("/dist/langchain.config.js", "/langchain.config.js");
+      }
       const configFile = await import(importPath);
       config = configFile.config;
     } else {
