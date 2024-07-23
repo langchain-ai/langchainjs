@@ -38,6 +38,7 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
+    "@rollup/wasm-node": "^4.19.0",
     "axios": "^1.6.7",
     "commander": "^11.1.0",
     "glob": "^10.3.10",

@@ -3,7 +3,8 @@ import ts from "typescript";
 import fs from "node:fs";
 import { rimraf } from "rimraf";
 import { Command } from "commander";
-import { rollup } from "rollup";
+// import { rollup } from "rollup";
+import { rollup } from "@rollup/wasm-node";
 import path from "node:path";
 import { ExportsMapValue, ImportData, LangChainConfig } from "./types.js";
 
