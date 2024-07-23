@@ -9,7 +9,6 @@ import {
 } from "@langchain/core/language_models/chat_models";
 import { BaseMessage, type AIMessageChunk } from "@langchain/core/messages";
 import {
-  Runnable,
   type RunnableBatchOptions,
   RunnableBinding,
   type RunnableConfig,
@@ -50,37 +49,6 @@ const _SUPPORTED_PROVIDERS = [
 
 export type ChatModelProvider = (typeof _SUPPORTED_PROVIDERS)[number];
 
-// This is needed so when `bindTools` is called on a configurable model, the typing is correct.
-abstract class BaseChatModelWithBindTools<
-  CallOptions extends BaseChatModelCallOptions = BaseChatModelCallOptions,
-  OutputMessageType extends AIMessageChunk = AIMessageChunk
-> extends BaseChatModel<CallOptions, OutputMessageType> {
-  abstract override bindTools(
-    _tools: (
-      | StructuredToolInterface
-      | Record<string, unknown>
-      | ToolDefinition
-      | RunnableToolLike
-    )[],
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    _kwargs?: Record<string, any>
-  ): Runnable<
-    BaseLanguageModelInput,
-    OutputMessageType,
-    this["ParsedCallOptions"]
-  >;
-
-  _llmType(): string {
-    return "chat_model";
-  }
-
-  abstract _generate(
-    _messages: BaseMessage[],
-    _config?: this["ParsedCallOptions"],
-    _runManager?: CallbackManagerForLLMRun
-  ): Promise<ChatResult>;
-}
-
 export interface ConfigurableChatModelCallOptions
   extends BaseChatModelCallOptions {
   tools?: (
@@ -96,8 +64,8 @@ async function _initChatModelHelper(
   modelProvider?: string,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   params: Record<string, any> = {}
-): Promise<BaseChatModelWithBindTools> {
-  const modelProviderCopy = modelProvider || _attemptInferModelProvider(model);
+): Promise<BaseChatModel> {
+  const modelProviderCopy = modelProvider || _inferModelProvider(model);
   if (!modelProviderCopy) {
     throw new Error(
       `Unable to infer model provider for { model: ${model} }, please specify modelProvider directly.`
@@ -199,13 +167,11 @@ async function _initChatModelHelper(
  * @returns {string | undefined} The inferred model provider name, or undefined if unable to infer.
  *
  * @example
- * _attemptInferModelProvider("gpt-4"); // returns "openai"
- * _attemptInferModelProvider("claude-2"); // returns "anthropic"
- * _attemptInferModelProvider("unknown-model"); // returns undefined
+ * _inferModelProvider("gpt-4"); // returns "openai"
+ * _inferModelProvider("claude-2"); // returns "anthropic"
+ * _inferModelProvider("unknown-model"); // returns undefined
  */
-export function _attemptInferModelProvider(
-  modelName: string
-): string | undefined {
+export function _inferModelProvider(modelName: string): string | undefined {
   if (modelName.startsWith("gpt-3") || modelName.startsWith("gpt-4")) {
     return "openai";
   } else if (modelName.startsWith("claude")) {
@@ -245,7 +211,11 @@ interface ConfigurableModelFields extends BaseChatModelParams {
 class _ConfigurableModel<
   RunInput extends BaseLanguageModelInput = BaseLanguageModelInput,
   CallOptions extends ConfigurableChatModelCallOptions = ConfigurableChatModelCallOptions
-> extends BaseChatModelWithBindTools<CallOptions, AIMessageChunk> {
+> extends BaseChatModel<CallOptions, AIMessageChunk> {
+  _llmType(): string {
+    return "chat_model";
+  }
+
   lc_namespace = ["langchain", "chat_models"];
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -324,7 +294,7 @@ class _ConfigurableModel<
     runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
     const model = await this._model(options);
-    return model._generate(messages, options, runManager);
+    return model._generate(messages, options ?? {}, runManager);
   }
 
   override bindTools(
@@ -473,22 +443,9 @@ class _ConfigurableModel<
     options?: Partial<CallOptions> | Partial<CallOptions>[],
     batchOptions?: RunnableBatchOptions
   ): Promise<(AIMessageChunk | Error)[]> {
-    // If options is undefined, null, an object, or an array with 0 or 1 element
-    if (
-      !options ||
-      !Array.isArray(options) ||
-      (Array.isArray(options) && options.length <= 1)
-    ) {
-      const config = Array.isArray(options) ? options[0] : options;
-      const model = await this._model(config);
-      return model.batch(inputs, config, {
-        ...batchOptions,
-        returnExceptions: batchOptions?.returnExceptions ?? false,
-      });
-    } else {
-      // If multiple configs, use the base Runnable.batch implementation
-      return super.batch(inputs, options, batchOptions);
-    }
+    // We can super this since the base runnable implementation of
+    // `.batch` will call `.invoke` on each input.
+    return super.batch(inputs, options, batchOptions);
   }
 
   async *transform(
@@ -639,7 +596,7 @@ export async function initChatModel<
  *   - string[]: Specified fields are configurable.
  * @param {string} [fields.configPrefix] - Prefix for configurable fields at runtime.
  * @param {Record<string, any>} [fields.params] - Additional keyword args to pass to the ChatModel constructor.
- * @returns {Promise<BaseChatModelWithBindTools>} A class which extends BaseChatModelWithBindTools that implements `bindTools` for proper typing.
+ * @returns {Promise<_ConfigurableModel>} A class which extends BaseChatModel.
  * @throws {Error} If modelProvider cannot be inferred or isn't supported.
  * @throws {Error} If the model provider integration package is not installed.
  *
