@@ -600,11 +600,7 @@ function extractToolCallChunk(
 function extractToken(chunk: AIMessageChunk): string | undefined {
   if (typeof chunk.content === "string") {
     return chunk.content;
-  } else if (
-    Array.isArray(chunk.content) &&
-    chunk.content[0].type === "tool_use" &&
-    "input" in chunk.content[0]
-  ) {
+  } else if (Array.isArray(chunk.content) && "input" in chunk.content[0]) {
     return typeof chunk.content[0].input === "string"
       ? chunk.content[0].input
       : JSON.stringify(chunk.content[0].input);
