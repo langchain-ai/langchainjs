@@ -61,6 +61,7 @@ const _SUPPORTED_PROVIDERS: Array<ChatModelProvider> = [
   "bedrock",
 ];
 
+// This is needed so when `bindTools` is called on a configurable model, the typing is correct.
 abstract class BaseChatModelWithBindTools extends BaseChatModel {
   abstract override bindTools(
     _tools: (
@@ -196,22 +197,6 @@ async function _initChatModelHelper(
 }
 
 /**
- * Check if a package is installed and can be imported.
- * @param {string} pkg The name of the package to check.
- * @throws {Error} If the package is not installed.
- */
-export function _checkPackage(pkg: string): void {
-  try {
-    require.resolve(pkg);
-  } catch (error) {
-    throw new Error(
-      `Unable to import ${pkg}. Please install with ` +
-        `\`npm install ${pkg}\` or \`yarn add ${pkg}\``
-    );
-  }
-}
-
-/**
  * Attempts to infer the model provider based on the given model name.
  *
  * @param {string} modelName - The name of the model to infer the provider for.
@@ -340,7 +325,8 @@ class _ConfigurableModel<
   bindTools(
     tools: (
       | StructuredToolInterface
-      | Record<string, unknown>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      | Record<string, any>
       | ToolDefinition
       | RunnableToolLike
     )[],
@@ -356,23 +342,18 @@ class _ConfigurableModel<
     });
   }
 
+  // Extract the input types from the `BaseModel` class.
   withStructuredOutput: BaseChatModel["withStructuredOutput"] = (
     schema,
     ...args
-  ): // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  Runnable<RunInput, { raw: BaseMessage; parsed: any }, CallOptions> => {
+  ): ReturnType<BaseChatModel["withStructuredOutput"]> => {
     this._queuedMethodOperations.withStructuredOutput = [schema, ...args];
     return new _ConfigurableModel<RunInput, CallOptions>({
       defaultConfig: this._defaultConfig,
       configurableFields: this._configurableFields,
       configPrefix: this._configPrefix,
       queuedMethodOperations: this._queuedMethodOperations,
-    }) as unknown as Runnable<
-      RunInput,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      { raw: BaseMessage; parsed: any },
-      CallOptions
-    >;
+    }) as unknown as ReturnType<BaseChatModel["withStructuredOutput"]>;
   };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
