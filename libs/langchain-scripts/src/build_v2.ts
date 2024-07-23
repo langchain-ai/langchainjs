@@ -7,6 +7,7 @@ import { Command } from "commander";
 import { rollup } from "@rollup/wasm-node";
 import path from "node:path";
 import { ExportsMapValue, ImportData, LangChainConfig } from "./types.js";
+import { fileURLToPath } from 'url';
 
 async function asyncSpawn(command: string, args: string[]) {
   return new Promise<void>((resolve, reject) => {
@@ -613,7 +614,9 @@ export async function buildWithTSup() {
     pre,
   } = processOptions();
 
-  const importPath = `${process.cwd()}/langchain.config.js`;
+  // const importPath = `${process.cwd()}/langchain.config.js`;
+  // const { config }: { config: LangChainConfig } = await import(importPath);
+  const importPath = fileURLToPath(new URL('langchain.config.js', `file://${process.cwd()}/`));
   const { config }: { config: LangChainConfig } = await import(importPath);
 
   // Clean & generate build files
