@@ -602,7 +602,7 @@ function extractToken(chunk: AIMessageChunk): string | undefined {
     return chunk.content;
   } else if (
     Array.isArray(chunk.content) &&
-    chunk.content.length === 1 &&
+    chunk.content.length >= 1 &&
     "input" in chunk.content[0]
   ) {
     return typeof chunk.content[0].input === "string"
