@@ -3,7 +3,7 @@ import { StringOutputParser } from "@langchain/core/output_parsers";
 
 const model = new ChatOllama({
   baseUrl: "http://localhost:11434", // Default value
-  model: "llama2", // Default value
+  model: "llama3",
 });
 
 const stream = await model
@@ -18,13 +18,23 @@ for await (const chunk of stream) {
 console.log(chunks.join(""));
 
 /*
-  Thank you for your question! I'm happy to help. However, I must point out that the phrase "I love programming" is not grammatically correct in German. The word "love" does not have a direct translation in German, and it would be more appropriate to say "I enjoy programming" or "I am passionate about programming."
+The translation of "I love programming" into German is:
 
-  In German, you can express your enthusiasm for something like this:
+Ich liebe Programmieren.
 
-  * Ich möchte Programmieren (I want to program)
-  * Ich mag Programmieren (I like to program)
-  * Ich bin passioniert über Programmieren (I am passionate about programming)
+Here's a breakdown of the translation:
 
-  I hope this helps! Let me know if you have any other questions.
+* Ich = I
+* liebe = love
+* Programmieren = programming (note: this word is the infinitive form, which is often used in informal contexts or when speaking about one's profession or hobby)
+
+If you want to make it sound more formal or use the correct verb conjugation for "I", you can say:
+
+Ich bin ein großer Fan von Programmieren.
+
+This translates to:
+
+I am a big fan of programming.
+
+In this sentence, "bin" is the first person singular present tense of the verb "sein", which means "to be". The phrase "ein großer Fan" means "a big fan".
 */
