@@ -91,7 +91,7 @@ export async function checkTreeShaking(options?: TreeShakingArgs) {
         `./dist/${entrypoint.replace(/^\.\//, "")}`
       );
       // Allow escaping side effects strictly within code directly
-      // within an entrypoints
+      // within an entrypoint
       hasUnexpectedSideEffects = !entrypointContent
         .toString()
         .includes("/* __LC_ALLOW_ENTRYPOINT_SIDE_EFFECTS__ */");
