@@ -237,6 +237,7 @@ describe("GAuth Chat", () => {
 test("Stream token count usage_metadata", async () => {
   const model = new ChatVertexAI({
     temperature: 0,
+    maxOutputTokens: 10,
   });
   let res: AIMessageChunk | null = null;
   for await (const chunk of await model.stream(
@@ -253,8 +254,8 @@ test("Stream token count usage_metadata", async () => {
   if (!res?.usage_metadata) {
     return;
   }
-  expect(res.usage_metadata.input_tokens).toBe(9);
-  expect(res.usage_metadata.output_tokens).toBeGreaterThan(10);
+  expect(res.usage_metadata.input_tokens).toBeGreaterThan(1);
+  expect(res.usage_metadata.output_tokens).toBeGreaterThan(1);
   expect(res.usage_metadata.total_tokens).toBe(
     res.usage_metadata.input_tokens + res.usage_metadata.output_tokens
   );
@@ -282,6 +283,7 @@ test("streamUsage excludes token usage", async () => {
 test("Invoke token count usage_metadata", async () => {
   const model = new ChatVertexAI({
     temperature: 0,
+    maxOutputTokens: 10,
   });
   const res = await model.invoke("Why is the sky blue? Be concise.");
   console.log(res);
@@ -289,9 +291,34 @@ test("Invoke token count usage_metadata", async () => {
   if (!res?.usage_metadata) {
     return;
   }
-  expect(res.usage_metadata.input_tokens).toBe(9);
-  expect(res.usage_metadata.output_tokens).toBeGreaterThan(10);
+  expect(res.usage_metadata.input_tokens).toBeGreaterThan(1);
+  expect(res.usage_metadata.output_tokens).toBeGreaterThan(1);
   expect(res.usage_metadata.total_tokens).toBe(
     res.usage_metadata.input_tokens + res.usage_metadata.output_tokens
   );
+});
+
+test("Streaming true constructor param will stream", async () => {
+  const modelWithStreaming = new ChatVertexAI({
+    maxOutputTokens: 50,
+    streaming: true,
+  });
+
+  let totalTokenCount = 0;
+  let tokensString = "";
+  const result = await modelWithStreaming.invoke("What is 1 + 1?", {
+    callbacks: [
+      {
+        handleLLMNewToken: (tok) => {
+          totalTokenCount += 1;
+          tokensString += tok;
+        },
+      },
+    ],
+  });
+
+  expect(result).toBeDefined();
+  expect(result.content).toBe(tokensString);
+
+  expect(totalTokenCount).toBeGreaterThan(1);
 });

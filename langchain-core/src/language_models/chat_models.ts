@@ -1,3 +1,5 @@
+import { z } from "zod";
+import { zodToJsonSchema } from "zod-to-json-schema";
 import {
   AIMessage,
   type BaseMessage,
@@ -5,6 +7,7 @@ import {
   type BaseMessageLike,
   HumanMessage,
   coerceMessageLikeToMessage,
+  AIMessageChunk,
 } from "../messages/index.js";
 import type { BasePromptValueInterface } from "../prompt_values.js";
 import {
@@ -17,6 +20,8 @@ import {
 } from "../outputs.js";
 import {
   BaseLanguageModel,
+  StructuredOutputMethodOptions,
+  ToolDefinition,
   type BaseLanguageModelCallOptions,
   type BaseLanguageModelInput,
   type BaseLanguageModelParams,
@@ -27,12 +32,22 @@ import {
   type Callbacks,
 } from "../callbacks/manager.js";
 import type { RunnableConfig } from "../runnables/config.js";
-import type { BaseCache } from "../caches.js";
-import { StructuredToolInterface } from "../tools.js";
-import { Runnable } from "../runnables/base.js";
+import type { BaseCache } from "../caches/base.js";
+import { StructuredToolInterface } from "../tools/index.js";
+import {
+  Runnable,
+  RunnableLambda,
+  RunnableSequence,
+  RunnableToolLike,
+} from "../runnables/base.js";
 import { isStreamEventsHandler } from "../tracers/event_stream.js";
 import { isLogStreamHandler } from "../tracers/log_stream.js";
 import { concat } from "../utils/stream.js";
+import { RunnablePassthrough } from "../runnables/passthrough.js";
+import { isZodSchema } from "../utils/types/is_zod_schema.js";
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type ToolChoice = string | Record<string, any> | "auto" | "any";
 
 /**
  * Represents a serialized chat model.
@@ -61,7 +76,23 @@ export type BaseChatModelParams = BaseLanguageModelParams;
 /**
  * Represents the call options for a base chat model.
  */
-export type BaseChatModelCallOptions = BaseLanguageModelCallOptions;
+export type BaseChatModelCallOptions = BaseLanguageModelCallOptions & {
+  /**
+   * Specifies how the chat model should use tools.
+   * @default undefined
+   *
+   * Possible values:
+   * - "auto": The model may choose to use any of the provided tools, or none.
+   * - "any": The model must use one of the provided tools.
+   * - "none": The model must not use any tools.
+   * - A string (not "auto", "any", or "none"): The name of a specific tool the model must use.
+   * - An object: A custom schema specifying tool choice parameters. Specific to the provider.
+   *
+   * Note: Not all providers support tool_choice. An error will be thrown
+   * if used with an unsupported model.
+   */
+  tool_choice?: ToolChoice;
+};
 
 /**
  * Creates a transform stream for encoding chat message chunks.
@@ -143,12 +174,17 @@ export abstract class BaseChatModel<
    * Bind tool-like objects to this chat model.
    *
    * @param tools A list of tool definitions to bind to this chat model.
-   * Can be a structured tool or an object matching the provider's
-   * specific tool schema.
+   * Can be a structured tool, an OpenAI formatted tool, or an object
+   * matching the provider's specific tool schema.
    * @param kwargs Any additional parameters to bind.
    */
   bindTools?(
-    tools: (StructuredToolInterface | Record<string, unknown>)[],
+    tools: (
+      | StructuredToolInterface
+      | Record<string, unknown>
+      | ToolDefinition
+      | RunnableToolLike
+    )[],
     kwargs?: Partial<CallOptions>
   ): Runnable<BaseLanguageModelInput, OutputMessageType, CallOptions>;
 
@@ -713,6 +749,138 @@ export abstract class BaseChatModel<
       throw new Error("Cannot use predict when output is not a string.");
     }
     return result.content;
+  }
+
+  withStructuredOutput<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  >(
+    outputSchema:
+      | z.ZodType<RunOutput>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      | Record<string, any>,
+    config?: StructuredOutputMethodOptions<false>
+  ): Runnable<BaseLanguageModelInput, RunOutput>;
+
+  withStructuredOutput<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>
+  >(
+    outputSchema:
+      | z.ZodType<RunOutput>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      | Record<string, any>,
+    config?: StructuredOutputMethodOptions<true>
+  ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
+
+  withStructuredOutput<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>
+  >(
+    outputSchema:
+      | z.ZodType<RunOutput>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      | Record<string, any>,
+    config?: StructuredOutputMethodOptions<boolean>
+  ):
+    | Runnable<BaseLanguageModelInput, RunOutput>
+    | Runnable<
+        BaseLanguageModelInput,
+        {
+          raw: BaseMessage;
+          parsed: RunOutput;
+        }
+      > {
+    if (typeof this.bindTools !== "function") {
+      throw new Error(
+        `Chat model must implement ".bindTools()" to use withStructuredOutput.`
+      );
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const schema: z.ZodType<RunOutput> | Record<string, any> = outputSchema;
+    const name = config?.name;
+    const description = schema.description ?? "A function available to call.";
+    const method = config?.method;
+    const includeRaw = config?.includeRaw;
+    if (method === "jsonMode") {
+      throw new Error(
+        `Base withStructuredOutput implementation only supports "functionCalling" as a method.`
+      );
+    }
+
+    let functionName = name ?? "extract";
+    let tools: ToolDefinition[];
+    if (isZodSchema(schema)) {
+      tools = [
+        {
+          type: "function",
+          function: {
+            name: functionName,
+            description,
+            parameters: zodToJsonSchema(schema),
+          },
+        },
+      ];
+    } else {
+      if ("name" in schema) {
+        functionName = schema.name;
+      }
+      tools = [
+        {
+          type: "function",
+          function: {
+            name: functionName,
+            description,
+            parameters: schema,
+          },
+        },
+      ];
+    }
+
+    const llm = this.bindTools(tools);
+    const outputParser = RunnableLambda.from<AIMessageChunk, RunOutput>(
+      (input: AIMessageChunk): RunOutput => {
+        if (!input.tool_calls || input.tool_calls.length === 0) {
+          throw new Error("No tool calls found in the response.");
+        }
+        const toolCall = input.tool_calls.find(
+          (tc) => tc.name === functionName
+        );
+        if (!toolCall) {
+          throw new Error(`No tool call found with name ${functionName}.`);
+        }
+        return toolCall.args as RunOutput;
+      }
+    );
+
+    if (!includeRaw) {
+      return llm.pipe(outputParser).withConfig({
+        runName: "StructuredOutput",
+      }) as Runnable<BaseLanguageModelInput, RunOutput>;
+    }
+
+    const parserAssign = RunnablePassthrough.assign({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      parsed: (input: any, config) => outputParser.invoke(input.raw, config),
+    });
+    const parserNone = RunnablePassthrough.assign({
+      parsed: () => null,
+    });
+    const parsedWithFallback = parserAssign.withFallbacks({
+      fallbacks: [parserNone],
+    });
+    return RunnableSequence.from<
+      BaseLanguageModelInput,
+      { raw: BaseMessage; parsed: RunOutput }
+    >([
+      {
+        raw: llm,
+      },
+      parsedWithFallback,
+    ]).withConfig({
+      runName: "StructuredOutputRunnable",
+    });
   }
 }
 

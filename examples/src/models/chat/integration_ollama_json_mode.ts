@@ -1,4 +1,4 @@
-import { ChatOllama } from "@langchain/community/chat_models/ollama";
+import { ChatOllama } from "@langchain/ollama";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 
 const prompt = ChatPromptTemplate.fromMessages([
@@ -11,7 +11,7 @@ const prompt = ChatPromptTemplate.fromMessages([
 
 const model = new ChatOllama({
   baseUrl: "http://localhost:11434", // Default value
-  model: "llama2", // Default value
+  model: "llama3",
   format: "json",
 });
 
@@ -25,8 +25,13 @@ const result = await chain.invoke({
 console.log(result);
 
 /*
-  AIMessage {
-    content: '{"original": "I love programming", "translated": "Ich liebe das Programmieren"}',
-    additional_kwargs: {}
+AIMessage {
+  "content": "{\n\"original\": \"I love programming\",\n\"translated\": \"Ich liebe Programmieren\"\n}",
+  "response_metadata": { ... },
+  "usage_metadata": {
+    "input_tokens": 47,
+    "output_tokens": 20,
+    "total_tokens": 67
   }
+}
 */

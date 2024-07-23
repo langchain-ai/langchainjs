@@ -7,10 +7,7 @@ import {
   isTraceableFunction,
 } from "langsmith/singletons/traceable";
 import type { RunnableInterface, RunnableBatchOptions } from "./types.js";
-import {
-  CallbackManager,
-  CallbackManagerForChainRun,
-} from "../callbacks/manager.js";
+import { CallbackManagerForChainRun } from "../callbacks/manager.js";
 import {
   LogStreamCallbackHandler,
   LogStreamCallbackHandlerInput,
@@ -55,6 +52,8 @@ import {
   isIterableIterator,
   isIterator,
 } from "./iter.js";
+import { _isToolCall, ToolInputParsingException } from "../tools/utils.js";
+import { ToolCall } from "../messages/tool.js";
 
 export { type RunnableInterface, RunnableBatchOptions };
 
@@ -62,11 +61,17 @@ export { type RunnableInterface, RunnableBatchOptions };
 export type RunnableFunc<RunInput, RunOutput> = (
   input: RunInput,
   options?:
-    | ({ config?: RunnableConfig } & RunnableConfig)
+    | ({
+        /** @deprecated Use top-level config fields instead. */
+        config?: RunnableConfig;
+      } & RunnableConfig)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     | Record<string, any>
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    | (Record<string, any> & { config: RunnableConfig } & RunnableConfig)
+    | (Record<string, any> & {
+        /** @deprecated Use top-level config fields instead. */
+        config: RunnableConfig;
+      } & RunnableConfig)
 ) => RunOutput | Promise<RunOutput>;
 
 export type RunnableMapLike<RunInput, RunOutput> = {
@@ -757,11 +762,11 @@ export abstract class Runnable<
    * +----------------------+------------------+---------------------------------+-----------------------------------------------+-------------------------------------------------+
    * | on_llm_end           | [model name]     |                                 | 'Hello human!'                                |                                                 |
    * +----------------------+------------------+---------------------------------+-----------------------------------------------+-------------------------------------------------+
-   * | on_chain_start       | format_docs      |                                 |                                               |                                                 |
+   * | on_chain_start       | some_runnable    |                                 |                                               |                                                 |
    * +----------------------+------------------+---------------------------------+-----------------------------------------------+-------------------------------------------------+
-   * | on_chain_stream      | format_docs      | "hello world!, goodbye world!"  |                                               |                                                 |
+   * | on_chain_stream      | some_runnable    | "hello world!, goodbye world!"  |                                               |                                                 |
    * +----------------------+------------------+---------------------------------+-----------------------------------------------+-------------------------------------------------+
-   * | on_chain_end         | format_docs      |                                 | [Document(...)]                               | "hello world!, goodbye world!"                  |
+   * | on_chain_end         | some_runnable    |                                 | [Document(...)]                               | "hello world!, goodbye world!"                  |
    * +----------------------+------------------+---------------------------------+-----------------------------------------------+-------------------------------------------------+
    * | on_tool_start        | some_tool        |                                 | {"x": 1, "y": "2"}                            |                                                 |
    * +----------------------+------------------+---------------------------------+-----------------------------------------------+-------------------------------------------------+
@@ -775,6 +780,52 @@ export abstract class Runnable<
    * +----------------------+------------------+---------------------------------+-----------------------------------------------+-------------------------------------------------+
    * | on_prompt_end        | [template_name]  |                                 | {"question": "hello"}                         | ChatPromptValue(messages: [SystemMessage, ...]) |
    * +----------------------+------------------+---------------------------------+-----------------------------------------------+-------------------------------------------------+
+   *
+   * The "on_chain_*" events are the default for Runnables that don't fit one of the above categories.
+   *
+   * In addition to the standard events above, users can also dispatch custom events.
+   *
+   * Custom events will be only be surfaced with in the `v2` version of the API!
+   *
+   * A custom event has following format:
+   *
+   * +-----------+------+-----------------------------------------------------------------------------------------------------------+
+   * | Attribute | Type | Description                                                                                               |
+   * +===========+======+===========================================================================================================+
+   * | name      | str  | A user defined name for the event.                                                                        |
+   * +-----------+------+-----------------------------------------------------------------------------------------------------------+
+   * | data      | Any  | The data associated with the event. This can be anything, though we suggest making it JSON serializable.  |
+   * +-----------+------+-----------------------------------------------------------------------------------------------------------+
+   *
+   * Here's an example:
+   * @example
+   * ```ts
+   * import { RunnableLambda } from "@langchain/core/runnables";
+   * import { dispatchCustomEvent } from "@langchain/core/callbacks/dispatch";
+   * // Use this import for web environments that don't support "async_hooks"
+   * // and manually pass config to child runs.
+   * // import { dispatchCustomEvent } from "@langchain/core/callbacks/dispatch/web";
+   *
+   * const slowThing = RunnableLambda.from(async (someInput: string) => {
+   *   // Placeholder for some slow operation
+   *   await new Promise((resolve) => setTimeout(resolve, 100));
+   *   await dispatchCustomEvent("progress_event", {
+   *    message: "Finished step 1 of 2",
+   *  });
+   *  await new Promise((resolve) => setTimeout(resolve, 100));
+   *  return "Done";
+   * });
+   *
+   * const eventStream = await slowThing.streamEvents("hello world", {
+   *   version: "v2",
+   * });
+   *
+   * for await (const event of eventStream) {
+   *  if (event.event === "on_custom_event") {
+   *    console.log(event);
+   *  }
+   * }
+   * ```
    */
   streamEvents(
     input: RunInput,
@@ -1074,6 +1125,26 @@ export abstract class Runnable<
         }),
       ],
     });
+  }
+
+  /**
+   * Convert a runnable to a tool. Return a new instance of `RunnableToolLike`
+   * which contains the runnable, name, description and schema.
+   *
+   * @template {T extends RunInput = RunInput} RunInput - The input type of the runnable. Should be the same as the `RunInput` type of the runnable.
+   *
+   * @param fields
+   * @param {string | undefined} [fields.name] The name of the tool. If not provided, it will default to the name of the runnable.
+   * @param {string | undefined} [fields.description] The description of the tool. Falls back to the description on the Zod schema if not provided, or undefined if neither are provided.
+   * @param {z.ZodType<T>} [fields.schema] The Zod schema for the input of the tool. Infers the Zod type from the input type of the runnable.
+   * @returns {RunnableToolLike<z.ZodType<T>, RunOutput>} An instance of `RunnableToolLike` which is a runnable that can be used as a tool.
+   */
+  asTool<T extends RunInput = RunInput>(fields: {
+    name?: string;
+    description?: string;
+    schema: z.ZodType<T>;
+  }): RunnableToolLike<z.ZodType<T | ToolCall>, RunOutput> {
+    return convertRunnableToTool<T, RunOutput>(this, fields);
   }
 }
 
@@ -2227,7 +2298,7 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
         callbacks: runManager?.getChild(),
         recursionLimit: (config?.recursionLimit ?? DEFAULT_RECURSION_LIMIT) - 1,
       });
-      void AsyncLocalStorageProviderSingleton.getInstance().run(
+      void AsyncLocalStorageProviderSingleton.runWithConfig(
         childConfig,
         async () => {
           try {
@@ -2318,15 +2389,19 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
         }
       }
     }
+    const childConfig = patchConfig(config, {
+      callbacks: runManager?.getChild(),
+      recursionLimit: (config?.recursionLimit ?? DEFAULT_RECURSION_LIMIT) - 1,
+    });
     const output = await new Promise<RunOutput | Runnable>(
       (resolve, reject) => {
-        void AsyncLocalStorageProviderSingleton.getInstance().run(
-          config,
+        void AsyncLocalStorageProviderSingleton.runWithConfig(
+          childConfig,
           async () => {
             try {
               const res = await this.func(finalChunk as RunInput, {
-                ...config,
-                config,
+                ...childConfig,
+                config: childConfig,
               });
               resolve(res);
             } catch (e) {
@@ -2340,23 +2415,19 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
       if (config?.recursionLimit === 0) {
         throw new Error("Recursion limit reached.");
       }
-      const stream = await output.stream(
-        finalChunk as RunInput,
-        patchConfig(config, {
-          callbacks: runManager?.getChild(),
-          recursionLimit:
-            (config?.recursionLimit ?? DEFAULT_RECURSION_LIMIT) - 1,
-        })
-      );
+      const stream = await output.stream(finalChunk as RunInput, childConfig);
       for await (const chunk of stream) {
         yield chunk;
       }
     } else if (isAsyncIterable(output)) {
-      for await (const chunk of consumeAsyncIterableInContext(config, output)) {
+      for await (const chunk of consumeAsyncIterableInContext(
+        childConfig,
+        output
+      )) {
         yield chunk as RunOutput;
       }
     } else if (isIterableIterator(output)) {
-      for (const chunk of consumeIteratorInContext(config, output)) {
+      for (const chunk of consumeIteratorInContext(childConfig, output)) {
         yield chunk as RunOutput;
       }
     } else {
@@ -2433,14 +2504,9 @@ export class RunnableWithFallbacks<RunInput, RunOutput> extends Runnable<
     input: RunInput,
     options?: Partial<RunnableConfig>
   ): Promise<RunOutput> {
-    const callbackManager_ = await CallbackManager.configure(
-      options?.callbacks,
-      undefined,
-      options?.tags,
-      undefined,
-      options?.metadata
-    );
-    const { runId, ...otherOptions } = options ?? {};
+    const config = ensureConfig(options);
+    const callbackManager_ = await getCallbackManagerForConfig(options);
+    const { runId, ...otherConfigFields } = config;
     const runManager = await callbackManager_?.handleChainStart(
       this.toJSON(),
       _coerceToDict(input, "input"),
@@ -2448,14 +2514,14 @@ export class RunnableWithFallbacks<RunInput, RunOutput> extends Runnable<
       undefined,
       undefined,
       undefined,
-      otherOptions?.runName
+      otherConfigFields?.runName
     );
     let firstError;
     for (const runnable of this.runnables()) {
       try {
         const output = await runnable.invoke(
           input,
-          patchConfig(otherOptions, { callbacks: runManager?.getChild() })
+          patchConfig(otherConfigFields, { callbacks: runManager?.getChild() })
         );
         await runManager?.handleChainEnd(_coerceToDict(output, "output"));
         return output;
@@ -2500,15 +2566,7 @@ export class RunnableWithFallbacks<RunInput, RunOutput> extends Runnable<
     }
     const configList = this._getOptionsList(options ?? {}, inputs.length);
     const callbackManagers = await Promise.all(
-      configList.map((config) =>
-        CallbackManager.configure(
-          config?.callbacks,
-          undefined,
-          config?.tags,
-          undefined,
-          config?.metadata
-        )
-      )
+      configList.map((config) => getCallbackManagerForConfig(config))
     );
     const runManagers = await Promise.all(
       callbackManagers.map(async (callbackManager, i) => {
@@ -2792,4 +2850,109 @@ export class RunnablePick<
     await wrappedGenerator.setup;
     return IterableReadableStream.fromAsyncGenerator(wrappedGenerator);
   }
+}
+
+export interface RunnableToolLikeArgs<
+  RunInput extends z.ZodType = z.ZodType,
+  RunOutput = unknown
+> extends Omit<RunnableBindingArgs<z.infer<RunInput>, RunOutput>, "config"> {
+  name: string;
+
+  description?: string;
+
+  schema: RunInput;
+
+  config?: RunnableConfig;
+}
+
+export class RunnableToolLike<
+  RunInput extends z.ZodType = z.ZodType,
+  RunOutput = unknown
+> extends RunnableBinding<z.infer<RunInput>, RunOutput> {
+  name: string;
+
+  description?: string;
+
+  schema: RunInput;
+
+  constructor(fields: RunnableToolLikeArgs<RunInput, RunOutput>) {
+    const sequence = RunnableSequence.from([
+      RunnableLambda.from(async (input) => {
+        let toolInput: z.TypeOf<RunInput>;
+
+        if (_isToolCall(input)) {
+          try {
+            toolInput = await this.schema.parseAsync(input.args);
+          } catch (e) {
+            throw new ToolInputParsingException(
+              `Received tool input did not match expected schema`,
+              JSON.stringify(input.args)
+            );
+          }
+        } else {
+          toolInput = input;
+        }
+        return toolInput;
+      }).withConfig({ runName: `${fields.name}:parse_input` }),
+      fields.bound,
+    ]).withConfig({ runName: fields.name });
+
+    super({
+      bound: sequence,
+      config: fields.config ?? {},
+    });
+
+    this.name = fields.name;
+    this.description = fields.description;
+    this.schema = fields.schema;
+  }
+
+  static lc_name() {
+    return "RunnableToolLike";
+  }
+}
+
+/**
+ * Given a runnable and a Zod schema, convert the runnable to a tool.
+ *
+ * @template RunInput The input type for the runnable.
+ * @template RunOutput The output type for the runnable.
+ *
+ * @param {Runnable<RunInput, RunOutput>} runnable The runnable to convert to a tool.
+ * @param fields
+ * @param {string | undefined} [fields.name] The name of the tool. If not provided, it will default to the name of the runnable.
+ * @param {string | undefined} [fields.description] The description of the tool. Falls back to the description on the Zod schema if not provided, or undefined if neither are provided.
+ * @param {z.ZodType<RunInput>} [fields.schema] The Zod schema for the input of the tool. Infers the Zod type from the input type of the runnable.
+ * @returns {RunnableToolLike<z.ZodType<RunInput>, RunOutput>} An instance of `RunnableToolLike` which is a runnable that can be used as a tool.
+ */
+export function convertRunnableToTool<RunInput, RunOutput>(
+  runnable: Runnable<RunInput, RunOutput>,
+  fields: {
+    name?: string;
+    description?: string;
+    schema: z.ZodType<RunInput>;
+  }
+): RunnableToolLike<z.ZodType<RunInput | ToolCall>, RunOutput> {
+  const name = fields.name ?? runnable.getName();
+  const description = fields.description ?? fields.schema?.description;
+
+  if (fields.schema.constructor === z.ZodString) {
+    return new RunnableToolLike<z.ZodType<RunInput | ToolCall>, RunOutput>({
+      name,
+      description,
+      schema: z
+        .object({
+          input: z.string(),
+        })
+        .transform((input) => input.input) as z.ZodType,
+      bound: runnable,
+    });
+  }
+
+  return new RunnableToolLike<z.ZodType<RunInput | ToolCall>, RunOutput>({
+    name,
+    description,
+    schema: fields.schema,
+    bound: runnable,
+  });
 }

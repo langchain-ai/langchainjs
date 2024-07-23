@@ -1,3 +1,5 @@
+/* eslint-disable no-process-env */
+
 import { test, expect } from "@jest/globals";
 import { LLMResult } from "@langchain/core/outputs";
 import { StringPromptValue } from "@langchain/core/prompt_values";
@@ -9,6 +11,27 @@ import {
 } from "@azure/identity";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { AzureOpenAI } from "../../azure/llms.js";
+
+// Save the original value of the 'LANGCHAIN_CALLBACKS_BACKGROUND' environment variable
+const originalBackground = process.env.LANGCHAIN_CALLBACKS_BACKGROUND;
+
+beforeAll(() => {
+  if (!process.env.AZURE_OPENAI_API_KEY) {
+    process.env.AZURE_OPENAI_API_KEY = process.env.TEST_AZURE_OPENAI_API_KEY;
+  }
+  if (!process.env.AZURE_OPENAI_API_DEPLOYMENT_NAME) {
+    process.env.AZURE_OPENAI_API_DEPLOYMENT_NAME =
+      process.env.TEST_AZURE_OPENAI_API_DEPLOYMENT_NAME;
+  }
+  if (!process.env.AZURE_OPENAI_BASE_PATH) {
+    process.env.AZURE_OPENAI_BASE_PATH =
+      process.env.TEST_AZURE_OPENAI_BASE_PATH;
+  }
+  if (!process.env.AZURE_OPENAI_API_VERSION) {
+    process.env.AZURE_OPENAI_API_VERSION =
+      process.env.TEST_AZURE_OPENAI_API_VERSION;
+  }
+});
 
 test("Test Azure OpenAI invoke", async () => {
   const model = new AzureOpenAI({
@@ -136,25 +159,35 @@ test("Test Azure OpenAI with versioned instruct model returns Azure OpenAI", asy
 });
 
 test("Test Azure OpenAI tokenUsage", async () => {
-  let tokenUsage = {
-    completionTokens: 0,
-    promptTokens: 0,
-    totalTokens: 0,
-  };
+  // Running LangChain callbacks in the background will sometimes cause the callbackManager to execute
+  // after the test/llm call has already finished & returned. Set that environment variable to false
+  // to prevent that from happening.
+  process.env.LANGCHAIN_CALLBACKS_BACKGROUND = "false";
 
-  const model = new AzureOpenAI({
-    maxTokens: 5,
-    modelName: "gpt-3.5-turbo-instruct",
-    callbackManager: CallbackManager.fromHandlers({
-      async handleLLMEnd(output: LLMResult) {
-        tokenUsage = output.llmOutput?.tokenUsage;
-      },
-    }),
-  });
-  const res = await model.invoke("Hello");
-  console.log({ res });
+  try {
+    let tokenUsage = {
+      completionTokens: 0,
+      promptTokens: 0,
+      totalTokens: 0,
+    };
 
-  expect(tokenUsage.promptTokens).toBe(1);
+    const model = new AzureOpenAI({
+      maxTokens: 5,
+      modelName: "gpt-3.5-turbo-instruct",
+      callbackManager: CallbackManager.fromHandlers({
+        async handleLLMEnd(output: LLMResult) {
+          tokenUsage = output.llmOutput?.tokenUsage;
+        },
+      }),
+    });
+    const res = await model.invoke("Hello");
+    console.log({ res });
+
+    expect(tokenUsage.promptTokens).toBe(1);
+  } finally {
+    // Reset the environment variable
+    process.env.LANGCHAIN_CALLBACKS_BACKGROUND = originalBackground;
+  }
 });
 
 test("Test Azure OpenAI in streaming mode", async () => {

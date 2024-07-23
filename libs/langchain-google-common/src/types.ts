@@ -1,6 +1,6 @@
 import type { BaseLLMParams } from "@langchain/core/language_models/llms";
-import { BaseLanguageModelCallOptions } from "@langchain/core/language_models/base";
 import { StructuredToolInterface } from "@langchain/core/tools";
+import type { BaseChatModelCallOptions } from "@langchain/core/language_models/chat_models";
 import type { JsonStream } from "./utils/stream.js";
 
 /**
@@ -104,6 +104,12 @@ export interface GoogleAIModelParams {
    * @default "text/plain"
    */
   responseMimeType?: GoogleAIResponseMimeType;
+
+  /**
+   * Whether or not to stream.
+   * @default false
+   */
+  streaming?: boolean;
 }
 
 /**
@@ -120,7 +126,7 @@ export interface GoogleAIBaseLLMInput<AuthOptions>
     GoogleAISafetyParams {}
 
 export interface GoogleAIBaseLanguageModelCallOptions
-  extends BaseLanguageModelCallOptions,
+  extends BaseChatModelCallOptions,
     GoogleAIModelRequestParams,
     GoogleAISafetyParams {
   /**

@@ -1,6 +1,6 @@
 {
   "name": "@langchain/core",
-  "version": "0.2.6",
+  "version": "0.2.18",
   "description": "Core LangChain.js abstractions and schemas",
   "type": "module",
   "engines": {
@@ -45,12 +45,12 @@
     "camelcase": "6",
     "decamelize": "1.2.0",
     "js-tiktoken": "^1.0.12",
-    "langsmith": "~0.1.30",
+    "langsmith": "~0.1.39",
     "ml-distance": "^4.0.0",
     "mustache": "^4.2.0",
     "p-queue": "^6.6.2",
     "p-retry": "4",
-    "uuid": "^9.0.0",
+    "uuid": "^10.0.0",
     "zod": "^3.22.4",
     "zod-to-json-schema": "^3.22.3"
   },
@@ -74,6 +74,7 @@
     "prettier": "^2.8.3",
     "release-it": "^15.10.1",
     "rimraf": "^5.0.1",
+    "ts-jest": "^29.1.0",
     "typescript": "~5.1.6",
     "web-streams-polyfill": "^3.3.3"
   },
@@ -121,6 +122,24 @@
       },
       "import": "./callbacks/base.js",
       "require": "./callbacks/base.cjs"
+    },
+    "./callbacks/dispatch": {
+      "types": {
+        "import": "./callbacks/dispatch.d.ts",
+        "require": "./callbacks/dispatch.d.cts",
+        "default": "./callbacks/dispatch.d.ts"
+      },
+      "import": "./callbacks/dispatch.js",
+      "require": "./callbacks/dispatch.cjs"
+    },
+    "./callbacks/dispatch/web": {
+      "types": {
+        "import": "./callbacks/dispatch/web.d.ts",
+        "require": "./callbacks/dispatch/web.d.cts",
+        "default": "./callbacks/dispatch/web.d.ts"
+      },
+      "import": "./callbacks/dispatch/web.js",
+      "require": "./callbacks/dispatch/web.cjs"
     },
     "./callbacks/manager": {
       "types": {
@@ -329,6 +348,15 @@
       "import": "./runnables.js",
       "require": "./runnables.cjs"
     },
+    "./runnables/graph": {
+      "types": {
+        "import": "./runnables/graph.d.ts",
+        "require": "./runnables/graph.d.cts",
+        "default": "./runnables/graph.d.ts"
+      },
+      "import": "./runnables/graph.js",
+      "require": "./runnables/graph.cjs"
+    },
     "./runnables/remote": {
       "types": {
         "import": "./runnables/remote.d.ts",
@@ -464,15 +492,6 @@
       "import": "./utils/async_caller.js",
       "require": "./utils/async_caller.cjs"
     },
-    "./utils/beta_warning": {
-      "types": {
-        "import": "./utils/beta_warning.d.ts",
-        "require": "./utils/beta_warning.d.cts",
-        "default": "./utils/beta_warning.d.ts"
-      },
-      "import": "./utils/beta_warning.js",
-      "require": "./utils/beta_warning.cjs"
-    },
     "./utils/chunk_array": {
       "types": {
         "import": "./utils/chunk_array.d.ts",
@@ -606,6 +625,14 @@
     "callbacks/base.js",
     "callbacks/base.d.ts",
     "callbacks/base.d.cts",
+    "callbacks/dispatch.cjs",
+    "callbacks/dispatch.js",
+    "callbacks/dispatch.d.ts",
+    "callbacks/dispatch.d.cts",
+    "callbacks/dispatch/web.cjs",
+    "callbacks/dispatch/web.js",
+    "callbacks/dispatch/web.d.ts",
+    "callbacks/dispatch/web.d.cts",
     "callbacks/manager.cjs",
     "callbacks/manager.js",
     "callbacks/manager.d.ts",
@@ -698,6 +725,10 @@
     "runnables.js",
     "runnables.d.ts",
     "runnables.d.cts",
+    "runnables/graph.cjs",
+    "runnables/graph.js",
+    "runnables/graph.d.ts",
+    "runnables/graph.d.cts",
     "runnables/remote.cjs",
     "runnables/remote.js",
     "runnables/remote.d.ts",
@@ -758,10 +789,6 @@
     "utils/async_caller.js",
     "utils/async_caller.d.ts",
     "utils/async_caller.d.cts",
-    "utils/beta_warning.cjs",
-    "utils/beta_warning.js",
-    "utils/beta_warning.d.ts",
-    "utils/beta_warning.d.cts",
     "utils/chunk_array.cjs",
     "utils/chunk_array.js",
     "utils/chunk_array.d.ts",

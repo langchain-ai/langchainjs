@@ -1,8 +1,15 @@
 import { test, expect } from "@jest/globals";
+import { v4 } from "uuid";
 import { AsyncLocalStorage } from "node:async_hooks";
 import { AsyncLocalStorageProviderSingleton } from "../index.js";
 import { RunnableLambda } from "../../runnables/base.js";
 import { FakeListChatModel } from "../../utils/testing/index.js";
+import { getCallbackManagerForConfig } from "../../runnables/config.js";
+import { BaseCallbackHandler } from "../../callbacks/base.js";
+
+class FakeCallbackHandler extends BaseCallbackHandler {
+  name = `fake-${v4()}`;
+}
 
 test("Config should be automatically populated after setting global async local storage", async () => {
   const inner = RunnableLambda.from((_, config) => config);
@@ -45,7 +52,6 @@ test("Config should be automatically populated after setting global async local 
   );
   const chunks = [];
   for await (const chunk of stream) {
-    console.log(chunk);
     chunks.push(chunk);
   }
   expect(chunks.length).toEqual(1);
@@ -80,7 +86,6 @@ test("Config should be automatically populated after setting global async local 
   );
   const chunks2 = [];
   for await (const chunk of stream2) {
-    console.log(chunk);
     chunks2.push(chunk);
   }
   expect(chunks2.length).toEqual(1);
@@ -124,7 +129,6 @@ test("Config should be automatically populated after setting global async local 
   );
   const events = [];
   for await (const event of eventStream) {
-    console.log(event);
     events.push(event);
   }
   expect(
@@ -139,7 +143,39 @@ test("Runnable streamEvents method with streaming nested in a RunnableLambda", a
   const chat = new FakeListChatModel({
     responses: ["Hello"],
   });
+  const outerRunId = v4();
+  const innerRunId = v4();
+  const innerRunId2 = v4();
+  const dummyHandler = new FakeCallbackHandler();
   const myFunc = async (input: string) => {
+    const outerCallbackManager = await getCallbackManagerForConfig(
+      AsyncLocalStorageProviderSingleton.getRunnableConfig()
+    );
+    expect(outerCallbackManager?.getParentRunId()).toEqual(outerRunId);
+
+    const nestedLambdaWithOverriddenCallbacks = RunnableLambda.from(
+      async (_: string, config) => {
+        expect(config?.callbacks?.handlers).toEqual([]);
+      }
+    );
+    await nestedLambdaWithOverriddenCallbacks.invoke(input, {
+      runId: innerRunId,
+      callbacks: [],
+    });
+
+    const nestedLambdaWithoutOverriddenCallbacks = RunnableLambda.from(
+      async (_: string, config) => {
+        const innerCallbackManager = await getCallbackManagerForConfig(
+          AsyncLocalStorageProviderSingleton.getRunnableConfig()
+        );
+        expect(innerCallbackManager?.getParentRunId()).toEqual(innerRunId2);
+        expect(config?.callbacks?.handlers).toContain(dummyHandler);
+      }
+    );
+    await nestedLambdaWithoutOverriddenCallbacks.invoke(input, {
+      runId: innerRunId2,
+    });
+
     for await (const _ of await chat.stream(input)) {
       // no-op
     }
@@ -150,8 +186,9 @@ test("Runnable streamEvents method with streaming nested in a RunnableLambda", a
   const events = [];
   for await (const event of myNestedLambda.streamEvents("hello", {
     version: "v1",
+    runId: outerRunId,
+    callbacks: [dummyHandler],
   })) {
-    console.log(event);
     events.push(event);
   }
   const chatModelStreamEvent = events.find((event) => {

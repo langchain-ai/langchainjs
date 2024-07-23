@@ -2,10 +2,10 @@
 import { test, expect } from "@jest/globals";
 import { ChatModelIntegrationTests } from "@langchain/standard-tests";
 import { AIMessageChunk } from "@langchain/core/messages";
-import { ChatCohere, CohereChatCallOptions } from "../chat_models.js";
+import { ChatCohere, ChatCohereCallOptions } from "../chat_models.js";
 
 class ChatCohereStandardIntegrationTests extends ChatModelIntegrationTests<
-  CohereChatCallOptions,
+  ChatCohereCallOptions,
   AIMessageChunk
 > {
   constructor() {
@@ -16,10 +16,18 @@ class ChatCohereStandardIntegrationTests extends ChatModelIntegrationTests<
     }
     super({
       Cls: ChatCohere,
-      chatModelHasToolCalling: false,
-      chatModelHasStructuredOutput: false,
+      chatModelHasToolCalling: true,
+      chatModelHasStructuredOutput: true,
       constructorArgs: {},
     });
+  }
+
+  async testToolMessageHistoriesListContent() {
+    this.skipTestMessage(
+      "testToolMessageHistoriesListContent",
+      "ChatCohere",
+      "Anthropic-style tool calling is not supported."
+    );
   }
 }
 

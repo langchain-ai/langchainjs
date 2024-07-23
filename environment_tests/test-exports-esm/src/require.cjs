@@ -5,7 +5,7 @@ const { ChatPromptTemplate } = require("@langchain/core/prompts");
 const { HNSWLib } = require("@langchain/community/vectorstores/hnswlib");
 const { HuggingFaceTransformersEmbeddings } = require("@langchain/community/embeddings/hf_transformers");
 const { Document } = require("@langchain/core/documents");
-const { CSVLoader } = require("langchain/document_loaders/fs/csv");
+const { CSVLoader } = require("@langchain/community/document_loaders/fs/csv");
 
 async function test() {
   // Test exports

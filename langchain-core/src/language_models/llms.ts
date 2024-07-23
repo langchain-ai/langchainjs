@@ -23,7 +23,7 @@ import {
   type BaseLanguageModelParams,
 } from "./base.js";
 import type { RunnableConfig } from "../runnables/config.js";
-import type { BaseCache } from "../caches.js";
+import type { BaseCache } from "../caches/base.js";
 import { isStreamEventsHandler } from "../tracers/event_stream.js";
 import { isLogStreamHandler } from "../tracers/log_stream.js";
 import { concat } from "../utils/stream.js";
@@ -156,7 +156,7 @@ export abstract class BaseLLM<
       });
       try {
         for await (const chunk of this._streamResponseChunks(
-          input.toString(),
+          prompt.toString(),
           callOptions,
           runManagers?.[0]
         )) {

@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import { BedrockEmbeddings } from "@langchain/community/embeddings/bedrock";
+import { BedrockEmbeddings } from "@langchain/aws";
 
 const embeddings = new BedrockEmbeddings({
   region: process.env.BEDROCK_AWS_REGION!,

@@ -640,7 +640,7 @@ export class Neo4jVectorStore extends VectorStore {
   async similaritySearchWithScore(
     query: string,
     k = 4,
-    params: Record<string, any> = {}
+    params: Record<string, Any> = {}
   ): Promise<[Document, number][]> {
     const embedding = await this.embeddings.embedQuery(query);
     return this.similaritySearchVectorWithScore(embedding, k, query, params);

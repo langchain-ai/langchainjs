@@ -40,7 +40,7 @@ If you're using Node.js, you can define the following environment variables to u
 
 ```bash
 AZURE_OPENAI_API_INSTANCE_NAME=<YOUR_INSTANCE_NAME>
-AZURE_OPENAI_API_EMBEDDING_DEPLOYMENT_NAME=<YOUR_EMBEDDING_DEPLOYMENT_NAME>
+AZURE_OPENAI_API_EMBEDDINGS_DEPLOYMENT_NAME=<YOUR_EMBEDDINGS_DEPLOYMENT_NAME>
 AZURE_OPENAI_API_KEY=<YOUR_KEY>
 AZURE_OPENAI_API_VERSION="2024-02-01"
 ```
@@ -63,7 +63,7 @@ You can find the list of supported API versions in the [Azure OpenAI documentati
 
 ::tip
 
-If `AZURE_OPENAI_API_EMBEDDING_DEPLOYMENT_NAME` is not defined, it will fall back to the value of `AZURE_OPENAI_API_DEPLOYMENT_NAME` for the deployment name. The same applies to the `azureOpenAIApiEmbeddingsDeploymentName` parameter in the `AzureOpenAIEmbeddings` constructor, which will fall back to the value of `azureOpenAIApiDeploymentName` if not defined.
+If `AZURE_OPENAI_API_EMBEDDINGS_DEPLOYMENT_NAME` is not defined, it will fall back to the value of `AZURE_OPENAI_API_DEPLOYMENT_NAME` for the deployment name. The same applies to the `azureOpenAIApiEmbeddingsDeploymentName` parameter in the `AzureOpenAIEmbeddings` constructor, which will fall back to the value of `azureOpenAIApiDeploymentName` if not defined.
 
 :::
 

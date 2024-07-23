@@ -11,6 +11,7 @@ export interface StoredMessageData {
   /** Response metadata. For example: response headers, logprobs, token counts. */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   response_metadata?: Record<string, any>;
+  id?: string;
 }
 
 export interface StoredMessage {
@@ -35,7 +36,8 @@ export type MessageType =
   | "generic"
   | "system"
   | "function"
-  | "tool";
+  | "tool"
+  | "remove";
 
 export type ImageDetail = "auto" | "low" | "high";
 
@@ -106,6 +108,11 @@ export type BaseMessageFields = {
   /** Response metadata. For example: response headers, logprobs, token counts. */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   response_metadata?: Record<string, any>;
+  /**
+   * An optional unique identifier for the message. This should ideally be
+   * provided by the provider/model which created the message.
+   */
+  id?: string;
 };
 
 export function mergeContent(
@@ -121,12 +128,44 @@ export function mergeContent(
     }
     // If both are arrays
   } else if (Array.isArray(secondContent)) {
-    return [...firstContent, ...secondContent];
-    // If the first content is a list and second is a string
+    return (
+      _mergeLists(firstContent, secondContent) ?? [
+        ...firstContent,
+        ...secondContent,
+      ]
+    );
   } else {
     // Otherwise, add the second content as a new element of the list
     return [...firstContent, { type: "text", text: secondContent }];
   }
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function stringifyWithDepthLimit(obj: any, depthLimit: number): string {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  function helper(obj: any, currentDepth: number): any {
+    if (typeof obj !== "object" || obj === null || obj === undefined) {
+      return obj;
+    }
+    if (currentDepth >= depthLimit) {
+      if (Array.isArray(obj)) {
+        return "[Array]";
+      }
+      return "[Object]";
+    }
+
+    if (Array.isArray(obj)) {
+      return obj.map((item) => helper(item, currentDepth + 1));
+    }
+
+    const result: Record<string, unknown> = {};
+    for (const key of Object.keys(obj)) {
+      result[key] = helper(obj[key], currentDepth + 1);
+    }
+    return result;
+  }
+
+  return JSON.stringify(helper(obj, 0), null, 2);
 }
 
 /**
@@ -170,6 +209,12 @@ export abstract class BaseMessage
   /** Response metadata. For example: response headers, logprobs, token counts. */
   response_metadata: NonNullable<BaseMessageFields["response_metadata"]>;
 
+  /**
+   * An optional unique identifier for the message. This should ideally be
+   * provided by the provider/model which created the message.
+   */
+  id?: string;
+
   /** The type of the message. */
   abstract _getType(): MessageType;
 
@@ -200,6 +245,7 @@ export abstract class BaseMessage
     this.content = fields.content;
     this.additional_kwargs = fields.additional_kwargs;
     this.response_metadata = fields.response_metadata;
+    this.id = fields.id;
   }
 
   toDict(): StoredMessage {
@@ -208,6 +254,39 @@ export abstract class BaseMessage
       data: (this.toJSON() as SerializedConstructor)
         .kwargs as StoredMessageData,
     };
+  }
+
+  static lc_name() {
+    return "BaseMessage";
+  }
+
+  // Can't be protected for silly reasons
+  get _printableFields(): Record<string, unknown> {
+    return {
+      id: this.id,
+      content: this.content,
+      name: this.name,
+      additional_kwargs: this.additional_kwargs,
+      response_metadata: this.response_metadata,
+    };
+  }
+
+  get [Symbol.toStringTag]() {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (this.constructor as any).lc_name();
+  }
+
+  // Override the default behavior of console.log
+  [Symbol.for("nodejs.util.inspect.custom")](depth: number | null) {
+    if (depth === null) {
+      return this;
+    }
+    const printable = stringifyWithDepthLimit(
+      this._printableFields,
+      Math.max(4, depth)
+    );
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return `${(this.constructor as any).lc_name()} ${printable}`;
   }
 }
 
@@ -246,8 +325,12 @@ export function _mergeDicts(
         `field[${key}] already exists in the message chunk, but with a different type.`
       );
     } else if (typeof merged[key] === "string") {
-      merged[key] = (merged[key] as string) + value;
-    } else if (!Array.isArray(merged[key]) && typeof merged[key] === "object") {
+      if (key === "type") {
+        // Do not merge 'type' fields
+        continue;
+      }
+      merged[key] += value;
+    } else if (typeof merged[key] === "object" && !Array.isArray(merged[key])) {
       merged[key] = _mergeDicts(merged[key], value);
     } else if (Array.isArray(merged[key])) {
       merged[key] = _mergeLists(merged[key], value);
@@ -284,11 +367,47 @@ export function _mergeLists(left?: any[], right?: any[]) {
         } else {
           merged.push(item);
         }
+      } else if (
+        typeof item === "object" &&
+        "text" in item &&
+        item.text === ""
+      ) {
+        // No-op - skip empty text blocks
+        continue;
       } else {
         merged.push(item);
       }
     }
     return merged;
+  }
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function _mergeObj<T = any>(
+  left: T | undefined,
+  right: T | undefined
+): T {
+  if (!left && !right) {
+    throw new Error("Cannot merge two undefined objects.");
+  }
+  if (!left || !right) {
+    return left || (right as T);
+  } else if (typeof left !== typeof right) {
+    throw new Error(
+      `Cannot merge objects of different types.\nLeft ${typeof left}\nRight ${typeof right}`
+    );
+  } else if (typeof left === "string" && typeof right === "string") {
+    return (left + right) as T;
+  } else if (Array.isArray(left) && Array.isArray(right)) {
+    return _mergeLists(left, right) as T;
+  } else if (typeof left === "object" && typeof right === "object") {
+    return _mergeDicts(left, right) as T;
+  } else if (left === right) {
+    return left;
+  } else {
+    throw new Error(
+      `Can not merge objects of different types.\nLeft ${left}\nRight ${right}`
+    );
   }
 }
 
@@ -305,6 +424,10 @@ export abstract class BaseMessageChunk extends BaseMessage {
 
 export type BaseMessageLike =
   | BaseMessage
+  | ({
+      type: MessageType | "user" | "assistant" | "placeholder";
+    } & BaseMessageFields &
+      Record<string, unknown>)
   | [
       StringWithAutocomplete<
         MessageType | "user" | "assistant" | "placeholder"

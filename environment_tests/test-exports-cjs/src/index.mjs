@@ -5,7 +5,7 @@ import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { HuggingFaceTransformersEmbeddings } from "@langchain/community/embeddings/hf_transformers";
 import { Document } from "@langchain/core/documents";
-import { CSVLoader } from "langchain/document_loaders/fs/csv";
+import { CSVLoader } from "@langchain/community/document_loaders/fs/csv";
 
 // Test exports
 assert(typeof OpenAI === "function");

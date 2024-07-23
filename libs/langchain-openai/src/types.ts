@@ -39,6 +39,12 @@ export declare interface OpenAIBaseInput {
   streaming: boolean;
 
   /**
+   * Whether or not to include token usage data in streamed chunks.
+   * @default true
+   */
+  streamUsage?: boolean;
+
+  /**
    * Model name to use
    * Alias for `model`
    */
@@ -142,7 +148,13 @@ export interface OpenAIChatInput extends OpenAIBaseInput {
   topLogprobs?: number;
 
   /** ChatGPT messages to pass as a prefix to the prompt */
-  prefixMessages?: OpenAIClient.Chat.CreateChatCompletionRequestMessage[];
+  prefixMessages?: OpenAIClient.Chat.ChatCompletionMessageParam[];
+
+  /**
+   * Whether to include the raw OpenAI response in the output message's "additional_kwargs" field.
+   * Currently in experimental beta.
+   */
+  __includeRawResponse?: boolean;
 }
 
 export declare interface AzureOpenAIInput {

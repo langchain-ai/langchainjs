@@ -43,11 +43,13 @@ import {
   Runnable,
   RunnablePassthrough,
   RunnableSequence,
+  RunnableToolLike,
 } from "@langchain/core/runnables";
 import {
   BaseLanguageModelInput,
   FunctionDefinition,
   StructuredOutputMethodOptions,
+  ToolDefinition,
 } from "@langchain/core/language_models/base";
 import {
   BaseLLMOutputParser,
@@ -62,11 +64,12 @@ import {
 } from "@langchain/core/output_parsers/openai_tools";
 import { StructuredToolInterface } from "@langchain/core/tools";
 import { convertToOpenAITool } from "@langchain/core/utils/function_calling";
+import { ToolCallChunk } from "@langchain/core/messages/tool";
 
 export interface ChatGroqCallOptions extends BaseChatModelCallOptions {
   headers?: Record<string, string>;
   tools?: OpenAIClient.ChatCompletionTool[];
-  tool_choice?: OpenAIClient.ChatCompletionToolChoiceOption;
+  tool_choice?: OpenAIClient.ChatCompletionToolChoiceOption | "any" | string;
   response_format?: { type: "json_object" };
 }
 
@@ -367,7 +370,12 @@ export class ChatGroq extends BaseChatModel<
   }
 
   override bindTools(
-    tools: (Record<string, unknown> | StructuredToolInterface)[],
+    tools: (
+      | Record<string, unknown>
+      | StructuredToolInterface
+      | ToolDefinition
+      | RunnableToolLike
+    )[],
     kwargs?: Partial<ChatGroqCallOptions>
   ): Runnable<BaseLanguageModelInput, AIMessageChunk, ChatGroqCallOptions> {
     return this.bind({
@@ -396,14 +404,14 @@ export class ChatGroq extends BaseChatModel<
       ) {
         throw new Error("Could not parse Groq output.");
       }
-      const toolCallChunks = generationMessage.tool_calls?.map(
-        (toolCall, i) => ({
+      const toolCallChunks: ToolCallChunk[] | undefined =
+        generationMessage.tool_calls?.map((toolCall, i) => ({
           name: toolCall.name,
           args: JSON.stringify(toolCall.args),
           id: toolCall.id,
           index: i,
-        })
-      );
+          type: "tool_call_chunk",
+        }));
       yield new ChatGenerationChunk({
         message: new AIMessageChunk({
           content: generationMessage.content,
