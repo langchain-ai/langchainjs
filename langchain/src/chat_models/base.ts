@@ -628,8 +628,7 @@ export async function initChatModel(
 // ################################# FOR CONTRIBUTORS #################################
 //
 // If adding support for a new provider, please append the provider
-// name to the supported list in the docstring below. Do *not* change the order of the
-// existing providers.
+// name to the supported list in the docstring below.
 //
 // ####################################################################################
 
@@ -668,25 +667,21 @@ export async function initChatModel(
  *
  * const gpt4 = await initChatModel("gpt-4", {
  *   modelProvider: "openai",
- *   kwargs: { temperature: 0 },
+ *   temperature: 0.25,
  * });
+ * const gpt4Result = await gpt4.invoke("what's your name");
+ *
  * const claude = await initChatModel("claude-3-opus-20240229", {
  *   modelProvider: "anthropic",
- *   kwargs: { temperature: 0 },
+ *   temperature: 0.25,
  * });
+ * const claudeResult = await claude.invoke("what's your name");
  *
- * // Create a partially configurable model with no default model:
- * const configurableModel = await initChatModel(undefined, {
- *   kwargs: { temperature: 0 },
+ * const gemini = await initChatModel("gemini-1.5-pro", {
+ *   modelProvider: "google_vertexai",
+ *   temperature: 0.25,
  * });
- *
- * // Create a fully configurable model with a default model and a config prefix:
- * const configurableModelWithDefault = await initChatModel("gpt-4", {
- *   modelProvider: "openai",
- *   configurableFields: "any",
- *   configPrefix: "foo",
- *   kwargs: { temperature: 0 },
- * });
+ * const geminiResult = await gemini.invoke("what's your name");
  * ```
  *
  * @example Create a partially configurable model with no default model
@@ -694,18 +689,21 @@ export async function initChatModel(
  * import { initChatModel } from "langchain/chat_models";
  *
  * const configurableModel = await initChatModel(undefined, {
- *   kwargs: { temperature: 0 },
+ *   temperature: 0,
+ *   configurableFields: ["model", "apiKey"],
  * });
  *
- * configurableModel.invoke("what's your name", {
- *   config: { configurable: { model: "gpt-4" } },
+ * const gpt4Result = await configurableModel.invoke("what's your name", {
+ *   configurable: {
+ *     model: "gpt-4",
+ *   },
  * });
- * // GPT-4 response
  *
- * configurableModel.invoke("what's your name", {
- *   config: { configurable: { model: "claude-3-5-sonnet-20240620" } },
+ * const claudeResult = await configurableModel.invoke("what's your name", {
+ *   configurable: {
+ *     model: "claude-3-5-sonnet-20240620",
+ *   },
  * });
- * // claude-3.5 sonnet response
  * ```
  *
  * @example Create a fully configurable model with a default model and a config prefix
@@ -716,22 +714,29 @@ export async function initChatModel(
  *   modelProvider: "openai",
  *   configurableFields: "any",
  *   configPrefix: "foo",
- *   kwargs: { temperature: 0 },
+ *   temperature: 0,
  * });
  *
- * configurableModelWithDefault.invoke("what's your name");
- * // GPT-4 response with temperature 0
+ * const openaiResult = await configurableModelWithDefault.invoke(
+ *   "what's your name",
+ *   {
+ *     configurable: {
+ *       foo_apiKey: process.env.OPENAI_API_KEY,
+ *     },
+ *   }
+ * );
  *
- * configurableModelWithDefault.invoke("what's your name", {
- *   config: {
+ * const claudeResult = await configurableModelWithDefault.invoke(
+ *   "what's your name",
+ *   {
  *     configurable: {
  *       foo_model: "claude-3-5-sonnet-20240620",
  *       foo_modelProvider: "anthropic",
  *       foo_temperature: 0.6,
+ *       foo_apiKey: process.env.ANTHROPIC_API_KEY,
  *     },
- *   },
- * });
- * // Claude-3.5 sonnet response with temperature 0.6
+ *   }
+ * );
  * ```
  *
  * @example Bind tools to a configurable model:
@@ -740,63 +745,69 @@ export async function initChatModel(
  * import { z } from "zod";
  * import { tool } from "@langchain/core/tools";
  *
- * const GetWeather = z
- *   .object({
- *     location: z
- *       .string()
- *       .describe("The city and state, e.g. San Francisco, CA"),
- *   })
- *   .describe("Get the current weather in a given location");
- *
  * const getWeatherTool = tool(
  *   (input) => {
  *     // Do something with the input
+ *     return JSON.stringify(input);
  *   },
  *   {
- *     schema: GetWeather,
+ *     schema: z
+ *       .object({
+ *         location: z
+ *           .string()
+ *           .describe("The city and state, e.g. San Francisco, CA"),
+ *       })
+ *       .describe("Get the current weather in a given location"),
  *     name: "GetWeather",
  *     description: "Get the current weather in a given location",
  *   }
  * );
  *
- * const GetPopulation = z
- *   .object({
- *     location: z
- *       .string()
- *       .describe("The city and state, e.g. San Francisco, CA"),
- *   })
- *   .describe("Get the current population in a given location");
- *
  * const getPopulationTool = tool(
  *   (input) => {
  *     // Do something with the input
+ *     return JSON.stringify(input);
  *   },
  *   {
- *     schema: GetPopulation,
+ *     schema: z
+ *       .object({
+ *         location: z
+ *           .string()
+ *           .describe("The city and state, e.g. San Francisco, CA"),
+ *       })
+ *       .describe("Get the current population in a given location"),
  *     name: "GetPopulation",
  *     description: "Get the current population in a given location",
  *   }
  * );
  *
  * const configurableModel = await initChatModel("gpt-4", {
- *   configurableFields: ["model", "modelProvider"],
- *   kwargs: { temperature: 0 },
+ *   configurableFields: ["model", "modelProvider", "apiKey"],
+ *   temperature: 0,
  * });
  *
  * const configurableModelWithTools = configurableModel.bind({
- *   tools: [GetWeather, GetPopulation],
+ *   tools: [getWeatherTool, getPopulationTool],
  * });
  *
- * configurableModelWithTools.invoke(
- *   "Which city is hotter today and which is bigger: LA or NY?"
- * );
- * // GPT-4 response with tool calls
- *
- * configurableModelWithTools.invoke(
+ * const configurableToolResult = await configurableModelWithTools.invoke(
  *   "Which city is hotter today and which is bigger: LA or NY?",
- *   { config: { configurable: { model: "claude-3-5-sonnet-20240620" } } }
+ *   {
+ *     configurable: {
+ *       apiKey: process.env.OPENAI_API_KEY,
+ *     },
+ *   }
  * );
- * // Claude-3.5 sonnet response with tools
+ *
+ * const configurableToolResult2 = await configurableModelWithTools.invoke(
+ *   "Which city is hotter today and which is bigger: LA or NY?",
+ *   {
+ *     configurable: {
+ *       model: "claude-3-5-sonnet-20240620",
+ *       apiKey: process.env.ANTHROPIC_API_KEY,
+ *     },
+ *   }
+ * );
  * ```
  *
  * @description
@@ -817,8 +828,8 @@ export async function initChatModel(
  * - command... -> cohere
  * - accounts/fireworks... -> fireworks
  *
- * @since 0.2.7
- * @version 0.2.8
+ * @since 0.2.11
+ * @version 0.2.11
  */
 export async function initChatModel<
   RunInput extends BaseLanguageModelInput = BaseLanguageModelInput,
