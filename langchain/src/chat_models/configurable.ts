@@ -551,6 +551,7 @@ class _ConfigurableModel<
     },
     streamOptions?: Omit<EventStreamCallbackHandlerInput, "autoClose">
   ): IterableReadableStream<StreamEvent | Uint8Array> {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     const outerThis = this;
     async function* wrappedGenerator() {
       const model = await outerThis._model(options);
@@ -860,7 +861,6 @@ export async function initChatModel<
       },
       configPrefix,
     });
-    // return _initChatModelHelper(model ?? "", modelProvider, paramsCopy);
   } else {
     if (model) {
       paramsCopy.model = model;

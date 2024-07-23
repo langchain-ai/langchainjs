@@ -2,13 +2,13 @@
 import { tool } from "@langchain/core/tools";
 import { z } from "zod";
 import { it } from "@jest/globals";
-import { initChatModel } from "../configurable.js";
-import { PromptTemplate } from "@langchain/core/prompts";
-import { pull } from "../../hub.js";
-import { AgentExecutor, createReactAgent } from "../../agents/index.js";
+import { ChatPromptTemplate, PromptTemplate } from "@langchain/core/prompts";
 import { RunLogPatch, StreamEvent } from "@langchain/core/tracers/log_stream";
 import { AIMessageChunk } from "@langchain/core/messages";
 import { concat } from "@langchain/core/utils/stream";
+import { AgentExecutor, createReactAgent } from "../../agents/index.js";
+import { pull } from "../../hub.js";
+import { initChatModel } from "../configurable.js";
 
 // Make copies of API keys and remove them from the environment to avoid conflicts.
 
@@ -471,19 +471,34 @@ describe("Can call base runnable methods", () => {
       apiKey: openAIApiKey,
     });
 
-    const stream = gpt4.streamEvents("what's your name", {
-      version: "v2",
-    });
+    const prompt = ChatPromptTemplate.fromMessages([["human", "{input}"]]);
+    const stream = prompt.pipe(gpt4).streamEvents(
+      {
+        input: "what's your name",
+      },
+      {
+        version: "v2",
+        configurable: {
+          model: "gpt-4o",
+        },
+      }
+    );
 
-    let events: StreamEvent[] = [];
+    const events: StreamEvent[] = [];
     for await (const event of stream) {
       events.push(event);
     }
-    // Greater than or equal to three because it should have at least the start, stream, and end events.
-    expect(events.length).toBeGreaterThanOrEqual(3);
-    expect(events[0].event).toBe("on_chat_model_start");
-    expect(events[1].event).toBe("on_chat_model_stream");
-    expect(events[events.length - 1].event).toBe("on_chat_model_end");
+
+    // The first event should be a start event.
+    expect(events[0].event).toBe("on_chain_start");
+
+    // Events in the middle should be stream events
+    expect(
+      events[Math.floor(events.length / 2)].event.endsWith("_stream")
+    ).toBe(true);
+
+    // The ;ast event should be an end event.
+    expect(events[events.length - 1].event).toBe("on_chain_end");
   });
 
   it("can call streamLog", async () => {
