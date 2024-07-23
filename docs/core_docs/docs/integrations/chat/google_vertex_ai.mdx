@@ -88,6 +88,16 @@ import ChatVertexAI from "@examples/models/chat/integration_googlevertexai.ts";
 See the LangSmith trace for the example above [here](https://smith.langchain.com/public/9fb579d8-4987-4302-beca-29a684ae2f4c/r).
 :::
 
+##Multimodality
+
+With Gemini, you can use LLM in a multimodal mode:
+
+For example : 
+
+import ChatVertexAI from "@examples/models/chat/integration_googlevertexai-multimodal.ts";
+
+<CodeBlock language="typescript">{ChatVertexAI}</CodeBlock>
+
 ### Streaming
 
 `ChatVertexAI` also supports streaming in multiple chunks for faster responses:
