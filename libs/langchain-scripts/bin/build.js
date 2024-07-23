@@ -225,16 +225,15 @@ async function listExternals(
 export async function checkTreeShaking(options) {
   const externals = await listExternals(options?.extraInternals ?? []);
   const entrypoints = await listEntrypoints();
-  const consoleLog = console.log;
-  /** @type {Map<string, { log: string; hasSideEffects: boolean; }>} */
+  const consoleInfo = console.info;
   const reportMap = new Map();
 
   for (const entrypoint of entrypoints) {
     let sideEffects = "";
 
-    console.log = function (...args) {
+    console.info = function (...args) {
       const line = args.length ? args.join(" ") : "";
-      if (line.trim().startsWith("First side effect in")) {
+      if (line.includes("First side effect in")) {
         sideEffects += `${line}\n`;
       }
     };
@@ -245,17 +244,26 @@ export async function checkTreeShaking(options) {
       experimentalLogSideEffects: true,
     });
 
+    let hasUnexpectedSideEffects = sideEffects.length > 0;
+    if (hasUnexpectedSideEffects) {
+      const entrypointContent = await fs.promises.readFile(`./dist/${entrypoint.replace(/^\.\//, "")}`);
+      // Allow escaping side effects strictly within code directly
+      // within an entrypoints
+      hasUnexpectedSideEffects = !entrypointContent
+        .toString()
+        .includes("/* __LC_ALLOW_ENTRYPOINT_SIDE_EFFECTS__ */");
+    }
     reportMap.set(entrypoint, {
       log: sideEffects,
-      hasSideEffects: sideEffects.length > 0,
+      hasUnexpectedSideEffects,
     });
   }
 
-  console.log = consoleLog;
+  console.info = consoleInfo;
 
   let failed = false;
   for (const [entrypoint, report] of reportMap) {
-    if (report.hasSideEffects) {
+    if (report.hasUnexpectedSideEffects) {
       failed = true;
       console.log("---------------------------------");
       console.log(`Tree shaking failed for ${entrypoint}`);
@@ -264,7 +272,7 @@ export async function checkTreeShaking(options) {
   }
 
   if (failed) {
-    process.exit(1);
+    throw new Error("Tree shaking checks failed.");
   } else {
     console.log("Tree shaking checks passed!");
   }

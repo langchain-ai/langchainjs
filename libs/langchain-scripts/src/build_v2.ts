@@ -463,7 +463,9 @@ async function checkTreeShaking(config: LangChainConfig) {
 
     let hasUnexpectedSideEffects = sideEffects.length > 0;
     if (hasUnexpectedSideEffects) {
-      const entrypointContent = fs.readFileSync(entrypoint);
+      const entrypointContent = await fs.promises.readFile(
+        `./dist/${entrypoint.replace(/^\.\//, "")}`
+      );
       // Allow escaping side effects strictly within code directly
       // within an entrypoints
       hasUnexpectedSideEffects = !entrypointContent
