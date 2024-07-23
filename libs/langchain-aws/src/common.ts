@@ -209,7 +209,7 @@ export function convertToConverseMessages(messages: BaseMessage[]): {
       }
     });
 
-  // Combine consecutive user tool result messages into a single message #6173
+  // Combine consecutive user tool result messages into a single message
   const combinedConverseMessages = converseMessages.reduce<BedrockMessage[]>(
     (acc, curr) => {
       const lastMessage = acc[acc.length - 1];
