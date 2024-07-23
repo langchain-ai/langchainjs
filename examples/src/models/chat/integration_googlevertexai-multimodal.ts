@@ -1,15 +1,34 @@
+import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { ChatVertexAI } from "@langchain/google-vertexai";
+import fs from "node:fs";
 
 const model = new ChatVertexAI({
-  model: "gemini-pro-vision", 
+  model: "gemini-pro-vision",
   temperature: 0.7,
 });
 
-const imageURL = "imageURL"; // Replace with your image URL
-
-const response = await model.invoke([
-  { type: "text", text: "Describe what you see in this image." },
-  { type: "image_url", image_url: { url: imageURL } },
+const image = fs.readFileSync("./hotdog.jpg").toString("base64");
+const prompt = ChatPromptTemplate.fromMessages([
+  [
+    "human",
+    [
+      {
+        type: "text",
+        text: "Describe the following image.",
+      },
+      {
+        type: "image_url",
+        image_url: "data:image/png;base64,{image_base64}",
+      },
+    ],
+  ],
 ]);
 
-console.log(response.content); // Extract the text content from the response
+const response = await prompt.pipe(model).invoke({
+  image_base64: image,
+});
+
+console.log(response.content);
+/*
+This is an image of a hot dog. The hot dog is on a white background. The hot dog is a grilled sausage in a bun.
+*/
