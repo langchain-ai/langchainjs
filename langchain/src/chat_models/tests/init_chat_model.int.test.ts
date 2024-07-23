@@ -186,11 +186,11 @@ test("Bind tools to a configurable model", async () => {
   expect(configurableToolResult2.tool_calls?.[0].name).toBe("GetWeather");
 });
 
-// Not implemented
-test.skip("Can call bindTools", async () => {
+test("Can call bindTools", async () => {
   const gpt4 = await initChatModel(undefined, {
     modelProvider: "openai",
     temperature: 0.25, // Funky temperature to verify it's being set properly.
+    apiKey: openAIApiKey,
   });
   const weatherTool = tool(
     (input) => {
@@ -210,16 +210,38 @@ test.skip("Can call bindTools", async () => {
     }
   );
 
-  const gpt4WithTools = gpt4.bindTools?.([weatherTool]);
-  const result = await gpt4WithTools?.invoke(
+  const gpt4WithTools = gpt4.bindTools([weatherTool]);
+  const result = await gpt4WithTools.invoke(
     "What's the weather in San Francisco?"
   );
-  console.log(result);
+  expect(result.tool_calls?.[0]).toBeDefined();
+  expect(result.tool_calls?.[0].name).toBe("GetWeather");
 });
 
 // Not implemented
-test.skip("Can call withStructuredOutput", async () => {
-  throw new Error("Not implemented");
+test("Can call withStructuredOutput", async () => {
+  const gpt4 = await initChatModel(undefined, {
+    modelProvider: "openai",
+    temperature: 0.25, // Funky temperature to verify it's being set properly.
+    apiKey: openAIApiKey,
+  });
+  const weatherSchema = z
+    .object({
+      location: z
+        .string()
+        .describe("The city and state, e.g. San Francisco, CA"),
+    })
+    .describe("Get the current weather in a given location");
+
+  const gpt4WithTools = gpt4.withStructuredOutput(weatherSchema, {
+    name: "GetWeather",
+  });
+  const result = await gpt4WithTools.invoke(
+    "What's the weather in San Francisco?"
+  );
+  expect(result).toBeDefined();
+  expect(result.location).toBeDefined();
+  expect(result.location).not.toBe("");
 });
 
 describe("Works with all model providers", () => {

@@ -6,7 +6,7 @@ import {
   BaseChatModel,
   type BaseChatModelCallOptions,
 } from "@langchain/core/language_models/chat_models";
-import { type AIMessageChunk } from "@langchain/core/messages";
+import { BaseMessage, type AIMessageChunk } from "@langchain/core/messages";
 import {
   Runnable,
   type RunnableBatchOptions,
@@ -25,6 +25,8 @@ import {
   type StreamEvent,
 } from "@langchain/core/tracers/log_stream";
 import { type StructuredToolInterface } from "@langchain/core/tools";
+import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
+import { ChatResult } from "@langchain/core/outputs";
 
 // TODO: remove once `EventStreamCallbackHandlerInput` is exposed in core.
 interface EventStreamCallbackHandlerInput
@@ -59,6 +61,29 @@ const _SUPPORTED_PROVIDERS: Array<ChatModelProvider> = [
   "bedrock",
 ];
 
+abstract class BaseChatModelWithBindTools extends BaseChatModel {
+  abstract override bindTools(
+    _tools: (
+      | StructuredToolInterface
+      | Record<string, unknown>
+      | ToolDefinition
+      | RunnableToolLike
+    )[],
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    _kwargs?: Record<string, any>
+  ): Runnable<BaseLanguageModelInput, AIMessageChunk, BaseChatModelCallOptions>;
+
+  _llmType(): string {
+    return "chat_model";
+  }
+
+  abstract _generate(
+    _messages: BaseMessage[],
+    _config?: this["ParsedCallOptions"],
+    _runManager?: CallbackManagerForLLMRun
+  ): Promise<ChatResult>;
+}
+
 export interface ConfigurableChatModelCallOptions
   extends BaseChatModelCallOptions {
   tools?: (
@@ -74,7 +99,7 @@ async function _initChatModelHelper(
   modelProvider?: string,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   kwargs: Record<string, any> = {}
-): Promise<BaseChatModel> {
+): Promise<BaseChatModelWithBindTools> {
   const modelProviderCopy = modelProvider || _attemptInferModelProvider(model);
   if (!modelProviderCopy) {
     throw new Error(
@@ -228,6 +253,12 @@ interface ConfigurableModelFields {
    * @default ""
    */
   configPrefix?: string;
+  /**
+   * Methods which should be called after the model is initialized.
+   * The key will be the method name, and the value will be the arguments.
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  queuedMethodOperations?: Record<string, any>;
 }
 
 class _ConfigurableModel<
@@ -249,6 +280,13 @@ class _ConfigurableModel<
    */
   _configPrefix: string;
 
+  /**
+   * Methods which should be called after the model is initialized.
+   * The key will be the method name, and the value will be the arguments.
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  _queuedMethodOperations: Record<string, any> = {};
+
   constructor(fields: ConfigurableModelFields) {
     super();
     this._defaultConfig = fields.defaultConfig ?? {};
@@ -266,30 +304,76 @@ class _ConfigurableModel<
     } else {
       this._configPrefix = "";
     }
+
+    this._queuedMethodOperations =
+      fields.queuedMethodOperations ?? this._queuedMethodOperations;
   }
 
   async _model(config?: RunnableConfig) {
     const params = { ...this._defaultConfig, ...this._modelParams(config) };
-    return _initChatModelHelper(params.model, params.modelProvider, params);
+    let initializedModel = await _initChatModelHelper(
+      params.model,
+      params.modelProvider,
+      params
+    );
+
+    // Apply queued method operations
+    const queuedMethodOperationsEntries = Object.entries(
+      this._queuedMethodOperations
+    );
+    if (queuedMethodOperationsEntries.length > 0) {
+      for (const [method, args] of queuedMethodOperationsEntries) {
+        if (
+          method in initializedModel &&
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          typeof (initializedModel as any)[method] === "function"
+        ) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          initializedModel = await (initializedModel as any)[method](...args);
+        }
+      }
+    }
+
+    return initializedModel;
   }
 
   bindTools(
-    _tools: (
+    tools: (
       | StructuredToolInterface
       | Record<string, unknown>
       | ToolDefinition
       | RunnableToolLike
     )[],
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    _kwargs?: Record<string, any>
-  ): this {
-    throw new Error("Not implemented");
+    kwargs?: Record<string, any>
+  ): _ConfigurableModel<RunInput, CallOptions> {
+    this._queuedMethodOperations.bindTools = [tools, kwargs];
+    return new _ConfigurableModel<RunInput, CallOptions>({
+      defaultConfig: this._defaultConfig,
+      configurableFields: this._configurableFields,
+      configPrefix: this._configPrefix,
+      queuedMethodOperations: this._queuedMethodOperations,
+    });
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  withStructuredOutput(_schema: any, ..._args: any[]): this {
-    throw new Error("Not implemented");
-  }
+  withStructuredOutput: BaseChatModel["withStructuredOutput"] = (
+    schema,
+    ...args
+  ): // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  Runnable<RunInput, { raw: BaseMessage; parsed: any }, CallOptions> => {
+    this._queuedMethodOperations.withStructuredOutput = [schema, ...args];
+    return new _ConfigurableModel<RunInput, CallOptions>({
+      defaultConfig: this._defaultConfig,
+      configurableFields: this._configurableFields,
+      configPrefix: this._configPrefix,
+      queuedMethodOperations: this._queuedMethodOperations,
+    }) as unknown as Runnable<
+      RunInput,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      { raw: BaseMessage; parsed: any },
+      CallOptions
+    >;
+  };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   _modelParams(config?: RunnableConfig): Record<string, any> {
@@ -519,7 +603,7 @@ export async function initChatModel(
     configurableFields?: never;
     configPrefix?: string;
   }
-): Promise<BaseChatModel>;
+): Promise<BaseChatModelWithBindTools>;
 
 export async function initChatModel(
   model: never,
@@ -574,7 +658,7 @@ export async function initChatModel(
  *   - string[]: Specified fields are configurable.
  * @param {string} [fields.configPrefix] - Prefix for configurable fields at runtime.
  * @param {Record<string, any>} [fields.kwargs] - Additional keyword args to pass to the ChatModel constructor.
- * @returns {Promise<BaseChatModel>} A BaseChatModel corresponding to the model and provider specified.
+ * @returns {Promise<BaseChatModelWithBindTools>} A class which extends BaseChatModelWithBindTools that implements `bindTools` for proper typing.
  * @throws {Error} If modelProvider cannot be inferred or isn't supported.
  * @throws {Error} If the model provider integration package is not installed.
  *
@@ -747,7 +831,9 @@ export async function initChatModel<
     configurableFields?: string[] | "any";
     configPrefix?: string;
   }
-): Promise<BaseChatModel | _ConfigurableModel<RunInput, CallOptions>> {
+): Promise<
+  BaseChatModelWithBindTools | _ConfigurableModel<RunInput, CallOptions>
+> {
   const { configurableFields, configPrefix, modelProvider, ...kwargs } = {
     configPrefix: "",
     ...(fields ?? {}),
