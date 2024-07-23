@@ -1,4 +1,4 @@
-import { initChatModel } from "langchain/chat_models";
+import { initChatModel } from "langchain/chat_models/universal";
 
 const firstLlm = await initChatModel("gpt-4o", {
   temperature: 0,

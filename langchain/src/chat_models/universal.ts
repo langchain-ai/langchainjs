@@ -38,8 +38,8 @@ const _SUPPORTED_PROVIDERS = [
   "anthropic",
   "azure_openai",
   "cohere",
-  "google_vertexai",
-  "google_genai",
+  "google-vertexai",
+  "google-genai",
   "ollama",
   "together",
   "fireworks",
@@ -122,11 +122,11 @@ async function _initChatModelHelper(
         const { ChatCohere } = await import("@langchain/cohere");
         return new ChatCohere({ model, ...params });
       }
-      case "google_vertexai": {
+      case "google-vertexai": {
         const { ChatVertexAI } = await import("@langchain/google-vertexai");
         return new ChatVertexAI({ model, ...params });
       }
-      case "google_genai": {
+      case "google-genai": {
         const { ChatGoogleGenerativeAI } = await import(
           "@langchain/google-genai"
         );
@@ -215,7 +215,7 @@ export function _attemptInferModelProvider(
   } else if (modelName.startsWith("accounts/fireworks")) {
     return "fireworks";
   } else if (modelName.startsWith("gemini")) {
-    return "google_vertexai";
+    return "google-vertexai";
   } else if (modelName.startsWith("amazon.")) {
     return "bedrock";
   } else {
@@ -433,7 +433,8 @@ class _ConfigurableModel<
     options?: CallOptions
   ): Promise<AIMessageChunk> {
     const model = await this._model(options);
-    return model.invoke(input, options);
+    const config = ensureConfig(options);
+    return model.invoke(input, config);
   }
 
   async stream(
@@ -441,10 +442,9 @@ class _ConfigurableModel<
     options?: CallOptions
   ): Promise<IterableReadableStream<AIMessageChunk>> {
     const model = await this._model(options);
-    const config = ensureConfig(options);
     const wrappedGenerator = new AsyncGeneratorWithSetup({
-      generator: await model.stream(input, config),
-      config,
+      generator: await model.stream(input, options),
+      config: options,
     });
     await wrappedGenerator.setup;
     return IterableReadableStream.fromAsyncGenerator(wrappedGenerator);
@@ -498,14 +498,7 @@ class _ConfigurableModel<
     const model = await this._model(options);
     const config = ensureConfig(options);
 
-    for await (const chunk of generator) {
-      yield* model.transform(
-        (async function* () {
-          yield chunk;
-        })(),
-        config
-      );
-    }
+    yield* model.transform(generator, config);
   }
 
   async *streamLog(
@@ -631,8 +624,8 @@ export async function initChatModel<
  *   - openai (@langchain/openai)
  *   - anthropic (@langchain/anthropic)
  *   - azure_openai (@langchain/openai)
- *   - google_vertexai (@langchain/google-vertexai)
- *   - google_genai (@langchain/google-genai)
+ *   - google-vertexai (@langchain/google-vertexai)
+ *   - google-genai (@langchain/google-genai)
  *   - bedrock (@langchain/aws)
  *   - cohere (@langchain/cohere)
  *   - fireworks (@langchain/community/chat_models/fireworks)
@@ -652,7 +645,7 @@ export async function initChatModel<
  *
  * @example Initialize non-configurable models
  * ```typescript
- * import { initChatModel } from "langchain/chat_models";
+ * import { initChatModel } from "langchain/chat_models/universal";
  *
  * const gpt4 = await initChatModel("gpt-4", {
  *   modelProvider: "openai",
@@ -667,7 +660,7 @@ export async function initChatModel<
  * const claudeResult = await claude.invoke("what's your name");
  *
  * const gemini = await initChatModel("gemini-1.5-pro", {
- *   modelProvider: "google_vertexai",
+ *   modelProvider: "google-vertexai",
  *   temperature: 0.25,
  * });
  * const geminiResult = await gemini.invoke("what's your name");
@@ -675,7 +668,7 @@ export async function initChatModel<
  *
  * @example Create a partially configurable model with no default model
  * ```typescript
- * import { initChatModel } from "langchain/chat_models";
+ * import { initChatModel } from "langchain/chat_models/universal";
  *
  * const configurableModel = await initChatModel(undefined, {
  *   temperature: 0,
@@ -697,7 +690,7 @@ export async function initChatModel<
  *
  * @example Create a fully configurable model with a default model and a config prefix
  * ```typescript
- * import { initChatModel } from "langchain/chat_models";
+ * import { initChatModel } from "langchain/chat_models/universal";
  *
  * const configurableModelWithDefault = await initChatModel("gpt-4", {
  *   modelProvider: "openai",
@@ -730,7 +723,7 @@ export async function initChatModel<
  *
  * @example Bind tools to a configurable model:
  * ```typescript
- * import { initChatModel } from "langchain/chat_models";
+ * import { initChatModel } from "langchain/chat_models/universal";
  * import { z } from "zod";
  * import { tool } from "@langchain/core/tools";
  *
@@ -813,7 +806,7 @@ export async function initChatModel<
  * - gpt-3... or gpt-4... -> openai
  * - claude... -> anthropic
  * - amazon.... -> bedrock
- * - gemini... -> google_vertexai
+ * - gemini... -> google-vertexai
  * - command... -> cohere
  * - accounts/fireworks... -> fireworks
  *

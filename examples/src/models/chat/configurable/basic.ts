@@ -1,4 +1,4 @@
-import { initChatModel } from "langchain/chat_models";
+import { initChatModel } from "langchain/chat_models/universal";
 
 // Returns a @langchain/openai ChatOpenAI instance.
 const gpt4o = await initChatModel("gpt-4o", {
@@ -12,19 +12,17 @@ const claudeOpus = await initChatModel("claude-3-opus-20240229", {
 });
 // Returns a @langchain/google-vertexai ChatVertexAI instance.
 const gemini15 = await initChatModel("gemini-1.5-pro", {
-  modelProvider: "google_vertexai",
+  modelProvider: "google-vertexai",
   temperature: 0,
 });
 
 // Since all model integrations implement the ChatModel interface, you can use them in the same way.
+console.log(`GPT-4o: ${(await gpt4o.invoke("what's your name")).content}\n`);
 console.log(
-  `GPT-4o: ${  (await gpt4o.invoke("what's your name")).content  }\n`
+  `Claude Opus: ${(await claudeOpus.invoke("what's your name")).content}\n`
 );
 console.log(
-  `Claude Opus: ${  (await claudeOpus.invoke("what's your name")).content  }\n`
-);
-console.log(
-  `Gemini 1.5: ${  (await gemini15.invoke("what's your name")).content  }\n`
+  `Gemini 1.5: ${(await gemini15.invoke("what's your name")).content}\n`
 );
 
 /*

@@ -8,7 +8,7 @@ import { AIMessageChunk } from "@langchain/core/messages";
 import { concat } from "@langchain/core/utils/stream";
 import { AgentExecutor, createReactAgent } from "../../agents/index.js";
 import { pull } from "../../hub.js";
-import { initChatModel } from "../configurable.js";
+import { initChatModel } from "../universal.js";
 
 // Make copies of API keys and remove them from the environment to avoid conflicts.
 
@@ -42,7 +42,7 @@ test("Initialize non-configurable models", async () => {
     temperature: 0.25,
   });
   const gemini = await initChatModel("gemini-1.5-pro", {
-    modelProvider: "google_vertexai",
+    modelProvider: "google-genai",
     temperature: 0.25,
   });
 
@@ -311,20 +311,20 @@ describe("Works with all model providers", () => {
     expect(cohereResult.content.length).toBeGreaterThan(0);
   });
 
-  it("Can invoke google_vertexai", async () => {
-    const google_vertexai = await initChatModel(undefined, {
-      modelProvider: "google_vertexai",
+  it("Can invoke google-genai", async () => {
+    const googleVertexai = await initChatModel(undefined, {
+      modelProvider: "google-genai",
       temperature: 0,
     });
 
-    const google_vertexaiResult = await google_vertexai.invoke(
+    const googleVertexaiResult = await googleVertexai.invoke(
       "what's your name"
     );
-    expect(google_vertexaiResult).toBeDefined();
-    expect(google_vertexaiResult.content.length).toBeGreaterThan(0);
+    expect(googleVertexaiResult).toBeDefined();
+    expect(googleVertexaiResult.content.length).toBeGreaterThan(0);
   });
 
-  it("Can invoke google_genai", async () => {
+  it("Can invoke google-genai", async () => {
     // Remove VertexAI env vars to avoid conflict.
     const googleApplicationCredentials =
       process.env.GOOGLE_APPLICATION_CREDENTIALS;
@@ -333,14 +333,14 @@ describe("Works with all model providers", () => {
     process.env.GOOGLE_API_KEY = googleApiKey;
 
     try {
-      const google_genai = await initChatModel(undefined, {
-        modelProvider: "google_genai",
+      const googleGenai = await initChatModel(undefined, {
+        modelProvider: "google-genai",
         temperature: 0,
       });
 
-      const google_genaiResult = await google_genai.invoke("what's your name");
-      expect(google_genaiResult).toBeDefined();
-      expect(google_genaiResult.content.length).toBeGreaterThan(0);
+      const googleGenaiResult = await googleGenai.invoke("what's your name");
+      expect(googleGenaiResult).toBeDefined();
+      expect(googleGenaiResult.content.length).toBeGreaterThan(0);
     } catch (e) {
       // Re-assign the original env vars.
       process.env.GOOGLE_APPLICATION_CREDENTIALS = googleApplicationCredentials;

@@ -1,4 +1,4 @@
-import { initChatModel } from "langchain/chat_models";
+import { initChatModel } from "langchain/chat_models/universal";
 
 const configurableModel = await initChatModel(undefined, { temperature: 0 });
 

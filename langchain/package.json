@@ -134,10 +134,10 @@
     "chains/graph_qa/cypher.js",
     "chains/graph_qa/cypher.d.ts",
     "chains/graph_qa/cypher.d.cts",
-    "chat_models.cjs",
-    "chat_models.js",
-    "chat_models.d.ts",
-    "chat_models.d.cts",
+    "chat_models/universal.cjs",
+    "chat_models/universal.js",
+    "chat_models/universal.d.ts",
+    "chat_models/universal.d.cts",
     "embeddings/cache_backed.cjs",
     "embeddings/cache_backed.js",
     "embeddings/cache_backed.d.ts",
@@ -705,15 +705,15 @@
     "@gomomento/sdk": "^1.51.1",
     "@gomomento/sdk-core": "^1.51.1",
     "@gomomento/sdk-web": "^1.51.1",
-    "@langchain/anthropic": "^0.2.6",
-    "@langchain/aws": "^0.0.4",
-    "@langchain/cohere": "^0.0.8",
-    "@langchain/community": "^0.2.20",
-    "@langchain/google-genai": "^0.0.23",
-    "@langchain/google-vertexai": "^0.0.20",
-    "@langchain/groq": "^0.0.15",
-    "@langchain/mistralai": "^0.0.26",
-    "@langchain/ollama": "^0.0.2",
+    "@langchain/anthropic": "*",
+    "@langchain/aws": "*",
+    "@langchain/cohere": "*",
+    "@langchain/community": "*",
+    "@langchain/google-genai": "*",
+    "@langchain/google-vertexai": "*",
+    "@langchain/groq": "*",
+    "@langchain/mistralai": "*",
+    "@langchain/ollama": "*",
     "@mendable/firecrawl-js": "^0.0.13",
     "@notionhq/client": "^2.2.10",
     "@pinecone-database/pinecone": "*",
@@ -1252,14 +1252,14 @@
       "import": "./chains/graph_qa/cypher.js",
       "require": "./chains/graph_qa/cypher.cjs"
     },
-    "./chat_models": {
+    "./chat_models/universal": {
       "types": {
-        "import": "./chat_models.d.ts",
-        "require": "./chat_models.d.cts",
-        "default": "./chat_models.d.ts"
+        "import": "./chat_models/universal.d.ts",
+        "require": "./chat_models/universal.d.cts",
+        "default": "./chat_models/universal.d.ts"
       },
-      "import": "./chat_models.js",
-      "require": "./chat_models.cjs"
+      "import": "./chat_models/universal.js",
+      "require": "./chat_models/universal.cjs"
     },
     "./embeddings/cache_backed": {
       "types": {

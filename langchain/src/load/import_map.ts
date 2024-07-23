@@ -20,6 +20,7 @@ export * as chains__combine_documents__reduce from "../chains/combine_documents/
 export * as chains__history_aware_retriever from "../chains/history_aware_retriever.js";
 export * as chains__openai_functions from "../chains/openai_functions/index.js";
 export * as chains__retrieval from "../chains/retrieval.js";
+export * as chat_models__universal from "../chat_models/universal.js";
 export * as embeddings__cache_backed from "../embeddings/cache_backed.js";
 export * as embeddings__fake from "../embeddings/fake.js";
 export * as vectorstores__memory from "../vectorstores/memory.js";
