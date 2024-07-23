@@ -1,12 +1,11 @@
 import { spawn } from "node:child_process";
 import ts from "typescript";
 import fs from "node:fs";
-import { rimraf } from "rimraf";
 import { Command } from "commander";
 import { rollup } from "@rollup/wasm-node";
 import path from "node:path";
+import { rm } from "node:fs/promises";
 import { ExportsMapValue, ImportData, LangChainConfig } from "./types.js";
-import { fileURLToPath } from 'url';
 
 async function asyncSpawn(command: string, args: string[]) {
   return new Promise<void>((resolve, reject) => {
@@ -613,48 +612,27 @@ export async function buildWithTSup() {
     pre,
   } = processOptions();
 
-  let config: LangChainConfig | undefined;
-  try {
-    // Required for cross-platform compatibility.
-    const importPath = fileURLToPath(new URL('langchain.config.js', `file://${process.cwd()}/`));
-    const configFile = await import(importPath);
-    config = configFile.config;
-  } catch (e: any) {
-    console.error(e.message);
-    console.error("Error trying to load with fileURLToPath");
+  // Required for cross-platform compatibility.
+  let importPath = new URL("langchain.config.js", import.meta.url).pathname;
+  if (importPath.endsWith("/dist/langchain.config.js")) {
+    importPath = importPath.replace(
+      "/dist/langchain.config.js",
+      "/langchain.config.js"
+    );
   }
-
-  try {
-    if (!config) {
-      console.log("----- trying to load via new URL() -----")
-      // Required for cross-platform compatibility.
-      let importPath = new URL('langchain.config.js', import.meta.url).pathname;
-      if (importPath.endsWith("/dist/langchain.config.js")) {
-        importPath = importPath.replace("/dist/langchain.config.js", "/langchain.config.js");
-      }
-      const configFile = await import(importPath);
-      config = configFile.config;
-    } else {
-      console.log("----- CONFIG LOADED -----")
-    }
-    
-  } catch (e: any) {
-    console.error(e.message);
-    console.error("Error trying to load with new URL");
-  }
-
-  if (!config) {
-    throw new Error("No config found");
-  } else {
-    console.log("--------- CONFIG SUCCESSFULLY LOADED ---------")
-  }
-  
+  const { config }: { config: LangChainConfig } = await import(importPath);
 
   // Clean & generate build files
   if (pre && shouldGenMaps) {
     await Promise.all([
-      rimraf("dist"),
-      rimraf(".turbo"),
+      rm("dist", { recursive: true, force: true }).catch((e) => {
+        console.error("Error removing dist (pre && shouldGenMaps)");
+        throw e;
+      }),
+      rm(".turbo", { recursive: true, force: true }).catch((e) => {
+        console.error("Error removing .turbo (pre && shouldGenMaps)");
+        throw e;
+      }),
       cleanGeneratedFiles(config),
       createImportMapFile(config),
       generateImportConstants(config),
@@ -662,8 +640,14 @@ export async function buildWithTSup() {
     ]);
   } else if (pre && !shouldGenMaps) {
     await Promise.all([
-      rimraf("dist"),
-      rimraf(".turbo"),
+      rm("dist", { recursive: true, force: true }).catch((e) => {
+        console.error("Error removing dist (pre && !shouldGenMaps)");
+        throw e;
+      }),
+      rm(".turbo", { recursive: true, force: true }).catch((e) => {
+        console.error("Error removing .turbo (pre && !shouldGenMaps)");
+        throw e;
+      }),
       cleanGeneratedFiles(config),
     ]);
   }
@@ -681,9 +665,18 @@ export async function buildWithTSup() {
     // move CJS to dist
     await Promise.all([
       updatePackageJson(config),
-      rimraf("dist-cjs"),
-      rimraf("dist/tests"),
-      rimraf("dist/**/tests"),
+      rm("dist-cjs", { recursive: true, force: true }).catch((e) => {
+        console.error("Error removing dist-cjs");
+        throw e;
+      }),
+      rm("dist/tests", { recursive: true, force: true }).catch((e) => {
+        console.error("Error removing dist/tests");
+        throw e;
+      }),
+      rm("dist/**/tests", { recursive: true, force: true }).catch((e) => {
+        console.error("Error removing dist/**/tests");
+        throw e;
+      }),
     ]);
   }
 
