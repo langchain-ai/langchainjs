@@ -466,8 +466,9 @@ async function checkTreeShaking(config: LangChainConfig) {
       const entrypointContent = fs.readFileSync(entrypoint);
       // Allow escaping side effects strictly within code directly
       // within an entrypoints
-      hasUnexpectedSideEffects =
-        !entrypointContent.toString().includes("/* __LC_ALLOW_ENTRYPOINT_SIDE_EFFECTS__ */");
+      hasUnexpectedSideEffects = !entrypointContent
+        .toString()
+        .includes("/* __LC_ALLOW_ENTRYPOINT_SIDE_EFFECTS__ */");
     }
     reportMap.set(entrypoint, {
       log: sideEffects,
