@@ -163,27 +163,33 @@ describe.skip("PineconeStore", () => {
   test("delete all", async () => {
     const pageContent = faker.lorem.sentence(5);
     const id = uuid.v4();
+    const id2 = uuid.v4();
 
-    await pineconeStore.addDocuments([
-      { pageContent, metadata: { foo: id } },
-      { pageContent, metadata: { foo: id } },
-    ]);
-    await sleep(35000);
-    const results = await pineconeStore.similaritySearch(pageContent, 2, {
-      foo: id,
-    });
-
-    expect(results.length).toEqual(2);
+    await pineconeStore.addDocuments(
+      [
+        { pageContent, metadata: { foo: id } },
+        { pageContent, metadata: { foo: id } },
+      ],
+      {
+        ids: [id, id2],
+      }
+    );
+    await sleep(40000);
+    const indexStats = await pineconeStore.pineconeIndex.describeIndexStats();
+    expect(indexStats.namespaces).toHaveProperty("");
+    expect(indexStats.namespaces?.[""].recordCount).toEqual(2);
+    const totalRecords = indexStats.totalRecordCount ?? 0;
+    expect(totalRecords).toBeGreaterThanOrEqual(2);
 
     await pineconeStore.delete({
       deleteAll: true,
     });
-
-    const results2 = await pineconeStore.similaritySearch(pageContent, 2, {
-      foo: id,
-    });
-
-    expect(results2.length).toEqual(0);
+    await sleep(40000);
+    const indexStats2 = await pineconeStore.pineconeIndex.describeIndexStats();
+    expect(indexStats2.namespaces).not.toHaveProperty("");
+    // The new total records should be less than the previous total records
+    const newTotalRecords = indexStats2.totalRecordCount ?? 0;
+    expect(newTotalRecords).toBeLessThan(totalRecords);
   });
 
   test("query based on passed namespace", async () => {
