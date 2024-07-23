@@ -3,10 +3,32 @@ import { z } from "zod";
 import { it } from "@jest/globals";
 import { initChatModel } from "../base.js";
 
+// Make copies of API keys and remove them from the environment to avoid conflicts.
+
+// OpenAI
+let openAIApiKey = process.env.OPENAI_API_KEY;
+process.env.OPENAI_API_KEY = "";
+
+// Azure OpenAI
+let azureOpenAIApiKey = process.env.AZURE_OPENAI_API_KEY;
+process.env.AZURE_OPENAI_API_KEY = "";
+let azureOpenAIApiDevelopmentName =
+  process.env.AZURE_OPENAI_API_DEPLOYMENT_NAME;
+process.env.AZURE_OPENAI_API_DEPLOYMENT_NAME = "";
+let azureOpenAIApiVersion = process.env.AZURE_OPENAI_API_VERSION;
+process.env.AZURE_OPENAI_API_VERSION = "";
+let azureOpenAIBasePath = process.env.AZURE_OPENAI_BASE_PATH;
+process.env.AZURE_OPENAI_BASE_PATH = "";
+
+// Google
+let googleApiKey = process.env.GOOGLE_API_KEY;
+process.env.GOOGLE_API_KEY = "";
+
 test("Initialize non-configurable models", async () => {
   const gpt4 = await initChatModel("gpt-4", {
     modelProvider: "openai",
     temperature: 0.25, // Funky temperature to verify it's being set properly.
+    apiKey: openAIApiKey,
   });
   const claude = await initChatModel("claude-3-opus-20240229", {
     modelProvider: "anthropic",
@@ -33,16 +55,23 @@ test("Initialize non-configurable models", async () => {
 test("Create a partially configurable model with no default model", async () => {
   const configurableModel = await initChatModel(undefined, {
     temperature: 0,
+    configurableFields: ["model", "apiKey"],
   });
 
   const gpt4Result = await configurableModel.invoke("what's your name", {
-    configurable: { model: "gpt-4" },
+    configurable: {
+      model: "gpt-4",
+      apiKey: openAIApiKey,
+    },
   });
   expect(gpt4Result).toBeDefined();
   expect(gpt4Result.content.length).toBeGreaterThan(0);
 
   const claudeResult = await configurableModel.invoke("what's your name", {
-    configurable: { model: "claude-3-5-sonnet-20240620" },
+    configurable: {
+      model: "claude-3-5-sonnet-20240620",
+      apiKey: process.env.ANTHROPIC_API_KEY,
+    },
   });
   expect(claudeResult).toBeDefined();
   expect(claudeResult.content.length).toBeGreaterThan(0);
@@ -57,7 +86,12 @@ test("Create a fully configurable model with a default model and a config prefix
   });
 
   const configurableResult = await configurableModelWithDefault.invoke(
-    "what's your name"
+    "what's your name",
+    {
+      configurable: {
+        foo_apiKey: openAIApiKey,
+      },
+    }
   );
   expect(configurableResult).toBeDefined();
   expect(configurableResult.content.length).toBeGreaterThan(0);
@@ -69,6 +103,7 @@ test("Create a fully configurable model with a default model and a config prefix
         foo_model: "claude-3-5-sonnet-20240620",
         foo_modelProvider: "anthropic",
         foo_temperature: 0.6,
+        foo_apiKey: process.env.ANTHROPIC_API_KEY,
       },
     }
   );
@@ -114,7 +149,7 @@ test("Bind tools to a configurable model", async () => {
   );
 
   const configurableModel = await initChatModel("gpt-4", {
-    configurableFields: ["model", "modelProvider"],
+    configurableFields: ["model", "modelProvider", "apiKey"],
     temperature: 0,
   });
 
@@ -123,7 +158,12 @@ test("Bind tools to a configurable model", async () => {
   });
 
   const configurableToolResult = await configurableModelWithTools.invoke(
-    "Which city is hotter today and which is bigger: LA or NY?"
+    "Which city is hotter today and which is bigger: LA or NY?",
+    {
+      configurable: {
+        apiKey: openAIApiKey,
+      },
+    }
   );
   expect(configurableToolResult).toBeDefined();
   expect(configurableToolResult.tool_calls?.[0]).toBeDefined();
@@ -132,7 +172,12 @@ test("Bind tools to a configurable model", async () => {
 
   const configurableToolResult2 = await configurableModelWithTools.invoke(
     "Which city is hotter today and which is bigger: LA or NY?",
-    { configurable: { model: "claude-3-5-sonnet-20240620" } }
+    {
+      configurable: {
+        model: "claude-3-5-sonnet-20240620",
+        apiKey: process.env.ANTHROPIC_API_KEY,
+      },
+    }
   );
   expect(configurableToolResult2).toBeDefined();
   expect(configurableToolResult2.tool_calls?.[0]).toBeDefined();
@@ -171,7 +216,8 @@ test.skip("Can call bindTools", async () => {
   console.log(result);
 });
 
-test("Can call withStructuredOutput", async () => {
+// Not implemented
+test.skip("Can call withStructuredOutput", async () => {
   throw new Error("Not implemented");
 });
 
@@ -180,6 +226,7 @@ describe("Works with all model providers", () => {
     const gpt4 = await initChatModel(undefined, {
       modelProvider: "openai",
       temperature: 0,
+      apiKey: openAIApiKey,
     });
 
     const gpt4Result = await gpt4.invoke("what's your name");
@@ -199,14 +246,30 @@ describe("Works with all model providers", () => {
   });
 
   it("Can invoke azure_openai", async () => {
-    const azure_openai = await initChatModel(undefined, {
-      modelProvider: "azure_openai",
-      temperature: 0,
-    });
+    process.env.AZURE_OPENAI_API_KEY = azureOpenAIApiKey;
+    process.env.AZURE_OPENAI_API_DEPLOYMENT_NAME =
+      azureOpenAIApiDevelopmentName;
+    process.env.AZURE_OPENAI_API_VERSION = azureOpenAIApiVersion;
+    process.env.AZURE_OPENAI_BASE_PATH = azureOpenAIBasePath;
 
-    const azure_openaiResult = await azure_openai.invoke("what's your name");
-    expect(azure_openaiResult).toBeDefined();
-    expect(azure_openaiResult.content.length).toBeGreaterThan(0);
+    try {
+      const azure_openai = await initChatModel(undefined, {
+        modelProvider: "azure_openai",
+        temperature: 0,
+      });
+
+      const azure_openaiResult = await azure_openai.invoke("what's your name");
+      expect(azure_openaiResult).toBeDefined();
+      expect(azure_openaiResult.content.length).toBeGreaterThan(0);
+    } catch (e) {
+      // Re-assign the original env vars.
+      process.env.AZURE_OPENAI_API_KEY = "";
+      process.env.AZURE_OPENAI_API_DEPLOYMENT_NAME = "";
+      process.env.AZURE_OPENAI_API_VERSION = "";
+      process.env.AZURE_OPENAI_BASE_PATH = "";
+      // Re-throw the error.
+      throw e;
+    }
   });
 
   it("Can invoke cohere", async () => {
@@ -234,17 +297,41 @@ describe("Works with all model providers", () => {
   });
 
   it("Can invoke google_genai", async () => {
-    const google_genai = await initChatModel(undefined, {
-      modelProvider: "google_genai",
-      temperature: 0,
-    });
+    // Remove VertexAI env vars to avoid conflict.
+    let googleApplicationCredentials =
+      process.env.GOOGLE_APPLICATION_CREDENTIALS;
+    process.env.GOOGLE_APPLICATION_CREDENTIALS = "";
+    // Re-assign the Google API key for this test.
+    process.env.GOOGLE_API_KEY = googleApiKey;
 
-    const google_genaiResult = await google_genai.invoke("what's your name");
-    expect(google_genaiResult).toBeDefined();
-    expect(google_genaiResult.content.length).toBeGreaterThan(0);
+    try {
+      const google_genai = await initChatModel(undefined, {
+        modelProvider: "google_genai",
+        temperature: 0,
+      });
+
+      const google_genaiResult = await google_genai.invoke("what's your name");
+      expect(google_genaiResult).toBeDefined();
+      expect(google_genaiResult.content.length).toBeGreaterThan(0);
+    } catch (e) {
+      // Re-assign the original env vars.
+      process.env.GOOGLE_APPLICATION_CREDENTIALS = googleApplicationCredentials;
+      process.env.GOOGLE_API_KEY = "";
+      throw e;
+    }
   });
 
-  it.skip("Can invoke ollama", async () => {});
+  it.skip("Can invoke ollama", async () => {
+    const ollama = await initChatModel(undefined, {
+      modelProvider: "ollama",
+      temperature: 0,
+      model: "llama3",
+    });
+
+    const ollamaResult = await ollama.invoke("what's your name");
+    expect(ollamaResult).toBeDefined();
+    expect(ollamaResult.content.length).toBeGreaterThan(0);
+  });
 
   it("Can invoke mistralai", async () => {
     const mistralai = await initChatModel(undefined, {
@@ -268,11 +355,15 @@ describe("Works with all model providers", () => {
     expect(groqResult.content.length).toBeGreaterThan(0);
   });
 
-  // todo: manually supply env vars via constructor!
   it("Can invoke bedrock", async () => {
     const bedrock = await initChatModel(undefined, {
       modelProvider: "bedrock",
       temperature: 0,
+      region: process.env.BEDROCK_AWS_REGION ?? "us-east-1",
+      credentials: {
+        secretAccessKey: process.env.BEDROCK_AWS_SECRET_ACCESS_KEY,
+        accessKeyId: process.env.BEDROCK_AWS_ACCESS_KEY_ID,
+      },
     });
 
     const bedrockResult = await bedrock.invoke("what's your name");
@@ -280,7 +371,26 @@ describe("Works with all model providers", () => {
     expect(bedrockResult.content.length).toBeGreaterThan(0);
   });
 
-  it.skip("Can invoke fireworks", async () => {});
+  // If these two fail with an import error you should explicitly build `@langchain/community`
+  it("Can invoke fireworks", async () => {
+    const fireworks = await initChatModel(undefined, {
+      modelProvider: "fireworks",
+      temperature: 0,
+    });
 
-  it.skip("Can invoke together", async () => {});
+    const fireworksResult = await fireworks.invoke("what's your name");
+    expect(fireworksResult).toBeDefined();
+    expect(fireworksResult.content.length).toBeGreaterThan(0);
+  });
+
+  it("Can invoke together", async () => {
+    const together = await initChatModel(undefined, {
+      modelProvider: "together",
+      temperature: 0,
+    });
+
+    const togetherResult = await together.invoke("what's your name");
+    expect(togetherResult).toBeDefined();
+    expect(togetherResult.content.length).toBeGreaterThan(0);
+  });
 });
