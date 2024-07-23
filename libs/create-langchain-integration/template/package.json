@@ -15,7 +15,7 @@
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-INTEGRATION_NAME/",
   "scripts": {
     "build": "yarn turbo:command build:internal --filter=@langchain/INTEGRATION_NAME",
-    "build:internal": "yarn lc-build:v2 --create-entrypoints --pre --tree-shaking",
+    "build:internal": "yarn lc_build_v2 --create-entrypoints --pre --tree-shaking",
     "build:esm": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist/ && rm -rf dist/tests dist/**/tests",
     "build:cjs": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist-cjs/ -p tsconfig.cjs.json && yarn move-cjs-to-dist && rm -rf dist-cjs",
     "build:watch": "yarn create-entrypoints && tsc --outDir dist/ --watch",

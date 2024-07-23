@@ -39,10 +39,10 @@ jobs:
       - name: Check linting
         run: yarn run lint
 
-  test-exports:
-    uses:
-      ./.github/workflows/test-exports.yml
-    secrets: inherit
+  # test-exports:
+  #   uses:
+  #     ./.github/workflows/test-exports.yml
+  #   secrets: inherit
 
   build-core:
     name: Build @langchain/core

@@ -3,7 +3,6 @@ import ts from "typescript";
 import fs from "node:fs";
 import { rimraf } from "rimraf";
 import { Command } from "commander";
-// import { rollup } from "rollup";
 import { rollup } from "@rollup/wasm-node";
 import path from "node:path";
 import { ExportsMapValue, ImportData, LangChainConfig } from "./types.js";
@@ -614,10 +613,37 @@ export async function buildWithTSup() {
     pre,
   } = processOptions();
 
-  // const importPath = `${process.cwd()}/langchain.config.js`;
-  // const { config }: { config: LangChainConfig } = await import(importPath);
-  const importPath = fileURLToPath(new URL('langchain.config.js', `file://${process.cwd()}/`));
-  const { config }: { config: LangChainConfig } = await import(importPath);
+  let config: LangChainConfig | undefined;
+  try {
+    // Required for cross-platform compatibility.
+    const importPath = fileURLToPath(new URL('langchain.config.js', `file://${process.cwd()}/`));
+    const configFile = await import(importPath);
+    config = configFile.config;
+  } catch (e: any) {
+    console.error(e.message);
+    console.error("Error trying to load with fileURLToPath");
+  }
+
+  try {
+    if (!config) {
+      console.log("----- trying to load via new URL() -----")
+      // Required for cross-platform compatibility.
+      const importPath = new URL('langchain.config.js', import.meta.url).pathname;
+      const configFile = await import(importPath);
+      config = configFile.config;
+    } else {
+      console.log("----- CONFIG LOADED -----")
+    }
+    
+  } catch (e: any) {
+    console.error(e.message);
+    console.error("Error trying to load with new URL");
+  }
+
+  if (!config) {
+    throw new Error("No config found");
+  }
+  
 
   // Clean & generate build files
   if (pre && shouldGenMaps) {

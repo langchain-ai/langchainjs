@@ -274,3 +274,22 @@ jobs:
         run: yarn build --filter=@langchain/standard-tests
       - name: Test `@langchain/cohere` with lowest deps
         run: docker compose -f dependency_range_tests/docker-compose.yml run cohere-lowest-deps
+
+  # platform-compatibility:
+  #   runs-on: ${{ matrix.os }}
+  #   needs: get-changed-files
+  #   if: contains(needs.get-changed-files.outputs.changed_files, 'langchain-core/')
+  #   strategy:
+  #     matrix:
+  #       os: [ubuntu-latest, windows-latest, macos-latest]
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - name: Use Node.js ${{ env.NODE_VERSION }}
+  #       uses: actions/setup-node@v3
+  #       with:
+  #         node-version: ${{ env.NODE_VERSION }}
+  #         cache: "yarn"
+  #     - name: Install dependencies
+  #       run: yarn install --immutable
+  #     - name: Build `@langchain/core`
+  #       run: yarn build --filter=@langchain/core
