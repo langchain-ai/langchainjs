@@ -432,7 +432,7 @@ export abstract class ChatModelIntegrationTests<
     ).invoke({
       toolName: "math_addition",
     });
-    
+
     expect(result.tool_calls?.[0]).toBeDefined();
     if (!result.tool_calls?.[0]) {
       throw new Error("result.tool_calls is undefined");
