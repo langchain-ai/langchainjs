@@ -10207,20 +10207,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@langchain/anthropic@npm:^0.2.8":
-  version: 0.2.8
-  resolution: "@langchain/anthropic@npm:0.2.8"
-  dependencies:
-    "@anthropic-ai/sdk": ^0.22.0
-    "@langchain/core": ">=0.2.16 <0.3.0"
-    fast-xml-parser: ^4.3.5
-    zod: ^3.22.4
-    zod-to-json-schema: ^3.22.4
-  checksum: c60fb1a98d982e9cc68df138a531c884124fb2450c463d76ec5dd110c9fc93cee548811a55266ba0814c52266be5cda8983f1a09d09ab8494c277e89ca1c7c30
-  languageName: node
-  linkType: hard
-
-"@langchain/anthropic@workspace:*, @langchain/anthropic@workspace:libs/langchain-anthropic":
+"@langchain/anthropic@^0.2.8, @langchain/anthropic@workspace:*, @langchain/anthropic@workspace:libs/langchain-anthropic":
   version: 0.0.0-use.local
   resolution: "@langchain/anthropic@workspace:libs/langchain-anthropic"
   dependencies:
@@ -10252,21 +10239,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/aws@npm:^0.0.5":
-  version: 0.0.5
-  resolution: "@langchain/aws@npm:0.0.5"
-  dependencies:
-    "@aws-sdk/client-bedrock-agent-runtime": ^3.583.0
-    "@aws-sdk/client-bedrock-runtime": ^3.602.0
-    "@aws-sdk/client-kendra": ^3.352.0
-    "@aws-sdk/credential-provider-node": ^3.600.0
-    "@langchain/core": ">=0.2.16 <0.3.0"
-    zod-to-json-schema: ^3.22.5
-  checksum: 57388fc13bc7e05aa2539c029a1105b46be583155fed62d3cc907256e2d95ef44019aa593f6a14a5a115fffd6ba3a7fbf47eaab37a34fd6afba6279c0e4eb85f
-  languageName: node
-  linkType: hard
-
-"@langchain/aws@workspace:*, @langchain/aws@workspace:libs/langchain-aws":
+"@langchain/aws@^0.0.5, @langchain/aws@workspace:*, @langchain/aws@workspace:libs/langchain-aws":
   version: 0.0.0-use.local
   resolution: "@langchain/aws@workspace:libs/langchain-aws"
   dependencies:
