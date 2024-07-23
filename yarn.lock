@@ -10207,7 +10207,20 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@langchain/anthropic@^0.2.6, @langchain/anthropic@workspace:*, @langchain/anthropic@workspace:libs/langchain-anthropic":
+"@langchain/anthropic@npm:^0.2.8":
+  version: 0.2.8
+  resolution: "@langchain/anthropic@npm:0.2.8"
+  dependencies:
+    "@anthropic-ai/sdk": ^0.22.0
+    "@langchain/core": ">=0.2.16 <0.3.0"
+    fast-xml-parser: ^4.3.5
+    zod: ^3.22.4
+    zod-to-json-schema: ^3.22.4
+  checksum: c60fb1a98d982e9cc68df138a531c884124fb2450c463d76ec5dd110c9fc93cee548811a55266ba0814c52266be5cda8983f1a09d09ab8494c277e89ca1c7c30
+  languageName: node
+  linkType: hard
+
+"@langchain/anthropic@workspace:*, @langchain/anthropic@workspace:libs/langchain-anthropic":
   version: 0.0.0-use.local
   resolution: "@langchain/anthropic@workspace:libs/langchain-anthropic"
   dependencies:
@@ -10238,6 +10251,20 @@ __metadata:
     zod-to-json-schema: ^3.22.4
   languageName: unknown
   linkType: soft
+
+"@langchain/aws@npm:^0.0.5":
+  version: 0.0.5
+  resolution: "@langchain/aws@npm:0.0.5"
+  dependencies:
+    "@aws-sdk/client-bedrock-agent-runtime": ^3.583.0
+    "@aws-sdk/client-bedrock-runtime": ^3.602.0
+    "@aws-sdk/client-kendra": ^3.352.0
+    "@aws-sdk/credential-provider-node": ^3.600.0
+    "@langchain/core": ">=0.2.16 <0.3.0"
+    zod-to-json-schema: ^3.22.5
+  checksum: 57388fc13bc7e05aa2539c029a1105b46be583155fed62d3cc907256e2d95ef44019aa593f6a14a5a115fffd6ba3a7fbf47eaab37a34fd6afba6279c0e4eb85f
+  languageName: node
+  linkType: hard
 
 "@langchain/aws@workspace:*, @langchain/aws@workspace:libs/langchain-aws":
   version: 0.0.0-use.local
@@ -10415,7 +10442,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/cohere@workspace:*, @langchain/cohere@workspace:libs/langchain-cohere":
+"@langchain/cohere@^0.2.1, @langchain/cohere@workspace:*, @langchain/cohere@workspace:libs/langchain-cohere":
   version: 0.0.0-use.local
   resolution: "@langchain/cohere@workspace:libs/langchain-cohere"
   dependencies:
@@ -11148,7 +11175,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/google-genai@workspace:*, @langchain/google-genai@workspace:libs/langchain-google-genai":
+"@langchain/google-genai@^0.0.23, @langchain/google-genai@workspace:*, @langchain/google-genai@workspace:libs/langchain-google-genai":
   version: 0.0.0-use.local
   resolution: "@langchain/google-genai@workspace:libs/langchain-google-genai"
   dependencies:
@@ -11215,7 +11242,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/google-vertexai@workspace:*, @langchain/google-vertexai@workspace:libs/langchain-google-vertexai":
+"@langchain/google-vertexai@^0.0.20, @langchain/google-vertexai@workspace:*, @langchain/google-vertexai@workspace:libs/langchain-google-vertexai":
   version: 0.0.0-use.local
   resolution: "@langchain/google-vertexai@workspace:libs/langchain-google-vertexai"
   dependencies:
@@ -11280,7 +11307,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/groq@workspace:*, @langchain/groq@workspace:libs/langchain-groq":
+"@langchain/groq@^0.0.15, @langchain/groq@workspace:*, @langchain/groq@workspace:libs/langchain-groq":
   version: 0.0.0-use.local
   resolution: "@langchain/groq@workspace:libs/langchain-groq"
   dependencies:
@@ -11348,7 +11375,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@langchain/mistralai@workspace:*, @langchain/mistralai@workspace:libs/langchain-mistralai":
+"@langchain/mistralai@^0.0.26, @langchain/mistralai@workspace:*, @langchain/mistralai@workspace:libs/langchain-mistralai":
   version: 0.0.0-use.local
   resolution: "@langchain/mistralai@workspace:libs/langchain-mistralai"
   dependencies:
@@ -11483,7 +11510,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/ollama@workspace:*, @langchain/ollama@workspace:libs/langchain-ollama":
+"@langchain/ollama@^0.0.2, @langchain/ollama@workspace:*, @langchain/ollama@workspace:libs/langchain-ollama":
   version: 0.0.0-use.local
   resolution: "@langchain/ollama@workspace:libs/langchain-ollama"
   dependencies:
@@ -30102,15 +30129,15 @@ __metadata:
     "@gomomento/sdk": ^1.51.1
     "@gomomento/sdk-core": ^1.51.1
     "@jest/globals": ^29.5.0
-    "@langchain/anthropic": ^0.2.6
-    "@langchain/aws": "workspace:*"
-    "@langchain/cohere": "workspace:*"
+    "@langchain/anthropic": ^0.2.8
+    "@langchain/aws": ^0.0.5
+    "@langchain/cohere": ^0.2.1
     "@langchain/core": ">=0.2.11 <0.3.0"
-    "@langchain/google-genai": "workspace:*"
-    "@langchain/google-vertexai": "workspace:*"
-    "@langchain/groq": "workspace:*"
-    "@langchain/mistralai": "workspace:*"
-    "@langchain/ollama": "workspace:*"
+    "@langchain/google-genai": ^0.0.23
+    "@langchain/google-vertexai": ^0.0.20
+    "@langchain/groq": ^0.0.15
+    "@langchain/mistralai": ^0.0.26
+    "@langchain/ollama": ^0.0.2
     "@langchain/openai": ">=0.1.0 <0.3.0"
     "@langchain/scripts": ~0.0.14
     "@langchain/textsplitters": ~0.0.0
