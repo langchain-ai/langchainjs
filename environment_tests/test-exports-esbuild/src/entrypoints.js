@@ -20,7 +20,6 @@ import * as chains_combine_documents_reduce from "langchain/chains/combine_docum
 import * as chains_history_aware_retriever from "langchain/chains/history_aware_retriever";
 import * as chains_openai_functions from "langchain/chains/openai_functions";
 import * as chains_retrieval from "langchain/chains/retrieval";
-import * as chat_models_universal from "langchain/chat_models/universal";
 import * as embeddings_cache_backed from "langchain/embeddings/cache_backed";
 import * as embeddings_fake from "langchain/embeddings/fake";
 import * as vectorstores_memory from "langchain/vectorstores/memory";

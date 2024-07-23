@@ -228,7 +228,7 @@ export const config = {
     "chains/load",
     "chains/sql_db",
     "chains/graph_qa/cypher",
-    "chat_models",
+    "chat_models/universal",
     "llms/load",
     "prompts/load",
     "memory/zep",

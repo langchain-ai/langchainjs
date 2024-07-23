@@ -20,7 +20,6 @@ export * from "langchain/chains/combine_documents/reduce";
 export * from "langchain/chains/history_aware_retriever";
 export * from "langchain/chains/openai_functions";
 export * from "langchain/chains/retrieval";
-export * from "langchain/chat_models/universal";
 export * from "langchain/embeddings/cache_backed";
 export * from "langchain/embeddings/fake";
 export * from "langchain/vectorstores/memory";
