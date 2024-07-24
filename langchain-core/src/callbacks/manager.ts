@@ -27,8 +27,7 @@ if (
   /* #__PURE__ */ getEnvironmentVariable("LANGCHAIN_CALLBACKS_BACKGROUND") !==
     "true"
 ) {
-  const logFunction = handler.raiseError ? console.error : console.warn;
-  /* #__PURE__ */ logFunction(
+  /* #__PURE__ */ console.warn(
     [
       "[WARN]: You have enabled LangSmith tracing without backgrounding callbacks.",
       "[WARN]: If you are not using a serverless environment where you must wait for tracing calls to finish,",
