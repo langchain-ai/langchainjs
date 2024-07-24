@@ -39,7 +39,7 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@aws-sdk/client-bedrock-agent-runtime": "^3.583.0",
+    "@aws-sdk/client-bedrock-agent-runtime": "^3.616.0",
     "@aws-sdk/client-bedrock-runtime": "^3.602.0",
     "@aws-sdk/client-kendra": "^3.352.0",
     "@aws-sdk/credential-provider-node": "^3.600.0",
@@ -47,7 +47,7 @@
     "zod-to-json-schema": "^3.22.5"
   },
   "devDependencies": {
-    "@aws-sdk/types": "^3.598.0",
+    "@aws-sdk/types": "^3.609.0",
     "@jest/globals": "^29.5.0",
     "@langchain/scripts": "~0.0.14",
     "@langchain/standard-tests": "0.0.0",
