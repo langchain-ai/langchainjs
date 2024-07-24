@@ -670,9 +670,12 @@ export async function buildWithTSup() {
       rimraf(".turbo", {
         retryDelay: 1000,
         maxRetries: 5,
-      }).catch((e) => {
+      }).catch(async (e) => {
         console.error("Error removing .turbo (pre && !shouldGenMaps)");
-        throw e;
+        console.log("Trying move remove");
+        await fs.promises.rm(".turbo", { recursive: true });
+        console.log("SUCCESSFULLY DELETED WIF RM!!!")
+        // throw e;
       }),
       cleanGeneratedFiles(config),
     ]);
