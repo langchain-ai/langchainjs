@@ -634,10 +634,11 @@ export async function buildWithTSup() {
   //     "/langchain.config.js"
   //   );
   // }
-  console.log("------process.cwd()------", process.cwd())
-  const lcPath = path.join(process.cwd(), "langchain.config.js");
+  console.log("------process.cwd()------", process.cwd());
+  console.log("------path.resolve()------", path.resolve());
   
-  const { config }: { config: LangChainConfig } = await import(lcPath);
+  // @ts-ignore - dynamic import
+  const { config }: { config: LangChainConfig } = await import("langchain.config.js");
 
   // Clean & generate build files
   if (pre && shouldGenMaps) {
