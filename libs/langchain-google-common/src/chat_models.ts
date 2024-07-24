@@ -58,9 +58,7 @@ import type {
   GeminiFunctionDeclaration,
   GeminiFunctionSchema,
 } from "./types.js";
-import {
-  zodToGeminiParameters,
-} from "./utils/zod_to_gemini_parameters.js";
+import { zodToGeminiParameters } from "./utils/zod_to_gemini_parameters.js";
 
 class ChatConnection<AuthOptions> extends AbstractGoogleLLMConnection<
   BaseMessage[],

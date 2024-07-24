@@ -101,7 +101,7 @@ export abstract class GoogleConnection<
     if (data && method === "POST") {
       opts.data = data;
     }
-    console.log("data", data)
+    console.log("data", data);
     if (this.streaming) {
       opts.responseType = "stream";
     } else {
@@ -362,8 +362,8 @@ export abstract class AbstractGoogleLLMConnection<
       functionCallingConfig: {
         mode: parameters.tool_choice as "auto" | "any" | "none",
         allowedFunctionNames: parameters.allowed_function_names,
-      }
-    }
+      },
+    };
   }
 
   formatData(
@@ -382,7 +382,7 @@ export abstract class AbstractGoogleLLMConnection<
       generationConfig,
     };
     if (tools && tools.length) {
-      console.log("HAVE TOOLS!!!!!!!")
+      console.log("HAVE TOOLS!!!!!!!");
       ret.tools = tools;
     }
     if (toolConfig) {

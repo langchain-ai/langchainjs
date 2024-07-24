@@ -329,33 +329,44 @@ test.only("tool_choice works", async () => {
   const model = new ChatVertexAI({
     model: "gemini-1.5-pro",
   });
-  const weatherTool = tool((_) => {
-    return "no-op"
-  }, {
-    name: "get_weather",
-    description: "Get the weather of a specific location and return the temperature in Celsius.",
-    schema: z.object({
-      location: z.string().describe("The name of city to get the weather for."),
-    })
-  });
-  const calculatorTool = tool((_) => {
-    return "no-op"
-  }, {
-    name: "calculator",
-    description: "Calculate the result of a math expression.",
-    schema: z.object({
-      expression: z.string().describe("The math expression to calculate."),
-    })
-  });
+  const weatherTool = tool(
+    (_) => {
+      return "no-op";
+    },
+    {
+      name: "get_weather",
+      description:
+        "Get the weather of a specific location and return the temperature in Celsius.",
+      schema: z.object({
+        location: z
+          .string()
+          .describe("The name of city to get the weather for."),
+      }),
+    }
+  );
+  const calculatorTool = tool(
+    (_) => {
+      return "no-op";
+    },
+    {
+      name: "calculator",
+      description: "Calculate the result of a math expression.",
+      schema: z.object({
+        expression: z.string().describe("The math expression to calculate."),
+      }),
+    }
+  );
   const modelWithTools = model.bind({
     tools: [weatherTool, calculatorTool],
-    tool_choice: "get_weather"
+    tool_choice: "get_weather",
   });
   // const modelWithTools = model.bindTools([weatherTool]);
 
   // const result = await modelWithTools.invoke("Whats the weather like in paris today?");
-  const result = await modelWithTools.invoke("Whats the weather like in paris today? also, what's 18628362 plus 18361?");
+  const result = await modelWithTools.invoke(
+    "Whats the weather like in paris today? also, what's 18628362 plus 18361?"
+  );
   console.log(result);
   expect(result.tool_calls).toBeDefined();
   console.log(result.tool_calls);
-})
+});
