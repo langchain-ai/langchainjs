@@ -10657,13 +10657,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@langchain/anthropic@workspace:*, @langchain/anthropic@workspace:libs/langchain-anthropic":
+"@langchain/anthropic@^0.2.8, @langchain/anthropic@workspace:*, @langchain/anthropic@workspace:libs/langchain-anthropic":
   version: 0.0.0-use.local
   resolution: "@langchain/anthropic@workspace:libs/langchain-anthropic"
   dependencies:
     "@anthropic-ai/sdk": ^0.22.0
     "@jest/globals": ^29.5.0
-    "@langchain/community": "workspace:*"
     "@langchain/core": ">=0.2.16 <0.3.0"
     "@langchain/scripts": ~0.0.20
     "@langchain/standard-tests": 0.0.0
@@ -10690,7 +10689,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/aws@workspace:*, @langchain/aws@workspace:libs/langchain-aws":
+"@langchain/aws@^0.0.5, @langchain/aws@workspace:*, @langchain/aws@workspace:libs/langchain-aws":
   version: 0.0.0-use.local
   resolution: "@langchain/aws@workspace:libs/langchain-aws"
   dependencies:
@@ -10719,7 +10718,6 @@ __metadata:
     eslint-plugin-prettier: ^4.2.1
     jest: ^29.5.0
     jest-environment-node: ^29.6.4
-    langchain: "workspace:*"
     prettier: ^2.8.3
     release-it: ^15.10.1
     rollup: ^4.5.2
@@ -10867,17 +10865,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/cohere@npm:^0.0.8":
-  version: 0.0.8
-  resolution: "@langchain/cohere@npm:0.0.8"
-  dependencies:
-    "@langchain/core": ~0.1.58
-    cohere-ai: ^7.9.3
-  checksum: f7ba95cb4f715eb0e77c7d6f842d61663baefb4a5f164bb872945b011d3e12f5fa320e976d605d943f70cc67801fd7618e2beac99cd74666f20f2000ac26a961
-  languageName: node
-  linkType: hard
-
-"@langchain/cohere@workspace:*, @langchain/cohere@workspace:libs/langchain-cohere":
+"@langchain/cohere@^0.2.1, @langchain/cohere@workspace:*, @langchain/cohere@workspace:libs/langchain-cohere":
   version: 0.0.0-use.local
   resolution: "@langchain/cohere@workspace:libs/langchain-cohere"
   dependencies:
@@ -11610,7 +11598,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/google-genai@workspace:*, @langchain/google-genai@workspace:libs/langchain-google-genai":
+"@langchain/google-genai@^0.0.23, @langchain/google-genai@workspace:*, @langchain/google-genai@workspace:libs/langchain-google-genai":
   version: 0.0.0-use.local
   resolution: "@langchain/google-genai@workspace:libs/langchain-google-genai"
   dependencies:
@@ -11677,7 +11665,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/google-vertexai@workspace:*, @langchain/google-vertexai@workspace:libs/langchain-google-vertexai":
+"@langchain/google-vertexai@^0.0.20, @langchain/google-vertexai@workspace:*, @langchain/google-vertexai@workspace:libs/langchain-google-vertexai":
   version: 0.0.0-use.local
   resolution: "@langchain/google-vertexai@workspace:libs/langchain-google-vertexai"
   dependencies:
@@ -11742,7 +11730,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/groq@workspace:*, @langchain/groq@workspace:libs/langchain-groq":
+"@langchain/groq@^0.0.15, @langchain/groq@workspace:*, @langchain/groq@workspace:libs/langchain-groq":
   version: 0.0.0-use.local
   resolution: "@langchain/groq@workspace:libs/langchain-groq"
   dependencies:
@@ -11768,7 +11756,6 @@ __metadata:
     groq-sdk: ^0.3.2
     jest: ^29.5.0
     jest-environment-node: ^29.6.4
-    langchain: "workspace:*"
     prettier: ^2.8.3
     release-it: ^15.10.1
     rollup: ^4.5.2
@@ -11811,7 +11798,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@langchain/mistralai@workspace:*, @langchain/mistralai@workspace:libs/langchain-mistralai":
+"@langchain/mistralai@^0.0.26, @langchain/mistralai@workspace:*, @langchain/mistralai@workspace:libs/langchain-mistralai":
   version: 0.0.0-use.local
   resolution: "@langchain/mistralai@workspace:libs/langchain-mistralai"
   dependencies:
@@ -11835,7 +11822,6 @@ __metadata:
     eslint-plugin-prettier: ^4.2.1
     jest: ^29.5.0
     jest-environment-node: ^29.6.4
-    langchain: "workspace:*"
     prettier: ^2.8.3
     release-it: ^15.10.1
     rollup: ^4.5.2
@@ -11947,7 +11933,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/ollama@workspace:*, @langchain/ollama@workspace:libs/langchain-ollama":
+"@langchain/ollama@^0.0.2, @langchain/ollama@workspace:*, @langchain/ollama@workspace:libs/langchain-ollama":
   version: 0.0.0-use.local
   resolution: "@langchain/ollama@workspace:libs/langchain-ollama"
   dependencies:
@@ -22088,19 +22074,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"cohere-ai@npm:^7.9.3":
-  version: 7.9.3
-  resolution: "cohere-ai@npm:7.9.3"
-  dependencies:
-    form-data: 4.0.0
-    js-base64: 3.7.2
-    node-fetch: 2.7.0
-    qs: 6.11.2
-    url-join: 4.0.1
-  checksum: 89c7356680a484fe46b8999b05e97d5329efa96105d0f9658cdc84147ea278a53320db9b6db5af31a231ae980161b1c3341bba4f07b69e152d3a6b776e6179a9
-  languageName: node
-  linkType: hard
-
 "collapse-white-space@npm:^1.0.2":
   version: 1.0.6
   resolution: "collapse-white-space@npm:1.0.6"
@@ -31017,8 +30990,15 @@ __metadata:
     "@gomomento/sdk": ^1.51.1
     "@gomomento/sdk-core": ^1.51.1
     "@jest/globals": ^29.5.0
-    "@langchain/cohere": ^0.0.8
+    "@langchain/anthropic": ^0.2.8
+    "@langchain/aws": ^0.0.5
+    "@langchain/cohere": ^0.2.1
     "@langchain/core": ">=0.2.11 <0.3.0"
+    "@langchain/google-genai": ^0.0.23
+    "@langchain/google-vertexai": ^0.0.20
+    "@langchain/groq": ^0.0.15
+    "@langchain/mistralai": ^0.0.26
+    "@langchain/ollama": ^0.0.2
     "@langchain/openai": ">=0.1.0 <0.3.0"
     "@langchain/scripts": ~0.0.20
     "@langchain/textsplitters": ~0.0.0
@@ -31117,6 +31097,15 @@ __metadata:
     "@gomomento/sdk": ^1.51.1
     "@gomomento/sdk-core": ^1.51.1
     "@gomomento/sdk-web": ^1.51.1
+    "@langchain/anthropic": "*"
+    "@langchain/aws": "*"
+    "@langchain/cohere": "*"
+    "@langchain/community": "*"
+    "@langchain/google-genai": "*"
+    "@langchain/google-vertexai": "*"
+    "@langchain/groq": "*"
+    "@langchain/mistralai": "*"
+    "@langchain/ollama": "*"
     "@mendable/firecrawl-js": ^0.0.13
     "@notionhq/client": ^2.2.10
     "@pinecone-database/pinecone": "*"
@@ -31175,6 +31164,26 @@ __metadata:
     "@gomomento/sdk-core":
       optional: true
     "@gomomento/sdk-web":
+      optional: true
+    "@langchain/anthropic":
+      optional: true
+    "@langchain/aws":
+      optional: true
+    "@langchain/cohere":
+      optional: true
+    "@langchain/community":
+      optional: true
+    "@langchain/google-genai":
+      optional: true
+    "@langchain/google-vertexai":
+      optional: true
+    "@langchain/google-vertexai-web":
+      optional: true
+    "@langchain/groq":
+      optional: true
+    "@langchain/mistralai":
+      optional: true
+    "@langchain/ollama":
       optional: true
     "@mendable/firecrawl-js":
       optional: true
