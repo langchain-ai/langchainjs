@@ -325,7 +325,7 @@ test("Streaming true constructor param will stream", async () => {
   expect(totalTokenCount).toBeGreaterThan(1);
 });
 
-test("tool_choice works", async () => {
+test.only("tool_choice works", async () => {
   const model = new ChatVertexAI({
     model: "gemini-1.5-pro",
   });
@@ -358,9 +358,10 @@ test("tool_choice works", async () => {
   });
 
   const result = await modelWithTools.invoke(
-    "Whats the weather like in paris today?"
+    "What's 1836 plus 7262? Whats the weather like in paris today?"
   );
 
+  expect(result.tool_calls).toHaveLength(1);
   expect(result.tool_calls?.[0]).toBeDefined();
   if (!result.tool_calls?.[0]) return;
   expect(result.tool_calls?.[0].name).toBe("get_weather");
