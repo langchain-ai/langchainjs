@@ -10,6 +10,14 @@ callbacks/base.cjs
 callbacks/base.js
 callbacks/base.d.ts
 callbacks/base.d.cts
+callbacks/dispatch.cjs
+callbacks/dispatch.js
+callbacks/dispatch.d.ts
+callbacks/dispatch.d.cts
+callbacks/dispatch/web.cjs
+callbacks/dispatch/web.js
+callbacks/dispatch/web.d.ts
+callbacks/dispatch/web.d.cts
 callbacks/manager.cjs
 callbacks/manager.js
 callbacks/manager.d.ts

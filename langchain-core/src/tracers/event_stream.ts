@@ -244,6 +244,13 @@ export class EventStreamCallbackHandler extends BaseTracer {
       yield firstChunk.value;
       return;
     }
+    // Match format from handlers below
+    function _formatOutputChunk(eventType: string, data: unknown) {
+      if (eventType === "llm" && typeof data === "string") {
+        return new GenerationChunk({ text: data });
+      }
+      return data;
+    }
     let tappedPromise = this.tappedPromises.get(runId);
     // if we are the first to tap, issue stream events
     if (tappedPromise === undefined) {
@@ -264,7 +271,9 @@ export class EventStreamCallbackHandler extends BaseTracer {
         await this.send(
           {
             ...event,
-            data: { chunk: firstChunk.value },
+            data: {
+              chunk: _formatOutputChunk(runInfo.runType, firstChunk.value),
+            },
           },
           runInfo
         );
@@ -276,7 +285,7 @@ export class EventStreamCallbackHandler extends BaseTracer {
               {
                 ...event,
                 data: {
-                  chunk,
+                  chunk: _formatOutputChunk(runInfo.runType, chunk),
                 },
               },
               runInfo
@@ -353,6 +362,10 @@ export class EventStreamCallbackHandler extends BaseTracer {
     let eventName;
     if (runInfo === undefined) {
       throw new Error(`onLLMNewToken: Run ID ${run.id} not found in run map.`);
+    }
+    // Top-level streaming events are covered by tapOutputIterable
+    if (run.parent_run_id === undefined) {
+      return;
     }
     if (runInfo.runType === "chat_model") {
       eventName = "on_chat_model_stream";
@@ -603,6 +616,27 @@ export class EventStreamCallbackHandler extends BaseTracer {
         name: runInfo.name,
         tags: runInfo.tags,
         metadata: runInfo.metadata,
+      },
+      runInfo
+    );
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async handleCustomEvent(eventName: string, data: any, runId: string) {
+    const runInfo = this.runInfoMap.get(runId);
+    if (runInfo === undefined) {
+      throw new Error(
+        `handleCustomEvent: Run ID ${runId} not found in run map.`
+      );
+    }
+    await this.send(
+      {
+        event: "on_custom_event",
+        run_id: runId,
+        name: eventName,
+        tags: runInfo.tags,
+        metadata: runInfo.metadata,
+        data,
       },
       runInfo
     );

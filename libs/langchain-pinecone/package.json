@@ -1,6 +1,6 @@
 {
   "name": "@langchain/pinecone",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "LangChain integration for Pinecone's vector database",
   "type": "module",
   "engines": {
@@ -15,7 +15,7 @@
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-pinecone/",
   "scripts": {
     "build": "yarn turbo:command build:internal --filter=@langchain/pinecone",
-    "build:internal": "yarn lc-build:v2 --create-entrypoints --pre --tree-shaking",
+    "build:internal": "yarn lc_build_v2 --create-entrypoints --pre --tree-shaking",
     "build:esm": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist/ && rm -rf dist/tests dist/**/tests",
     "build:cjs": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist-cjs/ -p tsconfig.cjs.json && yarn move-cjs-to-dist && rm -rf dist-cjs",
     "build:watch": "yarn create-entrypoints && tsc --outDir dist/ --watch",
@@ -40,7 +40,7 @@
   "license": "MIT",
   "dependencies": {
     "@langchain/core": ">0.2.0 <0.3.0",
-    "@pinecone-database/pinecone": "^2.2.0",
+    "@pinecone-database/pinecone": "^3.0.0",
     "flat": "^5.0.2",
     "uuid": "^10.0.0"
   },
@@ -48,7 +48,7 @@
     "@faker-js/faker": "^8.3.1",
     "@jest/globals": "^29.5.0",
     "@langchain/openai": "workspace:*",
-    "@langchain/scripts": "~0.0.14",
+    "@langchain/scripts": "~0.0.20",
     "@swc/core": "^1.3.90",
     "@swc/jest": "^0.2.29",
     "@tsconfig/recommended": "^1.0.3",

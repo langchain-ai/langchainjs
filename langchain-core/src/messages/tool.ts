@@ -10,13 +10,14 @@ import {
 
 export interface ToolMessageFieldsWithToolCallId extends BaseMessageFields {
   /**
-   * The raw output of the tool.
+   * Artifact of the Tool execution which is not meant to be sent to the model.
    *
-   * **Not part of the payload sent to the model.** Should only be specified if it is
-   * different from the message content, i.e. if only a subset of the full tool output
-   * is being passed as message content.
+   * Should only be specified if it is different from the message content, e.g. if only
+   * a subset of the full tool output is being passed as message content but the full
+   * output is needed in other parts of the code.
    */
-  raw_output?: unknown;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  artifact?: any;
   tool_call_id: string;
 }
 
@@ -36,13 +37,14 @@ export class ToolMessage extends BaseMessage {
   tool_call_id: string;
 
   /**
-   * The raw output of the tool.
+   * Artifact of the Tool execution which is not meant to be sent to the model.
    *
-   * **Not part of the payload sent to the model.** Should only be specified if it is
-   * different from the message content, i.e. if only a subset of the full tool output
-   * is being passed as message content.
+   * Should only be specified if it is different from the message content, e.g. if only
+   * a subset of the full tool output is being passed as message content but the full
+   * output is needed in other parts of the code.
    */
-  raw_output?: unknown;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  artifact?: any;
 
   constructor(fields: ToolMessageFieldsWithToolCallId);
 
@@ -63,7 +65,7 @@ export class ToolMessage extends BaseMessage {
     }
     super(fields);
     this.tool_call_id = fields.tool_call_id;
-    this.raw_output = fields.raw_output;
+    this.artifact = fields.artifact;
   }
 
   _getType(): MessageType {
@@ -72,6 +74,14 @@ export class ToolMessage extends BaseMessage {
 
   static isInstance(message: BaseMessage): message is ToolMessage {
     return message._getType() === "tool";
+  }
+
+  override get _printableFields(): Record<string, unknown> {
+    return {
+      ...super._printableFields,
+      tool_call_id: this.tool_call_id,
+      artifact: this.artifact,
+    };
   }
 }
 
@@ -83,18 +93,19 @@ export class ToolMessageChunk extends BaseMessageChunk {
   tool_call_id: string;
 
   /**
-   * The raw output of the tool.
+   * Artifact of the Tool execution which is not meant to be sent to the model.
    *
-   * **Not part of the payload sent to the model.** Should only be specified if it is
-   * different from the message content, i.e. if only a subset of the full tool output
-   * is being passed as message content.
+   * Should only be specified if it is different from the message content, e.g. if only
+   * a subset of the full tool output is being passed as message content but the full
+   * output is needed in other parts of the code.
    */
-  raw_output?: unknown;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  artifact?: any;
 
   constructor(fields: ToolMessageFieldsWithToolCallId) {
     super(fields);
     this.tool_call_id = fields.tool_call_id;
-    this.raw_output = fields.raw_output;
+    this.artifact = fields.artifact;
   }
 
   static lc_name() {
@@ -116,10 +127,18 @@ export class ToolMessageChunk extends BaseMessageChunk {
         this.response_metadata,
         chunk.response_metadata
       ),
-      raw_output: _mergeObj(this.raw_output, chunk.raw_output),
+      artifact: _mergeObj(this.artifact, chunk.artifact),
       tool_call_id: this.tool_call_id,
       id: this.id ?? chunk.id,
     });
+  }
+
+  override get _printableFields(): Record<string, unknown> {
+    return {
+      ...super._printableFields,
+      tool_call_id: this.tool_call_id,
+      artifact: this.artifact,
+    };
   }
 }
 
@@ -136,6 +155,8 @@ export type ToolCall = {
   args: Record<string, any>;
 
   id?: string;
+
+  type?: "tool_call";
 };
 
 /**
@@ -196,6 +217,8 @@ export type ToolCallChunk = {
   id?: string;
 
   index?: number;
+
+  type?: "tool_call_chunk";
 };
 
 export type InvalidToolCall = {
@@ -203,6 +226,7 @@ export type InvalidToolCall = {
   args?: string;
   id?: string;
   error?: string;
+  type?: "invalid_tool_call";
 };
 
 export function defaultToolCallParser(

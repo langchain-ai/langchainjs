@@ -85,7 +85,19 @@ import ChatVertexAI from "@examples/models/chat/integration_googlevertexai.ts";
 <CodeBlock language="typescript">{ChatVertexAI}</CodeBlock>
 
 :::tip
-See the LangSmith trace for the example above [here](https://smith.langchain.com/public/9fb579d8-4987-4302-beca-29a684ae2f4c/r).
+See the LangSmith trace for the example above [here](https://smith.langchain.com/public/9403290d-1ca6-41e5-819c-f3ec233194c5/r).
+:::
+
+## Multimodal
+
+The Gemini API can process multimodal inputs. The example below demonstrates how to do this:
+
+import MultiModalVertexAI from "@examples/models/chat/integration_googlevertexai-multimodal.ts";
+
+<CodeBlock language="typescript">{MultiModalVertexAI}</CodeBlock>
+
+:::tip
+See the LangSmith trace for the example above [here](https://smith.langchain.com/public/4cb2707d-bcf8-417e-8965-310b3045eb62/r).
 :::
 
 ### Streaming
@@ -97,7 +109,7 @@ import ChatVertexAIStreaming from "@examples/models/chat/integration_googleverte
 <CodeBlock language="typescript">{ChatVertexAIStreaming}</CodeBlock>
 
 :::tip
-See the LangSmith trace for the example above [here](https://smith.langchain.com/public/ba4cb190-3f60-49aa-a6f8-7d31316d94cf/r).
+See the LangSmith trace for the example above [here](https://smith.langchain.com/public/011c26dc-b7db-4fad-b0f2-3653f41a7667/r).
 :::
 
 ### Tool calling
@@ -109,19 +121,19 @@ import ChatVertexAITool from "@examples/models/chat/integration_googlevertexai-t
 <CodeBlock language="typescript">{ChatVertexAITool}</CodeBlock>
 
 :::tip
-See the LangSmith trace for the example above [here](https://smith.langchain.com/public/49e1c32c-395a-45e2-afba-913aa3389137/r).
+See the LangSmith trace for the example above [here](https://smith.langchain.com/public/e6714fb3-ef24-447c-810d-7ff2c80c7db4/r).
 :::
 
 ### `withStructuredOutput`
 
 Alternatively, you can also use the `withStructuredOutput` method:
 
-import ChatVertexAIWSA from "@examples/models/chat/integration_googlevertexai-wsa.ts";
+import ChatVertexAIWSO from "@examples/models/chat/integration_googlevertexai-wso.ts";
 
-<CodeBlock language="typescript">{ChatVertexAIWSA}</CodeBlock>
+<CodeBlock language="typescript">{ChatVertexAIWSO}</CodeBlock>
 
 :::tip
-See the LangSmith trace for the example above [here](https://smith.langchain.com/public/41bbbddb-f357-4bfa-a111-def8294a4514/r).
+See the LangSmith trace for the example above [here](https://smith.langchain.com/public/d7b9860a-a761-4f76-ba57-195759eb38e7/r).
 :::
 
 ### VertexAI tools agent

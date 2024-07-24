@@ -25,12 +25,12 @@ function InstallationInfo({ children }) {
 }
 
 const DEFAULTS = {
-  openaiParams: `{\n  model: "gpt-3.5-turbo",\n  temperature: 0\n}`,
-  anthropicParams: `{\n  model: "claude-3-sonnet-20240229",\n  temperature: 0\n}`,
-  fireworksParams: `{\n  model: "accounts/fireworks/models/firefunction-v1",\n  temperature: 0\n}`,
+  openaiParams: `{\n  model: "gpt-4o-mini",\n  temperature: 0\n}`,
+  anthropicParams: `{\n  model: "claude-3-5-sonnet-20240620",\n  temperature: 0\n}`,
+  fireworksParams: `{\n  model: "accounts/fireworks/models/llama-v3p1-70b-instruct",\n  temperature: 0\n}`,
   mistralParams: `{\n  model: "mistral-large-latest",\n  temperature: 0\n}`,
   groqParams: `{\n  model: "mixtral-8x7b-32768",\n  temperature: 0\n}`,
-  vertexParams: `{\n  model: "gemini-1.5-pro",\n  temperature: 0\n}`,
+  vertexParams: `{\n  model: "gemini-1.5-flash",\n  temperature: 0\n}`,
 };
 
 const MODELS_WSO = ["openai", "anthropic", "mistral", "groq", "vertex"];

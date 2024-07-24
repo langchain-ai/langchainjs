@@ -26,10 +26,18 @@ test("Test ChatOpenAI seed", async () => {
     seed: 123454930394983,
   });
   const message = new HumanMessage("Say something random!");
+
   const res = await chat.invoke([message]);
-  console.log(JSON.stringify(res));
 
   const res2 = await chat.invoke([message]);
+
+  expect(res.response_metadata.system_fingerprint).toBeDefined();
+  expect(res2.response_metadata.system_fingerprint).toBeDefined();
+
+  // These are unfortunately not consistently the same
+  delete res.response_metadata.system_fingerprint;
+  delete res2.response_metadata.system_fingerprint;
+
   const resAsObject = {
     ...res,
     id: undefined,
@@ -40,7 +48,6 @@ test("Test ChatOpenAI seed", async () => {
     id: undefined,
     lc_kwargs: { ...res2.lc_kwargs, id: undefined },
   };
-
   expect(resAsObject).toEqual(res2AsObject);
 });
 
@@ -290,4 +297,30 @@ test("Few shotting with tool calls", async () => {
   ]);
   console.log(res);
   expect(res.content).toContain("24");
+});
+
+test("Test ChatOpenAI with raw response", async () => {
+  const chat = new ChatOpenAI({
+    modelName: "gpt-3.5-turbo-1106",
+    maxTokens: 128,
+    __includeRawResponse: true,
+  });
+  const message = new HumanMessage("Hello!");
+  const res = await chat.invoke([message]);
+  expect(res.additional_kwargs.__raw_response).toBeDefined();
+});
+
+test("Test ChatOpenAI with raw response", async () => {
+  const chat = new ChatOpenAI({
+    modelName: "gpt-3.5-turbo-1106",
+    maxTokens: 128,
+    __includeRawResponse: true,
+  });
+  const message = new HumanMessage("Hello!");
+  const stream = await chat.stream([message]);
+  for await (const chunk of stream) {
+    expect(
+      chunk.additional_kwargs.__raw_response || chunk.usage_metadata
+    ).toBeDefined();
+  }
 });

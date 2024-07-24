@@ -1,6 +1,11 @@
+/* eslint-disable no-param-reassign */
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { OpenAI as OpenAIClient } from "openai";
 import { Tool, ToolParams } from "@langchain/core/tools";
+import {
+  MessageContentComplex,
+  MessageContentImageUrl,
+} from "@langchain/core/messages";
 
 /**
  * An interface for the Dall-E API Wrapper.
@@ -60,7 +65,12 @@ export interface DallEAPIWrapperParams extends ToolParams {
    * Must be one of "url" or "b64_json".
    * @default "url"
    */
-  responseFormat?: "url" | "b64_json";
+  dallEResponseFormat?: "url" | "b64_json";
+  /**
+   * @deprecated Use dallEResponseFormat instead for the Dall-E response type.
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  responseFormat?: any;
   /**
    * A unique identifier representing your end-user, which will help
    * OpenAI to monitor and detect abuse.
@@ -104,11 +114,20 @@ export class DallEAPIWrapper extends Tool {
     | "1792x1024"
     | "1024x1792" = "1024x1024";
 
-  private responseFormat: "url" | "b64_json" = "url";
+  private dallEResponseFormat: "url" | "b64_json" = "url";
 
   private user?: string;
 
   constructor(fields?: DallEAPIWrapperParams) {
+    // Shim for new base tool param name
+    if (
+      fields?.responseFormat !== undefined &&
+      ["url", "b64_json"].includes(fields.responseFormat)
+    ) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      fields.dallEResponseFormat = fields.responseFormat as any;
+      fields.responseFormat = "content";
+    }
     super(fields);
     const openAIApiKey =
       fields?.apiKey ??
@@ -129,25 +148,96 @@ export class DallEAPIWrapper extends Tool {
     this.quality = fields?.quality ?? this.quality;
     this.n = fields?.n ?? this.n;
     this.size = fields?.size ?? this.size;
-    this.responseFormat = fields?.responseFormat ?? this.responseFormat;
+    this.dallEResponseFormat =
+      fields?.dallEResponseFormat ?? this.dallEResponseFormat;
     this.user = fields?.user;
   }
 
+  /**
+   * Processes the API response if multiple images are generated.
+   * Returns a list of MessageContentImageUrl objects. If the response
+   * format is `url`, then the `image_url` field will contain the URL.
+   * If it is `b64_json`, then the `image_url` field will contain an object
+   * with a `url` field with the base64 encoded image.
+   *
+   * @param {OpenAIClient.Images.ImagesResponse[]} response The API response
+   * @returns {MessageContentImageUrl[]}
+   */
+  private processMultipleGeneratedUrls(
+    response: OpenAIClient.Images.ImagesResponse[]
+  ): MessageContentImageUrl[] {
+    if (this.dallEResponseFormat === "url") {
+      return response.flatMap((res) => {
+        const imageUrlContent = res.data
+          .flatMap((item) => {
+            if (!item.url) return [];
+            return {
+              type: "image_url" as const,
+              image_url: item.url,
+            };
+          })
+          .filter(
+            (item) =>
+              item !== undefined &&
+              item.type === "image_url" &&
+              typeof item.image_url === "string" &&
+              item.image_url !== undefined
+          );
+        return imageUrlContent;
+      });
+    } else {
+      return response.flatMap((res) => {
+        const b64Content = res.data
+          .flatMap((item) => {
+            if (!item.b64_json) return [];
+            return {
+              type: "image_url" as const,
+              image_url: {
+                url: item.b64_json,
+              },
+            };
+          })
+          .filter(
+            (item) =>
+              item !== undefined &&
+              item.type === "image_url" &&
+              typeof item.image_url === "object" &&
+              "url" in item.image_url &&
+              typeof item.image_url.url === "string" &&
+              item.image_url.url !== undefined
+          );
+        return b64Content;
+      });
+    }
+  }
+
   /** @ignore */
-  async _call(input: string): Promise<string> {
-    const response = await this.client.images.generate({
+  async _call(input: string): Promise<string | MessageContentComplex[]> {
+    const generateImageFields = {
       model: this.model,
       prompt: input,
-      n: this.n,
+      n: 1,
       size: this.size,
-      response_format: this.responseFormat,
+      response_format: this.dallEResponseFormat,
       style: this.style,
       quality: this.quality,
       user: this.user,
-    });
+    };
+
+    if (this.n > 1) {
+      const results = await Promise.all(
+        Array.from({ length: this.n }).map(() =>
+          this.client.images.generate(generateImageFields)
+        )
+      );
+
+      return this.processMultipleGeneratedUrls(results);
+    }
+
+    const response = await this.client.images.generate(generateImageFields);
 
     let data = "";
-    if (this.responseFormat === "url") {
+    if (this.dallEResponseFormat === "url") {
       [data] = response.data
         .map((item) => item.url)
         .filter((url): url is string => url !== "undefined");
@@ -156,7 +246,6 @@ export class DallEAPIWrapper extends Tool {
         .map((item) => item.b64_json)
         .filter((b64_json): b64_json is string => b64_json !== "undefined");
     }
-
     return data;
   }
 }

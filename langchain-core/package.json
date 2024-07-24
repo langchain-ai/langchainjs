@@ -1,6 +1,6 @@
 {
   "name": "@langchain/core",
-  "version": "0.2.15",
+  "version": "0.2.18",
   "description": "Core LangChain.js abstractions and schemas",
   "type": "module",
   "engines": {
@@ -15,7 +15,7 @@
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/langchain-core/",
   "scripts": {
     "build": "yarn turbo:command build:internal --filter=@langchain/core",
-    "build:internal": "yarn lc-build:v2 --create-entrypoints --pre --tree-shaking",
+    "build:internal": "yarn lc_build_v2 --create-entrypoints --pre --tree-shaking",
     "clean": "rm -rf .turbo dist/",
     "build:deps": "yarn turbo build",
     "build:esm": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist/ && rimraf dist/tests dist/**/tests",
@@ -45,7 +45,7 @@
     "camelcase": "6",
     "decamelize": "1.2.0",
     "js-tiktoken": "^1.0.12",
-    "langsmith": "~0.1.30",
+    "langsmith": "~0.1.39",
     "ml-distance": "^4.0.0",
     "mustache": "^4.2.0",
     "p-queue": "^6.6.2",
@@ -56,7 +56,7 @@
   },
   "devDependencies": {
     "@jest/globals": "^29.5.0",
-    "@langchain/scripts": "~0.0.14",
+    "@langchain/scripts": "~0.0.20",
     "@swc/core": "^1.3.90",
     "@swc/jest": "^0.2.29",
     "@types/mustache": "^4",
@@ -74,6 +74,7 @@
     "prettier": "^2.8.3",
     "release-it": "^15.10.1",
     "rimraf": "^5.0.1",
+    "ts-jest": "^29.1.0",
     "typescript": "~5.1.6",
     "web-streams-polyfill": "^3.3.3"
   },
@@ -121,6 +122,24 @@
       },
       "import": "./callbacks/base.js",
       "require": "./callbacks/base.cjs"
+    },
+    "./callbacks/dispatch": {
+      "types": {
+        "import": "./callbacks/dispatch.d.ts",
+        "require": "./callbacks/dispatch.d.cts",
+        "default": "./callbacks/dispatch.d.ts"
+      },
+      "import": "./callbacks/dispatch.js",
+      "require": "./callbacks/dispatch.cjs"
+    },
+    "./callbacks/dispatch/web": {
+      "types": {
+        "import": "./callbacks/dispatch/web.d.ts",
+        "require": "./callbacks/dispatch/web.d.cts",
+        "default": "./callbacks/dispatch/web.d.ts"
+      },
+      "import": "./callbacks/dispatch/web.js",
+      "require": "./callbacks/dispatch/web.cjs"
     },
     "./callbacks/manager": {
       "types": {
@@ -606,6 +625,14 @@
     "callbacks/base.js",
     "callbacks/base.d.ts",
     "callbacks/base.d.cts",
+    "callbacks/dispatch.cjs",
+    "callbacks/dispatch.js",
+    "callbacks/dispatch.d.ts",
+    "callbacks/dispatch.d.cts",
+    "callbacks/dispatch/web.cjs",
+    "callbacks/dispatch/web.js",
+    "callbacks/dispatch/web.d.ts",
+    "callbacks/dispatch/web.d.cts",
     "callbacks/manager.cjs",
     "callbacks/manager.js",
     "callbacks/manager.d.ts",

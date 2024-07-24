@@ -14,7 +14,6 @@ import {
   BaseLanguageModelInput,
   ToolDefinition,
   isOpenAITool,
-  type BaseLanguageModelCallOptions,
 } from "@langchain/core/language_models/base";
 import { isStructuredTool } from "@langchain/core/utils/function_calling";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
@@ -22,6 +21,7 @@ import {
   type BaseChatModelParams,
   BaseChatModel,
   LangSmithParams,
+  BaseChatModelCallOptions,
 } from "@langchain/core/language_models/chat_models";
 import {
   ChatGeneration,
@@ -38,7 +38,7 @@ import {
 } from "@langchain/core/messages/tool";
 import * as uuid from "uuid";
 import { StructuredToolInterface } from "@langchain/core/tools";
-import { Runnable } from "@langchain/core/runnables";
+import { Runnable, RunnableToolLike } from "@langchain/core/runnables";
 
 /**
  * Input interface for ChatCohere
@@ -84,7 +84,7 @@ interface TokenUsage {
 }
 
 export interface ChatCohereCallOptions
-  extends BaseLanguageModelCallOptions,
+  extends BaseChatModelCallOptions,
     Partial<Omit<Cohere.ChatRequest, "message" | "tools">>,
     Partial<Omit<Cohere.ChatStreamRequest, "message" | "tools">>,
     Pick<ChatCohereInput, "streamUsage"> {
@@ -93,6 +93,7 @@ export interface ChatCohereCallOptions
     | Cohere.Tool
     | Record<string, unknown>
     | ToolDefinition
+    | RunnableToolLike
   )[];
 }
 
@@ -345,6 +346,12 @@ export class ChatCohere<
   }
 
   invocationParams(options: this["ParsedCallOptions"]) {
+    if (options.tool_choice) {
+      throw new Error(
+        "'tool_choice' call option is not supported by ChatCohere."
+      );
+    }
+
     const params = {
       model: this.model,
       preamble: options.preamble,
@@ -369,6 +376,7 @@ export class ChatCohere<
       | Record<string, unknown>
       | StructuredToolInterface
       | ToolDefinition
+      | RunnableToolLike
     )[],
     kwargs?: Partial<CallOptions>
   ): Runnable<BaseLanguageModelInput, AIMessageChunk, CallOptions> {
@@ -597,6 +605,7 @@ export class ChatCohere<
       name: toolCall.function.name,
       args: toolCall.function.arguments,
       id: toolCall.id,
+      type: "tool_call",
     }));
   }
 
@@ -773,6 +782,7 @@ export class ChatCohere<
             args: toolCall.function.arguments,
             id: toolCall.id,
             index: toolCall.index,
+            type: "tool_call_chunk",
           }));
         }
 
