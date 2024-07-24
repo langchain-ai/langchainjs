@@ -639,11 +639,17 @@ export async function buildWithTSup() {
   // Clean & generate build files
   if (pre && shouldGenMaps) {
     await Promise.all([
-      rimraf("dist").catch((e) => {
+      rimraf("dist", {
+        retryDelay: 1000,
+        maxRetries: 5,
+      }).catch((e) => {
         console.error("Error removing dist (pre && shouldGenMaps)");
         throw e;
       }),
-      rimraf(".turbo").catch((e) => {
+      rimraf(".turbo", {
+        retryDelay: 1000,
+        maxRetries: 5,
+      }).catch((e) => {
         console.error("Error removing .turbo (pre && shouldGenMaps)");
         throw e;
       }),
@@ -654,11 +660,17 @@ export async function buildWithTSup() {
     ]);
   } else if (pre && !shouldGenMaps) {
     await Promise.all([
-      rimraf("dist").catch((e) => {
+      rimraf("dist", {
+        retryDelay: 1000,
+        maxRetries: 5,
+      }).catch((e) => {
         console.error("Error removing dist (pre && !shouldGenMaps)");
         throw e;
       }),
-      rimraf(".turbo").catch((e) => {
+      rimraf(".turbo", {
+        retryDelay: 1000,
+        maxRetries: 5,
+      }).catch((e) => {
         console.error("Error removing .turbo (pre && !shouldGenMaps)");
         throw e;
       }),
@@ -679,15 +691,24 @@ export async function buildWithTSup() {
     // move CJS to dist
     await Promise.all([
       updatePackageJson(config),
-      rimraf("dist-cjs").catch((e) => {
+      rimraf("dist-cjs", {
+        retryDelay: 1000,
+        maxRetries: 5,
+      }).catch((e) => {
         console.error("Error removing dist-cjs");
         throw e;
       }),
-      rimraf("dist/tests").catch((e) => {
+      rimraf("dist/tests", {
+        retryDelay: 1000,
+        maxRetries: 5,
+      }).catch((e) => {
         console.error("Error removing dist/tests");
         throw e;
       }),
-      rimraf("dist/**/tests").catch((e) => {
+      rimraf("dist/**/tests", {
+        retryDelay: 1000,
+        maxRetries: 5,
+      }).catch((e) => {
         console.error("Error removing dist/**/tests");
         throw e;
       }),
