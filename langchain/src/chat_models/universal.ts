@@ -575,6 +575,9 @@ export async function initChatModel<
  * Initialize a ChatModel from the model name and provider.
  * Must have the integration package corresponding to the model provider installed.
  *
+ * @template {extends BaseLanguageModelInput = BaseLanguageModelInput} RunInput - The input type for the model.
+ * @template {extends ConfigurableChatModelCallOptions = ConfigurableChatModelCallOptions} CallOptions - Call options for the model.
+ *
  * @param {string | ChatModelProvider} [model] - The name of the model, e.g. "gpt-4", "claude-3-opus-20240229".
  * @param {Object} [fields] - Additional configuration options.
  * @param {string} [fields.modelProvider] - The model provider. Supported values include:
@@ -596,7 +599,7 @@ export async function initChatModel<
  *   - string[]: Specified fields are configurable.
  * @param {string} [fields.configPrefix] - Prefix for configurable fields at runtime.
  * @param {Record<string, any>} [fields.params] - Additional keyword args to pass to the ChatModel constructor.
- * @returns {Promise<_ConfigurableModel>} A class which extends BaseChatModel.
+ * @returns {Promise<_ConfigurableModel<RunInput, CallOptions>>} A class which extends BaseChatModel.
  * @throws {Error} If modelProvider cannot be inferred or isn't supported.
  * @throws {Error} If the model provider integration package is not installed.
  *
