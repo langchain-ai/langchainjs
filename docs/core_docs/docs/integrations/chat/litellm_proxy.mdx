@@ -13,21 +13,8 @@ Use [LiteLLM Proxy](https://docs.litellm.ai/docs/simple_proxy) for:
 
 This allows you to call 100+ LLMs using `ChatOpenAI`
 
-```js
-import { ChatOpenAI } from "@langchain/openai";
-
-const model = new ChatOpenAI({
-  model: "claude-3-5-sonnet-20240620", // swap this for "gpt-4o-mini", "gemini-1.5-pro", "claude-3-5-sonnet-20240620"
-  openAIApiKey: "sk-1234",
-}, {
-  basePath: "http://0.0.0.0:4000", // set basePath to LiteLLM Proxy server
-});
-
-const message = await model.invoke("Hi there!");
-
-console.log(message);
-```
-
+import LiteLLMBasic from "@examples/models/llm/litellm_basic.ts";
+<CodeBlock language="typescript">{LiteLLMBasic}</CodeBlock>
 
 ## Step 1 Setup LiteLLM Proxy config.yaml
 
@@ -102,56 +89,17 @@ npm install @langchain/openai
 You can call all models defined on the `litellm_config.yaml`, all you need to do is change the `model` param.
 
 ## Call `"gpt-azure"`
-```js
-import { ChatOpenAI } from "@langchain/openai";
 
-
-const model = new ChatOpenAI({
-  model: "gpt-azure",
-  openAIApiKey: "sk-1234",
-  modelKwargs: {"metadata": "hello world"} // 👈 PASS Additional params here
-}, {
-  basePath: "http://0.0.0.0:4000",
-});
-
-const message = await model.invoke("Hi there!");
-
-console.log(message);
-```
-
+import LiteLLMAzure from "@examples/models/llm/litellm_azure.ts";
+<CodeBlock language="typescript">{LiteLLMAzure}</CodeBlock>
 
 ## Call `"gemini-pro"`
-```js
-import { ChatOpenAI } from "@langchain/openai";
 
-
-const model = new ChatOpenAI({
-  model: "gemini-pro",
-  openAIApiKey: "sk-1234",
-}, {
-  basePath: "http://0.0.0.0:4000",
-});
-
-const message = await model.invoke("Hi there!");
-
-console.log(message);
-```
+import LiteLLMVertex from "@examples/models/llm/litellm_vertex.ts";
+<CodeBlock language="typescript">{LiteLLMVertex}</CodeBlock>
 
 ## Call `"anthropic-claude"`
-```js
-import { ChatOpenAI } from "@langchain/openai";
 
-
-const model = new ChatOpenAI({
-  model: "anthropic-claude",
-  openAIApiKey: "sk-1234",
-}, {
-  basePath: "http://0.0.0.0:4000",
-});
-
-const message = await model.invoke("Hi there!");
-
-console.log(message);
-```
-
+import LiteLLMAnthropic from "@examples/models/llm/litellm_anthropic.ts";
+<CodeBlock language="typescript">{LiteLLMAnthropic}</CodeBlock>
 
