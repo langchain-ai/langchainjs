@@ -440,3 +440,44 @@ test("llm token callbacks can handle tool calls", async () => {
   if (!args) return;
   expect(args).toEqual(JSON.parse(tokens));
 });
+
+test.only("Anthropic can stream tool calls, and invoke again with that tool call", async () => {
+  const input = [
+    new HumanMessage("What is the weather in SF?"),
+  ];
+
+  const weatherTool = tool(
+    (_) => "The weather in San Francisco is 25°C",
+    {
+      name: "get_weather",
+      description: zodSchema.description,
+      schema: zodSchema,
+    }
+  );
+
+  const modelWithTools = model.bindTools([weatherTool]);
+
+  const stream = await modelWithTools.stream(input);
+
+  let finalChunk: AIMessageChunk | undefined;
+  for await (const chunk of stream) {
+    finalChunk = !finalChunk ? chunk : concat(finalChunk, chunk);
+  }
+  if (!finalChunk) {
+    throw new Error("chunk not defined");
+  }
+  // Push the AI message with the tool call to the input array.
+  input.push(finalChunk);
+  // Push a ToolMessage to the input array to represent the tool call response.
+  input.push(
+    new ToolMessage({
+      tool_call_id: finalChunk.tool_calls?.[0].id ?? "",
+      content:
+        "The weather in San Francisco is currently 25 degrees and sunny.",
+      name: "get_weather",
+    })
+  );
+  // Invoke again to ensure Anthropic can handle it's own tool call.
+  const finalResult = await modelWithTools.invoke(input);
+  console.dir(finalResult, { depth: null });
+});
