@@ -1,10 +1,10 @@
 import { spawn } from "node:child_process";
 import ts from "typescript";
 import fs from "node:fs";
-import { rimraf } from "rimraf";
 import { Command } from "commander";
-import { rollup } from "rollup";
+import { rollup } from "@rollup/wasm-node";
 import path from "node:path";
+import { glob } from "glob";
 import { ExportsMapValue, ImportData, LangChainConfig } from "./types.js";
 
 async function asyncSpawn(command: string, args: string[]) {
@@ -16,6 +16,7 @@ async function asyncSpawn(command: string, args: string[]) {
         ...process.env,
         NODE_OPTIONS: "--max-old-space-size=4096",
       },
+      shell: true,
     });
     child.on("close", (code) => {
       if (code !== 0) {
@@ -26,6 +27,50 @@ async function asyncSpawn(command: string, args: string[]) {
     });
   });
 }
+
+const deleteFolderRecursive = async function (inputPath: string) {
+  try {
+    // Verify the path exists
+    if (
+      await fs.promises
+        .access(inputPath)
+        .then(() => true)
+        .catch(() => false)
+    ) {
+      const pathStat = await fs.promises.lstat(inputPath);
+      // If it's a file, delete it and return
+      if (pathStat.isFile()) {
+        await fs.promises.unlink(inputPath);
+      } else if (pathStat.isDirectory()) {
+        // List contents of directory
+        const directoryContents = await fs.promises.readdir(inputPath);
+        if (directoryContents.length) {
+          for await (const item of directoryContents) {
+            const itemStat = await fs.promises.lstat(
+              path.join(inputPath, item)
+            );
+            if (itemStat.isFile()) {
+              // Delete file
+              await fs.promises.unlink(path.join(inputPath, item));
+            } else if (itemStat.isDirectory()) {
+              await deleteFolderRecursive(path.join(inputPath, item));
+            }
+          }
+        } else if (directoryContents.length === 0) {
+          // If the directory is empty, delete it
+          await fs.promises.rmdir(inputPath);
+        }
+      }
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (error: any) {
+    if (error.code !== "ENOENT") {
+      // If the error is not "file or directory doesn't exist", rethrow it
+      throw error;
+    }
+    // Otherwise, ignore the error (file or directory already doesn't exist)
+  }
+};
 
 const NEWLINE = `
 `;
@@ -560,6 +605,10 @@ export async function moveAndRename({
   dest: string;
   abs: (p: string) => string;
 }) {
+  if (!fs.existsSync(abs(source))) {
+    return;
+  }
+
   try {
     for (const file of await fs.promises.readdir(abs(source), {
       withFileTypes: true,
@@ -612,14 +661,27 @@ export async function buildWithTSup() {
     pre,
   } = processOptions();
 
-  const importPath = `${process.cwd()}/langchain.config.js`;
-  const { config }: { config: LangChainConfig } = await import(importPath);
+  let langchainConfigPath = path.resolve("langchain.config.js");
+  if (process.platform === "win32") {
+    // windows, must resolve path with file://
+    langchainConfigPath = `file:///${langchainConfigPath}`;
+  }
+
+  const { config }: { config: LangChainConfig } = await import(
+    langchainConfigPath
+  );
 
   // Clean & generate build files
   if (pre && shouldGenMaps) {
     await Promise.all([
-      rimraf("dist"),
-      rimraf(".turbo"),
+      deleteFolderRecursive("dist").catch((e) => {
+        console.error("Error removing dist (pre && shouldGenMaps)");
+        throw e;
+      }),
+      deleteFolderRecursive(".turbo").catch((e) => {
+        console.error("Error removing .turbo (pre && shouldGenMaps)");
+        throw e;
+      }),
       cleanGeneratedFiles(config),
       createImportMapFile(config),
       generateImportConstants(config),
@@ -627,8 +689,14 @@ export async function buildWithTSup() {
     ]);
   } else if (pre && !shouldGenMaps) {
     await Promise.all([
-      rimraf("dist"),
-      rimraf(".turbo"),
+      deleteFolderRecursive("dist").catch((e) => {
+        console.error("Error removing dist (pre && !shouldGenMaps)");
+        throw e;
+      }),
+      deleteFolderRecursive(".turbo").catch((e) => {
+        console.error("Error deleting with deleteFolderRecursive");
+        throw e;
+      }),
       cleanGeneratedFiles(config),
     ]);
   }
@@ -646,9 +714,25 @@ export async function buildWithTSup() {
     // move CJS to dist
     await Promise.all([
       updatePackageJson(config),
-      rimraf("dist-cjs"),
-      rimraf("dist/tests"),
-      rimraf("dist/**/tests"),
+      deleteFolderRecursive("dist-cjs").catch((e) => {
+        console.error("Error removing dist-cjs");
+        throw e;
+      }),
+      deleteFolderRecursive("dist/tests").catch((e) => {
+        console.error("Error removing dist/tests");
+        throw e;
+      }),
+      (async () => {
+        // Required for cross-platform compatibility.
+        // Windows does not manage globs the same as Max/Linux when deleting directories.
+        const testFolders = await glob("dist/**/tests");
+        await Promise.all(
+          testFolders.map((folder) => deleteFolderRecursive(folder))
+        );
+      })().catch((e) => {
+        console.error("Error removing dist/**/tests");
+        throw e;
+      }),
     ]);
   }
 
