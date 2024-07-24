@@ -10,10 +10,11 @@ import {
   getBufferString,
 } from "@langchain/core/messages";
 import { z } from "zod";
-import { StructuredTool } from "@langchain/core/tools";
+import { StructuredTool, tool } from "@langchain/core/tools";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { RunnableLambda } from "@langchain/core/runnables";
+import { concat } from "@langchain/core/utils/stream";
 import {
   BaseChatModelsTests,
   BaseChatModelsTestsFields,
@@ -523,6 +524,159 @@ export abstract class ChatModelIntegrationTests<
   }
 
   /**
+   * This test verifies models can invoke a tool, and use the AIMessage
+   * with the tool call in a followup request. This is useful when building
+   * agents, or other pipelines that invoke tools.
+   */
+  async testModelCanUseToolUseAIMessage() {
+    if (!this.chatModelHasToolCalling) {
+      console.log("Test requires tool calling. Skipping...");
+      return;
+    }
+
+    const model = new this.Cls(this.constructorArgs);
+    if (!model.bindTools) {
+      throw new Error(
+        "bindTools undefined. Cannot test OpenAI formatted tool calls."
+      );
+    }
+
+    const weatherSchema = z.object({
+      location: z.string().describe("The location to get the weather for."),
+    });
+
+    // Define the tool
+    const weatherTool = tool(
+      (_) => "The weather in San Francisco is 70 degrees and sunny.",
+      {
+        name: "get_current_weather",
+        schema: weatherSchema,
+        description: "Get the current weather for a location.",
+      }
+    );
+
+    const modelWithTools = model.bindTools([weatherTool]);
+
+    // List of messages to initially invoke the model with, and to hold
+    // followup messages to invoke the model with.
+    const messages = [
+      new HumanMessage(
+        "What's the weather like in San Francisco right now? Use the 'get_current_weather' tool to find the answer."
+      ),
+    ];
+
+    const result: AIMessage = await modelWithTools.invoke(messages);
+
+    expect(result.tool_calls?.[0]).toBeDefined();
+    if (!result.tool_calls?.[0]) {
+      throw new Error("result.tool_calls is undefined");
+    }
+    const { tool_calls } = result;
+    expect(tool_calls[0].name).toBe("get_current_weather");
+
+    // Push the result of the tool call into the messages array so we can
+    // confirm in the followup request the model can use the tool call.
+    messages.push(result);
+
+    // Create a dummy ToolMessage representing the output of the tool call.
+    const toolMessage = new ToolMessage({
+      tool_call_id: tool_calls[0].id ?? "",
+      name: tool_calls[0].name,
+      content: await weatherTool.invoke(
+        tool_calls[0].args as z.infer<typeof weatherSchema>
+      ),
+    });
+    messages.push(toolMessage);
+
+    const finalResult = await modelWithTools.invoke(messages);
+
+    expect(finalResult.content).not.toBe("");
+  }
+
+  /**
+   * Same as the above test, but streaming both model invocations.
+   */
+  async testModelCanUseToolUseAIMessageWithStreaming() {
+    if (!this.chatModelHasToolCalling) {
+      console.log("Test requires tool calling. Skipping...");
+      return;
+    }
+
+    const model = new this.Cls(this.constructorArgs);
+    if (!model.bindTools) {
+      throw new Error(
+        "bindTools undefined. Cannot test OpenAI formatted tool calls."
+      );
+    }
+
+    const weatherSchema = z.object({
+      location: z.string().describe("The location to get the weather for."),
+    });
+
+    // Define the tool
+    const weatherTool = tool(
+      (_) => "The weather in San Francisco is 70 degrees and sunny.",
+      {
+        name: "get_current_weather",
+        schema: weatherSchema,
+        description: "Get the current weather for a location.",
+      }
+    );
+
+    const modelWithTools = model.bindTools([weatherTool]);
+
+    // List of messages to initially invoke the model with, and to hold
+    // followup messages to invoke the model with.
+    const messages = [
+      new HumanMessage(
+        "What's the weather like in San Francisco right now? Use the 'get_current_weather' tool to find the answer."
+      ),
+    ];
+
+    const stream = await modelWithTools.stream(messages);
+    let result: AIMessageChunk | undefined;
+    for await (const chunk of stream) {
+      result = !result ? chunk : concat(result, chunk);
+    }
+
+    expect(result).toBeDefined();
+    if (!result) return;
+
+    expect(result.tool_calls?.[0]).toBeDefined();
+    if (!result.tool_calls?.[0]) {
+      throw new Error("result.tool_calls is undefined");
+    }
+
+    const { tool_calls } = result;
+    expect(tool_calls[0].name).toBe("get_current_weather");
+
+    // Push the result of the tool call into the messages array so we can
+    // confirm in the followup request the model can use the tool call.
+    messages.push(result);
+
+    // Create a dummy ToolMessage representing the output of the tool call.
+    const toolMessage = new ToolMessage({
+      tool_call_id: tool_calls[0].id ?? "",
+      name: tool_calls[0].name,
+      content: await weatherTool.invoke(
+        tool_calls[0].args as z.infer<typeof weatherSchema>
+      ),
+    });
+    messages.push(toolMessage);
+
+    const finalStream = await modelWithTools.stream(messages);
+    let finalResult: AIMessageChunk | undefined;
+    for await (const chunk of finalStream) {
+      finalResult = !finalResult ? chunk : concat(finalResult, chunk);
+    }
+
+    expect(finalResult).toBeDefined();
+    if (!finalResult) return;
+
+    expect(finalResult.content).not.toBe("");
+  }
+
+  /**
    * Run all unit tests for the chat model.
    * Each test is wrapped in a try/catch block to prevent the entire test suite from failing.
    * If a test fails, the error is logged to the console, and the test suite continues.
@@ -627,6 +781,20 @@ export abstract class ChatModelIntegrationTests<
     } catch (e: any) {
       allTestsPassed = false;
       console.error("testCacheComplexMessageTypes failed", e);
+    }
+
+    try {
+      await this.testModelCanUseToolUseAIMessage();
+    } catch (e: any) {
+      allTestsPassed = false;
+      console.error("testModelCanUseToolUseAIMessage failed", e);
+    }
+
+    try {
+      await this.testModelCanUseToolUseAIMessageWithStreaming();
+    } catch (e: any) {
+      allTestsPassed = false;
+      console.error("testModelCanUseToolUseAIMessageWithStreaming failed", e);
     }
 
     return allTestsPassed;
