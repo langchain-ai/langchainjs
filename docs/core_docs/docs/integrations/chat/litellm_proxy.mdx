@@ -99,7 +99,7 @@ We can use LangChain.js to make requests to LiteLLM Proxy:
 npm install @langchain/openai
 ```
 
-You can call all models defined on the `litellm_config.yaml`, all you need to do is change the `modelName`
+You can call all models defined on the `litellm_config.yaml`, all you need to do is change the `model` param.
 
 ## Call `"gpt-azure"`
 ```js
@@ -107,7 +107,7 @@ import { ChatOpenAI } from "@langchain/openai";
 
 
 const model = new ChatOpenAI({
-  modelName: "gpt-azure",
+  model: "gpt-azure",
   openAIApiKey: "sk-1234",
   modelKwargs: {"metadata": "hello world"} // 👈 PASS Additional params here
 }, {
