@@ -1,4 +1,11 @@
 import { StructuredToolInterface } from "@langchain/core/tools";
+import {
+  isOpenAITool,
+  ToolDefinition,
+} from "@langchain/core/language_models/base";
+import { RunnableToolLike } from "@langchain/core/runnables";
+import { isStructuredTool } from "@langchain/core/utils/function_calling";
+import { isModelGemini, validateGeminiParams } from "./gemini.js";
 import type {
   GeminiFunctionDeclaration,
   GeminiFunctionSchema,
@@ -8,13 +15,6 @@ import type {
   GoogleAIModelRequestParams,
   GoogleLLMModelFamily,
 } from "../types.js";
-import { isModelGemini, validateGeminiParams } from "./gemini.js";
-import {
-  isOpenAITool,
-  ToolDefinition,
-} from "@langchain/core/language_models/base";
-import { RunnableToolLike } from "@langchain/core/runnables";
-import { isStructuredTool } from "@langchain/core/utils/function_calling";
 import {
   jsonSchemaToGeminiParameters,
   zodToGeminiParameters,
