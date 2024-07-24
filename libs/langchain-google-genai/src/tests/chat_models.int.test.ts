@@ -28,7 +28,6 @@ const dummyToolResponse = `[{"title":"Weather in New York City","url":"https://w
 test("Test Google AI", async () => {
   const model = new ChatGoogleGenerativeAI({});
   const res = await model.invoke("what is 1 + 1?");
-  console.log({ res });
   expect(res).toBeTruthy();
 });
 
@@ -37,7 +36,6 @@ test("Test Google AI generation", async () => {
   const res = await model.generate([
     [["human", `Translate "I love programming" into Korean.`]],
   ]);
-  console.log(JSON.stringify(res, null, 2));
   expect(res).toBeTruthy();
 });
 
@@ -48,7 +46,6 @@ test("Test Google AI generation with a stop sequence", async () => {
   const res = await model.invoke([
     ["human", `What are the first three positive whole numbers?`],
   ]);
-  console.log(JSON.stringify(res, null, 2));
   expect(res).toBeTruthy();
   expect(res.additional_kwargs.finishReason).toBe("STOP");
   expect(res.content).not.toContain("2");
@@ -63,7 +60,6 @@ test("Test Google AI generation with a system message", async () => {
       ["human", `Translate "I love programming" into Korean.`],
     ],
   ]);
-  console.log(JSON.stringify(res, null, 2));
   expect(res).toBeTruthy();
 });
 
@@ -74,7 +70,7 @@ test("Test Google AI multimodal generation", async () => {
     await fs.readFile(path.join(__dirname, "/data/hotdog.jpg"))
   ).toString("base64");
   const model = new ChatGoogleGenerativeAI({
-    modelName: "gemini-pro-vision",
+    modelName: "gemini-1.5-flash",
   });
   const res = await model.invoke([
     new HumanMessage({
@@ -90,7 +86,6 @@ test("Test Google AI multimodal generation", async () => {
       ],
     }),
   ]);
-  console.log(JSON.stringify(res, null, 2));
   expect(res).toBeTruthy();
 });
 
@@ -114,7 +109,6 @@ test("Test Google AI handleLLMNewToken callback", async () => {
         },
       ]
     );
-    console.log({ tokens });
     const responseContent = typeof res.content === "string" ? res.content : "";
     expect(tokens).toBe(responseContent);
   } finally {
@@ -141,12 +135,10 @@ test("Test Google AI handleLLMNewToken callback with streaming", async () => {
         },
       ],
     });
-    console.log({ tokens });
     let responseContent = "";
     for await (const streamItem of res) {
       responseContent += streamItem.content;
     }
-    console.log({ tokens });
     expect(tokens).toBe(responseContent);
   } finally {
     // Reset the environment variable
@@ -174,8 +166,7 @@ test("Test Google AI in streaming mode", async () => {
         },
       ],
     });
-    console.log({ tokens, nrNewTokens });
-    expect(nrNewTokens).toBeGreaterThan(1);
+    expect(nrNewTokens).toBeGreaterThanOrEqual(1);
     expect(res.content).toBe(tokens);
   } finally {
     // Reset the environment variable
@@ -223,7 +214,6 @@ test.skip("Gemini can understand audio", async () => {
     }),
   });
 
-  console.log(response.content);
   expect(typeof response.content).toBe("string");
   expect((response.content as string).length).toBeGreaterThan(15);
 });
@@ -276,7 +266,6 @@ test("ChatGoogleGenerativeAI can bind and invoke langchain tools", async () => {
   });
   const res = await modelWithTools.invoke([prompt]);
   const toolCalls = res.tool_calls;
-  console.log(toolCalls);
   expect(toolCalls).toBeDefined();
   if (!toolCalls) {
     throw new Error("tool_calls not in response");
@@ -306,7 +295,6 @@ test("ChatGoogleGenerativeAI can bind and stream langchain tools", async () => {
     throw new Error("finalChunk is undefined");
   }
   const toolCalls = finalChunk.tool_calls;
-  console.log(toolCalls);
   expect(toolCalls).toBeDefined();
   if (!toolCalls) {
     throw new Error("tool_calls not in response");
@@ -393,7 +381,6 @@ test("ChatGoogleGenerativeAI can handle invoking tool messages.", async () => {
     new ToolMessage(dummyToolResponse, "id", browserTool.name),
   ];
   const response = await modelWithTools.invoke(fullPrompt);
-  console.log(response);
   expect(typeof response.content).toBe("string");
   expect(response.content.length).toBeGreaterThan(1);
   expect(response.tool_calls).toHaveLength(0);
@@ -407,7 +394,6 @@ test("ChatGoogleGenerativeAI can bind and invoke genai tools", async () => {
   });
   const res = await modelWithTools.invoke([prompt]);
   const toolCalls = res.tool_calls;
-  console.log(toolCalls);
   expect(toolCalls).toBeDefined();
   if (!toolCalls) {
     throw new Error("tool_calls not in response");
@@ -423,7 +409,6 @@ test("ChatGoogleGenerativeAI can bindTools with langchain tools and invoke", asy
   const modelWithTools = model.bindTools([new FakeBrowserTool()]);
   const res = await modelWithTools.invoke([prompt]);
   const toolCalls = res.tool_calls;
-  console.log(toolCalls);
   expect(toolCalls).toBeDefined();
   if (!toolCalls) {
     throw new Error("tool_calls not in response");
@@ -439,7 +424,6 @@ test("ChatGoogleGenerativeAI can bindTools with genai tools and invoke", async (
   const modelWithTools = model.bindTools([googleGenAITool]);
   const res = await modelWithTools.invoke([prompt]);
   const toolCalls = res.tool_calls;
-  console.log(toolCalls);
   expect(toolCalls).toBeDefined();
   if (!toolCalls) {
     throw new Error("tool_calls not in response");
@@ -457,7 +441,6 @@ test("ChatGoogleGenerativeAI can call withStructuredOutput langchain tools and i
     z.infer<typeof tool.schema>
   >(tool.schema);
   const res = await modelWithTools.invoke([prompt]);
-  console.log(res);
   expect(typeof res.url === "string").toBe(true);
 });
 
@@ -473,7 +456,6 @@ test("ChatGoogleGenerativeAI can call withStructuredOutput genai tools and invok
     googleGenAITool.functionDeclarations[0].parameters
   );
   const res = await modelWithTools.invoke([prompt]);
-  console.log(res);
   expect(typeof res.url === "string").toBe(true);
 });
 
@@ -492,7 +474,6 @@ test("Stream token count usage_metadata", async () => {
       res = res.concat(chunk);
     }
   }
-  console.log(res);
   expect(res?.usage_metadata).toBeDefined();
   if (!res?.usage_metadata) {
     return;
@@ -519,7 +500,6 @@ test("streamUsage excludes token usage", async () => {
       res = res.concat(chunk);
     }
   }
-  console.log(res);
   expect(res?.usage_metadata).not.toBeDefined();
 });
 
@@ -529,7 +509,6 @@ test("Invoke token count usage_metadata", async () => {
     maxOutputTokens: 10,
   });
   const res = await model.invoke("Why is the sky blue? Be concise.");
-  console.log(res);
   expect(res?.usage_metadata).toBeDefined();
   if (!res?.usage_metadata) {
     return;

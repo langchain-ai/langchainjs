@@ -63,7 +63,7 @@
     "@langchain/yandex": "workspace:*",
     "@layerup/layerup-security": "^1.5.12",
     "@opensearch-project/opensearch": "^2.2.0",
-    "@pinecone-database/pinecone": "^2.2.0",
+    "@pinecone-database/pinecone": "^3.0.0",
     "@planetscale/database": "^1.8.0",
     "@prisma/client": "^4.11.0",
     "@qdrant/js-client-rest": "^1.9.0",

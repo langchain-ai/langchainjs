@@ -11,7 +11,7 @@ const prompt = ChatPromptTemplate.fromMessages([
 
 const model = new ChatOllama({
   baseUrl: "http://localhost:11434", // Default value
-  model: "llama2", // Default value
+  model: "llama3",
   format: "json",
 });
 
@@ -26,11 +26,12 @@ console.log(result);
 
 /*
 AIMessage {
-  content: '{\n' +
-    '"original": "I love programming",\n' +
-    '"translated": "Ich liebe Programmierung"\n' +
-    '}',
-  response_metadata: { ... },
-  usage_metadata: { ... }
+  "content": "{\n\"original\": \"I love programming\",\n\"translated\": \"Ich liebe Programmieren\"\n}",
+  "response_metadata": { ... },
+  "usage_metadata": {
+    "input_tokens": 47,
+    "output_tokens": 20,
+    "total_tokens": 67
+  }
 }
 */

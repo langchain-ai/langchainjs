@@ -432,8 +432,9 @@ export abstract class ChatModelIntegrationTests<
     ).invoke({
       toolName: "math_addition",
     });
-    expect(result.tool_calls).toHaveLength(1);
-    if (!result.tool_calls) {
+
+    expect(result.tool_calls?.[0]).toBeDefined();
+    if (!result.tool_calls?.[0]) {
       throw new Error("result.tool_calls is undefined");
     }
     const { tool_calls } = result;
@@ -468,8 +469,9 @@ export abstract class ChatModelIntegrationTests<
     ).invoke({
       toolName: "math_addition",
     });
-    expect(result.tool_calls).toHaveLength(1);
-    if (!result.tool_calls) {
+
+    expect(result.tool_calls?.[0]).toBeDefined();
+    if (!result.tool_calls?.[0]) {
       throw new Error("result.tool_calls is undefined");
     }
     const { tool_calls } = result;

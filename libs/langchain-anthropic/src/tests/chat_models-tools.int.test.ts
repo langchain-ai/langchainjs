@@ -402,3 +402,41 @@ test("Can stream tool calls", async () => {
   expect(finalChunk?.tool_calls?.[0].args.location).toBeDefined();
   expect(realToolCallChunkStreams).toBeGreaterThan(1);
 });
+
+test("llm token callbacks can handle tool calls", async () => {
+  const weatherTool = tool((_) => "no-op", {
+    name: "get_weather",
+    description: zodSchema.description,
+    schema: zodSchema,
+  });
+
+  const modelWithTools = model.bindTools([weatherTool], {
+    tool_choice: {
+      type: "tool",
+      name: "get_weather",
+    },
+  });
+
+  let tokens = "";
+  const stream = await modelWithTools.stream("What is the weather in SF?", {
+    callbacks: [
+      {
+        handleLLMNewToken: (tok) => {
+          tokens += tok;
+        },
+      },
+    ],
+  });
+
+  let finalChunk: AIMessageChunk | undefined;
+  for await (const chunk of stream) {
+    finalChunk = !finalChunk ? chunk : concat(finalChunk, chunk);
+  }
+
+  expect(finalChunk?.tool_calls?.[0]).toBeDefined();
+  expect(finalChunk?.tool_calls?.[0].name).toBe("get_weather");
+  expect(finalChunk?.tool_calls?.[0].args).toBeDefined();
+  const args = finalChunk?.tool_calls?.[0].args;
+  if (!args) return;
+  expect(args).toEqual(JSON.parse(tokens));
+});
