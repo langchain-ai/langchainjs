@@ -626,20 +626,11 @@ export async function buildWithTSup() {
     pre,
   } = processOptions();
 
-  // Required for cross-platform compatibility.
-  // let importPath = new URL("langchain.config.js", import.meta.url).pathname;
-  // if (importPath.endsWith("/dist/langchain.config.js")) {
-  //   importPath = importPath.replace(
-  //     "/dist/langchain.config.js",
-  //     "/langchain.config.js"
-  //   );
-  // }
-  console.log("------process.cwd()------", process.cwd());
-  console.log(
-    "------path.resolve()------",
-    path.resolve("langchain.config.js")
-  );
-  const langchainConfigPath = path.resolve("langchain.config.js");
+  let langchainConfigPath = path.resolve("langchain.config.js");
+  if (process.platform === "win32") {
+    // windows, must resolve path with file://
+    langchainConfigPath = `file:///${langchainConfigPath}`;
+  }
 
   const { config }: { config: LangChainConfig } = await import(
     langchainConfigPath
