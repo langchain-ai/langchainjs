@@ -27,15 +27,27 @@ async function asyncSpawn(command: string, args: string[]) {
   });
 }
 
-// async function rmRf(dir: string) {
-//   // Check if the directory exists
-//   const exists = fs.existsSync(dir);
-//   if (!exists) {
-//     return;
-//   }
-//   // Remove the directory
-//   await fs.promises.rm(dir, { recursive: true });
-// }
+const deleteFolderRecursive = async function (inputPath: string) {
+  if (
+    await fs.promises
+      .access(inputPath)
+      .then(() => true)
+      .catch(() => false)
+  ) {
+    const files = await fs.promises.readdir(inputPath);
+    for (const file of files) {
+      const curPath = path.join(inputPath, file);
+      if ((await fs.promises.lstat(curPath)).isDirectory()) {
+        // recurse
+        await deleteFolderRecursive(curPath);
+      } else {
+        // delete file
+        await fs.promises.unlink(curPath);
+      }
+    }
+    await fs.promises.rmdir(inputPath);
+  }
+};
 
 const NEWLINE = `
 `;
@@ -667,8 +679,8 @@ export async function buildWithTSup() {
         console.error("Error removing dist (pre && !shouldGenMaps)");
         throw e;
       }),
-      fs.promises.rm(".turbo", { recursive: true, force: true }).catch((e) => {
-        console.error("Error deleting with fs.promises.rm");
+      deleteFolderRecursive(".turbo").catch((e) => {
+        console.error("Error deleting with deleteFolderRecursive");
         throw e;
       }),
       // rimraf(".turbo", {
