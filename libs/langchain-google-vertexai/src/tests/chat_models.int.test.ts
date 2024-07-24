@@ -11,10 +11,10 @@ import {
   SystemMessage,
   ToolMessage,
 } from "@langchain/core/messages";
-import { ChatVertexAI } from "../chat_models.js";
-import { GeminiTool } from "../types.js";
 import { tool } from "@langchain/core/tools";
 import { z } from "zod";
+import { ChatVertexAI } from "../chat_models.js";
+import { GeminiTool } from "../types.js";
 
 describe("GAuth Chat", () => {
   test("invoke", async () => {
@@ -330,9 +330,7 @@ test("tool_choice works", async () => {
     model: "gemini-1.5-pro",
   });
   const weatherTool = tool(
-    (_) => {
-      return "no-op";
-    },
+    (_) => "no-op",
     {
       name: "get_weather",
       description:
@@ -345,9 +343,7 @@ test("tool_choice works", async () => {
     }
   );
   const calculatorTool = tool(
-    (_) => {
-      return "no-op";
-    },
+    (_) => "no-op",
     {
       name: "calculator",
       description: "Calculate the result of a math expression.",

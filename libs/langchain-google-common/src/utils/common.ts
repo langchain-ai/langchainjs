@@ -144,6 +144,7 @@ export function copyAIModelParamsInto(
 
   const tools = options?.tools;
   if (tools) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ret.tools = convertToGeminiTools(tools as Record<string, any>[]);
   }
 
