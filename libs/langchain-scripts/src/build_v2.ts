@@ -4,7 +4,7 @@ import fs from "node:fs";
 import { Command } from "commander";
 import { rollup } from "@rollup/wasm-node";
 import path from "node:path";
-import { rimraf } from "rimraf";
+import { glob } from "glob";
 import { ExportsMapValue, ImportData, LangChainConfig } from "./types.js";
 
 async function asyncSpawn(command: string, args: string[]) {
@@ -28,74 +28,47 @@ async function asyncSpawn(command: string, args: string[]) {
   });
 }
 
-// function findNodeModulesBin() {
-//   const isWindows = process.platform === "win32";
-//   const nodeModulesBinPath = isWindows ? "node_modules\\.bin\\" : "node_modules/.bin/";
-//   // check if the path exists
-//   if (fs.existsSync(nodeModulesBinPath)) {
-//     return nodeModulesBinPath;
-//   } else {
-//     // navigate up the directory tree
-
-//   }
-//   return isWindows ? "node_modules\\.bin\\" : "node_modules/.bin/";
-
-// }
-
-// async function asyncSpawn(command: string, args: string[]) {
-//   return new Promise<void>((resolve, reject) => {
-//     const isWindows = process.platform === "win32";
-//     const cmd = isWindows ? path.join("node_modules", ".bin", `${command}.cmd`) : command;
-
-//     const child = spawn(cmd, args, {
-//       stdio: "inherit",
-//       shell: isWindows,
-//       env: {
-//         ...process.env,
-//         NODE_OPTIONS: "--max-old-space-size=4096",
-//       },
-//     });
-
-//     child.on("close", (code) => {
-//       if (code !== 0) {
-//         reject(new Error(`Command failed: ${command} ${args.join(" ")}`));
-//         return;
-//       }
-//       resolve();
-//     });
-//   });
-// }
-
 const deleteFolderRecursive = async function (inputPath: string) {
-  // Verify the path exists
-  if (
-    await fs.promises
-      .access(inputPath)
-      .then(() => true)
-      .catch(() => false)
-  ) {
-    const pathStat = await fs.promises.lstat(inputPath);
-    // If it's a file, delete it and return
-    if (pathStat.isFile()) {
-      await fs.promises.unlink(inputPath);
-    } else if (pathStat.isDirectory()) {
-      // List contents of directory
-      const directoryContents = await fs.promises.readdir(inputPath);
-      if (directoryContents.length) {
-        for await (const item of directoryContents) {
-          const itemStat = await fs.promises.lstat(path.join(inputPath, item));
-          if (itemStat.isFile()) {
-            // Delete file
-            await fs.promises.unlink(path.join(inputPath, item));
-          } else if (itemStat.isDirectory()) {
-            await deleteFolderRecursive(path.join(inputPath, item));
+  try {
+    // Verify the path exists
+    if (
+      await fs.promises
+        .access(inputPath)
+        .then(() => true)
+        .catch(() => false)
+    ) {
+      const pathStat = await fs.promises.lstat(inputPath);
+      // If it's a file, delete it and return
+      if (pathStat.isFile()) {
+        await fs.promises.unlink(inputPath);
+      } else if (pathStat.isDirectory()) {
+        // List contents of directory
+        const directoryContents = await fs.promises.readdir(inputPath);
+        if (directoryContents.length) {
+          for await (const item of directoryContents) {
+            const itemStat = await fs.promises.lstat(
+              path.join(inputPath, item)
+            );
+            if (itemStat.isFile()) {
+              // Delete file
+              await fs.promises.unlink(path.join(inputPath, item));
+            } else if (itemStat.isDirectory()) {
+              await deleteFolderRecursive(path.join(inputPath, item));
+            }
           }
+        } else if (directoryContents.length === 0) {
+          // If the directory is empty, delete it
+          await fs.promises.rmdir(inputPath);
         }
-      } else if (directoryContents.length === 0) {
-        // If the directory is empty, delete it
-        await fs.promises.rmdir(inputPath);
       }
     }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (error: any) {
+    if (error.code !== "ENOENT") {
+      // If the error is not "file or directory doesn't exist", rethrow it
+      throw error;
+    }
+    // Otherwise, ignore the error (file or directory already doesn't exist)
   }
 };
 
@@ -701,17 +674,11 @@ export async function buildWithTSup() {
   // Clean & generate build files
   if (pre && shouldGenMaps) {
     await Promise.all([
-      rimraf("dist", {
-        retryDelay: 1000,
-        maxRetries: 5,
-      }).catch((e) => {
+      deleteFolderRecursive("dist").catch((e) => {
         console.error("Error removing dist (pre && shouldGenMaps)");
         throw e;
       }),
-      rimraf(".turbo", {
-        retryDelay: 1000,
-        maxRetries: 5,
-      }).catch((e) => {
+      deleteFolderRecursive(".turbo").catch((e) => {
         console.error("Error removing .turbo (pre && shouldGenMaps)");
         throw e;
       }),
@@ -722,10 +689,7 @@ export async function buildWithTSup() {
     ]);
   } else if (pre && !shouldGenMaps) {
     await Promise.all([
-      rimraf("dist", {
-        retryDelay: 1000,
-        maxRetries: 5,
-      }).catch((e) => {
+      deleteFolderRecursive("dist").catch((e) => {
         console.error("Error removing dist (pre && !shouldGenMaps)");
         throw e;
       }),
@@ -733,16 +697,6 @@ export async function buildWithTSup() {
         console.error("Error deleting with deleteFolderRecursive");
         throw e;
       }),
-      // rimraf(".turbo", {
-      //   retryDelay: 1000,
-      //   maxRetries: 5,
-      // }).catch(async () => {
-      //   console.error("Error removing .turbo (pre && !shouldGenMaps)");
-      //   console.log("Trying move remove");
-      //   await fs.promises.rm(".turbo", { recursive: true });
-      //   console.log("SUCCESSFULLY DELETED WIF RM!!!")
-      //   // throw e;
-      // }),
       cleanGeneratedFiles(config),
     ]);
   }
@@ -760,24 +714,24 @@ export async function buildWithTSup() {
     // move CJS to dist
     await Promise.all([
       updatePackageJson(config),
-      rimraf("dist-cjs", {
-        retryDelay: 1000,
-        maxRetries: 5,
-      }).catch((e) => {
+      deleteFolderRecursive("dist-cjs").catch((e) => {
         console.error("Error removing dist-cjs");
         throw e;
       }),
-      rimraf("dist/tests", {
-        retryDelay: 1000,
-        maxRetries: 5,
-      }).catch((e) => {
+      deleteFolderRecursive("dist/tests").catch((e) => {
         console.error("Error removing dist/tests");
         throw e;
       }),
-      rimraf("dist/**/tests", {
-        retryDelay: 1000,
-        maxRetries: 5,
-      }).catch((e) => {
+      // deleteFolderRecursive("dist/**/tests").catch((e) => {
+      //   console.error("Error removing dist/**/tests");
+      //   throw e;
+      // }),
+      (async () => {
+        const testFolders = await glob("dist/**/tests");
+        await Promise.all(
+          testFolders.map((folder) => deleteFolderRecursive(folder))
+        );
+      })().catch((e) => {
         console.error("Error removing dist/**/tests");
         throw e;
       }),
