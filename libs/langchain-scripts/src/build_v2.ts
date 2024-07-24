@@ -35,7 +35,7 @@ const deleteFolderRecursive = async function (inputPath: string) {
       .catch(() => false)
   ) {
     const files = await fs.promises.readdir(inputPath);
-    for (const file of files) {
+    for await (const file of files) {
       const curPath = path.join(inputPath, file);
       if ((await fs.promises.lstat(curPath)).isDirectory()) {
         // recurse
@@ -45,7 +45,14 @@ const deleteFolderRecursive = async function (inputPath: string) {
         await fs.promises.unlink(curPath);
       }
     }
-    await fs.promises.rmdir(inputPath);
+
+    // Verify again that the directory is empty
+    const filesAfter = await fs.promises.readdir(inputPath);
+    if (filesAfter.length === 0) {
+      await fs.promises.rmdir(inputPath);
+    } else {
+      throw new Error(`Failed to delete ${inputPath} because dir is not empty`);
+    }
   }
 };
 
