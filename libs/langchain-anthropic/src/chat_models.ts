@@ -473,29 +473,32 @@ function _formatContent(content: MessageContent) {
           type: "image" as const, // Explicitly setting the type as "image"
           source,
         };
-      } else if (textTypes.find((t) => t === contentPart.type) && "text" in contentPart) {
+      } else if (
+        textTypes.find((t) => t === contentPart.type) &&
+        "text" in contentPart
+      ) {
         // Assuming contentPart is of type MessageContentText here
         return {
           type: "text" as const, // Explicitly setting the type as "text"
           text: contentPart.text,
         };
-      } else if (
-        toolTypes.find((t) => t === contentPart.type)
-      ) {
-        if ("index" in contentPart) {
-          // Anthropic does not support passing the index field here, so we remove it
-          delete contentPart.index;
-        }
-        
-        if (contentPart.type === "input_json_delta") {
-          // If type is `input_json_delta`, rename to `tool_use` for Anthropic
-          contentPart.type = "tool_use";
+      } else if (toolTypes.find((t) => t === contentPart.type)) {
+        const contentPartCopy = { ...contentPart };
+        if ("index" in contentPartCopy) {
+          // Anthropic does not support passing the index field here, so we remove it.
+          delete contentPartCopy.index;
         }
 
-        if ("input" in contentPart) {
-          // If the input is a JSON string, attempt to parse it
+        if (contentPartCopy.type === "input_json_delta") {
+          // `input_json_delta` type only represents yielding partial tool inputs
+          // and is not a valid type for Anthropic messages.
+          contentPartCopy.type = "tool_use";
+        }
+
+        if ("input" in contentPartCopy) {
+          // Anthropic tool use inputs should be valid objects, when applicable.
           try {
-            contentPart.input = JSON.parse(contentPart.input);
+            contentPartCopy.input = JSON.parse(contentPartCopy.input);
           } catch {
             // no-op
           }
@@ -503,7 +506,7 @@ function _formatContent(content: MessageContent) {
 
         // TODO: Fix when SDK types are fixed
         return {
-          ...contentPart,
+          ...contentPartCopy,
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } as any;
       } else {
@@ -636,6 +639,7 @@ function extractToolCallChunk(
     if (typeof inputJsonDeltaChunks.input === "string") {
       newToolCallChunk = {
         id: inputJsonDeltaChunks.id,
+        name: inputJsonDeltaChunks.name,
         args: inputJsonDeltaChunks.input,
         index: inputJsonDeltaChunks.index,
         type: "tool_call_chunk",
@@ -643,6 +647,7 @@ function extractToolCallChunk(
     } else {
       newToolCallChunk = {
         id: inputJsonDeltaChunks.id,
+        name: inputJsonDeltaChunks.name,
         args: JSON.stringify(inputJsonDeltaChunks.input, null, 2),
         index: inputJsonDeltaChunks.index,
         type: "tool_call_chunk",
@@ -994,10 +999,12 @@ export class ChatAnthropicMessages<
         streamUsage: !!(this.streamUsage || options.streamUsage),
         coerceContentToString,
         usageData,
-        toolUse: toolUse ? {
-          id: toolUse.id,
-          name: toolUse.name,
-        } : undefined,
+        toolUse: toolUse
+          ? {
+              id: toolUse.id,
+              name: toolUse.name,
+            }
+          : undefined,
       });
       if (!result) continue;
 
@@ -1092,14 +1099,11 @@ export class ChatAnthropicMessages<
             },
           }
         : requestOptions;
-    const formattedMsgs = _formatMessagesForAnthropic(messages);
-    console.log("formattedMsgs");
-    console.dir(formattedMsgs, { depth: null });
     const response = await this.completionWithRetry(
       {
         ...params,
         stream: false,
-        ...formattedMsgs,
+        ..._formatMessagesForAnthropic(messages),
       },
       options
     );
