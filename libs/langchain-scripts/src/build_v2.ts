@@ -722,11 +722,9 @@ export async function buildWithTSup() {
         console.error("Error removing dist/tests");
         throw e;
       }),
-      // deleteFolderRecursive("dist/**/tests").catch((e) => {
-      //   console.error("Error removing dist/**/tests");
-      //   throw e;
-      // }),
       (async () => {
+        // Required for cross-platform compatibility.
+        // Windows does not manage globs the same as Max/Linux when deleting directories.
         const testFolders = await glob("dist/**/tests");
         await Promise.all(
           testFolders.map((folder) => deleteFolderRecursive(folder))
