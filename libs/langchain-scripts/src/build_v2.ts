@@ -667,16 +667,20 @@ export async function buildWithTSup() {
         console.error("Error removing dist (pre && !shouldGenMaps)");
         throw e;
       }),
-      rimraf(".turbo", {
-        retryDelay: 1000,
-        maxRetries: 5,
-      }).catch(async () => {
-        console.error("Error removing .turbo (pre && !shouldGenMaps)");
-        console.log("Trying move remove");
-        await fs.promises.rm(".turbo", { recursive: true });
-        console.log("SUCCESSFULLY DELETED WIF RM!!!")
-        // throw e;
+      fs.promises.rm(".turbo", { recursive: true, force: true }).catch((e) => {
+        console.error("Error deleting with fs.promises.rm");
+        throw e;
       }),
+      // rimraf(".turbo", {
+      //   retryDelay: 1000,
+      //   maxRetries: 5,
+      // }).catch(async () => {
+      //   console.error("Error removing .turbo (pre && !shouldGenMaps)");
+      //   console.log("Trying move remove");
+      //   await fs.promises.rm(".turbo", { recursive: true });
+      //   console.log("SUCCESSFULLY DELETED WIF RM!!!")
+      //   // throw e;
+      // }),
       cleanGeneratedFiles(config),
     ]);
   }
