@@ -17,7 +17,7 @@ This allows you to call 100+ LLMs using `ChatOpenAI`
 import { ChatOpenAI } from "@langchain/openai";
 
 const model = new ChatOpenAI({
-  modelName: "claude-3-5-sonnet-20240620", // swap this for "gpt-4o-mini", "gemini-1.5-pro", "claude-3-5-sonnet-20240620"
+  model: "claude-3-5-sonnet-20240620", // swap this for "gpt-4o-mini", "gemini-1.5-pro", "claude-3-5-sonnet-20240620"
   openAIApiKey: "sk-1234",
 }, {
   basePath: "http://0.0.0.0:4000", // set basePath to LiteLLM Proxy server
@@ -126,7 +126,7 @@ import { ChatOpenAI } from "@langchain/openai";
 
 
 const model = new ChatOpenAI({
-  modelName: "gemini-pro",
+  model: "gemini-pro",
   openAIApiKey: "sk-1234",
 }, {
   basePath: "http://0.0.0.0:4000",
@@ -143,7 +143,7 @@ import { ChatOpenAI } from "@langchain/openai";
 
 
 const model = new ChatOpenAI({
-  modelName: "anthropic-claude",
+  model: "anthropic-claude",
   openAIApiKey: "sk-1234",
 }, {
   basePath: "http://0.0.0.0:4000",
