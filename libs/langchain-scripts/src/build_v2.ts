@@ -4,8 +4,8 @@ import fs from "node:fs";
 import { Command } from "commander";
 import { rollup } from "@rollup/wasm-node";
 import path from "node:path";
-import { ExportsMapValue, ImportData, LangChainConfig } from "./types.js";
 import { rimraf } from "rimraf";
+import { ExportsMapValue, ImportData, LangChainConfig } from "./types.js";
 
 async function asyncSpawn(command: string, args: string[]) {
   return new Promise<void>((resolve, reject) => {
@@ -635,10 +635,15 @@ export async function buildWithTSup() {
   //   );
   // }
   console.log("------process.cwd()------", process.cwd());
-  console.log("------path.resolve()------", path.resolve());
-  
-  // @ts-ignore - dynamic import
-  const { config }: { config: LangChainConfig } = await import("langchain.config.js");
+  console.log(
+    "------path.resolve()------",
+    path.resolve("langchain.config.js")
+  );
+  const langchainConfigPath = path.resolve("langchain.config.js");
+
+  const { config }: { config: LangChainConfig } = await import(
+    langchainConfigPath
+  );
 
   // Clean & generate build files
   if (pre && shouldGenMaps) {
