@@ -1311,7 +1311,6 @@ export class RunnableBinding<
   }
 
   async *transform(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     generator: AsyncGenerator<RunInput>,
     options: Partial<CallOptions>
   ): AsyncGenerator<RunOutput> {
