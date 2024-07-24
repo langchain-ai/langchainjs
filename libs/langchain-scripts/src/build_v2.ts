@@ -16,6 +16,7 @@ async function asyncSpawn(command: string, args: string[]) {
         ...process.env,
         NODE_OPTIONS: "--max-old-space-size=4096",
       },
+      shell: true,
     });
     child.on("close", (code) => {
       if (code !== 0) {
@@ -26,6 +27,44 @@ async function asyncSpawn(command: string, args: string[]) {
     });
   });
 }
+
+// function findNodeModulesBin() {
+//   const isWindows = process.platform === "win32";
+//   const nodeModulesBinPath = isWindows ? "node_modules\\.bin\\" : "node_modules/.bin/";
+//   // check if the path exists
+//   if (fs.existsSync(nodeModulesBinPath)) {
+//     return nodeModulesBinPath;
+//   } else {
+//     // navigate up the directory tree
+
+//   }
+//   return isWindows ? "node_modules\\.bin\\" : "node_modules/.bin/";
+
+// }
+
+// async function asyncSpawn(command: string, args: string[]) {
+//   return new Promise<void>((resolve, reject) => {
+//     const isWindows = process.platform === "win32";
+//     const cmd = isWindows ? path.join("node_modules", ".bin", `${command}.cmd`) : command;
+
+//     const child = spawn(cmd, args, {
+//       stdio: "inherit",
+//       shell: isWindows,
+//       env: {
+//         ...process.env,
+//         NODE_OPTIONS: "--max-old-space-size=4096",
+//       },
+//     });
+
+//     child.on("close", (code) => {
+//       if (code !== 0) {
+//         reject(new Error(`Command failed: ${command} ${args.join(" ")}`));
+//         return;
+//       }
+//       resolve();
+//     });
+//   });
+// }
 
 const deleteFolderRecursive = async function (inputPath: string) {
   // Verify the path exists
