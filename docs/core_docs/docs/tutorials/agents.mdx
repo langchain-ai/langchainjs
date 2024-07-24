@@ -31,6 +31,9 @@ When building with LangChain, all steps will automatically be traced in LangSmit
 ```bash
 export LANGCHAIN_TRACING_V2="true"
 export LANGCHAIN_API_KEY="<your-api-key>"
+
+# Reduce tracing latency if you are not in a serverless environment
+# export LANGCHAIN_CALLBACKS_BACKGROUND=true
 ```
 
 ## Define tools

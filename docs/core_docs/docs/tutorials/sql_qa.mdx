@@ -51,6 +51,9 @@ export OPENAI_API_KEY=<your key>
 # Uncomment the below to use LangSmith. Not required, but recommended for debugging and observability.
 # export LANGCHAIN_API_KEY=<your key>
 # export LANGCHAIN_TRACING_V2=true
+
+# Reduce tracing latency if you are not in a serverless environment
+# export LANGCHAIN_CALLBACKS_BACKGROUND=true
 ```
 
 import CodeBlock from "@theme/CodeBlock";
