@@ -2,6 +2,8 @@ import {
   RetrieveCommand,
   BedrockAgentRuntimeClient,
   type BedrockAgentRuntimeClientConfig,
+  type SearchType,
+  type RetrievalFilter,
 } from "@aws-sdk/client-bedrock-agent-runtime";
 
 import { BaseRetriever } from "@langchain/core/retrievers";
@@ -16,6 +18,8 @@ export interface AmazonKnowledgeBaseRetrieverArgs {
   topK: number;
   region: string;
   clientOptions?: BedrockAgentRuntimeClientConfig;
+  filter?: RetrievalFilter;
+  overrideSearchType?: SearchType;
 }
 
 /**
@@ -51,15 +55,23 @@ export class AmazonKnowledgeBaseRetriever extends BaseRetriever {
 
   bedrockAgentRuntimeClient: BedrockAgentRuntimeClient;
 
+  filter?: RetrievalFilter;
+
+  overrideSearchType?: SearchType;
+
   constructor({
     knowledgeBaseId,
     topK = 10,
     clientOptions,
     region,
+    filter,
+    overrideSearchType,
   }: AmazonKnowledgeBaseRetrieverArgs) {
     super();
 
     this.topK = topK;
+    this.filter = filter;
+    this.overrideSearchType = overrideSearchType;
     this.bedrockAgentRuntimeClient = new BedrockAgentRuntimeClient({
       region,
       ...clientOptions,
@@ -78,7 +90,12 @@ export class AmazonKnowledgeBaseRetriever extends BaseRetriever {
     return res;
   }
 
-  async queryKnowledgeBase(query: string, topK: number) {
+  async queryKnowledgeBase(
+    query: string,
+    topK: number,
+    filter?: RetrievalFilter,
+    overrideSearchType?: SearchType
+  ) {
     const retrieveCommand = new RetrieveCommand({
       knowledgeBaseId: this.knowledgeBaseId,
       retrievalQuery: {
@@ -87,6 +104,8 @@ export class AmazonKnowledgeBaseRetriever extends BaseRetriever {
       retrievalConfiguration: {
         vectorSearchConfiguration: {
           numberOfResults: topK,
+          overrideSearchType,
+          filter,
         },
       },
     });
@@ -96,19 +115,48 @@ export class AmazonKnowledgeBaseRetriever extends BaseRetriever {
     );
 
     return (
-      retrieveResponse.retrievalResults?.map((result) => ({
-        pageContent: this.cleanResult(result.content?.text || ""),
-        metadata: {
-          source: result.location?.s3Location?.uri,
-          score: result.score,
-          ...result.metadata,
-        },
-      })) ?? ([] as Array<Document>)
+      retrieveResponse.retrievalResults?.map((result) => {
+        let source;
+        switch (result.location?.type) {
+          case "CONFLUENCE":
+            source = result.location?.confluenceLocation?.url;
+            break;
+          case "S3":
+            source = result.location?.s3Location?.uri;
+            break;
+          case "SALESFORCE":
+            source = result.location?.salesforceLocation?.url;
+            break;
+          case "SHAREPOINT":
+            source = result.location?.sharePointLocation?.url;
+            break;
+          case "WEB":
+            source = result.location?.webLocation?.url;
+            break;
+          default:
+            source = result.location?.s3Location?.uri;
+            break;
+        }
+
+        return {
+          pageContent: this.cleanResult(result.content?.text || ""),
+          metadata: {
+            source,
+            score: result.score,
+            ...result.metadata,
+          },
+        };
+      }) ?? ([] as Array<Document>)
     );
   }
 
   async _getRelevantDocuments(query: string): Promise<Document[]> {
-    const docs = await this.queryKnowledgeBase(query, this.topK);
+    const docs = await this.queryKnowledgeBase(
+      query,
+      this.topK,
+      this.filter,
+      this.overrideSearchType
+    );
     return docs;
   }
 }
