@@ -25,10 +25,10 @@ export type AzureCosmosDBNoSQLQueryFilter = string | SqlQuerySpec;
 /** Azure AI Search filter type. */
 export type AzureCosmosDBNoSQLFilterType = {
   /**
-   * SQL WHERE clause to use add to the vector search query.
-   * @example 'c.category = "cars"'
+   * SQL filter clause to add to the vector search query.
+   * @example 'WHERE c.category = "cars" LIMIT 10 OFFSSET 0'
    */
-  filterWhereClause?: AzureCosmosDBNoSQLQueryFilter;
+  filterClause?: AzureCosmosDBNoSQLQueryFilter;
   /** Determines whether or not to include the embeddings in the search results. */
   includeEmbeddings?: boolean;
 };
@@ -323,28 +323,28 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
   ): Promise<[Document, number][]> {
     await this.initPromise;
 
-    let where = "";
-    let whereParams: SqlParameter[] = [];
-    if (filter?.filterWhereClause) {
-      if (typeof filter.filterWhereClause === "string") {
-        where = `WHERE ${filter.filterWhereClause} `;
+    let filterClause = "";
+    let filterClauseParams: SqlParameter[] = [];
+    if (filter?.filterClause) {
+      if (typeof filter.filterClause === "string") {
+        filterClause = `${filter.filterClause} `;
       } else {
-        where = `WHERE ${filter.filterWhereClause.query} `;
-        whereParams = filter.filterWhereClause.parameters ?? [];
+        filterClause = `${filter.filterClause.query} `;
+        filterClauseParams = filter.filterClause.parameters ?? [];
       }
     }
 
     const embeddings = filter?.includeEmbeddings
       ? `c[@embeddingKey] AS vector, `
       : "";
-    const query = `SELECT TOP @k c.id, ${embeddings}c[@textKey] AS text, c[@metadataKey] AS metadata, VectorDistance(c[@embeddingKey], @vector) AS similarityScore FROM c ${where}ORDER BY VectorDistance(c[@embeddingKey], @vector)`;
+    const query = `SELECT TOP @k c.id, ${embeddings}c[@textKey] AS text, c[@metadataKey] AS metadata, VectorDistance(c[@embeddingKey], @vector) AS similarityScore FROM c ${filterClause}ORDER BY VectorDistance(c[@embeddingKey], @vector)`;
 
     const { resources: items } = await this.container.items
       .query(
         {
           query,
           parameters: [
-            ...whereParams,
+            ...filterClauseParams,
             { name: "@k", value: k },
             { name: "@textKey", value: this.textKey },
             { name: "@metadataKey", value: this.metadataKey },

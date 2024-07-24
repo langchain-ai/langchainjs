@@ -174,7 +174,7 @@ describe("AzureCosmosDBNoSQLVectorStore", () => {
     ]);
 
     const results = await vectorStore.similaritySearch("sandwich", 1, {
-      filterWhereClause: "c.metadata.d = 1",
+      filterClause: "WHERE c.metadata.d = 1",
     });
 
     expect(results.length).toEqual(1);
