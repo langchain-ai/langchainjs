@@ -11682,25 +11682,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/scripts@npm:~0.0, @langchain/scripts@npm:~0.0.14":
-  version: 0.0.18
-  resolution: "@langchain/scripts@npm:0.0.18"
-  dependencies:
-    axios: ^1.6.7
-    commander: ^11.1.0
-    glob: ^10.3.10
-    rimraf: ^5.0.1
-    rollup: ^4.5.2
-    ts-morph: ^21.0.1
-    typescript: ^5.4.5
-  bin:
-    lc-build: bin/build.js
-    v2: bin/build_v2.js
-  checksum: 97d5de819093c951a6af564b917a79f6a13dc6bf21e8a05ab92e14ca0283580257d8db16e353b5b25412231abcd15a797c6f5f8a939b29152f916c115d894143
-  languageName: node
-  linkType: hard
-
-"@langchain/scripts@workspace:*, @langchain/scripts@workspace:libs/langchain-scripts":
+"@langchain/scripts@workspace:*, @langchain/scripts@workspace:libs/langchain-scripts, @langchain/scripts@~0.0, @langchain/scripts@~0.0.14":
   version: 0.0.0-use.local
   resolution: "@langchain/scripts@workspace:libs/langchain-scripts"
   dependencies:
