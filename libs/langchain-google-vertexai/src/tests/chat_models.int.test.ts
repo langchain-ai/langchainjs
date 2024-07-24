@@ -325,44 +325,37 @@ test("Streaming true constructor param will stream", async () => {
   expect(totalTokenCount).toBeGreaterThan(1);
 });
 
-test.only("tool_choice works", async () => {
+test("Can force a model to invoke a tool", async () => {
   const model = new ChatVertexAI({
     model: "gemini-1.5-pro",
   });
-  const weatherTool = tool(
-    (_) => "no-op",
-    {
-      name: "get_weather",
-      description:
-        "Get the weather of a specific location and return the temperature in Celsius.",
-      schema: z.object({
-        location: z
-          .string()
-          .describe("The name of city to get the weather for."),
-      }),
-    }
-  );
-  const calculatorTool = tool(
-    (_) => "no-op",
-    {
-      name: "calculator",
-      description: "Calculate the result of a math expression.",
-      schema: z.object({
-        expression: z.string().describe("The math expression to calculate."),
-      }),
-    }
-  );
+  const weatherTool = tool((_) => "no-op", {
+    name: "get_weather",
+    description:
+      "Get the weather of a specific location and return the temperature in Celsius.",
+    schema: z.object({
+      location: z.string().describe("The name of city to get the weather for."),
+    }),
+  });
+  const calculatorTool = tool((_) => "no-op", {
+    name: "calculator",
+    description: "Calculate the result of a math expression.",
+    schema: z.object({
+      expression: z.string().describe("The math expression to calculate."),
+    }),
+  });
   const modelWithTools = model.bind({
-    tools: [weatherTool, calculatorTool],
-    tool_choice: "get_weather",
+    tools: [calculatorTool, weatherTool],
+    tool_choice: "calculator",
   });
 
   const result = await modelWithTools.invoke(
-    "What's 1836 plus 7262? Whats the weather like in paris today?"
+    "Whats the weather like in paris today? What's 1836 plus 7262?"
   );
 
   expect(result.tool_calls).toHaveLength(1);
   expect(result.tool_calls?.[0]).toBeDefined();
   if (!result.tool_calls?.[0]) return;
-  expect(result.tool_calls?.[0].name).toBe("get_weather");
+  expect(result.tool_calls?.[0].name).toBe("calculator");
+  expect(result.tool_calls?.[0].args).toHaveProperty("expression");
 });
