@@ -27,15 +27,15 @@ async function asyncSpawn(command: string, args: string[]) {
   });
 }
 
-async function rmRf(dir: string) {
-  // Check if the directory exists
-  const exists = fs.existsSync(dir);
-  if (!exists) {
-    return;
-  }
-  // Remove the directory
-  await fs.promises.rm(dir, { recursive: true });
-}
+// async function rmRf(dir: string) {
+//   // Check if the directory exists
+//   const exists = fs.existsSync(dir);
+//   if (!exists) {
+//     return;
+//   }
+//   // Remove the directory
+//   await fs.promises.rm(dir, { recursive: true });
+// }
 
 const NEWLINE = `
 `;
@@ -627,14 +627,17 @@ export async function buildWithTSup() {
   } = processOptions();
 
   // Required for cross-platform compatibility.
-  let importPath = new URL("langchain.config.js", import.meta.url).pathname;
-  if (importPath.endsWith("/dist/langchain.config.js")) {
-    importPath = importPath.replace(
-      "/dist/langchain.config.js",
-      "/langchain.config.js"
-    );
-  }
-  const { config }: { config: LangChainConfig } = await import(importPath);
+  // let importPath = new URL("langchain.config.js", import.meta.url).pathname;
+  // if (importPath.endsWith("/dist/langchain.config.js")) {
+  //   importPath = importPath.replace(
+  //     "/dist/langchain.config.js",
+  //     "/langchain.config.js"
+  //   );
+  // }
+  console.log("------process.cwd()------", process.cwd())
+  const lcPath = path.join(process.cwd(), "langchain.config.js");
+  
+  const { config }: { config: LangChainConfig } = await import(lcPath);
 
   // Clean & generate build files
   if (pre && shouldGenMaps) {
