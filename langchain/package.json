@@ -610,7 +610,7 @@
     "@gomomento/sdk-core": "^1.51.1",
     "@jest/globals": "^29.5.0",
     "@langchain/cohere": "^0.0.8",
-    "@langchain/scripts": "~0.0.14",
+    "@langchain/scripts": "~0.0.19",
     "@mendable/firecrawl-js": "^0.0.13",
     "@notionhq/client": "^2.2.10",
     "@pinecone-database/pinecone": "^1.1.0",
