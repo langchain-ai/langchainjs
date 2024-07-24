@@ -4,8 +4,8 @@ import fs from "node:fs";
 import { Command } from "commander";
 import { rollup } from "@rollup/wasm-node";
 import path from "node:path";
-import { rm } from "node:fs/promises";
 import { ExportsMapValue, ImportData, LangChainConfig } from "./types.js";
+import { rimraf } from "rimraf";
 
 async function asyncSpawn(command: string, args: string[]) {
   return new Promise<void>((resolve, reject) => {
@@ -25,6 +25,16 @@ async function asyncSpawn(command: string, args: string[]) {
       resolve();
     });
   });
+}
+
+async function rmRf(dir: string) {
+  // Check if the directory exists
+  const exists = fs.existsSync(dir);
+  if (!exists) {
+    return;
+  }
+  // Remove the directory
+  await fs.promises.rm(dir, { recursive: true });
 }
 
 const NEWLINE = `
@@ -560,6 +570,10 @@ export async function moveAndRename({
   dest: string;
   abs: (p: string) => string;
 }) {
+  if (!fs.existsSync(abs(source))) {
+    return;
+  }
+
   try {
     for (const file of await fs.promises.readdir(abs(source), {
       withFileTypes: true,
@@ -625,11 +639,11 @@ export async function buildWithTSup() {
   // Clean & generate build files
   if (pre && shouldGenMaps) {
     await Promise.all([
-      rm("dist", { recursive: true, force: true }).catch((e) => {
+      rimraf("dist").catch((e) => {
         console.error("Error removing dist (pre && shouldGenMaps)");
         throw e;
       }),
-      rm(".turbo", { recursive: true, force: true }).catch((e) => {
+      rimraf(".turbo").catch((e) => {
         console.error("Error removing .turbo (pre && shouldGenMaps)");
         throw e;
       }),
@@ -640,11 +654,11 @@ export async function buildWithTSup() {
     ]);
   } else if (pre && !shouldGenMaps) {
     await Promise.all([
-      rm("dist", { recursive: true, force: true }).catch((e) => {
+      rimraf("dist").catch((e) => {
         console.error("Error removing dist (pre && !shouldGenMaps)");
         throw e;
       }),
-      rm(".turbo", { recursive: true, force: true }).catch((e) => {
+      rimraf(".turbo").catch((e) => {
         console.error("Error removing .turbo (pre && !shouldGenMaps)");
         throw e;
       }),
@@ -665,15 +679,15 @@ export async function buildWithTSup() {
     // move CJS to dist
     await Promise.all([
       updatePackageJson(config),
-      rm("dist-cjs", { recursive: true, force: true }).catch((e) => {
+      rimraf("dist-cjs").catch((e) => {
         console.error("Error removing dist-cjs");
         throw e;
       }),
-      rm("dist/tests", { recursive: true, force: true }).catch((e) => {
+      rimraf("dist/tests").catch((e) => {
         console.error("Error removing dist/tests");
         throw e;
       }),
-      rm("dist/**/tests", { recursive: true, force: true }).catch((e) => {
+      rimraf("dist/**/tests").catch((e) => {
         console.error("Error removing dist/**/tests");
         throw e;
       }),
