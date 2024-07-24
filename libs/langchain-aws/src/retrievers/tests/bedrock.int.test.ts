@@ -16,6 +16,8 @@ test("AmazonKnowledgeBaseRetriever", async () => {
     topK: 10,
     knowledgeBaseId: process.env.AMAZON_KNOWLEDGE_BASE_ID || "",
     region: process.env.BEDROCK_AWS_REGION,
+    overrideSearchType: "HYBRID",
+    filter: undefined,
     clientOptions: {
       credentials: {
         accessKeyId: process.env.BEDROCK_AWS_ACCESS_KEY_ID,
