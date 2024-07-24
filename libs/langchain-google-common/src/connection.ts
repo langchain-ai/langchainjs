@@ -101,7 +101,6 @@ export abstract class GoogleConnection<
     if (data && method === "POST") {
       opts.data = data;
     }
-    console.log("data", data);
     if (this.streaming) {
       opts.responseType = "stream";
     } else {
@@ -382,7 +381,6 @@ export abstract class AbstractGoogleLLMConnection<
       generationConfig,
     };
     if (tools && tools.length) {
-      console.log("HAVE TOOLS!!!!!!!");
       ret.tools = tools;
     }
     if (toolConfig) {
