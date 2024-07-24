@@ -140,7 +140,10 @@ export class BaseRunManager {
               this.tags
             );
           } catch (err) {
-            console.error(
+            const logFunction = handler.raiseError
+              ? console.error
+              : console.warn;
+            logFunction(
               `Error in handler ${handler.constructor.name}, handleText: ${err}`
             );
             if (handler.raiseError) {
@@ -185,7 +188,10 @@ export class CallbackManagerForRetrieverRun
                 this.tags
               );
             } catch (err) {
-              console.error(
+              const logFunction = handler.raiseError
+                ? console.error
+                : console.warn;
+              logFunction(
                 `Error in handler ${handler.constructor.name}, handleRetriever`
               );
               if (handler.raiseError) {
@@ -211,7 +217,10 @@ export class CallbackManagerForRetrieverRun
                 this.tags
               );
             } catch (error) {
-              console.error(
+              const logFunction = handler.raiseError
+                ? console.error
+                : console.warn;
+              logFunction(
                 `Error in handler ${handler.constructor.name}, handleRetrieverError: ${error}`
               );
               if (handler.raiseError) {
@@ -251,7 +260,10 @@ export class CallbackManagerForLLMRun
                 fields
               );
             } catch (err) {
-              console.error(
+              const logFunction = handler.raiseError
+                ? console.error
+                : console.warn;
+              logFunction(
                 `Error in handler ${handler.constructor.name}, handleLLMNewToken: ${err}`
               );
               if (handler.raiseError) {
@@ -277,7 +289,10 @@ export class CallbackManagerForLLMRun
                 this.tags
               );
             } catch (err) {
-              console.error(
+              const logFunction = handler.raiseError
+                ? console.error
+                : console.warn;
+              logFunction(
                 `Error in handler ${handler.constructor.name}, handleLLMError: ${err}`
               );
               if (handler.raiseError) {
@@ -303,7 +318,10 @@ export class CallbackManagerForLLMRun
                 this.tags
               );
             } catch (err) {
-              console.error(
+              const logFunction = handler.raiseError
+                ? console.error
+                : console.warn;
+              logFunction(
                 `Error in handler ${handler.constructor.name}, handleLLMEnd: ${err}`
               );
               if (handler.raiseError) {
@@ -353,7 +371,10 @@ export class CallbackManagerForChainRun
                 kwargs
               );
             } catch (err) {
-              console.error(
+              const logFunction = handler.raiseError
+                ? console.error
+                : console.warn;
+              logFunction(
                 `Error in handler ${handler.constructor.name}, handleChainError: ${err}`
               );
               if (handler.raiseError) {
@@ -386,7 +407,10 @@ export class CallbackManagerForChainRun
                 kwargs
               );
             } catch (err) {
-              console.error(
+              const logFunction = handler.raiseError
+                ? console.error
+                : console.warn;
+              logFunction(
                 `Error in handler ${handler.constructor.name}, handleChainEnd: ${err}`
               );
               if (handler.raiseError) {
@@ -412,7 +436,10 @@ export class CallbackManagerForChainRun
                 this.tags
               );
             } catch (err) {
-              console.error(
+              const logFunction = handler.raiseError
+                ? console.error
+                : console.warn;
+              logFunction(
                 `Error in handler ${handler.constructor.name}, handleAgentAction: ${err}`
               );
               if (handler.raiseError) {
@@ -438,7 +465,10 @@ export class CallbackManagerForChainRun
                 this.tags
               );
             } catch (err) {
-              console.error(
+              const logFunction = handler.raiseError
+                ? console.error
+                : console.warn;
+              logFunction(
                 `Error in handler ${handler.constructor.name}, handleAgentEnd: ${err}`
               );
               if (handler.raiseError) {
@@ -481,7 +511,10 @@ export class CallbackManagerForToolRun
                 this.tags
               );
             } catch (err) {
-              console.error(
+              const logFunction = handler.raiseError
+                ? console.error
+                : console.warn;
+              logFunction(
                 `Error in handler ${handler.constructor.name}, handleToolError: ${err}`
               );
               if (handler.raiseError) {
@@ -508,7 +541,10 @@ export class CallbackManagerForToolRun
                 this.tags
               );
             } catch (err) {
-              console.error(
+              const logFunction = handler.raiseError
+                ? console.error
+                : console.warn;
+              logFunction(
                 `Error in handler ${handler.constructor.name}, handleToolEnd: ${err}`
               );
               if (handler.raiseError) {
@@ -640,7 +676,10 @@ export class CallbackManager
                   runName
                 );
               } catch (err) {
-                console.error(
+                const logFunction = handler.raiseError
+                  ? console.error
+                  : console.warn;
+                logFunction(
                   `Error in handler ${handler.constructor.name}, handleLLMStart: ${err}`
                 );
                 if (handler.raiseError) {
@@ -727,7 +766,10 @@ export class CallbackManager
                   );
                 }
               } catch (err) {
-                console.error(
+                const logFunction = handler.raiseError
+                  ? console.error
+                  : console.warn;
+                logFunction(
                   `Error in handler ${handler.constructor.name}, handleLLMStart: ${err}`
                 );
                 if (handler.raiseError) {
@@ -794,7 +836,10 @@ export class CallbackManager
               runName
             );
           } catch (err) {
-            console.error(
+            const logFunction = handler.raiseError
+              ? console.error
+              : console.warn;
+            logFunction(
               `Error in handler ${handler.constructor.name}, handleChainStart: ${err}`
             );
             if (handler.raiseError) {
@@ -856,7 +901,10 @@ export class CallbackManager
               runName
             );
           } catch (err) {
-            console.error(
+            const logFunction = handler.raiseError
+              ? console.error
+              : console.warn;
+            logFunction(
               `Error in handler ${handler.constructor.name}, handleToolStart: ${err}`
             );
             if (handler.raiseError) {
@@ -918,7 +966,10 @@ export class CallbackManager
               runName
             );
           } catch (err) {
-            console.error(
+            const logFunction = handler.raiseError
+              ? console.error
+              : console.warn;
+            logFunction(
               `Error in handler ${handler.constructor.name}, handleRetrieverStart: ${err}`
             );
             if (handler.raiseError) {
@@ -963,7 +1014,10 @@ export class CallbackManager
                 this.metadata
               );
             } catch (err) {
-              console.error(
+              const logFunction = handler.raiseError
+                ? console.error
+                : console.warn;
+              logFunction(
                 `Error in handler ${handler.constructor.name}, handleCustomEvent: ${err}`
               );
               if (handler.raiseError) {
@@ -1217,7 +1271,8 @@ export function ensureHandler(
  * ];
  *
  * // Run the example
- * processQuestions(questions).catch(console.error);
+const logFunction = handler.raiseError ? console.error : console.warn; 
+* processQuestions(questions).catch(consolelogFunction;
  *
  * ```
  */
