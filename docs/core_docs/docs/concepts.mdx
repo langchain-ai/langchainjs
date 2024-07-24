@@ -72,6 +72,9 @@ After that, you can enable it by setting environment variables:
 ```shell
 export LANGCHAIN_TRACING_V2=true
 export LANGCHAIN_API_KEY=ls__...
+
+# Reduce tracing latency if you are not in a serverless environment
+# export LANGCHAIN_CALLBACKS_BACKGROUND=true
 ```
 
 ## LangChain Expression Language

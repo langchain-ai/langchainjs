@@ -18,6 +18,9 @@ After you sign up at the link above, make sure to set your environment variables
 ```shell
 export LANGCHAIN_TRACING_V2="true"
 export LANGCHAIN_API_KEY="..."
+
+# Reduce tracing latency if you are not in a serverless environment
+# export LANGCHAIN_CALLBACKS_BACKGROUND=true
 ```
 
 Let's suppose we have an agent, and want to visualize the actions it takes and tool outputs it receives. Without any debugging, here's what we see:
