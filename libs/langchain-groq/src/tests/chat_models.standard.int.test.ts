@@ -19,7 +19,7 @@ class ChatGroqStandardIntegrationTests extends ChatModelIntegrationTests<
       chatModelHasToolCalling: true,
       chatModelHasStructuredOutput: true,
       constructorArgs: {
-        model: "llama3-groq-70b-8192-tool-use-preview",
+        model: "llama-3.1-70b-versatile",
       },
     });
   }

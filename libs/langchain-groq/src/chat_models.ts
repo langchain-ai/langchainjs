@@ -207,17 +207,17 @@ function groqResponseToChatMessage(
   }
 }
 
-function _convertDeltaToolCallToToolCallChunk(toolCalls?: ChatCompletionsAPI.ChatCompletionChunk.Choice.Delta.ToolCall[]): ToolCallChunk[] | undefined {
+function _convertDeltaToolCallToToolCallChunk(
+  toolCalls?: ChatCompletionsAPI.ChatCompletionChunk.Choice.Delta.ToolCall[]
+): ToolCallChunk[] | undefined {
   if (!toolCalls?.length) return undefined;
 
-  return toolCalls.map((tc) => {
-    return {
+  return toolCalls.map((tc) => ({
       id: tc.id,
       name: tc.function?.name,
       args: tc.function?.arguments,
-      type: "tool_call_chunk"
-    }
-  })
+      type: "tool_call_chunk",
+    }));
 }
 
 function _convertDeltaToMessageChunk(
@@ -359,7 +359,9 @@ export class ChatGroq extends BaseChatModel<
   async completionWithRetry(
     request: ChatCompletionCreateParams,
     options?: OpenAICoreRequestOptions
-  ): Promise<AsyncIterable<ChatCompletionsAPI.ChatCompletionChunk> | ChatCompletion> {
+  ): Promise<
+    AsyncIterable<ChatCompletionsAPI.ChatCompletionChunk> | ChatCompletion
+  > {
     return this.caller.call(async () =>
       this.client.chat.completions.create(request, options)
     );
@@ -505,7 +507,7 @@ export class ChatGroq extends BaseChatModel<
         completion_tokens: completionTokens,
         prompt_tokens: promptTokens,
         total_tokens: totalTokens,
-      } = data.usage as CompletionsAPI.CompletionUsage
+      } = data.usage as CompletionsAPI.CompletionUsage;
 
       if (completionTokens) {
         tokenUsage.completionTokens =

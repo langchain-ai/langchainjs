@@ -1,9 +1,14 @@
 import { test } from "@jest/globals";
-import { AIMessage, AIMessageChunk, HumanMessage, ToolMessage } from "@langchain/core/messages";
-import { ChatGroq } from "../chat_models.js";
+import {
+  AIMessage,
+  AIMessageChunk,
+  HumanMessage,
+  ToolMessage,
+} from "@langchain/core/messages";
 import { tool } from "@langchain/core/tools";
 import { z } from "zod";
 import { concat } from "@langchain/core/utils/stream";
+import { ChatGroq } from "../chat_models.js";
 
 test("invoke", async () => {
   const chat = new ChatGroq({
@@ -205,19 +210,24 @@ test("Groq can stream tool calls", async () => {
     temperature: 0,
   });
 
-  const weatherTool = tool((_) => {
-    return "The temperature is 24 degrees with hail.";
-  }, {
-    name: "get_current_weather",
-    schema: z.object({
-      location: z.string().describe("The location to get the current weather for."),
-    }),
-    description: "Get the current weather in a given location.",
-  })
+  const weatherTool = tool(
+    (_) => "The temperature is 24 degrees with hail.",
+    {
+      name: "get_current_weather",
+      schema: z.object({
+        location: z
+          .string()
+          .describe("The location to get the current weather for."),
+      }),
+      description: "Get the current weather in a given location.",
+    }
+  );
 
   const modelWithTools = model.bindTools([weatherTool]);
 
-  const stream = await modelWithTools.stream("What is the weather in San Francisco?");
+  const stream = await modelWithTools.stream(
+    "What is the weather in San Francisco?"
+  );
 
   let finalMessage: AIMessageChunk | undefined;
   for await (const chunk of stream) {
@@ -231,5 +241,5 @@ test("Groq can stream tool calls", async () => {
   if (!finalMessage.tool_calls?.[0]) return;
 
   expect(finalMessage.tool_calls?.[0].name).toBe("get_current_weather");
-  expect(finalMessage.tool_calls?.[0].args).toHaveProperty("location")
-})
+  expect(finalMessage.tool_calls?.[0].args).toHaveProperty("location");
+});
