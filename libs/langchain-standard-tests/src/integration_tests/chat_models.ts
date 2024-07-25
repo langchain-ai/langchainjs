@@ -523,6 +523,43 @@ export abstract class ChatModelIntegrationTests<
     expect(cacheValue2).toEqual(cacheValue);
   }
 
+  async testStreamTokensWithToolCalls() {
+    const model = new this.Cls(this.constructorArgs);
+    if (!model.bindTools) {
+      throw new Error("bindTools is undefined");
+    }
+
+    const adderTool = new AdderTool();
+    const modelWithTools = model.bindTools([adderTool]);
+
+    const stream = await MATH_ADDITION_PROMPT.pipe(modelWithTools).stream({
+      toolName: "math_addition",
+    });
+    let result: AIMessageChunk | undefined;
+    for await (const chunk of stream) {
+      if (!result) {
+        result = chunk;
+      } else {
+        result = result.concat(chunk);
+      }
+    }
+
+    expect(result).toBeDefined();
+    if (!result) return;
+
+    // Verify a tool was actually called.
+    expect(result.tool_calls).toHaveLength(1);
+
+    // Verify usage metadata is present.
+    expect(result.usage_metadata).toBeDefined();
+
+    // Verify input and output tokens are present.
+    expect(result.usage_metadata?.input_tokens).toBeDefined();
+    expect(result.usage_metadata?.input_tokens).toBeGreaterThan(0);
+    expect(result.usage_metadata?.output_tokens).toBeDefined();
+    expect(result.usage_metadata?.output_tokens).toBeGreaterThan(0);
+  }
+
   /**
    * This test verifies models can invoke a tool, and use the AIMessage
    * with the tool call in a followup request. This is useful when building
@@ -781,6 +818,13 @@ export abstract class ChatModelIntegrationTests<
     } catch (e: any) {
       allTestsPassed = false;
       console.error("testCacheComplexMessageTypes failed", e);
+    }
+
+    try {
+      await this.testStreamTokensWithToolCalls();
+    } catch (e: any) {
+      allTestsPassed = false;
+      console.error("testStreamTokensWithToolCalls failed", e);
     }
 
     try {
