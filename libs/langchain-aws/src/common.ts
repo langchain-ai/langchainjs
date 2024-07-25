@@ -209,7 +209,29 @@ export function convertToConverseMessages(messages: BaseMessage[]): {
       }
     });
 
-  return { converseMessages, converseSystem };
+  // Combine consecutive user tool result messages into a single message
+  const combinedConverseMessages = converseMessages.reduce<BedrockMessage[]>(
+    (acc, curr) => {
+      const lastMessage = acc[acc.length - 1];
+
+      if (
+        lastMessage &&
+        lastMessage.role === "user" &&
+        lastMessage.content?.some((c) => "toolResult" in c) &&
+        curr.role === "user" &&
+        curr.content?.some((c) => "toolResult" in c)
+      ) {
+        lastMessage.content = lastMessage.content.concat(curr.content);
+      } else {
+        acc.push(curr);
+      }
+
+      return acc;
+    },
+    []
+  );
+
+  return { converseMessages: combinedConverseMessages, converseSystem };
 }
 
 export function isBedrockTool(tool: unknown): tool is BedrockTool {
@@ -258,8 +280,14 @@ export function convertToConverseTools(
   );
 }
 
+export type BedrockConverseToolChoice =
+  | "any"
+  | "auto"
+  | string
+  | BedrockToolChoice;
+
 export function convertToBedrockToolChoice(
-  toolChoice: string | BedrockToolChoice,
+  toolChoice: BedrockConverseToolChoice,
   tools: BedrockTool[]
 ): BedrockToolChoice {
   if (typeof toolChoice === "string") {
@@ -375,7 +403,7 @@ export function handleConverseStreamContentBlockDelta(
   if (!contentBlockDelta.delta) {
     throw new Error("No delta found in content block.");
   }
-  if (contentBlockDelta.delta.text) {
+  if (typeof contentBlockDelta.delta.text === "string") {
     return new ChatGenerationChunk({
       text: contentBlockDelta.delta.text,
       message: new AIMessageChunk({
@@ -398,11 +426,12 @@ export function handleConverseStreamContentBlockDelta(
       }),
     });
   } else {
-    const unsupportedField = Object.entries(contentBlockDelta.delta).filter(
-      ([_, value]) => !!value
-    );
     throw new Error(
-      `Unsupported content block type: ${unsupportedField[0][0]}`
+      `Unsupported content block type(s): ${JSON.stringify(
+        contentBlockDelta.delta,
+        null,
+        2
+      )}`
     );
   }
 }

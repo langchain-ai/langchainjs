@@ -11,6 +11,7 @@ import {
   SystemMessagePromptTemplate,
 } from "@langchain/core/prompts";
 import { CallbackManager } from "@langchain/core/callbacks/manager";
+import { concat } from "@langchain/core/utils/stream";
 import { ChatAnthropic } from "../chat_models.js";
 
 test("Test ChatAnthropic", async () => {
@@ -238,7 +239,6 @@ test("Test ChatAnthropic stream method", async () => {
   const stream = await model.stream("Print hello world.");
   const chunks = [];
   for await (const chunk of stream) {
-    console.log(chunk);
     chunks.push(chunk);
   }
   expect(chunks.length).toBeGreaterThan(1);
@@ -345,4 +345,23 @@ test("Stream tokens", async () => {
   expect(res.usage_metadata.total_tokens).toBe(
     res.usage_metadata.input_tokens + res.usage_metadata.output_tokens
   );
+});
+
+test("id is supplied when invoking", async () => {
+  const model = new ChatAnthropic();
+  const result = await model.invoke("Hello");
+  expect(result.id).toBeDefined();
+  expect(result.id).not.toEqual("");
+});
+
+test("id is supplied when streaming", async () => {
+  const model = new ChatAnthropic();
+  let finalChunk: AIMessageChunk | undefined;
+  for await (const chunk of await model.stream("Hello")) {
+    finalChunk = !finalChunk ? chunk : concat(finalChunk, chunk);
+  }
+  expect(finalChunk).toBeDefined();
+  if (!finalChunk) return;
+  expect(finalChunk.id).toBeDefined();
+  expect(finalChunk.id).not.toEqual("");
 });

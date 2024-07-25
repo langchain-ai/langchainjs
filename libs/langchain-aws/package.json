@@ -1,6 +1,6 @@
 {
   "name": "@langchain/aws",
-  "version": "0.0.2",
+  "version": "0.0.5",
   "description": "LangChain AWS integration",
   "type": "module",
   "engines": {
@@ -15,7 +15,7 @@
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-aws/",
   "scripts": {
     "build": "yarn turbo:command build:internal --filter=@langchain/aws",
-    "build:internal": "yarn lc-build:v2 --create-entrypoints --pre --tree-shaking",
+    "build:internal": "yarn lc_build_v2 --create-entrypoints --pre --tree-shaking",
     "build:esm": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist/ && rm -rf dist/tests dist/**/tests",
     "build:cjs": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist-cjs/ -p tsconfig.cjs.json && yarn move-cjs-to-dist && rm -rf dist-cjs",
     "build:watch": "yarn create-entrypoints && tsc --outDir dist/ --watch",
@@ -39,15 +39,17 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
+    "@aws-sdk/client-bedrock-agent-runtime": "^3.616.0",
     "@aws-sdk/client-bedrock-runtime": "^3.602.0",
+    "@aws-sdk/client-kendra": "^3.352.0",
     "@aws-sdk/credential-provider-node": "^3.600.0",
     "@langchain/core": ">=0.2.16 <0.3.0",
     "zod-to-json-schema": "^3.22.5"
   },
   "devDependencies": {
-    "@aws-sdk/types": "^3.598.0",
+    "@aws-sdk/types": "^3.609.0",
     "@jest/globals": "^29.5.0",
-    "@langchain/scripts": "~0.0.14",
+    "@langchain/scripts": "~0.0.20",
     "@langchain/standard-tests": "0.0.0",
     "@smithy/types": "^3.2.0",
     "@swc/core": "^1.3.90",

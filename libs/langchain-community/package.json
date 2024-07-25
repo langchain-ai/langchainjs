@@ -1,6 +1,6 @@
 {
   "name": "@langchain/community",
-  "version": "0.2.19",
+  "version": "0.2.20",
   "description": "Third-party integrations for LangChain.js",
   "type": "module",
   "engines": {
@@ -15,7 +15,7 @@
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-community/",
   "scripts": {
     "build": "yarn turbo:command build:internal --filter=@langchain/community",
-    "build:internal": "yarn lc-build:v2 --create-entrypoints --pre --tree-shaking --gen-maps",
+    "build:internal": "yarn lc_build_v2 --create-entrypoints --pre --tree-shaking --gen-maps",
     "lint:eslint": "NODE_OPTIONS=--max-old-space-size=4096 eslint --cache --ext .ts,.js src/",
     "lint:dpdm": "dpdm --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
     "lint": "yarn lint:eslint && yarn lint:dpdm",
@@ -36,12 +36,12 @@
   "license": "MIT",
   "dependencies": {
     "@langchain/core": ">=0.2.16 <0.3.0",
-    "@langchain/openai": "~0.1.0",
+    "@langchain/openai": ">=0.1.0 <0.3.0",
     "binary-extensions": "^2.2.0",
     "expr-eval": "^2.0.2",
     "flat": "^5.0.2",
     "js-yaml": "^4.1.0",
-    "langchain": "0.2.3",
+    "langchain": "~0.2.3",
     "langsmith": "~0.1.30",
     "uuid": "^10.0.0",
     "zod": "^3.22.3",
@@ -78,8 +78,8 @@
     "@gradientai/nodejs-sdk": "^1.2.0",
     "@huggingface/inference": "^2.6.4",
     "@jest/globals": "^29.5.0",
-    "@langchain/langgraph": "~0.0.26",
-    "@langchain/scripts": "~0.0.14",
+    "@langchain/langgraph": "<0.1.0",
+    "@langchain/scripts": "~0.0.20",
     "@langchain/standard-tests": "0.0.0",
     "@layerup/layerup-security": "^1.5.12",
     "@mendable/firecrawl-js": "^0.0.13",
