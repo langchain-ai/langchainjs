@@ -601,7 +601,6 @@ export class ChatMistralAI<
     const tokenUsage: TokenUsage = {};
     const params = this.invocationParams(options);
     const mistralMessages = convertMessagesToMistralMessages(messages);
-    console.dir(mistralMessages, { depth: null });
     const input = {
       ...params,
       messages: mistralMessages,
