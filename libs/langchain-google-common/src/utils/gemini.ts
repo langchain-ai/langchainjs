@@ -685,42 +685,6 @@ export function partsToBaseMessageChunkFields(
   return fields;
 }
 
-// export function partsToBaseMessageFields(parts: GeminiPart[]): AIMessageFields {
-//   const fields: AIMessageFields = {
-//     content: partsToMessageContent(parts),
-//     tool_calls: [],
-//     invalid_tool_calls: [],
-//   };
-
-//   const rawTools = partsToToolsRaw(parts);
-//   if (rawTools.length > 0) {
-//     const tools = toolsRawToTools(rawTools);
-//     for (const tool of tools) {
-//       try {
-//         fields.tool_calls?.push({
-//           name: tool.function.name,
-//           args: JSON.parse(tool.function.arguments),
-//           id: tool.id,
-//           type: "tool_call",
-//         });
-//         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-//       } catch (e: any) {
-//         fields.invalid_tool_calls?.push({
-//           name: tool.function.name,
-//           args: JSON.parse(tool.function.arguments),
-//           id: tool.id,
-//           error: e.message,
-//           type: "invalid_tool_call",
-//         });
-//       }
-//     }
-//     fields.additional_kwargs = {
-//       tool_calls: tools,
-//     };
-//   }
-//   return fields;
-// }
-
 export function responseToBaseMessage(
   response: GoogleLLMResponse
 ): BaseMessage {
