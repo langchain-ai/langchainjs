@@ -35,6 +35,15 @@ class ChatOpenAIStandardIntegrationTests extends ChatModelIntegrationTests<
     };
     await super.testUsageMetadataStreaming(callOptions);
   }
+
+  async testInvokeMoreComplexTools() {
+    this.skipTestMessage(
+      "testInvokeMoreComplexTools",
+      "ChatOpenAI",
+      "OpenAI does not support tool schemas which contain object with unknown/any parameters." +
+        "\nOpenAI only supports objects in schemas when the parameters are defined."
+    );
+  }
 }
 
 const testClass = new ChatOpenAIStandardIntegrationTests();
