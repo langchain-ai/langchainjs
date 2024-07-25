@@ -11992,7 +11992,20 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@langchain/mistralai@^0.0.26, @langchain/mistralai@workspace:*, @langchain/mistralai@workspace:libs/langchain-mistralai":
+"@langchain/mistralai@npm:^0.0.26":
+  version: 0.0.26
+  resolution: "@langchain/mistralai@npm:0.0.26"
+  dependencies:
+    "@langchain/core": ">=0.2.16 <0.3.0"
+    "@mistralai/mistralai": ^0.4.0
+    uuid: ^10.0.0
+    zod: ^3.22.4
+    zod-to-json-schema: ^3.22.4
+  checksum: 97c545994b16166044c96357c211cbaf8d9a2dbcc45a8bfdd1a90089ccd62f7e294aaa9d9fdd23bcea888b1a4eade818e96cf9a6f9c972e05deb2abf7a7fc8fc
+  languageName: node
+  linkType: hard
+
+"@langchain/mistralai@workspace:*, @langchain/mistralai@workspace:libs/langchain-mistralai":
   version: 0.0.0-use.local
   resolution: "@langchain/mistralai@workspace:libs/langchain-mistralai"
   dependencies:
