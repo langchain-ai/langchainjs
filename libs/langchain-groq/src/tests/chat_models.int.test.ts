@@ -210,18 +210,15 @@ test("Groq can stream tool calls", async () => {
     temperature: 0,
   });
 
-  const weatherTool = tool(
-    (_) => "The temperature is 24 degrees with hail.",
-    {
-      name: "get_current_weather",
-      schema: z.object({
-        location: z
-          .string()
-          .describe("The location to get the current weather for."),
-      }),
-      description: "Get the current weather in a given location.",
-    }
-  );
+  const weatherTool = tool((_) => "The temperature is 24 degrees with hail.", {
+    name: "get_current_weather",
+    schema: z.object({
+      location: z
+        .string()
+        .describe("The location to get the current weather for."),
+    }),
+    description: "Get the current weather in a given location.",
+  });
 
   const modelWithTools = model.bindTools([weatherTool]);
 

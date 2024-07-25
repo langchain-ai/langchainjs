@@ -213,11 +213,11 @@ function _convertDeltaToolCallToToolCallChunk(
   if (!toolCalls?.length) return undefined;
 
   return toolCalls.map((tc) => ({
-      id: tc.id,
-      name: tc.function?.name,
-      args: tc.function?.arguments,
-      type: "tool_call_chunk",
-    }));
+    id: tc.id,
+    name: tc.function?.name,
+    args: tc.function?.arguments,
+    type: "tool_call_chunk",
+  }));
 }
 
 function _convertDeltaToMessageChunk(
