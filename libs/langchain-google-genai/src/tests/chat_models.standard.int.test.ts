@@ -26,14 +26,14 @@ class ChatGoogleGenerativeAIStandardIntegrationTests extends ChatModelIntegratio
       },
     });
   }
-  
+
   async testInvokeMoreComplexTools() {
     this.skipTestMessage(
       "testInvokeMoreComplexTools",
       "ChatGoogleGenerativeAI",
-    "ChatGoogleGenerativeAI does not support tool schemas which contain object with unknown/any parameters." +
-        "\ChatGoogleGenerativeAI only supports objects in schemas when the parameters are defined."
-      )
+      "ChatGoogleGenerativeAI does not support tool schemas which contain object with unknown/any parameters." +
+        "ChatGoogleGenerativeAI only supports objects in schemas when the parameters are defined."
+    );
   }
 }
 
