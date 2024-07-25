@@ -639,7 +639,9 @@ export function responseToBaseMessageFields(
   return partsToBaseMessageChunkFields(parts);
 }
 
-export function partsToBaseMessageChunkFields(parts: GeminiPart[]): AIMessageChunkFields {
+export function partsToBaseMessageChunkFields(
+  parts: GeminiPart[]
+): AIMessageChunkFields {
   const fields: AIMessageChunkFields = {
     content: partsToMessageContent(parts),
     tool_call_chunks: [],
