@@ -72,34 +72,33 @@ export function convertToGeminiTools(
     | RunnableToolLike
   )[]
 ): GeminiTool[] {
-  return [
-    {
-      functionDeclarations: structuredTools.map(
-        (structuredTool): GeminiFunctionDeclaration => {
-          if (isStructuredTool(structuredTool)) {
-            const jsonSchema = zodToGeminiParameters(structuredTool.schema);
-            return {
-              name: structuredTool.name,
-              description: structuredTool.description,
-              parameters: jsonSchema as GeminiFunctionSchema,
-            };
-          }
-          if (isOpenAITool(structuredTool)) {
-            return {
-              name: structuredTool.function.name,
-              description:
-                structuredTool.function.description ??
-                `A function available to call.`,
-              parameters: jsonSchemaToGeminiParameters(
-                structuredTool.function.parameters
-              ),
-            };
-          }
-          return structuredTool as unknown as GeminiFunctionDeclaration;
-        }
-      ),
-    },
-  ];
+  let tools: GeminiTool[] = [{
+    functionDeclarations: []
+  }]
+  structuredTools.forEach((tool) => {
+    if ("functionDeclarations" in tool && Array.isArray(tool.functionDeclarations)) {
+      const funcs: GeminiFunctionDeclaration[] = tool.functionDeclarations;
+      tools[0].functionDeclarations?.push(...funcs);
+    } else if (isStructuredTool(tool)) {
+      const jsonSchema = zodToGeminiParameters(tool.schema);
+      tools[0].functionDeclarations?.push({
+        name: tool.name,
+        description: tool.description,
+        parameters: jsonSchema as GeminiFunctionSchema,
+      });
+    } else if (isOpenAITool(tool)) {
+      tools[0].functionDeclarations?.push({
+        name: tool.function.name,
+        description:
+        tool.function.description ??
+          `A function available to call.`,
+        parameters: jsonSchemaToGeminiParameters(
+          tool.function.parameters
+        ),
+      })
+    }
+  });
+  return tools;
 }
 
 export function copyAIModelParamsInto(
