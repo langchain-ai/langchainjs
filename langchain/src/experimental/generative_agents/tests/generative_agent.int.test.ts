@@ -390,16 +390,7 @@ test.skip(
       };
     };
 
-    const runSimulation = async () => {
-      try {
-        await Simulation();
-      } catch (error) {
-        // console.log("error running simulation:", error);
-        throw error;
-      }
-    };
-
-    await runSimulation();
+    await Simulation();
   },
   60000 * 30
 );
