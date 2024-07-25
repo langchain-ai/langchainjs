@@ -50,7 +50,7 @@ test("createToolCallingAgent works", async () => {
     input,
   });
 
-  console.log(result);
+  // console.log(result);
 
   expect(result.input).toBe(input);
   expect(typeof result.output).toBe("string");
@@ -91,9 +91,9 @@ test("createToolCallingAgent stream events works", async () => {
 
   for await (const event of eventStream) {
     const eventType = event.event;
-    console.log("Event type: ", eventType);
+    // console.log("Event type: ", eventType);
     if (eventType === "on_chat_model_stream") {
-      console.log("Content: ", event.data);
+      // console.log("Content: ", event.data);
     }
   }
 });
@@ -132,9 +132,9 @@ test("createToolCallingAgent stream events works for multiple turns", async () =
 
   for await (const event of eventStream) {
     const eventType = event.event;
-    console.log("Event type: ", eventType);
+    // console.log("Event type: ", eventType);
     if (eventType === "on_chat_model_stream") {
-      console.log("Content: ", event.data);
+      // console.log("Content: ", event.data);
     }
   }
 });

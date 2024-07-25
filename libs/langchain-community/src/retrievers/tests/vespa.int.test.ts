@@ -23,5 +23,5 @@ test.skip("VespaRetriever", async () => {
   const docs = await retriever.getRelevantDocuments("what is vespa?");
   expect(docs.length).toBeGreaterThan(0);
 
-  console.log(docs);
+  // console.log(docs);
 });

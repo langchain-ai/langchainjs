@@ -78,7 +78,7 @@ describe("ElasticVectorSearch", () => {
 
     expect(results3).toHaveLength(3);
 
-    console.log(`Upserted:`, results3);
+    // console.log(`Upserted:`, results3);
 
     await store.delete({ ids: ids.slice(2) });
 

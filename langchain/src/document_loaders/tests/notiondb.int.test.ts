@@ -10,6 +10,8 @@ test.skip("Test NotionDBLoader", async () => {
     notionApiVersion: "2022-06-28",
     databaseId: process.env.NOTION_DATABASE_ID!,
   });
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const documents = await loader.load();
-  console.log({ documents });
+  // console.log({ documents });
 });

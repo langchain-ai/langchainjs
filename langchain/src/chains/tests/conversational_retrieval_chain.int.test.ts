@@ -16,8 +16,10 @@ test("Test ConversationalRetrievalQAChain from LLM", async () => {
     model,
     vectorStore.asRetriever()
   );
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res = await chain.call({ question: "foo", chat_history: "bar" });
-  console.log({ res });
+  // console.log({ res });
 });
 
 test("Test ConversationalRetrievalQAChain from LLM with flag option to return source", async () => {
@@ -116,7 +118,7 @@ test("Test ConversationalRetrievalQAChain from LLM with override default prompts
     chat_history: "bar",
   });
   expect(res.text).toContain("I am learning from Aliens");
-  console.log({ res });
+  // console.log({ res });
 });
 
 test("Test ConversationalRetrievalQAChain from LLM with a chat model", async () => {
@@ -150,7 +152,7 @@ test("Test ConversationalRetrievalQAChain from LLM with a chat model", async () 
     chat_history: "bar",
   });
   expect(res.text).toContain("I am learning from Aliens");
-  console.log({ res });
+  // console.log({ res });
 });
 
 test("Test ConversationalRetrievalQAChain from LLM with a map reduce chain", async () => {
@@ -173,12 +175,14 @@ test("Test ConversationalRetrievalQAChain from LLM with a map reduce chain", asy
       },
     }
   );
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res = await chain.call({
     question: "What is better programming Language Python or Javascript ",
     chat_history: "bar",
   });
 
-  console.log({ res });
+  // console.log({ res });
 });
 
 test("Test ConversationalRetrievalQAChain from LLM without memory", async () => {
@@ -207,14 +211,16 @@ test("Test ConversationalRetrievalQAChain from LLM without memory", async () => 
     chat_history: "",
   });
 
-  console.log({ res });
+  // console.log({ res });
 
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res2 = await chain.call({
     question: "What are they made out of?",
     chat_history: question + res.text,
   });
 
-  console.log({ res2 });
+  // console.log({ res2 });
 });
 
 test("Test ConversationalRetrievalQAChain from LLM with a chat model without memory", async () => {
@@ -244,14 +250,16 @@ test("Test ConversationalRetrievalQAChain from LLM with a chat model without mem
     chat_history: "",
   });
 
-  console.log({ res });
+  // console.log({ res });
 
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res2 = await chain.call({
     question: "What are they made out of?",
     chat_history: question + res.text,
   });
 
-  console.log({ res2 });
+  // console.log({ res2 });
 });
 
 test("Test ConversationalRetrievalQAChain from LLM with memory", async () => {
@@ -279,17 +287,21 @@ test("Test ConversationalRetrievalQAChain from LLM with memory", async () => {
       }),
     }
   );
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res = await chain.call({
     question: "What is the powerhouse of the cell?",
   });
 
-  console.log({ res });
+  // console.log({ res });
 
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res2 = await chain.call({
     question: "What are they made out of?",
   });
 
-  console.log({ res2 });
+  // console.log({ res2 });
 });
 
 test("Test ConversationalRetrievalQAChain from LLM with a chat model and memory", async () => {
@@ -319,17 +331,21 @@ test("Test ConversationalRetrievalQAChain from LLM with a chat model and memory"
       }),
     }
   );
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res = await chain.call({
     question: "What is the powerhouse of the cell?",
   });
 
-  console.log({ res });
+  // console.log({ res });
 
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res2 = await chain.call({
     question: "What are they made out of?",
   });
 
-  console.log({ res2 });
+  // console.log({ res2 });
 });
 
 test("Test ConversationalRetrievalQAChain from LLM with deprecated history syntax", async () => {
@@ -358,12 +374,14 @@ test("Test ConversationalRetrievalQAChain from LLM with deprecated history synta
     chat_history: [],
   });
 
-  console.log({ res });
+  // console.log({ res });
 
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res2 = await chain.call({
     question: "What are they made out of?",
     chat_history: [[question, res.text]],
   });
 
-  console.log({ res2 });
+  // console.log({ res2 });
 });

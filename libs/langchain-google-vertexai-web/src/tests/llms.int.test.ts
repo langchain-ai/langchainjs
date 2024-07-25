@@ -29,20 +29,15 @@ describe("Google APIKey LLM", () => {
       expect(res).toBe("2");
     } else {
       expect(res.length).toBeGreaterThan(0);
-      console.log("call result:", res);
+      // console.log("call result:", res);
     }
   });
 
   test("call", async () => {
     const model = new VertexAI();
-    try {
-      const res = await model.invoke("If the time is 1:00, what time is it?");
-      expect(res.length).toBeGreaterThan(0);
-      expect(res.substring(0, 4)).toEqual("1:00");
-    } catch (xx) {
-      console.error(xx);
-      throw xx;
-    }
+    const res = await model.invoke("If the time is 1:00, what time is it?");
+    expect(res.length).toBeGreaterThan(0);
+    expect(res.substring(0, 4)).toEqual("1:00");
   });
 
   test("stream", async () => {
@@ -79,7 +74,7 @@ describe("Google APIKey LLM", () => {
     expect(res).toBeInstanceOf(AIMessage);
     expect(Array.isArray(res.content)).toEqual(true);
     expect(res.content[0]).toHaveProperty("text");
-    console.log("res", res);
+    // console.log("res", res);
   });
 
   test("invoke image", async () => {
@@ -104,7 +99,7 @@ describe("Google APIKey LLM", () => {
     const res = await model.invoke(input);
     expect(res).toBeDefined();
     expect(res.length).toBeGreaterThan(0);
-    console.log("res", res);
+    // console.log("res", res);
   });
 });
 
@@ -128,7 +123,7 @@ describe("Google WebAuth gai LLM", () => {
       expect(res).toBe("2");
     } else {
       expect(res.length).toBeGreaterThan(0);
-      console.log("call result:", res);
+      // console.log("call result:", res);
     }
   });
 
@@ -136,14 +131,9 @@ describe("Google WebAuth gai LLM", () => {
     const model = new VertexAI({
       platformType: "gai",
     });
-    try {
-      const res = await model.invoke("If the time is 1:00, what time is it?");
-      expect(res.length).toBeGreaterThan(0);
-      expect(res.substring(0, 4)).toEqual("1:00");
-    } catch (xx) {
-      console.error(xx);
-      throw xx;
-    }
+    const res = await model.invoke("If the time is 1:00, what time is it?");
+    expect(res.length).toBeGreaterThan(0);
+    expect(res.substring(0, 4)).toEqual("1:00");
   });
 
   test("stream", async () => {
@@ -183,7 +173,7 @@ describe("Google WebAuth gai LLM", () => {
     expect(res).toBeInstanceOf(AIMessage);
     expect(Array.isArray(res.content)).toEqual(true);
     expect(res.content[0]).toHaveProperty("text");
-    console.log("res", res);
+    // console.log("res", res);
   });
 
   test("invoke image", async () => {
@@ -209,6 +199,6 @@ describe("Google WebAuth gai LLM", () => {
     const res = await model.invoke(input);
     expect(res).toBeDefined();
     expect(res.length).toBeGreaterThan(0);
-    console.log("res", res);
+    // console.log("res", res);
   });
 });

@@ -26,7 +26,7 @@ test("MixedbreadAIReranker can indeed rerank documents with compressDocuments me
     documents,
     query
   );
-  console.log(rerankedDocuments);
+  // console.log(rerankedDocuments);
   expect(rerankedDocuments).toHaveLength(3);
 });
 
@@ -37,6 +37,6 @@ test("MixedbreadAIReranker can indeed rerank documents with rerank method", asyn
     documents.map((doc) => doc.pageContent),
     query
   );
-  console.log(rerankedDocuments);
+  // console.log(rerankedDocuments);
   expect(rerankedDocuments).toHaveLength(3);
 });
