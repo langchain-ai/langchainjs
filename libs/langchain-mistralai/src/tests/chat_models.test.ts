@@ -17,6 +17,7 @@ describe("Mistral Tool Call ID Conversion", () => {
       ssAbar4Dr: "ssAbar4Dr",
       abc123: "0001yoN1K",
       call_JIIjI55tTipFFzpcP8re3BpM: "0001sqrj5",
+      12345: "00003akVR",
     };
 
     for (const [inputId, expectedOutput] of Object.entries(resultMap)) {

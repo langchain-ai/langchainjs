@@ -200,7 +200,10 @@ function convertMessagesToMistralMessages(
   const getTools = (message: BaseMessage): MistralAIToolCalls[] | undefined => {
     if (isAIMessage(message) && !!message.tool_calls?.length) {
       return message.tool_calls
-        .map((toolCall) => ({ ...toolCall, id: toolCall.id }))
+        .map((toolCall) => ({
+          ...toolCall,
+          id: _convertToolCallIdToMistralCompatible(toolCall.id ?? ""),
+        }))
         .map(convertLangChainToolCallToOpenAI) as MistralAIToolCalls[];
     }
     if (!message.additional_kwargs.tool_calls?.length) {
@@ -218,6 +221,17 @@ function convertMessagesToMistralMessages(
   return messages.map((message) => {
     const toolCalls = getTools(message);
     const content = toolCalls === undefined ? getContent(message.content) : "";
+    if ("tool_call_id" in message && typeof message.tool_call_id === "string") {
+      return {
+        role: getRole(message._getType()),
+        content,
+        name: message.name,
+        tool_call_id: _convertToolCallIdToMistralCompatible(
+          message.tool_call_id
+        ),
+      };
+    }
+
     return {
       role: getRole(message._getType()),
       content,
@@ -587,6 +601,7 @@ export class ChatMistralAI<
     const tokenUsage: TokenUsage = {};
     const params = this.invocationParams(options);
     const mistralMessages = convertMessagesToMistralMessages(messages);
+    console.dir(mistralMessages, { depth: null });
     const input = {
       ...params,
       messages: mistralMessages,
