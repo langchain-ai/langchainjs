@@ -62,7 +62,7 @@ test("Google examples", async () => {
     },
   });
   const instance = model.createInstance(messages);
-  console.log(JSON.stringify(instance, null, 2));
+  // console.log(JSON.stringify(instance, null, 2));
   expect(instance.examples?.[0].input.author).toBe("user");
   expect(instance.examples?.[0].output.author).toBe("bot");
 });

@@ -184,7 +184,7 @@ test("convertMessageContentToParts correctly handles message types", () => {
   const messagesAsGoogleParts = messages
     .map((msg) => convertMessageContentToParts(msg, false))
     .flat();
-  console.log(messagesAsGoogleParts);
+  // console.log(messagesAsGoogleParts);
   expect(messagesAsGoogleParts).toEqual([
     { text: "You are a helpful assistant" },
     { text: "What's the weather like in new york?" },
@@ -224,7 +224,7 @@ test("convertBaseMessagesToContent correctly creates properly formatted content"
   ];
 
   const messagesAsGoogleContent = convertBaseMessagesToContent(messages, false);
-  console.log(messagesAsGoogleContent);
+  // console.log(messagesAsGoogleContent);
   // Google Generative AI API only allows for 'model' and 'user' roles
   // This means that 'system', 'human' and 'tool' messages are converted
   // to 'user' messages, and ai messages are converted to 'model' messages.

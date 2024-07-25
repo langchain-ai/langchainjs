@@ -13,7 +13,7 @@ test("Test PairwiseStringEvalChain", async () => {
     input: "What is addition?",
   });
   expect(res.score).toBe(0);
-  console.log({ res });
+  // console.log({ res });
 });
 
 test("Test LabeledPairwiseStringEvalChain", async () => {
@@ -29,7 +29,7 @@ test("Test LabeledPairwiseStringEvalChain", async () => {
   });
 
   expect(res.score).toBe(0);
-  console.log(res);
+  // console.log(res);
 });
 
 test("Test Custom  Criteria", async () => {
@@ -54,5 +54,5 @@ test("Test Custom  Criteria", async () => {
   });
   expect(res.score).toBe(1);
 
-  console.log(res);
+  // console.log(res);
 });

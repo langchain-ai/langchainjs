@@ -62,7 +62,7 @@ const runTest = async ({
     }
 
     const res = await chat.invoke(messages);
-    console.log({ res });
+    // console.log({ res });
 
     // test streaming call
     const stream = await chat.stream(
