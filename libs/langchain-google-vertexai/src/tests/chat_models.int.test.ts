@@ -13,6 +13,9 @@ import {
 } from "@langchain/core/messages";
 import { ChatVertexAI } from "../chat_models.js";
 import { GeminiTool } from "../types.js";
+import { tool } from "@langchain/core/tools";
+import { concat } from "@langchain/core/utils/stream";
+import { z } from "zod";
 
 describe("GAuth Chat", () => {
   test("invoke", async () => {
@@ -41,7 +44,7 @@ describe("GAuth Chat", () => {
       expect(textContent.text).toEqual("2");
       */
     } catch (e) {
-      console.error(e);
+      // console.error(e);
       throw e;
     }
   });
@@ -81,7 +84,7 @@ describe("GAuth Chat", () => {
       expect(["H", "T"]).toContainEqual(textContent.text);
       */
     } catch (e) {
-      console.error(e);
+      // console.error(e);
       throw e;
     }
   });
@@ -108,12 +111,11 @@ describe("GAuth Chat", () => {
       const lastChunk = resArray[resArray.length - 1];
       expect(lastChunk).toBeDefined();
       expect(lastChunk._getType()).toEqual("ai");
-      const aiChunk = lastChunk as AIMessageChunk;
-      console.log(aiChunk);
-
-      console.log(JSON.stringify(resArray, null, 2));
+      // const aiChunk = lastChunk as AIMessageChunk;
+      // console.log(aiChunk);
+      // console.log(JSON.stringify(resArray, null, 2));
     } catch (e) {
-      console.error(e);
+      // console.error(e);
       throw e;
     }
   });
@@ -209,7 +211,7 @@ describe("GAuth Chat", () => {
     for await (const chunk of res) {
       resArray.push(chunk);
     }
-    console.log(JSON.stringify(resArray, null, 2));
+    // console.log(JSON.stringify(resArray, null, 2));
   });
 
   test("withStructuredOutput", async () => {
@@ -249,7 +251,7 @@ test("Stream token count usage_metadata", async () => {
       res = res.concat(chunk);
     }
   }
-  console.log(res);
+  // console.log(res);
   expect(res?.usage_metadata).toBeDefined();
   if (!res?.usage_metadata) {
     return;
@@ -276,7 +278,7 @@ test("streamUsage excludes token usage", async () => {
       res = res.concat(chunk);
     }
   }
-  console.log(res);
+  // console.log(res);
   expect(res?.usage_metadata).not.toBeDefined();
 });
 
@@ -286,7 +288,7 @@ test("Invoke token count usage_metadata", async () => {
     maxOutputTokens: 10,
   });
   const res = await model.invoke("Why is the sky blue? Be concise.");
-  console.log(res);
+  // console.log(res);
   expect(res?.usage_metadata).toBeDefined();
   if (!res?.usage_metadata) {
     return;
@@ -321,4 +323,37 @@ test("Streaming true constructor param will stream", async () => {
   expect(result.content).toBe(tokensString);
 
   expect(totalTokenCount).toBeGreaterThan(1);
+});
+
+test("ChatGoogleGenerativeAI can stream tools", async () => {
+  const model = new ChatVertexAI({});
+
+  const weatherTool = tool((_) => {
+    return "The weather in San Francisco today is 18 degrees and sunny."
+  }, {
+    name: "current_weather_tool",
+    description: "Get the current weather for a given location.",
+    schema: z.object({
+      location: z.string().describe("The location to get the weather for."),
+    })
+  })
+
+  const modelWithTools = model.bindTools([weatherTool]);
+  const stream = await modelWithTools.stream("Whats the weather like today in San Francisco?");
+  let finalChunk: AIMessageChunk | undefined;
+  for await (const chunk of stream) {
+    finalChunk = !finalChunk ? chunk : concat(finalChunk, chunk);
+  }
+
+  expect(finalChunk).toBeDefined();
+  if (!finalChunk) return;
+
+  const toolCalls = finalChunk.tool_calls;
+  expect(toolCalls).toBeDefined();
+  if (!toolCalls) {
+    throw new Error("tool_calls not in response");
+  }
+  expect(toolCalls.length).toBe(1);
+  expect(toolCalls[0].name).toBe("current_weather_tool");
+  expect(toolCalls[0].args).toHaveProperty("location")
 });

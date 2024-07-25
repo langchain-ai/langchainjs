@@ -2,7 +2,7 @@ import { v4 as uuidv4 } from "uuid";
 import {
   AIMessage,
   AIMessageChunk,
-  AIMessageFields,
+  AIMessageChunkFields,
   BaseMessage,
   BaseMessageChunk,
   BaseMessageFields,
@@ -566,7 +566,7 @@ export function chunkToString(chunk: BaseMessageChunk): string {
 }
 
 export function partToMessageChunk(part: GeminiPart): BaseMessageChunk {
-  const fields = partsToBaseMessageFields([part]);
+  const fields = partsToBaseMessageChunkFields([part]);
   if (typeof fields.content === "string") {
     return new AIMessageChunk(fields);
   } else if (fields.content.every((item) => item.type === "text")) {
@@ -636,12 +636,13 @@ export function responseToBaseMessageFields(
   response: GoogleLLMResponse
 ): BaseMessageFields {
   const parts = responseToParts(response);
-  return partsToBaseMessageFields(parts);
+  return partsToBaseMessageChunkFields(parts);
 }
 
-export function partsToBaseMessageFields(parts: GeminiPart[]): AIMessageFields {
-  const fields: AIMessageFields = {
+export function partsToBaseMessageChunkFields(parts: GeminiPart[]): AIMessageChunkFields {
+  const fields: AIMessageChunkFields = {
     content: partsToMessageContent(parts),
+    tool_call_chunks: [],
     tool_calls: [],
     invalid_tool_calls: [],
   };
@@ -650,6 +651,13 @@ export function partsToBaseMessageFields(parts: GeminiPart[]): AIMessageFields {
   if (rawTools.length > 0) {
     const tools = toolsRawToTools(rawTools);
     for (const tool of tools) {
+      fields.tool_call_chunks?.push({
+        name: tool.function.name,
+        args: tool.function.arguments,
+        id: tool.id,
+        type: "tool_call_chunk",
+      });
+
       try {
         fields.tool_calls?.push({
           name: tool.function.name,
@@ -661,7 +669,7 @@ export function partsToBaseMessageFields(parts: GeminiPart[]): AIMessageFields {
       } catch (e: any) {
         fields.invalid_tool_calls?.push({
           name: tool.function.name,
-          args: JSON.parse(tool.function.arguments),
+          args: tool.function.arguments,
           id: tool.id,
           error: e.message,
           type: "invalid_tool_call",
@@ -674,6 +682,42 @@ export function partsToBaseMessageFields(parts: GeminiPart[]): AIMessageFields {
   }
   return fields;
 }
+
+// export function partsToBaseMessageFields(parts: GeminiPart[]): AIMessageFields {
+//   const fields: AIMessageFields = {
+//     content: partsToMessageContent(parts),
+//     tool_calls: [],
+//     invalid_tool_calls: [],
+//   };
+
+//   const rawTools = partsToToolsRaw(parts);
+//   if (rawTools.length > 0) {
+//     const tools = toolsRawToTools(rawTools);
+//     for (const tool of tools) {
+//       try {
+//         fields.tool_calls?.push({
+//           name: tool.function.name,
+//           args: JSON.parse(tool.function.arguments),
+//           id: tool.id,
+//           type: "tool_call",
+//         });
+//         // eslint-disable-next-line @typescript-eslint/no-explicit-any
+//       } catch (e: any) {
+//         fields.invalid_tool_calls?.push({
+//           name: tool.function.name,
+//           args: JSON.parse(tool.function.arguments),
+//           id: tool.id,
+//           error: e.message,
+//           type: "invalid_tool_call",
+//         });
+//       }
+//     }
+//     fields.additional_kwargs = {
+//       tool_calls: tools,
+//     };
+//   }
+//   return fields;
+// }
 
 export function responseToBaseMessage(
   response: GoogleLLMResponse
