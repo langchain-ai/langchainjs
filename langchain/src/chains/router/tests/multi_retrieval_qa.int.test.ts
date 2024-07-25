@@ -88,13 +88,13 @@ test("Test MultiPromptChain", async () => {
 
   const [
     // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
-  // @ts-expect-error unused var
+    // @ts-expect-error unused var
     { text: result1, sourceDocuments: sourceDocuments1 },
     // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
-  // @ts-expect-error unused var
+    // @ts-expect-error unused var
     { text: result2, sourceDocuments: sourceDocuments2 },
     // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
-  // @ts-expect-error unused var
+    // @ts-expect-error unused var
     { text: result3, sourceDocuments: sourceDocuments3 },
   ] = await Promise.all([testPromise1, testPromise2, testPromise3]);
 

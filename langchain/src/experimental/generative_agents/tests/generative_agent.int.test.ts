@@ -121,7 +121,7 @@ test.skip(
       for (let i = 0; i < observations.length; i += 1) {
         const observation = observations[i];
         // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
-  // @ts-expect-error unused var
+        // @ts-expect-error unused var
         const [, reaction] = await tommie.generateReaction(observation);
         // console.log("\x1b[32m", observation, "\x1b[0m", reaction);
         if ((i + 1) % 20 === 0) {

@@ -185,10 +185,9 @@ test("Test ChatBedrockConverse can invoke tools", async () => {
   });
   const tools = [
     tool(
-      (_input) => 
+      (_input) =>
         // console.log("tool", input);
-         "Hello"
-      ,
+        "Hello",
       {
         name: "get_weather",
         description: "Get the weather",
@@ -217,10 +216,9 @@ test("Test ChatBedrockConverse can invoke tools with non anthropic model", async
   });
   const tools = [
     tool(
-      (_input) => 
+      (_input) =>
         // console.log("tool", input);
-         "Hello"
-      ,
+        "Hello",
       {
         name: "get_weather",
         description: "Get the weather",
@@ -248,10 +246,9 @@ test("Test ChatBedrockConverse can stream tools", async () => {
   });
   const tools = [
     tool(
-      (_input) => 
+      (_input) =>
         // console.log("tool", input);
-         "Hello"
-      ,
+        "Hello",
       {
         name: "get_weather",
         description: "Get the weather",
@@ -287,10 +284,9 @@ test("Test ChatBedrockConverse tool_choice works", async () => {
   });
   const tools = [
     tool(
-      (_input) => 
+      (_input) =>
         // console.log("tool", input);
-         "Hello"
-      ,
+        "Hello",
       {
         name: "get_weather",
         description: "Get the weather",
@@ -300,10 +296,9 @@ test("Test ChatBedrockConverse tool_choice works", async () => {
       }
     ),
     tool(
-      (_input) => 
+      (_input) =>
         // console.log("tool", input);
-         "Hello"
-      ,
+        "Hello",
       {
         name: "calculator",
         description: "Sum two numbers",
