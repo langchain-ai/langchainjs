@@ -72,11 +72,16 @@ export function convertToGeminiTools(
     | RunnableToolLike
   )[]
 ): GeminiTool[] {
-  let tools: GeminiTool[] = [{
-    functionDeclarations: []
-  }]
+  const tools: GeminiTool[] = [
+    {
+      functionDeclarations: [],
+    },
+  ];
   structuredTools.forEach((tool) => {
-    if ("functionDeclarations" in tool && Array.isArray(tool.functionDeclarations)) {
+    if (
+      "functionDeclarations" in tool &&
+      Array.isArray(tool.functionDeclarations)
+    ) {
       const funcs: GeminiFunctionDeclaration[] = tool.functionDeclarations;
       tools[0].functionDeclarations?.push(...funcs);
     } else if (isStructuredTool(tool)) {
@@ -90,12 +95,9 @@ export function convertToGeminiTools(
       tools[0].functionDeclarations?.push({
         name: tool.function.name,
         description:
-        tool.function.description ??
-          `A function available to call.`,
-        parameters: jsonSchemaToGeminiParameters(
-          tool.function.parameters
-        ),
-      })
+          tool.function.description ?? `A function available to call.`,
+        parameters: jsonSchemaToGeminiParameters(tool.function.parameters),
+      });
     }
   });
   return tools;
