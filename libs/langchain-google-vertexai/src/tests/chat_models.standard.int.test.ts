@@ -38,7 +38,8 @@ class ChatVertexAIStandardIntegrationTests extends ChatModelIntegrationTests<
     this.skipTestMessage(
       "testInvokeMoreComplexTools",
       "ChatVertexAI",
-      "Google VertexAI does not support tool schemas where the object properties are not defined."
+      "Google VertexAI does not support tool schemas which contain object with unknown/any parameters." +
+        "Google VertexAI only supports objects in schemas when the parameters are defined."
     );
   }
 }
