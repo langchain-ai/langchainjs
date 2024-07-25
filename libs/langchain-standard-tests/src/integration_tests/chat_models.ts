@@ -256,7 +256,7 @@ export abstract class ChatModelIntegrationTests<
       endContentText = endContent[0].text;
     } else {
       throw new Error(
-        `Invalid final chunk received from .streamEvents:${  endContent}`
+        `Invalid final chunk received from .streamEvents:${endContent}`
       );
     }
 
