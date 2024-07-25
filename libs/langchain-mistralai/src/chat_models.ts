@@ -66,6 +66,7 @@ import {
 } from "@langchain/core/runnables";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { ToolCallChunk } from "@langchain/core/messages/tool";
+import { _convertToolCallIdToMistralCompatible } from "./utils.js";
 
 interface TokenUsage {
   completionTokens?: number;
@@ -208,7 +209,7 @@ function convertMessagesToMistralMessages(
     const toolCalls: Omit<OpenAIToolCall, "index">[] =
       message.additional_kwargs.tool_calls;
     return toolCalls?.map((toolCall) => ({
-      id: toolCall.id,
+      id: _convertToolCallIdToMistralCompatible(toolCall.id),
       type: "function",
       function: toolCall.function,
     }));
