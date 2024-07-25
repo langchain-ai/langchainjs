@@ -6,7 +6,8 @@ export function _isValidMistralToolCallId(toolCallId: string): boolean {
 }
 
 function _base62Encode(num: number): string {
-  const base62 = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  const base62 =
+    "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
   if (num === 0) return base62[0];
   const arr: string[] = [];
   const base = base62.length;
@@ -14,20 +15,22 @@ function _base62Encode(num: number): string {
     arr.push(base62[num % base]);
     num = Math.floor(num / base);
   }
-  return arr.reverse().join('');
+  return arr.reverse().join("");
 }
 
 function _simpleHash(str: string): number {
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
     const char = str.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash; // Convert to 32-bit integer
+    hash = (hash << 5) - hash + char;
+    hash &= hash; // Convert to 32-bit integer
   }
   return Math.abs(hash);
 }
 
-export function _convertToolCallIdToMistralCompatible(toolCallId: string): string {
+export function _convertToolCallIdToMistralCompatible(
+  toolCallId: string
+): string {
   if (_isValidMistralToolCallId(toolCallId)) {
     return toolCallId;
   } else {
@@ -36,7 +39,7 @@ export function _convertToolCallIdToMistralCompatible(toolCallId: string): strin
     if (base62Str.length >= 9) {
       return base62Str.slice(0, 9);
     } else {
-      return base62Str.padStart(9, '0');
+      return base62Str.padStart(9, "0");
     }
   }
 }
