@@ -160,10 +160,18 @@ function _makeMessageChunkFromAnthropicEvent(
     streamUsage: boolean;
     coerceContentToString: boolean;
     usageData: { input_tokens: number; output_tokens: number };
+    toolUse?: {
+      id: string;
+      name: string;
+    };
   }
 ): {
   chunk: AIMessageChunk;
   usageData: { input_tokens: number; output_tokens: number };
+  toolUse?: {
+    id: string;
+    name: string;
+  };
 } | null {
   let usageDataCopy = { ...fields.usageData };
 
@@ -233,6 +241,10 @@ function _makeMessageChunkFromAnthropicEvent(
         additional_kwargs: {},
       }),
       usageData: usageDataCopy,
+      toolUse: {
+        id: data.content_block.id,
+        name: data.content_block.name,
+      },
     };
   } else if (
     data.type === "content_block_delta" &&
@@ -268,6 +280,25 @@ function _makeMessageChunkFromAnthropicEvent(
                 index: data.index,
                 input: data.delta.partial_json,
                 type: data.delta.type,
+              },
+            ],
+        additional_kwargs: {},
+      }),
+      usageData: usageDataCopy,
+    };
+  } else if (data.type === "content_block_stop" && fields.toolUse) {
+    // Only yield the ID & name when the tool_use block is complete.
+    // This is so the names & IDs do not get concatenated.
+    return {
+      chunk: new AIMessageChunk({
+        content: fields.coerceContentToString
+          ? ""
+          : [
+              {
+                id: fields.toolUse.id,
+                name: fields.toolUse.name,
+                index: data.index,
+                type: "input_json_delta",
               },
             ],
         additional_kwargs: {},
@@ -424,6 +455,9 @@ export function _convertLangChainToolCallToAnthropic(
 }
 
 function _formatContent(content: MessageContent) {
+  const toolTypes = ["tool_use", "tool_result", "input_json_delta"];
+  const textTypes = ["text", "text_delta"];
+
   if (typeof content === "string") {
     return content;
   } else {
@@ -439,19 +473,40 @@ function _formatContent(content: MessageContent) {
           type: "image" as const, // Explicitly setting the type as "image"
           source,
         };
-      } else if (contentPart.type === "text") {
+      } else if (
+        textTypes.find((t) => t === contentPart.type) &&
+        "text" in contentPart
+      ) {
         // Assuming contentPart is of type MessageContentText here
         return {
           type: "text" as const, // Explicitly setting the type as "text"
           text: contentPart.text,
         };
-      } else if (
-        contentPart.type === "tool_use" ||
-        contentPart.type === "tool_result"
-      ) {
+      } else if (toolTypes.find((t) => t === contentPart.type)) {
+        const contentPartCopy = { ...contentPart };
+        if ("index" in contentPartCopy) {
+          // Anthropic does not support passing the index field here, so we remove it.
+          delete contentPartCopy.index;
+        }
+
+        if (contentPartCopy.type === "input_json_delta") {
+          // `input_json_delta` type only represents yielding partial tool inputs
+          // and is not a valid type for Anthropic messages.
+          contentPartCopy.type = "tool_use";
+        }
+
+        if ("input" in contentPartCopy) {
+          // Anthropic tool use inputs should be valid objects, when applicable.
+          try {
+            contentPartCopy.input = JSON.parse(contentPartCopy.input);
+          } catch {
+            // no-op
+          }
+        }
+
         // TODO: Fix when SDK types are fixed
         return {
-          ...contentPart,
+          ...contentPartCopy,
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } as any;
       } else {
@@ -519,7 +574,9 @@ function _formatMessagesForAnthropic(messages: BaseMessage[]): {
         const hasMismatchedToolCalls = !message.tool_calls.every((toolCall) =>
           content.find(
             (contentPart) =>
-              contentPart.type === "tool_use" && contentPart.id === toolCall.id
+              (contentPart.type === "tool_use" ||
+                contentPart.type === "input_json_delta") &&
+              contentPart.id === toolCall.id
           )
         );
         if (hasMismatchedToolCalls) {
@@ -581,12 +638,16 @@ function extractToolCallChunk(
   ) {
     if (typeof inputJsonDeltaChunks.input === "string") {
       newToolCallChunk = {
+        id: inputJsonDeltaChunks.id,
+        name: inputJsonDeltaChunks.name,
         args: inputJsonDeltaChunks.input,
         index: inputJsonDeltaChunks.index,
         type: "tool_call_chunk",
       };
     } else {
       newToolCallChunk = {
+        id: inputJsonDeltaChunks.id,
+        name: inputJsonDeltaChunks.name,
         args: JSON.stringify(inputJsonDeltaChunks.input, null, 2),
         index: inputJsonDeltaChunks.index,
         type: "tool_call_chunk",
@@ -919,6 +980,14 @@ export class ChatAnthropicMessages<
     let usageData = { input_tokens: 0, output_tokens: 0 };
 
     let concatenatedChunks: AIMessageChunk | undefined;
+    // Anthropic only yields the tool name and id once, so we need to save those
+    // so we can yield them with the rest of the tool_use content.
+    let toolUse:
+      | {
+          id: string;
+          name: string;
+        }
+      | undefined;
 
     for await (const data of stream) {
       if (options.signal?.aborted) {
@@ -930,11 +999,26 @@ export class ChatAnthropicMessages<
         streamUsage: !!(this.streamUsage || options.streamUsage),
         coerceContentToString,
         usageData,
+        toolUse: toolUse
+          ? {
+              id: toolUse.id,
+              name: toolUse.name,
+            }
+          : undefined,
       });
       if (!result) continue;
 
-      const { chunk, usageData: updatedUsageData } = result;
+      const {
+        chunk,
+        usageData: updatedUsageData,
+        toolUse: updatedToolUse,
+      } = result;
+
       usageData = updatedUsageData;
+
+      if (updatedToolUse) {
+        toolUse = updatedToolUse;
+      }
 
       const newToolCallChunk = extractToolCallChunk(chunk);
       // Maintain concatenatedChunks for accessing the complete `tool_use` content block.
