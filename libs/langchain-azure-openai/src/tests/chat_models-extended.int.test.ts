@@ -14,7 +14,7 @@ test("Test ChatOpenAI JSON mode", async () => {
   });
   const message = new HumanMessage("Hello!");
   const res = await chat.invoke([["system", "Only return JSON"], message]);
-  console.log(JSON.stringify(res));
+  // console.log(JSON.stringify(res));
 });
 
 test("Test ChatOpenAI seed", async () => {
@@ -27,7 +27,7 @@ test("Test ChatOpenAI seed", async () => {
   });
   const message = new HumanMessage("Say something random!");
   const res = await chat.invoke([message]);
-  console.log(JSON.stringify(res));
+  // console.log(JSON.stringify(res));
   const res2 = await chat.invoke([message]);
   expect(res).toEqual(res2);
 });
@@ -62,7 +62,7 @@ test("Test ChatOpenAI tool calling", async () => {
   const res = await chat.invoke([
     ["human", "What's the weather like in San Francisco, Tokyo, and Paris?"],
   ]);
-  console.log(JSON.stringify(res));
+  // console.log(JSON.stringify(res));
   expect(res.additional_kwargs.tool_calls?.length).toBeGreaterThan(1);
 });
 
@@ -109,7 +109,7 @@ test("Test ChatOpenAI tool calling with ToolMessages", async () => {
   const res = await chat.invoke([
     ["human", "What's the weather like in San Francisco, Tokyo, and Paris?"],
   ]);
-  console.log(JSON.stringify(res));
+  // console.log(JSON.stringify(res));
   expect(res.additional_kwargs.tool_calls?.length).toBeGreaterThan(1);
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const toolMessages = res.additional_kwargs.tool_calls!.map(
@@ -127,7 +127,7 @@ test("Test ChatOpenAI tool calling with ToolMessages", async () => {
     res,
     ...toolMessages,
   ]);
-  console.log(finalResponse);
+  // console.log(finalResponse);
 });
 
 test("Test ChatOpenAI tool calling with streaming", async () => {
@@ -163,7 +163,7 @@ test("Test ChatOpenAI tool calling with streaming", async () => {
   let finalChunk;
   const chunks = [];
   for await (const chunk of stream) {
-    console.log(chunk.additional_kwargs.tool_calls);
+    // console.log(chunk.additional_kwargs.tool_calls);
     chunks.push(chunk);
     if (!finalChunk) {
       finalChunk = chunk;
@@ -172,7 +172,7 @@ test("Test ChatOpenAI tool calling with streaming", async () => {
     }
   }
   expect(chunks.length).toBeGreaterThan(1);
-  console.log(finalChunk?.additional_kwargs.tool_calls);
+  // console.log(finalChunk?.additional_kwargs.tool_calls);
   expect(finalChunk?.additional_kwargs.tool_calls?.length).toBeGreaterThan(1);
 });
 
@@ -193,10 +193,10 @@ test("ChatOpenAI in JSON mode can cache generations", async () => {
     "Respond with a JSON object containing arbitrary fields."
   );
   const res = await chat.invoke([message]);
-  console.log(res);
+  // console.log(res);
 
   const res2 = await chat.invoke([message]);
-  console.log(res2);
+  // console.log(res2);
 
   expect(res).toEqual(res2);
 

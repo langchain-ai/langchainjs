@@ -41,7 +41,7 @@ describe("GAuth Chat", () => {
       expect(textContent.text).toEqual("2");
       */
     } catch (e) {
-      console.error(e);
+      // console.error(e);
       throw e;
     }
   });
@@ -81,7 +81,7 @@ describe("GAuth Chat", () => {
       expect(["H", "T"]).toContainEqual(textContent.text);
       */
     } catch (e) {
-      console.error(e);
+      // console.error(e);
       throw e;
     }
   });
@@ -109,11 +109,11 @@ describe("GAuth Chat", () => {
       expect(lastChunk).toBeDefined();
       expect(lastChunk._getType()).toEqual("ai");
       const aiChunk = lastChunk as AIMessageChunk;
-      console.log(aiChunk);
+      // console.log(aiChunk);
 
-      console.log(JSON.stringify(resArray, null, 2));
+      // console.log(JSON.stringify(resArray, null, 2));
     } catch (e) {
-      console.error(e);
+      // console.error(e);
       throw e;
     }
   });
@@ -209,7 +209,7 @@ describe("GAuth Chat", () => {
     for await (const chunk of res) {
       resArray.push(chunk);
     }
-    console.log(JSON.stringify(resArray, null, 2));
+    // console.log(JSON.stringify(resArray, null, 2));
   });
 
   test("withStructuredOutput", async () => {
@@ -249,7 +249,7 @@ test("Stream token count usage_metadata", async () => {
       res = res.concat(chunk);
     }
   }
-  console.log(res);
+  // console.log(res);
   expect(res?.usage_metadata).toBeDefined();
   if (!res?.usage_metadata) {
     return;
@@ -276,7 +276,7 @@ test("streamUsage excludes token usage", async () => {
       res = res.concat(chunk);
     }
   }
-  console.log(res);
+  // console.log(res);
   expect(res?.usage_metadata).not.toBeDefined();
 });
 
@@ -286,7 +286,7 @@ test("Invoke token count usage_metadata", async () => {
     maxOutputTokens: 10,
   });
   const res = await model.invoke("Why is the sky blue? Be concise.");
-  console.log(res);
+  // console.log(res);
   expect(res?.usage_metadata).toBeDefined();
   if (!res?.usage_metadata) {
     return;

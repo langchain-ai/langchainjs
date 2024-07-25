@@ -26,7 +26,7 @@ test.skip("Test ChatMinimax", async () => {
   });
   const message = new HumanMessage("Hello!");
   const res = await chat.invoke([message]);
-  console.log({ res });
+  // console.log({ res });
 });
 
 test.skip("Test ChatMinimax with SystemChatMessage", async () => {
@@ -34,7 +34,7 @@ test.skip("Test ChatMinimax with SystemChatMessage", async () => {
   const system_message = new SystemMessage("You are to chat with a user.");
   const message = new HumanMessage("Hello!");
   const res = await chat.invoke([system_message, message]);
-  console.log({ res });
+  // console.log({ res });
 });
 
 test.skip("Test ChatMinimax Generate", async () => {
@@ -52,11 +52,11 @@ test.skip("Test ChatMinimax Generate", async () => {
   for (const generation of res.generations) {
     expect(generation.length).toBe(1);
     for (const message of generation) {
-      console.log(message.text);
+      // console.log(message.text);
       expect(typeof message.text).toBe("string");
     }
   }
-  console.log({ res });
+  // console.log({ res });
 });
 
 test.skip("Test ChatMinimax Generate throws when one of the calls fails", async () => {
@@ -96,7 +96,7 @@ test.skip("Test ChatMinimax tokenUsage", async () => {
   });
   const message = new HumanMessage("Hello");
   const res = await model.invoke([message]);
-  console.log({ res });
+  // console.log({ res });
 
   expect(tokenUsage.totalTokens).toBeGreaterThan(0);
 });
@@ -124,8 +124,8 @@ test.skip("Test ChatMinimax tokenUsage with a batch", async () => {
     [new HumanMessage("Hello")],
     [new HumanMessage("Hi")],
   ]);
-  console.log({ tokenUsage });
-  console.log(res);
+  // console.log({ tokenUsage });
+  // console.log(res);
 
   expect(tokenUsage.totalTokens).toBeGreaterThan(0);
 });
@@ -154,7 +154,7 @@ test.skip("Test ChatMinimax in streaming mode", async () => {
   });
   const message = new HumanMessage("Hello!");
   const result = await model.invoke([message]);
-  console.log(result);
+  // console.log(result);
 
   expect(nrNewTokens > 0).toBe(true);
   expect(result.content).toBe(streamedCompletion);
@@ -183,7 +183,7 @@ test.skip("OpenAI Chat, docs, prompt templates", async () => {
     }),
   ]);
 
-  console.log(responseA.generations);
+  // console.log(responseA.generations);
 }, 5000);
 
 test.skip("Test OpenAI with signal in call options", async () => {
@@ -208,7 +208,7 @@ test.skip("Test OpenAI with specific roles in ChatMessage", async () => {
   );
   const user_message = new ChatMessage("Hello!", "user");
   const res = await chat.invoke([system_message, user_message]);
-  console.log({ res });
+  // console.log({ res });
 });
 
 test.skip("Function calling ", async () => {
@@ -245,7 +245,7 @@ test.skip("Function calling ", async () => {
     }),
   ]);
 
-  console.log(result);
+  // console.log(result);
   expect(result.additional_kwargs.function_call?.name).toBe("get_weather");
 });
 test.skip("Test ChatMinimax Function calling ", async () => {
@@ -282,7 +282,7 @@ test.skip("Test ChatMinimax Function calling ", async () => {
     }),
   ]);
 
-  console.log(result);
+  // console.log(result);
   expect(result.additional_kwargs.function_call?.name).toBe("get_weather");
 });
 
@@ -315,7 +315,7 @@ test.skip("Test ChatMinimax Glyph", async () => {
   const messages = await messagesTemplate.formatMessages({ text: "你好" });
   const result = await model.invoke(messages);
 
-  console.log(result);
+  // console.log(result);
   expect(result.content).toMatch(/The translated text：.*/);
 });
 test.skip("Test ChatMinimax Plugins", async () => {
@@ -337,5 +337,5 @@ test.skip("Test ChatMinimax Plugins", async () => {
     }),
   ]);
 
-  console.log(result);
+  // console.log(result);
 });

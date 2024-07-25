@@ -8,7 +8,7 @@ test.skip("Test OllamaFunctions", async () => {
   const chat = new OllamaFunctions({ model: "mistral" });
   const message = new HumanMessage("Hello!");
   const res = await chat.invoke([message]);
-  console.log(JSON.stringify(res));
+  // console.log(JSON.stringify(res));
 });
 
 test.skip("Test OllamaFunctions with functions", async () => {
@@ -39,7 +39,7 @@ test.skip("Test OllamaFunctions with functions", async () => {
   });
   const message = new HumanMessage("What is the weather in San Francisco?");
   const res = await chat.invoke([message]);
-  console.log(JSON.stringify(res));
+  // console.log(JSON.stringify(res));
 });
 
 test.skip("Test OllamaFunctions with a forced function call", async () => {
@@ -77,5 +77,5 @@ test.skip("Test OllamaFunctions with a forced function call", async () => {
     "Extract the desired information from the following passage:\n\nthis is really cool"
   );
   const res = await chat.invoke([message]);
-  console.log(JSON.stringify(res));
+  // console.log(JSON.stringify(res));
 });

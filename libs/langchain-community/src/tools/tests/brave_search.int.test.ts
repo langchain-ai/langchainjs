@@ -6,5 +6,5 @@ test.skip("BraveSearchTool", async () => {
 
   const result = await tool.invoke("What is Langchain?");
 
-  console.log({ result });
+  // console.log({ result });
 });

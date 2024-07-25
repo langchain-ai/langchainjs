@@ -15,7 +15,7 @@ test.skip("Test predict", async () => {
   const llamaCpp = new ChatLlamaCpp({ modelPath: llamaPath });
 
   const response = await llamaCpp.invoke("Where do Llamas come from?");
-  console.log({ response });
+  // console.log({ response });
 });
 
 test.skip("Test call", async () => {
@@ -24,7 +24,7 @@ test.skip("Test call", async () => {
   const response = await llamaCpp.invoke([
     new HumanMessage({ content: "My name is Nigel." }),
   ]);
-  console.log({ response });
+  // console.log({ response });
 });
 
 test.skip("Test multiple messages", async () => {
@@ -37,7 +37,7 @@ test.skip("Test multiple messages", async () => {
     ),
     new HumanMessage("What did I say my name was?"),
   ]);
-  console.log({ response });
+  // console.log({ response });
 });
 
 test.skip("Test system message", async () => {
@@ -49,7 +49,7 @@ test.skip("Test system message", async () => {
     ),
     new HumanMessage("Tell me where Llamas come from?"),
   ]);
-  console.log({ response });
+  // console.log({ response });
 });
 
 test.skip("test streaming call", async () => {
@@ -62,7 +62,7 @@ test.skip("test streaming call", async () => {
   const chunks = [];
   for await (const chunk of stream) {
     chunks.push(chunk.content);
-    console.log(chunk.content);
+    // console.log(chunk.content);
   }
 
   expect(chunks.length).toBeGreaterThan(1);
@@ -81,7 +81,7 @@ test.skip("test multi-mesage streaming call", async () => {
   const chunks = [];
   for await (const chunk of stream) {
     chunks.push(chunk.content);
-    console.log(chunk.content);
+    // console.log(chunk.content);
   }
 
   expect(chunks.length).toBeGreaterThan(1);
@@ -107,7 +107,7 @@ test.skip("test multi-mesage streaming call and abort after 5s", async () => {
         callbacks: [
           {
             handleLLMNewToken(token) {
-              console.log(token);
+              // console.log(token);
               chunks.push(token);
             },
           },

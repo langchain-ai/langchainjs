@@ -16,7 +16,7 @@ test("Test loadQAStuffChain", async () => {
     new Document({ pageContent: "baz" }),
   ];
   const res = await chain.call({ input_documents: docs, question: "Whats up" });
-  console.log({ res });
+  // console.log({ res });
 });
 
 test("Test loadQAMapReduceChain", async () => {
@@ -28,7 +28,7 @@ test("Test loadQAMapReduceChain", async () => {
     new Document({ pageContent: "baz" }),
   ];
   const res = await chain.call({ input_documents: docs, question: "Whats up" });
-  console.log({ res });
+  // console.log({ res });
 });
 
 test("Test loadQARefineChain", async () => {
@@ -42,5 +42,5 @@ test("Test loadQARefineChain", async () => {
     input_documents: docs,
     question: "Where did Harrison go to college?",
   });
-  console.log({ res });
+  // console.log({ res });
 });

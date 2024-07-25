@@ -7,13 +7,13 @@ describe.skip("ChatFriendli", () => {
     const chatFriendli = new ChatFriendli({ maxTokens: 20 });
     const message = new HumanMessage("1 + 1 = ");
     const res = await chatFriendli.invoke([message]);
-    console.log({ res });
+    // console.log({ res });
   });
 
   test("generate", async () => {
     const chatFriendli = new ChatFriendli({ maxTokens: 20 });
     const message = new HumanMessage("1 + 1 = ");
     const res = await chatFriendli.generate([[message]]);
-    console.log(JSON.stringify(res, null, 2));
+    // console.log(JSON.stringify(res, null, 2));
   });
 });

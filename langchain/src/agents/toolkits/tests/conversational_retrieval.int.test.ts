@@ -30,17 +30,17 @@ test("Test ConversationalRetrievalAgent", async () => {
   const result = await executor.invoke({
     input: "Hi, I'm Bob!",
   });
-  console.log(result);
+  // console.log(result);
   const result2 = await executor.invoke({
     input: "What's my name?",
   });
-  console.log(result2);
+  // console.log(result2);
   const result3 = await executor.invoke({
     input: "How much money did LangCo make in July?",
   });
-  console.log(result3);
+  // console.log(result3);
   const result4 = await executor.invoke({
     input: "How about in August?",
   });
-  console.log(result4);
+  // console.log(result4);
 });

@@ -43,7 +43,7 @@ test(`Chat model dataset`, async () => {
       await childRun.postRun();
       return chatCompletion.choices[0].message.content ?? "";
     } catch (error: any) {
-      console.error("Error generating wiki search query:", error);
+      // console.error("Error generating wiki search query:", error);
       childRun.end({ error: error.toString() });
       await childRun.postRun();
       throw error;
@@ -93,7 +93,7 @@ test(`Chat model dataset`, async () => {
       await childRun.postRun();
       return finalResults;
     } catch (error: any) {
-      console.error("Error in retrieval:", error);
+      // console.error("Error in retrieval:", error);
       childRun.end({ error: error.toString() });
       await childRun.postRun();
       throw error;
@@ -131,7 +131,7 @@ test(`Chat model dataset`, async () => {
       await childRun.postRun();
       return chatCompletion.choices[0].message.content ?? "";
     } catch (error: any) {
-      console.error("Error generating answer:", error);
+      // console.error("Error generating answer:", error);
       childRun.end({ error: error.toString() });
       await childRun.postRun();
       throw error;
@@ -158,7 +158,7 @@ test(`Chat model dataset`, async () => {
       await parentRun.postRun();
       return answer;
     } catch (error: any) {
-      console.error("Error running RAG Pipeline:", error);
+      // console.error("Error running RAG Pipeline:", error);
       parentRun.end({ error: error.toString() });
       await parentRun.postRun();
       throw error;
@@ -245,7 +245,7 @@ test(`Chat model dataset`, async () => {
     return ragPipeline(question);
   };
 
-  console.log(
+  // console.log(
     await runOnDataset(wrappedRagPipeline, datasetName, {
       evaluationConfig: evaluation,
     })
@@ -292,7 +292,7 @@ test("Thrown errors should not interrupt dataset run", async () => {
 
   // An illustrative custom evaluator example
   const dummy = async (_: DynamicRunEvaluatorParams) => {
-    console.log("RUNNING EVAL");
+    // console.log("RUNNING EVAL");
     throw new Error("Expected error");
   };
 
@@ -310,7 +310,7 @@ test("Thrown errors should not interrupt dataset run", async () => {
     return ragPipeline(question);
   };
 
-  console.log(
+  // console.log(
     await runOnDataset(wrappedRagPipeline, datasetName, {
       evaluationConfig: evaluation,
       maxConcurrency: 1,

@@ -21,7 +21,7 @@ test.skip("convertToGraphDocuments", async () => {
     new Document({ pageContent: "Elon Musk is suing OpenAI" }),
   ]);
 
-  console.log(result);
+  // console.log(result);
 });
 
 test("convertToGraphDocuments with allowed", async () => {
@@ -40,7 +40,7 @@ test("convertToGraphDocuments with allowed", async () => {
     new Document({ pageContent: "Elon Musk is suing OpenAI" }),
   ]);
 
-  console.log(JSON.stringify(result));
+  // console.log(JSON.stringify(result));
 
   expect(result).toEqual([
     new GraphDocument({
@@ -79,7 +79,7 @@ test("convertToGraphDocuments with allowed lowercased", async () => {
     new Document({ pageContent: "Elon Musk is suing OpenAI" }),
   ]);
 
-  console.log(JSON.stringify(result));
+  // console.log(JSON.stringify(result));
 
   expect(result).toEqual([
     new GraphDocument({

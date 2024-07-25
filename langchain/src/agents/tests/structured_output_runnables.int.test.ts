@@ -30,7 +30,7 @@ const structuredOutputParser = (
   const functionCall = output.additional_kwargs.function_call;
   const name = functionCall?.name as string;
   const inputs = functionCall?.arguments as string;
-  console.log(functionCall);
+  // console.log(functionCall);
 
   const jsonInput = JSON.parse(inputs);
 
@@ -116,7 +116,7 @@ test("Pass custom structured output parsers", async () => {
   const res = await executor.invoke({
     input: "what did the president say about kentaji brown jackson",
   });
-  console.log({
+  // console.log({
     res,
   });
   /**

@@ -159,7 +159,7 @@ describe("Pinecone self query", () => {
     const query5 = await selfQueryRetriever.getRelevantDocuments(
       "Awawawawa hello hello hello huh where am i?"
     );
-    console.log(query1, query2, query3, query4, query5); // query 5 should return documents
+    // console.log(query1, query2, query3, query4, query5); // query 5 should return documents
     expect(query5.length).toBeGreaterThan(0);
   });
 
@@ -311,7 +311,7 @@ describe("Pinecone self query", () => {
     const query5 = await selfQueryRetriever.getRelevantDocuments(
       "Awawawawa hello hello hello huh where am i?"
     );
-    console.log(query1, query2, query3, query4, query5); // query 5 should return documents
+    // console.log(query1, query2, query3, query4, query5); // query 5 should return documents
     expect(query5.length).toBeGreaterThan(0);
   });
 });

@@ -111,7 +111,7 @@ describe.skip("testCypherGeneratingRun", () => {
     expect(output.result.includes(expectedOutput)).toBeTruthy();
 
     const { query } = output[INTERMEDIATE_STEPS_KEY][0];
-    console.log(query);
+    // console.log(query);
     // const expectedQuery =
     //   "\n\nMATCH (a:Actor)-[:ACTED_IN]->" +
     //   "(m:Movie) WHERE m.title = 'Pulp Fiction' RETURN a.name";

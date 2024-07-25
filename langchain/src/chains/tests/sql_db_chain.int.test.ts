@@ -38,7 +38,7 @@ test("Test SqlDatabaseChain", async () => {
   expect(chain.prompt).toBe(SQL_SQLITE_PROMPT);
 
   const run = await chain.run("How many users are there?");
-  console.log(run);
+  // console.log(run);
 
   await datasource.destroy();
 });
@@ -78,7 +78,7 @@ test("Test SqlDatabaseChain with sqlOutputKey", async () => {
   expect(chain.prompt).toBe(SQL_SQLITE_PROMPT);
 
   const run = await chain.call({ query: "How many users are there?" });
-  console.log(run);
+  // console.log(run);
 
   expect(run).toHaveProperty("sql");
   await datasource.destroy();

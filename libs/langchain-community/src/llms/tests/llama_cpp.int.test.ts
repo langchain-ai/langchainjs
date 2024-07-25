@@ -8,13 +8,13 @@ const llamaPath = getEnvironmentVariable("LLAMA_PATH")!;
 test.skip("Test Llama_CPP", async () => {
   const model = new LlamaCpp({ modelPath: llamaPath });
   const res = await model.invoke("Where do Llamas live?");
-  console.log(res);
+  // console.log(res);
 }, 100000);
 
 test.skip("Test Llama_CPP", async () => {
   const model = new LlamaCpp({ modelPath: llamaPath });
   const res = await model.invoke("Where do Pandas live?");
-  console.log(res);
+  // console.log(res);
 }, 100000);
 
 test.skip("Test Llama_CPP", async () => {
@@ -55,7 +55,7 @@ test.skip("Test Llama_CPP", async () => {
   const res = await model.invoke(
     "Can you give me a list of 3 cute llama names?"
   );
-  console.log(res);
+  // console.log(res);
 }, 100000);
 
 // JSON schema test
@@ -78,5 +78,5 @@ const schemaJSON = {
 test.skip("Test Llama_CPP", async () => {
   const model = new LlamaCpp({ modelPath: llamaPath, jsonSchema: schemaJSON });
   const res = await model.invoke("Where do llamas live?");
-  console.log(res);
+  // console.log(res);
 }, 100000);

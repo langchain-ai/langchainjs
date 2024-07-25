@@ -7,7 +7,7 @@ describe.skip("AI21", () => {
     const result = await ai21.invoke(
       "What is a good name for a company that makes colorful socks?"
     );
-    console.log({ result });
+    // console.log({ result });
   });
 
   test("test translation call", async () => {
@@ -15,7 +15,7 @@ describe.skip("AI21", () => {
     const result = await ai21.invoke(
       `Translate "I love programming" into German.`
     );
-    console.log({ result });
+    // console.log({ result });
   });
 
   test("test JSON output call", async () => {
@@ -23,7 +23,7 @@ describe.skip("AI21", () => {
     const result = await ai21.invoke(
       `Output a JSON object with three string fields: "name", "birthplace", "bio".`
     );
-    console.log({ result });
+    // console.log({ result });
   });
 
   test("should abort the request", async () => {

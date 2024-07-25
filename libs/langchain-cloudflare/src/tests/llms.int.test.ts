@@ -10,7 +10,7 @@ const originalBackground = process.env.LANGCHAIN_CALLBACKS_BACKGROUND;
 test("Test CloudflareWorkersAI", async () => {
   const model = new CloudflareWorkersAI({});
   const res = await model.invoke("1 + 1 =");
-  console.log(res);
+  // console.log(res);
 }, 50000);
 
 test("generate with streaming true", async () => {
@@ -28,7 +28,7 @@ test("generate with streaming true", async () => {
       callbacks: [
         {
           handleLLMNewToken: (token) => {
-            console.log(token);
+            // console.log(token);
             tokens.push(token);
           },
         },
@@ -48,10 +48,10 @@ test("Test CloudflareWorkersAI streaming", async () => {
   const chunks = [];
   for await (const chunk of stream) {
     chunks.push(chunk);
-    console.log(chunk);
+    // console.log(chunk);
   }
   expect(chunks.length).toBeGreaterThan(1);
-  console.log(chunks.join(""));
+  // console.log(chunks.join(""));
 }, 50000);
 
 test.skip("Test custom base url", async () => {
@@ -61,5 +61,5 @@ test.skip("Test custom base url", async () => {
     )}/lang-chainjs/workers-ai/`,
   });
   const res = await model.invoke("1 + 1 =");
-  console.log(res);
+  // console.log(res);
 });

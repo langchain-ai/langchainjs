@@ -32,7 +32,7 @@ test("Test ChatBedrockConverse can invoke", async () => {
     maxTokens: 5,
   });
   const res = await model.invoke([new HumanMessage("Print hello world")]);
-  console.log({ res });
+  // console.log({ res });
   expect(typeof res.content).toBe("string");
   expect(res.content.length).toBeGreaterThan(1);
   expect(res.content).not.toContain("world");
@@ -49,7 +49,7 @@ test("Test ChatBedrockConverse stream method", async () => {
     chunks.push(chunk);
   }
   const finalMessage = chunks.map((c) => c.content).join("");
-  console.log(finalMessage);
+  // console.log(finalMessage);
   expect(chunks.length).toBeGreaterThan(1);
 });
 
@@ -78,7 +78,7 @@ test("Test ChatBedrockConverse in streaming mode", async () => {
     });
     const message = new HumanMessage("Hello!");
     const result = await model.invoke([message]);
-    console.log(result);
+    // console.log(result);
 
     expect(nrNewTokens > 0).toBe(true);
     expect(result.content).toBe(streamedCompletion);
@@ -96,7 +96,7 @@ test("Test ChatBedrockConverse with stop", async () => {
   const res = await model.invoke([new HumanMessage("Print hello world")], {
     stop: ["world"],
   });
-  console.log({ res });
+  // console.log({ res });
   expect(typeof res.content).toBe("string");
   expect(res.content.length).toBeGreaterThan(1);
   expect(res.content).not.toContain("world");
@@ -112,7 +112,7 @@ test("Test ChatBedrockConverse stream method with early break", async () => {
   );
   let i = 0;
   for await (const chunk of stream) {
-    console.log(chunk);
+    // console.log(chunk);
     i += 1;
     if (i > 10) {
       break;
@@ -134,7 +134,7 @@ test("Streaming tokens can be found in usage_metadata field", async () => {
       finalResult = chunk;
     }
   }
-  console.log({
+  // console.log({
     usage_metadata: finalResult?.usage_metadata,
   });
   expect(finalResult).toBeTruthy();
@@ -150,7 +150,7 @@ test("populates ID field on AIMessage", async () => {
     maxTokens: 5,
   });
   const response = await model.invoke("Hell");
-  console.log({
+  // console.log({
     invokeId: response.id,
   });
   expect(response.id?.length).toBeGreaterThan(1);
@@ -182,7 +182,7 @@ test("Test ChatBedrockConverse can invoke tools", async () => {
   const tools = [
     tool(
       (input) => {
-        console.log("tool", input);
+        // console.log("tool", input);
         return "Hello";
       },
       {
@@ -201,7 +201,7 @@ test("Test ChatBedrockConverse can invoke tools", async () => {
 
   expect(result.tool_calls).toBeDefined();
   expect(result.tool_calls).toHaveLength(1);
-  console.log("result.tool_calls?.[0]", result.tool_calls?.[0]);
+  // console.log("result.tool_calls?.[0]", result.tool_calls?.[0]);
   expect(result.tool_calls?.[0].name).toBe("get_weather");
   expect(result.tool_calls?.[0].id).toBeDefined();
 });
@@ -214,7 +214,7 @@ test("Test ChatBedrockConverse can invoke tools with non anthropic model", async
   const tools = [
     tool(
       (input) => {
-        console.log("tool", input);
+        // console.log("tool", input);
         return "Hello";
       },
       {
@@ -233,7 +233,7 @@ test("Test ChatBedrockConverse can invoke tools with non anthropic model", async
 
   expect(result.tool_calls).toBeDefined();
   expect(result.tool_calls).toHaveLength(1);
-  console.log("result.tool_calls?.[0]", result.tool_calls?.[0]);
+  // console.log("result.tool_calls?.[0]", result.tool_calls?.[0]);
   expect(result.tool_calls?.[0].name).toBe("get_weather");
   expect(result.tool_calls?.[0].id).toBeDefined();
 });
@@ -245,7 +245,7 @@ test("Test ChatBedrockConverse can stream tools", async () => {
   const tools = [
     tool(
       (input) => {
-        console.log("tool", input);
+        // console.log("tool", input);
         return "Hello";
       },
       {
@@ -272,7 +272,7 @@ test("Test ChatBedrockConverse can stream tools", async () => {
   }
   expect(finalChunk?.tool_calls).toBeDefined();
   expect(finalChunk?.tool_calls).toHaveLength(1);
-  console.log("result.tool_calls?.[0]", finalChunk?.tool_calls?.[0]);
+  // console.log("result.tool_calls?.[0]", finalChunk?.tool_calls?.[0]);
   expect(finalChunk?.tool_calls?.[0].name).toBe("get_weather");
   expect(finalChunk?.tool_calls?.[0].id).toBeDefined();
 });
@@ -284,7 +284,7 @@ test("Test ChatBedrockConverse tool_choice works", async () => {
   const tools = [
     tool(
       (input) => {
-        console.log("tool", input);
+        // console.log("tool", input);
         return "Hello";
       },
       {
@@ -297,7 +297,7 @@ test("Test ChatBedrockConverse tool_choice works", async () => {
     ),
     tool(
       (input) => {
-        console.log("tool", input);
+        // console.log("tool", input);
         return "Hello";
       },
       {
@@ -321,7 +321,7 @@ test("Test ChatBedrockConverse tool_choice works", async () => {
 
   expect(result.tool_calls).toBeDefined();
   expect(result.tool_calls).toHaveLength(1);
-  console.log("result.tool_calls?.[0]", result.tool_calls?.[0]);
+  // console.log("result.tool_calls?.[0]", result.tool_calls?.[0]);
   expect(result.tool_calls?.[0].name).toBe("get_weather");
   expect(result.tool_calls?.[0].id).toBeDefined();
 });

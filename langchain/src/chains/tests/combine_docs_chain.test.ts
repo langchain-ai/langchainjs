@@ -48,7 +48,7 @@ test("Test MapReduceDocumentsChain", async () => {
     input_documents: docs,
     question: "Where did harrison go to college",
   });
-  console.log({ res });
+  // console.log({ res });
 
   expect(res).toEqual({
     text: "a final answer",
@@ -73,7 +73,7 @@ test("Test MapReduceDocumentsChain with content above maxTokens and intermediate
     input_documents: docs,
     question: "Is the letter c present in the document",
   });
-  console.log({ res });
+  // console.log({ res });
 
   expect(res).toEqual({
     text: "a final answer",
@@ -94,5 +94,5 @@ test("Test RefineDocumentsChain", async () => {
   expect(chain.inputKeys).toEqual(["input_documents"]);
 
   const res = await chain.run(docs);
-  console.log({ res });
+  // console.log({ res });
 });

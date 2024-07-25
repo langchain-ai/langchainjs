@@ -18,7 +18,7 @@ test("Test QAEvalChain", async () => {
   const predictions = [{ result: "ChatGPT" }, { result: "GPT-4" }];
 
   const res = await chain.evaluate(examples, predictions);
-  console.log({ res });
+  // console.log({ res });
 });
 
 test("Test QAEvalChain with incorrect input variables", async () => {

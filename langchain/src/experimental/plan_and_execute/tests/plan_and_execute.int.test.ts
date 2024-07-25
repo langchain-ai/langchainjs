@@ -20,7 +20,7 @@ test.skip("Run agent on a simple input", async () => {
     input: `What is 80 raised to the second power?`,
   });
 
-  console.log({ result });
+  // console.log({ result });
 });
 
 test.skip("Run agent", async () => {
@@ -39,7 +39,7 @@ test.skip("Run agent", async () => {
     input: `Who is the current president of the United States? What is their current age raised to the second power?`,
   });
 
-  console.log({ result });
+  // console.log({ result });
 });
 
 // TODO: Improve prompt to store compressed context to support this input
@@ -59,5 +59,5 @@ test.skip("Run agent with a sequential math problem", async () => {
     input: `In a dance class of 20 students, 20% enrolled in contemporary dance, 25% of the remaining enrolled in jazz dance, and the rest enrolled in hip-hop dance. What percentage of the entire students enrolled in hip-hop dance?`,
   });
 
-  console.log(result);
+  // console.log(result);
 });

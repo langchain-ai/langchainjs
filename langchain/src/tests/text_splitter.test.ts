@@ -77,7 +77,7 @@ describe("Character text splitter", () => {
   test("Test invalid arguments.", () => {
     expect(() => {
       const res = new CharacterTextSplitter({ chunkSize: 2, chunkOverlap: 4 });
-      console.log(res);
+      // console.log(res);
     }).toThrow();
   });
 

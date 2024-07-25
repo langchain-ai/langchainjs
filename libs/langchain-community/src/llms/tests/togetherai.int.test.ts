@@ -11,7 +11,7 @@ test.skip("TogetherAI can make a request to an LLM", async () => {
   ]);
   const chain = prompt.pipe(model);
   const result = await chain.invoke({});
-  console.log("result", result);
+  // console.log("result", result);
 });
 
 test.skip("TogetherAI can stream responses", async () => {
@@ -28,10 +28,10 @@ test.skip("TogetherAI can stream responses", async () => {
   let numItems = 0;
   let fullText = "";
   for await (const item of result) {
-    console.log("stream item", item);
+    // console.log("stream item", item);
     fullText += item;
     numItems += 1;
   }
-  console.log(fullText);
+  // console.log(fullText);
   expect(numItems).toBeGreaterThan(1);
 });

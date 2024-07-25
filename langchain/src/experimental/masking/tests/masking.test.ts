@@ -307,7 +307,7 @@ describe("MaskingParser and PIIMaskingTransformer", () => {
           // @ts-expect-error Should throw with invalid regex
           invalid: { regex: null },
         });
-        console.log(transformer);
+        // console.log(transformer);
       }).toThrow("Invalid pattern configuration.");
     });
   });

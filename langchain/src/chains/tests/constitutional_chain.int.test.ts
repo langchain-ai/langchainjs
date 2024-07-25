@@ -30,5 +30,5 @@ test("Test ConstitutionalChain", async () => {
   const res = await constitutionalChain.invoke({
     question: "What is the meaning of life?",
   });
-  console.log({ res });
+  // console.log({ res });
 });

@@ -10,5 +10,5 @@ test.skip("Test FigmaFileLoader", async () => {
     fileKey: process.env.FIGMA_FILE_KEY!,
   });
   const documents = await loader.load();
-  console.log(documents[0].pageContent);
+  // console.log(documents[0].pageContent);
 });

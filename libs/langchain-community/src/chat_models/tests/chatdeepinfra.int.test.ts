@@ -7,13 +7,13 @@ describe("ChatDeepInfra", () => {
     const deepInfraChat = new ChatDeepInfra({ maxTokens: 20 });
     const message = new HumanMessage("1 + 1 = ");
     const res = await deepInfraChat.invoke([message]);
-    console.log({ res });
+    // console.log({ res });
   });
 
   test("generate", async () => {
     const deepInfraChat = new ChatDeepInfra({ maxTokens: 20 });
     const message = new HumanMessage("1 + 1 = ");
     const res = await deepInfraChat.generate([[message]]);
-    console.log(JSON.stringify(res, null, 2));
+    // console.log(JSON.stringify(res, null, 2));
   });
 });

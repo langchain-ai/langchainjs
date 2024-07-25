@@ -9,5 +9,5 @@ test.skip("Test TaskadeProjectLoader", async () => {
     projectId: process.env.TASKADE_PROJECT_ID!,
   });
   const documents = await loader.load();
-  console.log(documents[0].pageContent);
+  // console.log(documents[0].pageContent);
 });

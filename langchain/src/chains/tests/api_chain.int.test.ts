@@ -50,7 +50,7 @@ test("Test APIChain", async () => {
   const res = await chain.call({
     question: "Search for notes containing langchain",
   });
-  console.log({ res });
+  // console.log({ res });
 });
 
 test("Test APIChain fromLLMAndApiDocs", async () => {
@@ -61,5 +61,5 @@ test("Test APIChain fromLLMAndApiDocs", async () => {
     question:
       "What is the weather like right now in Munich, Germany in degrees Farenheit?",
   });
-  console.log({ res });
+  // console.log({ res });
 });

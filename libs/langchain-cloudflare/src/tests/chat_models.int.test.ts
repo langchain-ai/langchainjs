@@ -20,14 +20,14 @@ describe("ChatCloudflareWorkersAI", () => {
     const chat = new ChatCloudflareWorkersAI();
     const message = new HumanMessage("Hello!");
     const res = await chat.call([message]);
-    console.log({ res });
+    // console.log({ res });
   });
 
   test("generate", async () => {
     const chat = new ChatCloudflareWorkersAI();
     const message = new HumanMessage("Hello!");
     const res = await chat.generate([[message]]);
-    console.log(JSON.stringify(res, null, 2));
+    // console.log(JSON.stringify(res, null, 2));
   });
 
   test("generate with streaming true", async () => {
@@ -65,11 +65,11 @@ describe("ChatCloudflareWorkersAI", () => {
     const stream = await chat.stream([message]);
     const chunks = [];
     for await (const chunk of stream) {
-      console.log(chunk.content);
+      // console.log(chunk.content);
       chunks.push(chunk);
     }
     expect(chunks.length).toBeGreaterThan(1);
-    console.log(chunks.map((chunk) => chunk.content).join(""));
+    // console.log(chunks.map((chunk) => chunk.content).join(""));
     expect(
       chunks.map((chunk) => chunk.content).join("").length
     ).toBeGreaterThan(1);
@@ -78,7 +78,7 @@ describe("ChatCloudflareWorkersAI", () => {
   test("custom messages", async () => {
     const chat = new ChatCloudflareWorkersAI();
     const res = await chat.call([new ChatMessage("Hello!", "user")]);
-    console.log(JSON.stringify(res, null, 2));
+    // console.log(JSON.stringify(res, null, 2));
   });
 
   test("prompt templates", async () => {
@@ -101,7 +101,7 @@ describe("ChatCloudflareWorkersAI", () => {
       }),
     ]);
 
-    console.log(responseA.generations);
+    // console.log(responseA.generations);
   });
 
   test("longer chain of messages", async () => {
@@ -119,7 +119,7 @@ describe("ChatCloudflareWorkersAI", () => {
       }),
     ]);
 
-    console.log(responseA.generations);
+    // console.log(responseA.generations);
   });
 
   test.skip("custom base url", async () => {
@@ -141,6 +141,6 @@ describe("ChatCloudflareWorkersAI", () => {
       }),
     ]);
 
-    console.log(responseA.generations);
+    // console.log(responseA.generations);
   });
 });

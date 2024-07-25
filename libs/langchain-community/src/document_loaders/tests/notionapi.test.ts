@@ -17,7 +17,7 @@ test("Properties Parser", async () => {
     },
     id: process.env.NOTION_PAGE_ID ?? "",
     onDocumentLoaded: (current, total, currentTitle) => {
-      console.log(`Loaded Page: ${currentTitle} (${current}/${total})`);
+      // console.log(`Loaded Page: ${currentTitle} (${current}/${total})`);
     },
   });
 
@@ -82,7 +82,7 @@ test("Get Title (page)", async () => {
     },
     id: process.env.NOTION_PAGE_ID ?? "",
     onDocumentLoaded: (current, total, currentTitle) => {
-      console.log(`Loaded Page: ${currentTitle} (${current}/${total})`);
+      // console.log(`Loaded Page: ${currentTitle} (${current}/${total})`);
     },
   });
 
@@ -109,7 +109,7 @@ test("Get Title (database)", async () => {
     },
     id: process.env.NOTION_PAGE_ID ?? "",
     onDocumentLoaded: (current, total, currentTitle) => {
-      console.log(`Loaded Page: ${currentTitle} (${current}/${total})`);
+      // console.log(`Loaded Page: ${currentTitle} (${current}/${total})`);
     },
   });
 

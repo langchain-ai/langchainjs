@@ -92,6 +92,6 @@ test("Test MultiPromptChain", async () => {
     { text: result3, sourceDocuments: sourceDocuments3 },
   ] = await Promise.all([testPromise1, testPromise2, testPromise3]);
 
-  console.log({ sourceDocuments1, sourceDocuments2, sourceDocuments3 });
-  console.log({ result1, result2, result3 });
+  // console.log({ sourceDocuments1, sourceDocuments2, sourceDocuments3 });
+  // console.log({ result1, result2, result3 });
 });

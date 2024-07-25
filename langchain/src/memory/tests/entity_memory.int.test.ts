@@ -16,7 +16,7 @@ test.skip("Test entity memory in a chain", async () => {
   });
 
   const res1 = await chain.call({ input: "Hi! I'm Jim." });
-  console.log({
+  // console.log({
     res1,
     memory: await memory.loadMemoryVariables({ input: "Who is Jim?" }),
   });
@@ -25,7 +25,7 @@ test.skip("Test entity memory in a chain", async () => {
     input:
       "My office is the Scranton branch of Dunder Mifflin. What about you?",
   });
-  console.log({
+  // console.log({
     res2,
     memory: await memory.loadMemoryVariables({ input: "Who is Jim?" }),
   });
@@ -33,7 +33,7 @@ test.skip("Test entity memory in a chain", async () => {
   const res3 = await chain.call({
     input: "I am Jim.",
   });
-  console.log({
+  // console.log({
     res3,
     memory: await memory.loadMemoryVariables({ input: "Who is Jim?" }),
   });
@@ -41,7 +41,7 @@ test.skip("Test entity memory in a chain", async () => {
   const res4 = await chain.call({
     input: "What have I told you about Jim so far?",
   });
-  console.log({
+  // console.log({
     res4,
     memory: await memory.loadMemoryVariables({ input: "Who is Jim?" }),
   });
@@ -59,7 +59,7 @@ test.skip("Test entity memory with a chat model in a chain", async () => {
   });
 
   const res1 = await chain.call({ input: "Hi! I'm Jim." });
-  console.log({
+  // console.log({
     res1,
     memory: await memory.loadMemoryVariables({ input: "Who is Jim?" }),
   });
@@ -67,7 +67,7 @@ test.skip("Test entity memory with a chat model in a chain", async () => {
   const res2 = await chain.call({
     input: "My office is the Utica branch of Dunder Mifflin. What about you?",
   });
-  console.log({
+  // console.log({
     res2,
     memory: await memory.loadMemoryVariables({ input: "Who is Jim?" }),
   });
@@ -75,7 +75,7 @@ test.skip("Test entity memory with a chat model in a chain", async () => {
   const res3 = await chain.call({
     input: "I am Jim.",
   });
-  console.log({
+  // console.log({
     res3,
     memory: await memory.loadMemoryVariables({ input: "Who is Jim?" }),
   });
@@ -83,7 +83,7 @@ test.skip("Test entity memory with a chat model in a chain", async () => {
   const res4 = await chain.call({
     input: "What have I told you about Jim so far?",
   });
-  console.log({
+  // console.log({
     res4,
     memory: await memory.loadMemoryVariables({ input: "Who is Jim?" }),
   });

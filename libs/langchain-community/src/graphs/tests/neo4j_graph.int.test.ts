@@ -51,7 +51,7 @@ describe.skip("Neo4j Graph Tests", () => {
     );
 
     await graph.refreshSchema();
-    console.log(graph.getSchema());
+    // console.log(graph.getSchema());
 
     // expect(graph.getSchema()).toMatchInlineSnapshot(`
     //   "Node properties are the following:
@@ -229,7 +229,7 @@ describe.skip("Neo4j Graph with custom config", () => {
     const output = graphWithEnhancedSchema.getStructuredSchema();
 
     delete output.metadata;
-    console.log(output);
+    // console.log(output);
     expect(output).toEqual({
       nodeProps: {
         foo: [
@@ -258,7 +258,7 @@ describe.skip("Neo4j Graph with custom config", () => {
 
   test("Test running on multiple demo databases", async () => {
     for (const database of DEMO_DATABASES) {
-      console.log("Connecting demo database:", database);
+      // console.log("Connecting demo database:", database);
 
       const graphDemo = await Neo4jGraph.initialize({
         url: DEMO_URL,
@@ -270,6 +270,6 @@ describe.skip("Neo4j Graph with custom config", () => {
       await graphDemo.close();
     }
 
-    console.log("All database tests completed.");
+    // console.log("All database tests completed.");
   }, 10000000);
 });

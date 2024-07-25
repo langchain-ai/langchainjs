@@ -103,5 +103,5 @@ test("withStructuredOutput with proper output", async () => {
     Suspicious Automator Workflows Execution
   `);
 
-  console.log(result);
+  // console.log(result);
 });

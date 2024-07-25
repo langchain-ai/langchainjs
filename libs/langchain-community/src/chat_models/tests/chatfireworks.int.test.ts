@@ -16,20 +16,20 @@ describe.skip("ChatFireworks", () => {
     const chat = new ChatFireworks();
     const message = new HumanMessage("Hello!");
     const res = await chat.invoke([message]);
-    console.log({ res });
+    // console.log({ res });
   });
 
   test("generate", async () => {
     const chat = new ChatFireworks();
     const message = new HumanMessage("Hello!");
     const res = await chat.generate([[message]]);
-    console.log(JSON.stringify(res, null, 2));
+    // console.log(JSON.stringify(res, null, 2));
   });
 
   test("custom messages", async () => {
     const chat = new ChatFireworks();
     const res = await chat.invoke([new ChatMessage("Hello!", "user")]);
-    console.log(JSON.stringify(res, null, 2));
+    // console.log(JSON.stringify(res, null, 2));
   });
 
   test("prompt templates", async () => {
@@ -52,7 +52,7 @@ describe.skip("ChatFireworks", () => {
       }),
     ]);
 
-    console.log(responseA.generations);
+    // console.log(responseA.generations);
   });
 
   test("longer chain of messages", async () => {
@@ -70,7 +70,7 @@ describe.skip("ChatFireworks", () => {
       }),
     ]);
 
-    console.log(responseA.generations);
+    // console.log(responseA.generations);
   });
 
   test("Tool calling", async () => {
@@ -99,6 +99,6 @@ describe.skip("ChatFireworks", () => {
       ],
     });
     const result = await chat.invoke("What is the current weather in SF?");
-    console.log(result);
+    // console.log(result);
   });
 });

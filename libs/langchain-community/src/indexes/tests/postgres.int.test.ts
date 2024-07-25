@@ -55,11 +55,11 @@ describe.skip("PostgresRecordManager", () => {
     );
 
     // create new schema for test
-    console.log("creating new schema in test");
+    // console.log("creating new schema in test");
     await explicitSchemaRecordManager.pool.query('CREATE SCHEMA "newSchema"');
 
     // create table in new schema
-    console.log("calling createSchema function from test");
+    // console.log("calling createSchema function from test");
     await explicitSchemaRecordManager.createSchema();
 
     // drop created schema

@@ -31,7 +31,7 @@ test("createOpenAIFunctionsAgent works", async () => {
     input,
   });
 
-  console.log(result);
+  // console.log(result);
 
   expect(result.input).toBe(input);
   expect(typeof result.output).toBe("string");
@@ -69,7 +69,7 @@ test("createOpenAIFunctionsAgent can stream log", async () => {
     if (!firstChunkTime) {
       firstChunkTime = new Date().getTime();
     }
-    console.log(chunk);
+    // console.log(chunk);
     chunks.push(chunk);
   }
 
@@ -77,13 +77,13 @@ test("createOpenAIFunctionsAgent can stream log", async () => {
     throw new Error("firstChunkTime was not set.");
   }
 
-  console.log(chunks.length);
-  console.log();
-  console.log(
+  // console.log(chunks.length);
+  // console.log();
+  // console.log(
     "Time to complete after first chunk:",
     new Date().getTime() - firstChunkTime
   );
 
-  console.log(chunks.length);
+  // console.log(chunks.length);
   expect(chunks.length).toBeGreaterThan(1);
 });

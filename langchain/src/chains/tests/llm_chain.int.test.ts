@@ -16,7 +16,7 @@ test("Test OpenAI", async () => {
   });
   const chain = new LLMChain({ prompt, llm: model });
   const res = await chain.call({ foo: "my favorite color" });
-  console.log({ res });
+  // console.log({ res });
 });
 
 test("Test OpenAI with timeout", async () => {
@@ -42,7 +42,7 @@ test("Test run method", async () => {
   });
   const chain = new LLMChain({ prompt, llm: model });
   const res = await chain.run("my favorite color");
-  console.log({ res });
+  // console.log({ res });
 });
 
 test("Test run method", async () => {
@@ -57,7 +57,7 @@ test("Test run method", async () => {
     memory: new BufferMemory(),
   });
   const res = await chain.run("my favorite color");
-  console.log({ res });
+  // console.log({ res });
 });
 
 test("Test memory + cancellation", async () => {
@@ -106,7 +106,7 @@ test("Test apply", async () => {
   });
   const chain = new LLMChain({ prompt, llm: model });
   const res = await chain.apply([{ foo: "my favorite color" }]);
-  console.log({ res });
+  // console.log({ res });
 });
 
 test("Test LLMChain with ChatOpenAI", async () => {
@@ -119,7 +119,7 @@ test("Test LLMChain with ChatOpenAI", async () => {
   ]);
   const chatChain = new LLMChain({ llm: model, prompt: chatPromptTemplate });
   const res = await chatChain.call({ product: "colorful socks" });
-  console.log({ res });
+  // console.log({ res });
 });
 
 test("Test passing a runnable to an LLMChain", async () => {

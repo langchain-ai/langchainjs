@@ -10,7 +10,7 @@ const originalBackground = process.env.LANGCHAIN_CALLBACKS_BACKGROUND;
 test("Test OpenAI", async () => {
   const model = new OpenAIChat({ modelName: "gpt-3.5-turbo", maxTokens: 10 });
   const res = await model.invoke("Print hello world");
-  console.log({ res });
+  // console.log({ res });
 });
 
 test("Test OpenAI with prefix messages", async () => {
@@ -22,7 +22,7 @@ test("Test OpenAI with prefix messages", async () => {
     maxTokens: 10,
   });
   const res = await model.invoke("What is my name");
-  console.log({ res });
+  // console.log({ res });
 });
 
 test("Test OpenAI in streaming mode", async () => {
@@ -47,7 +47,7 @@ test("Test OpenAI in streaming mode", async () => {
       }),
     });
     const res = await model.invoke("Print hello world");
-    console.log({ res });
+    // console.log({ res });
 
     expect(nrNewTokens > 0).toBe(true);
     expect(res).toBe(streamedCompletion);
@@ -60,13 +60,13 @@ test("Test OpenAI in streaming mode", async () => {
 test("Test OpenAI with stop", async () => {
   const model = new OpenAIChat({ maxTokens: 5 });
   const res = await model.call("Print hello world", ["world"]);
-  console.log({ res });
+  // console.log({ res });
 });
 
 test("Test OpenAI with stop in object", async () => {
   const model = new OpenAIChat({ maxTokens: 5 });
   const res = await model.invoke("Print hello world", { stop: ["world"] });
-  console.log({ res });
+  // console.log({ res });
 });
 
 test("Test OpenAI with timeout in call options", async () => {
@@ -121,7 +121,7 @@ test("Test OpenAIChat stream method", async () => {
   const chunks = [];
   for await (const chunk of stream) {
     chunks.push(chunk);
-    console.log(chunks);
+    // console.log(chunks);
   }
   expect(chunks.length).toBeGreaterThan(1);
 });
@@ -136,7 +136,7 @@ test("Test OpenAIChat stream method with abort", async () => {
       }
     );
     for await (const chunk of stream) {
-      console.log(chunk);
+      // console.log(chunk);
     }
   }).rejects.toThrow();
 });
@@ -148,7 +148,7 @@ test("Test OpenAIChat stream method with early break", async () => {
   );
   let i = 0;
   for await (const chunk of stream) {
-    console.log(chunk);
+    // console.log(chunk);
     i += 1;
     if (i > 5) {
       break;

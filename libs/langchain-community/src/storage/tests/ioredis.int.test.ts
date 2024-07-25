@@ -29,7 +29,7 @@ describe("RedisByteStore", () => {
       value2,
     ]);
     for await (const key of store.yieldKeys()) {
-      console.log(key);
+      // console.log(key);
     }
     await store.mdelete(["key1", "key2"]);
     const retrievedValues2 = await store.mget(["key1", "key2"]);
@@ -54,7 +54,7 @@ describe("RedisByteStore", () => {
     for await (const key of store.yieldKeys(prefix)) {
       yieldedKeys.push(key);
     }
-    console.log(yieldedKeys);
+    // console.log(yieldedKeys);
     expect(yieldedKeys).toEqual(expect.arrayContaining(prefixedKeys));
   });
 });

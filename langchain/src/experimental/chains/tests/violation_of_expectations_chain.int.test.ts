@@ -35,7 +35,7 @@ test.skip("should respond with the proper schema", async () => {
     chat_history: dummyMessages,
   });
 
-  console.log({
+  // console.log({
     res,
   });
 });

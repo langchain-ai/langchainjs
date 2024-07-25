@@ -28,5 +28,5 @@ test("AmazonKendraRetriever", async () => {
 
   expect(docs.length).toBeGreaterThan(0);
 
-  console.log(docs);
+  // console.log(docs);
 });

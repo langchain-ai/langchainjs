@@ -28,7 +28,7 @@ test("Test ChatOpenAI with a file", async () => {
     ],
   });
   const res = await chat.invoke([message]);
-  console.log({ res });
+  // console.log({ res });
 });
 
 test("Test ChatOpenAI with a URL", async () => {
@@ -50,5 +50,5 @@ test("Test ChatOpenAI with a URL", async () => {
     ],
   });
   const res = await chat.invoke([message]);
-  console.log({ res });
+  // console.log({ res });
 });

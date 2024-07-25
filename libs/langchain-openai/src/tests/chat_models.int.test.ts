@@ -36,11 +36,11 @@ test("Test ChatOpenAI Generate", async () => {
   for (const generation of res.generations) {
     expect(generation.length).toBe(2);
     for (const message of generation) {
-      console.log(message.text);
+      // console.log(message.text);
       expect(typeof message.text).toBe("string");
     }
   }
-  console.log({ res });
+  // console.log({ res });
 });
 
 test("Test ChatOpenAI Generate throws when one of the calls fails", async () => {
@@ -148,7 +148,7 @@ test("Test ChatOpenAI in streaming mode", async () => {
     });
     const message = new HumanMessage("Hello!");
     const result = await model.invoke([message]);
-    console.log(result);
+    // console.log(result);
 
     expect(nrNewTokens > 0).toBe(true);
     expect(result.content).toBe(streamedCompletion);
@@ -188,7 +188,7 @@ test("Test ChatOpenAI in streaming mode with n > 1 and multiple prompts", async 
     const message1 = new HumanMessage("Hello!");
     const message2 = new HumanMessage("Bye!");
     const result = await model.generate([[message1], [message2]]);
-    console.log(result.generations);
+    // console.log(result.generations);
 
     expect(nrNewTokens > 0).toBe(true);
     expect(result.generations.map((g) => g.map((gg) => gg.text))).toEqual(
@@ -212,10 +212,10 @@ test("Test ChatOpenAI prompt value", async () => {
   for (const generation of res.generations) {
     expect(generation.length).toBe(2);
     for (const g of generation) {
-      console.log(g.text);
+      // console.log(g.text);
     }
   }
-  console.log({ res });
+  // console.log({ res });
 });
 
 test("OpenAI Chat, docs, prompt templates", async () => {
@@ -238,7 +238,7 @@ test("OpenAI Chat, docs, prompt templates", async () => {
     }),
   ]);
 
-  console.log(responseA.generations);
+  // console.log(responseA.generations);
 }, 5000);
 
 test("Test OpenAI with stop", async () => {
@@ -246,7 +246,7 @@ test("Test OpenAI with stop", async () => {
   const res = await model.invoke([new HumanMessage("Print hello world")], {
     stop: ["world"],
   });
-  console.log({ res });
+  // console.log({ res });
 });
 
 test("Test OpenAI with stop in object", async () => {
@@ -254,7 +254,7 @@ test("Test OpenAI with stop in object", async () => {
   const res = await model.invoke([new HumanMessage("Print hello world")], {
     stop: ["world"],
   });
-  console.log({ res });
+  // console.log({ res });
 });
 
 test("Test OpenAI with timeout in call options", async () => {
@@ -374,7 +374,7 @@ test("Test OpenAI with specific roles in ChatMessage", async () => {
   );
   const user_message = new ChatMessage("Hello!", "user");
   const res = await chat.invoke([system_message, user_message]);
-  console.log({ res });
+  // console.log({ res });
 });
 
 test("Test ChatOpenAI stream method", async () => {
@@ -382,7 +382,7 @@ test("Test ChatOpenAI stream method", async () => {
   const stream = await model.stream("Print hello world.");
   const chunks = [];
   for await (const chunk of stream) {
-    console.log(chunk);
+    // console.log(chunk);
     chunks.push(chunk);
   }
   expect(chunks.length).toBeGreaterThan(1);
@@ -401,7 +401,7 @@ test("Test ChatOpenAI stream method with abort", async () => {
       }
     );
     for await (const chunk of stream) {
-      console.log(chunk);
+      // console.log(chunk);
     }
   }).rejects.toThrow();
 });
@@ -413,7 +413,7 @@ test("Test ChatOpenAI stream method with early break", async () => {
   );
   let i = 0;
   for await (const chunk of stream) {
-    console.log(chunk);
+    // console.log(chunk);
     i += 1;
     if (i > 10) {
       break;
@@ -433,7 +433,7 @@ test("Test ChatOpenAI stream method, timeout error thrown from SDK", async () =>
       "How is your day going? Be extremely verbose."
     );
     for await (const chunk of stream) {
-      console.log(chunk);
+      // console.log(chunk);
     }
   }).rejects.toThrow();
 });
@@ -500,7 +500,7 @@ test("Function calling with streaming", async () => {
     expect(finalResult?.additional_kwargs?.function_call?.name).toBe(
       "get_current_weather"
     );
-    console.log(
+    // console.log(
       JSON.parse(finalResult?.additional_kwargs?.function_call?.arguments ?? "")
         .location
     );
@@ -761,13 +761,13 @@ test("Test ChatOpenAI token usage reporting for streaming calls", async () => {
           handleLLMEnd: async (output) => {
             streamingTokenUsed =
               output.llmOutput?.estimatedTokenUsage?.totalTokens;
-            console.log(
+            // console.log(
               "streaming usage",
               output.llmOutput?.estimatedTokenUsage
             );
           },
           handleLLMError: async (err) => {
-            console.error(err);
+            // console.error(err);
           },
         },
       ],
@@ -784,10 +784,10 @@ test("Test ChatOpenAI token usage reporting for streaming calls", async () => {
         {
           handleLLMEnd: async (output) => {
             nonStreamingTokenUsed = output.llmOutput?.tokenUsage?.totalTokens;
-            console.log("non-streaming usage", output.llmOutput?.estimated);
+            // console.log("non-streaming usage", output.llmOutput?.estimated);
           },
           handleLLMError: async (err) => {
-            console.error(err);
+            // console.error(err);
           },
         },
       ],
@@ -841,7 +841,7 @@ test("Streaming tokens can be found in usage_metadata field", async () => {
       finalResult = chunk;
     }
   }
-  console.log({
+  // console.log({
     usage_metadata: finalResult?.usage_metadata,
   });
   expect(finalResult).toBeTruthy();
@@ -860,7 +860,7 @@ test("streaming: true tokens can be found in usage_metadata field", async () => 
       include_usage: true,
     },
   });
-  console.log({
+  // console.log({
     usage_metadata: response?.usage_metadata,
   });
   expect(response).toBeTruthy();
@@ -877,7 +877,7 @@ test("streaming: streamUsage will not override stream_options", async () => {
   const response = await model.invoke("Hello, how are you?", {
     stream_options: { include_usage: false },
   });
-  console.log({
+  // console.log({
     usage_metadata: response?.usage_metadata,
   });
   expect(response).toBeTruthy();
@@ -887,7 +887,7 @@ test("streaming: streamUsage will not override stream_options", async () => {
 test("streaming: streamUsage default is true", async () => {
   const model = new ChatOpenAI();
   const response = await model.invoke("Hello, how are you?");
-  console.log({
+  // console.log({
     usage_metadata: response?.usage_metadata,
   });
   expect(response).toBeTruthy();
@@ -900,7 +900,7 @@ test("streaming: streamUsage default is true", async () => {
 test("populates ID field on AIMessage", async () => {
   const model = new ChatOpenAI();
   const response = await model.invoke("Hell");
-  console.log({
+  // console.log({
     invokeId: response.id,
   });
   expect(response.id?.length).toBeGreaterThan(1);
@@ -915,7 +915,7 @@ test("populates ID field on AIMessage", async () => {
       finalChunk = finalChunk.concat(chunk);
     }
   }
-  console.log({
+  // console.log({
     streamId: finalChunk?.id,
   });
   expect(finalChunk?.id?.length).toBeGreaterThan(1);

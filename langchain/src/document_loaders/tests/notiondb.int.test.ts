@@ -11,5 +11,5 @@ test.skip("Test NotionDBLoader", async () => {
     databaseId: process.env.NOTION_DATABASE_ID!,
   });
   const documents = await loader.load();
-  console.log({ documents });
+  // console.log({ documents });
 });

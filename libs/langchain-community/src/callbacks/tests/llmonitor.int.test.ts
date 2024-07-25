@@ -15,7 +15,7 @@ test.skip("Test traced chat call with tags", async () => {
       "What is a good name for a company that makes colorful socks?"
     ),
   ]);
-  console.log(response.content);
+  // console.log(response.content);
 
   const response2 = await chat.invoke([
     new SystemMessage(
@@ -23,5 +23,5 @@ test.skip("Test traced chat call with tags", async () => {
     ),
     new HumanMessage("Translate: I love programming."),
   ]);
-  console.log(response2.content);
+  // console.log(response2.content);
 });

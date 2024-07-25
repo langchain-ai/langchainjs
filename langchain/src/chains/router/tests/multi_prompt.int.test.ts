@@ -51,5 +51,5 @@ Here is a question:
   const [{ text: result1 }, { text: result2 }, { text: result3 }] =
     await Promise.all([testPromise1, testPromise2, testPromise3]);
 
-  console.log(result1, result2, result3);
+  // console.log(result1, result2, result3);
 });

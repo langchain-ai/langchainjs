@@ -39,7 +39,7 @@ test("Test Azure OpenAI invoke", async () => {
     modelName: "gpt-3.5-turbo-instruct",
   });
   const res = await model.invoke("Print hello world");
-  console.log({ res });
+  // console.log({ res });
 });
 
 test("Test Azure OpenAI call", async () => {
@@ -48,7 +48,7 @@ test("Test Azure OpenAI call", async () => {
     modelName: "gpt-3.5-turbo-instruct",
   });
   const res = await model.call("Print hello world", ["world"]);
-  console.log({ res });
+  // console.log({ res });
 });
 
 test("Test Azure OpenAI with stop in object", async () => {
@@ -57,7 +57,7 @@ test("Test Azure OpenAI with stop in object", async () => {
     modelName: "gpt-3.5-turbo-instruct",
   });
   const res = await model.invoke("Print hello world", { stop: ["world"] });
-  console.log({ res });
+  // console.log({ res });
 });
 
 test("Test Azure OpenAI with timeout in call options", async () => {
@@ -128,7 +128,7 @@ test("Test Azure OpenAI with concurrency == 1", async () => {
     model.invoke("Print hello world"),
     model.invoke("Print hello world"),
   ]);
-  console.log({ res });
+  // console.log({ res });
 });
 
 test("Test Azure OpenAI with maxTokens -1", async () => {
@@ -137,14 +137,14 @@ test("Test Azure OpenAI with maxTokens -1", async () => {
     modelName: "gpt-3.5-turbo-instruct",
   });
   const res = await model.call("Print hello world", ["world"]);
-  console.log({ res });
+  // console.log({ res });
 });
 
 test("Test Azure OpenAI with model name", async () => {
   const model = new AzureOpenAI({ modelName: "gpt-3.5-turbo-instruct" });
   expect(model).toBeInstanceOf(AzureOpenAI);
   const res = await model.invoke("Print hello world");
-  console.log({ res });
+  // console.log({ res });
   expect(typeof res).toBe("string");
 });
 
@@ -154,7 +154,7 @@ test("Test Azure OpenAI with versioned instruct model returns Azure OpenAI", asy
   });
   expect(model).toBeInstanceOf(AzureOpenAI);
   const res = await model.invoke("Print hello world");
-  console.log({ res });
+  // console.log({ res });
   expect(typeof res).toBe("string");
 });
 
@@ -181,7 +181,7 @@ test("Test Azure OpenAI tokenUsage", async () => {
       }),
     });
     const res = await model.invoke("Hello");
-    console.log({ res });
+    // console.log({ res });
 
     expect(tokenUsage.promptTokens).toBe(1);
   } finally {
@@ -206,7 +206,7 @@ test("Test Azure OpenAI in streaming mode", async () => {
     }),
   });
   const res = await model.invoke("Print hello world");
-  console.log({ res });
+  // console.log({ res });
 
   expect(nrNewTokens > 0).toBe(true);
   expect(res).toBe(streamedCompletion);
@@ -232,7 +232,7 @@ test("Test Azure OpenAI in streaming mode with multiple prompts", async () => {
     }),
   });
   const res = await model.generate(["Print hello world", "print hello sea"]);
-  console.log(
+  // console.log(
     res.generations,
     res.generations.map((g) => g[0].generationInfo)
   );
@@ -261,7 +261,7 @@ test("Test Azure OpenAI in streaming mode with multiple prompts", async () => {
     }),
   });
   const res = await model.generate(["Print hello world", "print hello sea"]);
-  console.log(
+  // console.log(
     res.generations,
     res.generations.map((g) => g[0].generationInfo)
   );
@@ -285,10 +285,10 @@ test("Test Azure OpenAI prompt value", async () => {
   for (const generation of res.generations) {
     expect(generation.length).toBe(1);
     for (const g of generation) {
-      console.log(g.text);
+      // console.log(g.text);
     }
   }
-  console.log({ res });
+  // console.log({ res });
 });
 
 test("Test Azure OpenAI stream method", async () => {
@@ -317,7 +317,7 @@ test("Test Azure OpenAI stream method with abort", async () => {
       }
     );
     for await (const chunk of stream) {
-      console.log(chunk);
+      // console.log(chunk);
     }
   }).rejects.toThrow();
 });
@@ -332,7 +332,7 @@ test("Test Azure OpenAI stream method with early break", async () => {
   );
   let i = 0;
   for await (const chunk of stream) {
-    console.log(chunk);
+    // console.log(chunk);
     i += 1;
     if (i > 5) {
       break;
@@ -362,5 +362,5 @@ test("Test Azure OpenAI with bearer token credentials", async () => {
     azureADTokenProvider,
   });
   const res = await model.invoke("Print hello world");
-  console.log({ res });
+  // console.log({ res });
 });

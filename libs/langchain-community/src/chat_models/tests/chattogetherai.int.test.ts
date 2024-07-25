@@ -17,7 +17,7 @@ describe("ChatTogetherAI", () => {
     const chat = new ChatTogetherAI();
     const message = new HumanMessage("Hello!");
     const res = await chat.invoke([message]);
-    console.log({ res });
+    // console.log({ res });
     expect(res.content.length).toBeGreaterThan(10);
   });
 
@@ -25,14 +25,14 @@ describe("ChatTogetherAI", () => {
     const chat = new ChatTogetherAI();
     const message = new HumanMessage("Hello!");
     const res = await chat.generate([[message]]);
-    console.log(JSON.stringify(res, null, 2));
+    // console.log(JSON.stringify(res, null, 2));
     expect(res.generations[0][0].text.length).toBeGreaterThan(10);
   });
 
   test("custom messages", async () => {
     const chat = new ChatTogetherAI();
     const res = await chat.invoke([new ChatMessage("Hello!", "user")]);
-    console.log({ res });
+    // console.log({ res });
     expect(res.content.length).toBeGreaterThan(10);
   });
 
@@ -56,7 +56,7 @@ describe("ChatTogetherAI", () => {
       }),
     ]);
 
-    console.log(responseA.generations);
+    // console.log(responseA.generations);
     expect(responseA.generations[0][0].text.length).toBeGreaterThan(10);
   });
 
@@ -75,7 +75,7 @@ describe("ChatTogetherAI", () => {
       }),
     ]);
 
-    console.log(responseA.generations);
+    // console.log(responseA.generations);
     expect(responseA.generations[0][0].text.length).toBeGreaterThan(10);
   });
 
@@ -103,7 +103,7 @@ describe("ChatTogetherAI", () => {
       ["human", "Please list this output in order of DESC [1, 4, 2, 8]."],
     ]);
     const res = await prompt.pipe(chat).invoke({});
-    console.log({ res });
+    // console.log({ res });
     expect(typeof res.content).toEqual("string");
     expect(JSON.parse(res.content as string)).toMatchObject({
       orderedArray: expect.any(Array),
@@ -139,7 +139,7 @@ describe("ChatTogetherAI", () => {
       ["human", "What is 1273926 times 27251?"],
     ]);
     const res = await prompt.pipe(chat).invoke({});
-    console.log({ res });
+    // console.log({ res });
     expect(res.additional_kwargs.tool_calls?.length).toBeGreaterThan(0);
     expect(
       JSON.parse(res.additional_kwargs.tool_calls?.[0].function.arguments ?? "")

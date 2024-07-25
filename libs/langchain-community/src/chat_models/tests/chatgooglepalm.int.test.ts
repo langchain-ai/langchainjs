@@ -15,7 +15,7 @@ test.skip("Test ChatGooglePalm", async () => {
   });
   const message = new HumanMessage("Hello!");
   const res = await chat.invoke([message]);
-  console.log({ res });
+  // console.log({ res });
 });
 
 test.skip("Test ChatGooglePalm generate", async () => {
@@ -24,7 +24,7 @@ test.skip("Test ChatGooglePalm generate", async () => {
   });
   const message = new HumanMessage("Hello!");
   const res = await chat.generate([[message]]);
-  console.log(JSON.stringify(res, null, 2));
+  // console.log(JSON.stringify(res, null, 2));
 });
 
 test.skip("ChatGooglePalm, prompt templates", async () => {
@@ -55,7 +55,7 @@ test.skip("ChatGooglePalm, prompt templates", async () => {
     }),
   ]);
 
-  console.log(responseA.generations);
+  // console.log(responseA.generations);
 });
 
 test.skip("ChatGooglePalm, longer chain of messages", async () => {
@@ -80,7 +80,7 @@ test.skip("ChatGooglePalm, longer chain of messages", async () => {
     }),
   ]);
 
-  console.log(responseA.generations);
+  // console.log(responseA.generations);
 });
 
 test.skip("ChatGooglePalm, chain of messages on code", async () => {
@@ -101,5 +101,5 @@ test.skip("ChatGooglePalm, chain of messages on code", async () => {
     }),
   ]);
 
-  console.log(JSON.stringify(responseA.generations, null, 1));
+  // console.log(JSON.stringify(responseA.generations, null, 1));
 });

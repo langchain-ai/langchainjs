@@ -11,7 +11,7 @@ test("test invoke", async () => {
   const result = await cohere.invoke(
     "What is a good name for a company that makes colorful socks?"
   );
-  console.log({ result });
+  // console.log({ result });
 });
 
 test("test invoke with callback", async () => {

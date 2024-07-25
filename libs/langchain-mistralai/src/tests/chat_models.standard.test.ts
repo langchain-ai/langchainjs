@@ -23,7 +23,7 @@ class ChatMistralAIStandardUnitTests extends ChatModelUnitTests<
   }
 
   expectedLsParams(): Partial<LangSmithParams> {
-    console.warn(
+    // console.warn(
       "Overriding testStandardParams. ChatCloudflareWorkersAI does not support stop sequences."
     );
     return {

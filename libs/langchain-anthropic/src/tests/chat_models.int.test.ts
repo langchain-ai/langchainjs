@@ -21,7 +21,7 @@ test("Test ChatAnthropic", async () => {
   });
   const message = new HumanMessage("Hello!");
   const res = await chat.invoke([message]);
-  console.log({ res });
+  // console.log({ res });
   expect(res.response_metadata.usage).toBeDefined();
 });
 
@@ -36,10 +36,10 @@ test("Test ChatAnthropic Generate", async () => {
   for (const generation of res.generations) {
     expect(generation.length).toBe(1);
     for (const message of generation) {
-      console.log(message.text);
+      // console.log(message.text);
     }
   }
-  console.log({ res });
+  // console.log({ res });
 });
 
 test.skip("Test ChatAnthropic Generate w/ ClientOptions", async () => {
@@ -58,10 +58,10 @@ test.skip("Test ChatAnthropic Generate w/ ClientOptions", async () => {
   for (const generation of res.generations) {
     expect(generation.length).toBe(1);
     for (const message of generation) {
-      console.log(message.text);
+      // console.log(message.text);
     }
   }
-  console.log({ res });
+  // console.log({ res });
 });
 
 test("Test ChatAnthropic Generate with a signal in call options", async () => {
@@ -94,7 +94,7 @@ test("Test ChatAnthropic tokenUsage with a batch", async () => {
     [new HumanMessage(`Hello!`)],
     [new HumanMessage(`Hi!`)],
   ]);
-  console.log({ res });
+  // console.log({ res });
 });
 
 test("Test ChatAnthropic in streaming mode", async () => {
@@ -114,7 +114,7 @@ test("Test ChatAnthropic in streaming mode", async () => {
   });
   const message = new HumanMessage("Hello!");
   const res = await model.invoke([message]);
-  console.log({ res });
+  // console.log({ res });
 
   expect(nrNewTokens > 0).toBe(true);
   expect(res.content).toBe(streamedCompletion);
@@ -149,7 +149,7 @@ test("Test ChatAnthropic in streaming mode with a signal", async () => {
     return res;
   }).rejects.toThrow();
 
-  console.log({ nrNewTokens, streamedCompletion });
+  // console.log({ nrNewTokens, streamedCompletion });
 }, 5000);
 
 test.skip("Test ChatAnthropic prompt value", async () => {
@@ -162,10 +162,10 @@ test.skip("Test ChatAnthropic prompt value", async () => {
   expect(res.generations.length).toBe(1);
   for (const generation of res.generations) {
     for (const g of generation) {
-      console.log(g.text);
+      // console.log(g.text);
     }
   }
-  console.log({ res });
+  // console.log({ res });
 });
 
 test.skip("ChatAnthropic, docs, prompt templates", async () => {
@@ -192,7 +192,7 @@ test.skip("ChatAnthropic, docs, prompt templates", async () => {
     }),
   ]);
 
-  console.log(responseA.generations);
+  // console.log(responseA.generations);
 });
 
 test.skip("ChatAnthropic, longer chain of messages", async () => {
@@ -214,7 +214,7 @@ test.skip("ChatAnthropic, longer chain of messages", async () => {
     }),
   ]);
 
-  console.log(responseA.generations);
+  // console.log(responseA.generations);
 });
 
 test.skip("ChatAnthropic, Anthropic apiUrl set manually via constructor", async () => {
@@ -227,7 +227,7 @@ test.skip("ChatAnthropic, Anthropic apiUrl set manually via constructor", async 
   });
   const message = new HumanMessage("Hello!");
   const res = await chat.call([message]);
-  console.log({ res });
+  // console.log({ res });
 });
 
 test("Test ChatAnthropic stream method", async () => {
@@ -258,7 +258,7 @@ test("Test ChatAnthropic stream method with abort", async () => {
       }
     );
     for await (const chunk of stream) {
-      console.log(chunk);
+      // console.log(chunk);
     }
   }).rejects.toThrow();
 });
@@ -274,7 +274,7 @@ test("Test ChatAnthropic stream method with early break", async () => {
   );
   let i = 0;
   for await (const chunk of stream) {
-    console.log(chunk);
+    // console.log(chunk);
     i += 1;
     if (i > 10) {
       break;
@@ -295,7 +295,7 @@ test("Test ChatAnthropic headers passed through", async () => {
   });
   const message = new HumanMessage("Hello!");
   const res = await chat.invoke([message]);
-  console.log({ res });
+  // console.log({ res });
 });
 
 test("Test ChatAnthropic multimodal", async () => {
@@ -316,7 +316,7 @@ test("Test ChatAnthropic multimodal", async () => {
       ],
     }),
   ]);
-  console.log(res);
+  // console.log(res);
 });
 
 test("Stream tokens", async () => {
@@ -335,7 +335,7 @@ test("Stream tokens", async () => {
       res = res.concat(chunk);
     }
   }
-  console.log(res);
+  // console.log(res);
   expect(res?.usage_metadata).toBeDefined();
   if (!res?.usage_metadata) {
     return;

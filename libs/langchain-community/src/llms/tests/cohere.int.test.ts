@@ -4,5 +4,5 @@ import { Cohere } from "../cohere.js";
 test("Test Cohere", async () => {
   const model = new Cohere({ maxTokens: 20 });
   const res = await model.invoke("1 + 1 =");
-  console.log(res);
+  // console.log(res);
 }, 50000);

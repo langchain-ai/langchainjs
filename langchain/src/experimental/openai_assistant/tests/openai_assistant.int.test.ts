@@ -84,7 +84,7 @@ test.skip("New OpenAIAssistantRunnable can be passed as an agent", async () => {
     content:
       "What's the weather in San Francisco and Tokyo? And will it be warm or cold in those places?",
   });
-  console.log(assistantResponse);
+  // console.log(assistantResponse);
   /**
     {
       output: "The weather in San Francisco, CA is currently 72°F and it's warm. In Tokyo, Japan, the temperature is 10°C and it's also warm."
@@ -103,7 +103,7 @@ test("OpenAIAssistantRunnable create and delete assistant", async () => {
     object: "assistant.deleted",
     deleted: true,
   });
-  console.log(deleteStatus);
+  // console.log(deleteStatus);
   /**
     {
       id: 'asst_jwkJPzFkIL2ei9Kn1SZzmR6Y',
@@ -141,7 +141,7 @@ test("OpenAIAssistantRunnable can be passed as an agent", async () => {
     content:
       "What's the weather in San Francisco and Tokyo? And will it be warm or cold in those places?",
   });
-  console.log(assistantResponse);
+  // console.log(assistantResponse);
   /**
     {
       output: "The weather in San Francisco, CA is currently 72°F and it's warm. In Tokyo, Japan, the temperature is 10°C and it's also warm."
@@ -160,7 +160,7 @@ test.skip("Created OpenAIAssistantRunnable is invokeable", async () => {
   const assistantResponse = await assistant.invoke({
     content: "What's 10 - 4 raised to the 2.7",
   });
-  console.log(assistantResponse);
+  // console.log(assistantResponse);
   /**
     [
       {
@@ -179,7 +179,7 @@ test.skip("Created OpenAIAssistantRunnable is invokeable", async () => {
    */
   const content = // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (assistantResponse as any[]).flatMap((res) => res.content);
-  console.log(content);
+  // console.log(content);
   /**
     [
       {

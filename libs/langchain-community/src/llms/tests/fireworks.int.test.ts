@@ -5,13 +5,13 @@ describe("Fireworks", () => {
   test("call", async () => {
     const model = new Fireworks({ maxTokens: 50 });
     const res = await model.invoke("1 + 1 = ");
-    console.log({ res });
+    // console.log({ res });
   });
 
   test("generate", async () => {
     const model = new Fireworks({ maxTokens: 50 });
     const res = await model.generate(["1 + 1 = "]);
-    console.log(JSON.stringify(res, null, 2));
+    // console.log(JSON.stringify(res, null, 2));
 
     await expect(
       async () => await model.generate(["1 + 1 = ", "2 + 2 = "])

@@ -186,7 +186,7 @@ async function testChatModel(
     });
 
     const res = await bedrock.invoke([new HumanMessage(message)]);
-    console.log(res, res.content);
+    // console.log(res, res.content);
 
     expect(res).toBeDefined();
     if (trace && guardrailIdentifier && guardrailVersion) {
@@ -255,7 +255,7 @@ async function testChatStreamingModel(
     ]);
     const chunks = [];
     for await (const chunk of stream) {
-      console.log(chunk);
+      // console.log(chunk);
       chunks.push(chunk);
     }
     expect(chunks.length).toBeGreaterThan(1);
@@ -307,7 +307,7 @@ async function testChatHandleLLMNewToken(
             tokens.push(token);
           },
           handleLLMEnd(output) {
-            console.log(output);
+            // console.log(output);
           },
         },
       ],
@@ -358,7 +358,7 @@ test.skip("Tool calling agent with Anthropic", async () => {
   const result = await agentExecutor.invoke({
     input,
   });
-  console.log(result);
+  // console.log(result);
 });
 
 test.skip.each([
@@ -382,7 +382,7 @@ test.skip.each([
   });
 
   const res = await bedrock.invoke([new HumanMessage("What is your name?")]);
-  console.log(res);
+  // console.log(res);
 
   expect(res.content.length).toBeGreaterThan(1);
 });
@@ -440,7 +440,7 @@ test.skip(".bind tools", async () => {
   const response = await modelWithTools.invoke(
     "Whats the weather like in san francisco?"
   );
-  console.log(response);
+  // console.log(response);
   if (!response.tool_calls?.[0]) {
     throw new Error("No tool calls found in response");
   }
@@ -479,7 +479,7 @@ test.skip(".bindTools with openai tool format", async () => {
   const response = await modelWithTools.invoke(
     "Whats the weather like in san francisco?"
   );
-  console.log(response);
+  // console.log(response);
   if (!response.tool_calls?.[0]) {
     throw new Error("No tool calls found in response");
   }

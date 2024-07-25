@@ -40,7 +40,7 @@ test("Test OpenAIFunctions MetadataTagger", async () => {
     }),
   ];
   const newDocuments = await metadataTagger.transformDocuments(documents);
-  console.log(newDocuments);
+  // console.log(newDocuments);
 
   expect(newDocuments.length).toBe(2);
   expect(newDocuments[0].metadata.movie_title).toBe("The Bee Movie");

@@ -98,5 +98,5 @@ test.skip("Chroma Store Self Query Retriever Test", async () => {
   const query4 = await selfQueryRetriever.getRelevantDocuments(
     "Which movies are either comedy or drama and are less than 90 minutes?"
   );
-  console.log(query1, query2, query3, query4);
+  // console.log(query1, query2, query3, query4);
 });

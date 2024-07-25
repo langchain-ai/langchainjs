@@ -11,7 +11,7 @@ test.skip("embedding text", async () => {
 
   const vector: number[] = await e.embedQuery("test 1");
   expect(vector).toHaveLength(1408);
-  console.log(vector);
+  // console.log(vector);
 });
 
 test.skip("embedding multiple texts", async () => {
@@ -22,7 +22,7 @@ test.skip("embedding multiple texts", async () => {
   expect(vector).toHaveLength(2);
   expect(vector[0]).toHaveLength(1408);
   expect(vector[1]).toHaveLength(1408);
-  console.log(vector);
+  // console.log(vector);
 });
 
 test.skip("embedding image", async () => {
@@ -36,7 +36,7 @@ test.skip("embedding image", async () => {
   const img = fs.readFileSync(pathname);
   const vector: number[] = await e.embedImageQuery(img);
   expect(vector).toHaveLength(1408);
-  console.log(vector);
+  // console.log(vector);
 });
 
 test.skip("embedding image with text in a vector store", async () => {
@@ -49,7 +49,7 @@ test.skip("embedding image with text in a vector store", async () => {
   );
 
   const resultOne = await vectorStore.similaritySearch("bird", 2);
-  console.log(resultOne);
+  // console.log(resultOne);
 
   const pathname = path.join(
     path.dirname(fileURLToPath(import.meta.url)),
@@ -80,5 +80,5 @@ test.skip("embedding image with text in a vector store", async () => {
     vector2,
     2
   );
-  console.log(resultTwo);
+  // console.log(resultTwo);
 });

@@ -18,7 +18,7 @@ test("Test summary buffer memory", async () => {
   );
 
   const result = await memory.loadMemoryVariables({});
-  console.log("result", result);
+  // console.log("result", result);
 
   await memory.clear();
   expect(await memory.loadMemoryVariables({})).toEqual({
@@ -40,7 +40,7 @@ test("Test summary buffer memory with chat model", async () => {
     { response: "Hello! I'm doing fine. and you?" }
   );
   const result = await memory.loadMemoryVariables({});
-  console.log("result", result);
+  // console.log("result", result);
 
   await memory.clear();
   expect(await memory.loadMemoryVariables({})).toEqual({
@@ -66,7 +66,7 @@ test("Test summary buffer memory return messages", async () => {
   );
 
   const result = await memory.loadMemoryVariables({});
-  console.log("result", result);
+  // console.log("result", result);
 
   await memory.clear();
   expect(await memory.loadMemoryVariables({})).toEqual({

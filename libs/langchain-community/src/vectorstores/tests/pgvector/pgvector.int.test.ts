@@ -92,7 +92,7 @@ describe("PGVectorStore", () => {
       // Check if the number of rows is equal to the number of documents added
       expect(rowCount).toEqual(docsToGenerate);
     } catch (e) {
-      console.error("Error: ", e);
+      // console.error("Error: ", e);
       throw e;
     }
   });
@@ -224,7 +224,7 @@ describe("PGVectorStore", () => {
 
       expect(idsAfterDelete).toContain(idToKeep);
     } catch (e) {
-      console.error("Error: ", e);
+      // console.error("Error: ", e);
       throw e;
     }
   });
@@ -262,7 +262,7 @@ describe("PGVectorStore", () => {
       expect(idsAfterDelete).toContainEqual(initialIds[1]);
       expect(idsAfterDelete).toContainEqual(initialIds[2]);
     } catch (e) {
-      console.error("Error: ", e);
+      // console.error("Error: ", e);
       throw e;
     }
   });
@@ -389,7 +389,7 @@ describe("PGVectorStore with collection", () => {
       // Check if the number of rows is equal to the number of documents added
       expect(rowCount).toEqual(docsToGenerate);
     } catch (e) {
-      console.error("Error: ", e);
+      // console.error("Error: ", e);
       throw e;
     }
   });
@@ -483,7 +483,7 @@ describe("PGVectorStore with collection", () => {
 
       expect(idsAfterDelete).toContain(idToKeep);
     } catch (e) {
-      console.error("Error: ", e);
+      // console.error("Error: ", e);
       throw e;
     }
   });
@@ -521,7 +521,7 @@ describe("PGVectorStore with collection", () => {
       expect(idsAfterDelete).toContainEqual(initialIds[1]);
       expect(idsAfterDelete).toContainEqual(initialIds[2]);
     } catch (e) {
-      console.error("Error: ", e);
+      // console.error("Error: ", e);
       throw e;
     }
   });
@@ -632,7 +632,7 @@ describe("PGVectorStore with schema", () => {
       // Check if the number of rows is equal to the number of documents added
       expect(rowCount).toEqual(docsToGenerate);
     } catch (e) {
-      console.error("Error: ", e);
+      // console.error("Error: ", e);
       throw e;
     }
   });
@@ -726,7 +726,7 @@ describe("PGVectorStore with schema", () => {
 
       expect(idsAfterDelete).toContain(idToKeep);
     } catch (e) {
-      console.error("Error: ", e);
+      // console.error("Error: ", e);
       throw e;
     }
   });
@@ -764,7 +764,7 @@ describe("PGVectorStore with schema", () => {
       expect(idsAfterDelete).toContainEqual(initialIds[1]);
       expect(idsAfterDelete).toContainEqual(initialIds[2]);
     } catch (e) {
-      console.error("Error: ", e);
+      // console.error("Error: ", e);
       throw e;
     }
   });

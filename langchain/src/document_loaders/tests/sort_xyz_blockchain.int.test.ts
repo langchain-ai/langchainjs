@@ -17,7 +17,7 @@ test.skip("Test Blockchain NFT Metadata Loader", async () => {
   });
 
   const response = await nftMetadataLoader.load();
-  console.log(response);
+  // console.log(response);
 });
 
 test.skip("Test Blockchain Latest Transactions Loader", async () => {
@@ -32,7 +32,7 @@ test.skip("Test Blockchain Latest Transactions Loader", async () => {
   });
 
   const response = await latestTransactionsLoader.load();
-  console.log(response);
+  // console.log(response);
 });
 
 test.skip("Test Blockchain SQL Query Loader", async () => {
@@ -42,5 +42,5 @@ test.skip("Test Blockchain SQL Query Loader", async () => {
   });
 
   const response = await sqlQueryLoader.load();
-  console.log(response);
+  // console.log(response);
 });

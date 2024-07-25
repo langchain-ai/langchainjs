@@ -28,7 +28,7 @@ test("Test VectorDBQAChain", async () => {
     vectorstore: vectorStore,
   });
   const res = await chain.call({ query: "What up" });
-  console.log({ res });
+  // console.log({ res });
 });
 
 test("Test VectorDBQAChain from LLM", async () => {
@@ -40,7 +40,7 @@ test("Test VectorDBQAChain from LLM", async () => {
   );
   const chain = VectorDBQAChain.fromLLM(model, vectorStore);
   const res = await chain.call({ query: "What up" });
-  console.log({ res });
+  // console.log({ res });
 });
 
 test("Test VectorDBQAChain from LLM with a filter function", async () => {
@@ -57,5 +57,5 @@ test("Test VectorDBQAChain from LLM with a filter function", async () => {
     query: "What up",
     filter: (document: Document) => document.metadata.id === 3,
   });
-  console.log({ res, sourceDocuments: res.sourceDocuments });
+  // console.log({ res, sourceDocuments: res.sourceDocuments });
 });

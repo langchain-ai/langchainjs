@@ -10,7 +10,7 @@ test.skip("Test Notion API Loader Page", async () => {
     },
     id: process.env.NOTION_PAGE_ID ?? "",
     onDocumentLoaded: (current, total, currentTitle, rootTitle) => {
-      console.log(
+      // console.log(
         `Loaded ${currentTitle} in ${rootTitle}:  (${current}/${total})`
       );
     },
@@ -18,8 +18,8 @@ test.skip("Test Notion API Loader Page", async () => {
 
   const docs = await loader.load();
   const titles = docs.map((doc) => doc.metadata.properties._title);
-  console.log("Titles:", titles);
-  console.log(`Loaded ${docs.length} pages`);
+  // console.log("Titles:", titles);
+  // console.log(`Loaded ${docs.length} pages`);
 });
 
 test.skip("Test Notion API Loader Database", async () => {
@@ -29,7 +29,7 @@ test.skip("Test Notion API Loader Database", async () => {
     },
     id: process.env.NOTION_DATABASE_ID ?? "",
     onDocumentLoaded: (current, total, currentTitle, rootTitle) => {
-      console.log(
+      // console.log(
         `Loaded ${currentTitle} in ${rootTitle}:  (${current}/${total})`
       );
     },
@@ -37,8 +37,8 @@ test.skip("Test Notion API Loader Database", async () => {
 
   const docs = await loader.load();
   const titles = docs.map((doc) => doc.metadata.properties._title);
-  console.log("Titles:", titles);
-  console.log(`Loaded ${docs.length} pages from the database`);
+  // console.log("Titles:", titles);
+  // console.log(`Loaded ${docs.length} pages from the database`);
 });
 
 test.skip("Test Notion API Loader onDocumentLoad", async () => {
@@ -60,7 +60,7 @@ test.skip("Test Notion API Loader onDocumentLoad", async () => {
 
   expect(onDocumentLoadedCheck.length).toBe(3);
 
-  console.log(onDocumentLoadedCheck);
+  // console.log(onDocumentLoadedCheck);
 });
 
 test.skip("Test docs with empty database page content", async () => {
@@ -101,5 +101,5 @@ test.skip("Test docs with empty database page content and propertiesAsHeader ena
 
   expect(docs.length).toBe(3);
 
-  console.log(docs);
+  // console.log(docs);
 });
