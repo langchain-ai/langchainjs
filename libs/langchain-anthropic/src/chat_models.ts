@@ -278,8 +278,10 @@ function _makeMessageChunkFromAnthropicEvent(
       }),
       usageData: usageDataCopy,
     };
-  } else if (data.type === "content_block_start" &&
-    data.content_block.type === "text") {
+  } else if (
+    data.type === "content_block_start" &&
+    data.content_block.type === "text"
+  ) {
     const content = data.content_block?.text;
     if (content !== undefined) {
       return {
@@ -287,11 +289,11 @@ function _makeMessageChunkFromAnthropicEvent(
           content: fields.coerceContentToString
             ? content
             : [
-              {
-                index: data.index,
-                ...data.content_block,
-              },
-            ],
+                {
+                  index: data.index,
+                  ...data.content_block,
+                },
+              ],
           additional_kwargs: {},
         }),
         usageData: usageDataCopy,
@@ -760,7 +762,9 @@ export class ChatAnthropicMessages<
 
   streamUsage = true;
 
-  constructor(fields?: Partial<AnthropicInput> & BaseChatModelParams & AnthropicPlatform) {
+  constructor(
+    fields?: Partial<AnthropicInput> & BaseChatModelParams & AnthropicPlatform
+  ) {
     super(fields ?? {});
 
     this.anthropicApiKey =
@@ -770,18 +774,32 @@ export class ChatAnthropicMessages<
     this.platform = fields?.platform;
     this.clientOptions = fields?.clientOptions ?? {};
     if (this.platform) {
-      if (this.platform === "vertex"
-        && ((!fields?.platformClientOptions?.accessToken && !fields?.platformClientOptions?.googleAuth)
-          || !fields?.platformClientOptions?.projectId || !fields?.platformClientOptions?.region)) {
+      if (
+        this.platform === "vertex" &&
+        ((!fields?.platformClientOptions?.accessToken &&
+          !fields?.platformClientOptions?.googleAuth) ||
+          !fields?.platformClientOptions?.projectId ||
+          !fields?.platformClientOptions?.region)
+      ) {
         throw new Error("Vertex authOption invalid");
       }
-      if (this.platform === "bedrock"
-        && (((!fields?.platformClientOptions?.awsSecretKey || !fields?.platformClientOptions?.awsAccessKey)
-          && !fields?.platformClientOptions?.awsSessionToken) || !fields?.platformClientOptions?.awsRegion)) {
+      if (
+        this.platform === "bedrock" &&
+        (((!fields?.platformClientOptions?.awsSecretKey ||
+          !fields?.platformClientOptions?.awsAccessKey) &&
+          !fields?.platformClientOptions?.awsSessionToken) ||
+          !fields?.platformClientOptions?.awsRegion)
+      ) {
         throw new Error("Bedrock authOption invalid");
       }
-      this.clientOptions = { ...this.clientOptions, ...fields?.platformClientOptions };
-      this.model = this.platform === "vertex" ? "claude-3-haiku@20240307" : "anthropic.claude-3-haiku-20240307-v1:0";
+      this.clientOptions = {
+        ...this.clientOptions,
+        ...fields?.platformClientOptions,
+      };
+      this.model =
+        this.platform === "vertex"
+          ? "claude-3-haiku@20240307"
+          : "anthropic.claude-3-haiku-20240307-v1:0";
       this.modelName = this.model;
     }
     if (!this.anthropicApiKey && !this.platform) {
@@ -968,14 +986,11 @@ export class ChatAnthropicMessages<
       const result = _makeMessageChunkFromAnthropicEvent(data, {
         streamUsage: !!(this.streamUsage || options.streamUsage),
         coerceContentToString,
-        usageData
+        usageData,
       });
       if (!result) continue;
 
-      const {
-        chunk,
-        usageData: updatedUsageData,
-      } = result;
+      const { chunk, usageData: updatedUsageData } = result;
 
       usageData = updatedUsageData;
 
