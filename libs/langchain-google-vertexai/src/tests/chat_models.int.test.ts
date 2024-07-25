@@ -13,111 +13,68 @@ import {
 } from "@langchain/core/messages";
 import { tool } from "@langchain/core/tools";
 import { z } from "zod";
-import { ChatVertexAI } from "../chat_models.js";
+import { concat } from "@langchain/core/utils/stream";
 import { GeminiTool } from "../types.js";
+import { ChatVertexAI } from "../chat_models.js";
 
 describe("GAuth Chat", () => {
   test("invoke", async () => {
     const model = new ChatVertexAI();
-    try {
-      const res = await model.invoke("What is 1 + 1?");
-      expect(res).toBeDefined();
-      expect(res._getType()).toEqual("ai");
+    const res = await model.invoke("What is 1 + 1?");
+    expect(res).toBeDefined();
+    expect(res._getType()).toEqual("ai");
 
-      const aiMessage = res as AIMessageChunk;
-      expect(aiMessage.content).toBeDefined();
+    const aiMessage = res as AIMessageChunk;
+    expect(aiMessage.content).toBeDefined();
 
-      expect(typeof aiMessage.content).toBe("string");
-      const text = aiMessage.content as string;
-      expect(text).toMatch(/(1 + 1 (equals|is|=) )?2.? ?/);
-
-      /*
-      expect(aiMessage.content.length).toBeGreaterThan(0);
-      expect(aiMessage.content[0]).toBeDefined();
-      const content = aiMessage.content[0] as MessageContentComplex;
-      expect(content).toHaveProperty("type");
-      expect(content.type).toEqual("text");
-
-      const textContent = content as MessageContentText;
-      expect(textContent.text).toBeDefined();
-      expect(textContent.text).toEqual("2");
-      */
-    } catch (e) {
-      console.error(e);
-      throw e;
-    }
+    expect(typeof aiMessage.content).toBe("string");
+    const text = aiMessage.content as string;
+    expect(text).toMatch(/(1 + 1 (equals|is|=) )?2.? ?/);
   });
 
   test("generate", async () => {
     const model = new ChatVertexAI();
-    try {
-      const messages: BaseMessage[] = [
-        new SystemMessage(
-          "You will reply to all requests to flip a coin with either H, indicating heads, or T, indicating tails."
-        ),
-        new HumanMessage("Flip it"),
-        new AIMessage("T"),
-        new HumanMessage("Flip the coin again"),
-      ];
-      const res = await model.predictMessages(messages);
-      expect(res).toBeDefined();
-      expect(res._getType()).toEqual("ai");
+    const messages: BaseMessage[] = [
+      new SystemMessage(
+        "You will reply to all requests to flip a coin with either H, indicating heads, or T, indicating tails."
+      ),
+      new HumanMessage("Flip it"),
+      new AIMessage("T"),
+      new HumanMessage("Flip the coin again"),
+    ];
+    const res = await model.predictMessages(messages);
+    expect(res).toBeDefined();
+    expect(res._getType()).toEqual("ai");
 
-      const aiMessage = res as AIMessageChunk;
-      expect(aiMessage.content).toBeDefined();
+    const aiMessage = res as AIMessageChunk;
+    expect(aiMessage.content).toBeDefined();
 
-      expect(typeof aiMessage.content).toBe("string");
-      const text = aiMessage.content as string;
-      expect(["H", "T"]).toContainEqual(text);
-
-      /*
-      expect(aiMessage.content.length).toBeGreaterThan(0);
-      expect(aiMessage.content[0]).toBeDefined();
-
-      const content = aiMessage.content[0] as MessageContentComplex;
-      expect(content).toHaveProperty("type");
-      expect(content.type).toEqual("text");
-
-      const textContent = content as MessageContentText;
-      expect(textContent.text).toBeDefined();
-      expect(["H", "T"]).toContainEqual(textContent.text);
-      */
-    } catch (e) {
-      console.error(e);
-      throw e;
-    }
+    expect(typeof aiMessage.content).toBe("string");
+    const text = aiMessage.content as string;
+    expect(["H", "T"]).toContainEqual(text);
   });
 
   test("stream", async () => {
     const model = new ChatVertexAI();
-    try {
-      const input: BaseLanguageModelInput = new ChatPromptValue([
-        new SystemMessage(
-          "You will reply to all requests to flip a coin with either H, indicating heads, or T, indicating tails."
-        ),
-        new HumanMessage("Flip it"),
-        new AIMessage("T"),
-        new HumanMessage("Flip the coin again"),
-      ]);
-      const res = await model.stream(input);
-      const resArray: BaseMessageChunk[] = [];
-      for await (const chunk of res) {
-        resArray.push(chunk);
-      }
-      expect(resArray).toBeDefined();
-      expect(resArray.length).toBeGreaterThanOrEqual(1);
-
-      const lastChunk = resArray[resArray.length - 1];
-      expect(lastChunk).toBeDefined();
-      expect(lastChunk._getType()).toEqual("ai");
-      const aiChunk = lastChunk as AIMessageChunk;
-      console.log(aiChunk);
-
-      console.log(JSON.stringify(resArray, null, 2));
-    } catch (e) {
-      console.error(e);
-      throw e;
+    const input: BaseLanguageModelInput = new ChatPromptValue([
+      new SystemMessage(
+        "You will reply to all requests to flip a coin with either H, indicating heads, or T, indicating tails."
+      ),
+      new HumanMessage("Flip it"),
+      new AIMessage("T"),
+      new HumanMessage("Flip the coin again"),
+    ]);
+    const res = await model.stream(input);
+    const resArray: BaseMessageChunk[] = [];
+    for await (const chunk of res) {
+      resArray.push(chunk);
     }
+    expect(resArray).toBeDefined();
+    expect(resArray.length).toBeGreaterThanOrEqual(1);
+
+    const lastChunk = resArray[resArray.length - 1];
+    expect(lastChunk).toBeDefined();
+    expect(lastChunk._getType()).toEqual("ai");
   });
 
   test("function", async () => {
@@ -211,7 +168,7 @@ describe("GAuth Chat", () => {
     for await (const chunk of res) {
       resArray.push(chunk);
     }
-    console.log(JSON.stringify(resArray, null, 2));
+    // console.log(JSON.stringify(resArray, null, 2));
   });
 
   test("withStructuredOutput", async () => {
@@ -251,7 +208,7 @@ test("Stream token count usage_metadata", async () => {
       res = res.concat(chunk);
     }
   }
-  console.log(res);
+  // console.log(res);
   expect(res?.usage_metadata).toBeDefined();
   if (!res?.usage_metadata) {
     return;
@@ -278,7 +235,7 @@ test("streamUsage excludes token usage", async () => {
       res = res.concat(chunk);
     }
   }
-  console.log(res);
+  // console.log(res);
   expect(res?.usage_metadata).not.toBeDefined();
 });
 
@@ -288,7 +245,7 @@ test("Invoke token count usage_metadata", async () => {
     maxOutputTokens: 10,
   });
   const res = await model.invoke("Why is the sky blue? Be concise.");
-  console.log(res);
+  // console.log(res);
   expect(res?.usage_metadata).toBeDefined();
   if (!res?.usage_metadata) {
     return;
@@ -358,4 +315,40 @@ test("Can force a model to invoke a tool", async () => {
   if (!result.tool_calls?.[0]) return;
   expect(result.tool_calls?.[0].name).toBe("calculator");
   expect(result.tool_calls?.[0].args).toHaveProperty("expression");
+});
+
+test("ChatGoogleGenerativeAI can stream tools", async () => {
+  const model = new ChatVertexAI({});
+
+  const weatherTool = tool(
+    (_) => "The weather in San Francisco today is 18 degrees and sunny.",
+    {
+      name: "current_weather_tool",
+      description: "Get the current weather for a given location.",
+      schema: z.object({
+        location: z.string().describe("The location to get the weather for."),
+      }),
+    }
+  );
+
+  const modelWithTools = model.bindTools([weatherTool]);
+  const stream = await modelWithTools.stream(
+    "Whats the weather like today in San Francisco?"
+  );
+  let finalChunk: AIMessageChunk | undefined;
+  for await (const chunk of stream) {
+    finalChunk = !finalChunk ? chunk : concat(finalChunk, chunk);
+  }
+
+  expect(finalChunk).toBeDefined();
+  if (!finalChunk) return;
+
+  const toolCalls = finalChunk.tool_calls;
+  expect(toolCalls).toBeDefined();
+  if (!toolCalls) {
+    throw new Error("tool_calls not in response");
+  }
+  expect(toolCalls.length).toBe(1);
+  expect(toolCalls[0].name).toBe("current_weather_tool");
+  expect(toolCalls[0].args).toHaveProperty("location");
 });

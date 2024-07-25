@@ -41,7 +41,7 @@ test("structured output chain", async () => {
   );
 
   const response = await chain.call({ inputText: "A man, living in Poland." });
-  console.log("response", response);
+  // console.log("response", response);
 
   expect(response.person).toHaveProperty("name");
   expect(response.person).toHaveProperty("surname");

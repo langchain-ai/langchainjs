@@ -8,6 +8,6 @@ test("Should load and invoke real-world serialized chain", async () => {
   const result = await chain.invoke(
     "x raised to the third plus seven equals 12"
   );
-  console.log(result);
+  // console.log(result);
   expect(typeof result).toBe("string");
 });

@@ -22,7 +22,7 @@ describe.skip("AstraDBChatMessageHistory", () => {
     try {
       await db.dropCollection("test_messages");
     } catch (e) {
-      console.debug("Collection doesn't exist yet, skipping drop");
+      // console.debug("Collection doesn't exist yet, skipping drop");
     }
 
     await db.createCollection("test_messages");

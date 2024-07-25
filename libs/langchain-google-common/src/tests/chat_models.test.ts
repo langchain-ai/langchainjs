@@ -141,8 +141,6 @@ describe("Mock ChatGoogle", () => {
       new HumanMessage("Flip it again"),
     ];
     await model.invoke(messages);
-    // console.log("record", JSON.stringify(record, null, 1));
-    // console.log("result", JSON.stringify(result, null, 1));
 
     expect(record.opts).toBeDefined();
     expect(record.opts.data).toBeDefined();
@@ -177,8 +175,6 @@ describe("Mock ChatGoogle", () => {
       new HumanMessage("Flip it again"),
     ];
     await model.invoke(messages);
-    // console.log("record", JSON.stringify(record, null, 1));
-    // console.log("result", JSON.stringify(result, null, 1));
 
     expect(record.opts).toBeDefined();
     expect(record.opts.data).toBeDefined();
@@ -270,8 +266,6 @@ describe("Mock ChatGoogle", () => {
       new HumanMessage("Flip it again"),
     ];
     await model.invoke(messages);
-    // console.log("record", JSON.stringify(record, null, 1));
-    // console.log("result", JSON.stringify(result, null, 1));
 
     expect(record.opts).toBeDefined();
     expect(record.opts.data).toBeDefined();
@@ -313,8 +307,6 @@ describe("Mock ChatGoogle", () => {
       new HumanMessage("Flip it again"),
     ];
     await model.invoke(messages);
-    // console.log("record", JSON.stringify(record, null, 1));
-    // console.log("result", JSON.stringify(result, null, 1));
 
     expect(record.opts).toBeDefined();
     expect(record.opts.data).toBeDefined();
@@ -356,8 +348,6 @@ describe("Mock ChatGoogle", () => {
       new HumanMessage("Flip it again"),
     ];
     await model.invoke(messages);
-    // console.log("record", JSON.stringify(record, null, 1));
-    // console.log("result", JSON.stringify(result, null, 1));
 
     expect(record.opts).toBeDefined();
     expect(record.opts.data).toBeDefined();
@@ -397,8 +387,6 @@ describe("Mock ChatGoogle", () => {
       new HumanMessage("Flip it again"),
     ];
     await model.invoke(messages);
-    // console.log("record", JSON.stringify(record, null, 1));
-    // console.log("result", JSON.stringify(result, null, 1));
 
     expect(record.opts).toBeDefined();
     expect(record.opts.data).toBeDefined();
@@ -442,7 +430,6 @@ describe("Mock ChatGoogle", () => {
     let caught = false;
     try {
       await model.invoke(messages);
-      // console.log(result);
     } catch (xx) {
       caught = true;
     }
@@ -472,7 +459,6 @@ describe("Mock ChatGoogle", () => {
     let caught = false;
     try {
       await model.invoke(messages);
-      // console.log(result);
     } catch (xx) {
       caught = true;
     }

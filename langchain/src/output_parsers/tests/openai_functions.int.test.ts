@@ -44,13 +44,13 @@ test("Streaming JSON patch", async () => {
   const chunks = [];
   let aggregate: any = {};
   for await (const chunk of stream) {
-    console.log(chunk);
+    // console.log(chunk);
     chunks.push(chunk);
     aggregate = applyPatch(aggregate, chunk as Operation[]).newDocument;
   }
 
   expect(chunks.length).toBeGreaterThan(1);
-  console.log(aggregate);
+  // console.log(aggregate);
   expect(aggregate.setup.length).toBeGreaterThan(1);
   expect(aggregate.punchline.length).toBeGreaterThan(1);
 });
@@ -75,9 +75,11 @@ test("Streaming JSON patch with an event stream output parser", async () => {
   });
 
   const chunks = [];
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const decoder = new TextDecoder();
   for await (const chunk of stream) {
-    console.log(decoder.decode(chunk));
+    // console.log(decoder.decode(chunk));
     chunks.push(chunk);
   }
 
@@ -102,13 +104,13 @@ test("Streaming aggregated JSON", async () => {
   const chunks = [];
   let aggregate: any = {};
   for await (const chunk of stream) {
-    console.log(chunk);
+    // console.log(chunk);
     chunks.push(chunk);
     aggregate = chunk;
   }
 
   expect(chunks.length).toBeGreaterThan(1);
-  console.log(aggregate);
+  // console.log(aggregate);
   expect(aggregate.setup.length).toBeGreaterThan(1);
   expect(aggregate.punchline.length).toBeGreaterThan(1);
 });
