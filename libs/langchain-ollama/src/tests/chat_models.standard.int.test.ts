@@ -42,7 +42,7 @@ class ChatOllamaStandardIntegrationTests extends ChatModelIntegrationTests<
    */
   async testWithStructuredOutput() {
     if (!this.chatModelHasStructuredOutput) {
-      // console.log("Test requires withStructuredOutput. Skipping...");
+      console.log("Test requires withStructuredOutput. Skipping...");
       return;
     }
 
