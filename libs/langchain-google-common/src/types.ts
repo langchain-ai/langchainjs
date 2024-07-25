@@ -117,6 +117,25 @@ export interface GoogleAIModelParams {
  */
 export interface GoogleAIModelRequestParams extends GoogleAIModelParams {
   tools?: StructuredToolInterface[] | GeminiTool[];
+  /**
+   * Force the model to use tools in a specific way.
+   *
+   * | Mode     |	Description                                                                                                                                             |
+   * |----------|---------------------------------------------------------------------------------------------------------------------------------------------------------|
+   * | "auto"	  | The default model behavior. The model decides whether to predict a function call or a natural language response.                                        |
+   * | "any"	  | The model must predict only function calls. To limit the model to a subset of functions, define the allowed function names in `allowed_function_names`. |
+   * | "none"	  | The model must not predict function calls. This behavior is equivalent to a model request without any associated function declarations.                 |
+   * | string   | The string value must be one of the function names. This will force the model to predict the specified function call.                                   |
+   *
+   * The tool configuration's "any" mode ("forced function calling") is supported for Gemini 1.5 Pro models only.
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  tool_choice?: string | "auto" | "any" | "none" | Record<string, any>;
+  /**
+   * Allowed functions to call when the mode is "any".
+   * If empty, any one of the provided functions are called.
+   */
+  allowed_function_names?: string[];
 }
 
 export interface GoogleAIBaseLLMInput<AuthOptions>
@@ -251,6 +270,12 @@ export interface GeminiRequest {
   contents?: GeminiContent[];
   systemInstruction?: GeminiContent;
   tools?: GeminiTool[];
+  toolConfig?: {
+    functionCallingConfig: {
+      mode: "auto" | "any" | "none";
+      allowedFunctionNames?: string[];
+    };
+  };
   safetySettings?: GeminiSafetySetting[];
   generationConfig?: GeminiGenerationConfig;
 }
