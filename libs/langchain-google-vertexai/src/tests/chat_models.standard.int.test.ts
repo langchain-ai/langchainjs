@@ -19,6 +19,7 @@ class ChatVertexAIStandardIntegrationTests extends ChatModelIntegrationTests<
       Cls: ChatVertexAI,
       chatModelHasToolCalling: true,
       chatModelHasStructuredOutput: true,
+      invokeResponseType: AIMessageChunk,
       constructorArgs: {
         model: "gemini-1.5-pro",
       },
@@ -30,6 +31,14 @@ class ChatVertexAIStandardIntegrationTests extends ChatModelIntegrationTests<
       "testToolMessageHistoriesListContent",
       "ChatVertexAI",
       "Not implemented."
+    );
+  }
+
+  async testInvokeMoreComplexTools() {
+    this.skipTestMessage(
+      "testInvokeMoreComplexTools",
+      "ChatVertexAI",
+      "Google VertexAI does not support tool schemas where the object properties are not defined."
     );
   }
 }
