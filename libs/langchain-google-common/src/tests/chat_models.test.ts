@@ -140,11 +140,7 @@ describe("Mock ChatGoogle", () => {
       new AIMessage("H"),
       new HumanMessage("Flip it again"),
     ];
-    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
-    // @ts-expect-error unused var
-    const result = await model.invoke(messages);
-    // console.log("record", JSON.stringify(record, null, 1));
-    // console.log("result", JSON.stringify(result, null, 1));
+    await model.invoke(messages);
 
     expect(record.opts).toBeDefined();
     expect(record.opts.data).toBeDefined();
@@ -178,11 +174,7 @@ describe("Mock ChatGoogle", () => {
       new AIMessage("H"),
       new HumanMessage("Flip it again"),
     ];
-    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
-    // @ts-expect-error unused var
-    const result = await model.invoke(messages);
-    // console.log("record", JSON.stringify(record, null, 1));
-    // console.log("result", JSON.stringify(result, null, 1));
+    await model.invoke(messages);
 
     expect(record.opts).toBeDefined();
     expect(record.opts.data).toBeDefined();
@@ -273,11 +265,7 @@ describe("Mock ChatGoogle", () => {
       new AIMessage("H"),
       new HumanMessage("Flip it again"),
     ];
-    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
-    // @ts-expect-error unused var
-    const result = await model.invoke(messages);
-    // console.log("record", JSON.stringify(record, null, 1));
-    // console.log("result", JSON.stringify(result, null, 1));
+    await model.invoke(messages);
 
     expect(record.opts).toBeDefined();
     expect(record.opts.data).toBeDefined();
@@ -318,11 +306,7 @@ describe("Mock ChatGoogle", () => {
       new AIMessage("H"),
       new HumanMessage("Flip it again"),
     ];
-    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
-    // @ts-expect-error unused var
-    const result = await model.invoke(messages);
-    // console.log("record", JSON.stringify(record, null, 1));
-    // console.log("result", JSON.stringify(result, null, 1));
+    await model.invoke(messages);
 
     expect(record.opts).toBeDefined();
     expect(record.opts.data).toBeDefined();
@@ -363,11 +347,7 @@ describe("Mock ChatGoogle", () => {
       new AIMessage("H"),
       new HumanMessage("Flip it again"),
     ];
-    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
-    // @ts-expect-error unused var
-    const result = await model.invoke(messages);
-    // console.log("record", JSON.stringify(record, null, 1));
-    // console.log("result", JSON.stringify(result, null, 1));
+    await model.invoke(messages);
 
     expect(record.opts).toBeDefined();
     expect(record.opts.data).toBeDefined();
@@ -406,11 +386,7 @@ describe("Mock ChatGoogle", () => {
       new AIMessage("H"),
       new HumanMessage("Flip it again"),
     ];
-    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
-    // @ts-expect-error unused var
-    const result = await model.invoke(messages);
-    // console.log("record", JSON.stringify(record, null, 1));
-    // console.log("result", JSON.stringify(result, null, 1));
+    await model.invoke(messages);
 
     expect(record.opts).toBeDefined();
     expect(record.opts.data).toBeDefined();
@@ -453,10 +429,7 @@ describe("Mock ChatGoogle", () => {
 
     let caught = false;
     try {
-      // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
-      // @ts-expect-error unused var
-      const result = await model.invoke(messages);
-      // console.log(result);
+      await model.invoke(messages);
     } catch (xx) {
       caught = true;
     }
@@ -485,10 +458,7 @@ describe("Mock ChatGoogle", () => {
 
     let caught = false;
     try {
-      // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
-      // @ts-expect-error unused var
-      const result = await model.invoke(messages);
-      // console.log(result);
+      await model.invoke(messages);
     } catch (xx) {
       caught = true;
     }

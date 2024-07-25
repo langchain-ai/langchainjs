@@ -13,7 +13,6 @@ import {
   BaseLanguageModelInput,
   StructuredOutputMethodOptions,
   ToolDefinition,
-  isOpenAITool,
 } from "@langchain/core/language_models/base";
 import type { z } from "zod";
 import {
@@ -24,7 +23,6 @@ import {
 } from "@langchain/core/runnables";
 import { JsonOutputKeyToolsParser } from "@langchain/core/output_parsers/openai_tools";
 import { BaseLLMOutputParser } from "@langchain/core/output_parsers";
-import { isStructuredTool } from "@langchain/core/utils/function_calling";
 import { AsyncCaller } from "@langchain/core/utils/async_caller";
 import { StructuredToolInterface } from "@langchain/core/tools";
 import { concat } from "@langchain/core/utils/stream";
@@ -39,6 +37,7 @@ import {
   GoogleAIBaseLanguageModelCallOptions,
 } from "./types.js";
 import {
+  convertToGeminiTools,
   copyAIModelParams,
   copyAndValidateModelParamsInto,
 } from "./utils/common.js";
@@ -59,10 +58,7 @@ import type {
   GeminiFunctionDeclaration,
   GeminiFunctionSchema,
 } from "./types.js";
-import {
-  jsonSchemaToGeminiParameters,
-  zodToGeminiParameters,
-} from "./utils/zod_to_gemini_parameters.js";
+import { zodToGeminiParameters } from "./utils/zod_to_gemini_parameters.js";
 
 class ChatConnection<AuthOptions> extends AbstractGoogleLLMConnection<
   BaseMessage[],
@@ -159,44 +155,6 @@ export interface ChatGoogleBaseInput<AuthOptions>
     GoogleAIModelParams,
     GoogleAISafetyParams,
     Pick<GoogleAIBaseLanguageModelCallOptions, "streamUsage"> {}
-
-function convertToGeminiTools(
-  structuredTools: (
-    | StructuredToolInterface
-    | Record<string, unknown>
-    | ToolDefinition
-    | RunnableToolLike
-  )[]
-): GeminiTool[] {
-  return [
-    {
-      functionDeclarations: structuredTools.map(
-        (structuredTool): GeminiFunctionDeclaration => {
-          if (isStructuredTool(structuredTool)) {
-            const jsonSchema = zodToGeminiParameters(structuredTool.schema);
-            return {
-              name: structuredTool.name,
-              description: structuredTool.description,
-              parameters: jsonSchema as GeminiFunctionSchema,
-            };
-          }
-          if (isOpenAITool(structuredTool)) {
-            return {
-              name: structuredTool.function.name,
-              description:
-                structuredTool.function.description ??
-                `A function available to call.`,
-              parameters: jsonSchemaToGeminiParameters(
-                structuredTool.function.parameters
-              ),
-            };
-          }
-          return structuredTool as unknown as GeminiFunctionDeclaration;
-        }
-      ),
-    },
-  ];
-}
 
 /**
  * Integration with a chat model.
@@ -342,12 +300,6 @@ export abstract class ChatGoogleBase<AuthOptions>
    * Get the parameters used to invoke the model
    */
   override invocationParams(options?: this["ParsedCallOptions"]) {
-    if (options?.tool_choice) {
-      throw new Error(
-        `'tool_choice' call option is not supported by ${this.getName()}.`
-      );
-    }
-
     return copyAIModelParams(this, options);
   }
 
