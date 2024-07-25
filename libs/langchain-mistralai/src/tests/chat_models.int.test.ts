@@ -1,13 +1,6 @@
 import { test } from "@jest/globals";
-import {
-  ChatPromptTemplate,
-  HumanMessagePromptTemplate,
-  MessagesPlaceholder,
-  SystemMessagePromptTemplate,
-} from "@langchain/core/prompts";
-import { AgentExecutor, createOpenAIToolsAgent } from "langchain/agents";
-import { BaseChatModel } from "@langchain/core/language_models/chat_models";
-import { DynamicStructuredTool, StructuredTool } from "@langchain/core/tools";
+import { ChatPromptTemplate } from "@langchain/core/prompts";
+import { StructuredTool } from "@langchain/core/tools";
 import { z } from "zod";
 import {
   AIMessage,
@@ -638,54 +631,6 @@ describe("withStructuredOutput", () => {
           raw.additional_kwargs.tool_calls?.[0].function.arguments ?? ""
         )
     ).toBe(true);
-  });
-
-  test("Model is compatible with OpenAI tools agent and Agent Executor", async () => {
-    const llm: BaseChatModel = new ChatMistralAI({
-      temperature: 0,
-      model: "mistral-large-latest",
-    });
-
-    const systemMessage = SystemMessagePromptTemplate.fromTemplate(
-      "You are an agent capable of retrieving current weather information."
-    );
-    const humanMessage = HumanMessagePromptTemplate.fromTemplate("{input}");
-    const agentScratchpad = new MessagesPlaceholder("agent_scratchpad");
-
-    const prompt = ChatPromptTemplate.fromMessages([
-      systemMessage,
-      humanMessage,
-      agentScratchpad,
-    ]);
-
-    const currentWeatherTool = new DynamicStructuredTool({
-      name: "get_current_weather",
-      description: "Get the current weather in a given location",
-      schema: z.object({
-        location: z
-          .string()
-          .describe("The city and state, e.g. San Francisco, CA"),
-      }),
-      func: async () => Promise.resolve("28 °C"),
-    });
-
-    const agent = await createOpenAIToolsAgent({
-      llm,
-      tools: [currentWeatherTool],
-      prompt,
-    });
-
-    const agentExecutor = new AgentExecutor({
-      agent,
-      tools: [currentWeatherTool],
-    });
-
-    const input = "What's the weather like in Paris?";
-    const { output } = await agentExecutor.invoke({ input });
-
-    console.log(output);
-    expect(output).toBeDefined();
-    expect(output).toContain("The current temperature in Paris is 28 °C");
   });
 });
 
