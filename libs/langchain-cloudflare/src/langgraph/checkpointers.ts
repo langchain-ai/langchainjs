@@ -20,14 +20,17 @@ interface Row {
 
 export type CloudflareD1SaverFields = {
   db: D1Database;
-}
+};
 
 export class CloudflareD1Saver extends BaseCheckpointSaver {
   db: D1Database;
 
   protected isSetup: boolean;
 
-  constructor(fields: CloudflareD1SaverFields, serde?: SerializerProtocol<Checkpoint>) {
+  constructor(
+    fields: CloudflareD1SaverFields,
+    serde?: SerializerProtocol<Checkpoint>
+  ) {
     super(serde);
     this.db = fields.db;
     this.isSetup = false;
@@ -137,7 +140,10 @@ CREATE TABLE IF NOT EXISTS checkpoints (thread_id TEXT NOT NULL, checkpoint_id T
     );
 
     try {
-      const { results: rows }: { results: Row[] } = await this.db.prepare(sql).bind(...args).all();
+      const { results: rows }: { results: Row[] } = await this.db
+        .prepare(sql)
+        .bind(...args)
+        .all();
 
       if (rows) {
         for (const row of rows) {
@@ -185,7 +191,7 @@ CREATE TABLE IF NOT EXISTS checkpoints (thread_id TEXT NOT NULL, checkpoint_id T
         this.serde.stringify(metadata),
       ];
 
-      this.db
+      await this.db
         .prepare(
           `INSERT OR REPLACE INTO checkpoints (thread_id, checkpoint_id, parent_id, checkpoint, metadata) VALUES (?, ?, ?, ?, ?)`
         )
