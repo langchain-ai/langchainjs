@@ -77,6 +77,6 @@ class ChatGroqStandardIntegrationTests extends ChatModelIntegrationTests<
 const testClass = new ChatGroqStandardIntegrationTests();
 
 test("ChatGroqStandardIntegrationTests", async () => {
-  const testResults = await testClass.testStreamTokensWithToolCalls();
+  const testResults = await testClass.runTests();
   expect(testResults).toBe(true);
 });
