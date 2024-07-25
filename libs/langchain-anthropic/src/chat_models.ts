@@ -47,17 +47,21 @@ import type {
   MessageCreateParams,
   Tool as AnthropicTool,
 } from "@anthropic-ai/sdk/resources/index.mjs";
-import { concat } from "@langchain/core/utils/stream";
+
+import { AnthropicVertex } from "@anthropic-ai/vertex-sdk";
+import { AnthropicBedrock } from "@anthropic-ai/bedrock-sdk";
+import type { ClientOptions as VertexClientOptions } from "@anthropic-ai/vertex-sdk/client";
+import type { ClientOptions as BedrockClientOptions } from "@anthropic-ai/bedrock-sdk/client";
 import {
   AnthropicToolsOutputParser,
   extractToolCalls,
 } from "./output_parsers.js";
-import { AnthropicToolResponse } from "./types.js";
 import {
   AnthropicToolChoice,
   AnthropicToolTypes,
   handleToolChoice,
 } from "./utils.js";
+import { AnthropicToolResponse } from "./types.js";
 
 type AnthropicMessage = Anthropic.MessageParam;
 type AnthropicMessageCreateParams = Anthropic.MessageCreateParamsNonStreaming;
@@ -160,18 +164,10 @@ function _makeMessageChunkFromAnthropicEvent(
     streamUsage: boolean;
     coerceContentToString: boolean;
     usageData: { input_tokens: number; output_tokens: number };
-    toolUse?: {
-      id: string;
-      name: string;
-    };
   }
 ): {
   chunk: AIMessageChunk;
   usageData: { input_tokens: number; output_tokens: number };
-  toolUse?: {
-    id: string;
-    name: string;
-  };
 } | null {
   let usageDataCopy = { ...fields.usageData };
 
@@ -241,10 +237,6 @@ function _makeMessageChunkFromAnthropicEvent(
         additional_kwargs: {},
       }),
       usageData: usageDataCopy,
-      toolUse: {
-        id: data.content_block.id,
-        name: data.content_block.name,
-      },
     };
   } else if (
     data.type === "content_block_delta" &&
@@ -286,25 +278,25 @@ function _makeMessageChunkFromAnthropicEvent(
       }),
       usageData: usageDataCopy,
     };
-  } else if (data.type === "content_block_stop" && fields.toolUse) {
-    // Only yield the ID & name when the tool_use block is complete.
-    // This is so the names & IDs do not get concatenated.
-    return {
-      chunk: new AIMessageChunk({
-        content: fields.coerceContentToString
-          ? ""
-          : [
+  } else if (data.type === "content_block_start" &&
+    data.content_block.type === "text") {
+    const content = data.content_block?.text;
+    if (content !== undefined) {
+      return {
+        chunk: new AIMessageChunk({
+          content: fields.coerceContentToString
+            ? content
+            : [
               {
-                id: fields.toolUse.id,
-                name: fields.toolUse.name,
                 index: data.index,
-                type: "input_json_delta",
+                ...data.content_block,
               },
             ],
-        additional_kwargs: {},
-      }),
-      usageData: usageDataCopy,
-    };
+          additional_kwargs: {},
+        }),
+        usageData: usageDataCopy,
+      };
+    }
   }
 
   return null;
@@ -382,6 +374,11 @@ export interface AnthropicInput {
    * @default true
    */
   streamUsage?: boolean;
+}
+
+export interface AnthropicPlatform {
+  platform?: "vertex" | "bedrock";
+  platformClientOptions?: VertexClientOptions & BedrockClientOptions;
 }
 
 /**
@@ -669,60 +666,14 @@ function extractToken(chunk: AIMessageChunk): string | undefined {
     return typeof chunk.content[0].input === "string"
       ? chunk.content[0].input
       : JSON.stringify(chunk.content[0].input);
+  } else if (
+    Array.isArray(chunk.content) &&
+    chunk.content.length >= 1 &&
+    "text" in chunk.content[0]
+  ) {
+    return chunk.content[0].text;
   }
   return undefined;
-}
-
-function extractToolUseContent(
-  chunk: AIMessageChunk,
-  concatenatedChunks: AIMessageChunk | undefined
-) {
-  let newConcatenatedChunks = concatenatedChunks;
-  // Remove `tool_use` content types until the last chunk.
-  let toolUseContent:
-    | {
-        id: string;
-        type: "tool_use";
-        name: string;
-        input: Record<string, unknown>;
-      }
-    | undefined;
-  if (!newConcatenatedChunks) {
-    newConcatenatedChunks = chunk;
-  } else {
-    newConcatenatedChunks = concat(newConcatenatedChunks, chunk);
-  }
-  if (
-    Array.isArray(newConcatenatedChunks.content) &&
-    newConcatenatedChunks.content.find((c) => c.type === "tool_use")
-  ) {
-    try {
-      const toolUseMsg = newConcatenatedChunks.content.find(
-        (c) => c.type === "tool_use"
-      );
-      if (
-        !toolUseMsg ||
-        !("input" in toolUseMsg || "name" in toolUseMsg || "id" in toolUseMsg)
-      )
-        return;
-      const parsedArgs = JSON.parse(toolUseMsg.input);
-      if (parsedArgs) {
-        toolUseContent = {
-          type: "tool_use",
-          id: toolUseMsg.id,
-          name: toolUseMsg.name,
-          input: parsedArgs,
-        };
-      }
-    } catch (_) {
-      // no-op
-    }
-  }
-
-  return {
-    toolUseContent,
-    concatenatedChunks: newConcatenatedChunks,
-  };
 }
 
 /**
@@ -797,24 +748,43 @@ export class ChatAnthropicMessages<
 
   streaming = false;
 
-  clientOptions: ClientOptions;
+  clientOptions: ClientOptions | VertexClientOptions | BedrockClientOptions;
+
+  platform?: "vertex" | "bedrock";
 
   // Used for non-streaming requests
-  protected batchClient: Anthropic;
+  protected batchClient: Anthropic | AnthropicVertex | AnthropicBedrock;
 
   // Used for streaming requests
-  protected streamingClient: Anthropic;
+  protected streamingClient: Anthropic | AnthropicVertex | AnthropicBedrock;
 
   streamUsage = true;
 
-  constructor(fields?: Partial<AnthropicInput> & BaseChatModelParams) {
+  constructor(fields?: Partial<AnthropicInput> & BaseChatModelParams & AnthropicPlatform) {
     super(fields ?? {});
 
     this.anthropicApiKey =
       fields?.apiKey ??
       fields?.anthropicApiKey ??
       getEnvironmentVariable("ANTHROPIC_API_KEY");
-    if (!this.anthropicApiKey) {
+    this.platform = fields?.platform;
+    this.clientOptions = fields?.clientOptions ?? {};
+    if (this.platform) {
+      if (this.platform === "vertex"
+        && ((!fields?.platformClientOptions?.accessToken && !fields?.platformClientOptions?.googleAuth)
+          || !fields?.platformClientOptions?.projectId || !fields?.platformClientOptions?.region)) {
+        throw new Error("Vertex authOption invalid");
+      }
+      if (this.platform === "bedrock"
+        && (((!fields?.platformClientOptions?.awsSecretKey || !fields?.platformClientOptions?.awsAccessKey)
+          && !fields?.platformClientOptions?.awsSessionToken) || !fields?.platformClientOptions?.awsRegion)) {
+        throw new Error("Bedrock authOption invalid");
+      }
+      this.clientOptions = { ...this.clientOptions, ...fields?.platformClientOptions };
+      this.model = this.platform === "vertex" ? "claude-3-haiku@20240307" : "anthropic.claude-3-haiku-20240307-v1:0";
+      this.modelName = this.model;
+    }
+    if (!this.anthropicApiKey && !this.platform) {
       throw new Error("Anthropic API key not found");
     }
     /** Keep anthropicApiKey for backwards compatibility */
@@ -837,8 +807,18 @@ export class ChatAnthropicMessages<
     this.stopSequences = fields?.stopSequences ?? this.stopSequences;
 
     this.streaming = fields?.streaming ?? false;
-    this.clientOptions = fields?.clientOptions ?? {};
     this.streamUsage = fields?.streamUsage ?? this.streamUsage;
+  }
+
+  getClientClass() {
+    if (this.platform === "vertex") {
+      return AnthropicVertex;
+    }
+    if (this.platform === "bedrock") {
+      return AnthropicBedrock;
+    }
+
+    return Anthropic;
   }
 
   getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
@@ -979,16 +959,6 @@ export class ChatAnthropicMessages<
     });
     let usageData = { input_tokens: 0, output_tokens: 0 };
 
-    let concatenatedChunks: AIMessageChunk | undefined;
-    // Anthropic only yields the tool name and id once, so we need to save those
-    // so we can yield them with the rest of the tool_use content.
-    let toolUse:
-      | {
-          id: string;
-          name: string;
-        }
-      | undefined;
-
     for await (const data of stream) {
       if (options.signal?.aborted) {
         stream.controller.abort();
@@ -998,54 +968,25 @@ export class ChatAnthropicMessages<
       const result = _makeMessageChunkFromAnthropicEvent(data, {
         streamUsage: !!(this.streamUsage || options.streamUsage),
         coerceContentToString,
-        usageData,
-        toolUse: toolUse
-          ? {
-              id: toolUse.id,
-              name: toolUse.name,
-            }
-          : undefined,
+        usageData
       });
       if (!result) continue;
 
       const {
         chunk,
         usageData: updatedUsageData,
-        toolUse: updatedToolUse,
       } = result;
 
       usageData = updatedUsageData;
 
-      if (updatedToolUse) {
-        toolUse = updatedToolUse;
-      }
-
       const newToolCallChunk = extractToolCallChunk(chunk);
-      // Maintain concatenatedChunks for accessing the complete `tool_use` content block.
-      concatenatedChunks = concatenatedChunks
-        ? concat(concatenatedChunks, chunk)
-        : chunk;
-
-      let toolUseContent;
-      const extractedContent = extractToolUseContent(chunk, concatenatedChunks);
-      if (extractedContent) {
-        toolUseContent = extractedContent.toolUseContent;
-        concatenatedChunks = extractedContent.concatenatedChunks;
-      }
-
-      // Filter partial `tool_use` content, and only add `tool_use` chunks if complete JSON available.
-      const chunkContent = Array.isArray(chunk.content)
-        ? chunk.content.filter((c) => c.type !== "tool_use")
-        : chunk.content;
-      if (Array.isArray(chunkContent) && toolUseContent) {
-        chunkContent.push(toolUseContent);
-      }
 
       // Extract the text content token for text field and runManager.
       const token = extractToken(chunk);
       yield new ChatGenerationChunk({
         message: new AIMessageChunk({
-          content: chunkContent,
+          // Just yield chunk as it is and tool_use will be concat by BaseChatModel._generateUncached().
+          content: chunk.content,
           additional_kwargs: chunk.additional_kwargs,
           tool_call_chunks: newToolCallChunk ? [newToolCallChunk] : undefined,
           usage_metadata: chunk.usage_metadata,
@@ -1163,6 +1104,7 @@ export class ChatAnthropicMessages<
   /**
    * Creates a streaming request with retry.
    * @param request The parameters for creating a completion.
+   * @param options
    * @returns A streaming request.
    */
   protected async createStreamWithRetry(
@@ -1171,7 +1113,7 @@ export class ChatAnthropicMessages<
   ): Promise<Stream<AnthropicMessageStreamEvent>> {
     if (!this.streamingClient) {
       const options_ = this.apiUrl ? { baseURL: this.apiUrl } : undefined;
-      this.streamingClient = new Anthropic({
+      this.streamingClient = new (this.getClientClass())({
         ...this.clientOptions,
         ...options_,
         apiKey: this.apiKey,
@@ -1196,12 +1138,10 @@ export class ChatAnthropicMessages<
     request: AnthropicMessageCreateParams & Kwargs,
     options: AnthropicRequestOptions
   ): Promise<Anthropic.Message> {
-    if (!this.apiKey) {
-      throw new Error("Missing Anthropic API key.");
-    }
     if (!this.batchClient) {
       const options = this.apiUrl ? { baseURL: this.apiUrl } : undefined;
-      this.batchClient = new Anthropic({
+
+      this.batchClient = new (this.getClientClass())({
         ...this.clientOptions,
         ...options,
         apiKey: this.apiKey,

@@ -35,7 +35,9 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
+    "@anthropic-ai/bedrock-sdk": "^0.10.0",
     "@anthropic-ai/sdk": "^0.22.0",
+    "@anthropic-ai/vertex-sdk": "^0.4.0",
     "@langchain/core": ">=0.2.16 <0.3.0",
     "fast-xml-parser": "^4.3.5",
     "zod": "^3.22.4",
