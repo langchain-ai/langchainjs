@@ -239,4 +239,5 @@ test("Groq can stream tool calls", async () => {
 
   expect(finalMessage.tool_calls?.[0].name).toBe("get_current_weather");
   expect(finalMessage.tool_calls?.[0].args).toHaveProperty("location");
+  expect(finalMessage.tool_calls?.[0].id).toBeDefined();
 });

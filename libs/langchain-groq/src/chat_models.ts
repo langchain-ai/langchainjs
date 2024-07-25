@@ -21,6 +21,7 @@ import {
   ToolMessage,
   OpenAIToolCall,
   isAIMessage,
+  BaseMessageChunk,
 } from "@langchain/core/messages";
 import {
   ChatGeneration,
@@ -208,7 +209,8 @@ function groqResponseToChatMessage(
 }
 
 function _convertDeltaToolCallToToolCallChunk(
-  toolCalls?: ChatCompletionsAPI.ChatCompletionChunk.Choice.Delta.ToolCall[]
+  toolCalls?: ChatCompletionsAPI.ChatCompletionChunk.Choice.Delta.ToolCall[],
+  index?: number
 ): ToolCallChunk[] | undefined {
   if (!toolCalls?.length) return undefined;
 
@@ -217,13 +219,23 @@ function _convertDeltaToolCallToToolCallChunk(
     name: tc.function?.name,
     args: tc.function?.arguments,
     type: "tool_call_chunk",
+    index,
   }));
 }
 
 function _convertDeltaToMessageChunk(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  delta: Record<string, any>
-) {
+  delta: Record<string, any>,
+  index: number
+): {
+  message: BaseMessageChunk;
+  toolCallData?: {
+    id: string;
+    name: string;
+    index: number;
+    type: "tool_call_chunk";
+  }[];
+} {
   const { role } = delta;
   const content = delta.content ?? "";
   let additional_kwargs;
@@ -239,17 +251,43 @@ function _convertDeltaToMessageChunk(
     additional_kwargs = {};
   }
   if (role === "user") {
-    return new HumanMessageChunk({ content });
+    return {
+      message: new HumanMessageChunk({ content }),
+    };
   } else if (role === "assistant") {
-    return new AIMessageChunk({
-      content,
-      additional_kwargs,
-      tool_call_chunks: _convertDeltaToolCallToToolCallChunk(delta.tool_calls),
-    });
+    const toolCallChunks = _convertDeltaToolCallToToolCallChunk(
+      delta.tool_calls,
+      index
+    );
+    return {
+      message: new AIMessageChunk({
+        content,
+        additional_kwargs,
+        tool_call_chunks: toolCallChunks
+          ? toolCallChunks.map((tc) => ({
+              type: tc.type,
+              args: tc.args,
+              index: tc.index,
+            }))
+          : undefined,
+      }),
+      toolCallData: toolCallChunks
+        ? toolCallChunks.map((tc) => ({
+            id: tc.id ?? "",
+            name: tc.name ?? "",
+            index: tc.index ?? index,
+            type: "tool_call_chunk",
+          }))
+        : undefined,
+    };
   } else if (role === "system") {
-    return new SystemMessageChunk({ content });
+    return {
+      message: new SystemMessageChunk({ content }),
+    };
   } else {
-    return new ChatMessageChunk({ content, role });
+    return {
+      message: new ChatMessageChunk({ content, role }),
+    };
   }
 }
 
@@ -423,6 +461,12 @@ export class ChatGroq extends BaseChatModel<
       }
     );
     let role = "";
+    const toolCall: {
+      id: string;
+      name: string;
+      index: number;
+      type: "tool_call_chunk";
+    }[] = [];
     for await (const data of response) {
       const choice = data?.choices[0];
       if (!choice) {
@@ -433,13 +477,34 @@ export class ChatGroq extends BaseChatModel<
       if (choice.delta?.role) {
         role = choice.delta.role;
       }
+
+      const { message, toolCallData } = _convertDeltaToMessageChunk(
+        {
+          ...choice.delta,
+          role,
+        } ?? {},
+        choice.index
+      );
+
+      if (toolCallData) {
+        // First, ensure the ID is not already present in toolCall
+        const newToolCallData = toolCallData.filter((tc) =>
+          toolCall.every((t) => t.id !== tc.id)
+        );
+        toolCall.push(...newToolCallData);
+
+        // Yield here, ensuring the ID and name fields are only yielded once.
+        yield new ChatGenerationChunk({
+          message: new AIMessageChunk({
+            content: "",
+            tool_call_chunks: newToolCallData,
+          }),
+          text: "",
+        });
+      }
+
       const chunk = new ChatGenerationChunk({
-        message: _convertDeltaToMessageChunk(
-          {
-            ...choice.delta,
-            role,
-          } ?? {}
-        ),
+        message,
         text: choice.delta.content ?? "",
         generationInfo: {
           finishReason: choice.finish_reason,
@@ -448,6 +513,7 @@ export class ChatGroq extends BaseChatModel<
       yield chunk;
       void runManager?.handleLLMNewToken(chunk.text ?? "");
     }
+
     if (options.signal?.aborted) {
       throw new Error("AbortError");
     }
