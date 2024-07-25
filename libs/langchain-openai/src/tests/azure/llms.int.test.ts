@@ -38,6 +38,8 @@ test("Test Azure OpenAI invoke", async () => {
     maxTokens: 5,
     modelName: "gpt-3.5-turbo-instruct",
   });
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res = await model.invoke("Print hello world");
   // console.log({ res });
 });
@@ -47,6 +49,8 @@ test("Test Azure OpenAI call", async () => {
     maxTokens: 5,
     modelName: "gpt-3.5-turbo-instruct",
   });
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res = await model.call("Print hello world", ["world"]);
   // console.log({ res });
 });
@@ -56,6 +60,8 @@ test("Test Azure OpenAI with stop in object", async () => {
     maxTokens: 5,
     modelName: "gpt-3.5-turbo-instruct",
   });
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res = await model.invoke("Print hello world", { stop: ["world"] });
   // console.log({ res });
 });
@@ -124,6 +130,8 @@ test("Test Azure OpenAI with concurrency == 1", async () => {
     modelName: "gpt-3.5-turbo-instruct",
     maxConcurrency: 1,
   });
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res = await Promise.all([
     model.invoke("Print hello world"),
     model.invoke("Print hello world"),
@@ -136,6 +144,8 @@ test("Test Azure OpenAI with maxTokens -1", async () => {
     maxTokens: -1,
     modelName: "gpt-3.5-turbo-instruct",
   });
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res = await model.call("Print hello world", ["world"]);
   // console.log({ res });
 });
@@ -180,6 +190,8 @@ test("Test Azure OpenAI tokenUsage", async () => {
         },
       }),
     });
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     const res = await model.invoke("Hello");
     // console.log({ res });
 
@@ -233,9 +245,9 @@ test("Test Azure OpenAI in streaming mode with multiple prompts", async () => {
   });
   const res = await model.generate(["Print hello world", "print hello sea"]);
   // console.log(
-    res.generations,
-    res.generations.map((g) => g[0].generationInfo)
-  );
+  //   res.generations,
+  //   res.generations.map((g) => g[0].generationInfo)
+  // );
 
   expect(nrNewTokens > 0).toBe(true);
   expect(res.generations.length).toBe(2);
@@ -262,9 +274,9 @@ test("Test Azure OpenAI in streaming mode with multiple prompts", async () => {
   });
   const res = await model.generate(["Print hello world", "print hello sea"]);
   // console.log(
-    res.generations,
-    res.generations.map((g) => g[0].generationInfo)
-  );
+  //   res.generations,
+  //   res.generations.map((g) => g[0].generationInfo)
+  // );
 
   expect(nrNewTokens > 0).toBe(true);
   expect(res.generations.length).toBe(2);
@@ -284,6 +296,8 @@ test("Test Azure OpenAI prompt value", async () => {
   expect(res.generations.length).toBe(1);
   for (const generation of res.generations) {
     expect(generation.length).toBe(1);
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     for (const g of generation) {
       // console.log(g.text);
     }
@@ -316,6 +330,8 @@ test("Test Azure OpenAI stream method with abort", async () => {
         signal: AbortSignal.timeout(1000),
       }
     );
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     for await (const chunk of stream) {
       // console.log(chunk);
     }
@@ -331,6 +347,8 @@ test("Test Azure OpenAI stream method with early break", async () => {
     "How is your day going? Be extremely verbose."
   );
   let i = 0;
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   for await (const chunk of stream) {
     // console.log(chunk);
     i += 1;
@@ -361,6 +379,8 @@ test("Test Azure OpenAI with bearer token credentials", async () => {
     modelName: "davinci-002",
     azureADTokenProvider,
   });
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res = await model.invoke("Print hello world");
   // console.log({ res });
 });

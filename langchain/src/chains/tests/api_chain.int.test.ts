@@ -47,6 +47,8 @@ test("Test APIChain", async () => {
   };
 
   const chain = new APIChain(apiChainInput);
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res = await chain.call({
     question: "Search for notes containing langchain",
   });
@@ -57,6 +59,8 @@ test("Test APIChain fromLLMAndApiDocs", async () => {
   // This test doesn't work as well with earlier models
   const model = new OpenAI({ modelName: "gpt-3.5-turbo-instruct" });
   const chain = APIChain.fromLLMAndAPIDocs(model, OPEN_METEO_DOCS);
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res = await chain.call({
     question:
       "What is the weather like right now in Munich, Germany in degrees Farenheit?",

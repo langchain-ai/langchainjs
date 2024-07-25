@@ -26,6 +26,8 @@ test("Test ChatOpenAI", async () => {
     maxTokens: 10,
   });
   const message = new HumanMessage("Hello!");
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res = await chat.call([message]);
   // console.log({ res });
 });
@@ -37,6 +39,8 @@ test("Test ChatOpenAI with SystemChatMessage", async () => {
   });
   const system_message = new SystemMessage("You are to chat with a user.");
   const message = new HumanMessage("Hello!");
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res = await chat.call([system_message, message]);
   // console.log({ res });
 });
@@ -92,6 +96,8 @@ test("Test ChatOpenAI tokenUsage", async () => {
     }),
   });
   const message = new HumanMessage("Hello");
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res = await model.invoke([message]);
   // console.log({ res });
 
@@ -114,6 +120,8 @@ test("Test ChatOpenAI tokenUsage with a batch", async () => {
       },
     }),
   });
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res = await model.generate([
     [new HumanMessage("Hello")],
     [new HumanMessage("Hi")],
@@ -189,6 +197,8 @@ test("Test ChatOpenAI prompt value", async () => {
   expect(res.generations.length).toBe(1);
   for (const generation of res.generations) {
     expect(generation.length).toBe(2);
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     for (const g of generation) {
       // console.log(g.text);
     }
@@ -208,6 +218,8 @@ test("OpenAI Chat, docs, prompt templates", async () => {
     HumanMessagePromptTemplate.fromTemplate("{text}"),
   ]);
 
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const responseA = await chat.generatePrompt([
     await chatPrompt.formatPromptValue({
       input_language: "English",
@@ -221,6 +233,8 @@ test("OpenAI Chat, docs, prompt templates", async () => {
 
 test("Test OpenAI with stop", async () => {
   const model = new AzureChatOpenAI({ maxTokens: 5 });
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res = await model.call(
     [new HumanMessage("Print hello world")],
     ["world"]
@@ -230,6 +244,8 @@ test("Test OpenAI with stop", async () => {
 
 test("Test OpenAI with stop in object", async () => {
   const model = new AzureChatOpenAI({ maxTokens: 5 });
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res = await model.invoke([new HumanMessage("Print hello world")], {
     stop: ["world"],
   });
@@ -291,6 +307,8 @@ test("Test OpenAI with specific roles in ChatMessage", async () => {
     "system"
   );
   const user_message = new ChatMessage("Hello!", "user");
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res = await chat.call([system_message, user_message]);
   // console.log({ res });
 });
@@ -321,6 +339,8 @@ test("Test ChatOpenAI stream method with abort", async () => {
         signal: AbortSignal.timeout(500),
       }
     );
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     for await (const chunk of stream) {
       // console.log(chunk);
     }
@@ -336,6 +356,8 @@ test("Test ChatOpenAI stream method with early break", async () => {
     "How is your day going? Be extremely verbose."
   );
   let i = 0;
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   for await (const chunk of stream) {
     // console.log(chunk);
     i += 1;
@@ -355,6 +377,8 @@ test("Test ChatOpenAI stream method, timeout error thrown from SDK", async () =>
     const stream = await model.stream(
       "How is your day going? Be extremely verbose."
     );
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     for await (const chunk of stream) {
       // console.log(chunk);
     }
@@ -418,9 +442,9 @@ test("Function calling with streaming", async () => {
     "get_current_weather"
   );
   // console.log(
-    JSON.parse(finalResult?.additional_kwargs?.function_call?.arguments ?? "")
-      .location
-  );
+  //   JSON.parse(finalResult?.additional_kwargs?.function_call?.arguments ?? "")
+  //     .location
+  // );
 });
 
 test("ChatOpenAI can cache generations", async () => {
@@ -672,7 +696,7 @@ test("Test ChatOpenAI token usage reporting for streaming function calls", async
             output.llmOutput?.estimatedTokenUsage?.totalTokens;
           // console.log("streaming usage", output.llmOutput?.estimatedTokenUsage);
         },
-        handleLLMError: async (err) => {
+        handleLLMError: async (_err) => {
           // console.error(err);
         },
       },
@@ -695,7 +719,7 @@ test("Test ChatOpenAI token usage reporting for streaming function calls", async
           nonStreamingTokenUsed = output.llmOutput?.tokenUsage?.totalTokens;
           // console.log("non-streaming usage", output.llmOutput?.tokenUsage);
         },
-        handleLLMError: async (err) => {
+        handleLLMError: async (_err) => {
           // console.error(err);
         },
       },
@@ -748,7 +772,7 @@ test("Test ChatOpenAI token usage reporting for streaming calls", async () => {
             output.llmOutput?.estimatedTokenUsage?.totalTokens;
           // console.log("streaming usage", output.llmOutput?.estimatedTokenUsage);
         },
-        handleLLMError: async (err) => {
+        handleLLMError: async (_err) => {
           // console.error(err);
         },
       },
@@ -768,7 +792,7 @@ test("Test ChatOpenAI token usage reporting for streaming calls", async () => {
           nonStreamingTokenUsed = output.llmOutput?.tokenUsage?.totalTokens;
           // console.log("non-streaming usage", output.llmOutput?.estimated);
         },
-        handleLLMError: async (err) => {
+        handleLLMError: async (_err) => {
           // console.error(err);
         },
       },
@@ -803,6 +827,8 @@ test("Test Azure ChatOpenAI with key credentials ", async () => {
     azureOpenAIApiDeploymentName:
       getEnvironmentVariable("AZURE_OPENAI_API_DEPLOYMENT_NAME") ?? "",
   });
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res = await model.invoke("Print hello world");
   // console.log({ res });
 });
@@ -819,6 +845,8 @@ test("Test ChatOpenAI with OpenAI API key credentials", async () => {
     azureOpenAIApiDeploymentName: "",
   });
   const message = new HumanMessage("Hello!");
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res = await chat.invoke([["system", "Say hi"], message]);
   // console.log(res);
 });

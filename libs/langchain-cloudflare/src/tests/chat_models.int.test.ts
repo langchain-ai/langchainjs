@@ -19,6 +19,8 @@ describe("ChatCloudflareWorkersAI", () => {
   test("call", async () => {
     const chat = new ChatCloudflareWorkersAI();
     const message = new HumanMessage("Hello!");
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     const res = await chat.call([message]);
     // console.log({ res });
   });
@@ -26,6 +28,8 @@ describe("ChatCloudflareWorkersAI", () => {
   test("generate", async () => {
     const chat = new ChatCloudflareWorkersAI();
     const message = new HumanMessage("Hello!");
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     const res = await chat.generate([[message]]);
     // console.log(JSON.stringify(res, null, 2));
   });
@@ -77,6 +81,8 @@ describe("ChatCloudflareWorkersAI", () => {
 
   test("custom messages", async () => {
     const chat = new ChatCloudflareWorkersAI();
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     const res = await chat.call([new ChatMessage("Hello!", "user")]);
     // console.log(JSON.stringify(res, null, 2));
   });
@@ -94,6 +100,8 @@ describe("ChatCloudflareWorkersAI", () => {
       HumanMessagePromptTemplate.fromTemplate("{text}"),
     ]);
 
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     const responseA = await chat.generatePrompt([
       await chatPrompt.formatPromptValue({
         job: "pirate",
@@ -113,6 +121,8 @@ describe("ChatCloudflareWorkersAI", () => {
       HumanMessagePromptTemplate.fromTemplate("{text}"),
     ]);
 
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     const responseA = await chat.generatePrompt([
       await chatPrompt.formatPromptValue({
         text: "What did I just say my name was?",
@@ -135,6 +145,8 @@ describe("ChatCloudflareWorkersAI", () => {
       HumanMessagePromptTemplate.fromTemplate("{text}"),
     ]);
 
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     const responseA = await chat.generatePrompt([
       await chatPrompt.formatPromptValue({
         text: "What did I just say my name was?",

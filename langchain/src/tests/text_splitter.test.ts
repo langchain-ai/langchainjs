@@ -76,6 +76,8 @@ describe("Character text splitter", () => {
 
   test("Test invalid arguments.", () => {
     expect(() => {
+      // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+      // @ts-expect-error unused var
       const res = new CharacterTextSplitter({ chunkSize: 2, chunkOverlap: 4 });
       // console.log(res);
     }).toThrow();

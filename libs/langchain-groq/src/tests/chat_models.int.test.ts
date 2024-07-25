@@ -139,6 +139,8 @@ test("stream with bound tools, yielding a single chunk", async () => {
       tool_choice: "auto",
     })
     .stream([message]);
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   for await (const chunk of stream) {
     // console.log(JSON.stringify(chunk));
   }

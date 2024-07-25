@@ -48,6 +48,8 @@ test.skip("embedding image with text in a vector store", async () => {
     e
   );
 
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const resultOne = await vectorStore.similaritySearch("bird", 2);
   // console.log(resultOne);
 
@@ -76,6 +78,8 @@ test.skip("embedding image with text in a vector store", async () => {
   const img2 = fs.readFileSync(pathname2);
   const vector2: number[] = await e.embedImageQuery(img2);
 
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const resultTwo = await vectorStore.similaritySearchVectorWithScore(
     vector2,
     2

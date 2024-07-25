@@ -30,7 +30,7 @@ class ChatCloudflareWorkersAIStandardUnitTests extends ChatModelUnitTests<
   }
 
   expectedLsParams(): Partial<LangSmithParams> {
-    // console.warn(
+    console.warn(
       "Overriding testStandardParams. ChatCloudflareWorkersAI does not support temperature or max tokens."
     );
     return {

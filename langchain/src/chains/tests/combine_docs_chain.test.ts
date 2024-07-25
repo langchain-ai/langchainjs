@@ -93,6 +93,8 @@ test("Test RefineDocumentsChain", async () => {
 
   expect(chain.inputKeys).toEqual(["input_documents"]);
 
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res = await chain.run(docs);
   // console.log({ res });
 });

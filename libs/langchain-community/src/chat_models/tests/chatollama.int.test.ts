@@ -12,6 +12,8 @@ import { ChatOllama } from "../ollama.js";
 
 test.skip("test call", async () => {
   const ollama = new ChatOllama({});
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const result = await ollama.invoke(
     "What is a good name for a company that makes colorful socks?"
   );
@@ -70,10 +72,14 @@ test.skip("should abort the request", async () => {
 
 test.skip("Test multiple messages", async () => {
   const model = new ChatOllama({ baseUrl: "http://localhost:11434" });
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res = await model.invoke([
     new HumanMessage({ content: "My name is Jonas" }),
   ]);
   // console.log({ res });
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res2 = await model.invoke([
     new HumanMessage("My name is Jonas"),
     new AIMessage(
@@ -140,6 +146,8 @@ test.skip("Test ChatOllama with an image", async () => {
     model: "llava",
     baseUrl: "http://127.0.0.1:11434",
   });
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res = await chat.invoke([
     new HumanMessage({
       content: [

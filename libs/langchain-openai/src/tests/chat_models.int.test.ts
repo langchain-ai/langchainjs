@@ -211,6 +211,8 @@ test("Test ChatOpenAI prompt value", async () => {
   expect(res.generations.length).toBe(1);
   for (const generation of res.generations) {
     expect(generation.length).toBe(2);
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     for (const g of generation) {
       // console.log(g.text);
     }
@@ -230,6 +232,8 @@ test("OpenAI Chat, docs, prompt templates", async () => {
     HumanMessagePromptTemplate.fromTemplate("{text}"),
   ]);
 
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const responseA = await chat.generatePrompt([
     await chatPrompt.formatPromptValue({
       input_language: "English",
@@ -243,6 +247,8 @@ test("OpenAI Chat, docs, prompt templates", async () => {
 
 test("Test OpenAI with stop", async () => {
   const model = new ChatOpenAI({ maxTokens: 5 });
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res = await model.invoke([new HumanMessage("Print hello world")], {
     stop: ["world"],
   });
@@ -251,6 +257,8 @@ test("Test OpenAI with stop", async () => {
 
 test("Test OpenAI with stop in object", async () => {
   const model = new ChatOpenAI({ maxTokens: 5 });
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res = await model.invoke([new HumanMessage("Print hello world")], {
     stop: ["world"],
   });
@@ -373,6 +381,8 @@ test("Test OpenAI with specific roles in ChatMessage", async () => {
     "system"
   );
   const user_message = new ChatMessage("Hello!", "user");
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res = await chat.invoke([system_message, user_message]);
   // console.log({ res });
 });
@@ -400,6 +410,8 @@ test("Test ChatOpenAI stream method with abort", async () => {
         signal: AbortSignal.timeout(500),
       }
     );
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     for await (const chunk of stream) {
       // console.log(chunk);
     }
@@ -412,6 +424,8 @@ test("Test ChatOpenAI stream method with early break", async () => {
     "How is your day going? Be extremely verbose."
   );
   let i = 0;
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   for await (const chunk of stream) {
     // console.log(chunk);
     i += 1;
@@ -432,6 +446,8 @@ test("Test ChatOpenAI stream method, timeout error thrown from SDK", async () =>
     const stream = await model.stream(
       "How is your day going? Be extremely verbose."
     );
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     for await (const chunk of stream) {
       // console.log(chunk);
     }
@@ -501,9 +517,9 @@ test("Function calling with streaming", async () => {
       "get_current_weather"
     );
     // console.log(
-      JSON.parse(finalResult?.additional_kwargs?.function_call?.arguments ?? "")
-        .location
-    );
+    //   JSON.parse(finalResult?.additional_kwargs?.function_call?.arguments ?? "")
+    //     .location
+    // );
   } finally {
     // Reset the environment variable
     process.env.LANGCHAIN_CALLBACKS_BACKGROUND = originalBackground;
@@ -745,8 +761,11 @@ test("Test ChatOpenAI token usage reporting for streaming calls", async () => {
 
   try {
     let streamingTokenUsed = -1;
+
     let nonStreamingTokenUsed = -1;
+
     const systemPrompt = "You are a helpful assistant";
+
     const question = "What is the color of the night sky?";
 
     const streamingModel = new ChatOpenAI({
@@ -762,11 +781,11 @@ test("Test ChatOpenAI token usage reporting for streaming calls", async () => {
             streamingTokenUsed =
               output.llmOutput?.estimatedTokenUsage?.totalTokens;
             // console.log(
-              "streaming usage",
-              output.llmOutput?.estimatedTokenUsage
-            );
+            //   "streaming usage",
+            //   output.llmOutput?.estimatedTokenUsage
+            // );
           },
-          handleLLMError: async (err) => {
+          handleLLMError: async (_err) => {
             // console.error(err);
           },
         },
@@ -786,7 +805,7 @@ test("Test ChatOpenAI token usage reporting for streaming calls", async () => {
             nonStreamingTokenUsed = output.llmOutput?.tokenUsage?.totalTokens;
             // console.log("non-streaming usage", output.llmOutput?.estimated);
           },
-          handleLLMError: async (err) => {
+          handleLLMError: async (_err) => {
             // console.error(err);
           },
         },
@@ -842,8 +861,8 @@ test("Streaming tokens can be found in usage_metadata field", async () => {
     }
   }
   // console.log({
-    usage_metadata: finalResult?.usage_metadata,
-  });
+  //   usage_metadata: finalResult?.usage_metadata,
+  // });
   expect(finalResult).toBeTruthy();
   expect(finalResult?.usage_metadata).toBeTruthy();
   expect(finalResult?.usage_metadata?.input_tokens).toBeGreaterThan(0);
@@ -861,8 +880,8 @@ test("streaming: true tokens can be found in usage_metadata field", async () => 
     },
   });
   // console.log({
-    usage_metadata: response?.usage_metadata,
-  });
+  //   usage_metadata: response?.usage_metadata,
+  // });
   expect(response).toBeTruthy();
   expect(response?.usage_metadata).toBeTruthy();
   expect(response?.usage_metadata?.input_tokens).toBeGreaterThan(0);
@@ -878,8 +897,8 @@ test("streaming: streamUsage will not override stream_options", async () => {
     stream_options: { include_usage: false },
   });
   // console.log({
-    usage_metadata: response?.usage_metadata,
-  });
+  //   usage_metadata: response?.usage_metadata,
+  // });
   expect(response).toBeTruthy();
   expect(response?.usage_metadata).toBeFalsy();
 });
@@ -888,8 +907,8 @@ test("streaming: streamUsage default is true", async () => {
   const model = new ChatOpenAI();
   const response = await model.invoke("Hello, how are you?");
   // console.log({
-    usage_metadata: response?.usage_metadata,
-  });
+  //   usage_metadata: response?.usage_metadata,
+  // });
   expect(response).toBeTruthy();
   expect(response?.usage_metadata).toBeTruthy();
   expect(response?.usage_metadata?.input_tokens).toBeGreaterThan(0);
@@ -901,8 +920,8 @@ test("populates ID field on AIMessage", async () => {
   const model = new ChatOpenAI();
   const response = await model.invoke("Hell");
   // console.log({
-    invokeId: response.id,
-  });
+  //   invokeId: response.id,
+  // });
   expect(response.id?.length).toBeGreaterThan(1);
   expect(response?.id?.startsWith("chatcmpl-")).toBe(true);
 
@@ -916,8 +935,8 @@ test("populates ID field on AIMessage", async () => {
     }
   }
   // console.log({
-    streamId: finalChunk?.id,
-  });
+  //   streamId: finalChunk?.id,
+  // });
   expect(finalChunk?.id?.length).toBeGreaterThan(1);
   expect(finalChunk?.id?.startsWith("chatcmpl-")).toBe(true);
 });

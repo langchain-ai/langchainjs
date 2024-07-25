@@ -80,9 +80,9 @@ test("createOpenAIFunctionsAgent can stream log", async () => {
   // console.log(chunks.length);
   // console.log();
   // console.log(
-    "Time to complete after first chunk:",
-    new Date().getTime() - firstChunkTime
-  );
+  //   "Time to complete after first chunk:",
+  //   new Date().getTime() - firstChunkTime
+  // );
 
   // console.log(chunks.length);
   expect(chunks.length).toBeGreaterThan(1);

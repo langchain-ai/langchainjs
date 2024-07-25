@@ -75,6 +75,8 @@ describe.skip("Google Maker Suite Hub Integration", () => {
       const caller = new AsyncCaller({});
       const connection = new DriveFileReadConnection({ fileId }, caller);
       // console.log("connection client", connection?.client);
+      // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+      // @ts-expect-error unused var
       const result = await connection.request();
       // console.log(result);
     });

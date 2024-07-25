@@ -140,6 +140,8 @@ describe("Mock ChatGoogle", () => {
       new AIMessage("H"),
       new HumanMessage("Flip it again"),
     ];
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     const result = await model.invoke(messages);
     // console.log("record", JSON.stringify(record, null, 1));
     // console.log("result", JSON.stringify(result, null, 1));
@@ -176,6 +178,8 @@ describe("Mock ChatGoogle", () => {
       new AIMessage("H"),
       new HumanMessage("Flip it again"),
     ];
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     const result = await model.invoke(messages);
     // console.log("record", JSON.stringify(record, null, 1));
     // console.log("result", JSON.stringify(result, null, 1));
@@ -269,6 +273,8 @@ describe("Mock ChatGoogle", () => {
       new AIMessage("H"),
       new HumanMessage("Flip it again"),
     ];
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     const result = await model.invoke(messages);
     // console.log("record", JSON.stringify(record, null, 1));
     // console.log("result", JSON.stringify(result, null, 1));
@@ -312,6 +318,8 @@ describe("Mock ChatGoogle", () => {
       new AIMessage("H"),
       new HumanMessage("Flip it again"),
     ];
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     const result = await model.invoke(messages);
     // console.log("record", JSON.stringify(record, null, 1));
     // console.log("result", JSON.stringify(result, null, 1));
@@ -355,6 +363,8 @@ describe("Mock ChatGoogle", () => {
       new AIMessage("H"),
       new HumanMessage("Flip it again"),
     ];
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     const result = await model.invoke(messages);
     // console.log("record", JSON.stringify(record, null, 1));
     // console.log("result", JSON.stringify(result, null, 1));
@@ -396,6 +406,8 @@ describe("Mock ChatGoogle", () => {
       new AIMessage("H"),
       new HumanMessage("Flip it again"),
     ];
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     const result = await model.invoke(messages);
     // console.log("record", JSON.stringify(record, null, 1));
     // console.log("result", JSON.stringify(result, null, 1));
@@ -441,6 +453,8 @@ describe("Mock ChatGoogle", () => {
 
     let caught = false;
     try {
+      // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+      // @ts-expect-error unused var
       const result = await model.invoke(messages);
       // console.log(result);
     } catch (xx) {
@@ -471,6 +485,8 @@ describe("Mock ChatGoogle", () => {
 
     let caught = false;
     try {
+      // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+      // @ts-expect-error unused var
       const result = await model.invoke(messages);
       // console.log(result);
     } catch (xx) {

@@ -14,6 +14,8 @@ test.skip("Test ChatGooglePalm", async () => {
     maxRetries: 1,
   });
   const message = new HumanMessage("Hello!");
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res = await chat.invoke([message]);
   // console.log({ res });
 });
@@ -23,6 +25,8 @@ test.skip("Test ChatGooglePalm generate", async () => {
     maxRetries: 1,
   });
   const message = new HumanMessage("Hello!");
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res = await chat.generate([[message]]);
   // console.log(JSON.stringify(res, null, 2));
 });
@@ -48,6 +52,8 @@ test.skip("ChatGooglePalm, prompt templates", async () => {
     HumanMessagePromptTemplate.fromTemplate("{text}"),
   ]);
 
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const responseA = await chat.generatePrompt([
     await chatPrompt.formatPromptValue({
       job: "pirate",
@@ -74,6 +80,8 @@ test.skip("ChatGooglePalm, longer chain of messages", async () => {
     HumanMessagePromptTemplate.fromTemplate("{text}"),
   ]);
 
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const responseA = await chat.generatePrompt([
     await chatPrompt.formatPromptValue({
       text: "What did I just say my name was?",
@@ -95,6 +103,8 @@ test.skip("ChatGooglePalm, chain of messages on code", async () => {
     HumanMessagePromptTemplate.fromTemplate("{text}"),
   ]);
 
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const responseA = await chat.generatePrompt([
     await chatPrompt.formatPromptValue({
       text: "How can I write a for loop counting to 10?",

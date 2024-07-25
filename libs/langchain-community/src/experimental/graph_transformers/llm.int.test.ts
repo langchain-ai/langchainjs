@@ -17,6 +17,8 @@ test.skip("convertToGraphDocuments", async () => {
     llm: model,
   });
 
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const result = await llmGraphTransformer.convertToGraphDocuments([
     new Document({ pageContent: "Elon Musk is suing OpenAI" }),
   ]);

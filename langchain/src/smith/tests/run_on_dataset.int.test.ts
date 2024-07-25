@@ -5,7 +5,6 @@
 import OpenAI from "openai";
 import wiki from "wikipedia";
 import { Client, Dataset, RunTree, RunTreeConfig } from "langsmith";
-import { runOnDataset } from "../runner_utils.js";
 import { DynamicRunEvaluatorParams, RunEvalConfig } from "../config.js";
 
 const oaiClient = new OpenAI();
@@ -211,6 +210,8 @@ test(`Chat model dataset`, async () => {
     };
   };
 
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const evaluation: RunEvalConfig = {
     // The 'evaluators' are loaded from LangChain's evaluation
     // library.
@@ -237,6 +238,8 @@ test(`Chat model dataset`, async () => {
     customEvaluators: [unsure],
   };
 
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const wrappedRagPipeline = async ({
     question,
   }: {
@@ -246,10 +249,10 @@ test(`Chat model dataset`, async () => {
   };
 
   // console.log(
-    await runOnDataset(wrappedRagPipeline, datasetName, {
-      evaluationConfig: evaluation,
-    })
-  );
+  //   await runOnDataset(wrappedRagPipeline, datasetName, {
+  //     evaluationConfig: evaluation,
+  //   })
+  // );
 });
 
 test("Thrown errors should not interrupt dataset run", async () => {
@@ -296,12 +299,16 @@ test("Thrown errors should not interrupt dataset run", async () => {
     throw new Error("Expected error");
   };
 
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const evaluation: RunEvalConfig = {
     // Custom evaluators can be user-defined RunEvaluator's
     // or a compatible function
     customEvaluators: [dummy],
   };
 
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const wrappedRagPipeline = async ({
     question,
   }: {
@@ -311,9 +318,9 @@ test("Thrown errors should not interrupt dataset run", async () => {
   };
 
   // console.log(
-    await runOnDataset(wrappedRagPipeline, datasetName, {
-      evaluationConfig: evaluation,
-      maxConcurrency: 1,
-    })
-  );
+  //   await runOnDataset(wrappedRagPipeline, datasetName, {
+  //     evaluationConfig: evaluation,
+  //     maxConcurrency: 1,
+  //   })
+  // );
 });

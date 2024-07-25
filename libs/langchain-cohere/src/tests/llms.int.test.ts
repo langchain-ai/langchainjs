@@ -8,6 +8,8 @@ const originalBackground = process.env.LANGCHAIN_CALLBACKS_BACKGROUND;
 
 test("test invoke", async () => {
   const cohere = new Cohere({});
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const result = await cohere.invoke(
     "What is a good name for a company that makes colorful socks?"
   );

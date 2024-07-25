@@ -110,6 +110,8 @@ describe.skip("testCypherGeneratingRun", () => {
     const expectedOutput = "Bruce Willis";
     expect(output.result.includes(expectedOutput)).toBeTruthy();
 
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
     const { query } = output[INTERMEDIATE_STEPS_KEY][0];
     // console.log(query);
     // const expectedQuery =

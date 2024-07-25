@@ -75,6 +75,8 @@ test("Streaming JSON patch with an event stream output parser", async () => {
   });
 
   const chunks = [];
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const decoder = new TextDecoder();
   for await (const chunk of stream) {
     // console.log(decoder.decode(chunk));

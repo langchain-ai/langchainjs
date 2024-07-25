@@ -63,6 +63,8 @@ test.skip("createOpenAIToolsAgent tracing works when it is nested in a lambda", 
     const noop = RunnableLambda.from(() => "hi").withConfig({
       runName: "nested_testing",
     });
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     const noopRes = await noop.invoke({ nested: "nested" });
     // console.log(noopRes);
     const res = await agentExecutor.invoke({

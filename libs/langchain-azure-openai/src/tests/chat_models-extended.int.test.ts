@@ -13,6 +13,8 @@ test("Test ChatOpenAI JSON mode", async () => {
     },
   });
   const message = new HumanMessage("Hello!");
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res = await chat.invoke([["system", "Only return JSON"], message]);
   // console.log(JSON.stringify(res));
 });
@@ -122,6 +124,8 @@ test("Test ChatOpenAI tool calling with ToolMessages", async () => {
         ),
       })
   );
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const finalResponse = await chat.invoke([
     ["human", "What's the weather like in San Francisco, Tokyo, and Paris?"],
     res,

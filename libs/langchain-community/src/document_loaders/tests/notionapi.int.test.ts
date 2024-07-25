@@ -9,14 +9,18 @@ test.skip("Test Notion API Loader Page", async () => {
       auth: process.env.NOTION_INTEGRATION_TOKEN,
     },
     id: process.env.NOTION_PAGE_ID ?? "",
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     onDocumentLoaded: (current, total, currentTitle, rootTitle) => {
       // console.log(
-        `Loaded ${currentTitle} in ${rootTitle}:  (${current}/${total})`
-      );
+      //   `Loaded ${currentTitle} in ${rootTitle}:  (${current}/${total})`
+      // );
     },
   });
 
   const docs = await loader.load();
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const titles = docs.map((doc) => doc.metadata.properties._title);
   // console.log("Titles:", titles);
   // console.log(`Loaded ${docs.length} pages`);
@@ -28,14 +32,18 @@ test.skip("Test Notion API Loader Database", async () => {
       auth: process.env.NOTION_INTEGRATION_TOKEN,
     },
     id: process.env.NOTION_DATABASE_ID ?? "",
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     onDocumentLoaded: (current, total, currentTitle, rootTitle) => {
       // console.log(
-        `Loaded ${currentTitle} in ${rootTitle}:  (${current}/${total})`
-      );
+      //   `Loaded ${currentTitle} in ${rootTitle}:  (${current}/${total})`
+      // );
     },
   });
 
   const docs = await loader.load();
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const titles = docs.map((doc) => doc.metadata.properties._title);
   // console.log("Titles:", titles);
   // console.log(`Loaded ${docs.length} pages from the database`);

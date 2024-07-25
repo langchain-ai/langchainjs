@@ -48,6 +48,8 @@ test("Test ChatBedrockConverse stream method", async () => {
   for await (const chunk of stream) {
     chunks.push(chunk);
   }
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const finalMessage = chunks.map((c) => c.content).join("");
   // console.log(finalMessage);
   expect(chunks.length).toBeGreaterThan(1);
@@ -111,6 +113,8 @@ test("Test ChatBedrockConverse stream method with early break", async () => {
     "How is your day going? Be extremely verbose."
   );
   let i = 0;
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   for await (const chunk of stream) {
     // console.log(chunk);
     i += 1;
@@ -135,8 +139,8 @@ test("Streaming tokens can be found in usage_metadata field", async () => {
     }
   }
   // console.log({
-    usage_metadata: finalResult?.usage_metadata,
-  });
+  //   usage_metadata: finalResult?.usage_metadata,
+  // });
   expect(finalResult).toBeTruthy();
   expect(finalResult?.usage_metadata).toBeTruthy();
   expect(finalResult?.usage_metadata?.input_tokens).toBeGreaterThan(0);
@@ -151,8 +155,8 @@ test("populates ID field on AIMessage", async () => {
   });
   const response = await model.invoke("Hell");
   // console.log({
-    invokeId: response.id,
-  });
+  //   invokeId: response.id,
+  // });
   expect(response.id?.length).toBeGreaterThan(1);
 
   /**
@@ -181,10 +185,10 @@ test("Test ChatBedrockConverse can invoke tools", async () => {
   });
   const tools = [
     tool(
-      (input) => {
+      (_input) => 
         // console.log("tool", input);
-        return "Hello";
-      },
+         "Hello"
+      ,
       {
         name: "get_weather",
         description: "Get the weather",
@@ -213,10 +217,10 @@ test("Test ChatBedrockConverse can invoke tools with non anthropic model", async
   });
   const tools = [
     tool(
-      (input) => {
+      (_input) => 
         // console.log("tool", input);
-        return "Hello";
-      },
+         "Hello"
+      ,
       {
         name: "get_weather",
         description: "Get the weather",
@@ -244,10 +248,10 @@ test("Test ChatBedrockConverse can stream tools", async () => {
   });
   const tools = [
     tool(
-      (input) => {
+      (_input) => 
         // console.log("tool", input);
-        return "Hello";
-      },
+         "Hello"
+      ,
       {
         name: "get_weather",
         description: "Get the weather",
@@ -283,10 +287,10 @@ test("Test ChatBedrockConverse tool_choice works", async () => {
   });
   const tools = [
     tool(
-      (input) => {
+      (_input) => 
         // console.log("tool", input);
-        return "Hello";
-      },
+         "Hello"
+      ,
       {
         name: "get_weather",
         description: "Get the weather",
@@ -296,10 +300,10 @@ test("Test ChatBedrockConverse tool_choice works", async () => {
       }
     ),
     tool(
-      (input) => {
+      (_input) => 
         // console.log("tool", input);
-        return "Hello";
-      },
+         "Hello"
+      ,
       {
         name: "calculator",
         description: "Sum two numbers",

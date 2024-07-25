@@ -11,7 +11,7 @@ const fsMock = {
   ...fs,
   mkdtempSync: jest.fn().mockReturnValue("tmp/s3fileloader-12345"),
   mkdirSync: jest.fn().mockImplementation(() => {}),
-  writeFileSync: jest.fn().mockImplementation((path, data) => {
+  writeFileSync: jest.fn().mockImplementation((_path, _data) => {
     // console.log(`Writing "${(data as object).toString()}" to ${path}`);
   }),
 };

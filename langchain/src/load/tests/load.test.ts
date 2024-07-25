@@ -169,7 +169,7 @@ test("serialize + deserialize llm chain string prompt", async () => {
     callbacks: [
       new ConsoleCallbackHandler(),
       {
-        handleLLMEnd(output) {
+        handleLLMEnd(_output) {
           // console.log(output);
         },
       },

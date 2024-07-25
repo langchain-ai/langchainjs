@@ -9,6 +9,8 @@ const originalBackground = process.env.LANGCHAIN_CALLBACKS_BACKGROUND;
 
 test("Test OpenAI", async () => {
   const model = new OpenAIChat({ modelName: "gpt-3.5-turbo", maxTokens: 10 });
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res = await model.invoke("Print hello world");
   // console.log({ res });
 });
@@ -21,6 +23,8 @@ test("Test OpenAI with prefix messages", async () => {
     ],
     maxTokens: 10,
   });
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res = await model.invoke("What is my name");
   // console.log({ res });
 });
@@ -59,12 +63,16 @@ test("Test OpenAI in streaming mode", async () => {
 
 test("Test OpenAI with stop", async () => {
   const model = new OpenAIChat({ maxTokens: 5 });
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res = await model.call("Print hello world", ["world"]);
   // console.log({ res });
 });
 
 test("Test OpenAI with stop in object", async () => {
   const model = new OpenAIChat({ maxTokens: 5 });
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res = await model.invoke("Print hello world", { stop: ["world"] });
   // console.log({ res });
 });
@@ -135,6 +143,8 @@ test("Test OpenAIChat stream method with abort", async () => {
         signal: AbortSignal.timeout(1000),
       }
     );
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     for await (const chunk of stream) {
       // console.log(chunk);
     }
@@ -147,6 +157,8 @@ test("Test OpenAIChat stream method with early break", async () => {
     "How is your day going? Be extremely verbose."
   );
   let i = 0;
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   for await (const chunk of stream) {
     // console.log(chunk);
     i += 1;

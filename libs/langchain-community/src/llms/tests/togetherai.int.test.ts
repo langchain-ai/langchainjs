@@ -10,6 +10,8 @@ test.skip("TogetherAI can make a request to an LLM", async () => {
     ["human", "Tell me a joke about bears."],
   ]);
   const chain = prompt.pipe(model);
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const result = await chain.invoke({});
   // console.log("result", result);
 });

@@ -7,12 +7,16 @@ const llamaPath = getEnvironmentVariable("LLAMA_PATH")!;
 
 test.skip("Test Llama_CPP", async () => {
   const model = new LlamaCpp({ modelPath: llamaPath });
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res = await model.invoke("Where do Llamas live?");
   // console.log(res);
 }, 100000);
 
 test.skip("Test Llama_CPP", async () => {
   const model = new LlamaCpp({ modelPath: llamaPath });
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res = await model.invoke("Where do Pandas live?");
   // console.log(res);
 }, 100000);
@@ -52,6 +56,8 @@ const gbnfListGrammer =
 
 test.skip("Test Llama_CPP", async () => {
   const model = new LlamaCpp({ modelPath: llamaPath, gbnf: gbnfListGrammer });
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res = await model.invoke(
     "Can you give me a list of 3 cute llama names?"
   );
@@ -77,6 +83,8 @@ const schemaJSON = {
 
 test.skip("Test Llama_CPP", async () => {
   const model = new LlamaCpp({ modelPath: llamaPath, jsonSchema: schemaJSON });
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res = await model.invoke("Where do llamas live?");
   // console.log(res);
 }, 100000);

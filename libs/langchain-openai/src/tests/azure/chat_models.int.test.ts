@@ -52,6 +52,8 @@ test("Test Azure ChatOpenAI call method", async () => {
     maxTokens: 10,
   });
   const message = new HumanMessage("Hello!");
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res = await chat.call([message]);
   // console.log({ res });
 });
@@ -63,6 +65,8 @@ test("Test Azure ChatOpenAI with SystemChatMessage", async () => {
   });
   const system_message = new SystemMessage("You are to chat with a user.");
   const message = new HumanMessage("Hello!");
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res = await chat.call([system_message, message]);
   // console.log({ res });
 });
@@ -124,6 +128,8 @@ test("Test Azure ChatOpenAI tokenUsage", async () => {
       }),
     });
     const message = new HumanMessage("Hello");
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     const res = await model.invoke([message]);
     // console.log({ res });
 
@@ -156,6 +162,8 @@ test("Test Azure ChatOpenAI tokenUsage with a batch", async () => {
         },
       }),
     });
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     const res = await model.generate([
       [new HumanMessage("Hello")],
       [new HumanMessage("Hi")],
@@ -255,6 +263,8 @@ test("Test Azure ChatOpenAI prompt value", async () => {
   expect(res.generations.length).toBe(1);
   for (const generation of res.generations) {
     expect(generation.length).toBe(2);
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     for (const g of generation) {
       // console.log(g.text);
     }
@@ -274,6 +284,8 @@ test("Test Azure OpenAI Chat, docs, prompt templates", async () => {
     HumanMessagePromptTemplate.fromTemplate("{text}"),
   ]);
 
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const responseA = await chat.generatePrompt([
     await chatPrompt.formatPromptValue({
       input_language: "English",
@@ -287,6 +299,8 @@ test("Test Azure OpenAI Chat, docs, prompt templates", async () => {
 
 test("Test Azure ChatOpenAI with stop", async () => {
   const model = new AzureChatOpenAI({ maxTokens: 5 });
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res = await model.call(
     [new HumanMessage("Print hello world")],
     ["world"]
@@ -296,6 +310,8 @@ test("Test Azure ChatOpenAI with stop", async () => {
 
 test("Test Azure ChatOpenAI with stop in object", async () => {
   const model = new AzureChatOpenAI({ maxTokens: 5 });
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res = await model.invoke([new HumanMessage("Print hello world")], {
     stop: ["world"],
   });
@@ -357,6 +373,8 @@ test("Test Azure ChatOpenAI with specific roles in ChatMessage", async () => {
     "system"
   );
   const user_message = new ChatMessage("Hello!", "user");
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res = await chat.call([system_message, user_message]);
   // console.log({ res });
 });
@@ -387,6 +405,8 @@ test("Test Azure ChatOpenAI stream method with abort", async () => {
         signal: AbortSignal.timeout(500),
       }
     );
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     for await (const chunk of stream) {
       // console.log(chunk);
     }
@@ -402,6 +422,8 @@ test("Test Azure ChatOpenAI stream method with early break", async () => {
     "How is your day going? Be extremely verbose."
   );
   let i = 0;
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   for await (const chunk of stream) {
     // console.log(chunk);
     i += 1;
@@ -422,6 +444,8 @@ test("Test Azure ChatOpenAI stream method, timeout error thrown from SDK", async
     const stream = await model.stream(
       "How is your day going? Be extremely verbose."
     );
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     for await (const chunk of stream) {
       // console.log(chunk);
     }
@@ -491,9 +515,9 @@ test("Test Azure ChatOpenAI Function calling with streaming", async () => {
       "get_current_weather"
     );
     // console.log(
-      JSON.parse(finalResult?.additional_kwargs?.function_call?.arguments ?? "")
-        .location
-    );
+    //   JSON.parse(finalResult?.additional_kwargs?.function_call?.arguments ?? "")
+    //     .location
+    // );
   } finally {
     // Reset the environment variable
     process.env.LANGCHAIN_CALLBACKS_BACKGROUND = originalBackground;
@@ -714,9 +738,11 @@ test("Test Azure ChatOpenAI token usage reporting for streaming function calls",
 
   try {
     let streamingTokenUsed = -1;
+
     let nonStreamingTokenUsed = -1;
 
     const humanMessage = "What a beautiful day!";
+
     const extractionFunctionSchema = {
       name: "extractor",
       description: "Extracts fields from the input.",
@@ -754,11 +780,11 @@ test("Test Azure ChatOpenAI token usage reporting for streaming function calls",
             streamingTokenUsed =
               output.llmOutput?.estimatedTokenUsage?.totalTokens;
             // console.log(
-              "streaming usage",
-              output.llmOutput?.estimatedTokenUsage
-            );
+            //   "streaming usage",
+            //   output.llmOutput?.estimatedTokenUsage
+            // );
           },
-          handleLLMError: async (err) => {
+          handleLLMError: async (_err) => {
             // console.error(err);
           },
         },
@@ -782,7 +808,7 @@ test("Test Azure ChatOpenAI token usage reporting for streaming function calls",
             nonStreamingTokenUsed = output.llmOutput?.tokenUsage?.totalTokens;
             // console.log("non-streaming usage", output.llmOutput?.tokenUsage);
           },
-          handleLLMError: async (err) => {
+          handleLLMError: async (_err) => {
             // console.error(err);
           },
         },
@@ -802,10 +828,10 @@ test("Test Azure ChatOpenAI token usage reporting for streaming function calls",
       streamingResult.additional_kwargs.function_call?.arguments
     ) {
       // console.log(
-        `Function Call: ${JSON.stringify(
-          nonStreamingResult.additional_kwargs.function_call
-        )}`
-      );
+      //   `Function Call: ${JSON.stringify(
+      //     nonStreamingResult.additional_kwargs.function_call
+      //   )}`
+      // );
       const nonStreamingArguments = JSON.stringify(
         JSON.parse(nonStreamingResult.additional_kwargs.function_call.arguments)
       );
@@ -832,8 +858,11 @@ test("Test Azure ChatOpenAI token usage reporting for streaming calls", async ()
 
   try {
     let streamingTokenUsed = -1;
+
     let nonStreamingTokenUsed = -1;
+
     const systemPrompt = "You are a helpful assistant";
+
     const question = "What is the color of the night sky?";
 
     const streamingModel = new AzureChatOpenAI({
@@ -849,11 +878,11 @@ test("Test Azure ChatOpenAI token usage reporting for streaming calls", async ()
             streamingTokenUsed =
               output.llmOutput?.estimatedTokenUsage?.totalTokens;
             // console.log(
-              "streaming usage",
-              output.llmOutput?.estimatedTokenUsage
-            );
+            //   "streaming usage",
+            //   output.llmOutput?.estimatedTokenUsage
+            // );
           },
-          handleLLMError: async (err) => {
+          handleLLMError: async (_err) => {
             // console.error(err);
           },
         },
@@ -873,7 +902,7 @@ test("Test Azure ChatOpenAI token usage reporting for streaming calls", async ()
             nonStreamingTokenUsed = output.llmOutput?.tokenUsage?.totalTokens;
             // console.log("non-streaming usage", output.llmOutput?.estimated);
           },
-          handleLLMError: async (err) => {
+          handleLLMError: async (_err) => {
             // console.error(err);
           },
         },
@@ -913,7 +942,7 @@ const clientSecret: string =
 let testFn: any = test;
 if (!tenantId || !clientId || !clientSecret) {
   // console.warn(`One or more required environment variables are not set.
-Skipping "Test Azure ChatOpenAI with bearer token provider".`);
+  // Skipping "Test Azure ChatOpenAI with bearer token provider".`);
   testFn = test.skip;
 }
 
@@ -934,6 +963,8 @@ testFn("Test Azure ChatOpenAI with bearer token provider", async () => {
     azureADTokenProvider,
   });
   const message = new HumanMessage("Hello!");
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res = await chat.invoke([["system", "Say hi"], message]);
   // console.log(res);
 });

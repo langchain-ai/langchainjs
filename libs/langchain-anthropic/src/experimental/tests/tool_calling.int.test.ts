@@ -13,6 +13,8 @@ test.skip("Test ChatAnthropicTools", async () => {
     maxRetries: 0,
   });
   const message = new HumanMessage("Hello!");
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res = await chat.invoke([message]);
   // console.log(JSON.stringify(res));
 });

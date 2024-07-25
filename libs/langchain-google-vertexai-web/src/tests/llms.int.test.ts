@@ -35,14 +35,9 @@ describe("Google APIKey LLM", () => {
 
   test("call", async () => {
     const model = new VertexAI();
-    try {
-      const res = await model.invoke("If the time is 1:00, what time is it?");
-      expect(res.length).toBeGreaterThan(0);
-      expect(res.substring(0, 4)).toEqual("1:00");
-    } catch (xx) {
-      // console.error(xx);
-      throw xx;
-    }
+    const res = await model.invoke("If the time is 1:00, what time is it?");
+    expect(res.length).toBeGreaterThan(0);
+    expect(res.substring(0, 4)).toEqual("1:00");
   });
 
   test("stream", async () => {
@@ -136,14 +131,9 @@ describe("Google WebAuth gai LLM", () => {
     const model = new VertexAI({
       platformType: "gai",
     });
-    try {
-      const res = await model.invoke("If the time is 1:00, what time is it?");
-      expect(res.length).toBeGreaterThan(0);
-      expect(res.substring(0, 4)).toEqual("1:00");
-    } catch (xx) {
-      // console.error(xx);
-      throw xx;
-    }
+    const res = await model.invoke("If the time is 1:00, what time is it?");
+    expect(res.length).toBeGreaterThan(0);
+    expect(res.substring(0, 4)).toEqual("1:00");
   });
 
   test("stream", async () => {

@@ -15,6 +15,8 @@ test("Test loadQAStuffChain", async () => {
     new Document({ pageContent: "bar" }),
     new Document({ pageContent: "baz" }),
   ];
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res = await chain.call({ input_documents: docs, question: "Whats up" });
   // console.log({ res });
 });
@@ -27,6 +29,8 @@ test("Test loadQAMapReduceChain", async () => {
     new Document({ pageContent: "bar" }),
     new Document({ pageContent: "baz" }),
   ];
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res = await chain.call({ input_documents: docs, question: "Whats up" });
   // console.log({ res });
 });
@@ -38,6 +42,8 @@ test("Test loadQARefineChain", async () => {
     new Document({ pageContent: "Harrison went to Harvard." }),
     new Document({ pageContent: "Ankush went to Princeton." }),
   ];
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res = await chain.call({
     input_documents: docs,
     question: "Where did Harrison go to college?",

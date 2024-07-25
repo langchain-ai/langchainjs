@@ -11,6 +11,8 @@ import { Ollama } from "../ollama.js";
 
 test.skip("test call", async () => {
   const ollama = new Ollama({});
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const result = await ollama.invoke(
     "What is a good name for a company that makes colorful socks?"
   );
@@ -126,6 +128,8 @@ test.skip("Test Ollama with an image", async () => {
   }).bind({
     images: [imageData.toString("base64")],
   });
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res = await model.invoke("What's in this image?");
   // console.log({ res });
 });

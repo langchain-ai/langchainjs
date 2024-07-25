@@ -15,6 +15,8 @@ test("Test OpenAI", async () => {
     inputVariables: ["foo"],
   });
   const chain = new LLMChain({ prompt, llm: model });
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res = await chain.call({ foo: "my favorite color" });
   // console.log({ res });
 });
@@ -41,6 +43,8 @@ test("Test run method", async () => {
     inputVariables: ["foo"],
   });
   const chain = new LLMChain({ prompt, llm: model });
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res = await chain.run("my favorite color");
   // console.log({ res });
 });
@@ -56,6 +60,8 @@ test("Test run method", async () => {
     llm: model,
     memory: new BufferMemory(),
   });
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res = await chain.run("my favorite color");
   // console.log({ res });
 });
@@ -105,6 +111,8 @@ test("Test apply", async () => {
     inputVariables: ["foo"],
   });
   const chain = new LLMChain({ prompt, llm: model });
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res = await chain.apply([{ foo: "my favorite color" }]);
   // console.log({ res });
 });
@@ -118,6 +126,8 @@ test("Test LLMChain with ChatOpenAI", async () => {
     humanMessagePrompt,
   ]);
   const chatChain = new LLMChain({ llm: model, prompt: chatPromptTemplate });
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res = await chatChain.call({ product: "colorful socks" });
   // console.log({ res });
 });

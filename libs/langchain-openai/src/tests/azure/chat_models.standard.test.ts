@@ -23,7 +23,7 @@ class AzureChatOpenAIStandardUnitTests extends ChatModelUnitTests<
   }
 
   testChatModelInitApiKey() {
-    // console.warn(
+    console.warn(
       "AzureChatOpenAI does not require a single API key. Skipping..."
     );
   }

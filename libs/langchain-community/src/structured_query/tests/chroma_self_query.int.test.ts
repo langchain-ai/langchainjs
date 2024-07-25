@@ -86,15 +86,23 @@ test.skip("Chroma Store Self Query Retriever Test", async () => {
     structuredQueryTranslator: new ChromaTranslator(),
   });
 
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const query1 = await selfQueryRetriever.getRelevantDocuments(
     "Which movies are less than 90 minutes?"
   );
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const query2 = await selfQueryRetriever.getRelevantDocuments(
     "Which movies are rated higher than 8.5?"
   );
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const query3 = await selfQueryRetriever.getRelevantDocuments(
     "Which movies are directed by Greta Gerwig?"
   );
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const query4 = await selfQueryRetriever.getRelevantDocuments(
     "Which movies are either comedy or drama and are less than 90 minutes?"
   );

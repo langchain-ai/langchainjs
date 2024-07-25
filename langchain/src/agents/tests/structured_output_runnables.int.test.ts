@@ -113,12 +113,14 @@ test("Pass custom structured output parsers", async () => {
     tools: [retrieverTool],
   });
   /** Call invoke on the agent */
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res = await executor.invoke({
     input: "what did the president say about kentaji brown jackson",
   });
   // console.log({
-    res,
-  });
+  //   res,
+  // });
   /**
     {
       res: {

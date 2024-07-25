@@ -9,6 +9,8 @@ const originalBackground = process.env.LANGCHAIN_CALLBACKS_BACKGROUND;
 
 test("Test CloudflareWorkersAI", async () => {
   const model = new CloudflareWorkersAI({});
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res = await model.invoke("1 + 1 =");
   // console.log(res);
 }, 50000);
@@ -60,6 +62,8 @@ test.skip("Test custom base url", async () => {
       "CLOUDFLARE_ACCOUNT_ID"
     )}/lang-chainjs/workers-ai/`,
   });
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res = await model.invoke("1 + 1 =");
   // console.log(res);
 });

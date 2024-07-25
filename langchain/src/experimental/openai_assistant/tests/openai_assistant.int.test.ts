@@ -80,6 +80,8 @@ test.skip("New OpenAIAssistantRunnable can be passed as an agent", async () => {
     agent,
     tools,
   });
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const assistantResponse = await agentExecutor.invoke({
     content:
       "What's the weather in San Francisco and Tokyo? And will it be warm or cold in those places?",
@@ -137,6 +139,8 @@ test("OpenAIAssistantRunnable can be passed as an agent", async () => {
     agent,
     tools,
   });
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const assistantResponse = await agentExecutor.invoke({
     content:
       "What's the weather in San Francisco and Tokyo? And will it be warm or cold in those places?",
@@ -177,6 +181,8 @@ test.skip("Created OpenAIAssistantRunnable is invokeable", async () => {
       }
     ]
    */
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const content = // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (assistantResponse as any[]).flatMap((res) => res.content);
   // console.log(content);

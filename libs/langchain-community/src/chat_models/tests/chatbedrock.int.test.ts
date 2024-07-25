@@ -306,7 +306,7 @@ async function testChatHandleLLMNewToken(
           handleLLMNewToken: (token) => {
             tokens.push(token);
           },
-          handleLLMEnd(output) {
+          handleLLMEnd(_output) {
             // console.log(output);
           },
         },
@@ -355,6 +355,8 @@ test.skip("Tool calling agent with Anthropic", async () => {
     tools,
   });
   const input = "what is the current weather in SF?";
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const result = await agentExecutor.invoke({
     input,
   });

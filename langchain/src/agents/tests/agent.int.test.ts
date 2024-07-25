@@ -47,11 +47,11 @@ test("Pass runnable to agent executor", async () => {
       "Who is Olivia Wilde's boyfriend? What is his current age raised to the 0.23 power?",
   });
   // console.log(
-    {
-      res,
-    },
-    "Pass runnable to agent executor"
-  );
+  //   {
+  //     res,
+  //   },
+  //   "Pass runnable to agent executor"
+  // );
   expect(res.output).not.toEqual("");
   expect(res.output).not.toEqual("Agent stopped due to max iterations.");
 });
@@ -116,11 +116,11 @@ test("Custom output parser", async () => {
       "Who is Olivia Wilde's boyfriend? What is his current age raised to the 0.23 power?",
   });
   // console.log(
-    {
-      res,
-    },
-    "Custom output parser"
-  );
+  //   {
+  //     res,
+  //   },
+  //   "Custom output parser"
+  // );
   expect(res.output).toEqual("We did it!");
 });
 
@@ -161,11 +161,11 @@ test("Add a fallback method", async () => {
     input: "Is the sky blue? Response with a concise answer",
   });
   // console.log(
-    {
-      res,
-    },
-    "Pass runnable to agent executor"
-  );
+  //   {
+  //     res,
+  //   },
+  //   "Pass runnable to agent executor"
+  // );
   expect(res.output).not.toEqual("");
   expect(res.output).not.toEqual("Agent stopped due to max iterations.");
 });
@@ -253,11 +253,11 @@ test("Run tool web-browser", async () => {
 
   const result = await executor.call({ input });
   // console.log(
-    {
-      result,
-    },
-    "Run tool web-browser"
-  );
+  //   {
+  //     result,
+  //   },
+  //   "Run tool web-browser"
+  // );
   expect(result.intermediateSteps.length).toBeGreaterThanOrEqual(1);
   expect(result.intermediateSteps[0].action.tool).toEqual("search");
   expect(result.intermediateSteps[1].action.tool).toEqual("web-browser");

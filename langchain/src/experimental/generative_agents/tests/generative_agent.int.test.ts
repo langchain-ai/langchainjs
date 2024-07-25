@@ -64,9 +64,9 @@ test.skip(
         await tommie.addMemory(observation, new Date());
       }
       // console.log(
-        "Tommie's second summary:\n",
-        await tommie.getSummary({ forceRefresh: true })
-      );
+      //   "Tommie's second summary:\n",
+      //   await tommie.getSummary({ forceRefresh: true })
+      // );
 
       /*
         Tommie's second summary:
@@ -120,19 +120,21 @@ test.skip(
       // Let's send Tommie on his way. We'll check in on his summary every few observations to watch him evolve
       for (let i = 0; i < observations.length; i += 1) {
         const observation = observations[i];
+        // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
         const [, reaction] = await tommie.generateReaction(observation);
         // console.log("\x1b[32m", observation, "\x1b[0m", reaction);
         if ((i + 1) % 20 === 0) {
           // console.log("*".repeat(40));
           // console.log(
-            "\x1b[34m",
-            `After ${
-              i + 1
-            } observations, Tommie's summary is:\n${await tommie.getSummary({
-              forceRefresh: true,
-            })}`,
-            "\x1b[0m"
-          );
+          //   "\x1b[34m",
+          //   `After ${
+          //     i + 1
+          //   } observations, Tommie's summary is:\n${await tommie.getSummary({
+          //     forceRefresh: true,
+          //   })}`,
+          //   "\x1b[0m"
+          // );
           // console.log("*".repeat(40));
         }
       }
@@ -176,31 +178,31 @@ test.skip(
 
       // Interview after the day
       // console.log(
-        await interviewAgent(
-          tommie,
-          "Tell me about how your day has been going"
-        )
-      );
+      //   await interviewAgent(
+      //     tommie,
+      //     "Tell me about how your day has been going"
+      //   )
+      // );
       /*
         Tommie said "My day has been pretty hectic. I've been driving around looking for job openings, attending job fairs, and updating my resume and cover letter. It's been really exhausting, but I'm determined to find the perfect job for me."
       */
       // console.log(
-        await interviewAgent(tommie, "How do you feel about coffee?")
-      );
+      //   await interviewAgent(tommie, "How do you feel about coffee?")
+      // );
       /*
         Tommie said "I actually love coffee - it's one of my favorite things. I try to drink it every day, especially when I'm stressed from job searching."
       */
       // console.log(
-        await interviewAgent(tommie, "Tell me about your childhood dog!")
-      );
+      //   await interviewAgent(tommie, "Tell me about your childhood dog!")
+      // );
       /*
         Tommie said "My childhood dog was named Bruno. He was an adorable black Labrador Retriever who was always full of energy. Every time I came home he'd be so excited to see me, it was like he never stopped smiling. He was always ready for adventure and he was always my shadow. I miss him every day."
       */
 
       // console.log(
-        "Tommie's second summary:\n",
-        await tommie.getSummary({ forceRefresh: true })
-      );
+      //   "Tommie's second summary:\n",
+      //   await tommie.getSummary({ forceRefresh: true })
+      // );
       /*
         Tommie's second summary:
         Name: Tommie (age: 25)
@@ -242,6 +244,8 @@ test.skip(
         await eve.addMemory(observation, new Date());
       }
 
+      // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+      // @ts-expect-error unused var
       const eveInitialSummary: string = await eve.getSummary({
         forceRefresh: true,
       });
@@ -255,8 +259,8 @@ test.skip(
 
       // Let’s “Interview” Eve before she speaks with Tommie.
       // console.log(
-        await interviewAgent(eve, "How are you feeling about today?")
-      );
+      //   await interviewAgent(eve, "How are you feeling about today?")
+      // );
       /*
         Eve said "I'm feeling a bit anxious about meeting my new client, but I'm sure it will be fine! How about you?".
       */
@@ -265,11 +269,11 @@ test.skip(
         Eve said "I know that Tommie is a recent college graduate who's been struggling to find a job. I'm looking forward to figuring out how I can help him move forward."
       */
       // console.log(
-        await interviewAgent(
-          eve,
-          "Tommie is looking to find a job. What are are some things you'd like to ask him?"
-        )
-      );
+      //   await interviewAgent(
+      //     eve,
+      //     "Tommie is looking to find a job. What are are some things you'd like to ask him?"
+      //   )
+      // );
       /*
         Eve said: "I'd really like to get to know more about Tommie's professional background and experience, and why he is looking for a job. And I'd also like to know more about his strengths and passions and what kind of work he would be best suited for. That way I can help him find the right job to fit his needs."
       */
@@ -290,6 +294,8 @@ test.skip(
         while (true) {
           let breakDialogue = false;
           for (const agent of agents) {
+            // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+            // @ts-expect-error unused var
             const [stayInDialogue, agentObservation] =
               await agent.generateDialogueResponse(observation);
             // console.log("Next reply:", agentObservation);

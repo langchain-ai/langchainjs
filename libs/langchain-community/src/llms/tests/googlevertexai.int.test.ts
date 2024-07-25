@@ -4,24 +4,32 @@ import { GoogleVertexAI } from "../googlevertexai/index.js";
 describe("Vertex AI", () => {
   test("Test Google Vertex", async () => {
     const model = new GoogleVertexAI({ maxOutputTokens: 50 });
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     const res = await model.invoke("1 + 1 = ");
     // console.log({ res });
   });
 
   test("Test Google Vertex generation", async () => {
     const model = new GoogleVertexAI({ maxOutputTokens: 50 });
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     const res = await model.generate(["1 + 1 = "]);
     // console.log(JSON.stringify(res, null, 2));
   });
 
   test("Test Google Vertex generation", async () => {
     const model = new GoogleVertexAI({ maxOutputTokens: 50 });
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     const res = await model.generate(["Print hello world."]);
     // console.log(JSON.stringify(res, null, 2));
   });
 
   test("Test Google Vertex generation", async () => {
     const model = new GoogleVertexAI({ maxOutputTokens: 50 });
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     const res = await model.generate([
       `Translate "I love programming" into Korean.`,
     ]);
@@ -34,6 +42,8 @@ describe("Vertex AI", () => {
     expect(model.temperature).toEqual(0.2);
     expect(model.maxOutputTokens).toEqual(64);
 
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     const res = await model.invoke("for( let co = 0");
     // console.log(res);
   });
@@ -45,6 +55,8 @@ describe("Vertex AI", () => {
     });
     expect(model.model).toEqual("code-bison");
 
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     const res = await model.invoke("Count to 10 in JavaScript.");
     // console.log(res);
   });
@@ -54,6 +66,8 @@ describe("Vertex AI", () => {
       model: "text-bison-32k",
       maxOutputTokens: 50,
     });
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     const res = await model.invoke("1 + 1 = ");
     // console.log({ res });
   });

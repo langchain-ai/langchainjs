@@ -95,6 +95,8 @@ test("withStructuredOutput with proper output", async () => {
     name: "Extractor",
   });
 
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const result = await modelWithStructuredOutput.invoke(`
     Enumeration of Kernel Modules via Proc
     Prompt for Credentials with OSASCRIPT

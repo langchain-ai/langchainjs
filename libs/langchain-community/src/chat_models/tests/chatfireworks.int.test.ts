@@ -15,6 +15,8 @@ describe.skip("ChatFireworks", () => {
   test("call", async () => {
     const chat = new ChatFireworks();
     const message = new HumanMessage("Hello!");
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     const res = await chat.invoke([message]);
     // console.log({ res });
   });
@@ -22,12 +24,16 @@ describe.skip("ChatFireworks", () => {
   test("generate", async () => {
     const chat = new ChatFireworks();
     const message = new HumanMessage("Hello!");
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     const res = await chat.generate([[message]]);
     // console.log(JSON.stringify(res, null, 2));
   });
 
   test("custom messages", async () => {
     const chat = new ChatFireworks();
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     const res = await chat.invoke([new ChatMessage("Hello!", "user")]);
     // console.log(JSON.stringify(res, null, 2));
   });
@@ -45,6 +51,8 @@ describe.skip("ChatFireworks", () => {
       HumanMessagePromptTemplate.fromTemplate("{text}"),
     ]);
 
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     const responseA = await chat.generatePrompt([
       await chatPrompt.formatPromptValue({
         job: "pirate",
@@ -64,6 +72,8 @@ describe.skip("ChatFireworks", () => {
       HumanMessagePromptTemplate.fromTemplate("{text}"),
     ]);
 
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     const responseA = await chat.generatePrompt([
       await chatPrompt.formatPromptValue({
         text: "What did I just say my name was?",
@@ -98,6 +108,8 @@ describe.skip("ChatFireworks", () => {
         },
       ],
     });
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     const result = await chat.invoke("What is the current weather in SF?");
     // console.log(result);
   });

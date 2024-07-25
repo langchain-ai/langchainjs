@@ -108,6 +108,8 @@ describe("GAuth Chat", () => {
       const lastChunk = resArray[resArray.length - 1];
       expect(lastChunk).toBeDefined();
       expect(lastChunk._getType()).toEqual("ai");
+      // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+      // @ts-expect-error unused var
       const aiChunk = lastChunk as AIMessageChunk;
       // console.log(aiChunk);
 

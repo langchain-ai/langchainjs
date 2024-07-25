@@ -13,6 +13,8 @@ describe("ChatGoogleVertexAI", () => {
   test("call", async () => {
     const chat = new ChatGoogleVertexAI();
     const message = new HumanMessage("Hello!");
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     const res = await chat.invoke([message]);
     // console.log({ res });
   });
@@ -22,6 +24,8 @@ describe("ChatGoogleVertexAI", () => {
       model: "chat-bison-32k",
     });
     const message = new HumanMessage("Hello!");
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     const res = await chat.invoke([message]);
     // console.log({ res });
   });
@@ -29,12 +33,16 @@ describe("ChatGoogleVertexAI", () => {
   test("generate", async () => {
     const chat = new ChatGoogleVertexAI();
     const message = new HumanMessage("Hello!");
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     const res = await chat.generate([[message]]);
     // console.log(JSON.stringify(res, null, 2));
   });
 
   test("custom messages", async () => {
     const chat = new ChatGoogleVertexAI();
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     const res = await chat.invoke([new ChatMessage("Hello!", "user")]);
     // console.log(JSON.stringify(res, null, 2));
   });
@@ -52,6 +60,8 @@ describe("ChatGoogleVertexAI", () => {
       HumanMessagePromptTemplate.fromTemplate("{text}"),
     ]);
 
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     const responseA = await chat.generatePrompt([
       await chatPrompt.formatPromptValue({
         job: "pirate",
@@ -71,6 +81,8 @@ describe("ChatGoogleVertexAI", () => {
       HumanMessagePromptTemplate.fromTemplate("{text}"),
     ]);
 
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     const responseA = await chat.generatePrompt([
       await chatPrompt.formatPromptValue({
         text: "What did I just say my name was?",
@@ -90,6 +102,8 @@ describe("ChatGoogleVertexAI", () => {
       HumanMessagePromptTemplate.fromTemplate("{text}"),
     ]);
 
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     const responseA = await chat.generatePrompt([
       await chatPrompt.formatPromptValue({
         text: "How can I write a for loop counting to 10?",
