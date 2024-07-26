@@ -48,10 +48,6 @@ import type {
   Tool as AnthropicTool,
 } from "@anthropic-ai/sdk/resources/index.mjs";
 
-import { AnthropicVertex } from "@anthropic-ai/vertex-sdk";
-import { AnthropicBedrock } from "@anthropic-ai/bedrock-sdk";
-import type { ClientOptions as VertexClientOptions } from "@anthropic-ai/vertex-sdk/client";
-import type { ClientOptions as BedrockClientOptions } from "@anthropic-ai/bedrock-sdk/client";
 import {
   AnthropicToolsOutputParser,
   extractToolCalls,
@@ -376,11 +372,6 @@ export interface AnthropicInput {
    * @default true
    */
   streamUsage?: boolean;
-}
-
-export interface AnthropicPlatform {
-  platform?: "vertex" | "bedrock";
-  platformClientOptions?: VertexClientOptions & BedrockClientOptions;
 }
 
 /**
@@ -750,61 +741,28 @@ export class ChatAnthropicMessages<
 
   streaming = false;
 
-  clientOptions: ClientOptions | VertexClientOptions | BedrockClientOptions;
-
-  platform?: "vertex" | "bedrock";
+  clientOptions: ClientOptions;
 
   // Used for non-streaming requests
-  protected batchClient: Anthropic | AnthropicVertex | AnthropicBedrock;
+  protected batchClient: Anthropic;
 
   // Used for streaming requests
-  protected streamingClient: Anthropic | AnthropicVertex | AnthropicBedrock;
+  protected streamingClient: Anthropic;
 
   streamUsage = true;
 
-  constructor(
-    fields?: Partial<AnthropicInput> & BaseChatModelParams & AnthropicPlatform
-  ) {
+  constructor(fields?: Partial<AnthropicInput> & BaseChatModelParams) {
     super(fields ?? {});
 
     this.anthropicApiKey =
       fields?.apiKey ??
       fields?.anthropicApiKey ??
       getEnvironmentVariable("ANTHROPIC_API_KEY");
-    this.platform = fields?.platform;
-    this.clientOptions = fields?.clientOptions ?? {};
-    if (this.platform) {
-      if (
-        this.platform === "vertex" &&
-        ((!fields?.platformClientOptions?.accessToken &&
-          !fields?.platformClientOptions?.googleAuth) ||
-          !fields?.platformClientOptions?.projectId ||
-          !fields?.platformClientOptions?.region)
-      ) {
-        throw new Error("Vertex authOption invalid");
-      }
-      if (
-        this.platform === "bedrock" &&
-        (((!fields?.platformClientOptions?.awsSecretKey ||
-          !fields?.platformClientOptions?.awsAccessKey) &&
-          !fields?.platformClientOptions?.awsSessionToken) ||
-          !fields?.platformClientOptions?.awsRegion)
-      ) {
-        throw new Error("Bedrock authOption invalid");
-      }
-      this.clientOptions = {
-        ...this.clientOptions,
-        ...fields?.platformClientOptions,
-      };
-      this.model =
-        this.platform === "vertex"
-          ? "claude-3-haiku@20240307"
-          : "anthropic.claude-3-haiku-20240307-v1:0";
-      this.modelName = this.model;
-    }
-    if (!this.anthropicApiKey && !this.platform) {
+
+    if (!this.anthropicApiKey) {
       throw new Error("Anthropic API key not found");
     }
+    this.clientOptions = fields?.clientOptions ?? {};
     /** Keep anthropicApiKey for backwards compatibility */
     this.apiKey = this.anthropicApiKey;
 
@@ -826,17 +784,6 @@ export class ChatAnthropicMessages<
 
     this.streaming = fields?.streaming ?? false;
     this.streamUsage = fields?.streamUsage ?? this.streamUsage;
-  }
-
-  getClientClass() {
-    if (this.platform === "vertex") {
-      return AnthropicVertex;
-    }
-    if (this.platform === "bedrock") {
-      return AnthropicBedrock;
-    }
-
-    return Anthropic;
   }
 
   getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
@@ -1128,7 +1075,7 @@ export class ChatAnthropicMessages<
   ): Promise<Stream<AnthropicMessageStreamEvent>> {
     if (!this.streamingClient) {
       const options_ = this.apiUrl ? { baseURL: this.apiUrl } : undefined;
-      this.streamingClient = new (this.getClientClass())({
+      this.streamingClient = new Anthropic({
         ...this.clientOptions,
         ...options_,
         apiKey: this.apiKey,
@@ -1155,8 +1102,10 @@ export class ChatAnthropicMessages<
   ): Promise<Anthropic.Message> {
     if (!this.batchClient) {
       const options = this.apiUrl ? { baseURL: this.apiUrl } : undefined;
-
-      this.batchClient = new (this.getClientClass())({
+      if (!this.apiKey) {
+        throw new Error("Missing Anthropic API key.");
+      }
+      this.batchClient = new Anthropic({
         ...this.clientOptions,
         ...options,
         apiKey: this.apiKey,
