@@ -617,7 +617,7 @@
     "@langchain/aws": "^0.0.5",
     "@langchain/cohere": "^0.2.1",
     "@langchain/google-genai": "^0.0.23",
-    "@langchain/google-vertexai": "^0.0.20",
+    "@langchain/google-vertexai": "^0.0.21",
     "@langchain/groq": "^0.0.15",
     "@langchain/mistralai": "^0.0.26",
     "@langchain/ollama": "^0.0.2",
@@ -799,9 +799,6 @@
       "optional": true
     },
     "@langchain/google-vertexai": {
-      "optional": true
-    },
-    "@langchain/google-vertexai-web": {
       "optional": true
     },
     "@langchain/groq": {
