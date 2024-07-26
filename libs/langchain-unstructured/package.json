@@ -15,7 +15,7 @@
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-unstructured/",
   "scripts": {
     "build": "yarn turbo:command build:internal --filter=@langchain/unstructured",
-    "build:internal": "yarn lc-build:v2 --create-entrypoints --pre --tree-shaking",
+    "build:internal": "yarn lc_build_v2 --create-entrypoints --pre --tree-shaking",
     "lint:eslint": "NODE_OPTIONS=--max-old-space-size=4096 eslint --cache --ext .ts,.js src/",
     "lint:dpdm": "dpdm --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
     "lint": "yarn lint:eslint && yarn lint:dpdm",
@@ -64,7 +64,11 @@
   },
   "exports": {
     ".": {
-      "types": "./index.d.ts",
+      "types": {
+        "import": "./index.d.ts",
+        "require": "./index.d.cts",
+        "default": "./index.d.ts"
+      },
       "import": "./index.js",
       "require": "./index.cjs"
     },
@@ -74,6 +78,7 @@
     "dist/",
     "index.cjs",
     "index.js",
-    "index.d.ts"
+    "index.d.ts",
+    "index.d.cts"
   ]
 }

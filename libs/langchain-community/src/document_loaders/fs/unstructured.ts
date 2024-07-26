@@ -96,6 +96,9 @@ export type SkipInferTableTypes =
  */
 export type ChunkingStrategy = "None" | "by_title";
 
+/**
+ * @deprecated Unstructured now has a standalone partner package with LangChain. Please download `@langchain/unstructured` instead.
+ */
 export type UnstructuredLoaderOptions = {
   apiKey?: string;
   apiUrl?: string;
@@ -127,6 +130,8 @@ export type UnstructuredMemoryLoaderOptions = {
 };
 
 /**
+ * @deprecated Unstructured now has a standalone partner package with LangChain. Please download `@langchain/unstructured` instead.
+ * 
  * A document loader that uses the Unstructured API to load unstructured
  * documents. It supports both the new syntax with options object and the
  * legacy syntax for backward compatibility. The load() method sends a

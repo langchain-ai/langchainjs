@@ -12416,7 +12416,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/unstructured@workspace:libs/langchain-unstructured":
+"@langchain/unstructured@workspace:*, @langchain/unstructured@workspace:libs/langchain-unstructured":
   version: 0.0.0-use.local
   resolution: "@langchain/unstructured@workspace:libs/langchain-unstructured"
   dependencies:
@@ -26146,6 +26146,7 @@ __metadata:
     "@langchain/redis": "workspace:*"
     "@langchain/scripts": ~0.0.20
     "@langchain/textsplitters": "workspace:*"
+    "@langchain/unstructured": "workspace:*"
     "@langchain/weaviate": "workspace:*"
     "@langchain/yandex": "workspace:*"
     "@layerup/layerup-security": ^1.5.12

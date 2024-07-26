@@ -10,7 +10,7 @@ function abs(relativePath) {
 }
 
 export const config = {
-  internals: [/node\:/, /@langchain\/core\//],
+  internals: [/node\:/, /@langchain\/core\//, "unstructured-client/sdk/models/shared"],
   entrypoints: {
     index: "index",
   },
