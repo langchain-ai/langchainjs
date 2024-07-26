@@ -11732,7 +11732,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/google-gauth@workspace:libs/langchain-google-gauth, @langchain/google-gauth@~0.0.20, @langchain/google-gauth@~0.0.21":
+"@langchain/google-gauth@workspace:libs/langchain-google-gauth, @langchain/google-gauth@~0.0.21":
   version: 0.0.0-use.local
   resolution: "@langchain/google-gauth@workspace:libs/langchain-google-gauth"
   dependencies:
@@ -11832,17 +11832,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/google-vertexai@npm:^0.0.20":
-  version: 0.0.20
-  resolution: "@langchain/google-vertexai@npm:0.0.20"
-  dependencies:
-    "@langchain/core": ">0.1.56 <0.3.0"
-    "@langchain/google-gauth": ~0.0.20
-  checksum: 925ae6bd5275a504f5595447738b85669ce3ac687c90df126d94de9ecc44ed2cd370ca6334e4177ae23ebc2fc65c686a130c15b18fc61bd2d9eb14f22ee68f15
-  languageName: node
-  linkType: hard
-
-"@langchain/google-vertexai@workspace:*, @langchain/google-vertexai@workspace:libs/langchain-google-vertexai":
+"@langchain/google-vertexai@^0.0.21, @langchain/google-vertexai@workspace:*, @langchain/google-vertexai@workspace:libs/langchain-google-vertexai":
   version: 0.0.0-use.local
   resolution: "@langchain/google-vertexai@workspace:libs/langchain-google-vertexai"
   dependencies:
@@ -31272,7 +31262,7 @@ __metadata:
     "@langchain/cohere": ^0.2.1
     "@langchain/core": ">=0.2.11 <0.3.0"
     "@langchain/google-genai": ^0.0.23
-    "@langchain/google-vertexai": ^0.0.20
+    "@langchain/google-vertexai": ^0.0.21
     "@langchain/groq": ^0.0.15
     "@langchain/mistralai": ^0.0.26
     "@langchain/ollama": ^0.0.2
@@ -31453,8 +31443,6 @@ __metadata:
     "@langchain/google-genai":
       optional: true
     "@langchain/google-vertexai":
-      optional: true
-    "@langchain/google-vertexai-web":
       optional: true
     "@langchain/groq":
       optional: true
