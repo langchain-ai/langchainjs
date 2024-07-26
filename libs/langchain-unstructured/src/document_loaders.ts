@@ -30,20 +30,23 @@ export type UnstructuredLoaderStrategy =
 export type UnstructuredMemoryLoaderOptions =
   | {
       /**
-       * The buffer containing the file content.
+       * Buffer can not be defined if passing paths to files.
        */
-      buffer: Buffer;
+      buffer?: never;
       /**
-       * The name of the file when using a buffer.
+       * The path to the file, or an array of paths to multiple files.
        */
-      filePath: string;
+      filePath: string | string[];
     }
   | {
       /**
-       * The path or list of paths to the file(s).
+       * The buffer containing the file content.
        */
-      filePath: string | string[];
-      buffer?: never;
+      buffer?: Buffer;
+      /**
+       * The name of the file.
+       */
+      filePath: string;
     };
 
 export interface UnstructuredLoaderOptions
@@ -55,6 +58,14 @@ export interface UnstructuredLoaderOptions
   apiKey?: string;
   client?: UnstructuredClient;
   strategy?: UnstructuredLoaderStrategy;
+  /**
+   * The Unstructured SDK has logs they call `console.info` to
+   * log at request time. Passing `true` will log these messages.
+   * The default of `false` will overwrite the `console.info` function
+   * so that it does not log.
+   * @default false
+   */
+  enableLogs?: boolean;
 }
 
 /**
@@ -145,7 +156,7 @@ export class UnstructuredLoader<
 > extends BaseDocumentLoader {
   client: UnstructuredClient;
 
-  filePath?: string | string[];
+  filePath: string | string[];
 
   buffer?: Buffer;
 
@@ -156,6 +167,8 @@ export class UnstructuredLoader<
   strategy: UnstructuredLoaderStrategy = "auto";
 
   unstructuredFields?: Omit<PartitionParameters, "files" | "strategy">;
+
+  enableLogs = false;
 
   constructor(
     fileOrBuffer: UnstructuredMemoryLoaderOptions,
@@ -174,16 +187,9 @@ export class UnstructuredLoader<
       serverURL,
       retryConfig,
       timeoutMs,
+      enableLogs,
       ...unstructuredFields
     } = { ...fields };
-
-    if (fileOrBuffer.filePath && fileOrBuffer.buffer) {
-      throw new Error(
-        "`filePath` and `buffer` cannot be defined simultaneously."
-      );
-    } else if (!fileOrBuffer.filePath && !fileOrBuffer.buffer) {
-      throw new Error("Either `filePath` or `buffer` must be defined.");
-    }
 
     if (client) {
       const disallowedParams: [string, unknown][] = [
@@ -226,6 +232,7 @@ export class UnstructuredLoader<
     this.postProcessors = postProcessors;
     this.strategy = strategy || this.strategy;
     this.unstructuredFields = unstructuredFields;
+    this.enableLogs = enableLogs || this.enableLogs;
   }
 
   mapStrategyToEnum(): StrategyEnum {
@@ -243,32 +250,56 @@ export class UnstructuredLoader<
   }
 
   async _partition(filePath: string): Promise<Element[]> {
-    let { buffer } = this;
-    const fileName = path.basename(filePath);
+    let files:
+      | {
+          fileName: string;
+          content: Uint8Array;
+        }
+      | undefined;
 
-    if (!buffer) {
-      // Buffer is false, we must read the file
-      buffer = await fs.promises.readFile(filePath);
+    if (this.buffer) {
+      files = {
+        fileName: filePath, // If buffer is passed, assume filePath is the name
+        content: new Uint8Array(this.buffer),
+      };
+    } else {
+      files = {
+        fileName: path.basename(filePath),
+        content: new Uint8Array(await fs.promises.readFile(filePath)),
+      };
     }
 
-    const res = await this.client.general.partition({
-      partitionParameters: {
-        ...this.unstructuredFields,
-        files: {
-          content: new Uint8Array(buffer),
-          fileName,
+    if (!files) {
+      throw new Error(`Unable to load files or buffer.`);
+    }
+
+    const { info } = console;
+    if (!this.enableLogs) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      console.info = (..._args: any) => {};
+    }
+
+    try {
+      const res = await this.client.general.partition({
+        partitionParameters: {
+          ...this.unstructuredFields,
+          files,
+          strategy: this.mapStrategyToEnum(),
         },
-        strategy: this.mapStrategyToEnum(),
-      },
-    });
+      });
 
-    if (!res.elements || res.elements.length === 0) {
-      throw new Error("No elements were returned from the Unstructured API.");
+      if (!res.elements || res.elements.length === 0) {
+        throw new Error("No elements were returned from the Unstructured API.");
+      }
+
+      return res.elements.filter(
+        (el) => "text" in el && typeof el.text === "string"
+      ) as Element[];
+    } finally {
+      if (!this.enableLogs) {
+        console.info = info;
+      }
     }
-
-    return res.elements.filter(
-      (el) => "text" in el && typeof el.text === "string"
-    ) as Element[];
   }
 
   async load(): Promise<Document<Metadata>[]> {
@@ -276,11 +307,11 @@ export class UnstructuredLoader<
 
     if (Array.isArray(this.filePath)) {
       // Handle multiple files
-      elements = (await Promise.all(this.filePath.map(this._partition))).flat();
-    } else if (this.filePath) {
-      elements = await this._partition(this.filePath);
+      elements = (
+        await Promise.all(this.filePath.map((fp) => this._partition(fp)))
+      ).flat();
     } else {
-      throw new Error("filePath must be defined.");
+      elements = await this._partition(this.filePath);
     }
 
     const documents: DocumentInterface<Metadata>[] = [];
