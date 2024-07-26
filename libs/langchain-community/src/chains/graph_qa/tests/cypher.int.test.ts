@@ -110,8 +110,10 @@ describe.skip("testCypherGeneratingRun", () => {
     const expectedOutput = "Bruce Willis";
     expect(output.result.includes(expectedOutput)).toBeTruthy();
 
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     const { query } = output[INTERMEDIATE_STEPS_KEY][0];
-    console.log(query);
+    // console.log(query);
     // const expectedQuery =
     //   "\n\nMATCH (a:Actor)-[:ACTED_IN]->" +
     //   "(m:Movie) WHERE m.title = 'Pulp Fiction' RETURN a.name";

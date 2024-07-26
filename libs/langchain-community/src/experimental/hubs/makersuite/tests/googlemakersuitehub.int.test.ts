@@ -45,7 +45,7 @@ describe.skip("Google Maker Suite Hub Integration", () => {
       const result = await chain.invoke({
         product: "shoes",
       });
-      console.log("text chain result", result);
+      // console.log("text chain result", result);
       expect(result).toBeTruthy();
     });
 
@@ -55,7 +55,7 @@ describe.skip("Google Maker Suite Hub Integration", () => {
       const result = await chain.invoke({
         description: "shoes",
       });
-      console.log("data chain result", result);
+      // console.log("data chain result", result);
       expect(result).toBeTruthy();
     });
 
@@ -65,7 +65,7 @@ describe.skip("Google Maker Suite Hub Integration", () => {
       const message = new HumanMessage("Hello!");
       const result = await model.invoke([message]);
       expect(result).toBeTruthy();
-      console.log({ result });
+      // console.log({ result });
     });
   });
 
@@ -74,9 +74,11 @@ describe.skip("Google Maker Suite Hub Integration", () => {
       const fileId = "1IAWobj3BYvbj5X3JOAKaoXTcNJlZLdpK";
       const caller = new AsyncCaller({});
       const connection = new DriveFileReadConnection({ fileId }, caller);
-      console.log("connection client", connection?.client);
+      // console.log("connection client", connection?.client);
+      // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+      // @ts-expect-error unused var
       const result = await connection.request();
-      console.log(result);
+      // console.log(result);
     });
   });
 
@@ -89,14 +91,14 @@ describe.skip("Google Maker Suite Hub Integration", () => {
       const result = await model.invoke(
         "What would be a good name for a company that makes socks"
       );
-      console.log("text chain result", result);
+      // console.log("text chain result", result);
       expect(result).toBeTruthy();
     });
 
     test("text chain", async () => {
       const prompt = await hub.pull("1gxLasQIeQdwR4wxtV_nb93b_g9f0GaMm");
       const result = await prompt.toChain().invoke({ product: "socks" });
-      console.log("text chain result", result);
+      // console.log("text chain result", result);
       expect(result).toBeTruthy();
     });
   });

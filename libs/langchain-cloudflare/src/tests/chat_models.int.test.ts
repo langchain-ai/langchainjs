@@ -1,3 +1,5 @@
+/* eslint-disable no-process-env */
+
 import { describe, test } from "@jest/globals";
 import { ChatMessage, HumanMessage } from "@langchain/core/messages";
 import {
@@ -10,38 +12,55 @@ import {
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { ChatCloudflareWorkersAI } from "../chat_models.js";
 
+// Save the original value of the 'LANGCHAIN_CALLBACKS_BACKGROUND' environment variable
+const originalBackground = process.env.LANGCHAIN_CALLBACKS_BACKGROUND;
+
 describe("ChatCloudflareWorkersAI", () => {
   test("call", async () => {
     const chat = new ChatCloudflareWorkersAI();
     const message = new HumanMessage("Hello!");
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     const res = await chat.call([message]);
-    console.log({ res });
+    // console.log({ res });
   });
 
   test("generate", async () => {
     const chat = new ChatCloudflareWorkersAI();
     const message = new HumanMessage("Hello!");
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     const res = await chat.generate([[message]]);
-    console.log(JSON.stringify(res, null, 2));
+    // console.log(JSON.stringify(res, null, 2));
   });
 
   test("generate with streaming true", async () => {
-    const chat = new ChatCloudflareWorkersAI({
-      streaming: true,
-    });
-    const message = new HumanMessage("What is 2 + 2?");
-    const tokens: string[] = [];
-    const res = await chat.generate([[message]], {
-      callbacks: [
-        {
-          handleLLMNewToken: (token) => {
-            tokens.push(token);
+    // Running LangChain callbacks in the background will sometimes cause the callbackManager to execute
+    // after the test/llm call has already finished & returned. Set that environment variable to false
+    // to prevent that from happening.
+    process.env.LANGCHAIN_CALLBACKS_BACKGROUND = "false";
+
+    try {
+      const chat = new ChatCloudflareWorkersAI({
+        streaming: true,
+      });
+      const message = new HumanMessage("What is 2 + 2?");
+      const tokens: string[] = [];
+      const res = await chat.generate([[message]], {
+        callbacks: [
+          {
+            handleLLMNewToken: (token) => {
+              tokens.push(token);
+            },
           },
-        },
-      ],
-    });
-    expect(tokens.length).toBeGreaterThan(1);
-    expect(tokens.join("")).toEqual(res.generations[0][0].text);
+        ],
+      });
+      expect(tokens.length).toBeGreaterThan(1);
+      expect(tokens.join("")).toEqual(res.generations[0][0].text);
+    } finally {
+      // Reset the environment variable
+      process.env.LANGCHAIN_CALLBACKS_BACKGROUND = originalBackground;
+    }
   });
 
   test("stream", async () => {
@@ -50,11 +69,11 @@ describe("ChatCloudflareWorkersAI", () => {
     const stream = await chat.stream([message]);
     const chunks = [];
     for await (const chunk of stream) {
-      console.log(chunk.content);
+      // console.log(chunk.content);
       chunks.push(chunk);
     }
     expect(chunks.length).toBeGreaterThan(1);
-    console.log(chunks.map((chunk) => chunk.content).join(""));
+    // console.log(chunks.map((chunk) => chunk.content).join(""));
     expect(
       chunks.map((chunk) => chunk.content).join("").length
     ).toBeGreaterThan(1);
@@ -62,8 +81,10 @@ describe("ChatCloudflareWorkersAI", () => {
 
   test("custom messages", async () => {
     const chat = new ChatCloudflareWorkersAI();
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     const res = await chat.call([new ChatMessage("Hello!", "user")]);
-    console.log(JSON.stringify(res, null, 2));
+    // console.log(JSON.stringify(res, null, 2));
   });
 
   test("prompt templates", async () => {
@@ -79,6 +100,8 @@ describe("ChatCloudflareWorkersAI", () => {
       HumanMessagePromptTemplate.fromTemplate("{text}"),
     ]);
 
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     const responseA = await chat.generatePrompt([
       await chatPrompt.formatPromptValue({
         job: "pirate",
@@ -86,7 +109,7 @@ describe("ChatCloudflareWorkersAI", () => {
       }),
     ]);
 
-    console.log(responseA.generations);
+    // console.log(responseA.generations);
   });
 
   test("longer chain of messages", async () => {
@@ -98,13 +121,15 @@ describe("ChatCloudflareWorkersAI", () => {
       HumanMessagePromptTemplate.fromTemplate("{text}"),
     ]);
 
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     const responseA = await chat.generatePrompt([
       await chatPrompt.formatPromptValue({
         text: "What did I just say my name was?",
       }),
     ]);
 
-    console.log(responseA.generations);
+    // console.log(responseA.generations);
   });
 
   test.skip("custom base url", async () => {
@@ -120,12 +145,14 @@ describe("ChatCloudflareWorkersAI", () => {
       HumanMessagePromptTemplate.fromTemplate("{text}"),
     ]);
 
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     const responseA = await chat.generatePrompt([
       await chatPrompt.formatPromptValue({
         text: "What did I just say my name was?",
       }),
     ]);
 
-    console.log(responseA.generations);
+    // console.log(responseA.generations);
   });
 });

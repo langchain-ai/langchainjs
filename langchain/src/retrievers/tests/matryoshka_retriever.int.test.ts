@@ -66,14 +66,14 @@ test("MatryoshkaRetriever can retrieve", async () => {
   await retriever.addDocuments(allDocs);
 
   const query = "What is LangChain?";
-  console.log("Querying documents");
+  // console.log("Querying documents");
   const results = await retriever.getRelevantDocuments(query);
 
   const retrieverResultContents = new Set(
     results.map((doc) => doc.pageContent)
   );
 
-  console.log([...retrieverResultContents]);
+  // console.log([...retrieverResultContents]);
   expect(results.length).toBe(5);
   expect(retrieverResultContents).toEqual(new Set(relevantDocContents));
 });

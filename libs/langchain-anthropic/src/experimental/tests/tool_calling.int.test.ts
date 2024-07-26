@@ -13,8 +13,10 @@ test.skip("Test ChatAnthropicTools", async () => {
     maxRetries: 0,
   });
   const message = new HumanMessage("Hello!");
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res = await chat.invoke([message]);
-  console.log(JSON.stringify(res));
+  // console.log(JSON.stringify(res));
 });
 
 test.skip("Test ChatAnthropicTools streaming", async () => {
@@ -26,7 +28,7 @@ test.skip("Test ChatAnthropicTools streaming", async () => {
   const stream = await chat.stream([message]);
   const chunks: BaseMessageChunk[] = [];
   for await (const chunk of stream) {
-    console.log(chunk);
+    // console.log(chunk);
     chunks.push(chunk);
   }
   expect(chunks.length).toBeGreaterThan(1);
@@ -64,7 +66,7 @@ test.skip("Test ChatAnthropicTools with tools", async () => {
   });
   const message = new HumanMessage("What is the weather in San Francisco?");
   const res = await chat.invoke([message]);
-  console.log(JSON.stringify(res));
+  // console.log(JSON.stringify(res));
   expect(res.additional_kwargs.tool_calls).toBeDefined();
   expect(res.additional_kwargs.tool_calls?.[0].function.name).toEqual(
     "get_current_weather"
@@ -110,7 +112,7 @@ test.skip("Test ChatAnthropicTools with a forced function call", async () => {
     "Extract the desired information from the following passage:\n\nthis is really cool"
   );
   const res = await chat.invoke([message]);
-  console.log(JSON.stringify(res));
+  // console.log(JSON.stringify(res));
   expect(res.additional_kwargs.tool_calls).toBeDefined();
   expect(res.additional_kwargs.tool_calls?.[0]?.function.name).toEqual(
     "extract_data"
@@ -153,7 +155,7 @@ test.skip("ChatAnthropicTools with Zod schema", async () => {
     "Alex is 5 feet tall. Claudia is 1 foot taller than Alex and jumps higher than him. Claudia is a brunette and Alex is blonde."
   );
   const res = await chat.invoke([message]);
-  console.log(JSON.stringify(res));
+  // console.log(JSON.stringify(res));
   expect(res.additional_kwargs.tool_calls).toBeDefined();
   expect(res.additional_kwargs.tool_calls?.[0]?.function.name).toEqual(
     "information_extraction"
@@ -196,12 +198,12 @@ test.skip("ChatAnthropicTools with parallel tool calling", async () => {
       },
     },
   });
-  console.log(zodToJsonSchema(schema));
+  // console.log(zodToJsonSchema(schema));
   const message = new HumanMessage(
     "Alex is 5 feet tall. Claudia is 1 foot taller than Alex and jumps higher than him. Claudia is a brunette and Alex is blonde."
   );
   const res = await chat.invoke([message]);
-  console.log(JSON.stringify(res));
+  // console.log(JSON.stringify(res));
   expect(res.additional_kwargs.tool_calls).toBeDefined();
   expect(
     res.additional_kwargs.tool_calls?.map((toolCall) =>
@@ -231,7 +233,7 @@ test.skip("Test ChatAnthropic withStructuredOutput", async () => {
   );
   const message = new HumanMessage("Alex is 5 feet tall. Alex is blonde.");
   const res = await runnable.invoke([message]);
-  console.log(JSON.stringify(res, null, 2));
+  // console.log(JSON.stringify(res, null, 2));
   expect(res).toEqual({ name: "Alex", height: 5, hairColor: "blonde" });
 });
 
@@ -252,7 +254,7 @@ test.skip("Test ChatAnthropic withStructuredOutput on a single array item", asyn
   );
   const message = new HumanMessage("Alex is 5 feet tall. Alex is blonde.");
   const res = await runnable.invoke([message]);
-  console.log(JSON.stringify(res, null, 2));
+  // console.log(JSON.stringify(res, null, 2));
   expect(res).toEqual({
     people: [{ hairColor: "blonde", height: 5, name: "Alex" }],
   });
@@ -296,7 +298,7 @@ test.skip("Test ChatAnthropic withStructuredOutput on a single array item", asyn
     email:
       "From: Erick. The email is about the new project. The tone is positive. The action items are to send the report and to schedule a meeting.",
   });
-  console.log(JSON.stringify(response, null, 2));
+  // console.log(JSON.stringify(response, null, 2));
   expect(response).toEqual({
     sender: "Erick",
     action_items: [expect.any(String), expect.any(String)],
@@ -319,7 +321,7 @@ test.skip("Test ChatAnthropicTools", async () => {
   const res = await structured.invoke(
     "What are the first five natural numbers?"
   );
-  console.log(res);
+  // console.log(res);
   expect(res).toEqual({
     nested: [1, 2, 3, 4, 5],
   });

@@ -28,7 +28,7 @@ test("withStructuredOutput zod schema function calling", async () => {
   ]);
   const chain = prompt.pipe(modelWithStructuredOutput);
   const result = await chain.invoke({});
-  console.log(result);
+  // console.log(result);
   expect("operation" in result).toBe(true);
   expect("number1" in result).toBe(true);
   expect("number2" in result).toBe(true);
@@ -67,7 +67,7 @@ Respond with a JSON object containing three keys:
   ]);
   const chain = prompt.pipe(modelWithStructuredOutput);
   const result = await chain.invoke({});
-  console.log(result);
+  // console.log(result);
   expect("operation" in result).toBe(true);
   expect("number1" in result).toBe(true);
   expect("number2" in result).toBe(true);
@@ -97,7 +97,7 @@ test("withStructuredOutput JSON schema function calling", async () => {
   ]);
   const chain = prompt.pipe(modelWithStructuredOutput);
   const result = await chain.invoke({});
-  console.log(result);
+  // console.log(result);
   expect("operation" in result).toBe(true);
   expect("number1" in result).toBe(true);
   expect("number2" in result).toBe(true);
@@ -127,7 +127,7 @@ test("withStructuredOutput OpenAI function definition function calling", async (
   ]);
   const chain = prompt.pipe(modelWithStructuredOutput);
   const result = await chain.invoke({});
-  console.log(result);
+  // console.log(result);
   expect("operation" in result).toBe(true);
   expect("number1" in result).toBe(true);
   expect("number2" in result).toBe(true);
@@ -166,7 +166,7 @@ Respond with a JSON object containing three keys:
   ]);
   const chain = prompt.pipe(modelWithStructuredOutput);
   const result = await chain.invoke({});
-  console.log(result);
+  // console.log(result);
   expect("operation" in result).toBe(true);
   expect("number1" in result).toBe(true);
   expect("number2" in result).toBe(true);
@@ -207,7 +207,7 @@ Respond with a JSON object containing three keys:
   ]);
   const chain = prompt.pipe(modelWithStructuredOutput);
   const result = await chain.invoke({});
-  console.log(result);
+  // console.log(result);
   expect("operation" in result).toBe(true);
   expect("number1" in result).toBe(true);
   expect("number2" in result).toBe(true);
@@ -238,7 +238,7 @@ test("withStructuredOutput includeRaw true", async () => {
   ]);
   const chain = prompt.pipe(modelWithStructuredOutput);
   const result = await chain.invoke({});
-  console.log(result);
+  // console.log(result);
 
   expect("parsed" in result).toBe(true);
   // Need to make TS happy :)

@@ -35,7 +35,7 @@ describe("Test LocalFileCache", () => {
     const response1 = await model.invoke("What is something random?");
     const response2 = await model.invoke("What is something random?");
     expect(response1).not.toBeUndefined();
-    console.log(response1, response2);
+    // console.log(response1, response2);
     expect(response1).toEqual(response2);
   });
 });

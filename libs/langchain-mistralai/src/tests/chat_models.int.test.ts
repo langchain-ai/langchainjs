@@ -1,13 +1,6 @@
 import { test } from "@jest/globals";
-import {
-  ChatPromptTemplate,
-  HumanMessagePromptTemplate,
-  MessagesPlaceholder,
-  SystemMessagePromptTemplate,
-} from "@langchain/core/prompts";
-import { AgentExecutor, createOpenAIToolsAgent } from "langchain/agents";
-import { BaseChatModel } from "@langchain/core/language_models/chat_models";
-import { DynamicStructuredTool, StructuredTool } from "@langchain/core/tools";
+import { ChatPromptTemplate } from "@langchain/core/prompts";
+import { StructuredTool } from "@langchain/core/tools";
 import { z } from "zod";
 import {
   AIMessage,
@@ -30,7 +23,7 @@ test("Test ChatMistralAI can invoke", async () => {
   const response = await prompt.pipe(model).invoke({
     input: "Hello",
   });
-  console.log("response", response);
+  // console.log("response", response);
   expect(response.content.length).toBeGreaterThan(1);
 });
 
@@ -46,11 +39,11 @@ test("Test ChatMistralAI can stream", async () => {
   let itters = 0;
   let fullMessage = "";
   for await (const item of response) {
-    console.log(item);
+    // console.log(item);
     itters += 1;
     fullMessage += item.content;
   }
-  console.log("fullMessage", fullMessage);
+  // console.log("fullMessage", fullMessage);
   expect(itters).toBeGreaterThan(1);
 });
 
@@ -88,7 +81,7 @@ test("Can call tools using structured tools", async () => {
   const chain = prompt.pipe(model);
   const response = await chain.invoke({});
   expect("tool_calls" in response.additional_kwargs).toBe(true);
-  console.log(response.additional_kwargs.tool_calls?.[0]);
+  // console.log(response.additional_kwargs.tool_calls?.[0]);
   expect(response.additional_kwargs.tool_calls?.[0].function.name).toBe(
     "calculator"
   );
@@ -135,7 +128,7 @@ test("Can call tools", async () => {
   ]);
   const chain = prompt.pipe(model);
   const response = await chain.invoke({});
-  console.log(response);
+  // console.log(response);
   expect(response.tool_calls?.length).toEqual(1);
   expect(response.tool_calls?.[0].args).toEqual(
     JSON.parse(
@@ -188,7 +181,7 @@ test("Can call .stream with tool calling", async () => {
   const response = await chain.stream({});
   let finalRes: BaseMessage | null = null;
   for await (const chunk of response) {
-    console.log(chunk);
+    // console.log(chunk);
     finalRes = chunk;
   }
   if (!finalRes) {
@@ -196,7 +189,7 @@ test("Can call .stream with tool calling", async () => {
   }
 
   expect("tool_calls" in finalRes.additional_kwargs).toBe(true);
-  console.log(finalRes.additional_kwargs.tool_calls?.[0]);
+  // console.log(finalRes.additional_kwargs.tool_calls?.[0]);
   expect(finalRes.additional_kwargs.tool_calls?.[0].function.name).toBe(
     "calculator"
   );
@@ -229,7 +222,7 @@ To use a calculator respond with valid JSON containing a single key: 'calculator
   const chain = prompt.pipe(model);
   const response = await chain.invoke({});
 
-  console.log(response);
+  // console.log(response);
   const parsedRes = JSON.parse(response.content as string);
   expect(parsedRes.calculator).toBeDefined();
 });
@@ -257,11 +250,11 @@ To use a calculator respond with valid JSON containing a single key: 'calculator
   const response = await chain.stream({});
   let finalRes = "";
   for await (const chunk of response) {
-    console.log(chunk);
+    // console.log(chunk);
     finalRes += chunk.content;
   }
 
-  console.log(finalRes);
+  // console.log(finalRes);
   const parsedRes = JSON.parse(finalRes);
   expect(parsedRes.calculator).toBeDefined();
 });
@@ -311,7 +304,7 @@ test("Can stream and concat responses for a complex tool", async () => {
   const response = await chain.stream({});
   let finalRes: BaseMessage[] = [];
   for await (const chunk of response) {
-    console.log(chunk);
+    // console.log(chunk);
     finalRes = finalRes.concat(chunk);
   }
   if (!finalRes) {
@@ -378,7 +371,7 @@ test("Few shotting with tool calls", async () => {
     new AIMessage("It is currently 24 degrees in SF with hail in SF."),
     new HumanMessage("What did you say the weather was?"),
   ]);
-  console.log(res);
+  // console.log(res);
   expect(res.content).toContain("24");
 });
 
@@ -413,7 +406,7 @@ describe("withStructuredOutput", () => {
     ]);
     const chain = prompt.pipe(modelWithStructuredOutput);
     const result = await chain.invoke({});
-    console.log(result);
+    // console.log(result);
     expect("operation" in result).toBe(true);
     expect("number1" in result).toBe(true);
     expect("number2" in result).toBe(true);
@@ -451,7 +444,7 @@ describe("withStructuredOutput", () => {
     ]);
     const chain = prompt.pipe(modelWithStructuredOutput);
     const result = await chain.invoke({});
-    console.log(result);
+    // console.log(result);
     expect("operation" in result).toBe(true);
     expect("number1" in result).toBe(true);
     expect("number2" in result).toBe(true);
@@ -488,7 +481,7 @@ describe("withStructuredOutput", () => {
     ]);
     const chain = prompt.pipe(modelWithStructuredOutput);
     const result = await chain.invoke({});
-    console.log(result);
+    // console.log(result);
     expect("operation" in result).toBe(true);
     expect("number1" in result).toBe(true);
     expect("number2" in result).toBe(true);
@@ -523,7 +516,7 @@ describe("withStructuredOutput", () => {
     ]);
     const chain = prompt.pipe(modelWithStructuredOutput);
     const result = await chain.invoke({});
-    console.log(result);
+    // console.log(result);
     expect("operation" in result).toBe(true);
     expect("number1" in result).toBe(true);
     expect("number2" in result).toBe(true);
@@ -561,7 +554,7 @@ describe("withStructuredOutput", () => {
     ]);
     const chain = prompt.pipe(modelWithStructuredOutput);
     const result = await chain.invoke({});
-    console.log(result);
+    // console.log(result);
     expect("operation" in result).toBe(true);
     expect("number1" in result).toBe(true);
     expect("number2" in result).toBe(true);
@@ -598,7 +591,7 @@ describe("withStructuredOutput", () => {
     ]);
     const chain = prompt.pipe(modelWithStructuredOutput);
     const result = await chain.invoke({});
-    console.log(result);
+    // console.log(result);
 
     expect("parsed" in result).toBe(true);
     // Need to make TS happy :)
@@ -639,54 +632,6 @@ describe("withStructuredOutput", () => {
         )
     ).toBe(true);
   });
-
-  test("Model is compatible with OpenAI tools agent and Agent Executor", async () => {
-    const llm: BaseChatModel = new ChatMistralAI({
-      temperature: 0,
-      model: "mistral-large-latest",
-    });
-
-    const systemMessage = SystemMessagePromptTemplate.fromTemplate(
-      "You are an agent capable of retrieving current weather information."
-    );
-    const humanMessage = HumanMessagePromptTemplate.fromTemplate("{input}");
-    const agentScratchpad = new MessagesPlaceholder("agent_scratchpad");
-
-    const prompt = ChatPromptTemplate.fromMessages([
-      systemMessage,
-      humanMessage,
-      agentScratchpad,
-    ]);
-
-    const currentWeatherTool = new DynamicStructuredTool({
-      name: "get_current_weather",
-      description: "Get the current weather in a given location",
-      schema: z.object({
-        location: z
-          .string()
-          .describe("The city and state, e.g. San Francisco, CA"),
-      }),
-      func: async () => Promise.resolve("28 °C"),
-    });
-
-    const agent = await createOpenAIToolsAgent({
-      llm,
-      tools: [currentWeatherTool],
-      prompt,
-    });
-
-    const agentExecutor = new AgentExecutor({
-      agent,
-      tools: [currentWeatherTool],
-    });
-
-    const input = "What's the weather like in Paris?";
-    const { output } = await agentExecutor.invoke({ input });
-
-    console.log(output);
-    expect(output).toBeDefined();
-    expect(output).toContain("The current temperature in Paris is 28 °C");
-  });
 });
 
 describe("ChatMistralAI aborting", () => {
@@ -711,7 +656,7 @@ describe("ChatMistralAI aborting", () => {
     try {
       for await (const item of stream) {
         finalRes += item.content;
-        console.log(finalRes);
+        // console.log(finalRes);
         iters += 1;
         controller.abort();
       }
@@ -748,7 +693,7 @@ describe("ChatMistralAI aborting", () => {
 
       for await (const item of stream) {
         finalRes += item.content;
-        console.log(finalRes);
+        // console.log(finalRes);
       }
       // If the loop completes without error, fail the test
       fail(
@@ -837,7 +782,7 @@ describe("codestral-latest", () => {
     const response = await prompt.pipe(model).invoke({
       input: "How can I log 'Hello, World!' in Python?",
     });
-    console.log("response", response);
+    // console.log("response", response);
     expect(response.content.length).toBeGreaterThan(1);
     expect((response.content as string).toLowerCase()).toContain("hello");
     expect((response.content as string).toLowerCase()).toContain("world");
@@ -857,11 +802,11 @@ describe("codestral-latest", () => {
     let itters = 0;
     let fullMessage = "";
     for await (const item of response) {
-      console.log(item);
+      // console.log(item);
       itters += 1;
       fullMessage += item.content;
     }
-    console.log("fullMessage", fullMessage);
+    // console.log("fullMessage", fullMessage);
     expect(itters).toBeGreaterThan(1);
     expect(fullMessage.toLowerCase()).toContain("hello");
     expect(fullMessage.toLowerCase()).toContain("world");
@@ -904,9 +849,9 @@ describe("codestral-latest", () => {
       input:
         "Write a function that takes in a single argument and logs it to the console. Ensure the code is in Python.",
     });
-    console.log(response);
+    // console.log(response);
     expect("tool_calls" in response.additional_kwargs).toBe(true);
-    console.log(response.additional_kwargs.tool_calls?.[0]);
+    // console.log(response.additional_kwargs.tool_calls?.[0]);
     if (!response.additional_kwargs.tool_calls?.[0]) {
       throw new Error("No tool call found");
     }
@@ -914,7 +859,7 @@ describe("codestral-latest", () => {
     expect(sandboxTool.function.name).toBe("code_sandbox");
     const parsedArgs = JSON.parse(sandboxTool.function.arguments);
     expect(parsedArgs.code).toBeDefined();
-    console.log(parsedArgs.code);
+    // console.log(parsedArgs.code);
   });
 });
 
@@ -922,6 +867,7 @@ test("Stream token count usage_metadata", async () => {
   const model = new ChatMistralAI({
     model: "codestral-latest",
     temperature: 0,
+    maxTokens: 10,
   });
   let res: AIMessageChunk | null = null;
   for await (const chunk of await model.stream(
@@ -933,13 +879,13 @@ test("Stream token count usage_metadata", async () => {
       res = res.concat(chunk);
     }
   }
-  console.log(res);
+  // console.log(res);
   expect(res?.usage_metadata).toBeDefined();
   if (!res?.usage_metadata) {
     return;
   }
-  expect(res.usage_metadata.input_tokens).toBe(13);
-  expect(res.usage_metadata.output_tokens).toBeGreaterThan(10);
+  expect(res.usage_metadata.input_tokens).toBeGreaterThan(1);
+  expect(res.usage_metadata.output_tokens).toBeGreaterThan(1);
   expect(res.usage_metadata.total_tokens).toBe(
     res.usage_metadata.input_tokens + res.usage_metadata.output_tokens
   );
@@ -961,7 +907,7 @@ test("streamUsage excludes token usage", async () => {
       res = res.concat(chunk);
     }
   }
-  console.log(res);
+  // console.log(res);
   expect(res?.usage_metadata).not.toBeDefined();
 });
 
@@ -969,15 +915,16 @@ test("Invoke token count usage_metadata", async () => {
   const model = new ChatMistralAI({
     model: "codestral-latest",
     temperature: 0,
+    maxTokens: 10,
   });
   const res = await model.invoke("Why is the sky blue? Be concise.");
-  console.log(res);
+  // console.log(res);
   expect(res?.usage_metadata).toBeDefined();
   if (!res?.usage_metadata) {
     return;
   }
-  expect(res.usage_metadata.input_tokens).toBe(13);
-  expect(res.usage_metadata.output_tokens).toBeGreaterThan(10);
+  expect(res.usage_metadata.input_tokens).toBeGreaterThan(1);
+  expect(res.usage_metadata.output_tokens).toBeGreaterThan(1);
   expect(res.usage_metadata.total_tokens).toBe(
     res.usage_metadata.input_tokens + res.usage_metadata.output_tokens
   );

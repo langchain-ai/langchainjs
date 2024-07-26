@@ -27,6 +27,7 @@ import { StructuredToolInterface } from "@langchain/core/tools";
 import { isStructuredTool } from "@langchain/core/utils/function_calling";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { ChatGenerationChunk } from "@langchain/core/outputs";
+import { RunnableToolLike } from "@langchain/core/runnables";
 import { BedrockToolChoice } from "./types.js";
 
 export function extractImageInfo(base64: string): ContentBlock.ImageMember {
@@ -67,18 +68,21 @@ export function convertToConverseMessages(messages: BaseMessage[]): {
   const converseSystem: BedrockSystemContentBlock[] = messages
     .filter((msg) => msg._getType() === "system")
     .map((msg) => {
-      const text = msg.content;
-      if (typeof text !== "string") {
-        throw new Error("System message content must be a string.");
+      if (typeof msg.content === "string") {
+        return { text: msg.content };
+      } else if (msg.content.length === 1 && msg.content[0].type === "text") {
+        return { text: msg.content[0].text };
       }
-      return { text };
+      throw new Error(
+        "System message content must be either a string, or a content array containing a single text object."
+      );
     });
   const converseMessages: BedrockMessage[] = messages
-    .filter((msg) => !["system", "tool", "function"].includes(msg._getType()))
+    .filter((msg) => msg._getType() !== "system")
     .map((msg) => {
       if (msg._getType() === "ai") {
         const castMsg = msg as AIMessage;
-        if (typeof castMsg.content === "string") {
+        if (typeof castMsg.content === "string" && castMsg.content !== "") {
           return {
             role: "assistant",
             content: [
@@ -99,16 +103,21 @@ export function convertToConverseMessages(messages: BaseMessage[]): {
                 },
               })),
             };
-          } else {
+          } else if (Array.isArray(castMsg.content)) {
             const contentBlocks: ContentBlock[] = castMsg.content.map(
               (block) => {
-                if (block.type === "text") {
+                if (block.type === "text" && block.text !== "") {
                   return {
                     text: block.text,
                   };
                 } else {
+                  const blockValues = Object.fromEntries(
+                    Object.values(block).filter(([key]) => key !== "type")
+                  );
                   throw new Error(
-                    `Unsupported content block type: ${block.type}`
+                    `Unsupported content block type: ${
+                      block.type
+                    } with content of ${JSON.stringify(blockValues, null, 2)}`
                   );
                 }
               }
@@ -117,10 +126,14 @@ export function convertToConverseMessages(messages: BaseMessage[]): {
               role: "assistant",
               content: contentBlocks,
             };
+          } else {
+            throw new Error(
+              `Invalid message content: empty string. '${msg._getType()}' must contain non-empty content.`
+            );
           }
         }
       } else if (msg._getType() === "human" || msg._getType() === "generic") {
-        if (typeof msg.content === "string") {
+        if (typeof msg.content === "string" && msg.content !== "") {
           return {
             role: "user",
             content: [
@@ -129,7 +142,7 @@ export function convertToConverseMessages(messages: BaseMessage[]): {
               },
             ],
           };
-        } else {
+        } else if (Array.isArray(msg.content)) {
           const contentBlocks: ContentBlock[] = msg.content.flatMap((block) => {
             if (block.type === "image_url") {
               const base64: string =
@@ -149,12 +162,17 @@ export function convertToConverseMessages(messages: BaseMessage[]): {
             role: "user",
             content: contentBlocks,
           };
+        } else {
+          throw new Error(
+            `Invalid message content: empty string. '${msg._getType()}' must contain non-empty content.`
+          );
         }
       } else if (msg._getType() === "tool") {
         const castMsg = msg as ToolMessage;
         if (typeof castMsg.content === "string") {
           return {
-            role: undefined,
+            // Tool use messages are always from the user
+            role: "user",
             content: [
               {
                 toolResult: {
@@ -170,7 +188,8 @@ export function convertToConverseMessages(messages: BaseMessage[]): {
           };
         } else {
           return {
-            role: undefined,
+            // Tool use messages are always from the user
+            role: "user",
             content: [
               {
                 toolResult: {
@@ -190,7 +209,29 @@ export function convertToConverseMessages(messages: BaseMessage[]): {
       }
     });
 
-  return { converseMessages, converseSystem };
+  // Combine consecutive user tool result messages into a single message
+  const combinedConverseMessages = converseMessages.reduce<BedrockMessage[]>(
+    (acc, curr) => {
+      const lastMessage = acc[acc.length - 1];
+
+      if (
+        lastMessage &&
+        lastMessage.role === "user" &&
+        lastMessage.content?.some((c) => "toolResult" in c) &&
+        curr.role === "user" &&
+        curr.content?.some((c) => "toolResult" in c)
+      ) {
+        lastMessage.content = lastMessage.content.concat(curr.content);
+      } else {
+        acc.push(curr);
+      }
+
+      return acc;
+    },
+    []
+  );
+
+  return { converseMessages: combinedConverseMessages, converseSystem };
 }
 
 export function isBedrockTool(tool: unknown): tool is BedrockTool {
@@ -207,6 +248,7 @@ export function convertToConverseTools(
     | BedrockTool
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     | Record<string, any>
+    | RunnableToolLike
   )[]
 ): BedrockTool[] {
   if (tools.every(isOpenAITool)) {
@@ -238,8 +280,14 @@ export function convertToConverseTools(
   );
 }
 
+export type BedrockConverseToolChoice =
+  | "any"
+  | "auto"
+  | string
+  | BedrockToolChoice;
+
 export function convertToBedrockToolChoice(
-  toolChoice: string | BedrockToolChoice,
+  toolChoice: BedrockConverseToolChoice,
   tools: BedrockTool[]
 ): BedrockToolChoice {
   if (typeof toolChoice === "string") {
@@ -331,6 +379,7 @@ export function convertConverseMessageToLangChainMessage(
           id: c.toolUse.toolUseId,
           name: c.toolUse.name,
           args: c.toolUse.input,
+          type: "tool_call",
         });
       } else if ("text" in c && typeof c.text === "string") {
         content.push({ type: "text", text: c.text });
@@ -354,7 +403,7 @@ export function handleConverseStreamContentBlockDelta(
   if (!contentBlockDelta.delta) {
     throw new Error("No delta found in content block.");
   }
-  if (contentBlockDelta.delta.text) {
+  if (typeof contentBlockDelta.delta.text === "string") {
     return new ChatGenerationChunk({
       text: contentBlockDelta.delta.text,
       message: new AIMessageChunk({
@@ -371,16 +420,18 @@ export function handleConverseStreamContentBlockDelta(
           {
             args: contentBlockDelta.delta.toolUse.input,
             index,
+            type: "tool_call_chunk",
           },
         ],
       }),
     });
   } else {
-    const unsupportedField = Object.entries(contentBlockDelta.delta).filter(
-      ([_, value]) => !!value
-    );
     throw new Error(
-      `Unsupported content block type: ${unsupportedField[0][0]}`
+      `Unsupported content block type(s): ${JSON.stringify(
+        contentBlockDelta.delta,
+        null,
+        2
+      )}`
     );
   }
 }
@@ -399,6 +450,7 @@ export function handleConverseStreamContentBlockStart(
             name: contentBlockStart.start.toolUse.name,
             id: contentBlockStart.start.toolUse.toolUseId,
             index,
+            type: "tool_call_chunk",
           },
         ],
       }),

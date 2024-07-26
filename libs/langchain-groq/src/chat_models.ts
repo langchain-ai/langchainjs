@@ -8,6 +8,8 @@ import {
   LangSmithParams,
   type BaseChatModelParams,
 } from "@langchain/core/language_models/chat_models";
+import * as ChatCompletionsAPI from "groq-sdk/resources/chat/completions";
+import * as CompletionsAPI from "groq-sdk/resources/completions";
 import {
   AIMessage,
   AIMessageChunk,
@@ -19,6 +21,7 @@ import {
   ToolMessage,
   OpenAIToolCall,
   isAIMessage,
+  BaseMessageChunk,
 } from "@langchain/core/messages";
 import {
   ChatGeneration,
@@ -32,7 +35,6 @@ import {
 } from "@langchain/openai";
 import { isZodSchema } from "@langchain/core/utils/types";
 import Groq from "groq-sdk";
-import { ChatCompletionChunk } from "groq-sdk/lib/chat_completions_ext";
 import {
   ChatCompletion,
   ChatCompletionCreateParams,
@@ -43,6 +45,7 @@ import {
   Runnable,
   RunnablePassthrough,
   RunnableSequence,
+  RunnableToolLike,
 } from "@langchain/core/runnables";
 import {
   BaseLanguageModelInput,
@@ -63,11 +66,12 @@ import {
 } from "@langchain/core/output_parsers/openai_tools";
 import { StructuredToolInterface } from "@langchain/core/tools";
 import { convertToOpenAITool } from "@langchain/core/utils/function_calling";
+import { ToolCallChunk } from "@langchain/core/messages/tool";
 
 export interface ChatGroqCallOptions extends BaseChatModelCallOptions {
   headers?: Record<string, string>;
   tools?: OpenAIClient.ChatCompletionTool[];
-  tool_choice?: OpenAIClient.ChatCompletionToolChoiceOption;
+  tool_choice?: OpenAIClient.ChatCompletionToolChoiceOption | "any" | string;
   response_format?: { type: "json_object" };
 }
 
@@ -144,8 +148,8 @@ export function messageToGroqRole(message: BaseMessage): GroqRoleEnum {
 
 function convertMessagesToGroqParams(
   messages: BaseMessage[]
-): Array<ChatCompletion.Choice.Message> {
-  return messages.map((message): ChatCompletion.Choice.Message => {
+): Array<ChatCompletionsAPI.ChatCompletionMessage> {
+  return messages.map((message): ChatCompletionsAPI.ChatCompletionMessage => {
     if (typeof message.content !== "string") {
       throw new Error("Non string message content not supported");
     }
@@ -170,12 +174,12 @@ function convertMessagesToGroqParams(
         completionParam.tool_call_id = (message as ToolMessage).tool_call_id;
       }
     }
-    return completionParam as ChatCompletion.Choice.Message;
+    return completionParam as ChatCompletionsAPI.ChatCompletionMessage;
   });
 }
 
 function groqResponseToChatMessage(
-  message: ChatCompletion.Choice.Message
+  message: ChatCompletionsAPI.ChatCompletionMessage
 ): BaseMessage {
   const rawToolCalls: OpenAIToolCall[] | undefined = message.tool_calls as
     | OpenAIToolCall[]
@@ -204,10 +208,34 @@ function groqResponseToChatMessage(
   }
 }
 
+function _convertDeltaToolCallToToolCallChunk(
+  toolCalls?: ChatCompletionsAPI.ChatCompletionChunk.Choice.Delta.ToolCall[],
+  index?: number
+): ToolCallChunk[] | undefined {
+  if (!toolCalls?.length) return undefined;
+
+  return toolCalls.map((tc) => ({
+    id: tc.id,
+    name: tc.function?.name,
+    args: tc.function?.arguments,
+    type: "tool_call_chunk",
+    index,
+  }));
+}
+
 function _convertDeltaToMessageChunk(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  delta: Record<string, any>
-) {
+  delta: Record<string, any>,
+  index: number
+): {
+  message: BaseMessageChunk;
+  toolCallData?: {
+    id: string;
+    name: string;
+    index: number;
+    type: "tool_call_chunk";
+  }[];
+} {
   const { role } = delta;
   const content = delta.content ?? "";
   let additional_kwargs;
@@ -223,13 +251,43 @@ function _convertDeltaToMessageChunk(
     additional_kwargs = {};
   }
   if (role === "user") {
-    return new HumanMessageChunk({ content });
+    return {
+      message: new HumanMessageChunk({ content }),
+    };
   } else if (role === "assistant") {
-    return new AIMessageChunk({ content, additional_kwargs });
+    const toolCallChunks = _convertDeltaToolCallToToolCallChunk(
+      delta.tool_calls,
+      index
+    );
+    return {
+      message: new AIMessageChunk({
+        content,
+        additional_kwargs,
+        tool_call_chunks: toolCallChunks
+          ? toolCallChunks.map((tc) => ({
+              type: tc.type,
+              args: tc.args,
+              index: tc.index,
+            }))
+          : undefined,
+      }),
+      toolCallData: toolCallChunks
+        ? toolCallChunks.map((tc) => ({
+            id: tc.id ?? "",
+            name: tc.name ?? "",
+            index: tc.index ?? index,
+            type: "tool_call_chunk",
+          }))
+        : undefined,
+    };
   } else if (role === "system") {
-    return new SystemMessageChunk({ content });
+    return {
+      message: new SystemMessageChunk({ content }),
+    };
   } else {
-    return new ChatMessageChunk({ content, role });
+    return {
+      message: new ChatMessageChunk({ content, role }),
+    };
   }
 }
 
@@ -320,8 +378,8 @@ export class ChatGroq extends BaseChatModel<
       ls_provider: "groq",
       ls_model_name: this.model,
       ls_model_type: "chat",
-      ls_temperature: params.temperature,
-      ls_max_tokens: params.max_tokens,
+      ls_temperature: params.temperature ?? this.temperature,
+      ls_max_tokens: params.max_tokens ?? this.maxTokens,
       ls_stop: options.stop,
     };
   }
@@ -329,7 +387,7 @@ export class ChatGroq extends BaseChatModel<
   async completionWithRetry(
     request: ChatCompletionCreateParamsStreaming,
     options?: OpenAICoreRequestOptions
-  ): Promise<AsyncIterable<ChatCompletionChunk>>;
+  ): Promise<AsyncIterable<ChatCompletionsAPI.ChatCompletionChunk>>;
 
   async completionWithRetry(
     request: ChatCompletionCreateParamsNonStreaming,
@@ -339,7 +397,9 @@ export class ChatGroq extends BaseChatModel<
   async completionWithRetry(
     request: ChatCompletionCreateParams,
     options?: OpenAICoreRequestOptions
-  ): Promise<AsyncIterable<ChatCompletionChunk> | ChatCompletion> {
+  ): Promise<
+    AsyncIterable<ChatCompletionsAPI.ChatCompletionChunk> | ChatCompletion
+  > {
     return this.caller.call(async () =>
       this.client.chat.completions.create(request, options)
     );
@@ -372,6 +432,7 @@ export class ChatGroq extends BaseChatModel<
       | Record<string, unknown>
       | StructuredToolInterface
       | ToolDefinition
+      | RunnableToolLike
     )[],
     kwargs?: Partial<ChatGroqCallOptions>
   ): Runnable<BaseLanguageModelInput, AIMessageChunk, ChatGroqCallOptions> {
@@ -388,76 +449,73 @@ export class ChatGroq extends BaseChatModel<
   ): AsyncGenerator<ChatGenerationChunk> {
     const params = this.invocationParams(options);
     const messagesMapped = convertMessagesToGroqParams(messages);
-    if (options.tools !== undefined && options.tools.length > 0) {
-      const result = await this._generateNonStreaming(
-        messages,
-        options,
-        runManager
-      );
-      const generationMessage = result.generations[0].message as AIMessage;
-      if (
-        generationMessage === undefined ||
-        typeof generationMessage.content !== "string"
-      ) {
-        throw new Error("Could not parse Groq output.");
+    const response = await this.completionWithRetry(
+      {
+        ...params,
+        messages: messagesMapped,
+        stream: true,
+      },
+      {
+        signal: options?.signal,
+        headers: options?.headers,
       }
-      const toolCallChunks = generationMessage.tool_calls?.map(
-        (toolCall, i) => ({
-          name: toolCall.name,
-          args: JSON.stringify(toolCall.args),
-          id: toolCall.id,
-          index: i,
-        })
-      );
-      yield new ChatGenerationChunk({
-        message: new AIMessageChunk({
-          content: generationMessage.content,
-          additional_kwargs: generationMessage.additional_kwargs,
-          tool_call_chunks: toolCallChunks,
-        }),
-        text: generationMessage.content,
-      });
-    } else {
-      const response = await this.completionWithRetry(
+    );
+    let role = "";
+    const toolCall: {
+      id: string;
+      name: string;
+      index: number;
+      type: "tool_call_chunk";
+    }[] = [];
+    for await (const data of response) {
+      const choice = data?.choices[0];
+      if (!choice) {
+        continue;
+      }
+      // The `role` field is populated in the first delta of the response
+      // but is not present in subsequent deltas. Extract it when available.
+      if (choice.delta?.role) {
+        role = choice.delta.role;
+      }
+
+      const { message, toolCallData } = _convertDeltaToMessageChunk(
         {
-          ...params,
-          messages: messagesMapped,
-          stream: true,
-        },
-        {
-          signal: options?.signal,
-          headers: options?.headers,
-        }
+          ...choice.delta,
+          role,
+        } ?? {},
+        choice.index
       );
-      let role = "";
-      for await (const data of response) {
-        const choice = data?.choices[0];
-        if (!choice) {
-          continue;
-        }
-        // The `role` field is populated in the first delta of the response
-        // but is not present in subsequent deltas. Extract it when available.
-        if (choice.delta?.role) {
-          role = choice.delta.role;
-        }
-        const chunk = new ChatGenerationChunk({
-          message: _convertDeltaToMessageChunk(
-            {
-              ...choice.delta,
-              role,
-            } ?? {}
-          ),
-          text: choice.delta.content ?? "",
-          generationInfo: {
-            finishReason: choice.finish_reason,
-          },
+
+      if (toolCallData) {
+        // First, ensure the ID is not already present in toolCall
+        const newToolCallData = toolCallData.filter((tc) =>
+          toolCall.every((t) => t.id !== tc.id)
+        );
+        toolCall.push(...newToolCallData);
+
+        // Yield here, ensuring the ID and name fields are only yielded once.
+        yield new ChatGenerationChunk({
+          message: new AIMessageChunk({
+            content: "",
+            tool_call_chunks: newToolCallData,
+          }),
+          text: "",
         });
-        yield chunk;
-        void runManager?.handleLLMNewToken(chunk.text ?? "");
       }
-      if (options.signal?.aborted) {
-        throw new Error("AbortError");
-      }
+
+      const chunk = new ChatGenerationChunk({
+        message,
+        text: choice.delta.content ?? "",
+        generationInfo: {
+          finishReason: choice.finish_reason,
+        },
+      });
+      yield chunk;
+      void runManager?.handleLLMNewToken(chunk.text ?? "");
+    }
+
+    if (options.signal?.aborted) {
+      throw new Error("AbortError");
     }
   }
 
@@ -515,7 +573,7 @@ export class ChatGroq extends BaseChatModel<
         completion_tokens: completionTokens,
         prompt_tokens: promptTokens,
         total_tokens: totalTokens,
-      } = data.usage as ChatCompletion.Usage;
+      } = data.usage as CompletionsAPI.CompletionUsage;
 
       if (completionTokens) {
         tokenUsage.completionTokens =

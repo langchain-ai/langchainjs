@@ -18,12 +18,12 @@ import { ChatGenerationChunk, ChatResult } from "@langchain/core/outputs";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import {
   BaseChatModel,
-  LangSmithParams,
+  type BaseChatModelCallOptions,
+  type LangSmithParams,
   type BaseChatModelParams,
 } from "@langchain/core/language_models/chat_models";
 import { NewTokenIndices } from "@langchain/core/callbacks/base";
 import {
-  BaseLanguageModelCallOptions,
   BaseLanguageModelInput,
   StructuredOutputMethodOptions,
   ToolDefinition,
@@ -33,6 +33,7 @@ import {
   Runnable,
   RunnablePassthrough,
   RunnableSequence,
+  RunnableToolLike,
 } from "@langchain/core/runnables";
 import type { z } from "zod";
 import { isZodSchema } from "@langchain/core/utils/types";
@@ -58,7 +59,7 @@ export type BaseMessageExamplePair = {
 };
 
 export interface GoogleGenerativeAIChatCallOptions
-  extends BaseLanguageModelCallOptions {
+  extends BaseChatModelCallOptions {
   tools?:
     | StructuredToolInterface[]
     | GoogleGenerativeAIFunctionDeclarationsTool[];
@@ -349,6 +350,7 @@ export class ChatGoogleGenerativeAI
       | StructuredToolInterface
       | Record<string, unknown>
       | ToolDefinition
+      | RunnableToolLike
     )[],
     kwargs?: Partial<GoogleGenerativeAIChatCallOptions>
   ): Runnable<
@@ -362,6 +364,12 @@ export class ChatGoogleGenerativeAI
   invocationParams(
     options?: this["ParsedCallOptions"]
   ): Omit<GenerateContentRequest, "contents"> {
+    if (options?.tool_choice) {
+      throw new Error(
+        "'tool_choice' call option is not supported by ChatGoogleGenerativeAI."
+      );
+    }
+
     const tools = options?.tools as
       | GoogleGenerativeAIFunctionDeclarationsTool[]
       | StructuredToolInterface[]

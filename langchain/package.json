@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.2.8",
+  "version": "0.2.11",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -134,6 +134,10 @@
     "chains/graph_qa/cypher.js",
     "chains/graph_qa/cypher.d.ts",
     "chains/graph_qa/cypher.d.cts",
+    "chat_models/universal.cjs",
+    "chat_models/universal.js",
+    "chat_models/universal.d.ts",
+    "chat_models/universal.d.cts",
     "embeddings/cache_backed.cjs",
     "embeddings/cache_backed.js",
     "embeddings/cache_backed.d.ts",
@@ -570,7 +574,7 @@
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/langchain/",
   "scripts": {
     "build": "yarn turbo:command build:internal --filter=langchain",
-    "build:internal": "yarn lc-build:v2 --create-entrypoints --pre --tree-shaking --gen-maps",
+    "build:internal": "yarn lc_build_v2 --create-entrypoints --pre --tree-shaking --gen-maps",
     "build:deps": "yarn run turbo:command build --filter=@langchain/openai --filter=@langchain/textsplitters --filter=@langchain/cohere --concurrency=1",
     "build:esm": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist/ && rimraf dist/tests dist/**/tests",
     "build:cjs": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist-cjs/ -p tsconfig.cjs.json && yarn move-cjs-to-dist && rimraf dist-cjs",
@@ -609,8 +613,15 @@
     "@gomomento/sdk": "^1.51.1",
     "@gomomento/sdk-core": "^1.51.1",
     "@jest/globals": "^29.5.0",
-    "@langchain/cohere": "^0.0.8",
-    "@langchain/scripts": "~0.0.14",
+    "@langchain/anthropic": "^0.2.8",
+    "@langchain/aws": "^0.0.5",
+    "@langchain/cohere": "^0.2.1",
+    "@langchain/google-genai": "^0.0.23",
+    "@langchain/google-vertexai": "^0.0.21",
+    "@langchain/groq": "^0.0.15",
+    "@langchain/mistralai": "^0.0.26",
+    "@langchain/ollama": "^0.0.2",
+    "@langchain/scripts": "~0.0.20",
     "@mendable/firecrawl-js": "^0.0.13",
     "@notionhq/client": "^2.2.10",
     "@pinecone-database/pinecone": "^1.1.0",
@@ -632,7 +643,7 @@
     "@vercel/kv": "^0.2.3",
     "@xata.io/client": "^0.28.0",
     "apify-client": "^2.7.1",
-    "assemblyai": "^4.0.0",
+    "assemblyai": "^4.6.0",
     "axios": "^0.26.0",
     "cheerio": "^1.0.0-rc.12",
     "chromadb": "^1.5.3",
@@ -694,6 +705,15 @@
     "@gomomento/sdk": "^1.51.1",
     "@gomomento/sdk-core": "^1.51.1",
     "@gomomento/sdk-web": "^1.51.1",
+    "@langchain/anthropic": "*",
+    "@langchain/aws": "*",
+    "@langchain/cohere": "*",
+    "@langchain/community": "*",
+    "@langchain/google-genai": "*",
+    "@langchain/google-vertexai": "*",
+    "@langchain/groq": "*",
+    "@langchain/mistralai": "*",
+    "@langchain/ollama": "*",
     "@mendable/firecrawl-js": "^0.0.13",
     "@notionhq/client": "^2.2.10",
     "@pinecone-database/pinecone": "*",
@@ -701,7 +721,7 @@
     "@vercel/kv": "^0.2.3",
     "@xata.io/client": "^0.28.0",
     "apify-client": "^2.7.1",
-    "assemblyai": "^4.0.0",
+    "assemblyai": "^4.6.0",
     "axios": "*",
     "cheerio": "^1.0.0-rc.12",
     "chromadb": "*",
@@ -761,6 +781,33 @@
       "optional": true
     },
     "@gomomento/sdk-web": {
+      "optional": true
+    },
+    "@langchain/anthropic": {
+      "optional": true
+    },
+    "@langchain/aws": {
+      "optional": true
+    },
+    "@langchain/cohere": {
+      "optional": true
+    },
+    "@langchain/community": {
+      "optional": true
+    },
+    "@langchain/google-genai": {
+      "optional": true
+    },
+    "@langchain/google-vertexai": {
+      "optional": true
+    },
+    "@langchain/groq": {
+      "optional": true
+    },
+    "@langchain/mistralai": {
+      "optional": true
+    },
+    "@langchain/ollama": {
       "optional": true
     },
     "@mendable/firecrawl-js": {
@@ -1201,6 +1248,15 @@
       },
       "import": "./chains/graph_qa/cypher.js",
       "require": "./chains/graph_qa/cypher.cjs"
+    },
+    "./chat_models/universal": {
+      "types": {
+        "import": "./chat_models/universal.d.ts",
+        "require": "./chat_models/universal.d.cts",
+        "default": "./chat_models/universal.d.ts"
+      },
+      "import": "./chat_models/universal.js",
+      "require": "./chat_models/universal.cjs"
     },
     "./embeddings/cache_backed": {
       "types": {

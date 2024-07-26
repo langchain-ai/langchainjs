@@ -31,7 +31,7 @@ test("createOpenAIToolsAgent works", async () => {
     input,
   });
 
-  console.log(result);
+  // console.log(result);
 
   expect(result.input).toBe(input);
   expect(typeof result.output).toBe("string");
@@ -63,8 +63,10 @@ test.skip("createOpenAIToolsAgent tracing works when it is nested in a lambda", 
     const noop = RunnableLambda.from(() => "hi").withConfig({
       runName: "nested_testing",
     });
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     const noopRes = await noop.invoke({ nested: "nested" });
-    console.log(noopRes);
+    // console.log(noopRes);
     const res = await agentExecutor.invoke({
       input,
     });
@@ -76,7 +78,7 @@ test.skip("createOpenAIToolsAgent tracing works when it is nested in a lambda", 
     callbacks: [new LangChainTracer({ projectName: "langchainjs-tracing-2" })],
   });
 
-  console.log(result);
+  // console.log(result);
 
   expect(result.input).toBe(input);
   expect(typeof result.output).toBe("string");
