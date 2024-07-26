@@ -21,17 +21,12 @@ describe("GAuth LLM", () => {
 
   test("call", async () => {
     const model = new VertexAI();
-    try {
-      const res = await model.invoke("1 + 1 = ");
-      if (res.length === 1) {
-        expect(res).toBe("2");
-      } else {
-        expect(res.length).toBeGreaterThan(0);
-        console.log("call result:", res);
-      }
-    } catch (xx) {
-      console.error(xx);
-      throw xx;
+    const res = await model.invoke("1 + 1 = ");
+    if (res.length === 1) {
+      expect(res).toBe("2");
+    } else {
+      expect(res.length).toBeGreaterThan(0);
+      // console.log("call result:", res);
     }
   });
 
@@ -42,7 +37,7 @@ describe("GAuth LLM", () => {
     expect(res.generations.length).toBeGreaterThan(0);
     expect(res.generations[0].length).toBeGreaterThan(0);
     expect(res.generations[0][0]).toHaveProperty("text");
-    console.log("generate result:", JSON.stringify(res, null, 2));
+    // console.log("generate result:", JSON.stringify(res, null, 2));
   });
 
   test("stream", async () => {
@@ -79,7 +74,7 @@ describe("GAuth LLM", () => {
     expect(res).toBeInstanceOf(AIMessage);
     expect(Array.isArray(res.content)).toEqual(true);
     expect(res.content[0]).toHaveProperty("text");
-    console.log("res", res);
+    // console.log("res", res);
   });
 
   test("invoke image", async () => {
@@ -104,7 +99,7 @@ describe("GAuth LLM", () => {
     const res = await model.invoke(input);
     expect(res).toBeDefined();
     expect(res.length).toBeGreaterThan(0);
-    console.log("res", res);
+    // console.log("res", res);
   });
 });
 
@@ -123,17 +118,12 @@ describe("GAuth LLM gai", () => {
     const model = new VertexAI({
       platformType: "gai",
     });
-    try {
-      const res = await model.invoke("1 + 1 = ");
-      if (res.length === 1) {
-        expect(res).toBe("2");
-      } else {
-        console.log("call result:", res);
-        expect(res.length).toBeGreaterThan(0);
-      }
-    } catch (xx) {
-      console.error(xx);
-      throw xx;
+    const res = await model.invoke("1 + 1 = ");
+    if (res.length === 1) {
+      expect(res).toBe("2");
+    } else {
+      // console.log("call result:", res);
+      expect(res.length).toBeGreaterThan(0);
     }
   });
 
@@ -141,14 +131,9 @@ describe("GAuth LLM gai", () => {
     const model = new VertexAI({
       platformType: "gai",
     });
-    try {
-      const res = await model.invoke("If the time is 1:00, what time is it?");
-      expect(res.length).toBeGreaterThan(0);
-      expect(res.substring(0, 4)).toEqual("1:00");
-    } catch (xx) {
-      console.error(xx);
-      throw xx;
-    }
+    const res = await model.invoke("If the time is 1:00, what time is it?");
+    expect(res.length).toBeGreaterThan(0);
+    expect(res.substring(0, 4)).toEqual("1:00");
   });
 
   test("generate", async () => {
@@ -160,7 +145,7 @@ describe("GAuth LLM gai", () => {
     expect(res.generations.length).toBeGreaterThan(0);
     expect(res.generations[0].length).toBeGreaterThan(0);
     expect(res.generations[0][0]).toHaveProperty("text");
-    console.log("generate result:", JSON.stringify(res, null, 2));
+    // console.log("generate result:", JSON.stringify(res, null, 2));
   });
 
   test("stream", async () => {
@@ -205,7 +190,7 @@ describe("GAuth LLM gai", () => {
     expect(res).toBeInstanceOf(AIMessage);
     expect(Array.isArray(res.content)).toEqual(true);
     expect(res.content[0]).toHaveProperty("text");
-    console.log("res", res);
+    // console.log("res", res);
   });
 
   test("invoke image", async () => {
@@ -231,6 +216,6 @@ describe("GAuth LLM gai", () => {
     const res = await model.invoke(input);
     expect(res).toBeDefined();
     expect(res.length).toBeGreaterThan(0);
-    console.log("res", res);
+    // console.log("res", res);
   });
 });

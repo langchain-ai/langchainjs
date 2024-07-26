@@ -18,7 +18,7 @@ test("MongoDBStore can set and retrieve", async () => {
   try {
     await client.connect();
   } catch (e) {
-    console.error("Failed to connect");
+    // console.error("Failed to connect");
     throw Error(e as string);
   }
 

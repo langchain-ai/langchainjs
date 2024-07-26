@@ -57,7 +57,7 @@ const runTest = async ({
     }
 
     const res = await chat.invoke(messages);
-    console.log({ res });
+    // console.log({ res });
 
     if (config.streaming) {
       expect(nrNewTokens > 0).toBe(true);

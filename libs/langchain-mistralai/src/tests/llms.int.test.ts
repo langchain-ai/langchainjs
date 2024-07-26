@@ -15,7 +15,7 @@ test("Test MistralAI", async () => {
   const res = await model.invoke(
     "Log 'Hello world' to the console in javascript: "
   );
-  console.log({ res }, "Test MistralAI");
+  // console.log({ res }, "Test MistralAI");
   expect(res.length).toBeGreaterThan(1);
 });
 
@@ -24,10 +24,12 @@ test("Test MistralAI with stop in object", async () => {
     maxTokens: 5,
     model: "codestral-latest",
   });
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res = await model.invoke("console.log 'Hello world' in javascript:", {
     stop: ["world"],
   });
-  console.log({ res }, "Test MistralAI with stop in object");
+  // console.log({ res }, "Test MistralAI with stop in object");
 });
 
 test("Test MistralAI with timeout in call options", async () => {
@@ -70,8 +72,10 @@ test("Test MistralAI with signal in call options", async () => {
       }
     );
 
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     for await (const chunk of ret) {
-      console.log({ chunk }, "Test MistralAI with signal in call options");
+      // console.log({ chunk }, "Test MistralAI with signal in call options");
       controller.abort();
     }
 
@@ -103,7 +107,7 @@ test("Test MistralAI in streaming mode", async () => {
     const res = await model.invoke(
       "Log 'Hello world' to the console in javascript: "
     );
-    console.log({ res }, "Test MistralAI in streaming mode");
+    // console.log({ res }, "Test MistralAI in streaming mode");
 
     expect(nrNewTokens > 0).toBe(true);
     expect(res).toBe(streamedCompletion);
@@ -141,8 +145,10 @@ test("Test MistralAI stream method with abort", async () => {
         signal: AbortSignal.timeout(1000),
       }
     );
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     for await (const chunk of stream) {
-      console.log({ chunk }, "Test MistralAI stream method with abort");
+      // console.log({ chunk }, "Test MistralAI stream method with abort");
     }
   }).rejects.toThrow();
 });
@@ -156,8 +162,10 @@ test("Test MistralAI stream method with early break", async () => {
     "How is your day going? Be extremely verbose."
   );
   let i = 0;
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   for await (const chunk of stream) {
-    console.log({ chunk }, "Test MistralAI stream method with early break");
+    // console.log({ chunk }, "Test MistralAI stream method with early break");
     i += 1;
     if (i > 5) {
       break;

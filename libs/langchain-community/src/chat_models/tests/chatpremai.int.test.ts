@@ -42,7 +42,7 @@ describe.skip("ChatPrem", () => {
       iters += 1;
       finalRes += chunk.content;
     }
-    console.log({ finalRes, iters });
+    // console.log({ finalRes, iters });
     expect(iters).toBeGreaterThan(1);
   });
 });

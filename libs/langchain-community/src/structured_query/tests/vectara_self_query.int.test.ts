@@ -105,7 +105,7 @@ test.skip("Vectara Self Query Retriever Test", async () => {
   const query4 = await selfQueryRetriever.getRelevantDocuments(
     "Wau wau wau wau hello gello hello?"
   );
-  console.log(query1, query2, query3, query4);
+  // console.log(query1, query2, query3, query4);
   expect(query1.length).toBe(2);
   expect(query2.length).toBe(1);
   expect(query3.length).toBe(1);

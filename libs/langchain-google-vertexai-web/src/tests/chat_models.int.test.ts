@@ -29,7 +29,7 @@ class WeatherTool extends StructuredTool {
   name = "get_weather";
 
   async _call(input: z.infer<typeof this.schema>) {
-    console.log(`WeatherTool called with input: ${input}`);
+    // console.log(`WeatherTool called with input: ${input}`);
     return `The weather in ${JSON.stringify(input.locations)} is 25°C`;
   }
 }
@@ -37,101 +37,71 @@ class WeatherTool extends StructuredTool {
 describe("Google APIKey Chat", () => {
   test("invoke", async () => {
     const model = new ChatVertexAI();
-    try {
-      const res = await model.invoke("What is 1 + 1?");
-      console.log(res);
-      expect(res).toBeDefined();
-      expect(res._getType()).toEqual("ai");
+    const res = await model.invoke("What is 1 + 1?");
+    // console.log(res);
+    expect(res).toBeDefined();
+    expect(res._getType()).toEqual("ai");
 
-      const aiMessage = res as AIMessageChunk;
-      console.log(aiMessage);
-      expect(aiMessage.content).toBeDefined();
-      expect(aiMessage.content.length).toBeGreaterThan(0);
-      expect(aiMessage.content[0]).toBeDefined();
-
-      // const content = aiMessage.content[0] as MessageContentComplex;
-      // expect(content).toHaveProperty("type");
-      // expect(content.type).toEqual("text");
-
-      // const textContent = content as MessageContentText;
-      // expect(textContent.text).toBeDefined();
-      // expect(textContent.text).toEqual("2");
-    } catch (e) {
-      console.error(e);
-      throw e;
-    }
+    const aiMessage = res as AIMessageChunk;
+    // console.log(aiMessage);
+    expect(aiMessage.content).toBeDefined();
+    expect(aiMessage.content.length).toBeGreaterThan(0);
+    expect(aiMessage.content[0]).toBeDefined();
   });
 
   test("generate", async () => {
     const model = new ChatVertexAI();
-    try {
-      const messages: BaseMessage[] = [
-        new SystemMessage(
-          "You will reply to all requests to flip a coin with either H, indicating heads, or T, indicating tails."
-        ),
-        new HumanMessage("Flip it"),
-        new AIMessage("T"),
-        new HumanMessage("Flip the coin again"),
-      ];
-      const res = await model.predictMessages(messages);
-      expect(res).toBeDefined();
-      expect(res._getType()).toEqual("ai");
+    const messages: BaseMessage[] = [
+      new SystemMessage(
+        "You will reply to all requests to flip a coin with either H, indicating heads, or T, indicating tails."
+      ),
+      new HumanMessage("Flip it"),
+      new AIMessage("T"),
+      new HumanMessage("Flip the coin again"),
+    ];
+    const res = await model.predictMessages(messages);
+    expect(res).toBeDefined();
+    expect(res._getType()).toEqual("ai");
 
-      const aiMessage = res as AIMessageChunk;
-      expect(aiMessage.content).toBeDefined();
-      expect(aiMessage.content.length).toBeGreaterThan(0);
-      expect(aiMessage.content[0]).toBeDefined();
-      console.log(aiMessage);
-
-      // const content = aiMessage.content[0] as MessageContentComplex;
-      // expect(content).toHaveProperty("type");
-      // expect(content.type).toEqual("text");
-
-      // const textContent = content as MessageContentText;
-      // expect(textContent.text).toBeDefined();
-      // expect(["H", "T"]).toContainEqual(textContent.text);
-    } catch (e) {
-      console.error(e);
-      throw e;
-    }
+    const aiMessage = res as AIMessageChunk;
+    expect(aiMessage.content).toBeDefined();
+    expect(aiMessage.content.length).toBeGreaterThan(0);
+    expect(aiMessage.content[0]).toBeDefined();
   });
 
   test("stream", async () => {
     const model = new ChatVertexAI();
-    try {
-      const input: BaseLanguageModelInput = new ChatPromptValue([
-        new SystemMessage(
-          "You will reply to all requests to flip a coin with either H, indicating heads, or T, indicating tails."
-        ),
-        new HumanMessage("Flip it"),
-        new AIMessage("T"),
-        new HumanMessage("Flip the coin again"),
-      ]);
-      const res = await model.stream(input);
-      const resArray: BaseMessageChunk[] = [];
-      for await (const chunk of res) {
-        resArray.push(chunk);
-      }
-      expect(resArray).toBeDefined();
-      expect(resArray.length).toBeGreaterThanOrEqual(1);
-
-      const lastChunk = resArray[resArray.length - 1];
-      expect(lastChunk).toBeDefined();
-      expect(lastChunk._getType()).toEqual("ai");
-      const aiChunk = lastChunk as AIMessageChunk;
-      console.log(aiChunk);
-
-      console.log(JSON.stringify(resArray, null, 2));
-    } catch (e) {
-      console.error(e);
-      throw e;
+    const input: BaseLanguageModelInput = new ChatPromptValue([
+      new SystemMessage(
+        "You will reply to all requests to flip a coin with either H, indicating heads, or T, indicating tails."
+      ),
+      new HumanMessage("Flip it"),
+      new AIMessage("T"),
+      new HumanMessage("Flip the coin again"),
+    ]);
+    const res = await model.stream(input);
+    const resArray: BaseMessageChunk[] = [];
+    for await (const chunk of res) {
+      resArray.push(chunk);
     }
+    expect(resArray).toBeDefined();
+    expect(resArray.length).toBeGreaterThanOrEqual(1);
+
+    const lastChunk = resArray[resArray.length - 1];
+    expect(lastChunk).toBeDefined();
+    expect(lastChunk._getType()).toEqual("ai");
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
+    const aiChunk = lastChunk as AIMessageChunk;
+    // console.log(aiChunk);
+
+    // console.log(JSON.stringify(resArray, null, 2));
   });
 
   test("Tool call", async () => {
     const chat = new ChatVertexAI().bindTools([new WeatherTool()]);
     const res = await chat.invoke("What is the weather in SF and LA");
-    console.log(res);
+    // console.log(res);
     expect(res.tool_calls?.length).toEqual(1);
     expect(res.tool_calls?.[0].args).toEqual(
       JSON.parse(res.additional_kwargs.tool_calls?.[0].function.arguments ?? "")
@@ -140,8 +110,10 @@ describe("Google APIKey Chat", () => {
 
   test("Few shotting with tool calls", async () => {
     const chat = new ChatVertexAI().bindTools([new WeatherTool()]);
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     const res = await chat.invoke("What is the weather in SF");
-    console.log(res);
+    // console.log(res);
     const res2 = await chat.invoke([
       new HumanMessage("What is the weather in SF?"),
       new AIMessage({
@@ -163,7 +135,7 @@ describe("Google APIKey Chat", () => {
       new AIMessage("It is currently 24 degrees in SF with hail in SF."),
       new HumanMessage("What did you say the weather was?"),
     ]);
-    console.log(res2);
+    // console.log(res2);
     expect(res2.content).toContain("24");
   });
 
@@ -192,93 +164,62 @@ describe("Google APIKey Chat", () => {
 describe("Google Webauth Chat", () => {
   test("invoke", async () => {
     const model = new ChatVertexAI();
-    try {
-      const res = await model.invoke("What is 1 + 1?");
-      expect(res).toBeDefined();
-      expect(res._getType()).toEqual("ai");
+    const res = await model.invoke("What is 1 + 1?");
+    expect(res).toBeDefined();
+    expect(res._getType()).toEqual("ai");
 
-      const aiMessage = res as AIMessageChunk;
-      expect(aiMessage.content).toBeDefined();
-      expect(aiMessage.content.length).toBeGreaterThan(0);
-      expect(aiMessage.content[0]).toBeDefined();
-      console.log(aiMessage);
-
-      // const content = aiMessage.content[0] as MessageContentComplex;
-      // expect(content).toHaveProperty("type");
-      // expect(content.type).toEqual("text");
-
-      // const textContent = content as MessageContentText;
-      // expect(textContent.text).toBeDefined();
-      // expect(textContent.text).toEqual("2");
-    } catch (e) {
-      console.error(e);
-      throw e;
-    }
+    const aiMessage = res as AIMessageChunk;
+    expect(aiMessage.content).toBeDefined();
+    expect(aiMessage.content.length).toBeGreaterThan(0);
+    expect(aiMessage.content[0]).toBeDefined();
+    // console.log(aiMessage);
   });
 
   test("generate", async () => {
     const model = new ChatVertexAI();
-    try {
-      const messages: BaseMessage[] = [
-        new SystemMessage(
-          "You will reply to all requests to flip a coin with either H, indicating heads, or T, indicating tails."
-        ),
-        new HumanMessage("Flip it"),
-        new AIMessage("T"),
-        new HumanMessage("Flip the coin again"),
-      ];
-      const res = await model.predictMessages(messages);
-      expect(res).toBeDefined();
-      expect(res._getType()).toEqual("ai");
+    const messages: BaseMessage[] = [
+      new SystemMessage(
+        "You will reply to all requests to flip a coin with either H, indicating heads, or T, indicating tails."
+      ),
+      new HumanMessage("Flip it"),
+      new AIMessage("T"),
+      new HumanMessage("Flip the coin again"),
+    ];
+    const res = await model.predictMessages(messages);
+    expect(res).toBeDefined();
+    expect(res._getType()).toEqual("ai");
 
-      const aiMessage = res as AIMessageChunk;
-      expect(aiMessage.content).toBeDefined();
-      expect(aiMessage.content.length).toBeGreaterThan(0);
-      expect(aiMessage.content[0]).toBeDefined();
-      console.log(aiMessage);
-
-      // const content = aiMessage.content[0] as MessageContentComplex;
-      // expect(content).toHaveProperty("type");
-      // expect(content.type).toEqual("text");
-
-      // const textContent = content as MessageContentText;
-      // expect(textContent.text).toBeDefined();
-      // expect(["H", "T"]).toContainEqual(textContent.text);
-    } catch (e) {
-      console.error(e);
-      throw e;
-    }
+    const aiMessage = res as AIMessageChunk;
+    expect(aiMessage.content).toBeDefined();
+    expect(aiMessage.content.length).toBeGreaterThan(0);
+    expect(aiMessage.content[0]).toBeDefined();
+    // console.log(aiMessage);
   });
 
   test("stream", async () => {
     const model = new ChatVertexAI();
-    try {
-      const input: BaseLanguageModelInput = new ChatPromptValue([
-        new SystemMessage(
-          "You will reply to all requests to flip a coin with either H, indicating heads, or T, indicating tails."
-        ),
-        new HumanMessage("Flip it"),
-        new AIMessage("T"),
-        new HumanMessage("Flip the coin again"),
-      ]);
-      const res = await model.stream(input);
-      const resArray: BaseMessageChunk[] = [];
-      for await (const chunk of res) {
-        resArray.push(chunk);
-      }
-      expect(resArray).toBeDefined();
-      expect(resArray.length).toBeGreaterThanOrEqual(1);
-
-      const lastChunk = resArray[resArray.length - 1];
-      expect(lastChunk).toBeDefined();
-      expect(lastChunk._getType()).toEqual("ai");
-      const aiChunk = lastChunk as AIMessageChunk;
-      console.log(aiChunk);
-
-      console.log(JSON.stringify(resArray, null, 2));
-    } catch (e) {
-      console.error(e);
-      throw e;
+    const input: BaseLanguageModelInput = new ChatPromptValue([
+      new SystemMessage(
+        "You will reply to all requests to flip a coin with either H, indicating heads, or T, indicating tails."
+      ),
+      new HumanMessage("Flip it"),
+      new AIMessage("T"),
+      new HumanMessage("Flip the coin again"),
+    ]);
+    const res = await model.stream(input);
+    const resArray: BaseMessageChunk[] = [];
+    for await (const chunk of res) {
+      resArray.push(chunk);
     }
+    expect(resArray).toBeDefined();
+    expect(resArray.length).toBeGreaterThanOrEqual(1);
+
+    const lastChunk = resArray[resArray.length - 1];
+    expect(lastChunk).toBeDefined();
+    expect(lastChunk._getType()).toEqual("ai");
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
+    const aiChunk = lastChunk as AIMessageChunk;
+    // console.log(aiChunk);
   });
 });
