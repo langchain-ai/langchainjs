@@ -37,6 +37,7 @@ export type UnstructuredMemoryLoaderOptions =
        * The path to the file, or an array of paths to multiple files.
        */
       filePath: string | string[];
+      fileName?: never;
     }
   | {
       /**
@@ -46,7 +47,8 @@ export type UnstructuredMemoryLoaderOptions =
       /**
        * The name of the file.
        */
-      filePath: string;
+      fileName: string;
+      filePath?: never;
     };
 
 export interface UnstructuredLoaderOptions
@@ -156,7 +158,9 @@ export class UnstructuredLoader<
 > extends BaseDocumentLoader {
   client: UnstructuredClient;
 
-  filePath: string | string[];
+  filePath?: string | string[];
+
+  fileName?: string;
 
   buffer?: Buffer;
 
@@ -190,6 +194,19 @@ export class UnstructuredLoader<
       enableLogs,
       ...unstructuredFields
     } = { ...fields };
+
+    if (fileOrBuffer.fileName && fileOrBuffer.filePath) {
+      throw new Error("You cannot pass both 'fileName' and 'filePath'.");
+    }
+    if (fileOrBuffer.buffer && fileOrBuffer.filePath) {
+      throw new Error("You cannot pass both 'buffer' and 'filePath'.");
+    }
+    if (fileOrBuffer.buffer && !fileOrBuffer.fileName) {
+      throw new Error("You must pass 'fileName' with 'buffer'.");
+    }
+    if (!fileOrBuffer.buffer && !fileOrBuffer.filePath) {
+      throw new Error("You must pass either 'buffer' or 'filePath'.");
+    }
 
     if (client) {
       const disallowedParams: [string, unknown][] = [
@@ -227,6 +244,7 @@ export class UnstructuredLoader<
     }
 
     this.filePath = fileOrBuffer?.filePath;
+    this.fileName = fileOrBuffer?.fileName;
     this.buffer = fileOrBuffer?.buffer;
     this.partitionViaApi = partitionViaApi;
     this.postProcessors = postProcessors;
@@ -249,7 +267,7 @@ export class UnstructuredLoader<
     }
   }
 
-  async _partition(filePath: string): Promise<Element[]> {
+  async _partition(fileNameOrPath: string): Promise<Element[]> {
     let files:
       | {
           fileName: string;
@@ -258,14 +276,15 @@ export class UnstructuredLoader<
       | undefined;
 
     if (this.buffer) {
+      // If buffer is passed, assume fileNameOrPath is the name
       files = {
-        fileName: filePath, // If buffer is passed, assume filePath is the name
+        fileName: fileNameOrPath,
         content: new Uint8Array(this.buffer),
       };
     } else {
       files = {
-        fileName: path.basename(filePath),
-        content: new Uint8Array(await fs.promises.readFile(filePath)),
+        fileName: path.basename(fileNameOrPath),
+        content: new Uint8Array(await fs.promises.readFile(fileNameOrPath)),
       };
     }
 
@@ -293,7 +312,7 @@ export class UnstructuredLoader<
       }
 
       return res.elements.filter(
-        (el) => "text" in el && typeof el.text === "string"
+        (el) => typeof el.text === "string"
       ) as Element[];
     } finally {
       if (!this.enableLogs) {
@@ -311,7 +330,7 @@ export class UnstructuredLoader<
         await Promise.all(this.filePath.map((fp) => this._partition(fp)))
       ).flat();
     } else {
-      elements = await this._partition(this.filePath);
+      elements = await this._partition(this.filePath ?? this.fileName ?? "");
     }
 
     const documents: DocumentInterface<Metadata>[] = [];

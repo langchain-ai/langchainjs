@@ -40,7 +40,7 @@ test("can process a .txt file buffer", async () => {
   const txtFileBuffer = await fs.promises.readFile(TXT_PATH);
   const loader = new UnstructuredLoader({
     buffer: txtFileBuffer,
-    filePath: TXT_FILE_NAME,
+    fileName: TXT_FILE_NAME,
   });
 
   const documents = await loader.load();
@@ -82,7 +82,7 @@ test("can process a .md file buffer", async () => {
   const mdFileBuffer = await fs.promises.readFile(MD_PATH);
   const loader = new UnstructuredLoader({
     buffer: mdFileBuffer,
-    filePath: MD_FILE_NAME,
+    fileName: MD_FILE_NAME,
   });
 
   const documents = await loader.load();
@@ -130,7 +130,7 @@ test("can process a .pdf file buffer", async () => {
   const pdfFileBuffer = await fs.promises.readFile(PDF_PATH);
   const loader = new UnstructuredLoader({
     buffer: pdfFileBuffer,
-    filePath: PDF_FILE_NAME,
+    fileName: PDF_FILE_NAME,
   });
 
   const documents = await loader.load();
@@ -178,3 +178,52 @@ test("enableLogs false overrides sdk console.info calls", async () => {
 
   expect(mockInfo).not.toHaveBeenCalled();
 });
+
+// Skipping because this test loads a rather large doc which takes a while.
+test.skip("Test Unstructured base loader with extractImageBlockTypes", async () => {
+  const options = {
+    extractImageBlockTypes: ["image"],
+    splitPdfConcurrencyLevel: 15,
+  };
+
+  const loader = new UnstructuredLoader(
+    {
+      filePath: "src/tests/data/1706.03762.pdf",
+    },
+    options
+  );
+  const docs = await loader.load();
+
+  expect(docs.length).toBeGreaterThan(10);
+  expect(
+    docs.some((item) => item?.metadata?.category.toLowerCase() === "image")
+  ).toBe(true);
+});
+
+/**
+ * TODO @brace implement once `DirectoryLoader` is moved to core.
+ */
+
+// Skipping because this test loads all files in the data directory which takes a while.
+// test.skip("Test Unstructured directory loader", async () => {
+//   const directoryPath = path.resolve(
+//     path.dirname(url.fileURLToPath(import.meta.url)),
+//     "src/tests/data"
+//   );
+
+//   const options = {
+//     apiKey: process.env.UNSTRUCTURED_API_KEY!,
+//     strategy: "fast",
+//   };
+
+//   const loader = new UnstructuredDirectoryLoader(
+//     directoryPath,
+//     options,
+//     true,
+//     UnknownHandling.Ignore
+//   );
+//   const docs = await loader.load();
+
+//   expect(docs.length).toBeGreaterThan(100);
+//   expect(typeof docs[0].pageContent).toBe("string");
+// });
