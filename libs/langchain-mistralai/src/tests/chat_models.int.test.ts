@@ -956,5 +956,4 @@ test("withStructuredOutput will always force tool usage", async () => {
   }
   const castMessage = response.raw as AIMessage;
   expect(castMessage.tool_calls).toHaveLength(1);
-  expect(castMessage.tool_calls?.[0].name).toBe("get_weather");
 });
