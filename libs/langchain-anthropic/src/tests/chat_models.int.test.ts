@@ -11,6 +11,7 @@ import {
   SystemMessagePromptTemplate,
 } from "@langchain/core/prompts";
 import { CallbackManager } from "@langchain/core/callbacks/manager";
+import { concat } from "@langchain/core/utils/stream";
 import { ChatAnthropic } from "../chat_models.js";
 
 test("Test ChatAnthropic", async () => {
@@ -20,7 +21,7 @@ test("Test ChatAnthropic", async () => {
   });
   const message = new HumanMessage("Hello!");
   const res = await chat.invoke([message]);
-  console.log({ res });
+  // console.log({ res });
   expect(res.response_metadata.usage).toBeDefined();
 });
 
@@ -34,11 +35,13 @@ test("Test ChatAnthropic Generate", async () => {
   expect(res.generations.length).toBe(2);
   for (const generation of res.generations) {
     expect(generation.length).toBe(1);
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     for (const message of generation) {
-      console.log(message.text);
+      // console.log(message.text);
     }
   }
-  console.log({ res });
+  // console.log({ res });
 });
 
 test.skip("Test ChatAnthropic Generate w/ ClientOptions", async () => {
@@ -56,11 +59,13 @@ test.skip("Test ChatAnthropic Generate w/ ClientOptions", async () => {
   expect(res.generations.length).toBe(2);
   for (const generation of res.generations) {
     expect(generation.length).toBe(1);
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     for (const message of generation) {
-      console.log(message.text);
+      // console.log(message.text);
     }
   }
-  console.log({ res });
+  // console.log({ res });
 });
 
 test("Test ChatAnthropic Generate with a signal in call options", async () => {
@@ -89,11 +94,13 @@ test("Test ChatAnthropic tokenUsage with a batch", async () => {
     maxRetries: 0,
     modelName: "claude-3-sonnet-20240229",
   });
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res = await model.generate([
     [new HumanMessage(`Hello!`)],
     [new HumanMessage(`Hi!`)],
   ]);
-  console.log({ res });
+  // console.log({ res });
 });
 
 test("Test ChatAnthropic in streaming mode", async () => {
@@ -113,7 +120,7 @@ test("Test ChatAnthropic in streaming mode", async () => {
   });
   const message = new HumanMessage("Hello!");
   const res = await model.invoke([message]);
-  console.log({ res });
+  // console.log({ res });
 
   expect(nrNewTokens > 0).toBe(true);
   expect(res.content).toBe(streamedCompletion);
@@ -148,7 +155,7 @@ test("Test ChatAnthropic in streaming mode with a signal", async () => {
     return res;
   }).rejects.toThrow();
 
-  console.log({ nrNewTokens, streamedCompletion });
+  // console.log({ nrNewTokens, streamedCompletion });
 }, 5000);
 
 test.skip("Test ChatAnthropic prompt value", async () => {
@@ -160,11 +167,13 @@ test.skip("Test ChatAnthropic prompt value", async () => {
   const res = await chat.generatePrompt([new ChatPromptValue([message])]);
   expect(res.generations.length).toBe(1);
   for (const generation of res.generations) {
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     for (const g of generation) {
-      console.log(g.text);
+      // console.log(g.text);
     }
   }
-  console.log({ res });
+  // console.log({ res });
 });
 
 test.skip("ChatAnthropic, docs, prompt templates", async () => {
@@ -183,6 +192,8 @@ test.skip("ChatAnthropic, docs, prompt templates", async () => {
     HumanMessagePromptTemplate.fromTemplate("{text}"),
   ]);
 
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const responseA = await chat.generatePrompt([
     await chatPrompt.formatPromptValue({
       input_language: "English",
@@ -191,7 +202,7 @@ test.skip("ChatAnthropic, docs, prompt templates", async () => {
     }),
   ]);
 
-  console.log(responseA.generations);
+  // console.log(responseA.generations);
 });
 
 test.skip("ChatAnthropic, longer chain of messages", async () => {
@@ -207,13 +218,15 @@ test.skip("ChatAnthropic, longer chain of messages", async () => {
     HumanMessagePromptTemplate.fromTemplate("{text}"),
   ]);
 
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const responseA = await chat.generatePrompt([
     await chatPrompt.formatPromptValue({
       text: "What did I just say my name was?",
     }),
   ]);
 
-  console.log(responseA.generations);
+  // console.log(responseA.generations);
 });
 
 test.skip("ChatAnthropic, Anthropic apiUrl set manually via constructor", async () => {
@@ -225,8 +238,10 @@ test.skip("ChatAnthropic, Anthropic apiUrl set manually via constructor", async 
     anthropicApiUrl,
   });
   const message = new HumanMessage("Hello!");
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res = await chat.call([message]);
-  console.log({ res });
+  // console.log({ res });
 });
 
 test("Test ChatAnthropic stream method", async () => {
@@ -238,7 +253,6 @@ test("Test ChatAnthropic stream method", async () => {
   const stream = await model.stream("Print hello world.");
   const chunks = [];
   for await (const chunk of stream) {
-    console.log(chunk);
     chunks.push(chunk);
   }
   expect(chunks.length).toBeGreaterThan(1);
@@ -257,8 +271,10 @@ test("Test ChatAnthropic stream method with abort", async () => {
         signal: AbortSignal.timeout(1000),
       }
     );
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     for await (const chunk of stream) {
-      console.log(chunk);
+      // console.log(chunk);
     }
   }).rejects.toThrow();
 });
@@ -273,8 +289,10 @@ test("Test ChatAnthropic stream method with early break", async () => {
     "How is your day going? Be extremely verbose."
   );
   let i = 0;
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   for await (const chunk of stream) {
-    console.log(chunk);
+    // console.log(chunk);
     i += 1;
     if (i > 10) {
       break;
@@ -294,8 +312,10 @@ test("Test ChatAnthropic headers passed through", async () => {
     },
   });
   const message = new HumanMessage("Hello!");
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res = await chat.invoke([message]);
-  console.log({ res });
+  // console.log({ res });
 });
 
 test("Test ChatAnthropic multimodal", async () => {
@@ -303,6 +323,8 @@ test("Test ChatAnthropic multimodal", async () => {
     modelName: "claude-3-sonnet-20240229",
     maxRetries: 0,
   });
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res = await chat.invoke([
     new HumanMessage({
       content: [
@@ -316,7 +338,7 @@ test("Test ChatAnthropic multimodal", async () => {
       ],
     }),
   ]);
-  console.log(res);
+  // console.log(res);
 });
 
 test("Stream tokens", async () => {
@@ -335,7 +357,7 @@ test("Stream tokens", async () => {
       res = res.concat(chunk);
     }
   }
-  console.log(res);
+  // console.log(res);
   expect(res?.usage_metadata).toBeDefined();
   if (!res?.usage_metadata) {
     return;
@@ -345,4 +367,23 @@ test("Stream tokens", async () => {
   expect(res.usage_metadata.total_tokens).toBe(
     res.usage_metadata.input_tokens + res.usage_metadata.output_tokens
   );
+});
+
+test("id is supplied when invoking", async () => {
+  const model = new ChatAnthropic();
+  const result = await model.invoke("Hello");
+  expect(result.id).toBeDefined();
+  expect(result.id).not.toEqual("");
+});
+
+test("id is supplied when streaming", async () => {
+  const model = new ChatAnthropic();
+  let finalChunk: AIMessageChunk | undefined;
+  for await (const chunk of await model.stream("Hello")) {
+    finalChunk = !finalChunk ? chunk : concat(finalChunk, chunk);
+  }
+  expect(finalChunk).toBeDefined();
+  if (!finalChunk) return;
+  expect(finalChunk.id).toBeDefined();
+  expect(finalChunk.id).not.toEqual("");
 });

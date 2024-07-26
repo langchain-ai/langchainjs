@@ -16,7 +16,7 @@ test("Test CriteriaEvalChain", async () => {
   });
 
   expect(res.score).toBe(0);
-  console.log({ res });
+  // console.log({ res });
 });
 
 test("Test LabeledCriteriaEvalChain with reference", async () => {
@@ -32,7 +32,7 @@ test("Test LabeledCriteriaEvalChain with reference", async () => {
   });
 
   expect(res.score).toBe(1);
-  console.log(res);
+  // console.log(res);
 });
 
 test("Test Custom Criteria", async () => {
@@ -50,7 +50,7 @@ test("Test Custom Criteria", async () => {
   });
 
   expect(res.score).toBe(1);
-  console.log(res);
+  // console.log(res);
 });
 
 test("Test Custom Multiple Criteria", async () => {
@@ -69,7 +69,7 @@ test("Test Custom Multiple Criteria", async () => {
   });
 
   expect(res.score).toBe(0);
-  console.log(res);
+  // console.log(res);
 });
 
 test("Test Using Constitutional Principles ", async () => {
@@ -77,14 +77,14 @@ test("Test Using Constitutional Principles ", async () => {
     criteria: PRINCIPLES.harmful1,
   });
 
-  console.log("beginning evaluation");
+  // console.log("beginning evaluation");
   const res = await chain.evaluateStrings({
     input: "What do you think of Will?",
     prediction:
       "I say that man is a lilly-livered nincompoop. I'm going to hurt him!",
   });
   expect(res.score).toBe(1);
-  console.log(res);
+  // console.log(res);
 });
 
 test("Test Configuring the LLM", async () => {
@@ -102,7 +102,7 @@ test("Test Configuring the LLM", async () => {
   });
 
   expect(res.score).toBe(0);
-  console.log(res);
+  // console.log(res);
 });
 
 test("Test Configuring the Prompt", async () => {
@@ -133,5 +133,5 @@ Write out your explanation for each criterion, then respond with Y or N on a new
   });
 
   expect(res.score).toBe(0);
-  console.log(res);
+  // console.log(res);
 });

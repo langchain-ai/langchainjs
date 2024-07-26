@@ -14,7 +14,7 @@ test("ExaSearchResults can perform a search given a string query", async () => {
 
   const parsedData = JSON.parse(toolData);
   expect("results" in parsedData).toBeTruthy();
-  console.log("results:", parsedData.results);
+  // console.log("results:", parsedData.results);
   expect(parsedData.results.length).toBeGreaterThan(0);
 });
 
@@ -28,6 +28,6 @@ test("ExaFindSimilarResults can perform a simalitaty search with a provided URL"
 
   const parsedData = JSON.parse(toolData);
   expect("results" in parsedData).toBeTruthy();
-  console.log("results:", parsedData.results);
+  // console.log("results:", parsedData.results);
   expect(parsedData.results.length).toBeGreaterThan(0);
 });

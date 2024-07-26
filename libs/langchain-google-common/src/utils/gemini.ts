@@ -2,7 +2,7 @@ import { v4 as uuidv4 } from "uuid";
 import {
   AIMessage,
   AIMessageChunk,
-  AIMessageFields,
+  AIMessageChunkFields,
   BaseMessage,
   BaseMessageChunk,
   BaseMessageFields,
@@ -21,6 +21,7 @@ import {
   ChatResult,
   Generation,
 } from "@langchain/core/outputs";
+import { ToolCallChunk } from "@langchain/core/messages/tool";
 import type {
   GoogleLLMResponse,
   GoogleAIModelParams,
@@ -565,7 +566,7 @@ export function chunkToString(chunk: BaseMessageChunk): string {
 }
 
 export function partToMessageChunk(part: GeminiPart): BaseMessageChunk {
-  const fields = partsToBaseMessageFields([part]);
+  const fields = partsToBaseMessageChunkFields([part]);
   if (typeof fields.content === "string") {
     return new AIMessageChunk(fields);
   } else if (fields.content.every((item) => item.type === "text")) {
@@ -597,13 +598,14 @@ export function responseToChatGenerations(
   if (ret.every((item) => typeof item.message.content === "string")) {
     const combinedContent = ret.map((item) => item.message.content).join("");
     const combinedText = ret.map((item) => item.text).join("");
-    const toolCallChunks = ret[
+    const toolCallChunks: ToolCallChunk[] | undefined = ret[
       ret.length - 1
     ]?.message.additional_kwargs?.tool_calls?.map((toolCall, i) => ({
       name: toolCall.function.name,
       args: toolCall.function.arguments,
       id: toolCall.id,
       index: i,
+      type: "tool_call_chunk",
     }));
     let usageMetadata: UsageMetadata | undefined;
     if ("usageMetadata" in response.data) {
@@ -634,12 +636,15 @@ export function responseToBaseMessageFields(
   response: GoogleLLMResponse
 ): BaseMessageFields {
   const parts = responseToParts(response);
-  return partsToBaseMessageFields(parts);
+  return partsToBaseMessageChunkFields(parts);
 }
 
-export function partsToBaseMessageFields(parts: GeminiPart[]): AIMessageFields {
-  const fields: AIMessageFields = {
+export function partsToBaseMessageChunkFields(
+  parts: GeminiPart[]
+): AIMessageChunkFields {
+  const fields: AIMessageChunkFields = {
     content: partsToMessageContent(parts),
+    tool_call_chunks: [],
     tool_calls: [],
     invalid_tool_calls: [],
   };
@@ -648,19 +653,28 @@ export function partsToBaseMessageFields(parts: GeminiPart[]): AIMessageFields {
   if (rawTools.length > 0) {
     const tools = toolsRawToTools(rawTools);
     for (const tool of tools) {
+      fields.tool_call_chunks?.push({
+        name: tool.function.name,
+        args: tool.function.arguments,
+        id: tool.id,
+        type: "tool_call_chunk",
+      });
+
       try {
         fields.tool_calls?.push({
           name: tool.function.name,
           args: JSON.parse(tool.function.arguments),
           id: tool.id,
+          type: "tool_call",
         });
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (e: any) {
         fields.invalid_tool_calls?.push({
           name: tool.function.name,
-          args: JSON.parse(tool.function.arguments),
+          args: tool.function.arguments,
           id: tool.id,
           error: e.message,
+          type: "invalid_tool_call",
         });
       }
     }

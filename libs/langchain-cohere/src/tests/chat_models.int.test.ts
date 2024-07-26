@@ -12,7 +12,7 @@ import { ChatCohere } from "../chat_models.js";
 test("ChatCohere can invoke", async () => {
   const model = new ChatCohere();
   const response = await model.invoke([new HumanMessage("Hello world")]);
-  console.log(response.additional_kwargs);
+  // console.log(response.additional_kwargs);
   expect(response.content).toBeTruthy();
   expect(response.additional_kwargs).toBeTruthy();
 });
@@ -22,7 +22,7 @@ test("ChatCohere can invoke", async () => {
 test("ChatCohere can count tokens", async () => {
   const model = new ChatCohere();
   const response = await model.generate([[new HumanMessage("Hello world")]]);
-  console.log(response);
+  // console.log(response);
   expect(response.llmOutput?.estimatedTokenUsage).toBeTruthy();
   expect(
     response.llmOutput?.estimatedTokenUsage.completionTokens
@@ -44,7 +44,7 @@ test("ChatCohere can stream", async () => {
   for await (const streamItem of stream) {
     tokens += streamItem.content;
     streamIters += 1;
-    console.log(tokens);
+    // console.log(tokens);
   }
   expect(streamIters).toBeGreaterThan(1);
 });
@@ -82,7 +82,7 @@ test("Stream token count usage_metadata", async () => {
     }
     lastRes = chunk;
   }
-  console.log(res);
+  // console.log(res);
   expect(res?.usage_metadata).toBeDefined();
   if (!res?.usage_metadata) {
     return;
@@ -117,7 +117,7 @@ test("streamUsage excludes token usage", async () => {
     }
     lastRes = chunk;
   }
-  console.log(res);
+  // console.log(res);
   expect(res?.usage_metadata).not.toBeDefined();
   if (res?.usage_metadata) {
     return;
@@ -135,7 +135,7 @@ test("Invoke token count usage_metadata", async () => {
     temperature: 0,
   });
   const res = await model.invoke("Why is the sky blue? Be concise.");
-  console.log(res);
+  // console.log(res);
   expect(res?.usage_metadata).toBeDefined();
   if (!res?.usage_metadata) {
     return;
@@ -172,7 +172,7 @@ test("Test model tool calling", async () => {
     ),
   ];
   const res = await modelWithTools.invoke(messages);
-  console.log(res);
+  // console.log(res);
   expect(res?.usage_metadata).toBeDefined();
   if (!res?.usage_metadata) {
     return;
@@ -192,7 +192,7 @@ test("Test model tool calling", async () => {
     )
   );
   const resWithToolResults = await modelWithTools.invoke(messages);
-  console.log(resWithToolResults);
+  // console.log(resWithToolResults);
   expect(resWithToolResults?.usage_metadata).toBeDefined();
   if (!resWithToolResults?.usage_metadata) {
     return;

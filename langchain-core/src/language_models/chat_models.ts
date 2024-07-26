@@ -33,7 +33,7 @@ import {
 } from "../callbacks/manager.js";
 import type { RunnableConfig } from "../runnables/config.js";
 import type { BaseCache } from "../caches/base.js";
-import { StructuredToolInterface } from "../tools.js";
+import { StructuredToolInterface } from "../tools/index.js";
 import {
   Runnable,
   RunnableLambda,
@@ -45,6 +45,9 @@ import { isLogStreamHandler } from "../tracers/log_stream.js";
 import { concat } from "../utils/stream.js";
 import { RunnablePassthrough } from "../runnables/passthrough.js";
 import { isZodSchema } from "../utils/types/is_zod_schema.js";
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type ToolChoice = string | Record<string, any> | "auto" | "any";
 
 /**
  * Represents a serialized chat model.
@@ -73,7 +76,23 @@ export type BaseChatModelParams = BaseLanguageModelParams;
 /**
  * Represents the call options for a base chat model.
  */
-export type BaseChatModelCallOptions = BaseLanguageModelCallOptions;
+export type BaseChatModelCallOptions = BaseLanguageModelCallOptions & {
+  /**
+   * Specifies how the chat model should use tools.
+   * @default undefined
+   *
+   * Possible values:
+   * - "auto": The model may choose to use any of the provided tools, or none.
+   * - "any": The model must use one of the provided tools.
+   * - "none": The model must not use any tools.
+   * - A string (not "auto", "any", or "none"): The name of a specific tool the model must use.
+   * - An object: A custom schema specifying tool choice parameters. Specific to the provider.
+   *
+   * Note: Not all providers support tool_choice. An error will be thrown
+   * if used with an unsupported model.
+   */
+  tool_choice?: ToolChoice;
+};
 
 /**
  * Creates a transform stream for encoding chat message chunks.

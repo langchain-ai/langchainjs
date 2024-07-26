@@ -111,8 +111,8 @@ describe("mergeMessageRuns", () => {
           { type: "text", text: "my favorite dish is lasagna" },
         ],
         tool_calls: [
-          { name: "blah_tool", args: { x: 2 }, id: "123" },
-          { name: "blah_tool", args: { x: -10 }, id: "456" },
+          { name: "blah_tool", args: { x: 2 }, id: "123", type: "tool_call" },
+          { name: "blah_tool", args: { x: -10 }, id: "456", type: "tool_call" },
         ],
         id: "baz",
       }),

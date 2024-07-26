@@ -16,8 +16,10 @@ test.skip("Test Blockchain NFT Metadata Loader", async () => {
     },
   });
 
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const response = await nftMetadataLoader.load();
-  console.log(response);
+  // console.log(response);
 });
 
 test.skip("Test Blockchain Latest Transactions Loader", async () => {
@@ -31,8 +33,10 @@ test.skip("Test Blockchain Latest Transactions Loader", async () => {
     },
   });
 
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const response = await latestTransactionsLoader.load();
-  console.log(response);
+  // console.log(response);
 });
 
 test.skip("Test Blockchain SQL Query Loader", async () => {
@@ -41,6 +45,8 @@ test.skip("Test Blockchain SQL Query Loader", async () => {
     query: `SELECT * FROM ethereum.nft_metadata WHERE contract_address = '${contractAddress}' AND token_id = 1 LIMIT 1`,
   });
 
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const response = await sqlQueryLoader.load();
-  console.log(response);
+  // console.log(response);
 });

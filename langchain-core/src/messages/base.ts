@@ -36,7 +36,8 @@ export type MessageType =
   | "generic"
   | "system"
   | "function"
-  | "tool";
+  | "tool"
+  | "remove";
 
 export type ImageDetail = "auto" | "low" | "high";
 
@@ -127,12 +128,44 @@ export function mergeContent(
     }
     // If both are arrays
   } else if (Array.isArray(secondContent)) {
-    return [...firstContent, ...secondContent];
-    // If the first content is a list and second is a string
+    return (
+      _mergeLists(firstContent, secondContent) ?? [
+        ...firstContent,
+        ...secondContent,
+      ]
+    );
   } else {
     // Otherwise, add the second content as a new element of the list
     return [...firstContent, { type: "text", text: secondContent }];
   }
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function stringifyWithDepthLimit(obj: any, depthLimit: number): string {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  function helper(obj: any, currentDepth: number): any {
+    if (typeof obj !== "object" || obj === null || obj === undefined) {
+      return obj;
+    }
+    if (currentDepth >= depthLimit) {
+      if (Array.isArray(obj)) {
+        return "[Array]";
+      }
+      return "[Object]";
+    }
+
+    if (Array.isArray(obj)) {
+      return obj.map((item) => helper(item, currentDepth + 1));
+    }
+
+    const result: Record<string, unknown> = {};
+    for (const key of Object.keys(obj)) {
+      result[key] = helper(obj[key], currentDepth + 1);
+    }
+    return result;
+  }
+
+  return JSON.stringify(helper(obj, 0), null, 2);
 }
 
 /**
@@ -222,6 +255,39 @@ export abstract class BaseMessage
         .kwargs as StoredMessageData,
     };
   }
+
+  static lc_name() {
+    return "BaseMessage";
+  }
+
+  // Can't be protected for silly reasons
+  get _printableFields(): Record<string, unknown> {
+    return {
+      id: this.id,
+      content: this.content,
+      name: this.name,
+      additional_kwargs: this.additional_kwargs,
+      response_metadata: this.response_metadata,
+    };
+  }
+
+  get [Symbol.toStringTag]() {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (this.constructor as any).lc_name();
+  }
+
+  // Override the default behavior of console.log
+  [Symbol.for("nodejs.util.inspect.custom")](depth: number | null) {
+    if (depth === null) {
+      return this;
+    }
+    const printable = stringifyWithDepthLimit(
+      this._printableFields,
+      Math.max(4, depth)
+    );
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return `${(this.constructor as any).lc_name()} ${printable}`;
+  }
 }
 
 // TODO: Deprecate when SDK typing is updated
@@ -259,8 +325,12 @@ export function _mergeDicts(
         `field[${key}] already exists in the message chunk, but with a different type.`
       );
     } else if (typeof merged[key] === "string") {
-      merged[key] = (merged[key] as string) + value;
-    } else if (!Array.isArray(merged[key]) && typeof merged[key] === "object") {
+      if (key === "type") {
+        // Do not merge 'type' fields
+        continue;
+      }
+      merged[key] += value;
+    } else if (typeof merged[key] === "object" && !Array.isArray(merged[key])) {
       merged[key] = _mergeDicts(merged[key], value);
     } else if (Array.isArray(merged[key])) {
       merged[key] = _mergeLists(merged[key], value);
@@ -297,6 +367,13 @@ export function _mergeLists(left?: any[], right?: any[]) {
         } else {
           merged.push(item);
         }
+      } else if (
+        typeof item === "object" &&
+        "text" in item &&
+        item.text === ""
+      ) {
+        // No-op - skip empty text blocks
+        continue;
       } else {
         merged.push(item);
       }

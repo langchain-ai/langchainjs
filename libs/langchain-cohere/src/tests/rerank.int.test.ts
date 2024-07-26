@@ -27,7 +27,7 @@ test("CohereRerank can indeed rerank documents with compressDocuments method", a
     documents,
     query
   );
-  console.log(rerankedDocuments);
+  // console.log(rerankedDocuments);
   expect(rerankedDocuments).toHaveLength(3);
 });
 
@@ -41,6 +41,6 @@ test("CohereRerank can indeed rerank documents with rerank method", async () => 
     documents.map((doc) => doc.pageContent),
     query
   );
-  console.log(rerankedDocuments);
+  // console.log(rerankedDocuments);
   expect(rerankedDocuments).toHaveLength(3);
 });

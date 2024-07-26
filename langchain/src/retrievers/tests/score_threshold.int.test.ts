@@ -43,7 +43,7 @@ test("ConversationalRetrievalQAChain.fromLLM should use its vector store recursi
     question: "Buildings are made out of what?",
   });
 
-  console.log("response:", res);
+  // console.log("response:", res);
 
   expect(res).toEqual(
     expect.objectContaining({

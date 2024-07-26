@@ -5,6 +5,24 @@ import { AIMessageChunk } from "@langchain/core/messages";
 import { AzureChatOpenAI } from "../../azure/chat_models.js";
 import { ChatOpenAICallOptions } from "../../chat_models.js";
 
+beforeAll(() => {
+  if (!process.env.AZURE_OPENAI_API_KEY) {
+    process.env.AZURE_OPENAI_API_KEY = process.env.TEST_AZURE_OPENAI_API_KEY;
+  }
+  if (!process.env.AZURE_OPENAI_API_DEPLOYMENT_NAME) {
+    process.env.AZURE_OPENAI_API_DEPLOYMENT_NAME =
+      process.env.TEST_AZURE_OPENAI_API_DEPLOYMENT_NAME;
+  }
+  if (!process.env.AZURE_OPENAI_BASE_PATH) {
+    process.env.AZURE_OPENAI_BASE_PATH =
+      process.env.TEST_AZURE_OPENAI_BASE_PATH;
+  }
+  if (!process.env.AZURE_OPENAI_API_VERSION) {
+    process.env.AZURE_OPENAI_API_VERSION =
+      process.env.TEST_AZURE_OPENAI_API_VERSION;
+  }
+});
+
 class AzureChatOpenAIStandardIntegrationTests extends ChatModelIntegrationTests<
   ChatOpenAICallOptions,
   AIMessageChunk
@@ -20,19 +38,28 @@ class AzureChatOpenAIStandardIntegrationTests extends ChatModelIntegrationTests<
     });
   }
 
-  async testToolMessageHistoriesListContent() {
-    this.skipTestMessage(
-      "testToolMessageHistoriesListContent",
-      "AzureChatOpenAI",
-      "Not properly implemented."
-    );
-  }
-
   async testUsageMetadataStreaming() {
     this.skipTestMessage(
       "testUsageMetadataStreaming",
       "AzureChatOpenAI",
       "Streaming tokens is not currently supported."
+    );
+  }
+
+  async testStreamTokensWithToolCalls() {
+    this.skipTestMessage(
+      "testStreamTokensWithToolCalls",
+      "AzureChatOpenAI",
+      "Streaming tokens is not currently supported."
+    );
+  }
+
+  async testInvokeMoreComplexTools() {
+    this.skipTestMessage(
+      "testInvokeMoreComplexTools",
+      "AzureChatOpenAI",
+      "AzureChatOpenAI does not support tool schemas which contain object with unknown/any parameters." +
+        "AzureChatOpenAI only supports objects in schemas when the parameters are defined."
     );
   }
 }

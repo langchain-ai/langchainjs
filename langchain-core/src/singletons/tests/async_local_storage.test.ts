@@ -140,7 +140,6 @@ test("Runnable streamEvents method with streaming nested in a RunnableLambda", a
   AsyncLocalStorageProviderSingleton.initializeGlobalInstance(
     new AsyncLocalStorage()
   );
-  const asyncLocalStorage = AsyncLocalStorageProviderSingleton.getInstance();
   const chat = new FakeListChatModel({
     responses: ["Hello"],
   });
@@ -150,7 +149,7 @@ test("Runnable streamEvents method with streaming nested in a RunnableLambda", a
   const dummyHandler = new FakeCallbackHandler();
   const myFunc = async (input: string) => {
     const outerCallbackManager = await getCallbackManagerForConfig(
-      asyncLocalStorage.getStore()
+      AsyncLocalStorageProviderSingleton.getRunnableConfig()
     );
     expect(outerCallbackManager?.getParentRunId()).toEqual(outerRunId);
 
@@ -167,7 +166,7 @@ test("Runnable streamEvents method with streaming nested in a RunnableLambda", a
     const nestedLambdaWithoutOverriddenCallbacks = RunnableLambda.from(
       async (_: string, config) => {
         const innerCallbackManager = await getCallbackManagerForConfig(
-          asyncLocalStorage.getStore()
+          AsyncLocalStorageProviderSingleton.getRunnableConfig()
         );
         expect(innerCallbackManager?.getParentRunId()).toEqual(innerRunId2);
         expect(config?.callbacks?.handlers).toContain(dummyHandler);

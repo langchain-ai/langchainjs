@@ -6,6 +6,7 @@ import { test, expect } from "@jest/globals";
 import { HumanMessage } from "@langchain/core/messages";
 import { AgentExecutor, createToolCallingAgent } from "langchain/agents";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
+import { concat } from "@langchain/core/utils/stream";
 import { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { BedrockChat as BedrockChatWeb } from "../bedrock/web.js";
@@ -185,7 +186,7 @@ async function testChatModel(
     });
 
     const res = await bedrock.invoke([new HumanMessage(message)]);
-    console.log(res, res.content);
+    // console.log(res, res.content);
 
     expect(res).toBeDefined();
     if (trace && guardrailIdentifier && guardrailVersion) {
@@ -254,7 +255,7 @@ async function testChatStreamingModel(
     ]);
     const chunks = [];
     for await (const chunk of stream) {
-      console.log(chunk);
+      // console.log(chunk);
       chunks.push(chunk);
     }
     expect(chunks.length).toBeGreaterThan(1);
@@ -305,8 +306,8 @@ async function testChatHandleLLMNewToken(
           handleLLMNewToken: (token) => {
             tokens.push(token);
           },
-          handleLLMEnd(output) {
-            console.log(output);
+          handleLLMEnd(_output) {
+            // console.log(output);
           },
         },
       ],
@@ -354,10 +355,12 @@ test.skip("Tool calling agent with Anthropic", async () => {
     tools,
   });
   const input = "what is the current weather in SF?";
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const result = await agentExecutor.invoke({
     input,
   });
-  console.log(result);
+  // console.log(result);
 });
 
 test.skip.each([
@@ -381,7 +384,7 @@ test.skip.each([
   });
 
   const res = await bedrock.invoke([new HumanMessage("What is your name?")]);
-  console.log(res);
+  // console.log(res);
 
   expect(res.content.length).toBeGreaterThan(1);
 });
@@ -439,7 +442,7 @@ test.skip(".bind tools", async () => {
   const response = await modelWithTools.invoke(
     "Whats the weather like in san francisco?"
   );
-  console.log(response);
+  // console.log(response);
   if (!response.tool_calls?.[0]) {
     throw new Error("No tool calls found in response");
   }
@@ -478,10 +481,53 @@ test.skip(".bindTools with openai tool format", async () => {
   const response = await modelWithTools.invoke(
     "Whats the weather like in san francisco?"
   );
-  console.log(response);
+  // console.log(response);
   if (!response.tool_calls?.[0]) {
     throw new Error("No tool calls found in response");
   }
   const { tool_calls } = response;
   expect(tool_calls[0].name.toLowerCase()).toBe("weather_tool");
+});
+
+test("Streaming tool calls with Anthropic", async () => {
+  const weatherTool = z
+    .object({
+      city: z.string().describe("The city to get the weather for"),
+      state: z.string().describe("The state to get the weather for").optional(),
+    })
+    .describe("Get the weather for a city");
+  const model = new BedrockChatWeb({
+    region: process.env.BEDROCK_AWS_REGION,
+    model: "anthropic.claude-3-sonnet-20240229-v1:0",
+    maxRetries: 0,
+    credentials: {
+      secretAccessKey: process.env.BEDROCK_AWS_SECRET_ACCESS_KEY!,
+      accessKeyId: process.env.BEDROCK_AWS_ACCESS_KEY_ID!,
+    },
+  });
+  const modelWithTools = model.bind({
+    tools: [
+      {
+        name: "weather_tool",
+        description: weatherTool.description,
+        input_schema: zodToJsonSchema(weatherTool),
+      },
+    ],
+  });
+  const stream = await modelWithTools.stream(
+    "Whats the weather like in san francisco?"
+  );
+  let finalChunk;
+  for await (const chunk of stream) {
+    if (finalChunk !== undefined) {
+      finalChunk = concat(finalChunk, chunk);
+    } else {
+      finalChunk = chunk;
+    }
+  }
+  if (finalChunk?.tool_calls?.[0] === undefined) {
+    throw new Error("No tool calls found in response");
+  }
+  expect(finalChunk?.tool_calls?.[0].name).toBe("weather_tool");
+  expect(finalChunk?.tool_calls?.[0].args?.city).toBeDefined();
 });

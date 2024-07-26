@@ -23,6 +23,6 @@ test("Regex can find links in md files", () => {
   structured outputs from models more generally.`;
 
   const links = extractLinks(mdWithLinks);
-  console.log(links);
+  // console.log(links);
   expect(links).toEqual([link1, link2, link3]);
 });

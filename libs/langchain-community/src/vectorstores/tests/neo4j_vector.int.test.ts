@@ -711,8 +711,8 @@ describe("Neo4j Vector", () => {
         }
       }
 
-      console.log("OUTPUT:", output);
-      console.log("EXPECTED OUTPUT:", expectedOutput);
+      // console.log("OUTPUT:", output);
+      // console.log("EXPECTED OUTPUT:", expectedOutput);
 
       expect(output.length).toEqual(expectedOutput.length);
       expect(output).toEqual(expect.arrayContaining(expectedOutput));

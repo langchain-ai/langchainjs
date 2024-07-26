@@ -1,8 +1,8 @@
-// Make this a type to override ReadableStream's async iterator type in case
-// the popular web-streams-polyfill is imported - the supplied types
 import { AsyncLocalStorageProviderSingleton } from "../singletons/index.js";
 
-// in this case don't quite match.
+// Make this a type to override ReadableStream's async iterator type in case
+// the popular web-streams-polyfill is imported - the supplied types
+// in that case don't quite match.
 export type IterableReadableStreamInterface<T> = ReadableStream<T> &
   AsyncIterable<T>;
 
@@ -202,15 +202,18 @@ export class AsyncGeneratorWithSetup<
     // needs to happen in logical order, ie. in the order in which input to
     // to each generator is available.
     this.setup = new Promise((resolve, reject) => {
-      const storage = AsyncLocalStorageProviderSingleton.getInstance();
-      void storage.run(params.config, async () => {
-        this.firstResult = params.generator.next();
-        if (params.startSetup) {
-          this.firstResult.then(params.startSetup).then(resolve, reject);
-        } else {
-          this.firstResult.then((_result) => resolve(undefined as S), reject);
-        }
-      });
+      void AsyncLocalStorageProviderSingleton.runWithConfig(
+        params.config,
+        async () => {
+          this.firstResult = params.generator.next();
+          if (params.startSetup) {
+            this.firstResult.then(params.startSetup).then(resolve, reject);
+          } else {
+            this.firstResult.then((_result) => resolve(undefined as S), reject);
+          }
+        },
+        true
+      );
     });
   }
 
@@ -220,10 +223,13 @@ export class AsyncGeneratorWithSetup<
       return this.firstResult;
     }
 
-    const storage = AsyncLocalStorageProviderSingleton.getInstance();
-    return storage.run(this.config, async () => {
-      return this.generator.next(...args);
-    });
+    return AsyncLocalStorageProviderSingleton.runWithConfig(
+      this.config,
+      async () => {
+        return this.generator.next(...args);
+      },
+      true
+    );
   }
 
   async return(
@@ -260,7 +266,10 @@ export async function pipeGeneratorWithSetup<
   startSetup: () => Promise<S>,
   ...args: A
 ) {
-  const gen = new AsyncGeneratorWithSetup({ generator, startSetup });
+  const gen = new AsyncGeneratorWithSetup({
+    generator,
+    startSetup,
+  });
   const setup = await gen.setup;
   return { output: to(gen, setup, ...args), setup };
 }

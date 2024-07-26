@@ -64,7 +64,7 @@ test("Test FaissStore.load and FaissStore.save", async () => {
 
   const tempDirectory = await fs.mkdtemp(path.join(os.tmpdir(), "lcjs-"));
 
-  console.log(tempDirectory);
+  // console.log(tempDirectory);
 
   await vectorStore.save(tempDirectory);
 
@@ -165,7 +165,7 @@ And I did that 4 days ago, when I nominated Circuit Court of Appeals Judge Ketan
 
   const tempDirectory = await fs.mkdtemp(path.join(os.tmpdir(), "lcjs-"));
 
-  console.log(tempDirectory);
+  // console.log(tempDirectory);
 
   await loadedFromPythonVectorStore.save(tempDirectory);
 

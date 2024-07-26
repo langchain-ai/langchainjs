@@ -13,7 +13,6 @@ import {
   BaseLanguageModelInput,
   StructuredOutputMethodOptions,
   ToolDefinition,
-  isOpenAITool,
 } from "@langchain/core/language_models/base";
 import type { z } from "zod";
 import {
@@ -24,9 +23,9 @@ import {
 } from "@langchain/core/runnables";
 import { JsonOutputKeyToolsParser } from "@langchain/core/output_parsers/openai_tools";
 import { BaseLLMOutputParser } from "@langchain/core/output_parsers";
-import { isStructuredTool } from "@langchain/core/utils/function_calling";
 import { AsyncCaller } from "@langchain/core/utils/async_caller";
 import { StructuredToolInterface } from "@langchain/core/tools";
+import { concat } from "@langchain/core/utils/stream";
 import {
   GoogleAIBaseLLMInput,
   GoogleAIModelParams,
@@ -38,6 +37,7 @@ import {
   GoogleAIBaseLanguageModelCallOptions,
 } from "./types.js";
 import {
+  convertToGeminiTools,
   copyAIModelParams,
   copyAndValidateModelParamsInto,
 } from "./utils/common.js";
@@ -58,10 +58,7 @@ import type {
   GeminiFunctionDeclaration,
   GeminiFunctionSchema,
 } from "./types.js";
-import {
-  jsonSchemaToGeminiParameters,
-  zodToGeminiParameters,
-} from "./utils/zod_to_gemini_parameters.js";
+import { zodToGeminiParameters } from "./utils/zod_to_gemini_parameters.js";
 
 class ChatConnection<AuthOptions> extends AbstractGoogleLLMConnection<
   BaseMessage[],
@@ -159,44 +156,6 @@ export interface ChatGoogleBaseInput<AuthOptions>
     GoogleAISafetyParams,
     Pick<GoogleAIBaseLanguageModelCallOptions, "streamUsage"> {}
 
-function convertToGeminiTools(
-  structuredTools: (
-    | StructuredToolInterface
-    | Record<string, unknown>
-    | ToolDefinition
-    | RunnableToolLike
-  )[]
-): GeminiTool[] {
-  return [
-    {
-      functionDeclarations: structuredTools.map(
-        (structuredTool): GeminiFunctionDeclaration => {
-          if (isStructuredTool(structuredTool)) {
-            const jsonSchema = zodToGeminiParameters(structuredTool.schema);
-            return {
-              name: structuredTool.name,
-              description: structuredTool.description,
-              parameters: jsonSchema as GeminiFunctionSchema,
-            };
-          }
-          if (isOpenAITool(structuredTool)) {
-            return {
-              name: structuredTool.function.name,
-              description:
-                structuredTool.function.description ??
-                `A function available to call.`,
-              parameters: jsonSchemaToGeminiParameters(
-                structuredTool.function.parameters
-              ),
-            };
-          }
-          return structuredTool as unknown as GeminiFunctionDeclaration;
-        }
-      ),
-    },
-  ];
-}
-
 /**
  * Integration with a chat model.
  */
@@ -240,6 +199,8 @@ export abstract class ChatGoogleBase<AuthOptions>
   safetyHandler: GoogleAISafetyHandler;
 
   streamUsage = true;
+
+  streaming = false;
 
   protected connection: ChatConnection<AuthOptions>;
 
@@ -345,22 +306,38 @@ export abstract class ChatGoogleBase<AuthOptions>
   async _generate(
     messages: BaseMessage[],
     options: this["ParsedCallOptions"],
-    _runManager: CallbackManagerForLLMRun | undefined
+    runManager: CallbackManagerForLLMRun | undefined
   ): Promise<ChatResult> {
     const parameters = this.invocationParams(options);
+
+    if (this.streaming) {
+      const stream = this._streamResponseChunks(messages, options, runManager);
+      let finalChunk: ChatGenerationChunk | null = null;
+      for await (const chunk of stream) {
+        finalChunk = !finalChunk ? chunk : concat(finalChunk, chunk);
+      }
+      if (!finalChunk) {
+        throw new Error("No chunks were returned from the stream.");
+      }
+      return {
+        generations: [finalChunk],
+      };
+    }
+
     const response = await this.connection.request(
       messages,
       parameters,
       options
     );
     const ret = safeResponseToChatResult(response, this.safetyHandler);
+    await runManager?.handleLLMNewToken(ret.generations[0].text);
     return ret;
   }
 
   async *_streamResponseChunks(
     _messages: BaseMessage[],
     options: this["ParsedCallOptions"],
-    _runManager?: CallbackManagerForLLMRun
+    runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
     // Make the call as a streaming request
     const parameters = this.invocationParams(options);
@@ -402,6 +379,7 @@ export abstract class ChatGoogleBase<AuthOptions>
               }),
             });
       yield chunk;
+      await runManager?.handleLLMNewToken(chunk.text);
     }
   }
 

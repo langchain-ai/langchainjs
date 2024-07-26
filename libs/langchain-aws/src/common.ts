@@ -209,7 +209,29 @@ export function convertToConverseMessages(messages: BaseMessage[]): {
       }
     });
 
-  return { converseMessages, converseSystem };
+  // Combine consecutive user tool result messages into a single message
+  const combinedConverseMessages = converseMessages.reduce<BedrockMessage[]>(
+    (acc, curr) => {
+      const lastMessage = acc[acc.length - 1];
+
+      if (
+        lastMessage &&
+        lastMessage.role === "user" &&
+        lastMessage.content?.some((c) => "toolResult" in c) &&
+        curr.role === "user" &&
+        curr.content?.some((c) => "toolResult" in c)
+      ) {
+        lastMessage.content = lastMessage.content.concat(curr.content);
+      } else {
+        acc.push(curr);
+      }
+
+      return acc;
+    },
+    []
+  );
+
+  return { converseMessages: combinedConverseMessages, converseSystem };
 }
 
 export function isBedrockTool(tool: unknown): tool is BedrockTool {
@@ -258,8 +280,14 @@ export function convertToConverseTools(
   );
 }
 
+export type BedrockConverseToolChoice =
+  | "any"
+  | "auto"
+  | string
+  | BedrockToolChoice;
+
 export function convertToBedrockToolChoice(
-  toolChoice: string | BedrockToolChoice,
+  toolChoice: BedrockConverseToolChoice,
   tools: BedrockTool[]
 ): BedrockToolChoice {
   if (typeof toolChoice === "string") {
@@ -351,6 +379,7 @@ export function convertConverseMessageToLangChainMessage(
           id: c.toolUse.toolUseId,
           name: c.toolUse.name,
           args: c.toolUse.input,
+          type: "tool_call",
         });
       } else if ("text" in c && typeof c.text === "string") {
         content.push({ type: "text", text: c.text });
@@ -374,7 +403,7 @@ export function handleConverseStreamContentBlockDelta(
   if (!contentBlockDelta.delta) {
     throw new Error("No delta found in content block.");
   }
-  if (contentBlockDelta.delta.text) {
+  if (typeof contentBlockDelta.delta.text === "string") {
     return new ChatGenerationChunk({
       text: contentBlockDelta.delta.text,
       message: new AIMessageChunk({
@@ -391,16 +420,18 @@ export function handleConverseStreamContentBlockDelta(
           {
             args: contentBlockDelta.delta.toolUse.input,
             index,
+            type: "tool_call_chunk",
           },
         ],
       }),
     });
   } else {
-    const unsupportedField = Object.entries(contentBlockDelta.delta).filter(
-      ([_, value]) => !!value
-    );
     throw new Error(
-      `Unsupported content block type: ${unsupportedField[0][0]}`
+      `Unsupported content block type(s): ${JSON.stringify(
+        contentBlockDelta.delta,
+        null,
+        2
+      )}`
     );
   }
 }
@@ -419,6 +450,7 @@ export function handleConverseStreamContentBlockStart(
             name: contentBlockStart.start.toolUse.name,
             id: contentBlockStart.start.toolUse.toolUseId,
             index,
+            type: "tool_call_chunk",
           },
         ],
       }),
