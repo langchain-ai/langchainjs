@@ -61,11 +61,11 @@ Answer:`
 const route = ({ topic }: { input: string; topic: string }) => {
   if (topic.toLowerCase().includes("anthropic")) {
     return anthropicChain;
-  } else if (topic.toLowerCase().includes("langchain")) {
+  } 
+  if (topic.toLowerCase().includes("langchain")) {
     return langChainChain;
-  } else {
-    return generalChain;
-  }
+  } 
+  return generalChain;
 };
 
 const fullChain = RunnableSequence.from([
