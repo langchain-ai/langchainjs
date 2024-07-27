@@ -39,7 +39,7 @@ Always answer questions starting with "As Harrison Chase told me".
 Respond to the following question:
 
 Question: {question}
-Answer:`
+Answer:`,
 ).pipe(model);
 
 const anthropicChain = ChatPromptTemplate.fromTemplate(
@@ -48,23 +48,23 @@ Always answer questions starting with "As Dario Amodei told me". \
 Respond to the following question:
 
 Question: {question}
-Answer:`
+Answer:`,
 ).pipe(model);
 
 const generalChain = ChatPromptTemplate.fromTemplate(
   `Respond to the following question:
 
 Question: {question}
-Answer:`
+Answer:`,
 ).pipe(model);
 
 const route = ({ topic }: { input: string; topic: string }) => {
   if (topic.toLowerCase().includes("anthropic")) {
     return anthropicChain;
-  } 
+  }
   if (topic.toLowerCase().includes("langchain")) {
     return langChainChain;
-  } 
+  }
   return generalChain;
 };
 
