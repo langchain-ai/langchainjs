@@ -21,8 +21,10 @@ class ChatGoogleGenerativeAIStandardIntegrationTests extends ChatModelIntegratio
       Cls: ChatGoogleGenerativeAI,
       chatModelHasToolCalling: true,
       chatModelHasStructuredOutput: true,
+      supportsParallelToolCalls: true,
       constructorArgs: {
         maxRetries: 1,
+        model: "gemini-1.5-pro"
       },
     });
   }

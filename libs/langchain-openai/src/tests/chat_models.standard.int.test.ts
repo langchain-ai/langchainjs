@@ -18,6 +18,7 @@ class ChatOpenAIStandardIntegrationTests extends ChatModelIntegrationTests<
       Cls: ChatOpenAI,
       chatModelHasToolCalling: true,
       chatModelHasStructuredOutput: true,
+      supportsParallelToolCalls: true,
       constructorArgs: {
         model: "gpt-3.5-turbo",
       },

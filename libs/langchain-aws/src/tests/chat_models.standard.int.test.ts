@@ -17,6 +17,7 @@ class ChatBedrockConverseStandardIntegrationTests extends ChatModelIntegrationTe
       Cls: ChatBedrockConverse,
       chatModelHasToolCalling: true,
       chatModelHasStructuredOutput: true,
+      supportsParallelToolCalls: true,
       constructorArgs: {
         region,
         model: "anthropic.claude-3-sonnet-20240229-v1:0",

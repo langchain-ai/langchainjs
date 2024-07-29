@@ -19,6 +19,7 @@ class ChatVertexAIStandardIntegrationTests extends ChatModelIntegrationTests<
       Cls: ChatVertexAI,
       chatModelHasToolCalling: true,
       chatModelHasStructuredOutput: true,
+      supportsParallelToolCalls: true,
       invokeResponseType: AIMessageChunk,
       constructorArgs: {
         model: "gemini-1.5-pro",

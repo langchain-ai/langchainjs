@@ -18,6 +18,7 @@ class ChatAnthropicStandardIntegrationTests extends ChatModelIntegrationTests<
       Cls: ChatAnthropic,
       chatModelHasToolCalling: true,
       chatModelHasStructuredOutput: true,
+      supportsParallelToolCalls: true,
       constructorArgs: {
         model: "claude-3-haiku-20240307",
       },

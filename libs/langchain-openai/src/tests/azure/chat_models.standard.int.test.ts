@@ -32,6 +32,7 @@ class AzureChatOpenAIStandardIntegrationTests extends ChatModelIntegrationTests<
       Cls: AzureChatOpenAI,
       chatModelHasToolCalling: true,
       chatModelHasStructuredOutput: true,
+      supportsParallelToolCalls: true,
       constructorArgs: {
         model: "gpt-3.5-turbo",
       },
