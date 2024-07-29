@@ -171,7 +171,10 @@ function _mergeAdjacentMessages(
     if (
       previous.role === current.role &&
       Array.isArray(previous.content) &&
-      Array.isArray(current.content)
+      Array.isArray(current.content) &&
+      // Only concatenate tool results if they are consecutive
+      previous.content[0].type === "tool_result" &&
+      current.content[0].type === "tool_result"
     ) {
       previous.content = previous.content.concat(current.content);
       return acc;
