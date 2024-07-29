@@ -28,7 +28,8 @@
     "gen:supabase": "npx supabase gen types typescript --project-id 'xsqpnijvmbodcxyapnyq' --schema public > ./src/supabase.d.ts",
     "broken-links": "node ./scripts/check-broken-links.js",
     "check:broken-links": "yarn quarto && yarn broken-links",
-    "check:broken-links:ci": "yarn quarto:vercel && yarn broken-links"
+    "check:broken-links:ci": "yarn quarto:vercel && yarn broken-links",
+    "validate": "tsx --experimental-wasm-modules -r dotenv/config ./scripts/validate_notebook.ts"
   },
   "dependencies": {
     "@docusaurus/core": "2.4.3",
@@ -70,8 +71,10 @@
     "rimraf": "^5.0.1",
     "supabase": "^1.148.6",
     "swc-loader": "^0.2.3",
+    "tsx": "^3.12.3",
     "typedoc": "^0.24.4",
     "typedoc-plugin-markdown": "next",
+    "typescript": "~5.1.6",
     "yaml-loader": "^0.8.0"
   },
   "packageManager": "yarn@3.4.1",
