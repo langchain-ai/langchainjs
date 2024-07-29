@@ -16,14 +16,10 @@ export function _makeMessageChunkFromAnthropicEvent(
   fields: {
     streamUsage: boolean;
     coerceContentToString: boolean;
-    usageData: { input_tokens: number; output_tokens: number };
   }
 ): {
   chunk: AIMessageChunk;
-  usageData: { input_tokens: number; output_tokens: number };
 } | null {
-  let usageDataCopy = { ...fields.usageData };
-
   if (data.type === "message_start") {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { content, usage, ...additionalKwargs } = data.message;
@@ -34,43 +30,31 @@ export function _makeMessageChunkFromAnthropicEvent(
         filteredAdditionalKwargs[key] = value;
       }
     }
-    usageDataCopy = usage;
-    let usageMetadata: UsageMetadata | undefined;
-    if (fields.streamUsage) {
-      usageMetadata = {
-        input_tokens: usage.input_tokens,
-        output_tokens: usage.output_tokens,
-        total_tokens: usage.input_tokens + usage.output_tokens,
-      };
-    }
+    const usageMetadata: UsageMetadata = {
+      input_tokens: usage.input_tokens,
+      output_tokens: usage.output_tokens,
+      total_tokens: usage.input_tokens + usage.output_tokens,
+    };
     return {
       chunk: new AIMessageChunk({
         content: fields.coerceContentToString ? "" : [],
         additional_kwargs: filteredAdditionalKwargs,
-        usage_metadata: usageMetadata,
+        usage_metadata: fields.streamUsage ? usageMetadata : undefined,
         id: data.message.id,
       }),
-      usageData: usageDataCopy,
     };
   } else if (data.type === "message_delta") {
-    let usageMetadata: UsageMetadata | undefined;
-    if (fields.streamUsage) {
-      usageMetadata = {
-        input_tokens: data.usage.output_tokens,
-        output_tokens: 0,
-        total_tokens: data.usage.output_tokens,
-      };
-    }
-    if (data?.usage !== undefined) {
-      usageDataCopy.output_tokens += data.usage.output_tokens;
-    }
+    const usageMetadata: UsageMetadata = {
+      input_tokens: 0,
+      output_tokens: data.usage.output_tokens,
+      total_tokens: data.usage.output_tokens,
+    };
     return {
       chunk: new AIMessageChunk({
         content: fields.coerceContentToString ? "" : [],
         additional_kwargs: { ...data.delta },
-        usage_metadata: usageMetadata,
+        usage_metadata: fields.streamUsage ? usageMetadata : undefined,
       }),
-      usageData: usageDataCopy,
     };
   } else if (
     data.type === "content_block_start" &&
@@ -89,7 +73,6 @@ export function _makeMessageChunkFromAnthropicEvent(
             ],
         additional_kwargs: {},
       }),
-      usageData: usageDataCopy,
     };
   } else if (
     data.type === "content_block_delta" &&
@@ -109,7 +92,6 @@ export function _makeMessageChunkFromAnthropicEvent(
               ],
           additional_kwargs: {},
         }),
-        usageData: usageDataCopy,
       };
     }
   } else if (
@@ -129,7 +111,6 @@ export function _makeMessageChunkFromAnthropicEvent(
             ],
         additional_kwargs: {},
       }),
-      usageData: usageDataCopy,
     };
   } else if (
     data.type === "content_block_start" &&
@@ -149,7 +130,6 @@ export function _makeMessageChunkFromAnthropicEvent(
               ],
           additional_kwargs: {},
         }),
-        usageData: usageDataCopy,
       };
     }
   }

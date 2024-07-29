@@ -2,11 +2,7 @@ import { Anthropic, type ClientOptions } from "@anthropic-ai/sdk";
 import type { Stream } from "@anthropic-ai/sdk/streaming";
 
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
-import {
-  AIMessageChunk,
-  type BaseMessage,
-  UsageMetadata,
-} from "@langchain/core/messages";
+import { AIMessageChunk, type BaseMessage } from "@langchain/core/messages";
 import { ChatGenerationChunk, type ChatResult } from "@langchain/core/outputs";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import {
@@ -431,7 +427,6 @@ export class ChatAnthropicMessages<
       ...formattedMessages,
       stream: true,
     });
-    let usageData = { input_tokens: 0, output_tokens: 0 };
 
     for await (const data of stream) {
       if (options.signal?.aborted) {
@@ -442,13 +437,10 @@ export class ChatAnthropicMessages<
       const result = _makeMessageChunkFromAnthropicEvent(data, {
         streamUsage: shouldStreamUsage,
         coerceContentToString,
-        usageData,
       });
       if (!result) continue;
 
-      const { chunk, usageData: updatedUsageData } = result;
-
-      usageData = updatedUsageData;
+      const { chunk } = result;
 
       const newToolCallChunk = extractToolCallChunk(chunk);
 
