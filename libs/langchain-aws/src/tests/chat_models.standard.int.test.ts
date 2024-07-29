@@ -52,6 +52,12 @@ class ChatBedrockConverseStandardIntegrationTests extends ChatModelIntegrationTe
       "Not properly implemented."
     );
   }
+
+  async testParallelToolCalling() {
+    // Pass `true` in the second argument to only verify it can support parallel tool calls in the message history.
+    // This is because the model struggles to actually call parallel tools.
+    await super.testParallelToolCalling(undefined, true);
+  }
 }
 
 const testClass = new ChatBedrockConverseStandardIntegrationTests();

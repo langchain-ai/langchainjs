@@ -1334,9 +1334,11 @@ Extraction path: {extractionPath}`,
    * both in streaming and non-streaming contexts, and can handle message histories with parallel tool calls.
    *
    * @param {InstanceType<this["Cls"]>["ParsedCallOptions"] | undefined} callOptions Optional call options to pass to the model.
+   * @param {boolean} onlyVerifyHistory If true, only verifies the message history test.
    */
   async testParallelToolCalling(
-    callOptions?: InstanceType<this["Cls"]>["ParsedCallOptions"]
+    callOptions?: InstanceType<this["Cls"]>["ParsedCallOptions"],
+    onlyVerifyHistory = false
   ) {
     // Skip the test if the model doesn't support tool calling
     if (!this.chatModelHasToolCalling) {
@@ -1442,8 +1444,25 @@ Extraction path: {extractionPath}`,
      * Verifies that the model can generate a response based on previous tool calls without making unnecessary additional tool calls.
      */
     const invokeParallelToolCallResultsInHistory = async () => {
+      const defaultAIMessageWithParallelTools = new AIMessage({
+        content: "",
+        tool_calls: [
+          {
+            name: weatherTool.name,
+            id: "get_current_weather_id",
+            args: { location: "San Francisco" },
+          },
+          {
+            name: currentTimeTool.name,
+            id: "get_current_time_id",
+            args: { location: "San Francisco" },
+          },
+        ],
+      });
       if (!parallelToolCallsMessage) {
-        throw new Error("Parallel tool calls message is undefined");
+        // Allow this variable to be assigned in the first test, or if only run histories
+        // is passed, assign it here since the first test will not run.
+        parallelToolCallsMessage = defaultAIMessageWithParallelTools;
       }
       // Find the tool calls for the weather and current time tools so we can re-use the IDs in the message history.
       const parallelToolCallWeather = parallelToolCallsMessage.tool_calls?.find(
@@ -1494,8 +1513,10 @@ Extraction path: {extractionPath}`,
     };
 
     // Now we can invoke each of our tests synchronously, as the last test requires the result of the first test.
-    await invokeParallelTools();
-    await streamParallelTools();
+    if (!onlyVerifyHistory) {
+      await invokeParallelTools();
+      await streamParallelTools();
+    }
     await invokeParallelToolCallResultsInHistory();
   }
 
