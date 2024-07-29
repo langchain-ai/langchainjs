@@ -117,8 +117,15 @@ class ChatConnection<AuthOptions> extends AbstractGoogleLLMConnection<
         }
 
         // Combine adjacent function messages
-        if (cur[0]?.role === "function" && acc.length > 0 && acc[acc.length - 1].role === "function") {
-          acc[acc.length - 1].parts = [...acc[acc.length - 1].parts, ...cur[0].parts];
+        if (
+          cur[0]?.role === "function" &&
+          acc.length > 0 &&
+          acc[acc.length - 1].role === "function"
+        ) {
+          acc[acc.length - 1].parts = [
+            ...acc[acc.length - 1].parts,
+            ...cur[0].parts,
+          ];
         } else {
           acc.push(...cur);
         }
