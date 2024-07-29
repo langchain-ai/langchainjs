@@ -1,5 +1,5 @@
 /* eslint-disable no-process-env */
-import { test } from "@jest/globals";
+import { test, expect } from "@jest/globals";
 import { ChatModelIntegrationTests } from "@langchain/standard-tests";
 import { AIMessageChunk } from "@langchain/core/messages";
 import { GoogleAIBaseLanguageModelCallOptions } from "@langchain/google-common";
