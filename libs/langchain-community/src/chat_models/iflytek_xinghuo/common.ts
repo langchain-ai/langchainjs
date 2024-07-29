@@ -256,7 +256,11 @@ export abstract class BaseChatIflytekXinghuo
     this.top_k = fields?.top_k ?? this.top_k;
 
     this.version = fields?.version ?? this.version;
-    if (["v1.1", "v2.1", "v3.1", "v3.5", "v4.0", "pro-128k"].includes(this.version)) {
+    if (
+      ["v1.1", "v2.1", "v3.1", "v3.5", "v4.0", "pro-128k"].includes(
+        this.version
+      )
+    ) {
       this.apiUrl = `wss://spark-api.xf-yun.com/${this.version}/chat`;
       switch (this.version) {
         case "v1.1":
