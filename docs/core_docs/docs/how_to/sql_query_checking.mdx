@@ -28,6 +28,9 @@ export OPENAI_API_KEY="your api key"
 # Uncomment the below to use LangSmith. Not required.
 # export LANGCHAIN_API_KEY="your api key"
 # export LANGCHAIN_TRACING_V2=true
+
+# Reduce tracing latency if you are not in a serverless environment
+# export LANGCHAIN_CALLBACKS_BACKGROUND=true
 ```
 
 The below example will use a SQLite connection with Chinook database. Follow these [installation steps](https://database.guide/2-sample-databases-sqlite/) to create `Chinook.db` in the same directory as this notebook:

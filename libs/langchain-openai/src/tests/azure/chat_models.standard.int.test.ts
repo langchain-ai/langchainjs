@@ -38,19 +38,28 @@ class AzureChatOpenAIStandardIntegrationTests extends ChatModelIntegrationTests<
     });
   }
 
-  async testToolMessageHistoriesListContent() {
-    this.skipTestMessage(
-      "testToolMessageHistoriesListContent",
-      "AzureChatOpenAI",
-      "Not properly implemented."
-    );
-  }
-
   async testUsageMetadataStreaming() {
     this.skipTestMessage(
       "testUsageMetadataStreaming",
       "AzureChatOpenAI",
       "Streaming tokens is not currently supported."
+    );
+  }
+
+  async testStreamTokensWithToolCalls() {
+    this.skipTestMessage(
+      "testStreamTokensWithToolCalls",
+      "AzureChatOpenAI",
+      "Streaming tokens is not currently supported."
+    );
+  }
+
+  async testInvokeMoreComplexTools() {
+    this.skipTestMessage(
+      "testInvokeMoreComplexTools",
+      "AzureChatOpenAI",
+      "AzureChatOpenAI does not support tool schemas which contain object with unknown/any parameters." +
+        "AzureChatOpenAI only supports objects in schemas when the parameters are defined."
     );
   }
 }

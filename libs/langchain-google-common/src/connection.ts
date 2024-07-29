@@ -350,6 +350,21 @@ export abstract class AbstractGoogleLLMConnection<
     }
   }
 
+  formatToolConfig(
+    parameters: GoogleAIModelRequestParams
+  ): GeminiRequest["toolConfig"] | undefined {
+    if (!parameters.tool_choice || typeof parameters.tool_choice !== "string") {
+      return undefined;
+    }
+
+    return {
+      functionCallingConfig: {
+        mode: parameters.tool_choice as "auto" | "any" | "none",
+        allowedFunctionNames: parameters.allowed_function_names,
+      },
+    };
+  }
+
   formatData(
     input: MessageType,
     parameters: GoogleAIModelRequestParams
@@ -357,6 +372,7 @@ export abstract class AbstractGoogleLLMConnection<
     const contents = this.formatContents(input, parameters);
     const generationConfig = this.formatGenerationConfig(input, parameters);
     const tools = this.formatTools(input, parameters);
+    const toolConfig = this.formatToolConfig(parameters);
     const safetySettings = this.formatSafetySettings(input, parameters);
     const systemInstruction = this.formatSystemInstruction(input, parameters);
 
@@ -366,6 +382,9 @@ export abstract class AbstractGoogleLLMConnection<
     };
     if (tools && tools.length) {
       ret.tools = tools;
+    }
+    if (toolConfig) {
+      ret.toolConfig = toolConfig;
     }
     if (safetySettings && safetySettings.length) {
       ret.safetySettings = safetySettings;

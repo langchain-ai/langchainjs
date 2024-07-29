@@ -65,7 +65,7 @@ test("Test HNSWLib.load, HNSWLib.save, and HNSWLib.delete", async () => {
 
   const tempDirectory = await fs.mkdtemp(path.join(os.tmpdir(), "lcjs-"));
 
-  console.log(tempDirectory);
+  // console.log(tempDirectory);
 
   await vectorStore.save(tempDirectory);
 

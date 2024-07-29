@@ -13,5 +13,5 @@ test.skip("TavilySearchAPIRetriever", async () => {
   const docs = await retriever.getRelevantDocuments("what bear is best?");
   expect(docs.length).toBeGreaterThan(0);
 
-  console.log(docs);
+  // console.log(docs);
 });

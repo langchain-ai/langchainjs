@@ -27,8 +27,10 @@ test("Test ConstitutionalChain", async () => {
     ],
   });
 
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res = await constitutionalChain.invoke({
     question: "What is the meaning of life?",
   });
-  console.log({ res });
+  // console.log({ res });
 });

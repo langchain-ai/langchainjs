@@ -30,7 +30,7 @@ test("Synthetic similarity", async () => {
   const embed = new SyntheticEmbeddings({ vectorSize: 2 });
   const v1 = await embed.embedQuery("this");
   const v2 = await embed.embedQuery("that");
-  console.log(v1, v2);
+  // console.log(v1, v2);
   expect(v1).toHaveLength(2);
   expect(v2).toHaveLength(2);
   expect(v1[0]).toEqual(v2[0]);

@@ -20,7 +20,7 @@ You can use npm, yarn, or pnpm to install LangChain.js
 
 LangChain is written in TypeScript and can be used in:
 
-- Node.js (ESM and CommonJS) - 18.x, 19.x, 20.x
+- Node.js (ESM and CommonJS) - 18.x, 19.x, 20.x, 22.x
 - Cloudflare Workers
 - Vercel / Next.js (Browser, Serverless and Edge functions)
 - Supabase Edge Functions

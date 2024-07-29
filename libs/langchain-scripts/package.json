@@ -1,6 +1,6 @@
 {
   "name": "@langchain/scripts",
-  "version": "0.0.18",
+  "version": "0.0.20",
   "description": "Shared scripts for LangChain.js",
   "type": "module",
   "engines": {
@@ -15,11 +15,12 @@
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-scripts/",
   "bin": {
     "lc-build": "bin/build.js",
-    "lc-build:v2": "bin/build_v2.js"
+    "lc_build_v2": "bin/build_v2.js"
   },
   "scripts": {
     "build": "yarn turbo:command build:internal --filter=@langchain/scripts",
-    "build:internal": "rm -rf ./build_new && tsc --project ./tsconfig.build.json && yarn build:generated",
+    "build:internal": "tsc --project ./tsconfig.build.json && yarn move:artifacts && yarn build:generated",
+    "move:artifacts": "mkdir -p ./dist && mv ./dist_build/* ./dist/",
     "build:generated": "node bin/build_v2.js --create-entrypoints --pre --tree-shaking",
     "build:turbo": "yarn turbo:command build --filter=@langchain/scripts",
     "lint:eslint": "NODE_OPTIONS=--max-old-space-size=4096 eslint --cache --ext .ts,.js src/",
@@ -38,6 +39,7 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
+    "@rollup/wasm-node": "^4.19.0",
     "axios": "^1.6.7",
     "commander": "^11.1.0",
     "glob": "^10.3.10",
@@ -65,7 +67,8 @@
     "jest-environment-node": "^29.6.4",
     "prettier": "^2.8.3",
     "release-it": "^15.10.1",
-    "ts-jest": "^29.1.0"
+    "ts-jest": "^29.1.0",
+    "tsx": "^4.16.2"
   },
   "publishConfig": {
     "access": "public"
