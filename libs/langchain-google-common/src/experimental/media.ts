@@ -4,7 +4,7 @@ import {
   AsyncCallerParams,
 } from "@langchain/core/utils/async_caller";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
-import { MediaBlob, BlobStore, BlobStoreOptions } from "./utils/media_core.js";
+import {MediaBlob, BlobStore, BlobStoreOptions, MediaBlobData} from "./utils/media_core.js";
 import {
   GoogleConnectionParams,
   GoogleRawResponse,
@@ -187,11 +187,8 @@ export abstract class BlobStoreGoogle<
     const metadata = await this._getMetadata(key);
     const data = await this._getData(key);
     if (data && metadata) {
-      return new MediaBlob({
-        path: key,
-        data,
-        metadata,
-      });
+      const ret = await MediaBlob.fromBlob(data, {metadata, path: key});
+      return ret;
     } else {
       return undefined;
     }
@@ -772,7 +769,10 @@ export abstract class BlobStoreAIStudioFileBase<
       const contentType =
         (metadata?.mimeType as string) ?? "application/octet-stream";
       // TODO - Get the actual data (and other metadata) from an optional backing store
-      const data = new Blob([], { type: contentType });
+      const data: MediaBlobData = {
+        value: "",
+        type: contentType,
+      }
 
       return new MediaBlob({
         path: key,

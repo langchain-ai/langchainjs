@@ -1,13 +1,31 @@
 import { v1, v4 } from "uuid"; // FIXME - it is importing the wrong uuid, so v6 and v7 aren't implemented
 import { BaseStore } from "@langchain/core/stores";
-import { Serializable } from "@langchain/core/load/serializable";
+import {Serializable, Serialized, SerializedConstructor} from "@langchain/core/load/serializable";
+
+export type MediaBlobData = {
+  value: string;  // In Base64 encoding
+  type: string;   // The mime type and possibly encoding
+}
 
 export interface MediaBlobParameters {
-  data?: Blob;
+
+  data?: MediaBlobData;
 
   metadata?: Record<string, unknown>;
 
   path?: string;
+}
+
+function bytesToString(dataArray: Uint8Array): string {
+  // Need to handle the array in smaller chunks to deal with stack size limits
+  let ret = "";
+  const chunkSize = 102400;
+  for (let i = 0; i < dataArray.length; i += chunkSize) {
+    const chunk = dataArray.subarray(i, i + chunkSize);
+    ret += String.fromCharCode(...chunk);
+  }
+
+  return ret;
 }
 
 /**
@@ -15,29 +33,40 @@ export interface MediaBlobParameters {
  * data is (or will be) located, along with optional metadata about the data.
  */
 export class MediaBlob
-  extends Serializable // FIXME - I'm not sure this serializes or deserializes correctly
+  extends Serializable
   implements MediaBlobParameters
 {
   lc_serializable = true;
 
   lc_namespace = ["langchain", "google-common"]; // FIXME - What should this be? And why?
 
-  data?: Blob;
+  data?: MediaBlobData;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   metadata?: Record<string, any>;
 
   path?: string;
 
-  constructor(params?: MediaBlobParameters) {
-    super(params);
-    this.data = params?.data;
-    this.metadata = params?.metadata;
-    this.path = params?.path;
+  constructor(params?: MediaBlobParameters | Serialized) {
+    const sparams = params as SerializedConstructor;
+    super(sparams?.kwargs);
+
+    const mparams = params as MediaBlobParameters;
+    this.data = mparams?.data || this.lc_kwargs?.data;
+    this.metadata = mparams?.metadata || this.lc_kwargs?.metadata;
+    this.path = mparams?.path || this.lc_kwargs?.path;
+  }
+
+  get lc_attributes() {
+    return {
+      data: this.data,
+      metadata: this.metadata,
+      path: this.path,
+    }
   }
 
   get size(): number {
-    return this.data?.size ?? 0;
+    return this.asBytes.length;
   }
 
   get dataType(): string {
@@ -58,24 +87,24 @@ export class MediaBlob
       : this.dataType.substring(0, semicolon);
   }
 
-  async asString(): Promise<string> {
-    const data = this.data ?? new Blob([]);
-    const dataBuffer = await data.arrayBuffer();
-    const dataArray = new Uint8Array(dataBuffer);
-
-    // Need to handle the array in smaller chunks to deal with stack size limits
-    let ret = "";
-    const chunkSize = 102400;
-    for (let i = 0; i < dataArray.length; i += chunkSize) {
-      const chunk = dataArray.subarray(i, i + chunkSize);
-      ret += String.fromCharCode(...chunk);
+  get asBytes(): Uint8Array {
+    if (!this.data) {
+      return Uint8Array.from([]);
     }
-
+    const binString = atob(this.data?.value);
+    const ret = new Uint8Array(binString.length);
+    for (let co=0; co < binString.length; co+=1) {
+      ret[co] = binString.charCodeAt(co);
+    }
     return ret;
   }
 
+  async asString(): Promise<string> {
+    return bytesToString(this.asBytes);
+  }
+
   async asBase64(): Promise<string> {
-    return btoa(await this.asString());
+    return this.data?.value ?? "";
   }
 
   async asDataUrl(): Promise<string> {
@@ -107,17 +136,30 @@ export class MediaBlob
 
     const comma = url.indexOf(',');
     const base64Data = url.substring(comma+1);
-    const binaryString = atob(base64Data);
-    const bytes = new Uint8Array(binaryString.length);
-    for (let i = 0; i < binaryString.length; i += 1) {
-      bytes[i] = binaryString.charCodeAt(i);
+
+    const data: MediaBlobData = {
+      type: mimeType,
+      value: base64Data,
     }
 
-    const blob = new Blob( [bytes], {type: mimeType});
+    return new MediaBlob({
+      data,
+      path: url,
+    })
+  }
+
+  static async fromBlob(blob: Blob, other?: MediaBlobParameters): Promise<MediaBlob> {
+    const valueBuffer = await blob.arrayBuffer();
+    const valueArray = new Uint8Array(valueBuffer);
+    const valueStr = bytesToString(valueArray);
+    const value = btoa(valueStr);
 
     return new MediaBlob({
-      data: blob,
-      path: url,
+      ...other,
+      data: {
+        value,
+        type: blob.type,
+      }
     })
   }
 }
@@ -485,7 +527,8 @@ export class SimpleWebBlobStore extends BlobStore {
 
     metadata.ok = res.ok;
     if (res.ok) {
-      ret.data = await res.blob();
+      const resMediaBlob = await MediaBlob.fromBlob(await res.blob());
+      ret.data = resMediaBlob.data;
     }
 
     ret.metadata = metadata;
