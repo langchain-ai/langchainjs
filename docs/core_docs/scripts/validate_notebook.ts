@@ -2,7 +2,7 @@ import * as fs from "node:fs";
 import * as ts from "typescript";
 
 export function extract(filepath: string) {
-  const cells = JSON.parse((fs.readFileSync(filepath)).toString()).cells;
+  const cells = JSON.parse(fs.readFileSync(filepath).toString()).cells;
   const code = cells
     .map((cell: Record<string, any>) => {
       if (cell.cell_type === "code") {
