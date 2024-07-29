@@ -79,4 +79,8 @@ const run = async () => {
   }
 };
 
-run();
+try {
+  run();
+} catch {
+  process.exit(1);
+}
