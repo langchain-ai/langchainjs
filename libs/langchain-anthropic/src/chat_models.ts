@@ -67,7 +67,8 @@ type AnthropicMessageStreamEvent = Anthropic.MessageStreamEvent;
 type AnthropicRequestOptions = Anthropic.RequestOptions;
 
 export interface ChatAnthropicCallOptions
-  extends BaseChatModelCallOptions {
+  extends BaseChatModelCallOptions,
+    Pick<AnthropicInput, "streamUsage"> {
   tools?: AnthropicToolTypes[];
   /**
    * Whether or not to specify what tool the model should use
@@ -156,12 +157,12 @@ function isAnthropicTool(tool: any): tool is AnthropicTool {
 function _makeMessageChunkFromAnthropicEvent(
   data: Anthropic.Messages.RawMessageStreamEvent,
   fields: {
+    streamUsage: boolean;
     coerceContentToString: boolean;
   }
 ): {
   chunk: AIMessageChunk;
 } | null {
-
   if (data.type === "message_start") {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { content, usage, ...additionalKwargs } = data.message;
@@ -181,21 +182,21 @@ function _makeMessageChunkFromAnthropicEvent(
       chunk: new AIMessageChunk({
         content: fields.coerceContentToString ? "" : [],
         additional_kwargs: filteredAdditionalKwargs,
-        usage_metadata: usageMetadata,
+        usage_metadata: fields.streamUsage ? usageMetadata : undefined,
         id: data.message.id,
       }),
     };
   } else if (data.type === "message_delta") {
     const usageMetadata: UsageMetadata = {
-        input_tokens: 0,
-        output_tokens: data.usage.output_tokens,
-        total_tokens: data.usage.output_tokens,
-      };
+      input_tokens: 0,
+      output_tokens: data.usage.output_tokens,
+      total_tokens: data.usage.output_tokens,
+    };
     return {
       chunk: new AIMessageChunk({
         content: fields.coerceContentToString ? "" : [],
         additional_kwargs: { ...data.delta },
-        usage_metadata: usageMetadata,
+        usage_metadata: fields.streamUsage ? usageMetadata : undefined,
       }),
     };
   } else if (
@@ -254,8 +255,10 @@ function _makeMessageChunkFromAnthropicEvent(
         additional_kwargs: {},
       }),
     };
-  } else if (data.type === "content_block_start" &&
-    data.content_block.type === "text") {
+  } else if (
+    data.type === "content_block_start" &&
+    data.content_block.type === "text"
+  ) {
     const content = data.content_block?.text;
     if (content !== undefined) {
       return {
@@ -263,11 +266,11 @@ function _makeMessageChunkFromAnthropicEvent(
           content: fields.coerceContentToString
             ? content
             : [
-              {
-                index: data.index,
-                ...data.content_block,
-              },
-            ],
+                {
+                  index: data.index,
+                  ...data.content_block,
+                },
+              ],
           additional_kwargs: {},
         }),
       };
@@ -344,6 +347,11 @@ export interface AnthropicInput {
    */
   invocationKwargs?: Kwargs;
 
+  /**
+   * Whether or not to include token usage data in streamed chunks.
+   * @default true
+   */
+  streamUsage?: boolean;
 }
 
 /**
@@ -721,6 +729,8 @@ export class ChatAnthropicMessages<
   // Used for streaming requests
   protected streamingClient: Anthropic;
 
+  streamUsage = true;
+
   constructor(fields?: Partial<AnthropicInput> & BaseChatModelParams) {
     super(fields ?? {});
 
@@ -753,6 +763,7 @@ export class ChatAnthropicMessages<
     this.stopSequences = fields?.stopSequences ?? this.stopSequences;
 
     this.streaming = fields?.streaming ?? false;
+    this.streamUsage = fields?.streamUsage ?? this.streamUsage;
   }
 
   getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
@@ -897,8 +908,9 @@ export class ChatAnthropicMessages<
         stream.controller.abort();
         throw new Error("AbortError: User aborted the request.");
       }
-
+      const shouldStreamUsage = this.streamUsage ?? options.streamUsage;
       const result = _makeMessageChunkFromAnthropicEvent(data, {
+        streamUsage: shouldStreamUsage,
         coerceContentToString,
       });
       if (!result) continue;
@@ -915,7 +927,7 @@ export class ChatAnthropicMessages<
           content: chunk.content,
           additional_kwargs: chunk.additional_kwargs,
           tool_call_chunks: newToolCallChunk ? [newToolCallChunk] : undefined,
-          usage_metadata: chunk.usage_metadata,
+          usage_metadata: shouldStreamUsage ? chunk.usage_metadata : undefined,
           response_metadata: chunk.response_metadata,
           id: chunk.id,
         }),
