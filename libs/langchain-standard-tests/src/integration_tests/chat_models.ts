@@ -1728,6 +1728,27 @@ Extraction path: {extractionPath}`,
       console.error("testInvokeMoreComplexTools failed", e.message);
     }
 
+    try {
+      await this.testParallelToolCalls();
+    } catch (e: any) {
+      allTestsPassed = false;
+      console.error("testParallelToolCalls failed", e.message);
+    }
+
+    try {
+      await this.testStreamingParallelToolCalls();
+    } catch (e: any) {
+      allTestsPassed = false;
+      console.error("testStreamingParallelToolCalls failed", e.message);
+    }
+
+    try {
+      await this.testParallelToolCallResults();
+    } catch (e: any) {
+      allTestsPassed = false;
+      console.error("testParallelToolCallResults failed", e.message);
+    }
+
     return allTestsPassed;
   }
 }
