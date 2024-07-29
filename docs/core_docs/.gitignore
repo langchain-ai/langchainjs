@@ -20,6 +20,7 @@ src/supabase.d.ts
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+/scripts/tmp
 
 # ESLint
 .eslintcache
@@ -33,8 +34,6 @@ yarn-error.log*
 
 /.quarto/
 # AUTO_GENERATED_DOCS
-docs/tutorials/test.md
-docs/tutorials/test.mdx
 docs/tutorials/rag.md
 docs/tutorials/rag.mdx
 docs/tutorials/query_analysis.md

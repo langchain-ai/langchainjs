@@ -70,7 +70,7 @@ function revive(obj: any): any {
           content: obj.content,
         });
       }
-      if (obj.type === "ChatMessage" || obj.type === "chat") {
+      if (obj.type === "ChatMessage" || obj.type === "generic") {
         return new ChatMessage({
           content: obj.content,
           role: obj.role,

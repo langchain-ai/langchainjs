@@ -37,6 +37,7 @@
     "test:standard:int": "turbo test:standard:int",
     "test:standard": "yarn test:standard:unit && yarn test:standard:int",
     "example": "yarn workspace examples start",
+    "notebook:validate": "yarn workspace core_docs validate",
     "precommit": "turbo precommit",
     "docs": "yarn workspace core_docs start",
     "docs:api_refs": "yarn workspace api_refs start",
