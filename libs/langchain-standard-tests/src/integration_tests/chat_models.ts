@@ -1329,7 +1329,7 @@ Extraction path: {extractionPath}`,
    * 2. Streaming responses with parallel tool calls
    * 3. Processing message histories containing parallel tool calls
    *
-   * The test uses a weather tool and a calculator tool to simulate complex, multi-tool scenarios.
+   * The test uses a weather tool and a current time tool to simulate complex, multi-tool scenarios.
    * It ensures that the model can correctly process and respond to prompts requiring multiple tool calls,
    * both in streaming and non-streaming contexts, and can handle message histories with parallel tool calls.
    *
@@ -1357,56 +1357,56 @@ Extraction path: {extractionPath}`,
 
     const weatherTool = tool((_) => "no-op", {
       name: "get_current_weather",
-      description: "Get the current weather for a location.",
+      description: "Get the current weather in a given location",
       schema: z.object({
-        location: z.string().describe("The location to get the weather for."),
+        location: z.string().describe("The city name, e.g. San Francisco"),
       }),
     });
-    const calculatorTool = tool((_) => "no-op", {
-      name: "calculator",
-      description: "Calculate the result of a given math expression.",
+    const currentTimeTool = tool((_) => "no-op", {
+      name: "get_current_time",
+      description: "Get the current time in a given location",
       schema: z.object({
-        expression: z.string().describe("The math expression to evaluate."),
+        location: z.string().describe("The city name, e.g. San Francisco"),
       }),
     });
 
-    const modelWithTools = model.bindTools([weatherTool, calculatorTool]);
+    const modelWithTools = model.bindTools([weatherTool, currentTimeTool]);
 
     const callParallelToolsPrompt =
-      "What is the current weather in San Francisco? Also, using a calculator tool, what is 246293 times 18462 plus 1817?\n" +
-      "Ensure you get the answer to both questions in this response by calling both the 'get_current_weather' and 'calculator' tools.";
+      "What's the weather and current time in San Francisco?\n" +
+      "Ensure you ALWAYS call the 'get_current_weather' tool for weather and 'get_current_time' tool for time.";
 
     // Save the result of the parallel tool calls for the history test.
     let parallelToolCallsMessage: AIMessage | undefined;
 
     /**
      * Tests the basic functionality of invoking multiple tools in parallel.
-     * Verifies that the model can call both the weather and calculator tools simultaneously.
+     * Verifies that the model can call both the weather and current time tools simultaneously.
      */
     const invokeParallelTools = async () => {
       const result: AIMessage = await modelWithTools.invoke(
         callParallelToolsPrompt,
         callOptions
       );
-      // Model should call at least two tools. Using greater than or equal since it might call the calculator tool multiple times.
+      // Model should call at least two tools. Using greater than or equal since it might call the current time tool multiple times.
       expect(result.tool_calls?.length).toBeGreaterThanOrEqual(2);
       if (!result.tool_calls?.length) return;
 
       const weatherToolCalls = result.tool_calls.find(
         (tc) => tc.name === weatherTool.name
       );
-      const calculatorToolCalls = result.tool_calls.find(
-        (tc) => tc.name === calculatorTool.name
+      const currentTimeToolCalls = result.tool_calls.find(
+        (tc) => tc.name === currentTimeTool.name
       );
 
       expect(weatherToolCalls).toBeDefined();
-      expect(calculatorToolCalls).toBeDefined();
+      expect(currentTimeToolCalls).toBeDefined();
       parallelToolCallsMessage = result;
     };
 
     /**
      * Tests the model's ability to stream responses while making parallel tool calls.
-     * Ensures that the streamed result contains calls to both the weather and calculator tools.
+     * Ensures that the streamed result contains calls to both the weather and current time tools.
      */
     const streamParallelTools = async () => {
       const stream = await modelWithTools.stream(
@@ -1421,19 +1421,20 @@ Extraction path: {extractionPath}`,
       expect(finalChunk).toBeDefined();
       if (!finalChunk) return;
 
-      // Model should call at least two tools. Using greater than or equal since it might call the calculator tool multiple times.
+      // Model should call at least two tools. Do not penalize for calling more than two tools, as
+      // long as it calls both the weather and current time tools.
       expect(finalChunk.tool_calls?.length).toBeGreaterThanOrEqual(2);
       if (!finalChunk.tool_calls?.length) return;
 
       const weatherToolCalls = finalChunk.tool_calls.find(
         (tc) => tc.name === weatherTool.name
       );
-      const calculatorToolCalls = finalChunk.tool_calls.find(
-        (tc) => tc.name === calculatorTool.name
+      const currentTimeToolCalls = finalChunk.tool_calls.find(
+        (tc) => tc.name === currentTimeTool.name
       );
 
       expect(weatherToolCalls).toBeDefined();
-      expect(calculatorToolCalls).toBeDefined();
+      expect(currentTimeToolCalls).toBeDefined();
     };
 
     /**
@@ -1444,17 +1445,17 @@ Extraction path: {extractionPath}`,
       if (!parallelToolCallsMessage) {
         throw new Error("Parallel tool calls message is undefined");
       }
-      // Find the tool calls for the weather and calculator tools so we can re-use the IDs in the message history.
+      // Find the tool calls for the weather and current time tools so we can re-use the IDs in the message history.
       const parallelToolCallWeather = parallelToolCallsMessage.tool_calls?.find(
         (tc) => tc.name === weatherTool.name
       );
-      const parallelToolCallCalculator =
+      const parallelToolCallCurrentTime =
         parallelToolCallsMessage.tool_calls?.find(
-          (tc) => tc.name === calculatorTool.name
+          (tc) => tc.name === currentTimeTool.name
         );
-      if (!parallelToolCallWeather?.id || !parallelToolCallCalculator?.id) {
+      if (!parallelToolCallWeather?.id || !parallelToolCallCurrentTime?.id) {
         throw new Error(
-          `IDs not found in one of both of parallel tool calls:\nWeather ID: ${parallelToolCallWeather?.id}\nCalculator ID: ${parallelToolCallCalculator?.id}`
+          `IDs not found in one of both of parallel tool calls:\nWeather ID: ${parallelToolCallWeather?.id}\nCurrent Time ID: ${parallelToolCallCurrentTime?.id}`
         );
       }
 
@@ -1468,9 +1469,9 @@ Extraction path: {extractionPath}`,
           content: "It is currently 24 degrees with hail in San Francisco.",
         }),
         new ToolMessage({
-          name: calculatorTool.name,
-          tool_call_id: parallelToolCallCalculator.id,
-          content: "(246293 * 18462) + 1817 = 4547063183",
+          name: currentTimeTool.name,
+          tool_call_id: parallelToolCallCurrentTime.id,
+          content: "The current time in San Francisco is 12:02 PM.",
         }),
       ];
 

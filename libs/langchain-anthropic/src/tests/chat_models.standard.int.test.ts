@@ -1,5 +1,5 @@
 /* eslint-disable no-process-env */
-import { test } from "@jest/globals";
+import { test, expect } from "@jest/globals";
 import { ChatModelIntegrationTests } from "@langchain/standard-tests";
 import { AIMessageChunk } from "@langchain/core/messages";
 import { ChatAnthropic, ChatAnthropicCallOptions } from "../chat_models.js";
@@ -32,7 +32,7 @@ class ChatAnthropicStandardIntegrationTests extends ChatModelIntegrationTests<
     this.constructorArgs = {
       ...this.constructorArgs,
       model: "claude-3-5-sonnet-20240620",
-    }
+    };
     await super.testParallelToolCalling();
     this.constructorArgs = constructorArgsCopy;
   }
