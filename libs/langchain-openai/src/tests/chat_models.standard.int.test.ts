@@ -18,6 +18,7 @@ class ChatOpenAIStandardIntegrationTests extends ChatModelIntegrationTests<
       Cls: ChatOpenAI,
       chatModelHasToolCalling: true,
       chatModelHasStructuredOutput: true,
+      supportsParallelToolCalls: true,
       constructorArgs: {
         model: "gpt-3.5-turbo",
       },
@@ -43,6 +44,18 @@ class ChatOpenAIStandardIntegrationTests extends ChatModelIntegrationTests<
       "OpenAI does not support tool schemas which contain object with unknown/any parameters." +
         "\nOpenAI only supports objects in schemas when the parameters are defined."
     );
+  }
+
+  async testParallelToolCalling() {
+    // Override constructor args to use a better model for this test.
+    // I found that GPT 3.5 struggles with parallel tool calling.
+    const constructorArgsCopy = { ...this.constructorArgs };
+    this.constructorArgs = {
+      ...this.constructorArgs,
+      model: "gpt-4o",
+    };
+    await super.testParallelToolCalling();
+    this.constructorArgs = constructorArgsCopy;
   }
 }
 
