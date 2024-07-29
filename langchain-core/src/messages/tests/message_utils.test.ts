@@ -5,10 +5,15 @@ import {
   trimMessages,
 } from "../transformers.js";
 import { AIMessage } from "../ai.js";
+import { ChatMessage } from "../chat.js";
 import { HumanMessage } from "../human.js";
 import { SystemMessage } from "../system.js";
 import { BaseMessage } from "../base.js";
-import { getBufferString } from "../utils.js";
+import {
+  getBufferString,
+  mapChatMessagesToStoredMessages,
+  mapStoredMessagesToChatMessages,
+} from "../utils.js";
 
 describe("filterMessage", () => {
   const getMessages = () => [
@@ -498,4 +503,20 @@ test("getBufferString can handle complex messages", () => {
       2
     )}`
   );
+});
+
+describe("chat message conversions", () => {
+  it("can convert a chat message to a stored message and back", () => {
+    const originalMessages = [
+      new ChatMessage("I'm a generic message!", "human"),
+      new HumanMessage("I'm a human message!"),
+    ];
+
+    const storedMessages = mapChatMessagesToStoredMessages(originalMessages);
+
+    const convertedBackMessages =
+      mapStoredMessagesToChatMessages(storedMessages);
+
+    expect(convertedBackMessages).toEqual(originalMessages);
+  });
 });
