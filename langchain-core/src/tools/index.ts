@@ -47,6 +47,21 @@ export interface ToolParams extends BaseLangChainParams {
   responseFormat?: ResponseFormat;
 }
 
+export interface ToolSchema {
+  /**
+   * The name of the tool to pass to the model.
+   */
+  name: string;
+  /**
+   * An optional description of the tool to pass to the model.
+   */
+  description?: string;
+  /**
+   * A Zod schema representing the parameters of the tool.
+   */
+  schema: ZodObjectAny;
+}
+
 export interface StructuredToolInterface<T extends ZodObjectAny = ZodObjectAny>
   extends RunnableInterface<
     (z.output<T> extends string ? string : never) | z.input<T> | ToolCall,
