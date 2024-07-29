@@ -24,7 +24,7 @@ class ChatGoogleGenerativeAIStandardIntegrationTests extends ChatModelIntegratio
       supportsParallelToolCalls: true,
       constructorArgs: {
         maxRetries: 1,
-        model: "gemini-1.5-pro"
+        model: "gemini-1.5-pro",
       },
     });
   }
