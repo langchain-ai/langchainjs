@@ -22775,8 +22775,10 @@ __metadata:
     rimraf: ^5.0.1
     supabase: ^1.148.6
     swc-loader: ^0.2.3
+    tsx: ^3.12.3
     typedoc: ^0.24.4
     typedoc-plugin-markdown: next
+    typescript: ~5.1.6
     uuid: ^10.0.0
     webpack: ^5.75.0
     yaml-loader: ^0.8.0
