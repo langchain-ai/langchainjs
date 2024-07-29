@@ -45,6 +45,7 @@ const run = async () => {
       skipLibCheck: true,
     });
     const diagnostics = ts.getPreEmitDiagnostics(program);
+    const issueStrings: string[] = [];
     if (diagnostics.length === 0) {
       console.log("No type errors found.");
     } else {
@@ -56,17 +57,24 @@ const run = async () => {
             diagnostic.messageText,
             "\n"
           );
-          console.log(
+          issueStrings.push(
             `${diagnostic.file.fileName} (${line + 1},${
               character + 1
             }): ${message}`
           );
         } else {
-          console.log(
+          issueStrings.push(
             ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n")
           );
         }
       });
+    }
+    if (issueStrings.length) {
+      const issues = issueStrings.join("\n");
+      console.error(issues);
+      const err = new Error("Found type errors in new notebook:");
+      (err as any).details = issues;
+      throw err;
     }
   } finally {
     try {
