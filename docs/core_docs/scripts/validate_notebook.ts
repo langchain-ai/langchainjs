@@ -72,7 +72,7 @@ const run = async () => {
     if (issueStrings.length) {
       const issues = issueStrings.join("\n");
       console.error(issues);
-      const err = new Error("Found type errors in new notebook:");
+      const err = new Error("Found type errors in new notebook.");
       (err as any).details = issues;
       throw err;
     }
