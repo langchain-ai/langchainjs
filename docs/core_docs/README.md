@@ -47,3 +47,11 @@ Some common defaults for linting/formatting have been set for you. If you integr
 ```
 $ yarn ci
 ```
+
+### Validating Notebooks
+
+You can validate that notebooks build and compile TypeScript using the following command:
+
+```bash
+$ yarn validate <PATH_TO_FILE>
+```
