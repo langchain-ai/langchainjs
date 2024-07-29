@@ -1,0 +1,29 @@
+name: Validate new notebooks
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'docs/core_docs/**'
+  workflow_dispatch:
+
+jobs:
+  validate-new-notebooks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v44
+      - name: Validate new notebooks
+        run: |
+          new_notebooks=$(echo ${{ steps.changed-files.outputs.added_files }} | tr ' ' '\n' | grep '\.ipynb$')
+          if [ -n "$new_notebooks" ]; then
+            for notebook in $new_notebooks; do
+              yarn notebook:validate "$notebook"
+            done
+          fi
