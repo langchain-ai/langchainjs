@@ -39,8 +39,11 @@ jobs:
       - name: Validate new notebooks
         run: |
           new_notebooks=$(echo ${{ steps.changed-files.outputs.added_files }} | tr ' ' '\n' | grep '\.ipynb$')
+          echo "New notebooks: $new_notebooks"
           if [ -n "$new_notebooks" ]; then
             for notebook in $new_notebooks; do
               yarn notebook:validate "$notebook"
             done
+          else
+            echo "No new notebooks to validate."
           fi
