@@ -1,9 +1,8 @@
-import * as fs from "node:fs/promises";
+import * as fs from "node:fs";
 import * as ts from "typescript";
-import { v4 as uuidv4 } from "uuid";
 
-export async function extract(filepath: string) {
-  const cells = JSON.parse((await fs.readFile(filepath)).toString()).cells;
+export function extract(filepath: string) {
+  const cells = JSON.parse((fs.readFileSync(filepath)).toString()).cells;
   const code = cells
     .map((cell: Record<string, any>) => {
       if (cell.cell_type === "code") {
@@ -35,11 +34,11 @@ const run = async () => {
   try {
     const typescriptSource = await extract(pathname);
     try {
-      await fs.access("./tmp", fs.constants.F_OK);
+      await fs.existsSync("./tmp");
     } catch (err) {
-      await fs.mkdir("./tmp");
+      await fs.mkdirSync("./tmp");
     }
-    await fs.writeFile(tempFilepath, typescriptSource);
+    await fs.writeFileSync(tempFilepath, typescriptSource);
     const program = ts.createProgram([tempFilepath], {
       module: ts.ModuleKind.NodeNext,
       moduleResolution: ts.ModuleResolutionKind.NodeNext,
@@ -73,14 +72,11 @@ const run = async () => {
     }
   } finally {
     try {
-      await fs.rm(tempFilepath);
+      await fs.rmSync(tempFilepath);
     } catch (e) {
       // Do nothing
     }
   }
 };
 
-run().catch((e) => {
-  console.error(e);
-  process.exit(1);
-});
+run();
