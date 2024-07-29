@@ -38,7 +38,7 @@ jobs:
         uses: tj-actions/changed-files@v44
       - name: Validate new notebooks
         run: |
-          new_notebooks=$(echo ${{ steps.changed-files.outputs.added_files }} | tr ' ' '\n' | grep '\.ipynb$')
+          new_notebooks=$(echo '${{ steps.changed-files.outputs.added_files }}' | tr ' ' '\n' | grep '\.ipynb$' || true)
           echo "New notebooks: $new_notebooks"
           if [ -n "$new_notebooks" ]; then
             for notebook in $new_notebooks; do
