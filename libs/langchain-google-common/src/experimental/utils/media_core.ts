@@ -1,14 +1,17 @@
 import { v1, v4 } from "uuid"; // FIXME - it is importing the wrong uuid, so v6 and v7 aren't implemented
 import { BaseStore } from "@langchain/core/stores";
-import {Serializable, Serialized, SerializedConstructor} from "@langchain/core/load/serializable";
+import {
+  Serializable,
+  Serialized,
+  SerializedConstructor,
+} from "@langchain/core/load/serializable";
 
 export type MediaBlobData = {
-  value: string;  // In Base64 encoding
-  type: string;   // The mime type and possibly encoding
-}
+  value: string; // In Base64 encoding
+  type: string; // The mime type and possibly encoding
+};
 
 export interface MediaBlobParameters {
-
   data?: MediaBlobData;
 
   metadata?: Record<string, unknown>;
@@ -32,10 +35,7 @@ function bytesToString(dataArray: Uint8Array): string {
  * Represents a chunk of data that can be identified by the path where the
  * data is (or will be) located, along with optional metadata about the data.
  */
-export class MediaBlob
-  extends Serializable
-  implements MediaBlobParameters
-{
+export class MediaBlob extends Serializable implements MediaBlobParameters {
   lc_serializable = true;
 
   lc_namespace = ["langchain", "google-common"]; // FIXME - What should this be? And why?
@@ -62,7 +62,7 @@ export class MediaBlob
       data: this.data,
       metadata: this.metadata,
       path: this.path,
-    }
+    };
   }
 
   get size(): number {
@@ -93,7 +93,7 @@ export class MediaBlob
     }
     const binString = atob(this.data?.value);
     const ret = new Uint8Array(binString.length);
-    for (let co=0; co < binString.length; co+=1) {
+    for (let co = 0; co < binString.length; co += 1) {
       ret[co] = binString.charCodeAt(co);
     }
     return ret;
@@ -127,28 +127,31 @@ export class MediaBlob
   }
 
   static fromDataUrl(url: string): MediaBlob {
-    if (!url.startsWith('data:')) {
-      throw new Error('Not a data: URL');
+    if (!url.startsWith("data:")) {
+      throw new Error("Not a data: URL");
     }
-    const colon = url.indexOf(':');
-    const semicolon = url.indexOf(';');
-    const mimeType = url.substring(colon+1, semicolon);
+    const colon = url.indexOf(":");
+    const semicolon = url.indexOf(";");
+    const mimeType = url.substring(colon + 1, semicolon);
 
-    const comma = url.indexOf(',');
-    const base64Data = url.substring(comma+1);
+    const comma = url.indexOf(",");
+    const base64Data = url.substring(comma + 1);
 
     const data: MediaBlobData = {
       type: mimeType,
       value: base64Data,
-    }
+    };
 
     return new MediaBlob({
       data,
       path: url,
-    })
+    });
   }
 
-  static async fromBlob(blob: Blob, other?: MediaBlobParameters): Promise<MediaBlob> {
+  static async fromBlob(
+    blob: Blob,
+    other?: MediaBlobParameters
+  ): Promise<MediaBlob> {
     const valueBuffer = await blob.arrayBuffer();
     const valueArray = new Uint8Array(valueBuffer);
     const valueStr = bytesToString(valueArray);
@@ -159,8 +162,8 @@ export class MediaBlob
       data: {
         value,
         type: blob.type,
-      }
-    })
+      },
+    });
   }
 }
 
@@ -255,13 +258,12 @@ export abstract class BlobStore extends BaseStore<string, MediaBlob> {
    * @param opts Any options (if needed) that may be used to determine if it is valid
    * @return If the path is supported
    */
-  hasValidPath (
+  hasValidPath(
     path: string | undefined,
     opts?: BlobStoreStoreOptions
   ): Promise<boolean> {
     const prefix = opts?.pathPrefix ?? "";
-    const isPrefixed =
-      typeof path !== "undefined" && path.startsWith(prefix);
+    const isPrefixed = typeof path !== "undefined" && path.startsWith(prefix);
     return Promise.resolve(isPrefixed);
   }
 
@@ -458,7 +460,6 @@ export interface ReadThroughBlobStoreOptions extends BlobStoreOptions {
 }
 
 export class ReadThroughBlobStore extends BlobStore {
-
   baseStore: BlobStore;
 
   backingStore: BlobStore;
@@ -469,11 +470,14 @@ export class ReadThroughBlobStore extends BlobStore {
     this.backingStore = opts.backingStore;
   }
 
-  async store(blob: MediaBlob, opts: BlobStoreStoreOptions = {}): Promise<MediaBlob | undefined> {
+  async store(
+    blob: MediaBlob,
+    opts: BlobStoreStoreOptions = {}
+  ): Promise<MediaBlob | undefined> {
     const originalUri = await blob.asUri();
     const newBlob = await this.backingStore.store(blob, opts);
     if (newBlob) {
-      await this.baseStore.mset([[originalUri,newBlob]]);
+      await this.baseStore.mset([[originalUri, newBlob]]);
     }
     return newBlob;
   }
@@ -493,7 +497,6 @@ export class ReadThroughBlobStore extends BlobStore {
   yieldKeys(prefix: string | undefined): AsyncGenerator<string> {
     return this.baseStore.yieldKeys(prefix);
   }
-
 }
 
 export class SimpleWebBlobStore extends BlobStore {
@@ -505,7 +508,10 @@ export class SimpleWebBlobStore extends BlobStore {
     path: string | undefined,
     _opts?: BlobStoreStoreOptions
   ): Promise<boolean> {
-    return await super.hasValidPath(path,{pathPrefix: "https://"}) || await super.hasValidPath(path,{pathPrefix: "http://"});
+    return (
+      (await super.hasValidPath(path, { pathPrefix: "https://" })) ||
+      (await super.hasValidPath(path, { pathPrefix: "http://" }))
+    );
   }
 
   async _fetch(url: string): Promise<MediaBlob | undefined> {
@@ -558,13 +564,13 @@ export class SimpleWebBlobStore extends BlobStore {
  * A blob "store" that works with data: URLs that will turn the URL into
  * a blob.
  */
-export class DataBlobStore extends BlobStore{
+export class DataBlobStore extends BlobStore {
   _notImplementedException() {
     throw new Error("Not implemented for DataBlobStore");
   }
 
   hasValidPath(path: string, _opts?: BlobStoreStoreOptions): Promise<boolean> {
-    return super.hasValidPath(path, {pathPrefix: "data:"});
+    return super.hasValidPath(path, { pathPrefix: "data:" });
   }
 
   _fetch(url: string): MediaBlob {
@@ -617,7 +623,6 @@ export interface MediaManagerConfiguration {
  * supports.
  */
 export class MediaManager {
-
   store: BlobStore;
 
   resolvers: BlobStore[] | undefined;
@@ -628,10 +633,7 @@ export class MediaManager {
   }
 
   defaultResolvers(): BlobStore[] {
-    return [
-      new DataBlobStore({}),
-      new SimpleWebBlobStore({}),
-    ]
+    return [new DataBlobStore({}), new SimpleWebBlobStore({})];
   }
 
   async _isInvalid(blob: MediaBlob | undefined): Promise<boolean> {
@@ -648,7 +650,7 @@ export class MediaManager {
     let resolvedBlob: MediaBlob | undefined;
 
     const resolvers = this.resolvers || this.defaultResolvers();
-    for (let co=0; co<resolvers.length; co+=1) {
+    for (let co = 0; co < resolvers.length; co += 1) {
       const resolver = resolvers[co];
       if (await resolver.hasValidPath(uri)) {
         resolvedBlob = await resolver.fetch(uri);

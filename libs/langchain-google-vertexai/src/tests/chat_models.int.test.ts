@@ -21,9 +21,9 @@ import { concat } from "@langchain/core/utils/stream";
 import {
   BackedBlobStore,
   MediaManager,
-  SimpleWebBlobStore
+  SimpleWebBlobStore,
 } from "@langchain/google-common/experimental/utils/media_core";
-import {GoogleCloudStorageUri} from "@langchain/google-common/experimental/media";
+import { GoogleCloudStorageUri } from "@langchain/google-common/experimental/media";
 import { GeminiTool } from "../types.js";
 import { ChatVertexAI } from "../chat_models.js";
 

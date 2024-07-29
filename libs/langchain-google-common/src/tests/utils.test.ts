@@ -1,13 +1,15 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { beforeEach, expect, test } from "@jest/globals";
 import { InMemoryStore } from "@langchain/core/stores";
-import {SerializedConstructor} from "@langchain/core/load/serializable";
+import { SerializedConstructor } from "@langchain/core/load/serializable";
 import { z } from "zod";
 import { zodToGeminiParameters } from "../utils/zod_to_gemini_parameters.js";
 import {
-  BackedBlobStore, BlobStore,
+  BackedBlobStore,
+  BlobStore,
   MediaBlob,
-  MediaManager, ReadThroughBlobStore,
+  MediaManager,
+  ReadThroughBlobStore,
   SimpleWebBlobStore,
 } from "../experimental/utils/media_core.js";
 
@@ -124,14 +126,14 @@ describe("media core", () => {
     const dblob = MediaBlob.fromDataUrl(dataUrl);
     expect(await dblob.asString()).toEqual(blobData);
     expect(dblob.mimetype).toEqual(blobMimeType);
-  })
+  });
 
   test("MediaBlob serialize", async () => {
     const blob = new Blob(["This is a test"], { type: "text/plain" });
     const mblob = await MediaBlob.fromBlob(blob);
-    console.log('serialize mblob', mblob);
+    console.log("serialize mblob", mblob);
     const serialized = mblob.toJSON() as SerializedConstructor;
-    console.log('serialized', serialized);
+    console.log("serialized", serialized);
     expect(serialized.kwargs).toHaveProperty("data");
     expect(serialized.kwargs.data.value).toEqual("VGhpcyBpcyBhIHRlc3Q=");
   });
@@ -139,20 +141,20 @@ describe("media core", () => {
   test("MediaBlob deserialize", async () => {
     const serialized: SerializedConstructor = {
       lc: 1,
-      type: 'constructor',
-      id: [ 'langchain', 'google-common', 'MediaBlob' ],
+      type: "constructor",
+      id: ["langchain", "google-common", "MediaBlob"],
       kwargs: {
         data: {
-          value: 'VGhpcyBpcyBhIHRlc3Q=',
-          type: 'text/plain',
-        }
+          value: "VGhpcyBpcyBhIHRlc3Q=",
+          type: "text/plain",
+        },
       },
     };
-    const mblob =  new MediaBlob(serialized);
-    console.log('deserialize mblob', mblob);
+    const mblob = new MediaBlob(serialized);
+    console.log("deserialize mblob", mblob);
     expect(mblob.dataType).toEqual("text/plain");
     expect(await mblob.asString()).toEqual("This is a test");
-  })
+  });
 
   test("SimpleWebBlobStore fetch", async () => {
     const webStore = new SimpleWebBlobStore();
@@ -174,7 +176,7 @@ describe("media core", () => {
       });
       const data = new Blob(["This is a test"], { type: "text/plain" });
       const path = "simple://foo";
-      const blob = await MediaBlob.fromBlob(data,{path});
+      const blob = await MediaBlob.fromBlob(data, { path });
       const storedBlob = await store.store(blob);
       expect(storedBlob).toBeDefined();
       const fetchedBlob = await store.fetch(path);
@@ -231,7 +233,7 @@ describe("media core", () => {
       });
       const path = "simple://foo";
       const data = new Blob(["This is a test"], { type: "text/plain" });
-      const blob = await MediaBlob.fromBlob(data,{path});
+      const blob = await MediaBlob.fromBlob(data, { path });
       const storedBlob = await store.store(blob);
       expect(storedBlob).toBeUndefined();
     });
@@ -247,7 +249,7 @@ describe("media core", () => {
       });
       const path = "simple://foo";
       const data = new Blob(["This is a test"], { type: "text/plain" });
-      const blob = await MediaBlob.fromBlob(data,{path});
+      const blob = await MediaBlob.fromBlob(data, { path });
       const storedBlob = await store.store(blob);
       expect(storedBlob).toBeDefined();
       expect(storedBlob?.path).toEqual(path);
@@ -265,7 +267,7 @@ describe("media core", () => {
       });
       const path = "simple://foo";
       const data = new Blob(["This is a test"], { type: "text/plain" });
-      const blob = await MediaBlob.fromBlob(data,{path});
+      const blob = await MediaBlob.fromBlob(data, { path });
       const storedBlob = await store.store(blob);
       expect(storedBlob?.path).toEqual("example://bar/foo");
       expect(await storedBlob?.asString()).toEqual("This is a test");
@@ -287,7 +289,7 @@ describe("media core", () => {
         alpha: "one",
         bravo: "two",
       };
-      const blob = await MediaBlob.fromBlob(data,{path, metadata});
+      const blob = await MediaBlob.fromBlob(data, { path, metadata });
       const storedBlob = await store.store(blob);
       expect(storedBlob?.path).toMatch(
         /example:\/\/bar\/[a-f0-9]{8}(-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i
@@ -311,9 +313,13 @@ describe("media core", () => {
     let canonicalMemory: MemStore;
     let resolverMemory: MemStore;
 
-    async function store(blobStore: BlobStore, path: string, text: string): Promise<void> {
+    async function store(
+      blobStore: BlobStore,
+      path: string,
+      text: string
+    ): Promise<void> {
       const data = new Blob([text], { type: "text/plain" });
-      const blob = await MediaBlob.fromBlob(data, {path});
+      const blob = await MediaBlob.fromBlob(data, { path });
       await blobStore.store(blob);
     }
 
@@ -357,7 +363,9 @@ describe("media core", () => {
 
     test("environment", async () => {
       expect(resolverMemory.length).toEqual(2);
-      const fooBlob = await mediaManager.resolvers?.[0]?.fetch("resolve://host/foo");
+      const fooBlob = await mediaManager.resolvers?.[0]?.fetch(
+        "resolve://host/foo"
+      );
       expect(await fooBlob?.asString()).toEqual("fooing");
     });
 
@@ -372,7 +380,8 @@ describe("media core", () => {
       // we should be able to fetch it by the resolve uri, but the
       // path in the blob itself should be the canonical uri
       expect(aliasMemory.length).toEqual(1);
-      const mediaStore: ReadThroughBlobStore = mediaManager.store as ReadThroughBlobStore;
+      const mediaStore: ReadThroughBlobStore =
+        mediaManager.store as ReadThroughBlobStore;
       const aliasBlob = await mediaStore.baseStore.fetch(uri);
       expect(aliasBlob).toBeDefined();
       expect(aliasBlob?.path).toEqual(curi);
