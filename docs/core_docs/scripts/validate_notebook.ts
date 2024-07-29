@@ -1,9 +1,8 @@
-import * as fs from "node:fs/promises";
+import * as fs from "node:fs";
 import * as ts from "typescript";
-import { v4 as uuidv4 } from "uuid";
 
-export async function extract(filepath: string) {
-  const cells = JSON.parse((await fs.readFile(filepath)).toString()).cells;
+export function extract(filepath: string) {
+  const cells = JSON.parse(fs.readFileSync(filepath).toString()).cells;
   const code = cells
     .map((cell: Record<string, any>) => {
       if (cell.cell_type === "code") {
@@ -33,13 +32,11 @@ const run = async () => {
     [pathname.split("/").length - 1].replace(".ipynb", ".mts");
   const tempFilepath = `./tmp/${filename}`;
   try {
-    const typescriptSource = await extract(pathname);
-    try {
-      await fs.access("./tmp", fs.constants.F_OK);
-    } catch (err) {
-      await fs.mkdir("./tmp");
+    const typescriptSource = extract(pathname);
+    if (!fs.existsSync("./tmp")) {
+      fs.mkdirSync("./tmp");
     }
-    await fs.writeFile(tempFilepath, typescriptSource);
+    fs.writeFileSync(tempFilepath, typescriptSource);
     const program = ts.createProgram([tempFilepath], {
       module: ts.ModuleKind.NodeNext,
       moduleResolution: ts.ModuleResolutionKind.NodeNext,
@@ -48,6 +45,7 @@ const run = async () => {
       skipLibCheck: true,
     });
     const diagnostics = ts.getPreEmitDiagnostics(program);
+    const issueStrings: string[] = [];
     if (diagnostics.length === 0) {
       console.log("No type errors found.");
     } else {
@@ -59,27 +57,36 @@ const run = async () => {
             diagnostic.messageText,
             "\n"
           );
-          console.log(
+          issueStrings.push(
             `${diagnostic.file.fileName} (${line + 1},${
               character + 1
             }): ${message}`
           );
         } else {
-          console.log(
+          issueStrings.push(
             ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n")
           );
         }
       });
     }
-  } catch (e) {
-    console.log(e);
+    if (issueStrings.length) {
+      const issues = issueStrings.join("\n");
+      console.error(issues);
+      const err = new Error("Found type errors in new notebook.");
+      (err as any).details = issues;
+      throw err;
+    }
   } finally {
     try {
-      await fs.rm(tempFilepath);
+      fs.rmSync(tempFilepath);
     } catch (e) {
       // Do nothing
     }
   }
 };
 
-run();
+try {
+  run();
+} catch {
+  process.exit(1);
+}
