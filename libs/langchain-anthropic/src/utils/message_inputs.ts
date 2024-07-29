@@ -40,17 +40,33 @@ function _mergeMessages(
   for (const message of messages) {
     if (message._getType() === "tool") {
       if (typeof message.content === "string") {
-        merged.push(
-          new HumanMessage({
-            content: [
-              {
-                type: "tool_result",
-                content: message.content,
-                tool_use_id: (message as ToolMessage).tool_call_id,
-              },
-            ],
-          })
-        );
+        const previousMessage = merged[merged.length - 1];
+        if (
+          previousMessage?._getType() === "human" &&
+          Array.isArray(previousMessage.content) &&
+          "type" in previousMessage.content[0] &&
+          previousMessage.content[0].type === "tool_result"
+        ) {
+          // If the previous message was a tool result, we merge this tool message into it.
+          previousMessage.content.push({
+            type: "tool_result",
+            content: message.content,
+            tool_use_id: (message as ToolMessage).tool_call_id,
+          });
+        } else {
+          // If not, we create a new human message with the tool result.
+          merged.push(
+            new HumanMessage({
+              content: [
+                {
+                  type: "tool_result",
+                  content: message.content,
+                  tool_use_id: (message as ToolMessage).tool_call_id,
+                },
+              ],
+            })
+          );
+        }
       } else {
         merged.push(new HumanMessage({ content: message.content }));
       }
@@ -158,32 +174,6 @@ function _formatContent(content: MessageContent) {
   }
 }
 
-function _mergeAdjacentMessages(
-  messages: AnthropicMessageParam[]
-): AnthropicMessageParam[] {
-  return messages.reduce((acc: AnthropicMessageParam[], current, index) => {
-    if (index === 0) {
-      return [current];
-    }
-
-    const previous = acc[acc.length - 1];
-
-    if (
-      previous.role === current.role &&
-      Array.isArray(previous.content) &&
-      Array.isArray(current.content) &&
-      // Only concatenate tool results if they are consecutive
-      previous.content[0].type === "tool_result" &&
-      current.content[0].type === "tool_result"
-    ) {
-      previous.content = previous.content.concat(current.content);
-      return acc;
-    }
-
-    return [...acc, current];
-  }, []);
-}
-
 /**
  * Formats messages as a prompt for the model.
  * @param messages The base messages to format as a prompt.
@@ -264,7 +254,7 @@ export function _formatMessagesForAnthropic(messages: BaseMessage[]): {
     }
   });
   return {
-    messages: _mergeAdjacentMessages(formattedMessages),
+    messages: formattedMessages,
     system,
   };
 }
