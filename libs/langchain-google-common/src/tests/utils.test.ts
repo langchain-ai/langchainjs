@@ -4,9 +4,9 @@ import { InMemoryStore } from "@langchain/core/stores";
 import { z } from "zod";
 import { zodToGeminiParameters } from "../utils/zod_to_gemini_parameters.js";
 import {
-  BackedBlobStore,
+  BackedBlobStore, BlobStore,
   MediaBlob,
-  MediaManager,
+  MediaManager, ReadThroughBlobStore,
   SimpleWebBlobStore,
 } from "../experimental/utils/media_core.js";
 
@@ -114,6 +114,22 @@ describe("media core", () => {
     expect(mblob.encoding).toEqual("us-ascii");
     expect(await mblob.asString()).toEqual("This is a test");
   });
+
+  test("MediaBlob fromDataUrl", async () => {
+    const blobData = "This is a test";
+    const blobMimeType = "text/plain";
+    const blobDataType = `${blobMimeType}; charset=US-ASCII`;
+    const blob = new Blob([blobData], {
+      type: blobDataType,
+    });
+    const mblob = new MediaBlob({
+      data: blob,
+    });
+    const dataUrl = await mblob.asDataUrl();
+    const dblob = MediaBlob.fromDataUrl(dataUrl);
+    expect(await dblob.asString()).toEqual(blobData);
+    expect(dblob.mimetype).toEqual(blobMimeType);
+  })
 
   test("MediaBlob serialize", async () => {
     const blob = new Blob(["This is a test"], { type: "text/plain" });
@@ -296,12 +312,12 @@ describe("media core", () => {
     let canonicalMemory: MemStore;
     let resolverMemory: MemStore;
 
-    async function store(path: string, text: string): Promise<void> {
+    async function store(blobStore: BlobStore, path: string, text: string): Promise<void> {
       const blob = new MediaBlob({
         data: new Blob([text], { type: "text/plain" }),
         path,
       });
-      await mediaManager.resolver.store(blob);
+      await blobStore.store(blob);
     }
 
     beforeEach(async () => {
@@ -330,18 +346,21 @@ describe("media core", () => {
           actionIfBlobMissing: "emptyBlob",
         },
       });
-      mediaManager = new MediaManager({
-        aliasStore,
-        canonicalStore,
-        resolver,
+      const mediaStore = new ReadThroughBlobStore({
+        baseStore: aliasStore,
+        backingStore: canonicalStore,
       });
-      await store("resolve://host/foo", "fooing");
-      await store("resolve://host2/bar/baz", "barbazing");
+      mediaManager = new MediaManager({
+        store: mediaStore,
+        resolvers: [resolver],
+      });
+      await store(resolver, "resolve://host/foo", "fooing");
+      await store(resolver, "resolve://host2/bar/baz", "barbazing");
     });
 
     test("environment", async () => {
       expect(resolverMemory.length).toEqual(2);
-      const fooBlob = await mediaManager.resolver.fetch("resolve://host/foo");
+      const fooBlob = await mediaManager.resolvers?.[0]?.fetch("resolve://host/foo");
       expect(await fooBlob?.asString()).toEqual("fooing");
     });
 
@@ -356,7 +375,8 @@ describe("media core", () => {
       // we should be able to fetch it by the resolve uri, but the
       // path in the blob itself should be the canonical uri
       expect(aliasMemory.length).toEqual(1);
-      const aliasBlob = await mediaManager.aliasStore.fetch(uri);
+      const mediaStore: ReadThroughBlobStore = mediaManager.store as ReadThroughBlobStore;
+      const aliasBlob = await mediaStore.baseStore.fetch(uri);
       expect(aliasBlob).toBeDefined();
       expect(aliasBlob?.path).toEqual(curi);
       expect(await aliasBlob?.asString()).toEqual("fooing");
@@ -365,9 +385,9 @@ describe("media core", () => {
       // fetching it by the resolve uri should fail
       // but fetching it by the canonical uri should succeed
       expect(canonicalMemory.length).toEqual(1);
-      const canonicalBlobU = await mediaManager.canonicalStore.fetch(uri);
+      const canonicalBlobU = await mediaStore.backingStore.fetch(uri);
       expect(canonicalBlobU).toBeUndefined();
-      const canonicalBlob = await mediaManager.canonicalStore.fetch(curi);
+      const canonicalBlob = await mediaStore.backingStore.fetch(curi);
       expect(canonicalBlob).toBeDefined();
       expect(canonicalBlob?.path).toEqual(curi);
       expect(await canonicalBlob?.asString()).toEqual("fooing");

@@ -21,7 +21,7 @@ import { GoogleAISafetyError } from "../utils/safety.js";
 import {
   BackedBlobStore,
   MediaBlob,
-  MediaManager,
+  MediaManager, ReadThroughBlobStore,
 } from "../experimental/utils/media_core.js";
 import { removeAdditionalProperties } from "../utils/zod_to_gemini_parameters.js";
 
@@ -665,6 +665,10 @@ describe("Mock ChatGoogle", () => {
         actionIfBlobMissing: undefined,
       },
     });
+    const blobStore = new ReadThroughBlobStore({
+      baseStore: aliasStore,
+      backingStore: canonicalStore,
+    });
     const resolverMemory = new MemStore();
     const resolver = new BackedBlobStore({
       backingStore: resolverMemory,
@@ -673,9 +677,8 @@ describe("Mock ChatGoogle", () => {
       },
     });
     const mediaManager = new MediaManager({
-      aliasStore,
-      canonicalStore,
-      resolver,
+      store: blobStore,
+      resolvers: [resolver],
     });
 
     async function store(path: string, text: string): Promise<void> {
@@ -684,7 +687,7 @@ describe("Mock ChatGoogle", () => {
         data: new Blob([text], { type }),
         path,
       });
-      await mediaManager.resolver.store(blob);
+      await resolver.store(blob);
     }
     await store("resolve://host/foo", "fooing");
     await store("resolve://host2/bar/baz", "barbazing");

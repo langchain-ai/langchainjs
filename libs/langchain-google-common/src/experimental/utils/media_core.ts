@@ -96,6 +96,30 @@ export class MediaBlob
       encoding,
     };
   }
+
+  static fromDataUrl(url: string): MediaBlob {
+    if (!url.startsWith('data:')) {
+      throw new Error('Not a data: URL');
+    }
+    const colon = url.indexOf(':');
+    const semicolon = url.indexOf(';');
+    const mimeType = url.substring(colon+1, semicolon);
+
+    const comma = url.indexOf(',');
+    const base64Data = url.substring(comma+1);
+    const binaryString = atob(base64Data);
+    const bytes = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i += 1) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+
+    const blob = new Blob( [bytes], {type: mimeType});
+
+    return new MediaBlob({
+      data: blob,
+      path: url,
+    })
+  }
 }
 
 export type ActionIfInvalidAction =
@@ -180,29 +204,22 @@ export abstract class BlobStore extends BaseStore<string, MediaBlob> {
   }
 
   /**
-   * Is the path set in the MediaBlob supported by this BlobStore?
-   * Subclasses must implement and evaluate `blob.path` to make this
-   * determination.
+   * Is the path supported by this BlobStore?
    *
    * Although this is async, this is expected to be a relatively fast operation
    * (ie - you shouldn't make network calls).
    *
-   * The default implementation assumes that undefined blob.paths are invalid
-   * and then uses the replacePathPrefix (or an empty string) as an assumed path
-   * to start with.
-   *
-   * @param blob The blob to test
+   * @param path The path to check
    * @param opts Any options (if needed) that may be used to determine if it is valid
-   * @return If the string represented by blob.path is supported.
+   * @return If the path is supported
    */
-  protected _hasValidPath(
-    blob: MediaBlob,
+  hasValidPath (
+    path: string | undefined,
     opts?: BlobStoreStoreOptions
   ): Promise<boolean> {
-    const path = blob.path ?? "";
     const prefix = opts?.pathPrefix ?? "";
     const isPrefixed =
-      typeof blob.path !== "undefined" && path.startsWith(prefix);
+      typeof path !== "undefined" && path.startsWith(prefix);
     return Promise.resolve(isPrefixed);
   }
 
@@ -293,7 +310,7 @@ export abstract class BlobStore extends BaseStore<string, MediaBlob> {
     blob: MediaBlob,
     opts?: BlobStoreStoreOptions
   ): Promise<MediaBlob | undefined> {
-    if (await this._hasValidPath(blob, opts)) {
+    if (await this.hasValidPath(blob.path, opts)) {
       return blob;
     }
     switch (opts?.actionIfInvalid) {
@@ -393,22 +410,60 @@ export class BackedBlobStore extends BlobStore {
   }
 }
 
+export interface ReadThroughBlobStoreOptions extends BlobStoreOptions {
+  baseStore: BlobStore;
+  backingStore: BlobStore;
+}
+
+export class ReadThroughBlobStore extends BlobStore {
+
+  baseStore: BlobStore;
+
+  backingStore: BlobStore;
+
+  constructor(opts: ReadThroughBlobStoreOptions) {
+    super(opts);
+    this.baseStore = opts.baseStore;
+    this.backingStore = opts.backingStore;
+  }
+
+  async store(blob: MediaBlob, opts: BlobStoreStoreOptions = {}): Promise<MediaBlob | undefined> {
+    const originalUri = await blob.asUri();
+    const newBlob = await this.backingStore.store(blob, opts);
+    if (newBlob) {
+      await this.baseStore.mset([[originalUri,newBlob]]);
+    }
+    return newBlob;
+  }
+
+  mdelete(keys: string[]): Promise<void> {
+    return this.baseStore.mdelete(keys);
+  }
+
+  mget(keys: string[]): Promise<(MediaBlob | undefined)[]> {
+    return this.baseStore.mget(keys);
+  }
+
+  mset(_keyValuePairs: [string, MediaBlob][]): Promise<void> {
+    throw new Error("Do not call ReadThroughBlobStore.mset directly");
+  }
+
+  yieldKeys(prefix: string | undefined): AsyncGenerator<string> {
+    return this.baseStore.yieldKeys(prefix);
+  }
+
+}
+
 export class SimpleWebBlobStore extends BlobStore {
   _notImplementedException() {
     throw new Error("Not implemented for SimpleWebBlobStore");
   }
 
-  _hasValidPath(
-    blob: MediaBlob,
+  async hasValidPath(
+    path: string | undefined,
     _opts?: BlobStoreStoreOptions
   ): Promise<boolean> {
-    const { path } = blob;
-    if (path) {
-      const ret = path?.startsWith("http://") || path?.startsWith("https://");
-      return Promise.resolve(ret);
-    } else {
-      return Promise.resolve(false);
-    }
+    return await super.hasValidPath(path,{pathPrefix: "https://"}) || await super.hasValidPath(path,{pathPrefix: "http://"});
   }
 
   async _fetch(url: string): Promise<MediaBlob | undefined> {
@@ -456,22 +511,59 @@ export class SimpleWebBlobStore extends BlobStore {
   }
 }
 
+/**
+ * A blob "store" that works with data: URLs that will turn the URL into
+ * a blob.
+ */
+export class DataBlobStore extends BlobStore{
+  _notImplementedException() {
+    throw new Error("Not implemented for DataBlobStore");
+  }
+
+  hasValidPath(path: string, _opts?: BlobStoreStoreOptions): Promise<boolean> {
+    return super.hasValidPath(path, {pathPrefix: "data:"});
+  }
+
+  _fetch(url: string): MediaBlob {
+    return MediaBlob.fromDataUrl(url);
+  }
+
+  async mget(keys: string[]): Promise<(MediaBlob | undefined)[]> {
+    const blobMap = keys.map(this._fetch);
+    return blobMap;
+  }
+
+  async mdelete(_keys: string[]): Promise<void> {
+    this._notImplementedException();
+  }
+
+  async mset(_keyValuePairs: [string, MediaBlob][]): Promise<void> {
+    this._notImplementedException();
+  }
+
+  async *yieldKeys(_prefix: string | undefined): AsyncGenerator<string> {
+    this._notImplementedException();
+    yield "";
+  }
+}
+
 export interface MediaManagerConfiguration {
   /**
-   * A map from the alias name to the canonical MediaBlob for that name
+   * A store that, given a common URI, returns the corresponding MediaBlob.
+   * The returned MediaBlob may have a different URI.
+   * In many cases, this will be a ReadThroughStore or something similar
+   * that has a cached version of the MediaBlob, but also a way to get
+   * a new (or refreshed) version.
    */
-  aliasStore: BlobStore;
+  store: BlobStore;
 
   /**
-   * The definitive store for the MediaBlob
+   * BlobStores that can resolve a URL into the MediaBlob to save
+   * in the canonical store. This list is evaluated in order.
+   * If not provided, a default list (which involves a DataBlobStore
+   * and a SimpleWebBlobStore) will be used.
    */
-  canonicalStore: BlobStore;
-
-  /**
-   * BlobStore that can resolve a URL into the MediaBlob to save
-   * in the canonical store. A SimpleWebBlobStore is used if not provided.
-   */
-  resolver?: BlobStore;
+  resolvers?: BlobStore[];
 }
 
 /**
@@ -482,16 +574,21 @@ export interface MediaManagerConfiguration {
  * supports.
  */
 export class MediaManager {
-  aliasStore: BlobStore;
 
-  canonicalStore: BlobStore;
+  store: BlobStore;
 
-  resolver: BlobStore;
+  resolvers: BlobStore[] | undefined;
 
   constructor(config: MediaManagerConfiguration) {
-    this.aliasStore = config.aliasStore;
-    this.canonicalStore = config.canonicalStore;
-    this.resolver = config.resolver || new SimpleWebBlobStore({});
+    this.store = config.store;
+    this.resolvers = config.resolvers;
+  }
+
+  defaultResolvers(): BlobStore[] {
+    return [
+      new DataBlobStore({}),
+      new SimpleWebBlobStore({}),
+    ]
   }
 
   async _isInvalid(blob: MediaBlob | undefined): Promise<boolean> {
@@ -499,28 +596,33 @@ export class MediaManager {
   }
 
   /**
-   * Given the non-canonical URI, load what is at this URI and save it
-   * in the canonical store.
+   * Given the public URI, load what is at this URI and save it
+   * in the store.
    * @param uri The URI to resolve using the resolver
    * @return A canonical MediaBlob for this URI
    */
-  async _resolveCanonical(uri: string): Promise<MediaBlob | undefined> {
-    const resolvedBlob = await this.resolver.fetch(uri);
-    if (resolvedBlob) {
-      const canonicalBlob = await this.canonicalStore.store(resolvedBlob);
-      if (typeof canonicalBlob !== "undefined") {
-        await this.aliasStore.mset([[uri, canonicalBlob]]);
+  async _resolveAndSave(uri: string): Promise<MediaBlob | undefined> {
+    let resolvedBlob: MediaBlob | undefined;
+
+    const resolvers = this.resolvers || this.defaultResolvers();
+    for (let co=0; co<resolvers.length; co+=1) {
+      const resolver = resolvers[co];
+      if (await resolver.hasValidPath(uri)) {
+        resolvedBlob = await resolver.fetch(uri);
       }
-      return canonicalBlob;
+    }
+
+    if (resolvedBlob) {
+      return await this.store.store(resolvedBlob);
     } else {
       return new MediaBlob();
     }
   }
 
   async getMediaBlob(uri: string): Promise<MediaBlob | undefined> {
-    const aliasBlob = await this.aliasStore.fetch(uri);
+    const aliasBlob = await this.store.fetch(uri);
     const ret = (await this._isInvalid(aliasBlob))
-      ? await this._resolveCanonical(uri)
+      ? await this._resolveAndSave(uri)
       : (aliasBlob as MediaBlob);
     return ret;
   }
