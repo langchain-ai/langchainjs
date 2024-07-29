@@ -67,8 +67,7 @@ type AnthropicMessageStreamEvent = Anthropic.MessageStreamEvent;
 type AnthropicRequestOptions = Anthropic.RequestOptions;
 
 export interface ChatAnthropicCallOptions
-  extends BaseChatModelCallOptions,
-    Pick<AnthropicInput, "streamUsage"> {
+  extends BaseChatModelCallOptions {
   tools?: AnthropicToolTypes[];
   /**
    * Whether or not to specify what tool the model should use
@@ -157,15 +156,11 @@ function isAnthropicTool(tool: any): tool is AnthropicTool {
 function _makeMessageChunkFromAnthropicEvent(
   data: Anthropic.Messages.RawMessageStreamEvent,
   fields: {
-    streamUsage: boolean;
     coerceContentToString: boolean;
-    usageData: { input_tokens: number; output_tokens: number };
   }
 ): {
   chunk: AIMessageChunk;
-  usageData: { input_tokens: number; output_tokens: number };
 } | null {
-  let usageDataCopy = { ...fields.usageData };
 
   if (data.type === "message_start") {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -177,15 +172,11 @@ function _makeMessageChunkFromAnthropicEvent(
         filteredAdditionalKwargs[key] = value;
       }
     }
-    usageDataCopy = usage;
-    let usageMetadata: UsageMetadata | undefined;
-    if (fields.streamUsage) {
-      usageMetadata = {
-        input_tokens: usage.input_tokens,
-        output_tokens: usage.output_tokens,
-        total_tokens: usage.input_tokens + usage.output_tokens,
-      };
-    }
+    const usageMetadata: UsageMetadata = {
+      input_tokens: usage.input_tokens,
+      output_tokens: usage.output_tokens,
+      total_tokens: usage.input_tokens + usage.output_tokens,
+    };
     return {
       chunk: new AIMessageChunk({
         content: fields.coerceContentToString ? "" : [],
@@ -193,27 +184,19 @@ function _makeMessageChunkFromAnthropicEvent(
         usage_metadata: usageMetadata,
         id: data.message.id,
       }),
-      usageData: usageDataCopy,
     };
   } else if (data.type === "message_delta") {
-    let usageMetadata: UsageMetadata | undefined;
-    if (fields.streamUsage) {
-      usageMetadata = {
-        input_tokens: data.usage.output_tokens,
-        output_tokens: 0,
+    const usageMetadata: UsageMetadata = {
+        input_tokens: 0,
+        output_tokens: data.usage.output_tokens,
         total_tokens: data.usage.output_tokens,
       };
-    }
-    if (data?.usage !== undefined) {
-      usageDataCopy.output_tokens += data.usage.output_tokens;
-    }
     return {
       chunk: new AIMessageChunk({
         content: fields.coerceContentToString ? "" : [],
         additional_kwargs: { ...data.delta },
         usage_metadata: usageMetadata,
       }),
-      usageData: usageDataCopy,
     };
   } else if (
     data.type === "content_block_start" &&
@@ -232,7 +215,6 @@ function _makeMessageChunkFromAnthropicEvent(
             ],
         additional_kwargs: {},
       }),
-      usageData: usageDataCopy,
     };
   } else if (
     data.type === "content_block_delta" &&
@@ -252,7 +234,6 @@ function _makeMessageChunkFromAnthropicEvent(
               ],
           additional_kwargs: {},
         }),
-        usageData: usageDataCopy,
       };
     }
   } else if (
@@ -272,12 +253,9 @@ function _makeMessageChunkFromAnthropicEvent(
             ],
         additional_kwargs: {},
       }),
-      usageData: usageDataCopy,
     };
-  } else if (
-    data.type === "content_block_start" &&
-    data.content_block.type === "text"
-  ) {
+  } else if (data.type === "content_block_start" &&
+    data.content_block.type === "text") {
     const content = data.content_block?.text;
     if (content !== undefined) {
       return {
@@ -285,14 +263,13 @@ function _makeMessageChunkFromAnthropicEvent(
           content: fields.coerceContentToString
             ? content
             : [
-                {
-                  index: data.index,
-                  ...data.content_block,
-                },
-              ],
+              {
+                index: data.index,
+                ...data.content_block,
+              },
+            ],
           additional_kwargs: {},
         }),
-        usageData: usageDataCopy,
       };
     }
   }
@@ -367,11 +344,6 @@ export interface AnthropicInput {
    */
   invocationKwargs?: Kwargs;
 
-  /**
-   * Whether or not to include token usage data in streamed chunks.
-   * @default true
-   */
-  streamUsage?: boolean;
 }
 
 /**
@@ -749,8 +721,6 @@ export class ChatAnthropicMessages<
   // Used for streaming requests
   protected streamingClient: Anthropic;
 
-  streamUsage = true;
-
   constructor(fields?: Partial<AnthropicInput> & BaseChatModelParams) {
     super(fields ?? {});
 
@@ -783,7 +753,6 @@ export class ChatAnthropicMessages<
     this.stopSequences = fields?.stopSequences ?? this.stopSequences;
 
     this.streaming = fields?.streaming ?? false;
-    this.streamUsage = fields?.streamUsage ?? this.streamUsage;
   }
 
   getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
@@ -922,7 +891,6 @@ export class ChatAnthropicMessages<
       ...formattedMessages,
       stream: true,
     });
-    let usageData = { input_tokens: 0, output_tokens: 0 };
 
     for await (const data of stream) {
       if (options.signal?.aborted) {
@@ -931,15 +899,11 @@ export class ChatAnthropicMessages<
       }
 
       const result = _makeMessageChunkFromAnthropicEvent(data, {
-        streamUsage: !!(this.streamUsage || options.streamUsage),
         coerceContentToString,
-        usageData,
       });
       if (!result) continue;
 
-      const { chunk, usageData: updatedUsageData } = result;
-
-      usageData = updatedUsageData;
+      const { chunk } = result;
 
       const newToolCallChunk = extractToolCallChunk(chunk);
 
@@ -962,23 +926,6 @@ export class ChatAnthropicMessages<
         await runManager?.handleLLMNewToken(token);
       }
     }
-
-    let usageMetadata: UsageMetadata | undefined;
-    if (this.streamUsage || options.streamUsage) {
-      usageMetadata = {
-        input_tokens: usageData.input_tokens,
-        output_tokens: usageData.output_tokens,
-        total_tokens: usageData.input_tokens + usageData.output_tokens,
-      };
-    }
-    yield new ChatGenerationChunk({
-      message: new AIMessageChunk({
-        content: coerceContentToString ? "" : [],
-        additional_kwargs: { usage: usageData },
-        usage_metadata: usageMetadata,
-      }),
-      text: "",
-    });
   }
 
   /** @ignore */
