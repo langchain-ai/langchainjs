@@ -73,6 +73,7 @@ const run = async () => {
     }
   } catch (e) {
     console.log(e);
+    throw e;
   } finally {
     try {
       await fs.rm(tempFilepath);
