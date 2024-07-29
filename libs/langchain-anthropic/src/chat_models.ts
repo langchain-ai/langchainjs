@@ -2,11 +2,7 @@ import { Anthropic, type ClientOptions } from "@anthropic-ai/sdk";
 import type { Stream } from "@anthropic-ai/sdk/streaming";
 
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
-import {
-  AIMessageChunk,
-  type BaseMessage,
-  UsageMetadata,
-} from "@langchain/core/messages";
+import { AIMessageChunk, type BaseMessage } from "@langchain/core/messages";
 import { ChatGenerationChunk, type ChatResult } from "@langchain/core/outputs";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import {
@@ -431,24 +427,20 @@ export class ChatAnthropicMessages<
       ...formattedMessages,
       stream: true,
     });
-    let usageData = { input_tokens: 0, output_tokens: 0 };
 
     for await (const data of stream) {
       if (options.signal?.aborted) {
         stream.controller.abort();
         throw new Error("AbortError: User aborted the request.");
       }
-
+      const shouldStreamUsage = this.streamUsage ?? options.streamUsage;
       const result = _makeMessageChunkFromAnthropicEvent(data, {
-        streamUsage: !!(this.streamUsage || options.streamUsage),
+        streamUsage: shouldStreamUsage,
         coerceContentToString,
-        usageData,
       });
       if (!result) continue;
 
-      const { chunk, usageData: updatedUsageData } = result;
-
-      usageData = updatedUsageData;
+      const { chunk } = result;
 
       const newToolCallChunk = extractToolCallChunk(chunk);
 
@@ -460,7 +452,7 @@ export class ChatAnthropicMessages<
           content: chunk.content,
           additional_kwargs: chunk.additional_kwargs,
           tool_call_chunks: newToolCallChunk ? [newToolCallChunk] : undefined,
-          usage_metadata: chunk.usage_metadata,
+          usage_metadata: shouldStreamUsage ? chunk.usage_metadata : undefined,
           response_metadata: chunk.response_metadata,
           id: chunk.id,
         }),
@@ -471,23 +463,6 @@ export class ChatAnthropicMessages<
         await runManager?.handleLLMNewToken(token);
       }
     }
-
-    let usageMetadata: UsageMetadata | undefined;
-    if (this.streamUsage || options.streamUsage) {
-      usageMetadata = {
-        input_tokens: usageData.input_tokens,
-        output_tokens: usageData.output_tokens,
-        total_tokens: usageData.input_tokens + usageData.output_tokens,
-      };
-    }
-    yield new ChatGenerationChunk({
-      message: new AIMessageChunk({
-        content: coerceContentToString ? "" : [],
-        additional_kwargs: { usage: usageData },
-        usage_metadata: usageMetadata,
-      }),
-      text: "",
-    });
   }
 
   /** @ignore */
