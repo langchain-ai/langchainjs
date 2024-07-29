@@ -62,7 +62,6 @@ class BedrockChatStandardIntegrationTests extends ChatModelIntegrationTests<
 const testClass = new BedrockChatStandardIntegrationTests();
 
 test("BedrockChatStandardIntegrationTests", async () => {
-  const testResults =
-    await testClass.testModelCanUseToolUseAIMessageWithStreaming();
+  const testResults = await testClass.runTests();
   expect(testResults).toBe(true);
 });
