@@ -71,6 +71,11 @@ interface ChatModelIntegrationTestsFields<
    * @default "abc123"
    */
   functionId?: string;
+  /**
+   * Whether or not the model supports parallel tool calling.
+   * @default false
+   */
+  supportsParallelToolCalls?: boolean;
 }
 
 export abstract class ChatModelIntegrationTests<
@@ -81,6 +86,8 @@ export abstract class ChatModelIntegrationTests<
   functionId = "abc123";
 
   invokeResponseType: typeof AIMessage | typeof AIMessageChunk = AIMessage;
+
+  supportsParallelToolCalls = false;
 
   constructor(
     fields: ChatModelIntegrationTestsFields<
@@ -93,6 +100,8 @@ export abstract class ChatModelIntegrationTests<
     this.functionId = fields.functionId ?? this.functionId;
     this.invokeResponseType =
       fields.invokeResponseType ?? this.invokeResponseType;
+    this.supportsParallelToolCalls =
+      fields.supportsParallelToolCalls ?? this.supportsParallelToolCalls;
   }
 
   /**
@@ -1311,6 +1320,274 @@ Extraction path: {extractionPath}`,
     expect(result.explanation).toBeDefined();
     expect(result.apiDetails).toBeDefined();
     expect(typeof result.apiDetails === "object").toBeTruthy();
+  }
+
+  /**
+   * Tests the chat model's ability to handle parallel tool calls.
+   * This test is specifically designed for models that support calling multiple tools
+   * simultaneously in a single interaction.
+   *
+   * The test performs the following steps:
+   * 1. Creates a chat model and binds two tools: a weather tool and a calculator tool.
+   * 2. Invokes the model with a prompt that requires using both tools.
+   * 3. Verifies that the model calls at least two tools in its response.
+   * 4. Checks that both the weather tool and calculator tool were called.
+   *
+   * This test ensures that the model can correctly process and respond to prompts
+   * that require multiple tool calls, demonstrating its ability to handle complex,
+   * multi-tool scenarios efficiently.
+   *
+   * @param {InstanceType<this["Cls"]>["ParsedCallOptions"] | undefined} callOptions Optional call options to pass to the model.
+   *  These options will be applied to the model at runtime.
+   */
+  async testParallelToolCalls(
+    callOptions?: InstanceType<this["Cls"]>["ParsedCallOptions"]
+  ) {
+    // Skip the test if the model doesn't support tool calling
+    if (!this.chatModelHasToolCalling) {
+      console.log("Test requires tool calling. Skipping...");
+      return;
+    }
+    // Skip the test if the model doesn't support parallel tool calls
+    if (!this.supportsParallelToolCalls) {
+      console.log("Test requires parallel tool calls. Skipping...");
+      return;
+    }
+    const model = new this.Cls(this.constructorArgs);
+    if (!model.bindTools) {
+      throw new Error(
+        "bindTools undefined. Cannot test OpenAI formatted tool calls."
+      );
+    }
+
+    const weatherTool = tool((_) => "no-op", {
+      name: "get_current_weather",
+      description: "Get the current weather for a location.",
+      schema: z.object({
+        location: z.string().describe("The location to get the weather for."),
+      }),
+    });
+    const calculatorTool = tool((_) => "no-op", {
+      name: "calculator",
+      description: "Calculate the result of a given math expression.",
+      schema: z.object({
+        expression: z.string().describe("The math expression to evaluate."),
+      }),
+    });
+
+    const modelWithTools = model.bindTools([weatherTool, calculatorTool]);
+
+    const result: AIMessage = await modelWithTools.invoke(
+      "What is the current weather in San Francisco? Also, using a calculator tool, what is 246293 times 18462 plus 1817?",
+      callOptions
+    );
+    // Model should call at least two tools. Using greater than or equal since it might call the calculator tool multiple times.
+    expect(result.tool_calls?.length).toBeGreaterThanOrEqual(2);
+    if (!result.tool_calls?.length) return;
+
+    const weatherToolCalls = result.tool_calls.find(
+      (tc) => tc.name === weatherTool.name
+    );
+    const calculatorToolCalls = result.tool_calls.find(
+      (tc) => tc.name === calculatorTool.name
+    );
+
+    expect(weatherToolCalls).toBeDefined();
+    expect(calculatorToolCalls).toBeDefined();
+  }
+
+  /**
+   * Tests the chat model's ability to handle parallel tool calls while streaming.
+   * This test is specifically designed for models that support calling multiple tools
+   * simultaneously in a single interaction and can stream the response.
+   *
+   * The test performs the following steps:
+   * 1. Creates a chat model and binds two tools: a weather tool and a calculator tool.
+   * 2. Streams the model's response to a prompt that requires using both tools.
+   * 3. Concatenates the streamed chunks into a final result.
+   * 4. Verifies that the final result contains at least two tool calls.
+   * 5. Checks that both the weather tool and calculator tool were called.
+   *
+   * This test ensures that the model can correctly process and stream responses to prompts
+   * that require multiple tool calls, demonstrating its ability to handle complex,
+   * multi-tool scenarios efficiently in a streaming context.
+   *
+   * @param {InstanceType<this["Cls"]>["ParsedCallOptions"] | undefined} callOptions Optional call options to pass to the model.
+   *  These options will be applied to the model at runtime.
+   */
+  async testStreamingParallelToolCalls(
+    callOptions?: InstanceType<this["Cls"]>["ParsedCallOptions"]
+  ) {
+    // Skip the test if the model doesn't support tool calling
+    if (!this.chatModelHasToolCalling) {
+      console.log("Test requires tool calling. Skipping...");
+      return;
+    }
+    // Skip the test if the model doesn't support parallel tool calls
+    if (!this.supportsParallelToolCalls) {
+      console.log("Test requires parallel tool calls. Skipping...");
+      return;
+    }
+    const model = new this.Cls(this.constructorArgs);
+    if (!model.bindTools) {
+      throw new Error(
+        "bindTools undefined. Cannot test OpenAI formatted tool calls."
+      );
+    }
+
+    const weatherTool = tool((_) => "no-op", {
+      name: "get_current_weather",
+      description: "Get the current weather for a location.",
+      schema: z.object({
+        location: z.string().describe("The location to get the weather for."),
+      }),
+    });
+    const calculatorTool = tool((_) => "no-op", {
+      name: "calculator",
+      description: "Calculate the result of a given math expression.",
+      schema: z.object({
+        expression: z.string().describe("The math expression to evaluate."),
+      }),
+    });
+
+    const modelWithTools = model.bindTools([weatherTool, calculatorTool]);
+
+    const stream = await modelWithTools.stream(
+      "What is the current weather in San Francisco? Also, using a calculator tool, what is 246293 times 18462 plus 1817?",
+      callOptions
+    );
+    let finalChunk: AIMessageChunk | undefined;
+    for await (const chunk of stream) {
+      finalChunk = !finalChunk ? chunk : concat(finalChunk, chunk);
+    }
+
+    expect(finalChunk).toBeDefined();
+    if (!finalChunk) return;
+
+    // Model should call at least two tools. Using greater than or equal since it might call the calculator tool multiple times.
+    expect(finalChunk.tool_calls?.length).toBeGreaterThanOrEqual(2);
+    if (!finalChunk.tool_calls?.length) return;
+
+    const weatherToolCalls = finalChunk.tool_calls.find(
+      (tc) => tc.name === weatherTool.name
+    );
+    const calculatorToolCalls = finalChunk.tool_calls.find(
+      (tc) => tc.name === calculatorTool.name
+    );
+
+    expect(weatherToolCalls).toBeDefined();
+    expect(calculatorToolCalls).toBeDefined();
+  }
+
+  /**
+   * Tests the chat model's ability to process and respond to a message history containing parallel tool calls.
+   * This test is specifically designed for models that support parallel tool calling,
+   * such as advanced language models with multi-tool capabilities.
+   *
+   * The test performs the following steps:
+   * 1. Creates a chat model and binds weather and calculator tools to it.
+   * 2. Constructs a message history that includes a HumanMessage, an AIMessage with parallel tool calls,
+   *    and ToolMessages with the tools' responses.
+   * 3. Invokes the model with this message history.
+   * 4. Verifies that the result does not contain any new tool calls.
+   * 5. Checks that the result contains a non-empty content response.
+   *
+   * This test ensures that the model can correctly process and respond to complex message
+   * histories that include parallel tool calls and their responses, without making unnecessary
+   * additional tool calls.
+   *
+   * @param {InstanceType<this["Cls"]>["ParsedCallOptions"] | undefined} callOptions Optional call options to pass to the model.
+   *  These options will be applied to the model at runtime.
+   */
+  async testParallelToolCallResults(
+    callOptions?: InstanceType<this["Cls"]>["ParsedCallOptions"]
+  ) {
+    // Skip the test if the model doesn't support tool calling
+    if (!this.chatModelHasToolCalling) {
+      console.log("Test requires tool calling. Skipping...");
+      return;
+    }
+    // Skip the test if the model doesn't support parallel tool calls
+    if (!this.supportsParallelToolCalls) {
+      console.log("Test requires parallel tool calls. Skipping...");
+      return;
+    }
+    const model = new this.Cls(this.constructorArgs);
+    if (!model.bindTools) {
+      throw new Error(
+        "bindTools undefined. Cannot test OpenAI formatted tool calls."
+      );
+    }
+
+    const weatherTool = tool((_) => "no-op", {
+      name: "get_current_weather",
+      description: "Get the current weather for a location.",
+      schema: z.object({
+        location: z.string().describe("The location to get the weather for."),
+      }),
+    });
+    const calculatorTool = tool((_) => "no-op", {
+      name: "calculator",
+      description: "Calculate the result of a given math expression.",
+      schema: z.object({
+        expression: z.string().describe("The math expression to evaluate."),
+      }),
+    });
+    // Even though we're not invoking these tools, we must ensure they are bound to the model
+    // as most model APIs require tools to be bound if they're referenced in the chat history.
+    const modelWithTools = model.bindTools([weatherTool, calculatorTool]);
+
+    const messageHistory = [
+      new HumanMessage(
+        "What is the current weather in San Francisco? Also, using a calculator tool, what is 246293 times 18462 plus 1817?"
+      ),
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          {
+            name: "get_current_weather",
+            id: "weather_call",
+            args: {
+              location: "San Francisco",
+            },
+          },
+          {
+            name: "calculator",
+            id: "calculator_call",
+            args: {
+              expression: "(246293 * 18462) + 1817",
+            },
+          },
+        ],
+      }),
+      new ToolMessage({
+        name: "get_current_weather",
+        tool_call_id: "weather_call",
+        content: "It is currently 24 degrees with hail in San Francisco.",
+      }),
+      new ToolMessage({
+        name: "calculator",
+        tool_call_id: "calculator_call",
+        content: "(246293 * 18462) + 1817 = 4547063183",
+      }),
+    ];
+
+    const result: AIMessage = await modelWithTools.invoke(
+      messageHistory,
+      callOptions
+    );
+    // The model should NOT call a tool given this message history.
+    expect(result.tool_calls ?? []).toHaveLength(0);
+
+    if (typeof result.content === "string") {
+      expect(result.content).not.toBe("");
+    } else {
+      expect(result.content.length).toBeGreaterThan(0);
+      const textOrTextDeltaContent = result.content.find(
+        (c) => c.type === "text" || c.type === "text_delta"
+      );
+      expect(textOrTextDeltaContent).toBeDefined();
+    }
   }
 
   /**
