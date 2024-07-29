@@ -32,13 +32,11 @@ const run = async () => {
     [pathname.split("/").length - 1].replace(".ipynb", ".mts");
   const tempFilepath = `./tmp/${filename}`;
   try {
-    const typescriptSource = await extract(pathname);
-    try {
-      await fs.existsSync("./tmp");
-    } catch (err) {
-      await fs.mkdirSync("./tmp");
+    const typescriptSource = extract(pathname);
+    if (!fs.existsSync("./tmp")) {
+      fs.mkdirSync("./tmp");
     }
-    await fs.writeFileSync(tempFilepath, typescriptSource);
+    fs.writeFileSync(tempFilepath, typescriptSource);
     const program = ts.createProgram([tempFilepath], {
       module: ts.ModuleKind.NodeNext,
       moduleResolution: ts.ModuleResolutionKind.NodeNext,
@@ -72,7 +70,7 @@ const run = async () => {
     }
   } finally {
     try {
-      await fs.rmSync(tempFilepath);
+      fs.rmSync(tempFilepath);
     } catch (e) {
       // Do nothing
     }
