@@ -275,7 +275,9 @@ function convertMessagesToOpenAIParams(messages: BaseMessage[]) {
 
 type ChatOpenAIToolType = BindToolsInput | OpenAIClient.ChatCompletionTool;
 
-function _convertChatOpenAIToolTypeToOpenAITool(tool: ChatOpenAIToolType): OpenAIClient.ChatCompletionTool {
+function _convertChatOpenAIToolTypeToOpenAITool(
+  tool: ChatOpenAIToolType
+): OpenAIClient.ChatCompletionTool {
   if ("function" in tool) {
     tool;
   }
@@ -608,7 +610,9 @@ export class ChatOpenAI<
       stream: this.streaming,
       functions: options?.functions,
       function_call: options?.function_call,
-      tools: options?.tools?.length ? options.tools.map(_convertChatOpenAIToolTypeToOpenAITool) : undefined,
+      tools: options?.tools?.length
+        ? options.tools.map(_convertChatOpenAIToolTypeToOpenAITool)
+        : undefined,
       tool_choice: formatToOpenAIToolChoice(options?.tool_choice),
       response_format: options?.response_format,
       seed: options?.seed,

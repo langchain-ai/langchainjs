@@ -1,4 +1,7 @@
-import type { ToolChoice, Tool as BedrockTool, } from "@aws-sdk/client-bedrock-runtime";
+import type {
+  ToolChoice,
+  Tool as BedrockTool,
+} from "@aws-sdk/client-bedrock-runtime";
 import type { AwsCredentialIdentity, Provider } from "@aws-sdk/types";
 import { ConverseCommand } from "@aws-sdk/client-bedrock-runtime";
 import { BindToolsInput } from "@langchain/core/language_models/chat_models";

@@ -1,6 +1,4 @@
-import {
-  isOpenAITool,
-} from "@langchain/core/language_models/base";
+import { isOpenAITool } from "@langchain/core/language_models/base";
 import { isLangChainTool } from "@langchain/core/utils/function_calling";
 import { isModelGemini, validateGeminiParams } from "./gemini.js";
 import type {

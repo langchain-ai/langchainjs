@@ -104,7 +104,7 @@ export function isStructuredToolParams(
  * Whether or not the tool is one of StructuredTool, RunnableTool or StructuredToolParams.
  * It returns `is StructuredToolParams` since that is the most minimal interface of the three,
  * while still containing the necessary properties to be passed to a LLM for tool calling.
- * 
+ *
  * @param {unknown | undefined} tool The tool to check if it is a LangChain tool.
  * @returns {tool is StructuredToolParams} Whether the inputted tool is a LangChain tool.
  */

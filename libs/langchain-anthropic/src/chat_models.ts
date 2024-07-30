@@ -837,7 +837,7 @@ export class ChatAnthropicMessages<
         name: t.name,
         description: t.description,
         input_schema: zodToJsonSchema(t.schema) as AnthropicTool.InputSchema,
-      }))
+      }));
     }
 
     throw new Error("Unsupported tool type passed to ChatAnthropic");

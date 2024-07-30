@@ -238,9 +238,7 @@ export function isBedrockTool(tool: unknown): tool is BedrockTool {
   return false;
 }
 
-export function convertToConverseTools(
-  tools: AWSToolType[]
-): BedrockTool[] {
+export function convertToConverseTools(tools: AWSToolType[]): BedrockTool[] {
   if (tools.every(isOpenAITool)) {
     return tools.map((tool) => ({
       toolSpec: {

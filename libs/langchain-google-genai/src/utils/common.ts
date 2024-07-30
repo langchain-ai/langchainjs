@@ -23,9 +23,7 @@ import {
   ChatResult,
 } from "@langchain/core/outputs";
 import { isLangChainTool } from "@langchain/core/utils/function_calling";
-import {
-  isOpenAITool,
-} from "@langchain/core/language_models/base";
+import { isOpenAITool } from "@langchain/core/language_models/base";
 import { ToolCallChunk } from "@langchain/core/messages/tool";
 import {
   jsonSchemaToGeminiParameters,

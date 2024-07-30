@@ -498,7 +498,9 @@ export class ChatMistralAI<
     options?: this["ParsedCallOptions"]
   ): Omit<ChatRequest, "messages"> {
     const { response_format, tools, tool_choice } = options ?? {};
-    const mistralAITools: Array<MistralAITool> | undefined = tools?.length ? _convertToolToMistralTool(tools) : undefined;
+    const mistralAITools: Array<MistralAITool> | undefined = tools?.length
+      ? _convertToolToMistralTool(tools)
+      : undefined;
     const params: Omit<ChatRequest, "messages"> = {
       model: this.model,
       tools: mistralAITools,

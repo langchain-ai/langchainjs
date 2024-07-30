@@ -31,7 +31,10 @@ import {
   ChatGenerationChunk,
   ChatResult,
 } from "@langchain/core/outputs";
-import { isLangChainTool, isStructuredTool } from "@langchain/core/utils/function_calling";
+import {
+  isLangChainTool,
+  isStructuredTool,
+} from "@langchain/core/utils/function_calling";
 import { zodToJsonSchema } from "zod-to-json-schema";
 
 import type { SerializedFields } from "../../load/map_keys.js";

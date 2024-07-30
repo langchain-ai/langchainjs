@@ -1,8 +1,6 @@
 import type { BaseMessage } from "@langchain/core/messages";
 import { AIMessageChunk } from "@langchain/core/messages";
-import type {
-  BaseLanguageModelInput,
-} from "@langchain/core/language_models/base";
+import type { BaseLanguageModelInput } from "@langchain/core/language_models/base";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {
   type BaseChatModelParams,

@@ -1,5 +1,8 @@
 import type { BaseLLMParams } from "@langchain/core/language_models/llms";
-import type { BaseChatModelCallOptions, BindToolsInput } from "@langchain/core/language_models/chat_models";
+import type {
+  BaseChatModelCallOptions,
+  BindToolsInput,
+} from "@langchain/core/language_models/chat_models";
 import type { JsonStream } from "./utils/stream.js";
 
 /**
