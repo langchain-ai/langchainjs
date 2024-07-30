@@ -20,6 +20,7 @@ src/supabase.d.ts
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+/scripts/tmp
 
 # ESLint
 .eslintcache
