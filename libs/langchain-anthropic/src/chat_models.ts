@@ -427,13 +427,16 @@ export class ChatAnthropicMessages<
       stream: false,
     });
 
-    const stream = await this.createStreamWithRetry({
-      ...params,
-      ...formattedMessages,
-      stream: true,
-    }, {
-      headers: options.headers,
-    });
+    const stream = await this.createStreamWithRetry(
+      {
+        ...params,
+        ...formattedMessages,
+        stream: true,
+      },
+      {
+        headers: options.headers,
+      }
+    );
 
     for await (const data of stream) {
       if (options.signal?.aborted) {
