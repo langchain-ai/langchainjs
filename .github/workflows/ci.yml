@@ -52,6 +52,6 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: "yarn"
       - name: Install dependencies
-        run: cd ./langchain-core && yarn install --immutable --focus
+        run: cd ./langchain-core && yarn workspaces focus
       - name: Build `@langchain/core`
         run: yarn build --filter=@langchain/core
