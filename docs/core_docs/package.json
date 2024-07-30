@@ -71,6 +71,7 @@
     "rimraf": "^5.0.1",
     "supabase": "^1.148.6",
     "swc-loader": "^0.2.3",
+    "ts-morph": "^23.0.0",
     "tsx": "^3.12.3",
     "typedoc": "^0.24.4",
     "typedoc-plugin-markdown": "next",
