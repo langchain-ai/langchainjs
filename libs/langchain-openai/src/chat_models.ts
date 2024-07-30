@@ -278,8 +278,8 @@ type ChatOpenAIToolType = BindToolsInput | OpenAIClient.ChatCompletionTool;
 function _convertChatOpenAIToolTypeToOpenAITool(
   tool: ChatOpenAIToolType
 ): OpenAIClient.ChatCompletionTool {
-  if ("function" in tool) {
-    return tool;
+  if ("function" in tool && "type" in tool && tool.type === "function") {
+    return tool as OpenAIClient.ChatCompletionTool;
   }
   return convertToOpenAITool(tool);
 }
