@@ -45,14 +45,6 @@ export interface ToolParams extends BaseLangChainParams {
    * @default "content"
    */
   responseFormat?: ResponseFormat;
-  /**
-   * Whether or not to continue when an error is thrown during
-   * tool invocation. If set to true, this will set the status of `ToolMessage`
-   * to "error" and return the error message as the content.
-   * @default false
-   * @version 0.2.19
-   */
-  continueOnError?: boolean;
 }
 
 export interface StructuredToolInterface<T extends ZodObjectAny = ZodObjectAny>
@@ -63,15 +55,6 @@ export interface StructuredToolInterface<T extends ZodObjectAny = ZodObjectAny>
   lc_namespace: string[];
 
   schema: T | z.ZodEffects<T>;
-
-  /**
-   * Whether or not to continue when an error is thrown during
-   * tool invocation. If set to true, this will set the status of `ToolMessage`
-   * to "error" and return the error message as the content.
-   * @default false
-   * @version 0.2.19
-   */
-  continueOnError?: boolean;
 
   /**
    * @deprecated Use .invoke() instead. Will be removed in 0.3.0.
@@ -120,15 +103,6 @@ export abstract class StructuredTool<
   }
 
   /**
-   * Whether or not to continue when an error is thrown during
-   * tool invocation. If set to true, this will set the status of `ToolMessage`
-   * to "error" and return the error message as the content.
-   * @default false
-   * @version 0.2.19
-   */
-  continueOnError = false;
-
-  /**
    * The tool response format.
    *
    * If "content" then the output of the tool is interpreted as the contents of a
@@ -143,7 +117,6 @@ export abstract class StructuredTool<
     super(fields ?? {});
 
     this.responseFormat = fields?.responseFormat ?? this.responseFormat;
-    this.continueOnError = fields?.continueOnError ?? this.continueOnError;
   }
 
   protected abstract _call(
@@ -237,21 +210,12 @@ export abstract class StructuredTool<
     );
     delete config.runId;
     let result;
-    let status: "success" | "error" = "success";
     try {
       result = await this._call(parsed, runManager, config);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       await runManager?.handleToolError(e);
-      if (!this.continueOnError) {
-        throw e;
-      } else {
-        status = "error";
-        result = {
-          code: e.code,
-          message: e.message,
-        };
-      }
+      throw e;
     }
     let content;
     let artifact;
@@ -279,7 +243,6 @@ export abstract class StructuredTool<
       artifact,
       toolCallId,
       name: this.name,
-      status,
     });
     await runManager?.handleToolEnd(formattedOutput);
     return formattedOutput;
@@ -592,7 +555,6 @@ function _formatToolOutput(params: {
   name: string;
   artifact?: unknown;
   toolCallId?: string;
-  status?: "error" | "success";
 }): ToolReturnType {
   const { content, artifact, toolCallId } = params;
   if (toolCallId) {
@@ -606,7 +568,6 @@ function _formatToolOutput(params: {
         artifact,
         tool_call_id: toolCallId,
         name: params.name,
-        status: params.status,
       });
     } else {
       return new ToolMessage({
@@ -614,7 +575,6 @@ function _formatToolOutput(params: {
         artifact,
         tool_call_id: toolCallId,
         name: params.name,
-        status: params.status,
       });
     }
   } else {
