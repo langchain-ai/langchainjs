@@ -13,7 +13,7 @@ type CLIInput = {
 async function main() {
   const program = new Command();
   program
-    .description("Create a new chat model integration docs.")
+    .description("Create a new integration doc.")
     .option(
       "--package <package>",
       "Package name, eg openai. Should be value of @langchain/<package>"

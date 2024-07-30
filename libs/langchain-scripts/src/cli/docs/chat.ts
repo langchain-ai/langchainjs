@@ -137,10 +137,10 @@ export async function fillChatIntegrationDocTemplate(fields: {
     fetchAPIRefUrl(formattedApiRefModuleUrl),
   ]);
   if (success.some((s) => s === false)) {
+    // Don't error out because this might be used before the package is released.
     console.error("Invalid package or module name. API reference not found.");
   }
 
-  let docTemplate = await fs.promises.readFile(TEMPLATE_PATH, "utf-8");
   const packageNameShortSnakeCase = fields.packageName.replaceAll("-", "_");
   const fullPackageNameSnakeCase = `langchain_${packageNameShortSnakeCase}`;
   const packageNamePretty = `@langchain/${fields.packageName}`;
@@ -149,7 +149,7 @@ export async function fillChatIntegrationDocTemplate(fields: {
     moduleNameAllCaps = moduleNameAllCaps.replace("CHAT", "");
   }
 
-  docTemplate = docTemplate
+  const docTemplate = (await fs.promises.readFile(TEMPLATE_PATH, "utf-8"))
     .replaceAll(PACKAGE_NAME_PLACEHOLDER, fields.packageName)
     .replaceAll(PACKAGE_NAME_SNAKE_CASE_PLACEHOLDER, fullPackageNameSnakeCase)
     .replaceAll(
@@ -184,7 +184,7 @@ export async function fillChatIntegrationDocTemplate(fields: {
   await fs.promises.writeFile(docPath, docTemplate);
 
   console.log(
-    `Successfully created new chat model integration doc at ${docPath}.\n` +
-      "Please run the cells in the doc to record the outputs, and replace the Python documentation support URL with the proper URL."
+    `Successfully created new chat model integration doc at ${docPath}.\n
+Please run the cells in the doc to record the outputs, and replace the Python documentation support URL with the proper URL.`
   );
 }
