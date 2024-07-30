@@ -33,8 +33,6 @@ yarn-error.log*
 
 /.quarto/
 # AUTO_GENERATED_DOCS
-docs/tutorials/test.md
-docs/tutorials/test.mdx
 docs/tutorials/rag.md
 docs/tutorials/rag.mdx
 docs/tutorials/query_analysis.md
