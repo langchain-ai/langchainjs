@@ -149,75 +149,33 @@ export async function fillChatIntegrationDocTemplate(fields: {
     moduleNameAllCaps = moduleNameAllCaps.replace("CHAT", "");
   }
 
-  docTemplate = docTemplate.replaceAll(
-    PACKAGE_NAME_PLACEHOLDER,
-    fields.packageName
-  );
-  docTemplate = docTemplate.replaceAll(
-    PACKAGE_NAME_SNAKE_CASE_PLACEHOLDER,
-    fullPackageNameSnakeCase
-  );
-  docTemplate = docTemplate.replaceAll(
-    PACKAGE_NAME_SHORT_SNAKE_CASE_PLACEHOLDER,
-    packageNameShortSnakeCase
-  );
-  docTemplate = docTemplate.replaceAll(
-    PACKAGE_NAME_PRETTY_PLACEHOLDER,
-    packageNamePretty
-  );
-
-  docTemplate = docTemplate.replaceAll(
-    MODULE_NAME_PLACEHOLDER,
-    fields.moduleName
-  );
-  docTemplate = docTemplate.replaceAll(
-    MODULE_NAME_ALL_CAPS_PLACEHOLDER,
-    moduleNameAllCaps
-  );
-
-  if (extraFields) {
-    docTemplate.replaceAll(
+  docTemplate = docTemplate
+    .replaceAll(PACKAGE_NAME_PLACEHOLDER, fields.packageName)
+    .replaceAll(PACKAGE_NAME_SNAKE_CASE_PLACEHOLDER, fullPackageNameSnakeCase)
+    .replaceAll(
+      PACKAGE_NAME_SHORT_SNAKE_CASE_PLACEHOLDER,
+      packageNameShortSnakeCase
+    )
+    .replaceAll(PACKAGE_NAME_PRETTY_PLACEHOLDER, packageNamePretty)
+    .replaceAll(MODULE_NAME_PLACEHOLDER, fields.moduleName)
+    .replaceAll(MODULE_NAME_ALL_CAPS_PLACEHOLDER, moduleNameAllCaps)
+    .replaceAll(
       TOOL_CALLING_PLACEHOLDER,
-      extraFields.toolCalling ? "✅" : "❌"
-    );
-    docTemplate.replaceAll(
-      JSON_MODE_PLACEHOLDER,
-      extraFields.jsonMode ? "✅" : "❌"
-    );
-    docTemplate.replaceAll(
-      IMAGE_INPUT_PLACEHOLDER,
-      extraFields.imageInput ? "✅" : "❌"
-    );
-    docTemplate.replaceAll(
-      AUDIO_INPUT_PLACEHOLDER,
-      extraFields.audioInput ? "✅" : "❌"
-    );
-    docTemplate.replaceAll(
-      VIDEO_INPUT_PLACEHOLDER,
-      extraFields.videoInput ? "✅" : "❌"
-    );
-    docTemplate.replaceAll(
+      extraFields?.toolCalling ? "✅" : "❌"
+    )
+    .replace(JSON_MODE_PLACEHOLDER, extraFields?.jsonMode ? "✅" : "❌")
+    .replace(IMAGE_INPUT_PLACEHOLDER, extraFields?.imageInput ? "✅" : "❌")
+    .replace(AUDIO_INPUT_PLACEHOLDER, extraFields?.audioInput ? "✅" : "❌")
+    .replace(VIDEO_INPUT_PLACEHOLDER, extraFields?.videoInput ? "✅" : "❌")
+    .replace(
       TOKEN_LEVEL_STREAMING_PLACEHOLDER,
-      extraFields.tokenLevelStreaming ? "✅" : "❌"
-    );
-    docTemplate.replaceAll(
-      TOKEN_USAGE_PLACEHOLDER,
-      extraFields.tokenUsage ? "✅" : "❌"
-    );
-    docTemplate.replaceAll(
-      LOGPROBS_PLACEHOLDER,
-      extraFields.logprobs ? "✅" : "❌"
-    );
-    docTemplate.replaceAll(LOCAL_PLACEHOLDER, extraFields.local ? "✅" : "❌");
-    docTemplate.replaceAll(
-      SERIALIZABLE_PLACEHOLDER,
-      extraFields.serializable ? "✅" : "❌"
-    );
-    docTemplate.replaceAll(
-      PY_SUPPORT_PLACEHOLDER,
-      extraFields.pySupport ? "✅" : "❌"
-    );
-  }
+      extraFields?.tokenLevelStreaming ? "✅" : "❌"
+    )
+    .replace(TOKEN_USAGE_PLACEHOLDER, extraFields?.tokenUsage ? "✅" : "❌")
+    .replace(LOGPROBS_PLACEHOLDER, extraFields?.logprobs ? "✅" : "❌")
+    .replace(LOCAL_PLACEHOLDER, extraFields?.local ? "✅" : "❌")
+    .replace(SERIALIZABLE_PLACEHOLDER, extraFields?.serializable ? "✅" : "❌")
+    .replace(PY_SUPPORT_PLACEHOLDER, extraFields?.pySupport ? "✅" : "❌");
 
   const docPath = path.join(
     INTEGRATIONS_DOCS_PATH,
@@ -226,7 +184,7 @@ export async function fillChatIntegrationDocTemplate(fields: {
   await fs.promises.writeFile(docPath, docTemplate);
 
   console.log(
-    `Successfully created new chat model integration doc at ${docPath}.` +
+    `Successfully created new chat model integration doc at ${docPath}.\n` +
       "Please run the cells in the doc to record the outputs, and replace the Python documentation support URL with the proper URL."
   );
 }
