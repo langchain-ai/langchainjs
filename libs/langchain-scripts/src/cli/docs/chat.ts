@@ -1,5 +1,6 @@
 import * as path from "node:path";
 import * as fs from "node:fs";
+import { getUserInput } from "../utils/get-input.js";
 
 const PACKAGE_NAME_PLACEHOLDER = "__package_name__";
 const PACKAGE_NAME_SHORT_SNAKE_CASE_PLACEHOLDER =
@@ -9,6 +10,19 @@ const PACKAGE_NAME_PRETTY_PLACEHOLDER = "__package_name_pretty__";
 const MODULE_NAME_PLACEHOLDER = "__ModuleName__";
 // This should not be prefixed with `Chat` as it's used for API keys.
 const MODULE_NAME_ALL_CAPS_PLACEHOLDER = "__MODULE_NAME_ALL_CAPS__";
+
+const TOOL_CALLING_PLACEHOLDER = "__tool_calling__";
+const JSON_MODE_PLACEHOLDER = "__json_mode__";
+const IMAGE_INPUT_PLACEHOLDER = "__image_input__";
+const AUDIO_INPUT_PLACEHOLDER = "__audio_input__";
+const VIDEO_INPUT_PLACEHOLDER = "__video_input__";
+const TOKEN_LEVEL_STREAMING_PLACEHOLDER = "__token_level_streaming__";
+const TOKEN_USAGE_PLACEHOLDER = "__token_usage__";
+const LOGPROBS_PLACEHOLDER = "__logprobs__";
+
+const SERIALIZABLE_PLACEHOLDER = "__serializable__";
+const LOCAL_PLACEHOLDER = "__local__";
+const PY_SUPPORT_PLACEHOLDER = "__py_support__";
 
 const API_REF_BASE_PACKAGE_URL = `https://api.js.langchain.com/modules/langchain_${PACKAGE_NAME_PLACEHOLDER}.html`;
 const API_REF_BASE_MODULE_URL = `https://api.js.langchain.com/classes/langchain_${PACKAGE_NAME_PLACEHOLDER}.${MODULE_NAME_PLACEHOLDER}.html`;
@@ -29,10 +43,86 @@ const fetchAPIRefUrl = async (url: string): Promise<boolean> => {
   }
 };
 
+type ExtraFields = {
+  /**
+   * If tool calling is true, structured output will also be true.
+   */
+  toolCalling: boolean;
+  jsonMode: boolean;
+  imageInput: boolean;
+  audioInput: boolean;
+  videoInput: boolean;
+  tokenLevelStreaming: boolean;
+  tokenUsage: boolean;
+  logprobs: boolean;
+  local: boolean;
+  serializable: boolean;
+  pySupport: boolean;
+};
+
+async function promptExtraFields(): Promise<ExtraFields> {
+  const hasToolCalling = await getUserInput(
+    "Does the tool support tool calling? (y/n) "
+  );
+  const hasJsonMode = await getUserInput(
+    "Does the tool support JSON mode? (y/n) "
+  );
+  const hasImageInput = await getUserInput(
+    "Does the tool support image input? (y/n) "
+  );
+  const hasAudioInput = await getUserInput(
+    "Does the tool support audio input? (y/n) "
+  );
+  const hasVideoInput = await getUserInput(
+    "Does the tool support video input? (y/n) "
+  );
+  const hasTokenLevelStreaming = await getUserInput(
+    "Does the tool support token level streaming? (y/n) "
+  );
+  const hasTokenUsage = await getUserInput(
+    "Does the tool support token usage? (y/n) "
+  );
+  const hasLogprobs = await getUserInput(
+    "Does the tool support logprobs? (y/n) "
+  );
+  const hasLocal = await getUserInput(
+    "Does the tool support local usage? (y/n) "
+  );
+  const hasSerializable = await getUserInput(
+    "Does the tool support serializable output? (y/n) "
+  );
+  const hasPySupport = await getUserInput(
+    "Does the tool support Python support? (y/n) "
+  );
+
+  return {
+    toolCalling: hasToolCalling.toLowerCase() === "y",
+    jsonMode: hasJsonMode.toLowerCase() === "y",
+    imageInput: hasImageInput.toLowerCase() === "y",
+    audioInput: hasAudioInput.toLowerCase() === "y",
+    videoInput: hasVideoInput.toLowerCase() === "y",
+    tokenLevelStreaming: hasTokenLevelStreaming.toLowerCase() === "y",
+    tokenUsage: hasTokenUsage.toLowerCase() === "y",
+    logprobs: hasLogprobs.toLowerCase() === "y",
+    local: hasLocal.toLowerCase() === "y",
+    serializable: hasSerializable.toLowerCase() === "y",
+    pySupport: hasPySupport.toLowerCase() === "y",
+  };
+}
+
 export async function fillChatIntegrationDocTemplate(fields: {
   packageName: string;
   moduleName: string;
 }) {
+  // Ask the user if they'd like to fill in extra fields, if so, prompt them.
+  let extraFields: ExtraFields | undefined;
+  const shouldPromptExtraFields = await getUserInput(
+    "Would you like to fill out optional fields? (y/n) "
+  );
+  if (shouldPromptExtraFields.toLowerCase() === "y") {
+    extraFields = await promptExtraFields();
+  }
+
   const formattedApiRefPackageUrl = API_REF_BASE_PACKAGE_URL.replace(
     PACKAGE_NAME_PLACEHOLDER,
     fields.packageName
@@ -85,8 +175,58 @@ export async function fillChatIntegrationDocTemplate(fields: {
     moduleNameAllCaps
   );
 
-  await fs.promises.writeFile(
-    path.join(INTEGRATIONS_DOCS_PATH, `${packageNameShortSnakeCase}.ipynb`),
-    docTemplate
+  if (extraFields) {
+    docTemplate.replaceAll(
+      TOOL_CALLING_PLACEHOLDER,
+      extraFields.toolCalling ? "✅" : "❌"
+    );
+    docTemplate.replaceAll(
+      JSON_MODE_PLACEHOLDER,
+      extraFields.jsonMode ? "✅" : "❌"
+    );
+    docTemplate.replaceAll(
+      IMAGE_INPUT_PLACEHOLDER,
+      extraFields.imageInput ? "✅" : "❌"
+    );
+    docTemplate.replaceAll(
+      AUDIO_INPUT_PLACEHOLDER,
+      extraFields.audioInput ? "✅" : "❌"
+    );
+    docTemplate.replaceAll(
+      VIDEO_INPUT_PLACEHOLDER,
+      extraFields.videoInput ? "✅" : "❌"
+    );
+    docTemplate.replaceAll(
+      TOKEN_LEVEL_STREAMING_PLACEHOLDER,
+      extraFields.tokenLevelStreaming ? "✅" : "❌"
+    );
+    docTemplate.replaceAll(
+      TOKEN_USAGE_PLACEHOLDER,
+      extraFields.tokenUsage ? "✅" : "❌"
+    );
+    docTemplate.replaceAll(
+      LOGPROBS_PLACEHOLDER,
+      extraFields.logprobs ? "✅" : "❌"
+    );
+    docTemplate.replaceAll(LOCAL_PLACEHOLDER, extraFields.local ? "✅" : "❌");
+    docTemplate.replaceAll(
+      SERIALIZABLE_PLACEHOLDER,
+      extraFields.serializable ? "✅" : "❌"
+    );
+    docTemplate.replaceAll(
+      PY_SUPPORT_PLACEHOLDER,
+      extraFields.pySupport ? "✅" : "❌"
+    );
+  }
+
+  const docPath = path.join(
+    INTEGRATIONS_DOCS_PATH,
+    `${packageNameShortSnakeCase}.ipynb`
+  );
+  await fs.promises.writeFile(docPath, docTemplate);
+
+  console.log(
+    "Successfully created new chat model integration doc at ${docPath}." +
+      "Please run the cells in the doc to record the outputs, and replace the Python documentation support URL with the proper URL."
   );
 }
