@@ -1,6 +1,11 @@
 import * as path from "node:path";
 import * as fs from "node:fs";
-import { getUserInput } from "../utils/get-input.js";
+import {
+  boldText,
+  getUserInput,
+  greenText,
+  redBackground,
+} from "../utils/get-input.js";
 
 const PACKAGE_NAME_PLACEHOLDER = "__package_name__";
 const PACKAGE_NAME_SHORT_SNAKE_CASE_PLACEHOLDER =
@@ -62,37 +67,59 @@ type ExtraFields = {
 
 async function promptExtraFields(): Promise<ExtraFields> {
   const hasToolCalling = await getUserInput(
-    "Does the tool support tool calling? (y/n) "
+    "Does the tool support tool calling? (y/n) ",
+    undefined,
+    true
   );
   const hasJsonMode = await getUserInput(
-    "Does the tool support JSON mode? (y/n) "
+    "Does the tool support JSON mode? (y/n) ",
+    undefined,
+    true
   );
   const hasImageInput = await getUserInput(
-    "Does the tool support image input? (y/n) "
+    "Does the tool support image input? (y/n) ",
+    undefined,
+    true
   );
   const hasAudioInput = await getUserInput(
-    "Does the tool support audio input? (y/n) "
+    "Does the tool support audio input? (y/n) ",
+    undefined,
+    true
   );
   const hasVideoInput = await getUserInput(
-    "Does the tool support video input? (y/n) "
+    "Does the tool support video input? (y/n) ",
+    undefined,
+    true
   );
   const hasTokenLevelStreaming = await getUserInput(
-    "Does the tool support token level streaming? (y/n) "
+    "Does the tool support token level streaming? (y/n) ",
+    undefined,
+    true
   );
   const hasTokenUsage = await getUserInput(
-    "Does the tool support token usage? (y/n) "
+    "Does the tool support token usage? (y/n) ",
+    undefined,
+    true
   );
   const hasLogprobs = await getUserInput(
-    "Does the tool support logprobs? (y/n) "
+    "Does the tool support logprobs? (y/n) ",
+    undefined,
+    true
   );
   const hasLocal = await getUserInput(
-    "Does the tool support local usage? (y/n) "
+    "Does the tool support local usage? (y/n) ",
+    undefined,
+    true
   );
   const hasSerializable = await getUserInput(
-    "Does the tool support serializable output? (y/n) "
+    "Does the tool support serializable output? (y/n) ",
+    undefined,
+    true
   );
   const hasPySupport = await getUserInput(
-    "Does the tool support Python support? (y/n) "
+    "Does the tool support Python support? (y/n) ",
+    undefined,
+    true
   );
 
   return {
@@ -117,7 +144,8 @@ export async function fillChatIntegrationDocTemplate(fields: {
   // Ask the user if they'd like to fill in extra fields, if so, prompt them.
   let extraFields: ExtraFields | undefined;
   const shouldPromptExtraFields = await getUserInput(
-    "Would you like to fill out optional fields? (y/n) "
+    "Would you like to fill out optional fields? (y/n) ",
+    "white_background"
   );
   if (shouldPromptExtraFields.toLowerCase() === "y") {
     extraFields = await promptExtraFields();
@@ -182,9 +210,18 @@ export async function fillChatIntegrationDocTemplate(fields: {
     `${packageNameShortSnakeCase}.ipynb`
   );
   await fs.promises.writeFile(docPath, docTemplate);
+  const prettyDocPath = docPath.split("docs/core_docs/")[1];
+
+  const updatePythonDocUrlText = `  ${redBackground(
+    "- Update the Python documentation URL with the proper URL."
+  )}`;
+  const successText = `\nSuccessfully created new chat model integration doc at ${prettyDocPath}.`;
 
   console.log(
-    `Successfully created new chat model integration doc at ${docPath}.\n
-Please run the cells in the doc to record the outputs, and replace the Python documentation support URL with the proper URL.`
+    `${greenText(successText)}\n
+${boldText("Next steps:")}
+${extraFields?.pySupport ? updatePythonDocUrlText : ""}
+  - Run all code cells in the generated doc to record the outputs.
+  - Add extra sections on integration specific features.\n`
   );
 }
