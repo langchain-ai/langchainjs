@@ -320,7 +320,7 @@
     "pickleparser": "^0.2.1",
     "playwright": "^1.32.1",
     "portkey-ai": "^0.1.11",
-    "puppeteer": "^22.0.0",
+    "puppeteer": "*",
     "redis": "*",
     "replicate": "^0.29.4",
     "sonix-speech-recognition": "^2.1.1",

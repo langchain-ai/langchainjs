@@ -743,7 +743,7 @@
     "pdf-parse": "1.1.1",
     "peggy": "^3.0.2",
     "playwright": "^1.32.1",
-    "puppeteer": "^22.0.0",
+    "puppeteer": "*",
     "pyodide": "^0.24.1",
     "redis": "^4.6.4",
     "sonix-speech-recognition": "^2.1.1",
