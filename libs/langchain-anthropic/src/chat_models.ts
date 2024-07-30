@@ -61,6 +61,11 @@ export interface ChatAnthropicCallOptions
    * @default "auto"
    */
   tool_choice?: AnthropicToolChoice;
+  /**
+   * Custom headers to pass to the Anthropic API
+   * when making a request.
+   */
+  headers?: Record<string, string>;
 }
 
 function _toolsInParams(params: AnthropicMessageCreateParams): boolean {
@@ -426,6 +431,8 @@ export class ChatAnthropicMessages<
       ...params,
       ...formattedMessages,
       stream: true,
+    }, {
+      headers: options.headers,
     });
 
     for await (const data of stream) {
@@ -543,6 +550,7 @@ export class ChatAnthropicMessages<
     } else {
       return this._generateNonStreaming(messages, params, {
         signal: options.signal,
+        headers: options.headers,
       });
     }
   }
