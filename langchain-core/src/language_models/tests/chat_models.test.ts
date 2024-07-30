@@ -249,7 +249,7 @@ test("Test ChatModel can emit a custom event", async () => {
   expect(customEvent).toBeDefined();
 });
 
-test.only("Test ChatModel can stream back a custom event", async () => {
+test("Test ChatModel can stream back a custom event", async () => {
   const model = new FakeListChatModel({
     responses: ["hi"],
     emitCustomEvent: true,
