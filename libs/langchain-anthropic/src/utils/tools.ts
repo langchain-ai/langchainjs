@@ -1,6 +1,4 @@
-import type {
-  MessageCreateParams,
-} from "@anthropic-ai/sdk/resources/index.mjs";
+import type { MessageCreateParams } from "@anthropic-ai/sdk/resources/index.mjs";
 import { AIMessageChunk } from "@langchain/core/messages";
 import { ToolCallChunk } from "@langchain/core/messages/tool";
 import { AnthropicToolChoice } from "../types.js";

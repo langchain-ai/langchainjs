@@ -31,11 +31,9 @@ import type {
   Tool as AnthropicTool,
 } from "@anthropic-ai/sdk/resources/index.mjs";
 
+import { isLangChainTool } from "@langchain/core/utils/function_calling";
 import { AnthropicToolsOutputParser } from "./output_parsers.js";
-import {
-  extractToolCallChunk,
-  handleToolChoice,
-} from "./utils/tools.js";
+import { extractToolCallChunk, handleToolChoice } from "./utils/tools.js";
 import { _formatMessagesForAnthropic } from "./utils/message_inputs.js";
 import {
   _makeMessageChunkFromAnthropicEvent,
@@ -49,7 +47,6 @@ import {
   AnthropicToolChoice,
   AnthropicToolTypes,
 } from "./types.js";
-import { isLangChainTool } from "@langchain/core/utils/function_calling";
 
 export interface ChatAnthropicCallOptions
   extends BaseChatModelCallOptions,
