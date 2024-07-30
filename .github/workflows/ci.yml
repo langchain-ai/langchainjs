@@ -53,5 +53,7 @@ jobs:
           cache: "yarn"
       - name: Install dependencies
         run: cd ./langchain-core && yarn workspaces focus
+      - name: Build @langchain/scripts
+        run: cd ./libs/langchain-scripts && yarn build:internal
       - name: Build `@langchain/core`
-        run: yarn build --filter=@langchain/core
+        run: cd ./langchain-core && yarn build:internal
