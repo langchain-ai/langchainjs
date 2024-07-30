@@ -140,6 +140,16 @@ export function mergeContent(
   }
 }
 
+export function _mergeStatus(
+  left?: "success" | "error",
+  right?: "success" | "error"
+): "success" | "error" {
+  if (left === "error" || right === "error") {
+    return "error";
+  }
+  return "success";
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function stringifyWithDepthLimit(obj: any, depthLimit: number): string {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

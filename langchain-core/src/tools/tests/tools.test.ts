@@ -115,3 +115,28 @@ test("Tool can accept single string input", async () => {
   const result = await stringTool.invoke("b");
   expect(result).toBe("ba");
 });
+
+test("Tool can continue if an error is thrown", async () => {
+  const errorTool = tool((_) => {
+    throw new Error("This tool encountered an error.");
+  }, {
+    name: "error_tool",
+    schema: z.object({
+      input: z.string(),
+    }),
+    continueOnError: true,
+  })
+
+  const result = await errorTool.invoke({
+    id: "testid",
+    args: { input: "test" },
+    name: "error_tool",
+    type: "tool_call",
+  });
+  expect(result).toBeInstanceOf(ToolMessage);
+  expect(result.status).toBe("error");
+  expect(JSON.parse(result.content)).toEqual({
+    code: undefined,
+    message: "This tool encountered an error.",
+  })
+});
