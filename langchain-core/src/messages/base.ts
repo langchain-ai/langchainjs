@@ -141,20 +141,17 @@ export function mergeContent(
 }
 
 /**
- * 'Merge' two statuses. Will return `undefined` if both statuses are passed as `undefined`,
- * 'success' if both statuses are 'success', and 'error' if either status is 'error'.
+ * 'Merge' two statuses. If either value passed is 'error', it will return 'error'. Else
+ * it will return 'success'.
  *
  * @param {"success" | "error" | undefined} left The existing value to 'merge' with the new value.
  * @param {"success" | "error" | undefined} right The new value to 'merge' with the existing value
- * @returns {"success" | "error" | undefined} The 'merged' value, or `undefined` if both values are `undefined`.
+ * @returns {"success" | "error"} The 'merged' value.
  */
 export function _mergeStatus(
   left?: "success" | "error",
   right?: "success" | "error"
 ): "success" | "error" | undefined {
-  if (!left && !right) {
-    return undefined;
-  }
   if (left === "error" || right === "error") {
     return "error";
   }
