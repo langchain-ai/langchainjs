@@ -17,18 +17,18 @@ export function extract(filepath: string) {
   const importDeclarations = sourceFile.getImportDeclarations();
   const uniqueImports = new Map<string, Set<string>>();
 
-  importDeclarations.forEach(importDecl => {
+  importDeclarations.forEach((importDecl) => {
     const moduleSpecifier = importDecl.getModuleSpecifierValue();
     if (!uniqueImports.has(moduleSpecifier)) {
       uniqueImports.set(moduleSpecifier, new Set());
     }
-    importDecl.getNamedImports().forEach(namedImport => {
+    importDecl.getNamedImports().forEach((namedImport) => {
       uniqueImports.get(moduleSpecifier)!.add(namedImport.getText());
     });
   });
 
   // Remove all existing imports
-  importDeclarations.forEach(importDecl => importDecl.remove());
+  importDeclarations.forEach((importDecl) => importDecl.remove());
 
   // Add deduplicated imports at the top
   uniqueImports.forEach((namedImports, moduleSpecifier) => {
