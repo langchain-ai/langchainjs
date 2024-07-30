@@ -1,6 +1,6 @@
+import { test, expect } from "@jest/globals";
 import { FakeStreamingLLM } from "../../utils/testing/index.js";
 import { XMLOutputParser } from "../xml.js";
-import { test, expect } from "@jest/globals";
 
 const XML_EXAMPLE = `<?xml version="1.0" encoding="UTF-8"?>
 <userProfile>

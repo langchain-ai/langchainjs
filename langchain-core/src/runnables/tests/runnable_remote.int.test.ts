@@ -1,7 +1,7 @@
+import { test, expect } from "@jest/globals";
 import { HumanMessage } from "../../messages/index.js";
 import { applyPatch } from "../../utils/json_patch.js";
 import { RemoteRunnable } from "../remote.js";
-import { test, expect } from "@jest/globals";
 
 test("invoke hosted langserve", async () => {
   const remote = new RemoteRunnable({

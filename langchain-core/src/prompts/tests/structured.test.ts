@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { ZodType, ZodTypeDef } from "zod";
+import { test, expect } from "@jest/globals";
 import {
   StructuredOutputMethodParams,
   StructuredOutputMethodOptions,
@@ -11,7 +12,6 @@ import { RunnableConfig } from "../../runnables/config.js";
 import { FakeListChatModel } from "../../utils/testing/index.js";
 import { StructuredPrompt } from "../structured.js";
 import { load } from "../../load/index.js";
-import { test, expect } from "@jest/globals";
 
 class FakeStructuredChatModel extends FakeListChatModel {
   withStructuredOutput<

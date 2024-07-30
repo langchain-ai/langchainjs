@@ -1,6 +1,7 @@
 /* eslint-disable no-promise-executor-return */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+import { test, expect } from "@jest/globals";
 import { StringOutputParser } from "../../output_parsers/string.js";
 import {
   ChatPromptTemplate,
@@ -16,7 +17,6 @@ import {
 } from "../../utils/testing/index.js";
 import { RunnableSequence, RunnableMap } from "../base.js";
 import { RunnablePassthrough } from "../passthrough.js";
-import { test, expect } from "@jest/globals";
 
 test("Create a runnable sequence with a runnable map", async () => {
   const promptTemplate = ChatPromptTemplate.fromMessages<{

@@ -1,10 +1,10 @@
 /* eslint-disable no-promise-executor-return */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+import { test, expect } from "@jest/globals";
 import { StringOutputParser } from "../../output_parsers/string.js";
 import { PromptTemplate } from "../../prompts/prompt.js";
 import { RunnableSequence } from "../base.js";
-import { test, expect } from "@jest/globals";
 
 type RunnableBatchOptionsV0 = {
   maxConcurrency?: number;
