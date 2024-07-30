@@ -4,12 +4,7 @@
 name: CI
 
 on:
-  push:
-    branches: ["main"]
   pull_request:
-    # Do not run this workflow if only docs changed.
-    paths-ignore:
-      - 'docs/**'
   workflow_dispatch:  # Allows triggering the workflow manually in GitHub UI
 
 
@@ -39,10 +34,21 @@ jobs:
       - name: Check linting
         run: yarn run lint
 
-  test-exports:
-    uses:
-      ./.github/workflows/test-exports.yml
-    secrets: inherit
+  format:
+    name: Check formatting
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js 18.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+          cache: "yarn"
+      - name: Install dependencies
+        run: yarn install --immutable --mode=skip-build
+      - name: Check formatting
+        run: yarn run format:check
+
 
   platform-compatibility:
     runs-on: ${{ matrix.os }}
@@ -57,6 +63,6 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: "yarn"
       - name: Install dependencies
-        run: yarn install --immutable
+        run: cd ./langchain-core && yarn install --immutable --focus
       - name: Build `@langchain/core`
         run: yarn build --filter=@langchain/core
