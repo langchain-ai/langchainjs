@@ -10,6 +10,8 @@ on:
       - 'examples/**'
       - 'dependency_range_tests/**'
       - 'environment_tests/**'
+      - '.github/**'
+      - '!.github/workflows/ci.yml'
   workflow_dispatch:  # Allows triggering the workflow manually in GitHub UI
 
 
