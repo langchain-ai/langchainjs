@@ -22,18 +22,16 @@ import {
   ChatGenerationChunk,
   ChatResult,
 } from "@langchain/core/outputs";
-import { StructuredToolInterface } from "@langchain/core/tools";
-import { isStructuredTool } from "@langchain/core/utils/function_calling";
+import { isLangChainTool } from "@langchain/core/utils/function_calling";
 import {
-  ToolDefinition,
   isOpenAITool,
 } from "@langchain/core/language_models/base";
 import { ToolCallChunk } from "@langchain/core/messages/tool";
-import { RunnableToolLike } from "@langchain/core/runnables";
 import {
   jsonSchemaToGeminiParameters,
   zodToGenerativeAIParameters,
 } from "./zod_to_genai_parameters.js";
+import { GoogleGenerativeAIToolType } from "../types.js";
 
 export function getMessageAuthor(message: BaseMessage) {
   const type = message._getType();
@@ -323,12 +321,7 @@ export function convertResponseContentToChatGenerationChunk(
 }
 
 export function convertToGenerativeAITools(
-  structuredTools: (
-    | StructuredToolInterface
-    | Record<string, unknown>
-    | ToolDefinition
-    | RunnableToolLike
-  )[]
+  structuredTools: GoogleGenerativeAIToolType[]
 ): GoogleGenerativeAIFunctionDeclarationsTool[] {
   if (
     structuredTools.every(
@@ -343,7 +336,7 @@ export function convertToGenerativeAITools(
     {
       functionDeclarations: structuredTools.map(
         (structuredTool): GenerativeAIFunctionDeclaration => {
-          if (isStructuredTool(structuredTool)) {
+          if (isLangChainTool(structuredTool)) {
             const jsonSchema = zodToGenerativeAIParameters(
               structuredTool.schema
             );

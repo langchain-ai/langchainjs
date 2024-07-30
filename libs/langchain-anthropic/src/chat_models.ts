@@ -31,14 +31,12 @@ import {
   type ToolDefinition,
   isOpenAITool,
 } from "@langchain/core/language_models/base";
-import { StructuredToolInterface } from "@langchain/core/tools";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { BaseLLMOutputParser } from "@langchain/core/output_parsers";
 import {
   Runnable,
   RunnablePassthrough,
   RunnableSequence,
-  RunnableToolLike,
 } from "@langchain/core/runnables";
 import { isZodSchema } from "@langchain/core/utils/types";
 import { ToolCall, ToolCallChunk } from "@langchain/core/messages/tool";
@@ -58,6 +56,7 @@ import {
   handleToolChoice,
 } from "./utils.js";
 import { AnthropicToolResponse } from "./types.js";
+import { isLangChainTool } from "@langchain/core/utils/function_calling";
 
 type AnthropicMessage = Anthropic.MessageParam;
 type AnthropicMessageCreateParams = Anthropic.MessageCreateParamsNonStreaming;
@@ -833,21 +832,19 @@ export class ChatAnthropicMessages<
       throw new Error(`Can not pass in a mix of tool schemas to ChatAnthropic`);
     }
 
-    return (tools as StructuredToolInterface[]).map((tool) => ({
-      name: tool.name,
-      description: tool.description,
-      input_schema: zodToJsonSchema(tool.schema) as AnthropicTool.InputSchema,
-    }));
+    if (tools.every(isLangChainTool)) {
+      return tools.map((t) => ({
+        name: t.name,
+        description: t.description,
+        input_schema: zodToJsonSchema(t.schema) as AnthropicTool.InputSchema,
+      }))
+    }
+
+    throw new Error("Unsupported tool type passed to ChatAnthropic");
   }
 
   override bindTools(
-    tools: (
-      | AnthropicTool
-      | Record<string, unknown>
-      | StructuredToolInterface
-      | ToolDefinition
-      | RunnableToolLike
-    )[],
+    tools: AnthropicToolTypes[],
     kwargs?: Partial<CallOptions>
   ): Runnable<BaseLanguageModelInput, AIMessageChunk, CallOptions> {
     return this.bind({

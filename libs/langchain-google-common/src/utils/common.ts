@@ -1,10 +1,7 @@
-import { StructuredToolInterface } from "@langchain/core/tools";
 import {
   isOpenAITool,
-  ToolDefinition,
 } from "@langchain/core/language_models/base";
-import { RunnableToolLike } from "@langchain/core/runnables";
-import { isStructuredTool } from "@langchain/core/utils/function_calling";
+import { isLangChainTool } from "@langchain/core/utils/function_calling";
 import { isModelGemini, validateGeminiParams } from "./gemini.js";
 import type {
   GeminiFunctionDeclaration,
@@ -13,6 +10,7 @@ import type {
   GoogleAIBaseLanguageModelCallOptions,
   GoogleAIModelParams,
   GoogleAIModelRequestParams,
+  GoogleAIToolType,
   GoogleLLMModelFamily,
 } from "../types.js";
 import {
@@ -65,12 +63,7 @@ function processToolChoice(
 }
 
 export function convertToGeminiTools(
-  structuredTools: (
-    | StructuredToolInterface
-    | Record<string, unknown>
-    | ToolDefinition
-    | RunnableToolLike
-  )[]
+  structuredTools: GoogleAIToolType[]
 ): GeminiTool[] {
   const tools: GeminiTool[] = [
     {
@@ -84,11 +77,11 @@ export function convertToGeminiTools(
     ) {
       const funcs: GeminiFunctionDeclaration[] = tool.functionDeclarations;
       tools[0].functionDeclarations?.push(...funcs);
-    } else if (isStructuredTool(tool)) {
+    } else if (isLangChainTool(tool)) {
       const jsonSchema = zodToGeminiParameters(tool.schema);
       tools[0].functionDeclarations?.push({
         name: tool.name,
-        description: tool.description,
+        description: tool.description ?? `A function available to call.`,
         parameters: jsonSchema as GeminiFunctionSchema,
       });
     } else if (isOpenAITool(tool)) {

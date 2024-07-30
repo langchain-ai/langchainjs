@@ -2,9 +2,7 @@ import type {
   MessageCreateParams,
   Tool as AnthropicTool,
 } from "@anthropic-ai/sdk/resources/index.mjs";
-import { ToolDefinition } from "@langchain/core/language_models/base";
-import { RunnableToolLike } from "@langchain/core/runnables";
-import { StructuredToolInterface } from "@langchain/core/tools";
+import { BindToolsInput } from "@langchain/core/language_models/chat_models";
 
 export type AnthropicToolChoice =
   | {
@@ -16,12 +14,7 @@ export type AnthropicToolChoice =
   | "none"
   | string;
 
-export type AnthropicToolTypes =
-  | StructuredToolInterface
-  | AnthropicTool
-  | Record<string, unknown>
-  | ToolDefinition
-  | RunnableToolLike;
+export type AnthropicToolTypes = BindToolsInput | AnthropicTool;
 
 export function handleToolChoice(
   toolChoice?: AnthropicToolChoice

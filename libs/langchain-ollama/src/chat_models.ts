@@ -5,7 +5,6 @@ import {
 } from "@langchain/core/messages";
 import {
   BaseLanguageModelInput,
-  ToolDefinition,
 } from "@langchain/core/language_models/base";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {
@@ -13,6 +12,7 @@ import {
   BaseChatModel,
   LangSmithParams,
   BaseChatModelCallOptions,
+  BindToolsInput,
 } from "@langchain/core/language_models/chat_models";
 import { Ollama } from "ollama/browser";
 import { ChatGenerationChunk, ChatResult } from "@langchain/core/outputs";
@@ -23,8 +23,7 @@ import type {
   Message as OllamaMessage,
   Tool as OllamaTool,
 } from "ollama";
-import { StructuredToolInterface } from "@langchain/core/tools";
-import { Runnable, RunnableToolLike } from "@langchain/core/runnables";
+import { Runnable } from "@langchain/core/runnables";
 import { convertToOpenAITool } from "@langchain/core/utils/function_calling";
 import { concat } from "@langchain/core/utils/stream";
 import {
@@ -37,7 +36,7 @@ export interface ChatOllamaCallOptions extends BaseChatModelCallOptions {
    * An array of strings to stop on.
    */
   stop?: string[];
-  tools?: (StructuredToolInterface | RunnableToolLike | ToolDefinition)[];
+  tools?: BindToolsInput[];
 }
 
 export interface PullModelOptions {
@@ -294,7 +293,7 @@ export class ChatOllama
   }
 
   override bindTools(
-    tools: (StructuredToolInterface | ToolDefinition | RunnableToolLike)[],
+    tools: BindToolsInput[],
     kwargs?: Partial<this["ParsedCallOptions"]>
   ): Runnable<BaseLanguageModelInput, AIMessageChunk, ChatOllamaCallOptions> {
     return this.bind({

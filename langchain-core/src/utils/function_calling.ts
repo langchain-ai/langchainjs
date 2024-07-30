@@ -1,7 +1,11 @@
 import { zodToJsonSchema } from "zod-to-json-schema";
-import { StructuredToolInterface } from "../tools/index.js";
+import {
+  StructuredToolInterface,
+  StructuredToolParams,
+} from "../tools/index.js";
 import { FunctionDefinition, ToolDefinition } from "../language_models/base.js";
 import { Runnable, RunnableToolLike } from "../runnables/base.js";
+import { isZodSchema } from "./types/is_zod_schema.js";
 
 /**
  * Formats a `StructuredTool` or `RunnableToolLike` instance into a format
@@ -13,7 +17,7 @@ import { Runnable, RunnableToolLike } from "../runnables/base.js";
  * @returns {FunctionDefinition} The inputted tool in OpenAI function format.
  */
 export function convertToOpenAIFunction(
-  tool: StructuredToolInterface | RunnableToolLike
+  tool: StructuredToolInterface | RunnableToolLike | StructuredToolParams
 ): FunctionDefinition {
   return {
     name: tool.name,
@@ -36,7 +40,7 @@ export function convertToOpenAITool(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   tool: StructuredToolInterface | Record<string, any> | RunnableToolLike
 ): ToolDefinition {
-  if (isStructuredTool(tool) || isRunnableToolLike(tool)) {
+  if (isLangChainTool(tool)) {
     return {
       type: "function",
       function: convertToOpenAIFunction(tool),
@@ -74,5 +78,41 @@ export function isRunnableToolLike(tool?: unknown): tool is RunnableToolLike {
     "lc_name" in tool.constructor &&
     typeof tool.constructor.lc_name === "function" &&
     tool.constructor.lc_name() === "RunnableToolLike"
+  );
+}
+
+/**
+ * Confirm whether or not the tool contains the necessary properties to be considered a `StructuredToolParams`.
+ *
+ * @param {unknown | undefined} tool The object to check if it is a `StructuredToolParams`.
+ * @returns {tool is StructuredToolParams} Whether the inputted object is a `StructuredToolParams`.
+ */
+export function isStructuredToolParams(
+  tool?: unknown
+): tool is StructuredToolParams {
+  return (
+    !!tool &&
+    typeof tool === "object" &&
+    "name" in tool &&
+    "schema" in tool &&
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    isZodSchema(tool.schema as Record<string, any>)
+  );
+}
+
+/**
+ * Whether or not the tool is one of StructuredTool, RunnableTool or StructuredToolParams.
+ * It returns `is StructuredToolParams` since that is the most minimal interface of the three,
+ * while still containing the necessary properties to be passed to a LLM for tool calling.
+ * 
+ * @param {unknown | undefined} tool The tool to check if it is a LangChain tool.
+ * @returns {tool is StructuredToolParams} Whether the inputted tool is a LangChain tool.
+ */
+export function isLangChainTool(tool?: unknown): tool is StructuredToolParams {
+  return (
+    isStructuredToolParams(tool) ||
+    isRunnableToolLike(tool) ||
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    isStructuredTool(tool as any)
   );
 }

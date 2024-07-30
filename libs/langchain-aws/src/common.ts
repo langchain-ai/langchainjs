@@ -9,7 +9,6 @@ import {
   ToolMessage,
 } from "@langchain/core/messages";
 import type { ToolCall } from "@langchain/core/messages/tool";
-import type { ToolDefinition } from "@langchain/core/language_models/base";
 import { isOpenAITool } from "@langchain/core/language_models/base";
 import type {
   Message as BedrockMessage,
@@ -23,12 +22,10 @@ import type {
   ContentBlockStartEvent,
 } from "@aws-sdk/client-bedrock-runtime";
 import type { DocumentType as __DocumentType } from "@smithy/types";
-import { StructuredToolInterface } from "@langchain/core/tools";
-import { isStructuredTool } from "@langchain/core/utils/function_calling";
+import { isLangChainTool } from "@langchain/core/utils/function_calling";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { ChatGenerationChunk } from "@langchain/core/outputs";
-import { RunnableToolLike } from "@langchain/core/runnables";
-import { BedrockToolChoice } from "./types.js";
+import { AWSToolType, BedrockToolChoice } from "./types.js";
 
 export function extractImageInfo(base64: string): ContentBlock.ImageMember {
   // Extract the format from the base64 string
@@ -242,14 +239,7 @@ export function isBedrockTool(tool: unknown): tool is BedrockTool {
 }
 
 export function convertToConverseTools(
-  tools: (
-    | StructuredToolInterface
-    | ToolDefinition
-    | BedrockTool
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    | Record<string, any>
-    | RunnableToolLike
-  )[]
+  tools: AWSToolType[]
 ): BedrockTool[] {
   if (tools.every(isOpenAITool)) {
     return tools.map((tool) => ({
@@ -261,7 +251,7 @@ export function convertToConverseTools(
         },
       },
     }));
-  } else if (tools.every(isStructuredTool)) {
+  } else if (tools.every(isLangChainTool)) {
     return tools.map((tool) => ({
       toolSpec: {
         name: tool.name,

@@ -20,10 +20,10 @@ import {
   ChatGenerationChunk,
   type ChatResult,
 } from "@langchain/core/outputs";
-import { type StructuredToolInterface } from "@langchain/core/tools";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import {
   BaseChatModel,
+  BindToolsInput,
   LangSmithParams,
   type BaseChatModelParams,
 } from "@langchain/core/language_models/chat_models";
@@ -41,7 +41,6 @@ import {
   Runnable,
   RunnablePassthrough,
   RunnableSequence,
-  RunnableToolLike,
 } from "@langchain/core/runnables";
 import {
   JsonOutputParser,
@@ -274,10 +273,19 @@ function convertMessagesToOpenAIParams(messages: BaseMessage[]) {
   });
 }
 
+type ChatOpenAIToolType = BindToolsInput | OpenAIClient.ChatCompletionTool;
+
+function _convertChatOpenAIToolTypeToOpenAITool(tool: ChatOpenAIToolType): OpenAIClient.ChatCompletionTool {
+  if ("function" in tool) {
+    tool;
+  }
+  return convertToOpenAITool(tool);
+}
+
 export interface ChatOpenAICallOptions
   extends OpenAICallOptions,
     BaseFunctionCallOptions {
-  tools?: StructuredToolInterface[] | OpenAIClient.ChatCompletionTool[];
+  tools?: ChatOpenAIToolType[];
   tool_choice?: OpenAIToolChoice;
   promptIndex?: number;
   response_format?: { type: "json_object" };
@@ -556,15 +564,11 @@ export class ChatOpenAI<
   }
 
   override bindTools(
-    tools: (
-      | Record<string, unknown>
-      | StructuredToolInterface
-      | RunnableToolLike
-    )[],
+    tools: ChatOpenAIToolType[],
     kwargs?: Partial<CallOptions>
   ): Runnable<BaseLanguageModelInput, AIMessageChunk, CallOptions> {
     return this.bind({
-      tools: tools.map(convertToOpenAITool),
+      tools: tools.map(_convertChatOpenAIToolTypeToOpenAITool),
       ...kwargs,
     } as Partial<CallOptions>);
   }
@@ -578,16 +582,6 @@ export class ChatOpenAI<
       streaming?: boolean;
     }
   ): Omit<OpenAIClient.Chat.ChatCompletionCreateParams, "messages"> {
-    function isStructuredToolArray(
-      tools?: unknown[]
-    ): tools is StructuredToolInterface[] {
-      return (
-        tools !== undefined &&
-        tools.every((tool) =>
-          Array.isArray((tool as StructuredToolInterface).lc_namespace)
-        )
-      );
-    }
     let streamOptionsConfig = {};
     if (options?.stream_options !== undefined) {
       streamOptionsConfig = { stream_options: options.stream_options };
@@ -614,9 +608,7 @@ export class ChatOpenAI<
       stream: this.streaming,
       functions: options?.functions,
       function_call: options?.function_call,
-      tools: isStructuredToolArray(options?.tools)
-        ? options?.tools.map(convertToOpenAITool)
-        : options?.tools,
+      tools: options?.tools?.length ? options.tools.map(_convertChatOpenAIToolTypeToOpenAITool) : undefined,
       tool_choice: formatToOpenAIToolChoice(options?.tool_choice),
       response_format: options?.response_format,
       seed: options?.seed,
