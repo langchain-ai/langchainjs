@@ -240,7 +240,7 @@ export abstract class StructuredTool<
     let status: "success" | "error" = "success";
     try {
       result = await this._call(parsed, runManager, config);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       await runManager?.handleToolError(e);
       if (!this.continueOnError) {

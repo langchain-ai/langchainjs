@@ -117,15 +117,18 @@ test("Tool can accept single string input", async () => {
 });
 
 test("Tool can continue if an error is thrown", async () => {
-  const errorTool = tool((_) => {
-    throw new Error("This tool encountered an error.");
-  }, {
-    name: "error_tool",
-    schema: z.object({
-      input: z.string(),
-    }),
-    continueOnError: true,
-  })
+  const errorTool = tool(
+    (_) => {
+      throw new Error("This tool encountered an error.");
+    },
+    {
+      name: "error_tool",
+      schema: z.object({
+        input: z.string(),
+      }),
+      continueOnError: true,
+    }
+  );
 
   const result = await errorTool.invoke({
     id: "testid",
@@ -138,5 +141,5 @@ test("Tool can continue if an error is thrown", async () => {
   expect(JSON.parse(result.content)).toEqual({
     code: undefined,
     message: "This tool encountered an error.",
-  })
+  });
 });
