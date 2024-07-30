@@ -1,16 +1,15 @@
 # This workflow will do a clean installation of node dependencies, cache/restore them, build the source code and run tests across different versions of node
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-nodejs
 
-name: CI
+name: Platform Compatibility
 
 on:
   pull_request:
-    paths_ignore:
-      - 'docs/**'
-      - 'dependency_range_tests/**'
-      - 'environment_tests/**'
-      - '.github/**'
-      - '!.github/workflows/ci.yml'
+    # Only run this workflow if the following directories have changed.
+    paths:
+      - 'langchain/**'
+      - 'langchain-core/**'
+      - 'libs/**'
   workflow_dispatch:  # Allows triggering the workflow manually in GitHub UI
 
 
@@ -25,17 +24,21 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  lint:
-    name: Check linting
-    runs-on: ubuntu-latest
+  platform-compatibility:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
     steps:
       - uses: actions/checkout@v4
-      - name: Use Node.js 18.x
+      - name: Use Node.js ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v3
         with:
-          node-version: 18.x
+          node-version: ${{ env.NODE_VERSION }}
           cache: "yarn"
       - name: Install dependencies
-        run: yarn install --immutable --mode=skip-build
-      - name: Check linting
-        run: yarn run lint
+        run: cd ./langchain-core && yarn workspaces focus
+      - name: Build @langchain/scripts
+        run: cd ./libs/langchain-scripts && yarn build:internal
+      - name: Build `@langchain/core`
+        run: cd ./langchain-core && yarn build:internal
