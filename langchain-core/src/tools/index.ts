@@ -229,7 +229,8 @@ export abstract class StructuredTool<
     let result;
     try {
       result = await this._call(parsed, runManager, config);
-    } catch (e) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (e: any) {
       await runManager?.handleToolError(e);
       throw e;
     }
@@ -529,12 +530,11 @@ export function tool<T extends ZodObjectAny | z.ZodString = ZodObjectAny>(
   // If the schema is not provided, or it's a string schema, create a DynamicTool
   if (!fields.schema || !("shape" in fields.schema) || !fields.schema.shape) {
     return new DynamicTool({
-      name: fields.name,
+      ...fields,
       description:
         fields.description ??
         fields.schema?.description ??
         `${fields.name} tool`,
-      responseFormat: fields.responseFormat,
       func,
     });
   }
@@ -543,7 +543,7 @@ export function tool<T extends ZodObjectAny | z.ZodString = ZodObjectAny>(
     fields.description ?? fields.schema.description ?? `${fields.name} tool`;
 
   return new DynamicStructuredTool<T extends ZodObjectAny ? T : ZodObjectAny>({
-    name: fields.name,
+    ...fields,
     description,
     schema: fields.schema as T extends ZodObjectAny ? T : ZodObjectAny,
     // TODO: Consider moving into DynamicStructuredTool constructor
@@ -564,7 +564,6 @@ export function tool<T extends ZodObjectAny | z.ZodString = ZodObjectAny>(
         );
       });
     },
-    responseFormat: fields.responseFormat,
   });
 }
 

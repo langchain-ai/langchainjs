@@ -2,6 +2,8 @@ const fs = require("node:fs");
 const { glob } = require("glob");
 const { execSync } = require("node:child_process");
 
+const IGNORED_CELL_REGEX = /```\w*?\n\/\/ ?@lc-docs-hide-cell\n[\s\S]*?```/g;
+
 async function main() {
   const allIpynb = await glob("./docs/**/*.ipynb");
 
@@ -15,6 +17,15 @@ async function main() {
   gitignore += "# AUTO_GENERATED_DOCS\n";
   gitignore += allRenames.join("\n");
   fs.writeFileSync(pathToRootGitignore, gitignore);
+  for (const renamedFilepath of allRenames) {
+    if (fs.existsSync(renamedFilepath)) {
+      let content = fs.readFileSync(renamedFilepath).toString();
+      if (content.match(IGNORED_CELL_REGEX)) {
+        content = content.replace(IGNORED_CELL_REGEX, "");
+        fs.writeFileSync(renamedFilepath, content);
+      }
+    }
+  }
 
   try {
     /**

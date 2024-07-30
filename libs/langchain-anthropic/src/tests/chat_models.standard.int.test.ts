@@ -18,10 +18,23 @@ class ChatAnthropicStandardIntegrationTests extends ChatModelIntegrationTests<
       Cls: ChatAnthropic,
       chatModelHasToolCalling: true,
       chatModelHasStructuredOutput: true,
+      supportsParallelToolCalls: true,
       constructorArgs: {
         model: "claude-3-haiku-20240307",
       },
     });
+  }
+
+  async testParallelToolCalling() {
+    // Override constructor args to use a better model for this test.
+    // I found that haiku struggles with parallel tool calling.
+    const constructorArgsCopy = { ...this.constructorArgs };
+    this.constructorArgs = {
+      ...this.constructorArgs,
+      model: "claude-3-5-sonnet-20240620",
+    };
+    await super.testParallelToolCalling();
+    this.constructorArgs = constructorArgsCopy;
   }
 }
 

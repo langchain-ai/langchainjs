@@ -332,7 +332,7 @@ module.exports = {
         },
         {
           type: "category",
-          label: "Stores",
+          label: "Key-value stores",
           collapsed: true,
           items: [
             {

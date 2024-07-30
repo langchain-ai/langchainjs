@@ -71,6 +71,11 @@ interface ChatModelIntegrationTestsFields<
    * @default "abc123"
    */
   functionId?: string;
+  /**
+   * Whether or not the model supports parallel tool calling.
+   * @default false
+   */
+  supportsParallelToolCalls?: boolean;
 }
 
 export abstract class ChatModelIntegrationTests<
@@ -81,6 +86,8 @@ export abstract class ChatModelIntegrationTests<
   functionId = "abc123";
 
   invokeResponseType: typeof AIMessage | typeof AIMessageChunk = AIMessage;
+
+  supportsParallelToolCalls = false;
 
   constructor(
     fields: ChatModelIntegrationTestsFields<
@@ -93,6 +100,8 @@ export abstract class ChatModelIntegrationTests<
     this.functionId = fields.functionId ?? this.functionId;
     this.invokeResponseType =
       fields.invokeResponseType ?? this.invokeResponseType;
+    this.supportsParallelToolCalls =
+      fields.supportsParallelToolCalls ?? this.supportsParallelToolCalls;
   }
 
   /**
@@ -1314,6 +1323,204 @@ Extraction path: {extractionPath}`,
   }
 
   /**
+   * Tests the chat model's ability to handle parallel tool calls in various scenarios.
+   * This comprehensive test covers three aspects of parallel tool calling:
+   * 1. Invoking multiple tools simultaneously
+   * 2. Streaming responses with parallel tool calls
+   * 3. Processing message histories containing parallel tool calls
+   *
+   * The test uses a weather tool and a current time tool to simulate complex, multi-tool scenarios.
+   * It ensures that the model can correctly process and respond to prompts requiring multiple tool calls,
+   * both in streaming and non-streaming contexts, and can handle message histories with parallel tool calls.
+   *
+   * @param {InstanceType<this["Cls"]>["ParsedCallOptions"] | undefined} callOptions Optional call options to pass to the model.
+   * @param {boolean} onlyVerifyHistory If true, only verifies the message history test.
+   */
+  async testParallelToolCalling(
+    callOptions?: InstanceType<this["Cls"]>["ParsedCallOptions"],
+    onlyVerifyHistory = false
+  ) {
+    // Skip the test if the model doesn't support tool calling
+    if (!this.chatModelHasToolCalling) {
+      console.log("Test requires tool calling. Skipping...");
+      return;
+    }
+    // Skip the test if the model doesn't support parallel tool calls
+    if (!this.supportsParallelToolCalls) {
+      console.log("Test requires parallel tool calls. Skipping...");
+      return;
+    }
+    const model = new this.Cls(this.constructorArgs);
+    if (!model.bindTools) {
+      throw new Error(
+        "bindTools undefined. Cannot test OpenAI formatted tool calls."
+      );
+    }
+
+    const weatherTool = tool((_) => "no-op", {
+      name: "get_current_weather",
+      description: "Get the current weather in a given location",
+      schema: z.object({
+        location: z.string().describe("The city name, e.g. San Francisco"),
+      }),
+    });
+    const currentTimeTool = tool((_) => "no-op", {
+      name: "get_current_time",
+      description: "Get the current time in a given location",
+      schema: z.object({
+        location: z.string().describe("The city name, e.g. San Francisco"),
+      }),
+    });
+
+    const modelWithTools = model.bindTools([weatherTool, currentTimeTool]);
+
+    const callParallelToolsPrompt =
+      "What's the weather and current time in San Francisco?\n" +
+      "Ensure you ALWAYS call the 'get_current_weather' tool for weather and 'get_current_time' tool for time.";
+
+    // Save the result of the parallel tool calls for the history test.
+    let parallelToolCallsMessage: AIMessage | undefined;
+
+    /**
+     * Tests the basic functionality of invoking multiple tools in parallel.
+     * Verifies that the model can call both the weather and current time tools simultaneously.
+     */
+    const invokeParallelTools = async () => {
+      const result: AIMessage = await modelWithTools.invoke(
+        callParallelToolsPrompt,
+        callOptions
+      );
+      // Model should call at least two tools. Using greater than or equal since it might call the current time tool multiple times.
+      expect(result.tool_calls?.length).toBeGreaterThanOrEqual(2);
+      if (!result.tool_calls?.length) return;
+
+      const weatherToolCalls = result.tool_calls.find(
+        (tc) => tc.name === weatherTool.name
+      );
+      const currentTimeToolCalls = result.tool_calls.find(
+        (tc) => tc.name === currentTimeTool.name
+      );
+
+      expect(weatherToolCalls).toBeDefined();
+      expect(currentTimeToolCalls).toBeDefined();
+      parallelToolCallsMessage = result;
+    };
+
+    /**
+     * Tests the model's ability to stream responses while making parallel tool calls.
+     * Ensures that the streamed result contains calls to both the weather and current time tools.
+     */
+    const streamParallelTools = async () => {
+      const stream = await modelWithTools.stream(
+        callParallelToolsPrompt,
+        callOptions
+      );
+      let finalChunk: AIMessageChunk | undefined;
+      for await (const chunk of stream) {
+        finalChunk = !finalChunk ? chunk : concat(finalChunk, chunk);
+      }
+
+      expect(finalChunk).toBeDefined();
+      if (!finalChunk) return;
+
+      // Model should call at least two tools. Do not penalize for calling more than two tools, as
+      // long as it calls both the weather and current time tools.
+      expect(finalChunk.tool_calls?.length).toBeGreaterThanOrEqual(2);
+      if (!finalChunk.tool_calls?.length) return;
+
+      const weatherToolCalls = finalChunk.tool_calls.find(
+        (tc) => tc.name === weatherTool.name
+      );
+      const currentTimeToolCalls = finalChunk.tool_calls.find(
+        (tc) => tc.name === currentTimeTool.name
+      );
+
+      expect(weatherToolCalls).toBeDefined();
+      expect(currentTimeToolCalls).toBeDefined();
+    };
+
+    /**
+     * Tests the model's ability to process a message history containing parallel tool calls.
+     * Verifies that the model can generate a response based on previous tool calls without making unnecessary additional tool calls.
+     */
+    const invokeParallelToolCallResultsInHistory = async () => {
+      const defaultAIMessageWithParallelTools = new AIMessage({
+        content: "",
+        tool_calls: [
+          {
+            name: weatherTool.name,
+            id: "get_current_weather_id",
+            args: { location: "San Francisco" },
+          },
+          {
+            name: currentTimeTool.name,
+            id: "get_current_time_id",
+            args: { location: "San Francisco" },
+          },
+        ],
+      });
+      if (!parallelToolCallsMessage) {
+        // Allow this variable to be assigned in the first test, or if only run histories
+        // is passed, assign it here since the first test will not run.
+        parallelToolCallsMessage = defaultAIMessageWithParallelTools;
+      }
+      // Find the tool calls for the weather and current time tools so we can re-use the IDs in the message history.
+      const parallelToolCallWeather = parallelToolCallsMessage.tool_calls?.find(
+        (tc) => tc.name === weatherTool.name
+      );
+      const parallelToolCallCurrentTime =
+        parallelToolCallsMessage.tool_calls?.find(
+          (tc) => tc.name === currentTimeTool.name
+        );
+      if (!parallelToolCallWeather?.id || !parallelToolCallCurrentTime?.id) {
+        throw new Error(
+          `IDs not found in one of both of parallel tool calls:\nWeather ID: ${parallelToolCallWeather?.id}\nCurrent Time ID: ${parallelToolCallCurrentTime?.id}`
+        );
+      }
+
+      const messageHistory = [
+        new HumanMessage(callParallelToolsPrompt),
+        // The saved message from earlier when we called the model to generate the parallel tool calls.
+        parallelToolCallsMessage,
+        new ToolMessage({
+          name: weatherTool.name,
+          tool_call_id: parallelToolCallWeather.id,
+          content: "It is currently 24 degrees with hail in San Francisco.",
+        }),
+        new ToolMessage({
+          name: currentTimeTool.name,
+          tool_call_id: parallelToolCallCurrentTime.id,
+          content: "The current time in San Francisco is 12:02 PM.",
+        }),
+      ];
+
+      const result: AIMessage = await modelWithTools.invoke(
+        messageHistory,
+        callOptions
+      );
+      // The model should NOT call a tool given this message history.
+      expect(result.tool_calls ?? []).toHaveLength(0);
+
+      if (typeof result.content === "string") {
+        expect(result.content).not.toBe("");
+      } else {
+        expect(result.content.length).toBeGreaterThan(0);
+        const textOrTextDeltaContent = result.content.find(
+          (c) => c.type === "text" || c.type === "text_delta"
+        );
+        expect(textOrTextDeltaContent).toBeDefined();
+      }
+    };
+
+    // Now we can invoke each of our tests synchronously, as the last test requires the result of the first test.
+    if (!onlyVerifyHistory) {
+      await invokeParallelTools();
+      await streamParallelTools();
+    }
+    await invokeParallelToolCallResultsInHistory();
+  }
+
+  /**
    * Run all unit tests for the chat model.
    * Each test is wrapped in a try/catch block to prevent the entire test suite from failing.
    * If a test fails, the error is logged to the console, and the test suite continues.
@@ -1449,6 +1656,13 @@ Extraction path: {extractionPath}`,
     } catch (e: any) {
       allTestsPassed = false;
       console.error("testInvokeMoreComplexTools failed", e.message);
+    }
+
+    try {
+      await this.testParallelToolCalling();
+    } catch (e: any) {
+      allTestsPassed = false;
+      console.error("testParallelToolCalling failed", e.message);
     }
 
     return allTestsPassed;

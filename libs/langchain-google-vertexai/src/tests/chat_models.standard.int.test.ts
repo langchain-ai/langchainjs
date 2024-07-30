@@ -19,6 +19,7 @@ class ChatVertexAIStandardIntegrationTests extends ChatModelIntegrationTests<
       Cls: ChatVertexAI,
       chatModelHasToolCalling: true,
       chatModelHasStructuredOutput: true,
+      supportsParallelToolCalls: true,
       invokeResponseType: AIMessageChunk,
       constructorArgs: {
         model: "gemini-1.5-pro",
@@ -41,6 +42,12 @@ class ChatVertexAIStandardIntegrationTests extends ChatModelIntegrationTests<
       "Google VertexAI does not support tool schemas which contain object with unknown/any parameters." +
         "Google VertexAI only supports objects in schemas when the parameters are defined."
     );
+  }
+
+  async testParallelToolCalling() {
+    // Pass `true` in the second argument to only verify it can support parallel tool calls in the message history.
+    // This is because the model struggles to actually call parallel tools.
+    await super.testParallelToolCalling(undefined, true);
   }
 }
 
