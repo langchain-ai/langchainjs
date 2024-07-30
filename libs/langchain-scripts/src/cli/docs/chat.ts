@@ -226,7 +226,7 @@ export async function fillChatIntegrationDocTemplate(fields: {
   await fs.promises.writeFile(docPath, docTemplate);
 
   console.log(
-    "Successfully created new chat model integration doc at ${docPath}." +
+    `Successfully created new chat model integration doc at ${docPath}.` +
       "Please run the cells in the doc to record the outputs, and replace the Python documentation support URL with the proper URL."
   );
 }

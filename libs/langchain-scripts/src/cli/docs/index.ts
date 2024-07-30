@@ -25,7 +25,8 @@ async function main() {
 
   const options = program.opts<CLIInput>();
 
-  let { package: packageName, module: moduleName, type } = options;
+  const { module: moduleName, type } = options;
+  let { package: packageName } = options;
 
   if (packageName.startsWith("@langchain/")) {
     packageName = packageName.replace("@langchain/", "");
@@ -43,4 +44,6 @@ async function main() {
   }
 }
 
-main();
+main().catch((err) => {
+  throw err;
+});
