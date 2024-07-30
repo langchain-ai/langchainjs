@@ -16,6 +16,7 @@ import {
 } from "../../utils/testing/index.js";
 import { RunnableSequence, RunnableMap } from "../base.js";
 import { RunnablePassthrough } from "../passthrough.js";
+import { test, expect } from "@jest/globals";
 
 test("Create a runnable sequence with a runnable map", async () => {
   const promptTemplate = ChatPromptTemplate.fromMessages<{

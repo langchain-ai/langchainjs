@@ -4,6 +4,7 @@ import { RunnablePassthrough } from "../passthrough.js";
 import { JsonOutputParser } from "../../output_parsers/json.js";
 import { RunnableSequence } from "../base.js";
 import { RunnableConfig } from "../config.js";
+import { test, expect } from "@jest/globals";
 
 test("RunnablePassthrough can call .assign and pass prev result through", async () => {
   const promptTemplate = PromptTemplate.fromTemplate("{input}");

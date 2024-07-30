@@ -6,6 +6,7 @@ import {
 } from "../../output_parsers/base.js";
 import { FakeChatModel } from "../../utils/testing/index.js";
 import { getEnvironmentVariable } from "../../utils/env.js";
+import { test } from "@jest/globals";
 
 class FakeDateOutputParser extends BaseOutputParser<Date> {
   lc_namespace = ["langchain_core", "output_parsers", "testing"];

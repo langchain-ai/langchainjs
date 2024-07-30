@@ -9,6 +9,7 @@ import { BaseLLM } from "../../language_models/llms.js";
 import { StringOutputParser } from "../../output_parsers/string.js";
 import type { LLMResult } from "../../outputs.js";
 import { RunCollectorCallbackHandler } from "../../tracers/run_collector.js";
+import { describe, it, expect } from "@jest/globals";
 
 class FakeLLM extends BaseLLM {
   nrMapCalls = 0;
