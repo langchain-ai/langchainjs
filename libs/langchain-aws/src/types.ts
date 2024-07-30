@@ -18,4 +18,4 @@ export type BedrockToolChoice =
   | ToolChoice.AnyMember
   | ToolChoice.AutoMember
   | ToolChoice.ToolMember;
-export type AWSToolType = BindToolsInput | BedrockTool;
+export type ChatBedrockConverseToolType = BindToolsInput | BedrockTool;

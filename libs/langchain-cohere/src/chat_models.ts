@@ -39,7 +39,7 @@ import {
 import * as uuid from "uuid";
 import { Runnable } from "@langchain/core/runnables";
 
-type CohereToolType = BindToolsInput | Cohere.Tool;
+type ChatCohereToolType = BindToolsInput | Cohere.Tool;
 
 /**
  * Input interface for ChatCohere
@@ -89,7 +89,7 @@ export interface ChatCohereCallOptions
     Partial<Omit<Cohere.ChatRequest, "message" | "tools">>,
     Partial<Omit<Cohere.ChatStreamRequest, "message" | "tools">>,
     Pick<ChatCohereInput, "streamUsage"> {
-  tools?: CohereToolType[];
+  tools?: ChatCohereToolType[];
 }
 
 /** @deprecated Import as ChatCohereCallOptions instead. */
@@ -366,7 +366,7 @@ export class ChatCohere<
   }
 
   override bindTools(
-    tools: CohereToolType[],
+    tools: ChatCohereToolType[],
     kwargs?: Partial<CallOptions>
   ): Runnable<BaseLanguageModelInput, AIMessageChunk, CallOptions> {
     return this.bind({

@@ -45,13 +45,13 @@ import {
   AnthropicRequestOptions,
   AnthropicStreamingMessageCreateParams,
   AnthropicToolChoice,
-  AnthropicToolTypes,
+  ChatAnthropicToolType,
 } from "./types.js";
 
 export interface ChatAnthropicCallOptions
   extends BaseChatModelCallOptions,
     Pick<AnthropicInput, "streamUsage"> {
-  tools?: AnthropicToolTypes[];
+  tools?: ChatAnthropicToolType[];
   /**
    * Whether or not to specify what tool the model should use
    * @default "auto"
@@ -351,7 +351,7 @@ export class ChatAnthropicMessages<
   }
 
   override bindTools(
-    tools: AnthropicToolTypes[],
+    tools: ChatAnthropicToolType[],
     kwargs?: Partial<CallOptions>
   ): Runnable<BaseLanguageModelInput, AIMessageChunk, CallOptions> {
     return this.bind({

@@ -319,43 +319,40 @@ export function convertResponseContentToChatGenerationChunk(
 }
 
 export function convertToGenerativeAITools(
-  structuredTools: GoogleGenerativeAIToolType[]
+  tools: GoogleGenerativeAIToolType[]
 ): GoogleGenerativeAIFunctionDeclarationsTool[] {
   if (
-    structuredTools.every(
+    tools.every(
       (tool) =>
         "functionDeclarations" in tool &&
         Array.isArray(tool.functionDeclarations)
     )
   ) {
-    return structuredTools as GoogleGenerativeAIFunctionDeclarationsTool[];
+    return tools as GoogleGenerativeAIFunctionDeclarationsTool[];
   }
   return [
     {
-      functionDeclarations: structuredTools.map(
-        (structuredTool): GenerativeAIFunctionDeclaration => {
-          if (isLangChainTool(structuredTool)) {
-            const jsonSchema = zodToGenerativeAIParameters(
-              structuredTool.schema
-            );
+      functionDeclarations: tools.map(
+        (tool): GenerativeAIFunctionDeclaration => {
+          if (isLangChainTool(tool)) {
+            const jsonSchema = zodToGenerativeAIParameters(tool.schema);
             return {
-              name: structuredTool.name,
-              description: structuredTool.description,
+              name: tool.name,
+              description: tool.description,
               parameters: jsonSchema,
             };
           }
-          if (isOpenAITool(structuredTool)) {
+          if (isOpenAITool(tool)) {
             return {
-              name: structuredTool.function.name,
+              name: tool.function.name,
               description:
-                structuredTool.function.description ??
-                `A function available to call.`,
+                tool.function.description ?? `A function available to call.`,
               parameters: jsonSchemaToGeminiParameters(
-                structuredTool.function.parameters
+                tool.function.parameters
               ),
             };
           }
-          return structuredTool as unknown as GenerativeAIFunctionDeclaration;
+          return tool as unknown as GenerativeAIFunctionDeclaration;
         }
       ),
     },

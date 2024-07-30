@@ -66,11 +66,11 @@ import {
 import { convertToOpenAITool } from "@langchain/core/utils/function_calling";
 import { ToolCallChunk } from "@langchain/core/messages/tool";
 
-type GroqToolType = BindToolsInput | OpenAIClient.ChatCompletionTool;
+type ChatGroqToolType = BindToolsInput | OpenAIClient.ChatCompletionTool;
 
 export interface ChatGroqCallOptions extends BaseChatModelCallOptions {
   headers?: Record<string, string>;
-  tools?: GroqToolType[];
+  tools?: ChatGroqToolType[];
   tool_choice?: OpenAIClient.ChatCompletionToolChoiceOption | "any" | string;
   response_format?: { type: "json_object" };
 }
@@ -428,7 +428,7 @@ export class ChatGroq extends BaseChatModel<
   }
 
   override bindTools(
-    tools: GroqToolType[],
+    tools: ChatGroqToolType[],
     kwargs?: Partial<ChatGroqCallOptions>
   ): Runnable<BaseLanguageModelInput, AIMessageChunk, ChatGroqCallOptions> {
     return this.bind({

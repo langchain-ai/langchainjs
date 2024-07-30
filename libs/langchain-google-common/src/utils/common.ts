@@ -60,30 +60,28 @@ function processToolChoice(
   throw new Error("Object inputs for tool_choice not supported.");
 }
 
-export function convertToGeminiTools(
-  structuredTools: GoogleAIToolType[]
-): GeminiTool[] {
-  const tools: GeminiTool[] = [
+export function convertToGeminiTools(tools: GoogleAIToolType[]): GeminiTool[] {
+  const geminiTools: GeminiTool[] = [
     {
       functionDeclarations: [],
     },
   ];
-  structuredTools.forEach((tool) => {
+  tools.forEach((tool) => {
     if (
       "functionDeclarations" in tool &&
       Array.isArray(tool.functionDeclarations)
     ) {
       const funcs: GeminiFunctionDeclaration[] = tool.functionDeclarations;
-      tools[0].functionDeclarations?.push(...funcs);
+      geminiTools[0].functionDeclarations?.push(...funcs);
     } else if (isLangChainTool(tool)) {
       const jsonSchema = zodToGeminiParameters(tool.schema);
-      tools[0].functionDeclarations?.push({
+      geminiTools[0].functionDeclarations?.push({
         name: tool.name,
         description: tool.description ?? `A function available to call.`,
         parameters: jsonSchema as GeminiFunctionSchema,
       });
     } else if (isOpenAITool(tool)) {
-      tools[0].functionDeclarations?.push({
+      geminiTools[0].functionDeclarations?.push({
         name: tool.function.name,
         description:
           tool.function.description ?? `A function available to call.`,
@@ -91,7 +89,7 @@ export function convertToGeminiTools(
       });
     }
   });
-  return tools;
+  return geminiTools;
 }
 
 export function copyAIModelParamsInto(

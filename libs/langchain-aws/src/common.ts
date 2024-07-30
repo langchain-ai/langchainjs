@@ -25,7 +25,7 @@ import type { DocumentType as __DocumentType } from "@smithy/types";
 import { isLangChainTool } from "@langchain/core/utils/function_calling";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { ChatGenerationChunk } from "@langchain/core/outputs";
-import { AWSToolType, BedrockToolChoice } from "./types.js";
+import { ChatBedrockConverseToolType, BedrockToolChoice } from "./types.js";
 
 export function extractImageInfo(base64: string): ContentBlock.ImageMember {
   // Extract the format from the base64 string
@@ -238,7 +238,9 @@ export function isBedrockTool(tool: unknown): tool is BedrockTool {
   return false;
 }
 
-export function convertToConverseTools(tools: AWSToolType[]): BedrockTool[] {
+export function convertToConverseTools(
+  tools: ChatBedrockConverseToolType[]
+): BedrockTool[] {
   if (tools.every(isOpenAITool)) {
     return tools.map((tool) => ({
       toolSpec: {

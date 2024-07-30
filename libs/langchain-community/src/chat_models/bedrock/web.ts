@@ -50,7 +50,7 @@ import {
 
 type AnthropicTool = Record<string, unknown>;
 
-type BedrockToolType = BindToolsInput | AnthropicTool;
+type BedrockChatToolType = BindToolsInput | AnthropicTool;
 
 const PRELUDE_TOTAL_LENGTH_BYTES = 4;
 
@@ -146,7 +146,7 @@ function formatTools(tools: BedrockChatCallOptions["tools"]): AnthropicTool[] {
 }
 
 export interface BedrockChatCallOptions extends BaseChatModelCallOptions {
-  tools?: BedrockToolType[];
+  tools?: BedrockChatToolType[];
 }
 
 export interface BedrockChatFields
@@ -731,7 +731,7 @@ export class BedrockChat
   }
 
   override bindTools(
-    tools: BedrockToolType[],
+    tools: BedrockChatToolType[],
     _kwargs?: Partial<this["ParsedCallOptions"]>
   ): Runnable<
     BaseLanguageModelInput,

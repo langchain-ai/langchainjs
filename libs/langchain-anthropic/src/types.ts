@@ -28,5 +28,4 @@ export type AnthropicToolChoice =
   | "auto"
   | "none"
   | string;
-
-export type AnthropicToolTypes = AnthropicTool | BindToolsInput;
+export type ChatAnthropicToolType = AnthropicTool | BindToolsInput;

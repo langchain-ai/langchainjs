@@ -25,7 +25,11 @@ import {
 } from "@aws-sdk/credential-provider-node";
 import type { DocumentType as __DocumentType } from "@smithy/types";
 import { Runnable } from "@langchain/core/runnables";
-import { AWSToolType, ConverseCommandParams, CredentialType } from "./types.js";
+import {
+  ChatBedrockConverseToolType,
+  ConverseCommandParams,
+  CredentialType,
+} from "./types.js";
 import {
   convertToConverseTools,
   convertToBedrockToolChoice,
@@ -130,7 +134,7 @@ export interface ChatBedrockConverseCallOptions
    */
   stop?: string[];
 
-  tools?: AWSToolType[];
+  tools?: ChatBedrockConverseToolType[];
 
   /**
    * Tool choice for the model. If passing a string, it must be "any", "auto" or the
@@ -275,7 +279,7 @@ export class ChatBedrockConverse
   }
 
   override bindTools(
-    tools: AWSToolType[],
+    tools: ChatBedrockConverseToolType[],
     kwargs?: Partial<this["ParsedCallOptions"]>
   ): Runnable<
     BaseLanguageModelInput,

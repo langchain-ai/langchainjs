@@ -77,14 +77,17 @@ export type MistralAIToolChoice = "auto" | "any" | "none";
 
 type MistralAIToolInput = { type: string; function: MistralAIFunction };
 
-type MistralAIToolType = MistralAIToolInput | MistralAITool | BindToolsInput;
+type ChatMistralAIToolType =
+  | MistralAIToolInput
+  | MistralAITool
+  | BindToolsInput;
 
 interface MistralAICallOptions
   extends Omit<BaseLanguageModelCallOptions, "stop"> {
   response_format?: {
     type: "text" | "json_object";
   };
-  tools: MistralAIToolType[];
+  tools: ChatMistralAIToolType[];
   tool_choice?: MistralAIToolChoice;
   /**
    * Whether or not to include token usage in the stream.
@@ -389,7 +392,7 @@ function _convertDeltaToMessageChunk(
 }
 
 function _convertToolToMistralTool(
-  tools: MistralAIToolType[]
+  tools: ChatMistralAIToolType[]
 ): MistralAITool[] {
   return tools.map((tool) => {
     if ("function" in tool) {
@@ -517,7 +520,7 @@ export class ChatMistralAI<
   }
 
   override bindTools(
-    tools: MistralAIToolType[],
+    tools: ChatMistralAIToolType[],
     kwargs?: Partial<CallOptions>
   ): Runnable<BaseLanguageModelInput, AIMessageChunk, CallOptions> {
     return this.bind({
