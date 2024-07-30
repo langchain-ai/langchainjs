@@ -279,7 +279,7 @@ function _convertChatOpenAIToolTypeToOpenAITool(
   tool: ChatOpenAIToolType
 ): OpenAIClient.ChatCompletionTool {
   if ("function" in tool) {
-    tool;
+    return tool;
   }
   return convertToOpenAITool(tool);
 }
