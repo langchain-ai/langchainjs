@@ -17874,6 +17874,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@ts-morph/common@npm:~0.24.0":
+  version: 0.24.0
+  resolution: "@ts-morph/common@npm:0.24.0"
+  dependencies:
+    fast-glob: ^3.3.2
+    minimatch: ^9.0.4
+    mkdirp: ^3.0.1
+    path-browserify: ^1.0.1
+  checksum: 793bc8a47c93ab55c6c036f94480d3b0e948661aef4bb7dbc29279b1dda2fc4fce809a88e221537867a313541842e12d1ecbd32b4769688abe1303807ec09db6
+  languageName: node
+  linkType: hard
+
 "@tsconfig/recommended@npm:^1.0.2":
   version: 1.0.2
   resolution: "@tsconfig/recommended@npm:1.0.2"
@@ -22322,6 +22334,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"code-block-writer@npm:^13.0.1":
+  version: 13.0.2
+  resolution: "code-block-writer@npm:13.0.2"
+  checksum: 8052ae6f27ef73366bd5df04b6f9beced493261fcaef5cbd0f3853644b5e0aa5af18d099b96448be88ea3d000c7b180207d371044edd9fcf98fea22c9f8ba3a1
+  languageName: node
+  linkType: hard
+
 "cohere-ai@npm:>=6.0.0":
   version: 6.2.2
   resolution: "cohere-ai@npm:6.2.2"
@@ -22867,6 +22886,7 @@ __metadata:
     rimraf: ^5.0.1
     supabase: ^1.148.6
     swc-loader: ^0.2.3
+    ts-morph: ^23.0.0
     tsx: ^3.12.3
     typedoc: ^0.24.4
     typedoc-plugin-markdown: next
@@ -32994,7 +33014,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"minimatch@npm:^9.0.5":
+"minimatch@npm:^9.0.4, minimatch@npm:^9.0.5":
   version: 9.0.5
   resolution: "minimatch@npm:9.0.5"
   dependencies:
@@ -39911,6 +39931,16 @@ __metadata:
     "@ts-morph/common": ~0.22.0
     code-block-writer: ^12.0.0
   checksum: f8e6acd4cdb2842af47ccf4e8900dc3f230f20c3b0d28e1e8b58c395b0a16d7b3e03ef56f29da3fdb861c50e22eb52524e0fc4bfca0fde8448f81b8f4f6aa157
+  languageName: node
+  linkType: hard
+
+"ts-morph@npm:^23.0.0":
+  version: 23.0.0
+  resolution: "ts-morph@npm:23.0.0"
+  dependencies:
+    "@ts-morph/common": ~0.24.0
+    code-block-writer: ^13.0.1
+  checksum: 3282eb0f8bd4577770874736c3259b97501da9a86137160b5d68f106b7848ea7b1fbccf9e198a3d930ec40c993e9951d4bfae31e2562dac8f3de0d7bb0e23615
   languageName: node
   linkType: hard
 
