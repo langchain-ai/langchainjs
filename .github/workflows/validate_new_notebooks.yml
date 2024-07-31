@@ -36,14 +36,23 @@ jobs:
       - name: Get changed files
         id: changed-files
         uses: tj-actions/changed-files@v44
-      - name: Validate new notebooks
+      - name: Check for new or modified notebooks
+        id: check_notebooks
         run: |
-          new_notebooks=$(echo '${{ steps.changed-files.outputs.added_files }}' | tr ' ' '\n' | grep '\.ipynb$' || true)
-          echo "New notebooks: $new_notebooks"
-          if [ -n "$new_notebooks" ]; then
-            for notebook in $new_notebooks; do
+          notebooks=$(echo '${{ steps.changed-files.outputs.all_changed_files }}' | tr ' ' '\n' | grep '\.ipynb$' || true)
+          echo "Affected notebooks: $notebooks"
+          echo "has_affected_notebooks=$([ -n "$notebooks" ] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
+      - name: Build examples
+        if: steps.check_notebooks.outputs.has_affected_notebooks == 'true'
+        run: yarn turbo:command build --filter=examples
+      - name: Validate affected notebooks
+        if: steps.check_notebooks.outputs.has_affected_notebooks == 'true'
+        run: |
+          notebooks=$(echo '${{ steps.changed-files.outputs.all_changed_files }}' | tr ' ' '\n' | grep '\.ipynb$' || true)
+          if [ -n "$notebooks" ]; then
+            for notebook in $notebooks; do
               yarn notebook:validate "$notebook"
             done
           else
-            echo "No new notebooks to validate."
+            echo "No notebooks to validate."
           fi
