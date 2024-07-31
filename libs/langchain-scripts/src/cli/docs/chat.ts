@@ -202,7 +202,10 @@ export async function fillChatIntegrationDocTemplate(fields: {
     .replace(TOKEN_USAGE_PLACEHOLDER, extraFields?.tokenUsage ? "✅" : "❌")
     .replace(LOGPROBS_PLACEHOLDER, extraFields?.logprobs ? "✅" : "❌")
     .replace(LOCAL_PLACEHOLDER, extraFields?.local ? "✅" : "❌")
-    .replace(SERIALIZABLE_PLACEHOLDER, extraFields?.serializable ? "✅" : "beta")
+    .replace(
+      SERIALIZABLE_PLACEHOLDER,
+      extraFields?.serializable ? "✅" : "beta"
+    )
     .replace(PY_SUPPORT_PLACEHOLDER, extraFields?.pySupport ? "✅" : "❌");
 
   const docPath = path.join(
