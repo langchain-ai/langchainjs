@@ -15,7 +15,10 @@ export function extract(filepath: string) {
 
   // Deduplicate imports
   const importDeclarations = sourceFile.getImportDeclarations();
-  const uniqueImports = new Map<string, { default?: string; named: Set<string> }>();
+  const uniqueImports = new Map<
+    string,
+    { default?: string; named: Set<string> }
+  >();
 
   importDeclarations.forEach((importDecl) => {
     const moduleSpecifier = importDecl.getModuleSpecifierValue();
@@ -35,13 +38,15 @@ export function extract(filepath: string) {
   importDeclarations.forEach((importDecl) => importDecl.remove());
 
   // Add deduplicated imports at the top
-  uniqueImports.forEach(({ default: defaultImport, named }, moduleSpecifier) => {
-    sourceFile.addImportDeclaration({
-      moduleSpecifier,
-      defaultImport,
-      namedImports: Array.from(named),
-    });
-  });
+  uniqueImports.forEach(
+    ({ default: defaultImport, named }, moduleSpecifier) => {
+      sourceFile.addImportDeclaration({
+        moduleSpecifier,
+        defaultImport,
+        namedImports: Array.from(named),
+      });
+    }
+  );
 
   return sourceFile.getFullText();
 }
