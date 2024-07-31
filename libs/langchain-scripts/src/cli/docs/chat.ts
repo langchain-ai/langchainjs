@@ -12,7 +12,7 @@ const PACKAGE_NAME_SHORT_SNAKE_CASE_PLACEHOLDER =
   "__package_name_short_snake_case__";
 const PACKAGE_NAME_SNAKE_CASE_PLACEHOLDER = "__package_name_snake_case__";
 const PACKAGE_NAME_PRETTY_PLACEHOLDER = "__package_name_pretty__";
-const PACKAGE_IMPORT_PATH_PLACEHOLDER = "__import_path__"
+const PACKAGE_IMPORT_PATH_PLACEHOLDER = "__import_path__";
 const MODULE_NAME_PLACEHOLDER = "__ModuleName__";
 // This should not be prefixed with `Chat` as it's used for API keys.
 const MODULE_NAME_ALL_CAPS_PLACEHOLDER = "__MODULE_NAME_ALL_CAPS__";
