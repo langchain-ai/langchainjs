@@ -31,7 +31,7 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@baiducloud/qianfan": "0.1.0",
+    "@baiducloud/qianfan": "^0.1.6",
     "@langchain/core": ">0.1.56 <0.3.0",
     "@langchain/openai": "~0.1.0",
     "zod": "^3.22.4",
