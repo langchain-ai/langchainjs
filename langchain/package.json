@@ -630,7 +630,6 @@
     "@swc/jest": "^0.2.29",
     "@tsconfig/recommended": "^1.0.2",
     "@types/d3-dsv": "^2",
-    "@types/decamelize": "^1.2.0",
     "@types/handlebars": "^4.1.0",
     "@types/html-to-text": "^9",
     "@types/js-yaml": "^4",
