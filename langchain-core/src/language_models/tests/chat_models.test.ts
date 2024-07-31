@@ -1,6 +1,6 @@
 /* eslint-disable no-promise-executor-return */
 
-import { test } from "@jest/globals";
+import { test, expect } from "@jest/globals";
 import { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { FakeChatModel, FakeListChatModel } from "../../utils/testing/index.js";

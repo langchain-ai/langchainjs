@@ -140,6 +140,24 @@ export function mergeContent(
   }
 }
 
+/**
+ * 'Merge' two statuses. If either value passed is 'error', it will return 'error'. Else
+ * it will return 'success'.
+ *
+ * @param {"success" | "error" | undefined} left The existing value to 'merge' with the new value.
+ * @param {"success" | "error" | undefined} right The new value to 'merge' with the existing value
+ * @returns {"success" | "error"} The 'merged' value.
+ */
+export function _mergeStatus(
+  left?: "success" | "error",
+  right?: "success" | "error"
+): "success" | "error" | undefined {
+  if (left === "error" || right === "error") {
+    return "error";
+  }
+  return "success";
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function stringifyWithDepthLimit(obj: any, depthLimit: number): string {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
