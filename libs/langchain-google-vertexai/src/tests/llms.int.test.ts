@@ -219,3 +219,12 @@ describe("GAuth LLM gai", () => {
     // console.log("res", res);
   });
 });
+
+test.only("invoke", async () => {
+  const model = new VertexAI({
+    model: "gemini-1.5-pro",
+  });
+
+  const res = await model.invoke("1 + 1 = ");
+  console.log("res", res);
+})

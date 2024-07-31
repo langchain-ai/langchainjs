@@ -187,6 +187,7 @@ export abstract class GoogleBaseLLM<AuthOptions>
     prompt: string,
     options: this["ParsedCallOptions"]
   ): Promise<string> {
+    console.log("this.model", this.model)
     const parameters = copyAIModelParams(this, options);
     const result = await this.connection.request(prompt, parameters, options);
     const ret = safeResponseToString(result, this.safetyHandler);
@@ -290,6 +291,7 @@ export abstract class GoogleBaseLLM<AuthOptions>
     input: BaseLanguageModelInput,
     options?: BaseLanguageModelCallOptions
   ): Promise<string> {
+    console.log("this.model", this.model)
     const stream = await this._streamIterator(input, options);
     let generatedOutput = "";
     for await (const chunk of stream) {

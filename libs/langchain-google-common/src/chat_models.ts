@@ -357,6 +357,7 @@ export abstract class ChatGoogleBase<AuthOptions>
   ): AsyncGenerator<ChatGenerationChunk> {
     // Make the call as a streaming request
     const parameters = this.invocationParams(options);
+    console.log("IN CHAT MODEL", this.model)
     const response = await this.streamedConnection.request(
       _messages,
       parameters,

@@ -106,7 +106,7 @@ export abstract class GoogleConnection<
     } else {
       opts.responseType = "json";
     }
-
+    console.dir(opts, { depth: null });
     const callResponse = await this.caller.callWithOptions(
       { signal: options?.signal },
       async () => this.client.request(opts)
