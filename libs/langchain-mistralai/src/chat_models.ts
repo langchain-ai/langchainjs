@@ -78,7 +78,8 @@ export type MistralAIToolChoice = "auto" | "any" | "none";
 
 type MistralAIToolInput = { type: string; function: MistralAIFunction };
 
-export interface ChatMistralAICallOptions extends Omit<BaseLanguageModelCallOptions, "stop"> {
+export interface ChatMistralAICallOptions
+  extends Omit<BaseLanguageModelCallOptions, "stop"> {
   response_format?: {
     type: "text" | "json_object";
   };
