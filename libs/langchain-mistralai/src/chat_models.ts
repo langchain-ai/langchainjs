@@ -77,8 +77,8 @@ interface TokenUsage {
 export type MistralAIToolChoice = "auto" | "any" | "none";
 
 type MistralAIToolInput = { type: string; function: MistralAIFunction };
-interface MistralAICallOptions
-  extends Omit<BaseLanguageModelCallOptions, "stop"> {
+
+export interface ChatMistralAICallOptions extends Omit<BaseLanguageModelCallOptions, "stop"> {
   response_format?: {
     type: "text" | "json_object";
   };
@@ -90,8 +90,6 @@ interface MistralAICallOptions
    */
   streamUsage?: boolean;
 }
-
-export interface ChatMistralAICallOptions extends MistralAICallOptions {}
 
 /**
  * Input to chat model class.
@@ -406,7 +404,7 @@ function _convertStructuredToolToMistralTool(
  * Integration with a chat model.
  */
 export class ChatMistralAI<
-    CallOptions extends MistralAICallOptions = MistralAICallOptions
+    CallOptions extends ChatMistralAICallOptions = ChatMistralAICallOptions
   >
   extends BaseChatModel<CallOptions, AIMessageChunk>
   implements ChatMistralAIInput
