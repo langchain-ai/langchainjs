@@ -12,6 +12,7 @@ const PACKAGE_NAME_SHORT_SNAKE_CASE_PLACEHOLDER =
   "__package_name_short_snake_case__";
 const PACKAGE_NAME_SNAKE_CASE_PLACEHOLDER = "__package_name_snake_case__";
 const PACKAGE_NAME_PRETTY_PLACEHOLDER = "__package_name_pretty__";
+const PACKAGE_IMPORT_PATH_PLACEHOLDER = "__import_path__";
 const MODULE_NAME_PLACEHOLDER = "__ModuleName__";
 // This should not be prefixed with `Chat` as it's used for API keys.
 const MODULE_NAME_ALL_CAPS_PLACEHOLDER = "__MODULE_NAME_ALL_CAPS__";
@@ -31,6 +32,7 @@ const PY_SUPPORT_PLACEHOLDER = "__py_support__";
 
 const API_REF_BASE_PACKAGE_URL = `https://api.js.langchain.com/modules/langchain_${PACKAGE_NAME_PLACEHOLDER}.html`;
 const API_REF_BASE_MODULE_URL = `https://api.js.langchain.com/classes/langchain_${PACKAGE_NAME_PLACEHOLDER}.${MODULE_NAME_PLACEHOLDER}.html`;
+
 const TEMPLATE_PATH = path.resolve("./src/cli/docs/templates/chat.ipynb");
 const INTEGRATIONS_DOCS_PATH = path.resolve(
   "../../docs/core_docs/docs/integrations/chat"
@@ -140,6 +142,7 @@ async function promptExtraFields(): Promise<ExtraFields> {
 export async function fillChatIntegrationDocTemplate(fields: {
   packageName: string;
   moduleName: string;
+  isCommunity: boolean;
 }) {
   // Ask the user if they'd like to fill in extra fields, if so, prompt them.
   let extraFields: ExtraFields | undefined;
@@ -151,14 +154,27 @@ export async function fillChatIntegrationDocTemplate(fields: {
     extraFields = await promptExtraFields();
   }
 
-  const formattedApiRefPackageUrl = API_REF_BASE_PACKAGE_URL.replace(
-    PACKAGE_NAME_PLACEHOLDER,
-    fields.packageName
-  );
-  const formattedApiRefModuleUrl = API_REF_BASE_MODULE_URL.replace(
-    PACKAGE_NAME_PLACEHOLDER,
-    fields.packageName
-  ).replace(MODULE_NAME_PLACEHOLDER, fields.moduleName);
+  let formattedApiRefPackageUrl = "";
+  let formattedApiRefModuleUrl = "";
+  if (fields.isCommunity) {
+    formattedApiRefPackageUrl = API_REF_BASE_PACKAGE_URL.replace(
+      PACKAGE_NAME_PLACEHOLDER,
+      `community_chat_models_${fields.packageName}`
+    );
+    formattedApiRefModuleUrl = API_REF_BASE_MODULE_URL.replace(
+      PACKAGE_NAME_PLACEHOLDER,
+      `community_chat_models_${fields.packageName}`
+    ).replace(MODULE_NAME_PLACEHOLDER, fields.moduleName);
+  } else {
+    formattedApiRefPackageUrl = API_REF_BASE_PACKAGE_URL.replace(
+      PACKAGE_NAME_PLACEHOLDER,
+      fields.packageName
+    );
+    formattedApiRefModuleUrl = API_REF_BASE_MODULE_URL.replace(
+      PACKAGE_NAME_PLACEHOLDER,
+      fields.packageName
+    ).replace(MODULE_NAME_PLACEHOLDER, fields.moduleName);
+  }
 
   const success = await Promise.all([
     fetchAPIRefUrl(formattedApiRefPackageUrl),
@@ -170,8 +186,20 @@ export async function fillChatIntegrationDocTemplate(fields: {
   }
 
   const packageNameShortSnakeCase = fields.packageName.replaceAll("-", "_");
-  const fullPackageNameSnakeCase = `langchain_${packageNameShortSnakeCase}`;
-  const packageNamePretty = `@langchain/${fields.packageName}`;
+  let fullPackageNameSnakeCase = "";
+  let packageNamePretty = "";
+  let fullPackageImportPath = "";
+
+  if (fields.isCommunity) {
+    fullPackageNameSnakeCase = `langchain_community_chat_models_${packageNameShortSnakeCase}`;
+    fullPackageImportPath = `@langchain/community/chat_models/${fields.packageName}`;
+    packageNamePretty = "@langchain/community";
+  } else {
+    fullPackageNameSnakeCase = `langchain_${packageNameShortSnakeCase}`;
+    packageNamePretty = `@langchain/${fields.packageName}`;
+    fullPackageImportPath = packageNamePretty;
+  }
+
   let moduleNameAllCaps = fields.moduleName.toUpperCase();
   if (moduleNameAllCaps.startsWith("CHAT")) {
     moduleNameAllCaps = moduleNameAllCaps.replace("CHAT", "");
@@ -185,6 +213,7 @@ export async function fillChatIntegrationDocTemplate(fields: {
       packageNameShortSnakeCase
     )
     .replaceAll(PACKAGE_NAME_PRETTY_PLACEHOLDER, packageNamePretty)
+    .replaceAll(PACKAGE_IMPORT_PATH_PLACEHOLDER, fullPackageImportPath)
     .replaceAll(MODULE_NAME_PLACEHOLDER, fields.moduleName)
     .replaceAll(MODULE_NAME_ALL_CAPS_PLACEHOLDER, moduleNameAllCaps)
     .replaceAll(
