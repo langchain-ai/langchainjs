@@ -9,15 +9,12 @@ import {
 } from "../utils/get-input.js";
 
 const NODE_OR_WEB_PLACEHOLDER = "__fs_or_web__";
-const PACKAGE_NAME_PLACEHOLDER = "__package_name__";
+const NODE_OR_WEB_IMPORT_PATH_PLACEHOLDER = "__fs_or_web_import_path__";
+const FILE_NAME_PLACEHOLDER = "__file_name__";
 const MODULE_NAME_PLACEHOLDER = "__ModuleName__";
-const PACKAGE_NAME_SHORT_SNAKE_CASE_PLACEHOLDER =
-  "__package_name_short_snake_case__";
-const PACKAGE_NAME_SNAKE_CASE_PLACEHOLDER = "__package_name_snake_case__";
-const PACKAGE_IMPORT_PATH_PLACEHOLDER = "__import_path__";
 
-// This should not be prefixed with `Chat` as it's used for API keys.
-const MODULE_NAME_ALL_CAPS_PLACEHOLDER = "__MODULE_NAME_ALL_CAPS__";
+const API_REF_BASE_PACKAGE_URL = `https://api.js.langchain.com/modules/langchain_community_document_loaders_${NODE_OR_WEB_PLACEHOLDER}_${FILE_NAME_PLACEHOLDER}.html`;
+const API_REF_BASE_MODULE_URL = `https://v02.api.js.langchain.com/classes/langchain_community_document_loaders_${NODE_OR_WEB_PLACEHOLDER}_${FILE_NAME_PLACEHOLDER}.${MODULE_NAME_PLACEHOLDER}.html`;
 
 const SERIALIZABLE_PLACEHOLDER = "__serializable__";
 const LOCAL_PLACEHOLDER = "__local__";
@@ -26,7 +23,11 @@ const PY_SUPPORT_PLACEHOLDER = "__py_support__";
 const WEB_SUPPORT_PLACEHOLDER = "__web_support__";
 const NODE_SUPPORT_PLACEHOLDER = "__fs_support__";
 
-const API_REF_BASE_MODULE_URL = `https://api.js.langchain.com/classes/langchain_community_document_loaders_${NODE_OR_WEB_PLACEHOLDER}_${PACKAGE_NAME_PLACEHOLDER}.${MODULE_NAME_PLACEHOLDER}.html`;
+const NODE_ONLY_SIDEBAR_BADGE_PLACEHOLDER = "__node_only_sidebar__";
+const NODE_ONLY_TOOL_TIP_PLACEHOLDER = "__node_only_tooltip__";
+
+// This should not be suffixed with `Loader` as it's used for API keys.
+const MODULE_NAME_ALL_CAPS_PLACEHOLDER = "__MODULE_NAME_ALL_CAPS__";
 
 const TEMPLATE_PATH = path.resolve(
   "./src/cli/docs/templates/document_loaders.ipynb"
@@ -34,6 +35,17 @@ const TEMPLATE_PATH = path.resolve(
 const INTEGRATIONS_DOCS_PATH = path.resolve(
   "../../docs/core_docs/docs/integrations/document_loaders"
 );
+
+const NODE_ONLY_TOOLTIP = `\`\`\`{=mdx}
+
+:::tip Compatibility
+
+Only available on Node.js.
+
+:::
+
+\`\`\``;
+const NODE_ONLY_SIDEBAR_BADGE = `sidebar_class_name: node-only`;
 
 const fetchAPIRefUrl = async (url: string): Promise<boolean> => {
   try {
@@ -48,25 +60,25 @@ const fetchAPIRefUrl = async (url: string): Promise<boolean> => {
 };
 
 type ExtraFields = {
-  nodeSupport: boolean;
-  webSupport: boolean;
+  webLoader: boolean;
+  nodeOnly: boolean;
   serializable: boolean;
   pySupport: boolean;
   local: boolean;
 };
 
 async function promptExtraFields(): Promise<ExtraFields> {
-  const hasNodeSupport = await getUserInput(
-    "Does this integration support Node environments? (y/n) ",
+  const isWebLoader = await getUserInput(
+    "Is this integration a web loader? (y/n) ",
     undefined,
     true
   );
-  const hasWebSupport = await getUserInput(
-    "Does this integration support web environments? (y/n) ",
+  const isNodeOnly = await getUserInput(
+    "Does this integration _only_ support Node environments? (y/n) ",
     undefined,
     true
   );
-  const hasSerializable = await getUserInput(
+  const isSerializable = await getUserInput(
     "Does this integration support serializable output? (y/n) ",
     undefined,
     true
@@ -83,13 +95,22 @@ async function promptExtraFields(): Promise<ExtraFields> {
   );
 
   return {
-    nodeSupport: hasNodeSupport.toLowerCase() === "y",
-    webSupport: hasWebSupport.toLowerCase() === "y",
-    serializable: hasSerializable.toLowerCase() === "y",
+    webLoader: isWebLoader.toLowerCase() === "y",
+    nodeOnly: isNodeOnly.toLowerCase() === "y",
+    serializable: isSerializable.toLowerCase() === "y",
     pySupport: hasPySupport.toLowerCase() === "y",
     local: hasLocalSupport.toLowerCase() === "y",
   };
 }
+
+/**
+ * Will always be community. We care about:
+ * Module name
+ * file name
+ * Is web loader (boolean)
+ * Is node only (boolean)
+ * Does it run locally (boolean)
+ */
 
 export async function fillDocLoaderIntegrationDocTemplate(fields: {
   packageName: string;
@@ -107,55 +128,62 @@ export async function fillDocLoaderIntegrationDocTemplate(fields: {
     extraFields = await promptExtraFields();
   }
 
-  const formattedApiRefModuleUrl = API_REF_BASE_MODULE_URL.replace(
-    PACKAGE_NAME_PLACEHOLDER,
-    fields.packageName
-  )
-    .replace(MODULE_NAME_PLACEHOLDER, fields.moduleName)
-    .replace(NODE_OR_WEB_PLACEHOLDER, extraFields?.webSupport ? "web" : "fs");
+  const formattedPackageApiRefUrl = API_REF_BASE_PACKAGE_URL.replace(
+    NODE_OR_WEB_PLACEHOLDER,
+    extraFields?.webLoader ? "web" : "fs"
+  ).replace(FILE_NAME_PLACEHOLDER, fields.packageName);
 
-  const success = await fetchAPIRefUrl(formattedApiRefModuleUrl);
-  if (!success) {
+  const formattedApiRefModuleUrl = API_REF_BASE_MODULE_URL.replace(
+    NODE_OR_WEB_PLACEHOLDER,
+    extraFields?.webLoader ? "web" : "fs"
+  )
+    .replace(FILE_NAME_PLACEHOLDER, fields.packageName)
+    .replace(MODULE_NAME_PLACEHOLDER, fields.moduleName);
+
+  const success = await Promise.all([
+    fetchAPIRefUrl(formattedApiRefModuleUrl),
+    fetchAPIRefUrl(formattedPackageApiRefUrl),
+  ]);
+  if (!success.find((s) => s === false)) {
     // Don't error out because this might be used before the package is released.
     console.error("Invalid package or module name. API reference not found.");
   }
 
-  const packageNameShortSnakeCase = fields.packageName.replaceAll("-", "_");
-  const fullPackageNameSnakeCase = `langchain_community_document_loaders_${
-    extraFields?.webSupport ? "web" : "fs"
-  }_${packageNameShortSnakeCase}`;
-  const fullPackageImportPath = `@langchain/community/document_loaders/${
-    extraFields?.webSupport ? "web" : "fs"
-  }/${fields.packageName}`;
-
   let moduleNameAllCaps = _.snakeCase(fields.moduleName).toUpperCase();
-  if (moduleNameAllCaps.endsWith("DOCUMENT_LOADER")) {
-    moduleNameAllCaps = moduleNameAllCaps.replace("DOCUMENT_LOADER", "");
+  if (moduleNameAllCaps.endsWith("_LOADER")) {
+    moduleNameAllCaps = moduleNameAllCaps.replace("_LOADER", "");
   }
 
   const docTemplate = (await fs.promises.readFile(TEMPLATE_PATH, "utf-8"))
-    .replaceAll(PACKAGE_NAME_PLACEHOLDER, fields.packageName)
-    .replaceAll(PACKAGE_NAME_SNAKE_CASE_PLACEHOLDER, fullPackageNameSnakeCase)
-    .replaceAll(
-      PACKAGE_NAME_SHORT_SNAKE_CASE_PLACEHOLDER,
-      packageNameShortSnakeCase
-    )
-    .replaceAll(PACKAGE_IMPORT_PATH_PLACEHOLDER, fullPackageImportPath)
+    .replaceAll(NODE_OR_WEB_PLACEHOLDER, extraFields?.webLoader ? "web" : "fs")
     .replaceAll(MODULE_NAME_PLACEHOLDER, fields.moduleName)
     .replaceAll(MODULE_NAME_ALL_CAPS_PLACEHOLDER, moduleNameAllCaps)
-    .replace(WEB_SUPPORT_PLACEHOLDER, extraFields?.webSupport ? "✅" : "❌")
-    .replace(NODE_SUPPORT_PLACEHOLDER, extraFields?.nodeSupport ? "✅" : "❌")
-    .replace(LOCAL_PLACEHOLDER, extraFields?.local ? "✅" : "❌")
-    .replace(
-      SERIALIZABLE_PLACEHOLDER,
-      extraFields?.serializable ? "✅" : "beta"
+    .replaceAll(
+      NODE_OR_WEB_IMPORT_PATH_PLACEHOLDER,
+      extraFields?.webLoader ? "web" : "fs"
     )
-    .replace(PY_SUPPORT_PLACEHOLDER, extraFields?.pySupport ? "✅" : "❌");
+    .replaceAll(FILE_NAME_PLACEHOLDER, fields.packageName)
+    .replaceAll(
+      NODE_ONLY_SIDEBAR_BADGE_PLACEHOLDER,
+      extraFields?.nodeOnly ? NODE_ONLY_SIDEBAR_BADGE : ""
+    )
+    .replaceAll(
+      NODE_ONLY_TOOL_TIP_PLACEHOLDER,
+      extraFields?.nodeOnly ? NODE_ONLY_TOOLTIP : ""
+    )
+    .replaceAll(WEB_SUPPORT_PLACEHOLDER, extraFields?.webLoader ? "✅" : "❌")
+    .replaceAll(NODE_SUPPORT_PLACEHOLDER, extraFields?.nodeOnly ? "✅" : "❌")
+    .replaceAll(LOCAL_PLACEHOLDER, extraFields?.local ? "✅" : "❌")
+    .replaceAll(
+      SERIALIZABLE_PLACEHOLDER,
+      extraFields?.serializable ? "beta" : "❌"
+    )
+    .replaceAll(PY_SUPPORT_PLACEHOLDER, extraFields?.pySupport ? "✅" : "❌");
 
   const docPath = path.join(
     INTEGRATIONS_DOCS_PATH,
-    extraFields?.webSupport ? "web_loaders" : "file_loaders",
-    `${packageNameShortSnakeCase}.ipynb`
+    extraFields?.webLoader ? "web_loaders" : "file_loaders",
+    `${fields.packageName}.ipynb`
   );
   await fs.promises.writeFile(docPath, docTemplate);
   const prettyDocPath = docPath.split("docs/core_docs/")[1];
