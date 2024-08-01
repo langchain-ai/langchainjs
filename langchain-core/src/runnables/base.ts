@@ -2082,16 +2082,7 @@ export class RunnableMap<
           );
         }
       );
-      if (options?.signal) {
-        promises.push(
-          new Promise<never>((_, reject) => {
-            options.signal?.addEventListener("abort", () =>
-              reject(new Error("Aborted"))
-            );
-          })
-        );
-      }
-      await Promise.all(promises);
+      await raceWithSignal(Promise.all(promises), options?.signal);
     } catch (e) {
       await runManager?.handleChainError(e);
       throw e;
