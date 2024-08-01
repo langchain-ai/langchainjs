@@ -156,7 +156,7 @@ export class QueryCheckerTool extends Tool {
 
   template = `
     {query}
-Double check the sqlite query above for common mistakes, including:
+Double check the SQL query above for common mistakes, including:
 - Using NOT IN with NULL values
 - Using UNION when UNION ALL should have been used
 - Using BETWEEN for exclusive ranges
