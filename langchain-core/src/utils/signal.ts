@@ -8,11 +8,11 @@ export async function raceWithSignal<T>(
   return Promise.race([
     promise,
     new Promise<never>((_, reject) => {
-      // Must be inside of the promise to avoid a race condition
+      signal.addEventListener("abort", () => reject(new Error("Aborted")));
+      // Must be here inside the promise to avoid a race condition
       if (signal.aborted) {
         return reject(new Error("Aborted"));
       }
-      signal.addEventListener("abort", () => reject(new Error("Aborted")));
     }),
   ]);
 }
