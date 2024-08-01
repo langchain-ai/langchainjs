@@ -2,6 +2,7 @@ import {
   LLM,
   BaseLLM,
   type BaseLLMParams,
+  BaseLLMCallOptions,
 } from "@langchain/core/language_models/llms";
 import {
   GuardrailResponse,
@@ -101,7 +102,7 @@ export class LayerupSecurity extends LLM {
     return "layerup_security";
   }
 
-  async _call(input: string, options?: BaseLLMParams): Promise<string> {
+  async _call(input: string, options?: BaseLLMCallOptions): Promise<string> {
     // Since LangChain LLMs only support string inputs, we will wrap each call to Layerup in a single-message
     // array of messages, then extract the string element when we need to access it.
     let messages: LLMMessage[] = [
