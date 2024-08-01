@@ -20,6 +20,7 @@ import { ZodObjectAny } from "../types/zod.js";
 import { MessageContent } from "../messages/base.js";
 import { AsyncLocalStorageProviderSingleton } from "../singletons/index.js";
 import { _isToolCall, ToolInputParsingException } from "./utils.js";
+import { isZodSchema } from "../utils/types/is_zod_schema.js";
 
 export { ToolInputParsingException };
 
@@ -319,16 +320,19 @@ export interface DynamicToolInput extends BaseDynamicToolInput {
  * Interface for the input parameters of the DynamicStructuredTool class.
  */
 export interface DynamicStructuredToolInput<
-  T extends ZodObjectAny = ZodObjectAny
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  T extends ZodObjectAny | Record<string, any> = ZodObjectAny
 > extends BaseDynamicToolInput {
   func: (
     input: BaseDynamicToolInput["responseFormat"] extends "content_and_artifact"
       ? ToolCall
-      : z.infer<T>,
+      : T extends ZodObjectAny
+      ? z.infer<T>
+      : T,
     runManager?: CallbackManagerForToolRun,
     config?: RunnableConfig
   ) => Promise<ToolReturnType>;
-  schema: T;
+  schema: T extends ZodObjectAny ? T : T;
 }
 
 /**
@@ -382,10 +386,14 @@ export class DynamicTool extends Tool {
  * description, designed to work with structured data. It extends the
  * StructuredTool class and overrides the _call method to execute the
  * provided function when the tool is called.
+ *
+ * Schema can be passed as Zod or JSON schema. The tool will not validate
+ * input if JSON schema is passed.
  */
 export class DynamicStructuredTool<
-  T extends ZodObjectAny = ZodObjectAny
-> extends StructuredTool<T> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  T extends ZodObjectAny | Record<string, any> = ZodObjectAny
+> extends StructuredTool<T extends ZodObjectAny ? T : ZodObjectAny> {
   static lc_name() {
     return "DynamicStructuredTool";
   }
@@ -396,7 +404,7 @@ export class DynamicStructuredTool<
 
   func: DynamicStructuredToolInput<T>["func"];
 
-  schema: T;
+  schema: T extends ZodObjectAny ? T : ZodObjectAny;
 
   constructor(fields: DynamicStructuredToolInput<T>) {
     super(fields);
@@ -404,14 +412,16 @@ export class DynamicStructuredTool<
     this.description = fields.description;
     this.func = fields.func;
     this.returnDirect = fields.returnDirect ?? this.returnDirect;
-    this.schema = fields.schema;
+    this.schema = (
+      isZodSchema(fields.schema) ? fields.schema : z.object({})
+    ) as T extends ZodObjectAny ? T : ZodObjectAny;
   }
 
   /**
    * @deprecated Use .invoke() instead. Will be removed in 0.3.0.
    */
   async call(
-    arg: z.output<T> | ToolCall,
+    arg: (T extends ZodObjectAny ? z.output<T> : T) | ToolCall,
     configArg?: RunnableConfig | Callbacks,
     /** @deprecated */
     tags?: string[]
@@ -424,11 +434,12 @@ export class DynamicStructuredTool<
   }
 
   protected _call(
-    arg: z.output<T> | ToolCall,
+    arg: (T extends ZodObjectAny ? z.output<T> : T) | ToolCall,
     runManager?: CallbackManagerForToolRun,
     parentConfig?: RunnableConfig
   ): Promise<ToolReturnType> {
-    return this.func(arg, runManager, parentConfig);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return this.func(arg as any, runManager, parentConfig);
   }
 }
 
@@ -447,10 +458,16 @@ export abstract class BaseToolkit {
 
 /**
  * Parameters for the tool function.
- * @template {ZodObjectAny | z.ZodString = ZodObjectAny} RunInput The input schema for the tool. Either any Zod object, or a Zod string.
+ * Schema can be provided as Zod or JSON schema.
+ * If you pass JSON schema, tool inputs will not be validated.
+ * @template {ZodObjectAny | z.ZodString | Record<string, any> = ZodObjectAny} RunInput The input schema for the tool. Either any Zod object, a Zod string, or JSON schema.
  */
 interface ToolWrapperParams<
-  RunInput extends ZodObjectAny | z.ZodString = ZodObjectAny
+  RunInput extends
+    | ZodObjectAny
+    | z.ZodString
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    | Record<string, any> = ZodObjectAny
 > extends ToolParams {
   /**
    * The name of the tool. If using with an LLM, this
@@ -483,8 +500,11 @@ interface ToolWrapperParams<
 /**
  * Creates a new StructuredTool instance with the provided function, name, description, and schema.
  *
+ * Schema can be provided as Zod or JSON schema.
+ * If you pass JSON schema, tool inputs will not be validated.
+ *
  * @function
- * @template {ZodObjectAny | z.ZodString = ZodObjectAny} T The input schema for the tool. Either any Zod object, or a Zod string.
+ * @template {ZodObjectAny | z.ZodString | Record<string, any> = ZodObjectAny} T The input schema for the tool. Either any Zod object, a Zod string, or JSON schema instance.
  *
  * @param {RunnableFunc<z.output<T>, ToolReturnType>} func - The function to invoke when the tool is called.
  * @param {ToolWrapperParams<T>} fields - An object containing the following properties:
@@ -494,18 +514,27 @@ interface ToolWrapperParams<
  *
  * @returns {DynamicStructuredTool<T>} A new StructuredTool instance.
  */
-export function tool<T extends z.ZodString = z.ZodString>(
+export function tool<T extends z.ZodString>(
   func: RunnableFunc<z.output<T>, ToolReturnType>,
   fields: ToolWrapperParams<T>
 ): DynamicTool;
 
-export function tool<T extends ZodObjectAny = ZodObjectAny>(
+export function tool<T extends ZodObjectAny>(
   func: RunnableFunc<z.output<T>, ToolReturnType>,
   fields: ToolWrapperParams<T>
 ): DynamicStructuredTool<T>;
 
-export function tool<T extends ZodObjectAny | z.ZodString = ZodObjectAny>(
-  func: RunnableFunc<z.output<T>, ToolReturnType>,
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function tool<T extends Record<string, any>>(
+  func: RunnableFunc<T, ToolReturnType>,
+  fields: ToolWrapperParams<T>
+): DynamicStructuredTool<T>;
+
+export function tool<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  T extends ZodObjectAny | z.ZodString | Record<string, any> = ZodObjectAny
+>(
+  func: RunnableFunc<T extends ZodObjectAny ? z.output<T> : T, ToolReturnType>,
   fields: ToolWrapperParams<T>
 ):
   | DynamicStructuredTool<T extends ZodObjectAny ? T : ZodObjectAny>
@@ -518,7 +547,9 @@ export function tool<T extends ZodObjectAny | z.ZodString = ZodObjectAny>(
         fields.description ??
         fields.schema?.description ??
         `${fields.name} tool`,
-      func,
+      // TS doesn't restrict the type here based on the guard above
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      func: func as any,
     });
   }
 
@@ -528,7 +559,8 @@ export function tool<T extends ZodObjectAny | z.ZodString = ZodObjectAny>(
   return new DynamicStructuredTool<T extends ZodObjectAny ? T : ZodObjectAny>({
     ...fields,
     description,
-    schema: fields.schema as T extends ZodObjectAny ? T : ZodObjectAny,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    schema: fields.schema as any,
     // TODO: Consider moving into DynamicStructuredTool constructor
     func: async (input, runManager, config) => {
       return new Promise((resolve, reject) => {
@@ -539,7 +571,9 @@ export function tool<T extends ZodObjectAny | z.ZodString = ZodObjectAny>(
           childConfig,
           async () => {
             try {
-              resolve(func(input, childConfig));
+              // TS doesn't restrict the type here based on the guard above
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              resolve(func(input as any, childConfig));
             } catch (e) {
               reject(e);
             }
