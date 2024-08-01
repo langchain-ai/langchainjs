@@ -31,6 +31,18 @@ export function mergeConfigs<CallOptions extends RunnableConfig>(
         copy[key] = [...new Set(baseKeys.concat(options[key] ?? []))];
       } else if (key === "configurable") {
         copy[key] = { ...copy[key], ...options[key] };
+      } else if (key === "timeout") {
+        if (copy.timeout === undefined) {
+          copy.timeout = options.timeout;
+        } else if (options.timeout !== undefined) {
+          copy.timeout = Math.min(copy.timeout, options.timeout);
+        }
+      } else if (key === "signal") {
+        if (copy.signal === undefined) {
+          copy.signal = options.signal;
+        } else if (options.signal !== undefined) {
+          copy.signal = AbortSignal.any([copy.signal, options.signal]);
+        }
       } else if (key === "callbacks") {
         const baseCallbacks = copy.callbacks;
         const providedCallbacks = options.callbacks;
@@ -154,6 +166,18 @@ export function ensureConfig<CallOptions extends RunnableConfig>(
         empty.metadata[key] = empty.configurable[key];
       }
     }
+  }
+  if (empty.timeout !== undefined) {
+    if (empty.timeout <= 0) {
+      throw new Error("Timeout must be a positive number");
+    }
+    const timeoutSignal = AbortSignal.timeout(empty.timeout);
+    if (empty.signal !== undefined) {
+      empty.signal = AbortSignal.any([empty.signal, timeoutSignal]);
+    } else {
+      empty.signal = timeoutSignal;
+    }
+    delete empty.timeout;
   }
   return empty as CallOptions;
 }

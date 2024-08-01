@@ -145,7 +145,7 @@ export abstract class BaseChatModel<
 > extends BaseLanguageModel<OutputMessageType, CallOptions> {
   declare ParsedCallOptions: Omit<
     CallOptions,
-    keyof RunnableConfig & "timeout"
+    Exclude<keyof RunnableConfig, "signal">
   >;
 
   // Only ever instantiated in main LangChain
@@ -159,14 +159,13 @@ export abstract class BaseChatModel<
     ...llmOutputs: LLMResult["llmOutput"][]
   ): LLMResult["llmOutput"];
 
-  protected _separateRunnableConfigFromCallOptions(
+  protected _separateRunnableConfigFromCallOptionsCompat(
     options?: Partial<CallOptions>
   ): [RunnableConfig, this["ParsedCallOptions"]] {
+    // For backwards compat, keep `signal` in both runnableConfig and callOptions
     const [runnableConfig, callOptions] =
       super._separateRunnableConfigFromCallOptions(options);
-    if (callOptions?.timeout && !callOptions.signal) {
-      callOptions.signal = AbortSignal.timeout(callOptions.timeout);
-    }
+    (callOptions as this["ParsedCallOptions"]).signal = runnableConfig.signal;
     return [runnableConfig, callOptions as this["ParsedCallOptions"]];
   }
 
@@ -232,7 +231,7 @@ export abstract class BaseChatModel<
       const prompt = BaseChatModel._convertInputToPromptValue(input);
       const messages = prompt.toChatMessages();
       const [runnableConfig, callOptions] =
-        this._separateRunnableConfigFromCallOptions(options);
+        this._separateRunnableConfigFromCallOptionsCompat(options);
 
       const inheritableMetadata = {
         ...runnableConfig.metadata,
@@ -578,7 +577,7 @@ export abstract class BaseChatModel<
     );
 
     const [runnableConfig, callOptions] =
-      this._separateRunnableConfigFromCallOptions(parsedOptions);
+      this._separateRunnableConfigFromCallOptionsCompat(parsedOptions);
     runnableConfig.callbacks = runnableConfig.callbacks ?? callbacks;
 
     if (!this.cache) {
@@ -586,8 +585,9 @@ export abstract class BaseChatModel<
     }
 
     const { cache } = this;
-    const llmStringKey =
-      this._getSerializedCacheKeyParametersForCall(callOptions);
+    const llmStringKey = this._getSerializedCacheKeyParametersForCall(
+      callOptions as CallOptions
+    );
 
     const { generations, missingPromptIndices } = await this._generateCached({
       messages: baseMessages,

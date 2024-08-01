@@ -63,7 +63,7 @@ export abstract class BaseLLM<
 > extends BaseLanguageModel<string, CallOptions> {
   declare ParsedCallOptions: Omit<
     CallOptions,
-    keyof RunnableConfig & "timeout"
+    Exclude<keyof RunnableConfig, "signal">
   >;
 
   // Only ever instantiated in main LangChain
@@ -103,14 +103,13 @@ export abstract class BaseLLM<
     throw new Error("Not implemented.");
   }
 
-  protected _separateRunnableConfigFromCallOptions(
+  protected _separateRunnableConfigFromCallOptionsCompat(
     options?: Partial<CallOptions>
   ): [RunnableConfig, this["ParsedCallOptions"]] {
+    // For backwards compat, keep `signal` in both runnableConfig and callOptions
     const [runnableConfig, callOptions] =
       super._separateRunnableConfigFromCallOptions(options);
-    if (callOptions?.timeout && !callOptions.signal) {
-      callOptions.signal = AbortSignal.timeout(callOptions.timeout);
-    }
+    (callOptions as this["ParsedCallOptions"]).signal = runnableConfig.signal;
     return [runnableConfig, callOptions as this["ParsedCallOptions"]];
   }
 
@@ -126,7 +125,7 @@ export abstract class BaseLLM<
     } else {
       const prompt = BaseLLM._convertInputToPromptValue(input);
       const [runnableConfig, callOptions] =
-        this._separateRunnableConfigFromCallOptions(options);
+        this._separateRunnableConfigFromCallOptionsCompat(options);
       const callbackManager_ = await CallbackManager.configure(
         runnableConfig.callbacks,
         this.callbacks,
@@ -461,7 +460,7 @@ export abstract class BaseLLM<
     }
 
     const [runnableConfig, callOptions] =
-      this._separateRunnableConfigFromCallOptions(parsedOptions);
+      this._separateRunnableConfigFromCallOptionsCompat(parsedOptions);
     runnableConfig.callbacks = runnableConfig.callbacks ?? callbacks;
 
     if (!this.cache) {
@@ -469,8 +468,9 @@ export abstract class BaseLLM<
     }
 
     const { cache } = this;
-    const llmStringKey =
-      this._getSerializedCacheKeyParametersForCall(callOptions);
+    const llmStringKey = this._getSerializedCacheKeyParametersForCall(
+      callOptions as CallOptions
+    );
     const { generations, missingPromptIndices } = await this._generateCached({
       prompts,
       cache,

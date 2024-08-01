@@ -339,6 +339,8 @@ export abstract class Runnable<
         recursionLimit: options.recursionLimit,
         maxConcurrency: options.maxConcurrency,
         runId: options.runId,
+        timeout: options.timeout,
+        signal: options.signal,
       });
     }
     const callOptions = { ...(options as Partial<CallOptions>) };
@@ -350,6 +352,8 @@ export abstract class Runnable<
     delete callOptions.recursionLimit;
     delete callOptions.maxConcurrency;
     delete callOptions.runId;
+    delete callOptions.timeout;
+    delete callOptions.signal;
     return [runnableConfig, callOptions];
   }
 
@@ -378,7 +382,17 @@ export abstract class Runnable<
     delete config.runId;
     let output;
     try {
-      output = await func.call(this, input, config, runManager);
+      const promise = func.call(this, input, config, runManager);
+      output = options?.signal
+        ? await Promise.race([
+            promise,
+            new Promise<never>((_, reject) => {
+              options.signal?.addEventListener("abort", () => {
+                reject(new Error("AbortError"));
+              });
+            }),
+          ])
+        : await promise;
     } catch (e) {
       await runManager?.handleChainError(e);
       throw e;
@@ -430,13 +444,23 @@ export abstract class Runnable<
     );
     let outputs: (RunOutput | Error)[];
     try {
-      outputs = await func.call(
+      const promise = func.call(
         this,
         inputs,
         optionsList,
         runManagers,
         batchOptions
       );
+      outputs = optionsList?.[0]?.signal
+        ? await Promise.race([
+            promise,
+            new Promise<never>((_, reject) => {
+              optionsList?.[0]?.signal?.addEventListener("abort", () => {
+                reject(new Error("AbortError"));
+              });
+            }),
+          ])
+        : await promise;
     } catch (e) {
       await Promise.all(
         runManagers.map((runManager) => runManager?.handleChainError(e))
@@ -509,6 +533,7 @@ export abstract class Runnable<
             undefined,
             config.runName ?? this.getName()
           ),
+        options?.signal,
         config
       );
       delete config.runId;
@@ -1750,14 +1775,27 @@ export class RunnableSequence<
       const initialSteps = [this.first, ...this.middle];
       for (let i = 0; i < initialSteps.length; i += 1) {
         const step = initialSteps[i];
-        nextStepInput = await step.invoke(
+        const promise = step.invoke(
           nextStepInput,
           patchConfig(config, {
             callbacks: runManager?.getChild(`seq:step:${i + 1}`),
           })
         );
+        nextStepInput = options?.signal
+          ? await Promise.race([
+              promise,
+              new Promise<never>((_, reject) => {
+                options.signal?.addEventListener("abort", () =>
+                  reject(new Error("Aborted"))
+                );
+              }),
+            ])
+          : await promise;
       }
       // TypeScript can't detect that the last output of the sequence returns RunOutput, so call it out of the loop here
+      if (options?.signal?.aborted) {
+        throw new Error("Aborted");
+      }
       finalOutput = await this.last.invoke(
         nextStepInput,
         patchConfig(config, {
@@ -1819,7 +1857,7 @@ export class RunnableSequence<
     try {
       for (let i = 0; i < this.steps.length; i += 1) {
         const step = this.steps[i];
-        nextStepInputs = await step.batch(
+        const promise = step.batch(
           nextStepInputs,
           runManagers.map((runManager, j) => {
             const childRunManager = runManager?.getChild(`seq:step:${i + 1}`);
@@ -1827,6 +1865,16 @@ export class RunnableSequence<
           }),
           batchOptions
         );
+        nextStepInputs = configList[0]?.signal
+          ? await Promise.race([
+              promise,
+              new Promise<never>((_, reject) => {
+                configList[0]?.signal?.addEventListener("abort", () =>
+                  reject(new Error("Aborted"))
+                );
+              }),
+            ])
+          : await promise;
       }
     } catch (e) {
       await Promise.all(
@@ -1880,6 +1928,7 @@ export class RunnableSequence<
         );
       }
       for await (const chunk of finalGenerator) {
+        options?.signal?.throwIfAborted();
         yield chunk;
         if (concatSupported) {
           if (finalOutput === undefined) {
@@ -2058,16 +2107,26 @@ export class RunnableMap<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const output: Record<string, any> = {};
     try {
-      await Promise.all(
-        Object.entries(this.steps).map(async ([key, runnable]) => {
+      const promises = Object.entries(this.steps).map(
+        async ([key, runnable]) => {
           output[key] = await runnable.invoke(
             input,
             patchConfig(config, {
               callbacks: runManager?.getChild(`map:key:${key}`),
             })
           );
-        })
+        }
       );
+      if (options?.signal) {
+        promises.push(
+          new Promise<never>((_, reject) => {
+            options.signal?.addEventListener("abort", () =>
+              reject(new Error("Aborted"))
+            );
+          })
+        );
+      }
+      await Promise.all(promises);
     } catch (e) {
       await runManager?.handleChainError(e);
       throw e;
@@ -2101,7 +2160,17 @@ export class RunnableMap<
     // starting new iterations as needed,
     // until all iterators are done
     while (tasks.size) {
-      const { key, result, gen } = await Promise.race(tasks.values());
+      const promise = Promise.race(tasks.values());
+      const { key, result, gen } = options?.signal
+        ? await Promise.race([
+            promise,
+            new Promise<never>((_, reject) => {
+              options.signal?.addEventListener("abort", () =>
+                reject(new Error("Aborted"))
+              );
+            }),
+          ])
+        : await promise;
       tasks.delete(key);
       if (!result.done) {
         yield { [key]: result.value } as unknown as RunOutput;
@@ -2172,21 +2241,33 @@ export class RunnableTraceable<RunInput, RunOutput> extends Runnable<
   async invoke(input: RunInput, options?: Partial<RunnableConfig>) {
     const [config] = this._getOptionsList(options ?? {}, 1);
     const callbacks = await getCallbackManagerForConfig(config);
-
-    return (await this.func(
+    const promise = this.func(
       patchConfig(config, { callbacks }),
       input
-    )) as RunOutput;
+    ) as Promise<RunOutput>;
+
+    return config?.signal
+      ? Promise.race([
+          promise,
+          new Promise<never>((_, reject) => {
+            config.signal?.addEventListener("abort", () =>
+              reject(new Error("Aborted"))
+            );
+          }),
+        ])
+      : await promise;
   }
 
   async *_streamIterator(
     input: RunInput,
     options?: Partial<RunnableConfig>
   ): AsyncGenerator<RunOutput> {
+    const [config] = this._getOptionsList(options ?? {}, 1);
     const result = await this.invoke(input, options);
 
     if (isAsyncIterable(result)) {
       for await (const item of result) {
+        config?.signal?.throwIfAborted();
         yield item as RunOutput;
       }
       return;
@@ -2194,6 +2275,7 @@ export class RunnableTraceable<RunInput, RunOutput> extends Runnable<
 
     if (isIterator(result)) {
       while (true) {
+        config?.signal?.throwIfAborted();
         const state: IteratorResult<unknown> = result.next();
         if (state.done) break;
         yield state.value as RunOutput;
@@ -2320,6 +2402,7 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
                 childConfig,
                 output
               )) {
+                config?.signal?.throwIfAborted();
                 if (finalOutput === undefined) {
                   finalOutput = chunk as RunOutput;
                 } else {
@@ -2339,6 +2422,7 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
                 childConfig,
                 output
               )) {
+                config?.signal?.throwIfAborted();
                 if (finalOutput === undefined) {
                   finalOutput = chunk as RunOutput;
                 } else {
@@ -2423,10 +2507,12 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
         childConfig,
         output
       )) {
+        config?.signal?.throwIfAborted();
         yield chunk as RunOutput;
       }
     } else if (isIterableIterator(output)) {
       for (const chunk of consumeIteratorInContext(childConfig, output)) {
+        config?.signal?.throwIfAborted();
         yield chunk as RunOutput;
       }
     } else {
@@ -2517,6 +2603,7 @@ export class RunnableWithFallbacks<RunInput, RunOutput> extends Runnable<
     );
     let firstError;
     for (const runnable of this.runnables()) {
+      config?.signal?.throwIfAborted();
       try {
         const output = await runnable.invoke(
           input,
@@ -2586,6 +2673,7 @@ export class RunnableWithFallbacks<RunInput, RunOutput> extends Runnable<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let firstError: any;
     for (const runnable of this.runnables()) {
+      configList[0].signal?.throwIfAborted();
       try {
         const outputs = await runnable.batch(
           inputs,

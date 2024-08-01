@@ -186,6 +186,8 @@ export class AsyncGeneratorWithSetup<
 
   public config?: unknown;
 
+  public signal?: AbortSignal;
+
   private firstResult: Promise<IteratorResult<T>>;
 
   private firstResultUsed = false;
@@ -194,9 +196,11 @@ export class AsyncGeneratorWithSetup<
     generator: AsyncGenerator<T>;
     startSetup?: () => Promise<S>;
     config?: unknown;
+    signal?: AbortSignal;
   }) {
     this.generator = params.generator;
     this.config = params.config;
+    this.signal = params.signal;
     // setup is a promise that resolves only after the first iterator value
     // is available. this is useful when setup of several piped generators
     // needs to happen in logical order, ie. in the order in which input to
@@ -218,6 +222,8 @@ export class AsyncGeneratorWithSetup<
   }
 
   async next(...args: [] | [TNext]): Promise<IteratorResult<T>> {
+    this.signal?.throwIfAborted();
+
     if (!this.firstResultUsed) {
       this.firstResultUsed = true;
       return this.firstResult;
@@ -225,9 +231,20 @@ export class AsyncGeneratorWithSetup<
 
     return AsyncLocalStorageProviderSingleton.runWithConfig(
       this.config,
-      async () => {
-        return this.generator.next(...args);
-      },
+      this.signal
+        ? async () => {
+            return Promise.race([
+              this.generator.next(...args),
+              new Promise<never>((_resolve, reject) => {
+                this.signal?.addEventListener("abort", () => {
+                  reject(new Error("Aborted"));
+                });
+              }),
+            ]);
+          }
+        : async () => {
+            return this.generator.next(...args);
+          },
       true
     );
   }
@@ -264,11 +281,13 @@ export async function pipeGeneratorWithSetup<
   ) => AsyncGenerator<U, UReturn, UNext>,
   generator: AsyncGenerator<T, TReturn, TNext>,
   startSetup: () => Promise<S>,
+  signal: AbortSignal | undefined,
   ...args: A
 ) {
   const gen = new AsyncGeneratorWithSetup({
     generator,
     startSetup,
+    signal,
   });
   const setup = await gen.setup;
   return { output: to(gen, setup, ...args), setup };
