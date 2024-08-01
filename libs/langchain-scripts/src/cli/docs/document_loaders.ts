@@ -1,12 +1,12 @@
 import * as path from "node:path";
 import * as fs from "node:fs";
+import _ from "lodash";
 import {
   boldText,
   getUserInput,
   greenText,
   redBackground,
 } from "../utils/get-input.js";
-import _ from "lodash";
 
 const NODE_OR_WEB_PLACEHOLDER = "__fs_or_web__";
 const PACKAGE_NAME_PLACEHOLDER = "__package_name__";
@@ -28,7 +28,9 @@ const NODE_SUPPORT_PLACEHOLDER = "__fs_support__";
 
 const API_REF_BASE_MODULE_URL = `https://api.js.langchain.com/classes/langchain_community_document_loaders_${NODE_OR_WEB_PLACEHOLDER}_${PACKAGE_NAME_PLACEHOLDER}.${MODULE_NAME_PLACEHOLDER}.html`;
 
-const TEMPLATE_PATH = path.resolve("./src/cli/docs/templates/document_loaders.ipynb");
+const TEMPLATE_PATH = path.resolve(
+  "./src/cli/docs/templates/document_loaders.ipynb"
+);
 const INTEGRATIONS_DOCS_PATH = path.resolve(
   "../../docs/core_docs/docs/integrations/document_loaders"
 );
@@ -108,7 +110,9 @@ export async function fillDocLoaderIntegrationDocTemplate(fields: {
   const formattedApiRefModuleUrl = API_REF_BASE_MODULE_URL.replace(
     PACKAGE_NAME_PLACEHOLDER,
     fields.packageName
-  ).replace(MODULE_NAME_PLACEHOLDER, fields.moduleName).replace(NODE_OR_WEB_PLACEHOLDER, extraFields?.webSupport ? "web" : "fs");
+  )
+    .replace(MODULE_NAME_PLACEHOLDER, fields.moduleName)
+    .replace(NODE_OR_WEB_PLACEHOLDER, extraFields?.webSupport ? "web" : "fs");
 
   const success = await fetchAPIRefUrl(formattedApiRefModuleUrl);
   if (!success) {
@@ -117,8 +121,12 @@ export async function fillDocLoaderIntegrationDocTemplate(fields: {
   }
 
   const packageNameShortSnakeCase = fields.packageName.replaceAll("-", "_");
-  const fullPackageNameSnakeCase = `langchain_community_document_loaders_${extraFields?.webSupport ? "web" : "fs"}_${packageNameShortSnakeCase}`;
-  let fullPackageImportPath = `@langchain/community/document_loaders/${extraFields?.webSupport ? "web" : "fs"}/${fields.packageName}`
+  const fullPackageNameSnakeCase = `langchain_community_document_loaders_${
+    extraFields?.webSupport ? "web" : "fs"
+  }_${packageNameShortSnakeCase}`;
+  const fullPackageImportPath = `@langchain/community/document_loaders/${
+    extraFields?.webSupport ? "web" : "fs"
+  }/${fields.packageName}`;
 
   let moduleNameAllCaps = _.snakeCase(fields.moduleName).toUpperCase();
   if (moduleNameAllCaps.endsWith("DOCUMENT_LOADER")) {

@@ -16,10 +16,7 @@ async function main() {
   const program = new Command();
   program
     .description("Create a new integration doc.")
-    .option(
-      "--package <package>",
-      "Package name, eg openai."
-    )
+    .option("--package <package>", "Package name, eg openai.")
     .option("--module <module>", "Module name, e.g ChatOpenAI")
     .option("--type <type>", "Type of integration, e.g. 'chat'")
     .option(
@@ -46,12 +43,12 @@ async function main() {
         isCommunity,
       });
       break;
-    case 'doc_loader':
+    case "doc_loader":
       await fillDocLoaderIntegrationDocTemplate({
         packageName,
         moduleName,
       });
-      break
+      break;
     default:
       console.error(
         `Invalid type: ${type}.\nOnly 'chat' and 'doc_loader' are supported at this time.`
