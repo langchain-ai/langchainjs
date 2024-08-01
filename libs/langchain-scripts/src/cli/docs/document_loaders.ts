@@ -137,7 +137,7 @@ export async function fillDocLoaderIntegrationDocTemplate(fields: {
     fetchAPIRefUrl(formattedApiRefModuleUrl),
     fetchAPIRefUrl(formattedPackageApiRefUrl),
   ]);
-  if (!success.find((s) => s === false)) {
+  if (success.find((s) => s === false)) {
     // Don't error out because this might be used before the package is released.
     console.error("Invalid package or module name. API reference not found.");
   }
