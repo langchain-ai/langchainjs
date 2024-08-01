@@ -6,12 +6,20 @@ export async function raceWithSignal<T>(
     return promise;
   }
   return Promise.race([
-    promise,
+    promise.catch<T>((err) => {
+      if (!signal?.aborted) {
+        throw err;
+      } else {
+        return undefined as T;
+      }
+    }),
     new Promise<never>((_, reject) => {
-      signal.addEventListener("abort", () => reject(new Error("Aborted")));
+      signal.addEventListener("abort", () => {
+        reject(new Error("Aborted"));
+      });
       // Must be here inside the promise to avoid a race condition
       if (signal.aborted) {
-        return reject(new Error("Aborted"));
+        reject(new Error("Aborted"));
       }
     }),
   ]);
