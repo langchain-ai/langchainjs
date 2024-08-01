@@ -18,12 +18,14 @@ export interface SecretMap {
   CLOUDFLARE_API_TOKEN?: string;
   COHERE_API_KEY?: string;
   DATABERRY_API_KEY?: string;
+  DRIA_API_KEY?: string;
   FIREWORKS_API_KEY?: string;
-  FRIENDLI_TOKEN?: string;
   FRIENDLI_TEAM?: string;
+  FRIENDLI_TOKEN?: string;
   GOOGLE_API_KEY?: string;
   GOOGLE_PALM_API_KEY?: string;
   GOOGLE_PLACES_API_KEY?: string;
+  GOOGLE_ROUTES_API_KEY?: string;
   GOOGLE_VERTEX_AI_WEB_CREDENTIALS?: string;
   GRADIENT_ACCESS_TOKEN?: string;
   GRADIENT_WORKSPACE_ID?: string;
@@ -36,10 +38,12 @@ export interface SecretMap {
   MILVUS_USERNAME?: string;
   MINIMAX_API_KEY?: string;
   MINIMAX_GROUP_ID?: string;
+  MOONSHOT_API_KEY?: string;
   PLANETSCALE_DATABASE_URL?: string;
   PLANETSCALE_HOST?: string;
   PLANETSCALE_PASSWORD?: string;
   PLANETSCALE_USERNAME?: string;
+  PREM_API_KEY?: string;
   QDRANT_API_KEY?: string;
   QDRANT_URL?: string;
   REDIS_PASSWORD?: string;
@@ -48,6 +52,8 @@ export interface SecretMap {
   REMOTE_RETRIEVER_AUTH_BEARER?: string;
   REPLICATE_API_TOKEN?: string;
   SEARXNG_API_BASE?: string;
+  TENCENT_SECRET_ID?: string;
+  TENCENT_SECRET_KEY?: string;
   TOGETHER_AI_API_KEY?: string;
   TURBOPUFFER_API_KEY?: string;
   UPSTASH_REDIS_REST_TOKEN?: string;
@@ -62,4 +68,5 @@ export interface SecretMap {
   YC_IAM_TOKEN?: string;
   ZEP_API_KEY?: string;
   ZEP_API_URL?: string;
+  ZHIPUAI_API_KEY?: string;
 }

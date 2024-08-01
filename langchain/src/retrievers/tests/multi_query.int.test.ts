@@ -1,8 +1,8 @@
 import { expect, test } from "@jest/globals";
-import { CohereEmbeddings } from "@langchain/community/embeddings/cohere";
+import { CohereEmbeddings } from "@langchain/cohere";
+import { ChatOpenAI } from "@langchain/openai";
 import { MemoryVectorStore } from "../../vectorstores/memory.js";
 import { MultiQueryRetriever } from "../multi_query.js";
-import { ChatAnthropic } from "../../chat_models/anthropic.js";
 
 test("Should work with a question input", async () => {
   const vectorstore = await MemoryVectorStore.fromTexts(
@@ -16,9 +16,9 @@ test("Should work with a question input", async () => {
       "mitochondria is made of lipids",
     ],
     [{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }, { id: 5 }],
-    new CohereEmbeddings()
+    new CohereEmbeddings({ model: "embed-english-v3.0" })
   );
-  const model = new ChatAnthropic({});
+  const model = new ChatOpenAI({});
   const retriever = MultiQueryRetriever.fromLLM({
     llm: model,
     retriever: vectorstore.asRetriever(),
@@ -42,9 +42,9 @@ test("Should work with a keyword", async () => {
       "mitochondria is made of lipids",
     ],
     [{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }, { id: 5 }],
-    new CohereEmbeddings()
+    new CohereEmbeddings({ model: "embed-english-v3.0" })
   );
-  const model = new ChatAnthropic({});
+  const model = new ChatOpenAI({});
   const retriever = MultiQueryRetriever.fromLLM({
     llm: model,
     retriever: vectorstore.asRetriever(),

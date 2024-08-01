@@ -1,5 +1,5 @@
-import { CheerioWebBaseLoader } from "langchain/document_loaders/web/cheerio";
-import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
+import { CheerioWebBaseLoader } from "@langchain/community/document_loaders/web/cheerio";
+import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 import { HtmlToTextTransformer } from "@langchain/community/document_transformers/html_to_text";
 
 const loader = new CheerioWebBaseLoader(

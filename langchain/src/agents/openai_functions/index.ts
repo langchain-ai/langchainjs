@@ -95,7 +95,7 @@ export interface OpenAIAgentCreatePromptArgs {
  * extends the Agent class and provides additional functionality specific
  * to the OpenAIAgent type.
  *
- * @deprecated Use the {@link https://api.js.langchain.com/functions/langchain_agents.createOpenAIFunctionsAgent.html | createOpenAIFunctionsAgent method instead}.
+ * @deprecated Use the {@link https://v02.api.js.langchain.com/functions/langchain_agents.createOpenAIFunctionsAgent.html | createOpenAIFunctionsAgent method instead}.
  */
 export class OpenAIAgent extends Agent {
   static lc_name() {

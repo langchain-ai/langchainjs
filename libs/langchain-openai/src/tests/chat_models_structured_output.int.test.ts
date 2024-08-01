@@ -30,7 +30,7 @@ test("withStructuredOutput zod schema function calling", async () => {
   ]);
   const chain = prompt.pipe(modelWithStructuredOutput);
   const result = await chain.invoke({});
-  console.log(result);
+  // console.log(result);
   expect("operation" in result).toBe(true);
   expect("number1" in result).toBe(true);
   expect("number2" in result).toBe(true);
@@ -68,7 +68,7 @@ Respond with a JSON object containing three keys:
   ]);
   const chain = prompt.pipe(modelWithStructuredOutput);
   const result = await chain.invoke({});
-  console.log(result);
+  // console.log(result);
   expect("operation" in result).toBe(true);
   expect("number1" in result).toBe(true);
   expect("number2" in result).toBe(true);
@@ -98,7 +98,7 @@ test("withStructuredOutput JSON schema function calling", async () => {
   ]);
   const chain = prompt.pipe(modelWithStructuredOutput);
   const result = await chain.invoke({});
-  console.log(result);
+  // console.log(result);
   expect("operation" in result).toBe(true);
   expect("number1" in result).toBe(true);
   expect("number2" in result).toBe(true);
@@ -128,7 +128,7 @@ test("withStructuredOutput OpenAI function definition function calling", async (
   ]);
   const chain = prompt.pipe(modelWithStructuredOutput);
   const result = await chain.invoke({});
-  console.log(result);
+  // console.log(result);
   expect("operation" in result).toBe(true);
   expect("number1" in result).toBe(true);
   expect("number2" in result).toBe(true);
@@ -166,7 +166,7 @@ Respond with a JSON object containing three keys:
   ]);
   const chain = prompt.pipe(modelWithStructuredOutput);
   const result = await chain.invoke({});
-  console.log(result);
+  // console.log(result);
   expect("operation" in result).toBe(true);
   expect("number1" in result).toBe(true);
   expect("number2" in result).toBe(true);
@@ -206,7 +206,7 @@ Respond with a JSON object containing three keys:
   ]);
   const chain = prompt.pipe(modelWithStructuredOutput);
   const result = await chain.invoke({});
-  console.log(result);
+  // console.log(result);
   expect("operation" in result).toBe(true);
   expect("number1" in result).toBe(true);
   expect("number2" in result).toBe(true);
@@ -239,7 +239,7 @@ test("withStructuredOutput includeRaw true", async () => {
   ]);
   const chain = prompt.pipe(modelWithStructuredOutput);
   const result = await chain.invoke({});
-  console.log(result);
+  // console.log(result);
 
   expect("parsed" in result).toBe(true);
   // Need to make TS happy :)
@@ -273,4 +273,50 @@ test("withStructuredOutput includeRaw true", async () => {
     "number2" in
       JSON.parse(raw.additional_kwargs.tool_calls?.[0].function.arguments ?? "")
   ).toBe(true);
+});
+
+test("parallelToolCalls param", async () => {
+  const calculatorSchema = z
+    .object({
+      operation: z.enum(["add", "subtract", "multiply", "divide"]),
+      number1: z.number(),
+      number2: z.number(),
+    })
+    .describe("A tool to perform basic arithmetic operations");
+  const weatherSchema = z
+    .object({
+      city: z.enum(["add", "subtract", "multiply", "divide"]),
+    })
+    .describe("A tool to get the weather in a city");
+
+  const model = new ChatOpenAI({
+    model: "gpt-4o",
+    temperature: 0,
+  }).bindTools([
+    {
+      type: "function",
+      function: {
+        name: "calculator",
+        description: calculatorSchema.description,
+        parameters: zodToJsonSchema(calculatorSchema),
+      },
+    },
+    {
+      type: "function",
+      function: {
+        name: "weather",
+        description: weatherSchema.description,
+        parameters: zodToJsonSchema(weatherSchema),
+      },
+    },
+  ]);
+
+  const response = await model.invoke(
+    ["What is the weather in san francisco and what is 23716 times 27342?"],
+    {
+      parallel_tool_calls: false,
+    }
+  );
+  // console.log(response.tool_calls);
+  expect(response.tool_calls?.length).toBe(1);
 });

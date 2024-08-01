@@ -1,3 +1,4 @@
+import { test, expect } from "@jest/globals";
 import { extractLinks } from "../check_broken_links.js";
 
 test("Regex can find links in md files", () => {
@@ -23,6 +24,6 @@ test("Regex can find links in md files", () => {
   structured outputs from models more generally.`;
 
   const links = extractLinks(mdWithLinks);
-  console.log(links);
+  // console.log(links);
   expect(links).toEqual([link1, link2, link3]);
 });

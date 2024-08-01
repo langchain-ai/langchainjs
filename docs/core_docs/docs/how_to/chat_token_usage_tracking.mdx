@@ -1,0 +1,93 @@
+---
+sidebar_position: 5
+---
+
+# How to track token usage
+
+:::info Prerequisites
+
+This guide assumes familiarity with the following concepts:
+
+- [Chat models](/docs/concepts/#chat-models)
+
+:::
+
+This notebook goes over how to track your token usage for specific calls.
+
+## Using `AIMessage.usage_metadata`
+
+A number of model providers return token usage information as part of the chat generation response. When available, this information will be included on the `AIMessage` objects produced by the corresponding model.
+
+LangChain `AIMessage` objects include a [`usage_metadata`](https://api.js.langchain.com/classes/langchain_core_messages.AIMessage.html#usage_metadata) attribute for supported providers. When populated, this attribute will be an object with standard keys (e.g., "input_tokens" and "output_tokens").
+
+#### OpenAI
+
+import CodeBlock from "@theme/CodeBlock";
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/openai
+```
+
+import UsageMetadataExample from "@examples/models/chat/usage_metadata.ts";
+
+<CodeBlock language="typescript">{UsageMetadataExample}</CodeBlock>
+
+#### Anthropic
+
+```bash npm2yarn
+npm install @langchain/anthropic
+```
+
+import UsageMetadataExampleAnthropic from "@examples/models/chat/usage_metadata_anthropic.ts";
+
+<CodeBlock language="typescript">{UsageMetadataExampleAnthropic}</CodeBlock>
+
+## Using `AIMessage.response_metadata`
+
+A number of model providers return token usage information as part of the chat generation response. When available, this is included in the `AIMessage.response_metadata` field.
+
+#### OpenAI
+
+import Example from "@examples/models/chat/token_usage_tracking.ts";
+
+<CodeBlock language="typescript">{Example}</CodeBlock>
+
+#### Anthropic
+
+import AnthropicExample from "@examples/models/chat/token_usage_tracking_anthropic.ts";
+
+<CodeBlock language="typescript">{AnthropicExample}</CodeBlock>
+
+## Streaming
+
+Some providers support token count metadata in a streaming context.
+
+#### OpenAI
+
+For example, OpenAI will return a message chunk at the end of a stream with token usage information. This behavior is supported by `@langchain/openai` >= 0.1.0 and can be enabled by passing a `stream_options` parameter when making your call.
+
+:::info
+By default, the last message chunk in a stream will include a `finish_reason` in the message's `response_metadata` attribute. If we include token usage in streaming mode, an additional chunk containing usage metadata will be added to the end of the stream, such that `finish_reason` appears on the second to last message chunk.
+:::
+
+import OpenAIStreamTokens from "@examples/models/chat/integration_openai_stream_tokens.ts";
+
+<CodeBlock language="typescript">{OpenAIStreamTokens}</CodeBlock>
+
+## Using callbacks
+
+You can also use the `handleLLMEnd` callback to get the full output from the LLM, including token usage for supported models.
+Here's an example of how you could do that:
+
+import CallbackExample from "@examples/models/chat/token_usage_tracking_callback.ts";
+
+<CodeBlock language="typescript">{CallbackExample}</CodeBlock>
+
+## Next steps
+
+You've now seen a few examples of how to track chat model token usage for supported providers.
+
+Next, check out the other how-to guides on chat models in this section, like [how to get a model to return structured output](/docs/how_to/structured_output) or [how to add caching to your chat models](/docs/how_to/chat_model_caching).

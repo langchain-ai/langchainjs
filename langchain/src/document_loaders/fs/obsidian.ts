@@ -5,6 +5,12 @@ import { Document } from "@langchain/core/documents";
 import { getEnv } from "@langchain/core/utils/env";
 import { DirectoryLoader, UnknownHandling } from "./directory.js";
 import { BaseDocumentLoader } from "../base.js";
+import { logVersion020MigrationWarning } from "../../util/entrypoint_deprecation.js";
+
+/* #__PURE__ */ logVersion020MigrationWarning({
+  oldEntrypointName: "document_loaders/fs/obsidian",
+  newPackageName: "@langchain/community",
+});
 
 export type FrontMatter = {
   title?: string;
@@ -240,6 +246,8 @@ class ObsidianFileLoader extends BaseDocumentLoader {
 }
 
 /**
+ * @deprecated - Import from "@langchain/community/document_loaders/fs/obsidian" instead. This entrypoint will be removed in 0.3.0.
+ *
  * Represents a loader for directories containing Obsidian markdown files. This loader extends
  * the DirectoryLoader and provides functionality to load and parse '.md' files with YAML frontmatter,
  * Obsidian tags, and Dataview fields.

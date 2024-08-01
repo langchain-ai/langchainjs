@@ -20,25 +20,27 @@ const documents = [
 test("CohereRerank can indeed rerank documents with compressDocuments method", async () => {
   const cohereRerank = new CohereRerank({
     apiKey: process.env.COHERE_API_KEY,
+    model: "rerank-english-v2.0",
   });
 
   const rerankedDocuments = await cohereRerank.compressDocuments(
     documents,
     query
   );
-  console.log(rerankedDocuments);
+  // console.log(rerankedDocuments);
   expect(rerankedDocuments).toHaveLength(3);
 });
 
 test("CohereRerank can indeed rerank documents with rerank method", async () => {
   const cohereRerank = new CohereRerank({
     apiKey: process.env.COHERE_API_KEY,
+    model: "rerank-english-v2.0",
   });
 
   const rerankedDocuments = await cohereRerank.rerank(
     documents.map((doc) => doc.pageContent),
     query
   );
-  console.log(rerankedDocuments);
+  // console.log(rerankedDocuments);
   expect(rerankedDocuments).toHaveLength(3);
 });

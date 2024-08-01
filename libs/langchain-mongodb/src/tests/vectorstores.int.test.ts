@@ -223,7 +223,7 @@ test("MongoDBAtlasVectorSearch upsert", async () => {
       "Sandwich",
       1
     );
-    console.log(results2);
+    // console.log(results2);
 
     expect(results2.length).toEqual(1);
     expect(results2[0].pageContent).not.toContain("sandwich");

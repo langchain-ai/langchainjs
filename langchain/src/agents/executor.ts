@@ -161,11 +161,11 @@ export class AgentExecutorIterator
   async onFirstStep(): Promise<void> {
     if (this.iterations === 0) {
       const callbackManager = await CallbackManager.configure(
-        this.callbacks,
+        this.callbacks ?? this.config?.callbacks,
         this.agentExecutor.callbacks,
-        this.tags,
+        this.tags ?? this.config?.tags,
         this.agentExecutor.tags,
-        this.metadata,
+        this.metadata ?? this.config?.metadata,
         this.agentExecutor.metadata,
         {
           verbose: this.agentExecutor.verbose,
@@ -174,12 +174,15 @@ export class AgentExecutorIterator
       this.runManager = await callbackManager?.handleChainStart(
         this.agentExecutor.toJSON(),
         this.inputs,
+        this.config?.runId,
         undefined,
-        undefined,
-        this.tags,
-        this.metadata,
-        this.runName
+        this.tags ?? this.config?.tags,
+        this.metadata ?? this.config?.metadata,
+        this.runName ?? this.config?.runName
       );
+      if (this.config !== undefined) {
+        delete this.config.runId;
+      }
     }
   }
 
@@ -234,9 +237,7 @@ export class AgentExecutorIterator
           this.intermediateSteps,
           runManager
         );
-        if (this.runManager) {
-          await this.runManager.handleChainEnd(output);
-        }
+        await this.runManager?.handleChainEnd(output);
         await this.setFinalOutputs(output);
       }
     }
@@ -256,6 +257,7 @@ export class AgentExecutorIterator
       this.runManager
     );
     await this.setFinalOutputs(returnedOutput);
+    await this.runManager?.handleChainEnd(returnedOutput);
     return returnedOutput;
   }
 
@@ -558,6 +560,11 @@ export class AgentExecutor extends BaseChain<ChainValues, AgentExecutorOutput> {
                   patchConfig(config, { callbacks: runManager?.getChild() })
                 )
               : `${action.tool} is not a valid tool, try another one.`;
+            if (typeof observation !== "string") {
+              throw new Error(
+                "Received unsupported non-string response from tool call."
+              );
+            }
           } catch (e) {
             // eslint-disable-next-line no-instanceof/no-instanceof
             if (e instanceof ToolInputParsingException) {
@@ -675,6 +682,11 @@ export class AgentExecutor extends BaseChain<ChainValues, AgentExecutorOutput> {
             agentAction.toolInput,
             runManager?.getChild()
           );
+          if (typeof observation !== "string") {
+            throw new Error(
+              "Received unsupported non-string response from tool call."
+            );
+          }
         } catch (e) {
           // eslint-disable-next-line no-instanceof/no-instanceof
           if (e instanceof ToolInputParsingException) {

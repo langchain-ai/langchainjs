@@ -1,0 +1,62 @@
+import CodeBlock from "@theme/CodeBlock";
+import InMemoryExample from "@examples/embeddings/cache_backed_in_memory.ts";
+import RedisExample from "@examples/embeddings/cache_backed_redis.ts";
+
+# How to cache embedding results
+
+:::info Prerequisites
+
+This guide assumes familiarity with the following concepts:
+
+- [Embeddings](/docs/concepts/#embedding-models)
+
+:::
+
+Embeddings can be stored or temporarily cached to avoid needing to recompute them.
+
+Caching embeddings can be done using a `CacheBackedEmbeddings` instance.
+
+The cache backed embedder is a wrapper around an embedder that caches embeddings in a key-value store.
+
+The text is hashed and the hash is used as the key in the cache.
+
+The main supported way to initialized a `CacheBackedEmbeddings` is the `fromBytesStore` static method. This takes in the following parameters:
+
+- `underlyingEmbeddings`: The embeddings model to use.
+- `documentEmbeddingCache`: The cache to use for storing document embeddings.
+- `namespace`: (optional, defaults to "") The namespace to use for document cache. This namespace is used to avoid collisions with other caches. For example, you could set it to the name of the embedding model used.
+
+**Attention:** Be sure to set the namespace parameter to avoid collisions of the same text embedded using different embeddings models.
+
+## In-memory
+
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/openai @langchain/community
+```
+
+Here's a basic test example with an in memory cache. This type of cache is primarily useful for unit tests or prototyping.
+Do not use this cache if you need to actually store the embeddings for an extended period of time:
+
+<CodeBlock language="typescript">{InMemoryExample}</CodeBlock>
+
+## Redis
+
+Here's an example with a Redis cache.
+
+You'll first need to install `ioredis` as a peer dependency and pass in an initialized client:
+
+```bash npm2yarn
+npm install ioredis
+```
+
+<CodeBlock language="typescript">{RedisExample}</CodeBlock>
+
+## Next steps
+
+You've now learned how to use caching to avoid recomputing embeddings.
+
+Next, check out the [full tutorial on retrieval-augmented generation](/docs/tutorials/rag).

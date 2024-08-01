@@ -1,18 +1,16 @@
 import assert from "assert";
-import { OpenAI } from "langchain/llms/openai";
+import { OpenAI } from "@langchain/openai";
 import { LLMChain } from "langchain/chains";
-import { ChatPromptTemplate } from "langchain/prompts";
-import { loadPrompt } from "langchain/prompts/load";
-import { HNSWLib } from "langchain/vectorstores/hnswlib";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
-import { Document } from "langchain/document";
-import { CSVLoader } from "langchain/document_loaders/fs/csv";
+import { ChatPromptTemplate } from "@langchain/core/prompts";
+import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
+import { HuggingFaceTransformersEmbeddings } from "@langchain/community/embeddings/hf_transformers";
+import { Document } from "@langchain/core/documents";
+import { CSVLoader } from "@langchain/community/document_loaders/fs/csv";
 
 async function test(useAzure: boolean = false) {
   // Test exports
   assert(typeof OpenAI === "function");
   assert(typeof LLMChain === "function");
-  assert(typeof loadPrompt === "function");
   assert(typeof ChatPromptTemplate === "function");
   assert(typeof HNSWLib === "function");
 
@@ -29,7 +27,7 @@ async function test(useAzure: boolean = false) {
         openAIApiKey: "sk-XXXX",
       };
 
-  const vs = new HNSWLib(new OpenAIEmbeddings(openAIParameters), {
+  const vs = new HNSWLib(new HuggingFaceTransformersEmbeddings({ model: "Xenova/all-MiniLM-L6-v2", }), {
     space: "ip",
     numDimensions: 3,
     index: new HierarchicalNSW("ip", 3),

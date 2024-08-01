@@ -1,8 +1,9 @@
 import { jest, test } from "@jest/globals";
-import { AIMessage } from "@langchain/core/messages";
+import { AIMessage, HumanMessage, ToolMessage } from "@langchain/core/messages";
 import { z } from "zod";
 import { OutputParserException } from "@langchain/core/output_parsers";
 import { ChatAnthropic } from "../chat_models.js";
+import { _formatMessagesForAnthropic } from "../utils/message_inputs.js";
 
 test("withStructuredOutput with output validation", async () => {
   const model = new ChatAnthropic({
@@ -95,6 +96,8 @@ test("withStructuredOutput with proper output", async () => {
     name: "Extractor",
   });
 
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const result = await modelWithStructuredOutput.invoke(`
     Enumeration of Kernel Modules via Proc
     Prompt for Credentials with OSASCRIPT
@@ -103,5 +106,86 @@ test("withStructuredOutput with proper output", async () => {
     Suspicious Automator Workflows Execution
   `);
 
-  console.log(result);
+  // console.log(result);
+});
+
+test("Can properly format anthropic messages when given two tool results", async () => {
+  const messageHistory = [
+    new HumanMessage("What is the weather in SF? Also, what is 2 + 2?"),
+    new AIMessage({
+      content: "",
+      tool_calls: [
+        {
+          name: "get_weather",
+          id: "weather_call",
+          args: {
+            location: "SF",
+          },
+        },
+        {
+          name: "calculator",
+          id: "calculator_call",
+          args: {
+            expression: "2 + 2",
+          },
+        },
+      ],
+    }),
+    new ToolMessage({
+      name: "get_weather",
+      tool_call_id: "weather_call",
+      content: "It is currently 24 degrees with hail in San Francisco.",
+    }),
+    new ToolMessage({
+      name: "calculator",
+      tool_call_id: "calculator_call",
+      content: "2 + 2 = 4",
+    }),
+  ];
+
+  const formattedMessages = _formatMessagesForAnthropic(messageHistory);
+
+  expect(formattedMessages).toEqual({
+    messages: [
+      {
+        role: "user",
+        content: "What is the weather in SF? Also, what is 2 + 2?",
+      },
+      {
+        role: "assistant",
+        content: [
+          {
+            type: "tool_use",
+            id: "weather_call",
+            name: "get_weather",
+            input: { location: "SF" },
+          },
+          {
+            type: "tool_use",
+            id: "calculator_call",
+            name: "calculator",
+            input: { expression: "2 + 2" },
+          },
+        ],
+      },
+      // We passed two separate `ToolMessage`s, but Anthropic expects them to
+      // be combined into a single `user` message
+      {
+        role: "user",
+        content: [
+          {
+            type: "tool_result",
+            content: "It is currently 24 degrees with hail in San Francisco.",
+            tool_use_id: "weather_call",
+          },
+          {
+            type: "tool_result",
+            content: "2 + 2 = 4",
+            tool_use_id: "calculator_call",
+          },
+        ],
+      },
+    ],
+    system: undefined,
+  });
 });

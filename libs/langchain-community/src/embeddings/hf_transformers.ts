@@ -1,4 +1,8 @@
-import { Pipeline, pipeline } from "@xenova/transformers";
+import type {
+  PretrainedOptions,
+  FeatureExtractionPipelineOptions,
+  FeatureExtractionPipeline,
+} from "@xenova/transformers";
 import { Embeddings, type EmbeddingsParams } from "@langchain/core/embeddings";
 import { chunkArray } from "@langchain/core/utils/chunk_array";
 
@@ -27,6 +31,16 @@ export interface HuggingFaceTransformersEmbeddingsParams
    * OpenAI, but may not be suitable for all use cases.
    */
   stripNewLines?: boolean;
+
+  /**
+   * Optional parameters for the pretrained model.
+   */
+  pretrainedOptions?: PretrainedOptions;
+
+  /**
+   * Optional parameters for the pipeline.
+   */
+  pipelineOptions?: FeatureExtractionPipelineOptions;
 }
 
 /**
@@ -61,7 +75,11 @@ export class HuggingFaceTransformersEmbeddings
 
   timeout?: number;
 
-  private pipelinePromise: Promise<Pipeline>;
+  pretrainedOptions?: PretrainedOptions;
+
+  pipelineOptions?: FeatureExtractionPipelineOptions;
+
+  private pipelinePromise: Promise<FeatureExtractionPipeline>;
 
   constructor(fields?: Partial<HuggingFaceTransformersEmbeddingsParams>) {
     super(fields ?? {});
@@ -70,6 +88,12 @@ export class HuggingFaceTransformersEmbeddings
     this.model = this.modelName;
     this.stripNewLines = fields?.stripNewLines ?? this.stripNewLines;
     this.timeout = fields?.timeout;
+    this.pretrainedOptions = fields?.pretrainedOptions ?? {};
+    this.pipelineOptions = {
+      pooling: "mean",
+      normalize: true,
+      ...fields?.pipelineOptions,
+    };
   }
 
   async embedDocuments(texts: string[]): Promise<number[][]> {
@@ -100,13 +124,12 @@ export class HuggingFaceTransformersEmbeddings
   }
 
   private async runEmbedding(texts: string[]) {
-    const pipe = await (this.pipelinePromise ??= pipeline(
-      "feature-extraction",
-      this.model
-    ));
+    const pipe = await (this.pipelinePromise ??= (
+      await import("@xenova/transformers")
+    ).pipeline("feature-extraction", this.model, this.pretrainedOptions));
 
     return this.caller.call(async () => {
-      const output = await pipe(texts, { pooling: "mean", normalize: true });
+      const output = await pipe(texts, this.pipelineOptions);
       return output.tolist();
     });
   }

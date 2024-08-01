@@ -2,7 +2,16 @@ import { JSDOM } from "jsdom";
 import { Document } from "@langchain/core/documents";
 import { AsyncCaller } from "@langchain/core/utils/async_caller";
 import { BaseDocumentLoader, DocumentLoader } from "../base.js";
+import { logVersion020MigrationWarning } from "../../util/entrypoint_deprecation.js";
 
+/* #__PURE__ */ logVersion020MigrationWarning({
+  oldEntrypointName: "document_loaders/web/recursive_url",
+  newPackageName: "@langchain/community",
+});
+
+/**
+ * @deprecated - Import from "@langchain/community/document_loaders/web/recursive_url" instead. This entrypoint will be removed in 0.3.0.
+ */
 export interface RecursiveUrlLoaderOptions {
   excludeDirs?: string[];
   extractor?: (text: string) => string;
@@ -12,6 +21,9 @@ export interface RecursiveUrlLoaderOptions {
   callerOptions?: ConstructorParameters<typeof AsyncCaller>[0];
 }
 
+/**
+ * @deprecated - Import from "@langchain/community/document_loaders/web/recursive_url" instead. This entrypoint will be removed in 0.3.0.
+ */
 export class RecursiveUrlLoader
   extends BaseDocumentLoader
   implements DocumentLoader

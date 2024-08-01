@@ -1,7 +1,7 @@
 import { test, expect } from "@jest/globals";
 import { OpenAI } from "@langchain/openai";
 import type { PromptTemplate } from "@langchain/core/prompts";
-import { TavilySearchResults } from "@langchain/community/tools/tavily_search";
+import { TavilySearchResults } from "../../util/testing/tools/tavily_search.js";
 import { pull } from "../../hub.js";
 import { AgentExecutor, createReactAgent } from "../index.js";
 
@@ -27,7 +27,7 @@ test("createReactAgent works", async () => {
     input,
   });
 
-  console.log(result);
+  // console.log(result);
 
   expect(result.input).toBe(input);
   expect(typeof result.output).toBe("string");

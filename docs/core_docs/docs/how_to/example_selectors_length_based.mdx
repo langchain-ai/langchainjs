@@ -1,0 +1,25 @@
+# How to select examples by length
+
+:::info Prerequisites
+
+This guide assumes familiarity with the following concepts:
+
+- [Prompt templates](/docs/concepts/#prompt-templates)
+- [Example selectors](/docs/how_to/example_selectors)
+
+:::
+
+This example selector selects which examples to use based on length.
+This is useful when you are worried about constructing a prompt that will go over the length of the context window.
+For longer inputs, it will select fewer examples to include, while for shorter inputs it will select more.
+
+import CodeBlock from "@theme/CodeBlock";
+import ExampleLength from "@examples/prompts/length_based_example_selector.ts";
+
+<CodeBlock language="typescript">{ExampleLength}</CodeBlock>
+
+## Next steps
+
+You've now learned a bit about using a length based example selector.
+
+Next, check out this guide on how to use a [similarity based example selector](/docs/how_to/example_selectors_similarity).

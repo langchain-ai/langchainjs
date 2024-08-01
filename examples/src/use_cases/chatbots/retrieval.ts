@@ -9,7 +9,7 @@ const chat = new ChatOpenAI({
   temperature: 0.2,
 });
 
-import { CheerioWebBaseLoader } from "langchain/document_loaders/web/cheerio";
+import { CheerioWebBaseLoader } from "@langchain/community/document_loaders/web/cheerio";
 
 const loader = new CheerioWebBaseLoader(
   "https://docs.smith.langchain.com/user_guide"
@@ -17,7 +17,7 @@ const loader = new CheerioWebBaseLoader(
 
 const rawDocs = await loader.load();
 
-import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
+import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 
 const textSplitter = new RecursiveCharacterTextSplitter({
   chunkSize: 500,

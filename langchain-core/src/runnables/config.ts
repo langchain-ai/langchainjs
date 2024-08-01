@@ -1,31 +1,13 @@
-import {
-  type BaseCallbackConfig,
-  CallbackManager,
-  ensureHandler,
-} from "../callbacks/manager.js";
+import { CallbackManager, ensureHandler } from "../callbacks/manager.js";
 import { AsyncLocalStorageProviderSingleton } from "../singletons/index.js";
+import { RunnableConfig } from "./types.js";
 
 export const DEFAULT_RECURSION_LIMIT = 25;
 
-export interface RunnableConfig extends BaseCallbackConfig {
-  /**
-   * Runtime values for attributes previously made configurable on this Runnable,
-   * or sub-Runnables.
-   */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  configurable?: Record<string, any>;
-
-  /**
-   * Maximum number of times a call can recurse. If not provided, defaults to 25.
-   */
-  recursionLimit?: number;
-
-  /** Maximum number of parallel calls to make. */
-  maxConcurrency?: number;
-}
+export { type RunnableConfig };
 
 export async function getCallbackManagerForConfig(config?: RunnableConfig) {
-  return CallbackManager.configure(
+  return CallbackManager._configureSync(
     config?.callbacks,
     undefined,
     config?.tags,
@@ -119,35 +101,57 @@ const PRIMITIVES = new Set(["string", "number", "boolean"]);
 
 /**
  * Ensure that a passed config is an object with all required keys present.
- *
- * Note: To make sure async local storage loading works correctly, this
- * should not be called with a default or prepopulated config argument.
  */
 export function ensureConfig<CallOptions extends RunnableConfig>(
   config?: CallOptions
 ): CallOptions {
-  const loadedConfig =
-    config ?? AsyncLocalStorageProviderSingleton.getInstance().getStore();
+  const implicitConfig = AsyncLocalStorageProviderSingleton.getRunnableConfig();
   let empty: RunnableConfig = {
     tags: [],
     metadata: {},
-    callbacks: undefined,
     recursionLimit: 25,
     runId: undefined,
   };
-  if (loadedConfig) {
-    empty = { ...empty, ...loadedConfig };
+  if (implicitConfig) {
+    // Don't allow runId and runName to be loaded implicitly, as this can cause
+    // child runs to improperly inherit their parents' run ids.
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { runId, runName, ...rest } = implicitConfig;
+    empty = Object.entries(rest).reduce(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (currentConfig: Record<string, any>, [key, value]) => {
+        if (value !== undefined) {
+          // eslint-disable-next-line no-param-reassign
+          currentConfig[key] = value;
+        }
+        return currentConfig;
+      },
+      empty
+    );
   }
-  if (loadedConfig?.configurable) {
-    for (const key of Object.keys(loadedConfig.configurable)) {
+  if (config) {
+    empty = Object.entries(config).reduce(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (currentConfig: Record<string, any>, [key, value]) => {
+        if (value !== undefined) {
+          // eslint-disable-next-line no-param-reassign
+          currentConfig[key] = value;
+        }
+        return currentConfig;
+      },
+      empty
+    );
+  }
+  if (empty?.configurable) {
+    for (const key of Object.keys(empty.configurable)) {
       if (
-        PRIMITIVES.has(typeof loadedConfig.configurable[key]) &&
+        PRIMITIVES.has(typeof empty.configurable[key]) &&
         !empty.metadata?.[key]
       ) {
         if (!empty.metadata) {
           empty.metadata = {};
         }
-        empty.metadata[key] = loadedConfig.configurable[key];
+        empty.metadata[key] = empty.configurable[key];
       }
     }
   }

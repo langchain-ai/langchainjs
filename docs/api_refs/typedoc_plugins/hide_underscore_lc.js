@@ -20,6 +20,12 @@ const SCRIPT_HTML = `<script>
     }
   }, false); // Add event listener for keydown events
 </script>`;
+const VERSION_DROPDOWN_HTML = `<div class="version-select">
+<select id="version-dropdown" onchange="window.location.href=this.value;">
+  <option selected value="">v0.2</option>
+  <option value="https://v01.api.js.langchain.com/">v0.1</option>
+</select>
+</div>`;
 
 /**
  * @param {string | undefined} deprecationText
@@ -127,7 +133,8 @@ function load(application) {
    * @param {Context} context
    */
   async function onEndRenderEvent(context) {
-    const htmlToSplitAt = `<div class="tsd-toolbar-contents container">`;
+    const htmlToSplitAtSearchScript = `<div class="tsd-toolbar-contents container">`;
+    const htmlToSplitAtVersionDropdown = `<div id="tsd-toolbar-links">`;
     const deprecatedHTML = "<h4>Deprecated</h4>";
 
     const { urls } = context;
@@ -162,9 +169,13 @@ function load(application) {
         }
       }
 
-      const [part1, part2] = htmlFileContent.split(htmlToSplitAt);
+      const [part1, part2] = htmlFileContent.split(htmlToSplitAtSearchScript);
       const htmlWithScript = part1 + SCRIPT_HTML + part2;
-      fs.writeFileSync(indexFilePath, htmlWithScript);
+      const htmlWithDropdown = htmlWithScript.replace(
+        htmlToSplitAtVersionDropdown,
+        htmlToSplitAtVersionDropdown + VERSION_DROPDOWN_HTML
+      );
+      fs.writeFileSync(indexFilePath, htmlWithDropdown);
     }
   }
 }

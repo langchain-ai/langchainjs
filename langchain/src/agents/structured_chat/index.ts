@@ -1,8 +1,10 @@
 import { zodToJsonSchema, JsonSchema7ObjectType } from "zod-to-json-schema";
 import type { StructuredToolInterface } from "@langchain/core/tools";
-import type {
-  BaseLanguageModel,
-  BaseLanguageModelInterface,
+import {
+  isOpenAITool,
+  type BaseLanguageModel,
+  type BaseLanguageModelInterface,
+  type ToolDefinition,
 } from "@langchain/core/language_models/base";
 import { RunnablePassthrough } from "@langchain/core/runnables";
 import type { BasePromptTemplate } from "@langchain/core/prompts";
@@ -14,6 +16,7 @@ import {
   PromptTemplate,
 } from "@langchain/core/prompts";
 import { AgentStep } from "@langchain/core/agents";
+import { isStructuredTool } from "@langchain/core/utils/function_calling";
 import { LLMChain } from "../../chains/llm_chain.js";
 import { Optional } from "../../types/type-utils.js";
 import {
@@ -54,7 +57,7 @@ export type StructuredChatAgentInput = Optional<AgentInput, "outputParser">;
 /**
  * Agent that interoperates with Structured Tools using React logic.
  * @augments Agent
- * @deprecated Use the {@link https://api.js.langchain.com/functions/langchain_agents.createStructuredChatAgent.html | createStructuredChatAgent method instead}.
+ * @deprecated Use the {@link https://v02.api.js.langchain.com/functions/langchain_agents.createStructuredChatAgent.html | createStructuredChatAgent method instead}.
  */
 export class StructuredChatAgent extends Agent {
   static lc_name() {
@@ -239,7 +242,7 @@ export type CreateStructuredChatAgentParams = {
   /** LLM to use as the agent. */
   llm: BaseLanguageModelInterface;
   /** Tools this agent has access to. */
-  tools: StructuredToolInterface[];
+  tools: (StructuredToolInterface | ToolDefinition)[];
   /**
    * The prompt to use. Must have input keys for
    * `tools`, `tool_names`, and `agent_scratchpad`.
@@ -324,7 +327,16 @@ export async function createStructuredChatAgent({
       )}`
     );
   }
-  const toolNames = tools.map((tool) => tool.name);
+  let toolNames: string[] = [];
+  if (tools.every(isOpenAITool)) {
+    toolNames = tools.map((tool) => tool.function.name);
+  } else if (tools.every(isStructuredTool)) {
+    toolNames = tools.map((tool) => tool.name);
+  } else {
+    throw new Error(
+      "All tools must be either OpenAI or Structured tools, not a mix."
+    );
+  }
   const partialedPrompt = await prompt.partial({
     tools: renderTextDescriptionAndArgs(tools),
     tool_names: toolNames.join(", "),

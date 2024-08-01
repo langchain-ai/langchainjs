@@ -30,7 +30,7 @@ describe.skip("Memgraph Graph Tests", () => {
     );
 
     await graph.refreshSchema();
-    console.log(graph.getSchema());
+    // console.log(graph.getSchema());
 
     expect(graph.getSchema()).toMatchInlineSnapshot(`
       "Node properties are the following:

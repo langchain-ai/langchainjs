@@ -54,7 +54,7 @@ await chain.invoke({
   ],
 });
 
-import { ChatMessageHistory } from "langchain/stores/message/in_memory";
+import { ChatMessageHistory } from "@langchain/community/stores/message/in_memory";
 
 const demoEphemeralChatMessageHistory = new ChatMessageHistory();
 
@@ -86,7 +86,7 @@ const responseMessage2 = await chain.invoke({
 
 console.log(responseMessage2);
 
-import { CheerioWebBaseLoader } from "langchain/document_loaders/web/cheerio";
+import { CheerioWebBaseLoader } from "@langchain/community/document_loaders/web/cheerio";
 
 const loader = new CheerioWebBaseLoader(
   "https://docs.smith.langchain.com/user_guide"
@@ -94,7 +94,7 @@ const loader = new CheerioWebBaseLoader(
 
 const rawDocs = await loader.load();
 
-import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
+import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 
 const textSplitter = new RecursiveCharacterTextSplitter({
   chunkSize: 500,

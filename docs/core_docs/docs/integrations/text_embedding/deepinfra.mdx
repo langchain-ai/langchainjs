@@ -1,0 +1,127 @@
+---
+sidebar_label: DeepInfra
+---
+
+# DeepInfra Embeddings
+
+The `DeepInfraEmbeddings` class utilizes the DeepInfra API to generate embeddings for given text inputs. This guide will walk you through the setup and usage of the `DeepInfraEmbeddings` class, helping you integrate it into your project seamlessly.
+
+## Installation
+
+Install the `@langchain/community` package as shown below:
+
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm i @langchain/community
+```
+
+## Initialization
+
+With this integration, you can use the DeepInfra embeddings model to get embeddings for your text data. Here is the [link](https://deepinfra.com/models/embeddings) to the embeddings models.
+
+First, you need to sign up on the DeepInfra website and get the API token from [here](https://deepinfra.com/dash/api_keys). You can copy names from the model cards and start using them in your code.
+
+To use the `DeepInfraEmbeddings` class, you need an API token from DeepInfra. You can pass this token directly to the constructor or set it as an environment variable (`DEEPINFRA_API_TOKEN`).
+
+### Basic Usage
+
+Here’s how to create an instance of `DeepInfraEmbeddings`:
+
+```typescript
+import { DeepInfraEmbeddings } from "@langchain/community/embeddings/deepinfra";
+
+const embeddings = new DeepInfraEmbeddings({
+  apiToken: "YOUR_API_TOKEN",
+  modelName: "sentence-transformers/clip-ViT-B-32", // Optional, defaults to "sentence-transformers/clip-ViT-B-32"
+  batchSize: 1024, // Optional, defaults to 1024
+});
+```
+
+If the `apiToken` is not provided, it will be read from the `DEEPINFRA_API_TOKEN` environment variable.
+
+## Generating Embeddings
+
+### Embedding a Single Query
+
+To generate embeddings for a single text query, use the `embedQuery` method:
+
+```typescript
+const embedding = await embeddings.embedQuery(
+  "What would be a good company name for a company that makes colorful socks?"
+);
+console.log(embedding);
+```
+
+### Embedding Multiple Documents
+
+To generate embeddings for multiple documents, use the `embedDocuments` method. This method will handle batching automatically based on the `batchSize` parameter:
+
+```typescript
+const documents = [
+  "Document 1 text...",
+  "Document 2 text...",
+  "Document 3 text...",
+];
+
+const embeddingsArray = await embeddings.embedDocuments(documents);
+console.log(embeddingsArray);
+```
+
+## Customizing Requests
+
+You can customize the base URL the SDK sends requests to by passing a `configuration` parameter:
+
+```typescript
+const customEmbeddings = new DeepInfraEmbeddings({
+  apiToken: "YOUR_API_TOKEN",
+  configuration: {
+    baseURL: "https://your_custom_url.com",
+  },
+});
+```
+
+This allows you to route requests through a custom endpoint if needed.
+
+## Error Handling
+
+If the API token is not provided and cannot be found in the environment variables, an error will be thrown:
+
+```typescript
+try {
+  const embeddings = new DeepInfraEmbeddings();
+} catch (error) {
+  console.error("DeepInfra API token not found");
+}
+```
+
+## Example
+
+Here’s a complete example of how to set up and use the `DeepInfraEmbeddings` class:
+
+```typescript
+import { DeepInfraEmbeddings } from "@langchain/community/embeddings/deepinfra";
+
+const embeddings = new DeepInfraEmbeddings({
+  apiToken: "YOUR_API_TOKEN",
+  modelName: "sentence-transformers/clip-ViT-B-32",
+  batchSize: 512,
+});
+
+async function runExample() {
+  const queryEmbedding = await embeddings.embedQuery("Example query text.");
+  console.log("Query Embedding:", queryEmbedding);
+
+  const documents = ["Text 1", "Text 2", "Text 3"];
+  const documentEmbeddings = await embeddings.embedDocuments(documents);
+  console.log("Document Embeddings:", documentEmbeddings);
+}
+
+runExample();
+```
+
+## Feedback and Support
+
+For feedback or questions, please contact [feedback@deepinfra.com](mailto:feedback@deepinfra.com).

@@ -1,10 +1,15 @@
-import { type ClientOptions } from "openai";
-import { type BaseChatModelParams } from "@langchain/core/language_models/chat_models";
+import { type ClientOptions, AzureOpenAI as AzureOpenAIClient } from "openai";
+import {
+  LangSmithParams,
+  type BaseChatModelParams,
+} from "@langchain/core/language_models/chat_models";
 import { ChatOpenAI } from "../chat_models.js";
+import { OpenAIEndpointConfig, getEndpoint } from "../utils/azure.js";
 import {
   AzureOpenAIInput,
   LegacyOpenAIInput,
   OpenAIChatInput,
+  OpenAICoreRequestOptions,
 } from "../types.js";
 
 export class AzureChatOpenAI extends ChatOpenAI {
@@ -31,21 +36,83 @@ export class AzureChatOpenAI extends ChatOpenAI {
         configuration?: ClientOptions & LegacyOpenAIInput;
       }
   ) {
-    // assume the base URL does not contain "openai" nor "deployments" prefix
-    let basePath = fields?.openAIBasePath ?? "";
-    if (!basePath.endsWith("/")) basePath += "/";
-    if (!basePath.endsWith("openai/deployments"))
-      basePath += "openai/deployments";
-
     const newFields = fields ? { ...fields } : fields;
     if (newFields) {
-      newFields.azureOpenAIBasePath = basePath;
-      newFields.azureOpenAIApiDeploymentName = newFields.deploymentName;
-      newFields.azureOpenAIApiKey = newFields.openAIApiKey;
-      newFields.azureOpenAIApiVersion = newFields.openAIApiVersion;
+      // don't rewrite the fields if they are already set
+      newFields.azureOpenAIApiDeploymentName =
+        newFields.azureOpenAIApiDeploymentName ?? newFields.deploymentName;
+      newFields.azureOpenAIApiKey =
+        newFields.azureOpenAIApiKey ?? newFields.openAIApiKey;
+      newFields.azureOpenAIApiVersion =
+        newFields.azureOpenAIApiVersion ?? newFields.openAIApiVersion;
     }
 
     super(newFields);
+  }
+
+  getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
+    const params = super.getLsParams(options);
+    params.ls_provider = "azure";
+    return params;
+  }
+
+  protected _getClientOptions(options: OpenAICoreRequestOptions | undefined) {
+    if (!this.client) {
+      const openAIEndpointConfig: OpenAIEndpointConfig = {
+        azureOpenAIApiDeploymentName: this.azureOpenAIApiDeploymentName,
+        azureOpenAIApiInstanceName: this.azureOpenAIApiInstanceName,
+        azureOpenAIApiKey: this.azureOpenAIApiKey,
+        azureOpenAIBasePath: this.azureOpenAIBasePath,
+        azureADTokenProvider: this.azureADTokenProvider,
+        baseURL: this.clientConfig.baseURL,
+      };
+
+      const endpoint = getEndpoint(openAIEndpointConfig);
+
+      const params = {
+        ...this.clientConfig,
+        baseURL: endpoint,
+        timeout: this.timeout,
+        maxRetries: 0,
+      };
+
+      if (!this.azureADTokenProvider) {
+        params.apiKey = openAIEndpointConfig.azureOpenAIApiKey;
+      }
+
+      if (!params.baseURL) {
+        delete params.baseURL;
+      }
+
+      params.defaultHeaders = {
+        ...params.defaultHeaders,
+        "User-Agent": params.defaultHeaders?.["User-Agent"]
+          ? `${params.defaultHeaders["User-Agent"]}: langchainjs-azure-openai-v2`
+          : `langchainjs-azure-openai-v2`,
+      };
+
+      this.client = new AzureOpenAIClient({
+        apiVersion: this.azureOpenAIApiVersion,
+        azureADTokenProvider: this.azureADTokenProvider,
+        deployment: this.azureOpenAIApiDeploymentName,
+        ...params,
+      });
+    }
+    const requestOptions = {
+      ...this.clientConfig,
+      ...options,
+    } as OpenAICoreRequestOptions;
+    if (this.azureOpenAIApiKey) {
+      requestOptions.headers = {
+        "api-key": this.azureOpenAIApiKey,
+        ...requestOptions.headers,
+      };
+      requestOptions.query = {
+        "api-version": this.azureOpenAIApiVersion,
+        ...requestOptions.query,
+      };
+    }
+    return requestOptions;
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

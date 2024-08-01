@@ -7,6 +7,7 @@ import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { RunnablePassthrough } from "@langchain/core/runnables";
 import { OpenAIClient } from "@langchain/openai";
 import { convertToOpenAITool } from "@langchain/core/utils/function_calling";
+import { ToolDefinition } from "@langchain/core/language_models/base";
 import { formatToOpenAIToolMessages } from "../format_scratchpad/openai_tools.js";
 import {
   OpenAIToolsAgentOutputParser,
@@ -35,7 +36,7 @@ export type CreateOpenAIToolsAgentParams = {
     }
   >;
   /** Tools this agent has access to. */
-  tools: StructuredToolInterface[];
+  tools: StructuredToolInterface[] | ToolDefinition[];
   /** The prompt to use, must have an input key of `agent_scratchpad`. */
   prompt: ChatPromptTemplate;
   /**

@@ -1,8 +1,14 @@
 /* eslint-disable no-process-env */
 
 import { expect, test } from "@jest/globals";
-import { AIMessage, HumanMessage, ToolMessage } from "@langchain/core/messages";
-import { StructuredTool } from "@langchain/core/tools";
+import {
+  AIMessage,
+  AIMessageChunk,
+  HumanMessage,
+  ToolMessage,
+} from "@langchain/core/messages";
+import { StructuredTool, tool } from "@langchain/core/tools";
+import { concat } from "@langchain/core/utils/stream";
 import { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { ChatAnthropic } from "../chat_models.js";
@@ -27,7 +33,6 @@ class WeatherTool extends StructuredTool {
   name = "get_weather";
 
   async _call(input: z.infer<typeof this.schema>) {
-    console.log(`WeatherTool called with input: ${input}`);
     return `The weather in ${input.location} is 25°C`;
   }
 }
@@ -78,7 +83,6 @@ test("Few shotting with tool calls", async () => {
     ),
     new HumanMessage("What did you say the weather was?"),
   ]);
-  console.log(res);
   expect(res.content).toContain("24");
 });
 
@@ -90,12 +94,7 @@ test("Can bind & invoke StructuredTools", async () => {
   const result = await modelWithTools.invoke(
     "What is the weather in SF today?"
   );
-  console.log(
-    {
-      tool_calls: JSON.stringify(result.content, null, 2),
-    },
-    "Can bind & invoke StructuredTools"
-  );
+
   expect(Array.isArray(result.content)).toBeTruthy();
   if (!Array.isArray(result.content)) {
     throw new Error("Content is not an array");
@@ -111,7 +110,7 @@ test("Can bind & invoke StructuredTools", async () => {
   }
   expect(toolCall).toBeTruthy();
   const { name, input } = toolCall;
-  expect(toolCall.input).toEqual(result.tool_calls?.[0].args);
+  expect(input).toEqual(result.tool_calls?.[0].args);
   expect(name).toBe("get_weather");
   expect(input).toBeTruthy();
   expect(input.location).toBeTruthy();
@@ -128,7 +127,6 @@ test("Can bind & invoke StructuredTools", async () => {
     ),
     new HumanMessage("What did you say the weather was?"),
   ]);
-  console.log(result2);
   // This should work, but Anthorpic is too skeptical
   expect(result2.content).toContain("59");
 });
@@ -141,12 +139,7 @@ test("Can bind & invoke AnthropicTools", async () => {
   const result = await modelWithTools.invoke(
     "What is the weather in London today?"
   );
-  console.log(
-    {
-      tool_calls: JSON.stringify(result.content, null, 2),
-    },
-    "Can bind & invoke StructuredTools"
-  );
+
   expect(Array.isArray(result.content)).toBeTruthy();
   if (!Array.isArray(result.content)) {
     throw new Error("Content is not an array");
@@ -170,45 +163,43 @@ test("Can bind & invoke AnthropicTools", async () => {
 test("Can bind & stream AnthropicTools", async () => {
   const modelWithTools = model.bind({
     tools: [anthropicTool],
+    tool_choice: {
+      type: "tool",
+      name: "get_weather",
+    },
   });
 
   const result = await modelWithTools.stream(
     "What is the weather in London today?"
   );
-  let finalMessage;
+  let finalMessage: AIMessageChunk | undefined;
   for await (const item of result) {
-    console.log("item", JSON.stringify(item, null, 2));
-    finalMessage = item;
+    if (!finalMessage) {
+      finalMessage = item;
+    } else {
+      finalMessage = concat(finalMessage, item);
+    }
   }
 
+  expect(finalMessage).toBeDefined();
   if (!finalMessage) {
     throw new Error("No final message returned");
   }
 
-  console.log(
-    {
-      tool_calls: JSON.stringify(finalMessage.content, null, 2),
-    },
-    "Can bind & invoke StructuredTools"
-  );
   expect(Array.isArray(finalMessage.content)).toBeTruthy();
   if (!Array.isArray(finalMessage.content)) {
     throw new Error("Content is not an array");
   }
-  let toolCall: AnthropicToolResponse | undefined;
-  finalMessage.content.forEach((item) => {
-    if (item.type === "tool_use") {
-      toolCall = item as AnthropicToolResponse;
-    }
-  });
-  if (!toolCall) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const toolCall = finalMessage.tool_calls?.[0];
+  if (toolCall === undefined) {
     throw new Error("No tool call found");
   }
   expect(toolCall).toBeTruthy();
-  const { name, input } = toolCall;
+  const { name, args } = toolCall;
   expect(name).toBe("get_weather");
-  expect(input).toBeTruthy();
-  expect(input.location).toBeTruthy();
+  expect(args).toBeTruthy();
+  expect(args.location).toBeTruthy();
 });
 
 test("withStructuredOutput with zod schema", async () => {
@@ -221,12 +212,6 @@ test("withStructuredOutput with zod schema", async () => {
 
   const result = await modelWithTools.invoke(
     "What is the weather in London today?"
-  );
-  console.log(
-    {
-      result,
-    },
-    "withStructuredOutput with zod schema"
   );
   expect(typeof result.location).toBe("string");
 });
@@ -242,12 +227,7 @@ test("withStructuredOutput with AnthropicTool", async () => {
   const result = await modelWithTools.invoke(
     "What is the weather in London today?"
   );
-  console.log(
-    {
-      result,
-    },
-    "withStructuredOutput with AnthropicTool"
-  );
+
   expect(typeof result.location).toBe("string");
 });
 
@@ -263,11 +243,200 @@ test("withStructuredOutput JSON Schema only", async () => {
   const result = await modelWithTools.invoke(
     "What is the weather in London today?"
   );
-  console.log(
-    {
-      result,
-    },
-    "withStructuredOutput JSON Schema only"
-  );
+
   expect(typeof result.location).toBe("string");
+});
+
+test("Can pass tool_choice", async () => {
+  const tool1 = {
+    name: "get_weather",
+    description:
+      "Get the weather of a specific location and return the temperature in Celsius.",
+    input_schema: {
+      type: "object",
+      properties: {
+        location: {
+          type: "string",
+          description: "The name of city to get the weather for.",
+        },
+      },
+      required: ["location"],
+    },
+  };
+  const tool2 = {
+    name: "calculator",
+    description: "Calculate any math expression and return the result.",
+    input_schema: {
+      type: "object",
+      properties: {
+        expression: {
+          type: "string",
+          description: "The math expression to calculate.",
+        },
+      },
+      required: ["expression"],
+    },
+  };
+  const tools = [tool1, tool2];
+
+  const modelWithTools = model.bindTools(tools, {
+    tool_choice: {
+      type: "tool",
+      name: "get_weather",
+    },
+  });
+
+  const result = await modelWithTools.invoke(
+    "What is the sum of 272818 and 281818?"
+  );
+
+  expect(Array.isArray(result.content)).toBeTruthy();
+  if (!Array.isArray(result.content)) {
+    throw new Error("Content is not an array");
+  }
+  let toolCall: AnthropicToolResponse | undefined;
+  result.content.forEach((item) => {
+    if (item.type === "tool_use") {
+      toolCall = item as AnthropicToolResponse;
+    }
+  });
+  if (!toolCall) {
+    throw new Error("No tool call found");
+  }
+  expect(toolCall).toBeTruthy();
+  const { name, input } = toolCall;
+  expect(input).toEqual(result.tool_calls?.[0].args);
+  expect(name).toBe("get_weather");
+  expect(input).toBeTruthy();
+  expect(input.location).toBeTruthy();
+});
+
+test("bindTools accepts openai formatted tool", async () => {
+  const openaiTool = {
+    type: "function",
+    function: {
+      name: "get_weather",
+      description:
+        "Get the weather of a specific location and return the temperature in Celsius.",
+      parameters: zodToJsonSchema(zodSchema),
+    },
+  };
+  const modelWithTools = model.bindTools([openaiTool]);
+  const response = await modelWithTools.invoke(
+    "Whats the weather like in san francisco?"
+  );
+  expect(response.tool_calls).toHaveLength(1);
+  const { tool_calls } = response;
+  if (!tool_calls) {
+    return;
+  }
+  expect(tool_calls[0].name).toBe("get_weather");
+});
+
+test("withStructuredOutput will always force tool usage", async () => {
+  const weatherTool = z
+    .object({
+      location: z.string().describe("The name of city to get the weather for."),
+    })
+    .describe(
+      "Get the weather of a specific location and return the temperature in Celsius."
+    );
+  const modelWithTools = model.withStructuredOutput(weatherTool, {
+    name: "get_weather",
+    includeRaw: true,
+  });
+  const response = await modelWithTools.invoke(
+    "What is the sum of 271623 and 281623? It is VERY important you use a calculator tool to give me the answer."
+  );
+
+  if (!("tool_calls" in response.raw)) {
+    throw new Error("Tool call not found in response");
+  }
+  const castMessage = response.raw as AIMessage;
+  expect(castMessage.tool_calls).toHaveLength(1);
+  expect(castMessage.tool_calls?.[0].name).toBe("get_weather");
+});
+
+test("Can stream tool calls", async () => {
+  const weatherTool = tool((_) => "no-op", {
+    name: "get_weather",
+    description: zodSchema.description,
+    schema: zodSchema,
+  });
+
+  const modelWithTools = model.bindTools([weatherTool], {
+    tool_choice: {
+      type: "tool",
+      name: "get_weather",
+    },
+  });
+  const stream = await modelWithTools.stream(
+    "What is the weather in San Francisco CA?"
+  );
+
+  let realToolCallChunkStreams = 0;
+  let prevToolCallChunkArgs = "";
+  let finalChunk: AIMessageChunk | undefined;
+  for await (const chunk of stream) {
+    if (!finalChunk) {
+      finalChunk = chunk;
+    } else {
+      finalChunk = concat(finalChunk, chunk);
+    }
+    if (chunk.tool_call_chunks?.[0]?.args) {
+      // Check if the args have changed since the last chunk.
+      // This helps count the number of unique arg updates in the stream,
+      // ensuring we're receiving multiple chunks with different arg content.
+      if (
+        !prevToolCallChunkArgs ||
+        prevToolCallChunkArgs !== chunk.tool_call_chunks[0].args
+      ) {
+        realToolCallChunkStreams += 1;
+      }
+      prevToolCallChunkArgs = chunk.tool_call_chunks[0].args;
+    }
+  }
+
+  expect(finalChunk?.tool_calls?.[0]).toBeDefined();
+  expect(finalChunk?.tool_calls?.[0].name).toBe("get_weather");
+  expect(finalChunk?.tool_calls?.[0].args.location).toBeDefined();
+  expect(realToolCallChunkStreams).toBeGreaterThan(1);
+});
+
+test("llm token callbacks can handle tool calls", async () => {
+  const weatherTool = tool((_) => "no-op", {
+    name: "get_weather",
+    description: zodSchema.description,
+    schema: zodSchema,
+  });
+
+  const modelWithTools = model.bindTools([weatherTool], {
+    tool_choice: {
+      type: "tool",
+      name: "get_weather",
+    },
+  });
+
+  let tokens = "";
+  const stream = await modelWithTools.stream("What is the weather in SF?", {
+    callbacks: [
+      {
+        handleLLMNewToken: (tok) => {
+          tokens += tok;
+        },
+      },
+    ],
+  });
+
+  let finalChunk: AIMessageChunk | undefined;
+  for await (const chunk of stream) {
+    finalChunk = !finalChunk ? chunk : concat(finalChunk, chunk);
+  }
+
+  expect(finalChunk?.tool_calls?.[0]).toBeDefined();
+  expect(finalChunk?.tool_calls?.[0].name).toBe("get_weather");
+  expect(finalChunk?.tool_calls?.[0].args).toBeDefined();
+  const args = finalChunk?.tool_calls?.[0].args;
+  if (!args) return;
+  expect(args).toEqual(JSON.parse(tokens));
 });
