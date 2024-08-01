@@ -17,8 +17,12 @@ export async function push(
     apiKey?: string;
     apiUrl?: string;
     parentCommitHash?: string;
+    /** @deprecated Use isPublic instead. */
     newRepoIsPublic?: boolean;
+    isPublic?: boolean;
+    /** @deprecated Use description instead. */
     newRepoDescription?: string;
+    description?: string;
     readme?: string;
     tags?: string[];
   }
@@ -27,8 +31,8 @@ export async function push(
   const payloadOptions = {
     object: runnable,
     parentCommitHash: options?.parentCommitHash,
-    isPublic: options?.newRepoIsPublic,
-    description: options?.newRepoDescription,
+    isPublic: options?.isPublic,
+    description: options?.description,
     readme: options?.readme,
     tags: options?.tags,
   };
