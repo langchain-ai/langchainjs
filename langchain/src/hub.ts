@@ -31,8 +31,8 @@ export async function push(
   const payloadOptions = {
     object: runnable,
     parentCommitHash: options?.parentCommitHash,
-    isPublic: options?.isPublic,
-    description: options?.description,
+    isPublic: options?.isPublic ?? options?.newRepoIsPublic,
+    description: options?.description ?? options?.newRepoDescription,
     readme: options?.readme,
     tags: options?.tags,
   };
