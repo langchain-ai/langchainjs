@@ -1,5 +1,8 @@
 import { test } from "@jest/globals";
-import { LLM, type BaseLLMParams } from "@langchain/core/language_models/llms";
+import {
+  LLM,
+  type BaseLLMCallOptions,
+} from "@langchain/core/language_models/llms";
 import { GuardrailResponse } from "@layerup/layerup-security/types.js";
 import {
   LayerupSecurity,
@@ -18,7 +21,7 @@ export class MockLLM extends LLM {
     return "mock_llm";
   }
 
-  async _call(_input: string, _options?: BaseLLMParams): Promise<string> {
+  async _call(_input: string, _options?: BaseLLMCallOptions): Promise<string> {
     return "Hi Bob! How are you?";
   }
 }
