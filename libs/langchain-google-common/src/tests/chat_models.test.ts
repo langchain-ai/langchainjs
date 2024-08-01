@@ -685,7 +685,10 @@ describe("Mock ChatGoogle", () => {
     async function store(path: string, text: string): Promise<void> {
       const type = path.endsWith(".png") ? "image/png" : "text/plain";
       const blob = new MediaBlob({
-        data: new Blob([text], { type }),
+        data: {
+          value: text,
+          type,
+        },
         path,
       });
       await resolver.store(blob);
