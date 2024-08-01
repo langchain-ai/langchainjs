@@ -111,11 +111,27 @@ class ChatConnection<AuthOptions> extends AbstractGoogleLLMConnection<
     const inputs = await Promise.all(inputPromises);
 
     return inputs.reduce((acc, cur) => {
-      // Filter out the system content, since those don't belong
-      // in the actual content.
-      const hasNoSystem = cur.every((content) => content.role !== "system");
-      return hasNoSystem ? [...acc, ...cur] : acc;
-    }, []);
+        // Filter out the system content
+        if (cur.every((content) => content.role === "system")) {
+          return acc;
+        }
+
+        // Combine adjacent function messages
+        if (
+          cur[0]?.role === "function" &&
+          acc.length > 0 &&
+          acc[acc.length - 1].role === "function"
+        ) {
+          acc[acc.length - 1].parts = [
+            ...acc[acc.length - 1].parts,
+            ...cur[0].parts,
+          ];
+        } else {
+          acc.push(...cur);
+        }
+
+        return acc;
+      }, [] as GeminiContent[]);
   }
 
   async formatSystemInstruction(

@@ -9,9 +9,7 @@ on:
       - 'libs/langchain-anthropic/**'
       - 'libs/langchain-community/**'
       - 'libs/langchain-openai/**'
-      - 'examples/**'
   workflow_dispatch: # Allows triggering the workflow manually in GitHub UI
-  workflow_call: # Allows triggering the workflow from another workflow
 
 # If another push to the same PR or branch happens while this workflow is still running,
 # cancel the earlier run in favor of the next run.

@@ -70,7 +70,7 @@ function revive(obj: any): any {
           content: obj.content,
         });
       }
-      if (obj.type === "ChatMessage" || obj.type === "chat") {
+      if (obj.type === "ChatMessage" || obj.type === "generic") {
         return new ChatMessage({
           content: obj.content,
           role: obj.role,
@@ -86,6 +86,7 @@ function revive(obj: any): any {
         return new ToolMessage({
           content: obj.content,
           tool_call_id: obj.tool_call_id,
+          status: obj.status,
         });
       }
       if (obj.type === "AIMessage" || obj.type === "ai") {
@@ -119,6 +120,7 @@ function revive(obj: any): any {
         return new ToolMessageChunk({
           content: obj.content,
           tool_call_id: obj.tool_call_id,
+          status: obj.status,
         });
       }
       if (obj.type === "AIMessageChunk") {

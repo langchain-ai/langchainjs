@@ -63,6 +63,7 @@ export class StringOutputParser extends BaseTransformOutputParser<string> {
   ): string {
     switch (content.type) {
       case "text":
+      case "text_delta":
         if ("text" in content) {
           // Type guard for MessageContentText
           return this._textContentToString(content as MessageContentText);
