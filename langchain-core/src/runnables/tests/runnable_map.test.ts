@@ -75,8 +75,8 @@ test("Test invoke with signal", async () => {
       return "SOME STUFF";
     },
   });
-  const controller = new AbortController();
   await expect(async () => {
+    const controller = new AbortController();
     await Promise.all([
       map.invoke("testing", {
         signal: controller.signal,
@@ -84,6 +84,20 @@ test("Test invoke with signal", async () => {
       new Promise<void>((resolve) => {
         controller.abort();
         resolve();
+      }),
+    ]);
+  }).rejects.toThrowError();
+  await expect(async () => {
+    const controller = new AbortController();
+    await Promise.all([
+      map.invoke("testing", {
+        signal: controller.signal,
+      }),
+      new Promise<void>((resolve) => {
+        setTimeout(() => {
+          controller.abort();
+          resolve();
+        }, 250);
       }),
     ]);
   }).rejects.toThrowError();
