@@ -42,7 +42,8 @@ export function mergeConfigs<CallOptions extends RunnableConfig>(
           copy.signal = options.signal;
         } else if (options.signal !== undefined) {
           if ("any" in AbortSignal) {
-            copy.signal = AbortSignal.any([copy.signal, options.signal]);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            copy.signal = (AbortSignal as any).any([copy.signal, options.signal]);
           } else {
             copy.signal = options.signal;
           }
@@ -178,7 +179,8 @@ export function ensureConfig<CallOptions extends RunnableConfig>(
     const timeoutSignal = AbortSignal.timeout(empty.timeout);
     if (empty.signal !== undefined) {
       if ("any" in AbortSignal) {
-        empty.signal = AbortSignal.any([empty.signal, timeoutSignal]);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        empty.signal = (AbortSignal as any).any([empty.signal, timeoutSignal]);
       }
     } else {
       empty.signal = timeoutSignal;
