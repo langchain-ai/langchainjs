@@ -1,4 +1,4 @@
-import { Client, ClientConfiguration, HubPushOptions } from "langchainhub";
+import { Client } from "langsmith";
 import { Runnable } from "@langchain/core/runnables";
 import { load } from "./load/index.js";
 
@@ -13,10 +13,26 @@ import { load } from "./load/index.js";
 export async function push(
   repoFullName: string,
   runnable: Runnable,
-  options?: HubPushOptions & ClientConfiguration
+  options?: {
+    apiKey?: string;
+    apiUrl?: string;
+    parentCommitHash?: string;
+    newRepoIsPublic?: boolean;
+    newRepoDescription?: string;
+    readme?: string;
+    tags?: string[];
+  }
 ) {
   const client = new Client(options);
-  return client.push(repoFullName, JSON.stringify(runnable), options);
+  const payloadOptions = {
+    object: runnable,
+    parentCommitHash: options?.parentCommitHash,
+    isPublic: options?.newRepoIsPublic,
+    description: options?.newRepoDescription,
+    readme: options?.readme,
+    tags: options?.tags,
+  };
+  return client.pushPrompt(repoFullName, payloadOptions);
 }
 
 /**
@@ -27,9 +43,11 @@ export async function push(
  */
 export async function pull<T extends Runnable>(
   ownerRepoCommit: string,
-  options?: ClientConfiguration
+  options?: { apiKey?: string; apiUrl?: string; includeModel?: boolean }
 ) {
   const client = new Client(options);
-  const result = await client.pull(ownerRepoCommit);
+  const result = await client._pullPrompt(ownerRepoCommit, {
+    includeModel: options?.includeModel,
+  });
   return load<T>(result);
 }
