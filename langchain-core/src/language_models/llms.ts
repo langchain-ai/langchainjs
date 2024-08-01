@@ -63,7 +63,7 @@ export abstract class BaseLLM<
 > extends BaseLanguageModel<string, CallOptions> {
   declare ParsedCallOptions: Omit<
     CallOptions,
-    Exclude<keyof RunnableConfig, "signal">
+    Exclude<keyof RunnableConfig, "signal" | "timeout">
   >;
 
   // Only ever instantiated in main LangChain

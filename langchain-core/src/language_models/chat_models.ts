@@ -143,9 +143,11 @@ export abstract class BaseChatModel<
   // TODO: Fix the parameter order on the next minor version.
   OutputMessageType extends BaseMessageChunk = BaseMessageChunk
 > extends BaseLanguageModel<OutputMessageType, CallOptions> {
+  // Backwards compatibility since signal and timeout have been moved to
+  // RunnableConfig
   declare ParsedCallOptions: Omit<
     CallOptions,
-    Exclude<keyof RunnableConfig, "signal">
+    Exclude<keyof RunnableConfig, "signal" | "timeout">
   >;
 
   // Only ever instantiated in main LangChain
