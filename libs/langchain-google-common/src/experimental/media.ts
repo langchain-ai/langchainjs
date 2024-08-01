@@ -140,12 +140,6 @@ export abstract class BlobStoreGoogle<
   async _set(keyValuePair: [string, MediaBlob]): Promise<ResponseType> {
     const [_key, blob] = keyValuePair;
     const setMetadata = this.buildSetMetadata(keyValuePair);
-    /*
-    const metadata = {
-      contentType: blob.mimetype,
-      ...setMetadata,
-    };
-    */
     const metadata = setMetadata;
     const options = {};
     const connection = this.buildSetConnection(keyValuePair);
