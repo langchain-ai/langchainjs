@@ -16,8 +16,10 @@ test("Properties Parser", async () => {
       auth: process.env.NOTION_INTEGRATION_TOKEN,
     },
     id: process.env.NOTION_PAGE_ID ?? "",
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     onDocumentLoaded: (current, total, currentTitle) => {
-      console.log(`Loaded Page: ${currentTitle} (${current}/${total})`);
+      // console.log(`Loaded Page: ${currentTitle} (${current}/${total})`);
     },
   });
 
@@ -81,8 +83,10 @@ test("Get Title (page)", async () => {
       auth: process.env.NOTION_INTEGRATION_TOKEN,
     },
     id: process.env.NOTION_PAGE_ID ?? "",
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     onDocumentLoaded: (current, total, currentTitle) => {
-      console.log(`Loaded Page: ${currentTitle} (${current}/${total})`);
+      // console.log(`Loaded Page: ${currentTitle} (${current}/${total})`);
     },
   });
 
@@ -108,8 +112,10 @@ test("Get Title (database)", async () => {
       auth: process.env.NOTION_INTEGRATION_TOKEN,
     },
     id: process.env.NOTION_PAGE_ID ?? "",
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     onDocumentLoaded: (current, total, currentTitle) => {
-      console.log(`Loaded Page: ${currentTitle} (${current}/${total})`);
+      // console.log(`Loaded Page: ${currentTitle} (${current}/${total})`);
     },
   });
 

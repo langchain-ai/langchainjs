@@ -26,7 +26,7 @@ import {
 } from "../messages/index.js";
 import { GenerationChunk, ChatGenerationChunk, RUN_KEY } from "../outputs.js";
 import { convertEventStreamToIterableReadableDataStream } from "../utils/event_source_parse.js";
-import { concat } from "../utils/stream.js";
+import { IterableReadableStream, concat } from "../utils/stream.js";
 
 type RemoteRunnableOptions = {
   timeout?: number;
@@ -70,7 +70,7 @@ function revive(obj: any): any {
           content: obj.content,
         });
       }
-      if (obj.type === "ChatMessage" || obj.type === "chat") {
+      if (obj.type === "ChatMessage" || obj.type === "generic") {
         return new ChatMessage({
           content: obj.content,
           role: obj.role,
@@ -86,6 +86,7 @@ function revive(obj: any): any {
         return new ToolMessage({
           content: obj.content,
           tool_call_id: obj.tool_call_id,
+          status: obj.status,
         });
       }
       if (obj.type === "AIMessage" || obj.type === "ai") {
@@ -119,6 +120,7 @@ function revive(obj: any): any {
         return new ToolMessageChunk({
           content: obj.content,
           tool_call_id: obj.tool_call_id,
+          status: obj.status,
         });
       }
       if (obj.type === "AIMessageChunk") {
@@ -406,12 +408,13 @@ export class RemoteRunnable<
     const runManager = await callbackManager_?.handleChainStart(
       this.toJSON(),
       _coerceToDict(input, "input"),
+      config.runId,
       undefined,
       undefined,
       undefined,
-      undefined,
-      options?.runName
+      config.runName
     );
+    delete config.runId;
     let finalOutput: RunOutput | undefined;
     let finalOutputSupported = true;
     try {
@@ -476,12 +479,13 @@ export class RemoteRunnable<
     const runManager = await callbackManager_?.handleChainStart(
       this.toJSON(),
       _coerceToDict(input, "input"),
+      config.runId,
       undefined,
       undefined,
       undefined,
-      undefined,
-      options?.runName
+      config.runName
     );
+    delete config.runId;
     // The type is in camelCase but the API only accepts snake_case.
     const camelCaseStreamOptions = {
       include_names: streamOptions?.includeNames,
@@ -533,97 +537,115 @@ export class RemoteRunnable<
     await runManager?.handleChainEnd(runLog?.state.final_output);
   }
 
+  _streamEvents(
+    input: RunInput,
+    options: Partial<CallOptions> & { version: "v1" | "v2" },
+    streamOptions?: Omit<LogStreamCallbackHandlerInput, "autoClose"> | undefined
+  ): AsyncGenerator<StreamEvent> {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    const outerThis = this;
+    const generator = async function* () {
+      const [config, kwargs] =
+        outerThis._separateRunnableConfigFromCallOptions(options);
+      const callbackManager_ = await getCallbackManagerForConfig(options);
+      const runManager = await callbackManager_?.handleChainStart(
+        outerThis.toJSON(),
+        _coerceToDict(input, "input"),
+        config.runId,
+        undefined,
+        undefined,
+        undefined,
+        config.runName
+      );
+      delete config.runId;
+      // The type is in camelCase but the API only accepts snake_case.
+      const camelCaseStreamOptions = {
+        include_names: streamOptions?.includeNames,
+        include_types: streamOptions?.includeTypes,
+        include_tags: streamOptions?.includeTags,
+        exclude_names: streamOptions?.excludeNames,
+        exclude_types: streamOptions?.excludeTypes,
+        exclude_tags: streamOptions?.excludeTags,
+      };
+      const events = [];
+      try {
+        const response = await outerThis.post<{
+          input: RunInput;
+          config?: RunnableConfig;
+          kwargs?: Omit<Partial<CallOptions>, keyof RunnableConfig>;
+          diff: false;
+        }>("/stream_events", {
+          input,
+          config: removeCallbacks(config),
+          kwargs,
+          ...camelCaseStreamOptions,
+          diff: false,
+        });
+        const { body, ok } = response;
+        if (!ok) {
+          throw new Error(`${response.status} Error: ${await response.text()}`);
+        }
+        if (!body) {
+          throw new Error(
+            "Could not begin remote stream events. Please check the given URL and try again."
+          );
+        }
+        const runnableStream =
+          convertEventStreamToIterableReadableDataStream(body);
+        for await (const log of runnableStream) {
+          const chunk = revive(JSON.parse(log));
+          const event = {
+            event: chunk.event,
+            name: chunk.name,
+            run_id: chunk.run_id,
+            tags: chunk.tags,
+            metadata: chunk.metadata,
+            data: chunk.data,
+          };
+          yield event;
+          events.push(event);
+        }
+      } catch (err) {
+        await runManager?.handleChainError(err);
+        throw err;
+      }
+      await runManager?.handleChainEnd(events);
+    };
+    return generator();
+  }
+
   streamEvents(
     input: RunInput,
-    options: Partial<CallOptions> & { version: "v1" },
+    options: Partial<CallOptions> & { version: "v1" | "v2" },
     streamOptions?: Omit<LogStreamCallbackHandlerInput, "autoClose">
-  ): AsyncGenerator<StreamEvent>;
+  ): IterableReadableStream<StreamEvent>;
 
   streamEvents(
     input: RunInput,
     options: Partial<CallOptions> & {
-      version: "v1";
+      version: "v1" | "v2";
       encoding: "text/event-stream";
     },
     streamOptions?: Omit<LogStreamCallbackHandlerInput, "autoClose">
-  ): AsyncGenerator<Uint8Array>;
+  ): IterableReadableStream<Uint8Array>;
 
-  async *streamEvents(
+  streamEvents(
     input: RunInput,
     options: Partial<CallOptions> & {
-      version: "v1";
+      version: "v1" | "v2";
       encoding?: "text/event-stream" | undefined;
     },
     streamOptions?: Omit<LogStreamCallbackHandlerInput, "autoClose">
-  ): AsyncGenerator<StreamEvent | Uint8Array> {
-    if (options?.version !== "v1") {
+  ): IterableReadableStream<StreamEvent | Uint8Array> {
+    if (options.version !== "v1" && options.version !== "v2") {
       throw new Error(
-        `Only version "v1" of the events schema is currently supported.`
+        `Only versions "v1" and "v2" of the events schema is currently supported.`
       );
     }
-    const [config, kwargs] =
-      this._separateRunnableConfigFromCallOptions(options);
-    const callbackManager_ = await getCallbackManagerForConfig(options);
-    const runManager = await callbackManager_?.handleChainStart(
-      this.toJSON(),
-      _coerceToDict(input, "input"),
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      options?.runName
-    );
-    // The type is in camelCase but the API only accepts snake_case.
-    const camelCaseStreamOptions = {
-      include_names: streamOptions?.includeNames,
-      include_types: streamOptions?.includeTypes,
-      include_tags: streamOptions?.includeTags,
-      exclude_names: streamOptions?.excludeNames,
-      exclude_types: streamOptions?.excludeTypes,
-      exclude_tags: streamOptions?.excludeTags,
-    };
-    const events = [];
-    try {
-      const response = await this.post<{
-        input: RunInput;
-        config?: RunnableConfig;
-        kwargs?: Omit<Partial<CallOptions>, keyof RunnableConfig>;
-        diff: false;
-      }>("/stream_events", {
-        input,
-        config: removeCallbacks(config),
-        kwargs,
-        ...camelCaseStreamOptions,
-        diff: false,
-      });
-      const { body, ok } = response;
-      if (!ok) {
-        throw new Error(`${response.status} Error: ${await response.text()}`);
-      }
-      if (!body) {
-        throw new Error(
-          "Could not begin remote stream events. Please check the given URL and try again."
-        );
-      }
-      const runnableStream =
-        convertEventStreamToIterableReadableDataStream(body);
-      for await (const log of runnableStream) {
-        const chunk = revive(JSON.parse(log));
-        const event = {
-          event: chunk.event,
-          name: chunk.name,
-          run_id: chunk.run_id,
-          tags: chunk.tags,
-          metadata: chunk.metadata,
-          data: chunk.data,
-        };
-        yield event;
-        events.push(event);
-      }
-    } catch (err) {
-      await runManager?.handleChainError(err);
-      throw err;
+    if (options.encoding !== undefined) {
+      throw new Error("Special encodings are not supported for this runnable.");
     }
-    await runManager?.handleChainEnd(events);
+    const eventStream = this._streamEvents(input, options, streamOptions);
+    return IterableReadableStream.fromAsyncGenerator(eventStream);
   }
 }

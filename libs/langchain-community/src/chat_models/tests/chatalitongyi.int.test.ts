@@ -62,7 +62,17 @@ const runTest = async ({
     }
 
     const res = await chat.invoke(messages);
-    console.log({ res });
+    // console.log({ res });
+
+    // test streaming call
+    const stream = await chat.stream(
+      `Translate "I love programming" into Chinese.`
+    );
+    const chunks = [];
+    for await (const chunk of stream) {
+      chunks.push(chunk);
+    }
+    expect(chunks.length).toBeGreaterThan(0);
 
     if (passedConfig.streaming) {
       expect(nrNewTokens > 0).toBe(true);

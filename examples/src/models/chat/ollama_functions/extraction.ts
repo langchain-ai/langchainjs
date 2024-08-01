@@ -1,9 +1,9 @@
 import { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
 
-import { OllamaFunctions } from "langchain/experimental/chat_models/ollama_functions";
-import { JsonOutputFunctionsParser } from "langchain/output_parsers";
+import { OllamaFunctions } from "@langchain/community/experimental/chat_models/ollama_functions";
 import { PromptTemplate } from "@langchain/core/prompts";
+import { JsonOutputFunctionsParser } from "@langchain/core/output_parsers/openai_functions";
 
 const EXTRACTION_TEMPLATE = `Extract and save the relevant entities mentioned in the following passage together with their properties.
 
@@ -44,20 +44,36 @@ const model = new OllamaFunctions({
 });
 
 // Use a JsonOutputFunctionsParser to get the parsed JSON response directly.
-const chain = await prompt.pipe(model).pipe(new JsonOutputFunctionsParser());
+const chain = prompt.pipe(model).pipe(new JsonOutputFunctionsParser());
 
 const response = await chain.invoke({
   input:
     "Alex is 5 feet tall. Claudia is 1 foot taller than Alex and jumps higher than him. Claudia has orange hair and Alex is blonde.",
 });
 
-console.log(response);
+console.log(JSON.stringify(response, null, 2));
 
 /*
-  {
-    people: [
-      { name: 'Alex', height: 5, hairColor: 'blonde' },
-      { name: 'Claudia', height: 6, hairColor: 'orange' }
-    ]
-  }
+{
+  "people": [
+    {
+      "name": "Alex",
+      "height": 5,
+      "hairColor": "blonde"
+    },
+    {
+      "name": "Claudia",
+      "height": {
+        "$num": 1,
+        "add": [
+          {
+            "name": "Alex",
+            "prop": "height"
+          }
+        ]
+      },
+      "hairColor": "orange"
+    }
+  ]
+}
 */

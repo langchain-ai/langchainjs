@@ -60,13 +60,13 @@ for Matching Engine:
 
 You will also need a document store. While an `InMemoryDocstore` is ok for
 initial testing, you will want to use something like a
-[GoogleCloudStorageDocstore](https://api.js.langchain.com/classes/langchain_stores_doc_gcs.GoogleCloudStorageDocstore.html) to store it more permanently.
+[GoogleCloudStorageDocstore](https://v02.api.js.langchain.com/classes/langchain_stores_doc_gcs.GoogleCloudStorageDocstore.html) to store it more permanently.
 
 ```typescript
-import { MatchingEngine } from "langchain/vectorstores/googlevertexai";
+import { MatchingEngine } from "@langchain/community/vectorstores/googlevertexai";
 import { Document } from "langchain/document";
 import { SyntheticEmbeddings } from "langchain/embeddings/fake";
-import { GoogleCloudStorageDocstore } from "langchain/stores/doc/gcs";
+import { GoogleCloudStorageDocstore } from "@langchain/community/stores/doc/gcs";
 
 const embeddings = new SyntheticEmbeddings({
   vectorSize: Number.parseInt(

@@ -20,6 +20,21 @@ interface TestConfig {
   shouldThrow?: boolean;
 }
 
+test.skip("Test chat.stream work fine", async () => {
+  const chat = new ChatZhipuAI({
+    modelName: "glm-3-turbo",
+  });
+  const stream = await chat.stream(
+    `Translate "I love programming" into Chinese.`
+  );
+  const chunks = [];
+  for await (const chunk of stream) {
+    chunks.push(chunk);
+  }
+  // console.log(chunks);
+  expect(chunks.length).toBeGreaterThan(0);
+});
+
 const runTest = async ({
   modelName,
   config,
@@ -61,7 +76,7 @@ const runTest = async ({
     }
 
     const res = await chat.invoke(messages, passedConfig);
-    console.log({ res });
+    // console.log({ res });
 
     if (passedConfig.streaming) {
       expect(nrNewTokens > 0).toBe(true);

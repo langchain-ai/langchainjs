@@ -7,8 +7,8 @@ import { pull } from "langchain/hub";
 import type { ChatPromptTemplate } from "@langchain/core/prompts";
 import { createRetrieverTool } from "langchain/tools/retriever";
 import { AgentExecutor, createOpenAIFunctionsAgent } from "langchain/agents";
-import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
-import { CheerioWebBaseLoader } from "langchain/document_loaders/web/cheerio";
+import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
+import { CheerioWebBaseLoader } from "@langchain/community/document_loaders/web/cheerio";
 import { MemoryVectorStore } from "langchain/vectorstores/memory";
 import { ChatMessageHistory } from "@langchain/community/stores/message/in_memory";
 

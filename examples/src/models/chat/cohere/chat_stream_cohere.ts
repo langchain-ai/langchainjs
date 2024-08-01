@@ -4,7 +4,6 @@ import { StringOutputParser } from "@langchain/core/output_parsers";
 
 const model = new ChatCohere({
   apiKey: process.env.COHERE_API_KEY, // Default
-  model: "command", // Default
 });
 const prompt = ChatPromptTemplate.fromMessages([
   ["ai", "You are a helpful assistant"],
@@ -23,15 +22,16 @@ for await (const item of response) {
 }
 console.log("stream tokens:", streamTokens);
 console.log("stream iters:", streamIters);
-/**
-stream item:
-stream item: Hello! I'm here to help answer any questions you
-stream item:  might have or assist you with any task you'd like to
-stream item:  accomplish. I can provide information
-stream item:  on a wide range of topics
-stream item: , from math and science to history and literature. I can
-stream item:  also help you manage your schedule, set reminders, and
-stream item:  much more. Is there something specific you need help with? Let
-stream item:  me know!
-stream item:
- */
+
+/*
+  stream item:
+  stream item: Hello! I'm here to help answer any questions you
+  stream item:  might have or assist you with any task you'd like to
+  stream item:  accomplish. I can provide information
+  stream item:  on a wide range of topics
+  stream item: , from math and science to history and literature. I can
+  stream item:  also help you manage your schedule, set reminders, and
+  stream item:  much more. Is there something specific you need help with? Let
+  stream item:  me know!
+  stream item:
+*/

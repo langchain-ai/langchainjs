@@ -1,9 +1,17 @@
-import { defaultProvider } from "@aws-sdk/credential-provider-node";
+import {
+  defaultProvider,
+  DefaultProviderInit,
+} from "@aws-sdk/credential-provider-node";
 
 import type { BaseChatModelParams } from "@langchain/core/language_models/chat_models";
 
-import { BaseBedrockInput } from "../../utils/bedrock.js";
+import { BaseBedrockInput } from "../../utils/bedrock/index.js";
 import { BedrockChat as BaseBedrockChat } from "./web.js";
+
+export interface BedrockChatFields
+  extends Partial<BaseBedrockInput>,
+    BaseChatModelParams,
+    Partial<DefaultProviderInit> {}
 
 /**
  * @example
@@ -21,10 +29,34 @@ export class BedrockChat extends BaseBedrockChat {
     return "BedrockChat";
   }
 
-  constructor(fields?: Partial<BaseBedrockInput> & BaseChatModelParams) {
+  constructor(fields?: BedrockChatFields) {
+    const {
+      profile,
+      filepath,
+      configFilepath,
+      ignoreCache,
+      mfaCodeProvider,
+      roleAssumer,
+      roleArn,
+      webIdentityTokenFile,
+      roleAssumerWithWebIdentity,
+      ...rest
+    } = fields ?? {};
     super({
-      ...fields,
-      credentials: fields?.credentials ?? defaultProvider(),
+      ...rest,
+      credentials:
+        rest?.credentials ??
+        defaultProvider({
+          profile,
+          filepath,
+          configFilepath,
+          ignoreCache,
+          mfaCodeProvider,
+          roleAssumer,
+          roleArn,
+          webIdentityTokenFile,
+          roleAssumerWithWebIdentity,
+        }),
     });
   }
 }

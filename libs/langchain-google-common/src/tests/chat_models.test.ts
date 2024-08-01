@@ -10,11 +10,14 @@ import {
   ToolMessage,
 } from "@langchain/core/messages";
 
+import { z } from "zod";
+import { zodToJsonSchema } from "zod-to-json-schema";
 import { ChatGoogleBase, ChatGoogleBaseInput } from "../chat_models.js";
 import { authOptions, MockClient, MockClientAuthInfo, mockId } from "./mock.js";
 import { GeminiTool, GoogleAIBaseLLMInput } from "../types.js";
 import { GoogleAbstractedClient } from "../auth.js";
 import { GoogleAISafetyError } from "../utils/safety.js";
+import { removeAdditionalProperties } from "../utils/zod_to_gemini_parameters.js";
 
 class ChatGoogle extends ChatGoogleBase<MockClientAuthInfo> {
   constructor(fields?: ChatGoogleBaseInput<MockClientAuthInfo>) {
@@ -137,9 +140,7 @@ describe("Mock ChatGoogle", () => {
       new AIMessage("H"),
       new HumanMessage("Flip it again"),
     ];
-    const result = await model.invoke(messages);
-    console.log("record", JSON.stringify(record, null, 1));
-    console.log("result", JSON.stringify(result, null, 1));
+    await model.invoke(messages);
 
     expect(record.opts).toBeDefined();
     expect(record.opts.data).toBeDefined();
@@ -173,9 +174,7 @@ describe("Mock ChatGoogle", () => {
       new AIMessage("H"),
       new HumanMessage("Flip it again"),
     ];
-    const result = await model.invoke(messages);
-    console.log("record", JSON.stringify(record, null, 1));
-    console.log("result", JSON.stringify(result, null, 1));
+    await model.invoke(messages);
 
     expect(record.opts).toBeDefined();
     expect(record.opts.data).toBeDefined();
@@ -266,9 +265,7 @@ describe("Mock ChatGoogle", () => {
       new AIMessage("H"),
       new HumanMessage("Flip it again"),
     ];
-    const result = await model.invoke(messages);
-    console.log("record", JSON.stringify(record, null, 1));
-    console.log("result", JSON.stringify(result, null, 1));
+    await model.invoke(messages);
 
     expect(record.opts).toBeDefined();
     expect(record.opts.data).toBeDefined();
@@ -309,9 +306,7 @@ describe("Mock ChatGoogle", () => {
       new AIMessage("H"),
       new HumanMessage("Flip it again"),
     ];
-    const result = await model.invoke(messages);
-    console.log("record", JSON.stringify(record, null, 1));
-    console.log("result", JSON.stringify(result, null, 1));
+    await model.invoke(messages);
 
     expect(record.opts).toBeDefined();
     expect(record.opts.data).toBeDefined();
@@ -352,9 +347,7 @@ describe("Mock ChatGoogle", () => {
       new AIMessage("H"),
       new HumanMessage("Flip it again"),
     ];
-    const result = await model.invoke(messages);
-    console.log("record", JSON.stringify(record, null, 1));
-    console.log("result", JSON.stringify(result, null, 1));
+    await model.invoke(messages);
 
     expect(record.opts).toBeDefined();
     expect(record.opts.data).toBeDefined();
@@ -393,9 +386,7 @@ describe("Mock ChatGoogle", () => {
       new AIMessage("H"),
       new HumanMessage("Flip it again"),
     ];
-    const result = await model.invoke(messages);
-    console.log("record", JSON.stringify(record, null, 1));
-    console.log("result", JSON.stringify(result, null, 1));
+    await model.invoke(messages);
 
     expect(record.opts).toBeDefined();
     expect(record.opts.data).toBeDefined();
@@ -438,8 +429,7 @@ describe("Mock ChatGoogle", () => {
 
     let caught = false;
     try {
-      const result = await model.invoke(messages);
-      console.log(result);
+      await model.invoke(messages);
     } catch (xx) {
       caught = true;
     }
@@ -468,8 +458,7 @@ describe("Mock ChatGoogle", () => {
 
     let caught = false;
     try {
-      const result = await model.invoke(messages);
-      console.log(result);
+      await model.invoke(messages);
     } catch (xx) {
       caught = true;
     }
@@ -604,7 +593,7 @@ describe("Mock ChatGoogle", () => {
 
     const result = await model.invoke("What?");
 
-    console.log(JSON.stringify(record, null, 1));
+    // console.log(JSON.stringify(record, null, 1));
 
     expect(result).toBeDefined();
 
@@ -678,7 +667,7 @@ describe("Mock ChatGoogle", () => {
 
     await model.invoke("What?");
 
-    console.log(JSON.stringify(record, null, 1));
+    // console.log(JSON.stringify(record, null, 1));
 
     const toolsResult = record?.opts?.data?.tools;
     expect(toolsResult).toBeDefined();
@@ -757,7 +746,7 @@ describe("Mock ChatGoogle", () => {
 
     const result = await model.invoke("What?");
 
-    console.log(JSON.stringify(result, null, 1));
+    // console.log(JSON.stringify(result, null, 1));
     expect(result).toHaveProperty("content");
     expect(result.content).toBe("");
     const args = result?.lc_kwargs?.additional_kwargs;
@@ -837,6 +826,88 @@ describe("Mock ChatGoogle", () => {
     const result = await model.invoke(messages);
     expect(result).toBeDefined();
 
-    console.log(JSON.stringify(record?.opts?.data, null, 1));
+    // console.log(JSON.stringify(record?.opts?.data, null, 1));
   });
+});
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function extractKeys(obj: Record<string, any>, keys: string[] = []) {
+  for (const key in obj) {
+    if (Object.prototype.hasOwnProperty.call(obj, key)) {
+      keys.push(key);
+      if (typeof obj[key] === "object" && obj[key] !== null) {
+        extractKeys(obj[key], keys);
+      }
+    }
+  }
+  return keys;
+}
+
+test("removeAdditionalProperties can remove all instances of additionalProperties", async () => {
+  const idealResponseSchema = z.object({
+    idealResponse: z
+      .string()
+      .optional()
+      .describe("The ideal response to the question"),
+  });
+  const questionSchema = z.object({
+    question: z.string().describe("Question text"),
+    type: z.enum(["singleChoice", "multiChoice"]).describe("Question type"),
+    options: z.array(z.string()).describe("List of possible answers"),
+    correctAnswer: z
+      .string()
+      .optional()
+      .describe("correct answer from the possible answers"),
+    idealResponses: z
+      .array(idealResponseSchema)
+      .describe("Array of ideal responses to the question"),
+  });
+
+  const schema = z.object({
+    questions: z.array(questionSchema).describe("Array of question objects"),
+  });
+
+  const parsedSchemaArr = removeAdditionalProperties(zodToJsonSchema(schema));
+  const arrSchemaKeys = extractKeys(parsedSchemaArr);
+  expect(
+    arrSchemaKeys.find((key) => key === "additionalProperties")
+  ).toBeUndefined();
+  const parsedSchemaObj = removeAdditionalProperties(
+    zodToJsonSchema(questionSchema)
+  );
+  const arrSchemaObj = extractKeys(parsedSchemaObj);
+  expect(
+    arrSchemaObj.find((key) => key === "additionalProperties")
+  ).toBeUndefined();
+
+  const analysisSchema = z.object({
+    decision: z.enum(["UseAPI", "UseFallback"]),
+    explanation: z.string(),
+    apiDetails: z
+      .object({
+        serviceName: z.string(),
+        endpointName: z.string(),
+        parameters: z.record(z.unknown()),
+        extractionPath: z.string(),
+      })
+      .optional(),
+  });
+  const parsedAnalysisSchema = removeAdditionalProperties(
+    zodToJsonSchema(analysisSchema)
+  );
+  const analysisSchemaObj = extractKeys(parsedAnalysisSchema);
+  expect(
+    analysisSchemaObj.find((key) => key === "additionalProperties")
+  ).toBeUndefined();
+});
+
+test("Can set streaming param", () => {
+  const modelWithStreamingDefault = new ChatGoogle();
+
+  expect(modelWithStreamingDefault.streaming).toBe(false);
+
+  const modelWithStreamingTrue = new ChatGoogle({
+    streaming: true,
+  });
+  expect(modelWithStreamingTrue.streaming).toBe(true);
 });

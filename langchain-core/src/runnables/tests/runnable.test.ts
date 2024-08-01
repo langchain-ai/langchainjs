@@ -4,7 +4,7 @@
 
 import { Run } from "langsmith";
 import { v4 as uuidv4 } from "uuid";
-import { jest } from "@jest/globals";
+import { jest, test, expect, describe } from "@jest/globals";
 import { createChatMessageChunkEncoderStream } from "../../language_models/chat_models.js";
 import { BaseMessage, HumanMessage } from "../../messages/index.js";
 import { OutputParserException } from "../../output_parsers/base.js";
@@ -197,6 +197,84 @@ test("RunnableLambda that returns a runnable should invoke the runnable", async 
   expect(result).toEqual("testing");
 });
 
+test("RunnableLambda that returns an async iterator should consume it", async () => {
+  const runnable = new RunnableLambda({
+    async *func() {
+      yield "test";
+      yield "ing";
+    },
+  });
+  const result = await runnable.invoke({});
+  expect(result).toEqual("testing");
+  const chunks = [];
+  const stream = await runnable.stream({});
+  for await (const chunk of stream) {
+    chunks.push(chunk);
+  }
+  expect(chunks).toEqual(["test", "ing"]);
+});
+
+test("RunnableLambda that returns an async iterable should consume it", async () => {
+  const runnable = new RunnableLambda({
+    func() {
+      return new ReadableStream({
+        async start(controller) {
+          controller.enqueue("test");
+          controller.enqueue("ing");
+          controller.close();
+        },
+      });
+    },
+  });
+  const result = await runnable.invoke({});
+  expect(result).toEqual("testing");
+  const chunks = [];
+  const stream = await runnable.stream({});
+  for await (const chunk of stream) {
+    chunks.push(chunk);
+  }
+  expect(chunks).toEqual(["test", "ing"]);
+});
+
+test("RunnableLambda that returns a promise for async iterable should consume it", async () => {
+  const runnable = new RunnableLambda({
+    async func() {
+      return new ReadableStream({
+        async start(controller) {
+          controller.enqueue("test");
+          controller.enqueue("ing");
+          controller.close();
+        },
+      });
+    },
+  });
+  const result = await runnable.invoke({});
+  expect(result).toEqual("testing");
+  const chunks = [];
+  const stream = await runnable.stream({});
+  for await (const chunk of stream) {
+    chunks.push(chunk);
+  }
+  expect(chunks).toEqual(["test", "ing"]);
+});
+
+test("RunnableLambda that returns an iterator should consume it", async () => {
+  const runnable = new RunnableLambda({
+    *func() {
+      yield "test";
+      yield "ing";
+    },
+  });
+  const result = await runnable.invoke({});
+  expect(result).toEqual("testing");
+  const chunks = [];
+  const stream = await runnable.stream({});
+  for await (const chunk of stream) {
+    chunks.push(chunk);
+  }
+  expect(chunks).toEqual(["test", "ing"]);
+});
+
 test("RunnableLambda that returns a streaming runnable should stream output from the inner runnable", async () => {
   const runnable = new RunnableLambda({
     func: () => new FakeStreamingLLM({}),
@@ -358,20 +436,20 @@ test("Create a runnable sequence with a static method with invalid output and ca
 test("RunnableSequence can pass config to every step in batched request", async () => {
   let numSeen = 0;
 
-  const addOne = (x: number, options?: { config?: RunnableConfig }) => {
-    if (options?.config?.configurable?.isPresent === true) {
+  const addOne = (x: number, options?: RunnableConfig) => {
+    if (options?.configurable?.isPresent === true) {
       numSeen += 1;
     }
     return x + 1;
   };
-  const addTwo = (x: number, options?: { config?: RunnableConfig }) => {
-    if (options?.config?.configurable?.isPresent === true) {
+  const addTwo = (x: number, options?: RunnableConfig) => {
+    if (options?.configurable?.isPresent === true) {
       numSeen += 1;
     }
     return x + 2;
   };
-  const addThree = (x: number, options?: { config?: RunnableConfig }) => {
-    if (options?.config?.configurable?.isPresent === true) {
+  const addThree = (x: number, options?: RunnableConfig) => {
+    if (options?.configurable?.isPresent === true) {
       numSeen += 1;
     }
     return x + 3;

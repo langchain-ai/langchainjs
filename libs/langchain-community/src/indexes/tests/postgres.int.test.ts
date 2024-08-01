@@ -1,5 +1,5 @@
 import { describe, expect, test, jest } from "@jest/globals";
-import { PoolConfig } from "pg";
+import pg, { PoolConfig } from "pg";
 import {
   PostgresRecordManager,
   PostgresRecordManagerOptions,
@@ -36,6 +36,16 @@ describe.skip("PostgresRecordManager", () => {
     await recordManager.end();
   });
 
+  test("Test provided postgres pool instance", async () => {
+    const pool = new pg.Pool(config.postgresConnectionOptions);
+    const providedPoolRecordManager = new PostgresRecordManager("test", {
+      ...config,
+      pool,
+    });
+
+    expect(providedPoolRecordManager.pool).toBe(pool);
+  });
+
   test("Test explicit schema definition", async () => {
     // configure explicit schema with record manager
     config.schema = "newSchema";
@@ -45,11 +55,11 @@ describe.skip("PostgresRecordManager", () => {
     );
 
     // create new schema for test
-    console.log("creating new schema in test");
+    // console.log("creating new schema in test");
     await explicitSchemaRecordManager.pool.query('CREATE SCHEMA "newSchema"');
 
     // create table in new schema
-    console.log("calling createSchema function from test");
+    // console.log("calling createSchema function from test");
     await explicitSchemaRecordManager.createSchema();
 
     // drop created schema

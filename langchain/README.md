@@ -2,24 +2,19 @@
 
 ⚡ Building applications with LLMs through composability ⚡
 
-[![CI](https://github.com/langchain-ai/langchainjs/actions/workflows/ci.yml/badge.svg)](https://github.com/langchain-ai/langchainjs/actions/workflows/ci.yml) ![npm](https://img.shields.io/npm/dm/langchain) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![Twitter](https://img.shields.io/twitter/url/https/twitter.com/langchainai.svg?style=social&label=Follow%20%40LangChainAI)](https://twitter.com/langchainai) [![](https://dcbadge.vercel.app/api/server/6adMQxSpJS?compact=true&style=flat)](https://discord.gg/6adMQxSpJS) [![Open in Dev Containers](https://img.shields.io/static/v1?label=Dev%20Containers&message=Open&color=blue&logo=visualstudiocode)](https://vscode.dev/redirect?url=vscode://ms-vscode-remote.remote-containers/cloneInVolume?url=https://github.com/langchain-ai/langchainjs)
+[![CI](https://github.com/langchain-ai/langchainjs/actions/workflows/ci.yml/badge.svg)](https://github.com/langchain-ai/langchainjs/actions/workflows/ci.yml) ![npm](https://img.shields.io/npm/dm/langchain) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![Twitter](https://img.shields.io/twitter/url/https/twitter.com/langchainai.svg?style=social&label=Follow%20%40LangChainAI)](https://twitter.com/langchainai) [![Open in Dev Containers](https://img.shields.io/static/v1?label=Dev%20Containers&message=Open&color=blue&logo=visualstudiocode)](https://vscode.dev/redirect?url=vscode://ms-vscode-remote.remote-containers/cloneInVolume?url=https://github.com/langchain-ai/langchainjs)
 [<img src="https://github.com/codespaces/badge.svg" title="Open in Github Codespace" width="150" height="20">](https://codespaces.new/langchain-ai/langchainjs)
 
 Looking for the Python version? Check out [LangChain](https://github.com/langchain-ai/langchain).
 
 To help you ship LangChain apps to production faster, check out [LangSmith](https://smith.langchain.com).
 [LangSmith](https://smith.langchain.com) is a unified developer platform for building, testing, and monitoring LLM applications.
-Fill out [this form](https://airtable.com/appwQzlErAS2qiP0L/shrGtGaVBVAz7NcV2) to get off the waitlist or speak with our sales team.
 
 ## ⚡️ Quick Install
 
 You can use npm, yarn, or pnpm to install LangChain.js
 
 `npm install -S langchain` or `yarn add langchain` or `pnpm add langchain`
-
-```typescript
-import { ChatOpenAI } from "langchain/chat_models/openai";
-```
 
 ## 🌐 Supported Environments
 
@@ -39,32 +34,33 @@ LangChain is written in TypeScript and can be used in:
 - **Reason**: rely on a language model to reason (about how to answer based on provided context, what actions to take, etc.)
 
 This framework consists of several parts.
-- **LangChain Libraries**: The Python and JavaScript libraries. Contains interfaces and integrations for a myriad of components, a basic runtime for combining these components into chains and agents, and off-the-shelf implementations of chains and agents.
-- **[LangChain Templates](https://github.com/langchain-ai/langchain/tree/master/templates)**: (currently Python-only) A collection of easily deployable reference architectures for a wide variety of tasks.
-- **[LangServe](https://github.com/langchain-ai/langserve)**: (currently Python-only) A library for deploying LangChain chains as a REST API.
-- **[LangSmith](https://smith.langchain.com)**: A developer platform that lets you debug, test, evaluate, and monitor chains built on any LLM framework and seamlessly integrates with LangChain.
+- **Open-source libraries**: Build your applications using LangChain's open-source [building blocks](https://js.langchain.com/v0.2/docs/concepts#langchain-expression-language), [components](https://js.langchain.com/v0.2/docs/concepts), and [third-party integrations](https://js.langchain.com/v0.2/docs/integrations/platforms/).
+Use [LangGraph.js](https://js.langchain.com/v0.2/docs/concepts/#langgraphjs) to build stateful agents with first-class streaming and human-in-the-loop support.
+- **Productionization**: Use [LangSmith](https://docs.smith.langchain.com/) to inspect, monitor and evaluate your chains, so that you can continuously optimize and deploy with confidence.
+- **Deployment**: Turn your LangGraph applications into production-ready APIs and Assistants with [LangGraph Cloud](https://langchain-ai.github.io/langgraph/cloud/) (currently Python-only).
 
 The LangChain libraries themselves are made up of several different packages.
 - **[`@langchain/core`](https://github.com/langchain-ai/langchainjs/blob/main/langchain-core)**: Base abstractions and LangChain Expression Language.
 - **[`@langchain/community`](https://github.com/langchain-ai/langchainjs/blob/main/libs/langchain-community)**: Third party integrations.
 - **[`langchain`](https://github.com/langchain-ai/langchainjs/blob/main/langchain)**: Chains, agents, and retrieval strategies that make up an application's cognitive architecture.
+- **[LangGraph.js](https://langchain-ai.github.io/langgraphjs/)**: A library for building robust and stateful multi-actor applications with LLMs by modeling steps as edges and nodes in a graph. Integrates smoothly with LangChain, but can be used without it.
 
 Integrations may also be split into their own compatible packages.
 
-![LangChain Stack](https://github.com/langchain-ai/langchainjs/blob/main/docs/core_docs/static/img/langchain_stack_feb_2024.webp)
+![LangChain Stack](https://github.com/langchain-ai/langchainjs/blob/main/docs/core_docs/static/svg/langchain_stack_062024.svg)
 
 This library aims to assist in the development of those types of applications. Common examples of these applications include:
 
 **❓Question Answering over specific documents**
 
-- [Documentation](https://js.langchain.com/docs/use_cases/question_answering/)
+- [Documentation](https://js.langchain.com/v0.2/docs/tutorials/rag)
 - End-to-end Example: [Doc-Chatbot](https://github.com/dissorial/doc-chatbot)
 
 
 **💬 Chatbots**
 
-- [Documentation](https://js.langchain.com/docs/modules/models/chat/)
-- End-to-end Example: [Chat-LangChain](https://github.com/langchain-ai/chat-langchain)
+- [Documentation](https://js.langchain.com/v0.2/docs/how_to/#chatbots)
+- End-to-end Example: [Chat-LangChain](https://github.com/langchain-ai/chat-langchainjs)
 
 ## 🚀 How does LangChain help?
 
@@ -86,15 +82,15 @@ Data Augmented Generation involves specific types of chains that first interact 
 
 **🤖 Agents:**
 
-Agents involve an LLM making decisions about which Actions to take, taking that Action, seeing an Observation, and repeating that until done. LangChain provides a standard interface for agents, a selection of agents to choose from, and examples of end-to-end agents.
+Agents allow an LLM autonomy over how a task is accomplished. Agents make decisions about which Actions to take, then take that Action, observe the result, and repeat until the task is complete. LangChain provides a [standard interface for agents](https://js.langchain.com/v0.2/docs/concepts/#agents), along with [LangGraph.js](https://github.com/langchain-ai/langgraphjs/) for building custom agents.
 
 ## 📖 Documentation
 
 Please see [here](https://js.langchain.com) for full documentation, which includes:
 
-- [Getting started](https://js.langchain.com/docs/get_started/introduction): installation, setting up the environment, simple examples
-- Overview of the [interfaces](https://js.langchain.com/docs/expression_language/), [modules](https://js.langchain.com/docs/modules/) and [integrations](https://js.langchain.com/docs/integrations/platforms)
-- [Use case](https://js.langchain.com/docs/use_cases/) walkthroughs and best practice [guides](https://js.langchain.com/docs/guides/)
+- [Getting started](https://js.langchain.com/v0.2/docs/introduction): installation, setting up the environment, simple examples
+- Overview of the [interfaces](https://js.langchain.com/v0.2/docs/how_to/lcel_cheatsheet/), [modules](https://js.langchain.com/v0.2/docs/concepts) and [integrations](https://js.langchain.com/v0.2/docs/integrations/platforms/)
+- [Tutorial](https://js.langchain.com/v0.2/docs/tutorials/) walkthroughs
 - [Reference](https://api.js.langchain.com): full API docs
 
 ## 💁 Contributing
@@ -108,4 +104,3 @@ Please report any security issues or concerns following our [security guidelines
 ## 🖇️ Relationship with Python LangChain
 
 This is built to integrate as seamlessly as possible with the [LangChain Python package](https://github.com/langchain-ai/langchain). Specifically, this means all objects (prompts, LLMs, chains, etc) are designed in a way where they can be serialized and shared between languages.
-

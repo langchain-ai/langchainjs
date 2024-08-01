@@ -1,10 +1,6 @@
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { z } from "zod";
-import {
-  type BaseMessage,
-  type AgentFinish,
-  type AgentStep,
-} from "langchain/schema";
+import type { BaseMessage } from "@langchain/core/messages";
 import { ChatOpenAI } from "@langchain/openai";
 import { convertToOpenAIFunction } from "@langchain/core/utils/function_calling";
 import { AgentExecutor } from "langchain/agents";
@@ -18,6 +14,7 @@ import {
   MessagesPlaceholder,
 } from "@langchain/core/prompts";
 import { DynamicTool } from "@langchain/core/tools";
+import { AgentFinish, AgentStep } from "@langchain/core/agents";
 
 const llm = new ChatOpenAI({
   model: "gpt-4-1106-preview",

@@ -4,7 +4,7 @@ const remoteChain = new RemoteRunnable({
   url: "https://your_hostname.com/path",
 });
 
-const logStream = await remoteChain.streamEvents(
+const logStream = remoteChain.streamEvents(
   {
     question: "What is a document loader?",
     chat_history: [],
@@ -12,7 +12,7 @@ const logStream = await remoteChain.streamEvents(
   // LangChain runnable config properties
   {
     // Version is required for streamEvents since it's a beta API
-    version: "v1",
+    version: "v2",
     // Optional, chain specific config
     configurable: {
       llm: "openai_gpt_3_5_turbo",

@@ -1,0 +1,41 @@
+---
+sidebar_label: Tencent Hunyuan
+---
+
+import CodeBlock from "@theme/CodeBlock";
+
+# ChatTencentHunyuan
+
+LangChain.js supports the Tencent Hunyuan family of models.
+
+https://cloud.tencent.com/document/product/1729/104753
+
+## Setup
+
+1. Sign up for a Tencent Cloud account [here](https://cloud.tencent.com/register).
+2. Create SecretID & SecretKey [here](https://console.cloud.tencent.com/cam/capi).
+3. Set SecretID and SecretKey as environment variables named `TENCENT_SECRET_ID` and `TENCENT_SECRET_KEY`, respectively.
+
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/community
+```
+
+If you are using LangChain.js in a browser environment, you'll also need to install the following dependencies:
+
+```bash npm2yarn
+npm install crypto-js
+```
+
+And then make sure that you import from the `web` as shown below.
+
+## Usage
+
+Here's an example:
+
+import TencentHunyuan from "@examples/models/chat/integration_tencent_hunyuan.ts";
+
+<CodeBlock language="typescript">{TencentHunyuan}</CodeBlock>

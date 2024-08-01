@@ -32,7 +32,12 @@ import {
   ExtractedFStringParams,
 } from "./prompt.js";
 import { ImagePromptTemplate } from "./image.js";
-import { TemplateFormat, parseFString } from "./template.js";
+import {
+  ParsedTemplateNode,
+  TemplateFormat,
+  parseFString,
+  parseMustache,
+} from "./template.js";
 
 /**
  * Abstract class that serves as a base for creating message prompt
@@ -129,50 +134,43 @@ export class MessagesPlaceholder<
     return [this.variableName];
   }
 
-  validateInputOrThrow(
-    input: Array<unknown> | undefined,
-    variableName: Extract<keyof RunInput, string>
-  ): input is BaseMessage[] {
-    if (this.optional && !input) {
-      return false;
-    } else if (!input) {
-      const error = new Error(
-        `Error: Field "${variableName}" in prompt uses a MessagesPlaceholder, which expects an array of BaseMessages as an input value. Received: undefined`
-      );
-      error.name = "InputFormatError";
-      throw error;
-    }
-
-    let isInputBaseMessage = false;
-
-    if (Array.isArray(input)) {
-      isInputBaseMessage = input.every((message) =>
-        isBaseMessage(message as BaseMessage)
-      );
-    } else {
-      isInputBaseMessage = isBaseMessage(input as BaseMessage);
-    }
-
-    if (!isInputBaseMessage) {
-      const readableInput =
-        typeof input === "string" ? input : JSON.stringify(input, null, 2);
-
-      const error = new Error(
-        `Error: Field "${variableName}" in prompt uses a MessagesPlaceholder, which expects an array of BaseMessages as an input value. Received: ${readableInput}`
-      );
-      error.name = "InputFormatError";
-      throw error;
-    }
-
-    return true;
-  }
-
   async formatMessages(
     values: TypedPromptInputValues<RunInput>
   ): Promise<BaseMessage[]> {
-    this.validateInputOrThrow(values[this.variableName], this.variableName);
+    const input = values[this.variableName];
+    if (this.optional && !input) {
+      return [];
+    } else if (!input) {
+      const error = new Error(
+        `Field "${this.variableName}" in prompt uses a MessagesPlaceholder, which expects an array of BaseMessages as an input value. Received: undefined`
+      );
+      error.name = "InputFormatError";
+      throw error;
+    }
 
-    return values[this.variableName] ?? [];
+    let formattedMessages;
+    try {
+      if (Array.isArray(input)) {
+        formattedMessages = input.map(coerceMessageLikeToMessage);
+      } else {
+        formattedMessages = [coerceMessageLikeToMessage(input)];
+      }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (e: any) {
+      const readableInput =
+        typeof input === "string" ? input : JSON.stringify(input, null, 2);
+      const error = new Error(
+        [
+          `Field "${this.variableName}" in prompt uses a MessagesPlaceholder, which expects an array of BaseMessages or coerceable values as input.`,
+          `Received value: ${readableInput}`,
+          `Additional message: ${e.message}`,
+        ].join("\n\n")
+      );
+      error.name = "InputFormatError";
+      throw error;
+    }
+
+    return formattedMessages;
   }
 }
 
@@ -495,13 +493,19 @@ class _StringImageMessagePromptTemplate<
         } else if (typeof item.text === "string") {
           text = item.text ?? "";
         }
-        prompt.push(PromptTemplate.fromTemplate(text));
+        prompt.push(PromptTemplate.fromTemplate(text, additionalOptions));
       } else if (typeof item === "object" && "image_url" in item) {
         let imgTemplate = item.image_url ?? "";
         let imgTemplateObject: ImagePromptTemplate<InputValues>;
         let inputVariables: string[] = [];
         if (typeof imgTemplate === "string") {
-          const parsedTemplate = parseFString(imgTemplate);
+          let parsedTemplate: ParsedTemplateNode[];
+          if (additionalOptions?.templateFormat === "mustache") {
+            parsedTemplate = parseMustache(imgTemplate);
+          } else {
+            parsedTemplate = parseFString(imgTemplate);
+          }
+
           const variables = parsedTemplate.flatMap((item) =>
             item.type === "variable" ? [item.name] : []
           );
@@ -521,10 +525,17 @@ class _StringImageMessagePromptTemplate<
           imgTemplateObject = new ImagePromptTemplate<InputValues>({
             template: imgTemplate,
             inputVariables,
+            templateFormat: additionalOptions?.templateFormat,
           });
         } else if (typeof imgTemplate === "object") {
           if ("url" in imgTemplate) {
-            const parsedTemplate = parseFString(imgTemplate.url);
+            let parsedTemplate: ParsedTemplateNode[];
+            if (additionalOptions?.templateFormat === "mustache") {
+              parsedTemplate = parseMustache(imgTemplate.url);
+            } else {
+              parsedTemplate = parseFString(imgTemplate.url);
+            }
+
             inputVariables = parsedTemplate.flatMap((item) =>
               item.type === "variable" ? [item.name] : []
             );
@@ -534,6 +545,7 @@ class _StringImageMessagePromptTemplate<
           imgTemplateObject = new ImagePromptTemplate<InputValues>({
             template: imgTemplate,
             inputVariables,
+            templateFormat: additionalOptions?.templateFormat,
           });
         } else {
           throw new Error("Invalid image template");
@@ -913,7 +925,12 @@ export class ChatPromptTemplate<
           imageUrl = item.image_url.url;
         }
 
-        const promptTemplatePlaceholder = PromptTemplate.fromTemplate(imageUrl);
+        const promptTemplatePlaceholder = PromptTemplate.fromTemplate(
+          imageUrl,
+          {
+            templateFormat: this.templateFormat,
+          }
+        );
         const formattedUrl = await promptTemplatePlaceholder.format(
           inputValues
         );

@@ -1,12 +1,12 @@
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { CohereRerank } from "@langchain/cohere";
 import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
-import { InMemoryStore } from "langchain/storage/in_memory";
+import { InMemoryStore } from "@langchain/core/stores";
 import {
   ParentDocumentRetriever,
   type SubDocs,
 } from "langchain/retrievers/parent_document";
-import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
+import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 
 // init Cohere Rerank. Remember to add COHERE_API_KEY to your .env
 const reranker = new CohereRerank({
@@ -69,9 +69,7 @@ await retriever.addDocuments(docs);
 
 // This will search for documents in vector store and return for LLM already reranked and sorted document
 // with appropriate minimum relevance score
-const retrievedDocs = await retriever.getRelevantDocuments(
-  "What is Pam's favorite color?"
-);
+const retrievedDocs = await retriever.invoke("What is Pam's favorite color?");
 
 // Pam's favorite color is returned first!
 console.log(JSON.stringify(retrievedDocs, null, 2));

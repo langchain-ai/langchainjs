@@ -1,7 +1,7 @@
 import type { z } from "zod";
-import type { RunnableConfig } from "./config.js";
 import type { IterableReadableStreamInterface } from "../utils/stream.js";
 import type { SerializableInterface } from "../load/serializable.js";
+import type { BaseCallbackConfig } from "../callbacks/manager.js";
 
 export type RunnableBatchOptions = {
   /** @deprecated Pass in via the standard runnable config object instead */
@@ -60,4 +60,33 @@ export interface RunnableInterface<
   ): AsyncGenerator<RunOutput>;
 
   getName(suffix?: string): string;
+}
+
+export interface Edge {
+  source: string;
+  target: string;
+  data?: string;
+  conditional?: boolean;
+}
+
+export interface Node {
+  id: string;
+  data: RunnableIOSchema | RunnableInterface;
+}
+
+export interface RunnableConfig extends BaseCallbackConfig {
+  /**
+   * Runtime values for attributes previously made configurable on this Runnable,
+   * or sub-Runnables.
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  configurable?: Record<string, any>;
+
+  /**
+   * Maximum number of times a call can recurse. If not provided, defaults to 25.
+   */
+  recursionLimit?: number;
+
+  /** Maximum number of parallel calls to make. */
+  maxConcurrency?: number;
 }

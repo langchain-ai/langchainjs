@@ -1,18 +1,106 @@
 import { StructuredToolInterface } from "@langchain/core/tools";
+import {
+  isOpenAITool,
+  ToolDefinition,
+} from "@langchain/core/language_models/base";
+import { RunnableToolLike } from "@langchain/core/runnables";
+import { isStructuredTool } from "@langchain/core/utils/function_calling";
+import { isModelGemini, validateGeminiParams } from "./gemini.js";
 import type {
+  GeminiFunctionDeclaration,
+  GeminiFunctionSchema,
   GeminiTool,
   GoogleAIBaseLanguageModelCallOptions,
   GoogleAIModelParams,
   GoogleAIModelRequestParams,
   GoogleLLMModelFamily,
 } from "../types.js";
-import { isModelGemini, validateGeminiParams } from "./gemini.js";
+import {
+  jsonSchemaToGeminiParameters,
+  zodToGeminiParameters,
+} from "./zod_to_gemini_parameters.js";
 
 export function copyAIModelParams(
   params: GoogleAIModelParams | undefined,
   options: GoogleAIBaseLanguageModelCallOptions | undefined
 ): GoogleAIModelRequestParams {
   return copyAIModelParamsInto(params, options, {});
+}
+
+function processToolChoice(
+  toolChoice: GoogleAIBaseLanguageModelCallOptions["tool_choice"],
+  allowedFunctionNames: GoogleAIBaseLanguageModelCallOptions["allowed_function_names"]
+):
+  | {
+      tool_choice: "any" | "auto" | "none";
+      allowed_function_names?: string[];
+    }
+  | undefined {
+  if (!toolChoice) {
+    if (allowedFunctionNames) {
+      // Allowed func names is passed, return 'any' so it forces the model to use a tool.
+      return {
+        tool_choice: "any",
+        allowed_function_names: allowedFunctionNames,
+      };
+    }
+    return undefined;
+  }
+
+  if (toolChoice === "any" || toolChoice === "auto" || toolChoice === "none") {
+    return {
+      tool_choice: toolChoice,
+      allowed_function_names: allowedFunctionNames,
+    };
+  }
+  if (typeof toolChoice === "string") {
+    // String representing the function name.
+    // Return any to force the model to predict the specified function call.
+    return {
+      tool_choice: "any",
+      allowed_function_names: [...(allowedFunctionNames ?? []), toolChoice],
+    };
+  }
+  throw new Error("Object inputs for tool_choice not supported.");
+}
+
+export function convertToGeminiTools(
+  structuredTools: (
+    | StructuredToolInterface
+    | Record<string, unknown>
+    | ToolDefinition
+    | RunnableToolLike
+  )[]
+): GeminiTool[] {
+  const tools: GeminiTool[] = [
+    {
+      functionDeclarations: [],
+    },
+  ];
+  structuredTools.forEach((tool) => {
+    if (
+      "functionDeclarations" in tool &&
+      Array.isArray(tool.functionDeclarations)
+    ) {
+      const funcs: GeminiFunctionDeclaration[] = tool.functionDeclarations;
+      tools[0].functionDeclarations?.push(...funcs);
+    } else if (isStructuredTool(tool)) {
+      const jsonSchema = zodToGeminiParameters(tool.schema);
+      tools[0].functionDeclarations?.push({
+        name: tool.name,
+        description: tool.description,
+        parameters: jsonSchema as GeminiFunctionSchema,
+      });
+    } else if (isOpenAITool(tool)) {
+      tools[0].functionDeclarations?.push({
+        name: tool.function.name,
+        description:
+          tool.function.description ?? `A function available to call.`,
+        parameters: jsonSchemaToGeminiParameters(tool.function.parameters),
+      });
+    }
+  });
+  return tools;
 }
 
 export function copyAIModelParamsInto(
@@ -45,66 +133,21 @@ export function copyAIModelParamsInto(
     options?.responseMimeType ??
     params?.responseMimeType ??
     target?.responseMimeType;
-
-  ret.tools = options?.tools;
-  // Ensure tools are formatted properly for Gemini
-  const geminiTools = options?.tools
-    ?.map((tool) => {
-      if (
-        "function" in tool &&
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        "parameters" in (tool.function as Record<string, any>)
-      ) {
-        // Tool is in OpenAI format. Convert to Gemini then return.
-
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const castTool = tool.function as Record<string, any>;
-        const cleanedParameters = castTool.parameters;
-        if ("$schema" in cleanedParameters) {
-          delete cleanedParameters.$schema;
-        }
-        if ("additionalProperties" in cleanedParameters) {
-          delete cleanedParameters.additionalProperties;
-        }
-        const toolInGeminiFormat: GeminiTool = {
-          functionDeclarations: [
-            {
-              name: castTool.name,
-              description: castTool.description,
-              parameters: cleanedParameters,
-            },
-          ],
-        };
-        return toolInGeminiFormat;
-      } else if ("functionDeclarations" in tool) {
-        return tool;
-      } else {
-        return null;
-      }
-    })
-    .filter((tool): tool is GeminiTool => tool !== null);
-
-  const structuredOutputTools = options?.tools
-    ?.map((tool) => {
-      if ("lc_namespace" in tool) {
-        return tool;
-      } else {
-        return null;
-      }
-    })
-    .filter((tool): tool is StructuredToolInterface => tool !== null);
-
-  if (
-    structuredOutputTools &&
-    structuredOutputTools.length > 0 &&
-    geminiTools &&
-    geminiTools.length > 0
-  ) {
-    throw new Error(
-      `Cannot mix structured tools with Gemini tools.\nReceived ${structuredOutputTools.length} structured tools and ${geminiTools.length} Gemini tools.`
-    );
+  ret.streaming = options?.streaming ?? params?.streaming ?? target?.streaming;
+  const toolChoice = processToolChoice(
+    options?.tool_choice,
+    options?.allowed_function_names
+  );
+  if (toolChoice) {
+    ret.tool_choice = toolChoice.tool_choice;
+    ret.allowed_function_names = toolChoice.allowed_function_names;
   }
-  ret.tools = geminiTools ?? structuredOutputTools;
+
+  const tools = options?.tools;
+  if (tools) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ret.tools = convertToGeminiTools(tools as Record<string, any>[]);
+  }
 
   return ret;
 }

@@ -2,6 +2,7 @@ export interface OpenAIEndpointConfig {
   azureOpenAIApiDeploymentName?: string;
   azureOpenAIApiInstanceName?: string;
   azureOpenAIApiKey?: string;
+  azureADTokenProvider?: () => Promise<string>;
   azureOpenAIBasePath?: string;
   baseURL?: string | null;
 }
@@ -35,17 +36,18 @@ export function getEndpoint(config: OpenAIEndpointConfig) {
     azureOpenAIApiKey,
     azureOpenAIBasePath,
     baseURL,
+    azureADTokenProvider,
   } = config;
 
   if (
-    azureOpenAIApiKey &&
+    (azureOpenAIApiKey || azureADTokenProvider) &&
     azureOpenAIBasePath &&
     azureOpenAIApiDeploymentName
   ) {
     return `${azureOpenAIBasePath}/${azureOpenAIApiDeploymentName}`;
   }
 
-  if (azureOpenAIApiKey) {
+  if (azureOpenAIApiKey || azureADTokenProvider) {
     if (!azureOpenAIApiInstanceName) {
       throw new Error(
         "azureOpenAIApiInstanceName is required when using azureOpenAIApiKey"

@@ -15,7 +15,6 @@ export {
   type VectorStoreInfo,
   VectorStoreRouterToolkit,
   VectorStoreToolkit,
-  ZapierToolKit,
   createJsonAgent,
   createOpenApiAgent,
   createVectorStoreAgent,

@@ -2,7 +2,7 @@ import { test, expect } from "@jest/globals";
 import { AIMessage } from "../../messages/ai.js";
 import { HumanMessage } from "../../messages/human.js";
 import { SystemMessage } from "../../messages/system.js";
-import { ChatPromptTemplate } from "../chat.js";
+import { ChatPromptTemplate, HumanMessagePromptTemplate } from "../chat.js";
 
 test("Test creating a chat prompt template from role string messages", async () => {
   const template = ChatPromptTemplate.fromMessages(
@@ -66,4 +66,86 @@ test("Ignores f-string inputs input variables with repeats.", async () => {
   expect(formattedPrompt.toChatMessages()).toEqual([
     new HumanMessage("This {bar} is a {foo} test {foo}."),
   ]);
+});
+
+test("Mustache template with image and chat prompts inside one template (fromMessages)", async () => {
+  const template = ChatPromptTemplate.fromMessages(
+    [
+      [
+        "human",
+        [
+          {
+            type: "image_url",
+            image_url: "{{image_url}}",
+          },
+          {
+            type: "text",
+            text: "{{other_var}}",
+          },
+        ],
+      ],
+      ["human", "hello {{name}}"],
+    ],
+    {
+      templateFormat: "mustache",
+    }
+  );
+
+  const messages = await template.formatMessages({
+    name: "Bob",
+    image_url: "https://foo.com/bar.png",
+    other_var: "bar",
+  });
+
+  expect(messages).toEqual([
+    new HumanMessage({
+      content: [
+        { type: "image_url", image_url: { url: "https://foo.com/bar.png" } },
+        { type: "text", text: "bar" },
+      ],
+    }),
+    new HumanMessage({
+      content: "hello Bob",
+    }),
+  ]);
+
+  expect(template.inputVariables.sort()).toEqual([
+    "image_url",
+    "name",
+    "other_var",
+  ]);
+});
+
+test("Mustache image template with nested URL and chat prompts HumanMessagePromptTemplate.fromTemplate", async () => {
+  const template = HumanMessagePromptTemplate.fromTemplate(
+    [
+      {
+        text: "{{name}}",
+      },
+      {
+        image_url: {
+          url: "{{image_url}}",
+        },
+      },
+    ],
+    {
+      templateFormat: "mustache",
+    }
+  );
+
+  const messages = await template.formatMessages({
+    name: "Bob",
+    image_url: "https://foo.com/bar.png",
+  });
+
+  expect(messages).toEqual([
+    new HumanMessage({
+      content: [
+        { type: "text", text: "Bob" },
+        { type: "image_url", image_url: { url: "https://foo.com/bar.png" } },
+      ],
+    }),
+  ]);
+
+  expect(template.inputVariables.sort()).toEqual(["image_url", "name"]);
 });

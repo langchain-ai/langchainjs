@@ -1,25 +1,23 @@
 async function test() {
   const { default: assert } = await import("assert");
-  const { OpenAI } = await import("langchain/llms/openai");
+  const { OpenAI } = await import("@langchain/openai");
   const { LLMChain } = await import("langchain/chains");
-  const { ChatPromptTemplate } = await import("langchain/prompts");
-  const { loadPrompt } = await import("langchain/prompts/load");
-  const { HNSWLib } = await import("langchain/vectorstores/hnswlib");
-  const { OpenAIEmbeddings } = await import("langchain/embeddings/openai");
-  const { Document } = await import("langchain/document");
-  const { CSVLoader } = await import("langchain/document_loaders/fs/csv");
+  const { ChatPromptTemplate } = await import("@langchain/core/prompts");
+  const { HNSWLib } = await import("@langchain/community/vectorstores/hnswlib");
+  const { HuggingFaceTransformersEmbeddings } = await import("@langchain/community/embeddings/hf_transformers");
+  const { Document } = await import("@langchain/core/documents");
+  const { CSVLoader } = await import("@langchain/community/document_loaders/fs/csv");
 
   // Test exports
   assert(typeof OpenAI === "function");
   assert(typeof LLMChain === "function");
-  assert(typeof loadPrompt === "function");
   assert(typeof ChatPromptTemplate === "function");
   assert(typeof HNSWLib === "function");
 
   // Test dynamic imports of peer dependencies
   const { HierarchicalNSW } = await HNSWLib.imports();
 
-  const vs = new HNSWLib(new OpenAIEmbeddings({ openAIApiKey: "sk-XXXX" }), {
+  const vs = new HNSWLib(new HuggingFaceTransformersEmbeddings({ model: "Xenova/all-MiniLM-L6-v2" }), {
     space: "ip",
     numDimensions: 3,
     index: new HierarchicalNSW("ip", 3),

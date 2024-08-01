@@ -1,7 +1,7 @@
 import * as rockset from "@rockset/client";
 import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
 import { RocksetStore } from "@langchain/community/vectorstores/rockset";
-import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
+import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 import { readFileSync } from "fs";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { createStuffDocumentsChain } from "langchain/chains/combine_documents";

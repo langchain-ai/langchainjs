@@ -48,8 +48,10 @@ Here is a question:
     input: "Who was the first president of the United States?",
   });
 
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const [{ text: result1 }, { text: result2 }, { text: result3 }] =
     await Promise.all([testPromise1, testPromise2, testPromise3]);
 
-  console.log(result1, result2, result3);
+  // console.log(result1, result2, result3);
 });

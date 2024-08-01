@@ -29,20 +29,15 @@ describe("Google APIKey LLM", () => {
       expect(res).toBe("2");
     } else {
       expect(res.length).toBeGreaterThan(0);
-      console.log("call result:", res);
+      // console.log("call result:", res);
     }
   });
 
   test("call", async () => {
     const model = new VertexAI();
-    try {
-      const res = await model.invoke("If the time is 1:00, what time is it?");
-      expect(res.length).toBeGreaterThan(0);
-      expect(res.substring(0, 4)).toEqual("1:00");
-    } catch (xx) {
-      console.error(xx);
-      throw xx;
-    }
+    const res = await model.invoke("If the time is 1:00, what time is it?");
+    expect(res.length).toBeGreaterThan(0);
+    expect(res.substring(0, 4)).toEqual("1:00");
   });
 
   test("stream", async () => {
@@ -79,7 +74,7 @@ describe("Google APIKey LLM", () => {
     expect(res).toBeInstanceOf(AIMessage);
     expect(Array.isArray(res.content)).toEqual(true);
     expect(res.content[0]).toHaveProperty("text");
-    console.log("res", res);
+    // console.log("res", res);
   });
 
   test("invoke image", async () => {
@@ -104,87 +99,7 @@ describe("Google APIKey LLM", () => {
     const res = await model.invoke(input);
     expect(res).toBeDefined();
     expect(res.length).toBeGreaterThan(0);
-    console.log("res", res);
-  });
-});
-
-describe("Google WebAuth LLM", () => {
-  test("platform", async () => {
-    const model = new VertexAI();
-    expect(model.platform).toEqual("gcp");
-  });
-
-  test("call", async () => {
-    const model = new VertexAI();
-    const res = await model.invoke("1 + 1 = ");
-    if (res.length === 1) {
-      expect(res).toBe("2");
-    } else {
-      expect(res.length).toBeGreaterThan(0);
-      console.log("call result:", res);
-    }
-  });
-
-  test("stream", async () => {
-    const model = new VertexAI();
-    const stream = await model.stream(
-      "What is the answer to live, the universe, and everything? Be verbose."
-    );
-    const chunks = [];
-    for await (const chunk of stream) {
-      chunks.push(chunk);
-    }
-    expect(chunks.length).toBeGreaterThan(1);
-  });
-
-  test("predictMessage image", async () => {
-    const model = new VertexAI({
-      modelName: "gemini-pro-vision",
-    });
-    const message: MessageContentComplex[] = [
-      {
-        type: "text",
-        text: "What is in this image?",
-      },
-      {
-        type: "image_url",
-        image_url: `data:image/png;base64,${imgData.blueSquare}`,
-      },
-    ];
-
-    const messages: BaseMessage[] = [
-      new HumanMessageChunk({ content: message }),
-    ];
-    const res = await model.predictMessages(messages);
-    expect(res).toBeInstanceOf(AIMessage);
-    expect(Array.isArray(res.content)).toEqual(true);
-    expect(res.content[0]).toHaveProperty("text");
-    console.log("res", res);
-  });
-
-  test("invoke image", async () => {
-    const model = new VertexAI({
-      modelName: "gemini-pro-vision",
-    });
-    const message: MessageContentComplex[] = [
-      {
-        type: "text",
-        text: "What is in this image?",
-      },
-      {
-        type: "image_url",
-        image_url: `data:image/png;base64,${imgData.blueSquare}`,
-      },
-    ];
-
-    const messages: BaseMessage[] = [
-      new HumanMessageChunk({ content: message }),
-    ];
-    const input = new ChatPromptValue(messages);
-    const res = await model.invoke(input);
-    expect(res).toBeDefined();
-    expect(res.length).toBeGreaterThan(0);
-    console.log("res", res);
+    // console.log("res", res);
   });
 });
 
@@ -208,7 +123,7 @@ describe("Google WebAuth gai LLM", () => {
       expect(res).toBe("2");
     } else {
       expect(res.length).toBeGreaterThan(0);
-      console.log("call result:", res);
+      // console.log("call result:", res);
     }
   });
 
@@ -216,14 +131,9 @@ describe("Google WebAuth gai LLM", () => {
     const model = new VertexAI({
       platformType: "gai",
     });
-    try {
-      const res = await model.invoke("If the time is 1:00, what time is it?");
-      expect(res.length).toBeGreaterThan(0);
-      expect(res.substring(0, 4)).toEqual("1:00");
-    } catch (xx) {
-      console.error(xx);
-      throw xx;
-    }
+    const res = await model.invoke("If the time is 1:00, what time is it?");
+    expect(res.length).toBeGreaterThan(0);
+    expect(res.substring(0, 4)).toEqual("1:00");
   });
 
   test("stream", async () => {
@@ -263,7 +173,7 @@ describe("Google WebAuth gai LLM", () => {
     expect(res).toBeInstanceOf(AIMessage);
     expect(Array.isArray(res.content)).toEqual(true);
     expect(res.content[0]).toHaveProperty("text");
-    console.log("res", res);
+    // console.log("res", res);
   });
 
   test("invoke image", async () => {
@@ -289,6 +199,6 @@ describe("Google WebAuth gai LLM", () => {
     const res = await model.invoke(input);
     expect(res).toBeDefined();
     expect(res.length).toBeGreaterThan(0);
-    console.log("res", res);
+    // console.log("res", res);
   });
 });

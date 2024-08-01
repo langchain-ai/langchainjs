@@ -147,6 +147,8 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
 
   azureOpenAIApiKey?: string;
 
+  azureADTokenProvider?: () => Promise<string>;
+
   azureOpenAIApiInstanceName?: string;
 
   azureOpenAIApiDeploymentName?: string;
@@ -155,9 +157,9 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
 
   organization?: string;
 
-  private client: OpenAIClient;
+  protected client: OpenAIClient;
 
-  private clientConfig: ClientOptions;
+  protected clientConfig: ClientOptions;
 
   constructor(
     fields?: Partial<OpenAIInput> &
@@ -173,6 +175,17 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
       (model?.startsWith("gpt-3.5-turbo") || model?.startsWith("gpt-4")) &&
       !model?.includes("-instruct")
     ) {
+      console.warn(
+        [
+          `Your chosen OpenAI model, "${model}", is a chat model and not a text-in/text-out LLM.`,
+          `Passing it into the "OpenAI" class is deprecated and only permitted for backwards-compatibility. You may experience odd behavior.`,
+          `Please use the "ChatOpenAI" class instead.`,
+          "",
+          `See this page for more information:`,
+          "|",
+          `└> https://js.langchain.com/v0.2/docs/integrations/chat/openai`,
+        ].join("\n")
+      );
       // eslint-disable-next-line no-constructor-return
       return new OpenAIChat(
         fields,
@@ -192,8 +205,12 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
       fields?.azureOpenAIApiKey ??
       getEnvironmentVariable("AZURE_OPENAI_API_KEY");
 
-    if (!this.azureOpenAIApiKey && !this.apiKey) {
-      throw new Error("OpenAI or Azure OpenAI API key not found");
+    this.azureADTokenProvider = fields?.azureADTokenProvider ?? undefined;
+
+    if (!this.azureOpenAIApiKey && !this.apiKey && !this.azureADTokenProvider) {
+      throw new Error(
+        "OpenAI or Azure OpenAI API key or Token Provider not found"
+      );
     }
 
     this.azureOpenAIApiInstanceName =
@@ -242,7 +259,7 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
       throw new Error("Cannot stream results when bestOf > 1");
     }
 
-    if (this.azureOpenAIApiKey) {
+    if (this.azureOpenAIApiKey || this.azureADTokenProvider) {
       if (!this.azureOpenAIApiInstanceName && !this.azureOpenAIBasePath) {
         throw new Error("Azure OpenAI API instance name not found");
       }
@@ -530,7 +547,7 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
    * @param options Optional configuration for the API call.
    * @returns The response from the OpenAI API.
    */
-  private _getClientOptions(options: OpenAICoreRequestOptions | undefined) {
+  protected _getClientOptions(options: OpenAICoreRequestOptions | undefined) {
     if (!this.client) {
       const openAIEndpointConfig: OpenAIEndpointConfig = {
         azureOpenAIApiDeploymentName: this.azureOpenAIApiDeploymentName,

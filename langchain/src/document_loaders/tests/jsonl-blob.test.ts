@@ -40,6 +40,7 @@ test("Test JSONL loader from blob", async () => {
   expect(docs.length).toBe(2);
   expect(docs[0]).toMatchInlineSnapshot(`
     Document {
+      "id": undefined,
       "metadata": {
         "blobType": "application/jsonl+json",
         "line": 1,
@@ -50,6 +51,7 @@ test("Test JSONL loader from blob", async () => {
   `);
   expect(docs[1]).toMatchInlineSnapshot(`
     Document {
+      "id": undefined,
       "metadata": {
         "blobType": "application/jsonl+json",
         "line": 2,

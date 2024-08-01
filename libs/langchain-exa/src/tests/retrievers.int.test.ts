@@ -12,7 +12,7 @@ test("ExaRetriever can retrieve some data", async () => {
     "What does the AI company LangChain do?"
   );
 
-  console.log("results:", JSON.stringify(results, null, 2));
+  // console.log("results:", JSON.stringify(results, null, 2));
   expect(results.length).toBeGreaterThan(0);
   // verify metadata fields are populated
   expect(results[0].metadata.url.length).toBeGreaterThan(1);

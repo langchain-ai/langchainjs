@@ -11,6 +11,10 @@ import { LangChainTracer } from "@langchain/core/tracers/tracer_langchain";
 import { BaseTracer } from "@langchain/core/tracers/base";
 import { ChainValues } from "@langchain/core/utils/types";
 import { AsyncCaller } from "@langchain/core/utils/async_caller";
+import type {
+  CallbackManager,
+  CallbackManagerForChainRun,
+} from "@langchain/core/callbacks/manager";
 import {
   Client,
   Example,
@@ -21,7 +25,7 @@ import {
 } from "langsmith";
 import { EvaluationResult, RunEvaluator } from "langsmith/evaluation";
 import { DataType } from "langsmith/schemas";
-import type { TraceableFunction } from "langsmith/traceable";
+import type { TraceableFunction } from "langsmith/singletons/traceable";
 import { LLMStringEvaluator } from "../evaluation/base.js";
 import { loadEvaluator } from "../evaluation/loader.js";
 import { EvaluatorType } from "../evaluation/types.js";
@@ -36,10 +40,6 @@ import {
 } from "./config.js";
 import { randomName } from "./name_generation.js";
 import { ProgressBar } from "./progress.js";
-import type {
-  CallbackManager,
-  CallbackManagerForChainRun,
-} from "../callbacks/manager.js";
 
 export type ChainOrFactory =
   | Runnable
@@ -165,7 +165,7 @@ class CallbackManagerRunTree extends RunTree {
     this.callbackManager = callbackManager;
   }
 
-  async createChild(config: RunTreeConfig): Promise<CallbackManagerRunTree> {
+  createChild(config: RunTreeConfig): CallbackManagerRunTree {
     const child = new CallbackManagerRunTree(
       {
         ...config,
