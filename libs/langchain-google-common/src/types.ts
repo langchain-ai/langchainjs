@@ -45,6 +45,7 @@ export interface GoogleConnectionParams<AuthOptions>
 export interface GoogleAISafetySetting {
   category: string;
   threshold: string;
+  method: string
 }
 
 export type GoogleAIResponseMimeType = "text/plain" | "application/json";
