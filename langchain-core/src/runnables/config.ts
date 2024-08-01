@@ -41,7 +41,11 @@ export function mergeConfigs<CallOptions extends RunnableConfig>(
         if (copy.signal === undefined) {
           copy.signal = options.signal;
         } else if (options.signal !== undefined) {
-          copy.signal = AbortSignal.any([copy.signal, options.signal]);
+          if ("any" in AbortSignal) {
+            copy.signal = AbortSignal.any([copy.signal, options.signal]);
+          } else {
+            copy.signal = options.signal;
+          }
         }
       } else if (key === "callbacks") {
         const baseCallbacks = copy.callbacks;
@@ -173,7 +177,9 @@ export function ensureConfig<CallOptions extends RunnableConfig>(
     }
     const timeoutSignal = AbortSignal.timeout(empty.timeout);
     if (empty.signal !== undefined) {
-      empty.signal = AbortSignal.any([empty.signal, timeoutSignal]);
+      if ("any" in AbortSignal) {
+        empty.signal = AbortSignal.any([empty.signal, timeoutSignal]);
+      }
     } else {
       empty.signal = timeoutSignal;
     }
