@@ -36,15 +36,8 @@ const INTEGRATIONS_DOCS_PATH = path.resolve(
   "../../docs/core_docs/docs/integrations/document_loaders"
 );
 
-const NODE_ONLY_TOOLTIP = `\`\`\`{=mdx}
-
-:::tip Compatibility
-
-Only available on Node.js.
-
-:::
-
-\`\`\``;
+const NODE_ONLY_TOOLTIP =
+  "```{=mdx}\n\n:::tip Compatibility\n\nOnly available on Node.js.\n\n:::\n\n```\n";
 const NODE_ONLY_SIDEBAR_BADGE = `sidebar_class_name: node-only`;
 
 const fetchAPIRefUrl = async (url: string): Promise<boolean> => {
