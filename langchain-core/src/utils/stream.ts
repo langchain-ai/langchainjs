@@ -1,4 +1,5 @@
 import { AsyncLocalStorageProviderSingleton } from "../singletons/index.js";
+import { raceWithSignal } from "./signal.js";
 
 // Make this a type to override ReadableStream's async iterator type in case
 // the popular web-streams-polyfill is imported - the supplied types
@@ -233,14 +234,7 @@ export class AsyncGeneratorWithSetup<
       this.config,
       this.signal
         ? async () => {
-            return Promise.race([
-              this.generator.next(...args),
-              new Promise<never>((_resolve, reject) => {
-                this.signal?.addEventListener("abort", () => {
-                  reject(new Error("Aborted"));
-                });
-              }),
-            ]);
+            return raceWithSignal(this.generator.next(...args), this.signal);
           }
         : async () => {
             return this.generator.next(...args);

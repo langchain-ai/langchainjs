@@ -43,7 +43,10 @@ export function mergeConfigs<CallOptions extends RunnableConfig>(
         } else if (options.signal !== undefined) {
           if ("any" in AbortSignal) {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            copy.signal = (AbortSignal as any).any([copy.signal, options.signal]);
+            copy.signal = (AbortSignal as any).any([
+              copy.signal,
+              options.signal,
+            ]);
           } else {
             copy.signal = options.signal;
           }

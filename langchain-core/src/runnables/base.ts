@@ -30,6 +30,7 @@ import {
   pipeGeneratorWithSetup,
   AsyncGeneratorWithSetup,
 } from "../utils/stream.js";
+import { raceWithSignal } from "../utils/signal.js";
 import {
   DEFAULT_RECURSION_LIMIT,
   RunnableConfig,
@@ -383,16 +384,7 @@ export abstract class Runnable<
     let output;
     try {
       const promise = func.call(this, input, config, runManager);
-      output = options?.signal
-        ? await Promise.race([
-            promise,
-            new Promise<never>((_, reject) => {
-              options.signal?.addEventListener("abort", () => {
-                reject(new Error("AbortError"));
-              });
-            }),
-          ])
-        : await promise;
+      output = await raceWithSignal(promise, options?.signal);
     } catch (e) {
       await runManager?.handleChainError(e);
       throw e;
@@ -451,16 +443,7 @@ export abstract class Runnable<
         runManagers,
         batchOptions
       );
-      outputs = optionsList?.[0]?.signal
-        ? await Promise.race([
-            promise,
-            new Promise<never>((_, reject) => {
-              optionsList?.[0]?.signal?.addEventListener("abort", () => {
-                reject(new Error("AbortError"));
-              });
-            }),
-          ])
-        : await promise;
+      outputs = await raceWithSignal(promise, optionsList?.[0]?.signal);
     } catch (e) {
       await Promise.all(
         runManagers.map((runManager) => runManager?.handleChainError(e))
@@ -1781,16 +1764,7 @@ export class RunnableSequence<
             callbacks: runManager?.getChild(`seq:step:${i + 1}`),
           })
         );
-        nextStepInput = options?.signal
-          ? await Promise.race([
-              promise,
-              new Promise<never>((_, reject) => {
-                options.signal?.addEventListener("abort", () =>
-                  reject(new Error("Aborted"))
-                );
-              }),
-            ])
-          : await promise;
+        nextStepInput = await raceWithSignal(promise, options?.signal);
       }
       // TypeScript can't detect that the last output of the sequence returns RunOutput, so call it out of the loop here
       if (options?.signal?.aborted) {
@@ -1865,16 +1839,7 @@ export class RunnableSequence<
           }),
           batchOptions
         );
-        nextStepInputs = configList[0]?.signal
-          ? await Promise.race([
-              promise,
-              new Promise<never>((_, reject) => {
-                configList[0]?.signal?.addEventListener("abort", () =>
-                  reject(new Error("Aborted"))
-                );
-              }),
-            ])
-          : await promise;
+        nextStepInputs = await raceWithSignal(promise, configList[0]?.signal);
       }
     } catch (e) {
       await Promise.all(
@@ -2161,16 +2126,10 @@ export class RunnableMap<
     // until all iterators are done
     while (tasks.size) {
       const promise = Promise.race(tasks.values());
-      const { key, result, gen } = options?.signal
-        ? await Promise.race([
-            promise,
-            new Promise<never>((_, reject) => {
-              options.signal?.addEventListener("abort", () =>
-                reject(new Error("Aborted"))
-              );
-            }),
-          ])
-        : await promise;
+      const { key, result, gen } = await raceWithSignal(
+        promise,
+        options?.signal
+      );
       tasks.delete(key);
       if (!result.done) {
         yield { [key]: result.value } as unknown as RunOutput;
@@ -2246,16 +2205,7 @@ export class RunnableTraceable<RunInput, RunOutput> extends Runnable<
       input
     ) as Promise<RunOutput>;
 
-    return config?.signal
-      ? Promise.race([
-          promise,
-          new Promise<never>((_, reject) => {
-            config.signal?.addEventListener("abort", () =>
-              reject(new Error("Aborted"))
-            );
-          }),
-        ])
-      : await promise;
+    return raceWithSignal(promise, config?.signal);
   }
 
   async *_streamIterator(
