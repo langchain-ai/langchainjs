@@ -154,6 +154,42 @@ export class BaseRunManager {
       )
     );
   }
+
+  async handleCustomEvent(
+    eventName: string,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    data: any,
+    _runId?: string,
+    _tags?: string[],
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    _metadata?: Record<string, any>
+  ): Promise<void> {
+    await Promise.all(
+      this.handlers.map((handler) =>
+        consumeCallback(async () => {
+          try {
+            await handler.handleCustomEvent?.(
+              eventName,
+              data,
+              this.runId,
+              this.tags,
+              this.metadata
+            );
+          } catch (err) {
+            const logFunction = handler.raiseError
+              ? console.error
+              : console.warn;
+            logFunction(
+              `Error in handler ${handler.constructor.name}, handleCustomEvent: ${err}`
+            );
+            if (handler.raiseError) {
+              throw err;
+            }
+          }
+        }, handler.awaitHandlers)
+      )
+    );
+  }
 }
 
 /**

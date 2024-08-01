@@ -141,7 +141,7 @@ export function mapStoredMessageToChatMessage(message: StoredMessage) {
       return new ToolMessage(
         storedMessage.data as ToolMessageFieldsWithToolCallId
       );
-    case "chat": {
+    case "generic": {
       if (storedMessage.data.role === undefined) {
         throw new Error("Role must be defined for chat messages");
       }

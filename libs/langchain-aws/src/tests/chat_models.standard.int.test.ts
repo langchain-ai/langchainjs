@@ -17,6 +17,7 @@ class ChatBedrockConverseStandardIntegrationTests extends ChatModelIntegrationTe
       Cls: ChatBedrockConverse,
       chatModelHasToolCalling: true,
       chatModelHasStructuredOutput: true,
+      supportsParallelToolCalls: true,
       constructorArgs: {
         region,
         model: "anthropic.claude-3-sonnet-20240229-v1:0",
@@ -50,6 +51,12 @@ class ChatBedrockConverseStandardIntegrationTests extends ChatModelIntegrationTe
       "ChatBedrockConverse",
       "Not properly implemented."
     );
+  }
+
+  async testParallelToolCalling() {
+    // Pass `true` in the second argument to only verify it can support parallel tool calls in the message history.
+    // This is because the model struggles to actually call parallel tools.
+    await super.testParallelToolCalling(undefined, true);
   }
 }
 
