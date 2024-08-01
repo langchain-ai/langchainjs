@@ -31545,7 +31545,6 @@ __metadata:
     js-yaml: ^4.1.0
     jsdom: ^22.1.0
     jsonpointer: ^5.0.1
-    langchainhub: ~0.0.8
     langsmith: ~0.1.40
     mammoth: ^1.5.1
     ml-distance: ^4.0.0
