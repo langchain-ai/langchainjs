@@ -117,9 +117,7 @@ export abstract class ChatModelIntegrationTests<
    * @param {any | undefined} callOptions Optional call options to pass to the model.
    *  These options will be applied to the model at runtime.
    */
-  async testInvoke(
-    callOptions?: any
-  ) {
+  async testInvoke(callOptions?: any) {
     // Create a new instance of the chat model
     const chatModel = new this.Cls(this.constructorArgs);
 
@@ -152,9 +150,7 @@ export abstract class ChatModelIntegrationTests<
    * @param {any | undefined} callOptions Optional call options to pass to the model.
    *  These options will be applied to the model at runtime.
    */
-  async testStream(
-    callOptions?: any
-  ) {
+  async testStream(callOptions?: any) {
     const chatModel = new this.Cls(this.constructorArgs);
     let numChars = 0;
 
@@ -188,9 +184,7 @@ export abstract class ChatModelIntegrationTests<
    * @param {any | undefined} callOptions Optional call options to pass to the model.
    *  These options will be applied to the model at runtime.
    */
-  async testBatch(
-    callOptions?: any
-  ) {
+  async testBatch(callOptions?: any) {
     const chatModel = new this.Cls(this.constructorArgs);
 
     // Process two simple prompts in batch
@@ -234,9 +228,7 @@ export abstract class ChatModelIntegrationTests<
    * @param {any | undefined} callOptions Optional call options to pass to the model.
    *  These options will be applied to the model at runtime.
    */
-  async testStreamEvents(
-    callOptions?: any
-  ) {
+  async testStreamEvents(callOptions?: any) {
     const chatModel = new this.Cls(this.constructorArgs);
 
     const stream = chatModel.streamEvents("Hello", {
@@ -305,9 +297,7 @@ export abstract class ChatModelIntegrationTests<
    * @param {any | undefined} callOptions Optional call options to pass to the model.
    *  These options will be applied to the model at runtime.
    */
-  async testConversation(
-    callOptions?: any
-  ) {
+  async testConversation(callOptions?: any) {
     // Create a new instance of the chat model
     const chatModel = new this.Cls(this.constructorArgs);
 
@@ -348,9 +338,7 @@ export abstract class ChatModelIntegrationTests<
    * @param {any | undefined} callOptions Optional call options to pass to the model.
    *  These options will be applied to the model at runtime.
    */
-  async testUsageMetadata(
-    callOptions?: any
-  ) {
+  async testUsageMetadata(callOptions?: any) {
     // Create a new instance of the chat model
     const chatModel = new this.Cls(this.constructorArgs);
 
@@ -398,9 +386,7 @@ export abstract class ChatModelIntegrationTests<
    * @param {any | undefined} callOptions Optional call options to pass to the model.
    *  These options will be applied to the model at runtime.
    */
-  async testUsageMetadataStreaming(
-    callOptions?: any
-  ) {
+  async testUsageMetadataStreaming(callOptions?: any) {
     const chatModel = new this.Cls(this.constructorArgs);
     let finalChunks: AIMessageChunk | undefined;
 
@@ -456,9 +442,7 @@ export abstract class ChatModelIntegrationTests<
    * @param {any | undefined} callOptions Optional call options to pass to the model.
    *  These options will be applied to the model at runtime.
    */
-  async testToolMessageHistoriesStringContent(
-    callOptions?: any
-  ) {
+  async testToolMessageHistoriesStringContent(callOptions?: any) {
     // Skip the test if the model doesn't support tool calling
     if (!this.chatModelHasToolCalling) {
       console.log("Test requires tool calling. Skipping...");
@@ -526,9 +510,7 @@ export abstract class ChatModelIntegrationTests<
    *
    * @param {any | undefined} callOptions Optional call options to pass to the model.
    */
-  async testToolMessageHistoriesListContent(
-    callOptions?: any
-  ) {
+  async testToolMessageHistoriesListContent(callOptions?: any) {
     if (!this.chatModelHasToolCalling) {
       console.log("Test requires tool calling. Skipping...");
       return;
@@ -607,9 +589,7 @@ export abstract class ChatModelIntegrationTests<
    * @param {any | undefined} callOptions Optional call options to pass to the model.
    *  These options will be applied to the model at runtime.
    */
-  async testStructuredFewShotExamples(
-    callOptions?: any
-  ) {
+  async testStructuredFewShotExamples(callOptions?: any) {
     // Skip the test if the model doesn't support tool calling
     if (!this.chatModelHasToolCalling) {
       console.log("Test requires tool calling. Skipping...");
@@ -672,9 +652,7 @@ export abstract class ChatModelIntegrationTests<
    * @param {any | undefined} callOptions Optional call options to pass to the model.
    *  These options will be applied to the model at runtime.
    */
-  async testWithStructuredOutput(
-    callOptions?: any
-  ) {
+  async testWithStructuredOutput(callOptions?: any) {
     // Skip the test if the model doesn't support structured output
     if (!this.chatModelHasStructuredOutput) {
       console.log("Test requires withStructuredOutput. Skipping...");
@@ -731,9 +709,7 @@ export abstract class ChatModelIntegrationTests<
    * @param {any | undefined} callOptions Optional call options to pass to the model.
    *  These options will be applied to the model at runtime.
    */
-  async testWithStructuredOutputIncludeRaw(
-    callOptions?: any
-  ) {
+  async testWithStructuredOutputIncludeRaw(callOptions?: any) {
     // Skip the test if the model doesn't support structured output
     if (!this.chatModelHasStructuredOutput) {
       console.log("Test requires withStructuredOutput. Skipping...");
@@ -793,9 +769,7 @@ export abstract class ChatModelIntegrationTests<
    * @param {any | undefined} callOptions Optional call options to pass to the model.
    *  These options will be applied to the model at runtime.
    */
-  async testBindToolsWithOpenAIFormattedTools(
-    callOptions?: any
-  ) {
+  async testBindToolsWithOpenAIFormattedTools(callOptions?: any) {
     // Skip the test if the model doesn't support tool calling
     if (!this.chatModelHasToolCalling) {
       console.log("Test requires tool calling. Skipping...");
@@ -860,9 +834,7 @@ export abstract class ChatModelIntegrationTests<
    * @param {any | undefined} callOptions Optional call options to pass to the model.
    *  These options will be applied to the model at runtime.
    */
-  async testBindToolsWithRunnableToolLike(
-    callOptions?: any
-  ) {
+  async testBindToolsWithRunnableToolLike(callOptions?: any) {
     // Skip the test if the model doesn't support tool calling
     if (!this.chatModelHasToolCalling) {
       console.log("Test requires tool calling. Skipping...");
@@ -928,9 +900,7 @@ export abstract class ChatModelIntegrationTests<
    * @param {any | undefined} callOptions Optional call options to pass to the model.
    *  These options will be applied to the model at runtime.
    */
-  async testCacheComplexMessageTypes(
-    callOptions?: any
-  ) {
+  async testCacheComplexMessageTypes(callOptions?: any) {
     // Create a new instance of the chat model with caching enabled
     const model = new this.Cls({
       ...this.constructorArgs,
@@ -992,9 +962,7 @@ export abstract class ChatModelIntegrationTests<
    * @param {any | undefined} callOptions Optional call options to pass to the model.
    *  These options will be applied to the model at runtime.
    */
-  async testStreamTokensWithToolCalls(
-    callOptions?: any
-  ) {
+  async testStreamTokensWithToolCalls(callOptions?: any) {
     const model = new this.Cls(this.constructorArgs);
     if (!model.bindTools) {
       throw new Error("bindTools is undefined");
@@ -1058,9 +1026,7 @@ export abstract class ChatModelIntegrationTests<
    * @param {any | undefined} callOptions Optional call options to pass to the model.
    *  These options will be applied to the model at runtime.
    */
-  async testModelCanUseToolUseAIMessage(
-    callOptions?: any
-  ) {
+  async testModelCanUseToolUseAIMessage(callOptions?: any) {
     if (!this.chatModelHasToolCalling) {
       console.log("Test requires tool calling. Skipping...");
       return;
@@ -1152,9 +1118,7 @@ export abstract class ChatModelIntegrationTests<
    * @param {any | undefined} callOptions Optional call options to pass to the model.
    *  These options will be applied to the model at runtime.
    */
-  async testModelCanUseToolUseAIMessageWithStreaming(
-    callOptions?: any
-  ) {
+  async testModelCanUseToolUseAIMessageWithStreaming(callOptions?: any) {
     if (!this.chatModelHasToolCalling) {
       console.log("Test requires tool calling. Skipping...");
       return;
@@ -1258,9 +1222,7 @@ export abstract class ChatModelIntegrationTests<
    * @param {any | undefined} callOptions Optional call options to pass to the model.
    *  These options will be applied to the model at runtime.
    */
-  async testInvokeMoreComplexTools(
-    callOptions?: any
-  ) {
+  async testInvokeMoreComplexTools(callOptions?: any) {
     // Skip the test if the model doesn't support tool calling
     if (!this.chatModelHasToolCalling) {
       console.log("Test requires tool calling. Skipping...");
@@ -1338,10 +1300,7 @@ Extraction path: {extractionPath}`,
    * @param {any | undefined} callOptions Optional call options to pass to the model.
    * @param {boolean} onlyVerifyHistory If true, only verifies the message history test.
    */
-  async testParallelToolCalling(
-    callOptions?: any,
-    onlyVerifyHistory = false
-  ) {
+  async testParallelToolCalling(callOptions?: any, onlyVerifyHistory = false) {
     // Skip the test if the model doesn't support tool calling
     if (!this.chatModelHasToolCalling) {
       console.log("Test requires tool calling. Skipping...");
