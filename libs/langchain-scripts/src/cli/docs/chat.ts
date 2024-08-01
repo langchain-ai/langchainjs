@@ -69,57 +69,57 @@ type ExtraFields = {
 
 async function promptExtraFields(): Promise<ExtraFields> {
   const hasToolCalling = await getUserInput(
-    "Does the tool support tool calling? (y/n) ",
+    "Does this integration support tool calling? (y/n) ",
     undefined,
     true
   );
   const hasJsonMode = await getUserInput(
-    "Does the tool support JSON mode? (y/n) ",
+    "Does this integration support JSON mode? (y/n) ",
     undefined,
     true
   );
   const hasImageInput = await getUserInput(
-    "Does the tool support image input? (y/n) ",
+    "Does this integration support image input? (y/n) ",
     undefined,
     true
   );
   const hasAudioInput = await getUserInput(
-    "Does the tool support audio input? (y/n) ",
+    "Does this integration support audio input? (y/n) ",
     undefined,
     true
   );
   const hasVideoInput = await getUserInput(
-    "Does the tool support video input? (y/n) ",
+    "Does this integration support video input? (y/n) ",
     undefined,
     true
   );
   const hasTokenLevelStreaming = await getUserInput(
-    "Does the tool support token level streaming? (y/n) ",
+    "Does this integration support token level streaming? (y/n) ",
     undefined,
     true
   );
   const hasTokenUsage = await getUserInput(
-    "Does the tool support token usage? (y/n) ",
+    "Does this integration support token usage? (y/n) ",
     undefined,
     true
   );
   const hasLogprobs = await getUserInput(
-    "Does the tool support logprobs? (y/n) ",
+    "Does this integration support logprobs? (y/n) ",
     undefined,
     true
   );
   const hasLocal = await getUserInput(
-    "Does the tool support local usage? (y/n) ",
+    "Does this integration support local usage? (y/n) ",
     undefined,
     true
   );
   const hasSerializable = await getUserInput(
-    "Does the tool support serializable output? (y/n) ",
+    "Does this integration support serializable output? (y/n) ",
     undefined,
     true
   );
   const hasPySupport = await getUserInput(
-    "Does the tool support Python support? (y/n) ",
+    "Does this integration have Python support? (y/n) ",
     undefined,
     true
   );
