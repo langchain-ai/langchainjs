@@ -386,6 +386,9 @@ export class DynamicTool extends Tool {
  * description, designed to work with structured data. It extends the
  * StructuredTool class and overrides the _call method to execute the
  * provided function when the tool is called.
+ *
+ * Schema can be passed as Zod or JSON schema. The tool will not validate
+ * input if JSON schema is passed.
  */
 export class DynamicStructuredTool<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -455,6 +458,8 @@ export abstract class BaseToolkit {
 
 /**
  * Parameters for the tool function.
+ * Schema can be provided as Zod or JSON schema.
+ * If you pass JSON schema, tool inputs will not be validated.
  * @template {ZodObjectAny | z.ZodString | Record<string, any> = ZodObjectAny} RunInput The input schema for the tool. Either any Zod object, a Zod string, or JSON schema.
  */
 interface ToolWrapperParams<
@@ -495,8 +500,11 @@ interface ToolWrapperParams<
 /**
  * Creates a new StructuredTool instance with the provided function, name, description, and schema.
  *
+ * Schema can be provided as Zod or JSON schema.
+ * If you pass JSON schema, tool inputs will not be validated.
+ *
  * @function
- * @template {ZodObjectAny | z.ZodString = ZodObjectAny} T The input schema for the tool. Either any Zod object, or a Zod string.
+ * @template {ZodObjectAny | z.ZodString | Record<string, any> = ZodObjectAny} T The input schema for the tool. Either any Zod object, a Zod string, or JSON schema instance.
  *
  * @param {RunnableFunc<z.output<T>, ToolReturnType>} func - The function to invoke when the tool is called.
  * @param {ToolWrapperParams<T>} fields - An object containing the following properties:
@@ -539,6 +547,7 @@ export function tool<
         fields.description ??
         fields.schema?.description ??
         `${fields.name} tool`,
+      // TS doesn't restrict the type here based on the guard above
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       func: func as any,
     });
@@ -562,6 +571,7 @@ export function tool<
           childConfig,
           async () => {
             try {
+              // TS doesn't restrict the type here based on the guard above
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
               resolve(func(input as any, childConfig));
             } catch (e) {
