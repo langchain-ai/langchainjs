@@ -11179,7 +11179,7 @@ __metadata:
     cassandra-driver: ^4.7.2
     cborg: ^4.1.1
     cheerio: ^1.0.0-rc.12
-    chromadb: ^1.5.3
+    chromadb: ^1.9.1
     closevector-common: 0.1.3
     closevector-node: 0.1.6
     closevector-web: 0.1.6
@@ -21914,6 +21914,27 @@ __metadata:
   version: 1.5.3
   resolution: "chromadb@npm:1.5.3"
   checksum: 9766c4aae2441b86b41b576700e8c023a1f6676bf596ff488933642246802ad093beaba967e8e3aff410a0b71dbe46c22a7fd732d8eff039de9cc9056a552037
+  languageName: node
+  linkType: hard
+
+"chromadb@npm:^1.9.1":
+  version: 1.9.1
+  resolution: "chromadb@npm:1.9.1"
+  dependencies:
+    cliui: ^8.0.1
+    isomorphic-fetch: ^3.0.0
+  peerDependencies:
+    "@google/generative-ai": ^0.1.1
+    cohere-ai: ^5.0.0 || ^6.0.0 || ^7.0.0
+    openai: ^3.0.0 || ^4.0.0
+  peerDependenciesMeta:
+    "@google/generative-ai":
+      optional: true
+    cohere-ai:
+      optional: true
+    openai:
+      optional: true
+  checksum: 9903891ee5811ec5a50d9c94057ea54d8f09d528749478f6ce1cbed4831544788f96d2c1301f7c3453f4ac5a2dd38380f1383686003d80a09e4e7dbc0d8b11f5
   languageName: node
   linkType: hard
 

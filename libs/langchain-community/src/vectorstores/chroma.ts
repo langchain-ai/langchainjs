@@ -1,5 +1,9 @@
 import * as uuid from "uuid";
-import type { ChromaClient as ChromaClientT, Collection } from "chromadb";
+import type {
+  ChromaClient as ChromaClientT,
+  Collection,
+  ChromaClientParams,
+} from "chromadb";
 import type { CollectionMetadata, Where } from "chromadb/dist/main/types.js";
 
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
@@ -59,6 +63,8 @@ export class Chroma extends VectorStore {
 
   numDimensions?: number;
 
+  clientParams?: Omit<ChromaClientParams, "path">;
+
   url: string;
 
   filter?: object;
@@ -67,12 +73,16 @@ export class Chroma extends VectorStore {
     return "chroma";
   }
 
-  constructor(embeddings: EmbeddingsInterface, args: ChromaLibArgs) {
+  constructor(
+    embeddings: EmbeddingsInterface,
+    args: ChromaLibArgs & { clientParams?: Omit<ChromaClientParams, "path"> }
+  ) {
     super(embeddings, args);
     this.numDimensions = args.numDimensions;
     this.embeddings = embeddings;
     this.collectionName = ensureCollectionName(args.collectionName);
     this.collectionMetadata = args.collectionMetadata;
+    this.clientParams = args.clientParams;
     if ("index" in args) {
       this.index = args.index;
     } else if ("url" in args) {
@@ -109,6 +119,7 @@ export class Chroma extends VectorStore {
       if (!this.index) {
         const chromaClient = new (await Chroma.imports()).ChromaClient({
           path: this.url,
+          ...(this.clientParams ?? {}),
         });
         this.index = chromaClient;
       }
