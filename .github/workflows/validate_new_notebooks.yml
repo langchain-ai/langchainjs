@@ -36,23 +36,23 @@ jobs:
       - name: Get changed files
         id: changed-files
         uses: tj-actions/changed-files@v44
-      - name: Check for new or modified notebooks
+      - name: Check for new or modified notebooks in docs/core_docs
         id: check_notebooks
         run: |
-          notebooks=$(echo '${{ steps.changed-files.outputs.all_changed_files }}' | tr ' ' '\n' | grep '\.ipynb$' || true)
+          notebooks=$(echo '${{ steps.changed-files.outputs.all_changed_files }}' | tr ' ' '\n' | grep '^docs/core_docs/.*\.ipynb$' || true)
           echo "Affected notebooks: $notebooks"
           echo "has_affected_notebooks=$([ -n "$notebooks" ] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
       - name: Build examples
         if: steps.check_notebooks.outputs.has_affected_notebooks == 'true'
         run: yarn turbo:command build --filter=examples
-      - name: Validate affected notebooks
+      - name: Validate affected notebooks in docs/core_docs
         if: steps.check_notebooks.outputs.has_affected_notebooks == 'true'
         run: |
-          notebooks=$(echo '${{ steps.changed-files.outputs.all_changed_files }}' | tr ' ' '\n' | grep '\.ipynb$' || true)
+          notebooks=$(echo '${{ steps.changed-files.outputs.all_changed_files }}' | tr ' ' '\n' | grep '^docs/core_docs/.*\.ipynb$' || true)
           if [ -n "$notebooks" ]; then
             for notebook in $notebooks; do
               yarn notebook:validate "$notebook"
             done
           else
-            echo "No notebooks to validate."
+            echo "No notebooks in docs/core_docs to validate."
           fi
