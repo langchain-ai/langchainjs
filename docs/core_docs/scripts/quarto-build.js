@@ -21,14 +21,6 @@ async function main() {
   for (const renamedFilepath of allRenames) {
     if (fs.existsSync(renamedFilepath)) {
       let content = fs.readFileSync(renamedFilepath).toString();
-      if (renamedFilepath.includes("blah")) {
-        console.log(
-          content,
-          content.match(IGNORED_CELL_REGEX),
-          content.match(LC_TS_IGNORE_REGEX),
-          content.match(IGNORED_CELL_REGEX) || content.match(LC_TS_IGNORE_REGEX)
-        );
-      }
       if (
         content.match(IGNORED_CELL_REGEX) ||
         content.match(LC_TS_IGNORE_REGEX)

@@ -8,7 +8,6 @@ export function extract(filepath: string) {
   const sourceFile = project.createSourceFile("temp.ts", "");
 
   cells.forEach((cell: Record<string, any>) => {
-    // console.log(cell.source.includes("// @lc-skip-validation"))
     const source = cell.source
       .join("")
       .replace(/\/\/ ?@lc-ts-ignore/g, "// @ts-ignore");
