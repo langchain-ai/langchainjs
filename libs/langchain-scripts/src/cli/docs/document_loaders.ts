@@ -96,15 +96,6 @@ async function promptExtraFields(): Promise<ExtraFields> {
   };
 }
 
-/**
- * Will always be community. We care about:
- * Module name
- * file name
- * Is web loader (boolean)
- * Is node only (boolean)
- * Does it run locally (boolean)
- */
-
 export async function fillDocLoaderIntegrationDocTemplate(fields: {
   packageName: string;
   moduleName: string;
