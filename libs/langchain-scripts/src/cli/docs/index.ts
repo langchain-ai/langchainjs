@@ -8,6 +8,7 @@ type CLIInput = {
   package: string;
   module: string;
   type: string;
+  community: boolean;
 };
 
 async function main() {
@@ -19,13 +20,17 @@ async function main() {
       "Package name, eg openai. Should be value of @langchain/<package>"
     )
     .option("--module <module>", "Module name, e.g ChatOpenAI")
-    .option("--type <type>", "Type of integration, e.g. 'chat'");
+    .option("--type <type>", "Type of integration, e.g. 'chat'")
+    .option(
+      "--community",
+      "If the integration is a community integration. Will effect the fields populated in the template."
+    );
 
   program.parse();
 
   const options = program.opts<CLIInput>();
 
-  const { module: moduleName, type } = options;
+  const { module: moduleName, type, community: isCommunity } = options;
   let { package: packageName } = options;
 
   if (packageName.startsWith("@langchain/")) {
@@ -34,7 +39,11 @@ async function main() {
 
   switch (type) {
     case "chat":
-      await fillChatIntegrationDocTemplate({ packageName, moduleName });
+      await fillChatIntegrationDocTemplate({
+        packageName,
+        moduleName,
+        isCommunity,
+      });
       break;
     default:
       console.error(
