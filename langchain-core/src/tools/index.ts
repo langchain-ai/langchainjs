@@ -320,6 +320,7 @@ export interface DynamicToolInput extends BaseDynamicToolInput {
  * Interface for the input parameters of the DynamicStructuredTool class.
  */
 export interface DynamicStructuredToolInput<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   T extends ZodObjectAny | Record<string, any> = ZodObjectAny
 > extends BaseDynamicToolInput {
   func: (
@@ -387,6 +388,7 @@ export class DynamicTool extends Tool {
  * provided function when the tool is called.
  */
 export class DynamicStructuredTool<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   T extends ZodObjectAny | Record<string, any> = ZodObjectAny
 > extends StructuredTool<T extends ZodObjectAny ? T : ZodObjectAny> {
   static lc_name() {
@@ -433,6 +435,7 @@ export class DynamicStructuredTool<
     runManager?: CallbackManagerForToolRun,
     parentConfig?: RunnableConfig
   ): Promise<ToolReturnType> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return this.func(arg as any, runManager, parentConfig);
   }
 }
@@ -458,6 +461,7 @@ interface ToolWrapperParams<
   RunInput extends
     | ZodObjectAny
     | z.ZodString
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     | Record<string, any> = ZodObjectAny
 > extends ToolParams {
   /**
@@ -512,12 +516,14 @@ export function tool<T extends ZodObjectAny>(
   fields: ToolWrapperParams<T>
 ): DynamicStructuredTool<T>;
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function tool<T extends Record<string, any>>(
   func: RunnableFunc<T, ToolReturnType>,
   fields: ToolWrapperParams<T>
 ): DynamicStructuredTool<T>;
 
 export function tool<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   T extends ZodObjectAny | z.ZodString | Record<string, any> = ZodObjectAny
 >(
   func: RunnableFunc<T extends ZodObjectAny ? z.output<T> : T, ToolReturnType>,
@@ -533,6 +539,7 @@ export function tool<
         fields.description ??
         fields.schema?.description ??
         `${fields.name} tool`,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       func: func as any,
     });
   }
@@ -543,6 +550,7 @@ export function tool<
   return new DynamicStructuredTool<T extends ZodObjectAny ? T : ZodObjectAny>({
     ...fields,
     description,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     schema: fields.schema as any,
     // TODO: Consider moving into DynamicStructuredTool constructor
     func: async (input, runManager, config) => {
@@ -554,6 +562,7 @@ export function tool<
           childConfig,
           async () => {
             try {
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               resolve(func(input as any, childConfig));
             } catch (e) {
               reject(e);
