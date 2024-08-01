@@ -320,6 +320,8 @@ export interface FakeChatInput extends BaseChatModelParams {
 
   /** Time to sleep in milliseconds between responses */
   sleep?: number;
+
+  emitCustomEvent?: boolean;
 }
 
 /**
@@ -353,10 +355,13 @@ export class FakeListChatModel extends BaseChatModel {
 
   sleep?: number;
 
-  constructor({ responses, sleep }: FakeChatInput) {
+  emitCustomEvent = false;
+
+  constructor({ responses, sleep, emitCustomEvent }: FakeChatInput) {
     super({});
     this.responses = responses;
     this.sleep = sleep;
+    this.emitCustomEvent = emitCustomEvent ?? this.emitCustomEvent;
   }
 
   _combineLLMOutput() {
@@ -369,9 +374,15 @@ export class FakeListChatModel extends BaseChatModel {
 
   async _generate(
     _messages: BaseMessage[],
-    options?: this["ParsedCallOptions"]
+    options?: this["ParsedCallOptions"],
+    runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
     await this._sleepIfRequested();
+    if (this.emitCustomEvent) {
+      await runManager?.handleCustomEvent("some_test_event", {
+        someval: true,
+      });
+    }
 
     if (options?.stop?.length) {
       return {
@@ -402,6 +413,11 @@ export class FakeListChatModel extends BaseChatModel {
   ): AsyncGenerator<ChatGenerationChunk> {
     const response = this._currentResponse();
     this._incrementResponse();
+    if (this.emitCustomEvent) {
+      await runManager?.handleCustomEvent("some_test_event", {
+        someval: true,
+      });
+    }
 
     for await (const text of response) {
       await this._sleepIfRequested();
