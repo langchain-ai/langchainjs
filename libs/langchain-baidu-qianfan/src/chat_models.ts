@@ -215,9 +215,9 @@ export class ChatBaiduQianfan
 
   userId?: string;
 
-  modelName = "ERNIE-Lite-8K";
+  modelName = "ERNIE-Bot-turbo";
 
-  model = "ERNIE-Lite-8K";
+  model = "ERNIE-Bot-turbo";
 
   temperature?: number | undefined;
 
@@ -241,6 +241,10 @@ export class ChatBaiduQianfan
 
     this.modelName = fields?.model ?? fields?.modelName ?? this.model;
     this.model = this.modelName;
+
+    if (!this.model) {
+      throw new Error(`Please provide modelName`);
+    }
 
     this.qianfanAK = fields?.qianfanAK ?? getEnvironmentVariable("QIANFAN_AK");
 
