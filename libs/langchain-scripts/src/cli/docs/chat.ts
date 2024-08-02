@@ -1,12 +1,12 @@
 import * as path from "node:path";
 import * as fs from "node:fs";
+import _ from "lodash";
 import {
   boldText,
   getUserInput,
   greenText,
   redBackground,
 } from "../utils/get-input.js";
-import _ from "lodash";
 import { camelCaseToSpaced } from "../utils/camel-case-to-spaces.js";
 
 const SIDEBAR_LABEL_PLACEHOLDER = "__sidebar_label__";
@@ -209,7 +209,9 @@ export async function fillChatIntegrationDocTemplate(fields: {
     moduleNameAllCaps = moduleNameAllCaps.replace("CHAT", "");
   }
 
-  const sidebarLabel = fields.moduleName.includes("Chat") ? camelCaseToSpaced(fields.moduleName.replace("Chat", "")) : camelCaseToSpaced(fields.moduleName);
+  const sidebarLabel = fields.moduleName.includes("Chat")
+    ? camelCaseToSpaced(fields.moduleName.replace("Chat", ""))
+    : camelCaseToSpaced(fields.moduleName);
 
   const docTemplate = (await fs.promises.readFile(TEMPLATE_PATH, "utf-8"))
     .replaceAll(SIDEBAR_LABEL_PLACEHOLDER, _.capitalize(sidebarLabel))

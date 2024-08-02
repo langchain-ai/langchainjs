@@ -133,10 +133,15 @@ export async function fillDocLoaderIntegrationDocTemplate(fields: {
     moduleNameAllCaps = moduleNameAllCaps.replace("_LOADER", "");
   }
 
-  const sidebarLabel = fields.moduleName.includes("Loader") ? fields.moduleName.replace("Loader", "") : fields.moduleName
+  const sidebarLabel = fields.moduleName.includes("Loader")
+    ? fields.moduleName.replace("Loader", "")
+    : fields.moduleName;
 
   const docTemplate = (await fs.promises.readFile(TEMPLATE_PATH, "utf-8"))
-    .replaceAll(SIDEBAR_LABEL_PLACEHOLDER, _.capitalize(camelCaseToSpaced(sidebarLabel)))
+    .replaceAll(
+      SIDEBAR_LABEL_PLACEHOLDER,
+      _.capitalize(camelCaseToSpaced(sidebarLabel))
+    )
     .replaceAll(NODE_OR_WEB_PLACEHOLDER, extraFields?.webLoader ? "web" : "fs")
     .replaceAll(MODULE_NAME_PLACEHOLDER, fields.moduleName)
     .replaceAll(MODULE_NAME_ALL_CAPS_PLACEHOLDER, moduleNameAllCaps)

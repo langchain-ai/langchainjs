@@ -1,12 +1,12 @@
 import * as path from "node:path";
 import * as fs from "node:fs";
+import _ from "lodash";
 import {
   boldText,
   getUserInput,
   greenText,
   redBackground,
 } from "../utils/get-input.js";
-import _ from "lodash";
 import { camelCaseToSpaced } from "../utils/camel-case-to-spaces.js";
 
 const SIDEBAR_LABEL_PLACEHOLDER = "__sidebar_label__";
