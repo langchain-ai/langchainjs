@@ -201,7 +201,8 @@ export class AsyncGeneratorWithSetup<
   }) {
     this.generator = params.generator;
     this.config = params.config;
-    this.signal = params.signal;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    this.signal = params.signal ?? (this.config as any)?.signal;
     // setup is a promise that resolves only after the first iterator value
     // is available. this is useful when setup of several piped generators
     // needs to happen in logical order, ie. in the order in which input to
