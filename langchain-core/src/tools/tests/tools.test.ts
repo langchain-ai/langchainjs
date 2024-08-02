@@ -1,6 +1,6 @@
 import { test, expect } from "@jest/globals";
 import { z } from "zod";
-import { tool } from "../index.js";
+import { DynamicStructuredTool, tool } from "../index.js";
 import { ToolMessage } from "../../messages/tool.js";
 
 test("Tool should error if responseFormat is content_and_artifact but the function doesn't return a tuple", async () => {
@@ -114,4 +114,101 @@ test("Tool can accept single string input", async () => {
 
   const result = await stringTool.invoke("b");
   expect(result).toBe("ba");
+});
+
+test("Tool declared with JSON schema", async () => {
+  const weatherSchema = {
+    type: "object",
+    properties: {
+      location: {
+        type: "string",
+        description: "A place",
+      },
+    },
+    required: ["location"],
+  };
+  const weatherTool = tool(
+    (_) => {
+      return "Sunny";
+    },
+    {
+      name: "weather",
+      schema: weatherSchema,
+    }
+  );
+
+  const weatherTool2 = new DynamicStructuredTool({
+    name: "weather",
+    description: "get the weather",
+    func: async (_) => {
+      return "Sunny";
+    },
+    schema: weatherSchema,
+  });
+  // No validation on JSON schema tools
+  await weatherTool.invoke({
+    somethingSilly: true,
+  });
+  await weatherTool2.invoke({
+    somethingSilly: true,
+  });
+});
+
+test("Tool input typing is enforced", async () => {
+  const weatherSchema = z.object({
+    location: z.string(),
+  });
+
+  const weatherTool = tool(
+    (_) => {
+      return "Sunny";
+    },
+    {
+      name: "weather",
+      schema: weatherSchema,
+    }
+  );
+
+  const weatherTool2 = new DynamicStructuredTool({
+    name: "weather",
+    description: "get the weather",
+    func: async (_) => {
+      return "Sunny";
+    },
+    schema: weatherSchema,
+  });
+
+  const weatherTool3 = tool(
+    async (_) => {
+      return "Sunny";
+    },
+    {
+      name: "weather",
+      description: "get the weather",
+      schema: z.string(),
+    }
+  );
+
+  await expect(async () => {
+    await weatherTool.invoke({
+      // @ts-expect-error Invalid argument
+      badval: "someval",
+    });
+  }).rejects.toThrow();
+  const res = await weatherTool.invoke({
+    location: "somewhere",
+  });
+  expect(res).toEqual("Sunny");
+  await expect(async () => {
+    await weatherTool2.invoke({
+      // @ts-expect-error Invalid argument
+      badval: "someval",
+    });
+  }).rejects.toThrow();
+  const res2 = await weatherTool2.invoke({
+    location: "someval",
+  });
+  expect(res2).toEqual("Sunny");
+  const res3 = await weatherTool3.invoke("blah");
+  expect(res3).toEqual("Sunny");
 });

@@ -32,6 +32,7 @@ class AzureChatOpenAIStandardIntegrationTests extends ChatModelIntegrationTests<
       Cls: AzureChatOpenAI,
       chatModelHasToolCalling: true,
       chatModelHasStructuredOutput: true,
+      supportsParallelToolCalls: true,
       constructorArgs: {
         model: "gpt-3.5-turbo",
       },
@@ -61,6 +62,12 @@ class AzureChatOpenAIStandardIntegrationTests extends ChatModelIntegrationTests<
       "AzureChatOpenAI does not support tool schemas which contain object with unknown/any parameters." +
         "AzureChatOpenAI only supports objects in schemas when the parameters are defined."
     );
+  }
+
+  async testParallelToolCalling() {
+    // Pass `true` in the second argument to only verify it can support parallel tool calls in the message history.
+    // This is because the model struggles to actually call parallel tools.
+    await super.testParallelToolCalling(undefined, true);
   }
 }
 

@@ -1,6 +1,6 @@
 /* eslint-disable no-promise-executor-return */
 
-import { test } from "@jest/globals";
+import { test, expect } from "@jest/globals";
 import { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { FakeChatModel, FakeListChatModel } from "../../utils/testing/index.js";
@@ -227,4 +227,41 @@ test("Test ChatModel can cache complex messages", async () => {
   if (!("message" in value[0])) return;
   const cachedMsg = value[0].message as AIMessage;
   expect(cachedMsg.content).toEqual(JSON.stringify(contentToCache, null, 2));
+});
+
+test("Test ChatModel can emit a custom event", async () => {
+  const model = new FakeListChatModel({
+    responses: ["hi"],
+    emitCustomEvent: true,
+  });
+  let customEvent;
+  const response = await model.invoke([["human", "Hello there!"]], {
+    callbacks: [
+      {
+        handleCustomEvent(_, data) {
+          customEvent = data;
+        },
+      },
+    ],
+  });
+  await new Promise((resolve) => setTimeout(resolve, 100));
+  expect(response.content).toEqual("hi");
+  expect(customEvent).toBeDefined();
+});
+
+test("Test ChatModel can stream back a custom event", async () => {
+  const model = new FakeListChatModel({
+    responses: ["hi"],
+    emitCustomEvent: true,
+  });
+  let customEvent;
+  const eventStream = await model.streamEvents([["human", "Hello there!"]], {
+    version: "v2",
+  });
+  for await (const event of eventStream) {
+    if (event.event === "on_custom_event") {
+      customEvent = event;
+    }
+  }
+  expect(customEvent).toBeDefined();
 });

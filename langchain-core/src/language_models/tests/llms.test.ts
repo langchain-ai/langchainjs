@@ -1,6 +1,6 @@
 /* eslint-disable no-promise-executor-return */
 
-import { test } from "@jest/globals";
+import { test, expect } from "@jest/globals";
 import { FakeLLM, FakeStreamingLLM } from "../../utils/testing/index.js";
 import { HumanMessagePromptTemplate } from "../../prompts/chat.js";
 
