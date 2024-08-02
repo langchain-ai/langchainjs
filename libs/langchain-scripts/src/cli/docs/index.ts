@@ -62,6 +62,7 @@ async function main() {
       await fillRetrieverIntegrationDocTemplate({
         packageName,
         moduleName,
+        isCommunity,
       });
       break;
     default:
