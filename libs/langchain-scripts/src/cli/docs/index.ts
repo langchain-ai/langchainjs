@@ -6,6 +6,7 @@ import { fillChatIntegrationDocTemplate } from "./chat.js";
 import { fillDocLoaderIntegrationDocTemplate } from "./document_loaders.js";
 import { fillLLMIntegrationDocTemplate } from "./llms.js";
 import { fillRetrieverIntegrationDocTemplate } from "./retrievers.js";
+import { fillEmbeddingsIntegrationDocTemplate } from "./embeddings.js";
 
 type CLIInput = {
   package: string;
@@ -65,9 +66,16 @@ async function main() {
         isCommunity,
       });
       break;
+    case "embeddings":
+      await fillEmbeddingsIntegrationDocTemplate({
+        packageName,
+        moduleName,
+        isCommunity,
+      });
+      break;
     default:
       console.error(
-        `Invalid type: ${type}.\nOnly 'chat', 'llm', 'retriever' and 'doc_loader' are supported at this time.`
+        `Invalid type: ${type}.\nOnly 'chat', 'llm', 'retriever', 'embeddings' and 'doc_loader' are supported at this time.`
       );
       process.exit(1);
   }
