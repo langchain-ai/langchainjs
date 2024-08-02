@@ -30,6 +30,14 @@
     "youtubei.js": "npm:/youtubei.js",
     "youtube-transcript": "npm:/youtube-transcript",
     "neo4j-driver": "npm:/neo4j-driver",
-    "axios": "npm:/axios"
+    "axios": "npm:/axios",
+    "@mendable/firecrawl-js": "npm:/@mendable/firecrawl-js",
+    "@aws-crypto/sha256-js": "npm:/@aws-crypto/sha256-js",
+    "@aws-sdk/credential-provider-node": "npm:/@aws-sdk/credential-provider-node",
+    "@smithy/protocol-http": "npm:/@smithy/protocol-http",
+    "@smithy/signature-v4": "npm:/@smithy/signature-v4",
+    "@smithy/eventstream-codec": "npm:/@smithy/eventstream-codec",
+    "@smithy/util-utf8": "npm:/@smithy/util-utf8",
+    "@aws-sdk/types": "npm:/@aws-sdk/types"
   }
 }
