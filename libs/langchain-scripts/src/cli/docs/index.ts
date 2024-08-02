@@ -67,7 +67,7 @@ async function main() {
       break;
     default:
       console.error(
-        `Invalid type: ${type}.\nOnly 'chat', 'llm', 'retrirver' and 'doc_loader' are supported at this time.`
+        `Invalid type: ${type}.\nOnly 'chat', 'llm', 'retriever' and 'doc_loader' are supported at this time.`
       );
       process.exit(1);
   }
