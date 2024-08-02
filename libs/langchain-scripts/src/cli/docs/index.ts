@@ -36,13 +36,13 @@ async function main() {
         className,
       });
       break;
-    case "doc_loader":
-      await fillDocLoaderIntegrationDocTemplate({
+    case "llm":
+      await fillLLMIntegrationDocTemplate({
         className,
       });
       break;
-    case "llm":
-      await fillLLMIntegrationDocTemplate({
+    case "embeddings":
+      await fillEmbeddingsIntegrationDocTemplate({
         className,
       });
       break;
@@ -51,8 +51,8 @@ async function main() {
         className,
       });
       break;
-    case "embeddings":
-      await fillEmbeddingsIntegrationDocTemplate({
+    case "doc_loader":
+      await fillDocLoaderIntegrationDocTemplate({
         className,
       });
       break;
