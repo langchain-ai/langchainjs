@@ -154,7 +154,7 @@ export async function fillDocLoaderIntegrationDocTemplate(fields: {
       NODE_ONLY_TOOL_TIP_PLACEHOLDER,
       extraFields?.nodeOnly ? NODE_ONLY_TOOLTIP : ""
     )
-    .replaceAll(NODE_SUPPORT_PLACEHOLDER, extraFields?.nodeOnly ? "✅" : "❌")
+    .replaceAll(NODE_SUPPORT_PLACEHOLDER, extraFields?.nodeOnly ? "Node-only" : "All environments")
     .replaceAll(LOCAL_PLACEHOLDER, extraFields?.local ? "✅" : "❌")
     .replaceAll(
       SERIALIZABLE_PLACEHOLDER,
