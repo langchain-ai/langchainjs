@@ -33,7 +33,7 @@ const INTEGRATIONS_DOCS_PATH = path.resolve(
 );
 
 const NODE_ONLY_TOOLTIP =
-  "```{=mdx}\\n\\n:::tip Compatibility\\n\\nOnly available on Node.js.\\n]\\n:::\\n\\n```\\n";
+  "```{=mdx}\\n\\n:::tip Compatibility\\n\\nOnly available on Node.js.\\n\\n:::\\n\\n```\\n";
 const NODE_ONLY_SIDEBAR_BADGE = `sidebar_class_name: node-only`;
 
 type ExtraFields = {
