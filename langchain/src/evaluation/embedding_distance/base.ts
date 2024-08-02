@@ -61,9 +61,9 @@ export function getDistanceCalculationFunction(
   const distanceFunctions: { [key in EmbeddingDistanceType]: VectorFunction } =
     {
       cosine: (X: number[], Y: number[]) => 1.0 - cosine(X, Y),
-      euclidean: euclidean,
-      manhattan: manhattan,
-      chebyshev: chebyshev,
+      euclidean,
+      manhattan,
+      chebyshev,
     };
 
   return distanceFunctions[distanceType];

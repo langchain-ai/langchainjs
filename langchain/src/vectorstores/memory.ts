@@ -1,7 +1,7 @@
-import { cosine } from "../util/ml-distance/similarities.js";
 import { VectorStore } from "@langchain/core/vectorstores";
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { Document } from "@langchain/core/documents";
+import { cosine } from "../util/ml-distance/similarities.js";
 
 /**
  * Interface representing a vector in memory. It includes the content
