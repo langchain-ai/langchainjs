@@ -441,7 +441,7 @@ test("llm token callbacks can handle tool calls", async () => {
   expect(args).toEqual(JSON.parse(tokens));
 });
 
-test.only("streaming with structured output", async () => {
+test("streaming with structured output", async () => {
   const stream = await model
     .withStructuredOutput(zodSchema)
     .stream("weather in london");

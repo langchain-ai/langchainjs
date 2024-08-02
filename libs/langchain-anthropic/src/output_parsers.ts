@@ -43,6 +43,7 @@ export class AnthropicToolsOutputParser<
     if (typeof result === "string") {
       try {
         parsedResult = JSON.parse(result);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (e: any) {
         throw new OutputParserException(
           `Failed to parse. Text: "${JSON.stringify(
