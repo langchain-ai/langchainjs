@@ -149,7 +149,9 @@ export async function fillLLMIntegrationDocTemplate(fields: {
     )
     .replace(PY_SUPPORT_PLACEHOLDER, extraFields?.pySupport ? "✅" : "❌");
 
-  const packageNameShortSnakeCase = fields.className.replace(/-/g, "_");
+  const packageNameShortSnakeCase = fields.className
+    .replace(/-/g, "_")
+    .toLowerCase();
   const docPath = path.join(
     INTEGRATIONS_DOCS_PATH,
     `${packageNameShortSnakeCase}.ipynb`
