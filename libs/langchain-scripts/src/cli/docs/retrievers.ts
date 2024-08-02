@@ -18,7 +18,6 @@ const INTEGRATIONS_DOCS_PATH = path.resolve(
   "../../docs/core_docs/docs/integrations/retrievers"
 );
 
-
 type ExtraFields = {
   hasCloudOffering: boolean;
   canSelfHost: boolean;
@@ -66,7 +65,10 @@ export async function fillRetrieverIntegrationDocTemplate(fields: {
   const docTemplate = (await fs.promises.readFile(TEMPLATE_PATH, "utf-8"))
     .replaceAll(PACKAGE_NAME_PLACEHOLDER, fields.packageName)
     .replaceAll(MODULE_NAME_PLACEHOLDER, fields.moduleName)
-    .replace(HAS_CLOUD_OFFERING_PLACEHOLDER, extraFields?.hasCloudOffering ? "✅" : "❌")
+    .replace(
+      HAS_CLOUD_OFFERING_PLACEHOLDER,
+      extraFields?.hasCloudOffering ? "✅" : "❌"
+    )
     .replace(CAN_SELF_HOST_PLACEHOLDER, extraFields?.canSelfHost ? "✅" : "❌")
     .replace(PY_SUPPORT_PLACEHOLDER, extraFields?.pySupport ? "✅" : "❌");
 

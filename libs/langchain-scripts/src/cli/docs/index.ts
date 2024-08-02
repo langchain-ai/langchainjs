@@ -58,7 +58,7 @@ async function main() {
         isCommunity,
       });
       break;
-    case 'retriever':
+    case "retriever":
       await fillRetrieverIntegrationDocTemplate({
         packageName,
         moduleName,
