@@ -17,15 +17,6 @@ const MODULE_NAME_PLACEHOLDER = "__ModuleName__";
 // This should not be prefixed with `Chat` as it's used for API keys.
 const MODULE_NAME_ALL_CAPS_PLACEHOLDER = "__MODULE_NAME_ALL_CAPS__";
 
-const TOOL_CALLING_PLACEHOLDER = "__tool_calling__";
-const JSON_MODE_PLACEHOLDER = "__json_mode__";
-const IMAGE_INPUT_PLACEHOLDER = "__image_input__";
-const AUDIO_INPUT_PLACEHOLDER = "__audio_input__";
-const VIDEO_INPUT_PLACEHOLDER = "__video_input__";
-const TOKEN_LEVEL_STREAMING_PLACEHOLDER = "__token_level_streaming__";
-const TOKEN_USAGE_PLACEHOLDER = "__token_usage__";
-const LOGPROBS_PLACEHOLDER = "__logprobs__";
-
 const SERIALIZABLE_PLACEHOLDER = "__serializable__";
 const LOCAL_PLACEHOLDER = "__local__";
 const PY_SUPPORT_PLACEHOLDER = "__py_support__";
@@ -33,9 +24,9 @@ const PY_SUPPORT_PLACEHOLDER = "__py_support__";
 const API_REF_BASE_PACKAGE_URL = `https://api.js.langchain.com/modules/langchain_${PACKAGE_NAME_PLACEHOLDER}.html`;
 const API_REF_BASE_MODULE_URL = `https://api.js.langchain.com/classes/langchain_${PACKAGE_NAME_PLACEHOLDER}.${MODULE_NAME_PLACEHOLDER}.html`;
 
-const TEMPLATE_PATH = path.resolve("./src/cli/docs/templates/chat.ipynb");
+const TEMPLATE_PATH = path.resolve("./src/cli/docs/templates/llms.ipynb");
 const INTEGRATIONS_DOCS_PATH = path.resolve(
-  "../../docs/core_docs/docs/integrations/chat"
+  "../../docs/core_docs/docs/integrations/llms"
 );
 
 const fetchAPIRefUrl = async (url: string): Promise<boolean> => {
@@ -51,63 +42,12 @@ const fetchAPIRefUrl = async (url: string): Promise<boolean> => {
 };
 
 type ExtraFields = {
-  /**
-   * If tool calling is true, structured output will also be true.
-   */
-  toolCalling: boolean;
-  jsonMode: boolean;
-  imageInput: boolean;
-  audioInput: boolean;
-  videoInput: boolean;
-  tokenLevelStreaming: boolean;
-  tokenUsage: boolean;
-  logprobs: boolean;
   local: boolean;
   serializable: boolean;
   pySupport: boolean;
 };
 
 async function promptExtraFields(): Promise<ExtraFields> {
-  const hasToolCalling = await getUserInput(
-    "Does this integration support tool calling? (y/n) ",
-    undefined,
-    true
-  );
-  const hasJsonMode = await getUserInput(
-    "Does this integration support JSON mode? (y/n) ",
-    undefined,
-    true
-  );
-  const hasImageInput = await getUserInput(
-    "Does this integration support image input? (y/n) ",
-    undefined,
-    true
-  );
-  const hasAudioInput = await getUserInput(
-    "Does this integration support audio input? (y/n) ",
-    undefined,
-    true
-  );
-  const hasVideoInput = await getUserInput(
-    "Does this integration support video input? (y/n) ",
-    undefined,
-    true
-  );
-  const hasTokenLevelStreaming = await getUserInput(
-    "Does this integration support token level streaming? (y/n) ",
-    undefined,
-    true
-  );
-  const hasTokenUsage = await getUserInput(
-    "Does this integration support token usage? (y/n) ",
-    undefined,
-    true
-  );
-  const hasLogprobs = await getUserInput(
-    "Does this integration support logprobs? (y/n) ",
-    undefined,
-    true
-  );
   const hasLocal = await getUserInput(
     "Does this integration support local usage? (y/n) ",
     undefined,
@@ -125,21 +65,13 @@ async function promptExtraFields(): Promise<ExtraFields> {
   );
 
   return {
-    toolCalling: hasToolCalling.toLowerCase() === "y",
-    jsonMode: hasJsonMode.toLowerCase() === "y",
-    imageInput: hasImageInput.toLowerCase() === "y",
-    audioInput: hasAudioInput.toLowerCase() === "y",
-    videoInput: hasVideoInput.toLowerCase() === "y",
-    tokenLevelStreaming: hasTokenLevelStreaming.toLowerCase() === "y",
-    tokenUsage: hasTokenUsage.toLowerCase() === "y",
-    logprobs: hasLogprobs.toLowerCase() === "y",
     local: hasLocal.toLowerCase() === "y",
     serializable: hasSerializable.toLowerCase() === "y",
     pySupport: hasPySupport.toLowerCase() === "y",
   };
 }
 
-export async function fillChatIntegrationDocTemplate(fields: {
+export async function fillLLMIntegrationDocTemplate(fields: {
   packageName: string;
   moduleName: string;
   isCommunity: boolean;
@@ -159,11 +91,11 @@ export async function fillChatIntegrationDocTemplate(fields: {
   if (fields.isCommunity) {
     formattedApiRefPackageUrl = API_REF_BASE_PACKAGE_URL.replace(
       PACKAGE_NAME_PLACEHOLDER,
-      `community_chat_models_${fields.packageName}`
+      `community_llms_${fields.packageName}`
     );
     formattedApiRefModuleUrl = API_REF_BASE_MODULE_URL.replace(
       PACKAGE_NAME_PLACEHOLDER,
-      `community_chat_models_${fields.packageName}`
+      `community_llms_${fields.packageName}`
     ).replace(MODULE_NAME_PLACEHOLDER, fields.moduleName);
   } else {
     formattedApiRefPackageUrl = API_REF_BASE_PACKAGE_URL.replace(
@@ -191,8 +123,8 @@ export async function fillChatIntegrationDocTemplate(fields: {
   let fullPackageImportPath = "";
 
   if (fields.isCommunity) {
-    fullPackageNameSnakeCase = `langchain_community_chat_models_${packageNameShortSnakeCase}`;
-    fullPackageImportPath = `@langchain/community/chat_models/${fields.packageName}`;
+    fullPackageNameSnakeCase = `langchain_community_llms_${packageNameShortSnakeCase}`;
+    fullPackageImportPath = `@langchain/community/llms/${fields.packageName}`;
     packageNamePretty = "@langchain/community";
   } else {
     fullPackageNameSnakeCase = `langchain_${packageNameShortSnakeCase}`;
@@ -201,8 +133,10 @@ export async function fillChatIntegrationDocTemplate(fields: {
   }
 
   let moduleNameAllCaps = fields.moduleName.toUpperCase();
-  if (moduleNameAllCaps.startsWith("CHAT")) {
-    moduleNameAllCaps = moduleNameAllCaps.replace("CHAT", "");
+  if (moduleNameAllCaps.endsWith("_LLM")) {
+    moduleNameAllCaps = moduleNameAllCaps.replace("_LLM", "");
+  } else if (moduleNameAllCaps.endsWith("LLM")) {
+    moduleNameAllCaps = moduleNameAllCaps.replace("LLM", "");
   }
 
   const docTemplate = (await fs.promises.readFile(TEMPLATE_PATH, "utf-8"))
@@ -216,20 +150,6 @@ export async function fillChatIntegrationDocTemplate(fields: {
     .replaceAll(PACKAGE_IMPORT_PATH_PLACEHOLDER, fullPackageImportPath)
     .replaceAll(MODULE_NAME_PLACEHOLDER, fields.moduleName)
     .replaceAll(MODULE_NAME_ALL_CAPS_PLACEHOLDER, moduleNameAllCaps)
-    .replaceAll(
-      TOOL_CALLING_PLACEHOLDER,
-      extraFields?.toolCalling ? "✅" : "❌"
-    )
-    .replace(JSON_MODE_PLACEHOLDER, extraFields?.jsonMode ? "✅" : "❌")
-    .replace(IMAGE_INPUT_PLACEHOLDER, extraFields?.imageInput ? "✅" : "❌")
-    .replace(AUDIO_INPUT_PLACEHOLDER, extraFields?.audioInput ? "✅" : "❌")
-    .replace(VIDEO_INPUT_PLACEHOLDER, extraFields?.videoInput ? "✅" : "❌")
-    .replace(
-      TOKEN_LEVEL_STREAMING_PLACEHOLDER,
-      extraFields?.tokenLevelStreaming ? "✅" : "❌"
-    )
-    .replace(TOKEN_USAGE_PLACEHOLDER, extraFields?.tokenUsage ? "✅" : "❌")
-    .replace(LOGPROBS_PLACEHOLDER, extraFields?.logprobs ? "✅" : "❌")
     .replace(LOCAL_PLACEHOLDER, extraFields?.local ? "✅" : "❌")
     .replace(
       SERIALIZABLE_PLACEHOLDER,
