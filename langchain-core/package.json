@@ -46,7 +46,6 @@
     "decamelize": "1.2.0",
     "js-tiktoken": "^1.0.12",
     "langsmith": "~0.1.39",
-    "ml-distance": "^4.0.0",
     "mustache": "^4.2.0",
     "p-queue": "^6.6.2",
     "p-retry": "4",

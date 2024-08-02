@@ -22,7 +22,6 @@
     "zod": "npm:/zod",
     "zod-to-json-schema": "npm:/zod-to-json-schema",
     "node-llama-cpp": "npm:/node-llama-cpp",
-    "ml-distance": "npm:/ml-distance",
     "pdf-parse": "npm:/pdf-parse",
     "peggy": "npm:/peggy",
     "readline": "https://deno.land/x/readline@v1.1.0/mod.ts",
