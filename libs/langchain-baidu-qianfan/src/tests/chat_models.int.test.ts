@@ -9,7 +9,7 @@ test("invoke", async () => {
   });
   const message = new HumanMessage("北京天气");
   const res = await chat.invoke([message]);
-  console.log(res.content);
+  // console.log(res.content);
   expect(res.content.length).toBeGreaterThan(10);
 });
 
@@ -20,6 +20,6 @@ test("invokeWithStream", async () => {
   });
   const message = new HumanMessage("等额本金和等额本息有什么区别？");
   const res = await chat.invoke([message]);
-  console.log({ res });
+  // console.log({ res });
   expect(res.content.length).toBeGreaterThan(10);
 });

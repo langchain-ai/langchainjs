@@ -72,11 +72,11 @@ declare interface BaiduQianfanChatInput {
   /**
    * Model name to use. Available options are: ERNIE-Bot, ERNIE-Lite-8K, ERNIE-Bot-4
    * Alias for `model`
-   * @default "ERNIE-Lite-8K"
+   * @default "ERNIE-Bot-turbo"
    */
   modelName: string;
   /** Model name to use. Available options are: ERNIE-Bot, ERNIE-Lite-8K, ERNIE-Bot-4
-   * @default "ERNIE-Lite-8K"
+   * @default "ERNIE-Bot-turbo"
    */
   model: string;
 
