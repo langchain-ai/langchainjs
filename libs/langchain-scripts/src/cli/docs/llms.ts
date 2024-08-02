@@ -6,48 +6,26 @@ import {
   greenText,
   redBackground,
 } from "../utils/get-input.js";
-
-const PACKAGE_NAME_PLACEHOLDER = "__package_name__";
-const PACKAGE_NAME_SHORT_SNAKE_CASE_PLACEHOLDER =
-  "__package_name_short_snake_case__";
-const PACKAGE_NAME_SNAKE_CASE_PLACEHOLDER = "__package_name_snake_case__";
-const PACKAGE_NAME_PRETTY_PLACEHOLDER = "__package_name_pretty__";
-const PACKAGE_IMPORT_PATH_PLACEHOLDER = "__import_path__";
-const MODULE_NAME_PLACEHOLDER = "__ModuleName__";
-// This should not be prefixed with `Chat` as it's used for API keys.
-const MODULE_NAME_ALL_CAPS_PLACEHOLDER = "__MODULE_NAME_ALL_CAPS__";
-
-const SERIALIZABLE_PLACEHOLDER = "__serializable__";
-const LOCAL_PLACEHOLDER = "__local__";
-const PY_SUPPORT_PLACEHOLDER = "__py_support__";
-
-const API_REF_BASE_PACKAGE_URL = `https://api.js.langchain.com/modules/langchain_${PACKAGE_NAME_PLACEHOLDER}.html`;
-const API_REF_BASE_MODULE_URL = `https://api.js.langchain.com/classes/langchain_${PACKAGE_NAME_PLACEHOLDER}.${MODULE_NAME_PLACEHOLDER}.html`;
+import { fetchURLStatus } from "../utils/fetch-url-status.js";
+import { API_REF_MODULE_PLACEHOLDER, API_REF_PACKAGE_PLACEHOLDER, ENV_VAR_NAME_PLACEHOLDER, FULL_IMPORT_PATH_PLACEHOLDER, LOCAL_PLACEHOLDER, MODULE_NAME_PLACEHOLDER, PACKAGE_NAME_PLACEHOLDER, PY_SUPPORT_PLACEHOLDER, PYTHON_DOC_URL_PLACEHOLDER, SERIALIZABLE_PLACEHOLDER, SIDEBAR_LABEL_PLACEHOLDER } from "../constants.js";
 
 const TEMPLATE_PATH = path.resolve("./src/cli/docs/templates/llms.ipynb");
 const INTEGRATIONS_DOCS_PATH = path.resolve(
   "../../docs/core_docs/docs/integrations/llms"
 );
 
-const fetchAPIRefUrl = async (url: string): Promise<boolean> => {
-  try {
-    const res = await fetch(url);
-    if (res.status !== 200) {
-      throw new Error(`API Reference URL ${url} not found.`);
-    }
-    return true;
-  } catch (_) {
-    return false;
-  }
-};
-
 type ExtraFields = {
   local: boolean;
   serializable: boolean;
   pySupport: boolean;
+  packageName: string;
+  fullImportPath: string;
+  envVarName: string;
 };
 
-async function promptExtraFields(): Promise<ExtraFields> {
+async function promptExtraFields(fields: {
+  envVarGuess: string;
+}): Promise<ExtraFields> {
   const hasLocal = await getUserInput(
     "Does this integration support local usage? (y/n) ",
     undefined,
@@ -64,92 +42,94 @@ async function promptExtraFields(): Promise<ExtraFields> {
     true
   );
 
+  const importPath = await getUserInput(
+    "What is the full import path of the integration? (e.g @langchain/community/llms/togetherai) ",
+    undefined,
+    true
+  );
+
+  let packageName = "";
+  if (importPath.startsWith("langchain/")) {
+    packageName = "langchain";
+  } else {
+    packageName = importPath.split("/").slice(0, 2).join("/");
+  }
+
+  const verifyPackageName = await getUserInput(
+    `Is ${packageName} the correct package name? (y/n) `,
+    undefined,
+    true
+  );
+  if (verifyPackageName.toLowerCase() === "n") {
+    packageName = await getUserInput(
+      "Please enter the full package name (e.g @langchain/community) ",
+      undefined,
+      true
+    );
+  }
+
+  const isEnvGuessCorrect = await getUserInput(
+    `Is the environment variable for the API key named ${fields.envVarGuess}? (y/n) `,
+    undefined,
+    true
+  );
+  let envVarName = fields.envVarGuess;
+  if (isEnvGuessCorrect.toLowerCase() === "n") {
+    envVarName = await getUserInput(
+      "Please enter the correct environment variable name ",
+      undefined,
+      true
+    );
+  }
+
   return {
     local: hasLocal.toLowerCase() === "y",
     serializable: hasSerializable.toLowerCase() === "y",
     pySupport: hasPySupport.toLowerCase() === "y",
+    packageName,
+    fullImportPath: importPath,
+    envVarName,
   };
 }
 
 export async function fillLLMIntegrationDocTemplate(fields: {
-  packageName: string;
-  moduleName: string;
-  isCommunity: boolean;
+  className: string;
 }) {
-  // Ask the user if they'd like to fill in extra fields, if so, prompt them.
-  let extraFields: ExtraFields | undefined;
-  const shouldPromptExtraFields = await getUserInput(
-    "Would you like to fill out optional fields? (y/n) ",
-    "white_background"
-  );
-  if (shouldPromptExtraFields.toLowerCase() === "y") {
-    extraFields = await promptExtraFields();
-  }
+  const sidebarLabel = fields.className.replace("LLM", "").replace("Llm", "");
+  const pyDocUrl = `https://python.langchain.com/v0.2/docs/integrations/llms/${sidebarLabel.toLowerCase()}/`;
+  let envVarName = `${sidebarLabel.toUpperCase()}_API_KEY`;
+  const extraFields = await promptExtraFields({
+    envVarGuess: envVarName,
+  });
+  envVarName = extraFields.envVarName;
 
-  let formattedApiRefPackageUrl = "";
-  let formattedApiRefModuleUrl = "";
-  if (fields.isCommunity) {
-    formattedApiRefPackageUrl = API_REF_BASE_PACKAGE_URL.replace(
-      PACKAGE_NAME_PLACEHOLDER,
-      `community_llms_${fields.packageName}`
-    );
-    formattedApiRefModuleUrl = API_REF_BASE_MODULE_URL.replace(
-      PACKAGE_NAME_PLACEHOLDER,
-      `community_llms_${fields.packageName}`
-    ).replace(MODULE_NAME_PLACEHOLDER, fields.moduleName);
-  } else {
-    formattedApiRefPackageUrl = API_REF_BASE_PACKAGE_URL.replace(
-      PACKAGE_NAME_PLACEHOLDER,
-      fields.packageName
-    );
-    formattedApiRefModuleUrl = API_REF_BASE_MODULE_URL.replace(
-      PACKAGE_NAME_PLACEHOLDER,
-      fields.packageName
-    ).replace(MODULE_NAME_PLACEHOLDER, fields.moduleName);
-  }
+  const apiRefModuleUrl = `https://api.js.langchain.com/classes/${extraFields.fullImportPath
+    .replace("@", "")
+    .replaceAll("/", "_")
+    .replaceAll("-", "_")}.${fields.className}.html`;
+  const apiRefPackageUrl = apiRefModuleUrl
+    .replace("/classes/", "/modules/")
+    .replace(`.${fields.className}.html`, ".html");
 
-  const success = await Promise.all([
-    fetchAPIRefUrl(formattedApiRefPackageUrl),
-    fetchAPIRefUrl(formattedApiRefModuleUrl),
+  const apiRefUrlSuccesses = await Promise.all([
+    fetchURLStatus(apiRefModuleUrl),
+    fetchURLStatus(apiRefPackageUrl),
   ]);
-  if (success.some((s) => s === false)) {
-    // Don't error out because this might be used before the package is released.
-    console.error("Invalid package or module name. API reference not found.");
-  }
-
-  const packageNameShortSnakeCase = fields.packageName.replaceAll("-", "_");
-  let fullPackageNameSnakeCase = "";
-  let packageNamePretty = "";
-  let fullPackageImportPath = "";
-
-  if (fields.isCommunity) {
-    fullPackageNameSnakeCase = `langchain_community_llms_${packageNameShortSnakeCase}`;
-    fullPackageImportPath = `@langchain/community/llms/${fields.packageName}`;
-    packageNamePretty = "@langchain/community";
-  } else {
-    fullPackageNameSnakeCase = `langchain_${packageNameShortSnakeCase}`;
-    packageNamePretty = `@langchain/${fields.packageName}`;
-    fullPackageImportPath = packageNamePretty;
-  }
-
-  let moduleNameAllCaps = fields.moduleName.toUpperCase();
-  if (moduleNameAllCaps.endsWith("_LLM")) {
-    moduleNameAllCaps = moduleNameAllCaps.replace("_LLM", "");
-  } else if (moduleNameAllCaps.endsWith("LLM")) {
-    moduleNameAllCaps = moduleNameAllCaps.replace("LLM", "");
+  if (apiRefUrlSuccesses.find((s) => !s)) {
+    console.warn(
+      "API ref URLs invalid. Please manually ensure they are correct."
+    );
   }
 
   const docTemplate = (await fs.promises.readFile(TEMPLATE_PATH, "utf-8"))
-    .replaceAll(PACKAGE_NAME_PLACEHOLDER, fields.packageName)
-    .replaceAll(PACKAGE_NAME_SNAKE_CASE_PLACEHOLDER, fullPackageNameSnakeCase)
-    .replaceAll(
-      PACKAGE_NAME_SHORT_SNAKE_CASE_PLACEHOLDER,
-      packageNameShortSnakeCase
-    )
-    .replaceAll(PACKAGE_NAME_PRETTY_PLACEHOLDER, packageNamePretty)
-    .replaceAll(PACKAGE_IMPORT_PATH_PLACEHOLDER, fullPackageImportPath)
-    .replaceAll(MODULE_NAME_PLACEHOLDER, fields.moduleName)
-    .replaceAll(MODULE_NAME_ALL_CAPS_PLACEHOLDER, moduleNameAllCaps)
+    .replaceAll(SIDEBAR_LABEL_PLACEHOLDER, sidebarLabel)
+    .replaceAll(MODULE_NAME_PLACEHOLDER, fields.className)
+    .replaceAll(PACKAGE_NAME_PLACEHOLDER, extraFields.packageName)
+    .replaceAll(FULL_IMPORT_PATH_PLACEHOLDER, extraFields.fullImportPath)
+    .replaceAll(ENV_VAR_NAME_PLACEHOLDER, extraFields.envVarName)
+    .replaceAll(PYTHON_DOC_URL_PLACEHOLDER, pyDocUrl)
+    .replaceAll(API_REF_MODULE_PLACEHOLDER, apiRefModuleUrl)
+    .replaceAll(API_REF_PACKAGE_PLACEHOLDER, apiRefPackageUrl)
     .replace(LOCAL_PLACEHOLDER, extraFields?.local ? "✅" : "❌")
     .replace(
       SERIALIZABLE_PLACEHOLDER,
@@ -157,6 +137,7 @@ export async function fillLLMIntegrationDocTemplate(fields: {
     )
     .replace(PY_SUPPORT_PLACEHOLDER, extraFields?.pySupport ? "✅" : "❌");
 
+  const packageNameShortSnakeCase = fields.className.replace(/-/g, "_");
   const docPath = path.join(
     INTEGRATIONS_DOCS_PATH,
     `${packageNameShortSnakeCase}.ipynb`

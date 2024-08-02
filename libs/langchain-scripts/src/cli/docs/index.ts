@@ -9,68 +9,51 @@ import { fillRetrieverIntegrationDocTemplate } from "./retrievers.js";
 import { fillEmbeddingsIntegrationDocTemplate } from "./embeddings.js";
 
 type CLIInput = {
-  package: string;
-  module: string;
   type: string;
   community: boolean;
+  classname: string;
 };
 
 async function main() {
   const program = new Command();
   program
     .description("Create a new integration doc.")
-    .option("--package <package>", "Package name, eg openai.")
-    .option("--module <module>", "Module name, e.g ChatOpenAI")
-    .option("--type <type>", "Type of integration, e.g. 'chat'")
     .option(
-      "--community",
-      "If the integration is a community integration. Will effect the fields populated in the template."
-    );
+      "--classname <classname>",
+      "Class name of the integration. e.g ChatOpenAI"
+    )
+    .option("--type <type>", "Type of integration, e.g. 'chat'");
 
   program.parse();
 
   const options = program.opts<CLIInput>();
 
-  const { module: moduleName, type, community: isCommunity } = options;
-  let { package: packageName } = options;
-
-  if (packageName.startsWith("@langchain/")) {
-    packageName = packageName.replace("@langchain/", "");
-  }
+  const { classname: className, type } = options;
 
   switch (type) {
     case "chat":
       await fillChatIntegrationDocTemplate({
-        packageName,
-        moduleName,
-        isCommunity,
+        className,
       });
       break;
     case "doc_loader":
       await fillDocLoaderIntegrationDocTemplate({
-        packageName,
-        moduleName,
+        className,
       });
       break;
     case "llm":
       await fillLLMIntegrationDocTemplate({
-        packageName,
-        moduleName,
-        isCommunity,
+        className,
       });
       break;
     case "retriever":
       await fillRetrieverIntegrationDocTemplate({
-        packageName,
-        moduleName,
-        isCommunity,
+        className,
       });
       break;
     case "embeddings":
       await fillEmbeddingsIntegrationDocTemplate({
-        packageName,
-        moduleName,
-        isCommunity,
+        className,
       });
       break;
     default:
