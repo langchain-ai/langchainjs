@@ -123,10 +123,10 @@ export async function fillRetrieverIntegrationDocTemplate(fields: {
     packageNameGuess: `@langchain/${fields.packageName}`,
     isCommunity: fields.isCommunity,
   });
-  const pySupport = extraFields.pySupport;
-  const canSelfHost = extraFields.canSelfHost;
-  const hasCloudOffering = extraFields.hasCloudOffering;
-  const packageName = extraFields.packageName;
+  const { pySupport } = extraFields;
+  const { canSelfHost } = extraFields;
+  const { hasCloudOffering } = extraFields;
+  const { packageName } = extraFields;
   const fullImportPath = extraFields.fullImportPath ?? extraFields.packageName;
 
   const apiRefModuleUrl = `https://api.js.langchain.com/classes/${fullImportPath
