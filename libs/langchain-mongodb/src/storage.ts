@@ -103,8 +103,12 @@ export class MongoDBStore extends BaseStore<string, Uint8Array> {
       }
       if (value === undefined || value === null) {
         return undefined;
-      } else if (typeof value === "object") {
+      } 
+      else if (typeof value.value === "object") {
         return encoder.encode(JSON.stringify(value.value));
+      }
+      else if (typeof value.value === "string") {
+        return encoder.encode(value.value);    
       } else {
         throw new Error("Unexpected value type");
       }
