@@ -20,7 +20,6 @@ const SERIALIZABLE_PLACEHOLDER = "__serializable__";
 const LOCAL_PLACEHOLDER = "__local__";
 const PY_SUPPORT_PLACEHOLDER = "__py_support__";
 
-const WEB_SUPPORT_PLACEHOLDER = "__web_support__";
 const NODE_SUPPORT_PLACEHOLDER = "__fs_support__";
 
 const NODE_ONLY_SIDEBAR_BADGE_PLACEHOLDER = "__node_only_sidebar__";
@@ -155,8 +154,10 @@ export async function fillDocLoaderIntegrationDocTemplate(fields: {
       NODE_ONLY_TOOL_TIP_PLACEHOLDER,
       extraFields?.nodeOnly ? NODE_ONLY_TOOLTIP : ""
     )
-    .replaceAll(WEB_SUPPORT_PLACEHOLDER, extraFields?.webLoader ? "✅" : "❌")
-    .replaceAll(NODE_SUPPORT_PLACEHOLDER, extraFields?.nodeOnly ? "✅" : "❌")
+    .replaceAll(
+      NODE_SUPPORT_PLACEHOLDER,
+      extraFields?.nodeOnly ? "Node-only" : "All environments"
+    )
     .replaceAll(LOCAL_PLACEHOLDER, extraFields?.local ? "✅" : "❌")
     .replaceAll(
       SERIALIZABLE_PLACEHOLDER,
