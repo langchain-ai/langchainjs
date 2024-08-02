@@ -123,17 +123,6 @@ export type LangSmithParams = {
   ls_stop?: Array<string>;
 };
 
-interface ChatModelGenerateCachedParameters<
-  T extends BaseChatModel<CallOptions>,
-  CallOptions extends BaseChatModelCallOptions = BaseChatModelCallOptions
-> {
-  messages: BaseMessageLike[][];
-  cache: BaseCache<Generation[]>;
-  llmStringKey: string;
-  parsedOptions: T["ParsedCallOptions"];
-  handledOptions: RunnableConfig;
-}
-
 /**
  * Base class for chat models. It extends the BaseLanguageModel class and
  * provides methods for generating chat based on input messages.
@@ -449,9 +438,14 @@ export abstract class BaseChatModel<
     llmStringKey,
     parsedOptions,
     handledOptions,
-  }: ChatModelGenerateCachedParameters<typeof this>): Promise<
-    LLMResult & { missingPromptIndices: number[] }
-  > {
+  }: {
+    messages: BaseMessageLike[][];
+    cache: BaseCache<Generation[]>;
+    llmStringKey: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    parsedOptions: any;
+    handledOptions: RunnableConfig;
+  }): Promise<LLMResult & { missingPromptIndices: number[] }> {
     const baseMessages = messages.map((messageList) =>
       messageList.map(coerceMessageLikeToMessage)
     );
