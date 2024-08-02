@@ -2,7 +2,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
-import { similarity as ml_distance_similarity } from "ml-distance";
 import { z } from "zod";
 import {
   BaseCallbackConfig,
@@ -46,6 +45,7 @@ import {
   StructuredOutputMethodOptions,
 } from "../../language_models/base.js";
 import { VectorStore } from "../../vectorstores.js";
+import { cosine } from "../ml-distance/similarities.js";
 
 /**
  * Parser for comma-separated values. It splits the input text by commas
@@ -750,7 +750,7 @@ interface MemoryVector {
  * function.
  */
 export interface FakeVectorStoreArgs {
-  similarity?: typeof ml_distance_similarity.cosine;
+  similarity?: typeof cosine;
 }
 
 /**
@@ -763,7 +763,7 @@ export class FakeVectorStore extends VectorStore {
 
   memoryVectors: MemoryVector[] = [];
 
-  similarity: typeof ml_distance_similarity.cosine;
+  similarity: typeof cosine;
 
   _vectorstoreType(): string {
     return "memory";
@@ -775,7 +775,7 @@ export class FakeVectorStore extends VectorStore {
   ) {
     super(embeddings, rest);
 
-    this.similarity = similarity ?? ml_distance_similarity.cosine;
+    this.similarity = similarity ?? cosine;
   }
 
   /**

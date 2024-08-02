@@ -43,18 +43,6 @@ export interface BaseLLMParams extends BaseLanguageModelParams {
 
 export interface BaseLLMCallOptions extends BaseLanguageModelCallOptions {}
 
-interface LLMGenerateCachedParameters<
-  T extends BaseLLM<CallOptions>,
-  CallOptions extends BaseLLMCallOptions = BaseLLMCallOptions
-> {
-  prompts: string[];
-  cache: BaseCache<Generation[]>;
-  llmStringKey: string;
-  parsedOptions: T["ParsedCallOptions"];
-  handledOptions: RunnableConfig;
-  runId?: string;
-}
-
 /**
  * LLM Wrapper. Takes in a prompt (or prompts) and returns a string.
  */
@@ -351,9 +339,15 @@ export abstract class BaseLLM<
     parsedOptions,
     handledOptions,
     runId,
-  }: LLMGenerateCachedParameters<typeof this>): Promise<
-    LLMResult & { missingPromptIndices: number[] }
-  > {
+  }: {
+    prompts: string[];
+    cache: BaseCache<Generation[]>;
+    llmStringKey: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    parsedOptions: any;
+    handledOptions: RunnableConfig;
+    runId?: string;
+  }): Promise<LLMResult & { missingPromptIndices: number[] }> {
     const callbackManager_ = await CallbackManager.configure(
       handledOptions.callbacks,
       this.callbacks,
