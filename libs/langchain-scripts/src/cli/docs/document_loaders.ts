@@ -141,9 +141,7 @@ export async function fillDocLoaderIntegrationDocTemplate(fields: {
   const apiRefModuleUrl = `https://api.js.langchain.com/classes/${extraFields.fullImportPath
     .replace("@", "")
     .replaceAll("/", "_")
-    .replaceAll("-", "_")}_${importPathEnding}.${
-    fields.className
-  }.html`;
+    .replaceAll("-", "_")}_${importPathEnding}.${fields.className}.html`;
   const apiRefPackageUrl = apiRefModuleUrl
     .replace("/classes/", "/modules/")
     .replace(`.${fields.className}.html`, ".html");
