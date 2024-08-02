@@ -5,6 +5,7 @@ import { Command } from "commander";
 import { fillChatIntegrationDocTemplate } from "./chat.js";
 import { fillDocLoaderIntegrationDocTemplate } from "./document_loaders.js";
 import { fillLLMIntegrationDocTemplate } from "./llms.js";
+import { fillRetrieverIntegrationDocTemplate } from "./retrievers.js";
 import { fillEmbeddingsIntegrationDocTemplate } from "./embeddings.js";
 
 type CLIInput = {
@@ -58,6 +59,13 @@ async function main() {
         isCommunity,
       });
       break;
+    case "retriever":
+      await fillRetrieverIntegrationDocTemplate({
+        packageName,
+        moduleName,
+        isCommunity,
+      });
+      break;
     case "embeddings":
       await fillEmbeddingsIntegrationDocTemplate({
         packageName,
@@ -67,7 +75,7 @@ async function main() {
       break;
     default:
       console.error(
-        `Invalid type: ${type}.\nOnly 'chat', 'llm', 'embeddings' and 'doc_loader' are supported at this time.`
+        `Invalid type: ${type}.\nOnly 'chat', 'llm', 'retriever', 'embeddings' and 'doc_loader' are supported at this time.`
       );
       process.exit(1);
   }
