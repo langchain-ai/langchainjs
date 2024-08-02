@@ -7,6 +7,9 @@ import {
   greenText,
   redBackground,
 } from "../utils/get-input.js";
+import { camelCaseToSpaced } from "../utils/camel-case-to-spaces.js";
+
+const SIDEBAR_LABEL_PLACEHOLDER = "__sidebar_label__";
 
 const NODE_OR_WEB_PLACEHOLDER = "__fs_or_web__";
 const NODE_OR_WEB_IMPORT_PATH_PLACEHOLDER = "__fs_or_web_import_path__";
@@ -16,7 +19,6 @@ const MODULE_NAME_PLACEHOLDER = "__ModuleName__";
 const API_REF_BASE_PACKAGE_URL = `https://api.js.langchain.com/modules/langchain_community_document_loaders_${NODE_OR_WEB_PLACEHOLDER}_${FILE_NAME_PLACEHOLDER}.html`;
 const API_REF_BASE_MODULE_URL = `https://v02.api.js.langchain.com/classes/langchain_community_document_loaders_${NODE_OR_WEB_PLACEHOLDER}_${FILE_NAME_PLACEHOLDER}.${MODULE_NAME_PLACEHOLDER}.html`;
 
-const SERIALIZABLE_PLACEHOLDER = "__serializable__";
 const LOCAL_PLACEHOLDER = "__local__";
 const PY_SUPPORT_PLACEHOLDER = "__py_support__";
 
@@ -55,7 +57,6 @@ const fetchAPIRefUrl = async (url: string): Promise<boolean> => {
 type ExtraFields = {
   webLoader: boolean;
   nodeOnly: boolean;
-  serializable: boolean;
   pySupport: boolean;
   local: boolean;
 };
@@ -68,11 +69,6 @@ async function promptExtraFields(): Promise<ExtraFields> {
   );
   const isNodeOnly = await getUserInput(
     "Does this integration _only_ support Node environments? (y/n) ",
-    undefined,
-    true
-  );
-  const isSerializable = await getUserInput(
-    "Does this integration support serializable output? (y/n) ",
     undefined,
     true
   );
@@ -90,7 +86,6 @@ async function promptExtraFields(): Promise<ExtraFields> {
   return {
     webLoader: isWebLoader.toLowerCase() === "y",
     nodeOnly: isNodeOnly.toLowerCase() === "y",
-    serializable: isSerializable.toLowerCase() === "y",
     pySupport: hasPySupport.toLowerCase() === "y",
     local: hasLocalSupport.toLowerCase() === "y",
   };
@@ -138,7 +133,10 @@ export async function fillDocLoaderIntegrationDocTemplate(fields: {
     moduleNameAllCaps = moduleNameAllCaps.replace("_LOADER", "");
   }
 
+  const sidebarLabel = fields.moduleName.includes("Loader") ? fields.moduleName.replace("Loader", "") : fields.moduleName
+
   const docTemplate = (await fs.promises.readFile(TEMPLATE_PATH, "utf-8"))
+    .replaceAll(SIDEBAR_LABEL_PLACEHOLDER, _.capitalize(camelCaseToSpaced(sidebarLabel)))
     .replaceAll(NODE_OR_WEB_PLACEHOLDER, extraFields?.webLoader ? "web" : "fs")
     .replaceAll(MODULE_NAME_PLACEHOLDER, fields.moduleName)
     .replaceAll(MODULE_NAME_ALL_CAPS_PLACEHOLDER, moduleNameAllCaps)
@@ -158,10 +156,6 @@ export async function fillDocLoaderIntegrationDocTemplate(fields: {
     .replaceAll(WEB_SUPPORT_PLACEHOLDER, extraFields?.webLoader ? "✅" : "❌")
     .replaceAll(NODE_SUPPORT_PLACEHOLDER, extraFields?.nodeOnly ? "✅" : "❌")
     .replaceAll(LOCAL_PLACEHOLDER, extraFields?.local ? "✅" : "❌")
-    .replaceAll(
-      SERIALIZABLE_PLACEHOLDER,
-      extraFields?.serializable ? "beta" : "❌"
-    )
     .replaceAll(PY_SUPPORT_PLACEHOLDER, extraFields?.pySupport ? "✅" : "❌");
 
   const docPath = path.join(

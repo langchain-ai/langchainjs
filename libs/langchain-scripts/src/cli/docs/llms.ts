@@ -6,6 +6,10 @@ import {
   greenText,
   redBackground,
 } from "../utils/get-input.js";
+import _ from "lodash";
+import { camelCaseToSpaced } from "../utils/camel-case-to-spaces.js";
+
+const SIDEBAR_LABEL_PLACEHOLDER = "__sidebar_label__";
 
 const PACKAGE_NAME_PLACEHOLDER = "__package_name__";
 const PACKAGE_NAME_SHORT_SNAKE_CASE_PLACEHOLDER =
@@ -139,7 +143,19 @@ export async function fillLLMIntegrationDocTemplate(fields: {
     moduleNameAllCaps = moduleNameAllCaps.replace("LLM", "");
   }
 
+  let sidebarLabel = camelCaseToSpaced(fields.moduleName);
+  if (sidebarLabel.includes("llm")) {
+    sidebarLabel = sidebarLabel.replace("llm", "");
+  } else if (sidebarLabel.includes("LLM")) {
+    sidebarLabel = sidebarLabel.replace("LLM", "");
+  } else if (sidebarLabel.includes("Llm")) {
+    sidebarLabel = sidebarLabel.replace("Llm", "");
+  }
+  // remove extra spaces
+  sidebarLabel = sidebarLabel.trim().replaceAll("  ", " ");
+
   const docTemplate = (await fs.promises.readFile(TEMPLATE_PATH, "utf-8"))
+    .replace(SIDEBAR_LABEL_PLACEHOLDER, _.capitalize(sidebarLabel))
     .replaceAll(PACKAGE_NAME_PLACEHOLDER, fields.packageName)
     .replaceAll(PACKAGE_NAME_SNAKE_CASE_PLACEHOLDER, fullPackageNameSnakeCase)
     .replaceAll(
