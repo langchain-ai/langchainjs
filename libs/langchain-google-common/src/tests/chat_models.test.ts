@@ -10,6 +10,8 @@ import {
   ToolMessage,
 } from "@langchain/core/messages";
 import { InMemoryStore } from "@langchain/core/stores";
+import {CallbackHandlerMethods} from "@langchain/core/callbacks/base";
+import {Serialized} from "@langchain/core/load/serializable";
 
 import { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
@@ -684,13 +686,8 @@ describe("Mock ChatGoogle", () => {
 
     async function store(path: string, text: string): Promise<void> {
       const type = path.endsWith(".png") ? "image/png" : "text/plain";
-      const blob = new MediaBlob({
-        data: {
-          value: text,
-          type,
-        },
-        path,
-      });
+      const data = new Blob([text], { type });
+      const blob = await MediaBlob.fromBlob( data, { path } );
       await resolver.store(blob);
     }
     await store("resolve://host/foo", "fooing");
@@ -705,10 +702,23 @@ describe("Mock ChatGoogle", () => {
       projectId,
       resultFile: "chat-3-mock.json",
     };
+    const callbacks: CallbackHandlerMethods[] = [
+      {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        handleChatModelStart(llm: Serialized, messages: BaseMessage[][], runId: string, _parentRunId?: string, _extraParams?: Record<string, unknown>, _tags?: string[], _metadata?: Record<string, unknown>, _runName?: string): any {
+          console.log('Chat start', llm, messages, runId )
+        },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        handleCustomEvent(eventName: string, data: any, runId: string, tags?: string[], metadata?: Record<string, any>): any {
+          console.log('Custom event', eventName, runId, data, tags, metadata);
+        }
+      }
+    ];
     const model = new ChatGoogle({
       authOptions,
       model: "gemini-1.5-flash",
       mediaManager,
+      callbacks,
     });
 
     const message: MessageContentComplex[] = [

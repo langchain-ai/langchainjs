@@ -5,6 +5,7 @@ import {
 } from "@langchain/core/utils/async_caller";
 import { getRuntimeEnvironment } from "@langchain/core/utils/env";
 import { StructuredToolInterface } from "@langchain/core/tools";
+import {BaseRunManager} from "@langchain/core/callbacks/manager";
 import type {
   GoogleAIBaseLLMInput,
   GoogleConnectionParams,
@@ -20,14 +21,14 @@ import type {
   GeminiFunctionDeclaration,
   GoogleAIModelRequestParams,
   GoogleRawResponse,
+  GoogleAIAPI,
 } from "./types.js";
 import {
   GoogleAbstractedClient,
   GoogleAbstractedClientOps,
   GoogleAbstractedClientOpsMethod,
 } from "./auth.js";
-import { zodToGeminiParameters } from "./utils/zod_to_gemini_parameters.js";
-import { getGeminiAPI } from "./utils/index.js";
+import { zodToGeminiParameters, getGeminiAPI } from "./utils/index.js";
 
 export abstract class GoogleConnection<
   CallOptions extends AsyncCallerCallOptions,
@@ -210,8 +211,7 @@ export abstract class GoogleAIConnection<
 
   client: GoogleAbstractedClient;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  api: any; // FIXME: Make this a real type
+  api: GoogleAIAPI;
 
   constructor(
     fields: GoogleAIBaseLLMInput<AuthOptions> | undefined,
@@ -231,6 +231,16 @@ export abstract class GoogleAIConnection<
       return "gemini";
     } else {
       return null;
+    }
+  }
+
+  get modelPublisher(): string {
+    switch (this.modelFamily) {
+      case "gemini":
+      case "palm":
+        return "google";
+      default:
+        return "unknown";
     }
   }
 
@@ -274,10 +284,31 @@ export abstract class GoogleAIConnection<
   async request(
     input: MessageType,
     parameters: GoogleAIModelRequestParams,
-    options: CallOptions
+    options: CallOptions,
+    runManager?: BaseRunManager,
   ): Promise<GoogleLLMResponse> {
+    const moduleName = this.constructor.name;
     const data = await this.formatData(input, parameters);
+
+    await runManager?.handleCustomEvent(`google-request-${moduleName}`, {
+      data,
+      options,
+      connection: {
+        ...this,
+        url: await this.buildUrl(),
+        urlMethod: await this.buildUrlMethod(),
+        modelFamily: this.modelFamily,
+        modelPublisher: this.modelPublisher,
+        computedPlatformType: this.computedPlatformType,
+      },
+    });
+
     const response = await this._request(data, options);
+
+    await runManager?.handleCustomEvent(`google-response-${moduleName}`, {
+      response,
+    });
+
     return response;
   }
 }

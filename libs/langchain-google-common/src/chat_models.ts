@@ -102,7 +102,7 @@ class ChatConnection<AuthOptions> extends AbstractGoogleLLMConnection<
     _parameters: GoogleAIModelParams
   ): Promise<GeminiContent[]> {
     const inputPromises: Promise<GeminiContent[]>[] = input.map((msg, i) =>
-      this.api.baseMessageToContent(
+      this.api.baseMessageToContent!(
         msg,
         input[i - 1],
         this.useSystemInstruction
@@ -151,7 +151,7 @@ class ChatConnection<AuthOptions> extends AbstractGoogleLLMConnection<
         if (index === 0) {
           // eslint-disable-next-line prefer-destructuring
           ret = (
-            await this.api.baseMessageToContent(message, undefined, true)
+            await this.api.baseMessageToContent!(message, undefined, true)
           )[0];
         } else {
           throw new Error(
@@ -347,7 +347,8 @@ export abstract class ChatGoogleBase<AuthOptions>
     const response = await this.connection.request(
       messages,
       parameters,
-      options
+      options,
+      runManager,
     );
     const ret = this.connection.api.safeResponseToChatResult(
       response,
