@@ -131,9 +131,9 @@ export async function fillEmbeddingsIntegrationDocTemplate(fields: {
     isCommunity: fields.isCommunity,
   });
   envVarName = extraFields.envVarName;
-  const pySupport = extraFields.pySupport;
+  const {pySupport} = extraFields;
   const localSupport = extraFields.local;
-  const packageName = extraFields.packageName;
+  const {packageName} = extraFields;
   const fullImportPath = extraFields.fullImportPath ?? extraFields.packageName;
 
   const apiRefModuleUrl = `https://api.js.langchain.com/classes/${fullImportPath
