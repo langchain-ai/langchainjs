@@ -10,6 +10,14 @@ import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { VectorStore } from "@langchain/core/vectorstores";
 import { Document } from "@langchain/core/documents";
 
+type SharedChromaLibArgs = {
+  numDimensions?: number;
+  collectionName?: string;
+  filter?: object;
+  collectionMetadata?: CollectionMetadata;
+  clientParams?: Omit<ChromaClientParams, "path">;
+};
+
 /**
  * Defines the arguments that can be passed to the `Chroma` class
  * constructor. It can either contain a `url` for the Chroma database, the
@@ -20,20 +28,12 @@ import { Document } from "@langchain/core/documents";
  * `filter`.
  */
 export type ChromaLibArgs =
-  | {
+  | ({
       url?: string;
-      numDimensions?: number;
-      collectionName?: string;
-      filter?: object;
-      collectionMetadata?: CollectionMetadata;
-    }
-  | {
+    } & SharedChromaLibArgs)
+  | ({
       index?: ChromaClientT;
-      numDimensions?: number;
-      collectionName?: string;
-      filter?: object;
-      collectionMetadata?: CollectionMetadata;
-    };
+    } & SharedChromaLibArgs);
 
 /**
  * Defines the parameters for the `delete` method in the `Chroma` class.
@@ -73,10 +73,7 @@ export class Chroma extends VectorStore {
     return "chroma";
   }
 
-  constructor(
-    embeddings: EmbeddingsInterface,
-    args: ChromaLibArgs & { clientParams?: Omit<ChromaClientParams, "path"> }
-  ) {
+  constructor(embeddings: EmbeddingsInterface, args: ChromaLibArgs) {
     super(embeddings, args);
     this.numDimensions = args.numDimensions;
     this.embeddings = embeddings;
