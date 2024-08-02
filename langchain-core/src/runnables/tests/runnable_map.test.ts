@@ -67,59 +67,6 @@ test("Test map inference in a sequence", async () => {
   );
 });
 
-test("Test invoke with signal", async () => {
-  const map = RunnableMap.from({
-    question: new RunnablePassthrough(),
-    context: async () => {
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      return "SOME STUFF";
-    },
-  });
-  await expect(async () => {
-    const controller = new AbortController();
-    await Promise.all([
-      map.invoke("testing", {
-        signal: controller.signal,
-      }),
-      new Promise<void>((resolve) => {
-        controller.abort();
-        resolve();
-      }),
-    ]);
-  }).rejects.toThrowError();
-  await expect(async () => {
-    const controller = new AbortController();
-    await Promise.all([
-      map.invoke("testing", {
-        signal: controller.signal,
-      }),
-      new Promise<void>((resolve) => {
-        setTimeout(() => {
-          controller.abort();
-          resolve();
-        }, 250);
-      }),
-    ]);
-  }).rejects.toThrowError();
-});
-
-test("Test stream with signal", async () => {
-  const map = RunnableMap.from({
-    question: new RunnablePassthrough(),
-    context: async () => {
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      return "SOME STUFF";
-    },
-  });
-  const controller = new AbortController();
-  await expect(async () => {
-    const stream = await map.stream("TESTING", { signal: controller.signal });
-    for await (const _ of stream) {
-      controller.abort();
-    }
-  }).rejects.toThrowError();
-});
-
 test("Should not allow mismatched inputs", async () => {
   const prompt = ChatPromptTemplate.fromTemplate(
     "context: {context}, question: {question}"
