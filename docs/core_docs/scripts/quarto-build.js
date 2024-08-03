@@ -2,7 +2,7 @@ const fs = require("node:fs");
 const { glob } = require("glob");
 const { execSync } = require("node:child_process");
 
-const IGNORED_CELL_REGEX = /^```\w*?\n\/\/ ?@lc-docs-hide-cell\n[\s\S]*?^```/gm;
+const IGNORED_CELL_REGEX = /^```\w*?[\s\S]\/\/ ?@lc-docs-hide-cell[\s\S]*?^```/gm;
 const LC_TS_IGNORE_REGEX = /\/\/ ?@lc-ts-ignore\n/g;
 
 async function main() {
@@ -25,6 +25,7 @@ async function main() {
         content.match(IGNORED_CELL_REGEX) ||
         content.match(LC_TS_IGNORE_REGEX)
       ) {
+        console.log(content);
         content = content
           .replace(IGNORED_CELL_REGEX, "")
           .replace(LC_TS_IGNORE_REGEX, "");
