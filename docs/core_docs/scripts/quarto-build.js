@@ -22,9 +22,6 @@ async function main() {
   for (const renamedFilepath of allRenames) {
     if (fs.existsSync(renamedFilepath)) {
       let content = fs.readFileSync(renamedFilepath, "utf-8").toString();
-      if (renamedFilepath.includes("llms/bedrock")) {
-        console.log(renamedFilepath, content.match(IGNORED_CELL_REGEX), content);
-      }
       if (
         content.match(IGNORED_CELL_REGEX) ||
         content.match(LC_TS_IGNORE_REGEX)
