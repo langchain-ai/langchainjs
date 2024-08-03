@@ -20,13 +20,10 @@ async function main() {
   gitignore += allRenames.join("\n");
   fs.writeFileSync(pathToRootGitignore, gitignore);
   for (const renamedFilepath of allRenames) {
-    if (renamedFilepath.includes("bedrock")) {
-      console.log(renamedFilepath, fs.existsSync(renamedFilepath))
-    }
     if (fs.existsSync(renamedFilepath)) {
       let content = fs.readFileSync(renamedFilepath, "utf-8").toString();
-      if (renamedFilepath.includes("bedrock")) {
-        console.log(renamedFilepath, content.match(IGNORED_CELL_REGEX))
+      if (renamedFilepath.includes("llms/bedrock")) {
+        console.log(renamedFilepath, content.match(IGNORED_CELL_REGEX), content);
       }
       if (
         content.match(IGNORED_CELL_REGEX) ||
