@@ -2,7 +2,8 @@ const fs = require("node:fs");
 const { glob } = require("glob");
 const { execSync } = require("node:child_process");
 
-const IGNORED_CELL_REGEX = /^```\w*?[\s\S]\/\/ ?@lc-docs-hide-cell[\s\S]*?^```/gm;
+const IGNORED_CELL_REGEX =
+  /^```\w*?[\s\S]\/\/ ?@lc-docs-hide-cell[\s\S]*?^```/gm;
 const LC_TS_IGNORE_REGEX = /\/\/ ?@lc-ts-ignore\n/g;
 
 async function main() {
@@ -19,13 +20,18 @@ async function main() {
   gitignore += allRenames.join("\n");
   fs.writeFileSync(pathToRootGitignore, gitignore);
   for (const renamedFilepath of allRenames) {
+    if (renamedFilepath.includes("bedrock")) {
+      console.log(renamedFilepath, fs.existsSync(renamedFilepath))
+    }
     if (fs.existsSync(renamedFilepath)) {
       let content = fs.readFileSync(renamedFilepath, "utf-8").toString();
+      if (renamedFilepath.includes("bedrock")) {
+        console.log(renamedFilepath, content.match(IGNORED_CELL_REGEX))
+      }
       if (
         content.match(IGNORED_CELL_REGEX) ||
         content.match(LC_TS_IGNORE_REGEX)
       ) {
-        console.log(content);
         content = content
           .replace(IGNORED_CELL_REGEX, "")
           .replace(LC_TS_IGNORE_REGEX, "");
