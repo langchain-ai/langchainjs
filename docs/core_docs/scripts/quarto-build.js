@@ -20,7 +20,7 @@ async function main() {
   fs.writeFileSync(pathToRootGitignore, gitignore);
   for (const renamedFilepath of allRenames) {
     if (fs.existsSync(renamedFilepath)) {
-      let content = fs.readFileSync(renamedFilepath).toString();
+      let content = fs.readFileSync(renamedFilepath, "utf-8").toString();
       if (
         content.match(IGNORED_CELL_REGEX) ||
         content.match(LC_TS_IGNORE_REGEX)
