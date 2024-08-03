@@ -9,3 +9,5 @@ inputs:
 runs:
   using: 'docker'
   image: 'Dockerfile'
+  env:
+    LANGCHAIN_PEOPLE_GITHUB_TOKEN: ${{ inputs.token }}

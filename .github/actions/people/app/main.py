@@ -1,6 +1,7 @@
 # Adapted from https://github.com/tiangolo/fastapi/blob/master/.github/actions/people/app/main.py
 
 import logging
+import os
 import subprocess
 import sys
 from collections import Counter
@@ -289,7 +290,7 @@ class PRsResponse(BaseModel):
 class Settings(BaseSettings):
     input_token: SecretStr
     github_repository: str
-    httpx_timeout: int = 30
+    httpx_timeout: int = 60
 
 
 def get_graphql_response(
@@ -516,6 +517,9 @@ def get_top_users(
 
 
 if __name__ == "__main__":
+    pr_github_token = os.environ.get('LANGCHAIN_PEOPLE_GITHUB_TOKEN')
+    if not pr_github_token:
+        raise ValueError("LANGCHAIN_PEOPLE_GITHUB_TOKEN environment variable is not set")
     logging.basicConfig(level=logging.INFO)
     settings = Settings()
     logging.info(f"Using config: {settings.model_dump_json()}")
@@ -634,7 +638,7 @@ if __name__ == "__main__":
     message = "👥 Update LangChain people data"
     result = subprocess.run(["git", "commit", "-m", message], check=True)
     logging.info("Pushing branch")
-    subprocess.run(["git", "push", "origin", branch_name, "-f"], check=True)
+    subprocess.run(["git", "push", f"https://x-access-token:{pr_github_token}@github.com/{settings.github_repository}.git", branch_name, "-f"], check=True)
     logging.info("Creating PR")
     pr = repo.create_pull(title=message, body=message, base="main", head=branch_name)
     logging.info(f"Created PR: {pr.number}")
