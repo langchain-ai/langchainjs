@@ -526,6 +526,16 @@ export class ChatAlibabaTongyi
     );
 
     for await (const chunk of stream) {
+      /* if some error occurs:
+         {
+          "code": "DataInspectionFailed",
+          "message": "Output data may contain inappropriate content.",
+          "request_id": "43d18007-5aa5-9d18-b3b3-a55aba9ce8cb"
+        }
+      */
+      if (!chunk.output) {
+        throw new Error(JSON.stringify(chunk));
+      }
       const { text, finish_reason } = chunk.output;
       yield new ChatGenerationChunk({
         text,
@@ -593,7 +603,7 @@ export class ChatAlibabaTongyi
           continue;
         }
         try {
-          yield JSON.parse(line.slice("data:".length).trim());
+          yield JSON.parse(line.slice("data:".length));
         } catch (e) {
           console.warn(`Received a non-JSON parseable chunk: ${line}`);
         }
