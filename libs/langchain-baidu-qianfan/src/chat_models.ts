@@ -414,7 +414,7 @@ export class ChatBaiduQianfan
       if (!stream) {
         return response;
       } else {
-        let streamResponse = {result: ''} as {
+        let streamResponse = { result: "" } as {
           id: string;
           object: string;
           created: number;
