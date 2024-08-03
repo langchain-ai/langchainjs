@@ -152,6 +152,8 @@ services:
         condition: service_completed_successfully
       test-exports-esm:
         condition: service_completed_successfully
+      test-exports-tsc:
+        condition: service_completed_successfully
       test-exports-cjs:
         condition: service_completed_successfully
       test-exports-cf:
