@@ -43,27 +43,16 @@ export interface BaseLLMParams extends BaseLanguageModelParams {
 
 export interface BaseLLMCallOptions extends BaseLanguageModelCallOptions {}
 
-interface LLMGenerateCachedParameters<
-  T extends BaseLLM<CallOptions>,
-  CallOptions extends BaseLLMCallOptions = BaseLLMCallOptions
-> {
-  prompts: string[];
-  cache: BaseCache<Generation[]>;
-  llmStringKey: string;
-  parsedOptions: T["ParsedCallOptions"];
-  handledOptions: RunnableConfig;
-  runId?: string;
-}
-
 /**
  * LLM Wrapper. Takes in a prompt (or prompts) and returns a string.
  */
 export abstract class BaseLLM<
   CallOptions extends BaseLLMCallOptions = BaseLLMCallOptions
 > extends BaseLanguageModel<string, CallOptions> {
+  // Backwards compatibility since fields have been moved to RunnableConfig
   declare ParsedCallOptions: Omit<
     CallOptions,
-    keyof RunnableConfig & "timeout"
+    Exclude<keyof RunnableConfig, "signal" | "timeout" | "maxConcurrency">
   >;
 
   // Only ever instantiated in main LangChain
@@ -103,14 +92,13 @@ export abstract class BaseLLM<
     throw new Error("Not implemented.");
   }
 
-  protected _separateRunnableConfigFromCallOptions(
+  protected _separateRunnableConfigFromCallOptionsCompat(
     options?: Partial<CallOptions>
   ): [RunnableConfig, this["ParsedCallOptions"]] {
+    // For backwards compat, keep `signal` in both runnableConfig and callOptions
     const [runnableConfig, callOptions] =
       super._separateRunnableConfigFromCallOptions(options);
-    if (callOptions?.timeout && !callOptions.signal) {
-      callOptions.signal = AbortSignal.timeout(callOptions.timeout);
-    }
+    (callOptions as this["ParsedCallOptions"]).signal = runnableConfig.signal;
     return [runnableConfig, callOptions as this["ParsedCallOptions"]];
   }
 
@@ -126,7 +114,7 @@ export abstract class BaseLLM<
     } else {
       const prompt = BaseLLM._convertInputToPromptValue(input);
       const [runnableConfig, callOptions] =
-        this._separateRunnableConfigFromCallOptions(options);
+        this._separateRunnableConfigFromCallOptionsCompat(options);
       const callbackManager_ = await CallbackManager.configure(
         runnableConfig.callbacks,
         this.callbacks,
@@ -351,9 +339,15 @@ export abstract class BaseLLM<
     parsedOptions,
     handledOptions,
     runId,
-  }: LLMGenerateCachedParameters<typeof this>): Promise<
-    LLMResult & { missingPromptIndices: number[] }
-  > {
+  }: {
+    prompts: string[];
+    cache: BaseCache<Generation[]>;
+    llmStringKey: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    parsedOptions: any;
+    handledOptions: RunnableConfig;
+    runId?: string;
+  }): Promise<LLMResult & { missingPromptIndices: number[] }> {
     const callbackManager_ = await CallbackManager.configure(
       handledOptions.callbacks,
       this.callbacks,
@@ -461,7 +455,7 @@ export abstract class BaseLLM<
     }
 
     const [runnableConfig, callOptions] =
-      this._separateRunnableConfigFromCallOptions(parsedOptions);
+      this._separateRunnableConfigFromCallOptionsCompat(parsedOptions);
     runnableConfig.callbacks = runnableConfig.callbacks ?? callbacks;
 
     if (!this.cache) {
@@ -469,8 +463,9 @@ export abstract class BaseLLM<
     }
 
     const { cache } = this;
-    const llmStringKey =
-      this._getSerializedCacheKeyParametersForCall(callOptions);
+    const llmStringKey = this._getSerializedCacheKeyParametersForCall(
+      callOptions as CallOptions
+    );
     const { generations, missingPromptIndices } = await this._generateCached({
       prompts,
       cache,

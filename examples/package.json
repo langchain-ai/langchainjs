@@ -91,7 +91,6 @@
     "js-yaml": "^4.1.0",
     "langchain": "workspace:*",
     "langsmith": "^0.1.30",
-    "ml-distance": "^4.0.0",
     "mongodb": "^6.3.0",
     "pg": "^8.11.0",
     "pickleparser": "^0.2.1",

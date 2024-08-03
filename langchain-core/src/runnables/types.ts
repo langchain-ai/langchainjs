@@ -89,4 +89,16 @@ export interface RunnableConfig extends BaseCallbackConfig {
 
   /** Maximum number of parallel calls to make. */
   maxConcurrency?: number;
+
+  /**
+   * Timeout for this call in milliseconds.
+   */
+  timeout?: number;
+
+  /**
+   * Abort signal for this call.
+   * If provided, the call will be aborted when the signal is aborted.
+   * @see https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal
+   */
+  signal?: AbortSignal;
 }
