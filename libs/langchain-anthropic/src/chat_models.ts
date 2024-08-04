@@ -512,8 +512,17 @@ export class ChatAnthropicMessages<
       additionalKwargs
     );
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { role: _role, type: _type, ...rest } = additionalKwargs;
-    return { generations, llmOutput: rest };
+    const { role: _role, type: _type, usage, ...rest } = additionalKwargs;
+    return {
+      generations,
+      llmOutput: {
+        ...rest,
+        tokenUsage: {
+          promptTokens: usage?.input_tokens,
+          completionTokens: usage?.output_tokens,
+        },
+      },
+    };
   }
 
   /** @ignore */
