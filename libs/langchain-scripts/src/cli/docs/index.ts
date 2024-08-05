@@ -22,7 +22,7 @@ const ALLOWED_TYPES = [
   "embeddings",
   "doc_loader",
   "toolkit",
-  "tool"
+  "tool",
 ];
 
 async function main() {
@@ -78,7 +78,7 @@ async function main() {
     case "tool":
       await fillToolIntegrationDocTemplate({
         className,
-      })
+      });
       break;
     default:
       console.error(
