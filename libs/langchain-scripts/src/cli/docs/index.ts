@@ -7,12 +7,21 @@ import { fillDocLoaderIntegrationDocTemplate } from "./document_loaders.js";
 import { fillLLMIntegrationDocTemplate } from "./llms.js";
 import { fillRetrieverIntegrationDocTemplate } from "./retrievers.js";
 import { fillEmbeddingsIntegrationDocTemplate } from "./embeddings.js";
+import { fillToolkitIntegrationDocTemplate } from "./toolkits.js";
 
 type CLIInput = {
   type: string;
-  community: boolean;
   classname: string;
 };
+
+const ALLOWED_TYPES = [
+  "chat",
+  "llm",
+  "retriever",
+  "embeddings",
+  "doc_loader",
+  "toolkit",
+];
 
 async function main() {
   const program = new Command();
@@ -22,7 +31,10 @@ async function main() {
       "--classname <classname>",
       "Class name of the integration. e.g ChatOpenAI"
     )
-    .option("--type <type>", "Type of integration, e.g. 'chat'");
+    .option(
+      "--type <type>",
+      `Type of integration.\nMust be one of:\n - ${ALLOWED_TYPES.join("\n - ")}`
+    );
 
   program.parse();
 
@@ -56,9 +68,16 @@ async function main() {
         className,
       });
       break;
+    case "toolkit":
+      await fillToolkitIntegrationDocTemplate({
+        className,
+      });
+      break;
     default:
       console.error(
-        `Invalid type: ${type}.\nOnly 'chat', 'llm', 'retriever', 'embeddings' and 'doc_loader' are supported at this time.`
+        `Invalid type: '${type}'.\nMust be one of:\n - ${ALLOWED_TYPES.join(
+          "\n - "
+        )}`
       );
       process.exit(1);
   }
