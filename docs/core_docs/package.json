@@ -37,7 +37,7 @@
     "@docusaurus/remark-plugin-npm2yarn": "2.4.3",
     "@docusaurus/theme-mermaid": "2.4.3",
     "@mdx-js/react": "^1.6.22",
-    "@supabase/supabase-js": "^2.39.7",
+    "@supabase/supabase-js": "^2.45.0",
     "clsx": "^1.2.1",
     "cookie": "^0.6.0",
     "isomorphic-dompurify": "^2.9.0",
