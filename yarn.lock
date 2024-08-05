@@ -5980,6 +5980,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@azure/abort-controller@npm:^2.0.0":
+  version: 2.1.2
+  resolution: "@azure/abort-controller@npm:2.1.2"
+  dependencies:
+    tslib: ^2.6.2
+  checksum: 22176c04ea01498311c6bbd336669f6e3faffad1cbb0c9ebc6ee9c1ff2cf958fd17ce73c7354b99d8bda9fcd311325ece7bee248875279174e3fc460e8b1a63d
+  languageName: node
+  linkType: hard
+
 "@azure/core-auth@npm:^1.3.0":
   version: 1.4.0
   resolution: "@azure/core-auth@npm:1.4.0"
@@ -6001,7 +6010,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@azure/core-client@npm:^1.3.0, @azure/core-client@npm:^1.4.0":
+"@azure/core-client@npm:^1.3.0":
   version: 1.7.3
   resolution: "@azure/core-client@npm:1.7.3"
   dependencies:
@@ -6013,6 +6022,21 @@ __metadata:
     "@azure/logger": ^1.0.0
     tslib: ^2.2.0
   checksum: 155a188b75b2d5ea783d5fde50479337c41796736f0fced1576466c8251e429195c229f2aff0bf897761f15c19d8fd0deea9a54aab514bd3584e37140e3f0cdc
+  languageName: node
+  linkType: hard
+
+"@azure/core-client@npm:^1.9.2":
+  version: 1.9.2
+  resolution: "@azure/core-client@npm:1.9.2"
+  dependencies:
+    "@azure/abort-controller": ^2.0.0
+    "@azure/core-auth": ^1.4.0
+    "@azure/core-rest-pipeline": ^1.9.1
+    "@azure/core-tracing": ^1.0.0
+    "@azure/core-util": ^1.6.1
+    "@azure/logger": ^1.0.0
+    tslib: ^2.6.2
+  checksum: 961b829dfda4f734a763e9480a2ea622a7031ba2da4126d0add6e351a9f73ddc5782bf2b766735d976b61da3857014e0a90223d1f85d1c68468747a7a56851c3
   languageName: node
   linkType: hard
 
@@ -6134,47 +6158,35 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@azure/identity@npm:^4.0.1":
-  version: 4.0.1
-  resolution: "@azure/identity@npm:4.0.1"
+"@azure/core-util@npm:^1.6.1":
+  version: 1.9.2
+  resolution: "@azure/core-util@npm:1.9.2"
   dependencies:
-    "@azure/abort-controller": ^1.0.0
-    "@azure/core-auth": ^1.5.0
-    "@azure/core-client": ^1.4.0
-    "@azure/core-rest-pipeline": ^1.1.0
-    "@azure/core-tracing": ^1.0.0
-    "@azure/core-util": ^1.3.0
-    "@azure/logger": ^1.0.0
-    "@azure/msal-browser": ^3.5.0
-    "@azure/msal-node": ^2.5.1
-    events: ^3.0.0
-    jws: ^4.0.0
-    open: ^8.0.0
-    stoppable: ^1.1.0
-    tslib: ^2.2.0
-  checksum: 2c975ca70b274dc185022c2b19f1774079fd5cfb08c78ec3500e4baf973911b2958031d5fa36369d3c9acdeb25db457cc497991e7393b383103c058e097703e5
+    "@azure/abort-controller": ^2.0.0
+    tslib: ^2.6.2
+  checksum: 63c7ab2bdd6e75e38af33e37c9844515c546ed3e8f88fb98926ec88287dfabb249b9fd156658d42bfccbaeb46369254e7cf53eb6ef789b9d88880585eaabb298
   languageName: node
   linkType: hard
 
-"@azure/identity@npm:^4.2.0":
-  version: 4.2.0
-  resolution: "@azure/identity@npm:4.2.0"
+"@azure/identity@npm:^4.2.1":
+  version: 4.4.1
+  resolution: "@azure/identity@npm:4.4.1"
   dependencies:
     "@azure/abort-controller": ^1.0.0
     "@azure/core-auth": ^1.5.0
-    "@azure/core-client": ^1.4.0
+    "@azure/core-client": ^1.9.2
     "@azure/core-rest-pipeline": ^1.1.0
     "@azure/core-tracing": ^1.0.0
     "@azure/core-util": ^1.3.0
     "@azure/logger": ^1.0.0
-    "@azure/msal-browser": ^3.11.1
-    "@azure/msal-node": ^2.6.6
+    "@azure/msal-browser": ^3.14.0
+    "@azure/msal-node": ^2.9.2
     events: ^3.0.0
     jws: ^4.0.0
     open: ^8.0.0
     stoppable: ^1.1.0
     tslib: ^2.2.0
-  checksum: b1b336113c944abf89376f366bf8e82958617465c91e561e922c165a10aaa1789e83a78b7baa070671247d0f97c63b4cc89cf6cabc72258f3d9cbe12fe799e2a
+  checksum: 8dba5a1e347b349eb999e46cce190dedef02c0a81a179d4c4bf67ea4407c9f44ace5eec08f1ac8c963f8723e1074d32a9878a0ae5d4d4a880b19389b5fb6e7a1
   languageName: node
   linkType: hard
 
@@ -6187,57 +6199,30 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@azure/msal-browser@npm:^3.11.1":
-  version: 3.14.0
-  resolution: "@azure/msal-browser@npm:3.14.0"
+"@azure/msal-browser@npm:^3.14.0":
+  version: 3.20.0
+  resolution: "@azure/msal-browser@npm:3.20.0"
   dependencies:
-    "@azure/msal-common": 14.10.0
-  checksum: 747cd3df32f082e515c5e268d64f0d16afa0ce21ab5154e235ee0eb0fd0e2902504d12bac1f94839afaf9cc94c823d961775c3f57c3f20f12864d13a5ed0fa44
+    "@azure/msal-common": 14.14.0
+  checksum: 237a041bbe898f46676ddc0e0a0cfb26c821efecc71de19168bd70e216da14f3e83bfad064e4c5e5491828ae3e096a2d46d58b5ba227b820fe716639f9d80f5c
   languageName: node
   linkType: hard
 
-"@azure/msal-browser@npm:^3.5.0":
-  version: 3.7.1
-  resolution: "@azure/msal-browser@npm:3.7.1"
+"@azure/msal-common@npm:14.14.0":
+  version: 14.14.0
+  resolution: "@azure/msal-common@npm:14.14.0"
+  checksum: c77f51bdddb34da008786d7517713232dc69b7de9deec438ef463098e535ebdb8241ac04e9ddaee859d788dee71d683bf7ef0acab47781457d5c4ea561a8addf
+  languageName: node
+  linkType: hard
+
+"@azure/msal-node@npm:^2.9.2":
+  version: 2.12.0
+  resolution: "@azure/msal-node@npm:2.12.0"
   dependencies:
-    "@azure/msal-common": 14.6.1
-  checksum: 756cc9aef745739408be6dace5fb8aee0e63c98d6998a38c70e5eea18257ce4a79ec100e88d370402c28e1688bf13280e5166633a560e8bcfbad0525d3bb46ac
-  languageName: node
-  linkType: hard
-
-"@azure/msal-common@npm:14.10.0":
-  version: 14.10.0
-  resolution: "@azure/msal-common@npm:14.10.0"
-  checksum: 50994f54cdce7425bef42d44b3b15e756ede11efa5d2f84440da41ea13f0b0c00e8c262925e42b2f6d5f6f850233dccf99d810ced7b2cf372b9a645ed53489f8
-  languageName: node
-  linkType: hard
-
-"@azure/msal-common@npm:14.6.1":
-  version: 14.6.1
-  resolution: "@azure/msal-common@npm:14.6.1"
-  checksum: 6d9da0a2863a4b076208d6ab75ff1fd2f7a3cb8018f4ee937cc769d27603ffa1c137a4a64b7bdf4e1d37d0b6275243ae758824f0adb554a5e8f37b83ee942763
-  languageName: node
-  linkType: hard
-
-"@azure/msal-node@npm:^2.5.1":
-  version: 2.6.2
-  resolution: "@azure/msal-node@npm:2.6.2"
-  dependencies:
-    "@azure/msal-common": 14.6.1
+    "@azure/msal-common": 14.14.0
     jsonwebtoken: ^9.0.0
     uuid: ^8.3.0
-  checksum: 7d842c1269bd0892d6545c64cc49a5c8a739ded35103b7faa389dde0b0318c9c057df06626baa40d40dfa164db65be8544c7c32796aa3454716ec817c1749380
-  languageName: node
-  linkType: hard
-
-"@azure/msal-node@npm:^2.6.6":
-  version: 2.8.0
-  resolution: "@azure/msal-node@npm:2.8.0"
-  dependencies:
-    "@azure/msal-common": 14.10.0
-    jsonwebtoken: ^9.0.0
-    uuid: ^8.3.0
-  checksum: 778b7f8a9088ec264b7b59c1dd06ca9f4d9acfe7dd9e9fa92fb1fbcb8da3f9917ebf641715d4fe2338da17eae00a571cb8f1b6431c419609c8eff372654ce378
+  checksum: ad02d84ff0510594165672f0a39ba78f962631046051daf4de16ad4f783e0ee4c8e372aa99d17ac461c9d52bcceb1215c0d527443d97d5028c5d738029c4e71c
   languageName: node
   linkType: hard
 
@@ -10914,7 +10899,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@langchain/azure-dynamic-sessions@workspace:libs/langchain-azure-dynamic-sessions"
   dependencies:
-    "@azure/identity": ^4.2.0
+    "@azure/identity": ^4.2.1
     "@jest/globals": ^29.5.0
     "@langchain/core": ~0.2
     "@langchain/scripts": ~0.0.20
@@ -10948,7 +10933,7 @@ __metadata:
   resolution: "@langchain/azure-openai@workspace:libs/langchain-azure-openai"
   dependencies:
     "@azure/core-auth": ^1.5.0
-    "@azure/identity": ^4.0.1
+    "@azure/identity": ^4.2.1
     "@azure/openai": 1.0.0-beta.11
     "@jest/globals": ^29.5.0
     "@langchain/core": ">0.1.0 <0.3.0"
@@ -12200,7 +12185,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@langchain/openai@workspace:libs/langchain-openai"
   dependencies:
-    "@azure/identity": ^4.2.0
+    "@azure/identity": ^4.2.1
     "@jest/globals": ^29.5.0
     "@langchain/core": ">=0.2.16 <0.3.0"
     "@langchain/scripts": ~0.0.20
@@ -26165,7 +26150,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "examples@workspace:examples"
   dependencies:
-    "@azure/identity": ^4.2.0
+    "@azure/identity": ^4.2.1
     "@clickhouse/client": ^0.2.5
     "@elastic/elasticsearch": ^8.4.0
     "@faker-js/faker": ^8.4.1
