@@ -659,7 +659,7 @@
     "eslint-plugin-jest": "^27.6.0",
     "eslint-plugin-no-instanceof": "^1.0.1",
     "eslint-plugin-prettier": "^4.2.1",
-    "fast-xml-parser": "^4.2.7",
+    "fast-xml-parser": "^4.4.1",
     "handlebars": "^4.7.8",
     "html-to-text": "^9.0.5",
     "ignore": "^5.2.0",
