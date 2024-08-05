@@ -38,7 +38,7 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@azure/identity": "^4.2.0",
+    "@azure/identity": "^4.2.1",
     "@langchain/core": "~0.2",
     "uuid": "^10.0.0"
   },

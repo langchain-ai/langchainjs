@@ -39,7 +39,7 @@
     "zod-to-json-schema": "3.20.3"
   },
   "devDependencies": {
-    "@azure/identity": "^4.0.1",
+    "@azure/identity": "^4.2.1",
     "@jest/globals": "^29.5.0",
     "@langchain/scripts": "~0.0.20",
     "@langchain/standard-tests": "0.0.0",
