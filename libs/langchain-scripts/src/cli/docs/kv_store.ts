@@ -98,14 +98,14 @@ async function promptExtraFields(fields: {
 export async function fillKVStoreIntegrationDocTemplate(fields: {
   className: string;
 }) {
-  // Sidebar labels should match this format "XYZ KV Store"
+  // Sidebar labels should match this format "XYZ Store"
   let sidebarLabel = "";
   if (fields.className.endsWith("KVStore")) {
-    sidebarLabel = fields.className.replace("KVStore", " KV Store");
+    sidebarLabel = fields.className.replace("KVStore", " Store");
   } else if (fields.className.endsWith("ByteStore")) {
-    sidebarLabel = fields.className.replace("ByteStore", " KV Store");
+    sidebarLabel = fields.className.replace("ByteStore", " Store");
   } else {
-    sidebarLabel = fields.className.replace("Store", " KV Store");
+    sidebarLabel = fields.className.replace("Store", " Store");
   }
   const pyDocUrl = `https://python.langchain.com/v0.2/docs/integrations/stores/${sidebarLabel.toLowerCase()}/`;
   let envVarName = `${sidebarLabel.toUpperCase()}_API_KEY`;
