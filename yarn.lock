@@ -41726,7 +41726,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ws@npm:8.14.2, ws@npm:^8.14.2, ws@npm:^8.5.0":
+"ws@npm:8.14.2":
   version: 8.14.2
   resolution: "ws@npm:8.14.2"
   peerDependencies:
@@ -41742,8 +41742,8 @@ __metadata:
   linkType: hard
 
 "ws@npm:^7.3.1":
-  version: 7.5.9
-  resolution: "ws@npm:7.5.9"
+  version: 7.5.10
+  resolution: "ws@npm:7.5.10"
   peerDependencies:
     bufferutil: ^4.0.1
     utf-8-validate: ^5.0.2
@@ -41752,41 +41752,11 @@ __metadata:
       optional: true
     utf-8-validate:
       optional: true
-  checksum: c3c100a181b731f40b7f2fddf004aa023f79d64f489706a28bc23ff88e87f6a64b3c6651fbec3a84a53960b75159574d7a7385709847a62ddb7ad6af76f49138
+  checksum: f9bb062abf54cc8f02d94ca86dcd349c3945d63851f5d07a3a61c2fcb755b15a88e943a63cf580cbdb5b74436d67ef6b67f745b8f7c0814e411379138e1863cb
   languageName: node
   linkType: hard
 
-"ws@npm:^8.13.0":
-  version: 8.13.0
-  resolution: "ws@npm:8.13.0"
-  peerDependencies:
-    bufferutil: ^4.0.1
-    utf-8-validate: ">=5.0.2"
-  peerDependenciesMeta:
-    bufferutil:
-      optional: true
-    utf-8-validate:
-      optional: true
-  checksum: 53e991bbf928faf5dc6efac9b8eb9ab6497c69feeb94f963d648b7a3530a720b19ec2e0ec037344257e05a4f35bd9ad04d9de6f289615ffb133282031b18c61c
-  languageName: node
-  linkType: hard
-
-"ws@npm:^8.16.0":
-  version: 8.17.0
-  resolution: "ws@npm:8.17.0"
-  peerDependencies:
-    bufferutil: ^4.0.1
-    utf-8-validate: ">=5.0.2"
-  peerDependenciesMeta:
-    bufferutil:
-      optional: true
-    utf-8-validate:
-      optional: true
-  checksum: 147ef9eab0251364e1d2c55338ad0efb15e6913923ccbfdf20f7a8a6cb8f88432bcd7f4d8f66977135bfad35575644f9983201c1a361019594a4e53977bf6d4e
-  languageName: node
-  linkType: hard
-
-"ws@npm:^8.17.1, ws@npm:^8.18.0":
+"ws@npm:^8.13.0, ws@npm:^8.14.2, ws@npm:^8.16.0, ws@npm:^8.17.1, ws@npm:^8.18.0, ws@npm:^8.5.0":
   version: 8.18.0
   resolution: "ws@npm:8.18.0"
   peerDependencies:
