@@ -11224,7 +11224,7 @@ __metadata:
     langsmith: ~0.1.30
     llmonitor: ^0.5.9
     lodash: ^4.17.21
-    lunary: ^0.6.11
+    lunary: ^0.7.10
     mammoth: ^1.6.0
     mongodb: ^5.2.0
     mysql2: ^3.3.3
@@ -11353,7 +11353,7 @@ __metadata:
     jsonwebtoken: ^9.0.2
     llmonitor: ^0.5.9
     lodash: ^4.17.21
-    lunary: ^0.6.11
+    lunary: ^0.7.10
     mammoth: ^1.6.0
     mongodb: ">=5.2.0"
     mysql2: ^3.3.3
@@ -32327,11 +32327,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"lunary@npm:^0.6.11":
-  version: 0.6.11
-  resolution: "lunary@npm:0.6.11"
+"lunary@npm:^0.7.10":
+  version: 0.7.10
+  resolution: "lunary@npm:0.7.10"
   dependencies:
-    mustache: ^4.2.0
     unctx: ^2.3.1
   peerDependencies:
     openai: ^4.0.0
@@ -32341,7 +32340,7 @@ __metadata:
       optional: true
     react:
       optional: true
-  checksum: 71e012f8e0b46567557984ebe9fe362eea49899d3f6cd8be8f7e24a4ea9820fea0087d759d1fd98b456bf241b98aeca9e2524a0409620cd6eb1ed3c42b4387a0
+  checksum: 7c7ce90eb8d7982c0425fc7fa026497ba47cbc50ef1fa64cf2b901d3c8dc4793dcbcca6f9cb7880569ad0293cf4e8aa53ab5416a8e646dea07f8b051bc8f5012
   languageName: node
   linkType: hard
 
