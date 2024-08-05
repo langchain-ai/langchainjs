@@ -13,7 +13,7 @@
     "@langchain/core": "workspace:*",
     "@langchain/openai": "workspace:*",
     "langchain": "workspace:*",
-    "wrangler": "3.7.0",
+    "wrangler": "3.19.0",
     "vitest": "0.34.3",
     "typescript": "^5.0.3"
   },
