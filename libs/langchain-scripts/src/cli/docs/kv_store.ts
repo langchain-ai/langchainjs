@@ -20,9 +20,7 @@ import {
   PY_SUPPORT_PLACEHOLDER,
 } from "../constants.js";
 
-const TEMPLATE_PATH = path.resolve(
-  "./src/cli/docs/templates/kv_store.ipynb"
-);
+const TEMPLATE_PATH = path.resolve("./src/cli/docs/templates/kv_store.ipynb");
 const INTEGRATIONS_DOCS_PATH = path.resolve(
   "../../docs/core_docs/docs/integrations/stores"
 );
@@ -97,10 +95,18 @@ async function promptExtraFields(fields: {
   };
 }
 
-export async function fillDocLoaderIntegrationDocTemplate(fields: {
+export async function fillKVStoreIntegrationDocTemplate(fields: {
   className: string;
 }) {
-  const sidebarLabel = fields.className.replace("Loader", "");
+  // Sidebar labels should match this format "XYZ KV Store"
+  let sidebarLabel = "";
+  if (fields.className.endsWith("KVStore")) {
+    sidebarLabel = fields.className.replace("KVStore", " KV Store");
+  } else if (fields.className.endsWith("ByteStore")) {
+    sidebarLabel = fields.className.replace("ByteStore", " KV Store");
+  } else {
+    sidebarLabel = fields.className.replace("Store", " KV Store");
+  }
   const pyDocUrl = `https://python.langchain.com/v0.2/docs/integrations/stores/${sidebarLabel.toLowerCase()}/`;
   let envVarName = `${sidebarLabel.toUpperCase()}_API_KEY`;
   const extraFields = await promptExtraFields({
@@ -111,7 +117,7 @@ export async function fillDocLoaderIntegrationDocTemplate(fields: {
   const apiRefModuleUrl = `https://api.js.langchain.com/classes/${extraFields.fullImportPath
     .replace("@", "")
     .replaceAll("/", "_")
-    .replaceAll("-", "_")}_${importPathEnding}.${fields.className}.html`;
+    .replaceAll("-", "_")}.${fields.className}.html`;
   const apiRefPackageUrl = apiRefModuleUrl
     .replace("/classes/", "/modules/")
     .replace(`.${fields.className}.html`, ".html");

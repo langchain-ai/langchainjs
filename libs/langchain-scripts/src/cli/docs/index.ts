@@ -8,6 +8,7 @@ import { fillLLMIntegrationDocTemplate } from "./llms.js";
 import { fillRetrieverIntegrationDocTemplate } from "./retrievers.js";
 import { fillEmbeddingsIntegrationDocTemplate } from "./embeddings.js";
 import { fillToolkitIntegrationDocTemplate } from "./toolkits.js";
+import { fillKVStoreIntegrationDocTemplate } from "./kv_store.js";
 
 type CLIInput = {
   type: string;
@@ -21,6 +22,7 @@ const ALLOWED_TYPES = [
   "embeddings",
   "doc_loader",
   "toolkit",
+  "kv_store",
 ];
 
 async function main() {
@@ -70,6 +72,11 @@ async function main() {
       break;
     case "toolkit":
       await fillToolkitIntegrationDocTemplate({
+        className,
+      });
+      break;
+    case "kv_store":
+      await fillKVStoreIntegrationDocTemplate({
         className,
       });
       break;
