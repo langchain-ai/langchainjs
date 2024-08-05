@@ -11124,7 +11124,7 @@ __metadata:
     flat: ^5.0.2
     google-auth-library: ^9.10.0
     googleapis: ^126.0.1
-    graphql: ^16.8.1
+    graphql: ^16.6.0
     hdb: 0.19.8
     hnswlib-node: ^3.0.0
     html-to-text: ^9.0.5
@@ -11143,7 +11143,7 @@ __metadata:
     lodash: ^4.17.21
     lunary: ^0.7.10
     mammoth: ^1.6.0
-    mongodb: ^5.8.0
+    mongodb: ^6.8.0
     mysql2: ^3.9.8
     neo4j-driver: ^5.17.0
     node-llama-cpp: 2.7.3
@@ -12585,6 +12585,15 @@ __metadata:
   dependencies:
     sparse-bitfield: ^3.0.3
   checksum: 208fd6f82136fd4332d0a6c667f8090b08f365dd7aa5880b8c485501caed7b058a99c231085c51ad7fa25f4a590d96c87af9a5b3fc0aea4de8c527657e33e548
+  languageName: node
+  linkType: hard
+
+"@mongodb-js/saslprep@npm:^1.1.5":
+  version: 1.1.8
+  resolution: "@mongodb-js/saslprep@npm:1.1.8"
+  dependencies:
+    sparse-bitfield: ^3.0.3
+  checksum: 259fda7ec913b5e63f102ae18840ef0d811c4a50919bbc437bd0452980806d640cd06c36076ed1655f1581ef24cd7316be0671f4b7429e7c97c7066524d2dbee
   languageName: node
   linkType: hard
 
@@ -18890,6 +18899,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/whatwg-url@npm:^11.0.2":
+  version: 11.0.5
+  resolution: "@types/whatwg-url@npm:11.0.5"
+  dependencies:
+    "@types/webidl-conversions": "*"
+  checksum: 23a0c45aff51817807b473a6adb181d6e3bb0d27dde54e84883d5d5bc93358e95204d2188e7ff7fdc2cdaf157e97e1188ef0a22ec79228da300fc30d4a05b56a
+  languageName: node
+  linkType: hard
+
 "@types/whatwg-url@npm:^8.2.1":
   version: 8.2.2
   resolution: "@types/whatwg-url@npm:8.2.2"
@@ -20704,6 +20722,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"axios@npm:^1.7.3":
+  version: 1.7.3
+  resolution: "axios@npm:1.7.3"
+  dependencies:
+    follow-redirects: ^1.15.6
+    form-data: ^4.0.0
+    proxy-from-env: ^1.1.0
+  checksum: bc304d6da974922342aed7c33155934354429cdc7e1ba9d399ab9ff3ac76103f3697eeedf042a634d43cdae682182bcffd942291db42d2be45b750597cdd5eef
+  languageName: node
+  linkType: hard
+
 "axobject-query@npm:^3.1.1, axobject-query@npm:^3.2.1":
   version: 3.2.1
   resolution: "axobject-query@npm:3.2.1"
@@ -21277,6 +21306,13 @@ __metadata:
   version: 5.5.1
   resolution: "bson@npm:5.5.1"
   checksum: f49730504e8362e2c8d1eb0c272e5e125392c41fb7196fc35ccbc39718ee62569a1d197bd2342c3334cd420073d3fd5dc7dea764a7f219dcd79e0ce473dd2772
+  languageName: node
+  linkType: hard
+
+"bson@npm:^6.7.0":
+  version: 6.8.0
+  resolution: "bson@npm:6.8.0"
+  checksum: 66076b04d7d54e7773d601a19b7c224bc5cff6b008efe102463fbc058879f2c84c0ed793b5b6ed12cc7616bbbe5e670db81cf7352e0ea947918119f8af704ba5
   languageName: node
   linkType: hard
 
@@ -26097,7 +26133,7 @@ __metadata:
     "@vercel/kv": ^0.2.3
     "@xata.io/client": ^0.28.0
     "@zilliz/milvus2-sdk-node": ^2.3.5
-    axios: ^0.28.0
+    axios: ^1.7.3
     chromadb: ^1.5.3
     convex: ^1.3.1
     couchbase: ^4.3.0
@@ -26113,20 +26149,20 @@ __metadata:
     exa-js: ^1.0.12
     faiss-node: ^0.5.1
     firebase-admin: ^12.0.0
-    graphql: ^16.8.1
+    graphql: ^16.6.0
     hdb: ^0.19.8
     ioredis: ^5.3.2
     js-yaml: ^4.1.0
     langchain: "workspace:*"
     langsmith: ^0.1.30
-    mongodb: ^5.8.0
+    mongodb: ^6.3.0
     pg: ^8.11.0
     pickleparser: ^0.2.1
     prettier: ^2.8.3
     prisma: ^4.11.0
     readline: ^1.3.0
     redis: ^4.6.13
-    sqlite3: ^5.1.5
+    sqlite3: ^5.1.4
     tsx: ^3.12.3
     typeorm: ^0.3.20
     typescript: ~5.1.6
@@ -27968,7 +28004,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"graphql@npm:^16.8.1":
+"graphql@npm:^16.6.0":
   version: 16.9.0
   resolution: "graphql@npm:16.9.0"
   checksum: 8cb3d54100e9227310383ce7f791ca48d12f15ed9f2021f23f8735f1121aafe4e5e611a853081dd935ce221724ea1ae4638faef5d2921fb1ad7c26b5f46611e9
@@ -31080,7 +31116,7 @@ __metadata:
     "@xata.io/client": ^0.28.0
     apify-client: ^2.7.1
     assemblyai: ^4.6.0
-    axios: ^0.28.0
+    axios: ^1.7.3
     binary-extensions: ^2.2.0
     cheerio: ^1.0.0-rc.12
     chromadb: ^1.5.3
@@ -31110,7 +31146,7 @@ __metadata:
     jsonpointer: ^5.0.1
     langsmith: ~0.1.40
     mammoth: ^1.5.1
-    mongodb: ^5.8.0
+    mongodb: ^6.8.0
     node-llama-cpp: 2.7.3
     notion-to-md: ^3.1.0
     officeparser: ^4.0.4
@@ -31136,7 +31172,7 @@ __metadata:
     weaviate-ts-client: ^2.0.0
     web-auth-library: ^1.0.3
     wikipedia: ^2.1.2
-    yaml: ^2.2.2
+    yaml: ^2.2.1
     youtube-transcript: ^1.0.6
     youtubei.js: ^9.1.0
     zod: ^3.22.4
@@ -32841,6 +32877,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"mongodb-connection-string-url@npm:^3.0.0":
+  version: 3.0.1
+  resolution: "mongodb-connection-string-url@npm:3.0.1"
+  dependencies:
+    "@types/whatwg-url": ^11.0.2
+    whatwg-url: ^13.0.0
+  checksum: b0a3b9e619c53ce8c10452c6475dc1eeba4761ae1b293b1b37014acf609f44ab7057f084de8fceead9934dba2aad0a59315eab9371c1287dbaaf5aae48c6d371
+  languageName: node
+  linkType: hard
+
 "mongodb@npm:^5.8.0":
   version: 5.9.2
   resolution: "mongodb@npm:5.9.2"
@@ -32870,6 +32916,40 @@ __metadata:
     snappy:
       optional: true
   checksum: fad5621f4a9764d71c48f2955be57925e506b14a4a63c5b9209ff733a58b2524cf9c87f216f2f02de092fab20eaa033ff5ade45c5cfa7f1c8c6bce114cb22e3f
+  languageName: node
+  linkType: hard
+
+"mongodb@npm:^6.3.0, mongodb@npm:^6.8.0":
+  version: 6.8.0
+  resolution: "mongodb@npm:6.8.0"
+  dependencies:
+    "@mongodb-js/saslprep": ^1.1.5
+    bson: ^6.7.0
+    mongodb-connection-string-url: ^3.0.0
+  peerDependencies:
+    "@aws-sdk/credential-providers": ^3.188.0
+    "@mongodb-js/zstd": ^1.1.0
+    gcp-metadata: ^5.2.0
+    kerberos: ^2.0.1
+    mongodb-client-encryption: ">=6.0.0 <7"
+    snappy: ^7.2.2
+    socks: ^2.7.1
+  peerDependenciesMeta:
+    "@aws-sdk/credential-providers":
+      optional: true
+    "@mongodb-js/zstd":
+      optional: true
+    gcp-metadata:
+      optional: true
+    kerberos:
+      optional: true
+    mongodb-client-encryption:
+      optional: true
+    snappy:
+      optional: true
+    socks:
+      optional: true
+  checksum: 5a744e9bf0f21a6f639d935b807ea4c4502f6c38719413e7c6dbed2323786c347a877e905bfd711259f552b21774a5d9d8a9271c97ed1634804f97f10addd440
   languageName: node
   linkType: hard
 
@@ -38075,7 +38155,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"sqlite3@npm:^5.1.5":
+"sqlite3@npm:^5.1.4":
   version: 5.1.7
   resolution: "sqlite3@npm:5.1.7"
   dependencies:
@@ -41128,6 +41208,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"whatwg-url@npm:^13.0.0":
+  version: 13.0.0
+  resolution: "whatwg-url@npm:13.0.0"
+  dependencies:
+    tr46: ^4.1.1
+    webidl-conversions: ^7.0.0
+  checksum: 7f69272a1bfd5f0d994988b9e234e35d21071a9bffe0d6fd4477d295552665c566b176ff8e0251a0a79c61c5a67a7a392e248aae5887d7e22bdff0125209e26b
+  languageName: node
+  linkType: hard
+
 "whatwg-url@npm:^14.0.0":
   version: 14.0.0
   resolution: "whatwg-url@npm:14.0.0"
@@ -41635,15 +41725,6 @@ __metadata:
   version: 2.2.1
   resolution: "yaml@npm:2.2.1"
   checksum: 84f68cbe462d5da4e7ded4a8bded949ffa912bc264472e5a684c3d45b22d8f73a3019963a32164023bdf3d83cfb6f5b58ff7b2b10ef5b717c630f40bd6369a23
-  languageName: node
-  linkType: hard
-
-"yaml@npm:^2.2.2":
-  version: 2.5.0
-  resolution: "yaml@npm:2.5.0"
-  bin:
-    yaml: bin.mjs
-  checksum: a116dca5c61641d9bf1f1016c6e71daeb1ed4915f5930ed237d45ab7a605aa5d92c332ff64879a6cd088cabede008c778774e3060ffeb4cd617d28088e4b2d83
   languageName: node
   linkType: hard
 
