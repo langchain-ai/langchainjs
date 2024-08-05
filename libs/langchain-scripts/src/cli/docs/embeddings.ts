@@ -6,17 +6,19 @@ import {
   greenText,
   redBackground,
 } from "../utils/get-input.js";
-
-const PACKAGE_NAME_PLACEHOLDER = "__package_name__";
-const MODULE_NAME_PLACEHOLDER = "__ModuleName__";
-const SIDEBAR_LABEL_PLACEHOLDER = "__sidebar_label__";
-const FULL_IMPORT_PATH_PLACEHOLDER = "__full_import_path__";
-const LOCAL_PLACEHOLDER = "__local__";
-const PY_SUPPORT_PLACEHOLDER = "__py_support__";
-const ENV_VAR_NAME_PLACEHOLDER = "__env_var_name__";
-const API_REF_MODULE_PLACEHOLDER = "__api_ref_module__";
-const API_REF_PACKAGE_PLACEHOLDER = "__api_ref_package__";
-const PYTHON_DOC_URL_PLACEHOLDER = "__python_doc_url__";
+import { fetchURLStatus } from "../utils/fetch-url-status.js";
+import {
+  PACKAGE_NAME_PLACEHOLDER,
+  MODULE_NAME_PLACEHOLDER,
+  SIDEBAR_LABEL_PLACEHOLDER,
+  FULL_IMPORT_PATH_PLACEHOLDER,
+  LOCAL_PLACEHOLDER,
+  PY_SUPPORT_PLACEHOLDER,
+  ENV_VAR_NAME_PLACEHOLDER,
+  API_REF_MODULE_PLACEHOLDER,
+  API_REF_PACKAGE_PLACEHOLDER,
+  PYTHON_DOC_URL_PLACEHOLDER,
+} from "../constants.js";
 
 const TEMPLATE_PATH = path.resolve(
   "./src/cli/docs/templates/text_embedding.ipynb"
@@ -24,18 +26,6 @@ const TEMPLATE_PATH = path.resolve(
 const INTEGRATIONS_DOCS_PATH = path.resolve(
   "../../docs/core_docs/docs/integrations/text_embedding"
 );
-
-const fetchAPIRefUrl = async (url: string): Promise<boolean> => {
-  try {
-    const res = await fetch(url);
-    if (res.status !== 200) {
-      throw new Error(`API Reference URL ${url} not found.`);
-    }
-    return true;
-  } catch (_) {
-    return false;
-  }
-};
 
 type ExtraFields = {
   local: boolean;
@@ -47,10 +37,9 @@ type ExtraFields = {
 
 async function promptExtraFields(fields: {
   envVarGuess: string;
-  packageNameGuess: string;
-  isCommunity: boolean;
 }): Promise<ExtraFields> {
-  const { envVarGuess, packageNameGuess, isCommunity } = fields;
+  const { envVarGuess } = fields;
+
   const canRunLocally = await getUserInput(
     "Does this embeddings model support local usage? (y/n) ",
     undefined,
@@ -62,73 +51,63 @@ async function promptExtraFields(fields: {
     true
   );
 
-  let packageName = packageNameGuess;
-  if (!isCommunity) {
-    // If it's not community, get the package name.
+  const importPath = await getUserInput(
+    "What is the full import path of the integration? (e.g @langchain/community/embeddings/togetherai) ",
+    undefined,
+    true
+  );
 
-    const isOtherPackageName = await getUserInput(
-      `Is this integration part of the ${packageNameGuess} package? (y/n) `
-    );
-    if (isOtherPackageName.toLowerCase() === "n") {
-      packageName = await getUserInput(
-        "What is the name of the package this integration is located in? (e.g @langchain/openai) ",
-        undefined,
-        true
-      );
-      if (
-        !packageName.startsWith("@langchain/") &&
-        !packageName.startsWith("langchain/")
-      ) {
-        packageName = await getUserInput(
-          "Packages must start with either '@langchain/' or 'langchain/'. Please enter a valid package name: ",
-          undefined,
-          true
-        );
-      }
-    }
+  let packageName = "";
+  if (importPath.startsWith("langchain/")) {
+    packageName = "langchain";
+  } else {
+    packageName = importPath.split("/").slice(0, 2).join("/");
   }
 
-  // If it's community or langchain, ask for the full import path
-  let fullImportPath: string | undefined;
-  if (
-    packageName.startsWith("@langchain/community") ||
-    packageName.startsWith("langchain/")
-  ) {
-    fullImportPath = await getUserInput(
-      "What is the full import path of the package? (e.g '@langchain/community/embeddings/togetherai') ",
+  const verifyPackageName = await getUserInput(
+    `Is ${packageName} the correct package name? (y/n) `,
+    undefined,
+    true
+  );
+  if (verifyPackageName.toLowerCase() === "n") {
+    packageName = await getUserInput(
+      "Please enter the full package name (e.g @langchain/community) ",
       undefined,
       true
     );
   }
 
-  const envVarName = await getUserInput(
-    `Is the environment variable for the API key named ${envVarGuess}? If it is, reply with 'y', else reply with the correct name: `,
+  const isEnvGuessCorrect = await getUserInput(
+    `Is the environment variable for the API key named ${envVarGuess}? (y/n) `,
     undefined,
     true
   );
+  let envVarName = envVarGuess;
+  if (isEnvGuessCorrect.toLowerCase() === "n") {
+    envVarName = await getUserInput(
+      "Please enter the correct environment variable name ",
+      undefined,
+      true
+    );
+  }
 
   return {
     local: canRunLocally.toLowerCase() === "y",
     pySupport: hasPySupport.toLowerCase() === "y",
     packageName,
-    fullImportPath,
-    envVarName:
-      envVarName.toLowerCase() === "y" ? envVarGuess : envVarName.toUpperCase(),
+    fullImportPath: importPath,
+    envVarName,
   };
 }
 
 export async function fillEmbeddingsIntegrationDocTemplate(fields: {
-  packageName: string;
-  moduleName: string;
-  isCommunity: boolean;
+  className: string;
 }) {
-  const sidebarLabel = fields.moduleName.replace("Embeddings", "");
+  const sidebarLabel = fields.className.replace("Embeddings", "");
   const pyDocUrl = `https://python.langchain.com/docs/integrations/text_embedding/${sidebarLabel.toLowerCase()}/`;
   let envVarName = `${sidebarLabel.toUpperCase()}_API_KEY`;
   const extraFields = await promptExtraFields({
-    packageNameGuess: `@langchain/${fields.packageName}`,
     envVarGuess: envVarName,
-    isCommunity: fields.isCommunity,
   });
   envVarName = extraFields.envVarName;
   const { pySupport } = extraFields;
@@ -139,14 +118,14 @@ export async function fillEmbeddingsIntegrationDocTemplate(fields: {
   const apiRefModuleUrl = `https://api.js.langchain.com/classes/${fullImportPath
     .replace("@", "")
     .replaceAll("/", "_")
-    .replaceAll("-", "_")}.${fields.moduleName}.html`;
+    .replaceAll("-", "_")}.${fields.className}.html`;
   const apiRefPackageUrl = apiRefModuleUrl
     .replace("/classes/", "/modules/")
-    .replace(`.${fields.moduleName}.html`, ".html");
+    .replace(`.${fields.className}.html`, ".html");
 
   const apiRefUrlSuccesses = await Promise.all([
-    fetchAPIRefUrl(apiRefModuleUrl),
-    fetchAPIRefUrl(apiRefPackageUrl),
+    fetchURLStatus(apiRefModuleUrl),
+    fetchURLStatus(apiRefPackageUrl),
   ]);
   if (apiRefUrlSuccesses.find((s) => !s)) {
     console.warn(
@@ -156,7 +135,7 @@ export async function fillEmbeddingsIntegrationDocTemplate(fields: {
 
   const docTemplate = (await fs.promises.readFile(TEMPLATE_PATH, "utf-8"))
     .replaceAll(PACKAGE_NAME_PLACEHOLDER, packageName)
-    .replaceAll(MODULE_NAME_PLACEHOLDER, fields.moduleName)
+    .replaceAll(MODULE_NAME_PLACEHOLDER, fields.className)
     .replaceAll(SIDEBAR_LABEL_PLACEHOLDER, sidebarLabel)
     .replaceAll(FULL_IMPORT_PATH_PLACEHOLDER, fullImportPath)
     .replaceAll(LOCAL_PLACEHOLDER, localSupport ? "✅" : "❌")
