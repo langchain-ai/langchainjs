@@ -467,7 +467,10 @@ export class ChatOllama
       yield new ChatGenerationChunk({
         text: responseMessage.content,
         message: convertOllamaMessagesToLangChain(responseMessage, {
-          responseMetadata: rest,
+          responseMetadata: {
+            ...rest,
+            message: responseMessage,
+          },
           usageMetadata,
         }),
       });
