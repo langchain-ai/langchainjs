@@ -12,66 +12,25 @@ import {
   MODULE_NAME_PLACEHOLDER,
   PACKAGE_NAME_PLACEHOLDER,
   FULL_IMPORT_PATH_PLACEHOLDER,
-  ENV_VAR_NAME_PLACEHOLDER,
   PYTHON_DOC_URL_PLACEHOLDER,
   API_REF_MODULE_PLACEHOLDER,
-  API_REF_PACKAGE_PLACEHOLDER,
-  LOCAL_PLACEHOLDER,
-  SERIALIZABLE_PLACEHOLDER,
   PY_SUPPORT_PLACEHOLDER,
 } from "../constants.js";
 
-const NODE_SUPPORT_PLACEHOLDER = "__fs_support__";
-const NODE_ONLY_SIDEBAR_BADGE_PLACEHOLDER = "__node_only_sidebar__";
-const NODE_ONLY_TOOL_TIP_PLACEHOLDER = "__node_only_tooltip__";
-
-const TEMPLATE_PATH = path.resolve(
-  "./src/cli/docs/templates/document_loaders.ipynb"
-);
+const TEMPLATE_PATH = path.resolve("./src/cli/docs/templates/toolkits.ipynb");
 const INTEGRATIONS_DOCS_PATH = path.resolve(
-  "../../docs/core_docs/docs/integrations/document_loaders"
+  "../../docs/core_docs/docs/integrations/toolkits"
 );
-
-const NODE_ONLY_TOOLTIP =
-  "```{=mdx}\\n\\n:::tip Compatibility\\n\\nOnly available on Node.js.\\n\\n:::\\n\\n```\\n";
-const NODE_ONLY_SIDEBAR_BADGE = `sidebar_class_name: node-only`;
 
 type ExtraFields = {
-  webLoader: boolean;
-  nodeOnly: boolean;
-  serializable: boolean;
   pySupport: boolean;
-  local: boolean;
-  envVarName: string;
   fullImportPath: string;
   packageName: string;
 };
 
-async function promptExtraFields(fields: {
-  envVarGuess: string;
-}): Promise<ExtraFields> {
-  const isWebLoader = await getUserInput(
-    "Is this integration a web loader? (y/n) ",
-    undefined,
-    true
-  );
-  const isNodeOnly = await getUserInput(
-    "Does this integration _only_ support Node environments? (y/n) ",
-    undefined,
-    true
-  );
-  const isSerializable = await getUserInput(
-    "Does this integration support serializable output? (y/n) ",
-    undefined,
-    true
-  );
+async function promptExtraFields(): Promise<ExtraFields> {
   const hasPySupport = await getUserInput(
     "Does this integration have Python support? (y/n) ",
-    undefined,
-    true
-  );
-  const hasLocalSupport = await getUserInput(
-    "Does this integration support running locally? (y/n) ",
     undefined,
     true
   );
@@ -101,58 +60,29 @@ async function promptExtraFields(fields: {
     );
   }
 
-  const isEnvGuessCorrect = await getUserInput(
-    `Is the environment variable for the API key named ${fields.envVarGuess}? (y/n) `,
-    undefined,
-    true
-  );
-  let envVarName = fields.envVarGuess;
-  if (isEnvGuessCorrect.toLowerCase() === "n") {
-    envVarName = await getUserInput(
-      "Please enter the correct environment variable name ",
-      undefined,
-      true
-    );
-  }
-
   return {
-    webLoader: isWebLoader.toLowerCase() === "y",
-    nodeOnly: isNodeOnly.toLowerCase() === "y",
-    serializable: isSerializable.toLowerCase() === "y",
     pySupport: hasPySupport.toLowerCase() === "y",
-    local: hasLocalSupport.toLowerCase() === "y",
-    envVarName,
     fullImportPath: importPath,
     packageName,
   };
 }
 
-export async function fillDocLoaderIntegrationDocTemplate(fields: {
+export async function fillToolkitIntegrationDocTemplate(fields: {
   className: string;
 }) {
-  const sidebarLabel = fields.className.replace("Loader", "");
-  const pyDocUrl = `https://python.langchain.com/v0.2/docs/integrations/document_loaders/${sidebarLabel.toLowerCase()}/`;
-  let envVarName = `${sidebarLabel.toUpperCase()}_API_KEY`;
-  const extraFields = await promptExtraFields({
-    envVarGuess: envVarName,
-  });
-  envVarName = extraFields.envVarName;
+  const sidebarLabel = fields.className.replace("Toolkit", "");
+  const pyDocUrl = `https://python.langchain.com/docs/integrations/toolkits/${sidebarLabel.toLowerCase()}/`;
+  const extraFields = await promptExtraFields();
   const importPathEnding = extraFields.fullImportPath.split("/").pop() ?? "";
   const apiRefModuleUrl = `https://api.js.langchain.com/classes/${extraFields.fullImportPath
     .replace("@", "")
     .replaceAll("/", "_")
     .replaceAll("-", "_")}_${importPathEnding}.${fields.className}.html`;
-  const apiRefPackageUrl = apiRefModuleUrl
-    .replace("/classes/", "/modules/")
-    .replace(`.${fields.className}.html`, ".html");
 
-  const apiRefUrlSuccesses = await Promise.all([
-    fetchURLStatus(apiRefModuleUrl),
-    fetchURLStatus(apiRefPackageUrl),
-  ]);
-  if (apiRefUrlSuccesses.find((s) => !s)) {
+  const apiRefUrlSuccess = await fetchURLStatus(apiRefModuleUrl);
+  if (apiRefUrlSuccess === false) {
     console.warn(
-      "API ref URLs invalid. Please manually ensure they are correct."
+      "API ref URL is invalid. Please manually ensure it is correct."
     );
   }
 
@@ -161,32 +91,12 @@ export async function fillDocLoaderIntegrationDocTemplate(fields: {
     .replaceAll(MODULE_NAME_PLACEHOLDER, fields.className)
     .replaceAll(PACKAGE_NAME_PLACEHOLDER, extraFields.packageName)
     .replaceAll(FULL_IMPORT_PATH_PLACEHOLDER, extraFields.fullImportPath)
-    .replaceAll(ENV_VAR_NAME_PLACEHOLDER, envVarName)
     .replaceAll(PYTHON_DOC_URL_PLACEHOLDER, pyDocUrl)
     .replaceAll(API_REF_MODULE_PLACEHOLDER, apiRefModuleUrl)
-    .replaceAll(API_REF_PACKAGE_PLACEHOLDER, apiRefPackageUrl)
-    .replaceAll(
-      NODE_ONLY_SIDEBAR_BADGE_PLACEHOLDER,
-      extraFields.nodeOnly ? NODE_ONLY_SIDEBAR_BADGE : ""
-    )
-    .replaceAll(
-      NODE_ONLY_TOOL_TIP_PLACEHOLDER,
-      extraFields?.nodeOnly ? NODE_ONLY_TOOLTIP : ""
-    )
-    .replaceAll(
-      NODE_SUPPORT_PLACEHOLDER,
-      extraFields?.nodeOnly ? "Node-only" : "All environments"
-    )
-    .replaceAll(LOCAL_PLACEHOLDER, extraFields?.local ? "✅" : "❌")
-    .replaceAll(
-      SERIALIZABLE_PLACEHOLDER,
-      extraFields?.serializable ? "beta" : "❌"
-    )
     .replaceAll(PY_SUPPORT_PLACEHOLDER, extraFields?.pySupport ? "✅" : "❌");
 
   const docPath = path.join(
     INTEGRATIONS_DOCS_PATH,
-    extraFields?.webLoader ? "web_loaders" : "file_loaders",
     `${importPathEnding}.ipynb`
   );
   await fs.promises.writeFile(docPath, docTemplate);
