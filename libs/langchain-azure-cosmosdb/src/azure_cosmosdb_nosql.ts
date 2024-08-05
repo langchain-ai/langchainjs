@@ -204,6 +204,7 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
       );
     }
 
+    // Deferring initialization to the first call to `initialize`
     this.initialize = () => {
       if (!this.initPromise) {
         this.initPromise = this.init(client, databaseName, containerName, {

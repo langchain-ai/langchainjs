@@ -82,7 +82,7 @@ export class AzureCosmosDBMongoDBvCoreVectorStore extends VectorStore {
 
   private connectPromise: Promise<void>;
 
-  private readonly initPromise: Promise<void>;
+  private initPromise: Promise<void>;
 
   private readonly client: MongoClient | undefined;
 
@@ -97,6 +97,13 @@ export class AzureCosmosDBMongoDBvCoreVectorStore extends VectorStore {
   readonly embeddingKey: string;
 
   private readonly indexOptions: AzureCosmosDBMongoDBvCoreIndexOptions;
+
+  /**
+   * Initializes the AzureCosmosDBMongoDBvCoreVectorStore.
+   * Connect the client to the database and create the container, creating them if needed.
+   * @returns A promise that resolves when the AzureCosmosDBMongoDBvCoreVectorStore has been initialized.
+   */
+  initialize: () => Promise<void>;
 
   _vectorstoreType(): string {
     return "azure_cosmosdb_mongodb_vcore";
@@ -134,15 +141,21 @@ export class AzureCosmosDBMongoDBvCoreVectorStore extends VectorStore {
     this.embeddingKey = dbConfig.embeddingKey ?? "vectorContent";
     this.indexOptions = dbConfig.indexOptions ?? {};
 
-    // Start initialization, but don't wait for it to finish here
-    this.initPromise = this.init(client, databaseName, collectionName).catch(
-      (error) => {
-        console.error(
-          "Error during AzureCosmosDBMongoDBvCoreVectorStore initialization:",
-          error
+    // Deferring initialization to the first call to `initialize`
+    this.initialize = () => {
+      if (!this.initPromise) {
+        this.initPromise = this.init(client, databaseName, collectionName).catch(
+          (error) => {
+            console.error(
+              "Error during AzureCosmosDBMongoDBvCoreVectorStore initialization:",
+              error
+            );
+          }
         );
       }
-    );
+
+      return this.initPromise;
+    };
   }
 
   /**
@@ -151,7 +164,7 @@ export class AzureCosmosDBMongoDBvCoreVectorStore extends VectorStore {
    * @returns A promise that resolves to a boolean indicating if the index exists.
    */
   async checkIndexExists(): Promise<boolean> {
-    await this.initPromise;
+    await this.initialize();
     const indexes = await this.collection.listIndexes().toArray();
     return indexes.some((index) => index.name === this.indexName);
   }
@@ -161,7 +174,7 @@ export class AzureCosmosDBMongoDBvCoreVectorStore extends VectorStore {
    * @returns A promise that resolves when the index has been deleted.
    */
   async deleteIndex(): Promise<void> {
-    await this.initPromise;
+    await this.initialize();
     if (await this.checkIndexExists()) {
       await this.collection.dropIndex(this.indexName);
     }
@@ -252,7 +265,7 @@ export class AzureCosmosDBMongoDBvCoreVectorStore extends VectorStore {
   async delete(
     params: AzureCosmosDBMongoDBvCoreDeleteParams | string[] = {}
   ): Promise<void> {
-    await this.initPromise;
+    await this.initialize();
 
     let ids: string | string[] | undefined;
     let filter: AzureCosmosDBMongoDBvCoreDeleteParams["filter"];
@@ -301,7 +314,7 @@ export class AzureCosmosDBMongoDBvCoreVectorStore extends VectorStore {
       [this.embeddingKey]: embedding,
       ...documents[idx].metadata,
     }));
-    await this.initPromise;
+    await this.initialize();
     const result = await this.collection.insertMany(docs);
     return Object.values(result.insertedIds).map((id) => String(id));
   }
@@ -332,7 +345,7 @@ export class AzureCosmosDBMongoDBvCoreVectorStore extends VectorStore {
     queryVector: number[],
     k = 4
   ): Promise<[Document, number][]> {
-    await this.initPromise;
+    await this.initialize();
 
     const pipeline = [
       {
