@@ -680,7 +680,7 @@
     "puppeteer": "^22.0.0",
     "pyodide": "^0.24.1",
     "redis": "^4.6.6",
-    "release-it": "^15.10.1",
+    "release-it": "^17.6.0",
     "rimraf": "^5.0.1",
     "rollup": "^3.19.1",
     "sonix-speech-recognition": "^2.1.1",
