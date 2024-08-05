@@ -11130,7 +11130,7 @@ __metadata:
     "@smithy/signature-v4": ^2.0.10
     "@smithy/util-utf8": ^2.0.0
     "@spider-cloud/spider-client": ^0.0.21
-    "@supabase/postgrest-js": ^1.1.1
+    "@supabase/postgrest-js": ^1.16.0
     "@supabase/supabase-js": ^2.45.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
@@ -11298,7 +11298,7 @@ __metadata:
     "@smithy/signature-v4": ^2.0.10
     "@smithy/util-utf8": ^2.0.0
     "@spider-cloud/spider-client": ^0.0.21
-    "@supabase/postgrest-js": ^1.1.1
+    "@supabase/postgrest-js": ^1.16.0
     "@supabase/supabase-js": ^2.45.0
     "@tensorflow-models/universal-sentence-encoder": "*"
     "@tensorflow/tfjs-converter": "*"
@@ -17223,12 +17223,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@supabase/postgrest-js@npm:^1.1.1":
-  version: 1.4.1
-  resolution: "@supabase/postgrest-js@npm:1.4.1"
+"@supabase/postgrest-js@npm:^1.16.0":
+  version: 1.16.0
+  resolution: "@supabase/postgrest-js@npm:1.16.0"
   dependencies:
-    cross-fetch: ^3.1.5
-  checksum: 0a4ad721a5985b92bd7d3703dc6a97c9c57200ff7bdc13c75134d235f7d795e700a421c7bdb1298190ec0b24fb6923c182d5ec7d34d091e9c179813ed8091546
+    "@supabase/node-fetch": ^2.6.14
+  checksum: 9cec1cd729c1234307585883ec7fe30ef035d97a9db481a061c0b350b27fa92b0f185b79d07f439893fb85e369829f45ad3b0ce6bad593a484c1121eb84b93e7
   languageName: node
   linkType: hard
 
