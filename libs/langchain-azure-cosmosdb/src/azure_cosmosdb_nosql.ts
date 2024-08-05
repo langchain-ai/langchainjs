@@ -98,7 +98,7 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
     };
   }
 
-  private readonly initPromise: Promise<void>;
+  private initPromise: Promise<void>;
 
   private readonly client: CosmosClient;
 
@@ -110,6 +110,13 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
 
   private embeddingKey: string;
 
+  /**
+   * Initializes the AzureCosmosDBNoSQLVectorStore.
+   * Connect the client to the database and create the container, creating them if needed.
+   * @returns A promise that resolves when the AzureCosmosDBNoSQLVectorStore has been initialized.
+   */
+  initialize: () => Promise<void>;
+  
   _vectorstoreType(): string {
     return "azure_cosmosdb_nosql";
   }
@@ -197,18 +204,23 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
       );
     }
 
-    // Start initialization, but don't wait for it to finish here
-    this.initPromise = this.init(client, databaseName, containerName, {
-      vectorEmbeddingPolicy,
-      indexingPolicy,
-      createContainerOptions: dbConfig.createContainerOptions,
-      createDatabaseOptions: dbConfig.createDatabaseOptions,
-    }).catch((error) => {
-      console.error(
-        "Error during AzureCosmosDBNoSQLVectorStore initialization:",
-        error
-      );
-    });
+    this.initialize = () => {
+      if (!this.initPromise) {
+        this.initPromise = this.init(client, databaseName, containerName, {
+          vectorEmbeddingPolicy,
+          indexingPolicy,
+          createContainerOptions: dbConfig.createContainerOptions,
+          createDatabaseOptions: dbConfig.createDatabaseOptions,
+        }).catch((error) => {
+          console.error(
+            "Error during AzureCosmosDBNoSQLVectorStore initialization:",
+            error
+          );
+        });
+      }
+
+      return this.initPromise;
+    };
   }
 
   /**
@@ -218,7 +230,7 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
    * @returns A promise that resolves when the documents have been removed.
    */
   async delete(params: AzureCosmosDBNoSqlDeleteParams = {}): Promise<void> {
-    await this.initPromise;
+    await this.initialize();
 
     if (params.ids && params.filter) {
       throw new Error(
@@ -258,7 +270,7 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
     vectors: number[][],
     documents: DocumentInterface[]
   ): Promise<string[]> {
-    await this.initPromise;
+    await this.initialize();
     const docs = vectors.map((embedding, idx) => ({
       [this.textKey]: documents[idx].pageContent,
       [this.embeddingKey]: embedding,
@@ -321,7 +333,7 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
     k = 4,
     filter: this["FilterType"] | undefined = undefined
   ): Promise<[Document, number][]> {
-    await this.initPromise;
+    await this.initialize();
 
     let filterClause = "";
     let filterClauseParams: SqlParameter[] = [];
