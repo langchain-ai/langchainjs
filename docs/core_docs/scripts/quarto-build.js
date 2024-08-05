@@ -3,7 +3,7 @@ const { glob } = require("glob");
 const { execSync } = require("node:child_process");
 
 const IGNORED_CELL_REGEX =
-  /^```\s?\w*?[\s\S]\/\/ ?@lc-docs-hide-cell[\s\S]*?^```/gm;
+  /^``` *\w*?[\s\S]\/\/ ?@lc-docs-hide-cell[\s\S]*?^```/gm;
 const LC_TS_IGNORE_REGEX = /\/\/ ?@lc-ts-ignore\n/g;
 
 async function main() {
@@ -22,6 +22,10 @@ async function main() {
   for (const renamedFilepath of allRenames) {
     if (fs.existsSync(renamedFilepath)) {
       let content = fs.readFileSync(renamedFilepath, "utf-8").toString();
+      // DEBUG
+      if (renamedFilepath.includes("kendra-retriever")) {
+        console.log(content.match(IGNORED_CELL_REGEX), content);
+      }
       if (
         content.match(IGNORED_CELL_REGEX) ||
         content.match(LC_TS_IGNORE_REGEX)
