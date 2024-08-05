@@ -76,7 +76,7 @@ async function promptExtraFields(): Promise<ExtraFields> {
   };
 }
 
-export async function fillDocLoaderIntegrationDocTemplate(fields: {
+export async function fillToolIntegrationDocTemplate(fields: {
   className: string;
 }) {
   const sidebarLabel = fields.className.replace("Tool", "");
@@ -86,7 +86,7 @@ export async function fillDocLoaderIntegrationDocTemplate(fields: {
   const apiRefModuleUrl = `https://api.js.langchain.com/classes/${extraFields.fullImportPath
     .replace("@", "")
     .replaceAll("/", "_")
-    .replaceAll("-", "_")}_${importPathEnding}.${fields.className}.html`;
+    .replaceAll("-", "_")}.${fields.className}.html`;
   const apiRefPackageUrl = apiRefModuleUrl
     .replace("/classes/", "/modules/")
     .replace(`.${fields.className}.html`, ".html");

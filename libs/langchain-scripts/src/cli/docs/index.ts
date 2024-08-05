@@ -8,6 +8,7 @@ import { fillLLMIntegrationDocTemplate } from "./llms.js";
 import { fillRetrieverIntegrationDocTemplate } from "./retrievers.js";
 import { fillEmbeddingsIntegrationDocTemplate } from "./embeddings.js";
 import { fillToolkitIntegrationDocTemplate } from "./toolkits.js";
+import { fillToolIntegrationDocTemplate } from "./tools.js";
 
 type CLIInput = {
   type: string;
@@ -21,6 +22,7 @@ const ALLOWED_TYPES = [
   "embeddings",
   "doc_loader",
   "toolkit",
+  "tool"
 ];
 
 async function main() {
@@ -72,6 +74,11 @@ async function main() {
       await fillToolkitIntegrationDocTemplate({
         className,
       });
+      break;
+    case "tool":
+      await fillToolIntegrationDocTemplate({
+        className,
+      })
       break;
     default:
       console.error(
