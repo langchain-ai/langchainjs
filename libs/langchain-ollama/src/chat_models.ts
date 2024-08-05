@@ -458,23 +458,19 @@ export class ChatOllama
         stream: false, // Ollama currently does not support streaming with tools
       });
 
-      const { message: responseMessage, ...rest } = toolResult;
-      usageMetadata.input_tokens += rest.prompt_eval_count ?? 0;
-      usageMetadata.output_tokens += rest.eval_count ?? 0;
+      usageMetadata.input_tokens += toolResult.prompt_eval_count ?? 0;
+      usageMetadata.output_tokens += toolResult.eval_count ?? 0;
       usageMetadata.total_tokens =
         usageMetadata.input_tokens + usageMetadata.output_tokens;
 
       yield new ChatGenerationChunk({
-        text: responseMessage.content,
-        message: convertOllamaMessagesToLangChain(responseMessage, {
-          responseMetadata: {
-            ...rest,
-            message: responseMessage,
-          },
+        text: toolResult.message.content,
+        message: convertOllamaMessagesToLangChain(toolResult.message, {
+          responseMetadata: toolResult,
           usageMetadata,
         }),
       });
-      return runManager?.handleLLMNewToken(responseMessage.content);
+      return runManager?.handleLLMNewToken(toolResult.message.content);
     }
 
     const stream = await this.client.chat({
@@ -489,18 +485,19 @@ export class ChatOllama
       if (options.signal?.aborted) {
         this.client.abort();
       }
-      const { message: responseMessage, ...rest } = chunk;
-      usageMetadata.input_tokens += rest.prompt_eval_count ?? 0;
-      usageMetadata.output_tokens += rest.eval_count ?? 0;
+      usageMetadata.input_tokens += chunk.prompt_eval_count ?? 0;
+      usageMetadata.output_tokens += chunk.eval_count ?? 0;
       usageMetadata.total_tokens =
         usageMetadata.input_tokens + usageMetadata.output_tokens;
-      lastMetadata = rest;
+      lastMetadata = chunk;
 
       yield new ChatGenerationChunk({
-        text: responseMessage.content ?? "",
-        message: convertOllamaMessagesToLangChain(responseMessage),
+        text: chunk.message.content ?? "",
+        message: convertOllamaMessagesToLangChain(chunk.message, {
+          responseMetadata: chunk,
+        }),
       });
-      await runManager?.handleLLMNewToken(responseMessage.content ?? "");
+      await runManager?.handleLLMNewToken(chunk.message.content ?? "");
     }
 
     // Yield the `response_metadata` as the final chunk.

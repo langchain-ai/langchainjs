@@ -106,3 +106,39 @@ test("Ollama can call withStructuredOutput includeRaw", async () => {
   expect((result.raw as AIMessage).tool_calls?.[0].id).toBeDefined();
   expect((result.raw as AIMessage).tool_calls?.[0].id).not.toBe("");
 });
+
+test("Expect raw tool calls to be included in response_metadata", async () => {
+  const model = new ChatOllama({
+    model: "llama3-groq-tool-use",
+    maxRetries: 1,
+  }).bindTools([weatherTool]);
+
+  const result = await model.invoke(messageHistory);
+  expect(result).toBeDefined();
+  expect(result.response_metadata.message.tool_calls).toHaveLength(1);
+  const toolCallResMetadata = result.response_metadata.message.tool_calls[0];
+  expect(toolCallResMetadata.function.name).toBe("get_current_weather");
+  expect(toolCallResMetadata.function.arguments.location).toBeDefined();
+  expect(toolCallResMetadata.function.arguments.location).not.toBe("");
+});
+
+test("Expect raw tool calls to be included in response_metadata when streaming", async () => {
+  const model = new ChatOllama({
+    model: "llama3-groq-tool-use",
+    maxRetries: 1,
+  }).bindTools([weatherTool]);
+
+  const stream = await model.stream(messageHistory);
+  let finalChunk: AIMessageChunk | undefined;
+  for await (const chunk of stream) {
+    finalChunk = !finalChunk ? chunk : concat(finalChunk, chunk);
+  }
+  expect(finalChunk).toBeDefined();
+  if (!finalChunk) return;
+  expect(finalChunk.response_metadata.message.tool_calls).toHaveLength(1);
+  const toolCallResMetadata =
+    finalChunk.response_metadata.message.tool_calls[0];
+  expect(toolCallResMetadata.function.name).toBe("get_current_weather");
+  expect(toolCallResMetadata.function.arguments.location).toBeDefined();
+  expect(toolCallResMetadata.function.arguments.location).not.toBe("");
+});
