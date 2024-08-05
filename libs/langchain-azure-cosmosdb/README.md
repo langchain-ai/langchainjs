@@ -21,18 +21,18 @@ You can do so by adding appropriate fields to your project's `package.json` like
   "name": "your-project",
   "version": "0.0.0",
   "dependencies": {
-    "@langchain/azure-openai": "^0.0.4",
-    "langchain": "0.0.207"
+    "@langchain/openai": "^0.2.5",
+    "langchain": "0.2.12"
   },
   "resolutions": {
-    "@langchain/core": "0.1.5"
+    "@langchain/core": "0.2.20"
   },
   "overrides": {
-    "@langchain/core": "0.1.5"
+    "@langchain/core": "0.2.20"
   },
   "pnpm": {
     "overrides": {
-      "@langchain/core": "0.1.5"
+      "@langchain/core": "0.2.20"
     }
   }
 }
