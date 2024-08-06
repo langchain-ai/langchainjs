@@ -8,6 +8,7 @@ const vectorStore = await MemoryVectorStore.fromTexts(
 );
 
 const resultOne = await vectorStore.similaritySearch("hello world", 1);
+vectorStore.delete
 console.log(resultOne);
 
 /*
