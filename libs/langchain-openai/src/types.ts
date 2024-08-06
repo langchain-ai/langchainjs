@@ -157,9 +157,8 @@ export interface OpenAIChatInput extends OpenAIBaseInput {
   __includeRawResponse?: boolean;
 
   /**
-   * Whether the model supports the 'strict' argument when passing in tools.
-   * Defaults to `true` if `modelName`/`model` starts with 'gpt-' otherwise
-   * defaults to `false`.
+   * Whether the model supports the `strict` argument when passing in tools.
+   * If `undefined` the `strict` argument will not be passed to OpenAI.
    */
   supportsStrictToolCalling?: boolean;
 }

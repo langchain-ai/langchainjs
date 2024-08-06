@@ -350,8 +350,6 @@ export interface ChatOpenAICallOptions
    *
    * If `undefined`, `strict` argument will not be passed to the model.
    *
-   * Enabled by default for `"gpt-"` models.
-   *
    * @version 0.2.6
    */
   strict?: boolean;
@@ -506,9 +504,7 @@ export class ChatOpenAI<
 
   /**
    * Whether the model supports the `strict` argument when passing in tools.
-   * Defaults to `true` if `modelName`/`model` starts with 'gpt-' otherwise
-   * defaults to `undefined`. If `undefined` the `strict` argument will not
-   * be passed to OpenAI.
+   * If `undefined` the `strict` argument will not be passed to OpenAI.
    */
   supportsStrictToolCalling?: boolean;
 
@@ -609,13 +605,10 @@ export class ChatOpenAI<
       ...fields?.configuration,
     };
 
-    // Assume only "gpt-..." models support strict tool calling as of 08/06/24.
-    // If `supportsStrictToolCalling` is explicitly set, use that value, or `true`
-    // if the model name starts with "gpt-". Else leave undefined so it's not passed to OpenAI.
+    // If `supportsStrictToolCalling` is explicitly set, use that value.
+    // Else leave undefined so it's not passed to OpenAI.
     if (fields?.supportsStrictToolCalling !== undefined) {
       this.supportsStrictToolCalling = fields.supportsStrictToolCalling;
-    } else if (this.modelName.startsWith("gpt-")) {
-      this.supportsStrictToolCalling = true;
     }
   }
 
