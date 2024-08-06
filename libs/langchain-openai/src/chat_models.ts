@@ -27,12 +27,13 @@ import {
   LangSmithParams,
   type BaseChatModelParams,
 } from "@langchain/core/language_models/chat_models";
-import type {
-  BaseFunctionCallOptions,
-  BaseLanguageModelInput,
-  FunctionDefinition,
-  StructuredOutputMethodOptions,
-  StructuredOutputMethodParams,
+import {
+  isOpenAITool,
+  type BaseFunctionCallOptions,
+  type BaseLanguageModelInput,
+  type FunctionDefinition,
+  type StructuredOutputMethodOptions,
+  type StructuredOutputMethodParams,
 } from "@langchain/core/language_models/base";
 import { NewTokenIndices } from "@langchain/core/callbacks/base";
 import { convertToOpenAITool } from "@langchain/core/utils/function_calling";
@@ -274,6 +275,25 @@ function convertMessagesToOpenAIParams(messages: BaseMessage[]) {
   });
 }
 
+type ChatOpenAIToolType =
+  | StructuredToolInterface
+  | OpenAIClient.ChatCompletionTool
+  | RunnableToolLike
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  | Record<string, any>;
+
+function _convertChatOpenAIToolTypeToOpenAITool(
+  tool: ChatOpenAIToolType,
+  fields?: {
+    strict?: boolean;
+  }
+): OpenAIClient.ChatCompletionTool {
+  if (isOpenAITool(tool)) {
+    return tool;
+  }
+  return convertToOpenAITool(tool, fields);
+}
+
 export interface ChatOpenAIStructuredOutputMethodOptions<
   IncludeRaw extends boolean
 > extends StructuredOutputMethodOptions<IncludeRaw> {
@@ -297,7 +317,7 @@ export interface ChatOpenAIStructuredOutputMethodOptions<
 export interface ChatOpenAICallOptions
   extends OpenAICallOptions,
     BaseFunctionCallOptions {
-  tools?: StructuredToolInterface[] | OpenAIClient.ChatCompletionTool[];
+  tools?: ChatOpenAIToolType[];
   tool_choice?: OpenAIToolChoice;
   promptIndex?: number;
   response_format?: { type: "json_object" };
@@ -612,11 +632,7 @@ export class ChatOpenAI<
   }
 
   override bindTools(
-    tools: (
-      | Record<string, unknown>
-      | StructuredToolInterface
-      | RunnableToolLike
-    )[],
+    tools: ChatOpenAIToolType[],
     kwargs?: Partial<CallOptions>
   ): Runnable<BaseLanguageModelInput, AIMessageChunk, CallOptions> {
     let strict: boolean | undefined;
@@ -626,7 +642,9 @@ export class ChatOpenAI<
       strict = this.supportsStrictToolCalling;
     }
     return this.bind({
-      tools: tools.map((tool) => convertToOpenAITool(tool, { strict })),
+      tools: tools.map((tool) =>
+        _convertChatOpenAIToolTypeToOpenAITool(tool, { strict })
+      ),
       ...kwargs,
     } as Partial<CallOptions>);
   }
@@ -647,16 +665,6 @@ export class ChatOpenAI<
       strict = this.supportsStrictToolCalling;
     }
 
-    function isStructuredToolArray(
-      tools?: unknown[]
-    ): tools is StructuredToolInterface[] {
-      return (
-        tools !== undefined &&
-        tools.every((tool) =>
-          Array.isArray((tool as StructuredToolInterface).lc_namespace)
-        )
-      );
-    }
     let streamOptionsConfig = {};
     if (options?.stream_options !== undefined) {
       streamOptionsConfig = { stream_options: options.stream_options };
@@ -683,15 +691,11 @@ export class ChatOpenAI<
       stream: this.streaming,
       functions: options?.functions,
       function_call: options?.function_call,
-      tools: isStructuredToolArray(options?.tools)
-        ? options?.tools.map((tool) => convertToOpenAITool(tool, { strict }))
-        : options?.tools?.map((tool) => {
-            const toolCopy = { ...tool };
-            if (strict !== undefined) {
-              toolCopy.function.strict = strict;
-            }
-            return toolCopy;
-          }),
+      tools: options?.tools?.length
+        ? options.tools.map((tool) =>
+            _convertChatOpenAIToolTypeToOpenAITool(tool, { strict })
+          )
+        : undefined,
       tool_choice: formatToOpenAIToolChoice(options?.tool_choice),
       response_format: options?.response_format,
       seed: options?.seed,

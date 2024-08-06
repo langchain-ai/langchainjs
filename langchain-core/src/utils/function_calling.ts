@@ -53,7 +53,7 @@ export function convertToOpenAITool(
   }
 ): ToolDefinition {
   let toolDef: ToolDefinition | undefined;
-  if (isStructuredTool(tool) || isRunnableToolLike(tool)) {
+  if (isLangChainTool(tool)) {
     toolDef = {
       type: "function",
       function: convertToOpenAIFunction(tool),
@@ -66,7 +66,7 @@ export function convertToOpenAITool(
     toolDef.function.strict = fields.strict;
   }
 
-  return tool as ToolDefinition;
+  return toolDef;
 }
 
 /**
@@ -98,5 +98,23 @@ export function isRunnableToolLike(tool?: unknown): tool is RunnableToolLike {
     "lc_name" in tool.constructor &&
     typeof tool.constructor.lc_name === "function" &&
     tool.constructor.lc_name() === "RunnableToolLike"
+  );
+}
+
+/**
+ * Whether or not the tool is one of StructuredTool, RunnableTool or StructuredToolParams.
+ * It returns `is StructuredToolParams` since that is the most minimal interface of the three,
+ * while still containing the necessary properties to be passed to a LLM for tool calling.
+ *
+ * @param {unknown | undefined} tool The tool to check if it is a LangChain tool.
+ * @returns {tool is StructuredToolParams} Whether the inputted tool is a LangChain tool.
+ */
+export function isLangChainTool(
+  tool?: unknown
+): tool is StructuredToolInterface {
+  return (
+    isRunnableToolLike(tool) ||
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    isStructuredTool(tool as any)
   );
 }
