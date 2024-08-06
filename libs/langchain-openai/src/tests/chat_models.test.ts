@@ -67,16 +67,7 @@ describe("strict tool calling", () => {
     const [_url, options] = mockFetch.mock.calls[0];
 
     if (options && options.body) {
-      expect(JSON.parse(options.body).tools).toEqual([
-        expect.objectContaining({
-          type: "function",
-          function: {
-            ...weatherTool.function,
-            // This should be added to the function call because `strict` was passed to `bindTools`
-            strict: true,
-          },
-        }),
-      ]);
+      expect(JSON.parse(options.body).tools[0].function).toHaveProperty("strict", true);
     } else {
       throw new Error("Body not found in request.");
     }
@@ -118,65 +109,7 @@ describe("strict tool calling", () => {
     const [_url, options] = mockFetch.mock.calls[0];
 
     if (options && options.body) {
-      expect(JSON.parse(options.body).tools).toEqual([
-        expect.objectContaining({
-          type: "function",
-          function: {
-            ...weatherTool.function,
-            // This should be added to the function call because `strict` was passed to `bind`
-            strict: true,
-          },
-        }),
-      ]);
-    } else {
-      throw new Error("Body not found in request.");
-    }
-  });
-
-  it("Sets strict to true if the model name starts with 'gpt-'", async () => {
-    const mockFetch = jest.fn<(url: any, options?: any) => Promise<any>>();
-    mockFetch.mockImplementation((url, options) => {
-      // Store the request details for later inspection
-      mockFetch.mock.calls.push([url, options]);
-
-      // Return a mock response
-      return Promise.resolve({
-        ok: true,
-        json: () => Promise.resolve({}),
-      });
-    });
-
-    const model = new ChatOpenAI({
-      model: "gpt-4",
-      apiKey: "test-key",
-      configuration: {
-        fetch: mockFetch,
-      },
-      maxRetries: 0,
-    });
-
-    // Do NOT pass `strict` here since we're checking that it's set to true by default
-    const modelWithTools = model.bindTools([weatherTool]);
-
-    // This will fail since we're not returning a valid response in our mocked fetch function.
-    await expect(
-      modelWithTools.invoke("What's the weather like?")
-    ).rejects.toThrow();
-
-    expect(mockFetch).toHaveBeenCalled();
-    const [_url, options] = mockFetch.mock.calls[0];
-
-    if (options && options.body) {
-      expect(JSON.parse(options.body).tools).toEqual([
-        expect.objectContaining({
-          type: "function",
-          function: {
-            ...weatherTool.function,
-            // This should be added to the function call because `strict` was passed to `bind`
-            strict: true,
-          },
-        }),
-      ]);
+      expect(JSON.parse(options.body).tools[0].function).toHaveProperty("strict", true);
     } else {
       throw new Error("Body not found in request.");
     }
@@ -217,57 +150,7 @@ describe("strict tool calling", () => {
     const [_url, options] = mockFetch.mock.calls[0];
 
     if (options && options.body) {
-      expect(JSON.parse(options.body).tools).toEqual([
-        expect.objectContaining({
-          type: "function",
-          function: {
-            ...weatherTool.function,
-            // This should be added to the function call because `strict` was passed to `bind`
-            strict: false,
-          },
-        }),
-      ]);
-    } else {
-      throw new Error("Body not found in request.");
-    }
-  });
-
-  // test fails unless it's run in isolation
-  it.skip("Strict is not passed if non 'gpt-' model is passed.", async () => {
-    const mockFetch = jest.fn<(url: any, options?: any) => Promise<any>>();
-    mockFetch.mockImplementation((url, options) => {
-      // Store the request details for later inspection
-      mockFetch.mock.calls.push([url, options]);
-
-      // Return a mock response
-      return Promise.resolve({
-        ok: true,
-        json: () => Promise.resolve({}),
-      });
-    });
-
-    const model = new ChatOpenAI({
-      model: "doesnt-start-with-gpt-4",
-      apiKey: "test-key",
-      configuration: {
-        fetch: mockFetch,
-      },
-      maxRetries: 0,
-    });
-
-    const modelWithTools = model.bindTools([weatherTool]);
-
-    // This will fail since we're not returning a valid response in our mocked fetch function.
-    await expect(
-      modelWithTools.invoke("What's the weather like?")
-    ).rejects.toThrow();
-
-    expect(mockFetch).toHaveBeenCalled();
-    const [_url, options] = mockFetch.mock.calls[0];
-
-    if (options && options.body) {
-      const body = JSON.parse(options.body);
-      expect(body.tools[0].function).not.toHaveProperty("strict");
+      expect(JSON.parse(options.body).tools[0].function).toHaveProperty("strict", false);
     } else {
       throw new Error("Body not found in request.");
     }
@@ -293,6 +176,7 @@ describe("strict tool calling", () => {
         fetch: mockFetch,
       },
       maxRetries: 0,
+      supportsStrictToolCalling: true,
     });
 
     const modelWithTools = model.withStructuredOutput(

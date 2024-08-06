@@ -289,6 +289,16 @@ function _convertChatOpenAIToolTypeToOpenAITool(
   }
 ): OpenAIClient.ChatCompletionTool {
   if (isOpenAITool(tool)) {
+    if (fields?.strict !== undefined) {
+      return {
+        ...tool,
+        function: {
+          ...tool.function,
+          strict: fields.strict,
+        }
+      }
+    }
+
     return tool;
   }
   return convertToOpenAITool(tool, fields);
