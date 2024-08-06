@@ -14,21 +14,29 @@ import {
   FULL_IMPORT_PATH_PLACEHOLDER,
   PYTHON_DOC_URL_PLACEHOLDER,
   API_REF_MODULE_PLACEHOLDER,
+  API_REF_PACKAGE_PLACEHOLDER,
+  SERIALIZABLE_PLACEHOLDER,
   PY_SUPPORT_PLACEHOLDER,
 } from "../constants.js";
 
-const TEMPLATE_PATH = path.resolve("./src/cli/docs/templates/toolkits.ipynb");
+const TEMPLATE_PATH = path.resolve("./src/cli/docs/templates/tools.ipynb");
 const INTEGRATIONS_DOCS_PATH = path.resolve(
-  "../../docs/core_docs/docs/integrations/toolkits"
+  "../../docs/core_docs/docs/integrations/tools"
 );
 
 type ExtraFields = {
+  serializable: boolean;
   pySupport: boolean;
   fullImportPath: string;
   packageName: string;
 };
 
 async function promptExtraFields(): Promise<ExtraFields> {
+  const isSerializable = await getUserInput(
+    "Does this integration support serializable output? (y/n) ",
+    undefined,
+    true
+  );
   const hasPySupport = await getUserInput(
     "Does this integration have Python support? (y/n) ",
     undefined,
@@ -61,28 +69,35 @@ async function promptExtraFields(): Promise<ExtraFields> {
   }
 
   return {
+    serializable: isSerializable.toLowerCase() === "y",
     pySupport: hasPySupport.toLowerCase() === "y",
     fullImportPath: importPath,
     packageName,
   };
 }
 
-export async function fillToolkitIntegrationDocTemplate(fields: {
+export async function fillToolIntegrationDocTemplate(fields: {
   className: string;
 }) {
-  const sidebarLabel = fields.className.replace("Toolkit", "");
-  const pyDocUrl = `https://python.langchain.com/docs/integrations/toolkits/${sidebarLabel.toLowerCase()}/`;
+  const sidebarLabel = fields.className.replace("Tool", "");
+  const pyDocUrl = `https://python.langchain.com/docs/integrations/tools/${sidebarLabel.toLowerCase()}/`;
   const extraFields = await promptExtraFields();
   const importPathEnding = extraFields.fullImportPath.split("/").pop() ?? "";
   const apiRefModuleUrl = `https://api.js.langchain.com/classes/${extraFields.fullImportPath
     .replace("@", "")
     .replaceAll("/", "_")
     .replaceAll("-", "_")}.${fields.className}.html`;
+  const apiRefPackageUrl = apiRefModuleUrl
+    .replace("/classes/", "/modules/")
+    .replace(`.${fields.className}.html`, ".html");
 
-  const apiRefUrlSuccess = await fetchURLStatus(apiRefModuleUrl);
-  if (apiRefUrlSuccess === false) {
+  const apiRefUrlSuccesses = await Promise.all([
+    fetchURLStatus(apiRefModuleUrl),
+    fetchURLStatus(apiRefPackageUrl),
+  ]);
+  if (apiRefUrlSuccesses.find((s) => !s)) {
     console.warn(
-      "API ref URL is invalid. Please manually ensure it is correct."
+      "API ref URLs invalid. Please manually ensure they are correct."
     );
   }
 
@@ -93,6 +108,11 @@ export async function fillToolkitIntegrationDocTemplate(fields: {
     .replaceAll(FULL_IMPORT_PATH_PLACEHOLDER, extraFields.fullImportPath)
     .replaceAll(PYTHON_DOC_URL_PLACEHOLDER, pyDocUrl)
     .replaceAll(API_REF_MODULE_PLACEHOLDER, apiRefModuleUrl)
+    .replaceAll(API_REF_PACKAGE_PLACEHOLDER, apiRefPackageUrl)
+    .replaceAll(
+      SERIALIZABLE_PLACEHOLDER,
+      extraFields?.serializable ? "beta" : "❌"
+    )
     .replaceAll(PY_SUPPORT_PLACEHOLDER, extraFields?.pySupport ? "✅" : "❌");
 
   const docPath = path.join(
