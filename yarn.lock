@@ -10866,7 +10866,7 @@ __metadata:
     "@aws-sdk/credential-provider-node": ^3.600.0
     "@aws-sdk/types": ^3.609.0
     "@jest/globals": ^29.5.0
-    "@langchain/core": ">=0.2.16 <0.3.0"
+    "@langchain/core": ">=0.2.21 <0.3.0"
     "@langchain/scripts": ~0.0.20
     "@langchain/standard-tests": 0.0.0
     "@smithy/types": ^3.2.0
