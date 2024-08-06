@@ -186,3 +186,9 @@ const oldResults: IdDocument[] = await engine.similaritySearch("this", 10);
 const oldIds = oldResults.map( doc => doc.id! );
 await engine.delete({ids: oldIds});
 ```
+
+
+## Related
+
+- Vector store [conceptual guide](/docs/concepts/#vectorstores)
+- Vector store [how-to guides](/docs/how_to/#vectorstores)
