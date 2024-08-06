@@ -221,7 +221,6 @@ In the configuration document, further optional parameters are provided; their d
 | `batchSize`      | How many documents will be sent on a single request to Cassandra. When using a value > 1, you should ensure your batch size will not exceed the Cassandra parameter `batch_size_fail_threshold_in_kb`. Batches are unlogged. |
 | `withClause`     | Cassandra tables may be created with an optional `WITH` clause; this is generally not needed but provided for completeness.                                                                                                  |
 
-
 ## Related
 
 - Vector store [conceptual guide](/docs/concepts/#vectorstores)
