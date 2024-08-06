@@ -63,7 +63,6 @@ class ChatBedrockConverseStandardIntegrationTests extends ChatModelIntegrationTe
 const testClass = new ChatBedrockConverseStandardIntegrationTests();
 
 test("ChatBedrockConverseStandardIntegrationTests", async () => {
-  const testResults =
-    await testClass.testModelCanUseToolUseAIMessageWithStreaming();
+  const testResults = await testClass.runTests();
   expect(testResults).toBe(true);
 });
