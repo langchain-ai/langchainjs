@@ -13,12 +13,21 @@ import { Runnable, RunnableToolLike } from "../runnables/base.js";
  * @returns {FunctionDefinition} The inputted tool in OpenAI function format.
  */
 export function convertToOpenAIFunction(
-  tool: StructuredToolInterface | RunnableToolLike
+  tool: StructuredToolInterface | RunnableToolLike,
+  fields?: {
+    /**
+     * If `true`, model output is guaranteed to exactly match the JSON Schema
+     * provided in the function definition.
+     */
+    strict?: boolean;
+  }
 ): FunctionDefinition {
   return {
     name: tool.name,
     description: tool.description,
     parameters: zodToJsonSchema(tool.schema),
+    // Do not include the `strict` field if it is `undefined`.
+    ...(fields?.strict !== undefined ? { strict: fields.strict } : {}),
   };
 }
 
