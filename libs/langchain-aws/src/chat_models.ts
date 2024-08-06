@@ -330,12 +330,17 @@ export class ChatBedrockConverse
     };
   }
 
+  supportStreaming() {
+    const provider = this.model.split(".")[0];
+    return !["ai21"].includes(provider);
+  }
+
   async _generate(
     messages: BaseMessage[],
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
-    if (this.streaming) {
+    if (this.streaming && this.supportStreaming()) {
       const stream = this._streamResponseChunks(messages, options, runManager);
       let finalResult: ChatGenerationChunk | undefined;
       for await (const chunk of stream) {
@@ -383,6 +388,9 @@ export class ChatBedrockConverse
       output.message,
       responseMetadata
     );
+    if (this.streaming) {
+      await _runManager?.handleLLMNewToken(typeof message.content === "string" ? message.content : "");
+    }
     return {
       generations: [
         {
