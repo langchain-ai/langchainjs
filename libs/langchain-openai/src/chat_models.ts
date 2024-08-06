@@ -1,4 +1,4 @@
-import { type ClientOptions, OpenAI as OpenAIClient, } from "openai";
+import { type ClientOptions, OpenAI as OpenAIClient } from "openai";
 
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {
@@ -307,7 +307,10 @@ export interface ChatOpenAICallOptions
   strict?: boolean;
 }
 
-export interface ChatOpenAIFields extends Partial<OpenAIChatInput>, Partial<AzureOpenAIInput>, BaseChatModelParams {
+export interface ChatOpenAIFields
+  extends Partial<OpenAIChatInput>,
+    Partial<AzureOpenAIInput>,
+    BaseChatModelParams {
   configuration?: ClientOptions & LegacyOpenAIInput;
 }
 
@@ -556,10 +559,10 @@ export class ChatOpenAI<
     };
 
     // Assume only "gpt-..." models support strict tool calling as of 08/06/24.
-    this.supportsStrictToolCalling = 
-    fields?.supportsStrictToolCalling !== undefined
-      ? fields.supportsStrictToolCalling
-      : this.modelName.startsWith("gpt-");
+    this.supportsStrictToolCalling =
+      fields?.supportsStrictToolCalling !== undefined
+        ? fields.supportsStrictToolCalling
+        : this.modelName.startsWith("gpt-");
   }
 
   getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
@@ -582,7 +585,10 @@ export class ChatOpenAI<
     )[],
     kwargs?: Partial<CallOptions>
   ): Runnable<BaseLanguageModelInput, AIMessageChunk, CallOptions> {
-    const strict = kwargs?.strict !== undefined ? kwargs.strict : this.supportsStrictToolCalling;
+    const strict =
+      kwargs?.strict !== undefined
+        ? kwargs.strict
+        : this.supportsStrictToolCalling;
     return this.bind({
       tools: tools.map((tool) => convertToOpenAITool(tool, { strict })),
       ...kwargs,
@@ -598,7 +604,10 @@ export class ChatOpenAI<
       streaming?: boolean;
     }
   ): Omit<OpenAIClient.Chat.ChatCompletionCreateParams, "messages"> {
-    const strict = options?.strict !== undefined ? options.strict : this.supportsStrictToolCalling;
+    const strict =
+      options?.strict !== undefined
+        ? options.strict
+        : this.supportsStrictToolCalling;
     function isStructuredToolArray(
       tools?: unknown[]
     ): tools is StructuredToolInterface[] {

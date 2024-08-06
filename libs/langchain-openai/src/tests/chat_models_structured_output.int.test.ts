@@ -2,8 +2,8 @@ import { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { AIMessage } from "@langchain/core/messages";
-import { ChatOpenAI } from "../chat_models.js";
 import { test, expect } from "@jest/globals";
+import { ChatOpenAI } from "../chat_models.js";
 
 test("withStructuredOutput zod schema function calling", async () => {
   const model = new ChatOpenAI({
@@ -334,17 +334,24 @@ test("Passing strict true forces the model to conform to the schema", async () =
     function: {
       name: "get_current_weather",
       description: "Get the current weather in a location",
-      parameters: zodToJsonSchema(z.object({
-        location: z.string().describe("The location to get the weather for"),
-      }))
-    }
-  }
-  const modelWithTools = model.bindTools([weatherTool], { strict: true, tool_choice: "get_current_weather" });
+      parameters: zodToJsonSchema(
+        z.object({
+          location: z.string().describe("The location to get the weather for"),
+        })
+      ),
+    },
+  };
+  const modelWithTools = model.bindTools([weatherTool], {
+    strict: true,
+    tool_choice: "get_current_weather",
+  });
 
-  const result = await modelWithTools.invoke("Whats the result of 173827 times 287326 divided by 2?");
+  const result = await modelWithTools.invoke(
+    "Whats the result of 173827 times 287326 divided by 2?"
+  );
   // Expect at least one tool call, allow multiple
   expect(result.tool_calls?.length).toBeGreaterThanOrEqual(1);
   expect(result.tool_calls?.[0].name).toBe("get_current_weather");
   expect(result.tool_calls?.[0].args).toHaveProperty("location");
-  console.log(result.tool_calls?.[0].args)
-})
+  console.log(result.tool_calls?.[0].args);
+});

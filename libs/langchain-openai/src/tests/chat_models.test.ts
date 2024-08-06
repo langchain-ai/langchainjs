@@ -3,25 +3,26 @@ import { zodToJsonSchema } from "zod-to-json-schema";
 import { it, expect, describe, beforeAll, afterAll, jest } from "@jest/globals";
 import { ChatOpenAI } from "../chat_models.js";
 
-
 describe("strict tool calling", () => {
   const weatherTool = {
     type: "function" as const,
     function: {
       name: "get_current_weather",
       description: "Get the current weather in a location",
-      parameters: zodToJsonSchema(z.object({
-        location: z.string().describe("The location to get the weather for"),
-      }))
-    }
-  }
+      parameters: zodToJsonSchema(
+        z.object({
+          location: z.string().describe("The location to get the weather for"),
+        })
+      ),
+    },
+  };
 
   // Store the original value of LANGCHAIN_TRACING_V2
   let oldLangChainTracingValue: string | undefined;
   // Before all tests, save the current LANGCHAIN_TRACING_V2 value
   beforeAll(() => {
     oldLangChainTracingValue = process.env.LANGCHAIN_TRACING_V2;
-  })
+  });
   // After all tests, restore the original LANGCHAIN_TRACING_V2 value
   afterAll(() => {
     if (oldLangChainTracingValue !== undefined) {
@@ -30,14 +31,14 @@ describe("strict tool calling", () => {
       // If it was undefined, remove the environment variable
       delete process.env.LANGCHAIN_TRACING_V2;
     }
-  })
+  });
 
   it("Can accept strict as a call arg via .bindTools", async () => {
     const mockFetch = jest.fn<(url: any, init?: any) => Promise<any>>();
     mockFetch.mockImplementation((url, options): Promise<any> => {
       // Store the request details for later inspection
       mockFetch.mock.calls.push({ url, options } as any);
-      
+
       // Return a mock response
       return Promise.resolve({
         ok: true,
@@ -56,22 +57,26 @@ describe("strict tool calling", () => {
     const modelWithTools = model.bindTools([weatherTool], { strict: true });
 
     // This will fail since we're not returning a valid response in our mocked fetch function.
-    await expect(modelWithTools.invoke("What's the weather like?")).rejects.toThrow();
+    await expect(
+      modelWithTools.invoke("What's the weather like?")
+    ).rejects.toThrow();
 
     expect(mockFetch).toHaveBeenCalled();
     const [_url, options] = mockFetch.mock.calls[0];
-  
+
     if (options && options.body) {
-      expect(JSON.parse(options.body).tools).toEqual([expect.objectContaining({
-        type: "function",
-        function: {
-          ...weatherTool.function,
-          // This should be added to the function call because `strict` was passed to `bindTools`
-          strict: true,
-        }
-      })]);
+      expect(JSON.parse(options.body).tools).toEqual([
+        expect.objectContaining({
+          type: "function",
+          function: {
+            ...weatherTool.function,
+            // This should be added to the function call because `strict` was passed to `bindTools`
+            strict: true,
+          },
+        }),
+      ]);
     } else {
-      throw new Error("Body not found in request.")
+      throw new Error("Body not found in request.");
     }
   });
 
@@ -80,7 +85,7 @@ describe("strict tool calling", () => {
     mockFetch.mockImplementation((url, options): Promise<any> => {
       // Store the request details for later inspection
       mockFetch.mock.calls.push({ url, options } as any);
-      
+
       // Return a mock response
       return Promise.resolve({
         ok: true,
@@ -98,26 +103,30 @@ describe("strict tool calling", () => {
 
     const modelWithTools = model.bind({
       tools: [weatherTool],
-      strict: true
+      strict: true,
     });
 
     // This will fail since we're not returning a valid response in our mocked fetch function.
-    await expect(modelWithTools.invoke("What's the weather like?")).rejects.toThrow();
+    await expect(
+      modelWithTools.invoke("What's the weather like?")
+    ).rejects.toThrow();
 
     expect(mockFetch).toHaveBeenCalled();
     const [_url, options] = mockFetch.mock.calls[0];
-  
+
     if (options && options.body) {
-      expect(JSON.parse(options.body).tools).toEqual([expect.objectContaining({
-        type: "function",
-        function: {
-          ...weatherTool.function,
-          // This should be added to the function call because `strict` was passed to `bind`
-          strict: true,
-        }
-      })]);
+      expect(JSON.parse(options.body).tools).toEqual([
+        expect.objectContaining({
+          type: "function",
+          function: {
+            ...weatherTool.function,
+            // This should be added to the function call because `strict` was passed to `bind`
+            strict: true,
+          },
+        }),
+      ]);
     } else {
-      throw new Error("Body not found in request.")
+      throw new Error("Body not found in request.");
     }
   });
 
@@ -126,7 +135,7 @@ describe("strict tool calling", () => {
     mockFetch.mockImplementation((url, options): Promise<any> => {
       // Store the request details for later inspection
       mockFetch.mock.calls.push({ url, options } as any);
-      
+
       // Return a mock response
       return Promise.resolve({
         ok: true,
@@ -146,22 +155,26 @@ describe("strict tool calling", () => {
     const modelWithTools = model.bindTools([weatherTool]);
 
     // This will fail since we're not returning a valid response in our mocked fetch function.
-    await expect(modelWithTools.invoke("What's the weather like?")).rejects.toThrow();
+    await expect(
+      modelWithTools.invoke("What's the weather like?")
+    ).rejects.toThrow();
 
     expect(mockFetch).toHaveBeenCalled();
     const [_url, options] = mockFetch.mock.calls[0];
-  
+
     if (options && options.body) {
-      expect(JSON.parse(options.body).tools).toEqual([expect.objectContaining({
-        type: "function",
-        function: {
-          ...weatherTool.function,
-          // This should be added to the function call because `strict` was passed to `bind`
-          strict: true,
-        }
-      })]);
+      expect(JSON.parse(options.body).tools).toEqual([
+        expect.objectContaining({
+          type: "function",
+          function: {
+            ...weatherTool.function,
+            // This should be added to the function call because `strict` was passed to `bind`
+            strict: true,
+          },
+        }),
+      ]);
     } else {
-      throw new Error("Body not found in request.")
+      throw new Error("Body not found in request.");
     }
   });
 
@@ -170,7 +183,7 @@ describe("strict tool calling", () => {
     mockFetch.mockImplementation((url, options): Promise<any> => {
       // Store the request details for later inspection
       mockFetch.mock.calls.push({ url, options } as any);
-      
+
       // Return a mock response
       return Promise.resolve({
         ok: true,
@@ -191,22 +204,26 @@ describe("strict tool calling", () => {
     const modelWithTools = model.bindTools([weatherTool]);
 
     // This will fail since we're not returning a valid response in our mocked fetch function.
-    await expect(modelWithTools.invoke("What's the weather like?")).rejects.toThrow();
+    await expect(
+      modelWithTools.invoke("What's the weather like?")
+    ).rejects.toThrow();
 
     expect(mockFetch).toHaveBeenCalled();
     const [_url, options] = mockFetch.mock.calls[0];
-  
+
     if (options && options.body) {
-      expect(JSON.parse(options.body).tools).toEqual([expect.objectContaining({
-        type: "function",
-        function: {
-          ...weatherTool.function,
-          // This should be added to the function call because `strict` was passed to `bind`
-          strict: false,
-        }
-      })]);
+      expect(JSON.parse(options.body).tools).toEqual([
+        expect.objectContaining({
+          type: "function",
+          function: {
+            ...weatherTool.function,
+            // This should be added to the function call because `strict` was passed to `bind`
+            strict: false,
+          },
+        }),
+      ]);
     } else {
-      throw new Error("Body not found in request.")
+      throw new Error("Body not found in request.");
     }
   });
-})
+});
