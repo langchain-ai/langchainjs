@@ -12,7 +12,11 @@ import {
   getBufferString,
 } from "@langchain/core/messages";
 import { z } from "zod";
-import { StructuredTool, StructuredToolParams, tool } from "@langchain/core/tools";
+import {
+  StructuredTool,
+  StructuredToolParams,
+  tool,
+} from "@langchain/core/tools";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { RunnableLambda } from "@langchain/core/runnables";
@@ -1485,7 +1489,7 @@ Extraction path: {extractionPath}`,
    * Tests the chat model's ability to accept and use a StructuredToolParams schema.
    * This schema contains the same fields as `StructuredToolInterface`, but does not
    * require a function to be passed when the tool is created.
-   * 
+   *
    * This test verifies that the model can:
    * 1. Correctly bind a tool defined using StructuredToolParams
    * 2. Process a prompt that should trigger the use of the bound tool
@@ -1520,7 +1524,7 @@ Extraction path: {extractionPath}`,
       schema: z.object({
         location: z.string().describe("The city name, e.g. San Francisco"),
       }),
-    }
+    };
     const modelWithTools = model.bindTools([tool]);
 
     const prompt = "What's the weather like in San Francisco today?";
@@ -1682,7 +1686,10 @@ Extraction path: {extractionPath}`,
       await this.testModelCanAcceptStructuredToolParamsSchema();
     } catch (e: any) {
       allTestsPassed = false;
-      console.error("testModelCanAcceptStructuredToolParamsSchema failed", e.message);
+      console.error(
+        "testModelCanAcceptStructuredToolParamsSchema failed",
+        e.message
+      );
     }
 
     return allTestsPassed;
