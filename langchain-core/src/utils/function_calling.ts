@@ -14,20 +14,25 @@ import { Runnable, RunnableToolLike } from "../runnables/base.js";
  */
 export function convertToOpenAIFunction(
   tool: StructuredToolInterface | RunnableToolLike,
-  fields?: {
-    /**
-     * If `true`, model output is guaranteed to exactly match the JSON Schema
-     * provided in the function definition.
-     */
-    strict?: boolean;
-  }
+  fields?:
+    | {
+        /**
+         * If `true`, model output is guaranteed to exactly match the JSON Schema
+         * provided in the function definition.
+         */
+        strict?: boolean;
+      }
+    | number
 ): FunctionDefinition {
+  // @TODO 0.3.0 Remove the `number` typing
+  const fieldsCopy = typeof fields === "number" ? undefined : fields;
+
   return {
     name: tool.name,
     description: tool.description,
     parameters: zodToJsonSchema(tool.schema),
     // Do not include the `strict` field if it is `undefined`.
-    ...(fields?.strict !== undefined ? { strict: fields.strict } : {}),
+    ...(fieldsCopy?.strict !== undefined ? { strict: fieldsCopy.strict } : {}),
   };
 }
 
@@ -44,14 +49,19 @@ export function convertToOpenAIFunction(
 export function convertToOpenAITool(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   tool: StructuredToolInterface | Record<string, any> | RunnableToolLike,
-  fields?: {
-    /**
-     * If `true`, model output is guaranteed to exactly match the JSON Schema
-     * provided in the function definition.
-     */
-    strict?: boolean;
-  }
+  fields?:
+    | {
+        /**
+         * If `true`, model output is guaranteed to exactly match the JSON Schema
+         * provided in the function definition.
+         */
+        strict?: boolean;
+      }
+    | number
 ): ToolDefinition {
+  // @TODO 0.3.0 Remove the `number` typing
+  const fieldsCopy = typeof fields === "number" ? undefined : fields;
+
   let toolDef: ToolDefinition | undefined;
   if (isLangChainTool(tool)) {
     toolDef = {
@@ -62,8 +72,8 @@ export function convertToOpenAITool(
     toolDef = tool as ToolDefinition;
   }
 
-  if (fields?.strict !== undefined) {
-    toolDef.function.strict = fields.strict;
+  if (fieldsCopy?.strict !== undefined) {
+    toolDef.function.strict = fieldsCopy.strict;
   }
 
   return toolDef;
