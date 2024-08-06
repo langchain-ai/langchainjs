@@ -5,7 +5,7 @@ import { MongoClient } from "mongodb";
 import { Document } from "@langchain/core/documents";
 import { OpenAIEmbeddings } from "@langchain/openai";
 
-import { AzureCosmosDBMongoDBvCoreVectorStore } from "../azure_cosmosdb_mongodb_vcore.js";
+import { AzureCosmosDBMongoDBVectorStore } from "../azure_cosmosdb_mongodb.js";
 
 const DATABASE_NAME = "langchain";
 const COLLECTION_NAME = "test";
@@ -22,7 +22,7 @@ const INDEX_NAME = "vectorSearchIndex";
  *
  * Once you have the instance running, you need to set the following environment
  * variables before running the test:
- * - AZURE_COSMOSDB_MONGODB_VCORE_CONNECTION_STRING
+ * - AZURE_COSMOSDB_MONGODB_CONNECTION_STRING
  * - AZURE_OPENAI_API_KEY
  * - AZURE_OPENAI_API_INSTANCE_NAME
  * - AZURE_OPENAI_API_EMBEDDINGS_DEPLOYMENT_NAME
@@ -30,10 +30,10 @@ const INDEX_NAME = "vectorSearchIndex";
  *
  * A regular OpenAI key can also be used instead of Azure OpenAI.
  */
-describe("AzureCosmosDBMongoDBvCoreVectorStore", () => {
+describe("AzureCosmosDBMongoDBVectorStore", () => {
   beforeEach(async () => {
     expect(
-      process.env.AZURE_COSMOSDB_MONGODB_VCORE_CONNECTION_STRING
+      process.env.AZURE_COSMOSDB_MONGODB_CONNECTION_STRING
     ).toBeDefined();
 
     // Note: when using Azure OpenAI, you have to also set these variables
@@ -47,7 +47,7 @@ describe("AzureCosmosDBMongoDBvCoreVectorStore", () => {
 
     const client = new MongoClient(
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      process.env.AZURE_COSMOSDB_MONGODB_VCORE_CONNECTION_STRING!
+      process.env.AZURE_COSMOSDB_MONGODB_CONNECTION_STRING!
     );
     await client.connect();
     const db = client.db(DATABASE_NAME);
@@ -67,7 +67,7 @@ describe("AzureCosmosDBMongoDBvCoreVectorStore", () => {
   });
 
   test("performs similarity search", async () => {
-    const vectorStore = new AzureCosmosDBMongoDBvCoreVectorStore(
+    const vectorStore = new AzureCosmosDBMongoDBVectorStore(
       new OpenAIEmbeddings(),
       {
         databaseName: DATABASE_NAME,
@@ -112,7 +112,7 @@ describe("AzureCosmosDBMongoDBvCoreVectorStore", () => {
 
   test("performs max marginal relevance search", async () => {
     const texts = ["foo", "foo", "fox"];
-    const vectorStore = await AzureCosmosDBMongoDBvCoreVectorStore.fromTexts(
+    const vectorStore = await AzureCosmosDBMongoDBVectorStore.fromTexts(
       texts,
       {},
       new OpenAIEmbeddings(),
@@ -172,7 +172,7 @@ describe("AzureCosmosDBMongoDBvCoreVectorStore", () => {
   });
 
   test("deletes documents by id", async () => {
-    const vectorStore = new AzureCosmosDBMongoDBvCoreVectorStore(
+    const vectorStore = new AzureCosmosDBMongoDBVectorStore(
       new OpenAIEmbeddings(),
       {
         databaseName: DATABASE_NAME,
@@ -204,7 +204,7 @@ describe("AzureCosmosDBMongoDBvCoreVectorStore", () => {
   });
 
   test("deletes documents by filter", async () => {
-    const vectorStore = new AzureCosmosDBMongoDBvCoreVectorStore(
+    const vectorStore = new AzureCosmosDBMongoDBVectorStore(
       new OpenAIEmbeddings(),
       {
         databaseName: DATABASE_NAME,
@@ -236,7 +236,7 @@ describe("AzureCosmosDBMongoDBvCoreVectorStore", () => {
   });
 
   test("deletes all documents", async () => {
-    const vectorStore = new AzureCosmosDBMongoDBvCoreVectorStore(
+    const vectorStore = new AzureCosmosDBMongoDBVectorStore(
       new OpenAIEmbeddings(),
       {
         databaseName: DATABASE_NAME,

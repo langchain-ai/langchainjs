@@ -16,7 +16,7 @@ import { maximalMarginalRelevance } from "@langchain/core/utils/math";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 
 /** Azure Cosmos DB for MongoDB vCore Similarity type. */
-export const AzureCosmosDBMongoDBvCoreSimilarityType = {
+export const AzureCosmosDBMongoDBSimilarityType = {
   /** Cosine similarity */
   COS: "COS",
   /** Inner - product */
@@ -26,11 +26,11 @@ export const AzureCosmosDBMongoDBvCoreSimilarityType = {
 } as const;
 
 /** Azure Cosmos DB for MongoDB vCore Similarity type. */
-export type AzureCosmosDBMongoDBvCoreSimilarityType =
-  (typeof AzureCosmosDBMongoDBvCoreSimilarityType)[keyof typeof AzureCosmosDBMongoDBvCoreSimilarityType];
+export type AzureCosmosDBMongoDBSimilarityType =
+  (typeof AzureCosmosDBMongoDBSimilarityType)[keyof typeof AzureCosmosDBMongoDBSimilarityType];
 
 /** Azure Cosmos DB for MongoDB vCore Index Options. */
-export type AzureCosmosDBMongoDBvCoreIndexOptions = {
+export type AzureCosmosDBMongoDBIndexOptions = {
   /** Skips automatic index creation. */
   readonly skipCreate?: boolean;
   /** Number of clusters that the inverted file (IVF) index uses to group the vector data. */
@@ -38,19 +38,19 @@ export type AzureCosmosDBMongoDBvCoreIndexOptions = {
   /** Number of dimensions for vector similarity. */
   readonly dimensions?: number;
   /** Similarity metric to use with the IVF index. */
-  readonly similarity?: AzureCosmosDBMongoDBvCoreSimilarityType;
+  readonly similarity?: AzureCosmosDBMongoDBSimilarityType;
 };
 
 /** Azure Cosmos DB for MongoDB vCore delete Parameters. */
-export type AzureCosmosDBMongoDBvCoreDeleteParams = {
+export type AzureCosmosDBMongoDBDeleteParams = {
   /** List of IDs for the documents to be removed. */
   readonly ids?: string | string[];
   /** MongoDB filter object or list of IDs for the documents to be removed. */
   readonly filter?: Filter<MongoDBDocument>;
 };
 
-/** Configuration options for the `AzureCosmosDBMongoDBvCoreVectorStore` constructor. */
-export interface AzureCosmosDBMongoDBvCoreConfig {
+/** Configuration options for the `AzureCosmosDBMongoDBVectorStore` constructor. */
+export interface AzureCosmosDBMongoDBConfig {
   readonly client?: MongoClient;
   readonly connectionString?: string;
   readonly databaseName?: string;
@@ -58,7 +58,7 @@ export interface AzureCosmosDBMongoDBvCoreConfig {
   readonly indexName?: string;
   readonly textKey?: string;
   readonly embeddingKey?: string;
-  readonly indexOptions?: AzureCosmosDBMongoDBvCoreIndexOptions;
+  readonly indexOptions?: AzureCosmosDBMongoDBIndexOptions;
 }
 
 /**
@@ -73,10 +73,10 @@ export interface AzureCosmosDBMongoDBvCoreConfig {
  * You also need an index on the collection, which is by default be created
  * automatically using the `createIndex` method.
  */
-export class AzureCosmosDBMongoDBvCoreVectorStore extends VectorStore {
+export class AzureCosmosDBMongoDBVectorStore extends VectorStore {
   get lc_secrets(): { [key: string]: string } {
     return {
-      connectionString: "AZURE_COSMOSDB_MONGODB_VCORE_CONNECTION_STRING",
+      connectionString: "AZURE_COSMOSDB_MONGODB_CONNECTION_STRING",
     };
   }
 
@@ -96,32 +96,32 @@ export class AzureCosmosDBMongoDBvCoreVectorStore extends VectorStore {
 
   readonly embeddingKey: string;
 
-  private readonly indexOptions: AzureCosmosDBMongoDBvCoreIndexOptions;
+  private readonly indexOptions: AzureCosmosDBMongoDBIndexOptions;
 
   /**
-   * Initializes the AzureCosmosDBMongoDBvCoreVectorStore.
+   * Initializes the AzureCosmosDBMongoDBVectorStore.
    * Connect the client to the database and create the container, creating them if needed.
-   * @returns A promise that resolves when the AzureCosmosDBMongoDBvCoreVectorStore has been initialized.
+   * @returns A promise that resolves when the AzureCosmosDBMongoDBVectorStore has been initialized.
    */
   initialize: () => Promise<void>;
 
   _vectorstoreType(): string {
-    return "azure_cosmosdb_mongodb_vcore";
+    return "azure_cosmosdb_mongodb";
   }
 
   constructor(
     embeddings: EmbeddingsInterface,
-    dbConfig: AzureCosmosDBMongoDBvCoreConfig
+    dbConfig: AzureCosmosDBMongoDBConfig
   ) {
     super(embeddings, dbConfig);
 
     const connectionString =
       dbConfig.connectionString ??
-      getEnvironmentVariable("AZURE_COSMOSDB_MONGODB_VCORE_CONNECTION_STRING");
+      getEnvironmentVariable("AZURE_COSMOSDB_MONGODB_CONNECTION_STRING");
 
     if (!dbConfig.client && !connectionString) {
       throw new Error(
-        "AzureCosmosDBMongoDBvCoreVectorStore client or connection string must be set."
+        "AzureCosmosDBMongoDBVectorStore client or connection string must be set."
       );
     }
 
@@ -147,7 +147,7 @@ export class AzureCosmosDBMongoDBvCoreVectorStore extends VectorStore {
         this.initPromise = this.init(client, databaseName, collectionName).catch(
           (error) => {
             console.error(
-              "Error during AzureCosmosDBMongoDBvCoreVectorStore initialization:",
+              "Error during AzureCosmosDBMongoDBVectorStore initialization:",
               error
             );
           }
@@ -226,7 +226,7 @@ export class AzureCosmosDBMongoDBvCoreVectorStore extends VectorStore {
   async createIndex(
     numLists = 100,
     dimensions: number | undefined = undefined,
-    similarity: AzureCosmosDBMongoDBvCoreSimilarityType = AzureCosmosDBMongoDBvCoreSimilarityType.COS
+    similarity: AzureCosmosDBMongoDBSimilarityType = AzureCosmosDBMongoDBSimilarityType.COS
   ): Promise<void> {
     await this.connectPromise;
 
@@ -257,18 +257,18 @@ export class AzureCosmosDBMongoDBvCoreVectorStore extends VectorStore {
   }
 
   /**
-   * Removes specified documents from the AzureCosmosDBMongoDBvCoreVectorStore.
+   * Removes specified documents from the AzureCosmosDBMongoDBVectorStore.
    * If no IDs or filter are specified, all documents will be removed.
    * @param params Parameters for the delete operation.
    * @returns A promise that resolves when the documents have been removed.
    */
   async delete(
-    params: AzureCosmosDBMongoDBvCoreDeleteParams | string[] = {}
+    params: AzureCosmosDBMongoDBDeleteParams | string[] = {}
   ): Promise<void> {
     await this.initialize();
 
     let ids: string | string[] | undefined;
-    let filter: AzureCosmosDBMongoDBvCoreDeleteParams["filter"];
+    let filter: AzureCosmosDBMongoDBDeleteParams["filter"];
     if (Array.isArray(params)) {
       ids = params;
     } else {
@@ -300,7 +300,7 @@ export class AzureCosmosDBMongoDBvCoreVectorStore extends VectorStore {
   }
 
   /**
-   * Method for adding vectors to the AzureCosmosDBMongoDBvCoreVectorStore.
+   * Method for adding vectors to the AzureCosmosDBMongoDBVectorStore.
    * @param vectors Vectors to be added.
    * @param documents Corresponding documents to be added.
    * @returns A promise that resolves to the added documents IDs.
@@ -320,7 +320,7 @@ export class AzureCosmosDBMongoDBvCoreVectorStore extends VectorStore {
   }
 
   /**
-   * Method for adding documents to the AzureCosmosDBMongoDBvCoreVectorStore. It first converts
+   * Method for adding documents to the AzureCosmosDBMongoDBVectorStore. It first converts
    * the documents to texts and then adds them as vectors.
    * @param documents The documents to add.
    * @returns A promise that resolves to the added documents IDs.
@@ -415,11 +415,11 @@ export class AzureCosmosDBMongoDBvCoreVectorStore extends VectorStore {
   }
 
   /**
-   * Initializes the AzureCosmosDBMongoDBvCoreVectorStore by connecting to the database.
+   * Initializes the AzureCosmosDBMongoDBVectorStore by connecting to the database.
    * @param client The MongoClient to use for connecting to the database.
    * @param databaseName The name of the database to use.
    * @param collectionName The name of the collection to use.
-   * @returns A promise that resolves when the AzureCosmosDBMongoDBvCoreVectorStore has been initialized.
+   * @returns A promise that resolves when the AzureCosmosDBMongoDBVectorStore has been initialized.
    */
   private async init(
     client: MongoClient,
@@ -444,21 +444,21 @@ export class AzureCosmosDBMongoDBvCoreVectorStore extends VectorStore {
   }
 
   /**
-   * Static method to create an instance of AzureCosmosDBMongoDBvCoreVectorStore from a
+   * Static method to create an instance of AzureCosmosDBMongoDBVectorStore from a
    * list of texts. It first converts the texts to vectors and then adds
    * them to the collection.
    * @param texts List of texts to be converted to vectors.
    * @param metadatas Metadata for the texts.
    * @param embeddings Embeddings to be used for conversion.
    * @param dbConfig Database configuration for Azure Cosmos DB for MongoDB vCore.
-   * @returns Promise that resolves to a new instance of AzureCosmosDBMongoDBvCoreVectorStore.
+   * @returns Promise that resolves to a new instance of AzureCosmosDBMongoDBVectorStore.
    */
   static async fromTexts(
     texts: string[],
     metadatas: object[] | object,
     embeddings: EmbeddingsInterface,
-    dbConfig: AzureCosmosDBMongoDBvCoreConfig
-  ): Promise<AzureCosmosDBMongoDBvCoreVectorStore> {
+    dbConfig: AzureCosmosDBMongoDBConfig
+  ): Promise<AzureCosmosDBMongoDBVectorStore> {
     const docs: Document[] = [];
     for (let i = 0; i < texts.length; i += 1) {
       const metadata = Array.isArray(metadatas) ? metadatas[i] : metadatas;
@@ -468,7 +468,7 @@ export class AzureCosmosDBMongoDBvCoreVectorStore extends VectorStore {
       });
       docs.push(newDoc);
     }
-    return AzureCosmosDBMongoDBvCoreVectorStore.fromDocuments(
+    return AzureCosmosDBMongoDBVectorStore.fromDocuments(
       docs,
       embeddings,
       dbConfig
@@ -476,19 +476,19 @@ export class AzureCosmosDBMongoDBvCoreVectorStore extends VectorStore {
   }
 
   /**
-   * Static method to create an instance of AzureCosmosDBMongoDBvCoreVectorStore from a
+   * Static method to create an instance of AzureCosmosDBMongoDBVectorStore from a
    * list of documents. It first converts the documents to vectors and then
    * adds them to the collection.
    * @param docs List of documents to be converted to vectors.
    * @param embeddings Embeddings to be used for conversion.
    * @param dbConfig Database configuration for Azure Cosmos DB for MongoDB vCore.
-   * @returns Promise that resolves to a new instance of AzureCosmosDBMongoDBvCoreVectorStore.
+   * @returns Promise that resolves to a new instance of AzureCosmosDBMongoDBVectorStore.
    */
   static async fromDocuments(
     docs: Document[],
     embeddings: EmbeddingsInterface,
-    dbConfig: AzureCosmosDBMongoDBvCoreConfig
-  ): Promise<AzureCosmosDBMongoDBvCoreVectorStore> {
+    dbConfig: AzureCosmosDBMongoDBConfig
+  ): Promise<AzureCosmosDBMongoDBVectorStore> {
     const instance = new this(embeddings, dbConfig);
     await instance.addDocuments(docs);
     return instance;
