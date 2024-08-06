@@ -164,16 +164,18 @@ export class PGVectorStore extends VectorStore {
    *
    * @param embeddings - Embeddings instance.
    * @param fields - `PGVectorStoreArgs` instance.
+   * @param dimensions Number of dimensions in your vector data type. For example, use 1536 for OpenAI's `text-embedding-3-small`. If not set, indexes like HNSW might not be used during query time.
    * @returns A new instance of `PGVectorStore`.
    */
   static async initialize(
     embeddings: EmbeddingsInterface,
-    config: PGVectorStoreArgs
+    config: PGVectorStoreArgs,
+    dimensions?: number
   ): Promise<PGVectorStore> {
     const postgresqlVectorStore = new PGVectorStore(embeddings, config);
 
     await postgresqlVectorStore._initializeClient();
-    await postgresqlVectorStore.ensureTableInDatabase();
+    await postgresqlVectorStore.ensureTableInDatabase(dimensions);
     if (postgresqlVectorStore.collectionTableName) {
       await postgresqlVectorStore.ensureCollectionTableInDatabase();
     }
@@ -552,10 +554,10 @@ export class PGVectorStore extends VectorStore {
   /**
    * Method to ensure the existence of the table in the database. It creates
    * the table if it does not already exist.
-   *
+   * @param dimensions Number of dimensions in your vector data type. For example, use 1536 for OpenAI's `text-embedding-3-small`. If not set, indexes like HNSW might not be used during query time.
    * @returns Promise that resolves when the table has been ensured.
    */
-  async ensureTableInDatabase(): Promise<void> {
+  async ensureTableInDatabase(dimensions?: number): Promise<void> {
     const vectorQuery =
       this.extensionSchemaName == null
         ? "CREATE EXTENSION IF NOT EXISTS vector;"
@@ -568,12 +570,15 @@ export class PGVectorStore extends VectorStore {
       this.extensionSchemaName == null
         ? "vector"
         : `"${this.extensionSchemaName}"."vector"`;
+    const vectorColumnType = dimensions
+      ? `${extensionName}(${dimensions})`
+      : extensionName;
     const tableQuery = `
       CREATE TABLE IF NOT EXISTS ${this.computedTableName} (
         "${this.idColumnName}" uuid NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY,
         "${this.contentColumnName}" text,
         "${this.metadataColumnName}" jsonb,
-        "${this.vectorColumnName}" ${extensionName}
+        "${this.vectorColumnName}" ${vectorColumnType}
       );
     `;
     await this.pool.query(vectorQuery);
