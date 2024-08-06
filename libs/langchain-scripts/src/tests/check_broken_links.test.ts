@@ -1,3 +1,4 @@
+import { test, expect } from "@jest/globals";
 import { extractLinks } from "../check_broken_links.js";
 
 test("Regex can find links in md files", () => {

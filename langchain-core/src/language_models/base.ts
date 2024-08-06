@@ -207,18 +207,6 @@ export interface BaseLanguageModelCallOptions extends RunnableConfig {
    * If not provided, the default stop tokens for the model will be used.
    */
   stop?: string[];
-
-  /**
-   * Timeout for this call in milliseconds.
-   */
-  timeout?: number;
-
-  /**
-   * Abort signal for this call.
-   * If provided, the call will be aborted when the signal is aborted.
-   * @see https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal
-   */
-  signal?: AbortSignal;
 }
 
 export interface FunctionDefinition {

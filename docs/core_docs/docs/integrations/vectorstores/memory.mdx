@@ -34,6 +34,23 @@ import ExampleLoader from "@examples/indexes/vector_stores/memory_fromdocs.ts";
 
 ### Use a custom similarity metric
 
-import ExampleCustom from "@examples/indexes/vector_stores/memory_custom_similarity.ts";
+```ts
+import { MemoryVectorStore } from "langchain/vectorstores/memory";
+import { OpenAIEmbeddings } from "@langchain/openai";
+import { similarity } from "ml-distance";
 
-<CodeBlock language="typescript">{ExampleCustom}</CodeBlock>
+const vectorStore = await MemoryVectorStore.fromTexts(
+  ["Hello world", "Bye bye", "hello nice world"],
+  [{ id: 2 }, { id: 1 }, { id: 3 }],
+  new OpenAIEmbeddings(),
+  { similarity: similarity.pearson }
+);
+
+const resultOne = await vectorStore.similaritySearch("hello world", 1);
+console.log(resultOne);
+```
+
+## Related
+
+- Vector store [conceptual guide](/docs/concepts/#vectorstores)
+- Vector store [how-to guides](/docs/how_to/#vectorstores)

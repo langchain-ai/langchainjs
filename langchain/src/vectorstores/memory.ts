@@ -1,7 +1,7 @@
-import { similarity as ml_distance_similarity } from "ml-distance";
 import { VectorStore } from "@langchain/core/vectorstores";
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { Document } from "@langchain/core/documents";
+import { cosine } from "../util/ml-distance/similarities.js";
 
 /**
  * Interface representing a vector in memory. It includes the content
@@ -21,7 +21,7 @@ interface MemoryVector {
  * function.
  */
 export interface MemoryVectorStoreArgs {
-  similarity?: typeof ml_distance_similarity.cosine;
+  similarity?: typeof cosine;
 }
 
 /**
@@ -34,7 +34,7 @@ export class MemoryVectorStore extends VectorStore {
 
   memoryVectors: MemoryVector[] = [];
 
-  similarity: typeof ml_distance_similarity.cosine;
+  similarity: typeof cosine;
 
   _vectorstoreType(): string {
     return "memory";
@@ -46,7 +46,7 @@ export class MemoryVectorStore extends VectorStore {
   ) {
     super(embeddings, rest);
 
-    this.similarity = similarity ?? ml_distance_similarity.cosine;
+    this.similarity = similarity ?? cosine;
   }
 
   /**
