@@ -405,7 +405,6 @@ export class ChatBedrockConverse
     if (options.streamUsage !== undefined) {
       streamUsage = options.streamUsage;
     }
-    console.dir(converseMessages, { depth: null });
     const command = new ConverseStreamCommand({
       modelId: this.model,
       messages: converseMessages,
