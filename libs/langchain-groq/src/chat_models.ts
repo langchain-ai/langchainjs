@@ -437,7 +437,7 @@ export class ChatGroq extends BaseChatModel<
     kwargs?: Partial<ChatGroqCallOptions>
   ): Runnable<BaseLanguageModelInput, AIMessageChunk, ChatGroqCallOptions> {
     return this.bind({
-      tools: tools.map(convertToOpenAITool),
+      tools: tools.map((tool) => convertToOpenAITool(tool)),
       ...kwargs,
     });
   }

@@ -27,12 +27,13 @@ import {
   LangSmithParams,
   type BaseChatModelParams,
 } from "@langchain/core/language_models/chat_models";
-import type {
-  BaseFunctionCallOptions,
-  BaseLanguageModelInput,
-  FunctionDefinition,
-  StructuredOutputMethodOptions,
-  StructuredOutputMethodParams,
+import {
+  isOpenAITool,
+  type BaseFunctionCallOptions,
+  type BaseLanguageModelInput,
+  type FunctionDefinition,
+  type StructuredOutputMethodOptions,
+  type StructuredOutputMethodParams,
 } from "@langchain/core/language_models/base";
 import { NewTokenIndices } from "@langchain/core/callbacks/base";
 import { convertToOpenAITool } from "@langchain/core/utils/function_calling";
@@ -274,10 +275,59 @@ function convertMessagesToOpenAIParams(messages: BaseMessage[]) {
   });
 }
 
+type ChatOpenAIToolType =
+  | StructuredToolInterface
+  | OpenAIClient.ChatCompletionTool
+  | RunnableToolLike
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  | Record<string, any>;
+
+function _convertChatOpenAIToolTypeToOpenAITool(
+  tool: ChatOpenAIToolType,
+  fields?: {
+    strict?: boolean;
+  }
+): OpenAIClient.ChatCompletionTool {
+  if (isOpenAITool(tool)) {
+    if (fields?.strict !== undefined) {
+      return {
+        ...tool,
+        function: {
+          ...tool.function,
+          strict: fields.strict,
+        },
+      };
+    }
+
+    return tool;
+  }
+  return convertToOpenAITool(tool, fields);
+}
+
+export interface ChatOpenAIStructuredOutputMethodOptions<
+  IncludeRaw extends boolean
+> extends StructuredOutputMethodOptions<IncludeRaw> {
+  /**
+   * strict: If `true` and `method` = "function_calling", model output is
+   * guaranteed to exactly match the schema. If `true`, the input schema
+   * will also be validated according to
+   * https://platform.openai.com/docs/guides/structured-outputs/supported-schemas.
+   * If `false`, input schema will not be validated and model output will not
+   * be validated.
+   * If `undefined`, `strict` argument will not be passed to the model.
+   *
+   * @version 0.2.6
+   * @note Planned breaking change in version `0.3.0`:
+   * `strict` will default to `true` when `method` is
+   * "function_calling" as of version `0.3.0`.
+   */
+  strict?: boolean;
+}
+
 export interface ChatOpenAICallOptions
   extends OpenAICallOptions,
     BaseFunctionCallOptions {
-  tools?: StructuredToolInterface[] | OpenAIClient.ChatCompletionTool[];
+  tools?: ChatOpenAIToolType[];
   tool_choice?: OpenAIToolChoice;
   promptIndex?: number;
   response_format?: { type: "json_object" };
@@ -299,6 +349,27 @@ export interface ChatOpenAICallOptions
    * call multiple tools in one response.
    */
   parallel_tool_calls?: boolean;
+  /**
+   * If `true`, model output is guaranteed to exactly match the JSON Schema
+   * provided in the tool definition. If `true`, the input schema will also be
+   * validated according to
+   * https://platform.openai.com/docs/guides/structured-outputs/supported-schemas.
+   *
+   * If `false`, input schema will not be validated and model output will not
+   * be validated.
+   *
+   * If `undefined`, `strict` argument will not be passed to the model.
+   *
+   * @version 0.2.6
+   */
+  strict?: boolean;
+}
+
+export interface ChatOpenAIFields
+  extends Partial<OpenAIChatInput>,
+    Partial<AzureOpenAIInput>,
+    BaseChatModelParams {
+  configuration?: ClientOptions & LegacyOpenAIInput;
 }
 
 /**
@@ -441,12 +512,14 @@ export class ChatOpenAI<
 
   protected clientConfig: ClientOptions;
 
+  /**
+   * Whether the model supports the `strict` argument when passing in tools.
+   * If `undefined` the `strict` argument will not be passed to OpenAI.
+   */
+  supportsStrictToolCalling?: boolean;
+
   constructor(
-    fields?: Partial<OpenAIChatInput> &
-      Partial<AzureOpenAIInput> &
-      BaseChatModelParams & {
-        configuration?: ClientOptions & LegacyOpenAIInput;
-      },
+    fields?: ChatOpenAIFields,
     /** @deprecated */
     configuration?: ClientOptions & LegacyOpenAIInput
   ) {
@@ -541,6 +614,12 @@ export class ChatOpenAI<
       ...configuration,
       ...fields?.configuration,
     };
+
+    // If `supportsStrictToolCalling` is explicitly set, use that value.
+    // Else leave undefined so it's not passed to OpenAI.
+    if (fields?.supportsStrictToolCalling !== undefined) {
+      this.supportsStrictToolCalling = fields.supportsStrictToolCalling;
+    }
   }
 
   getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
@@ -556,15 +635,19 @@ export class ChatOpenAI<
   }
 
   override bindTools(
-    tools: (
-      | Record<string, unknown>
-      | StructuredToolInterface
-      | RunnableToolLike
-    )[],
+    tools: ChatOpenAIToolType[],
     kwargs?: Partial<CallOptions>
   ): Runnable<BaseLanguageModelInput, AIMessageChunk, CallOptions> {
+    let strict: boolean | undefined;
+    if (kwargs?.strict !== undefined) {
+      strict = kwargs.strict;
+    } else if (this.supportsStrictToolCalling !== undefined) {
+      strict = this.supportsStrictToolCalling;
+    }
     return this.bind({
-      tools: tools.map(convertToOpenAITool),
+      tools: tools.map((tool) =>
+        _convertChatOpenAIToolTypeToOpenAITool(tool, { strict })
+      ),
       ...kwargs,
     } as Partial<CallOptions>);
   }
@@ -578,16 +661,13 @@ export class ChatOpenAI<
       streaming?: boolean;
     }
   ): Omit<OpenAIClient.Chat.ChatCompletionCreateParams, "messages"> {
-    function isStructuredToolArray(
-      tools?: unknown[]
-    ): tools is StructuredToolInterface[] {
-      return (
-        tools !== undefined &&
-        tools.every((tool) =>
-          Array.isArray((tool as StructuredToolInterface).lc_namespace)
-        )
-      );
+    let strict: boolean | undefined;
+    if (options?.strict !== undefined) {
+      strict = options.strict;
+    } else if (this.supportsStrictToolCalling !== undefined) {
+      strict = this.supportsStrictToolCalling;
     }
+
     let streamOptionsConfig = {};
     if (options?.stream_options !== undefined) {
       streamOptionsConfig = { stream_options: options.stream_options };
@@ -614,9 +694,11 @@ export class ChatOpenAI<
       stream: this.streaming,
       functions: options?.functions,
       function_call: options?.function_call,
-      tools: isStructuredToolArray(options?.tools)
-        ? options?.tools.map(convertToOpenAITool)
-        : options?.tools,
+      tools: options?.tools?.length
+        ? options.tools.map((tool) =>
+            _convertChatOpenAIToolTypeToOpenAITool(tool, { strict })
+          )
+        : undefined,
       tool_choice: formatToOpenAIToolChoice(options?.tool_choice),
       response_format: options?.response_format,
       seed: options?.seed,
@@ -1098,7 +1180,7 @@ export class ChatOpenAI<
       | z.ZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
-    config?: StructuredOutputMethodOptions<false>
+    config?: ChatOpenAIStructuredOutputMethodOptions<false>
   ): Runnable<BaseLanguageModelInput, RunOutput>;
 
   withStructuredOutput<
@@ -1110,7 +1192,7 @@ export class ChatOpenAI<
       | z.ZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
-    config?: StructuredOutputMethodOptions<true>
+    config?: ChatOpenAIStructuredOutputMethodOptions<true>
   ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
 
   withStructuredOutput<
@@ -1122,7 +1204,7 @@ export class ChatOpenAI<
       | z.ZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
-    config?: StructuredOutputMethodOptions<boolean>
+    config?: ChatOpenAIStructuredOutputMethodOptions<boolean>
   ):
     | Runnable<BaseLanguageModelInput, RunOutput>
     | Runnable<
@@ -1147,6 +1229,12 @@ export class ChatOpenAI<
     }
     let llm: Runnable<BaseLanguageModelInput>;
     let outputParser: BaseLLMOutputParser<RunOutput>;
+
+    if (config?.strict !== undefined && method === "jsonMode") {
+      throw new Error(
+        "Argument `strict` is only supported for `method` = 'function_calling'"
+      );
+    }
 
     if (method === "jsonMode") {
       llm = this.bind({
@@ -1179,6 +1267,8 @@ export class ChatOpenAI<
               name: functionName,
             },
           },
+          // Do not pass `strict` argument to OpenAI if `config.strict` is undefined
+          ...(config?.strict !== undefined ? { strict: config.strict } : {}),
         } as Partial<CallOptions>);
         outputParser = new JsonOutputKeyToolsParser({
           returnSingle: true,
@@ -1215,6 +1305,8 @@ export class ChatOpenAI<
               name: functionName,
             },
           },
+          // Do not pass `strict` argument to OpenAI if `config.strict` is undefined
+          ...(config?.strict !== undefined ? { strict: config.strict } : {}),
         } as Partial<CallOptions>);
         outputParser = new JsonOutputKeyToolsParser<RunOutput>({
           returnSingle: true,
