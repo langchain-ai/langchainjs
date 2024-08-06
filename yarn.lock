@@ -11107,7 +11107,7 @@ __metadata:
     "@gradientai/nodejs-sdk": ^1.2.0
     "@huggingface/inference": ^2.6.4
     "@jest/globals": ^29.5.0
-    "@langchain/core": ">=0.2.16 <0.3.0"
+    "@langchain/core": ">=0.2.21 <0.3.0"
     "@langchain/langgraph": <0.1.0
     "@langchain/openai": ">=0.1.0 <0.3.0"
     "@langchain/scripts": ~0.0.20
