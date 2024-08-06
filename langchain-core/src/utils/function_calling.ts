@@ -134,7 +134,6 @@ export function isStructuredToolParams(
   );
 }
 
-
 /**
  * Whether or not the tool is one of StructuredTool, RunnableTool or StructuredToolParams.
  * It returns `is StructuredToolParams` since that is the most minimal interface of the three,
