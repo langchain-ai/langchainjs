@@ -82,10 +82,10 @@ export function convertToConverseMessages(messages: BaseMessage[]): {
     .map((msg) => {
       if (msg._getType() === "ai") {
         const castMsg = msg as AIMessage;
-        let assistantMsg: BedrockMessage = {
+        const assistantMsg: BedrockMessage = {
           role: "assistant",
           content: [],
-        }
+        };
 
         if (castMsg.tool_calls && castMsg.tool_calls.length) {
           assistantMsg.content = castMsg.tool_calls.map((tc) => ({
@@ -94,7 +94,7 @@ export function convertToConverseMessages(messages: BaseMessage[]): {
               name: tc.name,
               input: tc.args,
             },
-          }))
+          }));
         }
 
         if (typeof castMsg.content === "string" && castMsg.content !== "") {
@@ -102,27 +102,28 @@ export function convertToConverseMessages(messages: BaseMessage[]): {
             text: castMsg.content,
           });
         } else if (Array.isArray(castMsg.content)) {
-          const contentBlocks: ContentBlock[] = castMsg.content.map(
-            (block) => {
-              if (block.type === "text" && block.text !== "") {
-                return {
-                  text: block.text,
-                };
-              } else {
-                const blockValues = Object.fromEntries(
-                  Object.values(block).filter(([key]) => key !== "type")
-                );
-                throw new Error(
-                  `Unsupported content block type: ${
-                    block.type
-                  } with content of ${JSON.stringify(blockValues, null, 2)}`
-                );
-              }
+          const contentBlocks: ContentBlock[] = castMsg.content.map((block) => {
+            if (block.type === "text" && block.text !== "") {
+              return {
+                text: block.text,
+              };
+            } else {
+              const blockValues = Object.fromEntries(
+                Object.values(block).filter(([key]) => key !== "type")
+              );
+              throw new Error(
+                `Unsupported content block type: ${
+                  block.type
+                } with content of ${JSON.stringify(blockValues, null, 2)}`
+              );
             }
-          );
-        
-          assistantMsg.content = [...(assistantMsg.content ? assistantMsg.content : []), ...contentBlocks]
-        } 
+          });
+
+          assistantMsg.content = [
+            ...(assistantMsg.content ? assistantMsg.content : []),
+            ...contentBlocks,
+          ];
+        }
         return assistantMsg;
       } else if (msg._getType() === "human" || msg._getType() === "generic") {
         if (typeof msg.content === "string" && msg.content !== "") {
@@ -199,7 +200,8 @@ export function convertToConverseMessages(messages: BaseMessage[]): {
       } else {
         throw new Error(`Unsupported message type: ${msg._getType()}`);
       }
-    }).flat();
+    })
+    .flat();
 
   // Combine consecutive user tool result messages into a single message
   const combinedConverseMessages = converseMessages.reduce<BedrockMessage[]>(

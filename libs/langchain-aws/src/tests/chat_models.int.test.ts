@@ -10,8 +10,8 @@ import {
 } from "@langchain/core/messages";
 import { tool } from "@langchain/core/tools";
 import { z } from "zod";
-import { ChatBedrockConverse } from "../chat_models.js";
 import { concat } from "@langchain/core/utils/stream";
+import { ChatBedrockConverse } from "../chat_models.js";
 
 // Save the original value of the 'LANGCHAIN_CALLBACKS_BACKGROUND' environment variable
 const originalBackground = process.env.LANGCHAIN_CALLBACKS_BACKGROUND;
@@ -372,8 +372,8 @@ test("Model can handle empty content messages", async () => {
 test("multiturn streaming", async () => {
   const model = new ChatBedrockConverse({
     ...baseConstructorArgs,
-    model: "anthropic.claude-3-5-sonnet-20240620-v1:0"
-  })
+    model: "anthropic.claude-3-5-sonnet-20240620-v1:0",
+  });
   const weatherSchema = z.object({
     location: z.string().describe("The location to get the weather for."),
   });
@@ -402,7 +402,7 @@ test("multiturn streaming", async () => {
   for await (const chunk of stream) {
     result = !result ? chunk : concat(result, chunk);
   }
-  console.log("Successfully made it through this one")
+  console.log("Successfully made it through this one");
   expect(result).toBeDefined();
   if (!result) return;
 
@@ -414,7 +414,7 @@ test("multiturn streaming", async () => {
   const { tool_calls } = result;
   expect(tool_calls[0].name).toBe("get_current_weather");
 
-  result.content = "Lets get that figured out for you!"
+  result.content = "Lets get that figured out for you!";
 
   messages.push(result);
 
@@ -434,18 +434,18 @@ test("multiturn streaming", async () => {
   for await (const chunk of finalStream) {
     finalResult = !finalResult ? chunk : concat(finalResult, chunk);
   }
-  console.log(finalResult)
+  console.log(finalResult);
   expect(finalResult).toBeDefined();
   if (!finalResult) return;
 
   expect(finalResult.content).not.toBe("");
-})
+});
 
 test("multiturn invoking", async () => {
   const model = new ChatBedrockConverse({
     ...baseConstructorArgs,
-    model: "anthropic.claude-3-5-sonnet-20240620-v1:0"
-  })
+    model: "anthropic.claude-3-5-sonnet-20240620-v1:0",
+  });
   const weatherSchema = z.object({
     location: z.string().describe("The location to get the weather for."),
   });
@@ -497,4 +497,4 @@ test("multiturn invoking", async () => {
   if (!finalResult) return;
 
   expect(finalResult.content).not.toBe("");
-})
+});
