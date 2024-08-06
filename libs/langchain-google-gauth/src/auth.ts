@@ -3,7 +3,7 @@ import {
   ensureAuthOptionScopes,
   GoogleAbstractedClient,
   GoogleAbstractedClientOps,
-  GoogleBaseLLMInput,
+  GoogleConnectionParams,
   JsonStream,
 } from "@langchain/google-common";
 import { GoogleAuth, GoogleAuthOptions } from "google-auth-library";
@@ -27,7 +27,7 @@ export class NodeJsonStream extends JsonStream {
 export class GAuthClient implements GoogleAbstractedClient {
   gauth: GoogleAuth;
 
-  constructor(fields?: GoogleBaseLLMInput<GoogleAuthOptions>) {
+  constructor(fields?: GoogleConnectionParams<GoogleAuthOptions>) {
     const options = ensureAuthOptionScopes<GoogleAuthOptions>(
       fields?.authOptions,
       "scopes",

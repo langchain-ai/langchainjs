@@ -100,6 +100,24 @@
       "import": "./types.js",
       "require": "./types.cjs"
     },
+    "./experimental/media": {
+      "types": {
+        "import": "./experimental/media.d.ts",
+        "require": "./experimental/media.d.cts",
+        "default": "./experimental/media.d.ts"
+      },
+      "import": "./experimental/media.js",
+      "require": "./experimental/media.cjs"
+    },
+    "./experimental/utils/media_core": {
+      "types": {
+        "import": "./experimental/utils/media_core.d.ts",
+        "require": "./experimental/utils/media_core.d.cts",
+        "default": "./experimental/utils/media_core.d.ts"
+      },
+      "import": "./experimental/utils/media_core.js",
+      "require": "./experimental/utils/media_core.cjs"
+    },
     "./package.json": "./package.json"
   },
   "files": [
@@ -115,6 +133,14 @@
     "types.cjs",
     "types.js",
     "types.d.ts",
-    "types.d.cts"
+    "types.d.cts",
+    "experimental/media.cjs",
+    "experimental/media.js",
+    "experimental/media.d.ts",
+    "experimental/media.d.cts",
+    "experimental/utils/media_core.cjs",
+    "experimental/utils/media_core.js",
+    "experimental/utils/media_core.d.ts",
+    "experimental/utils/media_core.d.cts"
   ]
 }
