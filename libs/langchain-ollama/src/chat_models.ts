@@ -359,7 +359,9 @@ export class ChatOllama
         stop: options?.stop,
       },
       tools: options?.tools?.length
-        ? (options.tools.map((tool) => convertToOpenAITool(tool)) as OllamaTool[])
+        ? (options.tools.map((tool) =>
+            convertToOpenAITool(tool)
+          ) as OllamaTool[])
         : undefined,
     };
   }

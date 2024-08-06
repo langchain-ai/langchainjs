@@ -49,6 +49,7 @@ describe("strict tool calling", () => {
 
     const model = new ChatOpenAI({
       model: "gpt-4",
+      apiKey: "test-key",
       configuration: {
         fetch: mockFetch,
       },
@@ -96,6 +97,7 @@ describe("strict tool calling", () => {
 
     const model = new ChatOpenAI({
       model: "gpt-4",
+      apiKey: "test-key",
       configuration: {
         fetch: mockFetch,
       },
@@ -146,6 +148,7 @@ describe("strict tool calling", () => {
 
     const model = new ChatOpenAI({
       model: "gpt-4",
+      apiKey: "test-key",
       configuration: {
         fetch: mockFetch,
       },
@@ -194,6 +197,7 @@ describe("strict tool calling", () => {
 
     const model = new ChatOpenAI({
       model: "gpt-4",
+      apiKey: "test-key",
       configuration: {
         fetch: mockFetch,
       },
@@ -244,6 +248,7 @@ describe("strict tool calling", () => {
 
     const model = new ChatOpenAI({
       model: "doesnt-start-with-gpt-4",
+      apiKey: "test-key",
       configuration: {
         fetch: mockFetch,
       },
@@ -283,6 +288,7 @@ describe("strict tool calling", () => {
 
     const model = new ChatOpenAI({
       model: "doesnt-start-with-gpt-4",
+      apiKey: "test-key",
       configuration: {
         fetch: mockFetch,
       },
@@ -329,6 +335,7 @@ describe("strict tool calling", () => {
 
     const model = new ChatOpenAI({
       model: "doesnt-start-with-gpt-4",
+      apiKey: "test-key",
       configuration: {
         fetch: mockFetch,
       },
