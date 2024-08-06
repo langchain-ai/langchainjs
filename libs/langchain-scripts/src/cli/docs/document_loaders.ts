@@ -1,32 +1,29 @@
 import * as path from "node:path";
 import * as fs from "node:fs";
-import _ from "lodash";
 import {
   boldText,
   getUserInput,
   greenText,
   redBackground,
 } from "../utils/get-input.js";
-
-const NODE_OR_WEB_PLACEHOLDER = "__fs_or_web__";
-const NODE_OR_WEB_IMPORT_PATH_PLACEHOLDER = "__fs_or_web_import_path__";
-const FILE_NAME_PLACEHOLDER = "__file_name__";
-const MODULE_NAME_PLACEHOLDER = "__ModuleName__";
-
-const API_REF_BASE_PACKAGE_URL = `https://api.js.langchain.com/modules/langchain_community_document_loaders_${NODE_OR_WEB_PLACEHOLDER}_${FILE_NAME_PLACEHOLDER}.html`;
-const API_REF_BASE_MODULE_URL = `https://v02.api.js.langchain.com/classes/langchain_community_document_loaders_${NODE_OR_WEB_PLACEHOLDER}_${FILE_NAME_PLACEHOLDER}.${MODULE_NAME_PLACEHOLDER}.html`;
-
-const SERIALIZABLE_PLACEHOLDER = "__serializable__";
-const LOCAL_PLACEHOLDER = "__local__";
-const PY_SUPPORT_PLACEHOLDER = "__py_support__";
+import { fetchURLStatus } from "../utils/fetch-url-status.js";
+import {
+  SIDEBAR_LABEL_PLACEHOLDER,
+  MODULE_NAME_PLACEHOLDER,
+  PACKAGE_NAME_PLACEHOLDER,
+  FULL_IMPORT_PATH_PLACEHOLDER,
+  ENV_VAR_NAME_PLACEHOLDER,
+  PYTHON_DOC_URL_PLACEHOLDER,
+  API_REF_MODULE_PLACEHOLDER,
+  API_REF_PACKAGE_PLACEHOLDER,
+  LOCAL_PLACEHOLDER,
+  SERIALIZABLE_PLACEHOLDER,
+  PY_SUPPORT_PLACEHOLDER,
+} from "../constants.js";
 
 const NODE_SUPPORT_PLACEHOLDER = "__fs_support__";
-
 const NODE_ONLY_SIDEBAR_BADGE_PLACEHOLDER = "__node_only_sidebar__";
 const NODE_ONLY_TOOL_TIP_PLACEHOLDER = "__node_only_tooltip__";
-
-// This should not be suffixed with `Loader` as it's used for API keys.
-const MODULE_NAME_ALL_CAPS_PLACEHOLDER = "__MODULE_NAME_ALL_CAPS__";
 
 const TEMPLATE_PATH = path.resolve(
   "./src/cli/docs/templates/document_loaders.ipynb"
@@ -36,20 +33,8 @@ const INTEGRATIONS_DOCS_PATH = path.resolve(
 );
 
 const NODE_ONLY_TOOLTIP =
-  "```{=mdx}\n\n:::tip Compatibility\n\nOnly available on Node.js.\n\n:::\n\n```\n";
+  "```{=mdx}\\n\\n:::tip Compatibility\\n\\nOnly available on Node.js.\\n\\n:::\\n\\n```\\n";
 const NODE_ONLY_SIDEBAR_BADGE = `sidebar_class_name: node-only`;
-
-const fetchAPIRefUrl = async (url: string): Promise<boolean> => {
-  try {
-    const res = await fetch(url);
-    if (res.status !== 200) {
-      throw new Error(`API Reference URL ${url} not found.`);
-    }
-    return true;
-  } catch (_) {
-    return false;
-  }
-};
 
 type ExtraFields = {
   webLoader: boolean;
@@ -57,9 +42,14 @@ type ExtraFields = {
   serializable: boolean;
   pySupport: boolean;
   local: boolean;
+  envVarName: string;
+  fullImportPath: string;
+  packageName: string;
 };
 
-async function promptExtraFields(): Promise<ExtraFields> {
+async function promptExtraFields(fields: {
+  envVarGuess: string;
+}): Promise<ExtraFields> {
   const isWebLoader = await getUserInput(
     "Is this integration a web loader? (y/n) ",
     undefined,
@@ -85,6 +75,45 @@ async function promptExtraFields(): Promise<ExtraFields> {
     undefined,
     true
   );
+  const importPath = await getUserInput(
+    "What is the full import path of the integration? (e.g @langchain/community/llms/togetherai) ",
+    undefined,
+    true
+  );
+
+  let packageName = "";
+  if (importPath.startsWith("langchain/")) {
+    packageName = "langchain";
+  } else {
+    packageName = importPath.split("/").slice(0, 2).join("/");
+  }
+
+  const verifyPackageName = await getUserInput(
+    `Is ${packageName} the correct package name? (y/n) `,
+    undefined,
+    true
+  );
+  if (verifyPackageName.toLowerCase() === "n") {
+    packageName = await getUserInput(
+      "Please enter the full package name (e.g @langchain/community) ",
+      undefined,
+      true
+    );
+  }
+
+  const isEnvGuessCorrect = await getUserInput(
+    `Is the environment variable for the API key named ${fields.envVarGuess}? (y/n) `,
+    undefined,
+    true
+  );
+  let envVarName = fields.envVarGuess;
+  if (isEnvGuessCorrect.toLowerCase() === "n") {
+    envVarName = await getUserInput(
+      "Please enter the correct environment variable name ",
+      undefined,
+      true
+    );
+  }
 
   return {
     webLoader: isWebLoader.toLowerCase() === "y",
@@ -92,63 +121,53 @@ async function promptExtraFields(): Promise<ExtraFields> {
     serializable: isSerializable.toLowerCase() === "y",
     pySupport: hasPySupport.toLowerCase() === "y",
     local: hasLocalSupport.toLowerCase() === "y",
+    envVarName,
+    fullImportPath: importPath,
+    packageName,
   };
 }
 
 export async function fillDocLoaderIntegrationDocTemplate(fields: {
-  packageName: string;
-  moduleName: string;
-  webSupport?: boolean;
-  nodeSupport?: boolean;
+  className: string;
 }) {
-  // Ask the user if they'd like to fill in extra fields, if so, prompt them.
-  let extraFields: ExtraFields | undefined;
-  const shouldPromptExtraFields = await getUserInput(
-    "Would you like to fill out optional fields? (y/n) ",
-    "white_background"
-  );
-  if (shouldPromptExtraFields.toLowerCase() === "y") {
-    extraFields = await promptExtraFields();
-  }
+  const sidebarLabel = fields.className.replace("Loader", "");
+  const pyDocUrl = `https://python.langchain.com/v0.2/docs/integrations/document_loaders/${sidebarLabel.toLowerCase()}/`;
+  let envVarName = `${sidebarLabel.toUpperCase()}_API_KEY`;
+  const extraFields = await promptExtraFields({
+    envVarGuess: envVarName,
+  });
+  envVarName = extraFields.envVarName;
+  const importPathEnding = extraFields.fullImportPath.split("/").pop() ?? "";
+  const apiRefModuleUrl = `https://api.js.langchain.com/classes/${extraFields.fullImportPath
+    .replace("@", "")
+    .replaceAll("/", "_")
+    .replaceAll("-", "_")}_${importPathEnding}.${fields.className}.html`;
+  const apiRefPackageUrl = apiRefModuleUrl
+    .replace("/classes/", "/modules/")
+    .replace(`.${fields.className}.html`, ".html");
 
-  const formattedPackageApiRefUrl = API_REF_BASE_PACKAGE_URL.replace(
-    NODE_OR_WEB_PLACEHOLDER,
-    extraFields?.webLoader ? "web" : "fs"
-  ).replace(FILE_NAME_PLACEHOLDER, fields.packageName);
-
-  const formattedApiRefModuleUrl = API_REF_BASE_MODULE_URL.replace(
-    NODE_OR_WEB_PLACEHOLDER,
-    extraFields?.webLoader ? "web" : "fs"
-  )
-    .replace(FILE_NAME_PLACEHOLDER, fields.packageName)
-    .replace(MODULE_NAME_PLACEHOLDER, fields.moduleName);
-
-  const success = await Promise.all([
-    fetchAPIRefUrl(formattedApiRefModuleUrl),
-    fetchAPIRefUrl(formattedPackageApiRefUrl),
+  const apiRefUrlSuccesses = await Promise.all([
+    fetchURLStatus(apiRefModuleUrl),
+    fetchURLStatus(apiRefPackageUrl),
   ]);
-  if (success.find((s) => s === false)) {
-    // Don't error out because this might be used before the package is released.
-    console.error("Invalid package or module name. API reference not found.");
-  }
-
-  let moduleNameAllCaps = _.snakeCase(fields.moduleName).toUpperCase();
-  if (moduleNameAllCaps.endsWith("_LOADER")) {
-    moduleNameAllCaps = moduleNameAllCaps.replace("_LOADER", "");
+  if (apiRefUrlSuccesses.find((s) => !s)) {
+    console.warn(
+      "API ref URLs invalid. Please manually ensure they are correct."
+    );
   }
 
   const docTemplate = (await fs.promises.readFile(TEMPLATE_PATH, "utf-8"))
-    .replaceAll(NODE_OR_WEB_PLACEHOLDER, extraFields?.webLoader ? "web" : "fs")
-    .replaceAll(MODULE_NAME_PLACEHOLDER, fields.moduleName)
-    .replaceAll(MODULE_NAME_ALL_CAPS_PLACEHOLDER, moduleNameAllCaps)
-    .replaceAll(
-      NODE_OR_WEB_IMPORT_PATH_PLACEHOLDER,
-      extraFields?.webLoader ? "web" : "fs"
-    )
-    .replaceAll(FILE_NAME_PLACEHOLDER, fields.packageName)
+    .replaceAll(SIDEBAR_LABEL_PLACEHOLDER, sidebarLabel)
+    .replaceAll(MODULE_NAME_PLACEHOLDER, fields.className)
+    .replaceAll(PACKAGE_NAME_PLACEHOLDER, extraFields.packageName)
+    .replaceAll(FULL_IMPORT_PATH_PLACEHOLDER, extraFields.fullImportPath)
+    .replaceAll(ENV_VAR_NAME_PLACEHOLDER, envVarName)
+    .replaceAll(PYTHON_DOC_URL_PLACEHOLDER, pyDocUrl)
+    .replaceAll(API_REF_MODULE_PLACEHOLDER, apiRefModuleUrl)
+    .replaceAll(API_REF_PACKAGE_PLACEHOLDER, apiRefPackageUrl)
     .replaceAll(
       NODE_ONLY_SIDEBAR_BADGE_PLACEHOLDER,
-      extraFields?.nodeOnly ? NODE_ONLY_SIDEBAR_BADGE : ""
+      extraFields.nodeOnly ? NODE_ONLY_SIDEBAR_BADGE : ""
     )
     .replaceAll(
       NODE_ONLY_TOOL_TIP_PLACEHOLDER,
@@ -168,7 +187,7 @@ export async function fillDocLoaderIntegrationDocTemplate(fields: {
   const docPath = path.join(
     INTEGRATIONS_DOCS_PATH,
     extraFields?.webLoader ? "web_loaders" : "file_loaders",
-    `${fields.packageName}.ipynb`
+    `${importPathEnding}.ipynb`
   );
   await fs.promises.writeFile(docPath, docTemplate);
   const prettyDocPath = docPath.split("docs/core_docs/")[1];

@@ -1,7 +1,6 @@
-import {
-  similarity as ml_distance_similarity,
-  distance as ml_distance,
-} from "ml-distance";
+import { cosine } from "./ml-distance/similarities.js";
+import { innerProduct as innerProductDistance } from "./ml-distance/distances.js";
+import { euclidean } from "./ml-distance-euclidean/euclidean.js";
 
 type VectorFunction = (xVector: number[], yVector: number[]) => number;
 
@@ -65,15 +64,15 @@ export function normalize(M: number[][], similarity = false): number[][] {
  * @returns {number[][] | [[]]} A matrix where each row represents the cosine similarity values between the corresponding rows of X and Y.
  */
 export function cosineSimilarity(X: number[][], Y: number[][]): number[][] {
-  return matrixFunc(X, Y, ml_distance_similarity.cosine);
+  return matrixFunc(X, Y, cosine);
 }
 
 export function innerProduct(X: number[][], Y: number[][]): number[][] {
-  return matrixFunc(X, Y, ml_distance.innerProduct);
+  return matrixFunc(X, Y, innerProductDistance);
 }
 
 export function euclideanDistance(X: number[][], Y: number[][]): number[][] {
-  return matrixFunc(X, Y, ml_distance.euclidean);
+  return matrixFunc(X, Y, euclidean);
 }
 
 /**

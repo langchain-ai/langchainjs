@@ -5,61 +5,93 @@ import { Command } from "commander";
 import { fillChatIntegrationDocTemplate } from "./chat.js";
 import { fillDocLoaderIntegrationDocTemplate } from "./document_loaders.js";
 import { fillLLMIntegrationDocTemplate } from "./llms.js";
+import { fillRetrieverIntegrationDocTemplate } from "./retrievers.js";
+import { fillEmbeddingsIntegrationDocTemplate } from "./embeddings.js";
+import { fillToolkitIntegrationDocTemplate } from "./toolkits.js";
+import { fillToolIntegrationDocTemplate } from "./tools.js";
+import { fillKVStoreIntegrationDocTemplate } from "./kv_store.js";
 
 type CLIInput = {
-  package: string;
-  module: string;
   type: string;
-  community: boolean;
+  classname: string;
 };
+
+const ALLOWED_TYPES = [
+  "chat",
+  "llm",
+  "retriever",
+  "embeddings",
+  "doc_loader",
+  "toolkit",
+  "tool",
+  "kv_store",
+];
 
 async function main() {
   const program = new Command();
   program
     .description("Create a new integration doc.")
-    .option("--package <package>", "Package name, eg openai.")
-    .option("--module <module>", "Module name, e.g ChatOpenAI")
-    .option("--type <type>", "Type of integration, e.g. 'chat'")
     .option(
-      "--community",
-      "If the integration is a community integration. Will effect the fields populated in the template."
+      "--classname <classname>",
+      "Class name of the integration. e.g ChatOpenAI"
+    )
+    .option(
+      "--type <type>",
+      `Type of integration.\nMust be one of:\n - ${ALLOWED_TYPES.join("\n - ")}`
     );
 
   program.parse();
 
   const options = program.opts<CLIInput>();
 
-  const { module: moduleName, type, community: isCommunity } = options;
-  let { package: packageName } = options;
-
-  if (packageName.startsWith("@langchain/")) {
-    packageName = packageName.replace("@langchain/", "");
-  }
+  const { classname: className, type } = options;
 
   switch (type) {
     case "chat":
       await fillChatIntegrationDocTemplate({
-        packageName,
-        moduleName,
-        isCommunity,
-      });
-      break;
-    case "doc_loader":
-      await fillDocLoaderIntegrationDocTemplate({
-        packageName,
-        moduleName,
+        className,
       });
       break;
     case "llm":
       await fillLLMIntegrationDocTemplate({
-        packageName,
-        moduleName,
-        isCommunity,
+        className,
+      });
+      break;
+    case "embeddings":
+      await fillEmbeddingsIntegrationDocTemplate({
+        className,
+      });
+      break;
+    case "retriever":
+      await fillRetrieverIntegrationDocTemplate({
+        className,
+      });
+      break;
+    case "doc_loader":
+      await fillDocLoaderIntegrationDocTemplate({
+        className,
+      });
+      break;
+    case "toolkit":
+      await fillToolkitIntegrationDocTemplate({
+        className,
+      });
+      break;
+    case "tool":
+      await fillToolIntegrationDocTemplate({
+        className,
+      });
+      break;
+    case "kv_store":
+      await fillKVStoreIntegrationDocTemplate({
+        className,
       });
       break;
     default:
       console.error(
-        `Invalid type: ${type}.\nOnly 'chat', 'llm' and 'doc_loader' are supported at this time.`
+        `Invalid type: '${type}'.\nMust be one of:\n - ${ALLOWED_TYPES.join(
+          "\n - "
+        )}`
       );
       process.exit(1);
   }
