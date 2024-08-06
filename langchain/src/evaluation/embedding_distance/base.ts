@@ -1,4 +1,3 @@
-import { distance, similarity } from "ml-distance";
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { ChainValues } from "@langchain/core/utils/types";
 import { OpenAIEmbeddings } from "@langchain/openai";
@@ -13,6 +12,9 @@ import {
   StringEvaluator,
   StringEvaluatorArgs,
 } from "../base.js";
+import { cosine } from "../../util/ml-distance/similarities.js";
+import { chebyshev, manhattan } from "../../util/ml-distance/distances.js";
+import { euclidean } from "../../util/ml-distance-euclidean/euclidean.js";
 
 /**
  *
@@ -58,10 +60,10 @@ export function getDistanceCalculationFunction(
 ): VectorFunction {
   const distanceFunctions: { [key in EmbeddingDistanceType]: VectorFunction } =
     {
-      cosine: (X: number[], Y: number[]) => 1.0 - similarity.cosine(X, Y),
-      euclidean: distance.euclidean,
-      manhattan: distance.manhattan,
-      chebyshev: distance.chebyshev,
+      cosine: (X: number[], Y: number[]) => 1.0 - cosine(X, Y),
+      euclidean,
+      manhattan,
+      chebyshev,
     };
 
   return distanceFunctions[distanceType];

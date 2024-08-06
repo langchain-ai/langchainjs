@@ -214,6 +214,14 @@ export class ChatGoogleGenerativeAI
     };
   }
 
+  lc_namespace = ["langchain", "chat_models", "google_genai"];
+
+  get lc_aliases() {
+    return {
+      apiKey: "google_api_key",
+    };
+  }
+
   modelName = "gemini-pro";
 
   model = "gemini-pro";

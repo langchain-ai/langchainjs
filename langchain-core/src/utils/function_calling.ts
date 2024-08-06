@@ -17,12 +17,26 @@ import { isZodSchema } from "./types/is_zod_schema.js";
  * @returns {FunctionDefinition} The inputted tool in OpenAI function format.
  */
 export function convertToOpenAIFunction(
-  tool: StructuredToolInterface | RunnableToolLike | StructuredToolParams
+  tool: StructuredToolInterface | RunnableToolLike | StructuredToolParams,
+  fields?:
+    | {
+        /**
+         * If `true`, model output is guaranteed to exactly match the JSON Schema
+         * provided in the function definition.
+         */
+        strict?: boolean;
+      }
+    | number
 ): FunctionDefinition {
+  // @TODO 0.3.0 Remove the `number` typing
+  const fieldsCopy = typeof fields === "number" ? undefined : fields;
+
   return {
     name: tool.name,
     description: tool.description,
     parameters: zodToJsonSchema(tool.schema),
+    // Do not include the `strict` field if it is `undefined`.
+    ...(fieldsCopy?.strict !== undefined ? { strict: fieldsCopy.strict } : {}),
   };
 }
 
@@ -38,15 +52,35 @@ export function convertToOpenAIFunction(
  */
 export function convertToOpenAITool(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  tool: StructuredToolInterface | Record<string, any> | RunnableToolLike
+  tool: StructuredToolInterface | Record<string, any> | RunnableToolLike,
+  fields?:
+    | {
+        /**
+         * If `true`, model output is guaranteed to exactly match the JSON Schema
+         * provided in the function definition.
+         */
+        strict?: boolean;
+      }
+    | number
 ): ToolDefinition {
+  // @TODO 0.3.0 Remove the `number` typing
+  const fieldsCopy = typeof fields === "number" ? undefined : fields;
+
+  let toolDef: ToolDefinition | undefined;
   if (isLangChainTool(tool)) {
-    return {
+    toolDef = {
       type: "function",
       function: convertToOpenAIFunction(tool),
     };
+  } else {
+    toolDef = tool as ToolDefinition;
   }
-  return tool as ToolDefinition;
+
+  if (fieldsCopy?.strict !== undefined) {
+    toolDef.function.strict = fieldsCopy.strict;
+  }
+
+  return toolDef;
 }
 
 /**
@@ -99,6 +133,7 @@ export function isStructuredToolParams(
     isZodSchema(tool.schema as Record<string, any>)
   );
 }
+
 
 /**
  * Whether or not the tool is one of StructuredTool, RunnableTool or StructuredToolParams.

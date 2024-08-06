@@ -82,7 +82,7 @@ type ChatMistralAIToolType =
   | MistralAITool
   | BindToolsInput;
 
-interface MistralAICallOptions
+export interface ChatMistralAICallOptions
   extends Omit<BaseLanguageModelCallOptions, "stop"> {
   response_format?: {
     type: "text" | "json_object";
@@ -95,8 +95,6 @@ interface MistralAICallOptions
    */
   streamUsage?: boolean;
 }
-
-export interface ChatMistralAICallOptions extends MistralAICallOptions {}
 
 /**
  * Input to chat model class.
@@ -415,7 +413,7 @@ function _convertToolToMistralTool(
  * Integration with a chat model.
  */
 export class ChatMistralAI<
-    CallOptions extends MistralAICallOptions = MistralAICallOptions
+    CallOptions extends ChatMistralAICallOptions = ChatMistralAICallOptions
   >
   extends BaseChatModel<CallOptions, AIMessageChunk>
   implements ChatMistralAIInput

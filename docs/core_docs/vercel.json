@@ -64,6 +64,10 @@
     {
       "source": "/v0.2/docs/integrations/chat/chrome_ai(/?)",
       "destination": "/v0.2/docs/integrations/llms/chrome_ai/"
+    },
+    {
+      "source": "/v0.2/docs/integrations/retrievers/vectorstore(/?)",
+      "destination": "/v0.2/docs/how_to/vectorstore_retriever/"
     }
   ]
 }

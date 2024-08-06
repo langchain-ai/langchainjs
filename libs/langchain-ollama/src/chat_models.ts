@@ -295,7 +295,7 @@ export class ChatOllama
     kwargs?: Partial<this["ParsedCallOptions"]>
   ): Runnable<BaseLanguageModelInput, AIMessageChunk, ChatOllamaCallOptions> {
     return this.bind({
-      tools: tools.map(convertToOpenAITool),
+      tools: tools.map((tool) => convertToOpenAITool(tool)),
       ...kwargs,
     });
   }
@@ -356,7 +356,9 @@ export class ChatOllama
         stop: options?.stop,
       },
       tools: options?.tools?.length
-        ? (options.tools.map(convertToOpenAITool) as OllamaTool[])
+        ? (options.tools.map((tool) =>
+            convertToOpenAITool(tool)
+          ) as OllamaTool[])
         : undefined,
     };
   }

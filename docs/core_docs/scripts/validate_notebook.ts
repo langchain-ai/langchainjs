@@ -8,22 +8,36 @@ export function extract(filepath: string) {
   const sourceFile = project.createSourceFile("temp.ts", "");
 
   cells.forEach((cell: Record<string, any>) => {
+    const source = cell.source
+      .join("")
+      .replace(/\/\/ ?@lc-ts-ignore/g, "// @ts-ignore");
     if (cell.cell_type === "code") {
-      sourceFile.addStatements(cell.source.join(""));
+      sourceFile.addStatements(source);
     }
   });
 
   // Deduplicate imports
   const importDeclarations = sourceFile.getImportDeclarations();
-  const uniqueImports = new Map<string, Set<string>>();
+  const uniqueImports = new Map<
+    string,
+    { default?: string; namespace?: string; named: Set<string> }
+  >();
 
   importDeclarations.forEach((importDecl) => {
     const moduleSpecifier = importDecl.getModuleSpecifierValue();
     if (!uniqueImports.has(moduleSpecifier)) {
-      uniqueImports.set(moduleSpecifier, new Set());
+      uniqueImports.set(moduleSpecifier, { named: new Set() });
+    }
+    const defaultImport = importDecl.getDefaultImport();
+    if (defaultImport) {
+      uniqueImports.get(moduleSpecifier)!.default = defaultImport.getText();
+    }
+    const namespaceImport = importDecl.getNamespaceImport();
+    if (namespaceImport) {
+      uniqueImports.get(moduleSpecifier)!.namespace = namespaceImport.getText();
     }
     importDecl.getNamedImports().forEach((namedImport) => {
-      uniqueImports.get(moduleSpecifier)!.add(namedImport.getText());
+      uniqueImports.get(moduleSpecifier)!.named.add(namedImport.getText());
     });
   });
 
@@ -31,12 +45,16 @@ export function extract(filepath: string) {
   importDeclarations.forEach((importDecl) => importDecl.remove());
 
   // Add deduplicated imports at the top
-  uniqueImports.forEach((namedImports, moduleSpecifier) => {
-    sourceFile.addImportDeclaration({
-      moduleSpecifier,
-      namedImports: Array.from(namedImports),
-    });
-  });
+  uniqueImports.forEach(
+    ({ default: defaultImport, namespace, named }, moduleSpecifier) => {
+      sourceFile.addImportDeclaration({
+        moduleSpecifier,
+        defaultImport,
+        namespaceImport: namespace,
+        namedImports: Array.from(named),
+      });
+    }
+  );
 
   return sourceFile.getFullText();
 }

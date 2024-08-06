@@ -79,60 +79,53 @@ export function convertToConverseMessages(messages: BaseMessage[]): {
     .map((msg) => {
       if (msg._getType() === "ai") {
         const castMsg = msg as AIMessage;
-        if (typeof castMsg.content === "string" && castMsg.content !== "") {
-          return {
-            role: "assistant",
-            content: [
-              {
-                text: castMsg.content,
-              },
-            ],
-          };
-        } else {
-          if (castMsg.tool_calls && castMsg.tool_calls.length) {
-            return {
-              role: "assistant",
-              content: castMsg.tool_calls.map((tc) => ({
-                toolUse: {
-                  toolUseId: tc.id,
-                  name: tc.name,
-                  input: tc.args,
-                },
-              })),
-            };
-          } else if (Array.isArray(castMsg.content)) {
-            const contentBlocks: ContentBlock[] = castMsg.content.map(
-              (block) => {
-                if (block.type === "text" && block.text !== "") {
-                  return {
-                    text: block.text,
-                  };
-                } else {
-                  const blockValues = Object.fromEntries(
-                    Object.values(block).filter(([key]) => key !== "type")
-                  );
-                  throw new Error(
-                    `Unsupported content block type: ${
-                      block.type
-                    } with content of ${JSON.stringify(blockValues, null, 2)}`
-                  );
-                }
-              }
-            );
-            return {
-              role: "assistant",
-              content: contentBlocks,
-            };
-          } else {
-            throw new Error(
-              `Invalid message content: empty string. '${msg._getType()}' must contain non-empty content.`
-            );
-          }
+        const assistantMsg: BedrockMessage = {
+          role: "assistant",
+          content: [],
+        };
+
+        if (castMsg.tool_calls && castMsg.tool_calls.length) {
+          assistantMsg.content = castMsg.tool_calls.map((tc) => ({
+            toolUse: {
+              toolUseId: tc.id,
+              name: tc.name,
+              input: tc.args,
+            },
+          }));
         }
+
+        if (typeof castMsg.content === "string" && castMsg.content !== "") {
+          assistantMsg.content?.push({
+            text: castMsg.content,
+          });
+        } else if (Array.isArray(castMsg.content)) {
+          const contentBlocks: ContentBlock[] = castMsg.content.map((block) => {
+            if (block.type === "text" && block.text !== "") {
+              return {
+                text: block.text,
+              };
+            } else {
+              const blockValues = Object.fromEntries(
+                Object.values(block).filter(([key]) => key !== "type")
+              );
+              throw new Error(
+                `Unsupported content block type: ${
+                  block.type
+                } with content of ${JSON.stringify(blockValues, null, 2)}`
+              );
+            }
+          });
+
+          assistantMsg.content = [
+            ...(assistantMsg.content ? assistantMsg.content : []),
+            ...contentBlocks,
+          ];
+        }
+        return assistantMsg;
       } else if (msg._getType() === "human" || msg._getType() === "generic") {
         if (typeof msg.content === "string" && msg.content !== "") {
           return {
-            role: "user",
+            role: "user" as const,
             content: [
               {
                 text: msg.content,
@@ -156,7 +149,7 @@ export function convertToConverseMessages(messages: BaseMessage[]): {
             }
           });
           return {
-            role: "user",
+            role: "user" as const,
             content: contentBlocks,
           };
         } else {
@@ -169,7 +162,7 @@ export function convertToConverseMessages(messages: BaseMessage[]): {
         if (typeof castMsg.content === "string") {
           return {
             // Tool use messages are always from the user
-            role: "user",
+            role: "user" as const,
             content: [
               {
                 toolResult: {
@@ -186,7 +179,7 @@ export function convertToConverseMessages(messages: BaseMessage[]): {
         } else {
           return {
             // Tool use messages are always from the user
-            role: "user",
+            role: "user" as const,
             content: [
               {
                 toolResult: {
