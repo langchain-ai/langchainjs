@@ -31122,7 +31122,7 @@ __metadata:
     "@langchain/anthropic": ^0.2.8
     "@langchain/aws": ^0.0.5
     "@langchain/cohere": ^0.2.1
-    "@langchain/core": ">=0.2.11 <0.3.0"
+    "@langchain/core": ">=0.2.21 <0.3.0"
     "@langchain/google-genai": ^0.0.23
     "@langchain/google-vertexai": ^0.0.21
     "@langchain/groq": ^0.0.15
