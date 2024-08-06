@@ -200,8 +200,7 @@ export function convertToConverseMessages(messages: BaseMessage[]): {
       } else {
         throw new Error(`Unsupported message type: ${msg._getType()}`);
       }
-    })
-    .flat();
+    });
 
   // Combine consecutive user tool result messages into a single message
   const combinedConverseMessages = converseMessages.reduce<BedrockMessage[]>(
