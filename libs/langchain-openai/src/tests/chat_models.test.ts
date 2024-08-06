@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, no-process-env */
 import { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { it, expect, describe, beforeAll, afterAll, jest } from "@jest/globals";
