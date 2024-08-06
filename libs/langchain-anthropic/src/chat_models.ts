@@ -182,8 +182,9 @@ function extractToken(chunk: AIMessageChunk): string | undefined {
 /**
  * Wrapper around Anthropic large language models.
  *
- * To use you should have the `@anthropic-ai/sdk` package installed, with the
- * `ANTHROPIC_API_KEY` environment variable set.
+ * To use this package, you should have an Anthropic API key set as an
+ * environment variable named `ANTHROPIC_API_KEY` or passed
+ * into the constructor.
  *
  * @remarks
  * Any parameters that are valid to be passed to {@link
