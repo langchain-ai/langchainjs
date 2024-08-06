@@ -3,7 +3,7 @@ const { glob } = require("glob");
 const { execSync } = require("node:child_process");
 
 const IGNORED_CELL_REGEX =
-  /^```\s?\w*?[\s\S]\/\/ ?@lc-docs-hide-cell[\s\S]*?^```/gm;
+  /^``` *\w*?[\s\S]\/\/ ?@lc-docs-hide-cell[\s\S]*?^```/gm;
 const LC_TS_IGNORE_REGEX = /\/\/ ?@lc-ts-ignore\n/g;
 
 async function main() {

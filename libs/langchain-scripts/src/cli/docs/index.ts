@@ -9,6 +9,7 @@ import { fillRetrieverIntegrationDocTemplate } from "./retrievers.js";
 import { fillEmbeddingsIntegrationDocTemplate } from "./embeddings.js";
 import { fillToolkitIntegrationDocTemplate } from "./toolkits.js";
 import { fillToolIntegrationDocTemplate } from "./tools.js";
+import { fillKVStoreIntegrationDocTemplate } from "./kv_store.js";
 
 type CLIInput = {
   type: string;
@@ -23,6 +24,7 @@ const ALLOWED_TYPES = [
   "doc_loader",
   "toolkit",
   "tool",
+  "kv_store",
 ];
 
 async function main() {
@@ -77,6 +79,11 @@ async function main() {
       break;
     case "tool":
       await fillToolIntegrationDocTemplate({
+        className,
+      });
+      break;
+    case "kv_store":
+      await fillKVStoreIntegrationDocTemplate({
         className,
       });
       break;
