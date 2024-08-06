@@ -78,6 +78,8 @@ docs/how_to/tool_choice.md
 docs/how_to/tool_choice.mdx
 docs/how_to/tool_calls_multimodal.md
 docs/how_to/tool_calls_multimodal.mdx
+docs/how_to/tool_calling_parallel.md
+docs/how_to/tool_calling_parallel.mdx
 docs/how_to/tool_calling.md
 docs/how_to/tool_calling.mdx
 docs/how_to/tool_artifacts.md
@@ -210,6 +212,8 @@ docs/how_to/assign.md
 docs/how_to/assign.mdx
 docs/how_to/agent_executor.md
 docs/how_to/agent_executor.mdx
+docs/integrations/toolkits/sql.md
+docs/integrations/toolkits/sql.mdx
 docs/integrations/text_embedding/togetherai.md
 docs/integrations/text_embedding/togetherai.mdx
 docs/integrations/text_embedding/openai.md
@@ -222,6 +226,12 @@ docs/integrations/text_embedding/cohere.md
 docs/integrations/text_embedding/cohere.mdx
 docs/integrations/text_embedding/azure_openai.md
 docs/integrations/text_embedding/azure_openai.mdx
+docs/integrations/stores/in_memory.md
+docs/integrations/stores/in_memory.mdx
+docs/integrations/stores/file_system.md
+docs/integrations/stores/file_system.mdx
+docs/integrations/retrievers/tavily.md
+docs/integrations/retrievers/tavily.mdx
 docs/integrations/retrievers/kendra-retriever.md
 docs/integrations/retrievers/kendra-retriever.mdx
 docs/integrations/retrievers/exa.md
