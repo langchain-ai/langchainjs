@@ -295,8 +295,8 @@ function _convertChatOpenAIToolTypeToOpenAITool(
         function: {
           ...tool.function,
           strict: fields.strict,
-        }
-      }
+        },
+      };
     }
 
     return tool;

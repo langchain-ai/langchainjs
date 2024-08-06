@@ -67,7 +67,10 @@ describe("strict tool calling", () => {
     const [_url, options] = mockFetch.mock.calls[0];
 
     if (options && options.body) {
-      expect(JSON.parse(options.body).tools[0].function).toHaveProperty("strict", true);
+      expect(JSON.parse(options.body).tools[0].function).toHaveProperty(
+        "strict",
+        true
+      );
     } else {
       throw new Error("Body not found in request.");
     }
@@ -109,7 +112,10 @@ describe("strict tool calling", () => {
     const [_url, options] = mockFetch.mock.calls[0];
 
     if (options && options.body) {
-      expect(JSON.parse(options.body).tools[0].function).toHaveProperty("strict", true);
+      expect(JSON.parse(options.body).tools[0].function).toHaveProperty(
+        "strict",
+        true
+      );
     } else {
       throw new Error("Body not found in request.");
     }
@@ -150,7 +156,10 @@ describe("strict tool calling", () => {
     const [_url, options] = mockFetch.mock.calls[0];
 
     if (options && options.body) {
-      expect(JSON.parse(options.body).tools[0].function).toHaveProperty("strict", false);
+      expect(JSON.parse(options.body).tools[0].function).toHaveProperty(
+        "strict",
+        false
+      );
     } else {
       throw new Error("Body not found in request.");
     }
