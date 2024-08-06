@@ -5,6 +5,7 @@ import {
 import {
   BaseChatModel,
   BaseChatModelParams,
+  BindToolsInput,
   type BaseChatModelCallOptions,
 } from "@langchain/core/language_models/chat_models";
 import { BaseMessage, type AIMessageChunk } from "@langchain/core/messages";
@@ -298,13 +299,7 @@ class _ConfigurableModel<
   }
 
   override bindTools(
-    tools: (
-      | StructuredToolInterface
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      | Record<string, any>
-      | ToolDefinition
-      | RunnableToolLike
-    )[],
+    tools: BindToolsInput[],
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     params?: Record<string, any>
   ): _ConfigurableModel<RunInput, CallOptions> {

@@ -33,7 +33,10 @@ import {
 } from "../callbacks/manager.js";
 import type { RunnableConfig } from "../runnables/config.js";
 import type { BaseCache } from "../caches/base.js";
-import { StructuredToolInterface } from "../tools/index.js";
+import {
+  StructuredToolInterface,
+  StructuredToolParams,
+} from "../tools/index.js";
 import {
   Runnable,
   RunnableLambda,
@@ -123,6 +126,14 @@ export type LangSmithParams = {
   ls_stop?: Array<string>;
 };
 
+export type BindToolsInput =
+  | StructuredToolInterface
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  | Record<string, any>
+  | ToolDefinition
+  | RunnableToolLike
+  | StructuredToolParams;
+
 /**
  * Base class for chat models. It extends the BaseLanguageModel class and
  * provides methods for generating chat based on input messages.
@@ -168,12 +179,7 @@ export abstract class BaseChatModel<
    * @param kwargs Any additional parameters to bind.
    */
   bindTools?(
-    tools: (
-      | StructuredToolInterface
-      | Record<string, unknown>
-      | ToolDefinition
-      | RunnableToolLike
-    )[],
+    tools: BindToolsInput[],
     kwargs?: Partial<CallOptions>
   ): Runnable<BaseLanguageModelInput, OutputMessageType, CallOptions>;
 
