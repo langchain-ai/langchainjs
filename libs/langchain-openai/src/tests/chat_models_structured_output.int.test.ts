@@ -321,3 +321,30 @@ test("parallelToolCalls param", async () => {
   // console.log(response.tool_calls);
   expect(response.tool_calls?.length).toBe(1);
 });
+
+test("Passing strict true forces the model to conform to the schema", async () => {
+  const model = new ChatOpenAI({
+    model: "gpt-4o",
+    temperature: 0,
+    maxRetries: 0,
+  });
+
+  const weatherTool = {
+    type: "function" as const,
+    function: {
+      name: "get_current_weather",
+      description: "Get the current weather in a location",
+      parameters: zodToJsonSchema(z.object({
+        location: z.string().describe("The location to get the weather for"),
+      }))
+    }
+  }
+  const modelWithTools = model.bindTools([weatherTool], { strict: true, tool_choice: "get_current_weather" });
+
+  const result = await modelWithTools.invoke("Whats the result of 173827 times 287326 divided by 2?");
+  // Expect at least one tool call, allow multiple
+  expect(result.tool_calls?.length).toBeGreaterThanOrEqual(1);
+  expect(result.tool_calls?.[0].name).toBe("get_current_weather");
+  expect(result.tool_calls?.[0].args).toHaveProperty("location");
+  console.log(result.tool_calls?.[0].args)
+})
