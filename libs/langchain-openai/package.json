@@ -37,7 +37,7 @@
   "dependencies": {
     "@langchain/core": ">=0.2.16 <0.3.0",
     "js-tiktoken": "^1.0.12",
-    "openai": "^4.49.1",
+    "openai": "^4.55.0",
     "zod": "^3.22.4",
     "zod-to-json-schema": "^3.22.3"
   },

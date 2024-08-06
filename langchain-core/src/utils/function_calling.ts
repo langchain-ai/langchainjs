@@ -34,14 +34,29 @@ export function convertToOpenAIFunction(
  */
 export function convertToOpenAITool(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  tool: StructuredToolInterface | Record<string, any> | RunnableToolLike
+  tool: StructuredToolInterface | Record<string, any> | RunnableToolLike,
+  fields?: {
+    /**
+     * If `true`, model output is guaranteed to exactly match the JSON Schema
+     * provided in the function definition.
+     */
+    strict?: boolean;
+  }
 ): ToolDefinition {
+  let toolDef: ToolDefinition | undefined;
   if (isStructuredTool(tool) || isRunnableToolLike(tool)) {
-    return {
+    toolDef = {
       type: "function",
       function: convertToOpenAIFunction(tool),
     };
+  } else {
+    toolDef = tool as ToolDefinition;
   }
+
+  if (fields?.strict !== undefined) {
+    toolDef.function.strict = fields.strict;
+  }
+
   return tool as ToolDefinition;
 }
 

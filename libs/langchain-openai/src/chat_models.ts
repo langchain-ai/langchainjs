@@ -1,4 +1,4 @@
-import { type ClientOptions, OpenAI as OpenAIClient } from "openai";
+import { type ClientOptions, OpenAI as OpenAIClient, } from "openai";
 
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {
@@ -299,6 +299,16 @@ export interface ChatOpenAICallOptions
    * call multiple tools in one response.
    */
   parallel_tool_calls?: boolean;
+  /**
+   * If `true`, model output is guaranteed to exactly match the JSON Schema
+   * provided in the tool definition.
+   * Enabled by default for `"gpt-"` models.
+   */
+  strict?: boolean;
+}
+
+export interface ChatOpenAIFields extends Partial<OpenAIChatInput>, Partial<AzureOpenAIInput>, BaseChatModelParams {
+  configuration?: ClientOptions & LegacyOpenAIInput;
 }
 
 /**
@@ -441,12 +451,15 @@ export class ChatOpenAI<
 
   protected clientConfig: ClientOptions;
 
+  /**
+   * Whether the model supports the 'strict' argument when passing in tools.
+   * Defaults to `true` if `modelName`/`model` starts with 'gpt-' otherwise
+   * defaults to `false`.
+   */
+  supportsStrictToolCalling?: boolean;
+
   constructor(
-    fields?: Partial<OpenAIChatInput> &
-      Partial<AzureOpenAIInput> &
-      BaseChatModelParams & {
-        configuration?: ClientOptions & LegacyOpenAIInput;
-      },
+    fields?: ChatOpenAIFields,
     /** @deprecated */
     configuration?: ClientOptions & LegacyOpenAIInput
   ) {
@@ -541,6 +554,12 @@ export class ChatOpenAI<
       ...configuration,
       ...fields?.configuration,
     };
+
+    // Assume only "gpt-..." models support strict tool calling as of 08/06/24.
+    this.supportsStrictToolCalling = 
+    fields?.supportsStrictToolCalling !== undefined
+      ? fields.supportsStrictToolCalling
+      : this.modelName.startsWith("gpt-");
   }
 
   getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
@@ -563,8 +582,9 @@ export class ChatOpenAI<
     )[],
     kwargs?: Partial<CallOptions>
   ): Runnable<BaseLanguageModelInput, AIMessageChunk, CallOptions> {
+    const strict = kwargs?.strict !== undefined ? kwargs.strict : this.supportsStrictToolCalling;
     return this.bind({
-      tools: tools.map(convertToOpenAITool),
+      tools: tools.map((tool) => convertToOpenAITool(tool, { strict })),
       ...kwargs,
     } as Partial<CallOptions>);
   }
@@ -578,6 +598,7 @@ export class ChatOpenAI<
       streaming?: boolean;
     }
   ): Omit<OpenAIClient.Chat.ChatCompletionCreateParams, "messages"> {
+    const strict = options?.strict !== undefined ? options.strict : this.supportsStrictToolCalling;
     function isStructuredToolArray(
       tools?: unknown[]
     ): tools is StructuredToolInterface[] {
@@ -615,7 +636,7 @@ export class ChatOpenAI<
       functions: options?.functions,
       function_call: options?.function_call,
       tools: isStructuredToolArray(options?.tools)
-        ? options?.tools.map(convertToOpenAITool)
+        ? options?.tools.map((tool) => convertToOpenAITool(tool, { strict }))
         : options?.tools,
       tool_choice: formatToOpenAIToolChoice(options?.tool_choice),
       response_format: options?.response_format,

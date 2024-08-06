@@ -155,6 +155,13 @@ export interface OpenAIChatInput extends OpenAIBaseInput {
    * Currently in experimental beta.
    */
   __includeRawResponse?: boolean;
+
+  /**
+   * Whether the model supports the 'strict' argument when passing in tools.
+   * Defaults to `true` if `modelName`/`model` starts with 'gpt-' otherwise
+   * defaults to `false`.
+   */
+  supportsStrictToolCalling?: boolean;
 }
 
 export declare interface AzureOpenAIInput {
