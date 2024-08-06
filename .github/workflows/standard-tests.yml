@@ -11,7 +11,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        package: [anthropic, cohere, google-genai, groq, mistralai]
+        package: [anthropic, cohere, google-genai, groq, mistralai, aws]
     steps:
       - uses: actions/checkout@v4
       - name: Use Node.js 18.x
