@@ -10,6 +10,7 @@ import {
   convertToOpenAITool,
 } from "@langchain/core/utils/function_calling";
 import { ChatMessage } from "@langchain/core/messages";
+import { OpenAIRoleEnum } from "../types.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function wrapOpenAIClientError(e: any) {

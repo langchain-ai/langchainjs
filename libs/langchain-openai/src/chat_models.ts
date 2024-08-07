@@ -84,7 +84,6 @@ import {
 
 export type { AzureOpenAIInput, OpenAICallOptions, OpenAIChatInput };
 
-
 export function messageToOpenAIRole(message: BaseMessage): OpenAIRoleEnum {
   const type = message._getType();
   switch (type) {
@@ -1066,6 +1065,8 @@ export class ChatOpenAI<
           request,
           requestOptions
         );
+        console.log("RES");
+        console.dir(res, { depth: null });
         return res;
       } catch (e) {
         const error = wrapOpenAIClientError(e);

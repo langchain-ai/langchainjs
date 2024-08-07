@@ -355,3 +355,35 @@ test("Passing strict true forces the model to conform to the schema", async () =
   expect(result.tool_calls?.[0].args).toHaveProperty("location");
   console.log(result.tool_calls?.[0].args);
 });
+
+test("Passing response_format json_schema works", async () => {
+  const weatherSchema = z.object({
+    city: z.string().describe("The city to get the weather for"),
+    state: z.string().describe("The state to get the weather for"),
+    zipCode: z.string().describe("The zip code to get the weather for"),
+    unit: z
+      .enum(["fahrenheit", "celsius"])
+      .describe("The unit to get the weather in"),
+  });
+
+  const model = new ChatOpenAI({
+    model: "gpt-4o-2024-08-06",
+  }).bind({
+    response_format: {
+      type: "json_schema",
+      json_schema: {
+        name: "get_current_weather",
+        description: "Get the current weather in a location",
+        schema: zodToJsonSchema(weatherSchema),
+        strict: true,
+      },
+    },
+  });
+
+  const response = await model.invoke(
+    "What is the weather in San Francisco, 91626 CA?"
+  );
+  console.log(response.content);
+  const parsed = JSON.parse(response.content as string);
+  console.log(parsed);
+});

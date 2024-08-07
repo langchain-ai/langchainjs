@@ -1,5 +1,9 @@
 import type { OpenAI as OpenAIClient } from "openai";
-import type { ResponseFormatText, ResponseFormatJSONObject, ResponseFormatJSONSchema } from "openai/resources/shared";
+import type {
+  ResponseFormatText,
+  ResponseFormatJSONObject,
+  ResponseFormatJSONSchema,
+} from "openai/resources/shared";
 
 import { TiktokenModel } from "js-tiktoken/lite";
 import type { BaseLanguageModelCallOptions } from "@langchain/core/language_models/base";
@@ -235,11 +239,20 @@ export interface OpenAILLMOutput {
 }
 
 // TODO import from SDK when available
-export type OpenAIRoleEnum = "system" | "assistant" | "user" | "function" | "tool";
+export type OpenAIRoleEnum =
+  | "system"
+  | "assistant"
+  | "user"
+  | "function"
+  | "tool";
 
 export type OpenAICompletionParam =
   OpenAIClient.Chat.Completions.ChatCompletionMessageParam;
 export type OpenAIFnDef = OpenAIClient.Chat.ChatCompletionCreateParams.Function;
-export type OpenAIFnCallOption = OpenAIClient.Chat.ChatCompletionFunctionCallOption;
+export type OpenAIFnCallOption =
+  OpenAIClient.Chat.ChatCompletionFunctionCallOption;
 
-export type ChatOpenAIResponseFormat = ResponseFormatText | ResponseFormatJSONObject | ResponseFormatJSONSchema;
+export type ChatOpenAIResponseFormat =
+  | ResponseFormatText
+  | ResponseFormatJSONObject
+  | ResponseFormatJSONSchema;
