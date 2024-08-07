@@ -1,6 +1,6 @@
 import type { BaseMessage } from "@langchain/core/messages";
 import { AIMessageChunk } from "@langchain/core/messages";
-import type { BaseLanguageModelInput } from "@langchain/core/language_models/base";
+import type { BaseLanguageModelInput, StructuredOutputMethodOptions, ToolDefinition } from "@langchain/core/language_models/base";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {
   type BaseChatModelParams,
@@ -24,7 +24,7 @@ import {
   DefaultProviderInit,
 } from "@aws-sdk/credential-provider-node";
 import type { DocumentType as __DocumentType } from "@smithy/types";
-import { Runnable } from "@langchain/core/runnables";
+import { Runnable, RunnableLambda, RunnablePassthrough, RunnableSequence } from "@langchain/core/runnables";
 import {
   ChatBedrockConverseToolType,
   ConverseCommandParams,
@@ -40,6 +40,9 @@ import {
   handleConverseStreamContentBlockStart,
   BedrockConverseToolChoice,
 } from "./common.js";
+import { zodToJsonSchema } from "zod-to-json-schema";
+import { isZodSchema } from "@langchain/core/utils/types";
+import { z } from "zod";
 
 /**
  * Inputs for ChatBedrockConverse.
@@ -429,5 +432,139 @@ export class ChatBedrockConverse
         }
       }
     }
+  }
+
+  withStructuredOutput<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  >(
+    outputSchema:
+      | z.ZodType<RunOutput>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      | Record<string, any>,
+    config?: StructuredOutputMethodOptions<false>
+  ): Runnable<BaseLanguageModelInput, RunOutput>;
+
+  withStructuredOutput<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>
+  >(
+    outputSchema:
+      | z.ZodType<RunOutput>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      | Record<string, any>,
+    config?: StructuredOutputMethodOptions<true>
+  ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
+
+  withStructuredOutput<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>
+  >(
+    outputSchema:
+      | z.ZodType<RunOutput>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      | Record<string, any>,
+    config?: StructuredOutputMethodOptions<boolean>
+  ):
+    | Runnable<BaseLanguageModelInput, RunOutput>
+    | Runnable<
+        BaseLanguageModelInput,
+        {
+          raw: BaseMessage;
+          parsed: RunOutput;
+        }
+      > {
+    if (typeof this.bindTools !== "function") {
+      throw new Error(
+        `Chat model must implement ".bindTools()" to use withStructuredOutput.`
+      );
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const schema: z.ZodType<RunOutput> | Record<string, any> = outputSchema;
+    const name = config?.name;
+    const description = schema.description ?? "A function available to call.";
+    const method = config?.method;
+    const includeRaw = config?.includeRaw;
+    if (method === "jsonMode") {
+      throw new Error(
+        `Base withStructuredOutput implementation only supports "functionCalling" as a method.`
+      );
+    }
+
+    let functionName = name ?? "extract";
+    let tools: ToolDefinition[];
+    if (isZodSchema(schema)) {
+      tools = [
+        {
+          type: "function",
+          function: {
+            name: functionName,
+            description,
+            parameters: zodToJsonSchema(schema),
+          },
+        },
+      ];
+    } else {
+      if ("name" in schema) {
+        functionName = schema.name;
+      }
+      tools = [
+        {
+          type: "function",
+          function: {
+            name: functionName,
+            description,
+            parameters: schema,
+          },
+        },
+      ];
+    }
+
+    const llm = this.bindTools(tools, {
+      tool_choice: tools[0].function.name,
+    });
+    const outputParser = RunnableLambda.from<AIMessageChunk, RunOutput>(
+      (input: AIMessageChunk): RunOutput => {
+        if (!input.tool_calls || input.tool_calls.length === 0) {
+          throw new Error("No tool calls found in the response.");
+        }
+        const toolCall = input.tool_calls.find(
+          (tc) => tc.name === functionName
+        );
+        if (!toolCall) {
+          throw new Error(`No tool call found with name ${functionName}.`);
+        }
+        return toolCall.args as RunOutput;
+      }
+    );
+
+    if (!includeRaw) {
+      return llm.pipe(outputParser).withConfig({
+        runName: "StructuredOutput",
+      }) as Runnable<BaseLanguageModelInput, RunOutput>;
+    }
+
+    const parserAssign = RunnablePassthrough.assign({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      parsed: (input: any, config) => outputParser.invoke(input.raw, config),
+    });
+    const parserNone = RunnablePassthrough.assign({
+      parsed: () => null,
+    });
+    const parsedWithFallback = parserAssign.withFallbacks({
+      fallbacks: [parserNone],
+    });
+    return RunnableSequence.from<
+      BaseLanguageModelInput,
+      { raw: BaseMessage; parsed: RunOutput }
+    >([
+      {
+        raw: llm,
+      },
+      parsedWithFallback,
+    ]).withConfig({
+      runName: "StructuredOutputRunnable",
+    });
   }
 }
