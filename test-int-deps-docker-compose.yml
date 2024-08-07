@@ -24,7 +24,7 @@ services:
       DEFAULT_VECTORIZER_MODULE: 'none'
       CLUSTER_HOSTNAME: 'node1'
   db:
-    image: ankane/pgvector
+    image: pgvector/pgvector:pg16
     ports:
       - 5433:5432
     volumes:
