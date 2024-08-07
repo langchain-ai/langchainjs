@@ -103,6 +103,11 @@ export type OpenAICoreRequestOptions<
   idempotencyKey?: string;
 };
 
+/**
+ * @typedef {Object} OpenAICallOptions
+ * @extends BaseLanguageModelCallOptions
+ * @property {OpenAICoreRequestOptions} [options] - Additional options to pass to the underlying axios request.
+ */
 export interface OpenAICallOptions extends BaseLanguageModelCallOptions {
   /**
    * Additional options to pass to the underlying axios request.

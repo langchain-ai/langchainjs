@@ -318,6 +318,19 @@ export interface ChatOpenAIStructuredOutputMethodOptions<
   strict?: boolean;
 }
 
+/**
+ * @typedef {Object} ChatOpenAICallOptions
+ * @extends OpenAICallOptions
+ * @extends BaseFunctionCallOptions
+ * @property {ChatOpenAIToolType[]} [tools] - Array of tools to be used by the model.
+ * @property {OpenAIToolChoice} [tool_choice] - Specifies how the model should choose tools.
+ * @property {number} [promptIndex] - Index of the prompt to use.
+ * @property {{ type: "json_object" }} [response_format] - Specifies the format of the response.
+ * @property {number} [seed] - Seed for deterministic sampling.
+ * @property {{ include_usage: boolean }} [stream_options] - Options for streamed completions.
+ * @property {boolean} [parallel_tool_calls] - Whether to allow parallel tool calls.
+ * @property {boolean} [strict] - Whether to enforce strict schema validation.
+ */
 export interface ChatOpenAICallOptions
   extends OpenAICallOptions,
     BaseFunctionCallOptions {
@@ -398,7 +411,14 @@ export interface ChatOpenAIFields
  * console.log(message);
  *
  * ```
+ * 
+ * 
+ * @extends {BaseChatModel<CallOptions, AIMessageChunk>}
+ * @implements {OpenAIChatInput}
+ * @implements {AzureOpenAIInput}
  */
+
+/** {@inheritDoc ChatOpenAICallOptions} */
 export class ChatOpenAI<
     CallOptions extends ChatOpenAICallOptions = ChatOpenAICallOptions
   >
