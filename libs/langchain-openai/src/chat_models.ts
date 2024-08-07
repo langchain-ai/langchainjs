@@ -399,7 +399,7 @@ export interface ChatOpenAIFields
  *
  * ```
  * @extends {BaseChatModel<CallOptions, AIMessageChunk>}
- * 
+ *
  * @param {ChatOpenAICallOptions} callOptions - The call options for the ChatOpenAI instance
  * @param {ChatOpenAIToolType[]} [callOptions.tools] - The tools to use with the model
  * @param {OpenAIToolChoice} [callOptions.tool_choice] - The tool choice configuration
