@@ -11,11 +11,11 @@ import type {
   Message as BedrockMessage,
   SystemContentBlock as BedrockSystemContentBlock,
 } from "@aws-sdk/client-bedrock-runtime";
+import { describe, test, expect, it } from "@jest/globals";
 import {
   convertToConverseMessages,
   handleConverseStreamContentBlockDelta,
 } from "../common.js";
-import { describe, test, expect, it } from "@jest/globals";
 
 describe("convertToConverseMessages", () => {
   const testCases: {

@@ -1,6 +1,10 @@
 import type { BaseMessage } from "@langchain/core/messages";
 import { AIMessageChunk } from "@langchain/core/messages";
-import type { BaseLanguageModelInput, StructuredOutputMethodOptions, ToolDefinition } from "@langchain/core/language_models/base";
+import type {
+  BaseLanguageModelInput,
+  StructuredOutputMethodOptions,
+  ToolDefinition,
+} from "@langchain/core/language_models/base";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {
   type BaseChatModelParams,
@@ -24,12 +28,15 @@ import {
   DefaultProviderInit,
 } from "@aws-sdk/credential-provider-node";
 import type { DocumentType as __DocumentType } from "@smithy/types";
-import { Runnable, RunnableLambda, RunnablePassthrough, RunnableSequence } from "@langchain/core/runnables";
 import {
-  ChatBedrockConverseToolType,
-  ConverseCommandParams,
-  CredentialType,
-} from "./types.js";
+  Runnable,
+  RunnableLambda,
+  RunnablePassthrough,
+  RunnableSequence,
+} from "@langchain/core/runnables";
+import { zodToJsonSchema } from "zod-to-json-schema";
+import { isZodSchema } from "@langchain/core/utils/types";
+import { z } from "zod";
 import {
   convertToConverseTools,
   convertToBedrockToolChoice,
@@ -40,9 +47,11 @@ import {
   handleConverseStreamContentBlockStart,
   BedrockConverseToolChoice,
 } from "./common.js";
-import { zodToJsonSchema } from "zod-to-json-schema";
-import { isZodSchema } from "@langchain/core/utils/types";
-import { z } from "zod";
+import {
+  ChatBedrockConverseToolType,
+  ConverseCommandParams,
+  CredentialType,
+} from "./types.js";
 
 /**
  * Inputs for ChatBedrockConverse.
