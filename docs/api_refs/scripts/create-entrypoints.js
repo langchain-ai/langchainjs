@@ -13,7 +13,6 @@ const BASE_TYPEDOC_CONFIG = {
   ],
   plugin: [
     "./typedoc_plugins/hide_underscore_lc.js",
-    "typedoc-plugin-expand-object-like-types",
   ],
   tsconfig: "../../tsconfig.json",
   readme: "none",

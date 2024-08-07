@@ -30,7 +30,6 @@
     "prettier": "^2.8.3",
     "tailwindcss": "^3.3.0",
     "typedoc": "^0.26.0",
-    "typedoc-plugin-expand-object-like-types": "^0.1.2",
     "typescript": "~5.1.6"
   }
 }

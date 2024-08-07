@@ -368,30 +368,32 @@ export interface ChatOpenAIFields
 
 /**
  * OpenAI chat model integration.
- * 
+ *
  * Setup:
  * Install `@langchain/openai` and set environment variable `OPENAI_API_KEY`.
- * 
+ *
  * ```bash
  * npm install @langchain/openai
  * export OPENAI_API_KEY="your-api-key"
  * ```
  * 
- * Key init args — completion params:
+ * ## Key args
+ * 
+ * ### Key init args — completion params:
  * @param {string} model - Name of OpenAI model to use.
  * @param {number} temperature - Sampling temperature.
  * @param {number | undefined} maxTokens - Max number of tokens to generate.
  * @param {boolean | undefined} logprobs - Whether to return logprobs.
  * @param {Object} stream_options - Configure streaming outputs, like whether to return token usage when streaming (`{ include_usage: true }`).
- * 
- * Key init args — client params:
+ *
+ * ### Key init args — client params:
  * @param {number | [number, number] | any | undefined} timeout - Timeout for requests.
  * @param {number} maxRetries - Max number of retries.
  * @param {string | undefined} apiKey - OpenAI API key. If not passed in will be read from env var OPENAI_API_KEY.
  * @param {string | undefined} baseUrl - Base URL for API requests. Only specify if using a proxy or service emulator.
  * @param {string | undefined} organization - OpenAI organization ID. If not passed in will be read from env var OPENAI_ORG_ID.
- * 
- * Key bind args:
+ *
+ * ### Key bind args:
  * @param {ChatOpenAIToolType[] | undefined} tools - Tools to bind to the model.
  * @param {OpenAIToolChoice | undefined} tool_choice - Specify how and/or which tool the model should invoke.
  * @param {number | undefined} promptIndex
@@ -401,14 +403,13 @@ export interface ChatOpenAIFields
  * @param {boolean} [stream_options.include_usage] - Whether or not to include token usage in the stream. If set to `true`, this will include an additional chunk at the end of the stream with the token usage.
  * @param {boolean | undefined} parallel_tool_calls - Whether or not to restrict the ability to call multiple tools in one response.
  * @param {boolean | undefined} strict - Whether or not to force the model to return structured output which exactly matches the schema.
- * 
+ *
  * See full list of supported init args and their descriptions in the params section.
- * 
  * 
  * @example
  * ```typescript
  * import { ChatOpenAI } from '@langchain/openai';
- * 
+ *
  * const llm = new ChatOpenAI({
  *   model: "gpt-4o",
  *   temperature: 0,
@@ -421,7 +422,7 @@ export interface ChatOpenAIFields
  *   // other params...
  * });
  * ```
- * 
+ *
  * @example
  * ```typescript
  * const messages = [
@@ -437,14 +438,14 @@ export interface ChatOpenAIFields
  * const result = await llm.invoke(messages);
  * console.log(result);
  * ```
- * 
+ *
  * @example
  * ```typescript
  * for await (const chunk of await llm.stream(messages)) {
  *   console.log(chunk);
  * }
  * ```
- * 
+ *
  * @example
  * ```typescript
  * import { AIMessageChunk } from '@langchain/core/messages';
@@ -457,11 +458,11 @@ export interface ChatOpenAIFields
  * }
  * console.log(full);
  * ```
- * 
+ *
  * @example
  * ```typescript
  * import { z } from 'zod';
- * 
+ *
  * const GetWeather = {
  *   name: "GetWeather",
  *   description: "Get the current weather in a given location",
@@ -469,7 +470,7 @@ export interface ChatOpenAIFields
  *     location: z.string().describe("The city and state, e.g. San Francisco, CA")
  *   }),
  * }
- * 
+ *
  * const GetPopulation = {
  *   name: "GetPopulation",
  *   description: "Get the current population in a given location",
@@ -477,7 +478,7 @@ export interface ChatOpenAIFields
  *     location: z.string().describe("The city and state, e.g. San Francisco, CA")
  *   }),
  * }
- * 
+ *
  * const llmWithTools = llm.bindTools(
  *   [GetWeather, GetPopulation],
  *   {
@@ -489,22 +490,22 @@ export interface ChatOpenAIFields
  * );
  * console.log(aiMsg.tool_calls);
  * ```
- * 
+ *
  * @example
  * ```typescript
  * import { z } from 'zod';
- * 
+ *
  * const Joke = z.object({
  *   setup: z.string().describe("The setup of the joke"),
  *   punchline: z.string().describe("The punchline to the joke"),
  *   rating: z.number().optional().describe("How funny the joke is, from 1 to 10")
  * }).describe('Joke to tell user.');
- * 
+ *
  * const structuredLlm = llm.withStructuredOutput(Joke);
  * const jokeResult = await structuredLlm.invoke("Tell me a joke about cats");
  * console.log(jokeResult);
  * ```
- * 
+ *
  * @example
  * ```typescript
  * const jsonLlm = llm.bind({ response_format: { type: "json_object" } });
@@ -513,15 +514,15 @@ export interface ChatOpenAIFields
  * );
  * console.log(jsonLlmAiMsg.content);
  * ```
- * 
+ *
  * @example
  * ```typescript
  * import { HumanMessage } from '@langchain/core/messages';
- * 
+ *
  * const imageUrl = "https://example.com/image.jpg";
  * const imageData = await fetch(imageUrl).then(res => res.arrayBuffer());
  * const base64Image = Buffer.from(imageData).toString('base64');
- * 
+ *
  * const message = new HumanMessage({
  *   content: [
  *     { type: "text", text: "describe the weather in this image" },
@@ -531,17 +532,17 @@ export interface ChatOpenAIFields
  *     },
  *   ]
  * });
- * 
+ *
  * const imageDescriptionAiMsg = await llm.invoke([message]);
  * console.log(imageDescriptionAiMsg.content);
  * ```
- * 
+ *
  * @example
  * ```typescript
  * const aiMsgForMetadata = await llm.invoke(messages);
  * console.log(aiMsgForMetadata.usage_metadata);
  * ```
- * 
+ *
  * @example
  * ```typescript
  * const streamForMetadata = await llm.stream(
@@ -558,14 +559,14 @@ export interface ChatOpenAIFields
  * }
  * console.log(fullForMetadata?.usage_metadata);
  * ```
- * 
+ *
  * @example
  * ```typescript
  * const logprobsLlm = new ChatOpenAI({ logprobs: true });
  * const aiMsgForLogprobs = await logprobsLlm.invoke(messages);
  * console.log(aiMsgForLogprobs.response_metadata.logprobs);
  * ```
- * 
+ *
  * @example
  * ```typescript
  * const aiMsgForResponseMetadata = await llm.invoke(messages);
