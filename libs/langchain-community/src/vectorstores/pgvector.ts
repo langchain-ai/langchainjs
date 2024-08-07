@@ -163,16 +163,16 @@ export class PGVectorStore extends VectorStore {
    * `connect` to return a new instance of `PGVectorStore`.
    *
    * @param embeddings - Embeddings instance.
-   * @param fields - `PGVectorStoreArgs` instance.
-   * @param dimensions Number of dimensions in your vector data type. For example, use 1536 for OpenAI's `text-embedding-3-small`. If not set, indexes like HNSW might not be used during query time.
+   * @param fields - `PGVectorStoreArgs` instance
+   * @param fields.dimensions Number of dimensions in your vector data type. For example, use 1536 for OpenAI's `text-embedding-3-small`. If not set, indexes like HNSW might not be used during query time.
    * @returns A new instance of `PGVectorStore`.
    */
   static async initialize(
     embeddings: EmbeddingsInterface,
-    config: PGVectorStoreArgs,
-    dimensions?: number
+    config: PGVectorStoreArgs & { dimensions?: number }
   ): Promise<PGVectorStore> {
-    const postgresqlVectorStore = new PGVectorStore(embeddings, config);
+    const { dimensions, ...rest } = config;
+    const postgresqlVectorStore = new PGVectorStore(embeddings, rest);
 
     await postgresqlVectorStore._initializeClient();
     await postgresqlVectorStore.ensureTableInDatabase(dimensions);
@@ -638,7 +638,7 @@ export class PGVectorStore extends VectorStore {
     texts: string[],
     metadatas: object[] | object,
     embeddings: EmbeddingsInterface,
-    dbConfig: PGVectorStoreArgs
+    dbConfig: PGVectorStoreArgs & { dimensions?: number }
   ): Promise<PGVectorStore> {
     const docs = [];
     for (let i = 0; i < texts.length; i += 1) {
@@ -665,7 +665,7 @@ export class PGVectorStore extends VectorStore {
   static async fromDocuments(
     docs: Document[],
     embeddings: EmbeddingsInterface,
-    dbConfig: PGVectorStoreArgs
+    dbConfig: PGVectorStoreArgs & { dimensions?: number }
   ): Promise<PGVectorStore> {
     const instance = await PGVectorStore.initialize(embeddings, dbConfig);
     await instance.addDocuments(docs, { ids: dbConfig.ids });
