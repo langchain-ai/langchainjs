@@ -32,9 +32,7 @@ const INDEX_NAME = "vectorSearchIndex";
  */
 describe("AzureCosmosDBMongoDBVectorStore", () => {
   beforeEach(async () => {
-    expect(
-      process.env.AZURE_COSMOSDB_MONGODB_CONNECTION_STRING
-    ).toBeDefined();
+    expect(process.env.AZURE_COSMOSDB_MONGODB_CONNECTION_STRING).toBeDefined();
 
     // Note: when using Azure OpenAI, you have to also set these variables
     // in addition to the API key:

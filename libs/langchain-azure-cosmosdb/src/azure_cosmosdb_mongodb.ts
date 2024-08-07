@@ -82,7 +82,7 @@ export class AzureCosmosDBMongoDBVectorStore extends VectorStore {
 
   private connectPromise: Promise<void>;
 
-  private initPromise: Promise<void>;
+  private initPromise?: Promise<void>;
 
   private readonly client: MongoClient | undefined;
 
@@ -143,15 +143,17 @@ export class AzureCosmosDBMongoDBVectorStore extends VectorStore {
 
     // Deferring initialization to the first call to `initialize`
     this.initialize = () => {
-      if (!this.initPromise) {
-        this.initPromise = this.init(client, databaseName, collectionName).catch(
-          (error) => {
-            console.error(
-              "Error during AzureCosmosDBMongoDBVectorStore initialization:",
-              error
-            );
-          }
-        );
+      if (this.initPromise === undefined) {
+        this.initPromise = this.init(
+          client,
+          databaseName,
+          collectionName
+        ).catch((error) => {
+          console.error(
+            "Error during AzureCosmosDBMongoDBVectorStore initialization:",
+            error
+          );
+        });
       }
 
       return this.initPromise;

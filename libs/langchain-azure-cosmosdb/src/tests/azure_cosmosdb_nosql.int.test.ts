@@ -5,8 +5,8 @@ import { Document } from "@langchain/core/documents";
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { CosmosClient } from "@azure/cosmos";
 
-import { AzureCosmosDBNoSQLVectorStore } from "../azure_cosmosdb_nosql.js";
 import { DefaultAzureCredential } from "@azure/identity";
+import { AzureCosmosDBNoSQLVectorStore } from "../azure_cosmosdb_nosql.js";
 
 const DATABASE_NAME = "langchainTestDB";
 const CONTAINER_NAME = "testContainer";
@@ -308,8 +308,7 @@ describe("AzureCosmosDBNoSQLVectorStore", () => {
     );
     await vectorStoreCS.addDocuments([{ pageContent: "init", metadata: {} }]);
 
-    
-    let connectionString = process.env.AZURE_COSMOSDB_NOSQL_CONNECTION_STRING;
+    const connectionString = process.env.AZURE_COSMOSDB_NOSQL_CONNECTION_STRING;
     if (connectionString) {
       // Remove the connection string to test managed identity
       process.env.AZURE_COSMOSDB_NOSQL_CONNECTION_STRING = "";

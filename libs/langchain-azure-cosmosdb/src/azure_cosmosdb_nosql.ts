@@ -98,7 +98,7 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
     };
   }
 
-  private initPromise: Promise<void>;
+  private initPromise?: Promise<void>;
 
   private readonly client: CosmosClient;
 
@@ -116,7 +116,7 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
    * @returns A promise that resolves when the AzureCosmosDBNoSQLVectorStore has been initialized.
    */
   initialize: () => Promise<void>;
-  
+
   _vectorstoreType(): string {
     return "azure_cosmosdb_nosql";
   }
@@ -131,7 +131,9 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
       dbConfig.connectionString ??
       getEnvironmentVariable("AZURE_COSMOSDB_NOSQL_CONNECTION_STRING");
 
-    const endpoint = dbConfig.endpoint ?? getEnvironmentVariable("AZURE_COSMOSDB_NOSQL_ENDPOINT");
+    const endpoint =
+      dbConfig.endpoint ??
+      getEnvironmentVariable("AZURE_COSMOSDB_NOSQL_ENDPOINT");
 
     if (!dbConfig.client && !connectionString && !endpoint) {
       throw new Error(
@@ -206,7 +208,7 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
 
     // Deferring initialization to the first call to `initialize`
     this.initialize = () => {
-      if (!this.initPromise) {
+      if (this.initPromise === undefined) {
         this.initPromise = this.init(client, databaseName, containerName, {
           vectorEmbeddingPolicy,
           indexingPolicy,

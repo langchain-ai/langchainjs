@@ -1,4 +1,7 @@
-import { AzureCosmosDBMongoDBVectorStore, AzureCosmosDBMongoDBSimilarityType } from "@langchain/azure-cosmosdb";
+import {
+  AzureCosmosDBMongoDBVectorStore,
+  AzureCosmosDBMongoDBSimilarityType,
+} from "@langchain/azure-cosmosdb";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
 import { createStuffDocumentsChain } from "langchain/chains/combine_documents";
