@@ -11833,7 +11833,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/google-vertexai@workspace:*, @langchain/google-vertexai@workspace:libs/langchain-google-vertexai":
+"@langchain/google-vertexai@^0.0.22, @langchain/google-vertexai@workspace:*, @langchain/google-vertexai@workspace:libs/langchain-google-vertexai":
   version: 0.0.0-use.local
   resolution: "@langchain/google-vertexai@workspace:libs/langchain-google-vertexai"
   dependencies:
