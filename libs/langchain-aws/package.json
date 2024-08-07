@@ -1,6 +1,6 @@
 {
   "name": "@langchain/aws",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "description": "LangChain AWS integration",
   "type": "module",
   "engines": {
@@ -44,6 +44,7 @@
     "@aws-sdk/client-kendra": "^3.352.0",
     "@aws-sdk/credential-provider-node": "^3.600.0",
     "@langchain/core": ">=0.2.21 <0.3.0",
+    "zod": "^3.23.8",
     "zod-to-json-schema": "^3.22.5"
   },
   "devDependencies": {
