@@ -128,7 +128,7 @@ AI:`;
   const prompt = PromptTemplate.fromTemplate(TEMPLATE);
 
   const ollama = new ChatOllama({
-    model: "llama2",
+    model: "llama3",
     format: "json",
     maxRetries: 1,
   });

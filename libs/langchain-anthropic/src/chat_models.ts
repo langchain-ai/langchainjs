@@ -17,14 +17,12 @@ import {
   type ToolDefinition,
   isOpenAITool,
 } from "@langchain/core/language_models/base";
-import { StructuredToolInterface } from "@langchain/core/tools";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { BaseLLMOutputParser } from "@langchain/core/output_parsers";
 import {
   Runnable,
   RunnablePassthrough,
   RunnableSequence,
-  RunnableToolLike,
 } from "@langchain/core/runnables";
 import { isZodSchema } from "@langchain/core/utils/types";
 import { z } from "zod";
@@ -33,13 +31,9 @@ import type {
   Tool as AnthropicTool,
 } from "@anthropic-ai/sdk/resources/index.mjs";
 
+import { isLangChainTool } from "@langchain/core/utils/function_calling";
 import { AnthropicToolsOutputParser } from "./output_parsers.js";
-import {
-  AnthropicToolChoice,
-  AnthropicToolTypes,
-  extractToolCallChunk,
-  handleToolChoice,
-} from "./utils/tools.js";
+import { extractToolCallChunk, handleToolChoice } from "./utils/tools.js";
 import { _formatMessagesForAnthropic } from "./utils/message_inputs.js";
 import {
   _makeMessageChunkFromAnthropicEvent,
@@ -50,12 +44,14 @@ import {
   AnthropicMessageStreamEvent,
   AnthropicRequestOptions,
   AnthropicStreamingMessageCreateParams,
+  AnthropicToolChoice,
+  ChatAnthropicToolType,
 } from "./types.js";
 
 export interface ChatAnthropicCallOptions
   extends BaseChatModelCallOptions,
     Pick<AnthropicInput, "streamUsage"> {
-  tools?: AnthropicToolTypes[];
+  tools?: ChatAnthropicToolType[];
   /**
    * Whether or not to specify what tool the model should use
    * @default "auto"
@@ -182,8 +178,9 @@ function extractToken(chunk: AIMessageChunk): string | undefined {
 /**
  * Wrapper around Anthropic large language models.
  *
- * To use you should have the `@anthropic-ai/sdk` package installed, with the
- * `ANTHROPIC_API_KEY` environment variable set.
+ * To use this package, you should have an Anthropic API key set as an
+ * environment variable named `ANTHROPIC_API_KEY` or passed
+ * into the constructor.
  *
  * @remarks
  * Any parameters that are valid to be passed to {@link
@@ -343,21 +340,19 @@ export class ChatAnthropicMessages<
       throw new Error(`Can not pass in a mix of tool schemas to ChatAnthropic`);
     }
 
-    return (tools as StructuredToolInterface[]).map((tool) => ({
-      name: tool.name,
-      description: tool.description,
-      input_schema: zodToJsonSchema(tool.schema) as AnthropicTool.InputSchema,
-    }));
+    if (tools.every(isLangChainTool)) {
+      return tools.map((t) => ({
+        name: t.name,
+        description: t.description,
+        input_schema: zodToJsonSchema(t.schema) as AnthropicTool.InputSchema,
+      }));
+    }
+
+    throw new Error("Unsupported tool type passed to ChatAnthropic");
   }
 
   override bindTools(
-    tools: (
-      | AnthropicTool
-      | Record<string, unknown>
-      | StructuredToolInterface
-      | ToolDefinition
-      | RunnableToolLike
-    )[],
+    tools: ChatAnthropicToolType[],
     kwargs?: Partial<CallOptions>
   ): Runnable<BaseLanguageModelInput, AIMessageChunk, CallOptions> {
     return this.bind({

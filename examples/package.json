@@ -24,7 +24,7 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@azure/identity": "^4.2.0",
+    "@azure/identity": "^4.2.1",
     "@clickhouse/client": "^0.2.5",
     "@elastic/elasticsearch": "^8.4.0",
     "@faker-js/faker": "^8.4.1",
@@ -69,7 +69,7 @@
     "@qdrant/js-client-rest": "^1.9.0",
     "@raycast/api": "^1.55.2",
     "@rockset/client": "^0.9.1",
-    "@supabase/supabase-js": "^2.10.0",
+    "@supabase/supabase-js": "^2.45.0",
     "@tensorflow/tfjs-backend-cpu": "^4.4.0",
     "@upstash/redis": "^1.32.0",
     "@upstash/vector": "^1.1.1",

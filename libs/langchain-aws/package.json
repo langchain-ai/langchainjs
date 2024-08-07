@@ -1,6 +1,6 @@
 {
   "name": "@langchain/aws",
-  "version": "0.0.6",
+  "version": "0.0.9",
   "description": "LangChain AWS integration",
   "type": "module",
   "engines": {
@@ -43,7 +43,8 @@
     "@aws-sdk/client-bedrock-runtime": "^3.602.0",
     "@aws-sdk/client-kendra": "^3.352.0",
     "@aws-sdk/credential-provider-node": "^3.600.0",
-    "@langchain/core": ">=0.2.16 <0.3.0",
+    "@langchain/core": ">=0.2.21 <0.3.0",
+    "zod": "^3.23.8",
     "zod-to-json-schema": "^3.22.5"
   },
   "devDependencies": {
@@ -68,7 +69,7 @@
     "jest": "^29.5.0",
     "jest-environment-node": "^29.6.4",
     "prettier": "^2.8.3",
-    "release-it": "^15.10.1",
+    "release-it": "^17.6.0",
     "rollup": "^4.5.2",
     "ts-jest": "^29.1.0",
     "typescript": "<5.2.0",

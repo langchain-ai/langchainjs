@@ -1,10 +1,22 @@
 import * as uuid from "uuid";
-import type { ChromaClient as ChromaClientT, Collection } from "chromadb";
+import type {
+  ChromaClient as ChromaClientT,
+  Collection,
+  ChromaClientParams,
+} from "chromadb";
 import type { CollectionMetadata, Where } from "chromadb/dist/main/types.js";
 
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { VectorStore } from "@langchain/core/vectorstores";
 import { Document } from "@langchain/core/documents";
+
+type SharedChromaLibArgs = {
+  numDimensions?: number;
+  collectionName?: string;
+  filter?: object;
+  collectionMetadata?: CollectionMetadata;
+  clientParams?: Omit<ChromaClientParams, "path">;
+};
 
 /**
  * Defines the arguments that can be passed to the `Chroma` class
@@ -16,20 +28,12 @@ import { Document } from "@langchain/core/documents";
  * `filter`.
  */
 export type ChromaLibArgs =
-  | {
+  | ({
       url?: string;
-      numDimensions?: number;
-      collectionName?: string;
-      filter?: object;
-      collectionMetadata?: CollectionMetadata;
-    }
-  | {
+    } & SharedChromaLibArgs)
+  | ({
       index?: ChromaClientT;
-      numDimensions?: number;
-      collectionName?: string;
-      filter?: object;
-      collectionMetadata?: CollectionMetadata;
-    };
+    } & SharedChromaLibArgs);
 
 /**
  * Defines the parameters for the `delete` method in the `Chroma` class.
@@ -59,6 +63,8 @@ export class Chroma extends VectorStore {
 
   numDimensions?: number;
 
+  clientParams?: Omit<ChromaClientParams, "path">;
+
   url: string;
 
   filter?: object;
@@ -73,6 +79,7 @@ export class Chroma extends VectorStore {
     this.embeddings = embeddings;
     this.collectionName = ensureCollectionName(args.collectionName);
     this.collectionMetadata = args.collectionMetadata;
+    this.clientParams = args.clientParams;
     if ("index" in args) {
       this.index = args.index;
     } else if ("url" in args) {
@@ -109,6 +116,7 @@ export class Chroma extends VectorStore {
       if (!this.index) {
         const chromaClient = new (await Chroma.imports()).ChromaClient({
           path: this.url,
+          ...(this.clientParams ?? {}),
         });
         this.index = chromaClient;
       }

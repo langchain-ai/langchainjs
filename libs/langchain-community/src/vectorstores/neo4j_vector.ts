@@ -403,7 +403,7 @@ export class Neo4jVectorStore extends VectorStore {
       const data = await store.query(fetchQuery, { props: textNodeProperties });
 
       if (!data) {
-        continue;
+        break;
       }
 
       const textEmbeddings = await embeddings.embedDocuments(

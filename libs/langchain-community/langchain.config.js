@@ -27,7 +27,8 @@ export const config = {
     "pdf-parse/lib/pdf.js/v1.10.100/build/pdf.js",
     "web-auth-library/google",
     "notion-to-md/build/utils/notion.js",
-    "@getzep/zep-cloud/api"
+    "@getzep/zep-cloud/api",
+    "@supabase/postgrest-js",
   ],
   entrypoints: {
     load: "load/index",
