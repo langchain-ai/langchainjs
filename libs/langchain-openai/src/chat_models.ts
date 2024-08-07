@@ -20,10 +20,10 @@ import {
   ChatGenerationChunk,
   type ChatResult,
 } from "@langchain/core/outputs";
-import { type StructuredToolInterface } from "@langchain/core/tools";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import {
   BaseChatModel,
+  BindToolsInput,
   LangSmithParams,
   type BaseChatModelParams,
 } from "@langchain/core/language_models/chat_models";
@@ -42,7 +42,6 @@ import {
   Runnable,
   RunnablePassthrough,
   RunnableSequence,
-  RunnableToolLike,
 } from "@langchain/core/runnables";
 import {
   JsonOutputParser,
@@ -275,12 +274,7 @@ function convertMessagesToOpenAIParams(messages: BaseMessage[]) {
   });
 }
 
-type ChatOpenAIToolType =
-  | StructuredToolInterface
-  | OpenAIClient.ChatCompletionTool
-  | RunnableToolLike
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  | Record<string, any>;
+type ChatOpenAIToolType = BindToolsInput | OpenAIClient.ChatCompletionTool;
 
 function _convertChatOpenAIToolTypeToOpenAITool(
   tool: ChatOpenAIToolType,
