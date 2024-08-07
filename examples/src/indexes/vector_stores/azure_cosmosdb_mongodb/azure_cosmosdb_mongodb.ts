@@ -1,7 +1,7 @@
 import {
-  AzureCosmosDBVectorStore,
-  AzureCosmosDBSimilarityType,
-} from "@langchain/community/vectorstores/azure_cosmosdb";
+  AzureCosmosDBMongoDBVectorStore,
+  AzureCosmosDBMongoDBSimilarityType,
+} from "@langchain/azure-cosmosdb";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
 import { createStuffDocumentsChain } from "langchain/chains/combine_documents";
@@ -18,8 +18,8 @@ const splitter = new RecursiveCharacterTextSplitter({
 });
 const documents = await splitter.splitDocuments(rawDocuments);
 
-// Create Azure Cosmos DB vector store
-const store = await AzureCosmosDBVectorStore.fromDocuments(
+// Create Azure Cosmos DB for MongoDB vCore vector store
+const store = await AzureCosmosDBMongoDBVectorStore.fromDocuments(
   documents,
   new OpenAIEmbeddings(),
   {
@@ -28,7 +28,7 @@ const store = await AzureCosmosDBVectorStore.fromDocuments(
     indexOptions: {
       numLists: 100,
       dimensions: 1536,
-      similarity: AzureCosmosDBSimilarityType.COS,
+      similarity: AzureCosmosDBMongoDBSimilarityType.COS,
     },
   }
 );
