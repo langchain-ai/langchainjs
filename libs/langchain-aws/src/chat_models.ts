@@ -53,6 +53,10 @@ import {
   CredentialType,
 } from "./types.js";
 
+// Models which support the `toolChoice` param.
+// See https://docs.aws.amazon.com/bedrock/latest/APIReference/API_runtime_ToolChoice.html
+const ALLOWED_TOOL_CHOICE_MODELS_PREFIX = ["anthropic.claude-3", "mistral.mistral-large"]
+
 /**
  * Inputs for ChatBedrockConverse.
  */
@@ -298,6 +302,11 @@ export class ChatBedrockConverse
     AIMessageChunk,
     this["ParsedCallOptions"]
   > {
+    if (kwargs?.tool_choice) {
+      if (!ALLOWED_TOOL_CHOICE_MODELS_PREFIX.find((prefix) => this.model.startsWith(prefix))) {
+        throw new Error("Only Anthropic Claude 3 and Mistral Large models support the tool_choice parameter.");
+      }
+    }
     return this.bind({ tools: convertToConverseTools(tools), ...kwargs });
   }
 
@@ -484,11 +493,6 @@ export class ChatBedrockConverse
           parsed: RunOutput;
         }
       > {
-    if (typeof this.bindTools !== "function") {
-      throw new Error(
-        `Chat model must implement ".bindTools()" to use withStructuredOutput.`
-      );
-    }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const schema: z.ZodType<RunOutput> | Record<string, any> = outputSchema;
     const name = config?.name;
@@ -497,7 +501,7 @@ export class ChatBedrockConverse
     const includeRaw = config?.includeRaw;
     if (method === "jsonMode") {
       throw new Error(
-        `Base withStructuredOutput implementation only supports "functionCalling" as a method.`
+        `ChatBedrockConverse does not support 'jsonMode'.`
       );
     }
 
@@ -530,9 +534,10 @@ export class ChatBedrockConverse
       ];
     }
 
-    const llm = this.bindTools(tools, {
+    const toolChoiceObj = ALLOWED_TOOL_CHOICE_MODELS_PREFIX.find((prefix) => this.model.startsWith(prefix)) ? {
       tool_choice: tools[0].function.name,
-    });
+    } : undefined
+    const llm = this.bindTools(tools, toolChoiceObj);
     const outputParser = RunnableLambda.from<AIMessageChunk, RunOutput>(
       (input: AIMessageChunk): RunOutput => {
         if (!input.tool_calls || input.tool_calls.length === 0) {

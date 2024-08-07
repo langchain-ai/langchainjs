@@ -15,6 +15,9 @@ import {
   convertToConverseMessages,
   handleConverseStreamContentBlockDelta,
 } from "../common.js";
+import { ChatBedrockConverse } from "../chat_models.js";
+import { z } from "zod";
+import { describe, expect, test } from "@jest/globals";
 
 describe("convertToConverseMessages", () => {
   const testCases: {
@@ -336,4 +339,164 @@ test("Streaming supports empty string chunks", async () => {
   expect(finalChunk).toBeDefined();
   if (!finalChunk) return;
   expect(finalChunk.content).toBe("Hello world!");
+});
+
+describe("tool_choice works for supported models", () => {
+  const tool = {
+    name: "weather",
+    schema: z.object({
+      location: z.string(),
+    })
+  }
+  const baseConstructorArgs = {
+    region: "us-east-1",
+    credentials: {
+      secretAccessKey: "process.env.BEDROCK_AWS_SECRET_ACCESS_KEY",
+      accessKeyId: "process.env.BEDROCK_AWS_ACCESS_KEY_ID",
+    },
+  }
+
+  it("throws an error if passing tool_choice with unsupported models", async () => {
+    // Claude 2 should throw
+    const claude2Model = new ChatBedrockConverse({
+      ...baseConstructorArgs,
+      model: "anthropic.claude-v2"
+    })
+    expect(() => claude2Model.bindTools([tool], {
+      tool_choice: tool.name,
+    })).toThrow();
+  
+    // Cohere should throw
+    const cohereModel = new ChatBedrockConverse({
+      ...baseConstructorArgs,
+      model: "cohere.command-text-v14"
+    })
+    expect(() => cohereModel.bindTools([tool], {
+      tool_choice: tool.name,
+    })).toThrow();
+  
+    // Mistral (not mistral large) should throw
+    const mistralModel = new ChatBedrockConverse({
+      ...baseConstructorArgs,
+      model: "mistral.mistral-7b-instruct-v0:2"
+    })
+    expect(() => mistralModel.bindTools([tool], {
+      tool_choice: tool.name,
+    })).toThrow();
+  })
+  
+  it("does NOT throw and binds tool_choice when calling bindTools with supported models", async () => {
+    // Claude 3 should NOT throw
+    const claude3Model = new ChatBedrockConverse({
+      ...baseConstructorArgs,
+      model: "anthropic.claude-3-5-sonnet-20240620-v1:0"
+    })
+    const claude3ModelWithTool = claude3Model.bindTools([tool], {
+      tool_choice: tool.name,
+    })
+    expect(claude3ModelWithTool).toBeDefined();
+    const claude3ModelWithToolAsJSON = claude3ModelWithTool.toJSON();
+    if (!("kwargs" in claude3ModelWithToolAsJSON)) {
+      throw new Error("kwargs not found in claude3ModelWithToolAsJSON");
+    }
+    expect(claude3ModelWithToolAsJSON.kwargs.kwargs).toHaveProperty("tool_choice");
+    expect(claude3ModelWithToolAsJSON.kwargs.kwargs.tool_choice).toBe(tool.name);
+  
+    // Mistral large should NOT throw
+    const mistralModel = new ChatBedrockConverse({
+      ...baseConstructorArgs,
+      model: "mistral.mistral-large-2407-v1:0"
+    })
+    const mistralModelWithTool = mistralModel.bindTools([tool], {
+      tool_choice: tool.name,
+    });
+    expect(mistralModelWithTool).toBeDefined();
+    const mistralModelWithToolAsJSON = mistralModelWithTool.toJSON();
+    if (!("kwargs" in mistralModelWithToolAsJSON)) {
+      throw new Error("kwargs not found in mistralModelWithToolAsJSON");
+    }
+    expect(mistralModelWithToolAsJSON.kwargs.kwargs).toHaveProperty("tool_choice");
+    expect(mistralModelWithToolAsJSON.kwargs.kwargs.tool_choice).toBe(tool.name);
+  })
+  
+  it("should NOT bind and NOT throw when using WSO with unsupported models", async () => {
+    // Claude 2 should NOT throw is using WSO
+    const claude2Model = new ChatBedrockConverse({
+      ...baseConstructorArgs,
+      model: "anthropic.claude-v2"
+    })
+    const claude2ModelWSO = claude2Model.withStructuredOutput(tool.schema, {
+      name: tool.name,
+    })
+    expect(claude2ModelWSO).toBeDefined();
+    const claude2ModelWSOAsJSON = claude2ModelWSO.toJSON();
+    if (!("kwargs" in claude2ModelWSOAsJSON)) {
+      throw new Error("kwargs not found in claude2ModelWSOAsJSON");
+    }
+    expect(claude2ModelWSOAsJSON.kwargs.bound.first.kwargs).not.toHaveProperty("tool_choice");
+  
+    // Cohere should NOT throw is using WSO
+    const cohereModel = new ChatBedrockConverse({
+      ...baseConstructorArgs,
+      model: "cohere.command-text-v14"
+    })
+    const cohereModelWSO = cohereModel.withStructuredOutput(tool.schema, {
+      name: tool.name,
+    })
+    expect(cohereModelWSO).toBeDefined();
+    const cohereModelWSOAsJSON = cohereModelWSO.toJSON();
+    if (!("kwargs" in cohereModelWSOAsJSON)) {
+      throw new Error("kwargs not found in cohereModelWSOAsJSON");
+    }
+    expect(cohereModelWSOAsJSON.kwargs.bound.first.kwargs).not.toHaveProperty("tool_choice");
+  
+    // Mistral (not mistral large) should NOT throw is using WSO
+    const mistralModel = new ChatBedrockConverse({
+      ...baseConstructorArgs,
+      model: "mistral.mistral-7b-instruct-v0:2"
+    })
+    const mistralModelWSO = mistralModel.withStructuredOutput(tool.schema, {
+      name: tool.name,
+    })
+    expect(mistralModelWSO).toBeDefined();
+    const mistralModelWSOAsJSON = mistralModelWSO.toJSON();
+    if (!("kwargs" in mistralModelWSOAsJSON)) {
+      throw new Error("kwargs not found in mistralModelWSOAsJSON");
+    }
+    expect(mistralModelWSOAsJSON.kwargs.bound.first.kwargs).not.toHaveProperty("tool_choice");
+  })
+  
+  it("should bind tool_choice when using WSO with supported models", async () => {
+    // Claude 3 should NOT throw is using WSO & it should have `tool_choice` bound.
+    const claude3Model = new ChatBedrockConverse({
+      ...baseConstructorArgs,
+      model: "anthropic.claude-3-5-sonnet-20240620-v1:0"
+    })
+    const claude3ModelWSO = claude3Model.withStructuredOutput(tool.schema, {
+      name: tool.name,
+    })
+    expect(claude3ModelWSO).toBeDefined();
+    const claude3ModelWSOAsJSON = claude3ModelWSO.toJSON();
+    if (!("kwargs" in claude3ModelWSOAsJSON)) {
+      throw new Error("kwargs not found in claude3ModelWSOAsJSON");
+    }
+    expect(claude3ModelWSOAsJSON.kwargs.bound.first.kwargs).toHaveProperty("tool_choice");
+    expect(claude3ModelWSOAsJSON.kwargs.bound.first.kwargs.tool_choice).toBe(tool.name);
+  
+    // Mistral (not mistral large) should NOT throw is using WSO
+    const mistralModel = new ChatBedrockConverse({
+      ...baseConstructorArgs,
+      model: "mistral.mistral-large-2407-v1:0"
+    })
+    const mistralModelWSO = mistralModel.withStructuredOutput(tool.schema, {
+      name: tool.name,
+    })
+    expect(mistralModelWSO).toBeDefined();
+    const mistralModelWSOAsJSON = mistralModelWSO.toJSON();
+    if (!("kwargs" in mistralModelWSOAsJSON)) {
+      throw new Error("kwargs not found in mistralModelWSOAsJSON");
+    }
+    expect(mistralModelWSOAsJSON.kwargs.bound.first.kwargs).toHaveProperty("tool_choice");
+    expect(mistralModelWSOAsJSON.kwargs.bound.first.kwargs.tool_choice).toBe(tool.name);
+  })
 });
