@@ -53,7 +53,7 @@ jobs:
         # Running `test:unit:ci` from root will build first, however debugging
         # in CI is easier if we separate the build step from the test step.
       - name: Build LangChain
-        run: yarn build ==filter=langchain
+        run: yarn build --filter=langchain
       - name: Test
         run: yarn run test:unit:ci --filter=langchain
         env:
