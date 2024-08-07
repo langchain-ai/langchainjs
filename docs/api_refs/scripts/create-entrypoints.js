@@ -11,9 +11,7 @@ const BASE_TYPEDOC_CONFIG = {
     "required-first",
     "alphabetical",
   ],
-  plugin: [
-    "./typedoc_plugins/hide_underscore_lc.js",
-  ],
+  plugin: ["./typedoc_plugins/hide_underscore_lc.js"],
   tsconfig: "../../tsconfig.json",
   readme: "none",
   excludePrivate: true,

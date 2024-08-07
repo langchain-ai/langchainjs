@@ -376,9 +376,9 @@ export interface ChatOpenAIFields
  * npm install @langchain/openai
  * export OPENAI_API_KEY="your-api-key"
  * ```
- * 
+ *
  * ## Key args
- * 
+ *
  * ### Key init args — completion params:
  * @param {string} model - Name of OpenAI model to use.
  * @param {number} temperature - Sampling temperature.
@@ -405,7 +405,7 @@ export interface ChatOpenAIFields
  * @param {boolean | undefined} strict - Whether or not to force the model to return structured output which exactly matches the schema.
  *
  * See full list of supported init args and their descriptions in the params section.
- * 
+ *
  * @example
  * ```typescript
  * import { ChatOpenAI } from '@langchain/openai';
