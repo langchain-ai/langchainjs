@@ -15,6 +15,7 @@ import {
   convertToConverseMessages,
   handleConverseStreamContentBlockDelta,
 } from "../common.js";
+import { describe, test, expect, it } from "@jest/globals";
 
 describe("convertToConverseMessages", () => {
   const testCases: {
