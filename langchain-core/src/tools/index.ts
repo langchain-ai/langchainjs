@@ -48,6 +48,14 @@ export interface ToolParams extends BaseLangChainParams {
   responseFormat?: ResponseFormat;
 }
 
+export interface StructuredToolParams
+  extends Pick<StructuredToolInterface, "name" | "schema"> {
+  /**
+   * An optional description of the tool to pass to the model.
+   */
+  description?: string;
+}
+
 export interface StructuredToolInterface<T extends ZodObjectAny = ZodObjectAny>
   extends RunnableInterface<
     (z.output<T> extends string ? string : never) | z.input<T> | ToolCall,
@@ -55,6 +63,9 @@ export interface StructuredToolInterface<T extends ZodObjectAny = ZodObjectAny>
   > {
   lc_namespace: string[];
 
+  /**
+   * A Zod schema representing the parameters of the tool.
+   */
   schema: T | z.ZodEffects<T>;
 
   /**
@@ -75,8 +86,14 @@ export interface StructuredToolInterface<T extends ZodObjectAny = ZodObjectAny>
     tags?: string[]
   ): Promise<ToolReturnType>;
 
+  /**
+   * The name of the tool.
+   */
   name: string;
 
+  /**
+   * A description of the tool.
+   */
   description: string;
 
   returnDirect: boolean;

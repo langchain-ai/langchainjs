@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.2.12",
+  "version": "0.2.13",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -617,7 +617,7 @@
     "@langchain/aws": "^0.0.5",
     "@langchain/cohere": "^0.2.1",
     "@langchain/google-genai": "^0.0.23",
-    "@langchain/google-vertexai": "^0.0.21",
+    "@langchain/google-vertexai": "^0.0.22",
     "@langchain/groq": "^0.0.15",
     "@langchain/mistralai": "^0.0.26",
     "@langchain/ollama": "^0.0.2",
@@ -934,7 +934,7 @@
     }
   },
   "dependencies": {
-    "@langchain/core": ">=0.2.11 <0.3.0",
+    "@langchain/core": ">=0.2.21 <0.3.0",
     "@langchain/openai": ">=0.1.0 <0.3.0",
     "@langchain/textsplitters": "~0.0.0",
     "binary-extensions": "^2.2.0",
