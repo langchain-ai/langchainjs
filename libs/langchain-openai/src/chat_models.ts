@@ -318,19 +318,6 @@ export interface ChatOpenAIStructuredOutputMethodOptions<
   strict?: boolean;
 }
 
-/**
- * @typedef {Object} ChatOpenAICallOptions
- * @extends OpenAICallOptions
- * @extends BaseFunctionCallOptions
- * @property {ChatOpenAIToolType[]} [tools] - Array of tools to be used by the model.
- * @property {OpenAIToolChoice} [tool_choice] - Specifies how the model should choose tools.
- * @property {number} [promptIndex] - Index of the prompt to use.
- * @property {{ type: "json_object" }} [response_format] - Specifies the format of the response.
- * @property {number} [seed] - Seed for deterministic sampling.
- * @property {{ include_usage: boolean }} [stream_options] - Options for streamed completions.
- * @property {boolean} [parallel_tool_calls] - Whether to allow parallel tool calls.
- * @property {boolean} [strict] - Whether to enforce strict schema validation.
- */
 export interface ChatOpenAICallOptions
   extends OpenAICallOptions,
     BaseFunctionCallOptions {
@@ -411,14 +398,18 @@ export interface ChatOpenAIFields
  * console.log(message);
  *
  * ```
- * 
- * 
  * @extends {BaseChatModel<CallOptions, AIMessageChunk>}
- * @implements {OpenAIChatInput}
- * @implements {AzureOpenAIInput}
+ * 
+ * @param {ChatOpenAICallOptions} callOptions - The call options for the ChatOpenAI instance
+ * @param {ChatOpenAIToolType[]} [callOptions.tools] - The tools to use with the model
+ * @param {OpenAIToolChoice} [callOptions.tool_choice] - The tool choice configuration
+ * @param {number} [callOptions.promptIndex] - The index of the prompt to use
+ * @param {{ type: "json_object" }} [callOptions.response_format] - The format of the response
+ * @param {number} [callOptions.seed] - The seed for random number generation
+ * @param {{ include_usage: boolean }} [callOptions.stream_options] - Options for streamed completions
+ * @param {boolean} [callOptions.parallel_tool_calls] - Whether to allow parallel tool calls
+ * @param {boolean} [callOptions.strict] - Whether to use strict mode for JSON schema validation
  */
-
-/** {@inheritDoc ChatOpenAICallOptions} */
 export class ChatOpenAI<
     CallOptions extends ChatOpenAICallOptions = ChatOpenAICallOptions
   >
