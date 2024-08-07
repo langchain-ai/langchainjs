@@ -35,6 +35,7 @@ import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {
   type BaseChatModelParams,
   BaseChatModel,
+  BindToolsInput,
   LangSmithParams,
 } from "@langchain/core/language_models/chat_models";
 
@@ -45,7 +46,6 @@ import {
 } from "@langchain/core/outputs";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { NewTokenIndices } from "@langchain/core/callbacks/base";
-import { StructuredTool, StructuredToolInterface } from "@langchain/core/tools";
 import { z } from "zod";
 import {
   type BaseLLMOutputParser,
@@ -62,7 +62,6 @@ import {
   Runnable,
   RunnablePassthrough,
   RunnableSequence,
-  RunnableToolLike,
 } from "@langchain/core/runnables";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { ToolCallChunk } from "@langchain/core/messages/tool";
@@ -78,12 +77,17 @@ export type MistralAIToolChoice = "auto" | "any" | "none";
 
 type MistralAIToolInput = { type: string; function: MistralAIFunction };
 
+type ChatMistralAIToolType =
+  | MistralAIToolInput
+  | MistralAITool
+  | BindToolsInput;
+
 export interface ChatMistralAICallOptions
   extends Omit<BaseLanguageModelCallOptions, "stop"> {
   response_format?: {
     type: "text" | "json_object";
   };
-  tools: StructuredToolInterface[] | MistralAIToolInput[] | MistralAITool[];
+  tools: ChatMistralAIToolType[];
   tool_choice?: MistralAIToolChoice;
   /**
    * Whether or not to include token usage in the stream.
@@ -385,10 +389,14 @@ function _convertDeltaToMessageChunk(
   }
 }
 
-function _convertStructuredToolToMistralTool(
-  tools: StructuredToolInterface[]
+function _convertToolToMistralTool(
+  tools: ChatMistralAIToolType[]
 ): MistralAITool[] {
   return tools.map((tool) => {
+    if ("function" in tool) {
+      return tool as MistralAITool;
+    }
+
     const description = tool.description ?? `Tool: ${tool.name}`;
     return {
       type: "function",
@@ -491,24 +499,9 @@ export class ChatMistralAI<
     options?: this["ParsedCallOptions"]
   ): Omit<ChatRequest, "messages"> {
     const { response_format, tools, tool_choice } = options ?? {};
-    const mistralAITools: Array<MistralAITool> | undefined = tools
-      ?.map((tool) => {
-        if ("lc_namespace" in tool) {
-          return _convertStructuredToolToMistralTool([tool]);
-        }
-        if (!tool.function.description) {
-          return {
-            type: "function",
-            function: {
-              name: tool.function.name,
-              description: `Tool: ${tool.function.name}`,
-              parameters: tool.function.parameters,
-            },
-          } as MistralAITool;
-        }
-        return tool as MistralAITool;
-      })
-      .flat();
+    const mistralAITools: Array<MistralAITool> | undefined = tools?.length
+      ? _convertToolToMistralTool(tools)
+      : undefined;
     const params: Omit<ChatRequest, "messages"> = {
       model: this.model,
       tools: mistralAITools,
@@ -525,23 +518,11 @@ export class ChatMistralAI<
   }
 
   override bindTools(
-    tools: (
-      | Record<string, unknown>
-      | StructuredToolInterface
-      | RunnableToolLike
-    )[],
+    tools: ChatMistralAIToolType[],
     kwargs?: Partial<CallOptions>
   ): Runnable<BaseLanguageModelInput, AIMessageChunk, CallOptions> {
-    const mistralAITools = tools
-      ?.map((tool) => {
-        if ("lc_namespace" in tool) {
-          return _convertStructuredToolToMistralTool([tool as StructuredTool]);
-        }
-        return tool;
-      })
-      .flat();
     return this.bind({
-      tools: mistralAITools,
+      tools: _convertToolToMistralTool(tools),
       ...kwargs,
     } as CallOptions);
   }
