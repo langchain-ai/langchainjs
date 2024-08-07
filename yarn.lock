@@ -10932,7 +10932,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/azure-cosmosdb@workspace:libs/langchain-azure-cosmosdb":
+"@langchain/azure-cosmosdb@workspace:*, @langchain/azure-cosmosdb@workspace:libs/langchain-azure-cosmosdb":
   version: 0.0.0-use.local
   resolution: "@langchain/azure-cosmosdb@workspace:libs/langchain-azure-cosmosdb"
   dependencies:
@@ -26642,6 +26642,7 @@ __metadata:
     "@google/generative-ai": ^0.7.0
     "@langchain/anthropic": "workspace:*"
     "@langchain/aws": "workspace:*"
+    "@langchain/azure-cosmosdb": "workspace:*"
     "@langchain/azure-dynamic-sessions": "workspace:^"
     "@langchain/azure-openai": "workspace:*"
     "@langchain/baidu-qianfan": "workspace:*"
