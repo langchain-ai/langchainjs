@@ -53,13 +53,6 @@ import {
   CredentialType,
 } from "./types.js";
 
-// Models which support the `toolChoice` param.
-// See https://docs.aws.amazon.com/bedrock/latest/APIReference/API_runtime_ToolChoice.html
-const ALLOWED_TOOL_CHOICE_MODELS_PREFIX = [
-  "anthropic.claude-3",
-  "mistral.mistral-large",
-];
-
 /**
  * Inputs for ChatBedrockConverse.
  */
@@ -139,6 +132,14 @@ export interface ChatBedrockConverseInput
    * Configuration information for a guardrail that you want to use in the request.
    */
   guardrailConfig?: GuardrailConfiguration;
+
+  /**
+   * Which types of `tool_choice` values the model supports.
+   *
+   * Inferred if not specified. Inferred as ['auto', 'any', 'tool'] if a 'claude-3'
+   * model is used, ['auto', 'any'] if a 'mistral-large' model is used, empty otherwise.
+   */
+  supportsToolChoiceValues?: Array<"auto" | "any" | "tool">;
 }
 
 export interface ChatBedrockConverseCallOptions
@@ -233,6 +234,14 @@ export class ChatBedrockConverse
 
   client: BedrockRuntimeClient;
 
+  /**
+   * Which types of `tool_choice` values the model supports.
+   *
+   * Inferred if not specified. Inferred as ['auto', 'any', 'tool'] if a 'claude-3'
+   * model is used, ['auto', 'any'] if a 'mistral-large' model is used, empty otherwise.
+   */
+  supportsToolChoiceValues?: Array<"auto" | "any" | "tool">;
+
   constructor(fields?: ChatBedrockConverseInput) {
     super(fields ?? {});
     const {
@@ -283,6 +292,18 @@ export class ChatBedrockConverse
     this.additionalModelRequestFields = rest?.additionalModelRequestFields;
     this.streamUsage = rest?.streamUsage ?? this.streamUsage;
     this.guardrailConfig = rest?.guardrailConfig;
+
+    if (rest?.supportsToolChoiceValues === undefined) {
+      if (this.model.includes("claude-3")) {
+        this.supportsToolChoiceValues = ["auto", "any", "tool"];
+      } else if (this.model.includes("mistral-large")) {
+        this.supportsToolChoiceValues = ["auto", "any"];
+      } else {
+        this.supportsToolChoiceValues = undefined;
+      }
+    } else {
+      this.supportsToolChoiceValues = rest.supportsToolChoiceValues;
+    }
   }
 
   getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
@@ -305,17 +326,6 @@ export class ChatBedrockConverse
     AIMessageChunk,
     this["ParsedCallOptions"]
   > {
-    if (kwargs?.tool_choice) {
-      if (
-        !ALLOWED_TOOL_CHOICE_MODELS_PREFIX.find((prefix) =>
-          this.model.startsWith(prefix)
-        )
-      ) {
-        throw new Error(
-          "Only Anthropic Claude 3 and Mistral Large models support the tool_choice parameter."
-        );
-      }
-    }
     return this.bind({ tools: convertToConverseTools(tools), ...kwargs });
   }
 
@@ -333,7 +343,10 @@ export class ChatBedrockConverse
       toolConfig = {
         tools,
         toolChoice: options.tool_choice
-          ? convertToBedrockToolChoice(options.tool_choice, tools)
+          ? convertToBedrockToolChoice(options.tool_choice, tools, {
+              model: this.model,
+              supportsToolChoiceValues: this.supportsToolChoiceValues,
+            })
           : undefined,
       };
     }
@@ -541,13 +554,18 @@ export class ChatBedrockConverse
       ];
     }
 
-    const toolChoiceObj = ALLOWED_TOOL_CHOICE_MODELS_PREFIX.find((prefix) =>
-      this.model.startsWith(prefix)
-    )
-      ? {
-          tool_choice: tools[0].function.name,
-        }
-      : undefined;
+    const supportsToolChoiceValues = this.supportsToolChoiceValues ?? [];
+    let toolChoiceObj: { tool_choice: string } | undefined;
+    if (supportsToolChoiceValues.includes("tool")) {
+      toolChoiceObj = {
+        tool_choice: tools[0].function.name,
+      };
+    } else if (supportsToolChoiceValues.includes("any")) {
+      toolChoiceObj = {
+        tool_choice: "any",
+      };
+    }
+
     const llm = this.bindTools(tools, toolChoiceObj);
     const outputParser = RunnableLambda.from<AIMessageChunk, RunOutput>(
       (input: AIMessageChunk): RunOutput => {

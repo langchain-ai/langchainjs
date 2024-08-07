@@ -355,6 +355,15 @@ describe("tool_choice works for supported models", () => {
       accessKeyId: "process.env.BEDROCK_AWS_ACCESS_KEY_ID",
     },
   };
+  const supportsToolChoiceValuesClaude3: Array<"auto" | "any" | "tool"> = [
+    "auto",
+    "any",
+    "tool",
+  ];
+  const supportsToolChoiceValuesMistralLarge: Array<"auto" | "any" | "tool"> = [
+    "auto",
+    "any",
+  ];
 
   it("throws an error if passing tool_choice with unsupported models", async () => {
     // Claude 2 should throw
@@ -362,33 +371,30 @@ describe("tool_choice works for supported models", () => {
       ...baseConstructorArgs,
       model: "anthropic.claude-v2",
     });
-    expect(() =>
-      claude2Model.bindTools([tool], {
-        tool_choice: tool.name,
-      })
-    ).toThrow();
+    const claude2WithTool = claude2Model.bindTools([tool], {
+      tool_choice: tool.name,
+    });
+    await expect(claude2WithTool.invoke("foo")).rejects.toThrow();
 
     // Cohere should throw
     const cohereModel = new ChatBedrockConverse({
       ...baseConstructorArgs,
       model: "cohere.command-text-v14",
     });
-    expect(() =>
-      cohereModel.bindTools([tool], {
-        tool_choice: tool.name,
-      })
-    ).toThrow();
+    const cohereModelWithTool = cohereModel.bindTools([tool], {
+      tool_choice: tool.name,
+    });
+    await expect(cohereModelWithTool.invoke("foo")).rejects.toThrow();
 
     // Mistral (not mistral large) should throw
     const mistralModel = new ChatBedrockConverse({
       ...baseConstructorArgs,
       model: "mistral.mistral-7b-instruct-v0:2",
     });
-    expect(() =>
-      mistralModel.bindTools([tool], {
-        tool_choice: tool.name,
-      })
-    ).toThrow();
+    const mistralModelWithTool = mistralModel.bindTools([tool], {
+      tool_choice: tool.name,
+    });
+    await expect(mistralModelWithTool.invoke("foo")).rejects.toThrow();
   });
 
   it("does NOT throw and binds tool_choice when calling bindTools with supported models", async () => {
@@ -396,6 +402,7 @@ describe("tool_choice works for supported models", () => {
     const claude3Model = new ChatBedrockConverse({
       ...baseConstructorArgs,
       model: "anthropic.claude-3-5-sonnet-20240620-v1:0",
+      supportsToolChoiceValues: supportsToolChoiceValuesClaude3,
     });
     const claude3ModelWithTool = claude3Model.bindTools([tool], {
       tool_choice: tool.name,
@@ -416,6 +423,7 @@ describe("tool_choice works for supported models", () => {
     const mistralModel = new ChatBedrockConverse({
       ...baseConstructorArgs,
       model: "mistral.mistral-large-2407-v1:0",
+      supportsToolChoiceValues: supportsToolChoiceValuesMistralLarge,
     });
     const mistralModelWithTool = mistralModel.bindTools([tool], {
       tool_choice: tool.name,
@@ -491,6 +499,8 @@ describe("tool_choice works for supported models", () => {
     const claude3Model = new ChatBedrockConverse({
       ...baseConstructorArgs,
       model: "anthropic.claude-3-5-sonnet-20240620-v1:0",
+      // We are not passing the `supportsToolChoiceValues` arg here as
+      // it should be inferred from the model name.
     });
     const claude3ModelWSO = claude3Model.withStructuredOutput(tool.schema, {
       name: tool.name,
@@ -511,6 +521,8 @@ describe("tool_choice works for supported models", () => {
     const mistralModel = new ChatBedrockConverse({
       ...baseConstructorArgs,
       model: "mistral.mistral-large-2407-v1:0",
+      // We are not passing the `supportsToolChoiceValues` arg here as
+      // it should be inferred from the model name.
     });
     const mistralModelWSO = mistralModel.withStructuredOutput(tool.schema, {
       name: tool.name,
@@ -523,8 +535,9 @@ describe("tool_choice works for supported models", () => {
     expect(mistralModelWSOAsJSON.kwargs.bound.first.kwargs).toHaveProperty(
       "tool_choice"
     );
+    // Mistral large only supports "auto" and "any" for tool_choice, not the actual tool name
     expect(mistralModelWSOAsJSON.kwargs.bound.first.kwargs.tool_choice).toBe(
-      tool.name
+      "any"
     );
   });
 });
