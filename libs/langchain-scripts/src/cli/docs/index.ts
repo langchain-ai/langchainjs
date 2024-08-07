@@ -10,6 +10,7 @@ import { fillEmbeddingsIntegrationDocTemplate } from "./embeddings.js";
 import { fillToolkitIntegrationDocTemplate } from "./toolkits.js";
 import { fillToolIntegrationDocTemplate } from "./tools.js";
 import { fillKVStoreIntegrationDocTemplate } from "./kv_store.js";
+import { fillVectorStoreIntegrationDocTemplate } from "./vectorstores.js";
 
 type CLIInput = {
   type: string;
@@ -25,6 +26,7 @@ const ALLOWED_TYPES = [
   "toolkit",
   "tool",
   "kv_store",
+  "vectorstore",
 ];
 
 async function main() {
@@ -84,6 +86,11 @@ async function main() {
       break;
     case "kv_store":
       await fillKVStoreIntegrationDocTemplate({
+        className,
+      });
+      break;
+    case "vectorstore":
+      await fillVectorStoreIntegrationDocTemplate({
         className,
       });
       break;

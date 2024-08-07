@@ -10,13 +10,13 @@ import {
   BaseChatModel,
   LangSmithParams,
   BaseChatModelCallOptions,
+  BindToolsInput,
 } from "@langchain/core/language_models/chat_models";
 import {
   BaseLanguageModelInput,
-  ToolDefinition,
   isOpenAITool,
 } from "@langchain/core/language_models/base";
-import { Runnable, RunnableToolLike } from "@langchain/core/runnables";
+import { Runnable } from "@langchain/core/runnables";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import {
   AIMessageChunk,
@@ -31,8 +31,10 @@ import {
   ChatGenerationChunk,
   ChatResult,
 } from "@langchain/core/outputs";
-import { StructuredToolInterface } from "@langchain/core/tools";
-import { isStructuredTool } from "@langchain/core/utils/function_calling";
+import {
+  isLangChainTool,
+  isStructuredTool,
+} from "@langchain/core/utils/function_calling";
 import { zodToJsonSchema } from "zod-to-json-schema";
 
 import type { SerializedFields } from "../../load/map_keys.js";
@@ -47,6 +49,8 @@ import {
 } from "../../utils/bedrock/anthropic.js";
 
 type AnthropicTool = Record<string, unknown>;
+
+type BedrockChatToolType = BindToolsInput | AnthropicTool;
 
 const PRELUDE_TOTAL_LENGTH_BYTES = 4;
 
@@ -112,29 +116,27 @@ function formatTools(tools: BedrockChatCallOptions["tools"]): AnthropicTool[] {
   if (!tools || !tools.length) {
     return [];
   }
-  if (tools.every((tc) => isStructuredTool(tc))) {
-    return (tools as StructuredToolInterface[]).map((tc) => ({
+  if (tools.every(isLangChainTool)) {
+    return tools.map((tc) => ({
       name: tc.name,
       description: tc.description,
       input_schema: zodToJsonSchema(tc.schema),
     }));
   }
-  if (tools.every((tc) => isOpenAITool(tc))) {
-    return (tools as ToolDefinition[]).map((tc) => ({
+  if (tools.every(isOpenAITool)) {
+    return tools.map((tc) => ({
       name: tc.function.name,
       description: tc.function.description,
       input_schema: tc.function.parameters,
     }));
   }
-
-  if (tools.every((tc) => isAnthropicTool(tc))) {
-    return tools as AnthropicTool[];
+  if (tools.every(isAnthropicTool)) {
+    return tools;
   }
-
   if (
-    tools.some((tc) => isStructuredTool(tc)) ||
-    tools.some((tc) => isOpenAITool(tc)) ||
-    tools.some((tc) => isAnthropicTool(tc))
+    tools.some(isStructuredTool) ||
+    tools.some(isOpenAITool) ||
+    tools.some(isAnthropicTool)
   ) {
     throw new Error(
       "All tools passed to BedrockChat must be of the same type."
@@ -144,12 +146,7 @@ function formatTools(tools: BedrockChatCallOptions["tools"]): AnthropicTool[] {
 }
 
 export interface BedrockChatCallOptions extends BaseChatModelCallOptions {
-  tools?: (
-    | StructuredToolInterface
-    | AnthropicTool
-    | ToolDefinition
-    | RunnableToolLike
-  )[];
+  tools?: BedrockChatToolType[];
 }
 
 export interface BedrockChatFields
@@ -734,12 +731,7 @@ export class BedrockChat
   }
 
   override bindTools(
-    tools: (
-      | StructuredToolInterface
-      | AnthropicTool
-      | ToolDefinition
-      | RunnableToolLike
-    )[],
+    tools: BedrockChatToolType[],
     _kwargs?: Partial<this["ParsedCallOptions"]>
   ): Runnable<
     BaseLanguageModelInput,

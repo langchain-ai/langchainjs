@@ -1,9 +1,6 @@
 import type { BaseMessage } from "@langchain/core/messages";
 import { AIMessageChunk } from "@langchain/core/messages";
-import type {
-  ToolDefinition,
-  BaseLanguageModelInput,
-} from "@langchain/core/language_models/base";
+import type { BaseLanguageModelInput } from "@langchain/core/language_models/base";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {
   type BaseChatModelParams,
@@ -13,7 +10,6 @@ import {
 } from "@langchain/core/language_models/chat_models";
 import type {
   ToolConfiguration,
-  Tool as BedrockTool,
   GuardrailConfiguration,
 } from "@aws-sdk/client-bedrock-runtime";
 import {
@@ -28,9 +24,12 @@ import {
   DefaultProviderInit,
 } from "@aws-sdk/credential-provider-node";
 import type { DocumentType as __DocumentType } from "@smithy/types";
-import { StructuredToolInterface } from "@langchain/core/tools";
-import { Runnable, RunnableToolLike } from "@langchain/core/runnables";
-import { ConverseCommandParams, CredentialType } from "./types.js";
+import { Runnable } from "@langchain/core/runnables";
+import {
+  ChatBedrockConverseToolType,
+  ConverseCommandParams,
+  CredentialType,
+} from "./types.js";
 import {
   convertToConverseTools,
   convertToBedrockToolChoice,
@@ -135,7 +134,7 @@ export interface ChatBedrockConverseCallOptions
    */
   stop?: string[];
 
-  tools?: (StructuredToolInterface | ToolDefinition | BedrockTool)[];
+  tools?: ChatBedrockConverseToolType[];
 
   /**
    * Tool choice for the model. If passing a string, it must be "any", "auto" or the
@@ -280,14 +279,7 @@ export class ChatBedrockConverse
   }
 
   override bindTools(
-    tools: (
-      | StructuredToolInterface
-      | BedrockTool
-      | ToolDefinition
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      | Record<string, any>
-      | RunnableToolLike
-    )[],
+    tools: ChatBedrockConverseToolType[],
     kwargs?: Partial<this["ParsedCallOptions"]>
   ): Runnable<
     BaseLanguageModelInput,
