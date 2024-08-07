@@ -477,6 +477,7 @@ export class ChatMistralAI<
     this.streamUsage = fields?.streamUsage ?? this.streamUsage;
   }
 
+  /** @ignore */
   getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
     const params = this.invocationParams(options);
     return {

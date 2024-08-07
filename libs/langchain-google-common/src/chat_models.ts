@@ -231,6 +231,7 @@ export abstract class ChatGoogleBase<AuthOptions>
     this.buildConnection(fields ?? {}, client);
   }
 
+  /** @ignore */
   getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
     const params = this.invocationParams(options);
     return {

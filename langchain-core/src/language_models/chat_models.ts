@@ -294,6 +294,7 @@ export abstract class BaseChatModel<
     }
   }
 
+  /** @ignore */
   getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
     return {
       ls_model_type: "chat",

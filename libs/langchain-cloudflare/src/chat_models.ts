@@ -82,6 +82,7 @@ export class ChatCloudflareWorkersAI
     }
   }
 
+  /** @ignore */
   getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
     return {
       ls_provider: "cloudflare",

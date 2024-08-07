@@ -185,6 +185,7 @@ export class ChatOllama
     this.format = fields.format;
   }
 
+  /** @ignore */
   getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
     const params = this.invocationParams(options);
     return {

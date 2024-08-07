@@ -372,6 +372,7 @@ export class ChatGroq extends BaseChatModel<
     this.maxTokens = fields?.maxTokens;
   }
 
+  /** @ignore */
   getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
     const params = this.invocationParams(options);
     return {

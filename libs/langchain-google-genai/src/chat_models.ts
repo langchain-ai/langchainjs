@@ -331,6 +331,7 @@ export class ChatGoogleGenerativeAI
     this.streamUsage = fields?.streamUsage ?? this.streamUsage;
   }
 
+  /** @ignore */
   getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
     return {
       ls_provider: "google_genai",

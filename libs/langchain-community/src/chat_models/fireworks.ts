@@ -104,6 +104,7 @@ export class ChatFireworks extends ChatOpenAI<ChatFireworksCallOptions> {
     this.apiKey = fireworksApiKey;
   }
 
+  /** @ignore */
   getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
     const params = super.getLsParams(options);
     params.ls_provider = "fireworks";
