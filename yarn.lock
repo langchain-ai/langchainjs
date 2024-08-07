@@ -10816,7 +10816,7 @@ __metadata:
   dependencies:
     "@anthropic-ai/sdk": ^0.22.0
     "@jest/globals": ^29.5.0
-    "@langchain/core": ">=0.2.16 <0.3.0"
+    "@langchain/core": ">=0.2.21 <0.3.0"
     "@langchain/scripts": ~0.0.20
     "@langchain/standard-tests": 0.0.0
     "@swc/core": ^1.3.90
@@ -10866,7 +10866,7 @@ __metadata:
     "@aws-sdk/credential-provider-node": ^3.600.0
     "@aws-sdk/types": ^3.609.0
     "@jest/globals": ^29.5.0
-    "@langchain/core": ">=0.2.16 <0.3.0"
+    "@langchain/core": ">=0.2.21 <0.3.0"
     "@langchain/scripts": ~0.0.20
     "@langchain/standard-tests": 0.0.0
     "@smithy/types": ^3.2.0
@@ -11042,7 +11042,7 @@ __metadata:
   resolution: "@langchain/cohere@workspace:libs/langchain-cohere"
   dependencies:
     "@jest/globals": ^29.5.0
-    "@langchain/core": ">=0.2.16 <0.3.0"
+    "@langchain/core": ">=0.2.21 <0.3.0"
     "@langchain/scripts": ~0.0.20
     "@langchain/standard-tests": 0.0.0
     "@swc/core": ^1.3.90
@@ -11107,7 +11107,7 @@ __metadata:
     "@gradientai/nodejs-sdk": ^1.2.0
     "@huggingface/inference": ^2.6.4
     "@jest/globals": ^29.5.0
-    "@langchain/core": ">=0.2.16 <0.3.0"
+    "@langchain/core": ">=0.2.21 <0.3.0"
     "@langchain/langgraph": <0.1.0
     "@langchain/openai": ">=0.1.0 <0.3.0"
     "@langchain/scripts": ~0.0.20
@@ -11689,23 +11689,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/google-common@npm:latest":
-  version: 0.0.18
-  resolution: "@langchain/google-common@npm:0.0.18"
-  dependencies:
-    "@langchain/core": ">0.1.56 <0.3.0"
-    uuid: ^9.0.0
-    zod-to-json-schema: ^3.22.4
-  checksum: afd120d664f7c3da35cef4323a9c5c50063021e1b64b8e259b6e9ff7fdfb4b270d7393b3b4e78a280f35578005ff8198c6f1283d8e1ccd651db10a15ef035534
-  languageName: node
-  linkType: hard
-
-"@langchain/google-common@workspace:*, @langchain/google-common@workspace:libs/langchain-google-common, @langchain/google-common@~0.0.22":
+"@langchain/google-common@workspace:*, @langchain/google-common@workspace:libs/langchain-google-common, @langchain/google-common@~0.0.23":
   version: 0.0.0-use.local
   resolution: "@langchain/google-common@workspace:libs/langchain-google-common"
   dependencies:
     "@jest/globals": ^29.5.0
-    "@langchain/core": ">=0.2.16 <0.3.0"
+    "@langchain/core": ">=0.2.21 <0.3.0"
     "@langchain/scripts": ~0.0.20
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
@@ -11733,13 +11722,13 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/google-gauth@workspace:libs/langchain-google-gauth, @langchain/google-gauth@~0.0.21":
+"@langchain/google-gauth@workspace:libs/langchain-google-gauth, @langchain/google-gauth@~0.0.22":
   version: 0.0.0-use.local
   resolution: "@langchain/google-gauth@workspace:libs/langchain-google-gauth"
   dependencies:
     "@jest/globals": ^29.5.0
-    "@langchain/core": ">=0.2.16 <0.3.0"
-    "@langchain/google-common": ~0.0.22
+    "@langchain/core": ">=0.2.21 <0.3.0"
+    "@langchain/google-common": ~0.0.23
     "@langchain/scripts": ~0.0.20
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
@@ -11783,7 +11772,7 @@ __metadata:
   dependencies:
     "@google/generative-ai": ^0.7.0
     "@jest/globals": ^29.5.0
-    "@langchain/core": ">=0.2.16 <0.3.0"
+    "@langchain/core": ">=0.2.21 <0.3.0"
     "@langchain/scripts": ~0.0.20
     "@langchain/standard-tests": 0.0.0
     "@swc/core": ^1.3.90
@@ -11817,8 +11806,8 @@ __metadata:
   resolution: "@langchain/google-vertexai-web@workspace:libs/langchain-google-vertexai-web"
   dependencies:
     "@jest/globals": ^29.5.0
-    "@langchain/core": ">0.1.56 <0.3.0"
-    "@langchain/google-webauth": ~0.0.21
+    "@langchain/core": ">=0.2.21 <0.3.0"
+    "@langchain/google-webauth": ~0.0.22
     "@langchain/scripts": ~0.0.20
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
@@ -11844,14 +11833,14 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/google-vertexai@^0.0.21, @langchain/google-vertexai@workspace:*, @langchain/google-vertexai@workspace:libs/langchain-google-vertexai":
+"@langchain/google-vertexai@^0.0.22, @langchain/google-vertexai@workspace:*, @langchain/google-vertexai@workspace:libs/langchain-google-vertexai":
   version: 0.0.0-use.local
   resolution: "@langchain/google-vertexai@workspace:libs/langchain-google-vertexai"
   dependencies:
     "@jest/globals": ^29.5.0
-    "@langchain/core": ">=0.2.16 <0.3.0"
-    "@langchain/google-common": latest
-    "@langchain/google-gauth": ~0.0.21
+    "@langchain/core": ">=0.2.21 <0.3.0"
+    "@langchain/google-common": "workspace:*"
+    "@langchain/google-gauth": ~0.0.22
     "@langchain/scripts": ~0.0.20
     "@langchain/standard-tests": 0.0.0
     "@swc/core": ^1.3.90
@@ -11878,13 +11867,13 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/google-webauth@workspace:libs/langchain-google-webauth, @langchain/google-webauth@~0.0.21":
+"@langchain/google-webauth@workspace:libs/langchain-google-webauth, @langchain/google-webauth@~0.0.22":
   version: 0.0.0-use.local
   resolution: "@langchain/google-webauth@workspace:libs/langchain-google-webauth"
   dependencies:
     "@jest/globals": ^29.5.0
-    "@langchain/core": ">0.1.56 <0.3.0"
-    "@langchain/google-common": ~0.0.22
+    "@langchain/core": ">=0.2.21 <0.3.0"
+    "@langchain/google-common": ~0.0.23
     "@langchain/scripts": ~0.0.20
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
@@ -11910,12 +11899,25 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/groq@^0.0.15, @langchain/groq@workspace:*, @langchain/groq@workspace:libs/langchain-groq":
+"@langchain/groq@npm:^0.0.15":
+  version: 0.0.15
+  resolution: "@langchain/groq@npm:0.0.15"
+  dependencies:
+    "@langchain/core": ">=0.2.16 <0.3.0"
+    "@langchain/openai": ~0.2.4
+    groq-sdk: ^0.3.2
+    zod: ^3.22.4
+    zod-to-json-schema: ^3.22.5
+  checksum: b9c9450ad481b36273ca42bb5499584febdd33f00c00962bf86321bc4ecf7a2d42ecdd86a0386f1931a556fb3038efa8a284e5256a4a124dabcd32c3293f1215
+  languageName: node
+  linkType: hard
+
+"@langchain/groq@workspace:*, @langchain/groq@workspace:libs/langchain-groq":
   version: 0.0.0-use.local
   resolution: "@langchain/groq@workspace:libs/langchain-groq"
   dependencies:
     "@jest/globals": ^29.5.0
-    "@langchain/core": ">=0.2.18 <0.3.0"
+    "@langchain/core": ">=0.2.21 <0.3.0"
     "@langchain/openai": "workspace:^"
     "@langchain/scripts": ~0.0.20
     "@langchain/standard-tests": 0.0.0
@@ -12012,7 +12014,7 @@ __metadata:
   resolution: "@langchain/mistralai@workspace:libs/langchain-mistralai"
   dependencies:
     "@jest/globals": ^29.5.0
-    "@langchain/core": ">=0.2.16 <0.3.0"
+    "@langchain/core": ">=0.2.21 <0.3.0"
     "@langchain/scripts": ~0.0.20
     "@langchain/standard-tests": 0.0.0
     "@mistralai/mistralai": ^0.4.0
@@ -12142,12 +12144,23 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/ollama@^0.0.2, @langchain/ollama@workspace:*, @langchain/ollama@workspace:libs/langchain-ollama":
+"@langchain/ollama@npm:^0.0.2":
+  version: 0.0.2
+  resolution: "@langchain/ollama@npm:0.0.2"
+  dependencies:
+    "@langchain/core": ">=0.2.17 <0.3.0"
+    ollama: ^0.5.6
+    uuid: ^10.0.0
+  checksum: 33b9259842b4df5221bb492b5d99e0545964486a9a2e6ab899b645fd8eb514b534280d8e6e3f1d0efd406513e624e9c030c1457910163e9a1ee10908e316a54e
+  languageName: node
+  linkType: hard
+
+"@langchain/ollama@workspace:*, @langchain/ollama@workspace:libs/langchain-ollama":
   version: 0.0.0-use.local
   resolution: "@langchain/ollama@workspace:libs/langchain-ollama"
   dependencies:
     "@jest/globals": ^29.5.0
-    "@langchain/core": ">=0.2.17 <0.3.0"
+    "@langchain/core": ">=0.2.21 <0.3.0"
     "@langchain/scripts": ~0.0.20
     "@langchain/standard-tests": 0.0.0
     "@swc/core": ^1.3.90
@@ -12177,13 +12190,13 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/openai@>=0.1.0 <0.3.0, @langchain/openai@workspace:*, @langchain/openai@workspace:^, @langchain/openai@workspace:libs/langchain-openai":
+"@langchain/openai@>=0.1.0 <0.3.0, @langchain/openai@workspace:*, @langchain/openai@workspace:^, @langchain/openai@workspace:libs/langchain-openai, @langchain/openai@~0.2.4":
   version: 0.0.0-use.local
   resolution: "@langchain/openai@workspace:libs/langchain-openai"
   dependencies:
     "@azure/identity": ^4.2.1
     "@jest/globals": ^29.5.0
-    "@langchain/core": ">=0.2.16 <0.3.0"
+    "@langchain/core": ">=0.2.21 <0.3.0"
     "@langchain/scripts": ~0.0.20
     "@langchain/standard-tests": 0.0.0
     "@swc/core": ^1.3.90
@@ -12199,7 +12212,7 @@ __metadata:
     jest: ^29.5.0
     jest-environment-node: ^29.6.4
     js-tiktoken: ^1.0.12
-    openai: ^4.49.1
+    openai: ^4.55.0
     prettier: ^2.8.3
     release-it: ^17.6.0
     rimraf: ^5.0.1
@@ -20970,6 +20983,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"base-64@npm:^0.1.0":
+  version: 0.1.0
+  resolution: "base-64@npm:0.1.0"
+  checksum: 5a42938f82372ab5392cbacc85a5a78115cbbd9dbef9f7540fa47d78763a3a8bd7d598475f0d92341f66285afd377509851a9bb5c67bbecb89686e9255d5b3eb
+  languageName: node
+  linkType: hard
+
 "base-64@npm:^1.0.0":
   version: 1.0.0
   resolution: "base-64@npm:1.0.0"
@@ -21760,6 +21780,13 @@ __metadata:
   version: 0.7.0
   resolution: "chardet@npm:0.7.0"
   checksum: 6fd5da1f5d18ff5712c1e0aed41da200d7c51c28f11b36ee3c7b483f3696dabc08927fc6b227735eb8f0e1215c9a8abd8154637f3eff8cada5959df7f58b024d
+  languageName: node
+  linkType: hard
+
+"charenc@npm:0.0.2":
+  version: 0.0.2
+  resolution: "charenc@npm:0.0.2"
+  checksum: 81dcadbe57e861d527faf6dd3855dc857395a1c4d6781f4847288ab23cffb7b3ee80d57c15bba7252ffe3e5e8019db767757ee7975663ad2ca0939bb8fcaf2e5
   languageName: node
   linkType: hard
 
@@ -23020,6 +23047,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"crypt@npm:0.0.2":
+  version: 0.0.2
+  resolution: "crypt@npm:0.0.2"
+  checksum: baf4c7bbe05df656ec230018af8cf7dbe8c14b36b98726939cef008d473f6fe7a4fad906cfea4062c93af516f1550a3f43ceb4d6615329612c6511378ed9fe34
+  languageName: node
+  linkType: hard
+
 "crypto-js@npm:^4.2.0":
   version: 4.2.0
   resolution: "crypto-js@npm:4.2.0"
@@ -24212,6 +24246,16 @@ __metadata:
   version: 29.4.3
   resolution: "diff-sequences@npm:29.4.3"
   checksum: 28b265e04fdddcf7f9f814effe102cc95a9dec0564a579b5aed140edb24fc345c611ca52d76d725a3cab55d3888b915b5e8a4702e0f6058968a90fa5f41fcde7
+  languageName: node
+  linkType: hard
+
+"digest-fetch@npm:^1.3.0":
+  version: 1.3.0
+  resolution: "digest-fetch@npm:1.3.0"
+  dependencies:
+    base-64: ^0.1.0
+    md5: ^2.3.0
+  checksum: 8ebdb4b9ef02b1ac0da532d25c7d08388f2552813dfadabfe7c4630e944bb4a48093b997fc926440a10e1ccf4912f2ce9adcf2d6687b0518dab8480e08f22f9d
   languageName: node
   linkType: hard
 
@@ -28076,6 +28120,23 @@ __metadata:
   languageName: node
   linkType: hard
 
+"groq-sdk@npm:^0.3.2":
+  version: 0.3.3
+  resolution: "groq-sdk@npm:0.3.3"
+  dependencies:
+    "@types/node": ^18.11.18
+    "@types/node-fetch": ^2.6.4
+    abort-controller: ^3.0.0
+    agentkeepalive: ^4.2.1
+    digest-fetch: ^1.3.0
+    form-data-encoder: 1.7.2
+    formdata-node: ^4.3.2
+    node-fetch: ^2.6.7
+    web-streams-polyfill: ^3.2.1
+  checksum: 822af994d44947072d861879bec959b2bad0762b16339cf1c4308d454bff09af3721126c45aa2f78d112e38365be92b36ec632bfc60fc6ece4e2f7c1b8ff327a
+  languageName: node
+  linkType: hard
+
 "groq-sdk@npm:^0.5.0":
   version: 0.5.0
   resolution: "groq-sdk@npm:0.5.0"
@@ -29162,6 +29223,13 @@ __metadata:
   version: 2.0.5
   resolution: "is-buffer@npm:2.0.5"
   checksum: 764c9ad8b523a9f5a32af29bdf772b08eb48c04d2ad0a7240916ac2688c983bf5f8504bf25b35e66240edeb9d9085461f9b5dae1f3d2861c6b06a65fe983de42
+  languageName: node
+  linkType: hard
+
+"is-buffer@npm:~1.1.6":
+  version: 1.1.6
+  resolution: "is-buffer@npm:1.1.6"
+  checksum: 4a186d995d8bbf9153b4bd9ff9fd04ae75068fe695d29025d25e592d9488911eeece84eefbd8fa41b8ddcc0711058a71d4c466dcf6f1f6e1d83830052d8ca707
   languageName: node
   linkType: hard
 
@@ -31146,9 +31214,9 @@ __metadata:
     "@langchain/anthropic": ^0.2.8
     "@langchain/aws": ^0.0.5
     "@langchain/cohere": ^0.2.1
-    "@langchain/core": ">=0.2.11 <0.3.0"
+    "@langchain/core": ">=0.2.21 <0.3.0"
     "@langchain/google-genai": ^0.0.23
-    "@langchain/google-vertexai": ^0.0.21
+    "@langchain/google-vertexai": ^0.0.22
     "@langchain/groq": ^0.0.15
     "@langchain/mistralai": ^0.0.26
     "@langchain/ollama": ^0.0.2
@@ -32379,6 +32447,17 @@ __metadata:
   bin:
     marked: bin/marked.js
   checksum: 0db6817893952c3ec710eb9ceafb8468bf5ae38cb0f92b7b083baa13d70b19774674be04db5b817681fa7c5c6a088f61300815e4dd75a59696f4716ad69f6260
+  languageName: node
+  linkType: hard
+
+"md5@npm:^2.3.0":
+  version: 2.3.0
+  resolution: "md5@npm:2.3.0"
+  dependencies:
+    charenc: 0.0.2
+    crypt: 0.0.2
+    is-buffer: ~1.1.6
+  checksum: a63cacf4018dc9dee08c36e6f924a64ced735b37826116c905717c41cebeb41a522f7a526ba6ad578f9c80f02cb365033ccd67fe186ffbcc1a1faeb75daa9b6e
   languageName: node
   linkType: hard
 
@@ -34050,6 +34129,28 @@ __metadata:
   bin:
     openai: bin/cli
   checksum: b9bc845d25412d6b6ad827fb1363a4029935d8eb85a8708e55f5cf2852a0551b8720c8099edcbb0a2c2ab2be2d8f652a97061d9898b908e29d9bb2f727304b6e
+  languageName: node
+  linkType: hard
+
+"openai@npm:^4.55.0":
+  version: 4.55.0
+  resolution: "openai@npm:4.55.0"
+  dependencies:
+    "@types/node": ^18.11.18
+    "@types/node-fetch": ^2.6.4
+    abort-controller: ^3.0.0
+    agentkeepalive: ^4.2.1
+    form-data-encoder: 1.7.2
+    formdata-node: ^4.3.2
+    node-fetch: ^2.6.7
+  peerDependencies:
+    zod: ^3.23.8
+  peerDependenciesMeta:
+    zod:
+      optional: true
+  bin:
+    openai: bin/cli
+  checksum: b2b1daa976516262e08e182ee982976a1dc615eebd250bbd71f4122740ebeeb207a20af6d35c718b67f1c3457196b524667a0c7fa417ab4e119020b5c1f5cd74
   languageName: node
   linkType: hard
 

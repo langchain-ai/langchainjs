@@ -12,16 +12,16 @@ import {
 } from "@langchain/core/messages";
 import {
   BaseLanguageModelInput,
-  ToolDefinition,
   isOpenAITool,
 } from "@langchain/core/language_models/base";
-import { isStructuredTool } from "@langchain/core/utils/function_calling";
+import { isLangChainTool } from "@langchain/core/utils/function_calling";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {
   type BaseChatModelParams,
   BaseChatModel,
   LangSmithParams,
   BaseChatModelCallOptions,
+  BindToolsInput,
 } from "@langchain/core/language_models/chat_models";
 import {
   ChatGeneration,
@@ -37,8 +37,9 @@ import {
   ToolCallChunk,
 } from "@langchain/core/messages/tool";
 import * as uuid from "uuid";
-import { StructuredToolInterface } from "@langchain/core/tools";
-import { Runnable, RunnableToolLike } from "@langchain/core/runnables";
+import { Runnable } from "@langchain/core/runnables";
+
+type ChatCohereToolType = BindToolsInput | Cohere.Tool;
 
 /**
  * Input interface for ChatCohere
@@ -88,13 +89,7 @@ export interface ChatCohereCallOptions
     Partial<Omit<Cohere.ChatRequest, "message" | "tools">>,
     Partial<Omit<Cohere.ChatStreamRequest, "message" | "tools">>,
     Pick<ChatCohereInput, "streamUsage"> {
-  tools?: (
-    | StructuredToolInterface
-    | Cohere.Tool
-    | Record<string, unknown>
-    | ToolDefinition
-    | RunnableToolLike
-  )[];
+  tools?: ChatCohereToolType[];
 }
 
 /** @deprecated Import as ChatCohereCallOptions instead. */
@@ -256,12 +251,12 @@ function _formatToolsToCohere(
         ),
       };
     });
-  } else if (tools.every(isStructuredTool)) {
+  } else if (tools.every(isLangChainTool)) {
     return tools.map((tool) => {
       const parameterDefinitionsFromZod = zodToJsonSchema(tool.schema);
       return {
         name: tool.name,
-        description: tool.description,
+        description: tool.description ?? "",
         parameterDefinitions: _convertJsonSchemaToCohereTool(
           parameterDefinitionsFromZod
         ),
@@ -371,13 +366,7 @@ export class ChatCohere<
   }
 
   override bindTools(
-    tools: (
-      | Cohere.Tool
-      | Record<string, unknown>
-      | StructuredToolInterface
-      | ToolDefinition
-      | RunnableToolLike
-    )[],
+    tools: ChatCohereToolType[],
     kwargs?: Partial<CallOptions>
   ): Runnable<BaseLanguageModelInput, AIMessageChunk, CallOptions> {
     return this.bind({
