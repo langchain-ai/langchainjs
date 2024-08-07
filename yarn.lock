@@ -31203,7 +31203,7 @@ __metadata:
     "@langchain/cohere": ^0.2.1
     "@langchain/core": ">=0.2.21 <0.3.0"
     "@langchain/google-genai": ^0.0.23
-    "@langchain/google-vertexai": ^0.0.21
+    "@langchain/google-vertexai": ^0.0.22
     "@langchain/groq": ^0.0.15
     "@langchain/mistralai": ^0.0.26
     "@langchain/ollama": ^0.0.2
