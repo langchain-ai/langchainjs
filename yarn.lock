@@ -11113,7 +11113,7 @@ __metadata:
     "@langchain/scripts": ~0.0.20
     "@langchain/standard-tests": 0.0.0
     "@layerup/layerup-security": ^1.5.12
-    "@mendable/firecrawl-js": ^0.0.31
+    "@mendable/firecrawl-js": ^0.0.35
     "@mlc-ai/web-llm": 0.2.46
     "@mozilla/readability": ^0.4.4
     "@neondatabase/serverless": ^0.9.1
@@ -12643,16 +12643,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@mendable/firecrawl-js@npm:^0.0.31":
-  version: 0.0.31
-  resolution: "@mendable/firecrawl-js@npm:0.0.31"
+"@mendable/firecrawl-js@npm:^0.0.35":
+  version: 0.0.35
+  resolution: "@mendable/firecrawl-js@npm:0.0.35"
   dependencies:
     axios: ^1.6.8
     dotenv: ^16.4.5
     uuid: ^9.0.1
     zod: ^3.23.8
     zod-to-json-schema: ^3.23.0
-  checksum: 5317b039ca50762f0ab3395f9c5fd51ce046ccdf81fc60f70b556a60eee5c05dbf23547f1e7988a0d506ac6dfd4e0edc8c20318f2e022bbf43fd9db36064a967
+  checksum: a400df0a444a567f2683b2419fe576b9751bd2196d98856b0f30168a69e168e95f51f97856a9334ba0e2817b1c64be21f08dc4f0be65b793a05bb0f6561b910d
   languageName: node
   linkType: hard
 
