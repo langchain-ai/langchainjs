@@ -1,4 +1,5 @@
 import type { OpenAI as OpenAIClient } from "openai";
+import type { ResponseFormatText, ResponseFormatJSONObject, ResponseFormatJSONSchema } from "openai/resources/shared";
 
 import { TiktokenModel } from "js-tiktoken/lite";
 import type { BaseLanguageModelCallOptions } from "@langchain/core/language_models/base";
@@ -222,3 +223,23 @@ export declare interface AzureOpenAIInput {
    */
   azureADTokenProvider?: () => Promise<string>;
 }
+
+export interface TokenUsage {
+  completionTokens?: number;
+  promptTokens?: number;
+  totalTokens?: number;
+}
+
+export interface OpenAILLMOutput {
+  tokenUsage: TokenUsage;
+}
+
+// TODO import from SDK when available
+export type OpenAIRoleEnum = "system" | "assistant" | "user" | "function" | "tool";
+
+export type OpenAICompletionParam =
+  OpenAIClient.Chat.Completions.ChatCompletionMessageParam;
+export type OpenAIFnDef = OpenAIClient.Chat.ChatCompletionCreateParams.Function;
+export type OpenAIFnCallOption = OpenAIClient.Chat.ChatCompletionFunctionCallOption;
+
+export type ChatOpenAIResponseFormat = ResponseFormatText | ResponseFormatJSONObject | ResponseFormatJSONSchema;

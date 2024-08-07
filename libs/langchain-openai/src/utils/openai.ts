@@ -9,6 +9,7 @@ import {
   convertToOpenAIFunction,
   convertToOpenAITool,
 } from "@langchain/core/utils/function_calling";
+import { ChatMessage } from "@langchain/core/messages";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function wrapOpenAIClientError(e: any) {
@@ -67,4 +68,18 @@ export function formatToOpenAIToolChoice(
   } else {
     return toolChoice;
   }
+}
+
+export function extractGenericMessageCustomRole(message: ChatMessage) {
+  if (
+    message.role !== "system" &&
+    message.role !== "assistant" &&
+    message.role !== "user" &&
+    message.role !== "function" &&
+    message.role !== "tool"
+  ) {
+    console.warn(`Unknown message role: ${message.role}`);
+  }
+
+  return message.role as OpenAIRoleEnum;
 }

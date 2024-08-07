@@ -62,10 +62,18 @@ import type {
   OpenAIChatInput,
   OpenAICoreRequestOptions,
   LegacyOpenAIInput,
+  OpenAICompletionParam,
+  OpenAIFnCallOption,
+  OpenAIFnDef,
+  OpenAILLMOutput,
+  OpenAIRoleEnum,
+  TokenUsage,
+  ChatOpenAIResponseFormat,
 } from "./types.js";
 import { type OpenAIEndpointConfig, getEndpoint } from "./utils/azure.js";
 import {
   OpenAIToolChoice,
+  extractGenericMessageCustomRole,
   formatToOpenAIToolChoice,
   wrapOpenAIClientError,
 } from "./utils/openai.js";
@@ -76,37 +84,6 @@ import {
 
 export type { AzureOpenAIInput, OpenAICallOptions, OpenAIChatInput };
 
-interface TokenUsage {
-  completionTokens?: number;
-  promptTokens?: number;
-  totalTokens?: number;
-}
-
-interface OpenAILLMOutput {
-  tokenUsage: TokenUsage;
-}
-
-// TODO import from SDK when available
-type OpenAIRoleEnum = "system" | "assistant" | "user" | "function" | "tool";
-
-type OpenAICompletionParam =
-  OpenAIClient.Chat.Completions.ChatCompletionMessageParam;
-type OpenAIFnDef = OpenAIClient.Chat.ChatCompletionCreateParams.Function;
-type OpenAIFnCallOption = OpenAIClient.Chat.ChatCompletionFunctionCallOption;
-
-function extractGenericMessageCustomRole(message: ChatMessage) {
-  if (
-    message.role !== "system" &&
-    message.role !== "assistant" &&
-    message.role !== "user" &&
-    message.role !== "function" &&
-    message.role !== "tool"
-  ) {
-    console.warn(`Unknown message role: ${message.role}`);
-  }
-
-  return message.role as OpenAIRoleEnum;
-}
 
 export function messageToOpenAIRole(message: BaseMessage): OpenAIRoleEnum {
   const type = message._getType();
@@ -324,7 +301,7 @@ export interface ChatOpenAICallOptions
   tools?: ChatOpenAIToolType[];
   tool_choice?: OpenAIToolChoice;
   promptIndex?: number;
-  response_format?: { type: "json_object" };
+  response_format?: ChatOpenAIResponseFormat;
   seed?: number;
   /**
    * Additional options to pass to streamed completions.
