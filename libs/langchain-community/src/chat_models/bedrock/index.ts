@@ -25,15 +25,30 @@ export interface BedrockChatFields
  * export BEDROCK_AWS_SECRET_ACCESS_KEY="your-aws-secret-access-key"
  * export BEDROCK_AWS_ACCESS_KEY_ID="your-aws-access-key-id"
  * ```
+ * 
+ * ## [Constructor args](/classes/langchain_community_chat_models_bedrock.BedrockChat.html#constructor)
  *
- * ## Key args
+ * ## [Runtime args](/interfaces/langchain_community_chat_models_bedrock_web.BedrockChatCallOptions.html)
  *
- * ### [Init args](/classes/langchain_community_chat_models_bedrock.BedrockChat.html#constructor)
+ * Runtime args can be passed as the second argument to any of the base runnable methods `.invoke`. `.stream`, `.batch`, etc.
+ * They can also be passed via the `.bind`, or the second arg in the `.bindTools` method, like shown in the example below:
  *
- * ### [Runtime args](/interfaces/langchain_community_chat_models_bedrock_web.BedrockChatCallOptions.html)
+ * ```typescript
+ * // When calling `.bind`, call options should be passed via the first argument
+ * const llmWithArgsBound = llm.bind({
+ *   stop: ["\n"],
+ *   tools: [...],
+ * });
  *
- * > See full list of supported init args and their descriptions in the [`constructor`](/classes/langchain_community_chat_models_bedrock.BedrockChat.html#constructor) section.
- *
+ * // When calling `.bindTools`, call options should be passed via the second argument
+ * const llmWithTools = llm.bindTools(
+ *   [...],
+ *   {
+ *     stop: ["stop on this token!"],
+ *   }
+ * );
+ * ```
+ * 
  * ## Examples
  *
  * <details open>
