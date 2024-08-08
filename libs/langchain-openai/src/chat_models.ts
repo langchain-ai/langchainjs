@@ -379,34 +379,17 @@ export interface ChatOpenAIFields
  *
  * ## Key args
  *
- * ### Key init args — completion params:
- * @param {string} model - Name of OpenAI model to use.
- * @param {number} temperature - Sampling temperature.
- * @param {number | undefined} maxTokens - Max number of tokens to generate.
- * @param {boolean | undefined} logprobs - Whether to return logprobs.
- * @param {Object} stream_options - Configure streaming outputs, like whether to return token usage when streaming (`{ include_usage: true }`).
+ * ### [Init args](/classes/langchain_openai.ChatOpenAI.html#constructor)
  *
- * ### Key init args — client params:
- * @param {number | [number, number] | any | undefined} timeout - Timeout for requests.
- * @param {number} maxRetries - Max number of retries.
- * @param {string | undefined} apiKey - OpenAI API key. If not passed in will be read from env var OPENAI_API_KEY.
- * @param {string | undefined} baseUrl - Base URL for API requests. Only specify if using a proxy or service emulator.
- * @param {string | undefined} organization - OpenAI organization ID. If not passed in will be read from env var OPENAI_ORG_ID.
+ * ### [Runtime args](/interfaces/langchain_openai.ChatOpenAICallOptions.html)
  *
- * ### Key bind args:
- * @param {ChatOpenAIToolType[] | undefined} tools - Tools to bind to the model.
- * @param {OpenAIToolChoice | undefined} tool_choice - Specify how and/or which tool the model should invoke.
- * @param {number | undefined} promptIndex
- * @param {{ type: "json_object" } | undefined} response_format - The format the model should respond in.
- * @param {number | undefined} seed - Seed for reproducibility.
- * @param {{ include_usage: boolean } | undefined} [stream_options] - Additional options to pass to streamed completions. If provided takes precedence over "streamUsage" set at initialization time.
- * @param {boolean} [stream_options.include_usage] - Whether or not to include token usage in the stream. If set to `true`, this will include an additional chunk at the end of the stream with the token usage.
- * @param {boolean | undefined} parallel_tool_calls - Whether or not to restrict the ability to call multiple tools in one response.
- * @param {boolean | undefined} strict - Whether or not to force the model to return structured output which exactly matches the schema.
+ * > See full list of supported init args and their descriptions in the [`constructor`](/classes/langchain_openai.ChatOpenAI.html#constructor) section.
  *
- * See full list of supported init args and their descriptions in the params section.
+ * ## Examples
  *
- * @example
+ * <details open>
+ * <summary><strong>Instantiate</strong></summary>
+ * 
  * ```typescript
  * import { ChatOpenAI } from '@langchain/openai';
  *
@@ -422,8 +405,13 @@ export interface ChatOpenAIFields
  *   // other params...
  * });
  * ```
+ * </details>
  *
- * @example
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Invoking</strong></summary>
+ *
  * ```typescript
  * const messages = [
  *   {
@@ -438,15 +426,25 @@ export interface ChatOpenAIFields
  * const result = await llm.invoke(messages);
  * console.log(result);
  * ```
+ * </details>
  *
- * @example
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Streaming Chunks</strong></summary>
+ *
  * ```typescript
  * for await (const chunk of await llm.stream(messages)) {
  *   console.log(chunk);
  * }
  * ```
+ * </details>
  *
- * @example
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Aggregate Streamed Chunks</strong></summary>
+ *
  * ```typescript
  * import { AIMessageChunk } from '@langchain/core/messages';
  * import { concat } from '@langchain/core/utils/stream';
@@ -458,8 +456,13 @@ export interface ChatOpenAIFields
  * }
  * console.log(full);
  * ```
+ * </details>
  *
- * @example
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Bind tools</strong></summary>
+ *
  * ```typescript
  * import { z } from 'zod';
  *
@@ -490,8 +493,13 @@ export interface ChatOpenAIFields
  * );
  * console.log(aiMsg.tool_calls);
  * ```
+ * </details>
  *
- * @example
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Structured Output</strong></summary>
+ *
  * ```typescript
  * import { z } from 'zod';
  *
@@ -505,8 +513,13 @@ export interface ChatOpenAIFields
  * const jokeResult = await structuredLlm.invoke("Tell me a joke about cats");
  * console.log(jokeResult);
  * ```
+ * </details>
  *
- * @example
+ * <br />
+ *
+ * <details>
+ * <summary><strong>JSON Object Response Format</strong></summary>
+ *
  * ```typescript
  * const jsonLlm = llm.bind({ response_format: { type: "json_object" } });
  * const jsonLlmAiMsg = await jsonLlm.invoke(
@@ -514,8 +527,13 @@ export interface ChatOpenAIFields
  * );
  * console.log(jsonLlmAiMsg.content);
  * ```
+ * </details>
  *
- * @example
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Multimodal</strong></summary>
+ *
  * ```typescript
  * import { HumanMessage } from '@langchain/core/messages';
  *
@@ -536,14 +554,24 @@ export interface ChatOpenAIFields
  * const imageDescriptionAiMsg = await llm.invoke([message]);
  * console.log(imageDescriptionAiMsg.content);
  * ```
+ * </details>
  *
- * @example
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Usage Metadata</strong></summary>
+ *
  * ```typescript
  * const aiMsgForMetadata = await llm.invoke(messages);
  * console.log(aiMsgForMetadata.usage_metadata);
  * ```
+ * </details>
  *
- * @example
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Stream Usage Metadata</strong></summary>
+ *
  * ```typescript
  * const streamForMetadata = await llm.stream(
  *   messages,
@@ -559,19 +587,32 @@ export interface ChatOpenAIFields
  * }
  * console.log(fullForMetadata?.usage_metadata);
  * ```
+ * </details>
  *
- * @example
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Logprobs</strong></summary>
+ *
  * ```typescript
  * const logprobsLlm = new ChatOpenAI({ logprobs: true });
  * const aiMsgForLogprobs = await logprobsLlm.invoke(messages);
  * console.log(aiMsgForLogprobs.response_metadata.logprobs);
  * ```
+ * </details>
  *
- * @example
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Response Metadata</strong></summary>
+ *
  * ```typescript
  * const aiMsgForResponseMetadata = await llm.invoke(messages);
  * console.log(aiMsgForResponseMetadata.response_metadata);
  * ```
+ * </details>
+ *
+ * <br />
  */
 export class ChatOpenAI<
     CallOptions extends ChatOpenAICallOptions = ChatOpenAICallOptions
