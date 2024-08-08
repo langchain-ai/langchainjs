@@ -159,8 +159,8 @@ test("populates ID field on AIMessage", async () => {
   expect(response.id?.length).toBeGreaterThan(1);
 
   /**
-   Bedrock Converse does not include an ID in
-   the response of a streaming call.
+   * Bedrock Converse does not include an ID in
+   * the response of a streaming call.
    */
 
   // Streaming
