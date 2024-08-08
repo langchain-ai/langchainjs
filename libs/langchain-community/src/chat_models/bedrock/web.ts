@@ -216,7 +216,7 @@ export interface BedrockChatFields
  * const result = await llm.invoke(messages);
  * console.log(result);
  * ```
- * 
+ *
  * ```txt
  * AIMessage {
  *   "content": "Here's the translation to French:\n\nJ'adore la programmation.",
@@ -296,7 +296,7 @@ export interface BedrockChatFields
  *   }
  * }
  * ```txt
- * 
+ *
  * ```
  * </details>
  *
@@ -316,7 +316,7 @@ export interface BedrockChatFields
  * }
  * console.log(full);
  * ```
- * 
+ *
  * ```txt
  * AIMessageChunk {
  *   "content": "J'adore la programmation.",
@@ -378,7 +378,7 @@ export interface BedrockChatFields
  * );
  * console.log(aiMsg.tool_calls);
  * ```
- * 
+ *
  * ```txt
  * [
  *   {
@@ -425,7 +425,7 @@ export interface BedrockChatFields
  * const jokeResult = await structuredLlm.invoke("Tell me a joke about cats");
  * console.log(jokeResult);
  * ```
- * 
+ *
  * ```txt
  * {
  *   setup: "Why don't cats play poker in the jungle?",
@@ -443,7 +443,7 @@ export interface BedrockChatFields
  * const aiMsgForResponseMetadata = await llm.invoke(messages);
  * console.log(aiMsgForResponseMetadata.response_metadata);
  * ```
- * 
+ *
  * ```txt
  * "response_metadata": {
  *   "type": "message",
