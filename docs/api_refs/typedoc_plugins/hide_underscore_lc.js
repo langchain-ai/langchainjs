@@ -50,6 +50,82 @@ const VERSION_DROPDOWN_HTML = `<div class="version-select">
 </div>`;
 
 /**
+ * Checks if the reflection is a property of a chat model class,
+ * and returns true (to hide the reflection) if it is.
+ *
+ * @param {DeclarationReflection} reflection
+ * @returns {boolean} Whether or not to hide the reflection
+ */
+function hideChatModelProperties(reflection) {
+  if (
+    reflection.kind === ReflectionKind.Property &&
+    reflection?.parent &&
+    reflection.parent.kind === ReflectionKind.Class &&
+    reflection.parent.name.includes("Chat")
+  ) {
+    return true;
+  }
+  return false;
+}
+
+/**
+ * Checks if the reflection is a method on a chat model class,
+ * and returns true (to hide the reflection) if it is.
+ *
+ * @param {DeclarationReflection} reflection
+ * @returns {boolean} Whether or not to hide the reflection
+ */
+function hideChatModelMethods(reflection) {
+  if (
+    reflection.kind === ReflectionKind.Method &&
+    reflection?.parent &&
+    reflection.parent.kind === ReflectionKind.Class &&
+    reflection.parent.name.includes("Chat")
+  ) {
+    if (
+      !WHITELISTED_CHAT_MODEL_INHERITED_METHODS.find(
+        (n) => n === reflection.name
+      )
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * Checks if the reflection is an accessor and is named `callKeys`,
+ * and returns true (to hide the reflection) if it is.
+ *
+ * @param {DeclarationReflection} reflection
+ * @returns {boolean} Whether or not to hide the reflection
+ */
+function hideChatModelAccessors(reflection) {
+  if (
+    reflection.kind === ReflectionKind.Accessor &&
+    reflection.name === "callKeys"
+  ) {
+    return true;
+  }
+  return false;
+}
+
+/**
+ * Check if the reflection should be hidden. If it should, it
+ * returns true.
+ *
+ * @param {DeclarationReflection} reflection
+ * @returns {boolean} Whether or not to hide the reflection
+ */
+function hideChatModelReflection(reflection) {
+  return (
+    hideChatModelProperties(reflection) ||
+    hideChatModelMethods(reflection) ||
+    hideChatModelAccessors(reflection)
+  );
+}
+
+/**
  * @param {string | undefined} deprecationText
  * @returns {string}
  */
@@ -136,36 +212,7 @@ function load(application) {
   function resolveReflection(_context, reflection) {
     const reflectionKind = reflection.kind;
 
-    if (
-      reflectionKind === ReflectionKind.Method &&
-      reflection?.parent &&
-      reflection.parent.kind === ReflectionKind.Class &&
-      reflection.parent.name.includes("Chat")
-    ) {
-      if (
-        !WHITELISTED_CHAT_MODEL_INHERITED_METHODS.find(
-          (n) => n === reflection.name
-        )
-      ) {
-        reflectionsToHide.push(reflection);
-      }
-    }
-
-    if (
-      reflectionKind === ReflectionKind.Property &&
-      reflection?.parent &&
-      reflection.parent.kind === ReflectionKind.Class &&
-      reflection.parent.name.includes("Chat")
-    ) {
-      // Hide all properties of chat models
-      reflectionsToHide.push(reflection);
-    }
-
-    if (
-      reflectionKind === ReflectionKind.Accessor &&
-      reflection.name === "callKeys"
-    ) {
-      // Hide all `callKeys` accessors
+    if (hideChatModelReflection(reflection)) {
       reflectionsToHide.push(reflection);
     }
 
