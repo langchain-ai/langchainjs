@@ -8,7 +8,11 @@ import { getEnvironmentVariable } from "@langchain/core/utils/env";
 
 import { GoogleAIConnection } from "./connection.js";
 import { ApiKeyGoogleAuth, GoogleAbstractedClient } from "./auth.js";
-import { GoogleAIModelRequestParams, GoogleConnectionParams, GoogleResponse } from "./types.js";
+import {
+  GoogleAIModelRequestParams,
+  GoogleConnectionParams,
+  GoogleResponse,
+} from "./types.js";
 
 class EmbeddingsConnection<
   CallOptions extends AsyncCallerCallOptions,
@@ -86,7 +90,7 @@ export interface GoogleEmbeddingsResponse extends GoogleResponse {
         values: number[];
       };
     }[];
-  }
+  };
 }
 
 /**
@@ -185,7 +189,7 @@ export abstract class BaseGoogleEmbeddings<AuthOptions>
       responses
         ?.map(
           (response) =>
-            (response?.data)?.predictions?.map(
+            response?.data?.predictions?.map(
               (result) => result.embeddings.values
             ) ?? []
         )

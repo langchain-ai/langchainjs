@@ -169,7 +169,7 @@ export abstract class GoogleAIConnection<
     CallOptions extends AsyncCallerCallOptions,
     InputType,
     AuthOptions,
-    ResponseType extends GoogleResponse,
+    ResponseType extends GoogleResponse
   >
   extends GoogleHostConnection<CallOptions, ResponseType, AuthOptions>
   implements GoogleAIBaseLLMInput<AuthOptions>
