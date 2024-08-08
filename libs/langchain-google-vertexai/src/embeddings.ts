@@ -4,16 +4,17 @@ import {
 } from "@langchain/google-gauth";
 
 /**
- * Input to chat model class.
+ * Input to a Google Vertex AI embeddings class.
  */
 export interface GoogleVertexAIEmbeddingsInput extends GoogleEmbeddingsInput {}
 
 /**
- * Integration with a chat model.
+ * Integration with a Google Vertex AI embeddings model using
+ * the "@langchain/google-gauth" package for auth.
  */
-export class GoogleVertexAIEmbeddings extends GoogleEmbeddings {
+export class VertexAIEmbeddings extends GoogleEmbeddings {
   static lc_name() {
-    return "GoogleVertexAIEmbeddings";
+    return "VertexAIEmbeddings";
   }
 
   constructor(fields: GoogleVertexAIEmbeddingsInput) {

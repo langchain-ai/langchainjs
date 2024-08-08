@@ -1,16 +1,16 @@
 import { test, expect } from "@jest/globals";
-import { GoogleVertexAIEmbeddings } from "../embeddings.js";
+import { VertexAIEmbeddings } from "../embeddings.js";
 
-test("Test GoogleVertexAIEmbeddings.embedQuery", async () => {
-  const embeddings = new GoogleVertexAIEmbeddings({
+test("Test VertexAIEmbeddings.embedQuery", async () => {
+  const embeddings = new VertexAIEmbeddings({
     model: "textembedding-gecko",
   });
   const res = await embeddings.embedQuery("Hello world");
   expect(typeof res[0]).toBe("number");
 });
 
-test("Test GoogleVertexAIEmbeddings.embedDocuments", async () => {
-  const embeddings = new GoogleVertexAIEmbeddings({
+test("Test VertexAIEmbeddings.embedDocuments", async () => {
+  const embeddings = new VertexAIEmbeddings({
     model: "text-embedding-004",
   });
   const res = await embeddings.embedDocuments([
