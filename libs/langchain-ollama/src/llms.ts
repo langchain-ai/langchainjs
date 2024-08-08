@@ -3,18 +3,15 @@ import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { GenerationChunk } from "@langchain/core/outputs";
 import type { StringWithAutocomplete } from "@langchain/core/utils/types";
 import { LLM, type BaseLLMParams } from "@langchain/core/language_models/llms";
-
-import { createOllamaGenerateStream, OllamaInput } from "../utils/ollama.js";
-
-export { type OllamaInput };
+import { Ollama as OllamaClient } from "ollama/browser";
 
 export interface OllamaCallOptions extends BaseLanguageModelCallOptions {
   images?: string[];
 }
 
+export interface OllamaInput extends BaseLLMParams {}
+
 /**
- * @deprecated Ollama LLM has moved to the `@langchain/ollama` package. Please install it using `npm install @langchain/ollama` and import it from there.
- * 
  * Class that represents the Ollama language model. It extends the base
  * LLM class and implements the OllamaInput interface.
  * @example
@@ -44,7 +41,7 @@ export class Ollama extends LLM<OllamaCallOptions> implements OllamaInput {
 
   lc_serializable = true;
 
-  model = "llama2";
+  model = "llama3";
 
   baseUrl = "http://localhost:11434";
 
@@ -116,12 +113,17 @@ export class Ollama extends LLM<OllamaCallOptions> implements OllamaInput {
 
   format?: StringWithAutocomplete<"json">;
 
+  client: OllamaClient;
+
   constructor(fields: OllamaInput & BaseLLMParams) {
     super(fields);
     this.model = fields.model ?? this.model;
     this.baseUrl = fields.baseUrl?.endsWith("/")
       ? fields.baseUrl.slice(0, -1)
       : fields.baseUrl ?? this.baseUrl;
+    this.client = new OllamaClient({
+      host: this.baseUrl,
+    })
     this.keepAlive = fields.keepAlive ?? this.keepAlive;
 
     this.headers = fields.headers ?? this.headers;
@@ -211,14 +213,11 @@ export class Ollama extends LLM<OllamaCallOptions> implements OllamaInput {
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<GenerationChunk> {
     const stream = await this.caller.call(async () =>
-      createOllamaGenerateStream(
-        this.baseUrl,
-        { ...this.invocationParams(options), prompt },
-        {
-          ...options,
-          headers: this.headers,
-        }
-      )
+      this.client.generate({
+        ...this.invocationParams(options),
+        prompt,
+        stream: true,
+      })
     );
     for await (const chunk of stream) {
       if (!chunk.done) {
