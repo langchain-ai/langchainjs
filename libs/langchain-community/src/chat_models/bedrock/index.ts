@@ -25,7 +25,7 @@ export interface BedrockChatFields
  * export BEDROCK_AWS_SECRET_ACCESS_KEY="your-aws-secret-access-key"
  * export BEDROCK_AWS_ACCESS_KEY_ID="your-aws-access-key-id"
  * ```
- * 
+ *
  * ## [Constructor args](/classes/langchain_community_chat_models_bedrock.BedrockChat.html#constructor)
  *
  * ## [Runtime args](/interfaces/langchain_community_chat_models_bedrock_web.BedrockChatCallOptions.html)
@@ -48,7 +48,7 @@ export interface BedrockChatFields
  *   }
  * );
  * ```
- * 
+ *
  * ## Examples
  *
  * <details open>
