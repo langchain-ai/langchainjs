@@ -170,7 +170,7 @@ export interface BedrockChatFields
  *
  * ### [Init args](/classes/langchain_community_chat_models_bedrock.BedrockChat.html#constructor)
  *
- * ### [Runtime args](/interfaces/langchain_community_chat_models_bedrock.BedrockChatCallOptions.html)
+ * ### [Runtime args](/interfaces/langchain_community_chat_models_bedrock_web.BedrockChatCallOptions.html)
  *
  * > See full list of supported init args and their descriptions in the [`constructor`](/classes/langchain_community_chat_models_bedrock.BedrockChat.html#constructor) section.
  *
@@ -250,6 +250,8 @@ export interface BedrockChatFields
  *   console.log(chunk);
  * }
  * ```
+ * 
+ * ```txt
  * AIMessageChunk {
  *   "content": "",
  *   "additional_kwargs": {
@@ -295,8 +297,6 @@ export interface BedrockChatFields
  *     "total_tokens": 36
  *   }
  * }
- * ```txt
- *
  * ```
  * </details>
  *
