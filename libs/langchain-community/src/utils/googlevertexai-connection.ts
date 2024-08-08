@@ -212,7 +212,9 @@ export class GoogleVertexAILLMConnection<
     }
 
     const projectId = await this.client.getProjectId();
-
+    console.log(
+      `https://${this.endpoint}/v1/projects/${projectId}/locations/${this.location}/publishers/google/models/${this.model}:${method}`
+    );
     return `https://${this.endpoint}/v1/projects/${projectId}/locations/${this.location}/publishers/google/models/${this.model}:${method}`;
   }
 

@@ -166,8 +166,8 @@ export abstract class GoogleHostConnection<
 }
 
 export abstract class GoogleAIConnection<
-    CallOptions extends BaseLanguageModelCallOptions,
-    MessageType,
+    CallOptions extends AsyncCallerCallOptions,
+    InputType,
     AuthOptions
   >
   extends GoogleHostConnection<CallOptions, GoogleLLMResponse, AuthOptions>
@@ -232,12 +232,12 @@ export abstract class GoogleAIConnection<
   }
 
   abstract formatData(
-    input: MessageType,
+    input: InputType,
     parameters: GoogleAIModelRequestParams
   ): unknown;
 
   async request(
-    input: MessageType,
+    input: InputType,
     parameters: GoogleAIModelRequestParams,
     options: CallOptions
   ): Promise<GoogleLLMResponse> {
