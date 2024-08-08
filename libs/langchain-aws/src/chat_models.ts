@@ -181,9 +181,9 @@ export interface ChatBedrockConverseCallOptions
  * export BEDROCK_AWS_ACCESS_KEY_ID="your-aws-access-key-id"
  * ```
  *
- * ### [Constructor args](/classes/langchain_aws.ChatBedrockConverse.html#constructor)
+ * ## [Constructor args](/classes/langchain_aws.ChatBedrockConverse.html#constructor)
  *
- * ### [Runtime args](/interfaces/langchain_aws.ChatBedrockConverseCallOptions.html)
+ * ## [Runtime args](/interfaces/langchain_aws.ChatBedrockConverseCallOptions.html)
  *
  * Runtime args can be passed as the second argument to any of the base runnable methods `.invoke`. `.stream`, `.batch`, etc.
  * They can also be passed via the `.bind`, or the second arg in the `.bindTools` method, like shown in the example below:
