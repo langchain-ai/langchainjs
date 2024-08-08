@@ -233,7 +233,7 @@ function extractToken(chunk: AIMessageChunk): string | undefined {
  * const result = await llm.invoke(messages);
  * console.log(result);
  * ```
- * 
+ *
  * ```txt
  * AIMessage {
  *   "id": "msg_01QDpd78JUHpRP6bRRNyzbW3",
@@ -269,7 +269,7 @@ function extractToken(chunk: AIMessageChunk): string | undefined {
  *   console.log(chunk);
  * }
  * ```
- * 
+ *
  * ```txt
  * AIMessageChunk {
  *   "id": "msg_01N8MwoYxiKo9w4chE4gXUs4",
@@ -338,7 +338,7 @@ function extractToken(chunk: AIMessageChunk): string | undefined {
  * }
  * console.log(full);
  * ```
- * 
+ *
  * ```txt
  * AIMessageChunk {
  *   "id": "msg_01SBTb5zSGXfjUc7yQ8EKEEA",
@@ -390,7 +390,7 @@ function extractToken(chunk: AIMessageChunk): string | undefined {
  * );
  * console.log(aiMsg.tool_calls);
  * ```
- * 
+ *
  * ```txt
  * [
  *   {
@@ -439,7 +439,7 @@ function extractToken(chunk: AIMessageChunk): string | undefined {
  * const jokeResult = await structuredLlm.invoke("Tell me a joke about cats");
  * console.log(jokeResult);
  * ```
- * 
+ *
  * ```txt
  * {
  *   setup: "Why don't cats play poker in the jungle?",
@@ -474,7 +474,7 @@ function extractToken(chunk: AIMessageChunk): string | undefined {
  * const imageDescriptionAiMsg = await llm.invoke([message]);
  * console.log(imageDescriptionAiMsg.content);
  * ```
- * 
+ *
  * ```txt
  * The weather in this image appears to be beautiful and clear. The sky is a vibrant blue with scattered white clouds, suggesting a sunny and pleasant day. The clouds are wispy and light, indicating calm conditions without any signs of storms or heavy weather. The bright green grass on the rolling hills looks lush and well-watered, which could mean recent rainfall or good growing conditions. Overall, the scene depicts a perfect spring or early summer day with mild temperatures, plenty of sunshine, and gentle breezes - ideal weather for enjoying the outdoors or for plant growth.
  * ```
@@ -489,7 +489,7 @@ function extractToken(chunk: AIMessageChunk): string | undefined {
  * const aiMsgForMetadata = await llm.invoke(messages);
  * console.log(aiMsgForMetadata.usage_metadata);
  * ```
- * 
+ *
  * ```txt
  * { input_tokens: 25, output_tokens: 19, total_tokens: 44 }
  * ```
@@ -513,7 +513,7 @@ function extractToken(chunk: AIMessageChunk): string | undefined {
  * }
  * console.log(fullForMetadata?.usage_metadata);
  * ```
- * 
+ *
  * ```txt
  * { input_tokens: 25, output_tokens: 20, total_tokens: 45 }
  * ```
@@ -528,7 +528,7 @@ function extractToken(chunk: AIMessageChunk): string | undefined {
  * const aiMsgForResponseMetadata = await llm.invoke(messages);
  * console.log(aiMsgForResponseMetadata.response_metadata);
  * ```
- * 
+ *
  * ```txt
  * {
  *   id: 'msg_01STxeQxJmp4sCSpioD6vK3L',
