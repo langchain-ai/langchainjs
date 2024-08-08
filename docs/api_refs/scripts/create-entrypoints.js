@@ -26,6 +26,8 @@ const BASE_TYPEDOC_CONFIG = {
   skipErrorChecking: true,
   exclude: ["dist"],
   hostedBaseUrl: "https://v02.api.js.langchain.com/",
+  entryPointStrategy: "packages",
+  entryPoints: ["../../langchain", "../../langchain-core", "../../libs/*"]
 };
 
 /**
@@ -70,7 +72,7 @@ async function main() {
       langChainConfig.config.entrypoints === null ||
       langChainConfig.config.entrypoints === undefined
     ) {
-      return;
+      continue;
     }
     const { config } = langChainConfig;
 
@@ -82,7 +84,7 @@ async function main() {
     const deprecatedNodeOnly =
       "deprecatedNodeOnly" in config ? config.deprecatedNodeOnly : [];
 
-    Object.values(config.entrypoints)
+    const workspaceEntrypoints = Object.values(config.entrypoints)
       .filter((key) => !deprecatedNodeOnly.includes(key))
       .filter(
         (key) =>
@@ -91,8 +93,21 @@ async function main() {
               blacklistedItem === `${entrypointDir}/src/${key}.ts`
           )
       )
-      .map((key) => entrypoints.add(`${entrypointDir}/src/${key}.ts`));
+      .map((key) => `src/${key}.ts`);
+
+    const typedocPath = path.join(entrypointDir, "typedoc.json");
+    
+    if (!fs.existsSync(typedocPath)) {
+      fs.writeFileSync(typedocPath, "{}\n");
+    }
+
+    updateJsonFile(typedocPath, (existingConfig) => ({
+      ...existingConfig,
+      entryPoints: workspaceEntrypoints,
+      extends: typedocPath.includes("/libs/") ? ["../../docs/api_refs/typedoc.base.json"] : ["../docs/api_refs/typedoc.base.json"]
+    }));
   }
+
   // Check if the `./typedoc.json` file exists, since it is gitignored by default
   if (!fs.existsSync("./typedoc.json")) {
     fs.writeFileSync("./typedoc.json", "{}\n");
@@ -100,7 +115,7 @@ async function main() {
 
   updateJsonFile("./typedoc.json", () => ({
     ...BASE_TYPEDOC_CONFIG,
-    entryPoints: Array.from(entrypoints),
+    // entryPoints: Array.from(entrypoints),
   }));
 }
 main();

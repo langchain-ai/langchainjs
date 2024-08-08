@@ -99,11 +99,11 @@ function load(application) {
    * @returns {void}
    */
   function onBeginResolve(context) {
-    reflectionsToHide.forEach((reflection) => {
-      const { project } = context;
-      // Remove the property from documentation
-      project.removeReflection(reflection);
-    });
+    // reflectionsToHide.forEach((reflection) => {
+    //   const { project } = context;
+    //   // Remove the property from documentation
+    //   project.removeReflection(reflection);
+    // });
   }
 
   /**
@@ -111,14 +111,18 @@ function load(application) {
    * @param {DeclarationReflection} reflection
    * @returns {void}
    */
-  function resolveReflection(_context, reflection) {
+  function resolveReflection(context, reflection) {
+    const { project } = context;
+
     const reflectionKind = reflection.kind;
     if (reflectionKindsToHide.includes(reflectionKind)) {
       if (
         reflection.name.startsWith("_") ||
         reflection.name.startsWith("lc_")
       ) {
-        reflectionsToHide.push(reflection);
+        // Remove the property from documentation
+        project.removeReflection(reflection);
+        // reflectionsToHide.push(reflection);
       }
     }
     if (reflection.name.includes("/src")) {
