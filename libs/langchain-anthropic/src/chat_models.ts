@@ -206,7 +206,6 @@ function extractToken(chunk: AIMessageChunk): string | undefined {
  *   model: "claude-3-5-sonnet-20240620",
  *   temperature: 0,
  *   maxTokens: undefined,
- *   timeout: undefined,
  *   maxRetries: 2,
  *   // apiKey: "...",
  *   // baseUrl: "...",
@@ -234,6 +233,30 @@ function extractToken(chunk: AIMessageChunk): string | undefined {
  * const result = await llm.invoke(messages);
  * console.log(result);
  * ```
+ * 
+ * ```txt
+ * AIMessage {
+ *   "id": "msg_01QDpd78JUHpRP6bRRNyzbW3",
+ *   "content": "Here's the translation to French:\n\nJ'adore la programmation.",
+ *   "response_metadata": {
+ *     "id": "msg_01QDpd78JUHpRP6bRRNyzbW3",
+ *     "model": "claude-3-5-sonnet-20240620",
+ *     "stop_reason": "end_turn",
+ *     "stop_sequence": null,
+ *     "usage": {
+ *       "input_tokens": 25,
+ *       "output_tokens": 19
+ *     },
+ *     "type": "message",
+ *     "role": "assistant"
+ *   },
+ *   "usage_metadata": {
+ *     "input_tokens": 25,
+ *     "output_tokens": 19,
+ *     "total_tokens": 44
+ *   }
+ * }
+ * ```
  * </details>
  *
  * <br />
@@ -244,6 +267,57 @@ function extractToken(chunk: AIMessageChunk): string | undefined {
  * ```typescript
  * for await (const chunk of await llm.stream(messages)) {
  *   console.log(chunk);
+ * }
+ * ```
+ * 
+ * ```txt
+ * AIMessageChunk {
+ *   "id": "msg_01N8MwoYxiKo9w4chE4gXUs4",
+ *   "content": "",
+ *   "additional_kwargs": {
+ *     "id": "msg_01N8MwoYxiKo9w4chE4gXUs4",
+ *     "type": "message",
+ *     "role": "assistant",
+ *     "model": "claude-3-5-sonnet-20240620"
+ *   },
+ *   "usage_metadata": {
+ *     "input_tokens": 25,
+ *     "output_tokens": 1,
+ *     "total_tokens": 26
+ *   }
+ * }
+ * AIMessageChunk {
+ *   "content": "",
+ * }
+ * AIMessageChunk {
+ *   "content": "Here",
+ * }
+ * AIMessageChunk {
+ *   "content": "'s",
+ * }
+ * AIMessageChunk {
+ *   "content": " the translation to",
+ * }
+ * AIMessageChunk {
+ *   "content": " French:\n\nJ",
+ * }
+ * AIMessageChunk {
+ *   "content": "'adore la programmation",
+ * }
+ * AIMessageChunk {
+ *   "content": ".",
+ * }
+ * AIMessageChunk {
+ *   "content": "",
+ *   "additional_kwargs": {
+ *     "stop_reason": "end_turn",
+ *     "stop_sequence": null
+ *   },
+ *   "usage_metadata": {
+ *     "input_tokens": 0,
+ *     "output_tokens": 19,
+ *     "total_tokens": 19
+ *   }
  * }
  * ```
  * </details>
@@ -263,6 +337,26 @@ function extractToken(chunk: AIMessageChunk): string | undefined {
  *   full = !full ? chunk : concat(full, chunk);
  * }
  * console.log(full);
+ * ```
+ * 
+ * ```txt
+ * AIMessageChunk {
+ *   "id": "msg_01SBTb5zSGXfjUc7yQ8EKEEA",
+ *   "content": "Here's the translation to French:\n\nJ'adore la programmation.",
+ *   "additional_kwargs": {
+ *     "id": "msg_01SBTb5zSGXfjUc7yQ8EKEEA",
+ *     "type": "message",
+ *     "role": "assistant",
+ *     "model": "claude-3-5-sonnet-20240620",
+ *     "stop_reason": "end_turn",
+ *     "stop_sequence": null
+ *   },
+ *   "usage_metadata": {
+ *     "input_tokens": 25,
+ *     "output_tokens": 20,
+ *     "total_tokens": 45
+ *   }
+ * }
  * ```
  * </details>
  *
@@ -296,6 +390,35 @@ function extractToken(chunk: AIMessageChunk): string | undefined {
  * );
  * console.log(aiMsg.tool_calls);
  * ```
+ * 
+ * ```txt
+ * [
+ *   {
+ *     name: 'GetWeather',
+ *     args: { location: 'Los Angeles, CA' },
+ *     id: 'toolu_01WjW3Dann6BPJVtLhovdBD5',
+ *     type: 'tool_call'
+ *   },
+ *   {
+ *     name: 'GetWeather',
+ *     args: { location: 'New York, NY' },
+ *     id: 'toolu_01G6wfJgqi5zRmJomsmkyZXe',
+ *     type: 'tool_call'
+ *   },
+ *   {
+ *     name: 'GetPopulation',
+ *     args: { location: 'Los Angeles, CA' },
+ *     id: 'toolu_0165qYWBA2VFyUst5RA18zew',
+ *     type: 'tool_call'
+ *   },
+ *   {
+ *     name: 'GetPopulation',
+ *     args: { location: 'New York, NY' },
+ *     id: 'toolu_01PGNyP33vxr13tGqr7i3rDo',
+ *     type: 'tool_call'
+ *   }
+ * ]
+ * ```
  * </details>
  *
  * <br />
@@ -315,6 +438,14 @@ function extractToken(chunk: AIMessageChunk): string | undefined {
  * const structuredLlm = llm.withStructuredOutput(Joke);
  * const jokeResult = await structuredLlm.invoke("Tell me a joke about cats");
  * console.log(jokeResult);
+ * ```
+ * 
+ * ```txt
+ * {
+ *   setup: "Why don't cats play poker in the jungle?",
+ *   punchline: 'Too many cheetahs!',
+ *   rating: 7
+ * }
  * ```
  * </details>
  *
@@ -343,6 +474,10 @@ function extractToken(chunk: AIMessageChunk): string | undefined {
  * const imageDescriptionAiMsg = await llm.invoke([message]);
  * console.log(imageDescriptionAiMsg.content);
  * ```
+ * 
+ * ```txt
+ * The weather in this image appears to be beautiful and clear. The sky is a vibrant blue with scattered white clouds, suggesting a sunny and pleasant day. The clouds are wispy and light, indicating calm conditions without any signs of storms or heavy weather. The bright green grass on the rolling hills looks lush and well-watered, which could mean recent rainfall or good growing conditions. Overall, the scene depicts a perfect spring or early summer day with mild temperatures, plenty of sunshine, and gentle breezes - ideal weather for enjoying the outdoors or for plant growth.
+ * ```
  * </details>
  *
  * <br />
@@ -353,6 +488,10 @@ function extractToken(chunk: AIMessageChunk): string | undefined {
  * ```typescript
  * const aiMsgForMetadata = await llm.invoke(messages);
  * console.log(aiMsgForMetadata.usage_metadata);
+ * ```
+ * 
+ * ```txt
+ * { input_tokens: 25, output_tokens: 19, total_tokens: 44 }
  * ```
  * </details>
  *
@@ -365,9 +504,7 @@ function extractToken(chunk: AIMessageChunk): string | undefined {
  * const streamForMetadata = await llm.stream(
  *   messages,
  *   {
- *     stream_options: {
- *       include_usage: true
- *     }
+ *     streamUsage: true
  *   }
  * );
  * let fullForMetadata: AIMessageChunk | undefined;
@@ -375,6 +512,10 @@ function extractToken(chunk: AIMessageChunk): string | undefined {
  *   fullForMetadata = !fullForMetadata ? chunk : concat(fullForMetadata, chunk);
  * }
  * console.log(fullForMetadata?.usage_metadata);
+ * ```
+ * 
+ * ```txt
+ * { input_tokens: 25, output_tokens: 20, total_tokens: 45 }
  * ```
  * </details>
  *
@@ -386,6 +527,18 @@ function extractToken(chunk: AIMessageChunk): string | undefined {
  * ```typescript
  * const aiMsgForResponseMetadata = await llm.invoke(messages);
  * console.log(aiMsgForResponseMetadata.response_metadata);
+ * ```
+ * 
+ * ```txt
+ * {
+ *   id: 'msg_01STxeQxJmp4sCSpioD6vK3L',
+ *   model: 'claude-3-5-sonnet-20240620',
+ *   stop_reason: 'end_turn',
+ *   stop_sequence: null,
+ *   usage: { input_tokens: 25, output_tokens: 19 },
+ *   type: 'message',
+ *   role: 'assistant'
+ * }
  * ```
  * </details>
  *
