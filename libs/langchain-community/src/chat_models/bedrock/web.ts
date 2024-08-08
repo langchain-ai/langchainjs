@@ -250,7 +250,7 @@ export interface BedrockChatFields
  *   console.log(chunk);
  * }
  * ```
- * 
+ *
  * ```txt
  * AIMessageChunk {
  *   "content": "",
