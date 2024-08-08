@@ -123,7 +123,7 @@ export class Ollama extends LLM<OllamaCallOptions> implements OllamaInput {
       : fields.baseUrl ?? this.baseUrl;
     this.client = new OllamaClient({
       host: this.baseUrl,
-    })
+    });
     this.keepAlive = fields.keepAlive ?? this.keepAlive;
 
     this.headers = fields.headers ?? this.headers;
