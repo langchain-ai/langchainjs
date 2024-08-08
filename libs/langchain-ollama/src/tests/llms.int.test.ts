@@ -20,9 +20,7 @@ test("test call", async () => {
 });
 
 test("test call with callback", async () => {
-  const ollama = new Ollama({
-    baseUrl: "http://localhost:11434",
-  });
+  const ollama = new Ollama();
   const tokens: string[] = [];
   const result = await ollama.invoke(
     "What is a good name for a company that makes colorful socks?",
@@ -41,9 +39,7 @@ test("test call with callback", async () => {
 });
 
 test("test streaming call", async () => {
-  const ollama = new Ollama({
-    baseUrl: "http://localhost:11434",
-  });
+  const ollama = new Ollama();
   const stream = await ollama.stream(
     `Translate "I love programming" into German.`
   );
@@ -56,9 +52,7 @@ test("test streaming call", async () => {
 });
 
 test("should abort the request", async () => {
-  const ollama = new Ollama({
-    baseUrl: "http://localhost:11434",
-  });
+  const ollama = new Ollama();
   const controller = new AbortController();
 
   await expect(() => {
@@ -79,8 +73,7 @@ test("should stream through with a bytes output parser", async () => {
   const prompt = PromptTemplate.fromTemplate(TEMPLATE);
 
   const ollama = new Ollama({
-    model: "llama2",
-    baseUrl: "http://127.0.0.1:11434",
+    model: "llama3",
   });
   const outputParser = new BytesOutputParser();
   const chain = prompt.pipe(ollama).pipe(outputParser);
@@ -105,8 +98,7 @@ test("JSON mode", async () => {
   const prompt = PromptTemplate.fromTemplate(TEMPLATE);
 
   const ollama = new Ollama({
-    model: "llama2",
-    baseUrl: "http://127.0.0.1:11434",
+    model: "llama3",
     format: "json",
   });
   const outputParser = new StringOutputParser();
@@ -124,7 +116,6 @@ test("Test Ollama with an image", async () => {
   const imageData = await fs.readFile(path.join(__dirname, "/data/hotdog.jpg"));
   const model = new Ollama({
     model: "llava",
-    baseUrl: "http://127.0.0.1:11434",
   }).bind({
     images: [imageData.toString("base64")],
   });
