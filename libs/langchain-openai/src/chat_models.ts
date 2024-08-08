@@ -382,7 +382,7 @@ export interface ChatOpenAIFields
  * ## [Runtime args](/interfaces/langchain_openai.ChatOpenAICallOptions.html)
  *
  * Runtime args can be passed as the second argument to any of the base runnable methods `.invoke`. `.stream`, `.batch`, etc.
- * They can also be passed via the `.bind`, or the second arg in the `.bindTools` method, like shown in the example below:
+ * They can also be passed via `.bind`, or the second arg in `.bindTools`, like shown in the examples below:
  *
  * ```typescript
  * // When calling `.bind`, call options should be passed via the first argument
@@ -395,7 +395,7 @@ export interface ChatOpenAIFields
  * const llmWithTools = llm.bindTools(
  *   [...],
  *   {
- *     stop: ["stop on this token!"],
+ *     tool_choice: "auto",
  *   }
  * );
  * ```
