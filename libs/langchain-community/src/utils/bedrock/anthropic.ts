@@ -55,17 +55,33 @@ function _mergeMessages(
   for (const message of messages) {
     if (message._getType() === "tool") {
       if (typeof message.content === "string") {
-        merged.push(
-          new HumanMessage({
-            content: [
-              {
-                type: "tool_result",
-                content: message.content,
-                tool_use_id: (message as ToolMessage).tool_call_id,
-              },
-            ],
-          })
-        );
+        const previousMessage = merged[merged.length - 1];
+        if (
+          previousMessage?._getType() === "human" &&
+          Array.isArray(previousMessage.content) &&
+          "type" in previousMessage.content[0] &&
+          previousMessage.content[0].type === "tool_result"
+        ) {
+          // If the previous message was a tool result, we merge this tool message into it.
+          previousMessage.content.push({
+            type: "tool_result",
+            content: message.content,
+            tool_use_id: (message as ToolMessage).tool_call_id,
+          });
+        } else {
+          // If not, we create a new human message with the tool result.
+          merged.push(
+            new HumanMessage({
+              content: [
+                {
+                  type: "tool_result",
+                  content: message.content,
+                  tool_use_id: (message as ToolMessage).tool_call_id,
+                },
+              ],
+            })
+          );
+        }
       } else {
         merged.push(new HumanMessage({ content: message.content }));
       }

@@ -6,6 +6,7 @@ import {
   _mergeDicts,
   type MessageType,
   _mergeObj,
+  _mergeStatus,
 } from "./base.js";
 
 export interface ToolMessageFieldsWithToolCallId extends BaseMessageFields {
@@ -19,6 +20,11 @@ export interface ToolMessageFieldsWithToolCallId extends BaseMessageFields {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   artifact?: any;
   tool_call_id: string;
+  /**
+   * Status of the tool invocation.
+   * @version 0.2.19
+   */
+  status?: "success" | "error";
 }
 
 /**
@@ -33,6 +39,12 @@ export class ToolMessage extends BaseMessage {
     // exclude snake case conversion to pascal case
     return { tool_call_id: "tool_call_id" };
   }
+
+  /**
+   * Status of the tool invocation.
+   * @version 0.2.19
+   */
+  status?: "success" | "error";
 
   tool_call_id: string;
 
@@ -66,6 +78,7 @@ export class ToolMessage extends BaseMessage {
     super(fields);
     this.tool_call_id = fields.tool_call_id;
     this.artifact = fields.artifact;
+    this.status = fields.status;
   }
 
   _getType(): MessageType {
@@ -93,6 +106,12 @@ export class ToolMessageChunk extends BaseMessageChunk {
   tool_call_id: string;
 
   /**
+   * Status of the tool invocation.
+   * @version 0.2.19
+   */
+  status?: "success" | "error";
+
+  /**
    * Artifact of the Tool execution which is not meant to be sent to the model.
    *
    * Should only be specified if it is different from the message content, e.g. if only
@@ -106,6 +125,7 @@ export class ToolMessageChunk extends BaseMessageChunk {
     super(fields);
     this.tool_call_id = fields.tool_call_id;
     this.artifact = fields.artifact;
+    this.status = fields.status;
   }
 
   static lc_name() {
@@ -130,6 +150,7 @@ export class ToolMessageChunk extends BaseMessageChunk {
       artifact: _mergeObj(this.artifact, chunk.artifact),
       tool_call_id: this.tool_call_id,
       id: this.id ?? chunk.id,
+      status: _mergeStatus(this.status, chunk.status),
     });
   }
 

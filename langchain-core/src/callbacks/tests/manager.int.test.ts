@@ -1,5 +1,5 @@
 /* eslint-disable no-process-env */
-import { test } from "@jest/globals";
+import { test, expect } from "@jest/globals";
 
 import { PromptTemplate } from "../../prompts/prompt.js";
 import { FakeLLM } from "../../utils/testing/index.js";

@@ -2,7 +2,7 @@
 /* eslint-disable no-process-env */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { test } from "@jest/globals";
+import { test, expect, afterEach } from "@jest/globals";
 import { z } from "zod";
 import {
   RunnableLambda,
@@ -2119,4 +2119,25 @@ test("Runnable streamEvents method with text/event-stream encoding", async () =>
   }
 
   expect(decoder.decode(events[3])).toEqual("event: end\n\n");
+});
+
+test("Runnable streamEvents method should respect passed signal", async () => {
+  const r = RunnableLambda.from(reverse);
+
+  const chain = r
+    .withConfig({ runName: "1" })
+    .pipe(r.withConfig({ runName: "2" }))
+    .pipe(r.withConfig({ runName: "3" }));
+
+  const controller = new AbortController();
+  const eventStream = await chain.streamEvents("hello", {
+    version: "v2",
+    signal: controller.signal,
+  });
+  await expect(async () => {
+    for await (const _ of eventStream) {
+      // Abort after the first chunk
+      controller.abort();
+    }
+  }).rejects.toThrowError();
 });

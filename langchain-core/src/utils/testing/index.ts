@@ -2,7 +2,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
-import { similarity as ml_distance_similarity } from "ml-distance";
 import { z } from "zod";
 import {
   BaseCallbackConfig,
@@ -16,6 +15,7 @@ import {
 import { Document } from "../../documents/document.js";
 import {
   BaseChatModel,
+  BaseChatModelCallOptions,
   BaseChatModelParams,
 } from "../../language_models/chat_models.js";
 import { BaseLLMParams, LLM } from "../../language_models/llms.js";
@@ -46,6 +46,7 @@ import {
   StructuredOutputMethodOptions,
 } from "../../language_models/base.js";
 import { VectorStore } from "../../vectorstores.js";
+import { cosine } from "../ml-distance/similarities.js";
 
 /**
  * Parser for comma-separated values. It splits the input text by commas
@@ -320,6 +321,12 @@ export interface FakeChatInput extends BaseChatModelParams {
 
   /** Time to sleep in milliseconds between responses */
   sleep?: number;
+
+  emitCustomEvent?: boolean;
+}
+
+export interface FakeListChatModelCallOptions extends BaseChatModelCallOptions {
+  thrownErrorString?: string;
 }
 
 /**
@@ -342,7 +349,7 @@ export interface FakeChatInput extends BaseChatModelParams {
  * console.log({ secondResponse });
  * ```
  */
-export class FakeListChatModel extends BaseChatModel {
+export class FakeListChatModel extends BaseChatModel<FakeListChatModelCallOptions> {
   static lc_name() {
     return "FakeListChatModel";
   }
@@ -353,10 +360,13 @@ export class FakeListChatModel extends BaseChatModel {
 
   sleep?: number;
 
-  constructor({ responses, sleep }: FakeChatInput) {
+  emitCustomEvent = false;
+
+  constructor({ responses, sleep, emitCustomEvent }: FakeChatInput) {
     super({});
     this.responses = responses;
     this.sleep = sleep;
+    this.emitCustomEvent = emitCustomEvent ?? this.emitCustomEvent;
   }
 
   _combineLLMOutput() {
@@ -369,9 +379,18 @@ export class FakeListChatModel extends BaseChatModel {
 
   async _generate(
     _messages: BaseMessage[],
-    options?: this["ParsedCallOptions"]
+    options?: this["ParsedCallOptions"],
+    runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
     await this._sleepIfRequested();
+    if (options?.thrownErrorString) {
+      throw new Error(options.thrownErrorString);
+    }
+    if (this.emitCustomEvent) {
+      await runManager?.handleCustomEvent("some_test_event", {
+        someval: true,
+      });
+    }
 
     if (options?.stop?.length) {
       return {
@@ -397,14 +416,22 @@ export class FakeListChatModel extends BaseChatModel {
 
   async *_streamResponseChunks(
     _messages: BaseMessage[],
-    _options: this["ParsedCallOptions"],
+    options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
     const response = this._currentResponse();
     this._incrementResponse();
+    if (this.emitCustomEvent) {
+      await runManager?.handleCustomEvent("some_test_event", {
+        someval: true,
+      });
+    }
 
     for await (const text of response) {
       await this._sleepIfRequested();
+      if (options?.thrownErrorString) {
+        throw new Error(options.thrownErrorString);
+      }
       const chunk = this._createResponseChunk(text);
       yield chunk;
       void runManager?.handleLLMNewToken(text);
@@ -734,7 +761,7 @@ interface MemoryVector {
  * function.
  */
 export interface FakeVectorStoreArgs {
-  similarity?: typeof ml_distance_similarity.cosine;
+  similarity?: typeof cosine;
 }
 
 /**
@@ -747,7 +774,7 @@ export class FakeVectorStore extends VectorStore {
 
   memoryVectors: MemoryVector[] = [];
 
-  similarity: typeof ml_distance_similarity.cosine;
+  similarity: typeof cosine;
 
   _vectorstoreType(): string {
     return "memory";
@@ -759,7 +786,7 @@ export class FakeVectorStore extends VectorStore {
   ) {
     super(embeddings, rest);
 
-    this.similarity = similarity ?? ml_distance_similarity.cosine;
+    this.similarity = similarity ?? cosine;
   }
 
   /**

@@ -37,6 +37,7 @@
     "test:standard:int": "turbo test:standard:int",
     "test:standard": "yarn test:standard:unit && yarn test:standard:int",
     "example": "yarn workspace examples start",
+    "notebook:validate": "yarn workspace core_docs validate",
     "precommit": "turbo precommit",
     "docs": "yarn workspace core_docs start",
     "docs:api_refs": "yarn workspace api_refs start",
@@ -62,6 +63,7 @@
     "voy-search@0.6.2": "patch:voy-search@npm%3A0.6.2#./.yarn/patches/voy-search-npm-0.6.2-d4aca30a0e.patch",
     "@langchain/core": "workspace:*",
     "better-sqlite3": "9.4.0",
+    "protobufjs": "^7.2.5",
     "zod": "3.23.8"
   },
   "lint-staged": {

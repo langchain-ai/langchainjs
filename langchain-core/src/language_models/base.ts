@@ -207,18 +207,6 @@ export interface BaseLanguageModelCallOptions extends RunnableConfig {
    * If not provided, the default stop tokens for the model will be used.
    */
   stop?: string[];
-
-  /**
-   * Timeout for this call in milliseconds.
-   */
-  timeout?: number;
-
-  /**
-   * Abort signal for this call.
-   * If provided, the call will be aborted when the signal is aborted.
-   * @see https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal
-   */
-  signal?: AbortSignal;
 }
 
 export interface FunctionDefinition {
@@ -245,6 +233,15 @@ export interface FunctionDefinition {
    * how to call the function.
    */
   description?: string;
+
+  /**
+   * Whether to enable strict schema adherence when generating the function call. If
+   * set to true, the model will follow the exact schema defined in the `parameters`
+   * field. Only a subset of JSON Schema is supported when `strict` is `true`. Learn
+   * more about Structured Outputs in the
+   * [function calling guide](https://platform.openai.com/docs/guides/function-calling).
+   */
+  strict?: boolean;
 }
 
 export interface ToolDefinition {

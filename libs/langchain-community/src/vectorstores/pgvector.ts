@@ -163,17 +163,19 @@ export class PGVectorStore extends VectorStore {
    * `connect` to return a new instance of `PGVectorStore`.
    *
    * @param embeddings - Embeddings instance.
-   * @param fields - `PGVectorStoreArgs` instance.
+   * @param fields - `PGVectorStoreArgs` instance
+   * @param fields.dimensions Number of dimensions in your vector data type. For example, use 1536 for OpenAI's `text-embedding-3-small`. If not set, indexes like HNSW might not be used during query time.
    * @returns A new instance of `PGVectorStore`.
    */
   static async initialize(
     embeddings: EmbeddingsInterface,
-    config: PGVectorStoreArgs
+    config: PGVectorStoreArgs & { dimensions?: number }
   ): Promise<PGVectorStore> {
-    const postgresqlVectorStore = new PGVectorStore(embeddings, config);
+    const { dimensions, ...rest } = config;
+    const postgresqlVectorStore = new PGVectorStore(embeddings, rest);
 
     await postgresqlVectorStore._initializeClient();
-    await postgresqlVectorStore.ensureTableInDatabase();
+    await postgresqlVectorStore.ensureTableInDatabase(dimensions);
     if (postgresqlVectorStore.collectionTableName) {
       await postgresqlVectorStore.ensureCollectionTableInDatabase();
     }
@@ -552,10 +554,10 @@ export class PGVectorStore extends VectorStore {
   /**
    * Method to ensure the existence of the table in the database. It creates
    * the table if it does not already exist.
-   *
+   * @param dimensions Number of dimensions in your vector data type. For example, use 1536 for OpenAI's `text-embedding-3-small`. If not set, indexes like HNSW might not be used during query time.
    * @returns Promise that resolves when the table has been ensured.
    */
-  async ensureTableInDatabase(): Promise<void> {
+  async ensureTableInDatabase(dimensions?: number): Promise<void> {
     const vectorQuery =
       this.extensionSchemaName == null
         ? "CREATE EXTENSION IF NOT EXISTS vector;"
@@ -568,12 +570,15 @@ export class PGVectorStore extends VectorStore {
       this.extensionSchemaName == null
         ? "vector"
         : `"${this.extensionSchemaName}"."vector"`;
+    const vectorColumnType = dimensions
+      ? `${extensionName}(${dimensions})`
+      : extensionName;
     const tableQuery = `
       CREATE TABLE IF NOT EXISTS ${this.computedTableName} (
         "${this.idColumnName}" uuid NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY,
         "${this.contentColumnName}" text,
         "${this.metadataColumnName}" jsonb,
-        "${this.vectorColumnName}" ${extensionName}
+        "${this.vectorColumnName}" ${vectorColumnType}
       );
     `;
     await this.pool.query(vectorQuery);
@@ -633,7 +638,7 @@ export class PGVectorStore extends VectorStore {
     texts: string[],
     metadatas: object[] | object,
     embeddings: EmbeddingsInterface,
-    dbConfig: PGVectorStoreArgs
+    dbConfig: PGVectorStoreArgs & { dimensions?: number }
   ): Promise<PGVectorStore> {
     const docs = [];
     for (let i = 0; i < texts.length; i += 1) {
@@ -660,7 +665,7 @@ export class PGVectorStore extends VectorStore {
   static async fromDocuments(
     docs: Document[],
     embeddings: EmbeddingsInterface,
-    dbConfig: PGVectorStoreArgs
+    dbConfig: PGVectorStoreArgs & { dimensions?: number }
   ): Promise<PGVectorStore> {
     const instance = await PGVectorStore.initialize(embeddings, dbConfig);
     await instance.addDocuments(docs, { ids: dbConfig.ids });
@@ -685,6 +690,7 @@ export class PGVectorStore extends VectorStore {
    * @param m - The max number of connections per layer (16 by default). Index build time improves with smaller values, while higher values can speed up search queries.
    * @param efConstruction -  The size of the dynamic candidate list for constructing the graph (64 by default). A higher value can potentially improve the index quality at the cost of index build time.
    * @param distanceFunction -  The distance function name you want to use, is automatically selected based on the distanceStrategy.
+   * @param namespace -  The namespace is used to create the index with a specific name. This is useful when you want to create multiple indexes on the same database schema (within the same schema in PostgreSQL, the index name must be unique across all tables).
    * @returns Promise that resolves with the query response of creating the index.
    */
   async createHnswIndex(config: {
@@ -692,8 +698,10 @@ export class PGVectorStore extends VectorStore {
     m?: number;
     efConstruction?: number;
     distanceFunction?: string;
+    namespace?: string;
   }): Promise<void> {
     let idxDistanceFunction = config?.distanceFunction || "vector_cosine_ops";
+    const prefix = config?.namespace ? `${config.namespace}_` : "";
 
     switch (this.distanceStrategy) {
       case "cosine":
@@ -709,7 +717,7 @@ export class PGVectorStore extends VectorStore {
         throw new Error(`Unknown distance strategy: ${this.distanceStrategy}`);
     }
 
-    const createIndexQuery = `CREATE INDEX IF NOT EXISTS ${
+    const createIndexQuery = `CREATE INDEX IF NOT EXISTS ${prefix}${
       this.vectorColumnName
     }_embedding_hnsw_idx
         ON ${this.computedTableName} USING hnsw ((${
