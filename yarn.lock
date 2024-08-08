@@ -11761,7 +11761,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/google-common@workspace:*, @langchain/google-common@workspace:libs/langchain-google-common, @langchain/google-common@~0.0.23":
+"@langchain/google-common@workspace:*, @langchain/google-common@workspace:libs/langchain-google-common, @langchain/google-common@~0.0, @langchain/google-common@~0.0.23":
   version: 0.0.0-use.local
   resolution: "@langchain/google-common@workspace:libs/langchain-google-common"
   dependencies:
@@ -11911,7 +11911,7 @@ __metadata:
   dependencies:
     "@jest/globals": ^29.5.0
     "@langchain/core": ">=0.2.21 <0.3.0"
-    "@langchain/google-common": "workspace:*"
+    "@langchain/google-common": ~0.0
     "@langchain/google-gauth": ~0.0.22
     "@langchain/scripts": ~0.0.20
     "@langchain/standard-tests": 0.0.0
