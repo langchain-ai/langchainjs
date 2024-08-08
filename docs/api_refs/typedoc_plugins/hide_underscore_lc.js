@@ -118,7 +118,7 @@ function getAllChatModelNames() {
       }
     }
   }
-  return chatModelNames;
+  return chatModelNames.flatMap((n) => (n ? [n] : []));
 }
 
 /**
@@ -161,19 +161,13 @@ function shouldRemoveReflection(reflection, chatModelNames) {
  * @returns {void}
  */
 function load(application) {
-  /**
-   * @type {string}
-   */
-  let langchainVersion;
+  let allChatModelNames = [];
   try {
-    const langChainPackageJson = fs
-      .readFileSync(PATH_TO_LANGCHAIN_PKG_JSON)
-      .toString();
-    langchainVersion = JSON.parse(langChainPackageJson).version;
-  } catch (e) {
-    throw new Error(`Error reading LangChain version for typedoc: ${e}`);
+    allChatModelNames = getAllChatModelNames();
+  } catch (err) {
+    console.error("Error while getting all chat model names");
+    throw err;
   }
-  const allChatModelNames = getAllChatModelNames();
 
   application.converter.on(
     Converter.EVENT_CREATE_DECLARATION,

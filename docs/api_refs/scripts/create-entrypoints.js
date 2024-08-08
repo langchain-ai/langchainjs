@@ -62,8 +62,6 @@ async function main() {
     fs.readFileSync("./blacklisted-entrypoints.json")
   );
 
-  const entrypoints = new Set([]);
-
   for await (const configFile of configFiles) {
     const langChainConfig = await import(configFile);
     if (!("entrypoints" in langChainConfig.config)) {
@@ -119,7 +117,16 @@ async function main() {
 
   updateJsonFile("./typedoc.json", () => ({
     ...BASE_TYPEDOC_CONFIG,
-    // entryPoints: Array.from(entrypoints),
   }));
 }
-main();
+
+async function runMain() {
+  try {
+    await main();
+  } catch (error) {
+    console.error("An error occurred while creating the entrypoints.");
+    throw error;
+  }
+}
+
+runMain();
