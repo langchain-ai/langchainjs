@@ -4,10 +4,11 @@ import {
   AsyncCallerCallOptions,
 } from "@langchain/core/utils/async_caller";
 import { chunkArray } from "@langchain/core/utils/chunk_array";
+import { getEnvironmentVariable } from "@langchain/core/utils/env";
+
 import { GoogleAIConnection } from "./connection.js";
 import { ApiKeyGoogleAuth, GoogleAbstractedClient } from "./auth.js";
-import { GoogleAIModelRequestParams, GoogleConnectionParams } from "./types.js";
-import { getEnvironmentVariable } from "@langchain/core/utils/env";
+import { GoogleAIModelRequestParams, GoogleConnectionParams, GoogleResponse } from "./types.js";
 
 class EmbeddingsConnection<
   CallOptions extends AsyncCallerCallOptions,
@@ -15,7 +16,8 @@ class EmbeddingsConnection<
 > extends GoogleAIConnection<
   CallOptions,
   GoogleEmbeddingsInstance[],
-  AuthOptions
+  AuthOptions,
+  GoogleEmbeddingsResponse
 > {
   convertSystemMessageToHumanContent: boolean | undefined;
 
@@ -73,14 +75,18 @@ export interface GoogleEmbeddingsInstance {
  * Vertex AI API. It extends GoogleBasePrediction and contains the
  * embeddings and their statistics.
  */
-export interface BaseGoogleEmbeddingsResults {
-  embeddings: {
-    statistics: {
-      token_count: number;
-      truncated: boolean;
-    };
-    values: number[];
-  };
+export interface GoogleEmbeddingsResponse extends GoogleResponse {
+  data: {
+    predictions: {
+      embeddings: {
+        statistics: {
+          token_count: number;
+          truncated: boolean;
+        };
+        values: number[];
+      };
+    }[];
+  }
 }
 
 /**
@@ -111,10 +117,9 @@ export abstract class BaseGoogleEmbeddings<AuthOptions>
 {
   model: string;
 
-  private connection: GoogleAIConnection<
+  private connection: EmbeddingsConnection<
     BaseGoogleEmbeddingsOptions,
-    GoogleEmbeddingsInstance[],
-    GoogleConnectionParams<AuthOptions>
+    AuthOptions
   >;
 
   constructor(fields: BaseGoogleEmbeddingsParams<AuthOptions>) {
@@ -180,8 +185,8 @@ export abstract class BaseGoogleEmbeddings<AuthOptions>
       responses
         ?.map(
           (response) =>
-            (response?.data as any)?.predictions?.map(
-              (result: any) => result.embeddings.values
+            (response?.data)?.predictions?.map(
+              (result) => result.embeddings.values
             ) ?? []
         )
         .flat() ?? [];

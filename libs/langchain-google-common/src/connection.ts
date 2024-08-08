@@ -168,9 +168,10 @@ export abstract class GoogleHostConnection<
 export abstract class GoogleAIConnection<
     CallOptions extends AsyncCallerCallOptions,
     InputType,
-    AuthOptions
+    AuthOptions,
+    ResponseType extends GoogleResponse,
   >
-  extends GoogleHostConnection<CallOptions, GoogleLLMResponse, AuthOptions>
+  extends GoogleHostConnection<CallOptions, ResponseType, AuthOptions>
   implements GoogleAIBaseLLMInput<AuthOptions>
 {
   model: string;
@@ -240,7 +241,7 @@ export abstract class GoogleAIConnection<
     input: InputType,
     parameters: GoogleAIModelRequestParams,
     options: CallOptions
-  ): Promise<GoogleLLMResponse> {
+  ): Promise<ResponseType> {
     const data = this.formatData(input, parameters);
     const response = await this._request(data, options);
     return response;
@@ -253,7 +254,8 @@ export abstract class AbstractGoogleLLMConnection<
 > extends GoogleAIConnection<
   BaseLanguageModelCallOptions,
   MessageType,
-  AuthOptions
+  AuthOptions,
+  GoogleLLMResponse
 > {
   async buildUrlMethodGemini(): Promise<string> {
     return this.streaming ? "streamGenerateContent" : "generateContent";
