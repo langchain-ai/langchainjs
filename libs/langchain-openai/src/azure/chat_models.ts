@@ -144,7 +144,7 @@ import {
  * <br />
  *
  * <details>
- * <summary><strong>`.withStructuredOutput`</strong></summary>
+ * <summary><strong>Structured Output</strong></summary>
  *
  * ```typescript
  * import { z } from 'zod';
