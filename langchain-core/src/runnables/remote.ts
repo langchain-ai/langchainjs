@@ -262,11 +262,11 @@ function serialize<RunInput>(input: RunInput): any {
 /**
  * Client for interacting with LangChain runnables
  * that are hosted as LangServe endpoints.
- * 
+ *
  * Allows you to interact with hosted runnables using the standard
  * `.invoke()`, `.stream()`, `.streamEvents()`, etc. methods that
  * other runnables support.
- * 
+ *
  * @param url - The base URL of the LangServe endpoint.
  * @param options - Optional configuration for the remote runnable, including timeout and headers.
  * @param fetch - Optional custom fetch implementation.
