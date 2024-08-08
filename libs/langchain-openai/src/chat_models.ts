@@ -389,7 +389,7 @@ export interface ChatOpenAIFields
  *
  * <details open>
  * <summary><strong>Instantiate</strong></summary>
- * 
+ *
  * ```typescript
  * import { ChatOpenAI } from '@langchain/openai';
  *
