@@ -77,7 +77,7 @@ import {
  * const result = await llm.invoke(messages);
  * console.log(result);
  * ```
- * 
+ *
  * ```txt
  * AIMessage {
  *   "id": "chatcmpl-9u4Mpu44CbPjwYFkTbeoZgvzB00Tz",
@@ -110,7 +110,7 @@ import {
  *   console.log(chunk);
  * }
  * ```
- * 
+ *
  * ```txt
  * AIMessageChunk {
  *   "id": "chatcmpl-9u4NWB7yUeHCKdLr6jP3HpaOYHTqs",
@@ -165,7 +165,7 @@ import {
  * }
  * console.log(full);
  * ```
- * 
+ *
  * ```txt
  * AIMessageChunk {
  *   "id": "chatcmpl-9u4PnX6Fy7OmK46DASy0bH6cxn5Xu",
@@ -215,7 +215,7 @@ import {
  * );
  * console.log(aiMsg.tool_calls);
  * ```
- * 
+ *
  * ```txt
  * [
  *   {
@@ -264,7 +264,7 @@ import {
  * const jokeResult = await structuredLlm.invoke("Tell me a joke about cats");
  * console.log(jokeResult);
  * ```
- * 
+ *
  * ```txt
  * {
  *   setup: 'Why was the cat sitting on the computer?',
@@ -286,7 +286,7 @@ import {
  * );
  * console.log(jsonLlmAiMsg.content);
  * ```
- * 
+ *
  * ```txt
  * {
  *   "randomInts": [23, 87, 45, 12, 78, 34, 56, 90, 11, 67]
@@ -319,7 +319,7 @@ import {
  * const imageDescriptionAiMsg = await llm.invoke([message]);
  * console.log(imageDescriptionAiMsg.content);
  * ```
- * 
+ *
  * ```txt
  * The weather in the image appears to be clear and sunny. The sky is mostly blue with a few scattered white clouds, indicating fair weather. The bright sunlight is casting shadows on the green, grassy hill, suggesting it is a pleasant day with good visibility. There are no signs of rain or stormy conditions.
  * ```
@@ -334,7 +334,7 @@ import {
  * const aiMsgForMetadata = await llm.invoke(messages);
  * console.log(aiMsgForMetadata.usage_metadata);
  * ```
- * 
+ *
  * ```txt
  * { input_tokens: 28, output_tokens: 5, total_tokens: 33 }
  * ```
@@ -350,7 +350,7 @@ import {
  * const aiMsgForLogprobs = await logprobsLlm.invoke(messages);
  * console.log(aiMsgForLogprobs.response_metadata.logprobs);
  * ```
- * 
+ *
  * ```txt
  * {
  *   content: [
@@ -407,7 +407,7 @@ import {
  * const aiMsgForResponseMetadata = await llm.invoke(messages);
  * console.log(aiMsgForResponseMetadata.response_metadata);
  * ```
- * 
+ *
  * ```txt
  * {
  *   tokenUsage: { completionTokens: 5, promptTokens: 28, totalTokens: 33 },
