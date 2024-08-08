@@ -13,7 +13,6 @@ const BASE_TYPEDOC_CONFIG = {
   ],
   plugin: ["./typedoc_plugins/hide_underscore_lc.js"],
   tsconfig: "../../tsconfig.json",
-  readme: "none",
   excludePrivate: true,
   excludeInternal: true,
   excludeExternals: true,
