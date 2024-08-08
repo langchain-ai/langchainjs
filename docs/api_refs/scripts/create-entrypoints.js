@@ -27,7 +27,7 @@ const BASE_TYPEDOC_CONFIG = {
   exclude: ["dist"],
   hostedBaseUrl: "https://v02.api.js.langchain.com/",
   entryPointStrategy: "packages",
-  entryPoints: ["../../langchain", "../../langchain-core", "../../libs/*"]
+  entryPoints: ["../../langchain", "../../langchain-core", "../../libs/*"],
 };
 
 /**
@@ -96,7 +96,7 @@ async function main() {
       .map((key) => `src/${key}.ts`);
 
     const typedocPath = path.join(entrypointDir, "typedoc.json");
-    
+
     if (!fs.existsSync(typedocPath)) {
       fs.writeFileSync(typedocPath, "{}\n");
     }
@@ -104,7 +104,9 @@ async function main() {
     updateJsonFile(typedocPath, (existingConfig) => ({
       ...existingConfig,
       entryPoints: workspaceEntrypoints,
-      extends: typedocPath.includes("/libs/") ? ["../../docs/api_refs/typedoc.base.json"] : ["../docs/api_refs/typedoc.base.json"]
+      extends: typedocPath.includes("/libs/")
+        ? ["../../docs/api_refs/typedoc.base.json"]
+        : ["../docs/api_refs/typedoc.base.json"],
     }));
   }
 
