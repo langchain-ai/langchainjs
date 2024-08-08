@@ -377,13 +377,28 @@ export interface ChatOpenAIFields
  * export OPENAI_API_KEY="your-api-key"
  * ```
  *
- * ## Key args
+ * ## [Constructor args](/classes/langchain_openai.ChatOpenAI.html#constructor)
  *
- * ### [Init args](/classes/langchain_openai.ChatOpenAI.html#constructor)
+ * ## [Runtime args](/interfaces/langchain_openai.ChatOpenAICallOptions.html)
  *
- * ### [Runtime args](/interfaces/langchain_openai.ChatOpenAICallOptions.html)
+ * Runtime args can be passed as the second argument to any of the base runnable methods `.invoke`. `.stream`, `.batch`, etc.
+ * They can also be passed via `.bind`, or the second arg in `.bindTools`, like shown in the examples below:
  *
- * > See full list of supported init args and their descriptions in the [`constructor`](/classes/langchain_openai.ChatOpenAI.html#constructor) section.
+ * ```typescript
+ * // When calling `.bind`, call options should be passed via the first argument
+ * const llmWithArgsBound = llm.bind({
+ *   stop: ["\n"],
+ *   tools: [...],
+ * });
+ *
+ * // When calling `.bindTools`, call options should be passed via the second argument
+ * const llmWithTools = llm.bindTools(
+ *   [...],
+ *   {
+ *     tool_choice: "auto",
+ *   }
+ * );
+ * ```
  *
  * ## Examples
  *
