@@ -139,6 +139,7 @@ services:
       - ../turbo.json:/turbo.json
       - ../package.json:/package.json
       - ../libs/langchain-standard-tests:/libs/langchain-standard-tests
+      - ../libs/langchain-google-vertexai:/libs/langchain-google-common
       - ../libs/langchain-google-vertexai:/libs/langchain-google-vertexai
       - ./scripts:/scripts
     command: bash /scripts/with_standard_tests/google-vertexai/test-with-latest-deps.sh
@@ -153,6 +154,7 @@ services:
       - ../turbo.json:/turbo.json
       - ../package.json:/package.json
       - ../libs/langchain-standard-tests:/libs/langchain-standard-tests
+      - ../libs/langchain-google-vertexai:/libs/langchain-google-common
       - ../libs/langchain-google-vertexai:/libs/langchain-google-vertexai
       - ./scripts:/scripts
     command: bash /scripts/with_standard_tests/google-vertexai/test-with-lowest-deps.sh

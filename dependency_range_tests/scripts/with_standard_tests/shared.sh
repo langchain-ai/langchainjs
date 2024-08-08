@@ -26,7 +26,7 @@ shopt -s extglob
 mkdir -p "$monorepo_dir"
 
 # Copy `@langchain/standard-tests` WITH build artifacts from the host.
-# This is because we build @langchain/standard-tests before running this script.
+# This is because we built @langchain/standard-tests before running this script.
 mkdir -p "$monorepo_standard_tests_dir/"
 cp -r "$original_standard_tests_dir"/* "$monorepo_standard_tests_dir/"
 
