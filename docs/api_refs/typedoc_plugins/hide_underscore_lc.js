@@ -9,6 +9,28 @@ const {
 const fs = require("fs");
 const path = require("path");
 
+const WHITELISTED_CHAT_MODEL_INHERITED_METHODS = [
+  "invoke",
+  "stream",
+  "batch",
+  "streamLog",
+  "streamEvents",
+  "bind",
+  "bindTools",
+  "asTool",
+  "pipe",
+  "withConfig",
+  "withRetry",
+  "assign",
+  "getNumTokens",
+  "getGraph",
+  "pick",
+  "withFallbacks",
+  "withStructuredOutput",
+  "withListeners",
+  "transform",
+];
+
 const PATH_TO_LANGCHAIN_PKG_JSON = "../../langchain/package.json";
 const BASE_OUTPUT_DIR = "./public";
 const SCRIPT_HTML = `<script>
@@ -113,6 +135,40 @@ function load(application) {
    */
   function resolveReflection(_context, reflection) {
     const reflectionKind = reflection.kind;
+
+    if (
+      reflectionKind === ReflectionKind.Method &&
+      reflection?.parent &&
+      reflection.parent.kind === ReflectionKind.Class &&
+      reflection.parent.name.includes("Chat")
+    ) {
+      if (
+        !WHITELISTED_CHAT_MODEL_INHERITED_METHODS.find(
+          (n) => n === reflection.name
+        )
+      ) {
+        reflectionsToHide.push(reflection);
+      }
+    }
+
+    if (
+      reflectionKind === ReflectionKind.Property &&
+      reflection?.parent &&
+      reflection.parent.kind === ReflectionKind.Class &&
+      reflection.parent.name.includes("Chat")
+    ) {
+      // Hide all properties of chat models
+      reflectionsToHide.push(reflection);
+    }
+
+    if (
+      reflectionKind === ReflectionKind.Accessor &&
+      reflection.name === "callKeys"
+    ) {
+      // Hide all `callKeys` accessors
+      reflectionsToHide.push(reflection);
+    }
+
     if (reflectionKindsToHide.includes(reflectionKind)) {
       if (
         reflection.name.startsWith("_") ||
