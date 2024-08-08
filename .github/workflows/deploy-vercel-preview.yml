@@ -28,6 +28,8 @@ jobs:
         run: npm install --global vercel@latest
       - name: Pull Vercel Environment Information
         run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+      - name: Build All Projects
+        run: yarn turbo:command build --filter=!examples --filter=!api_refs --filter=!core_docs --filter=!create-langchain-integration
       - name: Build Project Artifacts
         run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
       - name: Deploy Project Artifacts to Vercel
