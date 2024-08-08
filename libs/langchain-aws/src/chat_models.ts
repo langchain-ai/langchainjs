@@ -184,17 +184,17 @@ export interface ChatBedrockConverseCallOptions
  * ### [Constructor args](/classes/langchain_aws.ChatBedrockConverse.html#constructor)
  *
  * ### [Runtime args](/interfaces/langchain_aws.ChatBedrockConverseCallOptions.html)
- * 
+ *
  * Runtime args can be passed as the second argument to any of the base runnable methods `.invoke`. `.stream`, `.batch`, etc.
  * They can also be passed via the `.bind`, or the second arg in the `.bindTools` method, like shown in the example below:
- * 
+ *
  * ```typescript
  * // When calling `.bind`, call options should be passed via the first argument
  * const llmWithArgsBound = llm.bind({
  *   stop: ["\n"],
  *   tools: [...],
  * });
- * 
+ *
  * // When calling `.bindTools`, call options should be passed via the second argument
  * const llmWithTools = llm.bindTools(
  *   [...],
@@ -291,13 +291,13 @@ export interface ChatBedrockConverseCallOptions
  *
  * ```txt
  * AIMessageChunk {
- *   "content": ""  
+ *   "content": ""
  *   "response_metadata": {
  *     "messageStart": {
  *       "p": "abcdefghijk",
  *       "role": "assistant"
  *     }
- *   }  
+ *   }
  * }
  * AIMessageChunk {
  *   "content": "Here"
@@ -321,24 +321,24 @@ export interface ChatBedrockConverseCallOptions
  *   "content": " programmation."
  * }
  * AIMessageChunk {
- *   "content": ""  
+ *   "content": ""
  *   "response_metadata": {
  *     "contentBlockStop": {
  *       "contentBlockIndex": 0,
  *       "p": "abcdefghijk"
  *     }
- *   }  
+ *   }
  * }
  * AIMessageChunk {
- *   "content": ""  
+ *   "content": ""
  *   "response_metadata": {
  *     "messageStop": {
  *       "stopReason": "end_turn"
  *     }
- *   }  
+ *   }
  * }
  * AIMessageChunk {
- *   "content": ""  
+ *   "content": ""
  *   "response_metadata": {
  *     "metadata": {
  *       "metrics": {
@@ -351,7 +351,7 @@ export interface ChatBedrockConverseCallOptions
  *         "totalTokens": 44
  *       }
  *     }
- *   }  
+ *   }
  *   "usage_metadata": {
  *     "input_tokens": 25,
  *     "output_tokens": 19,
