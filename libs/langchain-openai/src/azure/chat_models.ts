@@ -77,6 +77,27 @@ import {
  * const result = await llm.invoke(messages);
  * console.log(result);
  * ```
+ * 
+ * ```txt
+ * AIMessage {
+ *   "id": "chatcmpl-9u4Mpu44CbPjwYFkTbeoZgvzB00Tz",
+ *   "content": "J'adore la programmation.",
+ *   "response_metadata": {
+ *     "tokenUsage": {
+ *       "completionTokens": 5,
+ *       "promptTokens": 28,
+ *       "totalTokens": 33
+ *     },
+ *     "finish_reason": "stop",
+ *     "system_fingerprint": "fp_3aa7262c27"
+ *   },
+ *   "usage_metadata": {
+ *     "input_tokens": 28,
+ *     "output_tokens": 5,
+ *     "total_tokens": 33
+ *   }
+ * }
+ * ```
  * </details>
  *
  * <br />
@@ -87,6 +108,43 @@ import {
  * ```typescript
  * for await (const chunk of await llm.stream(messages)) {
  *   console.log(chunk);
+ * }
+ * ```
+ * 
+ * ```txt
+ * AIMessageChunk {
+ *   "id": "chatcmpl-9u4NWB7yUeHCKdLr6jP3HpaOYHTqs",
+ *   "content": ""
+ * }
+ * AIMessageChunk {
+ *   "content": "J"
+ * }
+ * AIMessageChunk {
+ *   "content": "'adore"
+ * }
+ * AIMessageChunk {
+ *   "content": " la"
+ * }
+ * AIMessageChunk {
+ *   "content": " programmation",,
+ * }
+ * AIMessageChunk {
+ *   "content": ".",,
+ * }
+ * AIMessageChunk {
+ *   "content": "",
+ *   "response_metadata": {
+ *     "finish_reason": "stop",
+ *     "system_fingerprint": "fp_c9aa9c0491"
+ *   },
+ * }
+ * AIMessageChunk {
+ *   "content": "",
+ *   "usage_metadata": {
+ *     "input_tokens": 28,
+ *     "output_tokens": 5,
+ *     "total_tokens": 33
+ *   }
  * }
  * ```
  * </details>
@@ -106,6 +164,24 @@ import {
  *   full = !full ? chunk : concat(full, chunk);
  * }
  * console.log(full);
+ * ```
+ * 
+ * ```txt
+ * AIMessageChunk {
+ *   "id": "chatcmpl-9u4PnX6Fy7OmK46DASy0bH6cxn5Xu",
+ *   "content": "J'adore la programmation.",
+ *   "response_metadata": {
+ *     "prompt": 0,
+ *     "completion": 0,
+ *     "finish_reason": "stop",
+ *     "system_fingerprint": "fp_3aa7262c27fp_3aa7262c27fp_3aa7262c27fp_3aa7262c27fp_3aa7262c27fp_3aa7262c27fp_3aa7262c27"
+ *   },
+ *   "usage_metadata": {
+ *     "input_tokens": 28,
+ *     "output_tokens": 5,
+ *     "total_tokens": 33
+ *   }
+ * }
  * ```
  * </details>
  *
@@ -139,6 +215,35 @@ import {
  * );
  * console.log(aiMsg.tool_calls);
  * ```
+ * 
+ * ```txt
+ * [
+ *   {
+ *     name: 'GetWeather',
+ *     args: { location: 'Los Angeles, CA' },
+ *     type: 'tool_call',
+ *     id: 'call_uPU4FiFzoKAtMxfmPnfQL6UK'
+ *   },
+ *   {
+ *     name: 'GetWeather',
+ *     args: { location: 'New York, NY' },
+ *     type: 'tool_call',
+ *     id: 'call_UNkEwuQsHrGYqgDQuH9nPAtX'
+ *   },
+ *   {
+ *     name: 'GetPopulation',
+ *     args: { location: 'Los Angeles, CA' },
+ *     type: 'tool_call',
+ *     id: 'call_kL3OXxaq9OjIKqRTpvjaCH14'
+ *   },
+ *   {
+ *     name: 'GetPopulation',
+ *     args: { location: 'New York, NY' },
+ *     type: 'tool_call',
+ *     id: 'call_s9KQB1UWj45LLGaEnjz0179q'
+ *   }
+ * ]
+ * ```
  * </details>
  *
  * <br />
@@ -159,6 +264,14 @@ import {
  * const jokeResult = await structuredLlm.invoke("Tell me a joke about cats");
  * console.log(jokeResult);
  * ```
+ * 
+ * ```txt
+ * {
+ *   setup: 'Why was the cat sitting on the computer?',
+ *   punchline: 'Because it wanted to keep an eye on the mouse!',
+ *   rating: 7
+ * }
+ * ```
  * </details>
  *
  * <br />
@@ -172,6 +285,12 @@ import {
  *   "Return a JSON object with key 'randomInts' and a value of 10 random ints in [0-99]"
  * );
  * console.log(jsonLlmAiMsg.content);
+ * ```
+ * 
+ * ```txt
+ * {
+ *   "randomInts": [23, 87, 45, 12, 78, 34, 56, 90, 11, 67]
+ * }
  * ```
  * </details>
  *
@@ -200,6 +319,10 @@ import {
  * const imageDescriptionAiMsg = await llm.invoke([message]);
  * console.log(imageDescriptionAiMsg.content);
  * ```
+ * 
+ * ```txt
+ * The weather in the image appears to be clear and sunny. The sky is mostly blue with a few scattered white clouds, indicating fair weather. The bright sunlight is casting shadows on the green, grassy hill, suggesting it is a pleasant day with good visibility. There are no signs of rain or stormy conditions.
+ * ```
  * </details>
  *
  * <br />
@@ -210,6 +333,10 @@ import {
  * ```typescript
  * const aiMsgForMetadata = await llm.invoke(messages);
  * console.log(aiMsgForMetadata.usage_metadata);
+ * ```
+ * 
+ * ```txt
+ * { input_tokens: 28, output_tokens: 5, total_tokens: 33 }
  * ```
  * </details>
  *
@@ -223,6 +350,52 @@ import {
  * const aiMsgForLogprobs = await logprobsLlm.invoke(messages);
  * console.log(aiMsgForLogprobs.response_metadata.logprobs);
  * ```
+ * 
+ * ```txt
+ * {
+ *   content: [
+ *     {
+ *       token: 'J',
+ *       logprob: -0.000050616763,
+ *       bytes: [Array],
+ *       top_logprobs: []
+ *     },
+ *     {
+ *       token: "'",
+ *       logprob: -0.01868736,
+ *       bytes: [Array],
+ *       top_logprobs: []
+ *     },
+ *     {
+ *       token: 'ad',
+ *       logprob: -0.0000030545007,
+ *       bytes: [Array],
+ *       top_logprobs: []
+ *     },
+ *     { token: 'ore', logprob: 0, bytes: [Array], top_logprobs: [] },
+ *     {
+ *       token: ' la',
+ *       logprob: -0.515404,
+ *       bytes: [Array],
+ *       top_logprobs: []
+ *     },
+ *     {
+ *       token: ' programm',
+ *       logprob: -0.0000118755715,
+ *       bytes: [Array],
+ *       top_logprobs: []
+ *     },
+ *     { token: 'ation', logprob: 0, bytes: [Array], top_logprobs: [] },
+ *     {
+ *       token: '.',
+ *       logprob: -0.0000037697225,
+ *       bytes: [Array],
+ *       top_logprobs: []
+ *     }
+ *   ],
+ *   refusal: null
+ * }
+ * ```
  * </details>
  *
  * <br />
@@ -233,6 +406,14 @@ import {
  * ```typescript
  * const aiMsgForResponseMetadata = await llm.invoke(messages);
  * console.log(aiMsgForResponseMetadata.response_metadata);
+ * ```
+ * 
+ * ```txt
+ * {
+ *   tokenUsage: { completionTokens: 5, promptTokens: 28, totalTokens: 33 },
+ *   finish_reason: 'stop',
+ *   system_fingerprint: 'fp_3aa7262c27'
+ * }
  * ```
  * </details>
  */
