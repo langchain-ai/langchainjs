@@ -216,8 +216,8 @@ jobs:
           cache: "yarn"
       - name: Install dependencies
         run: yarn install --immutable
-      - name: Build `@langchain/standard-tests`
-        run: yarn build --filter=@langchain/standard-tests
+      - name: Build `@langchain/standard-tests` & `@langchain/google-common`
+        run: yarn build --filter=@langchain/standard-tests --filter=@langchain/google-common
       - name: Test `@langchain/google-vertexai` with latest deps
         run: docker compose -f dependency_range_tests/docker-compose.yml run google-vertexai-latest-deps
 
@@ -234,8 +234,8 @@ jobs:
           cache: "yarn"
       - name: Install dependencies
         run: yarn install --immutable
-      - name: Build `@langchain/standard-tests`
-        run: yarn build --filter=@langchain/standard-tests
+      - name: Build `@langchain/standard-tests` & `@langchain/google-common`
+        run: yarn build --filter=@langchain/standard-tests --filter=@langchain/google-common
       - name: Test `@langchain/google-vertexai` with lowest deps
         run: docker compose -f dependency_range_tests/docker-compose.yml run google-vertexai-lowest-deps
 

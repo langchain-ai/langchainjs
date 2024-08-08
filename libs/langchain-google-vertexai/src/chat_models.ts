@@ -7,6 +7,7 @@ export interface ChatVertexAIInput extends ChatGoogleInput {}
 
 /**
  * Integration with a chat model.
+ * test to trigger CI
  */
 export class ChatVertexAI extends ChatGoogle {
   static lc_name() {

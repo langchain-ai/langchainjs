@@ -8,8 +8,16 @@ export CI=true
 monorepo_dir="/app/monorepo"
 monorepo_openai_dir="/app/monorepo/libs/langchain-google-vertexai"
 
+original_google_common_dir="/libs/langchain-google-common"
+monorepo_google_common_dir="/app/monorepo/libs/langchain-google-common"
+
 # Run the shared script to copy all necessary folders/files
 bash /scripts/with_standard_tests/shared.sh google-vertexai
+
+# Copy `@langchain/google-common` WITH build artifacts from the host.
+# This is because we built @langchain/google-common before running this script.
+mkdir -p "$monorepo_google_common_dir/"
+cp -r "$original_google_common_dir"/* "$monorepo_google_common_dir/"
 
 # Navigate back to monorepo root and install dependencies
 cd "$monorepo_dir"
