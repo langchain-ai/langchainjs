@@ -11,7 +11,17 @@ export interface OllamaCallOptions extends BaseLanguageModelCallOptions {
 }
 
 export interface OllamaInput extends BaseLLMParams, OllamaCamelCaseOptions {
+  /**
+   * The model to use when making requests.
+   * @default "llama3"
+   */
   model?: string;
+  /**
+   * Optionally override the base URL to make request to.
+   * This should only be set if your Ollama instance is being
+   * server from a non-standard location.
+   * @default "http://localhost:11434"
+   */
   baseUrl?: string;
   format?: string;
 }
@@ -23,7 +33,7 @@ export interface OllamaInput extends BaseLLMParams, OllamaCamelCaseOptions {
  * ```typescript
  * const ollama = new Ollama({
  *   baseUrl: "http://api.example.com",
- *   model: "llama2",
+ *   model: "llama3",
  * });
  *
  * // Streaming translation from English to German
