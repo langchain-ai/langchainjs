@@ -6,7 +6,7 @@
     "dev": "next dev -p 3001",
     "typedoc:build": "npx typedoc --options typedoc.json",
     "build:scripts": "node ./scripts/create-entrypoints.js && yarn typedoc:build && node ./scripts/update-typedoc-css.js",
-    "build:packages": "yarn turbo:command build --filter=!examples --filter=!api_refs --filter=!core_docs --filter=!create-langchain-integration --concurrency=1 --force",
+    "build:packages": "yarn turbo:command build --filter=examples",
     "build": "yarn clean && yarn build:packages && yarn build:scripts && next build",
     "start": "yarn build && next start -p 3001",
     "lint": "next lint",
