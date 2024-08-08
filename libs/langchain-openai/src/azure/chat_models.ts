@@ -35,10 +35,10 @@ import {
  * > See full list of supported init args and their descriptions in the [`constructor`](/classes/langchain_openai.AzureChatOpenAI.html#constructor) section.
  *
  * ## Examples
- * 
+ *
  * <details open>
  * <summary><strong>Instantiate</strong></summary>
- * 
+ *
  * ```typescript
  * import { AzureChatOpenAI } from '@langchain/openai';
  *
@@ -57,12 +57,12 @@ import {
  * });
  * ```
  * </details>
- * 
+ *
  * <br />
- * 
+ *
  * <details>
  * <summary><strong>Invoking</strong></summary>
- * 
+ *
  * ```typescript
  * const messages = [
  *   {
@@ -78,24 +78,24 @@ import {
  * console.log(result);
  * ```
  * </details>
- * 
+ *
  * <br />
  *
  * <details>
  * <summary><strong>Streaming Chunks</strong></summary>
- * 
+ *
  * ```typescript
  * for await (const chunk of await llm.stream(messages)) {
  *   console.log(chunk);
  * }
  * ```
  * </details>
- * 
+ *
  * <br />
  *
  * <details>
  * <summary><strong>Aggregate Streamed Chunks</strong></summary>
- * 
+ *
  * ```typescript
  * import { AIMessageChunk } from '@langchain/core/messages';
  * import { concat } from '@langchain/core/utils/stream';
@@ -108,12 +108,12 @@ import {
  * console.log(full);
  * ```
  * </details>
- * 
+ *
  * <br />
- * 
+ *
  * <details>
  * <summary><strong>Bind tools</strong></summary>
- * 
+ *
  * ```typescript
  * import { z } from 'zod';
  *
@@ -140,12 +140,12 @@ import {
  * console.log(aiMsg.tool_calls);
  * ```
  * </details>
- * 
+ *
  * <br />
  *
  * <details>
  * <summary><strong>`.withStructuredOutput`</strong></summary>
- * 
+ *
  * ```typescript
  * import { z } from 'zod';
  *
@@ -160,12 +160,12 @@ import {
  * console.log(jokeResult);
  * ```
  * </details>
- * 
+ *
  * <br />
  *
  * <details>
  * <summary><strong>JSON Object Response Format</strong></summary>
- * 
+ *
  * ```typescript
  * const jsonLlm = llm.bind({ response_format: { type: "json_object" } });
  * const jsonLlmAiMsg = await jsonLlm.invoke(
@@ -174,12 +174,12 @@ import {
  * console.log(jsonLlmAiMsg.content);
  * ```
  * </details>
- * 
+ *
  * <br />
  *
  * <details>
  * <summary><strong>Multimodal</strong></summary>
- * 
+ *
  * ```typescript
  * import { HumanMessage } from '@langchain/core/messages';
  *
@@ -201,12 +201,12 @@ import {
  * console.log(imageDescriptionAiMsg.content);
  * ```
  * </details>
- * 
+ *
  * <br />
  *
  * <details>
  * <summary><strong>Usage Metadata</strong></summary>
- * 
+ *
  * ```typescript
  * const aiMsgForMetadata = await llm.invoke(messages);
  * console.log(aiMsgForMetadata.usage_metadata);
@@ -214,22 +214,22 @@ import {
  * </details>
  *
  * <br />
- * 
+ *
  * <details>
  * <summary><strong>Logprobs</strong></summary>
- * 
+ *
  * ```typescript
  * const logprobsLlm = new ChatOpenAI({ logprobs: true });
  * const aiMsgForLogprobs = await logprobsLlm.invoke(messages);
  * console.log(aiMsgForLogprobs.response_metadata.logprobs);
  * ```
  * </details>
- * 
+ *
  * <br />
  *
  * <details>
  * <summary><strong>Response Metadata</strong></summary>
- * 
+ *
  * ```typescript
  * const aiMsgForResponseMetadata = await llm.invoke(messages);
  * console.log(aiMsgForResponseMetadata.response_metadata);
