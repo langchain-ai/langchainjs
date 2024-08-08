@@ -1,6 +1,6 @@
 {
   "name": "@langchain/google-vertexai",
-  "version": "0.0.22",
+  "version": "0.0.25",
   "description": "LangChain.js support for Google Vertex AI",
   "type": "module",
   "engines": {
@@ -44,11 +44,11 @@
   "license": "MIT",
   "dependencies": {
     "@langchain/core": ">=0.2.21 <0.3.0",
-    "@langchain/google-gauth": "~0.0.22"
+    "@langchain/google-gauth": "~0.0.25"
   },
   "devDependencies": {
     "@jest/globals": "^29.5.0",
-    "@langchain/google-common": "workspace:*",
+    "@langchain/google-common": "~0.0",
     "@langchain/scripts": "~0.0.20",
     "@langchain/standard-tests": "0.0.0",
     "@swc/core": "^1.3.90",

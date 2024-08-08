@@ -4,6 +4,9 @@ import { Project } from "ts-morph";
 
 export function extract(filepath: string) {
   const cells = JSON.parse(fs.readFileSync(filepath).toString()).cells;
+  if (cells[0]?.source.includes("lc_docs_skip_validation: true\n")) {
+    return "";
+  }
   const project = new Project({ useInMemoryFileSystem: true });
   const sourceFile = project.createSourceFile("temp.ts", "");
 

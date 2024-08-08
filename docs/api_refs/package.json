@@ -6,7 +6,7 @@
     "dev": "next dev -p 3001",
     "typedoc:build": "npx typedoc --options typedoc.json",
     "build:scripts": "node ./scripts/create-entrypoints.js && yarn typedoc:build && node ./scripts/update-typedoc-css.js",
-    "build:packages": "yarn turbo:command build --filter=examples",
+    "build:packages": "yarn turbo:command build --filter=@langchain/core --filter=@langchain/openai --filter=@langchain/textsplitters",
     "build": "yarn clean && yarn build:packages && yarn build:scripts && next build",
     "start": "yarn build && next start -p 3001",
     "lint": "next lint",
@@ -32,6 +32,7 @@
     "tailwindcss": "^3.3.0",
     "ts-morph": "^23.0.0",
     "typedoc": "^0.26.1",
+    "typedoc-plugin-expand-object-like-types": "^0.1.2",
     "typescript": "~5.1.6"
   }
 }
