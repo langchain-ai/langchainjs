@@ -20487,6 +20487,7 @@ __metadata:
     react-dom: ^18
     tailwindcss: ^3.3.0
     typedoc: ^0.26.0
+    typedoc-plugin-expand-object-like-types: ^0.1.2
     typescript: ~5.1.6
   languageName: unknown
   linkType: soft
@@ -41100,6 +41101,15 @@ __metadata:
   dependencies:
     is-typedarray: ^1.0.0
   checksum: 99c11aaa8f45189fcfba6b8a4825fd684a321caa9bd7a76a27cf0c7732c174d198b99f449c52c3818107430b5f41c0ccbbfb75cb2ee3ca4a9451710986d61a60
+  languageName: node
+  linkType: hard
+
+"typedoc-plugin-expand-object-like-types@npm:^0.1.2":
+  version: 0.1.2
+  resolution: "typedoc-plugin-expand-object-like-types@npm:0.1.2"
+  peerDependencies:
+    typedoc: 0.22.x || 0.23.x
+  checksum: 9dd58ce283386709c821f7a30267edddff984cac69fc8dc994185378403d586ac53a58b790b553693a572ea5d417e5a9bb90c02d4e73dbf595ec5a3156b5252e
   languageName: node
   linkType: hard
 

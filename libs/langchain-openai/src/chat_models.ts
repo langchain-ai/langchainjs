@@ -367,37 +367,252 @@ export interface ChatOpenAIFields
 }
 
 /**
- * Wrapper around OpenAI large language models that use the Chat endpoint.
+ * OpenAI chat model integration.
  *
- * To use you should have the `OPENAI_API_KEY` environment variable set.
+ * Setup:
+ * Install `@langchain/openai` and set environment variable `OPENAI_API_KEY`.
  *
- * To use with Azure you should have the:
- * `AZURE_OPENAI_API_KEY`,
- * `AZURE_OPENAI_API_INSTANCE_NAME`,
- * `AZURE_OPENAI_API_DEPLOYMENT_NAME`
- * and `AZURE_OPENAI_API_VERSION` environment variables set.
- * `AZURE_OPENAI_BASE_PATH` is optional and will override `AZURE_OPENAI_API_INSTANCE_NAME` if you need to use a custom endpoint.
+ * ```bash
+ * npm install @langchain/openai
+ * export OPENAI_API_KEY="your-api-key"
+ * ```
  *
- * @remarks
- * Any parameters that are valid to be passed to {@link
- * https://platform.openai.com/docs/api-reference/chat/create |
- * `openai.createChatCompletion`} can be passed through {@link modelKwargs}, even
- * if not explicitly available on this class.
- * @example
+ * ## Key args
+ *
+ * ### [Init args](/classes/langchain_openai.ChatOpenAI.html#constructor)
+ *
+ * ### [Runtime args](/interfaces/langchain_openai.ChatOpenAICallOptions.html)
+ *
+ * > See full list of supported init args and their descriptions in the [`constructor`](/classes/langchain_openai.ChatOpenAI.html#constructor) section.
+ *
+ * ## Examples
+ *
+ * <details open>
+ * <summary><strong>Instantiate</strong></summary>
+ *
  * ```typescript
- * // Create a new instance of ChatOpenAI with specific temperature and model name settings
- * const model = new ChatOpenAI({
- *   temperature: 0.9,
- *   model: "ft:gpt-3.5-turbo-0613:{ORG_NAME}::{MODEL_ID}",
+ * import { ChatOpenAI } from '@langchain/openai';
+ *
+ * const llm = new ChatOpenAI({
+ *   model: "gpt-4o",
+ *   temperature: 0,
+ *   maxTokens: undefined,
+ *   timeout: undefined,
+ *   maxRetries: 2,
+ *   // apiKey: "...",
+ *   // baseUrl: "...",
+ *   // organization: "...",
+ *   // other params...
+ * });
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Invoking</strong></summary>
+ *
+ * ```typescript
+ * const messages = [
+ *   {
+ *     type: "system" as const,
+ *     content: "You are a helpful translator. Translate the user sentence to French.",
+ *   },
+ *   {
+ *     type: "human" as const,
+ *     content: "I love programming.",
+ *   },
+ * ];
+ * const result = await llm.invoke(messages);
+ * console.log(result);
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Streaming Chunks</strong></summary>
+ *
+ * ```typescript
+ * for await (const chunk of await llm.stream(messages)) {
+ *   console.log(chunk);
+ * }
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Aggregate Streamed Chunks</strong></summary>
+ *
+ * ```typescript
+ * import { AIMessageChunk } from '@langchain/core/messages';
+ * import { concat } from '@langchain/core/utils/stream';
+ *
+ * const stream = await llm.stream(messages);
+ * let full: AIMessageChunk | undefined;
+ * for await (const chunk of stream) {
+ *   full = !full ? chunk : concat(full, chunk);
+ * }
+ * console.log(full);
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Bind tools</strong></summary>
+ *
+ * ```typescript
+ * import { z } from 'zod';
+ *
+ * const GetWeather = {
+ *   name: "GetWeather",
+ *   description: "Get the current weather in a given location",
+ *   schema: z.object({
+ *     location: z.string().describe("The city and state, e.g. San Francisco, CA")
+ *   }),
+ * }
+ *
+ * const GetPopulation = {
+ *   name: "GetPopulation",
+ *   description: "Get the current population in a given location",
+ *   schema: z.object({
+ *     location: z.string().describe("The city and state, e.g. San Francisco, CA")
+ *   }),
+ * }
+ *
+ * const llmWithTools = llm.bindTools(
+ *   [GetWeather, GetPopulation],
+ *   {
+ *     // strict: true  // enforce tool args schema is respected
+ *   }
+ * );
+ * const aiMsg = await llmWithTools.invoke(
+ *   "Which city is hotter today and which is bigger: LA or NY?"
+ * );
+ * console.log(aiMsg.tool_calls);
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Structured Output</strong></summary>
+ *
+ * ```typescript
+ * import { z } from 'zod';
+ *
+ * const Joke = z.object({
+ *   setup: z.string().describe("The setup of the joke"),
+ *   punchline: z.string().describe("The punchline to the joke"),
+ *   rating: z.number().optional().describe("How funny the joke is, from 1 to 10")
+ * }).describe('Joke to tell user.');
+ *
+ * const structuredLlm = llm.withStructuredOutput(Joke);
+ * const jokeResult = await structuredLlm.invoke("Tell me a joke about cats");
+ * console.log(jokeResult);
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>JSON Object Response Format</strong></summary>
+ *
+ * ```typescript
+ * const jsonLlm = llm.bind({ response_format: { type: "json_object" } });
+ * const jsonLlmAiMsg = await jsonLlm.invoke(
+ *   "Return a JSON object with key 'randomInts' and a value of 10 random ints in [0-99]"
+ * );
+ * console.log(jsonLlmAiMsg.content);
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Multimodal</strong></summary>
+ *
+ * ```typescript
+ * import { HumanMessage } from '@langchain/core/messages';
+ *
+ * const imageUrl = "https://example.com/image.jpg";
+ * const imageData = await fetch(imageUrl).then(res => res.arrayBuffer());
+ * const base64Image = Buffer.from(imageData).toString('base64');
+ *
+ * const message = new HumanMessage({
+ *   content: [
+ *     { type: "text", text: "describe the weather in this image" },
+ *     {
+ *       type: "image_url",
+ *       image_url: { url: `data:image/jpeg;base64,${base64Image}` },
+ *     },
+ *   ]
  * });
  *
- * // Invoke the model with a message and await the response
- * const message = await model.invoke("Hi there!");
- *
- * // Log the response to the console
- * console.log(message);
- *
+ * const imageDescriptionAiMsg = await llm.invoke([message]);
+ * console.log(imageDescriptionAiMsg.content);
  * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Usage Metadata</strong></summary>
+ *
+ * ```typescript
+ * const aiMsgForMetadata = await llm.invoke(messages);
+ * console.log(aiMsgForMetadata.usage_metadata);
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Stream Usage Metadata</strong></summary>
+ *
+ * ```typescript
+ * const streamForMetadata = await llm.stream(
+ *   messages,
+ *   {
+ *     stream_options: {
+ *       include_usage: true
+ *     }
+ *   }
+ * );
+ * let fullForMetadata: AIMessageChunk | undefined;
+ * for await (const chunk of streamForMetadata) {
+ *   fullForMetadata = !fullForMetadata ? chunk : concat(fullForMetadata, chunk);
+ * }
+ * console.log(fullForMetadata?.usage_metadata);
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Logprobs</strong></summary>
+ *
+ * ```typescript
+ * const logprobsLlm = new ChatOpenAI({ logprobs: true });
+ * const aiMsgForLogprobs = await logprobsLlm.invoke(messages);
+ * console.log(aiMsgForLogprobs.response_metadata.logprobs);
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Response Metadata</strong></summary>
+ *
+ * ```typescript
+ * const aiMsgForResponseMetadata = await llm.invoke(messages);
+ * console.log(aiMsgForResponseMetadata.response_metadata);
+ * ```
+ * </details>
+ *
+ * <br />
  */
 export class ChatOpenAI<
     CallOptions extends ChatOpenAICallOptions = ChatOpenAICallOptions
