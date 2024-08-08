@@ -14,7 +14,7 @@ export interface GoogleEmbeddingsInput
   extends BaseGoogleEmbeddingsParams<GoogleAuthOptions> {}
 
 /**
- * Integration with an LLM.
+ * Integration with an Google embeddings model.
  */
 export class GoogleEmbeddings
   extends BaseGoogleEmbeddings<GoogleAuthOptions>
