@@ -130,7 +130,8 @@ function shouldRemoveReflection(reflection, chatModelNames) {
 
   if (
     reflection.parent &&
-    chatModelNames.find((name) => name === reflection.parent.name)
+    chatModelNames.find((name) => name === reflection.parent.name) &&
+    reflection.name !== "constructor"
   ) {
     if (kind === ReflectionKind.Property) {
       return true;
