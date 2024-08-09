@@ -71,7 +71,7 @@
     },
     {
       "source": "/v0.2/docs/integrations/llms/togetherai(/?)",
-      "destination": "/v0.2/docs/llms/together/"
+      "destination": "/v0.2/docs/integrations/llms/together/"
     }
   ]
 }
