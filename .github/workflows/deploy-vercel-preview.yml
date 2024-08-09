@@ -28,10 +28,6 @@ jobs:
         run: npm install --global vercel@latest
       - name: Pull Vercel Environment Information
         run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
-      - name: Install dependencies
-        run: yarn install --immutable --mode=skip-build
-      - name: Build All Projects
-        run: yarn turbo:command build --filter=!examples --filter=!api_refs --filter=!core_docs --filter=!create-langchain-integration
       - name: Build Project Artifacts
         run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
       - name: Deploy Project Artifacts to Vercel
@@ -40,7 +36,7 @@ jobs:
         run: gh pr comment $PR_URL -F deployment-url.txt
 
   deploy-api-refs-preview:
-    name: Deploy Preview Docs to Vercel
+    name: Deploy Preview API Refs to Vercel
     runs-on: ubuntu-latest
     environment: Staging
     env:
@@ -55,6 +51,10 @@ jobs:
         run: npm install --global vercel@latest
       - name: Pull Vercel Environment Information
         run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+      - name: Install dependencies
+        run: yarn install --immutable --mode=skip-build
+      - name: Build All Projects
+        run: yarn turbo:command build --filter=!examples --filter=!api_refs --filter=!core_docs --filter=!create-langchain-integration
       - name: Build Project Artifacts
         run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
       - name: Deploy Project Artifacts to Vercel
