@@ -1,4 +1,4 @@
-name: Deploy Docs Preview
+name: Deploy API Refs Preview
 
 on:
   workflow_dispatch:  # Allows triggering the workflow manually in GitHub UI
@@ -15,29 +15,6 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  deploy-docs-preview:
-    name: Deploy Preview Docs to Vercel
-    runs-on: ubuntu-latest
-    environment: Staging
-    env:
-      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-      PR_URL: ${{ github.event.pull_request.html_url }}
-      GITHUB_TOKEN: ${{ secrets.PR_COMMENT_GITHUB_TOKEN }}
-    steps:
-      - uses: actions/checkout@v2
-      - name: Install Vercel CLI
-        run: npm install --global vercel@latest
-      - name: Pull Vercel Environment Information
-        run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
-      - name: Build Project Artifacts
-        run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
-      - name: Deploy Project Artifacts to Vercel
-        run: vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }} > deployment-url.txt
-      - name: Post Preview URL Comment
-        run: gh pr comment $PR_URL -F deployment-url.txt
-
   deploy-api-refs-preview:
     name: Deploy Preview API Refs to Vercel
     runs-on: ubuntu-latest
