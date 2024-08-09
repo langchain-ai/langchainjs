@@ -3,6 +3,7 @@
     "langchain/": "npm:/langchain/",
     "@faker-js/faker": "npm:@faker-js/faker",
     "@langchain/anthropic": "npm:@langchain/anthropic",
+    "@langchain/cloudflare": "npm:@langchain/cloudflare",
     "@langchain/community/": "npm:/@langchain/community@0.2.2/",
     "@langchain/openai": "npm:@langchain/openai",
     "@langchain/cohere": "npm:@langchain/cohere",
@@ -22,7 +23,6 @@
     "zod": "npm:/zod",
     "zod-to-json-schema": "npm:/zod-to-json-schema",
     "node-llama-cpp": "npm:/node-llama-cpp",
-    "ml-distance": "npm:/ml-distance",
     "pdf-parse": "npm:/pdf-parse",
     "peggy": "npm:/peggy",
     "readline": "https://deno.land/x/readline@v1.1.0/mod.ts",
@@ -30,6 +30,14 @@
     "youtubei.js": "npm:/youtubei.js",
     "youtube-transcript": "npm:/youtube-transcript",
     "neo4j-driver": "npm:/neo4j-driver",
-    "axios": "npm:/axios"
+    "axios": "npm:/axios",
+    "@mendable/firecrawl-js": "npm:/@mendable/firecrawl-js",
+    "@aws-crypto/sha256-js": "npm:/@aws-crypto/sha256-js",
+    "@aws-sdk/credential-provider-node": "npm:/@aws-sdk/credential-provider-node",
+    "@smithy/protocol-http": "npm:/@smithy/protocol-http",
+    "@smithy/signature-v4": "npm:/@smithy/signature-v4",
+    "@smithy/eventstream-codec": "npm:/@smithy/eventstream-codec",
+    "@smithy/util-utf8": "npm:/@smithy/util-utf8",
+    "@aws-sdk/types": "npm:/@aws-sdk/types"
   }
 }

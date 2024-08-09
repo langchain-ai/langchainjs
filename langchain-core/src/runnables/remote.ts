@@ -70,7 +70,7 @@ function revive(obj: any): any {
           content: obj.content,
         });
       }
-      if (obj.type === "ChatMessage" || obj.type === "chat") {
+      if (obj.type === "ChatMessage" || obj.type === "generic") {
         return new ChatMessage({
           content: obj.content,
           role: obj.role,
@@ -86,6 +86,7 @@ function revive(obj: any): any {
         return new ToolMessage({
           content: obj.content,
           tool_call_id: obj.tool_call_id,
+          status: obj.status,
         });
       }
       if (obj.type === "AIMessage" || obj.type === "ai") {
@@ -119,6 +120,7 @@ function revive(obj: any): any {
         return new ToolMessageChunk({
           content: obj.content,
           tool_call_id: obj.tool_call_id,
+          status: obj.status,
         });
       }
       if (obj.type === "AIMessageChunk") {
@@ -212,11 +214,12 @@ function deserialize<RunOutput>(str: string): RunOutput {
   return revive(obj);
 }
 
-function removeCallbacks(
+function removeCallbacksAndSignal(
   options?: RunnableConfig
-): Omit<RunnableConfig, "callbacks"> {
+): Omit<RunnableConfig, "callbacks" | "signal"> {
   const rest = { ...options };
   delete rest.callbacks;
+  delete rest.signal;
   return rest;
 }
 
@@ -256,6 +259,19 @@ function serialize<RunInput>(input: RunInput): any {
   return input;
 }
 
+/**
+ * Client for interacting with LangChain runnables
+ * that are hosted as LangServe endpoints.
+ *
+ * Allows you to interact with hosted runnables using the standard
+ * `.invoke()`, `.stream()`, `.streamEvents()`, etc. methods that
+ * other runnables support.
+ *
+ * @param url - The base URL of the LangServe endpoint.
+ * @param options - Optional configuration for the remote runnable, including timeout and headers.
+ * @param fetch - Optional custom fetch implementation.
+ * @param fetchRequestOptions - Optional additional options for fetch requests.
+ */
 export class RemoteRunnable<
   RunInput,
   RunOutput,
@@ -265,24 +281,47 @@ export class RemoteRunnable<
 
   private options?: RemoteRunnableOptions;
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  fetchImplementation: (...args: any[]) => any = fetch;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  fetchRequestOptions?: Record<string, any>;
+
   lc_namespace = ["langchain", "schema", "runnable", "remote"];
 
-  constructor(fields: { url: string; options?: RemoteRunnableOptions }) {
+  constructor(fields: {
+    url: string;
+    options?: RemoteRunnableOptions;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    fetch?: (...args: any[]) => any;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    fetchRequestOptions?: Record<string, any>;
+  }) {
     super(fields);
-    const { url, options } = fields;
+    const {
+      url,
+      options,
+      fetch: fetchImplementation,
+      fetchRequestOptions,
+    } = fields;
+
     this.url = url.replace(/\/$/, ""); // remove trailing slash
     this.options = options;
+    this.fetchImplementation = fetchImplementation ?? this.fetchImplementation;
+    this.fetchRequestOptions = fetchRequestOptions;
   }
 
-  private async post<Body>(path: string, body: Body) {
-    return fetch(`${this.url}${path}`, {
+  private async post<Body>(path: string, body: Body, signal?: AbortSignal) {
+    return this.fetchImplementation(`${this.url}${path}`, {
       method: "POST",
       body: JSON.stringify(serialize(body)),
+      signal: signal ?? AbortSignal.timeout(this.options?.timeout ?? 60000),
+      ...this.fetchRequestOptions,
       headers: {
         "Content-Type": "application/json",
+        ...this.fetchRequestOptions?.headers,
         ...this.options?.headers,
       },
-      signal: AbortSignal.timeout(this.options?.timeout ?? 60000),
     });
   }
 
@@ -297,11 +336,15 @@ export class RemoteRunnable<
       input: RunInput;
       config?: RunnableConfig;
       kwargs?: Omit<Partial<CallOptions>, keyof RunnableConfig>;
-    }>("/invoke", {
-      input,
-      config: removeCallbacks(config),
-      kwargs: kwargs ?? {},
-    });
+    }>(
+      "/invoke",
+      {
+        input,
+        config: removeCallbacksAndSignal(config),
+        kwargs: kwargs ?? {},
+      },
+      config.signal
+    );
     if (!response.ok) {
       throw new Error(`${response.status} Error: ${await response.text()}`);
     }
@@ -345,13 +388,17 @@ export class RemoteRunnable<
       inputs: RunInput[];
       config?: (RunnableConfig & RunnableBatchOptions)[];
       kwargs?: Omit<Partial<CallOptions>, keyof RunnableConfig>[];
-    }>("/batch", {
-      inputs,
-      config: (configs ?? [])
-        .map(removeCallbacks)
-        .map((config) => ({ ...config, ...batchOptions })),
-      kwargs,
-    });
+    }>(
+      "/batch",
+      {
+        inputs,
+        config: (configs ?? [])
+          .map(removeCallbacksAndSignal)
+          .map((config) => ({ ...config, ...batchOptions })),
+        kwargs,
+      },
+      options?.[0]?.signal
+    );
     if (!response.ok) {
       throw new Error(`${response.status} Error: ${await response.text()}`);
     }
@@ -420,11 +467,15 @@ export class RemoteRunnable<
         input: RunInput;
         config?: RunnableConfig;
         kwargs?: Omit<Partial<CallOptions>, keyof RunnableConfig>;
-      }>("/stream", {
-        input,
-        config: removeCallbacks(config),
-        kwargs,
-      });
+      }>(
+        "/stream",
+        {
+          input,
+          config: removeCallbacksAndSignal(config),
+          kwargs,
+        },
+        config.signal
+      );
       if (!response.ok) {
         const json = await response.json();
         const error = new Error(
@@ -500,13 +551,17 @@ export class RemoteRunnable<
         config?: RunnableConfig;
         kwargs?: Omit<Partial<CallOptions>, keyof RunnableConfig>;
         diff: false;
-      }>("/stream_log", {
-        input,
-        config: removeCallbacks(config),
-        kwargs,
-        ...camelCaseStreamOptions,
-        diff: false,
-      });
+      }>(
+        "/stream_log",
+        {
+          input,
+          config: removeCallbacksAndSignal(config),
+          kwargs,
+          ...camelCaseStreamOptions,
+          diff: false,
+        },
+        config.signal
+      );
       const { body, ok } = response;
       if (!ok) {
         throw new Error(`${response.status} Error: ${await response.text()}`);
@@ -572,13 +627,17 @@ export class RemoteRunnable<
           config?: RunnableConfig;
           kwargs?: Omit<Partial<CallOptions>, keyof RunnableConfig>;
           diff: false;
-        }>("/stream_events", {
-          input,
-          config: removeCallbacks(config),
-          kwargs,
-          ...camelCaseStreamOptions,
-          diff: false,
-        });
+        }>(
+          "/stream_events",
+          {
+            input,
+            config: removeCallbacksAndSignal(config),
+            kwargs,
+            ...camelCaseStreamOptions,
+            diff: false,
+          },
+          config.signal
+        );
         const { body, ok } = response;
         if (!ok) {
           throw new Error(`${response.status} Error: ${await response.text()}`);

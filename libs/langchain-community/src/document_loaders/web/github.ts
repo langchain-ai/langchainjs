@@ -510,7 +510,7 @@ export class GithubRepoLoader
     >[] = [];
 
     for (const file of files) {
-      if (this.shouldIgnore(file.path, file.type)) {
+      if (file.type !== "dir" && this.shouldIgnore(file.path, file.type)) {
         continue;
       }
       if (file.type === "file" && file.size === 0) {
@@ -566,7 +566,7 @@ export class GithubRepoLoader
   ): AsyncGenerator<Document, void, undefined> {
     const files = await this.fetchRepoFiles(path);
     for (const file of files) {
-      if (this.shouldIgnore(file.path, file.type)) {
+      if (file.type !== "dir" && this.shouldIgnore(file.path, file.type)) {
         continue;
       }
 
@@ -619,7 +619,7 @@ export class GithubRepoLoader
     const files = await this.fetchRepoFiles(path);
 
     for (const file of files) {
-      if (this.shouldIgnore(file.path, file.type)) {
+      if (file.type !== "dir" && this.shouldIgnore(file.path, file.type)) {
         continue;
       }
 

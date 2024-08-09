@@ -18,8 +18,6 @@ import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { convertEventStreamToIterableReadableDataStream } from "@langchain/core/utils/event_source_parse";
 import { ChatCompletion } from "@baiducloud/qianfan";
 
-import { isValidModel } from "./utils.js";
-
 /**
  * Type representing the role of a message in the Qianfan chat model.
  */
@@ -72,12 +70,12 @@ interface ChatCompletionResponse {
  */
 declare interface BaiduQianfanChatInput {
   /**
-   * Model name to use. Available options are: ERNIE-Bot, ERNIE-Bot-turbo, ERNIE-Bot-4
+   * Model name to use. Available options are: ERNIE-Bot, ERNIE-Lite-8K, ERNIE-Bot-4
    * Alias for `model`
    * @default "ERNIE-Bot-turbo"
    */
   modelName: string;
-  /** Model name to use. Available options are: ERNIE-Bot, ERNIE-Bot-turbo, ERNIE-Bot-4
+  /** Model name to use. Available options are: ERNIE-Bot, ERNIE-Lite-8K, ERNIE-Bot-4
    * @default "ERNIE-Bot-turbo"
    */
   model: string;
@@ -244,8 +242,8 @@ export class ChatBaiduQianfan
     this.modelName = fields?.model ?? fields?.modelName ?? this.model;
     this.model = this.modelName;
 
-    if (!isValidModel(this.model)) {
-      throw new Error(`Invalid model name: ${this.model}`);
+    if (!this.model) {
+      throw new Error(`Please provide modelName`);
     }
 
     this.qianfanAK = fields?.qianfanAK ?? getEnvironmentVariable("QIANFAN_AK");
@@ -416,7 +414,7 @@ export class ChatBaiduQianfan
       if (!stream) {
         return response;
       } else {
-        let streamResponse = {} as {
+        let streamResponse = { result: "" } as {
           id: string;
           object: string;
           created: number;

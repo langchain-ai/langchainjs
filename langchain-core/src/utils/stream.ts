@@ -1,4 +1,5 @@
 import { AsyncLocalStorageProviderSingleton } from "../singletons/index.js";
+import { raceWithSignal } from "./signal.js";
 
 // Make this a type to override ReadableStream's async iterator type in case
 // the popular web-streams-polyfill is imported - the supplied types
@@ -186,6 +187,8 @@ export class AsyncGeneratorWithSetup<
 
   public config?: unknown;
 
+  public signal?: AbortSignal;
+
   private firstResult: Promise<IteratorResult<T>>;
 
   private firstResultUsed = false;
@@ -194,9 +197,12 @@ export class AsyncGeneratorWithSetup<
     generator: AsyncGenerator<T>;
     startSetup?: () => Promise<S>;
     config?: unknown;
+    signal?: AbortSignal;
   }) {
     this.generator = params.generator;
     this.config = params.config;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    this.signal = params.signal ?? (this.config as any)?.signal;
     // setup is a promise that resolves only after the first iterator value
     // is available. this is useful when setup of several piped generators
     // needs to happen in logical order, ie. in the order in which input to
@@ -218,6 +224,8 @@ export class AsyncGeneratorWithSetup<
   }
 
   async next(...args: [] | [TNext]): Promise<IteratorResult<T>> {
+    this.signal?.throwIfAborted();
+
     if (!this.firstResultUsed) {
       this.firstResultUsed = true;
       return this.firstResult;
@@ -225,9 +233,13 @@ export class AsyncGeneratorWithSetup<
 
     return AsyncLocalStorageProviderSingleton.runWithConfig(
       this.config,
-      async () => {
-        return this.generator.next(...args);
-      },
+      this.signal
+        ? async () => {
+            return raceWithSignal(this.generator.next(...args), this.signal);
+          }
+        : async () => {
+            return this.generator.next(...args);
+          },
       true
     );
   }
@@ -264,11 +276,13 @@ export async function pipeGeneratorWithSetup<
   ) => AsyncGenerator<U, UReturn, UNext>,
   generator: AsyncGenerator<T, TReturn, TNext>,
   startSetup: () => Promise<S>,
+  signal: AbortSignal | undefined,
   ...args: A
 ) {
   const gen = new AsyncGeneratorWithSetup({
     generator,
     startSetup,
+    signal,
   });
   const setup = await gen.setup;
   return { output: to(gen, setup, ...args), setup };

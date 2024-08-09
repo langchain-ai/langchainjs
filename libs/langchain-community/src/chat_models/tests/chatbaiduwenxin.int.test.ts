@@ -122,9 +122,9 @@ const testConfigs: TestConfig[] = [
     },
     shouldThrow: true,
   },
-  { modelName: "ERNIE-Bot-turbo", config: {} },
+  { modelName: "ERNIE-Lite-8K", config: {} },
   {
-    modelName: "ERNIE-Bot-turbo",
+    modelName: "ERNIE-Lite-8K",
     config: {
       description: "in streaming mode",
       streaming: true,
@@ -132,7 +132,7 @@ const testConfigs: TestConfig[] = [
     message: "您好，请讲个长笑话",
   },
   {
-    modelName: "ERNIE-Bot-turbo",
+    modelName: "ERNIE-Lite-8K",
     config: {
       description: "with system message",
     },

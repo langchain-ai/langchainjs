@@ -12,19 +12,16 @@ import { AIMessageChunk } from "@langchain/core/messages";
 import {
   BaseLanguageModelInput,
   StructuredOutputMethodOptions,
-  ToolDefinition,
 } from "@langchain/core/language_models/base";
 import type { z } from "zod";
 import {
   Runnable,
   RunnablePassthrough,
   RunnableSequence,
-  RunnableToolLike,
 } from "@langchain/core/runnables";
 import { JsonOutputKeyToolsParser } from "@langchain/core/output_parsers/openai_tools";
 import { BaseLLMOutputParser } from "@langchain/core/output_parsers";
 import { AsyncCaller } from "@langchain/core/utils/async_caller";
-import { StructuredToolInterface } from "@langchain/core/tools";
 import { concat } from "@langchain/core/utils/stream";
 import {
   GoogleAIBaseLLMInput,
@@ -57,6 +54,7 @@ import type {
   GoogleAISafetyParams,
   GeminiFunctionDeclaration,
   GeminiFunctionSchema,
+  GoogleAIToolType,
 } from "./types.js";
 import { zodToGeminiParameters } from "./utils/zod_to_gemini_parameters.js";
 
@@ -111,11 +109,27 @@ class ChatConnection<AuthOptions> extends AbstractGoogleLLMConnection<
         baseMessageToContent(msg, input[i - 1], this.useSystemInstruction)
       )
       .reduce((acc, cur) => {
-        // Filter out the system content, since those don't belong
-        // in the actual content.
-        const hasNoSystem = cur.every((content) => content.role !== "system");
-        return hasNoSystem ? [...acc, ...cur] : acc;
-      }, []);
+        // Filter out the system content
+        if (cur.every((content) => content.role === "system")) {
+          return acc;
+        }
+
+        // Combine adjacent function messages
+        if (
+          cur[0]?.role === "function" &&
+          acc.length > 0 &&
+          acc[acc.length - 1].role === "function"
+        ) {
+          acc[acc.length - 1].parts = [
+            ...acc[acc.length - 1].parts,
+            ...cur[0].parts,
+          ];
+        } else {
+          acc.push(...cur);
+        }
+
+        return acc;
+      }, [] as GeminiContent[]);
   }
 
   formatSystemInstruction(
@@ -157,7 +171,7 @@ export interface ChatGoogleBaseInput<AuthOptions>
     Pick<GoogleAIBaseLanguageModelCallOptions, "streamUsage"> {}
 
 /**
- * Integration with a chat model.
+ * Integration with a Google chat model.
  */
 export abstract class ChatGoogleBase<AuthOptions>
   extends BaseChatModel<GoogleAIBaseLanguageModelCallOptions, AIMessageChunk>
@@ -276,12 +290,7 @@ export abstract class ChatGoogleBase<AuthOptions>
   }
 
   override bindTools(
-    tools: (
-      | StructuredToolInterface
-      | Record<string, unknown>
-      | ToolDefinition
-      | RunnableToolLike
-    )[],
+    tools: GoogleAIToolType[],
     kwargs?: Partial<GoogleAIBaseLanguageModelCallOptions>
   ): Runnable<
     BaseLanguageModelInput,

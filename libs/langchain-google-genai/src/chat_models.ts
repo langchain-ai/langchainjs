@@ -26,14 +26,12 @@ import { NewTokenIndices } from "@langchain/core/callbacks/base";
 import {
   BaseLanguageModelInput,
   StructuredOutputMethodOptions,
-  ToolDefinition,
 } from "@langchain/core/language_models/base";
 import { StructuredToolInterface } from "@langchain/core/tools";
 import {
   Runnable,
   RunnablePassthrough,
   RunnableSequence,
-  RunnableToolLike,
 } from "@langchain/core/runnables";
 import type { z } from "zod";
 import { isZodSchema } from "@langchain/core/utils/types";
@@ -46,6 +44,7 @@ import {
   mapGenerateContentResultToChatResult,
 } from "./utils/common.js";
 import { GoogleGenerativeAIToolsOutputParser } from "./output_parsers.js";
+import { GoogleGenerativeAIToolType } from "./types.js";
 
 interface TokenUsage {
   completionTokens?: number;
@@ -60,9 +59,7 @@ export type BaseMessageExamplePair = {
 
 export interface GoogleGenerativeAIChatCallOptions
   extends BaseChatModelCallOptions {
-  tools?:
-    | StructuredToolInterface[]
-    | GoogleGenerativeAIFunctionDeclarationsTool[];
+  tools?: GoogleGenerativeAIToolType[];
   /**
    * Whether or not to include usage data, like token counts
    * in the streamed response chunks.
@@ -217,6 +214,14 @@ export class ChatGoogleGenerativeAI
     };
   }
 
+  lc_namespace = ["langchain", "chat_models", "google_genai"];
+
+  get lc_aliases() {
+    return {
+      apiKey: "google_api_key",
+    };
+  }
+
   modelName = "gemini-pro";
 
   model = "gemini-pro";
@@ -346,12 +351,7 @@ export class ChatGoogleGenerativeAI
   }
 
   override bindTools(
-    tools: (
-      | StructuredToolInterface
-      | Record<string, unknown>
-      | ToolDefinition
-      | RunnableToolLike
-    )[],
+    tools: GoogleGenerativeAIToolType[],
     kwargs?: Partial<GoogleGenerativeAIChatCallOptions>
   ): Runnable<
     BaseLanguageModelInput,

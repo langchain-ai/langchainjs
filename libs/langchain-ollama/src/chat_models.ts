@@ -3,16 +3,14 @@ import {
   UsageMetadata,
   type BaseMessage,
 } from "@langchain/core/messages";
-import {
-  BaseLanguageModelInput,
-  ToolDefinition,
-} from "@langchain/core/language_models/base";
+import { BaseLanguageModelInput } from "@langchain/core/language_models/base";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {
   type BaseChatModelParams,
   BaseChatModel,
   LangSmithParams,
   BaseChatModelCallOptions,
+  BindToolsInput,
 } from "@langchain/core/language_models/chat_models";
 import { Ollama } from "ollama/browser";
 import { ChatGenerationChunk, ChatResult } from "@langchain/core/outputs";
@@ -23,21 +21,21 @@ import type {
   Message as OllamaMessage,
   Tool as OllamaTool,
 } from "ollama";
-import { StructuredToolInterface } from "@langchain/core/tools";
-import { Runnable, RunnableToolLike } from "@langchain/core/runnables";
+import { Runnable } from "@langchain/core/runnables";
 import { convertToOpenAITool } from "@langchain/core/utils/function_calling";
 import { concat } from "@langchain/core/utils/stream";
 import {
   convertOllamaMessagesToLangChain,
   convertToOllamaMessages,
 } from "./utils.js";
+import { OllamaCamelCaseOptions } from "./types.js";
 
 export interface ChatOllamaCallOptions extends BaseChatModelCallOptions {
   /**
    * An array of strings to stop on.
    */
   stop?: string[];
-  tools?: (StructuredToolInterface | RunnableToolLike | ToolDefinition)[];
+  tools?: BindToolsInput[];
 }
 
 export interface PullModelOptions {
@@ -58,7 +56,9 @@ export interface PullModelOptions {
 /**
  * Input to chat model class.
  */
-export interface ChatOllamaInput extends BaseChatModelParams {
+export interface ChatOllamaInput
+  extends BaseChatModelParams,
+    OllamaCamelCaseOptions {
   /**
    * The model to invoke. If the model does not exist, it
    * will be pulled.
@@ -78,40 +78,7 @@ export interface ChatOllamaInput extends BaseChatModelParams {
    */
   checkOrPullModel?: boolean;
   streaming?: boolean;
-  numa?: boolean;
-  numCtx?: number;
-  numBatch?: number;
-  numGpu?: number;
-  mainGpu?: number;
-  lowVram?: boolean;
-  f16Kv?: boolean;
-  logitsAll?: boolean;
-  vocabOnly?: boolean;
-  useMmap?: boolean;
-  useMlock?: boolean;
-  embeddingOnly?: boolean;
-  numThread?: number;
-  numKeep?: number;
-  seed?: number;
-  numPredict?: number;
-  topK?: number;
-  topP?: number;
-  tfsZ?: number;
-  typicalP?: number;
-  repeatLastN?: number;
-  temperature?: number;
-  repeatPenalty?: number;
-  presencePenalty?: number;
-  frequencyPenalty?: number;
-  mirostat?: number;
-  mirostatTau?: number;
-  mirostatEta?: number;
-  penalizeNewline?: boolean;
   format?: string;
-  /**
-   * @default "5m"
-   */
-  keepAlive?: string | number;
 }
 
 /**
@@ -294,11 +261,11 @@ export class ChatOllama
   }
 
   override bindTools(
-    tools: (StructuredToolInterface | ToolDefinition | RunnableToolLike)[],
+    tools: BindToolsInput[],
     kwargs?: Partial<this["ParsedCallOptions"]>
   ): Runnable<BaseLanguageModelInput, AIMessageChunk, ChatOllamaCallOptions> {
     return this.bind({
-      tools: tools.map(convertToOpenAITool),
+      tools: tools.map((tool) => convertToOpenAITool(tool)),
       ...kwargs,
     });
   }
@@ -359,7 +326,9 @@ export class ChatOllama
         stop: options?.stop,
       },
       tools: options?.tools?.length
-        ? (options.tools.map(convertToOpenAITool) as OllamaTool[])
+        ? (options.tools.map((tool) =>
+            convertToOpenAITool(tool)
+          ) as OllamaTool[])
         : undefined,
     };
   }

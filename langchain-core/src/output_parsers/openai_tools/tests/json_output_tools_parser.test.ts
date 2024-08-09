@@ -1,4 +1,4 @@
-import { test } from "@jest/globals";
+import { test, expect } from "@jest/globals";
 import { z } from "zod";
 import { JsonOutputKeyToolsParser } from "../json_output_tools_parsers.js";
 import { AIMessage } from "../../../messages/index.js";
