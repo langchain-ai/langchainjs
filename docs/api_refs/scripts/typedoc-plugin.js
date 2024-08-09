@@ -13,6 +13,7 @@ const path = require("path");
 const { glob } = require("glob");
 const { Project, ClassDeclaration } = require("ts-morph");
 
+// Chat model methods which _should_ be included in the documentation
 const WHITELISTED_CHAT_MODEL_INHERITED_METHODS = [
   "invoke",
   "stream",
@@ -35,6 +36,8 @@ const WHITELISTED_CHAT_MODEL_INHERITED_METHODS = [
   "transform",
 ];
 
+// Reflection types to check for methods that should not be documented.
+// e.g methods prefixed with `_` or `lc_`
 const REFLECTION_KINDS_TO_HIDE = [
   ReflectionKind.Property,
   ReflectionKind.Accessor,
@@ -48,6 +51,9 @@ const REFLECTION_KINDS_TO_HIDE = [
 ];
 
 const BASE_OUTPUT_DIR = "./public";
+
+// Script to inject into the HTML to add a CMD/CTRL + K 'hotkey' which focuses
+// on the search input element.
 const SCRIPT_HTML = `<script>
   document.addEventListener('keydown', (e) => {
     if ((e.metaKey || e.ctrlKey) && e.keyCode === 75) { // Check for CMD + K or CTRL + K
@@ -57,6 +63,8 @@ const SCRIPT_HTML = `<script>
     }
   }, false); // Add event listener for keydown events
 </script>`;
+
+// Injected into each page's HTML to add a dropdown to switch between versions.
 const VERSION_DROPDOWN_HTML = `<div class="version-select">
 <select id="version-dropdown" onchange="window.location.href=this.value;">
   <option selected value="">v0.2</option>
@@ -65,66 +73,10 @@ const VERSION_DROPDOWN_HTML = `<div class="version-select">
 </div>`;
 
 /**
+ * HTML injected into sections where there is a `@deprecated` JSDoc tag.
+ * This provides a far more visible warning to the user that the feature is
+ * deprecated.
  *
- * @param {unknown} children
- */
-function recursiveChildrenUrlEditor(children) {
-  if (typeof children === "object") {
-    if (
-      "url" in children &&
-      typeof children.url === "string" &&
-      children.url.includes("/_langchain")
-    ) {
-      children.url = children.url.replace("/_langchain", "/langchain");
-    }
-    if ("children" in children && Array.isArray(children.children)) {
-      children.children.forEach((child) => {
-        recursiveChildrenUrlEditor(child);
-      });
-    }
-    if ("groups" in children && Array.isArray(children.groups)) {
-      children.groups.forEach((group) => {
-        if ("children" in group && Array.isArray(group.children)) {
-          group.children.forEach((child) => {
-            recursiveChildrenUrlEditor(child);
-          });
-        }
-      });
-    }
-  }
-}
-
-/**
- *
- * @param {UrlMapping<Reflection>} urlMap
- */
-function updateUrlMappings(urlMap) {
-  if (urlMap.url.includes("/_langchain")) {
-    urlMap.url = urlMap.url.replace("/_langchain", "/langchain");
-  }
-  if (urlMap.model.url?.includes("/_langchain")) {
-    urlMap.model.url = urlMap.model.url.replace("/_langchain", "/langchain");
-  }
-
-  if (urlMap.model.children?.length) {
-    urlMap.model.children.forEach((child) => {
-      if (child && child.url?.includes("/_langchain")) {
-        child.url = child.url.replace("/_langchain", "/langchain");
-      }
-    });
-  }
-  if (urlMap.model.groups?.length) {
-    urlMap.model.groups.forEach((group) => {
-      if (group && group.children?.length) {
-        group.children.forEach((child) => {
-          recursiveChildrenUrlEditor(child);
-        });
-      }
-    });
-  }
-}
-
-/**
  * @param {string | undefined} deprecationText
  * @returns {string}
  */
@@ -136,6 +88,9 @@ ${deprecationText ? `<p>${deprecationText}</p>` : ""}
 </div>`;
 
 /**
+ * Uses ts-morph to check if the class is a subclass of `BaseChatModel` or
+ * `SimpleChatModel`.
+ *
  * @param {ClassDeclaration} classDeclaration
  * @returns {boolean}
  */
@@ -154,6 +109,13 @@ function isBaseChatModelOrSimpleChatModel(classDeclaration) {
   return false;
 }
 
+/**
+ * Uses ts-morph to load all chat model files, and extract the names of the
+ * classes. This is then used to remove unwanted properties from showing up
+ * in the documentation of those classes.
+ *
+ * @returns {Array<string>}
+ */
 function getAllChatModelNames() {
   const communityChatModelPath =
     "../../libs/langchain-community/src/chat_models/*";
@@ -183,8 +145,15 @@ function getAllChatModelNames() {
 }
 
 /**
+ * Takes in a reflection and an array of all chat model class names.
+ * Then performs checks to see if the given reflection should be removed
+ * from the documentation.
+ * E.g a class method on chat models which is
+ * not intended to be documented.
+ *
  * @param {DeclarationReflection} reflection
  * @param {Array<string>} chatModelNames
+ * @returns {boolean} Whether or not the reflection should be removed
  */
 function shouldRemoveReflection(reflection, chatModelNames) {
   const kind = reflection.kind;
@@ -237,10 +206,8 @@ function load(application) {
 
   application.renderer.on(RendererEvent.END, onEndRenderEvent);
 
-  application.renderer.on(RendererEvent.BEGIN, onBeginRendererEvent);
-
   /**
-   * @param {Context} _context
+   * @param {Context} context
    * @param {DeclarationReflection} reflection
    * @returns {void}
    */
@@ -250,14 +217,6 @@ function load(application) {
     if (shouldRemoveReflection(reflection, allChatModelNames)) {
       project.removeReflection(reflection);
     }
-  }
-
-  /**
-   *
-   * @param {RendererEvent} event
-   */
-  function onBeginRendererEvent(event) {
-    event.urls.forEach((urlMap) => updateUrlMappings(urlMap));
   }
 
   /**

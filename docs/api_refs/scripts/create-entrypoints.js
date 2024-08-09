@@ -12,7 +12,7 @@ const BASE_TYPEDOC_CONFIG = {
     "alphabetical",
   ],
   plugin: [
-    "./typedoc_plugins/hide_underscore_lc.js",
+    "./scripts/typedoc-plugin.js",
     "typedoc-plugin-expand-object-like-types",
   ],
   tsconfig: "../../tsconfig.json",
