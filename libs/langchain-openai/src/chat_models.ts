@@ -377,13 +377,28 @@ export interface ChatOpenAIFields
  * export OPENAI_API_KEY="your-api-key"
  * ```
  *
- * ## Key args
+ * ## [Constructor args](/classes/langchain_openai.ChatOpenAI.html#constructor)
  *
- * ### [Init args](/classes/langchain_openai.ChatOpenAI.html#constructor)
+ * ## [Runtime args](/interfaces/langchain_openai.ChatOpenAICallOptions.html)
  *
- * ### [Runtime args](/interfaces/langchain_openai.ChatOpenAICallOptions.html)
+ * Runtime args can be passed as the second argument to any of the base runnable methods `.invoke`. `.stream`, `.batch`, etc.
+ * They can also be passed via `.bind`, or the second arg in `.bindTools`, like shown in the examples below:
  *
- * > See full list of supported init args and their descriptions in the [`constructor`](/classes/langchain_openai.ChatOpenAI.html#constructor) section.
+ * ```typescript
+ * // When calling `.bind`, call options should be passed via the first argument
+ * const llmWithArgsBound = llm.bind({
+ *   stop: ["\n"],
+ *   tools: [...],
+ * });
+ *
+ * // When calling `.bindTools`, call options should be passed via the second argument
+ * const llmWithTools = llm.bindTools(
+ *   [...],
+ *   {
+ *     tool_choice: "auto",
+ *   }
+ * );
+ * ```
  *
  * ## Examples
  *
@@ -426,6 +441,27 @@ export interface ChatOpenAIFields
  * const result = await llm.invoke(messages);
  * console.log(result);
  * ```
+ *
+ * ```txt
+ * AIMessage {
+ *   "id": "chatcmpl-9u4Mpu44CbPjwYFkTbeoZgvzB00Tz",
+ *   "content": "J'adore la programmation.",
+ *   "response_metadata": {
+ *     "tokenUsage": {
+ *       "completionTokens": 5,
+ *       "promptTokens": 28,
+ *       "totalTokens": 33
+ *     },
+ *     "finish_reason": "stop",
+ *     "system_fingerprint": "fp_3aa7262c27"
+ *   },
+ *   "usage_metadata": {
+ *     "input_tokens": 28,
+ *     "output_tokens": 5,
+ *     "total_tokens": 33
+ *   }
+ * }
+ * ```
  * </details>
  *
  * <br />
@@ -436,6 +472,43 @@ export interface ChatOpenAIFields
  * ```typescript
  * for await (const chunk of await llm.stream(messages)) {
  *   console.log(chunk);
+ * }
+ * ```
+ *
+ * ```txt
+ * AIMessageChunk {
+ *   "id": "chatcmpl-9u4NWB7yUeHCKdLr6jP3HpaOYHTqs",
+ *   "content": ""
+ * }
+ * AIMessageChunk {
+ *   "content": "J"
+ * }
+ * AIMessageChunk {
+ *   "content": "'adore"
+ * }
+ * AIMessageChunk {
+ *   "content": " la"
+ * }
+ * AIMessageChunk {
+ *   "content": " programmation",,
+ * }
+ * AIMessageChunk {
+ *   "content": ".",,
+ * }
+ * AIMessageChunk {
+ *   "content": "",
+ *   "response_metadata": {
+ *     "finish_reason": "stop",
+ *     "system_fingerprint": "fp_c9aa9c0491"
+ *   },
+ * }
+ * AIMessageChunk {
+ *   "content": "",
+ *   "usage_metadata": {
+ *     "input_tokens": 28,
+ *     "output_tokens": 5,
+ *     "total_tokens": 33
+ *   }
  * }
  * ```
  * </details>
@@ -455,6 +528,24 @@ export interface ChatOpenAIFields
  *   full = !full ? chunk : concat(full, chunk);
  * }
  * console.log(full);
+ * ```
+ *
+ * ```txt
+ * AIMessageChunk {
+ *   "id": "chatcmpl-9u4PnX6Fy7OmK46DASy0bH6cxn5Xu",
+ *   "content": "J'adore la programmation.",
+ *   "response_metadata": {
+ *     "prompt": 0,
+ *     "completion": 0,
+ *     "finish_reason": "stop",
+ *     "system_fingerprint": "fp_3aa7262c27fp_3aa7262c27fp_3aa7262c27fp_3aa7262c27fp_3aa7262c27fp_3aa7262c27fp_3aa7262c27"
+ *   },
+ *   "usage_metadata": {
+ *     "input_tokens": 28,
+ *     "output_tokens": 5,
+ *     "total_tokens": 33
+ *   }
+ * }
  * ```
  * </details>
  *
@@ -493,6 +584,35 @@ export interface ChatOpenAIFields
  * );
  * console.log(aiMsg.tool_calls);
  * ```
+ *
+ * ```txt
+ * [
+ *   {
+ *     name: 'GetWeather',
+ *     args: { location: 'Los Angeles, CA' },
+ *     type: 'tool_call',
+ *     id: 'call_uPU4FiFzoKAtMxfmPnfQL6UK'
+ *   },
+ *   {
+ *     name: 'GetWeather',
+ *     args: { location: 'New York, NY' },
+ *     type: 'tool_call',
+ *     id: 'call_UNkEwuQsHrGYqgDQuH9nPAtX'
+ *   },
+ *   {
+ *     name: 'GetPopulation',
+ *     args: { location: 'Los Angeles, CA' },
+ *     type: 'tool_call',
+ *     id: 'call_kL3OXxaq9OjIKqRTpvjaCH14'
+ *   },
+ *   {
+ *     name: 'GetPopulation',
+ *     args: { location: 'New York, NY' },
+ *     type: 'tool_call',
+ *     id: 'call_s9KQB1UWj45LLGaEnjz0179q'
+ *   }
+ * ]
+ * ```
  * </details>
  *
  * <br />
@@ -513,6 +633,14 @@ export interface ChatOpenAIFields
  * const jokeResult = await structuredLlm.invoke("Tell me a joke about cats");
  * console.log(jokeResult);
  * ```
+ *
+ * ```txt
+ * {
+ *   setup: 'Why was the cat sitting on the computer?',
+ *   punchline: 'Because it wanted to keep an eye on the mouse!',
+ *   rating: 7
+ * }
+ * ```
  * </details>
  *
  * <br />
@@ -526,6 +654,12 @@ export interface ChatOpenAIFields
  *   "Return a JSON object with key 'randomInts' and a value of 10 random ints in [0-99]"
  * );
  * console.log(jsonLlmAiMsg.content);
+ * ```
+ *
+ * ```txt
+ * {
+ *   "randomInts": [23, 87, 45, 12, 78, 34, 56, 90, 11, 67]
+ * }
  * ```
  * </details>
  *
@@ -554,6 +688,10 @@ export interface ChatOpenAIFields
  * const imageDescriptionAiMsg = await llm.invoke([message]);
  * console.log(imageDescriptionAiMsg.content);
  * ```
+ *
+ * ```txt
+ * The weather in the image appears to be clear and sunny. The sky is mostly blue with a few scattered white clouds, indicating fair weather. The bright sunlight is casting shadows on the green, grassy hill, suggesting it is a pleasant day with good visibility. There are no signs of rain or stormy conditions.
+ * ```
  * </details>
  *
  * <br />
@@ -564,6 +702,10 @@ export interface ChatOpenAIFields
  * ```typescript
  * const aiMsgForMetadata = await llm.invoke(messages);
  * console.log(aiMsgForMetadata.usage_metadata);
+ * ```
+ *
+ * ```txt
+ * { input_tokens: 28, output_tokens: 5, total_tokens: 33 }
  * ```
  * </details>
  *
@@ -587,6 +729,10 @@ export interface ChatOpenAIFields
  * }
  * console.log(fullForMetadata?.usage_metadata);
  * ```
+ *
+ * ```txt
+ * { input_tokens: 28, output_tokens: 5, total_tokens: 33 }
+ * ```
  * </details>
  *
  * <br />
@@ -599,6 +745,52 @@ export interface ChatOpenAIFields
  * const aiMsgForLogprobs = await logprobsLlm.invoke(messages);
  * console.log(aiMsgForLogprobs.response_metadata.logprobs);
  * ```
+ *
+ * ```txt
+ * {
+ *   content: [
+ *     {
+ *       token: 'J',
+ *       logprob: -0.000050616763,
+ *       bytes: [Array],
+ *       top_logprobs: []
+ *     },
+ *     {
+ *       token: "'",
+ *       logprob: -0.01868736,
+ *       bytes: [Array],
+ *       top_logprobs: []
+ *     },
+ *     {
+ *       token: 'ad',
+ *       logprob: -0.0000030545007,
+ *       bytes: [Array],
+ *       top_logprobs: []
+ *     },
+ *     { token: 'ore', logprob: 0, bytes: [Array], top_logprobs: [] },
+ *     {
+ *       token: ' la',
+ *       logprob: -0.515404,
+ *       bytes: [Array],
+ *       top_logprobs: []
+ *     },
+ *     {
+ *       token: ' programm',
+ *       logprob: -0.0000118755715,
+ *       bytes: [Array],
+ *       top_logprobs: []
+ *     },
+ *     { token: 'ation', logprob: 0, bytes: [Array], top_logprobs: [] },
+ *     {
+ *       token: '.',
+ *       logprob: -0.0000037697225,
+ *       bytes: [Array],
+ *       top_logprobs: []
+ *     }
+ *   ],
+ *   refusal: null
+ * }
+ * ```
  * </details>
  *
  * <br />
@@ -609,6 +801,14 @@ export interface ChatOpenAIFields
  * ```typescript
  * const aiMsgForResponseMetadata = await llm.invoke(messages);
  * console.log(aiMsgForResponseMetadata.response_metadata);
+ * ```
+ *
+ * ```txt
+ * {
+ *   tokenUsage: { completionTokens: 5, promptTokens: 28, totalTokens: 33 },
+ *   finish_reason: 'stop',
+ *   system_fingerprint: 'fp_3aa7262c27'
+ * }
  * ```
  * </details>
  *

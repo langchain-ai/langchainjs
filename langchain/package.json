@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.2.13",
+  "version": "0.2.14",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
