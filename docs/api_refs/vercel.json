@@ -1,0 +1,10 @@
+{
+  "buildCommand": "yarn build",
+  "trailingSlash": false,
+  "redirects": [
+    {
+      "source": "/:path*/langchain:rest*",
+      "destination": "/:path*/_langchain:rest*"
+    }
+  ]
+}

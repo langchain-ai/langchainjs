@@ -8,6 +8,42 @@ const {
 } = require("typedoc");
 const fs = require("fs");
 const path = require("path");
+const { glob } = require("glob");
+const { Project, ClassDeclaration } = require("ts-morph");
+
+const WHITELISTED_CHAT_MODEL_INHERITED_METHODS = [
+  "invoke",
+  "stream",
+  "batch",
+  "streamLog",
+  "streamEvents",
+  "bind",
+  "bindTools",
+  "asTool",
+  "pipe",
+  "withConfig",
+  "withRetry",
+  "assign",
+  "getNumTokens",
+  "getGraph",
+  "pick",
+  "withFallbacks",
+  "withStructuredOutput",
+  "withListeners",
+  "transform",
+];
+
+const REFLECTION_KINDS_TO_HIDE = [
+  ReflectionKind.Property,
+  ReflectionKind.Accessor,
+  ReflectionKind.Variable,
+  ReflectionKind.Method,
+  ReflectionKind.Function,
+  ReflectionKind.Class,
+  ReflectionKind.Interface,
+  ReflectionKind.Enum,
+  ReflectionKind.TypeAlias,
+];
 
 const PATH_TO_LANGCHAIN_PKG_JSON = "../../langchain/package.json";
 const BASE_OUTPUT_DIR = "./public";
@@ -39,88 +75,119 @@ ${deprecationText ? `<p>${deprecationText}</p>` : ""}
 </div>`;
 
 /**
+ * @param {ClassDeclaration} classDeclaration
+ * @returns {boolean}
+ */
+function isBaseChatModelOrSimpleChatModel(classDeclaration) {
+  let currentClass = classDeclaration;
+  while (currentClass) {
+    const baseClassName = currentClass.getBaseClass()?.getName();
+    if (
+      baseClassName === "BaseChatModel" ||
+      baseClassName === "SimpleChatModel"
+    ) {
+      return true;
+    }
+    currentClass = currentClass.getBaseClass();
+  }
+  return false;
+}
+
+function getAllChatModelNames() {
+  const communityChatModelPath =
+    "../../libs/langchain-community/src/chat_models/*";
+  const communityChatModelNestedPath =
+    "../../libs/langchain-community/src/chat_models/**/*";
+  const partnerPackageGlob =
+    "../../libs/!(langchain-community)/**/chat_models.ts";
+  const partnerPackageFiles = glob.globSync(partnerPackageGlob);
+
+  const tsMorphProject = new Project();
+  const sourceFiles = tsMorphProject.addSourceFilesAtPaths([
+    communityChatModelPath,
+    communityChatModelNestedPath,
+    ...partnerPackageFiles,
+  ]);
+
+  const chatModelNames = [];
+  for (const sourceFile of sourceFiles) {
+    const exportedClasses = sourceFile.getClasses();
+    for (const exportedClass of exportedClasses) {
+      if (isBaseChatModelOrSimpleChatModel(exportedClass)) {
+        chatModelNames.push(exportedClass.getName());
+      }
+    }
+  }
+  return chatModelNames.flatMap((n) => (n ? [n] : []));
+}
+
+/**
+ * @param {DeclarationReflection} reflection
+ * @param {Array<string>} chatModelNames
+ */
+function shouldRemoveReflection(reflection, chatModelNames) {
+  const kind = reflection.kind;
+
+  if (
+    reflection.parent &&
+    chatModelNames.find((name) => name === reflection.parent.name) &&
+    reflection.name !== "constructor"
+  ) {
+    if (kind === ReflectionKind.Property) {
+      return true;
+    }
+    if (
+      !WHITELISTED_CHAT_MODEL_INHERITED_METHODS.find(
+        (n) => n === reflection.name
+      )
+    ) {
+      return true;
+    }
+    if (kind === ReflectionKind.Accessor && reflection.name === "callKeys") {
+      return true;
+    }
+  }
+
+  if (REFLECTION_KINDS_TO_HIDE.find((kindToHide) => kindToHide === kind)) {
+    if (reflection.name.startsWith("_") || reflection.name.startsWith("lc_")) {
+      // Remove all reflections which start with an `_` or `lc_`
+      return true;
+    }
+  }
+}
+
+/**
  * @param {Application} application
  * @returns {void}
  */
 function load(application) {
-  /**
-   * @type {string}
-   */
-  let langchainVersion;
+  let allChatModelNames = [];
   try {
-    const langChainPackageJson = fs
-      .readFileSync(PATH_TO_LANGCHAIN_PKG_JSON)
-      .toString();
-    langchainVersion = JSON.parse(langChainPackageJson).version;
-  } catch (e) {
-    throw new Error(`Error reading LangChain version for typedoc: ${e}`);
+    allChatModelNames = getAllChatModelNames();
+  } catch (err) {
+    console.error("Error while getting all chat model names");
+    throw err;
   }
-
-  /**
-   * @type {Array<DeclarationReflection>}
-   */
-  let reflectionsToHide = [];
 
   application.converter.on(
     Converter.EVENT_CREATE_DECLARATION,
     resolveReflection
   );
-  application.converter.on(Converter.EVENT_RESOLVE_BEGIN, onBeginResolve);
-
-  application.renderer.on(RendererEvent.BEGIN, onBeginRenderEvent);
 
   application.renderer.on(RendererEvent.END, onEndRenderEvent);
-
-  const reflectionKindsToHide = [
-    ReflectionKind.Property,
-    ReflectionKind.Accessor,
-    ReflectionKind.Variable,
-    ReflectionKind.Method,
-    ReflectionKind.Function,
-    ReflectionKind.Class,
-    ReflectionKind.Interface,
-    ReflectionKind.Enum,
-    ReflectionKind.TypeAlias,
-  ];
-
-  /**
-   * @param {Context} context
-   * @returns {void}
-   */
-  function onBeginRenderEvent(context) {
-    const { project } = context;
-    if (project && langchainVersion) {
-      project.packageVersion = langchainVersion;
-    }
-  }
-
-  /**
-   * @param {Context} context
-   * @returns {void}
-   */
-  function onBeginResolve(context) {
-    reflectionsToHide.forEach((reflection) => {
-      const { project } = context;
-      // Remove the property from documentation
-      project.removeReflection(reflection);
-    });
-  }
 
   /**
    * @param {Context} _context
    * @param {DeclarationReflection} reflection
    * @returns {void}
    */
-  function resolveReflection(_context, reflection) {
-    const reflectionKind = reflection.kind;
-    if (reflectionKindsToHide.includes(reflectionKind)) {
-      if (
-        reflection.name.startsWith("_") ||
-        reflection.name.startsWith("lc_")
-      ) {
-        reflectionsToHide.push(reflection);
-      }
+  function resolveReflection(context, reflection) {
+    const { project } = context;
+
+    if (shouldRemoveReflection(reflection, allChatModelNames)) {
+      project.removeReflection(reflection);
     }
+
     if (reflection.name.includes("/src")) {
       reflection.name = reflection.name.replace("/src", "");
     }

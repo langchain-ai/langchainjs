@@ -1,10 +1,10 @@
 {
   "name": "langchainjs",
-  "version": "0.0.4",
   "private": true,
   "engines": {
     "node": ">=18"
   },
+  "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/",
   "workspaces": [
     "langchain",
     "langchain-core",
