@@ -5,6 +5,8 @@ const {
   ReflectionKind,
   DeclarationReflection,
   RendererEvent,
+  UrlMapping,
+  Reflection,
 } = require("typedoc");
 const fs = require("fs");
 const path = require("path");
@@ -45,7 +47,6 @@ const REFLECTION_KINDS_TO_HIDE = [
   ReflectionKind.TypeAlias,
 ];
 
-const PATH_TO_LANGCHAIN_PKG_JSON = "../../langchain/package.json";
 const BASE_OUTPUT_DIR = "./public";
 const SCRIPT_HTML = `<script>
   document.addEventListener('keydown', (e) => {
@@ -62,6 +63,66 @@ const VERSION_DROPDOWN_HTML = `<div class="version-select">
   <option value="https://v01.api.js.langchain.com/">v0.1</option>
 </select>
 </div>`;
+
+/**
+ *
+ * @param {unknown} children
+ */
+function recursiveChildrenUrlEditor(children) {
+  if (typeof children === "object") {
+    if (
+      "url" in children &&
+      typeof children.url === "string" &&
+      children.url.includes("/_langchain")
+    ) {
+      children.url = children.url.replace("/_langchain", "/langchain");
+    }
+    if ("children" in children && Array.isArray(children.children)) {
+      children.children.forEach((child) => {
+        recursiveChildrenUrlEditor(child);
+      });
+    }
+    if ("groups" in children && Array.isArray(children.groups)) {
+      children.groups.forEach((group) => {
+        if ("children" in group && Array.isArray(group.children)) {
+          group.children.forEach((child) => {
+            recursiveChildrenUrlEditor(child);
+          });
+        }
+      });
+    }
+  }
+}
+
+/**
+ *
+ * @param {UrlMapping<Reflection>} urlMap
+ */
+function updateUrlMappings(urlMap) {
+  if (urlMap.url.includes("/_langchain")) {
+    urlMap.url = urlMap.url.replace("/_langchain", "/langchain");
+  }
+  if (urlMap.model.url?.includes("/_langchain")) {
+    urlMap.model.url = urlMap.model.url.replace("/_langchain", "/langchain");
+  }
+
+  if (urlMap.model.children?.length) {
+    urlMap.model.children.forEach((child) => {
+      if (child && child.url?.includes("/_langchain")) {
+        child.url = child.url.replace("/_langchain", "/langchain");
+      }
+    });
+  }
+  if (urlMap.model.groups?.length) {
+    urlMap.model.groups.forEach((group) => {
+      if (group && group.children?.length) {
+        group.children.forEach((child) => {
+          recursiveChildrenUrlEditor(child);
+        });
+      }
+    });
+  }
+}
 
 /**
  * @param {string | undefined} deprecationText
@@ -176,6 +237,8 @@ function load(application) {
 
   application.renderer.on(RendererEvent.END, onEndRenderEvent);
 
+  application.renderer.on(RendererEvent.BEGIN, onBeginRendererEvent);
+
   /**
    * @param {Context} _context
    * @param {DeclarationReflection} reflection
@@ -187,19 +250,20 @@ function load(application) {
     if (shouldRemoveReflection(reflection, allChatModelNames)) {
       project.removeReflection(reflection);
     }
+  }
 
-    if (reflection.name.includes("/src")) {
-      reflection.name = reflection.name.replace("/src", "");
-    }
-    if (reflection.name.startsWith("libs/")) {
-      reflection.name = reflection.name.replace("libs/", "");
-    }
+  /**
+   *
+   * @param {RendererEvent} event
+   */
+  function onBeginRendererEvent(event) {
+    event.urls.forEach((urlMap) => updateUrlMappings(urlMap));
   }
 
   /**
    * @param {Context} context
    */
-  async function onEndRenderEvent(context) {
+  function onEndRenderEvent(context) {
     const htmlToSplitAtSearchScript = `<div class="tsd-toolbar-contents container">`;
     const htmlToSplitAtVersionDropdown = `<div id="tsd-toolbar-links">`;
     const deprecatedHTML = "<h4>Deprecated</h4>";

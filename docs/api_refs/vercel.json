@@ -3,8 +3,8 @@
   "trailingSlash": false,
   "redirects": [
     {
-      "source": "/:path*/langchain:rest*",
-      "destination": "/:path*/_langchain:rest*"
+      "source": "/:path*/(langchain_:rest*)",
+      "destination": "/:path*/_langchain_:rest*"
     }
   ]
 }
