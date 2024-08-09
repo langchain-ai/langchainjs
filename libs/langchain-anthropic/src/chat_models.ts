@@ -847,7 +847,7 @@ export class ChatAnthropicMessages<
         stream: false,
         ..._formatMessagesForAnthropic(messages),
       },
-      options: requestOptions
+      options: requestOptions,
     );
 
     const { content, ...additionalKwargs } = response;
