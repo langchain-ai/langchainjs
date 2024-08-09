@@ -11,7 +11,7 @@ function abs(relativePath) {
 
 
 export const config = {
-  internals: [/node\:/, /@langchain\/core\//],
+  internals: [/node\:/, /@langchain\/core\//, "openai/helpers/zod"],
   entrypoints: {
     index: "index",
   },
