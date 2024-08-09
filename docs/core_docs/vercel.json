@@ -72,6 +72,10 @@
     {
       "source": "/v0.2/docs/integrations/chat_memory(/?)",
       "destination": "/v0.2/docs/integrations/memory/"
+    },
+    {
+      "source": "/v0.2/docs/integrations/chat_memory/:path(.*/?)*",
+      "destination": "/v0.2/docs/integrations/memory/:path*"
     }
   ]
 }
