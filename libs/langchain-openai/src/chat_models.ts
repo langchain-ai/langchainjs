@@ -68,18 +68,11 @@ import type {
   OpenAIChatInput,
   OpenAICoreRequestOptions,
   LegacyOpenAIInput,
-  OpenAICompletionParam,
-  OpenAIFnCallOption,
-  OpenAIFnDef,
-  OpenAILLMOutput,
-  OpenAIRoleEnum,
-  TokenUsage,
   ChatOpenAIResponseFormat,
 } from "./types.js";
 import { type OpenAIEndpointConfig, getEndpoint } from "./utils/azure.js";
 import {
   OpenAIToolChoice,
-  extractGenericMessageCustomRole,
   formatToOpenAIToolChoice,
   wrapOpenAIClientError,
 } from "./utils/openai.js";
@@ -90,6 +83,38 @@ import {
 import { _convertToOpenAITool } from "./utils/tools.js";
 
 export type { AzureOpenAIInput, OpenAICallOptions, OpenAIChatInput };
+
+interface TokenUsage {
+  completionTokens?: number;
+  promptTokens?: number;
+  totalTokens?: number;
+}
+
+interface OpenAILLMOutput {
+  tokenUsage: TokenUsage;
+}
+
+// TODO import from SDK when available
+type OpenAIRoleEnum = "system" | "assistant" | "user" | "function" | "tool";
+
+type OpenAICompletionParam =
+  OpenAIClient.Chat.Completions.ChatCompletionMessageParam;
+type OpenAIFnDef = OpenAIClient.Chat.ChatCompletionCreateParams.Function;
+type OpenAIFnCallOption = OpenAIClient.Chat.ChatCompletionFunctionCallOption;
+
+function extractGenericMessageCustomRole(message: ChatMessage) {
+  if (
+    message.role !== "system" &&
+    message.role !== "assistant" &&
+    message.role !== "user" &&
+    message.role !== "function" &&
+    message.role !== "tool"
+  ) {
+    console.warn(`Unknown message role: ${message.role}`);
+  }
+
+  return message.role as OpenAIRoleEnum;
+}
 
 export function messageToOpenAIRole(message: BaseMessage): OpenAIRoleEnum {
   const type = message._getType();
@@ -283,7 +308,7 @@ function _convertChatOpenAIToolTypeToOpenAITool(
 
 export interface ChatOpenAIStructuredOutputMethodOptions<
   IncludeRaw extends boolean
-> extends Omit<StructuredOutputMethodOptions<IncludeRaw>, "method"> {
+> extends StructuredOutputMethodOptions<IncludeRaw> {
   /**
    * strict: If `true` and `method` = "function_calling", model output is
    * guaranteed to exactly match the schema. If `true`, the input schema
@@ -299,7 +324,6 @@ export interface ChatOpenAIStructuredOutputMethodOptions<
    * "function_calling" as of version `0.3.0`.
    */
   strict?: boolean;
-  method?: "functionCalling" | "jsonMode" | "jsonSchema";
 }
 
 export interface ChatOpenAICallOptions

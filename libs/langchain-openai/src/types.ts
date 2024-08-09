@@ -229,30 +229,6 @@ export declare interface AzureOpenAIInput {
   azureADTokenProvider?: () => Promise<string>;
 }
 
-export interface TokenUsage {
-  completionTokens?: number;
-  promptTokens?: number;
-  totalTokens?: number;
-}
-
-export interface OpenAILLMOutput {
-  tokenUsage: TokenUsage;
-}
-
-// TODO import from SDK when available
-export type OpenAIRoleEnum =
-  | "system"
-  | "assistant"
-  | "user"
-  | "function"
-  | "tool";
-
-export type OpenAICompletionParam =
-  OpenAIClient.Chat.Completions.ChatCompletionMessageParam;
-export type OpenAIFnDef = OpenAIClient.Chat.ChatCompletionCreateParams.Function;
-export type OpenAIFnCallOption =
-  OpenAIClient.Chat.ChatCompletionFunctionCallOption;
-
 type ChatOpenAIResponseFormatJSONSchema = Omit<
   ResponseFormatJSONSchema,
   "json_schema"
