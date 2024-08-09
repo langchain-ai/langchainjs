@@ -1,5 +1,4 @@
-import { Ai } from "@cloudflare/ai";
-import { Fetcher } from "@cloudflare/workers-types";
+import { Ai } from "@cloudflare/workers-types";
 import { Embeddings, EmbeddingsParams } from "@langchain/core/embeddings";
 import { chunkArray } from "@langchain/core/utils/chunk_array";
 
@@ -14,7 +13,7 @@ type AiTextEmbeddingsOutput = {
 
 export interface CloudflareWorkersAIEmbeddingsParams extends EmbeddingsParams {
   /** Binding */
-  binding: Fetcher;
+  binding: Ai;
 
   /**
    * Model name to use
@@ -57,7 +56,7 @@ export class CloudflareWorkersAIEmbeddings extends Embeddings {
         "Must supply a Workers AI binding, eg { binding: env.AI }"
       );
     }
-    this.ai = new Ai(fields.binding);
+    this.ai = fields.binding;
     this.modelName = fields?.model ?? fields.modelName ?? this.model;
     this.model = this.modelName;
     this.stripNewLines = fields.stripNewLines ?? this.stripNewLines;
