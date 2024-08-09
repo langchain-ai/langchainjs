@@ -76,6 +76,10 @@
     {
       "source": "/v0.2/docs/integrations/chat_memory/:path(.*/?)*",
       "destination": "/v0.2/docs/integrations/memory/:path*"
+    },
+    {
+      "source": "/v0.2/docs/integrations/llms/togetherai(/?)",
+      "destination": "/v0.2/docs/integrations/llms/together/"
     }
   ]
 }
