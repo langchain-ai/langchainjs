@@ -1,7 +1,9 @@
 name: Deploy Docs Preview
+
 on:
   workflow_dispatch:  # Allows triggering the workflow manually in GitHub UI
   pull_request:
+
 # If another push to the same PR or branch happens while this workflow is still running,
 # cancel the earlier run in favor of the next run.
 #
@@ -11,6 +13,7 @@ on:
 concurrency:
   group: exports-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
+
 jobs:
   deploy-docs-preview:
     name: Deploy Preview Docs to Vercel
