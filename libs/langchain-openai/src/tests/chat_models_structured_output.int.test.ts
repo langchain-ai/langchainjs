@@ -383,7 +383,31 @@ test("Passing response_format json_schema works", async () => {
   const response = await model.invoke(
     "What is the weather in San Francisco, 91626 CA?"
   );
-  console.log(response.content);
+  console.log("content", response.content);
   const parsed = JSON.parse(response.content as string);
-  console.log(parsed);
+  console.log("parsed", parsed);
+});
+
+test("Passing response_format json_schema works with WSO", async () => {
+  const weatherSchema = z.object({
+    city: z.string().describe("The city to get the weather for"),
+    state: z.string().describe("The state to get the weather for"),
+    zipCode: z.string().describe("The zip code to get the weather for"),
+    unit: z
+      .enum(["fahrenheit", "celsius"])
+      .describe("The unit to get the weather in"),
+  });
+
+  const model = new ChatOpenAI({
+    model: "gpt-4o-2024-08-06",
+  }).withStructuredOutput(weatherSchema, {
+    name: "get_current_weather",
+    method: "jsonSchema",
+    strict: true,
+  });
+
+  const response = await model.invoke(
+    "What is the weather in San Francisco, 91626 CA?"
+  );
+  console.log(response);
 });

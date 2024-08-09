@@ -276,7 +276,7 @@ function _convertChatOpenAIToolTypeToOpenAITool(
 
 export interface ChatOpenAIStructuredOutputMethodOptions<
   IncludeRaw extends boolean
-> extends StructuredOutputMethodOptions<IncludeRaw> {
+> extends Omit<StructuredOutputMethodOptions<IncludeRaw>, "method"> {
   /**
    * strict: If `true` and `method` = "function_calling", model output is
    * guaranteed to exactly match the schema. If `true`, the input schema
@@ -292,6 +292,7 @@ export interface ChatOpenAIStructuredOutputMethodOptions<
    * "function_calling" as of version `0.3.0`.
    */
   strict?: boolean;
+  method?: "functionCalling" | "jsonMode" | "jsonSchema";
 }
 
 export interface ChatOpenAICallOptions
@@ -1480,8 +1481,6 @@ export class ChatOpenAI<
           request,
           requestOptions
         );
-        console.log("RES");
-        console.dir(res, { depth: null });
         return res;
       } catch (e) {
         const error = wrapOpenAIClientError(e);
@@ -1626,6 +1625,23 @@ export class ChatOpenAI<
     if (method === "jsonMode") {
       llm = this.bind({
         response_format: { type: "json_object" },
+      } as Partial<CallOptions>);
+      if (isZodSchema(schema)) {
+        outputParser = StructuredOutputParser.fromZodSchema(schema);
+      } else {
+        outputParser = new JsonOutputParser<RunOutput>();
+      }
+    } else if (method === "jsonSchema") {
+      llm = this.bind({
+        response_format: {
+          type: "json_schema",
+          json_schema: {
+            name: name ?? "extract",
+            description: schema.description,
+            schema: isZodSchema(schema) ? zodToJsonSchema(schema) : schema,
+            strict: config?.strict,
+          },
+        },
       } as Partial<CallOptions>);
       if (isZodSchema(schema)) {
         outputParser = StructuredOutputParser.fromZodSchema(schema);
