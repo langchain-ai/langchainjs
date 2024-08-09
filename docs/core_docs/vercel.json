@@ -68,6 +68,10 @@
     {
       "source": "/v0.2/docs/integrations/retrievers/vectorstore(/?)",
       "destination": "/v0.2/docs/how_to/vectorstore_retriever/"
+    },
+    {
+      "source": "/v0.2/docs/integrations/llms/togetherai(/?)",
+      "destination": "/v0.2/docs/integrations/llms/together/"
     }
   ]
 }
