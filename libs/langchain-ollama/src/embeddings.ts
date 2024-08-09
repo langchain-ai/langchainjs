@@ -21,11 +21,6 @@ interface OllamaEmbeddingsParams extends EmbeddingsParams {
   baseUrl?: string;
 
   /**
-   * Extra headers to include in the Ollama API request
-   */
-  headers?: Record<string, string>;
-
-  /**
    * Defaults to "5m"
    */
   keepAlive?: string;
@@ -50,8 +45,6 @@ export class OllamaEmbeddings extends Embeddings {
 
   baseUrl = "http://localhost:11434";
 
-  headers?: Record<string, string>;
-
   keepAlive = "5m";
 
   requestOptions?: Partial<OllamaOptions>;
@@ -69,7 +62,6 @@ export class OllamaEmbeddings extends Embeddings {
     this.baseUrl = fields?.baseUrl ?? this.baseUrl;
 
     this.model = fields?.model ?? this.model;
-    this.headers = fields?.headers;
     this.keepAlive = fields?.keepAlive ?? this.keepAlive;
     this.truncate = fields?.truncate ?? this.truncate;
     this.requestOptions = fields?.requestOptions
