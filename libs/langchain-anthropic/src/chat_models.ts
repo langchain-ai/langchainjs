@@ -841,23 +841,13 @@ export class ChatAnthropicMessages<
       Kwargs,
     requestOptions: AnthropicRequestOptions
   ) {
-    const options =
-      params.tools !== undefined
-        ? {
-            ...requestOptions,
-            headers: {
-              ...requestOptions.headers,
-              "anthropic-beta": "tools-2024-04-04",
-            },
-          }
-        : requestOptions;
     const response = await this.completionWithRetry(
       {
         ...params,
         stream: false,
         ..._formatMessagesForAnthropic(messages),
       },
-      options
+      options: requestOptions
     );
 
     const { content, ...additionalKwargs } = response;
