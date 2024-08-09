@@ -56,16 +56,31 @@ import {
 } from "@langchain/core/output_parsers/openai_tools";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { ToolCallChunk } from "@langchain/core/messages/tool";
+import { zodResponseFormat } from "openai/helpers/zod";
+import type {
+  ResponseFormatText,
+  ResponseFormatJSONObject,
+  ResponseFormatJSONSchema,
+} from "openai/resources/shared";
+import { ParsedChatCompletion } from "openai/resources/beta/chat/completions.mjs";
 import type {
   AzureOpenAIInput,
   OpenAICallOptions,
   OpenAIChatInput,
   OpenAICoreRequestOptions,
   LegacyOpenAIInput,
+  OpenAICompletionParam,
+  OpenAIFnCallOption,
+  OpenAIFnDef,
+  OpenAILLMOutput,
+  OpenAIRoleEnum,
+  TokenUsage,
+  ChatOpenAIResponseFormat,
 } from "./types.js";
 import { type OpenAIEndpointConfig, getEndpoint } from "./utils/azure.js";
 import {
   OpenAIToolChoice,
+  extractGenericMessageCustomRole,
   formatToOpenAIToolChoice,
   wrapOpenAIClientError,
 } from "./utils/openai.js";
@@ -75,38 +90,6 @@ import {
 } from "./utils/openai-format-fndef.js";
 
 export type { AzureOpenAIInput, OpenAICallOptions, OpenAIChatInput };
-
-interface TokenUsage {
-  completionTokens?: number;
-  promptTokens?: number;
-  totalTokens?: number;
-}
-
-interface OpenAILLMOutput {
-  tokenUsage: TokenUsage;
-}
-
-// TODO import from SDK when available
-type OpenAIRoleEnum = "system" | "assistant" | "user" | "function" | "tool";
-
-type OpenAICompletionParam =
-  OpenAIClient.Chat.Completions.ChatCompletionMessageParam;
-type OpenAIFnDef = OpenAIClient.Chat.ChatCompletionCreateParams.Function;
-type OpenAIFnCallOption = OpenAIClient.Chat.ChatCompletionFunctionCallOption;
-
-function extractGenericMessageCustomRole(message: ChatMessage) {
-  if (
-    message.role !== "system" &&
-    message.role !== "assistant" &&
-    message.role !== "user" &&
-    message.role !== "function" &&
-    message.role !== "tool"
-  ) {
-    console.warn(`Unknown message role: ${message.role}`);
-  }
-
-  return message.role as OpenAIRoleEnum;
-}
 
 export function messageToOpenAIRole(message: BaseMessage): OpenAIRoleEnum {
   const type = message._getType();
@@ -300,7 +283,7 @@ function _convertChatOpenAIToolTypeToOpenAITool(
 
 export interface ChatOpenAIStructuredOutputMethodOptions<
   IncludeRaw extends boolean
-> extends StructuredOutputMethodOptions<IncludeRaw> {
+> extends Omit<StructuredOutputMethodOptions<IncludeRaw>, "method"> {
   /**
    * strict: If `true` and `method` = "function_calling", model output is
    * guaranteed to exactly match the schema. If `true`, the input schema
@@ -316,6 +299,7 @@ export interface ChatOpenAIStructuredOutputMethodOptions<
    * "function_calling" as of version `0.3.0`.
    */
   strict?: boolean;
+  method?: "functionCalling" | "jsonMode" | "jsonSchema";
 }
 
 export interface ChatOpenAICallOptions
@@ -324,7 +308,7 @@ export interface ChatOpenAICallOptions
   tools?: ChatOpenAIToolType[];
   tool_choice?: OpenAIToolChoice;
   promptIndex?: number;
-  response_format?: { type: "json_object" };
+  response_format?: ChatOpenAIResponseFormat;
   seed?: number;
   /**
    * Additional options to pass to streamed completions.
@@ -1061,6 +1045,34 @@ export class ChatOpenAI<
     } as Partial<CallOptions>);
   }
 
+  private createResponseFormat(
+    resFormat?: CallOptions["response_format"]
+  ):
+    | ResponseFormatText
+    | ResponseFormatJSONObject
+    | ResponseFormatJSONSchema
+    | undefined {
+    if (
+      resFormat &&
+      resFormat.type === "json_schema" &&
+      resFormat.json_schema.schema &&
+      isZodSchema(resFormat.json_schema.schema)
+    ) {
+      return zodResponseFormat(
+        resFormat.json_schema.schema,
+        resFormat.json_schema.name,
+        {
+          description: resFormat.json_schema.description,
+        }
+      );
+    }
+    return resFormat as
+      | ResponseFormatText
+      | ResponseFormatJSONObject
+      | ResponseFormatJSONSchema
+      | undefined;
+  }
+
   /**
    * Get the parameters used to invoke the model
    */
@@ -1083,6 +1095,7 @@ export class ChatOpenAI<
     } else if (this.streamUsage && (this.streaming || extra?.streaming)) {
       streamOptionsConfig = { stream_options: { include_usage: true } };
     }
+
     const params: Omit<
       OpenAIClient.Chat.ChatCompletionCreateParams,
       "messages"
@@ -1109,7 +1122,7 @@ export class ChatOpenAI<
           )
         : undefined,
       tool_choice: formatToOpenAIToolChoice(options?.tool_choice),
-      response_format: options?.response_format,
+      response_format: this.createResponseFormat(options?.response_format),
       seed: options?.seed,
       ...streamOptionsConfig,
       parallel_tool_calls: options?.parallel_tool_calls,
@@ -1147,6 +1160,32 @@ export class ChatOpenAI<
       stream: true as const,
     };
     let defaultRole: OpenAIRoleEnum | undefined;
+    if (
+      params.response_format &&
+      params.response_format.type === "json_schema"
+    ) {
+      console.warn(
+        `OpenAI does not yet support streaming with "response_format" set to "json_schema". Falling back to non-streaming mode.`
+      );
+      const res = await this._generate(messages, options, runManager);
+      const chunk = new ChatGenerationChunk({
+        message: new AIMessageChunk({
+          ...res.generations[0].message,
+        }),
+        text: res.generations[0].text,
+        generationInfo: res.generations[0].generationInfo,
+      });
+      yield chunk;
+      return runManager?.handleLLMNewToken(
+        res.generations[0].text ?? "",
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        { chunk }
+      );
+    }
+
     const streamIterable = await this.completionWithRetry(params, options);
     let usage: OpenAIClient.Completions.CompletionUsage | undefined;
     for await (const data of streamIterable) {
@@ -1282,17 +1321,36 @@ export class ChatOpenAI<
       tokenUsage.totalTokens = promptTokenUsage + completionTokenUsage;
       return { generations, llmOutput: { estimatedTokenUsage: tokenUsage } };
     } else {
-      const data = await this.completionWithRetry(
-        {
-          ...params,
-          stream: false,
-          messages: messagesMapped,
-        },
-        {
-          signal: options?.signal,
-          ...options?.options,
-        }
-      );
+      let data;
+      if (
+        options.response_format &&
+        options.response_format.type === "json_schema"
+      ) {
+        data = await this.betaParsedCompletionWithRetry(
+          {
+            ...params,
+            stream: false,
+            messages: messagesMapped,
+          },
+          {
+            signal: options?.signal,
+            ...options?.options,
+          }
+        );
+      } else {
+        data = await this.completionWithRetry(
+          {
+            ...params,
+            stream: false,
+            messages: messagesMapped,
+          },
+          {
+            signal: options?.signal,
+            ...options?.options,
+          }
+        );
+      }
+
       const {
         completion_tokens: completionTokens,
         prompt_tokens: promptTokens,
@@ -1512,6 +1570,31 @@ export class ChatOpenAI<
     });
   }
 
+  /**
+   * Call the beta chat completions parse endpoint. This should only be called if
+   * response_format is set to "json_object".
+   * @param {OpenAIClient.Chat.ChatCompletionCreateParamsNonStreaming} request
+   * @param {OpenAICoreRequestOptions | undefined} options
+   */
+  async betaParsedCompletionWithRetry(
+    request: OpenAIClient.Chat.ChatCompletionCreateParamsNonStreaming,
+    options?: OpenAICoreRequestOptions
+  ): Promise<ParsedChatCompletion<null>> {
+    const requestOptions = this._getClientOptions(options);
+    return this.caller.call(async () => {
+      try {
+        const res = await this.client.beta.chat.completions.parse(
+          request,
+          requestOptions
+        );
+        return res;
+      } catch (e) {
+        const error = wrapOpenAIClientError(e);
+        throw error;
+      }
+    });
+  }
+
   protected _getClientOptions(options: OpenAICoreRequestOptions | undefined) {
     if (!this.client) {
       const openAIEndpointConfig: OpenAIEndpointConfig = {
@@ -1648,6 +1731,23 @@ export class ChatOpenAI<
     if (method === "jsonMode") {
       llm = this.bind({
         response_format: { type: "json_object" },
+      } as Partial<CallOptions>);
+      if (isZodSchema(schema)) {
+        outputParser = StructuredOutputParser.fromZodSchema(schema);
+      } else {
+        outputParser = new JsonOutputParser<RunOutput>();
+      }
+    } else if (method === "jsonSchema") {
+      llm = this.bind({
+        response_format: {
+          type: "json_schema",
+          json_schema: {
+            name: name ?? "extract",
+            description: schema.description,
+            schema,
+            strict: config?.strict,
+          },
+        },
       } as Partial<CallOptions>);
       if (isZodSchema(schema)) {
         outputParser = StructuredOutputParser.fromZodSchema(schema);
