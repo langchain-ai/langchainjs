@@ -3,25 +3,37 @@ import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { GenerationChunk } from "@langchain/core/outputs";
 import type { StringWithAutocomplete } from "@langchain/core/utils/types";
 import { LLM, type BaseLLMParams } from "@langchain/core/language_models/llms";
-
-import { createOllamaGenerateStream, OllamaInput } from "../utils/ollama.js";
-
-export { type OllamaInput };
+import { Ollama as OllamaClient } from "ollama/browser";
+import { OllamaCamelCaseOptions } from "./types.js";
 
 export interface OllamaCallOptions extends BaseLanguageModelCallOptions {
   images?: string[];
 }
 
+export interface OllamaInput extends BaseLLMParams, OllamaCamelCaseOptions {
+  /**
+   * The model to use when making requests.
+   * @default "llama3"
+   */
+  model?: string;
+  /**
+   * Optionally override the base URL to make request to.
+   * This should only be set if your Ollama instance is being
+   * server from a non-standard location.
+   * @default "http://localhost:11434"
+   */
+  baseUrl?: string;
+  format?: string;
+}
+
 /**
- * @deprecated Ollama LLM has moved to the `@langchain/ollama` package. Please install it using `npm install @langchain/ollama` and import it from there.
- *
  * Class that represents the Ollama language model. It extends the base
  * LLM class and implements the OllamaInput interface.
  * @example
  * ```typescript
  * const ollama = new Ollama({
  *   baseUrl: "http://api.example.com",
- *   model: "llama2",
+ *   model: "llama3",
  * });
  *
  * // Streaming translation from English to German
@@ -44,19 +56,17 @@ export class Ollama extends LLM<OllamaCallOptions> implements OllamaInput {
 
   lc_serializable = true;
 
-  model = "llama2";
+  model = "llama3";
 
   baseUrl = "http://localhost:11434";
 
-  keepAlive = "5m";
+  keepAlive: string | number = "5m";
 
   embeddingOnly?: boolean;
 
   f16KV?: boolean;
 
   frequencyPenalty?: number;
-
-  headers?: Record<string, string>;
 
   logitsAll?: boolean;
 
@@ -76,8 +86,6 @@ export class Ollama extends LLM<OllamaCallOptions> implements OllamaInput {
 
   numGpu?: number;
 
-  numGqa?: number;
-
   numKeep?: number;
 
   numPredict?: number;
@@ -91,10 +99,6 @@ export class Ollama extends LLM<OllamaCallOptions> implements OllamaInput {
   repeatLastN?: number;
 
   repeatPenalty?: number;
-
-  ropeFrequencyBase?: number;
-
-  ropeFrequencyScale?: number;
 
   temperature?: number;
 
@@ -116,47 +120,48 @@ export class Ollama extends LLM<OllamaCallOptions> implements OllamaInput {
 
   format?: StringWithAutocomplete<"json">;
 
-  constructor(fields: OllamaInput & BaseLLMParams) {
-    super(fields);
-    this.model = fields.model ?? this.model;
-    this.baseUrl = fields.baseUrl?.endsWith("/")
-      ? fields.baseUrl.slice(0, -1)
-      : fields.baseUrl ?? this.baseUrl;
-    this.keepAlive = fields.keepAlive ?? this.keepAlive;
+  client: OllamaClient;
 
-    this.headers = fields.headers ?? this.headers;
-    this.embeddingOnly = fields.embeddingOnly;
-    this.f16KV = fields.f16KV;
-    this.frequencyPenalty = fields.frequencyPenalty;
-    this.logitsAll = fields.logitsAll;
-    this.lowVram = fields.lowVram;
-    this.mainGpu = fields.mainGpu;
-    this.mirostat = fields.mirostat;
-    this.mirostatEta = fields.mirostatEta;
-    this.mirostatTau = fields.mirostatTau;
-    this.numBatch = fields.numBatch;
-    this.numCtx = fields.numCtx;
-    this.numGpu = fields.numGpu;
-    this.numGqa = fields.numGqa;
-    this.numKeep = fields.numKeep;
-    this.numPredict = fields.numPredict;
-    this.numThread = fields.numThread;
-    this.penalizeNewline = fields.penalizeNewline;
-    this.presencePenalty = fields.presencePenalty;
-    this.repeatLastN = fields.repeatLastN;
-    this.repeatPenalty = fields.repeatPenalty;
-    this.ropeFrequencyBase = fields.ropeFrequencyBase;
-    this.ropeFrequencyScale = fields.ropeFrequencyScale;
-    this.temperature = fields.temperature;
-    this.stop = fields.stop;
-    this.tfsZ = fields.tfsZ;
-    this.topK = fields.topK;
-    this.topP = fields.topP;
-    this.typicalP = fields.typicalP;
-    this.useMLock = fields.useMLock;
-    this.useMMap = fields.useMMap;
-    this.vocabOnly = fields.vocabOnly;
-    this.format = fields.format;
+  constructor(fields?: OllamaInput & BaseLLMParams) {
+    super(fields ?? {});
+    this.model = fields?.model ?? this.model;
+    this.baseUrl = fields?.baseUrl?.endsWith("/")
+      ? fields?.baseUrl.slice(0, -1)
+      : fields?.baseUrl ?? this.baseUrl;
+    this.client = new OllamaClient({
+      host: this.baseUrl,
+    });
+    this.keepAlive = fields?.keepAlive ?? this.keepAlive;
+
+    this.embeddingOnly = fields?.embeddingOnly;
+    this.f16KV = fields?.f16Kv;
+    this.frequencyPenalty = fields?.frequencyPenalty;
+    this.logitsAll = fields?.logitsAll;
+    this.lowVram = fields?.lowVram;
+    this.mainGpu = fields?.mainGpu;
+    this.mirostat = fields?.mirostat;
+    this.mirostatEta = fields?.mirostatEta;
+    this.mirostatTau = fields?.mirostatTau;
+    this.numBatch = fields?.numBatch;
+    this.numCtx = fields?.numCtx;
+    this.numGpu = fields?.numGpu;
+    this.numKeep = fields?.numKeep;
+    this.numPredict = fields?.numPredict;
+    this.numThread = fields?.numThread;
+    this.penalizeNewline = fields?.penalizeNewline;
+    this.presencePenalty = fields?.presencePenalty;
+    this.repeatLastN = fields?.repeatLastN;
+    this.repeatPenalty = fields?.repeatPenalty;
+    this.temperature = fields?.temperature;
+    this.stop = fields?.stop;
+    this.tfsZ = fields?.tfsZ;
+    this.topK = fields?.topK;
+    this.topP = fields?.topP;
+    this.typicalP = fields?.typicalP;
+    this.useMLock = fields?.useMlock;
+    this.useMMap = fields?.useMmap;
+    this.vocabOnly = fields?.vocabOnly;
+    this.format = fields?.format;
   }
 
   _llmType() {
@@ -182,7 +187,6 @@ export class Ollama extends LLM<OllamaCallOptions> implements OllamaInput {
         num_batch: this.numBatch,
         num_ctx: this.numCtx,
         num_gpu: this.numGpu,
-        num_gqa: this.numGqa,
         num_keep: this.numKeep,
         num_predict: this.numPredict,
         num_thread: this.numThread,
@@ -190,8 +194,6 @@ export class Ollama extends LLM<OllamaCallOptions> implements OllamaInput {
         presence_penalty: this.presencePenalty,
         repeat_last_n: this.repeatLastN,
         repeat_penalty: this.repeatPenalty,
-        rope_frequency_base: this.ropeFrequencyBase,
-        rope_frequency_scale: this.ropeFrequencyScale,
         temperature: this.temperature,
         stop: options?.stop ?? this.stop,
         tfs_z: this.tfsZ,
@@ -211,16 +213,17 @@ export class Ollama extends LLM<OllamaCallOptions> implements OllamaInput {
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<GenerationChunk> {
     const stream = await this.caller.call(async () =>
-      createOllamaGenerateStream(
-        this.baseUrl,
-        { ...this.invocationParams(options), prompt },
-        {
-          ...options,
-          headers: this.headers,
-        }
-      )
+      this.client.generate({
+        ...this.invocationParams(options),
+        prompt,
+        stream: true,
+      })
     );
     for await (const chunk of stream) {
+      if (options.signal?.aborted) {
+        throw new Error("This operation was aborted");
+      }
+
       if (!chunk.done) {
         yield new GenerationChunk({
           text: chunk.response,
