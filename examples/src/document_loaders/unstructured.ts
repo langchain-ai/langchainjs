@@ -1,11 +1,13 @@
-import { UnstructuredLoader } from "@langchain/community/document_loaders/fs/unstructured";
+import { UnstructuredLoader } from "@langchain/unstructured";
 
 const options = {
   apiKey: "MY_API_KEY",
 };
 
 const loader = new UnstructuredLoader(
-  "src/document_loaders/example_data/notion.md",
+  {
+    filePath: "src/document_loaders/example_data/notion.md",
+  },
   options
 );
 const docs = await loader.load();
