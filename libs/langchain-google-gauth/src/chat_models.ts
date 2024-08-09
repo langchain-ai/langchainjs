@@ -14,7 +14,7 @@ export interface ChatGoogleInput
   extends ChatGoogleBaseInput<GoogleAuthOptions> {}
 
 /**
- * Integration with a chat model.
+ * Integration with a Google chat model.
  */
 export class ChatGoogle
   extends ChatGoogleBase<GoogleAuthOptions>

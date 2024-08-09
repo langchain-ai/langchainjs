@@ -11,12 +11,15 @@ const BASE_TYPEDOC_CONFIG = {
     "required-first",
     "alphabetical",
   ],
-  plugin: ["./typedoc_plugins/hide_underscore_lc.js"],
+  plugin: [
+    "./typedoc_plugins/hide_underscore_lc.js",
+    "typedoc-plugin-expand-object-like-types",
+  ],
   tsconfig: "../../tsconfig.json",
   readme: "none",
   excludePrivate: true,
   excludeInternal: true,
-  excludeExternals: true,
+  excludeExternals: false,
   excludeNotDocumented: false,
   includeVersion: true,
   sourceLinkTemplate:

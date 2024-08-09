@@ -29,7 +29,7 @@ import { type StructuredToolInterface } from "@langchain/core/tools";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { ChatResult } from "@langchain/core/outputs";
 
-// TODO: remove once `EventStreamCallbackHandlerInput` is exposed in core.
+// TODO: remove once `EventStreamCallbackHandlerInput` is exposed in core
 interface EventStreamCallbackHandlerInput
   extends Omit<LogStreamCallbackHandlerInput, "_schemaFormat"> {}
 

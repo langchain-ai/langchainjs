@@ -35,6 +35,7 @@
     "@google/generative-ai": "^0.7.0",
     "@langchain/anthropic": "workspace:*",
     "@langchain/aws": "workspace:*",
+    "@langchain/azure-cosmosdb": "workspace:*",
     "@langchain/azure-dynamic-sessions": "workspace:^",
     "@langchain/azure-openai": "workspace:*",
     "@langchain/baidu-qianfan": "workspace:*",
