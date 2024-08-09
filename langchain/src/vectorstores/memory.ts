@@ -1,7 +1,11 @@
-import { VectorStore } from "@langchain/core/vectorstores";
+import {
+  MaxMarginalRelevanceSearchOptions,
+  VectorStore,
+} from "@langchain/core/vectorstores";
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
-import { Document } from "@langchain/core/documents";
+import { Document, DocumentInterface } from "@langchain/core/documents";
 import { cosine } from "../util/ml-distance/similarities.js";
+import { maximalMarginalRelevance } from "../util/math.js";
 
 /**
  * Interface representing a vector in memory. It includes the content
@@ -82,6 +86,35 @@ export class MemoryVectorStore extends VectorStore {
     this.memoryVectors = this.memoryVectors.concat(memoryVectors);
   }
 
+  protected async _queryVectors(
+    query: number[],
+    k: number,
+    filter?: this["FilterType"]
+  ) {
+    const filterFunction = (memoryVector: MemoryVector) => {
+      if (!filter) {
+        return true;
+      }
+
+      const doc = new Document({
+        metadata: memoryVector.metadata,
+        pageContent: memoryVector.content,
+      });
+      return filter(doc);
+    };
+    const filteredMemoryVectors = this.memoryVectors.filter(filterFunction);
+    return filteredMemoryVectors
+      .map((vector, index) => ({
+        similarity: this.similarity(query, vector.embedding),
+        index,
+        metadata: vector.metadata,
+        content: vector.content,
+        embedding: vector.embedding,
+      }))
+      .sort((a, b) => (a.similarity > b.similarity ? -1 : 0))
+      .slice(0, k);
+  }
+
   /**
    * Method to perform a similarity search in the memory vector store. It
    * calculates the similarity between the query vector and each vector in
@@ -97,35 +130,46 @@ export class MemoryVectorStore extends VectorStore {
     k: number,
     filter?: this["FilterType"]
   ): Promise<[Document, number][]> {
-    const filterFunction = (memoryVector: MemoryVector) => {
-      if (!filter) {
-        return true;
-      }
-
-      const doc = new Document({
-        metadata: memoryVector.metadata,
-        pageContent: memoryVector.content,
-      });
-      return filter(doc);
-    };
-    const filteredMemoryVectors = this.memoryVectors.filter(filterFunction);
-    const searches = filteredMemoryVectors
-      .map((vector, index) => ({
-        similarity: this.similarity(query, vector.embedding),
-        index,
-      }))
-      .sort((a, b) => (a.similarity > b.similarity ? -1 : 0))
-      .slice(0, k);
-
+    const searches = await this._queryVectors(query, k, filter);
     const result: [Document, number][] = searches.map((search) => [
       new Document({
-        metadata: filteredMemoryVectors[search.index].metadata,
-        pageContent: filteredMemoryVectors[search.index].content,
+        metadata: search.metadata,
+        pageContent: search.content,
       }),
       search.similarity,
     ]);
 
     return result;
+  }
+
+  async maxMarginalRelevanceSearch(
+    query: string,
+    options: MaxMarginalRelevanceSearchOptions<this["FilterType"]>
+  ): Promise<DocumentInterface[]> {
+    const queryEmbedding = await this.embeddings.embedQuery(query);
+
+    const searches = await this._queryVectors(
+      queryEmbedding,
+      options.fetchK ?? 20,
+      options.filter
+    );
+
+    const embeddingList = searches.map((searchResp) => searchResp.embedding);
+
+    const mmrIndexes = maximalMarginalRelevance(
+      queryEmbedding,
+      embeddingList,
+      options.lambda,
+      options.k
+    );
+
+    return mmrIndexes.map(
+      (idx) =>
+        new Document({
+          metadata: searches[idx].metadata,
+          pageContent: searches[idx].content,
+        })
+    );
   }
 
   /**
