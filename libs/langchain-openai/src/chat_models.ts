@@ -36,7 +36,6 @@ import {
   type StructuredOutputMethodParams,
 } from "@langchain/core/language_models/base";
 import { NewTokenIndices } from "@langchain/core/callbacks/base";
-import { convertToOpenAITool } from "@langchain/core/utils/function_calling";
 import { z } from "zod";
 import {
   Runnable,
@@ -88,6 +87,7 @@ import {
   FunctionDef,
   formatFunctionDefinitions,
 } from "./utils/openai-format-fndef.js";
+import { _convertToOpenAITool } from "./utils/tools.js";
 
 export type { AzureOpenAIInput, OpenAICallOptions, OpenAIChatInput };
 
@@ -278,7 +278,7 @@ function _convertChatOpenAIToolTypeToOpenAITool(
 
     return tool;
   }
-  return convertToOpenAITool(tool, fields);
+  return _convertToOpenAITool(tool, fields);
 }
 
 export interface ChatOpenAIStructuredOutputMethodOptions<
