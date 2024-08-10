@@ -139,7 +139,7 @@ test("createToolCallingAgent stream events works for multiple turns", async () =
   }
 });
 
-test.only("createToolCallingAgent accepts fallbacks", async () => {
+test("createToolCallingAgent accepts fallbacks", async () => {
   const prompt = ChatPromptTemplate.fromMessages([
     ["system", "You are a helpful assistant"],
     ["placeholder", "{chat_history}"],
