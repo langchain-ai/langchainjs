@@ -813,7 +813,7 @@ export class BedrockChat
       provider === "meta" ||
       provider === "mistral"
     ) {
-      const toolsInParams = !_toolsInParams(options);
+      const toolsInParams = _toolsInParams(options);
       const reader = response.body?.getReader();
       const decoder = new TextDecoder();
       for await (const chunk of this._readChunks(reader)) {
