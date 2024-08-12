@@ -280,9 +280,9 @@ function _formatToolsToCohere(
  * export COHERE_API_KEY="your-api-key"
  * ```
  *
- * ## [Constructor args](/classes/langchain_cohere.ChatCohere.html#constructor)
+ * ## [Constructor args](https://api.js.langchain.com/classes/langchain_cohere.ChatCohere.html#constructor)
  *
- * ## [Runtime args](/interfaces/langchain_cohere.ChatCohereCallOptions.html)
+ * ## [Runtime args](https://api.js.langchain.com/interfaces/langchain_cohere.ChatCohereCallOptions.html)
  *
  * Runtime args can be passed as the second argument to any of the base runnable methods `.invoke`. `.stream`, `.batch`, etc.
  * They can also be passed via `.bind`, or the second arg in `.bindTools`, like shown in the examples below:

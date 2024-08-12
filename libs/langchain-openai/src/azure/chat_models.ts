@@ -26,9 +26,9 @@ import {
  * export AZURE_OPENAI_BASE_PATH="your-base-path"
  * ```
  *
- * ## [Constructor args](/classes/langchain_openai.AzureChatOpenAI.html#constructor)
+ * ## [Constructor args](https://api.js.langchain.com/classes/langchain_openai.AzureChatOpenAI.html#constructor)
  *
- * ## [Runtime args](/interfaces/langchain_openai.ChatOpenAICallOptions.html)
+ * ## [Runtime args](https://api.js.langchain.com/interfaces/langchain_openai.ChatOpenAICallOptions.html)
  *
  * Runtime args can be passed as the second argument to any of the base runnable methods `.invoke`. `.stream`, `.batch`, etc.
  * They can also be passed via `.bind`, or the second arg in `.bindTools`, like shown in the examples below:
