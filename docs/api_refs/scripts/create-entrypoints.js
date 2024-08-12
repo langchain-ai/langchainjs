@@ -1,5 +1,6 @@
 const fs = require("fs");
 const path = require("path");
+const { execSync } = require("child_process");
 
 const BASE_TYPEDOC_CONFIG = {
   $schema: "https://typedoc.org/schema.json",
@@ -29,7 +30,6 @@ const BASE_TYPEDOC_CONFIG = {
   exclude: ["dist"],
   hostedBaseUrl: "https://v02.api.js.langchain.com/",
   entryPointStrategy: "packages",
-  entryPoints: ["../../langchain", "../../langchain-core", "../../libs/*"],
 };
 
 /**
@@ -42,6 +42,35 @@ const updateJsonFile = (relativePath, updateFunction) => {
   const res = updateFunction(JSON.parse(contents));
   fs.writeFileSync(relativePath, JSON.stringify(res, null, 2) + "\n");
 };
+
+const workspacesListBreakStr = `"}
+{"`;
+const workspacesListJoinStr = `"},{"`;
+const BLACKLISTED_WORKSPACES = [
+  "@langchain/azure-openai",
+  "@langchain/google-gauth",
+  "@langchain/google-webauth",
+];
+
+/**
+ * @returns {Array<string>} An array of paths to all workspaces in the monorepo.
+ */
+function getYarnWorkspaces() {
+  const stdout = execSync("yarn workspaces list --json");
+  const workspaces = JSON.parse(
+    `[${stdout
+      .toString()
+      .split(workspacesListBreakStr)
+      .join(workspacesListJoinStr)}]`
+  );
+  const cleanedWorkspaces = workspaces.filter(
+    (ws) =>
+      ws.name === "langchain" ||
+      (ws.name.startsWith("@langchain/") &&
+        !BLACKLISTED_WORKSPACES.find((blacklisted) => ws.name === blacklisted))
+  );
+  return cleanedWorkspaces.map((ws) => `../../${ws.location}`);
+}
 
 async function main() {
   const workspaces = fs
@@ -115,8 +144,11 @@ async function main() {
     fs.writeFileSync("./typedoc.json", "{}\n");
   }
 
+  const yarnWorkspaces = getYarnWorkspaces();
+
   updateJsonFile("./typedoc.json", () => ({
     ...BASE_TYPEDOC_CONFIG,
+    entryPoints: yarnWorkspaces,
   }));
 }
 
