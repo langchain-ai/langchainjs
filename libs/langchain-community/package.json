@@ -1,6 +1,6 @@
 {
   "name": "@langchain/community",
-  "version": "0.2.25",
+  "version": "0.2.26",
   "description": "Third-party integrations for LangChain.js",
   "type": "module",
   "engines": {
@@ -36,7 +36,7 @@
   "license": "MIT",
   "dependencies": {
     "@langchain/core": ">=0.2.21 <0.3.0",
-    "@langchain/openai": ">=0.1.0 <0.3.0",
+    "@langchain/openai": ">=0.2.0 <0.3.0",
     "binary-extensions": "^2.2.0",
     "expr-eval": "^2.0.2",
     "flat": "^5.0.2",
@@ -82,7 +82,7 @@
     "@langchain/scripts": "~0.0.20",
     "@langchain/standard-tests": "0.0.0",
     "@layerup/layerup-security": "^1.5.12",
-    "@mendable/firecrawl-js": "^0.0.13",
+    "@mendable/firecrawl-js": "^0.0.36",
     "@mlc-ai/web-llm": "0.2.46",
     "@mozilla/readability": "^0.4.4",
     "@neondatabase/serverless": "^0.9.1",

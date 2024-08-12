@@ -370,16 +370,16 @@ export interface ChatOpenAIFields
  * OpenAI chat model integration.
  *
  * Setup:
- * Install `@langchain/openai` and set environment variable `OPENAI_API_KEY`.
+ * Install `@langchain/openai` and set an environment variable named `OPENAI_API_KEY`.
  *
  * ```bash
  * npm install @langchain/openai
  * export OPENAI_API_KEY="your-api-key"
  * ```
  *
- * ## [Constructor args](/classes/langchain_openai.ChatOpenAI.html#constructor)
+ * ## [Constructor args](https://api.js.langchain.com/classes/langchain_openai.ChatOpenAI.html#constructor)
  *
- * ## [Runtime args](/interfaces/langchain_openai.ChatOpenAICallOptions.html)
+ * ## [Runtime args](https://api.js.langchain.com/interfaces/langchain_openai.ChatOpenAICallOptions.html)
  *
  * Runtime args can be passed as the second argument to any of the base runnable methods `.invoke`. `.stream`, `.batch`, etc.
  * They can also be passed via `.bind`, or the second arg in `.bindTools`, like shown in the examples below:
@@ -428,17 +428,10 @@ export interface ChatOpenAIFields
  * <summary><strong>Invoking</strong></summary>
  *
  * ```typescript
- * const messages = [
- *   {
- *     type: "system" as const,
- *     content: "You are a helpful translator. Translate the user sentence to French.",
- *   },
- *   {
- *     type: "human" as const,
- *     content: "I love programming.",
- *   },
- * ];
- * const result = await llm.invoke(messages);
+ * const input = `Translate "I love programming" into French.`;
+ *
+ * // Models also accept a list of chat messages or a formatted prompt
+ * const result = await llm.invoke(input);
  * console.log(result);
  * ```
  *
@@ -470,7 +463,7 @@ export interface ChatOpenAIFields
  * <summary><strong>Streaming Chunks</strong></summary>
  *
  * ```typescript
- * for await (const chunk of await llm.stream(messages)) {
+ * for await (const chunk of await llm.stream(input)) {
  *   console.log(chunk);
  * }
  * ```
@@ -522,7 +515,7 @@ export interface ChatOpenAIFields
  * import { AIMessageChunk } from '@langchain/core/messages';
  * import { concat } from '@langchain/core/utils/stream';
  *
- * const stream = await llm.stream(messages);
+ * const stream = await llm.stream(input);
  * let full: AIMessageChunk | undefined;
  * for await (const chunk of stream) {
  *   full = !full ? chunk : concat(full, chunk);
@@ -538,7 +531,6 @@ export interface ChatOpenAIFields
  *     "prompt": 0,
  *     "completion": 0,
  *     "finish_reason": "stop",
- *     "system_fingerprint": "fp_3aa7262c27fp_3aa7262c27fp_3aa7262c27fp_3aa7262c27fp_3aa7262c27fp_3aa7262c27fp_3aa7262c27"
  *   },
  *   "usage_metadata": {
  *     "input_tokens": 28,
@@ -630,7 +622,7 @@ export interface ChatOpenAIFields
  * }).describe('Joke to tell user.');
  *
  * const structuredLlm = llm.withStructuredOutput(Joke);
- * const jokeResult = await structuredLlm.invoke("Tell me a joke about cats");
+ * const jokeResult = await structuredLlm.invoke("Tell me a joke about cats", { name: "Joke" });
  * console.log(jokeResult);
  * ```
  *
@@ -700,34 +692,8 @@ export interface ChatOpenAIFields
  * <summary><strong>Usage Metadata</strong></summary>
  *
  * ```typescript
- * const aiMsgForMetadata = await llm.invoke(messages);
+ * const aiMsgForMetadata = await llm.invoke(input);
  * console.log(aiMsgForMetadata.usage_metadata);
- * ```
- *
- * ```txt
- * { input_tokens: 28, output_tokens: 5, total_tokens: 33 }
- * ```
- * </details>
- *
- * <br />
- *
- * <details>
- * <summary><strong>Stream Usage Metadata</strong></summary>
- *
- * ```typescript
- * const streamForMetadata = await llm.stream(
- *   messages,
- *   {
- *     stream_options: {
- *       include_usage: true
- *     }
- *   }
- * );
- * let fullForMetadata: AIMessageChunk | undefined;
- * for await (const chunk of streamForMetadata) {
- *   fullForMetadata = !fullForMetadata ? chunk : concat(fullForMetadata, chunk);
- * }
- * console.log(fullForMetadata?.usage_metadata);
  * ```
  *
  * ```txt
@@ -742,7 +708,7 @@ export interface ChatOpenAIFields
  *
  * ```typescript
  * const logprobsLlm = new ChatOpenAI({ logprobs: true });
- * const aiMsgForLogprobs = await logprobsLlm.invoke(messages);
+ * const aiMsgForLogprobs = await logprobsLlm.invoke(input);
  * console.log(aiMsgForLogprobs.response_metadata.logprobs);
  * ```
  *
@@ -799,7 +765,7 @@ export interface ChatOpenAIFields
  * <summary><strong>Response Metadata</strong></summary>
  *
  * ```typescript
- * const aiMsgForResponseMetadata = await llm.invoke(messages);
+ * const aiMsgForResponseMetadata = await llm.invoke(input);
  * console.log(aiMsgForResponseMetadata.response_metadata);
  * ```
  *

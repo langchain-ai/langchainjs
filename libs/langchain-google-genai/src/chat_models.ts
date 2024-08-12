@@ -536,7 +536,7 @@ export class ChatGoogleGenerativeAI
       { signal: options?.signal },
       async () => {
         try {
-          return this.client.generateContent(request);
+          return await this.client.generateContent(request);
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (e: any) {
           // TODO: Improve error handling

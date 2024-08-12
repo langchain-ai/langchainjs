@@ -181,9 +181,9 @@ export interface ChatBedrockConverseCallOptions
  * export BEDROCK_AWS_ACCESS_KEY_ID="your-aws-access-key-id"
  * ```
  *
- * ## [Constructor args](/classes/langchain_aws.ChatBedrockConverse.html#constructor)
+ * ## [Constructor args](https://api.js.langchain.com/classes/langchain_aws.ChatBedrockConverse.html#constructor)
  *
- * ## [Runtime args](/interfaces/langchain_aws.ChatBedrockConverseCallOptions.html)
+ * ## [Runtime args](https://api.js.langchain.com/interfaces/langchain_aws.ChatBedrockConverseCallOptions.html)
  *
  * Runtime args can be passed as the second argument to any of the base runnable methods `.invoke`. `.stream`, `.batch`, etc.
  * They can also be passed via `.bind`, or the second arg in `.bindTools`, like shown in the examples below:
@@ -199,7 +199,7 @@ export interface ChatBedrockConverseCallOptions
  * const llmWithTools = llm.bindTools(
  *   [...],
  *   {
- *     tool_choice: "auto",
+ *     stop: ["\n"],
  *   }
  * );
  * ```
@@ -234,17 +234,10 @@ export interface ChatBedrockConverseCallOptions
  * <summary><strong>Invoking</strong></summary>
  *
  * ```typescript
- * const messages = [
- *   {
- *     type: "system" as const,
- *     content: "You are a helpful translator. Translate the user sentence to French.",
- *   },
- *   {
- *     type: "human" as const,
- *     content: "I love programming.",
- *   },
- * ];
- * const result = await llm.invoke(messages);
+ * const input = `Translate "I love programming" into French.`;
+ *
+ * // Models also accept a list of chat messages or a formatted prompt
+ * const result = await llm.invoke(input);
  * console.log(result);
  * ```
  *
@@ -284,7 +277,7 @@ export interface ChatBedrockConverseCallOptions
  * <summary><strong>Streaming Chunks</strong></summary>
  *
  * ```typescript
- * for await (const chunk of await llm.stream(messages)) {
+ * for await (const chunk of await llm.stream(input)) {
  *   console.log(chunk);
  * }
  * ```
@@ -370,7 +363,7 @@ export interface ChatBedrockConverseCallOptions
  * import { AIMessageChunk } from '@langchain/core/messages';
  * import { concat } from '@langchain/core/utils/stream';
  *
- * const stream = await llm.stream(messages);
+ * const stream = await llm.stream(input);
  * let full: AIMessageChunk | undefined;
  * for await (const chunk of stream) {
  *   full = !full ? chunk : concat(full, chunk);
@@ -495,7 +488,7 @@ export interface ChatBedrockConverseCallOptions
  * }).describe('Joke to tell user.');
  *
  * const structuredLlm = llm.withStructuredOutput(Joke);
- * const jokeResult = await structuredLlm.invoke("Tell me a joke about cats");
+ * const jokeResult = await structuredLlm.invoke("Tell me a joke about cats", { name: "Joke" });
  * console.log(jokeResult);
  * ```
  *
@@ -545,7 +538,7 @@ export interface ChatBedrockConverseCallOptions
  * <summary><strong>Usage Metadata</strong></summary>
  *
  * ```typescript
- * const aiMsgForMetadata = await llm.invoke(messages);
+ * const aiMsgForMetadata = await llm.invoke(input);
  * console.log(aiMsgForMetadata.usage_metadata);
  * ```
  *
@@ -560,7 +553,7 @@ export interface ChatBedrockConverseCallOptions
  * <summary><strong>Stream Usage Metadata</strong></summary>
  *
  * ```typescript
- * const streamForMetadata = await llm.stream(messages);
+ * const streamForMetadata = await llm.stream(input);
  * let fullForMetadata: AIMessageChunk | undefined;
  * for await (const chunk of streamForMetadata) {
  *   fullForMetadata = !fullForMetadata ? chunk : concat(fullForMetadata, chunk);
@@ -579,7 +572,7 @@ export interface ChatBedrockConverseCallOptions
  * <summary><strong>Response Metadata</strong></summary>
  *
  * ```typescript
- * const aiMsgForResponseMetadata = await llm.invoke(messages);
+ * const aiMsgForResponseMetadata = await llm.invoke(input);
  * console.log(aiMsgForResponseMetadata.response_metadata);
  * ```
  *

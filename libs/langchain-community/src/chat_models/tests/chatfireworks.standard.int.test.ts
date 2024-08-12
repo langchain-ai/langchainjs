@@ -14,7 +14,7 @@ class ChatFireworksStandardIntegrationTests extends ChatModelIntegrationTests<
       chatModelHasToolCalling: true,
       chatModelHasStructuredOutput: true,
       constructorArgs: {
-        model: "accounts/fireworks/models/firefunction-v1",
+        model: "accounts/fireworks/models/firefunction-v2",
       },
     });
   }

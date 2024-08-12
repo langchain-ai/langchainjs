@@ -179,16 +179,16 @@ function extractToken(chunk: AIMessageChunk): string | undefined {
  * Anthropic chat model integration.
  *
  * Setup:
- * Install `@langchain/anthropic` and set environment variable `ANTHROPIC_API_KEY`.
+ * Install `@langchain/anthropic` and set an environment variable named `ANTHROPIC_API_KEY`.
  *
  * ```bash
  * npm install @langchain/anthropic
  * export ANTHROPIC_API_KEY="your-api-key"
  * ```
  *
- * ## [Constructor args](/classes/langchain_anthropic.ChatAnthropic.html#constructor)
+ * ## [Constructor args](https://api.js.langchain.com/classes/langchain_anthropic.ChatAnthropic.html#constructor)
  *
- * ## [Runtime args](/interfaces/langchain_anthropic.ChatAnthropicCallOptions.html)
+ * ## [Runtime args](https://api.js.langchain.com/interfaces/langchain_anthropic.ChatAnthropicCallOptions.html)
  *
  * Runtime args can be passed as the second argument to any of the base runnable methods `.invoke`. `.stream`, `.batch`, etc.
  * They can also be passed via `.bind`, or the second arg in `.bindTools`, like shown in the examples below:
@@ -235,17 +235,10 @@ function extractToken(chunk: AIMessageChunk): string | undefined {
  * <summary><strong>Invoking</strong></summary>
  *
  * ```typescript
- * const messages = [
- *   {
- *     type: "system" as const,
- *     content: "You are a helpful translator. Translate the user sentence to French.",
- *   },
- *   {
- *     type: "human" as const,
- *     content: "I love programming.",
- *   },
- * ];
- * const result = await llm.invoke(messages);
+ * const input = `Translate "I love programming" into French.`;
+ *
+ * // Models also accept a list of chat messages or a formatted prompt
+ * const result = await llm.invoke(input);
  * console.log(result);
  * ```
  *
@@ -280,7 +273,7 @@ function extractToken(chunk: AIMessageChunk): string | undefined {
  * <summary><strong>Streaming Chunks</strong></summary>
  *
  * ```typescript
- * for await (const chunk of await llm.stream(messages)) {
+ * for await (const chunk of await llm.stream(input)) {
  *   console.log(chunk);
  * }
  * ```
@@ -346,7 +339,7 @@ function extractToken(chunk: AIMessageChunk): string | undefined {
  * import { AIMessageChunk } from '@langchain/core/messages';
  * import { concat } from '@langchain/core/utils/stream';
  *
- * const stream = await llm.stream(messages);
+ * const stream = await llm.stream(input);
  * let full: AIMessageChunk | undefined;
  * for await (const chunk of stream) {
  *   full = !full ? chunk : concat(full, chunk);
@@ -450,7 +443,7 @@ function extractToken(chunk: AIMessageChunk): string | undefined {
  *   rating: z.number().optional().describe("How funny the joke is, from 1 to 10")
  * }).describe('Joke to tell user.');
  *
- * const structuredLlm = llm.withStructuredOutput(Joke);
+ * const structuredLlm = llm.withStructuredOutput(Joke, { name: "Joke" });
  * const jokeResult = await structuredLlm.invoke("Tell me a joke about cats");
  * console.log(jokeResult);
  * ```
@@ -501,7 +494,7 @@ function extractToken(chunk: AIMessageChunk): string | undefined {
  * <summary><strong>Usage Metadata</strong></summary>
  *
  * ```typescript
- * const aiMsgForMetadata = await llm.invoke(messages);
+ * const aiMsgForMetadata = await llm.invoke(input);
  * console.log(aiMsgForMetadata.usage_metadata);
  * ```
  *
@@ -517,7 +510,7 @@ function extractToken(chunk: AIMessageChunk): string | undefined {
  *
  * ```typescript
  * const streamForMetadata = await llm.stream(
- *   messages,
+ *   input,
  *   {
  *     streamUsage: true
  *   }
@@ -540,7 +533,7 @@ function extractToken(chunk: AIMessageChunk): string | undefined {
  * <summary><strong>Response Metadata</strong></summary>
  *
  * ```typescript
- * const aiMsgForResponseMetadata = await llm.invoke(messages);
+ * const aiMsgForResponseMetadata = await llm.invoke(input);
  * console.log(aiMsgForResponseMetadata.response_metadata);
  * ```
  *
@@ -841,23 +834,13 @@ export class ChatAnthropicMessages<
       Kwargs,
     requestOptions: AnthropicRequestOptions
   ) {
-    const options =
-      params.tools !== undefined
-        ? {
-            ...requestOptions,
-            headers: {
-              ...requestOptions.headers,
-              "anthropic-beta": "tools-2024-04-04",
-            },
-          }
-        : requestOptions;
     const response = await this.completionWithRetry(
       {
         ...params,
         stream: false,
         ..._formatMessagesForAnthropic(messages),
       },
-      options
+      requestOptions
     );
 
     const { content, ...additionalKwargs } = response;

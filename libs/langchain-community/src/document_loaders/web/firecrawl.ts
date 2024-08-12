@@ -19,6 +19,10 @@ interface FirecrawlLoaderParameters {
   apiKey?: string;
 
   /**
+   * API URL for Firecrawl.
+   */
+  apiUrl?: string;
+  /**
    * Mode of operation. Can be either "crawl" or "scrape". If not provided, the default value is "crawl".
    */
   mode?: "crawl" | "scrape";
@@ -46,6 +50,8 @@ interface FirecrawlDocument {
 export class FireCrawlLoader extends BaseDocumentLoader {
   private apiKey: string;
 
+  private apiUrl?: string;
+
   private url: string;
 
   private mode: "crawl" | "scrape";
@@ -56,6 +62,7 @@ export class FireCrawlLoader extends BaseDocumentLoader {
     super();
     const {
       apiKey = getEnvironmentVariable("FIRECRAWL_API_KEY"),
+      apiUrl,
       url,
       mode = "crawl",
       params,
@@ -67,18 +74,25 @@ export class FireCrawlLoader extends BaseDocumentLoader {
     }
 
     this.apiKey = apiKey;
+    this.apiUrl = apiUrl;
     this.url = url;
     this.mode = mode;
     this.params = params;
   }
 
   /**
-   * Loads the data from the Firecrawl.
+   * Loads data from Firecrawl.
    * @returns An array of Documents representing the retrieved data.
    * @throws An error if the data could not be loaded.
    */
   public async load(): Promise<DocumentInterface[]> {
-    const app = new FirecrawlApp({ apiKey: this.apiKey });
+    const params: ConstructorParameters<typeof FirecrawlApp>[0] = {
+      apiKey: this.apiKey,
+    };
+    if (this.apiUrl !== undefined) {
+      params.apiUrl = this.apiUrl;
+    }
+    const app = new FirecrawlApp(params);
     let firecrawlDocs: FirecrawlDocument[];
 
     if (this.mode === "scrape") {
