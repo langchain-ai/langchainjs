@@ -19,7 +19,7 @@ interface FirecrawlLoaderParameters {
   apiKey?: string;
 
   /**
-   * API URL for Firecrawl. If not provided, the default value is "https://api.firecrawl.dev".
+   * API URL for Firecrawl.
    */
   apiUrl?: string;
   /**
