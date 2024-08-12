@@ -413,6 +413,8 @@ export type ChatFireworksCallOptions = Partial<
  *
  * <br />
  *
+ * <details>
+ *
  * <summary><strong>Usage Metadata</strong></summary>
  *
  * ```typescript
