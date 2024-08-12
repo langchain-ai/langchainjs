@@ -101,6 +101,7 @@ export class ChatFireworks extends ChatOpenAI<ChatFireworksCallOptions> {
       configuration: {
         baseURL: "https://api.fireworks.ai/inference/v1",
       },
+      streamUsage: false,
     });
 
     this.fireworksApiKey = fireworksApiKey;
