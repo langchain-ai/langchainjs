@@ -4,111 +4,111 @@
   "redirects": [
     {
       "source": "/:path*/langchain_load:rest",
-      "destination": "/:path*/_langchain.load:rest"
+      "destination": "/:path*/langchain.load:rest"
     },
     {
       "source": "/:path*/langchain_agents:rest",
-      "destination": "/:path*/_langchain.agents:rest"
+      "destination": "/:path*/langchain.agents:rest"
     },
     {
       "source": "/:path*/langchain_tools:rest",
-      "destination": "/:path*/_langchain.tools:rest"
+      "destination": "/:path*/langchain.tools:rest"
     },
     {
       "source": "/:path*/langchain_chains:rest",
-      "destination": "/:path*/_langchain.chains:rest"
+      "destination": "/:path*/langchain.chains:rest"
     },
     {
       "source": "/:path*/langchain_chat_models:rest",
-      "destination": "/:path*/_langchain.chat_models:rest"
+      "destination": "/:path*/langchain.chat_models:rest"
     },
     {
       "source": "/:path*/langchain_embeddings:rest",
-      "destination": "/:path*/_langchain.embeddings:rest"
+      "destination": "/:path*/langchain.embeddings:rest"
     },
     {
       "source": "/:path*/langchain_vectorstores:rest",
-      "destination": "/:path*/_langchain.vectorstores:rest"
+      "destination": "/:path*/langchain.vectorstores:rest"
     },
     {
       "source": "/:path*/langchain_text_splitter:rest",
-      "destination": "/:path*/_langchain.text_splitter:rest"
+      "destination": "/:path*/langchain.text_splitter:rest"
     },
     {
       "source": "/:path*/langchain_memory:rest",
-      "destination": "/:path*/_langchain.memory:rest"
+      "destination": "/:path*/langchain.memory:rest"
     },
     {
       "source": "/:path*/langchain_document:rest",
-      "destination": "/:path*/_langchain.document:rest"
+      "destination": "/:path*/langchain.document:rest"
     },
     {
       "source": "/:path*/langchain_document_loaders:rest",
-      "destination": "/:path*/_langchain.document_loaders:rest"
+      "destination": "/:path*/langchain.document_loaders:rest"
     },
     {
       "source": "/:path*/langchain_document_transformers:rest",
-      "destination": "/:path*/_langchain.document_transformers:rest"
+      "destination": "/:path*/langchain.document_transformers:rest"
     },
     {
       "source": "/:path*/langchain_sql_db:rest",
-      "destination": "/:path*/_langchain.sql_db:rest"
+      "destination": "/:path*/langchain.sql_db:rest"
     },
     {
       "source": "/:path*/langchain_callbacks:rest",
-      "destination": "/:path*/_langchain.callbacks:rest"
+      "destination": "/:path*/langchain.callbacks:rest"
     },
     {
       "source": "/:path*/langchain_output_parsers:rest",
-      "destination": "/:path*/_langchain.output_parsers:rest"
+      "destination": "/:path*/langchain.output_parsers:rest"
     },
     {
       "source": "/:path*/langchain_retrievers:rest",
-      "destination": "/:path*/_langchain.retrievers:rest"
+      "destination": "/:path*/langchain.retrievers:rest"
     },
     {
       "source": "/:path*/langchain_cache:rest",
-      "destination": "/:path*/_langchain.cache:rest"
+      "destination": "/:path*/langchain.cache:rest"
     },
     {
       "source": "/:path*/langchain_stores:rest",
-      "destination": "/:path*/_langchain.stores:rest"
+      "destination": "/:path*/langchain.stores:rest"
     },
     {
       "source": "/:path*/langchain_storage:rest",
-      "destination": "/:path*/_langchain.storage:rest"
+      "destination": "/:path*/langchain.storage:rest"
     },
     {
       "source": "/:path*/langchain_hub:rest",
-      "destination": "/:path*/_langchain.hub:rest"
+      "destination": "/:path*/langchain.hub:rest"
     },
     {
       "source": "/:path*/langchain_util:rest",
-      "destination": "/:path*/_langchain.util:rest"
+      "destination": "/:path*/langchain.util:rest"
     },
     {
       "source": "/:path*/langchain_experimental:rest",
-      "destination": "/:path*/_langchain.experimental:rest"
+      "destination": "/:path*/langchain.experimental:rest"
     },
     {
       "source": "/:path*/langchain_evaluation:rest",
-      "destination": "/:path*/_langchain.evaluation:rest"
+      "destination": "/:path*/langchain.evaluation:rest"
     },
     {
       "source": "/:path*/langchain_smith:rest",
-      "destination": "/:path*/_langchain.smith:rest"
+      "destination": "/:path*/langchain.smith:rest"
     },
     {
       "source": "/:path*/langchain_runnables:rest",
-      "destination": "/:path*/_langchain.runnables:rest"
+      "destination": "/:path*/langchain.runnables:rest"
     },
     {
       "source": "/:path*/langchain_indexes:rest",
-      "destination": "/:path*/_langchain.indexes:rest"
+      "destination": "/:path*/langchain.indexes:rest"
     },
     {
       "source": "/:path*/langchain_schema:rest",
-      "destination": "/:path*/_langchain.schema:rest"
+      "destination": "/:path*/langchain.schema:rest"
     },
     {
       "source": "/:path*/langchain_core_:rest",
