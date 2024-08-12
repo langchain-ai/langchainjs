@@ -46,9 +46,119 @@ export interface ChromaDeleteParams<T> {
 }
 
 /**
- * The main class that extends the `VectorStore` class. It provides
- * methods for interacting with the Chroma database, such as adding
- * documents, deleting documents, and searching for similar vectors.
+ * Chroma vector store integration.
+ *
+ * Setup:
+ * Install `@langchain/community` and `chromadb`, then clone the official `ChromaDB` repository.
+ *
+ * ```bash
+ * npm install @langchain/community chromadb
+ * ```
+ * 
+ * ```bash
+ * git clone https://github.com/chroma-core/chroma.git
+ * ```
+ * 
+ * Next, navigate into the `chroma` directory and start the docker container:
+ * 
+ * ```bash
+ * cd ./chroma
+ * 
+ * docker compose up
+ * ```
+ *
+ * ## [Constructor args](https://api.js.langchain.com/classes/langchain_community_vectorstores_chroma.Chroma.html#constructor)
+ *
+ * @example
+ * ```typescript
+ * import { Chroma } from '@langchain/community/vectorstores/chroma';
+ * import { OpenAIEmbeddings } from 'langchain-openai';
+ *
+ * const vectorStore = new Chroma({
+ *   collectionName: "foo",
+ *   embeddingFunction: new OpenAIEmbeddings(),
+ *   // other params...
+ * });
+ * ```
+ *
+ * @example
+ * ```typescript
+ * import { Document } from 'langchain-core/documents';
+ *
+ * const document1 = new Document({ pageContent: "foo", metadata: { baz: "bar" } });
+ * const document2 = new Document({ pageContent: "thud", metadata: { bar: "baz" } });
+ * const document3 = new Document({ pageContent: "i will be deleted :(" });
+ *
+ * const documents = [document1, document2, document3];
+ * const ids = ["1", "2", "3"];
+ * await vectorStore.addDocuments({ documents, ids });
+ * ```
+ *
+ * @example
+ * ```typescript
+ * const updatedDocument = new Document({
+ *   pageContent: "qux",
+ *   metadata: { bar: "baz" }
+ * });
+ *
+ * await vectorStore.updateDocuments({ ids: ["1"], documents: [updatedDocument] });
+ * ```
+ *
+ * @example
+ * ```typescript
+ * await vectorStore.delete({ ids: ["3"] });
+ * ```
+ *
+ * @example
+ * ```typescript
+ * const results = await vectorStore.similaritySearch({ query: "thud", k: 1 });
+ * for (const doc of results) {
+ *   console.log(`* ${doc.pageContent} [${JSON.stringify(doc.metadata)}]`);
+ * }
+ * // Output: * thud [{"baz":"bar"}]
+ * ```
+ *
+ * @example
+ * ```typescript
+ * const results = await vectorStore.similaritySearch({ 
+ *   query: "thud", 
+ *   k: 1, 
+ *   filter: { baz: "bar" } 
+ * });
+ * for (const doc of results) {
+ *   console.log(`* ${doc.pageContent} [${JSON.stringify(doc.metadata)}]`);
+ * }
+ * // Output: * foo [{"baz":"bar"}]
+ * ```
+ *
+ * @example
+ * ```typescript
+ * const results = await vectorStore.similaritySearchWithScore({ query: "qux", k: 1 });
+ * for (const [doc, score] of results) {
+ *   console.log(`* [SIM=${score.toFixed(6)}] ${doc.pageContent} [${JSON.stringify(doc.metadata)}]`);
+ * }
+ * // Output: * [SIM=0.000000] qux [{"bar":"baz","baz":"bar"}]
+ * ```
+ *
+ * @example
+ * ```typescript
+ * const results = await vectorStore.similaritySearchWithScore({ query: "qux", k: 1 });
+ * for (const [doc, score] of results) {
+ *   console.log(`* [SIM=${score.toFixed(6)}] ${doc.pageContent} [${JSON.stringify(doc.metadata)}]`);
+ * }
+ * // Output: * [SIM=0.335463] foo [{"baz":"bar"}]
+ * ```
+ *
+ * @example
+ * ```typescript
+ * const retriever = vectorStore.asRetriever({
+ *   searchType: "mmr",
+ *   searchKwargs: { k: 1, fetchK: 2, lambdaMult: 0.5 },
+ * });
+ * const result = await retriever.invoke("thud");
+ * console.log(result);
+ * // Output: [Document(metadata={"baz":"bar"}, pageContent="thud")]
+ * ```
  */
 export class Chroma extends VectorStore {
   declare FilterType: Where;
