@@ -50,7 +50,7 @@ interface FirecrawlDocument {
 export class FireCrawlLoader extends BaseDocumentLoader {
   private apiKey: string;
 
-  private apiUrl?: string
+  private apiUrl?: string;
 
   private url: string;
 
@@ -81,12 +81,18 @@ export class FireCrawlLoader extends BaseDocumentLoader {
   }
 
   /**
-   * Loads the data from the Firecrawl.
+   * Loads data from Firecrawl.
    * @returns An array of Documents representing the retrieved data.
    * @throws An error if the data could not be loaded.
    */
   public async load(): Promise<DocumentInterface[]> {
-    const app = new FirecrawlApp({ apiKey: this.apiKey, apiUrl: this.apiUrl });
+    const params: ConstructorParameters<typeof FirecrawlApp>[0] = {
+      apiKey: this.apiKey,
+    };
+    if (this.apiUrl !== undefined) {
+      params.apiUrl = this.apiUrl;
+    }
+    const app = new FirecrawlApp(params);
     let firecrawlDocs: FirecrawlDocument[];
 
     if (this.mode === "scrape") {
