@@ -50,7 +50,7 @@ interface FirecrawlDocument {
 export class FireCrawlLoader extends BaseDocumentLoader {
   private apiKey: string;
 
-  private apiUrl: string;
+  private apiUrl?: string
 
   private url: string;
 
@@ -62,7 +62,7 @@ export class FireCrawlLoader extends BaseDocumentLoader {
     super();
     const {
       apiKey = getEnvironmentVariable("FIRECRAWL_API_KEY"),
-      apiUrl = "https://api.firecrawl.dev",
+      apiUrl,
       url,
       mode = "crawl",
       params,
