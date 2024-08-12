@@ -11181,7 +11181,7 @@ __metadata:
     "@jest/globals": ^29.5.0
     "@langchain/core": ">=0.2.21 <0.3.0"
     "@langchain/langgraph": <0.1.0
-    "@langchain/openai": ">=0.1.0 <0.3.0"
+    "@langchain/openai": ">=0.2.0 <0.3.0"
     "@langchain/scripts": ~0.0.20
     "@langchain/standard-tests": 0.0.0
     "@layerup/layerup-security": ^1.5.12
@@ -12251,7 +12251,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/openai@>=0.1.0 <0.3.0, @langchain/openai@workspace:*, @langchain/openai@workspace:^, @langchain/openai@workspace:libs/langchain-openai, @langchain/openai@~0.2.4":
+"@langchain/openai@>=0.1.0 <0.3.0, @langchain/openai@>=0.2.0 <0.3.0, @langchain/openai@workspace:*, @langchain/openai@workspace:^, @langchain/openai@workspace:libs/langchain-openai, @langchain/openai@~0.2.4":
   version: 0.0.0-use.local
   resolution: "@langchain/openai@workspace:libs/langchain-openai"
   dependencies:

@@ -36,7 +36,7 @@
   "license": "MIT",
   "dependencies": {
     "@langchain/core": ">=0.2.21 <0.3.0",
-    "@langchain/openai": ">=0.1.0 <0.3.0",
+    "@langchain/openai": ">=0.2.0 <0.3.0",
     "binary-extensions": "^2.2.0",
     "expr-eval": "^2.0.2",
     "flat": "^5.0.2",
