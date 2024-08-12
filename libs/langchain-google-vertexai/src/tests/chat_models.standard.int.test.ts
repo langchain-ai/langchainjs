@@ -10,12 +10,7 @@ class ChatVertexAIStandardIntegrationTests extends ChatModelIntegrationTests<
   AIMessageChunk
 > {
   constructor() {
-    if (!process.env.GOOGLE_APPLICATION_CREDENTIALS) {
-      throw new Error(
-        "GOOGLE_APPLICATION_CREDENTIALS must be set to run standard integration tests."
-      );
-    }
-    super({
+    const superValues = {
       Cls: ChatVertexAI,
       chatModelHasToolCalling: true,
       chatModelHasStructuredOutput: true,
@@ -24,7 +19,39 @@ class ChatVertexAIStandardIntegrationTests extends ChatModelIntegrationTests<
       constructorArgs: {
         model: "gemini-1.5-pro",
       },
-    });
+    }
+    if (process.env.GOOGLE_APPLICATION_CREDENTIALS === "hello") {
+      super({
+        ...superValues,
+        constructorArgs: {
+          ...superValues.constructorArgs,
+          keyFile: process.env.GOOGLE_APPLICATION_CREDENTIALS,
+        }
+      })
+    } else if (process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON) {
+      // We can not pass in a path to `GOOGLE_APPLICATION_CREDENTIALS` in Github Actions, so instead
+      // we must parse it and pass in the credential values directly.
+      try {
+        const parsedCredentials = JSON.parse(process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON);
+        super({
+          ...superValues,
+          constructorArgs: {
+            ...superValues.constructorArgs,
+            credentials: {
+              client_email: parsedCredentials.client_email,
+              private_key: parsedCredentials.private_key,
+            }
+          }
+        })
+      } catch (e) {
+        console.error("Error parsing GOOGLE_APPLICATION_CREDENTIALS_JSON");
+        throw e;
+      }
+    } else {
+      throw new Error(
+        "Missing secrets for Google VertexAI standard tests."
+      );
+    }    
   }
 
   async testToolMessageHistoriesListContent() {
