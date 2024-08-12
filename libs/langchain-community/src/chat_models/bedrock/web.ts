@@ -509,8 +509,6 @@ export class BedrockChat
     streamProcessingMode: "SYNCHRONOUS" | "ASYNCHRONOUS";
   };
 
-  protected _anthropicTools?: AnthropicTool[];
-
   get lc_aliases(): Record<string, string> {
     return {
       model: "model_id",
@@ -599,9 +597,8 @@ export class BedrockChat
       );
     }
 
-    const callOptionTools = formatTools(options?.tools ?? []);
     return {
-      tools: [...(this._anthropicTools ?? []), ...callOptionTools],
+      tools: options?.tools ? formatTools(options.tools) : undefined,
       temperature: this.temperature,
       max_tokens: this.maxTokens,
       stop: options?.stop ?? this.stopSequences,
@@ -813,7 +810,7 @@ export class BedrockChat
       provider === "meta" ||
       provider === "mistral"
     ) {
-      const toolsInParams = !_toolsInParams(options);
+      const toolsInParams = _toolsInParams(options);
       const reader = response.body?.getReader();
       const decoder = new TextDecoder();
       for await (const chunk of this._readChunks(reader)) {
@@ -840,7 +837,10 @@ export class BedrockChat
               provider,
               chunkResult,
               {
-                coerceContentToString: toolsInParams,
+                // Content should _ONLY_ be coerced if tools are not in params
+                // If they are, we need content to be of type MessageTypeComplex
+                // so the tools can be passed through.
+                coerceContentToString: !toolsInParams,
               }
             );
             if (chunk === undefined) {
@@ -962,8 +962,9 @@ export class BedrockChat
         "Currently, tool calling through Bedrock is only supported for Anthropic models."
       );
     }
-    this._anthropicTools = formatTools(tools);
-    return this;
+    return this.bind({
+      tools: formatTools(tools),
+    });
   }
 }
 
