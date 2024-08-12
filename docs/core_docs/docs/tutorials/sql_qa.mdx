@@ -69,7 +69,7 @@ Let's create a simple chain that takes a question, turns it into a SQL query, ex
 
 ### Convert question to SQL query
 
-The first step in a SQL chain or agent is to take the user input and convert it to a SQL query. LangChain comes with a built-in chain for this: [`createSqlQueryChain`](https://v02.api.js.langchain.com/functions/langchain_chains_sql_db.createSqlQueryChain.html)
+The first step in a SQL chain or agent is to take the user input and convert it to a SQL query. LangChain comes with a built-in chain for this: [`createSqlQueryChain`](https://v02.api.js.langchain.com/functions/langchain.chains_sql_db.createSqlQueryChain.html)
 
 import QuickstartChainExample from "@examples/use_cases/sql/quickstart_chain.ts";
 
@@ -94,7 +94,7 @@ This is the most dangerous part of creating a SQL chain. Consider carefully if i
 Minimize the database connection permissions as much as possible.
 Consider adding a human approval step to you chains before query execution (see below).
 
-We can use the [`QuerySqlTool`](https://v02.api.js.langchain.com/classes/langchain_tools_sql.QuerySqlTool.html) to easily add query execution to our chain:
+We can use the [`QuerySqlTool`](https://v02.api.js.langchain.com/classes/langchain.tools_sql.QuerySqlTool.html) to easily add query execution to our chain:
 
 import QuickstartExecuteExample from "@examples/use_cases/sql/quickstart_execute_sql.ts";
 
@@ -133,8 +133,8 @@ LangChain offers a number of tools and functions that allow you to create SQL Ag
 - It can recover from errors by running a generated query, catching the traceback and regenerating it correctly.
 - It can answer questions that require multiple dependent queries.
 - It will save tokens by only considering the schema from relevant tables.
-- To initialize the agent, we use [`createOpenAIToolsAgent`](https://v02.api.js.langchain.com/functions/langchain_agents.createOpenAIToolsAgent.html) function.
-  This agent contains the [`SqlToolkit`](https://v02.api.js.langchain.com/classes/langchain_agents_toolkits_sql.SqlToolkit.html) which contains tools to:
+- To initialize the agent, we use [`createOpenAIToolsAgent`](https://v02.api.js.langchain.com/functions/langchain.agents.createOpenAIToolsAgent.html) function.
+  This agent contains the [`SqlToolkit`](https://v02.api.js.langchain.com/classes/langchain.agents_toolkits_sql.SqlToolkit.html) which contains tools to:
 - Create and execute queries
 - Check query syntax
 - Retrieve table descriptions

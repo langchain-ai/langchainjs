@@ -24,7 +24,7 @@ This guide assumes familiarity with the following concepts:
 
 `initChatModel` requires `langchain>=0.2.11`. See [this guide](/docs/how_to/installation/#installing-integration-packages) for some considerations to take when upgrading.
 
-See the [initChatModel()](https://api.js.langchain.com/functions/langchain_chat_models_universal.initChatModel.html) API reference for a full list of supported integrations.
+See the [initChatModel()](https://api.js.langchain.com/functions/langchain.chat_models_universal.initChatModel.html) API reference for a full list of supported integrations.
 
 Make sure you have the integration packages installed for any model providers you want to support. E.g. you should have `@langchain/openai` installed to init an OpenAI model.
 :::
@@ -38,7 +38,7 @@ import BasicExample from "@examples/models/chat/configurable/basic.ts";
 ## Inferring model provider
 
 For common and distinct model names `initChatModel()` will attempt to infer the model provider.
-See the [API reference](https://api.js.langchain.com/functions/langchain_chat_models_universal.initChatModel.html) for a full list of inference behavior.
+See the [API reference](https://api.js.langchain.com/functions/langchain.chat_models_universal.initChatModel.html) for a full list of inference behavior.
 E.g. any model that starts with `gpt-3...` or `gpt-4...` will be inferred as using model provider `openai`.
 
 import InferringProviderExample from "@examples/models/chat/configurable/inferring_model_provider.ts";
