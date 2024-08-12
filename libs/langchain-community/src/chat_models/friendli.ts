@@ -178,7 +178,7 @@ export class ChatFriendli extends BaseChatModel<BaseChatModelCallOptions> {
     };
   }
 
-  model = "llama-2-13b-chat";
+  model = "meta-llama-3-8b-instruct";
 
   baseUrl = "https://inference.friendli.ai";
 

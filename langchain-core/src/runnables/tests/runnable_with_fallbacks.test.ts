@@ -1,7 +1,7 @@
 /* eslint-disable no-promise-executor-return */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { test, expect } from "@jest/globals";
-import { FakeLLM } from "../../utils/testing/index.js";
+import { FakeLLM, FakeStreamingLLM } from "../../utils/testing/index.js";
 
 test("RunnableWithFallbacks", async () => {
   const llm = new FakeLLM({
@@ -35,4 +35,23 @@ test("RunnableWithFallbacks batch", async () => {
     "What up 3",
   ]);
   expect(result2).toEqual(["What up 1", "What up 2", "What up 3"]);
+});
+
+test("RunnableWithFallbacks stream", async () => {
+  const llm = new FakeStreamingLLM({
+    thrownErrorString: "Bad error!",
+  });
+  await expect(async () => {
+    await llm.stream("What up");
+  }).rejects.toThrow();
+  const llmWithFallbacks = llm.withFallbacks({
+    fallbacks: [new FakeStreamingLLM({})],
+  });
+  const stream = await llmWithFallbacks.stream("What up");
+  const chunks = [];
+  for await (const chunk of stream) {
+    chunks.push(chunk);
+  }
+  expect(chunks.length).toBeGreaterThan(1);
+  expect(chunks.join("")).toEqual("What up");
 });
