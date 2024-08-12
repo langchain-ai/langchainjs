@@ -79,17 +79,10 @@ import {
  * <summary><strong>Invoking</strong></summary>
  *
  * ```typescript
- * const messages = [
- *   {
- *     type: "system" as const,
- *     content: "You are a helpful translator. Translate the user sentence to French.",
- *   },
- *   {
- *     type: "human" as const,
- *     content: "I love programming.",
- *   },
- * ];
- * const result = await llm.invoke(messages);
+ * const input = `Translate "I love programming" into French.`;
+ *
+ * // Models also accept a list of chat messages or a formatted prompt
+ * const result = await llm.invoke(input);
  * console.log(result);
  * ```
  *
@@ -121,7 +114,7 @@ import {
  * <summary><strong>Streaming Chunks</strong></summary>
  *
  * ```typescript
- * for await (const chunk of await llm.stream(messages)) {
+ * for await (const chunk of await llm.stream(input)) {
  *   console.log(chunk);
  * }
  * ```
@@ -173,7 +166,7 @@ import {
  * import { AIMessageChunk } from '@langchain/core/messages';
  * import { concat } from '@langchain/core/utils/stream';
  *
- * const stream = await llm.stream(messages);
+ * const stream = await llm.stream(input);
  * let full: AIMessageChunk | undefined;
  * for await (const chunk of stream) {
  *   full = !full ? chunk : concat(full, chunk);
@@ -189,7 +182,6 @@ import {
  *     "prompt": 0,
  *     "completion": 0,
  *     "finish_reason": "stop",
- *     "system_fingerprint": "fp_3aa7262c27fp_3aa7262c27fp_3aa7262c27fp_3aa7262c27fp_3aa7262c27fp_3aa7262c27fp_3aa7262c27"
  *   },
  *   "usage_metadata": {
  *     "input_tokens": 28,
@@ -276,7 +268,7 @@ import {
  * }).describe('Joke to tell user.');
  *
  * const structuredLlm = llm.withStructuredOutput(Joke);
- * const jokeResult = await structuredLlm.invoke("Tell me a joke about cats");
+ * const jokeResult = await structuredLlm.invoke("Tell me a joke about cats", { name: "Joke" });
  * console.log(jokeResult);
  * ```
  *
@@ -346,7 +338,7 @@ import {
  * <summary><strong>Usage Metadata</strong></summary>
  *
  * ```typescript
- * const aiMsgForMetadata = await llm.invoke(messages);
+ * const aiMsgForMetadata = await llm.invoke(input);
  * console.log(aiMsgForMetadata.usage_metadata);
  * ```
  *
@@ -362,7 +354,7 @@ import {
  *
  * ```typescript
  * const logprobsLlm = new ChatOpenAI({ logprobs: true });
- * const aiMsgForLogprobs = await logprobsLlm.invoke(messages);
+ * const aiMsgForLogprobs = await logprobsLlm.invoke(input);
  * console.log(aiMsgForLogprobs.response_metadata.logprobs);
  * ```
  *
@@ -419,7 +411,7 @@ import {
  * <summary><strong>Response Metadata</strong></summary>
  *
  * ```typescript
- * const aiMsgForResponseMetadata = await llm.invoke(messages);
+ * const aiMsgForResponseMetadata = await llm.invoke(input);
  * console.log(aiMsgForResponseMetadata.response_metadata);
  * ```
  *
