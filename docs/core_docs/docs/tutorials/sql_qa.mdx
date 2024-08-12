@@ -133,8 +133,8 @@ LangChain offers a number of tools and functions that allow you to create SQL Ag
 - It can recover from errors by running a generated query, catching the traceback and regenerating it correctly.
 - It can answer questions that require multiple dependent queries.
 - It will save tokens by only considering the schema from relevant tables.
-- To initialize the agent, we use [`createOpenAIToolsAgent`](https://v02.api.js.langchain.com/functions/langchain_agents.createOpenAIToolsAgent.html) function.
-  This agent contains the [`SqlToolkit`](https://v02.api.js.langchain.com/classes/langchain_agents_toolkits_sql.SqlToolkit.html) which contains tools to:
+- To initialize the agent, we use [`createOpenAIToolsAgent`](https://v02.api.js.langchain.com/functions/langchain.agents.createOpenAIToolsAgent.html) function.
+  This agent contains the [`SqlToolkit`](https://v02.api.js.langchain.com/classes/langchain.agents_toolkits_sql.SqlToolkit.html) which contains tools to:
 - Create and execute queries
 - Check query syntax
 - Retrieve table descriptions

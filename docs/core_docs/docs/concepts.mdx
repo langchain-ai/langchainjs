@@ -112,7 +112,7 @@ With LCEL, **all** steps are automatically logged to [LangSmith](https://docs.sm
 
 <span data-heading-keywords="invoke,runnable"></span>
 
-To make it as easy as possible to create custom chains, we've implemented a ["Runnable"](https://api.js.langchain.com/classes/langchain_core_runnables.Runnable.html) protocol.
+To make it as easy as possible to create custom chains, we've implemented a ["Runnable"](https://api.js.langchain.com/classes/langchain_core.runnables.Runnable.html) protocol.
 Many LangChain components implement the `Runnable` protocol, including chat models, LLMs, output parsers, retrievers, prompt templates, and more. There are also several useful primitives for working with runnables, which you can read about below.
 
 This is a standard interface, which makes it easy to define custom chains as well as invoke them in a standard way.
@@ -394,14 +394,14 @@ LangChain has many different types of output parsers. This is a list of output p
 
 | Name                                                                                                              | Supports Streaming | Input Type                | Output Type                       | Description                                                                                                                                               |
 | ----------------------------------------------------------------------------------------------------------------- | ------------------ | ------------------------- | --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [JSON](https://v02.api.js.langchain.com/classes/langchain_core_output_parsers.JsonOutputParser.html)              | ✅                 | `string` \| `BaseMessage` | `Promise<T>`                      | Returns a JSON object as specified. You can specify a Zod schema and it will return JSON for that model.                                                  |
-| [XML](https://v02.api.js.langchain.com/classes/langchain_core_output_parsers.XMLOutputParser.html)                | ✅                 | `string` \| `BaseMessage` | `Promise<XMLResult>`              | Returns a object of tags. Use when XML output is needed. Use with models that are good at writing XML (like Anthropic's).                                 |
-| [CSV](https://v02.api.js.langchain.com/classes/langchain_core_output_parsers.CommaSeparatedListOutputParser.html) | ✅                 | `string` \| `BaseMessage` | `Array[string]`                   | Returns an array of comma separated values.                                                                                                               |
-| [Structured](https://v02.api.js.langchain.com/classes/langchain_core_output_parsers.StructuredOutputParser.html)  |                    | `string` \| `BaseMessage` | `Promise<TypeOf<T>>`              | Parse structured JSON from an LLM response.                                                                                                               |
-| [HTTP](https://v02.api.js.langchain.com/classes/langchain_output_parsers.HttpResponseOutputParser.html)           | ✅                 | `string`                  | `Promise<Uint8Array>`             | Parse an LLM response to then send over HTTP(s). Useful when invoking the LLM on the server/edge, and then sending the content/stream back to the client. |
-| [Bytes](https://v02.api.js.langchain.com/classes/langchain_core_output_parsers.BytesOutputParser.html)            | ✅                 | `string` \| `BaseMessage` | `Promise<Uint8Array>`             | Parse an LLM response to then send over HTTP(s). Useful for streaming LLM responses from the server/edge to the client.                                   |
-| [Datetime](https://v02.api.js.langchain.com/classes/langchain_output_parsers.DatetimeOutputParser.html)           |                    | `string`                  | `Promise<Date>`                   | Parses response into a `Date`.                                                                                                                            |
-| [Regex](https://v02.api.js.langchain.com/classes/langchain_output_parsers.RegexParser.html)                       |                    | `string`                  | `Promise<Record<string, string>>` | Parses the given text using the regex pattern and returns a object with the parsed output.                                                                |
+| [JSON](https://v02.api.js.langchain.com/classes/langchain_core.output_parsers.JsonOutputParser.html)              | ✅                 | `string` \| `BaseMessage` | `Promise<T>`                      | Returns a JSON object as specified. You can specify a Zod schema and it will return JSON for that model.                                                  |
+| [XML](https://v02.api.js.langchain.com/classes/langchain_core.output_parsers.XMLOutputParser.html)                | ✅                 | `string` \| `BaseMessage` | `Promise<XMLResult>`              | Returns a object of tags. Use when XML output is needed. Use with models that are good at writing XML (like Anthropic's).                                 |
+| [CSV](https://v02.api.js.langchain.com/classes/langchain_core.output_parsers.CommaSeparatedListOutputParser.html) | ✅                 | `string` \| `BaseMessage` | `Array[string]`                   | Returns an array of comma separated values.                                                                                                               |
+| [Structured](https://v02.api.js.langchain.com/classes/langchain_core.output_parsers.StructuredOutputParser.html)  |                    | `string` \| `BaseMessage` | `Promise<TypeOf<T>>`              | Parse structured JSON from an LLM response.                                                                                                               |
+| [HTTP](https://v02.api.js.langchain.com/classes/langchain.output_parsers.HttpResponseOutputParser.html)           | ✅                 | `string`                  | `Promise<Uint8Array>`             | Parse an LLM response to then send over HTTP(s). Useful when invoking the LLM on the server/edge, and then sending the content/stream back to the client. |
+| [Bytes](https://v02.api.js.langchain.com/classes/langchain_core.output_parsers.BytesOutputParser.html)            | ✅                 | `string` \| `BaseMessage` | `Promise<Uint8Array>`             | Parse an LLM response to then send over HTTP(s). Useful for streaming LLM responses from the server/edge to the client.                                   |
+| [Datetime](https://v02.api.js.langchain.com/classes/langchain.output_parsers.DatetimeOutputParser.html)           |                    | `string`                  | `Promise<Date>`                   | Parses response into a `Date`.                                                                                                                            |
+| [Regex](https://v02.api.js.langchain.com/classes/langchain.output_parsers.RegexParser.html)                       |                    | `string`                  | `Promise<Record<string, string>>` | Parses the given text using the regex pattern and returns a object with the parsed output.                                                                |
 
 For specifics on how to use output parsers, see the [relevant how-to guides here](/docs/how_to/#output-parsers).
 
@@ -517,7 +517,7 @@ For specifics on how to use retrievers, see the [relevant how-to guides here](/d
 
 For some techniques, such as [indexing and retrieval with multiple vectors per document](/docs/how_to/multi_vector/), having some sort of key-value (KV) storage is helpful.
 
-LangChain includes a [`BaseStore`](https://api.js.langchain.com/classes/langchain_core_stores.BaseStore.html) interface,
+LangChain includes a [`BaseStore`](https://api.js.langchain.com/classes/langchain_core.stores.BaseStore.html) interface,
 which allows for storage of arbitrary data. However, LangChain components that require KV-storage accept a
 more specific `BaseStore<string, Uint8Array>` instance that stores binary data (referred to as a `ByteStore`), and internally take care of
 encoding and decoding data for their specific needs.
@@ -526,7 +526,7 @@ This means that as a user, you only need to think about one type of store rather
 
 #### Interface
 
-All [`BaseStores`](https://api.js.langchain.com/classes/langchain_core_stores.BaseStore.html) support the following interface. Note that the interface allows
+All [`BaseStores`](https://api.js.langchain.com/classes/langchain_core.stores.BaseStore.html) support the following interface. Note that the interface allows
 for modifying **multiple** key-value pairs at once:
 
 - `mget(keys: string[]): Promise<(undefined | Uint8Array)[]>`: get the contents of multiple keys, returning `None` if the key does not exist
@@ -723,7 +723,7 @@ You can subscribe to these events by using the `callbacks` argument available th
 
 #### Callback handlers
 
-`CallbackHandlers` are objects that implement the [`CallbackHandler`](https://api.js.langchain.com/interfaces/langchain_core_callbacks_base.CallbackHandlerMethods.html) interface, which has a method for each event that can be subscribed to.
+`CallbackHandlers` are objects that implement the [`CallbackHandler`](https://api.js.langchain.com/interfaces/langchain_core.callbacks_base.CallbackHandlerMethods.html) interface, which has a method for each event that can be subscribed to.
 The `CallbackManager` will call the appropriate method on each handler when the event is triggered.
 
 #### Passing callbacks
@@ -793,7 +793,7 @@ For models (or other components) that don't support streaming natively, this ite
 you could still use the same general pattern when calling them. Using `.stream()` will also automatically call the model in streaming mode
 without the need to provide additional config.
 
-The type of each outputted chunk depends on the type of component - for example, chat models yield [`AIMessageChunks`](https://api.js.langchain.com/classes/langchain_core_messages.AIMessageChunk.html).
+The type of each outputted chunk depends on the type of component - for example, chat models yield [`AIMessageChunks`](https://api.js.langchain.com/classes/langchain_core.messages.AIMessageChunk.html).
 Because this method is part of [LangChain Expression Language](/docs/concepts/#langchain-expression-language),
 you can handle formatting differences from different outputs using an [output parser](/docs/concepts/#output-parsers) to transform
 each yielded chunk.
@@ -849,10 +849,10 @@ or [this guide](/docs/how_to/callbacks_custom_events) for how to stream custom e
 #### Callbacks
 
 The lowest level way to stream outputs from LLMs in LangChain is via the [callbacks](/docs/concepts/#callbacks) system. You can pass a
-callback handler that handles the [`handleLLMNewToken`](https://api.js.langchain.com/interfaces/langchain_core_callbacks_base.CallbackHandlerMethods.html#handleLLMNewToken) event into LangChain components. When that component is invoked, any
+callback handler that handles the [`handleLLMNewToken`](https://api.js.langchain.com/interfaces/langchain_core.callbacks_base.CallbackHandlerMethods.html#handleLLMNewToken) event into LangChain components. When that component is invoked, any
 [LLM](/docs/concepts/#llms) or [chat model](/docs/concepts/#chat-models) contained in the component calls
 the callback with the generated token. Within the callback, you could pipe the tokens into some other destination, e.g. a HTTP response.
-You can also handle the [`handleLLMEnd`](https://api.js.langchain.com/interfaces/langchain_core_callbacks_base.CallbackHandlerMethods.html#handleLLMEnd) event to perform any necessary cleanup.
+You can also handle the [`handleLLMEnd`](https://api.js.langchain.com/interfaces/langchain_core.callbacks_base.CallbackHandlerMethods.html#handleLLMEnd) event to perform any necessary cleanup.
 
 You can see [this how-to section](/docs/how_to/#callbacks) for more specifics on using callbacks.
 
@@ -1242,7 +1242,7 @@ Two approaches can address this tension: (1) [Multi Vector](/docs/how_to/multi_v
 
 Fifth, consider ways to improve the quality of your similarity search itself. Embedding models compress text into fixed-length (vector) representations that capture the semantic content of the document. This compression is useful for search / retrieval, but puts a heavy burden on that single vector representation to capture the semantic nuance / detail of the document. In some cases, irrelevant or redundant content can dilute the semantic usefulness of the embedding.
 
-There are some additional tricks to improve the quality of your retrieval. Embeddings excel at capturing semantic information, but may struggle with keyword-based queries. Many [vector stores](docs/integrations/retrievers/supabase-hybrid/) offer built-in [hybrid-search](https://docs.pinecone.io/guides/data/understanding-hybrid-search) to combine keyword and semantic similarity, which marries the benefits of both approaches. Furthermore, many vector stores have [maximal marginal relevance](https://api.js.langchain.com/interfaces/langchain_core_vectorstores.VectorStoreInterface.html#maxMarginalRelevanceSearch), which attempts to diversify the results of a search to avoid returning similar and redundant documents.
+There are some additional tricks to improve the quality of your retrieval. Embeddings excel at capturing semantic information, but may struggle with keyword-based queries. Many [vector stores](docs/integrations/retrievers/supabase-hybrid/) offer built-in [hybrid-search](https://docs.pinecone.io/guides/data/understanding-hybrid-search) to combine keyword and semantic similarity, which marries the benefits of both approaches. Furthermore, many vector stores have [maximal marginal relevance](https://api.js.langchain.com/interfaces/langchain_core.vectorstores.VectorStoreInterface.html#maxMarginalRelevanceSearch), which attempts to diversify the results of a search to avoid returning similar and redundant documents.
 
 | Name                                                                                                          | When to use                                           | Description                                                                                           |
 | ------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |

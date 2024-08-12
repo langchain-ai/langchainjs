@@ -9,7 +9,7 @@ This guide assumes familiarity with the following concepts:
 
 :::
 
-The [`RunnableParallel`](https://v02.api.js.langchain.com/classes/langchain_core_runnables.RunnableParallel.html) (also known as a `RunnableMap`) primitive is an object whose values are runnables (or things that can be coerced to runnables, like functions).
+The [`RunnableParallel`](https://v02.api.js.langchain.com/classes/langchain_core.runnables.RunnableParallel.html) (also known as a `RunnableMap`) primitive is an object whose values are runnables (or things that can be coerced to runnables, like functions).
 It runs all of its values in parallel, and each value is called with the initial input to the `RunnableParallel`. The final return value is an object with the results of each value under its appropriate key.
 
 ## Formatting with `RunnableParallels`
