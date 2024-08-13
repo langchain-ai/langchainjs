@@ -2,7 +2,7 @@
 import { expect, test } from "@jest/globals";
 import { z } from "zod";
 import { zodToGeminiParameters } from "../utils/zod_to_gemini_parameters.js";
-import { ReadableJsonStream } from "../utils/stream.ts";
+import { ReadableJsonStream } from "../utils/stream.js";
 
 test("zodToGeminiParameters can convert zod schema to gemini schema", () => {
   const zodSchema = z
