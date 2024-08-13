@@ -2,7 +2,8 @@ name: Deploy API Refs Preview
 
 on:
   workflow_dispatch:  # Allows triggering the workflow manually in GitHub UI
-  pull_request:
+  # Avoid deploying on PR due to rate limits
+  # pull_request:
 
 # If another push to the same PR or branch happens while this workflow is still running,
 # cancel the earlier run in favor of the next run.
