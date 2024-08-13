@@ -760,6 +760,7 @@ export abstract class Runnable<
    *
    * **ATTENTION** This reference table is for the V2 version of the schema.
    *
+   * ```md
    * +----------------------+------------------+---------------------------------+-----------------------------------------------+-------------------------------------------------+
    * | event                | name             | chunk                           | input                                         | output                                          |
    * +======================+==================+=================================+===============================================+=================================================+
@@ -793,6 +794,7 @@ export abstract class Runnable<
    * +----------------------+------------------+---------------------------------+-----------------------------------------------+-------------------------------------------------+
    * | on_prompt_end        | [template_name]  |                                 | {"question": "hello"}                         | ChatPromptValue(messages: [SystemMessage, ...]) |
    * +----------------------+------------------+---------------------------------+-----------------------------------------------+-------------------------------------------------+
+   * ```
    *
    * The "on_chain_*" events are the default for Runnables that don't fit one of the above categories.
    *
@@ -802,6 +804,7 @@ export abstract class Runnable<
    *
    * A custom event has following format:
    *
+   * ```md
    * +-----------+------+-----------------------------------------------------------------------------------------------------------+
    * | Attribute | Type | Description                                                                                               |
    * +===========+======+===========================================================================================================+
@@ -809,9 +812,10 @@ export abstract class Runnable<
    * +-----------+------+-----------------------------------------------------------------------------------------------------------+
    * | data      | Any  | The data associated with the event. This can be anything, though we suggest making it JSON serializable.  |
    * +-----------+------+-----------------------------------------------------------------------------------------------------------+
+   * ```
    *
    * Here's an example:
-   * @example
+   *
    * ```ts
    * import { RunnableLambda } from "@langchain/core/runnables";
    * import { dispatchCustomEvent } from "@langchain/core/callbacks/dispatch";
