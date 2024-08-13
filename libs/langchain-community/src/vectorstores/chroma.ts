@@ -49,22 +49,10 @@ export interface ChromaDeleteParams<T> {
  * Chroma vector store integration.
  *
  * Setup:
- * Install `@langchain/community` and `chromadb`, then clone the official `ChromaDB` repository.
+ * Install `@langchain/community` and `chromadb`.
  *
  * ```bash
  * npm install @langchain/community chromadb
- * ```
- *
- * ```bash
- * git clone https://github.com/chroma-core/chroma.git
- * ```
- *
- * Next, navigate into the `chroma` directory and start the docker container:
- *
- * ```bash
- * cd ./chroma
- *
- * docker compose up
  * ```
  *
  * ## [Constructor args](https://api.js.langchain.com/classes/langchain_community_vectorstores_chroma.Chroma.html#constructor)
@@ -74,10 +62,15 @@ export interface ChromaDeleteParams<T> {
  *
  * ```typescript
  * import { Chroma } from '@langchain/community/vectorstores/chroma';
+ * // Or other embeddings
  * import { OpenAIEmbeddings } from '@langchain/openai';
  *
+ * const embeddings = new OpenAIEmbeddings({
+ *   model: "text-embedding-3-small",
+ * })
+ *
  * const vectorStore = new Chroma(
- *   new OpenAIEmbeddings(),
+ *   embeddings,
  *   {
  *     collectionName: "foo",
  *     url: "http://localhost:8000", // URL of the Chroma server
@@ -92,13 +85,13 @@ export interface ChromaDeleteParams<T> {
  * <summary><strong>Add documents</strong></summary>
  *
  * ```typescript
- * import { Document } from '@langchain/core/documents';
+ * import type { Document } from '@langchain/core/documents';
  *
- * const document1 = new Document({ pageContent: "foo", metadata: { baz: "bar" } });
- * const document2 = new Document({ pageContent: "thud", metadata: { bar: "baz" } });
- * const document3 = new Document({ pageContent: "i will be deleted :(" });
+ * const document1 = { pageContent: "foo", metadata: { baz: "bar" } };
+ * const document2 = { pageContent: "thud", metadata: { bar: "baz" } };
+ * const document3 = { pageContent: "i will be deleted :(", metadata: {} };
  *
- * const documents = [document1, document2, document3];
+ * const documents: Document[] = [document1, document2, document3];
  * const ids = ["1", "2", "3"];
  * await vectorStore.addDocuments(documents, { ids });
  * ```
@@ -166,7 +159,7 @@ export interface ChromaDeleteParams<T> {
  *
  * ```typescript
  * const retriever = vectorStore.asRetriever({
- *   searchType: "mmr",
+ *   searchType: "mmr", // Leave blank for standard similarity search
  *   k: 1,
  * });
  * const resultAsRetriever = await retriever.invoke("thud");
@@ -473,10 +466,7 @@ export class Chroma extends VectorStore {
     return instance;
   }
 
-  /**
-   * Imports the `ChromaClient` from the `chromadb` module.
-   * @returns A promise that resolves with an object containing the `ChromaClient` constructor.
-   */
+  /** @ignore */
   static async imports(): Promise<{
     ChromaClient: typeof ChromaClientT;
   }> {

@@ -29,9 +29,114 @@ export interface MemoryVectorStoreArgs {
 }
 
 /**
- * Class that extends `VectorStore` to store vectors in memory. Provides
- * methods for adding documents, performing similarity searches, and
- * creating instances from texts, documents, or an existing index.
+ * In-memory, ephemeral vector store.
+ *
+ * Setup:
+ * Install `langchain`:
+ *
+ * ```bash
+ * npm install langchain
+ * ```
+ *
+ * ## [Constructor args](https://api.js.langchain.com/classes/langchain.vectorstores_memory.MemoryVectorStore.html#constructor)
+ *
+ * <details open>
+ * <summary><strong>Instantiate</strong></summary>
+ *
+ * ```typescript
+ * import { MemoryVectorStore } from 'langchain/vectorstores/memory';
+ * // Or other embeddings
+ * import { OpenAIEmbeddings } from '@langchain/openai';
+ *
+ * const embeddings = new OpenAIEmbeddings({
+ *   model: "text-embedding-3-small",
+ * });
+ *
+ * const vectorStore = new MemoryVectorStore(embeddings);
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Add documents</strong></summary>
+ *
+ * ```typescript
+ * import type { Document } from '@langchain/core/documents';
+ *
+ * const document1 = { pageContent: "foo", metadata: { baz: "bar" } };
+ * const document2 = { pageContent: "thud", metadata: { bar: "baz" } };
+ * const document3 = { pageContent: "i will be deleted :(", metadata: {} };
+ *
+ * const documents: Document[] = [document1, document2, document3];
+ *
+ * await vectorStore.addDocuments(documents);
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Similarity search</strong></summary>
+ *
+ * ```typescript
+ * const results = await vectorStore.similaritySearch("thud", 1);
+ * for (const doc of results) {
+ *   console.log(`* ${doc.pageContent} [${JSON.stringify(doc.metadata, null)}]`);
+ * }
+ * // Output: * thud [{"baz":"bar"}]
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ *
+ * <details>
+ * <summary><strong>Similarity search with filter</strong></summary>
+ *
+ * ```typescript
+ * const resultsWithFilter = await vectorStore.similaritySearch("thud", 1, { baz: "bar" });
+ *
+ * for (const doc of resultsWithFilter) {
+ *   console.log(`* ${doc.pageContent} [${JSON.stringify(doc.metadata, null)}]`);
+ * }
+ * // Output: * foo [{"baz":"bar"}]
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ *
+ * <details>
+ * <summary><strong>Similarity search with score</strong></summary>
+ *
+ * ```typescript
+ * const resultsWithScore = await vectorStore.similaritySearchWithScore("qux", 1);
+ * for (const [doc, score] of resultsWithScore) {
+ *   console.log(`* [SIM=${score.toFixed(6)}] ${doc.pageContent} [${JSON.stringify(doc.metadata, null)}]`);
+ * }
+ * // Output: * [SIM=0.000000] qux [{"bar":"baz","baz":"bar"}]
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>As a retriever</strong></summary>
+ *
+ * ```typescript
+ * const retriever = vectorStore.asRetriever({
+ *   searchType: "mmr", // Leave blank for standard similarity search
+ *   k: 1,
+ * });
+ * const resultAsRetriever = await retriever.invoke("thud");
+ * console.log(resultAsRetriever);
+ *
+ * // Output: [Document({ metadata: { "baz":"bar" }, pageContent: "thud" })]
+ * ```
+ * </details>
+ *
+ * <br />
  */
 export class MemoryVectorStore extends VectorStore {
   declare FilterType: (doc: Document) => boolean;
