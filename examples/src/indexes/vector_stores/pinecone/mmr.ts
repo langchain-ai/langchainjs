@@ -1,23 +1,36 @@
-import { MemoryVectorStore } from "langchain/vectorstores/memory";
-// Or other embeddings
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+import { Pinecone } from "@pinecone-database/pinecone";
 import { OpenAIEmbeddings } from "@langchain/openai";
+import { PineconeStore } from "@langchain/pinecone";
 
-const embeddings = new OpenAIEmbeddings({
-  model: "text-embedding-3-small",
+// Instantiate a new Pinecone client, which will automatically read the
+// env vars: PINECONE_API_KEY and PINECONE_ENVIRONMENT which come from
+// the Pinecone dashboard at https://app.pinecone.io
+
+const pinecone = new Pinecone();
+
+const pineconeIndex = pinecone.Index(process.env.PINECONE_INDEX!);
+
+/**
+ * Pinecone allows you to partition the records in an index into namespaces.
+ * Queries and other operations are then limited to one namespace,
+ * so different requests can search different subsets of your index.
+ * Read more about namespaces here: https://docs.pinecone.io/guides/indexes/use-namespaces
+ *
+ * NOTE: If you have namespace enabled in your Pinecone index, you must provide the namespace when creating the PineconeStore.
+ */
+const namespace = "pinecone";
+
+const vectorStore = await PineconeStore.fromExistingIndex(
+  new OpenAIEmbeddings(),
+  { pineconeIndex, namespace }
+);
+
+/* Search the vector DB independently with meta filters */
+const results = await vectorStore.maxMarginalRelevanceSearch("pinecone", {
+  k: 5,
+  fetchK: 20, // Default value for the number of initial documents to fetch for reranking.
+  // You can pass a filter as well
+  // filter: {},
 });
-
-const vectorStore = new MemoryVectorStore(embeddings);
-
-import type { Document } from "@langchain/core/documents";
-
-const document1 = { pageContent: "foo", metadata: { baz: "bar" } };
-const document2 = { pageContent: "thud", metadata: { bar: "baz" } };
-const document3 = { pageContent: "i will be deleted :(", metadata: {} };
-
-const documents: Document[] = [document1, document2, document3];
-await vectorStore.addDocuments(documents);
-
-const results = await vectorStore.similaritySearch("thud", 1);
-for (const doc of results) {
-  console.log(`* ${doc.pageContent} [${JSON.stringify(doc.metadata, null)}]`);
-}
+console.log(results);
