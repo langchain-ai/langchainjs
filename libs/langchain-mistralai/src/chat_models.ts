@@ -1,14 +1,15 @@
 import { v4 as uuidv4 } from "uuid";
 import {
-  ChatCompletionResponse,
-  Function as MistralAIFunction,
-  ToolCalls as MistralAIToolCalls,
-  ResponseFormat,
-  ChatCompletionResponseChunk,
-  ChatRequest,
-  Tool as MistralAITool,
-  Message as MistralAIMessage,
-  TokenUsage as MistralAITokenUsage,
+  Mistral as MistralClient,
+  // MistralChatCompletionResponse,
+  // Function as MistralAIFunction,
+  // ToolCalls as MistralAIToolCalls,
+  // ResponseFormat,
+  // MistralChatCompletionResponseChunk,
+  // ChatRequest,
+  // Tool as MistralAITool,
+  // Message as MistralAIMessage,
+  // TokenUsage as MistralAITokenUsage,
 } from "@mistralai/mistralai";
 import {
   MessageType,
@@ -74,6 +75,18 @@ interface TokenUsage {
 }
 
 export type MistralAIToolChoice = "auto" | "any" | "none";
+
+export type MistralChatCompletionParams = Parameters<MistralClient["chat"]["complete"]>[0];
+export type MistralAIToolCall = NonNullable<MistralChatCompletionParams["tools"]>[number]
+
+export type MistralChatCompletionResponse = Awaited<ReturnType<MistralClient["chat"]["complete"]>>;
+export type MistralChatCompletionResponseChunk = Awaited<ReturnType<MistralClient["chat"]["stream"]>>;
+export type MistralChatCompletionChoice = NonNullable<MistralChatCompletionResponse["choices"]>[number];
+
+export type MistralAITool = NonNullable<MistralChatCompletionParams["tools"]>[number];
+export type MistralAIFunction = MistralAITool["function"];
+
+export type MistralAIMessage = NonNullable<MistralChatCompletionChoice["message"]>;
 
 type MistralAIToolInput = { type: string; function: MistralAIFunction };
 
@@ -200,14 +213,14 @@ function convertMessagesToMistralMessages(
     );
   };
 
-  const getTools = (message: BaseMessage): MistralAIToolCalls[] | undefined => {
+  const getTools = (message: BaseMessage): MistralAIToolCall[] | undefined => {
     if (isAIMessage(message) && !!message.tool_calls?.length) {
       return message.tool_calls
         .map((toolCall) => ({
           ...toolCall,
           id: _convertToolCallIdToMistralCompatible(toolCall.id ?? ""),
         }))
-        .map(convertLangChainToolCallToOpenAI) as MistralAIToolCalls[];
+        .map(convertLangChainToolCallToOpenAI) as MistralAIToolCall[];
     }
     if (!message.additional_kwargs.tool_calls?.length) {
       return undefined;
@@ -244,16 +257,16 @@ function convertMessagesToMistralMessages(
 }
 
 function mistralAIResponseToChatMessage(
-  choice: ChatCompletionResponse["choices"][0],
+  choice: MistralChatCompletionResponse["choices"][0],
   usage?: MistralAITokenUsage
 ): BaseMessage {
   const { message } = choice;
   // MistralAI SDK does not include tool_calls in the non
   // streaming return type, so we need to extract it like this
   // to satisfy typescript.
-  let rawToolCalls: MistralAIToolCalls[] = [];
+  let rawToolCalls: MistralAIToolCall[] = [];
   if ("tool_calls" in message && Array.isArray(message.tool_calls)) {
-    rawToolCalls = message.tool_calls as MistralAIToolCalls[];
+    rawToolCalls = message.tool_calls as MistralAIToolCall[];
   }
   switch (message.role) {
     case "assistant": {
@@ -301,7 +314,7 @@ function _convertDeltaToMessageChunk(
   delta: {
     role?: string | undefined;
     content?: string | undefined;
-    tool_calls?: MistralAIToolCalls[] | undefined;
+    tool_calls?: MistralAIToolCall[] | undefined;
   },
   usage?: MistralAITokenUsage | null
 ) {
@@ -791,7 +804,6 @@ export class ChatMistralAI<
     this.temperature = fields?.temperature ?? this.temperature;
     this.topP = fields?.topP ?? this.topP;
     this.maxTokens = fields?.maxTokens ?? this.maxTokens;
-    this.safeMode = fields?.safeMode ?? this.safeMode;
     this.safePrompt = fields?.safePrompt ?? this.safePrompt;
     this.randomSeed = fields?.seed ?? fields?.randomSeed ?? this.seed;
     this.seed = this.randomSeed;
@@ -820,12 +832,12 @@ export class ChatMistralAI<
    */
   invocationParams(
     options?: this["ParsedCallOptions"]
-  ): Omit<ChatRequest, "messages"> {
+  ): Omit<MistralChatCompletionParams, "messages"> {
     const { response_format, tools, tool_choice } = options ?? {};
     const mistralAITools: Array<MistralAITool> | undefined = tools?.length
       ? _convertToolToMistralTool(tools)
       : undefined;
-    const params: Omit<ChatRequest, "messages"> = {
+    const params: Omit<MistralChatCompletionParams, "messages"> = {
       model: this.model,
       tools: mistralAITools,
       temperature: this.temperature,
@@ -858,31 +870,30 @@ export class ChatMistralAI<
   async completionWithRetry(
     input: ChatRequest,
     streaming: true
-  ): Promise<AsyncGenerator<ChatCompletionResponseChunk>>;
+  ): Promise<AsyncGenerator<MistralChatCompletionResponseChunk>>;
 
   async completionWithRetry(
     input: ChatRequest,
     streaming: false
-  ): Promise<ChatCompletionResponse>;
+  ): Promise<MistralChatCompletionResponse>;
 
   async completionWithRetry(
     input: ChatRequest,
     streaming: boolean
   ): Promise<
-    ChatCompletionResponse | AsyncGenerator<ChatCompletionResponseChunk>
+    MistralChatCompletionResponse | AsyncGenerator<MistralChatCompletionResponseChunk>
   > {
-    const { MistralClient } = await this.imports();
-    const client = new MistralClient(this.apiKey, this.endpoint);
+    const client = new MistralClient({ apiKey: this.apiKey, serverURL: this.endpoint });
 
     return this.caller.call(async () => {
       try {
         let res:
-          | ChatCompletionResponse
-          | AsyncGenerator<ChatCompletionResponseChunk>;
+          | MistralChatCompletionResponse
+          | AsyncGenerator<MistralChatCompletionResponseChunk>;
         if (streaming) {
-          res = client.chatStream(input);
+          res = client.chat.stream(input);
         } else {
-          res = await client.chat(input);
+          res = await client.chat.complete(input);
         }
         return res;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1190,12 +1201,6 @@ export class ChatMistralAI<
       },
       parsedWithFallback,
     ]);
-  }
-
-  /** @ignore */
-  private async imports() {
-    const { default: MistralClient } = await import("@mistralai/mistralai");
-    return { MistralClient };
   }
 }
 

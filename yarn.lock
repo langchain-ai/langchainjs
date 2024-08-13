@@ -12078,7 +12078,7 @@ __metadata:
     "@langchain/core": ">=0.2.21 <0.3.0"
     "@langchain/scripts": ~0.0.20
     "@langchain/standard-tests": 0.0.0
-    "@mistralai/mistralai": ^0.4.0
+    "@mistralai/mistralai": ^1.0.2
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -12730,6 +12730,15 @@ __metadata:
   dependencies:
     node-fetch: ^2.6.7
   checksum: 1b03fc0b55164c02e5fb29fb2d09ebe4ad44346fc313f7fb3ab09e48f73f975763d1ac9654098d433ea17d7caa20654b2b15510822276acc9fa46db461a254a6
+  languageName: node
+  linkType: hard
+
+"@mistralai/mistralai@npm:^1.0.2":
+  version: 1.0.2
+  resolution: "@mistralai/mistralai@npm:1.0.2"
+  peerDependencies:
+    zod: ">= 3"
+  checksum: 9d2ed8d96d20791571cf9ad2a47c4fb2a8a991543ce95a7daeba8f146cca73cac8e05b9da1e96b16d84a08c3c9bcea90c3e4909ce55dd366ea4931b2e18a28bb
   languageName: node
   linkType: hard
 
