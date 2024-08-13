@@ -1,6 +1,6 @@
 import { test } from "@jest/globals";
 import { Document } from "@langchain/core/documents";
-import { OpenAIEmbeddings, OpenAI } from "@langchain/openai";
+import { OpenAIEmbeddings, ChatOpenAI } from "@langchain/openai";
 import { AttributeInfo } from "../../../chains/query_constructor/index.js";
 import { SelfQueryRetriever } from "../index.js";
 import { FunctionalTranslator } from "../functional.js";
@@ -73,8 +73,8 @@ test("Memory Vector Store Self Query Retriever Test", async () => {
   ];
 
   const embeddings = new OpenAIEmbeddings();
-  const llm = new OpenAI({
-    modelName: "gpt-3.5-turbo",
+  const llm = new ChatOpenAI({
+    model: "gpt-4o-mini",
   });
   const documentContents = "Brief summary of a movie";
   const vectorStore = await MemoryVectorStore.fromDocuments(docs, embeddings);
@@ -203,8 +203,8 @@ test("Memory Vector Store Self Query Retriever Test With Default Filter Or Merge
   ];
 
   const embeddings = new OpenAIEmbeddings();
-  const llm = new OpenAI({
-    modelName: "gpt-3.5-turbo",
+  const llm = new ChatOpenAI({
+    model: "gpt-4o-mini",
   });
   const documentContents = "Brief summary of a movie";
   const vectorStore = await MemoryVectorStore.fromDocuments(docs, embeddings);
@@ -344,8 +344,8 @@ test("Memory Vector Store Self Query Retriever Test With Default Filter And Merg
   ];
 
   const embeddings = new OpenAIEmbeddings();
-  const llm = new OpenAI({
-    modelName: "gpt-3.5-turbo",
+  const llm = new ChatOpenAI({
+    model: "gpt-4o-mini",
   });
   const documentContents = "Brief summary of a movie";
   const vectorStore = await MemoryVectorStore.fromDocuments(docs, embeddings);
@@ -384,5 +384,5 @@ test("Memory Vector Store Self Query Retriever Test With Default Filter And Merg
     "Awawawa au au au wawawawa hello?"
   );
   // console.log(query4);
-  expect(query4.length).toEqual(0); // this one should return documents since default filter takes over
+  expect(query4.length).toEqual(7); // this one should return documents since default filter takes over
 });
