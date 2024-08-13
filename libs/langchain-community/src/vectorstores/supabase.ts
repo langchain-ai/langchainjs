@@ -46,8 +46,137 @@ export interface SupabaseLibArgs {
 }
 
 /**
- * Class for interacting with a Supabase database to store and manage
- * vectors.
+ * Supabase vector store integration.
+ *
+ * Setup:
+ * Install `@langchain/community` and `@supabase/supabase-js`.
+ *
+ * ```bash
+ * npm install @langchain/community @supabase/supabase-js
+ * ```
+ *
+ * See https://js.langchain.com/v0.2/docs/integrations/vectorstores/supabase for
+ * instructions on how to set up your Supabase instance.
+ *
+ * ## [Constructor args](https://api.js.langchain.com/classes/_langchain_community.vectorstores_supabase.SupabaseVectorStore.html#constructor)
+ *
+ * <details open>
+ * <summary><strong>Instantiate</strong></summary>
+ *
+ * ```typescript
+ * import { SupabaseVectorStore } from "@langchain/community/vectorstores/supabase";
+ * import { OpenAIEmbeddings } from "@langchain/openai";
+ *
+ * import { createClient } from "@supabase/supabase-js";
+ *
+ * const embeddings = new OpenAIEmbeddings({
+ *   model: "text-embedding-3-small",
+ * });
+ *
+ * const supabaseClient = createClient(
+ *   process.env.SUPABASE_URL,
+ *   process.env.SUPABASE_PRIVATE_KEY
+ * );
+ *
+ * const vectorStore = new SupabaseVectorStore(embeddings, {
+ *   client: supabaseClient,
+ *   tableName: "documents",
+ *   queryName: "match_documents",
+ * });
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Add documents</strong></summary>
+ *
+ * ```typescript
+ * import type { Document } from '@langchain/core/documents';
+ *
+ * const document1 = { pageContent: "foo", metadata: { baz: "bar" } };
+ * const document2 = { pageContent: "thud", metadata: { bar: "baz" } };
+ * const document3 = { pageContent: "i will be deleted :(", metadata: {} };
+ *
+ * const documents: Document[] = [document1, document2, document3];
+ * const ids = ["1", "2", "3"];
+ * await vectorStore.addDocuments(documents, { ids });
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Delete documents</strong></summary>
+ *
+ * ```typescript
+ * await vectorStore.delete({ ids: ["3"] });
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Similarity search</strong></summary>
+ *
+ * ```typescript
+ * const results = await vectorStore.similaritySearch("thud", 1);
+ * for (const doc of results) {
+ *   console.log(`* ${doc.pageContent} [${JSON.stringify(doc.metadata, null)}]`);
+ * }
+ * // Output: * thud [{"baz":"bar"}]
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ *
+ * <details>
+ * <summary><strong>Similarity search with filter</strong></summary>
+ *
+ * ```typescript
+ * const resultsWithFilter = await vectorStore.similaritySearch("thud", 1, { baz: "bar" });
+ *
+ * for (const doc of resultsWithFilter) {
+ *   console.log(`* ${doc.pageContent} [${JSON.stringify(doc.metadata, null)}]`);
+ * }
+ * // Output: * foo [{"baz":"bar"}]
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ *
+ * <details>
+ * <summary><strong>Similarity search with score</strong></summary>
+ *
+ * ```typescript
+ * const resultsWithScore = await vectorStore.similaritySearchWithScore("qux", 1);
+ * for (const [doc, score] of resultsWithScore) {
+ *   console.log(`* [SIM=${score.toFixed(6)}] ${doc.pageContent} [${JSON.stringify(doc.metadata, null)}]`);
+ * }
+ * // Output: * [SIM=0.000000] qux [{"bar":"baz","baz":"bar"}]
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>As a retriever</strong></summary>
+ *
+ * ```typescript
+ * const retriever = vectorStore.asRetriever({
+ *   searchType: "mmr", // Leave blank for standard similarity search
+ *   k: 1,
+ * });
+ * const resultAsRetriever = await retriever.invoke("thud");
+ * console.log(resultAsRetriever);
+ *
+ * // Output: [Document({ metadata: { "baz":"bar" }, pageContent: "thud" })]
+ * ```
+ * </details>
+ *
+ * <br />
  */
 export class SupabaseVectorStore extends VectorStore {
   declare FilterType: SupabaseMetadata | SupabaseFilterRPCCall;
