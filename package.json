@@ -1,10 +1,10 @@
 {
   "name": "langchainjs",
-  "version": "0.0.4",
   "private": true,
   "engines": {
     "node": ">=18"
   },
+  "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/",
   "workspaces": [
     "langchain",
     "langchain-core",
@@ -63,6 +63,7 @@
     "voy-search@0.6.2": "patch:voy-search@npm%3A0.6.2#./.yarn/patches/voy-search-npm-0.6.2-d4aca30a0e.patch",
     "@langchain/core": "workspace:*",
     "better-sqlite3": "9.4.0",
+    "protobufjs": "^7.2.5",
     "zod": "3.23.8"
   },
   "lint-staged": {

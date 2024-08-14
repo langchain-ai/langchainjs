@@ -1,10 +1,22 @@
 import * as uuid from "uuid";
-import type { ChromaClient as ChromaClientT, Collection } from "chromadb";
+import type {
+  ChromaClient as ChromaClientT,
+  Collection,
+  ChromaClientParams,
+} from "chromadb";
 import type { CollectionMetadata, Where } from "chromadb/dist/main/types.js";
 
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { VectorStore } from "@langchain/core/vectorstores";
 import { Document } from "@langchain/core/documents";
+
+type SharedChromaLibArgs = {
+  numDimensions?: number;
+  collectionName?: string;
+  filter?: object;
+  collectionMetadata?: CollectionMetadata;
+  clientParams?: Omit<ChromaClientParams, "path">;
+};
 
 /**
  * Defines the arguments that can be passed to the `Chroma` class
@@ -16,20 +28,12 @@ import { Document } from "@langchain/core/documents";
  * `filter`.
  */
 export type ChromaLibArgs =
-  | {
+  | ({
       url?: string;
-      numDimensions?: number;
-      collectionName?: string;
-      filter?: object;
-      collectionMetadata?: CollectionMetadata;
-    }
-  | {
+    } & SharedChromaLibArgs)
+  | ({
       index?: ChromaClientT;
-      numDimensions?: number;
-      collectionName?: string;
-      filter?: object;
-      collectionMetadata?: CollectionMetadata;
-    };
+    } & SharedChromaLibArgs);
 
 /**
  * Defines the parameters for the `delete` method in the `Chroma` class.
@@ -42,9 +46,130 @@ export interface ChromaDeleteParams<T> {
 }
 
 /**
- * The main class that extends the `VectorStore` class. It provides
- * methods for interacting with the Chroma database, such as adding
- * documents, deleting documents, and searching for similar vectors.
+ * Chroma vector store integration.
+ *
+ * Setup:
+ * Install `@langchain/community` and `chromadb`.
+ *
+ * ```bash
+ * npm install @langchain/community chromadb
+ * ```
+ *
+ * ## [Constructor args](https://api.js.langchain.com/classes/langchain_community_vectorstores_chroma.Chroma.html#constructor)
+ *
+ * <details open>
+ * <summary><strong>Instantiate</strong></summary>
+ *
+ * ```typescript
+ * import { Chroma } from '@langchain/community/vectorstores/chroma';
+ * // Or other embeddings
+ * import { OpenAIEmbeddings } from '@langchain/openai';
+ *
+ * const embeddings = new OpenAIEmbeddings({
+ *   model: "text-embedding-3-small",
+ * })
+ *
+ * const vectorStore = new Chroma(
+ *   embeddings,
+ *   {
+ *     collectionName: "foo",
+ *     url: "http://localhost:8000", // URL of the Chroma server
+ *   }
+ * );
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Add documents</strong></summary>
+ *
+ * ```typescript
+ * import type { Document } from '@langchain/core/documents';
+ *
+ * const document1 = { pageContent: "foo", metadata: { baz: "bar" } };
+ * const document2 = { pageContent: "thud", metadata: { bar: "baz" } };
+ * const document3 = { pageContent: "i will be deleted :(", metadata: {} };
+ *
+ * const documents: Document[] = [document1, document2, document3];
+ * const ids = ["1", "2", "3"];
+ * await vectorStore.addDocuments(documents, { ids });
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Delete documents</strong></summary>
+ *
+ * ```typescript
+ * await vectorStore.delete({ ids: ["3"] });
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Similarity search</strong></summary>
+ *
+ * ```typescript
+ * const results = await vectorStore.similaritySearch("thud", 1);
+ * for (const doc of results) {
+ *   console.log(`* ${doc.pageContent} [${JSON.stringify(doc.metadata, null)}]`);
+ * }
+ * // Output: * thud [{"baz":"bar"}]
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ *
+ * <details>
+ * <summary><strong>Similarity search with filter</strong></summary>
+ *
+ * ```typescript
+ * const resultsWithFilter = await vectorStore.similaritySearch("thud", 1, { baz: "bar" });
+ *
+ * for (const doc of resultsWithFilter) {
+ *   console.log(`* ${doc.pageContent} [${JSON.stringify(doc.metadata, null)}]`);
+ * }
+ * // Output: * foo [{"baz":"bar"}]
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ *
+ * <details>
+ * <summary><strong>Similarity search with score</strong></summary>
+ *
+ * ```typescript
+ * const resultsWithScore = await vectorStore.similaritySearchWithScore("qux", 1);
+ * for (const [doc, score] of resultsWithScore) {
+ *   console.log(`* [SIM=${score.toFixed(6)}] ${doc.pageContent} [${JSON.stringify(doc.metadata, null)}]`);
+ * }
+ * // Output: * [SIM=0.000000] qux [{"bar":"baz","baz":"bar"}]
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>As a retriever</strong></summary>
+ *
+ * ```typescript
+ * const retriever = vectorStore.asRetriever({
+ *   searchType: "mmr", // Leave blank for standard similarity search
+ *   k: 1,
+ * });
+ * const resultAsRetriever = await retriever.invoke("thud");
+ * console.log(resultAsRetriever);
+ *
+ * // Output: [Document({ metadata: { "baz":"bar" }, pageContent: "thud" })]
+ * ```
+ * </details>
+ *
+ * <br />
  */
 export class Chroma extends VectorStore {
   declare FilterType: Where;
@@ -58,6 +183,8 @@ export class Chroma extends VectorStore {
   collectionMetadata?: CollectionMetadata;
 
   numDimensions?: number;
+
+  clientParams?: Omit<ChromaClientParams, "path">;
 
   url: string;
 
@@ -73,6 +200,7 @@ export class Chroma extends VectorStore {
     this.embeddings = embeddings;
     this.collectionName = ensureCollectionName(args.collectionName);
     this.collectionMetadata = args.collectionMetadata;
+    this.clientParams = args.clientParams;
     if ("index" in args) {
       this.index = args.index;
     } else if ("url" in args) {
@@ -109,6 +237,7 @@ export class Chroma extends VectorStore {
       if (!this.index) {
         const chromaClient = new (await Chroma.imports()).ChromaClient({
           path: this.url,
+          ...(this.clientParams ?? {}),
         });
         this.index = chromaClient;
       }
@@ -337,10 +466,7 @@ export class Chroma extends VectorStore {
     return instance;
   }
 
-  /**
-   * Imports the `ChromaClient` from the `chromadb` module.
-   * @returns A promise that resolves with an object containing the `ChromaClient` constructor.
-   */
+  /** @ignore */
   static async imports(): Promise<{
     ChromaClient: typeof ChromaClientT;
   }> {

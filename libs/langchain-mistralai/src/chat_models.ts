@@ -35,6 +35,7 @@ import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {
   type BaseChatModelParams,
   BaseChatModel,
+  BindToolsInput,
   LangSmithParams,
 } from "@langchain/core/language_models/chat_models";
 
@@ -45,7 +46,6 @@ import {
 } from "@langchain/core/outputs";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { NewTokenIndices } from "@langchain/core/callbacks/base";
-import { StructuredTool, StructuredToolInterface } from "@langchain/core/tools";
 import { z } from "zod";
 import {
   type BaseLLMOutputParser,
@@ -62,7 +62,6 @@ import {
   Runnable,
   RunnablePassthrough,
   RunnableSequence,
-  RunnableToolLike,
 } from "@langchain/core/runnables";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { ToolCallChunk } from "@langchain/core/messages/tool";
@@ -77,12 +76,18 @@ interface TokenUsage {
 export type MistralAIToolChoice = "auto" | "any" | "none";
 
 type MistralAIToolInput = { type: string; function: MistralAIFunction };
-interface MistralAICallOptions
+
+type ChatMistralAIToolType =
+  | MistralAIToolInput
+  | MistralAITool
+  | BindToolsInput;
+
+export interface ChatMistralAICallOptions
   extends Omit<BaseLanguageModelCallOptions, "stop"> {
   response_format?: {
     type: "text" | "json_object";
   };
-  tools: StructuredToolInterface[] | MistralAIToolInput[] | MistralAITool[];
+  tools: ChatMistralAIToolType[];
   tool_choice?: MistralAIToolChoice;
   /**
    * Whether or not to include token usage in the stream.
@@ -90,8 +95,6 @@ interface MistralAICallOptions
    */
   streamUsage?: boolean;
 }
-
-export interface ChatMistralAICallOptions extends MistralAICallOptions {}
 
 /**
  * Input to chat model class.
@@ -386,10 +389,14 @@ function _convertDeltaToMessageChunk(
   }
 }
 
-function _convertStructuredToolToMistralTool(
-  tools: StructuredToolInterface[]
+function _convertToolToMistralTool(
+  tools: ChatMistralAIToolType[]
 ): MistralAITool[] {
   return tools.map((tool) => {
+    if ("function" in tool) {
+      return tool as MistralAITool;
+    }
+
     const description = tool.description ?? `Tool: ${tool.name}`;
     return {
       type: "function",
@@ -403,10 +410,333 @@ function _convertStructuredToolToMistralTool(
 }
 
 /**
- * Integration with a chat model.
+ * Mistral AI chat model integration.
+ *
+ * Setup:
+ * Install `@langchain/mistralai` and set an environment variable named `MISTRAL_API_KEY`.
+ *
+ * ```bash
+ * npm install @langchain/mistralai
+ * export MISTRAL_API_KEY="your-api-key"
+ * ```
+ *
+ * ## [Constructor args](https://api.js.langchain.com/classes/_langchain_mistralai.ChatMistralAI.html#constructor)
+ *
+ * ## [Runtime args](https://api.js.langchain.com/interfaces/_langchain_mistralai.ChatMistralAICallOptions.html)
+ *
+ * Runtime args can be passed as the second argument to any of the base runnable methods `.invoke`. `.stream`, `.batch`, etc.
+ * They can also be passed via `.bind`, or the second arg in `.bindTools`, like shown in the examples below:
+ *
+ * ```typescript
+ * // When calling `.bind`, call options should be passed via the first argument
+ * const llmWithArgsBound = llm.bind({
+ *   stop: ["\n"],
+ *   tools: [...],
+ * });
+ *
+ * // When calling `.bindTools`, call options should be passed via the second argument
+ * const llmWithTools = llm.bindTools(
+ *   [...],
+ *   {
+ *     tool_choice: "auto",
+ *   }
+ * );
+ * ```
+ *
+ * ## Examples
+ *
+ * <details open>
+ * <summary><strong>Instantiate</strong></summary>
+ *
+ * ```typescript
+ * import { ChatMistralAI } from '@langchain/mistralai';
+ *
+ * const llm = new ChatMistralAI({
+ *   model: "mistral-large-2402",
+ *   temperature: 0,
+ *   // other params...
+ * });
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Invoking</strong></summary>
+ *
+ * ```typescript
+ * const input = `Translate "I love programming" into French.`;
+ *
+ * // Models also accept a list of chat messages or a formatted prompt
+ * const result = await llm.invoke(input);
+ * console.log(result);
+ * ```
+ *
+ * ```txt
+ * AIMessage {
+ *   "content": "The translation of \"I love programming\" into French is \"J'aime la programmation\". Here's the breakdown:\n\n- \"I\" translates to \"Je\"\n- \"love\" translates to \"aime\"\n- \"programming\" translates to \"la programmation\"\n\nSo, \"J'aime la programmation\" means \"I love programming\" in French.",
+ *   "additional_kwargs": {},
+ *   "response_metadata": {
+ *     "tokenUsage": {
+ *       "completionTokens": 89,
+ *       "promptTokens": 13,
+ *       "totalTokens": 102
+ *     },
+ *     "finish_reason": "stop"
+ *   },
+ *   "tool_calls": [],
+ *   "invalid_tool_calls": [],
+ *   "usage_metadata": {
+ *     "input_tokens": 13,
+ *     "output_tokens": 89,
+ *     "total_tokens": 102
+ *   }
+ * }
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Streaming Chunks</strong></summary>
+ *
+ * ```typescript
+ * for await (const chunk of await llm.stream(input)) {
+ *   console.log(chunk);
+ * }
+ * ```
+ *
+ * ```txt
+ * AIMessageChunk {
+ *   "content": "The",
+ *   "additional_kwargs": {},
+ *   "response_metadata": {
+ *     "prompt": 0,
+ *     "completion": 0
+ *   },
+ *   "tool_calls": [],
+ *   "tool_call_chunks": [],
+ *   "invalid_tool_calls": []
+ * }
+ * AIMessageChunk {
+ *   "content": " translation",
+ *   "additional_kwargs": {},
+ *   "response_metadata": {
+ *     "prompt": 0,
+ *     "completion": 0
+ *   },
+ *   "tool_calls": [],
+ *   "tool_call_chunks": [],
+ *   "invalid_tool_calls": []
+ * }
+ * AIMessageChunk {
+ *   "content": " of",
+ *   "additional_kwargs": {},
+ *   "response_metadata": {
+ *     "prompt": 0,
+ *     "completion": 0
+ *   },
+ *   "tool_calls": [],
+ *   "tool_call_chunks": [],
+ *   "invalid_tool_calls": []
+ * }
+ * AIMessageChunk {
+ *   "content": " \"",
+ *   "additional_kwargs": {},
+ *   "response_metadata": {
+ *     "prompt": 0,
+ *     "completion": 0
+ *   },
+ *   "tool_calls": [],
+ *   "tool_call_chunks": [],
+ *   "invalid_tool_calls": []
+ * }
+ * AIMessageChunk {
+ *   "content": "I",
+ *   "additional_kwargs": {},
+ *   "response_metadata": {
+ *     "prompt": 0,
+ *     "completion": 0
+ *   },
+ *   "tool_calls": [],
+ *   "tool_call_chunks": [],
+ *   "invalid_tool_calls": []
+ * }
+ * AIMessageChunk {
+ *  "content": ".",
+ *  "additional_kwargs": {},
+ *  "response_metadata": {
+ *    "prompt": 0,
+ *    "completion": 0
+ *  },
+ *  "tool_calls": [],
+ *  "tool_call_chunks": [],
+ *  "invalid_tool_calls": []
+ *}
+ *AIMessageChunk {
+ *  "content": "",
+ *  "additional_kwargs": {},
+ *  "response_metadata": {
+ *    "prompt": 0,
+ *    "completion": 0
+ *  },
+ *  "tool_calls": [],
+ *  "tool_call_chunks": [],
+ *  "invalid_tool_calls": [],
+ *  "usage_metadata": {
+ *    "input_tokens": 13,
+ *    "output_tokens": 89,
+ *    "total_tokens": 102
+ *  }
+ *}
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Aggregate Streamed Chunks</strong></summary>
+ *
+ * ```typescript
+ * import { AIMessageChunk } from '@langchain/core/messages';
+ * import { concat } from '@langchain/core/utils/stream';
+ *
+ * const stream = await llm.stream(input);
+ * let full: AIMessageChunk | undefined;
+ * for await (const chunk of stream) {
+ *   full = !full ? chunk : concat(full, chunk);
+ * }
+ * console.log(full);
+ * ```
+ *
+ * ```txt
+ * AIMessageChunk {
+ *   "content": "The translation of \"I love programming\" into French is \"J'aime la programmation\". Here's the breakdown:\n\n- \"I\" translates to \"Je\"\n- \"love\" translates to \"aime\"\n- \"programming\" translates to \"la programmation\"\n\nSo, \"J'aime la programmation\" means \"I love programming\" in French.",
+ *   "additional_kwargs": {},
+ *   "response_metadata": {
+ *     "prompt": 0,
+ *     "completion": 0
+ *   },
+ *   "tool_calls": [],
+ *   "tool_call_chunks": [],
+ *   "invalid_tool_calls": [],
+ *   "usage_metadata": {
+ *     "input_tokens": 13,
+ *     "output_tokens": 89,
+ *     "total_tokens": 102
+ *   }
+ * }
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Bind tools</strong></summary>
+ *
+ * ```typescript
+ * import { z } from 'zod';
+ *
+ * const GetWeather = {
+ *   name: "GetWeather",
+ *   description: "Get the current weather in a given location",
+ *   schema: z.object({
+ *     location: z.string().describe("The city and state, e.g. San Francisco, CA")
+ *   }),
+ * }
+ *
+ * const GetPopulation = {
+ *   name: "GetPopulation",
+ *   description: "Get the current population in a given location",
+ *   schema: z.object({
+ *     location: z.string().describe("The city and state, e.g. San Francisco, CA")
+ *   }),
+ * }
+ *
+ * const llmWithTools = llm.bindTools([GetWeather, GetPopulation]);
+ * const aiMsg = await llmWithTools.invoke(
+ *   "Which city is hotter today and which is bigger: LA or NY?"
+ * );
+ * console.log(aiMsg.tool_calls);
+ * ```
+ *
+ * ```txt
+ * [
+ *   {
+ *     name: 'GetWeather',
+ *     args: { location: 'Los Angeles, CA' },
+ *     type: 'tool_call',
+ *     id: '47i216yko'
+ *   },
+ *   {
+ *     name: 'GetWeather',
+ *     args: { location: 'New York, NY' },
+ *     type: 'tool_call',
+ *     id: 'nb3v8Fpcn'
+ *   },
+ *   {
+ *     name: 'GetPopulation',
+ *     args: { location: 'Los Angeles, CA' },
+ *     type: 'tool_call',
+ *     id: 'EedWzByIB'
+ *   },
+ *   {
+ *     name: 'GetPopulation',
+ *     args: { location: 'New York, NY' },
+ *     type: 'tool_call',
+ *     id: 'jLdLia7zC'
+ *   }
+ * ]
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Structured Output</strong></summary>
+ *
+ * ```typescript
+ * import { z } from 'zod';
+ *
+ * const Joke = z.object({
+ *   setup: z.string().describe("The setup of the joke"),
+ *   punchline: z.string().describe("The punchline to the joke"),
+ *   rating: z.number().optional().describe("How funny the joke is, from 1 to 10")
+ * }).describe('Joke to tell user.');
+ *
+ * const structuredLlm = llm.withStructuredOutput(Joke, { name: "Joke" });
+ * const jokeResult = await structuredLlm.invoke("Tell me a joke about cats");
+ * console.log(jokeResult);
+ * ```
+ *
+ * ```txt
+ * {
+ *   setup: "Why don't cats play poker in the jungle?",
+ *   punchline: 'Too many cheetahs!',
+ *   rating: 7
+ * }
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Usage Metadata</strong></summary>
+ *
+ * ```typescript
+ * const aiMsgForMetadata = await llm.invoke(input);
+ * console.log(aiMsgForMetadata.usage_metadata);
+ * ```
+ *
+ * ```txt
+ * { input_tokens: 13, output_tokens: 89, total_tokens: 102 }
+ * ```
+ * </details>
+ *
+ * <br />
  */
 export class ChatMistralAI<
-    CallOptions extends MistralAICallOptions = MistralAICallOptions
+    CallOptions extends ChatMistralAICallOptions = ChatMistralAICallOptions
   >
   extends BaseChatModel<CallOptions, AIMessageChunk>
   implements ChatMistralAIInput
@@ -492,24 +822,9 @@ export class ChatMistralAI<
     options?: this["ParsedCallOptions"]
   ): Omit<ChatRequest, "messages"> {
     const { response_format, tools, tool_choice } = options ?? {};
-    const mistralAITools: Array<MistralAITool> | undefined = tools
-      ?.map((tool) => {
-        if ("lc_namespace" in tool) {
-          return _convertStructuredToolToMistralTool([tool]);
-        }
-        if (!tool.function.description) {
-          return {
-            type: "function",
-            function: {
-              name: tool.function.name,
-              description: `Tool: ${tool.function.name}`,
-              parameters: tool.function.parameters,
-            },
-          } as MistralAITool;
-        }
-        return tool as MistralAITool;
-      })
-      .flat();
+    const mistralAITools: Array<MistralAITool> | undefined = tools?.length
+      ? _convertToolToMistralTool(tools)
+      : undefined;
     const params: Omit<ChatRequest, "messages"> = {
       model: this.model,
       tools: mistralAITools,
@@ -526,23 +841,11 @@ export class ChatMistralAI<
   }
 
   override bindTools(
-    tools: (
-      | Record<string, unknown>
-      | StructuredToolInterface
-      | RunnableToolLike
-    )[],
+    tools: ChatMistralAIToolType[],
     kwargs?: Partial<CallOptions>
   ): Runnable<BaseLanguageModelInput, AIMessageChunk, CallOptions> {
-    const mistralAITools = tools
-      ?.map((tool) => {
-        if ("lc_namespace" in tool) {
-          return _convertStructuredToolToMistralTool([tool as StructuredTool]);
-        }
-        return tool;
-      })
-      .flat();
     return this.bind({
-      tools: mistralAITools,
+      tools: _convertToolToMistralTool(tools),
       ...kwargs,
     } as CallOptions);
   }

@@ -42,7 +42,7 @@ export interface RetrievalQAChainInput extends Omit<ChainInputs, "memory"> {
  *   documents,
  *   embeddings
  * );
- * const prompt = ChatPromptTemplate.fromTemplate(`Answer the user's question: {input}`);
+ * const prompt = ChatPromptTemplate.fromTemplate(`Answer the user's question: {input} based on the following context {context}`);
  *
  * const combineDocsChain = await createStuffDocumentsChain({
  *   llm,

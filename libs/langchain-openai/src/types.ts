@@ -155,6 +155,12 @@ export interface OpenAIChatInput extends OpenAIBaseInput {
    * Currently in experimental beta.
    */
   __includeRawResponse?: boolean;
+
+  /**
+   * Whether the model supports the `strict` argument when passing in tools.
+   * If `undefined` the `strict` argument will not be passed to OpenAI.
+   */
+  supportsStrictToolCalling?: boolean;
 }
 
 export declare interface AzureOpenAIInput {

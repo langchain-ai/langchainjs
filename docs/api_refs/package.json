@@ -7,7 +7,6 @@
     "typedoc:build": "npx typedoc --options typedoc.json",
     "build:scripts": "node ./scripts/create-entrypoints.js && yarn typedoc:build && node ./scripts/update-typedoc-css.js",
     "build": "yarn clean && yarn build:scripts && next build",
-    "build:vercel": "yarn clean && yarn build:scripts && next build",
     "start": "yarn build && next start -p 3001",
     "lint": "next lint",
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx}\"",
@@ -26,10 +25,13 @@
     "autoprefixer": "^10.0.1",
     "eslint": "^8",
     "eslint-config-next": "14.0.1",
+    "glob": "^10.3.10",
     "postcss": "^8",
     "prettier": "^2.8.3",
     "tailwindcss": "^3.3.0",
-    "typedoc": "^0.26.0",
+    "ts-morph": "^23.0.0",
+    "typedoc": "^0.26.1",
+    "typedoc-plugin-expand-object-like-types": "^0.1.2",
     "typescript": "~5.1.6"
   }
 }

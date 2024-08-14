@@ -1,6 +1,6 @@
 {
   "name": "@langchain/core",
-  "version": "0.2.18",
+  "version": "0.2.23",
   "description": "Core LangChain.js abstractions and schemas",
   "type": "module",
   "engines": {
@@ -46,7 +46,6 @@
     "decamelize": "1.2.0",
     "js-tiktoken": "^1.0.12",
     "langsmith": "~0.1.39",
-    "ml-distance": "^4.0.0",
     "mustache": "^4.2.0",
     "p-queue": "^6.6.2",
     "p-retry": "4",
@@ -73,7 +72,7 @@
     "jest-environment-node": "^29.6.4",
     "ml-matrix": "^6.10.4",
     "prettier": "^2.8.3",
-    "release-it": "^15.10.1",
+    "release-it": "^17.6.0",
     "rimraf": "^5.0.1",
     "ts-jest": "^29.1.0",
     "typescript": "~5.1.6",

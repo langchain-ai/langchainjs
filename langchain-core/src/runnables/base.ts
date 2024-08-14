@@ -30,6 +30,7 @@ import {
   pipeGeneratorWithSetup,
   AsyncGeneratorWithSetup,
 } from "../utils/stream.js";
+import { raceWithSignal } from "../utils/signal.js";
 import {
   DEFAULT_RECURSION_LIMIT,
   RunnableConfig,
@@ -195,13 +196,18 @@ export abstract class Runnable<
    * @param fields.fallbacks Other runnables to call if the runnable errors.
    * @returns A new RunnableWithFallbacks.
    */
-  withFallbacks(fields: {
-    fallbacks: Runnable<RunInput, RunOutput>[];
-  }): RunnableWithFallbacks<RunInput, RunOutput> {
+  withFallbacks(
+    fields:
+      | {
+          fallbacks: Runnable<RunInput, RunOutput>[];
+        }
+      | Runnable<RunInput, RunOutput>[]
+  ): RunnableWithFallbacks<RunInput, RunOutput> {
+    const fallbacks = Array.isArray(fields) ? fields : fields.fallbacks;
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
     return new RunnableWithFallbacks<RunInput, RunOutput>({
       runnable: this,
-      fallbacks: fields.fallbacks,
+      fallbacks,
     });
   }
 
@@ -339,6 +345,8 @@ export abstract class Runnable<
         recursionLimit: options.recursionLimit,
         maxConcurrency: options.maxConcurrency,
         runId: options.runId,
+        timeout: options.timeout,
+        signal: options.signal,
       });
     }
     const callOptions = { ...(options as Partial<CallOptions>) };
@@ -350,6 +358,8 @@ export abstract class Runnable<
     delete callOptions.recursionLimit;
     delete callOptions.maxConcurrency;
     delete callOptions.runId;
+    delete callOptions.timeout;
+    delete callOptions.signal;
     return [runnableConfig, callOptions];
   }
 
@@ -378,7 +388,8 @@ export abstract class Runnable<
     delete config.runId;
     let output;
     try {
-      output = await func.call(this, input, config, runManager);
+      const promise = func.call(this, input, config, runManager);
+      output = await raceWithSignal(promise, options?.signal);
     } catch (e) {
       await runManager?.handleChainError(e);
       throw e;
@@ -430,13 +441,14 @@ export abstract class Runnable<
     );
     let outputs: (RunOutput | Error)[];
     try {
-      outputs = await func.call(
+      const promise = func.call(
         this,
         inputs,
         optionsList,
         runManagers,
         batchOptions
       );
+      outputs = await raceWithSignal(promise, optionsList?.[0]?.signal);
     } catch (e) {
       await Promise.all(
         runManagers.map((runManager) => runManager?.handleChainError(e))
@@ -509,6 +521,7 @@ export abstract class Runnable<
             undefined,
             config.runName ?? this.getName()
           ),
+        options?.signal,
         config
       );
       delete config.runId;
@@ -747,6 +760,7 @@ export abstract class Runnable<
    *
    * **ATTENTION** This reference table is for the V2 version of the schema.
    *
+   * ```md
    * +----------------------+------------------+---------------------------------+-----------------------------------------------+-------------------------------------------------+
    * | event                | name             | chunk                           | input                                         | output                                          |
    * +======================+==================+=================================+===============================================+=================================================+
@@ -780,6 +794,7 @@ export abstract class Runnable<
    * +----------------------+------------------+---------------------------------+-----------------------------------------------+-------------------------------------------------+
    * | on_prompt_end        | [template_name]  |                                 | {"question": "hello"}                         | ChatPromptValue(messages: [SystemMessage, ...]) |
    * +----------------------+------------------+---------------------------------+-----------------------------------------------+-------------------------------------------------+
+   * ```
    *
    * The "on_chain_*" events are the default for Runnables that don't fit one of the above categories.
    *
@@ -789,6 +804,7 @@ export abstract class Runnable<
    *
    * A custom event has following format:
    *
+   * ```md
    * +-----------+------+-----------------------------------------------------------------------------------------------------------+
    * | Attribute | Type | Description                                                                                               |
    * +===========+======+===========================================================================================================+
@@ -796,9 +812,10 @@ export abstract class Runnable<
    * +-----------+------+-----------------------------------------------------------------------------------------------------------+
    * | data      | Any  | The data associated with the event. This can be anything, though we suggest making it JSON serializable.  |
    * +-----------+------+-----------------------------------------------------------------------------------------------------------+
+   * ```
    *
    * Here's an example:
-   * @example
+   *
    * ```ts
    * import { RunnableLambda } from "@langchain/core/runnables";
    * import { dispatchCustomEvent } from "@langchain/core/callbacks/dispatch";
@@ -1750,14 +1767,18 @@ export class RunnableSequence<
       const initialSteps = [this.first, ...this.middle];
       for (let i = 0; i < initialSteps.length; i += 1) {
         const step = initialSteps[i];
-        nextStepInput = await step.invoke(
+        const promise = step.invoke(
           nextStepInput,
           patchConfig(config, {
             callbacks: runManager?.getChild(`seq:step:${i + 1}`),
           })
         );
+        nextStepInput = await raceWithSignal(promise, options?.signal);
       }
       // TypeScript can't detect that the last output of the sequence returns RunOutput, so call it out of the loop here
+      if (options?.signal?.aborted) {
+        throw new Error("Aborted");
+      }
       finalOutput = await this.last.invoke(
         nextStepInput,
         patchConfig(config, {
@@ -1819,7 +1840,7 @@ export class RunnableSequence<
     try {
       for (let i = 0; i < this.steps.length; i += 1) {
         const step = this.steps[i];
-        nextStepInputs = await step.batch(
+        const promise = step.batch(
           nextStepInputs,
           runManagers.map((runManager, j) => {
             const childRunManager = runManager?.getChild(`seq:step:${i + 1}`);
@@ -1827,6 +1848,7 @@ export class RunnableSequence<
           }),
           batchOptions
         );
+        nextStepInputs = await raceWithSignal(promise, configList[0]?.signal);
       }
     } catch (e) {
       await Promise.all(
@@ -1880,6 +1902,7 @@ export class RunnableSequence<
         );
       }
       for await (const chunk of finalGenerator) {
+        options?.signal?.throwIfAborted();
         yield chunk;
         if (concatSupported) {
           if (finalOutput === undefined) {
@@ -2058,16 +2081,17 @@ export class RunnableMap<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const output: Record<string, any> = {};
     try {
-      await Promise.all(
-        Object.entries(this.steps).map(async ([key, runnable]) => {
+      const promises = Object.entries(this.steps).map(
+        async ([key, runnable]) => {
           output[key] = await runnable.invoke(
             input,
             patchConfig(config, {
               callbacks: runManager?.getChild(`map:key:${key}`),
             })
           );
-        })
+        }
       );
+      await raceWithSignal(Promise.all(promises), options?.signal);
     } catch (e) {
       await runManager?.handleChainError(e);
       throw e;
@@ -2101,7 +2125,11 @@ export class RunnableMap<
     // starting new iterations as needed,
     // until all iterators are done
     while (tasks.size) {
-      const { key, result, gen } = await Promise.race(tasks.values());
+      const promise = Promise.race(tasks.values());
+      const { key, result, gen } = await raceWithSignal(
+        promise,
+        options?.signal
+      );
       tasks.delete(key);
       if (!result.done) {
         yield { [key]: result.value } as unknown as RunOutput;
@@ -2172,21 +2200,24 @@ export class RunnableTraceable<RunInput, RunOutput> extends Runnable<
   async invoke(input: RunInput, options?: Partial<RunnableConfig>) {
     const [config] = this._getOptionsList(options ?? {}, 1);
     const callbacks = await getCallbackManagerForConfig(config);
-
-    return (await this.func(
+    const promise = this.func(
       patchConfig(config, { callbacks }),
       input
-    )) as RunOutput;
+    ) as Promise<RunOutput>;
+
+    return raceWithSignal(promise, config?.signal);
   }
 
   async *_streamIterator(
     input: RunInput,
     options?: Partial<RunnableConfig>
   ): AsyncGenerator<RunOutput> {
+    const [config] = this._getOptionsList(options ?? {}, 1);
     const result = await this.invoke(input, options);
 
     if (isAsyncIterable(result)) {
       for await (const item of result) {
+        config?.signal?.throwIfAborted();
         yield item as RunOutput;
       }
       return;
@@ -2194,6 +2225,7 @@ export class RunnableTraceable<RunInput, RunOutput> extends Runnable<
 
     if (isIterator(result)) {
       while (true) {
+        config?.signal?.throwIfAborted();
         const state: IteratorResult<unknown> = result.next();
         if (state.done) break;
         yield state.value as RunOutput;
@@ -2320,6 +2352,7 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
                 childConfig,
                 output
               )) {
+                config?.signal?.throwIfAborted();
                 if (finalOutput === undefined) {
                   finalOutput = chunk as RunOutput;
                 } else {
@@ -2339,6 +2372,7 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
                 childConfig,
                 output
               )) {
+                config?.signal?.throwIfAborted();
                 if (finalOutput === undefined) {
                   finalOutput = chunk as RunOutput;
                 } else {
@@ -2423,10 +2457,12 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
         childConfig,
         output
       )) {
+        config?.signal?.throwIfAborted();
         yield chunk as RunOutput;
       }
     } else if (isIterableIterator(output)) {
       for (const chunk of consumeIteratorInContext(childConfig, output)) {
+        config?.signal?.throwIfAborted();
         yield chunk as RunOutput;
       }
     } else {
@@ -2466,6 +2502,22 @@ export class RunnableParallel<RunInput> extends RunnableMap<RunInput> {}
 
 /**
  * A Runnable that can fallback to other Runnables if it fails.
+ * External APIs (e.g., APIs for a language model) may at times experience
+ * degraded performance or even downtime.
+ *
+ * In these cases, it can be useful to have a fallback Runnable that can be
+ * used in place of the original Runnable (e.g., fallback to another LLM provider).
+ *
+ * Fallbacks can be defined at the level of a single Runnable, or at the level
+ * of a chain of Runnables. Fallbacks are tried in order until one succeeds or
+ * all fail.
+ *
+ * While you can instantiate a `RunnableWithFallbacks` directly, it is usually
+ * more convenient to use the `withFallbacks` method on an existing Runnable.
+ *
+ * When streaming, fallbacks will only be called on failures during the initial
+ * stream creation. Errors that occur after a stream starts will not fallback
+ * to the next Runnable.
  */
 export class RunnableWithFallbacks<RunInput, RunOutput> extends Runnable<
   RunInput,
@@ -2517,6 +2569,7 @@ export class RunnableWithFallbacks<RunInput, RunOutput> extends Runnable<
     );
     let firstError;
     for (const runnable of this.runnables()) {
+      config?.signal?.throwIfAborted();
       try {
         const output = await runnable.invoke(
           input,
@@ -2535,6 +2588,61 @@ export class RunnableWithFallbacks<RunInput, RunOutput> extends Runnable<
     }
     await runManager?.handleChainError(firstError);
     throw firstError;
+  }
+
+  async *_streamIterator(
+    input: RunInput,
+    options?: Partial<RunnableConfig> | undefined
+  ): AsyncGenerator<RunOutput> {
+    const config = ensureConfig(options);
+    const callbackManager_ = await getCallbackManagerForConfig(options);
+    const { runId, ...otherConfigFields } = config;
+    const runManager = await callbackManager_?.handleChainStart(
+      this.toJSON(),
+      _coerceToDict(input, "input"),
+      runId,
+      undefined,
+      undefined,
+      undefined,
+      otherConfigFields?.runName
+    );
+    let firstError;
+    let stream;
+    for (const runnable of this.runnables()) {
+      config?.signal?.throwIfAborted();
+      const childConfig = patchConfig(otherConfigFields, {
+        callbacks: runManager?.getChild(),
+      });
+      try {
+        stream = await runnable.stream(input, childConfig);
+        break;
+      } catch (e) {
+        if (firstError === undefined) {
+          firstError = e;
+        }
+      }
+    }
+    if (stream === undefined) {
+      const error =
+        firstError ?? new Error("No error stored at end of fallback.");
+      await runManager?.handleChainError(error);
+      throw error;
+    }
+    let output;
+    try {
+      for await (const chunk of stream) {
+        yield chunk;
+        try {
+          output = output === undefined ? output : concat(output, chunk);
+        } catch (e) {
+          output = undefined;
+        }
+      }
+    } catch (e) {
+      await runManager?.handleChainError(e);
+      throw e;
+    }
+    await runManager?.handleChainEnd(_coerceToDict(output, "output"));
   }
 
   async batch(
@@ -2586,6 +2694,7 @@ export class RunnableWithFallbacks<RunInput, RunOutput> extends Runnable<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let firstError: any;
     for (const runnable of this.runnables()) {
+      configList[0].signal?.throwIfAborted();
       try {
         const outputs = await runnable.batch(
           inputs,
