@@ -745,6 +745,8 @@ const DEPRECATED_DOC_IDS = [
   "integrations/chat/baidu_wenxin",
   "integrations/chat/google_palm",
   "integrations/chat/ni_bittensor",
+  "integrations/chat/ollama_functions",
+  "integrations/chat/prompt_layer_openai",
   "integrations/llms/google_palm",
   "integrations/llms/ni_bittensor",
   "integrations/llms/prompt_layer_openai",
