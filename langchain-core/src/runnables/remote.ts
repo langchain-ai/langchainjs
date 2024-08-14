@@ -282,7 +282,7 @@ export class RemoteRunnable<
   private options?: RemoteRunnableOptions;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  fetchImplementation: (...args: any[]) => any = fetch;
+  fetchImplementation: (...args: any[]) => any = (args) => fetch(args);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   fetchRequestOptions?: Record<string, any>;
