@@ -11,13 +11,11 @@ You are currently on a page documenting the use of [text completion models](/doc
 Unless you are specifically using more advanced prompting techniques, you are probably looking for [this page instead](/docs/integrations/chat/).
 :::
 
-## Features (natively supported)
+[LLMs](docs/concepts/#llms) are Language models that takes a string as input and returns a string. These are generally older models (newer models generally are chat models, see above).
 
-All LLMs implement the Runnable interface, which comes with default implementations of all methods, ie. `invoke`, `batch`, `stream`, `map`. This gives all LLMs basic support for invoking, streaming, batching and mapping requests, which by default is implemented as below:
-
-- _Streaming_ support defaults to returning an `AsyncIterator` of a single value, the final result returned by the underlying LLM provider. This obviously doesn't give you token-by-token streaming, which requires native support from the LLM provider, but ensures your code that expects an iterator of tokens can work for any of our LLM integrations.
-- _Batch_ support defaults to calling the underlying LLM in parallel for each input. The concurrency can be controlled with the `maxConcurrency` key in `RunnableConfig`.
-- _Map_ support defaults to calling `.invoke` across all instances of the array which it was called on.
+:::info
+If you'd like to write your own LLM, see [this how-to](/docs/how_to/custom_llm). If you'd like to contribute an integration, see [Contributing integrations](/docs/contributing).
+:::
 
 ## All LLMs
 

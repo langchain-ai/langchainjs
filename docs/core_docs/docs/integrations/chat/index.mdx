@@ -6,18 +6,13 @@ hide_table_of_contents: true
 
 # Chat models
 
-## Features (natively supported)
+[Chat models](/docs/concepts/#chat-models) are language models that use a sequence of [messages](/docs/concepts/#messages) as inputs and return messages as outputs (as opposed to using plain text). These are generally newer models.
 
-All [Chat models](/docs/concepts/#chat-models) come with default implementations of all methods, ie. `invoke`, `batch`, `stream`. This gives all chat models basic support for invoking, streaming and batching, which by default is implemented as below:
+:::info
+If you'd like to write your own chat model, see [this how-to](/docs/how_to/custom_chat). If you'd like to contribute an integration, see [Contributing integrations](/docs/contributing).
+:::
 
-- _Streaming_ support defaults to returning an `AsyncIterator` of a single value, the final result returned by the underlying model provider. Note that this doesn't give you token-by-token streaming, which requires native support from the model provider, but ensures your code that expects an iterator of tokens can work for any of our model integrations.
-- _Batch_ support defaults to calling the underlying model in parallel for each input. You can control the concurrency with a `maxConcurrency` runtime param.
-
-Additionally, some chat models support additional ways of guaranteeing structure in their outputs by allowing you to pass in a defined schema.
-[Tool calling](/docs/how_to/tool_calling) (tool calling) is one capability, and allows you to use the chat model as the LLM in certain types of agents.
-Some models in LangChain have also implemented a `withStructuredOutput()` method that unifies many of these different ways of constraining output to a schema.
-
-The table shows, for each integration, which features have been implemented with native support. Yellow circles (🟡) indicates partial support - for example, if the model supports tool calling but not tool messages for agents.
+## Featured providers
 
 | Model                                                                    | Stream | JSON mode | [Tool Calling](/docs/how_to/tool_calling/) | [`withStructuredOutput()`](/docs/how_to/structured_output/#the-.withstructuredoutput-method) | [Multimodal](/docs/how_to/multimodal_inputs/) |
 | :----------------------------------------------------------------------- | :----: | :-------: | :----------------------------------------: | :------------------------------------------------------------------------------------------: | :-------------------------------------------: |
