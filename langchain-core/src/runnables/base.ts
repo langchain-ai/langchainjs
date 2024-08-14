@@ -912,7 +912,7 @@ export abstract class Runnable<
     const outerThis = this;
     async function consumeRunnableStream() {
       try {
-        const runnableStream = await outerThis.streamEvents(input, config);
+        const runnableStream = await outerThis.stream(input, config);
         const tappedStream = eventStreamer.tapOutputIterable(
           runId,
           runnableStream
