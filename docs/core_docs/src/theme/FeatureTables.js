@@ -1,3 +1,5 @@
+/* eslint-disable import/no-extraneous-dependencies */
+/* eslint-disable prefer-template */
 import React from "react";
 import { useCurrentSidebarCategory } from "@docusaurus/theme-common";
 import { useDocById } from "@docusaurus/theme-common/internal";
@@ -738,6 +740,20 @@ const FEATURE_TABLES = {
   },
 };
 
+const DEPRECATED_DOC_IDS = [
+  "integrations/chat/anthropic_tools",
+  "integrations/chat/baidu_wenxin",
+  "integrations/chat/google_palm",
+  "integrations/chat/ni_bittensor",
+  "integrations/llms/google_palm",
+  "integrations/llms/ni_bittensor",
+  "integrations/llms/prompt_layer_openai",
+  "integrations/text_embedding/google_palm",
+  "integrations/retrievers/chatgpt-retriever-plugin",
+  "integrations/tools/aiplugin-tool",
+  "integrations/tools/zapier_agent",
+];
+
 function toTable(columns, items) {
   const headers = columns.map((col) => col.title);
   return (
@@ -745,14 +761,17 @@ function toTable(columns, items) {
       <thead>
         <tr>
           {headers.map((header, i) => (
+            // eslint-disable-next-line react/no-array-index-key
             <th key={`header-${i}`}>{header}</th>
           ))}
         </tr>
       </thead>
       <tbody>
         {items.map((item, i) => (
+          // eslint-disable-next-line react/no-array-index-key
           <tr key={`row-${i}`}>
             {columns.map((col, j) => (
+              // eslint-disable-next-line react/no-array-index-key
               <td key={`cell-${i}-${j}`}>{col.formatter(item)}</td>
             ))}
           </tr>
@@ -786,15 +805,20 @@ export function IndexTable() {
   const { items } = useCurrentSidebarCategory();
 
   const rows = items
-    .filter((item) => !item.docId?.endsWith?.("/index"))
+    .filter(
+      (item) =>
+        !item.docId?.endsWith?.("/index") &&
+        !DEPRECATED_DOC_IDS.includes(item.docId)
+    )
     .map((item) => ({
       ...item,
+      // eslint-disable-next-line react-hooks/rules-of-hooks
       description: useDocById(item.docId ?? undefined)?.description,
     }));
   const rtn = toTable(
     [
       {
-        title: "Label",
+        title: "Name",
         formatter: (item) => <a href={item.href}>{item.label}</a>,
       },
       {
