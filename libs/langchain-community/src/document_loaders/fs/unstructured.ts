@@ -114,6 +114,8 @@ export type UnstructuredLoaderOptions = {
   newAfterNChars?: number;
   maxCharacters?: number;
   extractImageBlockTypes?: string[];
+  overlap?: number;
+  overlapAll?: boolean;
 };
 
 export type UnstructuredDirectoryLoaderOptions = UnstructuredLoaderOptions & {
@@ -181,6 +183,10 @@ export class UnstructuredLoader extends BaseDocumentLoader {
 
   private extractImageBlockTypes?: string[];
 
+  private overlap?: number;
+
+  private overlapAll?: boolean;
+
   constructor(
     filepathOrBufferOptions: string | UnstructuredMemoryLoaderOptions,
     unstructuredOptions: UnstructuredLoaderOptions | string = {}
@@ -225,6 +231,8 @@ export class UnstructuredLoader extends BaseDocumentLoader {
       this.newAfterNChars = options.newAfterNChars;
       this.maxCharacters = options.maxCharacters;
       this.extractImageBlockTypes = options.extractImageBlockTypes;
+      this.overlap = options.overlap;
+      this.overlapAll = options.overlapAll ?? false;
     }
   }
 
@@ -297,6 +305,14 @@ export class UnstructuredLoader extends BaseDocumentLoader {
         "extract_image_block_types",
         JSON.stringify(this.extractImageBlockTypes)
       );
+    }
+
+    if (this.overlap !== undefined) {
+      formData.append("overlap", String(this.overlap));
+    }
+    
+    if (this.overlapAll === true) {
+      formData.append("overlap_all", "true");
     }
 
     const headers = {
