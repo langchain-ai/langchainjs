@@ -5,6 +5,7 @@ import {
   RecordMetadata,
   PineconeRecord,
   Index as PineconeIndex,
+  ScoredPineconeRecord,
 } from "@pinecone-database/pinecone";
 
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
@@ -399,6 +400,41 @@ export class PineconeStore extends VectorStore {
       ...options,
     });
     return results;
+  }
+
+  /**
+   * Format the matching results from the Pinecone query.
+   * @param matches Matching results from the Pinecone query.
+   * @returns An array of arrays, where each inner array contains a document and its score.
+   */
+  private _formatMatches(matches: ScoredPineconeRecord<RecordMetadata>[] = []): [Document, number][] {
+    const documentsWithScores: [Document, number][] = [];
+    
+    for (const record of matches) {
+      const {
+        id,
+        score,
+        metadata: {
+          [this.textKey]: pageContent,
+          ...metadata
+        } = {
+          [this.textKey]: "",
+        },
+      } = record;
+      
+      if (score) {
+        documentsWithScores.push([
+          new Document({
+            id,
+            pageContent: pageContent.toString(),
+            metadata,
+          }),
+          score,
+        ]);
+      }
+    }
+    
+    return documentsWithScores;
   }
 
   /**
