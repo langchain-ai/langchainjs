@@ -483,7 +483,7 @@ export class PineconeStore extends VectorStore {
       { includeValues: true }
     );
 
-    const matches = results?.matches ?? [];
+    const { matches = [] } = results;
     const embeddingList = matches.map((match) => match.values);
 
     const mmrIndexes = maximalMarginalRelevance(
@@ -494,17 +494,8 @@ export class PineconeStore extends VectorStore {
     );
 
     const topMmrMatches = mmrIndexes.map((idx) => matches[idx]);
-
-    const finalResult: Document[] = [];
-    for (const res of topMmrMatches) {
-      const { [this.textKey]: pageContent, ...metadata } = (res.metadata ??
-        {}) as PineconeMetadata;
-      if (res.score) {
-        finalResult.push(new Document({ metadata, pageContent }));
-      }
-    }
-
-    return finalResult;
+    const records = this._formatMatches(topMmrMatches);
+    return records.map(([doc, _score]) => doc);
   }
 
   /**
