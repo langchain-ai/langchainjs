@@ -168,7 +168,10 @@ export interface GoogleGenerativeAIChatInput
   /** Whether to stream the results or not */
   streaming?: boolean;
 
-  /** Whether the response will be json or not */
+  /**
+   * Whether or not to force the model to respond with JSON.
+   * @default false
+   */
   json?: boolean;
 }
 
@@ -247,7 +250,6 @@ export class ChatGoogleGenerativeAI
 
   streamUsage = true;
 
-  json = false
 
   private client: GenerativeModel;
 
@@ -315,7 +317,6 @@ export class ChatGoogleGenerativeAI
 
     this.streaming = fields?.streaming ?? this.streaming;
 
-    this.json = fields?.json ?? false
 
     this.client = new GenerativeAI(this.apiKey).getGenerativeModel(
       {
@@ -328,7 +329,7 @@ export class ChatGoogleGenerativeAI
           temperature: this.temperature,
           topP: this.topP,
           topK: this.topK,
-          ...this.json ? { responseMimeType: "application/json" } : {}
+          ...fields?.json ? { responseMimeType: "application/json" } : {}
         },
       },
       {
