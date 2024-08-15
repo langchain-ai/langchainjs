@@ -126,13 +126,13 @@ export interface AnthropicInput {
   /** Anthropic API URL */
   anthropicApiUrl?: string;
 
+  /** @deprecated Use "model" instead */
+  modelName?: string;
   /** Model name to use */
-  modelName: string;
-  /** Model name to use */
-  model: string;
+  model?: string;
 
   /** Overridable Anthropic ClientOptions */
-  clientOptions: ClientOptions;
+  clientOptions?: ClientOptions;
 
   /** Holds any additional parameters that are valid to pass to {@link
    * https://console.anthropic.com/docs/api/reference |
@@ -611,7 +611,7 @@ export class ChatAnthropicMessages<
 
   streamUsage = true;
 
-  constructor(fields?: Partial<AnthropicInput> & BaseChatModelParams) {
+  constructor(fields?: AnthropicInput & BaseChatModelParams) {
     super(fields ?? {});
 
     this.anthropicApiKey =

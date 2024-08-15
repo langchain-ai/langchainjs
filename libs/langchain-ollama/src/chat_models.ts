@@ -82,22 +82,301 @@ export interface ChatOllamaInput
 }
 
 /**
- * Integration with the Ollama SDK.
+ * Ollama chat model integration.
  *
- * @example
+ * Setup:
+ * Install `@langchain/ollama` and the Ollama app.
+ *
+ * ```bash
+ * npm install @langchain/ollama
+ * ```
+ *
+ * ## [Constructor args](https://api.js.langchain.com/classes/_langchain_ollama.ChatOllama.html#constructor)
+ *
+ * ## [Runtime args](https://api.js.langchain.com/interfaces/_langchain_ollama.ChatOllamaCallOptions.html)
+ *
+ * Runtime args can be passed as the second argument to any of the base runnable methods `.invoke`. `.stream`, `.batch`, etc.
+ * They can also be passed via `.bind`, or the second arg in `.bindTools`, like shown in the examples below:
+ *
  * ```typescript
- * import { ChatOllama } from "@langchain/ollama";
- *
- * const model = new ChatOllama({
- *   model: "llama3", // Default model.
+ * // When calling `.bind`, call options should be passed via the first argument
+ * const llmWithArgsBound = llm.bind({
+ *   stop: ["\n"],
+ *   tools: [...],
  * });
  *
- * const result = await model.invoke([
- *   "human",
- *   "What is a good name for a company that makes colorful socks?",
- * ]);
+ * // When calling `.bindTools`, call options should be passed via the second argument
+ * const llmWithTools = llm.bindTools(
+ *   [...],
+ *   {
+ *     tool_choice: "auto",
+ *   }
+ * );
+ * ```
+ *
+ * ## Examples
+ *
+ * <details open>
+ * <summary><strong>Instantiate</strong></summary>
+ *
+ * ```typescript
+ * import { ChatOllama } from '@langchain/ollama';
+ *
+ * const llm = new ChatOllama({
+ *   model: "llama-3.1:8b",
+ *   temperature: 0,
+ *   // other params...
+ * });
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Invoking</strong></summary>
+ *
+ * ```typescript
+ * const input = `Translate "I love programming" into French.`;
+ *
+ * // Models also accept a list of chat messages or a formatted prompt
+ * const result = await llm.invoke(input);
  * console.log(result);
  * ```
+ *
+ * ```txt
+ * AIMessage {
+ *   "content": "The translation of \"I love programming\" into French is:\n\n\"J'adore programmer.\"",
+ *   "additional_kwargs": {},
+ *   "response_metadata": {
+ *     "model": "llama3.1:8b",
+ *     "created_at": "2024-08-12T22:12:23.09468Z",
+ *     "done_reason": "stop",
+ *     "done": true,
+ *     "total_duration": 3715571291,
+ *     "load_duration": 35244375,
+ *     "prompt_eval_count": 19,
+ *     "prompt_eval_duration": 3092116000,
+ *     "eval_count": 20,
+ *     "eval_duration": 585789000
+ *   },
+ *   "tool_calls": [],
+ *   "invalid_tool_calls": [],
+ *   "usage_metadata": {
+ *     "input_tokens": 19,
+ *     "output_tokens": 20,
+ *     "total_tokens": 39
+ *   }
+ * }
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Streaming Chunks</strong></summary>
+ *
+ * ```typescript
+ * for await (const chunk of await llm.stream(input)) {
+ *   console.log(chunk);
+ * }
+ * ```
+ *
+ * ```txt
+ * AIMessageChunk {
+ *   "content": "The",
+ *   "additional_kwargs": {},
+ *   "response_metadata": {},
+ *   "tool_calls": [],
+ *   "tool_call_chunks": [],
+ *   "invalid_tool_calls": []
+ * }
+ * AIMessageChunk {
+ *   "content": " translation",
+ *   "additional_kwargs": {},
+ *   "response_metadata": {},
+ *   "tool_calls": [],
+ *   "tool_call_chunks": [],
+ *   "invalid_tool_calls": []
+ * }
+ * AIMessageChunk {
+ *   "content": " of",
+ *   "additional_kwargs": {},
+ *   "response_metadata": {},
+ *   "tool_calls": [],
+ *   "tool_call_chunks": [],
+ *   "invalid_tool_calls": []
+ * }
+ * AIMessageChunk {
+ *   "content": " \"",
+ *   "additional_kwargs": {},
+ *   "response_metadata": {},
+ *   "tool_calls": [],
+ *   "tool_call_chunks": [],
+ *   "invalid_tool_calls": []
+ * }
+ * AIMessageChunk {
+ *   "content": "I",
+ *   "additional_kwargs": {},
+ *   "response_metadata": {},
+ *   "tool_calls": [],
+ *   "tool_call_chunks": [],
+ *   "invalid_tool_calls": []
+ * }
+ * ...
+ * AIMessageChunk {
+ *   "content": "",
+ *   "additional_kwargs": {},
+ *   "response_metadata": {},
+ *   "tool_calls": [],
+ *   "tool_call_chunks": [],
+ *   "invalid_tool_calls": []
+ * }
+ * AIMessageChunk {
+ *   "content": "",
+ *   "additional_kwargs": {},
+ *   "response_metadata": {
+ *     "model": "llama3.1:8b",
+ *     "created_at": "2024-08-12T22:13:22.22423Z",
+ *     "done_reason": "stop",
+ *     "done": true,
+ *     "total_duration": 8599883208,
+ *     "load_duration": 35975875,
+ *     "prompt_eval_count": 19,
+ *     "prompt_eval_duration": 7918195000,
+ *     "eval_count": 20,
+ *     "eval_duration": 643569000
+ *   },
+ *   "tool_calls": [],
+ *   "tool_call_chunks": [],
+ *   "invalid_tool_calls": [],
+ *   "usage_metadata": {
+ *     "input_tokens": 19,
+ *     "output_tokens": 20,
+ *     "total_tokens": 39
+ *   }
+ * }
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Bind tools</strong></summary>
+ *
+ * ```typescript
+ * import { z } from 'zod';
+ *
+ * const GetWeather = {
+ *   name: "GetWeather",
+ *   description: "Get the current weather in a given location",
+ *   schema: z.object({
+ *     location: z.string().describe("The city and state, e.g. San Francisco, CA")
+ *   }),
+ * }
+ *
+ * const GetPopulation = {
+ *   name: "GetPopulation",
+ *   description: "Get the current population in a given location",
+ *   schema: z.object({
+ *     location: z.string().describe("The city and state, e.g. San Francisco, CA")
+ *   }),
+ * }
+ *
+ * const llmWithTools = llm.bindTools([GetWeather, GetPopulation]);
+ * const aiMsg = await llmWithTools.invoke(
+ *   "Which city is hotter today and which is bigger: LA or NY?"
+ * );
+ * console.log(aiMsg.tool_calls);
+ * ```
+ *
+ * ```txt
+ * [
+ *   {
+ *     name: 'GetWeather',
+ *     args: { location: 'Los Angeles, CA' },
+ *     id: '49410cad-2163-415e-bdcd-d26938a9c8c5',
+ *     type: 'tool_call'
+ *   },
+ *   {
+ *     name: 'GetPopulation',
+ *     args: { location: 'New York, NY' },
+ *     id: '39e230e4-63ec-4fae-9df0-21c3abe735ad',
+ *     type: 'tool_call'
+ *   }
+ * ]
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Structured Output</strong></summary>
+ *
+ * ```typescript
+ * import { z } from 'zod';
+ *
+ * const Joke = z.object({
+ *   setup: z.string().describe("The setup of the joke"),
+ *   punchline: z.string().describe("The punchline to the joke"),
+ *   rating: z.number().optional().describe("How funny the joke is, from 1 to 10")
+ * }).describe('Joke to tell user.');
+ *
+ * const structuredLlm = llm.withStructuredOutput(Joke, { name: "Joke" });
+ * const jokeResult = await structuredLlm.invoke("Tell me a joke about cats");
+ * console.log(jokeResult);
+ * ```
+ *
+ * ```txt
+ * {
+ *   punchline: 'Why did the cat join a band? Because it wanted to be the purr-cussionist!',
+ *   rating: 8,
+ *   setup: 'A cat walks into a music store and asks the owner...'
+ * }
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Usage Metadata</strong></summary>
+ *
+ * ```typescript
+ * const aiMsgForMetadata = await llm.invoke(input);
+ * console.log(aiMsgForMetadata.usage_metadata);
+ * ```
+ *
+ * ```txt
+ * { input_tokens: 19, output_tokens: 20, total_tokens: 39 }
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Response Metadata</strong></summary>
+ *
+ * ```typescript
+ * const aiMsgForResponseMetadata = await llm.invoke(input);
+ * console.log(aiMsgForResponseMetadata.response_metadata);
+ * ```
+ *
+ * ```txt
+ * {
+ *   model: 'llama3.1:8b',
+ *   created_at: '2024-08-12T22:17:42.274795Z',
+ *   done_reason: 'stop',
+ *   done: true,
+ *   total_duration: 6767071209,
+ *   load_duration: 31628209,
+ *   prompt_eval_count: 19,
+ *   prompt_eval_duration: 6124504000,
+ *   eval_count: 20,
+ *   eval_duration: 608785000
+ * }
+ * ```
+ * </details>
+ *
+ * <br />
  */
 export class ChatOllama
   extends BaseChatModel<ChatOllamaCallOptions, AIMessageChunk>

@@ -211,9 +211,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@anthropic-ai/sdk@npm:^0.22.0":
-  version: 0.22.0
-  resolution: "@anthropic-ai/sdk@npm:0.22.0"
+"@anthropic-ai/sdk@npm:^0.25.2":
+  version: 0.25.2
+  resolution: "@anthropic-ai/sdk@npm:0.25.2"
   dependencies:
     "@types/node": ^18.11.18
     "@types/node-fetch": ^2.6.4
@@ -222,8 +222,7 @@ __metadata:
     form-data-encoder: 1.7.2
     formdata-node: ^4.3.2
     node-fetch: ^2.6.7
-    web-streams-polyfill: ^3.2.1
-  checksum: f09fc6ea1f5f68483fd2dbdc1ab78a0914d7a3f39fd4a921f5a04b8959ae82aa210372fa2dbff2ee78143d37fb408e7b7d61e0023e7ea31d5fa1f4873f371af8
+  checksum: b38f6a43f6f678e49f1b53226cc55654c23cf0fd1902cf3fcf98c0ae78f4c229518964f4cb31bc39da41925c806e7f4cc7ec14c511d387f07db3136b111bc744
   languageName: node
   linkType: hard
 
@@ -10852,7 +10851,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@langchain/anthropic@workspace:libs/langchain-anthropic"
   dependencies:
-    "@anthropic-ai/sdk": ^0.22.0
+    "@anthropic-ai/sdk": ^0.25.2
     "@jest/globals": ^29.5.0
     "@langchain/core": ">=0.2.21 <0.3.0"
     "@langchain/scripts": ~0.0.20
@@ -20482,13 +20481,15 @@ __metadata:
     autoprefixer: ^10.0.1
     eslint: ^8
     eslint-config-next: 14.0.1
+    glob: ^10.3.10
     next: 14.0.1
     postcss: ^8
     prettier: ^2.8.3
     react: ^18
     react-dom: ^18
     tailwindcss: ^3.3.0
-    typedoc: ^0.26.0
+    ts-morph: ^23.0.0
+    typedoc: ^0.26.1
     typedoc-plugin-expand-object-like-types: ^0.1.2
     typescript: ~5.1.6
   languageName: unknown
@@ -41151,9 +41152,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typedoc@npm:^0.26.0":
-  version: 0.26.3
-  resolution: "typedoc@npm:0.26.3"
+"typedoc@npm:^0.26.1":
+  version: 0.26.5
+  resolution: "typedoc@npm:0.26.5"
   dependencies:
     lunr: ^2.3.9
     markdown-it: ^14.1.0
@@ -41164,7 +41165,7 @@ __metadata:
     typescript: 4.6.x || 4.7.x || 4.8.x || 4.9.x || 5.0.x || 5.1.x || 5.2.x || 5.3.x || 5.4.x || 5.5.x
   bin:
     typedoc: bin/typedoc
-  checksum: 3e4fc7cbd455e2adf591b4d01f191fa9518e56a4a2ee659ba1d4d221902656dc1f3572a726443b91bb3586bb485e783d924670f7a9087602153ef04ea2dcbd82
+  checksum: 0587096c2b91536249d3aa9cc5e83a43086e318006ddeadc3c21c424d10a934b6bc19c56fda682d16a75f8133eb2730f54adace79996adeec89188fe331594c3
   languageName: node
   linkType: hard
 

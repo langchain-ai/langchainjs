@@ -6,40 +6,32 @@ hide_table_of_contents: true
 
 # Chat models
 
-## Features (natively supported)
+[Chat models](/docs/concepts/#chat-models) are language models that use a sequence of [messages](/docs/concepts/#messages) as inputs and return messages as outputs (as opposed to using plain text). These are generally newer models.
 
-All ChatModels implement the Runnable interface, which comes with default implementations of all methods, ie. `invoke`, `batch`, `stream`. This gives all ChatModels basic support for invoking, streaming and batching, which by default is implemented as below:
+:::info
+If you'd like to write your own chat model, see [this how-to](/docs/how_to/custom_chat). If you'd like to contribute an integration, see [Contributing integrations](/docs/contributing).
+:::
 
-- _Streaming_ support defaults to returning an `AsyncIterator` of a single value, the final result returned by the underlying ChatModel provider. This obviously doesn't give you token-by-token streaming, which requires native support from the ChatModel provider, but ensures your code that expects an iterator of tokens can work for any of our ChatModel integrations.
-- _Batch_ support defaults to calling the underlying ChatModel in parallel for each input. The concurrency can be controlled with the `maxConcurrency` key in `RunnableConfig`.
+## Featured providers
 
-Each ChatModel integration can optionally provide native implementations to truly enable invoke, streaming or batching requests.
+| Model                                                                    | Stream | JSON mode | [Tool Calling](/docs/how_to/tool_calling/) | [`withStructuredOutput()`](/docs/how_to/structured_output/#the-.withstructuredoutput-method) | [Multimodal](/docs/how_to/multimodal_inputs/) |
+| :----------------------------------------------------------------------- | :----: | :-------: | :----------------------------------------: | :------------------------------------------------------------------------------------------: | :-------------------------------------------: |
+| [BedrockChat](/docs/integrations/chat/bedrock/)                          |   ✅   |    ❌     |        🟡 (Bedrock Anthropic only)         |                                 🟡 (Bedrock Anthropic only)                                  |          🟡 (Bedrock Anthropic only)          |
+| [ChatBedrockConverse](/docs/integrations/chat/bedrock_converse/)         |   ✅   |    ❌     |                     ✅                     |                                              ✅                                              |                      ✅                       |
+| [ChatAnthropic](/docs/integrations/chat/anthropic/)                      |   ✅   |    ❌     |                     ✅                     |                                              ✅                                              |                      ✅                       |
+| [ChatCloudflareWorkersAI](/docs/integrations/chat/cloudflare_workersai/) |   ✅   |    ❌     |                     ❌                     |                                              ❌                                              |                      ❌                       |
+| [ChatCohere](/docs/integrations/chat/cohere/)                            |   ✅   |    ❌     |                     ✅                     |                                              ✅                                              |                      ✅                       |
+| [ChatFireworks](/docs/integrations/chat/fireworks/)                      |   ✅   |    ✅     |                     ✅                     |                                              ✅                                              |                      ✅                       |
+| [ChatGoogleGenerativeAI](/docs/integrations/chat/google_generativeai/)   |   ✅   |    ❌     |                     ✅                     |                                              ✅                                              |                      ✅                       |
+| [ChatVertexAI](/docs/integrations/chat/google_vertex_ai/)                |   ✅   |    ❌     |                     ✅                     |                                              ✅                                              |                      ✅                       |
+| [ChatGroq](/docs/integrations/chat/groq/)                                |   ✅   |    ✅     |                     ✅                     |                                              ✅                                              |                      ✅                       |
+| [ChatMistralAI](/docs/integrations/chat/mistral/)                        |   ✅   |    ✅     |                     ✅                     |                                              ✅                                              |                      ✅                       |
+| [ChatOllama](/docs/integrations/chat/ollama/)                            |   ✅   |    ✅     |                     ✅                     |                                              ✅                                              |                      ✅                       |
+| [ChatOpenAI](/docs/integrations/chat/openai/)                            |   ✅   |    ✅     |                     ✅                     |                                              ✅                                              |                      ✅                       |
+| [ChatTogetherAI](/docs/integrations/chat/togetherai/)                    |   ✅   |    ✅     |                     ✅                     |                                              ✅                                              |                      ✅                       |
 
-Additionally, some chat models support additional ways of guaranteeing structure in their outputs by allowing you to pass in a defined schema.
-[Tool calling](/docs/how_to/tool_calling) (tool calling) is one capability, and allows you to use the chat model as the LLM in certain types of agents.
-Some models in LangChain have also implemented a `withStructuredOutput()` method that unifies many of these different ways of constraining output to a schema.
+## All chat models
 
-The table shows, for each integration, which features have been implemented with native support. Yellow circles (🟡) indicates partial support - for example, if the model supports tool calling but not tool messages for agents.
+import { IndexTable } from "@theme/FeatureTables";
 
-| Model                   | Stream | JSON mode | [Tool Calling](/docs/how_to/tool_calling/) | [`withStructuredOutput()`](/docs/how_to/structured_output/#the-.withstructuredoutput-method) | [Multimodal](/docs/how_to/multimodal_inputs/) |
-| :---------------------- | :----: | :-------: | :----------------------------------------: | :------------------------------------------------------------------------------------------: | :-------------------------------------------: |
-| BedrockChat             |   ✅   |    ❌     |        🟡 (Bedrock Anthropic only)         |                                 🟡 (Bedrock Anthropic only)                                  |          🟡 (Bedrock Anthropic only)          |
-| ChatBedrockConverse     |   ✅   |    ❌     |                     ✅                     |                                              ✅                                              |                      ✅                       |
-| ChatAlibabaTongyi       |   ❌   |    ❌     |                     ❌                     |                                              ❌                                              |                      ❌                       |
-| ChatAnthropic           |   ✅   |    ❌     |                     ✅                     |                                              ✅                                              |                      ✅                       |
-| ChatBaiduWenxin         |   ❌   |    ❌     |                     ❌                     |                                              ❌                                              |                      ❌                       |
-| ChatCloudflareWorkersAI |   ✅   |    ❌     |                     ❌                     |                                              ❌                                              |                      ❌                       |
-| ChatCohere              |   ✅   |    ❌     |                     ✅                     |                                              ✅                                              |                      ✅                       |
-| ChatFireworks           |   ✅   |    ✅     |                     ✅                     |                                              ✅                                              |                      ✅                       |
-| ChatGoogleGenerativeAI  |   ✅   |    ❌     |                     ✅                     |                                              ✅                                              |                      ✅                       |
-| ChatVertexAI            |   ✅   |    ❌     |                     ✅                     |                                              ✅                                              |                      ✅                       |
-| ChatGroq                |   ✅   |    ✅     |                     ✅                     |                                              ✅                                              |                      ✅                       |
-| ChatLlamaCpp            |   ✅   |    ❌     |                     ❌                     |                                              ❌                                              |                      ❌                       |
-| ChatMinimax             |   ❌   |    ❌     |                     ❌                     |                                              ❌                                              |                      ❌                       |
-| ChatMistralAI           |   ❌   |    ✅     |                     ✅                     |                                              ✅                                              |                      ✅                       |
-| ChatOllama              |   ✅   |    ✅     |                     ✅                     |                                              ✅                                              |                      ✅                       |
-| ChatOpenAI              |   ✅   |    ✅     |                     ✅                     |                                              ✅                                              |                      ✅                       |
-| ChatTencentHunyuan      |   ✅   |    ❌     |                     ❌                     |                                              ❌                                              |                      ❌                       |
-| ChatTogetherAI          |   ✅   |    ✅     |                     ✅                     |                                              ✅                                              |                      ✅                       |
-| ChatYandexGPT           |   ❌   |    ❌     |                     ❌                     |                                              ❌                                              |                      ❌                       |
-| ChatZhipuAI             |   ❌   |    ❌     |                     ❌                     |                                              ❌                                              |                      ❌                       |
+<IndexTable />
