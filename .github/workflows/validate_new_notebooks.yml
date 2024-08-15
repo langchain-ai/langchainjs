@@ -52,6 +52,8 @@ jobs:
           if [ -n "$notebooks" ]; then
             for notebook in $notebooks; do
               absolute_path="$GITHUB_WORKSPACE/$notebook"
+              echo "$(ls -a)"
+              echo "$(pwd)"
               echo "Validating $absolute_path"
               yarn notebook:validate "$absolute_path"
             done
