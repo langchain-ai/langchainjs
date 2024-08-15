@@ -1,5 +1,5 @@
-import * as fs from "node:fs";
-import * as ts from "typescript";
+import fs from "node:fs";
+import ts from "typescript";
 import { Project } from "ts-morph";
 
 export function extract(filepath: string) {
@@ -62,16 +62,13 @@ export function extract(filepath: string) {
   return sourceFile.getFullText();
 }
 
-let [pathname, ...args] = process.argv.slice(2);
+let [pathname] = process.argv.slice(2);
 
 if (!pathname) {
   throw new Error("No pathname provided.");
 }
 
 const run = async () => {
-  if (pathname.startsWith("docs/core_docs/")) {
-    pathname = "./" + pathname.slice("docs/core_docs/".length);
-  }
   if (!pathname.endsWith(".ipynb")) {
     throw new Error("Only .ipynb files are supported.");
   }

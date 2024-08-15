@@ -15,7 +15,8 @@
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-scripts/",
   "bin": {
     "lc-build": "bin/build.js",
-    "lc_build_v2": "bin/build_v2.js"
+    "lc_build_v2": "bin/build_v2.js",
+    "notebook_validate": "bin/validate_notebook.js"
   },
   "scripts": {
     "build": "yarn turbo:command build:internal --filter=@langchain/scripts",
@@ -35,7 +36,8 @@
     "test:int": "NODE_OPTIONS=--experimental-vm-modules jest --testPathPattern=\\.int\\.test.ts --testTimeout 100000 --maxWorkers=50%",
     "format": "prettier --write \"src\"",
     "format:check": "prettier --check \"src\"",
-    "create:integration:doc": "node dist/cli/docs/index.js"
+    "create:integration:doc": "node dist/cli/docs/index.js",
+    "notebook:validate": "node dist/validate_notebook.js"
   },
   "author": "LangChain",
   "license": "MIT",
