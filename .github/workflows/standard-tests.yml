@@ -33,7 +33,7 @@ jobs:
           BEDROCK_AWS_ACCESS_KEY_ID: ${{ secrets.BEDROCK_AWS_ACCESS_KEY_ID }}
           BEDROCK_AWS_SECRET_ACCESS_KEY: ${{ secrets.BEDROCK_AWS_SECRET_ACCESS_KEY }}
           BEDROCK_AWS_REGION: "us-east-1"
-          GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
+          GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}
 
   # The `@langchain/openai` package contains standard tests for ChatOpenAI and AzureChatOpenAI
   # We want to run these separately, so we need to pass the exact path for each test, which means

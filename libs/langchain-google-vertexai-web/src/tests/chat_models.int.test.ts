@@ -36,7 +36,11 @@ class WeatherTool extends StructuredTool {
 
 describe("Google APIKey Chat", () => {
   test("invoke", async () => {
-    const model = new ChatVertexAI();
+    const model = new ChatVertexAI({
+      authOptions: {
+        credentials: JSON.parse(process.env.GOOGLE_VERTEX_AI_WEB_CREDENTIALS ?? ""),
+      }
+    });
     const res = await model.invoke("What is 1 + 1?");
     // console.log(res);
     expect(res).toBeDefined();
