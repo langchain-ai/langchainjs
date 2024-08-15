@@ -281,8 +281,13 @@ export class RemoteRunnable<
 
   private options?: RemoteRunnableOptions;
 
+  // Wrap the default fetch call due to issues with illegal invocations
+  // from the browser:
+  // https://stackoverflow.com/questions/69876859/why-does-bind-fix-failed-to-execute-fetch-on-window-illegal-invocation-err
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  fetchImplementation: (...args: any[]) => any = fetch;
+  fetchImplementation: (...args: any[]) => any = (...args: any[]) =>
+    // @ts-expect-error Broad typing to support a range of fetch implementations
+    fetch(...args);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   fetchRequestOptions?: Record<string, any>;
