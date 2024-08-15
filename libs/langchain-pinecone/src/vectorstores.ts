@@ -450,20 +450,10 @@ export class PineconeStore extends VectorStore {
     k: number,
     filter?: PineconeMetadata
   ): Promise<[Document, number][]> {
-    const results = await this._runPineconeQuery(query, k, filter);
-    const result: [Document, number][] = [];
-
-    if (results.matches) {
-      for (const res of results.matches) {
-        const { [this.textKey]: pageContent, ...metadata } = (res.metadata ??
-          {}) as PineconeMetadata;
-        if (res.score) {
-          result.push([new Document({ metadata, pageContent }), res.score]);
-        }
-      }
-    }
-
-    return result;
+    const { matches = [] } = await this._runPineconeQuery(query, k, filter);
+    const records = this._formatMatches(matches);
+    
+    return records;
   }
 
   /**
