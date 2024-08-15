@@ -24,7 +24,7 @@ class ChatVertexAIStandardIntegrationTests extends ChatModelIntegrationTests<
         model: "gemini-1.5-pro",
         authOptions: {
           credentials: JSON.parse(process.env.GOOGLE_VERTEX_AI_WEB_CREDENTIALS),
-        }
+        },
       },
     });
   }
