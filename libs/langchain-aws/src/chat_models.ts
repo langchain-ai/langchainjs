@@ -817,7 +817,9 @@ export class ChatBedrockConverse
       system: converseSystem,
       ...params,
     });
-    const response = await this.client.send(command);
+    const response = await this.client.send(command, {
+      abortSignal: options.signal,
+    });
     const { output, ...responseMetadata } = response;
     if (!output?.message) {
       throw new Error("No message found in Bedrock response.");
@@ -855,7 +857,9 @@ export class ChatBedrockConverse
       system: converseSystem,
       ...params,
     });
-    const response = await this.client.send(command);
+    const response = await this.client.send(command, {
+      abortSignal: options.signal,
+    });
     if (response.stream) {
       for await (const chunk of response.stream) {
         if (chunk.contentBlockStart) {
