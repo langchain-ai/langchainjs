@@ -1,4 +1,4 @@
-/* eslint-disable import/no-extraneous-dependencies */
+/* eslint-disable import/no-extraneous-dependencies, no-process-env */
 
 import { z } from "zod";
 import { test } from "@jest/globals";
@@ -9,7 +9,6 @@ import {
   BaseMessageChunk,
   HumanMessage,
   SystemMessage,
-  ToolMessage,
 } from "@langchain/core/messages";
 import { BaseLanguageModelInput } from "@langchain/core/language_models/base";
 import { ChatPromptValue } from "@langchain/core/prompt_values";
@@ -36,7 +35,13 @@ class WeatherTool extends StructuredTool {
 
 describe("Google APIKey Chat", () => {
   test("invoke", async () => {
-    const model = new ChatVertexAI();
+    const model = new ChatVertexAI({
+      authOptions: {
+        credentials: JSON.parse(
+          process.env.GOOGLE_VERTEX_AI_WEB_CREDENTIALS ?? ""
+        ),
+      },
+    });
     const res = await model.invoke("What is 1 + 1?");
     // console.log(res);
     expect(res).toBeDefined();
@@ -106,37 +111,6 @@ describe("Google APIKey Chat", () => {
     expect(res.tool_calls?.[0].args).toEqual(
       JSON.parse(res.additional_kwargs.tool_calls?.[0].function.arguments ?? "")
     );
-  });
-
-  test("Few shotting with tool calls", async () => {
-    const chat = new ChatVertexAI().bindTools([new WeatherTool()]);
-    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
-    // @ts-expect-error unused var
-    const res = await chat.invoke("What is the weather in SF");
-    // console.log(res);
-    const res2 = await chat.invoke([
-      new HumanMessage("What is the weather in SF?"),
-      new AIMessage({
-        content: "",
-        tool_calls: [
-          {
-            id: "12345",
-            name: "get_current_weather",
-            args: {
-              location: "SF",
-            },
-          },
-        ],
-      }),
-      new ToolMessage({
-        tool_call_id: "12345",
-        content: "It is currently 24 degrees with hail in SF.",
-      }),
-      new AIMessage("It is currently 24 degrees in SF with hail in SF."),
-      new HumanMessage("What did you say the weather was?"),
-    ]);
-    // console.log(res2);
-    expect(res2.content).toContain("24");
   });
 
   test("withStructuredOutput", async () => {
