@@ -1,6 +1,6 @@
 {
   "name": "@langchain/community",
-  "version": "0.2.27",
+  "version": "0.2.28",
   "description": "Third-party integrations for LangChain.js",
   "type": "module",
   "engines": {
@@ -293,7 +293,7 @@
     "faiss-node": "^0.5.1",
     "firebase-admin": "^11.9.0 || ^12.0.0",
     "google-auth-library": "*",
-    "googleapis": "^126.0.1",
+    "googleapis": "*",
     "hnswlib-node": "^3.0.0",
     "html-to-text": "^9.0.5",
     "ignore": "^5.2.0",

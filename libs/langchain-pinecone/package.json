@@ -1,6 +1,6 @@
 {
   "name": "@langchain/pinecone",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "description": "LangChain integration for Pinecone's vector database",
   "type": "module",
   "engines": {
