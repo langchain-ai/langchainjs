@@ -1,6 +1,6 @@
 import { test, expect } from "@jest/globals";
 import { z } from "zod";
-import { DynamicStructuredTool, tool } from "../index.js";
+import { DynamicStructuredTool, DynamicTool, tool } from "../index.js";
 import { ToolMessage } from "../../messages/tool.js";
 
 test("Tool should error if responseFormat is content_and_artifact but the function doesn't return a tuple", async () => {
@@ -128,7 +128,11 @@ test("Tool declared with JSON schema", async () => {
     required: ["location"],
   };
   const weatherTool = tool(
-    (_) => {
+    (input) => {
+      // even without validation expect input to be passed
+      expect(input).toEqual({
+        somethingSilly: true,
+      });
       return "Sunny";
     },
     {
@@ -136,15 +140,21 @@ test("Tool declared with JSON schema", async () => {
       schema: weatherSchema,
     }
   );
+  expect(weatherTool).toBeInstanceOf(DynamicStructuredTool);
 
   const weatherTool2 = new DynamicStructuredTool({
     name: "weather",
     description: "get the weather",
-    func: async (_) => {
+    func: async (input) => {
+      // even without validation expect input to be passed
+      expect(input).toEqual({
+        somethingSilly: true,
+      });
       return "Sunny";
     },
     schema: weatherSchema,
   });
+
   // No validation on JSON schema tools
   await weatherTool.invoke({
     somethingSilly: true,
