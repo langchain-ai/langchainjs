@@ -52,10 +52,14 @@ jobs:
           if [ -n "$notebooks" ]; then
             for notebook in $notebooks; do
               absolute_path="$GITHUB_WORKSPACE/$notebook"
-              echo "$(ls -a)"
-              echo "$(pwd)"
-              echo "Validating $absolute_path"
-              yarn notebook:validate "$absolute_path"
+              echo "Checking if $absolute_path exists"
+              if [ -f "$absolute_path" ]; then
+                echo "Validating $absolute_path"
+                yarn notebook:validate "$absolute_path"
+              else
+                echo "Error: $absolute_path does not exist"
+                exit 1
+              fi
             done
           else
             echo "No notebooks in docs/core_docs to validate."
