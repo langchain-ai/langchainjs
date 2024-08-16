@@ -5,6 +5,7 @@ import {
   RecordMetadata,
   PineconeRecord,
   Index as PineconeIndex,
+  ScoredPineconeRecord,
 } from "@pinecone-database/pinecone";
 
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
@@ -402,6 +403,40 @@ export class PineconeStore extends VectorStore {
   }
 
   /**
+   * Format the matching results from the Pinecone query.
+   * @param matches Matching results from the Pinecone query.
+   * @returns An array of arrays, where each inner array contains a document and its score.
+   */
+  private _formatMatches(
+    matches: ScoredPineconeRecord<RecordMetadata>[] = []
+  ): [Document, number][] {
+    const documentsWithScores: [Document, number][] = [];
+
+    for (const record of matches) {
+      const {
+        id,
+        score,
+        metadata: { [this.textKey]: pageContent, ...metadata } = {
+          [this.textKey]: "",
+        },
+      } = record;
+
+      if (score) {
+        documentsWithScores.push([
+          new Document({
+            id,
+            pageContent: pageContent.toString(),
+            metadata,
+          }),
+          score,
+        ]);
+      }
+    }
+
+    return documentsWithScores;
+  }
+
+  /**
    * Method that performs a similarity search in the Pinecone database and
    * returns the results along with their scores.
    * @param query Query vector for the similarity search.
@@ -414,20 +449,10 @@ export class PineconeStore extends VectorStore {
     k: number,
     filter?: PineconeMetadata
   ): Promise<[Document, number][]> {
-    const results = await this._runPineconeQuery(query, k, filter);
-    const result: [Document, number][] = [];
+    const { matches = [] } = await this._runPineconeQuery(query, k, filter);
+    const records = this._formatMatches(matches);
 
-    if (results.matches) {
-      for (const res of results.matches) {
-        const { [this.textKey]: pageContent, ...metadata } = (res.metadata ??
-          {}) as PineconeMetadata;
-        if (res.score) {
-          result.push([new Document({ metadata, pageContent }), res.score]);
-        }
-      }
-    }
-
-    return result;
+    return records;
   }
 
   /**
@@ -457,7 +482,7 @@ export class PineconeStore extends VectorStore {
       { includeValues: true }
     );
 
-    const matches = results?.matches ?? [];
+    const { matches = [] } = results;
     const embeddingList = matches.map((match) => match.values);
 
     const mmrIndexes = maximalMarginalRelevance(
@@ -468,17 +493,8 @@ export class PineconeStore extends VectorStore {
     );
 
     const topMmrMatches = mmrIndexes.map((idx) => matches[idx]);
-
-    const finalResult: Document[] = [];
-    for (const res of topMmrMatches) {
-      const { [this.textKey]: pageContent, ...metadata } = (res.metadata ??
-        {}) as PineconeMetadata;
-      if (res.score) {
-        finalResult.push(new Document({ metadata, pageContent }));
-      }
-    }
-
-    return finalResult;
+    const records = this._formatMatches(topMmrMatches);
+    return records.map(([doc, _score]) => doc);
   }
 
   /**
