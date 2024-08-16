@@ -70,11 +70,6 @@ if (!pathname) {
 }
 
 const run = async () => {
-  console.log({
-    pathname,
-    processCwd: process.cwd(),
-  });
-
   if (!pathname.endsWith(".ipynb")) {
     throw new Error("Only .ipynb files are supported.");
   }
