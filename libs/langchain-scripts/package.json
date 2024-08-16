@@ -1,6 +1,6 @@
 {
   "name": "@langchain/scripts",
-  "version": "0.0.20",
+  "version": "0.0.21",
   "description": "Shared scripts for LangChain.js",
   "type": "module",
   "engines": {
