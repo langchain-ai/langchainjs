@@ -407,21 +407,20 @@ export class PineconeStore extends VectorStore {
    * @param matches Matching results from the Pinecone query.
    * @returns An array of arrays, where each inner array contains a document and its score.
    */
-  private _formatMatches(matches: ScoredPineconeRecord<RecordMetadata>[] = []): [Document, number][] {
+  private _formatMatches(
+    matches: ScoredPineconeRecord<RecordMetadata>[] = []
+  ): [Document, number][] {
     const documentsWithScores: [Document, number][] = [];
-    
+
     for (const record of matches) {
       const {
         id,
         score,
-        metadata: {
-          [this.textKey]: pageContent,
-          ...metadata
-        } = {
+        metadata: { [this.textKey]: pageContent, ...metadata } = {
           [this.textKey]: "",
         },
       } = record;
-      
+
       if (score) {
         documentsWithScores.push([
           new Document({
@@ -433,7 +432,7 @@ export class PineconeStore extends VectorStore {
         ]);
       }
     }
-    
+
     return documentsWithScores;
   }
 
@@ -452,7 +451,7 @@ export class PineconeStore extends VectorStore {
   ): Promise<[Document, number][]> {
     const { matches = [] } = await this._runPineconeQuery(query, k, filter);
     const records = this._formatMatches(matches);
-    
+
     return records;
   }
 
