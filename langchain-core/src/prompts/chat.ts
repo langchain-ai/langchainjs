@@ -10,7 +10,6 @@ import {
   ChatMessage,
   type BaseMessageLike,
   coerceMessageLikeToMessage,
-  isBaseMessage,
   MessageContent,
 } from "../messages/index.js";
 import {
@@ -729,10 +728,7 @@ function _coerceMessagePromptTemplateLike<
   messagePromptTemplateLike: BaseMessagePromptTemplateLike,
   extra?: Extra
 ): BaseMessagePromptTemplate | BaseMessage {
-  if (
-    _isBaseMessagePromptTemplate(messagePromptTemplateLike) ||
-    isBaseMessage(messagePromptTemplateLike)
-  ) {
+  if (_isBaseMessagePromptTemplate(messagePromptTemplateLike)) {
     return messagePromptTemplateLike;
   }
   if (
@@ -1118,9 +1114,7 @@ export class ChatPromptTemplate<
       // eslint-disable-next-line no-instanceof/no-instanceof
       if (promptMessage instanceof BaseMessage) continue;
       for (const inputVariable of promptMessage.inputVariables) {
-        if (inputVariable in flattenedPartialVariables) {
-          continue;
-        }
+        if (inputVariable in flattenedPartialVariables) continue;
         inputVariables.add(inputVariable);
       }
     }

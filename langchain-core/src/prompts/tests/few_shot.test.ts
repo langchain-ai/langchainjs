@@ -125,7 +125,7 @@ An example about bar
   });
 });
 
-describe("FewShotChatMessagePromptTemplate", () => {
+describe.only("FewShotChatMessagePromptTemplate", () => {
   test("Format messages", async () => {
     const examplePrompt = ChatPromptTemplate.fromMessages([
       ["ai", "{ai_input_var}"],
@@ -252,4 +252,63 @@ An example about bar
 `
     );
   });
+
+  test("Can format messages with complex contents", async () => {
+    const examplePrompt = ChatPromptTemplate.fromMessages([
+      new AIMessage({
+        content: [{
+          type: "text",
+          text: "{ai_input_var}",
+        }]
+      }),
+      new HumanMessage({
+        content: [{
+          type: "text",
+          text: "{human_input_var}",
+        }]
+      }),
+    ]);
+    const examples = [
+      {
+        ai_input_var: "ai-foo",
+        human_input_var: "human-bar",
+      },
+      {
+        ai_input_var: "ai-foo2",
+        human_input_var: "human-bar2",
+      },
+    ];
+    const prompt = new FewShotChatMessagePromptTemplate({
+      examplePrompt,
+      inputVariables: ["ai_input_var", "human_input_var"],
+      examples,
+    });
+    const messages = await prompt.formatMessages({});
+    expect(messages).toEqual([
+      new AIMessage({
+        content: [{
+          type: "text",
+          text: "ai-foo",
+        }]
+      }),
+      new HumanMessage({
+        content: [{
+          type: "text",
+          text: "human-bar",
+        }]
+      }),
+      new AIMessage({
+        content: [{
+          type: "text",
+          text: "ai-foo2",
+        }]
+      }),
+      new HumanMessage({
+        content: [{
+          type: "text",
+          text: "human-bar2",
+        }]
+      }),
+    ]);
+  })
 });
