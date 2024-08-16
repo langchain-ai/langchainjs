@@ -11,6 +11,7 @@ import {
   type BaseMessageLike,
   coerceMessageLikeToMessage,
   MessageContent,
+  isBaseMessage,
 } from "../messages/index.js";
 import {
   type ChatPromptValueInterface,
@@ -731,6 +732,16 @@ function _coerceMessagePromptTemplateLike<
   if (_isBaseMessagePromptTemplate(messagePromptTemplateLike)) {
     return messagePromptTemplateLike;
   }
+  const allowedCoercionMessageTypes = ["system", "ai", "human", "generic"];
+  // Do not coerce if it's an instance of `BaseMessage` AND it's not one of the allowed message types.
+  if (
+    isBaseMessage(messagePromptTemplateLike) &&
+    !allowedCoercionMessageTypes.includes(messagePromptTemplateLike._getType())
+  ) {
+    console.log("Returning", messagePromptTemplateLike._getType())
+    return messagePromptTemplateLike;
+  }
+
   if (
     Array.isArray(messagePromptTemplateLike) &&
     messagePromptTemplateLike[0] === "placeholder"
