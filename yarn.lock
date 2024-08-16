@@ -11793,7 +11793,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/google-gauth@workspace:libs/langchain-google-gauth, @langchain/google-gauth@~0.0.25, @langchain/google-gauth@~0.0.26":
+"@langchain/google-gauth@workspace:libs/langchain-google-gauth, @langchain/google-gauth@~0.0.26":
   version: 0.0.0-use.local
   resolution: "@langchain/google-gauth@workspace:libs/langchain-google-gauth"
   dependencies:
@@ -11826,18 +11826,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/google-genai@npm:^0.0.25":
-  version: 0.0.25
-  resolution: "@langchain/google-genai@npm:0.0.25"
-  dependencies:
-    "@google/generative-ai": ^0.7.0
-    "@langchain/core": ">=0.2.21 <0.3.0"
-    zod-to-json-schema: ^3.22.4
-  checksum: 0119986f3f2c128c6eabf93ddc818fcc53773e91cc58154e416cbe9cefe15586e24776f21ca08d3a029701df1a1b8c45ce2c53c5d552a6df4566e08604e5bca9
-  languageName: node
-  linkType: hard
-
-"@langchain/google-genai@workspace:*, @langchain/google-genai@workspace:libs/langchain-google-genai":
+"@langchain/google-genai@^0.0.26, @langchain/google-genai@workspace:*, @langchain/google-genai@workspace:libs/langchain-google-genai":
   version: 0.0.0-use.local
   resolution: "@langchain/google-genai@workspace:libs/langchain-google-genai"
   dependencies:
@@ -11904,17 +11893,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/google-vertexai@npm:^0.0.25":
-  version: 0.0.25
-  resolution: "@langchain/google-vertexai@npm:0.0.25"
-  dependencies:
-    "@langchain/core": ">=0.2.21 <0.3.0"
-    "@langchain/google-gauth": ~0.0.25
-  checksum: 8ffc55b8d7a797277780cdab1851db606889e1063420c6a01f95b2c9b98f8a5708250c55bb25a8fb74b2052b4b83c8a63283f9a4c0ba769f86bacfcab22b3f50
-  languageName: node
-  linkType: hard
-
-"@langchain/google-vertexai@workspace:*, @langchain/google-vertexai@workspace:libs/langchain-google-vertexai":
+"@langchain/google-vertexai@^0.0.26, @langchain/google-vertexai@workspace:*, @langchain/google-vertexai@workspace:libs/langchain-google-vertexai":
   version: 0.0.0-use.local
   resolution: "@langchain/google-vertexai@workspace:libs/langchain-google-vertexai"
   dependencies:
@@ -32070,8 +32049,8 @@ __metadata:
     "@langchain/aws": ^0.0.5
     "@langchain/cohere": ^0.2.1
     "@langchain/core": ">=0.2.21 <0.3.0"
-    "@langchain/google-genai": ^0.0.25
-    "@langchain/google-vertexai": ^0.0.25
+    "@langchain/google-genai": ^0.0.26
+    "@langchain/google-vertexai": ^0.0.26
     "@langchain/groq": ^0.0.15
     "@langchain/mistralai": ^0.0.26
     "@langchain/ollama": ^0.0.2
