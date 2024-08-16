@@ -27,7 +27,7 @@
     "broken-links": "node ./scripts/check-broken-links.js",
     "check:broken-links": "yarn quarto && yarn broken-links",
     "check:broken-links:ci": "yarn quarto:vercel && yarn broken-links",
-    "validate": "tsx --experimental-wasm-modules -r dotenv/config ./scripts/validate_notebook.ts"
+    "validate": "yarn notebook_validate"
   },
   "dependencies": {
     "@docusaurus/core": "2.4.3",
