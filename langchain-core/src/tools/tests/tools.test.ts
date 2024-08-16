@@ -1,6 +1,6 @@
 import { test, expect } from "@jest/globals";
 import { z } from "zod";
-import { DynamicStructuredTool, DynamicTool, tool } from "../index.js";
+import { DynamicStructuredTool, tool } from "../index.js";
 import { ToolMessage } from "../../messages/tool.js";
 
 test("Tool should error if responseFormat is content_and_artifact but the function doesn't return a tuple", async () => {
