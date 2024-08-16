@@ -11826,7 +11826,18 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/google-genai@^0.0.25, @langchain/google-genai@workspace:*, @langchain/google-genai@workspace:libs/langchain-google-genai":
+"@langchain/google-genai@npm:^0.0.25":
+  version: 0.0.25
+  resolution: "@langchain/google-genai@npm:0.0.25"
+  dependencies:
+    "@google/generative-ai": ^0.7.0
+    "@langchain/core": ">=0.2.21 <0.3.0"
+    zod-to-json-schema: ^3.22.4
+  checksum: 0119986f3f2c128c6eabf93ddc818fcc53773e91cc58154e416cbe9cefe15586e24776f21ca08d3a029701df1a1b8c45ce2c53c5d552a6df4566e08604e5bca9
+  languageName: node
+  linkType: hard
+
+"@langchain/google-genai@workspace:*, @langchain/google-genai@workspace:libs/langchain-google-genai":
   version: 0.0.0-use.local
   resolution: "@langchain/google-genai@workspace:libs/langchain-google-genai"
   dependencies:
