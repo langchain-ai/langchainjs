@@ -519,3 +519,22 @@ test("Invoke token count usage_metadata", async () => {
     res.usage_metadata.input_tokens + res.usage_metadata.output_tokens
   );
 });
+
+test("Invoke with JSON mode", async () => {
+  const model = new ChatGoogleGenerativeAI({
+    model: "gemini-1.5-flash",
+    temperature: 0,
+    maxOutputTokens: 10,
+    json: true,
+  });
+  const res = await model.invoke("Why is the sky blue? Be concise.");
+  expect(res?.usage_metadata).toBeDefined();
+  if (!res?.usage_metadata) {
+    return;
+  }
+  expect(res.usage_metadata.input_tokens).toBeGreaterThan(1);
+  expect(res.usage_metadata.output_tokens).toBeGreaterThan(1);
+  expect(res.usage_metadata.total_tokens).toBe(
+    res.usage_metadata.input_tokens + res.usage_metadata.output_tokens
+  );
+});

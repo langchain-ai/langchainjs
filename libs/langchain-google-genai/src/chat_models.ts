@@ -75,6 +75,8 @@ export interface GoogleGenerativeAIChatInput
   extends BaseChatModelParams,
     Pick<GoogleGenerativeAIChatCallOptions, "streamUsage"> {
   /**
+   * @deprecated Use "model" instead.
+   *
    * Model Name to use
    *
    * Alias for `model`
@@ -170,6 +172,7 @@ export interface GoogleGenerativeAIChatInput
 
   /**
    * Whether or not to force the model to respond with JSON.
+   * Available for `gemini-1.5` models and later.
    * @default false
    */
   json?: boolean;
@@ -250,7 +253,6 @@ export class ChatGoogleGenerativeAI
 
   streamUsage = true;
 
-
   private client: GenerativeModel;
 
   get _isMultimodalModel() {
@@ -317,7 +319,6 @@ export class ChatGoogleGenerativeAI
 
     this.streaming = fields?.streaming ?? this.streaming;
 
-
     this.client = new GenerativeAI(this.apiKey).getGenerativeModel(
       {
         model: this.model,
@@ -329,7 +330,7 @@ export class ChatGoogleGenerativeAI
           temperature: this.temperature,
           topP: this.topP,
           topK: this.topK,
-          ...fields?.json ? { responseMimeType: "application/json" } : {}
+          ...(fields?.json ? { responseMimeType: "application/json" } : {}),
         },
       },
       {
