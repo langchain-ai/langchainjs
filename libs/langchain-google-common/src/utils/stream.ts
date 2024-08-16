@@ -252,7 +252,7 @@ export class ReadableJsonStream extends JsonStream {
 
   constructor(body: ReadableStream | null) {
     super();
-    this.decoder = new TextDecoder();
+    this.decoder = new TextDecoder("utf-8");
     if (body) {
       void this.run(body);
     } else {
@@ -266,7 +266,7 @@ export class ReadableJsonStream extends JsonStream {
     while (!isDone) {
       const { value, done } = await reader.read();
       if (!done) {
-        const svalue = this.decoder.decode(value);
+        const svalue = this.decoder.decode(value, { stream: true });
         this.appendBuffer(svalue);
       } else {
         isDone = done;
