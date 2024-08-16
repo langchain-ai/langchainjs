@@ -196,13 +196,18 @@ export abstract class Runnable<
    * @param fields.fallbacks Other runnables to call if the runnable errors.
    * @returns A new RunnableWithFallbacks.
    */
-  withFallbacks(fields: {
-    fallbacks: Runnable<RunInput, RunOutput>[];
-  }): RunnableWithFallbacks<RunInput, RunOutput> {
+  withFallbacks(
+    fields:
+      | {
+          fallbacks: Runnable<RunInput, RunOutput>[];
+        }
+      | Runnable<RunInput, RunOutput>[]
+  ): RunnableWithFallbacks<RunInput, RunOutput> {
+    const fallbacks = Array.isArray(fields) ? fields : fields.fallbacks;
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
     return new RunnableWithFallbacks<RunInput, RunOutput>({
       runnable: this,
-      fallbacks: fields.fallbacks,
+      fallbacks,
     });
   }
 
@@ -755,6 +760,7 @@ export abstract class Runnable<
    *
    * **ATTENTION** This reference table is for the V2 version of the schema.
    *
+   * ```md
    * +----------------------+------------------+---------------------------------+-----------------------------------------------+-------------------------------------------------+
    * | event                | name             | chunk                           | input                                         | output                                          |
    * +======================+==================+=================================+===============================================+=================================================+
@@ -788,6 +794,7 @@ export abstract class Runnable<
    * +----------------------+------------------+---------------------------------+-----------------------------------------------+-------------------------------------------------+
    * | on_prompt_end        | [template_name]  |                                 | {"question": "hello"}                         | ChatPromptValue(messages: [SystemMessage, ...]) |
    * +----------------------+------------------+---------------------------------+-----------------------------------------------+-------------------------------------------------+
+   * ```
    *
    * The "on_chain_*" events are the default for Runnables that don't fit one of the above categories.
    *
@@ -797,6 +804,7 @@ export abstract class Runnable<
    *
    * A custom event has following format:
    *
+   * ```md
    * +-----------+------+-----------------------------------------------------------------------------------------------------------+
    * | Attribute | Type | Description                                                                                               |
    * +===========+======+===========================================================================================================+
@@ -804,9 +812,10 @@ export abstract class Runnable<
    * +-----------+------+-----------------------------------------------------------------------------------------------------------+
    * | data      | Any  | The data associated with the event. This can be anything, though we suggest making it JSON serializable.  |
    * +-----------+------+-----------------------------------------------------------------------------------------------------------+
+   * ```
    *
    * Here's an example:
-   * @example
+   *
    * ```ts
    * import { RunnableLambda } from "@langchain/core/runnables";
    * import { dispatchCustomEvent } from "@langchain/core/callbacks/dispatch";
@@ -2493,6 +2502,22 @@ export class RunnableParallel<RunInput> extends RunnableMap<RunInput> {}
 
 /**
  * A Runnable that can fallback to other Runnables if it fails.
+ * External APIs (e.g., APIs for a language model) may at times experience
+ * degraded performance or even downtime.
+ *
+ * In these cases, it can be useful to have a fallback Runnable that can be
+ * used in place of the original Runnable (e.g., fallback to another LLM provider).
+ *
+ * Fallbacks can be defined at the level of a single Runnable, or at the level
+ * of a chain of Runnables. Fallbacks are tried in order until one succeeds or
+ * all fail.
+ *
+ * While you can instantiate a `RunnableWithFallbacks` directly, it is usually
+ * more convenient to use the `withFallbacks` method on an existing Runnable.
+ *
+ * When streaming, fallbacks will only be called on failures during the initial
+ * stream creation. Errors that occur after a stream starts will not fallback
+ * to the next Runnable.
  */
 export class RunnableWithFallbacks<RunInput, RunOutput> extends Runnable<
   RunInput,
@@ -2563,6 +2588,61 @@ export class RunnableWithFallbacks<RunInput, RunOutput> extends Runnable<
     }
     await runManager?.handleChainError(firstError);
     throw firstError;
+  }
+
+  async *_streamIterator(
+    input: RunInput,
+    options?: Partial<RunnableConfig> | undefined
+  ): AsyncGenerator<RunOutput> {
+    const config = ensureConfig(options);
+    const callbackManager_ = await getCallbackManagerForConfig(options);
+    const { runId, ...otherConfigFields } = config;
+    const runManager = await callbackManager_?.handleChainStart(
+      this.toJSON(),
+      _coerceToDict(input, "input"),
+      runId,
+      undefined,
+      undefined,
+      undefined,
+      otherConfigFields?.runName
+    );
+    let firstError;
+    let stream;
+    for (const runnable of this.runnables()) {
+      config?.signal?.throwIfAborted();
+      const childConfig = patchConfig(otherConfigFields, {
+        callbacks: runManager?.getChild(),
+      });
+      try {
+        stream = await runnable.stream(input, childConfig);
+        break;
+      } catch (e) {
+        if (firstError === undefined) {
+          firstError = e;
+        }
+      }
+    }
+    if (stream === undefined) {
+      const error =
+        firstError ?? new Error("No error stored at end of fallback.");
+      await runManager?.handleChainError(error);
+      throw error;
+    }
+    let output;
+    try {
+      for await (const chunk of stream) {
+        yield chunk;
+        try {
+          output = output === undefined ? output : concat(output, chunk);
+        } catch (e) {
+          output = undefined;
+        }
+      }
+    } catch (e) {
+      await runManager?.handleChainError(e);
+      throw e;
+    }
+    await runManager?.handleChainEnd(_coerceToDict(output, "output"));
   }
 
   async batch(

@@ -75,6 +75,8 @@ export interface GoogleGenerativeAIChatInput
   extends BaseChatModelParams,
     Pick<GoogleGenerativeAIChatCallOptions, "streamUsage"> {
   /**
+   * @deprecated Use "model" instead.
+   *
    * Model Name to use
    *
    * Alias for `model`
@@ -167,6 +169,13 @@ export interface GoogleGenerativeAIChatInput
 
   /** Whether to stream the results or not */
   streaming?: boolean;
+
+  /**
+   * Whether or not to force the model to respond with JSON.
+   * Available for `gemini-1.5` models and later.
+   * @default false
+   */
+  json?: boolean;
 }
 
 /**
@@ -321,6 +330,7 @@ export class ChatGoogleGenerativeAI
           temperature: this.temperature,
           topP: this.topP,
           topK: this.topK,
+          ...(fields?.json ? { responseMimeType: "application/json" } : {}),
         },
       },
       {
@@ -536,7 +546,7 @@ export class ChatGoogleGenerativeAI
       { signal: options?.signal },
       async () => {
         try {
-          return this.client.generateContent(request);
+          return await this.client.generateContent(request);
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (e: any) {
           // TODO: Improve error handling

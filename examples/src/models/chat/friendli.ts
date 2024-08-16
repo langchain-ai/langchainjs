@@ -1,7 +1,7 @@
 import { ChatFriendli } from "@langchain/community/chat_models/friendli";
 
 const model = new ChatFriendli({
-  model: "llama-2-13b-chat", // Default value
+  model: "meta-llama-3-8b-instruct", // Default value
   friendliToken: process.env.FRIENDLI_TOKEN,
   friendliTeam: process.env.FRIENDLI_TEAM,
   maxTokens: 800,

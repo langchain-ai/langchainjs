@@ -1,15 +1,16 @@
-import * as fs from "node:fs";
-import * as ts from "typescript";
+import fs from "node:fs";
+import ts from "typescript";
 import { Project } from "ts-morph";
 
 export function extract(filepath: string) {
-  const cells = JSON.parse(fs.readFileSync(filepath).toString()).cells;
+  const { cells } = JSON.parse(fs.readFileSync(filepath).toString());
   if (cells[0]?.source.includes("lc_docs_skip_validation: true\n")) {
     return "";
   }
   const project = new Project({ useInMemoryFileSystem: true });
   const sourceFile = project.createSourceFile("temp.ts", "");
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   cells.forEach((cell: Record<string, any>) => {
     const source = cell.source
       .join("")
@@ -62,16 +63,13 @@ export function extract(filepath: string) {
   return sourceFile.getFullText();
 }
 
-let [pathname, ...args] = process.argv.slice(2);
+const [pathname] = process.argv.slice(2);
 
 if (!pathname) {
   throw new Error("No pathname provided.");
 }
 
 const run = async () => {
-  if (pathname.startsWith("docs/core_docs/")) {
-    pathname = "./" + pathname.slice("docs/core_docs/".length);
-  }
   if (!pathname.endsWith(".ipynb")) {
     throw new Error("Only .ipynb files are supported.");
   }
@@ -121,6 +119,7 @@ const run = async () => {
       const issues = issueStrings.join("\n");
       console.error(issues);
       const err = new Error("Found type errors in new notebook.");
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (err as any).details = issues;
       throw err;
     }
@@ -134,7 +133,7 @@ const run = async () => {
 };
 
 try {
-  run();
+  void run();
 } catch {
   process.exit(1);
 }

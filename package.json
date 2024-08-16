@@ -1,10 +1,10 @@
 {
   "name": "langchainjs",
-  "version": "0.0.4",
   "private": true,
   "engines": {
     "node": ">=18"
   },
+  "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/",
   "workspaces": [
     "langchain",
     "langchain-core",
@@ -37,7 +37,7 @@
     "test:standard:int": "turbo test:standard:int",
     "test:standard": "yarn test:standard:unit && yarn test:standard:int",
     "example": "yarn workspace examples start",
-    "notebook:validate": "yarn workspace core_docs validate",
+    "notebook:validate": "turbo --filter=@langchain/scripts notebook:validate --",
     "precommit": "turbo precommit",
     "docs": "yarn workspace core_docs start",
     "docs:api_refs": "yarn workspace api_refs start",

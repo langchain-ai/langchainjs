@@ -430,7 +430,7 @@ export class DynamicStructuredTool<
     this.func = fields.func;
     this.returnDirect = fields.returnDirect ?? this.returnDirect;
     this.schema = (
-      isZodSchema(fields.schema) ? fields.schema : z.object({})
+      isZodSchema(fields.schema) ? fields.schema : z.object({}).passthrough()
     ) as T extends ZodObjectAny ? T : ZodObjectAny;
   }
 
@@ -557,7 +557,11 @@ export function tool<
   | DynamicStructuredTool<T extends ZodObjectAny ? T : ZodObjectAny>
   | DynamicTool {
   // If the schema is not provided, or it's a string schema, create a DynamicTool
-  if (!fields.schema || !("shape" in fields.schema) || !fields.schema.shape) {
+  if (
+    !fields.schema ||
+    (isZodSchema(fields.schema) &&
+      (!("shape" in fields.schema) || !fields.schema.shape))
+  ) {
     return new DynamicTool({
       ...fields,
       description:

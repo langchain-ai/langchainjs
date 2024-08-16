@@ -211,9 +211,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@anthropic-ai/sdk@npm:^0.22.0":
-  version: 0.22.0
-  resolution: "@anthropic-ai/sdk@npm:0.22.0"
+"@anthropic-ai/sdk@npm:^0.25.2":
+  version: 0.25.2
+  resolution: "@anthropic-ai/sdk@npm:0.25.2"
   dependencies:
     "@types/node": ^18.11.18
     "@types/node-fetch": ^2.6.4
@@ -222,8 +222,7 @@ __metadata:
     form-data-encoder: 1.7.2
     formdata-node: ^4.3.2
     node-fetch: ^2.6.7
-    web-streams-polyfill: ^3.2.1
-  checksum: f09fc6ea1f5f68483fd2dbdc1ab78a0914d7a3f39fd4a921f5a04b8959ae82aa210372fa2dbff2ee78143d37fb408e7b7d61e0023e7ea31d5fa1f4873f371af8
+  checksum: b38f6a43f6f678e49f1b53226cc55654c23cf0fd1902cf3fcf98c0ae78f4c229518964f4cb31bc39da41925c806e7f4cc7ec14c511d387f07db3136b111bc744
   languageName: node
   linkType: hard
 
@@ -10852,10 +10851,10 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@langchain/anthropic@workspace:libs/langchain-anthropic"
   dependencies:
-    "@anthropic-ai/sdk": ^0.22.0
+    "@anthropic-ai/sdk": ^0.25.2
     "@jest/globals": ^29.5.0
     "@langchain/core": ">=0.2.21 <0.3.0"
-    "@langchain/scripts": ~0.0.20
+    "@langchain/scripts": ^0.0.21
     "@langchain/standard-tests": 0.0.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
@@ -10905,7 +10904,7 @@ __metadata:
     "@aws-sdk/types": ^3.609.0
     "@jest/globals": ^29.5.0
     "@langchain/core": ">=0.2.21 <0.3.0"
-    "@langchain/scripts": ~0.0.20
+    "@langchain/scripts": ^0.0.21
     "@langchain/standard-tests": 0.0.0
     "@smithy/types": ^3.2.0
     "@swc/core": ^1.3.90
@@ -10974,7 +10973,7 @@ __metadata:
     "@azure/identity": ^4.2.1
     "@jest/globals": ^29.5.0
     "@langchain/core": ~0.2
-    "@langchain/scripts": ~0.0.20
+    "@langchain/scripts": ^0.0.21
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -11009,7 +11008,7 @@ __metadata:
     "@azure/openai": 1.0.0-beta.11
     "@jest/globals": ^29.5.0
     "@langchain/core": ">0.1.0 <0.3.0"
-    "@langchain/scripts": ~0.0.20
+    "@langchain/scripts": ^0.0.21
     "@langchain/standard-tests": 0.0.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
@@ -11041,7 +11040,7 @@ __metadata:
     "@jest/globals": ^29.5.0
     "@langchain/core": ">0.1.56 <0.3.0"
     "@langchain/openai": ~0.1.0
-    "@langchain/scripts": ~0.0.20
+    "@langchain/scripts": ^0.0.21
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -11077,7 +11076,7 @@ __metadata:
     "@jest/globals": ^29.5.0
     "@langchain/core": ">0.1.0 <0.3.0"
     "@langchain/langgraph": ~0.0.31
-    "@langchain/scripts": ~0.0.20
+    "@langchain/scripts": ^0.0.21
     "@langchain/standard-tests": 0.0.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
@@ -11115,7 +11114,7 @@ __metadata:
   dependencies:
     "@jest/globals": ^29.5.0
     "@langchain/core": ">=0.2.21 <0.3.0"
-    "@langchain/scripts": ~0.0.20
+    "@langchain/scripts": ^0.0.21
     "@langchain/standard-tests": 0.0.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
@@ -11181,11 +11180,11 @@ __metadata:
     "@jest/globals": ^29.5.0
     "@langchain/core": ">=0.2.21 <0.3.0"
     "@langchain/langgraph": <0.1.0
-    "@langchain/openai": ">=0.1.0 <0.3.0"
-    "@langchain/scripts": ~0.0.20
+    "@langchain/openai": ">=0.2.0 <0.3.0"
+    "@langchain/scripts": ^0.0.21
     "@langchain/standard-tests": 0.0.0
     "@layerup/layerup-security": ^1.5.12
-    "@mendable/firecrawl-js": ^0.0.13
+    "@mendable/firecrawl-js": ^0.0.36
     "@mlc-ai/web-llm": 0.2.46
     "@mozilla/readability": ^0.4.4
     "@neondatabase/serverless": ^0.9.1
@@ -11404,7 +11403,7 @@ __metadata:
     faiss-node: ^0.5.1
     firebase-admin: ^11.9.0 || ^12.0.0
     google-auth-library: "*"
-    googleapis: ^126.0.1
+    googleapis: "*"
     hnswlib-node: ^3.0.0
     html-to-text: ^9.0.5
     ignore: ^5.2.0
@@ -11693,7 +11692,7 @@ __metadata:
   resolution: "@langchain/core@workspace:langchain-core"
   dependencies:
     "@jest/globals": ^29.5.0
-    "@langchain/scripts": ~0.0.20
+    "@langchain/scripts": ^0.0.21
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@types/decamelize": ^1.2.0
@@ -11735,7 +11734,7 @@ __metadata:
   dependencies:
     "@jest/globals": ^29.5.0
     "@langchain/core": ">0.1.0 <0.3.0"
-    "@langchain/scripts": ~0.0.20
+    "@langchain/scripts": ^0.0.21
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -11761,13 +11760,13 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/google-common@workspace:*, @langchain/google-common@workspace:libs/langchain-google-common, @langchain/google-common@~0.0, @langchain/google-common@~0.0.25":
+"@langchain/google-common@workspace:*, @langchain/google-common@workspace:libs/langchain-google-common, @langchain/google-common@~0.0, @langchain/google-common@~0.0.26":
   version: 0.0.0-use.local
   resolution: "@langchain/google-common@workspace:libs/langchain-google-common"
   dependencies:
     "@jest/globals": ^29.5.0
     "@langchain/core": ">=0.2.21 <0.3.0"
-    "@langchain/scripts": ~0.0.20
+    "@langchain/scripts": ^0.0.21
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -11794,14 +11793,14 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/google-gauth@workspace:libs/langchain-google-gauth, @langchain/google-gauth@~0.0.25":
+"@langchain/google-gauth@workspace:libs/langchain-google-gauth, @langchain/google-gauth@~0.0.26":
   version: 0.0.0-use.local
   resolution: "@langchain/google-gauth@workspace:libs/langchain-google-gauth"
   dependencies:
     "@jest/globals": ^29.5.0
     "@langchain/core": ">=0.2.21 <0.3.0"
-    "@langchain/google-common": ~0.0.25
-    "@langchain/scripts": ~0.0.20
+    "@langchain/google-common": ~0.0.26
+    "@langchain/scripts": ^0.0.21
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -11827,14 +11826,14 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/google-genai@^0.0.25, @langchain/google-genai@workspace:*, @langchain/google-genai@workspace:libs/langchain-google-genai":
+"@langchain/google-genai@^0.0.26, @langchain/google-genai@workspace:*, @langchain/google-genai@workspace:libs/langchain-google-genai":
   version: 0.0.0-use.local
   resolution: "@langchain/google-genai@workspace:libs/langchain-google-genai"
   dependencies:
     "@google/generative-ai": ^0.7.0
     "@jest/globals": ^29.5.0
     "@langchain/core": ">=0.2.21 <0.3.0"
-    "@langchain/scripts": ~0.0.20
+    "@langchain/scripts": ^0.0.21
     "@langchain/standard-tests": 0.0.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
@@ -11868,8 +11867,8 @@ __metadata:
   dependencies:
     "@jest/globals": ^29.5.0
     "@langchain/core": ">=0.2.21 <0.3.0"
-    "@langchain/google-webauth": ~0.0.25
-    "@langchain/scripts": ~0.0.20
+    "@langchain/google-webauth": ~0.0.26
+    "@langchain/scripts": ^0.0.21
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -11894,15 +11893,15 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/google-vertexai@^0.0.25, @langchain/google-vertexai@workspace:*, @langchain/google-vertexai@workspace:libs/langchain-google-vertexai":
+"@langchain/google-vertexai@^0.0.26, @langchain/google-vertexai@workspace:*, @langchain/google-vertexai@workspace:libs/langchain-google-vertexai":
   version: 0.0.0-use.local
   resolution: "@langchain/google-vertexai@workspace:libs/langchain-google-vertexai"
   dependencies:
     "@jest/globals": ^29.5.0
     "@langchain/core": ">=0.2.21 <0.3.0"
     "@langchain/google-common": ~0.0
-    "@langchain/google-gauth": ~0.0.25
-    "@langchain/scripts": ~0.0.20
+    "@langchain/google-gauth": ~0.0.26
+    "@langchain/scripts": ^0.0.21
     "@langchain/standard-tests": 0.0.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
@@ -11928,14 +11927,14 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/google-webauth@workspace:libs/langchain-google-webauth, @langchain/google-webauth@~0.0.25":
+"@langchain/google-webauth@workspace:libs/langchain-google-webauth, @langchain/google-webauth@~0.0.26":
   version: 0.0.0-use.local
   resolution: "@langchain/google-webauth@workspace:libs/langchain-google-webauth"
   dependencies:
     "@jest/globals": ^29.5.0
     "@langchain/core": ">=0.2.21 <0.3.0"
-    "@langchain/google-common": ~0.0.25
-    "@langchain/scripts": ~0.0.20
+    "@langchain/google-common": ~0.0.26
+    "@langchain/scripts": ^0.0.21
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -11980,7 +11979,7 @@ __metadata:
     "@jest/globals": ^29.5.0
     "@langchain/core": ">=0.2.21 <0.3.0"
     "@langchain/openai": "workspace:^"
-    "@langchain/scripts": ~0.0.20
+    "@langchain/scripts": ^0.0.21
     "@langchain/standard-tests": 0.0.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
@@ -12076,7 +12075,7 @@ __metadata:
   dependencies:
     "@jest/globals": ^29.5.0
     "@langchain/core": ">=0.2.21 <0.3.0"
-    "@langchain/scripts": ~0.0.20
+    "@langchain/scripts": ^0.0.21
     "@langchain/standard-tests": 0.0.0
     "@mistralai/mistralai": ^0.4.0
     "@swc/core": ^1.3.90
@@ -12111,7 +12110,7 @@ __metadata:
   dependencies:
     "@jest/globals": ^29.5.0
     "@langchain/core": ">=0.2.5 <0.3.0"
-    "@langchain/scripts": ~0.0.20
+    "@langchain/scripts": ^0.0.21
     "@langchain/standard-tests": 0.0.0
     "@mixedbread-ai/sdk": ^2.2.3
     "@swc/core": ^1.3.90
@@ -12145,7 +12144,7 @@ __metadata:
     "@jest/globals": ^29.5.0
     "@langchain/core": ">0.1.0 <0.3.0"
     "@langchain/openai": "workspace:*"
-    "@langchain/scripts": ~0.0.20
+    "@langchain/scripts": ^0.0.21
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -12179,7 +12178,7 @@ __metadata:
     "@jest/globals": ^29.5.0
     "@langchain/core": ">0.1.0 <0.3.0"
     "@langchain/openai": "workspace:^"
-    "@langchain/scripts": ~0.0.20
+    "@langchain/scripts": ^0.0.21
     "@nomic-ai/atlas": ^0.8.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
@@ -12222,7 +12221,7 @@ __metadata:
   dependencies:
     "@jest/globals": ^29.5.0
     "@langchain/core": ">=0.2.21 <0.3.0"
-    "@langchain/scripts": ~0.0.20
+    "@langchain/scripts": ^0.0.21
     "@langchain/standard-tests": 0.0.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
@@ -12251,14 +12250,14 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/openai@>=0.1.0 <0.3.0, @langchain/openai@workspace:*, @langchain/openai@workspace:^, @langchain/openai@workspace:libs/langchain-openai, @langchain/openai@~0.2.4":
+"@langchain/openai@>=0.1.0 <0.3.0, @langchain/openai@>=0.2.0 <0.3.0, @langchain/openai@workspace:*, @langchain/openai@workspace:^, @langchain/openai@workspace:libs/langchain-openai, @langchain/openai@~0.2.4":
   version: 0.0.0-use.local
   resolution: "@langchain/openai@workspace:libs/langchain-openai"
   dependencies:
     "@azure/identity": ^4.2.1
     "@jest/globals": ^29.5.0
     "@langchain/core": ">=0.2.21 <0.3.0"
-    "@langchain/scripts": ~0.0.20
+    "@langchain/scripts": ^0.0.21
     "@langchain/standard-tests": 0.0.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
@@ -12305,7 +12304,7 @@ __metadata:
     "@jest/globals": ^29.5.0
     "@langchain/core": ">0.2.0 <0.3.0"
     "@langchain/openai": "workspace:*"
-    "@langchain/scripts": ~0.0.20
+    "@langchain/scripts": ^0.0.21
     "@pinecone-database/pinecone": ^3.0.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
@@ -12340,7 +12339,7 @@ __metadata:
     "@faker-js/faker": ^8.4.1
     "@jest/globals": ^29.5.0
     "@langchain/core": ">0.1.0 <0.3.0"
-    "@langchain/scripts": ~0.0.20
+    "@langchain/scripts": ^0.0.21
     "@qdrant/js-client-rest": ^1.9.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
@@ -12374,7 +12373,7 @@ __metadata:
     "@faker-js/faker": ^8.4.0
     "@jest/globals": ^29.5.0
     "@langchain/core": ">0.1.0 <0.3.0"
-    "@langchain/scripts": ~0.0.20
+    "@langchain/scripts": ^0.0.21
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -12401,7 +12400,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/scripts@workspace:*, @langchain/scripts@workspace:libs/langchain-scripts, @langchain/scripts@~0.0, @langchain/scripts@~0.0.20":
+"@langchain/scripts@^0.0.21, @langchain/scripts@workspace:*, @langchain/scripts@workspace:libs/langchain-scripts, @langchain/scripts@~0.0":
   version: 0.0.0-use.local
   resolution: "@langchain/scripts@workspace:libs/langchain-scripts"
   dependencies:
@@ -12439,6 +12438,7 @@ __metadata:
   bin:
     lc-build: bin/build.js
     lc_build_v2: bin/build_v2.js
+    notebook_validate: bin/validate_notebook.js
   languageName: unknown
   linkType: soft
 
@@ -12480,7 +12480,7 @@ __metadata:
   dependencies:
     "@jest/globals": ^29.5.0
     "@langchain/core": ">0.2.0 <0.3.0"
-    "@langchain/scripts": ~0.0.20
+    "@langchain/scripts": ^0.0.21
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -12512,7 +12512,7 @@ __metadata:
     "@jest/globals": ^29.5.0
     "@langchain/core": ">0.2.0 <0.3.0"
     "@langchain/openai": "workspace:^"
-    "@langchain/scripts": ~0.0.20
+    "@langchain/scripts": ^0.0.21
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -12546,7 +12546,7 @@ __metadata:
   dependencies:
     "@jest/globals": ^29.5.0
     "@langchain/core": ">0.1.0  <0.3.0"
-    "@langchain/scripts": ~0.0.20
+    "@langchain/scripts": ^0.0.21
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -12701,6 +12701,19 @@ __metadata:
     axios: ^1.6.8
     dotenv: ^16.4.5
   checksum: 9dbc0b6e5d300bb9ef9f45cebd5c0026ac468863984cdc73a57ed6fdf888eaead5f9e2325c6848d03897c72cab195fffb4ce7d832e39696a11216bc53b417b6d
+  languageName: node
+  linkType: hard
+
+"@mendable/firecrawl-js@npm:^0.0.36":
+  version: 0.0.36
+  resolution: "@mendable/firecrawl-js@npm:0.0.36"
+  dependencies:
+    axios: ^1.6.8
+    dotenv: ^16.4.5
+    uuid: ^9.0.1
+    zod: ^3.23.8
+    zod-to-json-schema: ^3.23.0
+  checksum: 93ac8a7d9d25c04d4f618e282c136af06cf7712ec3402922531094c3cdab0e59d6f484a7f583022032eb58f914a0494193f2fd22986edd0f6712a29545edf95a
   languageName: node
   linkType: hard
 
@@ -20469,13 +20482,15 @@ __metadata:
     autoprefixer: ^10.0.1
     eslint: ^8
     eslint-config-next: 14.0.1
+    glob: ^10.3.10
     next: 14.0.1
     postcss: ^8
     prettier: ^2.8.3
     react: ^18
     react-dom: ^18
     tailwindcss: ^3.3.0
-    typedoc: ^0.26.0
+    ts-morph: ^23.0.0
+    typedoc: ^0.26.1
     typedoc-plugin-expand-object-like-types: ^0.1.2
     typescript: ~5.1.6
   languageName: unknown
@@ -26676,7 +26691,7 @@ __metadata:
     "@langchain/pinecone": "workspace:*"
     "@langchain/qdrant": "workspace:*"
     "@langchain/redis": "workspace:*"
-    "@langchain/scripts": ~0.0.20
+    "@langchain/scripts": ^0.0.21
     "@langchain/textsplitters": "workspace:*"
     "@langchain/weaviate": "workspace:*"
     "@langchain/yandex": "workspace:*"
@@ -32035,13 +32050,13 @@ __metadata:
     "@langchain/aws": ^0.0.5
     "@langchain/cohere": ^0.2.1
     "@langchain/core": ">=0.2.21 <0.3.0"
-    "@langchain/google-genai": ^0.0.25
-    "@langchain/google-vertexai": ^0.0.25
+    "@langchain/google-genai": ^0.0.26
+    "@langchain/google-vertexai": ^0.0.26
     "@langchain/groq": ^0.0.15
     "@langchain/mistralai": ^0.0.26
     "@langchain/ollama": ^0.0.2
     "@langchain/openai": ">=0.1.0 <0.3.0"
-    "@langchain/scripts": ~0.0.20
+    "@langchain/scripts": ^0.0.21
     "@langchain/textsplitters": ~0.0.0
     "@mendable/firecrawl-js": ^0.0.13
     "@notionhq/client": ^2.2.10
@@ -41138,9 +41153,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typedoc@npm:^0.26.0":
-  version: 0.26.3
-  resolution: "typedoc@npm:0.26.3"
+"typedoc@npm:^0.26.1":
+  version: 0.26.5
+  resolution: "typedoc@npm:0.26.5"
   dependencies:
     lunr: ^2.3.9
     markdown-it: ^14.1.0
@@ -41151,7 +41166,7 @@ __metadata:
     typescript: 4.6.x || 4.7.x || 4.8.x || 4.9.x || 5.0.x || 5.1.x || 5.2.x || 5.3.x || 5.4.x || 5.5.x
   bin:
     typedoc: bin/typedoc
-  checksum: 3e4fc7cbd455e2adf591b4d01f191fa9518e56a4a2ee659ba1d4d221902656dc1f3572a726443b91bb3586bb485e783d924670f7a9087602153ef04ea2dcbd82
+  checksum: 0587096c2b91536249d3aa9cc5e83a43086e318006ddeadc3c21c424d10a934b6bc19c56fda682d16a75f8133eb2730f54adace79996adeec89188fe331594c3
   languageName: node
   linkType: hard
 

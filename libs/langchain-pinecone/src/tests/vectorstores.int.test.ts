@@ -1,6 +1,7 @@
 /* eslint-disable no-process-env */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 /* eslint-disable no-promise-executor-return */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, expect, test } from "@jest/globals";
 import { faker } from "@faker-js/faker";
 import { Pinecone } from "@pinecone-database/pinecone";
@@ -9,12 +10,14 @@ import { SyntheticEmbeddings } from "@langchain/core/utils/testing";
 import { Document } from "@langchain/core/documents";
 import { PineconeStoreParams, PineconeStore } from "../vectorstores.js";
 
+const PINECONE_SLEEP_LENGTH = 40000;
+
 function sleep(ms: number) {
   // eslint-disable-next-line no-promise-executor-return
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-describe.skip("PineconeStore", () => {
+describe("PineconeStore", () => {
   let pineconeStore: PineconeStore;
   const testIndexName = process.env.PINECONE_INDEX!;
   let namespaces: string[] = [];
@@ -57,22 +60,29 @@ describe.skip("PineconeStore", () => {
       [{ pageContent, metadata: {} }],
       [documentId]
     );
-    await sleep(35000);
+
+    await sleep(PINECONE_SLEEP_LENGTH);
 
     const results = await pineconeStore.similaritySearch(pageContent, 1);
 
-    expect(results).toEqual([new Document({ metadata: {}, pageContent })]);
+    expect(results).toEqual([
+      new Document({ metadata: {}, pageContent, id: documentId }),
+    ]);
 
     await pineconeStore.addDocuments(
       [{ pageContent: `${pageContent} upserted`, metadata: {} }],
       [documentId]
     );
-    await sleep(35000);
+    await sleep(PINECONE_SLEEP_LENGTH);
 
     const results2 = await pineconeStore.similaritySearch(pageContent, 1);
 
     expect(results2).toEqual([
-      new Document({ metadata: {}, pageContent: `${pageContent} upserted` }),
+      new Document({
+        metadata: {},
+        pageContent: `${pageContent} upserted`,
+        id: documentId,
+      }),
     ]);
   });
 
@@ -83,11 +93,15 @@ describe.skip("PineconeStore", () => {
       { pageContent, metadata: { foo: "bar" } },
     ]);
 
-    await sleep(35000);
+    await sleep(PINECONE_SLEEP_LENGTH);
     const results = await pineconeStore.similaritySearch(pageContent, 1);
 
     expect(results).toEqual([
-      new Document({ metadata: { foo: "bar" }, pageContent }),
+      new Document({
+        metadata: { foo: "bar" },
+        pageContent,
+        id: expect.any(String) as any,
+      }),
     ]);
   });
 
@@ -100,14 +114,18 @@ describe.skip("PineconeStore", () => {
       { pageContent, metadata: { foo: id } },
       { pageContent, metadata: { foo: "qux" } },
     ]);
-    await sleep(35000);
+    await sleep(PINECONE_SLEEP_LENGTH);
     // If the filter wasn't working, we'd get all 3 documents back
     const results = await pineconeStore.similaritySearch(pageContent, 3, {
       foo: id,
     });
 
     expect(results).toEqual([
-      new Document({ metadata: { foo: id }, pageContent }),
+      new Document({
+        metadata: { foo: id },
+        pageContent,
+        id: expect.any(String) as any,
+      }),
     ]);
   });
 
@@ -120,7 +138,7 @@ describe.skip("PineconeStore", () => {
       { pageContent, metadata: { foo: id } },
       { pageContent, metadata: { foo: id } },
     ]);
-    await sleep(35000);
+    await sleep(PINECONE_SLEEP_LENGTH);
     // If the filter wasn't working, we'd get all 3 documents back
     const results = await pineconeStore.maxMarginalRelevanceSearch(
       pageContent,
@@ -142,7 +160,7 @@ describe.skip("PineconeStore", () => {
       { pageContent, metadata: { foo: id } },
       { pageContent, metadata: { foo: id } },
     ]);
-    await sleep(35000);
+    await sleep(PINECONE_SLEEP_LENGTH);
     const results = await pineconeStore.similaritySearch(pageContent, 2, {
       foo: id,
     });
@@ -174,7 +192,7 @@ describe.skip("PineconeStore", () => {
         ids: [id, id2],
       }
     );
-    await sleep(40000);
+    await sleep(PINECONE_SLEEP_LENGTH);
     const indexStats = await pineconeStore.pineconeIndex.describeIndexStats();
     expect(indexStats.namespaces).toHaveProperty("");
     expect(indexStats.namespaces?.[""].recordCount).toEqual(2);
@@ -184,7 +202,7 @@ describe.skip("PineconeStore", () => {
     await pineconeStore.delete({
       deleteAll: true,
     });
-    await sleep(40000);
+    await sleep(PINECONE_SLEEP_LENGTH);
     const indexStats2 = await pineconeStore.pineconeIndex.describeIndexStats();
     expect(indexStats2.namespaces).not.toHaveProperty("");
     // The new total records should be less than the previous total records
@@ -209,7 +227,7 @@ describe.skip("PineconeStore", () => {
         namespace: namespaces[1],
       }
     );
-    await sleep(35000);
+    await sleep(PINECONE_SLEEP_LENGTH);
     const results = await pineconeStore.similaritySearch(pageContent, 1, {
       namespace: namespaces[0],
     });
@@ -234,22 +252,28 @@ describe.skip("PineconeStore", () => {
     });
 
     await store.addDocuments([{ pageContent, metadata: {} }], [documentId]);
-    await sleep(35000);
+    await sleep(PINECONE_SLEEP_LENGTH);
 
     const results = await store.similaritySearch(pageContent, 1);
 
-    expect(results).toEqual([new Document({ metadata: {}, pageContent })]);
+    expect(results).toEqual([
+      new Document({ metadata: {}, pageContent, id: documentId }),
+    ]);
 
     await store.addDocuments(
       [{ pageContent: `${pageContent} upserted`, metadata: {} }],
       [documentId]
     );
-    await sleep(35000);
+    await sleep(PINECONE_SLEEP_LENGTH);
 
     const results2 = await store.similaritySearch(pageContent, 1);
 
     expect(results2).toEqual([
-      new Document({ metadata: {}, pageContent: `${pageContent} upserted` }),
+      new Document({
+        metadata: {},
+        pageContent: `${pageContent} upserted`,
+        id: documentId,
+      }),
     ]);
   });
 });

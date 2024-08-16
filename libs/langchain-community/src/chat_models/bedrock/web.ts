@@ -218,17 +218,10 @@ export interface BedrockChatFields
  * <summary><strong>Invoking</strong></summary>
  *
  * ```typescript
- * const messages = [
- *   {
- *     type: "system" as const,
- *     content: "You are a helpful translator. Translate the user sentence to French.",
- *   },
- *   {
- *     type: "human" as const,
- *     content: "I love programming.",
- *   },
- * ];
- * const result = await llm.invoke(messages);
+ * const input = `Translate "I love programming" into French.`;
+ *
+ * // Models also accept a list of chat messages or a formatted prompt
+ * const result = await llm.invoke(input);
  * console.log(result);
  * ```
  *
@@ -261,7 +254,7 @@ export interface BedrockChatFields
  * <summary><strong>Streaming Chunks</strong></summary>
  *
  * ```typescript
- * for await (const chunk of await llm.stream(messages)) {
+ * for await (const chunk of await llm.stream(input)) {
  *   console.log(chunk);
  * }
  * ```
@@ -324,7 +317,7 @@ export interface BedrockChatFields
  * import { AIMessageChunk } from '@langchain/core/messages';
  * import { concat } from '@langchain/core/utils/stream';
  *
- * const stream = await llm.stream(messages);
+ * const stream = await llm.stream(input);
  * let full: AIMessageChunk | undefined;
  * for await (const chunk of stream) {
  *   full = !full ? chunk : concat(full, chunk);
@@ -455,7 +448,7 @@ export interface BedrockChatFields
  * <summary><strong>Response Metadata</strong></summary>
  *
  * ```typescript
- * const aiMsgForResponseMetadata = await llm.invoke(messages);
+ * const aiMsgForResponseMetadata = await llm.invoke(input);
  * console.log(aiMsgForResponseMetadata.response_metadata);
  * ```
  *
@@ -515,8 +508,6 @@ export class BedrockChat
     tagSuffix: string;
     streamProcessingMode: "SYNCHRONOUS" | "ASYNCHRONOUS";
   };
-
-  protected _anthropicTools?: AnthropicTool[];
 
   get lc_aliases(): Record<string, string> {
     return {
@@ -606,9 +597,8 @@ export class BedrockChat
       );
     }
 
-    const callOptionTools = formatTools(options?.tools ?? []);
     return {
-      tools: [...(this._anthropicTools ?? []), ...callOptionTools],
+      tools: options?.tools ? formatTools(options.tools) : undefined,
       temperature: this.temperature,
       max_tokens: this.maxTokens,
       stop: options?.stop ?? this.stopSequences,
@@ -820,7 +810,7 @@ export class BedrockChat
       provider === "meta" ||
       provider === "mistral"
     ) {
-      const toolsInParams = !_toolsInParams(options);
+      const toolsInParams = _toolsInParams(options);
       const reader = response.body?.getReader();
       const decoder = new TextDecoder();
       for await (const chunk of this._readChunks(reader)) {
@@ -847,7 +837,10 @@ export class BedrockChat
               provider,
               chunkResult,
               {
-                coerceContentToString: toolsInParams,
+                // Content should _ONLY_ be coerced if tools are not in params
+                // If they are, we need content to be of type MessageTypeComplex
+                // so the tools can be passed through.
+                coerceContentToString: !toolsInParams,
               }
             );
             if (chunk === undefined) {
@@ -969,8 +962,9 @@ export class BedrockChat
         "Currently, tool calling through Bedrock is only supported for Anthropic models."
       );
     }
-    this._anthropicTools = formatTools(tools);
-    return this;
+    return this.bind({
+      tools: formatTools(tools),
+    });
   }
 }
 
