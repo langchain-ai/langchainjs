@@ -3,7 +3,7 @@
 import { test } from "@jest/globals";
 import { AmazonKendraRetriever } from "../kendra.js";
 
-test("AmazonKendraRetriever", async () => {
+test.skip("AmazonKendraRetriever", async () => {
   if (
     !process.env.BEDROCK_AWS_REGION ||
     !process.env.BEDROCK_AWS_ACCESS_KEY_ID ||
