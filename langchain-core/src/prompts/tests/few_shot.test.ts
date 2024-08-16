@@ -125,7 +125,7 @@ An example about bar
   });
 });
 
-describe.only("FewShotChatMessagePromptTemplate", () => {
+describe("FewShotChatMessagePromptTemplate", () => {
   test("Format messages", async () => {
     const examplePrompt = ChatPromptTemplate.fromMessages([
       ["ai", "{ai_input_var}"],
@@ -256,16 +256,20 @@ An example about bar
   test("Can format messages with complex contents", async () => {
     const examplePrompt = ChatPromptTemplate.fromMessages([
       new AIMessage({
-        content: [{
-          type: "text",
-          text: "{ai_input_var}",
-        }]
+        content: [
+          {
+            type: "text",
+            text: "{ai_input_var}",
+          },
+        ],
       }),
       new HumanMessage({
-        content: [{
-          type: "text",
-          text: "{human_input_var}",
-        }]
+        content: [
+          {
+            type: "text",
+            text: "{human_input_var}",
+          },
+        ],
       }),
     ]);
     const examples = [
@@ -286,29 +290,37 @@ An example about bar
     const messages = await prompt.formatMessages({});
     expect(messages).toEqual([
       new AIMessage({
-        content: [{
-          type: "text",
-          text: "ai-foo",
-        }]
+        content: [
+          {
+            type: "text",
+            text: "ai-foo",
+          },
+        ],
       }),
       new HumanMessage({
-        content: [{
-          type: "text",
-          text: "human-bar",
-        }]
+        content: [
+          {
+            type: "text",
+            text: "human-bar",
+          },
+        ],
       }),
       new AIMessage({
-        content: [{
-          type: "text",
-          text: "ai-foo2",
-        }]
+        content: [
+          {
+            type: "text",
+            text: "ai-foo2",
+          },
+        ],
       }),
       new HumanMessage({
-        content: [{
-          type: "text",
-          text: "human-bar2",
-        }]
+        content: [
+          {
+            type: "text",
+            text: "human-bar2",
+          },
+        ],
       }),
     ]);
-  })
+  });
 });

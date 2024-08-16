@@ -625,39 +625,50 @@ test("Multi-modal, multi part chat prompt works with instances of BaseMessage", 
 
 test("extract input variables from complex message contents", async () => {
   const promptComplexContent = ChatPromptTemplate.fromMessages([
-    ["human", [
-      {
-        type: "text",
-        text: "{input}",
-      },
-    ]],
-    ["human", [
-      {
-        type:"image_url",
-        image_url: {
-          url: "{image_url}",
-          detail: "high"
-        }
-      }
-    ]],
-    ["human", [
-      {
-        type: "image_url",
-        image_url: "{image_url_2}"
-      },
-      {
-        type: "text",
-        text: "{input_2}"
-      },
-      {
-        type: "text",
-        text: "{input}" // Intentionally duplicated
-      }
-    ]]
-  ])
+    [
+      "human",
+      [
+        {
+          type: "text",
+          text: "{input}",
+        },
+      ],
+    ],
+    [
+      "human",
+      [
+        {
+          type: "image_url",
+          image_url: {
+            url: "{image_url}",
+            detail: "high",
+          },
+        },
+      ],
+    ],
+    [
+      "human",
+      [
+        {
+          type: "image_url",
+          image_url: "{image_url_2}",
+        },
+        {
+          type: "text",
+          text: "{input_2}",
+        },
+        {
+          type: "text",
+          text: "{input}", // Intentionally duplicated
+        },
+      ],
+    ],
+  ]);
 
-  expect(promptComplexContent.inputVariables).toHaveLength(4)
-  expect(promptComplexContent.inputVariables.sort()).toEqual(["input", "image_url", "image_url_2", "input_2"].sort());
+  expect(promptComplexContent.inputVariables).toHaveLength(4);
+  expect(promptComplexContent.inputVariables.sort()).toEqual(
+    ["input", "image_url", "image_url_2", "input_2"].sort()
+  );
 });
 
 test("extract input variables from complex message contents inside BaseMessages", async () => {
@@ -668,37 +679,39 @@ test("extract input variables from complex message contents inside BaseMessages"
           type: "text",
           text: "{input}",
         },
-      ]
-    }),
-    new HumanMessage({
-      content: [
-        {
-          type:"image_url",
-          image_url: {
-            url: "{image_url}",
-            detail: "high"
-          }
-        }
-      ]
+      ],
     }),
     new HumanMessage({
       content: [
         {
           type: "image_url",
-          image_url: "{image_url_2}"
+          image_url: {
+            url: "{image_url}",
+            detail: "high",
+          },
         },
-        {
-          type: "text",
-          text: "{input_2}"
-        },
-        {
-          type: "text",
-          text: "{input}" // Intentionally duplicated
-        }
-      ]
+      ],
     }),
-  ])
+    new HumanMessage({
+      content: [
+        {
+          type: "image_url",
+          image_url: "{image_url_2}",
+        },
+        {
+          type: "text",
+          text: "{input_2}",
+        },
+        {
+          type: "text",
+          text: "{input}", // Intentionally duplicated
+        },
+      ],
+    }),
+  ]);
 
-  expect(promptComplexContent.inputVariables).toHaveLength(4)
-  expect(promptComplexContent.inputVariables.sort()).toEqual(["input", "image_url", "image_url_2", "input_2"].sort());
+  expect(promptComplexContent.inputVariables).toHaveLength(4);
+  expect(promptComplexContent.inputVariables.sort()).toEqual(
+    ["input", "image_url", "image_url_2", "input_2"].sort()
+  );
 });
