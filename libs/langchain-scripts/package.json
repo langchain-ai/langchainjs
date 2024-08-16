@@ -36,8 +36,7 @@
     "test:int": "NODE_OPTIONS=--experimental-vm-modules jest --testPathPattern=\\.int\\.test.ts --testTimeout 100000 --maxWorkers=50%",
     "format": "prettier --write \"src\"",
     "format:check": "prettier --check \"src\"",
-    "create:integration:doc": "node dist/cli/docs/index.js",
-    "notebook:validate": "node dist/validate_notebook.js"
+    "create:integration:doc": "node dist/cli/docs/index.js"
   },
   "author": "LangChain",
   "license": "MIT",

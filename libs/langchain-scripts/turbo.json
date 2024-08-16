@@ -7,9 +7,6 @@
     },
     "build:internal": {
       "outputs": ["**/dist/**"]
-    },
-    "notebook:validate": {
-      "dependsOn": ["build"]
     }
   }
 }
