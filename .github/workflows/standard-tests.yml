@@ -24,16 +24,22 @@ jobs:
       - name: Run integration tests for ${{ matrix.package }}
         run: yarn turbo test:integration --filter=@langchain/${{ matrix.package }}
         env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          COHERE_API_KEY: ${{ secrets.COHERE_API_KEY }}
-          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
-          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
-          MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
-          # @langchain/aws credentials
-          BEDROCK_AWS_ACCESS_KEY_ID: ${{ secrets.BEDROCK_AWS_ACCESS_KEY_ID }}
-          BEDROCK_AWS_SECRET_ACCESS_KEY: ${{ secrets.BEDROCK_AWS_SECRET_ACCESS_KEY }}
-          BEDROCK_AWS_REGION: "us-east-1"
-          GOOGLE_VERTEX_AI_WEB_CREDENTIALS: ${{ secrets.GOOGLE_VERTEX_AI_WEB_CREDENTIALS }}
+          ${{ if eq(matrix.package, 'anthropic') }}:
+            ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          ${{ if eq(matrix.package, 'cohere') }}:
+            COHERE_API_KEY: ${{ secrets.COHERE_API_KEY }}
+          ${{ if eq(matrix.package, 'google-genai') }}:
+            GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+          ${{ if eq(matrix.package, 'groq') }}:
+            GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          ${{ if eq(matrix.package, 'mistralai') }}:
+            MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
+          ${{ if eq(matrix.package, 'aws') }}:
+            BEDROCK_AWS_ACCESS_KEY_ID: ${{ secrets.BEDROCK_AWS_ACCESS_KEY_ID }}
+            BEDROCK_AWS_SECRET_ACCESS_KEY: ${{ secrets.BEDROCK_AWS_SECRET_ACCESS_KEY }}
+            BEDROCK_AWS_REGION: "us-east-1"
+          ${{ if eq(matrix.package, 'google-vertexai-web') }}:
+            GOOGLE_VERTEX_AI_WEB_CREDENTIALS: ${{ secrets.GOOGLE_VERTEX_AI_WEB_CREDENTIALS }}
 
   # The `@langchain/openai` package contains standard tests for ChatOpenAI and AzureChatOpenAI
   # We want to run these separately, so we need to pass the exact path for each test, which means
