@@ -267,8 +267,8 @@ import {
  *   rating: z.number().optional().describe("How funny the joke is, from 1 to 10")
  * }).describe('Joke to tell user.');
  *
- * const structuredLlm = llm.withStructuredOutput(Joke);
- * const jokeResult = await structuredLlm.invoke("Tell me a joke about cats", { name: "Joke" });
+ * const structuredLlm = llm.withStructuredOutput(Joke, { name: "Joke" });
+ * const jokeResult = await structuredLlm.invoke("Tell me a joke about cats");
  * console.log(jokeResult);
  * ```
  *
