@@ -182,8 +182,7 @@ async function fileToBase64(filePath: string): Promise<string> {
 
 test("Gemini can understand audio", async () => {
   // Update this with the correct path to an audio file on your machine.
-  const audioPath =
-    "./src/tests/data/gettysburg10.wav";
+  const audioPath = "./src/tests/data/gettysburg10.wav";
   const audioMimeType = "audio/wav";
 
   const model = new ChatGoogleGenerativeAI({

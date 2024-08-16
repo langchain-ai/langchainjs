@@ -15,9 +15,12 @@ import {
 import { tool } from "@langchain/core/tools";
 import { z } from "zod";
 import { concat } from "@langchain/core/utils/stream";
+import {
+  ChatPromptTemplate,
+  MessagesPlaceholder,
+} from "@langchain/core/prompts";
 import { GeminiTool } from "../types.js";
 import { ChatVertexAI } from "../chat_models.js";
-import { ChatPromptTemplate, MessagesPlaceholder } from "@langchain/core/prompts";
 
 describe("GAuth Chat", () => {
   test("invoke", async () => {
@@ -363,8 +366,7 @@ async function fileToBase64(filePath: string): Promise<string> {
 
 test("Gemini can understand audio", async () => {
   // Update this with the correct path to an audio file on your machine.
-  const audioPath =
-    "../langchain-google-genai/src/tests/data/gettysburg10.wav";
+  const audioPath = "../langchain-google-genai/src/tests/data/gettysburg10.wav";
   const audioMimeType = "audio/wav";
 
   const model = new ChatVertexAI({
