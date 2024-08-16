@@ -128,7 +128,11 @@ test("Tool declared with JSON schema", async () => {
     required: ["location"],
   };
   const weatherTool = tool(
-    (_) => {
+    (input) => {
+      // even without validation expect input to be passed
+      expect(input).toEqual({
+        somethingSilly: true,
+      });
       return "Sunny";
     },
     {
@@ -136,15 +140,21 @@ test("Tool declared with JSON schema", async () => {
       schema: weatherSchema,
     }
   );
+  expect(weatherTool).toBeInstanceOf(DynamicStructuredTool);
 
   const weatherTool2 = new DynamicStructuredTool({
     name: "weather",
     description: "get the weather",
-    func: async (_) => {
+    func: async (input) => {
+      // even without validation expect input to be passed
+      expect(input).toEqual({
+        somethingSilly: true,
+      });
       return "Sunny";
     },
     schema: weatherSchema,
   });
+
   // No validation on JSON schema tools
   await weatherTool.invoke({
     somethingSilly: true,
