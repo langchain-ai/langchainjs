@@ -1,4 +1,4 @@
-import { z, ZodType } from "zod";
+import { z } from "zod";
 import {
   CallbackManager,
   CallbackManagerForToolRun,
@@ -559,8 +559,7 @@ export function tool<
   // If the schema is not provided, or it's a string schema, create a DynamicTool
   if (
     !fields.schema ||
-    // eslint-disable-next-line no-instanceof/no-instanceof
-    (fields.schema instanceof ZodType &&
+    (isZodSchema(fields.schema) &&
       (!("shape" in fields.schema) || !fields.schema.shape))
   ) {
     return new DynamicTool({
