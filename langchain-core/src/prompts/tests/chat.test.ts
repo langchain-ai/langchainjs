@@ -650,7 +650,6 @@ test("Format complex messages and keep additional fields", async () => {
     input: "hello",
     output: "ciao",
   });
-  console.log(formatted[0]);
 
   expect(formatted).toHaveLength(2);
 
@@ -665,6 +664,33 @@ test("Format complex messages and keep additional fields", async () => {
   expect(formatted[1].content[0]).toHaveProperty("cache_control");
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   expect((formatted[1].content[0] as any).cache_control).toEqual({
+    type: "ephemeral",
+  });
+});
+
+test("Format image content messages and keep additional fields", async () => {
+  const examplePrompt = ChatPromptTemplate.fromMessages([
+    [
+      "human",
+      [
+        {
+          type: "image_url",
+          image_url: "{image_url}",
+          cache_control: { type: "ephemeral" },
+        },
+      ],
+    ],
+  ]);
+  const formatted = await examplePrompt.formatMessages({
+    image_url: "image_url",
+  });
+
+  expect(formatted).toHaveLength(1);
+
+  expect(formatted[0]._getType()).toBe("human");
+  expect(formatted[0].content[0]).toHaveProperty("cache_control");
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  expect((formatted[0].content[0] as any).cache_control).toEqual({
     type: "ephemeral",
   });
 });

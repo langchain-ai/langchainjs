@@ -495,19 +495,12 @@ class _StringImageMessagePromptTemplate<
           text = item.text ?? "";
         }
 
-        let options = additionalOptions;
-        if (
-          typeof item !== "string" &&
-          Object.keys(item).some(
-            (key) => !["type", "text", "image_url"].includes(key)
-          )
-        ) {
-          options = {
-            ...options,
-            additionalContentFields: item,
-          };
-        }
-
+        const options = {
+          ...additionalOptions,
+          ...(typeof item !== "string"
+            ? { additionalContentFields: item }
+            : {}),
+        };
         prompt.push(PromptTemplate.fromTemplate(text, options));
       } else if (typeof item === "object" && "image_url" in item) {
         let imgTemplate = item.image_url ?? "";
@@ -541,6 +534,7 @@ class _StringImageMessagePromptTemplate<
             template: imgTemplate,
             inputVariables,
             templateFormat: additionalOptions?.templateFormat,
+            additionalContentFields: item,
           });
         } else if (typeof imgTemplate === "object") {
           if ("url" in imgTemplate) {
@@ -561,6 +555,7 @@ class _StringImageMessagePromptTemplate<
             template: imgTemplate,
             inputVariables,
             templateFormat: additionalOptions?.templateFormat,
+            additionalContentFields: item,
           });
         } else {
           throw new Error("Invalid image template");
