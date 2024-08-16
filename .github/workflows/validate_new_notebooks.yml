@@ -52,7 +52,7 @@ jobs:
           if [ -n "$notebooks" ]; then
             for notebook in $notebooks; do
               absolute_path="$GITHUB_WORKSPACE/$notebook"
-              yarn notebook:validate -- "$absolute_path"
+              yarn notebook:validate "$absolute_path"
             done
           else
             echo "No notebooks in docs/core_docs to validate."
