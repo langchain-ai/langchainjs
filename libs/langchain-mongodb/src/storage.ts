@@ -92,7 +92,7 @@ export class MongoDBStore extends BaseStore<string, Uint8Array> {
     const prefixedKeys = keys.map(this._getPrefixedKey.bind(this));
     const retrievedValues = await this.collection
       .find({
-        [this.primaryKey]: { $in: prefixedKeys },
+        [this.primaryKey]: {$in: prefixedKeys},
       })
       .toArray();
 
@@ -101,11 +101,10 @@ export class MongoDBStore extends BaseStore<string, Uint8Array> {
       retrievedValues.map((item) => [item[this.primaryKey], item])
     );
 
-    return keys.map((key) => {
-      const prefixedKey = this._getPrefixedKey(key);
+    return prefixedKeys.map((prefixedKey) => {
       const value = valueMap.get(prefixedKey);
 
-      if (!value || !("value" in value)) {
+      if (!value) {
         return undefined;
       }
 
