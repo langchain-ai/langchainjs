@@ -1,8 +1,8 @@
 import { KVMap } from "langsmith/schemas";
+import { Client } from "langsmith";
 import { Document, DocumentInterface } from "../documents/document.js";
 import { AsyncCallerParams } from "../utils/async_caller.js";
 import { BaseDocumentLoader } from "./base.js";
-import { Client } from "langsmith";
 
 // TODO: Replace with import from `langsmith` once exposed.
 interface ClientConfig {
@@ -28,14 +28,59 @@ export interface LangSmithLoaderFields {
   inlineS3Urls?: boolean;
   offset?: number;
   limit?: number;
-  metadata?: Record<string, any>;
+  metadata?: KVMap;
   filter?: string;
   contentKey?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   formatContent?: (content: any) => string;
   client?: Client;
   clientConfig?: ClientConfig;
 }
 
+/**
+ * Document loader integration with LangSmith.
+ *
+ * ## [Constructor args](https://api.js.langchain.com/interfaces/_langchain_core.document_loaders_langsmith.LangSmithLoaderFields.html)
+ *
+ * <details open>
+ * <summary><strong>Load</strong></summary>
+ *
+ * ```typescript
+ * import { LangSmithLoader } from '@langchain/core/document_loaders/langsmith';
+ * import { Client } from 'langsmith';
+ *
+ * const langSmithClient = new Client({
+ *   apiKey: process.env.LANGSMITH_API_KEY,
+ * })
+ *
+ * const loader = new LangSmithLoader({
+ *   datasetId: "9a3b36f7-b308-40a5-9b46-6613853b6330",
+ *   limit: 1,
+ * });
+ *
+ * const docs = await loader.load();
+ * ```
+ *
+ * ```txt
+ * [
+ *   {
+ *     pageContent: '{\n  "input_key_str": "string",\n  "input_key_bool": true\n}',
+ *     metadata: {
+ *       id: '8523d9e9-c123-4b23-9b46-21021nds289e',
+ *       created_at: '2024-08-19T17:09:14.806441+00:00',
+ *       modified_at: '2024-08-19T17:09:14.806441+00:00',
+ *       name: '#8517 @ brace-test-dataset',
+ *       dataset_id: '9a3b36f7-b308-40a5-9b46-6613853b6330',
+ *       source_run_id: null,
+ *       metadata: [Object],
+ *       inputs: [Object],
+ *       outputs: [Object]
+ *     }
+ *   }
+ * ]
+ * ```
+ * </details>
+ */
 export class LangSmithLoader extends BaseDocumentLoader {
   datasetId?: string;
 
@@ -53,12 +98,13 @@ export class LangSmithLoader extends BaseDocumentLoader {
 
   limit?: number;
 
-  metadata?: Record<string, any>;
+  metadata?: KVMap;
 
   filter?: string;
 
   contentKey: string[];
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   formatContent: (content: any) => string;
 
   client: Client;
@@ -85,7 +131,7 @@ export class LangSmithLoader extends BaseDocumentLoader {
   }
 
   async load(): Promise<Document[]> {
-    let documents: DocumentInterface[] = [];
+    const documents: DocumentInterface[] = [];
     for await (const example of this.client.listExamples({
       datasetId: this.datasetId,
       datasetName: this.datasetName,
@@ -98,14 +144,14 @@ export class LangSmithLoader extends BaseDocumentLoader {
       metadata: this.metadata,
       filter: this.filter,
     })) {
-      let content: any = example.inputs;
+      let content = example.inputs;
       for (const key of this.contentKey) {
         content = content[key];
       }
       const contentStr = this.formatContent(content);
 
-      const metadata: Record<string, any> = example;
-      ["datasetId", "createdAt", "modifiedAt", "sourceRunId"].forEach((k) => {
+      const metadata: KVMap = example;
+      ["created_at", "modified_at"].forEach((k) => {
         if (k in metadata) {
           if (typeof metadata[k] === "object") {
             // Dates are of type `object`, we want to convert them to strings.
@@ -123,7 +169,7 @@ export class LangSmithLoader extends BaseDocumentLoader {
   }
 }
 
-function _stringify(x: string | Record<string, any>): string {
+function _stringify(x: string | KVMap): string {
   if (typeof x === "string") {
     return x;
   } else {
