@@ -48,6 +48,12 @@ export interface ToolParams extends BaseLangChainParams {
   responseFormat?: ResponseFormat;
 }
 
+
+/**
+ * Schema for defining tools.
+ * 
+ * @version 0.2.19
+ */
 export interface StructuredToolParams
   extends Pick<StructuredToolInterface, "name" | "schema"> {
   /**
