@@ -480,6 +480,35 @@ function listEntrypoints(packageJson: Record<string, any>) {
   return entrypoints;
 }
 
+/**
+ * Checks whether or not the file has side effects marked with the `__LC_ALLOW_ENTRYPOINT_SIDE_EFFECTS__`
+ * keyword comment. If it does, this function will return `true`, otherwise it will return `false`.
+ * 
+ * @param {string} entrypoint 
+ * @returns {Promise<boolean>} Whether or not the file has side effects which are explicitly marked as allowed.
+ */
+const checkAllowSideEffects = async (entrypoint: string): Promise<boolean> => {
+  let entrypointContent: Buffer | undefined;
+  try {
+    entrypointContent = await fs.promises.readFile(
+      `./dist/${entrypoint.replace(/^\.\//, "")}`
+    );
+  } catch (e: any) {
+    if (e.message.includes("ENOENT")) {
+      // Entrypoint is likely via an `index.js` file, retry with `index.js` appended to path
+      entrypointContent = await fs.promises.readFile(
+        `./dist/${entrypoint.replace(/^\.\//, "").replace(/\.js$/, "")}/index.js`
+      );
+    }
+  }
+  
+  // Allow escaping side effects strictly within code directly
+  // within an entrypoint
+  return entrypointContent ? entrypointContent
+    .toString()
+    .includes("/* __LC_ALLOW_ENTRYPOINT_SIDE_EFFECTS__ */") : false;
+}
+
 async function checkTreeShaking(config: LangChainConfig) {
   const packageJson = JSON.parse(
     await fs.promises.readFile("package.json", "utf8")
@@ -508,14 +537,7 @@ async function checkTreeShaking(config: LangChainConfig) {
 
     let hasUnexpectedSideEffects = sideEffects.length > 0;
     if (hasUnexpectedSideEffects) {
-      const entrypointContent = await fs.promises.readFile(
-        `./dist/${entrypoint.replace(/^\.\//, "")}`
-      );
-      // Allow escaping side effects strictly within code directly
-      // within an entrypoint
-      hasUnexpectedSideEffects = !entrypointContent
-        .toString()
-        .includes("/* __LC_ALLOW_ENTRYPOINT_SIDE_EFFECTS__ */");
+      hasUnexpectedSideEffects = !(await checkAllowSideEffects(entrypoint));
     }
     reportMap.set(entrypoint, {
       log: sideEffects,
