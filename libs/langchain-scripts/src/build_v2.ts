@@ -483,8 +483,8 @@ function listEntrypoints(packageJson: Record<string, any>) {
 /**
  * Checks whether or not the file has side effects marked with the `__LC_ALLOW_ENTRYPOINT_SIDE_EFFECTS__`
  * keyword comment. If it does, this function will return `true`, otherwise it will return `false`.
- * 
- * @param {string} entrypoint 
+ *
+ * @param {string} entrypoint
  * @returns {Promise<boolean>} Whether or not the file has side effects which are explicitly marked as allowed.
  */
 const checkAllowSideEffects = async (entrypoint: string): Promise<boolean> => {
@@ -493,21 +493,26 @@ const checkAllowSideEffects = async (entrypoint: string): Promise<boolean> => {
     entrypointContent = await fs.promises.readFile(
       `./dist/${entrypoint.replace(/^\.\//, "")}`
     );
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (e: any) {
     if (e.message.includes("ENOENT")) {
       // Entrypoint is likely via an `index.js` file, retry with `index.js` appended to path
       entrypointContent = await fs.promises.readFile(
-        `./dist/${entrypoint.replace(/^\.\//, "").replace(/\.js$/, "")}/index.js`
+        `./dist/${entrypoint
+          .replace(/^\.\//, "")
+          .replace(/\.js$/, "")}/index.js`
       );
     }
   }
-  
+
   // Allow escaping side effects strictly within code directly
   // within an entrypoint
-  return entrypointContent ? entrypointContent
-    .toString()
-    .includes("/* __LC_ALLOW_ENTRYPOINT_SIDE_EFFECTS__ */") : false;
-}
+  return entrypointContent
+    ? entrypointContent
+        .toString()
+        .includes("/* __LC_ALLOW_ENTRYPOINT_SIDE_EFFECTS__ */")
+    : false;
+};
 
 async function checkTreeShaking(config: LangChainConfig) {
   const packageJson = JSON.parse(
