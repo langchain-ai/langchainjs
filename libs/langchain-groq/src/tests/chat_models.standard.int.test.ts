@@ -25,22 +25,6 @@ class ChatGroqStandardIntegrationTests extends ChatModelIntegrationTests<
     });
   }
 
-  async testUsageMetadataStreaming() {
-    this.skipTestMessage(
-      "testUsageMetadataStreaming",
-      "ChatGroq",
-      "Streaming tokens is not currently supported."
-    );
-  }
-
-  async testUsageMetadata() {
-    this.skipTestMessage(
-      "testUsageMetadata",
-      "ChatGroq",
-      "Usage metadata tokens is not currently supported."
-    );
-  }
-
   async testToolMessageHistoriesListContent() {
     this.skipTestMessage(
       "testToolMessageHistoriesListContent",
