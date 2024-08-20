@@ -404,10 +404,7 @@ export class ChatBaiduQianfan
     const makeCompletionRequest = async () => {
       console.log(request);
       const response = await this.client.chat(
-        {
-          messages: request.messages,
-          stream,
-        },
+        request,
         this.model
       );
 
@@ -455,7 +452,7 @@ export class ChatBaiduQianfan
   private async createStream(request: ChatCompletionRequest) {
     const response = await this.client.chat(
       {
-        messages: request.messages,
+        ...request,
         stream: true,
       },
       this.model
