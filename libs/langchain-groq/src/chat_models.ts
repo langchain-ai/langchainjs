@@ -23,6 +23,7 @@ import {
   OpenAIToolCall,
   isAIMessage,
   BaseMessageChunk,
+  UsageMetadata,
 } from "@langchain/core/messages";
 import {
   ChatGeneration,
@@ -226,7 +227,8 @@ function _convertDeltaToolCallToToolCallChunk(
 function _convertDeltaToMessageChunk(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   delta: Record<string, any>,
-  index: number
+  index: number,
+  xGroq?: ChatCompletionsAPI.ChatCompletionChunk.XGroq,
 ): {
   message: BaseMessageChunk;
   toolCallData?: {
@@ -250,6 +252,18 @@ function _convertDeltaToMessageChunk(
   } else {
     additional_kwargs = {};
   }
+
+  let usageMetadata: UsageMetadata | undefined;
+  let groqMessageId: string | undefined;
+  if (xGroq?.usage) {
+    usageMetadata = {
+      input_tokens: xGroq.usage.prompt_tokens,
+      output_tokens: xGroq.usage.completion_tokens,
+      total_tokens: xGroq.usage.total_tokens,
+    }
+    groqMessageId = xGroq.id;
+  }
+
   if (role === "user") {
     return {
       message: new HumanMessageChunk({ content }),
@@ -270,6 +284,8 @@ function _convertDeltaToMessageChunk(
               index: tc.index,
             }))
           : undefined,
+        usage_metadata: usageMetadata,
+        id: groqMessageId
       }),
       toolCallData: toolCallChunks
         ? toolCallChunks.map((tc) => ({
@@ -771,7 +787,9 @@ export class ChatGroq extends BaseChatModel<
       index: number;
       type: "tool_call_chunk";
     }[] = [];
+    let responseMetadata: Record<string, any> | undefined;
     for await (const data of response) {
+      responseMetadata = data;
       const choice = data?.choices[0];
       if (!choice) {
         continue;
@@ -787,7 +805,8 @@ export class ChatGroq extends BaseChatModel<
           ...choice.delta,
           role,
         } ?? {},
-        choice.index
+        choice.index,
+        data.x_groq
       );
 
       if (toolCallData) {
@@ -816,6 +835,19 @@ export class ChatGroq extends BaseChatModel<
       });
       yield chunk;
       void runManager?.handleLLMNewToken(chunk.text ?? "");
+    }
+
+    if (responseMetadata) {
+      if ("choices" in responseMetadata) {
+        delete responseMetadata.choices;
+      }
+      yield new ChatGenerationChunk({
+        message: new AIMessageChunk({
+          content: "",
+          response_metadata: responseMetadata,
+        }),
+        text: "",
+      });
     }
 
     if (options.signal?.aborted) {
