@@ -807,7 +807,7 @@ export interface ChatOpenAIFields
  *     strict: true, // Optional when using the `jsonSchema` method
  *   }
  * );
- * 
+ *
  * const jsonSchemaRes = await llmForJsonSchema.invoke(
  *   "What is the command to list files in a directory?"
  * );
