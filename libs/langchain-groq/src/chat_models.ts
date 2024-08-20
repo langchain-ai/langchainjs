@@ -228,7 +228,7 @@ function _convertDeltaToMessageChunk(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   delta: Record<string, any>,
   index: number,
-  xGroq?: ChatCompletionsAPI.ChatCompletionChunk.XGroq,
+  xGroq?: ChatCompletionsAPI.ChatCompletionChunk.XGroq
 ): {
   message: BaseMessageChunk;
   toolCallData?: {
@@ -260,7 +260,7 @@ function _convertDeltaToMessageChunk(
       input_tokens: xGroq.usage.prompt_tokens,
       output_tokens: xGroq.usage.completion_tokens,
       total_tokens: xGroq.usage.total_tokens,
-    }
+    };
     groqMessageId = xGroq.id;
   }
 
@@ -285,7 +285,7 @@ function _convertDeltaToMessageChunk(
             }))
           : undefined,
         usage_metadata: usageMetadata,
-        id: groqMessageId
+        id: groqMessageId,
       }),
       toolCallData: toolCallChunks
         ? toolCallChunks.map((tc) => ({
