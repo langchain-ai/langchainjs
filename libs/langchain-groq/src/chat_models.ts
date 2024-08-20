@@ -787,6 +787,7 @@ export class ChatGroq extends BaseChatModel<
       index: number;
       type: "tool_call_chunk";
     }[] = [];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let responseMetadata: Record<string, any> | undefined;
     for await (const data of response) {
       responseMetadata = data;
