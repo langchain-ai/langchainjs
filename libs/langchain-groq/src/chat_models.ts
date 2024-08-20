@@ -180,7 +180,8 @@ function convertMessagesToGroqParams(
 }
 
 function groqResponseToChatMessage(
-  message: ChatCompletionsAPI.ChatCompletionMessage
+  message: ChatCompletionsAPI.ChatCompletionMessage,
+  usageMetadata?: UsageMetadata
 ): BaseMessage {
   const rawToolCalls: OpenAIToolCall[] | undefined = message.tool_calls as
     | OpenAIToolCall[]
@@ -202,6 +203,7 @@ function groqResponseToChatMessage(
         additional_kwargs: { tool_calls: rawToolCalls },
         tool_calls: toolCalls,
         invalid_tool_calls: invalidToolCalls,
+        usage_metadata: usageMetadata,
       });
     }
     default:
@@ -931,10 +933,19 @@ export class ChatGroq extends BaseChatModel<
     if ("choices" in data && data.choices) {
       for (const part of (data as ChatCompletion).choices) {
         const text = part.message?.content ?? "";
+        let usageMetadata: UsageMetadata | undefined;
+        if (tokenUsage.totalTokens !== undefined) {
+          usageMetadata = {
+            input_tokens: tokenUsage.promptTokens ?? 0,
+            output_tokens: tokenUsage.completionTokens ?? 0,
+            total_tokens: tokenUsage.totalTokens,
+          };
+        }
         const generation: ChatGeneration = {
           text,
           message: groqResponseToChatMessage(
-            part.message ?? { role: "assistant" }
+            part.message ?? { role: "assistant" },
+            usageMetadata
           ),
         };
         generation.generationInfo = {
