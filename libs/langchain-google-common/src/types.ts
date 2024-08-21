@@ -4,7 +4,7 @@ import type {
   BindToolsInput,
 } from "@langchain/core/language_models/chat_models";
 import type { JsonStream } from "./utils/stream.js";
-
+import type { GoogleAISafetyError } from "./utils/safety.js";
 /**
  * Parameters needed to setup the client connection.
  * AuthOptions are something like GoogleAuthOptions (from google-auth-library)
@@ -327,7 +327,7 @@ export interface GoogleAISafetyHandler {
    */
   handle(response: GoogleLLMResponse): GoogleLLMResponse;
 }
-
+export type { GoogleAISafetyError };
 export interface GoogleAISafetyParams {
   safetyHandler?: GoogleAISafetyHandler;
 }
