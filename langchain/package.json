@@ -621,7 +621,7 @@
     "@langchain/groq": "^0.0.15",
     "@langchain/mistralai": "^0.0.26",
     "@langchain/ollama": "^0.0.2",
-    "@langchain/scripts": "^0.0.22",
+    "@langchain/scripts": "^0.0.23",
     "@mendable/firecrawl-js": "^0.0.13",
     "@notionhq/client": "^2.2.10",
     "@pinecone-database/pinecone": "^1.1.0",
