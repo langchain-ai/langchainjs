@@ -490,9 +490,7 @@ function listEntrypoints(packageJson: Record<string, any>) {
 const checkAllowSideEffects = async (entrypoint: string): Promise<boolean> => {
   let entrypointContent: Buffer | undefined;
   try {
-    entrypointContent = await fs.promises.readFile(
-      `./dist/${entrypoint}.js`
-    );
+    entrypointContent = await fs.promises.readFile(`./dist/${entrypoint}.js`);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (e: any) {
     if (e.message.includes("ENOENT")) {
@@ -541,8 +539,11 @@ async function checkTreeShaking(config: LangChainConfig) {
     let hasUnexpectedSideEffects = sideEffects.length > 0;
     if (hasUnexpectedSideEffects) {
       // Map the entrypoint back to the actual file entrypoint using the LangChainConfig file
-      const actualEntrypoint = config.entrypoints[entrypoint.replace(/^\.\/|\.js$/g, "")];
-      hasUnexpectedSideEffects = !(await checkAllowSideEffects(actualEntrypoint));
+      const actualEntrypoint =
+        config.entrypoints[entrypoint.replace(/^\.\/|\.js$/g, "")];
+      hasUnexpectedSideEffects = !(await checkAllowSideEffects(
+        actualEntrypoint
+      ));
     }
     reportMap.set(entrypoint, {
       log: sideEffects,
