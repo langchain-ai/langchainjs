@@ -31,6 +31,13 @@ function _constructMessageFromParams(
     return new AIMessage(rest);
   } else if (type === "system") {
     return new SystemMessage(rest);
+  } else if (type === "tool" && "tool_call_id" in rest) {
+    return new ToolMessage({
+      ...rest,
+      content: rest.content,
+      tool_call_id: rest.tool_call_id as string,
+      name: rest.name,
+    });
   } else {
     throw new Error(
       `Unable to coerce message from array: only human, AI, or system message coercion is currently supported.`
