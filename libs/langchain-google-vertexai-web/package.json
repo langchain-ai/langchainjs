@@ -46,7 +46,7 @@
   "devDependencies": {
     "@jest/globals": "^29.5.0",
     "@langchain/google-common": "~0.0",
-    "@langchain/scripts": "^0.0.22",
+    "@langchain/scripts": "^0.0.23",
     "@langchain/standard-tests": "0.0.0",
     "@swc/core": "^1.3.90",
     "@swc/jest": "^0.2.29",
