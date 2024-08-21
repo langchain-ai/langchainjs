@@ -186,6 +186,15 @@
       "import": "./document_loaders/base.js",
       "require": "./document_loaders/base.cjs"
     },
+    "./document_loaders/langsmith": {
+      "types": {
+        "import": "./document_loaders/langsmith.d.ts",
+        "require": "./document_loaders/langsmith.d.cts",
+        "default": "./document_loaders/langsmith.d.ts"
+      },
+      "import": "./document_loaders/langsmith.js",
+      "require": "./document_loaders/langsmith.cjs"
+    },
     "./embeddings": {
       "types": {
         "import": "./embeddings.d.ts",
@@ -653,6 +662,10 @@
     "document_loaders/base.js",
     "document_loaders/base.d.ts",
     "document_loaders/base.d.cts",
+    "document_loaders/langsmith.cjs",
+    "document_loaders/langsmith.js",
+    "document_loaders/langsmith.d.ts",
+    "document_loaders/langsmith.d.cts",
     "embeddings.cjs",
     "embeddings.js",
     "embeddings.d.ts",
