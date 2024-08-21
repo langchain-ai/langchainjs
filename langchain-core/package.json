@@ -45,7 +45,7 @@
     "camelcase": "6",
     "decamelize": "1.2.0",
     "js-tiktoken": "^1.0.12",
-    "langsmith": "~0.1.39",
+    "langsmith": "^0.1.43",
     "mustache": "^4.2.0",
     "p-queue": "^6.6.2",
     "p-retry": "4",
@@ -185,6 +185,15 @@
       },
       "import": "./document_loaders/base.js",
       "require": "./document_loaders/base.cjs"
+    },
+    "./document_loaders/langsmith": {
+      "types": {
+        "import": "./document_loaders/langsmith.d.ts",
+        "require": "./document_loaders/langsmith.d.cts",
+        "default": "./document_loaders/langsmith.d.ts"
+      },
+      "import": "./document_loaders/langsmith.js",
+      "require": "./document_loaders/langsmith.cjs"
     },
     "./embeddings": {
       "types": {
@@ -653,6 +662,10 @@
     "document_loaders/base.js",
     "document_loaders/base.d.ts",
     "document_loaders/base.d.cts",
+    "document_loaders/langsmith.cjs",
+    "document_loaders/langsmith.js",
+    "document_loaders/langsmith.d.ts",
+    "document_loaders/langsmith.d.cts",
     "embeddings.cjs",
     "embeddings.js",
     "embeddings.d.ts",
