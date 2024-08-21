@@ -328,6 +328,7 @@ export interface GoogleAISafetyHandler {
   handle(response: GoogleLLMResponse): GoogleLLMResponse;
 }
 export type { GoogleAISafetyError };
+
 export interface GoogleAISafetyParams {
   safetyHandler?: GoogleAISafetyHandler;
 }
