@@ -5,8 +5,8 @@ import { Command } from "commander";
 import { rollup } from "@rollup/wasm-node";
 import path from "node:path";
 import { glob } from "glob";
-import { ExportsMapValue, ImportData, LangChainConfig } from "../types.js";
 import { setTimeout } from "node:timers/promises";
+import { ExportsMapValue, ImportData, LangChainConfig } from "../types.js";
 
 async function asyncSpawn(command: string, args: string[]) {
   return new Promise<void>((resolve, reject) => {
@@ -29,7 +29,11 @@ async function asyncSpawn(command: string, args: string[]) {
   });
 }
 
-const deleteFolderRecursive = async function (inputPath: string, retries = 3, delay = 100) {
+const deleteFolderRecursive = async function (
+  inputPath: string,
+  retries = 3,
+  delay = 100
+) {
   for (let attempt = 0; attempt < retries; attempt++) {
     try {
       // Verify the path exists
@@ -48,7 +52,11 @@ const deleteFolderRecursive = async function (inputPath: string, retries = 3, de
           const directoryContents = await fs.promises.readdir(inputPath);
           if (directoryContents.length) {
             for await (const item of directoryContents) {
-              await deleteFolderRecursive(path.join(inputPath, item), retries, delay);
+              await deleteFolderRecursive(
+                path.join(inputPath, item),
+                retries,
+                delay
+              );
             }
           }
           // If the directory is empty or all contents have been deleted, delete it
