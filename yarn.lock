@@ -12438,8 +12438,7 @@ __metadata:
     tsx: ^4.16.2
     typescript: ^5.4.5
   bin:
-    lc-build: bin/build.js
-    lc_build_v2: bin/build_v2.js
+    lc_build: bin/build.js
     notebook_validate: bin/validate_notebook.js
   languageName: unknown
   linkType: soft
