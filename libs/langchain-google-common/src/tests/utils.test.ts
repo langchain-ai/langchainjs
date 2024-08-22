@@ -2,6 +2,7 @@
 import { beforeEach, expect, test } from "@jest/globals";
 import { InMemoryStore } from "@langchain/core/stores";
 import { SerializedConstructor } from "@langchain/core/load/serializable";
+import { load } from "@langchain/core/load";
 import { z } from "zod";
 import { zodToGeminiParameters } from "../utils/zod_to_gemini_parameters.js";
 import {
@@ -143,7 +144,14 @@ describe("media core", () => {
     const serialized: SerializedConstructor = {
       lc: 1,
       type: "constructor",
-      id: ["langchain", "google-common", "MediaBlob"],
+      id: [
+        "langchain",
+        "google_common",
+        "experimental",
+        "utils",
+        "media_core",
+        "MediaBlob",
+      ],
       kwargs: {
         data: {
           value: "VGhpcyBpcyBhIHRlc3Q=",
@@ -151,7 +159,13 @@ describe("media core", () => {
         },
       },
     };
-    const mblob = new MediaBlob(serialized);
+    const mblob: MediaBlob = await load(JSON.stringify(serialized), {
+      importMap: {
+        google_common__experimental__utils__media_core: await import(
+          "../../experimental/utils/media_core.js"
+        ),
+      },
+    });
     console.log("deserialize mblob", mblob);
     expect(mblob.dataType).toEqual("text/plain");
     expect(await mblob.asString()).toEqual("This is a test");
