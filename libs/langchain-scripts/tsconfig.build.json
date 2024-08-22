@@ -23,8 +23,7 @@
     "strict": true
   },
   "include": [
-    "src/build_v2.ts",
-    "src/types.ts"
+    "src/build/*"
   ],
   "exclude": [
     "node_modules/",
