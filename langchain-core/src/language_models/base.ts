@@ -269,7 +269,7 @@ export type StructuredOutputType = z.infer<z.ZodObject<any, any, any, any>>;
 export type StructuredOutputMethodOptions<IncludeRaw extends boolean = false> =
   {
     name?: string;
-    method?: "functionCalling" | "jsonMode";
+    method?: "functionCalling" | "jsonMode" | "jsonSchema" | string;
     includeRaw?: IncludeRaw;
   };
 

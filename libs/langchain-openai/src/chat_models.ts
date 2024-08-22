@@ -36,7 +36,6 @@ import {
   type StructuredOutputMethodParams,
 } from "@langchain/core/language_models/base";
 import { NewTokenIndices } from "@langchain/core/callbacks/base";
-import { convertToOpenAITool } from "@langchain/core/utils/function_calling";
 import { z } from "zod";
 import {
   Runnable,
@@ -56,12 +55,20 @@ import {
 } from "@langchain/core/output_parsers/openai_tools";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { ToolCallChunk } from "@langchain/core/messages/tool";
+import { zodResponseFormat } from "openai/helpers/zod";
+import type {
+  ResponseFormatText,
+  ResponseFormatJSONObject,
+  ResponseFormatJSONSchema,
+} from "openai/resources/shared";
+import { ParsedChatCompletion } from "openai/resources/beta/chat/completions.mjs";
 import type {
   AzureOpenAIInput,
   OpenAICallOptions,
   OpenAIChatInput,
   OpenAICoreRequestOptions,
   LegacyOpenAIInput,
+  ChatOpenAIResponseFormat,
 } from "./types.js";
 import { type OpenAIEndpointConfig, getEndpoint } from "./utils/azure.js";
 import {
@@ -73,6 +80,7 @@ import {
   FunctionDef,
   formatFunctionDefinitions,
 } from "./utils/openai-format-fndef.js";
+import { _convertToOpenAITool } from "./utils/tools.js";
 
 export type { AzureOpenAIInput, OpenAICallOptions, OpenAIChatInput };
 
@@ -295,7 +303,7 @@ function _convertChatOpenAIToolTypeToOpenAITool(
 
     return tool;
   }
-  return convertToOpenAITool(tool, fields);
+  return _convertToOpenAITool(tool, fields);
 }
 
 export interface ChatOpenAIStructuredOutputMethodOptions<
@@ -324,7 +332,7 @@ export interface ChatOpenAICallOptions
   tools?: ChatOpenAIToolType[];
   tool_choice?: OpenAIToolChoice;
   promptIndex?: number;
-  response_format?: { type: "json_object" };
+  response_format?: ChatOpenAIResponseFormat;
   seed?: number;
   /**
    * Additional options to pass to streamed completions.
@@ -621,8 +629,8 @@ export interface ChatOpenAIFields
  *   rating: z.number().optional().describe("How funny the joke is, from 1 to 10")
  * }).describe('Joke to tell user.');
  *
- * const structuredLlm = llm.withStructuredOutput(Joke);
- * const jokeResult = await structuredLlm.invoke("Tell me a joke about cats", { name: "Joke" });
+ * const structuredLlm = llm.withStructuredOutput(Joke, { name: "Joke" });
+ * const jokeResult = await structuredLlm.invoke("Tell me a joke about cats");
  * console.log(jokeResult);
  * ```
  *
@@ -774,6 +782,51 @@ export interface ChatOpenAIFields
  *   tokenUsage: { completionTokens: 5, promptTokens: 28, totalTokens: 33 },
  *   finish_reason: 'stop',
  *   system_fingerprint: 'fp_3aa7262c27'
+ * }
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>JSON Schema Structured Output</strong></summary>
+ *
+ * ```typescript
+ * const llmForJsonSchema = new ChatOpenAI({
+ *   model: "gpt-4o-2024-08-06",
+ * }).withStructuredOutput(
+ *   z.object({
+ *     command: z.string().describe("The command to execute"),
+ *     expectedOutput: z.string().describe("The expected output of the command"),
+ *     options: z
+ *       .array(z.string())
+ *       .describe("The options you can pass to the command"),
+ *   }),
+ *   {
+ *     method: "jsonSchema",
+ *     strict: true, // Optional when using the `jsonSchema` method
+ *   }
+ * );
+ *
+ * const jsonSchemaRes = await llmForJsonSchema.invoke(
+ *   "What is the command to list files in a directory?"
+ * );
+ * console.log(jsonSchemaRes);
+ * ```
+ *
+ * ```txt
+ * {
+ *   command: 'ls',
+ *   expectedOutput: 'A list of files and subdirectories within the specified directory.',
+ *   options: [
+ *     '-a: include directory entries whose names begin with a dot (.).',
+ *     '-l: use a long listing format.',
+ *     '-h: with -l, print sizes in human readable format (e.g., 1K, 234M, 2G).',
+ *     '-t: sort by time, newest first.',
+ *     '-r: reverse order while sorting.',
+ *     '-S: sort by file size, largest first.',
+ *     '-R: list subdirectories recursively.'
+ *   ]
  * }
  * ```
  * </details>
@@ -1027,6 +1080,34 @@ export class ChatOpenAI<
     } as Partial<CallOptions>);
   }
 
+  private createResponseFormat(
+    resFormat?: CallOptions["response_format"]
+  ):
+    | ResponseFormatText
+    | ResponseFormatJSONObject
+    | ResponseFormatJSONSchema
+    | undefined {
+    if (
+      resFormat &&
+      resFormat.type === "json_schema" &&
+      resFormat.json_schema.schema &&
+      isZodSchema(resFormat.json_schema.schema)
+    ) {
+      return zodResponseFormat(
+        resFormat.json_schema.schema,
+        resFormat.json_schema.name,
+        {
+          description: resFormat.json_schema.description,
+        }
+      );
+    }
+    return resFormat as
+      | ResponseFormatText
+      | ResponseFormatJSONObject
+      | ResponseFormatJSONSchema
+      | undefined;
+  }
+
   /**
    * Get the parameters used to invoke the model
    */
@@ -1049,6 +1130,7 @@ export class ChatOpenAI<
     } else if (this.streamUsage && (this.streaming || extra?.streaming)) {
       streamOptionsConfig = { stream_options: { include_usage: true } };
     }
+
     const params: Omit<
       OpenAIClient.Chat.ChatCompletionCreateParams,
       "messages"
@@ -1075,7 +1157,7 @@ export class ChatOpenAI<
           )
         : undefined,
       tool_choice: formatToOpenAIToolChoice(options?.tool_choice),
-      response_format: options?.response_format,
+      response_format: this.createResponseFormat(options?.response_format),
       seed: options?.seed,
       ...streamOptionsConfig,
       parallel_tool_calls: options?.parallel_tool_calls,
@@ -1113,6 +1195,32 @@ export class ChatOpenAI<
       stream: true as const,
     };
     let defaultRole: OpenAIRoleEnum | undefined;
+    if (
+      params.response_format &&
+      params.response_format.type === "json_schema"
+    ) {
+      console.warn(
+        `OpenAI does not yet support streaming with "response_format" set to "json_schema". Falling back to non-streaming mode.`
+      );
+      const res = await this._generate(messages, options, runManager);
+      const chunk = new ChatGenerationChunk({
+        message: new AIMessageChunk({
+          ...res.generations[0].message,
+        }),
+        text: res.generations[0].text,
+        generationInfo: res.generations[0].generationInfo,
+      });
+      yield chunk;
+      return runManager?.handleLLMNewToken(
+        res.generations[0].text ?? "",
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        { chunk }
+      );
+    }
+
     const streamIterable = await this.completionWithRetry(params, options);
     let usage: OpenAIClient.Completions.CompletionUsage | undefined;
     for await (const data of streamIterable) {
@@ -1248,17 +1356,36 @@ export class ChatOpenAI<
       tokenUsage.totalTokens = promptTokenUsage + completionTokenUsage;
       return { generations, llmOutput: { estimatedTokenUsage: tokenUsage } };
     } else {
-      const data = await this.completionWithRetry(
-        {
-          ...params,
-          stream: false,
-          messages: messagesMapped,
-        },
-        {
-          signal: options?.signal,
-          ...options?.options,
-        }
-      );
+      let data;
+      if (
+        options.response_format &&
+        options.response_format.type === "json_schema"
+      ) {
+        data = await this.betaParsedCompletionWithRetry(
+          {
+            ...params,
+            stream: false,
+            messages: messagesMapped,
+          },
+          {
+            signal: options?.signal,
+            ...options?.options,
+          }
+        );
+      } else {
+        data = await this.completionWithRetry(
+          {
+            ...params,
+            stream: false,
+            messages: messagesMapped,
+          },
+          {
+            signal: options?.signal,
+            ...options?.options,
+          }
+        );
+      }
+
       const {
         completion_tokens: completionTokens,
         prompt_tokens: promptTokens,
@@ -1478,6 +1605,31 @@ export class ChatOpenAI<
     });
   }
 
+  /**
+   * Call the beta chat completions parse endpoint. This should only be called if
+   * response_format is set to "json_object".
+   * @param {OpenAIClient.Chat.ChatCompletionCreateParamsNonStreaming} request
+   * @param {OpenAICoreRequestOptions | undefined} options
+   */
+  async betaParsedCompletionWithRetry(
+    request: OpenAIClient.Chat.ChatCompletionCreateParamsNonStreaming,
+    options?: OpenAICoreRequestOptions
+  ): Promise<ParsedChatCompletion<null>> {
+    const requestOptions = this._getClientOptions(options);
+    return this.caller.call(async () => {
+      try {
+        const res = await this.client.beta.chat.completions.parse(
+          request,
+          requestOptions
+        );
+        return res;
+      } catch (e) {
+        const error = wrapOpenAIClientError(e);
+        throw error;
+      }
+    });
+  }
+
   protected _getClientOptions(options: OpenAICoreRequestOptions | undefined) {
     if (!this.client) {
       const openAIEndpointConfig: OpenAIEndpointConfig = {
@@ -1614,6 +1766,23 @@ export class ChatOpenAI<
     if (method === "jsonMode") {
       llm = this.bind({
         response_format: { type: "json_object" },
+      } as Partial<CallOptions>);
+      if (isZodSchema(schema)) {
+        outputParser = StructuredOutputParser.fromZodSchema(schema);
+      } else {
+        outputParser = new JsonOutputParser<RunOutput>();
+      }
+    } else if (method === "jsonSchema") {
+      llm = this.bind({
+        response_format: {
+          type: "json_schema",
+          json_schema: {
+            name: name ?? "extract",
+            description: schema.description,
+            schema,
+            strict: config?.strict,
+          },
+        },
       } as Partial<CallOptions>);
       if (isZodSchema(schema)) {
         outputParser = StructuredOutputParser.fromZodSchema(schema);
