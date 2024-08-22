@@ -38,6 +38,10 @@ document_loaders/base.cjs
 document_loaders/base.js
 document_loaders/base.d.ts
 document_loaders/base.d.cts
+document_loaders/langsmith.cjs
+document_loaders/langsmith.js
+document_loaders/langsmith.d.ts
+document_loaders/langsmith.d.cts
 embeddings.cjs
 embeddings.js
 embeddings.d.ts
