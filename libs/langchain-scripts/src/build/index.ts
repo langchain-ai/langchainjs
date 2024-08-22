@@ -5,7 +5,7 @@ import { Command } from "commander";
 import { rollup } from "@rollup/wasm-node";
 import path from "node:path";
 import { glob } from "glob";
-import { ExportsMapValue, ImportData, LangChainConfig } from "./types.js";
+import { ExportsMapValue, ImportData, LangChainConfig } from "../types.js";
 
 async function asyncSpawn(command: string, args: string[]) {
   return new Promise<void>((resolve, reject) => {
