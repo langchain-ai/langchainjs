@@ -69,7 +69,7 @@ if (!pathname) {
   throw new Error("No pathname provided.");
 }
 
-const run = async () => {
+export async function checkNotebookTypeErrors() {
   if (!pathname.endsWith(".ipynb")) {
     throw new Error("Only .ipynb files are supported.");
   }
@@ -130,10 +130,4 @@ const run = async () => {
       // Do nothing
     }
   }
-};
-
-try {
-  void run();
-} catch {
-  process.exit(1);
 }
