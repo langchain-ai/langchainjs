@@ -5,7 +5,8 @@ import { Command } from "commander";
 import { rollup } from "@rollup/wasm-node";
 import path from "node:path";
 import { glob } from "glob";
-import { ExportsMapValue, ImportData, LangChainConfig } from "./types.js";
+import { setTimeout } from "node:timers/promises";
+import { ExportsMapValue, ImportData, LangChainConfig } from "../types.js";
 
 async function asyncSpawn(command: string, args: string[]) {
   return new Promise<void>((resolve, reject) => {
@@ -28,47 +29,55 @@ async function asyncSpawn(command: string, args: string[]) {
   });
 }
 
-const deleteFolderRecursive = async function (inputPath: string) {
-  try {
-    // Verify the path exists
-    if (
-      await fs.promises
-        .access(inputPath)
-        .then(() => true)
-        .catch(() => false)
-    ) {
-      const pathStat = await fs.promises.lstat(inputPath);
-      // If it's a file, delete it and return
-      if (pathStat.isFile()) {
-        await fs.promises.unlink(inputPath);
-      } else if (pathStat.isDirectory()) {
-        // List contents of directory
-        const directoryContents = await fs.promises.readdir(inputPath);
-        if (directoryContents.length) {
-          for await (const item of directoryContents) {
-            const itemStat = await fs.promises.lstat(
-              path.join(inputPath, item)
-            );
-            if (itemStat.isFile()) {
-              // Delete file
-              await fs.promises.unlink(path.join(inputPath, item));
-            } else if (itemStat.isDirectory()) {
-              await deleteFolderRecursive(path.join(inputPath, item));
+const deleteFolderRecursive = async function (
+  inputPath: string,
+  retries = 3,
+  delay = 100
+) {
+  for (let attempt = 0; attempt < retries; attempt += 1) {
+    try {
+      // Verify the path exists
+      if (
+        await fs.promises
+          .access(inputPath)
+          .then(() => true)
+          .catch(() => false)
+      ) {
+        const pathStat = await fs.promises.lstat(inputPath);
+        // If it's a file, delete it and return
+        if (pathStat.isFile()) {
+          await fs.promises.unlink(inputPath);
+        } else if (pathStat.isDirectory()) {
+          // List contents of directory
+          const directoryContents = await fs.promises.readdir(inputPath);
+          if (directoryContents.length) {
+            for await (const item of directoryContents) {
+              await deleteFolderRecursive(
+                path.join(inputPath, item),
+                retries,
+                delay
+              );
             }
           }
-        } else if (directoryContents.length === 0) {
-          // If the directory is empty, delete it
+          // If the directory is empty or all contents have been deleted, delete it
           await fs.promises.rmdir(inputPath);
         }
       }
+      // If we reach here, the operation was successful
+      return;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      if (error.code === "ENOENT") {
+        // File or directory doesn't exist, consider it deleted
+        return;
+      }
+      if (attempt === retries - 1) {
+        // If this was the last attempt, throw the error
+        throw error;
+      }
+      // Wait before the next attempt
+      await setTimeout(delay);
     }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } catch (error: any) {
-    if (error.code !== "ENOENT") {
-      // If the error is not "file or directory doesn't exist", rethrow it
-      throw error;
-    }
-    // Otherwise, ignore the error (file or directory already doesn't exist)
   }
 };
 
