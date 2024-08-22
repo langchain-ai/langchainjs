@@ -172,6 +172,7 @@ export abstract class BaseGoogleEmbeddings<AuthOptions>
         ?.map(
           (response) =>
             response?.data?.predictions?.map(
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               (result: any) => result.embeddings?.values
             ) ?? []
         )

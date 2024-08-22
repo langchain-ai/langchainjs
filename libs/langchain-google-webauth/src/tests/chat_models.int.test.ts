@@ -1,3 +1,4 @@
+/* eslint-disable import/no-extraneous-dependencies */
 import { StructuredTool } from "@langchain/core/tools";
 import { z } from "zod";
 import { test } from "@jest/globals";

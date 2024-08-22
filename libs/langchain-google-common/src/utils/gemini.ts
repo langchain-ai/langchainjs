@@ -33,9 +33,10 @@ import type {
   GenerateContentResponseData,
   GoogleAISafetyHandler,
   GeminiPartFunctionCall,
+  GeminiAPIConfig,
 } from "../types.js";
 import { GoogleAISafetyError } from "./safety.js";
-import { MediaBlob, MediaManager } from "../experimental/utils/media_core.js";
+import { MediaBlob } from "../experimental/utils/media_core.js";
 
 export interface FunctionCall {
   name: string;
@@ -70,10 +71,6 @@ const extractMimeType = (
   }
   return null;
 };
-
-export interface GeminiAPIConfig {
-  mediaManager?: MediaManager;
-}
 
 export function getGeminiAPI(config?: GeminiAPIConfig) {
   function messageContentText(

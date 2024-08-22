@@ -11958,6 +11958,7 @@ __metadata:
     ts-jest: ^29.1.0
     typescript: <5.2.0
     web-auth-library: ^1.0.3
+    zod: ^3.23.8
   languageName: unknown
   linkType: soft
 

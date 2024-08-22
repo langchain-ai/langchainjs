@@ -4,7 +4,7 @@ import type {
   BindToolsInput,
 } from "@langchain/core/language_models/chat_models";
 import type { JsonStream } from "./utils/stream.js";
-import { GeminiAPIConfig } from "./utils/index.js";
+import { MediaManager } from "./experimental/utils/media_core.js";
 
 /**
  * Parameters needed to setup the client connection.
@@ -346,4 +346,8 @@ export interface GeminiJsonSchemaDirty extends GeminiJsonSchema {
   items?: GeminiJsonSchemaDirty;
   properties?: Record<string, GeminiJsonSchemaDirty>;
   additionalProperties?: boolean;
+}
+
+export interface GeminiAPIConfig {
+  mediaManager?: MediaManager;
 }
