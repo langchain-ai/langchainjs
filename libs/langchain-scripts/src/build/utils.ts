@@ -1,4 +1,4 @@
-import { LangChainConfig } from "./types.js";
+import { LangChainConfig } from "../types.js";
 
 export function _verifyObjectIsLangChainConfig(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

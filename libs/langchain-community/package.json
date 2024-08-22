@@ -1,6 +1,6 @@
 {
   "name": "@langchain/community",
-  "version": "0.2.28",
+  "version": "0.2.30",
   "description": "Third-party integrations for LangChain.js",
   "type": "module",
   "engines": {
@@ -15,7 +15,7 @@
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-community/",
   "scripts": {
     "build": "yarn turbo:command build:internal --filter=@langchain/community",
-    "build:internal": "yarn lc_build_v2 --create-entrypoints --pre --tree-shaking --gen-maps",
+    "build:internal": "yarn lc_build --create-entrypoints --pre --tree-shaking --gen-maps",
     "lint:eslint": "NODE_OPTIONS=--max-old-space-size=4096 eslint --cache --ext .ts,.js src/",
     "lint:dpdm": "dpdm --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
     "lint": "yarn lint:eslint && yarn lint:dpdm",
@@ -78,8 +78,8 @@
     "@gradientai/nodejs-sdk": "^1.2.0",
     "@huggingface/inference": "^2.6.4",
     "@jest/globals": "^29.5.0",
-    "@langchain/langgraph": "<0.1.0",
-    "@langchain/scripts": "^0.0.21",
+    "@langchain/langgraph": "~0.0.26",
+    "@langchain/scripts": "^0.0.23",
     "@langchain/standard-tests": "0.0.0",
     "@layerup/layerup-security": "^1.5.12",
     "@mendable/firecrawl-js": "^0.0.36",
@@ -239,7 +239,7 @@
     "@google-cloud/storage": "^6.10.1 || ^7.7.0",
     "@gradientai/nodejs-sdk": "^1.2.0",
     "@huggingface/inference": "^2.6.4",
-    "@langchain/langgraph": "~0.0.26",
+    "@langchain/langgraph": "*",
     "@layerup/layerup-security": "^1.5.12",
     "@mendable/firecrawl-js": "^0.0.13",
     "@mlc-ai/web-llm": "0.2.46",
