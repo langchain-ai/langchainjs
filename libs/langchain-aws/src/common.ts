@@ -9,7 +9,6 @@ import {
   ToolMessage,
 } from "@langchain/core/messages";
 import type { ToolCall } from "@langchain/core/messages/tool";
-import type { ToolDefinition } from "@langchain/core/language_models/base";
 import { isOpenAITool } from "@langchain/core/language_models/base";
 import type {
   Message as BedrockMessage,
@@ -23,12 +22,10 @@ import type {
   ContentBlockStartEvent,
 } from "@aws-sdk/client-bedrock-runtime";
 import type { DocumentType as __DocumentType } from "@smithy/types";
-import { StructuredToolInterface } from "@langchain/core/tools";
-import { isStructuredTool } from "@langchain/core/utils/function_calling";
+import { isLangChainTool } from "@langchain/core/utils/function_calling";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { ChatGenerationChunk } from "@langchain/core/outputs";
-import { RunnableToolLike } from "@langchain/core/runnables";
-import { BedrockToolChoice } from "./types.js";
+import { ChatBedrockConverseToolType, BedrockToolChoice } from "./types.js";
 
 export function extractImageInfo(base64: string): ContentBlock.ImageMember {
   // Extract the format from the base64 string
@@ -82,60 +79,53 @@ export function convertToConverseMessages(messages: BaseMessage[]): {
     .map((msg) => {
       if (msg._getType() === "ai") {
         const castMsg = msg as AIMessage;
-        if (typeof castMsg.content === "string" && castMsg.content !== "") {
-          return {
-            role: "assistant",
-            content: [
-              {
-                text: castMsg.content,
-              },
-            ],
-          };
-        } else {
-          if (castMsg.tool_calls && castMsg.tool_calls.length) {
-            return {
-              role: "assistant",
-              content: castMsg.tool_calls.map((tc) => ({
-                toolUse: {
-                  toolUseId: tc.id,
-                  name: tc.name,
-                  input: tc.args,
-                },
-              })),
-            };
-          } else if (Array.isArray(castMsg.content)) {
-            const contentBlocks: ContentBlock[] = castMsg.content.map(
-              (block) => {
-                if (block.type === "text" && block.text !== "") {
-                  return {
-                    text: block.text,
-                  };
-                } else {
-                  const blockValues = Object.fromEntries(
-                    Object.values(block).filter(([key]) => key !== "type")
-                  );
-                  throw new Error(
-                    `Unsupported content block type: ${
-                      block.type
-                    } with content of ${JSON.stringify(blockValues, null, 2)}`
-                  );
-                }
-              }
-            );
-            return {
-              role: "assistant",
-              content: contentBlocks,
-            };
-          } else {
-            throw new Error(
-              `Invalid message content: empty string. '${msg._getType()}' must contain non-empty content.`
-            );
-          }
+        const assistantMsg: BedrockMessage = {
+          role: "assistant",
+          content: [],
+        };
+
+        if (castMsg.tool_calls && castMsg.tool_calls.length) {
+          assistantMsg.content = castMsg.tool_calls.map((tc) => ({
+            toolUse: {
+              toolUseId: tc.id,
+              name: tc.name,
+              input: tc.args,
+            },
+          }));
         }
+
+        if (typeof castMsg.content === "string" && castMsg.content !== "") {
+          assistantMsg.content?.push({
+            text: castMsg.content,
+          });
+        } else if (Array.isArray(castMsg.content)) {
+          const contentBlocks: ContentBlock[] = castMsg.content.map((block) => {
+            if (block.type === "text" && block.text !== "") {
+              return {
+                text: block.text,
+              };
+            } else {
+              const blockValues = Object.fromEntries(
+                Object.values(block).filter(([key]) => key !== "type")
+              );
+              throw new Error(
+                `Unsupported content block type: ${
+                  block.type
+                } with content of ${JSON.stringify(blockValues, null, 2)}`
+              );
+            }
+          });
+
+          assistantMsg.content = [
+            ...(assistantMsg.content ? assistantMsg.content : []),
+            ...contentBlocks,
+          ];
+        }
+        return assistantMsg;
       } else if (msg._getType() === "human" || msg._getType() === "generic") {
         if (typeof msg.content === "string" && msg.content !== "") {
           return {
-            role: "user",
+            role: "user" as const,
             content: [
               {
                 text: msg.content,
@@ -159,7 +149,7 @@ export function convertToConverseMessages(messages: BaseMessage[]): {
             }
           });
           return {
-            role: "user",
+            role: "user" as const,
             content: contentBlocks,
           };
         } else {
@@ -172,7 +162,7 @@ export function convertToConverseMessages(messages: BaseMessage[]): {
         if (typeof castMsg.content === "string") {
           return {
             // Tool use messages are always from the user
-            role: "user",
+            role: "user" as const,
             content: [
               {
                 toolResult: {
@@ -189,7 +179,7 @@ export function convertToConverseMessages(messages: BaseMessage[]): {
         } else {
           return {
             // Tool use messages are always from the user
-            role: "user",
+            role: "user" as const,
             content: [
               {
                 toolResult: {
@@ -242,14 +232,7 @@ export function isBedrockTool(tool: unknown): tool is BedrockTool {
 }
 
 export function convertToConverseTools(
-  tools: (
-    | StructuredToolInterface
-    | ToolDefinition
-    | BedrockTool
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    | Record<string, any>
-    | RunnableToolLike
-  )[]
+  tools: ChatBedrockConverseToolType[]
 ): BedrockTool[] {
   if (tools.every(isOpenAITool)) {
     return tools.map((tool) => ({
@@ -261,7 +244,7 @@ export function convertToConverseTools(
         },
       },
     }));
-  } else if (tools.every(isStructuredTool)) {
+  } else if (tools.every(isLangChainTool)) {
     return tools.map((tool) => ({
       toolSpec: {
         name: tool.name,
@@ -288,18 +271,27 @@ export type BedrockConverseToolChoice =
 
 export function convertToBedrockToolChoice(
   toolChoice: BedrockConverseToolChoice,
-  tools: BedrockTool[]
+  tools: BedrockTool[],
+  fields: {
+    model: string;
+    supportsToolChoiceValues?: Array<"auto" | "any" | "tool">;
+  }
 ): BedrockToolChoice {
+  const supportsToolChoiceValues = fields.supportsToolChoiceValues ?? [];
+
+  let bedrockToolChoice: BedrockToolChoice;
   if (typeof toolChoice === "string") {
     switch (toolChoice) {
       case "any":
-        return {
+        bedrockToolChoice = {
           any: {},
         };
+        break;
       case "auto":
-        return {
+        bedrockToolChoice = {
           auto: {},
         };
+        break;
       default: {
         const foundTool = tools.find(
           (tool) => tool.toolSpec?.name === toolChoice
@@ -309,15 +301,40 @@ export function convertToBedrockToolChoice(
             `Tool with name ${toolChoice} not found in tools list.`
           );
         }
-        return {
+        bedrockToolChoice = {
           tool: {
             name: toolChoice,
           },
         };
       }
     }
+  } else {
+    bedrockToolChoice = toolChoice;
   }
-  return toolChoice;
+
+  const toolChoiceType = Object.keys(bedrockToolChoice)[0] as
+    | "auto"
+    | "any"
+    | "tool";
+  if (!supportsToolChoiceValues.includes(toolChoiceType)) {
+    let supportedTxt = "";
+    if (supportsToolChoiceValues.length) {
+      supportedTxt =
+        `Model ${fields.model} does not currently support 'tool_choice' ` +
+        `of type ${toolChoiceType}. The following 'tool_choice' types ` +
+        `are supported: ${supportsToolChoiceValues.join(", ")}.`;
+    } else {
+      supportedTxt = `Model ${fields.model} does not currently support 'tool_choice'.`;
+    }
+
+    throw new Error(
+      `${supportedTxt} Please see` +
+        "https://docs.aws.amazon.com/bedrock/latest/APIReference/API_runtime_ToolChoice.html" +
+        "for the latest documentation on models that support tool choice."
+    );
+  }
+
+  return bedrockToolChoice;
 }
 
 export function convertConverseMessageToLangChainMessage(

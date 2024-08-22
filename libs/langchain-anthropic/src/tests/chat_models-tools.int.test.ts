@@ -38,7 +38,7 @@ class WeatherTool extends StructuredTool {
 }
 
 const model = new ChatAnthropic({
-  modelName: "claude-3-sonnet-20240229",
+  modelName: "claude-3-haiku-20240307",
   temperature: 0,
 });
 
@@ -439,4 +439,25 @@ test("llm token callbacks can handle tool calls", async () => {
   const args = finalChunk?.tool_calls?.[0].args;
   if (!args) return;
   expect(args).toEqual(JSON.parse(tokens));
+});
+
+test("streaming with structured output", async () => {
+  const stream = await model
+    .withStructuredOutput(zodSchema)
+    .stream("weather in london");
+  // Currently, streaming yields a single chunk
+  let finalChunk;
+  for await (const chunk of stream) {
+    finalChunk = chunk;
+  }
+  expect(typeof finalChunk).toEqual("object");
+  const stream2 = await model
+    .withStructuredOutput(zodToJsonSchema(zodSchema))
+    .stream("weather in london");
+  // Currently, streaming yields a single chunk
+  let finalChunk2;
+  for await (const chunk of stream2) {
+    finalChunk2 = chunk;
+  }
+  expect(typeof finalChunk2).toEqual("object");
 });

@@ -39,10 +39,28 @@ export class AnthropicToolsOutputParser<
   }
 
   protected async _validateResult(result: unknown): Promise<T> {
-    if (this.zodSchema === undefined) {
-      return result as T;
+    let parsedResult = result;
+    if (typeof result === "string") {
+      try {
+        parsedResult = JSON.parse(result);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } catch (e: any) {
+        throw new OutputParserException(
+          `Failed to parse. Text: "${JSON.stringify(
+            result,
+            null,
+            2
+          )}". Error: ${JSON.stringify(e.message)}`,
+          result
+        );
+      }
+    } else {
+      parsedResult = result;
     }
-    const zodParsedResult = await this.zodSchema.safeParseAsync(result);
+    if (this.zodSchema === undefined) {
+      return parsedResult as T;
+    }
+    const zodParsedResult = await this.zodSchema.safeParseAsync(parsedResult);
     if (zodParsedResult.success) {
       return zodParsedResult.data;
     } else {
@@ -52,7 +70,7 @@ export class AnthropicToolsOutputParser<
           null,
           2
         )}". Error: ${JSON.stringify(zodParsedResult.error.errors)}`,
-        JSON.stringify(result, null, 2)
+        JSON.stringify(parsedResult, null, 2)
       );
     }
   }

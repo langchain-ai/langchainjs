@@ -4,7 +4,7 @@ import { HumanMessage } from "@langchain/core/messages";
 const chat = new ChatBaiduQianfan({
   qianfanAccessKey: process.env.QIANFAN_ACCESS_KEY,
   qianfanSecretKey: process.env.QIANFAN_SECRET_KEY,
-  model: "ERNIE-Bot-turbo",
+  model: "ERNIE-Lite-8K",
   streaming: true,
 });
 

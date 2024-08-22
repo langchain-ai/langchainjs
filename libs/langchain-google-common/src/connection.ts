@@ -4,7 +4,8 @@ import {
   AsyncCallerCallOptions,
 } from "@langchain/core/utils/async_caller";
 import { getRuntimeEnvironment } from "@langchain/core/utils/env";
-import { StructuredToolInterface } from "@langchain/core/tools";
+import { StructuredToolParams } from "@langchain/core/tools";
+import { isLangChainTool } from "@langchain/core/utils/function_calling";
 import type {
   GoogleAIBaseLLMInput,
   GoogleConnectionParams,
@@ -20,6 +21,7 @@ import type {
   GeminiFunctionDeclaration,
   GoogleAIModelRequestParams,
   GoogleRawResponse,
+  GoogleAIToolType,
 } from "./types.js";
 import {
   GoogleAbstractedClient,
@@ -197,11 +199,12 @@ export abstract class GoogleRawConnection<
 }
 
 export abstract class GoogleAIConnection<
-    CallOptions extends BaseLanguageModelCallOptions,
-    MessageType,
-    AuthOptions
+    CallOptions extends AsyncCallerCallOptions,
+    InputType,
+    AuthOptions,
+    ResponseType extends GoogleResponse
   >
-  extends GoogleHostConnection<CallOptions, GoogleLLMResponse, AuthOptions>
+  extends GoogleHostConnection<CallOptions, ResponseType, AuthOptions>
   implements GoogleAIBaseLLMInput<AuthOptions>
 {
   model: string;
@@ -267,15 +270,15 @@ export abstract class GoogleAIConnection<
   }
 
   abstract formatData(
-    input: MessageType,
+    input: InputType,
     parameters: GoogleAIModelRequestParams
   ): Promise<unknown>;
 
   async request(
-    input: MessageType,
+    input: InputType,
     parameters: GoogleAIModelRequestParams,
     options: CallOptions
-  ): Promise<GoogleLLMResponse> {
+  ): Promise<GoogleResponse> {
     const data = await this.formatData(input, parameters);
     const response = await this._request(data, options);
     return response;
@@ -288,7 +291,8 @@ export abstract class AbstractGoogleLLMConnection<
 > extends GoogleAIConnection<
   BaseLanguageModelCallOptions,
   MessageType,
-  AuthOptions
+  AuthOptions,
+  GoogleLLMResponse
 > {
   async buildUrlMethodGemini(): Promise<string> {
     return this.streaming ? "streamGenerateContent" : "generateContent";
@@ -336,28 +340,18 @@ export abstract class AbstractGoogleLLMConnection<
     return {} as GeminiContent;
   }
 
-  // Borrowed from the OpenAI invocation params test
-  isStructuredToolArray(tools?: unknown[]): tools is StructuredToolInterface[] {
-    return (
-      tools !== undefined &&
-      tools.every((tool) =>
-        Array.isArray((tool as StructuredToolInterface).lc_namespace)
-      )
-    );
-  }
-
   structuredToolToFunctionDeclaration(
-    tool: StructuredToolInterface
+    tool: StructuredToolParams
   ): GeminiFunctionDeclaration {
     const jsonSchema = zodToGeminiParameters(tool.schema);
     return {
       name: tool.name,
-      description: tool.description,
+      description: tool.description ?? `A function available to call.`,
       parameters: jsonSchema,
     };
   }
 
-  structuredToolsToGeminiTools(tools: StructuredToolInterface[]): GeminiTool[] {
+  structuredToolsToGeminiTools(tools: StructuredToolParams[]): GeminiTool[] {
     return [
       {
         functionDeclarations: tools.map(
@@ -371,16 +365,19 @@ export abstract class AbstractGoogleLLMConnection<
     _input: MessageType,
     parameters: GoogleAIModelRequestParams
   ): GeminiTool[] {
-    const tools: StructuredToolInterface[] | GeminiTool[] | undefined =
-      parameters?.tools;
+    const tools: GoogleAIToolType[] | undefined = parameters?.tools;
     if (!tools || tools.length === 0) {
       return [];
     }
 
-    if (this.isStructuredToolArray(tools)) {
+    if (tools.every(isLangChainTool)) {
       return this.structuredToolsToGeminiTools(tools);
     } else {
-      if (tools.length === 1 && !tools[0].functionDeclarations?.length) {
+      if (
+        tools.length === 1 &&
+        (!("functionDeclarations" in tools[0]) ||
+          !tools[0].functionDeclarations?.length)
+      ) {
         return [];
       }
       return tools as GeminiTool[];

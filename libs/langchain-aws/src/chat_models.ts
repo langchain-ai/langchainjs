@@ -1,8 +1,9 @@
 import type { BaseMessage } from "@langchain/core/messages";
 import { AIMessageChunk } from "@langchain/core/messages";
 import type {
-  ToolDefinition,
   BaseLanguageModelInput,
+  StructuredOutputMethodOptions,
+  ToolDefinition,
 } from "@langchain/core/language_models/base";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {
@@ -13,7 +14,6 @@ import {
 } from "@langchain/core/language_models/chat_models";
 import type {
   ToolConfiguration,
-  Tool as BedrockTool,
   GuardrailConfiguration,
 } from "@aws-sdk/client-bedrock-runtime";
 import {
@@ -28,9 +28,15 @@ import {
   DefaultProviderInit,
 } from "@aws-sdk/credential-provider-node";
 import type { DocumentType as __DocumentType } from "@smithy/types";
-import { StructuredToolInterface } from "@langchain/core/tools";
-import { Runnable, RunnableToolLike } from "@langchain/core/runnables";
-import { ConverseCommandParams, CredentialType } from "./types.js";
+import {
+  Runnable,
+  RunnableLambda,
+  RunnablePassthrough,
+  RunnableSequence,
+} from "@langchain/core/runnables";
+import { zodToJsonSchema } from "zod-to-json-schema";
+import { isZodSchema } from "@langchain/core/utils/types";
+import { z } from "zod";
 import {
   convertToConverseTools,
   convertToBedrockToolChoice,
@@ -41,6 +47,11 @@ import {
   handleConverseStreamContentBlockStart,
   BedrockConverseToolChoice,
 } from "./common.js";
+import {
+  ChatBedrockConverseToolType,
+  ConverseCommandParams,
+  CredentialType,
+} from "./types.js";
 
 /**
  * Inputs for ChatBedrockConverse.
@@ -121,6 +132,14 @@ export interface ChatBedrockConverseInput
    * Configuration information for a guardrail that you want to use in the request.
    */
   guardrailConfig?: GuardrailConfiguration;
+
+  /**
+   * Which types of `tool_choice` values the model supports.
+   *
+   * Inferred if not specified. Inferred as ['auto', 'any', 'tool'] if a 'claude-3'
+   * model is used, ['auto', 'any'] if a 'mistral-large' model is used, empty otherwise.
+   */
+  supportsToolChoiceValues?: Array<"auto" | "any" | "tool">;
 }
 
 export interface ChatBedrockConverseCallOptions
@@ -135,7 +154,7 @@ export interface ChatBedrockConverseCallOptions
    */
   stop?: string[];
 
-  tools?: (StructuredToolInterface | ToolDefinition | BedrockTool)[];
+  tools?: ChatBedrockConverseToolType[];
 
   /**
    * Tool choice for the model. If passing a string, it must be "any", "auto" or the
@@ -150,22 +169,431 @@ export interface ChatBedrockConverseCallOptions
 }
 
 /**
- * Integration with AWS Bedrock Converse API.
+ * AWS Bedrock Converse chat model integration.
  *
- * @example
+ * Setup:
+ * Install `@langchain/aws` and set the following environment variables:
+ *
+ * ```bash
+ * npm install @langchain/aws
+ * export BEDROCK_AWS_REGION="your-aws-region"
+ * export BEDROCK_AWS_SECRET_ACCESS_KEY="your-aws-secret-access-key"
+ * export BEDROCK_AWS_ACCESS_KEY_ID="your-aws-access-key-id"
+ * ```
+ *
+ * ## [Constructor args](https://api.js.langchain.com/classes/langchain_aws.ChatBedrockConverse.html#constructor)
+ *
+ * ## [Runtime args](https://api.js.langchain.com/interfaces/langchain_aws.ChatBedrockConverseCallOptions.html)
+ *
+ * Runtime args can be passed as the second argument to any of the base runnable methods `.invoke`. `.stream`, `.batch`, etc.
+ * They can also be passed via `.bind`, or the second arg in `.bindTools`, like shown in the examples below:
+ *
  * ```typescript
- * import { ChatBedrockConverse } from "@langchain/aws";
+ * // When calling `.bind`, call options should be passed via the first argument
+ * const llmWithArgsBound = llm.bind({
+ *   stop: ["\n"],
+ *   tools: [...],
+ * });
  *
- * const model = new ChatBedrockConverse({
- *   region: process.env.BEDROCK_AWS_REGION ?? "us-east-1",
+ * // When calling `.bindTools`, call options should be passed via the second argument
+ * const llmWithTools = llm.bindTools(
+ *   [...],
+ *   {
+ *     stop: ["\n"],
+ *   }
+ * );
+ * ```
+ *
+ * ## Examples
+ *
+ * <details open>
+ * <summary><strong>Instantiate</strong></summary>
+ *
+ * ```typescript
+ * import { ChatBedrockConverse } from '@langchain/aws';
+ *
+ * const llm = new ChatBedrockConverse({
+ *   model: "anthropic.claude-3-5-sonnet-20240620-v1:0",
+ *   temperature: 0,
+ *   maxTokens: undefined,
+ *   timeout: undefined,
+ *   maxRetries: 2,
+ *   region: process.env.BEDROCK_AWS_REGION,
  *   credentials: {
  *     secretAccessKey: process.env.BEDROCK_AWS_SECRET_ACCESS_KEY!,
  *     accessKeyId: process.env.BEDROCK_AWS_ACCESS_KEY_ID!,
  *   },
+ *   // other params...
+ * });
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Invoking</strong></summary>
+ *
+ * ```typescript
+ * const input = `Translate "I love programming" into French.`;
+ *
+ * // Models also accept a list of chat messages or a formatted prompt
+ * const result = await llm.invoke(input);
+ * console.log(result);
+ * ```
+ *
+ * ```txt
+ * AIMessage {
+ *   "id": "81a27f7a-550c-473d-8307-c2fbb9c74956",
+ *   "content": "Here's the translation to French:\n\nJ'adore la programmation.",
+ *   "response_metadata": {
+ *     "$metadata": {
+ *       "httpStatusCode": 200,
+ *       "requestId": "81a27f7a-550c-473d-8307-c2fbb9c74956",
+ *       "attempts": 1,
+ *       "totalRetryDelay": 0
+ *     },
+ *     "metrics": {
+ *       "latencyMs": 1109
+ *     },
+ *     "stopReason": "end_turn",
+ *     "usage": {
+ *       "inputTokens": 25,
+ *       "outputTokens": 19,
+ *       "totalTokens": 44
+ *     }
+ *   },
+ *   "usage_metadata": {
+ *     "input_tokens": 25,
+ *     "output_tokens": 19,
+ *     "total_tokens": 44
+ *   }
+ * }
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Streaming Chunks</strong></summary>
+ *
+ * ```typescript
+ * for await (const chunk of await llm.stream(input)) {
+ *   console.log(chunk);
+ * }
+ * ```
+ *
+ * ```txt
+ * AIMessageChunk {
+ *   "content": ""
+ *   "response_metadata": {
+ *     "messageStart": {
+ *       "p": "abcdefghijk",
+ *       "role": "assistant"
+ *     }
+ *   }
+ * }
+ * AIMessageChunk {
+ *   "content": "Here"
+ * }
+ * AIMessageChunk {
+ *   "content": "'s"
+ * }
+ * AIMessageChunk {
+ *   "content": " the translation"
+ * }
+ * AIMessageChunk {
+ *   "content": " to"
+ * }
+ * AIMessageChunk {
+ *   "content": " French:\n\nJ"
+ * }
+ * AIMessageChunk {
+ *   "content": "'adore la"
+ * }
+ * AIMessageChunk {
+ *   "content": " programmation."
+ * }
+ * AIMessageChunk {
+ *   "content": ""
+ *   "response_metadata": {
+ *     "contentBlockStop": {
+ *       "contentBlockIndex": 0,
+ *       "p": "abcdefghijk"
+ *     }
+ *   }
+ * }
+ * AIMessageChunk {
+ *   "content": ""
+ *   "response_metadata": {
+ *     "messageStop": {
+ *       "stopReason": "end_turn"
+ *     }
+ *   }
+ * }
+ * AIMessageChunk {
+ *   "content": ""
+ *   "response_metadata": {
+ *     "metadata": {
+ *       "metrics": {
+ *         "latencyMs": 838
+ *       },
+ *       "p": "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123",
+ *       "usage": {
+ *         "inputTokens": 25,
+ *         "outputTokens": 19,
+ *         "totalTokens": 44
+ *       }
+ *     }
+ *   }
+ *   "usage_metadata": {
+ *     "input_tokens": 25,
+ *     "output_tokens": 19,
+ *     "total_tokens": 44
+ *   }
+ * }
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Aggregate Streamed Chunks</strong></summary>
+ *
+ * ```typescript
+ * import { AIMessageChunk } from '@langchain/core/messages';
+ * import { concat } from '@langchain/core/utils/stream';
+ *
+ * const stream = await llm.stream(input);
+ * let full: AIMessageChunk | undefined;
+ * for await (const chunk of stream) {
+ *   full = !full ? chunk : concat(full, chunk);
+ * }
+ * console.log(full);
+ * ```
+ *
+ * ```txt
+ * AIMessageChunk {
+ *   "content": "Here's the translation to French:\n\nJ'adore la programmation.",
+ *   "response_metadata": {
+ *     "messageStart": {
+ *       "p": "ab",
+ *       "role": "assistant"
+ *     },
+ *     "contentBlockStop": {
+ *       "contentBlockIndex": 0,
+ *       "p": "abcdefghijklmnopqrstuvwxyzABCDEFGHIJK"
+ *     },
+ *     "messageStop": {
+ *       "stopReason": "end_turn"
+ *     },
+ *     "metadata": {
+ *       "metrics": {
+ *         "latencyMs": 838
+ *       },
+ *       "p": "abcdefghijklmnopqrstuvwxyz",
+ *       "usage": {
+ *         "inputTokens": 25,
+ *         "outputTokens": 19,
+ *         "totalTokens": 44
+ *       }
+ *     }
+ *   },
+ *   "usage_metadata": {
+ *     "input_tokens": 25,
+ *     "output_tokens": 19,
+ *     "total_tokens": 44
+ *   }
+ * }
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Bind tools</strong></summary>
+ *
+ * ```typescript
+ * import { z } from 'zod';
+ *
+ * const GetWeather = {
+ *   name: "GetWeather",
+ *   description: "Get the current weather in a given location",
+ *   schema: z.object({
+ *     location: z.string().describe("The city and state, e.g. San Francisco, CA")
+ *   }),
+ * }
+ *
+ * const GetPopulation = {
+ *   name: "GetPopulation",
+ *   description: "Get the current population in a given location",
+ *   schema: z.object({
+ *     location: z.string().describe("The city and state, e.g. San Francisco, CA")
+ *   }),
+ * }
+ *
+ * const llmWithTools = llm.bindTools(
+ *   [GetWeather, GetPopulation],
+ *   {
+ *     // strict: true  // enforce tool args schema is respected
+ *   }
+ * );
+ * const aiMsg = await llmWithTools.invoke(
+ *   "Which city is hotter today and which is bigger: LA or NY?"
+ * );
+ * console.log(aiMsg.tool_calls);
+ * ```
+ *
+ * ```txt
+ * [
+ *   {
+ *     id: 'tooluse_hIaiqfweRtSiJyi6J4naJA',
+ *     name: 'GetWeather',
+ *     args: { location: 'Los Angeles, CA' },
+ *     type: 'tool_call'
+ *   },
+ *   {
+ *     id: 'tooluse_nOS8B0UlTd2FdpH4MSHw9w',
+ *     name: 'GetWeather',
+ *     args: { location: 'New York, NY' },
+ *     type: 'tool_call'
+ *   },
+ *   {
+ *     id: 'tooluse_XxMpZiETQ5aVS5opVDyIaw',
+ *     name: 'GetPopulation',
+ *     args: { location: 'Los Angeles, CA' },
+ *     type: 'tool_call'
+ *   },
+ *   {
+ *     id: 'tooluse_GpYvAfldT2aR8VQfH-p4PQ',
+ *     name: 'GetPopulation',
+ *     args: { location: 'New York, NY' },
+ *     type: 'tool_call'
+ *   }
+ * ]
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Structured Output</strong></summary>
+ *
+ * ```typescript
+ * import { z } from 'zod';
+ *
+ * const Joke = z.object({
+ *   setup: z.string().describe("The setup of the joke"),
+ *   punchline: z.string().describe("The punchline to the joke"),
+ *   rating: z.number().optional().describe("How funny the joke is, from 1 to 10")
+ * }).describe('Joke to tell user.');
+ *
+ * const structuredLlm = llm.withStructuredOutput(Joke, { name: "Joke" });
+ * const jokeResult = await structuredLlm.invoke("Tell me a joke about cats");
+ * console.log(jokeResult);
+ * ```
+ *
+ * ```txt
+ * {
+ *   setup: "Why don't cats play poker in the jungle?",
+ *   punchline: 'Too many cheetahs!',
+ *   rating: 7
+ * }
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Multimodal</strong></summary>
+ *
+ * ```typescript
+ * import { HumanMessage } from '@langchain/core/messages';
+ *
+ * const imageUrl = "https://example.com/image.jpg";
+ * const imageData = await fetch(imageUrl).then(res => res.arrayBuffer());
+ * const base64Image = Buffer.from(imageData).toString('base64');
+ *
+ * const message = new HumanMessage({
+ *   content: [
+ *     { type: "text", text: "describe the weather in this image" },
+ *     {
+ *       type: "image_url",
+ *       image_url: { url: `data:image/jpeg;base64,${base64Image}` },
+ *     },
+ *   ]
  * });
  *
- * const res = await model.invoke([new HumanMessage("Print hello world")]);
+ * const imageDescriptionAiMsg = await llm.invoke([message]);
+ * console.log(imageDescriptionAiMsg.content);
  * ```
+ *
+ * ```txt
+ * The weather in this image appears to be clear and pleasant. The sky is a vibrant blue with scattered white clouds, suggesting a sunny day with good visibility. The clouds are light and wispy, indicating fair weather conditions. There's no sign of rain, storm, or any adverse weather patterns. The lush green grass on the rolling hills looks well-watered and healthy, which could indicate recent rainfall or generally favorable weather conditions. Overall, the image depicts a beautiful, calm day with blue skies and sunshine - perfect weather for enjoying the outdoors.
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Usage Metadata</strong></summary>
+ *
+ * ```typescript
+ * const aiMsgForMetadata = await llm.invoke(input);
+ * console.log(aiMsgForMetadata.usage_metadata);
+ * ```
+ *
+ * ```txt
+ * { input_tokens: 25, output_tokens: 19, total_tokens: 44 }
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Stream Usage Metadata</strong></summary>
+ *
+ * ```typescript
+ * const streamForMetadata = await llm.stream(input);
+ * let fullForMetadata: AIMessageChunk | undefined;
+ * for await (const chunk of streamForMetadata) {
+ *   fullForMetadata = !fullForMetadata ? chunk : concat(fullForMetadata, chunk);
+ * }
+ * console.log(fullForMetadata?.usage_metadata);
+ * ```
+ *
+ * ```txt
+ * { input_tokens: 25, output_tokens: 19, total_tokens: 44 }
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Response Metadata</strong></summary>
+ *
+ * ```typescript
+ * const aiMsgForResponseMetadata = await llm.invoke(input);
+ * console.log(aiMsgForResponseMetadata.response_metadata);
+ * ```
+ *
+ * ```txt
+ * {
+ *   '$metadata': {
+ *     httpStatusCode: 200,
+ *     requestId: '5de2a2e5-d1dc-4dff-bb02-31361f4107bc',
+ *     extendedRequestId: undefined,
+ *     cfId: undefined,
+ *     attempts: 1,
+ *     totalRetryDelay: 0
+ *   },
+ *   metrics: { latencyMs: 1163 },
+ *   stopReason: 'end_turn',
+ *   usage: { inputTokens: 25, outputTokens: 19, totalTokens: 44 }
+ * }
+ * ```
+ * </details>
+ *
+ * <br />
  */
 export class ChatBedrockConverse
   extends BaseChatModel<ChatBedrockConverseCallOptions, AIMessageChunk>
@@ -214,6 +642,14 @@ export class ChatBedrockConverse
   guardrailConfig?: GuardrailConfiguration;
 
   client: BedrockRuntimeClient;
+
+  /**
+   * Which types of `tool_choice` values the model supports.
+   *
+   * Inferred if not specified. Inferred as ['auto', 'any', 'tool'] if a 'claude-3'
+   * model is used, ['auto', 'any'] if a 'mistral-large' model is used, empty otherwise.
+   */
+  supportsToolChoiceValues?: Array<"auto" | "any" | "tool">;
 
   constructor(fields?: ChatBedrockConverseInput) {
     super(fields ?? {});
@@ -265,6 +701,18 @@ export class ChatBedrockConverse
     this.additionalModelRequestFields = rest?.additionalModelRequestFields;
     this.streamUsage = rest?.streamUsage ?? this.streamUsage;
     this.guardrailConfig = rest?.guardrailConfig;
+
+    if (rest?.supportsToolChoiceValues === undefined) {
+      if (this.model.includes("claude-3")) {
+        this.supportsToolChoiceValues = ["auto", "any", "tool"];
+      } else if (this.model.includes("mistral-large")) {
+        this.supportsToolChoiceValues = ["auto", "any"];
+      } else {
+        this.supportsToolChoiceValues = undefined;
+      }
+    } else {
+      this.supportsToolChoiceValues = rest.supportsToolChoiceValues;
+    }
   }
 
   getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
@@ -280,14 +728,7 @@ export class ChatBedrockConverse
   }
 
   override bindTools(
-    tools: (
-      | StructuredToolInterface
-      | BedrockTool
-      | ToolDefinition
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      | Record<string, any>
-      | RunnableToolLike
-    )[],
+    tools: ChatBedrockConverseToolType[],
     kwargs?: Partial<this["ParsedCallOptions"]>
   ): Runnable<
     BaseLanguageModelInput,
@@ -311,7 +752,10 @@ export class ChatBedrockConverse
       toolConfig = {
         tools,
         toolChoice: options.tool_choice
-          ? convertToBedrockToolChoice(options.tool_choice, tools)
+          ? convertToBedrockToolChoice(options.tool_choice, tools, {
+              model: this.model,
+              supportsToolChoiceValues: this.supportsToolChoiceValues,
+            })
           : undefined,
       };
     }
@@ -373,7 +817,9 @@ export class ChatBedrockConverse
       system: converseSystem,
       ...params,
     });
-    const response = await this.client.send(command);
+    const response = await this.client.send(command, {
+      abortSignal: options.signal,
+    });
     const { output, ...responseMetadata } = response;
     if (!output?.message) {
       throw new Error("No message found in Bedrock response.");
@@ -411,7 +857,9 @@ export class ChatBedrockConverse
       system: converseSystem,
       ...params,
     });
-    const response = await this.client.send(command);
+    const response = await this.client.send(command, {
+      abortSignal: options.signal,
+    });
     if (response.stream) {
       for await (const chunk of response.stream) {
         if (chunk.contentBlockStart) {
@@ -437,5 +885,142 @@ export class ChatBedrockConverse
         }
       }
     }
+  }
+
+  withStructuredOutput<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  >(
+    outputSchema:
+      | z.ZodType<RunOutput>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      | Record<string, any>,
+    config?: StructuredOutputMethodOptions<false>
+  ): Runnable<BaseLanguageModelInput, RunOutput>;
+
+  withStructuredOutput<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>
+  >(
+    outputSchema:
+      | z.ZodType<RunOutput>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      | Record<string, any>,
+    config?: StructuredOutputMethodOptions<true>
+  ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
+
+  withStructuredOutput<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>
+  >(
+    outputSchema:
+      | z.ZodType<RunOutput>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      | Record<string, any>,
+    config?: StructuredOutputMethodOptions<boolean>
+  ):
+    | Runnable<BaseLanguageModelInput, RunOutput>
+    | Runnable<
+        BaseLanguageModelInput,
+        {
+          raw: BaseMessage;
+          parsed: RunOutput;
+        }
+      > {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const schema: z.ZodType<RunOutput> | Record<string, any> = outputSchema;
+    const name = config?.name;
+    const description = schema.description ?? "A function available to call.";
+    const method = config?.method;
+    const includeRaw = config?.includeRaw;
+    if (method === "jsonMode") {
+      throw new Error(`ChatBedrockConverse does not support 'jsonMode'.`);
+    }
+
+    let functionName = name ?? "extract";
+    let tools: ToolDefinition[];
+    if (isZodSchema(schema)) {
+      tools = [
+        {
+          type: "function",
+          function: {
+            name: functionName,
+            description,
+            parameters: zodToJsonSchema(schema),
+          },
+        },
+      ];
+    } else {
+      if ("name" in schema) {
+        functionName = schema.name;
+      }
+      tools = [
+        {
+          type: "function",
+          function: {
+            name: functionName,
+            description,
+            parameters: schema,
+          },
+        },
+      ];
+    }
+
+    const supportsToolChoiceValues = this.supportsToolChoiceValues ?? [];
+    let toolChoiceObj: { tool_choice: string } | undefined;
+    if (supportsToolChoiceValues.includes("tool")) {
+      toolChoiceObj = {
+        tool_choice: tools[0].function.name,
+      };
+    } else if (supportsToolChoiceValues.includes("any")) {
+      toolChoiceObj = {
+        tool_choice: "any",
+      };
+    }
+
+    const llm = this.bindTools(tools, toolChoiceObj);
+    const outputParser = RunnableLambda.from<AIMessageChunk, RunOutput>(
+      (input: AIMessageChunk): RunOutput => {
+        if (!input.tool_calls || input.tool_calls.length === 0) {
+          throw new Error("No tool calls found in the response.");
+        }
+        const toolCall = input.tool_calls.find(
+          (tc) => tc.name === functionName
+        );
+        if (!toolCall) {
+          throw new Error(`No tool call found with name ${functionName}.`);
+        }
+        return toolCall.args as RunOutput;
+      }
+    );
+
+    if (!includeRaw) {
+      return llm.pipe(outputParser).withConfig({
+        runName: "StructuredOutput",
+      }) as Runnable<BaseLanguageModelInput, RunOutput>;
+    }
+
+    const parserAssign = RunnablePassthrough.assign({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      parsed: (input: any, config) => outputParser.invoke(input.raw, config),
+    });
+    const parserNone = RunnablePassthrough.assign({
+      parsed: () => null,
+    });
+    const parsedWithFallback = parserAssign.withFallbacks({
+      fallbacks: [parserNone],
+    });
+    return RunnableSequence.from<
+      BaseLanguageModelInput,
+      { raw: BaseMessage; parsed: RunOutput }
+    >([
+      {
+        raw: llm,
+      },
+      parsedWithFallback,
+    ]).withConfig({
+      runName: "StructuredOutputRunnable",
+    });
   }
 }

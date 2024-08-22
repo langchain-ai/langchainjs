@@ -1,29 +1,7 @@
-import type {
-  MessageCreateParams,
-  Tool as AnthropicTool,
-} from "@anthropic-ai/sdk/resources/index.mjs";
-import { ToolDefinition } from "@langchain/core/language_models/base";
+import type { MessageCreateParams } from "@anthropic-ai/sdk/resources/index.mjs";
 import { AIMessageChunk } from "@langchain/core/messages";
 import { ToolCallChunk } from "@langchain/core/messages/tool";
-import { RunnableToolLike } from "@langchain/core/runnables";
-import { StructuredToolInterface } from "@langchain/core/tools";
-
-export type AnthropicToolChoice =
-  | {
-      type: "tool";
-      name: string;
-    }
-  | "any"
-  | "auto"
-  | "none"
-  | string;
-
-export type AnthropicToolTypes =
-  | StructuredToolInterface
-  | AnthropicTool
-  | Record<string, unknown>
-  | ToolDefinition
-  | RunnableToolLike;
+import { AnthropicToolChoice } from "../types.js";
 
 export function handleToolChoice(
   toolChoice?: AnthropicToolChoice

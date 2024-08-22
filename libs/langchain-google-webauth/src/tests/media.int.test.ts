@@ -13,10 +13,12 @@ describe("Google Webauth GCS store", () => {
     const uriPrefix = new GoogleCloudStorageUri("gs://test-langchainjs/");
     const uri = `gs://test-langchainjs/text/test-${Date.now()}-nm`;
     const content = "This is a test";
-    const blob = new MediaBlob({
-      path: uri,
-      data: new Blob([content], { type: "text/plain" }),
-    });
+    const blob = await MediaBlob.fromBlob(
+      new Blob([content], { type: "text/plain" }),
+      {
+        path: uri,
+      }
+    );
     const config: BlobStoreGoogleCloudStorageParams = {
       uriPrefix,
     };
@@ -35,14 +37,16 @@ describe("Google Webauth GCS store", () => {
     const uriPrefix = new GoogleCloudStorageUri("gs://test-langchainjs/");
     const uri = `gs://test-langchainjs/text/test-${Date.now()}-wm`;
     const content = "This is a test";
-    const blob = new MediaBlob({
-      path: uri,
-      data: new Blob([content], { type: "text/plain" }),
-      metadata: {
-        alpha: "one",
-        bravo: "two",
-      },
-    });
+    const blob = await MediaBlob.fromBlob(
+      new Blob([content], { type: "text/plain" }),
+      {
+        path: uri,
+        metadata: {
+          alpha: "one",
+          bravo: "two",
+        },
+      }
+    );
     const config: BlobStoreGoogleCloudStorageParams = {
       uriPrefix,
     };
@@ -66,9 +70,8 @@ describe("Google Webauth GCS store", () => {
 
     const uriPrefix = new GoogleCloudStorageUri("gs://test-langchainjs/");
     const uri = `gs://test-langchainjs/image/test-${Date.now()}-nm`;
-    const blob = new MediaBlob({
+    const blob = await MediaBlob.fromBlob(data, {
       path: uri,
-      data,
     });
     const config: BlobStoreGoogleCloudStorageParams = {
       uriPrefix,
@@ -139,9 +142,8 @@ describe("Google APIKey AIStudioBlobStore", () => {
     const filename = `src/tests/data/blue-square.png`;
     const dataBuffer = await fs.readFile(filename);
     const data = new Blob([dataBuffer], { type: "image/png" });
-    const blob = new MediaBlob({
+    const blob = await MediaBlob.fromBlob(data, {
       path: filename,
-      data,
     });
     const blobStore = new BlobStoreAIStudioFile();
     const storedBlob = await blobStore.store(blob);
@@ -159,9 +161,8 @@ describe("Google APIKey AIStudioBlobStore", () => {
     const filename = `src/tests/data/rainbow.mp4`;
     const dataBuffer = await fs.readFile(filename);
     const data = new Blob([dataBuffer], { type: "video/mp4" });
-    const blob = new MediaBlob({
+    const blob = await MediaBlob.fromBlob(data, {
       path: filename,
-      data,
     });
     const blobStore = new BlobStoreAIStudioFile();
     const storedBlob = await blobStore.store(blob);
@@ -180,9 +181,8 @@ describe("Google APIKey AIStudioBlobStore", () => {
     const filename = `src/tests/data/rainbow.mp4`;
     const dataBuffer = await fs.readFile(filename);
     const data = new Blob([dataBuffer], { type: "video/mp4" });
-    const blob = new MediaBlob({
+    const blob = await MediaBlob.fromBlob(data, {
       path: filename,
-      data,
     });
     const blobStore = new BlobStoreAIStudioFile({
       retryTime: -1,

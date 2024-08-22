@@ -51,7 +51,8 @@ jobs:
           notebooks=$(echo '${{ steps.changed-files.outputs.all_changed_files }}' | tr ' ' '\n' | grep '^docs/core_docs/.*\.ipynb$' || true)
           if [ -n "$notebooks" ]; then
             for notebook in $notebooks; do
-              yarn notebook:validate "$notebook"
+              absolute_path="$GITHUB_WORKSPACE/$notebook"
+              yarn workspace @langchain/scripts notebook_validate "$absolute_path"
             done
           else
             echo "No notebooks in docs/core_docs to validate."
