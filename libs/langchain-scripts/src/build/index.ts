@@ -34,7 +34,7 @@ const deleteFolderRecursive = async function (
   retries = 3,
   delay = 100
 ) {
-  for (let attempt = 0; attempt < retries; attempt++) {
+  for (let attempt = 0; attempt < retries; attempt += 1) {
     try {
       // Verify the path exists
       if (
@@ -65,6 +65,7 @@ const deleteFolderRecursive = async function (
       }
       // If we reach here, the operation was successful
       return;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       if (error.code === "ENOENT") {
         // File or directory doesn't exist, consider it deleted
