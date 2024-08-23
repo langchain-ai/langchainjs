@@ -1,1 +1,1 @@
-import "../dist/validate_notebook.js";
+import "../dist/notebooks/index.js";

@@ -161,7 +161,7 @@ test("Test llm span with prompt input", async () => {
       generations: [
         [
           {
-            text: "Hi",
+            message: new AIMessage("Hi"),
           },
         ],
       ],

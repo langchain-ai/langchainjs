@@ -1,6 +1,6 @@
 {
   "name": "@langchain/community",
-  "version": "0.2.30",
+  "version": "0.2.31",
   "description": "Third-party integrations for LangChain.js",
   "type": "module",
   "engines": {
@@ -79,7 +79,7 @@
     "@huggingface/inference": "^2.6.4",
     "@jest/globals": "^29.5.0",
     "@langchain/langgraph": "~0.0.26",
-    "@langchain/scripts": "^0.0.23",
+    "@langchain/scripts": ">=0.1.0 <0.2.0",
     "@langchain/standard-tests": "0.0.0",
     "@layerup/layerup-security": "^1.5.12",
     "@mendable/firecrawl-js": "^0.0.36",
