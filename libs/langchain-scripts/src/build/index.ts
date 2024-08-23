@@ -28,47 +28,55 @@ async function asyncSpawn(command: string, args: string[]) {
   });
 }
 
+// const deleteFolderRecursive = async function (inputPath: string) {
+//   try {
+//     // Verify the path exists
+//     if (
+//       await fs.promises
+//         .access(inputPath)
+//         .then(() => true)
+//         .catch(() => false)
+//     ) {
+//       const pathStat = await fs.promises.lstat(inputPath);
+//       // If it's a file, delete it and return
+//       if (pathStat.isFile()) {
+//         await fs.promises.unlink(inputPath);
+//       } else if (pathStat.isDirectory()) {
+//         // List contents of directory
+//         const directoryContents = await fs.promises.readdir(inputPath);
+//         if (directoryContents.length) {
+//           for await (const item of directoryContents) {
+//             const itemStat = await fs.promises.lstat(
+//               path.join(inputPath, item)
+//             );
+//             if (itemStat.isFile()) {
+//               // Delete file
+//               await fs.promises.unlink(path.join(inputPath, item));
+//             } else if (itemStat.isDirectory()) {
+//               await deleteFolderRecursive(path.join(inputPath, item));
+//             }
+//           }
+//         } else if (directoryContents.length === 0) {
+//           // If the directory is empty, delete it
+//           await fs.promises.rmdir(inputPath);
+//         }
+//       }
+//     }
+//     // eslint-disable-next-line @typescript-eslint/no-explicit-any
+//   } catch (error: any) {
+//     if (error.code !== "ENOENT") {
+//       // If the error is not "file or directory doesn't exist", rethrow it
+//       throw error;
+//     }
+//     // Otherwise, ignore the error (file or directory already doesn't exist)
+//   }
+// };
 const deleteFolderRecursive = async function (inputPath: string) {
   try {
-    // Verify the path exists
-    if (
-      await fs.promises
-        .access(inputPath)
-        .then(() => true)
-        .catch(() => false)
-    ) {
-      const pathStat = await fs.promises.lstat(inputPath);
-      // If it's a file, delete it and return
-      if (pathStat.isFile()) {
-        await fs.promises.unlink(inputPath);
-      } else if (pathStat.isDirectory()) {
-        // List contents of directory
-        const directoryContents = await fs.promises.readdir(inputPath);
-        if (directoryContents.length) {
-          for await (const item of directoryContents) {
-            const itemStat = await fs.promises.lstat(
-              path.join(inputPath, item)
-            );
-            if (itemStat.isFile()) {
-              // Delete file
-              await fs.promises.unlink(path.join(inputPath, item));
-            } else if (itemStat.isDirectory()) {
-              await deleteFolderRecursive(path.join(inputPath, item));
-            }
-          }
-        } else if (directoryContents.length === 0) {
-          // If the directory is empty, delete it
-          await fs.promises.rmdir(inputPath);
-        }
-      }
-    }
+    await fs.promises.rm(inputPath, { recursive: true, force: true });
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
-    if (error.code !== "ENOENT") {
-      // If the error is not "file or directory doesn't exist", rethrow it
-      throw error;
-    }
-    // Otherwise, ignore the error (file or directory already doesn't exist)
+    console.log(`Error deleting directory via fs.promises.rm: ${error.code}`);
   }
 };
 
@@ -706,10 +714,6 @@ export async function buildWithTSup() {
         console.error("Error removing dist (pre && shouldGenMaps)");
         throw e;
       }),
-      deleteFolderRecursive(".turbo").catch((e) => {
-        console.error("Error removing .turbo (pre && shouldGenMaps)");
-        throw e;
-      }),
       cleanGeneratedFiles(config),
       createImportMapFile(config),
       generateImportConstants(config),
@@ -719,10 +723,6 @@ export async function buildWithTSup() {
     await Promise.all([
       deleteFolderRecursive("dist").catch((e) => {
         console.error("Error removing dist (pre && !shouldGenMaps)");
-        throw e;
-      }),
-      deleteFolderRecursive(".turbo").catch((e) => {
-        console.error("Error deleting with deleteFolderRecursive");
         throw e;
       }),
       cleanGeneratedFiles(config),
