@@ -40,6 +40,7 @@ const deleteFolderRecursive = async function (inputPath: string) {
 const fsUnlink = async (filePath: string) => {
   try {
     await fs.promises.unlink(filePath);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     console.log(`Error deleting file via fs.promises.unlink: ${error.code}`);
   }
