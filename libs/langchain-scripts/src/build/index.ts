@@ -611,6 +611,7 @@ export async function moveAndRename({
     return;
   }
 
+  let renamedDestination = "";
   try {
     for await (const file of await fs.promises.readdir(abs(source), {
       withFileTypes: true,
@@ -641,18 +642,23 @@ export async function moveAndRename({
 
         // Rename the file to .cjs
         const renamed = path.format({ name: parsed.name, ext: ".cjs" });
-
-        await fs.promises.writeFile(
-          abs(`${dest}/${renamed}`),
-          rewritten,
-          "utf8"
-        );
+        renamedDestination = abs(`${dest}/${renamed}`);
+        await fs.promises.writeFile(renamedDestination, rewritten, "utf8");
       }
     }
-  } catch (err) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (error: any) {
     console.error("Error during moveAndRename");
-    console.error(err);
-    process.exit(1);
+    if (error.code === "ENOENT") {
+      // Check if file already exists in destination
+      if (fs.existsSync(renamedDestination)) {
+        console.error(
+          `File already exists in destination: ${renamedDestination}`
+        );
+      } else {
+        console.error(`File not found: ${error.path}`);
+      }
+    }
   }
 }
 
