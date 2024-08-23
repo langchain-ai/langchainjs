@@ -33,7 +33,9 @@ const fsRmRfSafe = async (inputPath: string) => {
     await fs.promises.rm(inputPath, { recursive: true, force: true });
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
-    console.log(`Error deleting directory via fs.promises.rm: ${error.code}. Path: ${inputPath}`);
+    console.log(
+      `Error deleting directory via fs.promises.rm: ${error.code}. Path: ${inputPath}`
+    );
   }
 };
 
