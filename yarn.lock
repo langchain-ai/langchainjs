@@ -11793,7 +11793,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/google-gauth@workspace:libs/langchain-google-gauth, @langchain/google-gauth@~0.0.27":
+"@langchain/google-gauth@workspace:libs/langchain-google-gauth, @langchain/google-gauth@~0.0.26, @langchain/google-gauth@~0.0.27":
   version: 0.0.0-use.local
   resolution: "@langchain/google-gauth@workspace:libs/langchain-google-gauth"
   dependencies:
@@ -11895,7 +11895,17 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/google-vertexai@^0.0.26, @langchain/google-vertexai@workspace:*, @langchain/google-vertexai@workspace:libs/langchain-google-vertexai":
+"@langchain/google-vertexai@npm:^0.0.26":
+  version: 0.0.26
+  resolution: "@langchain/google-vertexai@npm:0.0.26"
+  dependencies:
+    "@langchain/core": ">=0.2.21 <0.3.0"
+    "@langchain/google-gauth": ~0.0.26
+  checksum: 3ffb04cbf50f1b361178df4eac9fbd711f21405e6ad882a1d16e435cec382d9d9d52b02e47adc3a6b5e5b5cdf7c43cfd3ff0c7bdaaf8ff9e9bc0245e6beadbc2
+  languageName: node
+  linkType: hard
+
+"@langchain/google-vertexai@workspace:*, @langchain/google-vertexai@workspace:libs/langchain-google-vertexai":
   version: 0.0.0-use.local
   resolution: "@langchain/google-vertexai@workspace:libs/langchain-google-vertexai"
   dependencies:
