@@ -28,21 +28,23 @@ async function asyncSpawn(command: string, args: string[]) {
   });
 }
 
-const deleteFolderRecursive = async function (inputPath: string) {
+const fsRmRfSafe = async (inputPath: string) => {
   try {
     await fs.promises.rm(inputPath, { recursive: true, force: true });
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
-    console.log(`Error deleting directory via fs.promises.rm: ${error.code}`);
+    console.log(`Error deleting directory via fs.promises.rm: ${error.code}. Path: ${inputPath}`);
   }
 };
 
-const fsUnlink = async (filePath: string) => {
+const fsUnlinkSafe = async (filePath: string) => {
   try {
     await fs.promises.unlink(filePath);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
-    console.log(`Error deleting file via fs.promises.unlink: ${error.code}`);
+    console.log(
+      `Error deleting file via fs.promises.unlink: ${error.code}. Path: ${filePath}`
+    );
   }
 };
 
@@ -585,11 +587,11 @@ function processOptions(): {
 
 async function cleanGeneratedFiles(config: LangChainConfig) {
   const allFileNames = Object.keys(config.entrypoints)
-    .map((key) => [`${key}.cjs`, `${key}.js`, `${key}.d.ts`, `${key}.d.dts`])
+    .map((key) => [`${key}.cjs`, `${key}.js`, `${key}.d.ts`])
     .flat();
   return Promise.all(
     allFileNames.map(async (fileName) => {
-      await fsUnlink(fileName);
+      await fsUnlinkSafe(fileName);
     })
   );
 }
@@ -608,7 +610,7 @@ export async function moveAndRename({
   }
 
   try {
-    for (const file of await fs.promises.readdir(abs(source), {
+    for await (const file of await fs.promises.readdir(abs(source), {
       withFileTypes: true,
     })) {
       if (file.isDirectory()) {
@@ -673,7 +675,7 @@ export async function buildWithTSup() {
   // Clean & generate build files
   if (pre && shouldGenMaps) {
     await Promise.all([
-      deleteFolderRecursive("dist").catch((e) => {
+      fsRmRfSafe("dist").catch((e) => {
         console.error("Error removing dist (pre && shouldGenMaps)");
         throw e;
       }),
@@ -684,7 +686,7 @@ export async function buildWithTSup() {
     ]);
   } else if (pre && !shouldGenMaps) {
     await Promise.all([
-      deleteFolderRecursive("dist").catch((e) => {
+      fsRmRfSafe("dist").catch((e) => {
         console.error("Error removing dist (pre && !shouldGenMaps)");
         throw e;
       }),
@@ -705,11 +707,11 @@ export async function buildWithTSup() {
     // move CJS to dist
     await Promise.all([
       updatePackageJson(config),
-      deleteFolderRecursive("dist-cjs").catch((e) => {
+      fsRmRfSafe("dist-cjs").catch((e) => {
         console.error("Error removing dist-cjs");
         throw e;
       }),
-      deleteFolderRecursive("dist/tests").catch((e) => {
+      fsRmRfSafe("dist/tests").catch((e) => {
         console.error("Error removing dist/tests");
         throw e;
       }),
@@ -717,9 +719,7 @@ export async function buildWithTSup() {
         // Required for cross-platform compatibility.
         // Windows does not manage globs the same as Max/Linux when deleting directories.
         const testFolders = await glob("dist/**/tests");
-        await Promise.all(
-          testFolders.map((folder) => deleteFolderRecursive(folder))
-        );
+        await Promise.all(testFolders.map((folder) => fsRmRfSafe(folder)));
       })().catch((e) => {
         console.error("Error removing dist/**/tests");
         throw e;
