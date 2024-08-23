@@ -17,6 +17,7 @@ interface MemoryVector {
   embedding: number[];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   metadata: Record<string, any>;
+  id?: string;
 }
 
 /**
@@ -186,6 +187,7 @@ export class MemoryVectorStore extends VectorStore {
       content: documents[idx].pageContent,
       embedding,
       metadata: documents[idx].metadata,
+      id: documents[idx].id,
     }));
 
     this.memoryVectors = this.memoryVectors.concat(memoryVectors);
@@ -204,6 +206,7 @@ export class MemoryVectorStore extends VectorStore {
       const doc = new Document({
         metadata: memoryVector.metadata,
         pageContent: memoryVector.content,
+        id: memoryVector.id,
       });
       return filter(doc);
     };
@@ -215,6 +218,7 @@ export class MemoryVectorStore extends VectorStore {
         metadata: vector.metadata,
         content: vector.content,
         embedding: vector.embedding,
+        id: vector.id,
       }))
       .sort((a, b) => (a.similarity > b.similarity ? -1 : 0))
       .slice(0, k);
@@ -240,6 +244,7 @@ export class MemoryVectorStore extends VectorStore {
       new Document({
         metadata: search.metadata,
         pageContent: search.content,
+        id: search.id,
       }),
       search.similarity,
     ]);
@@ -273,6 +278,7 @@ export class MemoryVectorStore extends VectorStore {
         new Document({
           metadata: searches[idx].metadata,
           pageContent: searches[idx].content,
+          id: searches[idx].id,
         })
     );
   }
