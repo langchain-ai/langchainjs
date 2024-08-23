@@ -39,7 +39,7 @@ import {
   copyAndValidateModelParamsInto,
 } from "./utils/common.js";
 import { AbstractGoogleLLMConnection } from "./connection.js";
-import { DefaultGeminiSafetyHandler, GeminiAPIConfig } from "./utils/gemini.js";
+import { DefaultGeminiSafetyHandler } from "./utils/gemini.js";
 import { ApiKeyGoogleAuth, GoogleAbstractedClient } from "./auth.js";
 import { JsonStream } from "./utils/stream.js";
 import { ensureParams } from "./utils/failed_handler.js";
@@ -50,6 +50,7 @@ import type {
   GeminiFunctionDeclaration,
   GeminiFunctionSchema,
   GoogleAIToolType,
+  GeminiAPIConfig,
 } from "./types.js";
 import { zodToGeminiParameters } from "./utils/zod_to_gemini_parameters.js";
 

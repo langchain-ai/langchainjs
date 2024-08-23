@@ -8,7 +8,7 @@ export type MediaBlobData = {
 };
 
 export interface MediaBlobParameters {
-  data: MediaBlobData;
+  data?: MediaBlobData;
 
   metadata?: Record<string, unknown>;
 
@@ -145,7 +145,7 @@ export class MediaBlob extends Serializable implements MediaBlobParameters {
 
   static async fromBlob(
     blob: Blob,
-    other?: MediaBlobParameters
+    other?: Omit<MediaBlobParameters, "data">
   ): Promise<MediaBlob> {
     const valueBuffer = await blob.arrayBuffer();
     const valueArray = new Uint8Array(valueBuffer);
@@ -655,7 +655,7 @@ export class MediaManager {
     if (resolvedBlob) {
       return await this.store.store(resolvedBlob);
     } else {
-      return new MediaBlob();
+      return new MediaBlob({});
     }
   }
 
