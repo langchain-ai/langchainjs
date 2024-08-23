@@ -12402,28 +12402,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/scripts@npm:>=0.1.0 <0.2.0":
-  version: 0.1.0
-  resolution: "@langchain/scripts@npm:0.1.0"
-  dependencies:
-    "@rollup/wasm-node": ^4.19.0
-    axios: ^1.6.7
-    commander: ^11.1.0
-    glob: ^10.3.10
-    lodash: ^4.17.21
-    readline: ^1.3.0
-    rimraf: ^5.0.1
-    rollup: ^4.5.2
-    ts-morph: ^21.0.1
-    typescript: ^5.4.5
-  bin:
-    lc_build: bin/build.js
-    notebook_validate: bin/validate_notebook.js
-  checksum: 6f9f90195688a08326f49430cea8b844b3db222b6a86d94827e31e637dcb77de5330e1733df0373914b3920807e81b1598a6ac6b1a9ddee2ee0db204362d4645
-  languageName: node
-  linkType: hard
-
-"@langchain/scripts@workspace:*, @langchain/scripts@workspace:libs/langchain-scripts":
+"@langchain/scripts@>=0.1.0 <0.2.0, @langchain/scripts@workspace:*, @langchain/scripts@workspace:libs/langchain-scripts":
   version: 0.0.0-use.local
   resolution: "@langchain/scripts@workspace:libs/langchain-scripts"
   dependencies:
