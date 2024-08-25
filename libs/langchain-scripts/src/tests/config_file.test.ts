@@ -1,5 +1,5 @@
 import { test, expect } from "@jest/globals";
-import { _verifyObjectIsLangChainConfig } from "../utils.js";
+import { _verifyObjectIsLangChainConfig } from "../build/utils.js";
 
 test("_verifyObjectIsLangChainConfig successfully fails an invalid object", async () => {
   const { config } = await import("./langchain.invalid.config.js");

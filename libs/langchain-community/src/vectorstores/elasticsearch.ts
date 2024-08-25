@@ -344,7 +344,7 @@ export class ElasticVectorSearch extends VectorStore {
         });
       } else if (condition.operator === "exclude") {
         must_not.push({
-          terms: {
+          term: {
             [metadataField]: condition.value,
           },
         });

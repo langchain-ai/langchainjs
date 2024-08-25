@@ -15,7 +15,10 @@ import { Document, DocumentInterface } from "@langchain/core/documents";
 import { maximalMarginalRelevance } from "@langchain/core/utils/math";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 
-/** Cosmos DB Similarity type. */
+/**
+ * @deprecated Install and import from "@langchain/azure-cosmosdb" instead.
+ * Cosmos DB Similarity type.
+ */
 export const AzureCosmosDBSimilarityType = {
   /** CosineSimilarity */
   COS: "COS",
@@ -25,11 +28,17 @@ export const AzureCosmosDBSimilarityType = {
   L2: "L2",
 } as const;
 
-/** Cosmos DB Similarity type. */
+/**
+ * @deprecated Install and import from "@langchain/azure-cosmosdb" instead.
+ * Cosmos DB Similarity type.
+ */
 export type AzureCosmosDBSimilarityType =
   (typeof AzureCosmosDBSimilarityType)[keyof typeof AzureCosmosDBSimilarityType];
 
-/** Azure Cosmos DB Index Options. */
+/**
+ * @deprecated Install and import from "@langchain/azure-cosmosdb" instead.
+ * Azure Cosmos DB Index Options.
+ */
 export type AzureCosmosDBIndexOptions = {
   /** Skips automatic index creation. */
   readonly skipCreate?: boolean;
@@ -41,7 +50,10 @@ export type AzureCosmosDBIndexOptions = {
   readonly similarity?: AzureCosmosDBSimilarityType;
 };
 
-/** Azure Cosmos DB Delete Parameters. */
+/**
+ * @deprecated Install and import from "@langchain/azure-cosmosdb" instead.
+ * Azure Cosmos DB Delete Parameters.
+ */
 export type AzureCosmosDBDeleteParams = {
   /** List of IDs for the documents to be removed. */
   readonly ids?: string | string[];
@@ -50,6 +62,7 @@ export type AzureCosmosDBDeleteParams = {
 };
 
 /**
+ * @deprecated Install and import from "@langchain/azure-cosmosdb" instead.
  * Configuration options for the `AzureCosmosDBVectorStore` constructor.
  */
 export interface AzureCosmosDBConfig {
@@ -64,6 +77,7 @@ export interface AzureCosmosDBConfig {
 }
 
 /**
+ * @deprecated Install and import from "@langchain/azure-cosmosdb" instead.
  * Azure Cosmos DB for MongoDB vCore vector store.
  * To use this, you should have both:
  * - the `mongodb` NPM package installed

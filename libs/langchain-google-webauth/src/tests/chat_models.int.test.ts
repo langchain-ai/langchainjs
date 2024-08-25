@@ -1,3 +1,4 @@
+/* eslint-disable import/no-extraneous-dependencies */
 import { StructuredTool } from "@langchain/core/tools";
 import { z } from "zod";
 import { test } from "@jest/globals";
@@ -15,11 +16,9 @@ import {
 import { BaseLanguageModelInput } from "@langchain/core/language_models/base";
 import { ChatPromptValue } from "@langchain/core/prompt_values";
 import {
-  BackedBlobStore,
   MediaManager,
   SimpleWebBlobStore,
 } from "@langchain/google-common/experimental/utils/media_core";
-import { InMemoryStore } from "@langchain/core/stores";
 import { ChatGoogle } from "../chat_models.js";
 import { BlobStoreAIStudioFile } from "../media.js";
 
@@ -196,15 +195,11 @@ describe("Google APIKey Chat", () => {
   });
 
   test("media - fileData", async () => {
-    const aliasStore = new BackedBlobStore({
-      backingStore: new InMemoryStore(),
-    });
     const canonicalStore = new BlobStoreAIStudioFile({});
     const resolver = new SimpleWebBlobStore();
     const mediaManager = new MediaManager({
-      aliasStore,
-      canonicalStore,
-      resolver,
+      store: canonicalStore,
+      resolvers: [resolver],
     });
     const model = new ChatGoogle({
       modelName: "gemini-1.5-flash",

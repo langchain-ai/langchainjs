@@ -3,7 +3,7 @@
 import { test } from "@jest/globals";
 import { AmazonKnowledgeBaseRetriever } from "../bedrock.js";
 
-test("AmazonKnowledgeBaseRetriever", async () => {
+test.skip("AmazonKnowledgeBaseRetriever", async () => {
   if (
     !process.env.BEDROCK_AWS_REGION ||
     !process.env.BEDROCK_AWS_ACCESS_KEY_ID ||

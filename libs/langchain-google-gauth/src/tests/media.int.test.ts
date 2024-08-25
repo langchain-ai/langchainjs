@@ -12,9 +12,8 @@ describe("GAuth GCS store", () => {
     const uriPrefix = new GoogleCloudStorageUri("gs://test-langchainjs/");
     const uri = `gs://test-langchainjs/text/test-${Date.now()}-nm`;
     const content = "This is a test";
-    const blob = new MediaBlob({
+    const blob = await MediaBlob.fromBlob(new Blob([content], { type: "text/plain" }), {
       path: uri,
-      data: new Blob([content], { type: "text/plain" }),
     });
     const config: BlobStoreGoogleCloudStorageParams = {
       uriPrefix,
@@ -34,9 +33,8 @@ describe("GAuth GCS store", () => {
     const uriPrefix = new GoogleCloudStorageUri("gs://test-langchainjs/");
     const uri = `gs://test-langchainjs/text/test-${Date.now()}-wm`;
     const content = "This is a test";
-    const blob = new MediaBlob({
+    const blob = await MediaBlob.fromBlob(new Blob([content], { type: "text/plain" }), {
       path: uri,
-      data: new Blob([content], { type: "text/plain" }),
       metadata: {
         alpha: "one",
         bravo: "two",
@@ -65,9 +63,8 @@ describe("GAuth GCS store", () => {
 
     const uriPrefix = new GoogleCloudStorageUri("gs://test-langchainjs/");
     const uri = `gs://test-langchainjs/image/test-${Date.now()}-nm`;
-    const blob = new MediaBlob({
+    const blob = await MediaBlob.fromBlob(data, {
       path: uri,
-      data,
     });
     const config: BlobStoreGoogleCloudStorageParams = {
       uriPrefix,

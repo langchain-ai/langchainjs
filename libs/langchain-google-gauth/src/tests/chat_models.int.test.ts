@@ -16,7 +16,7 @@ import {
 import { InMemoryStore } from "@langchain/core/stores";
 import {
   BackedBlobStore,
-  MediaManager,
+  MediaManager, ReadThroughBlobStore,
   SimpleWebBlobStore,
 } from "@langchain/google-common/experimental/utils/media_core";
 import { GoogleCloudStorageUri } from "@langchain/google-common/experimental/media";
@@ -244,20 +244,23 @@ describe("GAuth Chat", () => {
   });
 
   test("media - fileData", async () => {
-    const aliasStore = new BackedBlobStore({
+    const baseStore = new BackedBlobStore({
       backingStore: new InMemoryStore(),
     });
-    const canonicalStore = new BlobStoreGoogleCloudStorage({
+    const backingStore = new BlobStoreGoogleCloudStorage({
       uriPrefix: new GoogleCloudStorageUri("gs://test-langchainjs/mediatest/"),
       defaultStoreOptions: {
         actionIfInvalid: "prefixPath",
       },
     });
+    const store = new ReadThroughBlobStore({
+      baseStore,
+      backingStore,
+    })
     const resolver = new SimpleWebBlobStore();
     const mediaManager = new MediaManager({
-      aliasStore,
-      canonicalStore,
-      resolver,
+      store,
+      resolvers: [resolver],
     });
     const model = new ChatGoogle({
       modelName: "gemini-1.5-flash",

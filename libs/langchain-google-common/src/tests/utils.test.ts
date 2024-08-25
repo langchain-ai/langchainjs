@@ -2,6 +2,7 @@
 import { beforeEach, expect, test } from "@jest/globals";
 import { InMemoryStore } from "@langchain/core/stores";
 import { SerializedConstructor } from "@langchain/core/load/serializable";
+import { load } from "@langchain/core/load";
 import { z } from "zod";
 import { zodToGeminiParameters } from "../utils/zod_to_gemini_parameters.js";
 import {
@@ -12,6 +13,7 @@ import {
   ReadThroughBlobStore,
   SimpleWebBlobStore,
 } from "../experimental/utils/media_core.js";
+import { ReadableJsonStream } from "../utils/stream.js";
 
 describe("zodToGeminiParameters", () => {
   test("can convert zod schema to gemini schema", () => {
@@ -142,7 +144,14 @@ describe("media core", () => {
     const serialized: SerializedConstructor = {
       lc: 1,
       type: "constructor",
-      id: ["langchain", "google-common", "MediaBlob"],
+      id: [
+        "langchain",
+        "google_common",
+        "experimental",
+        "utils",
+        "media_core",
+        "MediaBlob",
+      ],
       kwargs: {
         data: {
           value: "VGhpcyBpcyBhIHRlc3Q=",
@@ -150,7 +159,13 @@ describe("media core", () => {
         },
       },
     };
-    const mblob = new MediaBlob(serialized);
+    const mblob: MediaBlob = await load(JSON.stringify(serialized), {
+      importMap: {
+        google_common__experimental__utils__media_core: await import(
+          "../experimental/utils/media_core.js"
+        ),
+      },
+    });
     console.log("deserialize mblob", mblob);
     expect(mblob.dataType).toEqual("text/plain");
     expect(await mblob.asString()).toEqual("This is a test");
@@ -399,4 +414,58 @@ describe("media core", () => {
       expect(await canonicalBlob?.asString()).toEqual("fooing");
     });
   });
+});
+
+function toUint8Array(data: string): Uint8Array {
+  return new TextEncoder().encode(data);
+}
+
+test("ReadableJsonStream can handle stream", async () => {
+  const data = [
+    toUint8Array("["),
+    toUint8Array('{"i": 1}'),
+    toUint8Array('{"i'),
+    toUint8Array('": 2}'),
+    toUint8Array("]"),
+  ];
+
+  const source = new ReadableStream({
+    start(controller) {
+      data.forEach((chunk) => controller.enqueue(chunk));
+      controller.close();
+    },
+  });
+  const stream = new ReadableJsonStream(source);
+  expect(await stream.nextChunk()).toEqual({ i: 1 });
+  expect(await stream.nextChunk()).toEqual({ i: 2 });
+  expect(await stream.nextChunk()).toBeNull();
+  expect(stream.streamDone).toEqual(true);
+});
+
+test("ReadableJsonStream can handle multibyte stream", async () => {
+  const data = [
+    toUint8Array("["),
+    toUint8Array('{"i": 1, "msg":"hello👋"}'),
+    toUint8Array('{"i": 2,'),
+    toUint8Array('"msg":"こん'),
+    new Uint8Array([0xe3]), // 1st byte of "に"
+    new Uint8Array([0x81, 0xab]), // 2-3rd bytes of "に"
+    toUint8Array("ちは"),
+    new Uint8Array([0xf0, 0x9f]), // first half bytes of "👋"
+    new Uint8Array([0x91, 0x8b]), // second half bytes of "👋"
+    toUint8Array('"}'),
+    toUint8Array("]"),
+  ];
+
+  const source = new ReadableStream({
+    start(controller) {
+      data.forEach((chunk) => controller.enqueue(chunk));
+      controller.close();
+    },
+  });
+  const stream = new ReadableJsonStream(source);
+  expect(await stream.nextChunk()).toEqual({ i: 1, msg: "hello👋" });
+  expect(await stream.nextChunk()).toEqual({ i: 2, msg: "こんにちは👋" });
+  expect(await stream.nextChunk()).toBeNull();
+  expect(stream.streamDone).toEqual(true);
 });

@@ -5,6 +5,7 @@ import {
 import {
   BaseChatModel,
   BaseChatModelParams,
+  BindToolsInput,
   type BaseChatModelCallOptions,
 } from "@langchain/core/language_models/chat_models";
 import { BaseMessage, type AIMessageChunk } from "@langchain/core/messages";
@@ -28,7 +29,7 @@ import { type StructuredToolInterface } from "@langchain/core/tools";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { ChatResult } from "@langchain/core/outputs";
 
-// TODO: remove once `EventStreamCallbackHandlerInput` is exposed in core.
+// TODO: remove once `EventStreamCallbackHandlerInput` is exposed in core
 interface EventStreamCallbackHandlerInput
   extends Omit<LogStreamCallbackHandlerInput, "_schemaFormat"> {}
 
@@ -298,13 +299,7 @@ class _ConfigurableModel<
   }
 
   override bindTools(
-    tools: (
-      | StructuredToolInterface
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      | Record<string, any>
-      | ToolDefinition
-      | RunnableToolLike
-    )[],
+    tools: BindToolsInput[],
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     params?: Record<string, any>
   ): _ConfigurableModel<RunInput, CallOptions> {

@@ -1,4 +1,5 @@
 import { test } from "@jest/globals";
+import fs from "fs/promises";
 import { BaseLanguageModelInput } from "@langchain/core/language_models/base";
 import { ChatPromptValue } from "@langchain/core/prompt_values";
 import {
@@ -20,10 +21,14 @@ import { z } from "zod";
 import { concat } from "@langchain/core/utils/stream";
 import {
   BackedBlobStore,
-  MediaManager,
+  MediaManager, ReadThroughBlobStore,
   SimpleWebBlobStore,
 } from "@langchain/google-common/experimental/utils/media_core";
 import { GoogleCloudStorageUri } from "@langchain/google-common/experimental/media";
+import {
+  ChatPromptTemplate,
+  MessagesPlaceholder,
+} from "@langchain/core/prompts";
 import { GeminiTool } from "../types.js";
 import { ChatVertexAI } from "../chat_models.js";
 
@@ -203,20 +208,23 @@ describe("GAuth Chat", () => {
   });
 
   test("media - fileData", async () => {
-    const aliasStore = new BackedBlobStore({
+    const baseStore = new BackedBlobStore({
       backingStore: new InMemoryStore(),
     });
-    const canonicalStore = new BlobStoreGoogleCloudStorage({
+    const backingStore = new BlobStoreGoogleCloudStorage({
       uriPrefix: new GoogleCloudStorageUri("gs://test-langchainjs/mediatest/"),
       defaultStoreOptions: {
         actionIfInvalid: "prefixPath",
       },
     });
+    const store = new ReadThroughBlobStore({
+      baseStore,
+      backingStore,
+    })
     const resolver = new SimpleWebBlobStore();
     const mediaManager = new MediaManager({
-      aliasStore,
-      canonicalStore,
-      resolver,
+      store,
+      resolvers: [resolver],
     });
     const model = new ChatVertexAI({
       modelName: "gemini-1.5-flash",
@@ -417,4 +425,48 @@ test("ChatGoogleGenerativeAI can stream tools", async () => {
   expect(toolCalls.length).toBe(1);
   expect(toolCalls[0].name).toBe("current_weather_tool");
   expect(toolCalls[0].args).toHaveProperty("location");
+});
+
+async function fileToBase64(filePath: string): Promise<string> {
+  const fileData = await fs.readFile(filePath);
+  const base64String = Buffer.from(fileData).toString("base64");
+  return base64String;
+}
+
+test("Gemini can understand audio", async () => {
+  // Update this with the correct path to an audio file on your machine.
+  const audioPath = "../langchain-google-genai/src/tests/data/gettysburg10.wav";
+  const audioMimeType = "audio/wav";
+
+  const model = new ChatVertexAI({
+    model: "gemini-1.5-flash",
+    temperature: 0,
+    maxRetries: 0,
+  });
+
+  const audioBase64 = await fileToBase64(audioPath);
+
+  const prompt = ChatPromptTemplate.fromMessages([
+    new MessagesPlaceholder("audio"),
+  ]);
+
+  const chain = prompt.pipe(model);
+  const response = await chain.invoke({
+    audio: new HumanMessage({
+      content: [
+        {
+          type: "media",
+          mimeType: audioMimeType,
+          data: audioBase64,
+        },
+        {
+          type: "text",
+          text: "Summarize the content in this audio. ALso, what is the speaker's tone?",
+        },
+      ],
+    }),
+  });
+
+  expect(typeof response.content).toBe("string");
+  expect((response.content as string).length).toBeGreaterThan(15);
 });

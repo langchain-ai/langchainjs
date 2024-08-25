@@ -1,14 +1,25 @@
-import { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { StructuredToolInterface } from "@langchain/core/tools";
 import { RunnablePassthrough } from "@langchain/core/runnables";
-import { ToolDefinition } from "@langchain/core/language_models/base";
+import {
+  LanguageModelLike,
+  ToolDefinition,
+} from "@langchain/core/language_models/base";
+import { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import { AgentRunnableSequence } from "../agent.js";
 import {
   ToolCallingAgentOutputParser,
   ToolsAgentStep,
 } from "./output_parser.js";
 import { formatToToolMessages } from "../format_scratchpad/tool_calling.js";
+
+function _isBaseChatModel(x: LanguageModelLike): x is BaseChatModel {
+  const model = x as BaseChatModel;
+  return (
+    typeof model._modelType === "function" &&
+    model._modelType() === "base_chat_model"
+  );
+}
 
 /**
  * Params used by the createOpenAIToolsAgent function.
@@ -19,7 +30,7 @@ export type CreateToolCallingAgentParams = {
    * so must either be an OpenAI model that supports that or a wrapper of
    * a different model that adds in equivalent support.
    */
-  llm: BaseChatModel;
+  llm: LanguageModelLike;
   /** Tools this agent has access to. */
   tools: StructuredToolInterface[] | ToolDefinition[];
   /** The prompt to use, must have an input key of `agent_scratchpad`. */
@@ -95,13 +106,17 @@ export function createToolCallingAgent({
       ].join("\n")
     );
   }
-  if (llm.bindTools === undefined) {
-    throw new Error(
-      `This agent requires that the "bind_tools()" method be implemented on the input model.`
-    );
+  let modelWithTools;
+  if (_isBaseChatModel(llm)) {
+    if (llm.bindTools === undefined) {
+      throw new Error(
+        `This agent requires that the "bind_tools()" method be implemented on the input model.`
+      );
+    }
+    modelWithTools = llm.bindTools(tools);
+  } else {
+    modelWithTools = llm;
   }
-
-  const modelWithTools = llm.bindTools(tools);
 
   const agent = AgentRunnableSequence.fromRunnables(
     [

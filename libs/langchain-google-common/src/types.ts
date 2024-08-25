@@ -1,10 +1,9 @@
 import type { BaseLLMParams } from "@langchain/core/language_models/llms";
-import { StructuredToolInterface } from "@langchain/core/tools";
-import type { BaseChatModelCallOptions } from "@langchain/core/language_models/chat_models";
+import type { BaseChatModelCallOptions, BindToolsInput } from "@langchain/core/language_models/chat_models";
 import {BaseMessage, BaseMessageChunk, MessageContent} from "@langchain/core/messages";
 import {ChatGenerationChunk, ChatResult} from "@langchain/core/outputs";
 import type { JsonStream } from "./utils/stream.js";
-import { GeminiAPIConfig } from "./utils/index.js";
+import { MediaManager } from "./experimental/utils/media_core.js";
 
 /**
  * Parameters needed to setup the client connection.
@@ -48,6 +47,7 @@ export interface GoogleConnectionParams<AuthOptions>
 export interface GoogleAISafetySetting {
   category: string;
   threshold: string;
+  method?: string;
 }
 
 export type GoogleAIResponseMimeType = "text/plain" | "application/json";
@@ -115,11 +115,13 @@ export interface GoogleAIModelParams {
   streaming?: boolean;
 }
 
+export type GoogleAIToolType = BindToolsInput | GeminiTool;
+
 /**
  * The params which can be passed to the API at request time.
  */
 export interface GoogleAIModelRequestParams extends GoogleAIModelParams {
-  tools?: StructuredToolInterface[] | GeminiTool[];
+  tools?: GoogleAIToolType[];
   /**
    * Force the model to use tools in a specific way.
    *
@@ -381,4 +383,8 @@ export type GoogleAIAPI = {
     safetyHandler: GoogleAISafetyHandler
   ) => ChatResult;
 
+}
+
+export interface GeminiAPIConfig {
+  mediaManager?: MediaManager;
 }

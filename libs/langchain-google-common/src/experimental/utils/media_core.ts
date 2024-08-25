@@ -1,10 +1,6 @@
 import { v1, v4 } from "uuid"; // FIXME - it is importing the wrong uuid, so v6 and v7 aren't implemented
 import { BaseStore } from "@langchain/core/stores";
-import {
-  Serializable,
-  Serialized,
-  SerializedConstructor,
-} from "@langchain/core/load/serializable";
+import { Serializable } from "@langchain/core/load/serializable";
 
 export type MediaBlobData = {
   value: string; // In Base64 encoding
@@ -38,31 +34,30 @@ function bytesToString(dataArray: Uint8Array): string {
 export class MediaBlob extends Serializable implements MediaBlobParameters {
   lc_serializable = true;
 
-  lc_namespace = ["langchain", "google-common"]; // FIXME - What should this be? And why?
+  lc_namespace = [
+    "langchain",
+    "google_common",
+    "experimental",
+    "utils",
+    "media_core",
+  ];
 
-  data?: MediaBlobData;
+  data: MediaBlobData = {
+    value: "",
+    type: "text/plain",
+  };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   metadata?: Record<string, any>;
 
   path?: string;
 
-  constructor(params?: MediaBlobParameters | Serialized) {
-    const sparams = params as SerializedConstructor;
-    super(sparams?.kwargs);
+  constructor(params: MediaBlobParameters) {
+    super(params);
 
-    const mparams = params as MediaBlobParameters;
-    this.data = mparams?.data || this.lc_kwargs?.data;
-    this.metadata = mparams?.metadata || this.lc_kwargs?.metadata;
-    this.path = mparams?.path || this.lc_kwargs?.path;
-  }
-
-  get lc_attributes() {
-    return {
-      data: this.data,
-      metadata: this.metadata,
-      path: this.path,
-    };
+    this.data = params.data ?? this.data;
+    this.metadata = params.metadata;
+    this.path = params.path;
   }
 
   get size(): number {
@@ -150,7 +145,7 @@ export class MediaBlob extends Serializable implements MediaBlobParameters {
 
   static async fromBlob(
     blob: Blob,
-    other?: MediaBlobParameters
+    other?: Omit<MediaBlobParameters, "data">
   ): Promise<MediaBlob> {
     const valueBuffer = await blob.arrayBuffer();
     const valueArray = new Uint8Array(valueBuffer);
@@ -660,7 +655,7 @@ export class MediaManager {
     if (resolvedBlob) {
       return await this.store.store(resolvedBlob);
     } else {
-      return new MediaBlob();
+      return new MediaBlob({});
     }
   }
 

@@ -5,6 +5,7 @@ import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {
   BaseChatModel,
   BaseChatModelCallOptions,
+  BindToolsInput,
   LangSmithParams,
   type BaseChatModelParams,
 } from "@langchain/core/language_models/chat_models";
@@ -22,6 +23,7 @@ import {
   OpenAIToolCall,
   isAIMessage,
   BaseMessageChunk,
+  UsageMetadata,
 } from "@langchain/core/messages";
 import {
   ChatGeneration,
@@ -45,13 +47,11 @@ import {
   Runnable,
   RunnablePassthrough,
   RunnableSequence,
-  RunnableToolLike,
 } from "@langchain/core/runnables";
 import {
   BaseLanguageModelInput,
   FunctionDefinition,
   StructuredOutputMethodOptions,
-  ToolDefinition,
 } from "@langchain/core/language_models/base";
 import {
   BaseLLMOutputParser,
@@ -64,13 +64,14 @@ import {
   makeInvalidToolCall,
   convertLangChainToolCallToOpenAI,
 } from "@langchain/core/output_parsers/openai_tools";
-import { StructuredToolInterface } from "@langchain/core/tools";
 import { convertToOpenAITool } from "@langchain/core/utils/function_calling";
 import { ToolCallChunk } from "@langchain/core/messages/tool";
 
+type ChatGroqToolType = BindToolsInput | OpenAIClient.ChatCompletionTool;
+
 export interface ChatGroqCallOptions extends BaseChatModelCallOptions {
   headers?: Record<string, string>;
-  tools?: OpenAIClient.ChatCompletionTool[];
+  tools?: ChatGroqToolType[];
   tool_choice?: OpenAIClient.ChatCompletionToolChoiceOption | "any" | string;
   response_format?: { type: "json_object" };
 }
@@ -179,7 +180,8 @@ function convertMessagesToGroqParams(
 }
 
 function groqResponseToChatMessage(
-  message: ChatCompletionsAPI.ChatCompletionMessage
+  message: ChatCompletionsAPI.ChatCompletionMessage,
+  usageMetadata?: UsageMetadata
 ): BaseMessage {
   const rawToolCalls: OpenAIToolCall[] | undefined = message.tool_calls as
     | OpenAIToolCall[]
@@ -201,6 +203,7 @@ function groqResponseToChatMessage(
         additional_kwargs: { tool_calls: rawToolCalls },
         tool_calls: toolCalls,
         invalid_tool_calls: invalidToolCalls,
+        usage_metadata: usageMetadata,
       });
     }
     default:
@@ -226,7 +229,8 @@ function _convertDeltaToolCallToToolCallChunk(
 function _convertDeltaToMessageChunk(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   delta: Record<string, any>,
-  index: number
+  index: number,
+  xGroq?: ChatCompletionsAPI.ChatCompletionChunk.XGroq
 ): {
   message: BaseMessageChunk;
   toolCallData?: {
@@ -250,6 +254,18 @@ function _convertDeltaToMessageChunk(
   } else {
     additional_kwargs = {};
   }
+
+  let usageMetadata: UsageMetadata | undefined;
+  let groqMessageId: string | undefined;
+  if (xGroq?.usage) {
+    usageMetadata = {
+      input_tokens: xGroq.usage.prompt_tokens,
+      output_tokens: xGroq.usage.completion_tokens,
+      total_tokens: xGroq.usage.total_tokens,
+    };
+    groqMessageId = xGroq.id;
+  }
+
   if (role === "user") {
     return {
       message: new HumanMessageChunk({ content }),
@@ -270,6 +286,8 @@ function _convertDeltaToMessageChunk(
               index: tc.index,
             }))
           : undefined,
+        usage_metadata: usageMetadata,
+        id: groqMessageId,
       }),
       toolCallData: toolCallChunks
         ? toolCallChunks.map((tc) => ({
@@ -292,23 +310,332 @@ function _convertDeltaToMessageChunk(
 }
 
 /**
- * Wrapper around Groq API for large language models fine-tuned for chat
+ * Groq chat model integration.
  *
- * Groq API is compatible to the OpenAI API with some limitations. View the
+ * The Groq API is compatible to the OpenAI API with some limitations. View the
  * full API ref at:
  * @link {https://docs.api.groq.com/md/openai.oas.html}
  *
- * To use, you should have the `GROQ_API_KEY` environment variable set.
- * @example
+ * Setup:
+ * Install `@langchain/groq` and set an environment variable named `GROQ_API_KEY`.
+ *
+ * ```bash
+ * npm install @langchain/groq
+ * export GROQ_API_KEY="your-api-key"
+ * ```
+ *
+ * ## [Constructor args](https://api.js.langchain.com/classes/langchain_groq.ChatGroq.html#constructor)
+ *
+ * ## [Runtime args](https://api.js.langchain.com/interfaces/langchain_groq.ChatGroqCallOptions.html)
+ *
+ * Runtime args can be passed as the second argument to any of the base runnable methods `.invoke`. `.stream`, `.batch`, etc.
+ * They can also be passed via `.bind`, or the second arg in `.bindTools`, like shown in the examples below:
+ *
  * ```typescript
- * const model = new ChatGroq({
- *   temperature: 0.9,
- *   apiKey: process.env.GROQ_API_KEY,
+ * // When calling `.bind`, call options should be passed via the first argument
+ * const llmWithArgsBound = llm.bind({
+ *   stop: ["\n"],
+ *   tools: [...],
  * });
  *
- * const response = await model.invoke([new HumanMessage("Hello there!")]);
- * console.log(response);
+ * // When calling `.bindTools`, call options should be passed via the second argument
+ * const llmWithTools = llm.bindTools(
+ *   [...],
+ *   {
+ *     tool_choice: "auto",
+ *   }
+ * );
  * ```
+ *
+ * ## Examples
+ *
+ * <details open>
+ * <summary><strong>Instantiate</strong></summary>
+ *
+ * ```typescript
+ * import { ChatGroq } from '@langchain/groq';
+ *
+ * const llm = new ChatGroq({
+ *   model: "mixtral-8x7b-32768",
+ *   temperature: 0,
+ *   // other params...
+ * });
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Invoking</strong></summary>
+ *
+ * ```typescript
+ * const input = `Translate "I love programming" into French.`;
+ *
+ * // Models also accept a list of chat messages or a formatted prompt
+ * const result = await llm.invoke(input);
+ * console.log(result);
+ * ```
+ *
+ * ```txt
+ * AIMessage {
+ *   "content": "The French translation of \"I love programming\" is \"J'aime programmer\". In this sentence, \"J'aime\" is the first person singular conjugation of the French verb \"aimer\" which means \"to love\", and \"programmer\" is the French infinitive for \"to program\". I hope this helps! Let me know if you have any other questions.",
+ *   "additional_kwargs": {},
+ *   "response_metadata": {
+ *     "tokenUsage": {
+ *       "completionTokens": 82,
+ *       "promptTokens": 20,
+ *       "totalTokens": 102
+ *     },
+ *     "finish_reason": "stop"
+ *   },
+ *   "tool_calls": [],
+ *   "invalid_tool_calls": []
+ * }
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Streaming Chunks</strong></summary>
+ *
+ * ```typescript
+ * for await (const chunk of await llm.stream(input)) {
+ *   console.log(chunk);
+ * }
+ * ```
+ *
+ * ```txt
+ * AIMessageChunk {
+ *   "content": "",
+ *   "additional_kwargs": {},
+ *   "response_metadata": {
+ *     "finishReason": null
+ *   },
+ *   "tool_calls": [],
+ *   "tool_call_chunks": [],
+ *   "invalid_tool_calls": []
+ * }
+ * AIMessageChunk {
+ *   "content": "The",
+ *   "additional_kwargs": {},
+ *   "response_metadata": {
+ *     "finishReason": null
+ *   },
+ *   "tool_calls": [],
+ *   "tool_call_chunks": [],
+ *   "invalid_tool_calls": []
+ * }
+ * AIMessageChunk {
+ *   "content": " French",
+ *   "additional_kwargs": {},
+ *   "response_metadata": {
+ *     "finishReason": null
+ *   },
+ *   "tool_calls": [],
+ *   "tool_call_chunks": [],
+ *   "invalid_tool_calls": []
+ * }
+ * AIMessageChunk {
+ *   "content": " translation",
+ *   "additional_kwargs": {},
+ *   "response_metadata": {
+ *     "finishReason": null
+ *   },
+ *   "tool_calls": [],
+ *   "tool_call_chunks": [],
+ *   "invalid_tool_calls": []
+ * }
+ * AIMessageChunk {
+ *   "content": " of",
+ *   "additional_kwargs": {},
+ *   "response_metadata": {
+ *     "finishReason": null
+ *   },
+ *   "tool_calls": [],
+ *   "tool_call_chunks": [],
+ *   "invalid_tool_calls": []
+ * }
+ * AIMessageChunk {
+ *   "content": " \"",
+ *   "additional_kwargs": {},
+ *   "response_metadata": {
+ *     "finishReason": null
+ *   },
+ *   "tool_calls": [],
+ *   "tool_call_chunks": [],
+ *   "invalid_tool_calls": []
+ * }
+ * AIMessageChunk {
+ *   "content": "I",
+ *   "additional_kwargs": {},
+ *   "response_metadata": {
+ *     "finishReason": null
+ *   },
+ *   "tool_calls": [],
+ *   "tool_call_chunks": [],
+ *   "invalid_tool_calls": []
+ * }
+ * AIMessageChunk {
+ *   "content": " love",
+ *   "additional_kwargs": {},
+ *   "response_metadata": {
+ *     "finishReason": null
+ *   },
+ *   "tool_calls": [],
+ *   "tool_call_chunks": [],
+ *   "invalid_tool_calls": []
+ * }
+ * ...
+ * AIMessageChunk {
+ *   "content": ".",
+ *   "additional_kwargs": {},
+ *   "response_metadata": {
+ *     "finishReason": null
+ *   },
+ *   "tool_calls": [],
+ *   "tool_call_chunks": [],
+ *   "invalid_tool_calls": []
+ * }
+ * AIMessageChunk {
+ *   "content": "",
+ *   "additional_kwargs": {},
+ *   "response_metadata": {
+ *     "finishReason": "stop"
+ *   },
+ *   "tool_calls": [],
+ *   "tool_call_chunks": [],
+ *   "invalid_tool_calls": []
+ * }
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Aggregate Streamed Chunks</strong></summary>
+ *
+ * ```typescript
+ * import { AIMessageChunk } from '@langchain/core/messages';
+ * import { concat } from '@langchain/core/utils/stream';
+ *
+ * const stream = await llm.stream(input);
+ * let full: AIMessageChunk | undefined;
+ * for await (const chunk of stream) {
+ *   full = !full ? chunk : concat(full, chunk);
+ * }
+ * console.log(full);
+ * ```
+ *
+ * ```txt
+ * AIMessageChunk {
+ *   "content": "The French translation of \"I love programming\" is \"J'aime programmer\". In this sentence, \"J'aime\" is the first person singular conjugation of the French verb \"aimer\" which means \"to love\", and \"programmer\" is the French infinitive for \"to program\". I hope this helps! Let me know if you have any other questions.",
+ *   "additional_kwargs": {},
+ *   "response_metadata": {
+ *     "finishReason": "stop"
+ *   },
+ *   "tool_calls": [],
+ *   "tool_call_chunks": [],
+ *   "invalid_tool_calls": []
+ * }
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Bind tools</strong></summary>
+ *
+ * ```typescript
+ * import { z } from 'zod';
+ *
+ * const llmForToolCalling = new ChatGroq({
+ *   model: "llama3-groq-70b-8192-tool-use-preview",
+ *   temperature: 0,
+ *   // other params...
+ * });
+ *
+ * const GetWeather = {
+ *   name: "GetWeather",
+ *   description: "Get the current weather in a given location",
+ *   schema: z.object({
+ *     location: z.string().describe("The city and state, e.g. San Francisco, CA")
+ *   }),
+ * }
+ *
+ * const GetPopulation = {
+ *   name: "GetPopulation",
+ *   description: "Get the current population in a given location",
+ *   schema: z.object({
+ *     location: z.string().describe("The city and state, e.g. San Francisco, CA")
+ *   }),
+ * }
+ *
+ * const llmWithTools = llmForToolCalling.bindTools([GetWeather, GetPopulation]);
+ * const aiMsg = await llmWithTools.invoke(
+ *   "Which city is hotter today and which is bigger: LA or NY?"
+ * );
+ * console.log(aiMsg.tool_calls);
+ * ```
+ *
+ * ```txt
+ * [
+ *   {
+ *     name: 'GetWeather',
+ *     args: { location: 'Los Angeles, CA' },
+ *     type: 'tool_call',
+ *     id: 'call_cd34'
+ *   },
+ *   {
+ *     name: 'GetWeather',
+ *     args: { location: 'New York, NY' },
+ *     type: 'tool_call',
+ *     id: 'call_68rf'
+ *   },
+ *   {
+ *     name: 'GetPopulation',
+ *     args: { location: 'Los Angeles, CA' },
+ *     type: 'tool_call',
+ *     id: 'call_f81z'
+ *   },
+ *   {
+ *     name: 'GetPopulation',
+ *     args: { location: 'New York, NY' },
+ *     type: 'tool_call',
+ *     id: 'call_8byt'
+ *   }
+ * ]
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Structured Output</strong></summary>
+ *
+ * ```typescript
+ * import { z } from 'zod';
+ *
+ * const Joke = z.object({
+ *   setup: z.string().describe("The setup of the joke"),
+ *   punchline: z.string().describe("The punchline to the joke"),
+ *   rating: z.number().optional().describe("How funny the joke is, from 1 to 10")
+ * }).describe('Joke to tell user.');
+ *
+ * const structuredLlm = llmForToolCalling.withStructuredOutput(Joke, { name: "Joke" });
+ * const jokeResult = await structuredLlm.invoke("Tell me a joke about cats");
+ * console.log(jokeResult);
+ * ```
+ *
+ * ```txt
+ * {
+ *   setup: "Why don't cats play poker in the wild?",
+ *   punchline: 'Because there are too many cheetahs.'
+ * }
+ * ```
+ * </details>
+ *
+ * <br />
  */
 export class ChatGroq extends BaseChatModel<
   ChatGroqCallOptions,
@@ -428,16 +755,11 @@ export class ChatGroq extends BaseChatModel<
   }
 
   override bindTools(
-    tools: (
-      | Record<string, unknown>
-      | StructuredToolInterface
-      | ToolDefinition
-      | RunnableToolLike
-    )[],
+    tools: ChatGroqToolType[],
     kwargs?: Partial<ChatGroqCallOptions>
   ): Runnable<BaseLanguageModelInput, AIMessageChunk, ChatGroqCallOptions> {
     return this.bind({
-      tools: tools.map(convertToOpenAITool),
+      tools: tools.map((tool) => convertToOpenAITool(tool)),
       ...kwargs,
     });
   }
@@ -467,7 +789,10 @@ export class ChatGroq extends BaseChatModel<
       index: number;
       type: "tool_call_chunk";
     }[] = [];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let responseMetadata: Record<string, any> | undefined;
     for await (const data of response) {
+      responseMetadata = data;
       const choice = data?.choices[0];
       if (!choice) {
         continue;
@@ -483,7 +808,8 @@ export class ChatGroq extends BaseChatModel<
           ...choice.delta,
           role,
         } ?? {},
-        choice.index
+        choice.index,
+        data.x_groq
       );
 
       if (toolCallData) {
@@ -512,6 +838,19 @@ export class ChatGroq extends BaseChatModel<
       });
       yield chunk;
       void runManager?.handleLLMNewToken(chunk.text ?? "");
+    }
+
+    if (responseMetadata) {
+      if ("choices" in responseMetadata) {
+        delete responseMetadata.choices;
+      }
+      yield new ChatGenerationChunk({
+        message: new AIMessageChunk({
+          content: "",
+          response_metadata: responseMetadata,
+        }),
+        text: "",
+      });
     }
 
     if (options.signal?.aborted) {
@@ -594,10 +933,19 @@ export class ChatGroq extends BaseChatModel<
     if ("choices" in data && data.choices) {
       for (const part of (data as ChatCompletion).choices) {
         const text = part.message?.content ?? "";
+        let usageMetadata: UsageMetadata | undefined;
+        if (tokenUsage.totalTokens !== undefined) {
+          usageMetadata = {
+            input_tokens: tokenUsage.promptTokens ?? 0,
+            output_tokens: tokenUsage.completionTokens ?? 0,
+            total_tokens: tokenUsage.totalTokens,
+          };
+        }
         const generation: ChatGeneration = {
           text,
           message: groqResponseToChatMessage(
-            part.message ?? { role: "assistant" }
+            part.message ?? { role: "assistant" },
+            usageMetadata
           ),
         };
         generation.generationInfo = {

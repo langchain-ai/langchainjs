@@ -1,4 +1,4 @@
-import { MessageContent } from "../messages/index.js";
+import { MessageContent, MessageContentComplex } from "../messages/index.js";
 import { ImagePromptValue, ImageContent } from "../prompt_values.js";
 import type { InputValues, PartialValues } from "../utils/types/index.js";
 import {
@@ -40,6 +40,14 @@ export interface ImagePromptTemplateInput<
    * @defaultValue `true`
    */
   validateTemplate?: boolean;
+
+  /**
+   * Additional fields which should be included inside
+   * the message content array if using a complex message
+   * content.
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  additionalContentFields?: MessageContentComplex;
 }
 
 /**
@@ -63,11 +71,20 @@ export class ImagePromptTemplate<
 
   validateTemplate = true;
 
+  /**
+   * Additional fields which should be included inside
+   * the message content array if using a complex message
+   * content.
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  additionalContentFields?: MessageContentComplex;
+
   constructor(input: ImagePromptTemplateInput<RunInput, PartialVariableName>) {
     super(input);
     this.template = input.template;
     this.templateFormat = input.templateFormat ?? this.templateFormat;
     this.validateTemplate = input.validateTemplate ?? this.validateTemplate;
+    this.additionalContentFields = input.additionalContentFields;
 
     if (this.validateTemplate) {
       let totalInputVariables: string[] = this.inputVariables;

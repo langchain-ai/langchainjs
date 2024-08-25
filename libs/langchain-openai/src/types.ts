@@ -1,7 +1,13 @@
 import type { OpenAI as OpenAIClient } from "openai";
+import type {
+  ResponseFormatText,
+  ResponseFormatJSONObject,
+  ResponseFormatJSONSchema,
+} from "openai/resources/shared";
 
 import { TiktokenModel } from "js-tiktoken/lite";
 import type { BaseLanguageModelCallOptions } from "@langchain/core/language_models/base";
+import type { z } from "zod";
 
 // reexport this type from the included package so we can easily override and extend it if needed in the future
 // also makes it easier for folks to import this type without digging around into the dependent packages
@@ -155,6 +161,12 @@ export interface OpenAIChatInput extends OpenAIBaseInput {
    * Currently in experimental beta.
    */
   __includeRawResponse?: boolean;
+
+  /**
+   * Whether the model supports the `strict` argument when passing in tools.
+   * If `undefined` the `strict` argument will not be passed to OpenAI.
+   */
+  supportsStrictToolCalling?: boolean;
 }
 
 export declare interface AzureOpenAIInput {
@@ -216,3 +228,22 @@ export declare interface AzureOpenAIInput {
    */
   azureADTokenProvider?: () => Promise<string>;
 }
+
+type ChatOpenAIResponseFormatJSONSchema = Omit<
+  ResponseFormatJSONSchema,
+  "json_schema"
+> & {
+  json_schema: Omit<ResponseFormatJSONSchema["json_schema"], "schema"> & {
+    /**
+     * The schema for the response format, described as a JSON Schema object
+     * or a Zod object.
+     */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    schema: Record<string, any> | z.ZodObject<any, any, any, any>;
+  };
+};
+
+export type ChatOpenAIResponseFormat =
+  | ResponseFormatText
+  | ResponseFormatJSONObject
+  | ChatOpenAIResponseFormatJSONSchema;

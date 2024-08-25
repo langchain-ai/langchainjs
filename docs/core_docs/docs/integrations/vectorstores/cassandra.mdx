@@ -220,3 +220,8 @@ In the configuration document, further optional parameters are provided; their d
 | `maxConcurrency` | How many concurrent requests will be sent to Cassandra at a given time.                                                                                                                                                      |
 | `batchSize`      | How many documents will be sent on a single request to Cassandra. When using a value > 1, you should ensure your batch size will not exceed the Cassandra parameter `batch_size_fail_threshold_in_kb`. Batches are unlogged. |
 | `withClause`     | Cassandra tables may be created with an optional `WITH` clause; this is generally not needed but provided for completeness.                                                                                                  |
+
+## Related
+
+- Vector store [conceptual guide](/docs/concepts/#vectorstores)
+- Vector store [how-to guides](/docs/how_to/#vectorstores)

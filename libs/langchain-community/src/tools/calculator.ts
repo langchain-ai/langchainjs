@@ -7,9 +7,12 @@ import { Tool } from "@langchain/core/tools";
  * expressions. It extends the base Tool class.
  * @example
  * ```typescript
+ * import { Calculator } from "@langchain/community/tools/calculator";
+ *
  * const calculator = new Calculator();
- * const sum = calculator.add(99, 99);
+ * const sum = await calculator.invoke("99 + 99");
  * console.log("The sum of 99 and 99 is:", sum);
+ * // The sum of 99 and 99 is: 198
  * ```
  */
 export class Calculator extends Tool {

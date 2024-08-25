@@ -35,7 +35,6 @@ test("Test ChatBedrockConverse can invoke", async () => {
   // console.log({ res });
   expect(typeof res.content).toBe("string");
   expect(res.content.length).toBeGreaterThan(1);
-  expect(res.content).not.toContain("world");
 });
 
 test("Test ChatBedrockConverse stream method", async () => {

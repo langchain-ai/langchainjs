@@ -1,7 +1,6 @@
 import {ChatGenerationChunk, ChatResult} from "@langchain/core/outputs";
 import {BaseMessage, BaseMessageChunk} from "@langchain/core/messages";
-import {GoogleAIAPI, GoogleAISafetyHandler, GoogleLLMResponse} from "../types.js";
-import {GeminiAPIConfig} from "./gemini.js";
+import {GeminiAPIConfig, GoogleAIAPI, GoogleAISafetyHandler, GoogleLLMResponse} from "../types.js";
 
 export function getAnthropicAPI(_config?: GeminiAPIConfig): GoogleAIAPI {
 

@@ -48,6 +48,19 @@ export interface ToolParams extends BaseLangChainParams {
   responseFormat?: ResponseFormat;
 }
 
+/**
+ * Schema for defining tools.
+ *
+ * @version 0.2.19
+ */
+export interface StructuredToolParams
+  extends Pick<StructuredToolInterface, "name" | "schema"> {
+  /**
+   * An optional description of the tool to pass to the model.
+   */
+  description?: string;
+}
+
 export interface StructuredToolInterface<T extends ZodObjectAny = ZodObjectAny>
   extends RunnableInterface<
     (z.output<T> extends string ? string : never) | z.input<T> | ToolCall,
@@ -55,6 +68,9 @@ export interface StructuredToolInterface<T extends ZodObjectAny = ZodObjectAny>
   > {
   lc_namespace: string[];
 
+  /**
+   * A Zod schema representing the parameters of the tool.
+   */
   schema: T | z.ZodEffects<T>;
 
   /**
@@ -75,8 +91,14 @@ export interface StructuredToolInterface<T extends ZodObjectAny = ZodObjectAny>
     tags?: string[]
   ): Promise<ToolReturnType>;
 
+  /**
+   * The name of the tool.
+   */
   name: string;
 
+  /**
+   * A description of the tool.
+   */
   description: string;
 
   returnDirect: boolean;
@@ -413,7 +435,7 @@ export class DynamicStructuredTool<
     this.func = fields.func;
     this.returnDirect = fields.returnDirect ?? this.returnDirect;
     this.schema = (
-      isZodSchema(fields.schema) ? fields.schema : z.object({})
+      isZodSchema(fields.schema) ? fields.schema : z.object({}).passthrough()
     ) as T extends ZodObjectAny ? T : ZodObjectAny;
   }
 
@@ -540,7 +562,11 @@ export function tool<
   | DynamicStructuredTool<T extends ZodObjectAny ? T : ZodObjectAny>
   | DynamicTool {
   // If the schema is not provided, or it's a string schema, create a DynamicTool
-  if (!fields.schema || !("shape" in fields.schema) || !fields.schema.shape) {
+  if (
+    !fields.schema ||
+    (isZodSchema(fields.schema) &&
+      (!("shape" in fields.schema) || !fields.schema.shape))
+  ) {
     return new DynamicTool({
       ...fields,
       description:

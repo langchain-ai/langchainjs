@@ -138,3 +138,8 @@ Before starting, create a schema in Typesense with an id, a field for the vector
 - `static async fromTexts(texts: string[], metadatas: object[], embeddings: Embeddings, config: TypesenseConfig): Promise<Typesense>`: Creates a Typesense vector store from a list of texts and associated metadata. Texts are converted to documents and added to the vector store during construction.
 - `async similaritySearch(query: string, k?: number, filter?: Record<string, unknown>): Promise<Document[]>`: Searches for similar documents based on a query. Returns an array of similar documents.
 - `async deleteDocuments(documentIds: string[]): Promise<void>`: Deletes documents from the vector store based on their IDs.
+
+## Related
+
+- Vector store [conceptual guide](/docs/concepts/#vectorstores)
+- Vector store [how-to guides](/docs/how_to/#vectorstores)
