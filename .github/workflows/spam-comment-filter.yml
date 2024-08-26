@@ -19,7 +19,7 @@ jobs:
         id: regex_check
         run: |
           REGEX='^download\s+(?:https?:\/\/)?[\w-]+(\.[\w-]+)+[^\s]+\s+password:\s*.+\s+in the installer menu, select\s*.+$'
-          if echo "${{ github.event.comment.body }}" | grep -qiE "$REGEX"; then
+          if echo "${{ github.event.comment.body }}" | tr '\n' ' ' | grep -qiP "$REGEX"; then
             echo "REGEX_MATCHED=true" >> $GITHUB_OUTPUT
           else
             echo "REGEX_MATCHED=false" >> $GITHUB_OUTPUT
