@@ -46,6 +46,12 @@ export interface ToolParams extends BaseLangChainParams {
    * @default "content"
    */
   responseFormat?: ResponseFormat;
+  /**
+   * Whether to show full details in the thrown parsing errors.
+   *
+   * @default false
+   */
+  verboseParsingErrors?: boolean;
 }
 
 /**
@@ -121,6 +127,9 @@ export abstract class StructuredTool<
 
   returnDirect = false;
 
+  // TODO: Make default in 0.3
+  verboseParsingErrors = false;
+
   get lc_namespace() {
     return ["langchain", "tools"];
   }
@@ -139,6 +148,8 @@ export abstract class StructuredTool<
   constructor(fields?: ToolParams) {
     super(fields ?? {});
 
+    this.verboseParsingErrors =
+      fields?.verboseParsingErrors ?? this.verboseParsingErrors;
     this.responseFormat = fields?.responseFormat ?? this.responseFormat;
   }
 
@@ -205,11 +216,13 @@ export abstract class StructuredTool<
     let parsed;
     try {
       parsed = await this.schema.parseAsync(arg);
-    } catch (e) {
-      throw new ToolInputParsingException(
-        `Received tool input did not match expected schema`,
-        JSON.stringify(arg)
-      );
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (e: any) {
+      let message = `Received tool input did not match expected schema`;
+      if (this.verboseParsingErrors) {
+        message = `${message}\nDetails: ${e.message}`;
+      }
+      throw new ToolInputParsingException(message, JSON.stringify(arg));
     }
 
     const config = parseCallbackConfigArg(configArg);

@@ -222,3 +222,39 @@ test("Tool input typing is enforced", async () => {
   const res3 = await weatherTool3.invoke("blah");
   expect(res3).toEqual("Sunny");
 });
+
+test("Tool can throw detailed errors", async () => {
+  const weatherSchema = z.object({
+    location: z.string(),
+  });
+
+  const stringTool = tool(
+    (input) => {
+      return JSON.stringify(input);
+    },
+    {
+      name: "string_tool",
+      description: "A tool that appends 'a' to the input string",
+      schema: weatherSchema,
+      verboseParsingErrors: true,
+    }
+  );
+
+  await expect(
+    stringTool.invoke({
+      // @ts-expect-error Testing parsing errors
+      location: 8,
+    })
+  ).rejects.toThrow(`Received tool input did not match expected schema
+Details: [
+  {
+    "code": "invalid_type",
+    "expected": "string",
+    "received": "number",
+    "path": [
+      "location"
+    ],
+    "message": "Expected string, received number"
+  }
+]`);
+});
