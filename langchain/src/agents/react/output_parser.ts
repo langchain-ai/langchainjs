@@ -1,6 +1,6 @@
 import { AgentAction, AgentFinish } from "@langchain/core/agents";
 import { renderTemplate } from "@langchain/core/prompts";
-import {OutputParserException} from "@langchain/core/output_parsers";
+import { OutputParserException } from "@langchain/core/output_parsers";
 import { AgentActionOutputParser } from "../types.js";
 import { FORMAT_INSTRUCTIONS } from "./prompt.js";
 
