@@ -18,11 +18,11 @@ function formatKVMapItem(value: unknown) {
   if (typeof value === "string") {
     return value.trim();
   }
-  
+
   if (value === null || value === undefined) {
     return value;
   }
-  
+
   return tryJsonStringify(value, value.toString());
 }
 
@@ -222,7 +222,9 @@ export class ConsoleCallbackHandler extends BaseTracer {
       `${wrap(
         color.green,
         "[tool/start]"
-      )} [${crumbs}] Entering Tool run with input: "${formatKVMapItem(run.inputs.input)}"`
+      )} [${crumbs}] Entering Tool run with input: "${formatKVMapItem(
+        run.inputs.input
+      )}"`
     );
   }
 
@@ -237,7 +239,9 @@ export class ConsoleCallbackHandler extends BaseTracer {
     console.log(
       `${wrap(color.cyan, "[tool/end]")} [${crumbs}] [${elapsed(
         run
-      )}] Exiting Tool run with output: "${formatKVMapItem(run.outputs?.output)}"`
+      )}] Exiting Tool run with output: "${formatKVMapItem(
+        run.outputs?.output
+      )}"`
     );
   }
 
