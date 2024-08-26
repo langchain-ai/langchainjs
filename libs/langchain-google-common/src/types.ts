@@ -359,32 +359,29 @@ export type GoogleAIAPI = {
     useSystemInstruction: boolean
   ) => Promise<GeminiContent[]>;
 
-  safeResponseToString: (
-    response: GoogleLLMResponse,
-    safetyHandler: GoogleAISafetyHandler
+  responseToString: (
+    response: GoogleLLMResponse
   ) => string;
 
-  safeResponseToChatGeneration: (
-    response: GoogleLLMResponse,
-    safetyHandler: GoogleAISafetyHandler
+  responseToChatGeneration: (
+    response: GoogleLLMResponse
   ) => ChatGenerationChunk;
 
   chunkToString: (
     chunk: BaseMessageChunk
   ) => string;
 
-  safeResponseToBaseMessage: (
-    response: GoogleLLMResponse,
-    safetyHandler: GoogleAISafetyHandler
+  responseToBaseMessage: (
+    response: GoogleLLMResponse
   ) => BaseMessage;
 
-  safeResponseToChatResult: (
-    response: GoogleLLMResponse,
-    safetyHandler: GoogleAISafetyHandler
+  responseToChatResult: (
+    response: GoogleLLMResponse
   ) => ChatResult;
 
 }
 
 export interface GeminiAPIConfig {
+  safetyHandler?: GoogleAISafetyHandler;
   mediaManager?: MediaManager;
 }

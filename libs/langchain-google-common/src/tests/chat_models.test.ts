@@ -17,7 +17,7 @@ import { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { ChatGoogleBase, ChatGoogleBaseInput } from "../chat_models.js";
 import { authOptions, MockClient, MockClientAuthInfo, mockId } from "./mock.js";
-import { GeminiTool, GoogleAIBaseLLMInput } from "../types.js";
+import {GeminiTool, GoogleAIBaseLLMInput, GoogleAISafetyHandler} from "../types.js";
 import { GoogleAbstractedClient } from "../auth.js";
 import { GoogleAISafetyError } from "../utils/safety.js";
 import {
@@ -27,6 +27,7 @@ import {
   ReadThroughBlobStore,
 } from "../experimental/utils/media_core.js";
 import { removeAdditionalProperties } from "../utils/zod_to_gemini_parameters.js";
+import {MessageGeminiSafetyHandler} from "../utils/index.js";
 
 class ChatGoogle extends ChatGoogleBase<MockClientAuthInfo> {
   constructor(fields?: ChatGoogleBaseInput<MockClientAuthInfo>) {
@@ -474,7 +475,7 @@ describe("Mock ChatGoogle", () => {
     expect(caught).toBeTruthy();
   });
 
-  test("2. Response format - safety", async () => {
+  test("2. Safety - default", async () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const record: Record<string, any> = {};
     const projectId = mockId();
@@ -500,15 +501,49 @@ describe("Mock ChatGoogle", () => {
       caught = true;
       expect(xx).toBeInstanceOf(GoogleAISafetyError);
 
-      const result = xx?.reply.generations[0].message;
+      const result = xx?.reply.generations[0];
+      expect(result).toBeUndefined();
+    }
+
+    expect(caught).toEqual(true);
+  });
+
+  test("2. Safety - safety handler", async () => {
+    const safetyHandler: GoogleAISafetyHandler = new MessageGeminiSafetyHandler({
+      msg: "I'm sorry, Dave, but I can't do that."
+    })
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-2-mock.json",
+    };
+    const model = new ChatGoogle({
+      authOptions,
+      safetyHandler
+    });
+    const messages: BaseMessageLike[] = [
+      new HumanMessage("Flip a coin and tell me H for heads and T for tails"),
+      new AIMessage("H"),
+      new HumanMessage("Flip it again"),
+    ];
+    let caught = false;
+    try {
+      const result = await model.invoke(messages);
 
       expect(result._getType()).toEqual("ai");
       const aiMessage = result as AIMessage;
       expect(aiMessage.content).toBeDefined();
-      expect(aiMessage.content).toBe("T");
+      expect(aiMessage.content).toBe("I'm sorry, Dave, but I can't do that.");
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (xx: any) {
+      caught = true;
     }
 
-    expect(caught).toEqual(true);
+    expect(caught).toEqual(false);
   });
 
   test("3. invoke - images", async () => {

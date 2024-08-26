@@ -344,10 +344,7 @@ export abstract class ChatGoogleBase<AuthOptions>
       options,
       runManager,
     );
-    const ret = this.connection.api.safeResponseToChatResult(
-      response,
-      this.safetyHandler
-    );
+    const ret = this.connection.api.responseToChatResult(response);
     await runManager?.handleLLMNewToken(ret.generations[0].text);
     return ret;
   }
@@ -387,18 +384,15 @@ export abstract class ChatGoogleBase<AuthOptions>
       }
       const chunk =
         output !== null
-          ? this.connection.api.safeResponseToChatGeneration(
-              { data: output },
-              this.safetyHandler
-            )
+          ? this.connection.api.responseToChatGeneration({ data: output })
           : new ChatGenerationChunk({
-              text: "",
-              generationInfo: { finishReason: "stop" },
-              message: new AIMessageChunk({
-                content: "",
-                usage_metadata: usageMetadata,
-              }),
-            });
+            text: "",
+            generationInfo: { finishReason: "stop" },
+            message: new AIMessageChunk({
+              content: "",
+              usage_metadata: usageMetadata,
+            }),
+          });
       yield chunk;
       await runManager?.handleLLMNewToken(chunk.text);
     }

@@ -1,6 +1,6 @@
 import {ChatGenerationChunk, ChatResult} from "@langchain/core/outputs";
 import {BaseMessage, BaseMessageChunk} from "@langchain/core/messages";
-import {GeminiAPIConfig, GoogleAIAPI, GoogleAISafetyHandler, GoogleLLMResponse} from "../types.js";
+import {GeminiAPIConfig, GoogleAIAPI, GoogleLLMResponse} from "../types.js";
 
 export function getAnthropicAPI(_config?: GeminiAPIConfig): GoogleAIAPI {
 
@@ -8,16 +8,14 @@ export function getAnthropicAPI(_config?: GeminiAPIConfig): GoogleAIAPI {
     throw new Error("Not implemented");
   }
 
-  function safeResponseToString(
-    _response: GoogleLLMResponse,
-    _safetyHandler: GoogleAISafetyHandler
+  function responseToString(
+    _response: GoogleLLMResponse
   ): string {
     return notImplemented();
   }
 
-  function safeResponseToChatGeneration(
-    _response: GoogleLLMResponse,
-    _safetyHandler: GoogleAISafetyHandler
+  function responseToChatGeneration(
+    _response: GoogleLLMResponse
   ): ChatGenerationChunk {
     return notImplemented();
   }
@@ -28,26 +26,24 @@ export function getAnthropicAPI(_config?: GeminiAPIConfig): GoogleAIAPI {
     return notImplemented();
   }
 
-  function safeResponseToBaseMessage(
-    _response: GoogleLLMResponse,
-    _safetyHandler: GoogleAISafetyHandler
+  function responseToBaseMessage(
+    _response: GoogleLLMResponse
   ): BaseMessage {
     return notImplemented();
   }
 
-  function safeResponseToChatResult(
-    _response: GoogleLLMResponse,
-    _safetyHandler: GoogleAISafetyHandler
+  function responseToChatResult(
+    _response: GoogleLLMResponse
   ): ChatResult {
     return notImplemented();
   }
 
   return {
-    safeResponseToString,
-    safeResponseToChatGeneration,
+    responseToString,
+    responseToChatGeneration,
     chunkToString,
-    safeResponseToBaseMessage,
-    safeResponseToChatResult,
+    responseToBaseMessage,
+    responseToChatResult,
   };
 
 }
