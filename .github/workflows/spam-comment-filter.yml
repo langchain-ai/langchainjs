@@ -1,0 +1,29 @@
+name: Spam Comment Filter
+
+on:
+  issue_comment:
+    types: [created]
+  pull_request_review_comment:
+    types: [created]
+
+jobs:
+  filter_spam:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js 18.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+      - name: Install dependencies
+        run: yarn install --immutable
+      - name: Build scripts
+        run: yarn turbo:command build --filter=@langchain/scripts
+      - name: Run spam detection script
+        env:
+          SPAM_COMMENT_GITHUB_TOKEN: ${{ secrets.SPAM_COMMENT_GITHUB_TOKEN }}
+          COMMENT_JSON: ${{ toJson(github.event.comment) }}
+          COMMENT_ID: ${{ github.event.comment.id }}
+          REPO_OWNER: ${{ github.repository_owner }}
+          REPO_NAME: ${{ github.event.repository.name }}
+        run: yarn workspace @langchain/scripts filter_spam_comment
