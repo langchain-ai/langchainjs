@@ -14,9 +14,9 @@
   },
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-scripts/",
   "bin": {
+    "filter_spam_comment": "bin/filter_spam_comment.js",
     "lc_build": "bin/build.js",
-    "notebook_validate": "bin/validate_notebook.js",
-    "filter_spam_comment": "bin/filter_spam_comment.js"
+    "notebook_validate": "bin/validate_notebook.js"
   },
   "scripts": {
     "build": "yarn clean && yarn turbo:command build:internal --filter=@langchain/scripts",
