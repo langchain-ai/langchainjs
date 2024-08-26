@@ -13551,6 +13551,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@openfga/sdk@npm:^0.6.2":
+  version: 0.6.2
+  resolution: "@openfga/sdk@npm:0.6.2"
+  dependencies:
+    "@opentelemetry/api": ^1.9.0
+    "@opentelemetry/semantic-conventions": ^1.25.0
+    axios: ^1.6.8
+    tiny-async-pool: ^2.1.0
+  checksum: 6b75080d450b0be659f334dc8e5fd82551a1794fb87b24eb68dc6791c1c14cc4dfb238d55d858a20d2fa2d58c9301980bde1b16bc738cafcc1d4f40ab3f5d5e5
+  languageName: node
+  linkType: hard
+
 "@opensearch-project/opensearch@npm:^2.2.0":
   version: 2.2.0
   resolution: "@opensearch-project/opensearch@npm:2.2.0"
@@ -13568,6 +13580,20 @@ __metadata:
   version: 1.4.1
   resolution: "@opentelemetry/api@npm:1.4.1"
   checksum: e783c40d1a518abf9c4c5d65223237c1392cd9a6c53ac6e2c3ef0c05ff7266e3dfc4fd9874316dae0dcb7a97950878deb513bcbadfaad653d48f0215f2a0911b
+  languageName: node
+  linkType: hard
+
+"@opentelemetry/api@npm:^1.9.0":
+  version: 1.9.0
+  resolution: "@opentelemetry/api@npm:1.9.0"
+  checksum: 9e88e59d53ced668f3daaecfd721071c5b85a67dd386f1c6f051d1be54375d850016c881f656ffbe9a03bedae85f7e89c2f2b635313f9c9b195ad033cdc31020
+  languageName: node
+  linkType: hard
+
+"@opentelemetry/semantic-conventions@npm:^1.25.0":
+  version: 1.25.1
+  resolution: "@opentelemetry/semantic-conventions@npm:1.25.1"
+  checksum: fea418a4b09c55121c6da11c49dd2105116533838c484aead17e8acf8029dad711e145849812f9c61f9e48fad8e2b6cf103d2c18847ca993032ce9b27c2f863d
   languageName: node
   linkType: hard
 
@@ -32327,6 +32353,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "langchainjs@workspace:."
   dependencies:
+    "@openfga/sdk": ^0.6.2
     "@tsconfig/recommended": ^1.0.2
     "@types/jest": ^29.5.3
     "@types/semver": ^7
@@ -40438,6 +40465,13 @@ __metadata:
     es5-ext: ^0.10.64
     next-tick: ^1.1.0
   checksum: 7d37f90bdcee900aa4ba13e983905e2d16538bb13d38315f1ea3670656d91e7898f018909caedc8ebe964974ddeb3eedb5ffdc21f2329e34e6bcc353d0ee2903
+  languageName: node
+  linkType: hard
+
+"tiny-async-pool@npm:^2.1.0":
+  version: 2.1.0
+  resolution: "tiny-async-pool@npm:2.1.0"
+  checksum: 8891326f30e587590f94c5e1f8cab59c9aa305e442fc5b9f7ea997f8611d805a797aae2ea93cd00b42b494ef749353df38b4555e2a769d6fff31a3db7add7208
   languageName: node
   linkType: hard
 
