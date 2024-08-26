@@ -1255,7 +1255,7 @@ export class ChatOpenAI<
       }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const generationInfo: Record<string, any> = { ...newTokenIndices };
-      if (choice.finish_reason !== undefined) {
+      if (choice.finish_reason != null) {
         generationInfo.finish_reason = choice.finish_reason;
         // Only include system fingerprint in the last chunk for now
         // to avoid concatenation issues
