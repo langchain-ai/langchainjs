@@ -146,7 +146,7 @@ export interface AnthropicInput {
    */
   streamUsage?: boolean;
 
-  createClient?: (options: ClientOptions) => Anthropic
+  createClient?: (options: ClientOptions) => Anthropic;
 }
 
 /**
@@ -649,7 +649,9 @@ export class ChatAnthropicMessages<
     this.streaming = fields?.streaming ?? false;
     this.streamUsage = fields?.streamUsage ?? this.streamUsage;
 
-    this.createClient = fields?.createClient ?? ((options: ClientOptions) => new Anthropic(options));
+    this.createClient =
+      fields?.createClient ??
+      ((options: ClientOptions) => new Anthropic(options));
   }
 
   getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {

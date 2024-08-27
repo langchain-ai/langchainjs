@@ -16,8 +16,8 @@ import {
 } from "@langchain/core/prompts";
 import { CallbackManager } from "@langchain/core/callbacks/manager";
 import { concat } from "@langchain/core/utils/stream";
-import { ChatAnthropic } from "../chat_models.js";
 import { AnthropicVertex } from "@anthropic-ai/vertex-sdk";
+import { ChatAnthropic } from "../chat_models.js";
 
 test("Test ChatAnthropic", async () => {
   const chat = new ChatAnthropic({
