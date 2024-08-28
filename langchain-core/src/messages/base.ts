@@ -450,12 +450,25 @@ export abstract class BaseMessageChunk extends BaseMessage {
   abstract concat(chunk: BaseMessageChunk): BaseMessageChunk;
 }
 
+export type MessageFieldWithRole = {
+  role: StringWithAutocomplete<"user" | "assistant" | MessageType>;
+  content: MessageContent;
+  name?: string;
+} & Record<string, unknown>;
+
+export function _isMessageFieldWithRole(
+  x: BaseMessageLike
+): x is MessageFieldWithRole {
+  return typeof (x as MessageFieldWithRole).role === "string";
+}
+
 export type BaseMessageLike =
   | BaseMessage
   | ({
       type: MessageType | "user" | "assistant" | "placeholder";
     } & BaseMessageFields &
       Record<string, unknown>)
+  | MessageFieldWithRole
   | [
       StringWithAutocomplete<
         MessageType | "user" | "assistant" | "placeholder"
