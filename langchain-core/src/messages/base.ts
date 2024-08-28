@@ -289,6 +289,16 @@ export abstract class BaseMessage
     };
   }
 
+  // this private method is used to update the ID for the runtime
+  // value as well as in lc_kwargs for serialisation
+  _updateId(value: string | undefined) {
+    this.id = value;
+
+    // lc_attributes wouldn't work here, because jest compares the
+    // whole object
+    this.lc_kwargs.id = value;
+  }
+
   get [Symbol.toStringTag]() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return (this.constructor as any).lc_name();
