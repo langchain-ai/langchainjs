@@ -6,6 +6,8 @@ import {
   ToolMessage,
   ToolMessageChunk,
   AIMessageChunk,
+  coerceMessageLikeToMessage,
+  SystemMessage,
 } from "../index.js";
 import { load } from "../../load/index.js";
 
@@ -332,5 +334,65 @@ describe("Complex AIMessageChunk concat", () => {
         response_metadata: { extra: "value" },
       })
     );
+  });
+});
+
+describe("Message like coercion", () => {
+  it("Should convert OpenAI format messages", async () => {
+    const messages = [
+      {
+        id: "foobar",
+        role: "system",
+        content: "You are an assistant.",
+      },
+      {
+        role: "user",
+        content: [{ type: "text", text: "What is the weather in SF?" }],
+      },
+      {
+        role: "assistant",
+        content: "",
+        tool_calls: [
+          {
+            id: "call_123",
+            function: {
+              name: "get_weather",
+              arguments: JSON.stringify({ location: "sf" }),
+            },
+            type: "function",
+          },
+        ],
+      },
+      {
+        role: "tool",
+        content: "Pretty nice right now!",
+        tool_call_id: "call_123",
+      },
+    ].map(coerceMessageLikeToMessage);
+    expect(messages).toEqual([
+      new SystemMessage({
+        id: "foobar",
+        content: "You are an assistant.",
+      }),
+      new HumanMessage({
+        content: [{ type: "text", text: "What is the weather in SF?" }],
+      }),
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          {
+            id: "call_123",
+            name: "get_weather",
+            args: { location: "sf" },
+            type: "tool_call",
+          },
+        ],
+      }),
+      new ToolMessage({
+        name: undefined,
+        content: "Pretty nice right now!",
+        tool_call_id: "call_123",
+      }),
+    ]);
   });
 });
