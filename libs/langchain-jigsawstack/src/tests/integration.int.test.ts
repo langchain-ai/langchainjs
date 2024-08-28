@@ -1,6 +1,5 @@
 import { test, expect } from "@jest/globals";
 import { JigsawStack } from "jigsawstack";
-
 import { JigsawStackAIScrape, JigsawStackVOCR } from "../tools.js";
 
 test("JigsawStackAIScrape can scrape a website given a url and prompt", async () => {
@@ -17,7 +16,7 @@ test("JigsawStackAIScrape can scrape a website given a url and prompt", async ()
   expect(parsedData.success).toBeTruthy();
 });
 
-test("JigsawStackVocrResults can perform vision ocr", async () => {
+test("JigsawStackVocr can perform vision ocr", async () => {
   const tool = new JigsawStackVOCR({
     // @ts-expect-error type errors
     client: new JigsawStack(),
