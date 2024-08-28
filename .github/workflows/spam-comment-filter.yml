@@ -1,0 +1,43 @@
+name: Spam Comment Filter
+
+on:
+  issue_comment:
+    types: [created]
+  pull_request_review_comment:
+    types: [created]
+
+jobs:
+  filter_spam:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js 18.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+      - name: Check issue body against regex
+        id: regex_check
+        env:
+          COMMENT_BODY: ${{ github.event.comment.body }}
+        run: |
+          REGEX='^download\s+(?:https?:\/\/)?[\w-]+(\.[\w-]+)+[^\s]+\s+password:\s*.+\s+in the installer menu, select\s*.+$'
+          if echo "$COMMENT_BODY" | tr '\n' ' ' | grep -qiP "$REGEX"; then
+            echo "REGEX_MATCHED=true" >> $GITHUB_OUTPUT
+          else
+            echo "REGEX_MATCHED=false" >> $GITHUB_OUTPUT
+          fi
+      - name: Install dependencies
+        if: steps.regex_check.outputs.REGEX_MATCHED == 'true'
+        run: cd ./libs/langchain-scripts && yarn workspaces focus
+      - name: Build scripts
+        if: steps.regex_check.outputs.REGEX_MATCHED == 'true'
+        run: cd ./libs/langchain-scripts && yarn build:internal
+      - name: Run spam detection script
+        if: steps.regex_check.outputs.REGEX_MATCHED == 'true'
+        env:
+          SPAM_COMMENT_GITHUB_TOKEN: ${{ secrets.SPAM_COMMENT_GITHUB_TOKEN }}
+          COMMENT_JSON: ${{ toJson(github.event.comment) }}
+          COMMENT_ID: ${{ github.event.comment.id }}
+          REPO_OWNER: ${{ github.repository_owner }}
+          REPO_NAME: ${{ github.event.repository.name }}
+        run: cd ./libs/langchain-scripts && yarn filter_spam_comment

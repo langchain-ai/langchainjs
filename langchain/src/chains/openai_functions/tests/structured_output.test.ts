@@ -52,7 +52,7 @@ test("structured output parser", async () => {
     },
   ]);
 
-  console.log("result", result);
+  // console.log("result", result);
 
   expect(result.name).toEqual("Anna");
   expect(result.surname).toEqual("Kowalska");
@@ -106,7 +106,7 @@ test("structured output parser with Zod input", async () => {
     },
   ]);
 
-  console.log("result", result);
+  // console.log("result", result);
 
   expect(result.name).toEqual("Anna");
   expect(result.surname).toEqual("Kowalska");

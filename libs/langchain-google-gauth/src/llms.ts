@@ -12,7 +12,7 @@ import { GAuthClient } from "./auth.js";
 export interface GoogleLLMInput extends GoogleBaseLLMInput<GoogleAuthOptions> {}
 
 /**
- * Integration with an LLM.
+ * Integration with a Google LLM.
  */
 export class GoogleLLM
   extends GoogleBaseLLM<GoogleAuthOptions>

@@ -4,10 +4,11 @@ on:
   push:
     branches: ["main"]
   pull_request:
-    # Do not run this workflow if only docs/examples changed.
-    paths-ignore:
-      - 'docs/**'
-      - 'examples/**'
+    # Only run this workflow if the following directories have changed.
+    paths:
+      - 'langchain/**'
+      - 'langchain-core/**'
+      - 'libs/**'
   workflow_dispatch:  # Allows triggering the workflow manually in GitHub UI
 
 # If another push to the same PR or branch happens while this workflow is still running,
@@ -110,6 +111,22 @@ jobs:
         run: yarn build --filter=@langchain/standard-tests
       - name: Test `@langchain/community` with lowest deps
         run: docker compose -f dependency_range_tests/docker-compose.yml run community-lowest-deps
+
+  community-npm-install:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "yarn"
+      - name: Install dependencies
+        run: yarn install --immutable
+      - name: Build `@langchain/standard-tests`
+        run: yarn build --filter=@langchain/standard-tests
+      - name: Test npm install on `@langchain/community`
+        run: docker compose -f dependency_range_tests/docker-compose.yml run community-npm-install
 
   # OpenAI
   openai-latest-deps:

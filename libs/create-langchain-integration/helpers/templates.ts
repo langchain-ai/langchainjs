@@ -28,7 +28,14 @@ export async function installTemplate({ appName, root }: any) {
   const packageJson: any = JSON.parse(
     await fs.readFile(packageJsonFile, "utf8")
   );
+
   packageJson.name = appName;
+  if (appName.startsWith("@langchain/")) {
+    const integrationName = appName.replace("@langchain/", "");
+    packageJson.description = `Integration for LangChain ${integrationName}`;
+    packageJson.homepage = `https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-${integrationName}/`;
+    packageJson.scripts.build = `yarn turbo:command build:internal --filter=${appName}`;
+  }
 
   await fs.writeFile(
     packageJsonFile,

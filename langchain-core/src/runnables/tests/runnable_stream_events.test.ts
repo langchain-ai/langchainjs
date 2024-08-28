@@ -2,7 +2,7 @@
 /* eslint-disable no-process-env */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { test } from "@jest/globals";
+import { test, expect, afterEach } from "@jest/globals";
 import { z } from "zod";
 import {
   RunnableLambda,
@@ -22,7 +22,7 @@ import {
   SystemMessage,
 } from "../../messages/index.js";
 import { ChatGenerationChunk, GenerationChunk } from "../../outputs.js";
-import { DynamicStructuredTool, DynamicTool } from "../../tools.js";
+import { DynamicStructuredTool, DynamicTool } from "../../tools/index.js";
 import { Document } from "../../documents/document.js";
 
 function reverse(s: string) {

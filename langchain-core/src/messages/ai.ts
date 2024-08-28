@@ -128,6 +128,15 @@ export class AIMessage extends BaseMessage {
   _getType(): MessageType {
     return "ai";
   }
+
+  override get _printableFields(): Record<string, unknown> {
+    return {
+      ...super._printableFields,
+      tool_calls: this.tool_calls,
+      invalid_tool_calls: this.invalid_tool_calls,
+      usage_metadata: this.usage_metadata,
+    };
+  }
 }
 
 export function isAIMessage(x: BaseMessage): x is AIMessage {
@@ -179,14 +188,19 @@ export class AIMessageChunk extends BaseMessageChunk {
       for (const toolCallChunk of fields.tool_call_chunks) {
         let parsedArgs = {};
         try {
-          parsedArgs = parsePartialJson(toolCallChunk.args ?? "{}") ?? {};
-          if (typeof parsedArgs !== "object" || Array.isArray(parsedArgs)) {
+          parsedArgs = parsePartialJson(toolCallChunk.args || "{}");
+          if (
+            parsedArgs === null ||
+            typeof parsedArgs !== "object" ||
+            Array.isArray(parsedArgs)
+          ) {
             throw new Error("Malformed tool call chunk args.");
           }
           toolCalls.push({
             name: toolCallChunk.name ?? "",
             args: parsedArgs,
             id: toolCallChunk.id,
+            type: "tool_call",
           });
         } catch (e) {
           invalidToolCalls.push({
@@ -194,6 +208,7 @@ export class AIMessageChunk extends BaseMessageChunk {
             args: toolCallChunk.args,
             id: toolCallChunk.id,
             error: "Malformed args.",
+            type: "invalid_tool_call",
           });
         }
       }
@@ -230,6 +245,16 @@ export class AIMessageChunk extends BaseMessageChunk {
 
   _getType(): MessageType {
     return "ai";
+  }
+
+  override get _printableFields(): Record<string, unknown> {
+    return {
+      ...super._printableFields,
+      tool_calls: this.tool_calls,
+      tool_call_chunks: this.tool_call_chunks,
+      invalid_tool_calls: this.invalid_tool_calls,
+      usage_metadata: this.usage_metadata,
+    };
   }
 
   concat(chunk: AIMessageChunk) {

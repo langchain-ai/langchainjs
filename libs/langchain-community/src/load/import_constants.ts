@@ -16,6 +16,7 @@ export const optionalImportEntrypoints: string[] = [
   "langchain_community/embeddings/gradient_ai",
   "langchain_community/embeddings/hf",
   "langchain_community/embeddings/hf_transformers",
+  "langchain_community/embeddings/jina",
   "langchain_community/embeddings/llama_cpp",
   "langchain_community/embeddings/premai",
   "langchain_community/embeddings/tensorflow",
@@ -155,6 +156,7 @@ export const optionalImportEntrypoints: string[] = [
   "langchain_community/document_loaders/web/figma",
   "langchain_community/document_loaders/web/firecrawl",
   "langchain_community/document_loaders/web/github",
+  "langchain_community/document_loaders/web/taskade",
   "langchain_community/document_loaders/web/notionapi",
   "langchain_community/document_loaders/web/pdf",
   "langchain_community/document_loaders/web/recursive_url",
@@ -181,4 +183,5 @@ export const optionalImportEntrypoints: string[] = [
   "langchain_community/experimental/multimodal_embeddings/googlevertexai",
   "langchain_community/experimental/hubs/makersuite/googlemakersuitehub",
   "langchain_community/chains/graph_qa/cypher",
+  "langchain_community/langgraph/checkpointers/vercel_kv",
 ];

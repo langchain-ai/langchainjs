@@ -4,7 +4,7 @@
 
 import { Run } from "langsmith";
 import { v4 as uuidv4 } from "uuid";
-import { jest } from "@jest/globals";
+import { jest, test, expect, describe } from "@jest/globals";
 import { createChatMessageChunkEncoderStream } from "../../language_models/chat_models.js";
 import { BaseMessage, HumanMessage } from "../../messages/index.js";
 import { OutputParserException } from "../../output_parsers/base.js";
@@ -436,20 +436,20 @@ test("Create a runnable sequence with a static method with invalid output and ca
 test("RunnableSequence can pass config to every step in batched request", async () => {
   let numSeen = 0;
 
-  const addOne = (x: number, options?: { config?: RunnableConfig }) => {
-    if (options?.config?.configurable?.isPresent === true) {
+  const addOne = (x: number, options?: RunnableConfig) => {
+    if (options?.configurable?.isPresent === true) {
       numSeen += 1;
     }
     return x + 1;
   };
-  const addTwo = (x: number, options?: { config?: RunnableConfig }) => {
-    if (options?.config?.configurable?.isPresent === true) {
+  const addTwo = (x: number, options?: RunnableConfig) => {
+    if (options?.configurable?.isPresent === true) {
       numSeen += 1;
     }
     return x + 2;
   };
-  const addThree = (x: number, options?: { config?: RunnableConfig }) => {
-    if (options?.config?.configurable?.isPresent === true) {
+  const addThree = (x: number, options?: RunnableConfig) => {
+    if (options?.configurable?.isPresent === true) {
       numSeen += 1;
     }
     return x + 3;

@@ -2,17 +2,17 @@
 import { test, expect } from "@jest/globals";
 import { ChatModelUnitTests } from "@langchain/standard-tests";
 import { AIMessageChunk } from "@langchain/core/messages";
-import { ChatCohere, CohereChatCallOptions } from "../chat_models.js";
+import { ChatCohere, ChatCohereCallOptions } from "../chat_models.js";
 
 class ChatCohereStandardUnitTests extends ChatModelUnitTests<
-  CohereChatCallOptions,
+  ChatCohereCallOptions,
   AIMessageChunk
 > {
   constructor() {
     super({
       Cls: ChatCohere,
-      chatModelHasToolCalling: false,
-      chatModelHasStructuredOutput: false,
+      chatModelHasToolCalling: true,
+      chatModelHasStructuredOutput: true,
       constructorArgs: {},
     });
     // This must be set so method like `.bindTools` or `.withStructuredOutput`

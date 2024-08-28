@@ -57,7 +57,7 @@ const ratelimit = new Ratelimit({
     token: UPSTASH_REDIS_REST_TOKEN,
   }),
   // 10 requests per window, where window size is 60 seconds:
-  limiter: Ratelimit.fixedWindow(1, "60 s"),
+  limiter: Ratelimit.fixedWindow(10, "60 s"),
 });
 
 // create handler

@@ -6,7 +6,14 @@ import {
 } from "@langchain/core/messages";
 import { StructuredToolInterface } from "@langchain/core/tools";
 import { ChatGeneration, ChatGenerationChunk } from "@langchain/core/outputs";
-import { extractToolCalls, formatMessagesForAnthropic } from "./anthropic.js";
+import {
+  _makeMessageChunkFromAnthropicEvent,
+  extractToken,
+  extractToolCallChunk,
+  extractToolUseContent,
+  extractToolCalls,
+  formatMessagesForAnthropic,
+} from "./anthropic.js";
 
 export type CredentialType =
   | AwsCredentialIdentity
@@ -331,49 +338,50 @@ export class BedrockLLMInputOutputAdapter {
   static prepareMessagesOutput(
     provider: string,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    response: any
+    response: any,
+    fields?: {
+      coerceContentToString?: boolean;
+    }
   ): ChatGeneration | undefined {
     const responseBody = response ?? {};
     if (provider === "anthropic") {
-      if (responseBody.type === "message_start") {
-        return parseMessage(responseBody.message, true);
-      } else if (
-        responseBody.type === "content_block_delta" &&
-        responseBody.delta?.type === "text_delta" &&
-        typeof responseBody.delta?.text === "string"
-      ) {
-        return new ChatGenerationChunk({
-          message: new AIMessageChunk({
-            content: responseBody.delta.text,
-          }),
-          text: responseBody.delta.text,
-        });
-      } else if (responseBody.type === "message_delta") {
-        return new ChatGenerationChunk({
-          message: new AIMessageChunk({ content: "" }),
-          text: "",
-          generationInfo: {
-            ...responseBody.delta,
-            usage: responseBody.usage,
-          },
-        });
-      } else if (
-        responseBody.type === "message_stop" &&
-        responseBody["amazon-bedrock-invocationMetrics"] !== undefined
-      ) {
-        return new ChatGenerationChunk({
-          message: new AIMessageChunk({ content: "" }),
-          text: "",
-          generationInfo: {
-            "amazon-bedrock-invocationMetrics":
-              responseBody["amazon-bedrock-invocationMetrics"],
-          },
-        });
-      } else if (responseBody.type === "message") {
+      if (responseBody.type === "message") {
         return parseMessage(responseBody);
-      } else {
-        return undefined;
+      } else if (responseBody.type === "message_start") {
+        return parseMessage(responseBody.message, true);
       }
+      const chunk = _makeMessageChunkFromAnthropicEvent(response, {
+        coerceContentToString: fields?.coerceContentToString,
+      });
+      if (!chunk) return undefined;
+
+      const newToolCallChunk = extractToolCallChunk(chunk);
+      let toolUseContent;
+      const extractedContent = extractToolUseContent(chunk, undefined);
+      if (extractedContent) {
+        toolUseContent = extractedContent.toolUseContent;
+      }
+      // Filter partial `tool_use` content, and only add `tool_use` chunks if complete JSON available.
+      const chunkContent = Array.isArray(chunk.content)
+        ? chunk.content.filter((c) => c.type !== "tool_use")
+        : chunk.content;
+      if (Array.isArray(chunkContent) && toolUseContent) {
+        chunkContent.push(toolUseContent);
+      }
+      // Extract the text content token for text field and runManager.
+      const token = extractToken(chunk);
+      return new ChatGenerationChunk({
+        message: new AIMessageChunk({
+          content: chunkContent,
+          additional_kwargs: chunk.additional_kwargs,
+          tool_call_chunks: newToolCallChunk ? [newToolCallChunk] : undefined,
+          usage_metadata: chunk.usage_metadata,
+          response_metadata: chunk.response_metadata,
+        }),
+        // Backwards compatibility
+        generationInfo: { ...chunk.response_metadata },
+        text: token ?? "",
+      });
     } else if (provider === "cohere") {
       if (responseBody.event_type === "stream-start") {
         return parseMessageCohere(responseBody.message, true);

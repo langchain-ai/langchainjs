@@ -17,15 +17,24 @@ You must always select one of the above tools and respond with only a JSON objec
   "tool_input": <parameters for the selected tool, matching the tool's JSON schema>
 }}`;
 
+/**
+ * @deprecated Deprecated in favor of the `@langchain/ollama` package. Import `ChatOllama` from `@langchain/ollama` instead.
+ */
 export interface ChatOllamaFunctionsCallOptions
   extends BaseFunctionCallOptions {}
 
+/**
+ * @deprecated Deprecated in favor of the `@langchain/ollama` package. Import `ChatOllama` from `@langchain/ollama` instead.
+ */
 export type OllamaFunctionsInput = Partial<ChatOllamaInput> &
   BaseChatModelParams & {
     llm?: ChatOllama;
     toolSystemPromptTemplate?: string;
   };
 
+/**
+ * @deprecated Deprecated in favor of the `@langchain/ollama` package. Import `ChatOllama` from `@langchain/ollama` instead.
+ */
 export class OllamaFunctions extends BaseChatModel<ChatOllamaFunctionsCallOptions> {
   llm: ChatOllama;
 

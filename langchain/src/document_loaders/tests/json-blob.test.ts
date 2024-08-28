@@ -39,6 +39,7 @@ test("Test JSON loader from blob", async () => {
   expect(docs.length).toBe(2);
   expect(docs[0]).toMatchInlineSnapshot(`
     Document {
+      "id": undefined,
       "metadata": {
         "blobType": "application/json",
         "line": 1,
@@ -49,6 +50,7 @@ test("Test JSON loader from blob", async () => {
   `);
   expect(docs[1]).toMatchInlineSnapshot(`
     Document {
+      "id": undefined,
       "metadata": {
         "blobType": "application/json",
         "line": 2,
@@ -87,6 +89,7 @@ test("Test JSON loader from blob", async () => {
   expect(docs.length).toBe(10);
   expect(docs[0]).toMatchInlineSnapshot(`
     Document {
+      "id": undefined,
       "metadata": {
         "blobType": "application/json",
         "line": 1,
@@ -97,6 +100,7 @@ test("Test JSON loader from blob", async () => {
   `);
   expect(docs[1]).toMatchInlineSnapshot(`
     Document {
+      "id": undefined,
       "metadata": {
         "blobType": "application/json",
         "line": 2,

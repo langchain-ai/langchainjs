@@ -1,6 +1,6 @@
 {
   "name": "@langchain/community",
-  "version": "0.2.13",
+  "version": "0.2.31",
   "description": "Third-party integrations for LangChain.js",
   "type": "module",
   "engines": {
@@ -15,7 +15,7 @@
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-community/",
   "scripts": {
     "build": "yarn turbo:command build:internal --filter=@langchain/community",
-    "build:internal": "yarn lc-build:v2 --create-entrypoints --pre --tree-shaking --gen-maps",
+    "build:internal": "yarn lc_build --create-entrypoints --pre --tree-shaking --gen-maps",
     "lint:eslint": "NODE_OPTIONS=--max-old-space-size=4096 eslint --cache --ext .ts,.js src/",
     "lint:dpdm": "dpdm --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
     "lint": "yarn lint:eslint && yarn lint:dpdm",
@@ -35,15 +35,15 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@langchain/core": "~0.2.9",
-    "@langchain/openai": "~0.1.0",
+    "@langchain/core": ">=0.2.21 <0.3.0",
+    "@langchain/openai": ">=0.2.0 <0.3.0",
     "binary-extensions": "^2.2.0",
     "expr-eval": "^2.0.2",
     "flat": "^5.0.2",
     "js-yaml": "^4.1.0",
-    "langchain": "0.2.3",
+    "langchain": "~0.2.3",
     "langsmith": "~0.1.30",
-    "uuid": "^9.0.0",
+    "uuid": "^10.0.0",
     "zod": "^3.22.3",
     "zod-to-json-schema": "^3.22.5"
   },
@@ -78,10 +78,11 @@
     "@gradientai/nodejs-sdk": "^1.2.0",
     "@huggingface/inference": "^2.6.4",
     "@jest/globals": "^29.5.0",
-    "@langchain/scripts": "~0.0.14",
+    "@langchain/langgraph": "~0.0.26",
+    "@langchain/scripts": ">=0.1.0 <0.2.0",
     "@langchain/standard-tests": "0.0.0",
     "@layerup/layerup-security": "^1.5.12",
-    "@mendable/firecrawl-js": "^0.0.13",
+    "@mendable/firecrawl-js": "^0.0.36",
     "@mlc-ai/web-llm": "0.2.46",
     "@mozilla/readability": "^0.4.4",
     "@neondatabase/serverless": "^0.9.1",
@@ -98,8 +99,7 @@
     "@smithy/signature-v4": "^2.0.10",
     "@smithy/util-utf8": "^2.0.0",
     "@spider-cloud/spider-client": "^0.0.21",
-    "@supabase/postgrest-js": "^1.1.1",
-    "@supabase/supabase-js": "^2.10.0",
+    "@supabase/supabase-js": "^2.45.0",
     "@swc/core": "^1.3.90",
     "@swc/jest": "^0.2.29",
     "@tensorflow-models/universal-sentence-encoder": "^1.3.3",
@@ -122,22 +122,22 @@
     "@types/ws": "^8",
     "@typescript-eslint/eslint-plugin": "^5.58.0",
     "@typescript-eslint/parser": "^5.58.0",
-    "@upstash/ratelimit": "^1.1.3",
-    "@upstash/redis": "^1.20.6",
+    "@upstash/ratelimit": "^1.2.1",
+    "@upstash/redis": "^1.32.0",
     "@upstash/vector": "^1.1.1",
     "@vercel/kv": "^0.2.3",
     "@vercel/postgres": "^0.5.0",
     "@writerai/writer-sdk": "^0.40.2",
     "@xata.io/client": "^0.28.0",
-    "@xenova/transformers": "^2.5.4",
+    "@xenova/transformers": "^2.17.2",
     "@zilliz/milvus2-sdk-node": ">=2.3.5",
     "apify-client": "^2.7.1",
-    "assemblyai": "^4.0.0",
+    "assemblyai": "^4.6.0",
     "better-sqlite3": ">=9.4.0 <12.0.0",
     "cassandra-driver": "^4.7.2",
     "cborg": "^4.1.1",
     "cheerio": "^1.0.0-rc.12",
-    "chromadb": "^1.5.3",
+    "chromadb": "^1.9.1",
     "closevector-common": "0.1.3",
     "closevector-node": "0.1.6",
     "closevector-web": "0.1.6",
@@ -178,10 +178,10 @@
     "jsonwebtoken": "^9.0.2",
     "llmonitor": "^0.5.9",
     "lodash": "^4.17.21",
-    "lunary": "^0.6.11",
+    "lunary": "^0.7.10",
     "mammoth": "^1.6.0",
     "mongodb": "^5.2.0",
-    "mysql2": "^3.3.3",
+    "mysql2": "^3.9.8",
     "neo4j-driver": "^5.17.0",
     "node-llama-cpp": "2.7.3",
     "notion-to-md": "^3.1.0",
@@ -193,9 +193,9 @@
     "playwright": "^1.32.1",
     "portkey-ai": "^0.1.11",
     "prettier": "^2.8.3",
-    "puppeteer": "^19.7.2",
+    "puppeteer": "^22.0.0",
     "redis": "^4.6.6",
-    "release-it": "^15.10.1",
+    "release-it": "^17.6.0",
     "replicate": "^0.29.4",
     "rollup": "^3.19.1",
     "sonix-speech-recognition": "^2.1.1",
@@ -239,6 +239,7 @@
     "@google-cloud/storage": "^6.10.1 || ^7.7.0",
     "@gradientai/nodejs-sdk": "^1.2.0",
     "@huggingface/inference": "^2.6.4",
+    "@langchain/langgraph": "*",
     "@layerup/layerup-security": "^1.5.12",
     "@mendable/firecrawl-js": "^0.0.13",
     "@mlc-ai/web-llm": "0.2.46",
@@ -257,8 +258,7 @@
     "@smithy/signature-v4": "^2.0.10",
     "@smithy/util-utf8": "^2.0.0",
     "@spider-cloud/spider-client": "^0.0.21",
-    "@supabase/postgrest-js": "^1.1.1",
-    "@supabase/supabase-js": "^2.10.0",
+    "@supabase/supabase-js": "^2.45.0",
     "@tensorflow-models/universal-sentence-encoder": "*",
     "@tensorflow/tfjs-converter": "*",
     "@tensorflow/tfjs-core": "*",
@@ -269,10 +269,10 @@
     "@vercel/postgres": "^0.5.0",
     "@writerai/writer-sdk": "^0.40.2",
     "@xata.io/client": "^0.28.0",
-    "@xenova/transformers": "^2.5.4",
+    "@xenova/transformers": "^2.17.2",
     "@zilliz/milvus2-sdk-node": ">=2.3.5",
     "apify-client": "^2.7.1",
-    "assemblyai": "^4.0.0",
+    "assemblyai": "^4.6.0",
     "better-sqlite3": ">=9.4.0 <12.0.0",
     "cassandra-driver": "^4.7.2",
     "cborg": "^4.1.1",
@@ -293,7 +293,7 @@
     "faiss-node": "^0.5.1",
     "firebase-admin": "^11.9.0 || ^12.0.0",
     "google-auth-library": "*",
-    "googleapis": "^126.0.1",
+    "googleapis": "*",
     "hnswlib-node": "^3.0.0",
     "html-to-text": "^9.0.5",
     "ignore": "^5.2.0",
@@ -304,10 +304,10 @@
     "jsonwebtoken": "^9.0.2",
     "llmonitor": "^0.5.9",
     "lodash": "^4.17.21",
-    "lunary": "^0.6.11",
+    "lunary": "^0.7.10",
     "mammoth": "^1.6.0",
     "mongodb": ">=5.2.0",
-    "mysql2": "^3.3.3",
+    "mysql2": "^3.9.8",
     "neo4j-driver": "*",
     "node-llama-cpp": "*",
     "notion-to-md": "^3.1.0",
@@ -318,7 +318,7 @@
     "pickleparser": "^0.2.1",
     "playwright": "^1.32.1",
     "portkey-ai": "^0.1.11",
-    "puppeteer": "^19.7.2",
+    "puppeteer": "*",
     "redis": "*",
     "replicate": "^0.29.4",
     "sonix-speech-recognition": "^2.1.1",
@@ -413,6 +413,9 @@
     "@huggingface/inference": {
       "optional": true
     },
+    "@langchain/langgraph": {
+      "optional": true
+    },
     "@layerup/layerup-security": {
       "optional": true
     },
@@ -465,9 +468,6 @@
       "optional": true
     },
     "@spider-cloud/spider-client": {
-      "optional": true
-    },
-    "@supabase/postgrest-js": {
       "optional": true
     },
     "@supabase/supabase-js": {
@@ -1086,6 +1086,15 @@
       },
       "import": "./embeddings/hf_transformers.js",
       "require": "./embeddings/hf_transformers.cjs"
+    },
+    "./embeddings/jina": {
+      "types": {
+        "import": "./embeddings/jina.d.ts",
+        "require": "./embeddings/jina.d.cts",
+        "default": "./embeddings/jina.d.ts"
+      },
+      "import": "./embeddings/jina.js",
+      "require": "./embeddings/jina.cjs"
     },
     "./embeddings/llama_cpp": {
       "types": {
@@ -2725,6 +2734,15 @@
       "import": "./document_loaders/web/github.js",
       "require": "./document_loaders/web/github.cjs"
     },
+    "./document_loaders/web/taskade": {
+      "types": {
+        "import": "./document_loaders/web/taskade.d.ts",
+        "require": "./document_loaders/web/taskade.d.cts",
+        "default": "./document_loaders/web/taskade.d.ts"
+      },
+      "import": "./document_loaders/web/taskade.js",
+      "require": "./document_loaders/web/taskade.cjs"
+    },
     "./document_loaders/web/notionapi": {
       "types": {
         "import": "./document_loaders/web/notionapi.d.ts",
@@ -2968,6 +2986,15 @@
       "import": "./utils/cassandra.js",
       "require": "./utils/cassandra.cjs"
     },
+    "./experimental/callbacks/handlers/datadog": {
+      "types": {
+        "import": "./experimental/callbacks/handlers/datadog.d.ts",
+        "require": "./experimental/callbacks/handlers/datadog.d.cts",
+        "default": "./experimental/callbacks/handlers/datadog.d.ts"
+      },
+      "import": "./experimental/callbacks/handlers/datadog.js",
+      "require": "./experimental/callbacks/handlers/datadog.cjs"
+    },
     "./experimental/graph_transformers/llm": {
       "types": {
         "import": "./experimental/graph_transformers/llm.d.ts",
@@ -3004,6 +3031,15 @@
       "import": "./experimental/chat_models/ollama_functions.js",
       "require": "./experimental/chat_models/ollama_functions.cjs"
     },
+    "./experimental/llms/chrome_ai": {
+      "types": {
+        "import": "./experimental/llms/chrome_ai.d.ts",
+        "require": "./experimental/llms/chrome_ai.d.cts",
+        "default": "./experimental/llms/chrome_ai.d.ts"
+      },
+      "import": "./experimental/llms/chrome_ai.js",
+      "require": "./experimental/llms/chrome_ai.cjs"
+    },
     "./chains/graph_qa/cypher": {
       "types": {
         "import": "./chains/graph_qa/cypher.d.ts",
@@ -3012,6 +3048,15 @@
       },
       "import": "./chains/graph_qa/cypher.js",
       "require": "./chains/graph_qa/cypher.cjs"
+    },
+    "./langgraph/checkpointers/vercel_kv": {
+      "types": {
+        "import": "./langgraph/checkpointers/vercel_kv.d.ts",
+        "require": "./langgraph/checkpointers/vercel_kv.d.cts",
+        "default": "./langgraph/checkpointers/vercel_kv.d.ts"
+      },
+      "import": "./langgraph/checkpointers/vercel_kv.js",
+      "require": "./langgraph/checkpointers/vercel_kv.cjs"
     },
     "./package.json": "./package.json"
   },
@@ -3189,6 +3234,10 @@
     "embeddings/hf_transformers.js",
     "embeddings/hf_transformers.d.ts",
     "embeddings/hf_transformers.d.cts",
+    "embeddings/jina.cjs",
+    "embeddings/jina.js",
+    "embeddings/jina.d.ts",
+    "embeddings/jina.d.cts",
     "embeddings/llama_cpp.cjs",
     "embeddings/llama_cpp.js",
     "embeddings/llama_cpp.d.ts",
@@ -3917,6 +3966,10 @@
     "document_loaders/web/github.js",
     "document_loaders/web/github.d.ts",
     "document_loaders/web/github.d.cts",
+    "document_loaders/web/taskade.cjs",
+    "document_loaders/web/taskade.js",
+    "document_loaders/web/taskade.d.ts",
+    "document_loaders/web/taskade.d.cts",
     "document_loaders/web/notionapi.cjs",
     "document_loaders/web/notionapi.js",
     "document_loaders/web/notionapi.d.ts",
@@ -4025,6 +4078,10 @@
     "utils/cassandra.js",
     "utils/cassandra.d.ts",
     "utils/cassandra.d.cts",
+    "experimental/callbacks/handlers/datadog.cjs",
+    "experimental/callbacks/handlers/datadog.js",
+    "experimental/callbacks/handlers/datadog.d.ts",
+    "experimental/callbacks/handlers/datadog.d.cts",
     "experimental/graph_transformers/llm.cjs",
     "experimental/graph_transformers/llm.js",
     "experimental/graph_transformers/llm.d.ts",
@@ -4041,9 +4098,17 @@
     "experimental/chat_models/ollama_functions.js",
     "experimental/chat_models/ollama_functions.d.ts",
     "experimental/chat_models/ollama_functions.d.cts",
+    "experimental/llms/chrome_ai.cjs",
+    "experimental/llms/chrome_ai.js",
+    "experimental/llms/chrome_ai.d.ts",
+    "experimental/llms/chrome_ai.d.cts",
     "chains/graph_qa/cypher.cjs",
     "chains/graph_qa/cypher.js",
     "chains/graph_qa/cypher.d.ts",
-    "chains/graph_qa/cypher.d.cts"
+    "chains/graph_qa/cypher.d.cts",
+    "langgraph/checkpointers/vercel_kv.cjs",
+    "langgraph/checkpointers/vercel_kv.js",
+    "langgraph/checkpointers/vercel_kv.d.ts",
+    "langgraph/checkpointers/vercel_kv.d.cts"
   ]
 }

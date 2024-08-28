@@ -23,7 +23,7 @@ export interface RetrievalQAChainInput extends Omit<ChainInputs, "memory"> {
 }
 
 /**
- * @deprecated This class will be removed in 0.3.0. See below for an example implementation using
+ * @deprecated This class will be removed in 1.0.0. See below for an example implementation using
  * `createRetrievalChain`:
  * Class representing a chain for performing question-answering tasks with
  * a retrieval component.
@@ -42,7 +42,7 @@ export interface RetrievalQAChainInput extends Omit<ChainInputs, "memory"> {
  *   documents,
  *   embeddings
  * );
- * const prompt = ChatPromptTemplate.fromTemplate(`Answer the user's question: {input}`);
+ * const prompt = ChatPromptTemplate.fromTemplate(`Answer the user's question: {input} based on the following context {context}`);
  *
  * const combineDocsChain = await createStuffDocumentsChain({
  *   llm,

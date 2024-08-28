@@ -9,7 +9,6 @@ import {
 } from "../web/assemblyai.js";
 
 const transcriptId = process.env.ASSEMBLYAI_TRANSCRIPT_ID!;
-console.log(transcriptId);
 
 describe.skip("AssemblyAI", () => {
   test("Invalid API key", async () => {

@@ -24,10 +24,7 @@ export function removeAdditionalProperties(
   if (typeof obj === "object" && obj !== null) {
     const newObj = { ...obj };
 
-    if (
-      "additionalProperties" in newObj &&
-      typeof newObj.additionalProperties === "boolean"
-    ) {
+    if ("additionalProperties" in newObj) {
       delete newObj.additionalProperties;
     }
 

@@ -15,7 +15,7 @@ test("Should work with a question input", async () => {
       "mitochondria is made of lipids",
     ],
     [{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }, { id: 5 }],
-    new CohereEmbeddings()
+    new CohereEmbeddings({ model: "embed-english-v3.0" })
   );
   const retriever = new EnsembleRetriever({
     retrievers: [vectorstore.asRetriever()],
@@ -38,7 +38,7 @@ test("Should work with multiple retriever", async () => {
       "mitochondria is made of lipids",
     ],
     [{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }, { id: 5 }],
-    new CohereEmbeddings()
+    new CohereEmbeddings({ model: "embed-english-v3.0" })
   );
   const vectorstore2 = await MemoryVectorStore.fromTexts(
     [
@@ -51,7 +51,7 @@ test("Should work with multiple retriever", async () => {
       "mitochondria is made of lipids",
     ],
     [{ id: 6 }, { id: 7 }, { id: 8 }, { id: 9 }, { id: 10 }],
-    new CohereEmbeddings()
+    new CohereEmbeddings({ model: "embed-english-v3.0" })
   );
   const retriever = new EnsembleRetriever({
     retrievers: [vectorstore.asRetriever(), vectorstore2.asRetriever()],
@@ -76,7 +76,7 @@ test("Should work with weights", async () => {
       "mitochondria is made of lipids",
     ],
     [{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }, { id: 5 }],
-    new CohereEmbeddings()
+    new CohereEmbeddings({ model: "embed-english-v3.0" })
   );
   const vectorstore2 = await MemoryVectorStore.fromTexts(
     [
@@ -89,7 +89,7 @@ test("Should work with weights", async () => {
       "mitochondria is made of lipids",
     ],
     [{ id: 6 }, { id: 7 }, { id: 8 }, { id: 9 }, { id: 10 }],
-    new CohereEmbeddings()
+    new CohereEmbeddings({ model: "embed-english-v3.0" })
   );
   const retriever = new EnsembleRetriever({
     retrievers: [vectorstore.asRetriever(), vectorstore2.asRetriever()],

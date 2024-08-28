@@ -1,9 +1,31 @@
 /* eslint-disable no-promise-executor-return */
 
-import { test } from "@jest/globals";
+import { test, expect } from "@jest/globals";
 import { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { FakeChatModel, FakeListChatModel } from "../../utils/testing/index.js";
+import { HumanMessage } from "../../messages/human.js";
+import { getBufferString } from "../../messages/utils.js";
+import { AIMessage } from "../../messages/ai.js";
+
+test("Test ChatModel accepts array shorthand for messages", async () => {
+  const model = new FakeChatModel({});
+  const response = await model.invoke([["human", "Hello there!"]]);
+  expect(response.content).toEqual("Hello there!");
+});
+
+test("Test ChatModel accepts object shorthand for messages", async () => {
+  const model = new FakeChatModel({});
+  const response = await model.invoke([
+    {
+      type: "human",
+      content: "Hello there!",
+      additional_kwargs: {},
+      example: true,
+    },
+  ]);
+  expect(response.content).toEqual("Hello there!");
+});
 
 test("Test ChatModel uses callbacks", async () => {
   const model = new FakeChatModel({});
@@ -169,4 +191,77 @@ test("Test ChatModel withStructuredOutput new syntax and includeRaw", async () =
   console.log(response.nested.somethingelse);
   // No error
   console.log(response.parsed);
+});
+
+test("Test ChatModel can cache complex messages", async () => {
+  const model = new FakeChatModel({
+    cache: true,
+  });
+  if (!model.cache) {
+    throw new Error("Cache not enabled");
+  }
+
+  const contentToCache = [
+    {
+      type: "text",
+      text: "Hello there!",
+    },
+  ];
+  const humanMessage = new HumanMessage({
+    content: contentToCache,
+  });
+
+  const prompt = getBufferString([humanMessage]);
+  const llmKey = model._getSerializedCacheKeyParametersForCall({});
+
+  // Invoke model to trigger cache update
+  await model.invoke([humanMessage]);
+
+  const value = await model.cache.lookup(prompt, llmKey);
+  expect(value).toBeDefined();
+  if (!value) return;
+
+  expect(value[0].text).toEqual(JSON.stringify(contentToCache, null, 2));
+
+  expect("message" in value[0]).toBeTruthy();
+  if (!("message" in value[0])) return;
+  const cachedMsg = value[0].message as AIMessage;
+  expect(cachedMsg.content).toEqual(JSON.stringify(contentToCache, null, 2));
+});
+
+test("Test ChatModel can emit a custom event", async () => {
+  const model = new FakeListChatModel({
+    responses: ["hi"],
+    emitCustomEvent: true,
+  });
+  let customEvent;
+  const response = await model.invoke([["human", "Hello there!"]], {
+    callbacks: [
+      {
+        handleCustomEvent(_, data) {
+          customEvent = data;
+        },
+      },
+    ],
+  });
+  await new Promise((resolve) => setTimeout(resolve, 100));
+  expect(response.content).toEqual("hi");
+  expect(customEvent).toBeDefined();
+});
+
+test("Test ChatModel can stream back a custom event", async () => {
+  const model = new FakeListChatModel({
+    responses: ["hi"],
+    emitCustomEvent: true,
+  });
+  let customEvent;
+  const eventStream = await model.streamEvents([["human", "Hello there!"]], {
+    version: "v2",
+  });
+  for await (const event of eventStream) {
+    if (event.event === "on_custom_event") {
+      customEvent = event;
+    }
+  }
+  expect(customEvent).toBeDefined();
 });

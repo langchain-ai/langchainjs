@@ -11,8 +11,10 @@ test("Test loadSummzationChain stuff", async () => {
     new Document({ pageContent: "bar" }),
     new Document({ pageContent: "baz" }),
   ];
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res = await chain.call({ input_documents: docs, question: "Whats up" });
-  console.log({ res });
+  // console.log({ res });
 });
 
 test("Test loadSummarizationChain map_reduce", async () => {
@@ -23,8 +25,10 @@ test("Test loadSummarizationChain map_reduce", async () => {
     new Document({ pageContent: "bar" }),
     new Document({ pageContent: "baz" }),
   ];
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res = await chain.call({ input_documents: docs, question: "Whats up" });
-  console.log({ res });
+  // console.log({ res });
 });
 
 test("Test loadSummarizationChain refine", async () => {
@@ -35,6 +39,8 @@ test("Test loadSummarizationChain refine", async () => {
     new Document({ pageContent: "bar" }),
     new Document({ pageContent: "baz" }),
   ];
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res = await chain.call({ input_documents: docs, question: "Whats up" });
-  console.log({ res });
+  // console.log({ res });
 });

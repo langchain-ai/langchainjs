@@ -331,7 +331,7 @@ describe("Test getRelevantDocuments", () => {
         },
       },
     ];
-    console.log(resultsDocs);
+    // console.log(resultsDocs);
     expect(resultsDocs).toStrictEqual(expected);
   });
 });

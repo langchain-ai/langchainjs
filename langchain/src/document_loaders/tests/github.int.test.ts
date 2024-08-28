@@ -15,7 +15,7 @@ test("Test GithubRepoLoader", async () => {
     documents.filter((document) => document.metadata.source === "README.md")
       .length
   ).toBe(1);
-  console.log(documents[0].pageContent);
+  // console.log(documents[0].pageContent);
 });
 
 test("Test ignoreFiles with GithubRepoLoader", async () => {
@@ -37,7 +37,7 @@ test("Test ignoreFiles with GithubRepoLoader", async () => {
     documents.filter((document) => document.metadata.source === "README.md")
       .length
   ).toBe(0);
-  console.log(documents[0].pageContent);
+  // console.log(documents[0].pageContent);
 });
 
 test("Test ignorePaths with GithubRepoLoader", async () => {
@@ -59,7 +59,7 @@ test("Test ignorePaths with GithubRepoLoader", async () => {
     documents.filter((document) => document.metadata.source.endsWith(".md"))
       .length
   ).toBe(0);
-  console.log(documents[0].pageContent);
+  // console.log(documents[0].pageContent);
 });
 
 test("Test streaming documents from GithubRepoLoader", async () => {

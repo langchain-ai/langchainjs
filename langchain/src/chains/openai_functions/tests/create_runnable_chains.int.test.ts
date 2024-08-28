@@ -90,7 +90,7 @@ test("createStructuredOutputRunnable works with Zod", async () => {
     description:
       "My name's John Doe and I'm 30 years old. My favorite kind of food are chocolate chip cookies.",
   });
-  console.log(response);
+  // console.log(response);
   expect("person" in response).toBe(true);
   expect("name" in response.person).toBe(true);
   expect("age" in response.person).toBe(true);
@@ -118,7 +118,7 @@ test("createStructuredOutputRunnable works with JSON schema", async () => {
     description:
       "My name's John Doe and I'm 30 years old. My favorite kind of food are chocolate chip cookies.",
   });
-  console.log(response);
+  // console.log(response);
   expect("name" in response).toBe(true);
   expect("age" in response).toBe(true);
 });
@@ -145,7 +145,7 @@ test("createOpenAIFnRunnable works", async () => {
     description:
       "My name's John Doe and I'm 30 years old. My favorite kind of food are chocolate chip cookies.",
   });
-  console.log(response);
+  // console.log(response);
   expect("name" in response).toBe(true);
   expect("age" in response).toBe(true);
 });
@@ -171,7 +171,7 @@ test("createOpenAIFnRunnable works with multiple functions", async () => {
   const response = await runnable.invoke({
     question: "What's the weather like in Berkeley CA?",
   });
-  console.log(response);
+  // console.log(response);
   expect("state" in response).toBe(true);
   expect("city" in response).toBe(true);
 });

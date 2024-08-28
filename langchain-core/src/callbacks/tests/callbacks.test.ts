@@ -1,3 +1,4 @@
+/* eslint-disable no-promise-executor-return */
 import { test, expect } from "@jest/globals";
 import * as uuid from "uuid";
 import { CallbackManager } from "../manager.js";
@@ -8,6 +9,7 @@ import type { ChainValues } from "../../utils/types/index.js";
 import type { AgentAction, AgentFinish } from "../../agents.js";
 import { BaseMessage, HumanMessage } from "../../messages/index.js";
 import type { LLMResult } from "../../outputs.js";
+import { RunnableLambda } from "../../runnables/base.js";
 
 class FakeCallbackHandler extends BaseCallbackHandler {
   name = `fake-${uuid.v4()}`;
@@ -201,6 +203,9 @@ test("CallbackManager", async () => {
     new Document({ pageContent: "test", metadata: { test: "test" } }),
   ]);
   await retrieverCb.handleRetrieverError(new Error("test"));
+
+  // In case background mode is on while running this test
+  await new Promise((resolve) => setTimeout(resolve, 100));
 
   for (const handler of [handler1, handler2]) {
     expect(handler.starts).toBe(5);
@@ -513,4 +518,21 @@ test("error handling in llm start", async () => {
   await expect(async () => {
     await manager.handleLLMStart(serialized, ["test"]);
   }).rejects.toThrowError();
+});
+
+test("chain should still run if a normal callback handler throws an error", async () => {
+  const chain = RunnableLambda.from(async () => "hello world");
+  const res = await chain.invoke(
+    {},
+    {
+      callbacks: [
+        {
+          handleChainStart: () => {
+            throw new Error("Bad");
+          },
+        },
+      ],
+    }
+  );
+  expect(res).toEqual("hello world");
 });

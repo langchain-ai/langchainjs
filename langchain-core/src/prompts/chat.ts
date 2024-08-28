@@ -12,6 +12,7 @@ import {
   coerceMessageLikeToMessage,
   isBaseMessage,
   MessageContent,
+  MessageContentComplex,
 } from "../messages/index.js";
 import {
   type ChatPromptValueInterface,
@@ -134,50 +135,43 @@ export class MessagesPlaceholder<
     return [this.variableName];
   }
 
-  validateInputOrThrow(
-    input: Array<unknown> | undefined,
-    variableName: Extract<keyof RunInput, string>
-  ): input is BaseMessage[] {
-    if (this.optional && !input) {
-      return false;
-    } else if (!input) {
-      const error = new Error(
-        `Error: Field "${variableName}" in prompt uses a MessagesPlaceholder, which expects an array of BaseMessages as an input value. Received: undefined`
-      );
-      error.name = "InputFormatError";
-      throw error;
-    }
-
-    let isInputBaseMessage = false;
-
-    if (Array.isArray(input)) {
-      isInputBaseMessage = input.every((message) =>
-        isBaseMessage(message as BaseMessage)
-      );
-    } else {
-      isInputBaseMessage = isBaseMessage(input as BaseMessage);
-    }
-
-    if (!isInputBaseMessage) {
-      const readableInput =
-        typeof input === "string" ? input : JSON.stringify(input, null, 2);
-
-      const error = new Error(
-        `Error: Field "${variableName}" in prompt uses a MessagesPlaceholder, which expects an array of BaseMessages as an input value. Received: ${readableInput}`
-      );
-      error.name = "InputFormatError";
-      throw error;
-    }
-
-    return true;
-  }
-
   async formatMessages(
     values: TypedPromptInputValues<RunInput>
   ): Promise<BaseMessage[]> {
-    this.validateInputOrThrow(values[this.variableName], this.variableName);
+    const input = values[this.variableName];
+    if (this.optional && !input) {
+      return [];
+    } else if (!input) {
+      const error = new Error(
+        `Field "${this.variableName}" in prompt uses a MessagesPlaceholder, which expects an array of BaseMessages as an input value. Received: undefined`
+      );
+      error.name = "InputFormatError";
+      throw error;
+    }
 
-    return values[this.variableName] ?? [];
+    let formattedMessages;
+    try {
+      if (Array.isArray(input)) {
+        formattedMessages = input.map(coerceMessageLikeToMessage);
+      } else {
+        formattedMessages = [coerceMessageLikeToMessage(input)];
+      }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (e: any) {
+      const readableInput =
+        typeof input === "string" ? input : JSON.stringify(input, null, 2);
+      const error = new Error(
+        [
+          `Field "${this.variableName}" in prompt uses a MessagesPlaceholder, which expects an array of BaseMessages or coerceable values as input.`,
+          `Received value: ${readableInput}`,
+          `Additional message: ${e.message}`,
+        ].join("\n\n")
+      );
+      error.name = "InputFormatError";
+      throw error;
+    }
+
+    return formattedMessages;
   }
 }
 
@@ -500,7 +494,14 @@ class _StringImageMessagePromptTemplate<
         } else if (typeof item.text === "string") {
           text = item.text ?? "";
         }
-        prompt.push(PromptTemplate.fromTemplate(text, additionalOptions));
+
+        const options = {
+          ...additionalOptions,
+          ...(typeof item !== "string"
+            ? { additionalContentFields: item }
+            : {}),
+        };
+        prompt.push(PromptTemplate.fromTemplate(text, options));
       } else if (typeof item === "object" && "image_url" in item) {
         let imgTemplate = item.image_url ?? "";
         let imgTemplateObject: ImagePromptTemplate<InputValues>;
@@ -532,6 +533,8 @@ class _StringImageMessagePromptTemplate<
           imgTemplateObject = new ImagePromptTemplate<InputValues>({
             template: imgTemplate,
             inputVariables,
+            templateFormat: additionalOptions?.templateFormat,
+            additionalContentFields: item,
           });
         } else if (typeof imgTemplate === "object") {
           if ("url" in imgTemplate) {
@@ -551,6 +554,8 @@ class _StringImageMessagePromptTemplate<
           imgTemplateObject = new ImagePromptTemplate<InputValues>({
             template: imgTemplate,
             inputVariables,
+            templateFormat: additionalOptions?.templateFormat,
+            additionalContentFields: item,
           });
         } else {
           throw new Error("Invalid image template");
@@ -588,17 +593,34 @@ class _StringImageMessagePromptTemplate<
           const formatted = await prompt.format(
             inputs as TypedPromptInputValues<RunInput>
           );
-          content.push({ type: "text", text: formatted });
+          let additionalContentFields: MessageContentComplex | undefined;
+          if ("additionalContentFields" in prompt) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            additionalContentFields = prompt.additionalContentFields as any;
+          }
+          content.push({
+            ...additionalContentFields,
+            type: "text",
+            text: formatted,
+          });
           /** @TODO replace this */
           // eslint-disable-next-line no-instanceof/no-instanceof
         } else if (prompt instanceof ImagePromptTemplate) {
           const formatted = await prompt.format(
             inputs as TypedPromptInputValues<RunInput>
           );
-          content.push({ type: "image_url", image_url: formatted });
+          let additionalContentFields: MessageContentComplex | undefined;
+          if ("additionalContentFields" in prompt) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            additionalContentFields = prompt.additionalContentFields as any;
+          }
+          content.push({
+            ...additionalContentFields,
+            type: "image_url",
+            image_url: formatted,
+          });
         }
       }
-
       return this.createMessage(content);
     }
   }
@@ -774,9 +796,9 @@ function _coerceMessagePromptTemplateLike<
     // Assuming message.content is an array of complex objects, transform it.
     templateData = message.content.map((item) => {
       if ("text" in item) {
-        return { text: item.text };
+        return { ...item, text: item.text };
       } else if ("image_url" in item) {
-        return { image_url: item.image_url };
+        return { ...item, image_url: item.image_url };
       } else {
         return item;
       }

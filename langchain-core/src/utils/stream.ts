@@ -1,8 +1,9 @@
+import { AsyncLocalStorageProviderSingleton } from "../singletons/index.js";
+import { raceWithSignal } from "./signal.js";
+
 // Make this a type to override ReadableStream's async iterator type in case
 // the popular web-streams-polyfill is imported - the supplied types
-import { AsyncLocalStorageProviderSingleton } from "../singletons/index.js";
-
-// in this case don't quite match.
+// in that case don't quite match.
 export type IterableReadableStreamInterface<T> = ReadableStream<T> &
   AsyncIterable<T>;
 
@@ -186,6 +187,8 @@ export class AsyncGeneratorWithSetup<
 
   public config?: unknown;
 
+  public signal?: AbortSignal;
+
   private firstResult: Promise<IteratorResult<T>>;
 
   private firstResultUsed = false;
@@ -194,36 +197,51 @@ export class AsyncGeneratorWithSetup<
     generator: AsyncGenerator<T>;
     startSetup?: () => Promise<S>;
     config?: unknown;
+    signal?: AbortSignal;
   }) {
     this.generator = params.generator;
     this.config = params.config;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    this.signal = params.signal ?? (this.config as any)?.signal;
     // setup is a promise that resolves only after the first iterator value
     // is available. this is useful when setup of several piped generators
     // needs to happen in logical order, ie. in the order in which input to
     // to each generator is available.
     this.setup = new Promise((resolve, reject) => {
-      const storage = AsyncLocalStorageProviderSingleton.getInstance();
-      void storage.run(params.config, async () => {
-        this.firstResult = params.generator.next();
-        if (params.startSetup) {
-          this.firstResult.then(params.startSetup).then(resolve, reject);
-        } else {
-          this.firstResult.then((_result) => resolve(undefined as S), reject);
-        }
-      });
+      void AsyncLocalStorageProviderSingleton.runWithConfig(
+        params.config,
+        async () => {
+          this.firstResult = params.generator.next();
+          if (params.startSetup) {
+            this.firstResult.then(params.startSetup).then(resolve, reject);
+          } else {
+            this.firstResult.then((_result) => resolve(undefined as S), reject);
+          }
+        },
+        true
+      );
     });
   }
 
   async next(...args: [] | [TNext]): Promise<IteratorResult<T>> {
+    this.signal?.throwIfAborted();
+
     if (!this.firstResultUsed) {
       this.firstResultUsed = true;
       return this.firstResult;
     }
 
-    const storage = AsyncLocalStorageProviderSingleton.getInstance();
-    return storage.run(this.config, async () => {
-      return this.generator.next(...args);
-    });
+    return AsyncLocalStorageProviderSingleton.runWithConfig(
+      this.config,
+      this.signal
+        ? async () => {
+            return raceWithSignal(this.generator.next(...args), this.signal);
+          }
+        : async () => {
+            return this.generator.next(...args);
+          },
+      true
+    );
   }
 
   async return(
@@ -258,9 +276,14 @@ export async function pipeGeneratorWithSetup<
   ) => AsyncGenerator<U, UReturn, UNext>,
   generator: AsyncGenerator<T, TReturn, TNext>,
   startSetup: () => Promise<S>,
+  signal: AbortSignal | undefined,
   ...args: A
 ) {
-  const gen = new AsyncGeneratorWithSetup({ generator, startSetup });
+  const gen = new AsyncGeneratorWithSetup({
+    generator,
+    startSetup,
+    signal,
+  });
   const setup = await gen.setup;
   return { output: to(gen, setup, ...args), setup };
 }

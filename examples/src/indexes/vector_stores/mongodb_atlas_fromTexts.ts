@@ -10,7 +10,7 @@ const collection = client.db(dbName).collection(collectionName);
 const vectorstore = await MongoDBAtlasVectorSearch.fromTexts(
   ["Hello world", "Bye bye", "What's this?"],
   [{ id: 2 }, { id: 1 }, { id: 3 }],
-  new CohereEmbeddings(),
+  new CohereEmbeddings({ model: "embed-english-v3.0" }),
   {
     collection,
     indexName: "default", // The name of the Atlas search index. Defaults to "default"

@@ -7,7 +7,8 @@ import { TextLoader } from "langchain/document_loaders/fs/text";
 import { ScoreThresholdRetriever } from "langchain/retrievers/score_threshold";
 
 const vectorstore = new MemoryVectorStore(new OpenAIEmbeddings());
-const docstore = new InMemoryStore();
+const byteStore = new InMemoryStore<Uint8Array>();
+
 const childDocumentRetriever = ScoreThresholdRetriever.fromVectorStore(
   vectorstore,
   {
@@ -17,7 +18,7 @@ const childDocumentRetriever = ScoreThresholdRetriever.fromVectorStore(
 );
 const retriever = new ParentDocumentRetriever({
   vectorstore,
-  docstore,
+  byteStore,
   childDocumentRetriever,
   // Optional, not required if you're already passing in split documents
   parentSplitter: new RecursiveCharacterTextSplitter({

@@ -1,11 +1,18 @@
+/* eslint-disable no-process-env */
+
 import { expect, test } from "@jest/globals";
 import { CallbackManager } from "@langchain/core/callbacks/manager";
 import { OpenAIChat } from "../legacy.js";
 
+// Save the original value of the 'LANGCHAIN_CALLBACKS_BACKGROUND' environment variable
+const originalBackground = process.env.LANGCHAIN_CALLBACKS_BACKGROUND;
+
 test("Test OpenAI", async () => {
   const model = new OpenAIChat({ modelName: "gpt-3.5-turbo", maxTokens: 10 });
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res = await model.invoke("Print hello world");
-  console.log({ res });
+  // console.log({ res });
 });
 
 test("Test OpenAI with prefix messages", async () => {
@@ -16,42 +23,58 @@ test("Test OpenAI with prefix messages", async () => {
     ],
     maxTokens: 10,
   });
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res = await model.invoke("What is my name");
-  console.log({ res });
+  // console.log({ res });
 });
 
 test("Test OpenAI in streaming mode", async () => {
-  let nrNewTokens = 0;
-  let streamedCompletion = "";
+  // Running LangChain callbacks in the background will sometimes cause the callbackManager to execute
+  // after the test/llm call has already finished & returned. Set that environment variable to false
+  // to prevent that from happening.
+  process.env.LANGCHAIN_CALLBACKS_BACKGROUND = "false";
 
-  const model = new OpenAIChat({
-    maxTokens: 10,
-    modelName: "gpt-3.5-turbo",
-    streaming: true,
-    callbackManager: CallbackManager.fromHandlers({
-      async handleLLMNewToken(token: string) {
-        nrNewTokens += 1;
-        streamedCompletion += token;
-      },
-    }),
-  });
-  const res = await model.invoke("Print hello world");
-  console.log({ res });
+  try {
+    let nrNewTokens = 0;
+    let streamedCompletion = "";
 
-  expect(nrNewTokens > 0).toBe(true);
-  expect(res).toBe(streamedCompletion);
+    const model = new OpenAIChat({
+      maxTokens: 10,
+      modelName: "gpt-3.5-turbo",
+      streaming: true,
+      callbackManager: CallbackManager.fromHandlers({
+        async handleLLMNewToken(token: string) {
+          nrNewTokens += 1;
+          streamedCompletion += token;
+        },
+      }),
+    });
+    const res = await model.invoke("Print hello world");
+    // console.log({ res });
+
+    expect(nrNewTokens > 0).toBe(true);
+    expect(res).toBe(streamedCompletion);
+  } finally {
+    // Reset the environment variable
+    process.env.LANGCHAIN_CALLBACKS_BACKGROUND = originalBackground;
+  }
 }, 30000);
 
 test("Test OpenAI with stop", async () => {
   const model = new OpenAIChat({ maxTokens: 5 });
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res = await model.call("Print hello world", ["world"]);
-  console.log({ res });
+  // console.log({ res });
 });
 
 test("Test OpenAI with stop in object", async () => {
   const model = new OpenAIChat({ maxTokens: 5 });
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res = await model.invoke("Print hello world", { stop: ["world"] });
-  console.log({ res });
+  // console.log({ res });
 });
 
 test("Test OpenAI with timeout in call options", async () => {
@@ -106,7 +129,7 @@ test("Test OpenAIChat stream method", async () => {
   const chunks = [];
   for await (const chunk of stream) {
     chunks.push(chunk);
-    console.log(chunks);
+    // console.log(chunks);
   }
   expect(chunks.length).toBeGreaterThan(1);
 });
@@ -120,8 +143,10 @@ test("Test OpenAIChat stream method with abort", async () => {
         signal: AbortSignal.timeout(1000),
       }
     );
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     for await (const chunk of stream) {
-      console.log(chunk);
+      // console.log(chunk);
     }
   }).rejects.toThrow();
 });
@@ -132,8 +157,10 @@ test("Test OpenAIChat stream method with early break", async () => {
     "How is your day going? Be extremely verbose."
   );
   let i = 0;
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   for await (const chunk of stream) {
-    console.log(chunk);
+    // console.log(chunk);
     i += 1;
     if (i > 5) {
       break;

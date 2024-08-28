@@ -1,4 +1,8 @@
-import { APIConnectionTimeoutError, APIUserAbortError } from "openai";
+import {
+  APIConnectionTimeoutError,
+  APIUserAbortError,
+  OpenAI as OpenAIClient,
+} from "openai";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import type { StructuredToolInterface } from "@langchain/core/tools";
 import {
@@ -35,4 +39,32 @@ export function formatToOpenAIAssistantTool(tool: StructuredToolInterface) {
       parameters: zodToJsonSchema(tool.schema),
     },
   };
+}
+
+export type OpenAIToolChoice =
+  | OpenAIClient.ChatCompletionToolChoiceOption
+  | "any"
+  | string;
+
+export function formatToOpenAIToolChoice(
+  toolChoice?: OpenAIToolChoice
+): OpenAIClient.ChatCompletionToolChoiceOption | undefined {
+  if (!toolChoice) {
+    return undefined;
+  } else if (toolChoice === "any" || toolChoice === "required") {
+    return "required";
+  } else if (toolChoice === "auto") {
+    return "auto";
+  } else if (toolChoice === "none") {
+    return "none";
+  } else if (typeof toolChoice === "string") {
+    return {
+      type: "function",
+      function: {
+        name: toolChoice,
+      },
+    };
+  } else {
+    return toolChoice;
+  }
 }

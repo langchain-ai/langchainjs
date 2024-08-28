@@ -1,5 +1,4 @@
 import {
-  createClient,
   RedisClientOptions,
   RedisClientType,
   RedisModules,
@@ -12,6 +11,7 @@ import {
   mapChatMessagesToStoredMessages,
   mapStoredMessagesToChatMessages,
 } from "@langchain/core/messages";
+import { pool } from "./connections.js";
 
 /**
  * Type for the input to the `RedisChatMessageHistory` constructor.
@@ -68,7 +68,7 @@ export class RedisChatMessageHistory extends BaseListChatMessageHistory {
     super(fields);
 
     const { sessionId, sessionTTL, config, client } = fields;
-    this.client = (client ?? createClient(config ?? {})) as RedisClientType<
+    this.client = (client ?? pool.getClient(config)) as RedisClientType<
       RedisModules,
       RedisFunctions,
       RedisScripts

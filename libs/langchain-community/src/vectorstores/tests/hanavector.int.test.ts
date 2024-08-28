@@ -67,13 +67,13 @@ async function connectToHANA() {
         if (err) {
           reject(err);
         } else {
-          console.log("Connected to SAP HANA successfully.");
+          // console.log("Connected to SAP HANA successfully.");
           resolve();
         }
       });
     });
   } catch (error) {
-    console.error("Connect error", error);
+    // console.error("Connect error", error);
   }
 }
 
@@ -523,7 +523,7 @@ describe("Deletion tests", () => {
       await vectorStore.delete({});
     } catch (error) {
       exceptionOccurred = true;
-      console.log(error);
+      // console.log(error);
     }
     expect(exceptionOccurred).toBe(true);
 
@@ -536,7 +536,7 @@ describe("Deletion tests", () => {
       });
     } catch (error) {
       exceptionOccurred = true;
-      console.log(error);
+      // console.log(error);
     }
     expect(exceptionOccurred).toBe(true);
   });
@@ -628,7 +628,7 @@ describe("Tests on HANA side", () => {
       await vectordb.initialize();
     } catch (error) {
       // An Error is expected here
-      console.log(error);
+      // console.log(error);
       exceptionOccurred = true;
     }
 
@@ -662,7 +662,7 @@ describe("Tests on HANA side", () => {
       await vectordb.initialize();
     } catch (error) {
       // An Error is expected here
-      console.log(error);
+      // console.log(error);
       exceptionOccurred = true;
     }
 
@@ -821,7 +821,7 @@ describe("Tests on HANA side", () => {
         args
       );
     } catch (error) {
-      console.log(error);
+      // console.log(error);
       exceptionOccurred = true;
     }
     expect(exceptionOccurred).toBe(true);
@@ -839,7 +839,7 @@ describe("Tests on HANA side", () => {
         args
       );
     } catch (error) {
-      console.log(error);
+      // console.log(error);
       exceptionOccurred = true;
     }
     expect(exceptionOccurred).toBe(true);
@@ -862,7 +862,7 @@ describe("Tests on HANA side", () => {
     try {
       await vector.similaritySearch("foo", 3, { wrong_type: 0.1 });
     } catch (error) {
-      console.log(error);
+      // console.log(error);
       exceptionOccurred = true;
     }
     expect(exceptionOccurred).toBe(true);

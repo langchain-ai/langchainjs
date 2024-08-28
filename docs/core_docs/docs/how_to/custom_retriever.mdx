@@ -8,7 +8,7 @@ This guide assumes familiarity with the following concepts:
 
 :::
 
-To create your own retriever, you need to extend the [`BaseRetriever`](https://v02.api.js.langchain.com/classes/langchain_core_retrievers.BaseRetriever.html) class
+To create your own retriever, you need to extend the [`BaseRetriever`](https://v02.api.js.langchain.com/classes/langchain_core.retrievers.BaseRetriever.html) class
 and implement a `_getRelevantDocuments` method that takes a `string` as its first parameter (and an optional `runManager` for tracing).
 This method should return an array of `Document`s fetched from some source. This process can involve calls to a database, to the web using `fetch`, or any other source.
 Note the underscore before `_getRelevantDocuments()`. The base class wraps the non-prefixed version in order to automatically handle tracing of the original call.

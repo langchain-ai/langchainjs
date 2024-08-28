@@ -32,11 +32,11 @@ const agentExecutor = new AgentExecutor({
   tools,
 }).withConfig({ runName: "Agent" });
 
-const eventStream = await agentExecutor.streamEvents(
+const eventStream = agentExecutor.streamEvents(
   {
     input: "what is the weather in SF",
   },
-  { version: "v1" }
+  { version: "v2" }
 );
 
 for await (const event of eventStream) {
@@ -59,8 +59,8 @@ for await (const event of eventStream) {
       console.log(`Agent output was: ${event.data.output}`);
       console.log("\n-----");
     }
-  } else if (eventType === "on_llm_stream") {
-    const content = event.data?.chunk?.message?.content;
+  } else if (eventType === "on_chat_model_stream") {
+    const content = event.data?.chunk?.content;
     // Empty content in the context of OpenAI means
     // that the model is asking for a tool to be invoked via function call.
     // So we only print non-empty content
@@ -70,7 +70,11 @@ for await (const event of eventStream) {
   } else if (eventType === "on_tool_start") {
     console.log("\n-----");
     console.log(
-      `Starting tool: ${event.name} with inputs: ${event.data.input}`
+      `Starting tool: ${event.name} with inputs: ${JSON.stringify(
+        event.data.input,
+        null,
+        2
+      )}`
     );
   } else if (eventType === "on_tool_end") {
     console.log("\n-----");

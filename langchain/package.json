@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.2.6",
+  "version": "0.2.17",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -134,6 +134,10 @@
     "chains/graph_qa/cypher.js",
     "chains/graph_qa/cypher.d.ts",
     "chains/graph_qa/cypher.d.cts",
+    "chat_models/universal.cjs",
+    "chat_models/universal.js",
+    "chat_models/universal.d.ts",
+    "chat_models/universal.d.cts",
     "embeddings/cache_backed.cjs",
     "embeddings/cache_backed.js",
     "embeddings/cache_backed.d.ts",
@@ -286,6 +290,10 @@
     "document_loaders/fs/directory.js",
     "document_loaders/fs/directory.d.ts",
     "document_loaders/fs/directory.d.cts",
+    "document_loaders/fs/multi_file.cjs",
+    "document_loaders/fs/multi_file.js",
+    "document_loaders/fs/multi_file.d.ts",
+    "document_loaders/fs/multi_file.d.cts",
     "document_loaders/fs/buffer.cjs",
     "document_loaders/fs/buffer.js",
     "document_loaders/fs/buffer.d.ts",
@@ -566,12 +574,7 @@
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/langchain/",
   "scripts": {
     "build": "yarn turbo:command build:internal --filter=langchain",
-    "build:internal": "yarn lc-build:v2 --create-entrypoints --pre --tree-shaking --gen-maps",
-    "build:deps": "yarn run turbo:command build --filter=@langchain/openai --filter=@langchain/textsplitters --filter=@langchain/cohere --concurrency=1",
-    "build:esm": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist/ && rimraf dist/tests dist/**/tests",
-    "build:cjs": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist-cjs/ -p tsconfig.cjs.json && yarn move-cjs-to-dist && rimraf dist-cjs",
-    "build:watch": "yarn create-entrypoints && tsc --outDir dist/ --watch",
-    "build:scripts": "yarn create-entrypoints && yarn check-tree-shaking",
+    "build:internal": "yarn lc_build --create-entrypoints --pre --tree-shaking --gen-maps",
     "lint:eslint": "NODE_OPTIONS=--max-old-space-size=4096 eslint --cache --ext .ts,.js src/",
     "lint:dpdm": "dpdm --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
     "lint": "yarn lint:eslint && yarn lint:dpdm",
@@ -585,10 +588,7 @@
     "test:integration": "yarn run build:deps && NODE_OPTIONS=--experimental-vm-modules jest --testPathPattern=\\.int\\.test.ts --testTimeout 100000 --maxWorkers=50%",
     "test:single": "yarn run build:deps && NODE_OPTIONS=--experimental-vm-modules yarn run jest --config jest.config.cjs --testTimeout 100000",
     "format": "prettier --config .prettierrc --write \"src\"",
-    "format:check": "prettier --config .prettierrc --check \"src\"",
-    "move-cjs-to-dist": "yarn lc-build --config ./langchain.config.js --move-cjs-dist",
-    "create-entrypoints": "yarn lc-build --config ./langchain.config.js --create-entrypoints",
-    "check-tree-shaking": "yarn lc-build --config ./langchain.config.js --tree-shaking"
+    "format:check": "prettier --config .prettierrc --check \"src\""
   },
   "author": "LangChain",
   "license": "MIT",
@@ -605,17 +605,23 @@
     "@gomomento/sdk": "^1.51.1",
     "@gomomento/sdk-core": "^1.51.1",
     "@jest/globals": "^29.5.0",
-    "@langchain/cohere": "^0.0.8",
-    "@langchain/scripts": "~0.0.14",
+    "@langchain/anthropic": "^0.2.8",
+    "@langchain/aws": "^0.0.5",
+    "@langchain/cohere": "^0.2.1",
+    "@langchain/google-genai": "^0.0.26",
+    "@langchain/google-vertexai": "~0.0",
+    "@langchain/groq": "^0.0.15",
+    "@langchain/mistralai": "^0.0.26",
+    "@langchain/ollama": "^0.0.2",
+    "@langchain/scripts": ">=0.1.0 <0.2.0",
     "@mendable/firecrawl-js": "^0.0.13",
     "@notionhq/client": "^2.2.10",
     "@pinecone-database/pinecone": "^1.1.0",
-    "@supabase/supabase-js": "^2.10.0",
+    "@supabase/supabase-js": "^2.45.0",
     "@swc/core": "^1.3.90",
     "@swc/jest": "^0.2.29",
     "@tsconfig/recommended": "^1.0.2",
     "@types/d3-dsv": "^2",
-    "@types/decamelize": "^1.2.0",
     "@types/handlebars": "^4.1.0",
     "@types/html-to-text": "^9",
     "@types/js-yaml": "^4",
@@ -628,7 +634,7 @@
     "@vercel/kv": "^0.2.3",
     "@xata.io/client": "^0.28.0",
     "apify-client": "^2.7.1",
-    "assemblyai": "^4.0.0",
+    "assemblyai": "^4.6.0",
     "axios": "^0.26.0",
     "cheerio": "^1.0.0-rc.12",
     "chromadb": "^1.5.3",
@@ -645,7 +651,7 @@
     "eslint-plugin-jest": "^27.6.0",
     "eslint-plugin-no-instanceof": "^1.0.1",
     "eslint-plugin-prettier": "^4.2.1",
-    "fast-xml-parser": "^4.2.7",
+    "fast-xml-parser": "^4.4.1",
     "handlebars": "^4.7.8",
     "html-to-text": "^9.0.5",
     "ignore": "^5.2.0",
@@ -663,10 +669,10 @@
     "peggy": "^3.0.2",
     "playwright": "^1.32.1",
     "prettier": "^2.8.3",
-    "puppeteer": "^19.7.2",
+    "puppeteer": "^22.0.0",
     "pyodide": "^0.24.1",
     "redis": "^4.6.6",
-    "release-it": "^15.10.1",
+    "release-it": "^17.6.0",
     "rimraf": "^5.0.1",
     "rollup": "^3.19.1",
     "sonix-speech-recognition": "^2.1.1",
@@ -681,55 +687,64 @@
     "youtubei.js": "^9.1.0"
   },
   "peerDependencies": {
-    "@aws-sdk/client-s3": "^3.310.0",
-    "@aws-sdk/client-sagemaker-runtime": "^3.310.0",
-    "@aws-sdk/client-sfn": "^3.310.0",
-    "@aws-sdk/credential-provider-node": "^3.388.0",
-    "@azure/storage-blob": "^12.15.0",
+    "@aws-sdk/client-s3": "*",
+    "@aws-sdk/client-sagemaker-runtime": "*",
+    "@aws-sdk/client-sfn": "*",
+    "@aws-sdk/credential-provider-node": "*",
+    "@azure/storage-blob": "*",
     "@browserbasehq/sdk": "*",
-    "@gomomento/sdk": "^1.51.1",
-    "@gomomento/sdk-core": "^1.51.1",
+    "@gomomento/sdk": "*",
+    "@gomomento/sdk-core": "*",
     "@gomomento/sdk-web": "^1.51.1",
-    "@mendable/firecrawl-js": "^0.0.13",
-    "@notionhq/client": "^2.2.10",
+    "@langchain/anthropic": "*",
+    "@langchain/aws": "*",
+    "@langchain/cohere": "*",
+    "@langchain/community": "*",
+    "@langchain/google-genai": "*",
+    "@langchain/google-vertexai": "*",
+    "@langchain/groq": "*",
+    "@langchain/mistralai": "*",
+    "@langchain/ollama": "*",
+    "@mendable/firecrawl-js": "*",
+    "@notionhq/client": "*",
     "@pinecone-database/pinecone": "*",
-    "@supabase/supabase-js": "^2.10.0",
-    "@vercel/kv": "^0.2.3",
-    "@xata.io/client": "^0.28.0",
-    "apify-client": "^2.7.1",
-    "assemblyai": "^4.0.0",
+    "@supabase/supabase-js": "*",
+    "@vercel/kv": "*",
+    "@xata.io/client": "*",
+    "apify-client": "*",
+    "assemblyai": "*",
     "axios": "*",
-    "cheerio": "^1.0.0-rc.12",
+    "cheerio": "*",
     "chromadb": "*",
-    "convex": "^1.3.1",
-    "couchbase": "^4.3.0",
-    "d3-dsv": "^2.0.0",
-    "epub2": "^3.0.1",
+    "convex": "*",
+    "couchbase": "*",
+    "d3-dsv": "*",
+    "epub2": "*",
     "fast-xml-parser": "*",
     "handlebars": "^4.7.8",
-    "html-to-text": "^9.0.5",
-    "ignore": "^5.2.0",
-    "ioredis": "^5.3.2",
+    "html-to-text": "*",
+    "ignore": "*",
+    "ioredis": "*",
     "jsdom": "*",
-    "mammoth": "^1.6.0",
-    "mongodb": ">=5.2.0",
+    "mammoth": "*",
+    "mongodb": "*",
     "node-llama-cpp": "*",
-    "notion-to-md": "^3.1.0",
-    "officeparser": "^4.0.4",
-    "pdf-parse": "1.1.1",
+    "notion-to-md": "*",
+    "officeparser": "*",
+    "pdf-parse": "*",
     "peggy": "^3.0.2",
-    "playwright": "^1.32.1",
-    "puppeteer": "^19.7.2",
+    "playwright": "*",
+    "puppeteer": "*",
     "pyodide": "^0.24.1",
-    "redis": "^4.6.4",
-    "sonix-speech-recognition": "^2.1.1",
-    "srt-parser-2": "^1.2.3",
-    "typeorm": "^0.3.20",
+    "redis": "*",
+    "sonix-speech-recognition": "*",
+    "srt-parser-2": "*",
+    "typeorm": "*",
     "weaviate-ts-client": "*",
-    "web-auth-library": "^1.0.3",
-    "ws": "^8.14.2",
-    "youtube-transcript": "^1.0.6",
-    "youtubei.js": "^9.1.0"
+    "web-auth-library": "*",
+    "ws": "*",
+    "youtube-transcript": "*",
+    "youtubei.js": "*"
   },
   "peerDependenciesMeta": {
     "@aws-sdk/client-s3": {
@@ -757,6 +772,33 @@
       "optional": true
     },
     "@gomomento/sdk-web": {
+      "optional": true
+    },
+    "@langchain/anthropic": {
+      "optional": true
+    },
+    "@langchain/aws": {
+      "optional": true
+    },
+    "@langchain/cohere": {
+      "optional": true
+    },
+    "@langchain/community": {
+      "optional": true
+    },
+    "@langchain/google-genai": {
+      "optional": true
+    },
+    "@langchain/google-vertexai": {
+      "optional": true
+    },
+    "@langchain/groq": {
+      "optional": true
+    },
+    "@langchain/mistralai": {
+      "optional": true
+    },
+    "@langchain/ollama": {
       "optional": true
     },
     "@mendable/firecrawl-js": {
@@ -884,19 +926,17 @@
     }
   },
   "dependencies": {
-    "@langchain/core": "~0.2.0",
+    "@langchain/core": ">=0.2.21 <0.3.0",
     "@langchain/openai": ">=0.1.0 <0.3.0",
     "@langchain/textsplitters": "~0.0.0",
     "binary-extensions": "^2.2.0",
     "js-tiktoken": "^1.0.12",
     "js-yaml": "^4.1.0",
     "jsonpointer": "^5.0.1",
-    "langchainhub": "~0.0.8",
-    "langsmith": "~0.1.30",
-    "ml-distance": "^4.0.0",
+    "langsmith": "~0.1.40",
     "openapi-types": "^12.1.3",
     "p-retry": "4",
-    "uuid": "^9.0.0",
+    "uuid": "^10.0.0",
     "yaml": "^2.2.1",
     "zod": "^3.22.4",
     "zod-to-json-schema": "^3.22.3"
@@ -1197,6 +1237,15 @@
       },
       "import": "./chains/graph_qa/cypher.js",
       "require": "./chains/graph_qa/cypher.cjs"
+    },
+    "./chat_models/universal": {
+      "types": {
+        "import": "./chat_models/universal.d.ts",
+        "require": "./chat_models/universal.d.cts",
+        "default": "./chat_models/universal.d.ts"
+      },
+      "import": "./chat_models/universal.js",
+      "require": "./chat_models/universal.cjs"
     },
     "./embeddings/cache_backed": {
       "types": {
@@ -1539,6 +1588,15 @@
       },
       "import": "./document_loaders/fs/directory.js",
       "require": "./document_loaders/fs/directory.cjs"
+    },
+    "./document_loaders/fs/multi_file": {
+      "types": {
+        "import": "./document_loaders/fs/multi_file.d.ts",
+        "require": "./document_loaders/fs/multi_file.d.cts",
+        "default": "./document_loaders/fs/multi_file.d.ts"
+      },
+      "import": "./document_loaders/fs/multi_file.js",
+      "require": "./document_loaders/fs/multi_file.cjs"
     },
     "./document_loaders/fs/buffer": {
       "types": {

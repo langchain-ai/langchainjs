@@ -11,8 +11,10 @@ const fsMock = {
   ...fs,
   mkdtempSync: jest.fn().mockReturnValue("tmp/s3fileloader-12345"),
   mkdirSync: jest.fn().mockImplementation(() => {}),
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   writeFileSync: jest.fn().mockImplementation((path, data) => {
-    console.log(`Writing "${(data as object).toString()}" to ${path}`);
+    // console.log(`Writing "${(data as object).toString()}" to ${path}`);
   }),
 };
 

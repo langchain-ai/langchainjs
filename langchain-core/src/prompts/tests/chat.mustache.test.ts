@@ -91,6 +91,24 @@ test("Mustache template with image and chat prompts inside one template (fromMes
     }
   );
 
+  const messages = await template.formatMessages({
+    name: "Bob",
+    image_url: "https://foo.com/bar.png",
+    other_var: "bar",
+  });
+
+  expect(messages).toEqual([
+    new HumanMessage({
+      content: [
+        { type: "image_url", image_url: { url: "https://foo.com/bar.png" } },
+        { type: "text", text: "bar" },
+      ],
+    }),
+    new HumanMessage({
+      content: "hello Bob",
+    }),
+  ]);
+
   expect(template.inputVariables.sort()).toEqual([
     "image_url",
     "name",
@@ -114,6 +132,20 @@ test("Mustache image template with nested URL and chat prompts HumanMessagePromp
       templateFormat: "mustache",
     }
   );
+
+  const messages = await template.formatMessages({
+    name: "Bob",
+    image_url: "https://foo.com/bar.png",
+  });
+
+  expect(messages).toEqual([
+    new HumanMessage({
+      content: [
+        { type: "text", text: "Bob" },
+        { type: "image_url", image_url: { url: "https://foo.com/bar.png" } },
+      ],
+    }),
+  ]);
 
   expect(template.inputVariables.sort()).toEqual(["image_url", "name"]);
 });

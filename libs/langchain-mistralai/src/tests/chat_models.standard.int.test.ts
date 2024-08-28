@@ -23,6 +23,14 @@ class ChatMistralAIStandardIntegrationTests extends ChatModelIntegrationTests<
       functionId: "123456789",
     });
   }
+
+  async testCacheComplexMessageTypes() {
+    this.skipTestMessage(
+      "testCacheComplexMessageTypes",
+      "ChatMistralAI",
+      "Complex message types not properly implemented"
+    );
+  }
 }
 
 const testClass = new ChatMistralAIStandardIntegrationTests();

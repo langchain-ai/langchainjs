@@ -5,6 +5,7 @@ import {
   isBaseMessage,
   StoredMessage,
   StoredMessageV1,
+  BaseMessageFields,
 } from "./base.js";
 import {
   ChatMessage,
@@ -20,6 +21,30 @@ import { HumanMessage, HumanMessageChunk } from "./human.js";
 import { SystemMessage, SystemMessageChunk } from "./system.js";
 import { ToolMessage, ToolMessageFieldsWithToolCallId } from "./tool.js";
 
+function _constructMessageFromParams(
+  params: BaseMessageFields & { type: string }
+) {
+  const { type, ...rest } = params;
+  if (type === "human" || type === "user") {
+    return new HumanMessage(rest);
+  } else if (type === "ai" || type === "assistant") {
+    return new AIMessage(rest);
+  } else if (type === "system") {
+    return new SystemMessage(rest);
+  } else if (type === "tool" && "tool_call_id" in rest) {
+    return new ToolMessage({
+      ...rest,
+      content: rest.content,
+      tool_call_id: rest.tool_call_id as string,
+      name: rest.name,
+    });
+  } else {
+    throw new Error(
+      `Unable to coerce message from array: only human, AI, or system message coercion is currently supported.`
+    );
+  }
+}
+
 export function coerceMessageLikeToMessage(
   messageLike: BaseMessageLike
 ): BaseMessage {
@@ -28,17 +53,11 @@ export function coerceMessageLikeToMessage(
   } else if (isBaseMessage(messageLike)) {
     return messageLike;
   }
-  const [type, content] = messageLike;
-  if (type === "human" || type === "user") {
-    return new HumanMessage({ content });
-  } else if (type === "ai" || type === "assistant") {
-    return new AIMessage({ content });
-  } else if (type === "system") {
-    return new SystemMessage({ content });
+  if (Array.isArray(messageLike)) {
+    const [type, content] = messageLike;
+    return _constructMessageFromParams({ type, content });
   } else {
-    throw new Error(
-      `Unable to coerce message from array: only human, AI, or system message coercion is currently supported.`
-    );
+    return _constructMessageFromParams(messageLike);
   }
 }
 
@@ -70,7 +89,11 @@ export function getBufferString(
       throw new Error(`Got unsupported message type: ${m._getType()}`);
     }
     const nameStr = m.name ? `${m.name}, ` : "";
-    string_messages.push(`${role}: ${nameStr}${m.content}`);
+    const readableContent =
+      typeof m.content === "string"
+        ? m.content
+        : JSON.stringify(m.content, null, 2);
+    string_messages.push(`${role}: ${nameStr}${readableContent}`);
   }
   return string_messages.join("\n");
 }
@@ -125,7 +148,7 @@ export function mapStoredMessageToChatMessage(message: StoredMessage) {
       return new ToolMessage(
         storedMessage.data as ToolMessageFieldsWithToolCallId
       );
-    case "chat": {
+    case "generic": {
       if (storedMessage.data.role === undefined) {
         throw new Error("Role must be defined for chat messages");
       }
@@ -176,6 +199,7 @@ export function convertToChunk(message: BaseMessage) {
         ...aiChunkFields,
         tool_call_chunks: aiChunkFields.tool_calls?.map((tc) => ({
           ...tc,
+          type: "tool_call_chunk",
           index: undefined,
           args: JSON.stringify(tc.args),
         })),

@@ -21,10 +21,21 @@ class ChatGoogleGenerativeAIStandardIntegrationTests extends ChatModelIntegratio
       Cls: ChatGoogleGenerativeAI,
       chatModelHasToolCalling: true,
       chatModelHasStructuredOutput: true,
+      supportsParallelToolCalls: true,
       constructorArgs: {
         maxRetries: 1,
+        model: "gemini-1.5-pro",
       },
     });
+  }
+
+  async testInvokeMoreComplexTools() {
+    this.skipTestMessage(
+      "testInvokeMoreComplexTools",
+      "ChatGoogleGenerativeAI",
+      "ChatGoogleGenerativeAI does not support tool schemas which contain object with unknown/any parameters." +
+        "ChatGoogleGenerativeAI only supports objects in schemas when the parameters are defined."
+    );
   }
 }
 

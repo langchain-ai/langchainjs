@@ -13,6 +13,8 @@ export interface OllamaCallOptions extends BaseLanguageModelCallOptions {
 }
 
 /**
+ * @deprecated Ollama LLM has moved to the `@langchain/ollama` package. Please install it using `npm install @langchain/ollama` and import it from there.
+ *
  * Class that represents the Ollama language model. It extends the base
  * LLM class and implements the OllamaInput interface.
  * @example

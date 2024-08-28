@@ -113,6 +113,9 @@ export type UnstructuredLoaderOptions = {
   combineUnderNChars?: number;
   newAfterNChars?: number;
   maxCharacters?: number;
+  extractImageBlockTypes?: string[];
+  overlap?: number;
+  overlapAll?: boolean;
 };
 
 export type UnstructuredDirectoryLoaderOptions = UnstructuredLoaderOptions & {
@@ -178,6 +181,12 @@ export class UnstructuredLoader extends BaseDocumentLoader {
 
   private maxCharacters?: number;
 
+  private extractImageBlockTypes?: string[];
+
+  private overlap?: number;
+
+  private overlapAll?: boolean;
+
   constructor(
     filepathOrBufferOptions: string | UnstructuredMemoryLoaderOptions,
     unstructuredOptions: UnstructuredLoaderOptions | string = {}
@@ -221,6 +230,9 @@ export class UnstructuredLoader extends BaseDocumentLoader {
       this.combineUnderNChars = options.combineUnderNChars;
       this.newAfterNChars = options.newAfterNChars;
       this.maxCharacters = options.maxCharacters;
+      this.extractImageBlockTypes = options.extractImageBlockTypes;
+      this.overlap = options.overlap;
+      this.overlapAll = options.overlapAll ?? false;
     }
   }
 
@@ -288,6 +300,21 @@ export class UnstructuredLoader extends BaseDocumentLoader {
       formData.append("max_characters", String(this.maxCharacters));
     }
 
+    if (this.extractImageBlockTypes !== undefined) {
+      formData.append(
+        "extract_image_block_types",
+        JSON.stringify(this.extractImageBlockTypes)
+      );
+    }
+
+    if (this.overlap !== undefined) {
+      formData.append("overlap", String(this.overlap));
+    }
+
+    if (this.overlapAll === true) {
+      formData.append("overlap_all", "true");
+    }
+
     const headers = {
       "UNSTRUCTURED-API-KEY": this.apiKey ?? "",
     };
@@ -321,7 +348,7 @@ export class UnstructuredLoader extends BaseDocumentLoader {
     const documents: Document[] = [];
     for (const element of elements) {
       const { metadata, text } = element;
-      if (typeof text === "string") {
+      if (typeof text === "string" && text !== "") {
         documents.push(
           new Document({
             pageContent: text,

@@ -60,6 +60,10 @@ function convertToDottedOrderFormat(
   );
 }
 
+export function isBaseTracer(x: BaseCallbackHandler): x is BaseTracer {
+  return typeof (x as BaseTracer)._addRunToRunMap === "function";
+}
+
 export abstract class BaseTracer extends BaseCallbackHandler {
   protected runMap: Map<string, Run> = new Map();
 
@@ -90,7 +94,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     parentRun.child_runs.push(childRun);
   }
 
-  protected async _startTrace(run: Run) {
+  _addRunToRunMap(run: Run) {
     const currentDottedOrder = convertToDottedOrderFormat(
       run.start_time,
       run.id,
@@ -126,7 +130,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       storedRun.dotted_order = currentDottedOrder;
     }
     this.runMap.set(storedRun.id, storedRun);
-    await this.onRunCreate?.(storedRun);
+    return storedRun;
   }
 
   protected async _endTrace(run: Run): Promise<void> {
@@ -154,7 +158,12 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     return parentRun.child_execution_order + 1;
   }
 
-  async handleLLMStart(
+  /**
+   * Create and add a run to the run map for LLM start events.
+   * This must sometimes be done synchronously to avoid race conditions
+   * when callbacks are backgrounded, so we expose it as a separate method here.
+   */
+  _createRunForLLMStart(
     llm: Serialized,
     prompts: string[],
     runId: string,
@@ -163,7 +172,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     tags?: string[],
     metadata?: KVMap,
     name?: string
-  ): Promise<Run> {
+  ) {
     const execution_order = this._getExecutionOrder(parentRunId);
     const start_time = Date.now();
     const finalExtraParams = metadata
@@ -189,13 +198,42 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       extra: finalExtraParams ?? {},
       tags: tags || [],
     };
+    return this._addRunToRunMap(run);
+  }
 
-    await this._startTrace(run);
+  async handleLLMStart(
+    llm: Serialized,
+    prompts: string[],
+    runId: string,
+    parentRunId?: string,
+    extraParams?: KVMap,
+    tags?: string[],
+    metadata?: KVMap,
+    name?: string
+  ): Promise<Run> {
+    const run =
+      this.runMap.get(runId) ??
+      this._createRunForLLMStart(
+        llm,
+        prompts,
+        runId,
+        parentRunId,
+        extraParams,
+        tags,
+        metadata,
+        name
+      );
+    await this.onRunCreate?.(run);
     await this.onLLMStart?.(run);
     return run;
   }
 
-  async handleChatModelStart(
+  /**
+   * Create and add a run to the run map for chat model start events.
+   * This must sometimes be done synchronously to avoid race conditions
+   * when callbacks are backgrounded, so we expose it as a separate method here.
+   */
+  _createRunForChatModelStart(
     llm: Serialized,
     messages: BaseMessage[][],
     runId: string,
@@ -204,7 +242,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     tags?: string[],
     metadata?: KVMap,
     name?: string
-  ): Promise<Run> {
+  ) {
     const execution_order = this._getExecutionOrder(parentRunId);
     const start_time = Date.now();
     const finalExtraParams = metadata
@@ -230,8 +268,32 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       extra: finalExtraParams ?? {},
       tags: tags || [],
     };
+    return this._addRunToRunMap(run);
+  }
 
-    await this._startTrace(run);
+  async handleChatModelStart(
+    llm: Serialized,
+    messages: BaseMessage[][],
+    runId: string,
+    parentRunId?: string,
+    extraParams?: KVMap,
+    tags?: string[],
+    metadata?: KVMap,
+    name?: string
+  ): Promise<Run> {
+    const run =
+      this.runMap.get(runId) ??
+      this._createRunForChatModelStart(
+        llm,
+        messages,
+        runId,
+        parentRunId,
+        extraParams,
+        tags,
+        metadata,
+        name
+      );
+    await this.onRunCreate?.(run);
     await this.onLLMStart?.(run);
     return run;
   }
@@ -268,7 +330,12 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     return run;
   }
 
-  async handleChainStart(
+  /**
+   * Create and add a run to the run map for chain start events.
+   * This must sometimes be done synchronously to avoid race conditions
+   * when callbacks are backgrounded, so we expose it as a separate method here.
+   */
+  _createRunForChainStart(
     chain: Serialized,
     inputs: ChainValues,
     runId: string,
@@ -277,7 +344,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     metadata?: KVMap,
     runType?: string,
     name?: string
-  ): Promise<Run> {
+  ) {
     const execution_order = this._getExecutionOrder(parentRunId);
     const start_time = Date.now();
     const run: Run = {
@@ -300,7 +367,32 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       extra: metadata ? { metadata } : {},
       tags: tags || [],
     };
-    await this._startTrace(run);
+    return this._addRunToRunMap(run);
+  }
+
+  async handleChainStart(
+    chain: Serialized,
+    inputs: ChainValues,
+    runId: string,
+    parentRunId?: string,
+    tags?: string[],
+    metadata?: KVMap,
+    runType?: string,
+    name?: string
+  ): Promise<Run> {
+    const run =
+      this.runMap.get(runId) ??
+      this._createRunForChainStart(
+        chain,
+        inputs,
+        runId,
+        parentRunId,
+        tags,
+        metadata,
+        runType,
+        name
+      );
+    await this.onRunCreate?.(run);
     await this.onChainStart?.(run);
     return run;
   }
@@ -355,7 +447,12 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     return run;
   }
 
-  async handleToolStart(
+  /**
+   * Create and add a run to the run map for tool start events.
+   * This must sometimes be done synchronously to avoid race conditions
+   * when callbacks are backgrounded, so we expose it as a separate method here.
+   */
+  _createRunForToolStart(
     tool: Serialized,
     input: string,
     runId: string,
@@ -363,7 +460,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     tags?: string[],
     metadata?: KVMap,
     name?: string
-  ): Promise<Run> {
+  ) {
     const execution_order = this._getExecutionOrder(parentRunId);
     const start_time = Date.now();
     const run: Run = {
@@ -386,13 +483,36 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       extra: metadata ? { metadata } : {},
       tags: tags || [],
     };
+    return this._addRunToRunMap(run);
+  }
 
-    await this._startTrace(run);
+  async handleToolStart(
+    tool: Serialized,
+    input: string,
+    runId: string,
+    parentRunId?: string,
+    tags?: string[],
+    metadata?: KVMap,
+    name?: string
+  ): Promise<Run> {
+    const run =
+      this.runMap.get(runId) ??
+      this._createRunForToolStart(
+        tool,
+        input,
+        runId,
+        parentRunId,
+        tags,
+        metadata,
+        name
+      );
+    await this.onRunCreate?.(run);
     await this.onToolStart?.(run);
     return run;
   }
 
-  async handleToolEnd(output: string, runId: string): Promise<Run> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async handleToolEnd(output: any, runId: string): Promise<Run> {
     const run = this.runMap.get(runId);
     if (!run || run?.run_type !== "tool") {
       throw new Error("No tool run to end");
@@ -453,7 +573,12 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     await this.onAgentEnd?.(run);
   }
 
-  async handleRetrieverStart(
+  /**
+   * Create and add a run to the run map for retriever start events.
+   * This must sometimes be done synchronously to avoid race conditions
+   * when callbacks are backgrounded, so we expose it as a separate method here.
+   */
+  _createRunForRetrieverStart(
     retriever: Serialized,
     query: string,
     runId: string,
@@ -461,7 +586,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     tags?: string[],
     metadata?: KVMap,
     name?: string
-  ): Promise<Run> {
+  ) {
     const execution_order = this._getExecutionOrder(parentRunId);
     const start_time = Date.now();
     const run: Run = {
@@ -484,8 +609,30 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       extra: metadata ? { metadata } : {},
       tags: tags || [],
     };
+    return this._addRunToRunMap(run);
+  }
 
-    await this._startTrace(run);
+  async handleRetrieverStart(
+    retriever: Serialized,
+    query: string,
+    runId: string,
+    parentRunId?: string,
+    tags?: string[],
+    metadata?: KVMap,
+    name?: string
+  ): Promise<Run> {
+    const run =
+      this.runMap.get(runId) ??
+      this._createRunForRetrieverStart(
+        retriever,
+        query,
+        runId,
+        parentRunId,
+        tags,
+        metadata,
+        name
+      );
+    await this.onRunCreate?.(run);
     await this.onRetrieverStart?.(run);
     return run;
   }

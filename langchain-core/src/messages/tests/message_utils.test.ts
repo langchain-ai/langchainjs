@@ -1,13 +1,19 @@
-import { it, expect } from "@jest/globals";
+import { it, describe, test, expect } from "@jest/globals";
 import {
   filterMessages,
   mergeMessageRuns,
   trimMessages,
 } from "../transformers.js";
 import { AIMessage } from "../ai.js";
+import { ChatMessage } from "../chat.js";
 import { HumanMessage } from "../human.js";
 import { SystemMessage } from "../system.js";
 import { BaseMessage } from "../base.js";
+import {
+  getBufferString,
+  mapChatMessagesToStoredMessages,
+  mapStoredMessagesToChatMessages,
+} from "../utils.js";
 
 describe("filterMessage", () => {
   const getMessages = () => [
@@ -110,8 +116,8 @@ describe("mergeMessageRuns", () => {
           { type: "text", text: "my favorite dish is lasagna" },
         ],
         tool_calls: [
-          { name: "blah_tool", args: { x: 2 }, id: "123" },
-          { name: "blah_tool", args: { x: -10 }, id: "456" },
+          { name: "blah_tool", args: { x: 2 }, id: "123", type: "tool_call" },
+          { name: "blah_tool", args: { x: -10 }, id: "456", type: "tool_call" },
         ],
         id: "baz",
       }),
@@ -429,5 +435,88 @@ describe("trimMessages can trim", () => {
     // `func` is protected, so we need to cast it to any to access it
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     expect(typeof (trimmedMessages as any).func).toBe("function");
+  });
+});
+
+test("getBufferString can handle complex messages", () => {
+  const messageArr1 = [new HumanMessage("Hello there!")];
+  const messageArr2 = [
+    new AIMessage({
+      content: [
+        {
+          type: "text",
+          text: "Hello there!",
+        },
+      ],
+    }),
+  ];
+  const messageArr3 = [
+    new HumanMessage({
+      content: [
+        {
+          type: "image_url",
+          image_url: {
+            url: "https://example.com/image.jpg",
+          },
+        },
+        {
+          type: "image_url",
+          image_url: "https://example.com/image.jpg",
+        },
+      ],
+    }),
+  ];
+
+  const bufferString1 = getBufferString(messageArr1);
+  expect(bufferString1).toBe("Human: Hello there!");
+
+  const bufferString2 = getBufferString(messageArr2);
+  expect(bufferString2).toBe(
+    `AI: ${JSON.stringify(
+      [
+        {
+          type: "text",
+          text: "Hello there!",
+        },
+      ],
+      null,
+      2
+    )}`
+  );
+
+  const bufferString3 = getBufferString(messageArr3);
+  expect(bufferString3).toBe(
+    `Human: ${JSON.stringify(
+      [
+        {
+          type: "image_url",
+          image_url: {
+            url: "https://example.com/image.jpg",
+          },
+        },
+        {
+          type: "image_url",
+          image_url: "https://example.com/image.jpg",
+        },
+      ],
+      null,
+      2
+    )}`
+  );
+});
+
+describe("chat message conversions", () => {
+  it("can convert a chat message to a stored message and back", () => {
+    const originalMessages = [
+      new ChatMessage("I'm a generic message!", "human"),
+      new HumanMessage("I'm a human message!"),
+    ];
+
+    const storedMessages = mapChatMessagesToStoredMessages(originalMessages);
+
+    const convertedBackMessages =
+      mapStoredMessagesToChatMessages(storedMessages);
+
+    expect(convertedBackMessages).toEqual(originalMessages);
   });
 });

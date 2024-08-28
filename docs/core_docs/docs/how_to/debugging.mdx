@@ -18,6 +18,9 @@ After you sign up at the link above, make sure to set your environment variables
 ```shell
 export LANGCHAIN_TRACING_V2="true"
 export LANGCHAIN_API_KEY="..."
+
+# Reduce tracing latency if you are not in a serverless environment
+# export LANGCHAIN_CALLBACKS_BACKGROUND=true
 ```
 
 Let's suppose we have an agent, and want to visualize the actions it takes and tool outputs it receives. Without any debugging, here's what we see:
@@ -3521,5 +3524,5 @@ MacBook-Pro-4:examples jacoblee$ yarn start examples/src/guides/debugging/simple
 
 `Callbacks` are what we use to execute any functionality within a component outside the primary component logic.
 All of the above solutions use `Callbacks` under the hood to log intermediate steps of components.
-There are a number of `Callbacks` relevant for debugging that come with LangChain out of the box, like the [`ConsoleCallbackHandler`](https://v02.api.js.langchain.com/classes/langchain_core_tracers_console.ConsoleCallbackHandler.html).
+There are a number of `Callbacks` relevant for debugging that come with LangChain out of the box, like the [`ConsoleCallbackHandler`](https://v02.api.js.langchain.com/classes/langchain_core.tracers_console.ConsoleCallbackHandler.html).
 You can also implement your own callbacks to execute custom functionality.

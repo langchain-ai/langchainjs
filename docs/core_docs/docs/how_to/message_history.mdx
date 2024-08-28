@@ -48,6 +48,9 @@ If you do want to use LangSmith, after you sign up at the link above, make sure 
 ```bash
 export LANGCHAIN_TRACING_V2="true"
 export LANGCHAIN_API_KEY="<your-api-key>"
+
+# Reduce tracing latency if you are not in a serverless environment
+# export LANGCHAIN_CALLBACKS_BACKGROUND=true
 ```
 
 Let's create a simple runnable that takes a dict as input and returns a `BaseMessage`.

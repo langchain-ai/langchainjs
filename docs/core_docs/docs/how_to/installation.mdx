@@ -20,7 +20,7 @@ However, note that individual integrations may not be supported in all environme
 
 ## Installation
 
-To install LangChain, run the following command:
+To install the main `langchain` package, run:
 
 import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
@@ -30,8 +30,29 @@ import CodeBlock from "@theme/CodeBlock";
 npm install langchain
 ```
 
-A lot of the value of LangChain comes when integrating it with various model providers, datastores, etc.
+While this package acts as a sane starting point to using LangChain,
+much of the value of LangChain comes when integrating it with various model providers, datastores, etc.
 By default, the dependencies needed to do that are NOT installed. You will need to install the dependencies for specific integrations separately.
+We'll show how to do that in the next sections of this guide.
+
+Please also see the section on [installing integration packages](/docs/how_to/installation/#installing-integration-packages)
+for some special considerations when installing LangChain packages.
+
+## Ecosystem packages
+
+With the exception of the `langsmith` SDK, all packages in the LangChain ecosystem depend on `@langchain/core`, which contains base
+classes and abstractions that other packages use. The dependency graph below shows how the difference packages are related.
+A directed arrow indicates that the source package depends on the target package:
+
+![](/img/ecosystem_packages.png)
+
+When installing a package, you do not need to explicitly install that package's explicit dependencies (such as `@langchain/core`).
+However, you may choose to if you are using a feature only available in a certain version of that dependency.
+If you do, you should make sure that the installed or pinned version is compatible with any other integration packages you use.
+
+**Note:** It is important that your app only uses one version of `@langchain/core`. Common package managers may introduce additional versions
+when resolving dependencies, even if you don't intend this. See [this section on installing integration packages](/docs/how_to/installation/#installing-integration-packages)
+for more information and ways to remedy this.
 
 ### @langchain/community
 
@@ -55,7 +76,9 @@ npm install @langchain/core
 
 ### LangGraph
 
-`langgraph` is a library for building stateful, multi-actor applications with LLMs, built on top of (and intended to be used with) LangChain.
+[LangGraph.js](https://langchain-ai.github.io/langgraphjs/) is a library for building stateful, multi-actor applications with LLMs.
+It integrates smoothly with LangChain, but can be used without it.
+
 Install with:
 
 ```bash npm2yarn
@@ -111,6 +134,8 @@ If you are using `yarn`:
 }
 ```
 
+You can also try running the [`yarn dedupe`](https://yarnpkg.com/cli/dedupe) command if you are on `yarn` version 2 or higher.
+
 Or for `npm`:
 
 ```json title="npm package.json"
@@ -130,6 +155,8 @@ Or for `npm`:
   }
 }
 ```
+
+You can also try the [`npm dedupe`](https://docs.npmjs.com/cli/commands/npm-dedupe) command.
 
 Or for `pnpm`:
 
@@ -152,6 +179,8 @@ Or for `pnpm`:
   }
 }
 ```
+
+You can also try the [`pnpm dedupe`](https://pnpm.io/cli/dedupe) command.
 
 ## Loading the library
 

@@ -22,17 +22,14 @@ import {
   ChatGenerationChunk,
   ChatResult,
 } from "@langchain/core/outputs";
-import { StructuredToolInterface } from "@langchain/core/tools";
-import { isStructuredTool } from "@langchain/core/utils/function_calling";
-import {
-  ToolDefinition,
-  isOpenAITool,
-} from "@langchain/core/language_models/base";
+import { isLangChainTool } from "@langchain/core/utils/function_calling";
+import { isOpenAITool } from "@langchain/core/language_models/base";
 import { ToolCallChunk } from "@langchain/core/messages/tool";
 import {
   jsonSchemaToGeminiParameters,
   zodToGenerativeAIParameters,
 } from "./zod_to_genai_parameters.js";
+import { GoogleGenerativeAIToolType } from "../types.js";
 
 export function getMessageAuthor(message: BaseMessage) {
   const type = message._getType();
@@ -263,7 +260,10 @@ export function mapGenerateContentResultToChatResult(
     text,
     message: new AIMessage({
       content: text,
-      tool_calls: functionCalls,
+      tool_calls: functionCalls?.map((fc) => ({
+        ...fc,
+        type: "tool_call",
+      })),
       additional_kwargs: {
         ...generationInfo,
       },
@@ -299,6 +299,7 @@ export function convertResponseContentToChatGenerationChunk(
         ...fc,
         args: JSON.stringify(fc.args),
         index: extra.index,
+        type: "tool_call_chunk" as const,
       }))
     );
   }
@@ -318,47 +319,40 @@ export function convertResponseContentToChatGenerationChunk(
 }
 
 export function convertToGenerativeAITools(
-  structuredTools: (
-    | StructuredToolInterface
-    | Record<string, unknown>
-    | ToolDefinition
-  )[]
+  tools: GoogleGenerativeAIToolType[]
 ): GoogleGenerativeAIFunctionDeclarationsTool[] {
   if (
-    structuredTools.every(
+    tools.every(
       (tool) =>
         "functionDeclarations" in tool &&
         Array.isArray(tool.functionDeclarations)
     )
   ) {
-    return structuredTools as GoogleGenerativeAIFunctionDeclarationsTool[];
+    return tools as GoogleGenerativeAIFunctionDeclarationsTool[];
   }
   return [
     {
-      functionDeclarations: structuredTools.map(
-        (structuredTool): GenerativeAIFunctionDeclaration => {
-          if (isStructuredTool(structuredTool)) {
-            const jsonSchema = zodToGenerativeAIParameters(
-              structuredTool.schema
-            );
+      functionDeclarations: tools.map(
+        (tool): GenerativeAIFunctionDeclaration => {
+          if (isLangChainTool(tool)) {
+            const jsonSchema = zodToGenerativeAIParameters(tool.schema);
             return {
-              name: structuredTool.name,
-              description: structuredTool.description,
+              name: tool.name,
+              description: tool.description,
               parameters: jsonSchema,
             };
           }
-          if (isOpenAITool(structuredTool)) {
+          if (isOpenAITool(tool)) {
             return {
-              name: structuredTool.function.name,
+              name: tool.function.name,
               description:
-                structuredTool.function.description ??
-                `A function available to call.`,
+                tool.function.description ?? `A function available to call.`,
               parameters: jsonSchemaToGeminiParameters(
-                structuredTool.function.parameters
+                tool.function.parameters
               ),
             };
           }
-          return structuredTool as unknown as GenerativeAIFunctionDeclaration;
+          return tool as unknown as GenerativeAIFunctionDeclaration;
         }
       ),
     },

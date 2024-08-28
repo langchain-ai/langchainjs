@@ -36,13 +36,13 @@ console.log(JSON.stringify(response.additional_kwargs, null, 2));
 {
   "tool_calls": [
     {
-      "id": "calculator",
+      "id": "a20075d3b0e34f7ca60cc135916e620d",
       "type": "function",
       "function": {
         "name": "calculator",
-        "arguments": "{\"number2\":81623836,\"number1\":1628253239,\"operation\":\"multiply\"}"
+        "arguments": "{\"number1\":1628253239,\"operation\":\"multiply\",\"number2\":81623836}"
       }
     }
-  ],
+  ]
 }
  */

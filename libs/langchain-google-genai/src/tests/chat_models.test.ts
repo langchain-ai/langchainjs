@@ -15,6 +15,19 @@ import {
   convertMessageContentToParts,
 } from "../utils/common.js";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function extractKeys(obj: Record<string, any>, keys: string[] = []) {
+  for (const key in obj) {
+    if (Object.prototype.hasOwnProperty.call(obj, key)) {
+      keys.push(key);
+      if (typeof obj[key] === "object" && obj[key] !== null) {
+        extractKeys(obj[key], keys);
+      }
+    }
+  }
+  return keys;
+}
+
 test("Google AI - `temperature` must be in range [0.0,1.0]", async () => {
   expect(
     () =>
@@ -89,19 +102,6 @@ test("Google AI - `safetySettings` category array must be unique", async () => {
 });
 
 test("removeAdditionalProperties can remove all instances of additionalProperties", async () => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  function extractKeys(obj: Record<string, any>, keys: string[] = []) {
-    for (const key in obj) {
-      if (Object.prototype.hasOwnProperty.call(obj, key)) {
-        keys.push(key);
-        if (typeof obj[key] === "object" && obj[key] !== null) {
-          extractKeys(obj[key], keys);
-        }
-      }
-    }
-    return keys;
-  }
-
   const idealResponseSchema = z.object({
     idealResponse: z
       .string()
@@ -137,6 +137,26 @@ test("removeAdditionalProperties can remove all instances of additionalPropertie
   expect(
     arrSchemaObj.find((key) => key === "additionalProperties")
   ).toBeUndefined();
+
+  const analysisSchema = z.object({
+    decision: z.enum(["UseAPI", "UseFallback"]),
+    explanation: z.string(),
+    apiDetails: z
+      .object({
+        serviceName: z.string(),
+        endpointName: z.string(),
+        parameters: z.record(z.unknown()),
+        extractionPath: z.string(),
+      })
+      .optional(),
+  });
+  const parsedAnalysisSchema = removeAdditionalProperties(
+    zodToJsonSchema(analysisSchema)
+  );
+  const analysisSchemaObj = extractKeys(parsedAnalysisSchema);
+  expect(
+    analysisSchemaObj.find((key) => key === "additionalProperties")
+  ).toBeUndefined();
 });
 
 test("convertMessageContentToParts correctly handles message types", () => {
@@ -164,7 +184,7 @@ test("convertMessageContentToParts correctly handles message types", () => {
   const messagesAsGoogleParts = messages
     .map((msg) => convertMessageContentToParts(msg, false))
     .flat();
-  console.log(messagesAsGoogleParts);
+  // console.log(messagesAsGoogleParts);
   expect(messagesAsGoogleParts).toEqual([
     { text: "You are a helpful assistant" },
     { text: "What's the weather like in new york?" },
@@ -204,7 +224,7 @@ test("convertBaseMessagesToContent correctly creates properly formatted content"
   ];
 
   const messagesAsGoogleContent = convertBaseMessagesToContent(messages, false);
-  console.log(messagesAsGoogleContent);
+  // console.log(messagesAsGoogleContent);
   // Google Generative AI API only allows for 'model' and 'user' roles
   // This means that 'system', 'human' and 'tool' messages are converted
   // to 'user' messages, and ai messages are converted to 'model' messages.
