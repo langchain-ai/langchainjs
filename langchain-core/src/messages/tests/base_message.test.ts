@@ -6,6 +6,8 @@ import {
   ToolMessage,
   ToolMessageChunk,
   AIMessageChunk,
+  coerceMessageLikeToMessage,
+  SystemMessage,
 } from "../index.js";
 import { load } from "../../load/index.js";
 
@@ -332,5 +334,65 @@ describe("Complex AIMessageChunk concat", () => {
         response_metadata: { extra: "value" },
       })
     );
+  });
+});
+
+describe("Message like coercion", () => {
+  it("Should convert OpenAI format messages", async () => {
+    const messages = [
+      {
+        id: "foobar",
+        role: "system",
+        content: "6",
+      },
+      {
+        role: "user",
+        content: [{ type: "image_url", image_url: { url: "7.1" } }],
+      },
+      {
+        role: "assistant",
+        content: [{ type: "text", text: "8.1" }],
+        tool_calls: [
+          {
+            id: "8.5",
+            function: {
+              name: "8.4",
+              arguments: JSON.stringify({ "8.2": "8.3" }),
+            },
+            type: "function",
+          },
+        ],
+      },
+      {
+        role: "tool",
+        content: "10.2",
+        tool_call_id: "10.2",
+      },
+    ].map(coerceMessageLikeToMessage);
+    expect(messages).toEqual([
+      new SystemMessage({
+        id: "foobar",
+        content: "6",
+      }),
+      new HumanMessage({
+        content: [{ type: "image_url", image_url: { url: "7.1" } }],
+      }),
+      new AIMessage({
+        content: [{ type: "text", text: "8.1" }],
+        tool_calls: [
+          {
+            id: "8.5",
+            name: "8.4",
+            args: { "8.2": "8.3" },
+            type: "tool_call",
+          },
+        ],
+      }),
+      new ToolMessage({
+        name: undefined,
+        content: "10.2",
+        tool_call_id: "10.2",
+      }),
+    ]);
   });
 });
