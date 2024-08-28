@@ -343,21 +343,21 @@ describe("Message like coercion", () => {
       {
         id: "foobar",
         role: "system",
-        content: "You are an assistant.",
+        content: "6",
       },
       {
         role: "user",
-        content: [{ type: "text", text: "What is the weather in SF?" }],
+        content: [{ type: "image_url", image_url: { url: "7.1" } }],
       },
       {
         role: "assistant",
-        content: "",
+        content: [{ type: "text", text: "8.1" }],
         tool_calls: [
           {
-            id: "call_123",
+            id: "8.5",
             function: {
-              name: "get_weather",
-              arguments: JSON.stringify({ location: "sf" }),
+              name: "8.4",
+              arguments: JSON.stringify({ "8.2": "8.3" }),
             },
             type: "function",
           },
@@ -365,33 +365,33 @@ describe("Message like coercion", () => {
       },
       {
         role: "tool",
-        content: "Pretty nice right now!",
-        tool_call_id: "call_123",
+        content: "10.2",
+        tool_call_id: "10.2",
       },
     ].map(coerceMessageLikeToMessage);
     expect(messages).toEqual([
       new SystemMessage({
         id: "foobar",
-        content: "You are an assistant.",
+        content: "6",
       }),
       new HumanMessage({
-        content: [{ type: "text", text: "What is the weather in SF?" }],
+        content: [{ type: "image_url", image_url: { url: "7.1" } }],
       }),
       new AIMessage({
-        content: "",
+        content: [{ type: "text", text: "8.1" }],
         tool_calls: [
           {
-            id: "call_123",
-            name: "get_weather",
-            args: { location: "sf" },
+            id: "8.5",
+            name: "8.4",
+            args: { "8.2": "8.3" },
             type: "tool_call",
           },
         ],
       }),
       new ToolMessage({
         name: undefined,
-        content: "Pretty nice right now!",
-        tool_call_id: "call_123",
+        content: "10.2",
+        tool_call_id: "10.2",
       }),
     ]);
   });
