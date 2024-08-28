@@ -441,7 +441,7 @@ export abstract class BaseMessageChunk extends BaseMessage {
 }
 
 export type MessageFieldWithRole = {
-  role: MessageType | "user" | "assistant" | string;
+  role: StringWithAutocomplete<"user" | "assistant" | MessageType>;
   content: MessageContent;
   name?: string;
 } & Record<string, unknown>;
