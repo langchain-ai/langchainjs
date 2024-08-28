@@ -4,7 +4,7 @@ sidebar_position: 1
 
 # How to stream responses from an LLM
 
-All [`LLM`s](https://v02.api.js.langchain.com/classes/langchain_core_language_models_llms.BaseLLM.html) implement the [Runnable interface](https://v02.api.js.langchain.com/classes/langchain_core_runnables.Runnable.html), which comes with **default** implementations of standard runnable methods (i.e. `ainvoke`, `batch`, `abatch`, `stream`, `astream`, `astream_events`).
+All [`LLM`s](https://v02.api.js.langchain.com/classes/langchain_core.language_models_llms.BaseLLM.html) implement the [Runnable interface](https://v02.api.js.langchain.com/classes/langchain_core.runnables.Runnable.html), which comes with **default** implementations of standard runnable methods (i.e. `ainvoke`, `batch`, `abatch`, `stream`, `astream`, `astream_events`).
 
 The **default** streaming implementations provide an `AsyncGenerator` that yields a single value: the final output from the underlying chat model provider.
 
@@ -40,7 +40,7 @@ For models that do not support streaming, the entire response will be returned a
 
 ## Using a callback handler
 
-You can also use a [`CallbackHandler`](https://v02.api.js.langchain.com/classes/langchain_core_callbacks_base.BaseCallbackHandler.html) like so:
+You can also use a [`CallbackHandler`](https://v02.api.js.langchain.com/classes/langchain_core.callbacks_base.BaseCallbackHandler.html) like so:
 
 import StreamingExample from "@examples/models/llm/llm_streaming.ts";
 

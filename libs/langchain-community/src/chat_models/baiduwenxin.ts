@@ -2,10 +2,20 @@ import {
   BaseChatModel,
   type BaseChatModelParams,
 } from "@langchain/core/language_models/chat_models";
-import { AIMessage, BaseMessage, ChatMessage } from "@langchain/core/messages";
-import { ChatGeneration, ChatResult } from "@langchain/core/outputs";
+import {
+  AIMessage,
+  AIMessageChunk,
+  BaseMessage,
+  ChatMessage,
+} from "@langchain/core/messages";
+import {
+  ChatGeneration,
+  ChatGenerationChunk,
+  ChatResult,
+} from "@langchain/core/outputs";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
+import { convertEventStreamToIterableReadableDataStream } from "../utils/event_source_parse.js";
 
 /**
  * Type representing the role of a message in the Wenxin chat model.
@@ -163,6 +173,7 @@ function messageToWenxinRole(message: BaseMessage): WenxinMessageRole {
 }
 
 /**
+ * @deprecated Install and import from @langchain/baidu-qianfan instead.
  * Wrapper around Baidu ERNIE large language models that use the Chat endpoint.
  *
  * To use you should have the `BAIDU_API_KEY` and `BAIDU_SECRET_KEY`
@@ -347,6 +358,13 @@ export class ChatBaiduWenxin
     };
   }
 
+  private _ensureMessages(messages: BaseMessage[]): WenxinMessage[] {
+    return messages.map((message) => ({
+      role: messageToWenxinRole(message),
+      content: message.text,
+    }));
+  }
+
   /** @ignore */
   async _generate(
     messages: BaseMessage[],
@@ -366,10 +384,7 @@ export class ChatBaiduWenxin
       messages = messages.filter((message) => message !== systemMessage);
       params.system = systemMessage.text;
     }
-    const messagesMapped: WenxinMessage[] = messages.map((message) => ({
-      role: messageToWenxinRole(message),
-      content: message.text,
-    }));
+    const messagesMapped = this._ensureMessages(messages);
 
     const data = params.stream
       ? await new Promise<ChatCompletionResponse>((resolve, reject) => {
@@ -594,6 +609,94 @@ export class ChatBaiduWenxin
       }
     };
     return this.caller.call(makeCompletionRequest);
+  }
+
+  private async getFullApiUrl() {
+    if (!this.accessToken) {
+      this.accessToken = await this.getAccessToken();
+    }
+    return `${this.apiUrl}?access_token=${this.accessToken}`;
+  }
+
+  private async createWenxinStream(
+    request: ChatCompletionRequest,
+    signal?: AbortSignal
+  ) {
+    const url = await this.getFullApiUrl();
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Accept: "text/event-stream",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(request),
+      signal,
+    });
+
+    if (!response.body) {
+      throw new Error(
+        "Could not begin Wenxin stream. Please check the given URL and try again."
+      );
+    }
+
+    return convertEventStreamToIterableReadableDataStream(response.body);
+  }
+
+  private _deserialize(json: string) {
+    try {
+      return JSON.parse(json);
+    } catch (e) {
+      console.warn(`Received a non-JSON parseable chunk: ${json}`);
+    }
+  }
+
+  async *_streamResponseChunks(
+    messages: BaseMessage[],
+    options?: this["ParsedCallOptions"],
+    runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<ChatGenerationChunk> {
+    const parameters = {
+      ...this.invocationParams(),
+      stream: true,
+    };
+
+    // Wenxin requires the system message to be put in the params, not messages array
+    const systemMessage = messages.find(
+      (message) => message._getType() === "system"
+    );
+    if (systemMessage) {
+      // eslint-disable-next-line no-param-reassign
+      messages = messages.filter((message) => message !== systemMessage);
+      parameters.system = systemMessage.text;
+    }
+    const messagesMapped = this._ensureMessages(messages);
+
+    const stream = await this.caller.call(async () =>
+      this.createWenxinStream(
+        {
+          ...parameters,
+          messages: messagesMapped,
+        },
+        options?.signal
+      )
+    );
+
+    for await (const chunk of stream) {
+      const deserializedChunk = this._deserialize(chunk);
+      const { result, is_end, id } = deserializedChunk;
+      yield new ChatGenerationChunk({
+        text: result,
+        message: new AIMessageChunk({ content: result }),
+        generationInfo: is_end
+          ? {
+              is_end,
+              request_id: id,
+              usage: chunk.usage,
+            }
+          : undefined,
+      });
+      await runManager?.handleLLMNewToken(result);
+    }
   }
 
   _llmType() {

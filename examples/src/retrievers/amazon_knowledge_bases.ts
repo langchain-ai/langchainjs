@@ -1,4 +1,4 @@
-import { AmazonKnowledgeBaseRetriever } from "@langchain/community/retrievers/amazon_knowledge_base";
+import { AmazonKnowledgeBaseRetriever } from "@langchain/aws";
 
 const retriever = new AmazonKnowledgeBaseRetriever({
   topK: 10,

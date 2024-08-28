@@ -145,7 +145,7 @@ export class XataVectorSearch<
             )
           ),
         }),
-        record.xata.score,
+        record.xata ? record.xata.score : record.xata_score,
       ]) ?? []
     );
   }

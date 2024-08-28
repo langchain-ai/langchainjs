@@ -37,5 +37,5 @@ test("Test TrajectoryEvalChain", async () => {
   });
 
   expect(res.score).toBeDefined();
-  console.log({ res });
+  // console.log({ res });
 });

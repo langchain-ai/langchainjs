@@ -1,4 +1,7 @@
 import { Client } from "langsmith";
+import { RunTree } from "langsmith/run_trees";
+import { getCurrentRunTree } from "langsmith/singletons/traceable";
+
 import {
   BaseRun,
   RunCreate,
@@ -57,6 +60,11 @@ export class LangChainTracer
       getEnvironmentVariable("LANGCHAIN_SESSION");
     this.exampleId = exampleId;
     this.client = client ?? new Client({});
+
+    const traceableTree = LangChainTracer.getTraceableRunTree();
+    if (traceableTree) {
+      this.updateFromRunTree(traceableTree);
+    }
   }
 
   private async _convertToCreate(
@@ -101,5 +109,89 @@ export class LangChainTracer
 
   getRun(id: string): Run | undefined {
     return this.runMap.get(id);
+  }
+
+  updateFromRunTree(runTree: RunTree) {
+    let rootRun: RunTree = runTree;
+    const visited = new Set<string>();
+    while (rootRun.parent_run) {
+      if (visited.has(rootRun.id)) break;
+      visited.add(rootRun.id);
+
+      if (!rootRun.parent_run) break;
+      rootRun = rootRun.parent_run as RunTree;
+    }
+    visited.clear();
+
+    const queue = [rootRun];
+    while (queue.length > 0) {
+      const current = queue.shift();
+      if (!current || visited.has(current.id)) continue;
+      visited.add(current.id);
+
+      // @ts-expect-error Types of property 'events' are incompatible.
+      this.runMap.set(current.id, current);
+      if (current.child_runs) {
+        queue.push(...current.child_runs);
+      }
+    }
+
+    this.client = runTree.client ?? this.client;
+    this.projectName = runTree.project_name ?? this.projectName;
+    this.exampleId = runTree.reference_example_id ?? this.exampleId;
+  }
+
+  convertToRunTree(id: string): RunTree | undefined {
+    const runTreeMap: Record<string, RunTree> = {};
+    const runTreeList: [id: string, dotted_order: string | undefined][] = [];
+    for (const [id, run] of this.runMap) {
+      // by converting the run map to a run tree, we are doing a copy
+      // thus, any mutation performed on the run tree will not be reflected
+      // back in the run map
+      // TODO: Stop using `this.runMap` in favour of LangSmith's `RunTree`
+      const runTree = new RunTree({
+        ...run,
+        child_runs: [],
+        parent_run: undefined,
+
+        // inherited properties
+        client: this.client,
+        project_name: this.projectName,
+        reference_example_id: this.exampleId,
+        tracingEnabled: true,
+      });
+
+      runTreeMap[id] = runTree;
+      runTreeList.push([id, run.dotted_order]);
+    }
+
+    runTreeList.sort((a, b) => {
+      if (!a[1] || !b[1]) return 0;
+      return a[1].localeCompare(b[1]);
+    });
+
+    for (const [id] of runTreeList) {
+      const run = this.runMap.get(id);
+      const runTree = runTreeMap[id];
+      if (!run || !runTree) continue;
+
+      if (run.parent_run_id) {
+        const parentRunTree = runTreeMap[run.parent_run_id];
+        if (parentRunTree) {
+          parentRunTree.child_runs.push(runTree);
+          runTree.parent_run = parentRunTree;
+        }
+      }
+    }
+
+    return runTreeMap[id];
+  }
+
+  static getTraceableRunTree(): RunTree | undefined {
+    try {
+      return getCurrentRunTree();
+    } catch {
+      return undefined;
+    }
   }
 }

@@ -27,6 +27,8 @@ export const config = {
     "pdf-parse/lib/pdf.js/v1.10.100/build/pdf.js",
     "web-auth-library/google",
     "notion-to-md/build/utils/notion.js",
+    "@getzep/zep-cloud/api",
+    "@supabase/postgrest-js",
   ],
   entrypoints: {
     load: "load/index",
@@ -68,17 +70,21 @@ export const config = {
     "embeddings/bedrock": "embeddings/bedrock",
     "embeddings/cloudflare_workersai": "embeddings/cloudflare_workersai",
     "embeddings/cohere": "embeddings/cohere",
+    "embeddings/deepinfra": "embeddings/deepinfra",
     "embeddings/fireworks": "embeddings/fireworks",
     "embeddings/googlepalm": "embeddings/googlepalm",
     "embeddings/googlevertexai": "embeddings/googlevertexai",
     "embeddings/gradient_ai": "embeddings/gradient_ai",
     "embeddings/hf": "embeddings/hf",
     "embeddings/hf_transformers": "embeddings/hf_transformers",
+    "embeddings/jina": "embeddings/jina",
     "embeddings/llama_cpp": "embeddings/llama_cpp",
     "embeddings/minimax": "embeddings/minimax",
     "embeddings/ollama": "embeddings/ollama",
     "embeddings/premai": "embeddings/premai",
     "embeddings/tensorflow": "embeddings/tensorflow",
+    "embeddings/tencent_hunyuan": "embeddings/tencent_hunyuan/index",
+    "embeddings/tencent_hunyuan/web": "embeddings/tencent_hunyuan/web",
     "embeddings/togetherai": "embeddings/togetherai",
     "embeddings/voyage": "embeddings/voyage",
     "embeddings/zhipuai": "embeddings/zhipuai",
@@ -89,6 +95,7 @@ export const config = {
     "llms/bedrock/web": "llms/bedrock/web",
     "llms/cloudflare_workersai": "llms/cloudflare_workersai",
     "llms/cohere": "llms/cohere",
+    "llms/deepinfra": "llms/deepinfra",
     "llms/fireworks": "llms/fireworks",
     "llms/friendli": "llms/friendli",
     "llms/googlepalm": "llms/googlepalm",
@@ -160,6 +167,7 @@ export const config = {
     "chat_models/bedrock": "chat_models/bedrock/index",
     "chat_models/bedrock/web": "chat_models/bedrock/web",
     "chat_models/cloudflare_workersai": "chat_models/cloudflare_workersai",
+    "chat_models/deepinfra": "chat_models/deepinfra",
     "chat_models/fireworks": "chat_models/fireworks",
     "chat_models/friendli": "chat_models/friendli",
     "chat_models/googlevertexai": "chat_models/googlevertexai/index",
@@ -173,6 +181,8 @@ export const config = {
     "chat_models/ollama": "chat_models/ollama",
     "chat_models/portkey": "chat_models/portkey",
     "chat_models/premai": "chat_models/premai",
+    "chat_models/tencent_hunyuan": "chat_models/tencent_hunyuan/index",
+    "chat_models/tencent_hunyuan/web": "chat_models/tencent_hunyuan/web",
     "chat_models/togetherai": "chat_models/togetherai",
     "chat_models/webllm": "chat_models/webllm",
     "chat_models/yandex": "chat_models/yandex",
@@ -268,6 +278,7 @@ export const config = {
     "document_loaders/web/figma": "document_loaders/web/figma",
     "document_loaders/web/firecrawl": "document_loaders/web/firecrawl",
     "document_loaders/web/github": "document_loaders/web/github",
+    "document_loaders/web/taskade": "document_loaders/web/taskade",
     "document_loaders/web/notionapi": "document_loaders/web/notionapi",
     "document_loaders/web/pdf": "document_loaders/web/pdf",
     "document_loaders/web/recursive_url": "document_loaders/web/recursive_url",
@@ -299,6 +310,7 @@ export const config = {
     "utils/event_source_parse": "utils/event_source_parse",
     "utils/cassandra": "utils/cassandra",
     // experimental
+    "experimental/callbacks/handlers/datadog": "experimental/callbacks/handlers/datadog",
     "experimental/graph_transformers/llm":
       "experimental/graph_transformers/llm",
     "experimental/multimodal_embeddings/googlevertexai":
@@ -306,8 +318,11 @@ export const config = {
     "experimental/hubs/makersuite/googlemakersuitehub":
       "experimental/hubs/makersuite/googlemakersuitehub",
     "experimental/chat_models/ollama_functions": "experimental/chat_models/ollama_functions",
+    "experimental/llms/chrome_ai": "experimental/llms/chrome_ai",
     // chains
-    "chains/graph_qa/cypher": "chains/graph_qa/cypher"
+    "chains/graph_qa/cypher": "chains/graph_qa/cypher",
+    // langgraph checkpointers
+    "langgraph/checkpointers/vercel_kv": "langgraph/checkpointers/vercel_kv"
   },
   requiresOptionalDependency: [
     "tools/aws_sfn",
@@ -328,9 +343,12 @@ export const config = {
     "embeddings/tensorflow",
     "embeddings/hf",
     "embeddings/hf_transformers",
+    "embeddings/jina",
     "embeddings/llama_cpp",
     "embeddings/gradient_ai",
     "embeddings/premai",
+    "embeddings/tencent_hunyuan",
+    "embeddings/tencent_hunyuan/web",
     "embeddings/zhipuai",
     "llms/load",
     "llms/cohere",
@@ -400,6 +418,8 @@ export const config = {
     "chat_models/llama_cpp",
     "chat_models/portkey",
     "chat_models/premai",
+    "chat_models/tencent_hunyuan",
+    "chat_models/tencent_hunyuan/web",
     "chat_models/iflytek_xinghuo",
     "chat_models/iflytek_xinghuo/web",
     "chat_models/webllm",
@@ -475,6 +495,7 @@ export const config = {
     "document_loaders/web/firecrawl",
     "document_loaders/web/github",
     "document_loaders/web/pdf",
+    "document_loaders/web/taskade",
     "document_loaders/web/notionapi",
     "document_loaders/web/recursive_url",
     "document_loaders/web/s3",
@@ -499,7 +520,9 @@ export const config = {
     "experimental/multimodal_embeddings/googlevertexai",
     "experimental/hubs/makersuite/googlemakersuitehub",
     // chains
-    "chains/graph_qa/cypher"
+    "chains/graph_qa/cypher",
+    // langgraph checkpointers
+    "langgraph/checkpointers/vercel_kv"
   ],
   packageSuffix: "community",
   tsConfigPath: resolve("./tsconfig.json"),

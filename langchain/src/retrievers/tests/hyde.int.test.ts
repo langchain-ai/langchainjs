@@ -28,7 +28,7 @@ test("Hyde retriever", async () => {
   );
 
   expect(results.length).toBe(1);
-  console.log(results);
+  // console.log(results);
 });
 
 test("Hyde retriever with default prompt template", async () => {
@@ -56,5 +56,5 @@ test("Hyde retriever with default prompt template", async () => {
   );
 
   expect(results.length).toBe(1);
-  console.log(results);
+  // console.log(results);
 });

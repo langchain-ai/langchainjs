@@ -2,9 +2,10 @@ import { Embeddings, type EmbeddingsParams } from "@langchain/core/embeddings";
 import { chunkArray } from "@langchain/core/utils/chunk_array";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 
+/** @deprecated Install and import from @langchain/baidu-qianfan instead. */
 export interface BaiduQianfanEmbeddingsParams extends EmbeddingsParams {
   /** Model name to use */
-  modelName: "embedding-v1" | "bge_large_zh" | "bge-large-en" | "tao-8k";
+  modelName: "embedding-v1" | "bge_large_zh" | "bge_large_en" | "tao-8k";
 
   /**
    * Timeout to use when making requests to BaiduQianfan.

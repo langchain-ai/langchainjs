@@ -169,8 +169,8 @@ test("serialize + deserialize llm chain string prompt", async () => {
     callbacks: [
       new ConsoleCallbackHandler(),
       {
-        handleLLMEnd(output) {
-          console.log(output);
+        handleLLMEnd(_output) {
+          // console.log(output);
         },
       },
     ],
@@ -452,14 +452,14 @@ test("Should load traces even if the constructor name changes (minified environm
     value: "x",
   });
   const str = JSON.stringify(llm, null, 2);
-  console.log(str);
+  // console.log(str);
 
   const llm2 = await load<OpenAI>(
     str,
     { COHERE_API_KEY: "cohere-key" },
     { "langchain/llms/openai": { OpenAI } }
   );
-  console.log(JSON.stringify(llm2, null, 2));
+  // console.log(JSON.stringify(llm2, null, 2));
   expect(JSON.stringify(llm2, null, 2)).toBe(str);
 });
 

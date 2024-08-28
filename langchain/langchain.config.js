@@ -26,8 +26,7 @@ export const config = {
     "notion-to-md/build/utils/notion.js",
     "firebase-admin/app",
     "firebase-admin/firestore",
-    "web-auth-library/google",
-    "@google-ai/generativelanguage/build/protos/protos.js",
+    "web-auth-library/google"
   ],
   entrypoints: {
     load: "load/index",
@@ -66,6 +65,8 @@ export const config = {
     "chains/retrieval": "chains/retrieval",
     "chains/sql_db": "chains/sql_db/index",
     "chains/graph_qa/cypher": "chains/graph_qa/cypher",
+    // chat models
+    "chat_models/universal": "chat_models/universal",
     // embeddings
     "embeddings/cache_backed": "embeddings/cache_backed",
     "embeddings/fake": "embeddings/fake",
@@ -116,6 +117,7 @@ export const config = {
       "document_loaders/web/sort_xyz_blockchain",
     "document_loaders/web/youtube": "document_loaders/web/youtube",
     "document_loaders/fs/directory": "document_loaders/fs/directory",
+    "document_loaders/fs/multi_file": "document_loaders/fs/multi_file",
     "document_loaders/fs/buffer": "document_loaders/fs/buffer",
     "document_loaders/fs/chatgpt": "document_loaders/fs/chatgpt",
     "document_loaders/fs/text": "document_loaders/fs/text",
@@ -144,6 +146,7 @@ export const config = {
     // retrievers
     "retrievers/contextual_compression": "retrievers/contextual_compression",
     "retrievers/document_compressors": "retrievers/document_compressors/index",
+    "retrievers/ensemble": "retrievers/ensemble",
     "retrievers/multi_query": "retrievers/multi_query",
     "retrievers/multi_vector": "retrievers/multi_vector",
     "retrievers/parent_document": "retrievers/parent_document",
@@ -225,6 +228,7 @@ export const config = {
     "chains/load",
     "chains/sql_db",
     "chains/graph_qa/cypher",
+    "chat_models/universal",
     "llms/load",
     "prompts/load",
     "memory/zep",
@@ -254,6 +258,7 @@ export const config = {
     "document_loaders/web/couchbase",
     "document_loaders/web/youtube",
     "document_loaders/fs/directory",
+    "document_loaders/fs/multi_file",
     "document_loaders/fs/buffer",
     "document_loaders/fs/chatgpt",
     "document_loaders/fs/text",

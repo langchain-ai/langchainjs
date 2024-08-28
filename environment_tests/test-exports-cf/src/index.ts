@@ -20,7 +20,7 @@ import {
 } from "@langchain/core/prompts";
 import { OpenAI } from "@langchain/openai";
 import { OpenAIEmbeddings } from "@langchain/openai";
-import { HNLoader } from "langchain/document_loaders/web/hn";
+import { HNLoader } from "@langchain/community/document_loaders/web/hn";
 
 export interface Env {
   OPENAI_API_KEY?: string;

@@ -1,4 +1,4 @@
-import { ApifyDatasetLoader } from "langchain/document_loaders/web/apify_dataset";
+import { ApifyDatasetLoader } from "@langchain/community/document_loaders/web/apify_dataset";
 import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
 import { OpenAIEmbeddings, ChatOpenAI } from "@langchain/openai";
 import { Document } from "@langchain/core/documents";

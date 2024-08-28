@@ -13,8 +13,10 @@ describe("ChatGoogleVertexAI", () => {
   test("call", async () => {
     const chat = new ChatGoogleVertexAI();
     const message = new HumanMessage("Hello!");
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     const res = await chat.invoke([message]);
-    console.log({ res });
+    // console.log({ res });
   });
 
   test("32k", async () => {
@@ -22,21 +24,27 @@ describe("ChatGoogleVertexAI", () => {
       model: "chat-bison-32k",
     });
     const message = new HumanMessage("Hello!");
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     const res = await chat.invoke([message]);
-    console.log({ res });
+    // console.log({ res });
   });
 
   test("generate", async () => {
     const chat = new ChatGoogleVertexAI();
     const message = new HumanMessage("Hello!");
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     const res = await chat.generate([[message]]);
-    console.log(JSON.stringify(res, null, 2));
+    // console.log(JSON.stringify(res, null, 2));
   });
 
   test("custom messages", async () => {
     const chat = new ChatGoogleVertexAI();
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     const res = await chat.invoke([new ChatMessage("Hello!", "user")]);
-    console.log(JSON.stringify(res, null, 2));
+    // console.log(JSON.stringify(res, null, 2));
   });
 
   test("prompt templates", async () => {
@@ -52,6 +60,8 @@ describe("ChatGoogleVertexAI", () => {
       HumanMessagePromptTemplate.fromTemplate("{text}"),
     ]);
 
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     const responseA = await chat.generatePrompt([
       await chatPrompt.formatPromptValue({
         job: "pirate",
@@ -59,7 +69,7 @@ describe("ChatGoogleVertexAI", () => {
       }),
     ]);
 
-    console.log(responseA.generations);
+    // console.log(responseA.generations);
   });
 
   test("longer chain of messages", async () => {
@@ -71,13 +81,15 @@ describe("ChatGoogleVertexAI", () => {
       HumanMessagePromptTemplate.fromTemplate("{text}"),
     ]);
 
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     const responseA = await chat.generatePrompt([
       await chatPrompt.formatPromptValue({
         text: "What did I just say my name was?",
       }),
     ]);
 
-    console.log(responseA.generations);
+    // console.log(responseA.generations);
   });
 
   test("code, chain of messages", async () => {
@@ -90,13 +102,15 @@ describe("ChatGoogleVertexAI", () => {
       HumanMessagePromptTemplate.fromTemplate("{text}"),
     ]);
 
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     const responseA = await chat.generatePrompt([
       await chatPrompt.formatPromptValue({
         text: "How can I write a for loop counting to 10?",
       }),
     ]);
 
-    console.log(JSON.stringify(responseA.generations, null, 1));
+    // console.log(JSON.stringify(responseA.generations, null, 1));
   });
 
   test("stream method", async () => {
@@ -106,7 +120,7 @@ describe("ChatGoogleVertexAI", () => {
     );
     const chunks = [];
     for await (const chunk of stream) {
-      console.log("chunk", chunk);
+      // console.log("chunk", chunk);
       chunks.push(chunk);
     }
     expect(chunks.length).toBeGreaterThan(1);

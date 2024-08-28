@@ -175,6 +175,17 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
       (model?.startsWith("gpt-3.5-turbo") || model?.startsWith("gpt-4")) &&
       !model?.includes("-instruct")
     ) {
+      console.warn(
+        [
+          `Your chosen OpenAI model, "${model}", is a chat model and not a text-in/text-out LLM.`,
+          `Passing it into the "OpenAI" class is deprecated and only permitted for backwards-compatibility. You may experience odd behavior.`,
+          `Please use the "ChatOpenAI" class instead.`,
+          "",
+          `See this page for more information:`,
+          "|",
+          `└> https://js.langchain.com/v0.2/docs/integrations/chat/openai`,
+        ].join("\n")
+      );
       // eslint-disable-next-line no-constructor-return
       return new OpenAIChat(
         fields,

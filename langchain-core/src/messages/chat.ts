@@ -48,6 +48,13 @@ export class ChatMessage
   static isInstance(message: BaseMessage): message is ChatMessage {
     return message._getType() === "generic";
   }
+
+  override get _printableFields(): Record<string, unknown> {
+    return {
+      ...super._printableFields,
+      role: this.role,
+    };
+  }
 }
 
 /**
@@ -90,6 +97,14 @@ export class ChatMessageChunk extends BaseMessageChunk {
         chunk.response_metadata
       ),
       role: this.role,
+      id: this.id ?? chunk.id,
     });
+  }
+
+  override get _printableFields(): Record<string, unknown> {
+    return {
+      ...super._printableFields,
+      role: this.role,
+    };
   }
 }

@@ -403,7 +403,7 @@ export class Neo4jVectorStore extends VectorStore {
       const data = await store.query(fetchQuery, { props: textNodeProperties });
 
       if (!data) {
-        continue;
+        break;
       }
 
       const textEmbeddings = await embeddings.embedDocuments(
@@ -635,6 +635,15 @@ export class Neo4jVectorStore extends VectorStore {
     );
 
     return results.map((result) => result[0]);
+  }
+
+  async similaritySearchWithScore(
+    query: string,
+    k = 4,
+    params: Record<string, Any> = {}
+  ): Promise<[Document, number][]> {
+    const embedding = await this.embeddings.embedQuery(query);
+    return this.similaritySearchVectorWithScore(embedding, k, query, params);
   }
 
   async similaritySearchVectorWithScore(

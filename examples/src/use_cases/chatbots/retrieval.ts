@@ -9,7 +9,7 @@ const chat = new ChatOpenAI({
   temperature: 0.2,
 });
 
-import { CheerioWebBaseLoader } from "langchain/document_loaders/web/cheerio";
+import { CheerioWebBaseLoader } from "@langchain/community/document_loaders/web/cheerio";
 
 const loader = new CheerioWebBaseLoader(
   "https://docs.smith.langchain.com/user_guide"

@@ -105,16 +105,20 @@ test.skip("Weaviate Self Query Retriever Test", async () => {
     structuredQueryTranslator: new WeaviateTranslator(),
   });
 
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const query2 = await selfQueryRetriever.getRelevantDocuments(
     "Which movies are rated higher than 8.5?"
   );
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const query3 = await selfQueryRetriever.getRelevantDocuments(
     "Which movies are directed by Greta Gerwig?"
   );
   const query4 = await selfQueryRetriever.getRelevantDocuments(
     "Wau wau wau wau hello gello hello?"
   );
-  console.log(query2, query3, query4); // query4 has to return empty array
+  // console.log(query2, query3, query4); // query4 has to return empty array
   expect(query4.length).toBe(0);
 });
 
@@ -261,7 +265,7 @@ test.skip("Weaviate Vector Store Self Query Retriever Test With Default Filter O
   const query4 = await selfQueryRetriever.getRelevantDocuments(
     "Wau wau wau wau hello gello hello?"
   );
-  console.log(query4); // query4 has to return documents, since the default filter takes over with
+  // console.log(query4); // query4 has to return documents, since the default filter takes over with
   expect(query4.length).toEqual(7);
 });
 
@@ -408,6 +412,6 @@ test.skip("Weaviate Vector Store Self Query Retriever Test With Default Filter A
   const query4 = await selfQueryRetriever.getRelevantDocuments(
     "Wau wau wau wau hello gello hello?"
   );
-  console.log(query4); // query4 has to return empty array, since the default filter takes over with and filter
+  // console.log(query4); // query4 has to return empty array, since the default filter takes over with and filter
   expect(query4.length).toEqual(0);
 });

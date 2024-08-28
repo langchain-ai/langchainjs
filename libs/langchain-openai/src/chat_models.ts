@@ -20,22 +20,22 @@ import {
   ChatGenerationChunk,
   type ChatResult,
 } from "@langchain/core/outputs";
-import { type StructuredToolInterface } from "@langchain/core/tools";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import {
   BaseChatModel,
+  BindToolsInput,
   LangSmithParams,
   type BaseChatModelParams,
 } from "@langchain/core/language_models/chat_models";
-import type {
-  BaseFunctionCallOptions,
-  BaseLanguageModelInput,
-  FunctionDefinition,
-  StructuredOutputMethodOptions,
-  StructuredOutputMethodParams,
+import {
+  isOpenAITool,
+  type BaseFunctionCallOptions,
+  type BaseLanguageModelInput,
+  type FunctionDefinition,
+  type StructuredOutputMethodOptions,
+  type StructuredOutputMethodParams,
 } from "@langchain/core/language_models/base";
 import { NewTokenIndices } from "@langchain/core/callbacks/base";
-import { convertToOpenAITool } from "@langchain/core/utils/function_calling";
 import { z } from "zod";
 import {
   Runnable,
@@ -54,19 +54,33 @@ import {
   parseToolCall,
 } from "@langchain/core/output_parsers/openai_tools";
 import { zodToJsonSchema } from "zod-to-json-schema";
+import { ToolCallChunk } from "@langchain/core/messages/tool";
+import { zodResponseFormat } from "openai/helpers/zod";
+import type {
+  ResponseFormatText,
+  ResponseFormatJSONObject,
+  ResponseFormatJSONSchema,
+} from "openai/resources/shared";
+import { ParsedChatCompletion } from "openai/resources/beta/chat/completions.mjs";
 import type {
   AzureOpenAIInput,
   OpenAICallOptions,
   OpenAIChatInput,
   OpenAICoreRequestOptions,
   LegacyOpenAIInput,
+  ChatOpenAIResponseFormat,
 } from "./types.js";
 import { type OpenAIEndpointConfig, getEndpoint } from "./utils/azure.js";
-import { wrapOpenAIClientError } from "./utils/openai.js";
+import {
+  OpenAIToolChoice,
+  formatToOpenAIToolChoice,
+  wrapOpenAIClientError,
+} from "./utils/openai.js";
 import {
   FunctionDef,
   formatFunctionDefinitions,
 } from "./utils/openai-format-fndef.js";
+import { _convertToOpenAITool } from "./utils/tools.js";
 
 export type { AzureOpenAIInput, OpenAICallOptions, OpenAIChatInput };
 
@@ -126,7 +140,9 @@ export function messageToOpenAIRole(message: BaseMessage): OpenAIRoleEnum {
 }
 
 function openAIResponseToChatMessage(
-  message: OpenAIClient.Chat.Completions.ChatCompletionMessage
+  message: OpenAIClient.Chat.Completions.ChatCompletionMessage,
+  rawResponse: OpenAIClient.Chat.Completions.ChatCompletion,
+  includeRawResponse?: boolean
 ): BaseMessage {
   const rawToolCalls: OpenAIToolCall[] | undefined = message.tool_calls as
     | OpenAIToolCall[]
@@ -143,14 +159,26 @@ function openAIResponseToChatMessage(
           invalidToolCalls.push(makeInvalidToolCall(rawToolCall, e.message));
         }
       }
+      const additional_kwargs: Record<string, unknown> = {
+        function_call: message.function_call,
+        tool_calls: rawToolCalls,
+      };
+      if (includeRawResponse !== undefined) {
+        additional_kwargs.__raw_response = rawResponse;
+      }
+      let response_metadata: Record<string, unknown> | undefined;
+      if (rawResponse.system_fingerprint) {
+        response_metadata = {
+          system_fingerprint: rawResponse.system_fingerprint,
+        };
+      }
       return new AIMessage({
         content: message.content || "",
         tool_calls: toolCalls,
         invalid_tool_calls: invalidToolCalls,
-        additional_kwargs: {
-          function_call: message.function_call,
-          tool_calls: rawToolCalls,
-        },
+        additional_kwargs,
+        response_metadata,
+        id: rawResponse.id,
       });
     }
     default:
@@ -161,11 +189,13 @@ function openAIResponseToChatMessage(
 function _convertDeltaToMessageChunk(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   delta: Record<string, any>,
-  defaultRole?: OpenAIRoleEnum
+  rawResponse: OpenAIClient.Chat.Completions.ChatCompletionChunk,
+  defaultRole?: OpenAIRoleEnum,
+  includeRawResponse?: boolean
 ) {
   const role = delta.role ?? defaultRole;
   const content = delta.content ?? "";
-  let additional_kwargs;
+  let additional_kwargs: Record<string, unknown>;
   if (delta.function_call) {
     additional_kwargs = {
       function_call: delta.function_call,
@@ -177,10 +207,13 @@ function _convertDeltaToMessageChunk(
   } else {
     additional_kwargs = {};
   }
+  if (includeRawResponse) {
+    additional_kwargs.__raw_response = rawResponse;
+  }
   if (role === "user") {
     return new HumanMessageChunk({ content });
   } else if (role === "assistant") {
-    const toolCallChunks = [];
+    const toolCallChunks: ToolCallChunk[] = [];
     if (Array.isArray(delta.tool_calls)) {
       for (const rawToolCall of delta.tool_calls) {
         toolCallChunks.push({
@@ -188,6 +221,7 @@ function _convertDeltaToMessageChunk(
           args: rawToolCall.function?.arguments,
           id: rawToolCall.id,
           index: rawToolCall.index,
+          type: "tool_call_chunk",
         });
       }
     }
@@ -195,6 +229,7 @@ function _convertDeltaToMessageChunk(
       content,
       tool_call_chunks: toolCallChunks,
       additional_kwargs,
+      id: rawResponse.id,
     });
   } else if (role === "system") {
     return new SystemMessageChunk({ content });
@@ -228,11 +263,13 @@ function convertMessagesToOpenAIParams(messages: BaseMessage[]) {
     }
     if (message.additional_kwargs.function_call != null) {
       completionParam.function_call = message.additional_kwargs.function_call;
+      completionParam.content = null;
     }
     if (isAIMessage(message) && !!message.tool_calls?.length) {
       completionParam.tool_calls = message.tool_calls.map(
         convertLangChainToolCallToOpenAI
       );
+      completionParam.content = null;
     } else {
       if (message.additional_kwargs.tool_calls != null) {
         completionParam.tool_calls = message.additional_kwargs.tool_calls;
@@ -245,49 +282,556 @@ function convertMessagesToOpenAIParams(messages: BaseMessage[]) {
   });
 }
 
+type ChatOpenAIToolType = BindToolsInput | OpenAIClient.ChatCompletionTool;
+
+function _convertChatOpenAIToolTypeToOpenAITool(
+  tool: ChatOpenAIToolType,
+  fields?: {
+    strict?: boolean;
+  }
+): OpenAIClient.ChatCompletionTool {
+  if (isOpenAITool(tool)) {
+    if (fields?.strict !== undefined) {
+      return {
+        ...tool,
+        function: {
+          ...tool.function,
+          strict: fields.strict,
+        },
+      };
+    }
+
+    return tool;
+  }
+  return _convertToOpenAITool(tool, fields);
+}
+
+export interface ChatOpenAIStructuredOutputMethodOptions<
+  IncludeRaw extends boolean
+> extends StructuredOutputMethodOptions<IncludeRaw> {
+  /**
+   * strict: If `true` and `method` = "function_calling", model output is
+   * guaranteed to exactly match the schema. If `true`, the input schema
+   * will also be validated according to
+   * https://platform.openai.com/docs/guides/structured-outputs/supported-schemas.
+   * If `false`, input schema will not be validated and model output will not
+   * be validated.
+   * If `undefined`, `strict` argument will not be passed to the model.
+   *
+   * @version 0.2.6
+   * @note Planned breaking change in version `0.3.0`:
+   * `strict` will default to `true` when `method` is
+   * "function_calling" as of version `0.3.0`.
+   */
+  strict?: boolean;
+}
+
 export interface ChatOpenAICallOptions
   extends OpenAICallOptions,
     BaseFunctionCallOptions {
-  tools?: StructuredToolInterface[] | OpenAIClient.ChatCompletionTool[];
-  tool_choice?: OpenAIClient.ChatCompletionToolChoiceOption;
+  tools?: ChatOpenAIToolType[];
+  tool_choice?: OpenAIToolChoice;
   promptIndex?: number;
-  response_format?: { type: "json_object" };
+  response_format?: ChatOpenAIResponseFormat;
   seed?: number;
+  /**
+   * Additional options to pass to streamed completions.
+   * If provided takes precedence over "streamUsage" set at initialization time.
+   */
+  stream_options?: {
+    /**
+     * Whether or not to include token usage in the stream.
+     * If set to `true`, this will include an additional
+     * chunk at the end of the stream with the token usage.
+     */
+    include_usage: boolean;
+  };
+  /**
+   * Whether or not to restrict the ability to
+   * call multiple tools in one response.
+   */
+  parallel_tool_calls?: boolean;
+  /**
+   * If `true`, model output is guaranteed to exactly match the JSON Schema
+   * provided in the tool definition. If `true`, the input schema will also be
+   * validated according to
+   * https://platform.openai.com/docs/guides/structured-outputs/supported-schemas.
+   *
+   * If `false`, input schema will not be validated and model output will not
+   * be validated.
+   *
+   * If `undefined`, `strict` argument will not be passed to the model.
+   *
+   * @version 0.2.6
+   */
+  strict?: boolean;
+}
+
+export interface ChatOpenAIFields
+  extends Partial<OpenAIChatInput>,
+    Partial<AzureOpenAIInput>,
+    BaseChatModelParams {
+  configuration?: ClientOptions & LegacyOpenAIInput;
 }
 
 /**
- * Wrapper around OpenAI large language models that use the Chat endpoint.
+ * OpenAI chat model integration.
  *
- * To use you should have the `openai` package installed, with the
- * `OPENAI_API_KEY` environment variable set.
+ * Setup:
+ * Install `@langchain/openai` and set an environment variable named `OPENAI_API_KEY`.
  *
- * To use with Azure you should have the `openai` package installed, with the
- * `AZURE_OPENAI_API_KEY`,
- * `AZURE_OPENAI_API_INSTANCE_NAME`,
- * `AZURE_OPENAI_API_DEPLOYMENT_NAME`
- * and `AZURE_OPENAI_API_VERSION` environment variable set.
- * `AZURE_OPENAI_BASE_PATH` is optional and will override `AZURE_OPENAI_API_INSTANCE_NAME` if you need to use a custom endpoint.
+ * ```bash
+ * npm install @langchain/openai
+ * export OPENAI_API_KEY="your-api-key"
+ * ```
  *
- * @remarks
- * Any parameters that are valid to be passed to {@link
- * https://platform.openai.com/docs/api-reference/chat/create |
- * `openai.createChatCompletion`} can be passed through {@link modelKwargs}, even
- * if not explicitly available on this class.
- * @example
+ * ## [Constructor args](https://api.js.langchain.com/classes/langchain_openai.ChatOpenAI.html#constructor)
+ *
+ * ## [Runtime args](https://api.js.langchain.com/interfaces/langchain_openai.ChatOpenAICallOptions.html)
+ *
+ * Runtime args can be passed as the second argument to any of the base runnable methods `.invoke`. `.stream`, `.batch`, etc.
+ * They can also be passed via `.bind`, or the second arg in `.bindTools`, like shown in the examples below:
+ *
  * ```typescript
- * // Create a new instance of ChatOpenAI with specific temperature and model name settings
- * const model = new ChatOpenAI({
- *   temperature: 0.9,
- *   model: "ft:gpt-3.5-turbo-0613:{ORG_NAME}::{MODEL_ID}",
+ * // When calling `.bind`, call options should be passed via the first argument
+ * const llmWithArgsBound = llm.bind({
+ *   stop: ["\n"],
+ *   tools: [...],
  * });
  *
- * // Invoke the model with a message and await the response
- * const message = await model.invoke("Hi there!");
- *
- * // Log the response to the console
- * console.log(message);
- *
+ * // When calling `.bindTools`, call options should be passed via the second argument
+ * const llmWithTools = llm.bindTools(
+ *   [...],
+ *   {
+ *     tool_choice: "auto",
+ *   }
+ * );
  * ```
+ *
+ * ## Examples
+ *
+ * <details open>
+ * <summary><strong>Instantiate</strong></summary>
+ *
+ * ```typescript
+ * import { ChatOpenAI } from '@langchain/openai';
+ *
+ * const llm = new ChatOpenAI({
+ *   model: "gpt-4o",
+ *   temperature: 0,
+ *   maxTokens: undefined,
+ *   timeout: undefined,
+ *   maxRetries: 2,
+ *   // apiKey: "...",
+ *   // baseUrl: "...",
+ *   // organization: "...",
+ *   // other params...
+ * });
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Invoking</strong></summary>
+ *
+ * ```typescript
+ * const input = `Translate "I love programming" into French.`;
+ *
+ * // Models also accept a list of chat messages or a formatted prompt
+ * const result = await llm.invoke(input);
+ * console.log(result);
+ * ```
+ *
+ * ```txt
+ * AIMessage {
+ *   "id": "chatcmpl-9u4Mpu44CbPjwYFkTbeoZgvzB00Tz",
+ *   "content": "J'adore la programmation.",
+ *   "response_metadata": {
+ *     "tokenUsage": {
+ *       "completionTokens": 5,
+ *       "promptTokens": 28,
+ *       "totalTokens": 33
+ *     },
+ *     "finish_reason": "stop",
+ *     "system_fingerprint": "fp_3aa7262c27"
+ *   },
+ *   "usage_metadata": {
+ *     "input_tokens": 28,
+ *     "output_tokens": 5,
+ *     "total_tokens": 33
+ *   }
+ * }
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Streaming Chunks</strong></summary>
+ *
+ * ```typescript
+ * for await (const chunk of await llm.stream(input)) {
+ *   console.log(chunk);
+ * }
+ * ```
+ *
+ * ```txt
+ * AIMessageChunk {
+ *   "id": "chatcmpl-9u4NWB7yUeHCKdLr6jP3HpaOYHTqs",
+ *   "content": ""
+ * }
+ * AIMessageChunk {
+ *   "content": "J"
+ * }
+ * AIMessageChunk {
+ *   "content": "'adore"
+ * }
+ * AIMessageChunk {
+ *   "content": " la"
+ * }
+ * AIMessageChunk {
+ *   "content": " programmation",,
+ * }
+ * AIMessageChunk {
+ *   "content": ".",,
+ * }
+ * AIMessageChunk {
+ *   "content": "",
+ *   "response_metadata": {
+ *     "finish_reason": "stop",
+ *     "system_fingerprint": "fp_c9aa9c0491"
+ *   },
+ * }
+ * AIMessageChunk {
+ *   "content": "",
+ *   "usage_metadata": {
+ *     "input_tokens": 28,
+ *     "output_tokens": 5,
+ *     "total_tokens": 33
+ *   }
+ * }
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Aggregate Streamed Chunks</strong></summary>
+ *
+ * ```typescript
+ * import { AIMessageChunk } from '@langchain/core/messages';
+ * import { concat } from '@langchain/core/utils/stream';
+ *
+ * const stream = await llm.stream(input);
+ * let full: AIMessageChunk | undefined;
+ * for await (const chunk of stream) {
+ *   full = !full ? chunk : concat(full, chunk);
+ * }
+ * console.log(full);
+ * ```
+ *
+ * ```txt
+ * AIMessageChunk {
+ *   "id": "chatcmpl-9u4PnX6Fy7OmK46DASy0bH6cxn5Xu",
+ *   "content": "J'adore la programmation.",
+ *   "response_metadata": {
+ *     "prompt": 0,
+ *     "completion": 0,
+ *     "finish_reason": "stop",
+ *   },
+ *   "usage_metadata": {
+ *     "input_tokens": 28,
+ *     "output_tokens": 5,
+ *     "total_tokens": 33
+ *   }
+ * }
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Bind tools</strong></summary>
+ *
+ * ```typescript
+ * import { z } from 'zod';
+ *
+ * const GetWeather = {
+ *   name: "GetWeather",
+ *   description: "Get the current weather in a given location",
+ *   schema: z.object({
+ *     location: z.string().describe("The city and state, e.g. San Francisco, CA")
+ *   }),
+ * }
+ *
+ * const GetPopulation = {
+ *   name: "GetPopulation",
+ *   description: "Get the current population in a given location",
+ *   schema: z.object({
+ *     location: z.string().describe("The city and state, e.g. San Francisco, CA")
+ *   }),
+ * }
+ *
+ * const llmWithTools = llm.bindTools(
+ *   [GetWeather, GetPopulation],
+ *   {
+ *     // strict: true  // enforce tool args schema is respected
+ *   }
+ * );
+ * const aiMsg = await llmWithTools.invoke(
+ *   "Which city is hotter today and which is bigger: LA or NY?"
+ * );
+ * console.log(aiMsg.tool_calls);
+ * ```
+ *
+ * ```txt
+ * [
+ *   {
+ *     name: 'GetWeather',
+ *     args: { location: 'Los Angeles, CA' },
+ *     type: 'tool_call',
+ *     id: 'call_uPU4FiFzoKAtMxfmPnfQL6UK'
+ *   },
+ *   {
+ *     name: 'GetWeather',
+ *     args: { location: 'New York, NY' },
+ *     type: 'tool_call',
+ *     id: 'call_UNkEwuQsHrGYqgDQuH9nPAtX'
+ *   },
+ *   {
+ *     name: 'GetPopulation',
+ *     args: { location: 'Los Angeles, CA' },
+ *     type: 'tool_call',
+ *     id: 'call_kL3OXxaq9OjIKqRTpvjaCH14'
+ *   },
+ *   {
+ *     name: 'GetPopulation',
+ *     args: { location: 'New York, NY' },
+ *     type: 'tool_call',
+ *     id: 'call_s9KQB1UWj45LLGaEnjz0179q'
+ *   }
+ * ]
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Structured Output</strong></summary>
+ *
+ * ```typescript
+ * import { z } from 'zod';
+ *
+ * const Joke = z.object({
+ *   setup: z.string().describe("The setup of the joke"),
+ *   punchline: z.string().describe("The punchline to the joke"),
+ *   rating: z.number().optional().describe("How funny the joke is, from 1 to 10")
+ * }).describe('Joke to tell user.');
+ *
+ * const structuredLlm = llm.withStructuredOutput(Joke, { name: "Joke" });
+ * const jokeResult = await structuredLlm.invoke("Tell me a joke about cats");
+ * console.log(jokeResult);
+ * ```
+ *
+ * ```txt
+ * {
+ *   setup: 'Why was the cat sitting on the computer?',
+ *   punchline: 'Because it wanted to keep an eye on the mouse!',
+ *   rating: 7
+ * }
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>JSON Object Response Format</strong></summary>
+ *
+ * ```typescript
+ * const jsonLlm = llm.bind({ response_format: { type: "json_object" } });
+ * const jsonLlmAiMsg = await jsonLlm.invoke(
+ *   "Return a JSON object with key 'randomInts' and a value of 10 random ints in [0-99]"
+ * );
+ * console.log(jsonLlmAiMsg.content);
+ * ```
+ *
+ * ```txt
+ * {
+ *   "randomInts": [23, 87, 45, 12, 78, 34, 56, 90, 11, 67]
+ * }
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Multimodal</strong></summary>
+ *
+ * ```typescript
+ * import { HumanMessage } from '@langchain/core/messages';
+ *
+ * const imageUrl = "https://example.com/image.jpg";
+ * const imageData = await fetch(imageUrl).then(res => res.arrayBuffer());
+ * const base64Image = Buffer.from(imageData).toString('base64');
+ *
+ * const message = new HumanMessage({
+ *   content: [
+ *     { type: "text", text: "describe the weather in this image" },
+ *     {
+ *       type: "image_url",
+ *       image_url: { url: `data:image/jpeg;base64,${base64Image}` },
+ *     },
+ *   ]
+ * });
+ *
+ * const imageDescriptionAiMsg = await llm.invoke([message]);
+ * console.log(imageDescriptionAiMsg.content);
+ * ```
+ *
+ * ```txt
+ * The weather in the image appears to be clear and sunny. The sky is mostly blue with a few scattered white clouds, indicating fair weather. The bright sunlight is casting shadows on the green, grassy hill, suggesting it is a pleasant day with good visibility. There are no signs of rain or stormy conditions.
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Usage Metadata</strong></summary>
+ *
+ * ```typescript
+ * const aiMsgForMetadata = await llm.invoke(input);
+ * console.log(aiMsgForMetadata.usage_metadata);
+ * ```
+ *
+ * ```txt
+ * { input_tokens: 28, output_tokens: 5, total_tokens: 33 }
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Logprobs</strong></summary>
+ *
+ * ```typescript
+ * const logprobsLlm = new ChatOpenAI({ logprobs: true });
+ * const aiMsgForLogprobs = await logprobsLlm.invoke(input);
+ * console.log(aiMsgForLogprobs.response_metadata.logprobs);
+ * ```
+ *
+ * ```txt
+ * {
+ *   content: [
+ *     {
+ *       token: 'J',
+ *       logprob: -0.000050616763,
+ *       bytes: [Array],
+ *       top_logprobs: []
+ *     },
+ *     {
+ *       token: "'",
+ *       logprob: -0.01868736,
+ *       bytes: [Array],
+ *       top_logprobs: []
+ *     },
+ *     {
+ *       token: 'ad',
+ *       logprob: -0.0000030545007,
+ *       bytes: [Array],
+ *       top_logprobs: []
+ *     },
+ *     { token: 'ore', logprob: 0, bytes: [Array], top_logprobs: [] },
+ *     {
+ *       token: ' la',
+ *       logprob: -0.515404,
+ *       bytes: [Array],
+ *       top_logprobs: []
+ *     },
+ *     {
+ *       token: ' programm',
+ *       logprob: -0.0000118755715,
+ *       bytes: [Array],
+ *       top_logprobs: []
+ *     },
+ *     { token: 'ation', logprob: 0, bytes: [Array], top_logprobs: [] },
+ *     {
+ *       token: '.',
+ *       logprob: -0.0000037697225,
+ *       bytes: [Array],
+ *       top_logprobs: []
+ *     }
+ *   ],
+ *   refusal: null
+ * }
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Response Metadata</strong></summary>
+ *
+ * ```typescript
+ * const aiMsgForResponseMetadata = await llm.invoke(input);
+ * console.log(aiMsgForResponseMetadata.response_metadata);
+ * ```
+ *
+ * ```txt
+ * {
+ *   tokenUsage: { completionTokens: 5, promptTokens: 28, totalTokens: 33 },
+ *   finish_reason: 'stop',
+ *   system_fingerprint: 'fp_3aa7262c27'
+ * }
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>JSON Schema Structured Output</strong></summary>
+ *
+ * ```typescript
+ * const llmForJsonSchema = new ChatOpenAI({
+ *   model: "gpt-4o-2024-08-06",
+ * }).withStructuredOutput(
+ *   z.object({
+ *     command: z.string().describe("The command to execute"),
+ *     expectedOutput: z.string().describe("The expected output of the command"),
+ *     options: z
+ *       .array(z.string())
+ *       .describe("The options you can pass to the command"),
+ *   }),
+ *   {
+ *     method: "jsonSchema",
+ *     strict: true, // Optional when using the `jsonSchema` method
+ *   }
+ * );
+ *
+ * const jsonSchemaRes = await llmForJsonSchema.invoke(
+ *   "What is the command to list files in a directory?"
+ * );
+ * console.log(jsonSchemaRes);
+ * ```
+ *
+ * ```txt
+ * {
+ *   command: 'ls',
+ *   expectedOutput: 'A list of files and subdirectories within the specified directory.',
+ *   options: [
+ *     '-a: include directory entries whose names begin with a dot (.).',
+ *     '-l: use a long listing format.',
+ *     '-h: with -l, print sizes in human readable format (e.g., 1K, 234M, 2G).',
+ *     '-t: sort by time, newest first.',
+ *     '-r: reverse order while sorting.',
+ *     '-S: sort by file size, largest first.',
+ *     '-R: list subdirectories recursively.'
+ *   ]
+ * }
+ * ```
+ * </details>
+ *
+ * <br />
  */
 export class ChatOpenAI<
     CallOptions extends ChatOpenAICallOptions = ChatOpenAICallOptions
@@ -364,6 +908,8 @@ export class ChatOpenAI<
 
   streaming = false;
 
+  streamUsage = true;
+
   maxTokens?: number;
 
   logprobs?: boolean;
@@ -388,16 +934,20 @@ export class ChatOpenAI<
 
   organization?: string;
 
+  __includeRawResponse?: boolean;
+
   protected client: OpenAIClient;
 
   protected clientConfig: ClientOptions;
 
+  /**
+   * Whether the model supports the `strict` argument when passing in tools.
+   * If `undefined` the `strict` argument will not be passed to OpenAI.
+   */
+  supportsStrictToolCalling?: boolean;
+
   constructor(
-    fields?: Partial<OpenAIChatInput> &
-      Partial<AzureOpenAIInput> &
-      BaseChatModelParams & {
-        configuration?: ClientOptions & LegacyOpenAIInput;
-      },
+    fields?: ChatOpenAIFields,
     /** @deprecated */
     configuration?: ClientOptions & LegacyOpenAIInput
   ) {
@@ -458,8 +1008,7 @@ export class ChatOpenAI<
     this.stop = fields?.stopSequences ?? fields?.stop;
     this.stopSequences = this?.stop;
     this.user = fields?.user;
-
-    this.streaming = fields?.streaming ?? false;
+    this.__includeRawResponse = fields?.__includeRawResponse;
 
     if (this.azureOpenAIApiKey || this.azureADTokenProvider) {
       if (!this.azureOpenAIApiInstanceName && !this.azureOpenAIBasePath) {
@@ -472,7 +1021,12 @@ export class ChatOpenAI<
         throw new Error("Azure OpenAI API version not found");
       }
       this.apiKey = this.apiKey ?? "";
+      // Streaming usage is not supported by Azure deployments, so default to false
+      this.streamUsage = false;
     }
+
+    this.streaming = fields?.streaming ?? false;
+    this.streamUsage = fields?.streamUsage ?? this.streamUsage;
 
     this.clientConfig = {
       apiKey: this.apiKey,
@@ -488,9 +1042,15 @@ export class ChatOpenAI<
       ...configuration,
       ...fields?.configuration,
     };
+
+    // If `supportsStrictToolCalling` is explicitly set, use that value.
+    // Else leave undefined so it's not passed to OpenAI.
+    if (fields?.supportsStrictToolCalling !== undefined) {
+      this.supportsStrictToolCalling = fields.supportsStrictToolCalling;
+    }
   }
 
-  protected getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
+  getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
     const params = this.invocationParams(options);
     return {
       ls_provider: "openai",
@@ -503,31 +1063,74 @@ export class ChatOpenAI<
   }
 
   override bindTools(
-    tools: (Record<string, unknown> | StructuredToolInterface)[],
+    tools: ChatOpenAIToolType[],
     kwargs?: Partial<CallOptions>
   ): Runnable<BaseLanguageModelInput, AIMessageChunk, CallOptions> {
+    let strict: boolean | undefined;
+    if (kwargs?.strict !== undefined) {
+      strict = kwargs.strict;
+    } else if (this.supportsStrictToolCalling !== undefined) {
+      strict = this.supportsStrictToolCalling;
+    }
     return this.bind({
-      tools: tools.map(convertToOpenAITool),
+      tools: tools.map((tool) =>
+        _convertChatOpenAIToolTypeToOpenAITool(tool, { strict })
+      ),
       ...kwargs,
     } as Partial<CallOptions>);
+  }
+
+  private createResponseFormat(
+    resFormat?: CallOptions["response_format"]
+  ):
+    | ResponseFormatText
+    | ResponseFormatJSONObject
+    | ResponseFormatJSONSchema
+    | undefined {
+    if (
+      resFormat &&
+      resFormat.type === "json_schema" &&
+      resFormat.json_schema.schema &&
+      isZodSchema(resFormat.json_schema.schema)
+    ) {
+      return zodResponseFormat(
+        resFormat.json_schema.schema,
+        resFormat.json_schema.name,
+        {
+          description: resFormat.json_schema.description,
+        }
+      );
+    }
+    return resFormat as
+      | ResponseFormatText
+      | ResponseFormatJSONObject
+      | ResponseFormatJSONSchema
+      | undefined;
   }
 
   /**
    * Get the parameters used to invoke the model
    */
   invocationParams(
-    options?: this["ParsedCallOptions"]
-  ): Omit<OpenAIClient.Chat.ChatCompletionCreateParams, "messages"> {
-    function isStructuredToolArray(
-      tools?: unknown[]
-    ): tools is StructuredToolInterface[] {
-      return (
-        tools !== undefined &&
-        tools.every((tool) =>
-          Array.isArray((tool as StructuredToolInterface).lc_namespace)
-        )
-      );
+    options?: this["ParsedCallOptions"],
+    extra?: {
+      streaming?: boolean;
     }
+  ): Omit<OpenAIClient.Chat.ChatCompletionCreateParams, "messages"> {
+    let strict: boolean | undefined;
+    if (options?.strict !== undefined) {
+      strict = options.strict;
+    } else if (this.supportsStrictToolCalling !== undefined) {
+      strict = this.supportsStrictToolCalling;
+    }
+
+    let streamOptionsConfig = {};
+    if (options?.stream_options !== undefined) {
+      streamOptionsConfig = { stream_options: options.stream_options };
+    } else if (this.streamUsage && (this.streaming || extra?.streaming)) {
+      streamOptionsConfig = { stream_options: { include_usage: true } };
+    }
+
     const params: Omit<
       OpenAIClient.Chat.ChatCompletionCreateParams,
       "messages"
@@ -544,15 +1147,20 @@ export class ChatOpenAI<
       logit_bias: this.logitBias,
       stop: options?.stop ?? this.stopSequences,
       user: this.user,
+      // if include_usage is set or streamUsage then stream must be set to true.
       stream: this.streaming,
       functions: options?.functions,
       function_call: options?.function_call,
-      tools: isStructuredToolArray(options?.tools)
-        ? options?.tools.map(convertToOpenAITool)
-        : options?.tools,
-      tool_choice: options?.tool_choice,
-      response_format: options?.response_format,
+      tools: options?.tools?.length
+        ? options.tools.map((tool) =>
+            _convertChatOpenAIToolTypeToOpenAITool(tool, { strict })
+          )
+        : undefined,
+      tool_choice: formatToOpenAIToolChoice(options?.tool_choice),
+      response_format: this.createResponseFormat(options?.response_format),
       seed: options?.seed,
+      ...streamOptionsConfig,
+      parallel_tool_calls: options?.parallel_tool_calls,
       ...this.modelKwargs,
     };
     return params;
@@ -580,14 +1188,46 @@ export class ChatOpenAI<
     const messagesMapped: OpenAICompletionParam[] =
       convertMessagesToOpenAIParams(messages);
     const params = {
-      ...this.invocationParams(options),
+      ...this.invocationParams(options, {
+        streaming: true,
+      }),
       messages: messagesMapped,
       stream: true as const,
     };
     let defaultRole: OpenAIRoleEnum | undefined;
+    if (
+      params.response_format &&
+      params.response_format.type === "json_schema"
+    ) {
+      console.warn(
+        `OpenAI does not yet support streaming with "response_format" set to "json_schema". Falling back to non-streaming mode.`
+      );
+      const res = await this._generate(messages, options, runManager);
+      const chunk = new ChatGenerationChunk({
+        message: new AIMessageChunk({
+          ...res.generations[0].message,
+        }),
+        text: res.generations[0].text,
+        generationInfo: res.generations[0].generationInfo,
+      });
+      yield chunk;
+      return runManager?.handleLLMNewToken(
+        res.generations[0].text ?? "",
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        { chunk }
+      );
+    }
+
     const streamIterable = await this.completionWithRetry(params, options);
+    let usage: OpenAIClient.Completions.CompletionUsage | undefined;
     for await (const data of streamIterable) {
       const choice = data?.choices[0];
+      if (data.usage) {
+        usage = data.usage;
+      }
       if (!choice) {
         continue;
       }
@@ -596,7 +1236,12 @@ export class ChatOpenAI<
       if (!delta) {
         continue;
       }
-      const chunk = _convertDeltaToMessageChunk(delta, defaultRole);
+      const chunk = _convertDeltaToMessageChunk(
+        delta,
+        data,
+        defaultRole,
+        this.__includeRawResponse
+      );
       defaultRole = delta.role ?? defaultRole;
       const newTokenIndices = {
         prompt: options.promptIndex ?? 0,
@@ -610,8 +1255,11 @@ export class ChatOpenAI<
       }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const generationInfo: Record<string, any> = { ...newTokenIndices };
-      if (choice.finish_reason !== undefined) {
+      if (choice.finish_reason != null) {
         generationInfo.finish_reason = choice.finish_reason;
+        // Only include system fingerprint in the last chunk for now
+        // to avoid concatenation issues
+        generationInfo.system_fingerprint = data.system_fingerprint;
       }
       if (this.logprobs) {
         generationInfo.logprobs = choice.logprobs;
@@ -622,8 +1270,7 @@ export class ChatOpenAI<
         generationInfo,
       });
       yield generationChunk;
-      // eslint-disable-next-line no-void
-      void runManager?.handleLLMNewToken(
+      await runManager?.handleLLMNewToken(
         generationChunk.text ?? "",
         newTokenIndices,
         undefined,
@@ -631,6 +1278,20 @@ export class ChatOpenAI<
         undefined,
         { chunk: generationChunk }
       );
+    }
+    if (usage) {
+      const generationChunk = new ChatGenerationChunk({
+        message: new AIMessageChunk({
+          content: "",
+          usage_metadata: {
+            input_tokens: usage.prompt_tokens,
+            output_tokens: usage.completion_tokens,
+            total_tokens: usage.total_tokens,
+          },
+        }),
+        text: "",
+      });
+      yield generationChunk;
     }
     if (options.signal?.aborted) {
       throw new Error("AbortError");
@@ -695,17 +1356,36 @@ export class ChatOpenAI<
       tokenUsage.totalTokens = promptTokenUsage + completionTokenUsage;
       return { generations, llmOutput: { estimatedTokenUsage: tokenUsage } };
     } else {
-      const data = await this.completionWithRetry(
-        {
-          ...params,
-          stream: false,
-          messages: messagesMapped,
-        },
-        {
-          signal: options?.signal,
-          ...options?.options,
-        }
-      );
+      let data;
+      if (
+        options.response_format &&
+        options.response_format.type === "json_schema"
+      ) {
+        data = await this.betaParsedCompletionWithRetry(
+          {
+            ...params,
+            stream: false,
+            messages: messagesMapped,
+          },
+          {
+            signal: options?.signal,
+            ...options?.options,
+          }
+        );
+      } else {
+        data = await this.completionWithRetry(
+          {
+            ...params,
+            stream: false,
+            messages: messagesMapped,
+          },
+          {
+            signal: options?.signal,
+            ...options?.options,
+          }
+        );
+      }
+
       const {
         completion_tokens: completionTokens,
         prompt_tokens: promptTokens,
@@ -731,13 +1411,22 @@ export class ChatOpenAI<
         const generation: ChatGeneration = {
           text,
           message: openAIResponseToChatMessage(
-            part.message ?? { role: "assistant" }
+            part.message ?? { role: "assistant" },
+            data,
+            this.__includeRawResponse
           ),
         };
         generation.generationInfo = {
           ...(part.finish_reason ? { finish_reason: part.finish_reason } : {}),
           ...(part.logprobs ? { logprobs: part.logprobs } : {}),
         };
+        if (isAIMessage(generation.message)) {
+          generation.message.usage_metadata = {
+            input_tokens: tokenUsage.promptTokens ?? 0,
+            output_tokens: tokenUsage.completionTokens ?? 0,
+            total_tokens: tokenUsage.totalTokens ?? 0,
+          };
+        }
         generations.push(generation);
       }
       return {
@@ -916,6 +1605,31 @@ export class ChatOpenAI<
     });
   }
 
+  /**
+   * Call the beta chat completions parse endpoint. This should only be called if
+   * response_format is set to "json_object".
+   * @param {OpenAIClient.Chat.ChatCompletionCreateParamsNonStreaming} request
+   * @param {OpenAICoreRequestOptions | undefined} options
+   */
+  async betaParsedCompletionWithRetry(
+    request: OpenAIClient.Chat.ChatCompletionCreateParamsNonStreaming,
+    options?: OpenAICoreRequestOptions
+  ): Promise<ParsedChatCompletion<null>> {
+    const requestOptions = this._getClientOptions(options);
+    return this.caller.call(async () => {
+      try {
+        const res = await this.client.beta.chat.completions.parse(
+          request,
+          requestOptions
+        );
+        return res;
+      } catch (e) {
+        const error = wrapOpenAIClientError(e);
+        throw error;
+      }
+    });
+  }
+
   protected _getClientOptions(options: OpenAICoreRequestOptions | undefined) {
     if (!this.client) {
       const openAIEndpointConfig: OpenAIEndpointConfig = {
@@ -993,7 +1707,7 @@ export class ChatOpenAI<
       | z.ZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
-    config?: StructuredOutputMethodOptions<false>
+    config?: ChatOpenAIStructuredOutputMethodOptions<false>
   ): Runnable<BaseLanguageModelInput, RunOutput>;
 
   withStructuredOutput<
@@ -1005,7 +1719,7 @@ export class ChatOpenAI<
       | z.ZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
-    config?: StructuredOutputMethodOptions<true>
+    config?: ChatOpenAIStructuredOutputMethodOptions<true>
   ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
 
   withStructuredOutput<
@@ -1017,7 +1731,7 @@ export class ChatOpenAI<
       | z.ZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
-    config?: StructuredOutputMethodOptions<boolean>
+    config?: ChatOpenAIStructuredOutputMethodOptions<boolean>
   ):
     | Runnable<BaseLanguageModelInput, RunOutput>
     | Runnable<
@@ -1043,9 +1757,32 @@ export class ChatOpenAI<
     let llm: Runnable<BaseLanguageModelInput>;
     let outputParser: BaseLLMOutputParser<RunOutput>;
 
+    if (config?.strict !== undefined && method === "jsonMode") {
+      throw new Error(
+        "Argument `strict` is only supported for `method` = 'function_calling'"
+      );
+    }
+
     if (method === "jsonMode") {
       llm = this.bind({
         response_format: { type: "json_object" },
+      } as Partial<CallOptions>);
+      if (isZodSchema(schema)) {
+        outputParser = StructuredOutputParser.fromZodSchema(schema);
+      } else {
+        outputParser = new JsonOutputParser<RunOutput>();
+      }
+    } else if (method === "jsonSchema") {
+      llm = this.bind({
+        response_format: {
+          type: "json_schema",
+          json_schema: {
+            name: name ?? "extract",
+            description: schema.description,
+            schema,
+            strict: config?.strict,
+          },
+        },
       } as Partial<CallOptions>);
       if (isZodSchema(schema)) {
         outputParser = StructuredOutputParser.fromZodSchema(schema);
@@ -1074,6 +1811,8 @@ export class ChatOpenAI<
               name: functionName,
             },
           },
+          // Do not pass `strict` argument to OpenAI if `config.strict` is undefined
+          ...(config?.strict !== undefined ? { strict: config.strict } : {}),
         } as Partial<CallOptions>);
         outputParser = new JsonOutputKeyToolsParser({
           returnSingle: true,
@@ -1110,6 +1849,8 @@ export class ChatOpenAI<
               name: functionName,
             },
           },
+          // Do not pass `strict` argument to OpenAI if `config.strict` is undefined
+          ...(config?.strict !== undefined ? { strict: config.strict } : {}),
         } as Partial<CallOptions>);
         outputParser = new JsonOutputKeyToolsParser<RunOutput>({
           returnSingle: true,

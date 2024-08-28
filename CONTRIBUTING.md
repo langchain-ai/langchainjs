@@ -25,7 +25,7 @@ LangChain supports several different types of integrations with third-party prov
 
 We welcome such contributions, but ask that you read our dedicated [integration contribution guide](https://github.com/langchain-ai/langchainjs/blob/main/.github/contributing/INTEGRATIONS.md) for specific details and patterns to consider before opening a pull request.
 
-You can also check out the [guide on extending LangChain.js](https://js.langchain.com/docs/guides/extending_langchain/) in our docs.
+You can also check out the [guides on extending LangChain.js](https://js.langchain.com/v0.2/docs/how_to/#custom) in our docs.
 
 #### Integration packages
 
@@ -35,6 +35,17 @@ To make creating packages like this easier, we offer the [`create-langchain-inte
 
 ```bash
 $ npx create-langchain-integration
+```
+
+After creating the new integration package, you should add it to the [`unit-tests-integrations.yml`](./.github/workflows/unit-tests-integrations.yml) GitHub action workflow so that it is tested in CI. To do this,simply update the `env` section of the `prepare-matrix` job with your package name inside the `PACKAGES` variable:
+
+```yaml
+prepare-matrix:
+  needs: get-changed-files
+  runs-on: ubuntu-latest
+  env:
+    PACKAGES: "anthropic,azure-openai,cloudflare,<your-package>"
+    ...
 ```
 
 ### Want to add a feature that's already in Python?
@@ -147,6 +158,7 @@ cd libs/langchain-community
 ```
 
 ### Setup
+
 **Prerequisite**: Node version 18+ is required. Please check node version `node -v` and update it if required.
 
 To get started, you will need to install the dependencies for the project. To do so, run:

@@ -26,7 +26,7 @@ npm install playwright
 ## Usage
 
 ```typescript
-import { PlaywrightWebBaseLoader } from "langchain/document_loaders/web/playwright";
+import { PlaywrightWebBaseLoader } from "@langchain/community/document_loaders/web/playwright";
 
 /**
  * Loader uses `page.content()`
@@ -64,7 +64,7 @@ import {
   PlaywrightWebBaseLoader,
   Page,
   Browser,
-} from "langchain/document_loaders/web/playwright";
+} from "@langchain/community/document_loaders/web/playwright";
 
 const url = "https://www.tabnews.com.br/";
 const loader = new PlaywrightWebBaseLoader(url);
@@ -81,7 +81,7 @@ import {
   PlaywrightWebBaseLoader,
   Page,
   Browser,
-} from "langchain/document_loaders/web/playwright";
+} from "@langchain/community/document_loaders/web/playwright";
 
 const loader = new PlaywrightWebBaseLoader("https://www.tabnews.com.br/", {
   launchOptions: {

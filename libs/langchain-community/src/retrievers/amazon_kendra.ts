@@ -16,6 +16,8 @@ import { BaseRetriever } from "@langchain/core/retrievers";
 import { Document } from "@langchain/core/documents";
 
 /**
+ * @deprecated The AmazonKendraRetriever integration has been moved to the `@langchain/aws` package. Import from `@langchain/aws` instead.
+ *
  * Interface for the arguments required to initialize an
  * AmazonKendraRetriever instance.
  */
@@ -28,6 +30,8 @@ export interface AmazonKendraRetrieverArgs {
 }
 
 /**
+ * @deprecated The AmazonKendraRetriever integration has been moved to the `@langchain/aws` package. Import from `@langchain/aws` instead.
+ *
  * Class for interacting with Amazon Kendra, an intelligent search service
  * provided by AWS. Extends the BaseRetriever class.
  * @example

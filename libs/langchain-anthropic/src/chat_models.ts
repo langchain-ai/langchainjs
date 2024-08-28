@@ -2,33 +2,21 @@ import { Anthropic, type ClientOptions } from "@anthropic-ai/sdk";
 import type { Stream } from "@anthropic-ai/sdk/streaming";
 
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
-import {
-  AIMessage,
-  AIMessageChunk,
-  SystemMessage,
-  type BaseMessage,
-  HumanMessage,
-  ToolMessage,
-  isAIMessage,
-  MessageContent,
-} from "@langchain/core/messages";
-import {
-  ChatGeneration,
-  ChatGenerationChunk,
-  type ChatResult,
-} from "@langchain/core/outputs";
+import { AIMessageChunk, type BaseMessage } from "@langchain/core/messages";
+import { ChatGenerationChunk, type ChatResult } from "@langchain/core/outputs";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import {
   BaseChatModel,
+  BaseChatModelCallOptions,
   LangSmithParams,
   type BaseChatModelParams,
 } from "@langchain/core/language_models/chat_models";
 import {
-  StructuredOutputMethodOptions,
-  type BaseLanguageModelCallOptions,
-  BaseLanguageModelInput,
+  type StructuredOutputMethodOptions,
+  type BaseLanguageModelInput,
+  type ToolDefinition,
+  isOpenAITool,
 } from "@langchain/core/language_models/base";
-import { StructuredToolInterface } from "@langchain/core/tools";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { BaseLLMOutputParser } from "@langchain/core/output_parsers";
 import {
@@ -37,92 +25,47 @@ import {
   RunnableSequence,
 } from "@langchain/core/runnables";
 import { isZodSchema } from "@langchain/core/utils/types";
-import { ToolCall } from "@langchain/core/messages/tool";
 import { z } from "zod";
+import type {
+  MessageCreateParams,
+  Tool as AnthropicTool,
+} from "@anthropic-ai/sdk/resources/index.mjs";
+
+import { isLangChainTool } from "@langchain/core/utils/function_calling";
+import { AnthropicToolsOutputParser } from "./output_parsers.js";
+import { extractToolCallChunk, handleToolChoice } from "./utils/tools.js";
+import { _formatMessagesForAnthropic } from "./utils/message_inputs.js";
 import {
-  AnthropicToolsOutputParser,
-  extractToolCalls,
-} from "./output_parsers.js";
-import { AnthropicToolResponse } from "./types.js";
+  _makeMessageChunkFromAnthropicEvent,
+  anthropicResponseToChatMessages,
+} from "./utils/message_outputs.js";
+import {
+  AnthropicMessageCreateParams,
+  AnthropicMessageStreamEvent,
+  AnthropicRequestOptions,
+  AnthropicStreamingMessageCreateParams,
+  AnthropicToolChoice,
+  ChatAnthropicToolType,
+} from "./types.js";
 
-type AnthropicTool = {
-  name: string;
-  description: string;
-  /**
-   * JSON schema.
-   */
-  input_schema: Record<string, unknown>;
-};
-
-type AnthropicMessage = Anthropic.MessageParam;
-type AnthropicMessageCreateParams = Anthropic.MessageCreateParamsNonStreaming;
-type AnthropicStreamingMessageCreateParams =
-  Anthropic.MessageCreateParamsStreaming;
-type AnthropicMessageStreamEvent = Anthropic.MessageStreamEvent;
-type AnthropicRequestOptions = Anthropic.RequestOptions;
-type AnthropicToolChoice =
-  | {
-      type: "tool";
-      name: string;
-    }
-  | "any"
-  | "auto";
-interface ChatAnthropicCallOptions extends BaseLanguageModelCallOptions {
-  tools?: (StructuredToolInterface | AnthropicTool)[];
+export interface ChatAnthropicCallOptions
+  extends BaseChatModelCallOptions,
+    Pick<AnthropicInput, "streamUsage"> {
+  tools?: ChatAnthropicToolType[];
   /**
    * Whether or not to specify what tool the model should use
    * @default "auto"
    */
   tool_choice?: AnthropicToolChoice;
+  /**
+   * Custom headers to pass to the Anthropic API
+   * when making a request.
+   */
+  headers?: Record<string, string>;
 }
 
-type AnthropicMessageResponse = Anthropic.ContentBlock | AnthropicToolResponse;
-
-function _formatImage(imageUrl: string) {
-  const regex = /^data:(image\/.+);base64,(.+)$/;
-  const match = imageUrl.match(regex);
-  if (match === null) {
-    throw new Error(
-      [
-        "Anthropic only supports base64-encoded images currently.",
-        "Example: data:image/png;base64,/9j/4AAQSk...",
-      ].join("\n\n")
-    );
-  }
-  return {
-    type: "base64",
-    media_type: match[1] ?? "",
-    data: match[2] ?? "",
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } as any;
-}
-
-function anthropicResponseToChatMessages(
-  messages: AnthropicMessageResponse[],
-  additionalKwargs: Record<string, unknown>
-): ChatGeneration[] {
-  if (messages.length === 1 && messages[0].type === "text") {
-    return [
-      {
-        text: messages[0].text,
-        message: new AIMessage(messages[0].text, additionalKwargs),
-      },
-    ];
-  } else {
-    const toolCalls = extractToolCalls(messages);
-    const generations: ChatGeneration[] = [
-      {
-        text: "",
-        message: new AIMessage({
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          content: messages as any,
-          additional_kwargs: additionalKwargs,
-          tool_calls: toolCalls,
-        }),
-      },
-    ];
-    return generations;
-  }
+function _toolsInParams(params: AnthropicMessageCreateParams): boolean {
+  return !!(params.tools && params.tools.length > 0);
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -183,19 +126,25 @@ export interface AnthropicInput {
   /** Anthropic API URL */
   anthropicApiUrl?: string;
 
+  /** @deprecated Use "model" instead */
+  modelName?: string;
   /** Model name to use */
-  modelName: string;
-  /** Model name to use */
-  model: string;
+  model?: string;
 
   /** Overridable Anthropic ClientOptions */
-  clientOptions: ClientOptions;
+  clientOptions?: ClientOptions;
 
   /** Holds any additional parameters that are valid to pass to {@link
    * https://console.anthropic.com/docs/api/reference |
    * `anthropic.messages`} that are not explicitly specified on this class.
    */
   invocationKwargs?: Kwargs;
+
+  /**
+   * Whether or not to include token usage data in streamed chunks.
+   * @default true
+   */
+  streamUsage?: boolean;
 }
 
 /**
@@ -205,213 +154,403 @@ export interface AnthropicInput {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Kwargs = Record<string, any>;
 
-function _mergeMessages(
-  messages: BaseMessage[]
-): (SystemMessage | HumanMessage | AIMessage)[] {
-  // Merge runs of human/tool messages into single human messages with content blocks.
-  const merged = [];
-  for (const message of messages) {
-    if (message._getType() === "tool") {
-      if (typeof message.content === "string") {
-        merged.push(
-          new HumanMessage({
-            content: [
-              {
-                type: "tool_result",
-                content: message.content,
-                tool_use_id: (message as ToolMessage).tool_call_id,
-              },
-            ],
-          })
-        );
-      } else {
-        merged.push(new HumanMessage({ content: message.content }));
-      }
-    } else {
-      const previousMessage = merged[merged.length - 1];
-      if (
-        previousMessage?._getType() === "human" &&
-        message._getType() === "human"
-      ) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        let combinedContent: Record<string, any>[];
-        if (typeof previousMessage.content === "string") {
-          combinedContent = [{ type: "text", text: previousMessage.content }];
-        } else {
-          combinedContent = previousMessage.content;
-        }
-        if (typeof message.content === "string") {
-          combinedContent.push({ type: "text", text: message.content });
-        } else {
-          combinedContent = combinedContent.concat(message.content);
-        }
-        previousMessage.content = combinedContent;
-      } else {
-        merged.push(message);
-      }
-    }
+function extractToken(chunk: AIMessageChunk): string | undefined {
+  if (typeof chunk.content === "string") {
+    return chunk.content;
+  } else if (
+    Array.isArray(chunk.content) &&
+    chunk.content.length >= 1 &&
+    "input" in chunk.content[0]
+  ) {
+    return typeof chunk.content[0].input === "string"
+      ? chunk.content[0].input
+      : JSON.stringify(chunk.content[0].input);
+  } else if (
+    Array.isArray(chunk.content) &&
+    chunk.content.length >= 1 &&
+    "text" in chunk.content[0]
+  ) {
+    return chunk.content[0].text;
   }
-  return merged;
-}
-
-export function _convertLangChainToolCallToAnthropic(
-  toolCall: ToolCall
-): AnthropicToolResponse {
-  if (toolCall.id === undefined) {
-    throw new Error(`Anthropic requires all tool calls to have an "id".`);
-  }
-  return {
-    type: "tool_use",
-    id: toolCall.id,
-    name: toolCall.name,
-    input: toolCall.args,
-  };
-}
-
-function _formatContent(content: MessageContent) {
-  if (typeof content === "string") {
-    return content;
-  } else {
-    const contentBlocks = content.map((contentPart) => {
-      if (contentPart.type === "image_url") {
-        let source;
-        if (typeof contentPart.image_url === "string") {
-          source = _formatImage(contentPart.image_url);
-        } else {
-          source = _formatImage(contentPart.image_url.url);
-        }
-        return {
-          type: "image" as const, // Explicitly setting the type as "image"
-          source,
-        };
-      } else if (contentPart.type === "text") {
-        // Assuming contentPart is of type MessageContentText here
-        return {
-          type: "text" as const, // Explicitly setting the type as "text"
-          text: contentPart.text,
-        };
-      } else if (
-        contentPart.type === "tool_use" ||
-        contentPart.type === "tool_result"
-      ) {
-        // TODO: Fix when SDK types are fixed
-        return {
-          ...contentPart,
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        } as any;
-      } else {
-        throw new Error("Unsupported message content format");
-      }
-    });
-    return contentBlocks;
-  }
+  return undefined;
 }
 
 /**
- * Formats messages as a prompt for the model.
- * @param messages The base messages to format as a prompt.
- * @returns The formatted prompt.
- */
-function _formatMessagesForAnthropic(messages: BaseMessage[]): {
-  system?: string;
-  messages: AnthropicMessage[];
-} {
-  const mergedMessages = _mergeMessages(messages);
-  let system: string | undefined;
-  if (mergedMessages.length > 0 && mergedMessages[0]._getType() === "system") {
-    if (typeof messages[0].content !== "string") {
-      throw new Error("System message content must be a string.");
-    }
-    system = messages[0].content;
-  }
-  const conversationMessages =
-    system !== undefined ? mergedMessages.slice(1) : mergedMessages;
-  const formattedMessages = conversationMessages.map((message) => {
-    let role;
-    if (message._getType() === "human") {
-      role = "user" as const;
-    } else if (message._getType() === "ai") {
-      role = "assistant" as const;
-    } else if (message._getType() === "tool") {
-      role = "user" as const;
-    } else if (message._getType() === "system") {
-      throw new Error(
-        "System messages are only permitted as the first passed message."
-      );
-    } else {
-      throw new Error(`Message type "${message._getType()}" is not supported.`);
-    }
-    if (isAIMessage(message) && !!message.tool_calls?.length) {
-      if (typeof message.content === "string") {
-        if (message.content === "") {
-          return {
-            role,
-            content: message.tool_calls.map(
-              _convertLangChainToolCallToAnthropic
-            ),
-          };
-        } else {
-          return {
-            role,
-            content: [
-              { type: "text", text: message.content },
-              ...message.tool_calls.map(_convertLangChainToolCallToAnthropic),
-            ],
-          };
-        }
-      } else {
-        const { content } = message;
-        const hasMismatchedToolCalls = !message.tool_calls.every((toolCall) =>
-          content.find(
-            (contentPart) =>
-              contentPart.type === "tool_use" && contentPart.id === toolCall.id
-          )
-        );
-        if (hasMismatchedToolCalls) {
-          console.warn(
-            `The "tool_calls" field on a message is only respected if content is a string.`
-          );
-        }
-        return {
-          role,
-          content: _formatContent(message.content),
-        };
-      }
-    } else {
-      return {
-        role,
-        content: _formatContent(message.content),
-      };
-    }
-  });
-  return {
-    messages: formattedMessages,
-    system,
-  };
-}
-
-/**
- * Wrapper around Anthropic large language models.
+ * Anthropic chat model integration.
  *
- * To use you should have the `@anthropic-ai/sdk` package installed, with the
- * `ANTHROPIC_API_KEY` environment variable set.
+ * Setup:
+ * Install `@langchain/anthropic` and set an environment variable named `ANTHROPIC_API_KEY`.
  *
- * @remarks
- * Any parameters that are valid to be passed to {@link
- * https://console.anthropic.com/docs/api/reference |
- * `anthropic.messages`} can be passed through {@link invocationKwargs},
- * even if not explicitly available on this class.
- * @example
- * ```typescript
- * import { ChatAnthropic } from "@langchain/anthropic";
- *
- * const model = new ChatAnthropic({
- *   temperature: 0.9,
- *   apiKey: 'YOUR-API-KEY',
- * });
- * const res = await model.invoke({ input: 'Hello!' });
- * console.log(res);
+ * ```bash
+ * npm install @langchain/anthropic
+ * export ANTHROPIC_API_KEY="your-api-key"
  * ```
+ *
+ * ## [Constructor args](https://api.js.langchain.com/classes/langchain_anthropic.ChatAnthropic.html#constructor)
+ *
+ * ## [Runtime args](https://api.js.langchain.com/interfaces/langchain_anthropic.ChatAnthropicCallOptions.html)
+ *
+ * Runtime args can be passed as the second argument to any of the base runnable methods `.invoke`. `.stream`, `.batch`, etc.
+ * They can also be passed via `.bind`, or the second arg in `.bindTools`, like shown in the examples below:
+ *
+ * ```typescript
+ * // When calling `.bind`, call options should be passed via the first argument
+ * const llmWithArgsBound = llm.bind({
+ *   stop: ["\n"],
+ *   tools: [...],
+ * });
+ *
+ * // When calling `.bindTools`, call options should be passed via the second argument
+ * const llmWithTools = llm.bindTools(
+ *   [...],
+ *   {
+ *     tool_choice: "auto",
+ *   }
+ * );
+ * ```
+ *
+ * ## Examples
+ *
+ * <details open>
+ * <summary><strong>Instantiate</strong></summary>
+ *
+ * ```typescript
+ * import { ChatAnthropic } from '@langchain/anthropic';
+ *
+ * const llm = new ChatAnthropic({
+ *   model: "claude-3-5-sonnet-20240620",
+ *   temperature: 0,
+ *   maxTokens: undefined,
+ *   maxRetries: 2,
+ *   // apiKey: "...",
+ *   // baseUrl: "...",
+ *   // other params...
+ * });
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Invoking</strong></summary>
+ *
+ * ```typescript
+ * const input = `Translate "I love programming" into French.`;
+ *
+ * // Models also accept a list of chat messages or a formatted prompt
+ * const result = await llm.invoke(input);
+ * console.log(result);
+ * ```
+ *
+ * ```txt
+ * AIMessage {
+ *   "id": "msg_01QDpd78JUHpRP6bRRNyzbW3",
+ *   "content": "Here's the translation to French:\n\nJ'adore la programmation.",
+ *   "response_metadata": {
+ *     "id": "msg_01QDpd78JUHpRP6bRRNyzbW3",
+ *     "model": "claude-3-5-sonnet-20240620",
+ *     "stop_reason": "end_turn",
+ *     "stop_sequence": null,
+ *     "usage": {
+ *       "input_tokens": 25,
+ *       "output_tokens": 19
+ *     },
+ *     "type": "message",
+ *     "role": "assistant"
+ *   },
+ *   "usage_metadata": {
+ *     "input_tokens": 25,
+ *     "output_tokens": 19,
+ *     "total_tokens": 44
+ *   }
+ * }
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Streaming Chunks</strong></summary>
+ *
+ * ```typescript
+ * for await (const chunk of await llm.stream(input)) {
+ *   console.log(chunk);
+ * }
+ * ```
+ *
+ * ```txt
+ * AIMessageChunk {
+ *   "id": "msg_01N8MwoYxiKo9w4chE4gXUs4",
+ *   "content": "",
+ *   "additional_kwargs": {
+ *     "id": "msg_01N8MwoYxiKo9w4chE4gXUs4",
+ *     "type": "message",
+ *     "role": "assistant",
+ *     "model": "claude-3-5-sonnet-20240620"
+ *   },
+ *   "usage_metadata": {
+ *     "input_tokens": 25,
+ *     "output_tokens": 1,
+ *     "total_tokens": 26
+ *   }
+ * }
+ * AIMessageChunk {
+ *   "content": "",
+ * }
+ * AIMessageChunk {
+ *   "content": "Here",
+ * }
+ * AIMessageChunk {
+ *   "content": "'s",
+ * }
+ * AIMessageChunk {
+ *   "content": " the translation to",
+ * }
+ * AIMessageChunk {
+ *   "content": " French:\n\nJ",
+ * }
+ * AIMessageChunk {
+ *   "content": "'adore la programmation",
+ * }
+ * AIMessageChunk {
+ *   "content": ".",
+ * }
+ * AIMessageChunk {
+ *   "content": "",
+ *   "additional_kwargs": {
+ *     "stop_reason": "end_turn",
+ *     "stop_sequence": null
+ *   },
+ *   "usage_metadata": {
+ *     "input_tokens": 0,
+ *     "output_tokens": 19,
+ *     "total_tokens": 19
+ *   }
+ * }
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Aggregate Streamed Chunks</strong></summary>
+ *
+ * ```typescript
+ * import { AIMessageChunk } from '@langchain/core/messages';
+ * import { concat } from '@langchain/core/utils/stream';
+ *
+ * const stream = await llm.stream(input);
+ * let full: AIMessageChunk | undefined;
+ * for await (const chunk of stream) {
+ *   full = !full ? chunk : concat(full, chunk);
+ * }
+ * console.log(full);
+ * ```
+ *
+ * ```txt
+ * AIMessageChunk {
+ *   "id": "msg_01SBTb5zSGXfjUc7yQ8EKEEA",
+ *   "content": "Here's the translation to French:\n\nJ'adore la programmation.",
+ *   "additional_kwargs": {
+ *     "id": "msg_01SBTb5zSGXfjUc7yQ8EKEEA",
+ *     "type": "message",
+ *     "role": "assistant",
+ *     "model": "claude-3-5-sonnet-20240620",
+ *     "stop_reason": "end_turn",
+ *     "stop_sequence": null
+ *   },
+ *   "usage_metadata": {
+ *     "input_tokens": 25,
+ *     "output_tokens": 20,
+ *     "total_tokens": 45
+ *   }
+ * }
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Bind tools</strong></summary>
+ *
+ * ```typescript
+ * import { z } from 'zod';
+ *
+ * const GetWeather = {
+ *   name: "GetWeather",
+ *   description: "Get the current weather in a given location",
+ *   schema: z.object({
+ *     location: z.string().describe("The city and state, e.g. San Francisco, CA")
+ *   }),
+ * }
+ *
+ * const GetPopulation = {
+ *   name: "GetPopulation",
+ *   description: "Get the current population in a given location",
+ *   schema: z.object({
+ *     location: z.string().describe("The city and state, e.g. San Francisco, CA")
+ *   }),
+ * }
+ *
+ * const llmWithTools = llm.bindTools([GetWeather, GetPopulation]);
+ * const aiMsg = await llmWithTools.invoke(
+ *   "Which city is hotter today and which is bigger: LA or NY?"
+ * );
+ * console.log(aiMsg.tool_calls);
+ * ```
+ *
+ * ```txt
+ * [
+ *   {
+ *     name: 'GetWeather',
+ *     args: { location: 'Los Angeles, CA' },
+ *     id: 'toolu_01WjW3Dann6BPJVtLhovdBD5',
+ *     type: 'tool_call'
+ *   },
+ *   {
+ *     name: 'GetWeather',
+ *     args: { location: 'New York, NY' },
+ *     id: 'toolu_01G6wfJgqi5zRmJomsmkyZXe',
+ *     type: 'tool_call'
+ *   },
+ *   {
+ *     name: 'GetPopulation',
+ *     args: { location: 'Los Angeles, CA' },
+ *     id: 'toolu_0165qYWBA2VFyUst5RA18zew',
+ *     type: 'tool_call'
+ *   },
+ *   {
+ *     name: 'GetPopulation',
+ *     args: { location: 'New York, NY' },
+ *     id: 'toolu_01PGNyP33vxr13tGqr7i3rDo',
+ *     type: 'tool_call'
+ *   }
+ * ]
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Structured Output</strong></summary>
+ *
+ * ```typescript
+ * import { z } from 'zod';
+ *
+ * const Joke = z.object({
+ *   setup: z.string().describe("The setup of the joke"),
+ *   punchline: z.string().describe("The punchline to the joke"),
+ *   rating: z.number().optional().describe("How funny the joke is, from 1 to 10")
+ * }).describe('Joke to tell user.');
+ *
+ * const structuredLlm = llm.withStructuredOutput(Joke, { name: "Joke" });
+ * const jokeResult = await structuredLlm.invoke("Tell me a joke about cats");
+ * console.log(jokeResult);
+ * ```
+ *
+ * ```txt
+ * {
+ *   setup: "Why don't cats play poker in the jungle?",
+ *   punchline: 'Too many cheetahs!',
+ *   rating: 7
+ * }
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Multimodal</strong></summary>
+ *
+ * ```typescript
+ * import { HumanMessage } from '@langchain/core/messages';
+ *
+ * const imageUrl = "https://example.com/image.jpg";
+ * const imageData = await fetch(imageUrl).then(res => res.arrayBuffer());
+ * const base64Image = Buffer.from(imageData).toString('base64');
+ *
+ * const message = new HumanMessage({
+ *   content: [
+ *     { type: "text", text: "describe the weather in this image" },
+ *     {
+ *       type: "image_url",
+ *       image_url: { url: `data:image/jpeg;base64,${base64Image}` },
+ *     },
+ *   ]
+ * });
+ *
+ * const imageDescriptionAiMsg = await llm.invoke([message]);
+ * console.log(imageDescriptionAiMsg.content);
+ * ```
+ *
+ * ```txt
+ * The weather in this image appears to be beautiful and clear. The sky is a vibrant blue with scattered white clouds, suggesting a sunny and pleasant day. The clouds are wispy and light, indicating calm conditions without any signs of storms or heavy weather. The bright green grass on the rolling hills looks lush and well-watered, which could mean recent rainfall or good growing conditions. Overall, the scene depicts a perfect spring or early summer day with mild temperatures, plenty of sunshine, and gentle breezes - ideal weather for enjoying the outdoors or for plant growth.
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Usage Metadata</strong></summary>
+ *
+ * ```typescript
+ * const aiMsgForMetadata = await llm.invoke(input);
+ * console.log(aiMsgForMetadata.usage_metadata);
+ * ```
+ *
+ * ```txt
+ * { input_tokens: 25, output_tokens: 19, total_tokens: 44 }
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Stream Usage Metadata</strong></summary>
+ *
+ * ```typescript
+ * const streamForMetadata = await llm.stream(
+ *   input,
+ *   {
+ *     streamUsage: true
+ *   }
+ * );
+ * let fullForMetadata: AIMessageChunk | undefined;
+ * for await (const chunk of streamForMetadata) {
+ *   fullForMetadata = !fullForMetadata ? chunk : concat(fullForMetadata, chunk);
+ * }
+ * console.log(fullForMetadata?.usage_metadata);
+ * ```
+ *
+ * ```txt
+ * { input_tokens: 25, output_tokens: 20, total_tokens: 45 }
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Response Metadata</strong></summary>
+ *
+ * ```typescript
+ * const aiMsgForResponseMetadata = await llm.invoke(input);
+ * console.log(aiMsgForResponseMetadata.response_metadata);
+ * ```
+ *
+ * ```txt
+ * {
+ *   id: 'msg_01STxeQxJmp4sCSpioD6vK3L',
+ *   model: 'claude-3-5-sonnet-20240620',
+ *   stop_reason: 'end_turn',
+ *   stop_sequence: null,
+ *   usage: { input_tokens: 25, output_tokens: 19 },
+ *   type: 'message',
+ *   role: 'assistant'
+ * }
+ * ```
+ * </details>
+ *
+ * <br />
  */
 export class ChatAnthropicMessages<
     CallOptions extends ChatAnthropicCallOptions = ChatAnthropicCallOptions
@@ -470,16 +609,20 @@ export class ChatAnthropicMessages<
   // Used for streaming requests
   protected streamingClient: Anthropic;
 
-  constructor(fields?: Partial<AnthropicInput> & BaseChatModelParams) {
+  streamUsage = true;
+
+  constructor(fields?: AnthropicInput & BaseChatModelParams) {
     super(fields ?? {});
 
     this.anthropicApiKey =
       fields?.apiKey ??
       fields?.anthropicApiKey ??
       getEnvironmentVariable("ANTHROPIC_API_KEY");
+
     if (!this.anthropicApiKey) {
       throw new Error("Anthropic API key not found");
     }
+    this.clientOptions = fields?.clientOptions ?? {};
     /** Keep anthropicApiKey for backwards compatibility */
     this.apiKey = this.anthropicApiKey;
 
@@ -500,13 +643,13 @@ export class ChatAnthropicMessages<
     this.stopSequences = fields?.stopSequences ?? this.stopSequences;
 
     this.streaming = fields?.streaming ?? false;
-    this.clientOptions = fields?.clientOptions ?? {};
+    this.streamUsage = fields?.streamUsage ?? this.streamUsage;
   }
 
-  protected getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
+  getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
     const params = this.invocationParams(options);
     return {
-      ls_provider: "openai",
+      ls_provider: "anthropic",
       ls_model_name: this.model,
       ls_model_type: "chat",
       ls_temperature: params.temperature ?? undefined,
@@ -536,21 +679,33 @@ export class ChatAnthropicMessages<
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    if ((tools as any[]).some((tool) => isAnthropicTool(tool))) {
-      throw new Error(
-        `Can not pass in a mix of AnthropicTools and StructuredTools`
-      );
+    if ((tools as any[]).every((tool) => isOpenAITool(tool))) {
+      // Formatted as OpenAI tool, convert to Anthropic tool
+      return (tools as ToolDefinition[]).map((tc) => ({
+        name: tc.function.name,
+        description: tc.function.description,
+        input_schema: tc.function.parameters as AnthropicTool.InputSchema,
+      }));
     }
 
-    return (tools as StructuredToolInterface[]).map((tool) => ({
-      name: tool.name,
-      description: tool.description,
-      input_schema: zodToJsonSchema(tool.schema),
-    }));
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if ((tools as any[]).some((tool) => isAnthropicTool(tool))) {
+      throw new Error(`Can not pass in a mix of tool schemas to ChatAnthropic`);
+    }
+
+    if (tools.every(isLangChainTool)) {
+      return tools.map((t) => ({
+        name: t.name,
+        description: t.description,
+        input_schema: zodToJsonSchema(t.schema) as AnthropicTool.InputSchema,
+      }));
+    }
+
+    throw new Error("Unsupported tool type passed to ChatAnthropic");
   }
 
   override bindTools(
-    tools: (AnthropicTool | StructuredToolInterface)[],
+    tools: ChatAnthropicToolType[],
     kwargs?: Partial<CallOptions>
   ): Runnable<BaseLanguageModelInput, AIMessageChunk, CallOptions> {
     return this.bind({
@@ -569,25 +724,11 @@ export class ChatAnthropicMessages<
     "messages"
   > &
     Kwargs {
-    let tool_choice:
-      | {
-          type: string;
-          name?: string;
-        }
-      | undefined;
-    if (options?.tool_choice) {
-      if (options?.tool_choice === "any") {
-        tool_choice = {
-          type: "any",
-        };
-      } else if (options?.tool_choice === "auto") {
-        tool_choice = {
-          type: "auto",
-        };
-      } else {
-        tool_choice = options?.tool_choice;
-      }
-    }
+    const tool_choice:
+      | MessageCreateParams.ToolChoiceAuto
+      | MessageCreateParams.ToolChoiceAny
+      | MessageCreateParams.ToolChoiceTool
+      | undefined = handleToolChoice(options?.tool_choice);
 
     return {
       model: this.model,
@@ -628,93 +769,57 @@ export class ChatAnthropicMessages<
   ): AsyncGenerator<ChatGenerationChunk> {
     const params = this.invocationParams(options);
     const formattedMessages = _formatMessagesForAnthropic(messages);
-    if (options.tools !== undefined && options.tools.length > 0) {
-      const { generations } = await this._generateNonStreaming(
-        messages,
-        params,
-        {
-          signal: options.signal,
-        }
-      );
-      const result = generations[0].message as AIMessage;
-      const toolCallChunks = result.tool_calls?.map(
-        (toolCall: ToolCall, index: number) => ({
-          name: toolCall.name,
-          args: JSON.stringify(toolCall.args),
-          id: toolCall.id,
-          index,
-        })
-      );
-      yield new ChatGenerationChunk({
-        message: new AIMessageChunk({
-          content: result.content,
-          additional_kwargs: result.additional_kwargs,
-          tool_call_chunks: toolCallChunks,
-        }),
-        text: generations[0].text,
-      });
-    } else {
-      const stream = await this.createStreamWithRetry({
+    const coerceContentToString = !_toolsInParams({
+      ...params,
+      ...formattedMessages,
+      stream: false,
+    });
+
+    const stream = await this.createStreamWithRetry(
+      {
         ...params,
         ...formattedMessages,
         stream: true,
-      });
-      let usageData = { input_tokens: 0, output_tokens: 0 };
-      for await (const data of stream) {
-        if (options.signal?.aborted) {
-          stream.controller.abort();
-          throw new Error("AbortError: User aborted the request.");
-        }
-        if (data.type === "message_start") {
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          const { content, usage, ...additionalKwargs } = data.message;
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const filteredAdditionalKwargs: Record<string, any> = {};
-          for (const [key, value] of Object.entries(additionalKwargs)) {
-            if (value !== undefined && value !== null) {
-              filteredAdditionalKwargs[key] = value;
-            }
-          }
-          usageData = usage;
-          yield new ChatGenerationChunk({
-            message: new AIMessageChunk({
-              content: "",
-              additional_kwargs: filteredAdditionalKwargs,
-            }),
-            text: "",
-          });
-        } else if (data.type === "message_delta") {
-          yield new ChatGenerationChunk({
-            message: new AIMessageChunk({
-              content: "",
-              additional_kwargs: { ...data.delta },
-            }),
-            text: "",
-          });
-          if (data?.usage !== undefined) {
-            usageData.output_tokens += data.usage.output_tokens;
-          }
-        } else if (data.type === "content_block_delta") {
-          const content = data.delta?.text;
-          if (content !== undefined) {
-            yield new ChatGenerationChunk({
-              message: new AIMessageChunk({
-                content,
-                additional_kwargs: {},
-              }),
-              text: content,
-            });
-            await runManager?.handleLLMNewToken(content);
-          }
-        }
+      },
+      {
+        headers: options.headers,
       }
+    );
+
+    for await (const data of stream) {
+      if (options.signal?.aborted) {
+        stream.controller.abort();
+        throw new Error("AbortError: User aborted the request.");
+      }
+      const shouldStreamUsage = this.streamUsage ?? options.streamUsage;
+      const result = _makeMessageChunkFromAnthropicEvent(data, {
+        streamUsage: shouldStreamUsage,
+        coerceContentToString,
+      });
+      if (!result) continue;
+
+      const { chunk } = result;
+
+      const newToolCallChunk = extractToolCallChunk(chunk);
+
+      // Extract the text content token for text field and runManager.
+      const token = extractToken(chunk);
       yield new ChatGenerationChunk({
         message: new AIMessageChunk({
-          content: "",
-          additional_kwargs: { usage: usageData },
+          // Just yield chunk as it is and tool_use will be concat by BaseChatModel._generateUncached().
+          content: chunk.content,
+          additional_kwargs: chunk.additional_kwargs,
+          tool_call_chunks: newToolCallChunk ? [newToolCallChunk] : undefined,
+          usage_metadata: shouldStreamUsage ? chunk.usage_metadata : undefined,
+          response_metadata: chunk.response_metadata,
+          id: chunk.id,
         }),
-        text: "",
+        text: token ?? "",
       });
+
+      if (token) {
+        await runManager?.handleLLMNewToken(token);
+      }
     }
   }
 
@@ -729,23 +834,13 @@ export class ChatAnthropicMessages<
       Kwargs,
     requestOptions: AnthropicRequestOptions
   ) {
-    const options =
-      params.tools !== undefined
-        ? {
-            ...requestOptions,
-            headers: {
-              ...requestOptions.headers,
-              "anthropic-beta": "tools-2024-04-04",
-            },
-          }
-        : requestOptions;
     const response = await this.completionWithRetry(
       {
         ...params,
         stream: false,
         ..._formatMessagesForAnthropic(messages),
       },
-      options
+      requestOptions
     );
 
     const { content, ...additionalKwargs } = response;
@@ -754,6 +849,7 @@ export class ChatAnthropicMessages<
       content,
       additionalKwargs
     );
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { role: _role, type: _type, ...rest } = additionalKwargs;
     return { generations, llmOutput: rest };
   }
@@ -795,6 +891,7 @@ export class ChatAnthropicMessages<
     } else {
       return this._generateNonStreaming(messages, params, {
         signal: options.signal,
+        headers: options.headers,
       });
     }
   }
@@ -802,6 +899,7 @@ export class ChatAnthropicMessages<
   /**
    * Creates a streaming request with retry.
    * @param request The parameters for creating a completion.
+   * @param options
    * @returns A streaming request.
    */
   protected async createStreamWithRetry(
@@ -835,11 +933,11 @@ export class ChatAnthropicMessages<
     request: AnthropicMessageCreateParams & Kwargs,
     options: AnthropicRequestOptions
   ): Promise<Anthropic.Message> {
-    if (!this.apiKey) {
-      throw new Error("Missing Anthropic API key.");
-    }
     if (!this.batchClient) {
       const options = this.apiUrl ? { baseURL: this.apiUrl } : undefined;
+      if (!this.apiKey) {
+        throw new Error("Missing Anthropic API key.");
+      }
       this.batchClient = new Anthropic({
         ...this.clientOptions,
         ...options,
@@ -921,7 +1019,7 @@ export class ChatAnthropicMessages<
           name: functionName,
           description:
             jsonSchema.description ?? "A function available to call.",
-          input_schema: jsonSchema,
+          input_schema: jsonSchema as AnthropicTool.InputSchema,
         },
       ];
       outputParser = new AnthropicToolsOutputParser({
@@ -943,7 +1041,7 @@ export class ChatAnthropicMessages<
         anthropicTools = {
           name: functionName,
           description: schema.description ?? "",
-          input_schema: schema,
+          input_schema: schema as AnthropicTool.InputSchema,
         };
       }
       tools = [anthropicTools];
@@ -954,7 +1052,10 @@ export class ChatAnthropicMessages<
     }
     const llm = this.bind({
       tools,
-      tool_choice: "any",
+      tool_choice: {
+        type: "tool",
+        name: functionName,
+      },
     } as Partial<CallOptions>);
 
     if (!includeRaw) {

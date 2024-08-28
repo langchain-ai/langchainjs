@@ -23,7 +23,7 @@ test.skip("addMemory to Zep memory", async () => {
 
 test.skip("getMessages from Zep memory", async () => {
   const memoryVariables = await zepMemory.loadMemoryVariables({});
-  console.log("memoryVariables", memoryVariables);
+  // console.log("memoryVariables", memoryVariables);
 
   // Check if memoryKey exists in the memoryVariables
   expect(memoryVariables).toHaveProperty(zepMemory.memoryKey);
@@ -37,7 +37,7 @@ test.skip("getMessages from Zep memory", async () => {
   } else if (Array.isArray(messages)) {
     expect(messages.length).toBeGreaterThanOrEqual(1);
   } else {
-    console.log("failed to get messages: ", messages);
+    // console.log("failed to get messages: ", messages);
     // Fail the test because messages is neither string nor array
     throw new Error("Returned messages is neither string nor array");
   }

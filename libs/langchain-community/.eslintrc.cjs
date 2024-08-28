@@ -64,6 +64,7 @@ module.exports = {
     "prefer-rest-params": 0,
     "new-cap": ["error", { properties: false, capIsNew: false }],
     "arrow-body-style": 0,
+    "prefer-destructuring": 0
   },
   overrides: [
     {

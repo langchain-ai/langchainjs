@@ -4,6 +4,8 @@ import { Embeddings, EmbeddingsParams } from "@langchain/core/embeddings";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 
 /**
+ * @deprecated - Deprecated by Google. Will be removed in 0.3.0
+ *
  * Interface that extends EmbeddingsParams and defines additional
  * parameters specific to the GooglePaLMEmbeddings class.
  */
@@ -29,6 +31,8 @@ export interface GooglePaLMEmbeddingsParams extends EmbeddingsParams {
 }
 
 /**
+ * @deprecated - Deprecated by Google. Will be removed in 0.3.0
+ *
  * Class that extends the Embeddings class and provides methods for
  * generating embeddings using the Google Palm API.
  *

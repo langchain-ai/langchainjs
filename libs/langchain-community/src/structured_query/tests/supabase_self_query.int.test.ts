@@ -123,21 +123,21 @@ test("Supabase Store Self Query Retriever Test", async () => {
   const query1 = await selfQueryRetriever.getRelevantDocuments(
     "Which movies are less than 90 minutes?"
   );
-  console.log(query1);
+  // console.log(query1);
   expect(query1.length).toEqual(0);
   const query2 = await selfQueryRetriever.getRelevantDocuments(
     "Which movies are rated higher than 8.5?"
   );
-  console.log(query2);
+  // console.log(query2);
   expect(query2.length).toEqual(3);
   const query3 = await selfQueryRetriever.getRelevantDocuments(
     "Which movies are directed by Greta Gerwig?"
   );
-  console.log(query3);
+  // console.log(query3);
   expect(query3.length).toEqual(1);
 
   const query4 = await selfQueryRetriever.getRelevantDocuments("What is what"); // this should return empty since it'll create empty filter
-  console.log(query4);
+  // console.log(query4);
   expect(query4.length).toEqual(0);
 });
 
@@ -276,21 +276,21 @@ test("Supabase Store Self Query Retriever Test With Default Filter And Merge Ope
   const query1 = await selfQueryRetriever.getRelevantDocuments(
     "Which movies are less than 90 minutes?"
   );
-  console.log(query1);
+  // console.log(query1);
   expect(query1.length).toEqual(0);
   const query2 = await selfQueryRetriever.getRelevantDocuments(
     "Which movies are rated higher than 8.5?"
   );
-  console.log(query2);
+  // console.log(query2);
   expect(query2.length).toEqual(2);
   const query3 = await selfQueryRetriever.getRelevantDocuments(
     "Which movies are directed by Greta Gerwig?"
   );
-  console.log(query3);
+  // console.log(query3);
   expect(query3.length).toEqual(1);
 
   const query4 = await selfQueryRetriever.getRelevantDocuments("What is what"); // query4 has to empty document, since we can't use "or" operator
-  console.log(query4);
+  // console.log(query4);
   expect(query4.length).toEqual(0);
 });
 
@@ -431,21 +431,21 @@ test("Supabase Store Self Query Retriever Test With Default Filter Or Merge Oper
   const query1 = await selfQueryRetriever.getRelevantDocuments(
     "Which movies are less than 90 minutes?"
   );
-  console.log(query1);
+  // console.log(query1);
   expect(query1.length).toEqual(5);
   const query2 = await selfQueryRetriever.getRelevantDocuments(
     "Which movies are rated higher than 8.5?"
   );
-  console.log(query2);
+  // console.log(query2);
   expect(query2.length).toEqual(6);
   const query3 = await selfQueryRetriever.getRelevantDocuments(
     "Which movies are directed by Greta Gerwig?"
   );
-  console.log(query3);
+  // console.log(query3);
   expect(query3.length).toEqual(5);
 
   const query4 = await selfQueryRetriever.getRelevantDocuments("What is what");
-  console.log(query4);
+  // console.log(query4);
   expect(query4.length).toEqual(5);
 });
 
@@ -585,20 +585,20 @@ test("Supabase Store Self Query Retriever Test With Default Filter And Merge Ope
   const query1 = await selfQueryRetriever.getRelevantDocuments(
     "Which movies are less than 90 minutes?"
   );
-  console.log(query1);
+  // console.log(query1);
   expect(query1.length).toEqual(0);
   const query2 = await selfQueryRetriever.getRelevantDocuments(
     "Which movies are rated higher than 8.5?"
   );
-  console.log(query2);
+  // console.log(query2);
   expect(query2.length).toEqual(2);
   const query3 = await selfQueryRetriever.getRelevantDocuments(
     "Which movies are directed by Greta Gerwig?"
   );
-  console.log(query3);
+  // console.log(query3);
   expect(query3.length).toEqual(1);
 
   const query4 = await selfQueryRetriever.getRelevantDocuments("What is what"); // query4 has to empty document, since we can't use "or" operator
-  console.log(query4);
+  // console.log(query4);
   expect(query4.length).toEqual(0);
 });

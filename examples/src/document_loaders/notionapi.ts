@@ -1,4 +1,4 @@
-import { NotionAPILoader } from "langchain/document_loaders/web/notionapi";
+import { NotionAPILoader } from "@langchain/community/document_loaders/web/notionapi";
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 
 // Loading a page (including child pages all as separate documents)

@@ -5,6 +5,7 @@ import {
   RecordMetadata,
   PineconeRecord,
   Index as PineconeIndex,
+  ScoredPineconeRecord,
 } from "@pinecone-database/pinecone";
 
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
@@ -64,8 +65,137 @@ export type PineconeDeleteParams = {
 };
 
 /**
- * Class for managing and operating vector search applications with
- * Pinecone, the cloud-native high-scale vector database
+ * Pinecone vector store integration.
+ *
+ * Setup:
+ * Install `@langchain/pinecone` and `@pinecone-database/pinecone` to pass a client in.
+ *
+ * ```bash
+ * npm install @langchain/pinecone @pinecone-database/pinecone
+ * ```
+ *
+ * ## [Constructor args](https://api.js.langchain.com/classes/_langchain_pinecone.PineconeStore.html#constructor)
+ *
+ * <details open>
+ * <summary><strong>Instantiate</strong></summary>
+ *
+ * ```typescript
+ * import { PineconeStore } from '@langchain/pinecone';
+ * // Or other embeddings
+ * import { OpenAIEmbeddings } from '@langchain/openai';
+ *
+ * import { Pinecone as PineconeClient } from "@pinecone-database/pinecone";
+ *
+ * const pinecone = new PineconeClient();
+ *
+ * // Will automatically read the PINECONE_API_KEY and PINECONE_ENVIRONMENT env vars
+ * const pineconeIndex = pinecone.Index(process.env.PINECONE_INDEX!);
+ *
+ * const embeddings = new OpenAIEmbeddings({
+ *   model: "text-embedding-3-small",
+ * });
+ *
+ * const vectorStore = await PineconeStore.fromExistingIndex(embeddings, {
+ *   pineconeIndex,
+ *   // Maximum number of batch requests to allow at once. Each batch is 1000 vectors.
+ *   maxConcurrency: 5,
+ *   // You can pass a namespace here too
+ *   // namespace: "foo",
+ * });
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Add documents</strong></summary>
+ *
+ * ```typescript
+ * import type { Document } from '@langchain/core/documents';
+ *
+ * const document1 = { pageContent: "foo", metadata: { baz: "bar" } };
+ * const document2 = { pageContent: "thud", metadata: { bar: "baz" } };
+ * const document3 = { pageContent: "i will be deleted :(", metadata: {} };
+ *
+ * const documents: Document[] = [document1, document2, document3];
+ * const ids = ["1", "2", "3"];
+ * await vectorStore.addDocuments(documents, { ids });
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Delete documents</strong></summary>
+ *
+ * ```typescript
+ * await vectorStore.delete({ ids: ["3"] });
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Similarity search</strong></summary>
+ *
+ * ```typescript
+ * const results = await vectorStore.similaritySearch("thud", 1);
+ * for (const doc of results) {
+ *   console.log(`* ${doc.pageContent} [${JSON.stringify(doc.metadata, null)}]`);
+ * }
+ * // Output: * thud [{"baz":"bar"}]
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ *
+ * <details>
+ * <summary><strong>Similarity search with filter</strong></summary>
+ *
+ * ```typescript
+ * const resultsWithFilter = await vectorStore.similaritySearch("thud", 1, { baz: "bar" });
+ *
+ * for (const doc of resultsWithFilter) {
+ *   console.log(`* ${doc.pageContent} [${JSON.stringify(doc.metadata, null)}]`);
+ * }
+ * // Output: * foo [{"baz":"bar"}]
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ *
+ * <details>
+ * <summary><strong>Similarity search with score</strong></summary>
+ *
+ * ```typescript
+ * const resultsWithScore = await vectorStore.similaritySearchWithScore("qux", 1);
+ * for (const [doc, score] of resultsWithScore) {
+ *   console.log(`* [SIM=${score.toFixed(6)}] ${doc.pageContent} [${JSON.stringify(doc.metadata, null)}]`);
+ * }
+ * // Output: * [SIM=0.000000] qux [{"bar":"baz","baz":"bar"}]
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>As a retriever</strong></summary>
+ *
+ * ```typescript
+ * const retriever = vectorStore.asRetriever({
+ *   searchType: "mmr", // Leave blank for standard similarity search
+ *   k: 1,
+ * });
+ * const resultAsRetriever = await retriever.invoke("thud");
+ * console.log(resultAsRetriever);
+ *
+ * // Output: [Document({ metadata: { "baz":"bar" }, pageContent: "thud" })]
+ * ```
+ * </details>
+ *
+ * <br />
  */
 export class PineconeStore extends VectorStore {
   declare FilterType: PineconeMetadata;
@@ -273,6 +403,40 @@ export class PineconeStore extends VectorStore {
   }
 
   /**
+   * Format the matching results from the Pinecone query.
+   * @param matches Matching results from the Pinecone query.
+   * @returns An array of arrays, where each inner array contains a document and its score.
+   */
+  private _formatMatches(
+    matches: ScoredPineconeRecord<RecordMetadata>[] = []
+  ): [Document, number][] {
+    const documentsWithScores: [Document, number][] = [];
+
+    for (const record of matches) {
+      const {
+        id,
+        score,
+        metadata: { [this.textKey]: pageContent, ...metadata } = {
+          [this.textKey]: "",
+        },
+      } = record;
+
+      if (score) {
+        documentsWithScores.push([
+          new Document({
+            id,
+            pageContent: pageContent.toString(),
+            metadata,
+          }),
+          score,
+        ]);
+      }
+    }
+
+    return documentsWithScores;
+  }
+
+  /**
    * Method that performs a similarity search in the Pinecone database and
    * returns the results along with their scores.
    * @param query Query vector for the similarity search.
@@ -285,20 +449,10 @@ export class PineconeStore extends VectorStore {
     k: number,
     filter?: PineconeMetadata
   ): Promise<[Document, number][]> {
-    const results = await this._runPineconeQuery(query, k, filter);
-    const result: [Document, number][] = [];
+    const { matches = [] } = await this._runPineconeQuery(query, k, filter);
+    const records = this._formatMatches(matches);
 
-    if (results.matches) {
-      for (const res of results.matches) {
-        const { [this.textKey]: pageContent, ...metadata } = (res.metadata ??
-          {}) as PineconeMetadata;
-        if (res.score) {
-          result.push([new Document({ metadata, pageContent }), res.score]);
-        }
-      }
-    }
-
-    return result;
+    return records;
   }
 
   /**
@@ -328,7 +482,7 @@ export class PineconeStore extends VectorStore {
       { includeValues: true }
     );
 
-    const matches = results?.matches ?? [];
+    const { matches = [] } = results;
     const embeddingList = matches.map((match) => match.values);
 
     const mmrIndexes = maximalMarginalRelevance(
@@ -339,17 +493,8 @@ export class PineconeStore extends VectorStore {
     );
 
     const topMmrMatches = mmrIndexes.map((idx) => matches[idx]);
-
-    const finalResult: Document[] = [];
-    for (const res of topMmrMatches) {
-      const { [this.textKey]: pageContent, ...metadata } = (res.metadata ??
-        {}) as PineconeMetadata;
-      if (res.score) {
-        finalResult.push(new Document({ metadata, pageContent }));
-      }
-    }
-
-    return finalResult;
+    const records = this._formatMatches(topMmrMatches);
+    return records.map(([doc, _score]) => doc);
   }
 
   /**

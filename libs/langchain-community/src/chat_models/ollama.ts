@@ -20,11 +20,19 @@ import {
   type OllamaMessage,
 } from "../utils/ollama.js";
 
+/**
+ * @deprecated Deprecated in favor of the `@langchain/ollama` package. Import from `@langchain/ollama` instead.
+ */
 export interface ChatOllamaInput extends OllamaInput {}
 
+/**
+ * @deprecated Deprecated in favor of the `@langchain/ollama` package. Import from `@langchain/ollama` instead.
+ */
 export interface ChatOllamaCallOptions extends BaseLanguageModelCallOptions {}
 
 /**
+ * @deprecated Deprecated in favor of the `@langchain/ollama` package. Import from `@langchain/ollama` instead.
+ *
  * A class that enables calls to the Ollama API to access large language
  * models in a chat-like fashion. It extends the SimpleChatModel class and
  * implements the OllamaInput interface.
@@ -177,7 +185,7 @@ export class ChatOllama
     this.format = fields.format;
   }
 
-  protected getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
+  getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
     const params = this.invocationParams(options);
     return {
       ls_provider: "ollama",

@@ -10,7 +10,7 @@ import {
 } from "langchain/document_loaders/fs/directory";
 import { BaseDocumentLoader } from "@langchain/core/document_loaders/base";
 
-const UNSTRUCTURED_API_FILETYPES = [
+export const UNSTRUCTURED_API_FILETYPES = [
   ".txt",
   ".text",
   ".pdf",
@@ -94,7 +94,7 @@ export type SkipInferTableTypes =
 /**
  * Set the chunking_strategy to chunk text into larger or smaller elements. Defaults to None with optional arg of by_title
  */
-type ChunkingStrategy = "None" | "by_title";
+export type ChunkingStrategy = "None" | "by_title";
 
 export type UnstructuredLoaderOptions = {
   apiKey?: string;
@@ -113,11 +113,19 @@ export type UnstructuredLoaderOptions = {
   combineUnderNChars?: number;
   newAfterNChars?: number;
   maxCharacters?: number;
+  extractImageBlockTypes?: string[];
+  overlap?: number;
+  overlapAll?: boolean;
 };
 
-type UnstructuredDirectoryLoaderOptions = UnstructuredLoaderOptions & {
+export type UnstructuredDirectoryLoaderOptions = UnstructuredLoaderOptions & {
   recursive?: boolean;
   unknown?: UnknownHandling;
+};
+
+export type UnstructuredMemoryLoaderOptions = {
+  buffer: Buffer;
+  fileName: string;
 };
 
 /**
@@ -127,9 +135,16 @@ type UnstructuredDirectoryLoaderOptions = UnstructuredLoaderOptions & {
  * partitioning request to the Unstructured API and retrieves the
  * partitioned elements. It creates a Document instance for each element
  * and returns an array of Document instances.
+ *
+ * It accepts either a filepath or an object containing a buffer and a filename
+ * as input.
  */
 export class UnstructuredLoader extends BaseDocumentLoader {
   public filePath: string;
+
+  private buffer?: Buffer;
+
+  private fileName?: string;
 
   private apiUrl = "https://api.unstructured.io/general/v0/general";
 
@@ -166,21 +181,35 @@ export class UnstructuredLoader extends BaseDocumentLoader {
 
   private maxCharacters?: number;
 
+  private extractImageBlockTypes?: string[];
+
+  private overlap?: number;
+
+  private overlapAll?: boolean;
+
   constructor(
-    filePathOrLegacyApiUrl: string,
-    optionsOrLegacyFilePath: UnstructuredLoaderOptions | string = {}
+    filepathOrBufferOptions: string | UnstructuredMemoryLoaderOptions,
+    unstructuredOptions: UnstructuredLoaderOptions | string = {}
   ) {
     super();
 
     // Temporary shim to avoid breaking existing users
     // Remove when API keys are enforced by Unstructured and existing code will break anyway
-    const isLegacySyntax = typeof optionsOrLegacyFilePath === "string";
-    if (isLegacySyntax) {
-      this.filePath = optionsOrLegacyFilePath;
-      this.apiUrl = filePathOrLegacyApiUrl;
+    const isLegacySyntax = typeof unstructuredOptions === "string";
+    const isMemorySyntax = typeof filepathOrBufferOptions === "object";
+
+    if (isMemorySyntax) {
+      this.buffer = filepathOrBufferOptions.buffer;
+      this.fileName = filepathOrBufferOptions.fileName;
+    } else if (isLegacySyntax) {
+      this.filePath = unstructuredOptions;
+      this.apiUrl = filepathOrBufferOptions;
     } else {
-      this.filePath = filePathOrLegacyApiUrl;
-      const options = optionsOrLegacyFilePath;
+      this.filePath = filepathOrBufferOptions;
+    }
+
+    if (!isLegacySyntax) {
+      const options = unstructuredOptions;
       this.apiKey =
         options.apiKey ?? getEnvironmentVariable("UNSTRUCTURED_API_KEY");
       this.apiUrl =
@@ -201,18 +230,27 @@ export class UnstructuredLoader extends BaseDocumentLoader {
       this.combineUnderNChars = options.combineUnderNChars;
       this.newAfterNChars = options.newAfterNChars;
       this.maxCharacters = options.maxCharacters;
+      this.extractImageBlockTypes = options.extractImageBlockTypes;
+      this.overlap = options.overlap;
+      this.overlapAll = options.overlapAll ?? false;
     }
   }
 
   async _partition() {
-    const { readFile, basename } = await this.imports();
+    let buffer = this.buffer;
+    let fileName = this.fileName;
 
-    const buffer = await readFile(this.filePath);
-    const fileName = basename(this.filePath);
+    if (!buffer) {
+      const { readFile, basename } = await this.imports();
 
-    // I'm aware this reads the file into memory first, but we have lots of work
-    // to do on then consuming Documents in a streaming fashion anyway, so not
-    // worried about this for now.
+      buffer = await readFile(this.filePath);
+      fileName = basename(this.filePath);
+
+      // I'm aware this reads the file into memory first, but we have lots of work
+      // to do on then consuming Documents in a streaming fashion anyway, so not
+      // worried about this for now.
+    }
+
     const formData = new FormData();
     formData.append("files", new Blob([buffer]), fileName);
     formData.append("strategy", this.strategy);
@@ -262,6 +300,21 @@ export class UnstructuredLoader extends BaseDocumentLoader {
       formData.append("max_characters", String(this.maxCharacters));
     }
 
+    if (this.extractImageBlockTypes !== undefined) {
+      formData.append(
+        "extract_image_block_types",
+        JSON.stringify(this.extractImageBlockTypes)
+      );
+    }
+
+    if (this.overlap !== undefined) {
+      formData.append("overlap", String(this.overlap));
+    }
+
+    if (this.overlapAll === true) {
+      formData.append("overlap_all", "true");
+    }
+
     const headers = {
       "UNSTRUCTURED-API-KEY": this.apiKey ?? "",
     };
@@ -295,7 +348,7 @@ export class UnstructuredLoader extends BaseDocumentLoader {
     const documents: Document[] = [];
     for (const element of elements) {
       const { metadata, text } = element;
-      if (typeof text === "string") {
+      if (typeof text === "string" && text !== "") {
         documents.push(
           new Document({
             pageContent: text,

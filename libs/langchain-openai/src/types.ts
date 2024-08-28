@@ -1,7 +1,13 @@
 import type { OpenAI as OpenAIClient } from "openai";
+import type {
+  ResponseFormatText,
+  ResponseFormatJSONObject,
+  ResponseFormatJSONSchema,
+} from "openai/resources/shared";
 
 import { TiktokenModel } from "js-tiktoken/lite";
 import type { BaseLanguageModelCallOptions } from "@langchain/core/language_models/base";
+import type { z } from "zod";
 
 // reexport this type from the included package so we can easily override and extend it if needed in the future
 // also makes it easier for folks to import this type without digging around into the dependent packages
@@ -37,6 +43,12 @@ export declare interface OpenAIBaseInput {
 
   /** Whether to stream the results or not. Enabling disables tokenUsage reporting */
   streaming: boolean;
+
+  /**
+   * Whether or not to include token usage data in streamed chunks.
+   * @default true
+   */
+  streamUsage?: boolean;
 
   /**
    * Model name to use
@@ -142,7 +154,19 @@ export interface OpenAIChatInput extends OpenAIBaseInput {
   topLogprobs?: number;
 
   /** ChatGPT messages to pass as a prefix to the prompt */
-  prefixMessages?: OpenAIClient.Chat.CreateChatCompletionRequestMessage[];
+  prefixMessages?: OpenAIClient.Chat.ChatCompletionMessageParam[];
+
+  /**
+   * Whether to include the raw OpenAI response in the output message's "additional_kwargs" field.
+   * Currently in experimental beta.
+   */
+  __includeRawResponse?: boolean;
+
+  /**
+   * Whether the model supports the `strict` argument when passing in tools.
+   * If `undefined` the `strict` argument will not be passed to OpenAI.
+   */
+  supportsStrictToolCalling?: boolean;
 }
 
 export declare interface AzureOpenAIInput {
@@ -204,3 +228,22 @@ export declare interface AzureOpenAIInput {
    */
   azureADTokenProvider?: () => Promise<string>;
 }
+
+type ChatOpenAIResponseFormatJSONSchema = Omit<
+  ResponseFormatJSONSchema,
+  "json_schema"
+> & {
+  json_schema: Omit<ResponseFormatJSONSchema["json_schema"], "schema"> & {
+    /**
+     * The schema for the response format, described as a JSON Schema object
+     * or a Zod object.
+     */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    schema: Record<string, any> | z.ZodObject<any, any, any, any>;
+  };
+};
+
+export type ChatOpenAIResponseFormat =
+  | ResponseFormatText
+  | ResponseFormatJSONObject
+  | ChatOpenAIResponseFormatJSONSchema;

@@ -27,8 +27,10 @@ test("Test ChatOpenAI with a file", async () => {
       },
     ],
   });
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res = await chat.invoke([message]);
-  console.log({ res });
+  // console.log({ res });
 });
 
 test("Test ChatOpenAI with a URL", async () => {
@@ -49,6 +51,8 @@ test("Test ChatOpenAI with a URL", async () => {
       },
     ],
   });
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res = await chat.invoke([message]);
-  console.log({ res });
+  // console.log({ res });
 });

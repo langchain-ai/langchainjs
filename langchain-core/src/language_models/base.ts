@@ -1,7 +1,7 @@
 import type { Tiktoken, TiktokenModel } from "js-tiktoken/lite";
 
 import { z } from "zod";
-import { type BaseCache, InMemoryCache } from "../caches.js";
+import { type BaseCache, InMemoryCache } from "../caches/base.js";
 import {
   type BasePromptValueInterface,
   StringPromptValue,
@@ -11,8 +11,8 @@ import {
   type BaseMessage,
   type BaseMessageLike,
   type MessageContent,
-  coerceMessageLikeToMessage,
-} from "../messages/index.js";
+} from "../messages/base.js";
+import { coerceMessageLikeToMessage } from "../messages/utils.js";
 import { type LLMResult } from "../outputs.js";
 import { CallbackManager, Callbacks } from "../callbacks/manager.js";
 import { AsyncCaller, AsyncCallerParams } from "../utils/async_caller.js";
@@ -81,6 +81,27 @@ export const getModelContextSize = (modelName: string): number => {
       return 4097;
   }
 };
+
+/**
+ * Whether or not the input matches the OpenAI tool definition.
+ * @param {unknown} tool The input to check.
+ * @returns {boolean} Whether the input is an OpenAI tool definition.
+ */
+export function isOpenAITool(tool: unknown): tool is ToolDefinition {
+  if (typeof tool !== "object" || !tool) return false;
+  if (
+    "type" in tool &&
+    tool.type === "function" &&
+    "function" in tool &&
+    typeof tool.function === "object" &&
+    tool.function &&
+    "name" in tool.function &&
+    "parameters" in tool.function
+  ) {
+    return true;
+  }
+  return false;
+}
 
 interface CalculateMaxTokenProps {
   prompt: string;
@@ -186,18 +207,6 @@ export interface BaseLanguageModelCallOptions extends RunnableConfig {
    * If not provided, the default stop tokens for the model will be used.
    */
   stop?: string[];
-
-  /**
-   * Timeout for this call in milliseconds.
-   */
-  timeout?: number;
-
-  /**
-   * Abort signal for this call.
-   * If provided, the call will be aborted when the signal is aborted.
-   * @see https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal
-   */
-  signal?: AbortSignal;
 }
 
 export interface FunctionDefinition {
@@ -224,6 +233,15 @@ export interface FunctionDefinition {
    * how to call the function.
    */
   description?: string;
+
+  /**
+   * Whether to enable strict schema adherence when generating the function call. If
+   * set to true, the model will follow the exact schema defined in the `parameters`
+   * field. Only a subset of JSON Schema is supported when `strict` is `true`. Learn
+   * more about Structured Outputs in the
+   * [function calling guide](https://platform.openai.com/docs/guides/function-calling).
+   */
+  strict?: boolean;
 }
 
 export interface ToolDefinition {
@@ -251,7 +269,7 @@ export type StructuredOutputType = z.infer<z.ZodObject<any, any, any, any>>;
 export type StructuredOutputMethodOptions<IncludeRaw extends boolean = false> =
   {
     name?: string;
-    method?: "functionCalling" | "jsonMode";
+    method?: "functionCalling" | "jsonMode" | "jsonSchema" | string;
     includeRaw?: IncludeRaw;
   };
 
@@ -460,7 +478,7 @@ export abstract class BaseLanguageModel<
    * @param callOptions Call options for the model
    * @returns A unique cache key.
    */
-  protected _getSerializedCacheKeyParametersForCall(
+  _getSerializedCacheKeyParametersForCall(
     // TODO: Fix when we remove the RunnableLambda backwards compatibility shim.
     { config, ...callOptions }: CallOptions & { config?: RunnableConfig }
   ): string {

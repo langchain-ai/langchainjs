@@ -21,7 +21,7 @@ npm create convex@latest
 Add query and mutation helpers to `convex/langchain/db.ts`:
 
 ```ts title="convex/langchain/db.ts"
-export * from "langchain/util/convex";
+export * from "@langchain/community/utils/convex";
 ```
 
 ### Configure your schema
@@ -70,3 +70,8 @@ import Search from "@examples/indexes/vector_stores/convex/search.ts";
 <CodeBlock language="typescript" title="convex/myActions.ts">
   {Search}
 </CodeBlock>
+
+## Related
+
+- Vector store [conceptual guide](/docs/concepts/#vectorstores)
+- Vector store [how-to guides](/docs/how_to/#vectorstores)

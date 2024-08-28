@@ -2,7 +2,7 @@
 /* eslint-disable no-process-env */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { test } from "@jest/globals";
+import { test, expect, afterEach } from "@jest/globals";
 import { z } from "zod";
 import {
   RunnableLambda,
@@ -12,17 +12,24 @@ import {
 } from "../index.js";
 import { ChatPromptTemplate } from "../../prompts/chat.js";
 import {
+  FakeChatModel,
+  FakeLLM,
   FakeListChatModel,
   FakeRetriever,
   FakeStreamingLLM,
 } from "../../utils/testing/index.js";
 import {
+  AIMessage,
   AIMessageChunk,
   HumanMessage,
   SystemMessage,
 } from "../../messages/index.js";
-import { DynamicStructuredTool, DynamicTool } from "../../tools.js";
+import { DynamicStructuredTool, DynamicTool, tool } from "../../tools/index.js";
 import { Document } from "../../documents/document.js";
+import { PromptTemplate } from "../../prompts/prompt.js";
+import { GenerationChunk } from "../../outputs.js";
+// Import from web to avoid side-effects from AsyncLocalStorage
+import { dispatchCustomEvent } from "../../callbacks/dispatch/web.js";
 
 function reverse(s: string) {
   // Reverse a string.
@@ -67,6 +74,64 @@ test("Runnable streamEvents method", async () => {
       event: "on_chain_end",
       metadata: {},
       name: "reverse",
+      run_id: expect.any(String),
+      tags: [],
+    },
+  ]);
+});
+
+test("Runnable streamEvents method on a chat model", async () => {
+  const model = new FakeListChatModel({
+    responses: ["abc"],
+  });
+
+  const events = [];
+  const eventStream = await model.streamEvents("hello", { version: "v2" });
+  for await (const event of eventStream) {
+    events.push(event);
+  }
+
+  // used here to avoid casting every ID
+  const anyString = expect.any(String) as unknown as string;
+
+  expect(events).toMatchObject([
+    {
+      data: { input: "hello" },
+      event: "on_chat_model_start",
+      name: "FakeListChatModel",
+      metadata: expect.any(Object),
+      run_id: expect.any(String),
+      tags: [],
+    },
+    {
+      data: { chunk: new AIMessageChunk({ id: anyString, content: "a" }) },
+      event: "on_chat_model_stream",
+      name: "FakeListChatModel",
+      metadata: expect.any(Object),
+      run_id: expect.any(String),
+      tags: [],
+    },
+    {
+      data: { chunk: new AIMessageChunk({ id: anyString, content: "b" }) },
+      event: "on_chat_model_stream",
+      name: "FakeListChatModel",
+      metadata: expect.any(Object),
+      run_id: expect.any(String),
+      tags: [],
+    },
+    {
+      data: { chunk: new AIMessageChunk({ id: anyString, content: "c" }) },
+      event: "on_chat_model_stream",
+      name: "FakeListChatModel",
+      metadata: expect.any(Object),
+      run_id: expect.any(String),
+      tags: [],
+    },
+    {
+      data: { output: new AIMessageChunk({ id: anyString, content: "abc" }) },
+      event: "on_chat_model_end",
+      name: "FakeListChatModel",
+      metadata: expect.any(Object),
       run_id: expect.any(String),
       tags: [],
     },
@@ -568,77 +633,92 @@ test("Runnable streamEvents method with llm", async () => {
   expect(events).toEqual([
     {
       event: "on_llm_start",
-      name: "my_model",
-      run_id: expect.any(String),
-      tags: expect.arrayContaining(["my_model"]),
-      metadata: {
-        a: "b",
-      },
       data: {
         input: "hello",
       },
-    },
-    {
-      event: "on_llm_stream",
+      name: "my_model",
+      tags: ["my_model"],
       run_id: expect.any(String),
-      tags: expect.arrayContaining(["my_model"]),
       metadata: {
         a: "b",
       },
-      name: "my_model",
-      data: { chunk: "h" },
-    },
-
-    {
-      event: "on_llm_stream",
-      run_id: expect.any(String),
-      tags: expect.arrayContaining(["my_model"]),
-      metadata: {
-        a: "b",
-      },
-      name: "my_model",
-      data: { chunk: "e" },
     },
     {
       event: "on_llm_stream",
+      data: {
+        chunk: {
+          text: "h",
+        },
+      },
       run_id: expect.any(String),
-      tags: expect.arrayContaining(["my_model"]),
+      name: "my_model",
+      tags: ["my_model"],
       metadata: {
         a: "b",
       },
-      name: "my_model",
-      data: { chunk: "y" },
     },
     {
       event: "on_llm_stream",
+      data: {
+        chunk: {
+          text: "e",
+        },
+      },
       run_id: expect.any(String),
-      tags: expect.arrayContaining(["my_model"]),
+      name: "my_model",
+      tags: ["my_model"],
       metadata: {
         a: "b",
       },
+    },
+    {
+      event: "on_llm_stream",
+      data: {
+        chunk: {
+          text: "y",
+        },
+      },
+      run_id: expect.any(String),
       name: "my_model",
-      data: { chunk: "!" },
+      tags: ["my_model"],
+      metadata: {
+        a: "b",
+      },
+    },
+    {
+      event: "on_llm_stream",
+      data: {
+        chunk: {
+          text: "!",
+        },
+      },
+      run_id: expect.any(String),
+      name: "my_model",
+      tags: ["my_model"],
+      metadata: {
+        a: "b",
+      },
     },
     {
       event: "on_llm_end",
-      name: "my_model",
-      run_id: expect.any(String),
-      tags: expect.arrayContaining(["my_model"]),
-      metadata: {
-        a: "b",
-      },
       data: {
         output: {
           generations: [
             [
               {
-                generationInfo: {},
                 text: "hey!",
+                generationInfo: {},
               },
             ],
           ],
           llmOutput: {},
         },
+      },
+      run_id: expect.any(String),
+      name: "my_model",
+      tags: ["my_model"],
+      metadata: {
+        a: "b",
       },
     },
   ]);
@@ -672,6 +752,9 @@ test("Runnable streamEvents method with chat model chain", async () => {
   for await (const event of eventStream) {
     events.push(event);
   }
+
+  // used here to avoid casting every ID
+  const anyString = expect.any(String) as unknown as string;
   expect(events).toEqual([
     {
       run_id: expect.any(String),
@@ -740,7 +823,7 @@ test("Runnable streamEvents method with chat model chain", async () => {
         ls_stop: undefined,
       },
       name: "my_model",
-      data: { chunk: new AIMessageChunk("R") },
+      data: { chunk: new AIMessageChunk({ content: "R", id: anyString }) },
     },
     {
       event: "on_chain_stream",
@@ -750,7 +833,7 @@ test("Runnable streamEvents method with chat model chain", async () => {
         foo: "bar",
       },
       name: "my_chain",
-      data: { chunk: new AIMessageChunk("R") },
+      data: { chunk: new AIMessageChunk({ content: "R", id: anyString }) },
     },
     {
       event: "on_chat_model_stream",
@@ -763,7 +846,7 @@ test("Runnable streamEvents method with chat model chain", async () => {
         ls_stop: undefined,
       },
       name: "my_model",
-      data: { chunk: new AIMessageChunk("O") },
+      data: { chunk: new AIMessageChunk({ content: "O", id: anyString }) },
     },
     {
       event: "on_chain_stream",
@@ -773,7 +856,7 @@ test("Runnable streamEvents method with chat model chain", async () => {
         foo: "bar",
       },
       name: "my_chain",
-      data: { chunk: new AIMessageChunk("O") },
+      data: { chunk: new AIMessageChunk({ content: "O", id: anyString }) },
     },
     {
       event: "on_chat_model_stream",
@@ -786,7 +869,7 @@ test("Runnable streamEvents method with chat model chain", async () => {
         ls_stop: undefined,
       },
       name: "my_model",
-      data: { chunk: new AIMessageChunk("A") },
+      data: { chunk: new AIMessageChunk({ content: "A", id: anyString }) },
     },
     {
       event: "on_chain_stream",
@@ -796,7 +879,7 @@ test("Runnable streamEvents method with chat model chain", async () => {
         foo: "bar",
       },
       name: "my_chain",
-      data: { chunk: new AIMessageChunk("A") },
+      data: { chunk: new AIMessageChunk({ content: "A", id: anyString }) },
     },
     {
       event: "on_chat_model_stream",
@@ -809,7 +892,7 @@ test("Runnable streamEvents method with chat model chain", async () => {
         ls_stop: undefined,
       },
       name: "my_model",
-      data: { chunk: new AIMessageChunk("R") },
+      data: { chunk: new AIMessageChunk({ content: "R", id: anyString }) },
     },
     {
       event: "on_chain_stream",
@@ -819,7 +902,7 @@ test("Runnable streamEvents method with chat model chain", async () => {
         foo: "bar",
       },
       name: "my_chain",
-      data: { chunk: new AIMessageChunk("R") },
+      data: { chunk: new AIMessageChunk({ content: "R", id: anyString }) },
     },
     {
       event: "on_chat_model_end",
@@ -838,7 +921,229 @@ test("Runnable streamEvents method with chat model chain", async () => {
             [new SystemMessage("You are Godzilla"), new HumanMessage("hello")],
           ],
         },
-        output: new AIMessageChunk("ROAR"),
+        output: new AIMessageChunk({ content: "ROAR", id: anyString }),
+      },
+    },
+    {
+      event: "on_chain_end",
+      name: "my_chain",
+      run_id: expect.any(String),
+      tags: ["my_chain"],
+      metadata: {
+        foo: "bar",
+      },
+      data: { output: new AIMessageChunk({ content: "ROAR", id: anyString }) },
+    },
+  ]);
+});
+
+test("Chat model that supports streaming, but is invoked, should still emit on_stream events", async () => {
+  const template = ChatPromptTemplate.fromMessages([
+    ["system", "You are Godzilla"],
+    ["human", "{question}"],
+  ]).withConfig({
+    runName: "my_template",
+    tags: ["my_template"],
+  });
+  const model = new FakeListChatModel({
+    responses: ["ROAR"],
+  }).withConfig({
+    metadata: { a: "b" },
+    tags: ["my_model"],
+    runName: "my_model",
+  });
+  const chain = template
+    .pipe(async (val, config) => {
+      const result = await model.invoke(val, config);
+      return result;
+    })
+    .withConfig({
+      metadata: { foo: "bar" },
+      tags: ["my_chain"],
+      runName: "my_chain",
+    });
+  const events = [];
+  const eventStream = await chain.streamEvents(
+    { question: "hello" },
+    { version: "v2" }
+  );
+  for await (const event of eventStream) {
+    events.push(event);
+  }
+
+  // used here to avoid casting every ID
+  const anyString = expect.any(String) as unknown as string;
+
+  expect(events).toEqual([
+    {
+      run_id: expect.any(String),
+      event: "on_chain_start",
+      name: "my_chain",
+      tags: ["my_chain"],
+      metadata: {
+        foo: "bar",
+      },
+      data: {
+        input: {
+          question: "hello",
+        },
+      },
+    },
+    {
+      data: { input: { question: "hello" } },
+      event: "on_prompt_start",
+      metadata: { foo: "bar" },
+      name: "my_template",
+      run_id: expect.any(String),
+      tags: expect.arrayContaining(["my_chain", "seq:step:1", "my_template"]),
+    },
+    {
+      event: "on_prompt_end",
+      name: "my_template",
+      run_id: expect.any(String),
+      tags: expect.arrayContaining(["seq:step:1", "my_template", "my_chain"]),
+      metadata: {
+        foo: "bar",
+      },
+      data: {
+        input: {
+          question: "hello",
+        },
+        output: await template.invoke({ question: "hello" }),
+      },
+    },
+    {
+      event: "on_chain_start",
+      data: {},
+      name: "RunnableLambda",
+      tags: ["seq:step:2", "my_chain"],
+      run_id: expect.any(String),
+      metadata: {
+        foo: "bar",
+      },
+    },
+    {
+      event: "on_chat_model_start",
+      name: "my_model",
+      run_id: expect.any(String),
+      tags: expect.arrayContaining(["my_model", "my_chain"]),
+      metadata: {
+        foo: "bar",
+        a: "b",
+        ls_model_type: "chat",
+        ls_stop: undefined,
+      },
+      data: {
+        input: {
+          messages: [
+            [new SystemMessage("You are Godzilla"), new HumanMessage("hello")],
+          ],
+        },
+      },
+    },
+    {
+      event: "on_chat_model_stream",
+      run_id: expect.any(String),
+      tags: expect.arrayContaining(["my_chain", "my_model"]),
+      metadata: {
+        a: "b",
+        foo: "bar",
+        ls_model_type: "chat",
+        ls_stop: undefined,
+      },
+      name: "my_model",
+      data: { chunk: new AIMessageChunk({ id: anyString, content: "R" }) },
+    },
+    {
+      event: "on_chat_model_stream",
+      run_id: expect.any(String),
+      tags: expect.arrayContaining(["my_chain", "my_model"]),
+      metadata: {
+        a: "b",
+        foo: "bar",
+        ls_model_type: "chat",
+        ls_stop: undefined,
+      },
+      name: "my_model",
+      data: { chunk: new AIMessageChunk({ id: anyString, content: "O" }) },
+    },
+    {
+      event: "on_chat_model_stream",
+      run_id: expect.any(String),
+      tags: expect.arrayContaining(["my_chain", "my_model"]),
+      metadata: {
+        a: "b",
+        foo: "bar",
+        ls_model_type: "chat",
+        ls_stop: undefined,
+      },
+      name: "my_model",
+      data: { chunk: new AIMessageChunk({ id: anyString, content: "A" }) },
+    },
+    {
+      event: "on_chat_model_stream",
+      run_id: expect.any(String),
+      tags: expect.arrayContaining(["my_chain", "my_model"]),
+      metadata: {
+        a: "b",
+        foo: "bar",
+        ls_model_type: "chat",
+        ls_stop: undefined,
+      },
+      name: "my_model",
+      data: { chunk: new AIMessageChunk({ id: anyString, content: "R" }) },
+    },
+    {
+      event: "on_chat_model_end",
+      name: "my_model",
+      run_id: expect.any(String),
+      tags: expect.arrayContaining(["my_model", "my_chain"]),
+      metadata: {
+        foo: "bar",
+        a: "b",
+        ls_model_type: "chat",
+        ls_stop: undefined,
+      },
+      data: {
+        input: {
+          messages: [
+            [new SystemMessage("You are Godzilla"), new HumanMessage("hello")],
+          ],
+        },
+        output: new AIMessageChunk({ id: anyString, content: "ROAR" }),
+      },
+    },
+    {
+      event: "on_chain_stream",
+      run_id: expect.any(String),
+      tags: expect.arrayContaining(["seq:step:2", "my_chain"]),
+      metadata: {
+        foo: "bar",
+      },
+      name: "RunnableLambda",
+      data: { chunk: new AIMessageChunk({ id: anyString, content: "ROAR" }) },
+    },
+    {
+      event: "on_chain_stream",
+      run_id: expect.any(String),
+      tags: ["my_chain"],
+      metadata: {
+        foo: "bar",
+      },
+      name: "my_chain",
+      data: { chunk: new AIMessageChunk({ id: anyString, content: "ROAR" }) },
+    },
+    {
+      event: "on_chain_end",
+      name: "RunnableLambda",
+      run_id: expect.any(String),
+      tags: expect.arrayContaining(["seq:step:2", "my_chain"]),
+      metadata: {
+        foo: "bar",
+      },
+      data: {
+        input: await template.invoke({ question: "hello" }),
+        output: new AIMessageChunk({ id: anyString, content: "ROAR" }),
       },
     },
     {
@@ -850,7 +1155,643 @@ test("Runnable streamEvents method with chat model chain", async () => {
         foo: "bar",
       },
       data: {
-        output: new AIMessageChunk("ROAR"),
+        output: new AIMessageChunk({ id: anyString, content: "ROAR" }),
+      },
+    },
+  ]);
+});
+
+test("Chat model that doesn't support streaming, but is invoked, should emit one on_stream event", async () => {
+  const template = ChatPromptTemplate.fromMessages([
+    ["system", "You are Godzilla"],
+    ["human", "{question}"],
+  ]).withConfig({
+    runName: "my_template",
+    tags: ["my_template"],
+  });
+  const model = new FakeChatModel({}).withConfig({
+    metadata: { a: "b" },
+    tags: ["my_model"],
+    runName: "my_model",
+  });
+  const chain = template
+    .pipe(async (val, config) => {
+      const result = await model.invoke(val, config);
+      return result;
+    })
+    .withConfig({
+      metadata: { foo: "bar" },
+      tags: ["my_chain"],
+      runName: "my_chain",
+    });
+  const events = [];
+  const eventStream = await chain.streamEvents(
+    { question: "hello" },
+    { version: "v2" }
+  );
+  for await (const event of eventStream) {
+    events.push(event);
+  }
+
+  const anyString = expect.any(String) as unknown as string;
+  expect(events).toEqual([
+    {
+      run_id: expect.any(String),
+      event: "on_chain_start",
+      name: "my_chain",
+      tags: ["my_chain"],
+      metadata: {
+        foo: "bar",
+      },
+      data: {
+        input: {
+          question: "hello",
+        },
+      },
+    },
+    {
+      data: { input: { question: "hello" } },
+      event: "on_prompt_start",
+      metadata: { foo: "bar" },
+      name: "my_template",
+      run_id: expect.any(String),
+      tags: expect.arrayContaining(["my_chain", "seq:step:1", "my_template"]),
+    },
+    {
+      event: "on_prompt_end",
+      name: "my_template",
+      run_id: expect.any(String),
+      tags: expect.arrayContaining(["seq:step:1", "my_template", "my_chain"]),
+      metadata: {
+        foo: "bar",
+      },
+      data: {
+        input: {
+          question: "hello",
+        },
+        output: await template.invoke({ question: "hello" }),
+      },
+    },
+    {
+      event: "on_chain_start",
+      data: {},
+      name: "RunnableLambda",
+      tags: ["seq:step:2", "my_chain"],
+      run_id: expect.any(String),
+      metadata: {
+        foo: "bar",
+      },
+    },
+    {
+      event: "on_chat_model_start",
+      name: "my_model",
+      run_id: expect.any(String),
+      tags: expect.arrayContaining(["my_model", "my_chain"]),
+      metadata: {
+        foo: "bar",
+        a: "b",
+        ls_model_type: "chat",
+        ls_stop: undefined,
+      },
+      data: {
+        input: {
+          messages: [
+            [new SystemMessage("You are Godzilla"), new HumanMessage("hello")],
+          ],
+        },
+      },
+    },
+    {
+      event: "on_chat_model_stream",
+      run_id: expect.any(String),
+      tags: expect.arrayContaining(["my_chain", "my_model"]),
+      metadata: {
+        a: "b",
+        foo: "bar",
+        ls_model_type: "chat",
+        ls_stop: undefined,
+      },
+      name: "my_model",
+      data: {
+        chunk: new AIMessageChunk({
+          id: anyString,
+          content: "You are Godzilla\nhello",
+        }),
+      },
+    },
+    {
+      event: "on_chat_model_end",
+      name: "my_model",
+      run_id: expect.any(String),
+      tags: expect.arrayContaining(["my_model", "my_chain"]),
+      metadata: {
+        foo: "bar",
+        a: "b",
+        ls_model_type: "chat",
+        ls_stop: undefined,
+      },
+      data: {
+        input: {
+          messages: [
+            [new SystemMessage("You are Godzilla"), new HumanMessage("hello")],
+          ],
+        },
+        output: new AIMessage({
+          id: anyString,
+          content: "You are Godzilla\nhello",
+        }),
+      },
+    },
+    {
+      event: "on_chain_stream",
+      run_id: expect.any(String),
+      tags: expect.arrayContaining(["seq:step:2", "my_chain"]),
+      metadata: {
+        foo: "bar",
+      },
+      name: "RunnableLambda",
+      data: {
+        chunk: new AIMessage({
+          id: anyString,
+          content: "You are Godzilla\nhello",
+        }),
+      },
+    },
+    {
+      event: "on_chain_stream",
+      run_id: expect.any(String),
+      tags: ["my_chain"],
+      metadata: {
+        foo: "bar",
+      },
+      name: "my_chain",
+      data: {
+        chunk: new AIMessage({
+          id: anyString,
+          content: "You are Godzilla\nhello",
+        }),
+      },
+    },
+    {
+      event: "on_chain_end",
+      name: "RunnableLambda",
+      run_id: expect.any(String),
+      tags: expect.arrayContaining(["seq:step:2", "my_chain"]),
+      metadata: {
+        foo: "bar",
+      },
+      data: {
+        input: await template.invoke({ question: "hello" }),
+        output: new AIMessage({
+          id: anyString,
+          content: "You are Godzilla\nhello",
+        }),
+      },
+    },
+    {
+      event: "on_chain_end",
+      name: "my_chain",
+      run_id: expect.any(String),
+      tags: ["my_chain"],
+      metadata: {
+        foo: "bar",
+      },
+      data: {
+        output: new AIMessage({
+          id: anyString,
+          content: "You are Godzilla\nhello",
+        }),
+      },
+    },
+  ]);
+});
+
+test("LLM that supports streaming, but is invoked, should still emit on_stream events", async () => {
+  const template = PromptTemplate.fromTemplate(
+    `You are Godzilla\n{question}`
+  ).withConfig({
+    runName: "my_template",
+    tags: ["my_template"],
+  });
+  const model = new FakeStreamingLLM({
+    responses: ["ROAR"],
+  }).withConfig({
+    metadata: { a: "b" },
+    tags: ["my_model"],
+    runName: "my_model",
+  });
+  const chain = template
+    .pipe(async (val, config) => {
+      const result = await model.invoke(val, config);
+      return result;
+    })
+    .withConfig({
+      metadata: { foo: "bar" },
+      tags: ["my_chain"],
+      runName: "my_chain",
+    });
+  const events = [];
+  const eventStream = await chain.streamEvents(
+    { question: "hello" },
+    { version: "v2" }
+  );
+  for await (const event of eventStream) {
+    events.push(event);
+  }
+  expect(events).toEqual([
+    {
+      event: "on_chain_start",
+      data: {
+        input: {
+          question: "hello",
+        },
+      },
+      name: "my_chain",
+      tags: ["my_chain"],
+      run_id: expect.any(String),
+      metadata: {
+        foo: "bar",
+      },
+    },
+    {
+      event: "on_prompt_start",
+      data: {
+        input: {
+          question: "hello",
+        },
+      },
+      name: "my_template",
+      tags: ["seq:step:1", "my_template", "my_chain"],
+      run_id: expect.any(String),
+      metadata: {
+        foo: "bar",
+      },
+    },
+    {
+      event: "on_prompt_end",
+      data: {
+        output: await template.invoke({ question: "hello" }),
+        input: {
+          question: "hello",
+        },
+      },
+      run_id: expect.any(String),
+      name: "my_template",
+      tags: ["seq:step:1", "my_template", "my_chain"],
+      metadata: {
+        foo: "bar",
+      },
+    },
+    {
+      event: "on_chain_start",
+      data: {},
+      name: "RunnableLambda",
+      tags: ["seq:step:2", "my_chain"],
+      run_id: expect.any(String),
+      metadata: {
+        foo: "bar",
+      },
+    },
+    {
+      event: "on_llm_start",
+      data: {
+        input: {
+          prompts: ["You are Godzilla\nhello"],
+        },
+      },
+      name: "my_model",
+      tags: ["my_model", "my_chain"],
+      run_id: expect.any(String),
+      metadata: {
+        foo: "bar",
+        a: "b",
+      },
+    },
+    {
+      event: "on_llm_stream",
+      data: {
+        chunk: new GenerationChunk({
+          text: "R",
+        }),
+      },
+      run_id: expect.any(String),
+      name: "my_model",
+      tags: ["my_model", "my_chain"],
+      metadata: {
+        foo: "bar",
+        a: "b",
+      },
+    },
+    {
+      event: "on_llm_stream",
+      data: {
+        chunk: new GenerationChunk({
+          text: "O",
+        }),
+      },
+      run_id: expect.any(String),
+      name: "my_model",
+      tags: ["my_model", "my_chain"],
+      metadata: {
+        foo: "bar",
+        a: "b",
+      },
+    },
+    {
+      event: "on_llm_stream",
+      data: {
+        chunk: new GenerationChunk({
+          text: "A",
+        }),
+      },
+      run_id: expect.any(String),
+      name: "my_model",
+      tags: ["my_model", "my_chain"],
+      metadata: {
+        foo: "bar",
+        a: "b",
+      },
+    },
+    {
+      event: "on_llm_stream",
+      data: {
+        chunk: new GenerationChunk({
+          text: "R",
+        }),
+      },
+      run_id: expect.any(String),
+      name: "my_model",
+      tags: ["my_model", "my_chain"],
+      metadata: {
+        foo: "bar",
+        a: "b",
+      },
+    },
+    {
+      event: "on_llm_end",
+      data: {
+        output: {
+          generations: [
+            [
+              {
+                text: "ROAR",
+                generationInfo: {},
+              },
+            ],
+          ],
+          llmOutput: {},
+        },
+        input: {
+          prompts: ["You are Godzilla\nhello"],
+        },
+      },
+      run_id: expect.any(String),
+      name: "my_model",
+      tags: ["my_model", "my_chain"],
+      metadata: {
+        foo: "bar",
+        a: "b",
+      },
+    },
+    {
+      event: "on_chain_stream",
+      run_id: expect.any(String),
+      name: "RunnableLambda",
+      tags: ["seq:step:2", "my_chain"],
+      metadata: {
+        foo: "bar",
+      },
+      data: {
+        chunk: "ROAR",
+      },
+    },
+    {
+      event: "on_chain_stream",
+      run_id: expect.any(String),
+      name: "my_chain",
+      tags: ["my_chain"],
+      metadata: {
+        foo: "bar",
+      },
+      data: {
+        chunk: "ROAR",
+      },
+    },
+    {
+      event: "on_chain_end",
+      data: {
+        output: "ROAR",
+        input: await template.invoke({ question: "hello" }),
+      },
+      run_id: expect.any(String),
+      name: "RunnableLambda",
+      tags: ["seq:step:2", "my_chain"],
+      metadata: {
+        foo: "bar",
+      },
+    },
+    {
+      event: "on_chain_end",
+      data: {
+        output: "ROAR",
+      },
+      run_id: expect.any(String),
+      name: "my_chain",
+      tags: ["my_chain"],
+      metadata: {
+        foo: "bar",
+      },
+    },
+  ]);
+});
+
+test("LLM that doesn't support streaming, but is invoked, should emit one on_stream event", async () => {
+  const template = PromptTemplate.fromTemplate(
+    `You are Godzilla\n{question}`
+  ).withConfig({
+    runName: "my_template",
+    tags: ["my_template"],
+  });
+  const model = new FakeLLM({}).withConfig({
+    metadata: { a: "b" },
+    tags: ["my_model"],
+    runName: "my_model",
+  });
+  const chain = template
+    .pipe(async (val, config) => {
+      const result = await model.invoke(val, config);
+      return result;
+    })
+    .withConfig({
+      metadata: { foo: "bar" },
+      tags: ["my_chain"],
+      runName: "my_chain",
+    });
+  const events = [];
+  const eventStream = await chain.streamEvents(
+    { question: "hello" },
+    { version: "v2" }
+  );
+  for await (const event of eventStream) {
+    events.push(event);
+  }
+  expect(events).toEqual([
+    {
+      event: "on_chain_start",
+      data: {
+        input: {
+          question: "hello",
+        },
+      },
+      name: "my_chain",
+      tags: ["my_chain"],
+      run_id: expect.any(String),
+      metadata: {
+        foo: "bar",
+      },
+    },
+    {
+      event: "on_prompt_start",
+      data: {
+        input: {
+          question: "hello",
+        },
+      },
+      name: "my_template",
+      tags: ["seq:step:1", "my_template", "my_chain"],
+      run_id: expect.any(String),
+      metadata: {
+        foo: "bar",
+      },
+    },
+    {
+      event: "on_prompt_end",
+      data: {
+        output: await template.invoke({ question: "hello" }),
+        input: {
+          question: "hello",
+        },
+      },
+      run_id: expect.any(String),
+      name: "my_template",
+      tags: ["seq:step:1", "my_template", "my_chain"],
+      metadata: {
+        foo: "bar",
+      },
+    },
+    {
+      event: "on_chain_start",
+      data: {},
+      name: "RunnableLambda",
+      tags: ["seq:step:2", "my_chain"],
+      run_id: expect.any(String),
+      metadata: {
+        foo: "bar",
+      },
+    },
+    {
+      event: "on_llm_start",
+      data: {
+        input: {
+          prompts: ["You are Godzilla\nhello"],
+        },
+      },
+      name: "my_model",
+      tags: ["my_model", "my_chain"],
+      run_id: expect.any(String),
+      metadata: {
+        foo: "bar",
+        a: "b",
+      },
+    },
+    {
+      event: "on_llm_stream",
+      data: {
+        chunk: new GenerationChunk({
+          text: "You are Godzilla\nhello",
+        }),
+      },
+      run_id: expect.any(String),
+      name: "my_model",
+      tags: ["my_model", "my_chain"],
+      metadata: {
+        foo: "bar",
+        a: "b",
+      },
+    },
+    {
+      event: "on_llm_end",
+      data: {
+        output: {
+          generations: [
+            [
+              {
+                text: "You are Godzilla\nhello",
+                generationInfo: undefined,
+              },
+            ],
+          ],
+          llmOutput: {},
+        },
+        input: {
+          prompts: ["You are Godzilla\nhello"],
+        },
+      },
+      run_id: expect.any(String),
+      name: "my_model",
+      tags: ["my_model", "my_chain"],
+      metadata: {
+        foo: "bar",
+        a: "b",
+      },
+    },
+    {
+      event: "on_chain_stream",
+      run_id: expect.any(String),
+      name: "RunnableLambda",
+      tags: ["seq:step:2", "my_chain"],
+      metadata: {
+        foo: "bar",
+      },
+      data: {
+        chunk: "You are Godzilla\nhello",
+      },
+    },
+    {
+      event: "on_chain_stream",
+      run_id: expect.any(String),
+      name: "my_chain",
+      tags: ["my_chain"],
+      metadata: {
+        foo: "bar",
+      },
+      data: {
+        chunk: "You are Godzilla\nhello",
+      },
+    },
+    {
+      event: "on_chain_end",
+      data: {
+        output: "You are Godzilla\nhello",
+        input: await template.invoke({ question: "hello" }),
+      },
+      run_id: expect.any(String),
+      name: "RunnableLambda",
+      tags: ["seq:step:2", "my_chain"],
+      metadata: {
+        foo: "bar",
+      },
+    },
+    {
+      event: "on_chain_end",
+      data: {
+        output: "You are Godzilla\nhello",
+      },
+      run_id: expect.any(String),
+      name: "my_chain",
+      tags: ["my_chain"],
+      metadata: {
+        foo: "bar",
       },
     },
   ]);
@@ -916,6 +1857,192 @@ test("Runnable streamEvents method with simple tools", async () => {
     },
     {
       data: { output: JSON.stringify({ x: 1, y: "2" }) },
+      event: "on_tool_end",
+      metadata: {},
+      name: "with_parameters",
+      run_id: expect.any(String),
+      tags: [],
+    },
+  ]);
+});
+
+test("Runnable streamEvents method with a custom event", async () => {
+  const lambda = RunnableLambda.from(
+    async (params: { x: number; y: string }, config) => {
+      await dispatchCustomEvent("testEvent", { someval: "test" }, config);
+      await dispatchCustomEvent("testEvent", { someval: "test2" }, config);
+      return JSON.stringify({ x: params.x, y: params.y });
+    }
+  );
+  const events = [];
+  const eventStream = await lambda.streamEvents(
+    { x: 1, y: "2" },
+    { version: "v2" }
+  );
+  for await (const event of eventStream) {
+    events.push(event);
+  }
+  expect(events).toEqual([
+    {
+      event: "on_chain_start",
+      data: { input: { x: 1, y: "2" } },
+      name: "RunnableLambda",
+      tags: [],
+      run_id: expect.any(String),
+      metadata: {},
+    },
+    {
+      event: "on_custom_event",
+      run_id: expect.any(String),
+      name: "testEvent",
+      tags: [],
+      metadata: {},
+      data: { someval: "test" },
+    },
+    {
+      event: "on_custom_event",
+      run_id: expect.any(String),
+      name: "testEvent",
+      tags: [],
+      metadata: {},
+      data: { someval: "test2" },
+    },
+    {
+      event: "on_chain_stream",
+      run_id: expect.any(String),
+      name: "RunnableLambda",
+      tags: [],
+      metadata: {},
+      data: { chunk: '{"x":1,"y":"2"}' },
+    },
+    {
+      event: "on_chain_end",
+      data: { output: '{"x":1,"y":"2"}' },
+      run_id: expect.any(String),
+      name: "RunnableLambda",
+      tags: [],
+      metadata: {},
+    },
+  ]);
+});
+
+test("Custom event inside a custom tool", async () => {
+  const customTool = tool(
+    async (params: { x: number; y: string }, config) => {
+      await dispatchCustomEvent("testEvent", { someval: "test" }, config);
+      await dispatchCustomEvent("testEvent", { someval: "test2" }, config);
+      return JSON.stringify({ x: params.x, y: params.y });
+    },
+    {
+      schema: z.object({ x: z.number(), y: z.string() }),
+      name: "testtool",
+    }
+  );
+  const events = [];
+  const eventStream = await customTool.streamEvents(
+    { x: 1, y: "2" },
+    { version: "v2" }
+  );
+  for await (const event of eventStream) {
+    events.push(event);
+  }
+  expect(events).toEqual([
+    {
+      event: "on_tool_start",
+      data: { input: { x: 1, y: "2" } },
+      name: "testtool",
+      tags: [],
+      run_id: expect.any(String),
+      metadata: {},
+    },
+    {
+      event: "on_custom_event",
+      run_id: expect.any(String),
+      name: "testEvent",
+      tags: [],
+      metadata: {},
+      data: { someval: "test" },
+    },
+    {
+      event: "on_custom_event",
+      run_id: expect.any(String),
+      name: "testEvent",
+      tags: [],
+      metadata: {},
+      data: { someval: "test2" },
+    },
+    {
+      event: "on_tool_end",
+      data: { output: '{"x":1,"y":"2"}' },
+      run_id: expect.any(String),
+      name: "testtool",
+      tags: [],
+      metadata: {},
+    },
+  ]);
+});
+
+test("Runnable streamEvents method with tools that return objects", async () => {
+  const adderFunc = (_params: { x: number; y: number }) => {
+    return JSON.stringify({ sum: 3 });
+  };
+  const parameterlessTool = tool(adderFunc, {
+    name: "parameterless",
+  });
+  const events = [];
+  const eventStream = parameterlessTool.streamEvents({}, { version: "v2" });
+  for await (const event of eventStream) {
+    events.push(event);
+  }
+
+  expect(events).toEqual([
+    {
+      data: { input: {} },
+      event: "on_tool_start",
+      metadata: {},
+      name: "parameterless",
+      run_id: expect.any(String),
+      tags: [],
+    },
+    {
+      data: {
+        output: JSON.stringify({ sum: 3 }),
+      },
+      event: "on_tool_end",
+      metadata: {},
+      name: "parameterless",
+      run_id: expect.any(String),
+      tags: [],
+    },
+  ]);
+
+  const adderTool = tool(adderFunc, {
+    name: "with_parameters",
+    description: "A tool that does nothing",
+    schema: z.object({
+      x: z.number(),
+      y: z.number(),
+    }),
+  });
+  const events2 = [];
+  const eventStream2 = adderTool.streamEvents(
+    { x: 1, y: 2 },
+    { version: "v2" }
+  );
+  for await (const event of eventStream2) {
+    events2.push(event);
+  }
+  expect(events2).toEqual([
+    {
+      data: { input: { x: 1, y: 2 } },
+      event: "on_tool_start",
+      metadata: {},
+      name: "with_parameters",
+      run_id: expect.any(String),
+      tags: [],
+    },
+    {
+      data: { output: JSON.stringify({ sum: 3 }) },
       event: "on_tool_end",
       metadata: {},
       name: "with_parameters",
@@ -1027,4 +2154,25 @@ test("Runnable streamEvents method with text/event-stream encoding", async () =>
   }
 
   expect(decoder.decode(events[3])).toEqual("event: end\n\n");
+});
+
+test("Runnable streamEvents method should respect passed signal", async () => {
+  const r = RunnableLambda.from(reverse);
+
+  const chain = r
+    .withConfig({ runName: "1" })
+    .pipe(r.withConfig({ runName: "2" }))
+    .pipe(r.withConfig({ runName: "3" }));
+
+  const controller = new AbortController();
+  const eventStream = await chain.streamEvents("hello", {
+    version: "v2",
+    signal: controller.signal,
+  });
+  await expect(async () => {
+    for await (const _ of eventStream) {
+      // Abort after the first chunk
+      controller.abort();
+    }
+  }).rejects.toThrowError();
 });

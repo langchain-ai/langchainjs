@@ -56,11 +56,11 @@ const chatModel = new AdvancedCustomChatModel({ n: 4 });
 
 console.log(await chatModel.invoke([["human", "I am an LLM"]]));
 
-const eventStream = await chatModel.streamEvents([["human", "I am an LLM"]], {
-  version: "v1",
+const eventStream = chatModel.streamEvents([["human", "I am an LLM"]], {
+  version: "v2",
 });
 for await (const event of eventStream) {
-  if (event.event === "on_llm_end") {
+  if (event.event === "on_chat_model_end") {
     console.log(JSON.stringify(event, null, 2));
   }
 }

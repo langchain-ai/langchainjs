@@ -40,6 +40,6 @@ test("Extraction", async () => {
     foo: "bears",
   });
 
-  console.log(res);
+  // console.log(res);
   expect(res.length).toBe(2);
 });

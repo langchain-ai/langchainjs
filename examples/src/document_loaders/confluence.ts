@@ -1,4 +1,4 @@
-import { ConfluencePagesLoader } from "langchain/document_loaders/web/confluence";
+import { ConfluencePagesLoader } from "@langchain/community/document_loaders/web/confluence";
 
 const username = process.env.CONFLUENCE_USERNAME;
 const accessToken = process.env.CONFLUENCE_ACCESS_TOKEN;

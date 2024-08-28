@@ -44,20 +44,36 @@ const model = new OllamaFunctions({
 });
 
 // Use a JsonOutputFunctionsParser to get the parsed JSON response directly.
-const chain = await prompt.pipe(model).pipe(new JsonOutputFunctionsParser());
+const chain = prompt.pipe(model).pipe(new JsonOutputFunctionsParser());
 
 const response = await chain.invoke({
   input:
     "Alex is 5 feet tall. Claudia is 1 foot taller than Alex and jumps higher than him. Claudia has orange hair and Alex is blonde.",
 });
 
-console.log(response);
+console.log(JSON.stringify(response, null, 2));
 
 /*
-  {
-    people: [
-      { name: 'Alex', height: 5, hairColor: 'blonde' },
-      { name: 'Claudia', height: 6, hairColor: 'orange' }
-    ]
-  }
+{
+  "people": [
+    {
+      "name": "Alex",
+      "height": 5,
+      "hairColor": "blonde"
+    },
+    {
+      "name": "Claudia",
+      "height": {
+        "$num": 1,
+        "add": [
+          {
+            "name": "Alex",
+            "prop": "height"
+          }
+        ]
+      },
+      "hairColor": "orange"
+    }
+  ]
+}
 */

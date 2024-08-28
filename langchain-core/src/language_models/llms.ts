@@ -23,7 +23,10 @@ import {
   type BaseLanguageModelParams,
 } from "./base.js";
 import type { RunnableConfig } from "../runnables/config.js";
-import type { BaseCache } from "../caches.js";
+import type { BaseCache } from "../caches/base.js";
+import { isStreamEventsHandler } from "../tracers/event_stream.js";
+import { isLogStreamHandler } from "../tracers/log_stream.js";
+import { concat } from "../utils/stream.js";
 
 export type SerializedLLM = {
   _model: string;
@@ -40,27 +43,16 @@ export interface BaseLLMParams extends BaseLanguageModelParams {
 
 export interface BaseLLMCallOptions extends BaseLanguageModelCallOptions {}
 
-interface LLMGenerateCachedParameters<
-  T extends BaseLLM<CallOptions>,
-  CallOptions extends BaseLLMCallOptions = BaseLLMCallOptions
-> {
-  prompts: string[];
-  cache: BaseCache<Generation[]>;
-  llmStringKey: string;
-  parsedOptions: T["ParsedCallOptions"];
-  handledOptions: RunnableConfig;
-  runId?: string;
-}
-
 /**
  * LLM Wrapper. Takes in a prompt (or prompts) and returns a string.
  */
 export abstract class BaseLLM<
   CallOptions extends BaseLLMCallOptions = BaseLLMCallOptions
 > extends BaseLanguageModel<string, CallOptions> {
+  // Backwards compatibility since fields have been moved to RunnableConfig
   declare ParsedCallOptions: Omit<
     CallOptions,
-    keyof RunnableConfig & "timeout"
+    Exclude<keyof RunnableConfig, "signal" | "timeout" | "maxConcurrency">
   >;
 
   // Only ever instantiated in main LangChain
@@ -100,14 +92,13 @@ export abstract class BaseLLM<
     throw new Error("Not implemented.");
   }
 
-  protected _separateRunnableConfigFromCallOptions(
+  protected _separateRunnableConfigFromCallOptionsCompat(
     options?: Partial<CallOptions>
   ): [RunnableConfig, this["ParsedCallOptions"]] {
+    // For backwards compat, keep `signal` in both runnableConfig and callOptions
     const [runnableConfig, callOptions] =
       super._separateRunnableConfigFromCallOptions(options);
-    if (callOptions?.timeout && !callOptions.signal) {
-      callOptions.signal = AbortSignal.timeout(callOptions.timeout);
-    }
+    (callOptions as this["ParsedCallOptions"]).signal = runnableConfig.signal;
     return [runnableConfig, callOptions as this["ParsedCallOptions"]];
   }
 
@@ -123,7 +114,7 @@ export abstract class BaseLLM<
     } else {
       const prompt = BaseLLM._convertInputToPromptValue(input);
       const [runnableConfig, callOptions] =
-        this._separateRunnableConfigFromCallOptions(options);
+        this._separateRunnableConfigFromCallOptionsCompat(options);
       const callbackManager_ = await CallbackManager.configure(
         runnableConfig.callbacks,
         this.callbacks,
@@ -153,7 +144,7 @@ export abstract class BaseLLM<
       });
       try {
         for await (const chunk of this._streamResponseChunks(
-          input.toString(),
+          prompt.toString(),
           callOptions,
           runManagers?.[0]
         )) {
@@ -276,23 +267,60 @@ export abstract class BaseLLM<
       undefined,
       handledOptions?.runName
     );
+    // Even if stream is not explicitly called, check if model is implicitly
+    // called from streamEvents() or streamLog() to get all streamed events.
+    // Bail out if _streamResponseChunks not overridden
+    const hasStreamingHandler = !!runManagers?.[0].handlers.find((handler) => {
+      return isStreamEventsHandler(handler) || isLogStreamHandler(handler);
+    });
+    let output: LLMResult;
+    if (
+      hasStreamingHandler &&
+      prompts.length === 1 &&
+      this._streamResponseChunks !== BaseLLM.prototype._streamResponseChunks
+    ) {
+      try {
+        const stream = await this._streamResponseChunks(
+          prompts[0],
+          parsedOptions,
+          runManagers?.[0]
+        );
+        let aggregated;
+        for await (const chunk of stream) {
+          if (aggregated === undefined) {
+            aggregated = chunk;
+          } else {
+            aggregated = concat(aggregated, chunk);
+          }
+        }
+        if (aggregated === undefined) {
+          throw new Error("Received empty response from chat model call.");
+        }
+        output = { generations: [[aggregated]], llmOutput: {} };
+        await runManagers?.[0].handleLLMEnd(output);
+      } catch (e) {
+        await runManagers?.[0].handleLLMError(e);
+        throw e;
+      }
+    } else {
+      try {
+        output = await this._generate(prompts, parsedOptions, runManagers?.[0]);
+      } catch (err) {
+        await Promise.all(
+          (runManagers ?? []).map((runManager) =>
+            runManager?.handleLLMError(err)
+          )
+        );
+        throw err;
+      }
 
-    let output;
-    try {
-      output = await this._generate(prompts, parsedOptions, runManagers?.[0]);
-    } catch (err) {
+      const flattenedOutputs: LLMResult[] = this._flattenLLMResult(output);
       await Promise.all(
-        (runManagers ?? []).map((runManager) => runManager?.handleLLMError(err))
+        (runManagers ?? []).map((runManager, i) =>
+          runManager?.handleLLMEnd(flattenedOutputs[i])
+        )
       );
-      throw err;
     }
-
-    const flattenedOutputs: LLMResult[] = this._flattenLLMResult(output);
-    await Promise.all(
-      (runManagers ?? []).map((runManager, i) =>
-        runManager?.handleLLMEnd(flattenedOutputs[i])
-      )
-    );
     const runIds = runManagers?.map((manager) => manager.runId) || undefined;
     // This defines RUN_KEY as a non-enumerable property on the output object
     // so that it is not serialized when the output is stringified, and so that
@@ -311,9 +339,15 @@ export abstract class BaseLLM<
     parsedOptions,
     handledOptions,
     runId,
-  }: LLMGenerateCachedParameters<typeof this>): Promise<
-    LLMResult & { missingPromptIndices: number[] }
-  > {
+  }: {
+    prompts: string[];
+    cache: BaseCache<Generation[]>;
+    llmStringKey: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    parsedOptions: any;
+    handledOptions: RunnableConfig;
+    runId?: string;
+  }): Promise<LLMResult & { missingPromptIndices: number[] }> {
     const callbackManager_ = await CallbackManager.configure(
       handledOptions.callbacks,
       this.callbacks,
@@ -421,7 +455,7 @@ export abstract class BaseLLM<
     }
 
     const [runnableConfig, callOptions] =
-      this._separateRunnableConfigFromCallOptions(parsedOptions);
+      this._separateRunnableConfigFromCallOptionsCompat(parsedOptions);
     runnableConfig.callbacks = runnableConfig.callbacks ?? callbacks;
 
     if (!this.cache) {
@@ -429,8 +463,9 @@ export abstract class BaseLLM<
     }
 
     const { cache } = this;
-    const llmStringKey =
-      this._getSerializedCacheKeyParametersForCall(callOptions);
+    const llmStringKey = this._getSerializedCacheKeyParametersForCall(
+      callOptions as CallOptions
+    );
     const { generations, missingPromptIndices } = await this._generateCached({
       prompts,
       cache,

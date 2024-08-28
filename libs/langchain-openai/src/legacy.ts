@@ -157,7 +157,9 @@ export class OpenAIChat
     super(fields ?? {});
 
     this.openAIApiKey =
-      fields?.openAIApiKey ?? getEnvironmentVariable("OPENAI_API_KEY");
+      fields?.apiKey ??
+      fields?.openAIApiKey ??
+      getEnvironmentVariable("OPENAI_API_KEY");
 
     this.azureOpenAIApiKey =
       fields?.azureOpenAIApiKey ??
@@ -189,7 +191,7 @@ export class OpenAIChat
       fields?.configuration?.organization ??
       getEnvironmentVariable("OPENAI_ORGANIZATION");
 
-    this.modelName = fields?.modelName ?? this.modelName;
+    this.modelName = fields?.model ?? fields?.modelName ?? this.modelName;
     this.prefixMessages = fields?.prefixMessages ?? this.prefixMessages;
     this.modelKwargs = fields?.modelKwargs ?? {};
     this.timeout = fields?.timeout;

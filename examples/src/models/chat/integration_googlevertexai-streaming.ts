@@ -4,6 +4,7 @@ import { ChatVertexAI } from "@langchain/google-vertexai";
 
 const model = new ChatVertexAI({
   temperature: 0.7,
+  model: "gemini-1.5-flash-001",
 });
 const stream = await model.stream([
   ["system", "You are a funny assistant that answers in pirate language."],
@@ -11,23 +12,14 @@ const stream = await model.stream([
 ]);
 
 for await (const chunk of stream) {
-  console.log(chunk);
+  console.log(chunk.content);
 }
 
 /*
-AIMessageChunk {
-  content: [{ type: 'text', text: 'Ahoy there, matey! Me favorite grub be fish and chips, with' }],
-  additional_kwargs: {},
-  response_metadata: { data: { candidates: [Array], promptFeedback: [Object] } }
-}
-AIMessageChunk {
-  content: [{ type: 'text', text: " a hearty pint o' grog to wash it down. What be yer fancy, landlubber?" }],
-  additional_kwargs: {},
-  response_metadata: { data: { candidates: [Array] } }
-}
-AIMessageChunk {
-  content: '',
-  additional_kwargs: {},
-  response_metadata: { finishReason: 'stop' }
-}
+A
+hoy, matey! Me favorite food be a hearty plate o' grub,
+ with a side o' scurvy dogs and a tankard o' grog
+. Argh!
+
+
 */

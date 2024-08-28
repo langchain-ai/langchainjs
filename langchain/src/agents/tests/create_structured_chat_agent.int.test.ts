@@ -29,7 +29,7 @@ test("createStructuredChatAgent works", async () => {
     input,
   });
 
-  console.log(result);
+  // console.log(result);
 
   expect(result.input).toBe(input);
   expect(typeof result.output).toBe("string");

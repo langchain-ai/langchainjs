@@ -105,10 +105,12 @@ test("OpenAPI chain with a provided full spec", async () => {
     { llm: new ChatOpenAI({ modelName: "gpt-4-0613", temperature: 0 }) }
   );
 
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const result = await chain.run(
     `What are some options for a men's large blue button down shirt`
   );
-  console.log(result);
+  // console.log(result);
 });
 
 test("OpenAPI chain with yml spec from a URL", async () => {
@@ -118,8 +120,10 @@ test("OpenAPI chain with yml spec from a URL", async () => {
       llm: new ChatOpenAI({ modelName: "gpt-4-0613", temperature: 0 }),
     }
   );
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const result = await chain.run(`What's today's comic?`);
-  console.log(result);
+  // console.log(result);
 });
 
 test("OpenAPI chain with yml spec from a URL with a path parameter", async () => {
@@ -129,16 +133,20 @@ test("OpenAPI chain with yml spec from a URL with a path parameter", async () =>
       llm: new ChatOpenAI({ modelName: "gpt-4-0613", temperature: 0 }),
     }
   );
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const result = await chain.run(`What comic has id 2184?`);
-  console.log(result);
+  // console.log(result);
 });
 
 test("OpenAPI chain with yml spec from a URL requiring a POST request", async () => {
   const chain = await createOpenAPIChain("https://api.speak.com/openapi.yaml", {
     llm: new ChatOpenAI({ modelName: "gpt-4-0613", temperature: 0 }),
   });
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const result = await chain.run(`How would you say no thanks in Russian?`);
-  console.log(result);
+  // console.log(result);
 });
 
 test("OpenAPI chain with a longer spec and tricky query required params", async () => {
@@ -150,8 +158,10 @@ test("OpenAPI chain with a longer spec and tricky query required params", async 
       },
     }
   );
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const result = await chain.run(
     "Can you find and explain some articles about the intersection of AI and VR?"
   );
-  console.log(result);
+  // console.log(result);
 });

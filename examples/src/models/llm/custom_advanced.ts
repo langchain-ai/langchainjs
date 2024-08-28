@@ -52,8 +52,8 @@ const llm = new AdvancedCustomLLM({ n: 4 });
 
 console.log(await llm.invoke("I am an LLM"));
 
-const eventStream = await llm.streamEvents("I am an LLM", {
-  version: "v1",
+const eventStream = llm.streamEvents("I am an LLM", {
+  version: "v2",
 });
 for await (const event of eventStream) {
   if (event.event === "on_llm_end") {
