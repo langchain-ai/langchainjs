@@ -22,11 +22,11 @@ const pamChunkHeaderOptions = {
 };
 
 const vectorstore = await HNSWLib.fromDocuments([], new OpenAIEmbeddings());
-const docstore = new InMemoryStore();
+const byteStore = new InMemoryStore<Uint8Array>();
 
 const retriever = new ParentDocumentRetriever({
   vectorstore,
-  docstore,
+  byteStore,
   // Very small chunks for demo purposes.
   // Use a bigger chunk size for serious use-cases.
   childSplitter: new RecursiveCharacterTextSplitter({
