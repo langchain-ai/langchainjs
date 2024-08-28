@@ -1,15 +1,16 @@
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { MemoryVectorStore } from "langchain/vectorstores/memory";
-import { InMemoryStore } from "@langchain/core/stores";
 import { ParentDocumentRetriever } from "langchain/retrievers/parent_document";
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 import { TextLoader } from "langchain/document_loaders/fs/text";
+import { InMemoryStore } from "@langchain/core/stores";
 
 const vectorstore = new MemoryVectorStore(new OpenAIEmbeddings());
-const docstore = new InMemoryStore();
+const byteStore = new InMemoryStore<Uint8Array>();
+
 const retriever = new ParentDocumentRetriever({
   vectorstore,
-  docstore,
+  byteStore,
   // Optional, not required if you're already passing in split documents
   parentSplitter: new RecursiveCharacterTextSplitter({
     chunkOverlap: 0,

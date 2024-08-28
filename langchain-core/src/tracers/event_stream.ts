@@ -370,7 +370,7 @@ export class EventStreamCallbackHandler extends BaseTracer {
     if (runInfo.runType === "chat_model") {
       eventName = "on_chat_model_stream";
       if (kwargs?.chunk === undefined) {
-        chunk = new AIMessageChunk({ content: token });
+        chunk = new AIMessageChunk({ content: token, id: `run-${run.id}` });
       } else {
         chunk = kwargs.chunk.message;
       }
