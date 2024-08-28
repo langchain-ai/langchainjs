@@ -1,5 +1,5 @@
 import { it, expect } from "@jest/globals";
-import { JigsawStackVOCR, JigsawStackAIScrape } from "../tools.ts";
+import { JigsawStackAIScrape } from "../tools/ai-scrape.js";
 
 it("should run success scrape result", async () => {
   const tool = new JigsawStackAIScrape({

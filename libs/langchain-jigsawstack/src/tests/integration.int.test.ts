@@ -1,5 +1,6 @@
 import { expect, test } from "@jest/globals";
-import { JigsawStackVOCR, JigsawStackAIScrape } from "../tools.ts";
+import { JigsawStackAIScrape } from "../tools/ai-scrape.js";
+import { JigsawStackVOCR } from "../tools/vocr.js";
 
 test("JigsawStackAIScrape can scrape a website given a url and prompt", async () => {
   const tool = new JigsawStackAIScrape({

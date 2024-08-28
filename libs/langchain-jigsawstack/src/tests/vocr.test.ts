@@ -1,5 +1,5 @@
 import { it, expect } from "@jest/globals";
-import { JigsawStackVOCR } from "../tools.ts";
+import { JigsawStackVOCR } from "../tools/vocr.js";
 
 it("should exclude the text field from metadata", async () => {
   const tool = new JigsawStackVOCR({
