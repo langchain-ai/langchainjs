@@ -46,7 +46,9 @@ export class JigsawStackVOCR extends Tool {
     const apiKey =
       fields?.apiKey ?? getEnvironmentVariable("JIGSAWSTACK_API_KEY");
     if (!apiKey) {
-      throw new Error("JIGSAWSTACK_API_KEY is required.");
+      throw new Error(
+        "Please set the JIGSAWSTACK_API_KEY environment variable or pass it to the constructor as the apiKey field."
+      );
     }
 
     const _params = fields?.params;
