@@ -33,7 +33,7 @@
   "license": "MIT",
   "dependencies": {
     "@langchain/core": ">0.1.0 <0.3.0",
-    "jigsawstack": "^0.0.2"
+    "jigsawstack": "0.0.3"
   },
   "devDependencies": {
     "@jest/globals": "^29.5.0",
