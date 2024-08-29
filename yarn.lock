@@ -21378,13 +21378,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"base-64@npm:^1.0.0":
-  version: 1.0.0
-  resolution: "base-64@npm:1.0.0"
-  checksum: d10b64a1fc9b2c5a5f39f1ce1e6c9d1c5b249222bbfa3a0604c592d90623caf74419983feadd8a170f27dc0c3389704f72faafa3e645aeb56bfc030c93ff074a
-  languageName: node
-  linkType: hard
-
 "base16@npm:^1.0.0":
   version: 1.0.0
   resolution: "base16@npm:1.0.0"
@@ -32238,7 +32231,7 @@ __metadata:
     playwright: ^1.32.1
     prettier: ^2.8.3
     puppeteer: ^22.0.0
-    pyodide: ^0.24.1
+    pyodide: ^0.26.2
     redis: ^4.6.6
     release-it: ^17.6.0
     rimraf: ^5.0.1
@@ -32306,7 +32299,7 @@ __metadata:
     peggy: ^3.0.2
     playwright: "*"
     puppeteer: "*"
-    pyodide: ^0.24.1
+    pyodide: ">=0.24.1 <0.27.0"
     redis: "*"
     sonix-speech-recognition: "*"
     srt-parser-2: "*"
@@ -37291,13 +37284,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"pyodide@npm:^0.24.1":
-  version: 0.24.1
-  resolution: "pyodide@npm:0.24.1"
+"pyodide@npm:^0.26.2":
+  version: 0.26.2
+  resolution: "pyodide@npm:0.26.2"
   dependencies:
-    base-64: ^1.0.0
     ws: ^8.5.0
-  checksum: ab18e5eed3195b919c0e70b39a81bab0449ab56e42f28e8635664e688dba732da060492505719c3cb477302979791dbcc1df09ff39dc9e0816064b69818f283d
+  checksum: f8b11470a69f82609af9e1a1b76905dfd5baa42f86ce5488c44b82271af46252006bb73639f8d89aee11b9fb07d1e9de037ff5472aa76f1b4ff4e9fe09d7e839
   languageName: node
   linkType: hard
 
