@@ -1,7 +1,7 @@
 import { it, expect } from "@jest/globals";
 import { JigsawStackTextToSQL } from "../tools/text-to-sql.js";
 
-it("text to sql should run successfully and return the sql result", async () => {
+it("should run successfully and return the valid sql result", async () => {
   const tool = new JigsawStackTextToSQL({
     params: {
       sql_schema:

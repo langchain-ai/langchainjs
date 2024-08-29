@@ -1,7 +1,7 @@
 import { it, expect } from "@jest/globals";
 import { JigsawStackVOCR } from "../tools/vocr.js";
 
-it("should exclude the text field from metadata", async () => {
+it("should return result.success is true", async () => {
   const tool = new JigsawStackVOCR({
     params: {
       prompt: "Describe the image in detail",
