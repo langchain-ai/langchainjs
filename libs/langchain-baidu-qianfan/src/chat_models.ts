@@ -402,44 +402,26 @@ export class ChatBaiduQianfan
     onmessage?: (event: MessageEvent) => void
   ) {
     const makeCompletionRequest = async () => {
-      console.log(request);
       const response = await this.client.chat(request, this.model);
 
       if (!stream) {
         return response;
       } else {
-        let streamResponse = { result: "" } as {
-          id: string;
-          object: string;
-          created: number;
-          sentence_id?: number;
-          result: string;
-          need_clear_history: boolean;
-          usage: TokenUsage;
-        };
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         for await (const message of response as AsyncIterableIterator<any>) {
-          // 返回结果
-          if (!streamResponse) {
-            streamResponse = {
+          // Emit event for each chunk
+          const event = new MessageEvent('message', {
+            data: {
               id: message.id,
               object: message.object,
               created: message.created,
               result: message.result,
               need_clear_history: message.need_clear_history,
               usage: message.usage,
-            };
-          } else {
-            streamResponse.result += message.result;
-            streamResponse.created = message.created;
-            streamResponse.need_clear_history = message.need_clear_history;
-            streamResponse.usage = message.usage;
-          }
+              sentence_id: message.sentence_id
+            }
+          });
+          onmessage?.(event);
         }
-        const event = new MessageEvent("message", {
-          data: streamResponse,
-        });
-        onmessage?.(event);
       }
     };
 
