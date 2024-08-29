@@ -343,10 +343,9 @@ export class ElasticVectorSearch extends VectorStore {
           },
         });
       } else if (condition.operator === "exclude") {
+        const toExclude = { [metadataField]: condition.value }
         must_not.push({
-          term: {
-            [metadataField]: condition.value,
-          },
+          ...(Array.isArray(condition.value) ? { terms: toExclude } : { term: toExclude })
         });
       } else if (condition.operator === "or") {
         should.push({
