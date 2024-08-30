@@ -15,7 +15,6 @@ import {
 } from "@langchain/core/outputs";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
-import { convertEventStreamToIterableReadableDataStream } from "@langchain/core/utils/event_source_parse";
 import { ChatCompletion } from "@baiducloud/qianfan";
 
 /**
@@ -305,147 +304,92 @@ export class ChatBaiduQianfan
   private _ensureMessages(messages: BaseMessage[]): Qianfan[] {
     return messages.map((message) => ({
       role: messageToQianfanRole(message),
-      content: message.text,
+      content: message.content.toString(),
     }));
   }
 
   /** @ignore */
   async _generate(
     messages: BaseMessage[],
-    _options?: this["ParsedCallOptions"],
+    options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
-    const tokenUsage: TokenUsage = {};
+    if (this.streaming) {
+      let finalChunk: ChatGenerationChunk | undefined;
+      const stream = this._streamResponseChunks(messages, options, runManager);
+      for await (const chunk of stream) {
+        if (finalChunk === undefined) {
+          finalChunk = chunk;
+        } else {
+          finalChunk = finalChunk.concat(chunk);
+        }
+      }
 
-    const params = this.invocationParams();
+      if (finalChunk === undefined) {
+        throw new Error("No chunks returned from BaiduQianFan API.");
+      }
 
-    // Qianfan requires the system message to be put in the params, not messages array
-    const systemMessage = messages.find(
-      (message) => message._getType() === "system"
-    );
-    if (systemMessage) {
-      // eslint-disable-next-line no-param-reassign
-      messages = messages.filter((message) => message !== systemMessage);
-      params.system = systemMessage.text;
-    }
-    const messagesMapped = this._ensureMessages(messages);
-
-    const data = params.stream
-      ? await new Promise<ChatCompletionResponse>((resolve, reject) => {
-          let rejected = false;
-          this.completionWithRetry(
-            {
-              ...params,
-              messages: messagesMapped,
-            },
-            true,
-            (event) => {
-              resolve(event.data);
-              // eslint-disable-next-line no-void
-              void runManager?.handleLLMNewToken(event.data ?? "");
-            }
-          ).catch((error) => {
-            if (!rejected) {
-              rejected = true;
-              reject(error);
-            }
-          });
-        })
-      : await this.completionWithRetry(
+      return {
+        generations: [
           {
-            ...params,
-            messages: messagesMapped,
+            text: finalChunk.text,
+            message: finalChunk.message,
           },
-          false
-        ).then((data) => {
-          if (data?.error_code) {
-            throw new Error(data?.error_msg);
-          }
-          return data;
-        });
+        ],
+        llmOutput: finalChunk.generationInfo.usage,
+      };
+    } else {
+      const params = this.invocationParams();
 
-    const {
-      completion_tokens: completionTokens,
-      prompt_tokens: promptTokens,
-      total_tokens: totalTokens,
-    } = data.usage ?? {};
+      const systemMessage = messages.find(
+        (message) => message._getType() === "system"
+      );
+      if (systemMessage) {
+        // eslint-disable-next-line no-param-reassign
+        messages = messages.filter((message) => message !== systemMessage);
+        params.system = systemMessage.content.toString();
+      }
+      const messagesMapped = this._ensureMessages(messages);
 
-    if (completionTokens) {
-      tokenUsage.completionTokens =
-        (tokenUsage.completionTokens ?? 0) + completionTokens;
+      const data = (await this.completionWithRetry(
+        {
+          ...params,
+          messages: messagesMapped,
+        },
+        false
+      )) as ChatCompletionResponse;
+
+      const tokenUsage = data.usage || {};
+
+      const generations: ChatGeneration[] = [
+        {
+          text: data.result || "",
+          message: new AIMessage(data.result || ""),
+        },
+      ];
+
+      return {
+        generations,
+        llmOutput: { tokenUsage },
+      };
     }
-
-    if (promptTokens) {
-      tokenUsage.promptTokens = (tokenUsage.promptTokens ?? 0) + promptTokens;
-    }
-
-    if (totalTokens) {
-      tokenUsage.totalTokens = (tokenUsage.totalTokens ?? 0) + totalTokens;
-    }
-
-    const generations: ChatGeneration[] = [];
-    const text = data.result ?? "";
-    generations.push({
-      text,
-      message: new AIMessage(text),
-    });
-    return {
-      generations,
-      llmOutput: { tokenUsage },
-    };
   }
 
   /** @ignore */
   async completionWithRetry(
     request: ChatCompletionRequest,
-    stream: boolean,
-    onmessage?: (event: MessageEvent) => void
-  ) {
+    stream: boolean
+  ): Promise<ChatCompletionResponse | AsyncIterableIterator<any>> {
     const makeCompletionRequest = async () => {
       const response = await this.client.chat(request, this.model);
-
       if (!stream) {
         return response;
       } else {
-        for await (const message of response as AsyncIterableIterator<any>) {
-          // Emit event for each chunk
-          const event = new MessageEvent('message', {
-            data: {
-              id: message.id,
-              object: message.object,
-              created: message.created,
-              result: message.result,
-              need_clear_history: message.need_clear_history,
-              usage: message.usage,
-              sentence_id: message.sentence_id
-            }
-          });
-          onmessage?.(event);
-        }
+        return response as AsyncIterableIterator<any>;
       }
     };
 
     return this.caller.call(makeCompletionRequest);
-  }
-
-  private async createStream(request: ChatCompletionRequest) {
-    const response = await this.client.chat(
-      {
-        ...request,
-        stream: true,
-      },
-      this.model
-    );
-
-    return convertEventStreamToIterableReadableDataStream(response);
-  }
-
-  private _deserialize(json: string) {
-    try {
-      return JSON.parse(json);
-    } catch (e) {
-      console.warn(`Received a non-JSON parseable chunk: ${json}`);
-    }
   }
 
   async *_streamResponseChunks(
@@ -458,27 +402,28 @@ export class ChatBaiduQianfan
       stream: true,
     };
 
-    // Qianfan requires the system message to be put in the params, not messages array
     const systemMessage = messages.find(
       (message) => message._getType() === "system"
     );
     if (systemMessage) {
       // eslint-disable-next-line no-param-reassign
       messages = messages.filter((message) => message !== systemMessage);
-      parameters.system = systemMessage.text;
+      parameters.system = systemMessage.content.toString();
     }
     const messagesMapped = this._ensureMessages(messages);
 
-    const stream = await this.caller.call(async () =>
-      this.createStream({
-        ...parameters,
-        messages: messagesMapped,
-      })
-    );
+    const stream = (await this.caller.call(async () =>
+      this.completionWithRetry(
+        {
+          ...parameters,
+          messages: messagesMapped,
+        },
+        true
+      )
+    )) as AsyncIterableIterator<any>;
 
     for await (const chunk of stream) {
-      const deserializedChunk = this._deserialize(chunk);
-      const { result, is_end, id } = deserializedChunk;
+      const { result, is_end, id } = chunk;
       yield new ChatGenerationChunk({
         text: result,
         message: new AIMessageChunk({ content: result }),
