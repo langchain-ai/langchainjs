@@ -14,6 +14,25 @@ export type ScrapeOutputParams = Awaited<
   ReturnType<JigsawStackType["web"]["ai_scrape"]>
 >;
 
+/**
+ * A tool that leverages the JigsawStack AI Scraper for AI-driven web scraping.
+ *
+ * This tool allows you to scrape web content using advanced AI capabilities provided by JigsawStack.
+ *
+ * To use this tool, set the `JIGSAWSTACK_API_KEY` environment variable. You create a free API key at [JigsawStack](https://jigsawstack.com)
+ *
+ * @example
+ * ```typescript
+ * const tool = new JigsawStackAIScrape({
+ *   params: {
+ *     element_prompts: ["Pro plan"]
+ *   }
+ * });
+ * const res = await tool.invoke("https://jigsawstack.com/pricing");
+ * console.log({ res });
+ * ```
+ */
+
 export interface JigsawStackAIScrapeParams extends ToolParams {
   /**
    * The API key to use.
@@ -36,7 +55,7 @@ export class JigsawStackAIScrape extends Tool {
   description =
     "A wrapper around JigsawStack AI scrape. Output is a JSON object of the result";
 
-  name = "jigsawstack_ai_scrape_result_json";
+  name = "jigsawstack_ai_scrape";
 
   constructor(fields: JigsawStackAIScrapeParams) {
     super(fields);

@@ -28,16 +28,35 @@ export interface JigsawStackVOCRParams extends ToolParams {
   params: VOCRInputParams;
 }
 
+/**
+ * A tool that leverages the JigsawStack VOCR API.
+ *
+ * This tool allows you to recognize, describe, and retrieve data from images with great accuracy.
+ *
+ * To use this tool, ensure that the `JIGSAWSTACK_API_KEY` environment variable is set.
+ * You can create a free API key at [JigsawStack](https://jigsawstack.com).
+ *
+ * @example
+ * ```typescript
+ * const tool = new JigsawStackVOCR({
+ *   params: {
+ *     prompt: "Describe the image in detail",
+ *   },
+ * });
+ * const res = await tool.invoke("https://rogilvkqloanxtvjfrkm.supabase.co/storage/v1/object/public/demo/Collabo%201080x842.jpg?t=2024-03-22T09%3A22%3A48.442Z");
+ * console.log({ res });
+ * ```
+ */
+
 export class JigsawStackVOCR extends Tool {
   client: JigsawStackType;
   static lc_name(): string {
     return "JigsawStackVOCRResults";
   }
 
-  description =
-    "A wrapper around JigsawStack VOCR. Output is a JSON object of the results";
+  description = "A wrapper around JigsawStack VOCR";
 
-  name = "jigsawstack_vocr_results_json";
+  name = "jigsawstack_vocr";
 
   params: VOCRInputParams;
 

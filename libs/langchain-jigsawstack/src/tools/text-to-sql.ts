@@ -36,7 +36,7 @@ export class JigsawStackTextToSQL extends Tool {
 
   description = "A wrapper around JigsawStack Text to SQL";
 
-  name = "jigsawstack_text_to_sql_results_json";
+  name = "jigsawstack_text_to_sql";
 
   params: TextToSQLInputParams;
 

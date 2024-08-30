@@ -28,6 +28,22 @@ export interface JigsawStackAISearchParams extends ToolParams {
   params: AISearchInputParams;
 }
 
+/**
+ * A tool that leverages the JigsawStack Search API for AI-driven web search.
+ *
+ * This tool enables you to perform web searches and retrieve high-quality results powered by AI.
+ *
+ * To use this tool, ensure that the `JIGSAWSTACK_API_KEY` environment variable is set.
+ * You can create a free API key at [JigsawStack](https://jigsawstack.com).
+ *
+ * @example
+ * ```typescript
+ * const tool = new JigsawStackAISearch();
+ * const res = await tool.invoke("The leaning tower of Pisa");
+ * console.log({ res });
+ * ```
+ */
+
 export class JigsawStackAISearch extends Tool {
   client: JigsawStackType;
   static lc_name(): string {
@@ -36,7 +52,7 @@ export class JigsawStackAISearch extends Tool {
 
   description = "A wrapper around JigsawStack AI Search";
 
-  name = "jigsawstack_ai_search_results_json";
+  name = "jigsawstack_ai_search";
 
   params?: AISearchInputParams;
 

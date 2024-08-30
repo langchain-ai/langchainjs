@@ -36,7 +36,7 @@ export class JigsawStackSpeechToText extends Tool {
 
   description = "A wrapper around JigsawStack Speech to Text ";
 
-  name = "jigsawstack_speech_to_text_results_json";
+  name = "jigsawstack_speech_to_text";
 
   params?: SpeechToTextInputParams;
 
