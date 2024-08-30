@@ -112,7 +112,7 @@ With LCEL, **all** steps are automatically logged to [LangSmith](https://docs.sm
 
 <span data-heading-keywords="invoke,runnable"></span>
 
-To make it as easy as possible to create custom chains, we've implemented a ["Runnable"](https://api.js.langchain.com/classes/langchain_core.runnables.Runnable.html) protocol.
+To make it as easy as possible to create custom chains, we've implemented a ["Runnable"](https://api.js.langchain.com/classes/_langchain_core.runnables.Runnable.html) protocol.
 Many LangChain components implement the `Runnable` protocol, including chat models, LLMs, output parsers, retrievers, prompt templates, and more. There are also several useful primitives for working with runnables, which you can read about below.
 
 This is a standard interface, which makes it easy to define custom chains as well as invoke them in a standard way.
@@ -521,7 +521,7 @@ For specifics on how to use retrievers, see the [relevant how-to guides here](/d
 
 For some techniques, such as [indexing and retrieval with multiple vectors per document](/docs/how_to/multi_vector/), having some sort of key-value (KV) storage is helpful.
 
-LangChain includes a [`BaseStore`](https://api.js.langchain.com/classes/langchain_core.stores.BaseStore.html) interface,
+LangChain includes a [`BaseStore`](https://api.js.langchain.com/classes/_langchain_core.stores.BaseStore.html) interface,
 which allows for storage of arbitrary data. However, LangChain components that require KV-storage accept a
 more specific `BaseStore<string, Uint8Array>` instance that stores binary data (referred to as a `ByteStore`), and internally take care of
 encoding and decoding data for their specific needs.
@@ -530,7 +530,7 @@ This means that as a user, you only need to think about one type of store rather
 
 #### Interface
 
-All [`BaseStores`](https://api.js.langchain.com/classes/langchain_core.stores.BaseStore.html) support the following interface. Note that the interface allows
+All [`BaseStores`](https://api.js.langchain.com/classes/_langchain_core.stores.BaseStore.html) support the following interface. Note that the interface allows
 for modifying **multiple** key-value pairs at once:
 
 - `mget(keys: string[]): Promise<(undefined | Uint8Array)[]>`: get the contents of multiple keys, returning `None` if the key does not exist
@@ -797,7 +797,7 @@ For models (or other components) that don't support streaming natively, this ite
 you could still use the same general pattern when calling them. Using `.stream()` will also automatically call the model in streaming mode
 without the need to provide additional config.
 
-The type of each outputted chunk depends on the type of component - for example, chat models yield [`AIMessageChunks`](https://api.js.langchain.com/classes/langchain_core.messages.AIMessageChunk.html).
+The type of each outputted chunk depends on the type of component - for example, chat models yield [`AIMessageChunks`](https://api.js.langchain.com/classes/_langchain_core.messages.AIMessageChunk.html).
 Because this method is part of [LangChain Expression Language](/docs/concepts/#langchain-expression-language),
 you can handle formatting differences from different outputs using an [output parser](/docs/concepts/#output-parsers) to transform
 each yielded chunk.
