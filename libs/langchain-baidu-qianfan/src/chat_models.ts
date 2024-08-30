@@ -59,8 +59,12 @@ interface ChatCompletionResponse {
   id: string;
   object: string;
   created: number;
+  sentence_id: number;
+  is_end: boolean;
+  is_truncated: boolean;
   result: string;
   need_clear_history: boolean;
+  finish_reason: string;
   usage: TokenUsage;
 }
 
@@ -379,13 +383,15 @@ export class ChatBaiduQianfan
   async completionWithRetry(
     request: ChatCompletionRequest,
     stream: boolean
-  ): Promise<ChatCompletionResponse | AsyncIterableIterator<any>> {
+  ): Promise<
+    ChatCompletionResponse | AsyncIterableIterator<ChatCompletionResponse>
+  > {
     const makeCompletionRequest = async () => {
       const response = await this.client.chat(request, this.model);
       if (!stream) {
         return response;
       } else {
-        return response as AsyncIterableIterator<any>;
+        return response as AsyncIterableIterator<ChatCompletionResponse>;
       }
     };
 
@@ -420,7 +426,7 @@ export class ChatBaiduQianfan
         },
         true
       )
-    )) as AsyncIterableIterator<any>;
+    )) as AsyncIterableIterator<ChatCompletionResponse>;
 
     for await (const chunk of stream) {
       const { result, is_end, id } = chunk;
