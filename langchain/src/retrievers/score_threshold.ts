@@ -17,7 +17,7 @@ export type ScoreThresholdRetrieverInput<V extends VectorStore> = Omit<
 export class ScoreThresholdRetriever<
   V extends VectorStore
 > extends VectorStoreRetriever<V> {
-  minSimilarityScore: number;
+  minSimilarityScore: number = 0; // Initialize minSimilarityScore
 
   kIncrement = 10;
 
