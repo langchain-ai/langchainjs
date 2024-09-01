@@ -42,7 +42,7 @@ export class ScoreThresholdRetriever<
         this.filter
       );
       filteredResults = results.filter(
-        ([, score]) => score >= this.minSimilarityScore
+        ([, score]) => score <= this.minSimilarityScore
       );
     } while (filteredResults.length >= currentK && currentK < this.maxK);
     return filteredResults.map((documents) => documents[0]).slice(0, this.maxK);
