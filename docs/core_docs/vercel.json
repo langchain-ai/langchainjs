@@ -2,12 +2,6 @@
   "buildCommand": "yarn build:vercel",
   "outputDirectory": "build",
   "trailingSlash": true,
-  "rewrites": [
-    {
-      "source": "/v0.2/:path(.*/?)*",
-      "destination": "https://langchainjs-v02.vercel.app/v0.2/:path*"
-    }
-  ],
   "redirects": [
     {
       "source": "/docs(/?)",
