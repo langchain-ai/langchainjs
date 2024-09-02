@@ -262,6 +262,13 @@ const FEATURE_TABLES = {
           "https://api.python.langchain.com/en/latest/llms/langchain_ai21.llms.AI21LLM.html#langchain_ai21.llms.AI21LLM",
       },
       {
+        name: "Arcjet Redact",
+        link: "arcjet",
+        package: "langchain-arcjet",
+        // apiLink:
+        // "https://api.python.langchain.com/en/latest/llms/langchain_ai21.llms.AI21LLM.html#langchain_ai21.llms.AI21LLM",
+      },
+      {
         name: "AnthropicLLM",
         link: "anthropic",
         package: "langchain-anthropic",

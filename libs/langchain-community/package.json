@@ -213,6 +213,7 @@
     "youtubei.js": "^9.1.0"
   },
   "peerDependencies": {
+    "@arcjet/redact": "*",
     "@aws-crypto/sha256-js": "^5.0.0",
     "@aws-sdk/client-bedrock-agent-runtime": "^3.583.0",
     "@aws-sdk/client-bedrock-runtime": "^3.422.0",
@@ -335,6 +336,9 @@
     "youtubei.js": "^9.1.0"
   },
   "peerDependenciesMeta": {
+    "@arcjet/redact": {
+      "optional": true
+    },
     "@aws-crypto/sha256-js": {
       "optional": true
     },
@@ -1203,6 +1207,15 @@
       },
       "import": "./llms/aleph_alpha.js",
       "require": "./llms/aleph_alpha.cjs"
+    },
+    "./llms/arcjet": {
+      "types": {
+        "import": "./llms/arcjet.d.ts",
+        "require": "./llms/arcjet.d.cts",
+        "default": "./llms/arcjet.d.ts"
+      },
+      "import": "./llms/arcjet.js",
+      "require": "./llms/arcjet.cjs"
     },
     "./llms/bedrock": {
       "types": {
@@ -3286,6 +3299,10 @@
     "llms/aleph_alpha.js",
     "llms/aleph_alpha.d.ts",
     "llms/aleph_alpha.d.cts",
+    "llms/arcjet.cjs",
+    "llms/arcjet.js",
+    "llms/arcjet.d.ts",
+    "llms/arcjet.d.cts",
     "llms/bedrock.cjs",
     "llms/bedrock.js",
     "llms/bedrock.d.ts",
