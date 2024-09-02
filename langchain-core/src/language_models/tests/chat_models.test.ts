@@ -27,6 +27,64 @@ test("Test ChatModel accepts object shorthand for messages", async () => {
   expect(response.content).toEqual("Hello there!");
 });
 
+test("Test ChatModel accepts object with role for messages", async () => {
+  const model = new FakeChatModel({});
+  const response = await model.invoke([
+    {
+      role: "human",
+      content: "Hello there!!",
+      example: true,
+    },
+  ]);
+  expect(response.content).toEqual("Hello there!!");
+});
+
+test("Test ChatModel accepts several messages as objects with role", async () => {
+  const model = new FakeChatModel({});
+  const response = await model.invoke([
+    {
+      role: "system",
+      content: "You are an assistant.",
+    },
+    {
+      role: "human",
+      content: [{ type: "text", text: "What is the weather in SF?" }],
+      example: true,
+    },
+    {
+      role: "assistant",
+      content: "",
+      tool_calls: [
+        {
+          id: "call_123",
+          function: {
+            name: "get_weather",
+            arguments: JSON.stringify({ location: "sf" }),
+          },
+          type: "function",
+        },
+      ],
+    },
+    {
+      role: "tool",
+      content: "Pretty nice right now!",
+      tool_call_id: "call_123",
+    },
+  ]);
+  expect(response.content).toEqual(
+    [
+      "You are an assistant.",
+      JSON.stringify(
+        [{ type: "text", text: "What is the weather in SF?" }],
+        null,
+        2
+      ),
+      "",
+      "Pretty nice right now!",
+    ].join("\n")
+  );
+});
+
 test("Test ChatModel uses callbacks", async () => {
   const model = new FakeChatModel({});
   let acc = "";
