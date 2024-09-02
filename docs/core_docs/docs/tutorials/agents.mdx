@@ -26,7 +26,7 @@ In this tutorial we will build an agent that can interact with multiple differen
 By definition, agents take a self-determined, input-dependent sequence of steps before returning a user-facing output. This makes debugging these systems particularly tricky, and observability particularly important.
 [LangSmith](https://smith.langchain.com) is especially useful for such cases.
 
-When building with LangChain, all steps will automatically be traced in LangSmith. To set up LangSmith we just need set the following environment variables:
+When building with LangChain, all steps will automatically be traced in LangSmith. To set up LangSmith we just need to set the following environment variables:
 
 ```bash
 export LANGCHAIN_TRACING_V2="true"
@@ -42,7 +42,7 @@ We first need to create the tools we want to use. We will use two tools: [Tavily
 
 ### [Tavily](https://app.tavily.com)
 
-We have a built-in tool in LangChain to easily use Tavily search engine as tool.
+We have a built-in tool in LangChain to easily use Tavily search engine as a tool.
 Note that this requires a Tavily API key set as an environment variable named `TAVILY_API_KEY` - they have a free tier, but if you don’t have one or don’t want to create one, you can always ignore this step.
 
 ```typescript
@@ -100,7 +100,7 @@ console.log(retrieverResult[0]);
 */
 ```
 
-Now that we have populated our index that we will do doing retrieval over, we can easily turn it into a tool (the format needed for an agent to properly use it):
+Now that we have populated our index that we will bo doing retrieval over, we can easily turn it into a tool (the format needed for an agent to properly use it):
 
 ```typescript
 import { createRetrieverTool } from "langchain/tools/retriever";
@@ -150,7 +150,7 @@ const prompt = await pull<ChatPromptTemplate>(
 ```
 
 Now, we can initalize the agent with the LLM, the prompt, and the tools. The agent is responsible for taking in input and deciding what actions to take.
-Crucially, the Agent does not execute those actions - that is done by the AgentExecutor (next step). For more information about how to thing about these components, see our [conceptual guide](/docs/concepts#agents).
+Crucially, the Agent does not execute those actions - that is done by the AgentExecutor (next step). For more information about how to think about these components, see our [conceptual guide](/docs/concepts#agents).
 
 ```typescript
 import { createOpenAIFunctionsAgent } from "langchain/agents";
@@ -163,7 +163,7 @@ const agent = await createOpenAIFunctionsAgent({
 ```
 
 Finally, we combine the agent (the brains) with the tools inside the AgentExecutor (which will repeatedly call the agent and execute tools).
-For more information about how to thing about these components, see our [conceptual guide](/docs/concepts#agents).
+For more information about how to think about these components, see our [conceptual guide](/docs/concepts#agents).
 
 ```typescript
 import { AgentExecutor } from "langchain/agents";
