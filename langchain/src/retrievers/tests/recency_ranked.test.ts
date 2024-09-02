@@ -39,3 +39,35 @@ test("RecencyRankedRetriever", async () => {
   expect(results[0].pageContent).toBe("C");
   expect(results[1].pageContent).toBe("B");
 });
+
+test("RecencyRankedRetriever throws error for missing date metadata", async () => {
+    const docs = [
+      new Document({
+        pageContent: "A",
+        metadata: {},
+      }),
+      new Document({
+        pageContent: "B",
+        metadata: {},
+      }),
+      new Document({
+        pageContent: "C",
+        metadata: {},
+      }),
+    ];
+  
+    const vectorstore = new MemoryVectorStore(new FakeEmbeddings());
+    
+    await vectorstore.addDocuments(docs);
+    
+    const retriever = new RecencyRankedRetriever({
+      vectorStore: vectorstore,
+      k: 3,
+      top_k: 2,
+      recencyWeight: 0.99,
+    });
+    
+    await expect(retriever.getRelevantDocuments("test query")).rejects.toThrow(
+      "All documents must have a 'date' metadata of type Date"
+    );
+  });

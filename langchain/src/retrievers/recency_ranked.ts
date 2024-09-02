@@ -45,6 +45,10 @@ export class RecencyRankedRetriever extends BaseRetriever {
   ): [Document, number][] {
     if (documents.length === 0) return [];
 
+    if (!documents.every(([doc, _]) => doc.metadata.date instanceof Date)) {
+        throw new Error("All documents must have a 'date' metadata of type Date");
+    }
+
     const oldestDate = Math.min(
       ...documents.map(([doc, _]) => doc.metadata.date.getTime())
     );
