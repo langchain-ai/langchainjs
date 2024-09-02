@@ -115,6 +115,10 @@
       "destination": "/:path*/_langchain_core.:rest"
     },
     {
+      "source": "/:path*/langchain_core.:rest",
+      "destination": "/:path*/_langchain_core.:rest"
+    },
+    {
       "source": "/:path*/langchain_anthropic_experimental(_|\\.):rest",
       "destination": "/:path*/_langchain_anthropic.experimental.:rest"
     },

@@ -264,6 +264,10 @@ export abstract class BaseChatModel<
           callOptions,
           runManagers?.[0]
         )) {
+          if (chunk.message.id == null) {
+            const runId = runManagers?.at(0)?.runId;
+            if (runId != null) chunk.message._updateId(`run-${runId}`);
+          }
           chunk.message.response_metadata = {
             ...chunk.generationInfo,
             ...chunk.message.response_metadata,
@@ -362,6 +366,10 @@ export abstract class BaseChatModel<
         );
         let aggregated;
         for await (const chunk of stream) {
+          if (chunk.message.id == null) {
+            const runId = runManagers?.at(0)?.runId;
+            if (runId != null) chunk.message._updateId(`run-${runId}`);
+          }
           if (aggregated === undefined) {
             aggregated = chunk;
           } else {
@@ -397,6 +405,10 @@ export abstract class BaseChatModel<
           if (pResult.status === "fulfilled") {
             const result = pResult.value;
             for (const generation of result.generations) {
+              if (generation.message.id == null) {
+                const runId = runManagers?.at(0)?.runId;
+                if (runId != null) generation.message._updateId(`run-${runId}`);
+              }
               generation.message.response_metadata = {
                 ...generation.generationInfo,
                 ...generation.message.response_metadata,
