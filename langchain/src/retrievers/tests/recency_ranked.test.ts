@@ -28,7 +28,8 @@ test("RecencyRankedRetriever", async () => {
   
   const retriever = new RecencyRankedRetriever({
     vectorStore: vectorstore,
-    k: 2,
+    k: 3,
+    top_k: 2,
     recencyWeight: 0.99,
   });
   
