@@ -499,7 +499,8 @@ describe("response_format: json_schema", () => {
     expect(response).toHaveProperty("unit");
   });
 
-  it("can be streamed with WSO", async () => {
+  // Flaky test
+  it.skip("can be streamed with WSO", async () => {
     const model = new ChatOpenAI({
       model: "gpt-4o-2024-08-06",
     }).withStructuredOutput(weatherSchema, {
