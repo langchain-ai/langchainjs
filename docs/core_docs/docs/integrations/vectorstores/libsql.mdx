@@ -1,0 +1,58 @@
+# libSQL
+
+[Turso](https://turso.tech) is a SQLite-compatible database built on [libSQL](https://docs.turso.tech/libsql), the Open Contribution fork of SQLite.
+
+Vector Similiarity Search is built into Turso and libSQL Server as a native datatype. This enables you to store and query vectors directly in the database.
+
+## Setup
+
+### Create a Turso Database
+
+```bash
+turso db create
+```
+
+### Add a vector field to a new or existing table
+
+- `TABLE_NAME` is the name of the table you want to create.
+- `content` is used to store the `Document.pageContent` values.
+- `metadata` is used to store the `Document.metadata` object.
+- `EMBEDDING_COLUMN` is used to store the vector values, use the dimension used by the model you plan to use (1536 for OpenAI).
+
+```sql
+CREATE TABLE IF NOT EXISTS TABLE_NAME (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    content TEXT,
+    metadata TEXT,
+    EMBEDDING_COLUMN FLOAT32(1536) -- 1536-dimensional f32 vector for OpenAI
+);
+```
+
+### Create a new index
+
+```sql
+CREATE INDEX IF NOT EXISTS TABLE_NAME_idx ON TABLE_NAME (libsql_vector_idx(EMBEDDING_COLUMN));
+```
+
+Replace `TABLE_NAME` with the name of the table you want to create or update, and `EMBEDDING_COLUMN` with the name of the column you want to use to store the vector.
+
+## Usage
+
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/openai @langchain/community
+```
+
+import CodeBlock from "@theme/CodeBlock";
+
+### Example: Q&A chatbot using OpenAI and libSQL as vector store
+
+### Example: Similarity search with a metadata filter
+
+## Related
+
+- Vector store [conceptual guide](/docs/concepts/#vectorstores)
+- Vector store [how-to guides](/docs/how_to/#vectorstores)
