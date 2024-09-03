@@ -687,7 +687,6 @@
     "youtubei.js": "^9.1.0"
   },
   "peerDependencies": {
-    "@arcjet/redact": "*",
     "@aws-sdk/client-s3": "*",
     "@aws-sdk/client-sagemaker-runtime": "*",
     "@aws-sdk/client-sfn": "*",
