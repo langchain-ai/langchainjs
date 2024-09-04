@@ -42,6 +42,7 @@
     "zod-to-json-schema": "^3.22.4"
   },
   "devDependencies": {
+    "@anthropic-ai/vertex-sdk": "^0.4.1",
     "@jest/globals": "^29.5.0",
     "@langchain/scripts": ">=0.1.0 <0.2.0",
     "@langchain/standard-tests": "0.0.0",
