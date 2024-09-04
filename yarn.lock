@@ -12300,7 +12300,7 @@ __metadata:
     jest: ^29.5.0
     jest-environment-node: ^29.6.4
     js-tiktoken: ^1.0.12
-    openai: ^4.55.0
+    openai: ^4.57.3
     prettier: ^2.8.3
     release-it: ^17.6.0
     rimraf: ^5.0.1
@@ -19000,6 +19000,13 @@ __metadata:
   version: 6.9.7
   resolution: "@types/qs@npm:6.9.7"
   checksum: 7fd6f9c25053e9b5bb6bc9f9f76c1d89e6c04f7707a7ba0e44cc01f17ef5284adb82f230f542c2d5557d69407c9a40f0f3515e8319afd14e1e16b5543ac6cdba
+  languageName: node
+  linkType: hard
+
+"@types/qs@npm:^6.9.15":
+  version: 6.9.15
+  resolution: "@types/qs@npm:6.9.15"
+  checksum: 97d8208c2b82013b618e7a9fc14df6bd40a73e1385ac479b6896bafc7949a46201c15f42afd06e86a05e914f146f495f606b6fb65610cc60cf2e0ff743ec38a2
   languageName: node
   linkType: hard
 
@@ -35228,17 +35235,19 @@ __metadata:
   languageName: node
   linkType: hard
 
-"openai@npm:^4.55.0":
-  version: 4.55.0
-  resolution: "openai@npm:4.55.0"
+"openai@npm:^4.57.3":
+  version: 4.57.3
+  resolution: "openai@npm:4.57.3"
   dependencies:
     "@types/node": ^18.11.18
     "@types/node-fetch": ^2.6.4
+    "@types/qs": ^6.9.15
     abort-controller: ^3.0.0
     agentkeepalive: ^4.2.1
     form-data-encoder: 1.7.2
     formdata-node: ^4.3.2
     node-fetch: ^2.6.7
+    qs: ^6.10.3
   peerDependencies:
     zod: ^3.23.8
   peerDependenciesMeta:
@@ -35246,7 +35255,7 @@ __metadata:
       optional: true
   bin:
     openai: bin/cli
-  checksum: b2b1daa976516262e08e182ee982976a1dc615eebd250bbd71f4122740ebeeb207a20af6d35c718b67f1c3457196b524667a0c7fa417ab4e119020b5c1f5cd74
+  checksum: 6e8cef99975af5fd8e9a06685f05396a6fabecda38bd77fa62db4b7ea9bdfa0b4c762c5f74e99e42212af81f74f50748c5034bf78c9abcf74cc6eb984f3dcffa
   languageName: node
   linkType: hard
 
@@ -37358,6 +37367,15 @@ __metadata:
   dependencies:
     side-channel: ^1.0.6
   checksum: aa761d99e65b6936ba2dd2187f2d9976afbcda38deb3ff1b3fe331d09b0c578ed79ca2abdde1271164b5be619c521ec7db9b34c23f49a074e5921372d16242d5
+  languageName: node
+  linkType: hard
+
+"qs@npm:^6.10.3":
+  version: 6.13.0
+  resolution: "qs@npm:6.13.0"
+  dependencies:
+    side-channel: ^1.0.6
+  checksum: e9404dc0fc2849245107108ce9ec2766cde3be1b271de0bf1021d049dc5b98d1a2901e67b431ac5509f865420a7ed80b7acb3980099fe1c118a1c5d2e1432ad8
   languageName: node
   linkType: hard
 
