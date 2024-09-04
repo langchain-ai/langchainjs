@@ -23288,6 +23288,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "core_docs@workspace:docs/core_docs"
   dependencies:
+    "@anthropic-ai/vertex-sdk": ^0.4.1
     "@babel/eslint-parser": ^7.18.2
     "@docusaurus/core": 2.4.3
     "@docusaurus/preset-classic": 2.4.3

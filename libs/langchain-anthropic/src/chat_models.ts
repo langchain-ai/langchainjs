@@ -146,7 +146,13 @@ export interface AnthropicInput {
    */
   streamUsage?: boolean;
 
-  createClient?: (options: ClientOptions) => Anthropic;
+  /**
+   * Optional method that returns an initialized underlying Anthropic client.
+   * Useful for accessing Anthropic models hosted on other cloud services
+   * such as Google Vertex.
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  createClient?: (options: ClientOptions) => any;
 }
 
 /**
@@ -613,6 +619,11 @@ export class ChatAnthropicMessages<
 
   streamUsage = true;
 
+  /**
+   * Optional method that returns an initialized underlying Anthropic client.
+   * Useful for accessing Anthropic models hosted on other cloud services
+   * such as Google Vertex.
+   */
   createClient: (options: ClientOptions) => Anthropic;
 
   constructor(fields?: AnthropicInput & BaseChatModelParams) {
