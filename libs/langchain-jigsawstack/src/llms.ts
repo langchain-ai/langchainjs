@@ -106,8 +106,10 @@ export class JigsawStackPromptEngine
         })
     );
     try {
-      await runManager?.handleLLMNewToken(generateResponse.result);
-      return generateResponse.result;
+      await runManager?.handleLLMNewToken(
+        JSON.stringify(generateResponse.result)
+      );
+      return JSON.stringify(generateResponse.result);
     } catch {
       //   console.log(generateResponse);
       throw new Error("Could not parse response.");

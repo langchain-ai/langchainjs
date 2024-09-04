@@ -57,7 +57,7 @@ export class JigsawStackAISearch extends Tool {
 
   params?: AISearchInputParams;
 
-  constructor(fields: JigsawStackAISearchParams) {
+  constructor(fields?: JigsawStackAISearchParams) {
     super(fields);
     const apiKey =
       fields?.apiKey ?? getEnvironmentVariable("JIGSAWSTACK_API_KEY");

@@ -41,7 +41,7 @@ export class JigsawStackSpeechToText extends Tool {
 
   params?: SpeechToTextInputParams;
 
-  constructor(fields: JigsawStackSpeechToTextParams) {
+  constructor(fields?: JigsawStackSpeechToTextParams) {
     super(fields);
     const apiKey =
       fields?.apiKey ?? getEnvironmentVariable("JIGSAWSTACK_API_KEY");
