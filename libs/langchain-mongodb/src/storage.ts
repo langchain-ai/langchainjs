@@ -92,7 +92,7 @@ export class MongoDBStore extends BaseStore<string, Uint8Array> {
     const prefixedKeys = keys.map(this._getPrefixedKey.bind(this));
     const retrievedValues = await this.collection
       .find({
-        [this.primaryKey]: {$in: prefixedKeys},
+        [this.primaryKey]: { $in: prefixedKeys },
       })
       .toArray();
 
@@ -108,7 +108,9 @@ export class MongoDBStore extends BaseStore<string, Uint8Array> {
         return undefined;
       }
 
-      if (typeof value.value === "object") {
+      if (!("value" in value)) {
+        return undefined;
+      } else if (typeof value.value === "object") {
         return encoder.encode(JSON.stringify(value.value));
       } else if (typeof value.value === "string") {
         return encoder.encode(value.value);
