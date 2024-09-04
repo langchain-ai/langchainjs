@@ -11235,7 +11235,7 @@ __metadata:
     "@zilliz/milvus2-sdk-node": ">=2.3.5"
     apify-client: ^2.7.1
     assemblyai: ^4.6.0
-    better-sqlite3: ">=9.4.0 <12.0.0"
+    better-sqlite3: 9.5.0
     binary-extensions: ^2.2.0
     cassandra-driver: ^4.7.2
     cborg: ^4.1.1
@@ -21427,14 +21427,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"better-sqlite3@npm:>=9.4.0 <12.0.0":
-  version: 11.2.1
-  resolution: "better-sqlite3@npm:11.2.1"
+"better-sqlite3@npm:9.5.0":
+  version: 9.5.0
+  resolution: "better-sqlite3@npm:9.5.0"
   dependencies:
     bindings: ^1.5.0
     node-gyp: latest
     prebuild-install: ^7.1.1
-  checksum: 22259c298e76d4bc2bd993dfc9392bb80ecef948f48342804a7bd38a43ff7693089a9ea0ac0c14ebc195453aa94fce588755f6eea234d7550383b9f6ac7150a9
+  checksum: cfa56519755d6dd29ef8361c872c6f29392fcfcc44a435099eb61729aae23c4f18057972592a0b9ff0fcedc98e43db4ee7a1a2de21ab2868f8dcec4f8272ad9d
   languageName: node
   linkType: hard
 
