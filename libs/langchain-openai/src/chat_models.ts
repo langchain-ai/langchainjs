@@ -61,7 +61,6 @@ import type {
   ResponseFormatJSONObject,
   ResponseFormatJSONSchema,
 } from "openai/resources/shared";
-import { ParsedChatCompletion } from "openai/resources/beta/chat/completions.mjs";
 import type {
   AzureOpenAIInput,
   OpenAICallOptions,
@@ -1615,7 +1614,8 @@ export class ChatOpenAI<
   async betaParsedCompletionWithRetry(
     request: OpenAIClient.Chat.ChatCompletionCreateParamsNonStreaming,
     options?: OpenAICoreRequestOptions
-  ): Promise<ParsedChatCompletion<null>> {
+    // Avoid relying importing a beta type with no official entrypoint
+  ): Promise<ReturnType<OpenAIClient["beta"]["chat"]["completions"]["parse"]>> {
     const requestOptions = this._getClientOptions(options);
     return this.caller.call(async () => {
       try {
