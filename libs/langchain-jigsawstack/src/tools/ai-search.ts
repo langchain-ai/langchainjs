@@ -46,6 +46,7 @@ export interface JigsawStackAISearchParams extends ToolParams {
 
 export class JigsawStackAISearch extends Tool {
   client: JigsawStackType;
+
   static lc_name(): string {
     return "JigsawStackAISearch";
   }

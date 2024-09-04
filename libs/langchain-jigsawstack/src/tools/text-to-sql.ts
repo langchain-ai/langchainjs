@@ -30,6 +30,7 @@ export interface JigsawStackTextToSQLParams extends ToolParams {
 
 export class JigsawStackTextToSQL extends Tool {
   client: JigsawStackType;
+
   static lc_name(): string {
     return "JigsawStackTextToSQL";
   }
@@ -62,8 +63,8 @@ export class JigsawStackTextToSQL extends Tool {
     prompt: string,
     _runManager?: CallbackManagerForToolRun
   ): Promise<string> {
-    const payload: any = {
-      prompt: prompt,
+    const payload = {
+      prompt,
       sql_schema: this.params?.file_store_key
         ? undefined
         : this.params.sql_schema,

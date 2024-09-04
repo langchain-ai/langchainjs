@@ -46,6 +46,7 @@ export interface JigsawStackAIScrapeParams extends ToolParams {
 
 export class JigsawStackAIScrape extends Tool {
   client: JigsawStackType;
+
   params: ScrapeInputParams;
 
   static lc_name(): string {

@@ -99,12 +99,11 @@ export class JigsawStackPromptEngine
   ): Promise<string> {
     const generateResponse = await this.caller.callWithOptions(
       { signal: options.signal },
-      async () => {
-        return await this.client.prompt_engine.run_prompt_direct({
+      async () =>
+        this.client.prompt_engine.run_prompt_direct({
           prompt,
           ...this.invocationParams(options),
-        });
-      }
+        })
     );
     try {
       await runManager?.handleLLMNewToken(generateResponse.result);

@@ -30,6 +30,7 @@ export interface JigsawStackSpeechToTextParams extends ToolParams {
 
 export class JigsawStackSpeechToText extends Tool {
   client: JigsawStackType;
+
   static lc_name(): string {
     return "JigsawStackSpeechToText";
   }

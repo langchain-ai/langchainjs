@@ -50,6 +50,7 @@ export interface JigsawStackVOCRParams extends ToolParams {
 
 export class JigsawStackVOCR extends Tool {
   client: JigsawStackType;
+
   static lc_name(): string {
     return "JigsawStackVOCRResults";
   }
