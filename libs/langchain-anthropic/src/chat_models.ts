@@ -606,10 +606,10 @@ export class ChatAnthropicMessages<
   clientOptions: ClientOptions;
 
   // Used for non-streaming requests
-  protected batchClient!: Anthropic;
+  protected batchClient: Anthropic;
 
   // Used for streaming requests
-  protected streamingClient!: Anthropic;
+  protected streamingClient: Anthropic;
 
   streamUsage = true;
 
