@@ -68,18 +68,21 @@ export class Graph {
         id: stableNodeIds[node.id],
         ...nodeDataJson(node),
       })),
-      edges: this.edges.map((edge) =>
-        edge.data
-          ? {
-              source: stableNodeIds[edge.source],
-              target: stableNodeIds[edge.target],
-              data: edge.data,
-            }
-          : {
-              source: stableNodeIds[edge.source],
-              target: stableNodeIds[edge.target],
-            }
-      ),
+      edges: this.edges.map((edge) => {
+        const item: Record<string, unknown> = {
+          source: stableNodeIds[edge.source],
+          target: stableNodeIds[edge.target],
+        };
+
+        if (typeof edge.data !== "undefined") {
+          item.data = edge.data;
+        }
+
+        if (typeof edge.conditional !== "undefined") {
+          item.conditional = edge.conditional;
+        }
+        return item;
+      }),
     };
   }
 

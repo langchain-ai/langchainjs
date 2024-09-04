@@ -2,7 +2,7 @@ import { BaseCallbackHandlerInput } from "@langchain/core/callbacks/base";
 import { BaseTracer, Run } from "@langchain/core/tracers/base";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { Document } from "@langchain/core/documents";
-import { BaseMessage } from "@langchain/core/messages";
+import { BaseMessage, isAIMessage } from "@langchain/core/messages";
 import { ChatGeneration } from "@langchain/core/outputs";
 import { KVMap } from "langsmith/schemas";
 
@@ -262,12 +262,13 @@ export class DatadogLLMObsTracer
           messages: outputs?.generations?.flatMap(
             (generations: ChatGeneration[]) =>
               generations.map(({ message, text }) => {
-                const tokenUsage = message?.response_metadata?.tokenUsage;
-                if (tokenUsage) {
+                if (isAIMessage(message) && message?.usage_metadata) {
+                  tokensMetadata.prompt_tokens =
+                    message.usage_metadata.input_tokens;
                   tokensMetadata.completion_tokens =
-                    tokenUsage.completionTokens;
-                  tokensMetadata.prompt_tokens = tokenUsage.promptTokens;
-                  tokensMetadata.total_tokens = tokenUsage.totalTokens;
+                    message.usage_metadata.output_tokens;
+                  tokensMetadata.total_tokens =
+                    message.usage_metadata.total_tokens;
                 }
 
                 return {

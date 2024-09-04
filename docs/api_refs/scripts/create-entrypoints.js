@@ -1,5 +1,6 @@
 const fs = require("fs");
 const path = require("path");
+const { execSync } = require("child_process");
 
 const BASE_TYPEDOC_CONFIG = {
   $schema: "https://typedoc.org/schema.json",
@@ -11,12 +12,14 @@ const BASE_TYPEDOC_CONFIG = {
     "required-first",
     "alphabetical",
   ],
-  plugin: ["./typedoc_plugins/hide_underscore_lc.js"],
+  plugin: [
+    "./scripts/typedoc-plugin.js",
+    "typedoc-plugin-expand-object-like-types",
+  ],
   tsconfig: "../../tsconfig.json",
-  readme: "none",
   excludePrivate: true,
   excludeInternal: true,
-  excludeExternals: true,
+  excludeExternals: false,
   excludeNotDocumented: false,
   includeVersion: true,
   sourceLinkTemplate:
@@ -26,6 +29,7 @@ const BASE_TYPEDOC_CONFIG = {
   skipErrorChecking: true,
   exclude: ["dist"],
   hostedBaseUrl: "https://v02.api.js.langchain.com/",
+  entryPointStrategy: "packages",
 };
 
 /**
@@ -38,6 +42,35 @@ const updateJsonFile = (relativePath, updateFunction) => {
   const res = updateFunction(JSON.parse(contents));
   fs.writeFileSync(relativePath, JSON.stringify(res, null, 2) + "\n");
 };
+
+const workspacesListBreakStr = `"}
+{"`;
+const workspacesListJoinStr = `"},{"`;
+const BLACKLISTED_WORKSPACES = [
+  "@langchain/azure-openai",
+  "@langchain/google-gauth",
+  "@langchain/google-webauth",
+];
+
+/**
+ * @returns {Array<string>} An array of paths to all workspaces in the monorepo.
+ */
+function getYarnWorkspaces() {
+  const stdout = execSync("yarn workspaces list --json");
+  const workspaces = JSON.parse(
+    `[${stdout
+      .toString()
+      .split(workspacesListBreakStr)
+      .join(workspacesListJoinStr)}]`
+  );
+  const cleanedWorkspaces = workspaces.filter(
+    (ws) =>
+      ws.name === "langchain" ||
+      (ws.name.startsWith("@langchain/") &&
+        !BLACKLISTED_WORKSPACES.find((blacklisted) => ws.name === blacklisted))
+  );
+  return cleanedWorkspaces.map((ws) => `../../${ws.location}`);
+}
 
 async function main() {
   const workspaces = fs
@@ -58,8 +91,6 @@ async function main() {
     fs.readFileSync("./blacklisted-entrypoints.json")
   );
 
-  const entrypoints = new Set([]);
-
   for await (const configFile of configFiles) {
     const langChainConfig = await import(configFile);
     if (!("entrypoints" in langChainConfig.config)) {
@@ -70,7 +101,7 @@ async function main() {
       langChainConfig.config.entrypoints === null ||
       langChainConfig.config.entrypoints === undefined
     ) {
-      return;
+      continue;
     }
     const { config } = langChainConfig;
 
@@ -82,7 +113,7 @@ async function main() {
     const deprecatedNodeOnly =
       "deprecatedNodeOnly" in config ? config.deprecatedNodeOnly : [];
 
-    Object.values(config.entrypoints)
+    const workspaceEntrypoints = Object.values(config.entrypoints)
       .filter((key) => !deprecatedNodeOnly.includes(key))
       .filter(
         (key) =>
@@ -91,16 +122,43 @@ async function main() {
               blacklistedItem === `${entrypointDir}/src/${key}.ts`
           )
       )
-      .map((key) => entrypoints.add(`${entrypointDir}/src/${key}.ts`));
+      .map((key) => `src/${key}.ts`);
+
+    const typedocPath = path.join(entrypointDir, "typedoc.json");
+
+    if (!fs.existsSync(typedocPath)) {
+      fs.writeFileSync(typedocPath, "{}\n");
+    }
+
+    updateJsonFile(typedocPath, (existingConfig) => ({
+      ...existingConfig,
+      entryPoints: workspaceEntrypoints,
+      extends: typedocPath.includes("/libs/")
+        ? ["../../docs/api_refs/typedoc.base.json"]
+        : ["../docs/api_refs/typedoc.base.json"],
+    }));
   }
+
   // Check if the `./typedoc.json` file exists, since it is gitignored by default
   if (!fs.existsSync("./typedoc.json")) {
     fs.writeFileSync("./typedoc.json", "{}\n");
   }
 
+  const yarnWorkspaces = getYarnWorkspaces();
+
   updateJsonFile("./typedoc.json", () => ({
     ...BASE_TYPEDOC_CONFIG,
-    entryPoints: Array.from(entrypoints),
+    entryPoints: yarnWorkspaces,
   }));
 }
-main();
+
+async function runMain() {
+  try {
+    await main();
+  } catch (error) {
+    console.error("An error occurred while creating the entrypoints.");
+    throw error;
+  }
+}
+
+runMain();

@@ -188,8 +188,12 @@ export class AIMessageChunk extends BaseMessageChunk {
       for (const toolCallChunk of fields.tool_call_chunks) {
         let parsedArgs = {};
         try {
-          parsedArgs = parsePartialJson(toolCallChunk.args ?? "{}") ?? {};
-          if (typeof parsedArgs !== "object" || Array.isArray(parsedArgs)) {
+          parsedArgs = parsePartialJson(toolCallChunk.args || "{}");
+          if (
+            parsedArgs === null ||
+            typeof parsedArgs !== "object" ||
+            Array.isArray(parsedArgs)
+          ) {
             throw new Error("Malformed tool call chunk args.");
           }
           toolCalls.push({

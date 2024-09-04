@@ -18,7 +18,7 @@ This notebook goes over how to track your token usage for specific calls.
 
 A number of model providers return token usage information as part of the chat generation response. When available, this information will be included on the `AIMessage` objects produced by the corresponding model.
 
-LangChain `AIMessage` objects include a [`usage_metadata`](https://api.js.langchain.com/classes/langchain_core_messages.AIMessage.html#usage_metadata) attribute for supported providers. When populated, this attribute will be an object with standard keys (e.g., "input_tokens" and "output_tokens").
+LangChain `AIMessage` objects include a [`usage_metadata`](https://api.js.langchain.com/classes/langchain_core.messages.AIMessage.html#usage_metadata) attribute for supported providers. When populated, this attribute will be an object with standard keys (e.g., "input_tokens" and "output_tokens").
 
 #### OpenAI
 

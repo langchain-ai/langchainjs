@@ -259,6 +259,19 @@ function serialize<RunInput>(input: RunInput): any {
   return input;
 }
 
+/**
+ * Client for interacting with LangChain runnables
+ * that are hosted as LangServe endpoints.
+ *
+ * Allows you to interact with hosted runnables using the standard
+ * `.invoke()`, `.stream()`, `.streamEvents()`, etc. methods that
+ * other runnables support.
+ *
+ * @param url - The base URL of the LangServe endpoint.
+ * @param options - Optional configuration for the remote runnable, including timeout and headers.
+ * @param fetch - Optional custom fetch implementation.
+ * @param fetchRequestOptions - Optional additional options for fetch requests.
+ */
 export class RemoteRunnable<
   RunInput,
   RunOutput,
@@ -268,24 +281,52 @@ export class RemoteRunnable<
 
   private options?: RemoteRunnableOptions;
 
+  // Wrap the default fetch call due to issues with illegal invocations
+  // from the browser:
+  // https://stackoverflow.com/questions/69876859/why-does-bind-fix-failed-to-execute-fetch-on-window-illegal-invocation-err
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  fetchImplementation: (...args: any[]) => any = (...args: any[]) =>
+    // @ts-expect-error Broad typing to support a range of fetch implementations
+    fetch(...args);
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  fetchRequestOptions?: Record<string, any>;
+
   lc_namespace = ["langchain", "schema", "runnable", "remote"];
 
-  constructor(fields: { url: string; options?: RemoteRunnableOptions }) {
+  constructor(fields: {
+    url: string;
+    options?: RemoteRunnableOptions;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    fetch?: (...args: any[]) => any;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    fetchRequestOptions?: Record<string, any>;
+  }) {
     super(fields);
-    const { url, options } = fields;
+    const {
+      url,
+      options,
+      fetch: fetchImplementation,
+      fetchRequestOptions,
+    } = fields;
+
     this.url = url.replace(/\/$/, ""); // remove trailing slash
     this.options = options;
+    this.fetchImplementation = fetchImplementation ?? this.fetchImplementation;
+    this.fetchRequestOptions = fetchRequestOptions;
   }
 
   private async post<Body>(path: string, body: Body, signal?: AbortSignal) {
-    return fetch(`${this.url}${path}`, {
+    return this.fetchImplementation(`${this.url}${path}`, {
       method: "POST",
       body: JSON.stringify(serialize(body)),
+      signal: signal ?? AbortSignal.timeout(this.options?.timeout ?? 60000),
+      ...this.fetchRequestOptions,
       headers: {
         "Content-Type": "application/json",
+        ...this.fetchRequestOptions?.headers,
         ...this.options?.headers,
       },
-      signal: signal ?? AbortSignal.timeout(this.options?.timeout ?? 60000),
     });
   }
 

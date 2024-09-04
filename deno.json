@@ -3,6 +3,7 @@
     "langchain/": "npm:/langchain/",
     "@faker-js/faker": "npm:@faker-js/faker",
     "@langchain/anthropic": "npm:@langchain/anthropic",
+    "@langchain/cloudflare": "npm:@langchain/cloudflare",
     "@langchain/community/": "npm:/@langchain/community@0.2.2/",
     "@langchain/openai": "npm:@langchain/openai",
     "@langchain/cohere": "npm:@langchain/cohere",

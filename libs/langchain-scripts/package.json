@@ -1,6 +1,6 @@
 {
   "name": "@langchain/scripts",
-  "version": "0.0.20",
+  "version": "0.1.2",
   "description": "Shared scripts for LangChain.js",
   "type": "module",
   "engines": {
@@ -14,14 +14,15 @@
   },
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-scripts/",
   "bin": {
-    "lc-build": "bin/build.js",
-    "lc_build_v2": "bin/build_v2.js"
+    "filter_spam_comment": "bin/filter_spam_comment.js",
+    "lc_build": "bin/build.js",
+    "notebook_validate": "bin/validate_notebook.js"
   },
   "scripts": {
-    "build": "yarn turbo:command build:internal --filter=@langchain/scripts",
+    "build": "yarn clean && yarn turbo:command build:internal --filter=@langchain/scripts",
     "build:internal": "tsc --project ./tsconfig.build.json && yarn move:artifacts && yarn build:generated",
     "move:artifacts": "mkdir -p ./dist && mv ./dist_build/* ./dist/",
-    "build:generated": "node bin/build_v2.js --create-entrypoints --pre --tree-shaking",
+    "build:generated": "node bin/build.js --create-entrypoints --pre --tree-shaking",
     "build:turbo": "yarn turbo:command build --filter=@langchain/scripts",
     "lint:eslint": "NODE_OPTIONS=--max-old-space-size=4096 eslint --cache --ext .ts,.js src/",
     "lint:dpdm": "dpdm --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
@@ -40,6 +41,7 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
+    "@octokit/rest": "^21.0.2",
     "@rollup/wasm-node": "^4.19.0",
     "axios": "^1.6.7",
     "commander": "^11.1.0",

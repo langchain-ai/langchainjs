@@ -11,7 +11,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        package: [anthropic, cohere, google-genai, groq, mistralai, aws]
+        package: [anthropic, cohere, google-genai, groq, mistralai, aws, google-vertexai-web]
     steps:
       - uses: actions/checkout@v4
       - name: Use Node.js 18.x
@@ -24,12 +24,15 @@ jobs:
       - name: Run integration tests for ${{ matrix.package }}
         run: yarn turbo test:integration --filter=@langchain/${{ matrix.package }}
         env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          COHERE_API_KEY: ${{ secrets.COHERE_API_KEY }}
-          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
-          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
-          MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
-          DISABLE_CONSOLE_LOGS: "true"
+          ANTHROPIC_API_KEY: ${{ matrix.package == 'anthropic' && secrets.ANTHROPIC_API_KEY || '' }}
+          COHERE_API_KEY: ${{ matrix.package == 'cohere' && secrets.COHERE_API_KEY || '' }}
+          GOOGLE_API_KEY: ${{ matrix.package == 'google-genai' && secrets.GOOGLE_API_KEY || '' }}
+          GROQ_API_KEY: ${{ matrix.package == 'groq' && secrets.GROQ_API_KEY || '' }}
+          MISTRAL_API_KEY: ${{ matrix.package == 'mistralai' && secrets.MISTRAL_API_KEY || '' }}
+          BEDROCK_AWS_ACCESS_KEY_ID: ${{ matrix.package == 'aws' && secrets.BEDROCK_AWS_ACCESS_KEY_ID || '' }}
+          BEDROCK_AWS_SECRET_ACCESS_KEY: ${{ matrix.package == 'aws' && secrets.BEDROCK_AWS_SECRET_ACCESS_KEY || '' }}
+          BEDROCK_AWS_REGION: ${{ matrix.package == 'aws' && 'us-east-1' || '' }}
+          GOOGLE_VERTEX_AI_WEB_CREDENTIALS: ${{ matrix.package == 'google-vertexai-web' && secrets.GOOGLE_VERTEX_AI_WEB_CREDENTIALS || '' }}
 
   # The `@langchain/openai` package contains standard tests for ChatOpenAI and AzureChatOpenAI
   # We want to run these separately, so we need to pass the exact path for each test, which means
@@ -51,7 +54,6 @@ jobs:
         run: yarn workspace @langchain/openai test:single src/tests/chat_models_structured_output.int.test.ts src/tests/chat_models-extended.int.test.ts src/tests/chat_models-vision.int.test.ts src/tests/chat_models.int.test.ts src/tests/chat_models.standard.int.test.ts
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          DISABLE_CONSOLE_LOGS: "true"
 
   standard-tests-azure-openai:
     runs-on: ubuntu-latest
@@ -73,7 +75,6 @@ jobs:
           AZURE_OPENAI_API_DEPLOYMENT_NAME: "chat"
           AZURE_OPENAI_API_VERSION: ${{ secrets.AZURE_OPENAI_API_VERSION }}
           AZURE_OPENAI_BASE_PATH: ${{ secrets.AZURE_OPENAI_BASE_PATH }}
-          DISABLE_CONSOLE_LOGS: "true"
 
   standard-tests-bedrock:
     runs-on: ubuntu-latest
@@ -94,4 +95,21 @@ jobs:
           BEDROCK_AWS_REGION: "us-east-1"
           BEDROCK_AWS_SECRET_ACCESS_KEY: ${{ secrets.BEDROCK_AWS_SECRET_ACCESS_KEY }}
           BEDROCK_AWS_ACCESS_KEY_ID: ${{ secrets.BEDROCK_AWS_ACCESS_KEY_ID }}
-          DISABLE_CONSOLE_LOGS: "true"
+
+  standard-tests-fireworks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js 18.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+          cache: "yarn"
+      - name: Install dependencies
+        run: yarn install --immutable --mode=skip-build
+      - name: Build `@langchain/community`
+        run: yarn build --filter=@langchain/community
+      - name: Run standard tests (integration) for `@langchain/community` ChatFireworks
+        run: yarn workspace @langchain/community test:single src/chat_models/tests/chatfireworks.standard.int.test.ts
+        env:
+          FIREWORKS_API_KEY: ${{ secrets.FIREWORKS_API_KEY }}

@@ -1,7 +1,11 @@
-import { VectorStore } from "@langchain/core/vectorstores";
+import {
+  MaxMarginalRelevanceSearchOptions,
+  VectorStore,
+} from "@langchain/core/vectorstores";
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
-import { Document } from "@langchain/core/documents";
+import { Document, DocumentInterface } from "@langchain/core/documents";
 import { cosine } from "../util/ml-distance/similarities.js";
+import { maximalMarginalRelevance } from "../util/math.js";
 
 /**
  * Interface representing a vector in memory. It includes the content
@@ -13,6 +17,7 @@ interface MemoryVector {
   embedding: number[];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   metadata: Record<string, any>;
+  id?: string;
 }
 
 /**
@@ -25,9 +30,114 @@ export interface MemoryVectorStoreArgs {
 }
 
 /**
- * Class that extends `VectorStore` to store vectors in memory. Provides
- * methods for adding documents, performing similarity searches, and
- * creating instances from texts, documents, or an existing index.
+ * In-memory, ephemeral vector store.
+ *
+ * Setup:
+ * Install `langchain`:
+ *
+ * ```bash
+ * npm install langchain
+ * ```
+ *
+ * ## [Constructor args](https://api.js.langchain.com/classes/langchain.vectorstores_memory.MemoryVectorStore.html#constructor)
+ *
+ * <details open>
+ * <summary><strong>Instantiate</strong></summary>
+ *
+ * ```typescript
+ * import { MemoryVectorStore } from 'langchain/vectorstores/memory';
+ * // Or other embeddings
+ * import { OpenAIEmbeddings } from '@langchain/openai';
+ *
+ * const embeddings = new OpenAIEmbeddings({
+ *   model: "text-embedding-3-small",
+ * });
+ *
+ * const vectorStore = new MemoryVectorStore(embeddings);
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Add documents</strong></summary>
+ *
+ * ```typescript
+ * import type { Document } from '@langchain/core/documents';
+ *
+ * const document1 = { pageContent: "foo", metadata: { baz: "bar" } };
+ * const document2 = { pageContent: "thud", metadata: { bar: "baz" } };
+ * const document3 = { pageContent: "i will be deleted :(", metadata: {} };
+ *
+ * const documents: Document[] = [document1, document2, document3];
+ *
+ * await vectorStore.addDocuments(documents);
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Similarity search</strong></summary>
+ *
+ * ```typescript
+ * const results = await vectorStore.similaritySearch("thud", 1);
+ * for (const doc of results) {
+ *   console.log(`* ${doc.pageContent} [${JSON.stringify(doc.metadata, null)}]`);
+ * }
+ * // Output: * thud [{"baz":"bar"}]
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ *
+ * <details>
+ * <summary><strong>Similarity search with filter</strong></summary>
+ *
+ * ```typescript
+ * const resultsWithFilter = await vectorStore.similaritySearch("thud", 1, { baz: "bar" });
+ *
+ * for (const doc of resultsWithFilter) {
+ *   console.log(`* ${doc.pageContent} [${JSON.stringify(doc.metadata, null)}]`);
+ * }
+ * // Output: * foo [{"baz":"bar"}]
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ *
+ * <details>
+ * <summary><strong>Similarity search with score</strong></summary>
+ *
+ * ```typescript
+ * const resultsWithScore = await vectorStore.similaritySearchWithScore("qux", 1);
+ * for (const [doc, score] of resultsWithScore) {
+ *   console.log(`* [SIM=${score.toFixed(6)}] ${doc.pageContent} [${JSON.stringify(doc.metadata, null)}]`);
+ * }
+ * // Output: * [SIM=0.000000] qux [{"bar":"baz","baz":"bar"}]
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>As a retriever</strong></summary>
+ *
+ * ```typescript
+ * const retriever = vectorStore.asRetriever({
+ *   searchType: "mmr", // Leave blank for standard similarity search
+ *   k: 1,
+ * });
+ * const resultAsRetriever = await retriever.invoke("thud");
+ * console.log(resultAsRetriever);
+ *
+ * // Output: [Document({ metadata: { "baz":"bar" }, pageContent: "thud" })]
+ * ```
+ * </details>
+ *
+ * <br />
  */
 export class MemoryVectorStore extends VectorStore {
   declare FilterType: (doc: Document) => boolean;
@@ -77,9 +187,41 @@ export class MemoryVectorStore extends VectorStore {
       content: documents[idx].pageContent,
       embedding,
       metadata: documents[idx].metadata,
+      id: documents[idx].id,
     }));
 
     this.memoryVectors = this.memoryVectors.concat(memoryVectors);
+  }
+
+  protected async _queryVectors(
+    query: number[],
+    k: number,
+    filter?: this["FilterType"]
+  ) {
+    const filterFunction = (memoryVector: MemoryVector) => {
+      if (!filter) {
+        return true;
+      }
+
+      const doc = new Document({
+        metadata: memoryVector.metadata,
+        pageContent: memoryVector.content,
+        id: memoryVector.id,
+      });
+      return filter(doc);
+    };
+    const filteredMemoryVectors = this.memoryVectors.filter(filterFunction);
+    return filteredMemoryVectors
+      .map((vector, index) => ({
+        similarity: this.similarity(query, vector.embedding),
+        index,
+        metadata: vector.metadata,
+        content: vector.content,
+        embedding: vector.embedding,
+        id: vector.id,
+      }))
+      .sort((a, b) => (a.similarity > b.similarity ? -1 : 0))
+      .slice(0, k);
   }
 
   /**
@@ -97,35 +239,48 @@ export class MemoryVectorStore extends VectorStore {
     k: number,
     filter?: this["FilterType"]
   ): Promise<[Document, number][]> {
-    const filterFunction = (memoryVector: MemoryVector) => {
-      if (!filter) {
-        return true;
-      }
-
-      const doc = new Document({
-        metadata: memoryVector.metadata,
-        pageContent: memoryVector.content,
-      });
-      return filter(doc);
-    };
-    const filteredMemoryVectors = this.memoryVectors.filter(filterFunction);
-    const searches = filteredMemoryVectors
-      .map((vector, index) => ({
-        similarity: this.similarity(query, vector.embedding),
-        index,
-      }))
-      .sort((a, b) => (a.similarity > b.similarity ? -1 : 0))
-      .slice(0, k);
-
+    const searches = await this._queryVectors(query, k, filter);
     const result: [Document, number][] = searches.map((search) => [
       new Document({
-        metadata: filteredMemoryVectors[search.index].metadata,
-        pageContent: filteredMemoryVectors[search.index].content,
+        metadata: search.metadata,
+        pageContent: search.content,
+        id: search.id,
       }),
       search.similarity,
     ]);
 
     return result;
+  }
+
+  async maxMarginalRelevanceSearch(
+    query: string,
+    options: MaxMarginalRelevanceSearchOptions<this["FilterType"]>
+  ): Promise<DocumentInterface[]> {
+    const queryEmbedding = await this.embeddings.embedQuery(query);
+
+    const searches = await this._queryVectors(
+      queryEmbedding,
+      options.fetchK ?? 20,
+      options.filter
+    );
+
+    const embeddingList = searches.map((searchResp) => searchResp.embedding);
+
+    const mmrIndexes = maximalMarginalRelevance(
+      queryEmbedding,
+      embeddingList,
+      options.lambda,
+      options.k
+    );
+
+    return mmrIndexes.map(
+      (idx) =>
+        new Document({
+          metadata: searches[idx].metadata,
+          pageContent: searches[idx].content,
+          id: searches[idx].id,
+        })
+    );
   }
 
   /**

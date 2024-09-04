@@ -128,7 +128,11 @@ test("Tool declared with JSON schema", async () => {
     required: ["location"],
   };
   const weatherTool = tool(
-    (_) => {
+    (input) => {
+      // even without validation expect input to be passed
+      expect(input).toEqual({
+        somethingSilly: true,
+      });
       return "Sunny";
     },
     {
@@ -136,15 +140,21 @@ test("Tool declared with JSON schema", async () => {
       schema: weatherSchema,
     }
   );
+  expect(weatherTool).toBeInstanceOf(DynamicStructuredTool);
 
   const weatherTool2 = new DynamicStructuredTool({
     name: "weather",
     description: "get the weather",
-    func: async (_) => {
+    func: async (input) => {
+      // even without validation expect input to be passed
+      expect(input).toEqual({
+        somethingSilly: true,
+      });
       return "Sunny";
     },
     schema: weatherSchema,
   });
+
   // No validation on JSON schema tools
   await weatherTool.invoke({
     somethingSilly: true,
@@ -211,4 +221,40 @@ test("Tool input typing is enforced", async () => {
   expect(res2).toEqual("Sunny");
   const res3 = await weatherTool3.invoke("blah");
   expect(res3).toEqual("Sunny");
+});
+
+test("Tool can throw detailed errors", async () => {
+  const weatherSchema = z.object({
+    location: z.string(),
+  });
+
+  const stringTool = tool(
+    (input) => {
+      return JSON.stringify(input);
+    },
+    {
+      name: "string_tool",
+      description: "A tool that appends 'a' to the input string",
+      schema: weatherSchema,
+      verboseParsingErrors: true,
+    }
+  );
+
+  await expect(
+    stringTool.invoke({
+      // @ts-expect-error Testing parsing errors
+      location: 8,
+    })
+  ).rejects.toThrow(`Received tool input did not match expected schema
+Details: [
+  {
+    "code": "invalid_type",
+    "expected": "string",
+    "received": "number",
+    "path": [
+      "location"
+    ],
+    "message": "Expected string, received number"
+  }
+]`);
 });

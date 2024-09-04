@@ -271,18 +271,27 @@ export type BedrockConverseToolChoice =
 
 export function convertToBedrockToolChoice(
   toolChoice: BedrockConverseToolChoice,
-  tools: BedrockTool[]
+  tools: BedrockTool[],
+  fields: {
+    model: string;
+    supportsToolChoiceValues?: Array<"auto" | "any" | "tool">;
+  }
 ): BedrockToolChoice {
+  const supportsToolChoiceValues = fields.supportsToolChoiceValues ?? [];
+
+  let bedrockToolChoice: BedrockToolChoice;
   if (typeof toolChoice === "string") {
     switch (toolChoice) {
       case "any":
-        return {
+        bedrockToolChoice = {
           any: {},
         };
+        break;
       case "auto":
-        return {
+        bedrockToolChoice = {
           auto: {},
         };
+        break;
       default: {
         const foundTool = tools.find(
           (tool) => tool.toolSpec?.name === toolChoice
@@ -292,15 +301,40 @@ export function convertToBedrockToolChoice(
             `Tool with name ${toolChoice} not found in tools list.`
           );
         }
-        return {
+        bedrockToolChoice = {
           tool: {
             name: toolChoice,
           },
         };
       }
     }
+  } else {
+    bedrockToolChoice = toolChoice;
   }
-  return toolChoice;
+
+  const toolChoiceType = Object.keys(bedrockToolChoice)[0] as
+    | "auto"
+    | "any"
+    | "tool";
+  if (!supportsToolChoiceValues.includes(toolChoiceType)) {
+    let supportedTxt = "";
+    if (supportsToolChoiceValues.length) {
+      supportedTxt =
+        `Model ${fields.model} does not currently support 'tool_choice' ` +
+        `of type ${toolChoiceType}. The following 'tool_choice' types ` +
+        `are supported: ${supportsToolChoiceValues.join(", ")}.`;
+    } else {
+      supportedTxt = `Model ${fields.model} does not currently support 'tool_choice'.`;
+    }
+
+    throw new Error(
+      `${supportedTxt} Please see` +
+        "https://docs.aws.amazon.com/bedrock/latest/APIReference/API_runtime_ToolChoice.html" +
+        "for the latest documentation on models that support tool choice."
+    );
+  }
+
+  return bedrockToolChoice;
 }
 
 export function convertConverseMessageToLangChainMessage(

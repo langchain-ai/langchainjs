@@ -22,7 +22,7 @@ import useBaseUrl from "@docusaurus/useBaseUrl";
 ### `@langchain/core`
 
 This package contains base abstractions of different components and ways to compose them together.
-The interfaces for core components like LLMs, vectorstores, retrievers and more are defined here.
+The interfaces for core components like LLMs, vector stores, retrievers and more are defined here.
 No third party integrations are defined here.
 The dependencies are kept purposefully very lightweight.
 
@@ -30,7 +30,7 @@ The dependencies are kept purposefully very lightweight.
 
 This package contains third party integrations that are maintained by the LangChain community.
 Key partner packages are separated out (see below).
-This contains all integrations for various components (LLMs, vectorstores, retrievers).
+This contains all integrations for various components (LLMs, vector stores, retrievers).
 All dependencies in this package are optional to keep the package as lightweight as possible.
 
 ### Partner packages
@@ -112,7 +112,7 @@ With LCEL, **all** steps are automatically logged to [LangSmith](https://docs.sm
 
 <span data-heading-keywords="invoke,runnable"></span>
 
-To make it as easy as possible to create custom chains, we've implemented a ["Runnable"](https://api.js.langchain.com/classes/langchain_core_runnables.Runnable.html) protocol.
+To make it as easy as possible to create custom chains, we've implemented a ["Runnable"](https://api.js.langchain.com/classes/langchain_core.runnables.Runnable.html) protocol.
 Many LangChain components implement the `Runnable` protocol, including chat models, LLMs, output parsers, retrievers, prompt templates, and more. There are also several useful primitives for working with runnables, which you can read about below.
 
 This is a standard interface, which makes it easy to define custom chains as well as invoke them in a standard way.
@@ -143,7 +143,7 @@ Some components LangChain implements, some components we rely on third-party int
 <span data-heading-keywords="chat model,chat models"></span>
 
 Language models that use a sequence of messages as inputs and return chat messages as outputs (as opposed to using plain text).
-These are traditionally newer models (older models are generally `LLMs`, see below).
+These are generally newer models (older models are generally `LLMs`, see below).
 Chat models support the assignment of distinct roles to conversation messages, helping to distinguish messages from the AI, users, and instructions such as system messages.
 
 Although the underlying models are messages in, message out, the LangChain wrappers also allow these models to take a string as input.
@@ -206,7 +206,7 @@ Some language models take an array of messages as input and return a message.
 There are a few different types of messages.
 All messages have a `role`, `content`, and `response_metadata` property.
 
-The `role` describes WHO is saying the message.
+The `role` describes WHO is saying the message. The standard roles are "user", "assistant", "system", and "tool".
 LangChain has different message classes for different roles.
 
 The `content` property describes the content of the message.
@@ -215,13 +215,16 @@ This can be a few different things:
 - A string (most models deal this type of content)
 - A List of objects (this is used for multi-modal input, where the object contains information about that input type and that input location)
 
+Optionally, messages can have a `name` property which allows for differentiating between multiple speakers with the same role.
+For example, if there are two users in the chat history it can be useful to differentiate between them. Not all models support this.
+
 #### HumanMessage
 
-This represents a message from the user.
+This represents a message with role "user".
 
 #### AIMessage
 
-This represents a message from the model. In addition to the `content` property, these messages also have:
+This represents a message with role "assistant". In addition to the `content` property, these messages also have:
 
 **`response_metadata`**
 
@@ -241,11 +244,11 @@ This property returns a list of `ToolCall`s. A `ToolCall` is an object with the 
 
 #### SystemMessage
 
-This represents a system message, which tells the model how to behave. Not every model provider supports this.
+This represents a message with role "system", which tells the model how to behave. Not every model provider supports this.
 
 #### ToolMessage
 
-This represents the result of a tool call. In addition to `role` and `content`, this message has:
+This represents a message with role "tool", which contains the result of calling a tool. In addition to `role` and `content`, this message has:
 
 - a `tool_call_id` field which conveys the id of the call to the tool that was called to produce this result.
 - an `artifact` field which can be used to pass along arbitrary artifacts of the tool execution which are useful to track but which should not be sent to the model.
@@ -347,6 +350,7 @@ For specifics on how to use prompt templates, see the [relevant how-to guides he
 ### Example Selectors
 
 One common prompting technique for achieving better performance is to include examples as part of the prompt.
+This is known as [few-shot prompting](/docs/concepts/#few-shot-prompting).
 This gives the language model concrete examples of how it should behave.
 Sometimes these examples are hardcoded into the prompt, but for more advanced situations it may be nice to dynamically select them.
 Example Selectors are classes responsible for selecting and then formatting examples into prompts.
@@ -394,14 +398,14 @@ LangChain has many different types of output parsers. This is a list of output p
 
 | Name                                                                                                              | Supports Streaming | Input Type                | Output Type                       | Description                                                                                                                                               |
 | ----------------------------------------------------------------------------------------------------------------- | ------------------ | ------------------------- | --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [JSON](https://v02.api.js.langchain.com/classes/langchain_core_output_parsers.JsonOutputParser.html)              | ✅                 | `string` \| `BaseMessage` | `Promise<T>`                      | Returns a JSON object as specified. You can specify a Zod schema and it will return JSON for that model.                                                  |
-| [XML](https://v02.api.js.langchain.com/classes/langchain_core_output_parsers.XMLOutputParser.html)                | ✅                 | `string` \| `BaseMessage` | `Promise<XMLResult>`              | Returns a object of tags. Use when XML output is needed. Use with models that are good at writing XML (like Anthropic's).                                 |
-| [CSV](https://v02.api.js.langchain.com/classes/langchain_core_output_parsers.CommaSeparatedListOutputParser.html) | ✅                 | `string` \| `BaseMessage` | `Array[string]`                   | Returns an array of comma separated values.                                                                                                               |
-| [Structured](https://v02.api.js.langchain.com/classes/langchain_core_output_parsers.StructuredOutputParser.html)  |                    | `string` \| `BaseMessage` | `Promise<TypeOf<T>>`              | Parse structured JSON from an LLM response.                                                                                                               |
-| [HTTP](https://v02.api.js.langchain.com/classes/langchain_output_parsers.HttpResponseOutputParser.html)           | ✅                 | `string`                  | `Promise<Uint8Array>`             | Parse an LLM response to then send over HTTP(s). Useful when invoking the LLM on the server/edge, and then sending the content/stream back to the client. |
-| [Bytes](https://v02.api.js.langchain.com/classes/langchain_core_output_parsers.BytesOutputParser.html)            | ✅                 | `string` \| `BaseMessage` | `Promise<Uint8Array>`             | Parse an LLM response to then send over HTTP(s). Useful for streaming LLM responses from the server/edge to the client.                                   |
-| [Datetime](https://v02.api.js.langchain.com/classes/langchain_output_parsers.DatetimeOutputParser.html)           |                    | `string`                  | `Promise<Date>`                   | Parses response into a `Date`.                                                                                                                            |
-| [Regex](https://v02.api.js.langchain.com/classes/langchain_output_parsers.RegexParser.html)                       |                    | `string`                  | `Promise<Record<string, string>>` | Parses the given text using the regex pattern and returns a object with the parsed output.                                                                |
+| [JSON](https://v02.api.js.langchain.com/classes/langchain_core.output_parsers.JsonOutputParser.html)              | ✅                 | `string` \| `BaseMessage` | `Promise<T>`                      | Returns a JSON object as specified. You can specify a Zod schema and it will return JSON for that model.                                                  |
+| [XML](https://v02.api.js.langchain.com/classes/langchain_core.output_parsers.XMLOutputParser.html)                | ✅                 | `string` \| `BaseMessage` | `Promise<XMLResult>`              | Returns a object of tags. Use when XML output is needed. Use with models that are good at writing XML (like Anthropic's).                                 |
+| [CSV](https://v02.api.js.langchain.com/classes/langchain_core.output_parsers.CommaSeparatedListOutputParser.html) | ✅                 | `string` \| `BaseMessage` | `Array[string]`                   | Returns an array of comma separated values.                                                                                                               |
+| [Structured](https://v02.api.js.langchain.com/classes/langchain_core.output_parsers.StructuredOutputParser.html)  |                    | `string` \| `BaseMessage` | `Promise<TypeOf<T>>`              | Parse structured JSON from an LLM response.                                                                                                               |
+| [HTTP](https://v02.api.js.langchain.com/classes/langchain.output_parsers.HttpResponseOutputParser.html)           | ✅                 | `string`                  | `Promise<Uint8Array>`             | Parse an LLM response to then send over HTTP(s). Useful when invoking the LLM on the server/edge, and then sending the content/stream back to the client. |
+| [Bytes](https://v02.api.js.langchain.com/classes/langchain_core.output_parsers.BytesOutputParser.html)            | ✅                 | `string` \| `BaseMessage` | `Promise<Uint8Array>`             | Parse an LLM response to then send over HTTP(s). Useful for streaming LLM responses from the server/edge to the client.                                   |
+| [Datetime](https://v02.api.js.langchain.com/classes/langchain.output_parsers.DatetimeOutputParser.html)           |                    | `string`                  | `Promise<Date>`                   | Parses response into a `Date`.                                                                                                                            |
+| [Regex](https://v02.api.js.langchain.com/classes/langchain.output_parsers.RegexParser.html)                       |                    | `string`                  | `Promise<Record<string, string>>` | Parses the given text using the regex pattern and returns a object with the parsed output.                                                                |
 
 For specifics on how to use output parsers, see the [relevant how-to guides here](/docs/how_to/#output-parsers).
 
@@ -480,7 +484,7 @@ The base Embeddings class in LangChain provides two methods: one for embedding d
 
 For specifics on how to use embedding models, see the [relevant how-to guides here](/docs/how_to/#embedding-models).
 
-### Vectorstores
+### Vector stores {#vectorstore}
 
 <span data-heading-keywords="vector,vectorstore,vectorstores,vector store,vector stores"></span>
 
@@ -517,7 +521,7 @@ For specifics on how to use retrievers, see the [relevant how-to guides here](/d
 
 For some techniques, such as [indexing and retrieval with multiple vectors per document](/docs/how_to/multi_vector/), having some sort of key-value (KV) storage is helpful.
 
-LangChain includes a [`BaseStore`](https://api.js.langchain.com/classes/langchain_core_stores.BaseStore.html) interface,
+LangChain includes a [`BaseStore`](https://api.js.langchain.com/classes/langchain_core.stores.BaseStore.html) interface,
 which allows for storage of arbitrary data. However, LangChain components that require KV-storage accept a
 more specific `BaseStore<string, Uint8Array>` instance that stores binary data (referred to as a `ByteStore`), and internally take care of
 encoding and decoding data for their specific needs.
@@ -526,7 +530,7 @@ This means that as a user, you only need to think about one type of store rather
 
 #### Interface
 
-All [`BaseStores`](https://api.js.langchain.com/classes/langchain_core_stores.BaseStore.html) support the following interface. Note that the interface allows
+All [`BaseStores`](https://api.js.langchain.com/classes/langchain_core.stores.BaseStore.html) support the following interface. Note that the interface allows
 for modifying **multiple** key-value pairs at once:
 
 - `mget(keys: string[]): Promise<(undefined | Uint8Array)[]>`: get the contents of multiple keys, returning `None` if the key does not exist
@@ -723,7 +727,7 @@ You can subscribe to these events by using the `callbacks` argument available th
 
 #### Callback handlers
 
-`CallbackHandlers` are objects that implement the [`CallbackHandler`](https://api.js.langchain.com/interfaces/langchain_core_callbacks_base.CallbackHandlerMethods.html) interface, which has a method for each event that can be subscribed to.
+`CallbackHandlers` are objects that implement the [`CallbackHandler`](https://api.js.langchain.com/interfaces/langchain_core.callbacks_base.CallbackHandlerMethods.html) interface, which has a method for each event that can be subscribed to.
 The `CallbackManager` will call the appropriate method on each handler when the event is triggered.
 
 #### Passing callbacks
@@ -793,7 +797,7 @@ For models (or other components) that don't support streaming natively, this ite
 you could still use the same general pattern when calling them. Using `.stream()` will also automatically call the model in streaming mode
 without the need to provide additional config.
 
-The type of each outputted chunk depends on the type of component - for example, chat models yield [`AIMessageChunks`](https://api.js.langchain.com/classes/langchain_core_messages.AIMessageChunk.html).
+The type of each outputted chunk depends on the type of component - for example, chat models yield [`AIMessageChunks`](https://api.js.langchain.com/classes/langchain_core.messages.AIMessageChunk.html).
 Because this method is part of [LangChain Expression Language](/docs/concepts/#langchain-expression-language),
 you can handle formatting differences from different outputs using an [output parser](/docs/concepts/#output-parsers) to transform
 each yielded chunk.
@@ -849,10 +853,10 @@ or [this guide](/docs/how_to/callbacks_custom_events) for how to stream custom e
 #### Callbacks
 
 The lowest level way to stream outputs from LLMs in LangChain is via the [callbacks](/docs/concepts/#callbacks) system. You can pass a
-callback handler that handles the [`handleLLMNewToken`](https://api.js.langchain.com/interfaces/langchain_core_callbacks_base.CallbackHandlerMethods.html#handleLLMNewToken) event into LangChain components. When that component is invoked, any
+callback handler that handles the [`handleLLMNewToken`](https://api.js.langchain.com/interfaces/langchain_core.callbacks_base.CallbackHandlerMethods.html#handleLLMNewToken) event into LangChain components. When that component is invoked, any
 [LLM](/docs/concepts/#llms) or [chat model](/docs/concepts/#chat-models) contained in the component calls
 the callback with the generated token. Within the callback, you could pipe the tokens into some other destination, e.g. a HTTP response.
-You can also handle the [`handleLLMEnd`](https://api.js.langchain.com/interfaces/langchain_core_callbacks_base.CallbackHandlerMethods.html#handleLLMEnd) event to perform any necessary cleanup.
+You can also handle the [`handleLLMEnd`](https://api.js.langchain.com/interfaces/langchain_core.callbacks_base.CallbackHandlerMethods.html#handleLLMEnd) event to perform any necessary cleanup.
 
 You can see [this how-to section](/docs/how_to/#callbacks) for more specifics on using callbacks.
 
@@ -1144,6 +1148,87 @@ The following how-to guides are good practical resources for using function/tool
 - [How to return structured data from an LLM](/docs/how_to/structured_output/)
 - [How to use a model to call tools](/docs/how_to/tool_calling)
 
+### Few-shot prompting
+
+One of the most effective ways to improve model performance is to give a model examples of what you want it to do. The technique of adding example inputs and expected outputs to a model prompt is known as "few-shot prompting". There are a few things to think about when doing few-shot prompting:
+
+1. How are examples generated?
+2. How many examples are in each prompt?
+3. How are examples selected at runtime?
+4. How are examples formatted in the prompt?
+
+Here are the considerations for each.
+
+#### 1. Generating examples
+
+The first and most important step of few-shot prompting is coming up with a good dataset of examples.
+Good examples should be relevant at runtime, clear, informative, and provide information that was not already known to the model.
+
+At a high-level, the basic ways to generate examples are:
+
+- Manual: a person/people generates examples they think are useful.
+- Better model: a better (presumably more expensive/slower) model's responses are used as examples for a worse (presumably cheaper/faster) model.
+- User feedback: users (or labelers) leave feedback on interactions with the application and examples are generated based on that feedback (for example, all interactions with positive feedback could be turned into examples).
+- LLM feedback: same as user feedback but the process is automated by having models evaluate themselves.
+
+Which approach is best depends on your task. For tasks where a small number core principles need to be understood really well, it can be valuable hand-craft a few really good examples.
+For tasks where the space of correct behaviors is broader and more nuanced, it can be useful to generate many examples in a more automated fashion so that there's a higher likelihood of there being some highly relevant examples for any runtime input.
+
+**Single-turn v.s. multi-turn examples**
+
+Another dimension to think about when generating examples is what the example is actually showing.
+
+The simplest types of examples just have a user input and an expected model output. These are single-turn examples.
+
+One more complex type if example is where the example is an entire conversation, usually in which a model initially responds incorrectly and a user then tells the model how to correct its answer.
+This is called a multi-turn example. Multi-turn examples can be useful for more nuanced tasks where its useful to show common errors and spell out exactly why they're wrong and what should be done instead.
+
+#### 2. Number of examples
+
+Once we have a dataset of examples, we need to think about how many examples should be in each prompt.
+The key tradeoff is that more examples generally improve performance, but larger prompts increase costs and latency.
+And beyond some threshold having too many examples can start to confuse the model.
+Finding the right number of examples is highly dependent on the model, the task, the quality of the examples, and your cost and latency constraints.
+Anecdotally, the better the model is the fewer examples it needs to perform well and the more quickly you hit steeply diminishing returns on adding more examples.
+But, the best/only way to reliably answer this question is to run some experiments with different numbers of examples.
+
+#### 3. Selecting examples
+
+Assuming we are not adding our entire example dataset into each prompt, we need to have a way of selecting examples from our dataset based on a given input. We can do this:
+
+- Randomly
+- By (semantic or keyword-based) similarity of the inputs
+- Based on some other constraints, like token size
+
+LangChain has a number of [`ExampleSelectors`](/docs/concepts/#example-selectors) which make it easy to use any of these techniques.
+
+Generally, selecting by semantic similarity leads to the best model performance. But how important this is is again model and task specific, and is something worth experimenting with.
+
+#### 4. Formatting examples
+
+Most state-of-the-art models these days are chat models, so we'll focus on formatting examples for those. Our basic options are to insert the examples:
+
+- In the system prompt as a string
+- As their own messages
+
+If we insert our examples into the system prompt as a string, we'll need to make sure it's clear to the model where each example begins and which parts are the input versus output. Different models respond better to different syntaxes, like [ChatML](https://learn.microsoft.com/en-us/azure/ai-services/openai/how-to/chat-markup-language), XML, TypeScript, etc.
+
+If we insert our examples as messages, where each example is represented as a sequence of Human, AI messages, we might want to also assign [names](/docs/concepts/#messages) to our messages like `"exampleUser"` and `"exampleAssistant"` to make it clear that these messages correspond to different actors than the latest input message.
+
+**Formatting tool call examples**
+
+One area where formatting examples as messages can be tricky is when our example outputs have tool calls. This is because different models have different constraints on what types of message sequences are allowed when any tool calls are generated.
+
+- Some models require that any AIMessage with tool calls be immediately followed by ToolMessages for every tool call,
+- Some models additionally require that any ToolMessages be immediately followed by an AIMessage before the next HumanMessage,
+- Some models require that tools are passed in to the model if there are any tool calls / ToolMessages in the chat history.
+
+These requirements are model-specific and should be checked for the model you are using. If your model requires ToolMessages after tool calls and/or AIMessages after ToolMessages and your examples only include expected tool calls and not the actual tool outputs, you can try adding dummy ToolMessages / AIMessages to the end of each example with generic contents to satisfy the API constraints.
+
+In these cases it's especially worth experimenting with inserting your examples as strings versus messages, as having dummy messages can adversely affect certain models.
+
+You can see a case study of how Anthropic and OpenAI respond to different few-shot prompting techniques on two different tool calling benchmarks [here](https://blog.langchain.dev/few-shot-prompting-to-improve-tool-calling-performance/).
+
 ### Retrieval
 
 LLMs are trained on a large but fixed dataset, limiting their ability to reason over private or recent information. Fine-tuning an LLM with specific facts is one way to mitigate this, but is often [poorly suited for factual recall](https://www.anyscale.com/blog/fine-tuning-is-for-form-not-facts) and [can be costly](https://www.glean.com/blog/how-to-build-an-ai-assistant-for-the-enterprise).
@@ -1242,7 +1327,7 @@ Two approaches can address this tension: (1) [Multi Vector](/docs/how_to/multi_v
 
 Fifth, consider ways to improve the quality of your similarity search itself. Embedding models compress text into fixed-length (vector) representations that capture the semantic content of the document. This compression is useful for search / retrieval, but puts a heavy burden on that single vector representation to capture the semantic nuance / detail of the document. In some cases, irrelevant or redundant content can dilute the semantic usefulness of the embedding.
 
-There are some additional tricks to improve the quality of your retrieval. Embeddings excel at capturing semantic information, but may struggle with keyword-based queries. Many [vector stores](docs/integrations/retrievers/supabase-hybrid/) offer built-in [hybrid-search](https://docs.pinecone.io/guides/data/understanding-hybrid-search) to combine keyword and semantic similarity, which marries the benefits of both approaches. Furthermore, many vector stores have [maximal marginal relevance](https://api.js.langchain.com/interfaces/langchain_core_vectorstores.VectorStoreInterface.html#maxMarginalRelevanceSearch), which attempts to diversify the results of a search to avoid returning similar and redundant documents.
+There are some additional tricks to improve the quality of your retrieval. Embeddings excel at capturing semantic information, but may struggle with keyword-based queries. Many [vector stores](docs/integrations/retrievers/supabase-hybrid/) offer built-in [hybrid-search](https://docs.pinecone.io/guides/data/understanding-hybrid-search) to combine keyword and semantic similarity, which marries the benefits of both approaches. Furthermore, many vector stores have [maximal marginal relevance](https://api.js.langchain.com/interfaces/langchain_core.vectorstores.VectorStoreInterface.html#maxMarginalRelevanceSearch), which attempts to diversify the results of a search to avoid returning similar and redundant documents.
 
 | Name                                                                                                          | When to use                                           | Description                                                                                           |
 | ------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |

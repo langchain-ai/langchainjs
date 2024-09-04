@@ -171,7 +171,7 @@ export interface ChatGoogleBaseInput<AuthOptions>
     Pick<GoogleAIBaseLanguageModelCallOptions, "streamUsage"> {}
 
 /**
- * Integration with a chat model.
+ * Integration with a Google chat model.
  */
 export abstract class ChatGoogleBase<AuthOptions>
   extends BaseChatModel<GoogleAIBaseLanguageModelCallOptions, AIMessageChunk>
