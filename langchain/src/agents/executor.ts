@@ -311,6 +311,7 @@ export interface AgentExecutorInput extends ChainInputs {
     | boolean
     | string
     | ((e: OutputParserException | ToolInputParsingException) => string);
+  handleToolRuntimeErrors?: (e: Error) => string;
 }
 
 // TODO: Type properly with { intermediateSteps?: AgentStep[] };
@@ -386,6 +387,8 @@ export class AgentExecutor extends BaseChain<ChainValues, AgentExecutorOutput> {
     | ((e: OutputParserException | ToolInputParsingException) => string) =
     false;
 
+  handleToolRuntimeErrors?: (e: Error) => string;
+
   get inputKeys() {
     return this.agent.inputKeys;
   }
@@ -427,6 +430,7 @@ export class AgentExecutor extends BaseChain<ChainValues, AgentExecutorOutput> {
     this.tools = input.tools;
     this.handleParsingErrors =
       input.handleParsingErrors ?? this.handleParsingErrors;
+    this.handleToolRuntimeErrors = input.handleToolRuntimeErrors;
     this.returnOnlyOutputs = returnOnlyOutputs;
     if (this.agent._agentActionType() === "multi") {
       for (const tool of this.tools) {
@@ -565,7 +569,8 @@ export class AgentExecutor extends BaseChain<ChainValues, AgentExecutorOutput> {
                 "Received unsupported non-string response from tool call."
               );
             }
-          } catch (e) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          } catch (e: any) {
             // eslint-disable-next-line no-instanceof/no-instanceof
             if (e instanceof ToolInputParsingException) {
               if (this.handleParsingErrors === true) {
@@ -583,6 +588,8 @@ export class AgentExecutor extends BaseChain<ChainValues, AgentExecutorOutput> {
                 runManager?.getChild()
               );
               return { action, observation: observation ?? "" };
+            } else if (this.handleToolRuntimeErrors !== undefined) {
+              observation = this.handleToolRuntimeErrors(e);
             }
           }
 

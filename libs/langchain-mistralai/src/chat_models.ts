@@ -800,6 +800,18 @@ export class ChatMistralAI<
     this.streamUsage = fields?.streamUsage ?? this.streamUsage;
   }
 
+  get lc_secrets(): { [key: string]: string } | undefined {
+    return {
+      apiKey: "MISTRAL_API_KEY",
+    };
+  }
+
+  get lc_aliases(): { [key: string]: string } | undefined {
+    return {
+      apiKey: "mistral_api_key",
+    };
+  }
+
   getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
     const params = this.invocationParams(options);
     return {

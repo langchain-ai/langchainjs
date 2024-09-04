@@ -289,6 +289,16 @@ export abstract class BaseMessage
     };
   }
 
+  // this private method is used to update the ID for the runtime
+  // value as well as in lc_kwargs for serialisation
+  _updateId(value: string | undefined) {
+    this.id = value;
+
+    // lc_attributes wouldn't work here, because jest compares the
+    // whole object
+    this.lc_kwargs.id = value;
+  }
+
   get [Symbol.toStringTag]() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return (this.constructor as any).lc_name();
@@ -440,12 +450,25 @@ export abstract class BaseMessageChunk extends BaseMessage {
   abstract concat(chunk: BaseMessageChunk): BaseMessageChunk;
 }
 
+export type MessageFieldWithRole = {
+  role: StringWithAutocomplete<"user" | "assistant" | MessageType>;
+  content: MessageContent;
+  name?: string;
+} & Record<string, unknown>;
+
+export function _isMessageFieldWithRole(
+  x: BaseMessageLike
+): x is MessageFieldWithRole {
+  return typeof (x as MessageFieldWithRole).role === "string";
+}
+
 export type BaseMessageLike =
   | BaseMessage
   | ({
       type: MessageType | "user" | "assistant" | "placeholder";
     } & BaseMessageFields &
       Record<string, unknown>)
+  | MessageFieldWithRole
   | [
       StringWithAutocomplete<
         MessageType | "user" | "assistant" | "placeholder"
