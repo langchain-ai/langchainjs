@@ -80,6 +80,10 @@ export interface DallEAPIWrapperParams extends ToolParams {
    * The organization to use
    */
   organization?: string;
+  /**
+   * The base URL of the OpenAI API.
+   */
+  baseUrl?: string;
 }
 
 /**
@@ -141,6 +145,7 @@ export class DallEAPIWrapper extends Tool {
       apiKey: openAIApiKey,
       organization,
       dangerouslyAllowBrowser: true,
+      baseUrl: fields?.baseUrl,
     };
     this.client = new OpenAIClient(clientConfig);
     this.model = fields?.model ?? fields?.modelName ?? this.model;
