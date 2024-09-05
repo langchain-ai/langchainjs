@@ -701,7 +701,7 @@
     "@langchain/aws": "*",
     "@langchain/cohere": "*",
     "@langchain/community": "*",
-    "@langchain/core": ">=0.3.0 <0.4.0",
+    "@langchain/core": ">=0.2.21 <0.4.0",
     "@langchain/google-genai": "*",
     "@langchain/google-vertexai": "*",
     "@langchain/groq": "*",

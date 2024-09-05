@@ -9,10 +9,6 @@ if (currentPackageJson.peerDependencies["@langchain/core"] && !currentPackageJso
   const minVersion = semver.minVersion(
     currentPackageJson.peerDependencies["@langchain/core"]
   ).version;
-  currentPackageJson.overrides = {
-    ...currentPackageJson.overrides,
-    "@langchain/core": minVersion,
-  };
   currentPackageJson.peerDependencies = {
     ...currentPackageJson.peerDependencies,
     "@langchain/core": minVersion,

@@ -22,6 +22,7 @@ cd "$updater_script_dir"
 yarn
 # Run the updater script
 node "update_resolutions_lowest.js"
+node "update_workspace_deps.js"
 
 
 # Navigate back to monorepo root and install dependencies
@@ -32,4 +33,10 @@ yarn
 # We need to run inside the package directory so turbo repo does
 # not try to build the package/its workspace dependencies.
 cd "$monorepo_community_dir"
+
+# Read the @langchain/core version from peerDependencies
+core_version=$(node -p "require('./package.json').peerDependencies['@langchain/core']")
+
+# Install @langchain/core at the specified version
+yarn add @langchain/core@$core_version
 yarn test

@@ -239,7 +239,7 @@
     "@google-cloud/storage": "^6.10.1 || ^7.7.0",
     "@gradientai/nodejs-sdk": "^1.2.0",
     "@huggingface/inference": "^2.6.4",
-    "@langchain/core": ">=0.3.0 <0.4.0",
+    "@langchain/core": ">=0.2.21 <0.4.0",
     "@langchain/langgraph": "*",
     "@layerup/layerup-security": "^1.5.12",
     "@mendable/firecrawl-js": "^0.0.13",

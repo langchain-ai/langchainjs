@@ -37,7 +37,7 @@
     "uuid": "^10.0.0"
   },
   "peerDependencies": {
-    "@langchain/core": ">=0.3.0 <0.4.0"
+    "@langchain/core": ">=0.2.21 <0.4.0"
   },
   "devDependencies": {
     "@faker-js/faker": "^8.3.1",

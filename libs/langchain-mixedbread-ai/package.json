@@ -38,7 +38,7 @@
     "@mixedbread-ai/sdk": "^2.2.3"
   },
   "peerDependencies": {
-    "@langchain/core": ">=0.3.0 <0.4.0"
+    "@langchain/core": ">=0.2.5 <0.4.0"
   },
   "devDependencies": {
     "@jest/globals": "^29.5.0",

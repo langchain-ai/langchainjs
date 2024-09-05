@@ -32,4 +32,7 @@ yarn
 # We need to run inside the anthropic directory so turbo repo does
 # not try to build the package/its workspace dependencies.
 cd "$monorepo_anthropic_dir"
+
+# Install @langchain/core at the latest version
+yarn add @langchain/core@latest
 yarn test

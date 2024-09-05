@@ -9,10 +9,6 @@ if (currentPackageJson.peerDependencies["@langchain/core"] && !currentPackageJso
   const minVersion = semver.minVersion(
     currentPackageJson.peerDependencies["@langchain/core"]
   ).version;
-  currentPackageJson.overrides = {
-    ...currentPackageJson.overrides,
-    "@langchain/core": minVersion,
-  };
   currentPackageJson.peerDependencies = {
     ...currentPackageJson.peerDependencies,
     "@langchain/core": minVersion,
@@ -23,10 +19,6 @@ if (currentPackageJson.peerDependencies["@langchain/openai"] && !currentPackageJ
   const minVersion = semver.minVersion(
     currentPackageJson.peerDependencies["@langchain/openai"]
   ).version;
-  currentPackageJson.overrides = {
-    ...currentPackageJson.overrides,
-    "@langchain/openai": minVersion,
-  };
   currentPackageJson.peerDependencies = {
     ...currentPackageJson.peerDependencies,
     "@langchain/openai": minVersion,
@@ -37,10 +29,6 @@ if (currentPackageJson.peerDependencies["@langchain/textsplitters"] && !currentP
   const minVersion = semver.minVersion(
     currentPackageJson.peerDependencies["@langchain/textsplitters"]
   ).version;
-  currentPackageJson.overrides = {
-    ...currentPackageJson.overrides,
-    "@langchain/textsplitters": minVersion,
-  };
   currentPackageJson.peerDependencies = {
     ...currentPackageJson.peerDependencies,
     "@langchain/textsplitters": minVersion,

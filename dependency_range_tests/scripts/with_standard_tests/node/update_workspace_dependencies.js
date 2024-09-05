@@ -4,9 +4,9 @@ const standardTestsPackageJsonPath = "/app/monorepo/libs/langchain-standard-test
 
 const currentPackageJson = JSON.parse(fs.readFileSync(standardTestsPackageJsonPath));
 
-if (currentPackageJson.peerDependencies["@langchain/core"]) {
-  currentPackageJson.peerDependencies = {
-    ...currentPackageJson.peerDependencies,
+if (currentPackageJson.dependencies["@langchain/core"]) {
+  currentPackageJson.dependencies = {
+    ...currentPackageJson.dependencies,
     "@langchain/core": "latest",
   };
 }
