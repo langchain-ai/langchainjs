@@ -145,6 +145,14 @@ export interface AnthropicInput {
    * @default true
    */
   streamUsage?: boolean;
+
+  /**
+   * Optional method that returns an initialized underlying Anthropic client.
+   * Useful for accessing Anthropic models hosted on other cloud services
+   * such as Google Vertex.
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  createClient?: (options: ClientOptions) => any;
 }
 
 /**
@@ -611,6 +619,13 @@ export class ChatAnthropicMessages<
 
   streamUsage = true;
 
+  /**
+   * Optional method that returns an initialized underlying Anthropic client.
+   * Useful for accessing Anthropic models hosted on other cloud services
+   * such as Google Vertex.
+   */
+  createClient: (options: ClientOptions) => Anthropic;
+
   constructor(fields?: AnthropicInput & BaseChatModelParams) {
     super(fields ?? {});
 
@@ -644,6 +659,10 @@ export class ChatAnthropicMessages<
 
     this.streaming = fields?.streaming ?? false;
     this.streamUsage = fields?.streamUsage ?? this.streamUsage;
+
+    this.createClient =
+      fields?.createClient ??
+      ((options: ClientOptions) => new Anthropic(options));
   }
 
   getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
@@ -908,7 +927,7 @@ export class ChatAnthropicMessages<
   ): Promise<Stream<AnthropicMessageStreamEvent>> {
     if (!this.streamingClient) {
       const options_ = this.apiUrl ? { baseURL: this.apiUrl } : undefined;
-      this.streamingClient = new Anthropic({
+      this.streamingClient = this.createClient({
         ...this.clientOptions,
         ...options_,
         apiKey: this.apiKey,
@@ -938,7 +957,7 @@ export class ChatAnthropicMessages<
       if (!this.apiKey) {
         throw new Error("Missing Anthropic API key.");
       }
-      this.batchClient = new Anthropic({
+      this.batchClient = this.createClient({
         ...this.clientOptions,
         ...options,
         apiKey: this.apiKey,

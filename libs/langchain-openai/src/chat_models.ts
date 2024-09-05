@@ -956,6 +956,7 @@ export class ChatOpenAI<
     this.openAIApiKey =
       fields?.apiKey ??
       fields?.openAIApiKey ??
+      fields?.configuration?.apiKey ??
       getEnvironmentVariable("OPENAI_API_KEY");
     this.apiKey = this.openAIApiKey;
 

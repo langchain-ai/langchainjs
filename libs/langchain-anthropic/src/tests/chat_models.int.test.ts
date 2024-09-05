@@ -16,6 +16,7 @@ import {
 } from "@langchain/core/prompts";
 import { CallbackManager } from "@langchain/core/callbacks/manager";
 import { concat } from "@langchain/core/utils/stream";
+import { AnthropicVertex } from "@anthropic-ai/vertex-sdk";
 import { ChatAnthropic } from "../chat_models.js";
 
 test("Test ChatAnthropic", async () => {
@@ -734,4 +735,17 @@ test.skip("tool caching", async () => {
   expect(res2.response_metadata.usage.cache_read_input_tokens).toBeGreaterThan(
     0
   );
+});
+
+test.skip("Test ChatAnthropic with custom client", async () => {
+  const client = new AnthropicVertex();
+  const chat = new ChatAnthropic({
+    modelName: "claude-3-sonnet-20240229",
+    maxRetries: 0,
+    createClient: () => client,
+  });
+  const message = new HumanMessage("Hello!");
+  const res = await chat.invoke([message]);
+  // console.log({ res });
+  expect(res.response_metadata.usage).toBeDefined();
 });
