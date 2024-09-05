@@ -20,8 +20,8 @@ cp "$original_updater_script_dir"/* "$updater_script_dir/"
 cd "$updater_script_dir"
 yarn
 # Run the updater script
-node "update_resolutions_lowest.js"
 node "update_workspace_deps.js"
+node "update_resolutions_lowest.js"
 
 # Navigate back to monorepo root and install dependencies
 cd "$monorepo_dir"

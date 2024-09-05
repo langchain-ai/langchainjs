@@ -15,22 +15,22 @@ if (currentPackageJson.peerDependencies["@langchain/core"] && !currentPackageJso
   };
 }
 
-if (currentPackageJson.peerDependencies["@langchain/openai"] && !currentPackageJson.peerDependencies["@langchain/openai"].includes("rc")) {
+if (currentPackageJson.dependencies["@langchain/openai"] && !currentPackageJson.dependencies["@langchain/openai"].includes("rc")) {
   const minVersion = semver.minVersion(
-    currentPackageJson.peerDependencies["@langchain/openai"]
+    currentPackageJson.dependencies["@langchain/openai"]
   ).version;
-  currentPackageJson.peerDependencies = {
-    ...currentPackageJson.peerDependencies,
+  currentPackageJson.dependencies = {
+    ...currentPackageJson.dependencies,
     "@langchain/openai": minVersion,
   };
 }
 
-if (currentPackageJson.peerDependencies["@langchain/textsplitters"] && !currentPackageJson.peerDependencies["@langchain/textsplitters"].includes("rc")) {
+if (currentPackageJson.dependencies["@langchain/textsplitters"] && !currentPackageJson.dependencies["@langchain/textsplitters"].includes("rc")) {
   const minVersion = semver.minVersion(
-    currentPackageJson.peerDependencies["@langchain/textsplitters"]
+    currentPackageJson.dependencies["@langchain/textsplitters"]
   ).version;
-  currentPackageJson.peerDependencies = {
-    ...currentPackageJson.peerDependencies,
+  currentPackageJson.dependencies = {
+    ...currentPackageJson.dependencies,
     "@langchain/textsplitters": minVersion,
   };
 }

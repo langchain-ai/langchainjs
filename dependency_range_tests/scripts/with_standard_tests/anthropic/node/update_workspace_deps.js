@@ -12,8 +12,4 @@ if (currentPackageJson.devDependencies["@langchain/community"]) {
   };
 }
 
-if (currentPackageJson.devDependencies["@langchain/core"]) {
-  delete currentPackageJson.devDependencies["@langchain/core"];
-}
-
 fs.writeFileSync(communityPackageJsonPath, JSON.stringify(currentPackageJson, null, 2));

@@ -22,7 +22,6 @@ cd "$updater_script_dir"
 yarn
 # Run the updater script
 node "update_resolutions_lowest.js"
-node "update_workspace_deps.js"
 
 
 # Navigate back to monorepo root and install dependencies

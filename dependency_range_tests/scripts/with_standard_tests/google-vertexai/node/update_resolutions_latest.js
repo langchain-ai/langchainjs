@@ -5,6 +5,12 @@ const currentPackageJson = JSON.parse(fs.readFileSync(communityPackageJsonPath))
 
 if (currentPackageJson.devDependencies["@langchain/core"]) {
   delete currentPackageJson.devDependencies["@langchain/core"];
+  currentPackageJson.peerDependencies["@langchain/core"] = "latest";
+}
+
+if (currentPackageJson.devDependencies["@langchain/google-gauth"]) {
+  delete currentPackageJson.devDependencies["@langchain/google-gauth"];
+  currentPackageJson.peerDependencies["@langchain/google-gauth"] = "latest";
 }
 
 fs.writeFileSync(communityPackageJsonPath, JSON.stringify(currentPackageJson, null, 2));

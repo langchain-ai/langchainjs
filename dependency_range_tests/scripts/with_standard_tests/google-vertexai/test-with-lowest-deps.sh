@@ -22,7 +22,6 @@ cd "$updater_script_dir"
 yarn
 # Run the updater script
 node "update_resolutions_lowest.js"
-node "update_workspace_deps.js"
 
 
 # Navigate back to monorepo root and install dependencies
@@ -37,6 +36,8 @@ cd "$monorepo_vertexai_dir"
 # Read the @langchain/core version from peerDependencies
 core_version=$(node -p "require('./package.json').peerDependencies['@langchain/core']")
 
+gauth_version=$(node -p "require('./package.json').peerDependencies['@langchain/google-gauth']")
+
 # Install @langchain/core at the specified version
-yarn add @langchain/core@$core_version
+yarn add @langchain/core@$core_version @langchain/google-gauth@$gauth_version
 yarn test
