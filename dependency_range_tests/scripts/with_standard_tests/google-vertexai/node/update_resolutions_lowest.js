@@ -15,12 +15,16 @@ if (currentPackageJson.peerDependencies["@langchain/core"] && !currentPackageJso
   };
 }
 
-if (currentPackageJson.peerDependencies["@langchain/google-gauth"] && !currentPackageJson.peerDependencies["@langchain/google-gauth"].includes("rc")) {
+if (currentPackageJson.devDependencies["@langchain/core"]) {
+  delete currentPackageJson.devDependencies["@langchain/core"];
+}
+
+if (currentPackageJson.dependencies["@langchain/google-gauth"] && !currentPackageJson.dependencies["@langchain/google-gauth"].includes("rc")) {
   const minVersion = semver.minVersion(
-    currentPackageJson.peerDependencies["@langchain/google-gauth"]
+    currentPackageJson.dependencies["@langchain/google-gauth"]
   ).version;
-  currentPackageJson.peerDependencies = {
-    ...currentPackageJson.peerDependencies,
+  currentPackageJson.dependencies = {
+    ...currentPackageJson.dependencies,
     "@langchain/google-gauth": minVersion,
   };
 }

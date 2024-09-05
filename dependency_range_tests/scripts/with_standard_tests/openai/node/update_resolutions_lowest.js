@@ -15,4 +15,8 @@ if (currentPackageJson.peerDependencies["@langchain/core"] && !currentPackageJso
   };
 }
 
+if (currentPackageJson.devDependencies["@langchain/core"]) {
+  delete currentPackageJson.devDependencies["@langchain/core"];
+}
+
 fs.writeFileSync(communityPackageJsonPath, JSON.stringify(currentPackageJson, null, 2));

@@ -80,7 +80,7 @@
     "@langchain/core": "workspace:*",
     "@langchain/langgraph": "~0.0.26",
     "@langchain/scripts": ">=0.1.0 <0.2.0",
-    "@langchain/standard-tests": "workspace:*",
+    "@langchain/standard-tests": "0.0.0",
     "@layerup/layerup-security": "^1.5.12",
     "@mendable/firecrawl-js": "^0.0.36",
     "@mlc-ai/web-llm": ">=0.2.62 <0.3.0",

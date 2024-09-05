@@ -11223,7 +11223,7 @@ __metadata:
     "@langchain/langgraph": ~0.0.26
     "@langchain/openai": ">=0.2.0 <0.3.0"
     "@langchain/scripts": ">=0.1.0 <0.2.0"
-    "@langchain/standard-tests": "workspace:*"
+    "@langchain/standard-tests": 0.0.0
     "@layerup/layerup-security": ^1.5.12
     "@mendable/firecrawl-js": ^0.0.36
     "@mlc-ai/web-llm": ">=0.2.62 <0.3.0"
@@ -12521,7 +12521,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/standard-tests@0.0.0, @langchain/standard-tests@workspace:*, @langchain/standard-tests@workspace:libs/langchain-standard-tests":
+"@langchain/standard-tests@0.0.0, @langchain/standard-tests@workspace:libs/langchain-standard-tests":
   version: 0.0.0-use.local
   resolution: "@langchain/standard-tests@workspace:libs/langchain-standard-tests"
   dependencies:
