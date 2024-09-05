@@ -12242,6 +12242,7 @@ __metadata:
   resolution: "@langchain/nomic@workspace:libs/langchain-nomic"
   dependencies:
     "@jest/globals": ^29.5.0
+    "@langchain/core": "workspace:*"
     "@langchain/openai": "workspace:^"
     "@langchain/scripts": ">=0.1.0 <0.2.0"
     "@nomic-ai/atlas": ^0.8.0
