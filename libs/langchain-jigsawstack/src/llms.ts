@@ -46,13 +46,6 @@ export class JigsawStackPromptEngine
     };
   }
 
-  get lc_aliases(): { [key: string]: string } | undefined {
-    return {
-      apiKey: "jigsawstack_api_key",
-      api_key: "jigsawstack_api_key",
-    };
-  }
-
   lc_serializable = true;
 
   apiKey: string;
