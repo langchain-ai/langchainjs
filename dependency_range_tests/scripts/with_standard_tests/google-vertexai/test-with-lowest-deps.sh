@@ -36,8 +36,6 @@ cd "$monorepo_vertexai_dir"
 # Read the @langchain/core version from peerDependencies
 core_version=$(node -p "require('./package.json').peerDependencies['@langchain/core']")
 
-gauth_version=$(node -p "require('./package.json').peerDependencies['@langchain/google-gauth']")
-
 # Install @langchain/core at the specified version
-yarn add @langchain/core@$core_version @langchain/google-gauth@$gauth_version
+yarn add @langchain/core@$core_version
 yarn test

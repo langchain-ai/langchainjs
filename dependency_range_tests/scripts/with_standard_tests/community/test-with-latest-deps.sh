@@ -34,5 +34,4 @@ yarn
 cd "$monorepo_community_dir"
 
 yarn add @langchain/core
-yarn add @langchain/openai
 yarn test
