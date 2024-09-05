@@ -608,6 +608,7 @@
     "@langchain/anthropic": "^0.2.8",
     "@langchain/aws": "^0.0.5",
     "@langchain/cohere": "^0.2.1",
+    "@langchain/core": "workspace:*",
     "@langchain/google-genai": "^0.0.26",
     "@langchain/google-vertexai": "~0.0",
     "@langchain/groq": "^0.0.15",
@@ -700,6 +701,7 @@
     "@langchain/aws": "*",
     "@langchain/cohere": "*",
     "@langchain/community": "*",
+    "@langchain/core": ">=0.3.0 <0.4.0",
     "@langchain/google-genai": "*",
     "@langchain/google-vertexai": "*",
     "@langchain/groq": "*",
@@ -926,7 +928,6 @@
     }
   },
   "dependencies": {
-    "@langchain/core": ">=0.2.21 <0.3.0",
     "@langchain/openai": ">=0.1.0 <0.3.0",
     "@langchain/textsplitters": "~0.0.0",
     "binary-extensions": "^2.2.0",

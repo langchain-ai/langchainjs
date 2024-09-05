@@ -22,20 +22,6 @@ import type { DocumentInterface } from "../documents/document.js";
 import { isTracingEnabled } from "../utils/callbacks.js";
 import { isBaseTracer } from "../tracers/base.js";
 
-if (
-  /* #__PURE__ */ isTracingEnabled() &&
-  /* #__PURE__ */ getEnvironmentVariable("LANGCHAIN_CALLBACKS_BACKGROUND") !==
-    "true"
-) {
-  /* #__PURE__ */ console.warn(
-    [
-      "[WARN]: You have enabled LangSmith tracing without backgrounding callbacks.",
-      "[WARN]: If you are not using a serverless environment where you must wait for tracing calls to finish,",
-      `[WARN]: we suggest setting "process.env.LANGCHAIN_CALLBACKS_BACKGROUND=true" to avoid additional latency.`,
-    ].join("\n")
-  );
-}
-
 type BaseCallbackManagerMethods = {
   [K in keyof CallbackHandlerMethods]?: (
     ...args: Parameters<Required<CallbackHandlerMethods>[K]>

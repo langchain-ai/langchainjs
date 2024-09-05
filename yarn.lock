@@ -10879,7 +10879,7 @@ __metadata:
     "@anthropic-ai/sdk": ^0.25.2
     "@anthropic-ai/vertex-sdk": ^0.4.1
     "@jest/globals": ^29.5.0
-    "@langchain/core": ">=0.2.21 <0.3.0"
+    "@langchain/core": "workspace:*"
     "@langchain/scripts": ">=0.1.0 <0.2.0"
     "@langchain/standard-tests": 0.0.0
     "@swc/core": ^1.3.90
@@ -10902,6 +10902,8 @@ __metadata:
     typescript: ~5.1.6
     zod: ^3.22.4
     zod-to-json-schema: ^3.22.4
+  peerDependencies:
+    "@langchain/core": ">=0.3.0 0.4.0"
   languageName: unknown
   linkType: soft
 
@@ -10929,7 +10931,7 @@ __metadata:
     "@aws-sdk/credential-provider-node": ^3.600.0
     "@aws-sdk/types": ^3.609.0
     "@jest/globals": ^29.5.0
-    "@langchain/core": ">=0.2.21 <0.3.0"
+    "@langchain/core": "workspace:*"
     "@langchain/scripts": ">=0.1.0 <0.2.0"
     "@langchain/standard-tests": 0.0.0
     "@smithy/types": ^3.2.0
@@ -10955,6 +10957,8 @@ __metadata:
     typescript: <5.2.0
     zod: ^3.22.4
     zod-to-json-schema: ^3.22.5
+  peerDependencies:
+    "@langchain/core": ">=0.3.0 <0.4.0"
   languageName: unknown
   linkType: soft
 
@@ -10965,7 +10969,7 @@ __metadata:
     "@azure/cosmos": 4.0.1-beta.3
     "@azure/identity": ^4.2.0
     "@jest/globals": ^29.5.0
-    "@langchain/core": ~0.2
+    "@langchain/core": "workspace:*"
     "@langchain/openai": "workspace:^"
     "@langchain/scripts": ">=0.1.0 <0.2.0"
     "@swc/core": ^1.3.90
@@ -10989,6 +10993,8 @@ __metadata:
     rollup: ^4.5.2
     ts-jest: ^29.1.0
     typescript: <5.2.0
+  peerDependencies:
+    "@langchain/core": ">=0.3.0 <0.4.0"
   languageName: unknown
   linkType: soft
 
@@ -10998,7 +11004,7 @@ __metadata:
   dependencies:
     "@azure/identity": ^4.2.1
     "@jest/globals": ^29.5.0
-    "@langchain/core": ~0.2
+    "@langchain/core": "workspace:*"
     "@langchain/scripts": ">=0.1.0 <0.2.0"
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
@@ -11022,6 +11028,8 @@ __metadata:
     ts-jest: ^29.1.0
     typescript: <5.2.0
     uuid: ^10.0.0
+  peerDependencies:
+    "@langchain/core": ">=0.3.0 <0.4.0"
   languageName: unknown
   linkType: soft
 
@@ -11033,7 +11041,7 @@ __metadata:
     "@azure/identity": ^4.2.1
     "@azure/openai": 1.0.0-beta.11
     "@jest/globals": ^29.5.0
-    "@langchain/core": ">0.1.0 <0.3.0"
+    "@langchain/core": "workspace:*"
     "@langchain/scripts": ">=0.1.0 <0.2.0"
     "@langchain/standard-tests": 0.0.0
     "@swc/core": ^1.3.90
@@ -11055,6 +11063,8 @@ __metadata:
     typescript: ~5.1.6
     zod: ^3.22.3
     zod-to-json-schema: 3.20.3
+  peerDependencies:
+    "@langchain/core": ">=0.3.0 <0.4.0"
   languageName: unknown
   linkType: soft
 
@@ -11064,7 +11074,7 @@ __metadata:
   dependencies:
     "@baiducloud/qianfan": ^0.1.6
     "@jest/globals": ^29.5.0
-    "@langchain/core": ">0.1.56 <0.3.0"
+    "@langchain/core": "workspace:*"
     "@langchain/openai": ~0.1.0
     "@langchain/scripts": ">=0.1.0 <0.2.0"
     "@swc/core": ^1.3.90
@@ -11090,6 +11100,8 @@ __metadata:
     typescript: <5.2.0
     zod: ^3.22.4
     zod-to-json-schema: ^3.22.5
+  peerDependencies:
+    "@langchain/core": ">=0.3.0 <0.4.0"
   languageName: unknown
   linkType: soft
 
@@ -11100,7 +11112,7 @@ __metadata:
     "@cloudflare/ai": 1.0.47
     "@cloudflare/workers-types": ^4.20231218.0
     "@jest/globals": ^29.5.0
-    "@langchain/core": ">0.1.0 <0.3.0"
+    "@langchain/core": "workspace:*"
     "@langchain/langgraph": ~0.0.31
     "@langchain/scripts": ">=0.1.0 <0.2.0"
     "@langchain/standard-tests": 0.0.0
@@ -11127,7 +11139,8 @@ __metadata:
     typescript: <5.2.0
     uuid: ^10.0.0
   peerDependencies:
-    "@langchain/langgraph": <0.1.0
+    "@langchain/core": ">=0.3.0 <0.4.0"
+    "@langchain/langgraph": "*"
   peerDependenciesMeta:
     "@langchain/langgraph":
       optional: true
@@ -11139,7 +11152,7 @@ __metadata:
   resolution: "@langchain/cohere@workspace:libs/langchain-cohere"
   dependencies:
     "@jest/globals": ^29.5.0
-    "@langchain/core": ">=0.2.21 <0.3.0"
+    "@langchain/core": "workspace:*"
     "@langchain/scripts": ">=0.1.0 <0.2.0"
     "@langchain/standard-tests": 0.0.0
     "@swc/core": ^1.3.90
@@ -11167,6 +11180,8 @@ __metadata:
     uuid: ^10.0.0
     zod: ^3.23.8
     zod-to-json-schema: ^3.23.1
+  peerDependencies:
+    "@langchain/core": ">=0.3.0 <0.4.0"
   languageName: unknown
   linkType: soft
 
@@ -11204,11 +11219,11 @@ __metadata:
     "@gradientai/nodejs-sdk": ^1.2.0
     "@huggingface/inference": ^2.6.4
     "@jest/globals": ^29.5.0
-    "@langchain/core": ">=0.2.21 <0.3.0"
+    "@langchain/core": "workspace:*"
     "@langchain/langgraph": ~0.0.26
     "@langchain/openai": ">=0.2.0 <0.3.0"
     "@langchain/scripts": ">=0.1.0 <0.2.0"
-    "@langchain/standard-tests": 0.0.0
+    "@langchain/standard-tests": "workspace:*"
     "@layerup/layerup-security": ^1.5.12
     "@mendable/firecrawl-js": ^0.0.36
     "@mlc-ai/web-llm": 0.2.46
@@ -11375,6 +11390,7 @@ __metadata:
     "@google-cloud/storage": ^6.10.1 || ^7.7.0
     "@gradientai/nodejs-sdk": ^1.2.0
     "@huggingface/inference": ^2.6.4
+    "@langchain/core": ">=0.3.0 <0.4.0"
     "@langchain/langgraph": "*"
     "@layerup/layerup-security": ^1.5.12
     "@mendable/firecrawl-js": ^0.0.13
@@ -11759,7 +11775,7 @@ __metadata:
   resolution: "@langchain/exa@workspace:libs/langchain-exa"
   dependencies:
     "@jest/globals": ^29.5.0
-    "@langchain/core": ">0.1.0 <0.3.0"
+    "@langchain/core": "workspace:*"
     "@langchain/scripts": ">=0.1.0 <0.2.0"
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
@@ -11783,6 +11799,8 @@ __metadata:
     rollup: ^4.5.2
     ts-jest: ^29.1.0
     typescript: <5.2.0
+  peerDependencies:
+    "@langchain/core": ">=0.3.0 <0.4.0"
   languageName: unknown
   linkType: soft
 
@@ -11791,7 +11809,7 @@ __metadata:
   resolution: "@langchain/google-common@workspace:libs/langchain-google-common"
   dependencies:
     "@jest/globals": ^29.5.0
-    "@langchain/core": ">=0.2.21 <0.3.0"
+    "@langchain/core": "workspace:*"
     "@langchain/scripts": ">=0.1.0 <0.2.0"
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
@@ -11816,6 +11834,8 @@ __metadata:
     uuid: ^10.0.0
     zod: ^3.22.4
     zod-to-json-schema: ^3.22.4
+  peerDependencies:
+    "@langchain/core": ">=0.3.0 <0.4.0"
   languageName: unknown
   linkType: soft
 
@@ -11824,7 +11844,7 @@ __metadata:
   resolution: "@langchain/google-gauth@workspace:libs/langchain-google-gauth"
   dependencies:
     "@jest/globals": ^29.5.0
-    "@langchain/core": ">=0.2.21 <0.3.0"
+    "@langchain/core": "workspace:*"
     "@langchain/google-common": ~0.0.27
     "@langchain/scripts": ">=0.1.0 <0.2.0"
     "@swc/core": ^1.3.90
@@ -11849,6 +11869,8 @@ __metadata:
     ts-jest: ^29.1.0
     typescript: <5.2.0
     zod: ^3.22.4
+  peerDependencies:
+    "@langchain/core": ">=0.3.0 <0.4.0"
   languageName: unknown
   linkType: soft
 
@@ -11858,7 +11880,7 @@ __metadata:
   dependencies:
     "@google/generative-ai": ^0.7.0
     "@jest/globals": ^29.5.0
-    "@langchain/core": ">=0.2.21 <0.3.0"
+    "@langchain/core": "workspace:*"
     "@langchain/scripts": ">=0.1.0 <0.2.0"
     "@langchain/standard-tests": 0.0.0
     "@swc/core": ^1.3.90
@@ -11884,6 +11906,8 @@ __metadata:
     typescript: <5.2.0
     zod: ^3.22.4
     zod-to-json-schema: ^3.22.4
+  peerDependencies:
+    "@langchain/core": ">=0.3.0 <0.4.0"
   languageName: unknown
   linkType: soft
 
@@ -11892,7 +11916,7 @@ __metadata:
   resolution: "@langchain/google-vertexai-web@workspace:libs/langchain-google-vertexai-web"
   dependencies:
     "@jest/globals": ^29.5.0
-    "@langchain/core": ">=0.2.21 <0.3.0"
+    "@langchain/core": "workspace:*"
     "@langchain/google-common": ^0.0.27
     "@langchain/google-webauth": ~0.0.27
     "@langchain/scripts": ">=0.1.0 <0.2.0"
@@ -11918,6 +11942,8 @@ __metadata:
     ts-jest: ^29.1.0
     typescript: <5.2.0
     zod: ^3.22.4
+  peerDependencies:
+    "@langchain/core": ">=0.3.0 <0.4.0"
   languageName: unknown
   linkType: soft
 
@@ -11926,7 +11952,7 @@ __metadata:
   resolution: "@langchain/google-vertexai@workspace:libs/langchain-google-vertexai"
   dependencies:
     "@jest/globals": ^29.5.0
-    "@langchain/core": ">=0.2.21 <0.3.0"
+    "@langchain/core": "workspace:*"
     "@langchain/google-common": ^0.0.27
     "@langchain/google-gauth": ~0.0.27
     "@langchain/scripts": ">=0.1.0 <0.2.0"
@@ -11952,6 +11978,8 @@ __metadata:
     ts-jest: ^29.1.0
     typescript: <5.2.0
     zod: ^3.22.4
+  peerDependencies:
+    "@langchain/core": ">=0.3.0 <0.4.0"
   languageName: unknown
   linkType: soft
 
@@ -11960,7 +11988,7 @@ __metadata:
   resolution: "@langchain/google-webauth@workspace:libs/langchain-google-webauth"
   dependencies:
     "@jest/globals": ^29.5.0
-    "@langchain/core": ">=0.2.21 <0.3.0"
+    "@langchain/core": "workspace:*"
     "@langchain/google-common": ~0.0.27
     "@langchain/scripts": ">=0.1.0 <0.2.0"
     "@swc/core": ^1.3.90
@@ -11984,6 +12012,8 @@ __metadata:
     ts-jest: ^29.1.0
     typescript: <5.2.0
     web-auth-library: ^1.0.3
+  peerDependencies:
+    "@langchain/core": ">=0.3.0 <0.4.0"
   languageName: unknown
   linkType: soft
 
@@ -12005,7 +12035,7 @@ __metadata:
   resolution: "@langchain/groq@workspace:libs/langchain-groq"
   dependencies:
     "@jest/globals": ^29.5.0
-    "@langchain/core": ">=0.2.21 <0.3.0"
+    "@langchain/core": "workspace:*"
     "@langchain/openai": "workspace:^"
     "@langchain/scripts": ">=0.1.0 <0.2.0"
     "@langchain/standard-tests": 0.0.0
@@ -12033,6 +12063,8 @@ __metadata:
     typescript: <5.2.0
     zod: ^3.22.4
     zod-to-json-schema: ^3.22.5
+  peerDependencies:
+    "@langchain/core": ">=0.3.0 <0.4.0"
   languageName: unknown
   linkType: soft
 
@@ -12102,7 +12134,7 @@ __metadata:
   resolution: "@langchain/mistralai@workspace:libs/langchain-mistralai"
   dependencies:
     "@jest/globals": ^29.5.0
-    "@langchain/core": ">=0.2.21 <0.3.0"
+    "@langchain/core": "workspace:*"
     "@langchain/scripts": ">=0.1.0 <0.2.0"
     "@langchain/standard-tests": 0.0.0
     "@mistralai/mistralai": ^0.4.0
@@ -12129,6 +12161,8 @@ __metadata:
     uuid: ^10.0.0
     zod: ^3.22.4
     zod-to-json-schema: ^3.22.4
+  peerDependencies:
+    "@langchain/core": ">=0.3.0 <0.4.0"
   languageName: unknown
   linkType: soft
 
@@ -12137,7 +12171,7 @@ __metadata:
   resolution: "@langchain/mixedbread-ai@workspace:libs/langchain-mixedbread-ai"
   dependencies:
     "@jest/globals": ^29.5.0
-    "@langchain/core": ">=0.2.5 <0.3.0"
+    "@langchain/core": "workspace:*"
     "@langchain/scripts": ">=0.1.0 <0.2.0"
     "@langchain/standard-tests": 0.0.0
     "@mixedbread-ai/sdk": ^2.2.3
@@ -12162,6 +12196,8 @@ __metadata:
     rollup: ^4.5.2
     ts-jest: ^29.1.0
     typescript: <5.2.0
+  peerDependencies:
+    "@langchain/core": ">=0.3.0 <0.4.0"
   languageName: unknown
   linkType: soft
 
@@ -12170,7 +12206,7 @@ __metadata:
   resolution: "@langchain/mongodb@workspace:libs/langchain-mongodb"
   dependencies:
     "@jest/globals": ^29.5.0
-    "@langchain/core": ">0.1.0 <0.3.0"
+    "@langchain/core": "workspace:*"
     "@langchain/openai": "workspace:*"
     "@langchain/scripts": ">=0.1.0 <0.2.0"
     "@swc/core": ^1.3.90
@@ -12196,6 +12232,8 @@ __metadata:
     ts-jest: ^29.1.0
     typescript: <5.2.0
     uuid: ^10.0.0
+  peerDependencies:
+    "@langchain/core": ">=0.3.0 <0.4.0"
   languageName: unknown
   linkType: soft
 
@@ -12204,7 +12242,6 @@ __metadata:
   resolution: "@langchain/nomic@workspace:libs/langchain-nomic"
   dependencies:
     "@jest/globals": ^29.5.0
-    "@langchain/core": ">0.1.0 <0.3.0"
     "@langchain/openai": "workspace:^"
     "@langchain/scripts": ">=0.1.0 <0.2.0"
     "@nomic-ai/atlas": ^0.8.0
@@ -12229,6 +12266,8 @@ __metadata:
     rollup: ^4.5.2
     ts-jest: ^29.1.0
     typescript: <5.2.0
+  peerDependencies:
+    "@langchain/core": ">=0.3.0 <0.4.0"
   languageName: unknown
   linkType: soft
 
@@ -12248,7 +12287,7 @@ __metadata:
   resolution: "@langchain/ollama@workspace:libs/langchain-ollama"
   dependencies:
     "@jest/globals": ^29.5.0
-    "@langchain/core": ">=0.2.21 <0.3.0"
+    "@langchain/core": "workspace:*"
     "@langchain/scripts": ">=0.1.0 <0.2.0"
     "@langchain/standard-tests": 0.0.0
     "@swc/core": ^1.3.90
@@ -12275,6 +12314,8 @@ __metadata:
     uuid: ^10.0.0
     zod: ^3.22.4
     zod-to-json-schema: ^3.23.0
+  peerDependencies:
+    "@langchain/core": ">=0.3.0 <0.4.0"
   languageName: unknown
   linkType: soft
 
@@ -12284,7 +12325,7 @@ __metadata:
   dependencies:
     "@azure/identity": ^4.2.1
     "@jest/globals": ^29.5.0
-    "@langchain/core": ">=0.2.26 <0.3.0"
+    "@langchain/core": "workspace:*"
     "@langchain/scripts": ">=0.1.0 <0.2.0"
     "@langchain/standard-tests": 0.0.0
     "@swc/core": ^1.3.90
@@ -12308,6 +12349,8 @@ __metadata:
     typescript: ~5.1.6
     zod: ^3.22.4
     zod-to-json-schema: ^3.22.3
+  peerDependencies:
+    "@langchain/core": ">=0.3.0 <0.4.0"
   languageName: unknown
   linkType: soft
 
@@ -12330,7 +12373,7 @@ __metadata:
   dependencies:
     "@faker-js/faker": ^8.3.1
     "@jest/globals": ^29.5.0
-    "@langchain/core": ">0.2.0 <0.3.0"
+    "@langchain/core": "workspace:*"
     "@langchain/openai": "workspace:*"
     "@langchain/scripts": ">=0.1.0 <0.2.0"
     "@pinecone-database/pinecone": ^3.0.0
@@ -12357,6 +12400,8 @@ __metadata:
     ts-jest: ^29.1.0
     typescript: <5.2.0
     uuid: ^10.0.0
+  peerDependencies:
+    "@langchain/core": ">=0.3.0 <0.4.0"
   languageName: unknown
   linkType: soft
 
@@ -12366,7 +12411,7 @@ __metadata:
   dependencies:
     "@faker-js/faker": ^8.4.1
     "@jest/globals": ^29.5.0
-    "@langchain/core": ">0.1.0 <0.3.0"
+    "@langchain/core": "workspace:*"
     "@langchain/scripts": ">=0.1.0 <0.2.0"
     "@qdrant/js-client-rest": ^1.9.0
     "@swc/core": ^1.3.90
@@ -12391,6 +12436,8 @@ __metadata:
     ts-jest: ^29.1.0
     typescript: <5.2.0
     uuid: ^10.0.0
+  peerDependencies:
+    "@langchain/core": ">=0.3.0 <0.4.0"
   languageName: unknown
   linkType: soft
 
@@ -12400,7 +12447,7 @@ __metadata:
   dependencies:
     "@faker-js/faker": ^8.4.0
     "@jest/globals": ^29.5.0
-    "@langchain/core": ">0.1.0 <0.3.0"
+    "@langchain/core": "workspace:*"
     "@langchain/scripts": ">=0.1.0 <0.2.0"
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
@@ -12425,6 +12472,8 @@ __metadata:
     ts-jest: ^29.1.0
     typescript: <5.2.0
     uuid: ^10.0.0
+  peerDependencies:
+    "@langchain/core": ">=0.3.0 <0.4.0"
   languageName: unknown
   linkType: soft
 
@@ -12471,7 +12520,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/standard-tests@0.0.0, @langchain/standard-tests@workspace:libs/langchain-standard-tests":
+"@langchain/standard-tests@0.0.0, @langchain/standard-tests@workspace:*, @langchain/standard-tests@workspace:libs/langchain-standard-tests":
   version: 0.0.0-use.local
   resolution: "@langchain/standard-tests@workspace:libs/langchain-standard-tests"
   dependencies:
@@ -12508,7 +12557,7 @@ __metadata:
   resolution: "@langchain/textsplitters@workspace:libs/langchain-textsplitters"
   dependencies:
     "@jest/globals": ^29.5.0
-    "@langchain/core": ">0.2.0 <0.3.0"
+    "@langchain/core": "workspace:*"
     "@langchain/scripts": ">=0.1.0 <0.2.0"
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
@@ -12531,6 +12580,8 @@ __metadata:
     rollup: ^4.5.2
     ts-jest: ^29.1.0
     typescript: <5.2.0
+  peerDependencies:
+    "@langchain/core": ">=0.3.0 <0.4.0"
   languageName: unknown
   linkType: soft
 
@@ -12539,7 +12590,7 @@ __metadata:
   resolution: "@langchain/weaviate@workspace:libs/langchain-weaviate"
   dependencies:
     "@jest/globals": ^29.5.0
-    "@langchain/core": ">0.2.0 <0.3.0"
+    "@langchain/core": "workspace:*"
     "@langchain/openai": "workspace:^"
     "@langchain/scripts": ">=0.1.0 <0.2.0"
     "@swc/core": ^1.3.90
@@ -12566,6 +12617,8 @@ __metadata:
     typescript: <5.2.0
     uuid: ^10.0.0
     weaviate-ts-client: ^2.0.0
+  peerDependencies:
+    "@langchain/core": ">=0.3.0 <0.4.0"
   languageName: unknown
   linkType: soft
 
@@ -12574,7 +12627,7 @@ __metadata:
   resolution: "@langchain/yandex@workspace:libs/langchain-yandex"
   dependencies:
     "@jest/globals": ^29.5.0
-    "@langchain/core": ">0.1.0  <0.3.0"
+    "@langchain/core": "workspace:*"
     "@langchain/scripts": ">=0.1.0 <0.2.0"
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
@@ -12595,6 +12648,8 @@ __metadata:
     rollup: ^4.5.2
     ts-jest: ^29.1.0
     typescript: <5.2.0
+  peerDependencies:
+    "@langchain/core": ">=0.3.0 <0.4.0"
   languageName: unknown
   linkType: soft
 
@@ -32207,7 +32262,7 @@ __metadata:
     "@langchain/anthropic": ^0.2.8
     "@langchain/aws": ^0.0.5
     "@langchain/cohere": ^0.2.1
-    "@langchain/core": ">=0.2.21 <0.3.0"
+    "@langchain/core": "workspace:*"
     "@langchain/google-genai": ^0.0.26
     "@langchain/google-vertexai": ~0.0
     "@langchain/groq": ^0.0.15
@@ -32312,6 +32367,7 @@ __metadata:
     "@langchain/aws": "*"
     "@langchain/cohere": "*"
     "@langchain/community": "*"
+    "@langchain/core": ">=0.3.0 <0.4.0"
     "@langchain/google-genai": "*"
     "@langchain/google-vertexai": "*"
     "@langchain/groq": "*"

@@ -5,30 +5,30 @@ const communityPackageJsonPath = "/app/monorepo/libs/langchain-google-vertexai/p
 
 const currentPackageJson = JSON.parse(fs.readFileSync(communityPackageJsonPath));
 
-if (currentPackageJson.dependencies["@langchain/core"] && !currentPackageJson.dependencies["@langchain/core"].includes("rc")) {
+if (currentPackageJson.peerDependencies["@langchain/core"] && !currentPackageJson.peerDependencies["@langchain/core"].includes("rc")) {
   const minVersion = semver.minVersion(
-    currentPackageJson.dependencies["@langchain/core"]
+    currentPackageJson.peerDependencies["@langchain/core"]
   ).version;
   currentPackageJson.overrides = {
     ...currentPackageJson.overrides,
     "@langchain/core": minVersion,
   };
-  currentPackageJson.dependencies = {
-    ...currentPackageJson.dependencies,
+  currentPackageJson.peerDependencies = {
+    ...currentPackageJson.peerDependencies,
     "@langchain/core": minVersion,
   };
 }
 
-if (currentPackageJson.dependencies["@langchain/google-gauth"] && !currentPackageJson.dependencies["@langchain/google-gauth"].includes("rc")) {
+if (currentPackageJson.peerDependencies["@langchain/google-gauth"] && !currentPackageJson.peerDependencies["@langchain/google-gauth"].includes("rc")) {
   const minVersion = semver.minVersion(
-    currentPackageJson.dependencies["@langchain/google-gauth"]
+    currentPackageJson.peerDependencies["@langchain/google-gauth"]
   ).version;
   currentPackageJson.overrides = {
     ...currentPackageJson.overrides,
     "@langchain/google-gauth": minVersion,
   };
-  currentPackageJson.dependencies = {
-    ...currentPackageJson.dependencies,
+  currentPackageJson.peerDependencies = {
+    ...currentPackageJson.peerDependencies,
     "@langchain/google-gauth": minVersion,
   };
 }

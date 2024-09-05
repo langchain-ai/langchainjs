@@ -252,6 +252,10 @@ docs/integrations/tools/exa_search.md
 docs/integrations/tools/exa_search.mdx
 docs/integrations/tools/duckduckgo_search.md
 docs/integrations/tools/duckduckgo_search.mdx
+docs/integrations/stores/in_memory.md
+docs/integrations/stores/in_memory.mdx
+docs/integrations/stores/file_system.md
+docs/integrations/stores/file_system.mdx
 docs/integrations/text_embedding/togetherai.md
 docs/integrations/text_embedding/togetherai.mdx
 docs/integrations/text_embedding/openai.md
@@ -274,10 +278,6 @@ docs/integrations/text_embedding/bedrock.md
 docs/integrations/text_embedding/bedrock.mdx
 docs/integrations/text_embedding/azure_openai.md
 docs/integrations/text_embedding/azure_openai.mdx
-docs/integrations/stores/in_memory.md
-docs/integrations/stores/in_memory.mdx
-docs/integrations/stores/file_system.md
-docs/integrations/stores/file_system.mdx
 docs/integrations/retrievers/tavily.md
 docs/integrations/retrievers/tavily.mdx
 docs/integrations/retrievers/kendra-retriever.md

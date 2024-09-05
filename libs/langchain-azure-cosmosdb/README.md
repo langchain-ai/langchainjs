@@ -21,18 +21,18 @@ You can do so by adding appropriate fields to your project's `package.json` like
   "name": "your-project",
   "version": "0.0.0",
   "dependencies": {
-    "@langchain/openai": "^0.2.5",
-    "langchain": "0.2.12"
+    "@langchain/core": "^0.3.0",
+    "@langchain/azure-cosmosdb": "^0.2.5"
   },
   "resolutions": {
-    "@langchain/core": "0.2.20"
+    "@langchain/core": "0.3.0"
   },
   "overrides": {
-    "@langchain/core": "0.2.20"
+    "@langchain/core": "0.3.0"
   },
   "pnpm": {
     "overrides": {
-      "@langchain/core": "0.2.20"
+      "@langchain/core": "0.3.0"
     }
   }
 }

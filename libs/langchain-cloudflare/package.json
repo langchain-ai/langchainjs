@@ -36,12 +36,12 @@
   "license": "MIT",
   "dependencies": {
     "@cloudflare/ai": "1.0.47",
-    "@langchain/core": ">0.1.0 <0.3.0",
     "uuid": "^10.0.0"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20231218.0",
     "@jest/globals": "^29.5.0",
+    "@langchain/core": "workspace:*",
     "@langchain/langgraph": "~0.0.31",
     "@langchain/scripts": ">=0.1.0 <0.2.0",
     "@langchain/standard-tests": "0.0.0",
@@ -68,7 +68,8 @@
     "typescript": "<5.2.0"
   },
   "peerDependencies": {
-    "@langchain/langgraph": "<0.1.0"
+    "@langchain/core": ">=0.3.0 <0.4.0",
+    "@langchain/langgraph": "*"
   },
   "peerDependenciesMeta": {
     "@langchain/langgraph": {
