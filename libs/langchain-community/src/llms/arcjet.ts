@@ -39,34 +39,9 @@ export class ArcjetRedact<const Detect extends DetectSensitiveInfoEntities<Custo
   constructor(options: ArcjetRedactOptions<Detect>) {
     super(options);
 
-    if (!options.llm) {
-      throw new Error("Arcjet Redact requires an LLM to be provided");
-    }
-
-    if (options.entities && !Array.isArray(options.entities)) {
-      throw new Error("entities must be an array");
-    }
-
-    if (options.entities && options.entities.find((e) => typeof e !== "string")) {
-      throw new Error("entities must all be strings");
-    }
-
     if (options.entities && options.entities.length === 0) {
       throw new Error("no entities configured for redaction");
     }
-
-    if (options.contextWindowSize && typeof options.contextWindowSize !== "number") {
-      throw new Error("contextWindowSize must be a number")
-    }
-
-    if (options.detect && typeof options.detect !== "function") {
-      throw new Error("detect must be a function")
-    }
-
-    if (options.replace && typeof options.replace !== "function") {
-      throw new Error("replace must be a function")
-    }
-
     this.llm = options.llm;
     this.entities = options.entities;
     this.contextWindowSize = options.contextWindowSize;
