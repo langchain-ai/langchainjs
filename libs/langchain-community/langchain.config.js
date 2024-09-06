@@ -91,6 +91,7 @@ export const config = {
     // llms
     "llms/ai21": "llms/ai21",
     "llms/aleph_alpha": "llms/aleph_alpha",
+    "llms/arcjet": "llms/arcjet",
     "llms/bedrock": "llms/bedrock/index",
     "llms/bedrock/web": "llms/bedrock/web",
     "llms/cloudflare_workersai": "llms/cloudflare_workersai",
@@ -163,6 +164,7 @@ export const config = {
     "vectorstores/zep_cloud": "vectorstores/zep_cloud",
     // chat_models
     "chat_models/alibaba_tongyi": "chat_models/alibaba_tongyi",
+    "chat_models/arcjet": "chat_models/arcjet",
     "chat_models/baiduwenxin": "chat_models/baiduwenxin",
     "chat_models/bedrock": "chat_models/bedrock/index",
     "chat_models/bedrock/web": "chat_models/bedrock/web",
