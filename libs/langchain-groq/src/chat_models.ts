@@ -73,7 +73,7 @@ export interface ChatGroqCallOptions extends BaseChatModelCallOptions {
   headers?: Record<string, string>;
   tools?: ChatGroqToolType[];
   tool_choice?: OpenAIClient.ChatCompletionToolChoiceOption | "any" | string;
-  response_format?: { type: "json_object" };
+  response_format?: Groq.Chat.Completions.CompletionCreateParams.ResponseFormat;
 }
 
 export interface ChatGroqInput extends BaseChatModelParams {
@@ -118,6 +118,18 @@ export interface ChatGroqInput extends BaseChatModelParams {
    * This limits ensures computational efficiency and resource management.
    */
   maxTokens?: number;
+  /**
+   * An object specifying the format that the model must output.
+   *
+   * Setting to `{ "type": "json_object" }` enables JSON mode, which guarantees the
+   * message the model generates is valid JSON.
+   *
+   * **Important:** when using JSON mode, you **must** also instruct the model to
+   * produce JSON yourself via a system or user message.
+   * 
+   * Can be overridden by `response_format` in the call options.
+   */
+  responseFormat?: Groq.Chat.Completions.CompletionCreateParams.ResponseFormat;
 }
 
 type GroqRoleEnum = "system" | "assistant" | "user" | "function";
@@ -655,6 +667,8 @@ export class ChatGroq extends BaseChatModel<
 
   maxTokens?: number;
 
+  responseFormat?: Groq.Chat.Completions.CompletionCreateParams.ResponseFormat;
+
   streaming = false;
 
   static lc_name() {
@@ -697,6 +711,7 @@ export class ChatGroq extends BaseChatModel<
       [];
     this.stopSequences = this.stop;
     this.maxTokens = fields?.maxTokens;
+    this.responseFormat = fields?.responseFormat;
   }
 
   getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
@@ -742,15 +757,13 @@ export class ChatGroq extends BaseChatModel<
     if (options.tools !== undefined) {
       params.tools = options.tools;
     }
-    if (options.response_format !== undefined) {
-      params.response_format = options.response_format;
-    }
     return {
       ...params,
       stop: options.stop ?? this.stopSequences,
       model: this.model,
       temperature: this.temperature,
       max_tokens: this.maxTokens,
+      response_format: options.response_format ?? this.responseFormat,
     };
   }
 
