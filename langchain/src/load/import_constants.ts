@@ -25,5 +25,4 @@ export const optionalImportEntrypoints: string[] = [
   "langchain/storage/file_system",
   "langchain/hub",
   "langchain/experimental/prompts/handlebars",
-  "langchain/experimental/tools/pyinterpreter",
 ];

@@ -109,6 +109,7 @@
     "@tsconfig/recommended": "^1.0.2",
     "@types/better-sqlite3": "^7.6.10",
     "@types/crypto-js": "^4.2.2",
+    "@types/d3-dsv": "^3.0.7",
     "@types/flat": "^5.0.2",
     "@types/html-to-text": "^9",
     "@types/jsdom": "^21.1.1",
@@ -2969,6 +2970,15 @@
       "import": "./experimental/llms/chrome_ai.js",
       "require": "./experimental/llms/chrome_ai.cjs"
     },
+    "./experimental/tools/pyinterpreter": {
+      "types": {
+        "import": "./experimental/tools/pyinterpreter.d.ts",
+        "require": "./experimental/tools/pyinterpreter.d.cts",
+        "default": "./experimental/tools/pyinterpreter.d.ts"
+      },
+      "import": "./experimental/tools/pyinterpreter.js",
+      "require": "./experimental/tools/pyinterpreter.cjs"
+    },
     "./chains/graph_qa/cypher": {
       "types": {
         "import": "./chains/graph_qa/cypher.d.ts",
@@ -3999,6 +4009,10 @@
     "experimental/llms/chrome_ai.js",
     "experimental/llms/chrome_ai.d.ts",
     "experimental/llms/chrome_ai.d.cts",
+    "experimental/tools/pyinterpreter.cjs",
+    "experimental/tools/pyinterpreter.js",
+    "experimental/tools/pyinterpreter.d.ts",
+    "experimental/tools/pyinterpreter.d.cts",
     "chains/graph_qa/cypher.cjs",
     "chains/graph_qa/cypher.js",
     "chains/graph_qa/cypher.d.ts",

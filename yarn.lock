@@ -11252,6 +11252,7 @@ __metadata:
     "@tsconfig/recommended": ^1.0.2
     "@types/better-sqlite3": ^7.6.10
     "@types/crypto-js": ^4.2.2
+    "@types/d3-dsv": ^3.0.7
     "@types/flat": ^5.0.2
     "@types/html-to-text": ^9
     "@types/jsdom": ^21.1.1
@@ -12553,7 +12554,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/textsplitters@workspace:*, @langchain/textsplitters@workspace:libs/langchain-textsplitters, @langchain/textsplitters@~0.0.0":
+"@langchain/textsplitters@>=0.0.0 <0.2.0, @langchain/textsplitters@workspace:*, @langchain/textsplitters@workspace:libs/langchain-textsplitters":
   version: 0.0.0-use.local
   resolution: "@langchain/textsplitters@workspace:libs/langchain-textsplitters"
   dependencies:
@@ -12776,16 +12777,6 @@ __metadata:
   version: 1.6.22
   resolution: "@mdx-js/util@npm:1.6.22"
   checksum: 4b393907e39a1a75214f0314bf72a0adfa5e5adffd050dd5efe9c055b8549481a3cfc9f308c16dfb33311daf3ff63added7d5fd1fe52db614c004f886e0e559a
-  languageName: node
-  linkType: hard
-
-"@mendable/firecrawl-js@npm:^0.0.13":
-  version: 0.0.13
-  resolution: "@mendable/firecrawl-js@npm:0.0.13"
-  dependencies:
-    axios: ^1.6.8
-    dotenv: ^16.4.5
-  checksum: 9dbc0b6e5d300bb9ef9f45cebd5c0026ac468863984cdc73a57ed6fdf888eaead5f9e2325c6848d03897c72cab195fffb4ce7d832e39696a11216bc53b417b6d
   languageName: node
   linkType: hard
 
@@ -18397,10 +18388,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/d3-dsv@npm:^2":
-  version: 2.0.3
-  resolution: "@types/d3-dsv@npm:2.0.3"
-  checksum: 82b8aa6409643dbc624e0798a18e16f94aa4676f8e3949e0dc7992d898855e1d6230416c3fbf6d3d3314252e4027176525487dc030abb15031ef8db5b2c30f7a
+"@types/d3-dsv@npm:^3.0.7":
+  version: 3.0.7
+  resolution: "@types/d3-dsv@npm:3.0.7"
+  checksum: 5025e01459827d09d14e0d00281995a04042ce9e3e76444c5a65466c1d29649d82cbfaa9251e33837bf576f5c587525d8d8ff5aacc6bd3b831824d54449261b9
   languageName: node
   linkType: hard
 
@@ -22333,7 +22324,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"cheerio@npm:^1.0.0-rc.12":
+"cheerio@npm:1.0.0-rc.12, cheerio@npm:^1.0.0-rc.12":
   version: 1.0.0-rc.12
   resolution: "cheerio@npm:1.0.0-rc.12"
   dependencies:
@@ -32248,17 +32239,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "langchain@workspace:langchain"
   dependencies:
-    "@aws-sdk/client-s3": ^3.310.0
-    "@aws-sdk/client-sagemaker-runtime": ^3.414.0
-    "@aws-sdk/client-sfn": ^3.362.0
-    "@aws-sdk/credential-provider-node": ^3.388.0
-    "@aws-sdk/types": ^3.357.0
-    "@azure/storage-blob": ^12.15.0
-    "@browserbasehq/sdk": ^1.1.5
-    "@cloudflare/workers-types": ^4.20230922.0
     "@faker-js/faker": ^7.6.0
-    "@gomomento/sdk": ^1.51.1
-    "@gomomento/sdk-core": ^1.51.1
     "@jest/globals": ^29.5.0
     "@langchain/anthropic": ^0.2.8
     "@langchain/aws": ^0.0.5
@@ -32271,38 +32252,22 @@ __metadata:
     "@langchain/ollama": ^0.0.2
     "@langchain/openai": ">=0.1.0 <0.3.0"
     "@langchain/scripts": ">=0.1.0 <0.2.0"
-    "@langchain/textsplitters": ~0.0.0
-    "@mendable/firecrawl-js": ^0.0.13
-    "@notionhq/client": ^2.2.10
-    "@pinecone-database/pinecone": ^1.1.0
-    "@supabase/supabase-js": ^2.45.0
+    "@langchain/textsplitters": ">=0.0.0 <0.2.0"
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.2
-    "@types/d3-dsv": ^2
     "@types/handlebars": ^4.1.0
     "@types/html-to-text": ^9
     "@types/js-yaml": ^4
     "@types/jsdom": ^21.1.1
-    "@types/pdf-parse": ^1.1.1
     "@types/uuid": ^9
     "@types/ws": ^8
     "@typescript-eslint/eslint-plugin": ^5.58.0
     "@typescript-eslint/parser": ^5.58.0
-    "@vercel/kv": ^0.2.3
-    "@xata.io/client": ^0.28.0
-    apify-client: ^2.7.1
-    assemblyai: ^4.6.0
     axios: ^0.26.0
-    binary-extensions: ^2.2.0
-    cheerio: ^1.0.0-rc.12
-    chromadb: ^1.5.3
-    convex: ^1.3.1
-    couchbase: ^4.3.0
-    d3-dsv: ^2.0.0
+    cheerio: 1.0.0-rc.12
     dotenv: ^16.0.3
     dpdm: ^3.12.0
-    epub2: ^3.0.1
     eslint: ^8.33.0
     eslint-config-airbnb-base: ^15.0.0
     eslint-config-prettier: ^8.6.0
@@ -32310,60 +32275,31 @@ __metadata:
     eslint-plugin-jest: ^27.6.0
     eslint-plugin-no-instanceof: ^1.0.1
     eslint-plugin-prettier: ^4.2.1
-    fast-xml-parser: ^4.4.1
     handlebars: ^4.7.8
-    html-to-text: ^9.0.5
-    ignore: ^5.2.0
-    ioredis: ^5.3.2
     jest: ^29.5.0
     jest-environment-node: ^29.6.4
     js-tiktoken: ^1.0.12
     js-yaml: ^4.1.0
-    jsdom: ^22.1.0
     jsonpointer: ^5.0.1
     langsmith: ~0.1.40
-    mammoth: ^1.5.1
-    mongodb: ^5.2.0
-    node-llama-cpp: 2.7.3
-    notion-to-md: ^3.1.0
-    officeparser: ^4.0.4
     openai: ^4.41.1
     openapi-types: ^12.1.3
     p-retry: 4
-    pdf-parse: 1.1.1
     peggy: ^3.0.2
-    playwright: ^1.32.1
     prettier: ^2.8.3
-    puppeteer: ^22.0.0
     pyodide: ^0.26.2
-    redis: ^4.6.6
     release-it: ^17.6.0
     rimraf: ^5.0.1
     rollup: ^3.19.1
-    sonix-speech-recognition: ^2.1.1
-    srt-parser-2: ^1.2.3
     ts-jest: ^29.1.0
     typeorm: ^0.3.20
     typescript: ~5.1.6
     uuid: ^10.0.0
-    weaviate-ts-client: ^2.0.0
-    web-auth-library: ^1.0.3
     wikipedia: ^2.1.2
     yaml: ^2.2.1
-    youtube-transcript: ^1.0.6
-    youtubei.js: ^9.1.0
     zod: ^3.22.4
     zod-to-json-schema: ^3.22.3
   peerDependencies:
-    "@aws-sdk/client-s3": "*"
-    "@aws-sdk/client-sagemaker-runtime": "*"
-    "@aws-sdk/client-sfn": "*"
-    "@aws-sdk/credential-provider-node": "*"
-    "@azure/storage-blob": "*"
-    "@browserbasehq/sdk": "*"
-    "@gomomento/sdk": "*"
-    "@gomomento/sdk-core": "*"
-    "@gomomento/sdk-web": ^1.51.1
     "@langchain/anthropic": "*"
     "@langchain/aws": "*"
     "@langchain/cohere": "*"
@@ -32374,65 +32310,12 @@ __metadata:
     "@langchain/groq": "*"
     "@langchain/mistralai": "*"
     "@langchain/ollama": "*"
-    "@mendable/firecrawl-js": "*"
-    "@notionhq/client": "*"
-    "@pinecone-database/pinecone": "*"
-    "@supabase/supabase-js": "*"
-    "@vercel/kv": "*"
-    "@xata.io/client": "*"
-    apify-client: "*"
-    assemblyai: "*"
     axios: "*"
     cheerio: "*"
-    chromadb: "*"
-    convex: "*"
-    couchbase: "*"
-    d3-dsv: "*"
-    epub2: "*"
-    fast-xml-parser: "*"
     handlebars: ^4.7.8
-    html-to-text: "*"
-    ignore: "*"
-    ioredis: "*"
-    jsdom: "*"
-    mammoth: "*"
-    mongodb: "*"
-    node-llama-cpp: "*"
-    notion-to-md: "*"
-    officeparser: "*"
-    pdf-parse: "*"
     peggy: ^3.0.2
-    playwright: "*"
-    puppeteer: "*"
-    pyodide: ">=0.24.1 <0.27.0"
-    redis: "*"
-    sonix-speech-recognition: "*"
-    srt-parser-2: "*"
     typeorm: "*"
-    weaviate-ts-client: "*"
-    web-auth-library: "*"
-    ws: "*"
-    youtube-transcript: "*"
-    youtubei.js: "*"
   peerDependenciesMeta:
-    "@aws-sdk/client-s3":
-      optional: true
-    "@aws-sdk/client-sagemaker-runtime":
-      optional: true
-    "@aws-sdk/client-sfn":
-      optional: true
-    "@aws-sdk/credential-provider-node":
-      optional: true
-    "@azure/storage-blob":
-      optional: true
-    "@browserbasehq/sdk":
-      optional: true
-    "@gomomento/sdk":
-      optional: true
-    "@gomomento/sdk-core":
-      optional: true
-    "@gomomento/sdk-web":
-      optional: true
     "@langchain/anthropic":
       optional: true
     "@langchain/aws":
@@ -32451,87 +32334,15 @@ __metadata:
       optional: true
     "@langchain/ollama":
       optional: true
-    "@mendable/firecrawl-js":
-      optional: true
-    "@notionhq/client":
-      optional: true
-    "@pinecone-database/pinecone":
-      optional: true
-    "@supabase/supabase-js":
-      optional: true
-    "@vercel/kv":
-      optional: true
-    "@xata.io/client":
-      optional: true
-    apify-client:
-      optional: true
-    assemblyai:
-      optional: true
     axios:
       optional: true
     cheerio:
       optional: true
-    chromadb:
-      optional: true
-    convex:
-      optional: true
-    couchbase:
-      optional: true
-    d3-dsv:
-      optional: true
-    epub2:
-      optional: true
-    faiss-node:
-      optional: true
-    fast-xml-parser:
-      optional: true
     handlebars:
-      optional: true
-    html-to-text:
-      optional: true
-    ignore:
-      optional: true
-    ioredis:
-      optional: true
-    jsdom:
-      optional: true
-    mammoth:
-      optional: true
-    mongodb:
-      optional: true
-    node-llama-cpp:
-      optional: true
-    notion-to-md:
-      optional: true
-    officeparser:
-      optional: true
-    pdf-parse:
       optional: true
     peggy:
       optional: true
-    playwright:
-      optional: true
-    puppeteer:
-      optional: true
-    pyodide:
-      optional: true
-    redis:
-      optional: true
-    sonix-speech-recognition:
-      optional: true
-    srt-parser-2:
-      optional: true
     typeorm:
-      optional: true
-    weaviate-ts-client:
-      optional: true
-    web-auth-library:
-      optional: true
-    ws:
-      optional: true
-    youtube-transcript:
-      optional: true
-    youtubei.js:
       optional: true
   languageName: unknown
   linkType: soft
@@ -33442,25 +33253,6 @@ __metadata:
   dependencies:
     tmpl: 1.0.5
   checksum: b38a025a12c8146d6eeea5a7f2bf27d51d8ad6064da8ca9405fcf7bf9b54acd43e3b30ddd7abb9b1bfa4ddb266019133313482570ddb207de568f71ecfcf6060
-  languageName: node
-  linkType: hard
-
-"mammoth@npm:^1.5.1":
-  version: 1.5.1
-  resolution: "mammoth@npm:1.5.1"
-  dependencies:
-    argparse: ~1.0.3
-    bluebird: ~3.4.0
-    dingbat-to-unicode: ^1.0.1
-    jszip: ^3.7.1
-    lop: ^0.4.1
-    path-is-absolute: ^1.0.0
-    sax: ~1.1.1
-    underscore: ^1.13.1
-    xmlbuilder: ^10.0.0
-  bin:
-    mammoth: bin/mammoth
-  checksum: a780a80fd87c812de3d882fa8aa7bf54d59854bbe7195ccf90e3b63ef901de3a9e7ca664d7367ae5b638a9d8feb1376c6de9026a671a2f38e049297e0d9b41a4
   languageName: node
   linkType: hard
 
@@ -38850,13 +38642,6 @@ __metadata:
   version: 1.3.0
   resolution: "sax@npm:1.3.0"
   checksum: 238ab3a9ba8c8f8aaf1c5ea9120386391f6ee0af52f1a6a40bbb6df78241dd05d782f2359d614ac6aae08c4c4125208b456548a6cf68625aa4fe178486e63ecd
-  languageName: node
-  linkType: hard
-
-"sax@npm:~1.1.1":
-  version: 1.1.6
-  resolution: "sax@npm:1.1.6"
-  checksum: 879f18483d00f4630580fb4dc95da7d06046b1d71af1f27e33425f81d82751ab66a84eb584a462aa610f7a94de8d87416e03c708530ba76b1aa381b6828bfc9e
   languageName: node
   linkType: hard
 

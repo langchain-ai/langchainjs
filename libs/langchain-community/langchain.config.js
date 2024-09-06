@@ -311,6 +311,7 @@ export const config = {
       "experimental/hubs/makersuite/googlemakersuitehub",
     "experimental/chat_models/ollama_functions": "experimental/chat_models/ollama_functions",
     "experimental/llms/chrome_ai": "experimental/llms/chrome_ai",
+    "experimental/tools/pyinterpreter": "experimental/tools/pyinterpreter",
     // chains
     "chains/graph_qa/cypher": "chains/graph_qa/cypher",
     // langgraph checkpointers
@@ -503,6 +504,7 @@ export const config = {
     // experimental
     "experimental/multimodal_embeddings/googlevertexai",
     "experimental/hubs/makersuite/googlemakersuitehub",
+    "experimental/tools/pyinterpreter",
     // chains
     "chains/graph_qa/cypher",
     // langgraph checkpointers

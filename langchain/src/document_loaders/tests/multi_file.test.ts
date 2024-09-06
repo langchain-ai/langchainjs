@@ -13,19 +13,12 @@ test("Test MultiFileLoader", async () => {
   );
 
   const filePaths = [
-    path.resolve(baseDirectory, "1706.03762.pdf"),
-    path.resolve(baseDirectory, "Jacob_Lee_Resume_2023.pdf"),
-    path.resolve(
-      baseDirectory,
-      "Star_Wars_The_Clone_Wars_S06E07_Crisis_at_the_Heart.csv"
-    ),
     path.resolve(
       baseDirectory,
       "Star_Wars_The_Clone_Wars_S06E07_Crisis_at_the_Heart.json"
     ),
     path.resolve(baseDirectory, "complex.json"),
     path.resolve(baseDirectory, "example.txt"),
-    path.resolve(baseDirectory, "example_separator.csv"),
   ];
 
   const loader = new MultiFileLoader(

@@ -1006,6 +1006,10 @@ experimental/llms/chrome_ai.cjs
 experimental/llms/chrome_ai.js
 experimental/llms/chrome_ai.d.ts
 experimental/llms/chrome_ai.d.cts
+experimental/tools/pyinterpreter.cjs
+experimental/tools/pyinterpreter.js
+experimental/tools/pyinterpreter.d.ts
+experimental/tools/pyinterpreter.d.cts
 chains/graph_qa/cypher.cjs
 chains/graph_qa/cypher.js
 chains/graph_qa/cypher.d.ts

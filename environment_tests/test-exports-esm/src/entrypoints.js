@@ -42,11 +42,6 @@ import * as retrievers_document_compressors_chain_extract from "langchain/retrie
 import * as retrievers_document_compressors_embeddings_filter from "langchain/retrievers/document_compressors/embeddings_filter";
 import * as retrievers_hyde from "langchain/retrievers/hyde";
 import * as retrievers_score_threshold from "langchain/retrievers/score_threshold";
-import * as retrievers_self_query_chroma from "langchain/retrievers/self_query/chroma";
-import * as retrievers_self_query_pinecone from "langchain/retrievers/self_query/pinecone";
-import * as retrievers_self_query_supabase from "langchain/retrievers/self_query/supabase";
-import * as retrievers_self_query_weaviate from "langchain/retrievers/self_query/weaviate";
-import * as retrievers_self_query_vectara from "langchain/retrievers/self_query/vectara";
 import * as retrievers_matryoshka_retriever from "langchain/retrievers/matryoshka_retriever";
 import * as stores_doc_base from "langchain/stores/doc/base";
 import * as stores_doc_in_memory from "langchain/stores/doc/in_memory";

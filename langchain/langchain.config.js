@@ -15,18 +15,10 @@ export const config = {
     /js-tiktoken/,
     /@langchain\/core/,
     /langsmith/,
-    /@langchain\/anthropic/,
     /@langchain\/community/,
     "axios", // axios is a dependency of openai
-    "@rockset/client/dist/codegen/api.js",
     "mysql2/promise",
-    "pdf-parse/lib/pdf.js/v1.10.100/build/pdf.js",
-    "@zilliz/milvus2-sdk-node/dist/milvus/const/Milvus.js",
-    "@zilliz/milvus2-sdk-node/dist/milvus/types.js",
-    "notion-to-md/build/utils/notion.js",
-    "firebase-admin/app",
-    "firebase-admin/firestore",
-    "web-auth-library/google"
+    "notion-to-md/build/utils/notion.js"
   ],
   entrypoints: {
     load: "load/index",
@@ -111,12 +103,7 @@ export const config = {
     "retrievers/hyde": "retrievers/hyde",
     "retrievers/score_threshold": "retrievers/score_threshold",
     "retrievers/self_query": "retrievers/self_query/index",
-    "retrievers/self_query/chroma": "retrievers/self_query/chroma",
     "retrievers/self_query/functional": "retrievers/self_query/functional",
-    "retrievers/self_query/pinecone": "retrievers/self_query/pinecone",
-    "retrievers/self_query/supabase": "retrievers/self_query/supabase",
-    "retrievers/self_query/weaviate": "retrievers/self_query/weaviate",
-    "retrievers/self_query/vectara": "retrievers/self_query/vectara",
     "retrievers/matryoshka_retriever": "retrievers/matryoshka_retriever",
     // cache
     "cache/file_system": "cache/file_system",
@@ -148,7 +135,6 @@ export const config = {
     "experimental/masking": "experimental/masking/index",
     "experimental/prompts/custom_format": "experimental/prompts/custom_format",
     "experimental/prompts/handlebars": "experimental/prompts/handlebars",
-    "experimental/tools/pyinterpreter": "experimental/tools/pyinterpreter",
     // evaluation
     evaluation: "evaluation/index",
     // smith (LangSmith Evaluation)
@@ -164,14 +150,6 @@ export const config = {
     "document",
     "load/serializable",
     "runnables",
-    "document_loaders/web/searchapi",
-    "retrievers/self_query/chroma",
-    "retrievers/self_query/pinecone",
-    "retrievers/self_query/supabase",
-    "retrievers/self_query/weaviate",
-    "retrievers/self_query/vectara",
-    "document_loaders/web/serpapi",
-    "document_loaders/web/sort_xyz_blockchain"
   ],
   requiresOptionalDependency: [
     "agents/load",
@@ -240,7 +218,6 @@ export const config = {
     // Prevent export due to circular dependency with "load" entrypoint
     "hub",
     "experimental/prompts/handlebars",
-    "experimental/tools/pyinterpreter",
   ],
   extraImportMapEntries: [
     {
