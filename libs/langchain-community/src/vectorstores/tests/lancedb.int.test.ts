@@ -47,13 +47,12 @@ describe("LanceDB", () => {
 });
 
 describe("LanceDB empty schema", () => {
-
   test("Test fromTexts + addDocuments", async () => {
     const embeddings = new OpenAIEmbeddings();
     const vectorStore = await LanceDB.fromTexts(
       ["hello bye", "hello world", "bye bye"],
       [{ id: 1 }, { id: 2 }, { id: 3 }],
-      embeddings,
+      embeddings
     );
 
     const results = await vectorStore.similaritySearch("hello bye", 10);

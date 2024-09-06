@@ -29,9 +29,9 @@ export class LanceDB extends VectorStore {
 
   private table_name: string;
 
-  private mode: string|any;
+  private mode: string;
 
-  constructor(embeddings: any, args?: LanceDBArgs) {
+  constructor(embeddings: EmbeddingsInterface, args?: LanceDBArgs) {
     super(embeddings, args || {});
     this.table = args?.table || undefined;
     this.embeddings = embeddings;
@@ -90,7 +90,6 @@ export class LanceDB extends VectorStore {
       });
 
       return;
-
     }
     await this.table.add(data);
   }
@@ -107,7 +106,9 @@ export class LanceDB extends VectorStore {
     k: number
   ): Promise<[Document, number][]> {
     if (!this.table) {
-      throw new Error("Table not found. Please add vectors to the table first.");
+      throw new Error(
+        "Table not found. Please add vectors to the table first."
+      );
     }
     const results = await this.table.search(query).limit(k).execute();
 
@@ -142,7 +143,7 @@ export class LanceDB extends VectorStore {
   static async fromTexts(
     texts: string[],
     metadatas: object[] | object,
-    embeddings: any,
+    embeddings: EmbeddingsInterface,
     dbConfig?: LanceDBArgs
   ): Promise<LanceDB> {
     const docs: Document[] = [];
@@ -166,7 +167,7 @@ export class LanceDB extends VectorStore {
    */
   static async fromDocuments(
     docs: Document[],
-    embeddings: any,
+    embeddings: EmbeddingsInterface,
     dbConfig?: LanceDBArgs
   ): Promise<LanceDB> {
     const instance = new this(embeddings, dbConfig);
