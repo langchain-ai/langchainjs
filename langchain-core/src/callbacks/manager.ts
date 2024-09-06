@@ -1149,7 +1149,7 @@ export class CallbackManager
     return manager;
   }
 
-  static async configure(
+  static configure(
     inheritableHandlers?: Callbacks,
     localHandlers?: Callbacks,
     inheritableTags?: string[],
@@ -1157,7 +1157,7 @@ export class CallbackManager
     inheritableMetadata?: Record<string, unknown>,
     localMetadata?: Record<string, unknown>,
     options?: CallbackManagerOptions
-  ): Promise<CallbackManager | undefined> {
+  ): CallbackManager | undefined {
     return this._configureSync(
       inheritableHandlers,
       localHandlers,

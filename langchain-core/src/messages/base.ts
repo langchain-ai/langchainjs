@@ -76,33 +76,12 @@ export interface FunctionCall {
   name: string;
 }
 
-/**
- * @deprecated
- * Import as "OpenAIToolCall" instead
- */
-export interface ToolCall {
-  /**
-   * The ID of the tool call.
-   */
-  id: string;
-
-  /**
-   * The function that the model called.
-   */
-  function: FunctionCall;
-
-  /**
-   * The type of the tool. Currently, only `function` is supported.
-   */
-  type: "function";
-}
-
 export type BaseMessageFields = {
   content: MessageContent;
   name?: string;
   additional_kwargs?: {
     function_call?: FunctionCall;
-    tool_calls?: ToolCall[];
+    tool_calls?: OpenAIToolCall[];
     [key: string]: unknown;
   };
   /** Response metadata. For example: response headers, logprobs, token counts. */
@@ -319,8 +298,23 @@ export abstract class BaseMessage
 }
 
 // TODO: Deprecate when SDK typing is updated
-export type OpenAIToolCall = ToolCall & {
-  index: number;
+export type OpenAIToolCall = {
+  /**
+   * The ID of the tool call.
+   */
+  id: string;
+
+  /**
+   * The function that the model called.
+   */
+  function: FunctionCall;
+
+  /**
+   * The type of the tool. Currently, only `function` is supported.
+   */
+  type: "function";
+
+  index?: number;
 };
 
 export function isOpenAIToolCallArray(

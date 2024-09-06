@@ -58,21 +58,14 @@ import { ToolCall } from "../messages/tool.js";
 
 export { type RunnableInterface, RunnableBatchOptions };
 
-// TODO: Make `options` just take `RunnableConfig`
 export type RunnableFunc<RunInput, RunOutput> = (
   input: RunInput,
-  options?:
-    | ({
-        /** @deprecated Use top-level config fields instead. */
-        config?: RunnableConfig;
-      } & RunnableConfig)
+  options:
+    | RunnableConfig
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     | Record<string, any>
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    | (Record<string, any> & {
-        /** @deprecated Use top-level config fields instead. */
-        config: RunnableConfig;
-      } & RunnableConfig)
+    | (Record<string, any> & RunnableConfig)
 ) => RunOutput | Promise<RunOutput>;
 
 export type RunnableMapLike<RunInput, RunOutput> = {
@@ -1329,7 +1322,7 @@ export class RunnableBinding<
 
   async *transform(
     generator: AsyncGenerator<RunInput>,
-    options: Partial<CallOptions>
+    options?: Partial<CallOptions>
   ): AsyncGenerator<RunOutput> {
     yield* this.bound.transform(
       generator,
@@ -1473,7 +1466,7 @@ export class RunnableEach<
     inputs: RunInputItem[],
     config?: Partial<CallOptions>
   ): Promise<RunOutputItem[]> {
-    return this._callWithConfig(this._invoke, inputs, config);
+    return this._callWithConfig(this._invoke.bind(this), inputs, config);
   }
 
   /**
@@ -1594,7 +1587,7 @@ export class RunnableRetry<
    * @returns A promise that resolves to the output of the runnable.
    */
   async invoke(input: RunInput, config?: CallOptions): Promise<RunOutput> {
-    return this._callWithConfig(this._invoke, input, config);
+    return this._callWithConfig(this._invoke.bind(this), input, config);
   }
 
   async _batch<ReturnExceptions extends boolean = false>(
@@ -2400,7 +2393,7 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
     input: RunInput,
     options?: Partial<RunnableConfig>
   ): Promise<RunOutput> {
-    return this._callWithConfig(this._invoke, input, options);
+    return this._callWithConfig(this._invoke.bind(this), input, options);
   }
 
   async *_transform(
