@@ -1,0 +1,34 @@
+# JigsawStack Prompt Engine
+
+LangChain.js supports calling JigsawStack [Prompt Engine](https://docs.jigsawstack.com/api-reference/prompt-engine/run-direct) LLMs.
+
+## Setup
+
+- Set up an [account](https://jigsawstack.com/dashboard) (Get started for free)
+- Create and retrieve your [API key](https://jigsawstack.com/dashboard)
+
+## Credentials
+
+```bash
+export JIGSAWSTACK_API_KEY="your-api-key"
+```
+
+## Usage
+
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/jigsawstack
+```
+
+import CodeBlock from "@theme/CodeBlock";
+import JigsawStackPromptEngineExample from "@examples/models/llm/jigsawstack.ts";
+
+<CodeBlock language="typescript">{JigsawStackPromptEngineExample}</CodeBlock>
+
+## Related
+
+- LLM [conceptual guide](/docs/concepts/#llms)
+- LLM [how-to guides](/docs/how_to/#llms)

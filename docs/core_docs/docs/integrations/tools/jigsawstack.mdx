@@ -1,0 +1,55 @@
+---
+hide_table_of_contents: true
+---
+
+import CodeBlock from "@theme/CodeBlock";
+
+# JigsawStack Tool
+
+The JigsawStack Tool provides your agent with the following capabilities:
+
+- JigsawStackAIScrape: Scrape web content using advanced AI.
+
+- JigsawStackAISearch: Perform AI-powered web searches and retrieve high-quality results.
+
+- JigsawStackSpeechToText - Transcribe video and audio files using the Whisper large V3 AI model.
+
+- JigsawStackVOCR - Recognize, describe, and extract data from images using a prompt.
+
+- JigsawStackTextToSQL - Generate semantically correct SQL queries from text.
+
+## Setup
+
+- Set up an [account](https://jigsawstack.com/dashboard) (Get started for free)
+- Create and retrieve your [API key](https://jigsawstack.com/dashboard)
+
+## Credentials
+
+```bash
+export JIGSAWSTACK_API_KEY="your-api-key"
+```
+
+## Usage, standalone
+
+import ToolExample from "@examples/tools/jigsawstack.ts";
+
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/openai
+```
+
+<CodeBlock language="typescript">{ToolExample}</CodeBlock>
+
+## Usage, in an Agent
+
+import AgentExample from "@examples/agents/jigsawstack.ts";
+
+<CodeBlock language="typescript">{AgentExample}</CodeBlock>
+
+## Related
+
+- Tool [conceptual guide](/docs/concepts/#tools)
+- Tool [how-to guides](/docs/how_to/#tools)
