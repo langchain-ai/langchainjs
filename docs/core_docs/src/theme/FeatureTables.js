@@ -239,6 +239,17 @@ const FEATURE_TABLES = {
         apiLink:
           "https://api.python.langchain.com/en/latest/chat_models/langchain_upstage.chat_models.ChatUpstage.html#langchain_upstage.chat_models.ChatUpstage",
       },
+      {
+        name: "Arcjet Redact",
+        package: "langchain-community",
+        link: "arcjet",
+        structured_output: false,
+        tool_calling: false,
+        json_mode: false,
+        multimodal: false,
+        local: true,
+        apiLink: "",
+      },
     ],
   },
   llms: {
