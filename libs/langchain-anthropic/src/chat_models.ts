@@ -682,7 +682,6 @@ export class ChatAnthropicMessages<
    *
    * @param {ChatAnthropicCallOptions["tools"]} tools The tools to format
    * @returns {AnthropicTool[] | undefined} The formatted tools, or undefined if none are passed.
-   * @throws {Error} If a mix of AnthropicTools and StructuredTools are passed.
    */
   formatStructuredToolToAnthropic(
     tools: ChatAnthropicCallOptions["tools"]
@@ -690,37 +689,26 @@ export class ChatAnthropicMessages<
     if (!tools || !tools.length) {
       return undefined;
     }
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    if ((tools as any[]).every((tool) => isAnthropicTool(tool))) {
-      // If the tool is already an anthropic tool, return it
-      return tools as AnthropicTool[];
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    if ((tools as any[]).every((tool) => isOpenAITool(tool))) {
-      // Formatted as OpenAI tool, convert to Anthropic tool
-      return (tools as ToolDefinition[]).map((tc) => ({
-        name: tc.function.name,
-        description: tc.function.description,
-        input_schema: tc.function.parameters as AnthropicTool.InputSchema,
-      }));
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    if ((tools as any[]).some((tool) => isAnthropicTool(tool))) {
-      throw new Error(`Can not pass in a mix of tool schemas to ChatAnthropic`);
-    }
-
-    if (tools.every(isLangChainTool)) {
-      return tools.map((t) => ({
-        name: t.name,
-        description: t.description,
-        input_schema: zodToJsonSchema(t.schema) as AnthropicTool.InputSchema,
-      }));
-    }
-
-    throw new Error("Unsupported tool type passed to ChatAnthropic");
+    return tools.map((tool) => {
+      if (isAnthropicTool(tool)) {
+        return tool;
+      }
+      if (isOpenAITool(tool)) {
+        return {
+          name: tool.function.name,
+          description: tool.function.description,
+          input_schema: tool.function.parameters as AnthropicTool.InputSchema,
+        }
+      }
+      if (isLangChainTool(tool)) {
+        return {
+          name: tool.name,
+          description: tool.description,
+          input_schema: zodToJsonSchema(tool.schema) as AnthropicTool.InputSchema,
+        }
+      }
+      throw new Error(`Unknown tool type passed to ChatAnthropic: ${JSON.stringify(tool, null, 2)}`);
+    });
   }
 
   override bindTools(
