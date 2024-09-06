@@ -11575,6 +11575,7 @@ __metadata:
     portkey-ai: ^0.1.11
     prettier: ^2.8.3
     puppeteer: ^22.0.0
+    pyodide: ^0.26.2
     redis: ^4.6.6
     release-it: ^17.6.0
     replicate: ^0.29.4
@@ -11703,6 +11704,7 @@ __metadata:
     playwright: ^1.32.1
     portkey-ai: ^0.1.11
     puppeteer: "*"
+    pyodide: ">=0.24.1 <0.27.0"
     redis: "*"
     replicate: ^0.29.4
     sonix-speech-recognition: ^2.1.1
@@ -11929,6 +11931,8 @@ __metadata:
     portkey-ai:
       optional: true
     puppeteer:
+      optional: true
+    pyodide:
       optional: true
     redis:
       optional: true
@@ -32712,7 +32716,6 @@ __metadata:
     p-retry: 4
     peggy: ^3.0.2
     prettier: ^2.8.3
-    pyodide: ^0.26.2
     release-it: ^17.6.0
     rimraf: ^5.0.1
     rollup: ^3.19.1

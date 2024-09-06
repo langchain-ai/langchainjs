@@ -1,3 +1,4 @@
+// eslint-disable-next-line import/no-extraneous-dependencies
 import { loadPyodide, type PyodideInterface } from "pyodide";
 import { Tool, ToolParams } from "@langchain/core/tools";
 

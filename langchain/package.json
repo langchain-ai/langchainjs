@@ -449,7 +449,6 @@
     "openai": "^4.41.1",
     "peggy": "^3.0.2",
     "prettier": "^2.8.3",
-    "pyodide": "^0.26.2",
     "release-it": "^17.6.0",
     "rimraf": "^5.0.1",
     "rollup": "^3.19.1",
