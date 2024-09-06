@@ -985,6 +985,12 @@ export class ChatBedrockConverse
         if (!input.tool_calls || input.tool_calls.length === 0) {
           throw new Error("No tool calls found in the response.");
         }
+
+        if (toolChoiceObj?.tool_choice === functionName && input.tool_calls?.find((tc) => tc.name !== functionName)) {
+          throw new Error("Unexpected tool calls in response");
+        }
+
+
         const toolCall = input.tool_calls.find(
           (tc) => tc.name === functionName
         );
