@@ -4,7 +4,7 @@ import type {
   Collection,
   ChromaClientParams,
   CollectionMetadata,
-  Where
+  Where,
 } from "chromadb";
 
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
