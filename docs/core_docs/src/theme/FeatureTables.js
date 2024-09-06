@@ -803,6 +803,11 @@ function truncate(str, n) {
   return str.length > n ? str.substring(0, n - 1) + "..." : str;
 }
 
+function removeInlineMarkdownLinks(markdownText) {
+  const regex = /\[([^\]]+)\]\(([^)]+)\)/g;
+  return markdownText.replace(regex, '$1');
+}
+
 export function IndexTable() {
   const { items } = useCurrentSidebarCategory();
 
@@ -825,7 +830,7 @@ export function IndexTable() {
       },
       {
         title: "Description",
-        formatter: (item) => truncate(item.description ?? "", 70),
+        formatter: (item) => truncate(removeInlineMarkdownLinks(item.description) ?? "", 70),
       },
     ],
     rows
