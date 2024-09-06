@@ -14,7 +14,6 @@ import {
 import {
   type StructuredOutputMethodOptions,
   type BaseLanguageModelInput,
-  type ToolDefinition,
   isOpenAITool,
 } from "@langchain/core/language_models/base";
 import { zodToJsonSchema } from "zod-to-json-schema";
@@ -698,16 +697,24 @@ export class ChatAnthropicMessages<
           name: tool.function.name,
           description: tool.function.description,
           input_schema: tool.function.parameters as AnthropicTool.InputSchema,
-        }
+        };
       }
       if (isLangChainTool(tool)) {
         return {
           name: tool.name,
           description: tool.description,
-          input_schema: zodToJsonSchema(tool.schema) as AnthropicTool.InputSchema,
-        }
+          input_schema: zodToJsonSchema(
+            tool.schema
+          ) as AnthropicTool.InputSchema,
+        };
       }
-      throw new Error(`Unknown tool type passed to ChatAnthropic: ${JSON.stringify(tool, null, 2)}`);
+      throw new Error(
+        `Unknown tool type passed to ChatAnthropic: ${JSON.stringify(
+          tool,
+          null,
+          2
+        )}`
+      );
     });
   }
 
