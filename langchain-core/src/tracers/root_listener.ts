@@ -9,11 +9,11 @@ export class RootListenersTracer extends BaseTracer {
 
   config: RunnableConfig;
 
-  argOnStart?: ((run: Run, config: RunnableConfig) => void | Promise<void>);
+  argOnStart?: (run: Run, config: RunnableConfig) => void | Promise<void>;
 
-  argOnEnd?: ((run: Run, config: RunnableConfig) => void | Promise<void>);
+  argOnEnd?: (run: Run, config: RunnableConfig) => void | Promise<void>;
 
-  argOnError?: ((run: Run, config: RunnableConfig) => void | Promise<void>);
+  argOnError?: (run: Run, config: RunnableConfig) => void | Promise<void>;
 
   constructor({
     config,
