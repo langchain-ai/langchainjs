@@ -20,15 +20,8 @@ test("Test Directory loader", async () => {
     UnknownHandling.Ignore
   );
   const docs = await loader.load();
-  expect(docs.length).toBe(123);
+  expect(docs.length).toBe(43);
   expect(docs.map((d) => d.metadata.source).sort()).toEqual([
-    // CSV
-    ...Array.from({ length: 32 }, (_) =>
-      path.resolve(
-        directoryPath,
-        "Star_Wars_The_Clone_Wars_S06E07_Crisis_at_the_Heart.csv"
-      )
-    ),
     // JSON
     ...Array.from({ length: 32 }, (_) =>
       path.resolve(

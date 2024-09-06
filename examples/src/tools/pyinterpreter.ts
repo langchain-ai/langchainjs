@@ -1,5 +1,5 @@
 import { OpenAI } from "@langchain/openai";
-import { PythonInterpreterTool } from "langchain/experimental/tools/pyinterpreter";
+import { PythonInterpreterTool } from "@langchain/community/experimental/tools/pyinterpreter";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { StringOutputParser } from "@langchain/core/output_parsers";
 

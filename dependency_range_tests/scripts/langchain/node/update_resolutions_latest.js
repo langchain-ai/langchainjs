@@ -8,4 +8,10 @@ if (currentPackageJson.devDependencies["@langchain/core"]) {
   currentPackageJson.peerDependencies["@langchain/core"] = "latest";
 }
 
+// Stupid hack
+currentPackageJson.resolutions = {
+  ...currentPackageJson.resolutions,
+  "jackspeak": "2.1.1"
+};
+
 fs.writeFileSync(communityPackageJsonPath, JSON.stringify(currentPackageJson, null, 2));

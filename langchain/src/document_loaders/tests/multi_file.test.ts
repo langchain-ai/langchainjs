@@ -31,7 +31,7 @@ test("Test MultiFileLoader", async () => {
   );
 
   const docs = await loader.load();
-  expect(docs.length).toBe(123);
+  expect(docs.length).toBe(43);
 
   const expectedSources = [
     // JSON

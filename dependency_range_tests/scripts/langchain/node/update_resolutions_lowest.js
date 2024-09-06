@@ -39,4 +39,10 @@ if (currentPackageJson.dependencies["@langchain/textsplitters"] && !currentPacka
   };
 }
 
+// Stupid hack
+currentPackageJson.resolutions = {
+  ...currentPackageJson.resolutions,
+  "jackspeak": "2.1.1"
+};
+
 fs.writeFileSync(communityPackageJsonPath, JSON.stringify(currentPackageJson, null, 2));
