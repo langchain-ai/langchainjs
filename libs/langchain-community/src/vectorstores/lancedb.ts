@@ -1,4 +1,4 @@
-import { Table } from "vectordb";
+import { connect, Table, Connection, WriteMode } from "vectordb";
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { VectorStore } from "@langchain/core/vectorstores";
 import { Document } from "@langchain/core/documents";
@@ -8,8 +8,11 @@ import { Document } from "@langchain/core/documents";
  * table and an optional textKey.
  */
 export type LanceDBArgs = {
-  table: Table;
+  table?: Table;
   textKey?: string;
+  uri?: string;
+  table_name?: string;
+  mode?: string;
 };
 
 /**
@@ -18,15 +21,24 @@ export type LanceDBArgs = {
  * embeddings.
  */
 export class LanceDB extends VectorStore {
-  private table: Table;
+  private table?: Table;
 
   private textKey: string;
 
-  constructor(embeddings: EmbeddingsInterface, args: LanceDBArgs) {
-    super(embeddings, args);
-    this.table = args.table;
+  private uri: string;
+
+  private table_name: string;
+
+  private mode: string|any;
+
+  constructor(embeddings: any, args?: LanceDBArgs) {
+    super(embeddings, args || {});
+    this.table = args?.table || undefined;
     this.embeddings = embeddings;
-    this.textKey = args.textKey || "text";
+    this.textKey = args?.textKey || "text";
+    this.uri = args?.uri || "~/lancedb";
+    this.table_name = args?.table_name || "langchain";
+    this.mode = args?.mode || WriteMode.Overwrite;
   }
 
   /**
@@ -71,6 +83,15 @@ export class LanceDB extends VectorStore {
       });
       data.push(record);
     }
+    if (!this.table) {
+      const db: Connection = await connect(this.uri);
+      this.table = await db.createTable(this.table_name, data, {
+        writeMode: this.mode,
+      });
+
+      return;
+
+    }
     await this.table.add(data);
   }
 
@@ -85,6 +106,9 @@ export class LanceDB extends VectorStore {
     query: number[],
     k: number
   ): Promise<[Document, number][]> {
+    if (!this.table) {
+      throw new Error("Table not found. Please add vectors to the table first.");
+    }
     const results = await this.table.search(query).limit(k).execute();
 
     const docsAndScore: [Document, number][] = [];
@@ -118,8 +142,8 @@ export class LanceDB extends VectorStore {
   static async fromTexts(
     texts: string[],
     metadatas: object[] | object,
-    embeddings: EmbeddingsInterface,
-    dbConfig: LanceDBArgs
+    embeddings: any,
+    dbConfig?: LanceDBArgs
   ): Promise<LanceDB> {
     const docs: Document[] = [];
     for (let i = 0; i < texts.length; i += 1) {
@@ -142,8 +166,8 @@ export class LanceDB extends VectorStore {
    */
   static async fromDocuments(
     docs: Document[],
-    embeddings: EmbeddingsInterface,
-    dbConfig: LanceDBArgs
+    embeddings: any,
+    dbConfig?: LanceDBArgs
   ): Promise<LanceDB> {
     const instance = new this(embeddings, dbConfig);
     await instance.addDocuments(docs);
