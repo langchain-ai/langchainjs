@@ -830,7 +830,7 @@ export function IndexTable() {
       },
       {
         title: "Description",
-        formatter: (item) => truncate(removeInlineMarkdownLinks(item.description) ?? "", 70),
+        formatter: (item) => truncate(removeInlineMarkdownLinks(item.description ?? ""), 70),
       },
     ],
     rows
