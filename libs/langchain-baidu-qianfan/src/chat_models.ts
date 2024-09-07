@@ -340,7 +340,7 @@ export class ChatBaiduQianfan
             message: finalChunk.message,
           },
         ],
-        llmOutput: finalChunk.generationInfo.usage,
+        llmOutput: finalChunk.generationInfo?.usage ?? {},
       };
     } else {
       const params = this.invocationParams();
