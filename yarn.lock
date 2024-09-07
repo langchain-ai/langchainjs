@@ -11103,7 +11103,20 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@langchain/anthropic@^0.2.8, @langchain/anthropic@workspace:*, @langchain/anthropic@workspace:libs/langchain-anthropic":
+"@langchain/anthropic@npm:^0.2.8":
+  version: 0.2.17
+  resolution: "@langchain/anthropic@npm:0.2.17"
+  dependencies:
+    "@anthropic-ai/sdk": ^0.25.2
+    "@langchain/core": ">=0.2.21 <0.3.0"
+    fast-xml-parser: ^4.4.1
+    zod: ^3.22.4
+    zod-to-json-schema: ^3.22.4
+  checksum: c238df1fed3834bee3054645cb363aab7b30b22c917d05731abac4af5f55122b59e86797e9ed8a1a57f9ce7335e4264130f652555d5cc47727b8d274249f02f0
+  languageName: node
+  linkType: hard
+
+"@langchain/anthropic@workspace:*, @langchain/anthropic@workspace:libs/langchain-anthropic":
   version: 0.0.0-use.local
   resolution: "@langchain/anthropic@workspace:libs/langchain-anthropic"
   dependencies:
@@ -11134,7 +11147,7 @@ __metadata:
     zod: ^3.22.4
     zod-to-json-schema: ^3.22.4
   peerDependencies:
-    "@langchain/core": ">=0.2.21 <0.4.0"
+    "@langchain/core": ">=0.2.21 <0.4.0 || 0.3.0-rc.0"
   languageName: unknown
   linkType: soft
 
@@ -11452,7 +11465,7 @@ __metadata:
     "@jest/globals": ^29.5.0
     "@langchain/core": "workspace:*"
     "@langchain/langgraph": ~0.0.26
-    "@langchain/openai": ">=0.2.0 <0.3.0"
+    "@langchain/openai": ">=0.2.0 <0.3.0 || 0.3.0-rc.0"
     "@langchain/scripts": ">=0.1.0 <0.2.0"
     "@langchain/standard-tests": 0.0.0
     "@layerup/layerup-security": ^1.5.12
@@ -11555,7 +11568,7 @@ __metadata:
     js-yaml: ^4.1.0
     jsdom: ^22.1.0
     jsonwebtoken: ^9.0.2
-    langchain: ~0.2.3
+    langchain: ~0.2.3 || 0.3.0-rc.0
     langsmith: ~0.1.30
     llmonitor: ^0.5.9
     lodash: ^4.17.21
@@ -11623,7 +11636,7 @@ __metadata:
     "@google-cloud/storage": ^6.10.1 || ^7.7.0
     "@gradientai/nodejs-sdk": ^1.2.0
     "@huggingface/inference": ^2.6.4
-    "@langchain/core": ">=0.2.21 <0.4.0"
+    "@langchain/core": ">=0.2.21 <0.4.0 || 0.3.0-rc.0"
     "@langchain/langgraph": "*"
     "@layerup/layerup-security": ^1.5.12
     "@mendable/firecrawl-js": ^0.0.13
@@ -12556,7 +12569,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/openai@>=0.1.0 <0.3.0, @langchain/openai@>=0.2.0 <0.3.0, @langchain/openai@workspace:*, @langchain/openai@workspace:^, @langchain/openai@workspace:libs/langchain-openai, @langchain/openai@~0.2.4":
+"@langchain/openai@>=0.1.0 <0.3.0 || 0.3.0-rc.0, @langchain/openai@>=0.2.0 <0.3.0 || 0.3.0-rc.0, @langchain/openai@workspace:*, @langchain/openai@workspace:^, @langchain/openai@workspace:libs/langchain-openai":
   version: 0.0.0-use.local
   resolution: "@langchain/openai@workspace:libs/langchain-openai"
   dependencies:
@@ -12587,7 +12600,7 @@ __metadata:
     zod: ^3.22.4
     zod-to-json-schema: ^3.22.3
   peerDependencies:
-    "@langchain/core": ">=0.2.26 <0.4.0"
+    "@langchain/core": ">=0.2.26 <0.4.0 || 0.3.0-rc.0"
   languageName: unknown
   linkType: soft
 
@@ -12601,6 +12614,19 @@ __metadata:
     zod: ^3.22.4
     zod-to-json-schema: ^3.22.3
   checksum: 43aaafad2e1416bc23846c6c5084502025d3972c0b11b2ef2bcefd9da3dc1cd933cdf838c596404584af024adccc26e34476fededed0e614a19b47a4e5a8c8e5
+  languageName: node
+  linkType: hard
+
+"@langchain/openai@npm:~0.2.4":
+  version: 0.2.10
+  resolution: "@langchain/openai@npm:0.2.10"
+  dependencies:
+    "@langchain/core": ">=0.2.26 <0.3.0"
+    js-tiktoken: ^1.0.12
+    openai: ^4.57.3
+    zod: ^3.22.4
+    zod-to-json-schema: ^3.22.3
+  checksum: ebaef6c95ebbc467f66ca844cecfadc3e911697a25a4020aa9c461a3ee70cbffd749fa5ee2017f995cecd1b3b2dacc5c5436c34830cbef93fa77874c5b130290
   languageName: node
   linkType: hard
 
@@ -12789,7 +12815,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/textsplitters@>=0.0.0 <0.2.0, @langchain/textsplitters@workspace:*, @langchain/textsplitters@workspace:libs/langchain-textsplitters":
+"@langchain/textsplitters@>=0.0.0 <0.2.0 || 0.1.0-rc.0, @langchain/textsplitters@workspace:*, @langchain/textsplitters@workspace:libs/langchain-textsplitters":
   version: 0.0.0-use.local
   resolution: "@langchain/textsplitters@workspace:libs/langchain-textsplitters"
   dependencies:
@@ -12818,7 +12844,7 @@ __metadata:
     ts-jest: ^29.1.0
     typescript: <5.2.0
   peerDependencies:
-    "@langchain/core": ">=0.2.21 <0.4.0"
+    "@langchain/core": ">=0.2.21 <0.4.0 || 0.3.0-rc.0"
   languageName: unknown
   linkType: soft
 
@@ -12855,7 +12881,7 @@ __metadata:
     uuid: ^10.0.0
     weaviate-ts-client: ^2.0.0
   peerDependencies:
-    "@langchain/core": ">=0.2.21 <0.4.0"
+    "@langchain/core": ">=0.2.21 <0.4.0 || 0.3.0-rc.0"
   languageName: unknown
   linkType: soft
 
@@ -32664,7 +32690,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"langchain@workspace:*, langchain@workspace:langchain, langchain@~0.2.3":
+"langchain@workspace:*, langchain@workspace:langchain, langchain@~0.2.3 || 0.3.0-rc.0":
   version: 0.0.0-use.local
   resolution: "langchain@workspace:langchain"
   dependencies:
@@ -32679,9 +32705,9 @@ __metadata:
     "@langchain/groq": ^0.0.15
     "@langchain/mistralai": ^0.0.26
     "@langchain/ollama": ^0.0.2
-    "@langchain/openai": ">=0.1.0 <0.3.0"
+    "@langchain/openai": ">=0.1.0 <0.3.0 || 0.3.0-rc.0"
     "@langchain/scripts": ">=0.1.0 <0.2.0"
-    "@langchain/textsplitters": ">=0.0.0 <0.2.0"
+    "@langchain/textsplitters": ">=0.0.0 <0.2.0 || 0.1.0-rc.0"
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.2
@@ -32732,7 +32758,7 @@ __metadata:
     "@langchain/aws": "*"
     "@langchain/cohere": "*"
     "@langchain/community": "*"
-    "@langchain/core": ">=0.2.21 <0.4.0"
+    "@langchain/core": ">=0.2.21 <0.4.0 || 0.3.0-rc.0"
     "@langchain/google-genai": "*"
     "@langchain/google-vertexai": "*"
     "@langchain/groq": "*"
