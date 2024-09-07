@@ -633,7 +633,7 @@ export class ChatAnthropicMessages<
       fields?.anthropicApiKey ??
       getEnvironmentVariable("ANTHROPIC_API_KEY");
 
-    if (!this.anthropicApiKey) {
+    if (!this.anthropicApiKey && !fields?.createClient) {
       throw new Error("Anthropic API key not found");
     }
     this.clientOptions = fields?.clientOptions ?? {};
@@ -949,7 +949,7 @@ export class ChatAnthropicMessages<
   ): Promise<Anthropic.Message> {
     if (!this.batchClient) {
       const options = this.apiUrl ? { baseURL: this.apiUrl } : undefined;
-      if (!this.apiKey) {
+      if (!this.apiKey && !this.createClient) {
         throw new Error("Missing Anthropic API key.");
       }
       this.batchClient = this.createClient({
