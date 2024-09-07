@@ -122,6 +122,9 @@ function _formatContent(content: MessageContent) {
     return content;
   } else {
     const contentBlocks = content.map((contentPart) => {
+      const cacheControl =
+        "cache_control" in contentPart ? contentPart.cache_control : undefined;
+
       if (contentPart.type === "image_url") {
         let source;
         if (typeof contentPart.image_url === "string") {
@@ -132,6 +135,7 @@ function _formatContent(content: MessageContent) {
         return {
           type: "image" as const, // Explicitly setting the type as "image"
           source,
+          ...(cacheControl ? { cache_control: cacheControl } : {}),
         };
       } else if (
         textTypes.find((t) => t === contentPart.type) &&
@@ -141,6 +145,7 @@ function _formatContent(content: MessageContent) {
         return {
           type: "text" as const, // Explicitly setting the type as "text"
           text: contentPart.text,
+          ...(cacheControl ? { cache_control: cacheControl } : {}),
         };
       } else if (toolTypes.find((t) => t === contentPart.type)) {
         const contentPartCopy = { ...contentPart };
@@ -167,6 +172,7 @@ function _formatContent(content: MessageContent) {
         // TODO: Fix when SDK types are fixed
         return {
           ...contentPartCopy,
+          ...(cacheControl ? { cache_control: cacheControl } : {}),
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } as any;
       } else {

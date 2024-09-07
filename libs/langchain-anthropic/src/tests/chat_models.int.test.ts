@@ -393,8 +393,7 @@ test("id is supplied when streaming", async () => {
   expect(finalChunk.id).not.toEqual("");
 });
 
-test("system prompt caching", async () => {
-  const CACHED_TEXT = `## Components
+const CACHED_TEXT = `## Components
 
 LangChain provides standard, extendable interfaces and external integrations for various components useful for building with LLMs.
 Some components LangChain implements, some components we rely on third-party integrations for, and others are a mix.
@@ -655,6 +654,7 @@ LangChain has many different types of output parsers. This is a list of output p
 
 The current date is ${new Date().toISOString()}`;
 
+test("system prompt caching", async () => {
   const model = new ChatAnthropic({
     model: "claude-3-haiku-20240307",
     clientOptions: {
@@ -748,4 +748,46 @@ test.skip("Test ChatAnthropic with custom client", async () => {
   const res = await chat.invoke([message]);
   // console.log({ res });
   expect(res.response_metadata.usage).toBeDefined();
+});
+
+test("human message caching", async () => {
+  const model = new ChatAnthropic({
+    model: "claude-3-haiku-20240307",
+    clientOptions: {
+      defaultHeaders: {
+        "anthropic-beta": "prompt-caching-2024-07-31",
+      },
+    },
+  });
+
+  const messages = [
+    new SystemMessage({
+      content: [
+        {
+          type: "text",
+          text: `You are a pirate. Always respond in pirate dialect.\nUse the following as context when answering questions: ${CACHED_TEXT}`,
+        },
+      ],
+    }),
+    new HumanMessage({
+      content: [
+        {
+          type: "text",
+          text: "What types of messages are supported in LangChain?",
+          cache_control: { type: "ephemeral" },
+        },
+      ],
+    }),
+  ];
+
+  const res = await model.invoke(messages);
+  expect(
+    res.response_metadata.usage.cache_creation_input_tokens
+  ).toBeGreaterThan(0);
+  expect(res.response_metadata.usage.cache_read_input_tokens).toBe(0);
+  const res2 = await model.invoke(messages);
+  expect(res2.response_metadata.usage.cache_creation_input_tokens).toBe(0);
+  expect(res2.response_metadata.usage.cache_read_input_tokens).toBeGreaterThan(
+    0
+  );
 });
