@@ -5,7 +5,7 @@ import { Document } from "@langchain/core/documents";
 export interface RecencyRankedRetrieverConfig {
   vectorStore: VectorStoreInterface;
   k: number;
-  top_k?: number;
+  topK?: number;
   recencyWeight: number;
 }
 
@@ -20,7 +20,7 @@ export class RecencyRankedRetriever extends BaseRetriever {
 
   private k: number;
 
-  private top_k: number;
+  private topK: number;
 
   private recencyWeight: number;
 
@@ -28,14 +28,18 @@ export class RecencyRankedRetriever extends BaseRetriever {
     super();
     this.vectorStore = config.vectorStore;
     this.k = config.k;
-    this.top_k = config.top_k ?? config.k;
+    this.topK = config.topK ?? config.k;
     this.recencyWeight = config.recencyWeight;
   }
 
-  async getRelevantDocuments(query: string): Promise<Document[]> {
+  async _getRelevantDocuments(query: string): Promise<Document[]> {
     const relevantDocs = await this.vectorStore.similaritySearchWithScore(query, this.k);
-    const rerankedDocs = this.recentDocumentRanker(relevantDocs, this.top_k, this.recencyWeight);
+    const rerankedDocs = this.recentDocumentRanker(relevantDocs, this.topK, this.recencyWeight);
     return rerankedDocs.map(([doc, _]) => doc);
+  }
+
+  async invoke(query: string): Promise<Document[]> {
+    return this._getRelevantDocuments(query);
   }
 
   private recentDocumentRanker(
