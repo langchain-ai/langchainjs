@@ -5,7 +5,6 @@ import { Document } from "@langchain/core/documents";
 export type BM25RetrieverOptions = {
   docs: Document[];
   k: number;
-  preprocessFunc: (text: string) => string[];
 };
 
 /**
@@ -31,13 +30,14 @@ export class BM25Retriever extends BaseRetriever {
 
   k: number;
   
-  preprocessFunc: (text: string) => string[];
-
   constructor(options: BM25RetrieverOptions) {
     super();
     this.docs = options.docs;
     this.k = options.k;
-    this.preprocessFunc = options.preprocessFunc;
+  }
+
+  private preprocessFunc(text: string): string[] {
+    return text.toLowerCase().split(/\s+/);
   }
 
   async _getRelevantDocuments(query: string) {

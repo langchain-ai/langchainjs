@@ -17,7 +17,6 @@ test("BM25Retriever", async () => {
 
   const retriever = BM25Retriever.fromDocuments(docs, {
     k: 2,
-    preprocessFunc: (text: string) => text.toLowerCase().split(/\s+/),
   });
   const results = await retriever.invoke("the fox and the dog");
 
