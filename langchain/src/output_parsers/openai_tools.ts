@@ -1,4 +1,7 @@
-import { BaseLLMOutputParser } from "@langchain/core/output_parsers";
+import {
+  BaseCumulativeTransformOutputParser,
+  BaseLLMOutputParser,
+} from "@langchain/core/output_parsers";
 import type { ChatGeneration } from "@langchain/core/outputs";
 
 export type ParsedToolCall = {
@@ -102,7 +105,7 @@ export type JsonOutputKeyToolsParserParams = {
  * expecting only a single tool to be called.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export class JsonOutputKeyToolsParser extends BaseLLMOutputParser<any> {
+export class JsonOutputKeyToolsParser extends BaseCumulativeTransformOutputParser<any> {
   static lc_name() {
     return "JsonOutputKeyToolsParser";
   }
