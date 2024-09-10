@@ -11718,7 +11718,6 @@ __metadata:
   resolution: "@langchain/core@workspace:langchain-core"
   dependencies:
     "@jest/globals": ^29.5.0
-    "@langchain/langgraph": ^0.2.2
     "@langchain/scripts": ">=0.1.0 <0.2.0"
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
@@ -12037,17 +12036,6 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/langgraph-checkpoint@npm:~0.0.5":
-  version: 0.0.5
-  resolution: "@langchain/langgraph-checkpoint@npm:0.0.5"
-  dependencies:
-    uuid: ^10.0.0
-  peerDependencies:
-    "@langchain/core": ">=0.2.31 <0.3.0"
-  checksum: 5887a5e1986af7e6dd2c0c72775e019da7bc7809392298e9a44130c5b467e27685a076658c6c5e162ca403a5fc1f805dbdbc788b185ffe0dc9bad45f3320e175
-  languageName: node
-  linkType: hard
-
 "@langchain/langgraph@npm:0.0.28, @langchain/langgraph@npm:^0.0.28":
   version: 0.0.28
   resolution: "@langchain/langgraph@npm:0.0.28"
@@ -12061,20 +12049,6 @@ __metadata:
     better-sqlite3:
       optional: true
   checksum: 1465791026ccd6eaa13a2f2d03b8fb9f0972a8c23b9da1cfd581074f413ea60ef860de6d704c6a3b49f7425f23d6ba49c23255167ae83ab7d70dc00cc0560ce2
-  languageName: node
-  linkType: hard
-
-"@langchain/langgraph@npm:^0.2.2":
-  version: 0.2.2
-  resolution: "@langchain/langgraph@npm:0.2.2"
-  dependencies:
-    "@langchain/langgraph-checkpoint": ~0.0.5
-    double-ended-queue: ^2.1.0-0
-    uuid: ^10.0.0
-    zod: ^3.23.8
-  peerDependencies:
-    "@langchain/core": ">=0.2.31 <0.3.0"
-  checksum: 322e38b026919ac84feb1ec9fe00017cdf15d1c97aba3f5db2ecfb0cb569402bfd75cbf1619095c87cdffb0fc633da4b210c3a177e97dbb5a8823ecd7379b7bb
   languageName: node
   linkType: hard
 
@@ -25080,13 +25054,6 @@ __metadata:
   version: 16.4.5
   resolution: "dotenv@npm:16.4.5"
   checksum: 301a12c3d44fd49888b74eb9ccf9f07a1f5df43f489e7fcb89647a2edcd84c42d6bc349dc8df099cd18f07c35c7b04685c1a4f3e6a6a9e6b30f8d48c15b7f49c
-  languageName: node
-  linkType: hard
-
-"double-ended-queue@npm:^2.1.0-0":
-  version: 2.1.0-0
-  resolution: "double-ended-queue@npm:2.1.0-0"
-  checksum: 3030cf9dcf6f8e7d8cb6ae5b7304890445d7c32233a614e400ba7b378086ad76f5822d0e501afd5ffe0af1de4bcb842fa23d4c79174d54f6566399435fafc271
   languageName: node
   linkType: hard
 
