@@ -55,8 +55,4 @@ export class BM25Retriever extends BaseRetriever {
 
     return scoredDocs.slice(0, this.k).map((item) => item.document);
   }
-
-  async invoke(input: string): Promise<Document[]> {
-    return this._getRelevantDocuments(input);
-  }
 }
