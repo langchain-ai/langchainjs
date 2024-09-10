@@ -194,6 +194,7 @@ export const config = {
     // retrievers
     "retrievers/amazon_kendra": "retrievers/amazon_kendra",
     "retrievers/amazon_knowledge_base": "retrievers/amazon_knowledge_base",
+    "retrievers/bm25": "retrievers/bm25",
     "retrievers/chaindesk": "retrievers/chaindesk",
     "retrievers/databerry": "retrievers/databerry",
     "retrievers/dria": "retrievers/dria",
@@ -426,6 +427,7 @@ export const config = {
     "chat_models/zhipuai",
     "retrievers/amazon_kendra",
     "retrievers/amazon_knowledge_base",
+    "retrievers/bm25",
     "retrievers/dria",
     "retrievers/metal",
     "retrievers/supabase",

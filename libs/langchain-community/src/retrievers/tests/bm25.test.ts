@@ -1,6 +1,6 @@
 import { expect, test } from "@jest/globals";
 import { Document } from "@langchain/core/documents";
-import { BM25Retriever } from "../bm25_retriever.js";
+import { BM25Retriever } from "../bm25.js";
 
 test("BM25Retriever", async () => {
   const docs = [
@@ -21,5 +21,7 @@ test("BM25Retriever", async () => {
   const results = await retriever.invoke("the fox and the dog");
 
   expect(results).toHaveLength(2);
-  expect(results[0].pageContent).toBe("The quick brown fox jumps over the lazy dog");
+  expect(results[0].pageContent).toBe(
+    "The quick brown fox jumps over the lazy dog"
+  );
 });

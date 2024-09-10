@@ -11320,7 +11320,7 @@ __metadata:
     node-llama-cpp: 2.7.3
     notion-to-md: ^3.1.0
     officeparser: ^4.0.4
-    okapibm25: ^1.4.0
+    okapibm25: ^1.4.1
     pdf-parse: 1.1.1
     pg: ^8.11.0
     pg-copy-streams: ^6.0.5
@@ -11449,6 +11449,7 @@ __metadata:
     node-llama-cpp: "*"
     notion-to-md: ^3.1.0
     officeparser: ^4.0.4
+    okapibm25: ^1.4.1
     pdf-parse: 1.1.1
     pg: ^8.11.0
     pg-copy-streams: ^6.0.5
@@ -11668,6 +11669,8 @@ __metadata:
     notion-to-md:
       optional: true
     officeparser:
+      optional: true
+    okapibm25:
       optional: true
     pdf-parse:
       optional: true
@@ -32272,7 +32275,6 @@ __metadata:
     node-llama-cpp: 2.7.3
     notion-to-md: ^3.1.0
     officeparser: ^4.0.4
-    okapibm25: ^1.4.1
     openai: ^4.41.1
     openapi-types: ^12.1.3
     p-retry: 4
@@ -32345,7 +32347,6 @@ __metadata:
     node-llama-cpp: "*"
     notion-to-md: "*"
     officeparser: "*"
-    okapibm25: ^1.4.1
     pdf-parse: "*"
     peggy: ^3.0.2
     playwright: "*"
@@ -32450,8 +32451,6 @@ __metadata:
     notion-to-md:
       optional: true
     officeparser:
-      optional: true
-    okapibm25:
       optional: true
     pdf-parse:
       optional: true
@@ -35048,13 +35047,6 @@ __metadata:
   bin:
     officeparser: officeParser.js
   checksum: bd249cf1f74e460077c5b2eebc154a170f52fad8b75fc5d8f55b262f33e08b2f8411d947c0e4a51cc67987e07ae71d0ee33abaae4948db2840528ddb4bc4d083
-  languageName: node
-  linkType: hard
-
-"okapibm25@npm:^1.4.0":
-  version: 1.4.0
-  resolution: "okapibm25@npm:1.4.0"
-  checksum: 8f513ef7a05d78fc7a32d19cfbf44405c8164ddab27431f80516c8a9e00ed9b9f2a3bdbdc11633d3c0611b97f0a86b1f90bd84f6e0b0eb8424a856b34a9fd3de
   languageName: node
   linkType: hard
 

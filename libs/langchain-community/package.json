@@ -187,6 +187,7 @@
     "node-llama-cpp": "2.7.3",
     "notion-to-md": "^3.1.0",
     "officeparser": "^4.0.4",
+    "okapibm25": "^1.4.1",
     "pdf-parse": "1.1.1",
     "pg": "^8.11.0",
     "pg-copy-streams": "^6.0.5",
@@ -313,6 +314,7 @@
     "node-llama-cpp": "*",
     "notion-to-md": "^3.1.0",
     "officeparser": "^4.0.4",
+    "okapibm25": "^1.4.1",
     "pdf-parse": "1.1.1",
     "pg": "^8.11.0",
     "pg-copy-streams": "^6.0.5",
@@ -631,6 +633,9 @@
       "optional": true
     },
     "officeparser": {
+      "optional": true
+    },
+    "okapibm25": {
       "optional": true
     },
     "pdf-parse": {
