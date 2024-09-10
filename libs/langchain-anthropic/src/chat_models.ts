@@ -14,7 +14,6 @@ import {
 import {
   type StructuredOutputMethodOptions,
   type BaseLanguageModelInput,
-  type ToolDefinition,
   isOpenAITool,
 } from "@langchain/core/language_models/base";
 import { zodToJsonSchema } from "zod-to-json-schema";
@@ -145,6 +144,14 @@ export interface AnthropicInput {
    * @default true
    */
   streamUsage?: boolean;
+
+  /**
+   * Optional method that returns an initialized underlying Anthropic client.
+   * Useful for accessing Anthropic models hosted on other cloud services
+   * such as Google Vertex.
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  createClient?: (options: ClientOptions) => any;
 }
 
 /**
@@ -611,6 +618,13 @@ export class ChatAnthropicMessages<
 
   streamUsage = true;
 
+  /**
+   * Optional method that returns an initialized underlying Anthropic client.
+   * Useful for accessing Anthropic models hosted on other cloud services
+   * such as Google Vertex.
+   */
+  createClient: (options: ClientOptions) => Anthropic;
+
   constructor(fields?: AnthropicInput & BaseChatModelParams) {
     super(fields ?? {});
 
@@ -619,7 +633,7 @@ export class ChatAnthropicMessages<
       fields?.anthropicApiKey ??
       getEnvironmentVariable("ANTHROPIC_API_KEY");
 
-    if (!this.anthropicApiKey) {
+    if (!this.anthropicApiKey && !fields?.createClient) {
       throw new Error("Anthropic API key not found");
     }
     this.clientOptions = fields?.clientOptions ?? {};
@@ -644,6 +658,10 @@ export class ChatAnthropicMessages<
 
     this.streaming = fields?.streaming ?? false;
     this.streamUsage = fields?.streamUsage ?? this.streamUsage;
+
+    this.createClient =
+      fields?.createClient ??
+      ((options: ClientOptions) => new Anthropic(options));
   }
 
   getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
@@ -663,7 +681,6 @@ export class ChatAnthropicMessages<
    *
    * @param {ChatAnthropicCallOptions["tools"]} tools The tools to format
    * @returns {AnthropicTool[] | undefined} The formatted tools, or undefined if none are passed.
-   * @throws {Error} If a mix of AnthropicTools and StructuredTools are passed.
    */
   formatStructuredToolToAnthropic(
     tools: ChatAnthropicCallOptions["tools"]
@@ -671,37 +688,34 @@ export class ChatAnthropicMessages<
     if (!tools || !tools.length) {
       return undefined;
     }
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    if ((tools as any[]).every((tool) => isAnthropicTool(tool))) {
-      // If the tool is already an anthropic tool, return it
-      return tools as AnthropicTool[];
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    if ((tools as any[]).every((tool) => isOpenAITool(tool))) {
-      // Formatted as OpenAI tool, convert to Anthropic tool
-      return (tools as ToolDefinition[]).map((tc) => ({
-        name: tc.function.name,
-        description: tc.function.description,
-        input_schema: tc.function.parameters as AnthropicTool.InputSchema,
-      }));
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    if ((tools as any[]).some((tool) => isAnthropicTool(tool))) {
-      throw new Error(`Can not pass in a mix of tool schemas to ChatAnthropic`);
-    }
-
-    if (tools.every(isLangChainTool)) {
-      return tools.map((t) => ({
-        name: t.name,
-        description: t.description,
-        input_schema: zodToJsonSchema(t.schema) as AnthropicTool.InputSchema,
-      }));
-    }
-
-    throw new Error("Unsupported tool type passed to ChatAnthropic");
+    return tools.map((tool) => {
+      if (isAnthropicTool(tool)) {
+        return tool;
+      }
+      if (isOpenAITool(tool)) {
+        return {
+          name: tool.function.name,
+          description: tool.function.description,
+          input_schema: tool.function.parameters as AnthropicTool.InputSchema,
+        };
+      }
+      if (isLangChainTool(tool)) {
+        return {
+          name: tool.name,
+          description: tool.description,
+          input_schema: zodToJsonSchema(
+            tool.schema
+          ) as AnthropicTool.InputSchema,
+        };
+      }
+      throw new Error(
+        `Unknown tool type passed to ChatAnthropic: ${JSON.stringify(
+          tool,
+          null,
+          2
+        )}`
+      );
+    });
   }
 
   override bindTools(
@@ -908,7 +922,7 @@ export class ChatAnthropicMessages<
   ): Promise<Stream<AnthropicMessageStreamEvent>> {
     if (!this.streamingClient) {
       const options_ = this.apiUrl ? { baseURL: this.apiUrl } : undefined;
-      this.streamingClient = new Anthropic({
+      this.streamingClient = this.createClient({
         ...this.clientOptions,
         ...options_,
         apiKey: this.apiKey,
@@ -935,10 +949,7 @@ export class ChatAnthropicMessages<
   ): Promise<Anthropic.Message> {
     if (!this.batchClient) {
       const options = this.apiUrl ? { baseURL: this.apiUrl } : undefined;
-      if (!this.apiKey) {
-        throw new Error("Missing Anthropic API key.");
-      }
-      this.batchClient = new Anthropic({
+      this.batchClient = this.createClient({
         ...this.clientOptions,
         ...options,
         apiKey: this.apiKey,

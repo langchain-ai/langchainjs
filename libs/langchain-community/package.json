@@ -1,6 +1,6 @@
 {
   "name": "@langchain/community",
-  "version": "0.2.31",
+  "version": "0.2.33",
   "description": "Third-party integrations for LangChain.js",
   "type": "module",
   "engines": {
@@ -48,6 +48,7 @@
     "zod-to-json-schema": "^3.22.5"
   },
   "devDependencies": {
+    "@arcjet/redact": "^v1.0.0-alpha.23",
     "@aws-crypto/sha256-js": "^5.0.0",
     "@aws-sdk/client-bedrock-agent-runtime": "^3.583.0",
     "@aws-sdk/client-bedrock-runtime": "^3.422.0",
@@ -83,7 +84,7 @@
     "@langchain/standard-tests": "0.0.0",
     "@layerup/layerup-security": "^1.5.12",
     "@mendable/firecrawl-js": "^0.0.36",
-    "@mlc-ai/web-llm": "0.2.46",
+    "@mlc-ai/web-llm": ">=0.2.62 <0.3.0",
     "@mozilla/readability": "^0.4.4",
     "@neondatabase/serverless": "^0.9.1",
     "@notionhq/client": "^2.2.10",
@@ -133,7 +134,7 @@
     "@zilliz/milvus2-sdk-node": ">=2.3.5",
     "apify-client": "^2.7.1",
     "assemblyai": "^4.6.0",
-    "better-sqlite3": ">=9.4.0 <12.0.0",
+    "better-sqlite3": "9.5.0",
     "cassandra-driver": "^4.7.2",
     "cborg": "^4.1.1",
     "cheerio": "^1.0.0-rc.12",
@@ -213,6 +214,7 @@
     "youtubei.js": "^9.1.0"
   },
   "peerDependencies": {
+    "@arcjet/redact": "^v1.0.0-alpha.23",
     "@aws-crypto/sha256-js": "^5.0.0",
     "@aws-sdk/client-bedrock-agent-runtime": "^3.583.0",
     "@aws-sdk/client-bedrock-runtime": "^3.422.0",
@@ -242,7 +244,7 @@
     "@langchain/langgraph": "*",
     "@layerup/layerup-security": "^1.5.12",
     "@mendable/firecrawl-js": "^0.0.13",
-    "@mlc-ai/web-llm": "0.2.46",
+    "@mlc-ai/web-llm": "*",
     "@mozilla/readability": "*",
     "@neondatabase/serverless": "*",
     "@notionhq/client": "^2.2.10",
@@ -335,6 +337,9 @@
     "youtubei.js": "^9.1.0"
   },
   "peerDependenciesMeta": {
+    "@arcjet/redact": {
+      "optional": true
+    },
     "@aws-crypto/sha256-js": {
       "optional": true
     },
@@ -1204,6 +1209,15 @@
       "import": "./llms/aleph_alpha.js",
       "require": "./llms/aleph_alpha.cjs"
     },
+    "./llms/arcjet": {
+      "types": {
+        "import": "./llms/arcjet.d.ts",
+        "require": "./llms/arcjet.d.cts",
+        "default": "./llms/arcjet.d.ts"
+      },
+      "import": "./llms/arcjet.js",
+      "require": "./llms/arcjet.cjs"
+    },
     "./llms/bedrock": {
       "types": {
         "import": "./llms/bedrock.d.ts",
@@ -1834,6 +1848,15 @@
       "import": "./chat_models/alibaba_tongyi.js",
       "require": "./chat_models/alibaba_tongyi.cjs"
     },
+    "./chat_models/arcjet": {
+      "types": {
+        "import": "./chat_models/arcjet.d.ts",
+        "require": "./chat_models/arcjet.d.cts",
+        "default": "./chat_models/arcjet.d.ts"
+      },
+      "import": "./chat_models/arcjet.js",
+      "require": "./chat_models/arcjet.cjs"
+    },
     "./chat_models/baiduwenxin": {
       "types": {
         "import": "./chat_models/baiduwenxin.d.ts",
@@ -2094,6 +2117,15 @@
       },
       "import": "./retrievers/amazon_knowledge_base.js",
       "require": "./retrievers/amazon_knowledge_base.cjs"
+    },
+    "./retrievers/bm25": {
+      "types": {
+        "import": "./retrievers/bm25.d.ts",
+        "require": "./retrievers/bm25.d.cts",
+        "default": "./retrievers/bm25.d.ts"
+      },
+      "import": "./retrievers/bm25.js",
+      "require": "./retrievers/bm25.cjs"
     },
     "./retrievers/chaindesk": {
       "types": {
@@ -3286,6 +3318,10 @@
     "llms/aleph_alpha.js",
     "llms/aleph_alpha.d.ts",
     "llms/aleph_alpha.d.cts",
+    "llms/arcjet.cjs",
+    "llms/arcjet.js",
+    "llms/arcjet.d.ts",
+    "llms/arcjet.d.cts",
     "llms/bedrock.cjs",
     "llms/bedrock.js",
     "llms/bedrock.d.ts",
@@ -3566,6 +3602,10 @@
     "chat_models/alibaba_tongyi.js",
     "chat_models/alibaba_tongyi.d.ts",
     "chat_models/alibaba_tongyi.d.cts",
+    "chat_models/arcjet.cjs",
+    "chat_models/arcjet.js",
+    "chat_models/arcjet.d.ts",
+    "chat_models/arcjet.d.cts",
     "chat_models/baiduwenxin.cjs",
     "chat_models/baiduwenxin.js",
     "chat_models/baiduwenxin.d.ts",
@@ -3682,6 +3722,10 @@
     "retrievers/amazon_knowledge_base.js",
     "retrievers/amazon_knowledge_base.d.ts",
     "retrievers/amazon_knowledge_base.d.cts",
+    "retrievers/bm25.cjs",
+    "retrievers/bm25.js",
+    "retrievers/bm25.d.ts",
+    "retrievers/bm25.d.cts",
     "retrievers/chaindesk.cjs",
     "retrievers/chaindesk.js",
     "retrievers/chaindesk.d.ts",
