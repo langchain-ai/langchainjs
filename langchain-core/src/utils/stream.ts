@@ -71,6 +71,12 @@ export class IterableReadableStream<T>
     return this;
   }
 
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore Not present in Node 18 types, required in latest Node 22
+  async [Symbol.asyncDispose]() {
+    await this.return();
+  }
+
   static fromReadableStream<T>(stream: ReadableStream<T>) {
     // From https://developer.mozilla.org/en-US/docs/Web/API/Streams_API/Using_readable_streams#reading_the_stream
     const reader = stream.getReader();
@@ -245,7 +251,7 @@ export class AsyncGeneratorWithSetup<
   }
 
   async return(
-    value: TReturn | PromiseLike<TReturn>
+    value?: TReturn | PromiseLike<TReturn>
   ): Promise<IteratorResult<T>> {
     return this.generator.return(value);
   }
@@ -256,6 +262,12 @@ export class AsyncGeneratorWithSetup<
 
   [Symbol.asyncIterator]() {
     return this;
+  }
+
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore Not present in Node 18 types, required in latest Node 22
+  async [Symbol.asyncDispose]() {
+    await this.return();
   }
 }
 
