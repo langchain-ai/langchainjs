@@ -12,8 +12,8 @@ type ValidEntities<Detect> = Array<
   undefined extends Detect
     ? ArcjetSensitiveInfoType
     : Detect extends DetectSensitiveInfoEntities<infer CustomEntities>
-      ? ArcjetSensitiveInfoType | CustomEntities
-      : never
+    ? ArcjetSensitiveInfoType | CustomEntities
+    : never
 >;
 
 export type { ArcjetSensitiveInfoType, RedactOptions };
@@ -27,8 +27,8 @@ export interface ArcjetRedactOptions<Detect> extends BaseLLMCallOptions {
 }
 
 export class ArcjetRedact<
-  const Detect extends DetectSensitiveInfoEntities<CustomEntities> | undefined,
-  const CustomEntities extends string,
+  Detect extends DetectSensitiveInfoEntities<CustomEntities> | undefined,
+  CustomEntities extends string
 > extends LLM {
   static lc_name() {
     return "ArcjetRedact";
@@ -73,7 +73,7 @@ export class ArcjetRedact<
     const [redacted, unredact] = await redact(input, ajOptions);
 
     // Invoke the underlying LLM with the prompt and options
-    let result = await this.llm.invoke(redacted, options);
+    const result = await this.llm.invoke(redacted, options);
 
     return unredact(result);
   }

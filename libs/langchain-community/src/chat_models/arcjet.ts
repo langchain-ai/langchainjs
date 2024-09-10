@@ -1,3 +1,5 @@
+/* eslint-disable no-param-reassign */
+/* eslint-disable no-plusplus */
 import {
   BaseChatModel,
   type BaseChatModelParams,
@@ -14,8 +16,8 @@ type ValidEntities<Detect> = Array<
   undefined extends Detect
     ? ArcjetSensitiveInfoType
     : Detect extends DetectSensitiveInfoEntities<infer CustomEntities>
-      ? ArcjetSensitiveInfoType | CustomEntities
-      : never
+    ? ArcjetSensitiveInfoType | CustomEntities
+    : never
 >;
 
 export interface ArcjetRedactOptions<Detect> extends BaseChatModelParams {
@@ -77,8 +79,8 @@ function transformTextMessage(
 }
 
 export class ArcjetRedact<
-  const Detect extends DetectSensitiveInfoEntities<CustomEntities> | undefined,
-  const CustomEntities extends string,
+  Detect extends DetectSensitiveInfoEntities<CustomEntities> | undefined,
+  CustomEntities extends string
 > extends BaseChatModel {
   static lc_name() {
     return "ArcjetRedact";

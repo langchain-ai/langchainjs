@@ -12,6 +12,7 @@ export class MockLLM extends LLM {
   }
 
   lc_serializable = true;
+
   callback?: (input: string) => string;
 
   constructor(callback?: (input: string) => string) {
@@ -174,6 +175,7 @@ test("It throws when no entities are configured", async () => {
   };
 
   expect(() => {
+    // eslint-disable-next-line no-new
     new ArcjetRedact(options);
-  }).toThrow(new Error("no entities configured for redaction"));
+  }).toThrow("no entities configured for redaction");
 });

@@ -18,6 +18,7 @@ class MockChatModel extends BaseChatModel {
   _llmType(): string {
     return "mock_chat_model";
   }
+
   async _generate(
     messages: BaseMessage[],
     _options: this["ParsedCallOptions"],
