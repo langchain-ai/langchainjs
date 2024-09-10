@@ -71,6 +71,7 @@ export class IterableReadableStream<T>
     return this;
   }
 
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore Not present in Node 18 types, required in latest Node 22
   async [Symbol.asyncDispose]() {
     await this.return();
@@ -263,6 +264,7 @@ export class AsyncGeneratorWithSetup<
     return this;
   }
 
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore Not present in Node 18 types, required in latest Node 22
   async [Symbol.asyncDispose]() {
     await this.return();
