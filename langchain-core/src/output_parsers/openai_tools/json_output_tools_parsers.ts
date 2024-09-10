@@ -277,6 +277,7 @@ export class JsonOutputKeyToolsParser<
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async parsePartialResult(generations: ChatGeneration[]): Promise<any> {
     const results = await super.parsePartialResult(generations);
     const matchingResults = results.filter(
