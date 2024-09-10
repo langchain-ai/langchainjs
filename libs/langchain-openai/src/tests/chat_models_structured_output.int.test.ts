@@ -36,7 +36,7 @@ test("withStructuredOutput zod schema function calling", async () => {
   expect("number2" in result).toBe(true);
 });
 
-test.only("withStructuredOutput zod schema streaming", async () => {
+test("withStructuredOutput zod schema streaming", async () => {
   const model = new ChatOpenAI({
     temperature: 0,
     modelName: "gpt-4-turbo-preview",
