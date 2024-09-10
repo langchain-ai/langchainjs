@@ -71,6 +71,7 @@ export class IterableReadableStream<T>
     return this;
   }
 
+  // @ts-ignore Not present in Node 18 types, required in latest Node 22
   async [Symbol.asyncDispose]() {
     await this.return();
   }
@@ -262,6 +263,7 @@ export class AsyncGeneratorWithSetup<
     return this;
   }
 
+  // @ts-ignore Not present in Node 18 types, required in latest Node 22
   async [Symbol.asyncDispose]() {
     await this.return();
   }
