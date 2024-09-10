@@ -48,6 +48,7 @@
     "zod-to-json-schema": "^3.22.5"
   },
   "devDependencies": {
+    "@arcjet/redact": "^v1.0.0-alpha.23",
     "@aws-crypto/sha256-js": "^5.0.0",
     "@aws-sdk/client-bedrock-agent-runtime": "^3.583.0",
     "@aws-sdk/client-bedrock-runtime": "^3.422.0",

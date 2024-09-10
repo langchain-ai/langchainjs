@@ -3,15 +3,20 @@ import {
   BaseLLM,
   type BaseLLMCallOptions,
 } from "@langchain/core/language_models/llms";
-import type {
-  ArcjetSensitiveInfoType, RedactOptions
-} from "@arcjet/redact";
-import {
-  redact,
-} from "@arcjet/redact";
+import type { ArcjetSensitiveInfoType, RedactOptions } from "@arcjet/redact";
 
-type DetectSensitiveInfoEntities<T> = (tokens: string[]) => Array<ArcjetSensitiveInfoType | T | undefined>;
-type ValidEntities<Detect> = Array<undefined extends Detect ? ArcjetSensitiveInfoType : Detect extends DetectSensitiveInfoEntities<infer CustomEntities> ? ArcjetSensitiveInfoType | CustomEntities : never>;
+type DetectSensitiveInfoEntities<T> = (
+  tokens: string[]
+) => Array<ArcjetSensitiveInfoType | T | undefined>;
+type ValidEntities<Detect> = Array<
+  undefined extends Detect
+    ? ArcjetSensitiveInfoType
+    : Detect extends DetectSensitiveInfoEntities<infer CustomEntities>
+      ? ArcjetSensitiveInfoType | CustomEntities
+      : never
+>;
+
+export type { ArcjetSensitiveInfoType, RedactOptions };
 
 export interface ArcjetRedactOptions<Detect> extends BaseLLMCallOptions {
   llm: BaseLLM;
@@ -21,7 +26,10 @@ export interface ArcjetRedactOptions<Detect> extends BaseLLMCallOptions {
   replace?: (entity: ValidEntities<Detect>[number]) => string | undefined;
 }
 
-export class ArcjetRedact<const Detect extends DetectSensitiveInfoEntities<CustomEntities> | undefined, const CustomEntities extends string> extends LLM {
+export class ArcjetRedact<
+  const Detect extends DetectSensitiveInfoEntities<CustomEntities> | undefined,
+  const CustomEntities extends string,
+> extends LLM {
   static lc_name() {
     return "ArcjetRedact";
   }
@@ -61,6 +69,7 @@ export class ArcjetRedact<const Detect extends DetectSensitiveInfoEntities<Custo
       replace: this.replace,
     };
 
+    const { redact } = await import("@arcjet/redact");
     const [redacted, unredact] = await redact(input, ajOptions);
 
     // Invoke the underlying LLM with the prompt and options

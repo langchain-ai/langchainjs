@@ -248,7 +248,6 @@ const FEATURE_TABLES = {
         json_mode: false,
         multimodal: false,
         local: true,
-        apiLink: "",
       },
     ],
   },
@@ -275,9 +274,7 @@ const FEATURE_TABLES = {
       {
         name: "Arcjet Redact",
         link: "arcjet",
-        package: "langchain-arcjet",
-        // apiLink:
-        // "https://api.python.langchain.com/en/latest/llms/langchain_ai21.llms.AI21LLM.html#langchain_ai21.llms.AI21LLM",
+        package: "langchain-community",
       },
       {
         name: "AnthropicLLM",
