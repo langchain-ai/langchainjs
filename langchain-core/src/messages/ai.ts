@@ -143,6 +143,10 @@ export function isAIMessage(x: BaseMessage): x is AIMessage {
   return x._getType() === "ai";
 }
 
+export function isAIMessageChunk(x: BaseMessageChunk): x is AIMessageChunk {
+  return x._getType() === "ai";
+}
+
 export type AIMessageChunkFields = AIMessageFields & {
   tool_call_chunks?: ToolCallChunk[];
 };

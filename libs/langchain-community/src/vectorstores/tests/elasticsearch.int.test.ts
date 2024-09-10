@@ -114,6 +114,14 @@ describe("ElasticVectorSearch", () => {
       },
     ]);
     expect(results2).toHaveLength(1);
+    const results3 = await store.similaritySearch("*", 11, [
+      {
+        field: "a",
+        value: [createdAt],
+        operator: "exclude",
+      },
+    ]);
+    expect(results3).toHaveLength(1);
   });
 
   test.skip("ElasticVectorSearch integration with text splitting metadata", async () => {
