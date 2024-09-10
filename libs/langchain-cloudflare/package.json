@@ -39,7 +39,7 @@
     "uuid": "^10.0.0"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20240502.0",
+    "@cloudflare/workers-types": "^4.20240909.0",
     "@jest/globals": "^29.5.0",
     "@langchain/langgraph": "~0.0.31",
     "@langchain/scripts": ">=0.1.0 <0.2.0",
