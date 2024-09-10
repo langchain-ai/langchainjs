@@ -2118,6 +2118,15 @@
       "import": "./retrievers/amazon_knowledge_base.js",
       "require": "./retrievers/amazon_knowledge_base.cjs"
     },
+    "./retrievers/bm25": {
+      "types": {
+        "import": "./retrievers/bm25.d.ts",
+        "require": "./retrievers/bm25.d.cts",
+        "default": "./retrievers/bm25.d.ts"
+      },
+      "import": "./retrievers/bm25.js",
+      "require": "./retrievers/bm25.cjs"
+    },
     "./retrievers/chaindesk": {
       "types": {
         "import": "./retrievers/chaindesk.d.ts",
@@ -3713,6 +3722,10 @@
     "retrievers/amazon_knowledge_base.js",
     "retrievers/amazon_knowledge_base.d.ts",
     "retrievers/amazon_knowledge_base.d.cts",
+    "retrievers/bm25.cjs",
+    "retrievers/bm25.js",
+    "retrievers/bm25.d.ts",
+    "retrievers/bm25.d.cts",
     "retrievers/chaindesk.cjs",
     "retrievers/chaindesk.js",
     "retrievers/chaindesk.d.ts",
