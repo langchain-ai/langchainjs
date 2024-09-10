@@ -134,4 +134,8 @@ export abstract class BaseCumulativeTransformOutputParser<
       }
     }
   }
+
+  getFormatInstructions(): string {
+    return "";
+  }
 }
