@@ -122,9 +122,9 @@ export function makeInvalidToolCall(
 /**
  * Class for parsing the output of a tool-calling LLM into a JSON object.
  */
-export class JsonOutputToolsParser extends BaseCumulativeTransformOutputParser<
-  ParsedToolCall[]
-> {
+export class JsonOutputToolsParser<
+  T
+> extends BaseCumulativeTransformOutputParser<T> {
   static lc_name() {
     return "JsonOutputToolsParser";
   }
@@ -144,11 +144,11 @@ export class JsonOutputToolsParser extends BaseCumulativeTransformOutputParser<
     throw new Error("Not supported.");
   }
 
-  async parse(): Promise<ParsedToolCall[]> {
+  async parse(): Promise<T> {
     throw new Error("Not implemented.");
   }
 
-  async parseResult(generations: ChatGeneration[]): Promise<ParsedToolCall[]> {
+  async parseResult(generations: ChatGeneration[]): Promise<T> {
     const result = await this.parsePartialResult(generations, false);
     return result;
   }
@@ -162,7 +162,8 @@ export class JsonOutputToolsParser extends BaseCumulativeTransformOutputParser<
   async parsePartialResult(
     generations: ChatGenerationChunk[] | ChatGeneration[],
     partial = true
-  ): Promise<ParsedToolCall[]> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ): Promise<any> {
     const message = generations[0].message;
     let toolCalls;
     if (isAIMessage(message) && message.tool_calls?.length) {
@@ -232,7 +233,7 @@ export type JsonOutputKeyToolsParserParams<
 export class JsonOutputKeyToolsParser<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   T extends Record<string, any> = Record<string, any>
-> extends JsonOutputToolsParser {
+> extends JsonOutputToolsParser<T> {
   static lc_name() {
     return "JsonOutputKeyToolsParser";
   }
@@ -281,7 +282,7 @@ export class JsonOutputKeyToolsParser<
   async parsePartialResult(generations: ChatGeneration[]): Promise<any> {
     const results = await super.parsePartialResult(generations);
     const matchingResults = results.filter(
-      (result) => result.type === this.keyName
+      (result: ParsedToolCall) => result.type === this.keyName
     );
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let returnedValues: ParsedToolCall[] | Record<string, any>[] =
@@ -290,7 +291,9 @@ export class JsonOutputKeyToolsParser<
       return undefined;
     }
     if (!this.returnId) {
-      returnedValues = matchingResults.map((result) => result.args);
+      returnedValues = matchingResults.map(
+        (result: ParsedToolCall) => result.args
+      );
     }
     if (this.returnSingle) {
       return returnedValues[0];
@@ -302,7 +305,7 @@ export class JsonOutputKeyToolsParser<
   async parseResult(generations: ChatGeneration[]): Promise<any> {
     const results = await super.parsePartialResult(generations, false);
     const matchingResults = results.filter(
-      (result) => result.type === this.keyName
+      (result: ParsedToolCall) => result.type === this.keyName
     );
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let returnedValues: ParsedToolCall[] | Record<string, any>[] =
@@ -311,7 +314,9 @@ export class JsonOutputKeyToolsParser<
       return undefined;
     }
     if (!this.returnId) {
-      returnedValues = matchingResults.map((result) => result.args);
+      returnedValues = matchingResults.map(
+        (result: ParsedToolCall) => result.args
+      );
     }
     if (this.returnSingle) {
       return this._validateResult(returnedValues[0]);
