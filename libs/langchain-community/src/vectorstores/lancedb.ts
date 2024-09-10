@@ -11,7 +11,7 @@ export type LanceDBArgs = {
   table?: Table;
   textKey?: string;
   uri?: string;
-  table_name?: string;
+  tableName?: string;
   mode?: string;
 };
 
@@ -27,17 +27,17 @@ export class LanceDB extends VectorStore {
 
   private uri: string;
 
-  private table_name: string;
+  private tableName: string;
 
   private mode: string;
 
   constructor(embeddings: EmbeddingsInterface, args?: LanceDBArgs) {
     super(embeddings, args || {});
-    this.table = args?.table || undefined;
+    this.table = args?.table;
     this.embeddings = embeddings;
     this.textKey = args?.textKey || "text";
     this.uri = args?.uri || "~/lancedb";
-    this.table_name = args?.table_name || "langchain";
+    this.tableName = args?.tableName || "langchain";
     this.mode = args?.mode || WriteMode.Overwrite;
   }
 
@@ -85,7 +85,7 @@ export class LanceDB extends VectorStore {
     }
     if (!this.table) {
       const db: Connection = await connect(this.uri);
-      this.table = await db.createTable(this.table_name, data, {
+      this.table = await db.createTable(this.tableName, data, {
         writeMode: this.mode,
       });
 
