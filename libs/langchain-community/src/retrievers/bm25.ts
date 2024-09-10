@@ -1,11 +1,12 @@
-import BM25 from "okapibm25";
-import { BaseRetriever } from "@langchain/core/retrievers";
+import { BaseRetriever, BaseRetrieverInput } from "@langchain/core/retrievers";
 import { Document } from "@langchain/core/documents";
+
+import { BM25 } from "../utils/@furkantoprak/bm25/BM25.js";
 
 export type BM25RetrieverOptions = {
   docs: Document[];
   k: number;
-};
+} & BaseRetrieverInput;
 
 /**
  * A retriever that uses the BM25 algorithm to rank documents based on their
@@ -31,7 +32,7 @@ export class BM25Retriever extends BaseRetriever {
   k: number;
 
   constructor(options: BM25RetrieverOptions) {
-    super();
+    super(options);
     this.docs = options.docs;
     this.k = options.k;
   }
@@ -43,8 +44,7 @@ export class BM25Retriever extends BaseRetriever {
   async _getRelevantDocuments(query: string) {
     const processedQuery = this.preprocessFunc(query);
     const documents = this.docs.map((doc) => doc.pageContent);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const scores = (BM25 as any).default(documents, processedQuery) as number[];
+    const scores = BM25(documents, processedQuery) as number[];
 
     const scoredDocs = this.docs.map((doc, index) => ({
       document: doc,
