@@ -1,5 +1,5 @@
 import { ChatOpenAI } from "@langchain/openai";
-import { createOpenAIFunctionsAgent, AgentExecutor } from "langchain/agents";
+import { createOpenAIToolsAgent, AgentExecutor } from "langchain/agents";
 import { pull } from "langchain/hub";
 import type { ChatPromptTemplate } from "@langchain/core/prompts";
 
@@ -11,7 +11,7 @@ const prompt = await pull<ChatPromptTemplate>(
   "hwchase17/openai-functions-agent"
 );
 
-const agent = await createOpenAIFunctionsAgent({
+const agent = await createOpenAIToolsAgent({
   llm: model,
   prompt,
   tools: []
