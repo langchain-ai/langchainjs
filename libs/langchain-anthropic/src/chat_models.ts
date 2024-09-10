@@ -949,9 +949,6 @@ export class ChatAnthropicMessages<
   ): Promise<Anthropic.Message> {
     if (!this.batchClient) {
       const options = this.apiUrl ? { baseURL: this.apiUrl } : undefined;
-      if (!this.apiKey && !this.createClient) {
-        throw new Error("Missing Anthropic API key.");
-      }
       this.batchClient = this.createClient({
         ...this.clientOptions,
         ...options,
