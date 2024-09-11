@@ -286,6 +286,22 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@arcjet/redact-wasm@npm:1.0.0-alpha.24":
+  version: 1.0.0-alpha.24
+  resolution: "@arcjet/redact-wasm@npm:1.0.0-alpha.24"
+  checksum: b0cf2a5b8eec1fcacdc130c3fce963cfe2bdc786aeb21296409b8bcc0053204ea6c1d7a816e9adf999fb56c8f73aaa950dfbbb7bd628d06ea21fb868cc4b7e5c
+  languageName: node
+  linkType: hard
+
+"@arcjet/redact@npm:^v1.0.0-alpha.23":
+  version: 1.0.0-alpha.24
+  resolution: "@arcjet/redact@npm:1.0.0-alpha.24"
+  dependencies:
+    "@arcjet/redact-wasm": 1.0.0-alpha.24
+  checksum: 06eedc5f65eb98ac3b3f2598981a3c4b7265f89a59b138dfb38c7e19e3c4342ccb5ddfc3a0ae94add47f931b095138794b8c88355003c27374c37ead02f2106c
+  languageName: node
+  linkType: hard
+
 "@aws-crypto/crc32@npm:3.0.0":
   version: 3.0.0
   resolution: "@aws-crypto/crc32@npm:3.0.0"
@@ -8608,13 +8624,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@cloudflare/ai@npm:1.0.47":
-  version: 1.0.47
-  resolution: "@cloudflare/ai@npm:1.0.47"
-  checksum: a9e371f789256bb5795c0cb60d975749b07d6cb50141b997da6b5c94380ddf18e851cba518e246414fcab4239d8f4438c5fe29172e6f06c136be3be19a3b65e0
-  languageName: node
-  linkType: hard
-
 "@cloudflare/workers-types@npm:^4.20230922.0":
   version: 4.20230922.0
   resolution: "@cloudflare/workers-types@npm:4.20230922.0"
@@ -8622,10 +8631,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@cloudflare/workers-types@npm:^4.20231218.0":
-  version: 4.20231218.0
-  resolution: "@cloudflare/workers-types@npm:4.20231218.0"
-  checksum: b7e50a76ee8e9d662227bbb74798b93b6102acc224f1071a9c99a9adb419ad0b3bdabf7561e7e1b4a320a6a4616badeecdfb1848fbdaada197c7b37d845b8774
+"@cloudflare/workers-types@npm:^4.20240909.0":
+  version: 4.20240909.0
+  resolution: "@cloudflare/workers-types@npm:4.20240909.0"
+  checksum: 82fe9b22510d6a23533830684018651bf8a679692cc487cf82d15816e4c91b95ca5e759a6702d6b1268cd93cda8f0b45f3bf9e6ac27e926112ed4f3c7ef65968
   languageName: node
   linkType: hard
 
@@ -11353,8 +11362,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@langchain/cloudflare@workspace:libs/langchain-cloudflare"
   dependencies:
-    "@cloudflare/ai": 1.0.47
-    "@cloudflare/workers-types": ^4.20231218.0
+    "@cloudflare/workers-types": ^4.20240909.0
     "@jest/globals": ^29.5.0
     "@langchain/core": "workspace:*"
     "@langchain/langgraph": ~0.0.31
@@ -11433,6 +11441,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@langchain/community@workspace:libs/langchain-community"
   dependencies:
+    "@arcjet/redact": ^v1.0.0-alpha.23
     "@aws-crypto/sha256-js": ^5.0.0
     "@aws-sdk/client-bedrock-agent-runtime": ^3.583.0
     "@aws-sdk/client-bedrock-runtime": ^3.422.0
@@ -11610,6 +11619,7 @@ __metadata:
     zod: ^3.22.3
     zod-to-json-schema: ^3.22.5
   peerDependencies:
+    "@arcjet/redact": ^v1.0.0-alpha.23
     "@aws-crypto/sha256-js": ^5.0.0
     "@aws-sdk/client-bedrock-agent-runtime": ^3.583.0
     "@aws-sdk/client-bedrock-runtime": ^3.422.0
@@ -11733,6 +11743,8 @@ __metadata:
     youtube-transcript: ^1.0.6
     youtubei.js: ^9.1.0
   peerDependenciesMeta:
+    "@arcjet/redact":
+      optional: true
     "@aws-crypto/sha256-js":
       optional: true
     "@aws-sdk/client-bedrock-agent-runtime":
@@ -12261,6 +12273,7 @@ __metadata:
     ts-jest: ^29.1.0
     typescript: <5.2.0
     web-auth-library: ^1.0.3
+    zod: ^3.23.8
   peerDependencies:
     "@langchain/core": ">=0.2.21 <0.4.0"
   languageName: unknown

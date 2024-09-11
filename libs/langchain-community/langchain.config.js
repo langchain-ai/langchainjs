@@ -89,6 +89,7 @@ export const config = {
     // llms
     "llms/ai21": "llms/ai21",
     "llms/aleph_alpha": "llms/aleph_alpha",
+    "llms/arcjet": "llms/arcjet",
     "llms/bedrock": "llms/bedrock/index",
     "llms/bedrock/web": "llms/bedrock/web",
     "llms/cloudflare_workersai": "llms/cloudflare_workersai",
@@ -158,6 +159,7 @@ export const config = {
     "vectorstores/zep_cloud": "vectorstores/zep_cloud",
     // chat_models
     "chat_models/alibaba_tongyi": "chat_models/alibaba_tongyi",
+    "chat_models/arcjet": "chat_models/arcjet",
     "chat_models/baiduwenxin": "chat_models/baiduwenxin",
     "chat_models/bedrock": "chat_models/bedrock/index",
     "chat_models/bedrock/web": "chat_models/bedrock/web",
@@ -186,6 +188,7 @@ export const config = {
     // retrievers
     "retrievers/amazon_kendra": "retrievers/amazon_kendra",
     "retrievers/amazon_knowledge_base": "retrievers/amazon_knowledge_base",
+    "retrievers/bm25": "retrievers/bm25",
     "retrievers/chaindesk": "retrievers/chaindesk",
     "retrievers/databerry": "retrievers/databerry",
     "retrievers/dria": "retrievers/dria",
@@ -342,6 +345,7 @@ export const config = {
     "embeddings/tencent_hunyuan/web",
     "embeddings/zhipuai",
     "llms/load",
+    "llms/arcjet",
     "llms/cohere",
     "llms/gradient_ai",
     "llms/hf",
@@ -398,6 +402,7 @@ export const config = {
     "vectorstores/xata",
     "vectorstores/zep",
     "vectorstores/zep_cloud",
+    "chat_models/arcjet",
     "chat_models/bedrock",
     "chat_models/bedrock/web",
     "chat_models/llama_cpp",

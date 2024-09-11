@@ -304,6 +304,8 @@ docs/integrations/llms/cloudflare_workersai.md
 docs/integrations/llms/cloudflare_workersai.mdx
 docs/integrations/llms/bedrock.md
 docs/integrations/llms/bedrock.mdx
+docs/integrations/llms/arcjet.md
+docs/integrations/llms/arcjet.mdx
 docs/integrations/llms/azure.md
 docs/integrations/llms/azure.mdx
 docs/integrations/chat/togetherai.md
@@ -330,6 +332,8 @@ docs/integrations/chat/bedrock_converse.md
 docs/integrations/chat/bedrock_converse.mdx
 docs/integrations/chat/bedrock.md
 docs/integrations/chat/bedrock.mdx
+docs/integrations/chat/arcjet.md
+docs/integrations/chat/arcjet.mdx
 docs/integrations/chat/azure.md
 docs/integrations/chat/azure.mdx
 docs/integrations/chat/anthropic.md

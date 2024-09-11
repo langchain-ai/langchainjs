@@ -461,3 +461,30 @@ test("streaming with structured output", async () => {
   }
   expect(typeof finalChunk2).toEqual("object");
 });
+
+test("Can bound and invoke different tool types", async () => {
+  const langchainTool = {
+    name: "get_weather_lc",
+    description: "Get the weather of a specific location.",
+    schema: zodSchema,
+  };
+  const openaiTool = {
+    type: "function",
+    function: {
+      name: "get_weather_oai",
+      description: "Get the weather of a specific location.",
+      parameters: zodToJsonSchema(zodSchema),
+    },
+  };
+  const anthropicTool = {
+    name: "get_weather_ant",
+    description: "Get the weather of a specific location.",
+    input_schema: zodToJsonSchema(zodSchema),
+  };
+  const tools = [langchainTool, openaiTool, anthropicTool];
+  const modelWithTools = model.bindTools(tools);
+  const result = await modelWithTools.invoke(
+    "Whats the current weather in san francisco?"
+  );
+  expect(result.tool_calls?.length).toBeGreaterThanOrEqual(1);
+});
