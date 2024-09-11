@@ -69,12 +69,9 @@ describe("GAuth GCS store", () => {
 
     const uriPrefix = new GoogleCloudStorageUri("gs://test-langchainjs/");
     const uri = `gs://test-langchainjs/image/test-${Date.now()}-nm`;
-    const blob = await MediaBlob.fromBlob(
-      data,
-      {
-        path: uri,
-      }
-    )
+    const blob = await MediaBlob.fromBlob(data, {
+      path: uri,
+    });
     const config: BlobStoreGoogleCloudStorageParams = {
       uriPrefix,
     };
