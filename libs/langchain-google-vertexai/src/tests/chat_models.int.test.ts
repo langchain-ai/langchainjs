@@ -14,14 +14,14 @@ import {
   SystemMessage,
   ToolMessage,
 } from "@langchain/core/messages";
-import { InMemoryStore } from "@langchain/core/stores";
-import { BlobStoreGoogleCloudStorage } from "@langchain/google-gauth";
+import {BlobStoreGoogleCloudStorage, ChatGoogle} from "@langchain/google-gauth";
 import { tool } from "@langchain/core/tools";
 import { z } from "zod";
 import { concat } from "@langchain/core/utils/stream";
 import {
   BackedBlobStore,
-  MediaManager,
+  MediaBlob,
+  MediaManager, ReadThroughBlobStore,
   SimpleWebBlobStore,
 } from "@langchain/google-common/experimental/utils/media_core";
 import { GoogleCloudStorageUri } from "@langchain/google-common/experimental/media";
@@ -29,6 +29,7 @@ import {
   ChatPromptTemplate,
   MessagesPlaceholder,
 } from "@langchain/core/prompts";
+import { InMemoryStore } from "@langchain/core/stores";
 import { GeminiTool } from "../types.js";
 import { ChatVertexAI } from "../chat_models.js";
 
@@ -208,8 +209,17 @@ describe("GAuth Chat", () => {
   });
 
   test("media - fileData", async () => {
+    class MemStore extends InMemoryStore<MediaBlob> {
+      get length() {
+        return Object.keys(this.store).length;
+      }
+    }
+    const aliasMemory = new MemStore();
     const aliasStore = new BackedBlobStore({
-      backingStore: new InMemoryStore(),
+      backingStore: aliasMemory,
+      defaultFetchOptions: {
+        actionIfBlobMissing: undefined,
+      },
     });
     const canonicalStore = new BlobStoreGoogleCloudStorage({
       uriPrefix: new GoogleCloudStorageUri("gs://test-langchainjs/mediatest/"),
@@ -217,13 +227,16 @@ describe("GAuth Chat", () => {
         actionIfInvalid: "prefixPath",
       },
     });
+    const blobStore = new ReadThroughBlobStore({
+      baseStore: aliasStore,
+      backingStore: canonicalStore,
+    });
     const resolver = new SimpleWebBlobStore();
     const mediaManager = new MediaManager({
-      aliasStore,
-      canonicalStore,
-      resolver,
+      store: blobStore,
+      resolvers: [resolver],
     });
-    const model = new ChatVertexAI({
+    const model = new ChatGoogle({
       modelName: "gemini-1.5-flash",
       mediaManager,
     });
