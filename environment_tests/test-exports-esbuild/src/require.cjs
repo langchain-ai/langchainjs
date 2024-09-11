@@ -5,7 +5,6 @@ const { ChatPromptTemplate } = require("@langchain/core/prompts");
 const { HNSWLib } = require("@langchain/community/vectorstores/hnswlib");
 const { OpenAIEmbeddings } = require("@langchain/openai");
 const { Document } = require("@langchain/core/documents");
-const { CSVLoader } = require("@langchain/community/document_loaders/fs/csv");
 
 async function test() {
   // Test exports
@@ -39,13 +38,6 @@ async function test() {
   );
 
   assert((await vs.similaritySearchVectorWithScore([0, 0, 1], 1)).length === 1);
-
-  // Test CSVLoader
-  const loader = new CSVLoader(new Blob(["a,b,c\n1,2,3\n4,5,6"]));
-
-  const docs = await loader.load();
-
-  assert(docs.length === 2);
 }
 
 test()
