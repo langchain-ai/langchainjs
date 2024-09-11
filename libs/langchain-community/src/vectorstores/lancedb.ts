@@ -12,7 +12,7 @@ export type LanceDBArgs = {
   textKey?: string;
   uri?: string;
   tableName?: string;
-  mode?: string;
+  mode?: WriteMode;
 };
 
 /**
@@ -29,7 +29,7 @@ export class LanceDB extends VectorStore {
 
   private tableName: string;
 
-  private mode: string;
+  private mode?: WriteMode;
 
   constructor(embeddings: EmbeddingsInterface, args?: LanceDBArgs) {
     super(embeddings, args || {});
