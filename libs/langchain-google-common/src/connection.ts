@@ -20,6 +20,7 @@ import type {
   GeminiTool,
   GeminiFunctionDeclaration,
   GoogleAIModelRequestParams,
+  GoogleRawResponse,
   GoogleAIToolType,
 } from "./types.js";
 import {
@@ -28,6 +29,7 @@ import {
   GoogleAbstractedClientOpsMethod,
 } from "./auth.js";
 import { zodToGeminiParameters } from "./utils/zod_to_gemini_parameters.js";
+import { getGeminiAPI } from "./utils/index.js";
 
 export abstract class GoogleConnection<
   CallOptions extends AsyncCallerCallOptions,
@@ -84,15 +86,23 @@ export abstract class GoogleConnection<
     return this.constructor.name;
   }
 
-  async _request(
+  async additionalHeaders(): Promise<Record<string, string>> {
+    return {};
+  }
+
+  async _buildOpts(
     data: unknown | undefined,
-    options: CallOptions
-  ): Promise<ResponseType> {
+    _options: CallOptions,
+    requestHeaders: Record<string, string> = {}
+  ): Promise<GoogleAbstractedClientOps> {
     const url = await this.buildUrl();
     const method = this.buildMethod();
     const infoHeaders = (await this._clientInfoHeaders()) ?? {};
+    const additionalHeaders = (await this.additionalHeaders()) ?? {};
     const headers = {
       ...infoHeaders,
+      ...additionalHeaders,
+      ...requestHeaders,
     };
 
     const opts: GoogleAbstractedClientOps = {
@@ -108,7 +118,15 @@ export abstract class GoogleConnection<
     } else {
       opts.responseType = "json";
     }
+    return opts;
+  }
 
+  async _request(
+    data: unknown | undefined,
+    options: CallOptions,
+    requestHeaders: Record<string, string> = {}
+  ): Promise<ResponseType> {
+    const opts = await this._buildOpts(data, options, requestHeaders);
     const callResponse = await this.caller.callWithOptions(
       { signal: options?.signal },
       async () => this.client.request(opts)
@@ -165,6 +183,21 @@ export abstract class GoogleHostConnection<
   }
 }
 
+export abstract class GoogleRawConnection<
+  CallOptions extends AsyncCallerCallOptions,
+  AuthOptions
+> extends GoogleHostConnection<CallOptions, GoogleRawResponse, AuthOptions> {
+  async _buildOpts(
+    data: unknown | undefined,
+    _options: CallOptions,
+    requestHeaders: Record<string, string> = {}
+  ): Promise<GoogleAbstractedClientOps> {
+    const opts = await super._buildOpts(data, _options, requestHeaders);
+    opts.responseType = "blob";
+    return opts;
+  }
+}
+
 export abstract class GoogleAIConnection<
     CallOptions extends AsyncCallerCallOptions,
     InputType,
@@ -180,6 +213,9 @@ export abstract class GoogleAIConnection<
 
   client: GoogleAbstractedClient;
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  api: any; // FIXME: Make this a real type
+
   constructor(
     fields: GoogleAIBaseLLMInput<AuthOptions> | undefined,
     caller: AsyncCaller,
@@ -190,6 +226,7 @@ export abstract class GoogleAIConnection<
     this.client = client;
     this.modelName = fields?.model ?? fields?.modelName ?? this.model;
     this.model = this.modelName;
+    this.api = getGeminiAPI(fields);
   }
 
   get modelFamily(): GoogleLLMModelFamily {
@@ -235,14 +272,14 @@ export abstract class GoogleAIConnection<
   abstract formatData(
     input: InputType,
     parameters: GoogleAIModelRequestParams
-  ): unknown;
+  ): Promise<unknown>;
 
   async request(
     input: InputType,
     parameters: GoogleAIModelRequestParams,
     options: CallOptions
-  ): Promise<ResponseType> {
-    const data = this.formatData(input, parameters);
+  ): Promise<GoogleResponse> {
+    const data = await this.formatData(input, parameters);
     const response = await this._request(data, options);
     return response;
   }
@@ -273,7 +310,7 @@ export abstract class AbstractGoogleLLMConnection<
   abstract formatContents(
     input: MessageType,
     parameters: GoogleAIModelRequestParams
-  ): GeminiContent[];
+  ): Promise<GeminiContent[]>;
 
   formatGenerationConfig(
     _input: MessageType,
@@ -296,10 +333,10 @@ export abstract class AbstractGoogleLLMConnection<
     return parameters.safetySettings ?? [];
   }
 
-  formatSystemInstruction(
+  async formatSystemInstruction(
     _input: MessageType,
     _parameters: GoogleAIModelRequestParams
-  ): GeminiContent {
+  ): Promise<GeminiContent> {
     return {} as GeminiContent;
   }
 
@@ -362,16 +399,19 @@ export abstract class AbstractGoogleLLMConnection<
     };
   }
 
-  formatData(
+  async formatData(
     input: MessageType,
     parameters: GoogleAIModelRequestParams
-  ): GeminiRequest {
-    const contents = this.formatContents(input, parameters);
+  ): Promise<GeminiRequest> {
+    const contents = await this.formatContents(input, parameters);
     const generationConfig = this.formatGenerationConfig(input, parameters);
     const tools = this.formatTools(input, parameters);
     const toolConfig = this.formatToolConfig(parameters);
     const safetySettings = this.formatSafetySettings(input, parameters);
-    const systemInstruction = this.formatSystemInstruction(input, parameters);
+    const systemInstruction = await this.formatSystemInstruction(
+      input,
+      parameters
+    );
 
     const ret: GeminiRequest = {
       contents,
