@@ -114,11 +114,10 @@ export class LocalFileStore extends BaseStore<string, Uint8Array> {
         );
       }
 
-      console.log(fullPath);
       return fullPath;
     } catch (e) {
       throw new Error(
-        `Error getting full path for key: ${key}.\nError: ${JSON.stringify(e)}`
+        `Error getting full path for key: ${key}.\nError: ${String(e)}`
       );
     }
   }

@@ -99,8 +99,12 @@ describe("LocalFileStore", () => {
     await expect(
       store.mset([["/foo", encoder.encode(value1)]])
     ).rejects.toThrowError();
+    await expect(
+      store.mset([["\\foo", encoder.encode(value1)]])
+    ).rejects.toThrowError();
     await expect(store.mget(["../foo"])).rejects.toThrowError();
     await expect(store.mget(["/foo"])).rejects.toThrowError();
+    await expect(store.mget(["\\foo"])).rejects.toThrowError();
     await fs.promises.rm(secondaryRootPath, { recursive: true, force: true });
   });
 });
