@@ -3,7 +3,7 @@ import * as path from "node:path";
 import { BaseStore } from "@langchain/core/stores";
 
 /**
- * File system implementation of the BaseStore using a dictionary. Used for
+ * Test-only file system implementation of the BaseStore using a dictionary. Used for
  * storing key-value pairs in the file system.
  * @example
  * ```typescript
@@ -26,6 +26,10 @@ import { BaseStore } from "@langchain/core/stores";
  *   await store.mdelete([key]);
  * }
  * ```
+ *
+ * @security **Security Notice** This file store
+ * can alter any text file in the provided directory, so make sure
+ * that the directory you specify.
  */
 export class LocalFileStore extends BaseStore<string, Uint8Array> {
   lc_namespace = ["langchain", "storage"];
@@ -43,6 +47,12 @@ export class LocalFileStore extends BaseStore<string, Uint8Array> {
    * @returns Promise that resolves to the parsed file content.
    */
   private async getParsedFile(key: string): Promise<Uint8Array | undefined> {
+    // Validate the key to prevent path traversal
+    if (!/^[a-zA-Z0-9_\-:.]+$/.test(key)) {
+      throw new Error(
+        "Invalid key. Only alphanumeric characters, underscores, hyphens, colons, and periods are allowed."
+      );
+    }
     try {
       const fileContent = await fs.readFile(this.getFullPath(key));
       if (!fileContent) {
@@ -87,7 +97,23 @@ export class LocalFileStore extends BaseStore<string, Uint8Array> {
   private getFullPath(key: string): string {
     try {
       const keyAsTxtFile = `${key}.txt`;
-      const fullPath = path.join(this.rootPath, keyAsTxtFile);
+
+      // Validate the key to prevent path traversal
+      if (!/^[a-zA-Z0-9_.\-/]+$/.test(key)) {
+        throw new Error(`Invalid characters in key: ${key}`);
+      }
+
+      const fullPath = path.resolve(this.rootPath, keyAsTxtFile);
+      const commonPath = path.resolve(this.rootPath);
+
+      if (!fullPath.startsWith(commonPath)) {
+        throw new Error(
+          `Invalid key: ${key}. Key should be relative to the root path. ` +
+            `Root path: ${this.rootPath}, Full path: ${fullPath}`
+        );
+      }
+
+      console.log(fullPath);
       return fullPath;
     } catch (e) {
       throw new Error(
