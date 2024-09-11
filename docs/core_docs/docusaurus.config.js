@@ -136,7 +136,8 @@ const config = {
       announcementBar: {
         content:
           'LangChain v0.2 is out! You are currently viewing the old v0.1 docs. View the latest docs <a href="/v0.2/docs/introduction/">here</a>.',
-        isCloseable: true,
+        backgroundColor: "#FF0000",
+        textColor: "#FFFFFF",
       },
       prism: {
         theme: {
