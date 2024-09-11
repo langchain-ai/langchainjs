@@ -3,7 +3,7 @@ import * as path from "node:path";
 import { BaseStore } from "@langchain/core/stores";
 
 /**
- * Test-only file system implementation of the BaseStore using a dictionary. Used for
+ * File system implementation of the BaseStore using a dictionary. Used for
  * storing key-value pairs in the file system.
  * @example
  * ```typescript
@@ -28,8 +28,9 @@ import { BaseStore } from "@langchain/core/stores";
  * ```
  *
  * @security **Security Notice** This file store
- * can alter any text file in the provided directory, so make sure
- * that the directory you specify.
+ * can alter any text file in the provided directory and any subfolders.
+ * Make sure that the path you specify when initializing the store is free
+ * of other files.
  */
 export class LocalFileStore extends BaseStore<string, Uint8Array> {
   lc_namespace = ["langchain", "storage"];
