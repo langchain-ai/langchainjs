@@ -20,7 +20,7 @@ import {
 } from "@langchain/core/prompts";
 import { OpenAI } from "@langchain/openai";
 import { OpenAIEmbeddings } from "@langchain/openai";
-import { HNLoader } from "@langchain/community/document_loaders/web/hn";
+import { CSVLoader } from "@langchain/community/document_loaders/fs/csv";
 
 export interface Env {
   OPENAI_API_KEY?: string;
@@ -52,7 +52,7 @@ export default {
     const emb = new OpenAIEmbeddings(constructorParameters);
 
     // Test a document loader
-    new HNLoader("https://news.ycombinator.com/item?id=28275939");
+    new CSVLoader(new Blob(["a,b,c\n1,2,3\n4,5,6"]));
 
     // Test a chain + prompt + model
     const chain = new LLMChain({
