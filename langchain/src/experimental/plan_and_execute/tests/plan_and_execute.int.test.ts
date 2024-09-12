@@ -67,3 +67,21 @@ test.skip("Run agent with a sequential math problem", async () => {
 
   // console.log(result);
 });
+
+test.skip("Should run agent with no tools", async () => {
+  const model = new ChatOpenAI({
+    temperature: 0,
+    modelName: "gpt-3.5-turbo",
+    verbose: true,
+  });
+  const executor = await PlanAndExecuteAgentExecutor.fromLLMAndTools({
+    llm: model,
+    tools: [],
+  });
+
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
+  const result = await executor.call({
+    input: `Who is the current president of the United States? What is their current age raised to the second power?`,
+  });
+});
