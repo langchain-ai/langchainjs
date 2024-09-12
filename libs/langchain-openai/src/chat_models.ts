@@ -1194,7 +1194,8 @@ export class ChatOpenAI<
       const messageChunk = convertToChunk(result.generations[0].message);
       yield new ChatGenerationChunk({
         message: messageChunk,
-        text: messageChunk.content.toString(),
+        text:
+          typeof messageChunk.content === "string" ? messageChunk.content : "",
       });
       return;
     }
