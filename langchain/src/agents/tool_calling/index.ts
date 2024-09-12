@@ -43,7 +43,7 @@ export type CreateToolCallingAgentParams = {
   /**
    * Optional kwargs to pass to the underlying model.
    */
-  kwargs?: Record<string, unknown>;
+  kwargs?: BaseChatModelCallOptions & Partial<Record<string, any>>;
 };
 
 /**
