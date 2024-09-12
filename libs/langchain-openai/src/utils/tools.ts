@@ -1,3 +1,5 @@
+import { OpenAI as OpenAIClient } from "openai";
+
 import { ToolDefinition } from "@langchain/core/language_models/base";
 import { BindToolsInput } from "@langchain/core/language_models/chat_models";
 import {
@@ -27,7 +29,7 @@ export function _convertToOpenAITool(
      */
     strict?: boolean;
   }
-): ToolDefinition {
+): OpenAIClient.ChatCompletionTool {
   let toolDef: ToolDefinition | undefined;
 
   if (isLangChainTool(tool)) {
