@@ -30,7 +30,7 @@ export function _convertToOpenAITool(
     strict?: boolean;
   }
 ): OpenAIClient.ChatCompletionTool {
-  let toolDef: ToolDefinition | undefined;
+  let toolDef: OpenAIClient.ChatCompletionTool | undefined;
 
   if (isLangChainTool(tool)) {
     const oaiToolDef = zodFunction({
