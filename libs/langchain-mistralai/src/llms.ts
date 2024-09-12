@@ -82,6 +82,8 @@ export class MistralAI
     return "MistralAI";
   }
 
+  lc_namespace = ["langchain", "llms", "mistralai"];
+
   model = "codestral-latest";
 
   temperature = 0;
