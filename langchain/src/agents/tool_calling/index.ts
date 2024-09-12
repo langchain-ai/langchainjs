@@ -40,6 +40,10 @@ export type CreateToolCallingAgentParams = {
    * allowing streaming of intermediate steps. Defaults to true.
    */
   streamRunnable?: boolean;
+  /**
+   * Optional kwargs to pass to the underlying model.
+   */
+  kwargs?: Record<string, unknown>;
 };
 
 /**
@@ -97,6 +101,7 @@ export function createToolCallingAgent({
   tools,
   prompt,
   streamRunnable,
+  kwargs,
 }: CreateToolCallingAgentParams) {
   if (!prompt.inputVariables.includes("agent_scratchpad")) {
     throw new Error(
@@ -113,7 +118,7 @@ export function createToolCallingAgent({
         `This agent requires that the "bind_tools()" method be implemented on the input model.`
       );
     }
-    modelWithTools = llm.bindTools(tools);
+    modelWithTools = llm.bindTools(tools, { ...(kwargs ?? {}) });
   } else {
     modelWithTools = llm;
   }
