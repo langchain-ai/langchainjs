@@ -458,10 +458,6 @@ export function _isMessageFieldWithRole(
 
 export type BaseMessageLike =
   | BaseMessage
-  | ({
-      type: MessageType | "user" | "assistant" | "placeholder";
-    } & BaseMessageFields &
-      Record<string, unknown>)
   | MessageFieldWithRole
   | [
       StringWithAutocomplete<
@@ -469,7 +465,14 @@ export type BaseMessageLike =
       >,
       MessageContent
     ]
-  | string;
+  | string
+  /**
+   * @deprecated Specifying "type" is deprecated and will be removed in 0.4.0.
+   */
+  | ({
+      type: MessageType | "user" | "assistant" | "placeholder";
+    } & BaseMessageFields &
+      Record<string, unknown>);
 
 export function isBaseMessage(
   messageLike?: unknown

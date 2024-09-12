@@ -16,13 +16,6 @@ export type ParsedToolCall = {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   args: Record<string, any>;
-
-  /** @deprecated Use `type` instead. Will be removed in 0.2.0. */
-  name: string;
-
-  /** @deprecated Use `args` instead. Will be removed in 0.2.0. */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  arguments: Record<string, any>;
 };
 
 export type JsonOutputToolsParserParams = {
@@ -191,25 +184,11 @@ export class JsonOutputToolsParser<
     const parsedToolCalls = [];
     for (const toolCall of toolCalls) {
       if (toolCall !== undefined) {
-        // backward-compatibility with previous
-        // versions of Langchain JS, which uses `name` and `arguments`
-        // @ts-expect-error name and arguemnts are defined by Object.defineProperty
         const backwardsCompatibleToolCall: ParsedToolCall = {
           type: toolCall.name,
           args: toolCall.args,
           id: toolCall.id,
         };
-        Object.defineProperty(backwardsCompatibleToolCall, "name", {
-          get() {
-            return this.type;
-          },
-        });
-
-        Object.defineProperty(backwardsCompatibleToolCall, "arguments", {
-          get() {
-            return this.args;
-          },
-        });
         parsedToolCalls.push(backwardsCompatibleToolCall);
       }
     }
