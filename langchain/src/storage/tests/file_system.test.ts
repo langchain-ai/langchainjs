@@ -88,4 +88,23 @@ describe("LocalFileStore", () => {
     ).toEqual([value1, value2]);
     await fs.promises.rm(secondaryRootPath, { recursive: true, force: true });
   });
+
+  test("Should disallow attempts to traverse paths outside of a subfolder", async () => {
+    const encoder = new TextEncoder();
+    const store = await LocalFileStore.fromPath(secondaryRootPath);
+    const value1 = new Date().toISOString();
+    await expect(
+      store.mset([["../foo", encoder.encode(value1)]])
+    ).rejects.toThrowError();
+    await expect(
+      store.mset([["/foo", encoder.encode(value1)]])
+    ).rejects.toThrowError();
+    await expect(
+      store.mset([["\\foo", encoder.encode(value1)]])
+    ).rejects.toThrowError();
+    await expect(store.mget(["../foo"])).rejects.toThrowError();
+    await expect(store.mget(["/foo"])).rejects.toThrowError();
+    await expect(store.mget(["\\foo"])).rejects.toThrowError();
+    await fs.promises.rm(secondaryRootPath, { recursive: true, force: true });
+  });
 });

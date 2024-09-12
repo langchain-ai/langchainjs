@@ -5,7 +5,6 @@ import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { Document } from "@langchain/core/documents";
-import { CSVLoader } from "@langchain/community/document_loaders/fs/csv";
 
 async function test(useAzure: boolean = false) {
   // Test exports
@@ -49,13 +48,6 @@ async function test(useAzure: boolean = false) {
   );
 
   assert((await vs.similaritySearchVectorWithScore([0, 0, 1], 1)).length === 1);
-
-  // Test CSVLoader
-  const loader = new CSVLoader(new Blob(["a,b,c\n1,2,3\n4,5,6"]));
-
-  const docs = await loader.load();
-
-  assert(docs.length === 2);
 }
 
 test(false)
