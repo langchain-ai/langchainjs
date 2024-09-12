@@ -79,9 +79,7 @@ test.skip("Should run agent with no tools", async () => {
     tools: [],
   });
 
-  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
-  // @ts-expect-error unused var
-  const result = await executor.call({
+  await executor.call({
     input: `Who is the current president of the United States? What is their current age raised to the second power?`,
   });
 });
