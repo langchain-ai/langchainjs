@@ -80,7 +80,13 @@ export type BaseMessageFields = {
   content: MessageContent;
   name?: string;
   additional_kwargs?: {
+    /**
+     * @deprecated Use "tool_calls" field on AIMessages instead
+     */
     function_call?: FunctionCall;
+    /**
+     * @deprecated Use "tool_calls" field on AIMessages instead
+     */
     tool_calls?: OpenAIToolCall[];
     [key: string]: unknown;
   };
@@ -297,7 +303,9 @@ export abstract class BaseMessage
   }
 }
 
-// TODO: Deprecate when SDK typing is updated
+/**
+ * @deprecated Use "tool_calls" field on AIMessages instead
+ */
 export type OpenAIToolCall = {
   /**
    * The ID of the tool call.
