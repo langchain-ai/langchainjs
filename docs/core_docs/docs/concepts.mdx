@@ -26,6 +26,8 @@ The interfaces for core components like LLMs, vector stores, retrievers and more
 No third party integrations are defined here.
 The dependencies are kept purposefully very lightweight.
 
+This package is a requirement of most others in the LangChain ecosystem, and must be installed separately.
+
 ### `@langchain/community`
 
 This package contains third party integrations that are maintained by the LangChain community.
@@ -60,7 +62,7 @@ A developer platform that lets you debug, test, evaluate, and monitor LLM applic
 If you want to work with high level abstractions, you should install the `langchain` package.
 
 ```bash npm2yarn
-npm i langchain
+npm i langchain @langchain/core
 ```
 
 If you want to work with specific integrations, you will need to install them separately.

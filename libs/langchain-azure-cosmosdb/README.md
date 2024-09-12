@@ -9,7 +9,7 @@ Learn more about how to use this package in the LangChain documentation:
 ## Installation
 
 ```bash npm2yarn
-npm install @langchain/azure-cosmosdb
+npm install @langchain/azure-cosmosdb @langchain/core
 ```
 
 This package, along with the main LangChain package, depends on [`@langchain/core`](https://npmjs.com/package/@langchain/core/).

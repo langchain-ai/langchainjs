@@ -5,7 +5,7 @@ This package contains the LangChain.js integrations for Cohere through their SDK
 ## Installation
 
 ```bash npm2yarn
-npm install @langchain/cohere
+npm install @langchain/cohere @langchain/core
 ```
 
 This package, along with the main LangChain package, depends on [`@langchain/core`](https://npmjs.com/package/@langchain/core/).

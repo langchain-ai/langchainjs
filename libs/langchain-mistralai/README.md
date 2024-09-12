@@ -5,7 +5,7 @@ This package contains the LangChain.js integrations for Mistral through their SD
 ## Installation
 
 ```bash npm2yarn
-npm install @langchain/mistralai
+npm install @langchain/mistralai @langchain/core
 ```
 
 This package, along with the main LangChain package, depends on [`@langchain/core`](https://npmjs.com/package/@langchain/core/).

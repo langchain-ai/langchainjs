@@ -5,7 +5,7 @@ This package contains the LangChain.js integrations for Anthropic through their 
 ## Installation
 
 ```bash npm2yarn
-npm install @langchain/anthropic
+npm install @langchain/anthropic @langchain/core
 ```
 
 This package, along with the main LangChain package, depends on [`@langchain/core`](https://npmjs.com/package/@langchain/core/).

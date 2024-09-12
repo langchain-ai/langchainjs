@@ -5,7 +5,7 @@ This package contains the LangChain.js integrations for <ADD_NAME_HERE> through 
 ## Installation
 
 ```bash npm2yarn
-npm install @langchain/<ADD_PACKAGE_NAME_HERE>
+npm install @langchain/<ADD_PACKAGE_NAME_HERE> @langchain/core
 ```
 
 This package, along with the main LangChain package, depends on [`@langchain/core`](https://npmjs.com/package/@langchain/core/).

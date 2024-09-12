@@ -11,7 +11,7 @@ It provides Azure OpenAI support through the [Azure SDK for OpenAI](https://gith
 ## Installation
 
 ```bash npm2yarn
-npm install @langchain/azure-openai
+npm install @langchain/azure-openai @langchain/core
 ```
 
 This package, along with the main LangChain package, depends on [`@langchain/core`](https://npmjs.com/package/@langchain/core/).

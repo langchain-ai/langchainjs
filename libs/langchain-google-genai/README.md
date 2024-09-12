@@ -5,7 +5,7 @@ This package contains the LangChain.js integrations for Gemini through their gen
 ## Installation
 
 ```bash npm2yarn
-npm install @langchain/google-genai
+npm install @langchain/google-genai @langchain/core
 ```
 
 This package, along with the main LangChain package, depends on [`@langchain/core`](https://npmjs.com/package/@langchain/core/).

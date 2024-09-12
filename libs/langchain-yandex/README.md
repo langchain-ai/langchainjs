@@ -5,7 +5,7 @@ This package contains the LangChain.js integrations for YandexGPT through their 
 ## Installation
 
 ```bash npm2yarn
-npm install @langchain/yandex
+npm install @langchain/yandex @langchain/core
 ```
 
 ## Setup your environment

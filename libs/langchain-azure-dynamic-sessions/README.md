@@ -7,7 +7,7 @@ Learn more about how to use this tool in the [LangChain documentation](https://j
 ## Installation
 
 ```bash npm2yarn
-npm install @langchain/azure-dynamic-sessions
+npm install @langchain/azure-dynamic-sessions @langchain/core
 ```
 
 This package, along with the main LangChain package, depends on [`@langchain/core`](https://npmjs.com/package/@langchain/core/).

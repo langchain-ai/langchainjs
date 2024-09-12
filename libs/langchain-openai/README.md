@@ -5,7 +5,7 @@ This package contains the LangChain.js integrations for OpenAI through their SDK
 ## Installation
 
 ```bash npm2yarn
-npm install @langchain/openai
+npm install @langchain/openai @langchain/core
 ```
 
 This package, along with the main LangChain package, depends on [`@langchain/core`](https://npmjs.com/package/@langchain/core/).
