@@ -641,6 +641,8 @@ export class ChatGroq extends BaseChatModel<
   ChatGroqCallOptions,
   AIMessageChunk
 > {
+  lc_namespace = ["langchain", "chat_models", "groq"];
+
   client: Groq;
 
   modelName = "mixtral-8x7b-32768";
