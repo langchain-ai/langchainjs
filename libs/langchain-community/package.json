@@ -1,6 +1,6 @@
 {
   "name": "@langchain/community",
-  "version": "0.2.33",
+  "version": "0.3.0-rc.0",
   "description": "Third-party integrations for LangChain.js",
   "type": "module",
   "engines": {
@@ -35,13 +35,12 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@langchain/core": ">=0.2.21 <0.3.0",
-    "@langchain/openai": ">=0.2.0 <0.3.0",
+    "@langchain/openai": ">=0.2.0 <0.3.0 || 0.3.0-rc.0",
     "binary-extensions": "^2.2.0",
     "expr-eval": "^2.0.2",
     "flat": "^5.0.2",
     "js-yaml": "^4.1.0",
-    "langchain": "~0.2.3",
+    "langchain": "~0.2.3 || 0.3.0-rc.0",
     "langsmith": "~0.1.30",
     "uuid": "^10.0.0",
     "zod": "^3.22.3",
@@ -79,6 +78,7 @@
     "@gradientai/nodejs-sdk": "^1.2.0",
     "@huggingface/inference": "^2.6.4",
     "@jest/globals": "^29.5.0",
+    "@langchain/core": "workspace:*",
     "@langchain/langgraph": "~0.0.26",
     "@langchain/scripts": ">=0.1.0 <0.2.0",
     "@langchain/standard-tests": "0.0.0",
@@ -110,6 +110,7 @@
     "@tsconfig/recommended": "^1.0.2",
     "@types/better-sqlite3": "^7.6.10",
     "@types/crypto-js": "^4.2.2",
+    "@types/d3-dsv": "^3.0.7",
     "@types/flat": "^5.0.2",
     "@types/html-to-text": "^9",
     "@types/jsdom": "^21.1.1",
@@ -195,6 +196,7 @@
     "portkey-ai": "^0.1.11",
     "prettier": "^2.8.3",
     "puppeteer": "^22.0.0",
+    "pyodide": "^0.26.2",
     "redis": "^4.6.6",
     "release-it": "^17.6.0",
     "replicate": "^0.29.4",
@@ -241,6 +243,7 @@
     "@google-cloud/storage": "^6.10.1 || ^7.7.0",
     "@gradientai/nodejs-sdk": "^1.2.0",
     "@huggingface/inference": "^2.6.4",
+    "@langchain/core": ">=0.2.21 <0.4.0 || 0.3.0-rc.0",
     "@langchain/langgraph": "*",
     "@layerup/layerup-security": "^1.5.12",
     "@mendable/firecrawl-js": "^0.0.13",
@@ -321,6 +324,7 @@
     "playwright": "^1.32.1",
     "portkey-ai": "^0.1.11",
     "puppeteer": "*",
+    "pyodide": ">=0.24.1 <0.27.0",
     "redis": "*",
     "replicate": "^0.29.4",
     "sonix-speech-recognition": "^2.1.1",
@@ -656,6 +660,9 @@
       "optional": true
     },
     "puppeteer": {
+      "optional": true
+    },
+    "pyodide": {
       "optional": true
     },
     "redis": {
@@ -1047,24 +1054,6 @@
       "import": "./embeddings/fireworks.js",
       "require": "./embeddings/fireworks.cjs"
     },
-    "./embeddings/googlepalm": {
-      "types": {
-        "import": "./embeddings/googlepalm.d.ts",
-        "require": "./embeddings/googlepalm.d.cts",
-        "default": "./embeddings/googlepalm.d.ts"
-      },
-      "import": "./embeddings/googlepalm.js",
-      "require": "./embeddings/googlepalm.cjs"
-    },
-    "./embeddings/googlevertexai": {
-      "types": {
-        "import": "./embeddings/googlevertexai.d.ts",
-        "require": "./embeddings/googlevertexai.d.cts",
-        "default": "./embeddings/googlevertexai.d.ts"
-      },
-      "import": "./embeddings/googlevertexai.js",
-      "require": "./embeddings/googlevertexai.cjs"
-    },
     "./embeddings/gradient_ai": {
       "types": {
         "import": "./embeddings/gradient_ai.d.ts",
@@ -1280,33 +1269,6 @@
       },
       "import": "./llms/friendli.js",
       "require": "./llms/friendli.cjs"
-    },
-    "./llms/googlepalm": {
-      "types": {
-        "import": "./llms/googlepalm.d.ts",
-        "require": "./llms/googlepalm.d.cts",
-        "default": "./llms/googlepalm.d.ts"
-      },
-      "import": "./llms/googlepalm.js",
-      "require": "./llms/googlepalm.cjs"
-    },
-    "./llms/googlevertexai": {
-      "types": {
-        "import": "./llms/googlevertexai.d.ts",
-        "require": "./llms/googlevertexai.d.cts",
-        "default": "./llms/googlevertexai.d.ts"
-      },
-      "import": "./llms/googlevertexai.js",
-      "require": "./llms/googlevertexai.cjs"
-    },
-    "./llms/googlevertexai/web": {
-      "types": {
-        "import": "./llms/googlevertexai/web.d.ts",
-        "require": "./llms/googlevertexai/web.d.cts",
-        "default": "./llms/googlevertexai/web.d.ts"
-      },
-      "import": "./llms/googlevertexai/web.js",
-      "require": "./llms/googlevertexai/web.cjs"
     },
     "./llms/gradient_ai": {
       "types": {
@@ -1919,33 +1881,6 @@
       },
       "import": "./chat_models/friendli.js",
       "require": "./chat_models/friendli.cjs"
-    },
-    "./chat_models/googlevertexai": {
-      "types": {
-        "import": "./chat_models/googlevertexai.d.ts",
-        "require": "./chat_models/googlevertexai.d.cts",
-        "default": "./chat_models/googlevertexai.d.ts"
-      },
-      "import": "./chat_models/googlevertexai.js",
-      "require": "./chat_models/googlevertexai.cjs"
-    },
-    "./chat_models/googlevertexai/web": {
-      "types": {
-        "import": "./chat_models/googlevertexai/web.d.ts",
-        "require": "./chat_models/googlevertexai/web.d.cts",
-        "default": "./chat_models/googlevertexai/web.d.ts"
-      },
-      "import": "./chat_models/googlevertexai/web.js",
-      "require": "./chat_models/googlevertexai/web.cjs"
-    },
-    "./chat_models/googlepalm": {
-      "types": {
-        "import": "./chat_models/googlepalm.d.ts",
-        "require": "./chat_models/googlepalm.d.cts",
-        "default": "./chat_models/googlepalm.d.ts"
-      },
-      "import": "./chat_models/googlepalm.js",
-      "require": "./chat_models/googlepalm.cjs"
     },
     "./chat_models/iflytek_xinghuo": {
       "types": {
@@ -3072,6 +3007,15 @@
       "import": "./experimental/llms/chrome_ai.js",
       "require": "./experimental/llms/chrome_ai.cjs"
     },
+    "./experimental/tools/pyinterpreter": {
+      "types": {
+        "import": "./experimental/tools/pyinterpreter.d.ts",
+        "require": "./experimental/tools/pyinterpreter.d.cts",
+        "default": "./experimental/tools/pyinterpreter.d.ts"
+      },
+      "import": "./experimental/tools/pyinterpreter.js",
+      "require": "./experimental/tools/pyinterpreter.cjs"
+    },
     "./chains/graph_qa/cypher": {
       "types": {
         "import": "./chains/graph_qa/cypher.d.ts",
@@ -3246,14 +3190,6 @@
     "embeddings/fireworks.js",
     "embeddings/fireworks.d.ts",
     "embeddings/fireworks.d.cts",
-    "embeddings/googlepalm.cjs",
-    "embeddings/googlepalm.js",
-    "embeddings/googlepalm.d.ts",
-    "embeddings/googlepalm.d.cts",
-    "embeddings/googlevertexai.cjs",
-    "embeddings/googlevertexai.js",
-    "embeddings/googlevertexai.d.ts",
-    "embeddings/googlevertexai.d.cts",
     "embeddings/gradient_ai.cjs",
     "embeddings/gradient_ai.js",
     "embeddings/gradient_ai.d.ts",
@@ -3350,18 +3286,6 @@
     "llms/friendli.js",
     "llms/friendli.d.ts",
     "llms/friendli.d.cts",
-    "llms/googlepalm.cjs",
-    "llms/googlepalm.js",
-    "llms/googlepalm.d.ts",
-    "llms/googlepalm.d.cts",
-    "llms/googlevertexai.cjs",
-    "llms/googlevertexai.js",
-    "llms/googlevertexai.d.ts",
-    "llms/googlevertexai.d.cts",
-    "llms/googlevertexai/web.cjs",
-    "llms/googlevertexai/web.js",
-    "llms/googlevertexai/web.d.ts",
-    "llms/googlevertexai/web.d.cts",
     "llms/gradient_ai.cjs",
     "llms/gradient_ai.js",
     "llms/gradient_ai.d.ts",
@@ -3634,18 +3558,6 @@
     "chat_models/friendli.js",
     "chat_models/friendli.d.ts",
     "chat_models/friendli.d.cts",
-    "chat_models/googlevertexai.cjs",
-    "chat_models/googlevertexai.js",
-    "chat_models/googlevertexai.d.ts",
-    "chat_models/googlevertexai.d.cts",
-    "chat_models/googlevertexai/web.cjs",
-    "chat_models/googlevertexai/web.js",
-    "chat_models/googlevertexai/web.d.ts",
-    "chat_models/googlevertexai/web.d.cts",
-    "chat_models/googlepalm.cjs",
-    "chat_models/googlepalm.js",
-    "chat_models/googlepalm.d.ts",
-    "chat_models/googlepalm.d.cts",
     "chat_models/iflytek_xinghuo.cjs",
     "chat_models/iflytek_xinghuo.js",
     "chat_models/iflytek_xinghuo.d.ts",
@@ -4146,6 +4058,10 @@
     "experimental/llms/chrome_ai.js",
     "experimental/llms/chrome_ai.d.ts",
     "experimental/llms/chrome_ai.d.cts",
+    "experimental/tools/pyinterpreter.cjs",
+    "experimental/tools/pyinterpreter.js",
+    "experimental/tools/pyinterpreter.d.ts",
+    "experimental/tools/pyinterpreter.d.cts",
     "chains/graph_qa/cypher.cjs",
     "chains/graph_qa/cypher.js",
     "chains/graph_qa/cypher.d.ts",

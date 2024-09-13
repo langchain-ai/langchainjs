@@ -3,8 +3,9 @@ import type {
   ChromaClient as ChromaClientT,
   Collection,
   ChromaClientParams,
+  CollectionMetadata,
+  Where,
 } from "chromadb";
-import type { CollectionMetadata, Where } from "chromadb/dist/main/types.js";
 
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { VectorStore } from "@langchain/core/vectorstores";

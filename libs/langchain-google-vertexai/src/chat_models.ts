@@ -288,6 +288,8 @@ export interface ChatVertexAIInput extends ChatGoogleInput {}
  * <br />
  */
 export class ChatVertexAI extends ChatGoogle {
+  lc_namespace = ["langchain", "chat_models", "vertexai"];
+
   static lc_name() {
     return "ChatVertexAI";
   }

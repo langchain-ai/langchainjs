@@ -5,7 +5,7 @@ This package contains the LangChain.js integrations for Groq via the groq/sdk pa
 ## Installation
 
 ```bash npm2yarn
-npm install @langchain/groq
+npm install @langchain/groq @langchain/core
 ```
 
 ## Chat models

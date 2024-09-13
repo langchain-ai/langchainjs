@@ -35,12 +35,15 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@langchain/core": ">=0.2.21 <0.3.0",
     "@langchain/google-common": "~0.0.27",
     "google-auth-library": "^8.9.0"
   },
+  "peerDependencies": {
+    "@langchain/core": ">=0.2.21 <0.4.0"
+  },
   "devDependencies": {
     "@jest/globals": "^29.5.0",
+    "@langchain/core": "workspace:*",
     "@langchain/scripts": ">=0.1.0 <0.2.0",
     "@swc/core": "^1.3.90",
     "@swc/jest": "^0.2.29",
