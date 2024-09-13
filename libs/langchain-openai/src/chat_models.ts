@@ -14,6 +14,7 @@ import {
   ToolMessageChunk,
   OpenAIToolCall,
   isAIMessage,
+  convertToChunk,
 } from "@langchain/core/messages";
 import {
   type ChatGeneration,
@@ -1185,6 +1186,19 @@ export class ChatOpenAI<
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
+    if (this.model.includes("o1-")) {
+      console.warn(
+        "[WARNING]: OpenAI o1 models do not yet support token-level streaming. Streaming will yield single chunk."
+      );
+      const result = await this._generate(messages, options, runManager);
+      const messageChunk = convertToChunk(result.generations[0].message);
+      yield new ChatGenerationChunk({
+        message: messageChunk,
+        text:
+          typeof messageChunk.content === "string" ? messageChunk.content : "",
+      });
+      return;
+    }
     const messagesMapped: OpenAICompletionParam[] =
       convertMessagesToOpenAIParams(messages);
     const params = {
