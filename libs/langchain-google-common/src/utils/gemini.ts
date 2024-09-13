@@ -625,7 +625,7 @@ export function getGeminiAPI(config?: GeminiAPIConfig) {
   ): ChatGeneration[] {
     const parts = responseToParts(response);
     let ret = parts.map((part) => partToChatGeneration(part));
-    if (ret.every((item) => typeof item.message.content === "string")) {
+    if (ret.every((item) => typeof item.message.content === "string") && ret.length > 0) {
       const combinedContent = ret.map((item) => item.message.content).join("");
       const combinedText = ret.map((item) => item.text).join("");
       const toolCallChunks: ToolCallChunk[] | undefined = ret[
