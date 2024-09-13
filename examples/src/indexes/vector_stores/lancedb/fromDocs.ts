@@ -26,15 +26,10 @@ export const run = async () => {
 
 export const run_with_existing_table = async () => {
   const dir = await fs.mkdtemp(path.join(os.tmpdir(), "lancedb-"));
-  const db = await connect(dir);
-  const table = await db.createTable("vectors", [
-    { vector: Array(1536), text: "sample", source: "a" },
-  ]);
 
   const vectorStore = await LanceDB.fromDocuments(
     docs,
     new OpenAIEmbeddings(),
-    { table }
   );
 
   const resultOne = await vectorStore.similaritySearch("hello world", 1);
