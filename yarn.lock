@@ -11399,7 +11399,20 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/cohere@^0.2.1, @langchain/cohere@workspace:*, @langchain/cohere@workspace:libs/langchain-cohere":
+"@langchain/cohere@npm:^0.2.1":
+  version: 0.2.2
+  resolution: "@langchain/cohere@npm:0.2.2"
+  dependencies:
+    "@langchain/core": ">=0.2.21 <0.3.0"
+    cohere-ai: ^7.10.5
+    uuid: ^10.0.0
+    zod: ^3.23.8
+    zod-to-json-schema: ^3.23.1
+  checksum: 7e20f3dc0d4aab278ad21b38965ea41234b97c8c94e41ee732637a0e4d026f636507b47ab65d3d7eaee08be14cc1ef5721d6dde0cf88327454b80af6ee3956c4
+  languageName: node
+  linkType: hard
+
+"@langchain/cohere@workspace:*, @langchain/cohere@workspace:libs/langchain-cohere":
   version: 0.0.0-use.local
   resolution: "@langchain/cohere@workspace:libs/langchain-cohere"
   dependencies:
