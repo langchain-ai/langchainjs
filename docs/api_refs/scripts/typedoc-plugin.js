@@ -67,6 +67,7 @@ const SCRIPT_HTML = `<script>
 // Injected into each page's HTML to add a dropdown to switch between versions.
 const VERSION_DROPDOWN_HTML = `<div class="version-select">
 <select id="version-dropdown" onchange="window.location.href=this.value;">
+  <option value="https://v03.api.js.langchain.com/">v0.3</option>
   <option selected value="">v0.2</option>
   <option value="https://v01.api.js.langchain.com/">v0.1</option>
 </select>
