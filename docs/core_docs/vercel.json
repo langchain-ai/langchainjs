@@ -60,6 +60,10 @@
     {
       "source": "/docs/integrations/llms/togetherai(/?)",
       "destination": "/docs/integrations/llms/together/"
+    },
+    {
+      "source": "/docs/tutorials/agents(/?)",
+      "destination": "https://langchain-ai.github.io/langgraphjs/tutorials/quickstart/"
     }
   ]
 }
