@@ -41,7 +41,7 @@
     "zod-to-json-schema": "^3.22.3"
   },
   "peerDependencies": {
-    "@langchain/core": ">=0.2.26 <0.4.0 || 0.3.0-rc.0"
+    "@langchain/core": ">=0.2.26 <0.4.0"
   },
   "devDependencies": {
     "@azure/identity": "^4.2.1",
