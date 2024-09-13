@@ -87,7 +87,7 @@ Agents allow an LLM autonomy over how a task is accomplished. Agents make decisi
 
 Please see [here](https://js.langchain.com) for full documentation, which includes:
 
-- [Getting started](https://js.langchain.com/v0.2/docs/introduction): installation, setting up the environment, simple examples
+- [Getting started](https://js.langchain.com/docs/introduction): installation, setting up the environment, simple examples
 - Overview of the [interfaces](https://js.langchain.com/v0.2/docs/how_to/lcel_cheatsheet/), [modules](https://js.langchain.com/v0.2/docs/concepts) and [integrations](https://js.langchain.com/v0.2/docs/integrations/platforms/)
 - [Tutorial](https://js.langchain.com/v0.2/docs/tutorials/) walkthroughs
 - [Reference](https://api.js.langchain.com): full API docs
