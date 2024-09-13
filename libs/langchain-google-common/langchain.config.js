@@ -16,6 +16,8 @@ export const config = {
     index: "index",
     utils: "utils/index",
     types: "types",
+    "experimental/media": "experimental/media",
+    "experimental/utils/media_core": "experimental/utils/media_core",
   },
   tsConfigPath: resolve("./tsconfig.json"),
   cjsSource: "./dist-cjs",

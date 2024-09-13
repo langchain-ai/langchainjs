@@ -52,6 +52,28 @@ type AnthropicTool = Record<string, unknown>;
 
 type BedrockChatToolType = BindToolsInput | AnthropicTool;
 
+const AWS_REGIONS = [
+  "us",
+  "sa",
+  "me",
+  "il",
+  "eu",
+  "cn",
+  "ca",
+  "ap",
+  "af",
+  "us-gov",
+];
+
+const ALLOWED_MODEL_PROVIDERS = [
+  "ai21",
+  "anthropic",
+  "amazon",
+  "cohere",
+  "meta",
+  "mistral",
+];
+
 const PRELUDE_TOTAL_LENGTH_BYTES = 4;
 
 function convertOneMessageToText(
@@ -473,6 +495,8 @@ export class BedrockChat
 {
   model = "amazon.titan-tg1-large";
 
+  modelProvider: string;
+
   region: string;
 
   credentials: CredentialType;
@@ -545,17 +569,11 @@ export class BedrockChat
     super(fields ?? {});
 
     this.model = fields?.model ?? this.model;
-    const allowedModels = [
-      "ai21",
-      "anthropic",
-      "amazon",
-      "cohere",
-      "meta",
-      "mistral",
-    ];
-    if (!allowedModels.includes(this.model.split(".")[0])) {
+    this.modelProvider = getModelProvider(this.model);
+
+    if (!ALLOWED_MODEL_PROVIDERS.includes(this.modelProvider)) {
       throw new Error(
-        `Unknown model: '${this.model}', only these are supported: ${allowedModels}`
+        `Unknown model provider: '${this.modelProvider}', only these are supported: ${ALLOWED_MODEL_PROVIDERS}`
       );
     }
     const region =
@@ -655,7 +673,7 @@ export class BedrockChat
     const service = "bedrock-runtime";
     const endpointHost =
       this.endpointHost ?? `${service}.${this.region}.amazonaws.com`;
-    const provider = this.model.split(".")[0];
+    const provider = this.modelProvider;
     const response = await this._signedFetch(messages, options, {
       bedrockMethod: "invoke",
       endpointHost,
@@ -776,7 +794,7 @@ export class BedrockChat
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
-    const provider = this.model.split(".")[0];
+    const provider = this.modelProvider;
     const service = "bedrock-runtime";
 
     const endpointHost =
@@ -956,7 +974,7 @@ export class BedrockChat
     BaseMessageChunk,
     this["ParsedCallOptions"]
   > {
-    const provider = this.model.split(".")[0];
+    const provider = this.modelProvider;
     if (provider !== "anthropic") {
       throw new Error(
         "Currently, tool calling through Bedrock is only supported for Anthropic models."
@@ -977,7 +995,7 @@ function isChatGenerationChunk(
 }
 
 function canUseMessagesApi(model: string): boolean {
-  const modelProviderName = model.split(".")[0];
+  const modelProviderName = getModelProvider(model);
 
   if (
     modelProviderName === "anthropic" &&
@@ -997,6 +1015,20 @@ function canUseMessagesApi(model: string): boolean {
   }
 
   return false;
+}
+
+function isInferenceModel(modelId: string): boolean {
+  const parts = modelId.split(".");
+  return AWS_REGIONS.some((region) => parts[0] === region);
+}
+
+function getModelProvider(modelId: string): string {
+  const parts = modelId.split(".");
+  if (isInferenceModel(modelId)) {
+    return parts[1];
+  } else {
+    return parts[0];
+  }
 }
 
 /**

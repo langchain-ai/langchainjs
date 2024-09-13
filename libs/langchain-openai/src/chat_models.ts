@@ -14,6 +14,7 @@ import {
   ToolMessageChunk,
   OpenAIToolCall,
   isAIMessage,
+  convertToChunk,
 } from "@langchain/core/messages";
 import {
   type ChatGeneration,
@@ -61,7 +62,6 @@ import type {
   ResponseFormatJSONObject,
   ResponseFormatJSONSchema,
 } from "openai/resources/shared";
-import { ParsedChatCompletion } from "openai/resources/beta/chat/completions.mjs";
 import type {
   AzureOpenAIInput,
   OpenAICallOptions,
@@ -1186,6 +1186,19 @@ export class ChatOpenAI<
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
+    if (this.model.includes("o1-")) {
+      console.warn(
+        "[WARNING]: OpenAI o1 models do not yet support token-level streaming. Streaming will yield single chunk."
+      );
+      const result = await this._generate(messages, options, runManager);
+      const messageChunk = convertToChunk(result.generations[0].message);
+      yield new ChatGenerationChunk({
+        message: messageChunk,
+        text:
+          typeof messageChunk.content === "string" ? messageChunk.content : "",
+      });
+      return;
+    }
     const messagesMapped: OpenAICompletionParam[] =
       convertMessagesToOpenAIParams(messages);
     const params = {
@@ -1615,7 +1628,8 @@ export class ChatOpenAI<
   async betaParsedCompletionWithRetry(
     request: OpenAIClient.Chat.ChatCompletionCreateParamsNonStreaming,
     options?: OpenAICoreRequestOptions
-  ): Promise<ParsedChatCompletion<null>> {
+    // Avoid relying importing a beta type with no official entrypoint
+  ): Promise<ReturnType<OpenAIClient["beta"]["chat"]["completions"]["parse"]>> {
     const requestOptions = this._getClientOptions(options);
     return this.caller.call(async () => {
       try {

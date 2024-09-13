@@ -286,6 +286,22 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@arcjet/redact-wasm@npm:1.0.0-alpha.24":
+  version: 1.0.0-alpha.24
+  resolution: "@arcjet/redact-wasm@npm:1.0.0-alpha.24"
+  checksum: b0cf2a5b8eec1fcacdc130c3fce963cfe2bdc786aeb21296409b8bcc0053204ea6c1d7a816e9adf999fb56c8f73aaa950dfbbb7bd628d06ea21fb868cc4b7e5c
+  languageName: node
+  linkType: hard
+
+"@arcjet/redact@npm:^v1.0.0-alpha.23":
+  version: 1.0.0-alpha.24
+  resolution: "@arcjet/redact@npm:1.0.0-alpha.24"
+  dependencies:
+    "@arcjet/redact-wasm": 1.0.0-alpha.24
+  checksum: 06eedc5f65eb98ac3b3f2598981a3c4b7265f89a59b138dfb38c7e19e3c4342ccb5ddfc3a0ae94add47f931b095138794b8c88355003c27374c37ead02f2106c
+  languageName: node
+  linkType: hard
+
 "@aws-crypto/crc32@npm:3.0.0":
   version: 3.0.0
   resolution: "@aws-crypto/crc32@npm:3.0.0"
@@ -8457,13 +8473,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@cloudflare/ai@npm:1.0.47":
-  version: 1.0.47
-  resolution: "@cloudflare/ai@npm:1.0.47"
-  checksum: a9e371f789256bb5795c0cb60d975749b07d6cb50141b997da6b5c94380ddf18e851cba518e246414fcab4239d8f4438c5fe29172e6f06c136be3be19a3b65e0
-  languageName: node
-  linkType: hard
-
 "@cloudflare/workers-types@npm:^4.20230922.0":
   version: 4.20230922.0
   resolution: "@cloudflare/workers-types@npm:4.20230922.0"
@@ -8471,10 +8480,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@cloudflare/workers-types@npm:^4.20231218.0":
-  version: 4.20231218.0
-  resolution: "@cloudflare/workers-types@npm:4.20231218.0"
-  checksum: b7e50a76ee8e9d662227bbb74798b93b6102acc224f1071a9c99a9adb419ad0b3bdabf7561e7e1b4a320a6a4616badeecdfb1848fbdaada197c7b37d845b8774
+"@cloudflare/workers-types@npm:^4.20240909.0":
+  version: 4.20240909.0
+  resolution: "@cloudflare/workers-types@npm:4.20240909.0"
+  checksum: 82fe9b22510d6a23533830684018651bf8a679692cc487cf82d15816e4c91b95ca5e759a6702d6b1268cd93cda8f0b45f3bf9e6ac27e926112ed4f3c7ef65968
   languageName: node
   linkType: hard
 
@@ -11097,8 +11106,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@langchain/cloudflare@workspace:libs/langchain-cloudflare"
   dependencies:
-    "@cloudflare/ai": 1.0.47
-    "@cloudflare/workers-types": ^4.20231218.0
+    "@cloudflare/workers-types": ^4.20240909.0
     "@jest/globals": ^29.5.0
     "@langchain/core": ">0.1.0 <0.3.0"
     "@langchain/langgraph": ~0.0.31
@@ -11174,6 +11182,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@langchain/community@workspace:libs/langchain-community"
   dependencies:
+    "@arcjet/redact": ^v1.0.0-alpha.23
     "@aws-crypto/sha256-js": ^5.0.0
     "@aws-sdk/client-bedrock-agent-runtime": ^3.583.0
     "@aws-sdk/client-bedrock-runtime": ^3.422.0
@@ -11211,7 +11220,7 @@ __metadata:
     "@langchain/standard-tests": 0.0.0
     "@layerup/layerup-security": ^1.5.12
     "@mendable/firecrawl-js": ^0.0.36
-    "@mlc-ai/web-llm": 0.2.46
+    "@mlc-ai/web-llm": ">=0.2.62 <0.3.0"
     "@mozilla/readability": ^0.4.4
     "@neondatabase/serverless": ^0.9.1
     "@notionhq/client": ^2.2.10
@@ -11349,6 +11358,7 @@ __metadata:
     zod: ^3.22.3
     zod-to-json-schema: ^3.22.5
   peerDependencies:
+    "@arcjet/redact": ^v1.0.0-alpha.23
     "@aws-crypto/sha256-js": ^5.0.0
     "@aws-sdk/client-bedrock-agent-runtime": ^3.583.0
     "@aws-sdk/client-bedrock-runtime": ^3.422.0
@@ -11378,7 +11388,7 @@ __metadata:
     "@langchain/langgraph": "*"
     "@layerup/layerup-security": ^1.5.12
     "@mendable/firecrawl-js": ^0.0.13
-    "@mlc-ai/web-llm": 0.2.46
+    "@mlc-ai/web-llm": "*"
     "@mozilla/readability": "*"
     "@neondatabase/serverless": "*"
     "@notionhq/client": ^2.2.10
@@ -11470,6 +11480,8 @@ __metadata:
     youtube-transcript: ^1.0.6
     youtubei.js: ^9.1.0
   peerDependenciesMeta:
+    "@arcjet/redact":
+      optional: true
     "@aws-crypto/sha256-js":
       optional: true
     "@aws-sdk/client-bedrock-agent-runtime":
@@ -11984,6 +11996,7 @@ __metadata:
     ts-jest: ^29.1.0
     typescript: <5.2.0
     web-auth-library: ^1.0.3
+    zod: ^3.23.8
   languageName: unknown
   linkType: soft
 
@@ -12331,7 +12344,7 @@ __metadata:
     jest: ^29.5.0
     jest-environment-node: ^29.6.4
     js-tiktoken: ^1.0.12
-    openai: ^4.55.0
+    openai: ^4.57.3
     prettier: ^2.8.3
     release-it: ^17.6.0
     rimraf: ^5.0.1
@@ -12807,12 +12820,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@mlc-ai/web-llm@npm:0.2.46":
-  version: 0.2.46
-  resolution: "@mlc-ai/web-llm@npm:0.2.46"
+"@mlc-ai/web-llm@npm:>=0.2.62 <0.3.0":
+  version: 0.2.62
+  resolution: "@mlc-ai/web-llm@npm:0.2.62"
   dependencies:
     loglevel: ^1.9.1
-  checksum: 09c83a45d7f9351ae492d8704fe580868d0b46b640eca232ebc76d552f2ffad031c9c504a0d29f69122029478af270eeeda0800e7fb032b00c11dc1632e1ae11
+  checksum: 7ccb0842e3fe83156406e61e0172f2f07115c77669b37729499f52c120cc33acd000fc4619b30fb67ca7712246c9722af65e4fe208c2f4546e2882297d53293c
   languageName: node
   linkType: hard
 
@@ -19034,6 +19047,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/qs@npm:^6.9.15":
+  version: 6.9.15
+  resolution: "@types/qs@npm:6.9.15"
+  checksum: 97d8208c2b82013b618e7a9fc14df6bd40a73e1385ac479b6896bafc7949a46201c15f42afd06e86a05e914f146f495f606b6fb65610cc60cf2e0ff743ec38a2
+  languageName: node
+  linkType: hard
+
 "@types/range-parser@npm:*":
   version: 1.2.4
   resolution: "@types/range-parser@npm:1.2.4"
@@ -21432,13 +21452,6 @@ __metadata:
   version: 0.1.0
   resolution: "base-64@npm:0.1.0"
   checksum: 5a42938f82372ab5392cbacc85a5a78115cbbd9dbef9f7540fa47d78763a3a8bd7d598475f0d92341f66285afd377509851a9bb5c67bbecb89686e9255d5b3eb
-  languageName: node
-  linkType: hard
-
-"base-64@npm:^1.0.0":
-  version: 1.0.0
-  resolution: "base-64@npm:1.0.0"
-  checksum: d10b64a1fc9b2c5a5f39f1ce1e6c9d1c5b249222bbfa3a0604c592d90623caf74419983feadd8a170f27dc0c3389704f72faafa3e645aeb56bfc030c93ff074a
   languageName: node
   linkType: hard
 
@@ -32239,7 +32252,7 @@ __metadata:
     "@aws-sdk/types": ^3.357.0
     "@azure/storage-blob": ^12.15.0
     "@browserbasehq/sdk": ^1.1.5
-    "@cloudflare/workers-types": ^4.20230922.0
+    "@cloudflare/workers-types": ^4.20240909.0
     "@faker-js/faker": ^7.6.0
     "@gomomento/sdk": ^1.51.1
     "@gomomento/sdk-core": ^1.51.1
@@ -32319,7 +32332,7 @@ __metadata:
     playwright: ^1.32.1
     prettier: ^2.8.3
     puppeteer: ^22.0.0
-    pyodide: ^0.24.1
+    pyodide: ^0.26.2
     redis: ^4.6.6
     release-it: ^17.6.0
     rimraf: ^5.0.1
@@ -32387,7 +32400,7 @@ __metadata:
     peggy: ^3.0.2
     playwright: "*"
     puppeteer: "*"
-    pyodide: ^0.24.1
+    pyodide: ">=0.24.1 <0.27.0"
     redis: "*"
     sonix-speech-recognition: "*"
     srt-parser-2: "*"
@@ -35275,17 +35288,19 @@ __metadata:
   languageName: node
   linkType: hard
 
-"openai@npm:^4.55.0":
-  version: 4.55.0
-  resolution: "openai@npm:4.55.0"
+"openai@npm:^4.57.3":
+  version: 4.57.3
+  resolution: "openai@npm:4.57.3"
   dependencies:
     "@types/node": ^18.11.18
     "@types/node-fetch": ^2.6.4
+    "@types/qs": ^6.9.15
     abort-controller: ^3.0.0
     agentkeepalive: ^4.2.1
     form-data-encoder: 1.7.2
     formdata-node: ^4.3.2
     node-fetch: ^2.6.7
+    qs: ^6.10.3
   peerDependencies:
     zod: ^3.23.8
   peerDependenciesMeta:
@@ -35293,7 +35308,7 @@ __metadata:
       optional: true
   bin:
     openai: bin/cli
-  checksum: b2b1daa976516262e08e182ee982976a1dc615eebd250bbd71f4122740ebeeb207a20af6d35c718b67f1c3457196b524667a0c7fa417ab4e119020b5c1f5cd74
+  checksum: 6e8cef99975af5fd8e9a06685f05396a6fabecda38bd77fa62db4b7ea9bdfa0b4c762c5f74e99e42212af81f74f50748c5034bf78c9abcf74cc6eb984f3dcffa
   languageName: node
   linkType: hard
 
@@ -37372,13 +37387,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"pyodide@npm:^0.24.1":
-  version: 0.24.1
-  resolution: "pyodide@npm:0.24.1"
+"pyodide@npm:^0.26.2":
+  version: 0.26.2
+  resolution: "pyodide@npm:0.26.2"
   dependencies:
-    base-64: ^1.0.0
     ws: ^8.5.0
-  checksum: ab18e5eed3195b919c0e70b39a81bab0449ab56e42f28e8635664e688dba732da060492505719c3cb477302979791dbcc1df09ff39dc9e0816064b69818f283d
+  checksum: f8b11470a69f82609af9e1a1b76905dfd5baa42f86ce5488c44b82271af46252006bb73639f8d89aee11b9fb07d1e9de037ff5472aa76f1b4ff4e9fe09d7e839
   languageName: node
   linkType: hard
 
@@ -37406,6 +37420,15 @@ __metadata:
   dependencies:
     side-channel: ^1.0.6
   checksum: aa761d99e65b6936ba2dd2187f2d9976afbcda38deb3ff1b3fe331d09b0c578ed79ca2abdde1271164b5be619c521ec7db9b34c23f49a074e5921372d16242d5
+  languageName: node
+  linkType: hard
+
+"qs@npm:^6.10.3":
+  version: 6.13.0
+  resolution: "qs@npm:6.13.0"
+  dependencies:
+    side-channel: ^1.0.6
+  checksum: e9404dc0fc2849245107108ce9ec2766cde3be1b271de0bf1021d049dc5b98d1a2901e67b431ac5509f865420a7ed80b7acb3980099fe1c118a1c5d2e1432ad8
   languageName: node
   linkType: hard
 

@@ -940,3 +940,14 @@ test("populates ID field on AIMessage", async () => {
   expect(finalChunk?.id?.length).toBeGreaterThan(1);
   expect(finalChunk?.id?.startsWith("chatcmpl-")).toBe(true);
 });
+
+test("Test ChatOpenAI stream method", async () => {
+  const model = new ChatOpenAI({ model: "o1-mini" });
+  const stream = await model.stream("Print hello world.");
+  const chunks = [];
+  for await (const chunk of stream) {
+    console.log(chunk);
+    chunks.push(chunk);
+  }
+  expect(chunks.length).toEqual(1);
+});

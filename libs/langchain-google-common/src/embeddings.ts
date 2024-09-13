@@ -38,10 +38,10 @@ class EmbeddingsConnection<
     return "predict";
   }
 
-  formatData(
+  async formatData(
     input: GoogleEmbeddingsInstance[],
     parameters: GoogleAIModelRequestParams
-  ): unknown {
+  ): Promise<unknown> {
     return {
       instances: input,
       parameters,
@@ -172,7 +172,8 @@ export abstract class BaseGoogleEmbeddings<AuthOptions>
         ?.map(
           (response) =>
             response?.data?.predictions?.map(
-              (result) => result.embeddings.values
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              (result: any) => result.embeddings?.values
             ) ?? []
         )
         .flat() ?? [];

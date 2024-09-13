@@ -239,6 +239,16 @@ const FEATURE_TABLES = {
         apiLink:
           "https://api.python.langchain.com/en/latest/chat_models/langchain_upstage.chat_models.ChatUpstage.html#langchain_upstage.chat_models.ChatUpstage",
       },
+      {
+        name: "Arcjet Redact",
+        package: "langchain-community",
+        link: "arcjet",
+        structured_output: false,
+        tool_calling: false,
+        json_mode: false,
+        multimodal: false,
+        local: true,
+      },
     ],
   },
   llms: {
@@ -260,6 +270,11 @@ const FEATURE_TABLES = {
         package: "langchain-ai21",
         apiLink:
           "https://api.python.langchain.com/en/latest/llms/langchain_ai21.llms.AI21LLM.html#langchain_ai21.llms.AI21LLM",
+      },
+      {
+        name: "Arcjet Redact",
+        link: "arcjet",
+        package: "langchain-community",
       },
       {
         name: "AnthropicLLM",

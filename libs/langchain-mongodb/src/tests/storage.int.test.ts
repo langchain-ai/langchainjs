@@ -43,18 +43,22 @@ test("MongoDBStore can set and retrieve", async () => {
       encoder.encode(doc[1]),
     ]);
     await store.mset(docsAsKVPairs);
-    const retrievedDocs = (await store.mget(docs.map((doc) => doc[0]))).flatMap(
-      (doc) => {
-        if (doc !== undefined) {
-          const decodedDoc = decoder.decode(doc);
-          const parsedDoc = JSON.parse(decodedDoc);
-          return [parsedDoc];
-        }
-        return [];
-      }
-    );
 
-    expect(retrievedDocs.sort()).toEqual(docs.map((doc) => doc[1]).sort());
+    const keysToRetrieve = docs.map((doc) => doc[0]);
+    keysToRetrieve.unshift("nonexistent_key_0");
+    keysToRetrieve.push("nonexistent_key_3");
+
+    const retrievedDocs = await store.mget(keysToRetrieve);
+    expect(retrievedDocs.length).toBe(keysToRetrieve.length);
+    // Check that the first item is undefined (nonexistent_key_0)
+    expect(retrievedDocs[0]).toBeUndefined();
+
+    // Check that the second and third items match the original docs
+    expect(decoder.decode(retrievedDocs[1])).toBe(docs[0][1]);
+    expect(decoder.decode(retrievedDocs[2])).toBe(docs[1][1]);
+
+    // Check that the last item is undefined (nonexistent_key_1)
+    expect(retrievedDocs[retrievedDocs.length - 1]).toBeUndefined();
   } finally {
     const keys = store.yieldKeys();
     const yieldedKeys = [];
@@ -104,7 +108,9 @@ test("MongoDBStore can delete", async () => {
 
     const retrievedDocs = await store.mget(docs.map((doc) => doc[0]));
 
-    expect(retrievedDocs.length).toBe(0);
+    expect(retrievedDocs.length).toBe(2);
+    const everyValueUndefined = retrievedDocs.every((v) => v === undefined);
+    expect(everyValueUndefined).toBe(true);
   } finally {
     const keys = store.yieldKeys();
     const yieldedKeys = [];

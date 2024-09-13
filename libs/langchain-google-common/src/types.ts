@@ -4,6 +4,7 @@ import type {
   BindToolsInput,
 } from "@langchain/core/language_models/chat_models";
 import type { JsonStream } from "./utils/stream.js";
+import { MediaManager } from "./experimental/utils/media_core.js";
 
 /**
  * Parameters needed to setup the client connection.
@@ -147,7 +148,8 @@ export interface GoogleAIBaseLLMInput<AuthOptions>
   extends BaseLLMParams,
     GoogleConnectionParams<AuthOptions>,
     GoogleAIModelParams,
-    GoogleAISafetyParams {}
+    GoogleAISafetyParams,
+    GeminiAPIConfig {}
 
 export interface GoogleAIBaseLanguageModelCallOptions
   extends BaseChatModelCallOptions,
@@ -172,6 +174,10 @@ export interface GoogleResponse {
   data: any;
 }
 
+export interface GoogleRawResponse extends GoogleResponse {
+  data: Blob;
+}
+
 export interface GeminiPartText {
   text: string;
 }
@@ -183,7 +189,6 @@ export interface GeminiPartInlineData {
   };
 }
 
-// Vertex AI only
 export interface GeminiPartFileData {
   fileData: {
     mimeType: string;
@@ -341,4 +346,8 @@ export interface GeminiJsonSchemaDirty extends GeminiJsonSchema {
   items?: GeminiJsonSchemaDirty;
   properties?: Record<string, GeminiJsonSchemaDirty>;
   additionalProperties?: boolean;
+}
+
+export interface GeminiAPIConfig {
+  mediaManager?: MediaManager;
 }
