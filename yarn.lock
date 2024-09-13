@@ -12003,6 +12003,25 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@langchain/core@npm:>=0.2.16 <0.3.0, @langchain/core@npm:>=0.2.17 <0.3.0, @langchain/core@npm:>=0.2.18 <0.3.0, @langchain/core@npm:>=0.2.20 <0.3.0, @langchain/core@npm:>=0.2.21 <0.3.0, @langchain/core@npm:>=0.2.26 <0.3.0, @langchain/core@npm:>=0.2.5 <0.3.0":
+  version: 0.2.32
+  resolution: "@langchain/core@npm:0.2.32"
+  dependencies:
+    ansi-styles: ^5.0.0
+    camelcase: 6
+    decamelize: 1.2.0
+    js-tiktoken: ^1.0.12
+    langsmith: ^0.1.43
+    mustache: ^4.2.0
+    p-queue: ^6.6.2
+    p-retry: 4
+    uuid: ^10.0.0
+    zod: ^3.22.4
+    zod-to-json-schema: ^3.22.3
+  checksum: b26380e94c8838a1643177a53bef4c628ea583714a2e93e18a3126413f95756dc6dfbaf0572fe0965afcc79092d4a0c0e0851c932830261bd6c84d6380a0ac74
+  languageName: node
+  linkType: hard
+
 "@langchain/core@workspace:*, @langchain/core@workspace:langchain-core":
   version: 0.0.0-use.local
   resolution: "@langchain/core@workspace:langchain-core"
