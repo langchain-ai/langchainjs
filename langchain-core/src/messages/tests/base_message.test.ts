@@ -10,6 +10,7 @@ import {
   SystemMessage,
 } from "../index.js";
 import { load } from "../../load/index.js";
+import { syncLoad } from "../../load/sync.js";
 
 test("Test ChatPromptTemplate can format OpenAI content image messages", async () => {
   const message = new HumanMessage({
@@ -95,7 +96,10 @@ test("Deserialisation and serialisation of additional_kwargs and tool_call_id", 
     },
   });
 
-  const deserialized: AIMessage = await load(JSON.stringify(message), config);
+  let deserialized: AIMessage = await load(JSON.stringify(message), config);
+  expect(deserialized).toEqual(message);
+
+  deserialized = syncLoad(JSON.stringify(message), config);
   expect(deserialized).toEqual(message);
 });
 
@@ -112,7 +116,10 @@ test("Deserialisation and serialisation of tool_call_id", async () => {
     tool_call_id: "call_tXJNP1S6LHT5tLfaNHCbYCtH",
   });
 
-  const deserialized: ToolMessage = await load(JSON.stringify(message), config);
+  let deserialized: ToolMessage = await load(JSON.stringify(message), config);
+  expect(deserialized).toEqual(message);
+
+  deserialized = syncLoad(JSON.stringify(message), config);
   expect(deserialized).toEqual(message);
 });
 
@@ -131,7 +138,11 @@ test("Deserialisation and serialisation of messages with ID", async () => {
     id: messageId,
   });
 
-  const deserialized: AIMessage = await load(JSON.stringify(message), config);
+  let deserialized: AIMessage = await load(JSON.stringify(message), config);
+  expect(deserialized).toEqual(message);
+  expect(deserialized.id).toBe(messageId);
+
+  deserialized = syncLoad(JSON.stringify(message), config);
   expect(deserialized).toEqual(message);
   expect(deserialized.id).toBe(messageId);
 });

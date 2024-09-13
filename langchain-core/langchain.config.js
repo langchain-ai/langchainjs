@@ -31,6 +31,7 @@ export const config = {
     "language_models/llms": "language_models/llms",
     load: "load/index",
     "load/serializable": "load/serializable",
+    "load/sync": "load/sync",
     memory: "memory",
     messages: "messages/index",
     "messages/tool": "messages/tool",

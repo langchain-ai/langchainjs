@@ -12,7 +12,7 @@ import { type SerializedFields, keyFromJson, mapKeys } from "./map_keys.js";
 import { getEnvironmentVariable } from "../utils/env.js";
 import { combineAliasesAndInvert } from "./utils.js";
 
-async function reviver(
+export function syncReviver(
   this: {
     optionalImportsMap?: OptionalImportMap;
     optionalImportEntrypoints?: string[];
@@ -21,7 +21,7 @@ async function reviver(
     path?: string[];
   },
   value: unknown
-): Promise<unknown> {
+): unknown {
   const {
     optionalImportsMap = {},
     optionalImportEntrypoints = [],
@@ -50,7 +50,7 @@ async function reviver(
         return secretValueInEnv;
       } else {
         throw new Error(
-          `Missing key "${key}" for ${pathStr} in load(secretsMap={})`
+          `Missing key "${key}" for ${pathStr} in syncLoad(secretsMap={})`
         );
       }
     }
@@ -107,14 +107,15 @@ async function reviver(
       matchingNamespaceAlias
     ) {
       if (matchingNamespaceAlias !== undefined) {
-        module = await optionalImportsMap[
-          matchingNamespaceAlias as keyof typeof optionalImportsMap
-        ];
+        module =
+          optionalImportsMap[
+            matchingNamespaceAlias as keyof typeof optionalImportsMap
+          ];
       } else {
         throw new Error(
           `Missing key "${namespace.join(
             "/"
-          )}" for ${pathStr} in load(optionalImportsMap={})`
+          )}" for ${pathStr} in syncLoad(optionalImportsMap={})`
         );
       }
     } else {
@@ -171,7 +172,7 @@ async function reviver(
     }
 
     // Recurse on the arguments, which may be serialized objects themselves
-    const kwargs = await reviver.call(
+    const kwargs = syncReviver.call(
       { ...this, path: [...path, "kwargs"] },
       serialized.kwargs
     );
@@ -198,26 +199,22 @@ async function reviver(
     }
   } else if (typeof value === "object" && value !== null) {
     if (Array.isArray(value)) {
-      return Promise.all(
-        value.map((v, i) =>
-          reviver.call({ ...this, path: [...path, `${i}`] }, v)
-        )
+      return value.map((v, i) =>
+        syncReviver.call({ ...this, path: [...path, `${i}`] }, v)
       );
     } else {
       return Object.fromEntries(
-        await Promise.all(
-          Object.entries(value).map(async ([key, value]) => [
-            key,
-            await reviver.call({ ...this, path: [...path, key] }, value),
-          ])
-        )
+        Object.entries(value).map(([key, value]) => [
+          key,
+          syncReviver.call({ ...this, path: [...path, key] }, value),
+        ])
       );
     }
   }
   return value;
 }
 
-export async function load<T>(
+export function syncLoad<T>(
   text: string,
   mappings?: {
     secretsMap?: SecretMap;
@@ -225,7 +222,7 @@ export async function load<T>(
     optionalImportEntrypoints?: string[];
     importMap?: Record<string, unknown>;
   }
-): Promise<T> {
+): T {
   const json = JSON.parse(text);
-  return reviver.call({ ...mappings }, json) as Promise<T>;
+  return syncReviver.call({ ...mappings }, json) as T;
 }

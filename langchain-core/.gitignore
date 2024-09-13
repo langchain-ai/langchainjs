@@ -74,6 +74,10 @@ load/serializable.cjs
 load/serializable.js
 load/serializable.d.ts
 load/serializable.d.cts
+load/sync.cjs
+load/sync.js
+load/sync.d.ts
+load/sync.d.cts
 memory.cjs
 memory.js
 memory.d.ts
