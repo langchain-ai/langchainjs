@@ -20,8 +20,8 @@ import {
 } from "../outputs.js";
 import {
   BaseLanguageModel,
-  StructuredOutputMethodOptions,
-  ToolDefinition,
+  type StructuredOutputMethodOptions,
+  type ToolDefinition,
   type BaseLanguageModelCallOptions,
   type BaseLanguageModelInput,
   type BaseLanguageModelParams,

@@ -55,12 +55,12 @@ export async function createStuffDocumentsChain<RunOutput = string>({
     [
       RunnablePassthrough.assign({
         [DOCUMENTS_KEY]: new RunnablePick(DOCUMENTS_KEY).pipe(
-          (documents, metadata) =>
+          (documents, config) =>
             formatDocuments({
               documents,
               documentPrompt,
               documentSeparator,
-              config: metadata?.config,
+              config,
             })
         ),
       }),

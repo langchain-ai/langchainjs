@@ -13,7 +13,7 @@ const mdxComponentsPath = path.resolve(__dirname, "docs", "mdx_components");
 const baseLightCodeBlockTheme = require("prism-react-renderer/themes/vsLight");
 const baseDarkCodeBlockTheme = require("prism-react-renderer/themes/vsDark");
 
-const baseUrl = "/v0.2/";
+const baseUrl = "/";
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
@@ -201,12 +201,16 @@ const config = {
           },
           {
             type: "dropdown",
-            label: "v0.2",
+            label: "v0.3",
             position: "right",
             items: [
               {
-                label: "v0.2",
+                label: "v0.3",
                 href: "/docs/introduction",
+              },
+              {
+                label: "v0.2",
+                href: "https://js.langchain.com/v0.2/docs/introduction",
               },
               {
                 label: "v0.1",

@@ -9,20 +9,11 @@ export class RootListenersTracer extends BaseTracer {
 
   config: RunnableConfig;
 
-  argOnStart?: {
-    (run: Run): void | Promise<void>;
-    (run: Run, config: RunnableConfig): void | Promise<void>;
-  };
+  argOnStart?: (run: Run, config: RunnableConfig) => void | Promise<void>;
 
-  argOnEnd?: {
-    (run: Run): void | Promise<void>;
-    (run: Run, config: RunnableConfig): void | Promise<void>;
-  };
+  argOnEnd?: (run: Run, config: RunnableConfig) => void | Promise<void>;
 
-  argOnError?: {
-    (run: Run): void | Promise<void>;
-    (run: Run, config: RunnableConfig): void | Promise<void>;
-  };
+  argOnError?: (run: Run, config: RunnableConfig) => void | Promise<void>;
 
   constructor({
     config,
@@ -31,9 +22,9 @@ export class RootListenersTracer extends BaseTracer {
     onError,
   }: {
     config: RunnableConfig;
-    onStart?: (run: Run, config?: RunnableConfig) => void | Promise<void>;
-    onEnd?: (run: Run, config?: RunnableConfig) => void | Promise<void>;
-    onError?: (run: Run, config?: RunnableConfig) => void | Promise<void>;
+    onStart?: (run: Run, config: RunnableConfig) => void | Promise<void>;
+    onEnd?: (run: Run, config: RunnableConfig) => void | Promise<void>;
+    onError?: (run: Run, config: RunnableConfig) => void | Promise<void>;
   }) {
     super({ _awaitHandler: true });
     this.config = config;
@@ -59,11 +50,7 @@ export class RootListenersTracer extends BaseTracer {
     this.rootId = run.id;
 
     if (this.argOnStart) {
-      if (this.argOnStart.length === 1) {
-        await this.argOnStart(run);
-      } else if (this.argOnStart.length === 2) {
-        await this.argOnStart(run, this.config);
-      }
+      await this.argOnStart(run, this.config);
     }
   }
 
@@ -73,18 +60,10 @@ export class RootListenersTracer extends BaseTracer {
     }
     if (!run.error) {
       if (this.argOnEnd) {
-        if (this.argOnEnd.length === 1) {
-          await this.argOnEnd(run);
-        } else if (this.argOnEnd.length === 2) {
-          await this.argOnEnd(run, this.config);
-        }
+        await this.argOnEnd(run, this.config);
       }
     } else if (this.argOnError) {
-      if (this.argOnError.length === 1) {
-        await this.argOnError(run);
-      } else if (this.argOnError.length === 2) {
-        await this.argOnError(run, this.config);
-      }
+      await this.argOnError(run, this.config);
     }
   }
 }

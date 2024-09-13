@@ -9,8 +9,8 @@ import {
   AsyncCallerCallOptions,
 } from "@langchain/core/utils/async_caller";
 
-import { ChatGooglePaLM } from "../../../chat_models/googlepalm.js";
-import { GooglePaLM } from "../../../llms/googlepalm.js";
+import { ChatGooglePaLM } from "./chat_models.js";
+import { GooglePaLM } from "./llms.js";
 import {
   GoogleAbstractedClientOpsMethod,
   GoogleResponse,

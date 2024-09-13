@@ -34,10 +34,10 @@ LangChain is written in TypeScript and can be used in:
 - **Reason**: rely on a language model to reason (about how to answer based on provided context, what actions to take, etc.)
 
 This framework consists of several parts.
-- **Open-source libraries**: Build your applications using LangChain's open-source [building blocks](https://js.langchain.com/v0.2/docs/concepts#langchain-expression-language), [components](https://js.langchain.com/v0.2/docs/concepts), and [third-party integrations](https://js.langchain.com/v0.2/docs/integrations/platforms/).
-Use [LangGraph.js](https://js.langchain.com/v0.2/docs/concepts/#langgraphjs) to build stateful agents with first-class streaming and human-in-the-loop support.
+- **Open-source libraries**: Build your applications using LangChain's open-source [building blocks](https://js.langchain.com/docs/concepts#langchain-expression-language), [components](https://js.langchain.com/docs/concepts), and [third-party integrations](https://js.langchain.com/docs/integrations/platforms/).
+Use [LangGraph.js](https://js.langchain.com/docs/concepts/#langgraphjs) to build stateful agents with first-class streaming and human-in-the-loop support.
 - **Productionization**: Use [LangSmith](https://docs.smith.langchain.com/) to inspect, monitor and evaluate your chains, so that you can continuously optimize and deploy with confidence.
-- **Deployment**: Turn your LangGraph applications into production-ready APIs and Assistants with [LangGraph Cloud](https://langchain-ai.github.io/langgraph/cloud/) (currently Python-only).
+- **Deployment**: Turn your LangGraph applications into production-ready APIs and Assistants with [LangGraph Cloud](https://langchain-ai.github.io/langgraph/cloud/).
 
 The LangChain libraries themselves are made up of several different packages.
 - **[`@langchain/core`](https://github.com/langchain-ai/langchainjs/blob/main/langchain-core)**: Base abstractions and LangChain Expression Language.
@@ -53,12 +53,12 @@ This library aims to assist in the development of those types of applications. C
 
 **❓Question Answering over specific documents**
 
-- [Documentation](https://js.langchain.com/v0.2/docs/tutorials/rag/)
+- [Documentation](https://js.langchain.com/docs/tutorials/rag/)
 - End-to-end Example: [Doc-Chatbot](https://github.com/dissorial/doc-chatbot)
 
 **💬 Chatbots**
 
-- [Documentation](https://js.langchain.com/v0.2/docs/tutorials/chatbot)
+- [Documentation](https://js.langchain.com/docs/tutorials/chatbot)
 - End-to-end Example: [Chat-LangChain](https://github.com/langchain-ai/chat-langchain)
 
 ## 🚀 How does LangChain help?
@@ -81,15 +81,15 @@ Data Augmented Generation involves specific types of chains that first interact 
 
 **🤖 Agents:**
 
-Agents allow an LLM autonomy over how a task is accomplished. Agents make decisions about which Actions to take, then take that Action, observe the result, and repeat until the task is complete. LangChain provides a [standard interface for agents](https://js.langchain.com/v0.2/docs/concepts/#agents), along with [LangGraph.js](https://github.com/langchain-ai/langgraphjs/) for building custom agents.
+Agents allow an LLM autonomy over how a task is accomplished. Agents make decisions about which Actions to take, then take that Action, observe the result, and repeat until the task is complete. LangChain provides a [standard interface for agents](https://js.langchain.com/docs/concepts/#agents), along with [LangGraph.js](https://github.com/langchain-ai/langgraphjs/) for building custom agents.
 
 ## 📖 Documentation
 
 Please see [here](https://js.langchain.com) for full documentation, which includes:
 
-- [Getting started](https://js.langchain.com/v0.2/docs/introduction): installation, setting up the environment, simple examples
-- Overview of the [interfaces](https://js.langchain.com/v0.2/docs/how_to/lcel_cheatsheet/), [modules](https://js.langchain.com/v0.2/docs/concepts) and [integrations](https://js.langchain.com/v0.2/docs/integrations/platforms/)
-- [Tutorial](https://js.langchain.com/v0.2/docs/tutorials/) walkthroughs
+- [Getting started](https://js.langchain.com/docs/introduction): installation, setting up the environment, simple examples
+- Overview of the [interfaces](https://js.langchain.com/docs/how_to/lcel_cheatsheet/), [modules](https://js.langchain.com/docs/concepts) and [integrations](https://js.langchain.com/docs/integrations/platforms/)
+- [Tutorial](https://js.langchain.com/docs/tutorials/) walkthroughs
 - [Reference](https://api.js.langchain.com): full API docs
 
 ## 💁 Contributing

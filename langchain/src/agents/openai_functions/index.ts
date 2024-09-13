@@ -95,7 +95,7 @@ export interface OpenAIAgentCreatePromptArgs {
  * extends the Agent class and provides additional functionality specific
  * to the OpenAIAgent type.
  *
- * @deprecated Use the {@link https://v02.api.js.langchain.com/functions/langchain.agents.createOpenAIFunctionsAgent.html | createOpenAIFunctionsAgent method instead}.
+ * @deprecated Use the {@link https://api.js.langchain.com/functions/langchain.agents.createOpenAIFunctionsAgent.html | createOpenAIFunctionsAgent method instead}.
  */
 export class OpenAIAgent extends Agent {
   static lc_name() {
@@ -224,7 +224,7 @@ export class OpenAIAgent extends Agent {
 
     const valuesForPrompt = { ...newInputs };
     const valuesForLLM: CallOptionsIfAvailable<typeof llm> = {
-      functions: this.tools.map(convertToOpenAIFunction),
+      functions: this.tools.map((tool) => convertToOpenAIFunction(tool)),
     };
     const callKeys =
       "callKeys" in this.llmChain.llm ? this.llmChain.llm.callKeys : [];
@@ -345,7 +345,7 @@ export async function createOpenAIFunctionsAgent({
     );
   }
   const llmWithTools = llm.bind({
-    functions: tools.map(convertToOpenAIFunction),
+    functions: tools.map((tool) => convertToOpenAIFunction(tool)),
   });
   const agent = AgentRunnableSequence.fromRunnables(
     [

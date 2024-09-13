@@ -50,10 +50,21 @@ jobs:
         run: |
           notebooks=$(echo '${{ steps.changed-files.outputs.all_changed_files }}' | tr ' ' '\n' | grep '^docs/core_docs/.*\.ipynb$' || true)
           if [ -n "$notebooks" ]; then
+            failed_notebooks=()
             for notebook in $notebooks; do
               absolute_path="$GITHUB_WORKSPACE/$notebook"
+              set +e
               yarn workspace @langchain/scripts notebook_validate "$absolute_path"
+              if [ $? -ne 0 ]; then
+                failed_notebooks+=("$notebook")
+              fi
+              set -e
             done
+            if [ ${#failed_notebooks[@]} -ne 0 ]; then
+              echo "The following notebooks failed validation:"
+              printf '%s\n' "${failed_notebooks[@]}"
+              exit 1
+            fi
           else
             echo "No notebooks in docs/core_docs to validate."
           fi

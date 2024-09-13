@@ -76,6 +76,12 @@ export abstract class GoogleBaseLLM<AuthOptions>
     return "GoogleLLM";
   }
 
+  get lc_secrets(): { [key: string]: string } | undefined {
+    return {
+      authOptions: "GOOGLE_AUTH_OPTIONS",
+    };
+  }
+
   originalFields?: GoogleBaseLLMInput<AuthOptions>;
 
   lc_serializable = true;
