@@ -222,6 +222,10 @@ llms/aleph_alpha.cjs
 llms/aleph_alpha.js
 llms/aleph_alpha.d.ts
 llms/aleph_alpha.d.cts
+llms/arcjet.cjs
+llms/arcjet.js
+llms/arcjet.d.ts
+llms/arcjet.d.cts
 llms/bedrock.cjs
 llms/bedrock.js
 llms/bedrock.d.ts
@@ -502,6 +506,10 @@ chat_models/alibaba_tongyi.cjs
 chat_models/alibaba_tongyi.js
 chat_models/alibaba_tongyi.d.ts
 chat_models/alibaba_tongyi.d.cts
+chat_models/arcjet.cjs
+chat_models/arcjet.js
+chat_models/arcjet.d.ts
+chat_models/arcjet.d.cts
 chat_models/baiduwenxin.cjs
 chat_models/baiduwenxin.js
 chat_models/baiduwenxin.d.ts
@@ -618,6 +626,10 @@ retrievers/amazon_knowledge_base.cjs
 retrievers/amazon_knowledge_base.js
 retrievers/amazon_knowledge_base.d.ts
 retrievers/amazon_knowledge_base.d.cts
+retrievers/bm25.cjs
+retrievers/bm25.js
+retrievers/bm25.d.ts
+retrievers/bm25.d.cts
 retrievers/chaindesk.cjs
 retrievers/chaindesk.js
 retrievers/chaindesk.d.ts

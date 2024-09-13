@@ -20,7 +20,6 @@ import {
 } from "@langchain/core/prompts";
 import { OpenAI } from "@langchain/openai";
 import { OpenAIEmbeddings } from "@langchain/openai";
-import { HNLoader } from "@langchain/community/document_loaders/web/hn";
 
 export interface Env {
   OPENAI_API_KEY?: string;
@@ -50,9 +49,6 @@ export default {
     // Intantiate a few things to test the exports
     new OpenAI(constructorParameters);
     const emb = new OpenAIEmbeddings(constructorParameters);
-
-    // Test a document loader
-    new HNLoader("https://news.ycombinator.com/item?id=28275939");
 
     // Test a chain + prompt + model
     const chain = new LLMChain({
