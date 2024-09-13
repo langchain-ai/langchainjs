@@ -112,6 +112,10 @@ export class MistralAI
     return "MistralAI";
   }
 
+  lc_namespace = ["langchain", "llms", "mistralai"];
+
+  lc_serializable = true;
+
   model = "codestral-latest";
 
   temperature = 0;
@@ -180,6 +184,12 @@ Either provide one via the "apiKey" field in the constructor, or set the "MISTRA
   get lc_secrets(): { [key: string]: string } | undefined {
     return {
       apiKey: "MISTRAL_API_KEY",
+    };
+  }
+
+  get lc_aliases(): { [key: string]: string } | undefined {
+    return {
+      apiKey: "mistral_api_key",
     };
   }
 

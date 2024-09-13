@@ -26,6 +26,8 @@ The interfaces for core components like LLMs, vector stores, retrievers and more
 No third party integrations are defined here.
 The dependencies are kept purposefully very lightweight.
 
+This package is a requirement of most others in the LangChain ecosystem, and must be installed separately.
+
 ### `@langchain/community`
 
 This package contains third party integrations that are maintained by the LangChain community.
@@ -60,7 +62,7 @@ A developer platform that lets you debug, test, evaluate, and monitor LLM applic
 If you want to work with high level abstractions, you should install the `langchain` package.
 
 ```bash npm2yarn
-npm i langchain
+npm i langchain @langchain/core
 ```
 
 If you want to work with specific integrations, you will need to install them separately.
@@ -98,11 +100,7 @@ support for retries/fallbacks, so you can get the added reliability without any 
 
 **Access intermediate results**
 For more complex chains it’s often very useful to access the results of intermediate steps even before the final output is produced. This can be used to let end-users know
-something is happening, or even just to debug your chain. You can stream intermediate results, and it’s available on every [LangServe](https://www.langchain.com/langserve/) server.
-
-**Input and output schemas**
-Input and output schemas give every LCEL chain schemas inferred from the structure of your chain. This can be used for validation of inputs and outputs,
-and is an integral part of LangServe.
+something is happening, or even just to debug your chain.
 
 [**Seamless LangSmith tracing**](https://docs.smith.langchain.com)
 As your chains get more and more complex, it becomes increasingly important to understand what exactly is happening at every step.
@@ -396,16 +394,16 @@ LangChain has many different types of output parsers. This is a list of output p
 
 **Description**: Our commentary on this output parser and when to use it.
 
-| Name                                                                                                              | Supports Streaming | Input Type                | Output Type                       | Description                                                                                                                                               |
-| ----------------------------------------------------------------------------------------------------------------- | ------------------ | ------------------------- | --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [JSON](https://v02.api.js.langchain.com/classes/langchain_core.output_parsers.JsonOutputParser.html)              | ✅                 | `string` \| `BaseMessage` | `Promise<T>`                      | Returns a JSON object as specified. You can specify a Zod schema and it will return JSON for that model.                                                  |
-| [XML](https://v02.api.js.langchain.com/classes/langchain_core.output_parsers.XMLOutputParser.html)                | ✅                 | `string` \| `BaseMessage` | `Promise<XMLResult>`              | Returns a object of tags. Use when XML output is needed. Use with models that are good at writing XML (like Anthropic's).                                 |
-| [CSV](https://v02.api.js.langchain.com/classes/langchain_core.output_parsers.CommaSeparatedListOutputParser.html) | ✅                 | `string` \| `BaseMessage` | `Array[string]`                   | Returns an array of comma separated values.                                                                                                               |
-| [Structured](https://v02.api.js.langchain.com/classes/langchain_core.output_parsers.StructuredOutputParser.html)  |                    | `string` \| `BaseMessage` | `Promise<TypeOf<T>>`              | Parse structured JSON from an LLM response.                                                                                                               |
-| [HTTP](https://v02.api.js.langchain.com/classes/langchain.output_parsers.HttpResponseOutputParser.html)           | ✅                 | `string`                  | `Promise<Uint8Array>`             | Parse an LLM response to then send over HTTP(s). Useful when invoking the LLM on the server/edge, and then sending the content/stream back to the client. |
-| [Bytes](https://v02.api.js.langchain.com/classes/langchain_core.output_parsers.BytesOutputParser.html)            | ✅                 | `string` \| `BaseMessage` | `Promise<Uint8Array>`             | Parse an LLM response to then send over HTTP(s). Useful for streaming LLM responses from the server/edge to the client.                                   |
-| [Datetime](https://v02.api.js.langchain.com/classes/langchain.output_parsers.DatetimeOutputParser.html)           |                    | `string`                  | `Promise<Date>`                   | Parses response into a `Date`.                                                                                                                            |
-| [Regex](https://v02.api.js.langchain.com/classes/langchain.output_parsers.RegexParser.html)                       |                    | `string`                  | `Promise<Record<string, string>>` | Parses the given text using the regex pattern and returns a object with the parsed output.                                                                |
+| Name                                                                                                          | Supports Streaming | Input Type                | Output Type                       | Description                                                                                                                                               |
+| ------------------------------------------------------------------------------------------------------------- | ------------------ | ------------------------- | --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [JSON](https://api.js.langchain.com/classes/langchain_core.output_parsers.JsonOutputParser.html)              | ✅                 | `string` \| `BaseMessage` | `Promise<T>`                      | Returns a JSON object as specified. You can specify a Zod schema and it will return JSON for that model.                                                  |
+| [XML](https://api.js.langchain.com/classes/langchain_core.output_parsers.XMLOutputParser.html)                | ✅                 | `string` \| `BaseMessage` | `Promise<XMLResult>`              | Returns a object of tags. Use when XML output is needed. Use with models that are good at writing XML (like Anthropic's).                                 |
+| [CSV](https://api.js.langchain.com/classes/langchain_core.output_parsers.CommaSeparatedListOutputParser.html) | ✅                 | `string` \| `BaseMessage` | `Array[string]`                   | Returns an array of comma separated values.                                                                                                               |
+| [Structured](https://api.js.langchain.com/classes/langchain_core.output_parsers.StructuredOutputParser.html)  |                    | `string` \| `BaseMessage` | `Promise<TypeOf<T>>`              | Parse structured JSON from an LLM response.                                                                                                               |
+| [HTTP](https://api.js.langchain.com/classes/langchain.output_parsers.HttpResponseOutputParser.html)           | ✅                 | `string`                  | `Promise<Uint8Array>`             | Parse an LLM response to then send over HTTP(s). Useful when invoking the LLM on the server/edge, and then sending the content/stream back to the client. |
+| [Bytes](https://api.js.langchain.com/classes/langchain_core.output_parsers.BytesOutputParser.html)            | ✅                 | `string` \| `BaseMessage` | `Promise<Uint8Array>`             | Parse an LLM response to then send over HTTP(s). Useful for streaming LLM responses from the server/edge to the client.                                   |
+| [Datetime](https://api.js.langchain.com/classes/langchain.output_parsers.DatetimeOutputParser.html)           |                    | `string`                  | `Promise<Date>`                   | Parses response into a `Date`.                                                                                                                            |
+| [Regex](https://api.js.langchain.com/classes/langchain.output_parsers.RegexParser.html)                       |                    | `string`                  | `Promise<Record<string, string>>` | Parses the given text using the regex pattern and returns a object with the parsed output.                                                                |
 
 For specifics on how to use output parsers, see the [relevant how-to guides here](/docs/how_to/#output-parsers).
 

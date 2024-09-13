@@ -55,7 +55,7 @@ export async function dispatchCustomEvent(
         "and explicitly pass in a config parameter.",
         `\n\nOr, if you are calling this from a custom tool, ensure you're using the "tool" helper constructor as documented here:`,
         "\n  |",
-        "\n  └-> https://js.langchain.com/v0.2/docs/how_to/custom_tools#tool-function",
+        "\n  └-> https://js.langchain.com/docs/how_to/custom_tools#tool-function",
         "\n",
       ].join(" ")
     );

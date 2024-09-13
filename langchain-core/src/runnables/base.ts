@@ -58,21 +58,14 @@ import { ToolCall } from "../messages/tool.js";
 
 export { type RunnableInterface, RunnableBatchOptions };
 
-// TODO: Make `options` just take `RunnableConfig`
 export type RunnableFunc<RunInput, RunOutput> = (
   input: RunInput,
-  options?:
-    | ({
-        /** @deprecated Use top-level config fields instead. */
-        config?: RunnableConfig;
-      } & RunnableConfig)
+  options:
+    | RunnableConfig
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     | Record<string, any>
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    | (Record<string, any> & {
-        /** @deprecated Use top-level config fields instead. */
-        config: RunnableConfig;
-      } & RunnableConfig)
+    | (Record<string, any> & RunnableConfig)
 ) => RunOutput | Promise<RunOutput>;
 
 export type RunnableMapLike<RunInput, RunOutput> = {
@@ -761,39 +754,39 @@ export abstract class Runnable<
    * **ATTENTION** This reference table is for the V2 version of the schema.
    *
    * ```md
-   * +----------------------+------------------+---------------------------------+-----------------------------------------------+-------------------------------------------------+
-   * | event                | name             | chunk                           | input                                         | output                                          |
-   * +======================+==================+=================================+===============================================+=================================================+
-   * | on_chat_model_start  | [model name]     |                                 | {"messages": [[SystemMessage, HumanMessage]]} |                                                 |
-   * +----------------------+------------------+---------------------------------+-----------------------------------------------+-------------------------------------------------+
-   * | on_chat_model_stream | [model name]     | AIMessageChunk(content="hello") |                                               |                                                 |
-   * +----------------------+------------------+---------------------------------+-----------------------------------------------+-------------------------------------------------+
-   * | on_chat_model_end    | [model name]     |                                 | {"messages": [[SystemMessage, HumanMessage]]} | AIMessageChunk(content="hello world")           |
-   * +----------------------+------------------+---------------------------------+-----------------------------------------------+-------------------------------------------------+
-   * | on_llm_start         | [model name]     |                                 | {'input': 'hello'}                            |                                                 |
-   * +----------------------+------------------+---------------------------------+-----------------------------------------------+-------------------------------------------------+
-   * | on_llm_stream        | [model name]     | 'Hello'                         |                                               |                                                 |
-   * +----------------------+------------------+---------------------------------+-----------------------------------------------+-------------------------------------------------+
-   * | on_llm_end           | [model name]     |                                 | 'Hello human!'                                |                                                 |
-   * +----------------------+------------------+---------------------------------+-----------------------------------------------+-------------------------------------------------+
-   * | on_chain_start       | some_runnable    |                                 |                                               |                                                 |
-   * +----------------------+------------------+---------------------------------+-----------------------------------------------+-------------------------------------------------+
-   * | on_chain_stream      | some_runnable    | "hello world!, goodbye world!"  |                                               |                                                 |
-   * +----------------------+------------------+---------------------------------+-----------------------------------------------+-------------------------------------------------+
-   * | on_chain_end         | some_runnable    |                                 | [Document(...)]                               | "hello world!, goodbye world!"                  |
-   * +----------------------+------------------+---------------------------------+-----------------------------------------------+-------------------------------------------------+
-   * | on_tool_start        | some_tool        |                                 | {"x": 1, "y": "2"}                            |                                                 |
-   * +----------------------+------------------+---------------------------------+-----------------------------------------------+-------------------------------------------------+
-   * | on_tool_end          | some_tool        |                                 |                                               | {"x": 1, "y": "2"}                              |
-   * +----------------------+------------------+---------------------------------+-----------------------------------------------+-------------------------------------------------+
-   * | on_retriever_start   | [retriever name] |                                 | {"query": "hello"}                            |                                                 |
-   * +----------------------+------------------+---------------------------------+-----------------------------------------------+-------------------------------------------------+
-   * | on_retriever_end     | [retriever name] |                                 | {"query": "hello"}                            | [Document(...), ..]                             |
-   * +----------------------+------------------+---------------------------------+-----------------------------------------------+-------------------------------------------------+
-   * | on_prompt_start      | [template_name]  |                                 | {"question": "hello"}                         |                                                 |
-   * +----------------------+------------------+---------------------------------+-----------------------------------------------+-------------------------------------------------+
-   * | on_prompt_end        | [template_name]  |                                 | {"question": "hello"}                         | ChatPromptValue(messages: [SystemMessage, ...]) |
-   * +----------------------+------------------+---------------------------------+-----------------------------------------------+-------------------------------------------------+
+   * +----------------------+-----------------------------+------------------------------------------+
+   * | event                | input                       | output/chunk                             |
+   * +======================+=============================+==========================================+
+   * | on_chat_model_start  | {"messages": BaseMessage[]} |                                          |
+   * +----------------------+-----------------------------+------------------------------------------+
+   * | on_chat_model_stream |                             | AIMessageChunk("hello")                  |
+   * +----------------------+-----------------------------+------------------------------------------+
+   * | on_chat_model_end    | {"messages": BaseMessage[]} | AIMessageChunk("hello world")            |
+   * +----------------------+-----------------------------+------------------------------------------+
+   * | on_llm_start         | {'input': 'hello'}          |                                          |
+   * +----------------------+-----------------------------+------------------------------------------+
+   * | on_llm_stream        |                             | 'Hello'                                  |
+   * +----------------------+-----------------------------+------------------------------------------+
+   * | on_llm_end           | 'Hello human!'              |                                          |
+   * +----------------------+-----------------------------+------------------------------------------+
+   * | on_chain_start       |                             |                                          |
+   * +----------------------+-----------------------------+------------------------------------------+
+   * | on_chain_stream      |                             | "hello world!"                           |
+   * +----------------------+-----------------------------+------------------------------------------+
+   * | on_chain_end         | [Document(...)]             | "hello world!, goodbye world!"           |
+   * +----------------------+-----------------------------+------------------------------------------+
+   * | on_tool_start        | {"x": 1, "y": "2"}          |                                          |
+   * +----------------------+-----------------------------+------------------------------------------+
+   * | on_tool_end          |                             | {"x": 1, "y": "2"}                       |
+   * +----------------------+-----------------------------+------------------------------------------+
+   * | on_retriever_start   | {"query": "hello"}          |                                          |
+   * +----------------------+-----------------------------+------------------------------------------+
+   * | on_retriever_end     | {"query": "hello"}          | [Document(...), ..]                      |
+   * +----------------------+-----------------------------+------------------------------------------+
+   * | on_prompt_start      | {"question": "hello"}       |                                          |
+   * +----------------------+-----------------------------+------------------------------------------+
+   * | on_prompt_end        | {"question": "hello"}       | ChatPromptValue(messages: BaseMessage[]) |
+   * +----------------------+-----------------------------+------------------------------------------+
    * ```
    *
    * The "on_chain_*" events are the default for Runnables that don't fit one of the above categories.
@@ -805,13 +798,13 @@ export abstract class Runnable<
    * A custom event has following format:
    *
    * ```md
-   * +-----------+------+-----------------------------------------------------------------------------------------------------------+
-   * | Attribute | Type | Description                                                                                               |
-   * +===========+======+===========================================================================================================+
-   * | name      | str  | A user defined name for the event.                                                                        |
-   * +-----------+------+-----------------------------------------------------------------------------------------------------------+
-   * | data      | Any  | The data associated with the event. This can be anything, though we suggest making it JSON serializable.  |
-   * +-----------+------+-----------------------------------------------------------------------------------------------------------+
+   * +-----------+------+------------------------------------------------------------+
+   * | Attribute | Type | Description                                                |
+   * +===========+======+============================================================+
+   * | name      | str  | A user defined name for the event.                         |
+   * +-----------+------+------------------------------------------------------------+
+   * | data      | Any  | The data associated with the event. This can be anything.  |
+   * +-----------+------+------------------------------------------------------------+
    * ```
    *
    * Here's an example:
@@ -1329,7 +1322,7 @@ export class RunnableBinding<
 
   async *transform(
     generator: AsyncGenerator<RunInput>,
-    options: Partial<CallOptions>
+    options?: Partial<CallOptions>
   ): AsyncGenerator<RunOutput> {
     yield* this.bound.transform(
       generator,
@@ -1473,7 +1466,7 @@ export class RunnableEach<
     inputs: RunInputItem[],
     config?: Partial<CallOptions>
   ): Promise<RunOutputItem[]> {
-    return this._callWithConfig(this._invoke, inputs, config);
+    return this._callWithConfig(this._invoke.bind(this), inputs, config);
   }
 
   /**
@@ -1594,7 +1587,7 @@ export class RunnableRetry<
    * @returns A promise that resolves to the output of the runnable.
    */
   async invoke(input: RunInput, config?: CallOptions): Promise<RunOutput> {
-    return this._callWithConfig(this._invoke, input, config);
+    return this._callWithConfig(this._invoke.bind(this), input, config);
   }
 
   async _batch<ReturnExceptions extends boolean = false>(
@@ -2400,7 +2393,7 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
     input: RunInput,
     options?: Partial<RunnableConfig>
   ): Promise<RunOutput> {
-    return this._callWithConfig(this._invoke, input, options);
+    return this._callWithConfig(this._invoke.bind(this), input, options);
   }
 
   async *_transform(

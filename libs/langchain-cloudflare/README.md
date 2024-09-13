@@ -5,7 +5,7 @@ This package contains the LangChain.js integrations for Cloudflare through their
 ## Installation
 
 ```bash npm2yarn
-npm install @langchain/cloudflare
+npm install @langchain/cloudflare @langchain/core
 ```
 
 ## Development
