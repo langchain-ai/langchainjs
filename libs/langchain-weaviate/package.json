@@ -36,7 +36,7 @@
     "weaviate-ts-client": "^2.0.0"
   },
   "peerDependencies": {
-    "@langchain/core": ">=0.2.21 <0.4.0 || 0.3.0-rc.0"
+    "@langchain/core": ">=0.2.21 <0.4.0"
   },
   "devDependencies": {
     "@jest/globals": "^29.5.0",

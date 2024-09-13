@@ -462,7 +462,7 @@
     "@langchain/aws": "*",
     "@langchain/cohere": "*",
     "@langchain/community": "*",
-    "@langchain/core": ">=0.2.21 <0.4.0 || 0.3.0-rc.0",
+    "@langchain/core": ">=0.2.21 <0.4.0",
     "@langchain/google-genai": "*",
     "@langchain/google-vertexai": "*",
     "@langchain/groq": "*",
@@ -519,8 +519,8 @@
     }
   },
   "dependencies": {
-    "@langchain/openai": ">=0.1.0 <0.3.0 || 0.3.0-rc.0",
-    "@langchain/textsplitters": ">=0.0.0 <0.2.0 || 0.1.0-rc.0",
+    "@langchain/openai": ">=0.1.0 <0.4.0",
+    "@langchain/textsplitters": ">=0.0.0 <0.2.0",
     "js-tiktoken": "^1.0.12",
     "js-yaml": "^4.1.0",
     "jsonpointer": "^5.0.1",
