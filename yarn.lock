@@ -12841,17 +12841,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/textsplitters@npm:>=0.0.0 <0.2.0, @langchain/textsplitters@npm:~0.0.0":
-  version: 0.0.3
-  resolution: "@langchain/textsplitters@npm:0.0.3"
-  dependencies:
-    "@langchain/core": ">0.2.0 <0.3.0"
-    js-tiktoken: ^1.0.12
-  checksum: f0b32d65c863a280ce7104bff4d367734b8f76f2ec42b741fb690fbc20737bb4a3a412b82d8ba308a524441b6084ecd59cf61c3ce13cbb9639fbd02241c341d1
-  languageName: node
-  linkType: hard
-
-"@langchain/textsplitters@workspace:*, @langchain/textsplitters@workspace:libs/langchain-textsplitters":
+"@langchain/textsplitters@>=0.0.0 <0.2.0, @langchain/textsplitters@workspace:*, @langchain/textsplitters@workspace:libs/langchain-textsplitters":
   version: 0.0.0-use.local
   resolution: "@langchain/textsplitters@workspace:libs/langchain-textsplitters"
   dependencies:
@@ -12883,6 +12873,16 @@ __metadata:
     "@langchain/core": ">=0.2.21 <0.4.0"
   languageName: unknown
   linkType: soft
+
+"@langchain/textsplitters@npm:~0.0.0":
+  version: 0.0.3
+  resolution: "@langchain/textsplitters@npm:0.0.3"
+  dependencies:
+    "@langchain/core": ">0.2.0 <0.3.0"
+    js-tiktoken: ^1.0.12
+  checksum: f0b32d65c863a280ce7104bff4d367734b8f76f2ec42b741fb690fbc20737bb4a3a412b82d8ba308a524441b6084ecd59cf61c3ce13cbb9639fbd02241c341d1
+  languageName: node
+  linkType: hard
 
 "@langchain/weaviate@workspace:*, @langchain/weaviate@workspace:libs/langchain-weaviate":
   version: 0.0.0-use.local
