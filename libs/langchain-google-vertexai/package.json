@@ -32,11 +32,14 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@langchain/core": ">=0.2.21 <0.3.0",
     "@langchain/google-gauth": "~0.0.27"
+  },
+  "peerDependencies": {
+    "@langchain/core": ">=0.2.21 <0.4.0"
   },
   "devDependencies": {
     "@jest/globals": "^29.5.0",
+    "@langchain/core": "workspace:*",
     "@langchain/google-common": "^0.0.27",
     "@langchain/scripts": ">=0.1.0 <0.2.0",
     "@langchain/standard-tests": "0.0.0",

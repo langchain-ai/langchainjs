@@ -746,6 +746,8 @@ export class ChatMistralAI<
     return "ChatMistralAI";
   }
 
+  lc_namespace = ["langchain", "chat_models", "mistralai"];
+
   modelName = "mistral-small-latest";
 
   model = "mistral-small-latest";

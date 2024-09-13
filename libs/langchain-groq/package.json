@@ -35,14 +35,17 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@langchain/core": ">=0.2.21 <0.3.0",
     "@langchain/openai": "~0.2.6",
     "groq-sdk": "^0.5.0",
     "zod": "^3.22.4",
     "zod-to-json-schema": "^3.22.5"
   },
+  "peerDependencies": {
+    "@langchain/core": ">=0.2.21 <0.4.0"
+  },
   "devDependencies": {
     "@jest/globals": "^29.5.0",
+    "@langchain/core": "workspace:*",
     "@langchain/openai": "workspace:^",
     "@langchain/scripts": ">=0.1.0 <0.2.0",
     "@langchain/standard-tests": "0.0.0",

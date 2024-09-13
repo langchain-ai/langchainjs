@@ -11,7 +11,7 @@ This guide assumes familiarity with the following concepts:
 
 :::
 
-Vector stores can be converted into retrievers using the [`.asRetriever()`](https://v02.api.js.langchain.com/classes/langchain_core.vectorstores.VectorStore.html#asRetriever) method, which allows you to more easily compose them in chains.
+Vector stores can be converted into retrievers using the [`.asRetriever()`](https://api.js.langchain.com/classes/langchain_core.vectorstores.VectorStore.html#asRetriever) method, which allows you to more easily compose them in chains.
 
 Below, we show a retrieval-augmented generation (RAG) chain that performs question answering over documents using the following steps:
 
@@ -30,7 +30,7 @@ import IntegrationInstallTooltip from "@mdx_components/integration_install_toolt
 <IntegrationInstallTooltip></IntegrationInstallTooltip>
 
 ```bash npm2yarn
-npm install @langchain/openai
+npm install @langchain/openai @langchain/core
 ```
 
 You can download the `state_of_the_union.txt` file [here](https://github.com/langchain-ai/langchain/blob/master/docs/docs/modules/state_of_the_union.txt).

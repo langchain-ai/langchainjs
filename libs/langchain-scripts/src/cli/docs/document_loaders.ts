@@ -131,7 +131,7 @@ export async function fillDocLoaderIntegrationDocTemplate(fields: {
   className: string;
 }) {
   const sidebarLabel = fields.className.replace("Loader", "");
-  const pyDocUrl = `https://python.langchain.com/v0.2/docs/integrations/document_loaders/${sidebarLabel.toLowerCase()}/`;
+  const pyDocUrl = `https://python.langchain.com/docs/integrations/document_loaders/${sidebarLabel.toLowerCase()}/`;
   let envVarName = `${sidebarLabel.toUpperCase()}_API_KEY`;
   const extraFields = await promptExtraFields({
     envVarGuess: envVarName,

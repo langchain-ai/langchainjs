@@ -10,6 +10,8 @@ export interface VertexAIInput extends GoogleLLMInput {}
  * the "@langchain/google-gauth" package for auth.
  */
 export class VertexAI extends GoogleLLM {
+  lc_namespace = ["langchain", "llms", "vertexai"];
+
   static lc_name() {
     return "VertexAI";
   }

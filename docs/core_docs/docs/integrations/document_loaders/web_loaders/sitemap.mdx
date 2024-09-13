@@ -1,13 +1,13 @@
 # Sitemap Loader
 
-This notebook goes over how to use the [`SitemapLoader`](https://v02.api.js.langchain.com/classes/langchain.document_loaders_web_sitemap.SitemapLoader.html) class to load sitemaps into `Document`s.
+This notebook goes over how to use the [`SitemapLoader`](https://api.js.langchain.com/classes/_langchain_community.document_loaders_web_sitemap.SitemapLoader.html) class to load sitemaps into `Document`s.
 
 ## Setup
 
 First, we need to install the `langchain` package:
 
 ```bash npm2yarn
-npm install --save langchain
+npm install @langchain/community @langchain/core
 ```
 
 The URL passed in must either contain the `.xml` path to the sitemap, or a default `/sitemap.xml` will be appended to the URL.
