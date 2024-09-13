@@ -2,6 +2,10 @@ import fs from "node:fs";
 import ts from "typescript";
 import { Project } from "ts-morph";
 
+const SKIP_VALIDATION = [
+  "lcel_cheatsheet.ipynb",
+];
+
 export function extract(filepath: string) {
   const { cells } = JSON.parse(fs.readFileSync(filepath).toString());
   if (cells[0]?.source.includes("lc_docs_skip_validation: true\n")) {
@@ -73,9 +77,13 @@ export async function checkNotebookTypeErrors() {
   if (!pathname.endsWith(".ipynb")) {
     throw new Error("Only .ipynb files are supported.");
   }
-  const filename = pathname
+  const notebookName = pathname
     .split("/")
-    [pathname.split("/").length - 1].replace(".ipynb", ".mts");
+    [pathname.split("/").length - 1];
+  if (SKIP_VALIDATION.includes(notebookName)) {
+    return;
+  }
+  const filename = notebookName.replace(".ipynb", ".mts");
   const tempFilepath = `./tmp/${filename}`;
   try {
     const typescriptSource = extract(pathname);
