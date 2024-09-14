@@ -72,8 +72,6 @@ export const config = {
     "embeddings/cohere": "embeddings/cohere",
     "embeddings/deepinfra": "embeddings/deepinfra",
     "embeddings/fireworks": "embeddings/fireworks",
-    "embeddings/googlepalm": "embeddings/googlepalm",
-    "embeddings/googlevertexai": "embeddings/googlevertexai",
     "embeddings/gradient_ai": "embeddings/gradient_ai",
     "embeddings/hf": "embeddings/hf",
     "embeddings/hf_transformers": "embeddings/hf_transformers",
@@ -99,9 +97,6 @@ export const config = {
     "llms/deepinfra": "llms/deepinfra",
     "llms/fireworks": "llms/fireworks",
     "llms/friendli": "llms/friendli",
-    "llms/googlepalm": "llms/googlepalm",
-    "llms/googlevertexai": "llms/googlevertexai/index",
-    "llms/googlevertexai/web": "llms/googlevertexai/web",
     "llms/gradient_ai": "llms/gradient_ai",
     "llms/hf": "llms/hf",
     "llms/llama_cpp": "llms/llama_cpp",
@@ -172,9 +167,6 @@ export const config = {
     "chat_models/deepinfra": "chat_models/deepinfra",
     "chat_models/fireworks": "chat_models/fireworks",
     "chat_models/friendli": "chat_models/friendli",
-    "chat_models/googlevertexai": "chat_models/googlevertexai/index",
-    "chat_models/googlevertexai/web": "chat_models/googlevertexai/web",
-    "chat_models/googlepalm": "chat_models/googlepalm",
     "chat_models/iflytek_xinghuo": "chat_models/iflytek_xinghuo/index",
     "chat_models/iflytek_xinghuo/web": "chat_models/iflytek_xinghuo/web",
     "chat_models/llama_cpp": "chat_models/llama_cpp",
@@ -322,10 +314,9 @@ export const config = {
       "experimental/hubs/makersuite/googlemakersuitehub",
     "experimental/chat_models/ollama_functions": "experimental/chat_models/ollama_functions",
     "experimental/llms/chrome_ai": "experimental/llms/chrome_ai",
+    "experimental/tools/pyinterpreter": "experimental/tools/pyinterpreter",
     // chains
-    "chains/graph_qa/cypher": "chains/graph_qa/cypher",
-    // langgraph checkpointers
-    "langgraph/checkpointers/vercel_kv": "langgraph/checkpointers/vercel_kv"
+    "chains/graph_qa/cypher": "chains/graph_qa/cypher"
   },
   requiresOptionalDependency: [
     "tools/aws_sfn",
@@ -341,8 +332,6 @@ export const config = {
     "embeddings/bedrock",
     "embeddings/cloudflare_workersai",
     "embeddings/cohere",
-    "embeddings/googlevertexai",
-    "embeddings/googlepalm",
     "embeddings/tensorflow",
     "embeddings/hf",
     "embeddings/hf_transformers",
@@ -356,9 +345,6 @@ export const config = {
     "llms/load",
     "llms/arcjet",
     "llms/cohere",
-    "llms/googlevertexai",
-    "llms/googlevertexai/web",
-    "llms/googlepalm",
     "llms/gradient_ai",
     "llms/hf",
     "llms/raycast",
@@ -417,9 +403,6 @@ export const config = {
     "chat_models/arcjet",
     "chat_models/bedrock",
     "chat_models/bedrock/web",
-    "chat_models/googlevertexai",
-    "chat_models/googlevertexai/web",
-    "chat_models/googlepalm",
     "chat_models/llama_cpp",
     "chat_models/portkey",
     "chat_models/premai",
@@ -524,6 +507,7 @@ export const config = {
     // experimental
     "experimental/multimodal_embeddings/googlevertexai",
     "experimental/hubs/makersuite/googlemakersuitehub",
+    "experimental/tools/pyinterpreter",
     // chains
     "chains/graph_qa/cypher",
     // langgraph checkpointers

@@ -76,33 +76,18 @@ export interface FunctionCall {
   name: string;
 }
 
-/**
- * @deprecated
- * Import as "OpenAIToolCall" instead
- */
-export interface ToolCall {
-  /**
-   * The ID of the tool call.
-   */
-  id: string;
-
-  /**
-   * The function that the model called.
-   */
-  function: FunctionCall;
-
-  /**
-   * The type of the tool. Currently, only `function` is supported.
-   */
-  type: "function";
-}
-
 export type BaseMessageFields = {
   content: MessageContent;
   name?: string;
   additional_kwargs?: {
+    /**
+     * @deprecated Use "tool_calls" field on AIMessages instead
+     */
     function_call?: FunctionCall;
-    tool_calls?: ToolCall[];
+    /**
+     * @deprecated Use "tool_calls" field on AIMessages instead
+     */
+    tool_calls?: OpenAIToolCall[];
     [key: string]: unknown;
   };
   /** Response metadata. For example: response headers, logprobs, token counts. */
@@ -318,9 +303,26 @@ export abstract class BaseMessage
   }
 }
 
-// TODO: Deprecate when SDK typing is updated
-export type OpenAIToolCall = ToolCall & {
-  index: number;
+/**
+ * @deprecated Use "tool_calls" field on AIMessages instead
+ */
+export type OpenAIToolCall = {
+  /**
+   * The ID of the tool call.
+   */
+  id: string;
+
+  /**
+   * The function that the model called.
+   */
+  function: FunctionCall;
+
+  /**
+   * The type of the tool. Currently, only `function` is supported.
+   */
+  type: "function";
+
+  index?: number;
 };
 
 export function isOpenAIToolCallArray(
@@ -464,10 +466,6 @@ export function _isMessageFieldWithRole(
 
 export type BaseMessageLike =
   | BaseMessage
-  | ({
-      type: MessageType | "user" | "assistant" | "placeholder";
-    } & BaseMessageFields &
-      Record<string, unknown>)
   | MessageFieldWithRole
   | [
       StringWithAutocomplete<
@@ -475,7 +473,14 @@ export type BaseMessageLike =
       >,
       MessageContent
     ]
-  | string;
+  | string
+  /**
+   * @deprecated Specifying "type" is deprecated and will be removed in 0.4.0.
+   */
+  | ({
+      type: MessageType | "user" | "assistant" | "placeholder";
+    } & BaseMessageFields &
+      Record<string, unknown>);
 
 export function isBaseMessage(
   messageLike?: unknown

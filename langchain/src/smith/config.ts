@@ -53,11 +53,11 @@ export type DynamicRunEvaluatorParams<
 export type RunEvaluatorLike =
   | ((
       props: DynamicRunEvaluatorParams,
-      options?: { config?: RunnableConfig }
+      options: RunnableConfig
     ) => Promise<EvaluationResult>)
   | ((
       props: DynamicRunEvaluatorParams,
-      options?: { config?: RunnableConfig }
+      options: RunnableConfig
     ) => EvaluationResult);
 
 export function isOffTheShelfEvaluator<

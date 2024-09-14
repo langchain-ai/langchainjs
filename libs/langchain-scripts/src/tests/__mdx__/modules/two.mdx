@@ -65,10 +65,10 @@ If you are using `yarn`:
   },
   "dependencies": {
     "@langchain/google-genai": "^0.0.2",
-    "langchain": "0.0.207"
+    "@langchain/core": "^0.3.0"
   },
   "resolutions": {
-    "@langchain/core": "0.1.5"
+    "@langchain/core": "0.3.0"
   }
 }
 ```
@@ -85,10 +85,10 @@ Or for `npm`:
   },
   "dependencies": {
     "@langchain/google-genai": "^0.0.2",
-    "langchain": "0.0.207"
+    "@langchain/core": "^0.3.0"
   },
   "overrides": {
-    "@langchain/core": "0.1.5"
+    "@langchain/core": "0.3.0"
   }
 }
 ```
@@ -106,10 +106,10 @@ Or for `pnpm`:
   "dependencies": {
     "@langchain/google-genai": "^0.0.2",
     "langchain": "0.0.207"
-  },
+    "@langchain/core": "^0.3.0"
   "pnpm": {
     "overrides": {
-      "@langchain/core": "0.1.5"
+      "@langchain/core": "0.3.0"
     }
   }
 }
@@ -121,7 +121,7 @@ The [@langchain/community](https://www.npmjs.com/package/@langchain/community) p
 It is automatically installed along with `langchain`, but can also be used separately with just `@langchain/core`. Install with:
 
 ```bash npm2yarn
-npm install @langchain/community
+npm install @langchain/community @langchain/core
 ```
 
 ### @langchain/core
@@ -144,11 +144,11 @@ import IntegrationInstallTooltip from "@mdx_components/integration_install_toolt
 LangChain provides an ESM build targeting Node.js environments. You can import it using the following syntax:
 
 ```bash npm2yarn
-npm install @langchain/openai
+npm install @langchain/openai @langchain/core
 ```
 
 ```typescript
-import { OpenAI } from "@langchain/openai";
+import { ChatOpenAI } from "@langchain/openai";
 ```
 
 If you are using TypeScript in an ESM project we suggest updating your `tsconfig.json` to include the following:
@@ -168,7 +168,7 @@ If you are using TypeScript in an ESM project we suggest updating your `tsconfig
 LangChain provides a CommonJS build targeting Node.js environments. You can import it using the following syntax:
 
 ```typescript
-const { OpenAI } = require("@langchain/openai");
+const { ChatOpenAI } = require("@langchain/openai");
 ```
 
 ### Cloudflare Workers
@@ -176,7 +176,7 @@ const { OpenAI } = require("@langchain/openai");
 LangChain can be used in Cloudflare Workers. You can import it using the following syntax:
 
 ```typescript
-import { OpenAI } from "@langchain/openai";
+import { ChatOpenAI } from "@langchain/openai";
 ```
 
 ### Vercel / Next.js
@@ -184,7 +184,7 @@ import { OpenAI } from "@langchain/openai";
 LangChain can be used in Vercel / Next.js. We support using LangChain in frontend components, in Serverless functions and in Edge functions. You can import it using the following syntax:
 
 ```typescript
-import { OpenAI } from "@langchain/openai";
+import { ChatOpenAI } from "@langchain/openai";
 ```
 
 ### Deno / Supabase Edge Functions
@@ -192,13 +192,13 @@ import { OpenAI } from "@langchain/openai";
 LangChain can be used in Deno / Supabase Edge Functions. You can import it using the following syntax:
 
 ```typescript
-import { OpenAI } from "https://esm.sh/@langchain/openai";
+import { ChatOpenAI } from "https://esm.sh/@langchain/openai";
 ```
 
 or
 
 ```typescript
-import { OpenAI } from "npm:@langchain/openai";
+import { ChatOpenAI } from "npm:@langchain/openai";
 ```
 
 We recommend looking at our [Supabase Template](https://github.com/langchain-ai/langchain-template-supabase) for an example of how to use LangChain in Supabase Edge Functions.
@@ -208,7 +208,7 @@ We recommend looking at our [Supabase Template](https://github.com/langchain-ai/
 LangChain can be used in the browser. In our CI we test bundling LangChain with Webpack and Vite, but other bundlers should work too. You can import it using the following syntax:
 
 ```typescript
-import { OpenAI } from "@langchain/openai";
+import { ChatOpenAI } from "@langchain/openai";
 ```
 
 ## Unsupported: Node.js 16

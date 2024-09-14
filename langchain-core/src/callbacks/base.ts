@@ -350,7 +350,7 @@ export abstract class BaseCallbackHandler
   raiseError = false;
 
   awaitHandlers =
-    getEnvironmentVariable("LANGCHAIN_CALLBACKS_BACKGROUND") !== "true";
+    getEnvironmentVariable("LANGCHAIN_CALLBACKS_BACKGROUND") === "false";
 
   constructor(input?: BaseCallbackHandlerInput) {
     super();

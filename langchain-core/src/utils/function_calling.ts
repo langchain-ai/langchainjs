@@ -77,7 +77,8 @@ export function convertToOpenAITool(
   }
 
   if (fieldsCopy?.strict !== undefined) {
-    toolDef.function.strict = fieldsCopy.strict;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (toolDef.function as any).strict = fieldsCopy.strict;
   }
 
   return toolDef;
