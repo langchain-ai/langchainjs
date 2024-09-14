@@ -316,9 +316,7 @@ export const config = {
     "experimental/llms/chrome_ai": "experimental/llms/chrome_ai",
     "experimental/tools/pyinterpreter": "experimental/tools/pyinterpreter",
     // chains
-    "chains/graph_qa/cypher": "chains/graph_qa/cypher",
-    // langgraph checkpointers
-    "langgraph/checkpointers/vercel_kv": "langgraph/checkpointers/vercel_kv"
+    "chains/graph_qa/cypher": "chains/graph_qa/cypher"
   },
   requiresOptionalDependency: [
     "tools/aws_sfn",
