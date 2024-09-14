@@ -1,6 +1,6 @@
 {
   "name": "@langchain/baidu-qianfan",
-  "version": "0.0.4",
+  "version": "0.1.0",
   "description": "Baidu Qianfan integration for LangChain.js",
   "type": "module",
   "engines": {
@@ -32,7 +32,7 @@
   "license": "MIT",
   "dependencies": {
     "@baiducloud/qianfan": "^0.1.6",
-    "@langchain/openai": "~0.1.0",
+    "@langchain/openai": "~0.3.0",
     "zod": "^3.22.4",
     "zod-to-json-schema": "^3.22.5"
   },
