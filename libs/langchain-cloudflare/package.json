@@ -42,7 +42,6 @@
     "@cloudflare/workers-types": "^4.20240909.0",
     "@jest/globals": "^29.5.0",
     "@langchain/core": "workspace:*",
-    "@langchain/langgraph": "~0.0.31",
     "@langchain/scripts": ">=0.1.0 <0.2.0",
     "@langchain/standard-tests": "0.0.0",
     "@swc/core": "^1.3.90",
@@ -68,13 +67,7 @@
     "typescript": "<5.2.0"
   },
   "peerDependencies": {
-    "@langchain/core": ">=0.2.21 <0.4.0",
-    "@langchain/langgraph": "*"
-  },
-  "peerDependenciesMeta": {
-    "@langchain/langgraph": {
-      "optional": true
-    }
+    "@langchain/core": ">=0.2.21 <0.4.0"
   },
   "publishConfig": {
     "access": "public"
@@ -89,15 +82,6 @@
       "import": "./index.js",
       "require": "./index.cjs"
     },
-    "./langgraph/checkpointers": {
-      "types": {
-        "import": "./langgraph/checkpointers.d.ts",
-        "require": "./langgraph/checkpointers.d.cts",
-        "default": "./langgraph/checkpointers.d.ts"
-      },
-      "import": "./langgraph/checkpointers.js",
-      "require": "./langgraph/checkpointers.cjs"
-    },
     "./package.json": "./package.json"
   },
   "files": [
@@ -105,10 +89,6 @@
     "index.cjs",
     "index.js",
     "index.d.ts",
-    "index.d.cts",
-    "langgraph/checkpointers.cjs",
-    "langgraph/checkpointers.js",
-    "langgraph/checkpointers.d.ts",
-    "langgraph/checkpointers.d.cts"
+    "index.d.cts"
   ]
 }
