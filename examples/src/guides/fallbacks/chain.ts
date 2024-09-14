@@ -31,9 +31,7 @@ const badChain = chatPrompt.pipe(fakeOpenAIChatModel).pipe(outputParser);
 
 const goodChain = prompt.pipe(openAILLM).pipe(outputParser);
 
-const chain = badChain.withFallbacks({
-  fallbacks: [goodChain],
-});
+const chain = badChain.withFallbacks([goodChain]);
 
 const result = await chain.invoke({
   animal: "dragon",

@@ -26,7 +26,6 @@ export interface SecretMap {
   GOOGLE_PALM_API_KEY?: string;
   GOOGLE_PLACES_API_KEY?: string;
   GOOGLE_ROUTES_API_KEY?: string;
-  GOOGLE_VERTEX_AI_WEB_CREDENTIALS?: string;
   GRADIENT_ACCESS_TOKEN?: string;
   GRADIENT_WORKSPACE_ID?: string;
   HUGGINGFACEHUB_API_KEY?: string;

@@ -1,6 +1,9 @@
 import { BaseLLMOutputParser } from "@langchain/core/output_parsers";
 import type { ChatGeneration } from "@langchain/core/outputs";
 
+/**
+ * @deprecated Import from "@langchain/core/output_parsers/openai_tools"
+ */
 export type ParsedToolCall = {
   id?: string;
 
@@ -16,13 +19,16 @@ export type ParsedToolCall = {
   arguments: Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
 };
 
+/**
+ * @deprecated Import from "@langchain/core/output_parsers/openai_tools"
+ */
 export type JsonOutputToolsParserParams = {
   /** Whether to return the tool call id. */
   returnId?: boolean;
 };
 
 /**
- * Class for parsing the output of a tool-calling LLM into a JSON object.
+ * @deprecated Import from "@langchain/core/output_parsers/openai_tools"
  */
 export class JsonOutputToolsParser extends BaseLLMOutputParser<
   ParsedToolCall[]
@@ -98,10 +104,8 @@ export type JsonOutputKeyToolsParserParams = {
 };
 
 /**
- * Class for parsing the output of a tool-calling LLM into a JSON object if you are
- * expecting only a single tool to be called.
+ * @deprecated Import from "@langchain/core/output_parsers/openai_tools"
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export class JsonOutputKeyToolsParser extends BaseLLMOutputParser<any> {
   static lc_name() {
     return "JsonOutputKeyToolsParser";

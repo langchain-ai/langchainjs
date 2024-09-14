@@ -1,3 +1,4 @@
+import { ChatMistralAI } from "../chat_models.js";
 import {
   _isValidMistralToolCallId,
   _convertToolCallIdToMistralCompatible,
@@ -26,4 +27,13 @@ describe("Mistral Tool Call ID Conversion", () => {
       expect(_isValidMistralToolCallId(convertedId)).toBe(true);
     }
   });
+});
+
+test("Serialization", () => {
+  const model = new ChatMistralAI({
+    apiKey: "foo",
+  });
+  expect(JSON.stringify(model)).toEqual(
+    `{"lc":1,"type":"constructor","id":["langchain","chat_models","mistralai","ChatMistralAI"],"kwargs":{"mistral_api_key":{"lc":1,"type":"secret","id":["MISTRAL_API_KEY"]}}}`
+  );
 });

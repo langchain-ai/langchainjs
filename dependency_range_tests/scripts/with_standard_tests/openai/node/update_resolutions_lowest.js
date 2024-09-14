@@ -5,18 +5,18 @@ const communityPackageJsonPath = "/app/monorepo/libs/langchain-openai/package.js
 
 const currentPackageJson = JSON.parse(fs.readFileSync(communityPackageJsonPath));
 
-if (currentPackageJson.dependencies["@langchain/core"] && !currentPackageJson.dependencies["@langchain/core"].includes("rc")) {
+if (currentPackageJson.peerDependencies["@langchain/core"] && !currentPackageJson.peerDependencies["@langchain/core"].includes("rc")) {
   const minVersion = semver.minVersion(
-    currentPackageJson.dependencies["@langchain/core"]
+    currentPackageJson.peerDependencies["@langchain/core"]
   ).version;
-  currentPackageJson.overrides = {
-    ...currentPackageJson.overrides,
+  currentPackageJson.peerDependencies = {
+    ...currentPackageJson.peerDependencies,
     "@langchain/core": minVersion,
   };
-  currentPackageJson.dependencies = {
-    ...currentPackageJson.dependencies,
-    "@langchain/core": minVersion,
-  };
+}
+
+if (currentPackageJson.devDependencies["@langchain/core"]) {
+  delete currentPackageJson.devDependencies["@langchain/core"];
 }
 
 fs.writeFileSync(communityPackageJsonPath, JSON.stringify(currentPackageJson, null, 2));

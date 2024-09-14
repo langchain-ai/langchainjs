@@ -3,7 +3,7 @@ import { fileURLToPath } from "node:url";
 import * as path from "path";
 
 import { describe, expect, test } from "@jest/globals";
-import { ChatGooglePaLM } from "../../../../chat_models/googlepalm.js";
+import { ChatGooglePaLM } from "../chat_models.js";
 import { MakerSuiteHub, MakerSuitePrompt } from "../googlemakersuitehub.js";
 
 describe("Google Maker Suite Hub", () => {
