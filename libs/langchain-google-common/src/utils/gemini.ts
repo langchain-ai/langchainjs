@@ -624,8 +624,13 @@ export function getGeminiAPI(config?: GeminiAPIConfig) {
     response: GoogleLLMResponse
   ): ChatGeneration[] {
     const parts = responseToParts(response);
+
+    if (parts.length === 0) {
+      return [];
+    }
+
     let ret = parts.map((part) => partToChatGeneration(part));
-    if (ret.every((item) => typeof item.message.content === "string") && ret.length > 0) {
+    if (ret.every((item) => typeof item.message.content === "string")) {
       const combinedContent = ret.map((item) => item.message.content).join("");
       const combinedText = ret.map((item) => item.text).join("");
       const toolCallChunks: ToolCallChunk[] | undefined = ret[
