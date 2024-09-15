@@ -12300,7 +12300,32 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/langgraph@npm:0.0.28, @langchain/langgraph@npm:^0.0.28":
+"@langchain/langgraph-checkpoint@npm:~0.0.6":
+  version: 0.0.6
+  resolution: "@langchain/langgraph-checkpoint@npm:0.0.6"
+  dependencies:
+    uuid: ^10.0.0
+  peerDependencies:
+    "@langchain/core": ">=0.2.31 <0.4.0"
+  checksum: 7303a0f92f6474757bc9484314f36566a0785d8167ead65483fdada2921447e153a24754629ee601a168d2a39b6cc6d0c57ec34d607e10225619b9d5d30c8a5a
+  languageName: node
+  linkType: hard
+
+"@langchain/langgraph@npm:0.2.3":
+  version: 0.2.3
+  resolution: "@langchain/langgraph@npm:0.2.3"
+  dependencies:
+    "@langchain/langgraph-checkpoint": ~0.0.6
+    double-ended-queue: ^2.1.0-0
+    uuid: ^10.0.0
+    zod: ^3.23.8
+  peerDependencies:
+    "@langchain/core": ">=0.2.31 <0.4.0"
+  checksum: 09d423228633f4bfee24b15e9f81eee57e96fecf9914f1e1c1f40f9436d120de912b8c987da356591c6eae0ee2bcf3759ab8e0ff762f87bc4f3f73e4098c12e9
+  languageName: node
+  linkType: hard
+
+"@langchain/langgraph@npm:^0.0.28":
   version: 0.0.28
   resolution: "@langchain/langgraph@npm:0.0.28"
   dependencies:
@@ -23523,7 +23548,7 @@ __metadata:
     "@docusaurus/preset-classic": 2.4.3
     "@docusaurus/remark-plugin-npm2yarn": 2.4.3
     "@docusaurus/theme-mermaid": 2.4.3
-    "@langchain/langgraph": 0.0.28
+    "@langchain/langgraph": 0.2.3
     "@langchain/scripts": "workspace:*"
     "@mdx-js/react": ^1.6.22
     "@microsoft/fetch-event-source": ^2.0.1
@@ -25295,6 +25320,13 @@ __metadata:
   version: 16.4.5
   resolution: "dotenv@npm:16.4.5"
   checksum: 301a12c3d44fd49888b74eb9ccf9f07a1f5df43f489e7fcb89647a2edcd84c42d6bc349dc8df099cd18f07c35c7b04685c1a4f3e6a6a9e6b30f8d48c15b7f49c
+  languageName: node
+  linkType: hard
+
+"double-ended-queue@npm:^2.1.0-0":
+  version: 2.1.0-0
+  resolution: "double-ended-queue@npm:2.1.0-0"
+  checksum: 3030cf9dcf6f8e7d8cb6ae5b7304890445d7c32233a614e400ba7b378086ad76f5822d0e501afd5ffe0af1de4bcb842fa23d4c79174d54f6566399435fafc271
   languageName: node
   linkType: hard
 
