@@ -43,7 +43,7 @@ jobs:
           echo "Files being uploaded:"
           grep "^  - " vercel_output.txt | sort | uniq
       - name: Upload deployment log
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: vercel-deployment-log
           path: vercel_output.txt
