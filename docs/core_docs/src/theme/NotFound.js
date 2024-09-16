@@ -1,5 +1,5 @@
 /* eslint-disable import/no-extraneous-dependencies */
-/* eslint-disable no-nested-ternary */ 
+/* eslint-disable no-nested-ternary */
 import React from "react";
 import { translate } from "@docusaurus/Translate";
 import { PageMetadata } from "@docusaurus/theme-common";
