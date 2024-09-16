@@ -11301,7 +11301,7 @@ __metadata:
     "@baiducloud/qianfan": ^0.1.6
     "@jest/globals": ^29.5.0
     "@langchain/core": "workspace:*"
-    "@langchain/openai": ~0.1.0
+    "@langchain/openai": ~0.3.0
     "@langchain/scripts": ">=0.1.0 <0.2.0"
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
@@ -11545,7 +11545,7 @@ __metadata:
     jsdom: ^22.1.0
     jsonwebtoken: ^9.0.2
     langchain: ">=0.2.3 <0.4.0"
-    langsmith: ~0.1.30
+    langsmith: ~0.1.56
     llmonitor: ^0.5.9
     lodash: ^4.17.21
     lunary: ^0.7.10
@@ -11954,25 +11954,6 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/core@npm:>=0.2.16 <0.3.0, @langchain/core@npm:>=0.2.5 <0.3.0":
-  version: 0.2.32
-  resolution: "@langchain/core@npm:0.2.32"
-  dependencies:
-    ansi-styles: ^5.0.0
-    camelcase: 6
-    decamelize: 1.2.0
-    js-tiktoken: ^1.0.12
-    langsmith: ^0.1.43
-    mustache: ^4.2.0
-    p-queue: ^6.6.2
-    p-retry: 4
-    uuid: ^10.0.0
-    zod: ^3.22.4
-    zod-to-json-schema: ^3.22.3
-  checksum: b26380e94c8838a1643177a53bef4c628ea583714a2e93e18a3126413f95756dc6dfbaf0572fe0965afcc79092d4a0c0e0851c932830261bd6c84d6380a0ac74
-  languageName: node
-  linkType: hard
-
 "@langchain/core@workspace:*, @langchain/core@workspace:langchain-core":
   version: 0.0.0-use.local
   resolution: "@langchain/core@workspace:langchain-core"
@@ -11997,7 +11978,7 @@ __metadata:
     jest: ^29.5.0
     jest-environment-node: ^29.6.4
     js-tiktoken: ^1.0.12
-    langsmith: ^0.1.56-rc.1
+    langsmith: ^0.1.56
     ml-matrix: ^6.10.4
     mustache: ^4.2.0
     p-queue: ^6.6.2
@@ -12311,7 +12292,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@langchain/langgraph@npm:0.2.3":
+"@langchain/langgraph@npm:0.2.3, @langchain/langgraph@npm:^0.2.3":
   version: 0.2.3
   resolution: "@langchain/langgraph@npm:0.2.3"
   dependencies:
@@ -12322,22 +12303,6 @@ __metadata:
   peerDependencies:
     "@langchain/core": ">=0.2.31 <0.4.0"
   checksum: 09d423228633f4bfee24b15e9f81eee57e96fecf9914f1e1c1f40f9436d120de912b8c987da356591c6eae0ee2bcf3759ab8e0ff762f87bc4f3f73e4098c12e9
-  languageName: node
-  linkType: hard
-
-"@langchain/langgraph@npm:^0.0.28":
-  version: 0.0.28
-  resolution: "@langchain/langgraph@npm:0.0.28"
-  dependencies:
-    "@langchain/core": ">=0.2.16 <0.3.0"
-    uuid: ^10.0.0
-    zod: ^3.23.8
-  peerDependencies:
-    better-sqlite3: ^9.5.0
-  peerDependenciesMeta:
-    better-sqlite3:
-      optional: true
-  checksum: 1465791026ccd6eaa13a2f2d03b8fb9f0972a8c23b9da1cfd581074f413ea60ef860de6d704c6a3b49f7425f23d6ba49c23255167ae83ab7d70dc00cc0560ce2
   languageName: node
   linkType: hard
 
@@ -12521,7 +12486,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/openai@>=0.1.0 <0.4.0, @langchain/openai@>=0.2.0 <0.4.0, @langchain/openai@workspace:*, @langchain/openai@workspace:^, @langchain/openai@workspace:libs/langchain-openai":
+"@langchain/openai@>=0.1.0 <0.4.0, @langchain/openai@>=0.2.0 <0.4.0, @langchain/openai@workspace:*, @langchain/openai@workspace:^, @langchain/openai@workspace:libs/langchain-openai, @langchain/openai@~0.3.0":
   version: 0.0.0-use.local
   resolution: "@langchain/openai@workspace:libs/langchain-openai"
   dependencies:
@@ -12555,19 +12520,6 @@ __metadata:
     "@langchain/core": ">=0.2.26 <0.4.0"
   languageName: unknown
   linkType: soft
-
-"@langchain/openai@npm:~0.1.0":
-  version: 0.1.3
-  resolution: "@langchain/openai@npm:0.1.3"
-  dependencies:
-    "@langchain/core": ">=0.2.5 <0.3.0"
-    js-tiktoken: ^1.0.12
-    openai: ^4.49.1
-    zod: ^3.22.4
-    zod-to-json-schema: ^3.22.3
-  checksum: 43aaafad2e1416bc23846c6c5084502025d3972c0b11b2ef2bcefd9da3dc1cd933cdf838c596404584af024adccc26e34476fededed0e614a19b47a4e5a8c8e5
-  languageName: node
-  linkType: hard
 
 "@langchain/pinecone@workspace:*, @langchain/pinecone@workspace:libs/langchain-pinecone":
   version: 0.0.0-use.local
@@ -19515,13 +19467,6 @@ __metadata:
   version: 9.0.1
   resolution: "@types/uuid@npm:9.0.1"
   checksum: c472b8a77cbeded4bc529220b8611afa39bd64677f507838f8083d8aac8033b1f88cb9ddaa2f8589e0dcd2317291d0f6e1379f82d5ceebd6f74f3b4825288e00
-  languageName: node
-  linkType: hard
-
-"@types/uuid@npm:^9.0.1":
-  version: 9.0.2
-  resolution: "@types/uuid@npm:9.0.2"
-  checksum: 1754bcf3444e1e3aeadd6e774fc328eb53bc956665e2e8fb6ec127aa8e1f43d9a224c3d22a9a6233dca8dd81a12dc7fed4d84b8876dd5ec82d40f574f7ff8b68
   languageName: node
   linkType: hard
 
@@ -27120,7 +27065,7 @@ __metadata:
     "@langchain/google-vertexai": "workspace:*"
     "@langchain/google-vertexai-web": "workspace:*"
     "@langchain/groq": "workspace:*"
-    "@langchain/langgraph": ^0.0.28
+    "@langchain/langgraph": ^0.2.3
     "@langchain/mistralai": "workspace:*"
     "@langchain/mongodb": "workspace:*"
     "@langchain/nomic": "workspace:*"
@@ -27174,7 +27119,7 @@ __metadata:
     ioredis: ^5.3.2
     js-yaml: ^4.1.0
     langchain: "workspace:*"
-    langsmith: ^0.1.43
+    langsmith: ^0.1.56
     mongodb: ^6.3.0
     pg: ^8.11.0
     pickleparser: ^0.2.1
@@ -32634,7 +32579,7 @@ __metadata:
     js-tiktoken: ^1.0.12
     js-yaml: ^4.1.0
     jsonpointer: ^5.0.1
-    langsmith: ^0.1.56-rc.1
+    langsmith: ^0.1.56
     openai: ^4.41.1
     openapi-types: ^12.1.3
     p-retry: 4
@@ -32713,34 +32658,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"langsmith@npm:^0.1.43":
-  version: 0.1.43
-  resolution: "langsmith@npm:0.1.43"
-  dependencies:
-    "@types/uuid": ^9.0.1
-    commander: ^10.0.1
-    p-queue: ^6.6.2
-    p-retry: 4
-    semver: ^7.6.3
-    uuid: ^9.0.0
-  peerDependencies:
-    "@langchain/core": "*"
-    langchain: "*"
-    openai: "*"
-  peerDependenciesMeta:
-    "@langchain/core":
-      optional: true
-    langchain:
-      optional: true
-    openai:
-      optional: true
-  checksum: 83ded542eb9a4f3c7f75671ba9a85b9bb0558251cbc5ad506098068b7c5abcb6062101857cd5e2b324d5eb1e3f4984aff0d08b7b913c3ad6e41d4cbc65492a13
-  languageName: node
-  linkType: hard
-
-"langsmith@npm:^0.1.56-rc.1":
-  version: 0.1.56-rc.1
-  resolution: "langsmith@npm:0.1.56-rc.1"
+"langsmith@npm:^0.1.56, langsmith@npm:~0.1.56":
+  version: 0.1.56
+  resolution: "langsmith@npm:0.1.56"
   dependencies:
     "@types/uuid": ^10.0.0
     commander: ^10.0.1
@@ -32753,31 +32673,7 @@ __metadata:
   peerDependenciesMeta:
     openai:
       optional: true
-  checksum: 6d144958641bc7bca97b1fd0031fe9214d0e524e758d4a2efb0f34254de218bcfd4354ac71bed7b7d96893063f90a9db7103a6c921448519b1ab7a2200a1506f
-  languageName: node
-  linkType: hard
-
-"langsmith@npm:~0.1.30":
-  version: 0.1.39
-  resolution: "langsmith@npm:0.1.39"
-  dependencies:
-    "@types/uuid": ^9.0.1
-    commander: ^10.0.1
-    p-queue: ^6.6.2
-    p-retry: 4
-    uuid: ^9.0.0
-  peerDependencies:
-    "@langchain/core": "*"
-    langchain: "*"
-    openai: "*"
-  peerDependenciesMeta:
-    "@langchain/core":
-      optional: true
-    langchain:
-      optional: true
-    openai:
-      optional: true
-  checksum: df21332662ec3a2d2d5cf915acede52b96aedf2a286259435d683f230af5926500b129cab1f0275450e0d3de6d9d8476e410ac46f5e994beb43f2e2df8a1965f
+  checksum: 61db6dc3016e35d14d25e78a8ecebcc6356f2efc00310f5582dce9d28a88377525425622d1b98f053e73c0b3233d44c5a2f9d5654ca72ee2e61163edd5be2d28
   languageName: node
   linkType: hard
 
@@ -35402,24 +35298,6 @@ __metadata:
   bin:
     openai: bin/cli
   checksum: 28eae59cb4b51b3d7224647e3be369453522b5be3f1530a51bf8ffe2aefa165cf4156a7621803782014c022943b16ff27690159ef3720214fdbb137a21e47bf2
-  languageName: node
-  linkType: hard
-
-"openai@npm:^4.49.1":
-  version: 4.49.1
-  resolution: "openai@npm:4.49.1"
-  dependencies:
-    "@types/node": ^18.11.18
-    "@types/node-fetch": ^2.6.4
-    abort-controller: ^3.0.0
-    agentkeepalive: ^4.2.1
-    form-data-encoder: 1.7.2
-    formdata-node: ^4.3.2
-    node-fetch: ^2.6.7
-    web-streams-polyfill: ^3.2.1
-  bin:
-    openai: bin/cli
-  checksum: b9bc845d25412d6b6ad827fb1363a4029935d8eb85a8708e55f5cf2852a0551b8720c8099edcbb0a2c2ab2be2d8f652a97061d9898b908e29d9bb2f727304b6e
   languageName: node
   linkType: hard
 

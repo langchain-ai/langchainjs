@@ -3,24 +3,17 @@ async function test() {
   const { OpenAI } = await import("@langchain/openai");
   const { LLMChain } = await import("langchain/chains");
   const { ChatPromptTemplate } = await import("@langchain/core/prompts");
-  const { HNSWLib } = await import("@langchain/community/vectorstores/hnswlib");
   const { HuggingFaceTransformersEmbeddings } = await import("@langchain/community/embeddings/hf_transformers");
   const { Document } = await import("@langchain/core/documents");
+  const { MemoryVectorStore } = await import("langchain/vectorstores/memory");
 
   // Test exports
   assert(typeof OpenAI === "function");
   assert(typeof LLMChain === "function");
   assert(typeof ChatPromptTemplate === "function");
-  assert(typeof HNSWLib === "function");
+  assert(typeof MemoryVectorStore === "function");
 
-  // Test dynamic imports of peer dependencies
-  const { HierarchicalNSW } = await HNSWLib.imports();
-
-  const vs = new HNSWLib(new HuggingFaceTransformersEmbeddings({ model: "Xenova/all-MiniLM-L6-v2" }), {
-    space: "ip",
-    numDimensions: 3,
-    index: new HierarchicalNSW("ip", 3),
-  });
+  const vs = new MemoryVectorStore(new HuggingFaceTransformersEmbeddings({ model: "Xenova/all-MiniLM-L6-v2" }));
 
   await vs.addVectors(
     [
