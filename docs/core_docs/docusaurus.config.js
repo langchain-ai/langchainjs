@@ -205,12 +205,12 @@ const config = {
             position: "right",
             items: [
               {
-                label: "v0.2",
-                href: "https://js.langchain.com/v0.2/docs/introduction",
+                label: "Latest",
+                href: "/docs/introduction",
               },
               {
                 label: "v0.2",
-                href: "/docs/introduction",
+                href: "https://js.langchain.com/v0.2/docs/introduction",
               },
               {
                 label: "v0.1",
