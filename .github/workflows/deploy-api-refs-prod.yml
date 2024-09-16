@@ -35,5 +35,10 @@ jobs:
         run: yarn turbo:command build --filter=!examples --filter=!api_refs --filter=!core_docs --filter=!create-langchain-integration
       - name: Build Project Artifacts
         run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
-      - name: Deploy Project Artifacts to Vercel
-        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
+      - name: Deploy to Vercel
+        run: |
+          if [ ${{ github.ref }} = 'refs/heads/main' ]; then
+            vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }}
+          else
+            vercel deploy --token=${{ secrets.VERCEL_TOKEN }}
+          fi
