@@ -82,7 +82,7 @@
     "@langchain/scripts": ">=0.1.0 <0.2.0",
     "@langchain/standard-tests": "0.0.0",
     "@layerup/layerup-security": "^1.5.12",
-    "@mendable/firecrawl-js": "^0.0.36",
+    "@mendable/firecrawl-js": "^1.4.3",
     "@mlc-ai/web-llm": ">=0.2.62 <0.3.0",
     "@mozilla/readability": "^0.4.4",
     "@neondatabase/serverless": "^0.9.1",
