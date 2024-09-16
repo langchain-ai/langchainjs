@@ -52,11 +52,11 @@ const suggestedLinks = {
     alternative: ["/v0.1/docs/ecosystem/langserve/"],
   },
   "/docs/expression_language/": {
-    canonical: "/docs/how_to/#langchain-expression-language-lcel",
+    canonical: "/docs/how_to/#langchain-expression-language",
     alternative: ["/v0.1/docs/expression_language/"],
   },
   "/docs/expression_language/cookbook/": {
-    canonical: "/docs/how_to/#langchain-expression-language-lcel",
+    canonical: "/docs/how_to/#langchain-expression-language",
     alternative: ["/v0.1/docs/expression_language/cookbook/"],
   },
   "/docs/expression_language/cookbook/adding_memory/": {
@@ -116,7 +116,7 @@ const suggestedLinks = {
     alternative: ["/v0.1/docs/expression_language/streaming/"],
   },
   "/docs/expression_language/why/": {
-    canonical: "/docs/concepts/#langchain-expression-language-lcel",
+    canonical: "/docs/concepts/#langchain-expression-language",
     alternative: ["/v0.1/docs/expression_language/why/"],
   },
   "/docs/get_started/": {
