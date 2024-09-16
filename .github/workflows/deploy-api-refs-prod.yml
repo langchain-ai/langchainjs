@@ -37,8 +37,19 @@ jobs:
         run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
       - name: Deploy to Vercel
         run: |
-          if [ ${{ github.ref }} = 'refs/heads/main' ]; then
-            vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }}
-          else
-            vercel deploy --token=${{ secrets.VERCEL_TOKEN }}
-          fi
+          vercel deploy --prod --debug --token=${{ secrets.VERCEL_TOKEN }} > vercel_output.txt 2>&1
+          echo "Vercel deployment output:"
+          cat vercel_output.txt
+          echo "Files being uploaded:"
+          grep "^  - " vercel_output.txt | sort | uniq
+      - name: Upload deployment log
+        uses: actions/upload-artifact@v2
+        with:
+          name: vercel-deployment-log
+          path: vercel_output.txt
+
+# if [ ${{ github.ref }} = 'refs/heads/main' ]; then
+#   vercel deploy --prod --debug --token=${{ secrets.VERCEL_TOKEN }} > vercel_output.txt 2>&1
+# else
+#   vercel deploy --debug --token=${{ secrets.VERCEL_TOKEN }} > vercel_output.txt 2>&1
+# fi
