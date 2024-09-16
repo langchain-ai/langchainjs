@@ -138,6 +138,7 @@ const config = {
           'Newer LangChain version out! You are currently viewing the old v0.1 docs. View the latest docs <a href="/docs/introduction/">here</a>.',
         backgroundColor: "#FF0000",
         textColor: "#FFFFFF",
+        isCloseable: false,
       },
       prism: {
         theme: {
