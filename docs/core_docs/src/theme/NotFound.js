@@ -1,3 +1,5 @@
+/* eslint-disable import/no-extraneous-dependencies */
+/* eslint-disable no-nested-ternary */ 
 import React from "react";
 import { translate } from "@docusaurus/Translate";
 import { PageMetadata } from "@docusaurus/theme-common";
@@ -1006,6 +1008,7 @@ export default function NotFound() {
                     <summary>Alternative pages</summary>
                     <ul>
                       {alternative.map((alt, index) => (
+                        // eslint-disable-next-line react/no-array-index-key
                         <li key={index}>
                           <a href={alt}>{alt}</a>
                           {alt.startsWith("/v0.1/") && (
