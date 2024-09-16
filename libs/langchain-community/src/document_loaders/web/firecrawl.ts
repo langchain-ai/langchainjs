@@ -23,9 +23,9 @@ interface FirecrawlLoaderParameters {
    */
   apiUrl?: string;
   /**
-   * Mode of operation. Can be either "crawl" or "scrape". If not provided, the default value is "crawl".
+   * Mode of operation. Can be "crawl", "scrape", or "map". If not provided, the default value is "crawl".
    */
-  mode?: "crawl" | "scrape";
+  mode?: "crawl" | "scrape" | "map";
   params?: Record<string, unknown>;
 }
 
@@ -56,7 +56,7 @@ export class FireCrawlLoader extends BaseDocumentLoader {
 
   private url: string;
 
-  private mode: "crawl" | "scrape";
+  private mode: "crawl" | "scrape" | "map";
 
   private params?: Record<string, unknown>;
 
