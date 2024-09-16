@@ -1,3 +1,5 @@
+/* eslint-disable import/no-extraneous-dependencies */
+/* eslint-disable react/destructuring-assignment */
 // Swizzled class to show custom text for canary version.
 // Should be removed in favor of the stock implementation.
 
@@ -7,6 +9,7 @@ import Link from "@docusaurus/Link";
 import Translate from "@docusaurus/Translate";
 import { ThemeClassNames } from "@docusaurus/theme-common";
 import { useLocalPathname } from "@docusaurus/theme-common/internal";
+
 function UnreleasedVersionLabel({ siteTitle, versionMetadata }) {
   return (
     <Translate
@@ -86,7 +89,6 @@ export default function DocVersionBanner({ className }) {
     pluginId: "default",
     version: "Latest",
   };
-  console.log({ versionMetadata });
   const localPathname = useLocalPathname();
   if (versionMetadata.banner) {
     return (
@@ -100,13 +102,13 @@ export default function DocVersionBanner({ className }) {
       >
         <div>
           <BannerLabel
-            siteTitle={"LangChain"}
+            siteTitle="LangChain"
             versionMetadata={versionMetadata}
           />
         </div>
         <div className="margin-top--md">
           <LatestVersionSuggestionLabel
-            versionLabel={"Latest"}
+            versionLabel="Latest"
             to={`https://js.langchain.com${localPathname}`}
             onClick={() => {}}
           />
