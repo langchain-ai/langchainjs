@@ -270,7 +270,7 @@ export class GoogleCloudStorageUri {
   static uriToBucketAndPath(uri: string): BucketAndPath {
     const match = this.uriRegexp.exec(uri);
     if (!match) {
-      throw new Error("Invalid gs:// URI");
+      throw new Error(`Invalid gs:// URI: ${uri}`);
     }
     return {
       bucket: match[1],
