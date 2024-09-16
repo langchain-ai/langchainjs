@@ -54,7 +54,7 @@ import type {
 } from "./types.js";
 import { zodToGeminiParameters } from "./utils/zod_to_gemini_parameters.js";
 
-class ChatConnection<AuthOptions> extends AbstractGoogleLLMConnection<
+export class ChatConnection<AuthOptions> extends AbstractGoogleLLMConnection<
   BaseMessage[],
   AuthOptions
 > {
