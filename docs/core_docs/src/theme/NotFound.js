@@ -116,7 +116,7 @@ const suggestedLinks = {
     alternative: ["/v0.1/docs/expression_language/streaming/"],
   },
   "/docs/expression_language/why/": {
-    canonical: "/docs/concepts/#langchain-expression-language-lcel",
+    canonical: "/docs/concepts/#langchain-expression-language",
     alternative: ["/v0.1/docs/expression_language/why/"],
   },
   "/docs/get_started/": {
