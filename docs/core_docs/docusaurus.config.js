@@ -206,7 +206,7 @@ const config = {
             items: [
               {
                 label: "Latest",
-                href: "/docs/introduction",
+                href: "https://js.langchain.com/docs/introduction",
               },
               {
                 label: "v0.2",
