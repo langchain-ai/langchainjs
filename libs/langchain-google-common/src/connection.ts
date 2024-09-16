@@ -4,6 +4,7 @@ import {
   AsyncCallerCallOptions,
 } from "@langchain/core/utils/async_caller";
 import { getRuntimeEnvironment } from "@langchain/core/utils/env";
+import {BaseRunManager} from "@langchain/core/callbacks/manager";
 import { StructuredToolParams } from "@langchain/core/tools";
 import { isLangChainTool } from "@langchain/core/utils/function_calling";
 import type {
@@ -21,6 +22,7 @@ import type {
   GeminiFunctionDeclaration,
   GoogleAIModelRequestParams,
   GoogleRawResponse,
+  GoogleAIAPI,
   GoogleAIToolType,
 } from "./types.js";
 import {
@@ -213,8 +215,7 @@ export abstract class GoogleAIConnection<
 
   client: GoogleAbstractedClient;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  api: any; // FIXME: Make this a real type
+  api: GoogleAIAPI;
 
   constructor(
     fields: GoogleAIBaseLLMInput<AuthOptions> | undefined,
@@ -234,6 +235,16 @@ export abstract class GoogleAIConnection<
       return "gemini";
     } else {
       return null;
+    }
+  }
+
+  get modelPublisher(): string {
+    switch (this.modelFamily) {
+      case "gemini":
+      case "palm":
+        return "google";
+      default:
+        return "unknown";
     }
   }
 
@@ -277,10 +288,32 @@ export abstract class GoogleAIConnection<
   async request(
     input: InputType,
     parameters: GoogleAIModelRequestParams,
-    options: CallOptions
-  ): Promise<GoogleResponse> {
+
+    options: CallOptions,
+    runManager?: BaseRunManager,
+  ): Promise<ResponseType> {
+    const moduleName = this.constructor.name;
     const data = await this.formatData(input, parameters);
+
+    await runManager?.handleCustomEvent(`google-request-${moduleName}`, {
+      data,
+      options,
+      connection: {
+        ...this,
+        url: await this.buildUrl(),
+        urlMethod: await this.buildUrlMethod(),
+        modelFamily: this.modelFamily,
+        modelPublisher: this.modelPublisher,
+        computedPlatformType: this.computedPlatformType,
+      },
+    });
+
     const response = await this._request(data, options);
+
+    await runManager?.handleCustomEvent(`google-response-${moduleName}`, {
+      response,
+    });
+
     return response;
   }
 }

@@ -101,7 +101,7 @@ class ChatConnection<AuthOptions> extends AbstractGoogleLLMConnection<
     _parameters: GoogleAIModelParams
   ): Promise<GeminiContent[]> {
     const inputPromises: Promise<GeminiContent[]>[] = input.map((msg, i) =>
-      this.api.baseMessageToContent(
+      this.api.baseMessageToContent!(
         msg,
         input[i - 1],
         this.useSystemInstruction
@@ -150,7 +150,7 @@ class ChatConnection<AuthOptions> extends AbstractGoogleLLMConnection<
         if (index === 0) {
           // eslint-disable-next-line prefer-destructuring
           ret = (
-            await this.api.baseMessageToContent(message, undefined, true)
+            await this.api.baseMessageToContent!(message, undefined, true)
           )[0];
         } else {
           throw new Error(
@@ -341,12 +341,10 @@ export abstract class ChatGoogleBase<AuthOptions>
     const response = await this.connection.request(
       messages,
       parameters,
-      options
+      options,
+      runManager,
     );
-    const ret = this.connection.api.safeResponseToChatResult(
-      response,
-      this.safetyHandler
-    );
+    const ret = this.connection.api.responseToChatResult(response);
     await runManager?.handleLLMNewToken(ret.generations[0].text);
     return ret;
   }
@@ -386,18 +384,15 @@ export abstract class ChatGoogleBase<AuthOptions>
       }
       const chunk =
         output !== null
-          ? this.connection.api.safeResponseToChatGeneration(
-              { data: output },
-              this.safetyHandler
-            )
+          ? this.connection.api.responseToChatGeneration({ data: output })
           : new ChatGenerationChunk({
-              text: "",
-              generationInfo: { finishReason: "stop" },
-              message: new AIMessageChunk({
-                content: "",
-                usage_metadata: usageMetadata,
-              }),
-            });
+            text: "",
+            generationInfo: { finishReason: "stop" },
+            message: new AIMessageChunk({
+              content: "",
+              usage_metadata: usageMetadata,
+            }),
+          });
       yield chunk;
       await runManager?.handleLLMNewToken(chunk.text);
     }

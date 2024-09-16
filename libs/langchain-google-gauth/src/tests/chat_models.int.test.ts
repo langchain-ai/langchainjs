@@ -258,7 +258,7 @@ describe("GAuth Chat", () => {
         actionIfBlobMissing: undefined,
       },
     });
-    const canonicalStore = new BlobStoreGoogleCloudStorage({
+    const backingStore = new BlobStoreGoogleCloudStorage({
       uriPrefix: new GoogleCloudStorageUri("gs://test-langchainjs/mediatest/"),
       defaultStoreOptions: {
         actionIfInvalid: "prefixPath",
@@ -266,7 +266,7 @@ describe("GAuth Chat", () => {
     });
     const blobStore = new ReadThroughBlobStore({
       baseStore: aliasStore,
-      backingStore: canonicalStore,
+      backingStore,
     });
     const resolver = new SimpleWebBlobStore();
     const mediaManager = new MediaManager({
@@ -285,7 +285,7 @@ describe("GAuth Chat", () => {
       },
       {
         type: "media",
-        fileUri: "https://js.langchain.com/img/brand/wordmark.png",
+        fileUri: "https://js.langchain.com/v0.2/img/brand/wordmark.png",
       },
     ];
 

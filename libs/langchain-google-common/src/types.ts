@@ -1,8 +1,7 @@
 import type { BaseLLMParams } from "@langchain/core/language_models/llms";
-import type {
-  BaseChatModelCallOptions,
-  BindToolsInput,
-} from "@langchain/core/language_models/chat_models";
+import type { BaseChatModelCallOptions, BindToolsInput } from "@langchain/core/language_models/chat_models";
+import {BaseMessage, BaseMessageChunk, MessageContent} from "@langchain/core/messages";
+import {ChatGenerationChunk, ChatResult} from "@langchain/core/outputs";
 import type { JsonStream } from "./utils/stream.js";
 import { MediaManager } from "./experimental/utils/media_core.js";
 
@@ -348,6 +347,41 @@ export interface GeminiJsonSchemaDirty extends GeminiJsonSchema {
   additionalProperties?: boolean;
 }
 
+export type GoogleAIAPI = {
+
+  messageContentToParts?: (
+    content: MessageContent
+  ) => Promise<GeminiPart[]>;
+
+  baseMessageToContent?: (
+    message: BaseMessage,
+    prevMessage: BaseMessage | undefined,
+    useSystemInstruction: boolean
+  ) => Promise<GeminiContent[]>;
+
+  responseToString: (
+    response: GoogleLLMResponse
+  ) => string;
+
+  responseToChatGeneration: (
+    response: GoogleLLMResponse
+  ) => ChatGenerationChunk;
+
+  chunkToString: (
+    chunk: BaseMessageChunk
+  ) => string;
+
+  responseToBaseMessage: (
+    response: GoogleLLMResponse
+  ) => BaseMessage;
+
+  responseToChatResult: (
+    response: GoogleLLMResponse
+  ) => ChatResult;
+
+}
+
 export interface GeminiAPIConfig {
+  safetyHandler?: GoogleAISafetyHandler;
   mediaManager?: MediaManager;
 }

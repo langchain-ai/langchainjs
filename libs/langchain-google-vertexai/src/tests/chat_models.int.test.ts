@@ -225,7 +225,7 @@ describe("GAuth Chat", () => {
         actionIfBlobMissing: undefined,
       },
     });
-    const canonicalStore = new BlobStoreGoogleCloudStorage({
+    const backingStore = new BlobStoreGoogleCloudStorage({
       uriPrefix: new GoogleCloudStorageUri("gs://test-langchainjs/mediatest/"),
       defaultStoreOptions: {
         actionIfInvalid: "prefixPath",
@@ -233,7 +233,7 @@ describe("GAuth Chat", () => {
     });
     const blobStore = new ReadThroughBlobStore({
       baseStore: aliasStore,
-      backingStore: canonicalStore,
+      backingStore,
     });
     const resolver = new SimpleWebBlobStore();
     const mediaManager = new MediaManager({
@@ -252,7 +252,7 @@ describe("GAuth Chat", () => {
       },
       {
         type: "media",
-        fileUri: "https://js.langchain.com/img/brand/wordmark.png",
+        fileUri: "https://js.langchain.com/v0.2/img/brand/wordmark.png",
       },
     ];
 
@@ -279,208 +279,210 @@ describe("GAuth Chat", () => {
       throw e;
     }
   });
-});
 
-test("Stream token count usage_metadata", async () => {
-  const model = new ChatVertexAI({
-    temperature: 0,
-    maxOutputTokens: 10,
-  });
-  let res: AIMessageChunk | null = null;
-  for await (const chunk of await model.stream(
-    "Why is the sky blue? Be concise."
-  )) {
-    if (!res) {
-      res = chunk;
-    } else {
-      res = res.concat(chunk);
+  test("Stream token count usage_metadata", async () => {
+    const model = new ChatVertexAI({
+      temperature: 0,
+      maxOutputTokens: 10,
+    });
+    let res: AIMessageChunk | null = null;
+    for await (const chunk of await model.stream(
+      "Why is the sky blue? Be concise."
+    )) {
+      if (!res) {
+        res = chunk;
+      } else {
+        res = res.concat(chunk);
+      }
     }
-  }
-  // console.log(res);
-  expect(res?.usage_metadata).toBeDefined();
-  if (!res?.usage_metadata) {
-    return;
-  }
-  expect(res.usage_metadata.input_tokens).toBeGreaterThan(1);
-  expect(res.usage_metadata.output_tokens).toBeGreaterThan(1);
-  expect(res.usage_metadata.total_tokens).toBe(
-    res.usage_metadata.input_tokens + res.usage_metadata.output_tokens
-  );
-});
-
-test("streamUsage excludes token usage", async () => {
-  const model = new ChatVertexAI({
-    temperature: 0,
-    streamUsage: false,
-  });
-  let res: AIMessageChunk | null = null;
-  for await (const chunk of await model.stream(
-    "Why is the sky blue? Be concise."
-  )) {
-    if (!res) {
-      res = chunk;
-    } else {
-      res = res.concat(chunk);
+    // console.log(res);
+    expect(res?.usage_metadata).toBeDefined();
+    if (!res?.usage_metadata) {
+      return;
     }
-  }
-  // console.log(res);
-  expect(res?.usage_metadata).not.toBeDefined();
-});
-
-test("Invoke token count usage_metadata", async () => {
-  const model = new ChatVertexAI({
-    temperature: 0,
-    maxOutputTokens: 10,
-  });
-  const res = await model.invoke("Why is the sky blue? Be concise.");
-  // console.log(res);
-  expect(res?.usage_metadata).toBeDefined();
-  if (!res?.usage_metadata) {
-    return;
-  }
-  expect(res.usage_metadata.input_tokens).toBeGreaterThan(1);
-  expect(res.usage_metadata.output_tokens).toBeGreaterThan(1);
-  expect(res.usage_metadata.total_tokens).toBe(
-    res.usage_metadata.input_tokens + res.usage_metadata.output_tokens
-  );
-});
-
-test("Streaming true constructor param will stream", async () => {
-  const modelWithStreaming = new ChatVertexAI({
-    maxOutputTokens: 50,
-    streaming: true,
+    expect(res.usage_metadata.input_tokens).toBeGreaterThan(1);
+    expect(res.usage_metadata.output_tokens).toBeGreaterThan(1);
+    expect(res.usage_metadata.total_tokens).toBe(
+      res.usage_metadata.input_tokens + res.usage_metadata.output_tokens
+    );
   });
 
-  let totalTokenCount = 0;
-  let tokensString = "";
-  const result = await modelWithStreaming.invoke("What is 1 + 1?", {
-    callbacks: [
-      {
-        handleLLMNewToken: (tok) => {
-          totalTokenCount += 1;
-          tokensString += tok;
-        },
-      },
-    ],
-  });
-
-  expect(result).toBeDefined();
-  expect(result.content).toBe(tokensString);
-
-  expect(totalTokenCount).toBeGreaterThan(1);
-});
-
-test("Can force a model to invoke a tool", async () => {
-  const model = new ChatVertexAI({
-    model: "gemini-1.5-pro",
-  });
-  const weatherTool = tool((_) => "no-op", {
-    name: "get_weather",
-    description:
-      "Get the weather of a specific location and return the temperature in Celsius.",
-    schema: z.object({
-      location: z.string().describe("The name of city to get the weather for."),
-    }),
-  });
-  const calculatorTool = tool((_) => "no-op", {
-    name: "calculator",
-    description: "Calculate the result of a math expression.",
-    schema: z.object({
-      expression: z.string().describe("The math expression to calculate."),
-    }),
-  });
-  const modelWithTools = model.bind({
-    tools: [calculatorTool, weatherTool],
-    tool_choice: "calculator",
-  });
-
-  const result = await modelWithTools.invoke(
-    "Whats the weather like in paris today? What's 1836 plus 7262?"
-  );
-
-  expect(result.tool_calls).toHaveLength(1);
-  expect(result.tool_calls?.[0]).toBeDefined();
-  if (!result.tool_calls?.[0]) return;
-  expect(result.tool_calls?.[0].name).toBe("calculator");
-  expect(result.tool_calls?.[0].args).toHaveProperty("expression");
-});
-
-test("ChatGoogleGenerativeAI can stream tools", async () => {
-  const model = new ChatVertexAI({});
-
-  const weatherTool = tool(
-    (_) => "The weather in San Francisco today is 18 degrees and sunny.",
-    {
-      name: "current_weather_tool",
-      description: "Get the current weather for a given location.",
-      schema: z.object({
-        location: z.string().describe("The location to get the weather for."),
-      }),
+  test("streamUsage excludes token usage", async () => {
+    const model = new ChatVertexAI({
+      temperature: 0,
+      streamUsage: false,
+    });
+    let res: AIMessageChunk | null = null;
+    for await (const chunk of await model.stream(
+      "Why is the sky blue? Be concise."
+    )) {
+      if (!res) {
+        res = chunk;
+      } else {
+        res = res.concat(chunk);
+      }
     }
-  );
-
-  const modelWithTools = model.bindTools([weatherTool]);
-  const stream = await modelWithTools.stream(
-    "Whats the weather like today in San Francisco?"
-  );
-  let finalChunk: AIMessageChunk | undefined;
-  for await (const chunk of stream) {
-    finalChunk = !finalChunk ? chunk : concat(finalChunk, chunk);
-  }
-
-  expect(finalChunk).toBeDefined();
-  if (!finalChunk) return;
-
-  const toolCalls = finalChunk.tool_calls;
-  expect(toolCalls).toBeDefined();
-  if (!toolCalls) {
-    throw new Error("tool_calls not in response");
-  }
-  expect(toolCalls.length).toBe(1);
-  expect(toolCalls[0].name).toBe("current_weather_tool");
-  expect(toolCalls[0].args).toHaveProperty("location");
-});
-
-async function fileToBase64(filePath: string): Promise<string> {
-  const fileData = await fs.readFile(filePath);
-  const base64String = Buffer.from(fileData).toString("base64");
-  return base64String;
-}
-
-test("Gemini can understand audio", async () => {
-  // Update this with the correct path to an audio file on your machine.
-  const audioPath = "../langchain-google-genai/src/tests/data/gettysburg10.wav";
-  const audioMimeType = "audio/wav";
-
-  const model = new ChatVertexAI({
-    model: "gemini-1.5-flash",
-    temperature: 0,
-    maxRetries: 0,
+    // console.log(res);
+    expect(res?.usage_metadata).not.toBeDefined();
   });
 
-  const audioBase64 = await fileToBase64(audioPath);
+  test("Invoke token count usage_metadata", async () => {
+    const model = new ChatVertexAI({
+      temperature: 0,
+      maxOutputTokens: 10,
+    });
+    const res = await model.invoke("Why is the sky blue? Be concise.");
+    // console.log(res);
+    expect(res?.usage_metadata).toBeDefined();
+    if (!res?.usage_metadata) {
+      return;
+    }
+    expect(res.usage_metadata.input_tokens).toBeGreaterThan(1);
+    expect(res.usage_metadata.output_tokens).toBeGreaterThan(1);
+    expect(res.usage_metadata.total_tokens).toBe(
+      res.usage_metadata.input_tokens + res.usage_metadata.output_tokens
+    );
+  });
 
-  const prompt = ChatPromptTemplate.fromMessages([
-    new MessagesPlaceholder("audio"),
-  ]);
+  test("Streaming true constructor param will stream", async () => {
+    const modelWithStreaming = new ChatVertexAI({
+      maxOutputTokens: 50,
+      streaming: true,
+    });
 
-  const chain = prompt.pipe(model);
-  const response = await chain.invoke({
-    audio: new HumanMessage({
-      content: [
+    let totalTokenCount = 0;
+    let tokensString = "";
+    const result = await modelWithStreaming.invoke("What is 1 + 1?", {
+      callbacks: [
         {
-          type: "media",
-          mimeType: audioMimeType,
-          data: audioBase64,
-        },
-        {
-          type: "text",
-          text: "Summarize the content in this audio. ALso, what is the speaker's tone?",
+          handleLLMNewToken: (tok) => {
+            totalTokenCount += 1;
+            tokensString += tok;
+          },
         },
       ],
-    }),
+    });
+
+    expect(result).toBeDefined();
+    expect(result.content).toBe(tokensString);
+
+    expect(totalTokenCount).toBeGreaterThan(1);
   });
 
-  expect(typeof response.content).toBe("string");
-  expect((response.content as string).length).toBeGreaterThan(15);
+  test("Can force a model to invoke a tool", async () => {
+    const model = new ChatVertexAI({
+      model: "gemini-1.5-pro",
+    });
+    const weatherTool = tool((_) => "no-op", {
+      name: "get_weather",
+      description:
+        "Get the weather of a specific location and return the temperature in Celsius.",
+      schema: z.object({
+        location: z.string().describe("The name of city to get the weather for."),
+      }),
+    });
+    const calculatorTool = tool((_) => "no-op", {
+      name: "calculator",
+      description: "Calculate the result of a math expression.",
+      schema: z.object({
+        expression: z.string().describe("The math expression to calculate."),
+      }),
+    });
+    const modelWithTools = model.bind({
+      tools: [calculatorTool, weatherTool],
+      tool_choice: "calculator",
+    });
+
+    const result = await modelWithTools.invoke(
+      "Whats the weather like in paris today? What's 1836 plus 7262?"
+    );
+
+    expect(result.tool_calls).toHaveLength(1);
+    expect(result.tool_calls?.[0]).toBeDefined();
+    if (!result.tool_calls?.[0]) return;
+    expect(result.tool_calls?.[0].name).toBe("calculator");
+    expect(result.tool_calls?.[0].args).toHaveProperty("expression");
+  });
+
+  test("ChatGoogleGenerativeAI can stream tools", async () => {
+    const model = new ChatVertexAI({});
+
+    const weatherTool = tool(
+      (_) => "The weather in San Francisco today is 18 degrees and sunny.",
+      {
+        name: "current_weather_tool",
+        description: "Get the current weather for a given location.",
+        schema: z.object({
+          location: z.string().describe("The location to get the weather for."),
+        }),
+      }
+    );
+
+    const modelWithTools = model.bindTools([weatherTool]);
+    const stream = await modelWithTools.stream(
+      "Whats the weather like today in San Francisco?"
+    );
+    let finalChunk: AIMessageChunk | undefined;
+    for await (const chunk of stream) {
+      finalChunk = !finalChunk ? chunk : concat(finalChunk, chunk);
+    }
+
+    expect(finalChunk).toBeDefined();
+    if (!finalChunk) return;
+
+    const toolCalls = finalChunk.tool_calls;
+    expect(toolCalls).toBeDefined();
+    if (!toolCalls) {
+      throw new Error("tool_calls not in response");
+    }
+    expect(toolCalls.length).toBe(1);
+    expect(toolCalls[0].name).toBe("current_weather_tool");
+    expect(toolCalls[0].args).toHaveProperty("location");
+  });
+
+  async function fileToBase64(filePath: string): Promise<string> {
+    const fileData = await fs.readFile(filePath);
+    const base64String = Buffer.from(fileData).toString("base64");
+    return base64String;
+  }
+
+  test("Gemini can understand audio", async () => {
+    // Update this with the correct path to an audio file on your machine.
+    const audioPath = "../langchain-google-genai/src/tests/data/gettysburg10.wav";
+    const audioMimeType = "audio/wav";
+
+    const model = new ChatVertexAI({
+      model: "gemini-1.5-flash",
+      temperature: 0,
+      maxRetries: 0,
+    });
+
+    const audioBase64 = await fileToBase64(audioPath);
+
+    const prompt = ChatPromptTemplate.fromMessages([
+      new MessagesPlaceholder("audio"),
+    ]);
+
+    const chain = prompt.pipe(model);
+    const response = await chain.invoke({
+      audio: new HumanMessage({
+        content: [
+          {
+            type: "media",
+            mimeType: audioMimeType,
+            data: audioBase64,
+          },
+          {
+            type: "text",
+            text: "Summarize the content in this audio. ALso, what is the speaker's tone?",
+          },
+        ],
+      }),
+    });
+
+    expect(typeof response.content).toBe("string");
+    expect((response.content as string).length).toBeGreaterThan(15);
+  });
+
 });
+
