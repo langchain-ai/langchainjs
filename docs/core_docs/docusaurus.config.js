@@ -135,7 +135,9 @@ const config = {
     ({
       announcementBar: {
         content:
-          'A newer LangChain version is out! Check out the <a href="https://js.langchain.com/docs/introduction">latest version</a>.',
+          'Newer LangChain version out! You are currently viewing the old v0.1 docs. View the latest docs <a href="/docs/introduction/">here</a>.',
+        backgroundColor: "#FF0000",
+        textColor: "#FFFFFF",
         isCloseable: false,
       },
       prism: {
@@ -211,6 +213,10 @@ const config = {
             label: "v0.1",
             position: "right",
             items: [
+              {
+                label: "Latest",
+                href: "https://js.langchain.com/docs/introduction",
+              },
               {
                 label: "v0.2",
                 href: "https://js.langchain.com/v0.2/docs/introduction",
