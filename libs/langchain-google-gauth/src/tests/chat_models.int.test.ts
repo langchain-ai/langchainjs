@@ -285,7 +285,7 @@ describe("GAuth Chat", () => {
       },
       {
         type: "media",
-        fileUri: "https://js.langchain.com/v0.2/img/brand/wordmark.png",
+        fileUri: "https://js.langchain.com/img/brand/wordmark.png",
       },
     ];
 

@@ -2,7 +2,7 @@ const assert = require("assert");
 const { OpenAI } = require("@langchain/openai");
 const { LLMChain } = require("langchain/chains");
 const { ChatPromptTemplate } = require("@langchain/core/prompts");
-const { HNSWLib } = require("@langchain/community/vectorstores/hnswlib");
+const { MemoryVectorStore } = require("langchain/vectorstores/memory");
 const { HuggingFaceTransformersEmbeddings } = require("@langchain/community/embeddings/hf_transformers");
 const { Document } = require("@langchain/core/documents");
 
@@ -11,16 +11,9 @@ async function test() {
   assert(typeof OpenAI === "function");
   assert(typeof LLMChain === "function");
   assert(typeof ChatPromptTemplate === "function");
-  assert(typeof HNSWLib === "function");
+  assert(typeof MemoryVectorStore === "function");
 
-  // Test dynamic imports of peer dependencies
-  const { HierarchicalNSW } = await HNSWLib.imports();
-
-  const vs = new HNSWLib(new HuggingFaceTransformersEmbeddings({ model: "Xenova/all-MiniLM-L6-v2" }), {
-    space: "ip",
-    numDimensions: 3,
-    index: new HierarchicalNSW("ip", 3),
-  });
+  const vs = new MemoryVectorStore(new HuggingFaceTransformersEmbeddings({ model: "Xenova/all-MiniLM-L6-v2" }));
 
   await vs.addVectors(
     [

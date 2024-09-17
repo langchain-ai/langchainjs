@@ -10,9 +10,7 @@ const longerLlm = new ChatOpenAI({
   model: "gpt-3.5-turbo-16k",
 });
 
-const modelWithFallback = shorterLlm.withFallbacks({
-  fallbacks: [longerLlm],
-});
+const modelWithFallback = shorterLlm.withFallbacks([longerLlm]);
 
 const input = `What is the next number: ${"one, two, ".repeat(3000)}`;
 

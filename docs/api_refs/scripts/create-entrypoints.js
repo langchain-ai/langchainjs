@@ -28,7 +28,7 @@ const BASE_TYPEDOC_CONFIG = {
   name: "LangChain.js",
   skipErrorChecking: true,
   exclude: ["dist"],
-  hostedBaseUrl: "https://v02.api.js.langchain.com/",
+  hostedBaseUrl: "https://v03.api.js.langchain.com/",
   entryPointStrategy: "packages",
 };
 

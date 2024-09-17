@@ -176,7 +176,7 @@ export async function fillChatIntegrationDocTemplate(fields: {
   className: string;
 }) {
   const sidebarLabel = fields.className.replace("Chat", "");
-  const pyDocUrl = `https://python.langchain.com/v0.2/docs/integrations/chat/${sidebarLabel.toLowerCase()}/`;
+  const pyDocUrl = `https://python.langchain.com/docs/integrations/chat/${sidebarLabel.toLowerCase()}/`;
   let envVarName = `${sidebarLabel.toUpperCase()}_API_KEY`;
   const extraFields = await promptExtraFields({
     envVarGuess: envVarName,
