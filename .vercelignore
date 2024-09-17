@@ -1,2 +1,12 @@
 node_modules/
 **/node_modules/
+.next/
+**/.next/
+.git/
+**/.*
+**/*.test.*
+**/*.spec.*
+**/test/
+**/tests/
+**/docs/
+**/examples/
