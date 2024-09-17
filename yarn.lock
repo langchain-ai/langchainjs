@@ -251,24 +251,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@apache-arrow/ts@npm:^12.0.0":
-  version: 12.0.0
-  resolution: "@apache-arrow/ts@npm:12.0.0"
-  dependencies:
-    "@types/command-line-args": 5.2.0
-    "@types/command-line-usage": 5.0.2
-    "@types/node": 18.14.5
-    "@types/pad-left": 2.1.1
-    command-line-args: 5.2.1
-    command-line-usage: 6.1.3
-    flatbuffers: 23.3.3
-    json-bignum: ^0.0.3
-    pad-left: ^2.1.0
-    tslib: ^2.5.0
-  checksum: 67b2791e14d5377b1d160a0d8390decc386e013c517713f8b9c100737a0e478a394086d91a8c846848d4e30289070a119d8e65191998f4c2555b18a29564df50
-  languageName: node
-  linkType: hard
-
 "@apify/consts@npm:^2.13.0, @apify/consts@npm:^2.9.0":
   version: 2.13.0
   resolution: "@apify/consts@npm:2.13.0"
@@ -20816,26 +20798,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"apache-arrow@npm:^12.0.0":
-  version: 12.0.0
-  resolution: "apache-arrow@npm:12.0.0"
-  dependencies:
-    "@types/command-line-args": 5.2.0
-    "@types/command-line-usage": 5.0.2
-    "@types/node": 18.14.5
-    "@types/pad-left": 2.1.1
-    command-line-args: 5.2.1
-    command-line-usage: 6.1.3
-    flatbuffers: 23.3.3
-    json-bignum: ^0.0.3
-    pad-left: ^2.1.0
-    tslib: ^2.5.0
-  bin:
-    arrow2csv: bin/arrow2csv.js
-  checksum: 3285189517c2b298cda42852321ce127754918513116eade6e4914c57983f68b6ba96605cfaa2202796d3d6e14755d3b3758f76c1374492affa3d95714eaca40
-  languageName: node
-  linkType: hard
-
 "apache-arrow@npm:^12.0.1":
   version: 12.0.1
   resolution: "apache-arrow@npm:12.0.1"
@@ -27175,7 +27137,7 @@ __metadata:
     typescript: ~5.1.6
     typesense: ^1.5.3
     uuid: ^10.0.0
-    vectordb: ^0.1.4
+    vectordb: ^0.9.0
     voy-search: 0.6.2
     weaviate-ts-client: ^2.0.0
     zod: ^3.22.4
@@ -42483,16 +42445,6 @@ __metadata:
   version: 1.1.2
   resolution: "vary@npm:1.1.2"
   checksum: ae0123222c6df65b437669d63dfa8c36cee20a504101b2fcd97b8bf76f91259c17f9f2b4d70a1e3c6bbcee7f51b28392833adb6b2770b23b01abec84e369660b
-  languageName: node
-  linkType: hard
-
-"vectordb@npm:^0.1.4":
-  version: 0.1.4
-  resolution: "vectordb@npm:0.1.4"
-  dependencies:
-    "@apache-arrow/ts": ^12.0.0
-    apache-arrow: ^12.0.0
-  checksum: 8a40abf4466479b0b9e61687416b5ab232458401917bf9a1d5f3d8ea8c8320ecc5691174f4d4c0cfef0bb6c16328a9088419fd90ac85fd7267dbccdd1f9e55d7
   languageName: node
   linkType: hard
 
