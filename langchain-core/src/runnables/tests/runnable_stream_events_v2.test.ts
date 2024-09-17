@@ -4,6 +4,7 @@
 
 import { test, expect, afterEach } from "@jest/globals";
 import { z } from "zod";
+import { AsyncLocalStorage } from "node:async_hooks";
 import {
   RunnableLambda,
   RunnableMap,
@@ -28,8 +29,9 @@ import { DynamicStructuredTool, DynamicTool, tool } from "../../tools/index.js";
 import { Document } from "../../documents/document.js";
 import { PromptTemplate } from "../../prompts/prompt.js";
 import { GenerationChunk } from "../../outputs.js";
-// Import from web to avoid side-effects from AsyncLocalStorage
+// Import from web to avoid top-level side-effects from AsyncLocalStorage
 import { dispatchCustomEvent } from "../../callbacks/dispatch/web.js";
+import { AsyncLocalStorageProviderSingleton } from "../../singletons/index.js";
 
 function reverse(s: string) {
   // Reverse a string.
@@ -90,6 +92,73 @@ test("Runnable streamEvents method on a chat model", async () => {
   for await (const event of eventStream) {
     events.push(event);
   }
+
+  // used here to avoid casting every ID
+  const anyString = expect.any(String) as unknown as string;
+
+  expect(events).toMatchObject([
+    {
+      data: { input: "hello" },
+      event: "on_chat_model_start",
+      name: "FakeListChatModel",
+      metadata: expect.any(Object),
+      run_id: expect.any(String),
+      tags: [],
+    },
+    {
+      data: { chunk: new AIMessageChunk({ id: anyString, content: "a" }) },
+      event: "on_chat_model_stream",
+      name: "FakeListChatModel",
+      metadata: expect.any(Object),
+      run_id: expect.any(String),
+      tags: [],
+    },
+    {
+      data: { chunk: new AIMessageChunk({ id: anyString, content: "b" }) },
+      event: "on_chat_model_stream",
+      name: "FakeListChatModel",
+      metadata: expect.any(Object),
+      run_id: expect.any(String),
+      tags: [],
+    },
+    {
+      data: { chunk: new AIMessageChunk({ id: anyString, content: "c" }) },
+      event: "on_chat_model_stream",
+      name: "FakeListChatModel",
+      metadata: expect.any(Object),
+      run_id: expect.any(String),
+      tags: [],
+    },
+    {
+      data: { output: new AIMessageChunk({ id: anyString, content: "abc" }) },
+      event: "on_chat_model_end",
+      name: "FakeListChatModel",
+      metadata: expect.any(Object),
+      run_id: expect.any(String),
+      tags: [],
+    },
+  ]);
+});
+
+test("Runnable streamEvents call nested in another runnable + passed callbacks should still work", async () => {
+  AsyncLocalStorageProviderSingleton.initializeGlobalInstance(
+    new AsyncLocalStorage()
+  );
+
+  const model = new FakeListChatModel({
+    responses: ["abc"],
+  });
+
+  const events: any[] = [];
+  const container = RunnableLambda.from(async (_) => {
+    const eventStream = model.streamEvents("hello", { version: "v2" });
+    for await (const event of eventStream) {
+      events.push(event);
+    }
+    return events;
+  });
+
+  await container.invoke({}, { callbacks: [{ handleLLMStart: () => {} }] });
 
   // used here to avoid casting every ID
   const anyString = expect.any(String) as unknown as string;

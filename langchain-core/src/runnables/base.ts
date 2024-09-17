@@ -695,7 +695,7 @@ export abstract class Runnable<
       config.callbacks = callbacks.concat([logStreamCallbackHandler]);
     } else {
       const copiedCallbacks = callbacks.copy();
-      copiedCallbacks.inheritableHandlers.push(logStreamCallbackHandler);
+      copiedCallbacks.addHandler(logStreamCallbackHandler, true);
       // eslint-disable-next-line no-param-reassign
       config.callbacks = copiedCallbacks;
     }
@@ -896,7 +896,7 @@ export abstract class Runnable<
       config.callbacks = callbacks.concat(eventStreamer);
     } else {
       const copiedCallbacks = callbacks.copy();
-      copiedCallbacks.inheritableHandlers.push(eventStreamer);
+      copiedCallbacks.addHandler(eventStreamer, true);
       // eslint-disable-next-line no-param-reassign
       config.callbacks = copiedCallbacks;
     }
