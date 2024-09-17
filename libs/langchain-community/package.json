@@ -1,6 +1,6 @@
 {
   "name": "@langchain/community",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Third-party integrations for LangChain.js",
   "type": "module",
   "engines": {
@@ -41,7 +41,7 @@
     "flat": "^5.0.2",
     "js-yaml": "^4.1.0",
     "langchain": ">=0.2.3 <0.4.0",
-    "langsmith": "~0.1.30",
+    "langsmith": "~0.1.56",
     "uuid": "^10.0.0",
     "zod": "^3.22.3",
     "zod-to-json-schema": "^3.22.5"
@@ -207,7 +207,7 @@
     "typescript": "~5.1.6",
     "typesense": "^1.5.3",
     "usearch": "^1.1.1",
-    "vectordb": "^0.1.4",
+    "vectordb": "^0.9.0",
     "voy-search": "0.6.2",
     "weaviate-ts-client": "^1.4.0",
     "web-auth-library": "^1.0.3",

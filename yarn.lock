@@ -226,9 +226,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@anthropic-ai/sdk@npm:^0.25.2":
-  version: 0.25.2
-  resolution: "@anthropic-ai/sdk@npm:0.25.2"
+"@anthropic-ai/sdk@npm:^0.27.3":
+  version: 0.27.3
+  resolution: "@anthropic-ai/sdk@npm:0.27.3"
   dependencies:
     "@types/node": ^18.11.18
     "@types/node-fetch": ^2.6.4
@@ -237,7 +237,7 @@ __metadata:
     form-data-encoder: 1.7.2
     formdata-node: ^4.3.2
     node-fetch: ^2.6.7
-  checksum: b38f6a43f6f678e49f1b53226cc55654c23cf0fd1902cf3fcf98c0ae78f4c229518964f4cb31bc39da41925c806e7f4cc7ec14c511d387f07db3136b111bc744
+  checksum: 8000fc5a4e545057d8711f978a0de59c9a174398a81f700c9d279213790aaa4b2c100f96f2ef79447b8f1f3a04b8f094d60db66a06df8df96b31a3240d69cb5a
   languageName: node
   linkType: hard
 
@@ -248,24 +248,6 @@ __metadata:
     "@anthropic-ai/sdk": ">=0.14 <1"
     google-auth-library: ^9.4.2
   checksum: 3983c6f1b0e0aa2ce6896a0269177d1374343ba86169a30ad6cc0d9beef40ddcf410159baaa3f0942afbf62930951d067a870aa5c5e0624fe2c47981dc8d8c55
-  languageName: node
-  linkType: hard
-
-"@apache-arrow/ts@npm:^12.0.0":
-  version: 12.0.0
-  resolution: "@apache-arrow/ts@npm:12.0.0"
-  dependencies:
-    "@types/command-line-args": 5.2.0
-    "@types/command-line-usage": 5.0.2
-    "@types/node": 18.14.5
-    "@types/pad-left": 2.1.1
-    command-line-args: 5.2.1
-    command-line-usage: 6.1.3
-    flatbuffers: 23.3.3
-    json-bignum: ^0.0.3
-    pad-left: ^2.1.0
-    tslib: ^2.5.0
-  checksum: 67b2791e14d5377b1d160a0d8390decc386e013c517713f8b9c100737a0e478a394086d91a8c846848d4e30289070a119d8e65191998f4c2555b18a29564df50
   languageName: node
   linkType: hard
 
@@ -11112,11 +11094,46 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@lancedb/vectordb-darwin-arm64@npm:0.4.20":
+  version: 0.4.20
+  resolution: "@lancedb/vectordb-darwin-arm64@npm:0.4.20"
+  conditions: os=darwin & cpu=arm64
+  languageName: node
+  linkType: hard
+
+"@lancedb/vectordb-darwin-x64@npm:0.4.20":
+  version: 0.4.20
+  resolution: "@lancedb/vectordb-darwin-x64@npm:0.4.20"
+  conditions: os=darwin & cpu=x64
+  languageName: node
+  linkType: hard
+
+"@lancedb/vectordb-linux-arm64-gnu@npm:0.4.20":
+  version: 0.4.20
+  resolution: "@lancedb/vectordb-linux-arm64-gnu@npm:0.4.20"
+  conditions: os=linux & cpu=arm64
+  languageName: node
+  linkType: hard
+
+"@lancedb/vectordb-linux-x64-gnu@npm:0.4.20":
+  version: 0.4.20
+  resolution: "@lancedb/vectordb-linux-x64-gnu@npm:0.4.20"
+  conditions: os=linux & cpu=x64
+  languageName: node
+  linkType: hard
+
+"@lancedb/vectordb-win32-x64-msvc@npm:0.4.20":
+  version: 0.4.20
+  resolution: "@lancedb/vectordb-win32-x64-msvc@npm:0.4.20"
+  conditions: os=win32 & cpu=x64
+  languageName: node
+  linkType: hard
+
 "@langchain/anthropic@*, @langchain/anthropic@workspace:*, @langchain/anthropic@workspace:libs/langchain-anthropic":
   version: 0.0.0-use.local
   resolution: "@langchain/anthropic@workspace:libs/langchain-anthropic"
   dependencies:
-    "@anthropic-ai/sdk": ^0.25.2
+    "@anthropic-ai/sdk": ^0.27.3
     "@anthropic-ai/vertex-sdk": ^0.4.1
     "@jest/globals": ^29.5.0
     "@langchain/core": "workspace:*"
@@ -11301,7 +11318,7 @@ __metadata:
     "@baiducloud/qianfan": ^0.1.6
     "@jest/globals": ^29.5.0
     "@langchain/core": "workspace:*"
-    "@langchain/openai": ~0.1.0
+    "@langchain/openai": ~0.3.0
     "@langchain/scripts": ">=0.1.0 <0.2.0"
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
@@ -11545,7 +11562,7 @@ __metadata:
     jsdom: ^22.1.0
     jsonwebtoken: ^9.0.2
     langchain: ">=0.2.3 <0.4.0"
-    langsmith: ~0.1.30
+    langsmith: ~0.1.56
     llmonitor: ^0.5.9
     lodash: ^4.17.21
     lunary: ^0.7.10
@@ -11577,7 +11594,7 @@ __metadata:
     typesense: ^1.5.3
     usearch: ^1.1.1
     uuid: ^10.0.0
-    vectordb: ^0.1.4
+    vectordb: ^0.9.0
     voy-search: 0.6.2
     weaviate-ts-client: ^1.4.0
     web-auth-library: ^1.0.3
@@ -11954,25 +11971,6 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/core@npm:>=0.2.16 <0.3.0, @langchain/core@npm:>=0.2.5 <0.3.0":
-  version: 0.2.32
-  resolution: "@langchain/core@npm:0.2.32"
-  dependencies:
-    ansi-styles: ^5.0.0
-    camelcase: 6
-    decamelize: 1.2.0
-    js-tiktoken: ^1.0.12
-    langsmith: ^0.1.43
-    mustache: ^4.2.0
-    p-queue: ^6.6.2
-    p-retry: 4
-    uuid: ^10.0.0
-    zod: ^3.22.4
-    zod-to-json-schema: ^3.22.3
-  checksum: b26380e94c8838a1643177a53bef4c628ea583714a2e93e18a3126413f95756dc6dfbaf0572fe0965afcc79092d4a0c0e0851c932830261bd6c84d6380a0ac74
-  languageName: node
-  linkType: hard
-
 "@langchain/core@workspace:*, @langchain/core@workspace:langchain-core":
   version: 0.0.0-use.local
   resolution: "@langchain/core@workspace:langchain-core"
@@ -11997,7 +11995,7 @@ __metadata:
     jest: ^29.5.0
     jest-environment-node: ^29.6.4
     js-tiktoken: ^1.0.12
-    langsmith: ^0.1.56-rc.1
+    langsmith: ^0.1.56
     ml-matrix: ^6.10.4
     mustache: ^4.2.0
     p-queue: ^6.6.2
@@ -12311,7 +12309,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@langchain/langgraph@npm:0.2.3":
+"@langchain/langgraph@npm:0.2.3, @langchain/langgraph@npm:^0.2.3":
   version: 0.2.3
   resolution: "@langchain/langgraph@npm:0.2.3"
   dependencies:
@@ -12322,22 +12320,6 @@ __metadata:
   peerDependencies:
     "@langchain/core": ">=0.2.31 <0.4.0"
   checksum: 09d423228633f4bfee24b15e9f81eee57e96fecf9914f1e1c1f40f9436d120de912b8c987da356591c6eae0ee2bcf3759ab8e0ff762f87bc4f3f73e4098c12e9
-  languageName: node
-  linkType: hard
-
-"@langchain/langgraph@npm:^0.0.28":
-  version: 0.0.28
-  resolution: "@langchain/langgraph@npm:0.0.28"
-  dependencies:
-    "@langchain/core": ">=0.2.16 <0.3.0"
-    uuid: ^10.0.0
-    zod: ^3.23.8
-  peerDependencies:
-    better-sqlite3: ^9.5.0
-  peerDependenciesMeta:
-    better-sqlite3:
-      optional: true
-  checksum: 1465791026ccd6eaa13a2f2d03b8fb9f0972a8c23b9da1cfd581074f413ea60ef860de6d704c6a3b49f7425f23d6ba49c23255167ae83ab7d70dc00cc0560ce2
   languageName: node
   linkType: hard
 
@@ -12521,7 +12503,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/openai@>=0.1.0 <0.4.0, @langchain/openai@>=0.2.0 <0.4.0, @langchain/openai@workspace:*, @langchain/openai@workspace:^, @langchain/openai@workspace:libs/langchain-openai":
+"@langchain/openai@>=0.1.0 <0.4.0, @langchain/openai@>=0.2.0 <0.4.0, @langchain/openai@workspace:*, @langchain/openai@workspace:^, @langchain/openai@workspace:libs/langchain-openai, @langchain/openai@~0.3.0":
   version: 0.0.0-use.local
   resolution: "@langchain/openai@workspace:libs/langchain-openai"
   dependencies:
@@ -12555,19 +12537,6 @@ __metadata:
     "@langchain/core": ">=0.2.26 <0.4.0"
   languageName: unknown
   linkType: soft
-
-"@langchain/openai@npm:~0.1.0":
-  version: 0.1.3
-  resolution: "@langchain/openai@npm:0.1.3"
-  dependencies:
-    "@langchain/core": ">=0.2.5 <0.3.0"
-    js-tiktoken: ^1.0.12
-    openai: ^4.49.1
-    zod: ^3.22.4
-    zod-to-json-schema: ^3.22.3
-  checksum: 43aaafad2e1416bc23846c6c5084502025d3972c0b11b2ef2bcefd9da3dc1cd933cdf838c596404584af024adccc26e34476fededed0e614a19b47a4e5a8c8e5
-  languageName: node
-  linkType: hard
 
 "@langchain/pinecone@workspace:*, @langchain/pinecone@workspace:libs/langchain-pinecone":
   version: 0.0.0-use.local
@@ -13084,6 +13053,13 @@ __metadata:
     uint8-varint: ^2.0.1
     uint8arrays: ^5.0.0
   checksum: 8d0e1e50c80f4baeb088001a37864987e1a0447783a3411c6f7bd678bd3818d1183563a36076a98f3ebbb8d3c81d4203a609dac510a2370c77e450430b44e5ec
+  languageName: node
+  linkType: hard
+
+"@neon-rs/load@npm:^0.0.74":
+  version: 0.0.74
+  resolution: "@neon-rs/load@npm:0.0.74"
+  checksum: d26ec9b08cdf1a7c5aeefe98f77112d205d11b4005a7934b21fe8fd27528847e08e4749e7e6c3fc05ae9f701175a58c11a095ae6af449634df3991a2c82e1dfa
   languageName: node
   linkType: hard
 
@@ -19518,13 +19494,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/uuid@npm:^9.0.1":
-  version: 9.0.2
-  resolution: "@types/uuid@npm:9.0.2"
-  checksum: 1754bcf3444e1e3aeadd6e774fc328eb53bc956665e2e8fb6ec127aa8e1f43d9a224c3d22a9a6233dca8dd81a12dc7fed4d84b8876dd5ec82d40f574f7ff8b68
-  languageName: node
-  linkType: hard
-
 "@types/validate-npm-package-name@npm:3.0.0":
   version: 3.0.0
   resolution: "@types/validate-npm-package-name@npm:3.0.0"
@@ -20826,26 +20795,6 @@ __metadata:
     normalize-path: ^3.0.0
     picomatch: ^2.0.4
   checksum: 3e044fd6d1d26545f235a9fe4d7a534e2029d8e59fa7fd9f2a6eb21230f6b5380ea1eaf55136e60cbf8e613544b3b766e7a6fa2102e2a3a117505466e3025dc2
-  languageName: node
-  linkType: hard
-
-"apache-arrow@npm:^12.0.0":
-  version: 12.0.0
-  resolution: "apache-arrow@npm:12.0.0"
-  dependencies:
-    "@types/command-line-args": 5.2.0
-    "@types/command-line-usage": 5.0.2
-    "@types/node": 18.14.5
-    "@types/pad-left": 2.1.1
-    command-line-args: 5.2.1
-    command-line-usage: 6.1.3
-    flatbuffers: 23.3.3
-    json-bignum: ^0.0.3
-    pad-left: ^2.1.0
-    tslib: ^2.5.0
-  bin:
-    arrow2csv: bin/arrow2csv.js
-  checksum: 3285189517c2b298cda42852321ce127754918513116eade6e4914c57983f68b6ba96605cfaa2202796d3d6e14755d3b3758f76c1374492affa3d95714eaca40
   languageName: node
   linkType: hard
 
@@ -27120,7 +27069,7 @@ __metadata:
     "@langchain/google-vertexai": "workspace:*"
     "@langchain/google-vertexai-web": "workspace:*"
     "@langchain/groq": "workspace:*"
-    "@langchain/langgraph": ^0.0.28
+    "@langchain/langgraph": ^0.2.3
     "@langchain/mistralai": "workspace:*"
     "@langchain/mongodb": "workspace:*"
     "@langchain/nomic": "workspace:*"
@@ -27174,7 +27123,7 @@ __metadata:
     ioredis: ^5.3.2
     js-yaml: ^4.1.0
     langchain: "workspace:*"
-    langsmith: ^0.1.43
+    langsmith: ^0.1.56
     mongodb: ^6.3.0
     pg: ^8.11.0
     pickleparser: ^0.2.1
@@ -27188,7 +27137,7 @@ __metadata:
     typescript: ~5.1.6
     typesense: ^1.5.3
     uuid: ^10.0.0
-    vectordb: ^0.1.4
+    vectordb: ^0.9.0
     voy-search: 0.6.2
     weaviate-ts-client: ^2.0.0
     zod: ^3.22.4
@@ -32634,7 +32583,7 @@ __metadata:
     js-tiktoken: ^1.0.12
     js-yaml: ^4.1.0
     jsonpointer: ^5.0.1
-    langsmith: ^0.1.56-rc.1
+    langsmith: ^0.1.56
     openai: ^4.41.1
     openapi-types: ^12.1.3
     p-retry: 4
@@ -32713,34 +32662,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"langsmith@npm:^0.1.43":
-  version: 0.1.43
-  resolution: "langsmith@npm:0.1.43"
-  dependencies:
-    "@types/uuid": ^9.0.1
-    commander: ^10.0.1
-    p-queue: ^6.6.2
-    p-retry: 4
-    semver: ^7.6.3
-    uuid: ^9.0.0
-  peerDependencies:
-    "@langchain/core": "*"
-    langchain: "*"
-    openai: "*"
-  peerDependenciesMeta:
-    "@langchain/core":
-      optional: true
-    langchain:
-      optional: true
-    openai:
-      optional: true
-  checksum: 83ded542eb9a4f3c7f75671ba9a85b9bb0558251cbc5ad506098068b7c5abcb6062101857cd5e2b324d5eb1e3f4984aff0d08b7b913c3ad6e41d4cbc65492a13
-  languageName: node
-  linkType: hard
-
-"langsmith@npm:^0.1.56-rc.1":
-  version: 0.1.56-rc.1
-  resolution: "langsmith@npm:0.1.56-rc.1"
+"langsmith@npm:^0.1.56, langsmith@npm:~0.1.56":
+  version: 0.1.56
+  resolution: "langsmith@npm:0.1.56"
   dependencies:
     "@types/uuid": ^10.0.0
     commander: ^10.0.1
@@ -32753,31 +32677,7 @@ __metadata:
   peerDependenciesMeta:
     openai:
       optional: true
-  checksum: 6d144958641bc7bca97b1fd0031fe9214d0e524e758d4a2efb0f34254de218bcfd4354ac71bed7b7d96893063f90a9db7103a6c921448519b1ab7a2200a1506f
-  languageName: node
-  linkType: hard
-
-"langsmith@npm:~0.1.30":
-  version: 0.1.39
-  resolution: "langsmith@npm:0.1.39"
-  dependencies:
-    "@types/uuid": ^9.0.1
-    commander: ^10.0.1
-    p-queue: ^6.6.2
-    p-retry: 4
-    uuid: ^9.0.0
-  peerDependencies:
-    "@langchain/core": "*"
-    langchain: "*"
-    openai: "*"
-  peerDependenciesMeta:
-    "@langchain/core":
-      optional: true
-    langchain:
-      optional: true
-    openai:
-      optional: true
-  checksum: df21332662ec3a2d2d5cf915acede52b96aedf2a286259435d683f230af5926500b129cab1f0275450e0d3de6d9d8476e410ac46f5e994beb43f2e2df8a1965f
+  checksum: 61db6dc3016e35d14d25e78a8ecebcc6356f2efc00310f5582dce9d28a88377525425622d1b98f053e73c0b3233d44c5a2f9d5654ca72ee2e61163edd5be2d28
   languageName: node
   linkType: hard
 
@@ -35402,24 +35302,6 @@ __metadata:
   bin:
     openai: bin/cli
   checksum: 28eae59cb4b51b3d7224647e3be369453522b5be3f1530a51bf8ffe2aefa165cf4156a7621803782014c022943b16ff27690159ef3720214fdbb137a21e47bf2
-  languageName: node
-  linkType: hard
-
-"openai@npm:^4.49.1":
-  version: 4.49.1
-  resolution: "openai@npm:4.49.1"
-  dependencies:
-    "@types/node": ^18.11.18
-    "@types/node-fetch": ^2.6.4
-    abort-controller: ^3.0.0
-    agentkeepalive: ^4.2.1
-    form-data-encoder: 1.7.2
-    formdata-node: ^4.3.2
-    node-fetch: ^2.6.7
-    web-streams-polyfill: ^3.2.1
-  bin:
-    openai: bin/cli
-  checksum: b9bc845d25412d6b6ad827fb1363a4029935d8eb85a8708e55f5cf2852a0551b8720c8099edcbb0a2c2ab2be2d8f652a97061d9898b908e29d9bb2f727304b6e
   languageName: node
   linkType: hard
 
@@ -42566,13 +42448,32 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vectordb@npm:^0.1.4":
-  version: 0.1.4
-  resolution: "vectordb@npm:0.1.4"
+"vectordb@npm:^0.9.0":
+  version: 0.9.0
+  resolution: "vectordb@npm:0.9.0"
   dependencies:
-    "@apache-arrow/ts": ^12.0.0
-    apache-arrow: ^12.0.0
-  checksum: 8a40abf4466479b0b9e61687416b5ab232458401917bf9a1d5f3d8ea8c8320ecc5691174f4d4c0cfef0bb6c16328a9088419fd90ac85fd7267dbccdd1f9e55d7
+    "@lancedb/vectordb-darwin-arm64": 0.4.20
+    "@lancedb/vectordb-darwin-x64": 0.4.20
+    "@lancedb/vectordb-linux-arm64-gnu": 0.4.20
+    "@lancedb/vectordb-linux-x64-gnu": 0.4.20
+    "@lancedb/vectordb-win32-x64-msvc": 0.4.20
+    "@neon-rs/load": ^0.0.74
+    axios: ^1.4.0
+  peerDependencies:
+    "@apache-arrow/ts": ^14.0.2
+    apache-arrow: ^14.0.2
+  dependenciesMeta:
+    "@lancedb/vectordb-darwin-arm64":
+      optional: true
+    "@lancedb/vectordb-darwin-x64":
+      optional: true
+    "@lancedb/vectordb-linux-arm64-gnu":
+      optional: true
+    "@lancedb/vectordb-linux-x64-gnu":
+      optional: true
+    "@lancedb/vectordb-win32-x64-msvc":
+      optional: true
+  conditions: (os=darwin | os=linux | os=win32) & (cpu=x64 | cpu=arm64)
   languageName: node
   linkType: hard
 

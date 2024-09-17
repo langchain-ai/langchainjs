@@ -31,6 +31,8 @@ export interface FromLLMInput {
 }
 
 /**
+ * Chain for question-answering against a graph by generating Cypher statements.
+ *
  * @example
  * ```typescript
  * const chain = new GraphCypherQAChain({
@@ -39,6 +41,18 @@ export interface FromLLMInput {
  * });
  * const res = await chain.invoke("Who played in Pulp Fiction?");
  * ```
+ *
+ * @security
+ * This chain will execute Cypher statements against the provided database.
+ * Make sure that the database connection uses credentials
+ * that are narrowly-scoped to only include necessary permissions.
+ * Failure to do so may result in data corruption or loss, since the calling code
+ * may attempt commands that would result in deletion, mutation of data
+ * if appropriately prompted or reading sensitive data if such data is present in the database.
+ * The best way to guard against such negative outcomes is to (as appropriate) limit the
+ * permissions granted to the credentials used with this tool.
+ *
+ * See https://js.langchain.com/docs/security for more information.
  */
 export class GraphCypherQAChain extends BaseChain {
   private graph: Neo4jGraph;
