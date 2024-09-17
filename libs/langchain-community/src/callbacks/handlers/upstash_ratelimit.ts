@@ -148,7 +148,7 @@ class UpstashRatelimitHandler extends BaseCallbackHandler {
     _name?: string
   ): Promise<void> {
     if (this.tokenRatelimit) {
-      const remaining = await this.tokenRatelimit.getRemaining(this.identifier);
+      const { remaining } = await this.tokenRatelimit.getRemaining(this.identifier);
       if (remaining <= 0) {
         throw new UpstashRatelimitError("Token limit reached!", "token");
       }
