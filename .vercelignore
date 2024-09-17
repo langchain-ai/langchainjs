@@ -8,5 +8,4 @@ node_modules/
 **/*.spec.*
 **/test/
 **/tests/
-**/docs/
 **/examples/
