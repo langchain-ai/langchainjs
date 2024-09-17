@@ -22,7 +22,7 @@ code=$?
 if [ $code -eq 0 ]; then
     # Set the deploymentUrl using the input string
     deploymentUrl="${inputString}.api.js.langchain.com"
-    vercel alias $(cat deployment-url.txt) $deploymentUrl --token="$VERCEL_TOKEN"
+    vercel alias $(cat deployment-url.txt) $deploymentUrl --token="$VERCEL_TOKEN" --scope="langchain"
 else
     # Handle the error
     errorMessage=$(cat error.txt)
