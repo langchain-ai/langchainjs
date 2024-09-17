@@ -3,7 +3,7 @@ name: Deploy API Refs Prod
 on:
   workflow_dispatch:  # Allows triggering the workflow manually in GitHub UI
   push:
-    branches: ["main"]
+    branches: ["main", "v0.2"]
 
 # If another push to the same PR or branch happens while this workflow is still running,
 # cancel the earlier run in favor of the next run.
@@ -36,9 +36,4 @@ jobs:
       - name: Build Project Artifacts
         run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
       - name: Deploy to Vercel
-        run: |
-          if [ ${{ github.ref }} = 'refs/heads/main' ]; then
-            vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }}
-          else
-            vercel deploy --token=${{ secrets.VERCEL_TOKEN }}
-          fi
+        run: vercel deploy --prod --prebuilt --token=${{ secrets.VERCEL_TOKEN }}
