@@ -3,7 +3,7 @@ name: Deploy API Refs Prod
 on:
   workflow_dispatch:  # Allows triggering the workflow manually in GitHub UI
   push:
-    branches: ["main"]
+    branches: ["main", "v0.2"]
 
 # If another push to the same PR or branch happens while this workflow is still running,
 # cancel the earlier run in favor of the next run.
