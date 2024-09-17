@@ -207,7 +207,7 @@
     "typescript": "~5.1.6",
     "typesense": "^1.5.3",
     "usearch": "^1.1.1",
-    "vectordb": "^0.1.4",
+    "vectordb": "^0.9.0",
     "voy-search": "0.6.2",
     "weaviate-ts-client": "^1.4.0",
     "web-auth-library": "^1.0.3",

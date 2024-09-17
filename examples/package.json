@@ -102,7 +102,7 @@
     "typeorm": "^0.3.20",
     "typesense": "^1.5.3",
     "uuid": "^10.0.0",
-    "vectordb": "^0.1.4",
+    "vectordb": "^0.9.0",
     "voy-search": "0.6.2",
     "weaviate-ts-client": "^2.0.0",
     "zod": "^3.22.4",
