@@ -106,6 +106,7 @@ export type JsonOutputKeyToolsParserParams = {
 /**
  * @deprecated Import from "@langchain/core/output_parsers/openai_tools"
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export class JsonOutputKeyToolsParser extends BaseLLMOutputParser<any> {
   static lc_name() {
     return "JsonOutputKeyToolsParser";
