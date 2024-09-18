@@ -923,6 +923,7 @@ export class ChatAnthropicMessages<
     if (!this.streamingClient) {
       const options_ = this.apiUrl ? { baseURL: this.apiUrl } : undefined;
       this.streamingClient = this.createClient({
+        dangerouslyAllowBrowser: true,
         ...this.clientOptions,
         ...options_,
         apiKey: this.apiKey,
@@ -950,6 +951,7 @@ export class ChatAnthropicMessages<
     if (!this.batchClient) {
       const options = this.apiUrl ? { baseURL: this.apiUrl } : undefined;
       this.batchClient = this.createClient({
+        dangerouslyAllowBrowser: true,
         ...this.clientOptions,
         ...options,
         apiKey: this.apiKey,

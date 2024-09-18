@@ -9,9 +9,7 @@ const fakeOpenAIModel = new ChatOpenAI({
 
 const anthropicModel = new ChatAnthropic({});
 
-const modelWithFallback = fakeOpenAIModel.withFallbacks({
-  fallbacks: [anthropicModel],
-});
+const modelWithFallback = fakeOpenAIModel.withFallbacks([anthropicModel]);
 
 const result = await modelWithFallback.invoke("What is your name?");
 

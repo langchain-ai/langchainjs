@@ -8,46 +8,26 @@
       "destination": "https://langchainjs-v01.vercel.app/v0.1/:path*"
     },
     {
-      "source": "/robots.txt(/?)",
-      "destination": "/v0.2/robots.txt/"
-    },
-    {
-      "source": "/sitemap.xml(/?)",
-      "destination": "/v0.2/sitemap.xml/"
+      "source": "/v0.2/:path(.*/?)*",
+      "destination": "https://langchainjs-v02.vercel.app/v0.2/:path*"
     }
   ],
   "redirects": [
     {
-      "source": "/",
-      "destination": "/v0.2/docs/introduction/"
-    },
-    {
-      "source": "/v0.1",
-      "destination": "/"
-    },
-    {
-      "source": "/v0.2/docs/get_started/introduction(/?)",
-      "destination": "/v0.2/docs/introduction/"
-    },
-    {
-      "source": "/docs(/?)",
-      "destination": "/v0.2/docs/introduction/"
+      "source": "/docs/how_to/callbacks_backgrounding(/?)",
+      "destination": "/docs/how_to/callbacks_serverless/"
     },
     {
       "source": "/docs/get_started/introduction(/?)",
-      "destination": "/v0.2/docs/introduction/"
+      "destination": "/docs/introduction/"
     },
     {
-      "source": "/v0.2/docs(/?)",
-      "destination": "/v0.2/docs/introduction/"
+      "source": "/docs(/?)",
+      "destination": "/docs/introduction/"
     },
     {
-      "source": "/docs/integrations/:path(.*/?)*",
-      "destination": "/v0.2/docs/integrations/:path*"
-    },
-    {
-      "source": "/docs/:path(.*/?)*",
-      "destination": "/v0.1/docs/:path*"
+      "source": "/docs/get_started/introduction(/?)",
+      "destination": "/docs/introduction/"
     },
     {
       "source": "/docs/how_to/tool_calls_multi_modal(/?)",
@@ -62,24 +42,28 @@
       "destination": "https://docs.smith.langchain.com/"
     },
     {
-      "source": "/v0.2/docs/integrations/chat/chrome_ai(/?)",
-      "destination": "/v0.2/docs/integrations/llms/chrome_ai/"
+      "source": "/docs/integrations/chat/chrome_ai(/?)",
+      "destination": "/docs/integrations/llms/chrome_ai/"
     },
     {
-      "source": "/v0.2/docs/integrations/retrievers/vectorstore(/?)",
-      "destination": "/v0.2/docs/how_to/vectorstore_retriever/"
+      "source": "/docs/integrations/retrievers/vectorstore(/?)",
+      "destination": "/docs/how_to/vectorstore_retriever/"
     },
     {
-      "source": "/v0.2/docs/integrations/chat_memory(/?)",
-      "destination": "/v0.2/docs/integrations/memory/"
+      "source": "/docs/integrations/chat_memory(/?)",
+      "destination": "/docs/integrations/memory/"
     },
     {
-      "source": "/v0.2/docs/integrations/chat_memory/:path(.*/?)*",
-      "destination": "/v0.2/docs/integrations/memory/:path*"
+      "source": "/docs/integrations/chat_memory/:path(.*/?)*",
+      "destination": "/docs/integrations/memory/:path*"
     },
     {
-      "source": "/v0.2/docs/integrations/llms/togetherai(/?)",
-      "destination": "/v0.2/docs/integrations/llms/together/"
+      "source": "/docs/integrations/llms/togetherai(/?)",
+      "destination": "/docs/integrations/llms/together/"
+    },
+    {
+      "source": "/docs/tutorials/agents(/?)",
+      "destination": "https://langchain-ai.github.io/langgraphjs/tutorials/quickstart/"
     }
   ]
 }

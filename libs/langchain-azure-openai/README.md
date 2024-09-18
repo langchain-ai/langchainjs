@@ -1,6 +1,6 @@
 > [!IMPORTANT]
 > This package is now deprecated in favor of the new Azure integration in the OpenAI SDK. Please use the package [`@langchain/openai`](https://www.npmjs.com/package/@langchain/openai) instead.
-> You can find the migration guide [here](https://js.langchain.com/v0.2/docs/integrations/llms/azure#migration-from-azure-openai-sdk).
+> You can find the migration guide [here](https://js.langchain.com/docs/integrations/llms/azure#migration-from-azure-openai-sdk).
 
 # @langchain/azure-openai
 
@@ -11,7 +11,7 @@ It provides Azure OpenAI support through the [Azure SDK for OpenAI](https://gith
 ## Installation
 
 ```bash npm2yarn
-npm install @langchain/azure-openai
+npm install @langchain/azure-openai @langchain/core
 ```
 
 This package, along with the main LangChain package, depends on [`@langchain/core`](https://npmjs.com/package/@langchain/core/).
@@ -24,17 +24,17 @@ You can do so by adding appropriate fields to your project's `package.json` like
   "version": "0.0.0",
   "dependencies": {
     "@langchain/azure-openai": "^0.0.4",
-    "langchain": "0.0.207"
+    "@langchain/core": "^0.3.0"
   },
   "resolutions": {
-    "@langchain/core": "0.1.5"
+    "@langchain/core": "^0.3.0"
   },
   "overrides": {
-    "@langchain/core": "0.1.5"
+    "@langchain/core": "^0.3.0"
   },
   "pnpm": {
     "overrides": {
-      "@langchain/core": "0.1.5"
+      "@langchain/core": "^0.3.0"
     }
   }
 }

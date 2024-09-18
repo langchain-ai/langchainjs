@@ -107,7 +107,7 @@ export async function fillKVStoreIntegrationDocTemplate(fields: {
   } else {
     sidebarLabel = fields.className.replace("Store", " Store");
   }
-  const pyDocUrl = `https://python.langchain.com/v0.2/docs/integrations/stores/${sidebarLabel.toLowerCase()}/`;
+  const pyDocUrl = `https://python.langchain.com/docs/integrations/stores/${sidebarLabel.toLowerCase()}/`;
   let envVarName = `${sidebarLabel.toUpperCase()}_API_KEY`;
   const extraFields = await promptExtraFields({
     envVarGuess: envVarName,

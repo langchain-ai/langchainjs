@@ -14,7 +14,7 @@ if (currentPackageJson.dependencies["@langchain/core"]) {
 if (currentPackageJson.devDependencies["@langchain/scripts"]) {
   currentPackageJson.devDependencies = {
     ...currentPackageJson.devDependencies,
-    "@langchain/scripts": "latest",
+    "@langchain/scripts": "*",
   };
 }
 

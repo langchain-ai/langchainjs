@@ -67,6 +67,7 @@ Original question: {question}`,
 
 export interface MultiQueryRetrieverInput extends BaseRetrieverInput {
   retriever: BaseRetrieverInterface;
+  /** @deprecated Pass a custom prompt into `.fromLLM` instead. */
   llmChain: LLMChain<LineList>;
   queryCount?: number;
   parserKey?: string;

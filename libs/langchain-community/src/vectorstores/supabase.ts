@@ -55,7 +55,7 @@ export interface SupabaseLibArgs {
  * npm install @langchain/community @supabase/supabase-js
  * ```
  *
- * See https://js.langchain.com/v0.2/docs/integrations/vectorstores/supabase for
+ * See https://js.langchain.com/docs/integrations/vectorstores/supabase for
  * instructions on how to set up your Supabase instance.
  *
  * ## [Constructor args](https://api.js.langchain.com/classes/_langchain_community.vectorstores_supabase.SupabaseVectorStore.html#constructor)

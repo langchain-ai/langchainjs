@@ -22,7 +22,7 @@ import IntegrationInstallTooltip from "@mdx_components/integration_install_toolt
 <IntegrationInstallTooltip></IntegrationInstallTooltip>
 
 ```bash npm2yarn
-npm install @langchain/google-genai
+npm install @langchain/google-genai @langchain/core
 ```
 
 Configure your API key.
@@ -84,7 +84,7 @@ Click [here](/docs/integrations/chat/google_generativeai) for the `@langchain/go
 <IntegrationInstallTooltip></IntegrationInstallTooltip>
 
 ```bash npm2yarn
-npm install @langchain/google-vertexai
+npm install @langchain/google-vertexai @langchain/core
 ```
 
 Then, you'll need to add your service account credentials, either directly as a `GOOGLE_VERTEX_AI_WEB_CREDENTIALS` environment variable:
@@ -152,12 +152,6 @@ Click [here](/docs/integrations/chat/google_vertex_ai) for the `@langchain/googl
 </Tabs>
 
 The value of `image_url` must be a base64 encoded image (e.g., `data:image/png;base64,abcd124`).
-
-### Vertex AI (Legacy)
-
-:::tip
-See the legacy Google PaLM and VertexAI documentation [here](/docs/integrations/chat/google_palm) for chat, and [here](/docs/integrations/llms/google_palm) for LLMs.
-:::
 
 ## Vector Store
 
