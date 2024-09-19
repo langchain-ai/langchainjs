@@ -219,7 +219,12 @@
     "weaviate-ts-client": "^1.4.0",
     "web-auth-library": "^1.0.3",
     "youtube-transcript": "^1.0.6",
-    "youtubei.js": "^9.1.0"
+    "youtubei.js": "^9.1.0",
+    "@types/oracledb": "^6.4.0",
+    "htmlparser2": "^9.1.0",
+    "oracledb": "^6.4.0",
+    "uuid": "^9.0.1",
+    "winston": "^3.13.0"
   },
   "peerDependencies": {
     "@aws-crypto/sha256-js": "^5.0.0",
