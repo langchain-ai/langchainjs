@@ -174,7 +174,7 @@ export abstract class Runnable<
    */
   withConfig(
     config: RunnableConfig
-  ): RunnableBinding<RunInput, RunOutput, CallOptions> {
+  ): Runnable<RunInput, RunOutput, CallOptions> {
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
     return new RunnableBinding({
       bound: this,
@@ -1236,7 +1236,7 @@ export class RunnableBinding<
 
   withConfig(
     config: RunnableConfig
-  ): RunnableBinding<RunInput, RunOutput, CallOptions> {
+  ): Runnable<RunInput, RunOutput, CallOptions> {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return new (this.constructor as any)({
       bound: this.bound,
