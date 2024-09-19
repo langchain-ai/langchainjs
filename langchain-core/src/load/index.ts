@@ -1,4 +1,4 @@
-import {
+emport {
   Serializable,
   SerializedConstructor,
   SerializedNotImplemented,
