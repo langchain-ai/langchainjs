@@ -2328,7 +2328,6 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
           try {
             let output = await this.func(input, {
               ...childConfig,
-              config: childConfig,
             });
             if (output && Runnable.isRunnable(output)) {
               if (config?.recursionLimit === 0) {
