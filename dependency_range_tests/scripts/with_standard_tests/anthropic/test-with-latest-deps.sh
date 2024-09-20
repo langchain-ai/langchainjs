@@ -23,6 +23,7 @@ cd "$updater_script_dir"
 # Update any workspace dep to the latest version since not all workspaces are
 # available in the test enviroment.
 node "update_workspace_deps.js"
+node "update_resolutions_latest.js"
 
 # Navigate back to monorepo root and install dependencies
 cd "$monorepo_dir"
@@ -32,4 +33,6 @@ yarn
 # We need to run inside the anthropic directory so turbo repo does
 # not try to build the package/its workspace dependencies.
 cd "$monorepo_anthropic_dir"
+
+yarn add @langchain/core
 yarn test

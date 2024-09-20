@@ -132,7 +132,7 @@ export class PlanAndExecuteAgentExecutor extends BaseChain {
   }) {
     let agent;
 
-    if (isDynamicStructuredTool(tools[0])) {
+    if (tools.length > 0 && isDynamicStructuredTool(tools[0])) {
       agent = StructuredChatAgent.fromLLMAndTools(llm, tools, {
         humanMessageTemplate,
         inputVariables: ["previous_steps", "current_step", "agent_scratchpad"],

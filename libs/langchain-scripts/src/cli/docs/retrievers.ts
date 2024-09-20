@@ -89,7 +89,7 @@ export async function fillRetrieverIntegrationDocTemplate(fields: {
   className: string;
 }) {
   const sidebarLabel = fields.className.replace("Retriever", "");
-  const pyDocUrl = `https://python.langchain.com/v0.2/docs/integrations/retrievers/${sidebarLabel.toLowerCase()}/`;
+  const pyDocUrl = `https://python.langchain.com/docs/integrations/retrievers/${sidebarLabel.toLowerCase()}/`;
   const extraFields = await promptExtraFields();
   const { pySupport } = extraFields;
   const { canSelfHost } = extraFields;

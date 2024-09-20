@@ -21,7 +21,11 @@ cd /app
 
 node /updater_script/update_resolutions_lowest.js
 
+# Read the @langchain/core version from peerDependencies
+core_version=$(node -p "require('./package.json').peerDependencies['@langchain/core']")
+
 yarn
+yarn add @langchain/core@$core_version
 
 # Check the test command completes successfully
 NODE_OPTIONS=--experimental-vm-modules yarn run jest --testPathIgnorePatterns=\\.int\\.test.ts --testTimeout 30000 --maxWorkers=50%

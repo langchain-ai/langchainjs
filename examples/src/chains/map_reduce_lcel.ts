@@ -5,10 +5,10 @@ import {
 import { ChatOpenAI } from "@langchain/openai";
 import { formatDocument } from "langchain/schema/prompt_template";
 import {
+  RunnableConfig,
   RunnablePassthrough,
   RunnableSequence,
 } from "@langchain/core/runnables";
-import { BaseCallbackConfig } from "@langchain/core/callbacks/manager";
 import { Document } from "@langchain/core/documents";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { StringOutputParser } from "@langchain/core/output_parsers";
@@ -62,12 +62,10 @@ const collapseChain = RunnableSequence.from([
 // Define a function to collapse a list of documents until the total number of tokens is within the limit
 const collapse = async (
   documents: Document[],
-  options?: {
-    config?: BaseCallbackConfig;
-  },
+  options?: RunnableConfig,
   tokenMax = 4000
 ) => {
-  const editableConfig = options?.config;
+  const editableConfig = options;
   let docs = documents;
   let collapseCount = 1;
   while ((await getNumTokens(docs)) > tokenMax) {

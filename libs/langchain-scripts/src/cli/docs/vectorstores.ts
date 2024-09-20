@@ -80,7 +80,7 @@ export async function fillVectorStoreIntegrationDocTemplate(fields: {
   className: string;
 }) {
   const sidebarLabel = fields.className.replace("VectorStore", "");
-  const pyDocUrl = `https://python.langchain.com/v0.2/docs/integrations/vectorstores/${sidebarLabel.toLowerCase()}/`;
+  const pyDocUrl = `https://python.langchain.com/docs/integrations/vectorstores/${sidebarLabel.toLowerCase()}/`;
   let envVarName = `${sidebarLabel.toUpperCase()}_API_KEY`;
   const extraFields = await promptExtraFields({
     envVarGuess: envVarName,

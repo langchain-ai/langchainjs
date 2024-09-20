@@ -183,7 +183,7 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
           "",
           `See this page for more information:`,
           "|",
-          `└> https://js.langchain.com/v0.2/docs/integrations/chat/openai`,
+          `└> https://js.langchain.com/docs/integrations/chat/openai`,
         ].join("\n")
       );
       // eslint-disable-next-line no-constructor-return
