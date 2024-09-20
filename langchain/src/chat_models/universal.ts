@@ -564,7 +564,7 @@ export async function initChatModel<
   }
 ): Promise<_ConfigurableModel<RunInput, CallOptions>>;
 export async function initChatModel<
-  RunInput extends BaseLanguageModelInput = BaseLanguageModelInput,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   CallOptions extends Record<string, any> = ConfigurableChatModelCallOptions,
   ChatModel extends BaseChatModel<CallOptions> = BaseChatModel<CallOptions>
 >(model: string): Promise<ChatModel>;

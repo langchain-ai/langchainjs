@@ -6,7 +6,6 @@ import { ChatPromptTemplate, PromptTemplate } from "@langchain/core/prompts";
 import { RunLogPatch, StreamEvent } from "@langchain/core/tracers/log_stream";
 import { AIMessageChunk } from "@langchain/core/messages";
 import { concat } from "@langchain/core/utils/stream";
-import { BaseLanguageModelInput } from "@langchain/core/language_models/base";
 import { ChatOpenAI, ChatOpenAICallOptions } from "@langchain/openai";
 import { ChatAnthropic, ChatAnthropicCallOptions } from "@langchain/anthropic";
 import { ChatVertexAI } from "@langchain/google-vertexai";
@@ -65,18 +64,11 @@ test("Initialize non-configurable models", async () => {
 });
 
 test("Init models with just a model name", async () => {
-  const gpt4 = await initChatModel<
-    BaseLanguageModelInput,
-    ChatOpenAICallOptions,
-    ChatOpenAI
-  >("gpt-4");
-  const claude = await initChatModel<
-    BaseLanguageModelInput,
-    ChatAnthropicCallOptions,
-    ChatAnthropic
-  >("claude-3-opus-20240229");
+  const gpt4 = await initChatModel<ChatOpenAICallOptions, ChatOpenAI>("gpt-4");
+  const claude = await initChatModel<ChatAnthropicCallOptions, ChatAnthropic>(
+    "claude-3-opus-20240229"
+  );
   const gemini = await initChatModel<
-    BaseLanguageModelInput,
     GoogleAIBaseLanguageModelCallOptions,
     ChatVertexAI
   >("gemini-1.5-pro");
