@@ -178,5 +178,4 @@ export const optionalImportEntrypoints: string[] = [
   "langchain_community/experimental/hubs/makersuite/googlemakersuitehub",
   "langchain_community/experimental/tools/pyinterpreter",
   "langchain_community/chains/graph_qa/cypher",
-  "langchain_community/langgraph/checkpointers/vercel_kv",
 ];
