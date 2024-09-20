@@ -6,14 +6,14 @@ import { ChatPromptTemplate, PromptTemplate } from "@langchain/core/prompts";
 import { RunLogPatch, StreamEvent } from "@langchain/core/tracers/log_stream";
 import { AIMessageChunk } from "@langchain/core/messages";
 import { concat } from "@langchain/core/utils/stream";
-import { AgentExecutor, createReactAgent } from "../../agents/index.js";
-import { pull } from "../../hub.js";
-import { initChatModel } from "../universal.js";
 import { BaseLanguageModelInput } from "@langchain/core/language_models/base";
 import { ChatOpenAI, ChatOpenAICallOptions } from "@langchain/openai";
 import { ChatAnthropic, ChatAnthropicCallOptions } from "@langchain/anthropic";
 import { ChatVertexAI } from "@langchain/google-vertexai";
 import { GoogleAIBaseLanguageModelCallOptions } from "@langchain/google-common";
+import { initChatModel } from "../universal.js";
+import { pull } from "../../hub.js";
+import { AgentExecutor, createReactAgent } from "../../agents/index.js";
 
 // Make copies of API keys and remove them from the environment to avoid conflicts.
 
@@ -65,9 +65,21 @@ test("Initialize non-configurable models", async () => {
 });
 
 test("Init models with just a model name", async () => {
-  const gpt4 = await initChatModel<BaseLanguageModelInput, ChatOpenAICallOptions, ChatOpenAI>("gpt-4");
-  const claude = await initChatModel<BaseLanguageModelInput, ChatAnthropicCallOptions, ChatAnthropic>("claude-3-opus-20240229");
-  const gemini = await initChatModel<BaseLanguageModelInput, GoogleAIBaseLanguageModelCallOptions, ChatVertexAI>("gemini-1.5-pro");
+  const gpt4 = await initChatModel<
+    BaseLanguageModelInput,
+    ChatOpenAICallOptions,
+    ChatOpenAI
+  >("gpt-4");
+  const claude = await initChatModel<
+    BaseLanguageModelInput,
+    ChatAnthropicCallOptions,
+    ChatAnthropic
+  >("claude-3-opus-20240229");
+  const gemini = await initChatModel<
+    BaseLanguageModelInput,
+    GoogleAIBaseLanguageModelCallOptions,
+    ChatVertexAI
+  >("gemini-1.5-pro");
 
   const gpt4Result = await gpt4.invoke("what's your name");
   expect(gpt4Result).toBeDefined();
@@ -80,7 +92,7 @@ test("Init models with just a model name", async () => {
   const geminiResult = await gemini.invoke("what's your name");
   expect(geminiResult).toBeDefined();
   expect(geminiResult.content.length).toBeGreaterThan(0);
-})
+});
 
 test("Create a partially configurable model with no default model", async () => {
   const configurableModel = await initChatModel(undefined, {

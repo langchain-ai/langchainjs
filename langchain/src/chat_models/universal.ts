@@ -566,7 +566,7 @@ export async function initChatModel<
 export async function initChatModel<
   RunInput extends BaseLanguageModelInput = BaseLanguageModelInput,
   CallOptions extends Record<string, any> = ConfigurableChatModelCallOptions,
-  ChatModel extends BaseChatModel<CallOptions> = BaseChatModel<CallOptions>,
+  ChatModel extends BaseChatModel<CallOptions> = BaseChatModel<CallOptions>
 >(model: string): Promise<ChatModel>;
 
 // ################################# FOR CONTRIBUTORS #################################
@@ -781,7 +781,7 @@ export async function initChatModel<
 export async function initChatModel<
   RunInput extends BaseLanguageModelInput = BaseLanguageModelInput,
   CallOptions extends ConfigurableChatModelCallOptions = ConfigurableChatModelCallOptions,
-  ChatModel extends BaseChatModel<CallOptions> = BaseChatModel<CallOptions>,
+  ChatModel extends BaseChatModel<CallOptions> = BaseChatModel<CallOptions>
 >(
   model?: string,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -790,9 +790,7 @@ export async function initChatModel<
     configurableFields?: string[] | "any";
     configPrefix?: string;
   }
-): Promise<
-  _ConfigurableModel<RunInput, CallOptions> | ChatModel
-> {
+): Promise<_ConfigurableModel<RunInput, CallOptions> | ChatModel> {
   const { configurableFields, configPrefix, modelProvider, ...params } = {
     configPrefix: "",
     ...(fields ?? {}),
@@ -814,9 +812,7 @@ export async function initChatModel<
   const paramsCopy: Record<string, any> = { ...params };
 
   if (model && !fields) {
-    return _initChatModelHelper(model) as Promise<
-      ChatModel
-    >;
+    return _initChatModelHelper(model) as Promise<ChatModel>;
   }
 
   if (!configurableFieldsCopy) {
