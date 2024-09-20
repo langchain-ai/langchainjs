@@ -152,7 +152,7 @@ class UpstashRatelimitHandler extends BaseCallbackHandler {
 
       // result of getRemaining was changed from a number to an object in v2.0.0.
       // we check to make sure that it works with versions before & after:
-      const remaining = typeof result === "number" ? result : result.remaining
+      const remaining = typeof result === "number" ? result : result.remaining;
 
       if (remaining <= 0) {
         throw new UpstashRatelimitError("Token limit reached!", "token");
