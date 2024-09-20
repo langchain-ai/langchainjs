@@ -174,7 +174,7 @@ export abstract class Runnable<
    */
   withConfig(
     config: RunnableConfig
-  ): RunnableBinding<RunInput, RunOutput, CallOptions> {
+  ): Runnable<RunInput, RunOutput, CallOptions> {
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
     return new RunnableBinding({
       bound: this,
@@ -695,7 +695,7 @@ export abstract class Runnable<
       config.callbacks = callbacks.concat([logStreamCallbackHandler]);
     } else {
       const copiedCallbacks = callbacks.copy();
-      copiedCallbacks.inheritableHandlers.push(logStreamCallbackHandler);
+      copiedCallbacks.addHandler(logStreamCallbackHandler, true);
       // eslint-disable-next-line no-param-reassign
       config.callbacks = copiedCallbacks;
     }
@@ -896,7 +896,7 @@ export abstract class Runnable<
       config.callbacks = callbacks.concat(eventStreamer);
     } else {
       const copiedCallbacks = callbacks.copy();
-      copiedCallbacks.inheritableHandlers.push(eventStreamer);
+      copiedCallbacks.addHandler(eventStreamer, true);
       // eslint-disable-next-line no-param-reassign
       config.callbacks = copiedCallbacks;
     }
@@ -1236,7 +1236,7 @@ export class RunnableBinding<
 
   withConfig(
     config: RunnableConfig
-  ): RunnableBinding<RunInput, RunOutput, CallOptions> {
+  ): Runnable<RunInput, RunOutput, CallOptions> {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return new (this.constructor as any)({
       bound: this.bound,
@@ -2328,7 +2328,6 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
           try {
             let output = await this.func(input, {
               ...childConfig,
-              config: childConfig,
             });
             if (output && Runnable.isRunnable(output)) {
               if (config?.recursionLimit === 0) {

@@ -606,7 +606,7 @@ export function tool<
         const childConfig = patchConfig(config, {
           callbacks: runManager?.getChild(),
         });
-        void AsyncLocalStorageProviderSingleton.getInstance().run(
+        void AsyncLocalStorageProviderSingleton.runWithConfig(
           childConfig,
           async () => {
             try {
