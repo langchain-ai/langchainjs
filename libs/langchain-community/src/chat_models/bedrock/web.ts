@@ -222,10 +222,6 @@ export interface BedrockChatFields
  * const llm = new BedrockChat({
  *   region: process.env.AWS_REGION,
  *   maxRetries: 0,
- *   credentials: {
- *     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
- *     accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
- *   },
  *   model: "anthropic.claude-3-5-sonnet-20240620-v1:0",
  *   temperature: 0,
  *   maxTokens: undefined,
