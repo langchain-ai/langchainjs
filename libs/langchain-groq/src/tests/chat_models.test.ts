@@ -10,3 +10,10 @@ test("Serialization", () => {
     `{"lc":1,"type":"constructor","id":["langchain","chat_models","groq","ChatGroq"],"kwargs":{"api_key":{"lc":1,"type":"secret","id":["GROQ_API_KEY"]}}}`
   );
 });
+
+test("Serialization with no params", () => {
+  const model = new ChatGroq();
+  expect(JSON.stringify(model)).toEqual(
+    `{"lc":1,"type":"constructor","id":["langchain","chat_models","groq","ChatGroq"],"kwargs":{"api_key":{"lc":1,"type":"secret","id":["GROQ_API_KEY"]}}}`
+  );
+});
