@@ -434,6 +434,8 @@ export class AzureChatOpenAI extends ChatOpenAI {
       openAIApiKey: "openai_api_key",
       openAIApiVersion: "openai_api_version",
       openAIBasePath: "openai_api_base",
+      deploymentName: "deployment_name",
+      azureOpenAIEndpoint: "azure_endpoint",
     };
   }
 
@@ -477,6 +479,7 @@ export class AzureChatOpenAI extends ChatOpenAI {
         azureOpenAIBasePath: this.azureOpenAIBasePath,
         azureADTokenProvider: this.azureADTokenProvider,
         baseURL: this.clientConfig.baseURL,
+        azureOpenAIEndpoint: this.azureOpenAIEndpoint,
       };
 
       const endpoint = getEndpoint(openAIEndpointConfig);
