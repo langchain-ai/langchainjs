@@ -660,6 +660,8 @@ export class ChatGroq extends BaseChatModel<
 
   streaming = false;
 
+  apiKey?: string;
+
   static lc_name() {
     return "ChatGroq";
   }
@@ -690,6 +692,7 @@ export class ChatGroq extends BaseChatModel<
       apiKey,
       dangerouslyAllowBrowser: true,
     });
+    this.apiKey = apiKey;
     this.temperature = fields?.temperature ?? this.temperature;
     this.modelName = fields?.model ?? fields?.modelName ?? this.model;
     this.model = this.modelName;
