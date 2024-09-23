@@ -183,9 +183,9 @@ export interface BedrockChatFields
  *
  * ```bash
  * npm install @langchain/openai
- * export BEDROCK_AWS_REGION="your-aws-region"
- * export BEDROCK_AWS_SECRET_ACCESS_KEY="your-aws-secret-access-key"
- * export BEDROCK_AWS_ACCESS_KEY_ID="your-aws-access-key-id"
+ * export AWS_REGION="your-aws-region"
+ * export AWS_SECRET_ACCESS_KEY="your-aws-secret-access-key"
+ * export AWS_ACCESS_KEY_ID="your-aws-access-key-id"
  * ```
  *
  * ## [Constructor args](/classes/langchain_community_chat_models_bedrock.BedrockChat.html#constructor)
@@ -220,11 +220,11 @@ export interface BedrockChatFields
  * import { BedrockChat } from '@langchain/community/chat_models/bedrock';
  *
  * const llm = new BedrockChat({
- *   region: process.env.BEDROCK_AWS_REGION,
+ *   region: process.env.AWS_REGION,
  *   maxRetries: 0,
  *   credentials: {
- *     secretAccessKey: process.env.BEDROCK_AWS_SECRET_ACCESS_KEY!,
- *     accessKeyId: process.env.BEDROCK_AWS_ACCESS_KEY_ID!,
+ *     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+ *     accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
  *   },
  *   model: "anthropic.claude-3-5-sonnet-20240620-v1:0",
  *   temperature: 0,
@@ -499,7 +499,10 @@ export class BedrockChat
 
   region: string;
 
-  credentials: CredentialType;
+  credentials?: CredentialType;
+  awsAccessKeyID?: string;
+  awsSecretAccessKey?: string;
+  awsSessionToken?: string;
 
   temperature?: number | undefined = undefined;
 
@@ -542,8 +545,11 @@ export class BedrockChat
 
   get lc_secrets(): { [key: string]: string } | undefined {
     return {
-      "credentials.accessKeyId": "BEDROCK_AWS_ACCESS_KEY_ID",
-      "credentials.secretAccessKey": "BEDROCK_AWS_SECRET_ACCESS_KEY",
+      "credentials.accessKeyId": "AWS_ACCESS_KEY_ID",
+      "credentials.secretAccessKey": "AWS_SECRET_ACCESS_KEY",
+      awsAccessKeyId: "AWS_ACCESS_KEY_ID",
+      awsSecretAccessKey: "AWS_SECRET_ACCESS_KEY",
+      awsSessionToken: "AWS_SESSION_TOKEN",
     };
   }
 
@@ -585,10 +591,28 @@ export class BedrockChat
     }
     this.region = region;
 
-    const credentials = fields?.credentials;
+    this.awsAccessKeyID =
+      fields?.awsAccessKeyID || getEnvironmentVariable("AWS_ACCESS_KEY_ID");
+    this.awsSecretAccessKey =
+      fields?.awsSecretAccessKey ||
+      getEnvironmentVariable("AWS_SECRET_ACCESS_KEY");
+    this.awsSessionToken =
+      fields?.awsSessionToken || getEnvironmentVariable("AWS_SESSION_TOKEN");
+    const credentials = fields?.credentials ?? {
+      ...(this.awsAccessKeyID !== undefined && {
+        accessKeyID: this.awsAccessKeyID,
+      }),
+      ...(this.awsSecretAccessKey !== undefined && {
+        secretAccessKey: this.awsSecretAccessKey,
+      }),
+      ...(this.awsSessionToken !== undefined && {
+        sessionToken: this.awsSessionToken,
+      }),
+    };
+
     if (!credentials) {
       throw new Error(
-        "Please set the AWS credentials in the 'credentials' field."
+        "Please set the AWS credentials in the 'credentials' field or set env vars AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY, or AWS_SESSION_TOKEN."
       );
     }
     this.credentials = credentials;

@@ -168,6 +168,10 @@ export interface BaseBedrockInput {
     tagSuffix: string;
     streamProcessingMode: "SYNCHRONOUS" | "ASYNCHRONOUS";
   };
+
+  awsAccessKeyID?: string;
+  awsSecretAccessKey?: string;
+  awsSessionToken?: string;
 }
 
 type Dict = { [key: string]: unknown };
