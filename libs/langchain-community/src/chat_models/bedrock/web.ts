@@ -495,10 +495,7 @@ export class BedrockChat
 
   region: string;
 
-  credentials?: CredentialType;
-  awsAccessKeyID?: string;
-  awsSecretAccessKey?: string;
-  awsSessionToken?: string;
+  credentials: CredentialType;
 
   temperature?: number | undefined = undefined;
 
@@ -543,6 +540,7 @@ export class BedrockChat
     return {
       "credentials.accessKeyId": "AWS_ACCESS_KEY_ID",
       "credentials.secretAccessKey": "AWS_SECRET_ACCESS_KEY",
+      "credentials.sessionToken": "AWS_SECRET_ACCESS_KEY",
       awsAccessKeyId: "AWS_ACCESS_KEY_ID",
       awsSecretAccessKey: "AWS_SECRET_ACCESS_KEY",
       awsSessionToken: "AWS_SESSION_TOKEN",
@@ -568,7 +566,32 @@ export class BedrockChat
   }
 
   constructor(fields?: BedrockChatFields) {
-    super(fields ?? {});
+    const awsAccessKeyId =
+      fields?.awsAccessKeyId ?? getEnvironmentVariable("AWS_ACCESS_KEY_ID");
+    const awsSecretAccessKey =
+      fields?.awsSecretAccessKey ??
+      getEnvironmentVariable("AWS_SECRET_ACCESS_KEY");
+    const awsSessionToken =
+      fields?.awsSessionToken ?? getEnvironmentVariable("AWS_SESSION_TOKEN");
+
+    let credentials = fields?.credentials;
+    if (credentials === undefined) {
+      if (awsAccessKeyId === undefined || awsSecretAccessKey === undefined) {
+        throw new Error(
+          "Please set your AWS credentials in the 'credentials' field or set env vars AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY, and optionally AWS_SESSION_TOKEN."
+        );
+      }
+      credentials = {
+        accessKeyId: awsAccessKeyId,
+        secretAccessKey: awsSecretAccessKey,
+        sessionToken: awsSessionToken,
+      };
+    }
+
+    // eslint-disable-next-line no-param-reassign
+    fields = { ...fields, awsAccessKeyId, awsSecretAccessKey, awsSessionToken };
+
+    super(fields);
 
     this.model = fields?.model ?? this.model;
     this.modelProvider = getModelProvider(this.model);
@@ -587,30 +610,6 @@ export class BedrockChat
     }
     this.region = region;
 
-    this.awsAccessKeyID =
-      fields?.awsAccessKeyID || getEnvironmentVariable("AWS_ACCESS_KEY_ID");
-    this.awsSecretAccessKey =
-      fields?.awsSecretAccessKey ||
-      getEnvironmentVariable("AWS_SECRET_ACCESS_KEY");
-    this.awsSessionToken =
-      fields?.awsSessionToken || getEnvironmentVariable("AWS_SESSION_TOKEN");
-    const credentials = fields?.credentials ?? {
-      ...(this.awsAccessKeyID !== undefined && {
-        accessKeyID: this.awsAccessKeyID,
-      }),
-      ...(this.awsSecretAccessKey !== undefined && {
-        secretAccessKey: this.awsSecretAccessKey,
-      }),
-      ...(this.awsSessionToken !== undefined && {
-        sessionToken: this.awsSessionToken,
-      }),
-    };
-
-    if (!credentials) {
-      throw new Error(
-        "Please set the AWS credentials in the 'credentials' field or set env vars AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY, or AWS_SESSION_TOKEN."
-      );
-    }
     this.credentials = credentials;
 
     this.temperature = fields?.temperature ?? this.temperature;

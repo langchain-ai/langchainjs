@@ -169,8 +169,10 @@ export interface BaseBedrockInput {
     streamProcessingMode: "SYNCHRONOUS" | "ASYNCHRONOUS";
   };
 
-  awsAccessKeyID?: string;
+  awsAccessKeyId?: string;
+
   awsSecretAccessKey?: string;
+
   awsSessionToken?: string;
 }
 
