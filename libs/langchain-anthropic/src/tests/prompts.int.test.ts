@@ -3,7 +3,7 @@ import { pull } from "langchain/hub";
 
 import { convertPromptToAnthropic } from "../utils/prompts.js";
 
-test("basic traceable implementation", async () => {
+test("Convert hub prompt to Anthropic payload and invoke", async () => {
   const prompt = await pull("jacob/joke-generator");
   const formattedPrompt = await prompt.invoke({
     topic: "cats",
