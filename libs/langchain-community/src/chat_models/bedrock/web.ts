@@ -217,7 +217,7 @@ export interface BedrockChatFields
  * <summary><strong>Instantiate</strong></summary>
  *
  * ```typescript
- * import { BedrockChat } from '@langchain/community/chat_models/bedrock';
+ * import { BedrockChat } from '@langchain/community/chat_models/bedrock/web';
  *
  * const llm = new BedrockChat({
  *   region: process.env.AWS_REGION,
@@ -226,6 +226,16 @@ export interface BedrockChatFields
  *   temperature: 0,
  *   maxTokens: undefined,
  *   // other params...
+ * });
+ *
+ * // You can also pass credentials in explicitly:
+ * const llmWithCredentials = new BedrockChat({
+ *   region: process.env.BEDROCK_AWS_REGION,
+ *   model: "anthropic.claude-3-5-sonnet-20240620-v1:0",
+ *   credentials: {
+ *     secretAccessKey: process.env.BEDROCK_AWS_SECRET_ACCESS_KEY!,
+ *     accessKeyId: process.env.BEDROCK_AWS_ACCESS_KEY_ID!,
+ *   },
  * });
  * ```
  * </details>
