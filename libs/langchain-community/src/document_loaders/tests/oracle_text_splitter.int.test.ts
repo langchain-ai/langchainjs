@@ -1,7 +1,7 @@
 import { expect, test } from "@jest/globals";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import oracledb from "oracledb";
-import { OracleTextSplitter } from "../oracle_text_splitter.js";
+import { OracleTextSplitter } from "../fs/oracle.js";
 
 test("Test splitting by character count.", async () => {
   const text =

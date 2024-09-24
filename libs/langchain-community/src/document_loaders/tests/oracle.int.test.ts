@@ -27,4 +27,3 @@ test("Test loading PDF from file", async () => {
   expect(docs[0].pageContent).toContain("You");
   expect(docs[0].pageContent).toContain("Need");
 });
-
