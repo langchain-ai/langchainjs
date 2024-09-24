@@ -1,7 +1,6 @@
 import {
   BaseClient,
   BaseClientOptions,
-  GetTableSchemaResponse,
   Schemas,
   XataApiClient,
   parseWorkspacesUrlParts,
@@ -43,11 +42,11 @@ interface storedMessagesDTO {
 }
 
 const chatMemoryColumns: Schemas.Column[] = [
-  { name: "sessionId", type: "string" },
-  { name: "type", type: "string" },
-  { name: "role", type: "string" },
+  { name: "sessionId", type: "text" },
+  { name: "type", type: "text" },
+  { name: "role", type: "text" },
   { name: "content", type: "text" },
-  { name: "name", type: "string" },
+  { name: "name", type: "text" },
   { name: "additionalKwargs", type: "text" },
 ];
 
@@ -214,28 +213,69 @@ export class XataChatMessageHistory<
       throw new Error("Invalid databaseURL");
     }
     const { workspace, region } = urlParts;
-    const tableParams = {
-      workspace,
-      region,
-      database,
-      branch,
-      table: this.table,
-    };
 
-    let schema: GetTableSchemaResponse | null = null;
+    const { postgresEnabled } = await this.apiClient.databases.getDatabaseMetadata({ pathParams: { workspaceId: workspace, dbName: database } });
+
+    let isTableCreated = false;
     try {
-      schema = await this.apiClient.tables.getTableSchema(tableParams);
+      if (postgresEnabled) {
+        const { schema } = await this.apiClient.migrations.getSchema({
+          pathParams: {
+            workspace,
+            region,
+            dbBranchName: `${database}:${branch}`,
+          }
+        })
+        isTableCreated = Object.values(schema.tables).some((table) => table.name === this.table);
+      } else {
+        await this.apiClient.table.getTableSchema({
+          pathParams: {
+            workspace,
+            region,
+            dbBranchName: `${database}:${branch}`,
+            tableName: this.table,
+          }
+        });
+        isTableCreated = true;
+      }
     } catch (e) {
       // pass
     }
-    if (schema == null) {
-      await this.apiClient.tables.createTable(tableParams);
-      await this.apiClient.tables.setTableSchema({
-        ...tableParams,
-        schema: {
-          columns: chatMemoryColumns,
-        },
-      });
+
+    if (!isTableCreated) {
+      if (postgresEnabled) {
+        await this.apiClient.migrations.applyMigration({
+          pathParams: {
+            workspace,
+            region,
+            dbBranchName: `${database}:${branch}`,
+          },
+          body: {
+            operations: [{ createTable: { name: this.table, columns: chatMemoryColumns } }],
+            adaptTables: true
+          }
+        })
+      } else {
+        await this.apiClient.table.createTable({
+          pathParams: {
+            workspace,
+            region,
+            dbBranchName: `${database}:${branch}`,
+            tableName: this.table,
+          }
+        });
+        await this.apiClient.table.setTableSchema({
+          pathParams: {
+            workspace,
+            region,
+            dbBranchName: `${database}:${branch}`,
+            tableName: this.table,
+          },
+          body: {
+            columns: chatMemoryColumns,
+          }
+        });
+      }
     }
   }
 }

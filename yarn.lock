@@ -11509,7 +11509,7 @@ __metadata:
     "@vercel/kv": ^0.2.3
     "@vercel/postgres": ^0.5.0
     "@writerai/writer-sdk": ^0.40.2
-    "@xata.io/client": ^0.28.0
+    "@xata.io/client": ^0.30.0
     "@xenova/transformers": ^2.17.2
     "@zilliz/milvus2-sdk-node": ">=2.3.5"
     apify-client: ^2.7.1
@@ -11659,7 +11659,7 @@ __metadata:
     "@vercel/kv": ^0.2.3
     "@vercel/postgres": ^0.5.0
     "@writerai/writer-sdk": ^0.40.2
-    "@xata.io/client": ^0.28.0
+    "@xata.io/client": ^0.30.0
     "@xenova/transformers": ^2.17.2
     "@zilliz/milvus2-sdk-node": ">=2.3.5"
     apify-client: ^2.7.1
@@ -20363,12 +20363,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@xata.io/client@npm:^0.28.0":
-  version: 0.28.0
-  resolution: "@xata.io/client@npm:0.28.0"
+"@xata.io/client@npm:^0.30.0":
+  version: 0.30.0
+  resolution: "@xata.io/client@npm:0.30.0"
   peerDependencies:
     typescript: ">=4.5"
-  checksum: 39dbf590c320ba49623f44ab1124fb084f08f2820d04bc1f7c20459304ac4008227964ce4e5d9bf1ab34828c7d3fa3afb50f3455a1f37a981238463ae4289036
+  checksum: de28dc22b5d7c445e6a0464c7b3d553a27cb47c37fc550f905349fa25d68496db89d3ea8d79486e4994eac33497a689dbf66796e7ad1bd0e4754e55753d7869c
   languageName: node
   linkType: hard
 
@@ -27100,7 +27100,7 @@ __metadata:
     "@upstash/redis": ^1.32.0
     "@upstash/vector": ^1.1.1
     "@vercel/kv": ^0.2.3
-    "@xata.io/client": ^0.28.0
+    "@xata.io/client": ^0.30.0
     "@zilliz/milvus2-sdk-node": ^2.3.5
     axios: ^0.26.0
     chromadb: ^1.5.3
