@@ -3,7 +3,7 @@ import { AIMessage, HumanMessage, ToolMessage } from "@langchain/core/messages";
 import { z } from "zod";
 import { OutputParserException } from "@langchain/core/output_parsers";
 import { ChatAnthropic } from "../chat_models.js";
-import { _formatMessagesForAnthropic } from "../utils/message_inputs.js";
+import { _convertMessagesToAnthropicPayload } from "../index.js";
 
 test("withStructuredOutput with output validation", async () => {
   const model = new ChatAnthropic({
@@ -143,7 +143,7 @@ test("Can properly format anthropic messages when given two tool results", async
     }),
   ];
 
-  const formattedMessages = _formatMessagesForAnthropic(messageHistory);
+  const formattedMessages = _convertMessagesToAnthropicPayload(messageHistory);
 
   expect(formattedMessages).toEqual({
     messages: [
