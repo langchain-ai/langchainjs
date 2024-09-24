@@ -10,6 +10,7 @@ import { BaseChatMemory, BaseChatMemoryInput } from "./chat_memory.js";
  * Interface that defines the shape of the input object that the
  * CombinedMemory constructor accepts. It extends the BaseChatMemoryInput
  * interface and adds additional properties.
+ * @deprecated Will be removed in 1.0.0. Please see the migration guide at: https://js.langchain.com/docs/versions/migrating_memory/
  */
 export interface CombinedMemoryInput extends BaseChatMemoryInput {
   memories: BaseMemory[];
@@ -22,6 +23,7 @@ export interface CombinedMemoryInput extends BaseChatMemoryInput {
  * Class that manages and manipulates previous chat messages. It extends
  * from the BaseChatMemory class and implements the CombinedMemoryInput
  * interface.
+ * @deprecated Will be removed in 1.0.0. Please see the migration guide at: https://js.langchain.com/docs/versions/migrating_memory/
  */
 export class CombinedMemory
   extends BaseChatMemory

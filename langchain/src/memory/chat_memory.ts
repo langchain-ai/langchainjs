@@ -23,6 +23,7 @@ export interface BaseChatMemoryInput {
  * memory systems. It is designed to maintain the state of an application,
  * specifically the history of a conversation. This class is typically
  * extended by other classes to create specific types of memory systems.
+ * @deprecated Will be removed in 1.0.0. Please see the migration guide at: https://js.langchain.com/docs/versions/migrating_memory/
  */
 export abstract class BaseChatMemory extends BaseMemory {
   chatHistory: BaseChatMessageHistory;

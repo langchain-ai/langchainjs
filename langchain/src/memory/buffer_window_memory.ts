@@ -4,6 +4,7 @@ import { BaseChatMemory, BaseChatMemoryInput } from "./chat_memory.js";
 
 /**
  * Interface for the input parameters of the BufferWindowMemory class.
+ * @deprecated Will be removed in 1.0.0. Please see the migration guide at: https://js.langchain.com/docs/versions/migrating_memory/
  */
 export interface BufferWindowMemoryInput extends BaseChatMemoryInput {
   humanPrefix?: string;
@@ -40,6 +41,7 @@ export interface BufferWindowMemoryInput extends BaseChatMemoryInput {
  * const res2 = await chain.call({ input: "What's my name?" });
  * console.log({ res2 });
  * ```
+ * @deprecated Will be removed in 1.0.0. Please see the migration guide at: https://js.langchain.com/docs/versions/migrating_memory/
  */
 export class BufferWindowMemory
   extends BaseChatMemory

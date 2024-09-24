@@ -19,6 +19,7 @@ import { BaseChatMemory, BaseChatMemoryInput } from "./chat_memory.js";
 
 /**
  * Interface for the input parameters required by the EntityMemory class.
+ * @deprecated Will be removed in 1.0.0. Please see the migration guide at: https://js.langchain.com/docs/versions/migrating_memory/
  */
 export interface EntityMemoryInput extends BaseChatMemoryInput {
   llm: BaseLanguageModelInterface;
@@ -67,6 +68,7 @@ export interface EntityMemoryInput extends BaseChatMemoryInput {
  * });
  *
  * ```
+ * @deprecated Will be removed in 1.0.0. Please see the migration guide at: https://js.langchain.com/docs/versions/migrating_memory/
  */
 export class EntityMemory extends BaseChatMemory implements EntityMemoryInput {
   private entityExtractionChain: LLMChain;

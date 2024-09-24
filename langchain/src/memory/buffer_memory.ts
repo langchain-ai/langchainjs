@@ -4,6 +4,7 @@ import { BaseChatMemory, BaseChatMemoryInput } from "./chat_memory.js";
 
 /**
  * Interface for the input parameters of the `BufferMemory` class.
+ * @deprecated Will be removed in 1.0.0. Please see the migration guide at: https://js.langchain.com/docs/versions/migrating_memory/
  */
 export interface BufferMemoryInput extends BaseChatMemoryInput {
   humanPrefix?: string;
@@ -46,6 +47,7 @@ export interface BufferMemoryInput extends BaseChatMemoryInput {
  * console.log({ res });
  *
  * ```
+ * @deprecated Will be removed in 1.0.0. Please see the migration guide at: https://js.langchain.com/docs/versions/migrating_memory/
  */
 export class BufferMemory extends BaseChatMemory implements BufferMemoryInput {
   humanPrefix = "Human";
