@@ -42,12 +42,12 @@ interface storedMessagesDTO {
 }
 
 const chatMemoryColumns: Schemas.Column[] = [
-  { name: "sessionId", type: "text" },
-  { name: "type", type: "text" },
-  { name: "role", type: "text" },
-  { name: "content", type: "text" },
-  { name: "name", type: "text" },
-  { name: "additionalKwargs", type: "text" },
+  { name: "sessionId", type: "text", nullable: true },
+  { name: "type", type: "text", nullable: true },
+  { name: "role", type: "text", nullable: true },
+  { name: "content", type: "text", nullable: true },
+  { name: "name", type: "text", nullable: true },
+  { name: "additionalKwargs", type: "text", nullable: true },
 ];
 
 /**
