@@ -105,7 +105,9 @@ export class XataChatMessageHistory<
     if (client) {
       this.client = client;
     } else if (config) {
-      this.client = new BaseClient(config) as XataClient;
+      this.client = new BaseClient(config, [{
+        name: this.table, columns: chatMemoryColumns
+      }]) as XataClient;
     } else {
       throw new Error(
         "Either a client or a config must be provided to XataChatMessageHistoryInput"
