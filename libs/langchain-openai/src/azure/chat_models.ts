@@ -558,7 +558,7 @@ export class AzureChatOpenAI extends ChatOpenAI {
           json.kwargs.azure_endpoint = endpoint;
         }
       }
-      if (!json.kwargs.azure_endopint && this.azureOpenAIApiInstanceName) {
+      if (!json.kwargs.azure_endpoint && this.azureOpenAIApiInstanceName) {
         json.kwargs.azure_endpoint = `https://${this.azureOpenAIApiInstanceName}.openai.azure.com/`;
       }
       if (!json.kwargs.deployment_name && this.azureOpenAIApiDeploymentName) {
