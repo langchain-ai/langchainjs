@@ -3,7 +3,7 @@ import { AIMessage, HumanMessage, ToolMessage } from "@langchain/core/messages";
 import { z } from "zod";
 import { OutputParserException } from "@langchain/core/output_parsers";
 import { ChatAnthropic } from "../chat_models.js";
-import { _convertMessagesToAnthropicPayload } from "../index.js";
+import { _convertMessagesToAnthropicPayload } from "../utils/message_inputs.js";
 
 test("withStructuredOutput with output validation", async () => {
   const model = new ChatAnthropic({
