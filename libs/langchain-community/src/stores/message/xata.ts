@@ -105,9 +105,12 @@ export class XataChatMessageHistory<
     if (client) {
       this.client = client;
     } else if (config) {
-      this.client = new BaseClient(config, [{
-        name: this.table, columns: chatMemoryColumns
-      }]) as XataClient;
+      this.client = new BaseClient(config, [
+        {
+          name: this.table,
+          columns: chatMemoryColumns,
+        },
+      ]) as XataClient;
     } else {
       throw new Error(
         "Either a client or a config must be provided to XataChatMessageHistoryInput"
@@ -209,14 +212,13 @@ export class XataChatMessageHistory<
     }
 
     const { databaseURL, branch } = await this.client.getConfig();
-    const [, , host, , database] = databaseURL.split("/");
-    const urlParts = parseWorkspacesUrlParts(host);
-    if (urlParts == null) {
-      throw new Error("Invalid databaseURL");
-    }
-    const { workspace, region } = urlParts;
+    const { workspace, region, database } =
+      parseWorkspacesUrlParts(databaseURL);
 
-    const { postgresEnabled } = await this.apiClient.databases.getDatabaseMetadata({ pathParams: { workspaceId: workspace, dbName: database } });
+    const { postgresEnabled } =
+      await this.apiClient.databases.getDatabaseMetadata({
+        pathParams: { workspaceId: workspace, dbName: database },
+      });
 
     let isTableCreated = false;
     try {
@@ -226,9 +228,11 @@ export class XataChatMessageHistory<
             workspace,
             region,
             dbBranchName: `${database}:${branch}`,
-          }
-        })
-        isTableCreated = Object.values(schema.tables).some((table) => table.name === this.table);
+          },
+        });
+        isTableCreated = Object.values(schema.tables).some(
+          (table) => table.name === this.table
+        );
       } else {
         await this.apiClient.table.getTableSchema({
           pathParams: {
@@ -236,7 +240,7 @@ export class XataChatMessageHistory<
             region,
             dbBranchName: `${database}:${branch}`,
             tableName: this.table,
-          }
+          },
         });
         isTableCreated = true;
       }
@@ -253,10 +257,14 @@ export class XataChatMessageHistory<
             dbBranchName: `${database}:${branch}`,
           },
           body: {
-            operations: [{ createTable: { name: this.table, columns: chatMemoryColumns } }],
-            adaptTables: true
-          }
-        })
+            operations: [
+              {
+                create_table: { name: this.table, columns: chatMemoryColumns },
+              },
+            ],
+            adaptTables: true,
+          },
+        });
       } else {
         await this.apiClient.table.createTable({
           pathParams: {
@@ -264,7 +272,7 @@ export class XataChatMessageHistory<
             region,
             dbBranchName: `${database}:${branch}`,
             tableName: this.table,
-          }
+          },
         });
         await this.apiClient.table.setTableSchema({
           pathParams: {
@@ -275,7 +283,7 @@ export class XataChatMessageHistory<
           },
           body: {
             columns: chatMemoryColumns,
-          }
+          },
         });
       }
     }
