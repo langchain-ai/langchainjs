@@ -1018,8 +1018,20 @@ export class ChatOpenAI<
     this.__includeRawResponse = fields?.__includeRawResponse;
 
     if (this.azureOpenAIApiKey || this.azureADTokenProvider) {
-      if (!this.azureOpenAIApiInstanceName && !this.azureOpenAIBasePath && !this.azureOpenAIEndpoint) {
+      if (
+        !this.azureOpenAIApiInstanceName &&
+        !this.azureOpenAIBasePath &&
+        !this.azureOpenAIEndpoint
+      ) {
         throw new Error("Azure OpenAI API instance name not found");
+      }
+
+      if (!this.azureOpenAIApiDeploymentName && this.azureOpenAIBasePath) {
+        const parts = this.azureOpenAIBasePath.split("/openai/deployments/");
+        if (parts.length === 2) {
+          const [, deployment] = parts;
+          this.azureOpenAIApiDeploymentName = deployment;
+        }
       }
       if (!this.azureOpenAIApiDeploymentName) {
         throw new Error("Azure OpenAI API deployment name not found");
