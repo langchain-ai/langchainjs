@@ -183,9 +183,9 @@ export interface BedrockChatFields
  *
  * ```bash
  * npm install @langchain/openai
- * export BEDROCK_AWS_REGION="your-aws-region"
- * export BEDROCK_AWS_SECRET_ACCESS_KEY="your-aws-secret-access-key"
- * export BEDROCK_AWS_ACCESS_KEY_ID="your-aws-access-key-id"
+ * export AWS_REGION="your-aws-region"
+ * export AWS_SECRET_ACCESS_KEY="your-aws-secret-access-key"
+ * export AWS_ACCESS_KEY_ID="your-aws-access-key-id"
  * ```
  *
  * ## [Constructor args](/classes/langchain_community_chat_models_bedrock.BedrockChat.html#constructor)
@@ -217,19 +217,25 @@ export interface BedrockChatFields
  * <summary><strong>Instantiate</strong></summary>
  *
  * ```typescript
- * import { BedrockChat } from '@langchain/community/chat_models/bedrock';
+ * import { BedrockChat } from '@langchain/community/chat_models/bedrock/web';
  *
  * const llm = new BedrockChat({
- *   region: process.env.BEDROCK_AWS_REGION,
+ *   region: process.env.AWS_REGION,
  *   maxRetries: 0,
- *   credentials: {
- *     secretAccessKey: process.env.BEDROCK_AWS_SECRET_ACCESS_KEY!,
- *     accessKeyId: process.env.BEDROCK_AWS_ACCESS_KEY_ID!,
- *   },
  *   model: "anthropic.claude-3-5-sonnet-20240620-v1:0",
  *   temperature: 0,
  *   maxTokens: undefined,
  *   // other params...
+ * });
+ *
+ * // You can also pass credentials in explicitly:
+ * const llmWithCredentials = new BedrockChat({
+ *   region: process.env.BEDROCK_AWS_REGION,
+ *   model: "anthropic.claude-3-5-sonnet-20240620-v1:0",
+ *   credentials: {
+ *     secretAccessKey: process.env.BEDROCK_AWS_SECRET_ACCESS_KEY!,
+ *     accessKeyId: process.env.BEDROCK_AWS_ACCESS_KEY_ID!,
+ *   },
  * });
  * ```
  * </details>
@@ -542,8 +548,12 @@ export class BedrockChat
 
   get lc_secrets(): { [key: string]: string } | undefined {
     return {
-      "credentials.accessKeyId": "BEDROCK_AWS_ACCESS_KEY_ID",
-      "credentials.secretAccessKey": "BEDROCK_AWS_SECRET_ACCESS_KEY",
+      "credentials.accessKeyId": "AWS_ACCESS_KEY_ID",
+      "credentials.secretAccessKey": "AWS_SECRET_ACCESS_KEY",
+      "credentials.sessionToken": "AWS_SECRET_ACCESS_KEY",
+      awsAccessKeyId: "AWS_ACCESS_KEY_ID",
+      awsSecretAccessKey: "AWS_SECRET_ACCESS_KEY",
+      awsSessionToken: "AWS_SESSION_TOKEN",
     };
   }
 
@@ -566,7 +576,32 @@ export class BedrockChat
   }
 
   constructor(fields?: BedrockChatFields) {
-    super(fields ?? {});
+    const awsAccessKeyId =
+      fields?.awsAccessKeyId ?? getEnvironmentVariable("AWS_ACCESS_KEY_ID");
+    const awsSecretAccessKey =
+      fields?.awsSecretAccessKey ??
+      getEnvironmentVariable("AWS_SECRET_ACCESS_KEY");
+    const awsSessionToken =
+      fields?.awsSessionToken ?? getEnvironmentVariable("AWS_SESSION_TOKEN");
+
+    let credentials = fields?.credentials;
+    if (credentials === undefined) {
+      if (awsAccessKeyId === undefined || awsSecretAccessKey === undefined) {
+        throw new Error(
+          "Please set your AWS credentials in the 'credentials' field or set env vars AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY, and optionally AWS_SESSION_TOKEN."
+        );
+      }
+      credentials = {
+        accessKeyId: awsAccessKeyId,
+        secretAccessKey: awsSecretAccessKey,
+        sessionToken: awsSessionToken,
+      };
+    }
+
+    // eslint-disable-next-line no-param-reassign
+    fields = { ...fields, awsAccessKeyId, awsSecretAccessKey, awsSessionToken };
+
+    super(fields);
 
     this.model = fields?.model ?? this.model;
     this.modelProvider = getModelProvider(this.model);
@@ -585,12 +620,6 @@ export class BedrockChat
     }
     this.region = region;
 
-    const credentials = fields?.credentials;
-    if (!credentials) {
-      throw new Error(
-        "Please set the AWS credentials in the 'credentials' field."
-      );
-    }
     this.credentials = credentials;
 
     this.temperature = fields?.temperature ?? this.temperature;
