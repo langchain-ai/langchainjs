@@ -1,6 +1,6 @@
 import { VectorStore } from "@langchain/core/vectorstores";
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
-import { Document } from "@langchain/core/documents";
+import { Document, DocumentInterface } from "@langchain/core/documents";
 import {
   AsyncCaller,
   AsyncCallerParams,
@@ -90,7 +90,7 @@ export class FirestoreVectorSearch extends VectorStore {
    */
   async addVectors(
     vectors: number[][],
-    documents: Document[],
+    documents: DocumentInterface[],
     options?: { ids?: string[] }
   ) {
     const docs = vectors.map((embedding, idx) => ({
@@ -136,7 +136,7 @@ export class FirestoreVectorSearch extends VectorStore {
    * @param documents Documents to be added.
    * @returns Promise that resolves when the documents have been added.
    */
-  async addDocuments(documents: Document[], options?: { ids?: string[] }) {
+  async addDocuments(documents: DocumentInterface[], options?: { ids?: string[] }) {
     const texts = documents.map(({ pageContent }) => pageContent);
     return this.addVectors(
       await this.embeddings.embedDocuments(texts),
@@ -229,7 +229,7 @@ export class FirestoreVectorSearch extends VectorStore {
    * @returns Promise that resolves to a new instance of FirestoreVectorSearch.
    */
   static async fromDocuments(
-    docs: Document[],
+    docs: DocumentInterface[],
     embeddings: EmbeddingsInterface,
     dbConfig: FirestoreVectorSearchLibArgs & { ids?: string[] }
   ): Promise<FirestoreVectorSearch> {
