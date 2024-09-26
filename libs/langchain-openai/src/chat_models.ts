@@ -913,6 +913,8 @@ export class ChatOpenAI<
 
   maxTokens?: number;
 
+  maxCompletionTokens?: number;
+
   logprobs?: boolean;
 
   topLogprobs?: number;
@@ -1003,6 +1005,7 @@ export class ChatOpenAI<
     this.frequencyPenalty = fields?.frequencyPenalty ?? this.frequencyPenalty;
     this.presencePenalty = fields?.presencePenalty ?? this.presencePenalty;
     this.maxTokens = fields?.maxTokens;
+    this.maxCompletionTokens = fields?.maxCompletionTokens ?? this.maxTokens;
     this.logprobs = fields?.logprobs;
     this.topLogprobs = fields?.topLogprobs;
     this.n = fields?.n ?? this.n;
@@ -1143,6 +1146,7 @@ export class ChatOpenAI<
       frequency_penalty: this.frequencyPenalty,
       presence_penalty: this.presencePenalty,
       max_tokens: this.maxTokens === -1 ? undefined : this.maxTokens,
+      max_completion_tokens: this.maxCompletionTokens ?? this.maxTokens === -1 ? undefined : this.maxTokens,
       logprobs: this.logprobs,
       top_logprobs: this.topLogprobs,
       n: this.n,
