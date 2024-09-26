@@ -913,8 +913,6 @@ export class ChatOpenAI<
 
   maxTokens?: number;
 
-  maxCompletionTokens?: number;
-
   logprobs?: boolean;
 
   topLogprobs?: number;
@@ -1004,8 +1002,7 @@ export class ChatOpenAI<
     this.topP = fields?.topP ?? this.topP;
     this.frequencyPenalty = fields?.frequencyPenalty ?? this.frequencyPenalty;
     this.presencePenalty = fields?.presencePenalty ?? this.presencePenalty;
-    this.maxTokens = fields?.maxTokens;
-    this.maxCompletionTokens = fields?.maxCompletionTokens ?? this.maxTokens;
+    this.maxTokens = fields?.maxCompletionTokens ?? fields?.maxTokens;
     this.logprobs = fields?.logprobs;
     this.topLogprobs = fields?.topLogprobs;
     this.n = fields?.n ?? this.n;
@@ -1062,7 +1059,8 @@ export class ChatOpenAI<
       ls_model_name: this.model,
       ls_model_type: "chat",
       ls_temperature: params.temperature ?? undefined,
-      ls_max_tokens: params.max_tokens ?? undefined,
+      ls_max_tokens:
+        params.max_tokens ?? params.max_completion_tokens ?? undefined,
       ls_stop: options.stop,
     };
   }
@@ -1145,8 +1143,10 @@ export class ChatOpenAI<
       top_p: this.topP,
       frequency_penalty: this.frequencyPenalty,
       presence_penalty: this.presencePenalty,
-      max_tokens: this.maxTokens === -1 ? undefined : this.maxTokens,
-      max_completion_tokens: this.maxCompletionTokens ?? this.maxTokens === -1 ? undefined : this.maxTokens,
+      // maxTokens was deprecated in favor of maxCompletionTokens
+      // in September 2024 release
+      // https://community.openai.com/t/why-was-max-tokens-changed-to-max-completion-tokens/938077/4
+      max_completion_tokens: this.maxTokens === -1 ? undefined : this.maxTokens,
       logprobs: this.logprobs,
       top_logprobs: this.topLogprobs,
       n: this.n,
