@@ -258,6 +258,7 @@ export abstract class BaseChatModel<
         runnableConfig.runName
       );
       let generationChunk: ChatGenerationChunk | undefined;
+      let llmOutput: Record<string, any> | undefined;
       try {
         for await (const chunk of this._streamResponseChunks(
           messages,
@@ -278,6 +279,15 @@ export abstract class BaseChatModel<
           } else {
             generationChunk = generationChunk.concat(chunk);
           }
+          if (chunk.message instanceof AIMessageChunk && chunk.message.usage_metadata) {
+            llmOutput = {
+              tokenUsage: {
+                promptTokens: chunk.message.usage_metadata.input_tokens,
+                completionTokens: chunk.message.usage_metadata.output_tokens,
+                totalTokens: chunk.message.usage_metadata.total_tokens,
+              }
+            }
+          }
         }
       } catch (err) {
         await Promise.all(
@@ -292,6 +302,7 @@ export abstract class BaseChatModel<
           runManager?.handleLLMEnd({
             // TODO: Remove cast after figuring out inheritance
             generations: [[generationChunk as ChatGeneration]],
+            llmOutput,
           })
         )
       );
@@ -365,6 +376,7 @@ export abstract class BaseChatModel<
           runManagers?.[0]
         );
         let aggregated;
+        let llmOutput: Record<string, any> | undefined;
         for await (const chunk of stream) {
           if (chunk.message.id == null) {
             const runId = runManagers?.at(0)?.runId;
@@ -375,6 +387,15 @@ export abstract class BaseChatModel<
           } else {
             aggregated = concat(aggregated, chunk);
           }
+          if (chunk.message instanceof AIMessageChunk && chunk.message.usage_metadata) {
+            llmOutput = {
+              tokenUsage: {
+                promptTokens: chunk.message.usage_metadata.input_tokens,
+                completionTokens: chunk.message.usage_metadata.output_tokens,
+                totalTokens: chunk.message.usage_metadata.total_tokens,
+              }
+            }
+          }
         }
         if (aggregated === undefined) {
           throw new Error("Received empty response from chat model call.");
@@ -382,7 +403,7 @@ export abstract class BaseChatModel<
         generations.push([aggregated]);
         await runManagers?.[0].handleLLMEnd({
           generations,
-          llmOutput: {},
+          llmOutput,
         });
       } catch (e) {
         await runManagers?.[0].handleLLMError(e);
