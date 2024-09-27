@@ -11503,7 +11503,7 @@ __metadata:
     "@types/ws": ^8
     "@typescript-eslint/eslint-plugin": ^5.58.0
     "@typescript-eslint/parser": ^5.58.0
-    "@upstash/ratelimit": ^1.2.1
+    "@upstash/ratelimit": ^2.0.3
     "@upstash/redis": ^1.32.0
     "@upstash/vector": ^1.1.1
     "@vercel/kv": ^0.2.3
@@ -11653,7 +11653,7 @@ __metadata:
     "@tensorflow-models/universal-sentence-encoder": "*"
     "@tensorflow/tfjs-converter": "*"
     "@tensorflow/tfjs-core": "*"
-    "@upstash/ratelimit": ^1.1.3
+    "@upstash/ratelimit": ^1.1.3 || ^2.0.3
     "@upstash/redis": ^1.20.6
     "@upstash/vector": ^1.1.1
     "@vercel/kv": ^0.2.3
@@ -20101,21 +20101,21 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@upstash/core-analytics@npm:^0.0.9":
-  version: 0.0.9
-  resolution: "@upstash/core-analytics@npm:0.0.9"
+"@upstash/core-analytics@npm:^0.0.10":
+  version: 0.0.10
+  resolution: "@upstash/core-analytics@npm:0.0.10"
   dependencies:
     "@upstash/redis": ^1.28.3
-  checksum: cfb49ce9d7c745a98de2b4e35973855d6311502c90840683dbe4b6a58304d880c6c356c6de275f32cfe5ec5add865a3dfe860c96d989e8a06e823788e90af2b9
+  checksum: 5b435a5e67666a6ecb19e59ab73f314124634fdadb66390f8b2d6f7e20cac461262e5b81d113d77a5d093d8d11b2cfe3ecd5c573cde77505557f8bbf0f8b1e27
   languageName: node
   linkType: hard
 
-"@upstash/ratelimit@npm:^1.2.1":
-  version: 1.2.1
-  resolution: "@upstash/ratelimit@npm:1.2.1"
+"@upstash/ratelimit@npm:^2.0.3":
+  version: 2.0.3
+  resolution: "@upstash/ratelimit@npm:2.0.3"
   dependencies:
-    "@upstash/core-analytics": ^0.0.9
-  checksum: c23112312c51d91916ab75610a2ad9bd7b8eea41c2f6765eb84e572334eb0a4bc59c2420c9332c22a91e42398570c47ce0231884e6362d56e50057935d5f12f8
+    "@upstash/core-analytics": ^0.0.10
+  checksum: eae88d62948f9069bf1c89e9a7fb5c0e2a1e784d04af2319d079a60b02dc67d8e316af9252931d29fafb93dedb496479b0e92a340d62bdddd96d60e3fbe44c63
   languageName: node
   linkType: hard
 
