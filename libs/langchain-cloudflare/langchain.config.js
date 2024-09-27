@@ -13,8 +13,7 @@ function abs(relativePath) {
 export const config = {
   internals: [/node\:/, /@langchain\/core\//, /@langchain\/langgraph\/web/],
   entrypoints: {
-    index: "index",
-    "langgraph/checkpointers": "langgraph/checkpointers",
+    index: "index"
   },
   tsConfigPath: resolve("./tsconfig.json"),
   cjsSource: "./dist-cjs",

@@ -21,9 +21,9 @@ export interface BedrockChatFields
  *
  * ```bash
  * npm install @langchain/openai
- * export BEDROCK_AWS_REGION="your-aws-region"
- * export BEDROCK_AWS_SECRET_ACCESS_KEY="your-aws-secret-access-key"
- * export BEDROCK_AWS_ACCESS_KEY_ID="your-aws-access-key-id"
+ * export AWS_REGION="your-aws-region"
+ * export AWS_SECRET_ACCESS_KEY="your-aws-secret-access-key"
+ * export AWS_ACCESS_KEY_ID="your-aws-access-key-id"
  * ```
  *
  * ## [Constructor args](/classes/langchain_community_chat_models_bedrock.BedrockChat.html#constructor)
@@ -60,14 +60,20 @@ export interface BedrockChatFields
  * const llm = new BedrockChat({
  *   region: process.env.BEDROCK_AWS_REGION,
  *   maxRetries: 0,
- *   credentials: {
- *     secretAccessKey: process.env.BEDROCK_AWS_SECRET_ACCESS_KEY!,
- *     accessKeyId: process.env.BEDROCK_AWS_ACCESS_KEY_ID!,
- *   },
  *   model: "anthropic.claude-3-5-sonnet-20240620-v1:0",
  *   temperature: 0,
  *   maxTokens: undefined,
  *   // other params...
+ * });
+ *
+ * // You can also pass credentials in explicitly:
+ * const llmWithCredentials = new BedrockChat({
+ *   region: process.env.BEDROCK_AWS_REGION,
+ *   model: "anthropic.claude-3-5-sonnet-20240620-v1:0",
+ *   credentials: {
+ *     secretAccessKey: process.env.BEDROCK_AWS_SECRET_ACCESS_KEY!,
+ *     accessKeyId: process.env.BEDROCK_AWS_ACCESS_KEY_ID!,
+ *   },
  * });
  * ```
  * </details>

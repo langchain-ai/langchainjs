@@ -135,13 +135,6 @@ const config = {
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
-      announcementBar: {
-        content:
-          'Share your thoughts on AI agents. <a target="_blank" href="https://langchain.typeform.com/state-of-agents">Take the 3-min survey</a>.',
-        isCloseable: true,
-        backgroundColor: "rgba(53, 151, 147, 0.1)",
-        textColor: "rgb(53, 151, 147)",
-      },
       prism: {
         theme: {
           ...baseLightCodeBlockTheme,
@@ -308,7 +301,7 @@ const config = {
         // this is linked to erick@langchain.dev currently
         apiKey: "180851bbb9ba0ef6be9214849d6efeaf",
 
-        indexName: "js-langchain-0.2",
+        indexName: "js-langchain-latest",
 
         contextualSearch: false,
       },

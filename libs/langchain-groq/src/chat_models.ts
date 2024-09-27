@@ -42,6 +42,7 @@ import {
   ChatCompletionCreateParams,
   ChatCompletionCreateParamsNonStreaming,
   ChatCompletionCreateParamsStreaming,
+  CompletionCreateParams,
 } from "groq-sdk/resources/chat/completions";
 import {
   Runnable,
@@ -73,7 +74,7 @@ export interface ChatGroqCallOptions extends BaseChatModelCallOptions {
   headers?: Record<string, string>;
   tools?: ChatGroqToolType[];
   tool_choice?: OpenAIClient.ChatCompletionToolChoiceOption | "any" | string;
-  response_format?: { type: "json_object" };
+  response_format?: CompletionCreateParams.ResponseFormat;
 }
 
 export interface ChatGroqInput extends BaseChatModelParams {
@@ -659,6 +660,8 @@ export class ChatGroq extends BaseChatModel<
 
   streaming = false;
 
+  apiKey?: string;
+
   static lc_name() {
     return "ChatGroq";
   }
@@ -689,6 +692,7 @@ export class ChatGroq extends BaseChatModel<
       apiKey,
       dangerouslyAllowBrowser: true,
     });
+    this.apiKey = apiKey;
     this.temperature = fields?.temperature ?? this.temperature;
     this.modelName = fields?.model ?? fields?.modelName ?? this.model;
     this.model = this.modelName;

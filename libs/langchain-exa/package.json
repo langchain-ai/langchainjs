@@ -1,6 +1,6 @@
 {
   "name": "@langchain/exa",
-  "version": "0.0.5",
+  "version": "0.1.0",
   "description": "Exa integration for LangChain.js",
   "type": "module",
   "engines": {

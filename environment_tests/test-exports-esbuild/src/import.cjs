@@ -3,7 +3,7 @@ async function test() {
   const { OpenAI } = await import("@langchain/openai");
   const { LLMChain } = await import("langchain/chains");
   const { ChatPromptTemplate } = await import("@langchain/core/prompts");
-  const { HNSWLib } = await import("@langchain/community/vectorstores/hnswlib");
+  const { MemoryVectorStore } = await import("langchain/vectorstores/memory");
   const { OpenAIEmbeddings } = await import("@langchain/openai");
   const { Document } = await import("@langchain/core/documents");
 
@@ -11,16 +11,9 @@ async function test() {
   assert(typeof OpenAI === "function");
   assert(typeof LLMChain === "function");
   assert(typeof ChatPromptTemplate === "function");
-  assert(typeof HNSWLib === "function");
+  assert(typeof MemoryVectorStore === "function");
 
-  // Test dynamic imports of peer dependencies
-  const { HierarchicalNSW } = await HNSWLib.imports();
-
-  const vs = new HNSWLib(new OpenAIEmbeddings({ openAIApiKey: "sk-XXXX" }), {
-    space: "ip",
-    numDimensions: 3,
-    index: new HierarchicalNSW("ip", 3),
-  });
+  const vs = new MemoryVectorStore(new OpenAIEmbeddings({ openAIApiKey: "sk-XXXX" }));
 
   await vs.addVectors(
     [

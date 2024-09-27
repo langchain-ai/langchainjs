@@ -28,6 +28,7 @@ export type AIModelAvailability = "readily" | "after-download" | "no";
 export interface ChromeAIInputs extends BaseLLMParams {
   topK?: number;
   temperature?: number;
+  systemPrompt?: string;
 }
 
 export interface ChromeAICallOptions extends BaseLanguageModelCallOptions {}
@@ -52,11 +53,11 @@ export interface ChromeAICallOptions extends BaseLanguageModelCallOptions {}
  * ```
  */
 export class ChromeAI extends LLM<ChromeAICallOptions> {
-  session?: AITextSession;
+  temperature?: number;
 
-  temperature = 0.5;
+  topK?: number;
 
-  topK = 40;
+  systemPrompt?: string;
 
   static lc_name() {
     return "ChromeAI";
@@ -68,6 +69,7 @@ export class ChromeAI extends LLM<ChromeAICallOptions> {
     });
     this.temperature = inputs?.temperature ?? this.temperature;
     this.topK = inputs?.topK ?? this.topK;
+    this.systemPrompt = inputs?.systemPrompt;
   }
 
   _llmType() {
@@ -78,50 +80,33 @@ export class ChromeAI extends LLM<ChromeAICallOptions> {
    * Initialize the model. This method may be called before invoking the model
    * to set up a chat session in advance.
    */
-  async initialize() {
+  protected async createSession() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let ai: any;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    if (typeof window !== "undefined" && (window as any).ai !== undefined) {
-      // Browser context
+    let aiInstance: any;
+    try {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore Experimental browser-only global
+      aiInstance = ai;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      ai = (window as any).ai;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } else if (typeof self !== undefined && (self as any).ai !== undefined) {
-      // Worker context
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      ai = (self as any).ai;
-    } else {
+    } catch (e: any) {
       throw new Error(
-        "Could not initialize ChromeAI instance. Make sure you are running a version of Chrome with the proper experimental flags enabled."
+        `Could not initialize ChromeAI instance. Make sure you are running a version of Chrome with the proper experimental flags enabled.\n\nError message: ${e.message}`
       );
     }
-    const canCreateTextSession: AIModelAvailability =
-      await ai.canCreateTextSession();
-    if (canCreateTextSession === "no") {
+    const { available } = await aiInstance.assistant.capabilities();
+    if (available === "no") {
       throw new Error("The AI model is not available.");
-    } else if (canCreateTextSession === "after-download") {
+    } else if (available === "after-download") {
       throw new Error("The AI model is not yet downloaded.");
     }
 
-    this.session = await ai.createTextSession({
+    const session = await aiInstance.assistant.create({
+      systemPrompt: this.systemPrompt,
       topK: this.topK,
       temperature: this.temperature,
     });
-  }
 
-  /**
-   * Call `.destroy()` to free resources if you no longer need a session.
-   * When a session is destroyed, it can no longer be used, and any ongoing
-   * execution will be aborted. You may want to keep the session around if
-   * you intend to prompt the model often since creating a session can take
-   * some time.
-   */
-  destroy() {
-    if (!this.session) {
-      return console.log("No session found. Returning.");
-    }
-    this.session.destroy();
+    return session;
   }
 
   async *_streamResponseChunks(
@@ -129,22 +114,26 @@ export class ChromeAI extends LLM<ChromeAICallOptions> {
     _options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<GenerationChunk> {
-    if (!this.session) {
-      await this.initialize();
-    }
+    let session;
+    try {
+      session = await this.createSession();
 
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const stream = this.session!.promptStreaming(prompt);
-    const iterableStream = IterableReadableStream.fromReadableStream(stream);
+      const stream = session.promptStreaming(prompt);
+      const iterableStream =
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        IterableReadableStream.fromReadableStream<any>(stream);
 
-    let previousContent = "";
-    for await (const chunk of iterableStream) {
-      const newContent = chunk.slice(previousContent.length);
-      previousContent += newContent;
-      yield new GenerationChunk({
-        text: newContent,
-      });
-      await runManager?.handleLLMNewToken(newContent);
+      let previousContent = "";
+      for await (const chunk of iterableStream) {
+        const newContent = chunk.slice(previousContent.length);
+        previousContent += newContent;
+        yield new GenerationChunk({
+          text: newContent,
+        });
+        await runManager?.handleLLMNewToken(newContent);
+      }
+    } finally {
+      session?.destroy();
     }
   }
 
