@@ -24,11 +24,15 @@ npm install @langchain/jigsawstack
 ```
 
 import CodeBlock from "@theme/CodeBlock";
-import JigsawStackPromptEngineExample from "@examples/models/llm/jigsawstack.ts";
 
-<CodeBlock language="typescript">{JigsawStackPromptEngineExample}</CodeBlock>
+```ts
+import { JigsawStackPromptEngine } from "@langchain/jigsawstack";
 
-## Related
-
-- LLM [conceptual guide](/docs/concepts/#llms)
-- LLM [how-to guides](/docs/how_to/#llms)
+export const run = async () => {
+  const model = new JigsawStackPromptEngine();
+  const res = await model.invoke(
+    "Tell me about the leaning tower of pisa?\nAnswer:"
+  );
+  console.log({ res });
+};
+```
