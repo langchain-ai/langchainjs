@@ -15,7 +15,7 @@ import {
   ChatMessage,
   FunctionMessage,
 } from "../../messages/index.js";
-import { Document } from "../../../documents.js";
+import { Document } from "../../documents/document.js";
 
 function createChatPromptTemplate() {
   const systemPrompt = new PromptTemplate({
