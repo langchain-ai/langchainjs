@@ -514,7 +514,7 @@ async function checkTreeShaking(config: LangChainConfig) {
   const reportMap = new Map();
 
   for (const entrypoint of entrypoints) {
-    let sideEffects: { log: string; filename?: string }[] = [];
+    const sideEffects: { log: string; filename?: string }[] = [];
 
     console.info = function (...args) {
       const line = args.length ? args.join(" ") : "";
