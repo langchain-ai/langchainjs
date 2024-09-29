@@ -37,7 +37,7 @@ const docs = await loader.load();
 Please check the [usage example](/docs/integrations/document_loaders/file_loaders/oracleai).
 
 ```typescript
-import {OracleTextSplitter} from "@langchain/community/document_loaders/fs/oracleai";
+import {OracleTextSplitter} from "@langchain/textsplitters/oracle";
 
 const splitter = new OracleTextSplitter(conn, splitter_params);
 let chunks = await splitter.splitText(doc.pageContent);
