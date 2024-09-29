@@ -1,0 +1,163 @@
+---
+hide_table_of_contents: true
+---
+
+import CodeBlock from "@theme/CodeBlock";
+
+# JigsawStack Tool
+
+The JigsawStack Tool provides your agent with the following capabilities:
+
+- JigsawStackAIScrape: Scrape web content using advanced AI.
+
+- JigsawStackAISearch: Perform AI-powered web searches and retrieve high-quality results.
+
+- JigsawStackSpeechToText - Transcribe video and audio files using the Whisper large V3 AI model.
+
+- JigsawStackVOCR - Recognize, describe, and extract data from images using a prompt.
+
+- JigsawStackTextToSQL - Generate semantically correct SQL queries from text.
+
+## Setup
+
+- Set up an [account](https://jigsawstack.com/dashboard) (Get started for free)
+- Create and retrieve your [API key](https://jigsawstack.com/dashboard)
+
+## Credentials
+
+```bash
+export JIGSAWSTACK_API_KEY="your-api-key"
+```
+
+## Usage, standalone
+
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/openai
+```
+
+```js
+import {
+  JigsawStackAIScrape,
+  JigsawStackAISearch,
+  JigsawStackSpeechToText,
+  JigsawStackVOCR,
+  JigsawStackTextToSQL,
+} from "@langchain/jigsawstack";
+
+export const run = async () => {
+  // AI Scrape Tool
+  const aiScrapeTool = new JigsawStackAIScrape({
+    params: {
+      element_prompts: ["Pro plan"],
+    },
+  });
+  const result = await aiScrapeTool.invoke("https://jigsawstack.com/pricing");
+
+  console.log({ result });
+
+  // AI Search Tool
+
+  const aiSearchTool = new JigsawStackAISearch();
+  const doc = await aiSearchTool.invoke("The leaning tower of pisa");
+  console.log({ doc });
+
+  // VOCR Tool
+
+  const vocrTool = new JigsawStackVOCR({
+    params: {
+      prompt: "Describe the image in detail",
+    },
+  });
+  const data = await vocrTool.invoke(
+    "https://rogilvkqloanxtvjfrkm.supabase.co/storage/v1/object/public/demo/Collabo%201080x842.jpg?t=2024-03-22T09%3A22%3A48.442Z"
+  );
+
+  console.log({ data });
+
+  // Speech-to-Text Tool
+  const sttTool = new JigsawStackSpeechToText();
+  await sttTool.invoke(
+    "https://rogilvkqloanxtvjfrkm.supabase.co/storage/v1/object/public/demo/Video%201737458382653833217.mp4?t=2024-03-22T09%3A50%3A49.894"
+  );
+
+  // Text-to-SQL Tool
+  const sqlTool = new JigsawStackTextToSQL({
+    params: {
+      sql_schema:
+        "CREATE TABLE Transactions (transaction_id INT PRIMARY KEY, user_id INT NOT NULL,total_amount DECIMAL(10, 2 NOT NULL, transaction_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,status VARCHAR(20) DEFAULT 'pending',FOREIGN KEY(user_id) REFERENCES Users(user_id))",
+    },
+  });
+
+  await sqlTool.invoke(
+    "Generate a query to get transactions that amount exceed 10000 and sort by when created"
+  );
+};
+```
+
+## Usage, in an Agent
+
+```js
+import { ChatOpenAI } from "@langchain/openai";
+import { initializeAgentExecutorWithOptions } from "langchain/agents";
+import {
+  JigsawStackAIScrape,
+  JigsawStackAISearch,
+  JigsawStackVOCR,
+  JigsawStackSpeechToText,
+  JigsawStackTextToSQL,
+} from "@langchain/jigsawstack";
+
+const model = new ChatOpenAI({
+  temperature: 0,
+});
+
+//  add the tools that you need
+const tools = [
+  new JigsawStackAIScrape(),
+  new JigsawStackAISearch(),
+  new JigsawStackVOCR(),
+  new JigsawStackSpeechToText(),
+  new JigsawStackTextToSQL(),
+];
+
+const executor = await initializeAgentExecutorWithOptions(tools, model, {
+  agentType: "zero-shot-react-description",
+  verbose: true,
+});
+
+const res = await executor.invoke({
+  input: `Kokkalo Restaurant Santorini`,
+});
+
+console.log(res.output);
+
+/*
+{
+  "query": "Kokkalo Restaurant Santorini",
+  "ai_overview": "Kokkalo Restaurant, located in Fira, Santorini, offers a unique dining experience that blends traditional Greek cuisine with modern culinary trends. Here are some key details about the restaurant:\n\n- **Location**: Situated on the main road of Firostefani, Kokkalo is surrounded by the picturesque Cycladic architecture and provides stunning views of the Aegean Sea.\n- **Cuisine**: The restaurant specializes in authentic Greek dishes, crafted from high-quality, locally sourced ingredients. The menu is designed to engage all senses and features a variety of Mediterranean flavors.\n- **Ambiance**: Kokkalo boasts a chic and modern décor, creating a welcoming atmosphere for guests. The staff is known for their professionalism and attentiveness, enhancing the overall dining experience.\n- **Culinary Experience**: The name \"Kokkalo,\" meaning \"bone\" in Greek, symbolizes the strong foundation of the restaurant's culinary philosophy. Guests can expect a bold and unforgettable culinary journey.\n- **Cooking Classes**: Kokkalo also offers cooking lessons, allowing visitors to learn how to prepare traditional Greek dishes, providing a unique souvenir of their time in Santorini.\n- **Contact Information**: \n  - Address: 25 Martiou str, Fira, Santorini 84 700, Cyclades, Greece\n  - Phone: +30 22860 25407\n  - Email: reservation@kokkalosantorini.com\n\nFor more information, you can visit their [official website](https://www.santorini-view.com/restaurants/kokkalo-restaurant/) or their [Facebook page](https://www.facebook.com/kokkalorestaurant/).",
+  "is_safe": true,
+  "results": [
+    {
+      "title": "Kokkalo restaurant, Restaurants in Firostefani Santorini Greece",
+      "url": "http://www.travel-to-santorini.com/restaurants/firostefani/thebonerestaurant/",
+      "description": "Details Contact : George Grafakos Address : Firostefani, Opposite of Fira Primary School Zipcode : 84700 City : Santorni Phone : +30 22860 25407 Send an email",
+      "content": null,
+      "site_name": "Travel-to-santorini",
+      "site_long_name": "travel-to-santorini.com",
+      "language": "en",
+      "is_safe": true,
+      "favicon": "https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=http://travel-to-santorini.com&size=96"
+    }
+  ]
+}
+*/
+```
+
+## Related
+
+- Tool [conceptual guide](/docs/concepts/#tools)
+- Tool [how-to guides](/docs/how_to/#tools)

@@ -2,7 +2,7 @@ import assert from "assert";
 import { OpenAI } from "@langchain/openai";
 import { LLMChain } from "langchain/chains";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
-import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
+import { MemoryVectorStore } from "langchain/vectorstores/memory";
 import { HuggingFaceTransformersEmbeddings } from "@langchain/community/embeddings/hf_transformers";
 import { Document } from "@langchain/core/documents";
 
@@ -11,10 +11,9 @@ async function test(useAzure: boolean = false) {
   assert(typeof OpenAI === "function");
   assert(typeof LLMChain === "function");
   assert(typeof ChatPromptTemplate === "function");
-  assert(typeof HNSWLib === "function");
+  assert(typeof MemoryVectorStore === "function");
 
   // Test dynamic imports of peer dependencies
-  const { HierarchicalNSW } = await HNSWLib.imports();
   const openAIParameters = useAzure
     ? {
         azureOpenAIApiKey: "sk-XXXX",
@@ -25,11 +24,8 @@ async function test(useAzure: boolean = false) {
     : {
         openAIApiKey: "sk-XXXX",
       };
-  const vs = new HNSWLib(new HuggingFaceTransformersEmbeddings({ model: "Xenova/all-MiniLM-L6-v2" }), {
-    space: "ip",
-    numDimensions: 3,
-    index: new HierarchicalNSW("ip", 3),
-  });
+
+  const vs = new MemoryVectorStore(new HuggingFaceTransformersEmbeddings({ model: "Xenova/all-MiniLM-L6-v2" }));
 
   await vs.addVectors(
     [

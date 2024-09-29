@@ -33,7 +33,7 @@ import type {
 import { isLangChainTool } from "@langchain/core/utils/function_calling";
 import { AnthropicToolsOutputParser } from "./output_parsers.js";
 import { extractToolCallChunk, handleToolChoice } from "./utils/tools.js";
-import { _formatMessagesForAnthropic } from "./utils/message_inputs.js";
+import { _convertMessagesToAnthropicPayload } from "./utils/message_inputs.js";
 import {
   _makeMessageChunkFromAnthropicEvent,
   anthropicResponseToChatMessages,
@@ -782,7 +782,7 @@ export class ChatAnthropicMessages<
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
     const params = this.invocationParams(options);
-    const formattedMessages = _formatMessagesForAnthropic(messages);
+    const formattedMessages = _convertMessagesToAnthropicPayload(messages);
     const coerceContentToString = !_toolsInParams({
       ...params,
       ...formattedMessages,
@@ -852,7 +852,7 @@ export class ChatAnthropicMessages<
       {
         ...params,
         stream: false,
-        ..._formatMessagesForAnthropic(messages),
+        ..._convertMessagesToAnthropicPayload(messages),
       },
       requestOptions
     );
@@ -923,6 +923,7 @@ export class ChatAnthropicMessages<
     if (!this.streamingClient) {
       const options_ = this.apiUrl ? { baseURL: this.apiUrl } : undefined;
       this.streamingClient = this.createClient({
+        dangerouslyAllowBrowser: true,
         ...this.clientOptions,
         ...options_,
         apiKey: this.apiKey,
@@ -950,6 +951,7 @@ export class ChatAnthropicMessages<
     if (!this.batchClient) {
       const options = this.apiUrl ? { baseURL: this.apiUrl } : undefined;
       this.batchClient = this.createClient({
+        dangerouslyAllowBrowser: true,
         ...this.clientOptions,
         ...options,
         apiKey: this.apiKey,

@@ -250,7 +250,8 @@ function _convertDeltaToMessageChunk(
   }
 }
 
-function convertMessagesToOpenAIParams(messages: BaseMessage[]) {
+// Used in LangSmith, export is important here
+export function _convertMessagesToOpenAIParams(messages: BaseMessage[]) {
   // TODO: Function messages do not support array content, fix cast
   return messages.map((message) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1200,7 +1201,7 @@ export class ChatOpenAI<
       return;
     }
     const messagesMapped: OpenAICompletionParam[] =
-      convertMessagesToOpenAIParams(messages);
+      _convertMessagesToOpenAIParams(messages);
     const params = {
       ...this.invocationParams(options, {
         streaming: true,
@@ -1329,7 +1330,7 @@ export class ChatOpenAI<
     const tokenUsage: TokenUsage = {};
     const params = this.invocationParams(options);
     const messagesMapped: OpenAICompletionParam[] =
-      convertMessagesToOpenAIParams(messages);
+      _convertMessagesToOpenAIParams(messages);
 
     if (params.stream) {
       const stream = this._streamResponseChunks(messages, options, runManager);

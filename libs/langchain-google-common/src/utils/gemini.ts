@@ -746,6 +746,7 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     response: GoogleLLMResponse
   ): ChatGeneration[] {
     const parts = responseToParts(response);
+
     if (parts.length === 0) {
       return [];
     }

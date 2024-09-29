@@ -1,0 +1,38 @@
+# JigsawStack Prompt Engine
+
+LangChain.js supports calling JigsawStack [Prompt Engine](https://docs.jigsawstack.com/api-reference/prompt-engine/run-direct) LLMs.
+
+## Setup
+
+- Set up an [account](https://jigsawstack.com/dashboard) (Get started for free)
+- Create and retrieve your [API key](https://jigsawstack.com/dashboard)
+
+## Credentials
+
+```bash
+export JIGSAWSTACK_API_KEY="your-api-key"
+```
+
+## Usage
+
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/jigsawstack
+```
+
+import CodeBlock from "@theme/CodeBlock";
+
+```ts
+import { JigsawStackPromptEngine } from "@langchain/jigsawstack";
+
+export const run = async () => {
+  const model = new JigsawStackPromptEngine();
+  const res = await model.invoke(
+    "Tell me about the leaning tower of pisa?\nAnswer:"
+  );
+  console.log({ res });
+};
+```
