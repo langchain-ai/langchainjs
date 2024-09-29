@@ -173,7 +173,7 @@ A significant advantage of utilizing an ONNX model directly within Oracle is the
 Below is the example code to upload an ONNX model into Oracle Database:
 
 ```typescript
-import {OracleEmbeddings} from "@langchain/community/embeddings/oracleai";
+import {OracleEmbeddings} from "@langchain/community/embeddings/oracle";
 
 // please update with your related information
 // make sure that you have onnx file in the system
@@ -260,7 +260,7 @@ A significant advantage of utilizing OracleDocLoader is its capability to proces
 Below is a sample code snippet that demonstrates how to use OracleDocLoader
 
 ```typescript
-import {OracleDocLoader} from "@langchain/community/document_loaders/fs/oracleai";
+import {OracleDocLoader} from "@langchain/community/document_loaders/fs/oracle";
 
 // loading from Oracle Database table
 // make sure you have the table with this specification
@@ -300,7 +300,7 @@ Now that the user loaded the documents, they may want to generate a summary for 
 The following sample code will show how to generate summary:
 
 ```typescript
-import {OracleSummary} from "@langchain/community/utils/oracleai";
+import {OracleSummary} from "@langchain/community/utils/oracle";
 
 // proxy to be used when we instantiate summary and embedder object
 const proxy = "";
@@ -371,7 +371,7 @@ Now that the documents are chunked as per requirements, the users may want to ge
 The following sample code will show how to generate embeddings:
 
 ```typescript
-import {OracleEmbeddings} from "@langchain/community/embeddings/oracleai";
+import {OracleEmbeddings} from "@langchain/community/embeddings/oracle";
   
 // proxy to be used when we instantiate summary and embedder object
 const proxy = "";
@@ -422,9 +422,9 @@ please follow the necessary steps for proxy and credential.
 */
 
 import {OracleTextSplitter} from "@langchain/textsplitters/oracle";
-import {OracleDocLoader} from "@langchain/community/document_loaders/fs/oracleai";
-import {OracleSummary} from "@langchain/community/utils/oracleai";
-import {OracleEmbeddings} from "@langchain/community/embeddings/oracleai";
+import {OracleDocLoader} from "@langchain/community/document_loaders/fs/oracle";
+import {OracleSummary} from "@langchain/community/utils/oracle";
+import {OracleEmbeddings} from "@langchain/community/embeddings/oracle";
 import {Document} from "langchain/document";
 import oracledb from "oracledb";
 
