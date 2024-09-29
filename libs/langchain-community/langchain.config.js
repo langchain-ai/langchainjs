@@ -80,7 +80,7 @@ export const config = {
     "embeddings/llama_cpp": "embeddings/llama_cpp",
     "embeddings/minimax": "embeddings/minimax",
     "embeddings/ollama": "embeddings/ollama",
-    "embeddings/oracleai": "embeddings/oracle",
+    "embeddings/oracle": "embeddings/oracle",
     "embeddings/premai": "embeddings/premai",
     "embeddings/tensorflow": "embeddings/tensorflow",
     "embeddings/tencent_hunyuan": "embeddings/tencent_hunyuan/index",
@@ -305,13 +305,13 @@ export const config = {
     "document_loaders/fs/unstructured": "document_loaders/fs/unstructured",
     "document_loaders/fs/openai_whisper_audio":
       "document_loaders/fs/openai_whisper_audio",
-    "document_loaders/fs/oracleai": "document_loaders/fs/oracle",
+    "document_loaders/fs/oracle": "document_loaders/fs/oracle",
     "document_loaders/fs/pptx": "document_loaders/fs/pptx",
     // utils
     "utils/convex": "utils/convex",
     "utils/event_source_parse": "utils/event_source_parse",
     "utils/cassandra": "utils/cassandra",
-    "utils/oracleai": "utils/oracle",
+    "utils/oracle": "utils/oracle",
     // experimental
     "experimental/callbacks/handlers/datadog": "experimental/callbacks/handlers/datadog",
     "experimental/graph_transformers/llm":
