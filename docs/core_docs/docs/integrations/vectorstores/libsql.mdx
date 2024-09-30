@@ -46,7 +46,7 @@ CREATE TABLE IF NOT EXISTS TABLE_NAME (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     content TEXT,
     metadata TEXT,
-    EMBEDDING_COLUMN FLOAT32(1536) -- 1536-dimensional f32 vector for OpenAI
+    EMBEDDING_COLUMN F32_BLOB(1536) -- 1536-dimensional f32 vector for OpenAI
 );
 ```
 
@@ -55,7 +55,7 @@ CREATE TABLE IF NOT EXISTS TABLE_NAME (
 Make sure to replace the `TABLE_NAME` and `EMBEDDING_COLUMN` with the values you used in the previous step.
 
 ```sql
-CREATE INDEX IF NOT EXISTS TABLE_NAME_idx ON TABLE_NAME (libsql_vector_idx(EMBEDDING_COLUMN));
+CREATE INDEX IF NOT EXISTS idx_TABLE_NAME_EMBEDDING_COLUMN ON TABLE_NAME(libsql_vector_idx(EMBEDDING_COLUMN))
 ```
 
 ## Application code

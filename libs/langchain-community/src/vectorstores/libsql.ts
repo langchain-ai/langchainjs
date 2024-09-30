@@ -1,4 +1,4 @@
-import type { Client } from "@libsql/client";
+import type { Client, ResultSet, Value, LibsqlError } from "@libsql/client";
 import { VectorStore } from "@langchain/core/vectorstores";
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { Document } from "@langchain/core/documents";
@@ -94,10 +94,10 @@ export class LibSQLVectorStore extends VectorStore {
 
     for (let i = 0; i < rows.length; i += batchSize) {
       const chunk = rows.slice(i, i + batchSize);
-      const insertQueries = chunk.map((row) => ({
-        sql: `INSERT INTO ${this.table} (content, metadata, ${this.column}) VALUES (?, ?, vector(?)) RETURNING id`,
-        args: [row.content, row.metadata, row.embedding],
-      }));
+      const insertQueries = chunk.map(
+        (row) =>
+          `INSERT INTO ${this.table} (content, metadata, ${this.column}) VALUES (${row.content}, ${row.metadata}, vector(${row.embedding})) RETURNING id`
+      );
 
       const results = await this.db.batch(insertQueries);
 
@@ -131,15 +131,15 @@ export class LibSQLVectorStore extends VectorStore {
     const queryVector = `[${query.join(",")}]`;
 
     const sql = `
-      SELECT content, metadata, vector_distance_cos(${this.column}, vector(?)) AS distance
-      FROM vector_top_k('${this.table}_idx', vector(?), ?)
+      SELECT content, metadata, vector_distance_cos(${this.column}, vector(${queryVector})) AS distance
+      FROM vector_top_k('${this.table}_idx', vector(${queryVector}), ${k})
       JOIN ${this.table} ON ${this.table}.rowid = id
     `;
 
-    const results = await this.db.execute({
-      sql,
-      args: [queryVector, queryVector, k],
-    });
+    const results = await this.db.execute(
+      sql
+
+    );
 
     return results.rows.map((row: any) => {
       const metadata = JSON.parse(row.metadata);
