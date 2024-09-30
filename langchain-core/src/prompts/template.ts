@@ -106,17 +106,22 @@ export const parseMustache = (template: string) => {
   return mustacheTemplateToNodes(parsed);
 };
 
-export const interpolateFString = (template: string, values: InputValues) =>
-  parseFString(template).reduce((res, node) => {
+export const interpolateFString = (template: string, values: InputValues) => {
+  return parseFString(template).reduce((res, node) => {
     if (node.type === "variable") {
       if (node.name in values) {
-        return res + values[node.name];
+        const stringValue =
+          typeof values[node.name] === "string"
+            ? values[node.name]
+            : JSON.stringify(values[node.name]);
+        return res + stringValue;
       }
       throw new Error(`(f-string) Missing value for input ${node.name}`);
     }
 
     return res + node.text;
   }, "");
+};
 
 export const interpolateMustache = (template: string, values: InputValues) => {
   configureMustache();

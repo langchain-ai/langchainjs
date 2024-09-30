@@ -84,7 +84,8 @@ type ExtractTemplateParamsRecursive<
 export type ParamsFromFString<T extends string> = {
   [Key in
     | ExtractTemplateParamsRecursive<T>[number]
-    | (string & Record<never, never>)]: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    | (string & Record<never, never>)]: any;
 };
 
 export type ExtractedFStringParams<

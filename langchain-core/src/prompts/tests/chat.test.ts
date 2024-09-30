@@ -15,6 +15,7 @@ import {
   ChatMessage,
   FunctionMessage,
 } from "../../messages/index.js";
+import { Document } from "../../documents/document.js";
 
 function createChatPromptTemplate() {
   const systemPrompt = new PromptTemplate({
@@ -129,6 +130,23 @@ test("Test fromTemplate", async () => {
   ]);
 });
 
+test("Test fromTemplate", async () => {
+  const chatPrompt = ChatPromptTemplate.fromTemplate("Hello {foo}, I'm {bar}");
+  expect(chatPrompt.inputVariables).toEqual(["foo", "bar"]);
+  expect(
+    (
+      await chatPrompt.invoke({
+        foo: ["barbar"],
+        bar: [new Document({ pageContent: "bar" })],
+      })
+    ).toChatMessages()
+  ).toEqual([
+    new HumanMessage(
+      `Hello ["barbar"], I'm [{"pageContent":"bar","metadata":{}}]`
+    ),
+  ]);
+});
+
 test("Test fromMessages", async () => {
   const systemPrompt = new PromptTemplate({
     template: "Here's some context: {context}",
@@ -151,6 +169,34 @@ test("Test fromMessages", async () => {
   });
   expect(messages.toChatMessages()).toEqual([
     new SystemMessage("Here's some context: This is a context"),
+    new HumanMessage("Hello Foo, I'm Bar"),
+  ]);
+});
+
+test("Test fromMessages with non-string inputs", async () => {
+  const systemPrompt = new PromptTemplate({
+    template: "Here's some context: {context}",
+    inputVariables: ["context"],
+  });
+  const userPrompt = new PromptTemplate({
+    template: "Hello {foo}, I'm {bar}",
+    inputVariables: ["foo", "bar"],
+  });
+  // TODO: Fix autocomplete for the fromMessages method
+  const chatPrompt = ChatPromptTemplate.fromMessages([
+    new SystemMessagePromptTemplate(systemPrompt),
+    new HumanMessagePromptTemplate(userPrompt),
+  ]);
+  expect(chatPrompt.inputVariables).toEqual(["context", "foo", "bar"]);
+  const messages = await chatPrompt.formatPromptValue({
+    context: [new Document({ pageContent: "bar" })],
+    foo: "Foo",
+    bar: "Bar",
+  });
+  expect(messages.toChatMessages()).toEqual([
+    new SystemMessage(
+      `Here's some context: [{"pageContent":"bar","metadata":{}}]`
+    ),
     new HumanMessage("Hello Foo, I'm Bar"),
   ]);
 });
@@ -303,6 +349,24 @@ test("Test MessagesPlaceholder not optional", async () => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   await expect(prompt.formatMessages({} as any)).rejects.toThrow(
     'Field "foo" in prompt uses a MessagesPlaceholder, which expects an array of BaseMessages as an input value. Received: undefined'
+  );
+});
+
+test("Test MessagesPlaceholder not optional with invalid input should throw", async () => {
+  const prompt = new MessagesPlaceholder({
+    variableName: "foo",
+  });
+  const badInput = [new Document({ pageContent: "barbar", metadata: {} })];
+  await expect(
+    prompt.formatMessages({
+      foo: [new Document({ pageContent: "barbar", metadata: {} })],
+    })
+  ).rejects.toThrow(
+    `Field "foo" in prompt uses a MessagesPlaceholder, which expects an array of BaseMessages or coerceable values as input.\n\nReceived value: ${JSON.stringify(
+      badInput,
+      null,
+      2
+    )}\n\nAdditional message: Unable to coerce message from array: only human, AI, or system message coercion is currently supported.`
   );
 });
 
