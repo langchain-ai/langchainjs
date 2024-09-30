@@ -141,7 +141,7 @@ export type BindToolsInput =
 export abstract class BaseChatModel<
   CallOptions extends BaseChatModelCallOptions = BaseChatModelCallOptions,
   // TODO: Fix the parameter order on the next minor version.
-  OutputMessageType extends BaseMessageChunk = BaseMessageChunk
+  OutputMessageType extends BaseMessageChunk = AIMessageChunk
 > extends BaseLanguageModel<OutputMessageType, CallOptions> {
   // Backwards compatibility since fields have been moved to RunnableConfig
   declare ParsedCallOptions: Omit<
