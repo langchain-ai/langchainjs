@@ -184,7 +184,7 @@
     "mongodb": "^5.2.0",
     "mysql2": "^3.9.8",
     "neo4j-driver": "^5.17.0",
-    "node-llama-cpp": "2.7.3",
+    "node-llama-cpp": "^2",
     "notion-to-md": "^3.1.0",
     "officeparser": "^4.0.4",
     "pdf-parse": "1.1.1",
@@ -624,9 +624,6 @@
       "optional": true
     },
     "neo4j-driver": {
-      "optional": true
-    },
-    "node-llama-cpp": {
       "optional": true
     },
     "notion-to-md": {

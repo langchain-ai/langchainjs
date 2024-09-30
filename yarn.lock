@@ -11570,7 +11570,7 @@ __metadata:
     mongodb: ^5.2.0
     mysql2: ^3.9.8
     neo4j-driver: ^5.17.0
-    node-llama-cpp: 2.7.3
+    node-llama-cpp: ^2
     notion-to-md: ^3.1.0
     officeparser: ^4.0.4
     pdf-parse: 1.1.1
@@ -11916,8 +11916,6 @@ __metadata:
     mysql2:
       optional: true
     neo4j-driver:
-      optional: true
-    node-llama-cpp:
       optional: true
     notion-to-md:
       optional: true
@@ -34786,9 +34784,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"node-llama-cpp@npm:2.7.3":
-  version: 2.7.3
-  resolution: "node-llama-cpp@npm:2.7.3"
+"node-llama-cpp@npm:^2":
+  version: 2.8.16
+  resolution: "node-llama-cpp@npm:2.8.16"
   dependencies:
     chalk: ^5.3.0
     chmodrp: ^1.0.2
@@ -34806,9 +34804,14 @@ __metadata:
     uuid: ^9.0.0
     which: ^4.0.0
     yargs: ^17.7.2
+  peerDependencies:
+    typescript: ">=5.0.0"
+  peerDependenciesMeta:
+    typescript:
+      optional: true
   bin:
     node-llama-cpp: dist/cli/cli.js
-  checksum: 5be984ab4711d3e6f3f29e6246e5d3b437b0e48631376f361c832a969530ffa4da5cdc78e8cf8e003a86411ced42c7cf022ad6d5b50c24f276cd841dbb077e0b
+  checksum: 51607ec21f02a702a440fae6a8c06b00b039cbfcb09a7d92eaa16e97972ff71874285d9d2561429bae03b52da81e0d12d2d22356dd162f30ce92d37c928014c4
   languageName: node
   linkType: hard
 
