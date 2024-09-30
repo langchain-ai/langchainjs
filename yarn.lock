@@ -11472,7 +11472,7 @@ __metadata:
     "@planetscale/database": ^1.8.0
     "@premai/prem-sdk": ^0.3.25
     "@qdrant/js-client-rest": ^1.8.2
-    "@raycast/api": ^1.55.2
+    "@raycast/api": ^1.83.1
     "@rockset/client": ^0.9.1
     "@smithy/eventstream-codec": ^2.0.5
     "@smithy/protocol-http": ^3.0.6
@@ -11700,7 +11700,7 @@ __metadata:
     mongodb: ">=5.2.0"
     mysql2: ^3.9.8
     neo4j-driver: "*"
-    node-llama-cpp: "*"
+    node-llama-cpp: ^2
     notion-to-md: ^3.1.0
     officeparser: ^4.0.4
     pdf-parse: 1.1.1
@@ -14177,6 +14177,30 @@ __metadata:
   bin:
     ray: bin/ray
   checksum: 1154dc3d02d3ca1a9ee11d638682058464e2c01fb30df43b1f2ef0e6205744f34fcef10a413e16bfc93a08d19d6e569bbe7151660587a0d50c8df074f21c663d
+  languageName: node
+  linkType: hard
+
+"@raycast/api@npm:^1.83.1":
+  version: 1.83.1
+  resolution: "@raycast/api@npm:1.83.1"
+  dependencies:
+    "@types/node": ^20.8.10
+    "@types/react": ^18.3.3
+    react: 18.3.1
+  peerDependencies:
+    "@types/node": 20.8.10
+    "@types/react": 18.3.3
+    react-devtools: 5.2.0
+  peerDependenciesMeta:
+    "@types/node":
+      optional: true
+    "@types/react":
+      optional: true
+    react-devtools:
+      optional: true
+  bin:
+    ray: bin/ray
+  checksum: 166ee04610ea90c327da9ea898fec474cd14b9b83e2205447b979edd4d6e36682e6b0121c238a8380439a932e5d6654b63e2afb17ea408c85fe8066f1a8e3070
   languageName: node
   linkType: hard
 
@@ -19103,6 +19127,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/node@npm:^20.8.10":
+  version: 20.16.10
+  resolution: "@types/node@npm:20.16.10"
+  dependencies:
+    undici-types: ~6.19.2
+  checksum: 8b4d5a0af828871627e80da095df50ef8ae7ca458f39ccde1d060e3bf97b0bc76af9547bd5d75ce4ccb1dd80466804b2fe4f12553c11cb8691c6667effd9a9d7
+  languageName: node
+  linkType: hard
+
 "@types/offscreencanvas@npm:~2019.3.0":
   version: 2019.3.0
   resolution: "@types/offscreencanvas@npm:2019.3.0"
@@ -19311,6 +19344,16 @@ __metadata:
     "@types/scheduler": "*"
     csstype: ^3.0.2
   checksum: d3f1c39116c82e3a504f3332b9198f94f34a33d8535604434b1e387ecabd41ec995961775e2e1c08feefdde878a5b86220879350900137980d681ae3983db462
+  languageName: node
+  linkType: hard
+
+"@types/react@npm:^18.3.3":
+  version: 18.3.10
+  resolution: "@types/react@npm:18.3.10"
+  dependencies:
+    "@types/prop-types": "*"
+    csstype: ^3.0.2
+  checksum: 04261654b5f4bc9584e9d882c7dfd5b36dc58963f958f8c3efd24cb68c9d205bc2d57558a1479b86d7827f0e5116d5bd111791d1253583d1e1c165f0aeb48c48
   languageName: node
   linkType: hard
 
@@ -37794,6 +37837,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"react@npm:18.3.1":
+  version: 18.3.1
+  resolution: "react@npm:18.3.1"
+  dependencies:
+    loose-envify: ^1.1.0
+  checksum: a27bcfa8ff7c15a1e50244ad0d0c1cb2ad4375eeffefd266a64889beea6f6b64c4966c9b37d14ee32d6c9fcd5aa6ba183b6988167ab4d127d13e7cb5b386a376
+  languageName: node
+  linkType: hard
+
 "react@npm:^17.0.2":
   version: 17.0.2
   resolution: "react@npm:17.0.2"
@@ -41760,6 +41812,13 @@ __metadata:
   version: 5.26.5
   resolution: "undici-types@npm:5.26.5"
   checksum: 3192ef6f3fd5df652f2dc1cd782b49d6ff14dc98e5dced492aa8a8c65425227da5da6aafe22523c67f035a272c599bb89cfe803c1db6311e44bed3042fc25487
+  languageName: node
+  linkType: hard
+
+"undici-types@npm:~6.19.2":
+  version: 6.19.8
+  resolution: "undici-types@npm:6.19.8"
+  checksum: de51f1b447d22571cf155dfe14ff6d12c5bdaec237c765085b439c38ca8518fc360e88c70f99469162bf2e14188a7b0bcb06e1ed2dc031042b984b0bb9544017
   languageName: node
   linkType: hard
 
