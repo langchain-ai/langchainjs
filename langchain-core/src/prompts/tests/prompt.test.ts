@@ -1,5 +1,6 @@
 import { expect, test } from "@jest/globals";
 import { PromptTemplate } from "../prompt.js";
+import { Document } from "../../documents/document.js";
 
 test("Test using partial", async () => {
   const prompt = new PromptTemplate({
@@ -24,6 +25,18 @@ test("Test fromTemplate", async () => {
   expect(
     (await prompt.invoke({ foo: "foo", bar: "baz", unused: "eee" })).value
   ).toBe("foobaz");
+});
+
+test("Test fromTemplate with a non-string value", async () => {
+  const prompt = PromptTemplate.fromTemplate("{foo}{bar}");
+  expect(
+    (
+      await prompt.invoke({
+        foo: ["barbar"],
+        bar: [new Document({ pageContent: "bar" })],
+      })
+    ).value
+  ).toBe(`["barbar"][{"pageContent":"bar","metadata":{}}]`);
 });
 
 test("Test fromTemplate with escaped strings", async () => {
