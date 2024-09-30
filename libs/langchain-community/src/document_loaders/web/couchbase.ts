@@ -1,6 +1,4 @@
 /* eslint-disable import/no-extraneous-dependencies */
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-nocheck
 import { Cluster, QueryResult } from "couchbase";
 import { Document } from "@langchain/core/documents";
 import {
