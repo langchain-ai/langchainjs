@@ -53,7 +53,11 @@ export class RaycastAI extends LLM implements RaycastAIInput {
       throw new Error("Raycast AI environment is not accessible.");
     }
 
-    this.model = fields.model ?? "text-davinci-003";
+    if (fields.model === undefined) {
+      throw new Error(`You must provide a "model" field in your params.`);
+    }
+
+    this.model = fields.model;
     this.creativity = fields.creativity ?? 0.5;
     this.rateLimitPerMinute = fields.rateLimitPerMinute ?? 10;
   }
