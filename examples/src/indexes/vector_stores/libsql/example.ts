@@ -16,7 +16,7 @@ const embeddings = new OpenAIEmbeddings({
 });
 
 // Initialize a new LibSQLVectorStore instance to store embedding vectors
-const vectorStore = new LibSQLVectorStore(client, {
+const vectorStore = new LibSQLVectorStore(client, embeddings, {
   tableName: "TABLE_NAME",
   embeddingColumn: "EMBEDDING_COLUMN",
   dimensions: 153,
