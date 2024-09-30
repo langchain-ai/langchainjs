@@ -5,6 +5,7 @@ import { QdrantClient } from "@qdrant/js-client-rest";
 import { faker } from "@faker-js/faker";
 import { Document } from "@langchain/core/documents";
 import { SyntheticEmbeddings } from "@langchain/core/utils/testing";
+import { v4 } from "uuid";
 import { QdrantVectorStore } from "../vectorstores.js";
 
 describe("QdrantVectorStore testcase", () => {
@@ -19,12 +20,13 @@ describe("QdrantVectorStore testcase", () => {
     });
 
     const pageContent = faker.lorem.sentence(5);
+    const id = v4();
 
-    await qdrantVectorStore.addDocuments([{ pageContent, metadata: {} }]);
+    await qdrantVectorStore.addDocuments([{ pageContent, metadata: {}, id }]);
 
     const results = await qdrantVectorStore.similaritySearch(pageContent, 1);
 
-    expect(results[0]).toEqual(new Document({ metadata: {}, pageContent }));
+    expect(results[0]).toEqual(new Document({ metadata: {}, pageContent, id }));
 
     expect(qdrantVectorStore.maxMarginalRelevanceSearch).toBeDefined();
 
@@ -35,7 +37,9 @@ describe("QdrantVectorStore testcase", () => {
       }
     );
     expect(mmrResults.length).toBe(1);
-    expect(mmrResults[0]).toEqual(new Document({ metadata: {}, pageContent }));
+    expect(mmrResults[0]).toEqual(
+      new Document({ metadata: {}, pageContent, id })
+    );
   });
 
   test("passing client directly with a model that creates embeddings with a different number of dimensions", async () => {
@@ -59,6 +63,7 @@ describe("QdrantVectorStore testcase", () => {
 
     const results = await qdrantVectorStore.similaritySearch(pageContent, 1);
 
-    expect(results[0]).toEqual(new Document({ metadata: {}, pageContent }));
+    expect(results[0].metadata).toEqual({});
+    expect(results[0].pageContent).toEqual(pageContent);
   });
 });

@@ -149,7 +149,7 @@ export class QdrantVectorStore extends VectorStore {
     await this.ensureCollection();
 
     const points = vectors.map((embedding, idx) => ({
-      id: uuid(),
+      id: documents[idx].id ?? uuid(),
       vector: embedding,
       payload: {
         [this.contentPayloadKey]: documents[idx].pageContent,
@@ -206,6 +206,7 @@ export class QdrantVectorStore extends VectorStore {
       results as QdrantSearchResponse[]
     ).map((res) => [
       new Document({
+        id: res.id as string,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         metadata: res.payload[this.metadataPayloadKey] as Record<string, any>,
         pageContent: res.payload[this.contentPayloadKey] as string,
@@ -264,6 +265,7 @@ export class QdrantVectorStore extends VectorStore {
     const result = (topMmrMatches as QdrantSearchResponse[]).map(
       (res) =>
         new Document({
+          id: res.id as string,
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           metadata: res.payload[this.metadataPayloadKey] as Record<string, any>,
           pageContent: res.payload[this.contentPayloadKey] as string,
