@@ -109,7 +109,7 @@ export interface ChatOllamaInput
  * const llmWithTools = llm.bindTools(
  *   [...],
  *   {
- *     tool_choice: "auto",
+ *     stop: ["\n"],
  *   }
  * );
  * ```
