@@ -45,10 +45,10 @@ Most of these implementations have been officially deprecated in LangChain 0.3.x
 Please see [How to use BaseChatMessageHistory with LangGraph](./chat_history), if you would like to use `BaseChatMessageHistory` (with or without `RunnableWithMessageHistory`) in LangGraph.
 :::
 
-As of LangChain v0.1, we started recommending that users rely primarily on [BaseChatMessageHistory](https://v03.api.js.langchain.com/classes/_langchain_core.chat_history.BaseChatMessageHistory.html). `BaseChatMessageHistory` serves
+As of LangChain v0.1, we started recommending that users rely primarily on [BaseChatMessageHistory](https://api.js.langchain.com/classes/_langchain_core.chat_history.BaseChatMessageHistory.html). `BaseChatMessageHistory` serves
 as a simple persistence for storing and retrieving messages in a conversation.
 
-At that time, the only option for orchestrating LangChain chains was via [LCEL](/docs/how_to/#langchain-expression-language-lcel). To incorporate memory with `LCEL`, users had to use the [RunnableWithMessageHistory](https://v03.api.js.langchain.com/classes/_langchain_core.runnables.RunnableWithMessageHistory.html) interface. While sufficient for basic chat applications, many users found the API unintuitive and challenging to use.
+At that time, the only option for orchestrating LangChain chains was via [LCEL](/docs/how_to/#langchain-expression-language-lcel). To incorporate memory with `LCEL`, users had to use the [RunnableWithMessageHistory](https://api.js.langchain.com/classes/_langchain_core.runnables.RunnableWithMessageHistory.html) interface. While sufficient for basic chat applications, many users found the API unintuitive and challenging to use.
 
 As of LangChain v0.3, we recommend that **new** code takes advantage of LangGraph for both orchestration and persistence:
 
