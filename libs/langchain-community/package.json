@@ -82,7 +82,7 @@
     "@langchain/scripts": ">=0.1.0 <0.2.0",
     "@langchain/standard-tests": "0.0.0",
     "@layerup/layerup-security": "^1.5.12",
-    "@libsql/client": "^0.10.0",
+    "@libsql/client": "^0.14.0",
     "@mendable/firecrawl-js": "^0.0.36",
     "@mlc-ai/web-llm": "0.2.46",
     "@mozilla/readability": "^0.4.4",

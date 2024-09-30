@@ -5929,7 +5929,7 @@ __metadata:
     "@langchain/scripts": ">=0.1.0 <0.2.0"
     "@langchain/standard-tests": 0.0.0
     "@layerup/layerup-security": ^1.5.12
-    "@libsql/client": ^0.10.0
+    "@libsql/client": ^0.14.0
     "@mendable/firecrawl-js": ^0.0.36
     "@mlc-ai/web-llm": 0.2.46
     "@mozilla/readability": ^0.4.4
@@ -7346,25 +7346,25 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@libsql/client@npm:^0.10.0":
-  version: 0.10.0
-  resolution: "@libsql/client@npm:0.10.0"
+"@libsql/client@npm:^0.14.0":
+  version: 0.14.0
+  resolution: "@libsql/client@npm:0.14.0"
   dependencies:
-    "@libsql/core": ^0.10.0
-    "@libsql/hrana-client": ^0.6.2
+    "@libsql/core": ^0.14.0
+    "@libsql/hrana-client": ^0.7.0
     js-base64: ^3.7.5
-    libsql: ^0.4.1
+    libsql: ^0.4.4
     promise-limit: ^2.7.0
-  checksum: f7beaf575fd25aa08725fecc62fa78b3cbe0673bcf4208df4c734ac20d765828cb1f3d1abae9e9c16caaa4fa39be2b0dc399a195c0ae2bad1bab5e81a9d47248
+  checksum: 7eeaf95d76da8870544c27fcf1206c377a0fc3df72b174393a1fb17fc92ca568d9a42d24d65e771ca77edc5108e853a7ac18540ad0242da759f2ec1191103d99
   languageName: node
   linkType: hard
 
-"@libsql/core@npm:^0.10.0":
-  version: 0.10.0
-  resolution: "@libsql/core@npm:0.10.0"
+"@libsql/core@npm:^0.14.0":
+  version: 0.14.0
+  resolution: "@libsql/core@npm:0.14.0"
   dependencies:
     js-base64: ^3.7.5
-  checksum: 96c78d0390f76f591d8742e5c14f0e62cf746affc73935181b035400a583f28b9a8b7e8ee4e964165f11d48fe3f9302c99019b4996e8f57269cae078de172644
+  checksum: dae12491a277e03c3729de069bee9af9689f0c178b0fd1ef342f03aab94e4ccba8801e11d0393e0e3a77596e34f101b69b7f07f16f6b34a09eca698e340bed36
   languageName: node
   linkType: hard
 
@@ -7382,22 +7382,22 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@libsql/hrana-client@npm:^0.6.2":
-  version: 0.6.2
-  resolution: "@libsql/hrana-client@npm:0.6.2"
+"@libsql/hrana-client@npm:^0.7.0":
+  version: 0.7.0
+  resolution: "@libsql/hrana-client@npm:0.7.0"
   dependencies:
-    "@libsql/isomorphic-fetch": ^0.2.1
+    "@libsql/isomorphic-fetch": ^0.3.1
     "@libsql/isomorphic-ws": ^0.1.5
     js-base64: ^3.7.5
     node-fetch: ^3.3.2
-  checksum: db2b79a9ef70020163f97b8e955b32ded70abd4a2b826281de5587c4e8051777c711b16193d86865be134a4e1c16af6839ad221ca990ff8157c85ed1ad070db7
+  checksum: 0d36931ca3a01144dc14294d1d9666ee64724c6ab4889890ff0bc45564369503f6abccbc448518485af107bd69f49d35878059c46d98dacb34db4757b52c406a
   languageName: node
   linkType: hard
 
-"@libsql/isomorphic-fetch@npm:^0.2.1":
-  version: 0.2.5
-  resolution: "@libsql/isomorphic-fetch@npm:0.2.5"
-  checksum: 8ba0b8a71c095c74f332ff5e8e0cd7572ab56951a47d0afe872e90d47128d5faf42ba713012eb65db40a5ca0fc9fefc96dbc4379d9b28767a75cea19d79242f6
+"@libsql/isomorphic-fetch@npm:^0.3.1":
+  version: 0.3.1
+  resolution: "@libsql/isomorphic-fetch@npm:0.3.1"
+  checksum: 9f131cae3b14c39712f1140e21b2ab1ccc81b5f6ad2aa90d739dc8df0602109a5c4c0ea820dcd39632ace7a4b247bc31e2a5e79cd6efaf5f1777650aac9ac694
   languageName: node
   linkType: hard
 
@@ -23190,7 +23190,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"libsql@npm:^0.4.1":
+"libsql@npm:^0.4.4":
   version: 0.4.5
   resolution: "libsql@npm:0.4.5"
   dependencies:
