@@ -54,7 +54,7 @@ export class RaycastAI extends LLM implements RaycastAIInput {
     }
 
     if (fields.model === undefined) {
-      throw new Error(`You must provide a "model" field in your params.`)
+      throw new Error(`You must provide a "model" field in your params.`);
     }
 
     this.model = fields.model;
