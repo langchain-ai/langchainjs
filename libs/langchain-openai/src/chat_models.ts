@@ -630,7 +630,10 @@ export interface ChatOpenAIFields
  *   rating: z.number().optional().describe("How funny the joke is, from 1 to 10")
  * }).describe('Joke to tell user.');
  *
- * const structuredLlm = llm.withStructuredOutput(Joke, { name: "Joke" });
+ * const structuredLlm = llm.withStructuredOutput(Joke, {
+ *   name: "Joke",
+ *   strict: true, // Optionally enable OpenAI structured outputs
+ * });
  * const jokeResult = await structuredLlm.invoke("Tell me a joke about cats");
  * console.log(jokeResult);
  * ```
@@ -933,6 +936,8 @@ export class ChatOpenAI<
 
   azureOpenAIBasePath?: string;
 
+  azureOpenAIEndpoint?: string;
+
   organization?: string;
 
   __includeRawResponse?: boolean;
@@ -993,6 +998,10 @@ export class ChatOpenAI<
       fields?.configuration?.organization ??
       getEnvironmentVariable("OPENAI_ORGANIZATION");
 
+    this.azureOpenAIEndpoint =
+      fields?.azureOpenAIEndpoint ??
+      getEnvironmentVariable("AZURE_OPENAI_ENDPOINT");
+
     this.modelName = fields?.model ?? fields?.modelName ?? this.model;
     this.model = this.modelName;
     this.modelKwargs = fields?.modelKwargs ?? {};
@@ -1013,8 +1022,20 @@ export class ChatOpenAI<
     this.__includeRawResponse = fields?.__includeRawResponse;
 
     if (this.azureOpenAIApiKey || this.azureADTokenProvider) {
-      if (!this.azureOpenAIApiInstanceName && !this.azureOpenAIBasePath) {
+      if (
+        !this.azureOpenAIApiInstanceName &&
+        !this.azureOpenAIBasePath &&
+        !this.azureOpenAIEndpoint
+      ) {
         throw new Error("Azure OpenAI API instance name not found");
+      }
+
+      if (!this.azureOpenAIApiDeploymentName && this.azureOpenAIBasePath) {
+        const parts = this.azureOpenAIBasePath.split("/openai/deployments/");
+        if (parts.length === 2) {
+          const [, deployment] = parts;
+          this.azureOpenAIApiDeploymentName = deployment;
+        }
       }
       if (!this.azureOpenAIApiDeploymentName) {
         throw new Error("Azure OpenAI API deployment name not found");
@@ -1210,31 +1231,6 @@ export class ChatOpenAI<
       stream: true as const,
     };
     let defaultRole: OpenAIRoleEnum | undefined;
-    if (
-      params.response_format &&
-      params.response_format.type === "json_schema"
-    ) {
-      console.warn(
-        `OpenAI does not yet support streaming with "response_format" set to "json_schema". Falling back to non-streaming mode.`
-      );
-      const res = await this._generate(messages, options, runManager);
-      const chunk = new ChatGenerationChunk({
-        message: new AIMessageChunk({
-          ...res.generations[0].message,
-        }),
-        text: res.generations[0].text,
-        generationInfo: res.generations[0].generationInfo,
-      });
-      yield chunk;
-      return runManager?.handleLLMNewToken(
-        res.generations[0].text ?? "",
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        { chunk }
-      );
-    }
 
     const streamIterable = await this.completionWithRetry(params, options);
     let usage: OpenAIClient.Completions.CompletionUsage | undefined;
@@ -1654,6 +1650,7 @@ export class ChatOpenAI<
         azureOpenAIApiKey: this.azureOpenAIApiKey,
         azureOpenAIBasePath: this.azureOpenAIBasePath,
         baseURL: this.clientConfig.baseURL,
+        azureOpenAIEndpoint: this.azureOpenAIEndpoint,
       };
 
       const endpoint = getEndpoint(openAIEndpointConfig);
