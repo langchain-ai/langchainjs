@@ -259,6 +259,7 @@ export abstract class BaseChatModel<
         runnableConfig.runName
       );
       let generationChunk: ChatGenerationChunk | undefined;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let llmOutput: Record<string, any> | undefined;
       try {
         for await (const chunk of this._streamResponseChunks(
@@ -380,6 +381,7 @@ export abstract class BaseChatModel<
           runManagers?.[0]
         );
         let aggregated;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         let llmOutput: Record<string, any> | undefined;
         for await (const chunk of stream) {
           if (chunk.message.id == null) {
