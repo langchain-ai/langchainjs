@@ -280,7 +280,10 @@ export abstract class BaseChatModel<
           } else {
             generationChunk = generationChunk.concat(chunk);
           }
-          if (isAIMessageChunk(chunk.message) && chunk.message.usage_metadata) {
+          if (
+            isAIMessageChunk(chunk.message) &&
+            chunk.message.usage_metadata !== undefined
+          ) {
             llmOutput = {
               tokenUsage: {
                 promptTokens: chunk.message.usage_metadata.input_tokens,
@@ -388,7 +391,10 @@ export abstract class BaseChatModel<
           } else {
             aggregated = concat(aggregated, chunk);
           }
-          if (isAIMessageChunk(chunk.message) && chunk.message.usage_metadata) {
+          if (
+            isAIMessageChunk(chunk.message) &&
+            chunk.message.usage_metadata !== undefined
+          ) {
             llmOutput = {
               tokenUsage: {
                 promptTokens: chunk.message.usage_metadata.input_tokens,
