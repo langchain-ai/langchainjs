@@ -933,6 +933,8 @@ export class ChatOpenAI<
 
   azureOpenAIBasePath?: string;
 
+  azureOpenAIEndpoint?: string;
+
   organization?: string;
 
   __includeRawResponse?: boolean;
@@ -993,6 +995,10 @@ export class ChatOpenAI<
       fields?.configuration?.organization ??
       getEnvironmentVariable("OPENAI_ORGANIZATION");
 
+    this.azureOpenAIEndpoint =
+      fields?.azureOpenAIEndpoint ??
+      getEnvironmentVariable("AZURE_OPENAI_ENDPOINT");
+
     this.modelName = fields?.model ?? fields?.modelName ?? this.model;
     this.model = this.modelName;
     this.modelKwargs = fields?.modelKwargs ?? {};
@@ -1013,8 +1019,20 @@ export class ChatOpenAI<
     this.__includeRawResponse = fields?.__includeRawResponse;
 
     if (this.azureOpenAIApiKey || this.azureADTokenProvider) {
-      if (!this.azureOpenAIApiInstanceName && !this.azureOpenAIBasePath) {
+      if (
+        !this.azureOpenAIApiInstanceName &&
+        !this.azureOpenAIBasePath &&
+        !this.azureOpenAIEndpoint
+      ) {
         throw new Error("Azure OpenAI API instance name not found");
+      }
+
+      if (!this.azureOpenAIApiDeploymentName && this.azureOpenAIBasePath) {
+        const parts = this.azureOpenAIBasePath.split("/openai/deployments/");
+        if (parts.length === 2) {
+          const [, deployment] = parts;
+          this.azureOpenAIApiDeploymentName = deployment;
+        }
       }
       if (!this.azureOpenAIApiDeploymentName) {
         throw new Error("Azure OpenAI API deployment name not found");
@@ -1654,6 +1672,7 @@ export class ChatOpenAI<
         azureOpenAIApiKey: this.azureOpenAIApiKey,
         azureOpenAIBasePath: this.azureOpenAIBasePath,
         baseURL: this.clientConfig.baseURL,
+        azureOpenAIEndpoint: this.azureOpenAIEndpoint,
       };
 
       const endpoint = getEndpoint(openAIEndpointConfig);
