@@ -8627,44 +8627,51 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@couchbase/couchbase-darwin-arm64-napi@npm:4.3.0":
-  version: 4.3.0
-  resolution: "@couchbase/couchbase-darwin-arm64-napi@npm:4.3.0"
+"@couchbase/couchbase-darwin-arm64-napi@npm:4.4.2":
+  version: 4.4.2
+  resolution: "@couchbase/couchbase-darwin-arm64-napi@npm:4.4.2"
   conditions: os=darwin & cpu=arm64
   languageName: node
   linkType: hard
 
-"@couchbase/couchbase-darwin-x64-napi@npm:4.3.0":
-  version: 4.3.0
-  resolution: "@couchbase/couchbase-darwin-x64-napi@npm:4.3.0"
+"@couchbase/couchbase-darwin-x64-napi@npm:4.4.2":
+  version: 4.4.2
+  resolution: "@couchbase/couchbase-darwin-x64-napi@npm:4.4.2"
   conditions: os=darwin & cpu=x64
   languageName: node
   linkType: hard
 
-"@couchbase/couchbase-linux-arm64-napi@npm:4.3.0":
-  version: 4.3.0
-  resolution: "@couchbase/couchbase-linux-arm64-napi@npm:4.3.0"
+"@couchbase/couchbase-linux-arm64-napi@npm:4.4.2":
+  version: 4.4.2
+  resolution: "@couchbase/couchbase-linux-arm64-napi@npm:4.4.2"
   conditions: os=linux & cpu=arm64
   languageName: node
   linkType: hard
 
-"@couchbase/couchbase-linux-x64-napi@npm:4.3.0":
-  version: 4.3.0
-  resolution: "@couchbase/couchbase-linux-x64-napi@npm:4.3.0"
+"@couchbase/couchbase-linux-x64-napi@npm:4.4.2":
+  version: 4.4.2
+  resolution: "@couchbase/couchbase-linux-x64-napi@npm:4.4.2"
   conditions: os=linux & cpu=x64
   languageName: node
   linkType: hard
 
-"@couchbase/couchbase-linuxmusl-x64-napi@npm:4.3.0":
-  version: 4.3.0
-  resolution: "@couchbase/couchbase-linuxmusl-x64-napi@npm:4.3.0"
+"@couchbase/couchbase-linuxmusl-arm64-napi@npm:4.4.2":
+  version: 4.4.2
+  resolution: "@couchbase/couchbase-linuxmusl-arm64-napi@npm:4.4.2"
+  conditions: os=linux & cpu=arm64
+  languageName: node
+  linkType: hard
+
+"@couchbase/couchbase-linuxmusl-x64-napi@npm:4.4.2":
+  version: 4.4.2
+  resolution: "@couchbase/couchbase-linuxmusl-x64-napi@npm:4.4.2"
   conditions: os=linux & cpu=x64
   languageName: node
   linkType: hard
 
-"@couchbase/couchbase-win32-x64-napi@npm:4.3.0":
-  version: 4.3.0
-  resolution: "@couchbase/couchbase-win32-x64-napi@npm:4.3.0"
+"@couchbase/couchbase-win32-x64-napi@npm:4.4.2":
+  version: 4.4.2
+  resolution: "@couchbase/couchbase-win32-x64-napi@npm:4.4.2"
   conditions: os=win32 & cpu=x64
   languageName: node
   linkType: hard
@@ -11472,7 +11479,7 @@ __metadata:
     "@planetscale/database": ^1.8.0
     "@premai/prem-sdk": ^0.3.25
     "@qdrant/js-client-rest": ^1.8.2
-    "@raycast/api": ^1.55.2
+    "@raycast/api": ^1.83.1
     "@rockset/client": ^0.9.1
     "@smithy/eventstream-codec": ^2.0.5
     "@smithy/protocol-http": ^3.0.6
@@ -11570,7 +11577,7 @@ __metadata:
     mongodb: ^5.2.0
     mysql2: ^3.9.8
     neo4j-driver: ^5.17.0
-    node-llama-cpp: 2.7.3
+    node-llama-cpp: ^2
     notion-to-md: ^3.1.0
     officeparser: ^4.0.4
     pdf-parse: 1.1.1
@@ -11674,7 +11681,6 @@ __metadata:
     closevector-web: 0.1.6
     cohere-ai: "*"
     convex: ^1.3.1
-    couchbase: ^4.3.0
     crypto-js: ^4.2.0
     d3-dsv: ^2.0.0
     discord.js: ^14.14.1
@@ -11700,7 +11706,6 @@ __metadata:
     mongodb: ">=5.2.0"
     mysql2: ^3.9.8
     neo4j-driver: "*"
-    node-llama-cpp: "*"
     notion-to-md: ^3.1.0
     officeparser: ^4.0.4
     pdf-parse: 1.1.1
@@ -11866,8 +11871,6 @@ __metadata:
       optional: true
     convex:
       optional: true
-    couchbase:
-      optional: true
     crypto-js:
       optional: true
     d3-dsv:
@@ -11917,8 +11920,6 @@ __metadata:
     mysql2:
       optional: true
     neo4j-driver:
-      optional: true
-    node-llama-cpp:
       optional: true
     notion-to-md:
       optional: true
@@ -14158,25 +14159,27 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@raycast/api@npm:^1.55.2":
-  version: 1.55.2
-  resolution: "@raycast/api@npm:1.55.2"
+"@raycast/api@npm:^1.83.1":
+  version: 1.83.1
+  resolution: "@raycast/api@npm:1.83.1"
   dependencies:
-    "@types/node": 18.8.3
-    "@types/react": 18.0.9
-    react: 18.1.0
-    react-reconciler: 0.28.0
+    "@types/node": ^20.8.10
+    "@types/react": ^18.3.3
+    react: 18.3.1
   peerDependencies:
-    "@types/node": 18.8.3
-    "@types/react": 18.0.9
+    "@types/node": 20.8.10
+    "@types/react": 18.3.3
+    react-devtools: 5.2.0
   peerDependenciesMeta:
     "@types/node":
       optional: true
     "@types/react":
       optional: true
+    react-devtools:
+      optional: true
   bin:
     ray: bin/ray
-  checksum: 1154dc3d02d3ca1a9ee11d638682058464e2c01fb30df43b1f2ef0e6205744f34fcef10a413e16bfc93a08d19d6e569bbe7151660587a0d50c8df074f21c663d
+  checksum: 166ee04610ea90c327da9ea898fec474cd14b9b83e2205447b979edd4d6e36682e6b0121c238a8380439a932e5d6654b63e2afb17ea408c85fe8066f1a8e3070
   languageName: node
   linkType: hard
 
@@ -19034,13 +19037,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:18.8.3":
-  version: 18.8.3
-  resolution: "@types/node@npm:18.8.3"
-  checksum: 9201adc6dc389644c9f478f950ef8926a93e5827865dcd80d7d12fefacab665c96879c87cd6ec74d5eccdd998c4603d02e1e07a35d71a63fe4c20670a381f6ef
-  languageName: node
-  linkType: hard
-
 "@types/node@npm:>=12.12.47, @types/node@npm:>=13.7.0":
   version: 18.15.11
   resolution: "@types/node@npm:18.15.11"
@@ -19100,6 +19096,15 @@ __metadata:
   version: 20.4.8
   resolution: "@types/node@npm:20.4.8"
   checksum: 86a3963c0c7af3410553d1dfa4b018a20b3cb3ab4d8e8ffe27408b6338c5de0374b0bf379bc705da2205b466daa751ccfe062f453ba9bde34fdb0e5163ca6a68
+  languageName: node
+  linkType: hard
+
+"@types/node@npm:^20.8.10":
+  version: 20.16.10
+  resolution: "@types/node@npm:20.16.10"
+  dependencies:
+    undici-types: ~6.19.2
+  checksum: 8b4d5a0af828871627e80da095df50ef8ae7ca458f39ccde1d060e3bf97b0bc76af9547bd5d75ce4ccb1dd80466804b2fe4f12553c11cb8691c6667effd9a9d7
   languageName: node
   linkType: hard
 
@@ -19292,17 +19297,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/react@npm:18.0.9":
-  version: 18.0.9
-  resolution: "@types/react@npm:18.0.9"
-  dependencies:
-    "@types/prop-types": "*"
-    "@types/scheduler": "*"
-    csstype: ^3.0.2
-  checksum: 162364dad716d9017ee34aabf2ea37499709ebbdef70392ae1b39225985971e1a46f121efb9c5c7da92144ee1d96d4525df806a7c1c03a5db7fd31dd034ddc7a
-  languageName: node
-  linkType: hard
-
 "@types/react@npm:^18":
   version: 18.2.35
   resolution: "@types/react@npm:18.2.35"
@@ -19311,6 +19305,16 @@ __metadata:
     "@types/scheduler": "*"
     csstype: ^3.0.2
   checksum: d3f1c39116c82e3a504f3332b9198f94f34a33d8535604434b1e387ecabd41ec995961775e2e1c08feefdde878a5b86220879350900137980d681ae3983db462
+  languageName: node
+  linkType: hard
+
+"@types/react@npm:^18.3.3":
+  version: 18.3.10
+  resolution: "@types/react@npm:18.3.10"
+  dependencies:
+    "@types/prop-types": "*"
+    csstype: ^3.0.2
+  checksum: 04261654b5f4bc9584e9d882c7dfd5b36dc58963f958f8c3efd24cb68c9d205bc2d57558a1479b86d7827f0e5116d5bd111791d1253583d1e1c165f0aeb48c48
   languageName: node
   linkType: hard
 
@@ -22960,6 +22964,29 @@ __metadata:
   languageName: node
   linkType: hard
 
+"cmake-js@npm:^7.3.0":
+  version: 7.3.0
+  resolution: "cmake-js@npm:7.3.0"
+  dependencies:
+    axios: ^1.6.5
+    debug: ^4
+    fs-extra: ^11.2.0
+    lodash.isplainobject: ^4.0.6
+    memory-stream: ^1.0.0
+    node-api-headers: ^1.1.0
+    npmlog: ^6.0.2
+    rc: ^1.2.7
+    semver: ^7.5.4
+    tar: ^6.2.0
+    url-join: ^4.0.1
+    which: ^2.0.2
+    yargs: ^17.7.2
+  bin:
+    cmake-js: bin/cmake-js
+  checksum: 9a0da5bde0e4c03879f5835a6bf9e9e28113831a6ce9663917e4463e3056a98470bce4336416f3a0136360b68771031b53cbaf4ae17bd920352d2f2b1a8774c8
+  languageName: node
+  linkType: hard
+
 "cmd-shim@npm:^6.0.0":
   version: 6.0.2
   resolution: "cmd-shim@npm:6.0.2"
@@ -23636,17 +23663,18 @@ __metadata:
   linkType: hard
 
 "couchbase@npm:^4.3.0":
-  version: 4.3.0
-  resolution: "couchbase@npm:4.3.0"
+  version: 4.4.2
+  resolution: "couchbase@npm:4.4.2"
   dependencies:
-    "@couchbase/couchbase-darwin-arm64-napi": 4.3.0
-    "@couchbase/couchbase-darwin-x64-napi": 4.3.0
-    "@couchbase/couchbase-linux-arm64-napi": 4.3.0
-    "@couchbase/couchbase-linux-x64-napi": 4.3.0
-    "@couchbase/couchbase-linuxmusl-x64-napi": 4.3.0
-    "@couchbase/couchbase-win32-x64-napi": 4.3.0
-    cmake-js: ^7.2.1
-    node-addon-api: ^7.0.0
+    "@couchbase/couchbase-darwin-arm64-napi": 4.4.2
+    "@couchbase/couchbase-darwin-x64-napi": 4.4.2
+    "@couchbase/couchbase-linux-arm64-napi": 4.4.2
+    "@couchbase/couchbase-linux-x64-napi": 4.4.2
+    "@couchbase/couchbase-linuxmusl-arm64-napi": 4.4.2
+    "@couchbase/couchbase-linuxmusl-x64-napi": 4.4.2
+    "@couchbase/couchbase-win32-x64-napi": 4.4.2
+    cmake-js: ^7.3.0
+    node-addon-api: ^8.0.0
   dependenciesMeta:
     "@couchbase/couchbase-darwin-arm64-napi":
       optional: true
@@ -23656,11 +23684,13 @@ __metadata:
       optional: true
     "@couchbase/couchbase-linux-x64-napi":
       optional: true
+    "@couchbase/couchbase-linuxmusl-arm64-napi":
+      optional: true
     "@couchbase/couchbase-linuxmusl-x64-napi":
       optional: true
     "@couchbase/couchbase-win32-x64-napi":
       optional: true
-  checksum: 99c24663cd7ab524668f26f151f92a78ecf850ddeca919b71f26eebe1134c492218639f9f491ff95e749628bd108164f78f13884e85a1de27959152247f8ecab
+  checksum: 452dcdc01f9277fc6e15668eb4ab67b6afff0945a8832a598b1009068fe82edcb76d4fbf0704d9351deba74348ee25759ddba5efbfed14dae23fca13cf4714a5
   languageName: node
   linkType: hard
 
@@ -27088,7 +27118,6 @@ __metadata:
     "@planetscale/database": ^1.8.0
     "@prisma/client": ^4.11.0
     "@qdrant/js-client-rest": ^1.9.0
-    "@raycast/api": ^1.55.2
     "@rockset/client": ^0.9.1
     "@supabase/supabase-js": ^2.45.0
     "@tensorflow/tfjs-backend-cpu": ^4.4.0
@@ -27105,7 +27134,6 @@ __metadata:
     axios: ^0.26.0
     chromadb: ^1.5.3
     convex: ^1.3.1
-    couchbase: ^4.3.0
     date-fns: ^3.3.1
     dotenv: ^16.0.3
     duck-duck-scrape: ^2.2.5
@@ -34578,6 +34606,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"node-api-headers@npm:^1.1.0":
+  version: 1.3.0
+  resolution: "node-api-headers@npm:1.3.0"
+  checksum: 4da6c55dd3f39487e24eb5c0862a28899c0b8c4c03041bb452a7b8940efc9ffe781dafdc6e2fbe381d3d0495e08aaee4e2cc873d7a35a0b33b39248c376e873b
+  languageName: node
+  linkType: hard
+
 "node-domexception@npm:1.0.0, node-domexception@npm:^1.0.0":
   version: 1.0.0
   resolution: "node-domexception@npm:1.0.0"
@@ -34744,9 +34779,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"node-llama-cpp@npm:2.7.3":
-  version: 2.7.3
-  resolution: "node-llama-cpp@npm:2.7.3"
+"node-llama-cpp@npm:^2":
+  version: 2.8.16
+  resolution: "node-llama-cpp@npm:2.8.16"
   dependencies:
     chalk: ^5.3.0
     chmodrp: ^1.0.2
@@ -34764,9 +34799,14 @@ __metadata:
     uuid: ^9.0.0
     which: ^4.0.0
     yargs: ^17.7.2
+  peerDependencies:
+    typescript: ">=5.0.0"
+  peerDependenciesMeta:
+    typescript:
+      optional: true
   bin:
     node-llama-cpp: dist/cli/cli.js
-  checksum: 5be984ab4711d3e6f3f29e6246e5d3b437b0e48631376f361c832a969530ffa4da5cdc78e8cf8e003a86411ced42c7cf022ad6d5b50c24f276cd841dbb077e0b
+  checksum: 51607ec21f02a702a440fae6a8c06b00b039cbfcb09a7d92eaa16e97972ff71874285d9d2561429bae03b52da81e0d12d2d22356dd162f30ce92d37c928014c4
   languageName: node
   linkType: hard
 
@@ -37712,18 +37752,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-reconciler@npm:0.28.0":
-  version: 0.28.0
-  resolution: "react-reconciler@npm:0.28.0"
-  dependencies:
-    loose-envify: ^1.1.0
-    scheduler: ^0.22.0
-  peerDependencies:
-    react: ^18.1.0
-  checksum: 6421f9500827219556ead3d86cbdf0553c47d633ecda2144720bf235d404f5e4e1e585336c4dfa80e26a04f1a6117c455a60964917d5600c73a91d8374f0232f
-  languageName: node
-  linkType: hard
-
 "react-router-config@npm:^5.1.1":
   version: 5.1.1
   resolution: "react-router-config@npm:5.1.1"
@@ -37785,12 +37813,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react@npm:18.1.0":
-  version: 18.1.0
-  resolution: "react@npm:18.1.0"
+"react@npm:18.3.1":
+  version: 18.3.1
+  resolution: "react@npm:18.3.1"
   dependencies:
     loose-envify: ^1.1.0
-  checksum: 5bb296b561b43ef2220395da4faac86c14a087c8c80e1a7598a5740f01ee605c11eaf249985c1e2000971c4cd32ccb46d40f00479bbd9fb6b1c7cf857393b7d4
+  checksum: a27bcfa8ff7c15a1e50244ad0d0c1cb2ad4375eeffefd266a64889beea6f6b64c4966c9b37d14ee32d6c9fcd5aa6ba183b6988167ab4d127d13e7cb5b386a376
   languageName: node
   linkType: hard
 
@@ -38900,15 +38928,6 @@ __metadata:
     loose-envify: ^1.1.0
     object-assign: ^4.1.1
   checksum: c4b35cf967c8f0d3e65753252d0f260271f81a81e427241295c5a7b783abf4ea9e905f22f815ab66676f5313be0a25f47be582254db8f9241b259213e999b8fc
-  languageName: node
-  linkType: hard
-
-"scheduler@npm:^0.22.0":
-  version: 0.22.0
-  resolution: "scheduler@npm:0.22.0"
-  dependencies:
-    loose-envify: ^1.1.0
-  checksum: a8ef5cab769c020cd6382ad9ecc3f72dbde56a50a36639b3a42ad9c11f7724f03700bcad373044059b8067d4a6365154dc7c0ca8027ef20ff4900cf58a0fc2c5
   languageName: node
   linkType: hard
 
@@ -40562,6 +40581,20 @@ __metadata:
   languageName: node
   linkType: hard
 
+"tar@npm:^6.2.0":
+  version: 6.2.1
+  resolution: "tar@npm:6.2.1"
+  dependencies:
+    chownr: ^2.0.0
+    fs-minipass: ^2.0.0
+    minipass: ^5.0.0
+    minizlib: ^2.1.1
+    mkdirp: ^1.0.3
+    yallist: ^4.0.0
+  checksum: f1322768c9741a25356c11373bce918483f40fa9a25c69c59410c8a1247632487edef5fe76c5f12ac51a6356d2f1829e96d2bc34098668a2fc34d76050ac2b6c
+  languageName: node
+  linkType: hard
+
 "teeny-request@npm:^9.0.0":
   version: 9.0.0
   resolution: "teeny-request@npm:9.0.0"
@@ -41760,6 +41793,13 @@ __metadata:
   version: 5.26.5
   resolution: "undici-types@npm:5.26.5"
   checksum: 3192ef6f3fd5df652f2dc1cd782b49d6ff14dc98e5dced492aa8a8c65425227da5da6aafe22523c67f035a272c599bb89cfe803c1db6311e44bed3042fc25487
+  languageName: node
+  linkType: hard
+
+"undici-types@npm:~6.19.2":
+  version: 6.19.8
+  resolution: "undici-types@npm:6.19.8"
+  checksum: de51f1b447d22571cf155dfe14ff6d12c5bdaec237c765085b439c38ca8518fc360e88c70f99469162bf2e14188a7b0bcb06e1ed2dc031042b984b0bb9544017
   languageName: node
   linkType: hard
 
