@@ -21,7 +21,7 @@
   "scripts": {
     "build": "yarn clean && yarn turbo:command build:internal --filter=@langchain/scripts",
     "build:internal": "tsc --project ./tsconfig.build.json && yarn move:artifacts && yarn build:generated",
-    "move:artifacts": "mkdir -p ./dist && mv ./dist_build/* ./dist/",
+    "move:artifacts": "rimraf dist && mkdir -p dist && mv dist_build/* dist/",
     "build:generated": "node bin/build.js --create-entrypoints --pre --tree-shaking",
     "build:turbo": "yarn turbo:command build --filter=@langchain/scripts",
     "lint:eslint": "NODE_OPTIONS=--max-old-space-size=4096 eslint --cache --ext .ts,.js src/",
