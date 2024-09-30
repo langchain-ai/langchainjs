@@ -434,6 +434,11 @@ export class AzureChatOpenAI extends ChatOpenAI {
       openAIApiKey: "openai_api_key",
       openAIApiVersion: "openai_api_version",
       openAIBasePath: "openai_api_base",
+      deploymentName: "deployment_name",
+      azureOpenAIEndpoint: "azure_endpoint",
+      azureOpenAIApiVersion: "openai_api_version",
+      azureOpenAIBasePath: "openai_api_base",
+      azureOpenAIApiDeploymentName: "deployment_name",
     };
   }
 
@@ -477,6 +482,7 @@ export class AzureChatOpenAI extends ChatOpenAI {
         azureOpenAIBasePath: this.azureOpenAIBasePath,
         azureADTokenProvider: this.azureADTokenProvider,
         baseURL: this.clientConfig.baseURL,
+        azureOpenAIEndpoint: this.azureOpenAIEndpoint,
       };
 
       const endpoint = getEndpoint(openAIEndpointConfig);
@@ -541,6 +547,44 @@ export class AzureChatOpenAI extends ChatOpenAI {
       delete json.kwargs.azure_openai_api_key;
       delete json.kwargs.azure_openai_api_version;
       delete json.kwargs.azure_open_ai_base_path;
+
+      if (!json.kwargs.azure_endpoint && this.azureOpenAIEndpoint) {
+        json.kwargs.azure_endpoint = this.azureOpenAIEndpoint;
+      }
+      if (!json.kwargs.azure_endpoint && this.azureOpenAIBasePath) {
+        const parts = this.azureOpenAIBasePath.split("/openai/deployments/");
+        if (parts.length === 2 && parts[0].startsWith("http")) {
+          const [endpoint] = parts;
+          json.kwargs.azure_endpoint = endpoint;
+        }
+      }
+      if (!json.kwargs.azure_endpoint && this.azureOpenAIApiInstanceName) {
+        json.kwargs.azure_endpoint = `https://${this.azureOpenAIApiInstanceName}.openai.azure.com/`;
+      }
+      if (!json.kwargs.deployment_name && this.azureOpenAIApiDeploymentName) {
+        json.kwargs.deployment_name = this.azureOpenAIApiDeploymentName;
+      }
+      if (!json.kwargs.deployment_name && this.azureOpenAIBasePath) {
+        const parts = this.azureOpenAIBasePath.split("/openai/deployments/");
+        if (parts.length === 2) {
+          const [, deployment] = parts;
+          json.kwargs.deployment_name = deployment;
+        }
+      }
+
+      if (
+        json.kwargs.azure_endpoint &&
+        json.kwargs.deployment_name &&
+        json.kwargs.openai_api_base
+      ) {
+        delete json.kwargs.openai_api_base;
+      }
+      if (
+        json.kwargs.azure_openai_api_instance_name &&
+        json.kwargs.azure_endpoint
+      ) {
+        delete json.kwargs.azure_openai_api_instance_name;
+      }
     }
 
     return json;
