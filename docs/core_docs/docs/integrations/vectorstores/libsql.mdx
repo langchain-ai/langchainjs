@@ -6,18 +6,40 @@ Vector Similiarity Search is built into Turso and libSQL Server as a native data
 
 ## Setup
 
-### Create a Turso Database
+You can use local SQLite when working with the libSQL vector store, or use a hosted Turso Database.
+
+### 1. Create a Database
+
+#### Option 1. Local development with a SQLite file
 
 ```bash
-turso db create
+sqlite3 file.db
 ```
 
-### Add a vector field to a new or existing table
+Inside the shell, create a new table or add the embedding column to an existing table.
+
+Follow the instructions below in step 2.
+
+### Option 2. Create a Turso Database
+
+Visit [sqlite.new](https://sqlite.new) to create a new database, give it a name, and create a database auth token.
+
+Make sure to copy the database auth token, and the database URL, it should look something like:
+
+```text
+libsql://[database-name]-[your-username].turso.io
+```
+
+### 2. Add a vector field to a new or existing table
+
+Execute the following SQL command to create a new table or add the embedding column to an existing table.
+
+Make sure to mopdify the following parts of the SQL:
 
 - `TABLE_NAME` is the name of the table you want to create.
 - `content` is used to store the `Document.pageContent` values.
 - `metadata` is used to store the `Document.metadata` object.
-- `EMBEDDING_COLUMN` is used to store the vector values, use the dimension used by the model you plan to use (1536 for OpenAI).
+- `EMBEDDING_COLUMN` is used to store the vector values, use the dimensions size used by the model you plan to use (1536 for OpenAI).
 
 ```sql
 CREATE TABLE IF NOT EXISTS TABLE_NAME (
@@ -28,29 +50,61 @@ CREATE TABLE IF NOT EXISTS TABLE_NAME (
 );
 ```
 
-### Create a new index
+### 3. Create a new index
+
+Make sure to replace the `TABLE_NAME` and `EMBEDDING_COLUMN` with the values you used in the previous step.
 
 ```sql
 CREATE INDEX IF NOT EXISTS TABLE_NAME_idx ON TABLE_NAME (libsql_vector_idx(EMBEDDING_COLUMN));
 ```
 
-Replace `TABLE_NAME` with the name of the table you want to create or update, and `EMBEDDING_COLUMN` with the name of the column you want to use to store the vector.
+## Application code
 
-## Usage
+To work with Turso and libSQL, you must install the `@libsql/client` package:
+
+```bash npm2yarn
+npm install @libsql/client
+```
 
 import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
 
 <IntegrationInstallTooltip></IntegrationInstallTooltip>
 
+To initialize a new `LibSQL` vector store, you need to provide the database URL and Auth Token:
+
+```typescript
+import { createClient } from "@libsql/client";
+
+const client = createClient({
+  url: "libsql://[database-name]-[your-username].turso.io",
+  authToken: "...",
+});
+
+const vectorStore = new LibSQLVectorStore(client, {
+  tableName: "TABLE_NAME",
+  embeddingColumn: "EMBEDDING_COLUMN",
+  dimensions: 153,
+});
+```
+
+When working locally, you can use a sqlite file and omit the `authToken`:
+
+```typescript
+const client = createClient({
+  url: "file:./dev.db",
+});
+```
+
 ```bash npm2yarn
 npm install @langchain/openai @langchain/community
 ```
 
+## Usage
+
 import CodeBlock from "@theme/CodeBlock";
+import Example from "@examples/indexes/vector_stores/libsql/example.ts";
 
-### Example: Q&A chatbot using OpenAI and libSQL as vector store
-
-### Example: Similarity search with a metadata filter
+<CodeBlock language="typescript">{Example}</CodeBlock>
 
 ## Related
 
