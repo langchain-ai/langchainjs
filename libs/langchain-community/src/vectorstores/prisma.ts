@@ -309,9 +309,9 @@ export class PrismaVectorStore<
       vectors.map((vector, idx) =>
         this.db.$executeRaw(
           this.Prisma.sql`UPDATE ${tableNameRaw}
-          SET ${vectorColumnRaw} = ${`[${vector.join(",")}]`}::vector
-           WHERE ${idColumnRaw} = ${documents[idx].metadata[this.idColumn]}
-           `
+            SET ${vectorColumnRaw} = ${`[${vector.join(",")}]`}::vector
+            WHERE ${idColumnRaw} = ${documents[idx].metadata[this.idColumn]}
+          `
         )
       )
     );
