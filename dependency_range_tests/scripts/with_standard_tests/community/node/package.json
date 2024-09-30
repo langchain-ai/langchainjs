@@ -2,6 +2,7 @@
   "name": "dependency-range-tests",
   "version": "0.0.0",
   "private": true,
+  "type": "module",
   "description": "Tests dependency ranges for LangChain.",
   "dependencies": {
     "semver": "^7.5.4"
