@@ -8,6 +8,7 @@ import {
   HumanMessage,
   coerceMessageLikeToMessage,
   AIMessageChunk,
+  isAIMessageChunk,
 } from "../messages/index.js";
 import type { BasePromptValueInterface } from "../prompt_values.js";
 import {
@@ -279,14 +280,14 @@ export abstract class BaseChatModel<
           } else {
             generationChunk = generationChunk.concat(chunk);
           }
-          if (chunk.message instanceof AIMessageChunk && chunk.message.usage_metadata) {
+          if (isAIMessageChunk(chunk.message) && chunk.message.usage_metadata) {
             llmOutput = {
               tokenUsage: {
                 promptTokens: chunk.message.usage_metadata.input_tokens,
                 completionTokens: chunk.message.usage_metadata.output_tokens,
                 totalTokens: chunk.message.usage_metadata.total_tokens,
-              }
-            }
+              },
+            };
           }
         }
       } catch (err) {
@@ -387,14 +388,14 @@ export abstract class BaseChatModel<
           } else {
             aggregated = concat(aggregated, chunk);
           }
-          if (chunk.message instanceof AIMessageChunk && chunk.message.usage_metadata) {
+          if (isAIMessageChunk(chunk.message) && chunk.message.usage_metadata) {
             llmOutput = {
               tokenUsage: {
                 promptTokens: chunk.message.usage_metadata.input_tokens,
                 completionTokens: chunk.message.usage_metadata.output_tokens,
                 totalTokens: chunk.message.usage_metadata.total_tokens,
-              }
-            }
+              },
+            };
           }
         }
         if (aggregated === undefined) {
