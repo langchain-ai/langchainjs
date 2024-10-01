@@ -269,8 +269,14 @@ export class HanaDB extends VectorStore {
         throw new Error(`Column ${columnName} has the wrong type: ${dataType}`);
       }
 
+      // For the vector column, we have defined a default value of -1
+      // which refers to dynamic length
+      // However, Length can either be -1 (QRC01+02-24) or 0 (QRC03-24 onwards)
+      // i.e. HANA db can return 0 (length) even when we set the default value
+      // Hence, ignoring this check for now only in case of default value
+
       // Check length, if parameter was provided
-      if (columnLength !== undefined && length !== columnLength) {
+      if (columnLength !== undefined && length !== columnLength && length > 0) {
         throw new Error(`Column ${columnName} has the wrong length: ${length}`);
       }
     }
