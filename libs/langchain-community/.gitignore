@@ -162,6 +162,10 @@ embeddings/hf_transformers.cjs
 embeddings/hf_transformers.js
 embeddings/hf_transformers.d.ts
 embeddings/hf_transformers.d.cts
+embeddings/ibm.cjs
+embeddings/ibm.js
+embeddings/ibm.d.ts
+embeddings/ibm.d.cts
 embeddings/jina.cjs
 embeddings/jina.js
 embeddings/jina.d.ts
@@ -254,6 +258,10 @@ llms/hf.cjs
 llms/hf.js
 llms/hf.d.ts
 llms/hf.d.cts
+llms/ibm.cjs
+llms/ibm.js
+llms/ibm.d.ts
+llms/ibm.d.cts
 llms/llama_cpp.cjs
 llms/llama_cpp.js
 llms/llama_cpp.d.ts

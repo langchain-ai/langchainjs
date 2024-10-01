@@ -35,10 +35,12 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
+    "@ibm-cloud/watsonx-ai": "1.0.1",
     "@langchain/openai": ">=0.2.0 <0.4.0",
     "binary-extensions": "^2.2.0",
     "expr-eval": "^2.0.2",
     "flat": "^5.0.2",
+    "ibm-cloud-sdk-core": "^5.0.2",
     "js-yaml": "^4.1.0",
     "langchain": ">=0.2.3 <0.4.0",
     "langsmith": "~0.1.56",
@@ -1068,6 +1070,15 @@
       "import": "./embeddings/hf_transformers.js",
       "require": "./embeddings/hf_transformers.cjs"
     },
+    "./embeddings/ibm": {
+      "types": {
+        "import": "./embeddings/ibm.d.ts",
+        "require": "./embeddings/ibm.d.cts",
+        "default": "./embeddings/ibm.d.ts"
+      },
+      "import": "./embeddings/ibm.js",
+      "require": "./embeddings/ibm.cjs"
+    },
     "./embeddings/jina": {
       "types": {
         "import": "./embeddings/jina.d.ts",
@@ -1274,6 +1285,15 @@
       },
       "import": "./llms/hf.js",
       "require": "./llms/hf.cjs"
+    },
+    "./llms/ibm": {
+      "types": {
+        "import": "./llms/ibm.d.ts",
+        "require": "./llms/ibm.d.cts",
+        "default": "./llms/ibm.d.ts"
+      },
+      "import": "./llms/ibm.js",
+      "require": "./llms/ibm.cjs"
     },
     "./llms/llama_cpp": {
       "types": {
@@ -3180,6 +3200,10 @@
     "embeddings/hf_transformers.js",
     "embeddings/hf_transformers.d.ts",
     "embeddings/hf_transformers.d.cts",
+    "embeddings/ibm.cjs",
+    "embeddings/ibm.js",
+    "embeddings/ibm.d.ts",
+    "embeddings/ibm.d.cts",
     "embeddings/jina.cjs",
     "embeddings/jina.js",
     "embeddings/jina.d.ts",
@@ -3272,6 +3296,10 @@
     "llms/hf.js",
     "llms/hf.d.ts",
     "llms/hf.d.cts",
+    "llms/ibm.cjs",
+    "llms/ibm.js",
+    "llms/ibm.d.ts",
+    "llms/ibm.d.cts",
     "llms/llama_cpp.cjs",
     "llms/llama_cpp.js",
     "llms/llama_cpp.d.ts",
