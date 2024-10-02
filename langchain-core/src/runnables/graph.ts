@@ -144,25 +144,11 @@ export class Graph {
   }
 
   firstNode(): Node | undefined {
-    const targets = new Set(this.edges.map((edge) => edge.target));
-    const found: Node[] = [];
-    Object.values(this.nodes).forEach((node) => {
-      if (!targets.has(node.id)) {
-        found.push(node);
-      }
-    });
-    return found[0];
+    return _firstNode(this);
   }
 
   lastNode(): Node | undefined {
-    const sources = new Set(this.edges.map((edge) => edge.source));
-    const found: Node[] = [];
-    Object.values(this.nodes).forEach((node) => {
-      if (!sources.has(node.id)) {
-        found.push(node);
-      }
-    });
-    return found[0];
+    return _lastNode(this);
   }
 
   /**
@@ -203,25 +189,15 @@ export class Graph {
 
   trimFirstNode(): void {
     const firstNode = this.firstNode();
-    if (firstNode) {
-      const outgoingEdges = this.edges.filter(
-        (edge) => edge.source === firstNode.id
-      );
-      if (Object.keys(this.nodes).length === 1 || outgoingEdges.length === 1) {
-        this.removeNode(firstNode);
-      }
+    if (firstNode && _firstNode(this, [firstNode.id])) {
+      this.removeNode(firstNode);
     }
   }
 
   trimLastNode(): void {
     const lastNode = this.lastNode();
-    if (lastNode) {
-      const incomingEdges = this.edges.filter(
-        (edge) => edge.target === lastNode.id
-      );
-      if (Object.keys(this.nodes).length === 1 || incomingEdges.length === 1) {
-        this.removeNode(lastNode);
-      }
+    if (lastNode && _lastNode(this, [lastNode.id])) {
+      this.removeNode(lastNode);
     }
   }
 
@@ -305,4 +281,47 @@ export class Graph {
       backgroundColor: params?.backgroundColor,
     });
   }
+}
+/**
+ * Find the single node that is not a target of any edge.
+ * Exclude nodes/sources with ids in the exclude list.
+ * If there is no such node, or there are multiple, return undefined.
+ * When drawing the graph, this node would be the origin.
+ */
+function _firstNode(graph: Graph, exclude: string[] = []): Node | undefined {
+  const targets = new Set(
+    graph.edges
+      .filter((edge) => !exclude.includes(edge.source))
+      .map((edge) => edge.target)
+  );
+
+  const found: Node[] = [];
+  for (const node of Object.values(graph.nodes)) {
+    if (!exclude.includes(node.id) && !targets.has(node.id)) {
+      found.push(node);
+    }
+  }
+  return found.length === 1 ? found[0] : undefined;
+}
+
+/**
+ * Find the single node that is not a source of any edge.
+ * Exclude nodes/targets with ids in the exclude list.
+ * If there is no such node, or there are multiple, return undefined.
+ * When drawing the graph, this node would be the destination.
+ */
+function _lastNode(graph: Graph, exclude: string[] = []): Node | undefined {
+  const sources = new Set(
+    graph.edges
+      .filter((edge) => !exclude.includes(edge.target))
+      .map((edge) => edge.source)
+  );
+
+  const found: Node[] = [];
+  for (const node of Object.values(graph.nodes)) {
+    if (!exclude.includes(node.id) && !sources.has(node.id)) {
+      found.push(node);
+    }
+  }
+  return found.length === 1 ? found[0] : undefined;
 }

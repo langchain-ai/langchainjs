@@ -67,8 +67,8 @@ export function drawMermaid(
         : nodeName;
 
       let finalLabel = label;
-      if (node.metadata) {
-        finalLabel += `<hr/><small><em>${Object.entries(node.metadata)
+      if (Object.keys(node.metadata ?? {}).length) {
+        finalLabel += `<hr/><small><em>${Object.entries(node.metadata ?? {})
           .map(([k, v]) => `${k} = ${v}`)
           .join("\n")}</em></small>`;
       }
@@ -118,7 +118,7 @@ export function drawMermaid(
 
       let edgeLabel = "";
       if (data !== undefined) {
-        let edgeData = String(data);
+        let edgeData = data;
         const words = edgeData.split(" ");
         if (words.length > wrapLabelNWords) {
           edgeData = Array.from(
