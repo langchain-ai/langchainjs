@@ -425,7 +425,7 @@ export class PineconeStore extends VectorStore {
         documentsWithScores.push([
           new Document({
             id,
-            pageContent: pageContent?.toString(),
+            pageContent: pageContent ? pageContent.toString() : "",
             metadata,
           }),
           score,
