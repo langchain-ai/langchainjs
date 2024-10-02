@@ -1,23 +1,18 @@
-import { Edge } from "./types.js";
+import { Edge, Node } from "./types.js";
 
 function _escapeNodeLabel(nodeLabel: string): string {
   // Escapes the node label for Mermaid syntax.
   return nodeLabel.replace(/[^a-zA-Z-_0-9]/g, "_");
 }
 
-// Adjusts Mermaid edge to map conditional nodes to pure nodes.
-function _adjustMermaidEdge(edge: Edge, nodes: Record<string, string>) {
-  const sourceNodeLabel = nodes[edge.source] ?? edge.source;
-  const targetNodeLabel = nodes[edge.target] ?? edge.target;
-  return [sourceNodeLabel, targetNodeLabel];
-}
+const MARKDOWN_SPECIAL_CHARS = ["*", "_", "`"];
 
 function _generateMermaidGraphStyles(
   nodeColors: Record<string, string>
 ): string {
   let styles = "";
   for (const [className, color] of Object.entries(nodeColors)) {
-    styles += `\tclassDef ${className}class fill:${color};\n`;
+    styles += `\tclassDef ${className} ${color};\n`;
   }
   return styles;
 }
@@ -26,11 +21,11 @@ function _generateMermaidGraphStyles(
  * Draws a Mermaid graph using the provided graph data
  */
 export function drawMermaid(
-  nodes: Record<string, string>,
+  nodes: Record<string, Node>,
   edges: Edge[],
   config?: {
-    firstNodeLabel?: string;
-    lastNodeLabel?: string;
+    firstNode?: string;
+    lastNode?: string;
     curveStyle?: string;
     withStyles?: boolean;
     nodeColors?: Record<string, string>;
@@ -38,8 +33,8 @@ export function drawMermaid(
   }
 ): string {
   const {
-    firstNodeLabel,
-    lastNodeLabel,
+    firstNode,
+    lastNode,
     nodeColors,
     withStyles = true,
     curveStyle = "linear",
@@ -53,92 +48,126 @@ export function drawMermaid(
     // Node formatting templates
     const defaultClassLabel = "default";
     const formatDict: Record<string, string> = {
-      [defaultClassLabel]: "{0}([{1}]):::otherclass",
+      [defaultClassLabel]: "{0}({1})",
     };
-    if (firstNodeLabel !== undefined) {
-      formatDict[firstNodeLabel] = "{0}[{0}]:::startclass";
+    if (firstNode !== undefined) {
+      formatDict[firstNode] = "{0}([{1}]):::first";
     }
-    if (lastNodeLabel !== undefined) {
-      formatDict[lastNodeLabel] = "{0}[{0}]:::endclass";
+    if (lastNode !== undefined) {
+      formatDict[lastNode] = "{0}([{1}]):::last";
     }
 
     // Add nodes to the graph
-    for (const node of Object.values(nodes)) {
-      const nodeLabel = formatDict[node] ?? formatDict[defaultClassLabel];
-      const escapedNodeLabel = _escapeNodeLabel(node);
-      const nodeParts = node.split(":");
-      const nodeSplit = nodeParts[nodeParts.length - 1];
-      mermaidGraph += `\t${nodeLabel
-        .replace(/\{0\}/g, escapedNodeLabel)
-        .replace(/\{1\}/g, nodeSplit)};\n`;
+    for (const [key, node] of Object.entries(nodes)) {
+      const nodeName = node.name.split(":").pop() ?? "";
+      const label = MARKDOWN_SPECIAL_CHARS.some(
+        (char) => nodeName.startsWith(char) && nodeName.endsWith(char)
+      )
+        ? `<p>${nodeName}</p>`
+        : nodeName;
+
+      let finalLabel = label;
+      if (Object.keys(node.metadata ?? {}).length) {
+        finalLabel += `<hr/><small><em>${Object.entries(node.metadata ?? {})
+          .map(([k, v]) => `${k} = ${v}`)
+          .join("\n")}</em></small>`;
+      }
+
+      const nodeLabel = (formatDict[key] ?? formatDict[defaultClassLabel])
+        .replace("{0}", _escapeNodeLabel(key))
+        .replace("{1}", finalLabel);
+
+      mermaidGraph += `\t${nodeLabel}\n`;
     }
   }
-  let subgraph = "";
-  // Add edges to the graph
+
+  // Group edges by their common prefixes
+  const edgeGroups: Record<string, Edge[]> = {};
   for (const edge of edges) {
-    const sourcePrefix = edge.source.includes(":")
-      ? edge.source.split(":")[0]
-      : undefined;
-    const targetPrefix = edge.target.includes(":")
-      ? edge.target.split(":")[0]
-      : undefined;
-    // Exit subgraph if source or target is not in the same subgraph
-    if (
-      subgraph !== "" &&
-      (subgraph !== sourcePrefix || subgraph !== targetPrefix)
-    ) {
-      mermaidGraph += "\tend\n";
-      subgraph = "";
+    const srcParts = edge.source.split(":");
+    const tgtParts = edge.target.split(":");
+    const commonPrefix = srcParts
+      .filter((src, i) => src === tgtParts[i])
+      .join(":");
+    if (!edgeGroups[commonPrefix]) {
+      edgeGroups[commonPrefix] = [];
     }
-    // Enter subgraph if source and target are in the same subgraph
-    if (
-      subgraph === "" &&
-      sourcePrefix !== undefined &&
-      sourcePrefix === targetPrefix
-    ) {
-      mermaidGraph = `\tsubgraph ${sourcePrefix}\n`;
-      subgraph = sourcePrefix;
-    }
-    const [source, target] = _adjustMermaidEdge(edge, nodes);
-    let edgeLabel = "";
-    // Add BR every wrapLabelNWords words
-    if (edge.data !== undefined) {
-      let edgeData = edge.data;
-      const words = edgeData.split(" ");
-      // Group words into chunks of wrapLabelNWords size
-      if (words.length > wrapLabelNWords) {
-        edgeData = words
-          .reduce((acc: string[], word: string, i: number) => {
-            if (i % wrapLabelNWords === 0) acc.push("");
-            acc[acc.length - 1] += ` ${word}`;
-            return acc;
-          }, [])
-          .join("<br>");
-      }
-      if (edge.conditional) {
-        edgeLabel = ` -. ${edgeData} .-> `;
-      } else {
-        edgeLabel = ` -- ${edgeData} --> `;
-      }
-    } else {
-      if (edge.conditional) {
-        edgeLabel = ` -.-> `;
-      } else {
-        edgeLabel = ` --> `;
-      }
-    }
-    mermaidGraph += `\t${_escapeNodeLabel(
-      source
-    )}${edgeLabel}${_escapeNodeLabel(target)};\n`;
+    edgeGroups[commonPrefix].push(edge);
   }
-  if (subgraph !== "") {
-    mermaidGraph += "end\n";
+
+  const seenSubgraphs = new Set<string>();
+
+  function addSubgraph(edges: Edge[], prefix: string): void {
+    const selfLoop = edges.length === 1 && edges[0].source === edges[0].target;
+    if (prefix && !selfLoop) {
+      const subgraph = prefix.split(":").pop()!;
+      if (seenSubgraphs.has(subgraph)) {
+        throw new Error(
+          `Found duplicate subgraph '${subgraph}' -- this likely means that ` +
+            "you're reusing a subgraph node with the same name. " +
+            "Please adjust your graph to have subgraph nodes with unique names."
+        );
+      }
+
+      seenSubgraphs.add(subgraph);
+      mermaidGraph += `\tsubgraph ${subgraph}\n`;
+    }
+
+    for (const edge of edges) {
+      const { source, target, data, conditional } = edge;
+
+      let edgeLabel = "";
+      if (data !== undefined) {
+        let edgeData = data;
+        const words = edgeData.split(" ");
+        if (words.length > wrapLabelNWords) {
+          edgeData = Array.from(
+            { length: Math.ceil(words.length / wrapLabelNWords) },
+            (_, i) =>
+              words
+                .slice(i * wrapLabelNWords, (i + 1) * wrapLabelNWords)
+                .join(" ")
+          ).join("&nbsp;<br>&nbsp;");
+        }
+        edgeLabel = conditional
+          ? ` -. &nbsp;${edgeData}&nbsp; .-> `
+          : ` -- &nbsp;${edgeData}&nbsp; --> `;
+      } else {
+        edgeLabel = conditional ? " -.-> " : " --> ";
+      }
+
+      mermaidGraph += `\t${_escapeNodeLabel(
+        source
+      )}${edgeLabel}${_escapeNodeLabel(target)};\n`;
+    }
+
+    // Recursively add nested subgraphs
+    for (const nestedPrefix in edgeGroups) {
+      if (nestedPrefix.startsWith(`${prefix}:`) && nestedPrefix !== prefix) {
+        addSubgraph(edgeGroups[nestedPrefix], nestedPrefix);
+      }
+    }
+
+    if (prefix && !selfLoop) {
+      mermaidGraph += "\tend\n";
+    }
+  }
+
+  // Start with the top-level edges (no common prefix)
+  addSubgraph(edgeGroups[""] ?? [], "");
+
+  // Add remaining subgraphs
+  for (const prefix in edgeGroups) {
+    if (!prefix.includes(":") && prefix !== "") {
+      addSubgraph(edgeGroups[prefix], prefix);
+    }
   }
 
   // Add custom styles for nodes
-  if (withStyles && nodeColors !== undefined) {
-    mermaidGraph += _generateMermaidGraphStyles(nodeColors);
+  if (withStyles) {
+    mermaidGraph += _generateMermaidGraphStyles(nodeColors ?? {});
   }
+
   return mermaidGraph;
 }
 
