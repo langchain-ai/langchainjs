@@ -303,6 +303,8 @@ export class AIMessageChunk extends BaseMessageChunk {
         total_tokens: 0,
       };
       const usage_metadata: UsageMetadata = {
+        ...left,
+        ...right,
         input_tokens: left.input_tokens + right.input_tokens,
         output_tokens: left.output_tokens + right.output_tokens,
         total_tokens: left.total_tokens + right.total_tokens,
