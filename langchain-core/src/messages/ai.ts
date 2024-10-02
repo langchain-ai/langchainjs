@@ -37,7 +37,8 @@ export type UsageMetadata = {
    * The total token count
    */
   total_tokens: number;
-};
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+} & Record<string, any>;
 
 /**
  * Represents an AI message in a conversation.
