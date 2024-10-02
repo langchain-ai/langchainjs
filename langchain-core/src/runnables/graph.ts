@@ -9,31 +9,31 @@ import type {
 import { isRunnableInterface } from "./utils.js";
 import { drawMermaid, drawMermaidPng } from "./graph_mermaid.js";
 
-const MAX_DATA_DISPLAY_NAME_LENGTH = 42;
-
 export { Node, Edge };
 
-function nodeDataStr(node: Node): string {
-  if (!isUuid(node.id)) {
-    return node.id;
-  } else if (isRunnableInterface(node.data)) {
+function nodeDataStr(
+  id: string | undefined,
+  data: RunnableInterface | RunnableIOSchema
+): string {
+  if (id !== undefined && !isUuid(id)) {
+    return id;
+  } else if (isRunnableInterface(data)) {
     try {
-      let data = node.data.getName();
-      data = data.startsWith("Runnable") ? data.slice("Runnable".length) : data;
-      if (data.length > MAX_DATA_DISPLAY_NAME_LENGTH) {
-        data = `${data.substring(0, MAX_DATA_DISPLAY_NAME_LENGTH)}...`;
-      }
-      return data;
+      let dataStr = data.getName();
+      dataStr = dataStr.startsWith("Runnable")
+        ? dataStr.slice("Runnable".length)
+        : dataStr;
+      return dataStr;
     } catch (error) {
-      return node.data.getName();
+      return data.getName();
     }
   } else {
-    return node.data.name ?? "UnknownSchema";
+    return data.name ?? "UnknownSchema";
   }
 }
 
 function nodeDataJson(node: Node) {
-  // if node.data is implements Runnable
+  // if node.data implements Runnable
   if (isRunnableInterface(node.data)) {
     return {
       type: "runnable",
@@ -54,6 +54,11 @@ export class Graph {
   nodes: Record<string, Node> = {};
 
   edges: Edge[] = [];
+
+  constructor(params?: { nodes: Record<string, Node>; edges: Edge[] }) {
+    this.nodes = params?.nodes ?? this.nodes;
+    this.edges = params?.edges ?? this.edges;
+  }
 
   // Convert the graph to a JSON-serializable format.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -86,12 +91,22 @@ export class Graph {
     };
   }
 
-  addNode(data: RunnableInterface | RunnableIOSchema, id?: string): Node {
+  addNode(
+    data: RunnableInterface | RunnableIOSchema,
+    id?: string,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    metadata?: Record<string, any>
+  ): Node {
     if (id !== undefined && this.nodes[id] !== undefined) {
       throw new Error(`Node with id ${id} already exists`);
     }
-    const nodeId = id || uuidv4();
-    const node: Node = { id: nodeId, data };
+    const nodeId = id ?? uuidv4();
+    const node: Node = {
+      id: nodeId,
+      data,
+      name: nodeDataStr(id, data),
+      metadata,
+    };
     this.nodes[nodeId] = node;
     return node;
   }
@@ -210,6 +225,43 @@ export class Graph {
     }
   }
 
+  /**
+   * Return a new graph with all nodes re-identified,
+   * using their unique, readable names where possible.
+   */
+  reid(): Graph {
+    const nodeLabels: Record<string, string> = Object.fromEntries(
+      Object.values(this.nodes).map((node) => [node.id, node.name])
+    );
+    const nodeLabelCounts = new Map<string, number>();
+    Object.values(nodeLabels).forEach((label) => {
+      nodeLabelCounts.set(label, (nodeLabelCounts.get(label) || 0) + 1);
+    });
+
+    const getNodeId = (nodeId: string): string => {
+      const label = nodeLabels[nodeId];
+      if (isUuid(nodeId) && nodeLabelCounts.get(label) === 1) {
+        return label;
+      } else {
+        return nodeId;
+      }
+    };
+
+    return new Graph({
+      nodes: Object.fromEntries(
+        Object.entries(this.nodes).map(([id, node]) => [
+          getNodeId(id),
+          { ...node, id: getNodeId(id) },
+        ])
+      ),
+      edges: this.edges.map((edge) => ({
+        ...edge,
+        source: getNodeId(edge.source),
+        target: getNodeId(edge.target),
+      })),
+    });
+  }
+
   drawMermaid(params?: {
     withStyles?: boolean;
     curveStyle?: string;
@@ -219,23 +271,21 @@ export class Graph {
     const {
       withStyles,
       curveStyle,
-      nodeColors = { start: "#ffdfba", end: "#baffc9", other: "#fad7de" },
+      nodeColors = {
+        default: "fill:#f2f0ff,line-height:1.2",
+        first: "fill-opacity:0",
+        last: "fill:#bfb6fc",
+      },
       wrapLabelNWords,
     } = params ?? {};
-    const nodes: Record<string, string> = {};
-    for (const node of Object.values(this.nodes)) {
-      nodes[node.id] = nodeDataStr(node);
-    }
+    const graph = this.reid();
+    const firstNode = graph.firstNode();
 
-    const firstNode = this.firstNode();
-    const firstNodeLabel = firstNode ? nodeDataStr(firstNode) : undefined;
+    const lastNode = graph.lastNode();
 
-    const lastNode = this.lastNode();
-    const lastNodeLabel = lastNode ? nodeDataStr(lastNode) : undefined;
-
-    return drawMermaid(nodes, this.edges, {
-      firstNodeLabel,
-      lastNodeLabel,
+    return drawMermaid(graph.nodes, graph.edges, {
+      firstNode: firstNode?.id,
+      lastNode: lastNode?.id,
       withStyles,
       curveStyle,
       nodeColors,
