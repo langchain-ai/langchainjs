@@ -1,8 +1,9 @@
+/* eslint-disable no-promise-executor-return */
 import { test, expect, jest } from "@jest/globals";
 import { AIMessage, HumanMessage, ToolMessage } from "@langchain/core/messages";
+import { concat } from "@langchain/core/utils/stream";
 import { InMemoryCache } from "@langchain/core/caches";
 import { ChatOpenAI } from "../chat_models.js";
-import { concat } from "@langchain/core/utils/stream";
 
 test("Test ChatOpenAI JSON mode", async () => {
   const chat = new ChatOpenAI({
