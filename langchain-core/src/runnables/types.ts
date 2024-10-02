@@ -71,7 +71,10 @@ export interface Edge {
 
 export interface Node {
   id: string;
+  name: string;
   data: RunnableIOSchema | RunnableInterface;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  metadata?: Record<string, any>;
 }
 
 export interface RunnableConfig extends BaseCallbackConfig {
