@@ -218,8 +218,23 @@ export abstract class BaseMessage
    */
   id?: string;
 
-  /** The type of the message. */
+  /**
+   * @deprecated Use .getType() instead or import the proper typeguard.
+   * For example:
+   *
+   * ```ts
+   * import { isAIMessage } from "@langchain/core/messages";
+   *
+   * const message = new AIMessage("Hello!");
+   * isAIMessage(message); // true
+   * ```
+   */
   abstract _getType(): MessageType;
+
+  /** The type of the message. */
+  getType(): MessageType {
+    return this._getType();
+  }
 
   constructor(
     fields: string | BaseMessageFields,
