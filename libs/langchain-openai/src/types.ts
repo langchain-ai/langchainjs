@@ -254,3 +254,13 @@ export type ChatOpenAIResponseFormat =
   | ResponseFormatText
   | ResponseFormatJSONObject
   | ChatOpenAIResponseFormatJSONSchema;
+
+export type EmbedQueryMethodOptions<IncludeRaw extends boolean = false> = {
+  includeRaw?: IncludeRaw;
+};
+
+export type EmbedQueryRawResult = {
+  embedding: number[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  raw: any;
+}
