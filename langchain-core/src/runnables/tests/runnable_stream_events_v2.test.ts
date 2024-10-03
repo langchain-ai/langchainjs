@@ -1875,6 +1875,7 @@ test("Runnable streamEvents method with simple tools", async () => {
   const events = [];
   const eventStream = await tool.streamEvents({}, { version: "v2" });
   for await (const event of eventStream) {
+    event.event;
     events.push(event);
   }
 
