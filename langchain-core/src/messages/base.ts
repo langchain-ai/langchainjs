@@ -495,7 +495,8 @@ export type BaseMessageLike =
   | ({
       type: MessageType | "user" | "assistant" | "placeholder";
     } & BaseMessageFields &
-      Record<string, unknown>);
+      Record<string, unknown>)
+  | SerializedConstructor;
 
 export function isBaseMessage(
   messageLike?: unknown
