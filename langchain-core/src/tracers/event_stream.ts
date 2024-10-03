@@ -7,7 +7,7 @@ import { IterableReadableStream } from "../utils/stream.js";
 import { AIMessageChunk } from "../messages/ai.js";
 import { ChatGeneration, Generation, GenerationChunk } from "../outputs.js";
 import { BaseMessage } from "../messages/base.js";
-import { BaseLanguageModelInput } from "../language_models/base.js";
+import { BaseLanguageModelInput } from "../language_models/types.js";
 
 export interface BaseStreamEventV2 {
   /**
@@ -120,6 +120,14 @@ export interface OnToolEndStreamEventV2 extends BaseStreamEventV2 {
   event: "on_tool_end";
 }
 
+export interface OnRetrieverStartStreamEventV2 extends BaseStreamEventV2 {
+  event: "on_retriever_start";
+}
+
+export interface OnRetrieverEndStreamEventV2 extends BaseStreamEventV2 {
+  event: "on_retriever_end";
+}
+
 export interface OnChainStartStreamEventV2 extends BaseStreamEventV2 {
   event: "on_chain_start";
 }
@@ -150,6 +158,8 @@ export type StreamEventV2 =
   | OnChainStartStreamEventV2
   | OnChainStreamStreamEventV2
   | OnChainEndStreamEventV2
+  | OnRetrieverStartStreamEventV2
+  | OnRetrieverEndStreamEventV2
   | OnCustomEventV2;
 
 /**
