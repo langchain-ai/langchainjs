@@ -245,11 +245,20 @@ export class OpenAIEmbeddings
    * @param options Options to pass to the embedQuery method.
    * @returns Promise that resolves to an embedding for the document.
    */
-  async embedQuery(text: string, options?: EmbedQueryMethodOptions<false>): Promise<number[]>;
+  async embedQuery(
+    text: string,
+    options?: EmbedQueryMethodOptions<false>
+  ): Promise<number[]>;
 
-  async embedQuery(text: string, options?: EmbedQueryMethodOptions<true>): Promise<EmbedQueryRawResult>;
+  async embedQuery(
+    text: string,
+    options?: EmbedQueryMethodOptions<true>
+  ): Promise<EmbedQueryRawResult>;
 
-  async embedQuery(text: string, options?: EmbedQueryMethodOptions<boolean>): Promise<number[] | EmbedQueryRawResult> {
+  async embedQuery(
+    text: string,
+    options?: EmbedQueryMethodOptions<boolean>
+  ): Promise<number[] | EmbedQueryRawResult> {
     const params: OpenAIClient.EmbeddingCreateParams = {
       model: this.model,
       input: this.stripNewLines ? text.replace(/\n/g, " ") : text,

@@ -263,4 +263,4 @@ export type EmbedQueryRawResult = {
   embedding: number[];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   raw: any;
-}
+};
