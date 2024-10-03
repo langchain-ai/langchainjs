@@ -169,6 +169,7 @@ function openAIResponseToChatMessage(
       let response_metadata: Record<string, unknown> | undefined;
       if (rawResponse.system_fingerprint) {
         response_metadata = {
+          usage: { ...rawResponse.usage },
           system_fingerprint: rawResponse.system_fingerprint,
         };
       }
@@ -210,8 +211,9 @@ function _convertDeltaToMessageChunk(
   if (includeRawResponse) {
     additional_kwargs.__raw_response = rawResponse;
   }
+  const response_metadata = { usage: { ...rawResponse.usage } };
   if (role === "user") {
-    return new HumanMessageChunk({ content });
+    return new HumanMessageChunk({ content, response_metadata });
   } else if (role === "assistant") {
     const toolCallChunks: ToolCallChunk[] = [];
     if (Array.isArray(delta.tool_calls)) {
@@ -230,23 +232,26 @@ function _convertDeltaToMessageChunk(
       tool_call_chunks: toolCallChunks,
       additional_kwargs,
       id: rawResponse.id,
+      response_metadata,
     });
   } else if (role === "system") {
-    return new SystemMessageChunk({ content });
+    return new SystemMessageChunk({ content, response_metadata });
   } else if (role === "function") {
     return new FunctionMessageChunk({
       content,
       additional_kwargs,
       name: delta.name,
+      response_metadata,
     });
   } else if (role === "tool") {
     return new ToolMessageChunk({
       content,
       additional_kwargs,
       tool_call_id: delta.tool_call_id,
+      response_metadata,
     });
   } else {
-    return new ChatMessageChunk({ content, role });
+    return new ChatMessageChunk({ content, role, response_metadata });
   }
 }
 
@@ -1294,6 +1299,9 @@ export class ChatOpenAI<
       const generationChunk = new ChatGenerationChunk({
         message: new AIMessageChunk({
           content: "",
+          response_metadata: {
+            usage: { ...usage },
+          },
           usage_metadata: {
             input_tokens: usage.prompt_tokens,
             output_tokens: usage.completion_tokens,
