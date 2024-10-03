@@ -47,3 +47,13 @@ export class SystemMessageChunk extends BaseMessageChunk {
     });
   }
 }
+
+export function isSystemMessage(x: BaseMessage): x is SystemMessage {
+  return x._getType() === "system";
+}
+
+export function isSystemMessageChunk(
+  x: BaseMessageChunk
+): x is SystemMessageChunk {
+  return x._getType() === "system";
+}
