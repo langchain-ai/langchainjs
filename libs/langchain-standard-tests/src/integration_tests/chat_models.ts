@@ -236,9 +236,8 @@ export abstract class ChatModelIntegrationTests<
 
     const stream = chatModel.streamEvents("Hello", {
       ...callOptions,
-      encoding: undefined,
       version: "v2",
-    });
+    } as Partial<CallOptions> & { version: "v2" | "v1" });
 
     const events = [];
     for await (const chunk of stream) {
