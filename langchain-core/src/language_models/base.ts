@@ -363,11 +363,10 @@ export abstract class BaseLanguageModel<
     callbackManager,
     ...params
   }: BaseLanguageModelParams) {
-    const cache = params.cache;
-    delete params.cache;
+    const { cache, ...rest } = params;
     super({
       callbacks: callbacks ?? callbackManager,
-      ...params,
+      ...rest,
     });
     if (typeof cache === "object") {
       this.cache = cache;
