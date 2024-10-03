@@ -685,18 +685,6 @@ export class RemoteRunnable<
 
   streamEvents(
     input: RunInput,
-    options: Partial<CallOptions> & { version?: "v2" },
-    streamOptions?: Omit<EventStreamCallbackHandlerInput, "autoClose">
-  ): IterableReadableStream<StreamEventV2>;
-
-  streamEvents(
-    input: RunInput,
-    options: Partial<CallOptions> & { version: "v1" },
-    streamOptions?: Omit<EventStreamCallbackHandlerInput, "autoClose">
-  ): IterableReadableStream<StreamEvent>;
-
-  streamEvents(
-    input: RunInput,
     options: Partial<CallOptions> & {
       version?: "v1" | "v2";
       encoding: "text/event-stream";
@@ -707,8 +695,33 @@ export class RemoteRunnable<
   streamEvents(
     input: RunInput,
     options: Partial<CallOptions> & {
+      version?: "v2";
+    },
+    streamOptions?: Omit<EventStreamCallbackHandlerInput, "autoClose">
+  ): IterableReadableStream<StreamEventV2>;
+
+  streamEvents(
+    input: RunInput,
+    options: Partial<CallOptions> & {
+      version: "v1";
+    },
+    streamOptions?: Omit<EventStreamCallbackHandlerInput, "autoClose">
+  ): IterableReadableStream<StreamEvent>;
+
+  streamEvents(
+    input: RunInput,
+    options: Partial<CallOptions> & {
       version?: "v1" | "v2";
-      encoding?: "text/event-stream" | undefined;
+      encoding?: "text/event-stream";
+    },
+    streamOptions?: Omit<EventStreamCallbackHandlerInput, "autoClose">
+  ): IterableReadableStream<StreamEventV2 | StreamEvent | Uint8Array>;
+
+  streamEvents(
+    input: RunInput,
+    options: Partial<CallOptions> & {
+      version?: "v1" | "v2";
+      encoding?: "text/event-stream";
     },
     streamOptions?: Omit<EventStreamCallbackHandlerInput, "autoClose">
   ): IterableReadableStream<StreamEventV2 | StreamEvent | Uint8Array> {
