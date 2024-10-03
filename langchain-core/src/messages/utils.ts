@@ -79,7 +79,7 @@ function _constructMessageFromParams(
     });
   } else {
     throw new Error(
-      `Unable to coerce message from array: only human, AI, or system message coercion is currently supported.`
+      `Unable to coerce message from array: only human, AI, or system message coercion is currently supported.\n\nReceived:${params}`
     );
   }
 }
