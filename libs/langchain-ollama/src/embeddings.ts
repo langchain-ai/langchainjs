@@ -23,7 +23,7 @@ interface OllamaEmbeddingsParams extends EmbeddingsParams {
   /**
    * Defaults to "5m"
    */
-  keepAlive?: string;
+  keepAlive?: string | number;
 
   /**
    * Whether or not to truncate the input text to fit inside the model's
