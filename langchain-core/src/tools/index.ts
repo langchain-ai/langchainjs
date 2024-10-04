@@ -37,6 +37,14 @@ export type ContentAndArtifact = [MessageContent, any];
  */
 export interface ToolParams extends BaseLangChainParams {
   /**
+   * Override or pass the default tool name.
+   */
+  name?: string;
+  /**
+   * Override or pass the default tool description.
+   */
+  description?: string;
+  /**
    * The tool response format.
    *
    * If "content" then the output of the tool is interpreted as the contents of a
@@ -119,9 +127,9 @@ export abstract class StructuredTool<
   (z.output<T> extends string ? string : never) | z.input<T> | ToolCall,
   ToolReturnType
 > {
-  abstract name: string;
+  name: string;
 
-  abstract description: string;
+  description: string;
 
   abstract schema: T | z.ZodEffects<T>;
 
@@ -147,6 +155,8 @@ export abstract class StructuredTool<
 
   constructor(fields?: ToolParams) {
     super(fields ?? {});
+    this.name = fields?.name ?? this.name;
+    this.description = fields?.description ?? this.description;
 
     this.verboseParsingErrors =
       fields?.verboseParsingErrors ?? this.verboseParsingErrors;
