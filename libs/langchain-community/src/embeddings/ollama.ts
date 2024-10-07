@@ -21,7 +21,7 @@ interface OllamaEmbeddingsParams extends EmbeddingsParams {
   headers?: Record<string, string>;
 
   /** Defaults to "5m" */
-  keepAlive?: string | number;
+  keepAlive?: string;
 
   /** Advanced Ollama API request parameters in camelCase, see
    * https://github.com/jmorganca/ollama/blob/main/docs/modelfile.md#valid-parameters-and-values

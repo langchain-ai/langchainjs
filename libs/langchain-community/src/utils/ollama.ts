@@ -7,7 +7,7 @@ export interface OllamaInput {
   f16KV?: boolean;
   frequencyPenalty?: number;
   headers?: Record<string, string>;
-  keepAlive?: string | number;
+  keepAlive?: string;
   logitsAll?: boolean;
   lowVram?: boolean;
   mainGpu?: number;
