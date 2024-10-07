@@ -45,7 +45,7 @@ export class OllamaEmbeddings extends Embeddings {
 
   baseUrl = "http://localhost:11434";
 
-  keepAlive = "5m";
+  keepAlive: string | number = "5m";
 
   requestOptions?: Partial<OllamaOptions>;
 
