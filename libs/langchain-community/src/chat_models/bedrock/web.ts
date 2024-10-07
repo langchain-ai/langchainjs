@@ -52,6 +52,28 @@ type AnthropicTool = Record<string, unknown>;
 
 type BedrockChatToolType = BindToolsInput | AnthropicTool;
 
+const AWS_REGIONS = [
+  "us",
+  "sa",
+  "me",
+  "il",
+  "eu",
+  "cn",
+  "ca",
+  "ap",
+  "af",
+  "us-gov",
+];
+
+const ALLOWED_MODEL_PROVIDERS = [
+  "ai21",
+  "anthropic",
+  "amazon",
+  "cohere",
+  "meta",
+  "mistral",
+];
+
 const PRELUDE_TOTAL_LENGTH_BYTES = 4;
 
 function convertOneMessageToText(
@@ -161,9 +183,9 @@ export interface BedrockChatFields
  *
  * ```bash
  * npm install @langchain/openai
- * export BEDROCK_AWS_REGION="your-aws-region"
- * export BEDROCK_AWS_SECRET_ACCESS_KEY="your-aws-secret-access-key"
- * export BEDROCK_AWS_ACCESS_KEY_ID="your-aws-access-key-id"
+ * export AWS_REGION="your-aws-region"
+ * export AWS_SECRET_ACCESS_KEY="your-aws-secret-access-key"
+ * export AWS_ACCESS_KEY_ID="your-aws-access-key-id"
  * ```
  *
  * ## [Constructor args](/classes/langchain_community_chat_models_bedrock.BedrockChat.html#constructor)
@@ -195,19 +217,25 @@ export interface BedrockChatFields
  * <summary><strong>Instantiate</strong></summary>
  *
  * ```typescript
- * import { BedrockChat } from '@langchain/community/chat_models/bedrock';
+ * import { BedrockChat } from '@langchain/community/chat_models/bedrock/web';
  *
  * const llm = new BedrockChat({
- *   region: process.env.BEDROCK_AWS_REGION,
+ *   region: process.env.AWS_REGION,
  *   maxRetries: 0,
- *   credentials: {
- *     secretAccessKey: process.env.BEDROCK_AWS_SECRET_ACCESS_KEY!,
- *     accessKeyId: process.env.BEDROCK_AWS_ACCESS_KEY_ID!,
- *   },
  *   model: "anthropic.claude-3-5-sonnet-20240620-v1:0",
  *   temperature: 0,
  *   maxTokens: undefined,
  *   // other params...
+ * });
+ *
+ * // You can also pass credentials in explicitly:
+ * const llmWithCredentials = new BedrockChat({
+ *   region: process.env.BEDROCK_AWS_REGION,
+ *   model: "anthropic.claude-3-5-sonnet-20240620-v1:0",
+ *   credentials: {
+ *     secretAccessKey: process.env.BEDROCK_AWS_SECRET_ACCESS_KEY!,
+ *     accessKeyId: process.env.BEDROCK_AWS_ACCESS_KEY_ID!,
+ *   },
  * });
  * ```
  * </details>
@@ -473,6 +501,8 @@ export class BedrockChat
 {
   model = "amazon.titan-tg1-large";
 
+  modelProvider: string;
+
   region: string;
 
   credentials: CredentialType;
@@ -518,8 +548,12 @@ export class BedrockChat
 
   get lc_secrets(): { [key: string]: string } | undefined {
     return {
-      "credentials.accessKeyId": "BEDROCK_AWS_ACCESS_KEY_ID",
-      "credentials.secretAccessKey": "BEDROCK_AWS_SECRET_ACCESS_KEY",
+      "credentials.accessKeyId": "AWS_ACCESS_KEY_ID",
+      "credentials.secretAccessKey": "AWS_SECRET_ACCESS_KEY",
+      "credentials.sessionToken": "AWS_SECRET_ACCESS_KEY",
+      awsAccessKeyId: "AWS_ACCESS_KEY_ID",
+      awsSecretAccessKey: "AWS_SECRET_ACCESS_KEY",
+      awsSessionToken: "AWS_SESSION_TOKEN",
     };
   }
 
@@ -542,20 +576,39 @@ export class BedrockChat
   }
 
   constructor(fields?: BedrockChatFields) {
-    super(fields ?? {});
+    const awsAccessKeyId =
+      fields?.awsAccessKeyId ?? getEnvironmentVariable("AWS_ACCESS_KEY_ID");
+    const awsSecretAccessKey =
+      fields?.awsSecretAccessKey ??
+      getEnvironmentVariable("AWS_SECRET_ACCESS_KEY");
+    const awsSessionToken =
+      fields?.awsSessionToken ?? getEnvironmentVariable("AWS_SESSION_TOKEN");
+
+    let credentials = fields?.credentials;
+    if (credentials === undefined) {
+      if (awsAccessKeyId === undefined || awsSecretAccessKey === undefined) {
+        throw new Error(
+          "Please set your AWS credentials in the 'credentials' field or set env vars AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY, and optionally AWS_SESSION_TOKEN."
+        );
+      }
+      credentials = {
+        accessKeyId: awsAccessKeyId,
+        secretAccessKey: awsSecretAccessKey,
+        sessionToken: awsSessionToken,
+      };
+    }
+
+    // eslint-disable-next-line no-param-reassign
+    fields = { ...fields, awsAccessKeyId, awsSecretAccessKey, awsSessionToken };
+
+    super(fields);
 
     this.model = fields?.model ?? this.model;
-    const allowedModels = [
-      "ai21",
-      "anthropic",
-      "amazon",
-      "cohere",
-      "meta",
-      "mistral",
-    ];
-    if (!allowedModels.includes(this.model.split(".")[0])) {
+    this.modelProvider = getModelProvider(this.model);
+
+    if (!ALLOWED_MODEL_PROVIDERS.includes(this.modelProvider)) {
       throw new Error(
-        `Unknown model: '${this.model}', only these are supported: ${allowedModels}`
+        `Unknown model provider: '${this.modelProvider}', only these are supported: ${ALLOWED_MODEL_PROVIDERS}`
       );
     }
     const region =
@@ -567,12 +620,6 @@ export class BedrockChat
     }
     this.region = region;
 
-    const credentials = fields?.credentials;
-    if (!credentials) {
-      throw new Error(
-        "Please set the AWS credentials in the 'credentials' field."
-      );
-    }
     this.credentials = credentials;
 
     this.temperature = fields?.temperature ?? this.temperature;
@@ -655,7 +702,7 @@ export class BedrockChat
     const service = "bedrock-runtime";
     const endpointHost =
       this.endpointHost ?? `${service}.${this.region}.amazonaws.com`;
-    const provider = this.model.split(".")[0];
+    const provider = this.modelProvider;
     const response = await this._signedFetch(messages, options, {
       bedrockMethod: "invoke",
       endpointHost,
@@ -776,7 +823,7 @@ export class BedrockChat
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
-    const provider = this.model.split(".")[0];
+    const provider = this.modelProvider;
     const service = "bedrock-runtime";
 
     const endpointHost =
@@ -956,7 +1003,7 @@ export class BedrockChat
     BaseMessageChunk,
     this["ParsedCallOptions"]
   > {
-    const provider = this.model.split(".")[0];
+    const provider = this.modelProvider;
     if (provider !== "anthropic") {
       throw new Error(
         "Currently, tool calling through Bedrock is only supported for Anthropic models."
@@ -977,7 +1024,7 @@ function isChatGenerationChunk(
 }
 
 function canUseMessagesApi(model: string): boolean {
-  const modelProviderName = model.split(".")[0];
+  const modelProviderName = getModelProvider(model);
 
   if (
     modelProviderName === "anthropic" &&
@@ -997,6 +1044,20 @@ function canUseMessagesApi(model: string): boolean {
   }
 
   return false;
+}
+
+function isInferenceModel(modelId: string): boolean {
+  const parts = modelId.split(".");
+  return AWS_REGIONS.some((region) => parts[0] === region);
+}
+
+function getModelProvider(modelId: string): string {
+  const parts = modelId.split(".");
+  if (isInferenceModel(modelId)) {
+    return parts[1];
+  } else {
+    return parts[0];
+  }
 }
 
 /**

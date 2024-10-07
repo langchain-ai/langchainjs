@@ -72,8 +72,6 @@ export const config = {
     "embeddings/cohere": "embeddings/cohere",
     "embeddings/deepinfra": "embeddings/deepinfra",
     "embeddings/fireworks": "embeddings/fireworks",
-    "embeddings/googlepalm": "embeddings/googlepalm",
-    "embeddings/googlevertexai": "embeddings/googlevertexai",
     "embeddings/gradient_ai": "embeddings/gradient_ai",
     "embeddings/hf": "embeddings/hf",
     "embeddings/hf_transformers": "embeddings/hf_transformers",
@@ -91,6 +89,7 @@ export const config = {
     // llms
     "llms/ai21": "llms/ai21",
     "llms/aleph_alpha": "llms/aleph_alpha",
+    "llms/arcjet": "llms/arcjet",
     "llms/bedrock": "llms/bedrock/index",
     "llms/bedrock/web": "llms/bedrock/web",
     "llms/cloudflare_workersai": "llms/cloudflare_workersai",
@@ -98,9 +97,6 @@ export const config = {
     "llms/deepinfra": "llms/deepinfra",
     "llms/fireworks": "llms/fireworks",
     "llms/friendli": "llms/friendli",
-    "llms/googlepalm": "llms/googlepalm",
-    "llms/googlevertexai": "llms/googlevertexai/index",
-    "llms/googlevertexai/web": "llms/googlevertexai/web",
     "llms/gradient_ai": "llms/gradient_ai",
     "llms/hf": "llms/hf",
     "llms/llama_cpp": "llms/llama_cpp",
@@ -164,6 +160,7 @@ export const config = {
     "vectorstores/zep_cloud": "vectorstores/zep_cloud",
     // chat_models
     "chat_models/alibaba_tongyi": "chat_models/alibaba_tongyi",
+    "chat_models/arcjet": "chat_models/arcjet",
     "chat_models/baiduwenxin": "chat_models/baiduwenxin",
     "chat_models/bedrock": "chat_models/bedrock/index",
     "chat_models/bedrock/web": "chat_models/bedrock/web",
@@ -171,9 +168,6 @@ export const config = {
     "chat_models/deepinfra": "chat_models/deepinfra",
     "chat_models/fireworks": "chat_models/fireworks",
     "chat_models/friendli": "chat_models/friendli",
-    "chat_models/googlevertexai": "chat_models/googlevertexai/index",
-    "chat_models/googlevertexai/web": "chat_models/googlevertexai/web",
-    "chat_models/googlepalm": "chat_models/googlepalm",
     "chat_models/iflytek_xinghuo": "chat_models/iflytek_xinghuo/index",
     "chat_models/iflytek_xinghuo/web": "chat_models/iflytek_xinghuo/web",
     "chat_models/llama_cpp": "chat_models/llama_cpp",
@@ -195,6 +189,7 @@ export const config = {
     // retrievers
     "retrievers/amazon_kendra": "retrievers/amazon_kendra",
     "retrievers/amazon_knowledge_base": "retrievers/amazon_knowledge_base",
+    "retrievers/bm25": "retrievers/bm25",
     "retrievers/chaindesk": "retrievers/chaindesk",
     "retrievers/databerry": "retrievers/databerry",
     "retrievers/dria": "retrievers/dria",
@@ -320,10 +315,9 @@ export const config = {
       "experimental/hubs/makersuite/googlemakersuitehub",
     "experimental/chat_models/ollama_functions": "experimental/chat_models/ollama_functions",
     "experimental/llms/chrome_ai": "experimental/llms/chrome_ai",
+    "experimental/tools/pyinterpreter": "experimental/tools/pyinterpreter",
     // chains
-    "chains/graph_qa/cypher": "chains/graph_qa/cypher",
-    // langgraph checkpointers
-    "langgraph/checkpointers/vercel_kv": "langgraph/checkpointers/vercel_kv"
+    "chains/graph_qa/cypher": "chains/graph_qa/cypher"
   },
   requiresOptionalDependency: [
     "tools/aws_sfn",
@@ -339,8 +333,6 @@ export const config = {
     "embeddings/bedrock",
     "embeddings/cloudflare_workersai",
     "embeddings/cohere",
-    "embeddings/googlevertexai",
-    "embeddings/googlepalm",
     "embeddings/tensorflow",
     "embeddings/hf",
     "embeddings/hf_transformers",
@@ -352,10 +344,8 @@ export const config = {
     "embeddings/tencent_hunyuan/web",
     "embeddings/zhipuai",
     "llms/load",
+    "llms/arcjet",
     "llms/cohere",
-    "llms/googlevertexai",
-    "llms/googlevertexai/web",
-    "llms/googlepalm",
     "llms/gradient_ai",
     "llms/hf",
     "llms/raycast",
@@ -412,11 +402,9 @@ export const config = {
     "vectorstores/xata",
     "vectorstores/zep",
     "vectorstores/zep_cloud",
+    "chat_models/arcjet",
     "chat_models/bedrock",
     "chat_models/bedrock/web",
-    "chat_models/googlevertexai",
-    "chat_models/googlevertexai/web",
-    "chat_models/googlepalm",
     "chat_models/llama_cpp",
     "chat_models/portkey",
     "chat_models/premai",
@@ -521,6 +509,7 @@ export const config = {
     // experimental
     "experimental/multimodal_embeddings/googlevertexai",
     "experimental/hubs/makersuite/googlemakersuitehub",
+    "experimental/tools/pyinterpreter",
     // chains
     "chains/graph_qa/cypher",
     // langgraph checkpointers

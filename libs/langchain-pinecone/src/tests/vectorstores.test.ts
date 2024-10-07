@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { jest, test, expect } from "@jest/globals";
+import { expect, jest, test } from "@jest/globals";
 import { FakeEmbeddings } from "@langchain/core/utils/testing";
 import { PineconeStore } from "../vectorstores.js";
 
@@ -117,6 +117,34 @@ test("PineconeStore with string arrays", async () => {
       values: [0.1, 0.2, 0.3, 0.4],
     },
   ]);
+});
+
+describe("PineconeStore with null pageContent", () => {
+  it("should handle null pageContent correctly in _formatMatches", async () => {
+    const mockQueryResponse = {
+      matches: [
+        {
+          id: "1",
+          score: 0.9,
+          metadata: { textKey: null, otherKey: "value" },
+        },
+      ],
+    };
+
+    const client = {
+      namespace: jest.fn<any>().mockReturnValue({
+        query: jest.fn<any>().mockResolvedValue(mockQueryResponse),
+      }),
+    };
+    const embeddings = new FakeEmbeddings();
+
+    const store = new PineconeStore(embeddings, {
+      pineconeIndex: client as any,
+    });
+
+    const results = await store.similaritySearchVectorWithScore([], 0);
+    expect(results[0][0].pageContent).toEqual("");
+  });
 });
 
 test("PineconeStore can instantiate without passing in client", async () => {

@@ -5,7 +5,7 @@ set -euxo pipefail
 export CI=true
 
 monorepo_dir="/app/monorepo"
-monorepo_openai_dir="/app/monorepo/libs/langchain-google-vertexai"
+monorepo_vertexai_dir="/app/monorepo/libs/langchain-google-vertexai"
 updater_script_dir="/app/updater_script"
 updater_script_dir="/app/updater_script"
 original_updater_script_dir="/scripts/with_standard_tests/google-vertexai/node"
@@ -31,5 +31,11 @@ yarn
 # Navigate into `@langchain/package` to build and run tests
 # We need to run inside the package directory so turbo repo does
 # not try to build the package/its workspace dependencies.
-cd "$monorepo_openai_dir"
+cd "$monorepo_vertexai_dir"
+
+# Read the @langchain/core version from peerDependencies
+core_version=$(node -p "require('./package.json').peerDependencies['@langchain/core']")
+
+# Install @langchain/core at the specified version
+yarn add @langchain/core@$core_version
 yarn test

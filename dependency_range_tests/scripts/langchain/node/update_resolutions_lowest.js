@@ -5,28 +5,24 @@ const communityPackageJsonPath = "package.json";
 
 const currentPackageJson = JSON.parse(fs.readFileSync(communityPackageJsonPath));
 
-if (currentPackageJson.dependencies["@langchain/core"] && !currentPackageJson.dependencies["@langchain/core"].includes("rc")) {
+if (currentPackageJson.peerDependencies["@langchain/core"] && !currentPackageJson.peerDependencies["@langchain/core"].includes("rc")) {
   const minVersion = semver.minVersion(
-    currentPackageJson.dependencies["@langchain/core"]
+    currentPackageJson.peerDependencies["@langchain/core"]
   ).version;
-  currentPackageJson.overrides = {
-    ...currentPackageJson.overrides,
+  currentPackageJson.peerDependencies = {
+    ...currentPackageJson.peerDependencies,
     "@langchain/core": minVersion,
   };
-  currentPackageJson.dependencies = {
-    ...currentPackageJson.dependencies,
-    "@langchain/core": minVersion,
-  };
+}
+
+if (currentPackageJson.devDependencies["@langchain/core"]) {
+  delete currentPackageJson.devDependencies["@langchain/core"];
 }
 
 if (currentPackageJson.dependencies["@langchain/openai"] && !currentPackageJson.dependencies["@langchain/openai"].includes("rc")) {
   const minVersion = semver.minVersion(
     currentPackageJson.dependencies["@langchain/openai"]
   ).version;
-  currentPackageJson.overrides = {
-    ...currentPackageJson.overrides,
-    "@langchain/openai": minVersion,
-  };
   currentPackageJson.dependencies = {
     ...currentPackageJson.dependencies,
     "@langchain/openai": minVersion,
@@ -37,14 +33,16 @@ if (currentPackageJson.dependencies["@langchain/textsplitters"] && !currentPacka
   const minVersion = semver.minVersion(
     currentPackageJson.dependencies["@langchain/textsplitters"]
   ).version;
-  currentPackageJson.overrides = {
-    ...currentPackageJson.overrides,
-    "@langchain/textsplitters": minVersion,
-  };
   currentPackageJson.dependencies = {
     ...currentPackageJson.dependencies,
     "@langchain/textsplitters": minVersion,
   };
 }
+
+// Stupid hack
+currentPackageJson.resolutions = {
+  ...currentPackageJson.resolutions,
+  "jackspeak": "2.1.1"
+};
 
 fs.writeFileSync(communityPackageJsonPath, JSON.stringify(currentPackageJson, null, 2));

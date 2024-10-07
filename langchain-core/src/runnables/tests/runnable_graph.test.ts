@@ -91,17 +91,17 @@ test("Test graph sequence", async () => {
   expect(graph.drawMermaid())
     .toEqual(`%%{init: {'flowchart': {'curve': 'linear'}}}%%
 graph TD;
-\tPromptTemplateInput[PromptTemplateInput]:::startclass;
-\tPromptTemplate([PromptTemplate]):::otherclass;
-\tFakeLLM([FakeLLM]):::otherclass;
-\tCommaSeparatedListOutputParser([CommaSeparatedListOutputParser]):::otherclass;
-\tCommaSeparatedListOutputParserOutput[CommaSeparatedListOutputParserOutput]:::endclass;
+\tPromptTemplateInput([PromptTemplateInput]):::first
+\tPromptTemplate(PromptTemplate)
+\tFakeLLM(FakeLLM)
+\tCommaSeparatedListOutputParser(CommaSeparatedListOutputParser)
+\tCommaSeparatedListOutputParserOutput([CommaSeparatedListOutputParserOutput]):::last
 \tPromptTemplateInput --> PromptTemplate;
 \tPromptTemplate --> FakeLLM;
 \tCommaSeparatedListOutputParser --> CommaSeparatedListOutputParserOutput;
 \tFakeLLM --> CommaSeparatedListOutputParser;
-\tclassDef startclass fill:#ffdfba;
-\tclassDef endclass fill:#baffc9;
-\tclassDef otherclass fill:#fad7de;
+\tclassDef default fill:#f2f0ff,line-height:1.2;
+\tclassDef first fill-opacity:0;
+\tclassDef last fill:#bfb6fc;
 `);
 });

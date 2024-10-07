@@ -6,7 +6,7 @@ This package contains the LangChain.js integrations for Baidu Qianfan via the qi
 ## Installation
 
 ```bash npm2yarn
-npm install @langchain/baidu-qianfan
+npm install @langchain/baidu-qianfan @langchain/core
 ```
 
 ## Chat models

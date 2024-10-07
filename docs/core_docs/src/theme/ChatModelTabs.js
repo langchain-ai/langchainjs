@@ -12,7 +12,7 @@ function InstallationInfo({ children }) {
       <Admonition type="tip">
         <p>
           See{" "}
-          <a href="/docs/get_started/installation#installing-integration-packages">
+          <a href="/docs/how_to/installation/#installing-integration-packages">
             this section for general instructions on installing integration
             packages
           </a>

@@ -14,6 +14,7 @@ import {
   ToolMessageChunk,
   OpenAIToolCall,
   isAIMessage,
+  convertToChunk,
 } from "@langchain/core/messages";
 import {
   type ChatGeneration,
@@ -61,7 +62,6 @@ import type {
   ResponseFormatJSONObject,
   ResponseFormatJSONSchema,
 } from "openai/resources/shared";
-import { ParsedChatCompletion } from "openai/resources/beta/chat/completions.mjs";
 import type {
   AzureOpenAIInput,
   OpenAICallOptions,
@@ -169,6 +169,7 @@ function openAIResponseToChatMessage(
       let response_metadata: Record<string, unknown> | undefined;
       if (rawResponse.system_fingerprint) {
         response_metadata = {
+          usage: { ...rawResponse.usage },
           system_fingerprint: rawResponse.system_fingerprint,
         };
       }
@@ -210,8 +211,9 @@ function _convertDeltaToMessageChunk(
   if (includeRawResponse) {
     additional_kwargs.__raw_response = rawResponse;
   }
+  const response_metadata = { usage: { ...rawResponse.usage } };
   if (role === "user") {
-    return new HumanMessageChunk({ content });
+    return new HumanMessageChunk({ content, response_metadata });
   } else if (role === "assistant") {
     const toolCallChunks: ToolCallChunk[] = [];
     if (Array.isArray(delta.tool_calls)) {
@@ -230,27 +232,31 @@ function _convertDeltaToMessageChunk(
       tool_call_chunks: toolCallChunks,
       additional_kwargs,
       id: rawResponse.id,
+      response_metadata,
     });
   } else if (role === "system") {
-    return new SystemMessageChunk({ content });
+    return new SystemMessageChunk({ content, response_metadata });
   } else if (role === "function") {
     return new FunctionMessageChunk({
       content,
       additional_kwargs,
       name: delta.name,
+      response_metadata,
     });
   } else if (role === "tool") {
     return new ToolMessageChunk({
       content,
       additional_kwargs,
       tool_call_id: delta.tool_call_id,
+      response_metadata,
     });
   } else {
-    return new ChatMessageChunk({ content, role });
+    return new ChatMessageChunk({ content, role, response_metadata });
   }
 }
 
-function convertMessagesToOpenAIParams(messages: BaseMessage[]) {
+// Used in LangSmith, export is important here
+export function _convertMessagesToOpenAIParams(messages: BaseMessage[]) {
   // TODO: Function messages do not support array content, fix cast
   return messages.map((message) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -629,7 +635,10 @@ export interface ChatOpenAIFields
  *   rating: z.number().optional().describe("How funny the joke is, from 1 to 10")
  * }).describe('Joke to tell user.');
  *
- * const structuredLlm = llm.withStructuredOutput(Joke, { name: "Joke" });
+ * const structuredLlm = llm.withStructuredOutput(Joke, {
+ *   name: "Joke",
+ *   strict: true, // Optionally enable OpenAI structured outputs
+ * });
  * const jokeResult = await structuredLlm.invoke("Tell me a joke about cats");
  * console.log(jokeResult);
  * ```
@@ -932,6 +941,8 @@ export class ChatOpenAI<
 
   azureOpenAIBasePath?: string;
 
+  azureOpenAIEndpoint?: string;
+
   organization?: string;
 
   __includeRawResponse?: boolean;
@@ -956,6 +967,7 @@ export class ChatOpenAI<
     this.openAIApiKey =
       fields?.apiKey ??
       fields?.openAIApiKey ??
+      fields?.configuration?.apiKey ??
       getEnvironmentVariable("OPENAI_API_KEY");
     this.apiKey = this.openAIApiKey;
 
@@ -991,6 +1003,10 @@ export class ChatOpenAI<
       fields?.configuration?.organization ??
       getEnvironmentVariable("OPENAI_ORGANIZATION");
 
+    this.azureOpenAIEndpoint =
+      fields?.azureOpenAIEndpoint ??
+      getEnvironmentVariable("AZURE_OPENAI_ENDPOINT");
+
     this.modelName = fields?.model ?? fields?.modelName ?? this.model;
     this.model = this.modelName;
     this.modelKwargs = fields?.modelKwargs ?? {};
@@ -1011,8 +1027,20 @@ export class ChatOpenAI<
     this.__includeRawResponse = fields?.__includeRawResponse;
 
     if (this.azureOpenAIApiKey || this.azureADTokenProvider) {
-      if (!this.azureOpenAIApiInstanceName && !this.azureOpenAIBasePath) {
+      if (
+        !this.azureOpenAIApiInstanceName &&
+        !this.azureOpenAIBasePath &&
+        !this.azureOpenAIEndpoint
+      ) {
         throw new Error("Azure OpenAI API instance name not found");
+      }
+
+      if (!this.azureOpenAIApiDeploymentName && this.azureOpenAIBasePath) {
+        const parts = this.azureOpenAIBasePath.split("/openai/deployments/");
+        if (parts.length === 2) {
+          const [, deployment] = parts;
+          this.azureOpenAIApiDeploymentName = deployment;
+        }
       }
       if (!this.azureOpenAIApiDeploymentName) {
         throw new Error("Azure OpenAI API deployment name not found");
@@ -1185,8 +1213,21 @@ export class ChatOpenAI<
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
+    if (this.model.includes("o1-")) {
+      console.warn(
+        "[WARNING]: OpenAI o1 models do not yet support token-level streaming. Streaming will yield single chunk."
+      );
+      const result = await this._generate(messages, options, runManager);
+      const messageChunk = convertToChunk(result.generations[0].message);
+      yield new ChatGenerationChunk({
+        message: messageChunk,
+        text:
+          typeof messageChunk.content === "string" ? messageChunk.content : "",
+      });
+      return;
+    }
     const messagesMapped: OpenAICompletionParam[] =
-      convertMessagesToOpenAIParams(messages);
+      _convertMessagesToOpenAIParams(messages);
     const params = {
       ...this.invocationParams(options, {
         streaming: true,
@@ -1195,31 +1236,6 @@ export class ChatOpenAI<
       stream: true as const,
     };
     let defaultRole: OpenAIRoleEnum | undefined;
-    if (
-      params.response_format &&
-      params.response_format.type === "json_schema"
-    ) {
-      console.warn(
-        `OpenAI does not yet support streaming with "response_format" set to "json_schema". Falling back to non-streaming mode.`
-      );
-      const res = await this._generate(messages, options, runManager);
-      const chunk = new ChatGenerationChunk({
-        message: new AIMessageChunk({
-          ...res.generations[0].message,
-        }),
-        text: res.generations[0].text,
-        generationInfo: res.generations[0].generationInfo,
-      });
-      yield chunk;
-      return runManager?.handleLLMNewToken(
-        res.generations[0].text ?? "",
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        { chunk }
-      );
-    }
 
     const streamIterable = await this.completionWithRetry(params, options);
     let usage: OpenAIClient.Completions.CompletionUsage | undefined;
@@ -1283,6 +1299,9 @@ export class ChatOpenAI<
       const generationChunk = new ChatGenerationChunk({
         message: new AIMessageChunk({
           content: "",
+          response_metadata: {
+            usage: { ...usage },
+          },
           usage_metadata: {
             input_tokens: usage.prompt_tokens,
             output_tokens: usage.completion_tokens,
@@ -1315,7 +1334,7 @@ export class ChatOpenAI<
     const tokenUsage: TokenUsage = {};
     const params = this.invocationParams(options);
     const messagesMapped: OpenAICompletionParam[] =
-      convertMessagesToOpenAIParams(messages);
+      _convertMessagesToOpenAIParams(messages);
 
     if (params.stream) {
       const stream = this._streamResponseChunks(messages, options, runManager);
@@ -1614,7 +1633,8 @@ export class ChatOpenAI<
   async betaParsedCompletionWithRetry(
     request: OpenAIClient.Chat.ChatCompletionCreateParamsNonStreaming,
     options?: OpenAICoreRequestOptions
-  ): Promise<ParsedChatCompletion<null>> {
+    // Avoid relying importing a beta type with no official entrypoint
+  ): Promise<ReturnType<OpenAIClient["beta"]["chat"]["completions"]["parse"]>> {
     const requestOptions = this._getClientOptions(options);
     return this.caller.call(async () => {
       try {
@@ -1638,6 +1658,7 @@ export class ChatOpenAI<
         azureOpenAIApiKey: this.azureOpenAIApiKey,
         azureOpenAIBasePath: this.azureOpenAIBasePath,
         baseURL: this.clientConfig.baseURL,
+        azureOpenAIEndpoint: this.azureOpenAIEndpoint,
       };
 
       const endpoint = getEndpoint(openAIEndpointConfig);

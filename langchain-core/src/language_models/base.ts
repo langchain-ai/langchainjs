@@ -233,15 +233,6 @@ export interface FunctionDefinition {
    * how to call the function.
    */
   description?: string;
-
-  /**
-   * Whether to enable strict schema adherence when generating the function call. If
-   * set to true, the model will follow the exact schema defined in the `parameters`
-   * field. Only a subset of JSON Schema is supported when `strict` is `true`. Learn
-   * more about Structured Outputs in the
-   * [function calling guide](https://platform.openai.com/docs/guides/function-calling).
-   */
-  strict?: boolean;
 }
 
 export interface ToolDefinition {
@@ -372,13 +363,14 @@ export abstract class BaseLanguageModel<
     callbackManager,
     ...params
   }: BaseLanguageModelParams) {
+    const { cache, ...rest } = params;
     super({
       callbacks: callbacks ?? callbackManager,
-      ...params,
+      ...rest,
     });
-    if (typeof params.cache === "object") {
-      this.cache = params.cache;
-    } else if (params.cache) {
+    if (typeof cache === "object") {
+      this.cache = cache;
+    } else if (cache) {
       this.cache = InMemoryCache.global();
     } else {
       this.cache = undefined;

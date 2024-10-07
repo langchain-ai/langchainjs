@@ -87,7 +87,7 @@ export interface ChatMistralAICallOptions
   response_format?: {
     type: "text" | "json_object";
   };
-  tools: ChatMistralAIToolType[];
+  tools?: ChatMistralAIToolType[];
   tool_choice?: MistralAIToolChoice;
   /**
    * Whether or not to include token usage in the stream.
@@ -745,6 +745,8 @@ export class ChatMistralAI<
   static lc_name() {
     return "ChatMistralAI";
   }
+
+  lc_namespace = ["langchain", "chat_models", "mistralai"];
 
   modelName = "mistral-small-latest";
 

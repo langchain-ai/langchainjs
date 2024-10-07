@@ -281,3 +281,11 @@ export function defaultToolCallParser(
   }
   return [toolCalls, invalidToolCalls];
 }
+
+export function isToolMessage(x: BaseMessage): x is ToolMessage {
+  return x._getType() === "tool";
+}
+
+export function isToolMessageChunk(x: BaseMessageChunk): x is ToolMessageChunk {
+  return x._getType() === "tool";
+}

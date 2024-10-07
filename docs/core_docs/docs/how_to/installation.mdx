@@ -27,7 +27,7 @@ import TabItem from "@theme/TabItem";
 import CodeBlock from "@theme/CodeBlock";
 
 ```bash npm2yarn
-npm install langchain
+npm install langchain @langchain/core
 ```
 
 While this package acts as a sane starting point to using LangChain,
@@ -46,12 +46,8 @@ A directed arrow indicates that the source package depends on the target package
 
 ![](/img/ecosystem_packages.png)
 
-When installing a package, you do not need to explicitly install that package's explicit dependencies (such as `@langchain/core`).
-However, you may choose to if you are using a feature only available in a certain version of that dependency.
-If you do, you should make sure that the installed or pinned version is compatible with any other integration packages you use.
-
 **Note:** It is important that your app only uses one version of `@langchain/core`. Common package managers may introduce additional versions
-when resolving dependencies, even if you don't intend this. See [this section on installing integration packages](/docs/how_to/installation/#installing-integration-packages)
+when resolving direct dependencies, even if you don't intend this. See [this section on installing integration packages](/docs/how_to/installation/#installing-integration-packages)
 for more information and ways to remedy this.
 
 ### @langchain/community
@@ -60,7 +56,7 @@ The [@langchain/community](https://www.npmjs.com/package/@langchain/community) p
 Install with:
 
 ```bash npm2yarn
-npm install @langchain/community
+npm install @langchain/community @langchain/core
 ```
 
 There are also more granular packages containing LangChain integrations for individual providers.
@@ -68,7 +64,7 @@ There are also more granular packages containing LangChain integrations for indi
 ### @langchain/core
 
 The [@langchain/core](https://www.npmjs.com/package/@langchain/core) package contains base abstractions that the rest of the LangChain ecosystem uses, along with the LangChain Expression Language.
-It is automatically installed along with `langchain`, but can also be used separately. Install with:
+It should be installed separately:
 
 ```bash npm2yarn
 npm install @langchain/core
@@ -82,7 +78,7 @@ It integrates smoothly with LangChain, but can be used without it.
 Install with:
 
 ```bash npm2yarn
-npm install @langchain/langgraph
+npm install @langchain/langgraph @langchain/core
 ```
 
 ### LangSmith SDK
@@ -104,11 +100,12 @@ LangChain supports packages that contain module integrations with individual thi
 They can be as specific as [`@langchain/anthropic`](/docs/integrations/platforms/anthropic/), which contains integrations just for Anthropic models,
 or as broad as [`@langchain/community`](https://www.npmjs.com/package/@langchain/community), which contains broader variety of community contributed integrations.
 
-These packages, as well as the main LangChain package, all depend on [`@langchain/core`](https://www.npmjs.com/package/@langchain/core), which contains the base abstractions
-that these integration packages extend.
+These packages, as well as the main LangChain package, all have [`@langchain/core`](https://www.npmjs.com/package/@langchain/core) as a peer dependency
+to avoid package managers installing multiple versions of the same package. It contains the base abstractions that these integration packages extend.
 
 To ensure that all integrations and their types interact with each other properly, it is important that they all use the same version of `@langchain/core`.
-The best way to guarantee this is to add a `"resolutions"` or `"overrides"` field like the following in your project's `package.json`. The name will depend on your package manager:
+If you encounter type errors around base classes, you may need to guarantee that your package manager is resolving a single version of `@langchain/core`. To do so,
+you can add a `"resolutions"` or `"overrides"` field like the following in your project's `package.json`. The name will depend on your package manager:
 
 :::tip
 The `resolutions` or `pnpm.overrides` fields for `yarn` or `pnpm` must be set in the root `package.json` file.
@@ -126,10 +123,11 @@ If you are using `yarn`:
   },
   "dependencies": {
     "@langchain/anthropic": "^0.0.2",
+    "@langchain/core": "^0.3.0",
     "langchain": "0.0.207"
   },
   "resolutions": {
-    "@langchain/core": "0.1.5"
+    "@langchain/core": "0.3.0"
   }
 }
 ```
@@ -148,10 +146,11 @@ Or for `npm`:
   },
   "dependencies": {
     "@langchain/anthropic": "^0.0.2",
+    "@langchain/core": "^0.3.0",
     "langchain": "0.0.207"
   },
   "overrides": {
-    "@langchain/core": "0.1.5"
+    "@langchain/core": "0.3.0"
   }
 }
 ```
@@ -170,11 +169,12 @@ Or for `pnpm`:
   },
   "dependencies": {
     "@langchain/anthropic": "^0.0.2",
+    "@langchain/core": "^0.3.0",
     "langchain": "0.0.207"
   },
   "pnpm": {
     "overrides": {
-      "@langchain/core": "0.1.5"
+      "@langchain/core": "0.3.0"
     }
   }
 }
@@ -193,11 +193,11 @@ LangChain is written in TypeScript and provides type definitions for all of its 
 LangChain provides an ESM build targeting Node.js environments. You can import it using the following syntax:
 
 ```bash npm2yarn
-npm install @langchain/openai
+npm install @langchain/openai @langchain/core
 ```
 
 ```typescript
-import { OpenAI } from "@langchain/openai";
+import { ChatOpenAI } from "@langchain/openai";
 ```
 
 If you are using TypeScript in an ESM project we suggest updating your `tsconfig.json` to include the following:
@@ -217,7 +217,7 @@ If you are using TypeScript in an ESM project we suggest updating your `tsconfig
 LangChain provides a CommonJS build targeting Node.js environments. You can import it using the following syntax:
 
 ```typescript
-const { OpenAI } = require("@langchain/openai");
+const { ChatOpenAI } = require("@langchain/openai");
 ```
 
 ### Cloudflare Workers
@@ -225,7 +225,7 @@ const { OpenAI } = require("@langchain/openai");
 LangChain can be used in Cloudflare Workers. You can import it using the following syntax:
 
 ```typescript
-import { OpenAI } from "@langchain/openai";
+import { ChatOpenAI } from "@langchain/openai";
 ```
 
 ### Vercel / Next.js
@@ -233,7 +233,7 @@ import { OpenAI } from "@langchain/openai";
 LangChain can be used in Vercel / Next.js. We support using LangChain in frontend components, in Serverless functions and in Edge functions. You can import it using the following syntax:
 
 ```typescript
-import { OpenAI } from "@langchain/openai";
+import { ChatOpenAI } from "@langchain/openai";
 ```
 
 ### Deno / Supabase Edge Functions
@@ -241,23 +241,21 @@ import { OpenAI } from "@langchain/openai";
 LangChain can be used in Deno / Supabase Edge Functions. You can import it using the following syntax:
 
 ```typescript
-import { OpenAI } from "https://esm.sh/@langchain/openai";
+import { ChatOpenAI } from "https://esm.sh/@langchain/openai";
 ```
 
 or
 
 ```typescript
-import { OpenAI } from "npm:@langchain/openai";
+import { ChatOpenAI } from "npm:@langchain/openai";
 ```
-
-We recommend looking at our [Supabase Template](https://github.com/langchain-ai/langchain-template-supabase) for an example of how to use LangChain in Supabase Edge Functions.
 
 ### Browser
 
 LangChain can be used in the browser. In our CI we test bundling LangChain with Webpack and Vite, but other bundlers should work too. You can import it using the following syntax:
 
 ```typescript
-import { OpenAI } from "@langchain/openai";
+import { ChatOpenAI } from "@langchain/openai";
 ```
 
 ## Unsupported: Node.js 16
