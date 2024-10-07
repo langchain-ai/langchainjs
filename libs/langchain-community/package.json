@@ -421,6 +421,9 @@
     "@layerup/layerup-security": {
       "optional": true
     },
+    "@libsql/client": {
+      "optional": true
+    },
     "@mendable/firecrawl-js": {
       "optional": true
     },
