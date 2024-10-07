@@ -128,6 +128,11 @@ export class LibSQLVectorStore extends VectorStore {
     // filter is currently unused
     // filter?: this["FilterType"]
   ): Promise<[Document, number][]> {
+    // Potential SQL injection risk if query vector is not properly sanitized.
+    if (!query.every((num) => typeof num === "number" && !Number.isNaN(num))) {
+      throw new Error("Invalid query vector: all elements must be numbers");
+    }
+
     const queryVector = `[${query.join(",")}]`;
 
     const sql = `
@@ -136,10 +141,7 @@ export class LibSQLVectorStore extends VectorStore {
       JOIN ${this.table} ON ${this.table}.rowid = id
     `;
 
-    const results = await this.db.execute(
-      sql
-
-    );
+    const results = await this.db.execute(sql);
 
     return results.rows.map((row: any) => {
       const metadata = JSON.parse(row.metadata);
