@@ -1,18 +1,13 @@
-import type { Client, ResultSet, Value, LibsqlError } from "@libsql/client";
+import type { Client } from "@libsql/client";
 import { VectorStore } from "@langchain/core/vectorstores";
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { Document } from "@langchain/core/documents";
-
-interface Result {
-  content: string;
-  metadata: string;
-  distance: number;
-}
 
 /**
  * Interface for LibSQLVectorStore configuration options.
  */
 export interface LibSQLVectorStoreArgs {
+  db: Client;
   /** Name of the table to store vectors. Defaults to "vectors". */
   table?: string;
   /** Name of the column to store embeddings. Defaults to "embedding". */
@@ -46,17 +41,10 @@ export class LibSQLVectorStore extends VectorStore {
    * @param {Client} db - The LibSQL client instance.
    * @param {LibSQLVectorStoreArgs} options - Configuration options for the vector store.
    */
-  constructor(
-    db: Client,
-    embeddings: EmbeddingsInterface,
-    options: LibSQLVectorStoreArgs = {
-      table: "vectors",
-      column: "embedding",
-    }
-  ) {
+  constructor(embeddings: EmbeddingsInterface, options: LibSQLVectorStoreArgs) {
     super(embeddings, options);
 
-    this.db = db;
+    this.db = options.db;
     this.table = options.table || "vectors";
     this.column = options.column || "embedding";
   }
@@ -188,8 +176,7 @@ export class LibSQLVectorStore extends VectorStore {
     texts: string[],
     metadatas: object[] | object,
     embeddings: EmbeddingsInterface,
-    dbClient: Client,
-    options?: LibSQLVectorStoreArgs
+    options: LibSQLVectorStoreArgs
   ): Promise<LibSQLVectorStore> {
     const docs = texts.map((text, i) => {
       const metadata = Array.isArray(metadatas) ? metadatas[i] : metadatas;
@@ -197,7 +184,7 @@ export class LibSQLVectorStore extends VectorStore {
       return new Document({ pageContent: text, metadata });
     });
 
-    return LibSQLVectorStore.fromDocuments(docs, embeddings, dbClient, options);
+    return LibSQLVectorStore.fromDocuments(docs, embeddings, options);
   }
 
   /**
@@ -211,10 +198,9 @@ export class LibSQLVectorStore extends VectorStore {
   static async fromDocuments(
     docs: Document[],
     embeddings: EmbeddingsInterface,
-    dbClient: Client,
-    options?: LibSQLVectorStoreArgs
+    options: LibSQLVectorStoreArgs
   ): Promise<LibSQLVectorStore> {
-    const instance = new this(embeddings, dbClient, options);
+    const instance = new this(embeddings, options);
 
     await instance.addDocuments(docs);
 

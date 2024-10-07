@@ -101,7 +101,8 @@ const libsqlClient = createClient({
 //  url: "file:./dev.db",
 // });
 
-const vectorStore = new LibSQLVectorStore(libsqlClient, embeddings, {
+const vectorStore = new LibSQLVectorStore(embeddings, {
+  db: libsqlClient,
   tableName: "TABLE_NAME",
   embeddingColumn: "EMBEDDING_COLUMN",
   dimensions: 1536,
