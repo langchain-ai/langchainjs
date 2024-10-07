@@ -242,6 +242,7 @@
     "@huggingface/inference": "^2.6.4",
     "@langchain/langgraph": "*",
     "@layerup/layerup-security": "^1.5.12",
+    "@libsql/client": "^0.14.0",
     "@mendable/firecrawl-js": "^0.0.13",
     "@mlc-ai/web-llm": "0.2.46",
     "@mozilla/readability": "*",
