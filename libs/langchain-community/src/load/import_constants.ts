@@ -53,6 +53,7 @@ export const optionalImportEntrypoints: string[] = [
   "langchain_community/vectorstores/hnswlib",
   "langchain_community/vectorstores/hanavector",
   "langchain_community/vectorstores/lancedb",
+  "langchain_community/vectorstores/libsql",
   "langchain_community/vectorstores/milvus",
   "langchain_community/vectorstores/momento_vector_index",
   "langchain_community/vectorstores/mongodb_atlas",
