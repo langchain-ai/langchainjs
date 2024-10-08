@@ -1296,6 +1296,22 @@ export class ChatOpenAI<
       );
     }
     if (usage) {
+      const inputTokenDetails = {
+        ...(usage.prompt_tokens_details?.audio_tokens !== null && {
+          audio: usage.prompt_tokens_details?.audio_tokens,
+        }),
+        ...(usage.prompt_tokens_details?.cached_tokens !== null && {
+          cache_read: usage.prompt_tokens_details?.cached_tokens,
+        }),
+      };
+      const outputTokenDetails = {
+        ...(usage.completion_tokens_details?.audio_tokens !== null && {
+          audio: usage.completion_tokens_details?.audio_tokens,
+        }),
+        ...(usage.completion_tokens_details?.reasoning_tokens !== null && {
+          reasoning: usage.completion_tokens_details?.reasoning_tokens,
+        }),
+      };
       const generationChunk = new ChatGenerationChunk({
         message: new AIMessageChunk({
           content: "",
@@ -1306,6 +1322,12 @@ export class ChatOpenAI<
             input_tokens: usage.prompt_tokens,
             output_tokens: usage.completion_tokens,
             total_tokens: usage.total_tokens,
+            ...(Object.keys(inputTokenDetails).length > 0 && {
+              input_token_details: inputTokenDetails,
+            }),
+            ...(Object.keys(outputTokenDetails).length > 0 && {
+              output_token_details: outputTokenDetails,
+            }),
           },
         }),
         text: "",
@@ -1444,6 +1466,9 @@ export class ChatOpenAI<
             input_tokens: tokenUsage.promptTokens ?? 0,
             output_tokens: tokenUsage.completionTokens ?? 0,
             total_tokens: tokenUsage.totalTokens ?? 0,
+            ...(tokenUsage.inputTokenDetails
+              ? { input_token_details: tokenUsage.inputTokenDetails }
+              : {}),
           };
         }
         generations.push(generation);
