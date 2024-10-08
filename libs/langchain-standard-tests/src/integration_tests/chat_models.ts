@@ -430,11 +430,14 @@ export abstract class ChatModelIntegrationTests<
     }
   }
 
-  // You'll need to implement these methods
   abstract invokeWithAudioInput(stream: boolean): Promise<AIMessage>;
+
   abstract invokeWithAudioOutput(strea: boolean): Promise<AIMessage>;
+
   abstract invokeWithReasoningOutput(stream: boolean): Promise<AIMessage>;
+
   abstract invokeWithCacheReadInput(stream: boolean): Promise<AIMessage>;
+
   abstract invokeWithCacheCreationInput(stream: boolean): Promise<AIMessage>;
 
   private assertAudioInputMetadata(msg: AIMessage) {
