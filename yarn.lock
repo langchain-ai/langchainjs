@@ -10495,14 +10495,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@ibm-cloud/watsonx-ai@npm:1.0.1":
-  version: 1.0.1
-  resolution: "@ibm-cloud/watsonx-ai@npm:1.0.1"
+"@ibm-cloud/watsonx-ai@npm:^1.1.0":
+  version: 1.1.0
+  resolution: "@ibm-cloud/watsonx-ai@npm:1.1.0"
   dependencies:
     "@types/node": ^12.0.8
     extend: 3.0.2
     ibm-cloud-sdk-core: ^4.2.5
-  checksum: 843aa748f2568e5850df7718c38897dd668bc560426a339974cbd481ddf04579a54d661aa16b84d29c2b4d8aab0925ca3fbe78c31beb82e7cdc9ca02bd7a4e07
+  checksum: 0151bb0abe2a7d1dbcd6f8367ea02dfc924f15bdcbe8ec58bb89c8e055fa35c399b2253d6be3b84292f96c9161e49bcd6d6f5e1df0f2cd9adf21d1f3c0bc24b4
   languageName: node
   linkType: hard
 
@@ -11474,7 +11474,7 @@ __metadata:
     "@google-cloud/storage": ^7.7.0
     "@gradientai/nodejs-sdk": ^1.2.0
     "@huggingface/inference": ^2.6.4
-    "@ibm-cloud/watsonx-ai": 1.0.1
+    "@ibm-cloud/watsonx-ai": ^1.1.0
     "@jest/globals": ^29.5.0
     "@langchain/core": "workspace:*"
     "@langchain/openai": ">=0.2.0 <0.4.0"

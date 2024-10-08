@@ -81,25 +81,21 @@ export class WatsonxEmbeddings
     else return { spaceId: this.spaceId };
   }
 
-  ivocationParams(): EmbeddingParameters {
+  invocationParams(): EmbeddingParameters {
     return {
       truncate_input_tokens: this.truncate_input_tokens,
     };
-  }
-
-  async completionWithRetry<T>(callback: () => T) {
-    const caller = new AsyncCaller({
-      maxConcurrency: this.maxConcurrency,
-      maxRetries: this.maxRetries,
-    });
-    return caller.call(async () => callback());
   }
 
   async listModels() {
     const listModelParams = {
       filters: "function_embedding",
     };
-    const listModels = await this.completionWithRetry(() =>
+    const caller = new AsyncCaller({
+      maxConcurrency: this.maxConcurrency,
+      maxRetries: this.maxRetries,
+    });
+    const listModels = await caller.call(() =>
       this.service.listFoundationModelSpecs(listModelParams)
     );
     return listModels.result.resources?.map((item) => item.model_id);
@@ -110,10 +106,13 @@ export class WatsonxEmbeddings
       inputs,
       modelId: this.modelId,
       ...this.scopeId(),
-      parameters: this.ivocationParams(),
+      parameters: this.invocationParams(),
     };
-
-    const embeddings = await this.completionWithRetry(() =>
+    const caller = new AsyncCaller({
+      maxConcurrency: this.maxConcurrency,
+      maxRetries: this.maxRetries,
+    });
+    const embeddings = await caller.call(() =>
       this.service.embedText(textEmbeddingParams)
     );
     return embeddings.result.results.map((item) => item.embedding);

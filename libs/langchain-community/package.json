@@ -35,7 +35,7 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@ibm-cloud/watsonx-ai": "1.0.1",
+    "@ibm-cloud/watsonx-ai": "^1.1.0",
     "@langchain/openai": ">=0.2.0 <0.4.0",
     "binary-extensions": "^2.2.0",
     "expr-eval": "^2.0.2",
