@@ -1,8 +1,12 @@
 /* eslint-disable no-process-env */
 import { test, expect } from "@jest/globals";
 import { ChatModelIntegrationTests } from "@langchain/standard-tests";
-import { AIMessageChunk } from "@langchain/core/messages";
+import { AIMessage, AIMessageChunk } from "@langchain/core/messages";
 import { ChatOpenAI, ChatOpenAICallOptions } from "../chat_models.js";
+import { readFileSync } from "fs";
+import { join } from "path";
+
+const REPO_ROOT_DIR = process.cwd();
 
 class ChatOpenAIStandardIntegrationTests extends ChatModelIntegrationTests<
   ChatOpenAICallOptions,
@@ -23,6 +27,48 @@ class ChatOpenAIStandardIntegrationTests extends ChatModelIntegrationTests<
         model: "gpt-3.5-turbo",
       },
     });
+  }
+
+  supportedUsageMetadataDetails: {
+    invoke: Array<
+      | "audio_input"
+      | "audio_output"
+      | "reasoning_output"
+      | "cache_read_input"
+      | "cache_creation_input"
+    >;
+    stream: Array<
+      | "audio_input"
+      | "audio_output"
+      | "reasoning_output"
+      | "cache_read_input"
+      | "cache_creation_input"
+    >;
+  } = { invoke: ["cache_read_input", "reasoning_output"], stream: [] };
+
+  async invokeWithReasoningOutput(stream: boolean) {
+    const chatModel = new ChatOpenAI({
+      model: "o1-mini",
+      streamUsage: true,
+      temperature: 1,
+    });
+    const input =
+      "explain the relationship between the 2008/9 economic crisis and the startup ecosystem in the early 2010s";
+
+    return invoke(chatModel, input, stream);
+  }
+
+  async invokeWithCacheReadInput(stream: boolean = false): Promise<AIMessage> {
+    const readme = readFileSync(join(REPO_ROOT_DIR, "README.md"), "utf-8");
+
+    const input = `What's langchain? Here's the langchain README:
+    
+    ${readme}
+    `;
+    const llm = new ChatOpenAI({ modelName: "gpt-4o-mini", streamUsage: true });
+    await invoke(llm, input, stream);
+    // invoke twice so first invocation is cached
+    return invoke(llm, input, stream);
   }
 
   async testUsageMetadataStreaming() {
@@ -65,3 +111,26 @@ test("ChatOpenAIStandardIntegrationTests", async () => {
   const testResults = await testClass.runTests();
   expect(testResults).toBe(true);
 });
+
+async function invoke(
+  chatModel: ChatOpenAI,
+  input: string,
+  stream: boolean
+): Promise<AIMessage> {
+  if (stream) {
+    let finalChunks: AIMessageChunk | undefined;
+
+    // Stream the response for a simple "Hello" prompt
+    for await (const chunk of await chatModel.stream(input)) {
+      // Concatenate chunks to get the final result
+      if (!finalChunks) {
+        finalChunks = chunk;
+      } else {
+        finalChunks = finalChunks.concat(chunk);
+      }
+    }
+    return finalChunks as AIMessage;
+  } else {
+    return chatModel.invoke(input);
+  }
+}

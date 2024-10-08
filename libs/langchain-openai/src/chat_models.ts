@@ -1466,9 +1466,6 @@ export class ChatOpenAI<
             input_tokens: tokenUsage.promptTokens ?? 0,
             output_tokens: tokenUsage.completionTokens ?? 0,
             total_tokens: tokenUsage.totalTokens ?? 0,
-            ...(tokenUsage.inputTokenDetails
-              ? { input_token_details: tokenUsage.inputTokenDetails }
-              : {}),
           };
         }
         generations.push(generation);
