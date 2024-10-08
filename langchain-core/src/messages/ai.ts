@@ -86,16 +86,16 @@ export type UsageMetadata = {
   total_tokens: number;
 
   /**
-   * Breakdown of input token counts. 
-   * 
+   * Breakdown of input token counts.
+   *
    * Does *not* need to sum to full input token count. Does *not* need to have all keys.
-   */ 
+   */
   input_token_details?: InputTokenDetails;
 
   /**
    * Breakdown of output token counts.
-   * 
-   * Does *not* need to sum to full output token count. Does *not* need to have all keys.   
+   *
+   * Does *not* need to sum to full output token count. Does *not* need to have all keys.
    */
   output_token_details?: OutputTokenDetails;
 };
