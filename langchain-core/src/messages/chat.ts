@@ -108,3 +108,11 @@ export class ChatMessageChunk extends BaseMessageChunk {
     };
   }
 }
+
+export function isChatMessage(x: BaseMessage): x is ChatMessage {
+  return x._getType() === "generic";
+}
+
+export function isChatMessageChunk(x: BaseMessageChunk): x is ChatMessageChunk {
+  return x._getType() === "generic";
+}
