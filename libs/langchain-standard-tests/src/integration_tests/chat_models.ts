@@ -404,18 +404,28 @@ export abstract class ChatModelIntegrationTests<
       this.assertAudioOutputMetadata(msgWithAudioOutput);
     }
 
-    if (this.supportedUsageMetadataDetails.invoke.includes("reasoning_output")) {
-      const msgWithReasoningOutput = await this.invokeWithReasoningOutput(false);
+    if (
+      this.supportedUsageMetadataDetails.invoke.includes("reasoning_output")
+    ) {
+      const msgWithReasoningOutput = await this.invokeWithReasoningOutput(
+        false
+      );
       this.assertReasoningOutputMetadata(msgWithReasoningOutput);
     }
 
-    if (this.supportedUsageMetadataDetails.invoke.includes("cache_read_input")) {
+    if (
+      this.supportedUsageMetadataDetails.invoke.includes("cache_read_input")
+    ) {
       const msgWithCacheReadInput = await this.invokeWithCacheReadInput(false);
       this.assertCacheReadInputMetadata(msgWithCacheReadInput);
     }
 
-    if (this.supportedUsageMetadataDetails.invoke.includes("cache_creation_input")) {
-      const msgWithCacheCreationInput = await this.invokeWithCacheCreationInput(false);
+    if (
+      this.supportedUsageMetadataDetails.invoke.includes("cache_creation_input")
+    ) {
+      const msgWithCacheCreationInput = await this.invokeWithCacheCreationInput(
+        false
+      );
       this.assertCacheCreationInputMetadata(msgWithCacheCreationInput);
     }
   }
@@ -430,45 +440,70 @@ export abstract class ChatModelIntegrationTests<
   private assertAudioInputMetadata(msg: AIMessage) {
     expect(msg.usage_metadata).toBeDefined();
     expect(msg.usage_metadata!.input_token_details).toBeDefined();
-    expect(typeof msg.usage_metadata!.input_token_details!.audio).toBe("number");
+    expect(typeof msg.usage_metadata!.input_token_details!.audio).toBe(
+      "number"
+    );
     expect(msg.usage_metadata!.input_tokens).toBeGreaterThanOrEqual(
-      Object.values(msg.usage_metadata!.input_token_details!).reduce((a, b) => (a ?? 0) + (b ?? 0), 0)
+      Object.values(msg.usage_metadata!.input_token_details!).reduce(
+        (a, b) => (a ?? 0) + (b ?? 0),
+        0
+      )
     );
   }
 
   private assertAudioOutputMetadata(msg: AIMessage) {
     expect(msg.usage_metadata).toBeDefined();
     expect(msg.usage_metadata!.output_token_details).toBeDefined();
-    expect(typeof msg.usage_metadata!.output_token_details!.audio).toBe("number");
+    expect(typeof msg.usage_metadata!.output_token_details!.audio).toBe(
+      "number"
+    );
     expect(msg.usage_metadata!.output_tokens).toBeGreaterThanOrEqual(
-      Object.values(msg.usage_metadata!.output_token_details!).reduce((a, b) => (a ?? 0) + (b ?? 0), 0)
+      Object.values(msg.usage_metadata!.output_token_details!).reduce(
+        (a, b) => (a ?? 0) + (b ?? 0),
+        0
+      )
     );
   }
 
   private assertReasoningOutputMetadata(msg: AIMessage) {
     expect(msg.usage_metadata).toBeDefined();
     expect(msg.usage_metadata!.output_token_details).toBeDefined();
-    expect(typeof msg.usage_metadata!.output_token_details!.reasoning).toBe("number");
+    expect(typeof msg.usage_metadata!.output_token_details!.reasoning).toBe(
+      "number"
+    );
     expect(msg.usage_metadata!.output_tokens).toBeGreaterThanOrEqual(
-      Object.values(msg.usage_metadata!.output_token_details!).reduce((a, b) => (a ?? 0) + (b ?? 0), 0)
+      Object.values(msg.usage_metadata!.output_token_details!).reduce(
+        (a, b) => (a ?? 0) + (b ?? 0),
+        0
+      )
     );
   }
 
   private assertCacheReadInputMetadata(msg: AIMessage) {
     expect(msg.usage_metadata).toBeDefined();
     expect(msg.usage_metadata!.input_token_details).toBeDefined();
-    expect(typeof msg.usage_metadata!.input_token_details!.cache_read).toBe("number");
+    expect(typeof msg.usage_metadata!.input_token_details!.cache_read).toBe(
+      "number"
+    );
     expect(msg.usage_metadata!.input_tokens).toBeGreaterThanOrEqual(
-      Object.values(msg.usage_metadata!.input_token_details!).reduce((a, b) => (a ?? 0) + (b ?? 0), 0)
+      Object.values(msg.usage_metadata!.input_token_details!).reduce(
+        (a, b) => (a ?? 0) + (b ?? 0),
+        0
+      )
     );
   }
 
   private assertCacheCreationInputMetadata(msg: AIMessage) {
     expect(msg.usage_metadata).toBeDefined();
     expect(msg.usage_metadata!.input_token_details).toBeDefined();
-    expect(typeof msg.usage_metadata!.input_token_details!.cache_creation).toBe("number");
+    expect(typeof msg.usage_metadata!.input_token_details!.cache_creation).toBe(
+      "number"
+    );
     expect(msg.usage_metadata!.input_tokens).toBeGreaterThanOrEqual(
-      Object.values(msg.usage_metadata!.input_token_details!).reduce((a, b) => (a ?? 0) + (b ?? 0), 0)
+      Object.values(msg.usage_metadata!.input_token_details!).reduce(
+        (a, b) => (a ?? 0) + (b ?? 0),
+        0
+      )
     );
   }
 
@@ -534,18 +569,26 @@ export abstract class ChatModelIntegrationTests<
       this.assertAudioOutputMetadata(msgWithAudioOutput);
     }
 
-    if (this.supportedUsageMetadataDetails.invoke.includes("reasoning_output")) {
+    if (
+      this.supportedUsageMetadataDetails.invoke.includes("reasoning_output")
+    ) {
       const msgWithReasoningOutput = await this.invokeWithReasoningOutput(true);
       this.assertReasoningOutputMetadata(msgWithReasoningOutput);
     }
 
-    if (this.supportedUsageMetadataDetails.invoke.includes("cache_read_input")) {
+    if (
+      this.supportedUsageMetadataDetails.invoke.includes("cache_read_input")
+    ) {
       const msgWithCacheReadInput = await this.invokeWithCacheReadInput(true);
       this.assertCacheReadInputMetadata(msgWithCacheReadInput);
     }
 
-    if (this.supportedUsageMetadataDetails.invoke.includes("cache_creation_input")) {
-      const msgWithCacheCreationInput = await this.invokeWithCacheCreationInput(true);
+    if (
+      this.supportedUsageMetadataDetails.invoke.includes("cache_creation_input")
+    ) {
+      const msgWithCacheCreationInput = await this.invokeWithCacheCreationInput(
+        true
+      );
       this.assertCacheCreationInputMetadata(msgWithCacheCreationInput);
     }
   }
