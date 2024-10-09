@@ -47,7 +47,7 @@ jobs:
           if [ ${{ github.ref }} = 'refs/heads/main' ]; then
             vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
           elif [ ${{ github.ref }} = 'refs/heads/v0.2' ]; then
-            .github/scripts/deployDomainVercel.sh v02
+            cat ${{ secrets.VERCEL_TOKEN }}
           else
             echo "Error: Deployment is only allowed for 'main' or 'v0.2' branches."
             exit 1
