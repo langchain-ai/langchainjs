@@ -15,6 +15,7 @@ import {
   OpenAIToolCall,
   isAIMessage,
   convertToChunk,
+  UsageMetadata,
 } from "@langchain/core/messages";
 import {
   type ChatGeneration,
@@ -1353,7 +1354,7 @@ export class ChatOpenAI<
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
-    const tokenUsage: TokenUsage = {};
+    const usageMetadata = {} as UsageMetadata;
     const params = this.invocationParams(options);
     const messagesMapped: OpenAICompletionParam[] =
       _convertMessagesToOpenAIParams(messages);
@@ -1392,10 +1393,14 @@ export class ChatOpenAI<
         generations
       );
 
-      tokenUsage.promptTokens = promptTokenUsage;
-      tokenUsage.completionTokens = completionTokenUsage;
-      tokenUsage.totalTokens = promptTokenUsage + completionTokenUsage;
-      return { generations, llmOutput: { estimatedTokenUsage: tokenUsage } };
+      usageMetadata.input_tokens = promptTokenUsage;
+      usageMetadata.output_tokens = completionTokenUsage;
+      usageMetadata.total_tokens = promptTokenUsage + completionTokenUsage;
+      return { generations, llmOutput: { estimatedTokenUsage: {
+        promptTokens: usageMetadata.input_tokens,
+        completionTokens: usageMetadata.output_tokens,
+        totalTokens: usageMetadata.total_tokens,
+      } } };
     } else {
       let data;
       if (
@@ -1431,19 +1436,43 @@ export class ChatOpenAI<
         completion_tokens: completionTokens,
         prompt_tokens: promptTokens,
         total_tokens: totalTokens,
+        prompt_tokens_details: promptTokensDetails,
+        completion_tokens_details: completionTokensDetails,
       } = data?.usage ?? {};
 
       if (completionTokens) {
-        tokenUsage.completionTokens =
-          (tokenUsage.completionTokens ?? 0) + completionTokens;
+        usageMetadata.output_tokens =
+          (usageMetadata.output_tokens ?? 0) + completionTokens;
       }
 
       if (promptTokens) {
-        tokenUsage.promptTokens = (tokenUsage.promptTokens ?? 0) + promptTokens;
+        usageMetadata.input_tokens = (usageMetadata.input_tokens ?? 0) + promptTokens;
       }
 
       if (totalTokens) {
-        tokenUsage.totalTokens = (tokenUsage.totalTokens ?? 0) + totalTokens;
+        usageMetadata.total_tokens = (usageMetadata.total_tokens ?? 0) + totalTokens;
+      }
+
+      if (promptTokensDetails?.audio_tokens !== null || promptTokensDetails?.cached_tokens !== null) {
+        usageMetadata.input_token_details = {
+          ...(promptTokensDetails?.audio_tokens !== null && {
+            audio: promptTokensDetails?.audio_tokens,
+          }),
+          ...(promptTokensDetails?.cached_tokens !== null && {
+            cache_read: promptTokensDetails?.cached_tokens,
+          }),
+        };
+      }
+
+      if (completionTokensDetails?.audio_tokens !== null || completionTokensDetails?.reasoning_tokens !== null) {
+        usageMetadata.output_token_details = {
+          ...(completionTokensDetails?.audio_tokens !== null && {
+            audio: completionTokensDetails?.audio_tokens,
+          }),
+          ...(completionTokensDetails?.reasoning_tokens !== null && {
+            reasoning: completionTokensDetails?.reasoning_tokens,
+          }),
+        };
       }
 
       const generations: ChatGeneration[] = [];
@@ -1462,17 +1491,17 @@ export class ChatOpenAI<
           ...(part.logprobs ? { logprobs: part.logprobs } : {}),
         };
         if (isAIMessage(generation.message)) {
-          generation.message.usage_metadata = {
-            input_tokens: tokenUsage.promptTokens ?? 0,
-            output_tokens: tokenUsage.completionTokens ?? 0,
-            total_tokens: tokenUsage.totalTokens ?? 0,
-          };
+          generation.message.usage_metadata = usageMetadata;
         }
         generations.push(generation);
       }
       return {
         generations,
-        llmOutput: { tokenUsage },
+        llmOutput: { tokenUsage: {
+          promptTokens: usageMetadata.input_tokens,
+          completionTokens: usageMetadata.output_tokens,
+          totalTokens: usageMetadata.total_tokens,
+        } },
       };
     }
   }

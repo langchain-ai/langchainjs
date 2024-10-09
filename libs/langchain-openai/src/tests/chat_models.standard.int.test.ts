@@ -1,5 +1,5 @@
 /* eslint-disable no-process-env */
-import { test, expect } from "@jest/globals";
+import { test } from "@jest/globals";
 import { ChatModelIntegrationTests } from "@langchain/standard-tests";
 import { AIMessage, AIMessageChunk } from "@langchain/core/messages";
 import { readFileSync } from "fs";
