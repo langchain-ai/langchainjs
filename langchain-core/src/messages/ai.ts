@@ -352,6 +352,59 @@ export class AIMessageChunk extends BaseMessageChunk {
       this.usage_metadata !== undefined ||
       chunk.usage_metadata !== undefined
     ) {
+      let inputTokenDetails: InputTokenDetails | undefined;
+      if (
+        this.usage_metadata?.input_token_details !== undefined ||
+        chunk.usage_metadata?.input_token_details !== undefined
+      ) {
+        // not undefined, so we should include in the combined fields
+        const leftInputTokenDetails = {
+          ...(this.usage_metadata?.input_token_details ?? {}),
+          audio: 0,
+          cache_read: 0,
+          cache_creation: 0,
+        };
+        const rightInputTokenDetails = {
+          ...(chunk.usage_metadata?.input_token_details ?? {}),
+          audio: 0,
+          cache_read: 0,
+          cache_creation: 0,
+        };
+        inputTokenDetails = {
+          audio: leftInputTokenDetails.audio + rightInputTokenDetails.audio,
+          cache_read:
+            leftInputTokenDetails.cache_read +
+            rightInputTokenDetails.cache_read,
+          cache_creation:
+            leftInputTokenDetails.cache_creation +
+            rightInputTokenDetails.cache_creation,
+        };
+      }
+
+      let outputTokenDetails: OutputTokenDetails | undefined;
+      if (
+        this.usage_metadata?.output_token_details !== undefined ||
+        chunk.usage_metadata?.output_token_details !== undefined
+      ) {
+        // not undefined, so we should include in the combined fields
+        const leftOutputTokenDetails = {
+          ...(this.usage_metadata?.output_token_details ?? {}),
+          audio: 0,
+          reasoning: 0,
+        };
+        const rightOutputTokenDetails = {
+          ...(chunk.usage_metadata?.output_token_details ?? {}),
+          audio: 0,
+          reasoning: 0,
+        };
+        outputTokenDetails = {
+          audio: leftOutputTokenDetails.audio + rightOutputTokenDetails.audio,
+          reasoning:
+            leftOutputTokenDetails.reasoning +
+            rightOutputTokenDetails.reasoning,
+        };
+      }
+
       const left: UsageMetadata = this.usage_metadata ?? {
         input_tokens: 0,
         output_tokens: 0,
@@ -366,6 +419,14 @@ export class AIMessageChunk extends BaseMessageChunk {
         input_tokens: left.input_tokens + right.input_tokens,
         output_tokens: left.output_tokens + right.output_tokens,
         total_tokens: left.total_tokens + right.total_tokens,
+        // Do not include `input_token_details` / `output_token_details` keys in combined fields
+        // unless their values are defined.
+        ...(inputTokenDetails
+          ? { input_token_details: inputTokenDetails }
+          : {}),
+        ...(outputTokenDetails
+          ? { output_token_details: outputTokenDetails }
+          : {}),
       };
       combinedFields.usage_metadata = usage_metadata;
     }
