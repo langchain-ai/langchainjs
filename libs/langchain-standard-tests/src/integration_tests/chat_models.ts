@@ -487,7 +487,7 @@ export abstract class ChatModelIntegrationTests<
       "number"
     );
     expect(msg.usage_metadata?.input_tokens).toBeGreaterThanOrEqual(
-      Object.values(msg.usage_metadata?.input_token_details!).reduce(
+      Object.values(msg.usage_metadata?.input_token_details ?? {}).reduce(
         (a, b) => (a ?? 0) + (b ?? 0),
         0
       )
@@ -501,7 +501,7 @@ export abstract class ChatModelIntegrationTests<
       "number"
     );
     expect(msg.usage_metadata?.output_tokens).toBeGreaterThanOrEqual(
-      Object.values(msg.usage_metadata?.output_token_details!).reduce(
+      Object.values(msg.usage_metadata?.output_token_details ?? {}).reduce(
         (a, b) => (a ?? 0) + (b ?? 0),
         0
       )
@@ -515,7 +515,7 @@ export abstract class ChatModelIntegrationTests<
       "number"
     );
     expect(msg.usage_metadata?.output_tokens).toBeGreaterThanOrEqual(
-      Object.values(msg.usage_metadata?.output_token_details!).reduce(
+      Object.values(msg.usage_metadata?.output_token_details ?? {}).reduce(
         (a, b) => (a ?? 0) + (b ?? 0),
         0
       )
@@ -529,7 +529,7 @@ export abstract class ChatModelIntegrationTests<
       "number"
     );
     expect(msg.usage_metadata?.input_tokens).toBeGreaterThanOrEqual(
-      Object.values(msg.usage_metadata?.input_token_details!).reduce(
+      Object.values(msg.usage_metadata?.input_token_details ?? {}).reduce(
         (a, b) => (a ?? 0) + (b ?? 0),
         0
       )
@@ -543,7 +543,7 @@ export abstract class ChatModelIntegrationTests<
       "number"
     );
     expect(msg.usage_metadata?.input_tokens).toBeGreaterThanOrEqual(
-      Object.values(msg.usage_metadata?.input_token_details!).reduce(
+      Object.values(msg.usage_metadata?.input_token_details ?? {}).reduce(
         (a, b) => (a ?? 0) + (b ?? 0),
         0
       )
