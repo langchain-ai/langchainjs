@@ -1396,11 +1396,16 @@ export class ChatOpenAI<
       usageMetadata.input_tokens = promptTokenUsage;
       usageMetadata.output_tokens = completionTokenUsage;
       usageMetadata.total_tokens = promptTokenUsage + completionTokenUsage;
-      return { generations, llmOutput: { estimatedTokenUsage: {
-        promptTokens: usageMetadata.input_tokens,
-        completionTokens: usageMetadata.output_tokens,
-        totalTokens: usageMetadata.total_tokens,
-      } } };
+      return {
+        generations,
+        llmOutput: {
+          estimatedTokenUsage: {
+            promptTokens: usageMetadata.input_tokens,
+            completionTokens: usageMetadata.output_tokens,
+            totalTokens: usageMetadata.total_tokens,
+          },
+        },
+      };
     } else {
       let data;
       if (
@@ -1446,14 +1451,19 @@ export class ChatOpenAI<
       }
 
       if (promptTokens) {
-        usageMetadata.input_tokens = (usageMetadata.input_tokens ?? 0) + promptTokens;
+        usageMetadata.input_tokens =
+          (usageMetadata.input_tokens ?? 0) + promptTokens;
       }
 
       if (totalTokens) {
-        usageMetadata.total_tokens = (usageMetadata.total_tokens ?? 0) + totalTokens;
+        usageMetadata.total_tokens =
+          (usageMetadata.total_tokens ?? 0) + totalTokens;
       }
 
-      if (promptTokensDetails?.audio_tokens !== null || promptTokensDetails?.cached_tokens !== null) {
+      if (
+        promptTokensDetails?.audio_tokens !== null ||
+        promptTokensDetails?.cached_tokens !== null
+      ) {
         usageMetadata.input_token_details = {
           ...(promptTokensDetails?.audio_tokens !== null && {
             audio: promptTokensDetails?.audio_tokens,
@@ -1464,7 +1474,10 @@ export class ChatOpenAI<
         };
       }
 
-      if (completionTokensDetails?.audio_tokens !== null || completionTokensDetails?.reasoning_tokens !== null) {
+      if (
+        completionTokensDetails?.audio_tokens !== null ||
+        completionTokensDetails?.reasoning_tokens !== null
+      ) {
         usageMetadata.output_token_details = {
           ...(completionTokensDetails?.audio_tokens !== null && {
             audio: completionTokensDetails?.audio_tokens,
@@ -1497,11 +1510,13 @@ export class ChatOpenAI<
       }
       return {
         generations,
-        llmOutput: { tokenUsage: {
-          promptTokens: usageMetadata.input_tokens,
-          completionTokens: usageMetadata.output_tokens,
-          totalTokens: usageMetadata.total_tokens,
-        } },
+        llmOutput: {
+          tokenUsage: {
+            promptTokens: usageMetadata.input_tokens,
+            completionTokens: usageMetadata.output_tokens,
+            totalTokens: usageMetadata.total_tokens,
+          },
+        },
       };
     }
   }
