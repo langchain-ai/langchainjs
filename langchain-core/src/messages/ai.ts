@@ -352,58 +352,47 @@ export class AIMessageChunk extends BaseMessageChunk {
       this.usage_metadata !== undefined ||
       chunk.usage_metadata !== undefined
     ) {
-      let inputTokenDetails: InputTokenDetails | undefined;
-      if (
-        this.usage_metadata?.input_token_details !== undefined ||
-        chunk.usage_metadata?.input_token_details !== undefined
-      ) {
-        // not undefined, so we should include in the combined fields
-        const leftInputTokenDetails = {
-          ...(this.usage_metadata?.input_token_details ?? {}),
-          audio: 0,
-          cache_read: 0,
-          cache_creation: 0,
-        };
-        const rightInputTokenDetails = {
-          ...(chunk.usage_metadata?.input_token_details ?? {}),
-          audio: 0,
-          cache_read: 0,
-          cache_creation: 0,
-        };
-        inputTokenDetails = {
-          audio: leftInputTokenDetails.audio + rightInputTokenDetails.audio,
+      const inputTokenDetails: InputTokenDetails = {
+        ...((this.usage_metadata?.input_token_details?.audio !== undefined ||
+          chunk.usage_metadata?.input_token_details?.audio !== undefined) && {
+          audio:
+            (this.usage_metadata?.input_token_details?.audio ?? 0) +
+            (chunk.usage_metadata?.input_token_details?.audio ?? 0),
+        }),
+        ...((this.usage_metadata?.input_token_details?.cache_read !==
+          undefined ||
+          chunk.usage_metadata?.input_token_details?.cache_read !==
+            undefined) && {
           cache_read:
-            leftInputTokenDetails.cache_read +
-            rightInputTokenDetails.cache_read,
+            (this.usage_metadata?.input_token_details?.cache_read ?? 0) +
+            (chunk.usage_metadata?.input_token_details?.cache_read ?? 0),
+        }),
+        ...((this.usage_metadata?.input_token_details?.cache_creation !==
+          undefined ||
+          chunk.usage_metadata?.input_token_details?.cache_creation !==
+            undefined) && {
           cache_creation:
-            leftInputTokenDetails.cache_creation +
-            rightInputTokenDetails.cache_creation,
-        };
-      }
+            (this.usage_metadata?.input_token_details?.cache_creation ?? 0) +
+            (chunk.usage_metadata?.input_token_details?.cache_creation ?? 0),
+        }),
+      };
 
-      let outputTokenDetails: OutputTokenDetails | undefined;
-      if (
-        this.usage_metadata?.output_token_details !== undefined ||
-        chunk.usage_metadata?.output_token_details !== undefined
-      ) {
-        // not undefined, so we should include in the combined fields
-        const leftOutputTokenDetails = {
-          ...(this.usage_metadata?.output_token_details ?? {}),
-          audio: 0,
-          reasoning: 0,
-        };
-        const rightOutputTokenDetails = {
-          ...(chunk.usage_metadata?.output_token_details ?? {}),
-          audio: 0,
-          reasoning: 0,
-        };
-        outputTokenDetails = {
-          audio: leftOutputTokenDetails.audio + rightOutputTokenDetails.audio,
+      const outputTokenDetails: OutputTokenDetails = {
+        ...((this.usage_metadata?.output_token_details?.audio !== undefined ||
+          chunk.usage_metadata?.output_token_details?.audio !== undefined) && {
+          audio:
+            (this.usage_metadata?.output_token_details?.audio ?? 0) +
+            (chunk.usage_metadata?.output_token_details?.audio ?? 0),
+        }),
+        ...((this.usage_metadata?.output_token_details?.reasoning !==
+          undefined ||
+          chunk.usage_metadata?.output_token_details?.reasoning !==
+            undefined) && {
           reasoning:
-            leftOutputTokenDetails.reasoning +
-            rightOutputTokenDetails.reasoning,
-        };
-      }
+            (this.usage_metadata?.output_token_details?.reasoning ?? 0) +
+            (chunk.usage_metadata?.output_token_details?.reasoning ?? 0),
+        }),
+      };
 
       const left: UsageMetadata = this.usage_metadata ?? {
         input_tokens: 0,
@@ -421,12 +410,12 @@ export class AIMessageChunk extends BaseMessageChunk {
         total_tokens: left.total_tokens + right.total_tokens,
         // Do not include `input_token_details` / `output_token_details` keys in combined fields
         // unless their values are defined.
-        ...(inputTokenDetails
-          ? { input_token_details: inputTokenDetails }
-          : {}),
-        ...(outputTokenDetails
-          ? { output_token_details: outputTokenDetails }
-          : {}),
+        ...(Object.keys(inputTokenDetails).length > 0 && {
+          input_token_details: inputTokenDetails,
+        }),
+        ...(Object.keys(outputTokenDetails).length > 0 && {
+          output_token_details: outputTokenDetails,
+        }),
       };
       combinedFields.usage_metadata = usage_metadata;
     }
