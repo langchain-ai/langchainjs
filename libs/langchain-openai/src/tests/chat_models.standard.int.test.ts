@@ -5,6 +5,8 @@ import { AIMessage, AIMessageChunk } from "@langchain/core/messages";
 import { ChatOpenAI, ChatOpenAICallOptions } from "../chat_models.js";
 import { readFileSync } from "fs";
 import { join } from "path";
+import { concat } from "@langchain/core/utils/stream";
+import { BaseLanguageModelInput } from "@langchain/core/language_models/base";
 
 const REPO_ROOT_DIR = process.cwd();
 
@@ -114,7 +116,7 @@ test("ChatOpenAIStandardIntegrationTests", async () => {
 
 async function invoke(
   chatModel: ChatOpenAI,
-  input: string,
+  input: BaseLanguageModelInput,
   stream: boolean
 ): Promise<AIMessage> {
   if (stream) {
@@ -123,11 +125,7 @@ async function invoke(
     // Stream the response for a simple "Hello" prompt
     for await (const chunk of await chatModel.stream(input)) {
       // Concatenate chunks to get the final result
-      if (!finalChunks) {
-        finalChunks = chunk;
-      } else {
-        finalChunks = finalChunks.concat(chunk);
-      }
+      finalChunks = finalChunks ? concat(finalChunks, chunk) : chunk;
     }
     return finalChunks as AIMessage;
   } else {
