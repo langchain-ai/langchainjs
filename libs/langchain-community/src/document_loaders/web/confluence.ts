@@ -14,6 +14,7 @@ export interface ConfluencePagesLoaderParams {
   personalAccessToken?: string;
   limit?: number;
   expand?: string;
+  maxRetries?: number;
 }
 
 /**
@@ -71,6 +72,8 @@ export class ConfluencePagesLoader extends BaseDocumentLoader {
 
   public readonly limit: number;
 
+  public readonly maxRetries: number;
+
   /**
    * expand parameter for confluence rest api
    * description can be found at https://developer.atlassian.com/server/confluence/expansions-in-the-rest-api/
@@ -87,6 +90,7 @@ export class ConfluencePagesLoader extends BaseDocumentLoader {
     limit = 25,
     expand = "body.storage,version",
     personalAccessToken,
+    maxRetries = 5,
   }: ConfluencePagesLoaderParams) {
     super();
     this.baseUrl = baseUrl;
@@ -96,6 +100,7 @@ export class ConfluencePagesLoader extends BaseDocumentLoader {
     this.limit = limit;
     this.expand = expand;
     this.personalAccessToken = personalAccessToken;
+    this.maxRetries = maxRetries;
   }
 
   /**
@@ -147,30 +152,38 @@ export class ConfluencePagesLoader extends BaseDocumentLoader {
   protected async fetchConfluenceData(
     url: string
   ): Promise<ConfluenceAPIResponse> {
-    try {
-      const initialHeaders: HeadersInit = {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      };
+    let retryCounter = 0;
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+      retryCounter += 1;
+      try {
+        const initialHeaders: HeadersInit = {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        };
 
-      const authHeader = this.authorizationHeader;
-      if (authHeader) {
-        initialHeaders.Authorization = authHeader;
+        const authHeader = this.authorizationHeader;
+        if (authHeader) {
+          initialHeaders.Authorization = authHeader;
+        }
+
+        const response = await fetch(url, {
+          headers: initialHeaders,
+        });
+
+        if (!response.ok) {
+          throw new Error(
+            `Failed to fetch ${url} from Confluence: ${response.status}. Retrying...`
+          );
+        }
+
+        return await response.json();
+      } catch (error) {
+        if (retryCounter >= this.maxRetries)
+          throw new Error(
+            `Failed to fetch ${url} from Confluence (retry: ${retryCounter}): ${error}`
+          );
       }
-
-      const response = await fetch(url, {
-        headers: initialHeaders,
-      });
-
-      if (!response.ok) {
-        throw new Error(
-          `Failed to fetch ${url} from Confluence: ${response.status}`
-        );
-      }
-
-      return await response.json();
-    } catch (error) {
-      throw new Error(`Failed to fetch ${url} from Confluence: ${error}`);
     }
   }
 

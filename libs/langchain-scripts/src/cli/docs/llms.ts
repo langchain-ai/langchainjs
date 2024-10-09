@@ -108,7 +108,7 @@ export async function fillLLMIntegrationDocTemplate(fields: {
   className: string;
 }) {
   const sidebarLabel = fields.className.replace("LLM", "").replace("Llm", "");
-  const pyDocUrl = `https://python.langchain.com/v0.2/docs/integrations/llms/${sidebarLabel.toLowerCase()}/`;
+  const pyDocUrl = `https://python.langchain.com/docs/integrations/llms/${sidebarLabel.toLowerCase()}/`;
   let envVarName = `${sidebarLabel.toUpperCase()}_API_KEY`;
   const extraFields = await promptExtraFields({
     envVarGuess: envVarName,

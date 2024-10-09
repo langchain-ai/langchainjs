@@ -364,13 +364,13 @@ export class EventStreamCallbackHandler extends BaseTracer {
       throw new Error(`onLLMNewToken: Run ID ${run.id} not found in run map.`);
     }
     // Top-level streaming events are covered by tapOutputIterable
-    if (run.parent_run_id === undefined) {
+    if (this.runInfoMap.size === 1) {
       return;
     }
     if (runInfo.runType === "chat_model") {
       eventName = "on_chat_model_stream";
       if (kwargs?.chunk === undefined) {
-        chunk = new AIMessageChunk({ content: token });
+        chunk = new AIMessageChunk({ content: token, id: `run-${run.id}` });
       } else {
         chunk = kwargs.chunk.message;
       }

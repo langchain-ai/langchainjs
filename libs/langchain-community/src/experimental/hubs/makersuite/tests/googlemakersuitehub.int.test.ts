@@ -7,8 +7,8 @@ import * as path from "path";
 import { describe, test } from "@jest/globals";
 import { HumanMessage } from "@langchain/core/messages";
 import { AsyncCaller } from "@langchain/core/utils/async_caller";
-import { ChatGooglePaLM } from "../../../../chat_models/googlepalm.js";
-import { GooglePaLM } from "../../../../llms/googlepalm.js";
+import { ChatGooglePaLM } from "../chat_models.js";
+import { GooglePaLM } from "../llms.js";
 import {
   DriveFileReadConnection,
   MakerSuiteHub,

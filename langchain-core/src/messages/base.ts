@@ -76,33 +76,18 @@ export interface FunctionCall {
   name: string;
 }
 
-/**
- * @deprecated
- * Import as "OpenAIToolCall" instead
- */
-export interface ToolCall {
-  /**
-   * The ID of the tool call.
-   */
-  id: string;
-
-  /**
-   * The function that the model called.
-   */
-  function: FunctionCall;
-
-  /**
-   * The type of the tool. Currently, only `function` is supported.
-   */
-  type: "function";
-}
-
 export type BaseMessageFields = {
   content: MessageContent;
   name?: string;
   additional_kwargs?: {
+    /**
+     * @deprecated Use "tool_calls" field on AIMessages instead
+     */
     function_call?: FunctionCall;
-    tool_calls?: ToolCall[];
+    /**
+     * @deprecated Use "tool_calls" field on AIMessages instead
+     */
+    tool_calls?: OpenAIToolCall[];
     [key: string]: unknown;
   };
   /** Response metadata. For example: response headers, logprobs, token counts. */
@@ -233,8 +218,23 @@ export abstract class BaseMessage
    */
   id?: string;
 
-  /** The type of the message. */
+  /**
+   * @deprecated Use .getType() instead or import the proper typeguard.
+   * For example:
+   *
+   * ```ts
+   * import { isAIMessage } from "@langchain/core/messages";
+   *
+   * const message = new AIMessage("Hello!");
+   * isAIMessage(message); // true
+   * ```
+   */
   abstract _getType(): MessageType;
+
+  /** The type of the message. */
+  getType(): MessageType {
+    return this._getType();
+  }
 
   constructor(
     fields: string | BaseMessageFields,
@@ -289,6 +289,16 @@ export abstract class BaseMessage
     };
   }
 
+  // this private method is used to update the ID for the runtime
+  // value as well as in lc_kwargs for serialisation
+  _updateId(value: string | undefined) {
+    this.id = value;
+
+    // lc_attributes wouldn't work here, because jest compares the
+    // whole object
+    this.lc_kwargs.id = value;
+  }
+
   get [Symbol.toStringTag]() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return (this.constructor as any).lc_name();
@@ -308,9 +318,26 @@ export abstract class BaseMessage
   }
 }
 
-// TODO: Deprecate when SDK typing is updated
-export type OpenAIToolCall = ToolCall & {
-  index: number;
+/**
+ * @deprecated Use "tool_calls" field on AIMessages instead
+ */
+export type OpenAIToolCall = {
+  /**
+   * The ID of the tool call.
+   */
+  id: string;
+
+  /**
+   * The function that the model called.
+   */
+  function: FunctionCall;
+
+  /**
+   * The type of the tool. Currently, only `function` is supported.
+   */
+  type: "function";
+
+  index?: number;
 };
 
 export function isOpenAIToolCallArray(
@@ -440,19 +467,36 @@ export abstract class BaseMessageChunk extends BaseMessage {
   abstract concat(chunk: BaseMessageChunk): BaseMessageChunk;
 }
 
+export type MessageFieldWithRole = {
+  role: StringWithAutocomplete<"user" | "assistant" | MessageType>;
+  content: MessageContent;
+  name?: string;
+} & Record<string, unknown>;
+
+export function _isMessageFieldWithRole(
+  x: BaseMessageLike
+): x is MessageFieldWithRole {
+  return typeof (x as MessageFieldWithRole).role === "string";
+}
+
 export type BaseMessageLike =
   | BaseMessage
-  | ({
-      type: MessageType | "user" | "assistant" | "placeholder";
-    } & BaseMessageFields &
-      Record<string, unknown>)
+  | MessageFieldWithRole
   | [
       StringWithAutocomplete<
         MessageType | "user" | "assistant" | "placeholder"
       >,
       MessageContent
     ]
-  | string;
+  | string
+  /**
+   * @deprecated Specifying "type" is deprecated and will be removed in 0.4.0.
+   */
+  | ({
+      type: MessageType | "user" | "assistant" | "placeholder";
+    } & BaseMessageFields &
+      Record<string, unknown>)
+  | SerializedConstructor;
 
 export function isBaseMessage(
   messageLike?: unknown

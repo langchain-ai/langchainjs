@@ -22,6 +22,7 @@ export const config = {
     chat_history: "chat_history",
     documents: "documents/index",
     "document_loaders/base": "document_loaders/base",
+    "document_loaders/langsmith": "document_loaders/langsmith",
     embeddings: "embeddings",
     example_selectors: "example_selectors/index",
     indexing: "indexing/index",

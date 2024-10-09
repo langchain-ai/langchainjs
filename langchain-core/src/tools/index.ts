@@ -46,6 +46,25 @@ export interface ToolParams extends BaseLangChainParams {
    * @default "content"
    */
   responseFormat?: ResponseFormat;
+  /**
+   * Whether to show full details in the thrown parsing errors.
+   *
+   * @default false
+   */
+  verboseParsingErrors?: boolean;
+}
+
+/**
+ * Schema for defining tools.
+ *
+ * @version 0.2.19
+ */
+export interface StructuredToolParams
+  extends Pick<StructuredToolInterface, "name" | "schema"> {
+  /**
+   * An optional description of the tool to pass to the model.
+   */
+  description?: string;
 }
 
 export interface StructuredToolInterface<T extends ZodObjectAny = ZodObjectAny>
@@ -55,6 +74,9 @@ export interface StructuredToolInterface<T extends ZodObjectAny = ZodObjectAny>
   > {
   lc_namespace: string[];
 
+  /**
+   * A Zod schema representing the parameters of the tool.
+   */
   schema: T | z.ZodEffects<T>;
 
   /**
@@ -75,8 +97,14 @@ export interface StructuredToolInterface<T extends ZodObjectAny = ZodObjectAny>
     tags?: string[]
   ): Promise<ToolReturnType>;
 
+  /**
+   * The name of the tool.
+   */
   name: string;
 
+  /**
+   * A description of the tool.
+   */
   description: string;
 
   returnDirect: boolean;
@@ -99,6 +127,9 @@ export abstract class StructuredTool<
 
   returnDirect = false;
 
+  // TODO: Make default in 0.3
+  verboseParsingErrors = false;
+
   get lc_namespace() {
     return ["langchain", "tools"];
   }
@@ -117,6 +148,8 @@ export abstract class StructuredTool<
   constructor(fields?: ToolParams) {
     super(fields ?? {});
 
+    this.verboseParsingErrors =
+      fields?.verboseParsingErrors ?? this.verboseParsingErrors;
     this.responseFormat = fields?.responseFormat ?? this.responseFormat;
   }
 
@@ -183,11 +216,13 @@ export abstract class StructuredTool<
     let parsed;
     try {
       parsed = await this.schema.parseAsync(arg);
-    } catch (e) {
-      throw new ToolInputParsingException(
-        `Received tool input did not match expected schema`,
-        JSON.stringify(arg)
-      );
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (e: any) {
+      let message = `Received tool input did not match expected schema`;
+      if (this.verboseParsingErrors) {
+        message = `${message}\nDetails: ${e.message}`;
+      }
+      throw new ToolInputParsingException(message, JSON.stringify(arg));
     }
 
     const config = parseCallbackConfigArg(configArg);
@@ -413,7 +448,7 @@ export class DynamicStructuredTool<
     this.func = fields.func;
     this.returnDirect = fields.returnDirect ?? this.returnDirect;
     this.schema = (
-      isZodSchema(fields.schema) ? fields.schema : z.object({})
+      isZodSchema(fields.schema) ? fields.schema : z.object({}).passthrough()
     ) as T extends ZodObjectAny ? T : ZodObjectAny;
   }
 
@@ -540,7 +575,11 @@ export function tool<
   | DynamicStructuredTool<T extends ZodObjectAny ? T : ZodObjectAny>
   | DynamicTool {
   // If the schema is not provided, or it's a string schema, create a DynamicTool
-  if (!fields.schema || !("shape" in fields.schema) || !fields.schema.shape) {
+  if (
+    !fields.schema ||
+    (isZodSchema(fields.schema) &&
+      (!("shape" in fields.schema) || !fields.schema.shape))
+  ) {
     return new DynamicTool({
       ...fields,
       description:
@@ -567,7 +606,7 @@ export function tool<
         const childConfig = patchConfig(config, {
           callbacks: runManager?.getChild(),
         });
-        void AsyncLocalStorageProviderSingleton.getInstance().run(
+        void AsyncLocalStorageProviderSingleton.runWithConfig(
           childConfig,
           async () => {
             try {

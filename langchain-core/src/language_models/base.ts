@@ -260,7 +260,7 @@ export type StructuredOutputType = z.infer<z.ZodObject<any, any, any, any>>;
 export type StructuredOutputMethodOptions<IncludeRaw extends boolean = false> =
   {
     name?: string;
-    method?: "functionCalling" | "jsonMode";
+    method?: "functionCalling" | "jsonMode" | "jsonSchema" | string;
     includeRaw?: IncludeRaw;
   };
 
@@ -363,13 +363,14 @@ export abstract class BaseLanguageModel<
     callbackManager,
     ...params
   }: BaseLanguageModelParams) {
+    const { cache, ...rest } = params;
     super({
       callbacks: callbacks ?? callbackManager,
-      ...params,
+      ...rest,
     });
-    if (typeof params.cache === "object") {
-      this.cache = params.cache;
-    } else if (params.cache) {
+    if (typeof cache === "object") {
+      this.cache = cache;
+    } else if (cache) {
       this.cache = InMemoryCache.global();
     } else {
       this.cache = undefined;

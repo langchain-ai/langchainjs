@@ -8,6 +8,7 @@ import {
   HumanMessage,
   coerceMessageLikeToMessage,
   AIMessageChunk,
+  isAIMessageChunk,
 } from "../messages/index.js";
 import type { BasePromptValueInterface } from "../prompt_values.js";
 import {
@@ -20,8 +21,8 @@ import {
 } from "../outputs.js";
 import {
   BaseLanguageModel,
-  StructuredOutputMethodOptions,
-  ToolDefinition,
+  type StructuredOutputMethodOptions,
+  type ToolDefinition,
   type BaseLanguageModelCallOptions,
   type BaseLanguageModelInput,
   type BaseLanguageModelParams,
@@ -33,7 +34,10 @@ import {
 } from "../callbacks/manager.js";
 import type { RunnableConfig } from "../runnables/config.js";
 import type { BaseCache } from "../caches/base.js";
-import { StructuredToolInterface } from "../tools/index.js";
+import {
+  StructuredToolInterface,
+  StructuredToolParams,
+} from "../tools/index.js";
 import {
   Runnable,
   RunnableLambda,
@@ -123,6 +127,14 @@ export type LangSmithParams = {
   ls_stop?: Array<string>;
 };
 
+export type BindToolsInput =
+  | StructuredToolInterface
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  | Record<string, any>
+  | ToolDefinition
+  | RunnableToolLike
+  | StructuredToolParams;
+
 /**
  * Base class for chat models. It extends the BaseLanguageModel class and
  * provides methods for generating chat based on input messages.
@@ -130,7 +142,7 @@ export type LangSmithParams = {
 export abstract class BaseChatModel<
   CallOptions extends BaseChatModelCallOptions = BaseChatModelCallOptions,
   // TODO: Fix the parameter order on the next minor version.
-  OutputMessageType extends BaseMessageChunk = BaseMessageChunk
+  OutputMessageType extends BaseMessageChunk = AIMessageChunk
 > extends BaseLanguageModel<OutputMessageType, CallOptions> {
   // Backwards compatibility since fields have been moved to RunnableConfig
   declare ParsedCallOptions: Omit<
@@ -168,12 +180,7 @@ export abstract class BaseChatModel<
    * @param kwargs Any additional parameters to bind.
    */
   bindTools?(
-    tools: (
-      | StructuredToolInterface
-      | Record<string, unknown>
-      | ToolDefinition
-      | RunnableToolLike
-    )[],
+    tools: BindToolsInput[],
     kwargs?: Partial<CallOptions>
   ): Runnable<BaseLanguageModelInput, OutputMessageType, CallOptions>;
 
@@ -252,12 +259,18 @@ export abstract class BaseChatModel<
         runnableConfig.runName
       );
       let generationChunk: ChatGenerationChunk | undefined;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let llmOutput: Record<string, any> | undefined;
       try {
         for await (const chunk of this._streamResponseChunks(
           messages,
           callOptions,
           runManagers?.[0]
         )) {
+          if (chunk.message.id == null) {
+            const runId = runManagers?.at(0)?.runId;
+            if (runId != null) chunk.message._updateId(`run-${runId}`);
+          }
           chunk.message.response_metadata = {
             ...chunk.generationInfo,
             ...chunk.message.response_metadata,
@@ -267,6 +280,18 @@ export abstract class BaseChatModel<
             generationChunk = chunk;
           } else {
             generationChunk = generationChunk.concat(chunk);
+          }
+          if (
+            isAIMessageChunk(chunk.message) &&
+            chunk.message.usage_metadata !== undefined
+          ) {
+            llmOutput = {
+              tokenUsage: {
+                promptTokens: chunk.message.usage_metadata.input_tokens,
+                completionTokens: chunk.message.usage_metadata.output_tokens,
+                totalTokens: chunk.message.usage_metadata.total_tokens,
+              },
+            };
           }
         }
       } catch (err) {
@@ -282,6 +307,7 @@ export abstract class BaseChatModel<
           runManager?.handleLLMEnd({
             // TODO: Remove cast after figuring out inheritance
             generations: [[generationChunk as ChatGeneration]],
+            llmOutput,
           })
         )
       );
@@ -355,11 +381,29 @@ export abstract class BaseChatModel<
           runManagers?.[0]
         );
         let aggregated;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        let llmOutput: Record<string, any> | undefined;
         for await (const chunk of stream) {
+          if (chunk.message.id == null) {
+            const runId = runManagers?.at(0)?.runId;
+            if (runId != null) chunk.message._updateId(`run-${runId}`);
+          }
           if (aggregated === undefined) {
             aggregated = chunk;
           } else {
             aggregated = concat(aggregated, chunk);
+          }
+          if (
+            isAIMessageChunk(chunk.message) &&
+            chunk.message.usage_metadata !== undefined
+          ) {
+            llmOutput = {
+              tokenUsage: {
+                promptTokens: chunk.message.usage_metadata.input_tokens,
+                completionTokens: chunk.message.usage_metadata.output_tokens,
+                totalTokens: chunk.message.usage_metadata.total_tokens,
+              },
+            };
           }
         }
         if (aggregated === undefined) {
@@ -368,7 +412,7 @@ export abstract class BaseChatModel<
         generations.push([aggregated]);
         await runManagers?.[0].handleLLMEnd({
           generations,
-          llmOutput: {},
+          llmOutput,
         });
       } catch (e) {
         await runManagers?.[0].handleLLMError(e);
@@ -391,6 +435,10 @@ export abstract class BaseChatModel<
           if (pResult.status === "fulfilled") {
             const result = pResult.value;
             for (const generation of result.generations) {
+              if (generation.message.id == null) {
+                const runId = runManagers?.at(0)?.runId;
+                if (runId != null) generation.message._updateId(`run-${runId}`);
+              }
               generation.message.response_metadata = {
                 ...generation.generationInfo,
                 ...generation.message.response_metadata,

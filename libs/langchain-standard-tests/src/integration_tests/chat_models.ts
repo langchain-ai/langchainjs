@@ -12,7 +12,11 @@ import {
   getBufferString,
 } from "@langchain/core/messages";
 import { z } from "zod";
-import { StructuredTool, tool } from "@langchain/core/tools";
+import {
+  StructuredTool,
+  StructuredToolParams,
+  tool,
+} from "@langchain/core/tools";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { RunnableLambda } from "@langchain/core/runnables";
@@ -1482,6 +1486,114 @@ Extraction path: {extractionPath}`,
   }
 
   /**
+   * Tests the chat model's ability to accept and use a StructuredToolParams schema.
+   * This schema contains the same fields as `StructuredToolInterface`, but does not
+   * require a function to be passed when the tool is created.
+   *
+   * This test verifies that the model can:
+   * 1. Correctly bind a tool defined using StructuredToolParams
+   * 2. Process a prompt that should trigger the use of the bound tool
+   * 3. Generate a response that includes appropriate tool calls
+   *
+   * The test uses a simple weather tool to simulate a scenario where the model
+   * needs to make a tool call to retrieve weather information.
+   *
+   * It ensures that the model can correctly interpret the tool's schema,
+   * make the appropriate tool call, and include the required arguments.
+   *
+   * @param {any | undefined} callOptions Optional call options to pass to the model.
+   *  These options will be applied to the model at runtime.
+   */
+  async testModelCanAcceptStructuredToolParamsSchema(callOptions?: any) {
+    // Skip the test if the model doesn't support tool calling
+    if (!this.chatModelHasToolCalling) {
+      console.log("Test requires tool calling. Skipping...");
+      return;
+    }
+
+    const model = new this.Cls(this.constructorArgs);
+    if (!model.bindTools) {
+      throw new Error(
+        "bindTools undefined. Cannot test OpenAI formatted tool calls."
+      );
+    }
+
+    const tool: StructuredToolParams = {
+      name: "get_current_weather",
+      description: "Get the current weather in a given location",
+      schema: z.object({
+        location: z.string().describe("The city name, e.g. San Francisco"),
+      }),
+    };
+    const modelWithTools = model.bindTools([tool]);
+
+    const prompt = "What's the weather like in San Francisco today?";
+    const result: AIMessage = await modelWithTools.invoke(prompt, callOptions);
+
+    // Expect at least one tool call, allow multiple.
+    expect(result.tool_calls?.length).toBeGreaterThanOrEqual(1);
+
+    expect(result.tool_calls?.[0].name).toBe(tool.name);
+    expect(result.tool_calls?.[0].args).toHaveProperty("location");
+  }
+
+  /**
+   * Tests the chat model's ability to stream responses while using tools.
+   * This test verifies that the model can:
+   * 1. Correctly bind a tool defined using StructuredToolParams
+   * 2. Stream a response for a prompt that should trigger the use of the bound tool
+   * 3. Generate a streamed response that includes appropriate tool calls
+   *
+   * The test uses a simple weather tool to simulate a scenario where the model
+   * needs to make a tool call to retrieve weather information in a streaming context.
+   *
+   * It ensures that the model can correctly interpret the tool's schema,
+   * make the appropriate tool call, and include the required arguments
+   * while streaming the response.
+   *
+   * @param {any | undefined} callOptions Optional call options to pass to the model.
+   *  These options will be applied to the model at runtime.
+   */
+  async testStreamTools(callOptions?: any) {
+    // Skip the test if the model doesn't support tool calling
+    if (!this.chatModelHasToolCalling) {
+      console.log("Test requires tool calling. Skipping...");
+      return;
+    }
+
+    const model = new this.Cls(this.constructorArgs);
+    if (!model.bindTools) {
+      throw new Error(
+        "bindTools undefined. Cannot test OpenAI formatted tool calls."
+      );
+    }
+
+    const tool: StructuredToolParams = {
+      name: "get_current_weather",
+      description: "Get the current weather in a given location",
+      schema: z.object({
+        location: z.string().describe("The city name, e.g. San Francisco"),
+      }),
+    };
+    const modelWithTools = model.bindTools([tool]);
+
+    const prompt = "What's the weather like in San Francisco today?";
+    const stream = await modelWithTools.stream(prompt, callOptions);
+    let full: AIMessageChunk | undefined;
+    for await (const chunk of stream) {
+      full = !full ? chunk : concat(full, chunk);
+    }
+    expect(full).toBeDefined();
+    if (!full) return;
+
+    // Expect at least one tool call, allow multiple.
+    expect(full.tool_calls?.length).toBeGreaterThanOrEqual(1);
+
+    expect(full.tool_calls?.[0].name).toBe(tool.name);
+    expect(full.tool_calls?.[0].args).toHaveProperty("location");
+  }
+
+  /**
    * Run all unit tests for the chat model.
    * Each test is wrapped in a try/catch block to prevent the entire test suite from failing.
    * If a test fails, the error is logged to the console, and the test suite continues.
@@ -1624,6 +1736,23 @@ Extraction path: {extractionPath}`,
     } catch (e: any) {
       allTestsPassed = false;
       console.error("testParallelToolCalling failed", e.message);
+    }
+
+    try {
+      await this.testModelCanAcceptStructuredToolParamsSchema();
+    } catch (e: any) {
+      allTestsPassed = false;
+      console.error(
+        "testModelCanAcceptStructuredToolParamsSchema failed",
+        e.message
+      );
+    }
+
+    try {
+      await this.testStreamTools();
+    } catch (e: any) {
+      allTestsPassed = false;
+      console.error("testStreamTools failed", e.message);
     }
 
     return allTestsPassed;

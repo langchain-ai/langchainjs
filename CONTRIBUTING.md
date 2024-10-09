@@ -25,7 +25,7 @@ LangChain supports several different types of integrations with third-party prov
 
 We welcome such contributions, but ask that you read our dedicated [integration contribution guide](https://github.com/langchain-ai/langchainjs/blob/main/.github/contributing/INTEGRATIONS.md) for specific details and patterns to consider before opening a pull request.
 
-You can also check out the [guides on extending LangChain.js](https://js.langchain.com/v0.2/docs/how_to/#custom) in our docs.
+You can also check out the [guides on extending LangChain.js](https://js.langchain.com/docs/how_to/#custom) in our docs.
 
 #### Integration packages
 
@@ -105,9 +105,9 @@ You can invoke the script by calling `yarn release`. If new dependencies have be
 
 There are three parameters which can be passed to this script, one required and two optional.
 
-- __Required__: `<workspace name>`. eg: `@langchain/core` The name of the package to release. Can be found in the `name` value of the package's `package.json`
-- __Optional__: `--bump-deps` eg `--bump-deps` Will find all packages in the repo which depend on this workspace and checkout a new branch, update the dep version, run yarn install, commit & push to new branch. Generally, this is not necessary.
-- __Optional__: `--tag <tag>` eg `--tag beta` Add a tag to the NPM release. Useful if you want to push a release candidate.
+- **Required**: `<workspace name>`. eg: `@langchain/core` The name of the package to release. Can be found in the `name` value of the package's `package.json`
+- **Optional**: `--bump-deps` eg `--bump-deps` Will find all packages in the repo which depend on this workspace and checkout a new branch, update the dep version, run yarn install, commit & push to new branch. Generally, this is not necessary.
+- **Optional**: `--tag <tag>` eg `--tag beta` Add a tag to the NPM release. Useful if you want to push a release candidate.
 
 This script automatically bumps the package version, creates a new release branch with the changes, pushes the branch to GitHub, uses `release-it` to automatically release to NPM, and more depending on the flags passed.
 
@@ -322,6 +322,10 @@ For that reason, we ask that you add good documentation to all classes and metho
 Similar to linting, we recognize documentation can be annoying. If you do not want to do it, please contact a project maintainer, and they can help you with it. We do not want this to be a blocker for good code getting contributed.
 
 Documentation and the skeleton lives under the `docs/` folder. Example code is imported from under the `examples/` folder.
+
+**If you are contributing an integration, please copy and use the appropriate template from here:**
+
+https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-scripts/src/cli/docs/templates
 
 ### Running examples
 

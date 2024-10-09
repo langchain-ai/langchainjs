@@ -143,6 +143,10 @@ export function isAIMessage(x: BaseMessage): x is AIMessage {
   return x._getType() === "ai";
 }
 
+export function isAIMessageChunk(x: BaseMessageChunk): x is AIMessageChunk {
+  return x._getType() === "ai";
+}
+
 export type AIMessageChunkFields = AIMessageFields & {
   tool_call_chunks?: ToolCallChunk[];
 };
@@ -188,8 +192,12 @@ export class AIMessageChunk extends BaseMessageChunk {
       for (const toolCallChunk of fields.tool_call_chunks) {
         let parsedArgs = {};
         try {
-          parsedArgs = parsePartialJson(toolCallChunk.args ?? "{}") ?? {};
-          if (typeof parsedArgs !== "object" || Array.isArray(parsedArgs)) {
+          parsedArgs = parsePartialJson(toolCallChunk.args || "{}");
+          if (
+            parsedArgs === null ||
+            typeof parsedArgs !== "object" ||
+            Array.isArray(parsedArgs)
+          ) {
             throw new Error("Malformed tool call chunk args.");
           }
           toolCalls.push({

@@ -41,10 +41,152 @@ export interface PGVectorStoreArgs {
 }
 
 /**
- * Class that provides an interface to a Postgres vector database. It
- * extends the `VectorStore` base class and implements methods for adding
- * documents and vectors, performing similarity searches, and ensuring the
- * existence of a table in the database.
+ * PGVector vector store integration.
+ *
+ * Setup:
+ * Install `@langchain/community` and `pg`.
+ *
+ * If you wish to generate ids, you should also install the `uuid` package.
+ *
+ * ```bash
+ * npm install @langchain/community pg uuid
+ * ```
+ *
+ * ## [Constructor args](https://api.js.langchain.com/classes/_langchain_community.vectorstores_pgvector.PGVectorStore.html#constructor)
+ *
+ * <details open>
+ * <summary><strong>Instantiate</strong></summary>
+ *
+ * ```typescript
+ * import {
+ *   PGVectorStore,
+ *   DistanceStrategy,
+ * } from "@langchain/community/vectorstores/pgvector";
+ *
+ * // Or other embeddings
+ * import { OpenAIEmbeddings } from "@langchain/openai";
+ * import { PoolConfig } from "pg";
+ *
+ * const embeddings = new OpenAIEmbeddings({
+ *   model: "text-embedding-3-small",
+ * });
+ *
+ * // Sample config
+ * const config = {
+ *   postgresConnectionOptions: {
+ *     type: "postgres",
+ *     host: "127.0.0.1",
+ *     port: 5433,
+ *     user: "myuser",
+ *     password: "ChangeMe",
+ *     database: "api",
+ *   } as PoolConfig,
+ *   tableName: "testlangchainjs",
+ *   columns: {
+ *     idColumnName: "id",
+ *     vectorColumnName: "vector",
+ *     contentColumnName: "content",
+ *     metadataColumnName: "metadata",
+ *   },
+ *   // supported distance strategies: cosine (default), innerProduct, or euclidean
+ *   distanceStrategy: "cosine" as DistanceStrategy,
+ * };
+ *
+ * const vectorStore = await PGVectorStore.initialize(embeddings, config);
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Add documents</strong></summary>
+ *
+ * ```typescript
+ * import type { Document } from '@langchain/core/documents';
+ *
+ * const document1 = { pageContent: "foo", metadata: { baz: "bar" } };
+ * const document2 = { pageContent: "thud", metadata: { bar: "baz" } };
+ * const document3 = { pageContent: "i will be deleted :(", metadata: {} };
+ *
+ * const documents: Document[] = [document1, document2, document3];
+ * const ids = ["1", "2", "3"];
+ * await vectorStore.addDocuments(documents, { ids });
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Delete documents</strong></summary>
+ *
+ * ```typescript
+ * await vectorStore.delete({ ids: ["3"] });
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Similarity search</strong></summary>
+ *
+ * ```typescript
+ * const results = await vectorStore.similaritySearch("thud", 1);
+ * for (const doc of results) {
+ *   console.log(`* ${doc.pageContent} [${JSON.stringify(doc.metadata, null)}]`);
+ * }
+ * // Output: * thud [{"baz":"bar"}]
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ *
+ * <details>
+ * <summary><strong>Similarity search with filter</strong></summary>
+ *
+ * ```typescript
+ * const resultsWithFilter = await vectorStore.similaritySearch("thud", 1, { baz: "bar" });
+ *
+ * for (const doc of resultsWithFilter) {
+ *   console.log(`* ${doc.pageContent} [${JSON.stringify(doc.metadata, null)}]`);
+ * }
+ * // Output: * foo [{"baz":"bar"}]
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ *
+ * <details>
+ * <summary><strong>Similarity search with score</strong></summary>
+ *
+ * ```typescript
+ * const resultsWithScore = await vectorStore.similaritySearchWithScore("qux", 1);
+ * for (const [doc, score] of resultsWithScore) {
+ *   console.log(`* [SIM=${score.toFixed(6)}] ${doc.pageContent} [${JSON.stringify(doc.metadata, null)}]`);
+ * }
+ * // Output: * [SIM=0.000000] qux [{"bar":"baz","baz":"bar"}]
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>As a retriever</strong></summary>
+ *
+ * ```typescript
+ * const retriever = vectorStore.asRetriever({
+ *   searchType: "mmr", // Leave blank for standard similarity search
+ *   k: 1,
+ * });
+ * const resultAsRetriever = await retriever.invoke("thud");
+ * console.log(resultAsRetriever);
+ *
+ * // Output: [Document({ metadata: { "baz":"bar" }, pageContent: "thud" })]
+ * ```
+ * </details>
+ *
+ * <br />
  */
 export class PGVectorStore extends VectorStore {
   declare FilterType: Metadata;
@@ -163,17 +305,19 @@ export class PGVectorStore extends VectorStore {
    * `connect` to return a new instance of `PGVectorStore`.
    *
    * @param embeddings - Embeddings instance.
-   * @param fields - `PGVectorStoreArgs` instance.
+   * @param fields - `PGVectorStoreArgs` instance
+   * @param fields.dimensions Number of dimensions in your vector data type. For example, use 1536 for OpenAI's `text-embedding-3-small`. If not set, indexes like HNSW might not be used during query time.
    * @returns A new instance of `PGVectorStore`.
    */
   static async initialize(
     embeddings: EmbeddingsInterface,
-    config: PGVectorStoreArgs
+    config: PGVectorStoreArgs & { dimensions?: number }
   ): Promise<PGVectorStore> {
-    const postgresqlVectorStore = new PGVectorStore(embeddings, config);
+    const { dimensions, ...rest } = config;
+    const postgresqlVectorStore = new PGVectorStore(embeddings, rest);
 
     await postgresqlVectorStore._initializeClient();
-    await postgresqlVectorStore.ensureTableInDatabase();
+    await postgresqlVectorStore.ensureTableInDatabase(dimensions);
     if (postgresqlVectorStore.collectionTableName) {
       await postgresqlVectorStore.ensureCollectionTableInDatabase();
     }
@@ -552,10 +696,10 @@ export class PGVectorStore extends VectorStore {
   /**
    * Method to ensure the existence of the table in the database. It creates
    * the table if it does not already exist.
-   *
+   * @param dimensions Number of dimensions in your vector data type. For example, use 1536 for OpenAI's `text-embedding-3-small`. If not set, indexes like HNSW might not be used during query time.
    * @returns Promise that resolves when the table has been ensured.
    */
-  async ensureTableInDatabase(): Promise<void> {
+  async ensureTableInDatabase(dimensions?: number): Promise<void> {
     const vectorQuery =
       this.extensionSchemaName == null
         ? "CREATE EXTENSION IF NOT EXISTS vector;"
@@ -568,12 +712,15 @@ export class PGVectorStore extends VectorStore {
       this.extensionSchemaName == null
         ? "vector"
         : `"${this.extensionSchemaName}"."vector"`;
+    const vectorColumnType = dimensions
+      ? `${extensionName}(${dimensions})`
+      : extensionName;
     const tableQuery = `
       CREATE TABLE IF NOT EXISTS ${this.computedTableName} (
         "${this.idColumnName}" uuid NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY,
         "${this.contentColumnName}" text,
         "${this.metadataColumnName}" jsonb,
-        "${this.vectorColumnName}" ${extensionName}
+        "${this.vectorColumnName}" ${vectorColumnType}
       );
     `;
     await this.pool.query(vectorQuery);
@@ -633,7 +780,7 @@ export class PGVectorStore extends VectorStore {
     texts: string[],
     metadatas: object[] | object,
     embeddings: EmbeddingsInterface,
-    dbConfig: PGVectorStoreArgs
+    dbConfig: PGVectorStoreArgs & { dimensions?: number }
   ): Promise<PGVectorStore> {
     const docs = [];
     for (let i = 0; i < texts.length; i += 1) {
@@ -660,7 +807,7 @@ export class PGVectorStore extends VectorStore {
   static async fromDocuments(
     docs: Document[],
     embeddings: EmbeddingsInterface,
-    dbConfig: PGVectorStoreArgs
+    dbConfig: PGVectorStoreArgs & { dimensions?: number }
   ): Promise<PGVectorStore> {
     const instance = await PGVectorStore.initialize(embeddings, dbConfig);
     await instance.addDocuments(docs, { ids: dbConfig.ids });

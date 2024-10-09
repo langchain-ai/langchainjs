@@ -57,7 +57,7 @@ import IntegrationInstallTooltip from "@mdx_components/integration_install_toolt
 <IntegrationInstallTooltip></IntegrationInstallTooltip>
 
 ```bash npm2yarn
-npm install @langchain/openai
+npm install @langchain/openai @langchain/core
 ```
 
 See a [usage example](/docs/integrations/llms/azure).
@@ -91,7 +91,7 @@ import AzureOpenAIEmbeddings from "@examples/models/embeddings/azure_openai.ts";
 <IntegrationInstallTooltip></IntegrationInstallTooltip>
 
 ```bash npm2yarn
-npm install -S @langchain/community @azure/search-documents
+npm install -S @langchain/community @langchain/core @azure/search-documents
 ```
 
 See a [usage example](/docs/integrations/vectorstores/azure_aisearch).
@@ -100,20 +100,36 @@ See a [usage example](/docs/integrations/vectorstores/azure_aisearch).
 import { AzureAISearchVectorStore } from "@langchain/community/vectorstores/azure_aisearch";
 ```
 
-### Azure Cosmos DB for MongoDB vCore
+### Azure Cosmos DB for NoSQL
 
-> [Azure Cosmos DB for MongoDB vCore](https://learn.microsoft.com/en-us/azure/cosmos-db/mongodb/vcore/) makes it easy to create a database with full native MongoDB support. You can apply your MongoDB experience and continue to use your favorite MongoDB drivers, SDKs, and tools by pointing your application to the API for MongoDB vCore account’s connection string. Use vector search in Azure Cosmos DB for MongoDB vCore to seamlessly integrate your AI-based applications with your data that’s stored in Azure Cosmos DB.
+> [Azure Cosmos DB for NoSQL](https://learn.microsoft.com/azure/cosmos-db/nosql/) provides support for querying items with flexible schemas and native support for JSON. It now offers vector indexing and search. This feature is designed to handle high-dimensional vectors, enabling efficient and accurate vector search at any scale. You can now store vectors directly in the documents alongside your data. Each document in your database can contain not only traditional schema-free data, but also high-dimensional vectors as other properties of the documents.
 
 <IntegrationInstallTooltip></IntegrationInstallTooltip>
 
 ```bash npm2yarn
-npm install @langchain/community mongodb
+npm install @langchain/azure-cosmosdb @langchain/core
 ```
 
-See a [usage example](/docs/integrations/vectorstores/azure_cosmosdb).
+See a [usage example](/docs/integrations/vectorstores/azure_cosmosdb_nosql).
 
 ```typescript
-import { AzureCosmosDBVectorStore } from "@langchain/community/vectorstores/azure_cosmosdb";
+import { AzureCosmosDBNoSQLVectorStore } from "@langchain/azure-cosmosdb";
+```
+
+### Azure Cosmos DB for MongoDB vCore
+
+> [Azure Cosmos DB for MongoDB vCore](https://learn.microsoft.com/azure/cosmos-db/mongodb/vcore/) makes it easy to create a database with full native MongoDB support. You can apply your MongoDB experience and continue to use your favorite MongoDB drivers, SDKs, and tools by pointing your application to the API for MongoDB vCore account’s connection string. Use vector search in Azure Cosmos DB for MongoDB vCore to seamlessly integrate your AI-based applications with your data that’s stored in Azure Cosmos DB.
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/azure-cosmosdb @langchain/core
+```
+
+See a [usage example](/docs/integrations/vectorstores/azure_cosmosdb_mongodb).
+
+```typescript
+import { AzureCosmosDBMongoDBVectorStore } from "@langchain/azure-cosmosdb";
 ```
 
 ## Document loaders
@@ -138,7 +154,7 @@ import { AzureCosmosDBVectorStore } from "@langchain/community/vectorstores/azur
 <IntegrationInstallTooltip></IntegrationInstallTooltip>
 
 ```bash npm2yarn
-npm install @langchain/community @azure/storage-blob
+npm install @langchain/community @langchain/core @azure/storage-blob
 ```
 
 See a [usage example for the Azure Blob Storage](/docs/integrations/document_loaders/web_loaders/azure_blob_storage_container).
@@ -162,7 +178,7 @@ import { AzureBlobStorageFileLoader } from "@langchain/community/document_loader
 <IntegrationInstallTooltip></IntegrationInstallTooltip>
 
 ```bash npm2yarn
-npm install @langchain/azure-dynamic-sessions
+npm install @langchain/azure-dynamic-sessions @langchain/core
 ```
 
 See a [usage example](/docs/integrations/tools/azure_dynamic_sessions).

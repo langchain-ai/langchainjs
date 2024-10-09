@@ -12,7 +12,6 @@
 import "./entrypoints.js";
 
 // Import a few things we'll use to test the exports
-import { LLMChain } from "langchain/chains";
 import { ChatOpenAI } from "@langchain/openai";
 import {
   ChatPromptTemplate,
@@ -20,7 +19,8 @@ import {
 } from "@langchain/core/prompts";
 import { OpenAI } from "@langchain/openai";
 import { OpenAIEmbeddings } from "@langchain/openai";
-import { HNLoader } from "@langchain/community/document_loaders/web/hn";
+import { StringOutputParser } from "@langchain/core/output_parsers";
+import { MemoryVectorStore } from "langchain/vectorstores/memory";
 
 export interface Env {
   OPENAI_API_KEY?: string;
@@ -51,18 +51,13 @@ export default {
     new OpenAI(constructorParameters);
     const emb = new OpenAIEmbeddings(constructorParameters);
 
-    // Test a document loader
-    new HNLoader("https://news.ycombinator.com/item?id=28275939");
-
     // Test a chain + prompt + model
-    const chain = new LLMChain({
-      llm: new ChatOpenAI(constructorParameters),
-      prompt: ChatPromptTemplate.fromMessages([
-        HumanMessagePromptTemplate.fromTemplate("{input}"),
-      ]),
-    });
-    const res = await chain.run("hello");
-
+    const prompt = ChatPromptTemplate.fromMessages([
+      HumanMessagePromptTemplate.fromTemplate("{input}"),
+    ]);
+    const llm = new ChatOpenAI(constructorParameters);
+    const chain = prompt.pipe(llm).pipe(new StringOutputParser());
+    const res = await chain.invoke("hello");
     return new Response(
       `Hello, from Cloudflare Worker at ${request.url}. Assistant says: ${res}`
     );

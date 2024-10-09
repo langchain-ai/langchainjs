@@ -1,4 +1,5 @@
 import { test } from "@jest/globals";
+import fs from "fs/promises";
 import { BaseLanguageModelInput } from "@langchain/core/language_models/base";
 import { ChatPromptValue } from "@langchain/core/prompt_values";
 import {
@@ -8,12 +9,31 @@ import {
   BaseMessageChunk,
   BaseMessageLike,
   HumanMessage,
+  HumanMessageChunk,
+  MessageContentComplex,
   SystemMessage,
   ToolMessage,
 } from "@langchain/core/messages";
+import {
+  BlobStoreGoogleCloudStorage,
+  ChatGoogle,
+} from "@langchain/google-gauth";
 import { tool } from "@langchain/core/tools";
 import { z } from "zod";
 import { concat } from "@langchain/core/utils/stream";
+import {
+  BackedBlobStore,
+  MediaBlob,
+  MediaManager,
+  ReadThroughBlobStore,
+  SimpleWebBlobStore,
+} from "@langchain/google-common/experimental/utils/media_core";
+import { GoogleCloudStorageUri } from "@langchain/google-common/experimental/media";
+import {
+  ChatPromptTemplate,
+  MessagesPlaceholder,
+} from "@langchain/core/prompts";
+import { InMemoryStore } from "@langchain/core/stores";
 import { GeminiTool } from "../types.js";
 import { ChatVertexAI } from "../chat_models.js";
 
@@ -191,6 +211,74 @@ describe("GAuth Chat", () => {
     const result = await model.invoke("What is the weather in Paris?");
     expect(result).toHaveProperty("location");
   });
+
+  test("media - fileData", async () => {
+    class MemStore extends InMemoryStore<MediaBlob> {
+      get length() {
+        return Object.keys(this.store).length;
+      }
+    }
+    const aliasMemory = new MemStore();
+    const aliasStore = new BackedBlobStore({
+      backingStore: aliasMemory,
+      defaultFetchOptions: {
+        actionIfBlobMissing: undefined,
+      },
+    });
+    const canonicalStore = new BlobStoreGoogleCloudStorage({
+      uriPrefix: new GoogleCloudStorageUri("gs://test-langchainjs/mediatest/"),
+      defaultStoreOptions: {
+        actionIfInvalid: "prefixPath",
+      },
+    });
+    const blobStore = new ReadThroughBlobStore({
+      baseStore: aliasStore,
+      backingStore: canonicalStore,
+    });
+    const resolver = new SimpleWebBlobStore();
+    const mediaManager = new MediaManager({
+      store: blobStore,
+      resolvers: [resolver],
+    });
+    const model = new ChatGoogle({
+      modelName: "gemini-1.5-flash",
+      mediaManager,
+    });
+
+    const message: MessageContentComplex[] = [
+      {
+        type: "text",
+        text: "What is in this image?",
+      },
+      {
+        type: "media",
+        fileUri: "https://js.langchain.com/img/brand/wordmark.png",
+      },
+    ];
+
+    const messages: BaseMessage[] = [
+      new HumanMessageChunk({ content: message }),
+    ];
+
+    try {
+      const res = await model.invoke(messages);
+
+      console.log(res);
+
+      expect(res).toBeDefined();
+      expect(res._getType()).toEqual("ai");
+
+      const aiMessage = res as AIMessageChunk;
+      expect(aiMessage.content).toBeDefined();
+
+      expect(typeof aiMessage.content).toBe("string");
+      const text = aiMessage.content as string;
+      expect(text).toMatch(/LangChain/);
+    } catch (e) {
+      console.error(e);
+      throw e;
+    }
+  });
 });
 
 test("Stream token count usage_metadata", async () => {
@@ -351,4 +439,48 @@ test("ChatGoogleGenerativeAI can stream tools", async () => {
   expect(toolCalls.length).toBe(1);
   expect(toolCalls[0].name).toBe("current_weather_tool");
   expect(toolCalls[0].args).toHaveProperty("location");
+});
+
+async function fileToBase64(filePath: string): Promise<string> {
+  const fileData = await fs.readFile(filePath);
+  const base64String = Buffer.from(fileData).toString("base64");
+  return base64String;
+}
+
+test("Gemini can understand audio", async () => {
+  // Update this with the correct path to an audio file on your machine.
+  const audioPath = "../langchain-google-genai/src/tests/data/gettysburg10.wav";
+  const audioMimeType = "audio/wav";
+
+  const model = new ChatVertexAI({
+    model: "gemini-1.5-flash",
+    temperature: 0,
+    maxRetries: 0,
+  });
+
+  const audioBase64 = await fileToBase64(audioPath);
+
+  const prompt = ChatPromptTemplate.fromMessages([
+    new MessagesPlaceholder("audio"),
+  ]);
+
+  const chain = prompt.pipe(model);
+  const response = await chain.invoke({
+    audio: new HumanMessage({
+      content: [
+        {
+          type: "media",
+          mimeType: audioMimeType,
+          data: audioBase64,
+        },
+        {
+          type: "text",
+          text: "Summarize the content in this audio. ALso, what is the speaker's tone?",
+        },
+      ],
+    }),
+  });
+
+  expect(typeof response.content).toBe("string");
+  expect((response.content as string).length).toBeGreaterThan(15);
 });

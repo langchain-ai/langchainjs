@@ -11,7 +11,7 @@ The `GradientEmbeddings` class uses the Gradient AI API to generate embeddings f
 You'll need to install the official Gradient Node SDK as a peer dependency:
 
 ```bash npm2yarn
-npm i @gradientai/nodejs-sdk
+npm i @langchain/community @langchain/core @gradientai/nodejs-sdk
 ```
 
 You will need to set the following environment variables for using the Gradient AI API.
@@ -37,3 +37,8 @@ import CodeBlock from "@theme/CodeBlock";
 import GradientEmbeddingsExample from "@examples/embeddings/gradient_ai.ts";
 
 <CodeBlock language="typescript">{GradientEmbeddingsExample}</CodeBlock>
+
+## Related
+
+- Embedding model [conceptual guide](/docs/concepts/#embedding-models)
+- Embedding model [how-to guides](/docs/how_to/#embedding-models)

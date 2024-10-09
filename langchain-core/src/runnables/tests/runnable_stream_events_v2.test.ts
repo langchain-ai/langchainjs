@@ -4,6 +4,7 @@
 
 import { test, expect, afterEach } from "@jest/globals";
 import { z } from "zod";
+import { AsyncLocalStorage } from "node:async_hooks";
 import {
   RunnableLambda,
   RunnableMap,
@@ -28,8 +29,9 @@ import { DynamicStructuredTool, DynamicTool, tool } from "../../tools/index.js";
 import { Document } from "../../documents/document.js";
 import { PromptTemplate } from "../../prompts/prompt.js";
 import { GenerationChunk } from "../../outputs.js";
-// Import from web to avoid side-effects from AsyncLocalStorage
+// Import from web to avoid top-level side-effects from AsyncLocalStorage
 import { dispatchCustomEvent } from "../../callbacks/dispatch/web.js";
+import { AsyncLocalStorageProviderSingleton } from "../../singletons/index.js";
 
 function reverse(s: string) {
   // Reverse a string.
@@ -90,6 +92,10 @@ test("Runnable streamEvents method on a chat model", async () => {
   for await (const event of eventStream) {
     events.push(event);
   }
+
+  // used here to avoid casting every ID
+  const anyString = expect.any(String) as unknown as string;
+
   expect(events).toMatchObject([
     {
       data: { input: "hello" },
@@ -100,7 +106,7 @@ test("Runnable streamEvents method on a chat model", async () => {
       tags: [],
     },
     {
-      data: { chunk: new AIMessageChunk({ content: "a" }) },
+      data: { chunk: new AIMessageChunk({ id: anyString, content: "a" }) },
       event: "on_chat_model_stream",
       name: "FakeListChatModel",
       metadata: expect.any(Object),
@@ -108,7 +114,7 @@ test("Runnable streamEvents method on a chat model", async () => {
       tags: [],
     },
     {
-      data: { chunk: new AIMessageChunk({ content: "b" }) },
+      data: { chunk: new AIMessageChunk({ id: anyString, content: "b" }) },
       event: "on_chat_model_stream",
       name: "FakeListChatModel",
       metadata: expect.any(Object),
@@ -116,7 +122,7 @@ test("Runnable streamEvents method on a chat model", async () => {
       tags: [],
     },
     {
-      data: { chunk: new AIMessageChunk({ content: "c" }) },
+      data: { chunk: new AIMessageChunk({ id: anyString, content: "c" }) },
       event: "on_chat_model_stream",
       name: "FakeListChatModel",
       metadata: expect.any(Object),
@@ -124,7 +130,74 @@ test("Runnable streamEvents method on a chat model", async () => {
       tags: [],
     },
     {
-      data: { output: new AIMessageChunk({ content: "abc" }) },
+      data: { output: new AIMessageChunk({ id: anyString, content: "abc" }) },
+      event: "on_chat_model_end",
+      name: "FakeListChatModel",
+      metadata: expect.any(Object),
+      run_id: expect.any(String),
+      tags: [],
+    },
+  ]);
+});
+
+test("Runnable streamEvents call nested in another runnable + passed callbacks should still work", async () => {
+  AsyncLocalStorageProviderSingleton.initializeGlobalInstance(
+    new AsyncLocalStorage()
+  );
+
+  const model = new FakeListChatModel({
+    responses: ["abc"],
+  });
+
+  const events: any[] = [];
+  const container = RunnableLambda.from(async (_) => {
+    const eventStream = model.streamEvents("hello", { version: "v2" });
+    for await (const event of eventStream) {
+      events.push(event);
+    }
+    return events;
+  });
+
+  await container.invoke({}, { callbacks: [{ handleLLMStart: () => {} }] });
+
+  // used here to avoid casting every ID
+  const anyString = expect.any(String) as unknown as string;
+
+  expect(events).toMatchObject([
+    {
+      data: { input: "hello" },
+      event: "on_chat_model_start",
+      name: "FakeListChatModel",
+      metadata: expect.any(Object),
+      run_id: expect.any(String),
+      tags: [],
+    },
+    {
+      data: { chunk: new AIMessageChunk({ id: anyString, content: "a" }) },
+      event: "on_chat_model_stream",
+      name: "FakeListChatModel",
+      metadata: expect.any(Object),
+      run_id: expect.any(String),
+      tags: [],
+    },
+    {
+      data: { chunk: new AIMessageChunk({ id: anyString, content: "b" }) },
+      event: "on_chat_model_stream",
+      name: "FakeListChatModel",
+      metadata: expect.any(Object),
+      run_id: expect.any(String),
+      tags: [],
+    },
+    {
+      data: { chunk: new AIMessageChunk({ id: anyString, content: "c" }) },
+      event: "on_chat_model_stream",
+      name: "FakeListChatModel",
+      metadata: expect.any(Object),
+      run_id: expect.any(String),
+      tags: [],
+    },
+    {
+      data: { output: new AIMessageChunk({ id: anyString, content: "abc" }) },
       event: "on_chat_model_end",
       name: "FakeListChatModel",
       metadata: expect.any(Object),
@@ -748,6 +821,9 @@ test("Runnable streamEvents method with chat model chain", async () => {
   for await (const event of eventStream) {
     events.push(event);
   }
+
+  // used here to avoid casting every ID
+  const anyString = expect.any(String) as unknown as string;
   expect(events).toEqual([
     {
       run_id: expect.any(String),
@@ -816,7 +892,7 @@ test("Runnable streamEvents method with chat model chain", async () => {
         ls_stop: undefined,
       },
       name: "my_model",
-      data: { chunk: new AIMessageChunk("R") },
+      data: { chunk: new AIMessageChunk({ content: "R", id: anyString }) },
     },
     {
       event: "on_chain_stream",
@@ -826,7 +902,7 @@ test("Runnable streamEvents method with chat model chain", async () => {
         foo: "bar",
       },
       name: "my_chain",
-      data: { chunk: new AIMessageChunk("R") },
+      data: { chunk: new AIMessageChunk({ content: "R", id: anyString }) },
     },
     {
       event: "on_chat_model_stream",
@@ -839,7 +915,7 @@ test("Runnable streamEvents method with chat model chain", async () => {
         ls_stop: undefined,
       },
       name: "my_model",
-      data: { chunk: new AIMessageChunk("O") },
+      data: { chunk: new AIMessageChunk({ content: "O", id: anyString }) },
     },
     {
       event: "on_chain_stream",
@@ -849,7 +925,7 @@ test("Runnable streamEvents method with chat model chain", async () => {
         foo: "bar",
       },
       name: "my_chain",
-      data: { chunk: new AIMessageChunk("O") },
+      data: { chunk: new AIMessageChunk({ content: "O", id: anyString }) },
     },
     {
       event: "on_chat_model_stream",
@@ -862,7 +938,7 @@ test("Runnable streamEvents method with chat model chain", async () => {
         ls_stop: undefined,
       },
       name: "my_model",
-      data: { chunk: new AIMessageChunk("A") },
+      data: { chunk: new AIMessageChunk({ content: "A", id: anyString }) },
     },
     {
       event: "on_chain_stream",
@@ -872,7 +948,7 @@ test("Runnable streamEvents method with chat model chain", async () => {
         foo: "bar",
       },
       name: "my_chain",
-      data: { chunk: new AIMessageChunk("A") },
+      data: { chunk: new AIMessageChunk({ content: "A", id: anyString }) },
     },
     {
       event: "on_chat_model_stream",
@@ -885,7 +961,7 @@ test("Runnable streamEvents method with chat model chain", async () => {
         ls_stop: undefined,
       },
       name: "my_model",
-      data: { chunk: new AIMessageChunk("R") },
+      data: { chunk: new AIMessageChunk({ content: "R", id: anyString }) },
     },
     {
       event: "on_chain_stream",
@@ -895,7 +971,7 @@ test("Runnable streamEvents method with chat model chain", async () => {
         foo: "bar",
       },
       name: "my_chain",
-      data: { chunk: new AIMessageChunk("R") },
+      data: { chunk: new AIMessageChunk({ content: "R", id: anyString }) },
     },
     {
       event: "on_chat_model_end",
@@ -914,7 +990,7 @@ test("Runnable streamEvents method with chat model chain", async () => {
             [new SystemMessage("You are Godzilla"), new HumanMessage("hello")],
           ],
         },
-        output: new AIMessageChunk("ROAR"),
+        output: new AIMessageChunk({ content: "ROAR", id: anyString }),
       },
     },
     {
@@ -925,9 +1001,7 @@ test("Runnable streamEvents method with chat model chain", async () => {
       metadata: {
         foo: "bar",
       },
-      data: {
-        output: new AIMessageChunk("ROAR"),
-      },
+      data: { output: new AIMessageChunk({ content: "ROAR", id: anyString }) },
     },
   ]);
 });
@@ -965,6 +1039,10 @@ test("Chat model that supports streaming, but is invoked, should still emit on_s
   for await (const event of eventStream) {
     events.push(event);
   }
+
+  // used here to avoid casting every ID
+  const anyString = expect.any(String) as unknown as string;
+
   expect(events).toEqual([
     {
       run_id: expect.any(String),
@@ -1043,7 +1121,7 @@ test("Chat model that supports streaming, but is invoked, should still emit on_s
         ls_stop: undefined,
       },
       name: "my_model",
-      data: { chunk: new AIMessageChunk("R") },
+      data: { chunk: new AIMessageChunk({ id: anyString, content: "R" }) },
     },
     {
       event: "on_chat_model_stream",
@@ -1056,7 +1134,7 @@ test("Chat model that supports streaming, but is invoked, should still emit on_s
         ls_stop: undefined,
       },
       name: "my_model",
-      data: { chunk: new AIMessageChunk("O") },
+      data: { chunk: new AIMessageChunk({ id: anyString, content: "O" }) },
     },
     {
       event: "on_chat_model_stream",
@@ -1069,7 +1147,7 @@ test("Chat model that supports streaming, but is invoked, should still emit on_s
         ls_stop: undefined,
       },
       name: "my_model",
-      data: { chunk: new AIMessageChunk("A") },
+      data: { chunk: new AIMessageChunk({ id: anyString, content: "A" }) },
     },
     {
       event: "on_chat_model_stream",
@@ -1082,7 +1160,7 @@ test("Chat model that supports streaming, but is invoked, should still emit on_s
         ls_stop: undefined,
       },
       name: "my_model",
-      data: { chunk: new AIMessageChunk("R") },
+      data: { chunk: new AIMessageChunk({ id: anyString, content: "R" }) },
     },
     {
       event: "on_chat_model_end",
@@ -1101,7 +1179,7 @@ test("Chat model that supports streaming, but is invoked, should still emit on_s
             [new SystemMessage("You are Godzilla"), new HumanMessage("hello")],
           ],
         },
-        output: new AIMessageChunk("ROAR"),
+        output: new AIMessageChunk({ id: anyString, content: "ROAR" }),
       },
     },
     {
@@ -1112,7 +1190,7 @@ test("Chat model that supports streaming, but is invoked, should still emit on_s
         foo: "bar",
       },
       name: "RunnableLambda",
-      data: { chunk: new AIMessageChunk("ROAR") },
+      data: { chunk: new AIMessageChunk({ id: anyString, content: "ROAR" }) },
     },
     {
       event: "on_chain_stream",
@@ -1122,7 +1200,7 @@ test("Chat model that supports streaming, but is invoked, should still emit on_s
         foo: "bar",
       },
       name: "my_chain",
-      data: { chunk: new AIMessageChunk("ROAR") },
+      data: { chunk: new AIMessageChunk({ id: anyString, content: "ROAR" }) },
     },
     {
       event: "on_chain_end",
@@ -1134,7 +1212,7 @@ test("Chat model that supports streaming, but is invoked, should still emit on_s
       },
       data: {
         input: await template.invoke({ question: "hello" }),
-        output: new AIMessageChunk("ROAR"),
+        output: new AIMessageChunk({ id: anyString, content: "ROAR" }),
       },
     },
     {
@@ -1146,7 +1224,7 @@ test("Chat model that supports streaming, but is invoked, should still emit on_s
         foo: "bar",
       },
       data: {
-        output: new AIMessageChunk("ROAR"),
+        output: new AIMessageChunk({ id: anyString, content: "ROAR" }),
       },
     },
   ]);
@@ -1183,6 +1261,8 @@ test("Chat model that doesn't support streaming, but is invoked, should emit one
   for await (const event of eventStream) {
     events.push(event);
   }
+
+  const anyString = expect.any(String) as unknown as string;
   expect(events).toEqual([
     {
       run_id: expect.any(String),
@@ -1261,7 +1341,12 @@ test("Chat model that doesn't support streaming, but is invoked, should emit one
         ls_stop: undefined,
       },
       name: "my_model",
-      data: { chunk: new AIMessageChunk("You are Godzilla\nhello") },
+      data: {
+        chunk: new AIMessageChunk({
+          id: anyString,
+          content: "You are Godzilla\nhello",
+        }),
+      },
     },
     {
       event: "on_chat_model_end",
@@ -1280,7 +1365,10 @@ test("Chat model that doesn't support streaming, but is invoked, should emit one
             [new SystemMessage("You are Godzilla"), new HumanMessage("hello")],
           ],
         },
-        output: new AIMessage("You are Godzilla\nhello"),
+        output: new AIMessage({
+          id: anyString,
+          content: "You are Godzilla\nhello",
+        }),
       },
     },
     {
@@ -1291,7 +1379,12 @@ test("Chat model that doesn't support streaming, but is invoked, should emit one
         foo: "bar",
       },
       name: "RunnableLambda",
-      data: { chunk: new AIMessage("You are Godzilla\nhello") },
+      data: {
+        chunk: new AIMessage({
+          id: anyString,
+          content: "You are Godzilla\nhello",
+        }),
+      },
     },
     {
       event: "on_chain_stream",
@@ -1301,7 +1394,12 @@ test("Chat model that doesn't support streaming, but is invoked, should emit one
         foo: "bar",
       },
       name: "my_chain",
-      data: { chunk: new AIMessage("You are Godzilla\nhello") },
+      data: {
+        chunk: new AIMessage({
+          id: anyString,
+          content: "You are Godzilla\nhello",
+        }),
+      },
     },
     {
       event: "on_chain_end",
@@ -1313,7 +1411,10 @@ test("Chat model that doesn't support streaming, but is invoked, should emit one
       },
       data: {
         input: await template.invoke({ question: "hello" }),
-        output: new AIMessage("You are Godzilla\nhello"),
+        output: new AIMessage({
+          id: anyString,
+          content: "You are Godzilla\nhello",
+        }),
       },
     },
     {
@@ -1325,7 +1426,10 @@ test("Chat model that doesn't support streaming, but is invoked, should emit one
         foo: "bar",
       },
       data: {
-        output: new AIMessage("You are Godzilla\nhello"),
+        output: new AIMessage({
+          id: anyString,
+          content: "You are Godzilla\nhello",
+        }),
       },
     },
   ]);

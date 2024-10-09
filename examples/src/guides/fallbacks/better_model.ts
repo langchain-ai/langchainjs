@@ -39,9 +39,7 @@ try {
 */
 }
 
-const chain = badChain.withFallbacks({
-  fallbacks: [goodChain],
-});
+const chain = badChain.withFallbacks([goodChain]);
 
 const result = await chain.invoke({
   input: "testing",

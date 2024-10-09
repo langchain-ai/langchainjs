@@ -58,21 +58,14 @@ import { ToolCall } from "../messages/tool.js";
 
 export { type RunnableInterface, RunnableBatchOptions };
 
-// TODO: Make `options` just take `RunnableConfig`
 export type RunnableFunc<RunInput, RunOutput> = (
   input: RunInput,
-  options?:
-    | ({
-        /** @deprecated Use top-level config fields instead. */
-        config?: RunnableConfig;
-      } & RunnableConfig)
+  options:
+    | RunnableConfig
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     | Record<string, any>
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    | (Record<string, any> & {
-        /** @deprecated Use top-level config fields instead. */
-        config: RunnableConfig;
-      } & RunnableConfig)
+    | (Record<string, any> & RunnableConfig)
 ) => RunOutput | Promise<RunOutput>;
 
 export type RunnableMapLike<RunInput, RunOutput> = {
@@ -181,7 +174,7 @@ export abstract class Runnable<
    */
   withConfig(
     config: RunnableConfig
-  ): RunnableBinding<RunInput, RunOutput, CallOptions> {
+  ): Runnable<RunInput, RunOutput, CallOptions> {
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
     return new RunnableBinding({
       bound: this,
@@ -196,13 +189,18 @@ export abstract class Runnable<
    * @param fields.fallbacks Other runnables to call if the runnable errors.
    * @returns A new RunnableWithFallbacks.
    */
-  withFallbacks(fields: {
-    fallbacks: Runnable<RunInput, RunOutput>[];
-  }): RunnableWithFallbacks<RunInput, RunOutput> {
+  withFallbacks(
+    fields:
+      | {
+          fallbacks: Runnable<RunInput, RunOutput>[];
+        }
+      | Runnable<RunInput, RunOutput>[]
+  ): RunnableWithFallbacks<RunInput, RunOutput> {
+    const fallbacks = Array.isArray(fields) ? fields : fields.fallbacks;
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
     return new RunnableWithFallbacks<RunInput, RunOutput>({
       runnable: this,
-      fallbacks: fields.fallbacks,
+      fallbacks,
     });
   }
 
@@ -697,7 +695,7 @@ export abstract class Runnable<
       config.callbacks = callbacks.concat([logStreamCallbackHandler]);
     } else {
       const copiedCallbacks = callbacks.copy();
-      copiedCallbacks.inheritableHandlers.push(logStreamCallbackHandler);
+      copiedCallbacks.addHandler(logStreamCallbackHandler, true);
       // eslint-disable-next-line no-param-reassign
       config.callbacks = copiedCallbacks;
     }
@@ -755,39 +753,41 @@ export abstract class Runnable<
    *
    * **ATTENTION** This reference table is for the V2 version of the schema.
    *
-   * +----------------------+------------------+---------------------------------+-----------------------------------------------+-------------------------------------------------+
-   * | event                | name             | chunk                           | input                                         | output                                          |
-   * +======================+==================+=================================+===============================================+=================================================+
-   * | on_chat_model_start  | [model name]     |                                 | {"messages": [[SystemMessage, HumanMessage]]} |                                                 |
-   * +----------------------+------------------+---------------------------------+-----------------------------------------------+-------------------------------------------------+
-   * | on_chat_model_stream | [model name]     | AIMessageChunk(content="hello") |                                               |                                                 |
-   * +----------------------+------------------+---------------------------------+-----------------------------------------------+-------------------------------------------------+
-   * | on_chat_model_end    | [model name]     |                                 | {"messages": [[SystemMessage, HumanMessage]]} | AIMessageChunk(content="hello world")           |
-   * +----------------------+------------------+---------------------------------+-----------------------------------------------+-------------------------------------------------+
-   * | on_llm_start         | [model name]     |                                 | {'input': 'hello'}                            |                                                 |
-   * +----------------------+------------------+---------------------------------+-----------------------------------------------+-------------------------------------------------+
-   * | on_llm_stream        | [model name]     | 'Hello'                         |                                               |                                                 |
-   * +----------------------+------------------+---------------------------------+-----------------------------------------------+-------------------------------------------------+
-   * | on_llm_end           | [model name]     |                                 | 'Hello human!'                                |                                                 |
-   * +----------------------+------------------+---------------------------------+-----------------------------------------------+-------------------------------------------------+
-   * | on_chain_start       | some_runnable    |                                 |                                               |                                                 |
-   * +----------------------+------------------+---------------------------------+-----------------------------------------------+-------------------------------------------------+
-   * | on_chain_stream      | some_runnable    | "hello world!, goodbye world!"  |                                               |                                                 |
-   * +----------------------+------------------+---------------------------------+-----------------------------------------------+-------------------------------------------------+
-   * | on_chain_end         | some_runnable    |                                 | [Document(...)]                               | "hello world!, goodbye world!"                  |
-   * +----------------------+------------------+---------------------------------+-----------------------------------------------+-------------------------------------------------+
-   * | on_tool_start        | some_tool        |                                 | {"x": 1, "y": "2"}                            |                                                 |
-   * +----------------------+------------------+---------------------------------+-----------------------------------------------+-------------------------------------------------+
-   * | on_tool_end          | some_tool        |                                 |                                               | {"x": 1, "y": "2"}                              |
-   * +----------------------+------------------+---------------------------------+-----------------------------------------------+-------------------------------------------------+
-   * | on_retriever_start   | [retriever name] |                                 | {"query": "hello"}                            |                                                 |
-   * +----------------------+------------------+---------------------------------+-----------------------------------------------+-------------------------------------------------+
-   * | on_retriever_end     | [retriever name] |                                 | {"query": "hello"}                            | [Document(...), ..]                             |
-   * +----------------------+------------------+---------------------------------+-----------------------------------------------+-------------------------------------------------+
-   * | on_prompt_start      | [template_name]  |                                 | {"question": "hello"}                         |                                                 |
-   * +----------------------+------------------+---------------------------------+-----------------------------------------------+-------------------------------------------------+
-   * | on_prompt_end        | [template_name]  |                                 | {"question": "hello"}                         | ChatPromptValue(messages: [SystemMessage, ...]) |
-   * +----------------------+------------------+---------------------------------+-----------------------------------------------+-------------------------------------------------+
+   * ```md
+   * +----------------------+-----------------------------+------------------------------------------+
+   * | event                | input                       | output/chunk                             |
+   * +======================+=============================+==========================================+
+   * | on_chat_model_start  | {"messages": BaseMessage[]} |                                          |
+   * +----------------------+-----------------------------+------------------------------------------+
+   * | on_chat_model_stream |                             | AIMessageChunk("hello")                  |
+   * +----------------------+-----------------------------+------------------------------------------+
+   * | on_chat_model_end    | {"messages": BaseMessage[]} | AIMessageChunk("hello world")            |
+   * +----------------------+-----------------------------+------------------------------------------+
+   * | on_llm_start         | {'input': 'hello'}          |                                          |
+   * +----------------------+-----------------------------+------------------------------------------+
+   * | on_llm_stream        |                             | 'Hello'                                  |
+   * +----------------------+-----------------------------+------------------------------------------+
+   * | on_llm_end           | 'Hello human!'              |                                          |
+   * +----------------------+-----------------------------+------------------------------------------+
+   * | on_chain_start       |                             |                                          |
+   * +----------------------+-----------------------------+------------------------------------------+
+   * | on_chain_stream      |                             | "hello world!"                           |
+   * +----------------------+-----------------------------+------------------------------------------+
+   * | on_chain_end         | [Document(...)]             | "hello world!, goodbye world!"           |
+   * +----------------------+-----------------------------+------------------------------------------+
+   * | on_tool_start        | {"x": 1, "y": "2"}          |                                          |
+   * +----------------------+-----------------------------+------------------------------------------+
+   * | on_tool_end          |                             | {"x": 1, "y": "2"}                       |
+   * +----------------------+-----------------------------+------------------------------------------+
+   * | on_retriever_start   | {"query": "hello"}          |                                          |
+   * +----------------------+-----------------------------+------------------------------------------+
+   * | on_retriever_end     | {"query": "hello"}          | [Document(...), ..]                      |
+   * +----------------------+-----------------------------+------------------------------------------+
+   * | on_prompt_start      | {"question": "hello"}       |                                          |
+   * +----------------------+-----------------------------+------------------------------------------+
+   * | on_prompt_end        | {"question": "hello"}       | ChatPromptValue(messages: BaseMessage[]) |
+   * +----------------------+-----------------------------+------------------------------------------+
+   * ```
    *
    * The "on_chain_*" events are the default for Runnables that don't fit one of the above categories.
    *
@@ -797,16 +797,18 @@ export abstract class Runnable<
    *
    * A custom event has following format:
    *
-   * +-----------+------+-----------------------------------------------------------------------------------------------------------+
-   * | Attribute | Type | Description                                                                                               |
-   * +===========+======+===========================================================================================================+
-   * | name      | str  | A user defined name for the event.                                                                        |
-   * +-----------+------+-----------------------------------------------------------------------------------------------------------+
-   * | data      | Any  | The data associated with the event. This can be anything, though we suggest making it JSON serializable.  |
-   * +-----------+------+-----------------------------------------------------------------------------------------------------------+
+   * ```md
+   * +-----------+------+------------------------------------------------------------+
+   * | Attribute | Type | Description                                                |
+   * +===========+======+============================================================+
+   * | name      | str  | A user defined name for the event.                         |
+   * +-----------+------+------------------------------------------------------------+
+   * | data      | Any  | The data associated with the event. This can be anything.  |
+   * +-----------+------+------------------------------------------------------------+
+   * ```
    *
    * Here's an example:
-   * @example
+   *
    * ```ts
    * import { RunnableLambda } from "@langchain/core/runnables";
    * import { dispatchCustomEvent } from "@langchain/core/callbacks/dispatch";
@@ -894,7 +896,7 @@ export abstract class Runnable<
       config.callbacks = callbacks.concat(eventStreamer);
     } else {
       const copiedCallbacks = callbacks.copy();
-      copiedCallbacks.inheritableHandlers.push(eventStreamer);
+      copiedCallbacks.addHandler(eventStreamer, true);
       // eslint-disable-next-line no-param-reassign
       config.callbacks = copiedCallbacks;
     }
@@ -1234,7 +1236,7 @@ export class RunnableBinding<
 
   withConfig(
     config: RunnableConfig
-  ): RunnableBinding<RunInput, RunOutput, CallOptions> {
+  ): Runnable<RunInput, RunOutput, CallOptions> {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return new (this.constructor as any)({
       bound: this.bound,
@@ -1320,7 +1322,7 @@ export class RunnableBinding<
 
   async *transform(
     generator: AsyncGenerator<RunInput>,
-    options: Partial<CallOptions>
+    options?: Partial<CallOptions>
   ): AsyncGenerator<RunOutput> {
     yield* this.bound.transform(
       generator,
@@ -1464,7 +1466,7 @@ export class RunnableEach<
     inputs: RunInputItem[],
     config?: Partial<CallOptions>
   ): Promise<RunOutputItem[]> {
-    return this._callWithConfig(this._invoke, inputs, config);
+    return this._callWithConfig(this._invoke.bind(this), inputs, config);
   }
 
   /**
@@ -1585,7 +1587,7 @@ export class RunnableRetry<
    * @returns A promise that resolves to the output of the runnable.
    */
   async invoke(input: RunInput, config?: CallOptions): Promise<RunOutput> {
-    return this._callWithConfig(this._invoke, input, config);
+    return this._callWithConfig(this._invoke.bind(this), input, config);
   }
 
   async _batch<ReturnExceptions extends boolean = false>(
@@ -2326,7 +2328,6 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
           try {
             let output = await this.func(input, {
               ...childConfig,
-              config: childConfig,
             });
             if (output && Runnable.isRunnable(output)) {
               if (config?.recursionLimit === 0) {
@@ -2391,7 +2392,7 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
     input: RunInput,
     options?: Partial<RunnableConfig>
   ): Promise<RunOutput> {
-    return this._callWithConfig(this._invoke, input, options);
+    return this._callWithConfig(this._invoke.bind(this), input, options);
   }
 
   async *_transform(
@@ -2493,6 +2494,22 @@ export class RunnableParallel<RunInput> extends RunnableMap<RunInput> {}
 
 /**
  * A Runnable that can fallback to other Runnables if it fails.
+ * External APIs (e.g., APIs for a language model) may at times experience
+ * degraded performance or even downtime.
+ *
+ * In these cases, it can be useful to have a fallback Runnable that can be
+ * used in place of the original Runnable (e.g., fallback to another LLM provider).
+ *
+ * Fallbacks can be defined at the level of a single Runnable, or at the level
+ * of a chain of Runnables. Fallbacks are tried in order until one succeeds or
+ * all fail.
+ *
+ * While you can instantiate a `RunnableWithFallbacks` directly, it is usually
+ * more convenient to use the `withFallbacks` method on an existing Runnable.
+ *
+ * When streaming, fallbacks will only be called on failures during the initial
+ * stream creation. Errors that occur after a stream starts will not fallback
+ * to the next Runnable.
  */
 export class RunnableWithFallbacks<RunInput, RunOutput> extends Runnable<
   RunInput,
@@ -2563,6 +2580,61 @@ export class RunnableWithFallbacks<RunInput, RunOutput> extends Runnable<
     }
     await runManager?.handleChainError(firstError);
     throw firstError;
+  }
+
+  async *_streamIterator(
+    input: RunInput,
+    options?: Partial<RunnableConfig> | undefined
+  ): AsyncGenerator<RunOutput> {
+    const config = ensureConfig(options);
+    const callbackManager_ = await getCallbackManagerForConfig(options);
+    const { runId, ...otherConfigFields } = config;
+    const runManager = await callbackManager_?.handleChainStart(
+      this.toJSON(),
+      _coerceToDict(input, "input"),
+      runId,
+      undefined,
+      undefined,
+      undefined,
+      otherConfigFields?.runName
+    );
+    let firstError;
+    let stream;
+    for (const runnable of this.runnables()) {
+      config?.signal?.throwIfAborted();
+      const childConfig = patchConfig(otherConfigFields, {
+        callbacks: runManager?.getChild(),
+      });
+      try {
+        stream = await runnable.stream(input, childConfig);
+        break;
+      } catch (e) {
+        if (firstError === undefined) {
+          firstError = e;
+        }
+      }
+    }
+    if (stream === undefined) {
+      const error =
+        firstError ?? new Error("No error stored at end of fallback.");
+      await runManager?.handleChainError(error);
+      throw error;
+    }
+    let output;
+    try {
+      for await (const chunk of stream) {
+        yield chunk;
+        try {
+          output = output === undefined ? output : concat(output, chunk);
+        } catch (e) {
+          output = undefined;
+        }
+      }
+    } catch (e) {
+      await runManager?.handleChainError(e);
+      throw e;
+    }
+    await runManager?.handleChainEnd(_coerceToDict(output, "output"));
   }
 
   async batch(

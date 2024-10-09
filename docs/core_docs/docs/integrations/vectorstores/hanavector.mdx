@@ -11,9 +11,9 @@ import IntegrationInstallTooltip from "@mdx_components/integration_install_toolt
 <IntegrationInstallTooltip></IntegrationInstallTooltip>
 
 ```bash npm2yarn
-npm install -S @langchain/community @sap/hana-client
+npm install -S @langchain/community @langchain/core @sap/hana-client
 # or
-npm install -S @langchain/community hdb
+npm install -S @langchain/community @langchain/core hdb
 ```
 
 You'll also need to have database connection to a HANA Cloud instance.
@@ -46,3 +46,8 @@ import ExampleBasic from "@examples/indexes/vector_stores/hana_vector/basics.ts"
 import ExampleChain from "@examples/indexes/vector_stores/hana_vector/chains.ts";
 
 <CodeBlock language="typescript">{ExampleChain}</CodeBlock>
+
+## Related
+
+- Vector store [conceptual guide](/docs/concepts/#vectorstores)
+- Vector store [how-to guides](/docs/how_to/#vectorstores)

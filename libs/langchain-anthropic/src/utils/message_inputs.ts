@@ -11,7 +11,10 @@ import {
   isAIMessage,
 } from "@langchain/core/messages";
 import { ToolCall } from "@langchain/core/messages/tool";
-import { AnthropicMessageParam, AnthropicToolResponse } from "../types.js";
+import {
+  AnthropicMessageCreateParams,
+  AnthropicToolResponse,
+} from "../types.js";
 
 function _formatImage(imageUrl: string) {
   const regex = /^data:(image\/.+);base64,(.+)$/;
@@ -119,6 +122,9 @@ function _formatContent(content: MessageContent) {
     return content;
   } else {
     const contentBlocks = content.map((contentPart) => {
+      const cacheControl =
+        "cache_control" in contentPart ? contentPart.cache_control : undefined;
+
       if (contentPart.type === "image_url") {
         let source;
         if (typeof contentPart.image_url === "string") {
@@ -129,6 +135,7 @@ function _formatContent(content: MessageContent) {
         return {
           type: "image" as const, // Explicitly setting the type as "image"
           source,
+          ...(cacheControl ? { cache_control: cacheControl } : {}),
         };
       } else if (
         textTypes.find((t) => t === contentPart.type) &&
@@ -138,6 +145,7 @@ function _formatContent(content: MessageContent) {
         return {
           type: "text" as const, // Explicitly setting the type as "text"
           text: contentPart.text,
+          ...(cacheControl ? { cache_control: cacheControl } : {}),
         };
       } else if (toolTypes.find((t) => t === contentPart.type)) {
         const contentPartCopy = { ...contentPart };
@@ -164,6 +172,7 @@ function _formatContent(content: MessageContent) {
         // TODO: Fix when SDK types are fixed
         return {
           ...contentPartCopy,
+          ...(cacheControl ? { cache_control: cacheControl } : {}),
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } as any;
       } else {
@@ -176,19 +185,16 @@ function _formatContent(content: MessageContent) {
 
 /**
  * Formats messages as a prompt for the model.
+ * Used in LangSmith, export is important here.
  * @param messages The base messages to format as a prompt.
  * @returns The formatted prompt.
  */
-export function _formatMessagesForAnthropic(messages: BaseMessage[]): {
-  system?: string;
-  messages: AnthropicMessageParam[];
-} {
+export function _convertMessagesToAnthropicPayload(
+  messages: BaseMessage[]
+): AnthropicMessageCreateParams {
   const mergedMessages = _mergeMessages(messages);
-  let system: string | undefined;
+  let system;
   if (mergedMessages.length > 0 && mergedMessages[0]._getType() === "system") {
-    if (typeof messages[0].content !== "string") {
-      throw new Error("System message content must be a string.");
-    }
     system = messages[0].content;
   }
   const conversationMessages =
@@ -256,5 +262,5 @@ export function _formatMessagesForAnthropic(messages: BaseMessage[]): {
   return {
     messages: formattedMessages,
     system,
-  };
+  } as AnthropicMessageCreateParams;
 }

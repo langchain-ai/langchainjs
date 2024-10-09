@@ -4,7 +4,8 @@ import {
   AsyncCallerCallOptions,
 } from "@langchain/core/utils/async_caller";
 import { getRuntimeEnvironment } from "@langchain/core/utils/env";
-import { StructuredToolInterface } from "@langchain/core/tools";
+import { StructuredToolParams } from "@langchain/core/tools";
+import { isLangChainTool } from "@langchain/core/utils/function_calling";
 import type {
   GoogleAIBaseLLMInput,
   GoogleConnectionParams,
@@ -19,6 +20,8 @@ import type {
   GeminiTool,
   GeminiFunctionDeclaration,
   GoogleAIModelRequestParams,
+  GoogleRawResponse,
+  GoogleAIToolType,
 } from "./types.js";
 import {
   GoogleAbstractedClient,
@@ -26,6 +29,7 @@ import {
   GoogleAbstractedClientOpsMethod,
 } from "./auth.js";
 import { zodToGeminiParameters } from "./utils/zod_to_gemini_parameters.js";
+import { getGeminiAPI } from "./utils/index.js";
 
 export abstract class GoogleConnection<
   CallOptions extends AsyncCallerCallOptions,
@@ -82,15 +86,23 @@ export abstract class GoogleConnection<
     return this.constructor.name;
   }
 
-  async _request(
+  async additionalHeaders(): Promise<Record<string, string>> {
+    return {};
+  }
+
+  async _buildOpts(
     data: unknown | undefined,
-    options: CallOptions
-  ): Promise<ResponseType> {
+    _options: CallOptions,
+    requestHeaders: Record<string, string> = {}
+  ): Promise<GoogleAbstractedClientOps> {
     const url = await this.buildUrl();
     const method = this.buildMethod();
     const infoHeaders = (await this._clientInfoHeaders()) ?? {};
+    const additionalHeaders = (await this.additionalHeaders()) ?? {};
     const headers = {
       ...infoHeaders,
+      ...additionalHeaders,
+      ...requestHeaders,
     };
 
     const opts: GoogleAbstractedClientOps = {
@@ -106,7 +118,15 @@ export abstract class GoogleConnection<
     } else {
       opts.responseType = "json";
     }
+    return opts;
+  }
 
+  async _request(
+    data: unknown | undefined,
+    options: CallOptions,
+    requestHeaders: Record<string, string> = {}
+  ): Promise<ResponseType> {
+    const opts = await this._buildOpts(data, options, requestHeaders);
     const callResponse = await this.caller.callWithOptions(
       { signal: options?.signal },
       async () => this.client.request(opts)
@@ -163,12 +183,28 @@ export abstract class GoogleHostConnection<
   }
 }
 
+export abstract class GoogleRawConnection<
+  CallOptions extends AsyncCallerCallOptions,
+  AuthOptions
+> extends GoogleHostConnection<CallOptions, GoogleRawResponse, AuthOptions> {
+  async _buildOpts(
+    data: unknown | undefined,
+    _options: CallOptions,
+    requestHeaders: Record<string, string> = {}
+  ): Promise<GoogleAbstractedClientOps> {
+    const opts = await super._buildOpts(data, _options, requestHeaders);
+    opts.responseType = "blob";
+    return opts;
+  }
+}
+
 export abstract class GoogleAIConnection<
-    CallOptions extends BaseLanguageModelCallOptions,
-    MessageType,
-    AuthOptions
+    CallOptions extends AsyncCallerCallOptions,
+    InputType,
+    AuthOptions,
+    ResponseType extends GoogleResponse
   >
-  extends GoogleHostConnection<CallOptions, GoogleLLMResponse, AuthOptions>
+  extends GoogleHostConnection<CallOptions, ResponseType, AuthOptions>
   implements GoogleAIBaseLLMInput<AuthOptions>
 {
   model: string;
@@ -176,6 +212,9 @@ export abstract class GoogleAIConnection<
   modelName: string;
 
   client: GoogleAbstractedClient;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  api: any; // FIXME: Make this a real type
 
   constructor(
     fields: GoogleAIBaseLLMInput<AuthOptions> | undefined,
@@ -187,6 +226,7 @@ export abstract class GoogleAIConnection<
     this.client = client;
     this.modelName = fields?.model ?? fields?.modelName ?? this.model;
     this.model = this.modelName;
+    this.api = getGeminiAPI(fields);
   }
 
   get modelFamily(): GoogleLLMModelFamily {
@@ -230,16 +270,16 @@ export abstract class GoogleAIConnection<
   }
 
   abstract formatData(
-    input: MessageType,
+    input: InputType,
     parameters: GoogleAIModelRequestParams
-  ): unknown;
+  ): Promise<unknown>;
 
   async request(
-    input: MessageType,
+    input: InputType,
     parameters: GoogleAIModelRequestParams,
     options: CallOptions
-  ): Promise<GoogleLLMResponse> {
-    const data = this.formatData(input, parameters);
+  ): Promise<GoogleResponse> {
+    const data = await this.formatData(input, parameters);
     const response = await this._request(data, options);
     return response;
   }
@@ -251,7 +291,8 @@ export abstract class AbstractGoogleLLMConnection<
 > extends GoogleAIConnection<
   BaseLanguageModelCallOptions,
   MessageType,
-  AuthOptions
+  AuthOptions,
+  GoogleLLMResponse
 > {
   async buildUrlMethodGemini(): Promise<string> {
     return this.streaming ? "streamGenerateContent" : "generateContent";
@@ -269,7 +310,7 @@ export abstract class AbstractGoogleLLMConnection<
   abstract formatContents(
     input: MessageType,
     parameters: GoogleAIModelRequestParams
-  ): GeminiContent[];
+  ): Promise<GeminiContent[]>;
 
   formatGenerationConfig(
     _input: MessageType,
@@ -292,35 +333,25 @@ export abstract class AbstractGoogleLLMConnection<
     return parameters.safetySettings ?? [];
   }
 
-  formatSystemInstruction(
+  async formatSystemInstruction(
     _input: MessageType,
     _parameters: GoogleAIModelRequestParams
-  ): GeminiContent {
+  ): Promise<GeminiContent> {
     return {} as GeminiContent;
   }
 
-  // Borrowed from the OpenAI invocation params test
-  isStructuredToolArray(tools?: unknown[]): tools is StructuredToolInterface[] {
-    return (
-      tools !== undefined &&
-      tools.every((tool) =>
-        Array.isArray((tool as StructuredToolInterface).lc_namespace)
-      )
-    );
-  }
-
   structuredToolToFunctionDeclaration(
-    tool: StructuredToolInterface
+    tool: StructuredToolParams
   ): GeminiFunctionDeclaration {
     const jsonSchema = zodToGeminiParameters(tool.schema);
     return {
       name: tool.name,
-      description: tool.description,
+      description: tool.description ?? `A function available to call.`,
       parameters: jsonSchema,
     };
   }
 
-  structuredToolsToGeminiTools(tools: StructuredToolInterface[]): GeminiTool[] {
+  structuredToolsToGeminiTools(tools: StructuredToolParams[]): GeminiTool[] {
     return [
       {
         functionDeclarations: tools.map(
@@ -334,16 +365,19 @@ export abstract class AbstractGoogleLLMConnection<
     _input: MessageType,
     parameters: GoogleAIModelRequestParams
   ): GeminiTool[] {
-    const tools: StructuredToolInterface[] | GeminiTool[] | undefined =
-      parameters?.tools;
+    const tools: GoogleAIToolType[] | undefined = parameters?.tools;
     if (!tools || tools.length === 0) {
       return [];
     }
 
-    if (this.isStructuredToolArray(tools)) {
+    if (tools.every(isLangChainTool)) {
       return this.structuredToolsToGeminiTools(tools);
     } else {
-      if (tools.length === 1 && !tools[0].functionDeclarations?.length) {
+      if (
+        tools.length === 1 &&
+        (!("functionDeclarations" in tools[0]) ||
+          !tools[0].functionDeclarations?.length)
+      ) {
         return [];
       }
       return tools as GeminiTool[];
@@ -365,16 +399,19 @@ export abstract class AbstractGoogleLLMConnection<
     };
   }
 
-  formatData(
+  async formatData(
     input: MessageType,
     parameters: GoogleAIModelRequestParams
-  ): GeminiRequest {
-    const contents = this.formatContents(input, parameters);
+  ): Promise<GeminiRequest> {
+    const contents = await this.formatContents(input, parameters);
     const generationConfig = this.formatGenerationConfig(input, parameters);
     const tools = this.formatTools(input, parameters);
     const toolConfig = this.formatToolConfig(parameters);
     const safetySettings = this.formatSafetySettings(input, parameters);
-    const systemInstruction = this.formatSystemInstruction(input, parameters);
+    const systemInstruction = await this.formatSystemInstruction(
+      input,
+      parameters
+    );
 
     const ret: GeminiRequest = {
       contents,

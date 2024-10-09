@@ -2,20 +2,17 @@ import assert from "assert";
 import { OpenAI } from "@langchain/openai";
 import { LLMChain } from "langchain/chains";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
-import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
+import { MemoryVectorStore } from "langchain/vectorstores/memory";
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { Document } from "@langchain/core/documents";
-import { CSVLoader } from "@langchain/community/document_loaders/fs/csv";
 
 async function test(useAzure: boolean = false) {
   // Test exports
   assert(typeof OpenAI === "function");
   assert(typeof LLMChain === "function");
   assert(typeof ChatPromptTemplate === "function");
-  assert(typeof HNSWLib === "function");
+  assert(typeof MemoryVectorStore === "function");
 
-  // Test dynamic imports of peer dependencies
-  const { HierarchicalNSW } = await HNSWLib.imports();
   const openAIParameters = useAzure
     ? {
         azureOpenAIApiKey: "sk-XXXX",
@@ -27,11 +24,7 @@ async function test(useAzure: boolean = false) {
         openAIApiKey: "sk-XXXX",
       };
 
-  const vs = new HNSWLib(new OpenAIEmbeddings(openAIParameters), {
-    space: "ip",
-    numDimensions: 3,
-    index: new HierarchicalNSW("ip", 3),
-  });
+  const vs = new MemoryVectorStore(new OpenAIEmbeddings(openAIParameters));
 
   await vs.addVectors(
     [
@@ -49,13 +42,6 @@ async function test(useAzure: boolean = false) {
   );
 
   assert((await vs.similaritySearchVectorWithScore([0, 0, 1], 1)).length === 1);
-
-  // Test CSVLoader
-  const loader = new CSVLoader(new Blob(["a,b,c\n1,2,3\n4,5,6"]));
-
-  const docs = await loader.load();
-
-  assert(docs.length === 2);
 }
 
 test(false)

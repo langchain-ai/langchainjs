@@ -1,3 +1,5 @@
+import { SerializedConstructor } from "../load/serializable.js";
+import { _isToolCall } from "../tools/utils.js";
 import { AIMessage, AIMessageChunk, AIMessageChunkFields } from "./ai.js";
 import {
   BaseMessageLike,
@@ -6,6 +8,7 @@ import {
   StoredMessage,
   StoredMessageV1,
   BaseMessageFields,
+  _isMessageFieldWithRole,
 } from "./base.js";
 import {
   ChatMessage,
@@ -19,21 +22,100 @@ import {
 } from "./function.js";
 import { HumanMessage, HumanMessageChunk } from "./human.js";
 import { SystemMessage, SystemMessageChunk } from "./system.js";
-import { ToolMessage, ToolMessageFieldsWithToolCallId } from "./tool.js";
+import {
+  ToolCall,
+  ToolMessage,
+  ToolMessageFieldsWithToolCallId,
+} from "./tool.js";
+
+function _coerceToolCall(
+  toolCall: ToolCall | Record<string, unknown>
+): ToolCall {
+  if (_isToolCall(toolCall)) {
+    return toolCall;
+  } else if (
+    typeof toolCall.id === "string" &&
+    toolCall.type === "function" &&
+    typeof toolCall.function === "object" &&
+    toolCall.function !== null &&
+    "arguments" in toolCall.function &&
+    typeof toolCall.function.arguments === "string" &&
+    "name" in toolCall.function &&
+    typeof toolCall.function.name === "string"
+  ) {
+    // Handle OpenAI tool call format
+    return {
+      id: toolCall.id,
+      args: JSON.parse(toolCall.function.arguments),
+      name: toolCall.function.name,
+      type: "tool_call",
+    };
+  } else {
+    // TODO: Throw an error?
+    return toolCall as ToolCall;
+  }
+}
+
+function isSerializedConstructor(x: unknown): x is SerializedConstructor {
+  return (
+    typeof x === "object" &&
+    x != null &&
+    (x as SerializedConstructor).lc === 1 &&
+    Array.isArray((x as SerializedConstructor).id) &&
+    (x as SerializedConstructor).kwargs != null &&
+    typeof (x as SerializedConstructor).kwargs === "object"
+  );
+}
 
 function _constructMessageFromParams(
-  params: BaseMessageFields & { type: string }
+  params:
+    | (BaseMessageFields & { type: string } & Record<string, unknown>)
+    | SerializedConstructor
 ) {
-  const { type, ...rest } = params;
+  let type: string;
+  let rest: BaseMessageFields & Record<string, unknown>;
+  // Support serialized messages
+  if (isSerializedConstructor(params)) {
+    const className = params.id.at(-1);
+    if (className === "HumanMessage" || className === "HumanMessageChunk") {
+      type = "user";
+    } else if (className === "AIMessage" || className === "AIMessageChunk") {
+      type = "assistant";
+    } else if (
+      className === "SystemMessage" ||
+      className === "SystemMessageChunk"
+    ) {
+      type = "system";
+    } else {
+      type = "unknown";
+    }
+    rest = params.kwargs as BaseMessageFields;
+  } else {
+    const { type: extractedType, ...otherParams } = params;
+    type = extractedType;
+    rest = otherParams;
+  }
   if (type === "human" || type === "user") {
     return new HumanMessage(rest);
   } else if (type === "ai" || type === "assistant") {
-    return new AIMessage(rest);
+    const { tool_calls: rawToolCalls, ...other } = rest;
+    if (!Array.isArray(rawToolCalls)) {
+      return new AIMessage(rest);
+    }
+    const tool_calls = rawToolCalls.map(_coerceToolCall);
+    return new AIMessage({ ...other, tool_calls });
   } else if (type === "system") {
     return new SystemMessage(rest);
+  } else if (type === "tool" && "tool_call_id" in rest) {
+    return new ToolMessage({
+      ...rest,
+      content: rest.content,
+      tool_call_id: rest.tool_call_id as string,
+      name: rest.name,
+    });
   } else {
     throw new Error(
-      `Unable to coerce message from array: only human, AI, or system message coercion is currently supported.`
+      `Unable to coerce message from array: only human, AI, or system message coercion is currently supported.\n\nReceived:${params}`
     );
   }
 }
@@ -49,6 +131,9 @@ export function coerceMessageLikeToMessage(
   if (Array.isArray(messageLike)) {
     const [type, content] = messageLike;
     return _constructMessageFromParams({ type, content });
+  } else if (_isMessageFieldWithRole(messageLike)) {
+    const { role: type, ...rest } = messageLike;
+    return _constructMessageFromParams({ ...rest, type });
   } else {
     return _constructMessageFromParams(messageLike);
   }

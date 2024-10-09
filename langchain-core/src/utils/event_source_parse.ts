@@ -30,23 +30,45 @@ export interface EventSourceMessage {
  * @returns {Promise<void>} A promise that will be resolved when the stream closes.
  */
 export async function getBytes(
-  stream: ReadableStream<Uint8Array>,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  stream: ReadableStream<Uint8Array> | AsyncIterable<any>,
   onChunk: (arr: Uint8Array, flush?: boolean) => void
 ) {
-  const reader = stream.getReader();
-  // CHANGED: Introduced a "flush" mechanism to process potential pending messages when the stream ends.
-  //          This change is essential to ensure that we capture every last piece of information from streams,
-  //          such as those from Azure OpenAI, which may not terminate with a blank line. Without this
-  //          mechanism, we risk ignoring a possibly significant last message.
-  //          See https://github.com/langchain-ai/langchainjs/issues/1299 for details.
-  // eslint-disable-next-line no-constant-condition
-  while (true) {
-    const result = await reader.read();
-    if (result.done) {
-      onChunk(new Uint8Array(), true);
-      break;
+  // TODO: Use Async iteration for both cases?
+  // eslint-disable-next-line no-instanceof/no-instanceof
+  if (stream instanceof ReadableStream) {
+    const reader = stream.getReader();
+    // CHANGED: Introduced a "flush" mechanism to process potential pending messages when the stream ends.
+    //          This change is essential to ensure that we capture every last piece of information from streams,
+    //          such as those from Azure OpenAI, which may not terminate with a blank line. Without this
+    //          mechanism, we risk ignoring a possibly significant last message.
+    //          See https://github.com/langchain-ai/langchainjs/issues/1299 for details.
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+      const result = await reader.read();
+      if (result.done) {
+        onChunk(new Uint8Array(), true);
+        break;
+      }
+      onChunk(result.value);
     }
-    onChunk(result.value);
+  } else {
+    try {
+      // Handle Node.js Readable streams with async iteration
+      for await (const chunk of stream) {
+        onChunk(new Uint8Array(chunk));
+      }
+      onChunk(new Uint8Array(), true);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (e: any) {
+      throw new Error(
+        [
+          "Parsing event source stream failed.",
+          "Ensure your implementation of fetch returns a web or Node readable stream.",
+          `Error: ${e.message}`,
+        ].join("\n")
+      );
+    }
   }
 }
 

@@ -14,6 +14,9 @@ import {
   FakeChatMessageHistory,
   FakeListChatModel,
 } from "../../utils/testing/index.js";
+import { StringOutputParser } from "../../output_parsers/string.js";
+import { Document } from "../../documents/document.js";
+import { ChatPromptTemplate } from "../../prompts/chat.js";
 
 const chatModel = new FakeListChatModel({ responses: ["hey"], sleep: 500 });
 
@@ -151,4 +154,49 @@ describe.each(Object.keys(TEST_CASES))("Test runnable %s", (name) => {
       ]);
     }).rejects.toThrowError();
   });
+});
+
+test("Should not raise node warning", async () => {
+  const formatDocumentsAsString = (documents: Document[]) => {
+    return documents.map((doc) => doc.pageContent).join("\n\n");
+  };
+  const retriever = RunnableLambda.from(() => {
+    return [
+      new Document({ pageContent: "test1" }),
+      new Document({ pageContent: "test2" }),
+      new Document({ pageContent: "test4" }),
+      new Document({ pageContent: "test5" }),
+    ];
+  });
+  const ragChainWithSources = RunnableMap.from({
+    // Return raw documents here for now since we want to return them at
+    // the end - we'll format in the next step of the chain
+    context: retriever,
+    question: new RunnablePassthrough(),
+  }).assign({
+    answer: RunnableSequence.from([
+      (input) => {
+        return {
+          // Now we format the documents as strings for the prompt
+          context: formatDocumentsAsString(input.context as Document[]),
+          question: input.question,
+        };
+      },
+      ChatPromptTemplate.fromTemplate("Hello"),
+      new FakeListChatModel({ responses: ["test"] }),
+      new StringOutputParser(),
+    ]),
+  });
+
+  const stream = await ragChainWithSources.stream(
+    {
+      question: "What is the capital of France?",
+    },
+    {
+      signal: new AbortController().signal,
+    }
+  );
+  for await (const _ of stream) {
+    // console.log(_);
+  }
 });

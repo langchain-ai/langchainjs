@@ -180,15 +180,15 @@ async function fileToBase64(filePath: string): Promise<string> {
   return base64String;
 }
 
-test.skip("Gemini can understand audio", async () => {
+test("Gemini can understand audio", async () => {
   // Update this with the correct path to an audio file on your machine.
-  const audioPath =
-    "/Users/bracesproul/code/lang-chain-ai/langchainjs/libs/langchain-google-gauth/src/tests/data/audio.mp3";
-  const audioMimeType = "audio/mp3";
+  const audioPath = "./src/tests/data/gettysburg10.wav";
+  const audioMimeType = "audio/wav";
 
   const model = new ChatGoogleGenerativeAI({
-    model: "gemini-1.5-pro-latest",
+    model: "gemini-1.5-flash",
     temperature: 0,
+    maxRetries: 0,
   });
 
   const audioBase64 = await fileToBase64(audioPath);
@@ -507,6 +507,25 @@ test("Invoke token count usage_metadata", async () => {
   const model = new ChatGoogleGenerativeAI({
     temperature: 0,
     maxOutputTokens: 10,
+  });
+  const res = await model.invoke("Why is the sky blue? Be concise.");
+  expect(res?.usage_metadata).toBeDefined();
+  if (!res?.usage_metadata) {
+    return;
+  }
+  expect(res.usage_metadata.input_tokens).toBeGreaterThan(1);
+  expect(res.usage_metadata.output_tokens).toBeGreaterThan(1);
+  expect(res.usage_metadata.total_tokens).toBe(
+    res.usage_metadata.input_tokens + res.usage_metadata.output_tokens
+  );
+});
+
+test("Invoke with JSON mode", async () => {
+  const model = new ChatGoogleGenerativeAI({
+    model: "gemini-1.5-flash",
+    temperature: 0,
+    maxOutputTokens: 10,
+    json: true,
   });
   const res = await model.invoke("Why is the sky blue? Be concise.");
   expect(res?.usage_metadata).toBeDefined();
