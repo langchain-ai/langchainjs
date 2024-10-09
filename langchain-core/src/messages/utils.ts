@@ -1,3 +1,4 @@
+import { SerializedConstructor } from "../load/serializable.js";
 import { _isToolCall } from "../tools/utils.js";
 import { AIMessage, AIMessageChunk, AIMessageChunkFields } from "./ai.js";
 import {
@@ -55,10 +56,45 @@ function _coerceToolCall(
   }
 }
 
+function isSerializedConstructor(x: unknown): x is SerializedConstructor {
+  return (
+    typeof x === "object" &&
+    x != null &&
+    (x as SerializedConstructor).lc === 1 &&
+    Array.isArray((x as SerializedConstructor).id) &&
+    (x as SerializedConstructor).kwargs != null &&
+    typeof (x as SerializedConstructor).kwargs === "object"
+  );
+}
+
 function _constructMessageFromParams(
-  params: BaseMessageFields & { type: string } & Record<string, unknown>
+  params:
+    | (BaseMessageFields & { type: string } & Record<string, unknown>)
+    | SerializedConstructor
 ) {
-  const { type, ...rest } = params;
+  let type: string;
+  let rest: BaseMessageFields & Record<string, unknown>;
+  // Support serialized messages
+  if (isSerializedConstructor(params)) {
+    const className = params.id.at(-1);
+    if (className === "HumanMessage" || className === "HumanMessageChunk") {
+      type = "user";
+    } else if (className === "AIMessage" || className === "AIMessageChunk") {
+      type = "assistant";
+    } else if (
+      className === "SystemMessage" ||
+      className === "SystemMessageChunk"
+    ) {
+      type = "system";
+    } else {
+      type = "unknown";
+    }
+    rest = params.kwargs as BaseMessageFields;
+  } else {
+    const { type: extractedType, ...otherParams } = params;
+    type = extractedType;
+    rest = otherParams;
+  }
   if (type === "human" || type === "user") {
     return new HumanMessage(rest);
   } else if (type === "ai" || type === "assistant") {
@@ -79,7 +115,7 @@ function _constructMessageFromParams(
     });
   } else {
     throw new Error(
-      `Unable to coerce message from array: only human, AI, or system message coercion is currently supported.`
+      `Unable to coerce message from array: only human, AI, or system message coercion is currently supported.\n\nReceived:${params}`
     );
   }
 }

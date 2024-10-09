@@ -323,3 +323,15 @@ test("Test ChatModel can stream back a custom event", async () => {
   }
   expect(customEvent).toBeDefined();
 });
+
+test(`Test ChatModel should not serialize a passed "cache" parameter`, async () => {
+  const model = new FakeListChatModel({
+    responses: ["hi"],
+    emitCustomEvent: true,
+    cache: true,
+  });
+  console.log(JSON.stringify(model));
+  expect(JSON.stringify(model)).toEqual(
+    `{"lc":1,"type":"constructor","id":["langchain","chat_models","fake-list","FakeListChatModel"],"kwargs":{"responses":["hi"],"emit_custom_event":true}}`
+  );
+});
