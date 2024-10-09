@@ -161,14 +161,10 @@ export abstract class Serializable implements SerializableInterface {
 
     const aliases: { [key: string]: string } = {};
     const secrets: { [key: string]: string } = {};
-    let kwargs = Object.keys(this.lc_kwargs).reduce((acc, key) => {
+    const kwargs = Object.keys(this.lc_kwargs).reduce((acc, key) => {
       acc[key] = key in this ? this[key as keyof this] : this.lc_kwargs[key];
       return acc;
     }, {} as SerializedFields);
-
-    // Include lc_attributes of the current instance
-    kwargs = this.lc_attributes ? { ...kwargs, ...this.lc_attributes } : kwargs;
-
     // get secrets, attributes and aliases from all superclasses
     for (
       // eslint-disable-next-line @typescript-eslint/no-this-alias

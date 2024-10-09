@@ -133,8 +133,6 @@ test("Deserialisation and serialisation of messages with ID", async () => {
   });
 
   const deserialized: AIMessage = await load(JSON.stringify(message), config);
-  console.log("deserialized", JSON.stringify(deserialized));
-  console.log("message", JSON.stringify(message));
   expect(deserialized).toEqual(message);
   expect(deserialized.id).toBe(messageId);
 });
