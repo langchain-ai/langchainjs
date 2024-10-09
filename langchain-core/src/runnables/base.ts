@@ -58,14 +58,18 @@ import { ToolCall } from "../messages/tool.js";
 
 export { type RunnableInterface, RunnableBatchOptions };
 
-export type RunnableFunc<RunInput, RunOutput> = (
+export type RunnableFunc<
+  RunInput,
+  RunOutput,
+  CallOptions extends RunnableConfig = RunnableConfig
+> = (
   input: RunInput,
   options:
-    | RunnableConfig
+    | CallOptions
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     | Record<string, any>
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    | (Record<string, any> & RunnableConfig)
+    | (Record<string, any> & CallOptions)
 ) => RunOutput | Promise<RunOutput>;
 
 export type RunnableMapLike<RunInput, RunOutput> = {
@@ -73,9 +77,13 @@ export type RunnableMapLike<RunInput, RunOutput> = {
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type RunnableLike<RunInput = any, RunOutput = any> =
-  | RunnableInterface<RunInput, RunOutput>
-  | RunnableFunc<RunInput, RunOutput>
+export type RunnableLike<
+  RunInput = any,
+  RunOutput = any,
+  CallOptions extends RunnableConfig = RunnableConfig
+> =
+  | RunnableInterface<RunInput, RunOutput, CallOptions>
+  | RunnableFunc<RunInput, RunOutput, CallOptions>
   | RunnableMapLike<RunInput, RunOutput>;
 
 export type RunnableRetryFailedAttemptHandler = (
