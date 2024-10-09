@@ -20,29 +20,6 @@ export interface BaseCohereRerankArgs {
   maxChunksPerDoc?: number;
 }
 
-// export type CohereRerankApiKeyArgs = CohereBaseRerankArgs & {
-//   /**
-//    * The API key to use.
-//    * @default {process.env.COHERE_API_KEY}
-//    */
-//   apiKey?: string;
-// };
-
-// export type CohereRerankClientArgs = CohereBaseRerankArgs & {
-//   /**
-//    * The CohereClient instance to use
-//    */
-//   client: CohereClient;
-// };
-
-// export type CohereRerankArgs = CohereRerankApiKeyArgs | CohereRerankClientArgs;
-
-// function isClientArgs(
-//   fields: CohereRerankArgs
-// ): fields is CohereRerankClientArgs {
-//   return (fields as CohereRerankClientArgs).client !== undefined;
-// }
-
 type CohereRerankArgs = BaseCohereRerankArgs & CohereClientOptions;
 /**
  * Document compressor that uses `Cohere Rerank API`.
