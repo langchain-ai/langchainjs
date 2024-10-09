@@ -258,10 +258,11 @@ export type BaseLanguageModelInput =
 export type StructuredOutputType = z.infer<z.ZodObject<any, any, any, any>>;
 
 export type StructuredOutputMethodOptions<IncludeRaw extends boolean = false> =
-  {
+  Record<string, any> & {
     name?: string;
     method?: "functionCalling" | "jsonMode" | "jsonSchema" | string;
     includeRaw?: IncludeRaw;
+    strict?: boolean;
   };
 
 /** @deprecated Use StructuredOutputMethodOptions instead */
@@ -514,7 +515,6 @@ export abstract class BaseLanguageModel<
   withStructuredOutput?<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   >(
     schema:
       | z.ZodType<RunOutput>
