@@ -144,6 +144,14 @@ export function convertToConverseMessages(messages: BaseMessage[]): {
               return {
                 text: block.text,
               };
+            } else if (block.type === 'document' && block.document !== undefined) {
+              return {
+                document: block.document,
+              };
+            } else if (block.type === 'image' && block.image !== undefined) {
+              return {
+                image: block.image,
+              };
             } else {
               throw new Error(`Unsupported content block type: ${block.type}`);
             }
