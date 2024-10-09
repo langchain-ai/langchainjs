@@ -782,6 +782,7 @@ export class ChatAnthropicMessages<
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
     const params = this.invocationParams(options);
+    console.log(params);
     const formattedMessages = _convertMessagesToAnthropicPayload(messages);
     const coerceContentToString = !_toolsInParams({
       ...params,
