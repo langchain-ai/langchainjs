@@ -430,15 +430,55 @@ export abstract class ChatModelIntegrationTests<
     }
   }
 
-  abstract invokeWithAudioInput(stream: boolean): Promise<AIMessage>;
+  async invokeWithAudioInput(_stream: boolean): Promise<AIMessage> {
+    // Initialize the model so we can access the `.getName()` method
+    // for better error messages.
+    const chatModel = new this.Cls(this.constructorArgs);
+    throw new Error(
+      `invokeWithAudioInput is not implemented on ${chatModel.getName()}` +
+        "standard integration tests."
+    );
+  }
 
-  abstract invokeWithAudioOutput(strea: boolean): Promise<AIMessage>;
+  async invokeWithAudioOutput(_stream: boolean): Promise<AIMessage> {
+    // Initialize the model so we can access the `.getName()` method
+    // for better error messages.
+    const chatModel = new this.Cls(this.constructorArgs);
+    throw new Error(
+      `invokeWithAudioOutput is not implemented on ${chatModel.getName()}` +
+        "standard integration tests."
+    );
+  }
 
-  abstract invokeWithReasoningOutput(stream: boolean): Promise<AIMessage>;
+  async invokeWithReasoningOutput(_stream: boolean): Promise<AIMessage> {
+    // Initialize the model so we can access the `.getName()` method
+    // for better error messages.
+    const chatModel = new this.Cls(this.constructorArgs);
+    throw new Error(
+      `invokeWithReasoningOutput is not implemented on ${chatModel.getName()}` +
+        "standard integration tests."
+    );
+  }
 
-  abstract invokeWithCacheReadInput(stream: boolean): Promise<AIMessage>;
+  async invokeWithCacheReadInput(_stream: boolean): Promise<AIMessage> {
+    // Initialize the model so we can access the `.getName()` method
+    // for better error messages.
+    const chatModel = new this.Cls(this.constructorArgs);
+    throw new Error(
+      `invokeWithCacheReadInput is not implemented on ${chatModel.getName()}` +
+        "standard integration tests."
+    );
+  }
 
-  abstract invokeWithCacheCreationInput(stream: boolean): Promise<AIMessage>;
+  async invokeWithCacheCreationInput(_stream: boolean): Promise<AIMessage> {
+    // Initialize the model so we can access the `.getName()` method
+    // for better error messages.
+    const chatModel = new this.Cls(this.constructorArgs);
+    throw new Error(
+      `invokeWithCacheCreationInput is not implemented on ${chatModel.getName()}` +
+        "standard integration tests."
+    );
+  }
 
   private assertAudioInputMetadata(msg: AIMessage) {
     expect(msg.usage_metadata).toBeDefined();
