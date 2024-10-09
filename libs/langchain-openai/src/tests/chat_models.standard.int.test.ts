@@ -2,11 +2,11 @@
 import { test, expect } from "@jest/globals";
 import { ChatModelIntegrationTests } from "@langchain/standard-tests";
 import { AIMessage, AIMessageChunk } from "@langchain/core/messages";
-import { ChatOpenAI, ChatOpenAICallOptions } from "../chat_models.js";
 import { readFileSync } from "fs";
 import { join } from "path";
 import { concat } from "@langchain/core/utils/stream";
 import { BaseLanguageModelInput } from "@langchain/core/language_models/base";
+import { ChatOpenAI, ChatOpenAICallOptions } from "../chat_models.js";
 
 const REPO_ROOT_DIR = process.cwd();
 
