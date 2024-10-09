@@ -442,12 +442,12 @@ export abstract class ChatModelIntegrationTests<
 
   private assertAudioInputMetadata(msg: AIMessage) {
     expect(msg.usage_metadata).toBeDefined();
-    expect(msg.usage_metadata!.input_token_details).toBeDefined();
-    expect(typeof msg.usage_metadata!.input_token_details!.audio).toBe(
+    expect(msg.usage_metadata?.input_token_details).toBeDefined();
+    expect(typeof msg.usage_metadata?.input_token_details?.audio).toBe(
       "number"
     );
-    expect(msg.usage_metadata!.input_tokens).toBeGreaterThanOrEqual(
-      Object.values(msg.usage_metadata!.input_token_details!).reduce(
+    expect(msg.usage_metadata?.input_tokens).toBeGreaterThanOrEqual(
+      Object.values(msg.usage_metadata?.input_token_details!).reduce(
         (a, b) => (a ?? 0) + (b ?? 0),
         0
       )
@@ -456,12 +456,12 @@ export abstract class ChatModelIntegrationTests<
 
   private assertAudioOutputMetadata(msg: AIMessage) {
     expect(msg.usage_metadata).toBeDefined();
-    expect(msg.usage_metadata!.output_token_details).toBeDefined();
-    expect(typeof msg.usage_metadata!.output_token_details!.audio).toBe(
+    expect(msg.usage_metadata?.output_token_details).toBeDefined();
+    expect(typeof msg.usage_metadata?.output_token_details?.audio).toBe(
       "number"
     );
-    expect(msg.usage_metadata!.output_tokens).toBeGreaterThanOrEqual(
-      Object.values(msg.usage_metadata!.output_token_details!).reduce(
+    expect(msg.usage_metadata?.output_tokens).toBeGreaterThanOrEqual(
+      Object.values(msg.usage_metadata?.output_token_details!).reduce(
         (a, b) => (a ?? 0) + (b ?? 0),
         0
       )
@@ -470,12 +470,12 @@ export abstract class ChatModelIntegrationTests<
 
   private assertReasoningOutputMetadata(msg: AIMessage) {
     expect(msg.usage_metadata).toBeDefined();
-    expect(msg.usage_metadata!.output_token_details).toBeDefined();
-    expect(typeof msg.usage_metadata!.output_token_details!.reasoning).toBe(
+    expect(msg.usage_metadata?.output_token_details).toBeDefined();
+    expect(typeof msg.usage_metadata?.output_token_details?.reasoning).toBe(
       "number"
     );
-    expect(msg.usage_metadata!.output_tokens).toBeGreaterThanOrEqual(
-      Object.values(msg.usage_metadata!.output_token_details!).reduce(
+    expect(msg.usage_metadata?.output_tokens).toBeGreaterThanOrEqual(
+      Object.values(msg.usage_metadata?.output_token_details!).reduce(
         (a, b) => (a ?? 0) + (b ?? 0),
         0
       )
@@ -484,12 +484,12 @@ export abstract class ChatModelIntegrationTests<
 
   private assertCacheReadInputMetadata(msg: AIMessage) {
     expect(msg.usage_metadata).toBeDefined();
-    expect(msg.usage_metadata!.input_token_details).toBeDefined();
-    expect(typeof msg.usage_metadata!.input_token_details!.cache_read).toBe(
+    expect(msg.usage_metadata?.input_token_details).toBeDefined();
+    expect(typeof msg.usage_metadata?.input_token_details?.cache_read).toBe(
       "number"
     );
-    expect(msg.usage_metadata!.input_tokens).toBeGreaterThanOrEqual(
-      Object.values(msg.usage_metadata!.input_token_details!).reduce(
+    expect(msg.usage_metadata?.input_tokens).toBeGreaterThanOrEqual(
+      Object.values(msg.usage_metadata?.input_token_details!).reduce(
         (a, b) => (a ?? 0) + (b ?? 0),
         0
       )
@@ -498,12 +498,12 @@ export abstract class ChatModelIntegrationTests<
 
   private assertCacheCreationInputMetadata(msg: AIMessage) {
     expect(msg.usage_metadata).toBeDefined();
-    expect(msg.usage_metadata!.input_token_details).toBeDefined();
-    expect(typeof msg.usage_metadata!.input_token_details!.cache_creation).toBe(
+    expect(msg.usage_metadata?.input_token_details).toBeDefined();
+    expect(typeof msg.usage_metadata?.input_token_details?.cache_creation).toBe(
       "number"
     );
-    expect(msg.usage_metadata!.input_tokens).toBeGreaterThanOrEqual(
-      Object.values(msg.usage_metadata!.input_token_details!).reduce(
+    expect(msg.usage_metadata?.input_tokens).toBeGreaterThanOrEqual(
+      Object.values(msg.usage_metadata?.input_token_details!).reduce(
         (a, b) => (a ?? 0) + (b ?? 0),
         0
       )
