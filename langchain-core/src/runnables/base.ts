@@ -59,20 +59,20 @@ import { ToolCall } from "../messages/tool.js";
 export { type RunnableInterface, RunnableBatchOptions };
 
 // TODO: Make `options` just take `RunnableConfig`
-export type RunnableFunc<RunInput, RunOutput> = (
+export type RunnableFunc<RunInput, RunOutput, CallOptions> = (
   input: RunInput,
   options?:
     | ({
         /** @deprecated Use top-level config fields instead. */
-        config?: RunnableConfig;
-      } & RunnableConfig)
+        config?: CallOptions;
+      } & CallOptions)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     | Record<string, any>
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     | (Record<string, any> & {
         /** @deprecated Use top-level config fields instead. */
-        config: RunnableConfig;
-      } & RunnableConfig)
+        config: CallOptions;
+      } & CallOptions)
 ) => RunOutput | Promise<RunOutput>;
 
 export type RunnableMapLike<RunInput, RunOutput> = {
@@ -80,9 +80,15 @@ export type RunnableMapLike<RunInput, RunOutput> = {
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type RunnableLike<RunInput = any, RunOutput = any> =
-  | RunnableInterface<RunInput, RunOutput>
-  | RunnableFunc<RunInput, RunOutput>
+export type RunnableLike<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  RunInput = any,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  RunOutput = any,
+  CallOptions extends RunnableConfig = RunnableConfig
+> =
+  | RunnableInterface<RunInput, RunOutput, CallOptions>
+  | RunnableFunc<RunInput, RunOutput, CallOptions>
   | RunnableMapLike<RunInput, RunOutput>;
 
 export type RunnableRetryFailedAttemptHandler = (
@@ -478,7 +484,7 @@ export abstract class Runnable<
       runManager?: CallbackManagerForChainRun,
       options?: Partial<CallOptions>
     ) => AsyncGenerator<O>,
-    options?: CallOptions & { runType?: string }
+    options?: Partial<CallOptions> & { runType?: string }
   ): AsyncGenerator<O> {
     let finalInput: I | undefined;
     let finalInputSupported = true;
@@ -2241,15 +2247,28 @@ export class RunnableTraceable<RunInput, RunOutput> extends Runnable<
   }
 }
 
-function assertNonTraceableFunction<RunInput, RunOutput>(
+function assertNonTraceableFunction<
+  RunInput,
+  RunOutput,
+  CallOptions extends RunnableConfig = RunnableConfig
+>(
   func:
-    | RunnableFunc<RunInput, RunOutput | Runnable<RunInput, RunOutput>>
+    | RunnableFunc<
+        RunInput,
+        RunOutput | Runnable<RunInput, RunOutput, CallOptions>,
+        CallOptions
+      >
     | TraceableFunction<
-        RunnableFunc<RunInput, RunOutput | Runnable<RunInput, RunOutput>>
+        RunnableFunc<
+          RunInput,
+          RunOutput | Runnable<RunInput, RunOutput, CallOptions>,
+          CallOptions
+        >
       >
 ): asserts func is RunnableFunc<
   RunInput,
-  RunOutput | Runnable<RunInput, RunOutput>
+  RunOutput | Runnable<RunInput, RunOutput, CallOptions>,
+  CallOptions
 > {
   if (isTraceableFunction(func)) {
     throw new Error(
@@ -2261,10 +2280,11 @@ function assertNonTraceableFunction<RunInput, RunOutput>(
 /**
  * A runnable that runs a callable.
  */
-export class RunnableLambda<RunInput, RunOutput> extends Runnable<
+export class RunnableLambda<
   RunInput,
-  RunOutput
-> {
+  RunOutput,
+  CallOptions extends RunnableConfig = RunnableConfig
+> extends Runnable<RunInput, RunOutput, CallOptions> {
   static lc_name() {
     return "RunnableLambda";
   }
@@ -2273,21 +2293,31 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
 
   protected func: RunnableFunc<
     RunInput,
-    RunOutput | Runnable<RunInput, RunOutput>
+    RunOutput | Runnable<RunInput, RunOutput, CallOptions>,
+    CallOptions
   >;
 
   constructor(fields: {
     func:
-      | RunnableFunc<RunInput, RunOutput | Runnable<RunInput, RunOutput>>
+      | RunnableFunc<
+          RunInput,
+          RunOutput | Runnable<RunInput, RunOutput, CallOptions>,
+          CallOptions
+        >
       | TraceableFunction<
-          RunnableFunc<RunInput, RunOutput | Runnable<RunInput, RunOutput>>
+          RunnableFunc<
+            RunInput,
+            RunOutput | Runnable<RunInput, RunOutput, CallOptions>,
+            CallOptions
+          >
         >;
   }) {
     if (isTraceableFunction(fields.func)) {
       // eslint-disable-next-line no-constructor-return
       return RunnableTraceable.from(fields.func) as unknown as RunnableLambda<
         RunInput,
-        RunOutput
+        RunOutput,
+        CallOptions
       >;
     }
 
@@ -2297,23 +2327,51 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
     this.func = fields.func;
   }
 
-  static from<RunInput, RunOutput>(
-    func: RunnableFunc<RunInput, RunOutput | Runnable<RunInput, RunOutput>>
-  ): RunnableLambda<RunInput, RunOutput>;
-
-  static from<RunInput, RunOutput>(
-    func: TraceableFunction<
-      RunnableFunc<RunInput, RunOutput | Runnable<RunInput, RunOutput>>
+  static from<
+    RunInput,
+    RunOutput,
+    CallOptions extends RunnableConfig = RunnableConfig
+  >(
+    func: RunnableFunc<
+      RunInput,
+      RunOutput | Runnable<RunInput, RunOutput, CallOptions>,
+      CallOptions
     >
-  ): RunnableLambda<RunInput, RunOutput>;
+  ): RunnableLambda<RunInput, RunOutput, CallOptions>;
 
-  static from<RunInput, RunOutput>(
+  static from<
+    RunInput,
+    RunOutput,
+    CallOptions extends RunnableConfig = RunnableConfig
+  >(
+    func: TraceableFunction<
+      RunnableFunc<
+        RunInput,
+        RunOutput | Runnable<RunInput, RunOutput, CallOptions>,
+        CallOptions
+      >
+    >
+  ): RunnableLambda<RunInput, RunOutput, CallOptions>;
+
+  static from<
+    RunInput,
+    RunOutput,
+    CallOptions extends RunnableConfig = RunnableConfig
+  >(
     func:
-      | RunnableFunc<RunInput, RunOutput | Runnable<RunInput, RunOutput>>
-      | TraceableFunction<
-          RunnableFunc<RunInput, RunOutput | Runnable<RunInput, RunOutput>>
+      | RunnableFunc<
+          RunInput,
+          RunOutput | Runnable<RunInput, RunOutput, CallOptions>,
+          CallOptions
         >
-  ): RunnableLambda<RunInput, RunOutput> {
+      | TraceableFunction<
+          RunnableFunc<
+            RunInput,
+            RunOutput | Runnable<RunInput, RunOutput, CallOptions>,
+            CallOptions
+          >
+        >
+  ): RunnableLambda<RunInput, RunOutput, CallOptions> {
     return new RunnableLambda({
       func,
     });
@@ -2321,7 +2379,7 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
 
   async _invoke(
     input: RunInput,
-    config?: Partial<RunnableConfig>,
+    config?: Partial<CallOptions>,
     runManager?: CallbackManagerForChainRun
   ) {
     return new Promise<RunOutput>((resolve, reject) => {
@@ -2398,7 +2456,7 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
 
   async invoke(
     input: RunInput,
-    options?: Partial<RunnableConfig>
+    options?: Partial<CallOptions>
   ): Promise<RunOutput> {
     return this._callWithConfig(this._invoke, input, options);
   }
@@ -2406,7 +2464,7 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
   async *_transform(
     generator: AsyncGenerator<RunInput>,
     runManager?: CallbackManagerForChainRun,
-    config?: Partial<RunnableConfig>
+    config?: Partial<CallOptions>
   ): AsyncGenerator<RunOutput> {
     let finalChunk: RunInput | undefined;
     for await (const chunk of generator) {
@@ -2472,7 +2530,7 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
 
   transform(
     generator: AsyncGenerator<RunInput>,
-    options?: Partial<RunnableConfig>
+    options?: Partial<CallOptions>
   ): AsyncGenerator<RunOutput> {
     return this._transformStreamWithConfig(
       generator,
@@ -2483,7 +2541,7 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
 
   async stream(
     input: RunInput,
-    options?: Partial<RunnableConfig>
+    options?: Partial<CallOptions>
   ): Promise<IterableReadableStream<RunOutput>> {
     async function* generator() {
       yield input;
@@ -2728,16 +2786,25 @@ export class RunnableWithFallbacks<RunInput, RunOutput> extends Runnable<
 }
 
 // TODO: Figure out why the compiler needs help eliminating Error as a RunOutput type
-export function _coerceToRunnable<RunInput, RunOutput>(
-  coerceable: RunnableLike<RunInput, RunOutput>
-): Runnable<RunInput, Exclude<RunOutput, Error>> {
+export function _coerceToRunnable<
+  RunInput,
+  RunOutput,
+  CallOptions extends RunnableConfig = RunnableConfig
+>(
+  coerceable: RunnableLike<RunInput, RunOutput, CallOptions>
+): Runnable<RunInput, Exclude<RunOutput, Error>, CallOptions> {
   if (typeof coerceable === "function") {
     return new RunnableLambda({ func: coerceable }) as Runnable<
       RunInput,
-      Exclude<RunOutput, Error>
+      Exclude<RunOutput, Error>,
+      CallOptions
     >;
   } else if (Runnable.isRunnable(coerceable)) {
-    return coerceable as Runnable<RunInput, Exclude<RunOutput, Error>>;
+    return coerceable as Runnable<
+      RunInput,
+      Exclude<RunOutput, Error>,
+      CallOptions
+    >;
   } else if (!Array.isArray(coerceable) && typeof coerceable === "object") {
     const runnables: Record<string, Runnable<RunInput>> = {};
     for (const [key, value] of Object.entries(coerceable)) {
@@ -2745,7 +2812,7 @@ export function _coerceToRunnable<RunInput, RunOutput>(
     }
     return new RunnableMap({
       steps: runnables,
-    }) as unknown as Runnable<RunInput, Exclude<RunOutput, Error>>;
+    }) as unknown as Runnable<RunInput, Exclude<RunOutput, Error>, CallOptions>;
   } else {
     throw new Error(
       `Expected a Runnable, function or object.\nInstead got an unsupported type.`
