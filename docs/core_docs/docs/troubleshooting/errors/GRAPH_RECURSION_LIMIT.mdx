@@ -1,8 +1,19 @@
 # GRAPH_RECURSION_LIMIT
 
 Your LangGraph app reached the maximum number of steps before hitting a stop condition.
+This is often due to an infinite loop as below:
 
-This is usually a sign of an infinite loop, but complex graphs may hit this naturally.
+```ts
+const graph = new StateGraph(...)
+  .addNode("a", ...)
+  .addNode("b", ...)
+  .addEdge("a", "b")
+  .addEdge("b", "a")
+  ...
+  .compile();
+```
+
+However, complex graphs may hit the default limit naturally.
 
 ## Troubleshooting
 
