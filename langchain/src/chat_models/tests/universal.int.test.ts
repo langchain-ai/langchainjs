@@ -6,9 +6,13 @@ import { ChatPromptTemplate, PromptTemplate } from "@langchain/core/prompts";
 import { RunLogPatch, StreamEvent } from "@langchain/core/tracers/log_stream";
 import { AIMessageChunk } from "@langchain/core/messages";
 import { concat } from "@langchain/core/utils/stream";
-import { AgentExecutor, createReactAgent } from "../../agents/index.js";
-import { pull } from "../../hub.js";
+import { ChatOpenAI, ChatOpenAICallOptions } from "@langchain/openai";
+import { ChatAnthropic, ChatAnthropicCallOptions } from "@langchain/anthropic";
+import { ChatVertexAI } from "@langchain/google-vertexai";
+import { GoogleAIBaseLanguageModelCallOptions } from "@langchain/google-common";
 import { initChatModel } from "../universal.js";
+import { pull } from "../../hub.js";
+import { AgentExecutor, createReactAgent } from "../../agents/index.js";
 
 // Make copies of API keys and remove them from the environment to avoid conflicts.
 
@@ -45,6 +49,29 @@ test("Initialize non-configurable models", async () => {
     modelProvider: "google-genai",
     temperature: 0.25,
   });
+
+  const gpt4Result = await gpt4.invoke("what's your name");
+  expect(gpt4Result).toBeDefined();
+  expect(gpt4Result.content.length).toBeGreaterThan(0);
+
+  const claudeResult = await claude.invoke("what's your name");
+  expect(claudeResult).toBeDefined();
+  expect(claudeResult.content.length).toBeGreaterThan(0);
+
+  const geminiResult = await gemini.invoke("what's your name");
+  expect(geminiResult).toBeDefined();
+  expect(geminiResult.content.length).toBeGreaterThan(0);
+});
+
+test("Init models with just a model name", async () => {
+  const gpt4 = await initChatModel<ChatOpenAICallOptions, ChatOpenAI>("gpt-4");
+  const claude = await initChatModel<ChatAnthropicCallOptions, ChatAnthropic>(
+    "claude-3-opus-20240229"
+  );
+  const gemini = await initChatModel<
+    GoogleAIBaseLanguageModelCallOptions,
+    ChatVertexAI
+  >("gemini-1.5-pro");
 
   const gpt4Result = await gpt4.invoke("what's your name");
   expect(gpt4Result).toBeDefined();

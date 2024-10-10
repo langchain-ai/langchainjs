@@ -415,6 +415,7 @@
     "@langchain/aws": "*",
     "@langchain/cohere": "*",
     "@langchain/core": "workspace:*",
+    "@langchain/google-common": "*",
     "@langchain/google-genai": "*",
     "@langchain/google-vertexai": "*",
     "@langchain/groq": "*",
