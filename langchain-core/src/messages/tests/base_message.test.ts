@@ -10,6 +10,7 @@ import {
   SystemMessage,
 } from "../index.js";
 import { load } from "../../load/index.js";
+import { concat } from "../../utils/stream.js";
 
 test("Test ChatPromptTemplate can format OpenAI content image messages", async () => {
   const message = new HumanMessage({
@@ -394,5 +395,62 @@ describe("Message like coercion", () => {
         tool_call_id: "10.2",
       }),
     ]);
+  });
+});
+
+describe("usage_metadata serialized", () => {
+  test("usage_metadata is serialized when included in constructor", async () => {
+    const aiMsg = new AIMessage({
+      content: "hello",
+      usage_metadata: {
+        input_tokens: 1,
+        output_tokens: 1,
+        total_tokens: 2,
+      },
+    });
+    const jsonAIMessage = JSON.stringify(aiMsg);
+    expect(jsonAIMessage).toContain("usage_metadata");
+    expect(jsonAIMessage).toContain("input_tokens");
+    expect(jsonAIMessage).toContain("output_tokens");
+    expect(jsonAIMessage).toContain("total_tokens");
+  });
+
+  test("usage_metadata is serialized when included in constructor", async () => {
+    const aiMsg = new AIMessageChunk({
+      content: "hello",
+      usage_metadata: {
+        input_tokens: 1,
+        output_tokens: 1,
+        total_tokens: 2,
+      },
+    });
+    const jsonAIMessage = JSON.stringify(aiMsg);
+    expect(jsonAIMessage).toContain("usage_metadata");
+    expect(jsonAIMessage).toContain("input_tokens");
+    expect(jsonAIMessage).toContain("output_tokens");
+    expect(jsonAIMessage).toContain("total_tokens");
+  });
+
+  test("usage_metadata is serialized even when not included in constructor", async () => {
+    const aiMsg = new AIMessageChunk("hello");
+
+    const concatenatedAIMessageChunk = concat(
+      aiMsg,
+      new AIMessageChunk({
+        content: "",
+        usage_metadata: {
+          input_tokens: 1,
+          output_tokens: 1,
+          total_tokens: 2,
+        },
+      })
+    );
+    const jsonConcatenatedAIMessageChunk = JSON.stringify(
+      concatenatedAIMessageChunk
+    );
+    expect(jsonConcatenatedAIMessageChunk).toContain("usage_metadata");
+    expect(jsonConcatenatedAIMessageChunk).toContain("input_tokens");
+    expect(jsonConcatenatedAIMessageChunk).toContain("output_tokens");
+    expect(jsonConcatenatedAIMessageChunk).toContain("total_tokens");
   });
 });
