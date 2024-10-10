@@ -1,0 +1,14 @@
+# GRAPH_RECURSION_LIMIT
+
+Your LangGraph app reached the maximum number of steps before hitting a stop condition.
+
+This is usually a sign of an infinite loop, but complex graphs may hit this naturally.
+
+## Troubleshooting
+
+- If you are not expecting your graph to go through many iterations, you likely have a cycle. Check your logic for infinite loops.
+- If you have a complex graph, you can pass in a higher `recursionLimit` value into your `config` object when invoking your graph like this:
+
+```ts
+await graph.invoke({...}, { recursionLimit: 100 });
+```

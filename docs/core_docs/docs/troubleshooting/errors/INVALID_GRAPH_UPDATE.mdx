@@ -1,0 +1,40 @@
+# INVALID_GRAPH_UPDATE
+
+A LangGraph app received an unexpected return value from a node and failed to update its state at the end of a step.
+
+One way this can occur is if you are using a [fanout](https://langchain-ai.github.io/langgraphjs/how-tos/map-reduce/)
+or other parallel execution in your graph and you have defined a state with a value like this:
+
+```ts
+const StateAnnotation = Annotation.Root({
+  someKey: Annotation<string>,
+});
+
+const graph = new StateGraph(StateAnnotation)
+  .addNode(...)
+  ...
+  .compile();
+```
+
+If a node in the above graph returns `{ someKey: "someStringValue" }`, this will overwrite the state value for `someKey` with `"someStringValue"`.
+However, if multiple nodes in e.g. a fanout within a single step return values for `"someKey"`, the graph will throw this error because
+there is uncertainty around how to update the internal state.
+
+To get around this, you can define a reducer that combines multiple values:
+
+```ts
+const StateAnnotation = Annotation.Root({
+  someKey: Annotation<string[]>({
+    default: () => [],
+    reducer: (a, b) => a.concat(b),
+  }),
+});
+```
+
+This will allow you to return the same key from nodes executed in parallel safely.
+
+## Troubleshooting
+
+The following may help resolve this error:
+
+- If your graph executes nodes in parallel, make sure you have defined relevant state keys with a reducer.
