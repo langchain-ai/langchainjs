@@ -1,14 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { CohereClient, Cohere } from "cohere-ai";
+import { Cohere, CohereClient } from "cohere-ai";
 import { ToolResult } from "cohere-ai/api/index.js";
 
 import { zodToJsonSchema } from "zod-to-json-schema";
 import {
-  MessageType,
-  type BaseMessage,
-  MessageContent,
   AIMessage,
+  type BaseMessage,
   isAIMessage,
+  MessageContent,
+  MessageType,
 } from "@langchain/core/messages";
 import {
   BaseLanguageModelInput,
@@ -17,11 +17,11 @@ import {
 import { isLangChainTool } from "@langchain/core/utils/function_calling";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {
-  type BaseChatModelParams,
   BaseChatModel,
-  LangSmithParams,
   BaseChatModelCallOptions,
+  type BaseChatModelParams,
   BindToolsInput,
+  LangSmithParams,
 } from "@langchain/core/language_models/chat_models";
 import {
   ChatGeneration,
@@ -29,22 +29,22 @@ import {
   ChatResult,
 } from "@langchain/core/outputs";
 import { AIMessageChunk } from "@langchain/core/messages";
-import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { NewTokenIndices } from "@langchain/core/callbacks/base";
 import {
-  ToolMessage,
   ToolCall,
   ToolCallChunk,
+  ToolMessage,
 } from "@langchain/core/messages/tool";
 import * as uuid from "uuid";
 import { Runnable } from "@langchain/core/runnables";
+import { CohereClientOptions, getCohereClient } from "./client.js";
 
 type ChatCohereToolType = BindToolsInput | Cohere.Tool;
 
 /**
  * Input interface for ChatCohere
  */
-export interface ChatCohereInput extends BaseChatModelParams {
+export interface BaseChatCohereInput extends BaseChatModelParams {
   /**
    * The API key to use.
    * @default {process.env.COHERE_API_KEY}
@@ -77,6 +77,8 @@ export interface ChatCohereInput extends BaseChatModelParams {
    */
   streamUsage?: boolean;
 }
+
+export type ChatCohereInput = BaseChatCohereInput & CohereClientOptions;
 
 interface TokenUsage {
   completionTokens?: number;
@@ -732,14 +734,8 @@ export class ChatCohere<
   constructor(fields?: ChatCohereInput) {
     super(fields ?? {});
 
-    const token = fields?.apiKey ?? getEnvironmentVariable("COHERE_API_KEY");
-    if (!token) {
-      throw new Error("No API key provided for ChatCohere.");
-    }
+    this.client = getCohereClient(fields);
 
-    this.client = new CohereClient({
-      token,
-    });
     this.model = fields?.model ?? this.model;
     this.temperature = fields?.temperature ?? this.temperature;
     this.streaming = fields?.streaming ?? this.streaming;

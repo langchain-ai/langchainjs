@@ -1,14 +1,14 @@
 import { CohereClient, Cohere as CohereTypes } from "cohere-ai";
 
-import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { LLM, type BaseLLMParams } from "@langchain/core/language_models/llms";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import type { BaseLanguageModelCallOptions } from "@langchain/core/language_models/base";
+import { CohereClientOptions, getCohereClient } from "./client.js";
 
 /**
  * Interface for the input parameters specific to the Cohere model.
  */
-export interface CohereInput extends BaseLLMParams {
+export interface BaseCohereInput extends BaseLLMParams {
   /** Sampling temperature to use */
   temperature?: number;
 
@@ -19,9 +19,9 @@ export interface CohereInput extends BaseLLMParams {
 
   /** Model to use */
   model?: string;
-
-  apiKey?: string;
 }
+
+export type CohereInput = BaseCohereInput & CohereClientOptions;
 
 interface CohereCallOptions
   extends BaseLanguageModelCallOptions,
@@ -78,17 +78,7 @@ export class Cohere extends LLM<CohereCallOptions> implements CohereInput {
   constructor(fields?: CohereInput) {
     super(fields ?? {});
 
-    const apiKey = fields?.apiKey ?? getEnvironmentVariable("COHERE_API_KEY");
-
-    if (!apiKey) {
-      throw new Error(
-        "Please set the COHERE_API_KEY environment variable or pass it to the constructor as the apiKey field."
-      );
-    }
-
-    this.client = new CohereClient({
-      token: apiKey,
-    });
+    this.client = getCohereClient(fields);
     this.maxTokens = fields?.maxTokens ?? this.maxTokens;
     this.temperature = fields?.temperature ?? this.temperature;
     this.model = fields?.model ?? this.model;

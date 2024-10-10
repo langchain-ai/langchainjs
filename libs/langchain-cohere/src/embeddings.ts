@@ -1,8 +1,8 @@
 import { CohereClient } from "cohere-ai";
 
-import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { Embeddings, EmbeddingsParams } from "@langchain/core/embeddings";
 import { chunkArray } from "@langchain/core/utils/chunk_array";
+import { CohereClientOptions, getCohereClient } from "./client.js";
 
 /**
  * Interface that extends EmbeddingsParams and defines additional
@@ -57,23 +57,13 @@ export class CohereEmbeddings
   constructor(
     fields?: Partial<CohereEmbeddingsParams> & {
       verbose?: boolean;
-      apiKey?: string;
-    }
+    } & CohereClientOptions
   ) {
     const fieldsWithDefaults = { maxConcurrency: 2, ...fields };
 
     super(fieldsWithDefaults);
 
-    const apiKey =
-      fieldsWithDefaults?.apiKey || getEnvironmentVariable("COHERE_API_KEY");
-
-    if (!apiKey) {
-      throw new Error("Cohere API key not found");
-    }
-
-    this.client = new CohereClient({
-      token: apiKey,
-    });
+    this.client = getCohereClient(fieldsWithDefaults);
     this.model = fieldsWithDefaults?.model ?? this.model;
 
     if (!this.model) {
