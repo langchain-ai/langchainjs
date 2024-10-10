@@ -82,6 +82,7 @@
     "@langchain/scripts": ">=0.1.0 <0.2.0",
     "@langchain/standard-tests": "0.0.0",
     "@layerup/layerup-security": "^1.5.12",
+    "@libsql/client": "^0.14.0",
     "@mendable/firecrawl-js": "^0.0.36",
     "@mlc-ai/web-llm": ">=0.2.62 <0.3.0",
     "@mozilla/readability": "^0.4.4",
@@ -244,6 +245,7 @@
     "@huggingface/inference": "^2.6.4",
     "@langchain/core": ">=0.2.21 <0.4.0",
     "@layerup/layerup-security": "^1.5.12",
+    "@libsql/client": "^0.14.0",
     "@mendable/firecrawl-js": "^0.0.13",
     "@mlc-ai/web-llm": "*",
     "@mozilla/readability": "*",
@@ -419,6 +421,9 @@
       "optional": true
     },
     "@layerup/layerup-security": {
+      "optional": true
+    },
+    "@libsql/client": {
       "optional": true
     },
     "@mendable/firecrawl-js": {
@@ -1535,6 +1540,15 @@
       },
       "import": "./vectorstores/lancedb.js",
       "require": "./vectorstores/lancedb.cjs"
+    },
+    "./vectorstores/libsql": {
+      "types": {
+        "import": "./vectorstores/libsql.d.ts",
+        "require": "./vectorstores/libsql.d.cts",
+        "default": "./vectorstores/libsql.d.ts"
+      },
+      "import": "./vectorstores/libsql.js",
+      "require": "./vectorstores/libsql.cjs"
     },
     "./vectorstores/milvus": {
       "types": {
@@ -3388,6 +3402,10 @@
     "vectorstores/lancedb.js",
     "vectorstores/lancedb.d.ts",
     "vectorstores/lancedb.d.cts",
+    "vectorstores/libsql.cjs",
+    "vectorstores/libsql.js",
+    "vectorstores/libsql.d.ts",
+    "vectorstores/libsql.d.cts",
     "vectorstores/milvus.cjs",
     "vectorstores/milvus.js",
     "vectorstores/milvus.d.ts",
