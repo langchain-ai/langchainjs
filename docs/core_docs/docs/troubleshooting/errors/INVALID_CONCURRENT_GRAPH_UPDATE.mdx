@@ -1,6 +1,7 @@
-# INVALID_GRAPH_UPDATE
+# INVALID_CONCURRENT_GRAPH_UPDATE
 
-A LangGraph app received an unexpected return value from a node and failed to update its state at the end of a step.
+A LangGraph app received concurrent updates to its state from multiple nodes to a state property that doesn't
+support it.
 
 One way this can occur is if you are using a [fanout](https://langchain-ai.github.io/langgraphjs/how-tos/map-reduce/)
 or other parallel execution in your graph and you have defined a state with a value like this:
@@ -31,7 +32,7 @@ const StateAnnotation = Annotation.Root({
 });
 ```
 
-This will allow you to return the same key from nodes executed in parallel safely.
+This will allow you to define logic that handles the same key returned from multiple nodes executed in parallel.
 
 ## Troubleshooting
 
