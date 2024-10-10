@@ -185,6 +185,10 @@ export class AIMessageChunk extends BaseMessageChunk {
         tool_calls: fields.tool_calls ?? [],
         invalid_tool_calls: [],
         tool_call_chunks: [],
+        usage_metadata:
+          fields.usage_metadata !== undefined
+            ? fields.usage_metadata
+            : undefined,
       };
     } else {
       const toolCalls: ToolCall[] = [];
@@ -220,6 +224,10 @@ export class AIMessageChunk extends BaseMessageChunk {
         ...fields,
         tool_calls: toolCalls,
         invalid_tool_calls: invalidToolCalls,
+        usage_metadata:
+          fields.usage_metadata !== undefined
+            ? fields.usage_metadata
+            : undefined,
       };
     }
     // Sadly, TypeScript only allows super() calls at root if the class has
