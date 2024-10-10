@@ -59,7 +59,11 @@ import { ToolCall } from "../messages/tool.js";
 export { type RunnableInterface, RunnableBatchOptions };
 
 // TODO: Make `options` just take `RunnableConfig`
-export type RunnableFunc<RunInput, RunOutput, CallOptions> = (
+export type RunnableFunc<
+  RunInput,
+  RunOutput,
+  CallOptions extends RunnableConfig = RunnableConfig
+> = (
   input: RunInput,
   options?:
     | ({
