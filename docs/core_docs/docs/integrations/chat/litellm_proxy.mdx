@@ -1,0 +1,105 @@
+---
+sidebar_label: LiteLLM Proxy
+---
+
+import CodeBlock from "@theme/CodeBlock";
+
+# LiteLLM Proxy Server
+
+Use [LiteLLM Proxy](https://docs.litellm.ai/docs/simple_proxy) for:
+
+- Calling 100+ LLMs OpenAI, Azure, Vertex, Bedrock/etc using OpenAI format
+- Use Virtual Keys to Set Budgets & Track Usage
+
+This allows you to call 100+ LLMs using `ChatOpenAI`
+
+import LiteLLMBasic from "@examples/models/llm/litellm_basic.ts";
+<CodeBlock language="typescript">{LiteLLMBasic}</CodeBlock>
+
+## Step 1 Setup LiteLLM Proxy config.yaml
+
+LiteLLM Requires a config with all your models defined. This file should be named `litellm_config.yaml`
+
+[Detailed docs on how to setup LiteLLM config here](https://docs.litellm.ai/docs/proxy/configs)
+
+```yaml
+model_list:
+  # Azure OpenAI
+  # https://docs.litellm.ai/docs/providers/azure
+  - model_name: gpt-azure
+    litellm_params:
+      model: azure/gpt-turbo-small-ca
+      api_base: https://my-endpoint-canada-berri992.openai.azure.com/
+      api_key: "os.environ/AZURE_API_KEY"
+
+  # OpenAI API
+  # https://docs.litellm.ai/docs/providers/openai
+  - model_name: gpt-4o-mini
+    litellm_params:
+      model: openai/gpt-4o-mini
+      api_key: "os.environ/OPENAI_API_KEY"
+
+
+  # Vertex AI models
+  # https://docs.litellm.ai/docs/providers/vertex
+  - model_name: gemini-pro
+    litellm_params:
+      model: vertex_ai_beta/gemini-1.5-pro
+      vertex_project: "project-id"
+      vertex_location: "us-central1"
+      vertex_credentials: "/path/to/service_account.json" # [OPTIONAL] Do this OR `!gcloud auth application-default login` - run this to add vertex credentials to your env
+  
+  # Bedrock Models
+  # https://docs.litellm.ai/docs/providers/bedrock
+  - model_name: anthropic-claude
+    litellm_params: 
+      model: bedrock/anthropic.claude-instant-v1
+      aws_access_key_id: os.environ/CUSTOM_AWS_ACCESS_KEY_ID
+      aws_secret_access_key: os.environ/CUSTOM_AWS_SECRET_ACCESS_KEY
+      aws_region_name: os.environ/CUSTOM_AWS_REGION_NAME
+  
+```
+
+
+## Step 2. Start LiteLLM proxy
+
+```shell
+docker run \
+    -v $(pwd)/litellm_config.yaml:/app/config.yaml \
+    -p 4000:4000 \
+    -e AZURE_API_KEY \
+    -e OPENAI_API_KEY \
+    -e CUSTOM_AWS_ACCESS_KEY_ID \
+    -e CUSTOM_AWS_SECRET_ACCESS_KEY \
+    -e CUSTOM_AWS_REGION_NAME \
+    ghcr.io/berriai/litellm:main-latest \
+    --config /app/config.yaml --detailed_debug
+```
+
+The proxy will start running on `http://0.0.0.0:4000/`. You can use this endpoint to make all LLM requests.
+
+## Step 3. Make Requests using ChatOpenAI
+
+We can use LangChain.js to make requests to LiteLLM Proxy:
+
+```bash npm2yarn
+npm install @langchain/openai
+```
+
+You can call all models defined on the `litellm_config.yaml`, all you need to do is change the `model` param.
+
+## Call `"gpt-azure"`
+
+import LiteLLMAzure from "@examples/models/llm/litellm_azure.ts";
+<CodeBlock language="typescript">{LiteLLMAzure}</CodeBlock>
+
+## Call `"gemini-pro"`
+
+import LiteLLMVertex from "@examples/models/llm/litellm_vertex.ts";
+<CodeBlock language="typescript">{LiteLLMVertex}</CodeBlock>
+
+## Call `"anthropic-claude"`
+
+import LiteLLMAnthropic from "@examples/models/llm/litellm_anthropic.ts";
+<CodeBlock language="typescript">{LiteLLMAnthropic}</CodeBlock>
+
