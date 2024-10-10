@@ -78,7 +78,9 @@ export type RunnableMapLike<RunInput, RunOutput> = {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type RunnableLike<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput = any,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunOutput = any,
   CallOptions extends RunnableConfig = RunnableConfig
 > =
