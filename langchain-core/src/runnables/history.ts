@@ -115,9 +115,9 @@ export class RunnableWithMessageHistory<
   getMessageHistory: GetSessionHistoryCallable;
 
   constructor(fields: RunnableWithMessageHistoryInputs<RunInput, RunOutput>) {
-    let historyChain: Runnable = new RunnableLambda({
-      func: (input, options) => this._enterHistory(input, options ?? {}),
-    }).withConfig({ runName: "loadHistory" });
+    let historyChain: Runnable = RunnableLambda.from((input, options) =>
+      this._enterHistory(input, options ?? {})
+    ).withConfig({ runName: "loadHistory" });
 
     const messagesKey = fields.historyMessagesKey ?? fields.inputMessagesKey;
     if (messagesKey) {
