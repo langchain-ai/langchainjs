@@ -17,6 +17,7 @@ import { BaseChatMemory, BaseChatMemoryInput } from "./chat_memory.js";
 /**
  * Interface for the input parameters of the ConversationSummaryMemory
  * class.
+ * @deprecated Will be removed in 1.0.0. Please see the migration guide at: https://js.langchain.com/docs/versions/migrating_memory/
  */
 export interface ConversationSummaryMemoryInput
   extends BaseConversationSummaryMemoryInput {}
@@ -24,6 +25,7 @@ export interface ConversationSummaryMemoryInput
 /**
  * Interface for the input parameters of the BaseConversationSummaryMemory
  * class.
+ * @deprecated Will be removed in 1.0.0. Please see the migration guide at: https://js.langchain.com/docs/versions/migrating_memory/
  */
 export interface BaseConversationSummaryMemoryInput
   extends BaseChatMemoryInput {
@@ -39,6 +41,7 @@ export interface BaseConversationSummaryMemoryInput
  * Abstract class that provides a structure for storing and managing the
  * memory of a conversation. It includes methods for predicting a new
  * summary for the conversation given the existing messages and summary.
+ * @deprecated Will be removed in 1.0.0. Please see the migration guide at: https://js.langchain.com/docs/versions/migrating_memory/
  */
 export abstract class BaseConversationSummaryMemory extends BaseChatMemory {
   memoryKey = "history";
@@ -125,6 +128,7 @@ export abstract class BaseConversationSummaryMemory extends BaseChatMemory {
  * console.log({ res2, memory: await memory.loadMemoryVariables({}) });
  *
  * ```
+ * @deprecated Will be removed in 1.0.0. Please see the migration guide at: https://js.langchain.com/docs/versions/migrating_memory/
  */
 export class ConversationSummaryMemory extends BaseConversationSummaryMemory {
   buffer = "";
