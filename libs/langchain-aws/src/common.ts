@@ -144,11 +144,14 @@ export function convertToConverseMessages(messages: BaseMessage[]): {
               return {
                 text: block.text,
               };
-            } else if (block.type === 'document' && block.document !== undefined) {
+            } else if (
+              block.type === "document" &&
+              block.document !== undefined
+            ) {
               return {
                 document: block.document,
               };
-            } else if (block.type === 'image' && block.image !== undefined) {
+            } else if (block.type === "image" && block.image !== undefined) {
               return {
                 image: block.image,
               };
