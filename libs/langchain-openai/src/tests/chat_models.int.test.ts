@@ -24,6 +24,12 @@ import { ChatOpenAI } from "../chat_models.js";
 // Save the original value of the 'LANGCHAIN_CALLBACKS_BACKGROUND' environment variable
 const originalBackground = process.env.LANGCHAIN_CALLBACKS_BACKGROUND;
 
+test.only("Test ChatOpenAI Generate", async () => {
+  const chat = new ChatOpenAI({
+  });
+  await chat.invoke("Hello")
+});
+
 test("Test ChatOpenAI Generate", async () => {
   const chat = new ChatOpenAI({
     modelName: "gpt-3.5-turbo",

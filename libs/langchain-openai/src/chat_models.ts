@@ -1506,6 +1506,10 @@ export class ChatOpenAI<
         if (isAIMessage(generation.message)) {
           generation.message.usage_metadata = usageMetadata;
         }
+
+        generation.message = new AIMessage({
+          ...generation.message,
+        })
         generations.push(generation);
       }
       return {
