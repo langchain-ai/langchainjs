@@ -1506,6 +1506,11 @@ export class ChatOpenAI<
         if (isAIMessage(generation.message)) {
           generation.message.usage_metadata = usageMetadata;
         }
+        // Fields are not serialized unless passed to the constructor
+        // Doing this ensures all fields on the message are serialized
+        generation.message = new AIMessage({
+          ...generation.message,
+        });
         generations.push(generation);
       }
       return {
