@@ -1,11 +1,11 @@
 /* __LC_ALLOW_ENTRYPOINT_SIDE_EFFECTS__ */
 import { AsyncLocalStorage } from "node:async_hooks";
+import { RunTree } from "langsmith";
+import { isRunTree } from "langsmith/run_trees";
 import {
   _CONTEXT_VARIABLES_KEY,
   AsyncLocalStorageProviderSingleton,
 } from "./singletons/index.js";
-import { RunTree } from "langsmith";
-import { isRunTree } from "langsmith/run_trees";
 
 AsyncLocalStorageProviderSingleton.initializeGlobalInstance(
   new AsyncLocalStorage()
