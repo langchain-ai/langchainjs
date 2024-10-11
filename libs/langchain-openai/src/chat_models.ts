@@ -1509,7 +1509,7 @@ export class ChatOpenAI<
 
         generation.message = new AIMessage({
           ...generation.message,
-        })
+        });
         generations.push(generation);
       }
       return {
