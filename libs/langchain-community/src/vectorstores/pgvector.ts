@@ -686,6 +686,7 @@ export class PGVectorStore extends VectorStore {
         const document = new Document({
           pageContent: doc[this.contentColumnName],
           metadata: doc[this.metadataColumnName],
+          id: doc[this.idColumnName],
         });
         results.push([document, doc._distance]);
       }
