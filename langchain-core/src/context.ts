@@ -4,6 +4,8 @@ import {
   _CONTEXT_VARIABLES_KEY,
   AsyncLocalStorageProviderSingleton,
 } from "./singletons/index.js";
+import { RunTree } from "langsmith";
+import { isRunTree } from "langsmith/run_trees";
 
 AsyncLocalStorageProviderSingleton.initializeGlobalInstance(
   new AsyncLocalStorage()
@@ -64,11 +66,13 @@ export function setContextVariable(name: PropertyKey, value: any): void {
   const runTree = AsyncLocalStorageProviderSingleton.getInstance().getStore();
   const contextVars = { ...runTree?.[_CONTEXT_VARIABLES_KEY] };
   contextVars[name] = value;
+  let newValue = {};
+  if (isRunTree(runTree)) {
+    newValue = new RunTree({ ...runTree, __shallowClone: true });
+  }
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (AsyncLocalStorageProviderSingleton.getInstance() as any).enterWith({
-    ...runTree,
-    [_CONTEXT_VARIABLES_KEY]: contextVars,
-  });
+  (newValue as any)[_CONTEXT_VARIABLES_KEY] = contextVars;
+  AsyncLocalStorageProviderSingleton.getInstance().enterWith(newValue);
 }
 
 /**

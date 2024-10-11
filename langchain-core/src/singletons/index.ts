@@ -7,6 +7,8 @@ export interface AsyncLocalStorageInterface {
   getStore: () => any | undefined;
 
   run: <T>(store: any, callback: () => T) => T;
+
+  enterWith: (store: any) => void;
 }
 
 export class MockAsyncLocalStorage implements AsyncLocalStorageInterface {
@@ -16,6 +18,10 @@ export class MockAsyncLocalStorage implements AsyncLocalStorageInterface {
 
   run<T>(_store: any, callback: () => T): T {
     return callback();
+  }
+
+  enterWith(_store: any) {
+    return undefined;
   }
 }
 
