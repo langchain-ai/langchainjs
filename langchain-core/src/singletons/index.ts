@@ -24,6 +24,8 @@ const mockAsyncLocalStorage = new MockAsyncLocalStorage();
 const TRACING_ALS_KEY = Symbol.for("ls:tracing_async_local_storage");
 const LC_CHILD_KEY = Symbol.for("lc:child_config");
 
+export const _CONTEXT_VARIABLES_KEY = Symbol.for("lc:context_variables");
+
 class AsyncLocalStorageProvider {
   getInstance(): AsyncLocalStorageInterface {
     return (globalThis as any)[TRACING_ALS_KEY] ?? mockAsyncLocalStorage;
@@ -50,6 +52,7 @@ class AsyncLocalStorageProvider {
       config?.metadata
     );
     const storage = this.getInstance();
+    const previousValue = storage.getStore();
     const parentRunId = callbackManager?.getParentRunId();
 
     const langChainTracer = callbackManager?.handlers?.find(
@@ -68,6 +71,14 @@ class AsyncLocalStorageProvider {
 
     if (runTree) {
       runTree.extra = { ...runTree.extra, [LC_CHILD_KEY]: config };
+    }
+
+    if (
+      previousValue !== undefined &&
+      previousValue[_CONTEXT_VARIABLES_KEY] !== undefined
+    ) {
+      (runTree as any)[_CONTEXT_VARIABLES_KEY] =
+        previousValue[_CONTEXT_VARIABLES_KEY];
     }
 
     return storage.run(runTree, callback);
