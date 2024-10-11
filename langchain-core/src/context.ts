@@ -68,7 +68,7 @@ export function setContextVariable(name: PropertyKey, value: any): void {
   contextVars[name] = value;
   let newValue = {};
   if (isRunTree(runTree)) {
-    newValue = new RunTree({ ...runTree, __shallowClone: true });
+    newValue = new RunTree(runTree);
   }
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (newValue as any)[_CONTEXT_VARIABLES_KEY] = contextVars;
