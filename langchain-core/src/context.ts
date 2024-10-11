@@ -1,3 +1,4 @@
+/* __LC_ALLOW_ENTRYPOINT_SIDE_EFFECTS__ */
 import { AsyncLocalStorage } from "node:async_hooks";
 import {
   _CONTEXT_VARIABLES_KEY,

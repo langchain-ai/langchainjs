@@ -160,6 +160,15 @@
       "import": "./chat_history.js",
       "require": "./chat_history.cjs"
     },
+    "./context": {
+      "types": {
+        "import": "./context.d.ts",
+        "require": "./context.d.cts",
+        "default": "./context.d.ts"
+      },
+      "import": "./context.js",
+      "require": "./context.cjs"
+    },
     "./documents": {
       "types": {
         "import": "./documents.d.ts",
@@ -646,6 +655,10 @@
     "chat_history.js",
     "chat_history.d.ts",
     "chat_history.d.cts",
+    "context.cjs",
+    "context.js",
+    "context.d.ts",
+    "context.d.cts",
     "documents.cjs",
     "documents.js",
     "documents.d.ts",
