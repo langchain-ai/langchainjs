@@ -20,6 +20,12 @@ AsyncLocalStorageProviderSingleton.initializeGlobalInstance(
  *
  * @example
  * ```ts
+ * import { RunnableLambda } from "@langchain/core/runnables";
+ * import {
+ *   getContextVariable,
+ *   setContextVariable
+ * } from "@langchain/core/context";
+ *
  * const nested = RunnableLambda.from(() => {
  *   // "bar" because it was set by a parent
  *   console.log(getContextVariable("foo"));
@@ -76,6 +82,12 @@ export function setContextVariable(name: PropertyKey, value: any) {
  *
  * @example
  * ```ts
+ * import { RunnableLambda } from "@langchain/core/runnables";
+ * import {
+ *   getContextVariable,
+ *   setContextVariable
+ * } from "@langchain/core/context";
+ *
  * const nested = RunnableLambda.from(() => {
  *   // "bar" because it was set by a parent
  *   console.log(getContextVariable("foo"));
