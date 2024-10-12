@@ -11404,7 +11404,7 @@ __metadata:
     "@tsconfig/recommended": ^1.0.3
     "@typescript-eslint/eslint-plugin": ^6.12.0
     "@typescript-eslint/parser": ^6.12.0
-    cohere-ai: ^7.10.5
+    cohere-ai: ^7.14.0
     dotenv: ^16.3.1
     dpdm: ^3.12.0
     eslint: ^8.33.0
@@ -23132,27 +23132,6 @@ __metadata:
   version: 6.2.2
   resolution: "cohere-ai@npm:6.2.2"
   checksum: 5a7ea2bb6f2a6b83de7ec90612a38f0b215bfc199b5fe749842c6e771a1b183681a3a0e351d75c22eb6d929ea45cf03b1cdf4ed3a907c401186e73c392749310
-  languageName: node
-  linkType: hard
-
-"cohere-ai@npm:^7.10.5":
-  version: 7.10.5
-  resolution: "cohere-ai@npm:7.10.5"
-  dependencies:
-    "@aws-sdk/client-sagemaker": ^3.583.0
-    "@aws-sdk/credential-providers": ^3.583.0
-    "@aws-sdk/protocol-http": ^3.374.0
-    "@aws-sdk/signature-v4": ^3.374.0
-    form-data: 4.0.0
-    form-data-encoder: ^4.0.2
-    formdata-node: ^6.0.3
-    js-base64: 3.7.2
-    node-fetch: 2.7.0
-    qs: 6.11.2
-    readable-stream: ^4.5.2
-    url-join: 4.0.1
-    web-streams-polyfill: ^4.0.0
-  checksum: 80f87d1bd831c0115936a9d9cd1a364bde184ad96d461396acb346e2d3601ef084b6736a1344553f6e05713b7e117a8c295ff508111fca9f7b6c2a16e722e035
   languageName: node
   linkType: hard
 

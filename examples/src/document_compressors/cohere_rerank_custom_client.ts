@@ -28,12 +28,12 @@ const docs = [
 
 const client = new CohereClient({
   token: process.env.COHERE_API_KEY,
-  enviroment: "<your-cohere-deployment-url>", //optional
-  // other params
+  environment: "<your-cohere-deployment-url>", //optional
+  //other params
 });
 
 const cohereRerank = new CohereRerank({
-  client, // apiKey will be ignored even if provided
+  client, //apiKey will be ignored even if provided
   model: "rerank-english-v2.0",
 });
 
