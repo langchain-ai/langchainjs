@@ -62,7 +62,7 @@ AsyncLocalStorageProviderSingleton.initializeGlobalInstance(
  * @param value The value to set.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function setContextVariable(name: PropertyKey, value: any): void {
+export function setContextVariable<T>(name: PropertyKey, value: T): void {
   const runTree = AsyncLocalStorageProviderSingleton.getInstance().getStore();
   const contextVars = { ...runTree?.[_CONTEXT_VARIABLES_KEY] };
   contextVars[name] = value;
@@ -125,7 +125,7 @@ export function setContextVariable(name: PropertyKey, value: any): void {
  * @param name The name of the context variable.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function getContextVariable(name: PropertyKey): any {
+export function getContextVariable<T = any>(name: PropertyKey): T | undefined {
   const runTree = AsyncLocalStorageProviderSingleton.getInstance().getStore();
   return runTree?.[_CONTEXT_VARIABLES_KEY]?.[name];
 }
