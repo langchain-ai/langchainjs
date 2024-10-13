@@ -28,12 +28,12 @@ const docs = [
 
 const client = new CohereClient({
   token: process.env.COHERE_API_KEY,
-  environment: "<your-cohere-deployment-url>", //optional
-  //other params
+  environment: "<your-cohere-deployment-url>", // optional
+  // other params
 });
 
 const cohereRerank = new CohereRerank({
-  client, //apiKey will be ignored even if provided
+  client, // apiKey will be ignored even if provided
   model: "rerank-english-v2.0",
 });
 
@@ -42,12 +42,13 @@ const rerankedDocuments = await cohereRerank.rerank(docs, query, {
 });
 
 console.log(rerankedDocuments);
-/**
-[
-  { index: 3, relevanceScore: 0.9871293 },
-  { index: 1, relevanceScore: 0.29961726 },
-  { index: 4, relevanceScore: 0.27542195 },
-  { index: 0, relevanceScore: 0.08977329 },
-  { index: 2, relevanceScore: 0.041462272 }
-]
- */
+
+/*
+  [
+    { index: 3, relevanceScore: 0.9871293 },
+    { index: 1, relevanceScore: 0.29961726 },
+    { index: 4, relevanceScore: 0.27542195 },
+    { index: 0, relevanceScore: 0.08977329 },
+    { index: 2, relevanceScore: 0.041462272 }
+  ]
+*/
