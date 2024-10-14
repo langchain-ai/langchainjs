@@ -797,7 +797,6 @@ export abstract class BaseChatModel<
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   >(
     outputSchema:
       | z.ZodType<RunOutput>
@@ -838,6 +837,11 @@ export abstract class BaseChatModel<
     if (typeof this.bindTools !== "function") {
       throw new Error(
         `Chat model must implement ".bindTools()" to use withStructuredOutput.`
+      );
+    }
+    if (config?.strict) {
+      throw new Error(
+        `"strict" mode is not supported for this model by default.`
       );
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
