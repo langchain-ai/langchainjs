@@ -5,7 +5,7 @@ import {
 } from "@ibm-cloud/watsonx-ai/dist/watsonx-ai-ml/vml_v1.js";
 import { WatsonXAI } from "@ibm-cloud/watsonx-ai";
 import { AsyncCaller } from "@langchain/core/utils/async_caller";
-import { WatsonxAuth, WatsonxParams } from "../types/watsonx_ai.js";
+import { WatsonxAuth, WatsonxParams } from "../types/ibm.js";
 import { authenticateAndSetInstance } from "../utils/ibm.js";
 
 export interface WatsonxEmbeddingsParams
@@ -16,7 +16,7 @@ export class WatsonxEmbeddings
   extends Embeddings
   implements WatsonxEmbeddingsParams, WatsonxParams
 {
-  modelId = "ibm/slate-125m-english-rtrvr";
+  model = "ibm/slate-125m-english-rtrvr";
 
   serviceUrl: string;
 
@@ -37,7 +37,7 @@ export class WatsonxEmbeddings
   constructor(fields: WatsonxEmbeddingsParams & WatsonxAuth & WatsonxParams) {
     const superProps = { maxConcurrency: 2, ...fields };
     super(superProps);
-    this.modelId = fields?.modelId ? fields.modelId : this.modelId;
+    this.model = fields?.model ? fields.model : this.model;
     this.version = fields.version;
     this.serviceUrl = fields.serviceUrl;
     this.truncate_input_tokens = fields.truncate_input_tokens;
@@ -104,7 +104,7 @@ export class WatsonxEmbeddings
   private async embedSingleText(inputs: string[]) {
     const textEmbeddingParams: TextEmbeddingsParams = {
       inputs,
-      modelId: this.modelId,
+      modelId: this.model,
       ...this.scopeId(),
       parameters: this.invocationParams(),
     };

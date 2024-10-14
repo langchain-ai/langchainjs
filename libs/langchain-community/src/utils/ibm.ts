@@ -4,7 +4,7 @@ import {
   BearerTokenAuthenticator,
   CloudPakForDataAuthenticator,
 } from "ibm-cloud-sdk-core";
-import { WatsonxAuth, WatsonxInit } from "../types/watsonx_ai.js";
+import { WatsonxAuth, WatsonxInit } from "../types/ibm.js";
 
 export const authenticateAndSetInstance = ({
   watsonxAIApikey,

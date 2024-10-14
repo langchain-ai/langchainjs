@@ -18,7 +18,7 @@ export interface WatsonxInit {
 }
 
 export interface WatsonxParams extends WatsonxInit {
-  modelId?: string;
+  model?: string;
   spaceId?: string;
   projectId?: string;
   idOrName?: string;

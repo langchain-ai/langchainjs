@@ -29,6 +29,7 @@ export const config = {
     "notion-to-md/build/utils/notion.js",
     "@getzep/zep-cloud/api",
     "@supabase/postgrest-js",
+    "@ibm-cloud/watsonx-ai/dist/watsonx-ai-ml/vml_v1.js",
   ],
   entrypoints: {
     load: "load/index",

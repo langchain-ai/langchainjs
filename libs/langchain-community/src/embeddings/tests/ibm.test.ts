@@ -26,7 +26,7 @@ describe("Embeddings unit tests", () => {
         truncate_input_tokens: 10,
         maxConcurrency: 2,
         maxRetries: 2,
-        modelId: "ibm/slate-125m-english-rtrvr",
+        model: "ibm/slate-125m-english-rtrvr",
       };
       const instance = new WatsonxEmbeddings({ ...testProps, ...fakeAuthProp });
 

@@ -28,7 +28,7 @@ import {
   TokenUsage,
   WatsonxAuth,
   WatsonxParams,
-} from "../types/watsonx_ai.js";
+} from "../types/ibm.js";
 
 /**
  * Input to LLM class.
@@ -73,7 +73,7 @@ export class WatsonxLLM<
 
   streaming = false;
 
-  modelId = "ibm/granite-13b-chat-v2";
+  model = "ibm/granite-13b-chat-v2";
 
   maxRetries = 0;
 
@@ -121,7 +121,7 @@ export class WatsonxLLM<
 
   constructor(fields: WatsonxInputLLM & WatsonxAuth) {
     super(fields);
-    this.modelId = fields.modelId ?? this.modelId;
+    this.model = fields.model ?? this.model;
     this.version = fields.version;
     this.max_new_tokens = fields.max_new_tokens ?? this.max_new_tokens;
     this.serviceUrl = fields.serviceUrl;
@@ -238,12 +238,12 @@ export class WatsonxLLM<
 
   scopeId() {
     if (this.projectId)
-      return { projectId: this.projectId, modelId: this.modelId };
+      return { projectId: this.projectId, modelId: this.model };
     else if (this.spaceId)
-      return { spaceId: this.spaceId, modelId: this.modelId };
+      return { spaceId: this.spaceId, modelId: this.model };
     else if (this.idOrName)
-      return { idOrName: this.idOrName, modelId: this.modelId };
-    else return { spaceId: this.spaceId, modelId: this.modelId };
+      return { idOrName: this.idOrName, modelId: this.model };
+    else return { spaceId: this.spaceId, modelId: this.model };
   }
 
   async listModels() {
@@ -427,11 +427,10 @@ export class WatsonxLLM<
                 generated_token_count: 0,
                 input_token_count: 0,
               };
-              if (item.generated_text !== "")
-                void _runManager?.handleLLMNewToken(item.generated_text ?? "", {
-                  prompt: promptIdx,
-                  completion: 1,
-                });
+              void _runManager?.handleLLMNewToken(item.generated_text ?? "", {
+                prompt: promptIdx,
+                completion: 1,
+              });
               geneartionsArray[index] ??= generationInfo;
               geneartionsArray[index].generated_token_count =
                 item.generated_token_count;

@@ -2,7 +2,7 @@
 import { CallbackManager } from "@langchain/core/callbacks/manager";
 import { LLMResult } from "@langchain/core/outputs";
 import { StringPromptValue } from "@langchain/core/prompt_values";
-import { TokenUsage } from "../../types/watsonx_ai.js";
+import { TokenUsage } from "../../types/ibm.js";
 import { WatsonxLLM, WatsonxInputLLM } from "../ibm.js";
 
 const originalBackground = process.env.LANGCHAIN_CALLBACKS_BACKGROUND;
@@ -228,9 +228,9 @@ describe("Text generation", () => {
         }),
       });
       const res = await model.generate([
-        "Print hello world!",
-        "Print hello otter!",
-        "Print hello butter!",
+        "Print bye bye world!",
+        "Print bye bye world!",
+        "Print Hello IBM!",
       ]);
       res.generations.forEach((generation, index) => {
         generation.forEach((g) => {
