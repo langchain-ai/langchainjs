@@ -20,6 +20,7 @@ export const config = {
     "callbacks/manager": "callbacks/manager",
     "callbacks/promises": "callbacks/promises",
     chat_history: "chat_history",
+    context: "context",
     documents: "documents/index",
     "document_loaders/base": "document_loaders/base",
     "document_loaders/langsmith": "document_loaders/langsmith",

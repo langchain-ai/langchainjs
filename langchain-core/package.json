@@ -1,6 +1,6 @@
 {
   "name": "@langchain/core",
-  "version": "0.3.9",
+  "version": "0.3.11",
   "description": "Core LangChain.js abstractions and schemas",
   "type": "module",
   "engines": {
@@ -37,7 +37,7 @@
     "camelcase": "6",
     "decamelize": "1.2.0",
     "js-tiktoken": "^1.0.12",
-    "langsmith": "^0.1.56",
+    "langsmith": "^0.1.65",
     "mustache": "^4.2.0",
     "p-queue": "^6.6.2",
     "p-retry": "4",
@@ -68,7 +68,7 @@
     "rimraf": "^5.0.1",
     "ts-jest": "^29.1.0",
     "typescript": "~5.1.6",
-    "web-streams-polyfill": "^3.3.3"
+    "web-streams-polyfill": "^4.0.0"
   },
   "publishConfig": {
     "access": "public"
@@ -159,6 +159,15 @@
       },
       "import": "./chat_history.js",
       "require": "./chat_history.cjs"
+    },
+    "./context": {
+      "types": {
+        "import": "./context.d.ts",
+        "require": "./context.d.cts",
+        "default": "./context.d.ts"
+      },
+      "import": "./context.js",
+      "require": "./context.cjs"
     },
     "./documents": {
       "types": {
@@ -646,6 +655,10 @@
     "chat_history.js",
     "chat_history.d.ts",
     "chat_history.d.cts",
+    "context.cjs",
+    "context.js",
+    "context.d.ts",
+    "context.d.cts",
     "documents.cjs",
     "documents.js",
     "documents.d.ts",
