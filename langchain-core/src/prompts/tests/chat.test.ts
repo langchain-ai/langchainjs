@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { expect, test } from "@jest/globals";
 import {
   AIMessagePromptTemplate,
@@ -73,13 +75,18 @@ test("Test format", async () => {
 
 test("Test format with invalid input values", async () => {
   const chatPrompt = createChatPromptTemplate();
-  await expect(
+  let error: any | undefined;
+  try {
     // @ts-expect-error TS compiler should flag missing input variables
-    chatPrompt.formatPromptValue({
+    await chatPrompt.formatPromptValue({
       context: "This is a context",
       foo: "Foo",
-    })
-  ).rejects.toThrow("Missing value for input variable `bar`");
+    });
+  } catch (e) {
+    error = e;
+  }
+  expect(error?.message).toContain("Missing value for input variable `bar`");
+  expect(error?.lc_error_code).toEqual("INVALID_PROMPT_INPUT");
 });
 
 test("Test format with invalid input variables", async () => {
@@ -366,7 +373,7 @@ test("Test MessagesPlaceholder not optional with invalid input should throw", as
       badInput,
       null,
       2
-    )}\n\nAdditional message: Unable to coerce message from array: only human, AI, or system message coercion is currently supported.`
+    )}\n\nAdditional message: Unable to coerce message from array: only human, AI, system, or tool message coercion is currently supported.`
   );
 });
 
