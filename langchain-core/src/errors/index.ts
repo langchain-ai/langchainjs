@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable no-param-reassign */
 
 export type LangChainErrorCodes =
   | "INVALID_PROMPT_INPUT"
