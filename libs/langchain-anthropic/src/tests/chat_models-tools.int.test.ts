@@ -11,9 +11,9 @@ import { StructuredTool, tool } from "@langchain/core/tools";
 import { concat } from "@langchain/core/utils/stream";
 import { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
+import { RunnableLambda } from "@langchain/core/runnables";
 import { ChatAnthropic } from "../chat_models.js";
 import { AnthropicToolResponse } from "../types.js";
-import { RunnableLambda } from "@langchain/core/runnables";
 
 const zodSchema = z
   .object({
