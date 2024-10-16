@@ -13,6 +13,7 @@ import { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { ChatAnthropic } from "../chat_models.js";
 import { AnthropicToolResponse } from "../types.js";
+import { RunnableLambda } from "@langchain/core/runnables";
 
 const zodSchema = z
   .object({
@@ -200,6 +201,73 @@ test("Can bind & stream AnthropicTools", async () => {
   expect(name).toBe("get_weather");
   expect(args).toBeTruthy();
   expect(args.location).toBeTruthy();
+});
+
+test("stream events with no tool calls has string message content", async () => {
+  const wrapper = RunnableLambda.from(async (_, config) => {
+    const res = await model.invoke(
+      "What is the weather in London today?",
+      config
+    );
+    return res;
+  });
+  const eventStream = await wrapper.streamEvents(
+    "What is the weather in London today?",
+    {
+      version: "v2",
+    }
+  );
+
+  const chatModelStreamEvents = [];
+  for await (const event of eventStream) {
+    if (event.event === "on_chat_model_stream") {
+      chatModelStreamEvents.push(event);
+    }
+  }
+  expect(chatModelStreamEvents.length).toBeGreaterThan(0);
+  expect(
+    chatModelStreamEvents.every(
+      (event) => typeof event.data.chunk.content === "string"
+    )
+  ).toBe(true);
+});
+
+test("stream events with tool calls has raw message content", async () => {
+  const modelWithTools = model.bind({
+    tools: [anthropicTool],
+    tool_choice: {
+      type: "tool",
+      name: "get_weather",
+    },
+  });
+
+  const wrapper = RunnableLambda.from(async (_, config) => {
+    const res = await modelWithTools.invoke(
+      "What is the weather in London today?",
+      config
+    );
+    return res;
+  });
+  const eventStream = await wrapper.streamEvents(
+    "What is the weather in London today?",
+    {
+      version: "v2",
+    }
+  );
+
+  const chatModelStreamEvents = [];
+  for await (const event of eventStream) {
+    if (event.event === "on_chat_model_stream") {
+      console.log(event);
+      chatModelStreamEvents.push(event);
+    }
+  }
+  expect(chatModelStreamEvents.length).toBeGreaterThan(0);
+  expect(
+    chatModelStreamEvents.every((event) =>
+      Array.isArray(event.data.chunk.content)
+    )
+  ).toBe(true);
 });
 
 test("withStructuredOutput with zod schema", async () => {
