@@ -19,8 +19,8 @@ import {
 import { CallbackManager } from "@langchain/core/callbacks/manager";
 import { NewTokenIndices } from "@langchain/core/callbacks/base";
 import { InMemoryCache } from "@langchain/core/caches";
-import { ChatOpenAI } from "../chat_models.js";
 import { concat } from "@langchain/core/utils/stream";
+import { ChatOpenAI } from "../chat_models.js";
 
 // Save the original value of the 'LANGCHAIN_CALLBACKS_BACKGROUND' environment variable
 const originalBackground = process.env.LANGCHAIN_CALLBACKS_BACKGROUND;
@@ -999,10 +999,15 @@ test("Audio output", async () => {
     },
   });
 
-  const response = await model.invoke("Make me an audio clip of you yelling")
+  const response = await model.invoke("Make me an audio clip of you yelling");
   expect(Array.isArray(response.content)).toBeTruthy();
-  expect(Object.keys(response.content[0]).sort()).toEqual(["data", "expires_at", "id", "transcript"])
-})
+  expect(Object.keys(response.content[0]).sort()).toEqual([
+    "data",
+    "expires_at",
+    "id",
+    "transcript",
+  ]);
+});
 
 test("Audio output can stream", async () => {
   const model = new ChatOpenAI({
@@ -1015,7 +1020,7 @@ test("Audio output can stream", async () => {
     },
   });
 
-  const stream = await model.stream("Make me an audio clip of you yelling")
+  const stream = await model.stream("Make me an audio clip of you yelling");
   let finalMsg: AIMessageChunk | undefined;
   for await (const chunk of stream) {
     finalMsg = finalMsg ? concat(finalMsg, chunk) : chunk;
@@ -1025,5 +1030,11 @@ test("Audio output can stream", async () => {
   }
   console.dir(finalMsg, { depth: null });
   expect(Array.isArray(finalMsg.content)).toBeTruthy();
-  expect(Object.keys(finalMsg.content[1]).sort()).toEqual(["data", "expires_at", "id", "index", "transcript"])
-})
+  expect(Object.keys(finalMsg.content[1]).sort()).toEqual([
+    "data",
+    "expires_at",
+    "id",
+    "index",
+    "transcript",
+  ]);
+});

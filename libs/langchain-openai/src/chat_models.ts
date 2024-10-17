@@ -201,10 +201,12 @@ function _convertDeltaToMessageChunk(
   const role = delta.role ?? defaultRole;
   let content: MessageContent;
   if (delta.audio) {
-    content = [{
-      ...delta.audio,
-      index: rawResponse.choices[0].index,
-    }]
+    content = [
+      {
+        ...delta.audio,
+        index: rawResponse.choices[0].index,
+      },
+    ];
   } else {
     content = delta.content ?? "";
   }
@@ -971,7 +973,7 @@ export class ChatOpenAI<
 
   audio?: OpenAIClient.Chat.ChatCompletionAudioParam;
 
-  modalities?: Array<OpenAIClient.Chat.ChatCompletionModality>
+  modalities?: Array<OpenAIClient.Chat.ChatCompletionModality>;
 
   constructor(
     fields?: ChatOpenAIFields,
@@ -1207,8 +1209,8 @@ export class ChatOpenAI<
       seed: options?.seed,
       ...streamOptionsConfig,
       parallel_tool_calls: options?.parallel_tool_calls,
-      audio: this.audio,
-      modalities: this.modalities,
+      ...(this.audio ? { audio: this.audio } : {}),
+      ...(this.modalities ? { modalities: this.modalities } : {}),
       ...this.modelKwargs,
     };
     return params;
