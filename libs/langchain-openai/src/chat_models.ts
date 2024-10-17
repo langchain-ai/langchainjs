@@ -385,6 +385,26 @@ export interface ChatOpenAICallOptions
    * @version 0.2.6
    */
   strict?: boolean;
+  /**
+   * Output types that you would like the model to generate for this request. Most
+   * models are capable of generating text, which is the default:
+   *
+   * `["text"]`
+   *
+   * The `gpt-4o-audio-preview` model can also be used to
+   * [generate audio](https://platform.openai.com/docs/guides/audio). To request that
+   * this model generate both text and audio responses, you can use:
+   *
+   * `["text", "audio"]`
+   */
+  modalities?: Array<OpenAIClient.Chat.ChatCompletionModality>;
+
+  /**
+   * Parameters for audio output. Required when audio output is requested with
+   * `modalities: ["audio"]`.
+   * [Learn more](https://platform.openai.com/docs/guides/audio).
+   */
+  audio?: OpenAIClient.Chat.ChatCompletionAudioParam;
 }
 
 export interface ChatOpenAIFields
@@ -1209,8 +1229,12 @@ export class ChatOpenAI<
       seed: options?.seed,
       ...streamOptionsConfig,
       parallel_tool_calls: options?.parallel_tool_calls,
-      ...(this.audio ? { audio: this.audio } : {}),
-      ...(this.modalities ? { modalities: this.modalities } : {}),
+      ...(this.audio || options?.audio
+        ? { audio: this.audio || options?.audio }
+        : {}),
+      ...(this.modalities || options?.modalities
+        ? { modalities: this.modalities || options?.modalities }
+        : {}),
       ...this.modelKwargs,
     };
     return params;
