@@ -17,6 +17,7 @@ import {
   convertToChunk,
   UsageMetadata,
   MessageContent,
+  isHumanMessage,
 } from "@langchain/core/messages";
 import {
   type ChatGeneration,
@@ -175,10 +176,13 @@ function openAIResponseToChatMessage(
           system_fingerprint: rawResponse.system_fingerprint,
         };
       }
-      const content = message.audio ? [message.audio] : message.content;
+
+      if (message.audio) {
+        additional_kwargs.audio = message.audio;
+      }
 
       return new AIMessage({
-        content: content || "",
+        content: message.content || "",
         tool_calls: toolCalls,
         invalid_tool_calls: invalidToolCalls,
         additional_kwargs,
@@ -199,17 +203,8 @@ function _convertDeltaToMessageChunk(
   includeRawResponse?: boolean
 ) {
   const role = delta.role ?? defaultRole;
-  let content: MessageContent;
-  if (delta.audio) {
-    content = [
-      {
-        ...delta.audio,
-        index: rawResponse.choices[0].index,
-      },
-    ];
-  } else {
-    content = delta.content ?? "";
-  }
+  const content = delta.content ?? "";
+
   let additional_kwargs: Record<string, unknown>;
   if (delta.function_call) {
     additional_kwargs = {
@@ -225,6 +220,14 @@ function _convertDeltaToMessageChunk(
   if (includeRawResponse) {
     additional_kwargs.__raw_response = rawResponse;
   }
+
+  if (delta.audio) {
+    additional_kwargs.audio = {
+      ...delta.audio,
+      index: rawResponse.choices[0].index,
+    };
+  }
+
   const response_metadata = { usage: { ...rawResponse.usage } };
   if (role === "user") {
     return new HumanMessageChunk({ content, response_metadata });
@@ -270,9 +273,9 @@ function _convertDeltaToMessageChunk(
 }
 
 // Used in LangSmith, export is important here
-export function _convertMessagesToOpenAIParams(messages: BaseMessage[]) {
+export function _convertMessagesToOpenAIParams(messages: BaseMessage[]): OpenAICompletionParam[] {
   // TODO: Function messages do not support array content, fix cast
-  return messages.map((message) => {
+  return messages.flatMap((message) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const completionParam: Record<string, any> = {
       role: messageToOpenAIRole(message),
@@ -298,6 +301,17 @@ export function _convertMessagesToOpenAIParams(messages: BaseMessage[]) {
         completionParam.tool_call_id = (message as ToolMessage).tool_call_id;
       }
     }
+
+    if (message.additional_kwargs.audio && typeof message.additional_kwargs.audio === "object" && "id" in message.additional_kwargs.audio) {
+      const audioMessage = {
+        role: "assistant",
+        audio: {
+          id: message.additional_kwargs.audio.id,
+        }
+      }
+      return [completionParam, audioMessage] as OpenAICompletionParam[];
+    }
+
     return completionParam as OpenAICompletionParam;
   });
 }
