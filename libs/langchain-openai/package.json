@@ -1,6 +1,6 @@
 {
   "name": "@langchain/openai",
-  "version": "0.3.8",
+  "version": "0.3.9",
   "description": "OpenAI integrations for LangChain.js",
   "type": "module",
   "engines": {
