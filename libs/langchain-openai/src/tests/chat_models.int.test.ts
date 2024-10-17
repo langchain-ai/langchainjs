@@ -1,5 +1,5 @@
 /* eslint-disable no-process-env */
-
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { test, jest, expect } from "@jest/globals";
 import {
   AIMessageChunk,
@@ -41,6 +41,41 @@ test("Test ChatOpenAI Generate", async () => {
     }
   }
   // console.log({ res });
+});
+
+test("Test ChatOpenAI invoke fails with proper error", async () => {
+  const chat = new ChatOpenAI({
+    model: "gpt-4o-mini",
+    maxTokens: 10,
+    n: 2,
+    apiKey: "bad",
+  });
+  const message = new HumanMessage("Hello!");
+  let authError;
+  try {
+    await chat.invoke([message]);
+  } catch (e) {
+    authError = e;
+  }
+  expect(authError).toBeDefined();
+  expect((authError as any)?.lc_error_code).toEqual("MODEL_AUTHENTICATION");
+});
+
+test("Test ChatOpenAI invoke to unknown model fails with proper error", async () => {
+  const chat = new ChatOpenAI({
+    model: "badbadbad",
+    maxTokens: 10,
+    n: 2,
+  });
+  const message = new HumanMessage("Hello!");
+  let authError;
+  try {
+    await chat.invoke([message]);
+  } catch (e) {
+    authError = e;
+  }
+  expect(authError).toBeDefined();
+  expect((authError as any)?.lc_error_code).toEqual("MODEL_NOT_FOUND");
 });
 
 test("Test ChatOpenAI Generate throws when one of the calls fails", async () => {

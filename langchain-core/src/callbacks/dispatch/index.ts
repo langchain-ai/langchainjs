@@ -1,10 +1,12 @@
+/* __LC_ALLOW_ENTRYPOINT_SIDE_EFFECTS__ */
+
 import { AsyncLocalStorage } from "node:async_hooks";
 import { dispatchCustomEvent as dispatchCustomEventWeb } from "./web.js";
 import { type RunnableConfig, ensureConfig } from "../../runnables/config.js";
 import { AsyncLocalStorageProviderSingleton } from "../../singletons/index.js";
 
-/* #__PURE__ */ AsyncLocalStorageProviderSingleton.initializeGlobalInstance(
-  /* #__PURE__ */ new AsyncLocalStorage()
+AsyncLocalStorageProviderSingleton.initializeGlobalInstance(
+  new AsyncLocalStorage()
 );
 
 /**

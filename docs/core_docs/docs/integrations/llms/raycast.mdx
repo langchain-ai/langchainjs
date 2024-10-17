@@ -17,9 +17,18 @@ npm install @langchain/community @langchain/core
 ```
 
 import CodeBlock from "@theme/CodeBlock";
-import RaycastAIExample from "@examples/models/llm/raycast.ts";
 
-<CodeBlock language="typescript">{RaycastAIExample}</CodeBlock>
+```ts
+import { RaycastAI } from "@langchain/community/llms/raycast";
+
+import { Tool } from "@langchain/core/tools";
+
+const model = new RaycastAI({
+  rateLimitPerMinute: 10, // It is 10 by default so you can omit this line
+  model: "<model_name>",
+  creativity: 0, // `creativity` is a term used by Raycast which is equivalent to `temperature` in some other LLMs
+});
+```
 
 ## Related
 

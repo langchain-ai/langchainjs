@@ -39,6 +39,7 @@ import {
   parseFString,
   parseMustache,
 } from "./template.js";
+import { addLangChainErrorFields } from "../errors/index.js";
 
 /**
  * Abstract class that serves as a base for creating message prompt
@@ -168,6 +169,8 @@ export class MessagesPlaceholder<
         ].join("\n\n")
       );
       error.name = "InputFormatError";
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (error as any).lc_error_code = e.lc_error_code;
       throw error;
     }
 
@@ -996,9 +999,13 @@ export class ChatPromptTemplate<
               !(inputVariable in allValues) &&
               !(isMessagesPlaceholder(promptMessage) && promptMessage.optional)
             ) {
-              throw new Error(
-                `Missing value for input variable \`${inputVariable.toString()}\``
+              const error = addLangChainErrorFields(
+                new Error(
+                  `Missing value for input variable \`${inputVariable.toString()}\``
+                ),
+                "INVALID_PROMPT_INPUT"
               );
+              throw error;
             }
             acc[inputVariable] = allValues[inputVariable];
             return acc;

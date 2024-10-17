@@ -15,6 +15,7 @@ import {
   OpenAIToolCall,
   isAIMessage,
   convertToChunk,
+  UsageMetadata,
 } from "@langchain/core/messages";
 import {
   type ChatGeneration,
@@ -169,6 +170,7 @@ function openAIResponseToChatMessage(
       let response_metadata: Record<string, unknown> | undefined;
       if (rawResponse.system_fingerprint) {
         response_metadata = {
+          usage: { ...rawResponse.usage },
           system_fingerprint: rawResponse.system_fingerprint,
         };
       }
@@ -210,8 +212,9 @@ function _convertDeltaToMessageChunk(
   if (includeRawResponse) {
     additional_kwargs.__raw_response = rawResponse;
   }
+  const response_metadata = { usage: { ...rawResponse.usage } };
   if (role === "user") {
-    return new HumanMessageChunk({ content });
+    return new HumanMessageChunk({ content, response_metadata });
   } else if (role === "assistant") {
     const toolCallChunks: ToolCallChunk[] = [];
     if (Array.isArray(delta.tool_calls)) {
@@ -230,27 +233,31 @@ function _convertDeltaToMessageChunk(
       tool_call_chunks: toolCallChunks,
       additional_kwargs,
       id: rawResponse.id,
+      response_metadata,
     });
   } else if (role === "system") {
-    return new SystemMessageChunk({ content });
+    return new SystemMessageChunk({ content, response_metadata });
   } else if (role === "function") {
     return new FunctionMessageChunk({
       content,
       additional_kwargs,
       name: delta.name,
+      response_metadata,
     });
   } else if (role === "tool") {
     return new ToolMessageChunk({
       content,
       additional_kwargs,
       tool_call_id: delta.tool_call_id,
+      response_metadata,
     });
   } else {
-    return new ChatMessageChunk({ content, role });
+    return new ChatMessageChunk({ content, role, response_metadata });
   }
 }
 
-function convertMessagesToOpenAIParams(messages: BaseMessage[]) {
+// Used in LangSmith, export is important here
+export function _convertMessagesToOpenAIParams(messages: BaseMessage[]) {
   // TODO: Function messages do not support array content, fix cast
   return messages.map((message) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -629,7 +636,10 @@ export interface ChatOpenAIFields
  *   rating: z.number().optional().describe("How funny the joke is, from 1 to 10")
  * }).describe('Joke to tell user.');
  *
- * const structuredLlm = llm.withStructuredOutput(Joke, { name: "Joke" });
+ * const structuredLlm = llm.withStructuredOutput(Joke, {
+ *   name: "Joke",
+ *   strict: true, // Optionally enable OpenAI structured outputs
+ * });
  * const jokeResult = await structuredLlm.invoke("Tell me a joke about cats");
  * console.log(jokeResult);
  * ```
@@ -932,6 +942,8 @@ export class ChatOpenAI<
 
   azureOpenAIBasePath?: string;
 
+  azureOpenAIEndpoint?: string;
+
   organization?: string;
 
   __includeRawResponse?: boolean;
@@ -992,6 +1004,10 @@ export class ChatOpenAI<
       fields?.configuration?.organization ??
       getEnvironmentVariable("OPENAI_ORGANIZATION");
 
+    this.azureOpenAIEndpoint =
+      fields?.azureOpenAIEndpoint ??
+      getEnvironmentVariable("AZURE_OPENAI_ENDPOINT");
+
     this.modelName = fields?.model ?? fields?.modelName ?? this.model;
     this.model = this.modelName;
     this.modelKwargs = fields?.modelKwargs ?? {};
@@ -1012,8 +1028,20 @@ export class ChatOpenAI<
     this.__includeRawResponse = fields?.__includeRawResponse;
 
     if (this.azureOpenAIApiKey || this.azureADTokenProvider) {
-      if (!this.azureOpenAIApiInstanceName && !this.azureOpenAIBasePath) {
+      if (
+        !this.azureOpenAIApiInstanceName &&
+        !this.azureOpenAIBasePath &&
+        !this.azureOpenAIEndpoint
+      ) {
         throw new Error("Azure OpenAI API instance name not found");
+      }
+
+      if (!this.azureOpenAIApiDeploymentName && this.azureOpenAIBasePath) {
+        const parts = this.azureOpenAIBasePath.split("/openai/deployments/");
+        if (parts.length === 2) {
+          const [, deployment] = parts;
+          this.azureOpenAIApiDeploymentName = deployment;
+        }
       }
       if (!this.azureOpenAIApiDeploymentName) {
         throw new Error("Azure OpenAI API deployment name not found");
@@ -1200,7 +1228,7 @@ export class ChatOpenAI<
       return;
     }
     const messagesMapped: OpenAICompletionParam[] =
-      convertMessagesToOpenAIParams(messages);
+      _convertMessagesToOpenAIParams(messages);
     const params = {
       ...this.invocationParams(options, {
         streaming: true,
@@ -1209,31 +1237,6 @@ export class ChatOpenAI<
       stream: true as const,
     };
     let defaultRole: OpenAIRoleEnum | undefined;
-    if (
-      params.response_format &&
-      params.response_format.type === "json_schema"
-    ) {
-      console.warn(
-        `OpenAI does not yet support streaming with "response_format" set to "json_schema". Falling back to non-streaming mode.`
-      );
-      const res = await this._generate(messages, options, runManager);
-      const chunk = new ChatGenerationChunk({
-        message: new AIMessageChunk({
-          ...res.generations[0].message,
-        }),
-        text: res.generations[0].text,
-        generationInfo: res.generations[0].generationInfo,
-      });
-      yield chunk;
-      return runManager?.handleLLMNewToken(
-        res.generations[0].text ?? "",
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        { chunk }
-      );
-    }
 
     const streamIterable = await this.completionWithRetry(params, options);
     let usage: OpenAIClient.Completions.CompletionUsage | undefined;
@@ -1294,13 +1297,38 @@ export class ChatOpenAI<
       );
     }
     if (usage) {
+      const inputTokenDetails = {
+        ...(usage.prompt_tokens_details?.audio_tokens !== null && {
+          audio: usage.prompt_tokens_details?.audio_tokens,
+        }),
+        ...(usage.prompt_tokens_details?.cached_tokens !== null && {
+          cache_read: usage.prompt_tokens_details?.cached_tokens,
+        }),
+      };
+      const outputTokenDetails = {
+        ...(usage.completion_tokens_details?.audio_tokens !== null && {
+          audio: usage.completion_tokens_details?.audio_tokens,
+        }),
+        ...(usage.completion_tokens_details?.reasoning_tokens !== null && {
+          reasoning: usage.completion_tokens_details?.reasoning_tokens,
+        }),
+      };
       const generationChunk = new ChatGenerationChunk({
         message: new AIMessageChunk({
           content: "",
+          response_metadata: {
+            usage: { ...usage },
+          },
           usage_metadata: {
             input_tokens: usage.prompt_tokens,
             output_tokens: usage.completion_tokens,
             total_tokens: usage.total_tokens,
+            ...(Object.keys(inputTokenDetails).length > 0 && {
+              input_token_details: inputTokenDetails,
+            }),
+            ...(Object.keys(outputTokenDetails).length > 0 && {
+              output_token_details: outputTokenDetails,
+            }),
           },
         }),
         text: "",
@@ -1326,10 +1354,10 @@ export class ChatOpenAI<
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
-    const tokenUsage: TokenUsage = {};
+    const usageMetadata = {} as UsageMetadata;
     const params = this.invocationParams(options);
     const messagesMapped: OpenAICompletionParam[] =
-      convertMessagesToOpenAIParams(messages);
+      _convertMessagesToOpenAIParams(messages);
 
     if (params.stream) {
       const stream = this._streamResponseChunks(messages, options, runManager);
@@ -1365,10 +1393,19 @@ export class ChatOpenAI<
         generations
       );
 
-      tokenUsage.promptTokens = promptTokenUsage;
-      tokenUsage.completionTokens = completionTokenUsage;
-      tokenUsage.totalTokens = promptTokenUsage + completionTokenUsage;
-      return { generations, llmOutput: { estimatedTokenUsage: tokenUsage } };
+      usageMetadata.input_tokens = promptTokenUsage;
+      usageMetadata.output_tokens = completionTokenUsage;
+      usageMetadata.total_tokens = promptTokenUsage + completionTokenUsage;
+      return {
+        generations,
+        llmOutput: {
+          estimatedTokenUsage: {
+            promptTokens: usageMetadata.input_tokens,
+            completionTokens: usageMetadata.output_tokens,
+            totalTokens: usageMetadata.total_tokens,
+          },
+        },
+      };
     } else {
       let data;
       if (
@@ -1404,19 +1441,51 @@ export class ChatOpenAI<
         completion_tokens: completionTokens,
         prompt_tokens: promptTokens,
         total_tokens: totalTokens,
+        prompt_tokens_details: promptTokensDetails,
+        completion_tokens_details: completionTokensDetails,
       } = data?.usage ?? {};
 
       if (completionTokens) {
-        tokenUsage.completionTokens =
-          (tokenUsage.completionTokens ?? 0) + completionTokens;
+        usageMetadata.output_tokens =
+          (usageMetadata.output_tokens ?? 0) + completionTokens;
       }
 
       if (promptTokens) {
-        tokenUsage.promptTokens = (tokenUsage.promptTokens ?? 0) + promptTokens;
+        usageMetadata.input_tokens =
+          (usageMetadata.input_tokens ?? 0) + promptTokens;
       }
 
       if (totalTokens) {
-        tokenUsage.totalTokens = (tokenUsage.totalTokens ?? 0) + totalTokens;
+        usageMetadata.total_tokens =
+          (usageMetadata.total_tokens ?? 0) + totalTokens;
+      }
+
+      if (
+        promptTokensDetails?.audio_tokens !== null ||
+        promptTokensDetails?.cached_tokens !== null
+      ) {
+        usageMetadata.input_token_details = {
+          ...(promptTokensDetails?.audio_tokens !== null && {
+            audio: promptTokensDetails?.audio_tokens,
+          }),
+          ...(promptTokensDetails?.cached_tokens !== null && {
+            cache_read: promptTokensDetails?.cached_tokens,
+          }),
+        };
+      }
+
+      if (
+        completionTokensDetails?.audio_tokens !== null ||
+        completionTokensDetails?.reasoning_tokens !== null
+      ) {
+        usageMetadata.output_token_details = {
+          ...(completionTokensDetails?.audio_tokens !== null && {
+            audio: completionTokensDetails?.audio_tokens,
+          }),
+          ...(completionTokensDetails?.reasoning_tokens !== null && {
+            reasoning: completionTokensDetails?.reasoning_tokens,
+          }),
+        };
       }
 
       const generations: ChatGeneration[] = [];
@@ -1435,17 +1504,24 @@ export class ChatOpenAI<
           ...(part.logprobs ? { logprobs: part.logprobs } : {}),
         };
         if (isAIMessage(generation.message)) {
-          generation.message.usage_metadata = {
-            input_tokens: tokenUsage.promptTokens ?? 0,
-            output_tokens: tokenUsage.completionTokens ?? 0,
-            total_tokens: tokenUsage.totalTokens ?? 0,
-          };
+          generation.message.usage_metadata = usageMetadata;
         }
+        // Fields are not serialized unless passed to the constructor
+        // Doing this ensures all fields on the message are serialized
+        generation.message = new AIMessage({
+          ...generation.message,
+        });
         generations.push(generation);
       }
       return {
         generations,
-        llmOutput: { tokenUsage },
+        llmOutput: {
+          tokenUsage: {
+            promptTokens: usageMetadata.input_tokens,
+            completionTokens: usageMetadata.output_tokens,
+            totalTokens: usageMetadata.total_tokens,
+          },
+        },
       };
     }
   }
@@ -1653,6 +1729,7 @@ export class ChatOpenAI<
         azureOpenAIApiKey: this.azureOpenAIApiKey,
         azureOpenAIBasePath: this.azureOpenAIBasePath,
         baseURL: this.clientConfig.baseURL,
+        azureOpenAIEndpoint: this.azureOpenAIEndpoint,
       };
 
       const endpoint = getEndpoint(openAIEndpointConfig);

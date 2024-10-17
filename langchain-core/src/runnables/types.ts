@@ -71,16 +71,22 @@ export interface Edge {
 
 export interface Node {
   id: string;
+  name: string;
   data: RunnableIOSchema | RunnableInterface;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  metadata?: Record<string, any>;
 }
 
-export interface RunnableConfig extends BaseCallbackConfig {
+export interface RunnableConfig<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ConfigurableFieldType extends Record<string, any> = Record<string, any>
+> extends BaseCallbackConfig {
   /**
    * Runtime values for attributes previously made configurable on this Runnable,
    * or sub-Runnables.
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  configurable?: Record<string, any>;
+  configurable?: ConfigurableFieldType;
 
   /**
    * Maximum number of times a call can recurse. If not provided, defaults to 25.

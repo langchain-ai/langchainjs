@@ -14,4 +14,6 @@ export {
   ToolMessage,
   ToolMessageChunk,
   type InvalidToolCall,
+  isToolMessage,
+  isToolMessageChunk,
 } from "./tool.js";

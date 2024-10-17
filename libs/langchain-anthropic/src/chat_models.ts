@@ -33,7 +33,7 @@ import type {
 import { isLangChainTool } from "@langchain/core/utils/function_calling";
 import { AnthropicToolsOutputParser } from "./output_parsers.js";
 import { extractToolCallChunk, handleToolChoice } from "./utils/tools.js";
-import { _formatMessagesForAnthropic } from "./utils/message_inputs.js";
+import { _convertMessagesToAnthropicPayload } from "./utils/message_inputs.js";
 import {
   _makeMessageChunkFromAnthropicEvent,
   anthropicResponseToChatMessages,
@@ -46,6 +46,7 @@ import {
   AnthropicToolChoice,
   ChatAnthropicToolType,
 } from "./types.js";
+import { wrapAnthropicClientError } from "./utils/errors.js";
 
 export interface ChatAnthropicCallOptions
   extends BaseChatModelCallOptions,
@@ -782,7 +783,7 @@ export class ChatAnthropicMessages<
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
     const params = this.invocationParams(options);
-    const formattedMessages = _formatMessagesForAnthropic(messages);
+    const formattedMessages = _convertMessagesToAnthropicPayload(messages);
     const coerceContentToString = !_toolsInParams({
       ...params,
       ...formattedMessages,
@@ -818,7 +819,7 @@ export class ChatAnthropicMessages<
 
       // Extract the text content token for text field and runManager.
       const token = extractToken(chunk);
-      yield new ChatGenerationChunk({
+      const generationChunk = new ChatGenerationChunk({
         message: new AIMessageChunk({
           // Just yield chunk as it is and tool_use will be concat by BaseChatModel._generateUncached().
           content: chunk.content,
@@ -830,10 +831,16 @@ export class ChatAnthropicMessages<
         }),
         text: token ?? "",
       });
+      yield generationChunk;
 
-      if (token) {
-        await runManager?.handleLLMNewToken(token);
-      }
+      await runManager?.handleLLMNewToken(
+        token ?? "",
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        { chunk: generationChunk }
+      );
     }
   }
 
@@ -852,7 +859,7 @@ export class ChatAnthropicMessages<
       {
         ...params,
         stream: false,
-        ..._formatMessagesForAnthropic(messages),
+        ..._convertMessagesToAnthropicPayload(messages),
       },
       requestOptions
     );
@@ -931,15 +938,21 @@ export class ChatAnthropicMessages<
         maxRetries: 0,
       });
     }
-    const makeCompletionRequest = async () =>
-      this.streamingClient.messages.create(
-        {
-          ...request,
-          ...this.invocationKwargs,
-          stream: true,
-        } as AnthropicStreamingMessageCreateParams,
-        options
-      );
+    const makeCompletionRequest = async () => {
+      try {
+        return await this.streamingClient.messages.create(
+          {
+            ...request,
+            ...this.invocationKwargs,
+            stream: true,
+          } as AnthropicStreamingMessageCreateParams,
+          options
+        );
+      } catch (e) {
+        const error = wrapAnthropicClientError(e);
+        throw error;
+      }
+    };
     return this.caller.call(makeCompletionRequest);
   }
 
@@ -958,14 +971,20 @@ export class ChatAnthropicMessages<
         maxRetries: 0,
       });
     }
-    const makeCompletionRequest = async () =>
-      this.batchClient.messages.create(
-        {
-          ...request,
-          ...this.invocationKwargs,
-        } as AnthropicMessageCreateParams,
-        options
-      );
+    const makeCompletionRequest = async () => {
+      try {
+        return await this.batchClient.messages.create(
+          {
+            ...request,
+            ...this.invocationKwargs,
+          } as AnthropicMessageCreateParams,
+          options
+        );
+      } catch (e) {
+        const error = wrapAnthropicClientError(e);
+        throw error;
+      }
+    };
     return this.caller.callWithOptions(
       { signal: options.signal ?? undefined },
       makeCompletionRequest

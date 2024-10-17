@@ -23,7 +23,7 @@ interface OllamaEmbeddingsParams extends EmbeddingsParams {
   /**
    * Defaults to "5m"
    */
-  keepAlive?: string;
+  keepAlive?: string | number;
 
   /**
    * Whether or not to truncate the input text to fit inside the model's
@@ -45,7 +45,7 @@ export class OllamaEmbeddings extends Embeddings {
 
   baseUrl = "http://localhost:11434";
 
-  keepAlive = "5m";
+  keepAlive: string | number = "5m";
 
   requestOptions?: Partial<OllamaOptions>;
 
