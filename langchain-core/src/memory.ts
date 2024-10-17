@@ -1,4 +1,8 @@
 /**
+ * @deprecated This module contains memory abstractions from LangChain v0.0.x. These abstractions are now deprecated and will be removed in LangChain v1.0.0.
+ */
+
+/**
  * Type alias for a record where the keys are strings and the values can
  * be any type. This is used to represent the input values for a Chain.
  */
@@ -24,6 +28,7 @@ export type MemoryVariables = Record<string, any>;
  * the state in Chains. It can be used to store information about past
  * executions of a Chain and inject that information into the inputs of
  * future executions of the Chain.
+ * @deprecated Will be removed in 1.0.0. Please see the migration guide at: https://js.langchain.com/docs/versions/migrating_memory/
  */
 export abstract class BaseMemory {
   abstract get memoryKeys(): string[];
@@ -67,6 +72,7 @@ const getValue = (values: InputValues | OutputValues, key?: string) => {
  * This function is used by memory classes to select the input value
  * to use for the memory. If there is only one input value, it is used.
  * If there are multiple input values, the inputKey must be specified.
+ * @deprecated Will be removed in 1.0.0. Please see the migration guide at: https://js.langchain.com/docs/versions/migrating_memory/
  */
 export const getInputValue = (inputValues: InputValues, inputKey?: string) => {
   const value = getValue(inputValues, inputKey);
@@ -84,6 +90,7 @@ export const getInputValue = (inputValues: InputValues, inputKey?: string) => {
  * to use for the memory. If there is only one output value, it is used.
  * If there are multiple output values, the outputKey must be specified.
  * If no outputKey is specified, an error is thrown.
+ * @deprecated Will be removed in 1.0.0. Please see the migration guide at: https://js.langchain.com/docs/versions/migrating_memory/
  */
 export const getOutputValue = (
   outputValues: OutputValues,
@@ -103,6 +110,7 @@ export const getOutputValue = (
  * Function used by memory classes to get the key of the prompt input,
  * excluding any keys that are memory variables or the "stop" key. If
  * there is not exactly one prompt input key, an error is thrown.
+ * @deprecated Will be removed in 1.0.0. Please see the migration guide at: https://js.langchain.com/docs/versions/migrating_memory/
  */
 export function getPromptInputKey(
   inputs: Record<string, unknown>,
