@@ -19,6 +19,7 @@ import {
 import { CallbackManager } from "@langchain/core/callbacks/manager";
 import { NewTokenIndices } from "@langchain/core/callbacks/base";
 import { InMemoryCache } from "@langchain/core/caches";
+import { concat } from "@langchain/core/utils/stream";
 import { ChatOpenAI } from "../chat_models.js";
 
 // Save the original value of the 'LANGCHAIN_CALLBACKS_BACKGROUND' environment variable
@@ -985,4 +986,79 @@ test("Test ChatOpenAI stream method", async () => {
     chunks.push(chunk);
   }
   expect(chunks.length).toEqual(1);
+});
+
+describe("Audio output", () => {
+  test("Audio output", async () => {
+    const model = new ChatOpenAI({
+      model: "gpt-4o-audio-preview",
+      temperature: 0,
+      modalities: ["text", "audio"],
+      audio: {
+        voice: "alloy",
+        format: "wav",
+      },
+    });
+
+    const response = await model.invoke("Make me an audio clip of you yelling");
+    expect(Array.isArray(response.content)).toBeTruthy();
+    expect(Object.keys(response.content[0]).sort()).toEqual([
+      "data",
+      "expires_at",
+      "id",
+      "transcript",
+    ]);
+  });
+
+  test("Audio output can stream", async () => {
+    const model = new ChatOpenAI({
+      model: "gpt-4o-audio-preview",
+      temperature: 0,
+      modalities: ["text", "audio"],
+      audio: {
+        voice: "alloy",
+        format: "pcm16",
+      },
+    });
+
+    const stream = await model.stream("Make me an audio clip of you yelling");
+    let finalMsg: AIMessageChunk | undefined;
+    for await (const chunk of stream) {
+      finalMsg = finalMsg ? concat(finalMsg, chunk) : chunk;
+    }
+    if (!finalMsg) {
+      throw new Error("No final message found");
+    }
+    console.dir(finalMsg, { depth: null });
+    expect(Array.isArray(finalMsg.content)).toBeTruthy();
+    expect(Object.keys(finalMsg.content[1]).sort()).toEqual([
+      "data",
+      "expires_at",
+      "id",
+      "index",
+      "transcript",
+    ]);
+  });
+
+  test("Can bind audio output args", async () => {
+    const model = new ChatOpenAI({
+      model: "gpt-4o-audio-preview",
+      temperature: 0,
+    }).bind({
+      modalities: ["text", "audio"],
+      audio: {
+        voice: "alloy",
+        format: "wav",
+      },
+    });
+
+    const response = await model.invoke("Make me an audio clip of you yelling");
+    expect(Array.isArray(response.content)).toBeTruthy();
+    expect(Object.keys(response.content[0]).sort()).toEqual([
+      "data",
+      "expires_at",
+      "id",
+      "transcript",
+    ]);
+  });
 });
