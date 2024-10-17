@@ -5,33 +5,27 @@ import {
 } from "@langchain/core/utils/async_caller";
 import { getRuntimeEnvironment } from "@langchain/core/utils/env";
 import {BaseRunManager} from "@langchain/core/callbacks/manager";
-import { StructuredToolParams } from "@langchain/core/tools";
-import { isLangChainTool } from "@langchain/core/utils/function_calling";
 import type {
   GoogleAIBaseLLMInput,
   GoogleConnectionParams,
-  GoogleLLMModelFamily,
   GooglePlatformType,
   GoogleResponse,
   GoogleLLMResponse,
-  GeminiContent,
-  GeminiGenerationConfig,
-  GeminiRequest,
-  GeminiSafetySetting,
-  GeminiTool,
-  GeminiFunctionDeclaration,
   GoogleAIModelRequestParams,
   GoogleRawResponse,
   GoogleAIAPI,
-  GoogleAIToolType,
+  VertexModelFamily,
+  GoogleAIAPIConfig,
+  AnthropicAPIConfig,
+  GeminiAPIConfig,
 } from "./types.js";
 import {
   GoogleAbstractedClient,
   GoogleAbstractedClientOps,
   GoogleAbstractedClientOpsMethod,
 } from "./auth.js";
-import { zodToGeminiParameters } from "./utils/zod_to_gemini_parameters.js";
-import { getGeminiAPI } from "./utils/index.js";
+import {getGeminiAPI, modelToFamily, modelToPublisher} from "./utils/index.js";
+import {getAnthropicAPI} from "./utils/anthropic.js";
 
 export abstract class GoogleConnection<
   CallOptions extends AsyncCallerCallOptions,
@@ -215,7 +209,9 @@ export abstract class GoogleAIConnection<
 
   client: GoogleAbstractedClient;
 
-  api: GoogleAIAPI;
+  _apiName?: string;
+
+  apiConfig?: GoogleAIAPIConfig;
 
   constructor(
     fields: GoogleAIBaseLLMInput<AuthOptions> | undefined,
@@ -227,24 +223,36 @@ export abstract class GoogleAIConnection<
     this.client = client;
     this.modelName = fields?.model ?? fields?.modelName ?? this.model;
     this.model = this.modelName;
-    this.api = getGeminiAPI(fields);
+
+    this._apiName = fields?.apiName;
+    this.apiConfig = {
+      safetyHandler: fields?.safetyHandler,  // For backwards compatibility
+      ...fields?.apiConfig
+    };
   }
 
-  get modelFamily(): GoogleLLMModelFamily {
-    if (this.model.startsWith("gemini")) {
-      return "gemini";
-    } else {
-      return null;
-    }
+  get modelFamily(): VertexModelFamily {
+    return modelToFamily(this.model);
   }
 
   get modelPublisher(): string {
-    switch (this.modelFamily) {
-      case "gemini":
-      case "palm":
-        return "google";
-      default:
-        return "unknown";
+    return modelToPublisher(this.model);
+  }
+
+  get computedAPIName(): string {
+    // At least at the moment, model publishers and APIs map the same
+    return this.modelPublisher;
+  }
+
+  get apiName(): string {
+    return this._apiName ?? this.computedAPIName;
+  }
+
+  get api(): GoogleAIAPI {
+    switch (this.apiName) {
+      case "google":    return getGeminiAPI(this.apiConfig as GeminiAPIConfig);
+      case "anthropic": return getAnthropicAPI(this.apiConfig as AnthropicAPIConfig);
+      default: throw new Error(`Unknown API: ${this.apiName}`);
     }
   }
 
@@ -267,7 +275,8 @@ export abstract class GoogleAIConnection<
   async buildUrlVertex(): Promise<string> {
     const projectId = await this.client.getProjectId();
     const method = await this.buildUrlMethod();
-    const url = `https://${this.endpoint}/${this.apiVersion}/projects/${projectId}/locations/${this.location}/publishers/google/models/${this.model}:${method}`;
+    const publisher = this.modelPublisher;
+    const url = `https://${this.endpoint}/${this.apiVersion}/projects/${projectId}/locations/${this.location}/publishers/${publisher}/models/${this.model}:${method}`;
     return url;
   }
 
@@ -331,141 +340,25 @@ export abstract class AbstractGoogleLLMConnection<
     return this.streaming ? "streamGenerateContent" : "generateContent";
   }
 
+  async buildUrlMethodClaude(): Promise<string> {
+    return this.streaming ? "streamRawPredict" : "rawPredict";
+  }
+
   async buildUrlMethod(): Promise<string> {
     switch (this.modelFamily) {
       case "gemini":
         return this.buildUrlMethodGemini();
+      case "claude":
+        return this.buildUrlMethodClaude();
       default:
         throw new Error(`Unknown model family: ${this.modelFamily}`);
     }
   }
 
-  abstract formatContents(
-    input: MessageType,
-    parameters: GoogleAIModelRequestParams
-  ): Promise<GeminiContent[]>;
-
-  formatGenerationConfig(
-    _input: MessageType,
-    parameters: GoogleAIModelRequestParams
-  ): GeminiGenerationConfig {
-    return {
-      temperature: parameters.temperature,
-      topK: parameters.topK,
-      topP: parameters.topP,
-      maxOutputTokens: parameters.maxOutputTokens,
-      stopSequences: parameters.stopSequences,
-      responseMimeType: parameters.responseMimeType,
-    };
-  }
-
-  formatSafetySettings(
-    _input: MessageType,
-    parameters: GoogleAIModelRequestParams
-  ): GeminiSafetySetting[] {
-    return parameters.safetySettings ?? [];
-  }
-
-  async formatSystemInstruction(
-    _input: MessageType,
-    _parameters: GoogleAIModelRequestParams
-  ): Promise<GeminiContent> {
-    return {} as GeminiContent;
-  }
-
-  structuredToolToFunctionDeclaration(
-    tool: StructuredToolParams
-  ): GeminiFunctionDeclaration {
-    const jsonSchema = zodToGeminiParameters(tool.schema);
-    return {
-      name: tool.name,
-      description: tool.description ?? `A function available to call.`,
-      parameters: jsonSchema,
-    };
-  }
-
-  structuredToolsToGeminiTools(tools: StructuredToolParams[]): GeminiTool[] {
-    return [
-      {
-        functionDeclarations: tools.map(
-          this.structuredToolToFunctionDeclaration
-        ),
-      },
-    ];
-  }
-
-  formatTools(
-    _input: MessageType,
-    parameters: GoogleAIModelRequestParams
-  ): GeminiTool[] {
-    const tools: GoogleAIToolType[] | undefined = parameters?.tools;
-    if (!tools || tools.length === 0) {
-      return [];
-    }
-
-    if (tools.every(isLangChainTool)) {
-      return this.structuredToolsToGeminiTools(tools);
-    } else {
-      if (
-        tools.length === 1 &&
-        (!("functionDeclarations" in tools[0]) ||
-          !tools[0].functionDeclarations?.length)
-      ) {
-        return [];
-      }
-      return tools as GeminiTool[];
-    }
-  }
-
-  formatToolConfig(
-    parameters: GoogleAIModelRequestParams
-  ): GeminiRequest["toolConfig"] | undefined {
-    if (!parameters.tool_choice || typeof parameters.tool_choice !== "string") {
-      return undefined;
-    }
-
-    return {
-      functionCallingConfig: {
-        mode: parameters.tool_choice as "auto" | "any" | "none",
-        allowedFunctionNames: parameters.allowed_function_names,
-      },
-    };
-  }
-
   async formatData(
     input: MessageType,
     parameters: GoogleAIModelRequestParams
-  ): Promise<GeminiRequest> {
-    const contents = await this.formatContents(input, parameters);
-    const generationConfig = this.formatGenerationConfig(input, parameters);
-    const tools = this.formatTools(input, parameters);
-    const toolConfig = this.formatToolConfig(parameters);
-    const safetySettings = this.formatSafetySettings(input, parameters);
-    const systemInstruction = await this.formatSystemInstruction(
-      input,
-      parameters
-    );
-
-    const ret: GeminiRequest = {
-      contents,
-      generationConfig,
-    };
-    if (tools && tools.length) {
-      ret.tools = tools;
-    }
-    if (toolConfig) {
-      ret.toolConfig = toolConfig;
-    }
-    if (safetySettings && safetySettings.length) {
-      ret.safetySettings = safetySettings;
-    }
-    if (
-      systemInstruction?.role &&
-      systemInstruction?.parts &&
-      systemInstruction?.parts?.length
-    ) {
-      ret.systemInstruction = systemInstruction;
-    }
-    return ret;
+  ): Promise<unknown> {
+    return this.api.formatData(input, parameters);
   }
 }

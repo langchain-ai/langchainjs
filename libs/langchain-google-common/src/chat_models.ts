@@ -29,9 +29,8 @@ import {
   GoogleAISafetySetting,
   GoogleConnectionParams,
   GooglePlatformType,
-  GeminiContent,
   GeminiTool,
-  GoogleAIBaseLanguageModelCallOptions,
+  GoogleAIBaseLanguageModelCallOptions, GoogleAIAPI, GoogleAIAPIParams,
 } from "./types.js";
 import {
   convertToGeminiTools,
@@ -39,7 +38,7 @@ import {
   copyAndValidateModelParamsInto,
 } from "./utils/common.js";
 import { AbstractGoogleLLMConnection } from "./connection.js";
-import { DefaultGeminiSafetyHandler } from "./utils/gemini.js";
+import {DefaultGeminiSafetyHandler, getGeminiAPI} from "./utils/gemini.js";
 import { ApiKeyGoogleAuth, GoogleAbstractedClient } from "./auth.js";
 import { JsonStream } from "./utils/stream.js";
 import { ensureParams } from "./utils/failed_handler.js";
@@ -96,72 +95,21 @@ export class ChatConnection<AuthOptions> extends AbstractGoogleLLMConnection<
     return true;
   }
 
-  async formatContents(
-    input: BaseMessage[],
-    _parameters: GoogleAIModelParams
-  ): Promise<GeminiContent[]> {
-    const inputPromises: Promise<GeminiContent[]>[] = input.map((msg, i) =>
-      this.api.baseMessageToContent!(
-        msg,
-        input[i - 1],
-        this.useSystemInstruction
-      )
-    );
-    const inputs = await Promise.all(inputPromises);
-
-    return inputs.reduce((acc, cur) => {
-      // Filter out the system content
-      if (cur.every((content) => content.role === "system")) {
-        return acc;
-      }
-
-      // Combine adjacent function messages
-      if (
-        cur[0]?.role === "function" &&
-        acc.length > 0 &&
-        acc[acc.length - 1].role === "function"
-      ) {
-        acc[acc.length - 1].parts = [
-          ...acc[acc.length - 1].parts,
-          ...cur[0].parts,
-        ];
-      } else {
-        acc.push(...cur);
-      }
-
-      return acc;
-    }, [] as GeminiContent[]);
+  buildGeminiAPI(): GoogleAIAPI {
+    const geminiConfig: GeminiAPIConfig = {
+      useSystemInstruction: this.useSystemInstruction,
+      ...this.apiConfig as GeminiAPIConfig,
+    }
+    return getGeminiAPI(geminiConfig);
   }
 
-  async formatSystemInstruction(
-    input: BaseMessage[],
-    _parameters: GoogleAIModelParams
-  ): Promise<GeminiContent> {
-    if (!this.useSystemInstruction) {
-      return {} as GeminiContent;
+  get api(): GoogleAIAPI {
+    switch (this.apiName) {
+      case "google": return this.buildGeminiAPI();
+      default:       return super.api;
     }
-
-    let ret = {} as GeminiContent;
-    for (let index = 0; index < input.length; index += 1) {
-      const message = input[index];
-      if (message._getType() === "system") {
-        // For system types, we only want it if it is the first message,
-        // if it appears anywhere else, it should be an error.
-        if (index === 0) {
-          // eslint-disable-next-line prefer-destructuring
-          ret = (
-            await this.api.baseMessageToContent!(message, undefined, true)
-          )[0];
-        } else {
-          throw new Error(
-            "System messages are only permitted as the first passed message."
-          );
-        }
-      }
-    }
-
-    return ret;
   }
+
 }
 
 /**
@@ -172,7 +120,7 @@ export interface ChatGoogleBaseInput<AuthOptions>
     GoogleConnectionParams<AuthOptions>,
     GoogleAIModelParams,
     GoogleAISafetyParams,
-    GeminiAPIConfig,
+    GoogleAIAPIParams,
     Pick<GoogleAIBaseLanguageModelCallOptions, "streamUsage"> {}
 
 /**

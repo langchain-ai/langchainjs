@@ -34,10 +34,19 @@ import {
   MessagesPlaceholder,
 } from "@langchain/core/prompts";
 import { InMemoryStore } from "@langchain/core/stores";
+import {CallbackHandlerMethods} from "@langchain/core/callbacks/base";
 import { GeminiTool } from "../types.js";
 import { ChatVertexAI } from "../chat_models.js";
 
-describe("GAuth Chat", () => {
+const callbacks: CallbackHandlerMethods[] = [{
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  handleCustomEvent(eventName: string, data: any, _runId: string, _tags?: string[], _metadata?: Record<string, any>): any {
+    console.log('eventName', eventName);
+    console.log('data', JSON.stringify(data,null,1));
+  }
+}]
+
+describe("GAuth Gemini Chat", () => {
   test("invoke", async () => {
     const model = new ChatVertexAI();
     const res = await model.invoke("What is 1 + 1?");
@@ -242,7 +251,9 @@ describe("GAuth Chat", () => {
     });
     const model = new ChatGoogle({
       modelName: "gemini-1.5-flash",
-      mediaManager,
+      apiConfig: {
+        mediaManager,
+      },
     });
 
     const message: MessageContentComplex[] = [
@@ -486,3 +497,24 @@ describe("GAuth Chat", () => {
 
 });
 
+describe("GAuth Anthropic Chat", () => {
+  test("invoke", async () => {
+    const model = new ChatVertexAI({
+      endpoint: "us-east5-aiplatform.googleapis.com",
+      location: "us-east5",
+      model: "claude-3-5-sonnet@20240620",
+      callbacks,
+    });
+    const res = await model.invoke("What is 1 + 1?");
+    expect(res).toBeDefined();
+    expect(res._getType()).toEqual("ai");
+
+    const aiMessage = res as AIMessageChunk;
+    expect(aiMessage.content).toBeDefined();
+
+    console.log(JSON.stringify(aiMessage));
+    expect(typeof aiMessage.content).toBe("string");
+    const text = aiMessage.content as string;
+    expect(text).toMatch(/(1 + 1 (equals|is|=) )?2.? ?/);
+  });
+});

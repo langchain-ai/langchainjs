@@ -4,6 +4,12 @@ import {BaseMessage, BaseMessageChunk, MessageContent} from "@langchain/core/mes
 import {ChatGenerationChunk, ChatResult} from "@langchain/core/outputs";
 import type { JsonStream } from "./utils/stream.js";
 import { MediaManager } from "./experimental/utils/media_core.js";
+import {
+  AnthropicResponseData,
+  AnthropicAPIConfig,
+} from "./types-anthropic.js";
+
+export * from "./types-anthropic.js";
 
 /**
  * Parameters needed to setup the client connection.
@@ -148,7 +154,7 @@ export interface GoogleAIBaseLLMInput<AuthOptions>
     GoogleConnectionParams<AuthOptions>,
     GoogleAIModelParams,
     GoogleAISafetyParams,
-    GeminiAPIConfig {}
+    GoogleAIAPIParams {}
 
 export interface GoogleAIBaseLanguageModelCallOptions
   extends BaseChatModelCallOptions,
@@ -313,13 +319,15 @@ export interface GenerateContentResponseData {
 
 export type GoogleLLMModelFamily = null | "palm" | "gemini";
 
+export type VertexModelFamily = GoogleLLMModelFamily | "claude";
+
 export type GoogleLLMResponseData =
   | JsonStream
   | GenerateContentResponseData
   | GenerateContentResponseData[];
 
 export interface GoogleLLMResponse extends GoogleResponse {
-  data: GoogleLLMResponseData;
+  data: GoogleLLMResponseData | AnthropicResponseData;
 }
 
 export interface GoogleAISafetyHandler {
@@ -379,9 +387,24 @@ export type GoogleAIAPI = {
     response: GoogleLLMResponse
   ) => ChatResult;
 
+  formatData: (
+    input: unknown,
+    parameters: GoogleAIModelRequestParams
+  ) => Promise<unknown>;
+
 }
 
 export interface GeminiAPIConfig {
   safetyHandler?: GoogleAISafetyHandler;
   mediaManager?: MediaManager;
+  useSystemInstruction?: boolean;
+}
+
+export type GoogleAIAPIConfig =
+  | GeminiAPIConfig
+  | AnthropicAPIConfig
+
+export interface GoogleAIAPIParams {
+  apiName?: string;
+  apiConfig?: GoogleAIAPIConfig;
 }

@@ -275,7 +275,9 @@ describe("GAuth Chat", () => {
     });
     const model = new ChatGoogle({
       modelName: "gemini-1.5-flash",
-      mediaManager,
+      apiConfig: {
+        mediaManager,
+      },
     });
 
     const message: MessageContentComplex[] = [

@@ -41,7 +41,7 @@ class ChatGoogle extends ChatGoogleBase<MockClientAuthInfo> {
   }
 }
 
-describe("Mock ChatGoogle", () => {
+describe("Mock ChatGoogle - Gemini", () => {
   test("Setting invalid model parameters", async () => {
     expect(() => {
       const model = new ChatGoogle({
@@ -624,7 +624,7 @@ describe("Mock ChatGoogle", () => {
       const result = await model.invoke(messages);
       expect(result).toBeUndefined();
     } catch (e) {
-      expect((e as Error).message).toEqual("Invalid media content");
+      expect((e as Error).message).toMatch(/^Invalid media content/);
     }
   });
 
@@ -751,7 +751,9 @@ describe("Mock ChatGoogle", () => {
     const model = new ChatGoogle({
       authOptions,
       model: "gemini-1.5-flash",
-      mediaManager,
+      apiConfig: {
+        mediaManager,
+      },
       callbacks,
     });
 
@@ -1070,6 +1072,10 @@ describe("Mock ChatGoogle", () => {
     // console.log(JSON.stringify(record?.opts?.data, null, 1));
   });
 });
+
+describe("Mock ChatGoogle - Anthropic", () => {
+
+})
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function extractKeys(obj: Record<string, any>, keys: string[] = []) {
