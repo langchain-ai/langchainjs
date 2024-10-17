@@ -818,7 +818,7 @@ export class ChatAnthropicMessages<
 
       // Extract the text content token for text field and runManager.
       const token = extractToken(chunk);
-      yield new ChatGenerationChunk({
+      const generationChunk = new ChatGenerationChunk({
         message: new AIMessageChunk({
           // Just yield chunk as it is and tool_use will be concat by BaseChatModel._generateUncached().
           content: chunk.content,
@@ -830,10 +830,16 @@ export class ChatAnthropicMessages<
         }),
         text: token ?? "",
       });
+      yield generationChunk;
 
-      if (token) {
-        await runManager?.handleLLMNewToken(token);
-      }
+      await runManager?.handleLLMNewToken(
+        token ?? "",
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        { chunk: generationChunk }
+      );
     }
   }
 
