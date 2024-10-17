@@ -24,7 +24,6 @@ export function addLangChainErrorFields(
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function wrapAnthropicClientError(e: any) {
   let error;
-  console.log(e);
   if (e.status === 400 && e.message.includes("tool")) {
     error = addLangChainErrorFields(e, "INVALID_TOOL_RESULTS");
   } else if (e.status === 401) {
