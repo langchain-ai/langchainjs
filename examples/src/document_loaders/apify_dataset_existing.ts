@@ -6,6 +6,9 @@ import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { createRetrievalChain } from "langchain/chains/retrieval";
 import { createStuffDocumentsChain } from "langchain/chains/combine_documents";
 
+const APIFY_API_TOKEN = "YOUR-APIFY-API-TOKEN"; // or set as process.env.APIFY_API_TOKEN
+const OPENAI_API_KEY = "YOUR-OPENAI-API-KEY"; // or set as process.env.OPENAI_API_KEY
+
 /*
  * datasetMappingFunction is a function that maps your Apify dataset format to LangChain documents.
  * In the below example, the Apify dataset format looks like this:
@@ -21,16 +24,20 @@ const loader = new ApifyDatasetLoader("your-dataset-id", {
       metadata: { source: item.url },
     }),
   clientOptions: {
-    token: "your-apify-token", // Or set as process.env.APIFY_API_TOKEN
+    token: APIFY_API_TOKEN,
   },
 });
 
 const docs = await loader.load();
 
-const vectorStore = await HNSWLib.fromDocuments(docs, new OpenAIEmbeddings());
+const vectorStore = await HNSWLib.fromDocuments(
+  docs,
+  new OpenAIEmbeddings({ apiKey: OPENAI_API_KEY })
+);
 
 const model = new ChatOpenAI({
   temperature: 0,
+  apiKey: OPENAI_API_KEY,
 });
 
 const questionAnsweringPrompt = ChatPromptTemplate.fromMessages([
