@@ -16,6 +16,7 @@ import {
   isAIMessage,
   convertToChunk,
   UsageMetadata,
+  MessageContent,
 } from "@langchain/core/messages";
 import {
   type ChatGeneration,
@@ -174,8 +175,10 @@ function openAIResponseToChatMessage(
           system_fingerprint: rawResponse.system_fingerprint,
         };
       }
+      const content = message.audio ? [message.audio] : message.content;
+
       return new AIMessage({
-        content: message.content || "",
+        content: content || "",
         tool_calls: toolCalls,
         invalid_tool_calls: invalidToolCalls,
         additional_kwargs,
@@ -196,7 +199,15 @@ function _convertDeltaToMessageChunk(
   includeRawResponse?: boolean
 ) {
   const role = delta.role ?? defaultRole;
-  const content = delta.content ?? "";
+  let content: MessageContent;
+  if (delta.audio) {
+    content = [{
+      ...delta.audio,
+      index: rawResponse.choices[0].index,
+    }]
+  } else {
+    content = delta.content ?? "";
+  }
   let additional_kwargs: Record<string, unknown>;
   if (delta.function_call) {
     additional_kwargs = {
@@ -958,6 +969,10 @@ export class ChatOpenAI<
    */
   supportsStrictToolCalling?: boolean;
 
+  audio?: OpenAIClient.Chat.ChatCompletionAudioParam;
+
+  modalities?: Array<OpenAIClient.Chat.ChatCompletionModality>
+
   constructor(
     fields?: ChatOpenAIFields,
     /** @deprecated */
@@ -1026,6 +1041,8 @@ export class ChatOpenAI<
     this.stopSequences = this?.stop;
     this.user = fields?.user;
     this.__includeRawResponse = fields?.__includeRawResponse;
+    this.audio = fields?.audio;
+    this.modalities = fields?.modalities;
 
     if (this.azureOpenAIApiKey || this.azureADTokenProvider) {
       if (
@@ -1190,6 +1207,8 @@ export class ChatOpenAI<
       seed: options?.seed,
       ...streamOptionsConfig,
       parallel_tool_calls: options?.parallel_tool_calls,
+      audio: this.audio,
+      modalities: this.modalities,
       ...this.modelKwargs,
     };
     return params;
@@ -1241,7 +1260,7 @@ export class ChatOpenAI<
     const streamIterable = await this.completionWithRetry(params, options);
     let usage: OpenAIClient.Completions.CompletionUsage | undefined;
     for await (const data of streamIterable) {
-      const choice = data?.choices[0];
+      const choice = data?.choices?.[0];
       if (data.usage) {
         usage = data.usage;
       }
@@ -1264,12 +1283,6 @@ export class ChatOpenAI<
         prompt: options.promptIndex ?? 0,
         completion: choice.index ?? 0,
       };
-      if (typeof chunk.content !== "string") {
-        console.log(
-          "[WARNING]: Received non-string content from OpenAI. This is currently not supported."
-        );
-        continue;
-      }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const generationInfo: Record<string, any> = { ...newTokenIndices };
       if (choice.finish_reason != null) {
@@ -1283,7 +1296,7 @@ export class ChatOpenAI<
       }
       const generationChunk = new ChatGenerationChunk({
         message: chunk,
-        text: chunk.content,
+        text: typeof chunk.content === "string" ? chunk.content : "",
         generationInfo,
       });
       yield generationChunk;
@@ -1490,9 +1503,8 @@ export class ChatOpenAI<
 
       const generations: ChatGeneration[] = [];
       for (const part of data?.choices ?? []) {
-        const text = part.message?.content ?? "";
         const generation: ChatGeneration = {
-          text,
+          text: part.message?.content ?? "",
           message: openAIResponseToChatMessage(
             part.message ?? { role: "assistant" },
             data,
