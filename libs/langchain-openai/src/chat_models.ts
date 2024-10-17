@@ -16,7 +16,6 @@ import {
   isAIMessage,
   convertToChunk,
   UsageMetadata,
-  MessageContent,
 } from "@langchain/core/messages";
 import {
   type ChatGeneration,
@@ -175,10 +174,8 @@ function openAIResponseToChatMessage(
           system_fingerprint: rawResponse.system_fingerprint,
         };
       }
-      const content = message.audio ? [message.audio] : message.content;
-
       return new AIMessage({
-        content: content || "",
+        content: message.content || "",
         tool_calls: toolCalls,
         invalid_tool_calls: invalidToolCalls,
         additional_kwargs,
@@ -199,17 +196,7 @@ function _convertDeltaToMessageChunk(
   includeRawResponse?: boolean
 ) {
   const role = delta.role ?? defaultRole;
-  let content: MessageContent;
-  if (delta.audio) {
-    content = [
-      {
-        ...delta.audio,
-        index: rawResponse.choices[0].index,
-      },
-    ];
-  } else {
-    content = delta.content ?? "";
-  }
+  const content = delta.content ?? "";
   let additional_kwargs: Record<string, unknown>;
   if (delta.function_call) {
     additional_kwargs = {
@@ -385,26 +372,6 @@ export interface ChatOpenAICallOptions
    * @version 0.2.6
    */
   strict?: boolean;
-  /**
-   * Output types that you would like the model to generate for this request. Most
-   * models are capable of generating text, which is the default:
-   *
-   * `["text"]`
-   *
-   * The `gpt-4o-audio-preview` model can also be used to
-   * [generate audio](https://platform.openai.com/docs/guides/audio). To request that
-   * this model generate both text and audio responses, you can use:
-   *
-   * `["text", "audio"]`
-   */
-  modalities?: Array<OpenAIClient.Chat.ChatCompletionModality>;
-
-  /**
-   * Parameters for audio output. Required when audio output is requested with
-   * `modalities: ["audio"]`.
-   * [Learn more](https://platform.openai.com/docs/guides/audio).
-   */
-  audio?: OpenAIClient.Chat.ChatCompletionAudioParam;
 }
 
 export interface ChatOpenAIFields
@@ -875,43 +842,6 @@ export interface ChatOpenAIFields
  * </details>
  *
  * <br />
- *
- * <details>
- * <summary><strong>Audio Outputs</strong></summary>
- *
- * ```typescript
- * import { ChatOpenAI } from "@langchain/openai";
- *
- * const modelWithAudioOutput = new ChatOpenAI({
- *   model: "gpt-4o-audio-preview",
- *   // You may also pass these fields to `.bind` as a call argument.
- *   modalities: ["text", "audio"], // Specifies that the model should output audio.
- *   audio: {
- *     voice: "alloy",
- *     format: "wav",
- *   },
- * });
- *
- * const audioOutputResult = await modelWithAudioOutput.invoke("Tell me a joke about cats.");
- * const castMessageContent = audioOutputResult.content[0] as Record<string, any>;
- *
- * console.log({
- *   ...castMessageContent,
- *   data: castMessageContent.data.slice(0, 100) // Sliced for brevity
- * })
- * ```
- *
- * ```txt
- * {
- *   id: 'audio_67117718c6008190a3afad3e3054b9b6',
- *   data: 'UklGRqYwBgBXQVZFZm10IBAAAAABAAEAwF0AAIC7AAACABAATElTVBoAAABJTkZPSVNGVA4AAABMYXZmNTguMjkuMTAwAGRhdGFg',
- *   expires_at: 1729201448,
- *   transcript: 'Sure! Why did the cat sit on the computer? Because it wanted to keep an eye on the mouse!'
- * }
- * ```
- * </details>
- *
- * <br />
  */
 export class ChatOpenAI<
     CallOptions extends ChatOpenAICallOptions = ChatOpenAICallOptions
@@ -1028,10 +958,6 @@ export class ChatOpenAI<
    */
   supportsStrictToolCalling?: boolean;
 
-  audio?: OpenAIClient.Chat.ChatCompletionAudioParam;
-
-  modalities?: Array<OpenAIClient.Chat.ChatCompletionModality>;
-
   constructor(
     fields?: ChatOpenAIFields,
     /** @deprecated */
@@ -1100,8 +1026,6 @@ export class ChatOpenAI<
     this.stopSequences = this?.stop;
     this.user = fields?.user;
     this.__includeRawResponse = fields?.__includeRawResponse;
-    this.audio = fields?.audio;
-    this.modalities = fields?.modalities;
 
     if (this.azureOpenAIApiKey || this.azureADTokenProvider) {
       if (
@@ -1266,12 +1190,6 @@ export class ChatOpenAI<
       seed: options?.seed,
       ...streamOptionsConfig,
       parallel_tool_calls: options?.parallel_tool_calls,
-      ...(this.audio || options?.audio
-        ? { audio: this.audio || options?.audio }
-        : {}),
-      ...(this.modalities || options?.modalities
-        ? { modalities: this.modalities || options?.modalities }
-        : {}),
       ...this.modelKwargs,
     };
     return params;
@@ -1323,7 +1241,7 @@ export class ChatOpenAI<
     const streamIterable = await this.completionWithRetry(params, options);
     let usage: OpenAIClient.Completions.CompletionUsage | undefined;
     for await (const data of streamIterable) {
-      const choice = data?.choices?.[0];
+      const choice = data?.choices[0];
       if (data.usage) {
         usage = data.usage;
       }
@@ -1346,6 +1264,12 @@ export class ChatOpenAI<
         prompt: options.promptIndex ?? 0,
         completion: choice.index ?? 0,
       };
+      if (typeof chunk.content !== "string") {
+        console.log(
+          "[WARNING]: Received non-string content from OpenAI. This is currently not supported."
+        );
+        continue;
+      }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const generationInfo: Record<string, any> = { ...newTokenIndices };
       if (choice.finish_reason != null) {
@@ -1359,7 +1283,7 @@ export class ChatOpenAI<
       }
       const generationChunk = new ChatGenerationChunk({
         message: chunk,
-        text: typeof chunk.content === "string" ? chunk.content : "",
+        text: chunk.content,
         generationInfo,
       });
       yield generationChunk;
@@ -1566,8 +1490,9 @@ export class ChatOpenAI<
 
       const generations: ChatGeneration[] = [];
       for (const part of data?.choices ?? []) {
+        const text = part.message?.content ?? "";
         const generation: ChatGeneration = {
-          text: part.message?.content ?? "",
+          text,
           message: openAIResponseToChatMessage(
             part.message ?? { role: "assistant" },
             data,
