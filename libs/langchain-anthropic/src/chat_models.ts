@@ -46,6 +46,7 @@ import {
   AnthropicToolChoice,
   ChatAnthropicToolType,
 } from "./types.js";
+import { wrapAnthropicClientError } from "./utils/errors.js";
 
 export interface ChatAnthropicCallOptions
   extends BaseChatModelCallOptions,
@@ -937,15 +938,21 @@ export class ChatAnthropicMessages<
         maxRetries: 0,
       });
     }
-    const makeCompletionRequest = async () =>
-      this.streamingClient.messages.create(
-        {
-          ...request,
-          ...this.invocationKwargs,
-          stream: true,
-        } as AnthropicStreamingMessageCreateParams,
-        options
-      );
+    const makeCompletionRequest = async () => {
+      try {
+        return await this.streamingClient.messages.create(
+          {
+            ...request,
+            ...this.invocationKwargs,
+            stream: true,
+          } as AnthropicStreamingMessageCreateParams,
+          options
+        );
+      } catch (e) {
+        const error = wrapAnthropicClientError(e);
+        throw error;
+      }
+    };
     return this.caller.call(makeCompletionRequest);
   }
 
@@ -964,14 +971,20 @@ export class ChatAnthropicMessages<
         maxRetries: 0,
       });
     }
-    const makeCompletionRequest = async () =>
-      this.batchClient.messages.create(
-        {
-          ...request,
-          ...this.invocationKwargs,
-        } as AnthropicMessageCreateParams,
-        options
-      );
+    const makeCompletionRequest = async () => {
+      try {
+        return await this.batchClient.messages.create(
+          {
+            ...request,
+            ...this.invocationKwargs,
+          } as AnthropicMessageCreateParams,
+          options
+        );
+      } catch (e) {
+        const error = wrapAnthropicClientError(e);
+        throw error;
+      }
+    };
     return this.caller.callWithOptions(
       { signal: options.signal ?? undefined },
       makeCompletionRequest

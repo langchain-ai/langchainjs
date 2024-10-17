@@ -1,4 +1,5 @@
 /* eslint-disable no-process-env */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { expect, test } from "@jest/globals";
 import {
@@ -85,6 +86,36 @@ test("Few shotting with tool calls", async () => {
     new HumanMessage("What did you say the weather was?"),
   ]);
   expect(res.content).toContain("24");
+});
+
+test("Invalid tool calls should throw an appropriate error", async () => {
+  const chat = model.bindTools([new WeatherTool()]);
+  let error;
+  try {
+    await chat.invoke([
+      new HumanMessage("What is the weather in SF?"),
+      new AIMessage({
+        content: "Let me look up the current weather.",
+        tool_calls: [
+          {
+            id: "toolu_feiwjf9u98r389u498",
+            name: "get_weather",
+            args: {
+              location: "SF",
+            },
+          },
+        ],
+      }),
+      new ToolMessage({
+        tool_call_id: "badbadbad",
+        content: "It is currently 24 degrees with hail in San Francisco.",
+      }),
+    ]);
+  } catch (e) {
+    error = e;
+  }
+  expect(error).toBeDefined();
+  expect((error as any).lc_error_code).toEqual("INVALID_TOOL_RESULTS");
 });
 
 test("Can bind & invoke StructuredTools", async () => {
