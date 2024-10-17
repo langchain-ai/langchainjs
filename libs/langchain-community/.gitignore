@@ -526,6 +526,10 @@ chat_models/friendli.cjs
 chat_models/friendli.js
 chat_models/friendli.d.ts
 chat_models/friendli.d.cts
+chat_models/ibm.cjs
+chat_models/ibm.js
+chat_models/ibm.d.ts
+chat_models/ibm.d.cts
 chat_models/iflytek_xinghuo.cjs
 chat_models/iflytek_xinghuo.js
 chat_models/iflytek_xinghuo.d.ts

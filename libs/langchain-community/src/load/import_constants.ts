@@ -83,6 +83,7 @@ export const optionalImportEntrypoints: string[] = [
   "langchain_community/chat_models/arcjet",
   "langchain_community/chat_models/bedrock",
   "langchain_community/chat_models/bedrock/web",
+  "langchain_community/chat_models/ibm",
   "langchain_community/chat_models/iflytek_xinghuo",
   "langchain_community/chat_models/iflytek_xinghuo/web",
   "langchain_community/chat_models/llama_cpp",
