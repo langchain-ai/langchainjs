@@ -1,6 +1,7 @@
 import mustache from "mustache";
 import { MessageContent } from "../messages/index.js";
 import type { InputValues } from "../utils/types/index.js";
+import { addLangChainErrorFields } from "../errors/index.js";
 
 function configureMustache() {
   // Use unescaped HTML
@@ -155,7 +156,14 @@ export const renderTemplate = (
   template: string,
   templateFormat: TemplateFormat,
   inputValues: InputValues
-) => DEFAULT_FORMATTER_MAPPING[templateFormat](template, inputValues);
+) => {
+  try {
+    return DEFAULT_FORMATTER_MAPPING[templateFormat](template, inputValues);
+  } catch (e) {
+    const error = addLangChainErrorFields(e, "INVALID_PROMPT_INPUT");
+    throw error;
+  }
+};
 
 export const parseTemplate = (
   template: string,
