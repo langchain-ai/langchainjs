@@ -1040,7 +1040,7 @@ describe("Audio output", () => {
     ]);
   });
 
-  test.only("Can bind audio output args", async () => {
+  test("Can bind audio output args", async () => {
     const model = new ChatOpenAI({
       model: "gpt-4o-audio-preview",
       temperature: 0,
