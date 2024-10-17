@@ -183,8 +183,12 @@ const config = {
                 label: "Community",
               },
               {
+                to: "/docs/troubleshooting/errors",
+                label: "Error reference",
+              },
+              {
                 to: "/docs/additional_resources/tutorials",
-                label: "Tutorials",
+                label: "External guides",
               },
               {
                 to: "/docs/contributing",
