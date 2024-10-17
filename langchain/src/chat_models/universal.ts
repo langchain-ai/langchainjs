@@ -174,7 +174,11 @@ async function _initChatModelHelper(
  * _inferModelProvider("unknown-model"); // returns undefined
  */
 export function _inferModelProvider(modelName: string): string | undefined {
-  if (modelName.startsWith("gpt-3") || modelName.startsWith("gpt-4")) {
+  if (
+    modelName.startsWith("gpt-3") ||
+    modelName.startsWith("gpt-4") ||
+    modelName.startsWith("o1-")
+  ) {
     return "openai";
   } else if (modelName.startsWith("claude")) {
     return "anthropic";
@@ -559,6 +563,11 @@ export async function initChatModel<
     configPrefix?: string;
   }
 ): Promise<_ConfigurableModel<RunInput, CallOptions>>;
+export async function initChatModel<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  CallOptions extends Record<string, any> = ConfigurableChatModelCallOptions,
+  ChatModel extends BaseChatModel<CallOptions> = BaseChatModel<CallOptions>
+>(model: string): Promise<ChatModel>;
 
 // ################################# FOR CONTRIBUTORS #################################
 //
@@ -568,38 +577,40 @@ export async function initChatModel<
 // ####################################################################################
 
 /**
- * Initialize a ChatModel from the model name and provider.
+ * Initialize a chat model from the model name and/or provider.
  * Must have the integration package corresponding to the model provider installed.
  *
  * @template {extends BaseLanguageModelInput = BaseLanguageModelInput} RunInput - The input type for the model.
  * @template {extends ConfigurableChatModelCallOptions = ConfigurableChatModelCallOptions} CallOptions - Call options for the model.
  *
- * @param {string | ChatModelProvider} [model] - The name of the model, e.g. "gpt-4", "claude-3-opus-20240229".
+ * @param {string | ChatModelProvider} [model] - The name of the model, e.g. `"gpt-4"`, `"claude-3-opus-20240229"`.
  * @param {Object} [fields] - Additional configuration options.
  * @param {string} [fields.modelProvider] - The model provider. Supported values include:
- *   - openai (@langchain/openai)
- *   - anthropic (@langchain/anthropic)
- *   - azure_openai (@langchain/openai)
- *   - google-vertexai (@langchain/google-vertexai)
- *   - google-genai (@langchain/google-genai)
- *   - bedrock (@langchain/aws)
- *   - cohere (@langchain/cohere)
- *   - fireworks (@langchain/community/chat_models/fireworks)
- *   - together (@langchain/community/chat_models/togetherai)
- *   - mistralai (@langchain/mistralai)
- *   - groq (@langchain/groq)
- *   - ollama (@langchain/ollama)
+ *   - `"openai"` (`@langchain/openai`)
+ *   - `"anthropic"` (`@langchain/anthropic`)
+ *   - `"azure_openai"` (`@langchain/openai`)
+ *   - `"google-vertexai"` (`@langchain/google-vertexai`)
+ *   - `"google-genai"` (`@langchain/google-genai`)
+ *   - `"bedrock"` (`@langchain/aws`)
+ *   - `"cohere"` (`@langchain/cohere`)
+ *   - `"fireworks"` (`@langchain/community/chat_models/fireworks`)
+ *   - `"together"` (`@langchain/community/chat_models/togetherai`)
+ *   - `"mistralai"` (`@langchain/mistralai`)
+ *   - `"groq"` (`@langchain/groq`)
+ *   - `"ollama"` (`@langchain/ollama`)
  * @param {string[] | "any"} [fields.configurableFields] - Which model parameters are configurable:
- *   - undefined: No configurable fields.
- *   - "any": All fields are configurable. (See Security Note in description)
- *   - string[]: Specified fields are configurable.
+ *   - `undefined`: No configurable fields.
+ *   - `"any"`: All fields are configurable. (See Security Note in description)
+ *   - `string[]`: Specified fields are configurable.
  * @param {string} [fields.configPrefix] - Prefix for configurable fields at runtime.
- * @param {Record<string, any>} [fields.params] - Additional keyword args to pass to the ChatModel constructor.
- * @returns {Promise<_ConfigurableModel<RunInput, CallOptions>>} A class which extends BaseChatModel.
- * @throws {Error} If modelProvider cannot be inferred or isn't supported.
+ * @param {Record<string, any>} [fields.params] - Additional keyword args to pass to the `ChatModel` constructor.
+ * @returns {Promise<_ConfigurableModel<RunInput, CallOptions>>} A class which extends `BaseChatModel`.
+ * @throws {Error} If `modelProvider` cannot be inferred or isn't supported.
  * @throws {Error} If the model provider integration package is not installed.
  *
- * @example Initialize non-configurable models
+ * <details>
+ * <summary><strong>Initialize non-configurable models</strong></summary>
+ *
  * ```typescript
  * import { initChatModel } from "langchain/chat_models/universal";
  *
@@ -621,8 +632,14 @@ export async function initChatModel<
  * });
  * const geminiResult = await gemini.invoke("what's your name");
  * ```
+ * </details>
  *
- * @example Create a partially configurable model with no default model
+ * <br />
+ *
+ *
+ * <details>
+ * <summary><strong>Create a partially configurable model with no default model</strong></summary>
+ *
  * ```typescript
  * import { initChatModel } from "langchain/chat_models/universal";
  *
@@ -643,8 +660,14 @@ export async function initChatModel<
  *   },
  * });
  * ```
+ * </details>
  *
- * @example Create a fully configurable model with a default model and a config prefix
+ * <br />
+ *
+ *
+ * <details>
+ * <summary><strong>Create a fully configurable model with a default model and a config prefix</strong></summary>
+ *
  * ```typescript
  * import { initChatModel } from "langchain/chat_models/universal";
  *
@@ -676,8 +699,14 @@ export async function initChatModel<
  *   }
  * );
  * ```
+ * </details>
  *
- * @example Bind tools to a configurable model:
+ * <br />
+ *
+ *
+ * <details>
+ * <summary><strong>Bind tools to a configurable model</strong></summary>
+ *
  * ```typescript
  * import { initChatModel } from "langchain/chat_models/universal";
  * import { z } from "zod";
@@ -747,31 +776,66 @@ export async function initChatModel<
  *   }
  * );
  * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Initialize & return a specific chat model class</strong></summary>
+ *
+ * ```typescript
+ * import { initChatModel } from "langchain/chat_models/universal";
+ *
+ * // NOTE: You must pass the `CallOptions` and `ChatModel` generics if you
+ * // want the return value to be properly typed as the chat model class.
+ *
+ * // Returns an instance of `ChatOpenAI`
+ * const gpt4 = await initChatModel<ChatOpenAICallOptions, ChatOpenAI>("gpt-4");
+ * const gpt4Result = await gpt4.invoke("what's your name");
+ *
+ * // Returns an instance of `ChatAnthropic`
+ * const claude = await initChatModel<ChatAnthropicCallOptions, ChatAnthropic>(
+ *   "claude-3-opus-20240229"
+ * );
+ * const claudeResult = await claude.invoke("what's your name");
+ *
+ * // Returns an instance of `ChatVertexAI`
+ * const gemini = await initChatModel<
+ *   GoogleAIBaseLanguageModelCallOptions,
+ *   ChatVertexAI
+ * >("gemini-1.5-pro");
+ * const geminiResult = await gemini.invoke("what's your name");
+ * ```
+ * </details>
+ *
+ * <br />
  *
  * @description
- * This function initializes a ChatModel based on the provided model name and provider.
+ * This function initializes a chat model based on the provided model name and provider.
  * It supports various model providers and allows for runtime configuration of model parameters.
  *
- * Security Note: Setting `configurableFields` to "any" means fields like api_key, base_url, etc.
+ * Security Note: Setting `configurableFields` to `"any"` means fields like `apiKey`, `baseUrl`, etc.
  * can be altered at runtime, potentially redirecting model requests to a different service/user.
  * Make sure that if you're accepting untrusted configurations, you enumerate the
  * `configurableFields` explicitly.
  *
  * The function will attempt to infer the model provider from the model name if not specified.
  * Certain model name prefixes are associated with specific providers:
- * - gpt-3... or gpt-4... -> openai
- * - claude... -> anthropic
- * - amazon.... -> bedrock
- * - gemini... -> google-vertexai
- * - command... -> cohere
- * - accounts/fireworks... -> fireworks
+ * - `gpt-3...` / `gpt-4...` / `o1-...` -> openai
+ * - `claude...` -> anthropic
+ * - `amazon....` -> bedrock
+ * - `gemini...` -> google-vertexai
+ * - `command...` -> cohere
+ * - `accounts/fireworks...` -> fireworks
  *
- * @since 0.2.11
- * @version 0.2.11
+ * @version 0.2.11 Added support in `0.2.11`
+ *
+ * @note Support for OpenAI's `o1-...` models was added in `0.3.3`
  */
 export async function initChatModel<
   RunInput extends BaseLanguageModelInput = BaseLanguageModelInput,
-  CallOptions extends ConfigurableChatModelCallOptions = ConfigurableChatModelCallOptions
+  CallOptions extends ConfigurableChatModelCallOptions = ConfigurableChatModelCallOptions,
+  ChatModel extends BaseChatModel<CallOptions> = BaseChatModel<CallOptions>
 >(
   model?: string,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -780,7 +844,7 @@ export async function initChatModel<
     configurableFields?: string[] | "any";
     configPrefix?: string;
   }
-): Promise<_ConfigurableModel<RunInput, CallOptions>> {
+): Promise<_ConfigurableModel<RunInput, CallOptions> | ChatModel> {
   const { configurableFields, configPrefix, modelProvider, ...params } = {
     configPrefix: "",
     ...(fields ?? {}),
@@ -800,6 +864,10 @@ export async function initChatModel<
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const paramsCopy: Record<string, any> = { ...params };
+
+  if (model && !fields) {
+    return _initChatModelHelper(model) as Promise<ChatModel>;
+  }
 
   if (!configurableFieldsCopy) {
     return new _ConfigurableModel<RunInput, CallOptions>({
