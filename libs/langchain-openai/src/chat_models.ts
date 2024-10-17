@@ -273,10 +273,28 @@ function _convertDeltaToMessageChunk(
 export function _convertMessagesToOpenAIParams(messages: BaseMessage[]) {
   // TODO: Function messages do not support array content, fix cast
   return messages.map((message) => {
+    let contentObj: Partial<Record<"content" | "audio", any>>;
+    if (typeof message.content === "string") {
+      contentObj = {
+        content: message.content,
+      };
+    } else {
+      contentObj = Object.fromEntries(message.content.map((c) => {
+        if ("data" in c && "transcript" in c && "id" in c) {
+          // is audio
+          return ["audio", {
+            id: c.id,
+          }];
+        } else {
+          return ["content", c];
+        }
+      }))
+    }
+    console.log("contentObj", contentObj);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const completionParam: Record<string, any> = {
       role: messageToOpenAIRole(message),
-      content: message.content,
+      ...contentObj,
     };
     if (message.name != null) {
       completionParam.name = message.name;

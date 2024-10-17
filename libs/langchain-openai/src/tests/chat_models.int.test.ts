@@ -1061,4 +1061,35 @@ describe("Audio output", () => {
       "transcript",
     ]);
   });
+
+  test.only("Audio output in chat history", async () => {
+    const model = new ChatOpenAI({
+      model: "gpt-4o-audio-preview",
+      temperature: 0,
+      modalities: ["text", "audio"],
+      audio: {
+        voice: "alloy",
+        format: "wav",
+      },
+    });
+
+    const input = [{
+      role: "user",
+      content: "Make me an audio clip of you yelling",
+    }]
+
+    const response = await model.invoke(input);
+    console.log((response.content[0] as Record<string, any>).transcript)
+    expect(Array.isArray(response.content)).toBeTruthy();
+
+    const response2 = await model.invoke([
+      ...input,
+      response,
+      {
+        role: "user",
+        content: "What did you just say?",
+      }
+    ]);
+    console.log("res2", response2.content);
+  });
 });
