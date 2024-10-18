@@ -16,8 +16,6 @@ import {
   isAIMessage,
   convertToChunk,
   UsageMetadata,
-  MessageContent,
-  isHumanMessage,
 } from "@langchain/core/messages";
 import {
   type ChatGeneration,
@@ -273,7 +271,9 @@ function _convertDeltaToMessageChunk(
 }
 
 // Used in LangSmith, export is important here
-export function _convertMessagesToOpenAIParams(messages: BaseMessage[]): OpenAICompletionParam[] {
+export function _convertMessagesToOpenAIParams(
+  messages: BaseMessage[]
+): OpenAICompletionParam[] {
   // TODO: Function messages do not support array content, fix cast
   return messages.flatMap((message) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -302,13 +302,17 @@ export function _convertMessagesToOpenAIParams(messages: BaseMessage[]): OpenAIC
       }
     }
 
-    if (message.additional_kwargs.audio && typeof message.additional_kwargs.audio === "object" && "id" in message.additional_kwargs.audio) {
+    if (
+      message.additional_kwargs.audio &&
+      typeof message.additional_kwargs.audio === "object" &&
+      "id" in message.additional_kwargs.audio
+    ) {
       const audioMessage = {
         role: "assistant",
         audio: {
           id: message.additional_kwargs.audio.id,
-        }
-      }
+        },
+      };
       return [completionParam, audioMessage] as OpenAICompletionParam[];
     }
 

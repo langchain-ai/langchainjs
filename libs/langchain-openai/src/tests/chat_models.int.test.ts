@@ -1,4 +1,3 @@
-import fs from "fs";
 /* eslint-disable no-process-env */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { test, jest, expect } from "@jest/globals";
@@ -992,6 +991,7 @@ test("Test ChatOpenAI stream method", async () => {
 describe("Audio output", () => {
   test("Audio output", async () => {
     const model = new ChatOpenAI({
+      maxRetries: 0,
       model: "gpt-4o-audio-preview",
       temperature: 0,
       modalities: ["text", "audio"],
@@ -1004,9 +1004,12 @@ describe("Audio output", () => {
     const response = await model.invoke("Make me an audio clip of you yelling");
     expect(response.additional_kwargs.audio).toBeTruthy();
     if (!response.additional_kwargs.audio) {
-      throw new Error("Not in additional kwargs")
+      throw new Error("Not in additional kwargs");
     }
-    console.log("response.additional_kwargs.audio", response.additional_kwargs.audio)
+    // console.log(
+    //   "response.additional_kwargs.audio",
+    //   response.additional_kwargs.audio
+    // );
     expect(Object.keys(response.additional_kwargs.audio).sort()).toEqual([
       "data",
       "expires_at",
@@ -1017,6 +1020,7 @@ describe("Audio output", () => {
 
   test("Audio output can stream", async () => {
     const model = new ChatOpenAI({
+      maxRetries: 0,
       model: "gpt-4o-audio-preview",
       temperature: 0,
       modalities: ["text", "audio"],
@@ -1037,9 +1041,12 @@ describe("Audio output", () => {
 
     expect(finalMsg.additional_kwargs.audio).toBeTruthy();
     if (!finalMsg.additional_kwargs.audio) {
-      throw new Error("Not in additional kwargs")
+      throw new Error("Not in additional kwargs");
     }
-    console.log("response.additional_kwargs.audio", finalMsg.additional_kwargs.audio)
+    // console.log(
+    //   "response.additional_kwargs.audio",
+    //   finalMsg.additional_kwargs.audio
+    // );
     expect(Object.keys(finalMsg.additional_kwargs.audio).sort()).toEqual([
       "data",
       "expires_at",
@@ -1051,6 +1058,7 @@ describe("Audio output", () => {
 
   test("Can bind audio output args", async () => {
     const model = new ChatOpenAI({
+      maxRetries: 0,
       model: "gpt-4o-audio-preview",
       temperature: 0,
     }).bind({
@@ -1064,7 +1072,7 @@ describe("Audio output", () => {
     const response = await model.invoke("Make me an audio clip of you yelling");
     expect(response.additional_kwargs.audio).toBeTruthy();
     if (!response.additional_kwargs.audio) {
-      throw new Error("Not in additional kwargs")
+      throw new Error("Not in additional kwargs");
     }
     expect(Object.keys(response.additional_kwargs.audio).sort()).toEqual([
       "data",
@@ -1095,7 +1103,11 @@ describe("Audio output", () => {
 
     const response = await model.invoke(input);
     expect(response.additional_kwargs.audio).toBeTruthy();
-    console.log("transcript", (response.additional_kwargs.audio as Record<string, any>).transcript)
+    expect(
+      (response.additional_kwargs.audio as Record<string, any>).transcript
+        .length
+    ).toBeGreaterThan(1);
+    // console.log("response", (response.additional_kwargs.audio as any).transcript);
     const response2 = await model.invoke([
       ...input,
       response,
@@ -1104,12 +1116,17 @@ describe("Audio output", () => {
         content: "What did you just say?",
       },
     ]);
-    console.log("response2.content", response2.content);
-    console.log("response2.additional_kwargs.audio", response2.additional_kwargs.audio);
+    // console.log("response2", (response2.additional_kwargs.audio as any).transcript);
+    expect(response2.additional_kwargs.audio).toBeTruthy();
+    expect(
+      (response2.additional_kwargs.audio as Record<string, any>).transcript
+        .length
+    ).toBeGreaterThan(1);
   });
 
-  test.only("Users can pass audio as inputs", async () => {
+  test("Users can pass audio as inputs", async () => {
     const model = new ChatOpenAI({
+      maxRetries: 0,
       model: "gpt-4o-audio-preview",
       temperature: 0,
       modalities: ["text", "audio"],
@@ -1120,20 +1137,32 @@ describe("Audio output", () => {
     });
 
     const response = await model.invoke("Make me an audio clip of you yelling");
-    await fs.promises.writeFile("audio.json", JSON.stringify(response.additional_kwargs.audio, null, 2));
+    // console.log("response", (response.additional_kwargs.audio as any).transcript);
     expect(response.additional_kwargs.audio).toBeTruthy();
+    expect(
+      (response.additional_kwargs.audio as Record<string, any>).transcript
+        .length
+    ).toBeGreaterThan(1);
 
     const userInput = {
       type: "input_audio",
       input_audio: {
         data: (response.additional_kwargs.audio as any).data,
-        "format": "wav",
-      }
-    }
+        format: "wav",
+      },
+    };
 
-    const userInputRes = await model.invoke([new HumanMessage({
-      content: [userInput]
-    })]);
-    console.dir(userInputRes, { depth: null });
-  })
+    const userInputRes = await model.invoke([
+      new HumanMessage({
+        content: [userInput],
+      }),
+    ]);
+    // console.log("userInputRes.content", userInputRes.content);
+    // console.log("userInputRes.additional_kwargs.audio", userInputRes.additional_kwargs.audio);
+    expect(userInputRes.additional_kwargs.audio).toBeTruthy();
+    expect(
+      (userInputRes.additional_kwargs.audio as Record<string, any>).transcript
+        .length
+    ).toBeGreaterThan(1);
+  });
 });
