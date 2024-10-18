@@ -1378,7 +1378,7 @@ export class ChatOpenAI<
     const streamIterable = await this.completionWithRetry(params, options);
     let usage: OpenAIClient.Completions.CompletionUsage | undefined;
     for await (const data of streamIterable) {
-      const choice = data?.choices[0];
+      const choice = data?.choices?.[0];
       if (data.usage) {
         usage = data.usage;
       }
