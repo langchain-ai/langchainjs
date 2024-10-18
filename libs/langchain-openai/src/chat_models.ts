@@ -930,6 +930,43 @@ export interface ChatOpenAIFields
  * </details>
  *
  * <br />
+ *
+ * <details>
+ * <summary><strong>Audio Outputs</strong></summary>
+ *
+ * ```typescript
+ * import { ChatOpenAI } from "@langchain/openai";
+ *
+ * const modelWithAudioOutput = new ChatOpenAI({
+ *   model: "gpt-4o-audio-preview",
+ *   // You may also pass these fields to `.bind` as a call argument.
+ *   modalities: ["text", "audio"], // Specifies that the model should output audio.
+ *   audio: {
+ *     voice: "alloy",
+ *     format: "wav",
+ *   },
+ * });
+ *
+ * const audioOutputResult = await modelWithAudioOutput.invoke("Tell me a joke about cats.");
+ * const castAudioContent = audioOutputResult.additional_kwargs.audio as Record<string, any>;
+ *
+ * console.log({
+ *   ...castAudioContent,
+ *   data: castAudioContent.data.slice(0, 100) // Sliced for brevity
+ * })
+ * ```
+ *
+ * ```txt
+ * {
+ *   id: 'audio_67117718c6008190a3afad3e3054b9b6',
+ *   data: 'UklGRqYwBgBXQVZFZm10IBAAAAABAAEAwF0AAIC7AAACABAATElTVBoAAABJTkZPSVNGVA4AAABMYXZmNTguMjkuMTAwAGRhdGFg',
+ *   expires_at: 1729201448,
+ *   transcript: 'Sure! Why did the cat sit on the computer? Because it wanted to keep an eye on the mouse!'
+ * }
+ * ```
+ * </details>
+ *
+ * <br />
  */
 export class ChatOpenAI<
     CallOptions extends ChatOpenAICallOptions = ChatOpenAICallOptions
