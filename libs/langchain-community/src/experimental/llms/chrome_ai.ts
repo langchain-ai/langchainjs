@@ -5,25 +5,82 @@ import { GenerationChunk } from "@langchain/core/outputs";
 import { IterableReadableStream } from "@langchain/core/utils/stream";
 import { BaseLLMParams, LLM } from "@langchain/core/language_models/llms";
 
-export interface AI {
-  canCreateTextSession(): Promise<AIModelAvailability>;
-  createTextSession(options?: AITextSessionOptions): Promise<AITextSession>;
-  defaultTextSessionOptions(): Promise<AITextSessionOptions>;
+export interface AILanguageModelFactory {
+  create(options?: AILanguageModelCreateOptions): Promise<AILanguageModel>;
+  capabilities(): Promise<AILanguageModelCapabilities>;
 }
 
-export interface AITextSession {
-  prompt(input: string): Promise<string>;
-  promptStreaming(input: string): ReadableStream;
+export interface AILanguageModel extends EventTarget {
+  prompt(input: AILanguageModelPromptInput, options?: AILanguageModelPromptOptions): Promise<String>;
+  promptStreaming(input: AILanguageModelPromptInput, options?: AILanguageModelPromptOptions): ReadableStream;
+
+  countPromptTokens(input: AILanguageModelPromptInput, options?: AILanguageModelPromptOptions): Promise<number>;
+
+  get maxTokens(): number;
+  get tokensSoFar(): number;
+  get tokensLeft(): number;
+
+  get topK(): number;
+  get temperature(): number;
+
+  oncontextoverflow: ((event: Event) => void);
+
+  clone(options?: AILanguageModelCloneOptions): Promise<AILanguageModel>;
   destroy(): void;
-  clone(): AITextSession;
 }
 
-export interface AITextSessionOptions {
+interface AILanguageModelCapabilities {
+  readonly available: AICapabilityAvailability;
+  languageAvailable(languageTag: string): AICapabilityAvailability;
+
+  get defaultTopK(): number | undefined;
+  get maxTopK(): number | undefined;
+  get defaultTemperature(): number | undefined;
+  get maxTemperature(): number | undefined;
+}
+
+interface AILanguageModelCreateOptions {
+  signal?: AbortSignal;
+  monitor?: AICreateMonitorCallback;
+  systemPrompt?: string;
+  initialPrompts?: AILanguageModelInitialPrompt[];
   topK: number;
   temperature: number;
 }
 
-export type AIModelAvailability = "readily" | "after-download" | "no";
+export interface AILanguageModelInitialPrompt {
+  role: AILanguageModelInitialPromptRole;
+  content: string;
+}
+
+export interface AILanguageModelPrompt {
+  role: AILanguageModelPromptRole;
+  content: string;
+}
+
+export interface AILanguageModelPromptOptions {
+  signal?: AbortSignal;
+}
+
+export interface AILanguageModelCloneOptions {
+  signal?: AbortSignal;
+}
+
+export type AILanguageModelPromptInput = string | AILanguageModelPrompt | AILanguageModelPrompt[];
+
+enum AILanguageModelInitialPromptRole {
+  "system",
+  "user",
+  "assistant"
+}
+
+enum AILanguageModelPromptRole {
+  "user",
+  "assistant"
+}
+
+export type AICapabilityAvailability = "yes" | "no";
+export type AICreateMonitorCallback = () => void;
 
 export interface ChromeAIInputs extends BaseLLMParams {
   topK?: number;
@@ -93,14 +150,14 @@ export class ChromeAI extends LLM<ChromeAICallOptions> {
         `Could not initialize ChromeAI instance. Make sure you are running a version of Chrome with the proper experimental flags enabled.\n\nError message: ${e.message}`
       );
     }
-    const { available } = await aiInstance.assistant.capabilities();
+    const { available } = await aiInstance.languageModel.capabilities();
     if (available === "no") {
       throw new Error("The AI model is not available.");
     } else if (available === "after-download") {
       throw new Error("The AI model is not yet downloaded.");
     }
 
-    const session = await aiInstance.assistant.create({
+    const session = await aiInstance.languageModel.create({
       systemPrompt: this.systemPrompt,
       topK: this.topK,
       temperature: this.temperature,
