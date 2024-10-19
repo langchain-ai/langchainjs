@@ -3,6 +3,7 @@ import type {
   FeatureExtractionPipelineOptions,
   FeatureExtractionPipeline,
 } from "@xenova/transformers";
+import { env } from "@xenova/transformers";
 import { Embeddings, type EmbeddingsParams } from "@langchain/core/embeddings";
 import { chunkArray } from "@langchain/core/utils/chunk_array";
 
@@ -94,6 +95,15 @@ export class HuggingFaceTransformersEmbeddings
       normalize: true,
       ...fields?.pipelineOptions,
     };
+  }
+
+  /**
+   * Transformers env config function
+   */
+  setEnv:((envKey: keyof typeof env, envValue: any) => void) = (
+    envKey,envValue
+  )=>{
+    (env as Record<keyof typeof env, any>)[envKey] = envValue
   }
 
   async embedDocuments(texts: string[]): Promise<number[][]> {
