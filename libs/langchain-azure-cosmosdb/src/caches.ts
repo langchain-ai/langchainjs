@@ -18,8 +18,7 @@ import { getEnvironmentVariable } from "@langchain/core/utils/env";
 const USER_AGENT_SUFFIX = "LangChain-CDBNoSQL-SemanticCache-JavaScript";
 /**
  * Represents a Semantic Cache that uses CosmosDB NoSQL backend as the underlying 
- * storage system. It extends the `BaseCache` class and overrides its methods to
- * provide CosmosDBNoSQL-specific logic.
+ * storage system.
  * 
  * @example
  * ```typescript
@@ -88,9 +87,7 @@ export class AzureCosmosDBNoSQLSemanticCache extends BaseCache {
     }
 
     /**
-     * Retrieves data from the cache. It constructs a cache key from the given
-     * `llmKey`, and retrieves the corresponding value based on the prompt 
-     * from the Cosmos DB.
+     * Retrieves data from the cache. 
      *
      * @param prompt The prompt for lookup.
      * @param llmKey The LLM key used to construct the cache key.
@@ -112,8 +109,7 @@ export class AzureCosmosDBNoSQLSemanticCache extends BaseCache {
     }
 
     /**
-     * Updates the cache with new data. It constructs a cache key from the
-     * given `prompt` and stores the `value` in the CosmosDB
+     * Updates the cache with new data. 
      * 
      * @param prompt The prompt for update.
      * @param llmKey The LLM key used to construct the cache key.
