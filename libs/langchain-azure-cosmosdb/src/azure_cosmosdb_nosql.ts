@@ -68,7 +68,7 @@ export interface AzureCosmosDBNoSQLInitOptions {
  */
 export interface AzureCosmosDBNoSQLConfig
   extends AzureCosmosDBNoSQLInitOptions {
-  readonly client?: CosmosClient;
+  client?: CosmosClient;
   readonly connectionString?: string;
   readonly endpoint?: string;
   readonly credentials?: TokenCredential;
@@ -78,7 +78,7 @@ export interface AzureCosmosDBNoSQLConfig
   readonly metadataKey?: string;
 }
 
-const USER_AGENT_PREFIX = "langchainjs-azure-cosmosdb-nosql";
+const USER_AGENT_SUFFIX = "langchainjs-azure-cosmosdb-nosql";
 
 /**
  * Azure Cosmos DB for NoSQL vCore vector store.
@@ -151,14 +151,14 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
         this.client = new CosmosClient({
           endpoint,
           key,
-          userAgentSuffix: USER_AGENT_PREFIX,
+          userAgentSuffix: USER_AGENT_SUFFIX,
         });
       } else {
         // Use managed identity
         this.client = new CosmosClient({
           endpoint,
           aadCredentials: dbConfig.credentials ?? new DefaultAzureCredential(),
-          userAgentSuffix: USER_AGENT_PREFIX,
+          userAgentSuffix: USER_AGENT_SUFFIX,
         } as CosmosClientOptions);
       }
     }
