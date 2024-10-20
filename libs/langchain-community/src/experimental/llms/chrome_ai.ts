@@ -11,10 +11,19 @@ export interface AILanguageModelFactory {
 }
 
 export interface AILanguageModel extends EventTarget {
-  prompt(input: AILanguageModelPromptInput, options?: AILanguageModelPromptOptions): Promise<String>;
-  promptStreaming(input: AILanguageModelPromptInput, options?: AILanguageModelPromptOptions): ReadableStream;
+  prompt(
+    input: AILanguageModelPromptInput,
+    options?: AILanguageModelPromptOptions
+  ): Promise<string>;
+  promptStreaming(
+    input: AILanguageModelPromptInput,
+    options?: AILanguageModelPromptOptions
+  ): ReadableStream;
 
-  countPromptTokens(input: AILanguageModelPromptInput, options?: AILanguageModelPromptOptions): Promise<number>;
+  countPromptTokens(
+    input: AILanguageModelPromptInput,
+    options?: AILanguageModelPromptOptions
+  ): Promise<number>;
 
   get maxTokens(): number;
   get tokensSoFar(): number;
@@ -23,7 +32,7 @@ export interface AILanguageModel extends EventTarget {
   get topK(): number;
   get temperature(): number;
 
-  oncontextoverflow: ((event: Event) => void);
+  oncontextoverflow: (event: Event) => void;
 
   clone(options?: AILanguageModelCloneOptions): Promise<AILanguageModel>;
   destroy(): void;
@@ -66,17 +75,20 @@ export interface AILanguageModelCloneOptions {
   signal?: AbortSignal;
 }
 
-export type AILanguageModelPromptInput = string | AILanguageModelPrompt | AILanguageModelPrompt[];
+export type AILanguageModelPromptInput =
+  | string
+  | AILanguageModelPrompt
+  | AILanguageModelPrompt[];
 
 enum AILanguageModelInitialPromptRole {
   "system",
   "user",
-  "assistant"
+  "assistant",
 }
 
 enum AILanguageModelPromptRole {
   "user",
-  "assistant"
+  "assistant",
 }
 
 export type AICapabilityAvailability = "yes" | "no";
