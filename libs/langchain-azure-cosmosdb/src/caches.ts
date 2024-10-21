@@ -1,25 +1,39 @@
 import {
-    BaseCache,
-    deserializeStoredGeneration,
-    getCacheKey,
-    serializeGeneration,
+  BaseCache,
+  deserializeStoredGeneration,
+  getCacheKey,
+  serializeGeneration,
 } from "@langchain/core/caches";
 import { Generation } from "@langchain/core/outputs";
-import {
-    AzureCosmosDBNoSQLConfig,
-    AzureCosmosDBNoSQLVectorStore,
-} from "./index.js";
 import { Document } from "@langchain/core/documents";
 import { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { CosmosClient, CosmosClientOptions } from "@azure/cosmos";
 import { DefaultAzureCredential } from "@azure/identity";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
+import {
+  AzureCosmosDBNoSQLConfig,
+  AzureCosmosDBNoSQLVectorStore,
+} from "./azure_cosmosdb_nosql.js";
 
 const USER_AGENT_SUFFIX = "LangChain-CDBNoSQL-SemanticCache-JavaScript";
+
+// Create a new object based on dbConfig, and modify the 'client' property with user agent.
+function updateDbConfig(
+  dbConfig: AzureCosmosDBNoSQLConfig,
+  client: CosmosClient
+) {
+  const updatedDbConfig = {
+    ...dbConfig,
+    client,
+  };
+
+  return updatedDbConfig;
+}
+
 /**
- * Represents a Semantic Cache that uses CosmosDB NoSQL backend as the underlying 
+ * Represents a Semantic Cache that uses CosmosDB NoSQL backend as the underlying
  * storage system.
- * 
+ *
  * @example
  * ```typescript
  * const embeddings = new OpenAIEmbeddings();
@@ -28,122 +42,130 @@ const USER_AGENT_SUFFIX = "LangChain-CDBNoSQL-SemanticCache-JavaScript";
  *   containerName: CONTAINER_NAME
  * });
  * const model = new ChatOpenAI({cache});
- * 
+ *
  * // Invoke the model to perform an action
  * const response = await llm.invoke("Do something random!");
  * console.log(response);
  * ```
  */
 export class AzureCosmosDBNoSQLSemanticCache extends BaseCache {
-    private embeddings: EmbeddingsInterface;
-    private config: AzureCosmosDBNoSQLConfig;
-    private cacheDict: { [key: string]: AzureCosmosDBNoSQLVectorStore } = {};
+  private embeddings: EmbeddingsInterface;
 
-    constructor(embeddings: EmbeddingsInterface, dbConfig: AzureCosmosDBNoSQLConfig) {
-        super();
-        const connectionString =
-            dbConfig.connectionString ??
-            getEnvironmentVariable("AZURE_COSMOSDB_NOSQL_CONNECTION_STRING");
-        const endpoint =
-            dbConfig.endpoint ??
-            getEnvironmentVariable("AZURE_COSMOSDB_NOSQL_ENDPOINT");
+  private config: AzureCosmosDBNoSQLConfig;
 
-        var client: CosmosClient;
-        if (!dbConfig.client) {
-            if (connectionString) {
-                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                let [endpoint, key] = connectionString!.split(";");
-                [, endpoint] = endpoint.split("=");
-                [, key] = key.split("=");
+  private cacheDict: { [key: string]: AzureCosmosDBNoSQLVectorStore } = {};
 
-                client = new CosmosClient({
-                    endpoint,
-                    key,
-                    userAgentSuffix: USER_AGENT_SUFFIX,
-                });
-            } else {
-                // Use managed identity
-                client = new CosmosClient({
-                    endpoint,
-                    aadCredentials: dbConfig.credentials ?? new DefaultAzureCredential(),
-                    userAgentSuffix: USER_AGENT_SUFFIX,
-                } as CosmosClientOptions);
-            }
-            dbConfig.client = client;
-        }
-        this.embeddings = embeddings;
-        this.config = dbConfig;
-    }
+  constructor(
+    embeddings: EmbeddingsInterface,
+    dbConfig: AzureCosmosDBNoSQLConfig
+  ) {
+    super();
+    let client: CosmosClient;
 
-    private getLlmCache(llmKey: string) {
-        const key = getCacheKey(llmKey);
-        if (!this.cacheDict[key]) {
-            this.cacheDict[key] = new AzureCosmosDBNoSQLVectorStore(
-                this.embeddings,
-                this.config,
-            );
-        }
-        return this.cacheDict[key];
-    }
+    const connectionString =
+      dbConfig.connectionString ??
+      getEnvironmentVariable("AZURE_COSMOSDB_NOSQL_CONNECTION_STRING");
 
-    /**
-     * Retrieves data from the cache. 
-     *
-     * @param prompt The prompt for lookup.
-     * @param llmKey The LLM key used to construct the cache key.
-     * @returns An array of Generations if found, null otherwise.
-     */
-    public async lookup(prompt: string, llmKey: string) {
-        const llmCache = this.getLlmCache(llmKey);
+    const endpoint =
+      dbConfig.endpoint ??
+      getEnvironmentVariable("AZURE_COSMOSDB_NOSQL_ENDPOINT");
 
-        const results = await llmCache.similaritySearch(prompt, 1);
-        if (!results.length) return null;
+    if (!dbConfig.client) {
+      if (connectionString) {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        let [endpoint, key] = connectionString!.split(";");
+        [, endpoint] = endpoint.split("=");
+        [, key] = key.split("=");
 
-        const generations = results.flatMap(result =>
-            result.metadata.return_value.map((gen: string) =>
-                deserializeStoredGeneration(JSON.parse(gen))
-            )
-        );
-
-        return generations.length > 0 ? generations : null;
-    }
-
-    /**
-     * Updates the cache with new data. 
-     * 
-     * @param prompt The prompt for update.
-     * @param llmKey The LLM key used to construct the cache key.
-     * @param value The value to be stored in the cache.
-     */
-    public async update(
-        prompt: string,
-        llmKey: string,
-        returnValue: Generation[]
-    ) {
-        const serializedGenerations = returnValue.map(generation =>
-            JSON.stringify(serializeGeneration(generation))
-        );
-        const llmCache = this.getLlmCache(llmKey);
-        const metadata = {
-            llm_string: llmKey,
-            prompt: prompt,
-            return_value: serializedGenerations,
-        };
-        const doc = new Document({
-            pageContent: prompt,
-            metadata,
+        client = new CosmosClient({
+          endpoint,
+          key,
+          userAgentSuffix: USER_AGENT_SUFFIX,
         });
-        await llmCache.addDocuments([doc]);
+      } else {
+        // Use managed identity
+        client = new CosmosClient({
+          endpoint,
+          aadCredentials: dbConfig.credentials ?? new DefaultAzureCredential(),
+          userAgentSuffix: USER_AGENT_SUFFIX,
+        } as CosmosClientOptions);
+      }
+      this.config = updateDbConfig(dbConfig, client);
+    } else {
+      this.config = dbConfig;
     }
+    this.embeddings = embeddings;
+  }
 
-    /**
-     * deletes the semantic cache for a given llmKey
-     * @param llmKey 
-     */
-    public async clear(llmKey: string) {
-        const key = getCacheKey(llmKey);
-        if (this.cacheDict[key]) {
-            await this.cacheDict[key].delete();
-        }
+  private getLlmCache(llmKey: string) {
+    const key = getCacheKey(llmKey);
+    if (!this.cacheDict[key]) {
+      this.cacheDict[key] = new AzureCosmosDBNoSQLVectorStore(
+        this.embeddings,
+        this.config
+      );
     }
+    return this.cacheDict[key];
+  }
+
+  /**
+   * Retrieves data from the cache.
+   *
+   * @param prompt The prompt for lookup.
+   * @param llmKey The LLM key used to construct the cache key.
+   * @returns An array of Generations if found, null otherwise.
+   */
+  public async lookup(prompt: string, llmKey: string) {
+    const llmCache = this.getLlmCache(llmKey);
+
+    const results = await llmCache.similaritySearch(prompt, 1);
+    if (!results.length) return null;
+
+    const generations = results.flatMap((result) =>
+      result.metadata.return_value.map((gen: string) =>
+        deserializeStoredGeneration(JSON.parse(gen))
+      )
+    );
+
+    return generations.length > 0 ? generations : null;
+  }
+
+  /**
+   * Updates the cache with new data.
+   *
+   * @param prompt The prompt for update.
+   * @param llmKey The LLM key used to construct the cache key.
+   * @param value The value to be stored in the cache.
+   */
+  public async update(
+    prompt: string,
+    llmKey: string,
+    returnValue: Generation[]
+  ) {
+    const serializedGenerations = returnValue.map((generation) =>
+      JSON.stringify(serializeGeneration(generation))
+    );
+    const llmCache = this.getLlmCache(llmKey);
+    const metadata = {
+      llm_string: llmKey,
+      prompt,
+      return_value: serializedGenerations,
+    };
+    const doc = new Document({
+      pageContent: prompt,
+      metadata,
+    });
+    await llmCache.addDocuments([doc]);
+  }
+
+  /**
+   * deletes the semantic cache for a given llmKey
+   * @param llmKey
+   */
+  public async clear(llmKey: string) {
+    const key = getCacheKey(llmKey);
+    if (this.cacheDict[key]) {
+      await this.cacheDict[key].delete();
+    }
+  }
 }
