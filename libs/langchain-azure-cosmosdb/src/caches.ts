@@ -16,19 +16,8 @@ import {
 } from "./azure_cosmosdb_nosql.js";
 
 const USER_AGENT_SUFFIX = "LangChain-CDBNoSQL-SemanticCache-JavaScript";
-
-// Create a new object based on dbConfig, and modify the 'client' property with user agent.
-function updateDbConfig(
-  dbConfig: AzureCosmosDBNoSQLConfig,
-  client: CosmosClient
-) {
-  const updatedDbConfig = {
-    ...dbConfig,
-    client,
-  };
-
-  return updatedDbConfig;
-}
+const DEFAULT_DATABASE_NAME = "CosmosNoSqlCacheDB";
+const DEFAULT_CONTAINER_NAME = "CosmosNoSqlCacheContainer";
 
 /**
  * Represents a Semantic Cache that uses CosmosDB NoSQL backend as the underlying
@@ -70,6 +59,12 @@ export class AzureCosmosDBNoSQLSemanticCache extends BaseCache {
       dbConfig.endpoint ??
       getEnvironmentVariable("AZURE_COSMOSDB_NOSQL_ENDPOINT");
 
+    if (!dbConfig.client && !connectionString && !endpoint) {
+      throw new Error(
+        "AzureCosmosDBNoSQLSemanticCache client, connection string or endpoint must be set."
+      );
+    }
+
     if (!dbConfig.client) {
       if (connectionString) {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -90,10 +85,16 @@ export class AzureCosmosDBNoSQLSemanticCache extends BaseCache {
           userAgentSuffix: USER_AGENT_SUFFIX,
         } as CosmosClientOptions);
       }
-      this.config = updateDbConfig(dbConfig, client);
     } else {
-      this.config = dbConfig;
+      client = dbConfig.client;
     }
+
+    this.config = {
+      ...dbConfig,
+      client,
+      databaseName: dbConfig.databaseName ?? DEFAULT_DATABASE_NAME,
+      containerName: dbConfig.containerName ?? DEFAULT_CONTAINER_NAME,
+    };
     this.embeddings = embeddings;
   }
 
