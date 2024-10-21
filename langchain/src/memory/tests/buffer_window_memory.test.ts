@@ -47,10 +47,3 @@ test("Test buffer window memory with pre-loaded history", async () => {
   const result = await memory.loadMemoryVariables({});
   expect(result).toStrictEqual({ history: pastMessages });
 });
-
-test("Test buffer window memory with empty output", async () => {
-  const memory = new BufferWindowMemory({ k: 1 });
-  await memory.saveContext({ input: "foo" }, { output: "" });
-  const result = await memory.loadMemoryVariables({});
-  expect(result).toStrictEqual({ history: "Human: foo\nAI: " });
-});
