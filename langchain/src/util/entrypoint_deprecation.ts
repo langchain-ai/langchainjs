@@ -83,3 +83,22 @@ export function logVersion020MigrationWarning({
     console.warn(warningText);
   }
 }
+
+export function logVersion100SimpleMigrationWarning({
+  oldEntrypointName,
+  customMessage,
+}: {
+  oldEntrypointName: string;
+  customMessage?: string;
+}) {
+  const warningText = [
+    `[WARNING]: Importing from "langchain/${oldEntrypointName}" is deprecated.`,
+    // Add an additional line break if there is a custom message
+    ...(customMessage ? ["", customMessage] : []),
+  ].join("\n");
+  if (
+    getEnvironmentVariable("LANGCHAIN_SUPPRESS_MIGRATION_WARNINGS") !== "true"
+  ) {
+    console.warn(warningText);
+  }
+}
