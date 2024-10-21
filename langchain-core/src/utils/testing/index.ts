@@ -354,6 +354,8 @@ export class FakeListChatModel extends BaseChatModel<FakeListChatModelCallOption
     return "FakeListChatModel";
   }
 
+  lc_serializable = true;
+
   responses: string[];
 
   i = 0;
@@ -362,8 +364,9 @@ export class FakeListChatModel extends BaseChatModel<FakeListChatModelCallOption
 
   emitCustomEvent = false;
 
-  constructor({ responses, sleep, emitCustomEvent }: FakeChatInput) {
-    super({});
+  constructor(params: FakeChatInput) {
+    super(params);
+    const { responses, sleep, emitCustomEvent } = params;
     this.responses = responses;
     this.sleep = sleep;
     this.emitCustomEvent = emitCustomEvent ?? this.emitCustomEvent;

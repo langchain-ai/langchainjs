@@ -30,6 +30,10 @@ chat_history.cjs
 chat_history.js
 chat_history.d.ts
 chat_history.d.cts
+context.cjs
+context.js
+context.d.ts
+context.d.cts
 documents.cjs
 documents.js
 documents.d.ts
