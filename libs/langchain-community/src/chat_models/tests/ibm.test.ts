@@ -81,7 +81,7 @@ describe("LLM unit tests", () => {
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
         projectId: process.env.WATSONX_AI_PROJECT_ID || "testString",
-        modelId: "ibm/granite-13b-chat-v2",
+        model: "ibm/granite-13b-chat-v2",
         max_new_tokens: 100,
         temperature: 0.1,
         time_limit: 10000,
