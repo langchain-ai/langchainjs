@@ -98,7 +98,8 @@ export class FireCrawlLoader extends BaseDocumentLoader {
     let firecrawlDocs: FirecrawlDocument[];
 
     if (this.mode === "scrape") {
-      const response = await app.scrapeUrl(this.url, this.params);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const response = await app.scrapeUrl(this.url, this.params as any);
       if (!response.success) {
         throw new Error(
           `Firecrawl: Failed to scrape URL. Error: ${response.error}`
@@ -122,9 +123,12 @@ export class FireCrawlLoader extends BaseDocumentLoader {
       }
       firecrawlDocs = response.links as FirecrawlDocument[];
 
-      return firecrawlDocs.map((doc) => new Document({
-        pageContent: doc,
-      }));
+      return firecrawlDocs.map(
+        (doc) =>
+          new Document({
+            pageContent: JSON.stringify(doc),
+          })
+      );
     } else {
       throw new Error(
         `Unrecognized mode '${this.mode}'. Expected one of 'crawl', 'scrape'.`
