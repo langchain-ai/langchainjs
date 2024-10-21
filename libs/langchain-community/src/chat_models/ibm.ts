@@ -8,6 +8,7 @@ import {
   isAIMessage,
   MessageType,
   ToolMessageChunk,
+  UsageMetadata,
   type BaseMessage,
 } from "@langchain/core/messages";
 import {
@@ -542,12 +543,12 @@ export class ChatWatsonx<
     if (this.streaming) {
       const stream = this._streamResponseChunks(messages, options, runManager);
       const finalChunks: Record<number, ChatGenerationChunk> = {};
-      let tokenUsage: { [key: string]: number } = {
+      let tokenUsage: UsageMetadata = {
         input_tokens: 0,
         output_tokens: 0,
         total_tokens: 0,
       };
-      const tokenUsages: { [key: string]: number }[] = [];
+      const tokenUsages: UsageMetadata[] = [];
       for await (const chunk of stream) {
         const message = chunk.message as AIMessageChunk;
         if (message?.usage_metadata) {
