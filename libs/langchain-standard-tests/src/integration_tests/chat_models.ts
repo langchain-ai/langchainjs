@@ -95,6 +95,24 @@ export abstract class ChatModelIntegrationTests<
 
   supportsParallelToolCalls = false;
 
+  // Add these new properties
+  supportedUsageMetadataDetails: {
+    invoke: Array<
+      | "audio_input"
+      | "audio_output"
+      | "reasoning_output"
+      | "cache_read_input"
+      | "cache_creation_input"
+    >;
+    stream: Array<
+      | "audio_input"
+      | "audio_output"
+      | "reasoning_output"
+      | "cache_read_input"
+      | "cache_creation_input"
+    >;
+  } = { invoke: [], stream: [] };
+
   constructor(
     fields: ChatModelIntegrationTestsFields<
       CallOptions,
@@ -374,6 +392,162 @@ export abstract class ChatModelIntegrationTests<
 
     // Check that total_tokens is a number
     expect(typeof usageMetadata.total_tokens).toBe("number");
+
+    // Test additional usage metadata details
+    if (this.supportedUsageMetadataDetails.invoke.includes("audio_input")) {
+      const msgWithAudioInput = await this.invokeWithAudioInput(false);
+      this.assertAudioInputMetadata(msgWithAudioInput);
+    }
+
+    if (this.supportedUsageMetadataDetails.invoke.includes("audio_output")) {
+      const msgWithAudioOutput = await this.invokeWithAudioOutput(false);
+      this.assertAudioOutputMetadata(msgWithAudioOutput);
+    }
+
+    if (
+      this.supportedUsageMetadataDetails.invoke.includes("reasoning_output")
+    ) {
+      const msgWithReasoningOutput = await this.invokeWithReasoningOutput(
+        false
+      );
+      this.assertReasoningOutputMetadata(msgWithReasoningOutput);
+    }
+
+    if (
+      this.supportedUsageMetadataDetails.invoke.includes("cache_read_input")
+    ) {
+      const msgWithCacheReadInput = await this.invokeWithCacheReadInput(false);
+      this.assertCacheReadInputMetadata(msgWithCacheReadInput);
+    }
+
+    if (
+      this.supportedUsageMetadataDetails.invoke.includes("cache_creation_input")
+    ) {
+      const msgWithCacheCreationInput = await this.invokeWithCacheCreationInput(
+        false
+      );
+      this.assertCacheCreationInputMetadata(msgWithCacheCreationInput);
+    }
+  }
+
+  async invokeWithAudioInput(_stream: boolean): Promise<AIMessage> {
+    // Initialize the model so we can access the `.getName()` method
+    // for better error messages.
+    const chatModel = new this.Cls(this.constructorArgs);
+    throw new Error(
+      `invokeWithAudioInput is not implemented on ${chatModel.getName()}` +
+        "standard integration tests."
+    );
+  }
+
+  async invokeWithAudioOutput(_stream: boolean): Promise<AIMessage> {
+    // Initialize the model so we can access the `.getName()` method
+    // for better error messages.
+    const chatModel = new this.Cls(this.constructorArgs);
+    throw new Error(
+      `invokeWithAudioOutput is not implemented on ${chatModel.getName()}` +
+        "standard integration tests."
+    );
+  }
+
+  async invokeWithReasoningOutput(_stream: boolean): Promise<AIMessage> {
+    // Initialize the model so we can access the `.getName()` method
+    // for better error messages.
+    const chatModel = new this.Cls(this.constructorArgs);
+    throw new Error(
+      `invokeWithReasoningOutput is not implemented on ${chatModel.getName()}` +
+        "standard integration tests."
+    );
+  }
+
+  async invokeWithCacheReadInput(_stream: boolean): Promise<AIMessage> {
+    // Initialize the model so we can access the `.getName()` method
+    // for better error messages.
+    const chatModel = new this.Cls(this.constructorArgs);
+    throw new Error(
+      `invokeWithCacheReadInput is not implemented on ${chatModel.getName()}` +
+        "standard integration tests."
+    );
+  }
+
+  async invokeWithCacheCreationInput(_stream: boolean): Promise<AIMessage> {
+    // Initialize the model so we can access the `.getName()` method
+    // for better error messages.
+    const chatModel = new this.Cls(this.constructorArgs);
+    throw new Error(
+      `invokeWithCacheCreationInput is not implemented on ${chatModel.getName()}` +
+        "standard integration tests."
+    );
+  }
+
+  private assertAudioInputMetadata(msg: AIMessage) {
+    expect(msg.usage_metadata).toBeDefined();
+    expect(msg.usage_metadata?.input_token_details).toBeDefined();
+    expect(typeof msg.usage_metadata?.input_token_details?.audio).toBe(
+      "number"
+    );
+    expect(msg.usage_metadata?.input_tokens).toBeGreaterThanOrEqual(
+      Object.values(msg.usage_metadata?.input_token_details ?? {}).reduce(
+        (a, b) => (a ?? 0) + (b ?? 0),
+        0
+      )
+    );
+  }
+
+  private assertAudioOutputMetadata(msg: AIMessage) {
+    expect(msg.usage_metadata).toBeDefined();
+    expect(msg.usage_metadata?.output_token_details).toBeDefined();
+    expect(typeof msg.usage_metadata?.output_token_details?.audio).toBe(
+      "number"
+    );
+    expect(msg.usage_metadata?.output_tokens).toBeGreaterThanOrEqual(
+      Object.values(msg.usage_metadata?.output_token_details ?? {}).reduce(
+        (a, b) => (a ?? 0) + (b ?? 0),
+        0
+      )
+    );
+  }
+
+  private assertReasoningOutputMetadata(msg: AIMessage) {
+    expect(msg.usage_metadata).toBeDefined();
+    expect(msg.usage_metadata?.output_token_details).toBeDefined();
+    expect(typeof msg.usage_metadata?.output_token_details?.reasoning).toBe(
+      "number"
+    );
+    expect(msg.usage_metadata?.output_tokens).toBeGreaterThanOrEqual(
+      Object.values(msg.usage_metadata?.output_token_details ?? {}).reduce(
+        (a, b) => (a ?? 0) + (b ?? 0),
+        0
+      )
+    );
+  }
+
+  private assertCacheReadInputMetadata(msg: AIMessage) {
+    expect(msg.usage_metadata).toBeDefined();
+    expect(msg.usage_metadata?.input_token_details).toBeDefined();
+    expect(typeof msg.usage_metadata?.input_token_details?.cache_read).toBe(
+      "number"
+    );
+    expect(msg.usage_metadata?.input_tokens).toBeGreaterThanOrEqual(
+      Object.values(msg.usage_metadata?.input_token_details ?? {}).reduce(
+        (a, b) => (a ?? 0) + (b ?? 0),
+        0
+      )
+    );
+  }
+
+  private assertCacheCreationInputMetadata(msg: AIMessage) {
+    expect(msg.usage_metadata).toBeDefined();
+    expect(msg.usage_metadata?.input_token_details).toBeDefined();
+    expect(typeof msg.usage_metadata?.input_token_details?.cache_creation).toBe(
+      "number"
+    );
+    expect(msg.usage_metadata?.input_tokens).toBeGreaterThanOrEqual(
+      Object.values(msg.usage_metadata?.input_token_details ?? {}).reduce(
+        (a, b) => (a ?? 0) + (b ?? 0),
+        0
+      )
+    );
   }
 
   /**
@@ -426,6 +600,40 @@ export abstract class ChatModelIntegrationTests<
     expect(typeof usageMetadata.input_tokens).toBe("number");
     expect(typeof usageMetadata.output_tokens).toBe("number");
     expect(typeof usageMetadata.total_tokens).toBe("number");
+
+    // Test additional usage metadata details
+    if (this.supportedUsageMetadataDetails.invoke.includes("audio_input")) {
+      const msgWithAudioInput = await this.invokeWithAudioInput(true);
+      this.assertAudioInputMetadata(msgWithAudioInput);
+    }
+
+    if (this.supportedUsageMetadataDetails.invoke.includes("audio_output")) {
+      const msgWithAudioOutput = await this.invokeWithAudioOutput(true);
+      this.assertAudioOutputMetadata(msgWithAudioOutput);
+    }
+
+    if (
+      this.supportedUsageMetadataDetails.invoke.includes("reasoning_output")
+    ) {
+      const msgWithReasoningOutput = await this.invokeWithReasoningOutput(true);
+      this.assertReasoningOutputMetadata(msgWithReasoningOutput);
+    }
+
+    if (
+      this.supportedUsageMetadataDetails.invoke.includes("cache_read_input")
+    ) {
+      const msgWithCacheReadInput = await this.invokeWithCacheReadInput(true);
+      this.assertCacheReadInputMetadata(msgWithCacheReadInput);
+    }
+
+    if (
+      this.supportedUsageMetadataDetails.invoke.includes("cache_creation_input")
+    ) {
+      const msgWithCacheCreationInput = await this.invokeWithCacheCreationInput(
+        true
+      );
+      this.assertCacheCreationInputMetadata(msgWithCacheCreationInput);
+    }
   }
 
   /**

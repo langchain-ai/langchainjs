@@ -586,9 +586,25 @@ export function tool<
         fields.description ??
         fields.schema?.description ??
         `${fields.name} tool`,
-      // TS doesn't restrict the type here based on the guard above
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      func: func as any,
+      func: async (input, runManager, config) => {
+        return new Promise((resolve, reject) => {
+          const childConfig = patchConfig(config, {
+            callbacks: runManager?.getChild(),
+          });
+          void AsyncLocalStorageProviderSingleton.runWithConfig(
+            childConfig,
+            async () => {
+              try {
+                // TS doesn't restrict the type here based on the guard above
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                resolve(func(input as any, childConfig));
+              } catch (e) {
+                reject(e);
+              }
+            }
+          );
+        });
+      },
     });
   }
 
@@ -606,7 +622,7 @@ export function tool<
         const childConfig = patchConfig(config, {
           callbacks: runManager?.getChild(),
         });
-        void AsyncLocalStorageProviderSingleton.getInstance().run(
+        void AsyncLocalStorageProviderSingleton.runWithConfig(
           childConfig,
           async () => {
             try {

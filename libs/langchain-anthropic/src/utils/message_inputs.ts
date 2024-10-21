@@ -185,10 +185,11 @@ function _formatContent(content: MessageContent) {
 
 /**
  * Formats messages as a prompt for the model.
+ * Used in LangSmith, export is important here.
  * @param messages The base messages to format as a prompt.
  * @returns The formatted prompt.
  */
-export function _formatMessagesForAnthropic(
+export function _convertMessagesToAnthropicPayload(
   messages: BaseMessage[]
 ): AnthropicMessageCreateParams {
   const mergedMessages = _mergeMessages(messages);

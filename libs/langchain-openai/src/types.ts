@@ -167,6 +167,27 @@ export interface OpenAIChatInput extends OpenAIBaseInput {
    * If `undefined` the `strict` argument will not be passed to OpenAI.
    */
   supportsStrictToolCalling?: boolean;
+
+  /**
+   * Output types that you would like the model to generate for this request. Most
+   * models are capable of generating text, which is the default:
+   *
+   * `["text"]`
+   *
+   * The `gpt-4o-audio-preview` model can also be used to
+   * [generate audio](https://platform.openai.com/docs/guides/audio). To request that
+   * this model generate both text and audio responses, you can use:
+   *
+   * `["text", "audio"]`
+   */
+  modalities?: Array<OpenAIClient.Chat.ChatCompletionModality>;
+
+  /**
+   * Parameters for audio output. Required when audio output is requested with
+   * `modalities: ["audio"]`.
+   * [Learn more](https://platform.openai.com/docs/guides/audio).
+   */
+  audio?: OpenAIClient.Chat.ChatCompletionAudioParam;
 }
 
 export declare interface AzureOpenAIInput {
@@ -216,11 +237,18 @@ export declare interface AzureOpenAIInput {
   azureOpenAIApiCompletionsDeploymentName?: string;
 
   /**
-   * Custom endpoint for Azure OpenAI API. This is useful in case you have a deployment in another region.
+   * Custom base url for Azure OpenAI API. This is useful in case you have a deployment in another region.
    * e.g. setting this value to "https://westeurope.api.cognitive.microsoft.com/openai/deployments"
    * will be result in the endpoint URL: https://westeurope.api.cognitive.microsoft.com/openai/deployments/{DeploymentName}/
    */
   azureOpenAIBasePath?: string;
+
+  /**
+   * Custom endpoint for Azure OpenAI API. This is useful in case you have a deployment in another region.
+   * e.g. setting this value to "https://westeurope.api.cognitive.microsoft.com/"
+   * will be result in the endpoint URL: https://westeurope.api.cognitive.microsoft.com/openai/deployments/{DeploymentName}/
+   */
+  azureOpenAIEndpoint?: string;
 
   /**
    * A function that returns an access token for Microsoft Entra (formerly known as Azure Active Directory),

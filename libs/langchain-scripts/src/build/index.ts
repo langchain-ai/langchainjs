@@ -465,8 +465,11 @@ function listEntrypoints(packageJson: Record<string, any>) {
  * @param {string} entrypoint
  * @returns {Promise<boolean>} Whether or not the file has side effects which are explicitly marked as allowed.
  */
-const checkAllowSideEffects = async (entrypoint: string): Promise<boolean> => {
-  let entrypointContent: Buffer | undefined;
+const checkAllowSideEffects = async (
+  entrypoint: string,
+  filename?: string
+): Promise<boolean> => {
+  let entrypointContent;
   try {
     entrypointContent = await fs.promises.readFile(`./dist/${entrypoint}.js`);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -476,16 +479,28 @@ const checkAllowSideEffects = async (entrypoint: string): Promise<boolean> => {
       entrypointContent = await fs.promises.readFile(
         `./dist/${entrypoint}/index.js`
       );
+    } else {
+      entrypointContent = Buffer.from("");
     }
+  }
+
+  let fileContent;
+  try {
+    fileContent = await fs.promises.readFile(`./${filename}`);
+  } catch (e) {
+    fileContent = Buffer.from("");
   }
 
   // Allow escaping side effects strictly within code directly
   // within an entrypoint
-  return entrypointContent
-    ? entrypointContent
-        .toString()
-        .includes("/* __LC_ALLOW_ENTRYPOINT_SIDE_EFFECTS__ */")
-    : false;
+  return (
+    entrypointContent
+      .toString()
+      .includes("/* __LC_ALLOW_ENTRYPOINT_SIDE_EFFECTS__ */") ||
+    fileContent
+      .toString()
+      .includes("/* __LC_ALLOW_ENTRYPOINT_SIDE_EFFECTS__ */")
+  );
 };
 
 async function checkTreeShaking(config: LangChainConfig) {
@@ -499,12 +514,14 @@ async function checkTreeShaking(config: LangChainConfig) {
   const reportMap = new Map();
 
   for (const entrypoint of entrypoints) {
-    let sideEffects = "";
+    const sideEffects: { log: string; filename?: string }[] = [];
 
     console.info = function (...args) {
       const line = args.length ? args.join(" ") : "";
       if (line.includes("First side effect in")) {
-        sideEffects += `${line}\n`;
+        const match = line.match(/First side effect in (.+?) is at/);
+        const filename = match ? match[1] : undefined;
+        sideEffects.push({ log: `${line}\n`, filename });
       }
     };
 
@@ -514,17 +531,29 @@ async function checkTreeShaking(config: LangChainConfig) {
       experimentalLogSideEffects: true,
     });
 
-    let hasUnexpectedSideEffects = sideEffects.length > 0;
-    if (hasUnexpectedSideEffects) {
-      // Map the entrypoint back to the actual file entrypoint using the LangChainConfig file
-      const actualEntrypoint =
-        config.entrypoints[entrypoint.replace(/^\.\/|\.js$/g, "")];
-      hasUnexpectedSideEffects = !(await checkAllowSideEffects(
-        actualEntrypoint
-      ));
+    let hasUnexpectedSideEffects = false;
+    for (const sideEffect of sideEffects) {
+      if (sideEffect.filename) {
+        // Map the entrypoint back to the actual file entrypoint using the LangChainConfig file
+        const actualEntrypoint =
+          config.entrypoints[entrypoint.replace(/^\.\/|\.js$/g, "")];
+        const allowSideEffects = await checkAllowSideEffects(
+          actualEntrypoint,
+          sideEffect.filename
+        );
+        if (!allowSideEffects) {
+          hasUnexpectedSideEffects = true;
+          break;
+        }
+      } else {
+        // If we can't determine the filename, we'll consider it an unexpected side effect
+        hasUnexpectedSideEffects = true;
+        break;
+      }
     }
+
     reportMap.set(entrypoint, {
-      log: sideEffects,
+      log: sideEffects.map(({ log }) => log).join(""),
       hasUnexpectedSideEffects,
     });
   }
