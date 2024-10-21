@@ -343,26 +343,6 @@ function _convertChatOpenAIToolTypeToOpenAITool(
   return _convertToOpenAITool(tool, fields);
 }
 
-export interface ChatOpenAIStructuredOutputMethodOptions<
-  IncludeRaw extends boolean
-> extends StructuredOutputMethodOptions<IncludeRaw> {
-  /**
-   * strict: If `true` and `method` = "function_calling", model output is
-   * guaranteed to exactly match the schema. If `true`, the input schema
-   * will also be validated according to
-   * https://platform.openai.com/docs/guides/structured-outputs/supported-schemas.
-   * If `false`, input schema will not be validated and model output will not
-   * be validated.
-   * If `undefined`, `strict` argument will not be passed to the model.
-   *
-   * @version 0.2.6
-   * @note Planned breaking change in version `0.3.0`:
-   * `strict` will default to `true` when `method` is
-   * "function_calling" as of version `0.3.0`.
-   */
-  strict?: boolean;
-}
-
 export interface ChatOpenAICallOptions
   extends OpenAICallOptions,
     BaseFunctionCallOptions {
@@ -1932,11 +1912,10 @@ export class ChatOpenAI<
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | StructuredOutputMethodParams<RunOutput, false>
       | z.ZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
-    config?: ChatOpenAIStructuredOutputMethodOptions<false>
+    config?: StructuredOutputMethodOptions<false>
   ): Runnable<BaseLanguageModelInput, RunOutput>;
 
   withStructuredOutput<
@@ -1944,11 +1923,10 @@ export class ChatOpenAI<
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | StructuredOutputMethodParams<RunOutput, true>
       | z.ZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
-    config?: ChatOpenAIStructuredOutputMethodOptions<true>
+    config?: StructuredOutputMethodOptions<true>
   ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
 
   withStructuredOutput<
@@ -1956,11 +1934,10 @@ export class ChatOpenAI<
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | StructuredOutputMethodParams<RunOutput, boolean>
       | z.ZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
-    config?: ChatOpenAIStructuredOutputMethodOptions<boolean>
+    config?: StructuredOutputMethodOptions<boolean>
   ):
     | Runnable<BaseLanguageModelInput, RunOutput>
     | Runnable<
