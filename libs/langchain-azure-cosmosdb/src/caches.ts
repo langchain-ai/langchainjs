@@ -44,7 +44,7 @@ function updateDbConfig(
  * const model = new ChatOpenAI({cache});
  *
  * // Invoke the model to perform an action
- * const response = await llm.invoke("Do something random!");
+ * const response = await model.invoke("Do something random!");
  * console.log(response);
  * ```
  */
