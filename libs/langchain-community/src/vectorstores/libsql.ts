@@ -82,10 +82,10 @@ export class LibSQLVectorStore extends VectorStore {
 
     for (let i = 0; i < rows.length; i += batchSize) {
       const chunk = rows.slice(i, i + batchSize);
-      const insertQueries = chunk.map(
-        (row) =>
-          `INSERT INTO ${this.table} (content, metadata, ${this.column}) VALUES (${row.content}, ${row.metadata}, vector(${row.embedding})) RETURNING id`
-      );
+      const insertQueries = chunk.map((row) => ({
+        sql: `INSERT INTO ${this.table} (content, metadata, ${this.column}) VALUES (?, ?, ?) RETURNING id`,
+        args: [row.content, row.metadata, row.embedding],
+      }));
 
       const results = await this.db.batch(insertQueries);
 
