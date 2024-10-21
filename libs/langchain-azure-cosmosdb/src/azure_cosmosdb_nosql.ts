@@ -68,7 +68,7 @@ export interface AzureCosmosDBNoSQLInitOptions {
  */
 export interface AzureCosmosDBNoSQLConfig
   extends AzureCosmosDBNoSQLInitOptions {
-  client?: CosmosClient;
+  readonly client?: CosmosClient;
   readonly connectionString?: string;
   readonly endpoint?: string;
   readonly credentials?: TokenCredential;
