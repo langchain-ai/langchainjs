@@ -89,6 +89,7 @@ export interface WatsonxCallParams
       | "presencePenalty"
       | "responseFormat"
       | "timeLimit"
+      | "modelId"
     >
   > {
   maxRetries?: number;
@@ -368,14 +369,14 @@ export class ChatWatsonx<
     const params = this.invocationParams(options);
     return {
       ls_provider: "watsonx",
-      ls_model_name: this.modelId,
+      ls_model_name: this.model,
       ls_model_type: "chat",
       ls_temperature: params.temperature ?? undefined,
       ls_max_tokens: params.maxTokens ?? undefined,
     };
   }
 
-  modelId = "mistralai/mistral-large";
+  model = "mistralai/mistral-large";
 
   version = "2024-05-31";
 
@@ -445,7 +446,7 @@ export class ChatWatsonx<
     this.serviceUrl = fields?.serviceUrl;
     this.streaming = fields?.streaming ?? this.streaming;
     this.n = fields?.n ?? this.n;
-    this.modelId = fields?.modelId ?? this.modelId;
+    this.model = fields?.model ?? this.model;
     this.version = fields?.version ?? this.version;
 
     const {
@@ -509,8 +510,8 @@ export class ChatWatsonx<
 
   scopeId() {
     if (this.projectId)
-      return { projectId: this.projectId, modelId: this.modelId };
-    else return { spaceId: this.spaceId, modelId: this.modelId };
+      return { projectId: this.projectId, modelId: this.model };
+    else return { spaceId: this.spaceId, modelId: this.model };
   }
 
   async completionWithRetry<T>(
@@ -541,17 +542,20 @@ export class ChatWatsonx<
     if (this.streaming) {
       const stream = this._streamResponseChunks(messages, options, runManager);
       const finalChunks: Record<number, ChatGenerationChunk> = {};
-      let tokenUsage = {
+      let tokenUsage: { [key: string]: number } = {
         input_tokens: 0,
         output_tokens: 0,
         total_tokens: 0,
       };
-      const tokenUsages = [];
+      const tokenUsages: { [key: string]: number }[] = [];
       for await (const chunk of stream) {
         const message = chunk.message as AIMessageChunk;
         if (message?.usage_metadata) {
           const completion = chunk.generationInfo?.completion;
-          tokenUsages[completion] = message.usage_metadata;
+          if (tokenUsages[completion])
+            tokenUsages[completion].output_tokens +=
+              message.usage_metadata.output_tokens;
+          else tokenUsages[completion] = message.usage_metadata;
         }
         chunk.message.response_metadata = {
           ...chunk.generationInfo,
@@ -584,7 +588,7 @@ export class ChatWatsonx<
       };
       const watsonxMessages = _convertMessagesToWatsonxMessages(
         messages,
-        this.modelId
+        this.model
       );
       const callback = () =>
         this.service.textChat({
@@ -629,7 +633,7 @@ export class ChatWatsonx<
     const params = { ...this.invocationParams(options), ...this.scopeId() };
     const watsonxMessages = _convertMessagesToWatsonxMessages(
       messages,
-      this.modelId
+      this.model
     );
     const callback = () =>
       this.service.textChatStream({
@@ -668,7 +672,7 @@ export class ChatWatsonx<
       const message = _convertDeltaToMessageChunk(
         delta,
         data,
-        this.modelId,
+        this.model,
         chunk.data.usage,
         defaultRole
       );

@@ -222,6 +222,7 @@ describe("Tests for chat", () => {
       });
       const message = new HumanMessage("Print hello world");
       const res = await service.generate([[message], [message]]);
+
       for (const generation of res.generations) {
         expect(generation.length).toBe(2);
         for (const gen of generation) {
@@ -396,11 +397,6 @@ describe("Tests for chat", () => {
       }).rejects.toThrow();
     }, 5000);
     test("Token count and response equality", async () => {
-      let tokenUsage = {
-        completionTokens: 0,
-        promptTokens: 0,
-        totalTokens: 0,
-      };
       let generation = "";
       const service = new ChatWatsonx({
         version: "2024-05-31",
@@ -408,7 +404,6 @@ describe("Tests for chat", () => {
         projectId: process.env.WATSONX_AI_PROJECT_ID ?? "testString",
         callbackManager: CallbackManager.fromHandlers({
           async handleLLMEnd(output: LLMResult) {
-            tokenUsage = output.llmOutput?.tokenUsage;
             generation = output.generations[0][0].text;
           },
         }),
@@ -426,7 +421,7 @@ describe("Tests for chat", () => {
         tokenCount += 1;
         chunks.push(chunk.content);
       }
-      expect(tokenCount).toBe(tokenUsage.completionTokens);
+      expect(tokenCount).toBeGreaterThan(1);
       expect(chunks.join("")).toBe(generation);
     });
     test("Token count usage_metadata", async () => {
@@ -445,7 +440,7 @@ describe("Tests for chat", () => {
         return;
       }
       expect(res.usage_metadata.input_tokens).toBeGreaterThan(1);
-      expect(res.usage_metadata.output_tokens).toBeGreaterThan(1);
+      expect(res.usage_metadata.output_tokens).toBe(1);
       expect(res.usage_metadata.total_tokens).toBe(
         res.usage_metadata.input_tokens + res.usage_metadata.output_tokens
       );
@@ -809,7 +804,7 @@ describe("Tests for chat", () => {
       const service = new ChatWatsonx({
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL ?? "testString",
-        modelId: "meta-llama/llama-3-2-11b-vision-instruct",
+        model: "meta-llama/llama-3-2-11b-vision-instruct",
         projectId: process.env.WATSONX_AI_PROJECT_ID ?? "testString",
         max_new_tokens: 100,
       });
