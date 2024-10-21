@@ -1,4 +1,5 @@
 /* eslint-disable no-promise-executor-return */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { test, expect, jest } from "@jest/globals";
 import { AIMessage, HumanMessage, ToolMessage } from "@langchain/core/messages";
 import { concat } from "@langchain/core/utils/stream";
@@ -166,6 +167,17 @@ test("Test ChatOpenAI tool calling with ToolMessages", async () => {
         ),
       })
   );
+  let toolError;
+  try {
+    await chat.invoke([
+      ["human", "What's the weather like in San Francisco, Tokyo, and Paris?"],
+      res,
+    ]);
+  } catch (e) {
+    toolError = e;
+  }
+  expect(toolError).toBeDefined();
+  expect((toolError as any)?.lc_error_code).toEqual("INVALID_TOOL_RESULTS");
   // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
   // @ts-expect-error unused var
   const finalResponse = await chat.invoke([
