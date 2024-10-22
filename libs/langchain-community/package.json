@@ -956,6 +956,15 @@
       "import": "./tools/wolframalpha.js",
       "require": "./tools/wolframalpha.cjs"
     },
+    "./tools/notion": {
+      "types": {
+        "import": "./tools/notion.d.ts",
+        "require": "./tools/notion.d.cts",
+        "default": "./tools/notion.d.ts"
+      },
+      "import": "./tools/notion.js",
+      "require": "./tools/notion.cjs"
+    },
     "./agents/toolkits/aws_sfn": {
       "types": {
         "import": "./agents/toolkits/aws_sfn.d.ts",
@@ -982,6 +991,15 @@
       },
       "import": "./agents/toolkits/connery.js",
       "require": "./agents/toolkits/connery.cjs"
+    },
+    "./agents/toolkits/notion": {
+      "types": {
+        "import": "./agents/toolkits/notion.d.ts",
+        "require": "./agents/toolkits/notion.d.cts",
+        "default": "./agents/toolkits/notion.d.ts"
+      },
+      "import": "./agents/toolkits/notion.js",
+      "require": "./agents/toolkits/notion.cjs"
     },
     "./embeddings/alibaba_tongyi": {
       "types": {
@@ -3142,6 +3160,10 @@
     "tools/wolframalpha.js",
     "tools/wolframalpha.d.ts",
     "tools/wolframalpha.d.cts",
+    "tools/notion.cjs",
+    "tools/notion.js",
+    "tools/notion.d.ts",
+    "tools/notion.d.cts",
     "agents/toolkits/aws_sfn.cjs",
     "agents/toolkits/aws_sfn.js",
     "agents/toolkits/aws_sfn.d.ts",
@@ -3154,6 +3176,10 @@
     "agents/toolkits/connery.js",
     "agents/toolkits/connery.d.ts",
     "agents/toolkits/connery.d.cts",
+    "agents/toolkits/notion.cjs",
+    "agents/toolkits/notion.js",
+    "agents/toolkits/notion.d.ts",
+    "agents/toolkits/notion.d.cts",
     "embeddings/alibaba_tongyi.cjs",
     "embeddings/alibaba_tongyi.js",
     "embeddings/alibaba_tongyi.d.ts",

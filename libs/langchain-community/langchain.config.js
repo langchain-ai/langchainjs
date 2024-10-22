@@ -60,10 +60,12 @@ export const config = {
     "tools/tavily_search": "tools/tavily_search",
     "tools/wikipedia_query_run": "tools/wikipedia_query_run",
     "tools/wolframalpha": "tools/wolframalpha",
+    "tools/notion": "tools/notion/tools",
     // toolkits
     "agents/toolkits/aws_sfn": "agents/toolkits/aws_sfn",
     "agents/toolkits/base": "agents/toolkits/base",
     "agents/toolkits/connery": "agents/toolkits/connery/index",
+    "agents/toolkits/notion": "agents/toolkits/notion/toolkit",
     // embeddings
     "embeddings/alibaba_tongyi": "embeddings/alibaba_tongyi",
     "embeddings/baidu_qianfan": "embeddings/baidu_qianfan",
@@ -185,7 +187,8 @@ export const config = {
     // callbacks
     "callbacks/handlers/llmonitor": "callbacks/handlers/llmonitor",
     "callbacks/handlers/lunary": "callbacks/handlers/lunary",
-    "callbacks/handlers/upstash_ratelimit": "callbacks/handlers/upstash_ratelimit",
+    "callbacks/handlers/upstash_ratelimit":
+      "callbacks/handlers/upstash_ratelimit",
     // retrievers
     "retrievers/amazon_kendra": "retrievers/amazon_kendra",
     "retrievers/amazon_knowledge_base": "retrievers/amazon_knowledge_base",
@@ -306,18 +309,20 @@ export const config = {
     "utils/event_source_parse": "utils/event_source_parse",
     "utils/cassandra": "utils/cassandra",
     // experimental
-    "experimental/callbacks/handlers/datadog": "experimental/callbacks/handlers/datadog",
+    "experimental/callbacks/handlers/datadog":
+      "experimental/callbacks/handlers/datadog",
     "experimental/graph_transformers/llm":
       "experimental/graph_transformers/llm",
     "experimental/multimodal_embeddings/googlevertexai":
       "experimental/multimodal_embeddings/googlevertexai",
     "experimental/hubs/makersuite/googlemakersuitehub":
       "experimental/hubs/makersuite/googlemakersuitehub",
-    "experimental/chat_models/ollama_functions": "experimental/chat_models/ollama_functions",
+    "experimental/chat_models/ollama_functions":
+      "experimental/chat_models/ollama_functions",
     "experimental/llms/chrome_ai": "experimental/llms/chrome_ai",
     "experimental/tools/pyinterpreter": "experimental/tools/pyinterpreter",
     // chains
-    "chains/graph_qa/cypher": "chains/graph_qa/cypher"
+    "chains/graph_qa/cypher": "chains/graph_qa/cypher",
   },
   requiresOptionalDependency: [
     "tools/aws_sfn",
@@ -513,7 +518,7 @@ export const config = {
     // chains
     "chains/graph_qa/cypher",
     // langgraph checkpointers
-    "langgraph/checkpointers/vercel_kv"
+    "langgraph/checkpointers/vercel_kv",
   ],
   packageSuffix: "community",
   tsConfigPath: resolve("./tsconfig.json"),
