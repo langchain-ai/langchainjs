@@ -11588,6 +11588,7 @@ __metadata:
     lodash: ^4.17.21
     lunary: ^0.7.10
     mammoth: ^1.6.0
+    meilisearch: ^0.44.1
     mongodb: ^5.2.0
     mysql2: ^3.9.8
     neo4j-driver: ^5.17.0
@@ -11720,6 +11721,7 @@ __metadata:
     lodash: ^4.17.21
     lunary: ^0.7.10
     mammoth: ^1.6.0
+    meilisearch: ^0.44.1
     mongodb: ">=5.2.0"
     mysql2: ^3.9.8
     neo4j-driver: "*"
@@ -11933,6 +11935,8 @@ __metadata:
     lunary:
       optional: true
     mammoth:
+      optional: true
+    meilisearch:
       optional: true
     mongodb:
       optional: true
@@ -34016,6 +34020,13 @@ __metadata:
   version: 0.3.0
   resolution: "media-typer@npm:0.3.0"
   checksum: af1b38516c28ec95d6b0826f6c8f276c58aec391f76be42aa07646b4e39d317723e869700933ca6995b056db4b09a78c92d5440dc23657e6764be5d28874bba1
+  languageName: node
+  linkType: hard
+
+"meilisearch@npm:^0.44.1":
+  version: 0.44.1
+  resolution: "meilisearch@npm:0.44.1"
+  checksum: 11653703d82489c530ed1507d39128c9f7221f743b8fe39a1aa6c06e876d0c83879b2b27deded27954562d2c780755995d633117637f3197c9cd3a07905c8f06
   languageName: node
   linkType: hard
 
