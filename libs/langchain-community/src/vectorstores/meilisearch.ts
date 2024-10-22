@@ -28,7 +28,7 @@ export interface MeilisearchLibArgs {
  * VectorStore interface and is a match for the Langchain Python's MeiliSearch
  * Implementation.
  */
-export class MeiliSearch extends VectorStore {
+export class MeiliSearchVectorStore extends VectorStore {
     _vectorstoreType():string {
         return "meilisearch";
     }
@@ -122,7 +122,7 @@ export class MeiliSearch extends VectorStore {
      * @returns a Promise that resolves to void when the documents are added.
      */
     async addDocuments(documents: DocumentInterface[]): Promise<void> {
-        const hasIndex:boolean = await this.createMeiliSearchIndex();
+        await this.createMeiliSearchIndex();
 
         const docs:MeilisearchDocument[] = [];
 
@@ -159,8 +159,8 @@ export class MeiliSearch extends VectorStore {
      * and compatible with the MeiliSearch filter format.
      * @returns a Promise that resolves to an array of DocumentInterface objects.
      */
-    async similaritySearchVector(query:string, k: number, filter?: Filter): Promise<DocumentInterface[]> {
-        const raw_docs = await this.similaritySearchByVectorWithScore(query, k, filter);
+    async similaritySearch(query:string, k: number, filter?: Filter): Promise<DocumentInterface[]> {
+        const raw_docs = await this.similaritySearchWithScore(query, k, filter);
         raw_docs.sort((a, b) => b[1] - a[1]);
         const docs:DocumentInterface[] = raw_docs.map((doc) => doc[0]);
         return docs;
@@ -179,7 +179,7 @@ export class MeiliSearch extends VectorStore {
      * @returns a Promise that resolves to an array of tuples, each containing a DocumentInterface
      * object and its corresponding similarity score.
      */
-    async similaritySearchByVectorWithScore(query: string, k?: number, filter?: Filter): Promise<[DocumentInterface, number][]> {
+    async similaritySearchWithScore(query: string, k: number, filter?: Filter): Promise<[DocumentInterface, number][]> {
         const embedding = await this.embeddings.embedDocuments([query]);
         const docs = await this.similaritySearchVectorWithScore(embedding[0], k, filter);
         return docs;
@@ -260,7 +260,7 @@ export class MeiliSearch extends VectorStore {
         metadatas: object[] | object,
         embeddings: EmbeddingsInterface,
         args: MeilisearchLibArgs
-    ): Promise<MeiliSearch> {
+    ): Promise<MeiliSearchVectorStore> {
         const docs: DocumentInterface[] = texts.map((text, idx) => {
             return {
                 pageContent: text,
@@ -268,7 +268,7 @@ export class MeiliSearch extends VectorStore {
             };
         });
 
-        return await MeiliSearch.fromDocuments(docs, embeddings, args);
+        return await MeiliSearchVectorStore.fromDocuments(docs, embeddings, args);
     }
 
     /**
@@ -287,8 +287,8 @@ export class MeiliSearch extends VectorStore {
         documents: DocumentInterface[],
         embeddings: EmbeddingsInterface,
         args: MeilisearchLibArgs
-    ): Promise<MeiliSearch> {
-        const meilisearch = new MeiliSearch(embeddings, args);
+    ): Promise<MeiliSearchVectorStore> {
+        const meilisearch = new MeiliSearchVectorStore(embeddings, args);
         await meilisearch.addDocuments(documents);
         return meilisearch;
     }
@@ -306,7 +306,7 @@ export class MeiliSearch extends VectorStore {
     static async fromExistingIndex(
         embeddings: EmbeddingsInterface,
         args: MeilisearchLibArgs
-    ): Promise<MeiliSearch> {
-        return new MeiliSearch(embeddings, args);
+    ): Promise<MeiliSearchVectorStore> {
+        return new MeiliSearchVectorStore(embeddings, args);
     }
 }
