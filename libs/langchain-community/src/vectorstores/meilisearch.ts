@@ -90,7 +90,7 @@ export class MeiliSearchVectorStore extends VectorStore {
      * the embedders configuration is the default configuration.
      * @returns a Promise that resolves to void when the index is created.
      */
-    async createMeiliSearchIndex(): Promise<boolean> {
+    async createMeiliSearchIndex(): Promise<void> {
 
         let indexExists:boolean = false;
 
@@ -106,12 +106,7 @@ export class MeiliSearchVectorStore extends VectorStore {
             await this.client.waitForTask(creation_result.taskUid);
             const update_result = await this.client.index(this.index_name).updateEmbedders(this.embedders);
             await this.client.waitForTask(update_result.taskUid);
-            return true;
-        } else {
-            return true;
         }
-
-
     }
 
     /**
@@ -267,8 +262,8 @@ export class MeiliSearchVectorStore extends VectorStore {
                 metadata: metadatas instanceof Array ? metadatas[idx] : metadatas,
             };
         });
-
-        return await MeiliSearchVectorStore.fromDocuments(docs, embeddings, args);
+        const meilisearch = await MeiliSearchVectorStore.fromDocuments(docs, embeddings, args);
+        return meilisearch;
     }
 
     /**
