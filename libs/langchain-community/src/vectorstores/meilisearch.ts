@@ -237,6 +237,60 @@ export class MeiliSearchVectorStore extends VectorStore {
     }
 
     /**
+     * Delete the MeiliSearch index. This method will delete the MeiliSearch index.
+     * @returns a Promise that resolves to void when the index is deleted.
+     */
+    async deleteIndex(): Promise<void> {
+        const delete_result = await this.client.deleteIndex(this.index_name);
+        await this.client.waitForTask(delete_result.taskUid);
+        return;
+    }
+
+    /**
+     * Delete all documents in the MeiliSearch index. This method will delete all
+     * documents in the MeiliSearch index.
+     * @returns a Promise that resolves to void when the documents are deleted.
+     */
+    async deleteAllDocuments(): Promise<void> {
+        const delete_result = await this.client.index(this.index_name).deleteAllDocuments();
+        await this.client.waitForTask(delete_result.taskUid);
+        return;
+    }
+
+    /**
+     * Enable the Vector Store in the MeiliSearch instance. This method will enable
+     * the Vector Store in the MeiliSearch instance.
+     * @returns a Promise that resolves to void when the Vector Store is enabled.
+     * @throws an Error if the Vector Store is failed to enable.
+     */
+    async enableVectorStore(): Promise<void> {
+        const result = await this.client.httpRequest.patch('/experimental-features', {
+            vectorStore: true
+        });
+
+        if (result.status !== 200 && result.vectorStore !== true) {
+            throw new Error("Failed to enable vector store");
+        } else {
+            return;
+        }
+    }
+
+    /**
+     * Check if the MeiliSearch instance is healthy. This method will check if the
+     * MeiliSearch instance is healthy.
+     * @returns a Promise that resolves to true if the MeiliSearch instance is healthy
+     * and false if it is not.
+     */
+    async isHealthy(): Promise<boolean> {
+        try {
+            await this.client.health();
+            return true;
+        } catch (error) {
+            return false;
+        }
+    }
+
+    /**
      * Create a MeiliSearch instance from a list of texts and their corresponding
      * metadata. This method will create a MeiliSearch instance from the texts and
      * metadata provided.
