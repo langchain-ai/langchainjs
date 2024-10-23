@@ -124,42 +124,24 @@ export class LibSQLVectorStore extends VectorStore {
     const queryVector = `[${query.join(",")}]`;
 
     const sql = `
-      SELECT content, metadata, vector_distance_cos(${this.column}, vector(${queryVector})) AS distance
-      FROM vector_top_k('${this.table}_idx', vector(${queryVector}), ${k})
-      JOIN ${this.table} ON ${this.table}.rowid = id
+      SELECT ${this.table}.id, ${this.table}.content, ${this.table}.metadata, vector_distance_cos(${this.table}.${this.column}, vector('${queryVector}')) AS distance
+      FROM vector_top_k('idx_${this.table}_${this.column}', vector('${queryVector}'), ${k}) AS top_k
+      JOIN ${this.table} ON top_k.rowid = ${this.table}.id
     `;
 
     const results = await this.db.execute(sql);
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return results.rows.map((row: any) => {
       const metadata = JSON.parse(row.metadata);
 
       const doc = new Document({
+        id: row.id,
         metadata,
         pageContent: row.content,
       });
 
       return [doc, row.distance];
-    });
-  }
-
-  /**
-   * Deletes vectors from the store.
-   * @param {Object} params - Delete parameters.
-   * @param {string[] | number[]} [params.ids] - The ids of the vectors to delete.
-   * @returns {Promise<void>}
-   */
-  async delete(params: { ids?: string[] | number[] }): Promise<void> {
-    if (!params.ids) {
-      await this.db.execute(`DELETE FROM ${this.table}`);
-      return;
-    }
-
-    const idsToDelete = params.ids.join(", ");
-
-    await this.db.execute({
-      sql: `DELETE FROM ${this.table} WHERE id IN (?)`,
-      args: [idsToDelete],
     });
   }
 
