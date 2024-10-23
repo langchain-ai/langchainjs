@@ -4,6 +4,7 @@ export interface OptionalImportMap {}
 
 export interface SecretMap {
   ALIBABA_API_KEY?: string;
+  AUTHENTICATOR?: string;
   AWS_ACCESS_KEY_ID?: string;
   AWS_SECRETE_ACCESS_KEY?: string;
   AWS_SECRET_ACCESS_KEY?: string;
@@ -60,6 +61,12 @@ export interface SecretMap {
   VECTARA_API_KEY?: string;
   VECTARA_CORPUS_ID?: string;
   VECTARA_CUSTOMER_ID?: string;
+  WATSONX_AI_APIKEY?: string;
+  WATSONX_AI_AUTH_TYPE?: string;
+  WATSONX_AI_BEARER_TOKEN?: string;
+  WATSONX_AI_PASSWORD?: string;
+  WATSONX_AI_URL?: string;
+  WATSONX_AI_USERNAME?: string;
   WATSONX_PROJECT_ID?: string;
   WRITER_API_KEY?: string;
   WRITER_ORG_ID?: string;
