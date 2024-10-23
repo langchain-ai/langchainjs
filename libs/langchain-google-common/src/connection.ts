@@ -5,6 +5,7 @@ import {
 } from "@langchain/core/utils/async_caller";
 import { getRuntimeEnvironment } from "@langchain/core/utils/env";
 import {BaseRunManager} from "@langchain/core/callbacks/manager";
+import {BaseCallbackHandler} from "@langchain/core/callbacks/base";
 import type {
   GoogleAIBaseLLMInput,
   GoogleConnectionParams,
@@ -144,9 +145,9 @@ export abstract class GoogleHostConnection<
   // Use the "platform" getter if you need this.
   platformType: GooglePlatformType | undefined;
 
-  endpoint = "us-central1-aiplatform.googleapis.com";
+  _endpoint: string | undefined;
 
-  location = "us-central1";
+  _location: string | undefined;
 
   apiVersion = "v1";
 
@@ -160,8 +161,8 @@ export abstract class GoogleHostConnection<
     this.caller = caller;
 
     this.platformType = fields?.platformType;
-    this.endpoint = fields?.endpoint ?? this.endpoint;
-    this.location = fields?.location ?? this.location;
+    this._endpoint = fields?.endpoint;
+    this._location = fields?.location;
     this.apiVersion = fields?.apiVersion ?? this.apiVersion;
     this.client = client;
   }
@@ -172,6 +173,22 @@ export abstract class GoogleHostConnection<
 
   get computedPlatformType(): GooglePlatformType {
     return "gcp";
+  }
+
+  get location(): string {
+    return this._location ?? this.computedLocation;
+  }
+
+  get computedLocation(): string {
+    return "us-central1";
+  }
+
+  get endpoint(): string {
+    return this._endpoint ?? this.computedEndpoint
+  }
+
+  get computedEndpoint(): string {
+    return `${this.location}-aiplatform.googleapis.com`;
   }
 
   buildMethod(): GoogleAbstractedClientOpsMethod {
@@ -261,6 +278,14 @@ export abstract class GoogleAIConnection<
       return "gai";
     } else {
       return "gcp";
+    }
+  }
+
+  get computedLocation(): string {
+    switch (this.apiName) {
+      case "google": return super.computedLocation;
+      case "anthropic": return "us-east5";
+      default: throw new Error(`Unknown apiName: ${this.apiName}. Can't get location.`)
     }
   }
 
@@ -361,4 +386,82 @@ export abstract class AbstractGoogleLLMConnection<
   ): Promise<unknown> {
     return this.api.formatData(input, parameters);
   }
+}
+
+export interface GoogleCustomEventInfo {
+  subEvent: string,
+  module: string
+}
+
+export abstract class GoogleRequestCallbackHandler extends BaseCallbackHandler {
+
+  customEventInfo(eventName: string): GoogleCustomEventInfo {
+    const names = eventName.split('-');
+    return {
+      subEvent: names[1],
+      module: names[2],
+    }
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  abstract handleCustomRequestEvent(eventName: string, eventInfo: GoogleCustomEventInfo, data: any, runId: string, tags?: string[], metadata?: Record<string, any>): any;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  abstract handleCustomResponseEvent(eventName: string, eventInfo: GoogleCustomEventInfo, data: any, runId: string, tags?: string[], metadata?: Record<string, any>): any;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  handleCustomEvent(eventName: string, data: any, runId: string, tags?: string[], metadata?: Record<string, any>): any {
+    if (!eventName) {
+      return undefined;
+    }
+    const eventInfo = this.customEventInfo(eventName);
+    switch (eventInfo.subEvent) {
+      case "request":  return this.handleCustomRequestEvent(eventName,eventInfo,data,runId,tags,metadata);
+      case "response": return this.handleCustomResponseEvent(eventName,eventInfo,data,runId,tags,metadata);
+      default:
+        console.error(`Unexpected eventInfo for ${eventName} ${JSON.stringify(eventInfo,null,1)}`)
+    }
+  }
+}
+
+export class GoogleRequestLogger extends GoogleRequestCallbackHandler {
+  name: string = "GoogleRequestLogger";
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  log(eventName: string, data: any, tags?: string[]): undefined {
+    const tagStr = tags ? `[${tags}]` : "[]";
+    console.log(`${eventName} ${tagStr} ${JSON.stringify(data,null,1)}`)
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  handleCustomRequestEvent(eventName: string, _eventInfo: GoogleCustomEventInfo, data: any, _runId: string, tags?: string[], _metadata?: Record<string, any>): any {
+    this.log(eventName, data, tags);
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  handleCustomResponseEvent(eventName: string, _eventInfo: GoogleCustomEventInfo, data: any, _runId: string, tags?: string[], _metadata?: Record<string, any>): any {
+    this.log(eventName, data, tags);
+  }
+
+}
+
+export class GoogleRequestRecorder extends GoogleRequestCallbackHandler {
+  name = "GoogleRequestRecorder";
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  request: any = {}
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  response: any = {}
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  handleCustomRequestEvent(_eventName: string, _eventInfo: GoogleCustomEventInfo, data: any, _runId: string, _tags?: string[], _metadata?: Record<string, any>): any {
+    this.request = data;
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  handleCustomResponseEvent(_eventName: string, _eventInfo: GoogleCustomEventInfo, data: any, _runId: string, _tags?: string[], _metadata?: Record<string, any>): any {
+    this.response = data;
+  }
+
 }

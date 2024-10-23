@@ -1,4 +1,4 @@
-import { test } from "@jest/globals";
+import {expect, test} from "@jest/globals";
 import fs from "fs/promises";
 import { BaseLanguageModelInput } from "@langchain/core/language_models/base";
 import { ChatPromptValue } from "@langchain/core/prompt_values";
@@ -34,17 +34,10 @@ import {
   MessagesPlaceholder,
 } from "@langchain/core/prompts";
 import { InMemoryStore } from "@langchain/core/stores";
-import {CallbackHandlerMethods} from "@langchain/core/callbacks/base";
+import {BaseCallbackHandler} from "@langchain/core/callbacks/base";
+import {GoogleRequestLogger, GoogleRequestRecorder} from "@langchain/google-common";
 import { GeminiTool } from "../types.js";
 import { ChatVertexAI } from "../chat_models.js";
-
-const callbacks: CallbackHandlerMethods[] = [{
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  handleCustomEvent(eventName: string, data: any, _runId: string, _tags?: string[], _metadata?: Record<string, any>): any {
-    console.log('eventName', eventName);
-    console.log('data', JSON.stringify(data,null,1));
-  }
-}]
 
 describe("GAuth Gemini Chat", () => {
   test("invoke", async () => {
@@ -498,10 +491,20 @@ describe("GAuth Gemini Chat", () => {
 });
 
 describe("GAuth Anthropic Chat", () => {
-  test("invoke", async () => {
+
+  let recorder: GoogleRequestRecorder;
+  let callbacks: BaseCallbackHandler[];
+
+  beforeEach(() => {
+    recorder = new GoogleRequestRecorder();
+    callbacks = [
+      recorder,
+      new GoogleRequestLogger(),
+    ]
+  })
+
+  test.skip("invoke", async () => {
     const model = new ChatVertexAI({
-      endpoint: "us-east5-aiplatform.googleapis.com",
-      location: "us-east5",
       model: "claude-3-5-sonnet@20240620",
       callbacks,
     });
@@ -512,9 +515,29 @@ describe("GAuth Anthropic Chat", () => {
     const aiMessage = res as AIMessageChunk;
     expect(aiMessage.content).toBeDefined();
 
-    console.log(JSON.stringify(aiMessage));
     expect(typeof aiMessage.content).toBe("string");
     const text = aiMessage.content as string;
     expect(text).toMatch(/(1 + 1 (equals|is|=) )?2.? ?/);
+
+    const connection = recorder?.request?.connection;
+    expect(connection?.url).toEqual("https://us-east5-aiplatform.googleapis.com/v1/projects/test-vertex-ai-382612/locations/us-east5/publishers/anthropic/models/claude-3-5-sonnet@20240620:rawPredict");
+
+    console.log(JSON.stringify(aiMessage,null,1));
+    console.log(aiMessage.lc_kwargs);
   });
+
+  test("stream", async () => {
+    const model = new ChatVertexAI({
+      model: "claude-3-5-sonnet@20240620",
+      callbacks,
+    });
+    const stream = await model.stream("Print hello world.");
+    const chunks = [];
+    for await (const chunk of stream) {
+      console.log(chunk);
+      chunks.push(chunk);
+    }
+    expect(chunks.length).toBeGreaterThan(1);
+  });
+
 });
