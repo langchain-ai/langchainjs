@@ -76,6 +76,10 @@ export interface ChatOllamaInput
    * exist.
    * @default false
    */
+  /**
+   * Optional HTTP Headers to include in the request.
+   */
+  headers?: Headers;
   checkOrPullModel?: boolean;
   streaming?: boolean;
   format?: string;
@@ -459,6 +463,8 @@ export class ChatOllama
 
   baseUrl = "http://127.0.0.1:11434";
 
+  headers?: Headers;
+
   constructor(fields?: ChatOllamaInput) {
     super(fields ?? {});
 
@@ -467,6 +473,7 @@ export class ChatOllama
     });
     this.baseUrl = fields?.baseUrl ?? this.baseUrl;
 
+    this.headers = fields?.headers ?? this.headers;
     this.model = fields?.model ?? this.model;
     this.numa = fields?.numa;
     this.numCtx = fields?.numCtx;
