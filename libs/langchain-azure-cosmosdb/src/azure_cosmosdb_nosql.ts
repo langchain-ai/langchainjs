@@ -78,7 +78,7 @@ export interface AzureCosmosDBNoSQLConfig
   readonly metadataKey?: string;
 }
 
-const USER_AGENT_SUFFIX = "langchainjs-azure-cosmosdb-nosql";
+const USER_AGENT_SUFFIX = "langchainjs-cdbnosql-vectorstore-javascript";
 
 /**
  * Azure Cosmos DB for NoSQL vCore vector store.
