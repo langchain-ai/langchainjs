@@ -15,7 +15,7 @@ import {
   AzureCosmosDBNoSQLVectorStore,
 } from "./azure_cosmosdb_nosql.js";
 
-const USER_AGENT_SUFFIX = "LangChain-CDBNoSQL-SemanticCache-JavaScript";
+const USER_AGENT_SUFFIX = "langchainjs-azure-cosmosdb-nosql";
 const DEFAULT_DATABASE_NAME = "semanticCacheDB";
 const DEFAULT_CONTAINER_NAME = "semanticCacheContainer";
 
