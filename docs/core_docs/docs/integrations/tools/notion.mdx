@@ -1,0 +1,21 @@
+---
+hide_table_of_contents: true
+---
+
+import CodeBlock from "@theme/CodeBlock";
+
+# Notion Tool
+
+The notion tool allows you to retrieve, update, create and archive notion pages and its content
+The current version allows creation of the following blocks: paragraphs, headings.
+
+## Setup
+
+You need to setup Notion integration to grant access to your content first: [Notion Integration Guide](https://developers.notion.com/docs/create-a-notion-integration)
+Secondly, ensure you created environment variable NOTION_API_KEY with the key obtained during notion integration setup.
+
+## Usage
+
+import ToolExample from "@examples/tools/notion.ts";
+
+<CodeBlock language="typescript">{ToolExample}</CodeBlock>
