@@ -184,6 +184,7 @@
     "lodash": "^4.17.21",
     "lunary": "^0.7.10",
     "mammoth": "^1.6.0",
+    "meilisearch": "^0.44.1",
     "mongodb": "^5.2.0",
     "mysql2": "^3.9.8",
     "neo4j-driver": "^5.17.0",
@@ -314,6 +315,7 @@
     "lodash": "^4.17.21",
     "lunary": "^0.7.10",
     "mammoth": "^1.6.0",
+    "meilisearch": "^0.44.1",
     "mongodb": ">=5.2.0",
     "mysql2": "^3.9.8",
     "neo4j-driver": "*",
@@ -620,6 +622,9 @@
       "optional": true
     },
     "mammoth": {
+      "optional": true
+    },
+    "meilisearch": {
       "optional": true
     },
     "mongodb": {
