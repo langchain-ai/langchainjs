@@ -41,4 +41,25 @@ test.skip("OpenSearchVectorStore integration", async () => {
   });
 
   expect(results2).toHaveLength(1);
+
+  test('keywordSearchWithScore should return documents with scores', async () => {
+    const query = 'example query';
+    const k = 10;
+    const results = await store.keywordSearchWithScore(query, k);
+
+    expect(results).toBeInstanceOf(Array);
+    expect(results.length).toBeLessThanOrEqual(k);
+    results.forEach(([document, score]) => {
+      expect(document).toBeInstanceOf(Document);
+      expect(typeof score).toBe('number');
+    });
+  });
+
+  test('keywordSearchWithScore should handle errors', async () => {
+    const query = 'invalid query';
+    const k = 10;
+    vectorStore.client.search = jest.fn().mockRejectedValue(new Error('Search error'));
+
+    await expect(store.keywordSearchWithScore(query, k)).rejects.toThrow('Search error');
+  });
 });
