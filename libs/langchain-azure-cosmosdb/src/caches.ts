@@ -17,7 +17,7 @@ import {
 
 const USER_AGENT_SUFFIX = "LangChain-CDBNoSQL-SemanticCache-JavaScript";
 const DEFAULT_DATABASE_NAME = "CosmosNoSqlCacheDB";
-const DEFAULT_CONTAINER_NAME = "CosmosNoSqlCacheContainer";
+const DEFAULT_CONTAINER_NAME = "semanticCacheContainer";
 
 /**
  * Represents a Semantic Cache that uses CosmosDB NoSQL backend as the underlying
