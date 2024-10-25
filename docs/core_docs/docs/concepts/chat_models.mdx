@@ -121,7 +121,7 @@ Currently, only some LLMs support multimodal inputs, and almost none support mul
 
 A chat model's context window refers to the maximum size of the input sequence the model can process at one time. While the context windows of modern LLMs are quite large, they still present a limitation that developers must keep in mind when working with chat models.
 
-If the input exceeds the context window, the model may not be able to process the entire input and could raise an error. In conversational applications, this is especially important because the context window determines how much information the model can "remember" throughout a conversation. Developers often need to manage the input within the context window to maintain a coherent dialogue without exceeding the limit. For more details on handling memory in conversations, refer to the [memory](https://langchain-ai.github.io/langgraph/concepts/memory/).
+If the input exceeds the context window, the model may not be able to process the entire input and could raise an error. In conversational applications, this is especially important because the context window determines how much information the model can "remember" throughout a conversation. Developers often need to manage the input within the context window to maintain a coherent dialogue without exceeding the limit. For more details on handling memory in conversations, refer to the [memory](https://langchain-ai.github.io/langgraphjs/concepts/memory/).
 
 The size of the input is measured in [tokens](/docs/concepts/tokens) which are the unit of processing that the model uses.
 

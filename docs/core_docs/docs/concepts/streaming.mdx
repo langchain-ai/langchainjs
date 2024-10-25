@@ -40,7 +40,7 @@ In some cases, you may need to stream **custom data** that goes beyond the infor
 
 ## Streaming APIs
 
-LangChain two main APIs for streaming output in real-time. These APIs are supported by any component that implements the [Runnable Interface](/docs/concepts/runnables), including [LLMs](/docs/concepts/chat_models), [compiled LangGraph graphs](https://langchain-ai.github.io/langgraph/concepts/low_level/), and any Runnable generated with [LCEL](/docs/concepts/lcel).
+LangChain two main APIs for streaming output in real-time. These APIs are supported by any component that implements the [Runnable Interface](/docs/concepts/runnables), including [LLMs](/docs/concepts/chat_models), [compiled LangGraph graphs](https://langchain-ai.github.io/langgraphjs/concepts/low_level/), and any Runnable generated with [LCEL](/docs/concepts/lcel).
 
 1. sync [stream](https://python.langchain.com/api_reference/core/runnables/langchain_core.runnables.base.Runnable.html#langchain_core.runnables.base.Runnable.stream) and async [astream](https://python.langchain.com/api_reference/core/runnables/langchain_core.runnables.base.Runnable.html#langchain_core.runnables.base.Runnable.astream): Use to stream outputs from individual Runnables (e.g., a chat model) as they are generated or stream any workflow created with LangGraph.
 2. The async only [astream_events](https://python.langchain.com/api_reference/core/runnables/langchain_core.runnables.base.Runnable.html#langchain_core.runnables.base.Runnable.astream_events): Use this API to get access to custom events and intermediate outputs from LLM applications built entirely with [LCEL](/docs/concepts/lcel). Note that this API is available, but not needed when working with LangGraph.
@@ -78,18 +78,17 @@ When using `stream()` or `astream()` with chat models, the output is streamed as
 
 [LangGraph](/docs/concepts/architecture#langgraph) compiled graphs are [Runnables](/docs/concepts/runnables) and support the standard streaming APIs.
 
-When using the _stream_ and _astream_ methods with LangGraph, you can **one or more** [streaming mode](https://langchain-ai.github.io/langgraph/reference/types/#langgraph.types.StreamMode) which allow you to control the type of output that is streamed. The available streaming modes are:
+When using the _stream_ and _astream_ methods with LangGraph, you can **one or more** [streaming mode](https://langchain-ai.github.io/langgraphjs/reference/classes/langgraph_pregel.Pregel.html#streamMode) which allow you to control the type of output that is streamed. The available streaming modes are:
 
-- **"values"**: Emit all values of the [state](https://langchain-ai.github.io/langgraph/concepts/low_level/) for each step.
+- **"values"**: Emit all values of the [state](https://langchain-ai.github.io/langgraphjs/concepts/low_level/) for each step.
 - **"updates"**: Emit only the node name(s) and updates that were returned by the node(s) after each step.
 - **"debug"**: Emit debug events for each step.
 - **"messages"**: Emit LLM [messages](/docs/concepts/messages) [token-by-token](/docs/concepts/tokens).
-- **"custom"**: Emit custom output witten using [LangGraph's StreamWriter](https://langchain-ai.github.io/langgraph/reference/types/#langgraph.types.StreamWriter).
 
 For more information, please see:
 
-- [LangGraph streaming conceptual guide](https://langchain-ai.github.io/langgraph/concepts/streaming/) for more information on how to stream when working with LangGraph.
-- [LangGraph streaming how-to guides](https://langchain-ai.github.io/langgraph/how-tos/#streaming) for specific examples of streaming in LangGraph.
+- [LangGraph streaming conceptual guide](https://langchain-ai.github.io/langgraphjs/concepts/streaming/) for more information on how to stream when working with LangGraph.
+- [LangGraph streaming how-to guides](https://langchain-ai.github.io/langgraphjs/how-tos/#streaming) for specific examples of streaming in LangGraph.
 
 #### Usage with LCEL
 
@@ -140,8 +139,7 @@ See [this guide](/docs/how_to/streaming/#using-stream-events) for more detailed 
 
 To write custom data to the stream, you will need to choose one of the following methods based on the component you are working with:
 
-1. LangGraph's [StreamWriter](https://langchain-ai.github.io/langgraph/reference/types/#langgraph.types.StreamWriter) can be used to write custom data that will surface through **stream** and **astream** APIs when working with LangGraph. **Important** this is a LangGraph feature, so it is not available when working with pure LCEL. See [how to streaming custom data](https://langchain-ai.github.io/langgraph/how-tos/streaming-content/) for more information.
-2. [dispatch_events](https://python.langchain.com/api_reference/core/callbacks/langchain_core.callbacks.manager.dispatch_custom_event.html#) / [adispatch_events](https://python.langchain.com/api_reference/core/callbacks/langchain_core.callbacks.manager.adispatch_custom_event.html) can be used to write custom data that will be surfaced through the **astream_events** API. See [how to dispatch custom callback events](/docs/how_to/callbacks_custom_events/#astream-events-api) for more information.
+1. [dispatch_events](https://python.langchain.com/api_reference/core/callbacks/langchain_core.callbacks.manager.dispatch_custom_event.html#) / [adispatch_events](https://python.langchain.com/api_reference/core/callbacks/langchain_core.callbacks.manager.adispatch_custom_event.html) can be used to write custom data that will be surfaced through the **astream_events** API. See [how to dispatch custom callback events](/docs/how_to/callbacks_custom_events/#astream-events-api) for more information.
 
 ## "Auto-Streaming" Chat Models
 
@@ -182,13 +180,12 @@ Please review the [async programming in LangChain guide](/docs/concepts/async) f
 
 Please see the following how-to guides for specific examples of streaming in LangChain:
 
-- [LangGraph conceptual guide on streaming](https://langchain-ai.github.io/langgraph/concepts/streaming/)
-- [LangGraph streaming how-to guides](https://langchain-ai.github.io/langgraph/how-tos/#streaming)
+- [LangGraph conceptual guide on streaming](https://langchain-ai.github.io/langgraphjs/concepts/streaming/)
+- [LangGraph streaming how-to guides](https://langchain-ai.github.io/langgraphjs/how-tos/#streaming)
 - [How to stream runnables](/docs/how_to/streaming/): This how-to guide goes over common streaming patterns with LangChain components (e.g., chat models) and with [LCEL](/docs/concepts/lcel).
 - [How to stream chat models](/docs/how_to/chat_streaming/)
 - [How to stream tool calls](/docs/how_to/tool_streaming/)
 
 For writing custom data to the stream, please see the following resources:
 
-- If using LangGraph, see [how to stream custom data](https://langchain-ai.github.io/langgraph/how-tos/streaming-content/).
 - If using LCEL, see [how to dispatch custom callback events](/docs/how_to/callbacks_custom_events/#astream-events-api).

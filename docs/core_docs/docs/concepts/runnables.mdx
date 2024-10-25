@@ -1,6 +1,6 @@
 # Runnable interface
 
-The Runnable interface is foundational for working with LangChain components, and it's implemented across many of them, such as [language models](/docs/concepts/chat_models), [output parsers](/docs/concepts/output_parsers), [retrievers](/docs/concepts/retrievers), [compiled LangGraph graphs](https://langchain-ai.github.io/langgraph/concepts/low_level/#compiling-your-graph) and more.
+The Runnable interface is foundational for working with LangChain components, and it's implemented across many of them, such as [language models](/docs/concepts/chat_models), [output parsers](/docs/concepts/output_parsers), [retrievers](/docs/concepts/retrievers), [compiled LangGraph graphs](https://langchain-ai.github.io/langgraphjs/concepts/low_level/#compiling-your-graph) and more.
 
 This guide covers the main concepts and methods of the Runnable interface, which allows developers to interact with various LangChain components in a consistent and predictable manner.
 
@@ -282,8 +282,8 @@ See the [How to handle rate limits](/docs/how_to/chat_model_rate_limiting/) guid
 The `configurable` field is used to pass runtime values for configurable attributes of the Runnable.
 
 It is used frequently in [LangGraph](/docs/concepts/architecture#langgraph) with
-[LangGraph Persistence](https://langchain-ai.github.io/langgraph/concepts/persistence/)
-and [memory](https://langchain-ai.github.io/langgraph/concepts/memory/).
+[LangGraph Persistence](https://langchain-ai.github.io/langgraphjs/concepts/persistence/)
+and [memory](https://langchain-ai.github.io/langgraphjs/concepts/memory/).
 
 It is used for a similar purpose in [RunnableWithMessageHistory](https://python.langchain.com/api_reference/core/runnables/langchain_core.runnables.history.RunnableWithMessageHistory.html#langchain_core.runnables.history.RunnableWithMessageHistory) to specify either
 a `session_id` / `conversation_id` to keep track of conversation history.
