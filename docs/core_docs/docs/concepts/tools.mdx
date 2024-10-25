@@ -14,14 +14,14 @@ The **tool** abstraction in LangChain associates a python **function** with a **
 ## Key concepts
 
 - Tools are a way to encapsulate a function and its schema in a way that can be passed to a chat model.
-- Create tools using the [@tool](https://python.langchain.com/api_reference/core/tools/langchain_core.tools.convert.tool.html) decorator, which simplifies the process of tool creation, supporting the following:
+- Create tools using the [@tool](https://api.js.langchain.com/functions/_langchain_core.tools.tool-1.html) decorator, which simplifies the process of tool creation, supporting the following:
   - Automatically infer the tool's **name**, **description** and **inputs**, while also supporting customization.
   - Defining tools that return **artifacts** (e.g. images, dataframes, etc.)
   - Hiding input arguments from the schema (and hence from the model) using **injected tool arguments**.
 
 ## Tool interface
 
-The tool interface is defined in the [BaseTool](https://python.langchain.com/api_reference/core/tools/langchain_core.tools.base.BaseTool.html#langchain_core.tools.base.BaseTool) class which is a subclass of the [Runnable Interface](/docs/concepts/runnables).
+The tool interface is defined in the [BaseTool](https://api.js.langchain.com/classes/_langchain_core.tools.StructuredTool.html) class which is a subclass of the [Runnable Interface](/docs/concepts/runnables).
 
 The key attributes that correspond to the tool's **schema**:
 
@@ -36,7 +36,7 @@ The key methods to execute the function associated with the **tool**:
 
 ## Create tools using the `@tool` decorator
 
-The recommended way to create tools is using the [@tool](https://python.langchain.com/api_reference/core/tools/langchain_core.tools.convert.tool.html) decorator. This decorator is designed to simplify the process of tool creation and should be used in most cases. After defining a function, you can decorate it with [@tool](https://python.langchain.com/api_reference/core/tools/langchain_core.tools.convert.tool.html) to create a tool that implements the [Tool Interface](#tool-interface).
+The recommended way to create tools is using the [@tool](https://api.js.langchain.com/functions/_langchain_core.tools.tool-1.html) decorator. This decorator is designed to simplify the process of tool creation and should be used in most cases. After defining a function, you can decorate it with [@tool](https://api.js.langchain.com/functions/_langchain_core.tools.tool-1.html) to create a tool that implements the [Tool Interface](#tool-interface).
 
 ```python
 from langchain_core.tools import tool
@@ -50,7 +50,7 @@ def multiply(a: int, b: int) -> int:
 For more details on how to create tools, see the [how to create custom tools](/docs/how_to/custom_tools/) guide.
 
 :::note
-LangChain has a few other ways to create tools; e.g., by sub-classing the [BaseTool](https://python.langchain.com/api_reference/core/tools/langchain_core.tools.base.BaseTool.html#langchain_core.tools.base.BaseTool) class or by using `StructuredTool`. These methods are shown in the [how to create custom tools guide](/docs/how_to/custom_tools/), but
+LangChain has a few other ways to create tools; e.g., by sub-classing the [BaseTool](https://api.js.langchain.com/classes/_langchain_core.tools.StructuredTool.html) class or by using `StructuredTool`. These methods are shown in the [how to create custom tools guide](/docs/how_to/custom_tools/), but
 we generally recommend using the `@tool` decorator for most cases.
 :::
 
@@ -86,7 +86,7 @@ If you're using pre-built LangChain or LangGraph components like [create_react_a
 The `@tool` decorator offers additional options to configure the schema of the tool (e.g., modify name, description
 or parse the function's doc-string to infer the schema).
 
-Please see the [API reference for @tool](https://python.langchain.com/api_reference/core/tools/langchain_core.tools.convert.tool.html) for more details and review the [how to create custom tools](/docs/how_to/custom_tools/) guide for examples.
+Please see the [API reference for @tool](https://api.js.langchain.com/functions/_langchain_core.tools.tool-1.html) for more details and review the [how to create custom tools](/docs/how_to/custom_tools/) guide for examples.
 
 ## Tool artifacts
 
@@ -194,7 +194,7 @@ tools = toolkit.get_tools()
 
 See the following resources for more information:
 
-- [API Reference for @tool](https://python.langchain.com/api_reference/core/tools/langchain_core.tools.convert.tool.html)
+- [API Reference for @tool](https://api.js.langchain.com/functions/_langchain_core.tools.tool-1.html)
 - [How to create custom tools](/docs/how_to/custom_tools/)
 - [How to pass run time values to tools](/docs/how_to/tool_runtime/)
 - [All LangChain tool how-to guides](https://docs.langchain.com/docs/how_to/#tools)

@@ -71,7 +71,7 @@ Please read the [chat history](/docs/concepts/chat_history) guide for more infor
 
 LangChain provides a unified message format that can be used across all chat models, allowing users to work with different chat models without worrying about the specific details of the message format used by each model provider.
 
-LangChain messages are Python objects that subclass from a [BaseMessage](https://python.langchain.com/api_reference/core/messages/langchain_core.messages.base.BaseMessage.html).
+LangChain messages are Python objects that subclass from a [BaseMessage](https://api.js.langchain.com/classes/_langchain_core.messages.BaseMessage.html).
 
 The five main message types are:
 
@@ -86,7 +86,7 @@ Other important messages include:
 - [RemoveMessage](#removemessage) -- does not correspond to any role. This is an abstraction, mostly used in [LangGraph](/docs/concepts/architecture#langgraph) to manage chat history.
 - **Legacy** [FunctionMessage](#legacy-functionmessage): corresponds to the **function** role in OpenAI's **legacy** function-calling API.
 
-You can find more information about **messages** in the [API Reference](https://python.langchain.com/api_reference/core/messages.html).
+You can find more information about **messages** in the [API Reference](https://api.js.langchain.com/modules/_langchain_core.messages.html).
 
 ### SystemMessage
 
@@ -148,7 +148,7 @@ An `AIMessage` has the following attributes. The attributes which are **standard
 | `content`            | Raw              | Usually a string, but can be a list of content blocks. See [content](#content) for details.                                                                                                                              |
 | `tool_calls`         | Standardized     | Tool calls associated with the message. See [tool calling](/docs/concepts/tool_calling) for details.                                                                                                                     |
 | `invalid_tool_calls` | Standardized     | Tool calls with parsing errors associated with the message. See [tool calling](/docs/concepts/tool_calling) for details.                                                                                                 |
-| `usage_metadata`     | Standardized     | Usage metadata for a message, such as [token counts](/docs/concepts/tokens). See [Usage Metadata API Reference](https://python.langchain.com/api_reference/core/messages/langchain_core.messages.ai.UsageMetadata.html). |
+| `usage_metadata`     | Standardized     | Usage metadata for a message, such as [token counts](/docs/concepts/tokens). See [Usage Metadata API Reference](https://api.js.langchain.com/types/_langchain_core.messages.UsageMetadata.html). |
 | `id`                 | Standardized     | An optional unique identifier for the message, ideally provided by the provider/model that created the message.                                                                                                          |
 | `response_metadata`  | Raw              | Response metadata, e.g., response headers, logprobs, token counts.                                                                                                                                                       |
 
@@ -181,7 +181,7 @@ for chunk in model.stream([HumanMessage("what color is the sky?")]):
     print(chunk)
 ```
 
-`AIMessageChunk` follows nearly the same structure as `AIMessage`, but uses a different [ToolCallChunk](https://python.langchain.com/api_reference/core/messages/langchain_core.messages.tool.ToolCallChunk.html#langchain_core.messages.tool.ToolCallChunk)
+`AIMessageChunk` follows nearly the same structure as `AIMessage`, but uses a different [ToolCallChunk](https://api.js.langchain.com/types/_langchain_core.messages_tool.ToolCallChunk.html)
 to be able to stream tool calling in a standardized manner.
 
 #### Aggregating
@@ -242,5 +242,3 @@ chat_model.invoke([
 
 At the moment, the output of the model will be in terms of LangChain messages, so you will need to convert the output to the OpenAI format if you
 need OpenAI format for the output as well.
-
-The [convert_to_openai_messages](https://python.langchain.com/api_reference/core/messages/langchain_core.messages.utils.convert_to_openai_messages.html) utility function can be used to convert from LangChain messages to OpenAI format.

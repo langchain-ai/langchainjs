@@ -36,10 +36,9 @@ You can subscribe to these events by using the `callbacks` argument available th
 
 Callback handlers can either be `sync` or `async`:
 
-- Sync callback handlers implement the [BaseCallbackHandler](https://python.langchain.com/api_reference/core/callbacks/langchain_core.callbacks.base.BaseCallbackHandler.html) interface.
-- Async callback handlers implement the [AsyncCallbackHandler](https://python.langchain.com/api_reference/core/callbacks/langchain_core.callbacks.base.AsyncCallbackHandler.html) interface.
+- Callback handlers implement the [BaseCallbackHandler](https://api.js.langchain.com/classes/_langchain_core.callbacks_base.BaseCallbackHandler.html) interface.
 
-During run-time LangChain configures an appropriate callback manager (e.g., [CallbackManager](https://python.langchain.com/api_reference/core/callbacks/langchain_core.callbacks.manager.CallbackManager.html) or [AsyncCallbackManager](https://python.langchain.com/api_reference/core/callbacks/langchain_core.callbacks.manager.AsyncCallbackManager.html) which will be responsible for calling the appropriate method on each "registered" callback handler when the event is triggered.
+During run-time LangChain configures an appropriate callback manager (e.g., [CallbackManager](https://api.js.langchain.com/classes/_langchain_core.callbacks_manager.BaseCallbackManager.html)) which will be responsible for calling the appropriate method on each "registered" callback handler when the event is triggered.
 
 ## Passing callbacks
 

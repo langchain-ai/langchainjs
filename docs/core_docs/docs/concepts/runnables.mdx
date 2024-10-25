@@ -6,8 +6,8 @@ This guide covers the main concepts and methods of the Runnable interface, which
 
 :::info Related Resources
 
-- The ["Runnable" Interface API Reference](https://python.langchain.com/api_reference/core/runnables/langchain_core.runnables.base.Runnable.html#langchain_core.runnables.base.Runnable) provides a detailed overview of the Runnable interface and its methods.
-- A list of built-in `Runnables` can be found in the [LangChain Core API Reference](https://python.langchain.com/api_reference/core/runnables.html). Many of these Runnables are useful when composing custom "chains" in LangChain using the [LangChain Expression Language (LCEL)](/docs/concepts/lcel).
+- The ["Runnable" Interface API Reference](https://api.js.langchain.com/classes/_langchain_core.runnables.Runnable.html) provides a detailed overview of the Runnable interface and its methods.
+- A list of built-in `Runnables` can be found in the [LangChain Core API Reference](https://api.js.langchain.com/modules/_langchain_core.runnables.html). Many of these Runnables are useful when composing custom "chains" in LangChain using the [LangChain Expression Language (LCEL)](/docs/concepts/lcel).
   :::
 
 ## Overview of runnable interface
@@ -67,7 +67,7 @@ Streaming is critical in making applications based on LLMs feel responsive to en
 
 Runnables expose the following three streaming APIs:
 
-1. sync [stream](https://python.langchain.com/api_reference/core/runnables/langchain_core.runnables.base.Runnable.html#langchain_core.runnables.base.Runnable.stream) and async [astream](https://python.langchain.com/api_reference/core/runnables/langchain_core.runnables.base.Runnable.html#langchain_core.runnables.base.Runnable.astream): yields the output a Runnable as it is generated.
+1. [stream](https://api.js.langchain.com/classes/_langchain_core.runnables.Runnable.html#stream): yields the output a Runnable as it is generated.
 2. The async `astream_events`: a more advanced streaming API that allows streaming intermediate steps and final output
 3. The **legacy** async `astream_log`: a legacy streaming API that streams intermediate steps and final output
 
@@ -131,7 +131,7 @@ Currently, this inference does not work well for more complex Runnables that are
 ## RunnableConfig
 
 Any of the methods that are used to execute the runnable (e.g., `invoke`, `batch`, `stream`, `astream_events`) accept a second argument called
-`RunnableConfig` ([API Reference](https://python.langchain.com/api_reference/core/runnables/langchain_core.runnables.config.RunnableConfig.html#RunnableConfig)). This argument is a dictionary that contains configuration for the Runnable that will be used
+`RunnableConfig` ([API Reference](https://api.js.langchain.com/interfaces/_langchain_core.runnables.RunnableConfig.html)). This argument is a dictionary that contains configuration for the Runnable that will be used
 at run time during the execution of the runnable.
 
 A `RunnableConfig` can have any of the following properties defined:
@@ -285,7 +285,7 @@ It is used frequently in [LangGraph](/docs/concepts/architecture#langgraph) with
 [LangGraph Persistence](https://langchain-ai.github.io/langgraphjs/concepts/persistence/)
 and [memory](https://langchain-ai.github.io/langgraphjs/concepts/memory/).
 
-It is used for a similar purpose in [RunnableWithMessageHistory](https://python.langchain.com/api_reference/core/runnables/langchain_core.runnables.history.RunnableWithMessageHistory.html#langchain_core.runnables.history.RunnableWithMessageHistory) to specify either
+It is used for a similar purpose in [RunnableWithMessageHistory](https://api.js.langchain.com/classes/_langchain_core.runnables.RunnableWithMessageHistory.html) to specify either
 a `session_id` / `conversation_id` to keep track of conversation history.
 
 In addition, you can use it to specify any custom configuration options to pass to any [Configurable Runnable](#configurable-runnables) that they create.

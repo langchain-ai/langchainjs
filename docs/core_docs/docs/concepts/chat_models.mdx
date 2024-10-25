@@ -43,7 +43,7 @@ Models that do **not** include the prefix "Chat" in their name or include "LLM" 
 
 ## Interface
 
-LangChain chat models implement the [BaseChatModel](https://python.langchain.com/api_reference/core/language_models/langchain_core.language_models.chat_models.BaseChatModel.html) interface. Because [BaseChatModel] also implements the [Runnable Interface](/docs/concepts/runnables), chat models support a [standard streaming interface](/docs/concepts/streaming), [async programming](/docs/concepts/async), optimized [batching](/docs/concepts/runnables#batch), and more. Please see the [Runnable Interface](/docs/concepts/runnables) for more details.
+LangChain chat models implement the [BaseChatModel](https://api.js.langchain.com/classes/_langchain_core.language_models_chat_models.BaseChatModel.html) interface. Because [BaseChatModel] also implements the [Runnable Interface](/docs/concepts/runnables), chat models support a [standard streaming interface](/docs/concepts/streaming), [async programming](/docs/concepts/async), optimized [batching](/docs/concepts/runnables#batch), and more. Please see the [Runnable Interface](/docs/concepts/runnables) for more details.
 
 Many of the key methods of chat models operate on [messages](/docs/concepts/messages) as input and return messages as output.
 
@@ -53,7 +53,7 @@ Chat models offer a standard set of parameters that can be used to configure the
 In documentation, we will often use the terms "LLM" and "Chat Model" interchangeably. This is because most modern LLMs are exposed to users via a chat model interface.
 
 However, LangChain also has implementations of older LLMs that do not follow the chat model interface and instead use an interface that takes a string as input and returns a string as output. These models are typically named without the "Chat" prefix (e.g., `Ollama`, `Anthropic`, `OpenAI`, etc.).
-These models implement the [BaseLLM](https://python.langchain.com/api_reference/core/language_models/langchain_core.language_models.llms.BaseLLM.html#langchain_core.language_models.llms.BaseLLM) interface and may be named with the "LLM" suffix (e.g., `OllamaLLM`, `AnthropicLLM`, `OpenAILLM`, etc.). Generally, users should not use these models.
+These models implement the [BaseLLM](https://api.js.langchain.com/classes/_langchain_core.language_models_llms.BaseLLM.html) interface and may be named with the "LLM" suffix (e.g., `OllamaLLM`, `AnthropicLLM`, `OpenAILLM`, etc.). Generally, users should not use these models.
 :::
 
 ### Key methods
@@ -66,7 +66,7 @@ The key methods of a chat model are:
 4. **bind_tools**: A method that allows you to bind a tool to a chat model for use in the model's execution context.
 5. **with_structured_output**: A wrapper around the `invoke` method for models that natively support [structured output](/docs/concepts#structured_output).
 
-Other important methods can be found in the [BaseChatModel API Reference](https://python.langchain.com/api_reference/core/language_models/langchain_core.language_models.chat_models.BaseChatModel.html).
+Other important methods can be found in the [BaseChatModel API Reference](https://api.js.langchain.com/classes/_langchain_core.language_models_chat_models.BaseChatModel.html).
 
 ### Inputs and outputs
 
@@ -91,14 +91,13 @@ Many chat models have standardized parameters that can be used to configure the 
 | `max_retries`  | The maximum number of attempts the system will make to resend a request if it fails due to issues like network timeouts or rate limits.                                                                                                                                                                       |
 | `api_key`      | The API key required for authenticating with the model provider. This is usually issued when you sign up for access to the model.                                                                                                                                                                             |
 | `base_url`     | The URL of the API endpoint where requests are sent. This is typically provided by the model's provider and is necessary for directing your requests.                                                                                                                                                         |
-| `rate_limiter` | An optional [BaseRateLimiter](https://python.langchain.com/api_reference/core/rate_limiters/langchain_core.rate_limiters.BaseRateLimiter.html#langchain_core.rate_limiters.BaseRateLimiter) to space out requests to avoid exceeding rate limits. See [rate-limiting](#rate-limiting) below for more details. |
 
 Some important things to note:
 
 - Standard parameters only apply to model providers that expose parameters with the intended functionality. For example, some providers do not expose a configuration for maximum output tokens, so max_tokens can't be supported on these.
 - Standard params are currently only enforced on integrations that have their own integration packages (e.g. `langchain-openai`, `langchain-anthropic`, etc.), they're not enforced on models in `langchain-community`.
 
-ChatModels also accept other parameters that are specific to that integration. To find all the parameters supported by a ChatModel head to the [API reference](https://python.langchain.com/api_reference/) for that model.
+ChatModels also accept other parameters that are specific to that integration. To find all the parameters supported by a ChatModel head to the [API reference](https://api.js.langchain.com/) for that model.
 
 ## Tool calling
 

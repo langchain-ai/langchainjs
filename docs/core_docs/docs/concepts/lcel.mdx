@@ -15,7 +15,7 @@ We often refer to a `Runnable` created using LCEL as a "chain". It's important t
 
 - The [LCEL cheatsheet](/docs/how_to/lcel_cheatsheet/) shows common patterns that involve the Runnable interface and LCEL expressions.
 - Please see the following list of [how-to guides](/docs/how_to/#langchain-expression-language-lcel) that cover common tasks with LCEL.
-- A list of built-in `Runnables` can be found in the [LangChain Core API Reference](https://python.langchain.com/api_reference/core/runnables.html). Many of these Runnables are useful when composing custom "chains" in LangChain using LCEL.
+- A list of built-in `Runnables` can be found in the [LangChain Core API Reference](https://api.js.langchain.com/modules/_langchain_core.runnables.html). Many of these Runnables are useful when composing custom "chains" in LangChain using LCEL.
   :::
 
 ## Benefits of LCEL
@@ -50,12 +50,12 @@ Here are some guidelines:
 
 ## Composition Primitives
 
-`LCEL` chains are built by composing existing `Runnables` together. The two main composition primitives are [RunnableSequence](https://python.langchain.com/api_reference/core/runnables/langchain_core.runnables.base.RunnableSequence.html#langchain_core.runnables.base.RunnableSequence) and [RunnableParallel](https://python.langchain.com/api_reference/core/runnables/langchain_core.runnables.base.RunnableParallel.html#langchain_core.runnables.base.RunnableParallel).
+`LCEL` chains are built by composing existing `Runnables` together. The two main composition primitives are [RunnableSequence](https://api.js.langchain.com/classes/_langchain_core.runnables.RunnableSequence.html) and [RunnableParallel](https://api.js.langchain.com/classes/_langchain_core.runnables.RunnableParallel.html).
 
-Many other composition primitives (e.g., [RunnableAssign](https://python.langchain.com/api_reference/core/runnables/langchain_core.runnables.passthrough.RunnableAssign.html#langchain_core.runnables.passthrough.RunnableAssign)) can be thought of as variations of these two primitives.
+Many other composition primitives (e.g., [RunnableAssign](https://api.js.langchain.com/classes/_langchain_core.runnables.RunnableAssign.html)) can be thought of as variations of these two primitives.
 
 :::note
-You can find a list of all composition primitives in the [LangChain Core API Reference](https://python.langchain.com/api_reference/core/runnables.html).
+You can find a list of all composition primitives in the [LangChain Core API Reference](https://api.js.langchain.com/modules/_langchain_core.runnables.html).
 :::
 
 ### RunnableSequence
