@@ -54,14 +54,12 @@ test("QdrantVectorStore adds vectors with custom payload", async () => {
   });
 
   // Define a custom payload
-  const customPayload = {
-    customPayload: [
+  const customPayload = [
       {
         customField1: "value1",
         customField2: "value2",
       },
-    ],
-  };
+    ];
 
   // Add documents with custom payload
   await qdrantVectorStore.addDocuments(
@@ -83,7 +81,7 @@ test("QdrantVectorStore adds vectors with custom payload", async () => {
         payload: expect.objectContaining({
           content: "hello",
           metadata: {},
-          customPayload: customPayload.customPayload[0],
+          customPayload: customPayload[0],
         }),
       }),
     ],
@@ -109,8 +107,7 @@ test("QdrantVectorStore adds vectors with multiple custom payload", async () => 
   });
 
   // Define a custom payload
-  const customPayload = {
-    customPayload: [
+  const customPayload = [
       {
         customField1: "value1",
         customField2: "value2",
@@ -118,8 +115,7 @@ test("QdrantVectorStore adds vectors with multiple custom payload", async () => 
       {
         customField3: "value3",
       },
-    ],
-  };
+    ];
 
   // Add documents with custom payload
   await qdrantVectorStore.addDocuments(
@@ -149,14 +145,14 @@ test("QdrantVectorStore adds vectors with multiple custom payload", async () => 
         payload: expect.objectContaining({
           content: "hello",
           metadata: {},
-          customPayload: customPayload.customPayload[0],
+          customPayload: customPayload[0],
         }),
       }),
       expect.objectContaining({
         payload: expect.objectContaining({
           content: "Goodbye",
           metadata: {},
-          customPayload: customPayload.customPayload[1],
+          customPayload: customPayload[1],
         }),
       }),
       expect.objectContaining({
