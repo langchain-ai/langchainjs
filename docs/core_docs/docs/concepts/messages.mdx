@@ -1,8 +1,9 @@
 # Messages
 
 :::info Prerequisites
+
 - [Chat Models](/docs/concepts/chat_models)
-:::
+  :::
 
 ## Overview
 
@@ -25,7 +26,7 @@ A message typically consists of the following pieces of information:
 Roles are used to distinguish between different types of messages in a conversation and help the chat model understand how to respond to a given sequence of messages.
 
 | **Role**              | **Description**                                                                                                                                                                                                 |
-|-----------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **system**            | Used to tell the chat model how to behave and provide additional context. Not supported by all chat model providers.                                                                                            |
 | **user**              | Represents input from a user interacting with the model, usually in the form of text or other interactive input.                                                                                                |
 | **assistant**         | Represents a response from the model, which can include text or a request to invoke tools.                                                                                                                      |
@@ -39,9 +40,10 @@ The content of a message text or a list of dictionaries representing [multimodal
 Currently, most chat models support text as the primary content type, with some models also supporting multimodal data. However, support for multimodal data is still limited across most chat model providers.
 
 For more information see:
-* [HumanMessage](#humanmessage) -- for content in the input from the user.
-* [AIMessage](#aimessage) -- for content in the response from the model.
-* [Multimodality](/docs/concepts/multimodality) -- for more information on multimodal content.
+
+- [HumanMessage](#humanmessage) -- for content in the input from the user.
+- [AIMessage](#aimessage) -- for content in the response from the model.
+- [Multimodality](/docs/concepts/multimodality) -- for more information on multimodal content.
 
 ### Other Message Data
 
@@ -92,9 +94,9 @@ A `SystemMessage` is used to prime the behavior of the AI model and provide addi
 
 Different chat providers may support system message in one of the following ways:
 
-* **Through a "system" message role**: In this case, a system message is included as part of the message sequence with the role explicitly set as "system."
-* **Through a separate API parameter for system instructions**: Instead of being included as a message, system instructions are passed via a dedicated API parameter.
-* **No support for system messages**: Some models do not support system messages at all.
+- **Through a "system" message role**: In this case, a system message is included as part of the message sequence with the role explicitly set as "system."
+- **Through a separate API parameter for system instructions**: Instead of being included as a message, system instructions are passed via a dedicated API parameter.
+- **No support for system messages**: Some models do not support system messages at all.
 
 Most major chat model providers support system instructions via either a chat message or a separate API parameter. LangChain will automatically adapt based on the provider’s capabilities. If the provider supports a separate API parameter for system instructions, LangChain will extract the content of a system message and pass it through that parameter.
 
@@ -120,6 +122,7 @@ When invoking a chat model with a string as input, LangChain will automatically 
 ```python
 model.invoke("Hello, how are you?")
 ```
+
 :::
 
 #### Multi-modal Content
@@ -140,14 +143,14 @@ ai_message # <-- AIMessage
 
 An `AIMessage` has the following attributes. The attributes which are **standardized** are the ones that LangChain attempts to standardize across different chat model providers. **raw** fields are specific to the model provider and may vary.
 
-| Attribute            | Standardized/Raw | Description                                                                                                                                                                                                             |
-|----------------------|:-----------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `content`            | Raw              | Usually a string, but can be a list of content blocks. See [content](#content) for details.                                                                                                                             |
-| `tool_calls`         | Standardized     | Tool calls associated with the message. See [tool calling](/docs/concepts/tool_calling) for details.                                                                                                                    |
-| `invalid_tool_calls` | Standardized     | Tool calls with parsing errors associated with the message. See [tool calling](/docs/concepts/tool_calling) for details.                                                                                                |
+| Attribute            | Standardized/Raw | Description                                                                                                                                                                                                              |
+| -------------------- | :--------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `content`            | Raw              | Usually a string, but can be a list of content blocks. See [content](#content) for details.                                                                                                                              |
+| `tool_calls`         | Standardized     | Tool calls associated with the message. See [tool calling](/docs/concepts/tool_calling) for details.                                                                                                                     |
+| `invalid_tool_calls` | Standardized     | Tool calls with parsing errors associated with the message. See [tool calling](/docs/concepts/tool_calling) for details.                                                                                                 |
 | `usage_metadata`     | Standardized     | Usage metadata for a message, such as [token counts](/docs/concepts/tokens). See [Usage Metadata API Reference](https://python.langchain.com/api_reference/core/messages/langchain_core.messages.ai.UsageMetadata.html). |
-| `id`                 | Standardized     | An optional unique identifier for the message, ideally provided by the provider/model that created the message.                                                                                                         |
-| `response_metadata`  | Raw              | Response metadata, e.g., response headers, logprobs, token counts.                                                                                                                                                      |
+| `id`                 | Standardized     | An optional unique identifier for the message, ideally provided by the provider/model that created the message.                                                                                                          |
+| `response_metadata`  | Raw              | Response metadata, e.g., response headers, logprobs, token counts.                                                                                                                                                       |
 
 #### content
 
@@ -157,8 +160,8 @@ The content is either:
 
 - **text** -- the norm for virtually all chat models.
 - A **list of dictionaries** -- Each dictionary represents a content block and is associated with a `type`.
-    * Used by Anthropic for surfacing agent thought process when doing [tool calling](/docs/concepts/tool_calling).
-    * Used by OpenAI for audio outputs. Please see [multi-modal content](/docs/concepts/multimodality) for more information.
+  - Used by Anthropic for surfacing agent thought process when doing [tool calling](/docs/concepts/tool_calling).
+  - Used by OpenAI for audio outputs. Please see [multi-modal content](/docs/concepts/multimodality) for more information.
 
 :::important
 The **content** property is **not** standardized across different chat model providers, mostly because there are
@@ -180,7 +183,6 @@ for chunk in model.stream([HumanMessage("what color is the sky?")]):
 
 `AIMessageChunk` follows nearly the same structure as `AIMessage`, but uses a different [ToolCallChunk](https://python.langchain.com/api_reference/core/messages/langchain_core.messages.tool.ToolCallChunk.html#langchain_core.messages.tool.ToolCallChunk)
 to be able to stream tool calling in a standardized manner.
-
 
 #### Aggregating
 
@@ -206,8 +208,8 @@ for managing chat history in [LangGraph](/docs/concepts/architecture#langgraph).
 
 Please see the following for more information on how to use the `RemoveMessage`:
 
-* [Memory conceptual guide](https://langchain-ai.github.io/langgraph/concepts/memory/)
-* [How to delete messages](https://langchain-ai.github.io/langgraph/how-tos/memory/delete-messages/)
+- [Memory conceptual guide](https://langchain-ai.github.io/langgraph/concepts/memory/)
+- [How to delete messages](https://langchain-ai.github.io/langgraph/how-tos/memory/delete-messages/)
 
 ### (Legacy) FunctionMessage
 

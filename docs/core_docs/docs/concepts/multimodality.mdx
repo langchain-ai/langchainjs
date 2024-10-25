@@ -11,16 +11,17 @@
 ## Multimodality in chat models
 
 :::info Pre-requisites
-* [Chat models](/docs/concepts/chat_models)
-* [Messages](/docs/concepts/messages)
-:::
- 
+
+- [Chat models](/docs/concepts/chat_models)
+- [Messages](/docs/concepts/messages)
+  :::
+
 Multimodal support is still relatively new and less common, model providers have not yet standardized on the "best" way to define the API. As such, LangChain's multimodal abstractions are lightweight and flexible, designed to accommodate different model providers' APIs and interaction patterns, but are **not** standardized across models.
 
 ### How to use multimodal models
 
-* Use the [chat model integration table](/docs/integrations/chat/) to identify which models support multimodality.
-* Reference the [relevant how-to guides](/docs/how_to/#multimodal) for specific examples of how to use multimodal models.
+- Use the [chat model integration table](/docs/integrations/chat/) to identify which models support multimodality.
+- Reference the [relevant how-to guides](/docs/how_to/#multimodal) for specific examples of how to use multimodal models.
 
 ### What kind of multimodality is supported?
 
@@ -51,7 +52,7 @@ integration documentation for the correct format. Find the integration in the [c
 
 #### Outputs
 
-Virtually no popular chat models support multimodal outputs at the time of writing (October 2024). 
+Virtually no popular chat models support multimodal outputs at the time of writing (October 2024).
 
 The only exception is OpenAI's chat model ([gpt-4o-audio-preview](/docs/integrations/chat/openai/)), which can generate audio outputs.
 
@@ -68,8 +69,9 @@ However, a chat model can easily interact with multimodal data by invoking tools
 ## Multimodality in embedding models
 
 :::info Prerequisites
-* [Embedding Models](/docs/concepts/embedding_models)
-:::
+
+- [Embedding Models](/docs/concepts/embedding_models)
+  :::
 
 **Embeddings** are vector representations of data used for tasks like similarity search and retrieval.
 
@@ -80,8 +82,9 @@ As use cases involving multimodal search and retrieval tasks become more common,
 ## Multimodality in vector stores
 
 :::info Prerequisites
-* [Vector stores](/docs/concepts/vectorstores)
-:::
+
+- [Vector stores](/docs/concepts/vectorstores)
+  :::
 
 Vector stores are databases for storing and retrieving embeddings, which are typically used in search and retrieval tasks. Similar to embeddings, vector stores are currently optimized for text-based data.
 

@@ -1,9 +1,10 @@
 # Async programming with langchain
 
 :::info Prerequisites
-* [Runnable interface](/docs/concepts/runnables)
-* [asyncio](https://docs.python.org/3/library/asyncio.html)
-:::
+
+- [Runnable interface](/docs/concepts/runnables)
+- [asyncio](https://docs.python.org/3/library/asyncio.html)
+  :::
 
 LLM based applications often involve a lot of I/O-bound operations, such as making API calls to language models, databases, or other services. Asynchronous programming (or async programming) is a paradigm that allows a program to perform multiple tasks concurrently without blocking the execution of other tasks, improving efficiency and responsiveness, particularly in I/O-bound operations.
 
@@ -78,4 +79,3 @@ Please read [Propagation RunnableConfig](/docs/concepts/runnables#propagation-Ru
 ## How to use in ipython and jupyter notebooks
 
 As of IPython 7.0, IPython supports asynchronous REPLs. This means that you can use the `await` keyword in the IPython REPL and Jupyter Notebooks without any additional setup. For more information, see the [IPython blog post](https://blog.jupyter.org/ipython-7-0-async-repl-a35ce050f7f7).
-

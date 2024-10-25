@@ -1,20 +1,19 @@
-import ThemedImage from '@theme/ThemedImage';
-import useBaseUrl from '@docusaurus/useBaseUrl';
+import ThemedImage from "@theme/ThemedImage";
+import useBaseUrl from "@docusaurus/useBaseUrl";
 
 # Architecture
 
 LangChain is a framework that consists of a number of packages.
 
 <ThemedImage
-    alt="Diagram outlining the hierarchical organization of the LangChain framework, displaying the interconnected parts across multiple layers."
-    sources={{
-        light: useBaseUrl('/svg/langchain_stack_062024.svg'),
-        dark: useBaseUrl('/svg/langchain_stack_062024_dark.svg'),
-    }}
-    title="LangChain Framework Overview"
-    style={{ width: "100%" }}
+  alt="Diagram outlining the hierarchical organization of the LangChain framework, displaying the interconnected parts across multiple layers."
+  sources={{
+    light: useBaseUrl("/svg/langchain_stack_062024.svg"),
+    dark: useBaseUrl("/svg/langchain_stack_062024_dark.svg"),
+  }}
+  title="LangChain Framework Overview"
+  style={{ width: "100%" }}
 />
-
 
 ## langchain-core
 
@@ -35,8 +34,8 @@ Popular integrations have their own packages (e.g. `langchain-openai`, `langchai
 
 For more information see:
 
-* A list [integrations packages](/docs/integrations/providers/)
-* The [API Reference](https://python.langchain.com/api_reference/) where you can find detailed information about each of the integration package.
+- A list [integrations packages](/docs/integrations/providers/)
+- The [API Reference](https://python.langchain.com/api_reference/) where you can find detailed information about each of the integration package.
 
 ## langchain-community
 
@@ -53,8 +52,8 @@ LangGraph exposes high level interfaces for creating common types of agents, as 
 
 :::info[Further reading]
 
-* See our LangGraph overview [here](https://langchain-ai.github.io/langgraph/concepts/high_level/#core-principles).
-* See our LangGraph Academy Course [here](https://academy.langchain.com/courses/intro-to-langgraph).
+- See our LangGraph overview [here](https://langchain-ai.github.io/langgraph/concepts/high_level/#core-principles).
+- See our LangGraph Academy Course [here](https://academy.langchain.com/courses/intro-to-langgraph).
 
 :::
 
@@ -69,7 +68,6 @@ If you need a deployment option for LangGraph, you should instead be looking at 
 :::
 
 For more information, see the [LangServe documentation](/docs/langserve).
-
 
 ## LangSmith
 

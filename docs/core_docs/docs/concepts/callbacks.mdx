@@ -1,8 +1,9 @@
 # Callbacks
 
 :::note Prerequisites
+
 - [Runnable interface](/docs/concepts/runnables)
-:::
+  :::
 
 LangChain provides a callback system that allows you to hook into the various stages of your LLM application. This is useful for logging, monitoring, streaming, and other tasks.
 
@@ -11,7 +12,7 @@ You can subscribe to these events by using the `callbacks` argument available th
 ## Callback events
 
 | Event            | Event Trigger                               | Associated Method     |
-|------------------|---------------------------------------------|-----------------------|
+| ---------------- | ------------------------------------------- | --------------------- |
 | Chat model start | When a chat model starts                    | `on_chat_model_start` |
 | LLM start        | When a llm starts                           | `on_llm_start`        |
 | LLM new token    | When an llm OR chat model emits a new token | `on_llm_new_token`    |
@@ -35,8 +36,8 @@ You can subscribe to these events by using the `callbacks` argument available th
 
 Callback handlers can either be `sync` or `async`:
 
-* Sync callback handlers implement the [BaseCallbackHandler](https://python.langchain.com/api_reference/core/callbacks/langchain_core.callbacks.base.BaseCallbackHandler.html) interface.
-* Async callback handlers implement the [AsyncCallbackHandler](https://python.langchain.com/api_reference/core/callbacks/langchain_core.callbacks.base.AsyncCallbackHandler.html) interface.
+- Sync callback handlers implement the [BaseCallbackHandler](https://python.langchain.com/api_reference/core/callbacks/langchain_core.callbacks.base.BaseCallbackHandler.html) interface.
+- Async callback handlers implement the [AsyncCallbackHandler](https://python.langchain.com/api_reference/core/callbacks/langchain_core.callbacks.base.AsyncCallbackHandler.html) interface.
 
 During run-time LangChain configures an appropriate callback manager (e.g., [CallbackManager](https://python.langchain.com/api_reference/core/callbacks/langchain_core.callbacks.manager.CallbackManager.html) or [AsyncCallbackManager](https://python.langchain.com/api_reference/core/callbacks/langchain_core.callbacks.manager.AsyncCallbackManager.html) which will be responsible for calling the appropriate method on each "registered" callback handler when the event is triggered.
 
@@ -45,11 +46,11 @@ During run-time LangChain configures an appropriate callback manager (e.g., [Cal
 The `callbacks` property is available on most objects throughout the API (Models, Tools, Agents, etc.) in two different places:
 
 - **Request time callbacks**: Passed at the time of the request in addition to the input data.
-Available on all standard `Runnable` objects. These callbacks are INHERITED by all children
-of the object they are defined on. For example, `chain.invoke({"number": 25}, {"callbacks": [handler]})`.
+  Available on all standard `Runnable` objects. These callbacks are INHERITED by all children
+  of the object they are defined on. For example, `chain.invoke({"number": 25}, {"callbacks": [handler]})`.
 - **Constructor callbacks**: `chain = TheNameOfSomeChain(callbacks=[handler])`. These callbacks
-are passed as arguments to the constructor of the object. The callbacks are scoped
-only to the object they are defined on, and are **not** inherited by any children of the object.
+  are passed as arguments to the constructor of the object. The callbacks are scoped
+  only to the object they are defined on, and are **not** inherited by any children of the object.
 
 :::warning
 Constructor callbacks are scoped only to the object they are defined on. They are **not** inherited by children

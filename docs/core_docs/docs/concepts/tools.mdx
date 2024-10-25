@@ -1,12 +1,13 @@
 # Tools
 
 :::info Prerequisites
+
 - [Chat models](/docs/concepts/chat_models/)
-:::
+  :::
 
 ## Overview
 
-The **tool** abstraction in LangChain associates a python **function** with a **schema** that defines the function's **name**, **description** and **input**. 
+The **tool** abstraction in LangChain associates a python **function** with a **schema** that defines the function's **name**, **description** and **input**.
 
 **Tools** can be passed to [chat models](/docs/concepts/chat_models) that support [tool calling](/docs/concepts/tool_calling) allowing the model to request the execution of a specific function with specific inputs.
 
@@ -14,9 +15,9 @@ The **tool** abstraction in LangChain associates a python **function** with a **
 
 - Tools are a way to encapsulate a function and its schema in a way that can be passed to a chat model.
 - Create tools using the [@tool](https://python.langchain.com/api_reference/core/tools/langchain_core.tools.convert.tool.html) decorator, which simplifies the process of tool creation, supporting the following:
-   - Automatically infer the tool's **name**, **description** and **inputs**, while also supporting customization.
-   - Defining tools that return **artifacts** (e.g. images, dataframes, etc.)
-   - Hiding input arguments from the schema (and hence from the model) using **injected tool arguments**.
+  - Automatically infer the tool's **name**, **description** and **inputs**, while also supporting customization.
+  - Defining tools that return **artifacts** (e.g. images, dataframes, etc.)
+  - Hiding input arguments from the schema (and hence from the model) using **injected tool arguments**.
 
 ## Tool interface
 
@@ -68,10 +69,10 @@ You can also inspect the tool's schema and other properties:
 ```python
 print(multiply.name) # multiply
 print(multiply.description) # Multiply two numbers.
-print(multiply.args) 
+print(multiply.args)
 # {
-# 'type': 'object', 
-# 'properties': {'a': {'type': 'integer'}, 'b': {'type': 'integer'}}, 
+# 'type': 'object',
+# 'properties': {'a': {'type': 'integer'}, 'b': {'type': 'integer'}},
 # 'required': ['a', 'b']
 # }
 ```
@@ -96,7 +97,7 @@ Please see the [API reference for @tool](https://python.langchain.com/api_refere
 def some_tool(...) -> Tuple[str, Any]:
     """Tool that does something."""
     ...
-    return 'Message for chat model', some_artifact 
+    return 'Message for chat model', some_artifact
 ```
 
 See [how to return artifacts from tools](/docs/how_to/tool_artifacts/) for more details.
@@ -134,8 +135,7 @@ def user_specific_tool(input_data: str, user_id: InjectedToolArg) -> str:
 Annotating the `user_id` argument with `InjectedToolArg` tells LangChain that this argument should not be exposed as part of the
 tool's schema.
 
-See [how to pass run time values to tools](/docs/how_to/tool_runtime/) for more details on how to use `InjectedToolArg`.  
-
+See [how to pass run time values to tools](/docs/how_to/tool_runtime/) for more details on how to use `InjectedToolArg`.
 
 ### RunnableConfig
 
@@ -179,8 +179,8 @@ When designing tools to be used by models, keep the following in mind:
 - Design simple and narrowly scoped tools, as they are easier for models to use correctly.
 - Use chat models that support [tool-calling](/docs/concepts/tool_calling) APIs to take advantage of tools.
 
-
 ## Toolkits
+
 <span data-heading-keywords="toolkit,toolkits"></span>
 
 LangChain has a concept of **toolkits**. This a very thin abstraction that groups tools together that
@@ -208,4 +208,3 @@ See the following resources for more information:
 - [All LangChain tool how-to guides](https://docs.langchain.com/docs/how_to/#tools)
 - [Additional how-to guides that show usage with LangGraph](https://langchain-ai.github.io/langgraph/how-tos/tool-calling/)
 - Tool integrations, see the [tool integration docs](https://docs.langchain.com/docs/integrations/tools/).
-

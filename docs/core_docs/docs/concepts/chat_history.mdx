@@ -5,7 +5,7 @@
 - [Messages](/docs/concepts/messages)
 - [Chat models](/docs/concepts/chat_models)
 - [Tool calling](/docs/concepts/tool_calling)
-:::
+  :::
 
 Chat history is a record of the conversation between the user and the chat model. It is used to maintain context and state throughout the conversation. The chat history is sequence of [messages](/docs/concepts/messages), each of which is associated with a specific [role](/docs/concepts/messages#role), such as "user", "assistant", "system", or "tool".
 
@@ -26,13 +26,13 @@ So a full conversation often involves a combination of two patterns of alternati
 
 Since chat models have a maximum limit on input size, it's important to manage chat history and trim it as needed to avoid exceeding the [context window](/docs/concepts/chat_models#context_window).
 
-While processing chat history, it's essential to preserve a correct conversation structure. 
+While processing chat history, it's essential to preserve a correct conversation structure.
 
 Key guidelines for managing chat history:
 
 - The conversation should follow one of these structures:
-    - The first message is either a "user" message or a "system" message, followed by a "user" and then an "assistant" message.
-    - The last message should be either a "user" message or a "tool" message containing the result of a tool call.
+  - The first message is either a "user" message or a "system" message, followed by a "user" and then an "assistant" message.
+  - The last message should be either a "user" message or a "tool" message containing the result of a tool call.
 - When using [tool calling](/docs/concepts/tool_calling), a "tool" message should only follow an "assistant" message that requested the tool invocation.
 
 :::tip

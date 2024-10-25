@@ -3,7 +3,7 @@
 :::note Prerequisites
 
 - [Chat models](/docs/concepts/chat_models/)
-:::
+  :::
 
 ## Overview
 
@@ -25,6 +25,7 @@ Here are the considerations for each.
 The first and most important step of few-shot prompting is coming up with a good dataset of examples. Good examples should be relevant at runtime, clear, informative, and provide information that was not already known to the model.
 
 At a high-level, the basic ways to generate examples are:
+
 - Manual: a person/people generates examples they think are useful.
 - Better model: a better (presumably more expensive/slower) model's responses are used as examples for a worse (presumably cheaper/faster) model.
 - User feedback: users (or labelers) leave feedback on interactions with the application and examples are generated based on that feedback (for example, all interactions with positive feedback could be turned into examples).
@@ -54,6 +55,7 @@ But, the best/only way to reliably answer this question is to run some experimen
 ## 3. Selecting examples
 
 Assuming we are not adding our entire example dataset into each prompt, we need to have a way of selecting examples from our dataset based on a given input. We can do this:
+
 - Randomly
 - By (semantic or keyword-based) similarity of the inputs
 - Based on some other constraints, like token size
@@ -65,6 +67,7 @@ Generally, selecting by semantic similarity leads to the best model performance.
 ## 4. Formatting examples
 
 Most state-of-the-art models these days are chat models, so we'll focus on formatting examples for those. Our basic options are to insert the examples:
+
 - In the system prompt as a string
 - As their own messages
 
@@ -75,6 +78,7 @@ If we insert our examples as messages, where each example is represented as a se
 **Formatting tool call examples**
 
 One area where formatting examples as messages can be tricky is when our example outputs have tool calls. This is because different models have different constraints on what types of message sequences are allowed when any tool calls are generated.
+
 - Some models require that any AIMessage with tool calls be immediately followed by ToolMessages for every tool call,
 - Some models additionally require that any ToolMessages be immediately followed by an AIMessage before the next HumanMessage,
 - Some models require that tools are passed in to the model if there are any tool calls / ToolMessages in the chat history.

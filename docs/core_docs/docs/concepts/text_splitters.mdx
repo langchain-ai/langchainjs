@@ -1,11 +1,12 @@
 # Text splitters
+
 <span data-heading-keywords="text splitter,text splitting"></span>
 
 :::info[Prerequisites]
 
-* [Documents](/docs/concepts/retrievers/#interface)
-* Tokenization(/docs/concepts/tokens)
-:::
+- [Documents](/docs/concepts/retrievers/#interface)
+- Tokenization(/docs/concepts/tokens)
+  :::
 
 ## Overview
 
@@ -30,11 +31,12 @@ There are several reasons to split documents:
 - **Enhancing retrieval precision**: In information retrieval systems, splitting can improve the granularity of search results, allowing for more precise matching of queries to relevant document sections.
 - **Optimizing computational resources**: Working with smaller chunks of text can be more memory-efficient and allow for better parallelization of processing tasks.
 
-Now, the next question is *how* to split the documents into chunks! There are several strategies, each with its own advantages.
+Now, the next question is _how_ to split the documents into chunks! There are several strategies, each with its own advantages.
 
 :::info[Further reading]
-* See Greg Kamradt's [chunkviz](https://chunkviz.up.railway.app/) to visualize different splitting strategies discussed below.
-:::
+
+- See Greg Kamradt's [chunkviz](https://chunkviz.up.railway.app/) to visualize different splitting strategies discussed below.
+  :::
 
 ## Approaches
 
@@ -42,11 +44,13 @@ Now, the next question is *how* to split the documents into chunks! There are se
 
 The most intuitive strategy is to split documents based on their length. This simple yet effective approach ensures that each chunk doesn't exceed a specified size limit.
 Key benefits of length-based splitting:
+
 - Straightforward implementation
 - Consistent chunk sizes
 - Easily adaptable to different model requirements
 
 Types of length-based splitting:
+
 - **Token-based**: Splits text based on the number of tokens, which is useful when working with language models.
 - **Character-based**: Splits text based on the number of characters, which can be more consistent across different types of text.
 
@@ -62,16 +66,17 @@ texts = text_splitter.split_text(document)
 
 :::info[Further reading]
 
-* See the how-to guide for [token-based](/docs/how_to/split_by_token/) splitting.
-* See the how-to guide for [character-based](/docs/how_to/character_text_splitter/) splitting.
+- See the how-to guide for [token-based](/docs/how_to/split_by_token/) splitting.
+- See the how-to guide for [character-based](/docs/how_to/character_text_splitter/) splitting.
 
 :::
 
 ### Text-structured based
 
-Text is naturally organized into hierarchical units such as paragraphs, sentences, and words. 
+Text is naturally organized into hierarchical units such as paragraphs, sentences, and words.
 We can leverage this inherent structure to inform our splitting strategy, creating split that maintain natural language flow, maintain semantic coherence within split, and adapts to varying levels of text granularity.
 LangChain's [`RecursiveCharacterTextSplitter`](/docs/how_to/recursive_text_splitter/) implements this concept:
+
 - The `RecursiveCharacterTextSplitter` attempts to keep larger units (e.g., paragraphs) intact.
 - If a unit exceeds the chunk size, it moves to the next level (e.g., sentences).
 - This process continues down to the word level if necessary.
@@ -86,20 +91,22 @@ texts = text_splitter.split_text(document)
 
 :::info[Further reading]
 
-* See the how-to guide for [recursive text splitting](/docs/how_to/recursive_text_splitter/).
+- See the how-to guide for [recursive text splitting](/docs/how_to/recursive_text_splitter/).
 
 :::
 
 ### Document-structured based
 
-Some documents have an inherent structure, such as HTML, Markdown, or JSON files. 
+Some documents have an inherent structure, such as HTML, Markdown, or JSON files.
 In these cases, it's beneficial to split the document based on its structure, as it often naturally groups semantically related text.
 Key benefits of structure-based splitting:
+
 - Preserves the logical organization of the document
 - Maintains context within each chunk
 - Can be more effective for downstream tasks like retrieval or summarization
 
 Examples of structure-based splitting:
+
 - **Markdown**: Split based on headers (e.g., #, ##, ###)
 - **HTML**: Split using tags
 - **JSON**: Split by object or array elements
@@ -107,18 +114,18 @@ Examples of structure-based splitting:
 
 :::info[Further reading]
 
-* See the how-to guide for [Markdown splitting](/docs/how_to/markdown_header_metadata_splitter/).
-* See the how-to guide for [Recursive JSON splitting](/docs/how_to/recursive_json_splitter/).
-* See the how-to guide for [Code splitting](/docs/how_to/code_splitter/).
-* See the how-to guide for [HTML splitting](/docs/how_to/HTML_header_metadata_splitter/).
+- See the how-to guide for [Markdown splitting](/docs/how_to/markdown_header_metadata_splitter/).
+- See the how-to guide for [Recursive JSON splitting](/docs/how_to/recursive_json_splitter/).
+- See the how-to guide for [Code splitting](/docs/how_to/code_splitter/).
+- See the how-to guide for [HTML splitting](/docs/how_to/HTML_header_metadata_splitter/).
 
 :::
 
 ### Semantic meaning based
 
-Unlike the previous methods, semantic-based splitting actually considers the *content* of the text. 
+Unlike the previous methods, semantic-based splitting actually considers the _content_ of the text.
 While other approaches use document or text structure as proxies for semantic meaning, this method directly analyzes the text's semantics.
-There are several ways to implement this, but conceptually the approach is split text when there are significant changes in text *meaning*.
+There are several ways to implement this, but conceptually the approach is split text when there are significant changes in text _meaning_.
 As an example, we can use a sliding window approach to generate embeddings, and compare the embeddings to find significant differences:
 
 - Start with the first few sentences and generate an embedding.
@@ -129,7 +136,7 @@ This technique helps create chunks that are more semantically coherent, potentia
 
 :::info[Further reading]
 
-* See the how-to guide for [splitting text based on semantic meaning](/docs/how_to/semantic-chunker/).
-* See Greg Kamradt's [notebook](https://github.com/FullStackRetrieval-com/RetrievalTutorials/blob/main/tutorials/LevelsOfTextSplitting/5_Levels_Of_Text_Splitting.ipynb) showcasing semantic splitting.
+- See the how-to guide for [splitting text based on semantic meaning](/docs/how_to/semantic-chunker/).
+- See Greg Kamradt's [notebook](https://github.com/FullStackRetrieval-com/RetrievalTutorials/blob/main/tutorials/LevelsOfTextSplitting/5_Levels_Of_Text_Splitting.ipynb) showcasing semantic splitting.
 
 :::
