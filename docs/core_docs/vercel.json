@@ -80,6 +80,146 @@
     {
       "source": "/docs/troubleshooting/errors/MULTIPLE_SUBGRAPHS(/?)",
       "destination": "https://langchain-ai.github.io/langgraphjs/troubleshooting/errors/MULTIPLE_SUBGRAPHS/"
+    },
+    {
+      "source": "/docs/concepts/#agents(/?)",
+      "destination": "/docs/concepts/agents"
+    },
+    {
+      "source": "/docs/concepts/#agent_types(/?)",
+      "destination": "/docs/concepts/agents"
+    },
+    {
+      "source": "/docs/concepts/#stream_events(/?)",
+      "destination": "/docs/concepts/streaming/#stream_events"
+    },
+    {
+      "source": "/docs/concepts/#callbacks(/?)",
+      "destination": "/docs/concepts/callbacks"
+    },
+    {
+      "source": "/docs/concepts/#callbacks-1(/?)",
+      "destination": "/docs/concepts/callbacks"
+    },
+    {
+      "source": "/docs/concepts/#chat-history(/?)",
+      "destination": "/docs/concepts/chat_history"
+    },
+    {
+      "source": "/docs/concepts/#chat-model(/?)",
+      "destination": "/docs/concepts/chat_models"
+    },
+    {
+      "source": "/docs/concepts/#chat-models(/?)",
+      "destination": "/docs/concepts/chat_models"
+    },
+    {
+      "source": "/docs/concepts/#document-loaders(/?)",
+      "destination": "/docs/concepts/document_loaders"
+    },
+    {
+      "source": "/docs/concepts/#documents(/?)",
+      "destination": "https://api.js.langchain.com/classes/_langchain_core.documents.Document.html"
+    },
+    {
+      "source": "/docs/concepts/#embedding-models(/?)",
+      "destination": "/docs/concepts/embedding_models"
+    },
+    {
+      "source": "/docs/concepts/#example-selectors(/?)",
+      "destination": "/docs/concepts/example_selectors"
+    },
+    {
+      "source": "/docs/concepts/#few-shot-prompting(/?)",
+      "destination": "/docs/concepts/few-shot-prompting"
+    },
+    {
+      "source": "/docs/concepts/#function-tool-calling(/?)",
+      "destination": "/docs/concepts/tool_calling"
+    },
+    {
+      "source": "/docs/concepts/#functiontool-calling(/?)",
+      "destination": "/docs/concepts/tool_calling"
+    },
+    {
+      "source": "/docs/concepts/#invoke-with-just-the-arguments(/?)",
+      "destination": "/docs/concepts/tools"
+    },
+    {
+      "source": "/docs/concepts/#invoke-with-toolcall(/?)",
+      "destination": "/docs/concepts/tools"
+    },
+    {
+      "source": "/docs/concepts/#key-value-stores(/?)",
+      "destination": "/docs/concepts/key_value_stores"
+    },
+    {
+      "source": "/docs/concepts/#langchain-expression-language(/?)",
+      "destination": "/docs/concepts/lcel"
+    },
+    {
+      "source": "/docs/concepts/#langchain-expression-language-lcel(/?)",
+      "destination": "/docs/concepts/lcel"
+    },
+    {
+      "source": "/docs/concepts/#llms(/?)",
+      "destination": "/docs/concepts/text_llms"
+    },
+    {
+      "source": "/docs/concepts/#messagesplaceholder(/?)",
+      "destination": "/docs/concepts/prompt_templates/#messagesplaceholder"
+    },
+    {
+      "source": "/docs/concepts/#messages(/?)",
+      "destination": "/docs/concepts/messages"
+    },
+    {
+      "source": "/docs/concepts/#message-types(/?)",
+      "destination": "/docs/concepts/messages"
+    },
+    {
+      "source": "/docs/concepts/#output-parsers(/?)",
+      "destination": "/docs/concepts/output_parsers"
+    },
+    {
+      "source": "/docs/concepts/#prompt-templates(/?)",
+      "destination": "/docs/concepts/prompt_templates"
+    },
+    {
+      "source": "/docs/concepts/#retrieval(/?)",
+      "destination": "/docs/concepts/retrieval"
+    },
+    {
+      "source": "/docs/concepts/#retrievers(/?)",
+      "destination": "/docs/concepts/retrievers"
+    },
+    {
+      "source": "/docs/concepts/#interface(/?)",
+      "destination": "/docs/concepts/runnables"
+    },
+    {
+      "source": "/docs/concepts/#streaming(/?)",
+      "destination": "/docs/concepts/streaming"
+    },
+    {
+      "source": "/docs/concepts/#systemmessage(/?)",
+      "destination": "/docs/concepts/message/#systemmessage"
+    },
+    {
+      "source": "/docs/concepts/#text-splitters(/?)",
+      "destination": "/docs/concepts/text_splitters"
+    },
+    {
+      "source": "/docs/concepts/#toolkits(/?)",
+      "destination": "/docs/concepts/tools/#toolkits"
+    },
+    {
+      "source": "/docs/concepts/#toolmessage(/?)",
+      "destination": "/docs/concepts/messages/#toolmessage"
+    },
+    {
+      "source": "/docs/concepts/#tools(/?)",
+      "destination": "/docs/concepts/tools"
     }
   ]
 }
