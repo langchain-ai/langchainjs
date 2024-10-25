@@ -496,3 +496,4 @@ export class AzureCosmosDBMongoDBVectorStore extends VectorStore {
     return instance;
   }
 }
+
