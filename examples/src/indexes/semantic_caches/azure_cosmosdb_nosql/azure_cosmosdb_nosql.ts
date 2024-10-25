@@ -1,14 +1,16 @@
-import { AzureCosmosDBNoSQLConfig, AzureCosmosDBNoSQLSemanticCache } from "@langchain/azure-cosmosdb";
+import {
+  AzureCosmosDBNoSQLConfig,
+  AzureCosmosDBNoSQLSemanticCache,
+} from "@langchain/azure-cosmosdb";
 import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
-
 
 const embeddings = new OpenAIEmbeddings();
 const config: AzureCosmosDBNoSQLConfig = {
-    databaseName: "<DATABASE_NAME>",
-    containerName: "<CONTAINER_NAME>",
-    // use endpoint to initiate client with managed identity
-    connectionString: "<CONNECTION_STRING>",
-}
+  databaseName: "<DATABASE_NAME>",
+  containerName: "<CONTAINER_NAME>",
+  // use endpoint to initiate client with managed identity
+  connectionString: "<CONNECTION_STRING>",
+};
 const cache = new AzureCosmosDBNoSQLSemanticCache(embeddings, config);
 
 const model = new ChatOpenAI({ cache });
@@ -31,4 +33,3 @@ console.log(response2);
     additional_kwargs: {}
   }
 */
-
