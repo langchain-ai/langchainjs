@@ -271,12 +271,6 @@ Some Runnables may return other Runnables, which can lead to infinite recursion 
 
 If using the `batch` or `batch_as_completed` methods, you can set the `max_concurrency` attribute in the `RunnableConfig` dictionary to control the maximum number of parallel calls to make. This can be useful when you want to limit the number of parallel calls to prevent overloading a server or API.
 
-:::tip
-If you're trying to rate limit the number of requests made by a **Chat Model**, you can use the built-in [rate limiter](/docs/concepts/chat_models#rate-limiting) instead of setting `max_concurrency`, which will be more effective.
-
-See the [How to handle rate limits](/docs/how_to/chat_model_rate_limiting/) guide for more information.
-:::
-
 ### Setting configurable
 
 The `configurable` field is used to pass runtime values for configurable attributes of the Runnable.
@@ -348,5 +342,3 @@ To simplify this process, the Runnable interface provides two methods for creati
 
 - `configurable_fields`: This method allows you to configure specific **attributes** in a Runnable. For example, the `temperature` attribute of a chat model.
 - `configurable_alternatives`: This method enables you to specify **alternative** Runnables that can be run during run time. For example, you could specify a list of different chat models that can be used.
-
-See the [How to configure runtime chain internals](/docs/how_to/configure) guide for more information on how to configure runtime chain internals.

@@ -179,9 +179,6 @@ vectorstore.similarity_search(
 
 While algorithms like HNSW provide the foundation for efficient similarity search in many cases, additional techniques can be employed to improve search quality and diversity.
 For example, [maximal marginal relevance](https://python.langchain.com/v0.1/docs/modules/model_io/prompts/example_selectors/mmr/) is a re-ranking algorithm used to diversify search results, which is applied after the initial similarity search to ensure a more diverse set of results.
-As a second example, some [vector stores](/docs/integrations/retrievers/pinecone_hybrid_search/) offer built-in [hybrid-search](https://docs.pinecone.io/guides/data/understanding-hybrid-search) to combine keyword and semantic similarity search, which marries the benefits of both approaches.
-At the moment, there is no unified way to perform hybrid search using LangChain vectorstores, but it is generally exposed as a keyword argument that is passed in with `similarity_search`.
-See this [how-to guide on hybrid search](/docs/how_to/hybrid/) for more details.
 
 | Name                                                                                                              | When to use                                           | Description                                                                                                                                  |
 | ----------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |

@@ -65,7 +65,6 @@ Various techniques have been developed to leverage models for query re-writing, 
 
 | Name                                                                                                      | When to use                                                                                     | Description                                                                                                                                                                                                                                                                            |
 | --------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [Multi-query](/docs/how_to/MultiQueryRetriever/)                                                          | When you want to ensure high recall in retrieval by providing multiple pharsings of a question. | Rewrite the user question with multiple pharsings, retrieve documents for each rewritten question, return the unique documents for all queries.                                                                                                                                        |
 | [Decomposition](https://github.com/langchain-ai/rag-from-scratch/blob/main/rag_from_scratch_5_to_9.ipynb) | When a question can be broken down into smaller subproblems.                                    | Decompose a question into a set of subproblems / questions, which can either be solved sequentially (use the answer from first + retrieval to answer the second) or in parallel (consolidate each answer into final answer).                                                           |
 | [Step-back](https://github.com/langchain-ai/rag-from-scratch/blob/main/rag_from_scratch_5_to_9.ipynb)     | When a higher-level conceptual understanding is required.                                       | First prompt the LLM to ask a generic step-back question about higher-level concepts or principles, and retrieve relevant facts about them. Use this grounding to help answer the user question. [Paper](https://arxiv.org/pdf/2310.06117).                                            |
 | [HyDE](https://github.com/langchain-ai/rag-from-scratch/blob/main/rag_from_scratch_5_to_9.ipynb)          | If you have challenges retrieving relevant documents using the raw user inputs.                 | Use an LLM to convert questions into hypothetical documents that answer the question. Use the embedded hypothetical documents to retrieve real documents with the premise that doc-doc similarity search can produce more relevant matches. [Paper](https://arxiv.org/abs/2212.10496). |
@@ -169,7 +168,6 @@ Using this data structure, it is possible to efficiently match the words in sear
 :::info[Further reading]
 
 - See the [BM25](/docs/integrations/retrievers/bm25/) retriever integration.
-- See the [Elasticsearch](/docs/integrations/retrievers/elasticsearch_retriever/) retriever integration.
 
 :::
 
@@ -198,7 +196,6 @@ Relational databases excel at maintaining data integrity, supporting complex que
 :::info[Further reading]
 
 - See our [tutorial](/docs/tutorials/sql_qa/) for working with SQL databases.
-- See our [SQL database toolkit](/docs/integrations/tools/sql_database/).
 
 :::
 
@@ -213,7 +210,6 @@ They are particularly useful for storing and querying complex relationships betw
 :::info[Further reading]
 
 - See our [tutorial](/docs/tutorials/graph/) for working with graph databases.
-- See our [list of graph database integrations](/docs/integrations/graphs/).
 - See Neo4j's [starter kit for LangChain](https://neo4j.com/developer-blog/langchain-neo4j-starter-kit/).
 
 :::
