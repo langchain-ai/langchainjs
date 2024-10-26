@@ -7,7 +7,13 @@ import {
   GenerateContentRequest,
   SafetySetting,
   Part as GenerativeAIPart,
+  ModelParams,
+  RequestOptions,
 } from "@google/generative-ai";
+import {
+  CachedContentCreateParams,
+  GoogleAICacheManager as CacheManager,
+} from '@google/generative-ai/server';
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {
   AIMessageChunk,
@@ -77,7 +83,7 @@ export interface GoogleGenerativeAIChatCallOptions
  */
 export interface GoogleGenerativeAIChatInput
   extends BaseChatModelParams,
-    Pick<GoogleGenerativeAIChatCallOptions, "streamUsage"> {
+  Pick<GoogleGenerativeAIChatCallOptions, "streamUsage"> {
   /**
    * @deprecated Use "model" instead.
    *
@@ -519,8 +525,7 @@ export interface GoogleGenerativeAIChatInput
  */
 export class ChatGoogleGenerativeAI
   extends BaseChatModel<GoogleGenerativeAIChatCallOptions, AIMessageChunk>
-  implements GoogleGenerativeAIChatInput
-{
+  implements GoogleGenerativeAIChatInput {
   static lc_name() {
     return "ChatGoogleGenerativeAI";
   }
@@ -562,6 +567,8 @@ export class ChatGoogleGenerativeAI
   streaming = false;
 
   streamUsage = true;
+
+  cacheManager?: CacheManager;
 
   private client: GenerativeModel;
 
@@ -609,9 +616,9 @@ export class ChatGoogleGenerativeAI
     if (!this.apiKey) {
       throw new Error(
         "Please set an API key for Google GenerativeAI " +
-          "in the environment variable GOOGLE_API_KEY " +
-          "or in the `apiKey` field of the " +
-          "ChatGoogleGenerativeAI constructor"
+        "in the environment variable GOOGLE_API_KEY " +
+        "or in the `apiKey` field of the " +
+        "ChatGoogleGenerativeAI constructor"
       );
     }
 
@@ -649,6 +656,25 @@ export class ChatGoogleGenerativeAI
       }
     );
     this.streamUsage = fields?.streamUsage ?? this.streamUsage;
+  }
+
+  async addCachedContent(cachedContentCreateParams: CachedContentCreateParams,
+    modelParams?: Partial<ModelParams>, requestOptions?: RequestOptions
+   ) {
+    if (!this.apiKey) {
+      throw new Error(
+        "Please set an API key for Google GenerativeAI " +
+        "in the environment variable GOOGLE_API_KEY " +
+        "or in the `apiKey` field of the " +
+        "ChatGoogleGenerativeAI constructor"
+      );
+    }
+    this.cacheManager = this.cacheManager ? this.cacheManager : new CacheManager(this.apiKey);
+    this.client = new GenerativeAI(this.apiKey)
+      .getGenerativeModelFromCachedContent(
+        await this.cacheManager.create(cachedContentCreateParams),
+        modelParams, requestOptions
+      );
   }
 
   getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
@@ -887,9 +913,9 @@ export class ChatGoogleGenerativeAI
   ):
     | Runnable<BaseLanguageModelInput, RunOutput>
     | Runnable<
-        BaseLanguageModelInput,
-        { raw: BaseMessage; parsed: RunOutput }
-      > {
+      BaseLanguageModelInput,
+      { raw: BaseMessage; parsed: RunOutput }
+    > {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const schema: z.ZodType<RunOutput> | Record<string, any> = outputSchema;
     const name = config?.name;
