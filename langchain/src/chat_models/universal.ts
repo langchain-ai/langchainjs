@@ -386,6 +386,7 @@ class _ConfigurableModel<
         ? [...this._configurableFields]
         : this._configurableFields,
       configPrefix: this._configPrefix,
+      queuedMethodOperations: this._queuedMethodOperations,
     });
 
     return new RunnableBinding<RunInput, AIMessageChunk, CallOptions>({
