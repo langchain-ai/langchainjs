@@ -80,10 +80,9 @@ describe("LibSQLVectorStore (local)", () => {
     const store = new LibSQLVectorStore(embeddings, config);
 
     const ids = await store.addDocuments([
-      {
+      new Document({
         pageContent: "hello",
-        metadata: { a: 1 },
-      },
+      }),
     ]);
 
     expect(ids).toHaveLength(1);
@@ -117,10 +116,9 @@ describe("LibSQLVectorStore (local)", () => {
     const store = new LibSQLVectorStore(embeddings, config);
 
     const ids = await store.addDocuments([
-      {
+      new Document({
         pageContent: "hello world",
-        metadata: { a: 1 },
-      },
+      }),
     ]);
 
     expect(ids).toHaveLength(1);
@@ -154,18 +152,15 @@ describe("LibSQLVectorStore (local)", () => {
     const store = new LibSQLVectorStore(embeddings, config);
 
     const ids = await store.addDocuments([
-      {
+      new Document({
         pageContent: "the quick brown fox",
-        metadata: { a: 1 },
-      },
-      {
+      }),
+      new Document({
         pageContent: "jumped over the lazy dog",
-        metadata: { a: 2 },
-      },
-      {
+      }),
+      new Document({
         pageContent: "hello world",
-        metadata: { a: 3 },
-      },
+      }),
     ]);
 
     expect(ids).toHaveLength(3);
@@ -201,18 +196,17 @@ describe("LibSQLVectorStore (local)", () => {
     const store = new LibSQLVectorStore(embeddings, config);
 
     const ids = await store.addDocuments([
-      {
+      new Document({
         pageContent: "the quick brown fox",
-        metadata: { a: 1 },
-      },
-      {
+      }),
+      new Document({
         pageContent: "jumped over the lazy dog",
         metadata: { a: 2 },
-      },
-      {
+      }),
+      new Document({
         pageContent: "hello world",
         metadata: { a: 3 },
-      },
+      }),
     ]);
 
     expect(ids).toHaveLength(3);
@@ -247,18 +241,15 @@ describe("LibSQLVectorStore (local)", () => {
     const store = new LibSQLVectorStore(embeddings, config);
 
     const ids = await store.addDocuments([
-      {
+      new Document({
         pageContent: "the quick brown fox",
-        metadata: { a: 1 },
-      },
-      {
+      }),
+      new Document({
         pageContent: "jumped over the lazy dog",
-        metadata: { a: 2 },
-      },
-      {
+      }),
+      new Document({
         pageContent: "hello world",
-        metadata: { a: 3 },
-      },
+      }),
     ]);
 
     expect(ids).toHaveLength(3);
@@ -289,18 +280,15 @@ describe("LibSQLVectorStore (local)", () => {
     const store = new LibSQLVectorStore(embeddings, config);
 
     const ids = await store.addDocuments([
-      {
+      new Document({
         pageContent: "the quick brown fox",
-        metadata: { a: 1 },
-      },
-      {
+      }),
+      new Document({
         pageContent: "jumped over the lazy dog",
-        metadata: { a: 2 },
-      },
-      {
+      }),
+      new Document({
         pageContent: "hello world",
-        metadata: { a: 3 },
-      },
+      }),
     ]);
 
     expect(ids).toHaveLength(3);
