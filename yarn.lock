@@ -11147,7 +11147,21 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@langchain/anthropic@*, @langchain/anthropic@workspace:*, @langchain/anthropic@workspace:libs/langchain-anthropic":
+"@langchain/anthropic@npm:*":
+  version: 0.3.5
+  resolution: "@langchain/anthropic@npm:0.3.5"
+  dependencies:
+    "@anthropic-ai/sdk": ^0.27.3
+    fast-xml-parser: ^4.4.1
+    zod: ^3.22.4
+    zod-to-json-schema: ^3.22.4
+  peerDependencies:
+    "@langchain/core": ">=0.2.21 <0.4.0"
+  checksum: a241f3f863dbf1c233802553f3b955e4d71c114e5736eb344ba85aaece8d6d3596a0b4bd9ebabaf5bca180f913da242b0f72bebaba8d7600a88f489e44ced9be
+  languageName: node
+  linkType: hard
+
+"@langchain/anthropic@workspace:*, @langchain/anthropic@workspace:libs/langchain-anthropic":
   version: 0.0.0-use.local
   resolution: "@langchain/anthropic@workspace:libs/langchain-anthropic"
   dependencies:
