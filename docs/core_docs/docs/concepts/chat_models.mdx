@@ -20,7 +20,6 @@ LangChain provides a consistent interface for working with chat models from diff
 - Use either LangChain's [messages](/docs/concepts/messages) format or OpenAI format.
 - Standard [tool calling API](/docs/concepts#tool-calling): standard interface for binding tools to models, accessing tool call requests made by models, and sending tool results back to the model.
 - Standard API for structuring outputs (/docs/concepts/structured_outputs) via the `withStructuredOutput` method.
-- Provides support for [async programming](/docs/concepts/async), [efficient batching](/docs/concepts/runnables#batch), [a rich streaming API](/docs/concepts/streaming).
 - Integration with [LangSmith](https://docs.smith.langchain.com) for monitoring and debugging production-grade applications based on LLMs.
 - Additional features like standardized [token usage](/docs/concepts/messages#token_usage), [rate limiting](#rate-limiting), [caching](#cache) and more.
 
@@ -43,7 +42,7 @@ Models that do **not** include the prefix "Chat" in their name or include "LLM" 
 
 ## Interface
 
-LangChain chat models implement the [BaseChatModel](https://api.js.langchain.com/classes/_langchain_core.language_models_chat_models.BaseChatModel.html) interface. Because [BaseChatModel] also implements the [Runnable Interface](/docs/concepts/runnables), chat models support a [standard streaming interface](/docs/concepts/streaming), [async programming](/docs/concepts/async), optimized [batching](/docs/concepts/runnables#batch), and more. Please see the [Runnable Interface](/docs/concepts/runnables) for more details.
+LangChain chat models implement the [BaseChatModel](https://api.js.langchain.com/classes/_langchain_core.language_models_chat_models.BaseChatModel.html) interface. Because [BaseChatModel] also implements the [Runnable Interface](/docs/concepts/runnables), chat models support a [standard streaming interface](/docs/concepts/streaming), optimized [batching](/docs/concepts/runnables#batch), and more. Please see the [Runnable Interface](/docs/concepts/runnables) for more details.
 
 Many of the key methods of chat models operate on [messages](/docs/concepts/messages) as input and return messages as output.
 

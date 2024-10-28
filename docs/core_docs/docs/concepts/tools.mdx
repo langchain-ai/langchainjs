@@ -8,7 +8,7 @@
 
 ## Overview
 
-The **tool** abstraction in LangChain associates a python **function** with a **schema** that defines the function's **name**, **description** and **input**.
+The **tool** abstraction in LangChain associates a TypeScript **function** with a **schema** that defines the function's **name**, **description** and **input**.
 
 **Tools** can be passed to [chat models](/docs/concepts/chat_models) that support [tool calling](/docs/concepts/tool_calling) allowing the model to request the execution of a specific function with specific inputs.
 
@@ -32,7 +32,6 @@ The key attributes that correspond to the tool's **schema**:
 The key methods to execute the function associated with the **tool**:
 
 - **invoke**: Invokes the tool with the given arguments.
-- **ainvoke**: Invokes the tool with the given arguments, asynchronously. Used for [async programming with Langchain](/docs/concepts/async).
 
 ## Create tools using the `tool` function
 
