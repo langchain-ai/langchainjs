@@ -18,7 +18,7 @@ Because of their importance and variability, LangChain provides a uniform interf
 The LangChain [retriever](/docs/concepts/retrievers/) interface is straightforward:
 
 1. Input: A query (string)
-2. Output: A list of documents (standardized LangChain [Document](https://api.python.langchain.com/en/latest/documents/langchain_core.documents.base.Document.html) objects)
+2. Output: A list of documents (standardized LangChain [Document](https://api.js.langchain.com/classes/_langchain_core.documents.Document.html) objects)
 
 ## Key concept
 
@@ -29,19 +29,19 @@ All retrievers implement a simple interface for retrieving documents using natur
 ## Interface
 
 The only requirement for a retriever is the ability to accepts a query and return documents.
-In particular, [LangChain's retriever class](https://api.python.langchain.com/en/latest/retrievers/langchain_core.retrievers.BaseRetriever.html) only requires that the `_get_relevant_documents` method is implemented, which takes a `query: str` and returns a list of [Document](https://api.python.langchain.com/en/latest/documents/langchain_core.documents.base.Document.html) objects that are most relevant to the query.
+In particular, [LangChain's retriever class](https://api.js.langchain.com/classes/_langchain_core.retrievers.BaseRetriever.html) only requires that the `_getRelevantDocuments` method is implemented, which takes a `query: string` and returns a list of [Document](https://api.js.langchain.com/classes/_langchain_core.documents.Document.html) objects that are most relevant to the query.
 The underlying logic used to get relevant documents is specified by the retriever and can be whatever is most useful for the application.
 
 A LangChain retriever is a [runnable](/docs/how_to/lcel_cheatsheet/), which is a standard interface is for LangChain components.
 This means that it has a few common methods, including `invoke`, that are used to interact with it. A retriever can be invoked with a query:
 
-```python
-docs = retriever.invoke(query)
+```typescript
+const docs = await retriever.invoke(query)
 ```
 
-Retrievers return a list of [Document](https://api.python.langchain.com/en/latest/documents/langchain_core.documents.base.Document.html) objects, which have two attributes:
+Retrievers return a list of [Document](https://api.js.langchain.com/classes/_langchain_core.documents.Document.html) objects, which have two attributes:
 
-- `page_content`: The content of this document. Currently is a string.
+- `pageContent`: The content of this document. Currently is a string.
 - `metadata`: Arbitrary metadata associated with this document (e.g., document id, file name, source, etc).
 
 :::info[Further reading]
@@ -87,11 +87,11 @@ LangChain has retrievers for many popular lexical search algorithms / engines.
 ### Vector store
 
 [Vector stores](/docs/concepts/vectorstores/) are a powerful and efficient way to index and retrieve unstructured data.
-An vectorstore can be used as a retriever by calling the `as_retriever()` method.
+An vectorstore can be used as a retriever by calling the `asRetriever()` method.
 
-```python
-vectorstore = MyVectorStore()
-retriever = vectorstore.as_retriever()
+```typescript
+const vectorstore = new MyVectorStore()
+const retriever = vectorstore.asRetriever()
 ```
 
 ## Advanced retrieval patterns
@@ -102,11 +102,12 @@ Because the retriever interface is so simple, returning a list of `Document` obj
 This is particularly useful when you have multiple retrievers that are good at finding different types of relevant documents.
 It is easy to create an [ensemble retriever](/docs/how_to/ensemble_retriever/) that combines multiple retrievers with linear weighted scores:
 
-```python
-# Initialize the ensemble retriever
-ensemble_retriever = EnsembleRetriever(
-    retrievers=[bm25_retriever, vector_store_retriever], weights=[0.5, 0.5]
-)
+```typescript
+// Initialize the ensemble retriever
+const ensembleRetriever = new EnsembleRetriever({
+    retrievers: [bm25Retriever, vectorStoreRetriever],
+    weights: [0.5, 0.5]
+})
 ```
 
 When ensembling, how do we combine search results from many retrievers?

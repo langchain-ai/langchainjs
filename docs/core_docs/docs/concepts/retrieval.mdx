@@ -72,28 +72,30 @@ Various techniques have been developed to leverage models for query re-writing, 
 As an example, query decomposition can simply be accomplished using prompting and a structured output that enforces a list of sub-questions.
 These can then be run sequentially or in parallel on a downstream retrieval system.
 
-```python
-from pydantic import BaseModel, Field
-from langchain_openai import ChatOpenAI
-from langchain_core.messages import SystemMessage, HumanMessage
+```typescript
+import { z } from "zod";
+import { ChatOpenAI } from "@langchain/openai";
+import { SystemMessage, HumanMessage } from "@langchain/core/messages";
 
-# Define a pydantic model to enforce the output structure
-class Questions(BaseModel):
-    questions: List[str] = Field(
-        description="A list of sub-questions related to the input query."
-    )
+// Define a zod object for the structured output
+const Questions = z.object({
+  questions: z.array(z.string()).describe("A list of sub-questions related to the input query.")
+});
 
-# Create an instance of the model and enforce the output structure
-model = ChatOpenAI(model="gpt-4o", temperature=0)
-structured_model = model.with_structured_output(Questions)
+// Create an instance of the model and enforce the output structure
+const model = new ChatOpenAI({ modelName: "gpt-4", temperature: 0 });
+const structuredModel = model.withStructuredOutput(Questions);
 
-# Define the system prompt
-system = """You are a helpful assistant that generates multiple sub-questions related to an input question. \n
-The goal is to break down the input into a set of sub-problems / sub-questions that can be answers in isolation. \n"""
+// Define the system prompt
+const system = `You are a helpful assistant that generates multiple sub-questions related to an input question.
+The goal is to break down the input into a set of sub-problems / sub-questions that can be answers in isolation.`;
 
-# Pass the question to the model
-question = """What are the main components of an LLM-powered autonomous agent system?"""
-questions = structured_model.invoke([SystemMessage(content=system)]+[HumanMessage(content=question)])
+// Pass the question to the model
+const question = "What are the main components of an LLM-powered autonomous agent system?";
+const questions = await structuredModel.invoke([
+  new SystemMessage(system),
+  new HumanMessage(question)
+]);
 ```
 
 :::tip
@@ -130,16 +132,20 @@ These approaches leverage models to bridge the gap between user intent and the s
 
 As an example, here is how to use the `SelfQueryRetriever` to convert natural language queries into metadata filters.
 
-```python
-metadata_field_info = schema_for_metadata
-document_content_description = "Brief summary of a movie"
-llm = ChatOpenAI(temperature=0)
-retriever = SelfQueryRetriever.from_llm(
+```typescript
+import { SelfQueryRetriever } from "langchain/retrievers/self_query";
+import { AttributeInfo } from "langchain/chains/query_constructor";
+import { ChatOpenAI } from "@langchain/openai";
+
+const attributeInfo: AttributeInfo[] = schemaForMetadata;
+const documentContents = "Brief summary of a movie";
+const llm = new ChatOpenAI({ temperature: 0 });
+const retriever = SelfQueryRetriever.fromLlm({
     llm,
-    vectorstore,
-    document_content_description,
-    metadata_field_info,
-)
+    vectorStore,
+    documentContents,
+    attributeInfo,
+});
 ```
 
 :::info[Further reading]
@@ -219,14 +225,14 @@ They are particularly useful for storing and querying complex relationships betw
 LangChain provides a unified interface for interacting with various retrieval systems through the [retriever](/docs/concepts/retrievers/) concept. The interface is straightforward:
 
 1. Input: A query (string)
-2. Output: A list of documents (standardized LangChain [Document](https://api.python.langchain.com/en/latest/documents/langchain_core.documents.base.Document.html) objects)
+2. Output: A list of documents (standardized LangChain [Document](https://api.js.langchain.com/classes/_langchain_core.documents.Document.html) objects)
 
 You can create a retriever using any of the retrieval systems mentioned earlier. The query analysis techniques we discussed are particularly useful here, as they enable natural language interfaces for databases that typically require structured query languages.
 For example, you can build a retriever for a SQL database using text-to-SQL conversion. This allows a natural language query (string) to be transformed into a SQL query behind the scenes.
 Regardless of the underlying retrieval system, all retrievers in LangChain share a common interface. You can use them with the simple `invoke` method:
 
-```python
-docs = retriever.invoke(query)
+```typescript
+const docs = await retriever.invoke(query)
 ```
 
 :::info[Further reading]
