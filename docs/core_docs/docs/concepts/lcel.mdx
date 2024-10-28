@@ -16,14 +16,14 @@ We often refer to a `Runnable` created using LCEL as a "chain". It's important t
 - The [LCEL cheatsheet](/docs/how_to/lcel_cheatsheet/) shows common patterns that involve the Runnable interface and LCEL expressions.
 - Please see the following list of [how-to guides](/docs/how_to/#langchain-expression-language-lcel) that cover common tasks with LCEL.
 - A list of built-in `Runnables` can be found in the [LangChain Core API Reference](https://api.js.langchain.com/modules/_langchain_core.runnables.html). Many of these Runnables are useful when composing custom "chains" in LangChain using LCEL.
-  :::
+
+:::
 
 ## Benefits of LCEL
 
 LangChain optimizes the run-time execution of chains built with LCEL in a number of ways:
 
 - **Optimize parallel execution**: Run Runnables in parallel using [RunnableParallel](#RunnableParallel) or run multiple inputs through a given chain in parallel using the [Runnable Batch API](/docs/concepts/runnables#batch). Parallel execution can significantly reduce the latency as processing can be done in parallel instead of sequentially.
-- **Guarantee Async support**: Any chain built with LCEL can be run asynchronously using the [Runnable Async API](/docs/concepts/runnables#async-api). This can be useful when running chains in a server environment where you want to handle large number of requests concurrently.
 - **Simplify streaming**: LCEL chains can be streamed, allowing for incremental output as the chain is executed. LangChain can optimize the streaming of the output to minimize the time-to-first-token(time elapsed until the first chunk of output from a [chat model](/docs/concepts/chat_models) or [llm](/docs/concepts/text_llms) comes out).
 
 Other benefits include:
@@ -62,22 +62,27 @@ You can find a list of all composition primitives in the [LangChain Core API Ref
 
 `RunnableSequence` is a composition primitive that allows you "chain" multiple runnables sequentially, with the output of one runnable serving as the input to the next.
 
-```python
-from langchain_core.runnables import RunnableSequence
-chain = RunnableSequence([runnable1, runnable2])
+```typescript
+import { RunnableSequence } from "@langchain/core/runnables"
+const chain = new RunnableSequence({
+  first: runnable1,
+  // Optional, use if you have more than two runnables
+  // middle: [...],
+  last: runnable2,
+})
 ```
 
 Invoking the `chain` with some input:
 
-```python
-final_output = chain.invoke(some_input)
+```typescript
+const finalOutput = await chain.invoke(someInput)
 ```
 
 corresponds to the following:
 
-```python
-output1 = runnable1.invoke(some_input)
-final_output = runnable2.invoke(output1)
+```typescript
+const output1 = await runnable1.invoke(someInput)
+const finalOutput = await runnable2.invoke(output1)
 ```
 
 :::note
@@ -88,129 +93,67 @@ final_output = runnable2.invoke(output1)
 
 `RunnableParallel` is a composition primitive that allows you to run multiple runnables concurrently, with the same input provided to each.
 
-```python
-from langchain_core.runnables import RunnableParallel
-chain = RunnableParallel({
-    "key1": runnable1,
-    "key2": runnable2,
+```typescript
+import { RunnableParallel } from "@langchain/core/runnables"
+const chain = new RunnableParallel({
+  key1: runnable1,
+  key2: runnable2,
 })
 ```
 
 Invoking the `chain` with some input:
 
-```python
-final_output = chain.invoke(some_input)
+```typescript
+const finalOutput = await chain.invoke(someInput)
 ```
 
-Will yield a `final_output` dictionary with the same keys as the input dictionary, but with the values replaced by the output of the corresponding runnable.
+Will yield a `finalOutput` object with the same keys as the input object, but with the values replaced by the output of the corresponding runnable.
 
-```python
+```typescript
 {
-    "key1": runnable1.invoke(some_input),
-    "key2": runnable2.invoke(some_input),
+  key1: await runnable1.invoke(someInput),
+  key2: await runnable2.invoke(someInput),
 }
 ```
 
 Recall, that the runnables are executed in parallel, so while the result is the same as
-dictionary comprehension shown above, the execution time is much faster.
-
-:::note
-`RunnableParallel`supports both synchronous and asynchronous execution (as all `Runnables` do).
-
-- For synchronous execution, `RunnableParallel` uses a [ThreadPoolExecutor](https://docs.python.org/3/library/concurrent.futures.html#concurrent.futures.ThreadPoolExecutor) to run the runnables concurrently.
-- For asynchronous execution, `RunnableParallel` uses [asyncio.gather](https://docs.python.org/3/library/asyncio.html#asyncio.gather) to run the runnables concurrently.
-  :::
+object comprehension shown above, the execution time is much faster.
 
 ## Composition Syntax
 
 The usage of `RunnableSequence` and `RunnableParallel` is so common that we created a shorthand syntax for using them. This helps
 to make the code more readable and concise.
 
-### The `|` operator
+### The `pipe` method.
 
-We have [overloaded](https://docs.python.org/3/reference/datamodel.html#special-method-names) the `|` operator to create a `RunnableSequence` from two `Runnables`.
+You can `pipe` runnables together using the `.pipe(runnable)` method.
 
-```python
-chain = runnable1 | runnable2
+```typescript
+const chain = runnable1.pipe(runnable2);
 ```
 
 is Equivalent to:
 
-```python
-chain = RunnableSequence([runnable1, runnable2])
+```typescript
+const chain = new RunnableSequence({
+  first: runnable1,
+  last: runnable2,
+})
 ```
 
-### The `.pipe` method`
 
-If you have moral qualms with operator overloading, you can use the `.pipe` method instead. This is equivalent to the `|` operator.
+#### RunnableLambda functions
 
-```python
-chain = runnable1.pipe(runnable2)
+You can define generic TypeScript functions are runnables through the `RunnableLambda` class.
+
+```typescript
+const someFunc = RunnableLambda.from((input) => {
+  return input;
+});
+
+const chain = someFunc.pipe(runnable1);
 ```
 
-### Coercion
-
-LCEL applies automatic type coercion to make it easier to compose chains.
-
-If you do not understand the type coercion, you can always use the `RunnableSequence` and `RunnableParallel` classes directly.
-
-This will make the code more verbose, but it will also make it more explicit.
-
-#### Dictionary to RunnableParallel
-
-Inside an LCEL expression, a dictionary is automatically converted to a `RunnableParallel`.
-
-For example, the following code:
-
-```python
-mapping = {
-    "key1": runnable1,
-    "key2": runnable2,
-}
-
-chain = mapping | runnable3
-```
-
-It gets automatically converted to the following:
-
-```python
-chain = RunnableSequence([RunnableParallel(mapping), runnable3])
-```
-
-:::caution
-You have to be careful because the `mapping` dictionary is not a `RunnableParallel` object, it is just a dictionary. This means that the following code will raise an `AttributeError`:
-
-```python
-mapping.invoke(some_input)
-```
-
-:::
-
-#### Function to RunnableLambda
-
-Inside an LCEL expression, a function is automatically converted to a `RunnableLambda`.
-
-```
-def some_func(x):
-    return x
-
-chain = some_func | runnable1
-```
-
-It gets automatically converted to the following:
-
-```python
-chain = RunnableSequence([RunnableLambda(some_func), runnable1])
-```
-
-:::caution
-You have to be careful because the lambda function is not a `RunnableLambda` object, it is just a function. This means that the following code will raise an `AttributeError`:
-
-```python
-lambda x: x + 1.invoke(some_input)
-```
-
-:::
 
 ## Legacy chains
 
