@@ -113,14 +113,14 @@ Most chat models expect the user input to be in the form of text.
 ```typescript
 import { HumanMessage } from "@langchain/core/messages";
 
-await model.invoke([new HumanMessage("Hello, how are you?")])
+await model.invoke([new HumanMessage("Hello, how are you?")]);
 ```
 
 :::tip
 When invoking a chat model with a string as input, LangChain will automatically convert the string into a `HumanMessage` object. This is mostly useful for quick testing.
 
 ```typescript
-await model.invoke("Hello, how are you?")
+await model.invoke("Hello, how are you?");
 ```
 
 :::
@@ -138,20 +138,20 @@ Please see the [multimodality](/docs/concepts/multimodality) guide for more info
 ```typescript
 import { HumanMessage } from "@langchain/core/messages";
 
-const aiMessage = await model.invoke([new HumanMessage("Tell me a joke")])
-console.log(aiMessage) // <-- AIMessage
+const aiMessage = await model.invoke([new HumanMessage("Tell me a joke")]);
+console.log(aiMessage); // <-- AIMessage
 ```
 
 An `AIMessage` has the following attributes. The attributes which are **standardized** are the ones that LangChain attempts to standardize across different chat model providers. **raw** fields are specific to the model provider and may vary.
 
-| Attribute            | Standardized/Raw | Description                                                                                                                                                                                                              |
-| -------------------- | :--------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `content`            | Raw              | Usually a string, but can be a list of content blocks. See [content](#content) for details.                                                                                                                              |
-| `tool_calls`         | Standardized     | Tool calls associated with the message. See [tool calling](/docs/concepts/tool_calling) for details.                                                                                                                     |
-| `invalid_tool_calls` | Standardized     | Tool calls with parsing errors associated with the message. See [tool calling](/docs/concepts/tool_calling) for details.                                                                                                 |
+| Attribute            | Standardized/Raw | Description                                                                                                                                                                                      |
+| -------------------- | :--------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `content`            | Raw              | Usually a string, but can be a list of content blocks. See [content](#content) for details.                                                                                                      |
+| `tool_calls`         | Standardized     | Tool calls associated with the message. See [tool calling](/docs/concepts/tool_calling) for details.                                                                                             |
+| `invalid_tool_calls` | Standardized     | Tool calls with parsing errors associated with the message. See [tool calling](/docs/concepts/tool_calling) for details.                                                                         |
 | `usage_metadata`     | Standardized     | Usage metadata for a message, such as [token counts](/docs/concepts/tokens). See [Usage Metadata API Reference](https://api.js.langchain.com/types/_langchain_core.messages.UsageMetadata.html). |
-| `id`                 | Standardized     | An optional unique identifier for the message, ideally provided by the provider/model that created the message.                                                                                                          |
-| `response_metadata`  | Raw              | Response metadata, e.g., response headers, logprobs, token counts.                                                                                                                                                       |
+| `id`                 | Standardized     | An optional unique identifier for the message, ideally provided by the provider/model that created the message.                                                                                  |
+| `response_metadata`  | Raw              | Response metadata, e.g., response headers, logprobs, token counts.                                                                                                                               |
 
 #### content
 
@@ -178,8 +178,10 @@ It is returned from the `stream`, and `streamEvents` methods of the chat model.
 For example,
 
 ```typescript
-for await (const chunk of model.stream([new HumanMessage("what color is the sky?")])) {
-    console.log(chunk)
+for await (const chunk of model.stream([
+  new HumanMessage("what color is the sky?"),
+])) {
+  console.log(chunk);
 }
 ```
 
@@ -232,19 +234,19 @@ Chat models also accept OpenAI's format as **inputs** to chat models:
 
 ```typescript
 await chatModel.invoke([
-    {
-        role: "user",
-        content: "Hello, how are you?",
-    },
-    {
-        role: "assistant",
-        content: "I'm doing well, thank you for asking.",
-    },
-    {
-        role: "user",
-        content: "Can you tell me a joke?",
-    }
-])
+  {
+    role: "user",
+    content: "Hello, how are you?",
+  },
+  {
+    role: "assistant",
+    content: "I'm doing well, thank you for asking.",
+  },
+  {
+    role: "user",
+    content: "Can you tell me a joke?",
+  },
+]);
 ```
 
 ### Outputs

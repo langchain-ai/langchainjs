@@ -60,8 +60,9 @@ Example implementation using LangChain's `CharacterTextSplitter` with character 
 ```typescript
 import { CharacterTextSplitter } from "@langchain/textsplitters";
 const textSplitter = new CharacterTextSplitter({
-  chunkSize: 100, chunkOverlap: 0
-})
+  chunkSize: 100,
+  chunkOverlap: 0,
+});
 const texts = await textSplitter.splitText(document);
 ```
 
@@ -87,8 +88,11 @@ Here is example usage:
 ```typescript
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 
-const textSplitter = new RecursiveCharacterTextSplitter({ chunkSize: 100, chunkOverlap: 0 })
-const texts = await textSplitter.splitText(document)
+const textSplitter = new RecursiveCharacterTextSplitter({
+  chunkSize: 100,
+  chunkOverlap: 0,
+});
+const texts = await textSplitter.splitText(document);
 ```
 
 :::info[Further reading]

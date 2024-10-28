@@ -115,9 +115,9 @@ to the needs of your project.
 Here's one small example that prints just events containing streamed chat model output:
 
 ```typescript
-import { StringOutputParser } from "@langchain/core/output_parsers"
-import { ChatPromptTemplate } from "@langchain/core/prompts"
-import { ChatAnthropic } from "@langchain/anthropic"
+import { StringOutputParser } from "@langchain/core/output_parsers";
+import { ChatPromptTemplate } from "@langchain/core/prompts";
+import { ChatAnthropic } from "@langchain/anthropic";
 
 const model = new ChatAnthropic({ model: "claude-3-sonnet-20240229" });
 
@@ -125,7 +125,10 @@ const prompt = ChatPromptTemplate.fromTemplate("tell me a joke about {topic}");
 const parser = StringOutputParser();
 const chain = prompt.pipe(model).pipe(parser);
 
-for await (const event of await chain.streamEvents({ topic: "parrot" }, { version: "v2" })) {
+for await (const event of await chain.streamEvents(
+  { topic: "parrot" },
+  { version: "v2" }
+)) {
   if (event.event === "on_chat_model_stream") {
     console.log(event);
   }

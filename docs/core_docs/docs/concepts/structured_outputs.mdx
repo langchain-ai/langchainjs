@@ -41,7 +41,9 @@ import { z } from "zod";
 
 const ResponseFormatter = z.object({
   answer: z.string().describe("The answer to the user's question"),
-  followup_question: z.string().describe("A followup question the user could ask")
+  followup_question: z
+    .string()
+    .describe("A followup question the user could ask"),
 });
 ```
 
@@ -85,14 +87,16 @@ import { ChatOpenAI } from "@langchain/openai";
 
 const model = new ChatOpenAI({
   modelName: "gpt-4",
-  temperature: 0
+  temperature: 0,
 });
 
 // Bind ResponseFormatter schema as a tool to the model
 const modelWithTools = model.bindTools([ResponseFormatter]);
 
 // Invoke the model
-const aiMsg = await modelWithTools.invoke("What is the powerhouse of the cell?");
+const aiMsg = await modelWithTools.invoke(
+  "What is the powerhouse of the cell?"
+);
 ```
 
 ### JSON mode
@@ -108,10 +112,12 @@ import { ChatOpenAI } from "@langchain/openai";
 const model = new ChatOpenAI({
   model: "gpt-4",
 }).bind({
-  response_format: { type: "json_object" }
+  response_format: { type: "json_object" },
 });
 
-const aiMsg = await model.invoke("Return a JSON object with key 'random_nums' and a value of 10 random numbers in [0-99]");
+const aiMsg = await model.invoke(
+  "Return a JSON object with key 'random_nums' and a value of 10 random numbers in [0-99]"
+);
 console.log(aiMsg.content);
 // Output: {
 //   "random_nums": [23, 47, 89, 15, 34, 76, 58, 3, 62, 91]
@@ -146,11 +152,13 @@ This both binds the schema to the model as a tool and parses the output to the s
 
 ```typescript
 // Bind the schema to the model
-const modelWithStructure = model.withStructuredOutput(ResponseFormatter)
+const modelWithStructure = model.withStructuredOutput(ResponseFormatter);
 // Invoke the model
-const structuredOutput = await modelWithStructure.invoke("What is the powerhouse of the cell?")
+const structuredOutput = await modelWithStructure.invoke(
+  "What is the powerhouse of the cell?"
+);
 // Get back the object
-console.log(structuredOutput)
+console.log(structuredOutput);
 // { answer: "The powerhouse of the cell is the mitochondrion. Mitochondria are organelles that generate most of the cell's supply of adenosine triphosphate (ATP), which is used as a source of chemical energy.", followup_question: "What is the function of ATP in the cell?" }
 ```
 

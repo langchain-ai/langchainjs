@@ -36,7 +36,7 @@ The batching method is:
 
 - `batch`: Process multiple inputs in parallel, returning results in the same order as the inputs.
 
-The default implementation of `batch` executed the `invoke` method in parallel. 
+The default implementation of `batch` executed the `invoke` method in parallel.
 
 Some Runnables may provide their own implementations of `batch` that are optimized for their specific use case (e.g.,
 rely on a `batch` API provided by a model provider).
@@ -71,14 +71,14 @@ Runnable methods that result in the execution of the Runnable (e.g., `invoke`, `
 
 The **input type** and **output type** vary by component:
 
-| Component    | Input Type                                           | Output Type             |
-| ------------ | ---------------------------------------------------- | ----------------------- |
-| Prompt       | `object`                                             | `PromptValue`           |
-| ChatModel    | a `string`, list of chat messages or a `PromptValue` | `ChatMessage`           |
-| LLM          | a `string`, list of chat messages or a `PromptValue` | `string`                |
-| OutputParser | the output of an LLM or ChatModel                    | Depends on the parser   |
-| Retriever    | a `string`                                           | List of `Document`s     |
-| Tool         | a `string` or `object`, depending on the tool        | Depends on the tool     |
+| Component    | Input Type                                           | Output Type           |
+| ------------ | ---------------------------------------------------- | --------------------- |
+| Prompt       | `object`                                             | `PromptValue`         |
+| ChatModel    | a `string`, list of chat messages or a `PromptValue` | `ChatMessage`         |
+| LLM          | a `string`, list of chat messages or a `PromptValue` | `string`              |
+| OutputParser | the output of an LLM or ChatModel                    | Depends on the parser |
+| Retriever    | a `string`                                           | List of `Document`s   |
+| Tool         | a `string` or `object`, depending on the tool        | Depends on the tool   |
 
 Please refer to the individual component documentation for more information on the input and output types and how to use them.
 
@@ -90,29 +90,25 @@ at run time during the execution of the runnable.
 
 A `RunnableConfig` can have any of the following properties defined:
 
-| Attribute         | Description                                                                                |
-| ----------------- | ------------------------------------------------------------------------------------------ |
-| `runName`         | Name used for the given Runnable (not inherited).                                          |
-| `runId`           | Unique identifier for this call. sub-calls will get their own unique run ids.              |
-| `tags`            | Tags for this call and any sub-calls.                                                      |
-| `metadata`        | Metadata for this call and any sub-calls.                                                  |
-| `callbacks`       | Callbacks for this call and any sub-calls.                                                 |
-| `maxConcurrency`  | Maximum number of parallel calls to make (e.g., used by batch).                            |
-| `recursionLimit`  | Maximum number of times a call can recurse (e.g., used by Runnables that return Runnables) |
-| `configurable`    | Runtime values for configurable attributes of the Runnable.                                |
+| Attribute        | Description                                                                                |
+| ---------------- | ------------------------------------------------------------------------------------------ |
+| `runName`        | Name used for the given Runnable (not inherited).                                          |
+| `runId`          | Unique identifier for this call. sub-calls will get their own unique run ids.              |
+| `tags`           | Tags for this call and any sub-calls.                                                      |
+| `metadata`       | Metadata for this call and any sub-calls.                                                  |
+| `callbacks`      | Callbacks for this call and any sub-calls.                                                 |
+| `maxConcurrency` | Maximum number of parallel calls to make (e.g., used by batch).                            |
+| `recursionLimit` | Maximum number of times a call can recurse (e.g., used by Runnables that return Runnables) |
+| `configurable`   | Runtime values for configurable attributes of the Runnable.                                |
 
 Passing `config` to the `invoke` method is done like so:
 
 ```typescript
-await someRunnable.invoke(
-   someInput,
-   {
-      runName: 'myRun',
-      tags: ['tag1', 'tag2'],
-      metadata: { key: 'value' }
-
-   }
-)
+await someRunnable.invoke(someInput, {
+  runName: "myRun",
+  tags: ["tag1", "tag2"],
+  metadata: { key: "value" },
+});
 ```
 
 ### Propagation of RunnableConfig
@@ -127,18 +123,18 @@ There are two main patterns by which new `Runnables` are created:
 1. Declaratively using [LangChain Expression Language (LCEL)](/docs/concepts/lcel):
 
    ```typescript
-   const chain = prompt.pipe(chatModel).pipe(outputParser)
+   const chain = prompt.pipe(chatModel).pipe(outputParser);
    ```
 
 2. Using a [custom Runnable](#custom-runnables) (e.g., `RunnableLambda`) or using the `tool` function:
 
    ```typescript
    const foo = (input) => {
-      // Note that .invoke() is used directly here
-      // highlight-next-line
-      return barRunnable.invoke(input)
-   }
-   const fooRunnable = RunnableLambda.from(foo)
+     // Note that .invoke() is used directly here
+     // highlight-next-line
+     return barRunnable.invoke(input);
+   };
+   const fooRunnable = RunnableLambda.from(foo);
    ```
 
 LangChain will try to propagate `RunnableConfig` automatically for both of the patterns.
@@ -147,10 +143,11 @@ Propagating the `RunnableConfig` manually is done like so:
 
 ```typescript
 // highlight-next-line
-const foo = (input, config) => { // <-- Note the config argument
-   return barRunnable.invoke(input, config)
-}
-const fooRunnable = RunnableLambda.from(foo)
+const foo = (input, config) => {
+  // <-- Note the config argument
+  return barRunnable.invoke(input, config);
+};
+const fooRunnable = RunnableLambda.from(foo);
 ```
 
 ### Setting custom run name, tags, and metadata
@@ -187,16 +184,13 @@ the parent run, sub-class will get their own unique run ids automatically.
 To set a custom `runId`, you can pass it as a key-value pair in the `config` object when invoking the Runnable:
 
 ```typescript
-import { v4 as uuidv4 } from 'uuid'
+import { v4 as uuidv4 } from "uuid";
 
-const runId = uuidv4()
+const runId = uuidv4();
 
-await someRunnable.invoke(
-   someInput,
-   {
-      runId,
-   }
-)
+await someRunnable.invoke(someInput, {
+  runId,
+});
 
 // Do something with the runId
 ```
@@ -230,15 +224,9 @@ Use this option to configure [callbacks](/docs/concepts/callbacks) for the runna
 runtime. The callbacks will be passed to all sub-calls made by the runnable.
 
 ```typescript
-await someRunnable.invoke(
-   someInput,
-   {
-      callbacks: [
-         SomeCallbackHandler(),
-         AnotherCallbackHandler(),
-      ]
-   }
-)
+await someRunnable.invoke(someInput, {
+  callbacks: [SomeCallbackHandler(), AnotherCallbackHandler()],
+});
 ```
 
 Please read the [Callbacks Conceptual Guide](/docs/concepts/callbacks) for more information on how to use callbacks in LangChain.

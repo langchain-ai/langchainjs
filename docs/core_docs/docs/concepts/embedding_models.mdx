@@ -63,18 +63,16 @@ To illustrate, here's a practical example using LangChain's `.embed_documents` m
 
 ```typescript
 import { OpenAIEmbeddings } from "@langchain/openai";
-const embeddingsModel = new OpenAIEmbeddings()
-const embeddings = await embeddingsModel.embedDocuments(
-    [
-        "Hi there!",
-        "Oh, hello!",
-        "What's your name?",
-        "My friends call me World",
-        "Hello World!"
-    ]
-)
+const embeddingsModel = new OpenAIEmbeddings();
+const embeddings = await embeddingsModel.embedDocuments([
+  "Hi there!",
+  "Oh, hello!",
+  "What's your name?",
+  "My friends call me World",
+  "Hello World!",
+]);
 
-console.log(`(${embeddings.length}, ${embeddings[0].length})`)
+console.log(`(${embeddings.length}, ${embeddings[0].length})`);
 // (5, 1536)
 ```
 
@@ -113,10 +111,10 @@ As an example, [OpenAI suggests cosine similarity for their embeddings](https://
 
 ```typescript
 function cosineSimilarity(vec1: number[], vec2: number[]): number {
-    const dotProduct = vec1.reduce((sum, val, i) => sum + val * vec2[i], 0);
-    const norm1 = Math.sqrt(vec1.reduce((sum, val) => sum + val * val, 0));
-    const norm2 = Math.sqrt(vec2.reduce((sum, val) => sum + val * val, 0));
-    return dotProduct / (norm1 * norm2);
+  const dotProduct = vec1.reduce((sum, val, i) => sum + val * vec2[i], 0);
+  const norm1 = Math.sqrt(vec1.reduce((sum, val) => sum + val * val, 0));
+  const norm2 = Math.sqrt(vec2.reduce((sum, val) => sum + val * val, 0));
+  return dotProduct / (norm1 * norm2);
 }
 
 const similarity = cosineSimilarity(queryResult, documentResult);

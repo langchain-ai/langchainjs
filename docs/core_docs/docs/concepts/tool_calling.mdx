@@ -37,11 +37,11 @@ The tool call arguments can be passed directly to the tool.
 
 ```typescript
 // Tool creation
-const tools = [myTool]
+const tools = [myTool];
 // Tool binding
-const modelWithTools = model.bindTools(tools)
+const modelWithTools = model.bindTools(tools);
 // Tool calling
-const response = await modelWithTools.invoke(userInput)
+const response = await modelWithTools.invoke(userInput);
 ```
 
 ## Tool creation
@@ -51,19 +51,22 @@ The recommended way to create a tool is using the `tool` function.
 ```typescript
 import { tool } from "@langchain/core/tools";
 
-const multiply = tool(({ a, b }: { a: number, b: number }): number => {
+const multiply = tool(
+  ({ a, b }: { a: number; b: number }): number => {
     /**
      * Multiply a and b.
      */
     return a * b;
-}, {
+  },
+  {
     name: "multiply",
     description: "Multiply two numbers",
     schema: z.object({
-        a: z.number(),
-        b: z.number()
-    })
-})
+      a: z.number(),
+      b: z.number(),
+    }),
+  }
+);
 ```
 
 :::info[Further reading]
@@ -75,15 +78,16 @@ const multiply = tool(({ a, b }: { a: number, b: number }): number => {
 :::
 
 For tool calling that does not require a function to execute, you can also define just the tool schema:
+
 ```typescript
 const multiplyTool = {
-    name: "multiply",
-    description: "Multiply two numbers",
-    schema: z.object({
-        a: z.number(),
-        b: z.number()
-    })
-}
+  name: "multiply",
+  description: "Multiply two numbers",
+  schema: z.object({
+    a: z.number(),
+    b: z.number(),
+  }),
+};
 ```
 
 ## Tool binding
@@ -98,31 +102,34 @@ The central concept to understand is that LangChain provides a standardized inte
 The `.bindTools()` method can be used to specify which tools are available for a model to call.
 
 ```typescript
-const modelWithTools = model.bindTools([toolsList])
+const modelWithTools = model.bindTools([toolsList]);
 ```
 
 As a specific example, let's take a function `multiply` and bind it as a tool to a model that supports tool calling.
 
 ```typescript
-const multiply = tool(({ a, b }: { a: number, b: number }): number => {
-/**
+const multiply = tool(
+  ({ a, b }: { a: number; b: number }): number => {
+    /**
      * Multiply a and b.
-     * 
+     *
      * @param a - first number
      * @param b - second number
      * @returns The product of a and b
      */
     return a * b;
-}, {
+  },
+  {
     name: "multiply",
     description: "Multiply two numbers",
     schema: z.object({
-        a: z.number(),
-        b: z.number()
-    })
-})
+      a: z.number(),
+      b: z.number(),
+    }),
+  }
+);
 
-const llmWithTools = toolCallingModel.bindTools([multiply])
+const llmWithTools = toolCallingModel.bindTools([multiply]);
 ```
 
 ## Tool calling
@@ -133,14 +140,14 @@ A key principle of tool calling is that the model decides when to use a tool bas
 For example, given an unrelated input, the model would not call the tool:
 
 ```typescript
-const result = await llmWithTools.invoke("Hello world!")
+const result = await llmWithTools.invoke("Hello world!");
 ```
 
 The result would be an `AIMessage` containing the model's response in natural language (e.g., "Hello!").
 However, if we pass an input _relevant to the tool_, the model should choose to call it:
 
 ```typescript
-const result = await llmWithTools.invoke("What is 2 multiplied by 3?")
+const result = await llmWithTools.invoke("What is 2 multiplied by 3?");
 ```
 
 As before, the output `result` will be an `AIMessage`.

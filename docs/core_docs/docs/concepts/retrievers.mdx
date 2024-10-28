@@ -36,7 +36,7 @@ A LangChain retriever is a [runnable](/docs/how_to/lcel_cheatsheet/), which is a
 This means that it has a few common methods, including `invoke`, that are used to interact with it. A retriever can be invoked with a query:
 
 ```typescript
-const docs = await retriever.invoke(query)
+const docs = await retriever.invoke(query);
 ```
 
 Retrievers return a list of [Document](https://api.js.langchain.com/classes/_langchain_core.documents.Document.html) objects, which have two attributes:
@@ -90,8 +90,8 @@ LangChain has retrievers for many popular lexical search algorithms / engines.
 An vectorstore can be used as a retriever by calling the `asRetriever()` method.
 
 ```typescript
-const vectorstore = new MyVectorStore()
-const retriever = vectorstore.asRetriever()
+const vectorstore = new MyVectorStore();
+const retriever = vectorstore.asRetriever();
 ```
 
 ## Advanced retrieval patterns
@@ -105,9 +105,9 @@ It is easy to create an [ensemble retriever](/docs/how_to/ensemble_retriever/) t
 ```typescript
 // Initialize the ensemble retriever
 const ensembleRetriever = new EnsembleRetriever({
-    retrievers: [bm25Retriever, vectorStoreRetriever],
-    weights: [0.5, 0.5]
-})
+  retrievers: [bm25Retriever, vectorStoreRetriever],
+  weights: [0.5, 0.5],
+});
 ```
 
 When ensembling, how do we combine search results from many retrievers?

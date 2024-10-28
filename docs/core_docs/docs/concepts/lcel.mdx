@@ -63,26 +63,26 @@ You can find a list of all composition primitives in the [LangChain Core API Ref
 `RunnableSequence` is a composition primitive that allows you "chain" multiple runnables sequentially, with the output of one runnable serving as the input to the next.
 
 ```typescript
-import { RunnableSequence } from "@langchain/core/runnables"
+import { RunnableSequence } from "@langchain/core/runnables";
 const chain = new RunnableSequence({
   first: runnable1,
   // Optional, use if you have more than two runnables
   // middle: [...],
   last: runnable2,
-})
+});
 ```
 
 Invoking the `chain` with some input:
 
 ```typescript
-const finalOutput = await chain.invoke(someInput)
+const finalOutput = await chain.invoke(someInput);
 ```
 
 corresponds to the following:
 
 ```typescript
-const output1 = await runnable1.invoke(someInput)
-const finalOutput = await runnable2.invoke(output1)
+const output1 = await runnable1.invoke(someInput);
+const finalOutput = await runnable2.invoke(output1);
 ```
 
 :::note
@@ -94,17 +94,17 @@ const finalOutput = await runnable2.invoke(output1)
 `RunnableParallel` is a composition primitive that allows you to run multiple runnables concurrently, with the same input provided to each.
 
 ```typescript
-import { RunnableParallel } from "@langchain/core/runnables"
+import { RunnableParallel } from "@langchain/core/runnables";
 const chain = new RunnableParallel({
   key1: runnable1,
   key2: runnable2,
-})
+});
 ```
 
 Invoking the `chain` with some input:
 
 ```typescript
-const finalOutput = await chain.invoke(someInput)
+const finalOutput = await chain.invoke(someInput);
 ```
 
 Will yield a `finalOutput` object with the same keys as the input object, but with the values replaced by the output of the corresponding runnable.
@@ -138,9 +138,8 @@ is Equivalent to:
 const chain = new RunnableSequence({
   first: runnable1,
   last: runnable2,
-})
+});
 ```
-
 
 #### RunnableLambda functions
 
@@ -153,7 +152,6 @@ const someFunc = RunnableLambda.from((input) => {
 
 const chain = someFunc.pipe(runnable1);
 ```
-
 
 ## Legacy chains
 

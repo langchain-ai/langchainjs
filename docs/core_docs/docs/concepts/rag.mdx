@@ -66,30 +66,29 @@ Use three sentences maximum and keep the answer concise.
 Context: {context}:`;
 
 // Define a question
-const question = "What are the main components of an LLM-powered autonomous agent system?";
+const question =
+  "What are the main components of an LLM-powered autonomous agent system?";
 
 // Retrieve relevant documents
-const docs = await retriever.invoke(question)
+const docs = await retriever.invoke(question);
 
 // Combine the documents into a single string
 const docsText = docs.map((d) => d.pageContent).join("");
 
 // Populate the system prompt with the retrieved context
-const systemPromptFmt = systemPrompt.replace("{context}", docsText)
+const systemPromptFmt = systemPrompt.replace("{context}", docsText);
 
 // Create a model
 const model = new ChatOpenAI({
   model: "gpt-4o",
-  temperature: 0
-})
+  temperature: 0,
+});
 
 // Generate a response
-const questions = await model.invoke(
-  [
-    new SystemMessage(systemPromptFmt),
-    new HumanMessage(question)
-  ]
-)
+const questions = await model.invoke([
+  new SystemMessage(systemPromptFmt),
+  new HumanMessage(question),
+]);
 ```
 
 :::info[Further reading]

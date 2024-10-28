@@ -35,9 +35,9 @@ LangChain's [chat model](/docs/concepts/chat_models/) interface provides a commo
 
 ```typescript
 // Tool creation
-const tools = [myTool]
+const tools = [myTool];
 // Tool binding
-const modelWithTools = model.bindTools(tools)
+const modelWithTools = model.bindTools(tools);
 ```
 
 Similarly, getting models to produce [structured outputs](/docs/concepts/structured_outputs/) is an extremely common use case.
@@ -57,7 +57,7 @@ In the context of [RAG](/docs/concepts/rag/) and LLM application components, Lan
 The underlying implementation of the retriever depends on the type of data store or database you are connecting to, but all retrievers implement the [runnable interface](/docs/concepts/runnables/), meaning they can be invoked in a common manner.
 
 ```typescript
-const documents = await myRetriever.invoke("What is the meaning of life?")
+const documents = await myRetriever.invoke("What is the meaning of life?");
 ```
 
 ## Orchestration

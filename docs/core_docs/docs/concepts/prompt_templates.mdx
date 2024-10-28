@@ -18,9 +18,11 @@ For example, a common way to construct and use a PromptTemplate is as follows:
 ```typescript
 import { PromptTemplate } from "@langchain/core/prompts";
 
-const promptTemplate = PromptTemplate.fromTemplate("Tell me a joke about {topic}")
+const promptTemplate = PromptTemplate.fromTemplate(
+  "Tell me a joke about {topic}"
+);
 
-await promptTemplate.invoke({ topic: "cats" })
+await promptTemplate.invoke({ topic: "cats" });
 ```
 
 ## ChatPromptTemplates
@@ -32,11 +34,11 @@ For example, a common way to construct and use a ChatPromptTemplate is as follow
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 
 const promptTemplate = ChatPromptTemplate.fromMessages([
-    ["system", "You are a helpful assistant"],
-    ["user", "Tell me a joke about {topic}"]
+  ["system", "You are a helpful assistant"],
+  ["user", "Tell me a joke about {topic}"],
 ]);
 
-await promptTemplate.invoke({ topic: "cats" })
+await promptTemplate.invoke({ topic: "cats" });
 ```
 
 In the above example, this ChatPromptTemplate will construct two messages when called.
@@ -53,15 +55,18 @@ But what if we wanted the user to pass in a list of messages that we would slot 
 This is how you use MessagesPlaceholder.
 
 ```typescript
-import { ChatPromptTemplate, MessagesPlaceholder } from "@langchain/core/prompts";
+import {
+  ChatPromptTemplate,
+  MessagesPlaceholder,
+} from "@langchain/core/prompts";
 import { HumanMessage } from "@langchain/core/messages";
 
 const promptTemplate = ChatPromptTemplate.fromMessages([
-    ["system", "You are a helpful assistant"],
-    new MessagesPlaceholder("msgs")
-])
+  ["system", "You are a helpful assistant"],
+  new MessagesPlaceholder("msgs"),
+]);
 
-await promptTemplate.invoke({ msgs: [new HumanMessage("hi!")] })
+await promptTemplate.invoke({ msgs: [new HumanMessage("hi!")] });
 ```
 
 This will produce a list of two messages, the first one being a system message, and the second one being the HumanMessage we passed in.
@@ -72,10 +77,10 @@ An alternative way to accomplish the same thing without using the `MessagesPlace
 
 ```typescript
 const promptTemplate = ChatPromptTemplate.fromMessages([
-    ["system", "You are a helpful assistant"],
-    // highlight-next-line
-    ["placeholder", "{msgs}"] // <-- This is the changed part
-])
+  ["system", "You are a helpful assistant"],
+  // highlight-next-line
+  ["placeholder", "{msgs}"], // <-- This is the changed part
+]);
 ```
 
 For specifics on how to use prompt templates, see the [relevant how-to guides here](/docs/how_to/#prompt-templates).

@@ -40,9 +40,9 @@ const message = new HumanMessage({
   content: [
     { type: "text", text: "describe the weather in this image" },
     { type: "image_url", image_url: { url: image_url } },
-  ]
-})
-const response = await model.invoke([message])
+  ],
+});
+const response = await model.invoke([message]);
 ```
 
 :::caution
