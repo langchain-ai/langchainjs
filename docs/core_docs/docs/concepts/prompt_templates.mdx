@@ -18,9 +18,9 @@ For example, a common way to construct and use a PromptTemplate is as follows:
 ```typescript
 import { PromptTemplate } from "@langchain/core/prompts";
 
-promptTemplate = PromptTemplate.from_template("Tell me a joke about {topic}")
+const promptTemplate = PromptTemplate.fromTemplate("Tell me a joke about {topic}")
 
-promptTemplate.invoke({"topic": "cats"})
+await promptTemplate.invoke({ topic: "cats" })
 ```
 
 ## ChatPromptTemplates
@@ -71,7 +71,7 @@ This is useful for letting a list of messages be slotted into a particular spot.
 An alternative way to accomplish the same thing without using the `MessagesPlaceholder` class explicitly is:
 
 ```typescript
-promptTemplate = ChatPromptTemplate.,fromMessages([
+const promptTemplate = ChatPromptTemplate.fromMessages([
     ["system", "You are a helpful assistant"],
     // highlight-next-line
     ["placeholder", "{msgs}"] // <-- This is the changed part
