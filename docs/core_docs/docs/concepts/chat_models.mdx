@@ -53,7 +53,7 @@ Chat models offer a standard set of parameters that can be used to configure the
 In documentation, we will often use the terms "LLM" and "Chat Model" interchangeably. This is because most modern LLMs are exposed to users via a chat model interface.
 
 However, LangChain also has implementations of older LLMs that do not follow the chat model interface and instead use an interface that takes a string as input and returns a string as output. These models are typically named without the "Chat" prefix (e.g., `Ollama`, `Anthropic`, `OpenAI`, etc.).
-These models implement the [BaseLLM](https://api.js.langchain.com/classes/_langchain_core.language_models_llms.BaseLLM.html) interface and may be named with the "LLM" suffix (e.g., `OllamaLLM`, `AnthropicLLM`, `OpenAILLM`, etc.). Generally, users should not use these models.
+These models implement the [BaseLLM](https://api.js.langchain.com/classes/_langchain_core.language_models_llms.BaseLLM.html) interface and may be named with the "LLM" suffix (e.g., `OpenAILLM`, etc.). Generally, users should not use these models.
 :::
 
 ### Key methods
