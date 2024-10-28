@@ -290,7 +290,7 @@ export function convertResponseContentToChatGenerationChunk(
   const functionCalls = response.functionCalls();
   const [candidate] = response.candidates;
   const { content, ...generationInfo } = candidate;
-  const text = content?.parts[0]?.text ?? "";
+  const text = content?.parts?.[0]?.text ?? "";
 
   const toolCallChunks: ToolCallChunk[] = [];
   if (functionCalls) {
