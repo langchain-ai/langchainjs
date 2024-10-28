@@ -131,7 +131,7 @@
     },
     {
       "source": "/docs/concepts/#few-shot-prompting(/?)",
-      "destination": "/docs/concepts/few-shot-prompting"
+      "destination": "/docs/concepts/few_shot_prompting"
     },
     {
       "source": "/docs/concepts/#function-tool-calling(/?)",
