@@ -170,7 +170,7 @@ There are two main patterns by which new `Runnables` are created:
    chain = prompt | chat_model | output_parser
    ```
 
-2. Using a [custom Runnable](#custom-runnables) (e.g., `RunnableLambda`) or using the `@tool` decorator:
+2. Using a [custom Runnable](#custom-runnables) (e.g., `RunnableLambda`) or using the `tool` function:
 
    ```python
    def foo(input):

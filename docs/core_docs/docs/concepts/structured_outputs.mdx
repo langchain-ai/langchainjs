@@ -73,7 +73,7 @@ Here is an example using the `ResponseFormatter` schema defined above:
 from langchain_openai import ChatOpenAI
 model = ChatOpenAI(model="gpt-4o", temperature=0)
 # Bind responseformatter schema as a tool to the model
-model_with_tools = model.bind_tools([ResponseFormatter])
+model_with_tools = model.bindTools([ResponseFormatter])
 # Invoke the model
 ai_msg = model_with_tools.invoke("What is the powerhouse of the cell?")
 ```

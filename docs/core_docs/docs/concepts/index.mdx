@@ -45,9 +45,9 @@ The conceptual guide does not cover step-by-step instructions or specific implem
 - **[AIMessageChunk](/docs/concepts/messages#aimessagechunk)**: A partial response from an AI message. Used when streaming responses from a chat model.
 - **[AIMessage](/docs/concepts/messages#aimessage)**: Represents a complete response from an AI model.
 - **[astream_events](/docs/concepts/chat_models#key-methods)**: Stream granular information from [LCEL](/docs/concepts/lcel) chains.
-- **[BaseTool](/docs/concepts/tools#basetool)**: The base class for all tools in LangChain.
+- **[StructuredTool](/docs/concepts/tools#structuredtool)**: The base class for all tools in LangChain.
 - **[batch](/docs/concepts/runnables)**: Use to execute a runnable with batch inputs a Runnable.
-- **[bind_tools](/docs/concepts/chat_models#bind-tools)**: Allows models to interact with tools.
+- **[bindTools](/docs/concepts/chat_models#bind-tools)**: Allows models to interact with tools.
 - **[Caching](/docs/concepts/chat_models#caching)**: Storing results to avoid redundant calls to a chat model.
 - **[Chat models](/docs/concepts/multimodality#chat-models)**: Chat models that handle multiple data modalities.
 - **[Configurable runnables](/docs/concepts/runnables#configurable-Runnables)**: Creating configurable Runnables.
@@ -81,7 +81,7 @@ The conceptual guide does not cover step-by-step instructions or specific implem
 - **[Tokens](/docs/concepts/tokens)**: The basic unit that a language model reads, processes, and generates under the hood.
 - **[Tool artifacts](/docs/concepts/tools#tool-artifacts)**: Add artifacts to the output of a tool that will not be sent to the model, but will be available for downstream processing.
 - **[Tool binding](/docs/concepts/tool_calling#tool-binding)**: Binding tools to models.
-- **[@tool](/docs/concepts/tools#@tool)**: Decorator for creating tools in LangChain.
+- **[`tool`](/docs/concepts/tools)**: Function for creating tools in LangChain.
 - **[Toolkits](/docs/concepts/tools#toolkits)**: A collection of tools that can be used together.
 - **[ToolMessage](/docs/concepts/messages#toolmessage)**: Represents a message that contains the results of a tool execution.
 - **[Vector stores](/docs/concepts/vectorstores)**: Datastores specialized for storing and efficiently searching vector embeddings.
