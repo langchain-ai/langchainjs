@@ -7,6 +7,9 @@ import {
   GenerateContentRequest,
   SafetySetting,
   Part as GenerativeAIPart,
+  Tool as GenerativeAITool,
+  ToolConfig,
+  FunctionCallingMode,
 } from "@google/generative-ai";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {
@@ -60,6 +63,11 @@ export type BaseMessageExamplePair = {
 export interface GoogleGenerativeAIChatCallOptions
   extends BaseChatModelCallOptions {
   tools?: GoogleGenerativeAIToolType[];
+  /**
+   * Allowed functions to call when the mode is "any".
+   * If empty, any one of the provided functions are called.
+   */
+  allowedFunctionNames?: string[];
   /**
    * Whether or not to include usage data, like token counts
    * in the streamed response chunks.
@@ -680,34 +688,59 @@ export class ChatGoogleGenerativeAI
   invocationParams(
     options?: this["ParsedCallOptions"]
   ): Omit<GenerateContentRequest, "contents"> {
-    if (options?.tool_choice) {
-      throw new Error(
-        "'tool_choice' call option is not supported by ChatGoogleGenerativeAI."
-      );
-    }
-
-    const tools = options?.tools as
-      | GoogleGenerativeAIFunctionDeclarationsTool[]
-      | StructuredToolInterface[]
-      | undefined;
+    let genaiTools: GenerativeAITool[] | undefined;
     if (
-      Array.isArray(tools) &&
-      !tools.some(
+      Array.isArray(options?.tools) &&
+      !options?.tools.some(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (t: any) => !("lc_namespace" in t)
       )
     ) {
       // Tools are in StructuredToolInterface format. Convert to GenAI format
-      return {
-        tools: convertToGenerativeAITools(
-          options?.tools as StructuredToolInterface[]
-        ),
-      };
+      genaiTools = convertToGenerativeAITools(
+        options?.tools as StructuredToolInterface[]
+      );
+    } else {
+      genaiTools = options?.tools as GenerativeAITool[];
     }
+
+    let toolConfig: ToolConfig | undefined;
+    if (genaiTools?.length && options?.tool_choice) {
+      if (["any", "auto", "none"].some((c) => c === options.tool_choice)) {
+        const modeMap: Record<string, FunctionCallingMode> = {
+          any: FunctionCallingMode.ANY,
+          auto: FunctionCallingMode.AUTO,
+          none: FunctionCallingMode.NONE,
+        };
+        
+        toolConfig = {
+          functionCallingConfig: {
+            mode: modeMap[options.tool_choice as keyof typeof modeMap] ?? "MODE_UNSPECIFIED",
+            allowedFunctionNames: options.allowedFunctionNames,
+          }
+        }
+      } else if (typeof options.tool_choice === "string") {
+        toolConfig = {
+          functionCallingConfig: {
+            mode: FunctionCallingMode.ANY,
+            allowedFunctionNames: [...(options.allowedFunctionNames ?? []), options.tool_choice],
+          }
+        }
+      }
+
+      if (!options.tool_choice && options.allowedFunctionNames) {
+        toolConfig = {
+          functionCallingConfig: {
+            mode: FunctionCallingMode.ANY,
+            allowedFunctionNames: options.allowedFunctionNames,
+          }
+        }
+      }
+    }
+
     return {
-      tools: options?.tools as
-        | GoogleGenerativeAIFunctionDeclarationsTool[]
-        | undefined,
+      tools: genaiTools,
+      toolConfig,
     };
   }
 

@@ -538,3 +538,25 @@ test("Invoke with JSON mode", async () => {
     res.usage_metadata.input_tokens + res.usage_metadata.output_tokens
   );
 });
+
+test.only("Supports tool_choice", async () => {
+  const model = new ChatGoogleGenerativeAI({});
+  const tools = [{
+    name: "get_weather",
+    description: "Get the weather",
+    schema: z.object({
+      location: z.string(),
+    }),
+  },
+  {
+    name: "calculator",
+    description: "Preform calculations",
+    schema: z.object({
+      expression: z.string(),
+    }),
+  }];
+
+  const modelWithTools = model.bindTools(tools, { tool_choice: "calculator", allowedFunctionNames: ["calculator"] });
+  const response = await modelWithTools.invoke("What is 27725327 times 283683? Also whats the weather in New York?")
+  expect(response.tool_calls?.length).toBe(1);
+})
