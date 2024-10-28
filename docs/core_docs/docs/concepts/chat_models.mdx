@@ -19,7 +19,7 @@ LangChain provides a consistent interface for working with chat models from diff
 - Integrations with many chat model providers (e.g., Anthropic, OpenAI, Ollama, Microsoft Azure, Google Vertex, Amazon Bedrock, Hugging Face, Cohere, Groq). Please see [chat model integrations](/docs/integrations/chat/) for an up-to-date list of supported models.
 - Use either LangChain's [messages](/docs/concepts/messages) format or OpenAI format.
 - Standard [tool calling API](/docs/concepts#tool-calling): standard interface for binding tools to models, accessing tool call requests made by models, and sending tool results back to the model.
-- Standard API for structuring outputs (/docs/concepts/structured_outputs) via the `with_structured_output` method.
+- Standard API for structuring outputs (/docs/concepts/structured_outputs) via the `withStructuredOutput` method.
 - Provides support for [async programming](/docs/concepts/async), [efficient batching](/docs/concepts/runnables#batch), [a rich streaming API](/docs/concepts/streaming).
 - Integration with [LangSmith](https://docs.smith.langchain.com) for monitoring and debugging production-grade applications based on LLMs.
 - Additional features like standardized [token usage](/docs/concepts/messages#token_usage), [rate limiting](#rate-limiting), [caching](#cache) and more.
@@ -30,8 +30,8 @@ LangChain has many chat model integrations that allow you to use a wide variety 
 
 These integrations are one of two types:
 
-1. **Official models**: These are models that are officially supported by LangChain and/or model provider. You can find these models in the `langchain-<provider>` packages.
-2. **Community models**: There are models that are mostly contributed and supported by the community. You can find these models in the `langchain-community` package.
+1. **Official models**: These are models that are officially supported by LangChain and/or model provider. You can find these models in the `@langchain/<provider>` packages.
+2. **Community models**: There are models that are mostly contributed and supported by the community. You can find these models in the `@langchain/community` package.
 
 LangChain chat models are named with a convention that prefixes "Chat" to their class names (e.g., `ChatOllama`, `ChatAnthropic`, `ChatOpenAI`, etc.).
 
@@ -63,8 +63,8 @@ The key methods of a chat model are:
 1. **invoke**: The primary method for interacting with a chat model. It takes a list of [messages](/docs/concepts/messages) as input and returns a list of messages as output.
 2. **stream**: A method that allows you to stream the output of a chat model as it is generated.
 3. **batch**: A method that allows you to batch multiple requests to a chat model together for more efficient processing.
-4. **bind_tools**: A method that allows you to bind a tool to a chat model for use in the model's execution context.
-5. **with_structured_output**: A wrapper around the `invoke` method for models that natively support [structured output](/docs/concepts#structured_output).
+4. **bindTools**: A method that allows you to bind a tool to a chat model for use in the model's execution context.
+5. **withStructuredOutput**: A wrapper around the `invoke` method for models that natively support [structured output](/docs/concepts#structured_output).
 
 Other important methods can be found in the [BaseChatModel API Reference](https://api.js.langchain.com/classes/_langchain_core.language_models_chat_models.BaseChatModel.html).
 
@@ -86,16 +86,16 @@ Many chat models have standardized parameters that can be used to configure the 
 | `model`        | The name or identifier of the specific AI model you want to use (e.g., `"gpt-3.5-turbo"` or `"gpt-4"`).                                                                                                                                                                                                       |
 | `temperature`  | Controls the randomness of the model's output. A higher value (e.g., 1.0) makes responses more creative, while a lower value (e.g., 0.1) makes them more deterministic and focused.                                                                                                                           |
 | `timeout`      | The maximum time (in seconds) to wait for a response from the model before canceling the request. Ensures the request doesn’t hang indefinitely.                                                                                                                                                              |
-| `max_tokens`   | Limits the total number of tokens (words and punctuation) in the response. This controls how long the output can be.                                                                                                                                                                                          |
+| `maxTokens`    | Limits the total number of tokens (words and punctuation) in the response. This controls how long the output can be.                                                                                                                                                                                          |
 | `stop`         | Specifies stop sequences that indicate when the model should stop generating tokens. For example, you might use specific strings to signal the end of a response.                                                                                                                                             |
-| `max_retries`  | The maximum number of attempts the system will make to resend a request if it fails due to issues like network timeouts or rate limits.                                                                                                                                                                       |
-| `api_key`      | The API key required for authenticating with the model provider. This is usually issued when you sign up for access to the model.                                                                                                                                                                             |
-| `base_url`     | The URL of the API endpoint where requests are sent. This is typically provided by the model's provider and is necessary for directing your requests.                                                                                                                                                         |
+| `maxRetries`   | The maximum number of attempts the system will make to resend a request if it fails due to issues like network timeouts or rate limits.                                                                                                                                                                       |
+| `apiKey`       | The API key required for authenticating with the model provider. This is usually issued when you sign up for access to the model.                                                                                                                                                                             |
+| `baseUrl`      | The URL of the API endpoint where requests are sent. This is typically provided by the model's provider and is necessary for directing your requests.                                                                                                                                                         |
 
 Some important things to note:
 
 - Standard parameters only apply to model providers that expose parameters with the intended functionality. For example, some providers do not expose a configuration for maximum output tokens, so max_tokens can't be supported on these.
-- Standard params are currently only enforced on integrations that have their own integration packages (e.g. `langchain-openai`, `langchain-anthropic`, etc.), they're not enforced on models in `langchain-community`.
+- Standard params are currently only enforced on integrations that have their own integration packages (e.g. `@langchain/openai`, `@langchain/anthropic`, etc.), they're not enforced on models in `@langchain/community`.
 
 ChatModels also accept other parameters that are specific to that integration. To find all the parameters supported by a ChatModel head to the [API reference](https://api.js.langchain.com/) for that model.
 
