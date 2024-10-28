@@ -15,12 +15,12 @@ There are a few different types of prompt templates:
 These prompt templates are used to format a single string, and generally are used for simpler inputs.
 For example, a common way to construct and use a PromptTemplate is as follows:
 
-```python
-from langchain_core.prompts import PromptTemplate
+```typescript
+import { PromptTemplate } from "@langchain/core/prompts";
 
-prompt_template = PromptTemplate.from_template("Tell me a joke about {topic}")
+promptTemplate = PromptTemplate.from_template("Tell me a joke about {topic}")
 
-prompt_template.invoke({"topic": "cats"})
+promptTemplate.invoke({"topic": "cats"})
 ```
 
 ## ChatPromptTemplates
@@ -28,15 +28,15 @@ prompt_template.invoke({"topic": "cats"})
 These prompt templates are used to format a list of messages. These "templates" consist of a list of templates themselves.
 For example, a common way to construct and use a ChatPromptTemplate is as follows:
 
-```python
-from langchain_core.prompts import ChatPromptTemplate
+```typescript
+import { ChatPromptTemplate } from "@langchain/core/prompts";
 
-prompt_template = ChatPromptTemplate([
-    ("system", "You are a helpful assistant"),
-    ("user", "Tell me a joke about {topic}")
-])
+const promptTemplate = ChatPromptTemplate.fromMessages([
+    ["system", "You are a helpful assistant"],
+    ["user", "Tell me a joke about {topic}"]
+]);
 
-prompt_template.invoke({"topic": "cats"})
+await promptTemplate.invoke({ topic: "cats" })
 ```
 
 In the above example, this ChatPromptTemplate will construct two messages when called.
@@ -52,16 +52,16 @@ In the above ChatPromptTemplate, we saw how we could format two messages, each o
 But what if we wanted the user to pass in a list of messages that we would slot into a particular spot?
 This is how you use MessagesPlaceholder.
 
-```python
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain_core.messages import HumanMessage
+```typescript
+import { ChatPromptTemplate, MessagesPlaceholder } from "@langchain/core/prompts";
+import { HumanMessage } from "@langchain/core/messages";
 
-prompt_template = ChatPromptTemplate([
-    ("system", "You are a helpful assistant"),
-    MessagesPlaceholder("msgs")
+const promptTemplate = ChatPromptTemplate.fromMessages([
+    ["system", "You are a helpful assistant"],
+    new MessagesPlaceholder("msgs")
 ])
 
-prompt_template.invoke({"msgs": [HumanMessage(content="hi!")]})
+await promptTemplate.invoke({ msgs: [new HumanMessage("hi!")] })
 ```
 
 This will produce a list of two messages, the first one being a system message, and the second one being the HumanMessage we passed in.
@@ -70,10 +70,11 @@ This is useful for letting a list of messages be slotted into a particular spot.
 
 An alternative way to accomplish the same thing without using the `MessagesPlaceholder` class explicitly is:
 
-```python
-prompt_template = ChatPromptTemplate([
-    ("system", "You are a helpful assistant"),
-    ("placeholder", "{msgs}") # <-- This is the changed part
+```typescript
+promptTemplate = ChatPromptTemplate.,fromMessages([
+    ["system", "You are a helpful assistant"],
+    // highlight-next-line
+    ["placeholder", "{msgs}"] // <-- This is the changed part
 ])
 ```
 
