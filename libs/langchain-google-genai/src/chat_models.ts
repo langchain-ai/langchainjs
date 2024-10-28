@@ -712,20 +712,25 @@ export class ChatGoogleGenerativeAI
           auto: FunctionCallingMode.AUTO,
           none: FunctionCallingMode.NONE,
         };
-        
+
         toolConfig = {
           functionCallingConfig: {
-            mode: modeMap[options.tool_choice as keyof typeof modeMap] ?? "MODE_UNSPECIFIED",
+            mode:
+              modeMap[options.tool_choice as keyof typeof modeMap] ??
+              "MODE_UNSPECIFIED",
             allowedFunctionNames: options.allowedFunctionNames,
-          }
-        }
+          },
+        };
       } else if (typeof options.tool_choice === "string") {
         toolConfig = {
           functionCallingConfig: {
             mode: FunctionCallingMode.ANY,
-            allowedFunctionNames: [...(options.allowedFunctionNames ?? []), options.tool_choice],
-          }
-        }
+            allowedFunctionNames: [
+              ...(options.allowedFunctionNames ?? []),
+              options.tool_choice,
+            ],
+          },
+        };
       }
 
       if (!options.tool_choice && options.allowedFunctionNames) {
@@ -733,8 +738,8 @@ export class ChatGoogleGenerativeAI
           functionCallingConfig: {
             mode: FunctionCallingMode.ANY,
             allowedFunctionNames: options.allowedFunctionNames,
-          }
-        }
+          },
+        };
       }
     }
 
