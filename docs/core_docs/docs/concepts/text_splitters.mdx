@@ -36,7 +36,8 @@ Now, the next question is _how_ to split the documents into chunks! There are se
 :::info[Further reading]
 
 - See Greg Kamradt's [chunkviz](https://chunkviz.up.railway.app/) to visualize different splitting strategies discussed below.
-  :::
+
+:::
 
 ## Approaches
 
@@ -54,14 +55,14 @@ Types of length-based splitting:
 - **Token-based**: Splits text based on the number of tokens, which is useful when working with language models.
 - **Character-based**: Splits text based on the number of characters, which can be more consistent across different types of text.
 
-Example implementation using LangChain's `CharacterTextSplitter` with token-based splitting:
+Example implementation using LangChain's `CharacterTextSplitter` with character based splitting:
 
-```python
-from langchain_text_splitters import CharacterTextSplitter
-text_splitter = CharacterTextSplitter.from_tiktoken_encoder(
-    encoding_name="cl100k_base", chunk_size=100, chunk_overlap=0
-)
-texts = text_splitter.split_text(document)
+```typescript
+import { CharacterTextSplitter } from "@langchain/textsplitters";
+const textSplitter = new CharacterTextSplitter({
+  chunkSize: 100, chunkOverlap: 0
+})
+const texts = await textSplitter.splitText(document);
 ```
 
 :::info[Further reading]
@@ -83,10 +84,11 @@ LangChain's [`RecursiveCharacterTextSplitter`](/docs/how_to/recursive_text_split
 
 Here is example usage:
 
-```python
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-text_splitter = RecursiveCharacterTextSplitter(chunk_size=100, chunk_overlap=0)
-texts = text_splitter.split_text(document)
+```typescript
+import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
+
+const textSplitter = new RecursiveCharacterTextSplitter({ chunkSize: 100, chunkOverlap: 0 })
+const texts = await textSplitter.splitText(document)
 ```
 
 :::info[Further reading]
