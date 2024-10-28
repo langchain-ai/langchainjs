@@ -110,17 +110,17 @@ The `HumanMessage` corresponds to the **"user"** role. A human message represent
 
 Most chat models expect the user input to be in the form of text.
 
-```python
-from langchain_core.messages import HumanMessage
+```typescript
+import { HumanMessage } from "@langchain/core/messages";
 
-model.invoke([HumanMessage(content="Hello, how are you?")])
+await model.invoke([new HumanMessage("Hello, how are you?")])
 ```
 
 :::tip
 When invoking a chat model with a string as input, LangChain will automatically convert the string into a `HumanMessage` object. This is mostly useful for quick testing.
 
-```python
-model.invoke("Hello, how are you?")
+```typescript
+await model.invoke("Hello, how are you?")
 ```
 
 :::
@@ -135,10 +135,11 @@ Please see the [multimodality](/docs/concepts/multimodality) guide for more info
 
 `AIMessage` is used to represent a message with the role **"assistant"**. This is the response from the model, which can include text or a request to invoke tools. It could also include other media types like images, audio, or video -- though this is still uncommon at the moment.
 
-```python
-from langchain_core.messages import HumanMessage
-ai_message = model.invoke([HumanMessage("Tell me a joke")])
-ai_message # <-- AIMessage
+```typescript
+import { HumanMessage } from "@langchain/core/messages";
+
+const aiMessage = await model.invoke([new HumanMessage("Tell me a joke")])
+console.log(aiMessage) // <-- AIMessage
 ```
 
 An `AIMessage` has the following attributes. The attributes which are **standardized** are the ones that LangChain attempts to standardize across different chat model providers. **raw** fields are specific to the model provider and may vary.
@@ -172,13 +173,14 @@ still few examples to generalize from.
 
 It is common to [stream](/docs/concepts/streaming) responses for the chat model as they are being generated, so the user can see the response in real-time instead of waiting for the entire response to be generated before displaying it.
 
-It is returned from the `stream`, `astream` and `astream_events` methods of the chat model.
+It is returned from the `stream`, and `streamEvents` methods of the chat model.
 
 For example,
 
-```python
-for chunk in model.stream([HumanMessage("what color is the sky?")]):
-    print(chunk)
+```typescript
+for await (const chunk of model.stream([new HumanMessage("what color is the sky?")])) {
+    console.log(chunk)
+}
 ```
 
 `AIMessageChunk` follows nearly the same structure as `AIMessage`, but uses a different [ToolCallChunk](https://api.js.langchain.com/types/_langchain_core.messages_tool.ToolCallChunk.html)
@@ -186,10 +188,17 @@ to be able to stream tool calling in a standardized manner.
 
 #### Aggregating
 
-`AIMessageChunks` support the `+` operator to merge them into a single `AIMessage`. This is useful when you want to display the final response to the user.
+`<Type>MessageChunks` have a `concat` method you can use, or you can import it. This is useful when you want to display the final response to the user.
 
-```python
-ai_message = chunk1 + chunk2 + chunk3 + ...
+```typescript
+const aiMessage = chunk1.concat(chunk2).concat(chunk3).concat(...);
+```
+
+or
+
+```typescript
+import { concat } from "@langchain/core/utils/stream";
+const aiMessage = concat(chunk1, chunk2);
 ```
 
 ### ToolMessage
@@ -221,19 +230,19 @@ This is a legacy message type, corresponding to OpenAI's legacy function-calling
 
 Chat models also accept OpenAI's format as **inputs** to chat models:
 
-```python
-chat_model.invoke([
+```typescript
+await chatModel.invoke([
     {
-        "role": "user",
-        "content": "Hello, how are you?",
+        role: "user",
+        content: "Hello, how are you?",
     },
     {
-        "role": "assistant",
-        "content": "I'm doing well, thank you for asking.",
+        role: "assistant",
+        content: "I'm doing well, thank you for asking.",
     },
     {
-        "role": "user",
-        "content": "Can you tell me a joke?",
+        role: "user",
+        content: "Can you tell me a joke?",
     }
 ])
 ```
