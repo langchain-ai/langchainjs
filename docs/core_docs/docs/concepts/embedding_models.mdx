@@ -9,9 +9,11 @@
 :::
 
 :::info[Note]
+
 This conceptual overview focuses on text-based embedding models.
 
 Embedding models can also be [multimodal](/docs/concepts/multimodality) though such models are not currently supported by LangChain.
+
 :::
 
 Imagine being able to capture the essence of any text - a tweet, document, or book - in a single, compact representation.
@@ -59,10 +61,10 @@ This common interface simplifies interaction with various embedding providers th
 This distinction is important, as some providers employ different embedding strategies for documents (which are to be searched) versus queries (the search input itself).
 To illustrate, here's a practical example using LangChain's `.embed_documents` method to embed a list of strings:
 
-```python
-from langchain_openai import OpenAIEmbeddings
-embeddings_model = OpenAIEmbeddings()
-embeddings = embeddings_model.embed_documents(
+```typescript
+import { OpenAIEmbeddings } from "@langchain/openai";
+const embeddingsModel = new OpenAIEmbeddings()
+const embeddings = await embeddingsModel.embedDocuments(
     [
         "Hi there!",
         "Oh, hello!",
@@ -71,14 +73,15 @@ embeddings = embeddings_model.embed_documents(
         "Hello World!"
     ]
 )
-len(embeddings), len(embeddings[0])
-(5, 1536)
+
+console.log(`(${embeddings.length}, ${embeddings[0].length})`)
+// (5, 1536)
 ```
 
-For convenience, you can also use the `embed_query` method to embed a single text:
+For convenience, you can also use the `embedQuery` method to embed a single text:
 
 ```python
-query_embedding = embeddings_model.embed_query("What is the meaning of life?")
+const queryEmbedding = await embeddingsModel.embedQuery("What is the meaning of life?")
 ```
 
 :::info[Further reading]
@@ -108,22 +111,21 @@ Some common similarity metrics include:
 The choice of similarity metric should be chosen based on the model.
 As an example, [OpenAI suggests cosine similarity for their embeddings](https://platform.openai.com/docs/guides/embeddings/which-distance-function-should-i-use), which can be easily implemented:
 
-```python
-import numpy as np
+```typescript
+function cosineSimilarity(vec1: number[], vec2: number[]): number {
+    const dotProduct = vec1.reduce((sum, val, i) => sum + val * vec2[i], 0);
+    const norm1 = Math.sqrt(vec1.reduce((sum, val) => sum + val * val, 0));
+    const norm2 = Math.sqrt(vec2.reduce((sum, val) => sum + val * val, 0));
+    return dotProduct / (norm1 * norm2);
+}
 
-def cosine_similarity(vec1, vec2):
-    dot_product = np.dot(vec1, vec2)
-    norm_vec1 = np.linalg.norm(vec1)
-    norm_vec2 = np.linalg.norm(vec2)
-    return dot_product / (norm_vec1 * norm_vec2)
-
-similarity = cosine_similarity(query_result, document_result)
-print("Cosine Similarity:", similarity)
+const similarity = cosineSimilarity(queryResult, documentResult);
+console.log("Cosine Similarity:", similarity);
 ```
 
 :::info[Further reading]
 
-- See Simon Willison’s [nice blog post and video](https://simonwillison.net/2023/Oct/23/embeddings/) on embeddings and similarity metrics.
+- See Simon Willison's [nice blog post and video](https://simonwillison.net/2023/Oct/23/embeddings/) on embeddings and similarity metrics.
 - See [this documentation](https://developers.google.com/machine-learning/clustering/dnn-clustering/supervised-similarity) from Google on similarity metrics to consider with embeddings.
 - See Pinecone's [blog post](https://www.pinecone.io/learn/vector-similarity/) on similarity metrics.
 - See OpenAI's [FAQ](https://platform.openai.com/docs/guides/embeddings/faq) on what similarity metric to use with OpenAI embeddings.
