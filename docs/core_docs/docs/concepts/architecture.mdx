@@ -15,7 +15,7 @@ LangChain is a framework that consists of a number of packages.
   style={{ width: "100%" }}
 />
 
-## langchain-core
+## @langchain/core
 
 This package contains base abstractions for different components and ways to compose them together.
 The interfaces for core components like chat models, vector stores, tools and more are defined here.
@@ -30,7 +30,7 @@ All chains, agents, and retrieval strategies here are NOT specific to any one in
 
 ## Integration packages
 
-Popular integrations have their own packages (e.g. `langchain-openai`, `langchain-anthropic`, etc) so that they can be properly versioned and appropriately lightweight.
+Popular integrations have their own packages (e.g. `@langchain/openai`, `@langchain/anthropic`, etc) so that they can be properly versioned and appropriately lightweight.
 
 For more information see:
 
@@ -44,9 +44,9 @@ Key integration packages are separated out (see above).
 This contains integrations for various components (chat models, vector stores, tools, etc).
 All dependencies in this package are optional to keep the package as lightweight as possible.
 
-## langgraph
+## @langchian/langgraph
 
-`langgraph` is an extension of `langchain` aimed at building robust and stateful multi-actor applications with LLMs by modeling steps as edges and nodes in a graph.
+`@langchian/langgraph` is an extension of `langchain` aimed at building robust and stateful multi-actor applications with LLMs by modeling steps as edges and nodes in a graph.
 
 LangGraph exposes high level interfaces for creating common types of agents, as well as a low-level API for composing custom flows.
 
