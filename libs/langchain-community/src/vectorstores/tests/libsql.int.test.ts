@@ -82,6 +82,7 @@ describe("LibSQLVectorStore (local)", () => {
     const ids = await store.addDocuments([
       new Document({
         pageContent: "hello",
+        metadata: { a: 1 },
       }),
     ]);
 
@@ -118,6 +119,7 @@ describe("LibSQLVectorStore (local)", () => {
     const ids = await store.addDocuments([
       new Document({
         pageContent: "hello world",
+        metadata: { a: 1 },
       }),
     ]);
 
@@ -178,6 +180,61 @@ describe("LibSQLVectorStore (local)", () => {
     expect(results2).toHaveLength(3);
     expect(
       results2.map((result) => result.id).every((id) => typeof id === "string")
+    ).toBe(true);
+  });
+
+  test("a similarity search with a filter can be performed", async () => {
+    await client.batch([
+      `DROP TABLE IF EXISTS vectors;`,
+      `CREATE TABLE IF NOT EXISTS vectors (
+        content TEXT,
+        metadata JSON,
+        embedding F32_BLOB(1024)
+      );`,
+      `CREATE INDEX IF NOT EXISTS idx_vectors_embedding
+        ON vectors (libsql_vector_idx(embedding));`,
+    ]);
+
+    const store = new LibSQLVectorStore(embeddings, config);
+
+    const ids = await store.addDocuments([
+      new Document({
+        pageContent: "the quick brown fox",
+        metadata: {
+          label: "1",
+        },
+      }),
+      new Document({
+        pageContent: "jumped over the lazy dog",
+        metadata: {
+          label: "2",
+        },
+      }),
+      new Document({
+        pageContent: "hello world",
+        metadata: {
+          label: "1",
+        },
+      }),
+    ]);
+
+    expect(ids).toHaveLength(3);
+    expect(ids.every((id) => typeof id === "string")).toBe(true);
+
+    const results = await store.similaritySearch("the quick brown dog", 10, {
+      label: {
+        operator: "=",
+        value: "1",
+      },
+    });
+
+    expect(results).toHaveLength(2);
+    expect(results.map((result) => result.pageContent)).toEqual([
+      "the quick brown fox",
+      "hello world",
+    ]);
+    expect(
+      results.map((result) => result.id).every((id) => typeof id === "string")
     ).toBe(true);
   });
 
@@ -282,12 +339,15 @@ describe("LibSQLVectorStore (local)", () => {
     const ids = await store.addDocuments([
       new Document({
         pageContent: "the quick brown fox",
+        metadata: { a: 1 },
       }),
       new Document({
         pageContent: "jumped over the lazy dog",
+        metadata: { a: 2 },
       }),
       new Document({
         pageContent: "hello world",
+        metadata: { a: 3 },
       }),
     ]);
 
