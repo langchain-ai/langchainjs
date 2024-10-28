@@ -4,7 +4,8 @@
 
 - [Runnable Interface](/docs/concepts/runnables)
 - [Chat Models](/docs/concepts/chat_models)
-  :::
+
+:::
 
 **Streaming** is crucial for enhancing the responsiveness of applications built on [LLMs](/docs/concepts/chat_models). By displaying output progressively, even before a complete response is ready, streaming significantly improves user experience (UX), particularly when dealing with the latency of LLMs.
 
@@ -42,43 +43,42 @@ In some cases, you may need to stream **custom data** that goes beyond the infor
 
 LangChain two main APIs for streaming output in real-time. These APIs are supported by any component that implements the [Runnable Interface](/docs/concepts/runnables), including [LLMs](/docs/concepts/chat_models), [compiled LangGraph graphs](https://langchain-ai.github.io/langgraphjs/concepts/low_level/), and any Runnable generated with [LCEL](/docs/concepts/lcel).
 
-1. [stream](https://api.js.langchain.com/classes/_langchain_core.runnables.Runnable.html#stream): Use to stream outputs from individual Runnables (e.g., a chat model) as they are generated or stream any workflow created with LangGraph.
-2. The async only [astream_events](https://api.js.langchain.com/classes/_langchain_core.runnables.Runnable.html#streamEvents): Use this API to get access to custom events and intermediate outputs from LLM applications built entirely with [LCEL](/docs/concepts/lcel). Note that this API is available, but not needed when working with LangGraph.
+1. [`stream`](https://api.js.langchain.com/classes/_langchain_core.runnables.Runnable.html#stream): Use to stream outputs from individual Runnables (e.g., a chat model) as they are generated or stream any workflow created with LangGraph.
+2. [`streamEvents`](https://api.js.langchain.com/classes/_langchain_core.runnables.Runnable.html#streamEvents): Use this API to get access to custom events and intermediate outputs from LLM applications built entirely with [LCEL](/docs/concepts/lcel). Note that this API is available, but not needed when working with LangGraph.
 
 :::note
-In addition, there is a **legacy** async [astream_log](https://api.js.langchain.com/classes/_langchain_core.runnables.Runnable.html#streamLog) API. This API is not recommended for new projects it is more complex and less feature-rich than the other streaming APIs.
+In addition, there is a **legacy** [streamLog](https://api.js.langchain.com/classes/_langchain_core.runnables.Runnable.html#streamLog) API. This API is not recommended for new projects it is more complex and less feature-rich than the other streaming APIs.
 :::
 
-### `stream()` and `astream()`
+### `stream()`
 
-The `stream()` method returns an iterator that yields chunks of output synchronously as they are produced. You can use a `for` loop to process each chunk in real-time. For example, when using an LLM, this allows the output to be streamed incrementally as it is generated, reducing the wait time for users.
+The `stream()` method returns an iterator that yields chunks of output synchronously as they are produced. You can use a `for await` loop to process each chunk in real-time. For example, when using an LLM, this allows the output to be streamed incrementally as it is generated, reducing the wait time for users.
 
-The type of chunk yielded by the `stream()` and `astream()` methods depends on the component being streamed. For example, when streaming from an [LLM](/docs/concepts/chat_models) each component will be an [AIMessageChunk](/docs/concepts/messages#aimessagechunk); however, for other components, the chunk may be different.
+The type of chunk yielded by the `stream()` methods depends on the component being streamed. For example, when streaming from an [LLM](/docs/concepts/chat_models) each component will be an [`AIMessageChunk`](/docs/concepts/messages#aimessagechunk); however, for other components, the chunk may be different.
 
 The `stream()` method returns an iterator that yields these chunks as they are produced. For example,
 
-```python
-for chunk in component.stream(some_input):
-    # IMPORTANT: Keep the processing of each chunk as efficient as possible.
-    # While you're processing the current chunk, the upstream component is
-    # waiting to produce the next one. For example, if working with LangGraph,
-    # graph execution is paused while the current chunk is being processed.
-    # In extreme cases, this could even result in timeouts (e.g., when llm outputs are
-    # streamed from an API that has a timeout).
-    print(chunk)
+```typescript
+for await (const chunk in await component.stream(someInput)) {
+    // IMPORTANT: Keep the processing of each chunk as efficient as possible.
+    // While you're processing the current chunk, the upstream component is
+    // waiting to produce the next one. For example, if working with LangGraph,
+    // graph execution is paused while the current chunk is being processed.
+    // In extreme cases, this could even result in timeouts (e.g., when llm outputs are
+    // streamed from an API that has a timeout).
+    console.log(chunk)
+}
 ```
-
-The [asynchronous version](/docs/concepts/async), `astream()`, works similarly but is designed for non-blocking workflows. You can use it in asynchronous code to achieve the same real-time streaming behavior.
 
 #### Usage with chat models
 
-When using `stream()` or `astream()` with chat models, the output is streamed as [AIMessageChunks](/docs/concepts/messages#aimessagechunk) as it is generated by the LLM. This allows you to present or process the LLM's output incrementally as it's being produced, which is particularly useful in interactive applications or interfaces.
+When using `stream()` with chat models, the output is streamed as [`AIMessageChunks`](/docs/concepts/messages#aimessagechunk) as it is generated by the LLM. This allows you to present or process the LLM's output incrementally as it's being produced, which is particularly useful in interactive applications or interfaces.
 
 #### Usage with LangGraph
 
 [LangGraph](/docs/concepts/architecture#langgraph) compiled graphs are [Runnables](/docs/concepts/runnables) and support the standard streaming APIs.
 
-When using the _stream_ and _astream_ methods with LangGraph, you can **one or more** [streaming mode](https://langchain-ai.github.io/langgraphjs/reference/classes/langgraph_pregel.Pregel.html#streamMode) which allow you to control the type of output that is streamed. The available streaming modes are:
+When using the _stream_ and methods with LangGraph, you can **one or more** [streaming mode](https://langchain-ai.github.io/langgraphjs/reference/classes/langgraph_pregel.Pregel.html#streamMode) which allow you to control the type of output that is streamed. The available streaming modes are:
 
 - **"values"**: Emit all values of the [state](https://langchain-ai.github.io/langgraphjs/concepts/low_level/) for each step.
 - **"updates"**: Emit only the node name(s) and updates that were returned by the node(s) after each step.
@@ -92,89 +92,84 @@ For more information, please see:
 
 #### Usage with LCEL
 
-If you compose multiple Runnables using [LangChain’s Expression Language (LCEL)](/docs/concepts/lcel), the `stream()` and `astream()` methods will, by convention, stream the output of the last step in the chain. This allows the final processed result to be streamed incrementally. **LCEL** tries to optimize streaming latency in pipelines such that the streaming results from the last step are available as soon as possible.
+If you compose multiple Runnables using [LangChain’s Expression Language (LCEL)](/docs/concepts/lcel), the `stream()` methods will, by convention, stream the output of the last step in the chain. This allows the final processed result to be streamed incrementally. **LCEL** tries to optimize streaming latency in pipelines such that the streaming results from the last step are available as soon as possible.
 
-### `astream_events`
+### `streamEvents`
 
-<span data-heading-keywords="astream_events,stream_events,stream events"></span>
+<span data-heading-keywords="streamEvents,stream_events,stream events"></span>
 
 :::tip
-Use the `astream_events` API to access custom data and intermediate outputs from LLM applications built entirely with [LCEL](/docs/concepts/lcel).
+Use the `streamEvents` API to access custom data and intermediate outputs from LLM applications built entirely with [LCEL](/docs/concepts/lcel).
 
-While this API is available for use with [LangGraph](/docs/concepts/architecture#langgraph) as well, it is usually not necessary when working with LangGraph, as the `stream` and `astream` methods provide comprehensive streaming capabilities for LangGraph graphs.
+While this API is available for use with [LangGraph](/docs/concepts/architecture#langgraph) as well, it is usually not necessary when working with LangGraph, as the `stream` methods provide comprehensive streaming capabilities for LangGraph graphs.
 :::
 
 For chains constructed using **LCEL**, the `.stream()` method only streams the output of the final step from te chain. This might be sufficient for some applications, but as you build more complex chains of several LLM calls together, you may want to use the intermediate values of the chain alongside the final output. For example, you may want to return sources alongside the final generation when building a chat-over-documents app.
 
 There are ways to do this [using callbacks](/docs/concepts/callbacks), or by constructing your chain in such a way that it passes intermediate
 values to the end with something like chained [`.assign()`](/docs/how_to/passthrough/) calls, but LangChain also includes an
-`.astream_events()` method that combines the flexibility of callbacks with the ergonomics of `.stream()`. When called, it returns an iterator
+`.streamEvents()` method that combines the flexibility of callbacks with the ergonomics of `.stream()`. When called, it returns an iterator
 which yields [various types of events](/docs/how_to/streaming/#event-reference) that you can filter and process according
 to the needs of your project.
 
 Here's one small example that prints just events containing streamed chat model output:
 
-```python
-from langchain_core.output_parsers import StrOutputParser
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_anthropic import ChatAnthropic
+```typescript
+import { StringOutputParser } from "@langchain/core/output_parsers"
+import { ChatPromptTemplate } from "@langchain/core/prompts"
+import { ChatAnthropic } from "@langchain/anthropic"
 
-model = ChatAnthropic(model="claude-3-sonnet-20240229")
+const model = new ChatAnthropic({ model: "claude-3-sonnet-20240229" });
 
-prompt = ChatPromptTemplate.from_template("tell me a joke about {topic}")
-parser = StrOutputParser()
-chain = prompt | model | parser
+const prompt = ChatPromptTemplate.fromTemplate("tell me a joke about {topic}");
+const parser = StringOutputParser();
+const chain = prompt.pipe(model).pipe(parser);
 
-async for event in chain.astream_events({"topic": "parrot"}, version="v2"):
-    kind = event["event"]
-    if kind == "on_chat_model_stream":
-        print(event, end="|", flush=True)
+for await (const event of await chain.streamEvents({ topic: "parrot" }, { version: "v2" })) {
+  if (event.event === "on_chat_model_stream") {
+    console.log(event);
+  }
+}
 ```
 
 You can roughly think of it as an iterator over callback events (though the format differs) - and you can use it on almost all LangChain components!
 
-See [this guide](/docs/how_to/streaming/#using-stream-events) for more detailed information on how to use `.astream_events()`, including a table listing available events.
+See [this guide](/docs/how_to/streaming/#using-stream-events) for more detailed information on how to use `.streamEvents()`, including a table listing available events.
 
 ## Writing custom data to the stream
 
 To write custom data to the stream, you will need to choose one of the following methods based on the component you are working with:
 
-1. [dispatch_events](https://api.js.langchain.com/functions/_langchain_core.callbacks_dispatch.dispatchCustomEvent.html#) / [adispatch_events](https://api.js.langchain.com/functions/_langchain_core.callbacks_dispatch.dispatchCustomEvent.html) can be used to write custom data that will be surfaced through the **astream_events** API. See [how to dispatch custom callback events](/docs/how_to/callbacks_custom_events/#astream-events-api) for more information.
+1. [dispatch_events](https://api.js.langchain.com/functions/_langchain_core.callbacks_dispatch.dispatchCustomEvent.html#) can be used to write custom data that will be surfaced through the **streamEvents** API. See [how to dispatch custom callback events](/docs/how_to/callbacks_custom_events/#stream-events-api) for more information.
 
 ## "Auto-Streaming" Chat Models
 
-LangChain simplifies streaming from [chat models](/docs/concepts/chat_models) by automatically enabling streaming mode in certain cases, even when you’re not explicitly calling the streaming methods. This is particularly useful when you use the non-streaming `invoke` method but still want to stream the entire application, including intermediate results from the chat model.
+LangChain simplifies streaming from [chat models](/docs/concepts/chat_models) by automatically enabling streaming mode in certain cases, even when you're not explicitly calling the streaming methods. This is particularly useful when you use the non-streaming `invoke` method but still want to stream the entire application, including intermediate results from the chat model.
 
 ### How It Works
 
-When you call the `invoke` (or `ainvoke`) method on a chat model, LangChain will automatically switch to streaming mode if it detects that you are trying to stream the overall application.
+When you call the `invoke` method on a chat model, LangChain will automatically switch to streaming mode if it detects that you are trying to stream the overall application.
 
-Under the hood, it'll have `invoke` (or `ainvoke`) use the `stream` (or `astream`) method to generate its output. The result of the invocation will be the same as far as the code that was using `invoke` is concerned; however, while the chat model is being streamed, LangChain will take care of invoking `on_llm_new_token` events in LangChain's [callback system](/docs/concepts/callbacks). These callback events
-allow LangGraph `stream`/`astream` and `astream_events` to surface the chat model's output in real-time.
+Under the hood, it'll have `invoke` use the `stream` method to generate its output. The result of the invocation will be the same as far as the code that was using `invoke` is concerned; however, while the chat model is being streamed, LangChain will take care of invoking `on_llm_new_token` events in LangChain's [callback system](/docs/concepts/callbacks). These callback events
+allow LangGraph `stream` and `streamEvents` to surface the chat model's output in real-time.
 
 Example:
 
-```python
-def node(state):
+```typescript
+const node = (state) => {
     ...
-    # The code below uses the invoke method, but LangChain will
-    # automatically switch to streaming mode
-    # when it detects that the overall
-    # application is being streamed.
+    // The code below uses the invoke method, but LangChain will
+    // automatically switch to streaming mode
+    // when it detects that the overall
+    // application is being streamed.
     ai_message = model.invoke(state["messages"])
     ...
 
-for chunk in compiled_graph.stream(..., mode="messages"):
-    ...
+    for await (const chunk of await compiledGraph.stream(..., { streamMode: "messages" })) {
+      // ... do something
+    }
+}
 ```
-
-## Async Programming
-
-LangChain offers both synchronous (sync) and asynchronous (async) versions of many of its methods. The async methods are typically prefixed with an "a" (e.g., `ainvoke`, `astream`). When writing async code, it's crucial to consistently use these asynchronous methods to ensure non-blocking behavior and optimal performance.
-
-If streaming data fails to appear in real-time, please ensure that you are using the correct async methods for your workflow.
-
-Please review the [async programming in LangChain guide](/docs/concepts/async) for more information on writing async code with LangChain.
 
 ## Related Resources
 
@@ -188,4 +183,4 @@ Please see the following how-to guides for specific examples of streaming in Lan
 
 For writing custom data to the stream, please see the following resources:
 
-- If using LCEL, see [how to dispatch custom callback events](/docs/how_to/callbacks_custom_events/#astream-events-api).
+- If using LCEL, see [how to dispatch custom callback events](/docs/how_to/callbacks_custom_events/#stream-events-api).
