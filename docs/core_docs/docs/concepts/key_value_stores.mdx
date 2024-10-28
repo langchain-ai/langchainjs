@@ -6,7 +6,7 @@ LangChain provides a key-value store interface for storing and retrieving data.
 
 LangChain includes a [`BaseStore`](https://api.js.langchain.com/classes/_langchain_core.stores.BaseStore.html) interface,
 which allows for storage of arbitrary data. However, LangChain components that require KV-storage accept a
-more specific `BaseStore[str, bytes]` instance that stores binary data (referred to as a `ByteStore`), and internally take care of
+more specific `BaseStore<string, Uint8Array>` instance that stores binary data (referred to as a `ByteStore`), and internally take care of
 encoding and decoding data for their specific needs.
 
 This means that as a user, you only need to think about one type of store rather than different ones for different types of data.
@@ -26,12 +26,12 @@ Please see these how-to guides for more information:
 
 ## Interface
 
-All [`BaseStores`](https://api.js.langchain.com/classes/_langchain_core.stores.BaseStore.html) support the following interface. Note that the interface allows for modifying **multiple** key-value pairs at once:
+All [`BaseStore`](https://api.js.langchain.com/classes/_langchain_core.stores.BaseStore.html)s support the following interface. Note that the interface allows for modifying **multiple** key-value pairs at once:
 
-- `mget(key: Sequence[str]) -> List[Optional[bytes]]`: get the contents of multiple keys, returning `None` if the key does not exist
-- `mset(key_value_pairs: Sequence[Tuple[str, bytes]]) -> None`: set the contents of multiple keys
-- `mdelete(key: Sequence[str]) -> None`: delete multiple keys
-- `yield_keys(prefix: Optional[str] = None) -> Iterator[str]`: yield all keys in the store, optionally filtering by a prefix
+- `mget(keys: string[]): Promise<(Uint8Array | undefined)[]>`: get the contents of multiple keys, returning `undefined` if the key does not exist
+- `mset(keyValuePairs: [string, Uint8Array][]): Promise<void>`: set the contents of multiple keys
+- `mdelete(keys: string[]): Promise<void>`: delete multiple keys
+- `yieldKeys(prefix?: string): AsyncIterator<string>`: yield all keys in the store, optionally filtering by a prefix
 
 ## Integrations
 

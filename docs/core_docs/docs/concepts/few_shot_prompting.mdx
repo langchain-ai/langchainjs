@@ -79,11 +79,11 @@ If we insert our examples as messages, where each example is represented as a se
 
 One area where formatting examples as messages can be tricky is when our example outputs have tool calls. This is because different models have different constraints on what types of message sequences are allowed when any tool calls are generated.
 
-- Some models require that any AIMessage with tool calls be immediately followed by ToolMessages for every tool call,
-- Some models additionally require that any ToolMessages be immediately followed by an AIMessage before the next HumanMessage,
-- Some models require that tools are passed in to the model if there are any tool calls / ToolMessages in the chat history.
+- Some models require that any `AIMessage` with tool calls be immediately followed by `ToolMessage`s for every tool call,
+- Some models additionally require that any `ToolMessage`s be immediately followed by an `AIMessage` before the next `HumanMessage`,
+- Some models require that tools are passed in to the model if there are any tool calls / `ToolMessage`s in the chat history.
 
-These requirements are model-specific and should be checked for the model you are using. If your model requires ToolMessages after tool calls and/or AIMessages after ToolMessages and your examples only include expected tool calls and not the actual tool outputs, you can try adding dummy ToolMessages / AIMessages to the end of each example with generic contents to satisfy the API constraints.
+These requirements are model-specific and should be checked for the model you are using. If your model requires `ToolMessage`s after tool calls and/or `AIMessage`s after `ToolMessage`s and your examples only include expected tool calls and not the actual tool outputs, you can try adding dummy `ToolMessage`s / `AIMessage`s to the end of each example with generic contents to satisfy the API constraints.
 In these cases it's especially worth experimenting with inserting your examples as strings versus messages, as having dummy messages can adversely affect certain models.
 
 You can see a case study of how Anthropic and OpenAI respond to different few-shot prompting techniques on two different tool calling benchmarks [here](https://blog.langchain.dev/few-shot-prompting-to-improve-tool-calling-performance/).
