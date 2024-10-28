@@ -33,16 +33,16 @@ Most chat models that support **multimodal inputs** also accept those values in 
 
 The gist of passing multimodal inputs to a chat model is to use content blocks that specify a type and corresponding data. For example, to pass an image to a chat model:
 
-```python
-from langchain_core.messages import HumanMessage
+```typescript
+import { HumanMessage } from "@langchain/core/messages";
 
-message = HumanMessage(
-    content=[
-        {"type": "text", "text": "describe the weather in this image"},
-        {"type": "image_url", "image_url": {"url": image_url}},
-    ],
-)
-response = model.invoke([message])
+const message = new HumanMessage({
+  content: [
+    { type: "text", text: "describe the weather in this image" },
+    { type: "image_url", image_url: { url: image_url } },
+  ]
+})
+const response = await model.invoke([message])
 ```
 
 :::caution
@@ -71,7 +71,8 @@ However, a chat model can easily interact with multimodal data by invoking tools
 :::info Prerequisites
 
 - [Embedding Models](/docs/concepts/embedding_models)
-  :::
+
+:::
 
 **Embeddings** are vector representations of data used for tasks like similarity search and retrieval.
 
@@ -84,7 +85,8 @@ As use cases involving multimodal search and retrieval tasks become more common,
 :::info Prerequisites
 
 - [Vector stores](/docs/concepts/vectorstores)
-  :::
+
+:::
 
 Vector stores are databases for storing and retrieving embeddings, which are typically used in search and retrieval tasks. Similar to embeddings, vector stores are currently optimized for text-based data.
 
