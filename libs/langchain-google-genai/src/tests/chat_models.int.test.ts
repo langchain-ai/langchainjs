@@ -539,7 +539,7 @@ test("Invoke with JSON mode", async () => {
   );
 });
 
-test.only("Supports tool_choice", async () => {
+test("Supports tool_choice", async () => {
   const model = new ChatGoogleGenerativeAI({});
   const tools = [
     {
