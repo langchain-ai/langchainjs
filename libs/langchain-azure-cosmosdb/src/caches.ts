@@ -16,7 +16,6 @@ import {
 } from "./azure_cosmosdb_nosql.js";
 
 const USER_AGENT_SUFFIX = "langchainjs-cdbnosql-semanticcache-javascript";
-const DEFAULT_DATABASE_NAME = "semanticCacheDB";
 const DEFAULT_CONTAINER_NAME = "semanticCacheContainer";
 
 /**
@@ -92,7 +91,7 @@ export class AzureCosmosDBNoSQLSemanticCache extends BaseCache {
     this.config = {
       ...dbConfig,
       client,
-      databaseName: dbConfig.databaseName ?? DEFAULT_DATABASE_NAME,
+      databaseName: dbConfig.databaseName,
       containerName: dbConfig.containerName ?? DEFAULT_CONTAINER_NAME,
     };
     this.embeddings = embeddings;
