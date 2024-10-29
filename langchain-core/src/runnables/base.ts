@@ -1181,6 +1181,43 @@ export type RunnableBindingArgs<
 
 /**
  * A runnable that delegates calls to another runnable with a set of kwargs.
+ * @example
+ * ```typescript
+ * import {
+ *   type RunnableConfig,
+ *   RunnableLambda,
+ * } from "@langchain/core/runnables";
+ *
+ * const enhanceProfile = (
+ *   profile: Record<string, any>,
+ *   config?: RunnableConfig
+ * ) => {
+ *   if (config?.configurable?.role) {
+ *     return { ...profile, role: config.configurable.role };
+ *   }
+ *   return profile;
+ * };
+ *
+ * const runnable = RunnableLambda.from(enhanceProfile);
+ *
+ * // Bind configuration to the runnable to set the user's role dynamically
+ * const adminRunnable = runnable.bind({ configurable: { role: "Admin" } });
+ * const userRunnable = runnable.bind({ configurable: { role: "User" } });
+ *
+ * const result1 = await adminRunnable.invoke({
+ *   name: "Alice",
+ *   email: "alice@example.com"
+ * });
+ *
+ * // { name: "Alice", email: "alice@example.com", role: "Admin" }
+ *
+ * const result2 = await userRunnable.invoke({
+ *   name: "Bob",
+ *   email: "bob@example.com"
+ * });
+ *
+ * // { name: "Bob", email: "bob@example.com", role: "User" }
+ * ```
  */
 export class RunnableBinding<
   RunInput,
@@ -1432,6 +1469,24 @@ export class RunnableBinding<
 /**
  * A runnable that delegates calls to another runnable
  * with each element of the input sequence.
+ * @example
+ * ```typescript
+ * import { RunnableEach, RunnableLambda } from "@langchain/core/runnables";
+ *
+ * const toUpperCase = (input: string): string => input.toUpperCase();
+ * const addGreeting = (input: string): string => `Hello, ${input}!`;
+ *
+ * const upperCaseLambda = RunnableLambda.from(toUpperCase);
+ * const greetingLambda = RunnableLambda.from(addGreeting);
+ *
+ * const chain = new RunnableEach({
+ *   bound: upperCaseLambda.pipe(greetingLambda),
+ * });
+ *
+ * const result = await chain.invoke(["alice", "bob", "carol"])
+ *
+ * // ["Hello, ALICE!", "Hello, BOB!", "Hello, CAROL!"]
+ * ```
  */
 export class RunnableEach<
   RunInputItem,
@@ -1526,6 +1581,45 @@ export class RunnableEach<
 /**
  * Base class for runnables that can be retried a
  * specified number of times.
+ * @example
+ * ```typescript
+ * import {
+ *   RunnableLambda,
+ *   RunnableRetry,
+ * } from "@langchain/core/runnables";
+ *
+ * // Simulate an API call that fails
+ * const simulateApiCall = (input: string): string => {
+ *   console.log(`Attempting API call with input: ${input}`);
+ *   throw new Error("API call failed due to network issue");
+ * };
+ *
+ * const apiCallLambda = RunnableLambda.from(simulateApiCall);
+ *
+ * // Apply retry logic using the .withRetry() method
+ * const apiCallWithRetry = apiCallLambda.withRetry({ stopAfterAttempt: 3 });
+ *
+ * // Alternatively, create a RunnableRetry instance manually
+ * const manualRetry = new RunnableRetry({
+ *   bound: apiCallLambda,
+ *   maxAttemptNumber: 3,
+ *   config: {},
+ * });
+ *
+ * // Example invocation using the .withRetry() method
+ * const res = await apiCallWithRetry
+ *   .invoke("Request 1")
+ *   .catch((error) => {
+ *     console.error("Failed after multiple retries:", error.message);
+ *   });
+ *
+ * // Example invocation using the manual retry instance
+ * const res2 = await manualRetry
+ *   .invoke("Request 2")
+ *   .catch((error) => {
+ *     console.error("Failed after multiple retries:", error.message);
+ *   });
+ * ```
  */
 export class RunnableRetry<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -2302,7 +2396,30 @@ function assertNonTraceableFunction<
 }
 
 /**
- * A runnable that runs a callable.
+ * A runnable that wraps an arbitrary function that takes a single argument.
+ * @example
+ * ```typescript
+ * import { RunnableLambda } from "@langchain/core/runnables";
+ *
+ * const add = (input: { x: number; y: number }) => input.x + input.y;
+ *
+ * const multiply = (input: { value: number; multiplier: number }) =>
+ *   input.value * input.multiplier;
+ *
+ * // Create runnables for the functions
+ * const addLambda = RunnableLambda.from(add);
+ * const multiplyLambda = RunnableLambda.from(multiply);
+ *
+ * // Chain the lambdas for a mathematical operation
+ * const chainedLambda = addLambda.pipe((result) =>
+ *   multiplyLambda.invoke({ value: result, multiplier: 2 })
+ * );
+ *
+ * // Example invocation of the chainedLambda
+ * const result = await chainedLambda.invoke({ x: 2, y: 3 });
+ *
+ * // Will log "10" (since (2 + 3) * 2 = 10)
+ * ```
  */
 export class RunnableLambda<
   RunInput,
@@ -2579,6 +2696,39 @@ export class RunnableLambda<
   }
 }
 
+/**
+ * A runnable that runs a mapping of runnables in parallel,
+ * and returns a mapping of their outputs.
+ * @example
+ * ```typescript
+ * import {
+ *   RunnableLambda,
+ *   RunnableParallel,
+ * } from "@langchain/core/runnables";
+ *
+ * const addYears = (age: number): number => age + 5;
+ * const yearsToFifty = (age: number): number => 50 - age;
+ * const yearsToHundred = (age: number): number => 100 - age;
+ *
+ * const addYearsLambda = RunnableLambda.from(addYears);
+ * const milestoneFiftyLambda = RunnableLambda.from(yearsToFifty);
+ * const milestoneHundredLambda = RunnableLambda.from(yearsToHundred);
+ *
+ * // Pipe will coerce objects into RunnableParallel by default, but we
+ * // explicitly instantiate one here to demonstrate
+ * const sequence = addYearsLambda.pipe(
+ *   RunnableParallel.from({
+ *     years_to_fifty: milestoneFiftyLambda,
+ *     years_to_hundred: milestoneHundredLambda,
+ *   })
+ * );
+ *
+ * // Invoke the sequence with a single age input
+ * const res = sequence.invoke(25);
+ *
+ * // { years_to_fifty: 25, years_to_hundred: 75 }
+ * ```
+ */
 export class RunnableParallel<RunInput> extends RunnableMap<RunInput> {}
 
 /**
@@ -2599,6 +2749,55 @@ export class RunnableParallel<RunInput> extends RunnableMap<RunInput> {}
  * When streaming, fallbacks will only be called on failures during the initial
  * stream creation. Errors that occur after a stream starts will not fallback
  * to the next Runnable.
+ *
+ * @example
+ * ```typescript
+ * import {
+ *   RunnableLambda,
+ *   RunnableWithFallbacks,
+ * } from "@langchain/core/runnables";
+ *
+ * const primaryOperation = (input: string): string => {
+ *   if (input !== "safe") {
+ *     throw new Error("Primary operation failed due to unsafe input");
+ *   }
+ *   return `Processed: ${input}`;
+ * };
+ *
+ * // Define a fallback operation that processes the input differently
+ * const fallbackOperation = (input: string): string =>
+ *   `Fallback processed: ${input}`;
+ *
+ * const primaryRunnable = RunnableLambda.from(primaryOperation);
+ * const fallbackRunnable = RunnableLambda.from(fallbackOperation);
+ *
+ * // Apply the fallback logic using the .withFallbacks() method
+ * const runnableWithFallback = primaryRunnable.withFallbacks([fallbackRunnable]);
+ *
+ * // Alternatively, create a RunnableWithFallbacks instance manually
+ * const manualFallbackChain = new RunnableWithFallbacks({
+ *   runnable: primaryRunnable,
+ *   fallbacks: [fallbackRunnable],
+ * });
+ *
+ * // Example invocation using .withFallbacks()
+ * const res = await runnableWithFallback
+ *   .invoke("unsafe input")
+ *   .catch((error) => {
+ *     console.error("Failed after all attempts:", error.message);
+ *   });
+ *
+ * // "Fallback processed: unsafe input"
+ *
+ * // Example invocation using manual instantiation
+ * const res = await manualFallbackChain
+ *   .invoke("safe")
+ *   .catch((error) => {
+ *     console.error("Failed after all attempts:", error.message);
+ *   });
+ *
+ * // "Processed: safe"
+ * ```
  */
 export class RunnableWithFallbacks<RunInput, RunOutput> extends Runnable<
   RunInput,
@@ -2849,6 +3048,34 @@ export interface RunnableAssignFields<RunInput> {
 
 /**
  * A runnable that assigns key-value pairs to inputs of type `Record<string, unknown>`.
+ * @example
+ * ```typescript
+ * import {
+ *   RunnableAssign,
+ *   RunnableLambda,
+ *   RunnableParallel,
+ * } from "@langchain/core/runnables";
+ *
+ * const calculateAge = (x: { birthYear: number }): { age: number } => {
+ *   const currentYear = new Date().getFullYear();
+ *   return { age: currentYear - x.birthYear };
+ * };
+ *
+ * const createGreeting = (x: { name: string }): { greeting: string } => {
+ *   return { greeting: `Hello, ${x.name}!` };
+ * };
+ *
+ * const mapper = RunnableParallel.from({
+ *   age_step: RunnableLambda.from(calculateAge),
+ *   greeting_step: RunnableLambda.from(createGreeting),
+ * });
+ *
+ * const runnableAssign = new RunnableAssign({ mapper });
+ *
+ * const res = await runnableAssign.invoke({ name: "Alice", birthYear: 1990 });
+ *
+ * // { name: "Alice", birthYear: 1990, age_step: { age: 34 }, greeting_step: { greeting: "Hello, Alice!" } }
+ * ```
  */
 export class RunnableAssign<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -2963,6 +3190,27 @@ export interface RunnablePickFields {
 
 /**
  * A runnable that assigns key-value pairs to inputs of type `Record<string, unknown>`.
+ * Useful for streaming, can be automatically created and chained by calling `runnable.pick();`.
+ * @example
+ * ```typescript
+ * import { RunnablePick } from "@langchain/core/runnables";
+ *
+ * const inputData = {
+ *   name: "John",
+ *   age: 30,
+ *   city: "New York",
+ *   country: "USA",
+ *   email: "john.doe@example.com",
+ *   phone: "+1234567890",
+ * };
+ *
+ * const basicInfoRunnable = new RunnablePick(["name", "city"]);
+ *
+ * // Example invocation
+ * const res = await basicInfoRunnable.invoke(inputData);
+ *
+ * // { name: 'John', city: 'New York' }
+ * ```
  */
 export class RunnablePick<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
