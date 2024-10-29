@@ -146,18 +146,25 @@ export class LibSQLVectorStore extends VectorStore {
    * @param {string[] | number[]} [params.ids] - The ids of the vectors to delete.
    * @returns {Promise<void>}
    */
-  async delete(params: { ids?: string[] | number[] }): Promise<void> {
-    if (!params.ids) {
+  async delete(params: {
+    ids?: string[] | number[];
+    deleteAll?: boolean;
+  }): Promise<void> {
+    if (params.deleteAll) {
       await this.db.execute(`DELETE FROM ${this.table}`);
       return;
+    } else if (params.ids !== undefined) {
+      await this.db.batch(
+        params.ids.map((id) => ({
+          sql: `DELETE FROM ${this.table} WHERE rowid = :id`,
+          args: { id },
+        }))
+      );
+    } else {
+      throw new Error(
+        `You must provide an "ids" parameter or a "deleteAll" parameter.`
+      );
     }
-
-    await this.db.batch(
-      params.ids.map((id) => ({
-        sql: `DELETE FROM ${this.table} WHERE rowid = :id`,
-        args: { id },
-      }))
-    );
   }
 
   /**

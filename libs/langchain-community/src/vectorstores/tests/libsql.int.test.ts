@@ -2,13 +2,13 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { expect, test } from "@jest/globals";
 import { Document } from "@langchain/core/documents";
-import { OllamaEmbeddings } from "@langchain/ollama";
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { createClient } from "@libsql/client";
+import { SyntheticEmbeddings } from "@langchain/core/utils/testing";
 import fs from "node:fs";
 import { LibSQLVectorStore, LibSQLVectorStoreArgs } from "../libsql.js";
 
-test("can create and query", async () => {
+test("can create and query (cloud)", async () => {
   const client = createClient({
     url: process.env.LIBSQL_URL!,
     authToken: process.env.LIBSQL_AUTH_TOKEN,
@@ -54,7 +54,9 @@ describe("LibSQLVectorStore (local)", () => {
     db: client,
   };
 
-  const embeddings = new OllamaEmbeddings();
+  const embeddings = new SyntheticEmbeddings({
+    vectorSize: 1024,
+  });
 
   afterAll(async () => {
     await client.close();
@@ -172,10 +174,6 @@ describe("LibSQLVectorStore (local)", () => {
     const results1 = await store.similaritySearch("the quick brown dog", 2);
 
     expect(results1).toHaveLength(2);
-    expect(results1.map((result) => result.pageContent)).toEqual([
-      "the quick brown fox",
-      "jumped over the lazy dog",
-    ]);
     expect(
       results1.map((result) => result.id).every((id) => typeof id === "string")
     ).toBe(true);
@@ -183,11 +181,6 @@ describe("LibSQLVectorStore (local)", () => {
     const results2 = await store.similaritySearch("hello");
 
     expect(results2).toHaveLength(3);
-    expect(results2.map((result) => result.pageContent)).toEqual([
-      "hello world",
-      "the quick brown fox",
-      "jumped over the lazy dog",
-    ]);
     expect(
       results2.map((result) => result.id).every((id) => typeof id === "string")
     ).toBe(true);
