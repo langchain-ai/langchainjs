@@ -264,7 +264,9 @@ describe("LibSQLVectorStore (local)", () => {
     expect(ids).toHaveLength(3);
     expect(ids.every((id) => typeof id === "string")).toBe(true);
 
-    await store.delete({});
+    await store.delete({
+      deleteAll: true,
+    });
 
     const resultSet = await client.execute(`SELECT * FROM vectors`);
 
