@@ -17,7 +17,7 @@ const DEFAULT_CONTAINER_NAME = "chatHistoryContainer";
  */
 export interface AzureCosmosDBNoSQLChatMessageHistoryInput {
   sessionId: string;
-  userId: string;
+  userId?: string;
   client?: CosmosClient;
   connectionString?: string;
   endpoint?: string;
@@ -35,8 +35,8 @@ export interface AzureCosmosDBNoSQLChatMessageHistoryInput {
  * @example
  * ```typescript
  * const chatHistory = new AzureCosmsosDBNoSQLChatMessageHistory({
- *     sessionId: new ObjectId().toString(),
- *     userId: new ObjectId().toString(),
+ *     sessionId: "session-id",
+ *     userId: "user-id",
  *     databaseName: DATABASE_NAME,
  *     containerName: CONTAINER_NAME,
  * });
@@ -73,6 +73,8 @@ export class AzureCosmsosDBNoSQLChatMessageHistory extends BaseListChatMessageHi
 
   private messageList: BaseMessage[] = [];
 
+  private initPromise?: Promise<void>;
+
   constructor(chatHistoryInput: AzureCosmosDBNoSQLChatMessageHistoryInput) {
     super();
 
@@ -80,7 +82,7 @@ export class AzureCosmsosDBNoSQLChatMessageHistory extends BaseListChatMessageHi
     this.databaseName = chatHistoryInput.databaseName ?? DEFAULT_DATABASE_NAME;
     this.containerName =
       chatHistoryInput.containerName ?? DEFAULT_CONTAINER_NAME;
-    this.userId = chatHistoryInput.userId;
+    this.userId = chatHistoryInput.userId ?? "anonymous";
     this.ttl = chatHistoryInput.ttl;
     this.client = this.initializeClient(chatHistoryInput);
   }
@@ -124,16 +126,23 @@ export class AzureCosmsosDBNoSQLChatMessageHistory extends BaseListChatMessageHi
   }
 
   private async initializeContainer(): Promise<void> {
-    const { database } = await this.client.databases.createIfNotExists({
-      id: this.databaseName,
-    });
-    const { container } = await database.containers.createIfNotExists({
-      id: this.containerName,
-      partitionKey: "/user_id",
-      defaultTtl: this.ttl,
-    });
-
-    this.container = container;
+    if (!this.initPromise) {
+      this.initPromise = (async () => {
+        const { database } = await this.client.databases.createIfNotExists({
+          id: this.databaseName,
+        });
+        const { container } = await database.containers.createIfNotExists({
+          id: this.containerName,
+          partitionKey: "/userId",
+          defaultTtl: this.ttl,
+        });
+        this.container = container;
+      })().catch((error) => {
+        console.error("Error initializing Cosmos DB container:", error);
+        throw error;
+      });
+    }
+    return this.initPromise;
   }
 
   async getMessages(): Promise<BaseMessage[]> {
@@ -153,7 +162,7 @@ export class AzureCosmsosDBNoSQLChatMessageHistory extends BaseListChatMessageHi
     const messages = mapChatMessagesToStoredMessages(this.messageList);
     await this.container.items.upsert({
       id: this.sessionId,
-      user_id: this.userId,
+      userId: this.userId,
       messages,
     });
   }
@@ -162,5 +171,10 @@ export class AzureCosmsosDBNoSQLChatMessageHistory extends BaseListChatMessageHi
     this.messageList = [];
     await this.initializeContainer();
     await this.container.item(this.sessionId, this.userId).delete();
+  }
+
+  async clearAllSessionsForUser(userId: string) {
+    await this.initializeContainer();
+    await this.container.deleteAllItemsForPartitionKey(userId);
   }
 }
