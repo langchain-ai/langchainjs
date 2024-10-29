@@ -20,11 +20,15 @@ let fetchMock: any;
 const originalTracingEnvValue = process.env.LANGCHAIN_TRACING_V2;
 
 beforeEach(() => {
-  fetchMock = jest
-    .spyOn(global, "fetch")
-    .mockImplementation(() =>
-      Promise.resolve({ ok: true, text: () => "" } as any)
-    );
+  fetchMock = jest.spyOn(global, "fetch").mockImplementation(() =>
+    Promise.resolve({
+      ok: true,
+      text: () => "",
+      json: () => {
+        return {};
+      },
+    } as any)
+  );
   process.env.LANGCHAIN_TRACING_V2 = "true";
 });
 

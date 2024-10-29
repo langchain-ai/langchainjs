@@ -1701,6 +1701,15 @@ export class RunnableRetry<
   }
 }
 
+export type RunnableSequenceFields<RunInput, RunOutput> = {
+  first: Runnable<RunInput>;
+  middle?: Runnable[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  last: Runnable<any, RunOutput>;
+  name?: string;
+  omitSequenceTags?: boolean;
+};
+
 /**
  * A sequence of runnables, where the output of each is the input of the next.
  * @example
@@ -1729,22 +1738,19 @@ export class RunnableSequence<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   protected last: Runnable<any, RunOutput>;
 
+  omitSequenceTags = false;
+
   lc_serializable = true;
 
   lc_namespace = ["langchain_core", "runnables"];
 
-  constructor(fields: {
-    first: Runnable<RunInput>;
-    middle?: Runnable[];
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    last: Runnable<any, RunOutput>;
-    name?: string;
-  }) {
+  constructor(fields: RunnableSequenceFields<RunInput, RunOutput>) {
     super(fields);
     this.first = fields.first;
     this.middle = fields.middle ?? this.middle;
     this.last = fields.last;
     this.name = fields.name;
+    this.omitSequenceTags = fields.omitSequenceTags ?? this.omitSequenceTags;
   }
 
   get steps() {
@@ -1773,7 +1779,9 @@ export class RunnableSequence<
         const promise = step.invoke(
           nextStepInput,
           patchConfig(config, {
-            callbacks: runManager?.getChild(`seq:step:${i + 1}`),
+            callbacks: runManager?.getChild(
+              this.omitSequenceTags ? undefined : `seq:step:${i + 1}`
+            ),
           })
         );
         nextStepInput = await raceWithSignal(promise, options?.signal);
@@ -1785,7 +1793,9 @@ export class RunnableSequence<
       finalOutput = await this.last.invoke(
         nextStepInput,
         patchConfig(config, {
-          callbacks: runManager?.getChild(`seq:step:${this.steps.length}`),
+          callbacks: runManager?.getChild(
+            this.omitSequenceTags ? undefined : `seq:step:${this.steps.length}`
+          ),
         })
       );
     } catch (e) {
@@ -1846,7 +1856,9 @@ export class RunnableSequence<
         const promise = step.batch(
           nextStepInputs,
           runManagers.map((runManager, j) => {
-            const childRunManager = runManager?.getChild(`seq:step:${i + 1}`);
+            const childRunManager = runManager?.getChild(
+              this.omitSequenceTags ? undefined : `seq:step:${i + 1}`
+            );
             return patchConfig(configList[j], { callbacks: childRunManager });
           }),
           batchOptions
@@ -1892,7 +1904,9 @@ export class RunnableSequence<
       let finalGenerator = steps[0].transform(
         inputGenerator(),
         patchConfig(otherOptions, {
-          callbacks: runManager?.getChild(`seq:step:1`),
+          callbacks: runManager?.getChild(
+            this.omitSequenceTags ? undefined : `seq:step:1`
+          ),
         })
       );
       for (let i = 1; i < steps.length; i += 1) {
@@ -1900,7 +1914,9 @@ export class RunnableSequence<
         finalGenerator = await step.transform(
           finalGenerator,
           patchConfig(otherOptions, {
-            callbacks: runManager?.getChild(`seq:step:${i + 1}`),
+            callbacks: runManager?.getChild(
+              this.omitSequenceTags ? undefined : `seq:step:${i + 1}`
+            ),
           })
         );
       }
@@ -1998,13 +2014,24 @@ export class RunnableSequence<
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       RunnableLike<any, RunOutput>
     ],
-    name?: string
+    nameOrFields?:
+      | string
+      | Omit<
+          RunnableSequenceFields<RunInput, RunOutput>,
+          "first" | "middle" | "last"
+        >
   ) {
+    let extra: Record<string, unknown> = {};
+    if (typeof nameOrFields === "string") {
+      extra.name = nameOrFields;
+    } else if (nameOrFields !== undefined) {
+      extra = nameOrFields;
+    }
     return new RunnableSequence<RunInput, Exclude<RunOutput, Error>>({
+      ...extra,
       first: _coerceToRunnable(first),
       middle: runnables.slice(0, -1).map(_coerceToRunnable),
       last: _coerceToRunnable(runnables[runnables.length - 1]),
-      name,
     });
   }
 }
