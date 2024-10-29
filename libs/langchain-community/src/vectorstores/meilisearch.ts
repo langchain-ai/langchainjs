@@ -2,8 +2,7 @@ import { VectorStore } from "@langchain/core/vectorstores";
 import * as uuid from "uuid";
 import { DocumentInterface } from "@langchain/core/documents";
 import { EmbeddingsInterface } from "@langchain/core/embeddings";
-import { Filter, Meilisearch } from "meilisearch";
-import { Embedders } from "meilisearch";
+import { Filter, Meilisearch,Embedders } from "meilisearch";
 
 interface MeilisearchDocument {
   id: string | number;
@@ -129,7 +128,7 @@ export class MeiliSearchVectorStore extends VectorStore {
 
       metadata[this.text_key] = doc.pageContent;
 
-      const embedder_name = Object.keys(this.embedders)[0];
+      const embedder_name = Object.keys(this.embedders!)[0];
 
       docs.push({
         id: id,
@@ -212,7 +211,7 @@ export class MeiliSearchVectorStore extends VectorStore {
     filter?: Filter
   ): Promise<[DocumentInterface, number][]> {
     const docs: [DocumentInterface, number][] = [];
-    const embedder_name = Object.keys(this.embedders)[0];
+    const embedder_name = Object.keys(this.embedders!)[0];
 
     const search_result = await this.client.index(this.index_name).search("", {
       vector: query,
@@ -226,7 +225,7 @@ export class MeiliSearchVectorStore extends VectorStore {
       const metadata = hit[this.metadata_key];
       if (metadata && this.text_key in metadata) {
         const text = metadata.text;
-        const semantic_score = hit._rankingScore;
+        const semantic_score = hit._rankingScore ?? 0.0;
 
         const { [this.text_key]: omitted, ...filteredMetadata } = metadata;
 
@@ -247,11 +246,7 @@ export class MeiliSearchVectorStore extends VectorStore {
    * For MeiliSearch, the `addVectors` method is not implemented. This is because
    * MeiliSearch is not designed to work this way since V1.5.1.
    */
-  addVectors(
-    vectors: number[][],
-    documents: DocumentInterface[],
-    options?: { [x: string]: any }
-  ): Promise<string[] | void> {
+  addVectors(): Promise<string[] | void> {
     throw new Error("Method need not implemented.");
   }
 
