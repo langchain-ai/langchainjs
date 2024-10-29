@@ -1,7 +1,7 @@
-import type { Client } from "@libsql/client";
-import { VectorStore } from "@langchain/core/vectorstores";
-import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { Document } from "@langchain/core/documents";
+import type { EmbeddingsInterface } from "@langchain/core/embeddings";
+import { VectorStore } from "@langchain/core/vectorstores";
+import type { Client, InStatement } from "@libsql/client";
 
 /**
  * Interface for LibSQLVectorStore configuration options.
@@ -82,23 +82,17 @@ export class LibSQLVectorStore extends VectorStore {
 
     for (let i = 0; i < rows.length; i += batchSize) {
       const chunk = rows.slice(i, i + batchSize);
-      const insertQueries = chunk.map((row) => ({
-        sql: `INSERT INTO ${this.table} (content, metadata, ${this.column}) VALUES (?, ?, ?) RETURNING id`,
-        args: [row.content, row.metadata, row.embedding],
+
+      const insertQueries: InStatement[] = chunk.map((row) => ({
+        sql: `INSERT INTO ${this.table} (content, metadata, ${this.column}) VALUES (:content, :metadata, vector(:embedding)) RETURNING ${this.table}.rowid AS id`,
+        args: row,
       }));
 
       const results = await this.db.batch(insertQueries);
 
-      for (const result of results) {
-        if (
-          result &&
-          result.rows &&
-          result.rows.length > 0 &&
-          result.rows[0].id != null
-        ) {
-          ids.push(result.rows[0].id.toString());
-        }
-      }
+      ids.push(
+        ...results.flatMap((result) => result.rows.map((row) => String(row.id)))
+      );
     }
 
     return ids;
@@ -123,11 +117,12 @@ export class LibSQLVectorStore extends VectorStore {
 
     const queryVector = `[${query.join(",")}]`;
 
-    const sql = `
-      SELECT ${this.table}.id, ${this.table}.content, ${this.table}.metadata, vector_distance_cos(${this.table}.${this.column}, vector('${queryVector}')) AS distance
-      FROM vector_top_k('idx_${this.table}_${this.column}', vector('${queryVector}'), ${k}) AS top_k
-      JOIN ${this.table} ON top_k.rowid = ${this.table}.id
-    `;
+    const sql: InStatement = {
+      sql: `SELECT ${this.table}.rowid as id, ${this.table}.content, ${this.table}.metadata, vector_distance_cos(${this.table}.${this.column}, vector(:queryVector)) AS distance
+      FROM vector_top_k('idx_${this.table}_${this.column}', vector(:queryVector), CAST(:k AS INTEGER)) as top_k
+      JOIN ${this.table} ON top_k.rowid = ${this.table}.rowid`,
+      args: { queryVector, k },
+    };
 
     const results = await this.db.execute(sql);
 
@@ -136,13 +131,39 @@ export class LibSQLVectorStore extends VectorStore {
       const metadata = JSON.parse(row.metadata);
 
       const doc = new Document({
-        id: row.id,
+        id: String(row.id),
         metadata,
         pageContent: row.content,
       });
 
       return [doc, row.distance];
     });
+  }
+
+  /**
+   * Deletes vectors from the store.
+   * @param {Object} params - Delete parameters.
+   * @param {string[] | number[]} [params.ids] - The ids of the vectors to delete.
+   * @returns {Promise<void>}
+   */
+  async delete(params: {
+    ids?: string[] | number[];
+    deleteAll?: boolean;
+  }): Promise<void> {
+    if (params.deleteAll) {
+      await this.db.execute(`DELETE FROM ${this.table}`);
+    } else if (params.ids !== undefined) {
+      await this.db.batch(
+        params.ids.map((id) => ({
+          sql: `DELETE FROM ${this.table} WHERE rowid = :id`,
+          args: { id },
+        }))
+      );
+    } else {
+      throw new Error(
+        `You must provide an "ids" parameter or a "deleteAll" parameter.`
+      );
+    }
   }
 
   /**
