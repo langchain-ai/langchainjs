@@ -21,7 +21,7 @@ import { Serialized } from "../load/serializable.js";
 import type { DocumentInterface } from "../documents/document.js";
 import { isTracingEnabled } from "../utils/callbacks.js";
 import { isBaseTracer } from "../tracers/base.js";
-import { getDefaultLangChainTracer } from "../singletons/tracer.js";
+import { getDefaultLangChainTracerSingleton } from "../singletons/tracer.js";
 
 type BaseCallbackManagerMethods = {
   [K in keyof CallbackHandlerMethods]?: (
