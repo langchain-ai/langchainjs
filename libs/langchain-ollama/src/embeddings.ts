@@ -33,8 +33,13 @@ interface OllamaEmbeddingsParams extends EmbeddingsParams {
   truncate?: boolean;
 
   /**
+   * Optional HTTP Headers to include in the request.
+   */
+  headers?: Headers;
+
+  /**
    * Advanced Ollama API request parameters in camelCase, see
-   * https://github.com/jmorganca/ollama/blob/main/docs/modelfile.md#valid-parameters-and-values
+   * https://github.com/ollama/ollama/blob/main/docs/modelfile.md#valid-parameters-and-values
    * for details of the available parameters.
    */
   requestOptions?: OllamaCamelCaseOptions;
@@ -58,6 +63,7 @@ export class OllamaEmbeddings extends Embeddings {
 
     this.client = new Ollama({
       host: fields?.baseUrl,
+      headers: fields?.headers,
     });
     this.baseUrl = fields?.baseUrl ?? this.baseUrl;
 
