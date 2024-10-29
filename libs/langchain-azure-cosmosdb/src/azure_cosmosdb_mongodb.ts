@@ -34,7 +34,7 @@ export type AzureCosmosDBMongoDBIndexOptions = {
   /** Skips automatic index creation. */
   readonly skipCreate?: boolean;
 
-  readonly indexType?: 'ivf' | 'hnsw';
+  readonly indexType?: "ivf" | "hnsw";
   /** Number of clusters that the inverted file (IVF) index uses to group the vector data. */
   readonly numLists?: number;
   /** Number of dimensions for vector similarity. */
@@ -234,7 +234,7 @@ export class AzureCosmosDBMongoDBVectorStore extends VectorStore {
    */
   async createIndex(
     dimensions: number | undefined = undefined,
-    indexType:'ivf' | 'hnsw' = 'ivf',
+    indexType: "ivf" | "hnsw" = "ivf",
     similarity: AzureCosmosDBMongoDBSimilarityType = AzureCosmosDBMongoDBSimilarityType.COS
   ): Promise<void> {
     await this.connectPromise;
@@ -253,10 +253,13 @@ export class AzureCosmosDBMongoDBVectorStore extends VectorStore {
           name: this.indexName,
           key: { [this.embeddingKey]: "cosmosSearch" },
           cosmosSearchOptions: {
-            kind: indexType === 'hnsw' ? 'vector-hnsw' : 'vector-ivf',
-            ...(indexType === 'hnsw'
-              ? {m: this.indexOptions.m ?? 16, efConstruction: this.indexOptions.efConstruction ?? 200}
-              : {numLists: this.indexOptions.numLists ?? 100}),
+            kind: indexType === "hnsw" ? "vector-hnsw" : "vector-ivf",
+            ...(indexType === "hnsw"
+              ? {
+                  m: this.indexOptions.m ?? 16,
+                  efConstruction: this.indexOptions.efConstruction ?? 200,
+                }
+              : { numLists: this.indexOptions.numLists ?? 100 }),
             similarity,
             dimensions: vectorLength,
           },
@@ -446,7 +449,7 @@ export class AzureCosmosDBMongoDBVectorStore extends VectorStore {
     // Unless skipCreate is set, create the index
     // This operation is no-op if the index already exists
     if (!this.indexOptions.skipCreate) {
-      const indexType = this.indexOptions.indexType === 'hnsw' ? 'hnsw' : 'ivf';
+      const indexType = this.indexOptions.indexType === "hnsw" ? "hnsw" : "ivf";
       await this.createIndex(
         this.indexOptions.dimensions,
         indexType,
