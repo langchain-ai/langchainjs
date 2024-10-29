@@ -78,8 +78,10 @@ console.log(`(${embeddings.length}, ${embeddings[0].length})`);
 
 For convenience, you can also use the `embedQuery` method to embed a single text:
 
-```python
-const queryEmbedding = await embeddingsModel.embedQuery("What is the meaning of life?")
+```typescript
+const queryEmbedding = await embeddingsModel.embedQuery(
+  "What is the meaning of life?"
+);
 ```
 
 :::info[Further reading]
