@@ -11582,7 +11582,7 @@ __metadata:
     js-yaml: ^4.1.0
     jsdom: ^22.1.0
     jsonwebtoken: ^9.0.2
-    langchain: ">=0.2.3 <0.4.0"
+    langchain: ">=0.2.3 <0.3.0 || >=0.3.4 <0.4.0"
     langsmith: ^0.2.0
     llmonitor: ^0.5.9
     lodash: ^4.17.21
@@ -32875,7 +32875,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"langchain@>=0.2.3 <0.4.0, langchain@workspace:*, langchain@workspace:langchain":
+"langchain@>=0.2.3 <0.3.0 || >=0.3.4 <0.4.0, langchain@workspace:*, langchain@workspace:langchain":
   version: 0.0.0-use.local
   resolution: "langchain@workspace:langchain"
   dependencies:

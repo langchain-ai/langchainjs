@@ -60,6 +60,8 @@ export function _makeMessageChunkFromAnthropicEvent(
     data.type === "content_block_start" &&
     data.content_block.type === "tool_use"
   ) {
+    const toolCallContentBlock =
+      data.content_block as Anthropic.Messages.ToolUseBlock;
     return {
       chunk: new AIMessageChunk({
         content: fields.coerceContentToString
@@ -72,6 +74,14 @@ export function _makeMessageChunkFromAnthropicEvent(
               },
             ],
         additional_kwargs: {},
+        tool_call_chunks: [
+          {
+            id: toolCallContentBlock.id,
+            index: data.index,
+            name: toolCallContentBlock.name,
+            args: "",
+          },
+        ],
       }),
     };
   } else if (
@@ -110,6 +120,12 @@ export function _makeMessageChunkFromAnthropicEvent(
               },
             ],
         additional_kwargs: {},
+        tool_call_chunks: [
+          {
+            index: data.index,
+            args: data.delta.partial_json,
+          },
+        ],
       }),
     };
   } else if (
