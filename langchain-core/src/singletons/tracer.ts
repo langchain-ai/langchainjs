@@ -1,10 +1,18 @@
-import { LangChainTracer } from "../tracers/tracer_langchain.js";
+import { Client } from "langsmith";
+import { getEnvironmentVariable } from "../utils/env.js";
 
-let tracerInstance: LangChainTracer;
+let client: Client;
 
-export const getDefaultLangChainTracerSingleton = () => {
-  if (tracerInstance === undefined) {
-    tracerInstance = new LangChainTracer();
+export const getDefaultLangChainClientSingleton = () => {
+  if (client === undefined) {
+    const clientParams =
+      getEnvironmentVariable("LANGCHAIN_CALLBACKS_BACKGROUND") === "false"
+        ? {
+            // LangSmith has its own backgrounding system
+            blockOnRootRunFinalization: true,
+          }
+        : {};
+    client = new Client(clientParams);
   }
-  return tracerInstance;
+  return client;
 };

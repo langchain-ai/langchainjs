@@ -21,7 +21,6 @@ import { Serialized } from "../load/serializable.js";
 import type { DocumentInterface } from "../documents/document.js";
 import { isTracingEnabled } from "../utils/callbacks.js";
 import { isBaseTracer } from "../tracers/base.js";
-import { getDefaultLangChainTracerSingleton } from "../singletons/tracer.js";
 
 type BaseCallbackManagerMethods = {
   [K in keyof CallbackHandlerMethods]?: (
@@ -1230,7 +1229,7 @@ export class CallbackManager
         )
       ) {
         if (tracingV2Enabled) {
-          const tracerV2 = getDefaultLangChainTracerSingleton();
+          const tracerV2 = new LangChainTracer();
           callbackManager.addHandler(tracerV2, true);
 
           // handoff between langchain and langsmith/traceable
