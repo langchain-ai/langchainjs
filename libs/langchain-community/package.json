@@ -1,6 +1,6 @@
 {
   "name": "@langchain/community",
-  "version": "0.3.7",
+  "version": "0.3.10",
   "description": "Third-party integrations for LangChain.js",
   "type": "module",
   "engines": {
@@ -40,8 +40,8 @@
     "expr-eval": "^2.0.2",
     "flat": "^5.0.2",
     "js-yaml": "^4.1.0",
-    "langchain": ">=0.2.3 <0.4.0",
-    "langsmith": "~0.1.56",
+    "langchain": ">=0.2.3 <0.3.0 || >=0.3.4 <0.4.0",
+    "langsmith": "^0.2.0",
     "uuid": "^10.0.0",
     "zod": "^3.22.3",
     "zod-to-json-schema": "^3.22.5"
@@ -84,7 +84,7 @@
     "@langchain/standard-tests": "0.0.0",
     "@layerup/layerup-security": "^1.5.12",
     "@libsql/client": "^0.14.0",
-    "@mendable/firecrawl-js": "^0.0.36",
+    "@mendable/firecrawl-js": "^1.4.3",
     "@mlc-ai/web-llm": ">=0.2.62 <0.3.0",
     "@mozilla/readability": "^0.4.4",
     "@neondatabase/serverless": "^0.9.1",
@@ -249,7 +249,7 @@
     "@langchain/core": ">=0.2.21 <0.4.0",
     "@layerup/layerup-security": "^1.5.12",
     "@libsql/client": "^0.14.0",
-    "@mendable/firecrawl-js": "^0.0.13",
+    "@mendable/firecrawl-js": "^1.4.3",
     "@mlc-ai/web-llm": "*",
     "@mozilla/readability": "*",
     "@neondatabase/serverless": "*",

@@ -11482,7 +11482,7 @@ __metadata:
     "@langchain/standard-tests": 0.0.0
     "@layerup/layerup-security": ^1.5.12
     "@libsql/client": ^0.14.0
-    "@mendable/firecrawl-js": ^0.0.36
+    "@mendable/firecrawl-js": ^1.4.3
     "@mlc-ai/web-llm": ">=0.2.62 <0.3.0"
     "@mozilla/readability": ^0.4.4
     "@neondatabase/serverless": ^0.9.1
@@ -11582,8 +11582,8 @@ __metadata:
     js-yaml: ^4.1.0
     jsdom: ^22.1.0
     jsonwebtoken: ^9.0.2
-    langchain: ">=0.2.3 <0.4.0"
-    langsmith: ~0.1.56
+    langchain: ">=0.2.3 <0.3.0 || >=0.3.4 <0.4.0"
+    langsmith: ^0.2.0
     llmonitor: ^0.5.9
     lodash: ^4.17.21
     lunary: ^0.7.10
@@ -11655,7 +11655,7 @@ __metadata:
     "@langchain/core": ">=0.2.21 <0.4.0"
     "@layerup/layerup-security": ^1.5.12
     "@libsql/client": ^0.14.0
-    "@mendable/firecrawl-js": ^0.0.13
+    "@mendable/firecrawl-js": ^1.4.3
     "@mlc-ai/web-llm": "*"
     "@mozilla/readability": "*"
     "@neondatabase/serverless": "*"
@@ -12015,7 +12015,7 @@ __metadata:
     jest: ^29.5.0
     jest-environment-node: ^29.6.4
     js-tiktoken: ^1.0.12
-    langsmith: ^0.1.65
+    langsmith: ^0.2.0
     ml-matrix: ^6.10.4
     mustache: ^4.2.0
     p-queue: ^6.6.2
@@ -13069,16 +13069,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@mendable/firecrawl-js@npm:^0.0.36":
-  version: 0.0.36
-  resolution: "@mendable/firecrawl-js@npm:0.0.36"
+"@mendable/firecrawl-js@npm:^1.4.3":
+  version: 1.4.3
+  resolution: "@mendable/firecrawl-js@npm:1.4.3"
   dependencies:
     axios: ^1.6.8
-    dotenv: ^16.4.5
-    uuid: ^9.0.1
+    isows: ^1.0.4
+    typescript-event-target: ^1.1.1
     zod: ^3.23.8
     zod-to-json-schema: ^3.23.0
-  checksum: 93ac8a7d9d25c04d4f618e282c136af06cf7712ec3402922531094c3cdab0e59d6f484a7f583022032eb58f914a0494193f2fd22986edd0f6712a29545edf95a
+  checksum: ee36a4ceaca326d1ae86a714500dd0698060a63e84e0d5c83fb14967ac36755cd4b0b42a260c5e7b63914551a94ead2f4c712a76b9e58a6580dd5ca8628e851a
   languageName: node
   linkType: hard
 
@@ -27338,7 +27338,7 @@ __metadata:
     ioredis: ^5.3.2
     js-yaml: ^4.1.0
     langchain: "workspace:*"
-    langsmith: ^0.1.56
+    langsmith: ^0.2.0
     mongodb: ^6.3.0
     pg: ^8.11.0
     pickleparser: ^0.2.1
@@ -31332,6 +31332,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"isows@npm:^1.0.4":
+  version: 1.0.4
+  resolution: "isows@npm:1.0.4"
+  peerDependencies:
+    ws: "*"
+  checksum: a3ee62e3d6216abb3adeeb2a551fe2e7835eac87b05a6ecc3e7739259bf5f8e83290501f49e26137390c8093f207fc3378d4a7653aab76ad7bbab4b2dba9c5b9
+  languageName: node
+  linkType: hard
+
 "isstream@npm:0.1.2":
   version: 0.1.2
   resolution: "isstream@npm:0.1.2"
@@ -32866,7 +32875,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"langchain@>=0.2.3 <0.4.0, langchain@workspace:*, langchain@workspace:langchain":
+"langchain@>=0.2.3 <0.3.0 || >=0.3.4 <0.4.0, langchain@workspace:*, langchain@workspace:langchain":
   version: 0.0.0-use.local
   resolution: "langchain@workspace:langchain"
   dependencies:
@@ -32912,7 +32921,7 @@ __metadata:
     js-tiktoken: ^1.0.12
     js-yaml: ^4.1.0
     jsonpointer: ^5.0.1
-    langsmith: ^0.1.56
+    langsmith: ^0.2.0
     openai: ^4.41.1
     openapi-types: ^12.1.3
     p-retry: 4
@@ -32991,9 +33000,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"langsmith@npm:^0.1.56, langsmith@npm:~0.1.56":
-  version: 0.1.56
-  resolution: "langsmith@npm:0.1.56"
+"langsmith@npm:^0.2.0":
+  version: 0.2.0
+  resolution: "langsmith@npm:0.2.0"
   dependencies:
     "@types/uuid": ^10.0.0
     commander: ^10.0.1
@@ -33006,26 +33015,7 @@ __metadata:
   peerDependenciesMeta:
     openai:
       optional: true
-  checksum: 61db6dc3016e35d14d25e78a8ecebcc6356f2efc00310f5582dce9d28a88377525425622d1b98f053e73c0b3233d44c5a2f9d5654ca72ee2e61163edd5be2d28
-  languageName: node
-  linkType: hard
-
-"langsmith@npm:^0.1.65":
-  version: 0.1.65
-  resolution: "langsmith@npm:0.1.65"
-  dependencies:
-    "@types/uuid": ^10.0.0
-    commander: ^10.0.1
-    p-queue: ^6.6.2
-    p-retry: 4
-    semver: ^7.6.3
-    uuid: ^10.0.0
-  peerDependencies:
-    openai: "*"
-  peerDependenciesMeta:
-    openai:
-      optional: true
-  checksum: ca44f26733fbb20675b84f2586b90622b8cf1aedc82123f5574af04e88ba29348e28b2b63f410479aeb7e5c174d2fef13b4bd9eb68581d93a104950b1fafa40f
+  checksum: 0cd92d0e31526d309af197a3502c93a00ac8c09f6b2864161a18a5c1e8b95b0e8203bad2dfe3b4beb26055fc815a8d70730592a58c9af7e202917b13d01f695c
   languageName: node
   linkType: hard
 
@@ -41930,6 +41920,13 @@ __metadata:
     typeorm-ts-node-commonjs: cli-ts-node-commonjs.js
     typeorm-ts-node-esm: cli-ts-node-esm.js
   checksum: 9d6e5ecd0688eed5a151f33fb26b6d7c3e0af0eaf14ceaefe4c1c1863cdda6eabf2e865c9df2321f7dce26e40f320b76b811e2d1d58bf43f6ce19b36aa1ed1c4
+  languageName: node
+  linkType: hard
+
+"typescript-event-target@npm:^1.1.1":
+  version: 1.1.1
+  resolution: "typescript-event-target@npm:1.1.1"
+  checksum: ad9eaf0f3c161c4062c33d80ac5235e7c32c5b6f79eabcf23f9c39c7617b9337a4d9d4a2249340a84626fa68abeed38f5973dff547fecd71164f96d0b11af516
   languageName: node
   linkType: hard
 
