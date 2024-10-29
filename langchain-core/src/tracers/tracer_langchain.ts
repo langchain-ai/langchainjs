@@ -59,12 +59,14 @@ export class LangChainTracer
       getEnvironmentVariable("LANGCHAIN_PROJECT") ??
       getEnvironmentVariable("LANGCHAIN_SESSION");
     this.exampleId = exampleId;
-    this.client =
-      client ??
-      new Client({
-        // LangChain has its own backgrounding system
-        blockOnRootRunFinalization: true,
-      });
+    const clientParams =
+      getEnvironmentVariable("LANGCHAIN_CALLBACKS_BACKGROUND") === "false"
+        ? {
+            // LangSmith has its own backgrounding system
+            blockOnRootRunFinalization: true,
+          }
+        : {};
+    this.client = client ?? new Client(clientParams);
 
     const traceableTree = LangChainTracer.getTraceableRunTree();
     if (traceableTree) {

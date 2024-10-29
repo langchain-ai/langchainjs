@@ -23,7 +23,13 @@ export interface OllamaInput extends BaseLLMParams, OllamaCamelCaseOptions {
    * @default "http://localhost:11434"
    */
   baseUrl?: string;
+
   format?: string;
+
+  /**
+   * Optional HTTP Headers to include in the request.
+   */
+  headers?: Headers;
 }
 
 /**
@@ -130,6 +136,7 @@ export class Ollama extends LLM<OllamaCallOptions> implements OllamaInput {
       : fields?.baseUrl ?? this.baseUrl;
     this.client = new OllamaClient({
       host: this.baseUrl,
+      headers: fields?.headers,
     });
     this.keepAlive = fields?.keepAlive ?? this.keepAlive;
 
