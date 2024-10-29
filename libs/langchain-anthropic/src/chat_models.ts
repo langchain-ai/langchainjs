@@ -32,7 +32,7 @@ import type {
 
 import { isLangChainTool } from "@langchain/core/utils/function_calling";
 import { AnthropicToolsOutputParser } from "./output_parsers.js";
-import { extractToolCallChunk, handleToolChoice } from "./utils/tools.js";
+import { handleToolChoice } from "./utils/tools.js";
 import { _convertMessagesToAnthropicPayload } from "./utils/message_inputs.js";
 import {
   _makeMessageChunkFromAnthropicEvent,
@@ -46,6 +46,7 @@ import {
   AnthropicToolChoice,
   ChatAnthropicToolType,
 } from "./types.js";
+import { wrapAnthropicClientError } from "./utils/errors.js";
 
 export interface ChatAnthropicCallOptions
   extends BaseChatModelCallOptions,
@@ -814,26 +815,30 @@ export class ChatAnthropicMessages<
 
       const { chunk } = result;
 
-      const newToolCallChunk = extractToolCallChunk(chunk);
-
       // Extract the text content token for text field and runManager.
       const token = extractToken(chunk);
-      yield new ChatGenerationChunk({
+      const generationChunk = new ChatGenerationChunk({
         message: new AIMessageChunk({
           // Just yield chunk as it is and tool_use will be concat by BaseChatModel._generateUncached().
           content: chunk.content,
           additional_kwargs: chunk.additional_kwargs,
-          tool_call_chunks: newToolCallChunk ? [newToolCallChunk] : undefined,
+          tool_call_chunks: chunk.tool_call_chunks,
           usage_metadata: shouldStreamUsage ? chunk.usage_metadata : undefined,
           response_metadata: chunk.response_metadata,
           id: chunk.id,
         }),
         text: token ?? "",
       });
+      yield generationChunk;
 
-      if (token) {
-        await runManager?.handleLLMNewToken(token);
-      }
+      await runManager?.handleLLMNewToken(
+        token ?? "",
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        { chunk: generationChunk }
+      );
     }
   }
 
@@ -931,15 +936,21 @@ export class ChatAnthropicMessages<
         maxRetries: 0,
       });
     }
-    const makeCompletionRequest = async () =>
-      this.streamingClient.messages.create(
-        {
-          ...request,
-          ...this.invocationKwargs,
-          stream: true,
-        } as AnthropicStreamingMessageCreateParams,
-        options
-      );
+    const makeCompletionRequest = async () => {
+      try {
+        return await this.streamingClient.messages.create(
+          {
+            ...request,
+            ...this.invocationKwargs,
+            stream: true,
+          } as AnthropicStreamingMessageCreateParams,
+          options
+        );
+      } catch (e) {
+        const error = wrapAnthropicClientError(e);
+        throw error;
+      }
+    };
     return this.caller.call(makeCompletionRequest);
   }
 
@@ -958,14 +969,20 @@ export class ChatAnthropicMessages<
         maxRetries: 0,
       });
     }
-    const makeCompletionRequest = async () =>
-      this.batchClient.messages.create(
-        {
-          ...request,
-          ...this.invocationKwargs,
-        } as AnthropicMessageCreateParams,
-        options
-      );
+    const makeCompletionRequest = async () => {
+      try {
+        return await this.batchClient.messages.create(
+          {
+            ...request,
+            ...this.invocationKwargs,
+          } as AnthropicMessageCreateParams,
+          options
+        );
+      } catch (e) {
+        const error = wrapAnthropicClientError(e);
+        throw error;
+      }
+    };
     return this.caller.callWithOptions(
       { signal: options.signal ?? undefined },
       makeCompletionRequest

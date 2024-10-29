@@ -427,10 +427,28 @@ test("Create a runnable sequence with a static method with invalid output and ca
     }
   };
   const runnable = RunnableSequence.from([promptTemplate, llm, parser]);
-  await expect(async () => {
-    const result = await runnable.invoke({ input: "Hello sequence!" });
-    console.log(result);
-  }).rejects.toThrow(OutputParserException);
+  let error: any | undefined;
+  try {
+    await runnable.invoke({ input: "Hello sequence!" });
+  } catch (e: any) {
+    error = e;
+  }
+  expect(error).toBeInstanceOf(OutputParserException);
+  expect(error?.lc_error_code).toEqual("OUTPUT_PARSING_FAILURE");
+});
+
+test("Create a runnable sequence with a static method with no tags", async () => {
+  const seq = RunnableSequence.from([() => "foo", () => "bar"], {
+    omitSequenceTags: true,
+  });
+  const events = [];
+  for await (const event of seq.streamEvents({}, { version: "v2" })) {
+    events.push(event);
+  }
+  expect(events.length).toBeGreaterThan(1);
+  for (const event of events) {
+    expect(event.tags?.find((tag) => tag.startsWith("seq:"))).toBeUndefined();
+  }
 });
 
 test("RunnableSequence can pass config to every step in batched request", async () => {

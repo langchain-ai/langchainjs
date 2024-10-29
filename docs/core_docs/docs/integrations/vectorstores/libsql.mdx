@@ -10,9 +10,9 @@ This guide provides a quick overview for getting started with libSQL vector stor
 
 ## Integration details
 
-| Class               | Package                | JS support | Package latest                                                    |
+| Class               | Package                | PY support | Package latest                                                    |
 | ------------------- | ---------------------- | ---------- | ----------------------------------------------------------------- |
-| `LibSQLVectorStore` | `@langchain/community` | ✅         | ![npm version](https://img.shields.io/npm/v/@langchain/community) |
+| `LibSQLVectorStore` | `@langchain/community` | ❌         | ![npm version](https://img.shields.io/npm/v/@langchain/community) |
 
 ## Setup
 
@@ -54,7 +54,7 @@ libsql://[database-name]-[your-username].turso.io
 
 Execute the following SQL command to create a new table or add the embedding column to an existing table.
 
-Make sure to mopdify the following parts of the SQL:
+Make sure to modify the following parts of the SQL:
 
 - `TABLE_NAME` is the name of the table you want to create.
 - `content` is used to store the `Document.pageContent` values.
@@ -70,7 +70,7 @@ CREATE TABLE IF NOT EXISTS TABLE_NAME (
 );
 ```
 
-Now create an index on the `EMBEDDING_COLUMN` column:
+Now create an index on the `EMBEDDING_COLUMN` column - the index name is important!:
 
 ```sql
 CREATE INDEX IF NOT EXISTS idx_TABLE_NAME_EMBEDDING_COLUMN ON TABLE_NAME(libsql_vector_idx(EMBEDDING_COLUMN));
@@ -103,9 +103,8 @@ const libsqlClient = createClient({
 
 const vectorStore = new LibSQLVectorStore(embeddings, {
   db: libsqlClient,
-  tableName: "TABLE_NAME",
-  embeddingColumn: "EMBEDDING_COLUMN",
-  dimensions: 1536,
+  table: "TABLE_NAME",
+  column: "EMBEDDING_COLUMN",
 });
 ```
 
@@ -154,7 +153,7 @@ const similaritySearchWithScoreResults =
 
 for (const [doc, score] of similaritySearchWithScoreResults) {
   console.log(
-    `${score.toFixed(3)} ${doc.pageContent} [${JSON.stringify(doc.metadata)}`
+    `${score.toFixed(3)} ${doc.pageContent} [${JSON.stringify(doc.metadata)}]`
   );
 }
 ```

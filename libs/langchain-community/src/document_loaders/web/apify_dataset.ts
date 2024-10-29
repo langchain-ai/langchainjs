@@ -81,15 +81,48 @@ export class ApifyDatasetLoader<Metadata extends Record<string, any>>
     super();
     const { clientOptions, datasetMappingFunction, ...asyncCallerParams } =
       config;
-    const token = ApifyDatasetLoader._getApifyApiToken(clientOptions);
-    this.apifyClient = new ApifyClient({ ...clientOptions, token });
+    this.apifyClient = ApifyDatasetLoader._getApifyClient(clientOptions);
     this.datasetId = datasetId;
     this.datasetMappingFunction = datasetMappingFunction;
     this.caller = new AsyncCaller(asyncCallerParams);
   }
 
+  /**
+   * Creates an instance of the ApifyClient class with the provided clientOptions.
+   * Adds a User-Agent header to the request config for langchainjs attribution.
+   * @param clientOptions
+   * @private
+   */
+  private static _getApifyClient(
+    clientOptions?: ApifyClientOptions
+  ): ApifyClient {
+    const token = ApifyDatasetLoader._getApifyApiToken(clientOptions);
+    const updatedClientOptions = {
+      ...clientOptions,
+      token,
+      requestInterceptors: [
+        ...(clientOptions?.requestInterceptors ?? []),
+        ApifyDatasetLoader._addUserAgent,
+      ],
+    };
+    return new ApifyClient({ ...updatedClientOptions, token });
+  }
+
   private static _getApifyApiToken(config?: { token?: string }) {
     return config?.token ?? getEnvironmentVariable("APIFY_API_TOKEN");
+  }
+
+  /**
+   * Adds a User-Agent header to the request config.
+   * @param config
+   * @private
+   */
+  private static _addUserAgent(config: any): any {
+    const updatedConfig = { ...config };
+    updatedConfig.headers ??= {};
+    updatedConfig.headers["User-Agent"] =
+      (updatedConfig.headers["User-Agent"] ?? "") + "; Origin/langchainjs";
+    return updatedConfig;
   }
 
   /**
@@ -116,8 +149,8 @@ export class ApifyDatasetLoader<Metadata extends Record<string, any>>
    * Create an ApifyDatasetLoader by calling an Actor on the Apify platform and waiting for its results to be ready.
    * @param actorId The ID or name of the Actor on the Apify platform.
    * @param input The input object of the Actor that you're trying to run.
-   * @param options Options specifying settings for the Actor run.
-   * @param options.datasetMappingFunction A function that takes a single object (an Apify dataset item) and converts it to an instance of the Document class.
+   * @param config Options specifying settings for the Actor run.
+   * @param config.datasetMappingFunction A function that takes a single object (an Apify dataset item) and converts it to an instance of the Document class.
    * @returns An instance of `ApifyDatasetLoader` with the results from the Actor run.
    */
   static async fromActorCall<Metadata extends Record<string, any>>(
@@ -132,8 +165,9 @@ export class ApifyDatasetLoader<Metadata extends Record<string, any>>
     const apifyApiToken = ApifyDatasetLoader._getApifyApiToken(
       config.clientOptions
     );
-    const apifyClient = new ApifyClient({ token: apifyApiToken });
-
+    const apifyClient = ApifyDatasetLoader._getApifyClient(
+      config.clientOptions
+    );
     const actorCall = await apifyClient
       .actor(actorId)
       .call(input, config.callOptions ?? {});
@@ -148,8 +182,10 @@ export class ApifyDatasetLoader<Metadata extends Record<string, any>>
    * Create an ApifyDatasetLoader by calling a saved Actor task on the Apify platform and waiting for its results to be ready.
    * @param taskId The ID or name of the task on the Apify platform.
    * @param input The input object of the task that you're trying to run. Overrides the task's saved input.
-   * @param options Options specifying settings for the task run.
-   * @param options.datasetMappingFunction A function that takes a single object (an Apify dataset item) and converts it to an instance of the Document class.
+   * @param config Options specifying settings for the task run.
+   * @param config.callOptions Options specifying settings for the task run.
+   * @param config.clientOptions Options specifying settings for the Apify client.
+   * @param config.datasetMappingFunction A function that takes a single object (an Apify dataset item) and converts it to an instance of the Document class.
    * @returns An instance of `ApifyDatasetLoader` with the results from the task's run.
    */
   static async fromActorTaskCall<Metadata extends Record<string, any>>(
@@ -164,8 +200,9 @@ export class ApifyDatasetLoader<Metadata extends Record<string, any>>
     const apifyApiToken = ApifyDatasetLoader._getApifyApiToken(
       config.clientOptions
     );
-    const apifyClient = new ApifyClient({ token: apifyApiToken });
-
+    const apifyClient = ApifyDatasetLoader._getApifyClient(
+      config.clientOptions
+    );
     const taskCall = await apifyClient
       .task(taskId)
       .call(input, config.callOptions ?? {});

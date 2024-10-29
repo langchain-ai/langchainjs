@@ -1,4 +1,5 @@
 /* eslint-disable no-process-env */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { expect, test } from "@jest/globals";
 import {
@@ -11,6 +12,7 @@ import { StructuredTool, tool } from "@langchain/core/tools";
 import { concat } from "@langchain/core/utils/stream";
 import { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
+import { RunnableLambda } from "@langchain/core/runnables";
 import { ChatAnthropic } from "../chat_models.js";
 import { AnthropicToolResponse } from "../types.js";
 
@@ -84,6 +86,36 @@ test("Few shotting with tool calls", async () => {
     new HumanMessage("What did you say the weather was?"),
   ]);
   expect(res.content).toContain("24");
+});
+
+test("Invalid tool calls should throw an appropriate error", async () => {
+  const chat = model.bindTools([new WeatherTool()]);
+  let error;
+  try {
+    await chat.invoke([
+      new HumanMessage("What is the weather in SF?"),
+      new AIMessage({
+        content: "Let me look up the current weather.",
+        tool_calls: [
+          {
+            id: "toolu_feiwjf9u98r389u498",
+            name: "get_weather",
+            args: {
+              location: "SF",
+            },
+          },
+        ],
+      }),
+      new ToolMessage({
+        tool_call_id: "badbadbad",
+        content: "It is currently 24 degrees with hail in San Francisco.",
+      }),
+    ]);
+  } catch (e) {
+    error = e;
+  }
+  expect(error).toBeDefined();
+  expect((error as any).lc_error_code).toEqual("INVALID_TOOL_RESULTS");
 });
 
 test("Can bind & invoke StructuredTools", async () => {
@@ -200,6 +232,73 @@ test("Can bind & stream AnthropicTools", async () => {
   expect(name).toBe("get_weather");
   expect(args).toBeTruthy();
   expect(args.location).toBeTruthy();
+});
+
+test("stream events with no tool calls has string message content", async () => {
+  const wrapper = RunnableLambda.from(async (_, config) => {
+    const res = await model.invoke(
+      "What is the weather in London today?",
+      config
+    );
+    return res;
+  });
+  const eventStream = await wrapper.streamEvents(
+    "What is the weather in London today?",
+    {
+      version: "v2",
+    }
+  );
+
+  const chatModelStreamEvents = [];
+  for await (const event of eventStream) {
+    if (event.event === "on_chat_model_stream") {
+      chatModelStreamEvents.push(event);
+    }
+  }
+  expect(chatModelStreamEvents.length).toBeGreaterThan(0);
+  expect(
+    chatModelStreamEvents.every(
+      (event) => typeof event.data.chunk.content === "string"
+    )
+  ).toBe(true);
+});
+
+test("stream events with tool calls has raw message content", async () => {
+  const modelWithTools = model.bind({
+    tools: [anthropicTool],
+    tool_choice: {
+      type: "tool",
+      name: "get_weather",
+    },
+  });
+
+  const wrapper = RunnableLambda.from(async (_, config) => {
+    const res = await modelWithTools.invoke(
+      "What is the weather in London today?",
+      config
+    );
+    return res;
+  });
+  const eventStream = await wrapper.streamEvents(
+    "What is the weather in London today?",
+    {
+      version: "v2",
+    }
+  );
+
+  const chatModelStreamEvents = [];
+  for await (const event of eventStream) {
+    if (event.event === "on_chat_model_stream") {
+      console.log(event);
+      chatModelStreamEvents.push(event);
+    }
+  }
+  expect(chatModelStreamEvents.length).toBeGreaterThan(0);
+  expect(
+    chatModelStreamEvents.every((event) =>
+      Array.isArray(event.data.chunk.content)
+    )
+  ).toBe(true);
 });
 
 test("withStructuredOutput with zod schema", async () => {

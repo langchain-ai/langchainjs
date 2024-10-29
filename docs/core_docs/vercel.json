@@ -64,6 +64,22 @@
     {
       "source": "/docs/tutorials/agents(/?)",
       "destination": "https://langchain-ai.github.io/langgraphjs/tutorials/quickstart/"
+    },
+    {
+      "source": "/docs/troubleshooting/errors/GRAPH_RECURSION_LIMIT(/?)",
+      "destination": "https://langchain-ai.github.io/langgraphjs/troubleshooting/errors/GRAPH_RECURSION_LIMIT/"
+    },
+    {
+      "source": "/docs/troubleshooting/errors/INVALID_CONCURRENT_GRAPH_UPDATE(/?)",
+      "destination": "https://langchain-ai.github.io/langgraphjs/troubleshooting/errors/INVALID_CONCURRENT_GRAPH_UPDATE/"
+    },
+    {
+      "source": "/docs/troubleshooting/errors/INVALID_GRAPH_NODE_RETURN_VALUE(/?)",
+      "destination": "https://langchain-ai.github.io/langgraphjs/troubleshooting/errors/INVALID_GRAPH_NODE_RETURN_VALUE/"
+    },
+    {
+      "source": "/docs/troubleshooting/errors/MULTIPLE_SUBGRAPHS(/?)",
+      "destination": "https://langchain-ai.github.io/langgraphjs/troubleshooting/errors/MULTIPLE_SUBGRAPHS/"
     }
   ]
 }
