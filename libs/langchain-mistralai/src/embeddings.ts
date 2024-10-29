@@ -1,7 +1,8 @@
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { Embeddings, type EmbeddingsParams } from "@langchain/core/embeddings";
 import { chunkArray } from "@langchain/core/utils/chunk_array";
-import { EmbeddingResponse } from "@mistralai/mistralai";
+import { EmbeddingRequest as MistralAIEmbeddingsRequest} from "@mistralai/mistralai/src/models/components/embeddingrequest.js";
+import { EmbeddingResponse as MistralAIEmbeddingsResult} from "@mistralai/mistralai/src/models/components/embeddingresponse.js";
 
 /**
  * Interface for MistralAIEmbeddings parameters. Extends EmbeddingsParams and
@@ -30,9 +31,9 @@ export interface MistralAIEmbeddingsParams extends EmbeddingsParams {
    */
   encodingFormat?: string;
   /**
-   * Override the default endpoint.
+   * Override the default server URL used by the Mistral SDK.
    */
-  endpoint?: string;
+  serverURL?: string;
   /**
    * The maximum number of documents to embed in a single request.
    * @default {512}
@@ -65,7 +66,7 @@ export class MistralAIEmbeddings
 
   apiKey: string;
 
-  endpoint?: string;
+  serverURL?: string;
 
   constructor(fields?: Partial<MistralAIEmbeddingsParams>) {
     super(fields ?? {});
@@ -74,7 +75,7 @@ export class MistralAIEmbeddings
       throw new Error("API key missing for MistralAI, but it is required.");
     }
     this.apiKey = apiKey;
-    this.endpoint = fields?.endpoint;
+    this.serverURL = fields?.serverURL;
     this.modelName = fields?.model ?? fields?.modelName ?? this.model;
     this.model = this.modelName;
     this.encodingFormat = fields?.encodingFormat ?? this.encodingFormat;
@@ -105,7 +106,7 @@ export class MistralAIEmbeddings
       const batch = batches[i];
       const { data: batchResponse } = batchResponses[i];
       for (let j = 0; j < batch.length; j += 1) {
-        embeddings.push(batchResponse[j].embedding);
+        embeddings.push(batchResponse[j].embedding ?? []);
       }
     }
     return embeddings;
@@ -121,33 +122,42 @@ export class MistralAIEmbeddings
     const { data } = await this.embeddingWithRetry(
       this.stripNewLines ? text.replace(/\n/g, " ") : text
     );
-    return data[0].embedding;
+    return data[0].embedding ?? [];
   }
 
   /**
    * Private method to make a request to the MistralAI API to generate
    * embeddings. Handles the retry logic and returns the response from the
    * API.
-   * @param {string | Array<string>} input Text to send to the MistralAI API.
+   * @param {string | Array<string>} inputs Text to send to the MistralAI API.
    * @returns {Promise<MistralAIEmbeddingsResult>} Promise that resolves to the response from the API.
    */
   private async embeddingWithRetry(
-    input: string | Array<string>
-  ): Promise<EmbeddingResponse> {
-    const { MistralClient } = await this.imports();
-    const client = new MistralClient(this.apiKey, this.endpoint);
+    inputs: string | Array<string>
+  ): Promise<MistralAIEmbeddingsResult> {
+    const { Mistral } = await this.imports();
+    const client = new Mistral({
+      apiKey: this.apiKey, 
+      serverURL: this.serverURL,
+      // Could add hooks here
+    });
+    let embeddingsRequest: MistralAIEmbeddingsRequest = {
+      model: this.model,
+      inputs,
+      encodingFormat: this.encodingFormat
+    }
     return this.caller.call(async () => {
-      const res = await client.embeddings({
-        model: this.model,
-        input,
-      });
+      const res = await client.embeddings.create(
+        embeddingsRequest,
+        // Could add options here
+      );
       return res;
     });
   }
 
   /** @ignore */
   private async imports() {
-    const { default: MistralClient } = await import("@mistralai/mistralai");
-    return { MistralClient };
+    const { Mistral } = await import("@mistralai/mistralai");
+    return { Mistral };
   }
 }

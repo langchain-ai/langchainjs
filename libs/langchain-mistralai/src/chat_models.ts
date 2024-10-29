@@ -13,7 +13,7 @@ import {
 } from "@mistralai/mistralai";
 import {
   ChatCompletionRequest as MistralAIChatCompletionRequest,
-  ToolChoice as MistralAIToolChoice,
+  ChatCompletionRequestToolChoice as MistralAIToolChoice,
   Messages as MistralAIMessage,
 } from "@mistralai/mistralai/models/components/chatcompletionrequest.js";
 import { Tool as MistralAITool } from "@mistralai/mistralai/models/components/tool.js";
@@ -124,9 +124,9 @@ export interface ChatMistralAIInput
    */
   model?: string;
   /**
-   * Override the default endpoint.
+   * Override the default server URL used by the Mistral SDK.
    */
-  endpoint?: string;
+  serverURL?: string;
   /**
    * What sampling temperature to use, between 0.0 and 2.0.
    * Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic.
@@ -755,7 +755,7 @@ export class ChatMistralAI<
 
   apiKey: string;
 
-  endpoint?: string;
+  serverURL?: string;
 
   temperature = 0.7;
 
@@ -790,7 +790,7 @@ export class ChatMistralAI<
     }
     this.apiKey = apiKey;
     this.streaming = fields?.streaming ?? this.streaming;
-    this.endpoint = fields?.endpoint;
+    this.serverURL = fields?.serverURL;
     this.temperature = fields?.temperature ?? this.temperature;
     this.topP = fields?.topP ?? this.topP;
     this.maxTokens = fields?.maxTokens ?? this.maxTokens;
@@ -874,7 +874,7 @@ export class ChatMistralAI<
   > {
     const client = new MistralClient({
       apiKey: this.apiKey,
-      serverURL: this.endpoint,
+      serverURL: this.serverURL,
     });
 
     return this.caller.call(async () => {
@@ -1044,7 +1044,7 @@ export class ChatMistralAI<
   /** @ignore */
   _combineLLMOutput() {
     return [];
-  }
+  } 
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
