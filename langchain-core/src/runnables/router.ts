@@ -25,10 +25,14 @@ export type RouterInput = {
  * });
  *
  * // Invoke the 'reverseText' runnable
- * const result1 = router.invoke({ key: "reverseText", input: "Hello World" }); // Output: "dlroW olleH"
+ * const result1 = router.invoke({ key: "reverseText", input: "Hello World" });
+ *
+ * // "dlroW olleH"
  *
  * // Invoke the 'toUpperCase' runnable
- * const result2 = router.invoke({ key: "toUpperCase", input: "Hello World" }); // Output: "HELLO WORLD"
+ * const result2 = router.invoke({ key: "toUpperCase", input: "Hello World" });
+ *
+ * // "HELLO WORLD"
  * ```
  */
 export class RouterRunnable<

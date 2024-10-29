@@ -1183,7 +1183,10 @@ export type RunnableBindingArgs<
  * A runnable that delegates calls to another runnable with a set of kwargs.
  * @example
  * ```typescript
- * import { type RunnableConfig, RunnableLambda } from "@langchain/core/runnables";
+ * import {
+ *   type RunnableConfig,
+ *   RunnableLambda,
+ * } from "@langchain/core/runnables";
  *
  * const enhanceProfile = (
  *   profile: Record<string, any>,
@@ -1201,19 +1204,19 @@ export type RunnableBindingArgs<
  * const adminRunnable = runnable.bind({ configurable: { role: "Admin" } });
  * const userRunnable = runnable.bind({ configurable: { role: "User" } });
  *
- * adminRunnable
- *   .invoke({ name: "Alice", email: "alice@example.com" })
- *   .then((result) => {
- *     console.log(result);
- *     // Output: { name: "Alice", email: "alice@example.com", role: "Admin" }
- *   });
+ * const result1 = await adminRunnable.invoke({
+ *   name: "Alice",
+ *   email: "alice@example.com"
+ * });
  *
- * userRunnable
- *   .invoke({ name: "Bob", email: "bob@example.com" })
- *   .then((result) => {
- *     console.log(result);
- *     // Output: { name: "Bob", email: "bob@example.com", role: "User" }
- *   });
+ * // { name: "Alice", email: "alice@example.com", role: "Admin" }
+ *
+ * const result2 = await userRunnable.invoke({
+ *   name: "Bob",
+ *   email: "bob@example.com"
+ * });
+ *
+ * // { name: "Bob", email: "bob@example.com", role: "User" }
  * ```
  */
 export class RunnableBinding<
@@ -1480,10 +1483,9 @@ export class RunnableBinding<
  *   bound: upperCaseLambda.pipe(greetingLambda),
  * });
  *
- * chain.invoke(["alice", "bob", "carol"]).then((result) => {
- *   console.log(result);
- *   // Output: ["Hello, ALICE!", "Hello, BOB!", "Hello, CAROL!"]
- * });
+ * const result = await chain.invoke(["alice", "bob", "carol"])
+ *
+ * // ["Hello, ALICE!", "Hello, BOB!", "Hello, CAROL!"]
  * ```
  */
 export class RunnableEach<
@@ -1581,9 +1583,12 @@ export class RunnableEach<
  * specified number of times.
  * @example
  * ```typescript
- * import { RunnableLambda, RunnableRetry } from "@langchain/core/runnables";
+ * import {
+ *   RunnableLambda,
+ *   RunnableRetry,
+ * } from "@langchain/core/runnables";
  *
- * // Simulate an API call that fails randomly
+ * // Simulate an API call that fails
  * const simulateApiCall = (input: string): string => {
  *   console.log(`Attempting API call with input: ${input}`);
  *   throw new Error("API call failed due to network issue");
@@ -1602,21 +1607,15 @@ export class RunnableEach<
  * });
  *
  * // Example invocation using the .withRetry() method
- * apiCallWithRetry
+ * const res = await apiCallWithRetry
  *   .invoke("Request 1")
- *   .then((result) => {
- *     console.log(result);
- *   })
  *   .catch((error) => {
  *     console.error("Failed after multiple retries:", error.message);
  *   });
  *
  * // Example invocation using the manual retry instance
- * manualRetry
+ * const res2 = await manualRetry
  *   .invoke("Request 2")
- *   .then((result) => {
- *     console.log(result);
- *   })
  *   .catch((error) => {
  *     console.error("Failed after multiple retries:", error.message);
  *   });
@@ -2397,12 +2396,13 @@ function assertNonTraceableFunction<
 }
 
 /**
- * A runnable that runs a callable.
+ * A runnable that wraps an arbitrary function that takes a single argument.
  * @example
  * ```typescript
  * import { RunnableLambda } from "@langchain/core/runnables";
  *
  * const add = (input: { x: number; y: number }) => input.x + input.y;
+ *
  * const multiply = (input: { value: number; multiplier: number }) =>
  *   input.value * input.multiplier;
  *
@@ -2416,9 +2416,9 @@ function assertNonTraceableFunction<
  * );
  *
  * // Example invocation of the chainedLambda
- * chainedLambda.invoke({ x: 2, y: 3 }).then((result) => {
- *   console.log(result); // Output: 10 (since (2 + 3) * 2 = 10)
- * });
+ * const result = await chainedLambda.invoke({ x: 2, y: 3 });
+ *
+ * // Will log "10" (since (2 + 3) * 2 = 10)
  * ```
  */
 export class RunnableLambda<
@@ -2697,9 +2697,14 @@ export class RunnableLambda<
 }
 
 /**
+ * A runnable that runs a mapping of runnables in parallel,
+ * and returns a mapping of their outputs.
  * @example
  * ```typescript
- * import { RunnableLambda, RunnableParallel } from "@langchain/core/runnables";
+ * import {
+ *   RunnableLambda,
+ *   RunnableParallel,
+ * } from "@langchain/core/runnables";
  *
  * const addYears = (age: number): number => age + 5;
  * const yearsToFifty = (age: number): number => 50 - age;
@@ -2709,6 +2714,8 @@ export class RunnableLambda<
  * const milestoneFiftyLambda = RunnableLambda.from(yearsToFifty);
  * const milestoneHundredLambda = RunnableLambda.from(yearsToHundred);
  *
+ * // Pipe will coerce objects into RunnableParallel by default, but we
+ * // explicitly instantiate one here to demonstrate
  * const sequence = addYearsLambda.pipe(
  *   RunnableParallel.from({
  *     years_to_fifty: milestoneFiftyLambda,
@@ -2717,20 +2724,9 @@ export class RunnableLambda<
  * );
  *
  * // Invoke the sequence with a single age input
- * sequence.invoke(25).then((result) => {
- *   console.log(result);
- *   // Output: { years_to_fifty: 20, years_to_hundred: 70 }
- * });
+ * const res = sequence.invoke(25);
  *
- * // Batch processing with multiple age inputs
- * sequence.batch([25, 35, 45]).then((results) => {
- *   console.log(results);
- *   // Output: [
- *   //   { years_to_fifty: 20, years_to_hundred: 70 },
- *   //   { years_to_fifty: 10, years_to_hundred: 60 },
- *   //   { years_to_fifty: 0, years_to_hundred: 50 }
- *   // ]
- * });
+ * // { years_to_fifty: 25, years_to_hundred: 75 }
  * ```
  */
 export class RunnableParallel<RunInput> extends RunnableMap<RunInput> {}
@@ -2785,26 +2781,22 @@ export class RunnableParallel<RunInput> extends RunnableMap<RunInput> {}
  * });
  *
  * // Example invocation using .withFallbacks()
- * runnableWithFallback
+ * const res = await runnableWithFallback
  *   .invoke("unsafe input")
- *   .then((result) => {
- *     console.log(result);
- *     // Output: "Fallback processed: unsafe input"
- *   })
  *   .catch((error) => {
  *     console.error("Failed after all attempts:", error.message);
  *   });
  *
+ * // "Fallback processed: unsafe input"
+ *
  * // Example invocation using manual instantiation
- * manualFallbackChain
+ * const res = await manualFallbackChain
  *   .invoke("safe")
- *   .then((result) => {
- *     console.log(result);
- *     // Output: "Processed: safe"
- *   })
  *   .catch((error) => {
  *     console.error("Failed after all attempts:", error.message);
  *   });
+ *
+ * // "Processed: safe"
  * ```
  */
 export class RunnableWithFallbacks<RunInput, RunOutput> extends Runnable<
@@ -3080,10 +3072,9 @@ export interface RunnableAssignFields<RunInput> {
  *
  * const runnableAssign = new RunnableAssign({ mapper });
  *
- * runnableAssign.invoke({ name: "Alice", birthYear: 1990 }).then((result) => {
- *   console.log(result);
- *   // Output: { name: "Alice", birthYear: 1990, age_step: { age: 34 }, greeting_step: { greeting: "Hello, Alice!" } }
- * });
+ * const res = await runnableAssign.invoke({ name: "Alice", birthYear: 1990 });
+ *
+ * // { name: "Alice", birthYear: 1990, age_step: { age: 34 }, greeting_step: { greeting: "Hello, Alice!" } }
  * ```
  */
 export class RunnableAssign<
@@ -3199,6 +3190,7 @@ export interface RunnablePickFields {
 
 /**
  * A runnable that assigns key-value pairs to inputs of type `Record<string, unknown>`.
+ * Useful for streaming, can be automatically created and chained by calling `runnable.pick();`.
  * @example
  * ```typescript
  * import { RunnablePick } from "@langchain/core/runnables";
@@ -3215,10 +3207,9 @@ export interface RunnablePickFields {
  * const basicInfoRunnable = new RunnablePick(["name", "city"]);
  *
  * // Example invocation
- * basicInfoRunnable.invoke(inputData).then((outputData) => {
- *   console.log(outputData);
- *   // Output: { name: 'John', city: 'New York' }
- * });
+ * const res = await basicInfoRunnable.invoke(inputData);
+ *
+ * // { name: 'John', city: 'New York' }
  * ```
  */
 export class RunnablePick<
