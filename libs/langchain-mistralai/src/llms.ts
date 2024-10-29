@@ -6,7 +6,7 @@ import { FIMCompletionRequest as MistralFIMCompletionRequest } from "@mistralai/
 import { FIMCompletionStreamRequest as MistralFIMCompletionStreamRequest} from "@mistralai/mistralai/models/components/fimcompletionstreamrequest.js";
 import { FIMCompletionResponse as MistralFIMCompletionResponse } from "@mistralai/mistralai/models/components/fimcompletionresponse.js";
 import { ChatCompletionChoice as MistralChatCompletionChoice} from "@mistralai/mistralai/models/components/chatcompletionchoice.js";
-import { CompletionEvent as MistralCompletionEvent } from "@mistralai/mistralai/models/components/completionevent.js";
+import { CompletionEvent as MistralChatCompletionEvent } from "@mistralai/mistralai/models/components/completionevent.js";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { chunkArray } from "@langchain/core/utils/chunk_array";
 import { AsyncCaller } from "@langchain/core/utils/async_caller";
@@ -200,8 +200,7 @@ Either provide one via the "apiKey" field in the constructor, or set the "MISTRA
               options,
               true
             );
-            for await (const message of stream) {
-              const data = message.data
+            for await (const { data } of stream) {
               // on the first message set the response properties
               if (!response) {
                 response = {
@@ -287,14 +286,14 @@ Either provide one via the "apiKey" field in the constructor, or set the "MISTRA
     request: MistralFIMCompletionStreamRequest,
     options: this["ParsedCallOptions"],
     stream: true
-  ): Promise<AsyncIterable<MistralCompletionEvent>>;
+  ): Promise<AsyncIterable<MistralChatCompletionEvent>>;
 
   async completionWithRetry(
     request: MistralFIMCompletionRequest | MistralFIMCompletionStreamRequest,
     options: this["ParsedCallOptions"],
     stream: boolean
   ): Promise<
-    MistralFIMCompletionResponse | AsyncIterable<MistralCompletionEvent>
+    MistralFIMCompletionResponse | AsyncIterable<MistralChatCompletionEvent>
   > {
     const { Mistral } = await this.imports();
     const caller = new AsyncCaller({
@@ -312,10 +311,27 @@ Either provide one via the "apiKey" field in the constructor, or set the "MISTRA
         signal: options.signal,
       },
       async () => {
-        if (stream) {
-          return client.fim.stream(request);
-        } else {
-          return client.fim.complete(request);
+        try {
+          let res:
+            | MistralFIMCompletionResponse
+            | AsyncIterable<MistralChatCompletionEvent>;
+          if (stream) {
+            res = await client.fim.stream(request);
+          } else {
+            res = await client.fim.complete(request);
+          }
+          return res;
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } catch (e: any) {
+          console.log(e, e.status, e.code, e.statusCode, e.message);
+          if (
+            e.message?.includes("status: 400") ||
+            e.message?.toLowerCase().includes("status 400") ||
+            e.message?.includes("validation failed")
+          ) {
+            e.status = 400;
+          }
+          throw e;
         }
       }
     );
