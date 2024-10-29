@@ -71,15 +71,15 @@ export interface ChatOllamaInput
    */
   baseUrl?: string;
   /**
+   * Optional HTTP Headers to include in the request.
+   */
+  headers?: Headers;
+  /**
    * Whether or not to check the model exists on the local machine before
    * invoking it. If set to `true`, the model will be pulled if it does not
    * exist.
    * @default false
    */
-  /**
-   * Optional HTTP Headers to include in the request.
-   */
-  headers?: Headers;
   checkOrPullModel?: boolean;
   streaming?: boolean;
   format?: string;
@@ -463,17 +463,15 @@ export class ChatOllama
 
   baseUrl = "http://127.0.0.1:11434";
 
-  headers?: Headers;
-
   constructor(fields?: ChatOllamaInput) {
     super(fields ?? {});
 
     this.client = new Ollama({
       host: fields?.baseUrl,
+      headers: fields?.headers,
     });
     this.baseUrl = fields?.baseUrl ?? this.baseUrl;
 
-    this.headers = fields?.headers ?? this.headers;
     this.model = fields?.model ?? this.model;
     this.numa = fields?.numa;
     this.numCtx = fields?.numCtx;

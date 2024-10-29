@@ -32,7 +32,7 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "ollama": "^0.5.6",
+    "ollama": "^0.5.9",
     "uuid": "^10.0.0"
   },
   "peerDependencies": {
