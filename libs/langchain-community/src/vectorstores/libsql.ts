@@ -152,7 +152,6 @@ export class LibSQLVectorStore extends VectorStore {
   }): Promise<void> {
     if (params.deleteAll) {
       await this.db.execute(`DELETE FROM ${this.table}`);
-      return;
     } else if (params.ids !== undefined) {
       await this.db.batch(
         params.ids.map((id) => ({
