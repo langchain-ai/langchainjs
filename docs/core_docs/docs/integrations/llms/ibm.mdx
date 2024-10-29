@@ -1,0 +1,260 @@
+---
+sidebar_label: IBM watsonx.ai
+title: IBM watsonx.ai
+---
+
+# IBM watsonx.ai {#ibm-watsonx.ai}
+
+This will help you get started with IBM [text completion models
+(LLMs)](../../../docs/concepts#llms) using LangChain. For detailed
+documentation on `IBM watsonx.ai` features and configuration options,
+please refer to the [IBM
+watsonx.ai](https://api.js.langchain.com/classes/_langchain_community.llms_ibm.html).
+
+## Overview
+
+### Integration details
+
+| Class                                                                                       | Package                                                                                              | Local | Serializable | [PY support](https://python.langchain.com/docs/integrations/llms/ibm_watsonx/) |                                            Package downloads                                            |                                            Package latest                                            |
+| :------------------------------------------------------------------------------------------ | :--------------------------------------------------------------------------------------------------- | :---: | :----------: | :----------------------------------------------------------------------------: | :-----------------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------------: |
+| [`IBM watsonx.ai`](https://api.js.langchain.com/modules/_langchain_community.llms_ibm.html) | [(**langchain/community?**)](https://api.js.langchain.com/modules/langchain_community_llms_ibm.html) |  ❌   |      ✅      |                                       ✅                                       | ![NPM - Downloads](https://img.shields.io/npm/dm/@langchain/community?style=flat-square&label=%20&.png) | ![NPM - Version](https://img.shields.io/npm/v/@langchain/community?style=flat-square&label=%20&.png) |
+
+## Setup
+
+To access IBM WatsonxAI models you’ll need to create an IBM watsonx.ai
+account, get an API key or any other type of credentials, and install
+the `@langchain/community` integration package.
+
+### Credentials
+
+Head to [IBM Cloud](https://cloud.ibm.com/login) to sign up to IBM
+watsonx.ai and generate an API key or provide any other authentication
+form as presented below.
+
+#### IAM authentication
+
+```bash
+export WATSONX_AI_AUTH_TYPE=iam
+export WATSONX_AI_APIKEY=<YOUR-APIKEY>
+```
+
+#### Bearer token authentication
+
+```bash
+export WATSONX_AI_AUTH_TYPE=bearertoken
+export WATSONX_AI_BEARER_TOKEN=<YOUR-BEARER-TOKEN>
+```
+
+#### CP4D authentication
+
+```bash
+export WATSONX_AI_AUTH_TYPE=cp4d
+export WATSONX_AI_USERNAME=<YOUR_USERNAME>
+export WATSONX_AI_PASSWORD=<YOUR_PASSWORD>
+export WATSONX_AI_URL=<URL>
+```
+
+Once these are placed in your environment variables and object is
+initialized authentication will proceed automatically.
+
+Authentication can also be accomplished by passing these values as
+parameters to a new instance.
+
+## IAM authentication
+
+```typescript
+import { WatsonxLLM } from "@langchain/community/llms/ibm";
+
+const props = {
+  version: "YYYY-MM-DD",
+  serviceUrl: "<SERVICE_URL>",
+  projectId: "<PROJECT_ID>",
+  watsonxAIAuthType: "iam",
+  watsonxAIApikey: "<YOUR-APIKEY>",
+};
+const instance = new WatsonxLLM(props);
+```
+
+## Bearer token authentication
+
+```typescript
+import { WatsonxLLM } from "@langchain/community/llms/ibm";
+
+const props = {
+  version: "YYYY-MM-DD",
+  serviceUrl: "<SERVICE_URL>",
+  projectId: "<PROJECT_ID>",
+  watsonxAIAuthType: "bearertoken",
+  watsonxAIBearerToken: "<YOUR-BEARERTOKEN>",
+};
+const instance = new WatsonxLLM(props);
+```
+
+### CP4D authentication
+
+```typescript
+import { WatsonxLLM } from "@langchain/community/llms/ibm";
+
+const props = {
+  version: "YYYY-MM-DD",
+  serviceUrl: "<SERVICE_URL>",
+  projectId: "<PROJECT_ID>",
+  watsonxAIAuthType: "cp4d",
+  watsonxAIUsername: "<YOUR-USERNAME>",
+  watsonxAIPassword: "<YOUR-PASSWORD>",
+  watsonxAIUrl: "<url>",
+};
+const instance = new WatsonxLLM(props);
+```
+
+If you want to get automated tracing of your model calls you can also
+set your [LangSmith](https://docs.smith.langchain.com/) API key by
+uncommenting below:
+
+```bash
+# export LANGCHAIN_TRACING_V2="true"
+# export LANGCHAIN_API_KEY="your-api-key"
+```
+
+### Installation
+
+The LangChain IBM watsonx.ai integration lives in the
+`@langchain/community` package:
+
+```mdx-code-block
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+import Npm2Yarn from "@theme/Npm2Yarn";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+<Npm2Yarn>
+  @langchain/community @langchain/core
+</Npm2Yarn>
+
+```
+
+## Instantiation
+
+Now we can instantiate our model object and generate chat completions:
+
+```javascript
+import { WatsonxLLM } from "@langchain/community/llms/ibm";
+
+const props = {
+  decoding_method: "sample",
+  max_new_tokens: 100,
+  min_new_tokens: 1,
+  temperature: 0.5,
+  top_k: 50,
+  top_p: 1,
+};
+const instance = new WatsonxLLM({
+  version: "YYYY-MM-DD",
+  serviceUrl: process.env.API_URL,
+  projectId: "<PROJECT_ID>",
+  spaceId: "<SPACE_ID>",
+  idOrName: "<DEPLOYMENT_ID>",
+  model: "<MODEL_ID>",
+  ...props,
+});
+```
+
+Note:
+
+- You must provide `spaceId`, `projectId` or `idOrName`(deployment id)
+  in order to proceed.
+- Depending on the region of your provisioned service instance, use
+  correct serviceUrl.
+- You need to specify the model you want to use for inferencing
+  through model_id.
+
+## Invocation and generation
+
+```javascript
+const result = await instance.invoke("Print hello world.");
+console.log(result);
+
+const results = await instance.generate([
+  "Print hello world.",
+  "Print bye, bye world!",
+]);
+console.log(results);
+```
+
+```text
+
+print('Hello world.')<|endoftext|>
+{
+  generations: [ [ [Object] ], [ [Object] ] ],
+  llmOutput: { tokenUsage: { generated_token_count: 28, input_token_count: 10 } }
+}
+```
+
+## Chaining
+
+We can chain our completion model with a prompt template like so:
+
+```javascript
+import { PromptTemplate } from "@langchain/core/prompts";
+
+const prompt = PromptTemplate.fromTemplate(
+  "How to say {input} in {output_language}:\n"
+);
+
+const chain = prompt.pipe(instance);
+await chain.invoke({
+  output_language: "German",
+  input: "I love programming.",
+});
+```
+
+```text
+Ich liebe Programmieren.
+
+To express that you are passionate about programming in German,
+```
+
+## Props overwriting
+
+Passed props at initialization will last for the whole life cycle of the
+object, however you may overwrite them for a single method’s call by
+passing second argument as below
+
+```javascript
+const result2 = await instance.invoke("Print hello world.", {
+  parameters: {
+    max_new_tokens: 20,
+  },
+});
+console.log(result2);
+```
+
+```text
+
+print('Hello world.')<|endoftext|>
+```
+
+## Tokenization
+
+This package has it’s custom getNumTokens implementation which returns
+exact amount of tokens that would be used.
+
+```javascript
+const tokens = await instance.getNumTokens("Print hello world.");
+console.log(tokens);
+```
+
+```text
+4
+```
+
+## API reference
+
+For detailed documentation of all `IBM watsonx.ai` features and
+configurations head to the API reference: [API
+docs](https://api.js.langchain.com/modules/_langchain_community.embeddings_ibm.html)
+
+## Related
+
+- LLM [conceptual guide](/docs/concepts/#llms)
+- LLM [how-to guides](/docs/how_to/#llms)

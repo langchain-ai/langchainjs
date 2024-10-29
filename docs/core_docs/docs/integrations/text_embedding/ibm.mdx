@@ -1,0 +1,314 @@
+---
+sidebar_label: IBM watsonx.ai
+title: IBM watsonx.ai
+---
+
+# IBM watsonx.ai {#ibm-watsonx.ai}
+
+This will help you get started with IBM watsonx.ai [embedding
+models](../../../docs/concepts#embedding-models) using LangChain. For
+detailed documentation on `IBM watsonx.ai` features and configuration
+options, please refer to the [API
+reference](https://api.js.langchain.com/classes/_langchain_community.embeddings_ibm.html).
+
+## Overview
+
+### Integration details
+
+| Class                                                                                                               | Package                                                                                              | Local | [Py support](https://python.langchain.com/docs/integrations/text_embedding/ibm_watsonx/) |                                            Package downloads                                            |                                            Package latest                                            |
+| :------------------------------------------------------------------------------------------------------------------ | :--------------------------------------------------------------------------------------------------- | :---: | :--------------------------------------------------------------------------------------: | :-----------------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------------: |
+| [`IBM watsonx.ai`](https://api.js.langchain.com/classes/_langchain_community.embeddings_ibm.WatsonxEmbeddings.html) | [(**langchain/community?**)](https://api.js.langchain.com/modules/langchain_community_llms_ibm.html) |  ❌   |                                            ✅                                            | ![NPM - Downloads](https://img.shields.io/npm/dm/@langchain/community?style=flat-square&label=%20&.png) | ![NPM - Version](https://img.shields.io/npm/v/@langchain/community?style=flat-square&label=%20&.png) |
+
+## Setup
+
+To access IBM WatsonxAI embeddings you’ll need to create an IBM
+watsonx.ai account, get an API key or any other type of credentials, and
+install the `@langchain/community` integration package.
+
+### Credentials
+
+Head to [IBM Cloud](https://cloud.ibm.com/login) to sign up to IBM
+watsonx.ai and generate an API key or provide any other authentication
+form as presented below.
+
+#### IAM authentication
+
+```bash
+export WATSONX_AI_AUTH_TYPE=iam
+export WATSONX_AI_APIKEY=<YOUR-APIKEY>
+```
+
+#### Bearer token authentication
+
+```bash
+export WATSONX_AI_AUTH_TYPE=bearertoken
+export WATSONX_AI_BEARER_TOKEN=<YOUR-BEARER-TOKEN>
+```
+
+#### CP4D authentication
+
+```bash
+export WATSONX_AI_AUTH_TYPE=cp4d
+export WATSONX_AI_USERNAME=<YOUR_USERNAME>
+export WATSONX_AI_PASSWORD=<YOUR_PASSWORD>
+export WATSONX_AI_URL=<URL>
+```
+
+Once these are placed in your environment variables and object is
+initialized authentication will proceed automatically.
+
+Authentication can also be accomplished by passing these values as
+parameters to a new instance.
+
+## IAM authentication
+
+```typescript
+import { WatsonxEmbeddings } from "@langchain/community/embeddings/ibm";
+
+const props = {
+  version: "YYYY-MM-DD",
+  serviceUrl: "<SERVICE_URL>",
+  projectId: "<PROJECT_ID>",
+  watsonxAIAuthType: "iam",
+  watsonxAIApikey: "<YOUR-APIKEY>",
+};
+const instance = new WatsonxEmbeddings(props);
+```
+
+## Bearer token authentication
+
+```typescript
+import { WatsonxEmbeddings } from "@langchain/community/embeddings/ibm";
+
+const props = {
+  version: "YYYY-MM-DD",
+  serviceUrl: "<SERVICE_URL>",
+  projectId: "<PROJECT_ID>",
+  watsonxAIAuthType: "bearertoken",
+  watsonxAIBearerToken: "<YOUR-BEARERTOKEN>",
+};
+const instance = new WatsonxEmbeddings(props);
+```
+
+### CP4D authentication
+
+```typescript
+import { WatsonxEmbeddings } from "@langchain/community/embeddings/ibm";
+
+const props = {
+  version: "YYYY-MM-DD",
+  serviceUrl: "<SERVICE_URL>",
+  projectId: "<PROJECT_ID>",
+  watsonxAIAuthType: "cp4d",
+  watsonxAIUsername: "<YOUR-USERNAME>",
+  watsonxAIPassword: "<YOUR-PASSWORD>",
+  watsonxAIUrl: "<url>",
+};
+const instance = new WatsonxEmbeddings(props);
+```
+
+If you want to get automated tracing of your model calls you can also
+set your [LangSmith](https://docs.smith.langchain.com/) API key by
+uncommenting below:
+
+```bash
+# export LANGCHAIN_TRACING_V2="true"
+# export LANGCHAIN_API_KEY="your-api-key"
+```
+
+### Installation
+
+The LangChain IBM watsonx.ai integration lives in the
+`@langchain/community` package:
+
+```mdx-code-block
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+import Npm2Yarn from "@theme/Npm2Yarn";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+<Npm2Yarn>
+  @langchain/community @langchain/core
+</Npm2Yarn>
+
+```
+
+## Instantiation
+
+Now we can instantiate our model object and embed text:
+
+```javascript
+import { WatsonxEmbeddings } from "@langchain/community/embeddings/ibm";
+
+const embeddings = new WatsonxEmbeddings({
+  version: "YYYY-MM-DD",
+  serviceUrl: process.env.API_URL,
+  projectId: "<PROJECT_ID>",
+  spaceId: "<SPACE_ID>",
+  idOrName: "<DEPLOYMENT_ID>",
+  model: "<MODEL_ID>",
+});
+```
+
+Note:
+
+- You must provide `spaceId`, `projectId` or `idOrName`(deployment id)
+  in order to proceed.
+- Depending on the region of your provisioned service instance, use
+  correct serviceUrl.
+
+## Indexing and Retrieval
+
+Embedding models are often used in retrieval-augmented generation (RAG)
+flows, both as part of indexing data as well as later retrieving it. For
+more detailed instructions, please see our RAG tutorials under the
+[working with external knowledge
+tutorials](../../../docs/tutorials/#working-with-external-knowledge).
+
+Below, see how to index and retrieve data using the `embeddings` object
+we initialized above. In this example, we will index and retrieve a
+sample document using the demo
+[`MemoryVectorStore`](../../../docs/integrations/vectorstores/memory).
+
+```javascript
+// Create a vector store with a sample text
+import { MemoryVectorStore } from "langchain/vectorstores/memory";
+
+const text =
+  "LangChain is the framework for building context-aware reasoning applications";
+
+const vectorstore = await MemoryVectorStore.fromDocuments(
+  [{ pageContent: text, metadata: {} }],
+  embeddings
+);
+
+// Use the vector store as a retriever that returns a single document
+const retriever = vectorstore.asRetriever(1);
+
+// Retrieve the most similar text
+const retrievedDocuments = await retriever.invoke("What is LangChain?");
+
+retrievedDocuments[0].pageContent;
+```
+
+```text
+LangChain is the framework for building context-aware reasoning applications
+```
+
+## Direct Usage
+
+Under the hood, the vectorstore and retriever implementations are
+calling `embeddings.embedDocument(...)` and `embeddings.embedQuery(...)`
+to create embeddings for the text(s) used in `fromDocuments` and the
+retriever’s `invoke` operations, respectively.
+
+You can directly call these methods to get embeddings for your own use
+cases.
+
+### Embed single texts
+
+You can embed queries for search with `embedQuery`. This generates a
+vector representation specific to the query:
+
+```javascript
+const singleVector = await embeddings.embedQuery(text);
+singleVector.slice(0, 100);
+```
+
+```text
+[
+   -0.017436018,   -0.01469498,   -0.015685871,  -0.013543149, -0.0011519607,
+   -0.008123747,   0.015286108,   -0.023845721,   -0.02454774,    0.07235078,
+   -0.032333843, -0.0035843418,   -0.015389036,     0.0455373,  -0.021119863,
+   -0.022039745,   0.021746712,   -0.017774817,  -0.008232582,  -0.036727764,
+   -0.015734928,    0.03606811,   -0.005108186,  -0.036052454,   0.024462992,
+     0.02359307,    0.03273164,    0.009195497, -0.0077208397,    -0.0127943,
+   -0.023869334,  -0.029473905,  -0.0080457395, -0.0021337876,    0.04949132,
+    0.013950589,  -0.010046689,    0.021029025,  -0.031725302,   0.004251065,
+   -0.034171984,   -0.03696642,   -0.014253629,  -0.017757406,  -0.007531065,
+     0.07187789,   0.009661725,    0.041889492,   -0.04660478,   0.028036641,
+    0.059334517,   -0.04561291,    0.056029715,   -0.00676024,   0.026493236,
+      0.0116374,   0.050126843,   -0.018036349,  -0.013711887,   0.042252757,
+    -0.04453391,    0.04705777, -0.00044598224,  -0.030227259,   0.029286578,
+      0.0252211,   0.011694125,   -0.031404093,    0.02951232,    0.08812359,
+    0.023539362,  -0.011082862,    0.008024676, 0.00084492035,  -0.007984158,
+  -0.0005008702,  -0.025189219,    0.021000557, -0.0065513053,   0.036524914,
+   0.0015150858, -0.0042383806,    0.049065087,   0.000941666,    0.04447001,
+    0.012942205,  -0.078316726,    -0.03004237,  -0.025807172,   -0.03446275,
+    -0.00932942,  -0.044925686,     0.03190307,   0.010136769,  -0.048854534,
+    0.025738232,  -0.017840309,    0.023738133,   0.014214792,   0.030452395
+]
+```
+
+### Embed multiple texts
+
+You can embed multiple texts for indexing with `embedDocuments`. The
+internals used for this method may (but do not have to) differ from
+embedding queries:
+
+```javascript
+const text2 =
+  "LangGraph is a library for building stateful, multi-actor applications with LLMs";
+
+const vectors = await embeddings.embedDocuments([text, text2]);
+
+console.log(vectors[0].slice(0, 100));
+console.log(vectors[1].slice(0, 100));
+```
+
+```text
+[
+   -0.017436024,  -0.014695002,    -0.01568589,  -0.013543164, -0.001151976,
+   -0.008123703,   0.015286064,   -0.023845702,  -0.024547677,   0.07235076,
+   -0.032333862, -0.0035843418,   -0.015389038,   0.045537304, -0.021119865,
+    -0.02203975,   0.021746716,    -0.01777481,  -0.008232588,  -0.03672781,
+   -0.015734889,   0.036068108,     -0.0051082,  -0.036052432,  0.024462998,
+    0.023593083,    0.03273162,    0.009195521,  -0.007720828, -0.012794304,
+   -0.023869323,  -0.029473891,   -0.008045726,  -0.002133793,  0.049491342,
+    0.013950573,  -0.010046691,     0.02102898,   -0.03172528, 0.0042510596,
+   -0.034171965,  -0.036966413,   -0.014253668,  -0.017757434, -0.007531062,
+     0.07187787,   0.009661732,    0.041889492,   -0.04660476,  0.028036654,
+    0.059334517,  -0.045612894,    0.056029722,   -0.00676024,  0.026493296,
+   0.0116374055,   0.050126873,   -0.018036384,  -0.013711868,    0.0422528,
+   -0.044533912,   0.047057763, -0.00044596897,  -0.030227251,  0.029286569,
+    0.025221113,   0.011694138,    -0.03140413,   0.029512335,   0.08812357,
+    0.023539348,  -0.011082865,    0.008024677, 0.00084490055, -0.007984145,
+  -0.0005008745,  -0.025189226,    0.021000564, -0.0065513197,  0.036524955,
+   0.0015150585, -0.0042383634,    0.049065102,   0.000941638,  0.044469994,
+    0.012942193,  -0.078316696,     -0.0300424,  -0.025807157,   -0.0344627,
+   -0.009329439,   -0.04492573,    0.031903077,   0.010136808, -0.048854522,
+    0.025738247,   -0.01784033,    0.023738142,   0.014214801,  0.030452369
+]
+[
+     0.03278884, -0.017893745, -0.0027520044,   0.016506646,   0.028271576,
+    -0.01284331,  0.014344065,  -0.007968607,   -0.03899479,   0.039327156,
+   -0.047726233,  0.009559004,   -0.05302522,   0.011498492, -0.0055542476,
+  -0.0020940166, -0.029262392,  -0.025919685,   0.024261741, -0.0010863725,
+   0.0074619935,  0.014191284,  -0.009054746,  -0.038633537,   0.039744128,
+    0.012625762,  0.030490868,   0.013526139,  -0.024638629,  -0.011268263,
+   -0.012759613,  -0.04693565,  -0.013087251,   -0.01971696,  0.0125782555,
+    0.024156926, -0.011638484,   0.017364893,    -0.0405832, -0.0032466082,
+    -0.01611277, -0.022583133,   0.019492855,   -0.03664484,  -0.022627067,
+    0.011026938, -0.014631298,   0.043255687,  -0.029447634,   0.017212389,
+    0.029366229, -0.041978795,   0.005347565, -0.0106230285,  -0.008334342,
+   -0.008841154,  0.045096103,    0.03996879,  -0.002039457, -0.0051824683,
+   -0.019464444,  0.092018366,  -0.009283633,  -0.020052811,  0.0043408144,
+   -0.029403884,   0.02587689,  -0.027253918,     0.0159064,     0.0421537,
+     0.05078811, -0.012380686,  -0.018032575,    0.01711449,    0.03636163,
+   -0.014590949, -0.015076142, 0.00018201554,   0.002490666,   0.044776678,
+     0.05301749, -0.007891316,   0.028668318, -0.0016632816,    0.04487743,
+   -0.032529455, -0.040372133,  -0.020566158,  -0.011109745,   -0.01724949,
+  -0.0047519016, -0.041635286,  0.0068111843,   0.039498538,   -0.02491227,
+    0.016853934, -0.017926402,  -0.006154979,   0.025893573,   0.015262395
+]
+```
+
+## API reference
+
+For detailed documentation of all **module_name** features and
+configurations head to the API reference: **api_ref_module**
+
+## Related
+
+- Embedding model [conceptual guide](/docs/concepts/#embedding-models)
+- Embedding model [how-to guides](/docs/how_to/#embedding-models)
