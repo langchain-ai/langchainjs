@@ -11,6 +11,17 @@ import {
   TokenUsage as MistralAITokenUsage,
 } from "@mistralai/mistralai";
 import {
+  ChatCompletionRequest as MistralAIChatCompletionRequest,
+  ChatCompletionRequestToolChoice as MistralAIToolChoice,
+  Messages as MistralAIMessage,
+} from "@mistralai/mistralai/models/components/chatcompletionrequest.js";
+import { Tool as MistralAITool } from "@mistralai/mistralai/models/components/tool.js";
+import { ToolCall as MistralAIToolCall } from "@mistralai/mistralai/models/components/toolcall.js";
+import { ChatCompletionStreamRequest as MistralChatCompletionStreamRequest } from "@mistralai/mistralai/models/components/chatcompletionstreamrequest.js";
+import { UsageInfo as MistralAITokenUsage } from "@mistralai/mistralai/models/components/usageinfo.js";
+import { CompletionEvent as MistralAIChatCompletionEvent } from "@mistralai/mistralai/models/components/completionevent.js";
+import { ChatCompletionResponse as MistralChatCompletionResponse } from "@mistralai/mistralai/models/components/chatcompletionresponse.js";
+import {
   MessageType,
   type BaseMessage,
   MessageContent,
@@ -119,9 +130,9 @@ export interface ChatMistralAIInput
    */
   model?: string;
   /**
-   * Override the default endpoint.
+   * Override the default server URL used by the Mistral SDK.
    */
-  endpoint?: string;
+  serverURL?: string;
   /**
    * What sampling temperature to use, between 0.0 and 2.0.
    * Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic.
@@ -754,7 +765,7 @@ export class ChatMistralAI<
 
   apiKey: string;
 
-  endpoint?: string;
+  serverURL?: string;
 
   temperature = 0.7;
 
@@ -789,7 +800,7 @@ export class ChatMistralAI<
     }
     this.apiKey = apiKey;
     this.streaming = fields?.streaming ?? this.streaming;
-    this.endpoint = fields?.endpoint;
+    this.serverURL = fields?.serverURL;
     this.temperature = fields?.temperature ?? this.temperature;
     this.topP = fields?.topP ?? this.topP;
     this.maxTokens = fields?.maxTokens ?? this.maxTokens;
@@ -885,8 +896,10 @@ export class ChatMistralAI<
   ): Promise<
     ChatCompletionResponse | AsyncGenerator<ChatCompletionResponseChunk>
   > {
-    const { MistralClient } = await this.imports();
-    const client = new MistralClient(this.apiKey, this.endpoint);
+    const client = new MistralClient({
+      apiKey: this.apiKey,
+      serverURL: this.serverURL,
+    });
 
     return this.caller.call(async () => {
       try {
@@ -1053,7 +1066,7 @@ export class ChatMistralAI<
   /** @ignore */
   _combineLLMOutput() {
     return [];
-  }
+  } 
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
