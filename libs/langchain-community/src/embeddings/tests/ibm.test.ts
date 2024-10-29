@@ -1,6 +1,6 @@
 /* eslint-disable no-process-env */
 import { testProperties } from "../../llms/tests/ibm.test.js";
-import { WatsonxEmbeddings } from "../ibm.js";
+import { WatsonxEmbeddings, WatsonxInputEmbeddings } from "../ibm.js";
 
 const fakeAuthProp = {
   watsonxAIAuthType: "iam",
@@ -10,6 +10,7 @@ describe("Embeddings unit tests", () => {
   describe("Positive tests", () => {
     test("Basic properties", () => {
       const testProps = {
+        model: "ibm/slate-125m-english-rtrvr",
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
         projectId: process.env.WATSONX_AI_PROJECT_ID || "testString",
@@ -19,14 +20,14 @@ describe("Embeddings unit tests", () => {
     });
 
     test("Basic properties", () => {
-      const testProps = {
+      const testProps: WatsonxInputEmbeddings = {
+        model: "ibm/slate-125m-english-rtrvr",
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
         projectId: process.env.WATSONX_AI_PROJECT_ID || "testString",
-        truncate_input_tokens: 10,
+        truncateInputTokens: 10,
         maxConcurrency: 2,
         maxRetries: 2,
-        model: "ibm/slate-125m-english-rtrvr",
       };
       const instance = new WatsonxEmbeddings({ ...testProps, ...fakeAuthProp });
 
@@ -37,6 +38,7 @@ describe("Embeddings unit tests", () => {
   describe("Negative tests", () => {
     test("Missing id", async () => {
       const testProps = {
+        model: "ibm/slate-125m-english-rtrvr",
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
       };
@@ -84,6 +86,7 @@ describe("Embeddings unit tests", () => {
 
     test("Passing more than one id", async () => {
       const testProps = {
+        model: "ibm/slate-125m-english-rtrvr",
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
         projectId: process.env.WATSONX_AI_PROJECT_ID || "testString",
@@ -100,6 +103,7 @@ describe("Embeddings unit tests", () => {
 
     test("Invalid properties", () => {
       const testProps = {
+        model: "ibm/slate-125m-english-rtrvr",
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
         projectId: process.env.WATSONX_AI_PROJECT_ID || "testString",
