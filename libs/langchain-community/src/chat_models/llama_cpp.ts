@@ -50,7 +50,7 @@ export interface LlamaCppCallOptions extends BaseLanguageModelCallOptions {
  * @example
  * ```typescript
  * // Initialize the ChatLlamaCpp model with the path to the model binary file.
- * const model = new ChatLlamaCpp({
+ * const model = await ChatLlamaCpp.chatInit({
  *   modelPath: "/Replace/with/path/to/your/model/gguf-llama2-q4_0.bin",
  *   temperature: 0.5,
  * });

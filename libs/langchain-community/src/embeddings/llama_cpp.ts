@@ -19,8 +19,8 @@ export interface LlamaCppEmbeddingsParams
  * @example
  * ```typescript
  * // Initialize LlamaCppEmbeddings with the path to the model file
- * const embeddings = new LlamaCppEmbeddings({
- *   modelPath: "/Replace/with/path/to/your/model/gguf-llama2-q4_0.bin",
+ * const embeddings = await LlamaCppEmbeddings.embeddingsInit({
+ *   modelPath: llamaPath,
  * });
  *
  * // Embed a query string using the Llama embeddings
