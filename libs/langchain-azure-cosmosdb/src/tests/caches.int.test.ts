@@ -6,8 +6,8 @@ import {
   IndexingMode,
   VectorEmbeddingPolicy,
 } from "@azure/cosmos";
-import { FakeEmbeddings, FakeLLM } from "@langchain/core/utils/testing";
 import { DefaultAzureCredential } from "@azure/identity";
+import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
 import { AzureCosmosDBNoSQLSemanticCache } from "../caches.js";
 
 const DATABASE_NAME = "langchainTestCacheDB";
@@ -31,7 +31,7 @@ function vectorEmbeddingPolicy(
         path: "/embedding",
         dataType: "float32",
         distanceFunction,
-        dimensions: 0,
+        dimensions: 505,
       },
     ],
   };
@@ -39,25 +39,34 @@ function vectorEmbeddingPolicy(
 
 function initializeCache(
   indexType: any,
-  distanceFunction: any
+  distanceFunction: any,
+  similarityThreshold?: number
 ): AzureCosmosDBNoSQLSemanticCache {
   let cache: AzureCosmosDBNoSQLSemanticCache;
   if (process.env.AZURE_COSMOSDB_NOSQL_CONNECTION_STRING) {
-    cache = new AzureCosmosDBNoSQLSemanticCache(new FakeEmbeddings(), {
-      databaseName: DATABASE_NAME,
-      containerName: CONTAINER_NAME,
-      connectionString: process.env.AZURE_COSMOSDB_NOSQL_CONNECTION_STRING,
-      indexingPolicy: indexingPolicy(indexType),
-      vectorEmbeddingPolicy: vectorEmbeddingPolicy(distanceFunction),
-    });
+    cache = new AzureCosmosDBNoSQLSemanticCache(
+      new OpenAIEmbeddings(),
+      {
+        databaseName: DATABASE_NAME,
+        containerName: CONTAINER_NAME,
+        connectionString: process.env.AZURE_COSMOSDB_NOSQL_CONNECTION_STRING,
+        indexingPolicy: indexingPolicy(indexType),
+        vectorEmbeddingPolicy: vectorEmbeddingPolicy(distanceFunction),
+      },
+      similarityThreshold
+    );
   } else if (process.env.AZURE_COSMOSDB_NOSQL_ENDPOINT) {
-    cache = new AzureCosmosDBNoSQLSemanticCache(new FakeEmbeddings(), {
-      databaseName: DATABASE_NAME,
-      containerName: CONTAINER_NAME,
-      endpoint: process.env.AZURE_COSMOSDB_NOSQL_ENDPOINT,
-      indexingPolicy: indexingPolicy(indexType),
-      vectorEmbeddingPolicy: vectorEmbeddingPolicy(distanceFunction),
-    });
+    cache = new AzureCosmosDBNoSQLSemanticCache(
+      new OpenAIEmbeddings(),
+      {
+        databaseName: DATABASE_NAME,
+        containerName: CONTAINER_NAME,
+        endpoint: process.env.AZURE_COSMOSDB_NOSQL_ENDPOINT,
+        indexingPolicy: indexingPolicy(indexType),
+        vectorEmbeddingPolicy: vectorEmbeddingPolicy(distanceFunction),
+      },
+      similarityThreshold
+    );
   } else {
     throw new Error(
       "Please set the environment variable AZURE_COSMOSDB_NOSQL_CONNECTION_STRING or AZURE_COSMOSDB_NOSQL_ENDPOINT"
@@ -78,6 +87,10 @@ function initializeCache(
  * Once you have the instance running, you need to set the following environment
  * variables before running the test:
  * - AZURE_COSMOSDB_NOSQL_CONNECTION_STRING or AZURE_COSMOSDB_NOSQL_ENDPOINT
+ * - AZURE_OPENAI_API_KEY
+ * - AZURE_OPENAI_API_INSTANCE_NAME
+ * - AZURE_OPENAI_API_EMBEDDINGS_DEPLOYMENT_NAME
+ * - AZURE_OPENAI_API_VERSION
  */
 describe("Azure CosmosDB NoSQL Semantic Cache", () => {
   beforeEach(async () => {
@@ -105,58 +118,114 @@ describe("Azure CosmosDB NoSQL Semantic Cache", () => {
       // Ignore error if the database does not exist
     }
   });
+
   it("test AzureCosmosDBNoSqlSemanticCache with cosine quantizedFlat", async () => {
     const cache = initializeCache("quantizedFlat", "cosine");
-    const llm = new FakeLLM({});
-    const llmString = JSON.stringify(llm._identifyingParams());
+    const model = new ChatOpenAI({ cache });
+    const llmString = JSON.stringify(model._identifyingParams);
     await cache.update("foo", llmString, [{ text: "fizz" }]);
-    const cacheOutput = await cache.lookup("bar", llmString);
+
+    let cacheOutput = await cache.lookup("foo", llmString);
     expect(cacheOutput).toEqual([{ text: "fizz" }]);
+
+    cacheOutput = await cache.lookup("bar", llmString);
+    expect(cacheOutput).toEqual(null);
+
     await cache.clear(llmString);
   });
+
   it("test AzureCosmosDBNoSqlSemanticCache with cosine flat", async () => {
     const cache = initializeCache("flat", "cosine");
-    const llm = new FakeLLM({});
-    const llmString = JSON.stringify(llm._identifyingParams());
-    await cache.update("foo", llmString, [{ text: "Buzz" }]);
-    const cacheOutput = await cache.lookup("bar", llmString);
-    expect(cacheOutput).toEqual([{ text: "Buzz" }]);
+    const model = new ChatOpenAI({ cache });
+    const llmString = JSON.stringify(model._identifyingParams);
+    await cache.update("foo", llmString, [{ text: "fizz" }]);
+
+    let cacheOutput = await cache.lookup("foo", llmString);
+    expect(cacheOutput).toEqual([{ text: "fizz" }]);
+
+    cacheOutput = await cache.lookup("bar", llmString);
+    expect(cacheOutput).toEqual(null);
+
     await cache.clear(llmString);
   });
+
   it("test AzureCosmosDBNoSqlSemanticCache with dotProduct quantizedFlat", async () => {
     const cache = initializeCache("quantizedFlat", "dotproduct");
-    const llm = new FakeLLM({});
-    const llmString = JSON.stringify(llm._identifyingParams());
-    await cache.update("foo", llmString, [{ text: "fizz" }, { text: "Buzz" }]);
-    const cacheOutput = await cache.lookup("bar", llmString);
-    expect(cacheOutput).toEqual([{ text: "fizz" }, { text: "Buzz" }]);
+    const model = new ChatOpenAI({ cache });
+    const llmString = JSON.stringify(model._identifyingParams);
+    await cache.update("foo", llmString, [{ text: "fizz" }]);
+
+    let cacheOutput = await cache.lookup("foo", llmString);
+    expect(cacheOutput).toEqual([{ text: "fizz" }]);
+
+    cacheOutput = await cache.lookup("bar", llmString);
+    expect(cacheOutput).toEqual(null);
+
     await cache.clear(llmString);
   });
+
   it("test AzureCosmosDBNoSqlSemanticCache with dotProduct flat", async () => {
-    const cache = initializeCache("flat", "dotproduct");
-    const llm = new FakeLLM({});
-    const llmString = JSON.stringify(llm._identifyingParams());
-    await cache.update("foo", llmString, [{ text: "fizz" }, { text: "Buzz" }]);
-    const cacheOutput = await cache.lookup("bar", llmString);
-    expect(cacheOutput).toEqual([{ text: "fizz" }, { text: "Buzz" }]);
+    const cache = initializeCache("flat", "cosine");
+    const model = new ChatOpenAI({ cache });
+    const llmString = JSON.stringify(model._identifyingParams);
+    await cache.update("foo", llmString, [{ text: "fizz" }]);
+
+    let cacheOutput = await cache.lookup("foo", llmString);
+    expect(cacheOutput).toEqual([{ text: "fizz" }]);
+
+    cacheOutput = await cache.lookup("bar", llmString);
+    expect(cacheOutput).toEqual(null);
+
     await cache.clear(llmString);
   });
+
   it("test AzureCosmosDBNoSqlSemanticCache with euclidean quantizedFlat", async () => {
     const cache = initializeCache("quantizedFlat", "euclidean");
-    const llm = new FakeLLM({});
-    const llmString = JSON.stringify(llm._identifyingParams());
+    const model = new ChatOpenAI({ cache });
+    const llmString = JSON.stringify(model._identifyingParams);
     await cache.update("foo", llmString, [{ text: "fizz" }]);
-    const cacheOutput = await cache.lookup("bar", llmString);
+
+    let cacheOutput = await cache.lookup("foo", llmString);
     expect(cacheOutput).toEqual([{ text: "fizz" }]);
+
+    cacheOutput = await cache.lookup("bar", llmString);
+    expect(cacheOutput).toEqual(null);
+
     await cache.clear(llmString);
   });
+
   it("test AzureCosmosDBNoSqlSemanticCache with euclidean flat", async () => {
     const cache = initializeCache("flat", "euclidean");
-    const llm = new FakeLLM({});
-    const llmString = JSON.stringify(llm._identifyingParams());
-    await cache.update("foo", llmString, [{ text: "fizz" }, { text: "Buzz" }]);
-    const cacheOutput = await cache.lookup("bar", llmString);
-    expect(cacheOutput).toEqual([{ text: "fizz" }, { text: "Buzz" }]);
+    const model = new ChatOpenAI({ cache });
+    const llmString = JSON.stringify(model._identifyingParams);
+    await cache.update("foo", llmString, [{ text: "fizz" }]);
+
+    let cacheOutput = await cache.lookup("foo", llmString);
+    expect(cacheOutput).toEqual([{ text: "fizz" }]);
+
+    cacheOutput = await cache.lookup("bar", llmString);
+    expect(cacheOutput).toEqual(null);
+
     await cache.clear(llmString);
+  });
+
+  it("test AzureCosmosDBNoSqlSemanticCache response according to similarity score", async () => {
+    const cache = initializeCache("quantizedFlat", "cosine");
+    const model = new ChatOpenAI({ cache });
+    const response1 = await model.invoke(
+      "Where is the headquarter of Microsoft?"
+    );
+    console.log(response1.content);
+    // gives similarity score of 0.56 which is less than the threshold of 0.6. The cache
+    // will retun null which will allow the model to generate result.
+    const response2 = await model.invoke(
+      "List all Microsoft offices in India."
+    );
+    expect(response2.content).not.toEqual(response1.content);
+    console.log(response2.content);
+    // gives similarity score of .63 > 0.6
+    const response3 = await model.invoke("Tell me something about Microsoft");
+    expect(response3.content).toEqual(response1.content);
+    console.log(response3.content);
   });
 });

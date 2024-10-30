@@ -11,7 +11,21 @@ const config: AzureCosmosDBNoSQLConfig = {
   // use endpoint to initiate client with managed identity
   connectionString: "<CONNECTION_STRING>",
 };
-const cache = new AzureCosmosDBNoSQLSemanticCache(embeddings, config);
+
+/**
+ * Sets the threshold similarity score for returning cached results based on vector distance.
+ * Cached output is returned only if the similarity score meets or exceeds this threshold;
+ * otherwise, a new result is generated. Default is 0.6, adjustable via the constructor
+ * to suit various distance functions and use cases.
+ * (see: https://learn.microsoft.com/en-us/azure/cosmos-db/nosql/query/vectordistance).
+ */
+
+const similarityScoreThreshold = 0.5;
+const cache = new AzureCosmosDBNoSQLSemanticCache(
+  embeddings,
+  config,
+  similarityScoreThreshold
+);
 
 const model = new ChatOpenAI({ cache });
 

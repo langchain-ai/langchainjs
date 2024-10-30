@@ -41,11 +41,16 @@ export class AzureCosmosDBNoSQLSemanticCache extends BaseCache {
 
   private config: AzureCosmosDBNoSQLConfig;
 
+  private similarityScoreThreshold: number;
+
   private cacheDict: { [key: string]: AzureCosmosDBNoSQLVectorStore } = {};
+
+  private vectorDistanceFunction: string;
 
   constructor(
     embeddings: EmbeddingsInterface,
-    dbConfig: AzureCosmosDBNoSQLConfig
+    dbConfig: AzureCosmosDBNoSQLConfig,
+    similarityScoreThreshold: number = 0.6
   ) {
     super();
     let client: CosmosClient;
@@ -88,6 +93,10 @@ export class AzureCosmosDBNoSQLSemanticCache extends BaseCache {
       client = dbConfig.client;
     }
 
+    this.vectorDistanceFunction =
+      dbConfig.vectorEmbeddingPolicy?.vectorEmbeddings[0].distanceFunction ??
+      "cosine";
+
     this.config = {
       ...dbConfig,
       client,
@@ -95,6 +104,7 @@ export class AzureCosmosDBNoSQLSemanticCache extends BaseCache {
       containerName: dbConfig.containerName ?? DEFAULT_CONTAINER_NAME,
     };
     this.embeddings = embeddings;
+    this.similarityScoreThreshold = similarityScoreThreshold;
   }
 
   private getLlmCache(llmKey: string) {
@@ -118,14 +128,24 @@ export class AzureCosmosDBNoSQLSemanticCache extends BaseCache {
   public async lookup(prompt: string, llmKey: string) {
     const llmCache = this.getLlmCache(llmKey);
 
-    const results = await llmCache.similaritySearch(prompt, 1);
+    const results = await llmCache.similaritySearchWithScore(prompt, 1);
     if (!results.length) return null;
 
-    const generations = results.flatMap((result) =>
-      result.metadata.return_value.map((gen: string) =>
-        deserializeStoredGeneration(JSON.parse(gen))
-      )
-    );
+    const generations = results
+      .flatMap(([document, score]) => {
+        const isSimilar =
+          (this.vectorDistanceFunction === "euclidean" &&
+            score <= this.similarityScoreThreshold) ||
+          (this.vectorDistanceFunction !== "euclidean" &&
+            score >= this.similarityScoreThreshold);
+
+        if (!isSimilar) return undefined;
+
+        return document.metadata.return_value.map((gen: string) =>
+          deserializeStoredGeneration(JSON.parse(gen))
+        );
+      })
+      .filter((gen) => gen !== undefined);
 
     return generations.length > 0 ? generations : null;
   }
