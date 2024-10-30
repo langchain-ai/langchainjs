@@ -17,7 +17,7 @@ const config: AzureCosmosDBNoSQLConfig = {
  * Cached output is returned only if the similarity score meets or exceeds this threshold;
  * otherwise, a new result is generated. Default is 0.6, adjustable via the constructor
  * to suit various distance functions and use cases.
- * (see: https://learn.microsoft.com/en-us/azure/cosmos-db/nosql/query/vectordistance).
+ * (see: https://learn.microsoft.com/azure/cosmos-db/nosql/query/vectordistance).
  */
 
 const similarityScoreThreshold = 0.5;
