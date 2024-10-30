@@ -76,7 +76,8 @@ export interface WatsonxDeltaStream {
   refusal?: string;
 }
 
-export interface WatsonxCallParams extends Partial<Omit<TextChatParams, "modelId">> {
+export interface WatsonxCallParams
+  extends Partial<Omit<TextChatParams, "modelId">> {
   maxRetries?: number;
 }
 export interface WatsonxCallOptionsChat

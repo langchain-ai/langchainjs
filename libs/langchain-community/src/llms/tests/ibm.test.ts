@@ -2,6 +2,7 @@
 import WatsonxAiMlVml_v1 from "@ibm-cloud/watsonx-ai/dist/watsonx-ai-ml/vml_v1.js";
 import { WatsonxLLM, WatsonxInputLLM } from "../ibm.js";
 import { authenticateAndSetInstance } from "../../utils/ibm.js";
+import { WatsonxEmbeddings } from "../../embeddings/ibm.js";
 
 const fakeAuthProp = {
   watsonxAIAuthType: "iam",
@@ -11,7 +12,7 @@ export function getKey<K>(key: K): K {
   return key;
 }
 export const testProperties = (
-  instance: WatsonxLLM,
+  instance: WatsonxLLM | WatsonxEmbeddings,
   testProps: WatsonxInputLLM,
   notExTestProps?: { [key: string]: any }
 ) => {
@@ -33,7 +34,7 @@ export const testProperties = (
       }
     });
   };
-  checkProperty<WatsonxInputLLM>(testProps, instance);
+  checkProperty<typeof testProps>(testProps, instance);
   if (notExTestProps)
     checkProperty<typeof notExTestProps>(notExTestProps, instance, false);
 };

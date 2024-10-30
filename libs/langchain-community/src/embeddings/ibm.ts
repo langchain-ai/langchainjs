@@ -13,7 +13,8 @@ export interface WatsonxEmbeddingsParams
   truncateInputTokens?: number;
 }
 
-export interface WatsonxInputEmbeddings extends Omit<WatsonxParams, "idOrName"> {
+export interface WatsonxInputEmbeddings
+  extends Omit<WatsonxParams, "idOrName"> {
   truncateInputTokens?: number;
 }
 
