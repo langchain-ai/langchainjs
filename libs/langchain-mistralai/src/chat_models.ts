@@ -355,8 +355,8 @@ function mistralAIResponseToChatMessage(
 function _convertDeltaToMessageChunk(
   delta: {
     role?: string | undefined;
-    content?: string | undefined;
-    tool_calls?: MistralAIToolCalls[] | undefined;
+    content?: string | null | undefined;
+    tool_calls?: MistralAIToolCall[] | null | undefined;
   },
   usage?: MistralAITokenUsage | null
 ) {
@@ -982,7 +982,7 @@ export class ChatMistralAI<
 
     // Enable streaming for signal controller or timeout due
     // to SDK limitations on canceling requests.
-    const shouldStream = !!options.signal ?? !!options.timeout;
+    const shouldStream = options.signal ?? !!options.timeout;
 
     // Handle streaming
     if (this.streaming || shouldStream) {
