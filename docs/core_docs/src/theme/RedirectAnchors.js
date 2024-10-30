@@ -1,7 +1,8 @@
 import React from "react";
-import { Redirect } from "@docusaurus/router";
 
 function RedirectAnchors() {
+  if (typeof window === "undefined") return null;
+
   // get # anchor from url
   const lookup = {
     "#conceptual-guide": "/docs/concepts",
@@ -98,10 +99,12 @@ function RedirectAnchors() {
   const hash = window?.location?.hash;
   if (hash) {
     if (lookup[hash]) {
-      return <Redirect to={lookup[hash]} />;
+      window.location.href = lookup[hash];
+      return null;
     }
   }
-  return null;
+
+  return <></>;
 }
 
 export default RedirectAnchors;
