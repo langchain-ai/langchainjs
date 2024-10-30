@@ -104,7 +104,7 @@ function RedirectAnchors() {
     }
   }
 
-  return <></>;
+  return null;
 }
 
 export default RedirectAnchors;
