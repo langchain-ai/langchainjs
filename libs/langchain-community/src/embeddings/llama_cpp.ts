@@ -43,17 +43,19 @@ export class LlamaCppEmbeddings extends Embeddings {
   }
 
   /**
-  * Initializes the llama_cpp model for usage in the embeddings wrapper.
-  * @param inputs - the inputs passed onto the model.
-  * @returns A Promise that resolves to the LlamaCppEmbeddings type class.
-  */
-  public static async embeddingsInit(inputs: LlamaBaseCppInputs): Promise<LlamaCppEmbeddings> {
-    const instance = new LlamaCppEmbeddings(inputs)
+   * Initializes the llama_cpp model for usage in the embeddings wrapper.
+   * @param inputs - the inputs passed onto the model.
+   * @returns A Promise that resolves to the LlamaCppEmbeddings type class.
+   */
+  public static async embeddingsInit(
+    inputs: LlamaBaseCppInputs
+  ): Promise<LlamaCppEmbeddings> {
+    const instance = new LlamaCppEmbeddings(inputs);
 
     instance._model = await createLlamaModel(inputs);
     instance._context = await createLlamaContext(instance._model, inputs);
 
-    return instance
+    return instance;
   }
 
   /**

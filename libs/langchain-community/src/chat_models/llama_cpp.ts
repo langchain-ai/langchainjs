@@ -6,7 +6,7 @@ import {
   type Token,
   ChatUserMessage,
   ChatModelResponse,
-  ChatHistoryItem
+  ChatHistoryItem,
 } from "node-llama-cpp";
 
 import {
@@ -101,19 +101,21 @@ export class ChatLlamaCpp extends SimpleChatModel<LlamaCppCallOptions> {
   }
 
   /**
-  * Initializes the llama_cpp model for usage in the chat models wrapper.
-  * @param inputs - the inputs passed onto the model.
-  * @returns A Promise that resolves to the ChatLlamaCpp type class.
-  */
-  public static async chatInit(inputs: LlamaBaseCppInputs): Promise<ChatLlamaCpp> {
-    const instance = new ChatLlamaCpp(inputs)
- 
+   * Initializes the llama_cpp model for usage in the chat models wrapper.
+   * @param inputs - the inputs passed onto the model.
+   * @returns A Promise that resolves to the ChatLlamaCpp type class.
+   */
+  public static async chatInit(
+    inputs: LlamaBaseCppInputs
+  ): Promise<ChatLlamaCpp> {
+    const instance = new ChatLlamaCpp(inputs);
+
     instance._model = await createLlamaModel(inputs);
     instance._context = await createLlamaContext(instance._model, inputs);
- 
-    return instance
+
+    return instance;
   }
- 
+
   _llmType() {
     return "llama2_cpp";
   }
@@ -161,7 +163,9 @@ export class ChatLlamaCpp extends SimpleChatModel<LlamaCppCallOptions> {
         signal: options.signal,
         onToken: async (tokens: number[]) => {
           options.onToken?.(tokens);
-          await runManager?.handleLLMNewToken(this._model.detokenize(tokens.map(num => num as Token)));
+          await runManager?.handleLLMNewToken(
+            this._model.detokenize(tokens.map((num) => num as Token))
+          );
         },
         maxTokens: this?.maxTokens,
         temperature: this?.temperature,
@@ -209,7 +213,9 @@ export class ChatLlamaCpp extends SimpleChatModel<LlamaCppCallOptions> {
         }),
         generationInfo: {},
       });
-      await runManager?.handleLLMNewToken(this._model.detokenize([chunk]) ?? "");
+      await runManager?.handleLLMNewToken(
+        this._model.detokenize([chunk]) ?? ""
+      );
     }
   }
 
@@ -247,9 +253,7 @@ export class ChatLlamaCpp extends SimpleChatModel<LlamaCppCallOptions> {
     // Lets see if we just have a prompt left or are their previous interactions?
     if (noSystemMessages.length > 1) {
       // Is the last message a prompt?
-      if (
-        noSystemMessages[noSystemMessages.length - 1].getType() === "human"
-      ) {
+      if (noSystemMessages[noSystemMessages.length - 1].getType() === "human") {
         const finalMessageContent =
           noSystemMessages[noSystemMessages.length - 1].content;
         if (typeof finalMessageContent !== "string") {
@@ -280,7 +284,7 @@ export class ChatLlamaCpp extends SimpleChatModel<LlamaCppCallOptions> {
         contextSequence: this._context.getSequence(),
         systemPrompt: sysMessage,
       });
-      this._session.setChatHistory(interactions)
+      this._session.setChatHistory(interactions);
     } else if (sysMessage !== "" && interactions.length === 0) {
       this._session = new LlamaChatSession({
         contextSequence: this._context.getSequence(),
@@ -290,7 +294,7 @@ export class ChatLlamaCpp extends SimpleChatModel<LlamaCppCallOptions> {
       this._session = new LlamaChatSession({
         contextSequence: this._context.getSequence(),
       });
-      this._session.setChatHistory(interactions)
+      this._session.setChatHistory(interactions);
     } else {
       this._session = new LlamaChatSession({
         contextSequence: this._context.getSequence(),
@@ -315,8 +319,11 @@ export class ChatLlamaCpp extends SimpleChatModel<LlamaCppCallOptions> {
             "ChatLlamaCpp does not support non-string message content."
           );
         }
-        const llamaPrompt: ChatUserMessage = {type:"user", text: prompt}
-        const llamaResponse: ChatModelResponse = {type: "model", response: [response]}
+        const llamaPrompt: ChatUserMessage = { type: "user", text: prompt };
+        const llamaResponse: ChatModelResponse = {
+          type: "model",
+          response: [response],
+        };
         result.push(llamaPrompt);
         result.push(llamaResponse);
       }

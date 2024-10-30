@@ -58,13 +58,15 @@ export interface LlamaBaseCppInputs {
   gbnf?: string;
 }
 
-export async function createLlamaModel(inputs: LlamaBaseCppInputs): Promise<LlamaModel> {
+export async function createLlamaModel(
+  inputs: LlamaBaseCppInputs
+): Promise<LlamaModel> {
   const options: LlamaModelOptions = {
     gpuLayers: inputs?.gpuLayers,
     modelPath: inputs.modelPath,
     useMlock: inputs?.useMlock,
     useMmap: inputs?.useMmap,
-    vocabOnly: inputs?.vocabOnly
+    vocabOnly: inputs?.vocabOnly,
   };
 
   const llama = await getLlama();
@@ -103,13 +105,12 @@ export async function createLlamaJsonSchemaGrammar(
 export async function createCustomGrammar(
   filePath: string | undefined
 ): Promise<LlamaGrammar | undefined> {
-
-  if (filePath === undefined){
+  if (filePath === undefined) {
     return undefined;
   }
 
   const llama = await getLlama();
   return llama.createGrammar({
-    grammar: filePath
-  })
+    grammar: filePath,
+  });
 }

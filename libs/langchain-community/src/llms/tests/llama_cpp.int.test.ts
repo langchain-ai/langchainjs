@@ -35,7 +35,10 @@ test.skip("Test Llama_CPP", async () => {
 }, 100000);
 
 test.skip("Test Llama_CPP", async () => {
-  const model = await LlamaCpp.llmInit({ modelPath: llamaPath, temperature: 0.7 });
+  const model = await LlamaCpp.llmInit({
+    modelPath: llamaPath,
+    temperature: 0.7,
+  });
 
   const stream = await model.stream(
     "Tell me a short story about a happy Llama."
@@ -55,7 +58,10 @@ const gbnfListGrammer =
   'root ::= item+ # Excludes various line break characters item ::= "- " [^\r\n\x0b\x0c\x85\u2028\u2029]+ "\n"';
 
 test.skip("Test Llama_CPP", async () => {
-  const model = await LlamaCpp.llmInit({ modelPath: llamaPath, gbnf: gbnfListGrammer });
+  const model = await LlamaCpp.llmInit({
+    modelPath: llamaPath,
+    gbnf: gbnfListGrammer,
+  });
   // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
   // @ts-expect-error unused var
   const res = await model.invoke(
@@ -82,7 +88,10 @@ const schemaJSON = {
 };
 
 test.skip("Test Llama_CPP", async () => {
-  const model = await LlamaCpp.llmInit({ modelPath: llamaPath, jsonSchema: schemaJSON });
+  const model = await LlamaCpp.llmInit({
+    modelPath: llamaPath,
+    jsonSchema: schemaJSON,
+  });
   // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
   // @ts-expect-error unused var
   const res = await model.invoke("Where do llamas live?");

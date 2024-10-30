@@ -87,15 +87,17 @@ export class LlamaCpp extends LLM<LlamaCppCallOptions> {
    * @returns A Promise that resolves to the LlamaCpp type class.
    */
   public static async llmInit(inputs: LlamaCppInputs): Promise<LlamaCpp> {
-    const instance = new LlamaCpp(inputs)
+    const instance = new LlamaCpp(inputs);
 
     instance._model = await createLlamaModel(inputs);
     instance._context = await createLlamaContext(instance._model, inputs);
-    instance._jsonSchema = await createLlamaJsonSchemaGrammar(inputs?.jsonSchema);
+    instance._jsonSchema = await createLlamaJsonSchemaGrammar(
+      inputs?.jsonSchema
+    );
     instance._gbnf = await createCustomGrammar(inputs?.gbnf);
     instance._session = createLlamaSession(instance._context);
 
-    return instance
+    return instance;
   }
 
   _llmType() {
@@ -152,10 +154,10 @@ export class LlamaCpp extends LLM<LlamaCppCallOptions> {
     };
 
     if (this._context.sequencesLeft === 0) {
-      this._context = await createLlamaContext(this._model, LlamaCpp.inputs)
+      this._context = await createLlamaContext(this._model, LlamaCpp.inputs);
     }
     const sequence = this._context.getSequence();
-    const tokens = this._model.tokenize(prompt)
+    const tokens = this._model.tokenize(prompt);
 
     const stream = await this.caller.call(async () =>
       sequence.evaluate(tokens, promptOptions)
@@ -166,7 +168,9 @@ export class LlamaCpp extends LLM<LlamaCppCallOptions> {
         text: this._model.detokenize([chunk]),
         generationInfo: {},
       });
-      await runManager?.handleLLMNewToken(this._model.detokenize([chunk]) ?? "");
+      await runManager?.handleLLMNewToken(
+        this._model.detokenize([chunk]) ?? ""
+      );
     }
   }
 }

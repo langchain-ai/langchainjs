@@ -61,7 +61,10 @@ test.skip("Test system message", async () => {
 });
 
 test.skip("test streaming call", async () => {
-  const llamaCpp = await ChatLlamaCpp.chatInit({ modelPath: llamaPath, temperature: 0.7 });
+  const llamaCpp = await ChatLlamaCpp.chatInit({
+    modelPath: llamaPath,
+    temperature: 0.7,
+  });
 
   const stream = await llamaCpp.stream(
     "Tell me a short story about a happy Llama."
@@ -77,7 +80,10 @@ test.skip("test streaming call", async () => {
 });
 
 test.skip("test multi-mesage streaming call", async () => {
-  const llamaCpp = await ChatLlamaCpp.chatInit({ modelPath: llamaPath, temperature: 0.7 });
+  const llamaCpp = await ChatLlamaCpp.chatInit({
+    modelPath: llamaPath,
+    temperature: 0.7,
+  });
 
   const stream = await llamaCpp.stream([
     new SystemMessage(
@@ -96,7 +102,10 @@ test.skip("test multi-mesage streaming call", async () => {
 });
 
 test.skip("test multi-mesage streaming call and abort after 5s", async () => {
-  const llamaCpp = await ChatLlamaCpp.chatInit({ modelPath: llamaPath, temperature: 0.7 });
+  const llamaCpp = await ChatLlamaCpp.chatInit({
+    modelPath: llamaPath,
+    temperature: 0.7,
+  });
   const controller = new AbortController();
   setTimeout(() => {
     controller.abort();

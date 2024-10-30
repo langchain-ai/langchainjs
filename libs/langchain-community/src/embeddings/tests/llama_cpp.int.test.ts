@@ -7,13 +7,17 @@ import { LlamaCppEmbeddings } from "../llama_cpp.js";
 const llamaPath = getEnvironmentVariable("LLAMA_PATH")!;
 
 test.skip("Test LlamaCppEmbeddings.embedQuery", async () => {
-  const embeddings = await LlamaCppEmbeddings.embeddingsInit({ modelPath: llamaPath });
+  const embeddings = await LlamaCppEmbeddings.embeddingsInit({
+    modelPath: llamaPath,
+  });
   const res = await embeddings.embedQuery("Hello Llama");
   expect(typeof res[0]).toBe("number");
 });
 
 test.skip("Test LlamaCppEmbeddings.embedDocuments", async () => {
-  const embeddings = await LlamaCppEmbeddings.embeddingsInit({ modelPath: llamaPath });
+  const embeddings = await LlamaCppEmbeddings.embeddingsInit({
+    modelPath: llamaPath,
+  });
   const res = await embeddings.embedDocuments(["Hello Llama", "Bye bye"]);
   expect(res).toHaveLength(2);
   expect(typeof res[0][0]).toBe("number");
