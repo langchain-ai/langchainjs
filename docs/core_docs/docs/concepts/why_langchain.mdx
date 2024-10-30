@@ -60,6 +60,20 @@ The underlying implementation of the retriever depends on the type of data store
 const documents = await myRetriever.invoke("What is the meaning of life?");
 ```
 
+```text
+[
+   Document({
+      pageContent: "The meaning of life is 42.",
+      metadata: { ... },
+   }),
+   Document({
+      pageContent: "The meaning of life is to use LangChain.",
+      metadata: { ... },
+   }),
+   ...
+]
+```
+
 ## Orchestration
 
 While standardization for individual components is useful, we've increasingly seen that developers want to _combine_ components into more complex applications.

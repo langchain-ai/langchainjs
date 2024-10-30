@@ -101,7 +101,7 @@ Different chat providers may support system message in one of the following ways
 
 Most major chat model providers support system instructions via either a chat message or a separate API parameter. LangChain will automatically adapt based on the provider’s capabilities. If the provider supports a separate API parameter for system instructions, LangChain will extract the content of a system message and pass it through that parameter.
 
-If no system message is supported by the provider, in most cases LangChain will attempt to incorporate the system message's content into a HumanMessage or raise an exception if that is not possible. However, this behavior is not yet consistently enforced across all implementations, and if using a less popular implementation of a chat model (e.g., an implementation from the `langchain-community` package) it is recommended to check the specific documentation for that model.
+If no system message is supported by the provider, in most cases LangChain will attempt to incorporate the system message's content into a HumanMessage or raise an exception if that is not possible. However, this behavior is not yet consistently enforced across all implementations, and if using a less popular implementation of a chat model (e.g., an implementation from the `@langchain/community` package) it is recommended to check the specific documentation for that model.
 
 ### HumanMessage
 
