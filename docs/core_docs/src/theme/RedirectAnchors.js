@@ -1,3 +1,4 @@
+import React from "react";
 import { Redirect } from "@docusaurus/router";
 
 function RedirectAnchors() {
@@ -12,12 +13,14 @@ function RedirectAnchors() {
     "#langgraph": "/docs/concepts/architecture/#langchianlanggraph",
     "#langsmith": "/docs/concepts/architecture/#langsmith",
     "#langchain-expression-language-lcel": "/docs/concepts/lcel",
+    "#langchain-expression-language": "/docs/concepts/lcel",
     "#runnable-interface": "/docs/concepts/runnables",
     "#components": "/docs/concepts/",
     "#chat-models": "/docs/concepts/chat_models",
     "#multimodality": "/docs/concepts/multimodality",
     "#llms": "/docs/concepts/chat_models",
     "#messages": "/docs/concepts/messages",
+    "#message-types": "/docs/concepts/messages",
     "#humanmessage": "/docs/concepts/messages/#humanmessage",
     "#aimessage": "/docs/concepts/messages/#aimessage",
     "#systemmessage": "/docs/concepts/messages/#systemmessage",
@@ -32,11 +35,14 @@ function RedirectAnchors() {
     "#output-parsers": "/docs/concepts/output_parsers",
     "#chat-history": "/docs/concepts/chat_history",
     "#documents":
-      "https://v03.api.js.langchain.com/classes/_langchain_core.documents.Document.html",
+      "https://api.js.langchain.com/classes/_langchain_core.documents.Document.html",
+    "#document":
+      "https://api.js.langchain.com/classes/_langchain_core.documents.Document.html",
     "#document-loaders": "/docs/concepts/document_loaders",
     "#text-splitters": "/docs/concepts/text_splitters",
     "#embedding-models": "/docs/concepts/embedding_models",
     "#vector-stores": "/docs/concepts/vectorstores",
+    "#vectorstore": "/docs/concepts/vectorstores",
     "#retrievers": "/docs/concepts/retrievers",
     "#keyvalue-stores": "/docs/concepts/key_value_stores",
     "#interface": "/docs/concepts/runnables",
@@ -58,7 +64,6 @@ function RedirectAnchors() {
     "#streaming": "/docs/concepts/streaming",
     "#stream": "/docs/concepts/streaming#stream",
     "#streamevents": "/docs/concepts/streaming#streamevents",
-    "#callbacks": "/docs/concepts/callbacks",
     "#tokens": "/docs/concepts/tokens",
     "#functiontool-calling": "/docs/concepts/tool_calling",
     "#tool-usage": "/docs/concepts/tool_calling",
@@ -87,7 +92,9 @@ function RedirectAnchors() {
     "#text-splitting": "/docs/concepts/text_splitting",
     "#evaluation": "/docs/concepts/evaluation",
     "#tracing": "/docs/concepts/tracing",
+    "#few-shot-prompting": "/docs/concepts/few_shot_prompting",
   };
+
   const hash = window?.location?.hash;
   if (hash) {
     if (lookup[hash]) {
