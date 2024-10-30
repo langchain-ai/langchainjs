@@ -24,6 +24,7 @@ class ChatWatsonxStandardTests extends ChatModelUnitTests<
       chatModelHasToolCalling: true,
       chatModelHasStructuredOutput: true,
       constructorArgs: {
+        model: "mistralai/mistral-large",
         watsonxAIApikey: "testString",
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL ?? "testString",
