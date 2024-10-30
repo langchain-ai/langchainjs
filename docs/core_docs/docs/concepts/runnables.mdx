@@ -142,9 +142,9 @@ LangChain will try to propagate `RunnableConfig` automatically for both of the p
 Propagating the `RunnableConfig` manually is done like so:
 
 ```typescript
+// Note the config argument
 // highlight-next-line
 const foo = (input, config) => {
-  // <-- Note the config argument
   return barRunnable.invoke(input, config);
 };
 const fooRunnable = RunnableLambda.from(foo);
@@ -156,7 +156,7 @@ The `runName`, `tags`, and `metadata` attributes of the `RunnableConfig` object 
 
 The `runName` is a string that can be used to set a custom name for the run. This name will be used in logs and other places to identify the run. It is not inherited by sub-calls.
 
-The `tags` and `metadata` attributes are lists and dictionaries, respectively, that can be used to set custom tags and metadata for the run. These values are inherited by sub-calls.
+The `tags` and `metadata` attributes are arrays and objects, respectively, that can be used to set custom tags and metadata for the run. These values are inherited by sub-calls.
 
 Using these attributes can be useful for tracking and debugging runs, as they will be surfaced in [LangSmith](https://docs.smith.langchain.com/) as trace attributes that you can
 filter and search on.

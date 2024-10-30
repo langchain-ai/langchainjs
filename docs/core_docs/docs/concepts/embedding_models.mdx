@@ -55,11 +55,11 @@ To navigate this variety, researchers and practitioners often turn to benchmarks
 LangChain provides a universal interface for working with them, providing standard methods for common operations.
 This common interface simplifies interaction with various embedding providers through two central methods:
 
-- `embed_documents`: For embedding multiple texts (documents)
-- `embed_query`: For embedding a single text (query)
+- `embedDocuments`: For embedding multiple texts (documents)
+- `embedQuery`: For embedding a single text (query)
 
 This distinction is important, as some providers employ different embedding strategies for documents (which are to be searched) versus queries (the search input itself).
-To illustrate, here's a practical example using LangChain's `.embed_documents` method to embed a list of strings:
+To illustrate, here's a practical example using LangChain's `.embedDocuments` method to embed a list of strings:
 
 ```typescript
 import { OpenAIEmbeddings } from "@langchain/openai";

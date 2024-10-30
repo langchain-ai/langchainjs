@@ -3,7 +3,7 @@
 Prompt templates help to translate user input and parameters into instructions for a language model.
 This can be used to guide a model's response, helping it understand the context and generate relevant and coherent language-based output.
 
-Prompt Templates take as input a dictionary, where each key represents a variable in the prompt template to fill in.
+Prompt Templates take as input an object, where each key represents a variable in the prompt template to fill in.
 
 Prompt Templates output a PromptValue. This PromptValue can be passed to an LLM or a ChatModel, and can also be cast to a string or a list of messages.
 The reason this PromptValue exists is to make it easy to switch between strings and messages.

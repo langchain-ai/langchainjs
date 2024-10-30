@@ -138,7 +138,7 @@ const jsonObject = JSON.parse(aiMsg.content)
 
 There are a few challenges when producing structured output with the above methods:
 
-(1) If using tool calling, tool call arguments needs to be parsed from a dictionary back to the original schema.
+(1) If using tool calling, tool call arguments needs to be parsed from an object back to the original schema.
 
 (2) In addition, the model needs to be instructed to _always_ use the tool when we want to enforce structured output, which is a provider specific setting.
 
