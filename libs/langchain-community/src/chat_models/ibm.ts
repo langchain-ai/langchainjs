@@ -360,7 +360,7 @@ export class ChatWatsonx<
 
   version = "2024-05-31";
 
-  maxTokens = 100;
+  maxTokens: number;
 
   maxRetries = 0;
 
@@ -394,11 +394,7 @@ export class ChatWatsonx<
 
   streaming: boolean;
 
-  constructor(
-    fields: ChatWatsonxInput &
-      WatsonxAuth &
-      Partial<Omit<WatsonxCallParams, "tool_choice">>
-  ) {
+  constructor(fields: ChatWatsonxInput & WatsonxAuth) {
     super(fields);
     if (
       (fields.projectId && fields.spaceId) ||
