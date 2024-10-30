@@ -360,7 +360,7 @@ export class ChatWatsonx<
 
   version = "2024-05-31";
 
-  maxTokens = 100;
+  maxTokens: number;
 
   maxRetries = 0;
 
