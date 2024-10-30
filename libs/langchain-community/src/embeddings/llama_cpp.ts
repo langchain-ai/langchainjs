@@ -36,13 +36,24 @@ export class LlamaCppEmbeddings extends Embeddings {
 
   _context: LlamaContext;
 
-  constructor(inputs: LlamaCppEmbeddingsParams) {
+  private constructor(inputs: LlamaCppEmbeddingsParams) {
     super(inputs);
     const _inputs = inputs;
     _inputs.embedding = true;
+  }
 
-    this._model = createLlamaModel(_inputs);
-    this._context = createLlamaContext(this._model, _inputs);
+  /**
+  * Initializes the llama_cpp model for usage in the embeddings wrapper.
+  * @param inputs - the inputs passed onto the model.
+  * @returns A Promise that resolves to the LlamaCppEmbeddings type class.
+  */
+  public static async embeddingsInit(inputs: LlamaBaseCppInputs): Promise<LlamaCppEmbeddings> {
+    const instance = new LlamaCppEmbeddings(inputs)
+
+    instance._model = await createLlamaModel(inputs);
+    instance._context = await createLlamaContext(instance._model, inputs);
+
+    return instance
   }
 
   /**
@@ -57,7 +68,7 @@ export class LlamaCppEmbeddings extends Embeddings {
       const encodings = await this.caller.call(
         () =>
           new Promise((resolve) => {
-            resolve(this._context.encode(text));
+            resolve(this._model.tokenize(text));
           })
       );
       tokensArray.push(encodings);
@@ -90,7 +101,7 @@ export class LlamaCppEmbeddings extends Embeddings {
     const encodings = await this.caller.call(
       () =>
         new Promise((resolve) => {
-          resolve(this._context.encode(text));
+          resolve(this._model.tokenize(text));
         })
     );
 

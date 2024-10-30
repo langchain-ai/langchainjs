@@ -187,7 +187,7 @@
     "mongodb": "^5.2.0",
     "mysql2": "^3.9.8",
     "neo4j-driver": "^5.17.0",
-    "node-llama-cpp": "^2",
+    "node-llama-cpp": "3.1.1",
     "notion-to-md": "^3.1.0",
     "officeparser": "^4.0.4",
     "pdf-parse": "1.1.1",

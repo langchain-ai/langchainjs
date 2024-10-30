@@ -5,6 +5,9 @@ import {
   LlamaChatSession,
   LlamaJsonSchemaGrammar,
   LlamaGrammar,
+  getLlama,
+  type LlamaModelOptions,
+  LlamaContextOptions,
   GbnfJsonSchema,
 } from "node-llama-cpp";
 
@@ -55,58 +58,58 @@ export interface LlamaBaseCppInputs {
   gbnf?: string;
 }
 
-export function createLlamaModel(inputs: LlamaBaseCppInputs): LlamaModel {
-  const options = {
+export async function createLlamaModel(inputs: LlamaBaseCppInputs): Promise<LlamaModel> {
+  const options: LlamaModelOptions = {
     gpuLayers: inputs?.gpuLayers,
     modelPath: inputs.modelPath,
     useMlock: inputs?.useMlock,
     useMmap: inputs?.useMmap,
-    vocabOnly: inputs?.vocabOnly,
-    jsonSchema: inputs?.jsonSchema,
-    gbnf: inputs?.gbnf,
+    vocabOnly: inputs?.vocabOnly
   };
 
-  return new LlamaModel(options);
+  const llama = await getLlama();
+  return llama.loadModel(options);
 }
 
-export function createLlamaContext(
+export async function createLlamaContext(
   model: LlamaModel,
   inputs: LlamaBaseCppInputs
-): LlamaContext {
-  const options = {
+): Promise<LlamaContext> {
+  const options: LlamaContextOptions = {
     batchSize: inputs?.batchSize,
     contextSize: inputs?.contextSize,
-    embedding: inputs?.embedding,
-    f16Kv: inputs?.f16Kv,
-    logitsAll: inputs?.logitsAll,
-    model,
-    prependBos: inputs?.prependBos,
-    seed: inputs?.seed,
     threads: inputs?.threads,
   };
 
-  return new LlamaContext(options);
+  return model.createContext(options);
 }
 
 export function createLlamaSession(context: LlamaContext): LlamaChatSession {
-  return new LlamaChatSession({ context });
+  return new LlamaChatSession({ contextSequence: context.getSequence() });
 }
 
-export function createLlamaJsonSchemaGrammar(
+export async function createLlamaJsonSchemaGrammar(
   schemaString: object | undefined
-): LlamaJsonSchemaGrammar<GbnfJsonSchema> | undefined {
+): Promise<LlamaJsonSchemaGrammar<GbnfJsonSchema> | undefined> {
   if (schemaString === undefined) {
     return undefined;
   }
 
   const schemaJSON = schemaString as GbnfJsonSchema;
-  return new LlamaJsonSchemaGrammar(schemaJSON);
+  const llama = await getLlama();
+  return await llama.createGrammarForJsonSchema(schemaJSON);
 }
 
-export function createCustomGrammar(
+export async function createCustomGrammar(
   filePath: string | undefined
-): LlamaGrammar | undefined {
-  return filePath === undefined
-    ? undefined
-    : new LlamaGrammar({ grammar: filePath });
+): Promise<LlamaGrammar | undefined> {
+
+  if (filePath === undefined){
+    return undefined;
+  }
+
+  const llama = await getLlama();
+  return llama.createGrammar({
+    grammar: filePath
+  })
 }

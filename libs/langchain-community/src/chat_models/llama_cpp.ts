@@ -3,7 +3,10 @@ import {
   LlamaModel,
   LlamaContext,
   LlamaChatSession,
-  type ConversationInteraction,
+  type Token,
+  ChatUserMessage,
+  ChatModelResponse,
+  ChatHistoryItem
 } from "node-llama-cpp";
 
 import {
@@ -87,18 +90,30 @@ export class ChatLlamaCpp extends SimpleChatModel<LlamaCppCallOptions> {
     return "ChatLlamaCpp";
   }
 
-  constructor(inputs: LlamaCppInputs) {
+  private constructor(inputs: LlamaCppInputs) {
     super(inputs);
     this.maxTokens = inputs?.maxTokens;
     this.temperature = inputs?.temperature;
     this.topK = inputs?.topK;
     this.topP = inputs?.topP;
     this.trimWhitespaceSuffix = inputs?.trimWhitespaceSuffix;
-    this._model = createLlamaModel(inputs);
-    this._context = createLlamaContext(this._model, inputs);
     this._session = null;
   }
 
+  /**
+  * Initializes the llama_cpp model for usage in the chat models wrapper.
+  * @param inputs - the inputs passed onto the model.
+  * @returns A Promise that resolves to the ChatLlamaCpp type class.
+  */
+  public static async chatInit(inputs: LlamaBaseCppInputs): Promise<ChatLlamaCpp> {
+    const instance = new ChatLlamaCpp(inputs)
+ 
+    instance._model = await createLlamaModel(inputs);
+    instance._context = await createLlamaContext(instance._model, inputs);
+ 
+    return instance
+  }
+ 
   _llmType() {
     return "llama2_cpp";
   }
@@ -146,7 +161,7 @@ export class ChatLlamaCpp extends SimpleChatModel<LlamaCppCallOptions> {
         signal: options.signal,
         onToken: async (tokens: number[]) => {
           options.onToken?.(tokens);
-          await runManager?.handleLLMNewToken(this._context.decode(tokens));
+          await runManager?.handleLLMNewToken(this._model.detokenize(tokens.map(num => num as Token)));
         },
         maxTokens: this?.maxTokens,
         temperature: this?.temperature,
@@ -180,20 +195,21 @@ export class ChatLlamaCpp extends SimpleChatModel<LlamaCppCallOptions> {
     };
 
     const prompt = this._buildPrompt(input);
+    const sequence = this._context.getSequence();
 
     const stream = await this.caller.call(async () =>
-      this._context.evaluate(this._context.encode(prompt), promptOptions)
+      sequence.evaluate(this._model.tokenize(prompt), promptOptions)
     );
 
     for await (const chunk of stream) {
       yield new ChatGenerationChunk({
-        text: this._context.decode([chunk]),
+        text: this._model.detokenize([chunk]),
         message: new AIMessageChunk({
-          content: this._context.decode([chunk]),
+          content: this._model.detokenize([chunk]),
         }),
         generationInfo: {},
       });
-      await runManager?.handleLLMNewToken(this._context.decode([chunk]) ?? "");
+      await runManager?.handleLLMNewToken(this._model.detokenize([chunk]) ?? "");
     }
   }
 
@@ -202,12 +218,12 @@ export class ChatLlamaCpp extends SimpleChatModel<LlamaCppCallOptions> {
     let prompt = "";
     let sysMessage = "";
     let noSystemMessages: BaseMessage[] = [];
-    let interactions: ConversationInteraction[] = [];
+    let interactions: ChatHistoryItem[] = [];
 
     // Let's see if we have a system message
-    if (messages.findIndex((msg) => msg._getType() === "system") !== -1) {
+    if (messages.findIndex((msg) => msg.getType() === "system") !== -1) {
       const sysMessages = messages.filter(
-        (message) => message._getType() === "system"
+        (message) => message.getType() === "system"
       );
 
       const systemMessageContent = sysMessages[sysMessages.length - 1].content;
@@ -222,7 +238,7 @@ export class ChatLlamaCpp extends SimpleChatModel<LlamaCppCallOptions> {
 
       // Now filter out the system messages
       noSystemMessages = messages.filter(
-        (message) => message._getType() !== "system"
+        (message) => message.getType() !== "system"
       );
     } else {
       noSystemMessages = messages;
@@ -232,7 +248,7 @@ export class ChatLlamaCpp extends SimpleChatModel<LlamaCppCallOptions> {
     if (noSystemMessages.length > 1) {
       // Is the last message a prompt?
       if (
-        noSystemMessages[noSystemMessages.length - 1]._getType() === "human"
+        noSystemMessages[noSystemMessages.length - 1].getType() === "human"
       ) {
         const finalMessageContent =
           noSystemMessages[noSystemMessages.length - 1].content;
@@ -261,23 +277,23 @@ export class ChatLlamaCpp extends SimpleChatModel<LlamaCppCallOptions> {
     // Now lets construct a session according to what we got
     if (sysMessage !== "" && interactions.length > 0) {
       this._session = new LlamaChatSession({
-        context: this._context,
-        conversationHistory: interactions,
+        contextSequence: this._context.getSequence(),
         systemPrompt: sysMessage,
       });
+      this._session.setChatHistory(interactions)
     } else if (sysMessage !== "" && interactions.length === 0) {
       this._session = new LlamaChatSession({
-        context: this._context,
+        contextSequence: this._context.getSequence(),
         systemPrompt: sysMessage,
       });
     } else if (sysMessage === "" && interactions.length > 0) {
       this._session = new LlamaChatSession({
-        context: this._context,
-        conversationHistory: interactions,
+        contextSequence: this._context.getSequence(),
       });
+      this._session.setChatHistory(interactions)
     } else {
       this._session = new LlamaChatSession({
-        context: this._context,
+        contextSequence: this._context.getSequence(),
       });
     }
 
@@ -287,8 +303,8 @@ export class ChatLlamaCpp extends SimpleChatModel<LlamaCppCallOptions> {
   // This builds a an array of interactions
   protected _convertMessagesToInteractions(
     messages: BaseMessage[]
-  ): ConversationInteraction[] {
-    const result: ConversationInteraction[] = [];
+  ): ChatHistoryItem[] {
+    const result: ChatHistoryItem[] = [];
 
     for (let i = 0; i < messages.length; i += 2) {
       if (i + 1 < messages.length) {
@@ -299,10 +315,10 @@ export class ChatLlamaCpp extends SimpleChatModel<LlamaCppCallOptions> {
             "ChatLlamaCpp does not support non-string message content."
           );
         }
-        result.push({
-          prompt,
-          response,
-        });
+        const llamaPrompt: ChatUserMessage = {type:"user", text: prompt}
+        const llamaResponse: ChatModelResponse = {type: "model", response: [response]}
+        result.push(llamaPrompt);
+        result.push(llamaResponse);
       }
     }
 
@@ -313,11 +329,11 @@ export class ChatLlamaCpp extends SimpleChatModel<LlamaCppCallOptions> {
     const prompt = input
       .map((message) => {
         let messageText;
-        if (message._getType() === "human") {
+        if (message.getType() === "human") {
           messageText = `[INST] ${message.content} [/INST]`;
-        } else if (message._getType() === "ai") {
+        } else if (message.getType() === "ai") {
           messageText = message.content;
-        } else if (message._getType() === "system") {
+        } else if (message.getType() === "system") {
           messageText = `<<SYS>> ${message.content} <</SYS>>`;
         } else if (ChatMessage.isInstance(message)) {
           messageText = `\n\n${message.role[0].toUpperCase()}${message.role.slice(
@@ -325,7 +341,7 @@ export class ChatLlamaCpp extends SimpleChatModel<LlamaCppCallOptions> {
           )}: ${message.content}`;
         } else {
           console.warn(
-            `Unsupported message type passed to llama_cpp: "${message._getType()}"`
+            `Unsupported message type passed to llama_cpp: "${message.getType()}"`
           );
           messageText = "";
         }
