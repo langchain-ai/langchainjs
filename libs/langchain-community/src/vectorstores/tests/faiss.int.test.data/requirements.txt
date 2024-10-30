@@ -1,2 +1,2 @@
 langchain==0.3.0
-langchain-community==0.2.9
+langchain-community==0.3.0
