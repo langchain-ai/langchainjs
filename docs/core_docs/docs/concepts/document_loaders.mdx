@@ -1,0 +1,40 @@
+# Document loaders
+
+<span data-heading-keywords="document loader,document loaders"></span>
+
+:::info[Prerequisites]
+
+- [Document loaders API reference](/docs/how_to/#document-loaders)
+
+:::
+
+Document loaders are designed to load document objects. LangChain has hundreds of integrations with various data sources to load data from: Slack, Notion, Google Drive, etc.
+
+## Integrations
+
+You can find available integrations on the [Document loaders integrations page](/docs/integrations/document_loaders/).
+
+## Interface
+
+Documents loaders implement the [BaseLoader interface](https://api.js.langchain.com/classes/_langchain_core.document_loaders_base.BaseDocumentLoader.html).
+
+Each DocumentLoader has its own specific parameters, but they can all be invoked in the same way with the `.load` method or `.lazy_load`.
+
+Here's a simple example:
+
+```typescript
+import { CSVLoader } from "@langchain/community/document_loaders/fs/csv";
+
+const loader = new CSVLoader(
+  ...  // <-- Integration specific parameters here
+);
+const data = await loader.load();
+```
+
+## Related resources
+
+Please see the following resources for more information:
+
+- [How-to guides for document loaders](/docs/how_to/#document-loaders)
+- [Document API reference](https://api.js.langchain.com/classes/_langchain_core.documents.Document.html)
+- [Document loaders integrations](/docs/integrations/document_loaders/)
