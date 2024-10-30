@@ -394,11 +394,7 @@ export class ChatWatsonx<
 
   streaming: boolean;
 
-  constructor(
-    fields: ChatWatsonxInput &
-      WatsonxAuth &
-      Partial<Omit<WatsonxCallParams, "tool_choice">>
-  ) {
+  constructor(fields: ChatWatsonxInput & WatsonxAuth) {
     super(fields);
     if (
       (fields.projectId && fields.spaceId) ||
