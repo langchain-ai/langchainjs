@@ -214,6 +214,10 @@
       "destination": "/docs/concepts/tools/#toolkits"
     },
     {
+      "source": "/docs/concepts/#tool-calling(/?)",
+      "destination": "/docs/concepts/tool_calling"
+    },
+    {
       "source": "/docs/concepts/#toolmessage(/?)",
       "destination": "/docs/concepts/messages/#toolmessage"
     },
