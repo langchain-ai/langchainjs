@@ -25,6 +25,12 @@ const promptTemplate = PromptTemplate.fromTemplate(
 await promptTemplate.invoke({ topic: "cats" });
 ```
 
+```text
+StringPromptValue {
+  value: 'Tell me a joke about cats'
+}
+```
+
 ## ChatPromptTemplates
 
 These prompt templates are used to format a list of messages. These "templates" consist of a list of templates themselves.
@@ -39,6 +45,23 @@ const promptTemplate = ChatPromptTemplate.fromMessages([
 ]);
 
 await promptTemplate.invoke({ topic: "cats" });
+```
+
+```text
+ChatPromptValue {
+  messages: [
+    SystemMessage {
+      "content": "You are a helpful assistant",
+      "additional_kwargs": {},
+      "response_metadata": {}
+    },
+    HumanMessage {
+      "content": "Tell me a joke about cats",
+      "additional_kwargs": {},
+      "response_metadata": {}
+    }
+  ]
+}
 ```
 
 In the above example, this ChatPromptTemplate will construct two messages when called.
@@ -67,6 +90,23 @@ const promptTemplate = ChatPromptTemplate.fromMessages([
 ]);
 
 await promptTemplate.invoke({ msgs: [new HumanMessage("hi!")] });
+```
+
+```text
+ChatPromptValue {
+  messages: [
+    SystemMessage {
+      "content": "You are a helpful assistant",
+      "additional_kwargs": {},
+      "response_metadata": {}
+    },
+    HumanMessage {
+      "content": "hi!",
+      "additional_kwargs": {},
+      "response_metadata": {}
+    }
+  ]
+}
 ```
 
 This will produce a list of two messages, the first one being a system message, and the second one being the HumanMessage we passed in.

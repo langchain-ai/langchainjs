@@ -140,8 +140,18 @@ Please see the [multimodality](/docs/concepts/multimodality) guide for more info
 import { HumanMessage } from "@langchain/core/messages";
 
 const aiMessage = await model.invoke([new HumanMessage("Tell me a joke")]);
-console.log(aiMessage); // <-- AIMessage
+console.log(aiMessage);
 ```
+
+```text
+AIMessage({
+  content: "Why did the chicken cross the road?\n\nTo get to the other side!",
+  tool_calls: [],
+  response_metadata: { ... },
+  usage_metadata: { ... },
+})
+```
+
 
 An `AIMessage` has the following attributes. The attributes which are **standardized** are the ones that LangChain attempts to standardize across different chat model providers. **raw** fields are specific to the model provider and may vary.
 

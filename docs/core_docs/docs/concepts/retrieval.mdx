@@ -143,7 +143,7 @@ import { ChatOpenAI } from "@langchain/openai";
 const attributeInfo: AttributeInfo[] = schemaForMetadata;
 const documentContents = "Brief summary of a movie";
 const llm = new ChatOpenAI({ temperature: 0 });
-const retriever = SelfQueryRetriever.fromLlm({
+const retriever = SelfQueryRetriever.fromLLM({
   llm,
   vectorStore,
   documentContents,

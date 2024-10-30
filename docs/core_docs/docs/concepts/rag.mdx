@@ -56,10 +56,9 @@ As an example, here's a simple RAG workflow that passes information from a [retr
 
 ```typescript
 import { ChatOpenAI } from "@langchain/openai";
-import { SystemMessage, HumanMessage } from "@langchain/core/messages";
 
 // Define a system prompt that tells the model how to use the retrieved context
-systemPrompt = `You are an assistant for question-answering tasks.
+const systemPrompt = `You are an assistant for question-answering tasks.
 Use the following pieces of retrieved context to answer the question.
 If you don't know the answer, just say that you don't know.
 Use three sentences maximum and keep the answer concise.
@@ -86,8 +85,14 @@ const model = new ChatOpenAI({
 
 // Generate a response
 const questions = await model.invoke([
-  new SystemMessage(systemPromptFmt),
-  new HumanMessage(question),
+  {
+    role: "system",
+    content: systemPromptFmt,
+  },
+  {
+    role: "user",
+    content: question,
+  },
 ]);
 ```
 
