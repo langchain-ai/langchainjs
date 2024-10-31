@@ -30,7 +30,9 @@ import {
   GoogleConnectionParams,
   GooglePlatformType,
   GeminiTool,
-  GoogleAIBaseLanguageModelCallOptions, GoogleAIAPI, GoogleAIAPIParams,
+  GoogleAIBaseLanguageModelCallOptions,
+  GoogleAIAPI,
+  GoogleAIAPIParams,
 } from "./types.js";
 import {
   convertToGeminiTools,
@@ -38,7 +40,7 @@ import {
   copyAndValidateModelParamsInto,
 } from "./utils/common.js";
 import { AbstractGoogleLLMConnection } from "./connection.js";
-import {DefaultGeminiSafetyHandler, getGeminiAPI} from "./utils/gemini.js";
+import { DefaultGeminiSafetyHandler, getGeminiAPI } from "./utils/gemini.js";
 import { ApiKeyGoogleAuth, GoogleAbstractedClient } from "./auth.js";
 import { JsonStream } from "./utils/stream.js";
 import { ensureParams } from "./utils/failed_handler.js";
@@ -98,18 +100,19 @@ export class ChatConnection<AuthOptions> extends AbstractGoogleLLMConnection<
   buildGeminiAPI(): GoogleAIAPI {
     const geminiConfig: GeminiAPIConfig = {
       useSystemInstruction: this.useSystemInstruction,
-      ...this.apiConfig as GeminiAPIConfig,
-    }
+      ...(this.apiConfig as GeminiAPIConfig),
+    };
     return getGeminiAPI(geminiConfig);
   }
 
   get api(): GoogleAIAPI {
     switch (this.apiName) {
-      case "google": return this.buildGeminiAPI();
-      default:       return super.api;
+      case "google":
+        return this.buildGeminiAPI();
+      default:
+        return super.api;
     }
   }
-
 }
 
 /**
@@ -290,7 +293,7 @@ export abstract class ChatGoogleBase<AuthOptions>
       messages,
       parameters,
       options,
-      runManager,
+      runManager
     );
     const ret = this.connection.api.responseToChatResult(response);
     await runManager?.handleLLMNewToken(ret.generations[0].text);
@@ -307,7 +310,8 @@ export abstract class ChatGoogleBase<AuthOptions>
     const response = await this.streamedConnection.request(
       _messages,
       parameters,
-      options
+      options,
+      runManager
     );
 
     // Get the streaming parser of the response
@@ -318,6 +322,12 @@ export abstract class ChatGoogleBase<AuthOptions>
     // that is either available or added to the queue
     while (!stream.streamDone) {
       const output = await stream.nextChunk();
+      await runManager?.handleCustomEvent(
+        `google-chunk-${this.constructor.name}`,
+        {
+          output,
+        }
+      );
       if (
         output &&
         output.usageMetadata &&
@@ -334,15 +344,17 @@ export abstract class ChatGoogleBase<AuthOptions>
         output !== null
           ? this.connection.api.responseToChatGeneration({ data: output })
           : new ChatGenerationChunk({
-            text: "",
-            generationInfo: { finishReason: "stop" },
-            message: new AIMessageChunk({
-              content: "",
-              usage_metadata: usageMetadata,
-            }),
-          });
-      yield chunk;
-      await runManager?.handleLLMNewToken(chunk.text);
+              text: "",
+              generationInfo: { finishReason: "stop" },
+              message: new AIMessageChunk({
+                content: "",
+                usage_metadata: usageMetadata,
+              }),
+            });
+      if (chunk) {
+        yield chunk;
+        await runManager?.handleLLMNewToken(chunk.text);
+      }
     }
   }
 
