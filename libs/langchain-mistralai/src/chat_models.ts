@@ -5,7 +5,7 @@ import {
   ChatCompletionRequestToolChoice as MistralAIToolChoice,
   Messages as MistralAIMessage,
 } from "@mistralai/mistralai/models/components/chatcompletionrequest.js";
-import { ContentChunk } from "@mistralai/mistralai/models/components/contentchunk.js";
+import { ContentChunk, ContentChunk$ } from "@mistralai/mistralai/models/components/contentchunk.js";
 import { Tool as MistralAITool } from "@mistralai/mistralai/models/components/tool.js";
 import { ToolCall as MistralAIToolCall } from "@mistralai/mistralai/models/components/toolcall.js";
 import { ChatCompletionStreamRequest as MistralChatCompletionStreamRequest } from "@mistralai/mistralai/models/components/chatcompletionstreamrequest.js";
@@ -183,55 +183,43 @@ function convertMessagesToMistralMessages(
   };
 
   const getContent = (content: MessageContent, role: MessageType): string | ContentChunk[] => {
-    const mistralRole = getRole(role)
+    const mistralRole = getRole(role);
+
+    const _generateContentChunk = (complex: any, role: string): ContentChunk => {
+      if (complex.type === "image_url" && role === "user") {
+        return {
+          type: complex.type,
+          imageUrl: complex?.image_url
+        } as ContentChunk;
+      }
+      
+      if (complex.type === "text" && (role === "user" || role === "system")){
+        return {
+          type: complex.type,
+          text: complex?.text
+        } as ContentChunk;
+      }
+
+      throw new Error(
+        `ChatMistralAI only supports messages of type MessageContentText for role "human"
+          and "system" and MessageContentImageUrl for role "human". Received: ${JSON.stringify(
+          content,
+          null,
+          2
+        )}`
+      );
+    }
 
     if (typeof content === "string") {
       return content;
     }
-    else if (Array.isArray(content)) {
-      if (mistralRole === "user") {
-        return content.map((messageContentComplex) => {
-          if (messageContentComplex?.type === "image_url") {
-            return {
-              type: messageContentComplex.type,
-              imageUrl: messageContentComplex?.image_url
-            } as ContentChunk;
-          }
-          else if (messageContentComplex?.type === "text"){
-            return {
-              type: messageContentComplex.type,
-              text: messageContentComplex?.text
-            } as ContentChunk;
-          }
-          throw new Error(
-            `ChatMistralAI only supports messages of type MessageContentText
-              and MessageContentImageUrl for role "human". Received: ${JSON.stringify(
-              content,
-              null,
-              2
-            )}`
-          );
-        });
-      }
-      else if (mistralRole === "system") {
-        return content.map((messageContentComplex) => {
-          if (messageContentComplex?.type === "text"){
-            return {
-              type: messageContentComplex.type,
-              text: messageContentComplex?.text
-            } as ContentChunk;
-          }
-          throw new Error(
-            `ChatMistralAI only supports messages of type MessageContentText
-              for role "system". Received: ${JSON.stringify(
-              content,
-              null,
-              2
-            )}`
-          );
-        });
-      }
+    
+    if (Array.isArray(content)) {
+      return content.map((messageContentComplex) => {
+        return _generateContentChunk(messageContentComplex, mistralRole);
+      });
     }
+    
     throw new Error(
       `ChatMistralAI does not support non text message content for role "ai", "tool", 
         or "function". Received: ${JSON.stringify(
