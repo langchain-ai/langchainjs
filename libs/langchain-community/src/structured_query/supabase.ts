@@ -224,7 +224,7 @@ export class SupabaseTranslator<
       attribute,
       value,
       false
-    )}.${comparator}.${value}}`;
+    )}.${comparator}.${value}`;
   }
 
   /**

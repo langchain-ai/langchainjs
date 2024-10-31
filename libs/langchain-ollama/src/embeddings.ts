@@ -23,7 +23,7 @@ interface OllamaEmbeddingsParams extends EmbeddingsParams {
   /**
    * Defaults to "5m"
    */
-  keepAlive?: string;
+  keepAlive?: string | number;
 
   /**
    * Whether or not to truncate the input text to fit inside the model's
@@ -33,8 +33,13 @@ interface OllamaEmbeddingsParams extends EmbeddingsParams {
   truncate?: boolean;
 
   /**
+   * Optional HTTP Headers to include in the request.
+   */
+  headers?: Headers;
+
+  /**
    * Advanced Ollama API request parameters in camelCase, see
-   * https://github.com/jmorganca/ollama/blob/main/docs/modelfile.md#valid-parameters-and-values
+   * https://github.com/ollama/ollama/blob/main/docs/modelfile.md#valid-parameters-and-values
    * for details of the available parameters.
    */
   requestOptions?: OllamaCamelCaseOptions;
@@ -45,7 +50,7 @@ export class OllamaEmbeddings extends Embeddings {
 
   baseUrl = "http://localhost:11434";
 
-  keepAlive = "5m";
+  keepAlive: string | number = "5m";
 
   requestOptions?: Partial<OllamaOptions>;
 
@@ -58,6 +63,7 @@ export class OllamaEmbeddings extends Embeddings {
 
     this.client = new Ollama({
       host: fields?.baseUrl,
+      headers: fields?.headers,
     });
     this.baseUrl = fields?.baseUrl ?? this.baseUrl;
 

@@ -342,6 +342,12 @@ export class ElasticVectorSearch extends VectorStore {
             field: metadataField,
           },
         });
+      } else if (condition.operator === "not_exists") {
+        must_not.push({
+          exists: {
+            field: metadataField,
+          },
+        });
       } else if (condition.operator === "exclude") {
         const toExclude = { [metadataField]: condition.value };
         must_not.push({

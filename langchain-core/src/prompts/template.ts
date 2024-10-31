@@ -1,6 +1,7 @@
 import mustache from "mustache";
 import { MessageContent } from "../messages/index.js";
 import type { InputValues } from "../utils/types/index.js";
+import { addLangChainErrorFields } from "../errors/index.js";
 
 function configureMustache() {
   // Use unescaped HTML
@@ -106,17 +107,22 @@ export const parseMustache = (template: string) => {
   return mustacheTemplateToNodes(parsed);
 };
 
-export const interpolateFString = (template: string, values: InputValues) =>
-  parseFString(template).reduce((res, node) => {
+export const interpolateFString = (template: string, values: InputValues) => {
+  return parseFString(template).reduce((res, node) => {
     if (node.type === "variable") {
       if (node.name in values) {
-        return res + values[node.name];
+        const stringValue =
+          typeof values[node.name] === "string"
+            ? values[node.name]
+            : JSON.stringify(values[node.name]);
+        return res + stringValue;
       }
       throw new Error(`(f-string) Missing value for input ${node.name}`);
     }
 
     return res + node.text;
   }, "");
+};
 
 export const interpolateMustache = (template: string, values: InputValues) => {
   configureMustache();
@@ -150,7 +156,14 @@ export const renderTemplate = (
   template: string,
   templateFormat: TemplateFormat,
   inputValues: InputValues
-) => DEFAULT_FORMATTER_MAPPING[templateFormat](template, inputValues);
+) => {
+  try {
+    return DEFAULT_FORMATTER_MAPPING[templateFormat](template, inputValues);
+  } catch (e) {
+    const error = addLangChainErrorFields(e, "INVALID_PROMPT_INPUT");
+    throw error;
+  }
+};
 
 export const parseTemplate = (
   template: string,

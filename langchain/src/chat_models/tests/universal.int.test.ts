@@ -558,4 +558,47 @@ describe("Can call base runnable methods", () => {
     expect(batchResult[0].content).not.toBe("");
     expect(batchResult[1].content).not.toBe("");
   });
+
+  it("can call withConfig with tools", async () => {
+    const weatherTool = {
+      schema: z
+        .object({
+          location: z
+            .string()
+            .describe("The city and state, e.g. San Francisco, CA"),
+        })
+        .describe("Get the current weather in a given location"),
+      name: "GetWeather",
+      description: "Get the current weather in a given location",
+    };
+
+    const openaiModel = await initChatModel("gpt-4o-mini", {
+      temperature: 0,
+      apiKey: openAIApiKey,
+    });
+
+    const modelWithTools = openaiModel.bindTools([weatherTool], {
+      tool_choice: "GetWeather",
+    });
+    expect(modelWithTools._queuedMethodOperations.bindTools).toBeDefined();
+    expect(modelWithTools._queuedMethodOperations.bindTools[0][0].name).toBe(
+      "GetWeather"
+    );
+    const modelWithConfig = modelWithTools.withConfig({ runName: "weather" });
+
+    expect(modelWithConfig.bound).toHaveProperty("_queuedMethodOperations");
+    expect(
+      (modelWithConfig.bound as any)._queuedMethodOperations.bindTools
+    ).toBeDefined();
+    expect(
+      (modelWithConfig.bound as any)._queuedMethodOperations.bindTools[0][0]
+        .name
+    ).toBe("GetWeather");
+
+    expect(modelWithConfig.config.runName).toBe("weather");
+
+    const result = await modelWithConfig.invoke("What's 8x8?");
+    expect(result.tool_calls).toBeDefined();
+    expect(result.tool_calls?.[0].name).toBe("GetWeather");
+  });
 });

@@ -103,7 +103,8 @@ test("Returns tool message if responseFormat is content_and_artifact and returns
 
 test("Tool can accept single string input", async () => {
   const stringTool = tool<z.ZodString>(
-    (input: string): string => {
+    (input: string, config): string => {
+      expect(config).toMatchObject({ configurable: { foo: "bar" } });
       return `${input}a`;
     },
     {
@@ -113,7 +114,7 @@ test("Tool can accept single string input", async () => {
     }
   );
 
-  const result = await stringTool.invoke("b");
+  const result = await stringTool.invoke("b", { configurable: { foo: "bar" } });
   expect(result).toBe("ba");
 });
 

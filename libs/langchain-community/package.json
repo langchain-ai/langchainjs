@@ -1,6 +1,6 @@
 {
   "name": "@langchain/community",
-  "version": "0.3.3",
+  "version": "0.3.11",
   "description": "Third-party integrations for LangChain.js",
   "type": "module",
   "engines": {
@@ -40,8 +40,8 @@
     "expr-eval": "^2.0.2",
     "flat": "^5.0.2",
     "js-yaml": "^4.1.0",
-    "langchain": ">=0.2.3 <0.4.0",
-    "langsmith": "~0.1.56",
+    "langchain": ">=0.2.3 <0.3.0 || >=0.3.4 <0.4.0",
+    "langsmith": "^0.2.0",
     "uuid": "^10.0.0",
     "zod": "^3.22.3",
     "zod-to-json-schema": "^3.22.5"
@@ -77,12 +77,14 @@
     "@google-cloud/storage": "^7.7.0",
     "@gradientai/nodejs-sdk": "^1.2.0",
     "@huggingface/inference": "^2.6.4",
+    "@ibm-cloud/watsonx-ai": "^1.1.0",
     "@jest/globals": "^29.5.0",
     "@langchain/core": "workspace:*",
     "@langchain/scripts": ">=0.1.0 <0.2.0",
     "@langchain/standard-tests": "0.0.0",
     "@layerup/layerup-security": "^1.5.12",
-    "@mendable/firecrawl-js": "^0.0.36",
+    "@libsql/client": "^0.14.0",
+    "@mendable/firecrawl-js": "^1.4.3",
     "@mlc-ai/web-llm": ">=0.2.62 <0.3.0",
     "@mozilla/readability": "^0.4.4",
     "@neondatabase/serverless": "^0.9.1",
@@ -92,7 +94,7 @@
     "@planetscale/database": "^1.8.0",
     "@premai/prem-sdk": "^0.3.25",
     "@qdrant/js-client-rest": "^1.8.2",
-    "@raycast/api": "^1.55.2",
+    "@raycast/api": "^1.83.1",
     "@rockset/client": "^0.9.1",
     "@smithy/eventstream-codec": "^2.0.5",
     "@smithy/protocol-http": "^3.0.6",
@@ -169,6 +171,7 @@
     "hdb": "0.19.8",
     "hnswlib-node": "^3.0.0",
     "html-to-text": "^9.0.5",
+    "ibm-cloud-sdk-core": "^5.0.2",
     "ignore": "^5.2.0",
     "interface-datastore": "^8.2.11",
     "ioredis": "^5.3.2",
@@ -184,7 +187,7 @@
     "mongodb": "^5.2.0",
     "mysql2": "^3.9.8",
     "neo4j-driver": "^5.17.0",
-    "node-llama-cpp": "2.7.3",
+    "node-llama-cpp": "^2",
     "notion-to-md": "^3.1.0",
     "officeparser": "^4.0.4",
     "pdf-parse": "1.1.1",
@@ -242,9 +245,11 @@
     "@google-cloud/storage": "^6.10.1 || ^7.7.0",
     "@gradientai/nodejs-sdk": "^1.2.0",
     "@huggingface/inference": "^2.6.4",
+    "@ibm-cloud/watsonx-ai": "*",
     "@langchain/core": ">=0.2.21 <0.4.0",
     "@layerup/layerup-security": "^1.5.12",
-    "@mendable/firecrawl-js": "^0.0.13",
+    "@libsql/client": "^0.14.0",
+    "@mendable/firecrawl-js": "^1.4.3",
     "@mlc-ai/web-llm": "*",
     "@mozilla/readability": "*",
     "@neondatabase/serverless": "*",
@@ -286,7 +291,6 @@
     "closevector-web": "0.1.6",
     "cohere-ai": "*",
     "convex": "^1.3.1",
-    "couchbase": "^4.3.0",
     "crypto-js": "^4.2.0",
     "d3-dsv": "^2.0.0",
     "discord.js": "^14.14.1",
@@ -299,6 +303,7 @@
     "googleapis": "*",
     "hnswlib-node": "^3.0.0",
     "html-to-text": "^9.0.5",
+    "ibm-cloud-sdk-core": "*",
     "ignore": "^5.2.0",
     "interface-datastore": "^8.2.11",
     "ioredis": "^5.3.2",
@@ -312,7 +317,6 @@
     "mongodb": ">=5.2.0",
     "mysql2": "^3.9.8",
     "neo4j-driver": "*",
-    "node-llama-cpp": "*",
     "notion-to-md": "^3.1.0",
     "officeparser": "^4.0.4",
     "pdf-parse": "1.1.1",
@@ -421,6 +425,9 @@
       "optional": true
     },
     "@layerup/layerup-security": {
+      "optional": true
+    },
+    "@libsql/client": {
       "optional": true
     },
     "@mendable/firecrawl-js": {
@@ -549,9 +556,6 @@
     "convex": {
       "optional": true
     },
-    "couchbase": {
-      "optional": true
-    },
     "crypto-js": {
       "optional": true
     },
@@ -625,9 +629,6 @@
       "optional": true
     },
     "neo4j-driver": {
-      "optional": true
-    },
-    "node-llama-cpp": {
       "optional": true
     },
     "notion-to-md": {
@@ -1076,6 +1077,15 @@
       "import": "./embeddings/hf_transformers.js",
       "require": "./embeddings/hf_transformers.cjs"
     },
+    "./embeddings/ibm": {
+      "types": {
+        "import": "./embeddings/ibm.d.ts",
+        "require": "./embeddings/ibm.d.cts",
+        "default": "./embeddings/ibm.d.ts"
+      },
+      "import": "./embeddings/ibm.js",
+      "require": "./embeddings/ibm.cjs"
+    },
     "./embeddings/jina": {
       "types": {
         "import": "./embeddings/jina.d.ts",
@@ -1282,6 +1292,15 @@
       },
       "import": "./llms/hf.js",
       "require": "./llms/hf.cjs"
+    },
+    "./llms/ibm": {
+      "types": {
+        "import": "./llms/ibm.d.ts",
+        "require": "./llms/ibm.d.cts",
+        "default": "./llms/ibm.d.ts"
+      },
+      "import": "./llms/ibm.js",
+      "require": "./llms/ibm.cjs"
     },
     "./llms/llama_cpp": {
       "types": {
@@ -1543,6 +1562,15 @@
       },
       "import": "./vectorstores/lancedb.js",
       "require": "./vectorstores/lancedb.cjs"
+    },
+    "./vectorstores/libsql": {
+      "types": {
+        "import": "./vectorstores/libsql.d.ts",
+        "require": "./vectorstores/libsql.d.cts",
+        "default": "./vectorstores/libsql.d.ts"
+      },
+      "import": "./vectorstores/libsql.js",
+      "require": "./vectorstores/libsql.cjs"
     },
     "./vectorstores/milvus": {
       "types": {
@@ -1876,6 +1904,15 @@
       },
       "import": "./chat_models/friendli.js",
       "require": "./chat_models/friendli.cjs"
+    },
+    "./chat_models/ibm": {
+      "types": {
+        "import": "./chat_models/ibm.d.ts",
+        "require": "./chat_models/ibm.d.cts",
+        "default": "./chat_models/ibm.d.ts"
+      },
+      "import": "./chat_models/ibm.js",
+      "require": "./chat_models/ibm.cjs"
     },
     "./chat_models/iflytek_xinghuo": {
       "types": {
@@ -3188,6 +3225,10 @@
     "embeddings/hf_transformers.js",
     "embeddings/hf_transformers.d.ts",
     "embeddings/hf_transformers.d.cts",
+    "embeddings/ibm.cjs",
+    "embeddings/ibm.js",
+    "embeddings/ibm.d.ts",
+    "embeddings/ibm.d.cts",
     "embeddings/jina.cjs",
     "embeddings/jina.js",
     "embeddings/jina.d.ts",
@@ -3280,6 +3321,10 @@
     "llms/hf.js",
     "llms/hf.d.ts",
     "llms/hf.d.cts",
+    "llms/ibm.cjs",
+    "llms/ibm.js",
+    "llms/ibm.d.ts",
+    "llms/ibm.d.cts",
     "llms/llama_cpp.cjs",
     "llms/llama_cpp.js",
     "llms/llama_cpp.d.ts",
@@ -3396,6 +3441,10 @@
     "vectorstores/lancedb.js",
     "vectorstores/lancedb.d.ts",
     "vectorstores/lancedb.d.cts",
+    "vectorstores/libsql.cjs",
+    "vectorstores/libsql.js",
+    "vectorstores/libsql.d.ts",
+    "vectorstores/libsql.d.cts",
     "vectorstores/milvus.cjs",
     "vectorstores/milvus.js",
     "vectorstores/milvus.d.ts",
@@ -3544,6 +3593,10 @@
     "chat_models/friendli.js",
     "chat_models/friendli.d.ts",
     "chat_models/friendli.d.cts",
+    "chat_models/ibm.cjs",
+    "chat_models/ibm.js",
+    "chat_models/ibm.d.ts",
+    "chat_models/ibm.d.cts",
     "chat_models/iflytek_xinghuo.cjs",
     "chat_models/iflytek_xinghuo.js",
     "chat_models/iflytek_xinghuo.d.ts",

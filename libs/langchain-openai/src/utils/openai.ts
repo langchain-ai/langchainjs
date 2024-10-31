@@ -9,6 +9,7 @@ import {
   convertToOpenAIFunction,
   convertToOpenAITool,
 } from "@langchain/core/utils/function_calling";
+import { addLangChainErrorFields } from "./errors.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function wrapOpenAIClientError(e: any) {
@@ -19,6 +20,14 @@ export function wrapOpenAIClientError(e: any) {
   } else if (e.constructor.name === APIUserAbortError.name) {
     error = new Error(e.message);
     error.name = "AbortError";
+  } else if (e.status === 400 && e.message.includes("tool_calls")) {
+    error = addLangChainErrorFields(e, "INVALID_TOOL_RESULTS");
+  } else if (e.status === 401) {
+    error = addLangChainErrorFields(e, "MODEL_AUTHENTICATION");
+  } else if (e.status === 429) {
+    error = addLangChainErrorFields(e, "MODEL_RATE_LIMIT");
+  } else if (e.status === 404) {
+    error = addLangChainErrorFields(e, "MODEL_NOT_FOUND");
   } else {
     error = e;
   }

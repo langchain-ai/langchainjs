@@ -47,3 +47,13 @@ export class HumanMessageChunk extends BaseMessageChunk {
     });
   }
 }
+
+export function isHumanMessage(x: BaseMessage): x is HumanMessage {
+  return x.getType() === "human";
+}
+
+export function isHumanMessageChunk(
+  x: BaseMessageChunk
+): x is HumanMessageChunk {
+  return x.getType() === "human";
+}

@@ -269,8 +269,11 @@ export class HanaDB extends VectorStore {
         throw new Error(`Column ${columnName} has the wrong type: ${dataType}`);
       }
 
+      // Length can either be -1 (QRC01+02-24) or 0 (QRC03-24 onwards)
+      // to indicate no length constraint being present.
+
       // Check length, if parameter was provided
-      if (columnLength !== undefined && length !== columnLength) {
+      if (columnLength !== undefined && length !== columnLength && length > 0) {
         throw new Error(`Column ${columnName} has the wrong length: ${length}`);
       }
     }

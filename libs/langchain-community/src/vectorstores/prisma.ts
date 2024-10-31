@@ -1,6 +1,6 @@
+import { Document } from "@langchain/core/documents";
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { VectorStore } from "@langchain/core/vectorstores";
-import { Document } from "@langchain/core/documents";
 
 const IdColumnSymbol = Symbol("id");
 const ContentColumnSymbol = Symbol("content");
@@ -306,12 +306,13 @@ export class PrismaVectorStore<
     const vectorColumnRaw = this.Prisma.raw(`"${this.vectorColumnName}"`);
 
     await this.db.$transaction(
-      vectors.map(
-        (vector, idx) => this.db.$executeRaw`
-          UPDATE ${tableNameRaw}
-          SET ${vectorColumnRaw} = ${`[${vector.join(",")}]`}::vector
-          WHERE ${idColumnRaw} = ${documents[idx].metadata[this.idColumn]}
-        `
+      vectors.map((vector, idx) =>
+        this.db.$executeRaw(
+          this.Prisma.sql`UPDATE ${tableNameRaw}
+            SET ${vectorColumnRaw} = ${`[${vector.join(",")}]`}::vector
+            WHERE ${idColumnRaw} = ${documents[idx].metadata[this.idColumn]}
+          `
+        )
       )
     );
   }

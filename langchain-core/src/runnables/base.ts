@@ -58,14 +58,18 @@ import { ToolCall } from "../messages/tool.js";
 
 export { type RunnableInterface, RunnableBatchOptions };
 
-export type RunnableFunc<RunInput, RunOutput> = (
+export type RunnableFunc<
+  RunInput,
+  RunOutput,
+  CallOptions extends RunnableConfig = RunnableConfig
+> = (
   input: RunInput,
   options:
-    | RunnableConfig
+    | CallOptions
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     | Record<string, any>
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    | (Record<string, any> & RunnableConfig)
+    | (Record<string, any> & CallOptions)
 ) => RunOutput | Promise<RunOutput>;
 
 export type RunnableMapLike<RunInput, RunOutput> = {
@@ -73,9 +77,15 @@ export type RunnableMapLike<RunInput, RunOutput> = {
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type RunnableLike<RunInput = any, RunOutput = any> =
-  | RunnableInterface<RunInput, RunOutput>
-  | RunnableFunc<RunInput, RunOutput>
+export type RunnableLike<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  RunInput = any,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  RunOutput = any,
+  CallOptions extends RunnableConfig = RunnableConfig
+> =
+  | RunnableInterface<RunInput, RunOutput, CallOptions>
+  | RunnableFunc<RunInput, RunOutput, CallOptions>
   | RunnableMapLike<RunInput, RunOutput>;
 
 export type RunnableRetryFailedAttemptHandler = (
@@ -471,7 +481,7 @@ export abstract class Runnable<
       runManager?: CallbackManagerForChainRun,
       options?: Partial<CallOptions>
     ) => AsyncGenerator<O>,
-    options?: CallOptions & { runType?: string }
+    options?: Partial<CallOptions> & { runType?: string }
   ): AsyncGenerator<O> {
     let finalInput: I | undefined;
     let finalInputSupported = true;
@@ -1171,6 +1181,43 @@ export type RunnableBindingArgs<
 
 /**
  * A runnable that delegates calls to another runnable with a set of kwargs.
+ * @example
+ * ```typescript
+ * import {
+ *   type RunnableConfig,
+ *   RunnableLambda,
+ * } from "@langchain/core/runnables";
+ *
+ * const enhanceProfile = (
+ *   profile: Record<string, any>,
+ *   config?: RunnableConfig
+ * ) => {
+ *   if (config?.configurable?.role) {
+ *     return { ...profile, role: config.configurable.role };
+ *   }
+ *   return profile;
+ * };
+ *
+ * const runnable = RunnableLambda.from(enhanceProfile);
+ *
+ * // Bind configuration to the runnable to set the user's role dynamically
+ * const adminRunnable = runnable.bind({ configurable: { role: "Admin" } });
+ * const userRunnable = runnable.bind({ configurable: { role: "User" } });
+ *
+ * const result1 = await adminRunnable.invoke({
+ *   name: "Alice",
+ *   email: "alice@example.com"
+ * });
+ *
+ * // { name: "Alice", email: "alice@example.com", role: "Admin" }
+ *
+ * const result2 = await userRunnable.invoke({
+ *   name: "Bob",
+ *   email: "bob@example.com"
+ * });
+ *
+ * // { name: "Bob", email: "bob@example.com", role: "User" }
+ * ```
  */
 export class RunnableBinding<
   RunInput,
@@ -1422,6 +1469,24 @@ export class RunnableBinding<
 /**
  * A runnable that delegates calls to another runnable
  * with each element of the input sequence.
+ * @example
+ * ```typescript
+ * import { RunnableEach, RunnableLambda } from "@langchain/core/runnables";
+ *
+ * const toUpperCase = (input: string): string => input.toUpperCase();
+ * const addGreeting = (input: string): string => `Hello, ${input}!`;
+ *
+ * const upperCaseLambda = RunnableLambda.from(toUpperCase);
+ * const greetingLambda = RunnableLambda.from(addGreeting);
+ *
+ * const chain = new RunnableEach({
+ *   bound: upperCaseLambda.pipe(greetingLambda),
+ * });
+ *
+ * const result = await chain.invoke(["alice", "bob", "carol"])
+ *
+ * // ["Hello, ALICE!", "Hello, BOB!", "Hello, CAROL!"]
+ * ```
  */
 export class RunnableEach<
   RunInputItem,
@@ -1516,6 +1581,45 @@ export class RunnableEach<
 /**
  * Base class for runnables that can be retried a
  * specified number of times.
+ * @example
+ * ```typescript
+ * import {
+ *   RunnableLambda,
+ *   RunnableRetry,
+ * } from "@langchain/core/runnables";
+ *
+ * // Simulate an API call that fails
+ * const simulateApiCall = (input: string): string => {
+ *   console.log(`Attempting API call with input: ${input}`);
+ *   throw new Error("API call failed due to network issue");
+ * };
+ *
+ * const apiCallLambda = RunnableLambda.from(simulateApiCall);
+ *
+ * // Apply retry logic using the .withRetry() method
+ * const apiCallWithRetry = apiCallLambda.withRetry({ stopAfterAttempt: 3 });
+ *
+ * // Alternatively, create a RunnableRetry instance manually
+ * const manualRetry = new RunnableRetry({
+ *   bound: apiCallLambda,
+ *   maxAttemptNumber: 3,
+ *   config: {},
+ * });
+ *
+ * // Example invocation using the .withRetry() method
+ * const res = await apiCallWithRetry
+ *   .invoke("Request 1")
+ *   .catch((error) => {
+ *     console.error("Failed after multiple retries:", error.message);
+ *   });
+ *
+ * // Example invocation using the manual retry instance
+ * const res2 = await manualRetry
+ *   .invoke("Request 2")
+ *   .catch((error) => {
+ *     console.error("Failed after multiple retries:", error.message);
+ *   });
+ * ```
  */
 export class RunnableRetry<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1691,6 +1795,15 @@ export class RunnableRetry<
   }
 }
 
+export type RunnableSequenceFields<RunInput, RunOutput> = {
+  first: Runnable<RunInput>;
+  middle?: Runnable[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  last: Runnable<any, RunOutput>;
+  name?: string;
+  omitSequenceTags?: boolean;
+};
+
 /**
  * A sequence of runnables, where the output of each is the input of the next.
  * @example
@@ -1719,22 +1832,19 @@ export class RunnableSequence<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   protected last: Runnable<any, RunOutput>;
 
+  omitSequenceTags = false;
+
   lc_serializable = true;
 
   lc_namespace = ["langchain_core", "runnables"];
 
-  constructor(fields: {
-    first: Runnable<RunInput>;
-    middle?: Runnable[];
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    last: Runnable<any, RunOutput>;
-    name?: string;
-  }) {
+  constructor(fields: RunnableSequenceFields<RunInput, RunOutput>) {
     super(fields);
     this.first = fields.first;
     this.middle = fields.middle ?? this.middle;
     this.last = fields.last;
     this.name = fields.name;
+    this.omitSequenceTags = fields.omitSequenceTags ?? this.omitSequenceTags;
   }
 
   get steps() {
@@ -1763,7 +1873,9 @@ export class RunnableSequence<
         const promise = step.invoke(
           nextStepInput,
           patchConfig(config, {
-            callbacks: runManager?.getChild(`seq:step:${i + 1}`),
+            callbacks: runManager?.getChild(
+              this.omitSequenceTags ? undefined : `seq:step:${i + 1}`
+            ),
           })
         );
         nextStepInput = await raceWithSignal(promise, options?.signal);
@@ -1775,7 +1887,9 @@ export class RunnableSequence<
       finalOutput = await this.last.invoke(
         nextStepInput,
         patchConfig(config, {
-          callbacks: runManager?.getChild(`seq:step:${this.steps.length}`),
+          callbacks: runManager?.getChild(
+            this.omitSequenceTags ? undefined : `seq:step:${this.steps.length}`
+          ),
         })
       );
     } catch (e) {
@@ -1836,7 +1950,9 @@ export class RunnableSequence<
         const promise = step.batch(
           nextStepInputs,
           runManagers.map((runManager, j) => {
-            const childRunManager = runManager?.getChild(`seq:step:${i + 1}`);
+            const childRunManager = runManager?.getChild(
+              this.omitSequenceTags ? undefined : `seq:step:${i + 1}`
+            );
             return patchConfig(configList[j], { callbacks: childRunManager });
           }),
           batchOptions
@@ -1882,7 +1998,9 @@ export class RunnableSequence<
       let finalGenerator = steps[0].transform(
         inputGenerator(),
         patchConfig(otherOptions, {
-          callbacks: runManager?.getChild(`seq:step:1`),
+          callbacks: runManager?.getChild(
+            this.omitSequenceTags ? undefined : `seq:step:1`
+          ),
         })
       );
       for (let i = 1; i < steps.length; i += 1) {
@@ -1890,7 +2008,9 @@ export class RunnableSequence<
         finalGenerator = await step.transform(
           finalGenerator,
           patchConfig(otherOptions, {
-            callbacks: runManager?.getChild(`seq:step:${i + 1}`),
+            callbacks: runManager?.getChild(
+              this.omitSequenceTags ? undefined : `seq:step:${i + 1}`
+            ),
           })
         );
       }
@@ -1988,13 +2108,24 @@ export class RunnableSequence<
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       RunnableLike<any, RunOutput>
     ],
-    name?: string
+    nameOrFields?:
+      | string
+      | Omit<
+          RunnableSequenceFields<RunInput, RunOutput>,
+          "first" | "middle" | "last"
+        >
   ) {
+    let extra: Record<string, unknown> = {};
+    if (typeof nameOrFields === "string") {
+      extra.name = nameOrFields;
+    } else if (nameOrFields !== undefined) {
+      extra = nameOrFields;
+    }
     return new RunnableSequence<RunInput, Exclude<RunOutput, Error>>({
+      ...extra,
       first: _coerceToRunnable(first),
       middle: runnables.slice(0, -1).map(_coerceToRunnable),
       last: _coerceToRunnable(runnables[runnables.length - 1]),
-      name,
     });
   }
 }
@@ -2234,15 +2365,28 @@ export class RunnableTraceable<RunInput, RunOutput> extends Runnable<
   }
 }
 
-function assertNonTraceableFunction<RunInput, RunOutput>(
+function assertNonTraceableFunction<
+  RunInput,
+  RunOutput,
+  CallOptions extends RunnableConfig = RunnableConfig
+>(
   func:
-    | RunnableFunc<RunInput, RunOutput | Runnable<RunInput, RunOutput>>
+    | RunnableFunc<
+        RunInput,
+        RunOutput | Runnable<RunInput, RunOutput, CallOptions>,
+        CallOptions
+      >
     | TraceableFunction<
-        RunnableFunc<RunInput, RunOutput | Runnable<RunInput, RunOutput>>
+        RunnableFunc<
+          RunInput,
+          RunOutput | Runnable<RunInput, RunOutput, CallOptions>,
+          CallOptions
+        >
       >
 ): asserts func is RunnableFunc<
   RunInput,
-  RunOutput | Runnable<RunInput, RunOutput>
+  RunOutput | Runnable<RunInput, RunOutput, CallOptions>,
+  CallOptions
 > {
   if (isTraceableFunction(func)) {
     throw new Error(
@@ -2252,12 +2396,36 @@ function assertNonTraceableFunction<RunInput, RunOutput>(
 }
 
 /**
- * A runnable that runs a callable.
+ * A runnable that wraps an arbitrary function that takes a single argument.
+ * @example
+ * ```typescript
+ * import { RunnableLambda } from "@langchain/core/runnables";
+ *
+ * const add = (input: { x: number; y: number }) => input.x + input.y;
+ *
+ * const multiply = (input: { value: number; multiplier: number }) =>
+ *   input.value * input.multiplier;
+ *
+ * // Create runnables for the functions
+ * const addLambda = RunnableLambda.from(add);
+ * const multiplyLambda = RunnableLambda.from(multiply);
+ *
+ * // Chain the lambdas for a mathematical operation
+ * const chainedLambda = addLambda.pipe((result) =>
+ *   multiplyLambda.invoke({ value: result, multiplier: 2 })
+ * );
+ *
+ * // Example invocation of the chainedLambda
+ * const result = await chainedLambda.invoke({ x: 2, y: 3 });
+ *
+ * // Will log "10" (since (2 + 3) * 2 = 10)
+ * ```
  */
-export class RunnableLambda<RunInput, RunOutput> extends Runnable<
+export class RunnableLambda<
   RunInput,
-  RunOutput
-> {
+  RunOutput,
+  CallOptions extends RunnableConfig = RunnableConfig
+> extends Runnable<RunInput, RunOutput, CallOptions> {
   static lc_name() {
     return "RunnableLambda";
   }
@@ -2266,21 +2434,31 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
 
   protected func: RunnableFunc<
     RunInput,
-    RunOutput | Runnable<RunInput, RunOutput>
+    RunOutput | Runnable<RunInput, RunOutput, CallOptions>,
+    CallOptions
   >;
 
   constructor(fields: {
     func:
-      | RunnableFunc<RunInput, RunOutput | Runnable<RunInput, RunOutput>>
+      | RunnableFunc<
+          RunInput,
+          RunOutput | Runnable<RunInput, RunOutput, CallOptions>,
+          CallOptions
+        >
       | TraceableFunction<
-          RunnableFunc<RunInput, RunOutput | Runnable<RunInput, RunOutput>>
+          RunnableFunc<
+            RunInput,
+            RunOutput | Runnable<RunInput, RunOutput, CallOptions>,
+            CallOptions
+          >
         >;
   }) {
     if (isTraceableFunction(fields.func)) {
       // eslint-disable-next-line no-constructor-return
       return RunnableTraceable.from(fields.func) as unknown as RunnableLambda<
         RunInput,
-        RunOutput
+        RunOutput,
+        CallOptions
       >;
     }
 
@@ -2290,23 +2468,51 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
     this.func = fields.func;
   }
 
-  static from<RunInput, RunOutput>(
-    func: RunnableFunc<RunInput, RunOutput | Runnable<RunInput, RunOutput>>
-  ): RunnableLambda<RunInput, RunOutput>;
-
-  static from<RunInput, RunOutput>(
-    func: TraceableFunction<
-      RunnableFunc<RunInput, RunOutput | Runnable<RunInput, RunOutput>>
+  static from<
+    RunInput,
+    RunOutput,
+    CallOptions extends RunnableConfig = RunnableConfig
+  >(
+    func: RunnableFunc<
+      RunInput,
+      RunOutput | Runnable<RunInput, RunOutput, CallOptions>,
+      CallOptions
     >
-  ): RunnableLambda<RunInput, RunOutput>;
+  ): RunnableLambda<RunInput, RunOutput, CallOptions>;
 
-  static from<RunInput, RunOutput>(
+  static from<
+    RunInput,
+    RunOutput,
+    CallOptions extends RunnableConfig = RunnableConfig
+  >(
+    func: TraceableFunction<
+      RunnableFunc<
+        RunInput,
+        RunOutput | Runnable<RunInput, RunOutput, CallOptions>,
+        CallOptions
+      >
+    >
+  ): RunnableLambda<RunInput, RunOutput, CallOptions>;
+
+  static from<
+    RunInput,
+    RunOutput,
+    CallOptions extends RunnableConfig = RunnableConfig
+  >(
     func:
-      | RunnableFunc<RunInput, RunOutput | Runnable<RunInput, RunOutput>>
-      | TraceableFunction<
-          RunnableFunc<RunInput, RunOutput | Runnable<RunInput, RunOutput>>
+      | RunnableFunc<
+          RunInput,
+          RunOutput | Runnable<RunInput, RunOutput, CallOptions>,
+          CallOptions
         >
-  ): RunnableLambda<RunInput, RunOutput> {
+      | TraceableFunction<
+          RunnableFunc<
+            RunInput,
+            RunOutput | Runnable<RunInput, RunOutput, CallOptions>,
+            CallOptions
+          >
+        >
+  ): RunnableLambda<RunInput, RunOutput, CallOptions> {
     return new RunnableLambda({
       func,
     });
@@ -2314,7 +2520,7 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
 
   async _invoke(
     input: RunInput,
-    config?: Partial<RunnableConfig>,
+    config?: Partial<CallOptions>,
     runManager?: CallbackManagerForChainRun
   ) {
     return new Promise<RunOutput>((resolve, reject) => {
@@ -2390,7 +2596,7 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
 
   async invoke(
     input: RunInput,
-    options?: Partial<RunnableConfig>
+    options?: Partial<CallOptions>
   ): Promise<RunOutput> {
     return this._callWithConfig(this._invoke.bind(this), input, options);
   }
@@ -2398,7 +2604,7 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
   async *_transform(
     generator: AsyncGenerator<RunInput>,
     runManager?: CallbackManagerForChainRun,
-    config?: Partial<RunnableConfig>
+    config?: Partial<CallOptions>
   ): AsyncGenerator<RunOutput> {
     let finalChunk: RunInput | undefined;
     for await (const chunk of generator) {
@@ -2464,7 +2670,7 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
 
   transform(
     generator: AsyncGenerator<RunInput>,
-    options?: Partial<RunnableConfig>
+    options?: Partial<CallOptions>
   ): AsyncGenerator<RunOutput> {
     return this._transformStreamWithConfig(
       generator,
@@ -2475,7 +2681,7 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
 
   async stream(
     input: RunInput,
-    options?: Partial<RunnableConfig>
+    options?: Partial<CallOptions>
   ): Promise<IterableReadableStream<RunOutput>> {
     async function* generator() {
       yield input;
@@ -2490,6 +2696,39 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
   }
 }
 
+/**
+ * A runnable that runs a mapping of runnables in parallel,
+ * and returns a mapping of their outputs.
+ * @example
+ * ```typescript
+ * import {
+ *   RunnableLambda,
+ *   RunnableParallel,
+ * } from "@langchain/core/runnables";
+ *
+ * const addYears = (age: number): number => age + 5;
+ * const yearsToFifty = (age: number): number => 50 - age;
+ * const yearsToHundred = (age: number): number => 100 - age;
+ *
+ * const addYearsLambda = RunnableLambda.from(addYears);
+ * const milestoneFiftyLambda = RunnableLambda.from(yearsToFifty);
+ * const milestoneHundredLambda = RunnableLambda.from(yearsToHundred);
+ *
+ * // Pipe will coerce objects into RunnableParallel by default, but we
+ * // explicitly instantiate one here to demonstrate
+ * const sequence = addYearsLambda.pipe(
+ *   RunnableParallel.from({
+ *     years_to_fifty: milestoneFiftyLambda,
+ *     years_to_hundred: milestoneHundredLambda,
+ *   })
+ * );
+ *
+ * // Invoke the sequence with a single age input
+ * const res = sequence.invoke(25);
+ *
+ * // { years_to_fifty: 25, years_to_hundred: 75 }
+ * ```
+ */
 export class RunnableParallel<RunInput> extends RunnableMap<RunInput> {}
 
 /**
@@ -2510,6 +2749,55 @@ export class RunnableParallel<RunInput> extends RunnableMap<RunInput> {}
  * When streaming, fallbacks will only be called on failures during the initial
  * stream creation. Errors that occur after a stream starts will not fallback
  * to the next Runnable.
+ *
+ * @example
+ * ```typescript
+ * import {
+ *   RunnableLambda,
+ *   RunnableWithFallbacks,
+ * } from "@langchain/core/runnables";
+ *
+ * const primaryOperation = (input: string): string => {
+ *   if (input !== "safe") {
+ *     throw new Error("Primary operation failed due to unsafe input");
+ *   }
+ *   return `Processed: ${input}`;
+ * };
+ *
+ * // Define a fallback operation that processes the input differently
+ * const fallbackOperation = (input: string): string =>
+ *   `Fallback processed: ${input}`;
+ *
+ * const primaryRunnable = RunnableLambda.from(primaryOperation);
+ * const fallbackRunnable = RunnableLambda.from(fallbackOperation);
+ *
+ * // Apply the fallback logic using the .withFallbacks() method
+ * const runnableWithFallback = primaryRunnable.withFallbacks([fallbackRunnable]);
+ *
+ * // Alternatively, create a RunnableWithFallbacks instance manually
+ * const manualFallbackChain = new RunnableWithFallbacks({
+ *   runnable: primaryRunnable,
+ *   fallbacks: [fallbackRunnable],
+ * });
+ *
+ * // Example invocation using .withFallbacks()
+ * const res = await runnableWithFallback
+ *   .invoke("unsafe input")
+ *   .catch((error) => {
+ *     console.error("Failed after all attempts:", error.message);
+ *   });
+ *
+ * // "Fallback processed: unsafe input"
+ *
+ * // Example invocation using manual instantiation
+ * const res = await manualFallbackChain
+ *   .invoke("safe")
+ *   .catch((error) => {
+ *     console.error("Failed after all attempts:", error.message);
+ *   });
+ *
+ * // "Processed: safe"
+ * ```
  */
 export class RunnableWithFallbacks<RunInput, RunOutput> extends Runnable<
   RunInput,
@@ -2720,16 +3008,25 @@ export class RunnableWithFallbacks<RunInput, RunOutput> extends Runnable<
 }
 
 // TODO: Figure out why the compiler needs help eliminating Error as a RunOutput type
-export function _coerceToRunnable<RunInput, RunOutput>(
-  coerceable: RunnableLike<RunInput, RunOutput>
-): Runnable<RunInput, Exclude<RunOutput, Error>> {
+export function _coerceToRunnable<
+  RunInput,
+  RunOutput,
+  CallOptions extends RunnableConfig = RunnableConfig
+>(
+  coerceable: RunnableLike<RunInput, RunOutput, CallOptions>
+): Runnable<RunInput, Exclude<RunOutput, Error>, CallOptions> {
   if (typeof coerceable === "function") {
     return new RunnableLambda({ func: coerceable }) as Runnable<
       RunInput,
-      Exclude<RunOutput, Error>
+      Exclude<RunOutput, Error>,
+      CallOptions
     >;
   } else if (Runnable.isRunnable(coerceable)) {
-    return coerceable as Runnable<RunInput, Exclude<RunOutput, Error>>;
+    return coerceable as Runnable<
+      RunInput,
+      Exclude<RunOutput, Error>,
+      CallOptions
+    >;
   } else if (!Array.isArray(coerceable) && typeof coerceable === "object") {
     const runnables: Record<string, Runnable<RunInput>> = {};
     for (const [key, value] of Object.entries(coerceable)) {
@@ -2737,7 +3034,7 @@ export function _coerceToRunnable<RunInput, RunOutput>(
     }
     return new RunnableMap({
       steps: runnables,
-    }) as unknown as Runnable<RunInput, Exclude<RunOutput, Error>>;
+    }) as unknown as Runnable<RunInput, Exclude<RunOutput, Error>, CallOptions>;
   } else {
     throw new Error(
       `Expected a Runnable, function or object.\nInstead got an unsupported type.`
@@ -2751,6 +3048,34 @@ export interface RunnableAssignFields<RunInput> {
 
 /**
  * A runnable that assigns key-value pairs to inputs of type `Record<string, unknown>`.
+ * @example
+ * ```typescript
+ * import {
+ *   RunnableAssign,
+ *   RunnableLambda,
+ *   RunnableParallel,
+ * } from "@langchain/core/runnables";
+ *
+ * const calculateAge = (x: { birthYear: number }): { age: number } => {
+ *   const currentYear = new Date().getFullYear();
+ *   return { age: currentYear - x.birthYear };
+ * };
+ *
+ * const createGreeting = (x: { name: string }): { greeting: string } => {
+ *   return { greeting: `Hello, ${x.name}!` };
+ * };
+ *
+ * const mapper = RunnableParallel.from({
+ *   age_step: RunnableLambda.from(calculateAge),
+ *   greeting_step: RunnableLambda.from(createGreeting),
+ * });
+ *
+ * const runnableAssign = new RunnableAssign({ mapper });
+ *
+ * const res = await runnableAssign.invoke({ name: "Alice", birthYear: 1990 });
+ *
+ * // { name: "Alice", birthYear: 1990, age_step: { age: 34 }, greeting_step: { greeting: "Hello, Alice!" } }
+ * ```
  */
 export class RunnableAssign<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -2865,6 +3190,27 @@ export interface RunnablePickFields {
 
 /**
  * A runnable that assigns key-value pairs to inputs of type `Record<string, unknown>`.
+ * Useful for streaming, can be automatically created and chained by calling `runnable.pick();`.
+ * @example
+ * ```typescript
+ * import { RunnablePick } from "@langchain/core/runnables";
+ *
+ * const inputData = {
+ *   name: "John",
+ *   age: 30,
+ *   city: "New York",
+ *   country: "USA",
+ *   email: "john.doe@example.com",
+ *   phone: "+1234567890",
+ * };
+ *
+ * const basicInfoRunnable = new RunnablePick(["name", "city"]);
+ *
+ * // Example invocation
+ * const res = await basicInfoRunnable.invoke(inputData);
+ *
+ * // { name: 'John', city: 'New York' }
+ * ```
  */
 export class RunnablePick<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
