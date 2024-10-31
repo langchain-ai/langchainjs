@@ -1,0 +1,388 @@
+---
+sidebar_position: 0
+title: Vector stores and retrievers
+---
+
+# Vector stores and retrievers
+
+This tutorial will familiarize you with LangChain's vector store and retriever abstractions.
+These abstractions are designed to support retrieval of data-- from (vector) databases and other sources-- for integration with LLM workflows.
+They are important for applications that fetch data to be reasoned over as part of model inference, as in the case of retrieval-augmented generation, or RAG (see our RAG tutorial [here](../../docs/tutorials/rag)).
+
+## Concepts
+
+This guide focuses on retrieval of text data. We will cover the following concepts:
+
+- Documents;
+- Vector stores;
+- Retrievers;
+
+## Setup
+
+### Installation
+
+This tutorial requires the `langchain`, `@langchain/core`, and `@langchain/community` packages:
+
+```mdx-code-block
+import Npm2Yarn from '@theme/Npm2Yarn';
+import TabItem from '@theme/TabItem';
+import CodeBlock from "@theme/CodeBlock";
+
+<Npm2Yarn>
+  langchain @langchain/core @langchain/community
+</Npm2Yarn>
+```
+
+For more details, see our [Installation
+guide](../../docs/how_to/installation/).
+
+### LangSmith
+
+Many of the applications you build with LangChain will contain multiple
+steps with multiple invocations of LLM calls. As these applications get
+more and more complex, it becomes crucial to be able to inspect what
+exactly is going on inside your chain or agent. The best way to do this
+is with [LangSmith](https://smith.langchain.com).
+
+After you sign up at the link above, make sure to set your environment
+variables to start logging traces:
+
+```shell
+export LANGCHAIN_TRACING_V2="true"
+export LANGCHAIN_API_KEY="..."
+
+# Reduce tracing latency if you are not in a serverless environment
+# export LANGCHAIN_CALLBACKS_BACKGROUND=true
+```
+
+## Documents
+
+LangChain implements a [Document](https://v03.api.js.langchain.com/classes/_langchain_core.documents.Document.html) abstraction, which is intended to represent a unit of text and associated metadata.
+It has two attributes:
+
+- `pageContent`: a string representing the content;
+- `metadata`: an object containing arbitrary data;
+
+The `metadata` attribute can capture information about the source of the document, its relationship to other documents, and other information.
+Note that an individual `Document` object often represents a chunk of a larger document.
+
+Let's generate some sample documents:
+
+```typescript
+import { Document } from "@langchain/core/documents";
+
+export default [
+  new Document({
+    pageContent:
+      "Dogs are great companions, known for their loyalty and friendliness.",
+    metadata: { source: "mammal-pets-doc" },
+  }),
+  new Document({
+    pageContent: "Cats are independent pets that often enjoy their own space.",
+    metadata: { source: "mammal-pets-doc" },
+  }),
+  new Document({
+    pageContent:
+      "Goldfish are popular pets for beginners, requiring relatively simple care.",
+    metadata: { source: "fish-pets-doc" },
+  }),
+  new Document({
+    pageContent:
+      "Parrots are intelligent birds capable of mimicking human speech.",
+    metadata: { source: "bird-pets-doc" },
+  }),
+  new Document({
+    pageContent:
+      "Rabbits are social animals that need plenty of space to hop around.",
+    metadata: { source: "mammal-pets-doc" },
+  }),
+];
+```
+
+**API Reference:** [Document](https://v03.api.js.langchain.com/classes/_langchain_core.documents.Document.html)
+
+---
+
+Here we've generated five documents, containing metadata indicating three distinct "sources".
+
+## Vector stores
+
+Vector search is a common way to store and search over unstructured data (such as unstructured text).
+The idea is to store numeric vectors that are associated with the text. Given a query, we can [embed](../../docs/concepts/embedding_models) it as a vector of the same dimension and use vector similarity metrics to identify related data in the store.
+
+LangChain [VectorStore](https://v03.api.js.langchain.com/classes/_langchain_core.vectorstores.VectorStore.html) objects contain methods for adding text and Document objects to the store, and querying them using various similarity metrics.
+They are often initialized with [embedding](../../docs/how_to/embed_text) models, which determine how text data is translated to numeric vectors.
+
+LangChain includes a suite of [integrations](../../docs/integrations/vectorstores) with different vector store technologies.
+Some vector stores are hosted by a provider (e.g., various cloud providers) and require specific credentials to use; some (such as [Postgres](../../docs/integrations/vectorstores/pgvector)) run in separate infrastructure that can be run locally or via a third-party; others can run in-memory for lightweight workloads.
+Here we will demonstrate usage of LangChain VectorStores using [Chroma](../../docs/integrations/vectorstores/chroma), which includes an in-memory implementation.
+
+To instantiate a vector store, we often need to provide an [embedding](../../docs/how_to/embed_text) model to specify how text should be converted into a numeric vector. Here we will use [OpenAI embeddings](../../docs/integrations/text_embedding/openai).
+
+```typescript
+import { OpenAIEmbeddings } from "@langchain/openai";
+import { Chroma } from "@langchain/community/vectorstores/chroma";
+import documents from "../data/documents";
+
+  const chromaConfig = {
+    url: "https://localhost:8000"
+    collectionName: "pets_collection",
+  };
+
+  const embeddings = new OpenAIEmbeddings()
+
+  const chroma = await Chroma.fromDocuments(documents, embeddings, chromaConfig);
+```
+
+**API Reference:** [OpenAIEmbeddings](https://v03.api.js.langchain.com/classes/_langchain_openai.OpenAIEmbeddings.html)
+
+---
+
+Calling `.fromDocuments` here will add the documents to the vector store. [VectorStore](https://v03.api.js.langchain.com/classes/_langchain_core.vectorstores.VectorStore.html) implements methods for adding documents that can also be called after the object is instantiated.
+Most implementations will allow you to connect to an existing vector store-- e.g., by providing a client, index name, or other information. See the documentation for a specific [integration](../../docs/concepts/vectorstores) for more detail.
+
+Once we've instantiated a `VectorStore` that contains documents, we can query it. [VectorStore](https://v03.api.js.langchain.com/classes/_langchain_core.vectorstores.VectorStore.html) includes methods for querying:
+
+- Synchronously and asynchronously;
+- By string query and by vector;
+- With and without returning similarity scores;
+- By similarity and [maximum marginal relevance](https://v03.api.js.langchain.com/classes/_langchain_core.vectorstores.VectorStore.html#maxMarginalRelevanceSearch) (to balance similarity with query to diversity in retrieved results).
+
+The methods will generally include a list of [Document](https://v03.api.js.langchain.com/classes/_langchain_core.documents.Document.html) objects in their outputs.
+
+### Examples
+
+Return documents based on similarity to a string query:
+
+```typescript
+await chroma.similaritySearch("cat");
+```
+
+```json
+[
+  {
+    "pageContent": "Cats are independent pets that often enjoy their own space.",
+    "metadata": { "source": "mammal-pets-doc" }
+  },
+  {
+    "pageContent": "Dogs are great companions, known for their loyalty and friendliness.",
+    "metadata": { "source": "mammal-pets-doc" }
+  },
+  {
+    "pageContent": "Rabbits are social animals that need plenty of space to hop around.",
+    "metadata": { "source": "mammal-pets-doc" }
+  },
+  {
+    "pageContent": "Parrots are intelligent birds capable of mimicking human speech.",
+    "metadata": { "source": "bird-pets-doc" }
+  }
+]
+```
+
+Return scores:
+
+```typescript
+await chroma.similaritySearchWithScore("cat");
+```
+
+```json
+// Note that providers implement different scores; Chroma here
+// returns a distance metric that should vary inversely with
+// similarity.
+
+[
+  [
+    {
+      "pageContent": "Cats are independent pets that often enjoy their own space.",
+      "metadata": { "source": "mammal-pets-doc" }
+    },
+    0.3749317423763067
+  ],
+  [
+    {
+      "pageContent": "Dogs are great companions, known for their loyalty and friendliness.",
+      "metadata": { "source": "mammal-pets-doc" }
+    },
+    0.483024756734972
+  ],
+  [
+    {
+      "pageContent": "Rabbits are social animals that need plenty of space to hop around.",
+      "metadata": { "source": "mammal-pets-doc" }
+    },
+    0.4958319828348823
+  ],
+  [
+    {
+      "pageContent": "Parrots are intelligent birds capable of mimicking human speech.",
+      "metadata": { "source": "bird-pets-doc" }
+    },
+    0.497523653562735
+  ]
+]
+```
+
+Return documents based on similarity to an embedded query:
+
+```typescript
+const embedding = await new OpenAIEmbeddings().embedQuery("cat");
+const k = 1; // number of similar vectors to return
+
+await chroma.similaritySearchVectorWithScore(embedding, k);
+```
+
+```json
+[
+  [
+    {
+      "pageContent": "Cats are independent pets that often enjoy their own space.",
+      "metadata": { "source": "mammal-pets-doc" }
+    },
+    0.3749317423763067
+  ],
+  [
+    {
+      "pageContent": "Dogs are great companions, known for their loyalty and friendliness.",
+      "metadata": { "source": "mammal-pets-doc" }
+    },
+    0.483024756734972
+  ],
+  [
+    {
+      "pageContent": "Rabbits are social animals that need plenty of space to hop around.",
+      "metadata": { "source": "mammal-pets-doc" }
+    },
+    0.4958319828348823
+  ],
+  [
+    {
+      "pageContent": "Parrots are intelligent birds capable of mimicking human speech.",
+      "metadata": { "source": "bird-pets-doc" }
+    },
+    0.497523653562735
+  ],
+  [
+    {
+      "pageContent": "Goldfish are popular pets for beginners, requiring relatively simple care.",
+      "metadata": { "source": "fish-pets-doc" }
+    },
+    0.5030592849950544
+  ]
+]
+```
+
+Learn more:
+
+- [API Reference](https://v03.api.js.langchain.com/classes/_langchain_core.vectorstores.VectorStore.html)
+- [How-to Guide](../../docs/how_to/vectorstores)
+- [Integration-specific docs](../../docs/integrations/vectorstores)
+
+## Retrievers
+
+LangChain `VectorStore` objects do not subclass [Runnable](https://v03.api.js.langchain.com/classes/_langchain_core.runnables.Runnable.html), and so cannot immediately be integrated into LangChain Expression Language [chains](../..//docs/concepts/lcel).
+
+LangChain [Retrievers](https://v03.api.js.langchain.com/modules/_langchain_core.retrievers.html) are Runnables, so they implement a standard set of methods (e.g., synchronous and asynchronous `invoke` and `batch` operations) and are designed to be incorporated in LCEL chains.
+
+We can create a simple version of this ourselves, without subclassing `Retriever`.
+If we choose what method we wish to use to retrieve documents, we can create a runnable easily.
+Below we will build one around the `similaritySearch` method:
+
+```typescript
+const retriever = RunnableLambda.from(({ query, k }) =>
+  chroma.similaritySearch(query, k)
+);
+
+await retriever.invoke({ query: "cat", k: 1 });
+```
+
+**API Reference:** [RunnableLambda](https://v03.api.js.langchain.com/classes/_langchain_core.runnables.RunnableLambda.html)
+
+---
+
+```json
+[
+  {
+    "pageContent": "Cats are independent pets that often enjoy their own space.",
+    "metadata": { "source": "mammal-pets-doc" }
+  }
+]
+```
+
+Vectorstores implement an `asRetriever` method that will generate a Retriever, specifically a [VectorStoreRetriever](https://v03.api.js.langchain.com/classes/_langchain_core.vectorstores.VectorStoreRetriever.html).
+These retrievers include specific `search_type` and `search_kwargs` (only for maximum marginal relevance `mmr` search type) attributes that identify what methods of the underlying vector store to call, and how to parameterize them.
+For instance, we can replicate the above with the following:
+
+```typescript
+const retriever = chroma.asRetriever({ searchType: "similarity", k: 1 });
+await retriever.invoke("cat");
+```
+
+```json
+[
+  {
+    "pageContent": "Cats are independent pets that often enjoy their own space.",
+    "metadata": { "source": "mammal-pets-doc" }
+  }
+]
+```
+
+`VectorStoreRetriever` supports search types of `"similarity"` (default) and `"mmr"` (maximum marginal relevance, described above).
+
+Retrievers can easily be incorporated into more complex applications, such as retrieval-augmented generation (RAG) applications that combine a given question with retrieved context into a prompt for a LLM. Below we show a minimal example.
+
+```mdx-code-block
+import ChatModelTabs from "@theme/ChatModelTabs";
+
+<ChatModelTabs customVarName="llm" />
+```
+
+```typescript
+import { ChatPromptTemplate } from "@langchain/core/prompts";
+import {
+  RunnablePassthrough,
+  RunnableSequence,
+} from "@langchain/core/runnables";
+import { StringOutputParser } from "@langchain/core/output_parsers";
+
+const chatPrompt = ChatPromptTemplate.fromTemplate(`
+  Answer this question using the provided context only.
+  Question: {question}
+  Context: {context}
+`);
+
+const ragChain = RunnableSequence.from([
+  {
+    context: retriever,
+    question: new RunnablePassthrough(),
+  },
+  chatPrompt,
+  llm,
+  new StringOutputParser(),
+]);
+
+const result = await ragChain.invoke("tell me about cats");
+console.log(result);
+```
+
+**API Reference:** [ChatPromptTemplate](https://v03.api.js.langchain.com/classes/_langchain_core.prompts.ChatPromptTemplate.html) | [RunnablePassthrough](https://v03.api.js.langchain.com/classes/_langchain_core.runnables.RunnablePassthrough.html) | [RunnableSequence](https://v03.api.js.langchain.com/classes/_langchain_core.runnables.RunnableSequence.html)
+
+---
+
+```
+Cats are independent pets that often enjoy their own space.
+```
+
+## Learn more:
+
+Retrieval strategies can be rich and complex. For example:
+
+- We can [infer hard rules and filters](../../docs/how_to/self_query) from a query (e.g., "using documents published after 2020");
+- We can [return documents that are linked](../../docs/how_to/parent_document_retriever) to the retrieved context in some way (e.g., via some document taxonomy);
+- We can generate [multiple embeddings](../../docs/how_to/multi_vector) for each unit of context;
+- We can [ensemble results](../../docs/how_to/ensemble_retriever) from multiple retrievers;
+- We can assign weights to documents, e.g., to weigh [recent documents](../../docs/how_to/time_weighted_vectorstore) higher.
+
+The [retrievers](../../docs/how_to/#retrievers) section of the how-to guides covers these and other built-in retrieval strategies.
+
+It is also straightforward to extend the [BaseRetriever](https://v03.api.js.langchain.com/classes/_langchain_core.retrievers.BaseRetriever.html) class in order to implement custom retrievers.
+See our how-to guide [here](../../docs/how_to/custom_retriever).
