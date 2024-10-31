@@ -1,0 +1,126 @@
+# Prompt Templates
+
+Prompt templates help to translate user input and parameters into instructions for a language model.
+This can be used to guide a model's response, helping it understand the context and generate relevant and coherent language-based output.
+
+Prompt Templates take as input an object, where each key represents a variable in the prompt template to fill in.
+
+Prompt Templates output a PromptValue. This PromptValue can be passed to an LLM or a ChatModel, and can also be cast to a string or a list of messages.
+The reason this PromptValue exists is to make it easy to switch between strings and messages.
+
+There are a few different types of prompt templates:
+
+## String PromptTemplates
+
+These prompt templates are used to format a single string, and generally are used for simpler inputs.
+For example, a common way to construct and use a PromptTemplate is as follows:
+
+```typescript
+import { PromptTemplate } from "@langchain/core/prompts";
+
+const promptTemplate = PromptTemplate.fromTemplate(
+  "Tell me a joke about {topic}"
+);
+
+await promptTemplate.invoke({ topic: "cats" });
+```
+
+```text
+StringPromptValue {
+  value: 'Tell me a joke about cats'
+}
+```
+
+## ChatPromptTemplates
+
+These prompt templates are used to format a list of messages. These "templates" consist of a list of templates themselves.
+For example, a common way to construct and use a ChatPromptTemplate is as follows:
+
+```typescript
+import { ChatPromptTemplate } from "@langchain/core/prompts";
+
+const promptTemplate = ChatPromptTemplate.fromMessages([
+  ["system", "You are a helpful assistant"],
+  ["user", "Tell me a joke about {topic}"],
+]);
+
+await promptTemplate.invoke({ topic: "cats" });
+```
+
+```text
+ChatPromptValue {
+  messages: [
+    SystemMessage {
+      "content": "You are a helpful assistant",
+      "additional_kwargs": {},
+      "response_metadata": {}
+    },
+    HumanMessage {
+      "content": "Tell me a joke about cats",
+      "additional_kwargs": {},
+      "response_metadata": {}
+    }
+  ]
+}
+```
+
+In the above example, this ChatPromptTemplate will construct two messages when called.
+The first is a system message, that has no variables to format.
+The second is a HumanMessage, and will be formatted by the `topic` variable the user passes in.
+
+## MessagesPlaceholder
+
+<span data-heading-keywords="messagesplaceholder"></span>
+
+This prompt template is responsible for adding a list of messages in a particular place.
+In the above ChatPromptTemplate, we saw how we could format two messages, each one a string.
+But what if we wanted the user to pass in a list of messages that we would slot into a particular spot?
+This is how you use MessagesPlaceholder.
+
+```typescript
+import {
+  ChatPromptTemplate,
+  MessagesPlaceholder,
+} from "@langchain/core/prompts";
+import { HumanMessage } from "@langchain/core/messages";
+
+const promptTemplate = ChatPromptTemplate.fromMessages([
+  ["system", "You are a helpful assistant"],
+  new MessagesPlaceholder("msgs"),
+]);
+
+await promptTemplate.invoke({ msgs: [new HumanMessage("hi!")] });
+```
+
+```text
+ChatPromptValue {
+  messages: [
+    SystemMessage {
+      "content": "You are a helpful assistant",
+      "additional_kwargs": {},
+      "response_metadata": {}
+    },
+    HumanMessage {
+      "content": "hi!",
+      "additional_kwargs": {},
+      "response_metadata": {}
+    }
+  ]
+}
+```
+
+This will produce a list of two messages, the first one being a system message, and the second one being the HumanMessage we passed in.
+If we had passed in 5 messages, then it would have produced 6 messages in total (the system message plus the 5 passed in).
+This is useful for letting a list of messages be slotted into a particular spot.
+
+An alternative way to accomplish the same thing without using the `MessagesPlaceholder` class explicitly is:
+
+```typescript
+const promptTemplate = ChatPromptTemplate.fromMessages([
+  ["system", "You are a helpful assistant"],
+  // highlight-next-line
+  ["placeholder", "{msgs}"], // <-- This is the changed part
+]);
+```
+
+For specifics on how to use prompt templates, see the [relevant how-to guides here](/docs/how_to/#prompt-templates).
