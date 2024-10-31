@@ -12509,7 +12509,7 @@ __metadata:
     eslint-plugin-prettier: ^4.2.1
     jest: ^29.5.0
     jest-environment-node: ^29.6.4
-    ollama: ^0.5.6
+    ollama: ^0.5.9
     prettier: ^2.8.3
     release-it: ^17.6.0
     rollup: ^4.5.2
@@ -35517,12 +35517,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ollama@npm:^0.5.6":
-  version: 0.5.6
-  resolution: "ollama@npm:0.5.6"
+"ollama@npm:^0.5.9":
+  version: 0.5.9
+  resolution: "ollama@npm:0.5.9"
   dependencies:
     whatwg-fetch: ^3.6.20
-  checksum: f7aafe4f0cf5e3fee9f5be7501733d3ab4ea0b02e0aafacdae90cb5a8babfa4bb4543d47fab152b5424084d3331185a09e584a5d3c74e2cefcf017dc5964f520
+  checksum: bfaadcec6273d86fcc7c94e5e9e571a7b6b84b852b407a473f3bac7dc69b7b11815a163ae549b5318267a00f192d39696225309812319d2edc8a98a079ace475
   languageName: node
   linkType: hard
 

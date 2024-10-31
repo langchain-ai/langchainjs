@@ -315,9 +315,14 @@ export abstract class BaseChatModel<
   }
 
   getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
+    const providerName = this.getName().startsWith("Chat")
+      ? this.getName().replace("Chat", "")
+      : this.getName();
+
     return {
       ls_model_type: "chat",
       ls_stop: options.stop,
+      ls_provider: providerName,
     };
   }
 
