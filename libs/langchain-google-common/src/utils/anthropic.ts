@@ -1,10 +1,16 @@
-import {ChatGeneration, ChatGenerationChunk, ChatResult} from "@langchain/core/outputs";
+import {
+  ChatGeneration,
+  ChatGenerationChunk,
+  ChatResult,
+} from "@langchain/core/outputs";
 import {
   BaseMessage,
   BaseMessageChunk,
   AIMessageChunk,
   MessageContentComplex,
-  MessageContentText, MessageContent, MessageContentImageUrl
+  MessageContentText,
+  MessageContent,
+  MessageContentImageUrl,
 } from "@langchain/core/messages";
 import {
   AnthropicAPIConfig,
@@ -13,16 +19,24 @@ import {
   AnthropicContentToolUse,
   AnthropicMessage,
   AnthropicMessageContent,
-  AnthropicMessageContentImage, AnthropicMessageContentText,
-  AnthropicRequest, AnthropicRequestSettings,
+  AnthropicMessageContentImage,
+  AnthropicMessageContentText,
+  AnthropicRequest,
+  AnthropicRequestSettings,
   AnthropicResponseData,
-  GoogleAIAPI, GoogleAIModelParams,
+  AnthropicResponseMessage,
+  AnthropicStreamContentBlockDeltaEvent,
+  AnthropicStreamContentBlockStartEvent,
+  AnthropicStreamMessageDeltaEvent,
+  AnthropicStreamMessageStartEvent,
+  AnthropicStreamTextDelta,
+  GoogleAIAPI,
+  GoogleAIModelParams,
   GoogleAIModelRequestParams,
-  GoogleLLMResponse
+  GoogleLLMResponse,
 } from "../types.js";
 
 export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
-
   // function notImplemented(): never {
   //   throw new Error("Not implemented");
   // }
@@ -31,41 +45,59 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
     return "text" in part ? part.text : "";
   }
 
-  function responseToString(
-    response: GoogleLLMResponse
-  ): string {
-    const data = response.data as AnthropicResponseData;
-    const content: AnthropicContent[] = data?.content ?? [];
-    const ret = content.reduce(( acc, part) => {
-      const str = partToString( part );
+  function messageToString(message: AnthropicResponseMessage): string {
+    const content: AnthropicContent[] = message?.content ?? [];
+    const ret = content.reduce((acc, part) => {
+      const str = partToString(part);
       return acc + str;
-    }, "")
+    }, "");
     return ret;
   }
 
-  function textContentToContent(textContent: AnthropicContentText): MessageContentText {
+  function responseToString(response: GoogleLLMResponse): string {
+    const data = response.data as AnthropicResponseData;
+    switch (data?.type) {
+      case "message":
+        return messageToString(data as AnthropicResponseMessage);
+      default:
+        throw Error(`Unknown type: ${data?.type}`);
+    }
+  }
+
+  function textContentToContent(
+    textContent: AnthropicContentText
+  ): MessageContentText {
     return textContent;
   }
 
-  function toolUseContentToContent(_toolUseContent: AnthropicContentToolUse): undefined {
+  function toolUseContentToContent(
+    _toolUseContent: AnthropicContentToolUse
+  ): undefined {
     // FIXME: implement
     return undefined;
   }
 
-  function anthropicContentToContent(anthropicContent: AnthropicContent): MessageContentComplex | undefined {
+  function anthropicContentToContent(
+    anthropicContent: AnthropicContent
+  ): MessageContentComplex | undefined {
     const type = anthropicContent?.type;
     switch (type) {
-      case "text": return textContentToContent(anthropicContent);
-      case "tool_use": return toolUseContentToContent(anthropicContent);
-      default: return undefined;
+      case "text":
+        return textContentToContent(anthropicContent);
+      case "tool_use":
+        return toolUseContentToContent(anthropicContent);
+      default:
+        return undefined;
     }
   }
 
-  function contentToMessage(anthropicContent: AnthropicContent[]): BaseMessageChunk {
+  function contentToMessage(
+    anthropicContent: AnthropicContent[]
+  ): BaseMessageChunk {
     let isComplex = false;
     const complexContent: MessageContentComplex[] = [];
     let textContext = "";
-    anthropicContent.forEach(ac => {
+    anthropicContent.forEach((ac) => {
       const c = anthropicContentToContent(ac);
       if (c) {
         complexContent.push(c);
@@ -86,37 +118,142 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
     }
   }
 
-  function dataToGenerationInfo(data: AnthropicResponseData) {
-    const usage = data?.usage;
-    const usageMetadata: Record<string,number> = {
-      input_tokens: usage.input_tokens ?? 0,
-      output_tokens: usage.output_tokens ?? 0,
-      total_tokens: (usage.input_tokens ?? 0) + (usage.output_tokens ?? 0),
+  function messageToGenerationInfo(message: AnthropicResponseMessage) {
+    const usage = message?.usage;
+    const usageMetadata: Record<string, number> = {
+      input_tokens: usage?.input_tokens ?? 0,
+      output_tokens: usage?.output_tokens ?? 0,
+      total_tokens: (usage?.input_tokens ?? 0) + (usage?.output_tokens ?? 0),
     };
     return {
       usage_metadata: usageMetadata,
-      finish_reason: data.stop_reason,
+      finish_reason: message.stop_reason,
+    };
+  }
+
+  function messageToChatGeneration(
+    responseMessage: AnthropicResponseMessage
+  ): ChatGenerationChunk {
+    const content: AnthropicContent[] = responseMessage?.content ?? [];
+    const text = messageToString(responseMessage);
+    const message = contentToMessage(content);
+    const generationInfo = messageToGenerationInfo(responseMessage);
+    return new ChatGenerationChunk({
+      text,
+      message,
+      generationInfo,
+    });
+  }
+
+  function messageStartToChatGeneration(
+    event: AnthropicStreamMessageStartEvent
+  ): ChatGenerationChunk {
+    const responseMessage = event.message;
+    return messageToChatGeneration(responseMessage);
+  }
+
+  function messageDeltaToChatGeneration(
+    event: AnthropicStreamMessageDeltaEvent
+  ): ChatGenerationChunk {
+    const responseMessage = event.delta;
+    return messageToChatGeneration(responseMessage as AnthropicResponseMessage);
+  }
+
+  function contentBlockStartTextToChatGeneration(
+    event: AnthropicStreamContentBlockStartEvent
+  ): ChatGenerationChunk {
+    const content = event.content_block as AnthropicContentText;
+    const message = contentToMessage([content]);
+    const text = content?.text;
+    return new ChatGenerationChunk({
+      message,
+      text,
+    });
+  }
+
+  function contentBlockStartToChatGeneration(
+    event: AnthropicStreamContentBlockStartEvent
+  ): ChatGenerationChunk | null {
+    switch (event.content_block.type) {
+      case "text":
+        return contentBlockStartTextToChatGeneration(event);
+      // TODO: case "tool_use": return contentBlockStartToolUseToChatGeneration(event);
+      default:
+        console.warn(`Unexpected content_block type: ${JSON.stringify(event)}`);
+        return null;
+    }
+  }
+
+  function contentBlockDeltaTextToChatGeneration(
+    event: AnthropicStreamContentBlockDeltaEvent
+  ): ChatGenerationChunk {
+    const content = event.delta as AnthropicStreamTextDelta;
+    const text = content?.text;
+    const message = new AIMessageChunk(text);
+    return new ChatGenerationChunk({
+      message,
+      text,
+    });
+  }
+
+  function contentBlockDeltaToChatGeneration(
+    event: AnthropicStreamContentBlockDeltaEvent
+  ): ChatGenerationChunk | null {
+    switch (event.delta.type) {
+      case "text_delta":
+        return contentBlockDeltaTextToChatGeneration(event);
+      // TODO: case "tool_use": return contentBlockDeltaToolUseToChatGeneration(event);
+      default:
+        console.warn(`Unexpected content_block type: ${JSON.stringify(event)}`);
+        return null;
     }
   }
 
   function responseToChatGeneration(
     response: GoogleLLMResponse
-  ): ChatGenerationChunk {
+  ): ChatGenerationChunk | null {
     const data = response.data as AnthropicResponseData;
-    const content: AnthropicContent[] = data?.content ?? [];
-    const text = responseToString(response);
-    const message = contentToMessage(content);
-    const generationInfo = dataToGenerationInfo(data);
-    return new ChatGenerationChunk({
-      text,
-      message,
-      generationInfo,
-    })
+    switch (data.type) {
+      case "message":
+        return messageToChatGeneration(data as AnthropicResponseMessage);
+      case "message_start":
+        return messageStartToChatGeneration(
+          data as AnthropicStreamMessageStartEvent
+        );
+      case "message_delta":
+        return messageDeltaToChatGeneration(
+          data as AnthropicStreamMessageDeltaEvent
+        );
+      case "content_block_start":
+        return contentBlockStartToChatGeneration(
+          data as AnthropicStreamContentBlockStartEvent
+        );
+      case "content_block_delta":
+        return contentBlockDeltaToChatGeneration(
+          data as AnthropicStreamContentBlockDeltaEvent
+        );
+
+      case "ping":
+      case "message_stop":
+      case "content_block_stop":
+        // These are ignorable
+        return null;
+
+      case "error":
+        throw new Error(
+          `Error while streaming results: ${JSON.stringify(data)}`
+        );
+
+      default:
+        // We don't know what type this is, but Anthropic may have added
+        // new ones without telling us. Don't error, but don't use them.
+        console.warn("Unknown data for responseToChatGeneration", data);
+        // throw new Error(`Unknown response type: ${data.type}`);
+        return null;
+    }
   }
 
-  function chunkToString(
-    chunk: BaseMessageChunk
-  ): string {
+  function chunkToString(chunk: BaseMessageChunk): string {
     if (chunk === null) {
       return "";
     } else if (typeof chunk.content === "string") {
@@ -130,32 +267,33 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
     }
   }
 
-  function responseToBaseMessage(
-    response: GoogleLLMResponse
-  ): BaseMessage {
-    const data = response.data as AnthropicResponseData;
+  function responseToBaseMessage(response: GoogleLLMResponse): BaseMessage {
+    const data = response.data as AnthropicResponseMessage;
     const content: AnthropicContent[] = data?.content ?? [];
     return contentToMessage(content);
   }
 
-  function responseToChatResult(
-    response: GoogleLLMResponse
-  ): ChatResult {
-    const data = response.data as AnthropicResponseData;
+  function responseToChatResult(response: GoogleLLMResponse): ChatResult {
+    const message = response.data as AnthropicResponseMessage;
     const generations: ChatGeneration[] = [];
-    generations.push( responseToChatGeneration(response) );
-    const llmOutput = dataToGenerationInfo(data);
+    const gen = responseToChatGeneration(response);
+    if (gen) {
+      generations.push(gen);
+    }
+    const llmOutput = messageToGenerationInfo(message);
     return {
       generations,
       llmOutput,
-    }
+    };
   }
 
   function formatAnthropicVersion(): string {
     return config?.version ?? "vertex-2023-10-16";
   }
 
-  function textContentToAnthropicContent(content: MessageContentText): AnthropicMessageContentText {
+  function textContentToAnthropicContent(
+    content: MessageContentText
+  ): AnthropicMessageContentText {
     return content;
   }
 
@@ -171,8 +309,9 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
     return null;
   }
 
-
-  function imageContentToAnthropicContent(content: MessageContentImageUrl): AnthropicMessageContentImage | undefined {
+  function imageContentToAnthropicContent(
+    content: MessageContentImageUrl
+  ): AnthropicMessageContentImage | undefined {
     const dataUrl = content.image_url;
     const url = typeof dataUrl === "string" ? dataUrl : dataUrl?.url;
     const urlInfo = extractMimeType(url);
@@ -186,98 +325,119 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
       source: {
         type: "base64",
         ...urlInfo,
-      }
-    }
+      },
+    };
   }
 
-  function contentComplexToAnthropicContent(content: MessageContentComplex): AnthropicMessageContent | undefined {
+  function contentComplexToAnthropicContent(
+    content: MessageContentComplex
+  ): AnthropicMessageContent | undefined {
     const type = content?.type;
     switch (type) {
-      case "text":      return textContentToAnthropicContent(content as MessageContentText);
-      case "image_url": return imageContentToAnthropicContent(content as MessageContentImageUrl);
+      case "text":
+        return textContentToAnthropicContent(content as MessageContentText);
+      case "image_url":
+        return imageContentToAnthropicContent(
+          content as MessageContentImageUrl
+        );
       // TODO - Handle Tool Use and Tool Result
-      default: return undefined;
+      default:
+        return undefined;
     }
   }
 
-  function contentToAnthropicContent(content: MessageContent): AnthropicMessageContent[] {
+  function contentToAnthropicContent(
+    content: MessageContent
+  ): AnthropicMessageContent[] {
     const ret: AnthropicMessageContent[] = [];
 
-    const ca = (typeof content === "string")
-      ? [{type: "text", text: content}]
-      : content;
-    ca.forEach( complex => {
+    const ca =
+      typeof content === "string" ? [{ type: "text", text: content }] : content;
+    ca.forEach((complex) => {
       const ac = contentComplexToAnthropicContent(complex);
       if (ac) {
         ret.push(ac);
       }
-    })
+    });
 
     return ret;
   }
 
-  function baseRoleToAnthropicMessage(base: BaseMessage, role: string): AnthropicMessage {
+  function baseRoleToAnthropicMessage(
+    base: BaseMessage,
+    role: string
+  ): AnthropicMessage {
     const content = contentToAnthropicContent(base.content);
     return {
       role,
       content,
-    }
+    };
   }
 
-  function baseToAnthropicMessage(base: BaseMessage): AnthropicMessage | undefined {
+  function baseToAnthropicMessage(
+    base: BaseMessage
+  ): AnthropicMessage | undefined {
     const type = base._getType();
     switch (type) {
-      case "human": return baseRoleToAnthropicMessage(base, "user");
-      case "ai":    return baseRoleToAnthropicMessage(base, "assistant");
+      case "human":
+        return baseRoleToAnthropicMessage(base, "user");
+      case "ai":
+        return baseRoleToAnthropicMessage(base, "assistant");
       // TODO - Handle "function" and "tool"?
-      default:      return undefined;
+      default:
+        return undefined;
     }
   }
 
   function formatMessages(input: BaseMessage[]): AnthropicMessage[] {
     const ret: AnthropicMessage[] = [];
 
-    input.forEach( baseMessage => {
+    input.forEach((baseMessage) => {
       const anthropicMessage = baseToAnthropicMessage(baseMessage);
       if (anthropicMessage) {
-        ret.push(anthropicMessage)
+        ret.push(anthropicMessage);
       }
-    })
+    });
 
     return ret;
   }
 
-  function formatSettings(parameters: GoogleAIModelRequestParams): AnthropicRequestSettings {
+  function formatSettings(
+    parameters: GoogleAIModelRequestParams
+  ): AnthropicRequestSettings {
     const ret: AnthropicRequestSettings = {
+      stream: parameters?.streaming ?? false,
       max_tokens: parameters?.maxOutputTokens ?? 8192,
     };
 
     if (parameters.topP) {
-      ret.top_p = parameters.topP
+      ret.top_p = parameters.topP;
     }
     if (parameters.topK) {
-      ret.top_k = parameters.topK
+      ret.top_k = parameters.topK;
     }
     if (parameters.temperature) {
-      ret.temperature = parameters.temperature
+      ret.temperature = parameters.temperature;
     }
     if (parameters.stopSequences) {
-      ret.stop_sequences = parameters.stopSequences
+      ret.stop_sequences = parameters.stopSequences;
     }
 
     return ret;
   }
 
-  function contentComplexArrayToText(contentArray: MessageContentComplex[]): string {
+  function contentComplexArrayToText(
+    contentArray: MessageContentComplex[]
+  ): string {
     let ret = "";
 
-    contentArray.forEach(content => {
+    contentArray.forEach((content) => {
       const contentType = content?.type;
       if (contentType === "text") {
         const textContent = content as MessageContentText;
-        ret = `${ret}\n${textContent.text}`
+        ret = `${ret}\n${textContent.text}`;
       }
-    })
+    });
 
     return ret;
   }
@@ -285,15 +445,16 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
   function formatSystem(input: BaseMessage[]): string {
     let ret = "";
 
-    input.forEach(message => {
+    input.forEach((message) => {
       if (message._getType() === "system") {
         const content = message?.content;
-        const contentString = typeof content === "string"
-          ? content as string
-          : contentComplexArrayToText(content as MessageContentComplex[])
+        const contentString =
+          typeof content === "string"
+            ? (content as string)
+            : contentComplexArrayToText(content as MessageContentComplex[]);
         ret = `${ret}\n${contentString}`;
       }
-    })
+    });
 
     return ret;
   }
@@ -306,13 +467,13 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
     const anthropicVersion = formatAnthropicVersion();
     const messages = formatMessages(typedInput);
     const settings = formatSettings(parameters);
-    const system = formatSystem(typedInput)
+    const system = formatSystem(typedInput);
     // TODO: Tools
     const ret: AnthropicRequest = {
       anthropic_version: anthropicVersion,
       messages,
       ...settings,
-    }
+    };
     if (system?.length) {
       ret.system = system;
     }
@@ -328,7 +489,6 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
     responseToChatResult,
     formatData,
   };
-
 }
 
 export function validateClaudeParams(_params: GoogleAIModelParams): void {

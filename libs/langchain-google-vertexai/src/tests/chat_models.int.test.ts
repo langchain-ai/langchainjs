@@ -1,4 +1,4 @@
-import {expect, test} from "@jest/globals";
+import { expect, test } from "@jest/globals";
 import fs from "fs/promises";
 import { BaseLanguageModelInput } from "@langchain/core/language_models/base";
 import { ChatPromptValue } from "@langchain/core/prompt_values";
@@ -34,14 +34,27 @@ import {
   MessagesPlaceholder,
 } from "@langchain/core/prompts";
 import { InMemoryStore } from "@langchain/core/stores";
-import {BaseCallbackHandler} from "@langchain/core/callbacks/base";
-import {GoogleRequestLogger, GoogleRequestRecorder} from "@langchain/google-common";
+import { BaseCallbackHandler } from "@langchain/core/callbacks/base";
+import {
+  GoogleRequestLogger,
+  GoogleRequestRecorder,
+} from "@langchain/google-common";
 import { GeminiTool } from "../types.js";
 import { ChatVertexAI } from "../chat_models.js";
 
 describe("GAuth Gemini Chat", () => {
+  let recorder: GoogleRequestRecorder;
+  let callbacks: BaseCallbackHandler[];
+
+  beforeEach(() => {
+    recorder = new GoogleRequestRecorder();
+    callbacks = [recorder, new GoogleRequestLogger()];
+  });
+
   test("invoke", async () => {
-    const model = new ChatVertexAI();
+    const model = new ChatVertexAI({
+      callbacks,
+    });
     const res = await model.invoke("What is 1 + 1?");
     expect(res).toBeDefined();
     expect(res._getType()).toEqual("ai");
@@ -77,7 +90,9 @@ describe("GAuth Gemini Chat", () => {
   });
 
   test("stream", async () => {
-    const model = new ChatVertexAI();
+    const model = new ChatVertexAI({
+      callbacks,
+    });
     const input: BaseLanguageModelInput = new ChatPromptValue([
       new SystemMessage(
         "You will reply to all requests to flip a coin with either H, indicating heads, or T, indicating tails."
@@ -382,7 +397,9 @@ describe("GAuth Gemini Chat", () => {
       description:
         "Get the weather of a specific location and return the temperature in Celsius.",
       schema: z.object({
-        location: z.string().describe("The name of city to get the weather for."),
+        location: z
+          .string()
+          .describe("The name of city to get the weather for."),
       }),
     });
     const calculatorTool = tool((_) => "no-op", {
@@ -452,7 +469,8 @@ describe("GAuth Gemini Chat", () => {
 
   test("Gemini can understand audio", async () => {
     // Update this with the correct path to an audio file on your machine.
-    const audioPath = "../langchain-google-genai/src/tests/data/gettysburg10.wav";
+    const audioPath =
+      "../langchain-google-genai/src/tests/data/gettysburg10.wav";
     const audioMimeType = "audio/wav";
 
     const model = new ChatVertexAI({
@@ -487,21 +505,16 @@ describe("GAuth Gemini Chat", () => {
     expect(typeof response.content).toBe("string");
     expect((response.content as string).length).toBeGreaterThan(15);
   });
-
 });
 
 describe("GAuth Anthropic Chat", () => {
-
   let recorder: GoogleRequestRecorder;
   let callbacks: BaseCallbackHandler[];
 
   beforeEach(() => {
     recorder = new GoogleRequestRecorder();
-    callbacks = [
-      recorder,
-      new GoogleRequestLogger(),
-    ]
-  })
+    callbacks = [recorder, new GoogleRequestLogger()];
+  });
 
   test.skip("invoke", async () => {
     const model = new ChatVertexAI({
@@ -520,9 +533,11 @@ describe("GAuth Anthropic Chat", () => {
     expect(text).toMatch(/(1 + 1 (equals|is|=) )?2.? ?/);
 
     const connection = recorder?.request?.connection;
-    expect(connection?.url).toEqual("https://us-east5-aiplatform.googleapis.com/v1/projects/test-vertex-ai-382612/locations/us-east5/publishers/anthropic/models/claude-3-5-sonnet@20240620:rawPredict");
+    expect(connection?.url).toEqual(
+      "https://us-east5-aiplatform.googleapis.com/v1/projects/test-vertex-ai-382612/locations/us-east5/publishers/anthropic/models/claude-3-5-sonnet@20240620:rawPredict"
+    );
 
-    console.log(JSON.stringify(aiMessage,null,1));
+    console.log(JSON.stringify(aiMessage, null, 1));
     console.log(aiMessage.lc_kwargs);
   });
 
@@ -531,7 +546,7 @@ describe("GAuth Anthropic Chat", () => {
       model: "claude-3-5-sonnet@20240620",
       callbacks,
     });
-    const stream = await model.stream("Print hello world.");
+    const stream = await model.stream("How are you today? Be verbose.");
     const chunks = [];
     for await (const chunk of stream) {
       console.log(chunk);
@@ -539,5 +554,4 @@ describe("GAuth Anthropic Chat", () => {
     }
     expect(chunks.length).toBeGreaterThan(1);
   });
-
 });
