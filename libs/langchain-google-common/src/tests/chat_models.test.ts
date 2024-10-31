@@ -1094,7 +1094,62 @@ describe("Mock ChatGoogle - Gemini", () => {
   });
 });
 
-describe("Mock ChatGoogle - Anthropic", () => {});
+describe("Mock ChatGoogle - Anthropic", () => {
+  test("1. Invoke request format", async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "claude-chat-1-mock.json",
+    };
+    const model = new ChatGoogle({
+      model: "claude-3-5-sonnet@20240620",
+      platformType: "gcp",
+      authOptions,
+    });
+    const messages: BaseMessageLike[] = [new HumanMessage("What is 1+1?")];
+    await model.invoke(messages);
+
+    console.log("record", record);
+    expect(record.opts).toBeDefined();
+    expect(record.opts.data).toBeDefined();
+    const { data } = record.opts;
+    expect(data.messages).toBeDefined();
+    expect(data.messages.length).toEqual(1);
+    expect(data.messages[0].role).toEqual("user");
+    expect(data.messages[0].content).toBeDefined();
+    expect(data.messages[0].content.length).toBeGreaterThanOrEqual(1);
+    expect(data.messages[0].content[0].text).toBeDefined();
+    expect(data.system).not.toBeDefined();
+  });
+
+  test("1. Invoke response format", async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "claude-chat-1-mock.json",
+    };
+    const model = new ChatGoogle({
+      model: "claude-3-5-sonnet@20240620",
+      platformType: "gcp",
+      authOptions,
+    });
+    const messages: BaseMessageLike[] = [new HumanMessage("What is 1+1?")];
+    const result = await model.invoke(messages);
+
+    expect(result._getType()).toEqual("ai");
+    const aiMessage = result as AIMessage;
+    expect(aiMessage.content).toBeDefined();
+    expect(aiMessage.content).toBe(
+      "1 + 1 = 2\n\nThis is one of the most basic arithmetic equations. It represents the addition of two units, resulting in a sum of two."
+    );
+  });
+});
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function extractKeys(obj: Record<string, any>, keys: string[] = []) {

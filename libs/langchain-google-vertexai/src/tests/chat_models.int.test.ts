@@ -516,7 +516,7 @@ describe("GAuth Anthropic Chat", () => {
     callbacks = [recorder, new GoogleRequestLogger()];
   });
 
-  test.skip("invoke", async () => {
+  test("invoke", async () => {
     const model = new ChatVertexAI({
       model: "claude-3-5-sonnet@20240620",
       callbacks,
