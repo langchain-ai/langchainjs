@@ -12,7 +12,7 @@ function RedirectAnchors() {
     "#langchain": "/docs/concepts/architecture/#langchain",
     "#langchaincommunity": "/docs/concepts/architecture/#langchaincommunity",
     "#partner-packages": "/docs/concepts/architecture/#integration-packages",
-    "#langgraph": "/docs/concepts/architecture/#langchianlanggraph",
+    "#langgraph": "/docs/concepts/architecture/#langchainlanggraph",
     "#langsmith": "/docs/concepts/architecture/#langsmith",
     "#langchain-expression-language-lcel": "/docs/concepts/lcel",
     "#langchain-expression-language": "/docs/concepts/lcel",
