@@ -15,7 +15,7 @@ import {
   jsonSchemaToGeminiParameters,
   zodToGeminiParameters,
 } from "./zod_to_gemini_parameters.js";
-import {isModelClaude, validateClaudeParams} from "./anthropic.js";
+import { isModelClaude, validateClaudeParams } from "./anthropic.js";
 
 export function copyAIModelParams(
   params: GoogleAIModelParams | undefined,
@@ -147,21 +147,16 @@ export function modelToFamily(
 ): VertexModelFamily {
   if (!modelName) {
     return null;
-
   } else if (isModelGemini(modelName)) {
     return "gemini";
-
   } else if (isModelClaude(modelName)) {
     return "claude";
-
   } else {
     return null;
   }
 }
 
-export function modelToPublisher(
-  modelName: string | undefined
-): string {
+export function modelToPublisher(modelName: string | undefined): string {
   const family = modelToFamily(modelName);
   switch (family) {
     case "gemini":

@@ -1,7 +1,14 @@
 import type { BaseLLMParams } from "@langchain/core/language_models/llms";
-import type { BaseChatModelCallOptions, BindToolsInput } from "@langchain/core/language_models/chat_models";
-import {BaseMessage, BaseMessageChunk, MessageContent} from "@langchain/core/messages";
-import {ChatGenerationChunk, ChatResult} from "@langchain/core/outputs";
+import type {
+  BaseChatModelCallOptions,
+  BindToolsInput,
+} from "@langchain/core/language_models/chat_models";
+import {
+  BaseMessage,
+  BaseMessageChunk,
+  MessageContent,
+} from "@langchain/core/messages";
+import { ChatGenerationChunk, ChatResult } from "@langchain/core/outputs";
 import type { JsonStream } from "./utils/stream.js";
 import { MediaManager } from "./experimental/utils/media_core.js";
 import {
@@ -356,10 +363,7 @@ export interface GeminiJsonSchemaDirty extends GeminiJsonSchema {
 }
 
 export type GoogleAIAPI = {
-
-  messageContentToParts?: (
-    content: MessageContent
-  ) => Promise<GeminiPart[]>;
+  messageContentToParts?: (content: MessageContent) => Promise<GeminiPart[]>;
 
   baseMessageToContent?: (
     message: BaseMessage,
@@ -367,32 +371,23 @@ export type GoogleAIAPI = {
     useSystemInstruction: boolean
   ) => Promise<GeminiContent[]>;
 
-  responseToString: (
-    response: GoogleLLMResponse
-  ) => string;
+  responseToString: (response: GoogleLLMResponse) => string;
 
   responseToChatGeneration: (
     response: GoogleLLMResponse
-  ) => ChatGenerationChunk;
+  ) => ChatGenerationChunk | null;
 
-  chunkToString: (
-    chunk: BaseMessageChunk
-  ) => string;
+  chunkToString: (chunk: BaseMessageChunk) => string;
 
-  responseToBaseMessage: (
-    response: GoogleLLMResponse
-  ) => BaseMessage;
+  responseToBaseMessage: (response: GoogleLLMResponse) => BaseMessage;
 
-  responseToChatResult: (
-    response: GoogleLLMResponse
-  ) => ChatResult;
+  responseToChatResult: (response: GoogleLLMResponse) => ChatResult;
 
   formatData: (
     input: unknown,
     parameters: GoogleAIModelRequestParams
   ) => Promise<unknown>;
-
-}
+};
 
 export interface GeminiAPIConfig {
   safetyHandler?: GoogleAISafetyHandler;
@@ -400,9 +395,7 @@ export interface GeminiAPIConfig {
   useSystemInstruction?: boolean;
 }
 
-export type GoogleAIAPIConfig =
-  | GeminiAPIConfig
-  | AnthropicAPIConfig
+export type GoogleAIAPIConfig = GeminiAPIConfig | AnthropicAPIConfig;
 
 export interface GoogleAIAPIParams {
   apiName?: string;

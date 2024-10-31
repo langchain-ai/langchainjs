@@ -10,13 +10,17 @@ import {
   ToolMessage,
 } from "@langchain/core/messages";
 import { InMemoryStore } from "@langchain/core/stores";
-import {CallbackHandlerMethods} from "@langchain/core/callbacks/base";
-import {Serialized} from "@langchain/core/load/serializable";
+import { CallbackHandlerMethods } from "@langchain/core/callbacks/base";
+import { Serialized } from "@langchain/core/load/serializable";
 import { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { ChatGoogleBase, ChatGoogleBaseInput } from "../chat_models.js";
 import { authOptions, MockClient, MockClientAuthInfo, mockId } from "./mock.js";
-import {GeminiTool, GoogleAIBaseLLMInput, GoogleAISafetyHandler} from "../types.js";
+import {
+  GeminiTool,
+  GoogleAIBaseLLMInput,
+  GoogleAISafetyHandler,
+} from "../types.js";
 import { GoogleAbstractedClient } from "../auth.js";
 import { GoogleAISafetyError } from "../utils/safety.js";
 import {
@@ -26,7 +30,7 @@ import {
   ReadThroughBlobStore,
 } from "../experimental/utils/media_core.js";
 import { removeAdditionalProperties } from "../utils/zod_to_gemini_parameters.js";
-import {MessageGeminiSafetyHandler} from "../utils/index.js";
+import { MessageGeminiSafetyHandler } from "../utils/index.js";
 
 class ChatGoogle extends ChatGoogleBase<MockClientAuthInfo> {
   constructor(fields?: ChatGoogleBaseInput<MockClientAuthInfo>) {
@@ -508,9 +512,11 @@ describe("Mock ChatGoogle - Gemini", () => {
   });
 
   test("2. Safety - safety handler", async () => {
-    const safetyHandler: GoogleAISafetyHandler = new MessageGeminiSafetyHandler({
-      msg: "I'm sorry, Dave, but I can't do that."
-    })
+    const safetyHandler: GoogleAISafetyHandler = new MessageGeminiSafetyHandler(
+      {
+        msg: "I'm sorry, Dave, but I can't do that.",
+      }
+    );
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const record: Record<string, any> = {};
     const projectId = mockId();
@@ -521,7 +527,7 @@ describe("Mock ChatGoogle - Gemini", () => {
     };
     const model = new ChatGoogle({
       authOptions,
-      safetyHandler
+      safetyHandler,
     });
     const messages: BaseMessageLike[] = [
       new HumanMessage("Flip a coin and tell me H for heads and T for tails"),
@@ -721,7 +727,7 @@ describe("Mock ChatGoogle - Gemini", () => {
     async function store(path: string, text: string): Promise<void> {
       const type = path.endsWith(".png") ? "image/png" : "text/plain";
       const data = new Blob([text], { type });
-      const blob = await MediaBlob.fromBlob( data, { path } );
+      const blob = await MediaBlob.fromBlob(data, { path });
       await resolver.store(blob);
     }
     await store("resolve://host/foo", "fooing");
@@ -739,14 +745,29 @@ describe("Mock ChatGoogle - Gemini", () => {
     const callbacks: CallbackHandlerMethods[] = [
       {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        handleChatModelStart(llm: Serialized, messages: BaseMessage[][], runId: string, _parentRunId?: string, _extraParams?: Record<string, unknown>, _tags?: string[], _metadata?: Record<string, unknown>, _runName?: string): any {
-          console.log('Chat start', llm, messages, runId )
+        handleChatModelStart(
+          llm: Serialized,
+          messages: BaseMessage[][],
+          runId: string,
+          _parentRunId?: string,
+          _extraParams?: Record<string, unknown>,
+          _tags?: string[],
+          _metadata?: Record<string, unknown>,
+          _runName?: string
+        ): any {
+          console.log("Chat start", llm, messages, runId);
         },
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        handleCustomEvent(eventName: string, data: any, runId: string, tags?: string[], metadata?: Record<string, any>): any {
-          console.log('Custom event', eventName, runId, data, tags, metadata);
-        }
-      }
+        handleCustomEvent(
+          eventName: string,
+          data: any,
+          runId: string,
+          tags?: string[],
+          metadata?: Record<string, any>
+        ): any {
+          console.log("Custom event", eventName, runId, data, tags, metadata);
+        },
+      },
     ];
     const model = new ChatGoogle({
       authOptions,
@@ -1073,9 +1094,7 @@ describe("Mock ChatGoogle - Gemini", () => {
   });
 });
 
-describe("Mock ChatGoogle - Anthropic", () => {
-
-})
+describe("Mock ChatGoogle - Anthropic", () => {});
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function extractKeys(obj: Record<string, any>, keys: string[] = []) {

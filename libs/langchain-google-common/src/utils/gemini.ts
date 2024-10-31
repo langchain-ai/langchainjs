@@ -20,7 +20,7 @@ import {
   ChatGenerationChunk,
   ChatResult,
 } from "@langchain/core/outputs";
-import { ToolCallChunk } from "@langchain/core/messages/tool"
+import { ToolCallChunk } from "@langchain/core/messages/tool";
 import { StructuredToolParams } from "@langchain/core/tools";
 import { isLangChainTool } from "@langchain/core/utils/function_calling";
 import type {
@@ -42,11 +42,14 @@ import { GoogleAISafetyError } from "./safety.js";
 import { MediaBlob } from "../experimental/utils/media_core.js";
 import {
   GeminiFunctionDeclaration,
-  GeminiGenerationConfig, GeminiRequest,
-  GeminiSafetySetting, GeminiTool,
-  GoogleAIModelRequestParams, GoogleAIToolType
+  GeminiGenerationConfig,
+  GeminiRequest,
+  GeminiSafetySetting,
+  GeminiTool,
+  GoogleAIModelRequestParams,
+  GoogleAIToolType,
 } from "../types.js";
-import {zodToGeminiParameters} from "./zod_to_gemini_parameters.js";
+import { zodToGeminiParameters } from "./zod_to_gemini_parameters.js";
 
 export interface FunctionCall {
   name: string;
@@ -285,7 +288,9 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
       }
     }
 
-    throw new Error(`Invalid media content: ${JSON.stringify(content,null,1)}`);
+    throw new Error(
+      `Invalid media content: ${JSON.stringify(content, null, 1)}`
+    );
   }
 
   async function messageContentComplexToPart(
@@ -480,14 +485,12 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
 
   async function baseMessageToContent(
     message: BaseMessage,
-    prevMessage: BaseMessage | undefined,
+    prevMessage: BaseMessage | undefined
   ): Promise<GeminiContent[]> {
     const type = message._getType();
     switch (type) {
       case "system":
-        return systemMessageToContent(
-          message as SystemMessage,
-        );
+        return systemMessageToContent(message as SystemMessage);
       case "human":
         return roleMessageToContent("user", message);
       case "ai":
@@ -650,8 +653,8 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     response: GoogleLLMResponse,
     responseTo: (response: GoogleLLMResponse) => RetType
   ): RetType {
-    const safetyHandler = config?.safetyHandler ??
-      new DefaultGeminiSafetyHandler();
+    const safetyHandler =
+      config?.safetyHandler ?? new DefaultGeminiSafetyHandler();
     try {
       const safeResponse = safetyHandler.handle(response);
       return responseTo(safeResponse);
@@ -665,9 +668,7 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     }
   }
 
-  function safeResponseToString(
-    response: GoogleLLMResponse
-  ): string {
+  function safeResponseToString(response: GoogleLLMResponse): string {
     return safeResponseTo(response, responseToString);
   }
 
@@ -852,9 +853,7 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     return new AIMessage(fields);
   }
 
-  function safeResponseToBaseMessage(
-    response: GoogleLLMResponse
-  ): BaseMessage {
+  function safeResponseToBaseMessage(response: GoogleLLMResponse): BaseMessage {
     return safeResponseTo(response, responseToBaseMessage);
   }
 
@@ -866,17 +865,15 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     };
   }
 
-  function safeResponseToChatResult(
-    response: GoogleLLMResponse
-  ): ChatResult {
+  function safeResponseToChatResult(response: GoogleLLMResponse): ChatResult {
     return safeResponseTo(response, responseToChatResult);
   }
 
   function inputType(
     input: MessageContent | BaseMessage[]
   ): "MessageContent" | "BaseMessageArray" {
-    if (typeof input === 'string') {
-      return "MessageContent"
+    if (typeof input === "string") {
+      return "MessageContent";
     } else {
       const firstItem: BaseMessage | MessageContentComplex = input[0];
       if (Object.hasOwn(firstItem, "content")) {
@@ -906,10 +903,7 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     _parameters: GoogleAIModelParams
   ): Promise<GeminiContent[]> {
     const inputPromises: Promise<GeminiContent[]>[] = input.map((msg, i) =>
-      baseMessageToContent!(
-        msg,
-        input[i - 1],
-      )
+      baseMessageToContent!(msg, input[i - 1])
     );
     const inputs = await Promise.all(inputPromises);
 
@@ -948,7 +942,7 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
       case "BaseMessageArray":
         return formatBaseMessageContents(input as BaseMessage[], parameters);
       default:
-        throw new Error(`Unknown input type "${it}": ${input}`)
+        throw new Error(`Unknown input type "${it}": ${input}`);
     }
   }
 
@@ -982,9 +976,7 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
         // if it appears anywhere else, it should be an error.
         if (index === 0) {
           // eslint-disable-next-line prefer-destructuring
-          ret = (
-            await baseMessageToContent!(message, undefined)
-          )[0];
+          ret = (await baseMessageToContent!(message, undefined))[0];
         } else {
           throw new Error(
             "System messages are only permitted as the first passed message."
@@ -1023,19 +1015,17 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     };
   }
 
-  function structuredToolsToGeminiTools(tools: StructuredToolParams[]): GeminiTool[] {
+  function structuredToolsToGeminiTools(
+    tools: StructuredToolParams[]
+  ): GeminiTool[] {
     return [
       {
-        functionDeclarations: tools.map(
-          structuredToolToFunctionDeclaration
-        ),
+        functionDeclarations: tools.map(structuredToolToFunctionDeclaration),
       },
     ];
   }
 
-  function formatTools(
-    parameters: GoogleAIModelRequestParams
-  ): GeminiTool[] {
+  function formatTools(parameters: GoogleAIModelRequestParams): GeminiTool[] {
     const tools: GoogleAIToolType[] | undefined = parameters?.tools;
     if (!tools || tools.length === 0) {
       return [];
@@ -1083,27 +1073,27 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     const systemInstruction = await formatSystemInstruction(typedInput);
 
     const ret: GeminiRequest = {
-    contents,
-    generationConfig,
-  };
-  if (tools && tools.length) {
-    ret.tools = tools;
+      contents,
+      generationConfig,
+    };
+    if (tools && tools.length) {
+      ret.tools = tools;
+    }
+    if (toolConfig) {
+      ret.toolConfig = toolConfig;
+    }
+    if (safetySettings && safetySettings.length) {
+      ret.safetySettings = safetySettings;
+    }
+    if (
+      systemInstruction?.role &&
+      systemInstruction?.parts &&
+      systemInstruction?.parts?.length
+    ) {
+      ret.systemInstruction = systemInstruction;
+    }
+    return ret;
   }
-  if (toolConfig) {
-    ret.toolConfig = toolConfig;
-  }
-  if (safetySettings && safetySettings.length) {
-    ret.safetySettings = safetySettings;
-  }
-  if (
-    systemInstruction?.role &&
-    systemInstruction?.parts &&
-    systemInstruction?.parts?.length
-  ) {
-    ret.systemInstruction = systemInstruction;
-  }
-  return ret;
-}
 
   return {
     messageContentToParts,
