@@ -140,7 +140,6 @@ export class LlamaCpp extends LLM<LlamaCppCallOptions> {
 
       return completion;
     } catch (e) {
-      console.log(e);
       throw new Error("Error getting prompt completion.");
     }
   }
