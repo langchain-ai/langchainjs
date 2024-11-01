@@ -59,6 +59,14 @@ import {
 export interface ChatBedrockConverseInput
   extends BaseChatModelParams,
     Partial<DefaultProviderInit> {
+
+  /**
+   * The BedrockRuntimeClient to use.
+   * It gives ability to override the default client with a custom one, allowing you to pass requestHandler {NodeHttpHandler} parameter
+   * in case it is not provided here.
+   */
+  client?: BedrockRuntimeClient;
+
   /**
    * Whether or not to stream responses
    */
@@ -687,10 +695,15 @@ export class ChatBedrockConverse
       );
     }
 
-    this.client = new BedrockRuntimeClient({
-      region,
-      credentials,
-    });
+    if (fields?.client) {
+      this.client = fields.client;
+    } else {
+      this.client = new BedrockRuntimeClient({
+        region,
+        credentials,
+      });
+    }
+    
     this.region = region;
     this.model = rest?.model ?? this.model;
     this.streaming = rest?.streaming ?? this.streaming;
