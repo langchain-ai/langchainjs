@@ -20,75 +20,88 @@ export function convertToolsToGenAI(
   tools: GenerativeAITool[];
   toolConfig?: ToolConfig;
 } {
-  const functionDeclarationTools: FunctionDeclaration[] = [];
-  let genAITools: GenerativeAITool[] = [];
+  // Extract function declaration processing to a separate function
+  const genAITools = processTools(tools);
 
-  tools.forEach((t) => {
-    if (isLangChainTool(t)) {
-      const convertedTool = convertToGenerativeAITools([
-        t as StructuredToolInterface,
-      ])[0];
+  // Simplify tool config creation
+  const toolConfig = createToolConfig(genAITools, extra);
+
+  return { tools: genAITools, toolConfig };
+}
+
+function processTools(tools: GoogleGenerativeAIToolType[]) {
+  let functionDeclarationTools: FunctionDeclaration[] = [];
+  const genAITools: GenerativeAITool[] = [];
+
+  tools.forEach((tool) => {
+    if (isLangChainTool(tool)) {
+      const [convertedTool] = convertToGenerativeAITools([
+        tool as StructuredToolInterface,
+      ]);
       if (convertedTool.functionDeclarations) {
         functionDeclarationTools.push(...convertedTool.functionDeclarations);
       }
     } else {
-      genAITools.push(t as GenerativeAITool);
+      genAITools.push(tool as GenerativeAITool);
     }
   });
 
-  genAITools = genAITools.map((t) => {
-    if ("functionDeclarations" in t) {
-      return {
+  return genAITools.map((tool) => {
+    if (
+      functionDeclarationTools?.length > 0 &&
+      "functionDeclarations" in tool
+    ) {
+      const newTool = {
         functionDeclarations: [
-          ...(t.functionDeclarations || []),
+          ...(tool.functionDeclarations || []),
           ...functionDeclarationTools,
         ],
       };
+      // Clear the functionDeclarationTools array so it is not passed again
+      functionDeclarationTools = [];
+      return newTool;
     }
-    return t;
+    return tool;
   });
+}
 
-  let toolConfig: ToolConfig | undefined;
-  if (genAITools?.length && extra?.toolChoice) {
-    if (["any", "auto", "none"].some((c) => c === extra?.toolChoice)) {
-      const modeMap: Record<string, FunctionCallingMode> = {
-        any: FunctionCallingMode.ANY,
-        auto: FunctionCallingMode.AUTO,
-        none: FunctionCallingMode.NONE,
-      };
+function createToolConfig(
+  genAITools: GenerativeAITool[],
+  extra?: {
+    toolChoice?: ToolChoice;
+    allowedFunctionNames?: string[];
+  }
+): ToolConfig | undefined {
+  if (!genAITools.length || !extra) return undefined;
 
-      toolConfig = {
-        functionCallingConfig: {
-          mode:
-            modeMap[extra?.toolChoice as keyof typeof modeMap] ??
-            "MODE_UNSPECIFIED",
-          allowedFunctionNames: extra?.allowedFunctionNames,
-        },
-      };
-    } else if (typeof extra?.toolChoice === "string") {
-      toolConfig = {
-        functionCallingConfig: {
-          mode: FunctionCallingMode.ANY,
-          allowedFunctionNames: [
-            ...(extra?.allowedFunctionNames ?? []),
-            extra?.toolChoice,
-          ],
-        },
-      };
-    }
+  const { toolChoice, allowedFunctionNames } = extra;
 
-    if (!extra?.toolChoice && extra?.allowedFunctionNames) {
-      toolConfig = {
-        functionCallingConfig: {
-          mode: FunctionCallingMode.ANY,
-          allowedFunctionNames: extra?.allowedFunctionNames,
-        },
-      };
-    }
+  const modeMap: Record<string, FunctionCallingMode> = {
+    any: FunctionCallingMode.ANY,
+    auto: FunctionCallingMode.AUTO,
+    none: FunctionCallingMode.NONE,
+  };
+
+  if (toolChoice && ["any", "auto", "none"].includes(toolChoice as string)) {
+    return {
+      functionCallingConfig: {
+        mode: modeMap[toolChoice as keyof typeof modeMap] ?? "MODE_UNSPECIFIED",
+        allowedFunctionNames,
+      },
+    };
   }
 
-  return {
-    tools: genAITools,
-    toolConfig,
-  };
+  if (typeof toolChoice === "string" || allowedFunctionNames) {
+    return {
+      functionCallingConfig: {
+        mode: FunctionCallingMode.ANY,
+        allowedFunctionNames: [
+          ...(allowedFunctionNames ?? []),
+          ...(toolChoice && typeof toolChoice === "string" ? [toolChoice] : []),
+        ],
+      },
+    };
+  }
+
+  return undefined;
 }
