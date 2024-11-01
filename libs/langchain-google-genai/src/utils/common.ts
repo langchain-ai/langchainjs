@@ -124,11 +124,11 @@ export function convertMessageContentToParts(
         };
       } else if (c.type === "executableCode") {
         return {
-          executableCode: c.executableCode
+          executableCode: c.executableCode,
         };
       } else if (c.type === "codeExecutionResult") {
         return {
-          codeExecutionResult: c.codeExecutionResult
+          codeExecutionResult: c.codeExecutionResult,
         };
       }
 
@@ -277,18 +277,23 @@ export function mapGenerateContentResultToChatResult(
         return {
           type: "executableCode",
           executableCode: p.executableCode,
-        }
+        };
       } else if ("codeExecutionResult" in p) {
         return {
           type: "codeExecutionResult",
           codeExecutionResult: p.codeExecutionResult,
-        }
+        };
       }
       return p;
-    })
+    });
   }
 
-  const text = typeof content === "string" ? content : "text" in content[0] ? content[0].text : "";
+  const text =
+    typeof content === "string"
+      ? content
+      : "text" in content[0]
+      ? content[0].text
+      : "";
 
   const generation: ChatGeneration = {
     text,
