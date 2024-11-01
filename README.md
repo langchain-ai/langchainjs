@@ -34,7 +34,7 @@ LangChain is written in TypeScript and can be used in:
 - **Reason**: rely on a language model to reason (about how to answer based on provided context, what actions to take, etc.)
 
 This framework consists of several parts.
-- **Open-source libraries**: Build your applications using LangChain's open-source [building blocks](https://js.langchain.com/docs/concepts#langchain-expression-language), [components](https://js.langchain.com/docs/concepts), and [third-party integrations](https://js.langchain.com/docs/integrations/platforms/).
+- **Open-source libraries**: Build your applications using LangChain's open-source [building blocks](https://js.langchain.com/docs/concepts/lcel), [components](https://js.langchain.com/docs/concepts), and [third-party integrations](https://js.langchain.com/docs/integrations/platforms/).
 Use [LangGraph.js](https://js.langchain.com/docs/concepts/#langgraphjs) to build stateful agents with first-class streaming and human-in-the-loop support.
 - **Productionization**: Use [LangSmith](https://docs.smith.langchain.com/) to inspect, monitor and evaluate your chains, so that you can continuously optimize and deploy with confidence.
 - **Deployment**: Turn your LangGraph applications into production-ready APIs and Assistants with [LangGraph Cloud](https://langchain-ai.github.io/langgraph/cloud/).

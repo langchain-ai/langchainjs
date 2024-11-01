@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { WatsonXAI } from "@ibm-cloud/watsonx-ai";
 import {
   IamAuthenticator,
