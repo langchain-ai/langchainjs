@@ -29,6 +29,7 @@ const createMockClient = () => {
                 metadata: {
                   return_value: ['{"text": "fizz"}'], // Simulate stored serialized generation
                 },
+                similarityScore: 0.8,
               },
             ],
           })),
