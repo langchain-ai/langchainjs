@@ -288,12 +288,12 @@ export function mapGenerateContentResultToChatResult(
     });
   }
 
-  const text =
-    typeof content === "string"
-      ? content
-      : "text" in content[0]
-      ? content[0].text
-      : "";
+  let text = "";
+  if (typeof content === "string") {
+    text = content;
+  } else if ("text" in content[0]) {
+    text = content[0].text;
+  }
 
   const generation: ChatGeneration = {
     text,
