@@ -328,8 +328,39 @@ export function convertResponseContentToChatGenerationChunk(
   }
   const functionCalls = response.functionCalls();
   const [candidate] = response.candidates;
-  const { content, ...generationInfo } = candidate;
-  const text = content?.parts?.[0]?.text ?? "";
+  const { content: candidateContent, ...generationInfo } = candidate;
+  let content: MessageContent;
+  // Checks if some parts do not have text. If false, it means that the content is a string.
+  if (!candidateContent?.parts.some((p) => !("text" in p))) {
+    content = candidateContent.parts.map((p) => p.text).join("");
+  } else {
+    content = candidateContent.parts.map((p) => {
+      if ("text" in p) {
+        return {
+          type: "text",
+          text: p.text,
+        };
+      } else if ("executableCode" in p) {
+        return {
+          type: "executableCode",
+          executableCode: p.executableCode,
+        };
+      } else if ("codeExecutionResult" in p) {
+        return {
+          type: "codeExecutionResult",
+          codeExecutionResult: p.codeExecutionResult,
+        };
+      }
+      return p;
+    });
+  }
+
+  let text = "";
+  if (typeof content === "string") {
+    text = content;
+  } else if ("text" in content[0]) {
+    text = content[0].text;
+  }
 
   const toolCallChunks: ToolCallChunk[] = [];
   if (functionCalls) {
@@ -342,11 +373,12 @@ export function convertResponseContentToChatGenerationChunk(
       }))
     );
   }
+
   return new ChatGenerationChunk({
     text,
     message: new AIMessageChunk({
-      content: text,
-      name: !content ? undefined : content.role,
+      content,
+      name: !candidateContent ? undefined : candidateContent.role,
       tool_call_chunks: toolCallChunks,
       // Each chunk can have unique "generationInfo", and merging strategy is unclear,
       // so leave blank for now.
