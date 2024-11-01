@@ -175,6 +175,15 @@ export class AzureCosmsosDBNoSQLChatMessageHistory extends BaseListChatMessageHi
 
   async clearAllSessionsForUser(userId: string) {
     await this.initializeContainer();
-    await this.container.deleteAllItemsForPartitionKey(userId);
+    const query = {
+      query: "SELECT c.id FROM c WHERE c.userId = @userId",
+      parameters: [
+        { name: "@userId", value: userId }
+      ]
+    };
+    const { resources: userSessions } = await this.container.items.query(query).fetchAll();
+    for (const userSession of userSessions) {
+      await this.container.item(userSession.id, userId).delete();
+    }
   }
 }

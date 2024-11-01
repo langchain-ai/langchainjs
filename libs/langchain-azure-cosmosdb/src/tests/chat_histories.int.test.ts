@@ -124,3 +124,45 @@ test("Test CosmosDB history with a TTL", async () => {
   const expiredResult = await chatHistory.getMessages();
   expect(expiredResult).toStrictEqual([]);
 });
+
+test("Test clear all sessions for a user", async () => {
+  const input1 = {
+    sessionId: new Date().toISOString(),
+    userId: "user1",
+    databaseName: "DbWithTTL",
+    ttl: 5,
+  };
+  const chatHistory1 = new AzureCosmsosDBNoSQLChatMessageHistory(input1);
+
+  await chatHistory1.addUserMessage("Who is the best vocalist?");
+  await chatHistory1.addAIMessage("Ozzy Osbourne");
+
+  const input2 = {
+    sessionId: new Date().toISOString(),
+    userId: "user1",
+    databaseName: "DbWithTTL",
+    ttl: 5,
+  };
+  const chatHistory2 = new AzureCosmsosDBNoSQLChatMessageHistory(input2);
+
+  await chatHistory2.addUserMessage("Who is the best vocalist?");
+  await chatHistory2.addAIMessage("Ozzy Osbourne");
+
+  const expectedMessages = [
+    new HumanMessage("Who is the best vocalist?"),
+    new AIMessage("Ozzy Osbourne"),
+  ];
+
+  const result1 = await chatHistory1.getMessages();
+  expect(result1).toEqual(expectedMessages);
+
+  const result2 = await chatHistory1.getMessages();
+  expect(result2).toEqual(expectedMessages);
+
+  await chatHistory1.clearAllSessionsForUser("user1")
+
+  const deletedResult1 = await chatHistory1.getMessages();
+  const deletedResult2 = await chatHistory2.getMessages();
+  expect(deletedResult1).toStrictEqual([]);
+  expect(deletedResult2).toStrictEqual([]);
+});
