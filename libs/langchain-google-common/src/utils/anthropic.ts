@@ -29,10 +29,10 @@ import {
   AnthropicStreamContentBlockStartEvent,
   AnthropicStreamMessageDeltaEvent,
   AnthropicStreamMessageStartEvent,
-  AnthropicStreamTextDelta,
+  AnthropicStreamTextDelta, AnthropicTool, AnthropicToolChoice, GeminiTool,
   GoogleAIAPI,
   GoogleAIModelParams,
-  GoogleAIModelRequestParams,
+  GoogleAIModelRequestParams, GoogleAIToolType,
   GoogleLLMResponse,
 } from "../types.js";
 
@@ -377,7 +377,7 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
   function baseToAnthropicMessage(
     base: BaseMessage
   ): AnthropicMessage | undefined {
-    const type = base._getType();
+    const type = base.getType();
     switch (type) {
       case "human":
         return baseRoleToAnthropicMessage(base, "user");
@@ -459,6 +459,70 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
     return ret;
   }
 
+  function formatGeminiTool(tool: GeminiTool): AnthropicTool[] {
+    if (Object.hasOwn(tool, "functionDeclarations")) {
+      const funcs = tool?.functionDeclarations ?? [];
+      return funcs.map(func => {
+        const inputSchema = func.parameters!;
+        return {
+          // type: "tool",  // This may only be valid for models 20241011+
+          name: func.name,
+          description: func.description,
+          input_schema: inputSchema,
+        }
+      })
+    } else {
+      console.warn(`Unable to format GeminiTool: ${JSON.stringify(tool,null,1)}`);
+      return [];
+    }
+  }
+
+  function formatTool(tool: GoogleAIToolType): AnthropicTool[] {
+    if (Object.hasOwn(tool, "name")) {
+      return [tool as AnthropicTool];
+    } else {
+      return formatGeminiTool(tool as GeminiTool)
+    }
+  }
+
+  function formatTools(parameters: GoogleAIModelRequestParams): AnthropicTool[] {
+    const tools: GoogleAIToolType[] = parameters?.tools ?? [];
+    const ret: AnthropicTool[] = [];
+    tools.forEach(tool => {
+      const anthropicTools = formatTool(tool);
+      anthropicTools.forEach(anthropicTool => {
+        if (anthropicTool) {
+          ret.push(anthropicTool)
+        }
+      })
+    })
+    return ret;
+  }
+
+  function formatToolChoice(parameters: GoogleAIModelRequestParams): AnthropicToolChoice | undefined {
+    const choice = parameters?.tool_choice;
+    if (!choice) {
+      return undefined;
+    } else if (typeof choice === "object") {
+      return choice as AnthropicToolChoice;
+    } else {
+      switch (choice) {
+        case "any":
+        case "auto":
+          return {
+            type: choice,
+          }
+        case "none":
+          return undefined;
+        default:
+          return {
+            type: "tool",
+            name: choice,
+          }
+      }
+    }
+  }
+
   async function formatData(
     input: unknown,
     parameters: GoogleAIModelRequestParams
@@ -468,12 +532,19 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
     const messages = formatMessages(typedInput);
     const settings = formatSettings(parameters);
     const system = formatSystem(typedInput);
-    // TODO: Tools
+    const tools = formatTools(parameters);
+    const toolChoice = formatToolChoice(parameters);
     const ret: AnthropicRequest = {
       anthropic_version: anthropicVersion,
       messages,
       ...settings,
     };
+    if (tools && tools.length && (parameters?.tool_choice !== "none")) {
+      ret.tools = tools;
+    }
+    if (toolChoice) {
+      ret.tool_choice = toolChoice;
+    }
     if (system?.length) {
       ret.system = system;
     }

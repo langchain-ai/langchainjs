@@ -42,6 +42,25 @@ import {
 import { GeminiTool } from "../types.js";
 import { ChatVertexAI } from "../chat_models.js";
 
+const weatherTool = tool((_) => "no-op", {
+  name: "get_weather",
+  description:
+    "Get the weather of a specific location and return the temperature in Celsius.",
+  schema: z.object({
+    location: z
+      .string()
+      .describe("The name of city to get the weather for."),
+  }),
+});
+
+const calculatorTool = tool((_) => "no-op", {
+  name: "calculator",
+  description: "Calculate the result of a math expression.",
+  schema: z.object({
+    expression: z.string().describe("The math expression to calculate."),
+  }),
+});
+
 describe("GAuth Gemini Chat", () => {
   let recorder: GoogleRequestRecorder;
   let callbacks: BaseCallbackHandler[];
@@ -392,23 +411,6 @@ describe("GAuth Gemini Chat", () => {
     const model = new ChatVertexAI({
       model: "gemini-1.5-pro",
     });
-    const weatherTool = tool((_) => "no-op", {
-      name: "get_weather",
-      description:
-        "Get the weather of a specific location and return the temperature in Celsius.",
-      schema: z.object({
-        location: z
-          .string()
-          .describe("The name of city to get the weather for."),
-      }),
-    });
-    const calculatorTool = tool((_) => "no-op", {
-      name: "calculator",
-      description: "Calculate the result of a math expression.",
-      schema: z.object({
-        expression: z.string().describe("The math expression to calculate."),
-      }),
-    });
     const modelWithTools = model.bind({
       tools: [calculatorTool, weatherTool],
       tool_choice: "calculator",
@@ -554,4 +556,30 @@ describe("GAuth Anthropic Chat", () => {
     }
     expect(chunks.length).toBeGreaterThan(1);
   });
+
+  test("tool invocation", async () => {
+    const model = new ChatVertexAI({
+      model: "claude-3-5-sonnet@20240620",
+      callbacks,
+    });
+    const modelWithTools = model.bind({
+      tools: [weatherTool],
+    });
+
+    const result = await modelWithTools.invoke(
+      "Whats the weather like in paris today?"
+    );
+
+    const request = recorder?.request ?? {};
+    const data = request?.data;
+    expect(data).toHaveProperty("tools");
+    expect(data.toools).toHaveLength(1);
+
+    expect(result.tool_calls).toHaveLength(1);
+    expect(result.tool_calls?.[0]).toBeDefined();
+    if (!result.tool_calls?.[0]) return;
+    expect(result.tool_calls?.[0].name).toBe("weather");
+    expect(result.tool_calls?.[0].args).toHaveProperty("location");
+  });
+
 });
