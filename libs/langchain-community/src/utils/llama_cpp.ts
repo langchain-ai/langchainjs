@@ -5,10 +5,10 @@ import {
   LlamaChatSession,
   LlamaJsonSchemaGrammar,
   LlamaGrammar,
-  getLlama,
   type LlamaModelOptions,
   LlamaContextOptions,
   GbnfJsonSchema,
+  Llama,
 } from "node-llama-cpp";
 
 /**
@@ -59,7 +59,8 @@ export interface LlamaBaseCppInputs {
 }
 
 export async function createLlamaModel(
-  inputs: LlamaBaseCppInputs
+  inputs: LlamaBaseCppInputs,
+  llama: Llama
 ): Promise<LlamaModel> {
   const options: LlamaModelOptions = {
     gpuLayers: inputs?.gpuLayers,
@@ -69,7 +70,6 @@ export async function createLlamaModel(
     vocabOnly: inputs?.vocabOnly,
   };
 
-  const llama = await getLlama();
   return llama.loadModel(options);
 }
 
@@ -91,25 +91,25 @@ export function createLlamaSession(context: LlamaContext): LlamaChatSession {
 }
 
 export async function createLlamaJsonSchemaGrammar(
-  schemaString: object | undefined
+  schemaString: object | undefined,
+  llama: Llama
 ): Promise<LlamaJsonSchemaGrammar<GbnfJsonSchema> | undefined> {
   if (schemaString === undefined) {
     return undefined;
   }
 
   const schemaJSON = schemaString as GbnfJsonSchema;
-  const llama = await getLlama();
   return await llama.createGrammarForJsonSchema(schemaJSON);
 }
 
 export async function createCustomGrammar(
-  filePath: string | undefined
+  filePath: string | undefined,
+  llama: Llama
 ): Promise<LlamaGrammar | undefined> {
   if (filePath === undefined) {
     return undefined;
   }
 
-  const llama = await getLlama();
   return llama.createGrammar({
     grammar: filePath,
   });

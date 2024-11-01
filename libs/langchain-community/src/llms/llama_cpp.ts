@@ -5,6 +5,7 @@ import {
   LlamaChatSession,
   LlamaJsonSchemaGrammar,
   LlamaGrammar,
+  getLlama,
   GbnfJsonSchema,
 } from "node-llama-cpp";
 import {
@@ -88,13 +89,15 @@ export class LlamaCpp extends LLM<LlamaCppCallOptions> {
    */
   public static async llmInit(inputs: LlamaCppInputs): Promise<LlamaCpp> {
     const instance = new LlamaCpp(inputs);
+    const llama = await getLlama();
 
-    instance._model = await createLlamaModel(inputs);
+    instance._model = await createLlamaModel(inputs, llama);
     instance._context = await createLlamaContext(instance._model, inputs);
     instance._jsonSchema = await createLlamaJsonSchemaGrammar(
-      inputs?.jsonSchema
+      inputs?.jsonSchema,
+      llama
     );
-    instance._gbnf = await createCustomGrammar(inputs?.gbnf);
+    instance._gbnf = await createCustomGrammar(inputs?.gbnf, llama);
     instance._session = createLlamaSession(instance._context);
 
     return instance;
@@ -137,6 +140,7 @@ export class LlamaCpp extends LLM<LlamaCppCallOptions> {
 
       return completion;
     } catch (e) {
+      console.log(e);
       throw new Error("Error getting prompt completion.");
     }
   }

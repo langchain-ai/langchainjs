@@ -7,6 +7,7 @@ import {
   ChatUserMessage,
   ChatModelResponse,
   ChatHistoryItem,
+  getLlama,
 } from "node-llama-cpp";
 
 import {
@@ -109,15 +110,16 @@ export class ChatLlamaCpp extends SimpleChatModel<LlamaCppCallOptions> {
     inputs: LlamaBaseCppInputs
   ): Promise<ChatLlamaCpp> {
     const instance = new ChatLlamaCpp(inputs);
+    const llama = await getLlama();
 
-    instance._model = await createLlamaModel(inputs);
+    instance._model = await createLlamaModel(inputs, llama);
     instance._context = await createLlamaContext(instance._model, inputs);
 
     return instance;
   }
 
   _llmType() {
-    return "llama2_cpp";
+    return "llama3_cpp";
   }
 
   /** @ignore */

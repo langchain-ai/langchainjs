@@ -1,5 +1,5 @@
 /* eslint-disable import/no-extraneous-dependencies */
-import { LlamaModel, LlamaContext } from "node-llama-cpp";
+import { LlamaModel, LlamaContext, getLlama } from "node-llama-cpp";
 import { Embeddings, type EmbeddingsParams } from "@langchain/core/embeddings";
 import {
   LlamaBaseCppInputs,
@@ -51,8 +51,9 @@ export class LlamaCppEmbeddings extends Embeddings {
     inputs: LlamaBaseCppInputs
   ): Promise<LlamaCppEmbeddings> {
     const instance = new LlamaCppEmbeddings(inputs);
+    const llama = await getLlama();
 
-    instance._model = await createLlamaModel(inputs);
+    instance._model = await createLlamaModel(inputs, llama);
     instance._context = await createLlamaContext(instance._model, inputs);
 
     return instance;
