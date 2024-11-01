@@ -17,7 +17,11 @@ import {
 } from "@langchain/core/prompts";
 import { StructuredTool } from "@langchain/core/tools";
 import { z } from "zod";
-import { FunctionDeclarationSchemaType } from "@google/generative-ai";
+import {
+  DynamicRetrievalMode,
+  SchemaType as FunctionDeclarationSchemaType,
+  GoogleSearchRetrievalTool,
+} from "@google/generative-ai";
 import { ChatGoogleGenerativeAI } from "../chat_models.js";
 
 // Save the original value of the 'LANGCHAIN_CALLBACKS_BACKGROUND' environment variable
@@ -566,4 +570,25 @@ test("Supports tool_choice", async () => {
     "What is 27725327 times 283683? Also whats the weather in New York?"
   );
   expect(response.tool_calls?.length).toBe(1);
+});
+
+test("Supports GoogleSearchRetrievalTool", async () => {
+  const searchRetrievalTool: GoogleSearchRetrievalTool = {
+    googleSearchRetrieval: {
+      dynamicRetrievalConfig: {
+        mode: DynamicRetrievalMode.MODE_DYNAMIC,
+        dynamicThreshold: 0.7, // default is 0.7
+      },
+    },
+  };
+  const model = new ChatGoogleGenerativeAI({
+    model: "gemini-1.5-pro",
+    temperature: 0,
+    maxRetries: 0,
+  }).bindTools([searchRetrievalTool]);
+
+  const result = await model.invoke("Who won the 2024 MLB World Series?");
+
+  expect(result.response_metadata?.groundingMetadata).toBeDefined();
+  expect(result.content as string).toContain("Dodgers");
 });
