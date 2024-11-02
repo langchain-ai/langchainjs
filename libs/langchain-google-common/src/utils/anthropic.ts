@@ -10,8 +10,9 @@ import {
   MessageContentComplex,
   MessageContentText,
   MessageContent,
-  MessageContentImageUrl,
+  MessageContentImageUrl, AIMessageFields, AIMessageChunkFields,
 } from "@langchain/core/messages";
+import {ToolCall, ToolCallChunk, ToolMessage} from "@langchain/core/messages/tool";
 import {
   AnthropicAPIConfig,
   AnthropicContent,
@@ -20,13 +21,13 @@ import {
   AnthropicMessage,
   AnthropicMessageContent,
   AnthropicMessageContentImage,
-  AnthropicMessageContentText,
+  AnthropicMessageContentText, AnthropicMessageContentToolResult, AnthropicMessageContentToolResultContent,
   AnthropicRequest,
   AnthropicRequestSettings,
   AnthropicResponseData,
   AnthropicResponseMessage,
   AnthropicStreamContentBlockDeltaEvent,
-  AnthropicStreamContentBlockStartEvent,
+  AnthropicStreamContentBlockStartEvent, AnthropicStreamInputJsonDelta,
   AnthropicStreamMessageDeltaEvent,
   AnthropicStreamMessageStartEvent,
   AnthropicStreamTextDelta, AnthropicTool, AnthropicToolChoice, GeminiTool,
@@ -64,28 +65,38 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
     }
   }
 
-  function textContentToContent(
+  function textContentToMessageFields(
     textContent: AnthropicContentText
-  ): MessageContentText {
-    return textContent;
+  ): AIMessageFields {
+    return {
+      content: [textContent],
+    }
   }
 
-  function toolUseContentToContent(
-    _toolUseContent: AnthropicContentToolUse
-  ): undefined {
-    // FIXME: implement
-    return undefined;
+  function toolUseContentToMessageFields(
+    toolUseContent: AnthropicContentToolUse
+  ): AIMessageFields {
+    const tool: ToolCall = {
+      id: toolUseContent.id,
+      name: toolUseContent.name,
+      type: "tool_call",
+      args: toolUseContent.input,
+    }
+    return {
+      content: [],
+      tool_calls: [tool],
+    }
   }
 
-  function anthropicContentToContent(
+  function anthropicContentToMessageFields(
     anthropicContent: AnthropicContent
-  ): MessageContentComplex | undefined {
+  ): AIMessageFields | undefined {
     const type = anthropicContent?.type;
     switch (type) {
       case "text":
-        return textContentToContent(anthropicContent);
+        return textContentToMessageFields(anthropicContent);
       case "tool_use":
-        return toolUseContentToContent(anthropicContent);
+        return toolUseContentToMessageFields(anthropicContent);
       default:
         return undefined;
     }
@@ -94,28 +105,23 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
   function contentToMessage(
     anthropicContent: AnthropicContent[]
   ): BaseMessageChunk {
-    let isComplex = false;
     const complexContent: MessageContentComplex[] = [];
-    let textContext = "";
+    const toolCalls: ToolCall[] = [];
     anthropicContent.forEach((ac) => {
-      const c = anthropicContentToContent(ac);
-      if (c) {
-        complexContent.push(c);
-        if (c.type === "text") {
-          textContext = `${textContext}${c.text}`;
-        } else {
-          isComplex = true;
-        }
+      const messageFields = anthropicContentToMessageFields(ac);
+      if (messageFields?.content) {
+        complexContent.push(...messageFields.content as MessageContentComplex[]);
+      }
+      if (messageFields?.tool_calls) {
+        toolCalls.push(...messageFields.tool_calls)
       }
     });
 
-    if (isComplex) {
-      return new AIMessageChunk({
-        content: complexContent,
-      });
-    } else {
-      return new AIMessageChunk(textContext);
+    const ret: AIMessageFields = {
+      content: complexContent,
+      tool_calls: toolCalls,
     }
+    return new AIMessageChunk(ret);
   }
 
   function messageToGenerationInfo(message: AnthropicResponseMessage) {
@@ -159,41 +165,58 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
     return messageToChatGeneration(responseMessage as AnthropicResponseMessage);
   }
 
-  function contentBlockStartTextToChatGeneration(
+  function contentBlockStartToChatGeneration(
     event: AnthropicStreamContentBlockStartEvent
-  ): ChatGenerationChunk {
-    const content = event.content_block as AnthropicContentText;
+  ): ChatGenerationChunk | null {
+    const content = event.content_block;
     const message = contentToMessage([content]);
-    const text = content?.text;
+    if (!message) {
+      return null;
+    }
+
+    const text = "text" in content ? content.text : "";
     return new ChatGenerationChunk({
       message,
       text,
     });
-  }
-
-  function contentBlockStartToChatGeneration(
-    event: AnthropicStreamContentBlockStartEvent
-  ): ChatGenerationChunk | null {
-    switch (event.content_block.type) {
-      case "text":
-        return contentBlockStartTextToChatGeneration(event);
-      // TODO: case "tool_use": return contentBlockStartToolUseToChatGeneration(event);
-      default:
-        console.warn(`Unexpected content_block type: ${JSON.stringify(event)}`);
-        return null;
-    }
   }
 
   function contentBlockDeltaTextToChatGeneration(
     event: AnthropicStreamContentBlockDeltaEvent
   ): ChatGenerationChunk {
-    const content = event.delta as AnthropicStreamTextDelta;
-    const text = content?.text;
+    const delta = event.delta as AnthropicStreamTextDelta;
+    const text = delta?.text;
     const message = new AIMessageChunk(text);
     return new ChatGenerationChunk({
       message,
       text,
     });
+  }
+
+  function contentBlockDeltaInputJsonDeltaToChatGeneration(
+    event: AnthropicStreamContentBlockDeltaEvent
+  ): ChatGenerationChunk {
+    const delta = event.delta as AnthropicStreamInputJsonDelta;
+    const text: string = "";
+    const toolChunks: ToolCallChunk[] = [
+      {
+        index: event.index,
+        args: delta.partial_json,
+      }
+    ];
+    const content: MessageContentComplex[] = [{
+      index: event.index,
+      ...delta,
+    }];
+    const messageFields: AIMessageChunkFields = {
+      content,
+      tool_call_chunks: toolChunks,
+    }
+    const message = new AIMessageChunk(messageFields);
+    return new ChatGenerationChunk({
+      message,
+      text,
+    })
   }
 
   function contentBlockDeltaToChatGeneration(
@@ -202,7 +225,8 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
     switch (event.delta.type) {
       case "text_delta":
         return contentBlockDeltaTextToChatGeneration(event);
-      // TODO: case "tool_use": return contentBlockDeltaToolUseToChatGeneration(event);
+      case "input_json_delta":
+        return contentBlockDeltaInputJsonDeltaToChatGeneration(event);
       default:
         console.warn(`Unexpected content_block type: ${JSON.stringify(event)}`);
         return null;
@@ -340,8 +364,8 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
         return imageContentToAnthropicContent(
           content as MessageContentImageUrl
         );
-      // TODO - Handle Tool Use and Tool Result
       default:
+        console.warn(`Unexpected content type: ${type}`);
         return undefined;
     }
   }
@@ -374,6 +398,25 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
     };
   }
 
+  function toolMessageToAnthropicMessage(
+    base: ToolMessage
+  ): AnthropicMessage {
+    const role = "user";
+    const toolUseId = base.tool_call_id;
+    const toolContent = contentToAnthropicContent(base.content) as AnthropicMessageContentToolResultContent[];
+    const content: AnthropicMessageContentToolResult[] = [
+      {
+        type: "tool_result",
+        tool_use_id: toolUseId,
+        content: toolContent,
+      }
+    ]
+    return {
+      role,
+      content,
+    }
+  }
+
   function baseToAnthropicMessage(
     base: BaseMessage
   ): AnthropicMessage | undefined {
@@ -383,7 +426,8 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
         return baseRoleToAnthropicMessage(base, "user");
       case "ai":
         return baseRoleToAnthropicMessage(base, "assistant");
-      // TODO - Handle "function" and "tool"?
+      case "tool":
+        return toolMessageToAnthropicMessage(base as ToolMessage);
       default:
         return undefined;
     }
@@ -465,7 +509,7 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
       return funcs.map(func => {
         const inputSchema = func.parameters!;
         return {
-          // type: "tool",  // This may only be valid for models 20241011+
+          // type: "tool",  // This may only be valid for models 20241022+
           name: func.name,
           description: func.description,
           input_schema: inputSchema,

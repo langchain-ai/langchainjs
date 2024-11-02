@@ -43,7 +43,7 @@ export interface AnthropicMessageContentToolResult
   type: "tool_result";
   tool_use_id: string;
   is_error?: boolean;
-  content: string | AnthropicMessageContentToolResultContent;
+  content: string | AnthropicMessageContentToolResultContent[];
 }
 
 export type AnthropicMessageContent =
@@ -87,7 +87,7 @@ export type AnthropicToolChoice =
 export type AnthropicToolInputSchema = object;
 
 export interface AnthropicTool {
-  type?: string;  // Just available on tools 20241011 and later?
+  type?: string;  // Just available on tools 20241022 and later?
   name: string;
   description?: string;
   cache_control?: AnthropicCacheControl;
@@ -195,7 +195,7 @@ export interface AnthropicStreamTextDelta extends AnthropicStreamBaseDelta {
 export interface AnthropicStreamInputJsonDelta
   extends AnthropicStreamBaseDelta {
   type: "input_json_delta";
-  text: string;
+  partial_json: string;
 }
 
 export type AnthropicStreamDelta =
