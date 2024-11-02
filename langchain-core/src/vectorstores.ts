@@ -336,41 +336,7 @@ export abstract class VectorStore
       "the Langchain vectorstore implementation you are using forgot to override this, please report a bug"
     );
   }
-  /**
-   * Creates a `VectorStoreRetriever` instance with flexible configuration options.
-   *
-   * @param {number | Partial<VectorStoreRetrieverInput<this>>} [kOrFields]
-   *    - If a number is provided, it sets the `k` parameter (number of items to retrieve).
-   *    - If an object is provided, it should contain various configuration options.
-   * @param {this["FilterType"]} [filter]
-   *    - Optional filter criteria to limit the items retrieved based on the specified filter type.
-   * @param {Callbacks} [callbacks]
-   *    - Optional callbacks that may be triggered at specific stages of the retrieval process.
-   * @param {string[]} [tags]
-   *    - Tags to categorize or label the `VectorStoreRetriever`. Defaults to an empty array if not provided.
-   * @param {Record<string, unknown>} [metadata]
-   *    - Additional metadata as key-value pairs to add contextual information for the retrieval process.
-   * @param {boolean} [verbose]
-   *    - If `true`, enables detailed logging for the retrieval process. Defaults to `false`.
-   *
-   * @returns {VectorStoreRetriever<this>}
-   *    - A configured `VectorStoreRetriever` instance based on the provided parameters.
-   *
-   * @example
-   * // Basic usage with a `k` value:
-   * const retriever = asRetriever(5);
-   *
-   * @example
-   * // Usage with a configuration object:
-   * const retriever = asRetriever({
-   *   k: 10,
-   *   filter: myFilter,
-   *   tags: ['example', 'test'],
-   *   verbose: true,
-   *   searchType: 'mmr',
-   *   searchKwargs: { alpha: 0.5 },
-   * });
-   */
+
   asRetriever(
     kOrFields?: number | Partial<VectorStoreRetrieverInput<this>>,
     filter?: this["FilterType"],
