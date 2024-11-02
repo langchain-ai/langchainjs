@@ -513,6 +513,10 @@ describe("GAuth Anthropic Chat", () => {
   let recorder: GoogleRequestRecorder;
   let callbacks: BaseCallbackHandler[];
 
+  // const modelName: string = "claude-3-5-sonnet@20240620";
+  // const modelName: string = "claude-3-sonnet@20240229";
+  const modelName: string    = "claude-3-5-sonnet-v2@20241022";
+
   beforeEach(() => {
     recorder = new GoogleRequestRecorder();
     callbacks = [recorder, new GoogleRequestLogger()];
@@ -520,7 +524,7 @@ describe("GAuth Anthropic Chat", () => {
 
   test("invoke", async () => {
     const model = new ChatVertexAI({
-      model: "claude-3-5-sonnet@20240620",
+      modelName,
       callbacks,
     });
     const res = await model.invoke("What is 1 + 1?");
@@ -545,7 +549,7 @@ describe("GAuth Anthropic Chat", () => {
 
   test("stream", async () => {
     const model = new ChatVertexAI({
-      model: "claude-3-5-sonnet@20240620",
+      modelName,
       callbacks,
     });
     const stream = await model.stream("How are you today? Be verbose.");
@@ -559,7 +563,7 @@ describe("GAuth Anthropic Chat", () => {
 
   test("tool invocation", async () => {
     const model = new ChatVertexAI({
-      model: "claude-3-5-sonnet@20240620",
+      modelName,
       callbacks,
     });
     const modelWithTools = model.bind({
@@ -573,12 +577,11 @@ describe("GAuth Anthropic Chat", () => {
     const request = recorder?.request ?? {};
     const data = request?.data;
     expect(data).toHaveProperty("tools");
-    expect(data.toools).toHaveLength(1);
+    expect(data.tools).toHaveLength(1);
 
     expect(result.tool_calls).toHaveLength(1);
     expect(result.tool_calls?.[0]).toBeDefined();
-    if (!result.tool_calls?.[0]) return;
-    expect(result.tool_calls?.[0].name).toBe("weather");
+    expect(result.tool_calls?.[0].name).toBe("get_weather");
     expect(result.tool_calls?.[0].args).toHaveProperty("location");
   });
 
