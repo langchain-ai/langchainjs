@@ -574,7 +574,7 @@ test("Supports tool_choice", async () => {
   expect(response.tool_calls?.length).toBe(1);
 });
 
-describe.only("GoogleSearchRetrievalTool", () => {
+describe("GoogleSearchRetrievalTool", () => {
   test("Supports GoogleSearchRetrievalTool", async () => {
     const searchRetrievalTool: GoogleSearchRetrievalTool = {
       googleSearchRetrieval: {
@@ -619,13 +619,12 @@ describe.only("GoogleSearchRetrievalTool", () => {
     if (!finalMsg) {
       throw new Error("finalMsg is undefined");
     }
-    console.log(finalMsg.response_metadata?.groundingMetadata);
     expect(finalMsg.response_metadata?.groundingMetadata).toBeDefined();
     expect(finalMsg.content as string).toContain("Dodgers");
   });
 });
 
-describe.only("CodeExecutionTool", () => {
+describe("CodeExecutionTool", () => {
   test("Supports CodeExecutionTool", async () => {
     const codeExecutionTool: CodeExecutionTool = {
       codeExecution: {}, // Simply pass an empty object to enable it.
@@ -707,7 +706,6 @@ describe.only("CodeExecutionTool", () => {
     if (!finalMsg) {
       throw new Error("finalMsg is undefined");
     }
-    console.log("finalMsg.content\n\n", finalMsg.content);
     expect(Array.isArray(finalMsg.content)).toBeTruthy();
     if (!Array.isArray(finalMsg.content)) {
       throw new Error("Content is not an array");
