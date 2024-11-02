@@ -4,7 +4,7 @@ import type { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import {
   type FunctionDeclarationSchema as GenerativeAIFunctionDeclarationSchema,
-  FunctionDeclarationSchemaType,
+  type SchemaType as FunctionDeclarationSchemaType,
 } from "@google/generative-ai";
 
 export interface GenerativeAIJsonSchema extends Record<string, unknown> {
