@@ -329,11 +329,14 @@ export function convertResponseContentToChatGenerationChunk(
   const functionCalls = response.functionCalls();
   const [candidate] = response.candidates;
   const { content: candidateContent, ...generationInfo } = candidate;
-  let content: MessageContent;
+  let content: MessageContent | undefined;
   // Checks if some parts do not have text. If false, it means that the content is a string.
-  if (!candidateContent?.parts.some((p) => !("text" in p))) {
+  if (
+    candidateContent?.parts &&
+    candidateContent.parts.every((p) => "text" in p)
+  ) {
     content = candidateContent.parts.map((p) => p.text).join("");
-  } else {
+  } else if (candidateContent.parts) {
     content = candidateContent.parts.map((p) => {
       if ("text" in p) {
         return {
@@ -356,9 +359,9 @@ export function convertResponseContentToChatGenerationChunk(
   }
 
   let text = "";
-  if (typeof content === "string") {
+  if (content && typeof content === "string") {
     text = content;
-  } else if ("text" in content[0]) {
+  } else if (content && typeof content === "object" && "text" in content[0]) {
     text = content[0].text;
   }
 
@@ -377,7 +380,7 @@ export function convertResponseContentToChatGenerationChunk(
   return new ChatGenerationChunk({
     text,
     message: new AIMessageChunk({
-      content,
+      content: content || "",
       name: !candidateContent ? undefined : candidateContent.role,
       tool_call_chunks: toolCallChunks,
       // Each chunk can have unique "generationInfo", and merging strategy is unclear,

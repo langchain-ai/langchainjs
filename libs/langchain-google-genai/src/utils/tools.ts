@@ -29,7 +29,7 @@ export function convertToolsToGenAI(
   return { tools: genAITools, toolConfig };
 }
 
-function processTools(tools: GoogleGenerativeAIToolType[]) {
+function processTools(tools: GoogleGenerativeAIToolType[]): GenerativeAITool[] {
   let functionDeclarationTools: FunctionDeclaration[] = [];
   const genAITools: GenerativeAITool[] = [];
 
@@ -46,23 +46,39 @@ function processTools(tools: GoogleGenerativeAIToolType[]) {
     }
   });
 
-  return genAITools.map((tool) => {
-    if (
-      functionDeclarationTools?.length > 0 &&
-      "functionDeclarations" in tool
-    ) {
-      const newTool = {
-        functionDeclarations: [
-          ...(tool.functionDeclarations || []),
-          ...functionDeclarationTools,
-        ],
-      };
-      // Clear the functionDeclarationTools array so it is not passed again
-      functionDeclarationTools = [];
-      return newTool;
-    }
-    return tool;
-  });
+  const genAIFunctionDeclaration = genAITools.find(
+    (t) => "functionDeclarations" in t
+  );
+  if (genAIFunctionDeclaration) {
+    return genAITools.map((tool) => {
+      if (
+        functionDeclarationTools?.length > 0 &&
+        "functionDeclarations" in tool
+      ) {
+        const newTool = {
+          functionDeclarations: [
+            ...(tool.functionDeclarations || []),
+            ...functionDeclarationTools,
+          ],
+        };
+        // Clear the functionDeclarationTools array so it is not passed again
+        functionDeclarationTools = [];
+        return newTool;
+      }
+      return tool;
+    });
+  }
+
+  return [
+    ...genAITools,
+    ...(functionDeclarationTools.length > 0
+      ? [
+          {
+            functionDeclarations: functionDeclarationTools,
+          },
+        ]
+      : []),
+  ];
 }
 
 function createToolConfig(

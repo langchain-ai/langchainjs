@@ -574,7 +574,7 @@ test("Supports tool_choice", async () => {
   expect(response.tool_calls?.length).toBe(1);
 });
 
-describe("GoogleSearchRetrievalTool", () => {
+describe.only("GoogleSearchRetrievalTool", () => {
   test("Supports GoogleSearchRetrievalTool", async () => {
     const searchRetrievalTool: GoogleSearchRetrievalTool = {
       googleSearchRetrieval: {
@@ -625,7 +625,7 @@ describe("GoogleSearchRetrievalTool", () => {
   });
 });
 
-describe("CodeExecutionTool", () => {
+describe.only("CodeExecutionTool", () => {
   test("Supports CodeExecutionTool", async () => {
     const codeExecutionTool: CodeExecutionTool = {
       codeExecution: {}, // Simply pass an empty object to enable it.
