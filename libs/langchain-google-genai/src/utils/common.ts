@@ -13,6 +13,7 @@ import {
   AIMessageChunk,
   BaseMessage,
   ChatMessage,
+  MessageContent,
   MessageContentComplex,
   UsageMetadata,
   isBaseMessage,
@@ -106,7 +107,7 @@ export function convertMessageContentToParts(
         args: tc.args,
       },
     }));
-  } else if (message._getType() === "tool" && message.name && message.content) {
+  } else if (message.getType() === "tool" && message.name && message.content) {
     functionResponses = [
       {
         functionResponse: {
@@ -120,6 +121,14 @@ export function convertMessageContentToParts(
       if (c.type === "text") {
         return {
           text: c.text,
+        };
+      } else if (c.type === "executableCode") {
+        return {
+          executableCode: c.executableCode,
+        };
+      } else if (c.type === "codeExecutionResult") {
+        return {
+          codeExecutionResult: c.codeExecutionResult,
         };
       }
 
@@ -253,13 +262,43 @@ export function mapGenerateContentResultToChatResult(
 
   const functionCalls = response.functionCalls();
   const [candidate] = response.candidates;
-  const { content, ...generationInfo } = candidate;
-  const text = content?.parts[0]?.text ?? "";
+  const { content: candidateContent, ...generationInfo } = candidate;
+  let content: MessageContent;
+  if (candidateContent?.parts.length === 1 && candidateContent.parts[0].text) {
+    content = candidateContent.parts[0].text;
+  } else {
+    content = candidateContent.parts.map((p) => {
+      if ("text" in p) {
+        return {
+          type: "text",
+          text: p.text,
+        };
+      } else if ("executableCode" in p) {
+        return {
+          type: "executableCode",
+          executableCode: p.executableCode,
+        };
+      } else if ("codeExecutionResult" in p) {
+        return {
+          type: "codeExecutionResult",
+          codeExecutionResult: p.codeExecutionResult,
+        };
+      }
+      return p;
+    });
+  }
+
+  let text = "";
+  if (typeof content === "string") {
+    text = content;
+  } else if ("text" in content[0]) {
+    text = content[0].text;
+  }
 
   const generation: ChatGeneration = {
     text,
     message: new AIMessage({
-      content: text,
+      content,
       tool_calls: functionCalls?.map((fc) => ({
         ...fc,
         type: "tool_call",
@@ -289,8 +328,42 @@ export function convertResponseContentToChatGenerationChunk(
   }
   const functionCalls = response.functionCalls();
   const [candidate] = response.candidates;
-  const { content, ...generationInfo } = candidate;
-  const text = content?.parts?.[0]?.text ?? "";
+  const { content: candidateContent, ...generationInfo } = candidate;
+  let content: MessageContent | undefined;
+  // Checks if some parts do not have text. If false, it means that the content is a string.
+  if (
+    candidateContent?.parts &&
+    candidateContent.parts.every((p) => "text" in p)
+  ) {
+    content = candidateContent.parts.map((p) => p.text).join("");
+  } else if (candidateContent.parts) {
+    content = candidateContent.parts.map((p) => {
+      if ("text" in p) {
+        return {
+          type: "text",
+          text: p.text,
+        };
+      } else if ("executableCode" in p) {
+        return {
+          type: "executableCode",
+          executableCode: p.executableCode,
+        };
+      } else if ("codeExecutionResult" in p) {
+        return {
+          type: "codeExecutionResult",
+          codeExecutionResult: p.codeExecutionResult,
+        };
+      }
+      return p;
+    });
+  }
+
+  let text = "";
+  if (content && typeof content === "string") {
+    text = content;
+  } else if (content && typeof content === "object" && "text" in content[0]) {
+    text = content[0].text;
+  }
 
   const toolCallChunks: ToolCallChunk[] = [];
   if (functionCalls) {
@@ -303,11 +376,12 @@ export function convertResponseContentToChatGenerationChunk(
       }))
     );
   }
+
   return new ChatGenerationChunk({
     text,
     message: new AIMessageChunk({
-      content: text,
-      name: !content ? undefined : content.role,
+      content: content || "",
+      name: !candidateContent ? undefined : candidateContent.role,
       tool_call_chunks: toolCallChunks,
       // Each chunk can have unique "generationInfo", and merging strategy is unclear,
       // so leave blank for now.
