@@ -585,4 +585,38 @@ describe("GAuth Anthropic Chat", () => {
     expect(result.tool_calls?.[0].args).toHaveProperty("location");
   });
 
+  test("stream tools", async () => {
+    const model = new ChatVertexAI({
+      modelName,
+      callbacks,
+    });
+
+    const weatherTool = tool(
+      (_) => "The weather in San Francisco today is 18 degrees and sunny.",
+      {
+        name: "current_weather_tool",
+        description: "Get the current weather for a given location.",
+        schema: z.object({
+          location: z.string().describe("The location to get the weather for."),
+        }),
+      }
+    );
+
+    const modelWithTools = model.bindTools([weatherTool]);
+    const stream = await modelWithTools.stream(
+      "Whats the weather like today in San Francisco?"
+    );
+    let finalChunk: AIMessageChunk | undefined;
+    for await (const chunk of stream) {
+      finalChunk = !finalChunk ? chunk : concat(finalChunk, chunk);
+    }
+
+    expect(finalChunk).toBeDefined();
+    const toolCalls = finalChunk?.tool_calls;
+    expect(toolCalls).toBeDefined();
+    expect(toolCalls?.length).toBe(1);
+    expect(toolCalls?.[0].name).toBe("current_weather_tool");
+    expect(toolCalls?.[0].args).toHaveProperty("location");
+  });
+
 });

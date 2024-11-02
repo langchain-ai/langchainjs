@@ -196,7 +196,7 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
     return messageToChatGeneration(responseMessage as AnthropicResponseMessage);
   }
 
-  function contentBlockStartToChatGeneration(
+  function contentBlockStartTextToChatGeneration(
     event: AnthropicStreamContentBlockStartEvent
   ): ChatGenerationChunk | null {
     const content = event.content_block;
@@ -210,6 +210,51 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
       message,
       text,
     });
+  }
+
+  function contentBlockStartToolUseToChatGeneration(
+    event: AnthropicStreamContentBlockStartEvent
+  ): ChatGenerationChunk | null {
+    const contentBlock = event.content_block as AnthropicContentToolUse;
+    const text: string = "";
+    const toolChunk: ToolCallChunk = {
+      type: "tool_call_chunk",
+      index: event.index,
+      name: contentBlock.name,
+      id: contentBlock.id,
+    }
+    if (typeof contentBlock.input === "object" && Object.keys(contentBlock.input).length > 0) {
+      toolChunk.args = JSON.stringify(contentBlock.input);
+    }
+    const toolChunks: ToolCallChunk[] = [toolChunk];
+
+    const content: MessageContentComplex[] = [{
+      index: event.index,
+      ...contentBlock,
+    }];
+    const messageFields: AIMessageChunkFields = {
+      content,
+      tool_call_chunks: toolChunks,
+    }
+    const message = newAIMessageChunk(messageFields);
+    return new ChatGenerationChunk({
+      message,
+      text,
+    })
+  }
+
+  function contentBlockStartToChatGeneration(
+    event: AnthropicStreamContentBlockStartEvent
+  ): ChatGenerationChunk | null {
+    switch (event.content_block.type) {
+      case "text":
+        return contentBlockStartTextToChatGeneration(event);
+      case "tool_use":
+        return contentBlockStartToolUseToChatGeneration(event);
+      default:
+        console.warn(`Unexpected start content_block type: ${JSON.stringify(event)}`);
+        return null;
+    }
   }
 
   function contentBlockDeltaTextToChatGeneration(
@@ -259,7 +304,7 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
       case "input_json_delta":
         return contentBlockDeltaInputJsonDeltaToChatGeneration(event);
       default:
-        console.warn(`Unexpected content_block type: ${JSON.stringify(event)}`);
+        console.warn(`Unexpected delta content_block type: ${JSON.stringify(event)}`);
         return null;
     }
   }
