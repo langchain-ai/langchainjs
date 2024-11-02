@@ -47,9 +47,7 @@ const weatherTool = tool((_) => "no-op", {
   description:
     "Get the weather of a specific location and return the temperature in Celsius.",
   schema: z.object({
-    location: z
-      .string()
-      .describe("The name of city to get the weather for."),
+    location: z.string().describe("The name of city to get the weather for."),
   }),
 });
 
@@ -515,7 +513,7 @@ describe("GAuth Anthropic Chat", () => {
 
   // const modelName: string = "claude-3-5-sonnet@20240620";
   // const modelName: string = "claude-3-sonnet@20240229";
-  const modelName: string    = "claude-3-5-sonnet-v2@20241022";
+  const modelName: string = "claude-3-5-sonnet-v2@20241022";
 
   beforeEach(() => {
     recorder = new GoogleRequestRecorder();
@@ -618,5 +616,4 @@ describe("GAuth Anthropic Chat", () => {
     expect(toolCalls?.[0].name).toBe("current_weather_tool");
     expect(toolCalls?.[0].args).toHaveProperty("location");
   });
-
 });

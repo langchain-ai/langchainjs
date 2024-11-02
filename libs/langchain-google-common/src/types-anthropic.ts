@@ -87,7 +87,7 @@ export type AnthropicToolChoice =
 export type AnthropicToolInputSchema = object;
 
 export interface AnthropicTool {
-  type?: string;  // Just available on tools 20241022 and later?
+  type?: string; // Just available on tools 20241022 and later?
   name: string;
   description?: string;
   cache_control?: AnthropicCacheControl;

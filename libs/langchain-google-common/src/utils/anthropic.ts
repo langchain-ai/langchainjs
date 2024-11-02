@@ -10,9 +10,15 @@ import {
   MessageContentComplex,
   MessageContentText,
   MessageContent,
-  MessageContentImageUrl, AIMessageFields, AIMessageChunkFields,
+  MessageContentImageUrl,
+  AIMessageFields,
+  AIMessageChunkFields,
 } from "@langchain/core/messages";
-import {ToolCall, ToolCallChunk, ToolMessage} from "@langchain/core/messages/tool";
+import {
+  ToolCall,
+  ToolCallChunk,
+  ToolMessage,
+} from "@langchain/core/messages/tool";
 import {
   AnthropicAPIConfig,
   AnthropicContent,
@@ -21,19 +27,26 @@ import {
   AnthropicMessage,
   AnthropicMessageContent,
   AnthropicMessageContentImage,
-  AnthropicMessageContentText, AnthropicMessageContentToolResult, AnthropicMessageContentToolResultContent,
+  AnthropicMessageContentText,
+  AnthropicMessageContentToolResult,
+  AnthropicMessageContentToolResultContent,
   AnthropicRequest,
   AnthropicRequestSettings,
   AnthropicResponseData,
   AnthropicResponseMessage,
   AnthropicStreamContentBlockDeltaEvent,
-  AnthropicStreamContentBlockStartEvent, AnthropicStreamInputJsonDelta,
+  AnthropicStreamContentBlockStartEvent,
+  AnthropicStreamInputJsonDelta,
   AnthropicStreamMessageDeltaEvent,
   AnthropicStreamMessageStartEvent,
-  AnthropicStreamTextDelta, AnthropicTool, AnthropicToolChoice, GeminiTool,
+  AnthropicStreamTextDelta,
+  AnthropicTool,
+  AnthropicToolChoice,
+  GeminiTool,
   GoogleAIAPI,
   GoogleAIModelParams,
-  GoogleAIModelRequestParams, GoogleAIToolType,
+  GoogleAIModelRequestParams,
+  GoogleAIToolType,
   GoogleLLMResponse,
 } from "../types.js";
 
@@ -77,11 +90,11 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
     }
     const ret: AIMessageFields = {
       ...fields,
-    }
+    };
 
     if (Array.isArray(fields?.content)) {
       let str: string | undefined = "";
-      fields.content.forEach(val => {
+      fields.content.forEach((val) => {
         if (str !== undefined && val.type === "text") {
           str = `${str}${val.text}`;
         } else {
@@ -101,7 +114,7 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
   ): AIMessageFields {
     return {
       content: [textContent],
-    }
+    };
   }
 
   function toolUseContentToMessageFields(
@@ -112,11 +125,11 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
       name: toolUseContent.name,
       type: "tool_call",
       args: toolUseContent.input,
-    }
+    };
     return {
       content: [],
       tool_calls: [tool],
-    }
+    };
   }
 
   function anthropicContentToMessageFields(
@@ -141,17 +154,19 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
     anthropicContent.forEach((ac) => {
       const messageFields = anthropicContentToMessageFields(ac);
       if (messageFields?.content) {
-        complexContent.push(...messageFields.content as MessageContentComplex[]);
+        complexContent.push(
+          ...(messageFields.content as MessageContentComplex[])
+        );
       }
       if (messageFields?.tool_calls) {
-        toolCalls.push(...messageFields.tool_calls)
+        toolCalls.push(...messageFields.tool_calls);
       }
     });
 
     const ret: AIMessageFields = {
       content: complexContent,
       tool_calls: toolCalls,
-    }
+    };
     return newAIMessageChunk(ret);
   }
 
@@ -222,25 +237,30 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
       index: event.index,
       name: contentBlock.name,
       id: contentBlock.id,
-    }
-    if (typeof contentBlock.input === "object" && Object.keys(contentBlock.input).length > 0) {
+    };
+    if (
+      typeof contentBlock.input === "object" &&
+      Object.keys(contentBlock.input).length > 0
+    ) {
       toolChunk.args = JSON.stringify(contentBlock.input);
     }
     const toolChunks: ToolCallChunk[] = [toolChunk];
 
-    const content: MessageContentComplex[] = [{
-      index: event.index,
-      ...contentBlock,
-    }];
+    const content: MessageContentComplex[] = [
+      {
+        index: event.index,
+        ...contentBlock,
+      },
+    ];
     const messageFields: AIMessageChunkFields = {
       content,
       tool_call_chunks: toolChunks,
-    }
+    };
     const message = newAIMessageChunk(messageFields);
     return new ChatGenerationChunk({
       message,
       text,
-    })
+    });
   }
 
   function contentBlockStartToChatGeneration(
@@ -252,7 +272,9 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
       case "tool_use":
         return contentBlockStartToolUseToChatGeneration(event);
       default:
-        console.warn(`Unexpected start content_block type: ${JSON.stringify(event)}`);
+        console.warn(
+          `Unexpected start content_block type: ${JSON.stringify(event)}`
+        );
         return null;
     }
   }
@@ -278,21 +300,23 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
       {
         index: event.index,
         args: delta.partial_json,
-      }
+      },
     ];
-    const content: MessageContentComplex[] = [{
-      index: event.index,
-      ...delta,
-    }];
+    const content: MessageContentComplex[] = [
+      {
+        index: event.index,
+        ...delta,
+      },
+    ];
     const messageFields: AIMessageChunkFields = {
       content,
       tool_call_chunks: toolChunks,
-    }
+    };
     const message = newAIMessageChunk(messageFields);
     return new ChatGenerationChunk({
       message,
       text,
-    })
+    });
   }
 
   function contentBlockDeltaToChatGeneration(
@@ -304,7 +328,9 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
       case "input_json_delta":
         return contentBlockDeltaInputJsonDeltaToChatGeneration(event);
       default:
-        console.warn(`Unexpected delta content_block type: ${JSON.stringify(event)}`);
+        console.warn(
+          `Unexpected delta content_block type: ${JSON.stringify(event)}`
+        );
         return null;
     }
   }
@@ -474,23 +500,23 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
     };
   }
 
-  function toolMessageToAnthropicMessage(
-    base: ToolMessage
-  ): AnthropicMessage {
+  function toolMessageToAnthropicMessage(base: ToolMessage): AnthropicMessage {
     const role = "user";
     const toolUseId = base.tool_call_id;
-    const toolContent = contentToAnthropicContent(base.content) as AnthropicMessageContentToolResultContent[];
+    const toolContent = contentToAnthropicContent(
+      base.content
+    ) as AnthropicMessageContentToolResultContent[];
     const content: AnthropicMessageContentToolResult[] = [
       {
         type: "tool_result",
         tool_use_id: toolUseId,
         content: toolContent,
-      }
-    ]
+      },
+    ];
     return {
       role,
       content,
-    }
+    };
   }
 
   function baseToAnthropicMessage(
@@ -582,17 +608,19 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
   function formatGeminiTool(tool: GeminiTool): AnthropicTool[] {
     if (Object.hasOwn(tool, "functionDeclarations")) {
       const funcs = tool?.functionDeclarations ?? [];
-      return funcs.map(func => {
+      return funcs.map((func) => {
         const inputSchema = func.parameters!;
         return {
           // type: "tool",  // This may only be valid for models 20241022+
           name: func.name,
           description: func.description,
           input_schema: inputSchema,
-        }
-      })
+        };
+      });
     } else {
-      console.warn(`Unable to format GeminiTool: ${JSON.stringify(tool,null,1)}`);
+      console.warn(
+        `Unable to format GeminiTool: ${JSON.stringify(tool, null, 1)}`
+      );
       return [];
     }
   }
@@ -601,25 +629,29 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
     if (Object.hasOwn(tool, "name")) {
       return [tool as AnthropicTool];
     } else {
-      return formatGeminiTool(tool as GeminiTool)
+      return formatGeminiTool(tool as GeminiTool);
     }
   }
 
-  function formatTools(parameters: GoogleAIModelRequestParams): AnthropicTool[] {
+  function formatTools(
+    parameters: GoogleAIModelRequestParams
+  ): AnthropicTool[] {
     const tools: GoogleAIToolType[] = parameters?.tools ?? [];
     const ret: AnthropicTool[] = [];
-    tools.forEach(tool => {
+    tools.forEach((tool) => {
       const anthropicTools = formatTool(tool);
-      anthropicTools.forEach(anthropicTool => {
+      anthropicTools.forEach((anthropicTool) => {
         if (anthropicTool) {
-          ret.push(anthropicTool)
+          ret.push(anthropicTool);
         }
-      })
-    })
+      });
+    });
     return ret;
   }
 
-  function formatToolChoice(parameters: GoogleAIModelRequestParams): AnthropicToolChoice | undefined {
+  function formatToolChoice(
+    parameters: GoogleAIModelRequestParams
+  ): AnthropicToolChoice | undefined {
     const choice = parameters?.tool_choice;
     if (!choice) {
       return undefined;
@@ -631,14 +663,14 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
         case "auto":
           return {
             type: choice,
-          }
+          };
         case "none":
           return undefined;
         default:
           return {
             type: "tool",
             name: choice,
-          }
+          };
       }
     }
   }
@@ -659,7 +691,7 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
       messages,
       ...settings,
     };
-    if (tools && tools.length && (parameters?.tool_choice !== "none")) {
+    if (tools && tools.length && parameters?.tool_choice !== "none") {
       ret.tools = tools;
     }
     if (toolChoice) {
