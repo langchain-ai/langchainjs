@@ -540,7 +540,7 @@ describe("GAuth Anthropic Chat", () => {
 
     const connection = recorder?.request?.connection;
     expect(connection?.url).toEqual(
-      "https://us-east5-aiplatform.googleapis.com/v1/projects/test-vertex-ai-382612/locations/us-east5/publishers/anthropic/models/claude-3-5-sonnet@20240620:rawPredict"
+      `https://us-east5-aiplatform.googleapis.com/v1/projects/test-vertex-ai-382612/locations/us-east5/publishers/anthropic/models/${modelName}:rawPredict`
     );
 
     console.log(JSON.stringify(aiMessage, null, 1));

@@ -65,6 +65,37 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
     }
   }
 
+  /**
+   * Normalize the AIMessageChunk.
+   * If the fields are just a string - use that as content.
+   * If the content is an array of just text fields, turn them into a string.
+   * @param fields
+   */
+  function newAIMessageChunk(fields: string | AIMessageFields): AIMessageChunk {
+    if (typeof fields === "string") {
+      return new AIMessageChunk(fields);
+    }
+    const ret: AIMessageFields = {
+      ...fields,
+    }
+
+    if (Array.isArray(fields?.content)) {
+      let str: string | undefined = "";
+      fields.content.forEach(val => {
+        if (str !== undefined && val.type === "text") {
+          str = `${str}${val.text}`;
+        } else {
+          str = undefined;
+        }
+      });
+      if (str) {
+        ret.content = str;
+      }
+    }
+
+    return new AIMessageChunk(ret);
+  }
+
   function textContentToMessageFields(
     textContent: AnthropicContentText
   ): AIMessageFields {
@@ -121,7 +152,7 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
       content: complexContent,
       tool_calls: toolCalls,
     }
-    return new AIMessageChunk(ret);
+    return newAIMessageChunk(ret);
   }
 
   function messageToGenerationInfo(message: AnthropicResponseMessage) {
@@ -186,7 +217,7 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
   ): ChatGenerationChunk {
     const delta = event.delta as AnthropicStreamTextDelta;
     const text = delta?.text;
-    const message = new AIMessageChunk(text);
+    const message = newAIMessageChunk(text);
     return new ChatGenerationChunk({
       message,
       text,
@@ -212,7 +243,7 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
       content,
       tool_call_chunks: toolChunks,
     }
-    const message = new AIMessageChunk(messageFields);
+    const message = newAIMessageChunk(messageFields);
     return new ChatGenerationChunk({
       message,
       text,
