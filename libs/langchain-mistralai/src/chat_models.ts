@@ -12,6 +12,7 @@ import { ChatCompletionStreamRequest as MistralChatCompletionStreamRequest } fro
 import { UsageInfo as MistralAITokenUsage } from "@mistralai/mistralai/models/components/usageinfo.js";
 import { CompletionEvent as MistralAIChatCompletionEvent } from "@mistralai/mistralai/models/components/completionevent.js";
 import { ChatCompletionResponse as MistralChatCompletionResponse } from "@mistralai/mistralai/models/components/chatcompletionresponse.js";
+import { HTTPClient } from "@mistralai/mistralai/lib/http.js";
 import {
   MessageType,
   type BaseMessage,
@@ -167,6 +168,11 @@ export interface ChatMistralAIInput
    * The seed to use for random sampling. If set, different calls will generate deterministic results.
    */
   seed?: number;
+  /**
+   * 
+   */
+  httpClient?: HTTPClient | undefined;
+  
 }
 
 function convertMessagesToMistralMessages(
@@ -822,6 +828,12 @@ export class ChatMistralAI<
 
   streamUsage = true;
 
+  /**
+   * Optional custom HTTP client to manage API requests
+   * Allows users to add custom fetch implementations, hooks, as well as error and response processing.
+   */
+  httpClient?: HTTPClient;
+
   constructor(fields?: ChatMistralAIInput) {
     super(fields ?? {});
     const apiKey = fields?.apiKey ?? getEnvironmentVariable("MISTRAL_API_KEY");
@@ -840,9 +852,11 @@ export class ChatMistralAI<
     this.safePrompt = fields?.safePrompt ?? this.safePrompt;
     this.randomSeed = fields?.seed ?? fields?.randomSeed ?? this.seed;
     this.seed = this.randomSeed;
+    this.httpClient = fields?.httpClient;
     this.modelName = fields?.model ?? fields?.modelName ?? this.model;
     this.model = this.modelName;
     this.streamUsage = fields?.streamUsage ?? this.streamUsage;
+    this.httpClient = fields?.httpClient ?? undefined;
   }
 
   get lc_secrets(): { [key: string]: string } | undefined {
@@ -931,6 +945,8 @@ export class ChatMistralAI<
     const client = new MistralClient({
       apiKey: this.apiKey,
       serverURL: this.serverURL,
+      // If httpClient exists, pass it into constructor
+      ...( this.httpClient ? {httpCLient: this.httpClient} : {})
     });
 
     return this.caller.call(async () => {

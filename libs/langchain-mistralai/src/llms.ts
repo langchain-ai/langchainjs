@@ -7,6 +7,7 @@ import { FIMCompletionStreamRequest as MistralFIMCompletionStreamRequest} from "
 import { FIMCompletionResponse as MistralFIMCompletionResponse } from "@mistralai/mistralai/models/components/fimcompletionresponse.js";
 import { ChatCompletionChoice as MistralChatCompletionChoice} from "@mistralai/mistralai/models/components/chatcompletionchoice.js";
 import { CompletionEvent as MistralChatCompletionEvent } from "@mistralai/mistralai/models/components/completionevent.js";
+import { HTTPClient } from "@mistralai/mistralai/lib/http.js";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { chunkArray } from "@langchain/core/utils/chunk_array";
 import { AsyncCaller } from "@langchain/core/utils/async_caller";
@@ -68,6 +69,11 @@ export interface MistralAIInput extends BaseLLMParams {
    * Batch size to use when passing multiple documents to generate
    */
   batchSize?: number;
+  /**
+   * Optional custom HTTP client to manage API requests
+   * Allows users to add custom fetch implementations, hooks, as well as error and response processing.
+   */
+  httpClient?: HTTPClient;
 }
 
 /**
@@ -107,6 +113,8 @@ export class MistralAI
 
   maxConcurrency?: number;
 
+  httpClient?: HTTPClient;
+
   constructor(fields?: MistralAIInput) {
     super(fields ?? {});
 
@@ -120,6 +128,7 @@ export class MistralAI
     this.serverURL = fields?.serverURL;
     this.maxRetries = fields?.maxRetries;
     this.maxConcurrency = fields?.maxConcurrency;
+    this.httpClient = fields?.httpClient ?? undefined;
 
     const apiKey = fields?.apiKey ?? getEnvironmentVariable("MISTRAL_API_KEY");
     if (!apiKey) {
@@ -314,7 +323,8 @@ Either provide one via the "apiKey" field in the constructor, or set the "MISTRA
       apiKey: this.apiKey,
       serverURL: this.serverURL,
       timeoutMs: options.timeout,
-      // this.maxRetries,
+      // If httpClient exists, pass it into constructor
+      ...( this.httpClient ? {httpCLient: this.httpClient} : {})
     });
     return caller.callWithOptions(
       {
