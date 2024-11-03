@@ -935,6 +935,7 @@ export class ChatMistralAI<
     this.safePrompt = fields?.safePrompt ?? this.safePrompt;
     this.randomSeed = fields?.seed ?? fields?.randomSeed ?? this.seed;
     this.seed = this.randomSeed;
+    this.httpClient = fields?.httpClient;
     this.modelName = fields?.model ?? fields?.modelName ?? this.model;
     this.model = this.modelName;
     this.streamUsage = fields?.streamUsage ?? this.streamUsage;
