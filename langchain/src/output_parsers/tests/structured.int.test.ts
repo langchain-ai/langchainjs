@@ -1,25 +1,28 @@
 import { expect, test } from "@jest/globals";
 import { z } from "zod";
-
-import { OpenAI, ChatOpenAI } from "@langchain/openai";
+import { ChatOpenAI } from "@langchain/openai";
 import {
   ChatPromptTemplate,
   PromptTemplate,
   SystemMessagePromptTemplate,
 } from "@langchain/core/prompts";
-import { LLMChain } from "../../chains/index.js";
 import { StructuredOutputParser } from "../structured.js";
 
 test("StructuredOutputParser deals special chars in prompt with llm model", async () => {
-  const model = new OpenAI({
+  const model = new ChatOpenAI({
     temperature: 0,
+    model: "gpt-3.5-turbo",
   });
 
-  const parser = StructuredOutputParser.fromNamesAndDescriptions({
-    question1: "a very on-topic question",
-    question2: "a super weird question",
-    question3: "an on-topic, but slightly creative",
-  });
+  const parser = StructuredOutputParser.fromZodSchema(
+    z.object({
+      questions: z.object({
+        question1: z.string().describe("a very on-topic question"),
+        question2: z.string().describe("a super weird question"),
+        question3: z.string().describe("an on-topic, but slightly creative"),
+      }),
+    })
+  );
 
   const prompt = new PromptTemplate({
     template: "context:\n{context}\n---{format_instructions}",
@@ -29,14 +32,9 @@ test("StructuredOutputParser deals special chars in prompt with llm model", asyn
     },
   });
 
-  const chain = new LLMChain({
-    llm: model,
-    prompt,
-    outputParser: parser,
-    outputKey: "questions",
-  });
+  const chain = prompt.pipe(model).pipe(parser);
 
-  const result = await chain.call({
+  const result = await chain.invoke({
     context: `The U2 ur-myth begins in 1976, when drummer Larry Mullen wanted to form a band.
       He picked four school friends from Mount Temple Comprehensive School in Dublin.
       “Larry formed U2,” says Paul McGuinness, U2’s manager from the beginning. “He
@@ -54,13 +52,18 @@ test("StructuredOutputParser deals special chars in prompt with llm model", asyn
 test("StructuredOutputParser deals special chars in prompt with chat model", async () => {
   const model = new ChatOpenAI({
     temperature: 0,
+    model: "gpt-3.5-turbo",
   });
 
-  const parser = StructuredOutputParser.fromNamesAndDescriptions({
-    question1: "a very on-topic question",
-    question2: "a super weird question",
-    question3: "an on-topic, but slightly creative",
-  });
+  const parser = StructuredOutputParser.fromZodSchema(
+    z.object({
+      questions: z.object({
+        question1: z.string().describe("a very on-topic question"),
+        question2: z.string().describe("a super weird question"),
+        question3: z.string().describe("an on-topic, but slightly creative"),
+      }),
+    })
+  );
 
   const prompt = new ChatPromptTemplate({
     promptMessages: [
@@ -73,14 +76,9 @@ test("StructuredOutputParser deals special chars in prompt with chat model", asy
     },
   });
 
-  const chain = new LLMChain({
-    llm: model,
-    prompt,
-    outputParser: parser,
-    outputKey: "questions",
-  });
+  const chain = prompt.pipe(model).pipe(parser);
 
-  const result = await chain.call({
+  const result = await chain.invoke({
     context: `The U2 ur-myth begins in 1976, when drummer Larry Mullen wanted to form a band.
         He picked four school friends from Mount Temple Comprehensive School in Dublin.
         “Larry formed U2,” says Paul McGuinness, U2’s manager from the beginning. “He
@@ -98,13 +96,18 @@ test("StructuredOutputParser deals special chars in prompt with chat model", asy
 test("StructuredOutputParser deals special chars in prompt with chat model 2", async () => {
   const model = new ChatOpenAI({
     temperature: 0,
+    model: "gpt-3.5-turbo",
   });
 
-  const parser = StructuredOutputParser.fromNamesAndDescriptions({
-    question1: "a very on-topic question",
-    question2: "a super weird question",
-    question3: "an on-topic, but slightly creative",
-  });
+  const parser = StructuredOutputParser.fromZodSchema(
+    z.object({
+      questions: z.object({
+        question1: z.string().describe("a very on-topic question"),
+        question2: z.string().describe("a super weird question"),
+        question3: z.string().describe("an on-topic, but slightly creative"),
+      }),
+    })
+  );
 
   const prompt = new ChatPromptTemplate({
     promptMessages: [
@@ -117,13 +120,9 @@ test("StructuredOutputParser deals special chars in prompt with chat model 2", a
     },
   });
 
-  const chain = new LLMChain({
-    llm: model,
-    prompt,
-    outputKey: "questions",
-  });
+  const chain = prompt.pipe(model);
 
-  const result = await chain.call({
+  const result = await chain.invoke({
     context: `The U2 ur-myth begins in 1976, when drummer Larry Mullen wanted to form a band.
           He picked four school friends from Mount Temple Comprehensive School in Dublin.
           “Larry formed U2,” says Paul McGuinness, U2’s manager from the beginning. “He
@@ -132,11 +131,11 @@ test("StructuredOutputParser deals special chars in prompt with chat model 2", a
   });
 
   // console.log("response", result);
-  const parsed = await parser.parse(result.questions);
+  const parsed = await parser.parse(result.content.toString());
 
-  expect(parsed).toHaveProperty("question1");
-  expect(parsed).toHaveProperty("question2");
-  expect(parsed).toHaveProperty("question3");
+  expect(parsed.questions).toHaveProperty("question1");
+  expect(parsed.questions).toHaveProperty("question2");
+  expect(parsed.questions).toHaveProperty("question3");
 });
 
 test("StructuredOutputParser handles a longer and more complex schema", async () => {
@@ -164,7 +163,10 @@ test("StructuredOutputParser handles a longer and more complex schema", async ()
     partialVariables: { format_instructions: formatInstructions },
   });
 
-  const model = new OpenAI({ temperature: 0.5, modelName: "gpt-3.5-turbo" });
+  const model = new ChatOpenAI({
+    temperature: 0.5,
+    modelName: "gpt-3.5-turbo",
+  });
 
   const input = await prompt.format({
     inputText: "A man, living in Poland.",
@@ -172,7 +174,7 @@ test("StructuredOutputParser handles a longer and more complex schema", async ()
   const response = await model.invoke(input);
   // console.log("response", response);
 
-  const parsed = await parser.parse(response);
+  const parsed = await parser.parse(response.content.toString());
 
   expect(parsed).toHaveProperty("name");
   expect(parsed).toHaveProperty("surname");
@@ -183,4 +185,19 @@ test("StructuredOutputParser handles a longer and more complex schema", async ()
   expect(parsed).toHaveProperty("gender");
   expect(parsed).toHaveProperty("interests");
   expect(parsed.interests.length).toBeGreaterThan(0);
+});
+
+test("StructuredOutputParser handles nested backticks", async () => {
+  const parser = StructuredOutputParser.fromZodSchema(
+    z.object({
+      result: z.string(),
+    })
+  );
+
+  const result = `{"result": "long markdown text with example \`\`\`javascript\\nfunction(){}\`\`\` here"}`;
+
+  const parsed = await parser.parse(result);
+  // console.log(parsed);
+
+  expect(parsed).toHaveProperty("result");
 });
