@@ -16,11 +16,13 @@ const model = new ChatGoogleGenerativeAI({});
 let fileResult: UploadFileResponse;
 
 beforeAll(async () => {
+  // Download video file and save in src/tests/data
+  // curl -O https://storage.googleapis.com/generativeai-downloads/data/Sherlock_Jr_FullMovie.mp4
   const displayName = 'Sherlock Jr. video';
 
   const filename = fileURLToPath(import.meta.url);
   const dirname = path.dirname(filename);
-  const pathToVideoFile = path.join(dirname, "/data/hotdog.jpg");
+  const pathToVideoFile = path.join(dirname, "/data/Sherlock_Jr_FullMovie.mp4");
 
   const contextCache = new GoogleGenerativeAIContextCache(process.env.GOOGLE_API_KEY || "");
   fileResult = await contextCache.uploadFile(pathToVideoFile, {
@@ -28,17 +30,15 @@ beforeAll(async () => {
     mimeType: 'video/mp4',
   });
 
-  const { name, uri } = fileResult.file;
+  const { name } = fileResult.file;
 
   // Poll getFile() on a set interval (2 seconds here) to check file state.
   let file = await contextCache.getFile(name);
   while (file.state === FileState.PROCESSING) {
-    console.log('Waiting for video to be processed.');
     // Sleep for 2 seconds
     await new Promise((resolve) => setTimeout(resolve, 2_000));
     file = await contextCache.getFile(name);
   }
-  console.log(`Video processing complete: ${uri}`);
 
   const systemInstruction =
     'You are an expert video analyzer, and your job is to answer ' +
@@ -64,13 +64,13 @@ beforeAll(async () => {
   });
 
   model.enableCachedContent(cachedContent);
-});
+}, 10 * 60 * 1000); // Set timeout to 10 minutes to upload file
 
 test("Test Google AI", async () => {
   const res = await model.invoke('Introduce different characters in the movie by describing ' +
     'their personality, looks, and names. Also list the ' +
     'timestamps they were introduced for the first time.');
 
-  console.log(res)
+  console.log(res);
   expect(res).toBeTruthy();
 });
