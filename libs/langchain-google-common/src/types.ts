@@ -57,10 +57,59 @@ export interface GoogleConnectionParams<AuthOptions>
   platformType?: GooglePlatformType;
 }
 
+export enum GoogleAISafetyCategory {
+  Harassment = "HARM_CATEGORY_HARASSMENT",
+  HARASSMENT = Harassment,
+  HARM_CATEGORY_HARASSMENT = Harassment,
+
+  HateSpeech = "HARM_CATEGORY_HATE_SPEECH",
+  HATE_SPEECH = HateSpeech,
+  HARM_CATEGORY_HATE_SPEECH = HateSpeech,
+
+  SexuallyExplicit = "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+  SEXUALLY_EXPLICIT = SexuallyExplicit,
+  HARM_CATEGORY_SEXUALLY_EXPLICIT = SexuallyExplicit,
+
+  Dangerous = "HARM_CATEGORY_DANGEROUS",
+  DANGEROUS = Dangerous,
+  HARM_CATEGORY_DANGEROUS = Dangerous,
+
+  CivicIntegrity = "HARM_CATEGORY_CIVIC_INTEGRITY",
+  CIVIC_INTEGRITY = CivicIntegrity,
+  HARM_CATEGORY_CIVIC_INTEGRITY = CivicIntegrity,
+}
+
+export enum GoogleAISafetyThreshold {
+  None = "BLOCK_NONE",
+  NONE = None,
+  BLOCK_NONE = None,
+
+  Few = "BLOCK_ONLY_HIGH",
+  FEW = Few,
+  BLOCK_ONLY_HIGH = Few,
+
+  Some = "BLOCK_MEDIUM_AND_ABOVE",
+  SOME = Some,
+  BLOCK_MEDIUM_AND_ABOVE = Some,
+
+  Most = "BLOCK_LOW_AND_ABOVE",
+  MOST = Most,
+  BLOCK_LOW_AND_ABOVE = Most,
+
+  Off = "OFF",
+  OFF = Off,
+  BLOCK_OFF = Off,
+}
+
+export enum GoogleAISafetyMethod {
+  Severity = "SEVERITY",
+  Probability = "PROBABILITY",
+}
+
 export interface GoogleAISafetySetting {
-  category: string;
-  threshold: string;
-  method?: string;
+  category: GoogleAISafetyCategory | string;
+  threshold: GoogleAISafetyThreshold | string;
+  method?: GoogleAISafetyMethod | string; // Just for Vertex AI?
 }
 
 export type GoogleAIResponseMimeType = "text/plain" | "application/json";
