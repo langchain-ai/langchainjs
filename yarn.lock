@@ -10306,6 +10306,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@google/generative-ai@npm:^0.21.0":
+  version: 0.21.0
+  resolution: "@google/generative-ai@npm:0.21.0"
+  checksum: 91345a8399b5e71382193d0eac47a4b264613a9d7e48a431290b523e3fbb44a207a33bdead304f181987e5a0127a84168c4e21cf461c1087cd3b0ebc5125d13d
+  languageName: node
+  linkType: hard
+
 "@google/generative-ai@npm:^0.7.0":
   version: 0.7.1
   resolution: "@google/generative-ai@npm:0.7.1"
@@ -12136,11 +12143,23 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/google-genai@*, @langchain/google-genai@workspace:*, @langchain/google-genai@workspace:libs/langchain-google-genai":
+"@langchain/google-genai@npm:*":
+  version: 0.1.2
+  resolution: "@langchain/google-genai@npm:0.1.2"
+  dependencies:
+    "@google/generative-ai": ^0.7.0
+    zod-to-json-schema: ^3.22.4
+  peerDependencies:
+    "@langchain/core": ">=0.2.21 <0.4.0"
+  checksum: 69113d66898e7e7fe2c852a844edbd440f72caf7445b555ce4dc1bdd6cd530b404dc3631662d70458604bf9ee395bba8c2c1d4c5a024b29498d7bd977573051a
+  languageName: node
+  linkType: hard
+
+"@langchain/google-genai@workspace:*, @langchain/google-genai@workspace:libs/langchain-google-genai":
   version: 0.0.0-use.local
   resolution: "@langchain/google-genai@workspace:libs/langchain-google-genai"
   dependencies:
-    "@google/generative-ai": ^0.7.0
+    "@google/generative-ai": ^0.21.0
     "@jest/globals": ^29.5.0
     "@langchain/core": "workspace:*"
     "@langchain/scripts": ">=0.1.0 <0.2.0"
@@ -12169,7 +12188,7 @@ __metadata:
     zod: ^3.22.4
     zod-to-json-schema: ^3.22.4
   peerDependencies:
-    "@langchain/core": ">=0.2.21 <0.4.0"
+    "@langchain/core": ">=0.3.17 <0.4.0"
   languageName: unknown
   linkType: soft
 
