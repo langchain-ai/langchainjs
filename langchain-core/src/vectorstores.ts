@@ -790,12 +790,14 @@ export abstract class VectorStore
    *    - A configured `VectorStoreRetriever` instance based on the provided parameters.
    *
    * @example
-   * // Basic usage with a `k` value:
-   * const retriever = asRetriever(5);
+   * Basic usage with a `k` value:
+   * ```typescript
+   * const retriever = myVectorStore.asRetriever(5);
+   * ```
    *
-   * @example
-   * // Usage with a configuration object:
-   * const retriever = asRetriever({
+   * Usage with a configuration object:
+   * ```typescript
+   * const retriever = myVectorStore.asRetriever({
    *   k: 10,
    *   filter: myFilter,
    *   tags: ['example', 'test'],
@@ -803,6 +805,7 @@ export abstract class VectorStore
    *   searchType: 'mmr',
    *   searchKwargs: { alpha: 0.5 },
    * });
+   * ```
    */
   asRetriever(
     kOrFields?: number | Partial<VectorStoreRetrieverInput<this>>,
