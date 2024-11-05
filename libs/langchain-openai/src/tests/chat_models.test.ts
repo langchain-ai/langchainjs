@@ -256,4 +256,85 @@ describe("strict tool calling", () => {
       throw new Error("Body not found in request.");
     }
   });
+
+  test("Predicted output is passed through", async () => {
+    const mockFetch = jest.fn<(url: any, options?: any) => Promise<any>>();
+    mockFetch.mockImplementation((url, options) => {
+      // Store the request details for later inspection
+      mockFetch.mock.calls.push([url, options]);
+
+      // Return a mock response
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({}),
+      });
+    });
+
+    const model = new ChatOpenAI({
+      model: "gpt-4o-mini",
+      apiKey: "test-key",
+      configuration: {
+        fetch: mockFetch,
+      },
+      maxRetries: 0,
+    });
+
+    const code = `
+/// <summary>
+/// Represents a user with a first name, last name, and username.
+/// </summary>
+public class User
+{
+    /// <summary>
+    /// Gets or sets the user's first name.
+    /// </summary>
+    public string FirstName { get; set; }
+
+    /// <summary>
+    /// Gets or sets the user's last name.
+    /// </summary>
+    public string LastName { get; set; }
+
+    /// <summary>
+    /// Gets or sets the user's username.
+    /// </summary>
+    public string Username { get; set; }
+}
+`;
+    // Mock will fail
+    await expect(
+      model.invoke(
+        [
+          {
+            role: "user",
+            content:
+              "Replace the Username property with an Email property. Respond only with code, and with no markdown formatting.",
+          },
+          {
+            role: "user",
+            content: code,
+          },
+        ],
+        {
+          prediction: {
+            type: "content",
+            content: code,
+          },
+        }
+      )
+    ).rejects.toThrow();
+
+    expect(mockFetch).toHaveBeenCalled();
+    const [_url, options] = mockFetch.mock.calls[0];
+
+    if (options && options.body) {
+      const body = JSON.parse(options.body);
+      expect(body.prediction).toEqual({
+        type: "content",
+        content: code,
+      });
+    } else {
+      throw new Error("Body not found in request.");
+    }
+  });
 });

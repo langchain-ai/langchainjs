@@ -636,3 +636,62 @@ test.skip("system prompt caching", async () => {
     aggregate?.response_metadata?.usage.prompt_tokens_details.cached_tokens
   ).toBeGreaterThan(0);
 });
+
+test("predicted output", async () => {
+  const model = new ChatOpenAI({
+    model: "gpt-4o-mini",
+  });
+  const code = `
+/// <summary>
+/// Represents a user with a first name, last name, and username.
+/// </summary>
+public class User
+{
+    /// <summary>
+    /// Gets or sets the user's first name.
+    /// </summary>
+    public string FirstName { get; set; }
+
+    /// <summary>
+    /// Gets or sets the user's last name.
+    /// </summary>
+    public string LastName { get; set; }
+
+    /// <summary>
+    /// Gets or sets the user's username.
+    /// </summary>
+    public string Username { get; set; }
+}
+`;
+  const res = await model.invoke(
+    [
+      {
+        role: "user",
+        content:
+          "Replace the Username property with an Email property. Respond only with code, and with no markdown formatting.",
+      },
+      {
+        role: "user",
+        content: code,
+      },
+    ],
+    {
+      prediction: {
+        type: "content",
+        content: code,
+      },
+    }
+  );
+  console.log(res);
+  // TODO: Remove cast when we don't have to support 0.2.x core versions
+  expect(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    typeof (res.usage_metadata?.output_token_details as any)
+      ?.accepted_prediction
+  ).toBe("number");
+  expect(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    typeof (res.usage_metadata?.output_token_details as any)
+      ?.rejected_prediction
+  ).toBe("number");
+});

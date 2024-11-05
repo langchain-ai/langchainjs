@@ -423,6 +423,11 @@ export interface ChatOpenAICallOptions
    * [Learn more](https://platform.openai.com/docs/guides/audio).
    */
   audio?: OpenAIClient.Chat.ChatCompletionAudioParam;
+  /**
+   * Static predicted output content, such as the content of a text file that is being regenerated.
+   * [Learn more](https://platform.openai.com/docs/guides/latency-optimization#use-predicted-outputs).
+   */
+  prediction?: OpenAIClient.ChatCompletionPredictionContent;
 }
 
 export interface ChatOpenAIFields
@@ -1329,6 +1334,9 @@ export class ChatOpenAI<
         : {}),
       ...this.modelKwargs,
     };
+    if (options?.prediction !== undefined) {
+      params.prediction = options.prediction;
+    }
     return params;
   }
 
@@ -1621,6 +1629,24 @@ export class ChatOpenAI<
           }),
           ...(completionTokensDetails?.reasoning_tokens !== null && {
             reasoning: completionTokensDetails?.reasoning_tokens,
+          }),
+        };
+      }
+
+      if (
+        completionTokensDetails?.accepted_prediction_tokens !== null ||
+        completionTokensDetails?.rejected_prediction_tokens !== null
+      ) {
+        // TODO: Remove cast when we don't have to support 0.2.x core versions
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (usageMetadata.output_token_details as any) = {
+          ...(completionTokensDetails?.accepted_prediction_tokens !== null && {
+            accepted_prediction:
+              completionTokensDetails?.accepted_prediction_tokens,
+          }),
+          ...(completionTokensDetails?.rejected_prediction_tokens !== null && {
+            rejected_prediction:
+              completionTokensDetails?.rejected_prediction_tokens,
           }),
         };
       }
