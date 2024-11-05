@@ -682,16 +682,12 @@ public class User
       },
     }
   );
-  console.log(res);
-  // TODO: Remove cast when we don't have to support 0.2.x core versions
   expect(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    typeof (res.usage_metadata?.output_token_details as any)
-      ?.accepted_prediction
+    typeof res.response_metadata?.usage?.completion_tokens_details
+      .accepted_prediction_tokens
   ).toBe("number");
   expect(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    typeof (res.usage_metadata?.output_token_details as any)
-      ?.rejected_prediction
+    typeof res.response_metadata?.usage?.completion_tokens_details
+      .rejected_prediction_tokens
   ).toBe("number");
 });

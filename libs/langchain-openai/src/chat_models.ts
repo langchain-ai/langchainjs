@@ -1633,24 +1633,6 @@ export class ChatOpenAI<
         };
       }
 
-      if (
-        completionTokensDetails?.accepted_prediction_tokens !== null ||
-        completionTokensDetails?.rejected_prediction_tokens !== null
-      ) {
-        // TODO: Remove cast when we don't have to support 0.2.x core versions
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (usageMetadata.output_token_details as any) = {
-          ...(completionTokensDetails?.accepted_prediction_tokens !== null && {
-            accepted_prediction:
-              completionTokensDetails?.accepted_prediction_tokens,
-          }),
-          ...(completionTokensDetails?.rejected_prediction_tokens !== null && {
-            rejected_prediction:
-              completionTokensDetails?.rejected_prediction_tokens,
-          }),
-        };
-      }
-
       const generations: ChatGeneration[] = [];
       for (const part of data?.choices ?? []) {
         const text = part.message?.content ?? "";
