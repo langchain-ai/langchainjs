@@ -2,12 +2,12 @@ import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { BaseLLMParams, LLM } from "@langchain/core/language_models/llms";
 import { type BaseLanguageModelCallOptions } from "@langchain/core/language_models/base";
 import { GenerationChunk, LLMResult } from "@langchain/core/outputs";
-import { FIMCompletionRequest as MistralFIMCompletionRequest } from "@mistralai/mistralai/models/components/fimcompletionrequest.js";
-import { FIMCompletionStreamRequest as MistralFIMCompletionStreamRequest} from "@mistralai/mistralai/models/components/fimcompletionstreamrequest.js";
-import { FIMCompletionResponse as MistralFIMCompletionResponse } from "@mistralai/mistralai/models/components/fimcompletionresponse.js";
-import { ChatCompletionChoice as MistralChatCompletionChoice} from "@mistralai/mistralai/models/components/chatcompletionchoice.js";
-import { CompletionEvent as MistralChatCompletionEvent } from "@mistralai/mistralai/models/components/completionevent.js";
-import { HTTPClient } from "@mistralai/mistralai/lib/http.js";
+import { FIMCompletionRequest as MistralAIFIMCompletionRequest } from "@mistralai/mistralai/models/components/fimcompletionrequest.js";
+import { FIMCompletionStreamRequest as MistralAIFIMCompletionStreamRequest} from "@mistralai/mistralai/models/components/fimcompletionstreamrequest.js";
+import { FIMCompletionResponse as MistralAIFIMCompletionResponse } from "@mistralai/mistralai/models/components/fimcompletionresponse.js";
+import { ChatCompletionChoice as MistralAIChatCompletionChoice} from "@mistralai/mistralai/models/components/chatcompletionchoice.js";
+import { CompletionEvent as MistralAIChatCompletionEvent } from "@mistralai/mistralai/models/components/completionevent.js";
+import { HTTPClient as MistralAIHTTPClient} from "@mistralai/mistralai/lib/http.js";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { chunkArray } from "@langchain/core/utils/chunk_array";
 import { AsyncCaller } from "@langchain/core/utils/async_caller";
@@ -73,7 +73,7 @@ export interface MistralAIInput extends BaseLLMParams {
    * Optional custom HTTP client to manage API requests
    * Allows users to add custom fetch implementations, hooks, as well as error and response processing.
    */
-  httpClient?: HTTPClient;
+  httpClient?: MistralAIHTTPClient;
 }
 
 /**
@@ -113,7 +113,7 @@ export class MistralAI
 
   maxConcurrency?: number;
 
-  httpClient?: HTTPClient;
+  httpClient?: MistralAIHTTPClient;
 
   constructor(fields?: MistralAIInput) {
     super(fields ?? {});
@@ -158,7 +158,7 @@ Either provide one via the "apiKey" field in the constructor, or set the "MISTRA
 
   invocationParams(
     options: this["ParsedCallOptions"]
-  ): Omit<MistralFIMCompletionRequest | MistralFIMCompletionStreamRequest, "prompt"> {
+  ): Omit<MistralAIFIMCompletionRequest | MistralAIFIMCompletionStreamRequest, "prompt"> {
     return {
       model: this.model,
       suffix: options.suffix,
@@ -194,7 +194,7 @@ Either provide one via the "apiKey" field in the constructor, or set the "MISTRA
     runManager?: CallbackManagerForLLMRun
   ): Promise<LLMResult> {
     const subPrompts = chunkArray(prompts, this.batchSize);
-    const choices: MistralChatCompletionChoice[][] = [];
+    const choices: MistralAIChatCompletionChoice[][] = [];
 
     const params = this.invocationParams(options);
 
@@ -202,14 +202,14 @@ Either provide one via the "apiKey" field in the constructor, or set the "MISTRA
       const data = await (async () => {
         if (this.streaming) {
           const responseData: Array<
-            { choices: MistralChatCompletionChoice[] } & Partial<
-              Omit<MistralFIMCompletionResponse, "choices">
+            { choices: MistralAIChatCompletionChoice[] } & Partial<
+              Omit<MistralAIFIMCompletionResponse, "choices">
             >
           > = [];
           for (let x = 0; x < subPrompts[i].length; x += 1) {
-            const choices: MistralChatCompletionChoice[] = [];
+            const choices: MistralAIChatCompletionChoice[] = [];
             let response:
-              | Omit<MistralFIMCompletionResponse, "choices" | "usage">
+              | Omit<MistralAIFIMCompletionResponse, "choices" | "usage">
               | undefined;
               const stream = await this.completionWithRetry(
               {
@@ -263,7 +263,7 @@ Either provide one via the "apiKey" field in the constructor, or set the "MISTRA
           }
           return responseData;
         } else {
-          const responseData: Array<MistralFIMCompletionResponse> = [];
+          const responseData: Array<MistralAIFIMCompletionResponse> = [];
           for (let x = 0; x < subPrompts[i].length; x += 1) {
             const res = await this.completionWithRetry(
               {
@@ -296,23 +296,23 @@ Either provide one via the "apiKey" field in the constructor, or set the "MISTRA
   }
 
   async completionWithRetry(
-    request: MistralFIMCompletionRequest,
+    request: MistralAIFIMCompletionRequest,
     options: this["ParsedCallOptions"],
     stream: false
-  ): Promise<MistralFIMCompletionResponse>;
+  ): Promise<MistralAIFIMCompletionResponse>;
 
   async completionWithRetry(
-    request: MistralFIMCompletionStreamRequest,
+    request: MistralAIFIMCompletionStreamRequest,
     options: this["ParsedCallOptions"],
     stream: true
-  ): Promise<AsyncIterable<MistralChatCompletionEvent>>;
+  ): Promise<AsyncIterable<MistralAIChatCompletionEvent>>;
 
   async completionWithRetry(
-    request: MistralFIMCompletionRequest | MistralFIMCompletionStreamRequest,
+    request: MistralAIFIMCompletionRequest | MistralAIFIMCompletionStreamRequest,
     options: this["ParsedCallOptions"],
     stream: boolean
   ): Promise<
-    MistralFIMCompletionResponse | AsyncIterable<MistralChatCompletionEvent>
+    MistralAIFIMCompletionResponse | AsyncIterable<MistralAIChatCompletionEvent>
   > {
     const { Mistral } = await this.imports();
     const caller = new AsyncCaller({
@@ -324,7 +324,7 @@ Either provide one via the "apiKey" field in the constructor, or set the "MISTRA
       serverURL: this.serverURL,
       timeoutMs: options.timeout,
       // If httpClient exists, pass it into constructor
-      ...( this.httpClient ? {httpCLient: this.httpClient} : {})
+      ...( this.httpClient ? {httpClient: this.httpClient} : {})
     });
     return caller.callWithOptions(
       {
@@ -333,8 +333,8 @@ Either provide one via the "apiKey" field in the constructor, or set the "MISTRA
       async () => {
         try {
           let res:
-            | MistralFIMCompletionResponse
-            | AsyncIterable<MistralChatCompletionEvent>;
+            | MistralAIFIMCompletionResponse
+            | AsyncIterable<MistralAIChatCompletionEvent>;
           if (stream) {
             res = await client.fim.stream(request);
           } else {
