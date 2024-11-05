@@ -12143,19 +12143,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/google-genai@npm:*":
-  version: 0.1.2
-  resolution: "@langchain/google-genai@npm:0.1.2"
-  dependencies:
-    "@google/generative-ai": ^0.7.0
-    zod-to-json-schema: ^3.22.4
-  peerDependencies:
-    "@langchain/core": ">=0.2.21 <0.4.0"
-  checksum: 69113d66898e7e7fe2c852a844edbd440f72caf7445b555ce4dc1bdd6cd530b404dc3631662d70458604bf9ee395bba8c2c1d4c5a024b29498d7bd977573051a
-  languageName: node
-  linkType: hard
-
-"@langchain/google-genai@workspace:*, @langchain/google-genai@workspace:libs/langchain-google-genai":
+"@langchain/google-genai@*, @langchain/google-genai@workspace:*, @langchain/google-genai@workspace:libs/langchain-google-genai":
   version: 0.0.0-use.local
   resolution: "@langchain/google-genai@workspace:libs/langchain-google-genai"
   dependencies:
