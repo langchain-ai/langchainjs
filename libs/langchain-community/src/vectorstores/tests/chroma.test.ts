@@ -138,16 +138,17 @@ describe("Chroma", () => {
       pageContent: "Document 1",
       metadata: { source: "https://example.com" },
     };
-    
+
     const documents = [document1];
 
-    const chroma = new Chroma(
-      new FakeEmbeddings(), 
-      {collectionName: "new-test-collection", index: mockClient});
+    const chroma = new Chroma(new FakeEmbeddings(), {
+      collectionName: "new-test-collection",
+      index: mockClient,
+    });
 
-    chroma.addDocuments(documents, { ids: ["0"] })
+    await chroma.addDocuments(documents, { ids: ["0"] });
     const result = await chroma.similaritySearch(document1.pageContent, 1);
-    
+
     expect(result[0]).toHaveProperty("id", "0");
   });
 });
