@@ -1,6 +1,7 @@
 import { BaseDocumentLoader } from "@langchain/core/document_loaders/base";
 import { Document } from "@langchain/core/documents";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
+import { AsyncCaller } from "@langchain/core/utils/async_caller";
 
 interface AirtableLoaderOptions {
   tableId: string;
@@ -30,11 +31,7 @@ export class AirtableLoader extends BaseDocumentLoader {
 
   private static readonly BASE_URL = "https://api.airtable.com/v0";
 
-  private static readonly MAX_RETRIES = 3;
-
-  private static readonly DEFAULT_RETRY_DELAY_MS = 1000;
-
-  private static readonly FETCH_ABORT_TIMEOUT = 10000;
+  private asyncCaller: AsyncCaller;
 
   /**
    * Initializes the AirtableLoader with configuration options.
@@ -57,6 +54,8 @@ export class AirtableLoader extends BaseDocumentLoader {
         "Missing Airtable API token. Please set AIRTABLE_API_TOKEN environment variable."
       );
     }
+
+    this.asyncCaller = new AsyncCaller({ maxRetries: 3, maxConcurrency: 5 });
   }
 
   /**
@@ -71,7 +70,7 @@ export class AirtableLoader extends BaseDocumentLoader {
     try {
       do {
         const url = this.constructUrl(offset);
-        const data = await this.retryFetchRecords(url);
+        const data = await this.asyncCaller.call(() => this.fetchRecords(url));
         data.records.forEach((record: AirtableRecord) =>
           documents.push(this.createDocument(record))
         );
@@ -97,7 +96,7 @@ export class AirtableLoader extends BaseDocumentLoader {
     try {
       do {
         const url = this.constructUrl(offset);
-        const data = await this.retryFetchRecords(url);
+        const data = await this.asyncCaller.call(() => this.fetchRecords(url));
 
         for (const record of data.records) {
           yield this.createDocument(record);
@@ -108,34 +107,6 @@ export class AirtableLoader extends BaseDocumentLoader {
     } catch (error) {
       console.error("Error loading Airtable records lazily:", error);
       throw new Error("Failed to load Airtable records lazily");
-    }
-  }
-
-  /**
-   * Fetches records from Airtable with retry logic to handle transient failures.
-   *
-   * @param url - The Airtable API request URL.
-   * @param attempt - Current retry attempt number.
-   * @returns A promise that resolves to an AirtableResponse object.
-   */
-  private async retryFetchRecords(
-    url: string,
-    attempt = 1
-  ): Promise<AirtableResponse> {
-    try {
-      return await this.fetchRecords(url);
-    } catch (error) {
-      const maxRetries = AirtableLoader.MAX_RETRIES;
-      const retryDelayMs = AirtableLoader.DEFAULT_RETRY_DELAY_MS;
-
-      if (attempt <= maxRetries) {
-        console.warn(
-          `Attempt ${attempt} failed. Retrying in ${retryDelayMs}ms...`
-        );
-        await this.delay(retryDelayMs);
-        return this.retryFetchRecords(url, attempt + 1);
-      }
-      throw new Error(`Failed to fetch records after ${maxRetries} attempts.`);
     }
   }
 
@@ -163,10 +134,6 @@ export class AirtableLoader extends BaseDocumentLoader {
    */
   private async fetchRecords(url: string): Promise<AirtableResponse> {
     const controller = new AbortController();
-    const timeoutId = setTimeout(
-      () => controller.abort(),
-      AirtableLoader.FETCH_ABORT_TIMEOUT
-    );
 
     try {
       const response = await fetch(url, {
@@ -186,8 +153,6 @@ export class AirtableLoader extends BaseDocumentLoader {
     } catch (error) {
       console.error("Error during fetch:", error);
       throw error;
-    } finally {
-      clearTimeout(timeoutId);
     }
   }
 
@@ -205,17 +170,5 @@ export class AirtableLoader extends BaseDocumentLoader {
       ...(this.kwargs.view && { view: this.kwargs.view }),
     };
     return new Document({ pageContent: JSON.stringify(record), metadata });
-  }
-
-  /**
-   * Delays execution by a specified number of milliseconds.
-   *
-   * @param ms - The number of milliseconds to delay.
-   * @returns A promise that resolves after the specified delay.
-   */
-  private delay(ms: number): Promise<void> {
-    return new Promise<void>((resolve) => {
-      setTimeout(resolve, ms);
-    });
   }
 }
