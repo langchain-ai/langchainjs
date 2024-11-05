@@ -270,8 +270,6 @@ export class PGVectorStore extends VectorStore {
     } else {
       this._verbose = config.verbose;
     }
-
-
   }
 
   get computedTableName() {
@@ -535,8 +533,9 @@ export class PGVectorStore extends VectorStore {
 
     const queryString = `
       DELETE FROM ${this.computedTableName}
-      WHERE ${collectionId ? "collection_id = $2 AND " : ""}${this.idColumnName
-      } = ANY($1::uuid[])
+      WHERE ${collectionId ? "collection_id = $2 AND " : ""}${
+      this.idColumnName
+    } = ANY($1::uuid[])
     `;
     await this.pool.query(queryString, params);
   }
@@ -559,8 +558,9 @@ export class PGVectorStore extends VectorStore {
 
     const queryString = `
       DELETE FROM ${this.computedTableName}
-      WHERE ${collectionId ? "collection_id = $2 AND " : ""}${this.metadataColumnName
-      }::jsonb @> $1
+      WHERE ${collectionId ? "collection_id = $2 AND " : ""}${
+      this.metadataColumnName
+    }::jsonb @> $1
     `;
     return await this.pool.query(queryString, params);
   }
@@ -866,10 +866,12 @@ export class PGVectorStore extends VectorStore {
         throw new Error(`Unknown distance strategy: ${this.distanceStrategy}`);
     }
 
-    const createIndexQuery = `CREATE INDEX IF NOT EXISTS ${prefix}${this.vectorColumnName
-      }_embedding_hnsw_idx
-        ON ${this.computedTableName} USING hnsw ((${this.vectorColumnName
-      }::vector(${config.dimensions})) ${idxDistanceFunction})
+    const createIndexQuery = `CREATE INDEX IF NOT EXISTS ${prefix}${
+      this.vectorColumnName
+    }_embedding_hnsw_idx
+        ON ${this.computedTableName} USING hnsw ((${
+      this.vectorColumnName
+    }::vector(${config.dimensions})) ${idxDistanceFunction})
         WITH (
             m=${config?.m || 16},
             ef_construction=${config?.efConstruction || 64}
