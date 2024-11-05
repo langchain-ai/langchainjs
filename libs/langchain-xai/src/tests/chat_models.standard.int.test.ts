@@ -69,7 +69,7 @@ class ChatXAIStandardIntegrationTests extends ChatModelIntegrationTests<
 const testClass = new ChatXAIStandardIntegrationTests();
 
 test("ChatXAIStandardIntegrationTests", async () => {
-  console.warn = (..._args: any[]) => {
+  console.warn = (..._args: unknown[]) => {
     // no-op
   };
   const testResults = await testClass.runTests();

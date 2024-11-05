@@ -2,12 +2,12 @@ import { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { AIMessage } from "@langchain/core/messages";
-import { ChatGroq } from "../chat_models.js";
+import { ChatXAI } from "../chat_models.js";
 
 test("withStructuredOutput zod schema function calling", async () => {
-  const model = new ChatGroq({
+  const model = new ChatXAI({
     temperature: 0,
-    modelName: "mixtral-8x7b-32768",
+    model: "grok-beta",
   });
 
   const calculatorSchema = z.object({
@@ -35,9 +35,9 @@ test("withStructuredOutput zod schema function calling", async () => {
 });
 
 test("withStructuredOutput zod schema JSON mode", async () => {
-  const model = new ChatGroq({
+  const model = new ChatXAI({
     temperature: 0,
-    modelName: "mixtral-8x7b-32768",
+    model: "grok-beta",
   });
 
   const calculatorSchema = z.object({
@@ -74,9 +74,9 @@ Respond with a JSON object containing three keys:
 });
 
 test("withStructuredOutput JSON schema function calling", async () => {
-  const model = new ChatGroq({
+  const model = new ChatXAI({
     temperature: 0,
-    modelName: "mixtral-8x7b-32768",
+    model: "grok-beta",
   });
 
   const calculatorSchema = z.object({
@@ -104,9 +104,9 @@ test("withStructuredOutput JSON schema function calling", async () => {
 });
 
 test("withStructuredOutput OpenAI function definition function calling", async () => {
-  const model = new ChatGroq({
+  const model = new ChatXAI({
     temperature: 0,
-    modelName: "mixtral-8x7b-32768",
+    model: "grok-beta",
   });
 
   const calculatorSchema = z.object({
@@ -134,9 +134,9 @@ test("withStructuredOutput OpenAI function definition function calling", async (
 });
 
 test("withStructuredOutput JSON schema JSON mode", async () => {
-  const model = new ChatGroq({
+  const model = new ChatXAI({
     temperature: 0,
-    modelName: "mixtral-8x7b-32768",
+    model: "grok-beta",
   });
 
   const calculatorSchema = z.object({
@@ -173,9 +173,9 @@ Respond with a JSON object containing three keys:
 });
 
 test("withStructuredOutput JSON schema", async () => {
-  const model = new ChatGroq({
+  const model = new ChatXAI({
     temperature: 0,
-    modelName: "mixtral-8x7b-32768",
+    model: "grok-beta",
   });
 
   const jsonSchema = {
@@ -214,9 +214,9 @@ Respond with a JSON object containing three keys:
 });
 
 test("withStructuredOutput includeRaw true", async () => {
-  const model = new ChatGroq({
+  const model = new ChatXAI({
     temperature: 0,
-    modelName: "mixtral-8x7b-32768",
+    model: "grok-beta",
   });
 
   const calculatorSchema = z.object({
@@ -256,20 +256,14 @@ test("withStructuredOutput includeRaw true", async () => {
     throw new Error("raw not in result");
   }
   const { raw } = result as { raw: AIMessage };
-  expect(raw.additional_kwargs.tool_calls?.length).toBeGreaterThan(0);
-  expect(raw.additional_kwargs.tool_calls?.[0].function.name).toBe(
-    "calculator"
-  );
-  expect(
-    "operation" in
-      JSON.parse(raw.additional_kwargs.tool_calls?.[0].function.arguments ?? "")
-  ).toBe(true);
-  expect(
-    "number1" in
-      JSON.parse(raw.additional_kwargs.tool_calls?.[0].function.arguments ?? "")
-  ).toBe(true);
-  expect(
-    "number2" in
-      JSON.parse(raw.additional_kwargs.tool_calls?.[0].function.arguments ?? "")
-  ).toBe(true);
+
+  expect(raw.tool_calls?.[0].args).toBeDefined();
+  if (!raw.tool_calls?.[0].args) {
+    throw new Error("args not in tool call");
+  }
+  expect(raw.tool_calls?.length).toBeGreaterThan(0);
+  expect(raw.tool_calls?.[0].name).toBe("calculator");
+  expect("operation" in raw.tool_calls[0].args).toBe(true);
+  expect("number1" in raw.tool_calls[0].args).toBe(true);
+  expect("number2" in raw.tool_calls[0].args).toBe(true);
 });

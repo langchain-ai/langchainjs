@@ -8,10 +8,10 @@ import {
 import { tool } from "@langchain/core/tools";
 import { z } from "zod";
 import { concat } from "@langchain/core/utils/stream";
-import { ChatGroq } from "../chat_models.js";
+import { ChatXAI } from "../chat_models.js";
 
 test("invoke", async () => {
-  const chat = new ChatGroq({
+  const chat = new ChatXAI({
     maxRetries: 0,
   });
   const message = new HumanMessage("What color is the sky?");
@@ -21,7 +21,7 @@ test("invoke", async () => {
 });
 
 test("invoke with stop sequence", async () => {
-  const chat = new ChatGroq({
+  const chat = new ChatXAI({
     maxRetries: 0,
   });
   const message = new HumanMessage("Count to ten.");
@@ -32,7 +32,7 @@ test("invoke with stop sequence", async () => {
 });
 
 test("invoke should respect passed headers", async () => {
-  const chat = new ChatGroq({
+  const chat = new ChatXAI({
     maxRetries: 0,
   });
   const message = new HumanMessage("Count to ten.");
@@ -44,7 +44,7 @@ test("invoke should respect passed headers", async () => {
 });
 
 test("stream should respect passed headers", async () => {
-  const chat = new ChatGroq({
+  const chat = new ChatXAI({
     maxRetries: 0,
   });
   const message = new HumanMessage("Count to ten.");
@@ -56,7 +56,7 @@ test("stream should respect passed headers", async () => {
 });
 
 test("generate", async () => {
-  const chat = new ChatGroq();
+  const chat = new ChatXAI();
   const message = new HumanMessage("Hello!");
   const res = await chat.generate([[message]]);
   // console.log(JSON.stringify(res, null, 2));
@@ -64,7 +64,7 @@ test("generate", async () => {
 });
 
 test("streaming", async () => {
-  const chat = new ChatGroq();
+  const chat = new ChatXAI();
   const message = new HumanMessage("What color is the sky?");
   const stream = await chat.stream([message]);
   let iters = 0;
@@ -78,9 +78,9 @@ test("streaming", async () => {
 });
 
 test("invoke with bound tools", async () => {
-  const chat = new ChatGroq({
+  const chat = new ChatXAI({
     maxRetries: 0,
-    modelName: "mixtral-8x7b-32768",
+    model: "grok-beta",
   });
   const message = new HumanMessage("What is the current weather in Hawaii?");
   const res = await chat
@@ -118,7 +118,7 @@ test("invoke with bound tools", async () => {
 });
 
 test("stream with bound tools, yielding a single chunk", async () => {
-  const chat = new ChatGroq({
+  const chat = new ChatXAI({
     maxRetries: 0,
   });
   const message = new HumanMessage("What is the current weather in Hawaii?");
@@ -155,8 +155,8 @@ test("stream with bound tools, yielding a single chunk", async () => {
 });
 
 test("Few shotting with tool calls", async () => {
-  const chat = new ChatGroq({
-    modelName: "mixtral-8x7b-32768",
+  const chat = new ChatXAI({
+    model: "grok-beta",
     temperature: 0,
   }).bind({
     tools: [
@@ -207,8 +207,8 @@ test("Few shotting with tool calls", async () => {
 });
 
 test("Groq can stream tool calls", async () => {
-  const model = new ChatGroq({
-    model: "llama-3.1-70b-versatile",
+  const model = new ChatXAI({
+    model: "grok-beta",
     temperature: 0,
   });
 

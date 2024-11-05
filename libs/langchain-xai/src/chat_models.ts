@@ -4,6 +4,7 @@ import {
   LangSmithParams,
   type BaseChatModelParams,
 } from "@langchain/core/language_models/chat_models";
+import { Serialized } from "@langchain/core/load/serializable";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import {
   type OpenAICoreRequestOptions,
@@ -59,23 +60,21 @@ export interface ChatXAIInput extends BaseChatModelParams {
 }
 
 /**
- * Groq chat model integration.
+ * xAI chat model integration.
  *
- * The Groq API is compatible to the OpenAI API with some limitations. View the
- * full API ref at:
- * @link {https://docs.api.groq.com/md/openai.oas.html}
+ * The xAI API is compatible to the OpenAI API with some limitations.
  *
  * Setup:
- * Install `@langchain/groq` and set an environment variable named `XAI_API_KEY`.
+ * Install `@langchain/xai` and set an environment variable named `XAI_API_KEY`.
  *
  * ```bash
- * npm install @langchain/groq
+ * npm install @langchain/xai
  * export XAI_API_KEY="your-api-key"
  * ```
  *
- * ## [Constructor args](https://api.js.langchain.com/classes/langchain_groq.ChatXAI.html#constructor)
+ * ## [Constructor args](https://api.js.langchain.com/classes/langchain_xai.ChatXAI.html#constructor)
  *
- * ## [Runtime args](https://api.js.langchain.com/interfaces/langchain_groq.ChatXAICallOptions.html)
+ * ## [Runtime args](https://api.js.langchain.com/interfaces/langchain_xai.ChatXAICallOptions.html)
  *
  * Runtime args can be passed as the second argument to any of the base runnable methods `.invoke`. `.stream`, `.batch`, etc.
  * They can also be passed via `.bind`, or the second arg in `.bindTools`, like shown in the examples below:
@@ -102,10 +101,10 @@ export interface ChatXAIInput extends BaseChatModelParams {
  * <summary><strong>Instantiate</strong></summary>
  *
  * ```typescript
- * import { ChatXAI } from '@langchain/groq';
+ * import { ChatXAI } from '@langchain/xai';
  *
  * const llm = new ChatXAI({
- *   model: "mixtral-8x7b-32768",
+ *   model: "grok-beta",
  *   temperature: 0,
  *   // other params...
  * });
@@ -299,7 +298,7 @@ export interface ChatXAIInput extends BaseChatModelParams {
  * import { z } from 'zod';
  *
  * const llmForToolCalling = new ChatXAI({
- *   model: "llama3-groq-70b-8192-tool-use-preview",
+ *   model: "grok-beta",
  *   temperature: 0,
  *   // other params...
  * });
@@ -403,6 +402,8 @@ export class ChatXAI extends ChatOpenAI<ChatXAICallOptions> {
 
   lc_serializable = true;
 
+  lc_namespace = ["langchain", "chat_models", "xai"];
+
   constructor(fields?: Partial<ChatXAIInput>) {
     const apiKey = fields?.apiKey || getEnvironmentVariable("XAI_API_KEY");
     if (!apiKey) {
@@ -419,6 +420,21 @@ export class ChatXAI extends ChatOpenAI<ChatXAICallOptions> {
         baseURL: "https://api.x.ai/v1",
       },
     });
+  }
+
+  toJSON(): Serialized {
+    const result = super.toJSON();
+
+    if (
+      "kwargs" in result &&
+      typeof result.kwargs === "object" &&
+      result.kwargs != null
+    ) {
+      delete result.kwargs.openai_api_key;
+      delete result.kwargs.configuration;
+    }
+
+    return result;
   }
 
   getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
