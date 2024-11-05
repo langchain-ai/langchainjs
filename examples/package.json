@@ -38,6 +38,7 @@
     "@langchain/azure-cosmosdb": "workspace:*",
     "@langchain/azure-dynamic-sessions": "workspace:^",
     "@langchain/azure-openai": "workspace:*",
+    "@langchain/xai": "workspace:*",
     "@langchain/baidu-qianfan": "workspace:*",
     "@langchain/cloudflare": "workspace:*",
     "@langchain/cohere": "workspace:*",

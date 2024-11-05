@@ -12820,7 +12820,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/xai@workspace:libs/langchain-xai":
+"@langchain/xai@workspace:*, @langchain/xai@workspace:libs/langchain-xai":
   version: 0.0.0-use.local
   resolution: "@langchain/xai@workspace:libs/langchain-xai"
   dependencies:
@@ -27342,6 +27342,7 @@ __metadata:
     "@langchain/scripts": ">=0.1.0 <0.2.0"
     "@langchain/textsplitters": "workspace:*"
     "@langchain/weaviate": "workspace:*"
+    "@langchain/xai": "workspace:*"
     "@langchain/yandex": "workspace:*"
     "@layerup/layerup-security": ^1.5.12
     "@opensearch-project/opensearch": ^2.2.0
