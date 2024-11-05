@@ -51,7 +51,6 @@ import {
 } from "../types.js";
 
 export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
-
   function partToString(part: AnthropicContent): string {
     return "text" in part ? part.text : "";
   }
