@@ -353,7 +353,14 @@ export abstract class ChatGoogleBase<AuthOptions>
             });
       if (chunk) {
         yield chunk;
-        await runManager?.handleLLMNewToken(chunk.text);
+        await runManager?.handleLLMNewToken(
+          chunk.text ?? "",
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          { chunk }
+        );
       }
     }
   }
