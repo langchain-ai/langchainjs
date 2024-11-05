@@ -2,8 +2,8 @@ import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { Embeddings, type EmbeddingsParams } from "@langchain/core/embeddings";
 import { chunkArray } from "@langchain/core/utils/chunk_array";
 import { EmbeddingRequest as MistralAIEmbeddingsRequest} from "@mistralai/mistralai/src/models/components/embeddingrequest.js";
-import { EmbeddingResponse as MistralAIEmbeddingsResult} from "@mistralai/mistralai/src/models/components/embeddingresponse.js";
-import { HTTPClient } from "@mistralai/mistralai/lib/http.js";
+import { EmbeddingResponse as MistralAIEmbeddingsResponse} from "@mistralai/mistralai/src/models/components/embeddingresponse.js";
+import { HTTPClient as MistralAIHTTPClient} from "@mistralai/mistralai/lib/http.js";
 
 /**
  * Interface for MistralAIEmbeddings parameters. Extends EmbeddingsParams and
@@ -50,7 +50,7 @@ export interface MistralAIEmbeddingsParams extends EmbeddingsParams {
    * Optional custom HTTP client to manage API requests
    * Allows users to add custom fetch implementations, hooks, as well as error and response processing.
    */
-  httpCLient?: HTTPClient;
+  httpClient?: MistralAIHTTPClient;
 
 }
 
@@ -75,7 +75,7 @@ export class MistralAIEmbeddings
 
   serverURL?: string;
 
-  httpClient?: HTTPClient;
+  httpClient?: MistralAIHTTPClient;
 
   constructor(fields?: Partial<MistralAIEmbeddingsParams>) {
     super(fields ?? {});
@@ -90,7 +90,7 @@ export class MistralAIEmbeddings
     this.encodingFormat = fields?.encodingFormat ?? this.encodingFormat;
     this.batchSize = fields?.batchSize ?? this.batchSize;
     this.stripNewLines = fields?.stripNewLines ?? this.stripNewLines;
-    this.httpClient = fields?.httpCLient ?? undefined;
+    this.httpClient = fields?.httpClient ?? undefined;
   }
 
   /**
@@ -140,17 +140,17 @@ export class MistralAIEmbeddings
    * embeddings. Handles the retry logic and returns the response from the
    * API.
    * @param {string | Array<string>} inputs Text to send to the MistralAI API.
-   * @returns {Promise<MistralAIEmbeddingsResult>} Promise that resolves to the response from the API.
+   * @returns {Promise<MistralAIEmbeddingsResponse>} Promise that resolves to the response from the API.
    */
   private async embeddingWithRetry(
     inputs: string | Array<string>
-  ): Promise<MistralAIEmbeddingsResult> {
+  ): Promise<MistralAIEmbeddingsResponse> {
     const { Mistral } = await this.imports();
     const client = new Mistral({
       apiKey: this.apiKey, 
       serverURL: this.serverURL,
       // If httpClient exists, pass it into constructor
-      ...( this.httpClient ? {httpCLient: this.httpClient} : {})
+      ...( this.httpClient ? {httpClient: this.httpClient} : {})
     });
     let embeddingsRequest: MistralAIEmbeddingsRequest = {
       model: this.model,

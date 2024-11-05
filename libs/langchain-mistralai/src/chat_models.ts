@@ -5,14 +5,14 @@ import {
   ChatCompletionRequestToolChoice as MistralAIToolChoice,
   Messages as MistralAIMessage,
 } from "@mistralai/mistralai/models/components/chatcompletionrequest.js";
-import { ContentChunk, ContentChunk$ } from "@mistralai/mistralai/models/components/contentchunk.js";
+import { ContentChunk as MistralAIContentChunk} from "@mistralai/mistralai/models/components/contentchunk.js";
 import { Tool as MistralAITool } from "@mistralai/mistralai/models/components/tool.js";
 import { ToolCall as MistralAIToolCall } from "@mistralai/mistralai/models/components/toolcall.js";
-import { ChatCompletionStreamRequest as MistralChatCompletionStreamRequest } from "@mistralai/mistralai/models/components/chatcompletionstreamrequest.js";
+import { ChatCompletionStreamRequest as MistralAIChatCompletionStreamRequest } from "@mistralai/mistralai/models/components/chatcompletionstreamrequest.js";
 import { UsageInfo as MistralAITokenUsage } from "@mistralai/mistralai/models/components/usageinfo.js";
 import { CompletionEvent as MistralAIChatCompletionEvent } from "@mistralai/mistralai/models/components/completionevent.js";
-import { ChatCompletionResponse as MistralChatCompletionResponse } from "@mistralai/mistralai/models/components/chatcompletionresponse.js";
-import { HTTPClient } from "@mistralai/mistralai/lib/http.js";
+import { ChatCompletionResponse as MistralAIChatCompletionResponse } from "@mistralai/mistralai/models/components/chatcompletionresponse.js";
+import { HTTPClient as MistralAIHTTPClient} from "@mistralai/mistralai/lib/http.js";
 import {
   MessageType,
   type BaseMessage,
@@ -164,7 +164,7 @@ export interface ChatMistralAIInput
   /**
    * 
    */
-  httpClient?: HTTPClient | undefined;
+  httpClient?: MistralAIHTTPClient | undefined;
   
 }
 
@@ -188,22 +188,22 @@ function convertMessagesToMistralMessages(
     }
   };
 
-  const getContent = (content: MessageContent, role: MessageType): string | ContentChunk[] => {
+  const getContent = (content: MessageContent, role: MessageType): string | MistralAIContentChunk[] => {
     const mistralRole = getRole(role);
 
-    const _generateContentChunk = (complex: any, role: string): ContentChunk => {
+    const _generateContentChunk = (complex: any, role: string): MistralAIContentChunk => {
       if (complex.type === "image_url" && role === "user") {
         return {
           type: complex.type,
           imageUrl: complex?.image_url
-        } as ContentChunk;
+        } as MistralAIContentChunk;
       }
       
       if (complex.type === "text" && (role === "user" || role === "system")){
         return {
           type: complex.type,
           text: complex?.text
-        } as ContentChunk;
+        } as MistralAIContentChunk;
       }
 
       throw new Error(
@@ -286,7 +286,7 @@ function convertMessagesToMistralMessages(
 }
 
 function mistralAIResponseToChatMessage(
-  choice: NonNullable<MistralChatCompletionResponse["choices"]>[0],
+  choice: NonNullable<MistralAIChatCompletionResponse["choices"]>[0],
   usage?: MistralAITokenUsage
 ): BaseMessage {
   const { message } = choice;
@@ -821,7 +821,7 @@ export class ChatMistralAI<
    * Optional custom HTTP client to manage API requests
    * Allows users to add custom fetch implementations, hooks, as well as error and response processing.
    */
-  httpClient?: HTTPClient;
+  httpClient?: MistralAIHTTPClient;
 
   constructor(fields?: ChatMistralAIInput) {
     super(fields ?? {});
@@ -840,7 +840,6 @@ export class ChatMistralAI<
     this.safePrompt = fields?.safePrompt ?? this.safePrompt;
     this.randomSeed = fields?.seed ?? fields?.randomSeed ?? this.seed;
     this.seed = this.randomSeed;
-    this.httpClient = fields?.httpClient;
     this.modelName = fields?.model ?? fields?.modelName ?? this.model;
     this.model = this.modelName;
     this.streamUsage = fields?.streamUsage ?? this.streamUsage;
@@ -902,32 +901,32 @@ export class ChatMistralAI<
    * @returns {Promise<MistralAIChatCompletionResult | AsyncGenerator<MistralAIChatCompletionResult>>} The response from the MistralAI API.
    */
   async completionWithRetry(
-    input: MistralChatCompletionStreamRequest,
+    input: MistralAIChatCompletionStreamRequest,
     streaming: true
   ): Promise<AsyncIterable<MistralAIChatCompletionEvent>>;
 
   async completionWithRetry(
     input: MistralAIChatCompletionRequest,
     streaming: false
-  ): Promise<MistralChatCompletionResponse>;
+  ): Promise<MistralAIChatCompletionResponse>;
 
   async completionWithRetry(
-    input: MistralAIChatCompletionRequest | MistralChatCompletionStreamRequest,
+    input: MistralAIChatCompletionRequest | MistralAIChatCompletionStreamRequest,
     streaming: boolean
   ): Promise<
-    MistralChatCompletionResponse | AsyncIterable<MistralAIChatCompletionEvent>
+    MistralAIChatCompletionResponse | AsyncIterable<MistralAIChatCompletionEvent>
   > {
     const client = new MistralClient({
       apiKey: this.apiKey,
       serverURL: this.serverURL,
       // If httpClient exists, pass it into constructor
-      ...( this.httpClient ? {httpCLient: this.httpClient} : {})
+      ...( this.httpClient ? {httpClient: this.httpClient} : {})
     });
 
     return this.caller.call(async () => {
       try {
         let res:
-          | MistralChatCompletionResponse
+          | MistralAIChatCompletionResponse
           | AsyncIterable<MistralAIChatCompletionEvent>;
         if (streaming) {
           res = await client.chat.stream(input);
