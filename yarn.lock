@@ -12552,7 +12552,7 @@ __metadata:
     jest: ^29.5.0
     jest-environment-node: ^29.6.4
     js-tiktoken: ^1.0.12
-    openai: ^4.68.0
+    openai: ^4.71.0
     prettier: ^2.8.3
     release-it: ^17.6.0
     rimraf: ^5.0.1
@@ -35695,9 +35695,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"openai@npm:^4.68.0":
-  version: 4.68.0
-  resolution: "openai@npm:4.68.0"
+"openai@npm:^4.71.0":
+  version: 4.71.0
+  resolution: "openai@npm:4.71.0"
   dependencies:
     "@types/node": ^18.11.18
     "@types/node-fetch": ^2.6.4
@@ -35713,7 +35713,7 @@ __metadata:
       optional: true
   bin:
     openai: bin/cli
-  checksum: 2866e54ac1b34e074055dde7cc809bcc33d1172f0ab289dacd54ced04a62ab3c2b9f584fdb84ece981edc5c30939497af4e91fe33646f71d5c6ced5d7106a797
+  checksum: ba4b3772e806c59b1ea1235a40486392c797906e45dd97914f2cd819b4be2996e207c7b7c67d43236692300354f4e9ffa8ebfca6e97d3555655ebf0f3f01e3f2
   languageName: node
   linkType: hard
 
