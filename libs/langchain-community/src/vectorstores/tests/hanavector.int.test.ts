@@ -5,7 +5,14 @@ import { Document } from "@langchain/core/documents";
 import { FakeEmbeddings } from "@langchain/core/utils/testing";
 import { test, expect } from "@jest/globals";
 import { HanaDB, HanaDBArgs } from "../hanavector.js";
-
+import {
+  DOCUMENTS,
+  TYPE_1_FILTERING_TEST_CASES,
+  TYPE_2_FILTERING_TEST_CASES,
+  TYPE_3_FILTERING_TEST_CASES,
+  TYPE_4_FILTERING_TEST_CASES,
+  TYPE_5_FILTERING_TEST_CASES,
+} from "./hanavector.fixtures.js";
 // Connection parameters
 const connectionParams = {
   host: process.env.HANA_HOST,
@@ -269,12 +276,10 @@ describe("add documents and similarity search tests", () => {
         },
       },
     ]);
-
     const results: Document[] = await vectorStore.similaritySearch(
       "Sandwiches taste good.",
       1
     );
-    // console.log(results);
     expect(results.length).toEqual(1);
     expect(results).toMatchObject([
       {
@@ -867,4 +872,428 @@ describe("Tests on HANA side", () => {
     }
     expect(exceptionOccurred).toBe(true);
   });
+});
+
+describe("HNSW Index Creation Tests", () => {
+  test("test HNSW index creation with default values", async () => {
+    /**
+     * Description:
+     * This test verifies that the HNSW index can be successfully created with default values
+     * when no parameters are passed to the createHnswIndex function.
+     */
+    const tableNameTest = "TEST_TABLE_HNSW_DEFAULT";
+    const args = {
+      connection: client,
+      tableName: tableNameTest,
+    };
+
+    // Cleanup: Drop table if exists
+    await dropTable(client, tableNameTest);
+
+    // Create HanaDB instance and add data
+    const vector = await HanaDB.fromTexts(
+      ["foo", "bar", "baz"],
+      {},
+      embeddings,
+      args
+    );
+
+    let exceptionOccurred = false;
+    try {
+      // Call the createHnswIndex function with no parameters (default values)
+      await vector.createHnswIndex();
+    } catch (error) {
+      console.log(error);
+      exceptionOccurred = true;
+    }
+
+    // Assert that no exception occurred
+    expect(exceptionOccurred).toBe(false);
+  });
+
+  test("test HNSW index creation with specific values", async () => {
+    /**
+     * Description:
+     * This test verifies that the HNSW index can be created with specific values for m, efConstruction,
+     * efSearch, and a custom indexName.
+     */
+    const tableNameTest = "TEST_TABLE_HNSW_DEFINED";
+    const args = {
+      connection: client,
+      tableName: tableNameTest,
+    };
+
+    // Cleanup: Drop table if exists
+    await dropTable(client, tableNameTest);
+
+    // Create HanaDB instance and add data
+    const vector = await HanaDB.fromTexts(
+      ["foo", "bar", "baz"],
+      {},
+      embeddings,
+      args
+    );
+
+    let exceptionOccurred = false;
+    try {
+      // Call the createHnswIndex function with specific values
+      await vector.createHnswIndex({
+        m: 50,
+        efConstruction: 150,
+        efSearch: 300,
+        indexName: "custom_index",
+      });
+    } catch (error) {
+      console.log(error);
+      exceptionOccurred = true;
+    }
+
+    // Assert that no exception occurred
+    expect(exceptionOccurred).toBe(false);
+  });
+
+  test("test HNSW index creation after initialization", async () => {
+    const tableNameTest = "TEST_TABLE_HNSW_INDEX_AFTER_INIT";
+
+    // Clean up: drop the table if it exists
+    await dropTable(client, tableNameTest);
+    const args = {
+      connection: client,
+      tableName: tableNameTest,
+    };
+    // Initialize HanaDB without adding documents yet
+    const vectorDB = new HanaDB(embeddings, args);
+    await vectorDB.initialize();
+    expect(vectorDB).toBeDefined();
+    // Create HNSW index before adding any documents
+    await vectorDB.createHnswIndex({
+      indexName: "index_pre_add",
+      efSearch: 400,
+      m: 50,
+      efConstruction: 150,
+    });
+
+    // Add texts after index creation
+    await vectorDB.addDocuments([
+      {
+        pageContent: "Bye bye",
+        metadata: { id: 2, name: "2" },
+      },
+      {
+        pageContent: "Hello world",
+        metadata: { id: 1, name: "1" },
+      },
+      {
+        pageContent: "hello nice world",
+        metadata: { id: 3, name: "3" },
+      },
+    ]);
+
+    const results = await vectorDB.similaritySearch("Hello world", 1);
+    expect(results).toHaveLength(1);
+    expect(results).toEqual([
+      new Document({
+        pageContent: "Hello world",
+        metadata: { id: 1, name: "1" },
+      }),
+    ]);
+  });
+
+  test("test duplicate HNSW index creation", async () => {
+    const tableNameTest = "TEST_TABLE_HNSW_DUPLICATE_INDEX";
+    const args = {
+      connection: client,
+      tableName: tableNameTest,
+    };
+    // Clean up: drop the table if it exists
+    await dropTable(client, tableNameTest);
+
+    // Create HanaDB instance and add data
+    const vectorDB = await HanaDB.fromTexts(
+      ["foo", "bar", "baz"],
+      {},
+      embeddings,
+      args
+    );
+
+    // Create HNSW index for the first time
+    await vectorDB.createHnswIndex({
+      indexName: "index_cosine",
+      efSearch: 300,
+      m: 80,
+      efConstruction: 100,
+    });
+
+    // Trying to create the same index again should raise an exception
+    await expect(
+      vectorDB.createHnswIndex({
+        efSearch: 300,
+        m: 80,
+        efConstruction: 100,
+      })
+    ).rejects.toThrow();
+  });
+
+  test("test HNSW index creation with invalid m value", async () => {
+    /**
+     * Description:
+     * This test ensures that the HNSW index creation throws an error when an invalid value for m is passed
+     * (e.g., m < 4 or m > 1000).
+     */
+    const tableNameTest = "TEST_TABLE_HNSW_INVALID_M";
+    const args = {
+      connection: client,
+      tableName: tableNameTest,
+    };
+
+    // Cleanup: Drop table if exists
+    await dropTable(client, tableNameTest);
+
+    // Create HanaDB instance and add data
+    const vector = await HanaDB.fromTexts(
+      ["foo", "bar", "baz"],
+      {},
+      embeddings,
+      args
+    );
+
+    let exceptionOccurred = false;
+    try {
+      // Call the createHnswIndex function with invalid m value
+      await vector.createHnswIndex({
+        m: 2, // Invalid value for m (should be >= 4)
+      });
+    } catch (error) {
+      exceptionOccurred = true;
+    }
+
+    // Assert that exception occurred
+    expect(exceptionOccurred).toBe(true);
+  });
+
+  test("test HNSW index creation with invalid efConstruction value", async () => {
+    /**
+     * Description:
+     * This test ensures that the HNSW index creation throws an error when an invalid efConstruction value is passed
+     * (e.g., efConstruction > 100000).
+     */
+    const tableNameTest = "TEST_TABLE_HNSW_INVALID_EF_CONSTRUCTION";
+    const args = {
+      connection: client,
+      tableName: tableNameTest,
+    };
+
+    // Cleanup: Drop table if exists
+    await dropTable(client, tableNameTest);
+
+    // Create HanaDB instance and add data
+    const vector = await HanaDB.fromTexts(
+      ["foo", "bar", "baz"],
+      {},
+      embeddings,
+      args
+    );
+
+    let exceptionOccurred = false;
+    try {
+      // Call the createHnswIndex function with invalid efConstruction value
+      await vector.createHnswIndex({
+        efConstruction: 100001, // Invalid value for efConstruction (should be <= 100000)
+      });
+    } catch (error) {
+      exceptionOccurred = true;
+    }
+
+    // Assert that exception occurred
+    expect(exceptionOccurred).toBe(true);
+  });
+
+  test("test HNSW index creation with invalid efSearch value", async () => {
+    /**
+     * Description:
+     * This test ensures that the HNSW index creation throws an error when an invalid efSearch value is passed
+     * (e.g., efSearch < 1 or efSearch > 100000).
+     */
+    const tableNameTest = "TEST_TABLE_HNSW_INVALID_EF_SEARCH";
+    const args = {
+      connection: client,
+      tableName: tableNameTest,
+    };
+
+    // Cleanup: Drop table if exists
+    await dropTable(client, tableNameTest);
+
+    // Create HanaDB instance and add data
+    const vector = await HanaDB.fromTexts(
+      ["foo", "bar", "baz"],
+      {},
+      embeddings,
+      args
+    );
+
+    let exceptionOccurred = false;
+    try {
+      // Call the createHnswIndex function with invalid efSearch value
+      await vector.createHnswIndex({
+        efSearch: 0, // Invalid value for efSearch (should be >= 1)
+      });
+    } catch (error) {
+      exceptionOccurred = true;
+    }
+
+    // Assert that exception occurred
+    expect(exceptionOccurred).toBe(true);
+  });
+});
+
+describe("Filter Tests", () => {
+  // Filter Test 1: Applying various filters from TYPE_1_FILTERING_TEST_CASES
+  it.each(TYPE_1_FILTERING_TEST_CASES)(
+    "should apply type 1 filtering correctly with filter %j",
+    async (testCase) => {
+      const { filter, expected } = testCase;
+      const tableNameTest = "TEST_TABLE_ENHANCED_FILTER_1";
+      const args = {
+        connection: client,
+        tableName: tableNameTest,
+      };
+      await dropTable(client, tableNameTest);
+
+      // Initialize the HanaDB instance
+      const vectorDB = new HanaDB(embeddings, args);
+      await vectorDB.initialize();
+      expect(vectorDB).toBeDefined();
+
+      // Add documents to the database
+      await vectorDB.addDocuments(DOCUMENTS);
+
+      // Perform a similarity search with the filter
+      const docs = await vectorDB.similaritySearch("Foo", 5, filter);
+      const ids = docs.map((doc) => doc.metadata.id);
+
+      // Check if the returned document IDs match the expected IDs
+      expect(ids.length).toBe(expected.length);
+      expect(ids.every((id) => expected.includes(id))).toBe(true);
+    }
+  );
+
+  // Filter Test 2: Testing TYPE_2_FILTERING_TEST_CASES
+  it.each(TYPE_2_FILTERING_TEST_CASES)(
+    "should apply type 2 filtering correctly with filter %j",
+    async (testCase) => {
+      const { filter, expected } = testCase;
+      const tableNameTest = "TEST_TABLE_ENHANCED_FILTER_2";
+      const args = {
+        connection: client,
+        tableName: tableNameTest,
+      };
+      await dropTable(client, tableNameTest);
+
+      // Initialize the HanaDB instance
+      const vectorDB = new HanaDB(embeddings, args);
+      await vectorDB.initialize();
+      expect(vectorDB).toBeDefined();
+
+      // Add documents to the database
+      await vectorDB.addDocuments(DOCUMENTS);
+
+      // Perform a similarity search with the filter
+      const docs = await vectorDB.similaritySearch("Foo", 5, filter);
+      const ids = docs.map((doc) => doc.metadata.id);
+
+      // Check if the returned document IDs match the expected IDs
+      expect(ids.length).toBe(expected.length);
+      expect(ids.every((id) => expected.includes(id))).toBe(true);
+    }
+  );
+
+  // Filter Test 3: Testing TYPE_3_FILTERING_TEST_CASES
+  it.each(TYPE_3_FILTERING_TEST_CASES)(
+    "should apply type 3 filtering correctly with filter %j",
+    async (testCase) => {
+      const { filter, expected } = testCase;
+      const tableNameTest = "TEST_TABLE_ENHANCED_FILTER_3";
+      const args = {
+        connection: client,
+        tableName: tableNameTest,
+      };
+      await dropTable(client, tableNameTest);
+
+      // Initialize the HanaDB instance
+      const vectorDB = new HanaDB(embeddings, args);
+      await vectorDB.initialize();
+      expect(vectorDB).toBeDefined();
+
+      // Add documents to the database
+      await vectorDB.addDocuments(DOCUMENTS);
+
+      // Perform a similarity search with the filter
+      const docs = await vectorDB.similaritySearch("Foo", 5, filter);
+      const ids = docs.map((doc) => doc.metadata.id);
+
+      // Check if the returned document IDs match the expected IDs
+      expect(ids.length).toBe(expected.length);
+      expect(ids.every((id) => expected.includes(id))).toBe(true);
+    }
+  );
+
+  // Filter Test 4: Testing TYPE_4_FILTERING_TEST_CASES
+  it.each(TYPE_4_FILTERING_TEST_CASES)(
+    "should apply type 4 filtering correctly with filter %j",
+    async (testCase) => {
+      const { filter, expected } = testCase;
+      const tableNameTest = "TEST_TABLE_ENHANCED_FILTER_4";
+      const args = {
+        connection: client,
+        tableName: tableNameTest,
+      };
+      await dropTable(client, tableNameTest);
+
+      // Initialize the HanaDB instance
+      const vectorDB = new HanaDB(embeddings, args);
+      await vectorDB.initialize();
+      expect(vectorDB).toBeDefined();
+
+      // Add documents to the database
+      await vectorDB.addDocuments(DOCUMENTS);
+
+      // Perform a similarity search with the filter
+      const docs = await vectorDB.similaritySearch("Foo", 5, filter);
+      const ids = docs.map((doc) => doc.metadata.id);
+
+      // Check if the returned document IDs match the expected IDs
+      expect(ids.length).toBe(expected.length);
+      expect(ids.every((id) => expected.includes(id))).toBe(true);
+    }
+  );
+
+  // Filter Test 5: Testing TYPE_4_FILTERING_TEST_CASES
+  it.each(TYPE_5_FILTERING_TEST_CASES)(
+    "should apply type 5 filtering correctly with filter %j",
+    async (testCase) => {
+      const { filter, expected } = testCase;
+      const tableNameTest = "TEST_TABLE_ENHANCED_FILTER_5";
+      const args = {
+        connection: client,
+        tableName: tableNameTest,
+      };
+      await dropTable(client, tableNameTest);
+
+      // Initialize the HanaDB instance
+      const vectorDB = new HanaDB(embeddings, args);
+      await vectorDB.initialize();
+      expect(vectorDB).toBeDefined();
+
+      // Add documents to the database
+      await vectorDB.addDocuments(DOCUMENTS);
+
+      // Perform a similarity search with the filter
+      const docs = await vectorDB.similaritySearch("Foo", 5, filter);
+      const ids = docs.map((doc) => doc.metadata.id);
+
+      // Check if the returned document IDs match the expected IDs
+      expect(ids.length).toBe(expected.length);
+      expect(ids.every((id) => expected.includes(id))).toBe(true);
+    }
+  );
 });

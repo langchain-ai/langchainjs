@@ -8,6 +8,45 @@ import { maximalMarginalRelevance } from "@langchain/core/utils/math";
 
 export type DistanceStrategy = "euclidean" | "cosine";
 
+const COMPARISONS_TO_SQL: Record<string, string> = {
+  $eq: "=",
+  $ne: "<>",
+  $lt: "<",
+  $lte: "<=",
+  $gt: ">",
+  $gte: ">=",
+};
+
+interface FilterObject {
+  [key: string]: FilterValue;
+}
+
+type FilterValue =
+  | string
+  | number
+  | boolean
+  | Date
+  | FilterObject
+  | Array<FilterValue>;
+
+const IN_OPERATORS_TO_SQL: Record<string, string> = {
+  $in: "IN",
+  $nin: "NOT IN",
+};
+
+const BETWEEN_OPERATOR_TO_SQL: Record<string, string> = {
+  $between: "BETWEEN",
+};
+
+const LIKE_OPERATOR_TO_SQL: Record<string, string> = {
+  $like: "LIKE",
+};
+
+const LOGICAL_OPERATORS_TO_SQL: Record<string, string> = {
+  $and: "AND",
+  $or: "OR",
+};
+
 const HANA_DISTANCE_FUNCTION: Record<DistanceStrategy, [string, string]> = {
   cosine: ["COSINE_SIMILARITY", "DESC"],
   euclidean: ["L2DISTANCE", "ASC"],
@@ -19,10 +58,6 @@ const defaultContentColumn = "VEC_TEXT";
 const defaultMetadataColumn = "VEC_META";
 const defaultVectorColumn = "VEC_VECTOR";
 const defaultVectorColumnLength = -1; // -1 means dynamic length
-
-interface Filter {
-  [key: string]: boolean | string | number;
-}
 
 /**
  * Interface defining the arguments required to create an instance of
@@ -37,6 +72,7 @@ export interface HanaDBArgs {
   metadataColumn?: string;
   vectorColumn?: string;
   vectorColumnLength?: number;
+  specificMetadataColumns?: string[];
 }
 
 export class HanaDB extends VectorStore {
@@ -58,7 +94,7 @@ export class HanaDB extends VectorStore {
 
   private vectorColumnLength: number;
 
-  declare FilterType: Filter;
+  private specificMetadataColumns: string[];
 
   _vectorstoreType(): string {
     return "hanadb";
@@ -78,9 +114,12 @@ export class HanaDB extends VectorStore {
       args.vectorColumn || defaultVectorColumn
     );
     this.vectorColumnLength = HanaDB.sanitizeInt(
-      args.vectorColumnLength || defaultVectorColumnLength
-    ); // Using '??' to allow 0 as a valid value
-
+      args.vectorColumnLength || defaultVectorColumnLength,
+      -1
+    );
+    this.specificMetadataColumns = HanaDB.sanitizeSpecificMetadataColumns(
+      args.specificMetadataColumns || []
+    );
     this.connection = args.connection;
   }
 
@@ -170,11 +209,12 @@ export class HanaDB extends VectorStore {
    * @param inputInt The input to be sanitized.
    * @returns The sanitized integer.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  public static sanitizeInt(inputInt: any): number {
+  public static sanitizeInt(inputInt: number | string, lowerBound = 0): number {
     const value = parseInt(inputInt.toString(), 10);
-    if (Number.isNaN(value) || value < -1) {
-      throw new Error(`Value (${value}) must not be smaller than -1`);
+    if (Number.isNaN(value) || value < lowerBound) {
+      throw new Error(
+        `Value (${value}) must not be smaller than ${lowerBound}`
+      );
     }
     return value;
   }
@@ -219,6 +259,10 @@ export class HanaDB extends VectorStore {
       }
     });
     return metadata;
+  }
+
+  static sanitizeSpecificMetadataColumns(columns: string[]): string[] {
+    return columns.map((column) => this.sanitizeName(column));
   }
 
   /**
@@ -287,11 +331,13 @@ export class HanaDB extends VectorStore {
         `"${this.contentColumn}" NCLOB, ` +
         `"${this.metadataColumn}" NCLOB, ` +
         `"${this.vectorColumn}" REAL_VECTOR`;
+      // Length can either be -1 (QRC01+02-24) or 0 (QRC03-24 onwards)
+      if (this.vectorColumnLength === -1 || this.vectorColumnLength === 0) {
+        sqlStr += ");";
+      } else {
+        sqlStr += `(${this.vectorColumnLength}));`;
+      }
 
-      sqlStr +=
-        this.vectorColumnLength === -1
-          ? ");"
-          : `(${this.vectorColumnLength}));`;
       const client = this.connection;
       await this.executeQuery(client, sqlStr);
     }
@@ -316,38 +362,247 @@ export class HanaDB extends VectorStore {
    * @returns A tuple containing the WHERE clause string and an array of query parameters.
    */
   private createWhereByFilter(
-    filter?: Filter
-  ): [string, Array<string | number | boolean>] {
-    const queryTuple: Array<string | number | boolean> = [];
+    filter?: FilterObject
+  ): [string, Array<FilterValue>] {
     let whereStr = "";
-    if (filter) {
-      Object.keys(filter).forEach((key, i) => {
-        whereStr += i === 0 ? " WHERE " : " AND ";
-        whereStr += ` JSON_VALUE(${this.metadataColumn}, '$.${key}') = ?`;
+    let queryTuple: Array<FilterValue> = [];
 
-        const value = filter[key];
-        if (typeof value === "number") {
-          if (Number.isInteger(value)) {
-            // hdb requires string while sap/hana-client doesn't
-            queryTuple.push(value.toString());
-          } else {
-            throw new Error(
-              `Unsupported filter data-type: wrong number type for key ${key}`
-            );
-          }
-        } else if (typeof value === "string") {
-          queryTuple.push(value);
-        } else if (typeof value === "boolean") {
-          queryTuple.push(value.toString());
-        } else {
-          throw new Error(
-            `Unsupported filter data-type: ${typeof value} for key ${key}`
-          );
-        }
-      });
+    if (filter && Object.keys(filter).length > 0) {
+      const [where, params] = this.processFilterObject(filter);
+      whereStr = ` WHERE ${where}`;
+      queryTuple = params;
     }
 
     return [whereStr, queryTuple];
+  }
+
+  /**
+   * Processes a filter object to generate SQL WHERE clause components.
+   * @param filter - A filter object with keys as metadata fields and values as filter values.
+   * @returns A tuple containing the WHERE clause string and an array of query parameters.
+   */
+  private processFilterObject(
+    filter: FilterObject
+  ): [string, Array<FilterValue>] {
+    let whereStr = "";
+    const queryTuple: Array<FilterValue> = [];
+
+    Object.keys(filter).forEach((key, i) => {
+      const filterValue = filter[key];
+      if (i !== 0) {
+        whereStr += " AND ";
+      }
+
+      // Handling logical operators ($and, $or)
+      if (key in LOGICAL_OPERATORS_TO_SQL) {
+        const logicalOperator = LOGICAL_OPERATORS_TO_SQL[key];
+        const logicalOperands = filterValue as FilterObject[];
+        logicalOperands.forEach((operand: FilterObject, j: number) => {
+          if (j !== 0) {
+            whereStr += ` ${logicalOperator} `;
+          }
+          const [whereLogical, paramsLogical] =
+            this.processFilterObject(operand);
+          whereStr += "(" + whereLogical + ")";
+          queryTuple.push(...paramsLogical);
+        });
+
+        return;
+      }
+
+      // Handle special comparison operators and simple types
+      let operator = "=";
+      let sqlParam = "?";
+      if (typeof filterValue === "number") {
+        if (Number.isInteger(filterValue)) {
+          // hdb requires string while sap/hana-client doesn't
+          queryTuple.push(filterValue.toString());
+        } else {
+          throw new Error(
+            `Unsupported filter data-type: wrong number type for key ${key}`
+          );
+        }
+      } else if (typeof filterValue === "string") {
+        queryTuple.push(filterValue);
+      } else if (typeof filterValue === "boolean") {
+        queryTuple.push(filterValue.toString());
+      } else if (typeof filterValue === "object" && filterValue !== null) {
+        // Get the special operator key, like $eq, $ne, $in, $between, etc.
+        const specialOp = Object.keys(filterValue)[0];
+        const specialVal = (filterValue as FilterObject)[specialOp];
+        // Handling of 'special' operators starting with "$"
+        if (specialOp in COMPARISONS_TO_SQL) {
+          operator = COMPARISONS_TO_SQL[specialOp];
+          if (typeof specialVal === "boolean") {
+            queryTuple.push(specialVal.toString());
+          } else if (typeof specialVal === "number") {
+            sqlParam = "CAST(? as float)";
+            queryTuple.push(specialVal);
+          } else if (
+            typeof specialVal === "object" &&
+            "type" in specialVal &&
+            specialVal.type === "date"
+          ) {
+            sqlParam = "CAST(? as DATE)";
+            queryTuple.push(specialVal.date);
+          } else {
+            queryTuple.push(specialVal);
+          }
+        } else if (specialOp in BETWEEN_OPERATOR_TO_SQL) {
+          // ensure the value is an array with exact length of 2
+          if (!Array.isArray(specialVal) || specialVal.length !== 2) {
+            throw new Error(`Operator '${specialOp}' expects two values.`);
+          }
+          const [betweenFrom, betweenTo] = specialVal as [
+            FilterValue,
+            FilterValue
+          ];
+          operator = BETWEEN_OPERATOR_TO_SQL[specialOp];
+          sqlParam = "? AND ?";
+          queryTuple.push(betweenFrom.toString(), betweenTo.toString());
+        } else if (specialOp in LIKE_OPERATOR_TO_SQL) {
+          operator = LIKE_OPERATOR_TO_SQL[specialOp];
+          if (specialVal !== undefined) {
+            queryTuple.push(specialVal.toString());
+          } else {
+            throw new Error(
+              `Operator '${specialOp}' expects a non-undefined value.`
+            );
+          }
+        } else if (specialOp in IN_OPERATORS_TO_SQL) {
+          operator = IN_OPERATORS_TO_SQL[specialOp];
+          if (Array.isArray(specialVal)) {
+            const placeholders = Array(specialVal.length).fill("?").join(",");
+            sqlParam = `(${placeholders})`;
+            queryTuple.push(
+              ...specialVal.map((listEntry) => listEntry.toString())
+            );
+          } else {
+            throw new Error(`Unsupported value for ${operator}: ${specialVal}`);
+          }
+        } else {
+          throw new Error(`Unsupported operator: ${specialOp}`);
+        }
+      } else {
+        throw new Error(`Unsupported filter data-type: ${typeof filterValue}`);
+      }
+
+      // Metadata column handling
+      const selector = this.specificMetadataColumns.includes(key)
+        ? `"${key}"`
+        : `JSON_VALUE(${this.metadataColumn}, '$.${key}')`;
+      whereStr += `${selector} ${operator} ${sqlParam}`;
+    });
+    return [whereStr, queryTuple];
+  }
+
+  /**
+   * Creates an HNSW vector index on a specified table and vector column with
+   * optional build and search configurations. If no configurations are provided,
+   * default parameters from the database are used. If provided values exceed the
+   * valid ranges, an error will be raised.
+   * The index is always created in ONLINE mode.
+   *
+   * @param {object} options Object containing configuration options for the index
+   * @param {number} [options.m] (Optional) Maximum number of neighbors per graph node (Valid Range: [4, 1000])
+   * @param {number} [options.efConstruction] (Optional) Maximal candidates to consider when building the graph
+   *                                           (Valid Range: [1, 100000])
+   * @param {number} [options.efSearch] (Optional) Minimum candidates for top-k-nearest neighbor queries
+   *                                     (Valid Range: [1, 100000])
+   * @param {string} [options.indexName] (Optional) Custom index name. Defaults to <table_name>_<distance_strategy>_idx
+   * @returns {Promise<void>} Promise that resolves when index is added.
+   */
+  public async createHnswIndex(
+    options: {
+      m?: number;
+      efConstruction?: number;
+      efSearch?: number;
+      indexName?: string;
+    } = {}
+  ): Promise<void> {
+    // Destructure the options inside the function body
+    const { m, efConstruction, efSearch, indexName } = options;
+
+    // Determine the distance function based on the configured strategy
+    const distanceFuncName = HANA_DISTANCE_FUNCTION[this.distanceStrategy][0];
+    const defaultIndexName = `${this.tableName}_${distanceFuncName}_idx`;
+
+    // Use provided indexName or fallback to default
+    // const finalIndexName = indexName || defaultIndexName;
+    const finalIndexName = HanaDB.sanitizeName(indexName || defaultIndexName);
+    // Initialize buildConfig and searchConfig objects
+    const buildConfig: Record<string, number> = {};
+    const searchConfig: Record<string, number> = {};
+
+    // Validate and add m parameter to buildConfig if provided
+    if (m !== undefined) {
+      const minimumHnswM = 4;
+      const maximumHnswM = 1000;
+      const sanitizedM = HanaDB.sanitizeInt(m, minimumHnswM);
+      if (sanitizedM < minimumHnswM || sanitizedM > maximumHnswM) {
+        throw new Error("M must be in the range [4, 1000]");
+      }
+      buildConfig.M = sanitizedM;
+    }
+
+    // Validate and add efConstruction to buildConfig if provided
+    if (efConstruction !== undefined) {
+      const minimumEfConstruction = 1;
+      const maximumEfConstruction = 100000;
+      const sanitizedEfConstruction = HanaDB.sanitizeInt(
+        efConstruction,
+        minimumEfConstruction
+      );
+      if (
+        sanitizedEfConstruction < minimumEfConstruction ||
+        sanitizedEfConstruction > maximumEfConstruction
+      ) {
+        throw new Error("efConstruction must be in the range [1, 100000]");
+      }
+      buildConfig.efConstruction = sanitizedEfConstruction;
+    }
+
+    // Validate and add efSearch to searchConfig if provided
+    if (efSearch !== undefined) {
+      const minimumEfSearch = 1;
+      const maximumEfSearch = 100000;
+      const sanitizedEfSearch = HanaDB.sanitizeInt(efSearch, minimumEfSearch);
+      if (
+        sanitizedEfSearch < minimumEfSearch ||
+        sanitizedEfSearch > maximumEfSearch
+      ) {
+        throw new Error("efSearch must be in the range [1, 100000]");
+      }
+      searchConfig.efSearch = sanitizedEfSearch;
+    }
+
+    // Convert buildConfig and searchConfig to JSON strings if they contain values
+    const buildConfigStr = Object.keys(buildConfig).length
+      ? JSON.stringify(buildConfig)
+      : "";
+    const searchConfigStr = Object.keys(searchConfig).length
+      ? JSON.stringify(searchConfig)
+      : "";
+
+    // Create the base SQL string for index creation
+    let sqlStr = `CREATE HNSW VECTOR INDEX ${finalIndexName} ON "${this.tableName}" ("${this.vectorColumn}") 
+                  SIMILARITY FUNCTION ${distanceFuncName} `;
+
+    // Append buildConfig to the SQL string if provided
+    if (buildConfigStr) {
+      sqlStr += `BUILD CONFIGURATION '${buildConfigStr}' `;
+    }
+
+    // Append searchConfig to the SQL string if provided
+    if (searchConfigStr) {
+      sqlStr += `SEARCH CONFIGURATION '${searchConfigStr}' `;
+    }
+
+    // Add the ONLINE option
+    sqlStr += "ONLINE;";
+
+    const client = this.connection;
+    await this.executeQuery(client, sqlStr);
   }
 
   /**
@@ -360,7 +615,7 @@ export class HanaDB extends VectorStore {
    */
   public async delete(options: {
     ids?: string[];
-    filter?: Filter;
+    filter?: FilterObject;
   }): Promise<void> {
     const { ids, filter } = options;
     if (ids) {
@@ -482,7 +737,7 @@ export class HanaDB extends VectorStore {
   async similaritySearch(
     query: string,
     k: number,
-    filter?: Filter
+    filter?: FilterObject
   ): Promise<Document[]> {
     const results = await this.similaritySearchWithScore(query, k, filter);
     return results.map((result) => result[0]);
@@ -499,7 +754,7 @@ export class HanaDB extends VectorStore {
   async similaritySearchWithScore(
     query: string,
     k: number,
-    filter?: Filter
+    filter?: FilterObject
   ): Promise<[Document, number][]> {
     const queryEmbedding = await this.embeddings.embedQuery(query);
     return this.similaritySearchVectorWithScore(queryEmbedding, k, filter);
@@ -516,7 +771,7 @@ export class HanaDB extends VectorStore {
   async similaritySearchVectorWithScore(
     queryEmbedding: number[],
     k: number,
-    filter?: Filter
+    filter?: FilterObject
   ): Promise<[Document, number][]> {
     const wholeResult = await this.similaritySearchWithScoreAndVectorByVector(
       queryEmbedding,
@@ -537,9 +792,8 @@ export class HanaDB extends VectorStore {
   async similaritySearchWithScoreAndVectorByVector(
     embedding: number[],
     k: number,
-    filter?: Filter
+    filter?: FilterObject
   ): Promise<Array<[Document, number, number[]]>> {
-    // const result: Array<[Document, number, number[]]> = [];
     // Sanitize inputs
     const sanitizedK = HanaDB.sanitizeInt(k);
     const sanitizedEmbedding = HanaDB.sanitizeListFloat(embedding);
@@ -600,7 +854,6 @@ export class HanaDB extends VectorStore {
     options: MaxMarginalRelevanceSearchOptions<this["FilterType"]>
   ): Promise<Document[]> {
     const { k, fetchK = 20, lambda = 0.5 } = options;
-    // console.log(options)
     const queryEmbedding = await this.embeddings.embedQuery(query);
 
     const docs = await this.similaritySearchWithScoreAndVectorByVector(
