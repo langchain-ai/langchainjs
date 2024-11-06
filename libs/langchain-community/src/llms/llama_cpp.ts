@@ -73,7 +73,7 @@ export class LlamaCpp extends LLM<LlamaCppCallOptions> {
     return "LlamaCpp";
   }
 
-  private constructor(inputs: LlamaCppInputs) {
+  protected constructor(inputs: LlamaCppInputs) {
     super(inputs);
     this.maxTokens = inputs?.maxTokens;
     this.temperature = inputs?.temperature;
@@ -87,7 +87,7 @@ export class LlamaCpp extends LLM<LlamaCppCallOptions> {
    * @param inputs - the inputs passed onto the model.
    * @returns A Promise that resolves to the LlamaCpp type class.
    */
-  public static async llmInit(inputs: LlamaCppInputs): Promise<LlamaCpp> {
+  public static async initialize(inputs: LlamaCppInputs): Promise<LlamaCpp> {
     const instance = new LlamaCpp(inputs);
     const llama = await getLlama();
 
@@ -104,7 +104,7 @@ export class LlamaCpp extends LLM<LlamaCppCallOptions> {
   }
 
   _llmType() {
-    return "llama3_cpp";
+    return "llama_cpp";
   }
 
   /** @ignore */
@@ -140,7 +140,6 @@ export class LlamaCpp extends LLM<LlamaCppCallOptions> {
 
       return completion;
     } catch (e) {
-      console.log(e);
       throw new Error("Error getting prompt completion.");
     }
   }

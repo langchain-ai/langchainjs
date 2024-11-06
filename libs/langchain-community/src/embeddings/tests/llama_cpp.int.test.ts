@@ -7,7 +7,7 @@ import { LlamaCppEmbeddings } from "../llama_cpp.js";
 const llamaPath = getEnvironmentVariable("LLAMA_PATH")!;
 
 test.skip("Test LlamaCppEmbeddings.embedQuery", async () => {
-  const embeddings = await LlamaCppEmbeddings.embeddingsInit({
+  const embeddings = await LlamaCppEmbeddings.initialize({
     modelPath: llamaPath,
   });
   const res = await embeddings.embedQuery("Hello Llama");
@@ -15,7 +15,7 @@ test.skip("Test LlamaCppEmbeddings.embedQuery", async () => {
 });
 
 test.skip("Test LlamaCppEmbeddings.embedDocuments", async () => {
-  const embeddings = await LlamaCppEmbeddings.embeddingsInit({
+  const embeddings = await LlamaCppEmbeddings.initialize({
     modelPath: llamaPath,
   });
   const res = await embeddings.embedDocuments(["Hello Llama", "Bye bye"]);
@@ -25,7 +25,7 @@ test.skip("Test LlamaCppEmbeddings.embedDocuments", async () => {
 });
 
 test.skip("Test LlamaCppEmbeddings concurrency", async () => {
-  const embeddings = await LlamaCppEmbeddings.embeddingsInit({
+  const embeddings = await LlamaCppEmbeddings.initialize({
     modelPath: llamaPath,
     batchSize: 1,
   });
