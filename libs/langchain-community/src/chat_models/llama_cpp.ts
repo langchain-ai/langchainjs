@@ -91,7 +91,7 @@ export class ChatLlamaCpp extends SimpleChatModel<LlamaCppCallOptions> {
     return "ChatLlamaCpp";
   }
 
-  protected constructor(inputs: LlamaCppInputs) {
+  public constructor(inputs: LlamaCppInputs) {
     super(inputs);
     this.maxTokens = inputs?.maxTokens;
     this.temperature = inputs?.temperature;

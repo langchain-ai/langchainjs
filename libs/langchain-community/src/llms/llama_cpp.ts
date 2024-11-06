@@ -73,7 +73,7 @@ export class LlamaCpp extends LLM<LlamaCppCallOptions> {
     return "LlamaCpp";
   }
 
-  protected constructor(inputs: LlamaCppInputs) {
+  public constructor(inputs: LlamaCppInputs) {
     super(inputs);
     this.maxTokens = inputs?.maxTokens;
     this.temperature = inputs?.temperature;
