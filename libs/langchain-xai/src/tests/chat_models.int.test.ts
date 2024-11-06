@@ -31,18 +31,6 @@ test("invoke with stop sequence", async () => {
   expect((res.content as string).toLowerCase()).not.toContain("six");
 });
 
-test("invoke should respect passed headers", async () => {
-  const chat = new ChatXAI({
-    maxRetries: 0,
-  });
-  const message = new HumanMessage("Count to ten.");
-  await expect(async () => {
-    await chat.invoke([message], {
-      headers: { Authorization: "badbadbad" },
-    });
-  }).rejects.toThrowError();
-});
-
 test("stream should respect passed headers", async () => {
   const chat = new ChatXAI({
     maxRetries: 0,

@@ -24,46 +24,6 @@ class ChatXAIStandardIntegrationTests extends ChatModelIntegrationTests<
       },
     });
   }
-
-  async testToolMessageHistoriesListContent() {
-    this.skipTestMessage(
-      "testToolMessageHistoriesListContent",
-      "ChatXAI",
-      "Complex message types not properly implemented"
-    );
-  }
-
-  async testToolMessageHistoriesStringContent() {
-    this.skipTestMessage(
-      "testToolMessageHistoriesStringContent",
-      "ChatXAI",
-      "Not working"
-    );
-  }
-
-  async testStructuredFewShotExamples() {
-    this.skipTestMessage(
-      "testStructuredFewShotExamples",
-      "ChatXAI",
-      "Not working"
-    );
-  }
-
-  async testModelCanUseToolUseAIMessage() {
-    this.skipTestMessage(
-      "testModelCanUseToolUseAIMessage",
-      "ChatXAI",
-      "Not working"
-    );
-  }
-
-  async testModelCanUseToolUseAIMessageWithStreaming() {
-    this.skipTestMessage(
-      "testModelCanUseToolUseAIMessageWithStreaming",
-      "ChatXAI",
-      "Not working"
-    );
-  }
 }
 
 const testClass = new ChatXAIStandardIntegrationTests();

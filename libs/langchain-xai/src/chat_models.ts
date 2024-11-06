@@ -473,10 +473,25 @@ export class ChatXAI extends ChatOpenAI<ChatXAICallOptions> {
     delete request.logit_bias;
     delete request.functions;
 
-    if (request.stream === true) {
-      return super.completionWithRetry(request, options);
+    const newRequestMessages = request.messages.map((msg) => {
+      if (!msg.content) {
+        return {
+          ...msg,
+          content: "",
+        };
+      }
+      return msg;
+    });
+
+    const newRequest = {
+      ...request,
+      messages: newRequestMessages,
+    };
+
+    if (newRequest.stream === true) {
+      return super.completionWithRetry(newRequest, options);
     }
 
-    return super.completionWithRetry(request, options);
+    return super.completionWithRetry(newRequest, options);
   }
 }
