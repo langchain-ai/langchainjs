@@ -13,6 +13,7 @@ import { UsageInfo as MistralAITokenUsage } from "@mistralai/mistralai/models/co
 import { CompletionEvent as MistralAIChatCompletionEvent } from "@mistralai/mistralai/models/components/completionevent.js";
 import { ChatCompletionResponse as MistralAIChatCompletionResponse } from "@mistralai/mistralai/models/components/chatcompletionresponse.js";
 import { HTTPClient as MistralAIHTTPClient} from "@mistralai/mistralai/lib/http.js";
+import { RetryConfig as MistralAIRetryConfig } from "@mistralai/mistralai/lib/retries.js";
 import {
   MessageType,
   type BaseMessage,
@@ -162,10 +163,45 @@ export interface ChatMistralAIInput
    */
   seed?: number;
   /**
-   * 
+   * Custom HTTP client to manage API requests
+   * Allows users to add custom fetch implementations, hooks, as well as error and response processing.
    */
-  httpClient?: MistralAIHTTPClient | undefined;
-  
+  httpClient?: MistralAIHTTPClient;
+  /**
+   * The strategy for handling request errors. Either "none" or "backoff".
+   * @default {"none"} 
+   */
+  backoffStrategy?: string;
+  /**
+   * The intial time interval to wait before retrying a failed request, in ms.
+   * Only used when backoffStrategy = "backoff".
+   * @default {500}
+   */
+  backoffInitialInterval?: number;
+  /**
+   * The maximum interval of time to wait before retrying a failed request, in ms.
+   * Only used when backoffStrategy = "backoff".
+   * @default {60000}
+   */
+  backoffMaxInterval?: number;
+  /**
+   * The base to exponentiate by the number of retries attempted. The time interval to wait for the 
+   * next retry is backoffInitialInterval * backoffExponent**number_of_retries, in ms.
+   * Only used when backoffStrategy = "backoff".
+   * @default {1.5}
+   */
+  backoffExponent?: number;
+  /**
+   * The maximum time to retry requests for, after the first request is received by Mistral, in ms.
+   * Only used when backoffStrategy = "backoff".
+   * @default {3600000}
+   */
+  backoffMaxElapsedTime?: number;
+  /**
+   * Whether or not to retry requests that failed due to connection errors.
+   * Only used when backoffStrategy = "backoff".
+   */
+  retryConnectionErrors?: boolean;
 }
 
 function convertMessagesToMistralMessages(
@@ -196,14 +232,14 @@ function convertMessagesToMistralMessages(
         return {
           type: complex.type,
           imageUrl: complex?.image_url
-        } as MistralAIContentChunk;
+        };
       }
       
-      if (complex.type === "text" && (role === "user" || role === "system")){
+      if (complex.type === "text" && (role === "user" || role === "system")) {
         return {
           type: complex.type,
           text: complex?.text
-        } as MistralAIContentChunk;
+        };
       }
 
       throw new Error(
@@ -817,11 +853,19 @@ export class ChatMistralAI<
 
   streamUsage = true;
 
-  /**
-   * Optional custom HTTP client to manage API requests
-   * Allows users to add custom fetch implementations, hooks, as well as error and response processing.
-   */
   httpClient?: MistralAIHTTPClient;
+
+  backoffStrategy = "none";
+
+  backoffInitialInterval = 500;
+
+  backoffMaxInterval = 60000;
+
+  backoffExponent = 1.5;
+
+  backoffMaxElapsedTime = 3600000;
+
+  retryConnectionErrors?: boolean;
 
   constructor(fields?: ChatMistralAIInput) {
     super(fields ?? {});
@@ -843,7 +887,13 @@ export class ChatMistralAI<
     this.modelName = fields?.model ?? fields?.modelName ?? this.model;
     this.model = this.modelName;
     this.streamUsage = fields?.streamUsage ?? this.streamUsage;
-    this.httpClient = fields?.httpClient ?? undefined;
+    this.httpClient = fields?.httpClient ?? this.httpClient;
+    this.backoffStrategy = fields?.backoffStrategy ?? this.backoffStrategy;
+    this.backoffInitialInterval = fields?.backoffInitialInterval ?? this.backoffInitialInterval;
+    this.backoffMaxInterval = fields?.backoffMaxInterval ?? this.backoffMaxInterval;
+    this.backoffExponent = fields?.backoffExponent ?? this.backoffExponent;
+    this.backoffMaxElapsedTime = fields?.backoffMaxElapsedTime ?? this.backoffMaxElapsedTime;
+    this.retryConnectionErrors = fields?.retryConnectionErrors ?? this.retryConnectionErrors;
   }
 
   getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
@@ -916,11 +966,33 @@ export class ChatMistralAI<
   ): Promise<
     MistralAIChatCompletionResponse | AsyncIterable<MistralAIChatCompletionEvent>
   > {
+      /**
+       * Get the Mistral request retry config
+       */
+      const _getRetryConfig = (): MistralAIRetryConfig => {
+        if (this.backoffStrategy === "backoff") {
+          return {
+            strategy: this.backoffStrategy,
+            backoff: {
+              initialInterval: this.backoffInitialInterval,
+              maxInterval: this.backoffMaxInterval,
+              exponent: this.backoffExponent,
+              maxElapsedTime: this.backoffMaxElapsedTime,
+            },
+            retryConnectionErrors: this.retryConnectionErrors
+          };
+        }
+        return { 
+          strategy: "none"
+        };
+      };
+
     const client = new MistralClient({
       apiKey: this.apiKey,
       serverURL: this.serverURL,
       // If httpClient exists, pass it into constructor
-      ...( this.httpClient ? {httpClient: this.httpClient} : {})
+      ...( this.httpClient ? {httpClient: this.httpClient} : {}),
+      retryConfig: _getRetryConfig(),
     });
 
     return this.caller.call(async () => {
