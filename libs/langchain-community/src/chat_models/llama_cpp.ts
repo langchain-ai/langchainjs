@@ -51,7 +51,7 @@ export interface LlamaCppCallOptions extends BaseLanguageModelCallOptions {
  * @example
  * ```typescript
  * // Initialize the ChatLlamaCpp model with the path to the model binary file.
- * const model = await ChatLlamaCpp.chatInit({
+ * const model = await ChatLlamaCpp.initialize({
  *   modelPath: "/Replace/with/path/to/your/model/gguf-llama2-q4_0.bin",
  *   temperature: 0.5,
  * });
@@ -91,7 +91,7 @@ export class ChatLlamaCpp extends SimpleChatModel<LlamaCppCallOptions> {
     return "ChatLlamaCpp";
   }
 
-  private constructor(inputs: LlamaCppInputs) {
+  protected constructor(inputs: LlamaCppInputs) {
     super(inputs);
     this.maxTokens = inputs?.maxTokens;
     this.temperature = inputs?.temperature;
@@ -106,7 +106,7 @@ export class ChatLlamaCpp extends SimpleChatModel<LlamaCppCallOptions> {
    * @param inputs - the inputs passed onto the model.
    * @returns A Promise that resolves to the ChatLlamaCpp type class.
    */
-  public static async chatInit(
+  public static async initialize(
     inputs: LlamaBaseCppInputs
   ): Promise<ChatLlamaCpp> {
     const instance = new ChatLlamaCpp(inputs);
@@ -119,7 +119,7 @@ export class ChatLlamaCpp extends SimpleChatModel<LlamaCppCallOptions> {
   }
 
   _llmType() {
-    return "llama3_cpp";
+    return "llama_cpp";
   }
 
   /** @ignore */

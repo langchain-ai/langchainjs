@@ -19,7 +19,7 @@ export interface LlamaCppEmbeddingsParams
  * @example
  * ```typescript
  * // Initialize LlamaCppEmbeddings with the path to the model file
- * const embeddings = await LlamaCppEmbeddings.embeddingsInit({
+ * const embeddings = await LlamaCppEmbeddings.initialize({
  *   modelPath: llamaPath,
  * });
  *
@@ -36,7 +36,7 @@ export class LlamaCppEmbeddings extends Embeddings {
 
   _context: LlamaContext;
 
-  private constructor(inputs: LlamaCppEmbeddingsParams) {
+  protected constructor(inputs: LlamaCppEmbeddingsParams) {
     super(inputs);
     const _inputs = inputs;
     _inputs.embedding = true;
@@ -47,7 +47,7 @@ export class LlamaCppEmbeddings extends Embeddings {
    * @param inputs - the inputs passed onto the model.
    * @returns A Promise that resolves to the LlamaCppEmbeddings type class.
    */
-  public static async embeddingsInit(
+  public static async initialize(
     inputs: LlamaBaseCppInputs
   ): Promise<LlamaCppEmbeddings> {
     const instance = new LlamaCppEmbeddings(inputs);
