@@ -19,6 +19,18 @@ describe("Text generation", () => {
       await watsonXInstance.invoke("Hello world?");
     });
 
+    test("Overwritte params", async () => {
+      const watsonXInstance = new WatsonxLLM({
+        model: "ibm/granite-13b-chat-v2",
+        version: "2024-05-31",
+        serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
+        projectId: process.env.WATSONX_AI_PROJECT_ID,
+      });
+      await watsonXInstance.invoke("Hello world?", {
+        parameters: { maxNewTokens: 10 },
+      });
+    });
+
     test("Invalid projectId", async () => {
       const watsonXInstance = new WatsonxLLM({
         model: "ibm/granite-13b-chat-v2",

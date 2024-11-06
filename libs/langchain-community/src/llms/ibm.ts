@@ -32,7 +32,7 @@ import {
 
 export interface WatsonxCallOptionsLLM extends BaseLanguageModelCallOptions {
   maxRetries?: number;
-  parameters?: WatsonxInputLLM;
+  parameters?: Partial<WatsonxInputLLM>;
   idOrName?: string;
 }
 
