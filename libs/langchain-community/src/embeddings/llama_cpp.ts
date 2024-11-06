@@ -36,7 +36,7 @@ export class LlamaCppEmbeddings extends Embeddings {
 
   _context: LlamaContext;
 
-  protected constructor(inputs: LlamaCppEmbeddingsParams) {
+  public constructor(inputs: LlamaCppEmbeddingsParams) {
     super(inputs);
     const _inputs = inputs;
     _inputs.embedding = true;
