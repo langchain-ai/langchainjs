@@ -12724,21 +12724,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@mistralai/mistralai@npm:^0.4.0":
-  version: 0.4.0
-  resolution: "@mistralai/mistralai@npm:0.4.0"
-  dependencies:
-    node-fetch: ^2.6.7
-  checksum: 1b03fc0b55164c02e5fb29fb2d09ebe4ad44346fc313f7fb3ab09e48f73f975763d1ac9654098d433ea17d7caa20654b2b15510822276acc9fa46db461a254a6
-  languageName: node
-  linkType: hard
-
-"@mistralai/mistralai@npm:^1.0.2":
-  version: 1.0.2
-  resolution: "@mistralai/mistralai@npm:1.0.2"
+"@mistralai/mistralai@npm:^1.1.0":
+  version: 1.1.0
+  resolution: "@mistralai/mistralai@npm:1.1.0"
   peerDependencies:
     zod: ">= 3"
-  checksum: 9d2ed8d96d20791571cf9ad2a47c4fb2a8a991543ce95a7daeba8f146cca73cac8e05b9da1e96b16d84a08c3c9bcea90c3e4909ce55dd366ea4931b2e18a28bb
+  checksum: 219a96ec73361f7c9079d8ed77a504bea767fba7e150159d6c7ec1019b5a0a76eaf0a867b5562442ed5face483a2b7c24f597bde56ecf7b39aece3b36831ce79
   languageName: node
   linkType: hard
 
@@ -32344,6 +32335,7 @@ __metadata:
     semver: ^7.5.4
     turbo: ^1.13.3
     typescript: ~5.1.6
+    zod: ^3.23.8
   languageName: unknown
   linkType: soft
 

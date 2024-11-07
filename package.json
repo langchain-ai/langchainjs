@@ -72,5 +72,8 @@
       "eslint --cache --fix"
     ],
     "*.md": "prettier --config .prettierrc --write"
+  },
+  "dependencies": {
+    "zod": "^3.23.8"
   }
 }
