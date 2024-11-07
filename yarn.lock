@@ -33203,7 +33203,6 @@ __metadata:
     semver: ^7.5.4
     turbo: ^1.13.3
     typescript: ~5.1.6
-    zod: ^3.23.8
   languageName: unknown
   linkType: soft
 
