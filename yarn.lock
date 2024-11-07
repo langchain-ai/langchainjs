@@ -12851,6 +12851,7 @@ __metadata:
     ts-jest: ^29.1.0
     typescript: <5.2.0
     zod: ^3.22.4
+    zod-to-json-schema: ^3.23.1
   peerDependencies:
     "@langchain/core": ">=0.2.21 <0.4.0"
   languageName: unknown
