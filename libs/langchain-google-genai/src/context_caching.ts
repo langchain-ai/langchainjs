@@ -1,27 +1,59 @@
-import { CachedContentCreateParams, CachedContentUpdateParams, FileMetadata, FileMetadataResponse, GoogleAICacheManager, ListCacheResponse, ListFilesResponse, ListParams, UploadFileResponse } from "@google/generative-ai/server";
-import { GoogleAIFileManager } from "@google/generative-ai/server";
-import { CachedContent, RequestOptions, SingleRequestOptions } from "@google/generative-ai";
+import {
+  CachedContentCreateParams,
+  CachedContentUpdateParams,
+  FileMetadata,
+  FileMetadataResponse,
+  GoogleAICacheManager,
+  ListCacheResponse,
+  ListFilesResponse,
+  ListParams,
+  UploadFileResponse,
+  GoogleAIFileManager,
+} from "@google/generative-ai/server";
+import {
+  CachedContent,
+  RequestOptions,
+  SingleRequestOptions,
+} from "@google/generative-ai";
 
 export class GoogleGenerativeAIContextCache {
   private fileManager: GoogleAIFileManager;
+
   private cacheManager: GoogleAICacheManager;
 
-  constructor(apiKey: string, fileManagerRequestOptions?: RequestOptions, 
+  constructor(
+    apiKey: string,
+    fileManagerRequestOptions?: RequestOptions,
     cacheManagerRequestOptions?: RequestOptions
   ) {
-    this.fileManager = new GoogleAIFileManager(apiKey, fileManagerRequestOptions);
-    this.cacheManager = new GoogleAICacheManager(apiKey, cacheManagerRequestOptions);
+    this.fileManager = new GoogleAIFileManager(
+      apiKey,
+      fileManagerRequestOptions
+    );
+    this.cacheManager = new GoogleAICacheManager(
+      apiKey,
+      cacheManagerRequestOptions
+    );
   }
 
-  uploadFile(filePath: string, fileMetadata: FileMetadata): Promise<UploadFileResponse> {
+  uploadFile(
+    filePath: string,
+    fileMetadata: FileMetadata
+  ): Promise<UploadFileResponse> {
     return this.fileManager.uploadFile(filePath, fileMetadata);
   }
 
-  listFiles(listParams?: ListParams, requestOptions?: SingleRequestOptions): Promise<ListFilesResponse> {
+  listFiles(
+    listParams?: ListParams,
+    requestOptions?: SingleRequestOptions
+  ): Promise<ListFilesResponse> {
     return this.fileManager.listFiles(listParams, requestOptions);
   }
 
-  getFile(fileId: string, requestOptions?: SingleRequestOptions): Promise<FileMetadataResponse> {
+  getFile(
+    fileId: string,
+    requestOptions?: SingleRequestOptions
+  ): Promise<FileMetadataResponse> {
     return this.fileManager.getFile(fileId, requestOptions);
   }
 
@@ -29,7 +61,9 @@ export class GoogleGenerativeAIContextCache {
     return this.fileManager.deleteFile(fileId);
   }
 
-  createCache(createOptions: CachedContentCreateParams): Promise<CachedContent> {
+  createCache(
+    createOptions: CachedContentCreateParams
+  ): Promise<CachedContent> {
     return this.cacheManager.create(createOptions);
   }
 
@@ -41,7 +75,10 @@ export class GoogleGenerativeAIContextCache {
     return this.cacheManager.get(name);
   }
 
-  updateCache(name: string, updateParams: CachedContentUpdateParams): Promise<CachedContent> {
+  updateCache(
+    name: string,
+    updateParams: CachedContentUpdateParams
+  ): Promise<CachedContent> {
     return this.cacheManager.update(name, updateParams);
   }
 
