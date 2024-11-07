@@ -296,7 +296,10 @@ export abstract class ChatGoogleBase<AuthOptions>
       runManager
     );
     const ret = this.connection.api.responseToChatResult(response);
-    await runManager?.handleLLMNewToken(ret.generations[0].text);
+    const chunk = ret?.generations?.[0];
+    if (chunk) {
+      await runManager?.handleLLMNewToken(chunk.text || "");
+    }
     return ret;
   }
 
