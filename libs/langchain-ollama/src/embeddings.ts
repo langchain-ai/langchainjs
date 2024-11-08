@@ -42,7 +42,7 @@ interface OllamaEmbeddingsParams extends EmbeddingsParams {
    * https://github.com/ollama/ollama/blob/main/docs/modelfile.md#valid-parameters-and-values
    * for details of the available parameters.
    */
-  requestOptions?: OllamaCamelCaseOptions;
+  requestOptions?: OllamaCamelCaseOptions & Partial<OllamaOptions>;
 }
 
 export class OllamaEmbeddings extends Embeddings {
@@ -121,6 +121,9 @@ export class OllamaEmbeddings extends Embeddings {
       const snakeCasedOption = mapping[key as keyof OllamaCamelCaseOptions];
       if (snakeCasedOption) {
         snakeCasedOptions[snakeCasedOption as keyof OllamaOptions] = value;
+      } else {
+        // Just pass unknown options through
+        snakeCasedOptions[key as keyof OllamaOptions] = value;
       }
     }
     return snakeCasedOptions;
