@@ -36,7 +36,7 @@ export async function consumeCallback<T>(
 ): Promise<void> {
   if (wait === true) {
     // Clear config since callbacks are not part of the root run
-    // Avoid using singletons due to circuluar dependency issues
+    // Avoid using global singleton due to circuluar dependency issues
     if (getGlobalAsyncLocalStorageInstance() !== undefined) {
       await getGlobalAsyncLocalStorageInstance().run(undefined, async () =>
         promiseFn()
