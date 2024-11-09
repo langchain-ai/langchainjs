@@ -3,7 +3,7 @@ import { Embeddings, type EmbeddingsParams } from "@langchain/core/embeddings";
 import { chunkArray } from "@langchain/core/utils/chunk_array";
 import { EmbeddingRequest as MistralAIEmbeddingsRequest} from "@mistralai/mistralai/src/models/components/embeddingrequest.js";
 import { EmbeddingResponse as MistralAIEmbeddingsResponse} from "@mistralai/mistralai/src/models/components/embeddingresponse.js";
-import { HTTPClient as MistralAIHTTPClient} from "@mistralai/mistralai/lib/http.js";
+import { BeforeRequestHook, HTTPClient as MistralAIHTTPClient, RequestErrorHook, ResponseHook} from "@mistralai/mistralai/lib/http.js";
 
 /**
  * Interface for MistralAIEmbeddings parameters. Extends EmbeddingsParams and
@@ -47,6 +47,24 @@ export interface MistralAIEmbeddingsParams extends EmbeddingsParams {
    */
   stripNewLines?: boolean;
   /**
+   * A list of custom hooks that must follow (req: Request) => Awaitable<Request | void>
+   * They are automatically added when a ChatMistralAI Object is created
+   * @default {[]}
+   */
+  beforeRequestHooks?: Array<BeforeRequestHook>;
+  /**
+     * A list of custom hooks that must follow (err: unknown, req: Request) => Awaitable<void>
+     * They are automatically added when a ChatMistralAI Object is created
+     * @default {[]}
+     */
+  requestErrorHooks?: Array<RequestErrorHook>;
+  /**
+     * A list of custom hooks that must follow (res: Response, req: Request) => Awaitable<void>
+     * They are automatically added when a ChatMistralAI Object is created
+     * @default {[]}
+     */
+  responseHooks?: Array<ResponseHook>;
+  /**
    * Optional custom HTTP client to manage API requests
    * Allows users to add custom fetch implementations, hooks, as well as error and response processing.
    */
@@ -75,6 +93,12 @@ export class MistralAIEmbeddings
 
   serverURL?: string;
 
+  beforeRequestHooks?: Array<BeforeRequestHook>;
+
+  requestErrorHooks?: Array<RequestErrorHook>;
+
+  responseHooks?: Array<ResponseHook>;
+
   httpClient?: MistralAIHTTPClient;
 
   constructor(fields?: Partial<MistralAIEmbeddingsParams>) {
@@ -90,9 +114,14 @@ export class MistralAIEmbeddings
     this.encodingFormat = fields?.encodingFormat ?? this.encodingFormat;
     this.batchSize = fields?.batchSize ?? this.batchSize;
     this.stripNewLines = fields?.stripNewLines ?? this.stripNewLines;
-    this.httpClient = fields?.httpClient ?? undefined;
+    this.beforeRequestHooks = fields?.beforeRequestHooks ?? this.beforeRequestHooks;
+    this.requestErrorHooks = fields?.requestErrorHooks ?? this.requestErrorHooks;
+    this.responseHooks = fields?.responseHooks ?? this.responseHooks;
+    this.httpClient = fields?.httpClient ?? this.httpClient;
+    this.addAllHooksToHttpClient();
   }
 
+  
   /**
    * Method to generate embeddings for an array of documents. Splits the
    * documents into batches and makes requests to the MistralAI API to generate
@@ -164,6 +193,79 @@ export class MistralAIEmbeddings
       );
       return res;
     });
+  }
+
+  addAllHooksToHttpClient() {
+    try {
+      // To prevent duplicate hooks
+      this.removeAllHooksFromHttpClient();
+
+      // If the user wants to use hooks, but hasn't created an HTTPClient yet
+      const hasHooks = [
+        this.beforeRequestHooks,
+        this.requestErrorHooks,
+        this.responseHooks
+      ].some(hook => hook && hook.length > 0);
+      if(hasHooks && !this.httpClient) {
+        this.httpClient = new MistralAIHTTPClient();
+      }
+
+      if(this.beforeRequestHooks) {
+        for(const hook of this.beforeRequestHooks) {
+          this.httpClient?.addHook("beforeRequest", hook);
+        }
+      }
+
+      if(this.requestErrorHooks) {
+        for(const hook of this.requestErrorHooks) {
+          this.httpClient?.addHook("requestError", hook);
+        }
+      }
+
+      if(this.responseHooks) {
+        for(const hook of this.responseHooks) {
+          this.httpClient?.addHook("response", hook);
+        }
+      }
+    } catch {
+      throw new Error("Error in adding all hooks");
+    }
+  }
+
+  removeAllHooksFromHttpClient() {
+    try {
+      if(this.beforeRequestHooks) {
+        for(const hook of this.beforeRequestHooks) {
+          this.httpClient?.removeHook("beforeRequest", hook);
+        }
+      }
+
+      if(this.requestErrorHooks) {
+        for(const hook of this.requestErrorHooks) {
+          this.httpClient?.removeHook("requestError", hook);
+        }
+      }
+
+      if(this.responseHooks) {
+        for(const hook of this.responseHooks) {
+          this.httpClient?.removeHook("response", hook);
+        }
+      }
+    } catch {
+      throw new Error("Error in removing hooks");
+    }
+  }
+
+  removeHookFromHttpClient(
+    hook: BeforeRequestHook | RequestErrorHook | ResponseHook
+  ) {
+    try {
+      this.httpClient?.removeHook("beforeRequest", hook as BeforeRequestHook);
+      this.httpClient?.removeHook("requestError", hook as RequestErrorHook);
+      this.httpClient?.removeHook("response", hook as ResponseHook);
+    } catch {
+      throw new Error("Error in removing hook");
+    }
   }
 
   /** @ignore */

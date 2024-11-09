@@ -7,7 +7,7 @@ import { FIMCompletionStreamRequest as MistralAIFIMCompletionStreamRequest} from
 import { FIMCompletionResponse as MistralAIFIMCompletionResponse } from "@mistralai/mistralai/models/components/fimcompletionresponse.js";
 import { ChatCompletionChoice as MistralAIChatCompletionChoice} from "@mistralai/mistralai/models/components/chatcompletionchoice.js";
 import { CompletionEvent as MistralAIChatCompletionEvent } from "@mistralai/mistralai/models/components/completionevent.js";
-import { HTTPClient as MistralAIHTTPClient} from "@mistralai/mistralai/lib/http.js";
+import { BeforeRequestHook, HTTPClient as MistralAIHTTPClient, RequestErrorHook, ResponseHook} from "@mistralai/mistralai/lib/http.js";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { chunkArray } from "@langchain/core/utils/chunk_array";
 import { AsyncCaller } from "@langchain/core/utils/async_caller";
@@ -70,6 +70,24 @@ export interface MistralAIInput extends BaseLLMParams {
    */
   batchSize?: number;
   /**
+   * A list of custom hooks that must follow (req: Request) => Awaitable<Request | void>
+   * They are automatically added when a ChatMistralAI Object is created
+   * @default {[]}
+   */
+  beforeRequestHooks?: Array<BeforeRequestHook>;
+  /**
+     * A list of custom hooks that must follow (err: unknown, req: Request) => Awaitable<void>
+     * They are automatically added when a ChatMistralAI Object is created
+     * @default {[]}
+     */
+  requestErrorHooks?: Array<RequestErrorHook>;
+  /**
+     * A list of custom hooks that must follow (res: Response, req: Request) => Awaitable<void>
+     * They are automatically added when a ChatMistralAI Object is created
+     * @default {[]}
+     */
+  responseHooks?: Array<ResponseHook>;
+  /**
    * Optional custom HTTP client to manage API requests
    * Allows users to add custom fetch implementations, hooks, as well as error and response processing.
    */
@@ -113,6 +131,12 @@ export class MistralAI
 
   maxConcurrency?: number;
 
+  beforeRequestHooks?: Array<BeforeRequestHook>;
+
+  requestErrorHooks?: Array<RequestErrorHook>;
+
+  responseHooks?: Array<ResponseHook>;
+
   httpClient?: MistralAIHTTPClient;
 
   constructor(fields?: MistralAIInput) {
@@ -128,7 +152,10 @@ export class MistralAI
     this.serverURL = fields?.serverURL;
     this.maxRetries = fields?.maxRetries;
     this.maxConcurrency = fields?.maxConcurrency;
-    this.httpClient = fields?.httpClient ?? undefined;
+    this.beforeRequestHooks = fields?.beforeRequestHooks ?? this.beforeRequestHooks;
+    this.requestErrorHooks = fields?.requestErrorHooks ?? this.requestErrorHooks;
+    this.responseHooks = fields?.responseHooks ?? this.responseHooks;
+    this.httpClient = fields?.httpClient ?? this.httpClient;
 
     const apiKey = fields?.apiKey ?? getEnvironmentVariable("MISTRAL_API_KEY");
     if (!apiKey) {
@@ -138,6 +165,8 @@ Either provide one via the "apiKey" field in the constructor, or set the "MISTRA
       );
     }
     this.apiKey = apiKey;
+
+    this.addAllHooksToHttpClient();
   }
 
   get lc_secrets(): { [key: string]: string } | undefined {
@@ -388,6 +417,80 @@ Either provide one via the "apiKey" field in the constructor, or set the "MISTRA
       throw new Error("AbortError");
     }
   }
+
+  addAllHooksToHttpClient() {
+    try {
+      // To prevent duplicate hooks
+      this.removeAllHooksFromHttpClient();
+
+      // If the user wants to use hooks, but hasn't created an HTTPClient yet
+      const hasHooks = [
+        this.beforeRequestHooks,
+        this.requestErrorHooks,
+        this.responseHooks
+      ].some(hook => hook && hook.length > 0);
+      if(hasHooks && !this.httpClient) {
+        this.httpClient = new MistralAIHTTPClient();
+      }
+
+      if(this.beforeRequestHooks) {
+        for(const hook of this.beforeRequestHooks) {
+          this.httpClient?.addHook("beforeRequest", hook);
+        }
+      }
+
+      if(this.requestErrorHooks) {
+        for(const hook of this.requestErrorHooks) {
+          this.httpClient?.addHook("requestError", hook);
+        }
+      }
+
+      if(this.responseHooks) {
+        for(const hook of this.responseHooks) {
+          this.httpClient?.addHook("response", hook);
+        }
+      }
+    } catch {
+      throw new Error("Error in adding all hooks");
+    }
+  }
+
+  removeAllHooksFromHttpClient() {
+    try {
+      if(this.beforeRequestHooks) {
+        for(const hook of this.beforeRequestHooks) {
+          this.httpClient?.removeHook("beforeRequest", hook);
+        }
+      }
+
+      if(this.requestErrorHooks) {
+        for(const hook of this.requestErrorHooks) {
+          this.httpClient?.removeHook("requestError", hook);
+        }
+      }
+
+      if(this.responseHooks) {
+        for(const hook of this.responseHooks) {
+          this.httpClient?.removeHook("response", hook);
+        }
+      }
+    } catch {
+      throw new Error("Error in removing hooks");
+    }
+  }
+
+  removeHookFromHttpClient(
+    hook: BeforeRequestHook | RequestErrorHook | ResponseHook
+  ) {
+    try {
+      this.httpClient?.removeHook("beforeRequest", hook as BeforeRequestHook);
+      this.httpClient?.removeHook("requestError", hook as RequestErrorHook);
+      this.httpClient?.removeHook("response", hook as ResponseHook);
+    } catch {
+      throw new Error("Error in removing hook");
+    }
+  }
+
 
   /** @ignore */
   private async imports() {
