@@ -3,7 +3,12 @@ import { Embeddings, type EmbeddingsParams } from "@langchain/core/embeddings";
 import { chunkArray } from "@langchain/core/utils/chunk_array";
 import { EmbeddingRequest as MistralAIEmbeddingsRequest} from "@mistralai/mistralai/src/models/components/embeddingrequest.js";
 import { EmbeddingResponse as MistralAIEmbeddingsResponse} from "@mistralai/mistralai/src/models/components/embeddingresponse.js";
-import { BeforeRequestHook, HTTPClient as MistralAIHTTPClient, RequestErrorHook, ResponseHook} from "@mistralai/mistralai/lib/http.js";
+import { 
+  BeforeRequestHook,
+  RequestErrorHook,
+  ResponseHook,
+  HTTPClient as MistralAIHTTPClient,
+} from "@mistralai/mistralai/lib/http.js";
 
 /**
  * Interface for MistralAIEmbeddings parameters. Extends EmbeddingsParams and
@@ -33,6 +38,11 @@ export interface MistralAIEmbeddingsParams extends EmbeddingsParams {
   encodingFormat?: string;
   /**
    * Override the default server URL used by the Mistral SDK.
+   * @deprecated use serverURL instead
+   */
+  endpoint?: string;
+  /**
+   * Override the default server URL used by the Mistral SDK.
    */
   serverURL?: string;
   /**
@@ -48,20 +58,17 @@ export interface MistralAIEmbeddingsParams extends EmbeddingsParams {
   stripNewLines?: boolean;
   /**
    * A list of custom hooks that must follow (req: Request) => Awaitable<Request | void>
-   * They are automatically added when a ChatMistralAI Object is created
-   * @default {[]}
+   * They are automatically added when a ChatMistralAI instance is created
    */
   beforeRequestHooks?: Array<BeforeRequestHook>;
   /**
      * A list of custom hooks that must follow (err: unknown, req: Request) => Awaitable<void>
-     * They are automatically added when a ChatMistralAI Object is created
-     * @default {[]}
+     * They are automatically added when a ChatMistralAI instance is created
      */
   requestErrorHooks?: Array<RequestErrorHook>;
   /**
      * A list of custom hooks that must follow (res: Response, req: Request) => Awaitable<void>
-     * They are automatically added when a ChatMistralAI Object is created
-     * @default {[]}
+     * They are automatically added when a ChatMistralAI instance is created
      */
   responseHooks?: Array<ResponseHook>;
   /**
@@ -91,6 +98,11 @@ export class MistralAIEmbeddings
 
   apiKey: string;
 
+  /**
+   * @deprecated use serverURL instead
+   */
+  endpoint: string;
+
   serverURL?: string;
 
   beforeRequestHooks?: Array<BeforeRequestHook>;
@@ -108,7 +120,7 @@ export class MistralAIEmbeddings
       throw new Error("API key missing for MistralAI, but it is required.");
     }
     this.apiKey = apiKey;
-    this.serverURL = fields?.serverURL;
+    this.serverURL = fields?.serverURL ?? this.serverURL;
     this.modelName = fields?.model ?? fields?.modelName ?? this.model;
     this.model = this.modelName;
     this.encodingFormat = fields?.encodingFormat ?? this.encodingFormat;
@@ -206,23 +218,23 @@ export class MistralAIEmbeddings
         this.requestErrorHooks,
         this.responseHooks
       ].some(hook => hook && hook.length > 0);
-      if(hasHooks && !this.httpClient) {
+      if (hasHooks && !this.httpClient) {
         this.httpClient = new MistralAIHTTPClient();
       }
 
-      if(this.beforeRequestHooks) {
+      if (this.beforeRequestHooks) {
         for(const hook of this.beforeRequestHooks) {
           this.httpClient?.addHook("beforeRequest", hook);
         }
       }
 
-      if(this.requestErrorHooks) {
+      if (this.requestErrorHooks) {
         for(const hook of this.requestErrorHooks) {
           this.httpClient?.addHook("requestError", hook);
         }
       }
 
-      if(this.responseHooks) {
+      if (this.responseHooks) {
         for(const hook of this.responseHooks) {
           this.httpClient?.addHook("response", hook);
         }
@@ -234,19 +246,19 @@ export class MistralAIEmbeddings
 
   removeAllHooksFromHttpClient() {
     try {
-      if(this.beforeRequestHooks) {
+      if (this.beforeRequestHooks) {
         for(const hook of this.beforeRequestHooks) {
           this.httpClient?.removeHook("beforeRequest", hook);
         }
       }
 
-      if(this.requestErrorHooks) {
+      if (this.requestErrorHooks) {
         for(const hook of this.requestErrorHooks) {
           this.httpClient?.removeHook("requestError", hook);
         }
       }
 
-      if(this.responseHooks) {
+      if (this.responseHooks) {
         for(const hook of this.responseHooks) {
           this.httpClient?.removeHook("response", hook);
         }

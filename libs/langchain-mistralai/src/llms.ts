@@ -7,7 +7,12 @@ import { FIMCompletionStreamRequest as MistralAIFIMCompletionStreamRequest} from
 import { FIMCompletionResponse as MistralAIFIMCompletionResponse } from "@mistralai/mistralai/models/components/fimcompletionresponse.js";
 import { ChatCompletionChoice as MistralAIChatCompletionChoice} from "@mistralai/mistralai/models/components/chatcompletionchoice.js";
 import { CompletionEvent as MistralAIChatCompletionEvent } from "@mistralai/mistralai/models/components/completionevent.js";
-import { BeforeRequestHook, HTTPClient as MistralAIHTTPClient, RequestErrorHook, ResponseHook} from "@mistralai/mistralai/lib/http.js";
+import { 
+  BeforeRequestHook,
+  RequestErrorHook,
+  ResponseHook,
+  HTTPClient as MistralAIHTTPClient,
+} from "@mistralai/mistralai/lib/http.js";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { chunkArray } from "@langchain/core/utils/chunk_array";
 import { AsyncCaller } from "@langchain/core/utils/async_caller";
@@ -33,6 +38,11 @@ export interface MistralAIInput extends BaseLLMParams {
    * @default {process.env.MISTRAL_API_KEY}
    */
   apiKey?: string;
+  /**
+   * Override the default server URL used by the Mistral SDK.
+   * @deprecated use serverURL instead
+   */
+  endpoint?: string;
   /**
    * Override the default server URL used by the Mistral SDK.
    */
@@ -71,20 +81,17 @@ export interface MistralAIInput extends BaseLLMParams {
   batchSize?: number;
   /**
    * A list of custom hooks that must follow (req: Request) => Awaitable<Request | void>
-   * They are automatically added when a ChatMistralAI Object is created
-   * @default {[]}
+   * They are automatically added when a ChatMistralAI instance is created
    */
   beforeRequestHooks?: Array<BeforeRequestHook>;
   /**
      * A list of custom hooks that must follow (err: unknown, req: Request) => Awaitable<void>
-     * They are automatically added when a ChatMistralAI Object is created
-     * @default {[]}
+     * They are automatically added when a ChatMistralAI instance is created
      */
   requestErrorHooks?: Array<RequestErrorHook>;
   /**
      * A list of custom hooks that must follow (res: Response, req: Request) => Awaitable<void>
-     * They are automatically added when a ChatMistralAI Object is created
-     * @default {[]}
+     * They are automatically added when a ChatMistralAI instance is created
      */
   responseHooks?: Array<ResponseHook>;
   /**
@@ -121,6 +128,11 @@ export class MistralAI
 
   apiKey: string;
 
+  /**
+   * @deprecated use serverURL instead
+   */
+  endpoint: string;
+
   serverURL?: string;
 
   maxRetries?: number;
@@ -145,7 +157,7 @@ export class MistralAI
     this.randomSeed = fields?.randomSeed ?? this.randomSeed;
     this.batchSize = fields?.batchSize ?? this.batchSize;
     this.streaming = fields?.streaming ?? this.streaming;
-    this.serverURL = fields?.serverURL;
+    this.serverURL = fields?.serverURL ?? this.serverURL;
     this.maxRetries = fields?.maxRetries;
     this.maxConcurrency = fields?.maxConcurrency;
     this.beforeRequestHooks = fields?.beforeRequestHooks ?? this.beforeRequestHooks;
@@ -419,23 +431,23 @@ Either provide one via the "apiKey" field in the constructor, or set the "MISTRA
         this.requestErrorHooks,
         this.responseHooks
       ].some(hook => hook && hook.length > 0);
-      if(hasHooks && !this.httpClient) {
+      if (hasHooks && !this.httpClient) {
         this.httpClient = new MistralAIHTTPClient();
       }
 
-      if(this.beforeRequestHooks) {
+      if (this.beforeRequestHooks) {
         for(const hook of this.beforeRequestHooks) {
           this.httpClient?.addHook("beforeRequest", hook);
         }
       }
 
-      if(this.requestErrorHooks) {
+      if (this.requestErrorHooks) {
         for(const hook of this.requestErrorHooks) {
           this.httpClient?.addHook("requestError", hook);
         }
       }
 
-      if(this.responseHooks) {
+      if (this.responseHooks) {
         for(const hook of this.responseHooks) {
           this.httpClient?.addHook("response", hook);
         }
@@ -447,19 +459,19 @@ Either provide one via the "apiKey" field in the constructor, or set the "MISTRA
 
   removeAllHooksFromHttpClient() {
     try {
-      if(this.beforeRequestHooks) {
+      if (this.beforeRequestHooks) {
         for(const hook of this.beforeRequestHooks) {
           this.httpClient?.removeHook("beforeRequest", hook);
         }
       }
 
-      if(this.requestErrorHooks) {
+      if (this.requestErrorHooks) {
         for(const hook of this.requestErrorHooks) {
           this.httpClient?.removeHook("requestError", hook);
         }
       }
 
-      if(this.responseHooks) {
+      if (this.responseHooks) {
         for(const hook of this.responseHooks) {
           this.httpClient?.removeHook("response", hook);
         }
