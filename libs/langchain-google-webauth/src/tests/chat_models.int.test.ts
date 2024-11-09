@@ -204,7 +204,9 @@ describe("Google APIKey Chat", () => {
     const model = new ChatGoogle({
       modelName: "gemini-1.5-flash",
       apiVersion: "v1beta",
-      mediaManager,
+      apiConfig: {
+        mediaManager,
+      },
     });
 
     const message: MessageContentComplex[] = [

@@ -1,3 +1,4 @@
+/* eslint disable @typescript-eslint/no-explicit-any */
 import { expect, test } from "@jest/globals";
 import {
   AIMessage,
@@ -79,7 +80,6 @@ describe("Mock ChatGoogle - Gemini", () => {
   });
 
   test("user agent header", async () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const record: Record<string, any> = {};
     const projectId = mockId();
     const authOptions: MockClientAuthInfo = {
@@ -108,7 +108,6 @@ describe("Mock ChatGoogle - Gemini", () => {
   });
 
   test("platform default", async () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const record: Record<string, any> = {};
     const projectId = mockId();
     const authOptions: MockClientAuthInfo = {
@@ -123,7 +122,6 @@ describe("Mock ChatGoogle - Gemini", () => {
   });
 
   test("platform set", async () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const record: Record<string, any> = {};
     const projectId = mockId();
     const authOptions: MockClientAuthInfo = {
@@ -139,7 +137,6 @@ describe("Mock ChatGoogle - Gemini", () => {
   });
 
   test("1. Basic request format", async () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const record: Record<string, any> = {};
     const projectId = mockId();
     const authOptions: MockClientAuthInfo = {
@@ -173,7 +170,6 @@ describe("Mock ChatGoogle - Gemini", () => {
   });
 
   test("1. Invoke request format", async () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const record: Record<string, any> = {};
     const projectId = mockId();
     const authOptions: MockClientAuthInfo = {
@@ -207,7 +203,6 @@ describe("Mock ChatGoogle - Gemini", () => {
   });
 
   test("1. Response format", async () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const record: Record<string, any> = {};
     const projectId = mockId();
     const authOptions: MockClientAuthInfo = {
@@ -232,7 +227,6 @@ describe("Mock ChatGoogle - Gemini", () => {
   });
 
   test("1. Invoke response format", async () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const record: Record<string, any> = {};
     const projectId = mockId();
     const authOptions: MockClientAuthInfo = {
@@ -260,7 +254,6 @@ describe("Mock ChatGoogle - Gemini", () => {
   // SystemMessages will be turned into the human request with the prompt
   // from the system message and a faked ai response saying "Ok".
   test("1. System request format old model", async () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const record: Record<string, any> = {};
     const projectId = mockId();
     const authOptions: MockClientAuthInfo = {
@@ -301,7 +294,6 @@ describe("Mock ChatGoogle - Gemini", () => {
   });
 
   test("1. System request format convert true", async () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const record: Record<string, any> = {};
     const projectId = mockId();
     const authOptions: MockClientAuthInfo = {
@@ -342,7 +334,6 @@ describe("Mock ChatGoogle - Gemini", () => {
   });
 
   test("1. System request format convert false", async () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const record: Record<string, any> = {};
     const projectId = mockId();
     const authOptions: MockClientAuthInfo = {
@@ -381,7 +372,6 @@ describe("Mock ChatGoogle - Gemini", () => {
   });
 
   test("1. System request format new model", async () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const record: Record<string, any> = {};
     const projectId = mockId();
     const authOptions: MockClientAuthInfo = {
@@ -420,7 +410,6 @@ describe("Mock ChatGoogle - Gemini", () => {
   });
 
   test("1. System request - multiple", async () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const record: Record<string, any> = {};
     const projectId = mockId();
     const authOptions: MockClientAuthInfo = {
@@ -452,7 +441,6 @@ describe("Mock ChatGoogle - Gemini", () => {
   });
 
   test("1. System request - not first", async () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const record: Record<string, any> = {};
     const projectId = mockId();
     const authOptions: MockClientAuthInfo = {
@@ -481,7 +469,6 @@ describe("Mock ChatGoogle - Gemini", () => {
   });
 
   test("2. Safety - settings", async () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const record: Record<string, any> = {};
     const projectId = mockId();
     const authOptions: MockClientAuthInfo = {
@@ -506,8 +493,6 @@ describe("Mock ChatGoogle - Gemini", () => {
     let caught = false;
     try {
       await model.invoke(messages);
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (xx: any) {
       caught = true;
     }
@@ -523,7 +508,6 @@ describe("Mock ChatGoogle - Gemini", () => {
   });
 
   test("2. Safety - default", async () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const record: Record<string, any> = {};
     const projectId = mockId();
     const authOptions: MockClientAuthInfo = {
@@ -542,8 +526,6 @@ describe("Mock ChatGoogle - Gemini", () => {
     let caught = false;
     try {
       await model.invoke(messages);
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (xx: any) {
       caught = true;
       expect(xx).toBeInstanceOf(GoogleAISafetyError);
@@ -561,7 +543,6 @@ describe("Mock ChatGoogle - Gemini", () => {
         msg: "I'm sorry, Dave, but I can't do that.",
       }
     );
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const record: Record<string, any> = {};
     const projectId = mockId();
     const authOptions: MockClientAuthInfo = {
@@ -586,8 +567,6 @@ describe("Mock ChatGoogle - Gemini", () => {
       const aiMessage = result as AIMessage;
       expect(aiMessage.content).toBeDefined();
       expect(aiMessage.content).toBe("I'm sorry, Dave, but I can't do that.");
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (xx: any) {
       caught = true;
     }
@@ -596,7 +575,6 @@ describe("Mock ChatGoogle - Gemini", () => {
   });
 
   test("3. invoke - images", async () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const record: Record<string, any> = {};
     const projectId = mockId();
     const authOptions: MockClientAuthInfo = {
@@ -642,7 +620,6 @@ describe("Mock ChatGoogle - Gemini", () => {
   });
 
   test("3. invoke - media - invalid", async () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const record: Record<string, any> = {};
     const projectId = mockId();
     const authOptions: MockClientAuthInfo = {
@@ -679,7 +656,6 @@ describe("Mock ChatGoogle - Gemini", () => {
   });
 
   test("3. invoke - media - no manager", async () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const record: Record<string, any> = {};
     const projectId = mockId();
     const authOptions: MockClientAuthInfo = {
@@ -778,7 +754,6 @@ describe("Mock ChatGoogle - Gemini", () => {
     await store("resolve://host2/bar/baz", "barbazing");
     await store("resolve://host/foo/blue-box.png", "png");
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const record: Record<string, any> = {};
     const projectId = mockId();
     const authOptions: MockClientAuthInfo = {
@@ -788,7 +763,6 @@ describe("Mock ChatGoogle - Gemini", () => {
     };
     const callbacks: CallbackHandlerMethods[] = [
       {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         handleChatModelStart(
           llm: Serialized,
           messages: BaseMessage[][],
@@ -801,7 +775,6 @@ describe("Mock ChatGoogle - Gemini", () => {
         ): any {
           console.log("Chat start", llm, messages, runId);
         },
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         handleCustomEvent(
           eventName: string,
           data: any,
@@ -861,7 +834,6 @@ describe("Mock ChatGoogle - Gemini", () => {
   });
 
   test("4. Functions Bind - Gemini format request", async () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const record: Record<string, any> = {};
     const projectId = mockId();
     const authOptions: MockClientAuthInfo = {
@@ -943,7 +915,6 @@ describe("Mock ChatGoogle - Gemini", () => {
   });
 
   test("4. Functions withStructuredOutput - Gemini format request", async () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const record: Record<string, any> = {};
     const projectId = mockId();
     const authOptions: MockClientAuthInfo = {
@@ -1015,7 +986,6 @@ describe("Mock ChatGoogle - Gemini", () => {
   });
 
   test("4. Functions - results", async () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const record: Record<string, any> = {};
     const projectId = mockId();
     const authOptions: MockClientAuthInfo = {
@@ -1076,7 +1046,6 @@ describe("Mock ChatGoogle - Gemini", () => {
   });
 
   test("5. Functions - function reply", async () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const record: Record<string, any> = {};
     const projectId = mockId();
     const authOptions: MockClientAuthInfo = {
@@ -1140,7 +1109,6 @@ describe("Mock ChatGoogle - Gemini", () => {
 
 describe("Mock ChatGoogle - Anthropic", () => {
   test("1. Invoke request format", async () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const record: Record<string, any> = {};
     const projectId = mockId();
     const authOptions: MockClientAuthInfo = {
@@ -1170,7 +1138,6 @@ describe("Mock ChatGoogle - Anthropic", () => {
   });
 
   test("1. Invoke response format", async () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const record: Record<string, any> = {};
     const projectId = mockId();
     const authOptions: MockClientAuthInfo = {
@@ -1194,8 +1161,6 @@ describe("Mock ChatGoogle - Anthropic", () => {
     );
   });
 });
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function extractKeys(obj: Record<string, any>, keys: string[] = []) {
   for (const key in obj) {
     if (Object.prototype.hasOwnProperty.call(obj, key)) {

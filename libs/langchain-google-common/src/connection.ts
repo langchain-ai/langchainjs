@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { BaseLanguageModelCallOptions } from "@langchain/core/language_models/base";
 import {
   AsyncCaller,
@@ -419,7 +420,6 @@ export abstract class GoogleRequestCallbackHandler extends BaseCallbackHandler {
     };
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   abstract handleCustomRequestEvent(
     eventName: string,
     eventInfo: GoogleCustomEventInfo,
@@ -429,7 +429,6 @@ export abstract class GoogleRequestCallbackHandler extends BaseCallbackHandler {
     metadata?: Record<string, any>
   ): any;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   abstract handleCustomResponseEvent(
     eventName: string,
     eventInfo: GoogleCustomEventInfo,
@@ -439,7 +438,6 @@ export abstract class GoogleRequestCallbackHandler extends BaseCallbackHandler {
     metadata?: Record<string, any>
   ): any;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   abstract handleCustomChunkEvent(
     eventName: string,
     eventInfo: GoogleCustomEventInfo,
@@ -449,7 +447,6 @@ export abstract class GoogleRequestCallbackHandler extends BaseCallbackHandler {
     metadata?: Record<string, any>
   ): any;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   handleCustomEvent(
     eventName: string,
     data: any,
@@ -504,13 +501,11 @@ export abstract class GoogleRequestCallbackHandler extends BaseCallbackHandler {
 export class GoogleRequestLogger extends GoogleRequestCallbackHandler {
   name: string = "GoogleRequestLogger";
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   log(eventName: string, data: any, tags?: string[]): undefined {
     const tagStr = tags ? `[${tags}]` : "[]";
     console.log(`${eventName} ${tagStr} ${JSON.stringify(data, null, 1)}`);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   handleCustomRequestEvent(
     eventName: string,
     _eventInfo: GoogleCustomEventInfo,
@@ -522,7 +517,6 @@ export class GoogleRequestLogger extends GoogleRequestCallbackHandler {
     this.log(eventName, data, tags);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   handleCustomResponseEvent(
     eventName: string,
     _eventInfo: GoogleCustomEventInfo,
@@ -534,7 +528,6 @@ export class GoogleRequestLogger extends GoogleRequestCallbackHandler {
     this.log(eventName, data, tags);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   handleCustomChunkEvent(
     eventName: string,
     _eventInfo: GoogleCustomEventInfo,
@@ -550,16 +543,12 @@ export class GoogleRequestLogger extends GoogleRequestCallbackHandler {
 export class GoogleRequestRecorder extends GoogleRequestCallbackHandler {
   name = "GoogleRequestRecorder";
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   request: any = {};
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   response: any = {};
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   chunk: any[] = [];
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   handleCustomRequestEvent(
     _eventName: string,
     _eventInfo: GoogleCustomEventInfo,
@@ -571,7 +560,6 @@ export class GoogleRequestRecorder extends GoogleRequestCallbackHandler {
     this.request = data;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   handleCustomResponseEvent(
     _eventName: string,
     _eventInfo: GoogleCustomEventInfo,
@@ -583,7 +571,6 @@ export class GoogleRequestRecorder extends GoogleRequestCallbackHandler {
     this.response = data;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   handleCustomChunkEvent(
     _eventName: string,
     _eventInfo: GoogleCustomEventInfo,
