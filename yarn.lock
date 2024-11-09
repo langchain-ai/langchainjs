@@ -14121,19 +14121,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@pinecone-database/pinecone@npm:^3.0.0":
-  version: 3.0.0
-  resolution: "@pinecone-database/pinecone@npm:3.0.0"
-  dependencies:
-    "@sinclair/typebox": ^0.29.0
-    ajv: ^8.12.0
-    cross-fetch: ^3.1.5
-    encoding: ^0.1.13
-  checksum: 3803c6fead5343e495ccfe177793ed6f58411c2c5efdb1538cdcb0203164ebefb299ed30c8b9c1590d00cafb1dd20e2d06d6b0339159ea237d2939856f377ca9
-  languageName: node
-  linkType: hard
-
-"@pinecone-database/pinecone@npm:^3.0.0 || ^4.0.0":
+"@pinecone-database/pinecone@npm:^3.0.0 || ^4.0.0, @pinecone-database/pinecone@npm:^4.0.0":
   version: 4.0.0
   resolution: "@pinecone-database/pinecone@npm:4.0.0"
   dependencies:
@@ -27354,7 +27342,7 @@ __metadata:
     "@langchain/yandex": "workspace:*"
     "@layerup/layerup-security": ^1.5.12
     "@opensearch-project/opensearch": ^2.2.0
-    "@pinecone-database/pinecone": ^3.0.0
+    "@pinecone-database/pinecone": ^4.0.0
     "@planetscale/database": ^1.8.0
     "@prisma/client": ^4.11.0
     "@qdrant/js-client-rest": ^1.9.0
