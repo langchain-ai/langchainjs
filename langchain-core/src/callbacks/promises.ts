@@ -1,4 +1,5 @@
 import PQueueMod from "p-queue";
+import { AsyncLocalStorageProviderSingleton } from "../singletons/index.js";
 
 let queue: typeof import("p-queue")["default"]["prototype"];
 
@@ -25,12 +26,20 @@ export async function consumeCallback<T>(
   wait: boolean
 ): Promise<void> {
   if (wait === true) {
-    await promiseFn();
+    // Clear config since callbacks are not part of the root run
+    await AsyncLocalStorageProviderSingleton.runWithConfig(
+      undefined,
+      async () => promiseFn()
+    );
   } else {
     if (typeof queue === "undefined") {
       queue = createQueue();
     }
-    void queue.add(promiseFn);
+    void queue.add(() =>
+      AsyncLocalStorageProviderSingleton.runWithConfig(undefined, async () =>
+        promiseFn()
+      )
+    );
   }
 }
 
