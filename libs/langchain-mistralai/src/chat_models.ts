@@ -1373,8 +1373,8 @@ export class ChatMistralAI<
       // Is function calling
       if (isZodSchema(schema)) {
         const asJsonSchema = zodToJsonSchema(schema);
-        llm = this.bindTools(
-          [
+        llm = this.bind({
+          tools: [
             {
               type: "function" as const,
               function: {
@@ -1384,9 +1384,8 @@ export class ChatMistralAI<
               },
             },
           ],
-          {
-            tool_choice: "any"
-          } as Partial<CallOptions>);
+          tool_choice: "any",
+        } as Partial<CallOptions>);
         outputParser = new JsonOutputKeyToolsParser({
           returnSingle: true,
           keyName: functionName,
@@ -1408,15 +1407,14 @@ export class ChatMistralAI<
             parameters: schema,
           };
         }
-        llm = this.bindTools(
-          [
+        llm = this.bind({
+          tools: [
             {
               type: "function" as const,
               function: openAIFunctionDefinition,
             },
           ],
-          {
-            tool_choice: "any"
+          tool_choice: "any",
           } as Partial<CallOptions>);
         outputParser = new JsonOutputKeyToolsParser<RunOutput>({
           returnSingle: true,
