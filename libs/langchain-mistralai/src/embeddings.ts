@@ -60,17 +60,17 @@ export interface MistralAIEmbeddingsParams extends EmbeddingsParams {
    * A list of custom hooks that must follow (req: Request) => Awaitable<Request | void>
    * They are automatically added when a ChatMistralAI instance is created
    */
-  beforeRequestHooks?: Array<BeforeRequestHook>;
+  beforeRequestHooks?: BeforeRequestHook[];
   /**
      * A list of custom hooks that must follow (err: unknown, req: Request) => Awaitable<void>
      * They are automatically added when a ChatMistralAI instance is created
      */
-  requestErrorHooks?: Array<RequestErrorHook>;
+  requestErrorHooks?: RequestErrorHook[];
   /**
      * A list of custom hooks that must follow (res: Response, req: Request) => Awaitable<void>
      * They are automatically added when a ChatMistralAI instance is created
      */
-  responseHooks?: Array<ResponseHook>;
+  responseHooks?: ResponseHook[];
   /**
    * Optional custom HTTP client to manage API requests
    * Allows users to add custom fetch implementations, hooks, as well as error and response processing.
@@ -201,7 +201,6 @@ export class MistralAIEmbeddings
     return this.caller.call(async () => {
       const res = await client.embeddings.create(
         embeddingsRequest,
-        // Could add options here
       );
       return res;
     });

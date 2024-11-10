@@ -7,7 +7,7 @@ import { MistralAI } from "../llms.js";
 // Save the original value of the 'LANGCHAIN_CALLBACKS_BACKGROUND' environment variable
 const originalBackground = process.env.LANGCHAIN_CALLBACKS_BACKGROUND;
 
-test("Test MistralAI", async () => {
+test("Test MistralAI default", async () => {
   const model = new MistralAI({
     maxTokens: 5,
     model: "codestral-latest",

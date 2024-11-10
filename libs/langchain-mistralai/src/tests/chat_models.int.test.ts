@@ -5,14 +5,13 @@ import { z } from "zod";
 import {
   AIMessage,
   AIMessageChunk,
-  BaseMessage,
   HumanMessage,
   ToolMessage,
 } from "@langchain/core/messages";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { ChatMistralAI } from "../chat_models.js";
 
-test("Test ChatMistralAI can invoke", async () => {
+test("Test ChatMistralAI can invoke hello", async () => {
   const model = new ChatMistralAI({
     model: "mistral-tiny",
   });
@@ -80,19 +79,17 @@ test("Can call tools using structured tools", async () => {
 
   const chain = prompt.pipe(model);
   const response = await chain.invoke({});
-  expect("tool_calls" in response.additional_kwargs).toBe(true);
+  expect("tool_calls" in response).toBe(true);
   // console.log(response.additional_kwargs.tool_calls?.[0]);
-  expect(response.additional_kwargs.tool_calls?.[0].function.name).toBe(
+  expect(response.tool_calls?.[0].name).toBe(
     "calculator"
   );
   expect(
-    JSON.parse(
-      response.additional_kwargs.tool_calls?.[0].function.arguments ?? "{}"
-    ).calculator
+    response.tool_calls?.[0].args?.calculator
   ).toBeDefined();
 });
 
-test("Can call tools", async () => {
+test("Can call tools using raw tools", async () => {
   const tools = [
     {
       type: "function",
@@ -130,19 +127,11 @@ test("Can call tools", async () => {
   const response = await chain.invoke({});
   // console.log(response);
   expect(response.tool_calls?.length).toEqual(1);
-  expect(response.tool_calls?.[0].args).toEqual(
-    JSON.parse(
-      response.additional_kwargs.tool_calls?.[0].function.arguments ?? "{}"
-    )
-  );
-  expect("tool_calls" in response.additional_kwargs).toBe(true);
-  expect(response.additional_kwargs.tool_calls?.[0].function.name).toBe(
+  expect(response.tool_calls?.[0].name).toBe(
     "calculator"
   );
   expect(
-    JSON.parse(
-      response.additional_kwargs.tool_calls?.[0].function.arguments ?? "{}"
-    ).calculator
+    response.tool_calls?.[0].args?.calculator
   ).toBeDefined();
 });
 
@@ -179,7 +168,7 @@ test("Can call .stream with tool calling", async () => {
 
   const chain = prompt.pipe(model);
   const response = await chain.stream({});
-  let finalRes: BaseMessage | null = null;
+  let finalRes: AIMessageChunk | null = null;
   for await (const chunk of response) {
     // console.log(chunk);
     finalRes = chunk;
@@ -188,15 +177,13 @@ test("Can call .stream with tool calling", async () => {
     throw new Error("No final response found");
   }
 
-  expect("tool_calls" in finalRes.additional_kwargs).toBe(true);
+  expect("tool_calls" in finalRes).toBe(true);
   // console.log(finalRes.additional_kwargs.tool_calls?.[0]);
-  expect(finalRes.additional_kwargs.tool_calls?.[0].function.name).toBe(
+  expect(finalRes.tool_calls?.[0].name).toBe(
     "calculator"
   );
   expect(
-    JSON.parse(
-      finalRes.additional_kwargs.tool_calls?.[0].function.arguments ?? "{}"
-    ).calculator
+    finalRes.tool_calls?.[0].args.calculator
   ).toBeDefined();
 });
 
@@ -302,7 +289,7 @@ test("Can stream and concat responses for a complex tool", async () => {
 
   const chain = prompt.pipe(model);
   const response = await chain.stream({});
-  let finalRes: BaseMessage[] = [];
+  let finalRes: AIMessageChunk[] = [];
   for await (const chunk of response) {
     // console.log(chunk);
     finalRes = finalRes.concat(chunk);
@@ -311,11 +298,10 @@ test("Can stream and concat responses for a complex tool", async () => {
     throw new Error("No final response found");
   }
 
-  expect(finalRes[0].additional_kwargs.tool_calls?.[0]).toBeDefined();
-  const toolCall = finalRes[0].additional_kwargs.tool_calls?.[0];
-  expect(toolCall?.function.name).toBe("person_traits");
-  const args = JSON.parse(toolCall?.function.arguments ?? "{}");
-  const { person } = args;
+  expect(finalRes[0].tool_calls?.[0]).toBeDefined();
+  const toolCall = finalRes[0].tool_calls?.[0];
+  expect(toolCall?.name).toBe("person_traits");
+  const person = toolCall?.args?.person;
   expect(person).toBeDefined();
   expect(person.name).toBeDefined();
   expect(person.age).toBeDefined();
@@ -406,7 +392,7 @@ describe("withStructuredOutput", () => {
     ]);
     const chain = prompt.pipe(modelWithStructuredOutput);
     const result = await chain.invoke({});
-    // console.log(result);
+    console.log(result);
     expect("operation" in result).toBe(true);
     expect("number1" in result).toBe(true);
     expect("number2" in result).toBe(true);
@@ -812,7 +798,7 @@ describe("codestral-latest", () => {
     expect(fullMessage.toLowerCase()).toContain("world");
   });
 
-  test("Can call tools using structured tools codestral-latest", async () => {
+  test("Can call tools using codestral-latest structured tools", async () => {
     class CodeSandbox extends StructuredTool {
       name = "code_sandbox";
 
@@ -850,16 +836,15 @@ describe("codestral-latest", () => {
         "Write a function that takes in a single argument and logs it to the console. Ensure the code is in Python.",
     });
     // console.log(response);
-    expect("tool_calls" in response.additional_kwargs).toBe(true);
-    // console.log(response.additional_kwargs.tool_calls?.[0]);
-    if (!response.additional_kwargs.tool_calls?.[0]) {
+    expect("tool_calls" in response).toBe(true);
+    // console.log(response.tool_calls?.[0]);
+    if (!response.tool_calls?.[0]) {
       throw new Error("No tool call found");
     }
-    const sandboxTool = response.additional_kwargs.tool_calls[0];
-    expect(sandboxTool.function.name).toBe("code_sandbox");
-    const parsedArgs = JSON.parse(sandboxTool.function.arguments);
-    expect(parsedArgs.code).toBeDefined();
-    // console.log(parsedArgs.code);
+    const sandboxTool = response.tool_calls[0];
+    expect(sandboxTool.name).toBe("code_sandbox");
+    expect(sandboxTool.args?.code).toBeDefined();
+    // console.log(sandboxTool.args?.code);
   });
 });
 
