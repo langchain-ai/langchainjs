@@ -218,19 +218,38 @@ export class ConfluencePagesLoader extends BaseDocumentLoader {
    * @returns A Document instance.
    */
   private createDocumentFromPage(page: ConfluencePage): Document {
+    const htmlContent = page.body.storage.value;
+
+    // Extract and preserve code blocks with unique placeholders
+    const codeBlocks: { language: string; code: string }[] = [];
+    const htmlWithPlaceholders = htmlContent.replace(
+      /<ac:structured-macro.*?<ac:parameter ac:name="language">(.*?)<\/ac:parameter>.*?<ac:plain-text-body><!\[CDATA\[([\s\S]*?)\]\]><\/ac:plain-text-body><\/ac:structured-macro>/g,
+      (_, language, code) => {
+        const placeholder = `CODE_BLOCK_${codeBlocks.length}`;
+        codeBlocks.push({ language, code: code.trim() });
+        return `\n${placeholder}\n`;
+      }
+    );
+
     // Convert the HTML content to plain text
-    const plainTextContent = htmlToText(page.body.storage.value, {
+    let plainTextContent = htmlToText(htmlWithPlaceholders, {
       wordwrap: false,
-      preserveNewlines: false,
+      preserveNewlines: true,
+    });
+
+    // Reinsert code blocks with proper markdown formatting
+    codeBlocks.forEach(({ language, code }, index) => {
+      const placeholder = `CODE_BLOCK_${index}`;
+      plainTextContent = plainTextContent.replace(
+        placeholder,
+        `\`\`\`${language}\n${code}\n\`\`\``
+      );
     });
 
     // Remove empty lines
     const textWithoutEmptyLines = plainTextContent.replace(/^\s*[\r\n]/gm, "");
 
-    // Generate the URL
-    const pageUrl = `${this.baseUrl}/spaces/${this.spaceKey}/pages/${page.id}`;
-
-    // Return a langchain document
+    // Rest of the method remains the same...
     return new Document({
       pageContent: textWithoutEmptyLines,
       metadata: {
@@ -238,7 +257,7 @@ export class ConfluencePagesLoader extends BaseDocumentLoader {
         status: page.status,
         title: page.title,
         type: page.type,
-        url: pageUrl,
+        url: `${this.baseUrl}/spaces/${this.spaceKey}/pages/${page.id}`,
         version: page.version?.number,
         updated_by: page.version?.by?.displayName,
         updated_at: page.version?.when,
