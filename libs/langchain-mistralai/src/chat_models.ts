@@ -176,17 +176,17 @@ export interface ChatMistralAIInput
    * A list of custom hooks that must follow (req: Request) => Awaitable<Request | void>
    * They are automatically added when a ChatMistralAI instance is created
    */
-  beforeRequestHooks?: Array<BeforeRequestHook>;
+  beforeRequestHooks?: BeforeRequestHook[];
   /**
    * A list of custom hooks that must follow (err: unknown, req: Request) => Awaitable<void>
    * They are automatically added when a ChatMistralAI instance is created
    */
-  requestErrorHooks?: Array<RequestErrorHook>;
+  requestErrorHooks?: RequestErrorHook[];
   /**
    * A list of custom hooks that must follow (res: Response, req: Request) => Awaitable<void>
    * They are automatically added when a ChatMistralAI instance is created
    */
-  responseHooks?: Array<ResponseHook>;
+  responseHooks?: ResponseHook[];
   /**
    * Custom HTTP client to manage API requests
    * Allows users to add custom fetch implementations, hooks, as well as error and response processing.
@@ -354,12 +354,12 @@ function mistralAIResponseToChatMessage(
   if (message === undefined) {
     throw new Error("No message found in response");
   }
-  // MistralAI SDK does not include tool_calls in the non
+  // MistralAI SDK does not include toolCalls in the non
   // streaming return type, so we need to extract it like this
   // to satisfy typescript.
   let rawToolCalls: MistralAIToolCall[] = [];
-  if ("tool_calls" in message && Array.isArray(message.tool_calls)) {
-    rawToolCalls = message.tool_calls as MistralAIToolCall[];
+  if ("toolCalls" in message && Array.isArray(message.toolCalls)) {
+    rawToolCalls = message.toolCalls;
   }
   switch (message.role) {
     case "assistant": {
@@ -400,11 +400,11 @@ function _convertDeltaToMessageChunk(
   delta: {
     role?: string | undefined;
     content?: string | null | undefined;
-    tool_calls?: MistralAIToolCall[] | null | undefined;
+    toolCalls?: MistralAIToolCall[] | null | undefined;
   },
   usage?: MistralAITokenUsage | null
 ) {
-  if (!delta.content && !delta.tool_calls) {
+  if (!delta.content && !delta.toolCalls) {
     if (usage) {
       return new AIMessageChunk({
         content: "",
@@ -422,8 +422,8 @@ function _convertDeltaToMessageChunk(
   // Our merge additional kwargs util function will throw unless there
   // is an index key in each tool object (as seen in OpenAI's) so we
   // need to insert it here.
-  const rawToolCallChunksWithIndex = delta.tool_calls?.length
-    ? delta.tool_calls?.map(
+  const rawToolCallChunksWithIndex = delta.toolCalls?.length
+    ? delta.toolCalls?.map(
         (toolCall, index): MistralAIToolCall & { index: number } => ({
           ...toolCall,
           index,
@@ -956,7 +956,7 @@ export class ChatMistralAI<
    */
   invocationParams(
     options?: this["ParsedCallOptions"]
-  ): Omit<MistralAIChatCompletionRequest, "messages"> {
+  ): Omit<MistralAIChatCompletionRequest | MistralAIChatCompletionStreamRequest, "messages"> {
     const { response_format, tools, tool_choice } = options ?? {};
     const mistralAITools: Array<MistralAITool> | undefined = tools?.length
       ? _convertToolToMistralTool(tools)
@@ -988,7 +988,7 @@ export class ChatMistralAI<
   /**
    * Calls the MistralAI API with retry logic in case of failures.
    * @param {ChatRequest} input The input to send to the MistralAI API.
-   * @returns {Promise<MistralAIChatCompletionResult | AsyncGenerator<MistralAIChatCompletionResult>>} The response from the MistralAI API.
+   * @returns {Promise<MistralAIChatCompletionResult | AsyncIterable<MistralAIChatCompletionEvent>>} The response from the MistralAI API.
    */
   async completionWithRetry(
     input: MistralAIChatCompletionStreamRequest,
@@ -1282,7 +1282,6 @@ export class ChatMistralAI<
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | StructuredOutputMethodParams<RunOutput, false>
       | z.ZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
@@ -1294,7 +1293,6 @@ export class ChatMistralAI<
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | StructuredOutputMethodParams<RunOutput, true>
       | z.ZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
@@ -1306,7 +1304,6 @@ export class ChatMistralAI<
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | StructuredOutputMethodParams<RunOutput, boolean>
       | z.ZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
@@ -1322,17 +1319,17 @@ export class ChatMistralAI<
     let name;
     let method;
     let includeRaw;
-    if (isStructuredOutputMethodParams(outputSchema)) {
-      schema = outputSchema.schema;
-      name = outputSchema.name;
-      method = outputSchema.method;
-      includeRaw = outputSchema.includeRaw;
-    } else {
+    // if (isStructuredOutputMethodParams(outputSchema)) {
+    //   schema = outputSchema.schema;
+    //   name = outputSchema.name;
+    //   method = outputSchema.method;
+    //   includeRaw = outputSchema.includeRaw;
+    // } else {
       schema = outputSchema;
       name = config?.name;
       method = config?.method;
       includeRaw = config?.includeRaw;
-    }
+    // }
     let llm: Runnable<BaseLanguageModelInput>;
     let outputParser: BaseLLMOutputParser<RunOutput>;
 
@@ -1350,8 +1347,8 @@ export class ChatMistralAI<
       // Is function calling
       if (isZodSchema(schema)) {
         const asJsonSchema = zodToJsonSchema(schema);
-        llm = this.bind({
-          tools: [
+        llm = this.bindTools(
+          [
             {
               type: "function" as const,
               function: {
@@ -1361,8 +1358,9 @@ export class ChatMistralAI<
               },
             },
           ],
-          tool_choice: "any",
-        } as Partial<CallOptions>);
+          {
+            tool_choice: "any"
+          } as Partial<CallOptions>);
         outputParser = new JsonOutputKeyToolsParser({
           returnSingle: true,
           keyName: functionName,
@@ -1384,15 +1382,16 @@ export class ChatMistralAI<
             parameters: schema,
           };
         }
-        llm = this.bind({
-          tools: [
+        llm = this.bindTools(
+          [
             {
               type: "function" as const,
               function: openAIFunctionDefinition,
             },
           ],
-          tool_choice: "any",
-        } as Partial<CallOptions>);
+          {
+            tool_choice: "any"
+          } as Partial<CallOptions>);
         outputParser = new JsonOutputKeyToolsParser<RunOutput>({
           returnSingle: true,
           keyName: functionName,
@@ -1440,14 +1439,14 @@ function isZodSchema<
   return typeof (input as z.ZodType<RunOutput>)?.parse === "function";
 }
 
-function isStructuredOutputMethodParams(
-  x: unknown
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-): x is StructuredOutputMethodParams<Record<string, any>> {
-  return (
-    x !== undefined &&
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    typeof (x as StructuredOutputMethodParams<Record<string, any>>).schema ===
-      "object"
-  );
-}
+// function isStructuredOutputMethodParams(
+//   x: unknown
+//   // eslint-disable-next-line @typescript-eslint/no-explicit-any
+// ): x is StructuredOutputMethodParams<Record<string, any>> {
+//   return (
+//     x !== undefined &&
+//     // eslint-disable-next-line @typescript-eslint/no-explicit-any
+//     typeof (x as StructuredOutputMethodParams<Record<string, any>>).schema ===
+//       "object"
+//   );
+// }
