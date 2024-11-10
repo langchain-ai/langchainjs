@@ -38,7 +38,7 @@ export type QdrantAddDocumentOptions = {
 
 /**
  * Type that defines the parameters for the delete operation in the
- * QdrantStore class. It includes ids, filter, deleteAll flag, and namespace.
+ * QdrantStore class. It includes ids, filter and shard key.
  */
 export type QdrantDeleteParams = 
   | { ids: string[]; shardKey?: string; filter?: never }
