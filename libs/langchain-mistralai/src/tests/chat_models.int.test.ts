@@ -595,27 +595,18 @@ describe("withStructuredOutput", () => {
       throw new Error("raw not in result");
     }
     const { raw } = result as { raw: AIMessage };
-    expect(raw.additional_kwargs.tool_calls?.length).toBeGreaterThan(0);
-    expect(raw.additional_kwargs.tool_calls?.[0].function.name).toBe(
+    expect(raw.tool_calls?.length).toBeGreaterThan(0);
+    expect(raw.tool_calls?.[0].name).toBe(
       "calculator"
     );
     expect(
-      "operation" in
-        JSON.parse(
-          raw.additional_kwargs.tool_calls?.[0].function.arguments ?? ""
-        )
+      "operation" in (raw.tool_calls?.[0]?.args ?? {})
     ).toBe(true);
     expect(
-      "number1" in
-        JSON.parse(
-          raw.additional_kwargs.tool_calls?.[0].function.arguments ?? ""
-        )
+      "number1" in (raw.tool_calls?.[0]?.args ?? {})
     ).toBe(true);
     expect(
-      "number2" in
-        JSON.parse(
-          raw.additional_kwargs.tool_calls?.[0].function.arguments ?? ""
-        )
+      "number2" in (raw.tool_calls?.[0]?.args ?? {})
     ).toBe(true);
   });
 });
