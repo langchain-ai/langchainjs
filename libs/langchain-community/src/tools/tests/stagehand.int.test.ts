@@ -1,6 +1,9 @@
 import { expect, describe } from "@jest/globals";
 import { GooglePlacesAPI } from "../google_places.js";
 
+
+// TODO create tests for StagehandToolkit
+
 describe("GooglePlacesAPI", () => {
   test("should be setup with correct parameters", async () => {
     const instance = new GooglePlacesAPI();

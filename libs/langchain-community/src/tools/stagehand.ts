@@ -14,7 +14,31 @@ import { ConneryService } from "../../../tools/connery.js";
  */
 export class StagehandToolkit extends Toolkit {
   tools: ToolInterface[];
-  // add tools here
+
+  /**
+   * Creates a StagehandToolkit instance with all Stagehand tools initialized with a shared Stagehand instance.
+   * It populates the tools property of the StagehandToolkit instance.
+   * @returns A Promise that resolves to a StagehandToolkit instance.
+   */
+  static async createInstance(): Promise<StagehandToolkit> {
+    const toolkit = new StagehandToolkit();
+    toolkit.tools = [];
+
+    // Initialize single Stagehand instance to be shared across tools
+    const stagehand = new Stagehand({
+      env: "LOCAL", 
+      enableCaching: true,
+    });
+
+    // Create tools with shared Stagehand instance
+    const actTool = new StagehandActTool(stagehand);
+    const extractTool = new StagehandExtractTool(stagehand);
+    const observeTool = new StagehandObserveTool(stagehand);
+
+    toolkit.tools.push(actTool, extractTool, observeTool);
+    
+    return toolkit;
+  }
 }
 
 
