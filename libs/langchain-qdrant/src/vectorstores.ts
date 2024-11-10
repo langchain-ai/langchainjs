@@ -194,17 +194,19 @@ export class QdrantVectorStore extends VectorStore {
       const batchSize = 1000;
       for (let i = 0; i < ids.length; i += batchSize) {
         const batchIds = ids.slice(i, i + batchSize);
-        await this.client.delete({
-          collectionName: this.collectionName,
+        await this.client.delete(this.collectionName, {
+          wait: true,
+          ordering: 'weak',
           points: batchIds,
-          shardKey,
+          shard_key: shardKey,
         });
       }
     } else if (filter) {
-      await this.client.delete({
-        collectionName: this.collectionName,
-        filter,
-        shardKey,
+      await this.client.delete(this.collectionName, {
+        wait: true,
+        ordering: 'weak',
+        filter: filter,
+        shard_key: shardKey,
       });
     } else {
       throw new Error("Either ids or filter must be provided.");
