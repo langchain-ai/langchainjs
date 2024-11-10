@@ -220,9 +220,15 @@ export class ConfluencePagesLoader extends BaseDocumentLoader {
   private createDocumentFromPage(page: ConfluencePage): Document {
     const htmlContent = page.body.storage.value;
 
+    // Handle both self-closing and regular macros for attachments and view-file
+    const htmlWithoutOtherMacros = htmlContent.replace(
+      /<ac:structured-macro\s+ac:name="(attachments|view-file)"[^>]*(?:\/?>|>.*?<\/ac:structured-macro>)/gs,
+      "[ATTACHMENT]"
+    );
+
     // Extract and preserve code blocks with unique placeholders
     const codeBlocks: { language: string; code: string }[] = [];
-    const htmlWithPlaceholders = htmlContent.replace(
+    const htmlWithPlaceholders = htmlWithoutOtherMacros.replace(
       /<ac:structured-macro.*?<ac:parameter ac:name="language">(.*?)<\/ac:parameter>.*?<ac:plain-text-body><!\[CDATA\[([\s\S]*?)\]\]><\/ac:plain-text-body><\/ac:structured-macro>/g,
       (_, language, code) => {
         const placeholder = `CODE_BLOCK_${codeBlocks.length}`;
