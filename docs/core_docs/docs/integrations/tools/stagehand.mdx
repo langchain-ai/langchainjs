@@ -36,32 +36,33 @@ export ANTHROPIC_API_KEY="your-anthropic-api-key"
 
 ```typescript
 import { Stagehand } from "@browserbasehq/stagehand";
-import { z } from "zod";
-const run = async () => {
-// Initialize Stagehand
-const stagehand = new Stagehand({
-env: "LOCAL", // or "BROWSERBASE" for remote browser
-});
-await stagehand.init();
-// Navigate to a webpage
-await stagehand.page.goto("https://github.com/browserbase/stagehand");
-// Perform an action
-await stagehand.act({
-action: "click on the contributors",
-useVision: "fallback" // Optional: use vision if text-based fails
-});
-// Extract data
-const contributor = await stagehand.extract({
-instruction: "extract the top contributor",
-schema: z.object({
-username: z.string(),
-url: z.string(),
-}),
-});
-// Get possible actions
-const actions = await stagehand.observe();
-console.log("Available actions:", actions);
-};
+import { StagehandActTool } from "./StagehandActTool";
+import { initializeAgentExecutor } from "@langchain/agents";
+
+async function main() {
+  // Initialize Stagehand once and pass it to the tools
+  const stagehand = new Stagehand({
+    env: "LOCAL",
+    enableCaching: true,
+  });
+  await stagehand.init();
+  await stagehand.page.goto("https://example.com");
+
+  const actTool = new StagehandActTool(stagehand);
+  const tools = [actTool];
+
+  const executor = await initializeAgentExecutor(
+    tools,
+    /* your LLM instance */,
+    "zero-shot-react-description"
+  );
+
+  const result = await executor.call({ input: "Click on the login button" });
+
+  console.log(`Agent answer: ${result.output}`);
+}
+
+main();
 ```
 
 ## Usage in an Agent
