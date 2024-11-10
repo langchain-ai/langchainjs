@@ -2,14 +2,21 @@ import { CallbackManagerForToolRun } from "@langchain/core/callbacks/manager";
 import { Tool, type ToolParams } from "@langchain/core/tools";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 
+// TODO create a TOOLKIT for stagehand
+
+import { Tool, ToolInterface } from "@langchain/core/tools";
+import { Toolkit } from "../base.js";
+import { ConneryService } from "../../../tools/connery.js";
+
 /**
- * Options for the TavilySearchResults tool.
+ * ConneryToolkit provides access to all the available actions from the Connery Runner.
+ * @extends Toolkit
  */
-export type TavilySearchAPIRetrieverFields = ToolParams & {
-  maxResults?: number;
-  kwargs?: Record<string, unknown>;
-  apiKey?: string;
-};
+export class StagehandToolkit extends Toolkit {
+  tools: ToolInterface[];
+  // add tools here
+}
+
 
 /**
  * Tavily search API tool integration.

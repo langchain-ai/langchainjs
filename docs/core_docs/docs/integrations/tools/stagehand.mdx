@@ -73,6 +73,7 @@ import { z } from "zod";
 import { ChatOpenAI } from "@langchain/openai";
 import { initializeAgentExecutorWithOptions } from "langchain/agents";
 import { Tool } from "langchain/tools";
+
 const run = async () => {
 // Initialize Stagehand
 const stagehand = new Stagehand();
@@ -97,7 +98,9 @@ schema,
 });
 return JSON.stringify(result);
 }
+
 }
+
 class StagehandObserveTool extends Tool {
 name = "observe";
 description = "Lists possible actions on the current page";
@@ -106,6 +109,7 @@ const actions = await stagehand.observe();
 return JSON.stringify(actions);
 }
 }
+
 // Initialize LangChain components
 const model = new ChatOpenAI({ temperature: 0 });
 const tools = [
@@ -113,11 +117,13 @@ new StagehandActTool(),
 new StagehandExtractTool(),
 new StagehandObserveTool(),
 ];
+
 // Create the agent
 const executor = await initializeAgentExecutorWithOptions(tools, model, {
 agentType: "zero-shot-react-description",
 verbose: true,
 });
+
 // Run the agent
 const result = await executor.invoke({
 input: "Go to github.com/browserbase/stagehand and find the top contributor",
