@@ -20,9 +20,10 @@ import {
 } from "@mistralai/mistralai/lib/http.js";
 import { RetryConfig as MistralAIRetryConfig } from "@mistralai/mistralai/lib/retries.js";
 import {
+  BaseMessage,
   MessageType,
-  type BaseMessage,
   MessageContent,
+  MessageContentComplex,
   AIMessage,
   HumanMessage,
   HumanMessageChunk,
@@ -30,7 +31,6 @@ import {
   ToolMessageChunk,
   ChatMessageChunk,
   FunctionMessageChunk,
-  OpenAIToolCall,
   isAIMessage,
 } from "@langchain/core/messages";
 import type {
@@ -255,23 +255,22 @@ function convertMessagesToMistralMessages(
     }
   };
 
-  const getContent = (content: MessageContent, role: MessageType): string | MistralAIContentChunk[] => {
-    const mistralRole = getRole(role);
+  const getContent = (content: MessageContent, type: MessageType): string | MistralAIContentChunk[] => {
 
-    const _generateContentChunk = (complex: any, role: string): MistralAIContentChunk => {
+    const _generateContentChunk = (complex: MessageContentComplex, role: string): MistralAIContentChunk => {
       if (complex.type === "image_url" && role === "user") {
         return {
           type: complex.type,
           imageUrl: complex?.image_url
         };
-      }
+      };
       
       if (complex.type === "text" && (role === "user" || role === "system")) {
         return {
           type: complex.type,
           text: complex?.text
         };
-      }
+      };
 
       throw new Error(
         `ChatMistralAI only supports messages of type MessageContentText for role "human"
@@ -281,17 +280,39 @@ function convertMessagesToMistralMessages(
           2
         )}`
       );
-    }
+    };
 
     if (typeof content === "string") {
       return content;
-    }
-    
+    };
+
     if (Array.isArray(content)) {
-      return content.map((messageContentComplex) => {
-        return _generateContentChunk(messageContentComplex, mistralRole);
+      const mistralRole = getRole(type);
+
+      // Mistral "assistant" and "tool" roles can only support string content
+      if (mistralRole === "assistant" || mistralRole === "tool") {
+        let strContent = "";
+        content.forEach((messageContentComplex) => {
+          // Ignore all non-text complex message types
+          if (messageContentComplex.type === "text") {
+            strContent.concat(strContent, ` ${messageContentComplex.text}`);
+          };
+        });
+        return strContent;
+      };
+
+      // Mistral "system" and "user" roles can support some MistralContentChunks
+      let newContent: MistralAIContentChunk[] = [];
+      content.forEach((messageContentComplex) => {
+        // Mistral content chunks only support type "text" and "image_url"
+        if (messageContentComplex.type === "text" || messageContentComplex.type == "image_url") {
+          newContent.push(
+            _generateContentChunk(messageContentComplex, mistralRole)
+          );
+        };
       });
-    }
+      return newContent;
+    };
     
     throw new Error(
       `ChatMistralAI does not support non text message content for role "ai", "tool", 
@@ -312,24 +333,15 @@ function convertMessagesToMistralMessages(
         }))
         .map(convertLangChainToolCallToOpenAI) as MistralAIToolCalls[];
     }
-    if (!message.additional_kwargs.tool_calls?.length) {
-      return undefined;
-    }
-    const toolCalls: Omit<OpenAIToolCall, "index">[] =
-      message.additional_kwargs.tool_calls;
-    return toolCalls?.map((toolCall) => ({
-      id: _convertToolCallIdToMistralCompatible(toolCall.id),
-      type: "function",
-      function: toolCall.function,
-    }));
+    return undefined;
   };
 
   return messages.map((message) => {
     const toolCalls = getTools(message);
-    const content = getContent(message.content, message._getType());
+    const content = getContent(message.content, message.getType());
     if ("tool_call_id" in message && typeof message.tool_call_id === "string") {
       return {
-        role: getRole(message._getType()),
+        role: getRole(message.getType()),
         content,
         name: message.name,
         toolCallId: _convertToolCallIdToMistralCompatible(
@@ -339,14 +351,14 @@ function convertMessagesToMistralMessages(
     }
     else if (isAIMessage(message)) {
       return {
-        role: getRole(message._getType()),
+        role: getRole(message.getType()),
         content,
         toolCalls: toolCalls,
       };
     }
 
     return {
-      role: getRole(message._getType()),
+      role: getRole(message.getType()),
       content,
     };
   }) as MistralAIMessage[];
