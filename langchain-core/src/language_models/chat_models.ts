@@ -51,7 +51,7 @@ import { RunnablePassthrough } from "../runnables/passthrough.js";
 import { isZodSchema } from "../utils/types/is_zod_schema.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-type ToolChoice = string | Record<string, any> | "auto" | "any";
+export type ToolChoice = string | Record<string, any> | "auto" | "any";
 
 /**
  * Represents a serialized chat model.
@@ -315,9 +315,14 @@ export abstract class BaseChatModel<
   }
 
   getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
+    const providerName = this.getName().startsWith("Chat")
+      ? this.getName().replace("Chat", "")
+      : this.getName();
+
     return {
       ls_model_type: "chat",
       ls_stop: options.stop,
+      ls_provider: providerName,
     };
   }
 

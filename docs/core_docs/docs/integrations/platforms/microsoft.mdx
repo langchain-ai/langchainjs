@@ -132,6 +132,24 @@ See a [usage example](/docs/integrations/vectorstores/azure_cosmosdb_mongodb).
 import { AzureCosmosDBMongoDBVectorStore } from "@langchain/azure-cosmosdb";
 ```
 
+## Semantic Cache
+
+### Azure Cosmos DB NoSQL Semantic Cache
+
+> The Semantic Cache feature is supported with Azure Cosmos DB for NoSQL integration, enabling users to retrieve cached responses based on semantic similarity between the user input and previously cached results. It leverages [AzureCosmosDBNoSQLVectorStore](/docs/integrations/vectorstores/azure_cosmosdb_nosql), which stores vector embeddings of cached prompts. These embeddings enable similarity-based searches, allowing the system to retrieve relevant cached results.
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/azure-cosmosdb @langchain/core
+```
+
+See a [usage example](/docs/integrations/llm_caching/azure_cosmosdb_nosql).
+
+```typescript
+import { AzureCosmosDBNoSQLSemanticCache } from "@langchain/azure-cosmosdb";
+```
+
 ## Document loaders
 
 ### Azure Blob Storage
