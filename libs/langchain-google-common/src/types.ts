@@ -57,54 +57,63 @@ export interface GoogleConnectionParams<AuthOptions>
   platformType?: GooglePlatformType;
 }
 
-export enum GoogleAISafetyCategory {
-  Harassment = "HARM_CATEGORY_HARASSMENT",
-  HARASSMENT = Harassment,
-  HARM_CATEGORY_HARASSMENT = Harassment,
+export const GoogleAISafetyCategory = {
+  Harassment: "HARM_CATEGORY_HARASSMENT",
+  HARASSMENT: "HARM_CATEGORY_HARASSMENT",
+  HARM_CATEGORY_HARASSMENT: "HARM_CATEGORY_HARASSMENT",
 
-  HateSpeech = "HARM_CATEGORY_HATE_SPEECH",
-  HATE_SPEECH = HateSpeech,
-  HARM_CATEGORY_HATE_SPEECH = HateSpeech,
+  HateSpeech: "HARM_CATEGORY_HATE_SPEECH",
+  HATE_SPEECH: "HARM_CATEGORY_HATE_SPEECH",
+  HARM_CATEGORY_HATE_SPEECH: "HARM_CATEGORY_HATE_SPEECH",
 
-  SexuallyExplicit = "HARM_CATEGORY_SEXUALLY_EXPLICIT",
-  SEXUALLY_EXPLICIT = SexuallyExplicit,
-  HARM_CATEGORY_SEXUALLY_EXPLICIT = SexuallyExplicit,
+  SexuallyExplicit: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+  SEXUALLY_EXPLICIT: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+  HARM_CATEGORY_SEXUALLY_EXPLICIT: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
 
-  Dangerous = "HARM_CATEGORY_DANGEROUS",
-  DANGEROUS = Dangerous,
-  HARM_CATEGORY_DANGEROUS = Dangerous,
+  Dangerous: "HARM_CATEGORY_DANGEROUS",
+  DANGEROUS: "HARM_CATEGORY_DANGEROUS",
+  HARM_CATEGORY_DANGEROUS: "HARM_CATEGORY_DANGEROUS",
 
-  CivicIntegrity = "HARM_CATEGORY_CIVIC_INTEGRITY",
-  CIVIC_INTEGRITY = CivicIntegrity,
-  HARM_CATEGORY_CIVIC_INTEGRITY = CivicIntegrity,
-}
+  CivicIntegrity: "HARM_CATEGORY_CIVIC_INTEGRITY",
+  CIVIC_INTEGRITY: "HARM_CATEGORY_CIVIC_INTEGRITY",
+  HARM_CATEGORY_CIVIC_INTEGRITY: "HARM_CATEGORY_CIVIC_INTEGRITY",
+} as const;
 
-export enum GoogleAISafetyThreshold {
-  None = "BLOCK_NONE",
-  NONE = None,
-  BLOCK_NONE = None,
+export type GoogleAISafetyCategory =
+  (typeof GoogleAISafetyCategory)[keyof typeof GoogleAISafetyCategory];
 
-  Few = "BLOCK_ONLY_HIGH",
-  FEW = Few,
-  BLOCK_ONLY_HIGH = Few,
+export const GoogleAISafetyThreshold = {
+  None: "BLOCK_NONE",
+  NONE: "BLOCK_NONE",
+  BLOCK_NONE: "BLOCK_NONE",
 
-  Some = "BLOCK_MEDIUM_AND_ABOVE",
-  SOME = Some,
-  BLOCK_MEDIUM_AND_ABOVE = Some,
+  Few: "BLOCK_ONLY_HIGH",
+  FEW: "BLOCK_ONLY_HIGH",
+  BLOCK_ONLY_HIGH: "BLOCK_ONLY_HIGH",
 
-  Most = "BLOCK_LOW_AND_ABOVE",
-  MOST = Most,
-  BLOCK_LOW_AND_ABOVE = Most,
+  Some: "BLOCK_MEDIUM_AND_ABOVE",
+  SOME: "BLOCK_MEDIUM_AND_ABOVE",
+  BLOCK_MEDIUM_AND_ABOVE: "BLOCK_MEDIUM_AND_ABOVE",
 
-  Off = "OFF",
-  OFF = Off,
-  BLOCK_OFF = Off,
-}
+  Most: "BLOCK_LOW_AND_ABOVE",
+  MOST: "BLOCK_LOW_AND_ABOVE",
+  BLOCK_LOW_AND_ABOVE: "BLOCK_LOW_AND_ABOVE",
 
-export enum GoogleAISafetyMethod {
-  Severity = "SEVERITY",
-  Probability = "PROBABILITY",
-}
+  Off: "OFF",
+  OFF: "OFF",
+  BLOCK_OFF: "OFF",
+} as const;
+
+export type GoogleAISafetyThreshold =
+  (typeof GoogleAISafetyThreshold)[keyof typeof GoogleAISafetyThreshold];
+
+export const GoogleAISafetyMethod = {
+  Severity: "SEVERITY",
+  Probability: "PROBABILITY",
+} as const;
+
+export type GoogleAISafetyMethod =
+  (typeof GoogleAISafetyMethod)[keyof typeof GoogleAISafetyMethod];
 
 export interface GoogleAISafetySetting {
   category: GoogleAISafetyCategory | string;
