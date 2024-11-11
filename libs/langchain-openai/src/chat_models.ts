@@ -343,6 +343,26 @@ function _convertChatOpenAIToolTypeToOpenAITool(
   return _convertToOpenAITool(tool, fields);
 }
 
+export interface ChatOpenAIStructuredOutputMethodOptions<
+  IncludeRaw extends boolean
+> extends StructuredOutputMethodOptions<IncludeRaw> {
+  /**
+   * strict: If `true` and `method` = "function_calling", model output is
+   * guaranteed to exactly match the schema. If `true`, the input schema
+   * will also be validated according to
+   * https://platform.openai.com/docs/guides/structured-outputs/supported-schemas.
+   * If `false`, input schema will not be validated and model output will not
+   * be validated.
+   * If `undefined`, `strict` argument will not be passed to the model.
+   *
+   * @version 0.2.6
+   * @note Planned breaking change in version `0.3.0`:
+   * `strict` will default to `true` when `method` is
+   * "function_calling" as of version `0.3.0`.
+   */
+  strict?: boolean;
+}
+
 export interface ChatOpenAICallOptions
   extends OpenAICallOptions,
     BaseFunctionCallOptions {
@@ -1923,7 +1943,7 @@ export class ChatOpenAI<
       | z.ZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
-    config?: StructuredOutputMethodOptions<false>
+    config?: ChatOpenAIStructuredOutputMethodOptions<false>
   ): Runnable<BaseLanguageModelInput, RunOutput>;
 
   withStructuredOutput<
@@ -1934,7 +1954,7 @@ export class ChatOpenAI<
       | z.ZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
-    config?: StructuredOutputMethodOptions<true>
+    config?: ChatOpenAIStructuredOutputMethodOptions<true>
   ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
 
   withStructuredOutput<
@@ -1945,7 +1965,7 @@ export class ChatOpenAI<
       | z.ZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
-    config?: StructuredOutputMethodOptions<boolean>
+    config?: ChatOpenAIStructuredOutputMethodOptions<boolean>
   ):
     | Runnable<BaseLanguageModelInput, RunOutput>
     | Runnable<
