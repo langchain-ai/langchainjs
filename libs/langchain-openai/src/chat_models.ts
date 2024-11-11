@@ -343,6 +343,7 @@ function _convertChatOpenAIToolTypeToOpenAITool(
   return _convertToOpenAITool(tool, fields);
 }
 
+// TODO: Use the base structured output options param in next breaking release.
 export interface ChatOpenAIStructuredOutputMethodOptions<
   IncludeRaw extends boolean
 > extends StructuredOutputMethodOptions<IncludeRaw> {
