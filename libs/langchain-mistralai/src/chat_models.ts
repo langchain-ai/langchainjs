@@ -1329,21 +1329,11 @@ export class ChatMistralAI<
         { raw: BaseMessage; parsed: RunOutput }
       > {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let schema: z.ZodType<RunOutput> | Record<string, any>;
-    let name;
-    let method;
-    let includeRaw;
-    // if (isStructuredOutputMethodParams(outputSchema)) {
-    //   schema = outputSchema.schema;
-    //   name = outputSchema.name;
-    //   method = outputSchema.method;
-    //   includeRaw = outputSchema.includeRaw;
-    // } else {
-      schema = outputSchema;
-      name = config?.name;
-      method = config?.method;
-      includeRaw = config?.includeRaw;
-    // }
+    let schema: z.ZodType<RunOutput> | Record<string, any> = outputSchema;
+    let name = config?.name;
+    let method = config?.method;
+    let includeRaw = config?.includeRaw;
+  
     let llm: Runnable<BaseLanguageModelInput>;
     let outputParser: BaseLLMOutputParser<RunOutput>;
 
@@ -1450,15 +1440,3 @@ function isZodSchema<
   // Check for a characteristic method of Zod schemas
   return typeof (input as z.ZodType<RunOutput>)?.parse === "function";
 }
-
-// function isStructuredOutputMethodParams(
-//   x: unknown
-//   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-// ): x is StructuredOutputMethodParams<Record<string, any>> {
-//   return (
-//     x !== undefined &&
-//     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-//     typeof (x as StructuredOutputMethodParams<Record<string, any>>).schema ===
-//       "object"
-//   );
-// }
