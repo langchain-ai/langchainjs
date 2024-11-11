@@ -1,9 +1,10 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { BaseDocumentLoader } from "@langchain/core/document_loaders/base";
 import { Document } from "@langchain/core/documents";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { AsyncCaller } from "@langchain/core/utils/async_caller";
 
-interface AirtableLoaderOptions {
+export interface AirtableLoaderOptions {
   tableId: string;
   baseId: string;
   kwargs?: Record<string, any>;
