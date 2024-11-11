@@ -36,7 +36,6 @@ import {
 import type {
   BaseLanguageModelInput,
   BaseLanguageModelCallOptions,
-  StructuredOutputMethodParams,
   StructuredOutputMethodOptions,
   FunctionDefinition,
 } from "@langchain/core/language_models/base";

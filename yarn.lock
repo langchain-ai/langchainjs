@@ -12328,68 +12328,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@langchain/langgraph@npm:^0.0.28":
-  version: 0.0.28
-  resolution: "@langchain/langgraph@npm:0.0.28"
-  dependencies:
-    "@langchain/core": ">=0.2.16 <0.3.0"
-    uuid: ^10.0.0
-    zod: ^3.23.8
-  peerDependencies:
-    better-sqlite3: ^9.5.0
-  peerDependenciesMeta:
-    better-sqlite3:
-      optional: true
-  checksum: 1465791026ccd6eaa13a2f2d03b8fb9f0972a8c23b9da1cfd581074f413ea60ef860de6d704c6a3b49f7425f23d6ba49c23255167ae83ab7d70dc00cc0560ce2
-  languageName: node
-  linkType: hard
-
-"@langchain/langgraph@npm:~0.0.26":
-  version: 0.0.34
-  resolution: "@langchain/langgraph@npm:0.0.34"
-  dependencies:
-    "@langchain/core": ">=0.2.20 <0.3.0"
-    uuid: ^10.0.0
-    zod: ^3.23.8
-  peerDependencies:
-    better-sqlite3: ^9.5.0
-  peerDependenciesMeta:
-    better-sqlite3:
-      optional: true
-  checksum: efa3c6b4eb40fdeb696531fe63f1f8e2b5d23b7adfc9404103cc9265db4aab6caee7de9ba1e01e14f2765d98a8b536bfbc473795543b0314e84c72b3b349a258
-  languageName: node
-  linkType: hard
-
-"@langchain/langgraph@npm:~0.0.31":
-  version: 0.0.31
-  resolution: "@langchain/langgraph@npm:0.0.31"
-  dependencies:
-    "@langchain/core": ">=0.2.18 <0.3.0"
-    uuid: ^10.0.0
-    zod: ^3.23.8
-  peerDependencies:
-    better-sqlite3: ^9.5.0
-  peerDependenciesMeta:
-    better-sqlite3:
-      optional: true
-  checksum: 74c0af490dab5c1f38d426cdeb0530fd300606bd28bb099d27b0ace029a02800a75fcc047f6755d853b485e78728b472170a19173803014dcc54bafe85939d9f
-  languageName: node
-  linkType: hard
-
-"@langchain/mistralai@npm:^0.0.26":
-  version: 0.0.26
-  resolution: "@langchain/mistralai@npm:0.0.26"
-  dependencies:
-    "@langchain/core": ">=0.2.16 <0.3.0"
-    "@mistralai/mistralai": ^1.1.0
-    uuid: ^10.0.0
-    zod: ^3.22.4
-    zod-to-json-schema: ^3.22.4
-  checksum: 97c545994b16166044c96357c211cbaf8d9a2dbcc45a8bfdd1a90089ccd62f7e294aaa9d9fdd23bcea888b1a4eade818e96cf9a6f9c972e05deb2abf7a7fc8fc
-  languageName: node
-  linkType: hard
-
-"@langchain/mistralai@workspace:*, @langchain/mistralai@workspace:libs/langchain-mistralai":
+"@langchain/mistralai@*, @langchain/mistralai@workspace:*, @langchain/mistralai@workspace:libs/langchain-mistralai":
   version: 0.0.0-use.local
   resolution: "@langchain/mistralai@workspace:libs/langchain-mistralai"
   dependencies:
