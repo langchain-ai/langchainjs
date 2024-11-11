@@ -258,10 +258,11 @@ export type BaseLanguageModelInput =
 export type StructuredOutputType = z.infer<z.ZodObject<any, any, any, any>>;
 
 export type StructuredOutputMethodOptions<IncludeRaw extends boolean = false> =
-  Record<string, any> & {
+  {
     name?: string;
     method?: "functionCalling" | "jsonMode" | "jsonSchema" | string;
     includeRaw?: IncludeRaw;
+    /** Whether to use strict mode. Currently only supported by OpenAI models. */
     strict?: boolean;
   };
 
