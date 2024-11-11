@@ -261,6 +261,7 @@ export const config = {
     "indexes/memory": "indexes/memory",
     "indexes/sqlite": "indexes/sqlite",
     // document_loaders
+    "document_loaders/web/airtable": "document_loaders/web/airtable",
     "document_loaders/web/apify_dataset": "document_loaders/web/apify_dataset",
     "document_loaders/web/assemblyai": "document_loaders/web/assemblyai",
     "document_loaders/web/azure_blob_storage_container":
@@ -306,7 +307,6 @@ export const config = {
     "document_loaders/fs/openai_whisper_audio":
       "document_loaders/fs/openai_whisper_audio",
     "document_loaders/fs/pptx": "document_loaders/fs/pptx",
-    "document_loaders/web/airtable": "document_loaders/web/airtable",
     // utils
     "utils/convex": "utils/convex",
     "utils/event_source_parse": "utils/event_source_parse",
