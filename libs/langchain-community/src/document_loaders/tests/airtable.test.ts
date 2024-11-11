@@ -8,6 +8,7 @@ import { AirtableLoader } from "../web/airtable.js";
 describe("AirtableLoader", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    process.env.AIRTABLE_API_TOKEN = "foobar";
   });
 
   // Tests for the load method
