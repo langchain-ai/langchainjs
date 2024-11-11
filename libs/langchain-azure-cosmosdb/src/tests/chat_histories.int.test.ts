@@ -159,7 +159,7 @@ test("Test clear all sessions for a user", async () => {
   const result2 = await chatHistory1.getMessages();
   expect(result2).toEqual(expectedMessages);
 
-  await chatHistory1.clearAllSessionsForUser("user1")
+  await chatHistory1.clearAllSessionsForUser("user1");
 
   const deletedResult1 = await chatHistory1.getMessages();
   const deletedResult2 = await chatHistory2.getMessages();
