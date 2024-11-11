@@ -1,4 +1,5 @@
 /* eslint-disable no-promise-executor-return */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { test, expect, jest } from "@jest/globals";
 import { AIMessage, HumanMessage, ToolMessage } from "@langchain/core/messages";
 import { concat } from "@langchain/core/utils/stream";
@@ -166,6 +167,17 @@ test("Test ChatOpenAI tool calling with ToolMessages", async () => {
         ),
       })
   );
+  let toolError;
+  try {
+    await chat.invoke([
+      ["human", "What's the weather like in San Francisco, Tokyo, and Paris?"],
+      res,
+    ]);
+  } catch (e) {
+    toolError = e;
+  }
+  expect(toolError).toBeDefined();
+  expect((toolError as any)?.lc_error_code).toEqual("INVALID_TOOL_RESULTS");
   // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
   // @ts-expect-error unused var
   const finalResponse = await chat.invoke([
@@ -623,4 +635,59 @@ test.skip("system prompt caching", async () => {
   expect(
     aggregate?.response_metadata?.usage.prompt_tokens_details.cached_tokens
   ).toBeGreaterThan(0);
+});
+
+test("predicted output", async () => {
+  const model = new ChatOpenAI({
+    model: "gpt-4o-mini",
+  });
+  const code = `
+/// <summary>
+/// Represents a user with a first name, last name, and username.
+/// </summary>
+public class User
+{
+    /// <summary>
+    /// Gets or sets the user's first name.
+    /// </summary>
+    public string FirstName { get; set; }
+
+    /// <summary>
+    /// Gets or sets the user's last name.
+    /// </summary>
+    public string LastName { get; set; }
+
+    /// <summary>
+    /// Gets or sets the user's username.
+    /// </summary>
+    public string Username { get; set; }
+}
+`;
+  const res = await model.invoke(
+    [
+      {
+        role: "user",
+        content:
+          "Replace the Username property with an Email property. Respond only with code, and with no markdown formatting.",
+      },
+      {
+        role: "user",
+        content: code,
+      },
+    ],
+    {
+      prediction: {
+        type: "content",
+        content: code,
+      },
+    }
+  );
+  expect(
+    typeof res.response_metadata?.usage?.completion_tokens_details
+      .accepted_prediction_tokens
+  ).toBe("number");
+  expect(
+    typeof res.response_metadata?.usage?.completion_tokens_details
+      .rejected_prediction_tokens
+  ).toBe("number");
 });

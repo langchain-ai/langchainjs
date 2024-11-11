@@ -27,7 +27,6 @@ import {
   BaseLanguageModelInput,
   StructuredOutputMethodOptions,
 } from "@langchain/core/language_models/base";
-import { StructuredToolInterface } from "@langchain/core/tools";
 import {
   Runnable,
   RunnablePassthrough,
@@ -40,11 +39,11 @@ import { zodToGenerativeAIParameters } from "./utils/zod_to_genai_parameters.js"
 import {
   convertBaseMessagesToContent,
   convertResponseContentToChatGenerationChunk,
-  convertToGenerativeAITools,
   mapGenerateContentResultToChatResult,
 } from "./utils/common.js";
 import { GoogleGenerativeAIToolsOutputParser } from "./output_parsers.js";
 import { GoogleGenerativeAIToolType } from "./types.js";
+import { convertToolsToGenAI } from "./utils/tools.js";
 
 interface TokenUsage {
   completionTokens?: number;
@@ -60,6 +59,11 @@ export type BaseMessageExamplePair = {
 export interface GoogleGenerativeAIChatCallOptions
   extends BaseChatModelCallOptions {
   tools?: GoogleGenerativeAIToolType[];
+  /**
+   * Allowed functions to call when the mode is "any".
+   * If empty, any one of the provided functions are called.
+   */
+  allowedFunctionNames?: string[];
   /**
    * Whether or not to include usage data, like token counts
    * in the streamed response chunks.
@@ -674,40 +678,24 @@ export class ChatGoogleGenerativeAI
     AIMessageChunk,
     GoogleGenerativeAIChatCallOptions
   > {
-    return this.bind({ tools: convertToGenerativeAITools(tools), ...kwargs });
+    return this.bind({ tools: convertToolsToGenAI(tools)?.tools, ...kwargs });
   }
 
   invocationParams(
     options?: this["ParsedCallOptions"]
   ): Omit<GenerateContentRequest, "contents"> {
-    if (options?.tool_choice) {
-      throw new Error(
-        "'tool_choice' call option is not supported by ChatGoogleGenerativeAI."
-      );
-    }
+    const toolsAndConfig = options?.tools?.length
+      ? convertToolsToGenAI(options.tools, {
+          toolChoice: options.tool_choice,
+          allowedFunctionNames: options.allowedFunctionNames,
+        })
+      : undefined;
 
-    const tools = options?.tools as
-      | GoogleGenerativeAIFunctionDeclarationsTool[]
-      | StructuredToolInterface[]
-      | undefined;
-    if (
-      Array.isArray(tools) &&
-      !tools.some(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (t: any) => !("lc_namespace" in t)
-      )
-    ) {
-      // Tools are in StructuredToolInterface format. Convert to GenAI format
-      return {
-        tools: convertToGenerativeAITools(
-          options?.tools as StructuredToolInterface[]
-        ),
-      };
-    }
     return {
-      tools: options?.tools as
-        | GoogleGenerativeAIFunctionDeclarationsTool[]
-        | undefined,
+      ...(toolsAndConfig?.tools ? { tools: toolsAndConfig.tools } : {}),
+      ...(toolsAndConfig?.toolConfig
+        ? { toolConfig: toolsAndConfig.toolConfig }
+        : {}),
     };
   }
 

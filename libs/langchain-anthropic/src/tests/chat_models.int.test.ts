@@ -1,4 +1,5 @@
 /* eslint-disable no-process-env */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { expect, test } from "@jest/globals";
 import {
@@ -28,6 +29,39 @@ test("Test ChatAnthropic", async () => {
   const res = await chat.invoke([message]);
   // console.log({ res });
   expect(res.response_metadata.usage).toBeDefined();
+});
+
+test("Test ChatAnthropic with a bad API key throws appropriate error", async () => {
+  const chat = new ChatAnthropic({
+    modelName: "claude-3-sonnet-20240229",
+    maxRetries: 0,
+    apiKey: "bad",
+  });
+  let error;
+  try {
+    const message = new HumanMessage("Hello!");
+    await chat.invoke([message]);
+  } catch (e) {
+    error = e;
+  }
+  expect(error).toBeDefined();
+  expect((error as any).lc_error_code).toEqual("MODEL_AUTHENTICATION");
+});
+
+test("Test ChatAnthropic with unknown model throws appropriate error", async () => {
+  const chat = new ChatAnthropic({
+    modelName: "badbad",
+    maxRetries: 0,
+  });
+  let error;
+  try {
+    const message = new HumanMessage("Hello!");
+    await chat.invoke([message]);
+  } catch (e) {
+    error = e;
+  }
+  expect(error).toBeDefined();
+  expect((error as any).lc_error_code).toEqual("MODEL_NOT_FOUND");
 });
 
 test("Test ChatAnthropic Generate", async () => {

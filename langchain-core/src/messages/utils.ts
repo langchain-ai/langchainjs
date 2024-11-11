@@ -1,3 +1,4 @@
+import { addLangChainErrorFields } from "../errors/index.js";
 import { SerializedConstructor } from "../load/serializable.js";
 import { _isToolCall } from "../tools/utils.js";
 import { AIMessage, AIMessageChunk, AIMessageChunkFields } from "./ai.js";
@@ -114,9 +115,17 @@ function _constructMessageFromParams(
       name: rest.name,
     });
   } else {
-    throw new Error(
-      `Unable to coerce message from array: only human, AI, or system message coercion is currently supported.\n\nReceived:${params}`
+    const error = addLangChainErrorFields(
+      new Error(
+        `Unable to coerce message from array: only human, AI, system, or tool message coercion is currently supported.\n\nReceived: ${JSON.stringify(
+          params,
+          null,
+          2
+        )}`
+      ),
+      "MESSAGE_COERCION_FAILURE"
     );
+    throw error;
   }
 }
 

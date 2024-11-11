@@ -23,15 +23,17 @@ interface FirecrawlLoaderParameters {
    */
   apiUrl?: string;
   /**
-   * Mode of operation. Can be either "crawl" or "scrape". If not provided, the default value is "crawl".
+   * Mode of operation. Can be "crawl", "scrape", or "map". If not provided, the default value is "crawl".
    */
-  mode?: "crawl" | "scrape";
+  mode?: "crawl" | "scrape" | "map";
   params?: Record<string, unknown>;
 }
 
 interface FirecrawlDocument {
-  markdown: string;
-  metadata: Record<string, unknown>;
+  markdown?: string;
+  html?: string;
+  rawHtml?: string;
+  metadata?: Record<string, unknown>;
 }
 
 /**
@@ -54,7 +56,7 @@ export class FireCrawlLoader extends BaseDocumentLoader {
 
   private url: string;
 
-  private mode: "crawl" | "scrape";
+  private mode: "crawl" | "scrape" | "map";
 
   private params?: Record<string, unknown>;
 
@@ -96,16 +98,37 @@ export class FireCrawlLoader extends BaseDocumentLoader {
     let firecrawlDocs: FirecrawlDocument[];
 
     if (this.mode === "scrape") {
-      const response = await app.scrapeUrl(this.url, this.params);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const response = await app.scrapeUrl(this.url, this.params as any);
       if (!response.success) {
         throw new Error(
           `Firecrawl: Failed to scrape URL. Error: ${response.error}`
         );
       }
-      firecrawlDocs = [response.data as FirecrawlDocument];
+      firecrawlDocs = [response] as FirecrawlDocument[];
     } else if (this.mode === "crawl") {
-      const response = await app.crawlUrl(this.url, this.params, true);
-      firecrawlDocs = response as FirecrawlDocument[];
+      const response = await app.crawlUrl(this.url, this.params);
+      if (!response.success) {
+        throw new Error(
+          `Firecrawl: Failed to crawl URL. Error: ${response.error}`
+        );
+      }
+      firecrawlDocs = response.data as FirecrawlDocument[];
+    } else if (this.mode === "map") {
+      const response = await app.mapUrl(this.url, this.params);
+      if (!response.success) {
+        throw new Error(
+          `Firecrawl: Failed to map URL. Error: ${response.error}`
+        );
+      }
+      firecrawlDocs = response.links as FirecrawlDocument[];
+
+      return firecrawlDocs.map(
+        (doc) =>
+          new Document({
+            pageContent: JSON.stringify(doc),
+          })
+      );
     } else {
       throw new Error(
         `Unrecognized mode '${this.mode}'. Expected one of 'crawl', 'scrape'.`
@@ -115,7 +138,7 @@ export class FireCrawlLoader extends BaseDocumentLoader {
     return firecrawlDocs.map(
       (doc) =>
         new Document({
-          pageContent: doc.markdown || "",
+          pageContent: doc.markdown || doc.html || doc.rawHtml || "",
           metadata: doc.metadata || {},
         })
     );
