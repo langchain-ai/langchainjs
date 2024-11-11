@@ -24,13 +24,13 @@ class ChatMistralAIStandardIntegrationTests extends ChatModelIntegrationTests<
     });
   }
 
-  async testCacheComplexMessageTypes() {
-    this.skipTestMessage(
-      "testCacheComplexMessageTypes",
-      "ChatMistralAI",
-      "Complex message types not properly implemented"
-    );
-  }
+  // async testCacheComplexMessageTypes() {
+  //   this.skipTestMessage(
+  //     "testCacheComplexMessageTypes",
+  //     "ChatMistralAI",
+  //     "Complex message types not properly implemented"
+  //   );
+  // }
 }
 
 const testClass = new ChatMistralAIStandardIntegrationTests();
