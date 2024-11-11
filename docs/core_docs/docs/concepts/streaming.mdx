@@ -59,14 +59,14 @@ The type of chunk yielded by the `stream()` methods depends on the component bei
 The `stream()` method returns an iterator that yields these chunks as they are produced. For example,
 
 ```typescript
-for await (const chunk in await component.stream(someInput)) {
-    // IMPORTANT: Keep the processing of each chunk as efficient as possible.
-    // While you're processing the current chunk, the upstream component is
-    // waiting to produce the next one. For example, if working with LangGraph,
-    // graph execution is paused while the current chunk is being processed.
-    // In extreme cases, this could even result in timeouts (e.g., when llm outputs are
-    // streamed from an API that has a timeout).
-    console.log(chunk)
+for await (const chunk of await component.stream(someInput)) {
+  // IMPORTANT: Keep the processing of each chunk as efficient as possible.
+  // While you're processing the current chunk, the upstream component is
+  // waiting to produce the next one. For example, if working with LangGraph,
+  // graph execution is paused while the current chunk is being processed.
+  // In extreme cases, this could even result in timeouts (e.g., when llm outputs are
+  // streamed from an API that has a timeout).
+  console.log(chunk);
 }
 ```
 

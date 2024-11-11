@@ -1,0 +1,40 @@
+# Azure Cosmos DB NoSQL Semantic Cache
+
+> The Semantic Cache feature is supported with Azure Cosmos DB for NoSQL integration, enabling users to retrieve cached responses based on semantic similarity between the user input and previously cached results. It leverages [AzureCosmosDBNoSQLVectorStore](/docs/integrations/vectorstores/azure_cosmosdb_nosql), which stores vector embeddings of cached prompts. These embeddings enable similarity-based searches, allowing the system to retrieve relevant cached results.
+
+If you don't have an Azure account, you can [create a free account](https://azure.microsoft.com/free/) to get started.
+
+## Setup
+
+You'll first need to install the [`@langchain/azure-cosmosdb`](https://www.npmjs.com/package/@langchain/azure-cosmosdb) package:
+
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/azure-cosmosdb @langchain/core
+```
+
+You'll also need to have an Azure Cosmos DB for NoSQL instance running. You can deploy a free version on Azure Portal without any cost, following [this guide](https://learn.microsoft.com/azure/cosmos-db/nosql/quickstart-portal).
+
+Once you have your instance running, make sure you have the connection string. If you are using Managed Identity, you need to have the endpoint. You can find them in the Azure Portal, under the "Settings / Keys" section of your instance.
+
+import CodeBlock from "@theme/CodeBlock";
+
+:::info
+
+When using Azure Managed Identity and role-based access control, you must ensure that the database and container have been created beforehand. RBAC does not provide permissions to create databases and containers. You can get more information about the permission model in the [Azure Cosmos DB documentation](https://learn.microsoft.com/azure/cosmos-db/how-to-setup-rbac#permission-model).
+
+:::
+
+## Usage example
+
+import Example from "@examples/caches/azure_cosmosdb_nosql/azure_cosmosdb_nosql.ts";
+
+<CodeBlock language="typescript">{Example}</CodeBlock>
+
+## Related
+
+- Vector store [conceptual guide](/docs/concepts/#vectorstores)
+- Vector store [how-to guides](/docs/how_to/#vectorstores)

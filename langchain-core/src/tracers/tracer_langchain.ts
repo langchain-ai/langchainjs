@@ -11,6 +11,7 @@ import {
 import { getEnvironmentVariable, getRuntimeEnvironment } from "../utils/env.js";
 import { BaseTracer } from "./base.js";
 import { BaseCallbackHandlerInput } from "../callbacks/base.js";
+import { getDefaultLangChainClientSingleton } from "../singletons/tracer.js";
 
 export interface Run extends BaseRun {
   id: string;
@@ -59,14 +60,7 @@ export class LangChainTracer
       getEnvironmentVariable("LANGCHAIN_PROJECT") ??
       getEnvironmentVariable("LANGCHAIN_SESSION");
     this.exampleId = exampleId;
-    const clientParams =
-      getEnvironmentVariable("LANGCHAIN_CALLBACKS_BACKGROUND") === "false"
-        ? {
-            // LangSmith has its own backgrounding system
-            blockOnRootRunFinalization: true,
-          }
-        : {};
-    this.client = client ?? new Client(clientParams);
+    this.client = client ?? getDefaultLangChainClientSingleton();
 
     const traceableTree = LangChainTracer.getTraceableRunTree();
     if (traceableTree) {
