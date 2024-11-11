@@ -1,6 +1,6 @@
 {
   "name": "@langchain/azure-cosmosdb",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Azure CosmosDB integration for LangChain.js",
   "type": "module",
   "engines": {

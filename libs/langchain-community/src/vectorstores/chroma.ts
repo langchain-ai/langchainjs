@@ -398,6 +398,7 @@ export class Chroma extends VectorStore {
         new Document({
           pageContent: firstDocuments?.[i] ?? "",
           metadata,
+          id: firstIds[i],
         }),
         firstDistances[i],
       ]);

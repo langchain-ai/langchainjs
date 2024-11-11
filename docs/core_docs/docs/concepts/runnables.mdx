@@ -1,0 +1,248 @@
+# Runnable interface
+
+The Runnable interface is foundational for working with LangChain components, and it's implemented across many of them, such as [language models](/docs/concepts/chat_models), [output parsers](/docs/concepts/output_parsers), [retrievers](/docs/concepts/retrievers), [compiled LangGraph graphs](https://langchain-ai.github.io/langgraphjs/concepts/low_level/#compiling-your-graph) and more.
+
+This guide covers the main concepts and methods of the Runnable interface, which allows developers to interact with various LangChain components in a consistent and predictable manner.
+
+:::info Related Resources
+
+- The ["Runnable" Interface API Reference](https://api.js.langchain.com/classes/_langchain_core.runnables.Runnable.html) provides a detailed overview of the Runnable interface and its methods.
+- A list of built-in `Runnables` can be found in the [LangChain Core API Reference](https://api.js.langchain.com/modules/_langchain_core.runnables.html). Many of these Runnables are useful when composing custom "chains" in LangChain using the [LangChain Expression Language (LCEL)](/docs/concepts/lcel).
+
+:::
+
+## Overview of runnable interface
+
+The Runnable way defines a standard interface that allows a Runnable component to be:
+
+- [Invoked](/docs/how_to/lcel_cheatsheet/#invoke-a-runnable): A single input is transformed into an output.
+- [Batched](/docs/how_to/lcel_cheatsheet/#batch-a-runnable/): Multiple inputs are efficiently transformed into outputs.
+- [Streamed](/docs/how_to/lcel_cheatsheet/#stream-a-runnable): Outputs are streamed as they are produced.
+- Inspected: Schematic information about Runnable's input, output, and configuration can be accessed.
+- Composed: Multiple Runnables can be composed to work together using [the LangChain Expression Language (LCEL)](/docs/concepts/lcel) to create complex pipelines.
+
+Please review the [LCEL Cheatsheet](/docs/how_to/lcel_cheatsheet) for some common patterns that involve the Runnable interface and LCEL expressions.
+
+### Optimized parallel execution (batch)
+
+LangChain Runnables offer a built-in `batch` API that allow you to process multiple inputs in parallel.
+
+Using this method can significantly improve performance when needing to process multiple independent inputs, as the
+processing can be done in parallel instead of sequentially.
+
+The batching method is:
+
+- `batch`: Process multiple inputs in parallel, returning results in the same order as the inputs.
+
+The default implementation of `batch` executed the `invoke` method in parallel.
+
+Some Runnables may provide their own implementations of `batch` that are optimized for their specific use case (e.g.,
+rely on a `batch` API provided by a model provider).
+
+:::tip
+When processing a large number of inputs using `batch`, users may want to control the maximum number of parallel calls. This can be done by setting the `maxConcurrency` attribute in the `RunnableConfig` object. See the [RunnableConfig](/docs/concepts/runnables#RunnableConfig) for more information.
+:::
+
+## Streaming apis
+
+<span data-heading-keywords="streaming-api"></span>
+
+Streaming is critical in making applications based on LLMs feel responsive to end-users.
+
+Runnables expose the following three streaming APIs:
+
+1. [`stream`](https://api.js.langchain.com/classes/_langchain_core.runnables.Runnable.html#stream): yields the output a Runnable as it is generated.
+2. [`streamEvents`](https://v03.api.js.langchain.com/classes/_langchain_core.runnables.Runnable.html#streamEvents): a more advanced streaming API that allows streaming intermediate steps and final output
+3. **legacy** `streamLog`: a legacy streaming API that streams intermediate steps and final output
+
+Please refer to the [Streaming Conceptual Guide](/docs/concepts/streaming) for more details on how to stream in LangChain.
+
+## Input and output types
+
+Every `Runnable` is characterized by an input and output type. These input and output types can be any TypeScript object, and are defined by the Runnable itself.
+
+Runnable methods that result in the execution of the Runnable (e.g., `invoke`, `batch`, `stream`, `streamEvents`) work with these input and output types.
+
+- `invoke`: Accepts an input and returns an output.
+- `batch`: Accepts a list of inputs and returns a list of outputs.
+- `stream`: Accepts an input and returns a generator that yields outputs.
+
+The **input type** and **output type** vary by component:
+
+| Component    | Input Type                                           | Output Type           |
+| ------------ | ---------------------------------------------------- | --------------------- |
+| Prompt       | `object`                                             | `PromptValue`         |
+| ChatModel    | a `string`, list of chat messages or a `PromptValue` | `ChatMessage`         |
+| LLM          | a `string`, list of chat messages or a `PromptValue` | `string`              |
+| OutputParser | the output of an LLM or ChatModel                    | Depends on the parser |
+| Retriever    | a `string`                                           | List of `Document`s   |
+| Tool         | a `string` or `object`, depending on the tool        | Depends on the tool   |
+
+Please refer to the individual component documentation for more information on the input and output types and how to use them.
+
+## RunnableConfig
+
+Any of the methods that are used to execute the runnable (e.g., `invoke`, `batch`, `stream`, `streamEvents`) accept a second argument called
+`RunnableConfig` ([API Reference](https://api.js.langchain.com/interfaces/_langchain_core.runnables.RunnableConfig.html)). This argument is an object that contains configuration for the Runnable that will be used
+at run time during the execution of the runnable.
+
+A `RunnableConfig` can have any of the following properties defined:
+
+| Attribute        | Description                                                                                |
+| ---------------- | ------------------------------------------------------------------------------------------ |
+| `runName`        | Name used for the given Runnable (not inherited).                                          |
+| `runId`          | Unique identifier for this call. sub-calls will get their own unique run ids.              |
+| `tags`           | Tags for this call and any sub-calls.                                                      |
+| `metadata`       | Metadata for this call and any sub-calls.                                                  |
+| `callbacks`      | Callbacks for this call and any sub-calls.                                                 |
+| `maxConcurrency` | Maximum number of parallel calls to make (e.g., used by batch).                            |
+| `recursionLimit` | Maximum number of times a call can recurse (e.g., used by Runnables that return Runnables) |
+| `configurable`   | Runtime values for configurable attributes of the Runnable.                                |
+
+Passing `config` to the `invoke` method is done like so:
+
+```typescript
+await someRunnable.invoke(someInput, {
+  runName: "myRun",
+  tags: ["tag1", "tag2"],
+  metadata: { key: "value" },
+});
+```
+
+### Propagation of RunnableConfig
+
+Many `Runnables` are composed of other Runnables, and it is important that the `RunnableConfig` is propagated to all sub-calls made by the Runnable. This allows providing run time configuration values to the parent Runnable that are inherited by all sub-calls.
+
+If this were not the case, it would be impossible to set and propagate [callbacks](/docs/concepts/callbacks) or other configuration values like `tags` and `metadata` which
+are expected to be inherited by all sub-calls.
+
+There are two main patterns by which new `Runnables` are created:
+
+1. Declaratively using [LangChain Expression Language (LCEL)](/docs/concepts/lcel):
+
+   ```typescript
+   const chain = prompt.pipe(chatModel).pipe(outputParser);
+   ```
+
+2. Using a [custom Runnable](#custom-runnables) (e.g., `RunnableLambda`) or using the `tool` function:
+
+   ```typescript
+   const foo = (input) => {
+     // Note that .invoke() is used directly here
+     // highlight-next-line
+     return barRunnable.invoke(input);
+   };
+   const fooRunnable = RunnableLambda.from(foo);
+   ```
+
+LangChain will try to propagate `RunnableConfig` automatically for both of the patterns.
+
+Propagating the `RunnableConfig` manually is done like so:
+
+```typescript
+// Note the config argument
+// highlight-next-line
+const foo = (input, config) => {
+  return barRunnable.invoke(input, config);
+};
+const fooRunnable = RunnableLambda.from(foo);
+```
+
+### Setting custom run name, tags, and metadata
+
+The `runName`, `tags`, and `metadata` attributes of the `RunnableConfig` object can be used to set custom values for the run name, tags, and metadata for a given Runnable.
+
+The `runName` is a string that can be used to set a custom name for the run. This name will be used in logs and other places to identify the run. It is not inherited by sub-calls.
+
+The `tags` and `metadata` attributes are arrays and objects, respectively, that can be used to set custom tags and metadata for the run. These values are inherited by sub-calls.
+
+Using these attributes can be useful for tracking and debugging runs, as they will be surfaced in [LangSmith](https://docs.smith.langchain.com/) as trace attributes that you can
+filter and search on.
+
+The attributes will also be propagated to [callbacks](/docs/concepts/callbacks), and will appear in streaming APIs like [streamEvents](/docs/concepts/streaming) as part of each event in the stream.
+
+:::note Related
+
+- [How-to trace with LangChain](https://docs.smith.langchain.com/how_to_guides/tracing/trace_with_langchain)
+
+:::
+
+### Setting run id
+
+:::note
+This is an advanced feature that is unnecessary for most users.
+:::
+
+You may need to set a custom `runId` for a given run, in case you want
+to reference it later or correlate it with other systems.
+
+The `runId` MUST be a valid UUID string and **unique** for each run. It is used to identify
+the parent run, sub-class will get their own unique run ids automatically.
+
+To set a custom `runId`, you can pass it as a key-value pair in the `config` object when invoking the Runnable:
+
+```typescript
+import { v4 as uuidv4 } from "uuid";
+
+const runId = uuidv4();
+
+await someRunnable.invoke(someInput, {
+  runId,
+});
+
+// Do something with the runId
+```
+
+### Setting recursion limit
+
+:::note
+This is an advanced feature that is unnecessary for most users.
+:::
+
+Some Runnables may return other Runnables, which can lead to infinite recursion if not handled properly. To prevent this, you can set a `recursion_limit` in the `RunnableConfig` object. This will limit the number of times a Runnable can recurse.
+
+### Setting max concurrency
+
+If using the `batch` methods, you can set the `maxConcurrency` attribute in the `RunnableConfig` object to control the maximum number of parallel calls to make. This can be useful when you want to limit the number of parallel calls to prevent overloading a server or API.
+
+### Setting configurable
+
+The `configurable` field is used to pass runtime values for configurable attributes of the Runnable.
+
+It is used frequently in [LangGraph](/docs/concepts/architecture#langgraph) with
+[LangGraph Persistence](https://langchain-ai.github.io/langgraphjs/concepts/persistence/)
+and [memory](https://langchain-ai.github.io/langgraphjs/concepts/memory/).
+
+It is used for a similar purpose in [RunnableWithMessageHistory](https://api.js.langchain.com/classes/_langchain_core.runnables.RunnableWithMessageHistory.html) to specify
+a `session_id` to keep track of conversation history.
+
+### Setting callbacks
+
+Use this option to configure [callbacks](/docs/concepts/callbacks) for the runnable at
+runtime. The callbacks will be passed to all sub-calls made by the runnable.
+
+```typescript
+await someRunnable.invoke(someInput, {
+  callbacks: [SomeCallbackHandler(), AnotherCallbackHandler()],
+});
+```
+
+Please read the [Callbacks Conceptual Guide](/docs/concepts/callbacks) for more information on how to use callbacks in LangChain.
+
+## Creating a runnable from a function
+
+You may need to create a custom Runnable that runs arbitrary logic. This is especially
+useful if using [LangChain Expression Language (LCEL)](/docs/concepts/lcel) to compose
+multiple Runnables and you need to add custom processing logic in one of the steps.
+
+There are two ways to create a custom Runnable from a function:
+
+- `RunnableLambda`: Use this simple transformations where streaming is not required.
+- `RunnableGenerator`: use this for more complex transformations when streaming is needed.
+
+See the [How to run custom functions](/docs/how_to/functions) guide for more information on how to use `RunnableLambda` and `RunnableGenerator`.
+
+:::important
+Users should not try to subclass Runnables to create a new custom Runnable. It is
+much more complex and error-prone than simply using `RunnableLambda` or `RunnableGenerator`.
+:::

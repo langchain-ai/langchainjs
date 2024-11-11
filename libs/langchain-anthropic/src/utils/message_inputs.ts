@@ -71,7 +71,17 @@ function _mergeMessages(
           );
         }
       } else {
-        merged.push(new HumanMessage({ content: message.content }));
+        merged.push(
+          new HumanMessage({
+            content: [
+              {
+                type: "tool_result",
+                content: _formatContent(message.content),
+                tool_use_id: (message as ToolMessage).tool_call_id,
+              },
+            ],
+          })
+        );
       }
     } else {
       const previousMessage = merged[merged.length - 1];

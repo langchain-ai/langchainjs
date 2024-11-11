@@ -7,9 +7,6 @@ import {
   GenerateContentRequest,
   SafetySetting,
   Part as GenerativeAIPart,
-  Tool as GenerativeAITool,
-  ToolConfig,
-  FunctionCallingMode,
 } from "@google/generative-ai";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {
@@ -30,7 +27,6 @@ import {
   BaseLanguageModelInput,
   StructuredOutputMethodOptions,
 } from "@langchain/core/language_models/base";
-import { StructuredToolInterface } from "@langchain/core/tools";
 import {
   Runnable,
   RunnablePassthrough,
@@ -43,11 +39,11 @@ import { zodToGenerativeAIParameters } from "./utils/zod_to_genai_parameters.js"
 import {
   convertBaseMessagesToContent,
   convertResponseContentToChatGenerationChunk,
-  convertToGenerativeAITools,
   mapGenerateContentResultToChatResult,
 } from "./utils/common.js";
 import { GoogleGenerativeAIToolsOutputParser } from "./output_parsers.js";
 import { GoogleGenerativeAIToolType } from "./types.js";
+import { convertToolsToGenAI } from "./utils/tools.js";
 
 interface TokenUsage {
   completionTokens?: number;
@@ -682,70 +678,24 @@ export class ChatGoogleGenerativeAI
     AIMessageChunk,
     GoogleGenerativeAIChatCallOptions
   > {
-    return this.bind({ tools: convertToGenerativeAITools(tools), ...kwargs });
+    return this.bind({ tools: convertToolsToGenAI(tools)?.tools, ...kwargs });
   }
 
   invocationParams(
     options?: this["ParsedCallOptions"]
   ): Omit<GenerateContentRequest, "contents"> {
-    let genaiTools: GenerativeAITool[] | undefined;
-    if (
-      Array.isArray(options?.tools) &&
-      !options?.tools.some(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (t: any) => !("lc_namespace" in t)
-      )
-    ) {
-      // Tools are in StructuredToolInterface format. Convert to GenAI format
-      genaiTools = convertToGenerativeAITools(
-        options?.tools as StructuredToolInterface[]
-      );
-    } else {
-      genaiTools = options?.tools as GenerativeAITool[];
-    }
-
-    let toolConfig: ToolConfig | undefined;
-    if (genaiTools?.length && options?.tool_choice) {
-      if (["any", "auto", "none"].some((c) => c === options.tool_choice)) {
-        const modeMap: Record<string, FunctionCallingMode> = {
-          any: FunctionCallingMode.ANY,
-          auto: FunctionCallingMode.AUTO,
-          none: FunctionCallingMode.NONE,
-        };
-
-        toolConfig = {
-          functionCallingConfig: {
-            mode:
-              modeMap[options.tool_choice as keyof typeof modeMap] ??
-              "MODE_UNSPECIFIED",
-            allowedFunctionNames: options.allowedFunctionNames,
-          },
-        };
-      } else if (typeof options.tool_choice === "string") {
-        toolConfig = {
-          functionCallingConfig: {
-            mode: FunctionCallingMode.ANY,
-            allowedFunctionNames: [
-              ...(options.allowedFunctionNames ?? []),
-              options.tool_choice,
-            ],
-          },
-        };
-      }
-
-      if (!options.tool_choice && options.allowedFunctionNames) {
-        toolConfig = {
-          functionCallingConfig: {
-            mode: FunctionCallingMode.ANY,
-            allowedFunctionNames: options.allowedFunctionNames,
-          },
-        };
-      }
-    }
+    const toolsAndConfig = options?.tools?.length
+      ? convertToolsToGenAI(options.tools, {
+          toolChoice: options.tool_choice,
+          allowedFunctionNames: options.allowedFunctionNames,
+        })
+      : undefined;
 
     return {
-      tools: genaiTools,
-      toolConfig,
+      ...(toolsAndConfig?.tools ? { tools: toolsAndConfig.tools } : {}),
+      ...(toolsAndConfig?.toolConfig
+        ? { toolConfig: toolsAndConfig.toolConfig }
+        : {}),
     };
   }
 
