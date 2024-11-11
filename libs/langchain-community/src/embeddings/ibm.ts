@@ -9,14 +9,20 @@ import { WatsonxAuth, WatsonxParams } from "../types/ibm.js";
 import { authenticateAndSetInstance } from "../utils/ibm.js";
 
 export interface WatsonxEmbeddingsParams
-  extends Omit<EmbeddingParameters, "return_options">,
-    Pick<TextEmbeddingsParams, "headers"> {}
+  extends Pick<TextEmbeddingsParams, "headers"> {
+  truncateInputTokens?: number;
+}
+
+export interface WatsonxInputEmbeddings
+  extends Omit<WatsonxParams, "idOrName"> {
+  truncateInputTokens?: number;
+}
 
 export class WatsonxEmbeddings
   extends Embeddings
   implements WatsonxEmbeddingsParams, WatsonxParams
 {
-  model = "ibm/slate-125m-english-rtrvr";
+  model: string;
 
   serviceUrl: string;
 
@@ -26,7 +32,7 @@ export class WatsonxEmbeddings
 
   projectId?: string;
 
-  truncate_input_tokens?: number;
+  truncateInputTokens?: number;
 
   maxRetries?: number;
 
@@ -34,18 +40,18 @@ export class WatsonxEmbeddings
 
   private service: WatsonXAI;
 
-  constructor(fields: WatsonxEmbeddingsParams & WatsonxAuth & WatsonxParams) {
+  constructor(fields: WatsonxInputEmbeddings & WatsonxAuth) {
     const superProps = { maxConcurrency: 2, ...fields };
     super(superProps);
-    this.model = fields?.model ? fields.model : this.model;
+    this.model = fields.model;
     this.version = fields.version;
     this.serviceUrl = fields.serviceUrl;
-    this.truncate_input_tokens = fields.truncate_input_tokens;
+    this.truncateInputTokens = fields.truncateInputTokens;
     this.maxConcurrency = fields.maxConcurrency;
-    this.maxRetries = fields.maxRetries;
+    this.maxRetries = fields.maxRetries ?? 0;
     if (fields.projectId && fields.spaceId)
       throw new Error("Maximum 1 id type can be specified per instance");
-    else if (!fields.projectId && !fields.spaceId && !fields.idOrName)
+    else if (!fields.projectId && !fields.spaceId)
       throw new Error(
         "No id specified! At least id of 1 type has to be specified"
       );
@@ -77,13 +83,14 @@ export class WatsonxEmbeddings
   }
 
   scopeId() {
-    if (this.projectId) return { projectId: this.projectId };
-    else return { spaceId: this.spaceId };
+    if (this.projectId)
+      return { projectId: this.projectId, modelId: this.model };
+    else return { spaceId: this.spaceId, modelId: this.model };
   }
 
   invocationParams(): EmbeddingParameters {
     return {
-      truncate_input_tokens: this.truncate_input_tokens,
+      truncate_input_tokens: this.truncateInputTokens,
     };
   }
 
@@ -104,7 +111,6 @@ export class WatsonxEmbeddings
   private async embedSingleText(inputs: string[]) {
     const textEmbeddingParams: TextEmbeddingsParams = {
       inputs,
-      modelId: this.model,
       ...this.scopeId(),
       parameters: this.invocationParams(),
     };
