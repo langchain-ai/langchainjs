@@ -998,6 +998,10 @@ document_loaders/fs/pptx.cjs
 document_loaders/fs/pptx.js
 document_loaders/fs/pptx.d.ts
 document_loaders/fs/pptx.d.cts
+document_loaders/web/airtable.cjs
+document_loaders/web/airtable.js
+document_loaders/web/airtable.d.ts
+document_loaders/web/airtable.d.cts
 utils/convex.cjs
 utils/convex.js
 utils/convex.d.ts
