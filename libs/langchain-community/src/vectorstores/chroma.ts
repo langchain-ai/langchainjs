@@ -354,6 +354,7 @@ export class Chroma extends VectorStore {
       throw new Error("cannot provide both `filter` and `this.filter`");
     }
     const _filter = filter ?? this.filter;
+    const where = _filter === undefined ? undefined : { ..._filter };
 
     const collection = await this.ensureCollection();
 
@@ -362,7 +363,7 @@ export class Chroma extends VectorStore {
     const result = await collection.query({
       queryEmbeddings: query,
       nResults: k,
-      where: { ..._filter },
+      where,
     });
 
     const { ids, distances, documents, metadatas } = result;
@@ -398,6 +399,7 @@ export class Chroma extends VectorStore {
         new Document({
           pageContent: firstDocuments?.[i] ?? "",
           metadata,
+          id: firstIds[i],
         }),
         firstDistances[i],
       ]);

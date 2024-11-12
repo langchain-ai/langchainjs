@@ -17,7 +17,13 @@ import {
 } from "@langchain/core/prompts";
 import { StructuredTool } from "@langchain/core/tools";
 import { z } from "zod";
-import { FunctionDeclarationSchemaType } from "@google/generative-ai";
+import {
+  CodeExecutionTool,
+  DynamicRetrievalMode,
+  SchemaType as FunctionDeclarationSchemaType,
+  GoogleSearchRetrievalTool,
+} from "@google/generative-ai";
+import { concat } from "@langchain/core/utils/stream";
 import { ChatGoogleGenerativeAI } from "../chat_models.js";
 
 // Save the original value of the 'LANGCHAIN_CALLBACKS_BACKGROUND' environment variable
@@ -566,4 +572,156 @@ test("Supports tool_choice", async () => {
     "What is 27725327 times 283683? Also whats the weather in New York?"
   );
   expect(response.tool_calls?.length).toBe(1);
+});
+
+describe("GoogleSearchRetrievalTool", () => {
+  test("Supports GoogleSearchRetrievalTool", async () => {
+    const searchRetrievalTool: GoogleSearchRetrievalTool = {
+      googleSearchRetrieval: {
+        dynamicRetrievalConfig: {
+          mode: DynamicRetrievalMode.MODE_DYNAMIC,
+          dynamicThreshold: 0.7, // default is 0.7
+        },
+      },
+    };
+    const model = new ChatGoogleGenerativeAI({
+      model: "gemini-1.5-pro",
+      temperature: 0,
+      maxRetries: 0,
+    }).bindTools([searchRetrievalTool]);
+
+    const result = await model.invoke("Who won the 2024 MLB World Series?");
+
+    expect(result.response_metadata?.groundingMetadata).toBeDefined();
+    expect(result.content as string).toContain("Dodgers");
+  });
+
+  test("Can stream GoogleSearchRetrievalTool", async () => {
+    const searchRetrievalTool: GoogleSearchRetrievalTool = {
+      googleSearchRetrieval: {
+        dynamicRetrievalConfig: {
+          mode: DynamicRetrievalMode.MODE_DYNAMIC,
+          dynamicThreshold: 0.7, // default is 0.7
+        },
+      },
+    };
+    const model = new ChatGoogleGenerativeAI({
+      model: "gemini-1.5-pro",
+      temperature: 0,
+      maxRetries: 0,
+    }).bindTools([searchRetrievalTool]);
+
+    const stream = await model.stream("Who won the 2024 MLB World Series?");
+    let finalMsg: AIMessageChunk | undefined;
+    for await (const msg of stream) {
+      finalMsg = finalMsg ? concat(finalMsg, msg) : msg;
+    }
+    if (!finalMsg) {
+      throw new Error("finalMsg is undefined");
+    }
+    expect(finalMsg.response_metadata?.groundingMetadata).toBeDefined();
+    expect(finalMsg.content as string).toContain("Dodgers");
+  });
+});
+
+describe("CodeExecutionTool", () => {
+  test("Supports CodeExecutionTool", async () => {
+    const codeExecutionTool: CodeExecutionTool = {
+      codeExecution: {}, // Simply pass an empty object to enable it.
+    };
+    const model = new ChatGoogleGenerativeAI({
+      model: "gemini-1.5-pro",
+      temperature: 0,
+      maxRetries: 0,
+    }).bindTools([codeExecutionTool]);
+
+    const result = await model.invoke(
+      "Use code execution to find the sum of the first and last 3 numbers in the following list: [1, 2, 3, 72638, 8, 727, 4, 5, 6]"
+    );
+
+    expect(Array.isArray(result.content)).toBeTruthy();
+    if (!Array.isArray(result.content)) {
+      throw new Error("Content is not an array");
+    }
+    const texts = result.content
+      .flatMap((item) => ("text" in item ? [item.text] : []))
+      .join("\n");
+    expect(texts).toContain("21");
+
+    const executableCode = result.content.find(
+      (item) => item.type === "executableCode"
+    );
+    expect(executableCode).toBeDefined();
+    const codeResult = result.content.find(
+      (item) => item.type === "codeExecutionResult"
+    );
+    expect(codeResult).toBeDefined();
+  });
+
+  test("CodeExecutionTool contents can be passed in chat history", async () => {
+    const codeExecutionTool: CodeExecutionTool = {
+      codeExecution: {}, // Simply pass an empty object to enable it.
+    };
+    const model = new ChatGoogleGenerativeAI({
+      model: "gemini-1.5-pro",
+      temperature: 0,
+      maxRetries: 0,
+    }).bindTools([codeExecutionTool]);
+
+    const codeResult = await model.invoke(
+      "Use code execution to find the sum of the first and last 3 numbers in the following list: [1, 2, 3, 72638, 8, 727, 4, 5, 6]"
+    );
+
+    const explanation = await model.invoke([
+      codeResult,
+      {
+        role: "user",
+        content:
+          "Please explain the question I asked, the code you wrote, and the answer you got.",
+      },
+    ]);
+
+    expect(typeof explanation.content).toBe("string");
+    expect(explanation.content.length).toBeGreaterThan(10);
+  });
+
+  test("Can stream CodeExecutionTool", async () => {
+    const codeExecutionTool: CodeExecutionTool = {
+      codeExecution: {}, // Simply pass an empty object to enable it.
+    };
+    const model = new ChatGoogleGenerativeAI({
+      model: "gemini-1.5-pro",
+      temperature: 0,
+      maxRetries: 0,
+    }).bindTools([codeExecutionTool]);
+
+    const stream = await model.stream(
+      "Use code execution to find the sum of the first and last 3 numbers in the following list: [1, 2, 3, 72638, 8, 727, 4, 5, 6]"
+    );
+    let finalMsg: AIMessageChunk | undefined;
+    for await (const msg of stream) {
+      finalMsg = finalMsg ? concat(finalMsg, msg) : msg;
+    }
+
+    if (!finalMsg) {
+      throw new Error("finalMsg is undefined");
+    }
+    expect(Array.isArray(finalMsg.content)).toBeTruthy();
+    if (!Array.isArray(finalMsg.content)) {
+      throw new Error("Content is not an array");
+    }
+    const texts = finalMsg.content
+      .flatMap((item) => ("text" in item ? [item.text] : []))
+      .join("\n");
+    expect(texts).toContain("21");
+
+    const executableCode = finalMsg.content.find(
+      (item) => item.type === "executableCode"
+    );
+    expect(executableCode).toBeDefined();
+    const codeResult = finalMsg.content.find(
+      (item) => item.type === "codeExecutionResult"
+    );
+    expect(codeResult).toBeDefined();
+  });
 });

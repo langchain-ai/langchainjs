@@ -1267,36 +1267,8 @@ export function ensureHandler(
 }
 
 /**
- * @example
- * ```typescript
- * const prompt = PromptTemplate.fromTemplate(`What is the answer to {question}?`);
- *
- * // Example of using LLMChain to process a series of questions
- * const chain = new LLMChain({
- *   llm: new ChatOpenAI({ temperature: 0.9 }),
- *   prompt,
- * });
- *
- * // Process questions using the chain
- * const processQuestions = async (questions) => {
- *   for (const question of questions) {
- *     const result = await chain.call({ question });
- *     console.log(result);
- *   }
- * };
- *
- * // Example questions
- * const questions = [
- *   "What is your name?",
- *   "What is your quest?",
- *   "What is your favorite color?",
- * ];
- *
- * // Run the example
-const logFunction = handler.raiseError ? console.error : console.warn; 
-* processQuestions(questions).catch(consolelogFunction;
- *
- * ```
+ * @deprecated Use [`traceable`](https://docs.smith.langchain.com/observability/how_to_guides/tracing/annotate_code)
+ * from "langsmith" instead.
  */
 export class TraceGroup {
   private runManager?: CallbackManagerForChainRun;
