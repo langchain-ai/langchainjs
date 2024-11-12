@@ -41,6 +41,7 @@ import {
   TextChatResultChoice,
   TextChatResultMessage,
   TextChatToolCall,
+  TextChatToolChoiceTool,
   TextChatUsage,
 } from "@ibm-cloud/watsonx-ai/dist/watsonx-ai-ml/vml_v1.js";
 import { WatsonXAI } from "@ibm-cloud/watsonx-ai";
@@ -86,6 +87,7 @@ export interface WatsonxCallOptionsChat
   extends Omit<BaseLanguageModelCallOptions, "stop">,
     WatsonxCallParams {
   promptIndex?: number;
+  tool_choice?: TextChatToolChoiceTool;
 }
 
 type ChatWatsonxToolType = BindToolsInput | TextChatParameterTools;
@@ -470,7 +472,7 @@ export class ChatWatsonx<
       tools: options.tools
         ? _convertToolToWatsonxTool(options.tools)
         : undefined,
-      toolChoice: options.toolChoice,
+      toolChoice: options.tool_choice,
       responseFormat: options.responseFormat,
       toolChoiceOption: options.toolChoiceOption,
     };
