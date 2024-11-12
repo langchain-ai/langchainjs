@@ -838,6 +838,10 @@ indexes/sqlite.cjs
 indexes/sqlite.js
 indexes/sqlite.d.ts
 indexes/sqlite.d.cts
+document_loaders/web/airtable.cjs
+document_loaders/web/airtable.js
+document_loaders/web/airtable.d.ts
+document_loaders/web/airtable.d.cts
 document_loaders/web/apify_dataset.cjs
 document_loaders/web/apify_dataset.js
 document_loaders/web/apify_dataset.d.ts
@@ -998,10 +1002,6 @@ document_loaders/fs/pptx.cjs
 document_loaders/fs/pptx.js
 document_loaders/fs/pptx.d.ts
 document_loaders/fs/pptx.d.cts
-document_loaders/web/airtable.cjs
-document_loaders/web/airtable.js
-document_loaders/web/airtable.d.ts
-document_loaders/web/airtable.d.cts
 utils/convex.cjs
 utils/convex.js
 utils/convex.d.ts
