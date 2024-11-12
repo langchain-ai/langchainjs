@@ -134,14 +134,11 @@ export class AirtableLoader extends BaseDocumentLoader {
    * @returns A promise that resolves to an AirtableResponse object.
    */
   private async fetchRecords(url: string): Promise<AirtableResponse> {
-    const controller = new AbortController();
-
     try {
       const response = await fetch(url, {
         headers: {
           Authorization: `Bearer ${this.apiToken}`,
         },
-        signal: controller.signal,
       });
 
       if (!response.ok) {
