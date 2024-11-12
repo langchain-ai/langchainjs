@@ -40,7 +40,7 @@ export type QdrantAddDocumentOptions = {
  * Type that defines the parameters for the delete operation in the
  * QdrantStore class. It includes ids, filter and shard key.
  */
-export type QdrantDeleteParams = 
+export type QdrantDeleteParams =
   | { ids: string[]; shardKey?: string; filter?: never }
   | { filter: object; shardKey?: string; ids?: never };
 
@@ -196,7 +196,7 @@ export class QdrantVectorStore extends VectorStore {
         const batchIds = ids.slice(i, i + batchSize);
         await this.client.delete(this.collectionName, {
           wait: true,
-          ordering: 'weak',
+          ordering: "weak",
           points: batchIds,
           shard_key: shardKey,
         });
@@ -204,8 +204,8 @@ export class QdrantVectorStore extends VectorStore {
     } else if (filter) {
       await this.client.delete(this.collectionName, {
         wait: true,
-        ordering: 'weak',
-        filter: filter,
+        ordering: "weak",
+        filter,
         shard_key: shardKey,
       });
     } else {
