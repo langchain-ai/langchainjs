@@ -36,6 +36,14 @@ export type QdrantAddDocumentOptions = {
   customPayload: Record<string, any>[];
 };
 
+/**
+ * Type that defines the parameters for the delete operation in the
+ * QdrantStore class. It includes ids, filter and shard key.
+ */
+export type QdrantDeleteParams =
+  | { ids: string[]; shardKey?: string; filter?: never }
+  | { filter: object; shardKey?: string; ids?: never };
+
 export type QdrantFilter = QdrantSchemas["Filter"];
 
 export type QdrantCondition = QdrantSchemas["FieldCondition"];
@@ -171,6 +179,37 @@ export class QdrantVectorStore extends VectorStore {
         }`
       );
       throw error;
+    }
+  }
+
+  /**
+   * Method that deletes points from the Qdrant database.
+   * @param params Parameters for the delete operation.
+   * @returns Promise that resolves when the delete operation is complete.
+   */
+  async delete(params: QdrantDeleteParams): Promise<void> {
+    const { ids, filter, shardKey } = params;
+
+    if (ids) {
+      const batchSize = 1000;
+      for (let i = 0; i < ids.length; i += batchSize) {
+        const batchIds = ids.slice(i, i + batchSize);
+        await this.client.delete(this.collectionName, {
+          wait: true,
+          ordering: "weak",
+          points: batchIds,
+          shard_key: shardKey,
+        });
+      }
+    } else if (filter) {
+      await this.client.delete(this.collectionName, {
+        wait: true,
+        ordering: "weak",
+        filter,
+        shard_key: shardKey,
+      });
+    } else {
+      throw new Error("Either ids or filter must be provided.");
     }
   }
 
