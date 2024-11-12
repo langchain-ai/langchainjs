@@ -9,7 +9,13 @@ import {
   AsyncCaller,
 } from "@langchain/core/utils/async_caller";
 import { BaseDocumentLoader } from "@langchain/core/document_loaders/base";
-import { WebBaseLoaderParams, WebBaseLoader } from "./web_base_loader.js";
+import { WebBaseLoaderParams, WebBaseLoader } from "./html.js";
+
+/**
+ * @deprecated Either import the CheerioWebBaseLoaderParams from @langchain/community/document_loaders/web/cheerio
+ * or use the WebBaseLoaderParams from @langchain/community/document_loaders/web/html.
+ */
+export { WebBaseLoaderParams };
 
 /**
  * Represents the parameters for configuring the CheerioWebBaseLoader. It
