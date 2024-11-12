@@ -12,7 +12,7 @@ import { ChatLlamaCpp } from "../llama_cpp.js";
 const llamaPath = getEnvironmentVariable("LLAMA_PATH")!;
 
 test.skip("Test predict", async () => {
-  const llamaCpp = new ChatLlamaCpp({ modelPath: llamaPath });
+  const llamaCpp = await ChatLlamaCpp.initialize({ modelPath: llamaPath });
 
   // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
   // @ts-expect-error unused var
@@ -21,7 +21,7 @@ test.skip("Test predict", async () => {
 });
 
 test.skip("Test call", async () => {
-  const llamaCpp = new ChatLlamaCpp({ modelPath: llamaPath });
+  const llamaCpp = await ChatLlamaCpp.initialize({ modelPath: llamaPath });
 
   // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
   // @ts-expect-error unused var
@@ -32,7 +32,7 @@ test.skip("Test call", async () => {
 });
 
 test.skip("Test multiple messages", async () => {
-  const llamaCpp = new ChatLlamaCpp({ modelPath: llamaPath });
+  const llamaCpp = await ChatLlamaCpp.initialize({ modelPath: llamaPath });
 
   // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
   // @ts-expect-error unused var
@@ -47,7 +47,7 @@ test.skip("Test multiple messages", async () => {
 });
 
 test.skip("Test system message", async () => {
-  const llamaCpp = new ChatLlamaCpp({ modelPath: llamaPath });
+  const llamaCpp = await ChatLlamaCpp.initialize({ modelPath: llamaPath });
 
   // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
   // @ts-expect-error unused var
@@ -61,7 +61,10 @@ test.skip("Test system message", async () => {
 });
 
 test.skip("test streaming call", async () => {
-  const llamaCpp = new ChatLlamaCpp({ modelPath: llamaPath, temperature: 0.7 });
+  const llamaCpp = await ChatLlamaCpp.initialize({
+    modelPath: llamaPath,
+    temperature: 0.7,
+  });
 
   const stream = await llamaCpp.stream(
     "Tell me a short story about a happy Llama."
@@ -77,7 +80,10 @@ test.skip("test streaming call", async () => {
 });
 
 test.skip("test multi-mesage streaming call", async () => {
-  const llamaCpp = new ChatLlamaCpp({ modelPath: llamaPath, temperature: 0.7 });
+  const llamaCpp = await ChatLlamaCpp.initialize({
+    modelPath: llamaPath,
+    temperature: 0.7,
+  });
 
   const stream = await llamaCpp.stream([
     new SystemMessage(
@@ -96,7 +102,10 @@ test.skip("test multi-mesage streaming call", async () => {
 });
 
 test.skip("test multi-mesage streaming call and abort after 5s", async () => {
-  const llamaCpp = new ChatLlamaCpp({ modelPath: llamaPath, temperature: 0.7 });
+  const llamaCpp = await ChatLlamaCpp.initialize({
+    modelPath: llamaPath,
+    temperature: 0.7,
+  });
   const controller = new AbortController();
   setTimeout(() => {
     controller.abort();
