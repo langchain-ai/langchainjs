@@ -54,6 +54,7 @@ export * as chat_models__moonshot from "../chat_models/moonshot.js";
 export * as chat_models__ollama from "../chat_models/ollama.js";
 export * as chat_models__togetherai from "../chat_models/togetherai.js";
 export * as chat_models__yandex from "../chat_models/yandex.js";
+export * as retrievers__arxiv from "../retrievers/arxiv.js";
 export * as retrievers__bm25 from "../retrievers/bm25.js";
 export * as retrievers__chaindesk from "../retrievers/chaindesk.js";
 export * as retrievers__databerry from "../retrievers/databerry.js";
