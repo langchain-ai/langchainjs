@@ -343,6 +343,7 @@ function _convertChatOpenAIToolTypeToOpenAITool(
   return _convertToOpenAITool(tool, fields);
 }
 
+// TODO: Use the base structured output options param in next breaking release.
 export interface ChatOpenAIStructuredOutputMethodOptions<
   IncludeRaw extends boolean
 > extends StructuredOutputMethodOptions<IncludeRaw> {
@@ -1940,7 +1941,6 @@ export class ChatOpenAI<
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | StructuredOutputMethodParams<RunOutput, false>
       | z.ZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
@@ -1952,7 +1952,6 @@ export class ChatOpenAI<
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | StructuredOutputMethodParams<RunOutput, true>
       | z.ZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
@@ -1964,7 +1963,6 @@ export class ChatOpenAI<
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | StructuredOutputMethodParams<RunOutput, boolean>
       | z.ZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
