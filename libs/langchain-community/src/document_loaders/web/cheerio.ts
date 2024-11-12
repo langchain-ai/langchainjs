@@ -5,9 +5,7 @@ import type {
   SelectorType,
 } from "cheerio";
 import { Document } from "@langchain/core/documents";
-import {
-  AsyncCaller,
-} from "@langchain/core/utils/async_caller";
+import { AsyncCaller } from "@langchain/core/utils/async_caller";
 import { BaseDocumentLoader } from "@langchain/core/document_loaders/base";
 import { WebBaseLoaderParams, WebBaseLoader } from "./html.js";
 

@@ -45,7 +45,10 @@ export interface WebBaseLoader extends DocumentLoader {
   headers?: HeadersInit;
 }
 
-export class HTMLWebBaseLoader extends BaseDocumentLoader implements WebBaseLoader {
+export class HTMLWebBaseLoader
+  extends BaseDocumentLoader
+  implements WebBaseLoader
+{
   timeout: number;
 
   caller: AsyncCaller;

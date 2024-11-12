@@ -6,7 +6,9 @@ test("Test HTML web scraper loader", async () => {
     "https://news.ycombinator.com/item?id=34817881"
   );
   const docs = await loader.load();
-  expect(docs[0].pageContent).toEqual(expect.stringContaining("What Lights the Universe’s Standard Candles?"))
+  expect(docs[0].pageContent).toEqual(
+    expect.stringContaining("What Lights the Universe’s Standard Candles?")
+  );
 });
 
 test("Test HTML web scraper loader with textDecoder", async () => {
