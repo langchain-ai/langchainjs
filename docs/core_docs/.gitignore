@@ -218,14 +218,14 @@ docs/how_to/agent_executor.md
 docs/how_to/agent_executor.mdx
 docs/concepts/t.md
 docs/concepts/t.mdx
-docs/troubleshooting/errors/INVALID_TOOL_RESULTS.md
-docs/troubleshooting/errors/INVALID_TOOL_RESULTS.mdx
 docs/versions/migrating_memory/conversation_summary_memory.md
 docs/versions/migrating_memory/conversation_summary_memory.mdx
 docs/versions/migrating_memory/conversation_buffer_window_memory.md
 docs/versions/migrating_memory/conversation_buffer_window_memory.mdx
 docs/versions/migrating_memory/chat_history.md
 docs/versions/migrating_memory/chat_history.mdx
+docs/troubleshooting/errors/INVALID_TOOL_RESULTS.md
+docs/troubleshooting/errors/INVALID_TOOL_RESULTS.mdx
 docs/integrations/vectorstores/weaviate.md
 docs/integrations/vectorstores/weaviate.mdx
 docs/integrations/vectorstores/upstash.md
@@ -328,6 +328,8 @@ docs/integrations/llms/azure.md
 docs/integrations/llms/azure.mdx
 docs/integrations/llms/arcjet.md
 docs/integrations/llms/arcjet.mdx
+docs/integrations/chat/xai.md
+docs/integrations/chat/xai.mdx
 docs/integrations/chat/togetherai.md
 docs/integrations/chat/togetherai.mdx
 docs/integrations/chat/openai.md
