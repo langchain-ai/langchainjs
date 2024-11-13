@@ -47,17 +47,17 @@ function _formatImage(imageUrl: string) {
   } as any;
 }
 
-function _mergeMessages(
+function _ensureMessageContents(
   messages: BaseMessage[]
 ): (SystemMessage | HumanMessage | AIMessage)[] {
   // Merge runs of human/tool messages into single human messages with content blocks.
-  const merged = [];
+  const updatedMsgs = [];
   for (const message of messages) {
-    if (message._getType() === "tool") {
+    if (message.getType() === "tool") {
       if (typeof message.content === "string") {
-        const previousMessage = merged[merged.length - 1];
+        const previousMessage = updatedMsgs[updatedMsgs.length - 1];
         if (
-          previousMessage?._getType() === "human" &&
+          previousMessage?.getType() === "human" &&
           Array.isArray(previousMessage.content) &&
           "type" in previousMessage.content[0] &&
           previousMessage.content[0].type === "tool_result"
@@ -70,7 +70,7 @@ function _mergeMessages(
           });
         } else {
           // If not, we create a new human message with the tool result.
-          merged.push(
+          updatedMsgs.push(
             new HumanMessage({
               content: [
                 {
@@ -83,33 +83,23 @@ function _mergeMessages(
           );
         }
       } else {
-        merged.push(new HumanMessage({ content: message.content }));
+        updatedMsgs.push(
+          new HumanMessage({
+            content: [
+              {
+                type: "tool_result",
+                content: _formatContent(message.content),
+                tool_use_id: (message as ToolMessage).tool_call_id,
+              },
+            ],
+          })
+        );
       }
     } else {
-      const previousMessage = merged[merged.length - 1];
-      if (
-        previousMessage?._getType() === "human" &&
-        message._getType() === "human"
-      ) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        let combinedContent: Record<string, any>[];
-        if (typeof previousMessage.content === "string") {
-          combinedContent = [{ type: "text", text: previousMessage.content }];
-        } else {
-          combinedContent = previousMessage.content;
-        }
-        if (typeof message.content === "string") {
-          combinedContent.push({ type: "text", text: message.content });
-        } else {
-          combinedContent = combinedContent.concat(message.content);
-        }
-        previousMessage.content = combinedContent;
-      } else {
-        merged.push(message);
-      }
+      updatedMsgs.push(message);
     }
   }
-  return merged;
+  return updatedMsgs;
 }
 
 export function _convertLangChainToolCallToAnthropic(
@@ -170,9 +160,9 @@ export function formatMessagesForAnthropic(messages: BaseMessage[]): {
   system?: string;
   messages: Record<string, unknown>[];
 } {
-  const mergedMessages = _mergeMessages(messages);
+  const mergedMessages = _ensureMessageContents(messages);
   let system: string | undefined;
-  if (mergedMessages.length > 0 && mergedMessages[0]._getType() === "system") {
+  if (mergedMessages.length > 0 && mergedMessages[0].getType() === "system") {
     if (typeof messages[0].content !== "string") {
       throw new Error("System message content must be a string.");
     }
@@ -182,18 +172,18 @@ export function formatMessagesForAnthropic(messages: BaseMessage[]): {
     system !== undefined ? mergedMessages.slice(1) : mergedMessages;
   const formattedMessages = conversationMessages.map((message) => {
     let role;
-    if (message._getType() === "human") {
+    if (message.getType() === "human") {
       role = "user" as const;
-    } else if (message._getType() === "ai") {
+    } else if (message.getType() === "ai") {
       role = "assistant" as const;
-    } else if (message._getType() === "tool") {
+    } else if (message.getType() === "tool") {
       role = "user" as const;
-    } else if (message._getType() === "system") {
+    } else if (message.getType() === "system") {
       throw new Error(
         "System messages are only permitted as the first passed message."
       );
     } else {
-      throw new Error(`Message type "${message._getType()}" is not supported.`);
+      throw new Error(`Message type "${message.getType()}" is not supported.`);
     }
     if (isAIMessage(message) && !!message.tool_calls?.length) {
       if (typeof message.content === "string") {
