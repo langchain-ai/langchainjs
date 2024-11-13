@@ -1,20 +1,13 @@
 /* eslint-disable no-process-env */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import WatsonxAiMlVml_v1 from "@ibm-cloud/watsonx-ai/dist/watsonx-ai-ml/vml_v1.js";
-import { WatsonxLLM, WatsonxInputLLM } from "../ibm.js";
-import { authenticateAndSetInstance } from "../../utils/ibm.js";
-import { WatsonxEmbeddings } from "../../embeddings/ibm.js";
+import { WatsonxRerank, WatsonxInputRerank } from "../ibm.js";
 
-const fakeAuthProp = {
-  watsonxAIAuthType: "iam",
-  watsonxAIApikey: "fake_key",
-};
-export function getKey<K>(key: K): K {
+function getKey<K>(key: K): K {
   return key;
 }
-export const testProperties = (
-  instance: WatsonxLLM | WatsonxEmbeddings,
-  testProps: WatsonxInputLLM,
+const testProperties = (
+  instance: WatsonxRerank,
+  testProps: WatsonxInputRerank,
   notExTestProps?: { [key: string]: any }
 ) => {
   const checkProperty = <T extends { [key: string]: any }>(
@@ -39,93 +32,52 @@ export const testProperties = (
   if (notExTestProps)
     checkProperty<typeof notExTestProps>(notExTestProps, instance, false);
 };
-
-describe("Rerank unit tests", () => {
+const fakeAuthProp = {
+  watsonxAIAuthType: "iam",
+  watsonxAIApikey: "fake_key",
+};
+describe("Embeddings unit tests", () => {
   describe("Positive tests", () => {
-    test("Test authentication function", () => {
-      const instance = authenticateAndSetInstance({
-        version: "2024-05-31",
-        serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
-        ...fakeAuthProp,
-      });
-      expect(instance).toBeInstanceOf(WatsonxAiMlVml_v1);
-    });
-
-    test("Test basic properties after init", async () => {
+    test("Basic properties", () => {
       const testProps = {
-        model: "ibm/granite-13b-chat-v2",
+        model: "cross-encoder/ms-marco-minilm-l-12-v2",
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
         projectId: process.env.WATSONX_AI_PROJECT_ID || "testString",
       };
-      const instance = new WatsonxLLM({ ...testProps, ...fakeAuthProp });
-
+      const instance = new WatsonxRerank({ ...testProps, ...fakeAuthProp });
       testProperties(instance, testProps);
     });
 
-    test("Test methods after init", () => {
-      const testProps: WatsonxInputLLM = {
-        model: "ibm/granite-13b-chat-v2",
+    test("Basic properties", () => {
+      const testProps: WatsonxInputRerank = {
+        model: "cross-encoder/ms-marco-minilm-l-12-v2",
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
         projectId: process.env.WATSONX_AI_PROJECT_ID || "testString",
-      };
-      const instance = new WatsonxLLM({
-        ...testProps,
-        ...fakeAuthProp,
-      });
-      expect(instance.getNumTokens).toBeDefined();
-      expect(instance._generate).toBeDefined();
-      expect(instance._streamResponseChunks).toBeDefined();
-      expect(instance.invocationParams).toBeDefined();
-    });
-
-    test("Test properties after init", async () => {
-      const testProps: WatsonxInputLLM = {
-        version: "2024-05-31",
-        serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
-        projectId: process.env.WATSONX_AI_PROJECT_ID || "testString",
-        model: "ibm/granite-13b-chat-v2",
-        maxNewTokens: 100,
-        decodingMethod: "sample",
-        lengthPenalty: { decay_factor: 1, start_index: 1 },
-        minNewTokens: 10,
-        randomSeed: 1,
-        stopSequence: ["hello"],
-        temperature: 0.1,
-        timeLimit: 10000,
-        topK: 1,
-        topP: 1,
-        repetitionPenalty: 1,
-        truncateInpuTokens: 1,
+        truncateInputTokens: 10,
+        maxConcurrency: 2,
+        maxRetries: 2,
         returnOptions: {
-          input_text: true,
-          generated_tokens: true,
-          input_tokens: true,
-          token_logprobs: true,
-          token_ranks: true,
-          top_n_tokens: 2,
+          topN: 5,
+          inputs: false,
         },
-        includeStopSequence: false,
-        maxRetries: 3,
-        maxConcurrency: 3,
       };
-      const instance = new WatsonxLLM({ ...testProps, ...fakeAuthProp });
-
+      const instance = new WatsonxRerank({ ...testProps, ...fakeAuthProp });
       testProperties(instance, testProps);
     });
   });
 
   describe("Negative tests", () => {
     test("Missing id", async () => {
-      const testProps: WatsonxInputLLM = {
-        model: "ibm/granite-13b-chat-v2",
+      const testProps = {
+        model: "cross-encoder/ms-marco-minilm-l-12-v2",
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
       };
       expect(
         () =>
-          new WatsonxLLM({
+          new WatsonxRerank({
             ...testProps,
             ...fakeAuthProp,
           })
@@ -133,27 +85,24 @@ describe("Rerank unit tests", () => {
     });
 
     test("Missing other props", async () => {
-      // @ts-expect-error Intentionally passing not enough parameters
+      // @ts-expect-error Intentionally passing wrong value
       const testPropsProjectId: WatsonxInputLLM = {
         projectId: process.env.WATSONX_AI_PROJECT_ID || "testString",
       };
-
       expect(
         () =>
-          new WatsonxLLM({
+          new WatsonxRerank({
             ...testPropsProjectId,
-            ...fakeAuthProp,
           })
       ).toThrowError();
-      // @ts-expect-error Intentionally passing not enough parameters
+      // @ts-expect-error //Intentionally passing wrong value
       const testPropsServiceUrl: WatsonxInputLLM = {
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
       };
       expect(
         () =>
-          new WatsonxLLM({
+          new WatsonxRerank({
             ...testPropsServiceUrl,
-            ...fakeAuthProp,
           })
       ).toThrowError();
       const testPropsVersion = {
@@ -161,16 +110,16 @@ describe("Rerank unit tests", () => {
       };
       expect(
         () =>
-          new WatsonxLLM({
-            // @ts-expect-error Intentionally passing wrong type of an object
+          new WatsonxRerank({
+            // @ts-expect-error Intentionally passing wrong props
             testPropsVersion,
           })
       ).toThrowError();
     });
 
     test("Passing more than one id", async () => {
-      const testProps: WatsonxInputLLM = {
-        model: "ibm/granite-13b-chat-v2",
+      const testProps = {
+        model: "cross-encoder/ms-marco-minilm-l-12-v2",
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
         projectId: process.env.WATSONX_AI_PROJECT_ID || "testString",
@@ -178,16 +127,16 @@ describe("Rerank unit tests", () => {
       };
       expect(
         () =>
-          new WatsonxLLM({
+          new WatsonxRerank({
             ...testProps,
             ...fakeAuthProp,
           })
       ).toThrowError();
     });
 
-    test("Not existing property passed", async () => {
+    test("Invalid properties", () => {
       const testProps = {
-        model: "ibm/granite-13b-chat-v2",
+        model: "cross-encoder/ms-marco-minilm-l-12-v2",
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
         projectId: process.env.WATSONX_AI_PROJECT_ID || "testString",
@@ -198,11 +147,12 @@ describe("Rerank unit tests", () => {
           notExProp: 12,
         },
       };
-      const instance = new WatsonxLLM({
+      const instance = new WatsonxRerank({
         ...testProps,
         ...notExTestProps,
         ...fakeAuthProp,
       });
+
       testProperties(instance, testProps, notExTestProps);
     });
   });

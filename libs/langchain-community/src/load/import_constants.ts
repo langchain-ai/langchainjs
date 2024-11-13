@@ -100,6 +100,7 @@ export const optionalImportEntrypoints: string[] = [
   "langchain_community/retrievers/amazon_kendra",
   "langchain_community/retrievers/amazon_knowledge_base",
   "langchain_community/retrievers/dria",
+  "langchain_community/retrievers/ibm",
   "langchain_community/retrievers/metal",
   "langchain_community/retrievers/supabase",
   "langchain_community/retrievers/vectara_summary",

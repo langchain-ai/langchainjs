@@ -626,6 +626,10 @@ retrievers/dria.cjs
 retrievers/dria.js
 retrievers/dria.d.ts
 retrievers/dria.d.cts
+retrievers/ibm.cjs
+retrievers/ibm.js
+retrievers/ibm.d.ts
+retrievers/ibm.d.cts
 retrievers/metal.cjs
 retrievers/metal.js
 retrievers/metal.d.ts
