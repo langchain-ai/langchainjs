@@ -18,7 +18,6 @@ import {
   ResponseHook,
   HTTPClient as MistralAIHTTPClient,
 } from "@mistralai/mistralai/lib/http.js";
-import { RetryConfig as MistralAIRetryConfig } from "@mistralai/mistralai/lib/retries.js";
 import {
   BaseMessage,
   MessageType,
@@ -191,41 +190,6 @@ export interface ChatMistralAIInput
    * Allows users to add custom fetch implementations, hooks, as well as error and response processing.
    */
   httpClient?: MistralAIHTTPClient;
-  /**
-   * The strategy for handling request errors. Either "none" or "backoff".
-   * @default {"none"} 
-   */
-  backoffStrategy?: string;
-  /**
-   * The intial time interval to wait before retrying a failed request, in ms.
-   * Only used when backoffStrategy = "backoff".
-   * @default {500}
-   */
-  backoffInitialInterval?: number;
-  /**
-   * The maximum interval of time to wait before retrying a failed request, in ms.
-   * Only used when backoffStrategy = "backoff".
-   * @default {60000}
-   */
-  backoffMaxInterval?: number;
-  /**
-   * The base to exponentiate by the number of retries attempted. The time interval to wait for the 
-   * next retry is backoffInitialInterval * backoffExponent**number_of_retries, in ms.
-   * Only used when backoffStrategy = "backoff".
-   * @default {1.5}
-   */
-  backoffExponent?: number;
-  /**
-   * The maximum time to retry requests for, after the first request is received by Mistral, in ms.
-   * Only used when backoffStrategy = "backoff".
-   * @default {3600000}
-   */
-  backoffMaxElapsedTime?: number;
-  /**
-   * Whether or not to retry requests that failed due to connection errors.
-   * Only used when backoffStrategy = "backoff".
-   */
-  retryConnectionErrors?: boolean;
 }
 
 function convertMessagesToMistralMessages(
@@ -904,18 +868,6 @@ export class ChatMistralAI<
 
   httpClient?: MistralAIHTTPClient;
 
-  backoffStrategy = "none";
-
-  backoffInitialInterval = 500;
-
-  backoffMaxInterval = 60000;
-
-  backoffExponent = 1.5;
-
-  backoffMaxElapsedTime = 3600000;
-
-  retryConnectionErrors?: boolean;
-
   constructor(fields?: ChatMistralAIInput) {
     super(fields ?? {});
     const apiKey = fields?.apiKey ?? getEnvironmentVariable("MISTRAL_API_KEY");
@@ -941,12 +893,6 @@ export class ChatMistralAI<
     this.requestErrorHooks = fields?.requestErrorHooks ?? this.requestErrorHooks;
     this.responseHooks = fields?.responseHooks ?? this.responseHooks;
     this.httpClient = fields?.httpClient ?? this.httpClient;
-    this.backoffStrategy = fields?.backoffStrategy ?? this.backoffStrategy;
-    this.backoffInitialInterval = fields?.backoffInitialInterval ?? this.backoffInitialInterval;
-    this.backoffMaxInterval = fields?.backoffMaxInterval ?? this.backoffMaxInterval;
-    this.backoffExponent = fields?.backoffExponent ?? this.backoffExponent;
-    this.backoffMaxElapsedTime = fields?.backoffMaxElapsedTime ?? this.backoffMaxElapsedTime;
-    this.retryConnectionErrors = fields?.retryConnectionErrors ?? this.retryConnectionErrors;
     this.addAllHooksToHttpClient();
   }
 
@@ -1032,33 +978,11 @@ export class ChatMistralAI<
   ): Promise<
     MistralAIChatCompletionResponse | AsyncIterable<MistralAIChatCompletionEvent>
   > {
-      /**
-       * Get the Mistral request retry config
-       */
-      const _getRetryConfig = (): MistralAIRetryConfig => {
-        if (this.backoffStrategy === "backoff") {
-          return {
-            strategy: this.backoffStrategy,
-            backoff: {
-              initialInterval: this.backoffInitialInterval,
-              maxInterval: this.backoffMaxInterval,
-              exponent: this.backoffExponent,
-              maxElapsedTime: this.backoffMaxElapsedTime,
-            },
-            retryConnectionErrors: this.retryConnectionErrors
-          };
-        }
-        return { 
-          strategy: "none"
-        };
-      };
-
     const client = new MistralClient({
       apiKey: this.apiKey,
       serverURL: this.serverURL,
       // If httpClient exists, pass it into constructor
       ...( this.httpClient ? {httpClient: this.httpClient} : {}),
-      retryConfig: _getRetryConfig(),
     });
 
     return this.caller.call(async () => {
