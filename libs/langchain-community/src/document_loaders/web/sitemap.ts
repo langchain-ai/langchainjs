@@ -5,7 +5,7 @@ import { CheerioWebBaseLoader, CheerioWebBaseLoaderParams } from "./cheerio.js";
 /**
  * Interface representing the parameters for initializing a SitemapLoader.
  * @interface SitemapLoaderParams
- * @extends WebBaseLoaderParams
+ * @extends CheerioWebBaseLoaderParams
  */
 export interface SitemapLoaderParams extends CheerioWebBaseLoaderParams {
   /**
