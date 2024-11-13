@@ -1,5 +1,5 @@
-import { Document } from "../../document.js";
-import { BaseDocumentLoader } from "../base.js";
+import { Document } from "@langchain/core/documents";
+import { BaseDocumentLoader } from "@langchain/core/document_loaders/base";
 
 type JiraStatusCategory = {
   self: string

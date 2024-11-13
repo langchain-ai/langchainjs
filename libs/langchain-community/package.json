@@ -2746,6 +2746,15 @@
       "import": "./document_loaders/web/imsdb.js",
       "require": "./document_loaders/web/imsdb.cjs"
     },
+    "./document_loaders/web/jira": {
+      "types": {
+        "import": "./document_loaders/web/jira.d.ts",
+        "require": "./document_loaders/web/jira.d.cts",
+        "default": "./document_loaders/web/jira.d.ts"
+      },
+      "import": "./document_loaders/web/jira.js",
+      "require": "./document_loaders/web/jira.cjs"
+    },
     "./document_loaders/web/figma": {
       "types": {
         "import": "./document_loaders/web/figma.d.ts",
@@ -4005,6 +4014,10 @@
     "document_loaders/web/imsdb.js",
     "document_loaders/web/imsdb.d.ts",
     "document_loaders/web/imsdb.d.cts",
+    "document_loaders/web/jira.cjs",
+    "document_loaders/web/jira.js",
+    "document_loaders/web/jira.d.ts",
+    "document_loaders/web/jira.d.cts",
     "document_loaders/web/figma.cjs",
     "document_loaders/web/figma.js",
     "document_loaders/web/figma.d.ts",

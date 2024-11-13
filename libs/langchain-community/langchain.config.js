@@ -281,6 +281,7 @@ export const config = {
     "document_loaders/web/gitbook": "document_loaders/web/gitbook",
     "document_loaders/web/hn": "document_loaders/web/hn",
     "document_loaders/web/imsdb": "document_loaders/web/imsdb",
+    "document_loaders/web/jira": "document_loaders/web/jira",
     "document_loaders/web/figma": "document_loaders/web/figma",
     "document_loaders/web/firecrawl": "document_loaders/web/firecrawl",
     "document_loaders/web/github": "document_loaders/web/github",

@@ -1,4 +1,4 @@
-import { JiraProjectLoader } from "langchain/document_loaders/web/jira";
+import { JiraProjectLoader } from "@langchain/community/document_loaders/web/jira";
 
 const username = process.env.JIRA_USERNAME;
 const accessToken = process.env.JIRA_ACCESS_TOKEN;

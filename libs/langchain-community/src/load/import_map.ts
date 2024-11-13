@@ -73,6 +73,7 @@ export * as indexes__base from "../indexes/base.js";
 export * as indexes__memory from "../indexes/memory.js";
 export * as document_loaders__web__airtable from "../document_loaders/web/airtable.js";
 export * as document_loaders__web__html from "../document_loaders/web/html.js";
+export * as document_loaders__web__jira from "../document_loaders/web/jira.js";
 export * as document_loaders__web__searchapi from "../document_loaders/web/searchapi.js";
 export * as document_loaders__web__serpapi from "../document_loaders/web/serpapi.js";
 export * as document_loaders__web__sort_xyz_blockchain from "../document_loaders/web/sort_xyz_blockchain.js";
