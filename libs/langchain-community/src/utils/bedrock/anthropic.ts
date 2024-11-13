@@ -53,11 +53,11 @@ function _ensureMessageContents(
   // Merge runs of human/tool messages into single human messages with content blocks.
   const updatedMsgs = [];
   for (const message of messages) {
-    if (message.getType() === "tool") {
+    if (message._getType() === "tool") {
       if (typeof message.content === "string") {
         const previousMessage = updatedMsgs[updatedMsgs.length - 1];
         if (
-          previousMessage?.getType() === "human" &&
+          previousMessage?._getType() === "human" &&
           Array.isArray(previousMessage.content) &&
           "type" in previousMessage.content[0] &&
           previousMessage.content[0].type === "tool_result"
@@ -162,7 +162,7 @@ export function formatMessagesForAnthropic(messages: BaseMessage[]): {
 } {
   const mergedMessages = _ensureMessageContents(messages);
   let system: string | undefined;
-  if (mergedMessages.length > 0 && mergedMessages[0].getType() === "system") {
+  if (mergedMessages.length > 0 && mergedMessages[0]._getType() === "system") {
     if (typeof messages[0].content !== "string") {
       throw new Error("System message content must be a string.");
     }
@@ -172,18 +172,18 @@ export function formatMessagesForAnthropic(messages: BaseMessage[]): {
     system !== undefined ? mergedMessages.slice(1) : mergedMessages;
   const formattedMessages = conversationMessages.map((message) => {
     let role;
-    if (message.getType() === "human") {
+    if (message._getType() === "human") {
       role = "user" as const;
-    } else if (message.getType() === "ai") {
+    } else if (message._getType() === "ai") {
       role = "assistant" as const;
-    } else if (message.getType() === "tool") {
+    } else if (message._getType() === "tool") {
       role = "user" as const;
-    } else if (message.getType() === "system") {
+    } else if (message._getType() === "system") {
       throw new Error(
         "System messages are only permitted as the first passed message."
       );
     } else {
-      throw new Error(`Message type "${message.getType()}" is not supported.`);
+      throw new Error(`Message type "${message._getType()}" is not supported.`);
     }
     if (isAIMessage(message) && !!message.tool_calls?.length) {
       if (typeof message.content === "string") {
