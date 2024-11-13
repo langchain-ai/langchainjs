@@ -171,11 +171,10 @@ const API_ENDPOINTS = {
  * Class representing a document loader for loading pages from Confluence.
  */
 export class JiraProjectLoader extends BaseDocumentLoader {
+  private readonly accessToken: string;
   public readonly baseUrl: string;
   public readonly projectKey: string;
   public readonly username: string;
-  public readonly accessToken: string;
-  public readonly authorizationHeader: string;
   public readonly limit: number;
 
   constructor({
@@ -190,7 +189,6 @@ export class JiraProjectLoader extends BaseDocumentLoader {
     this.projectKey = projectKey;
     this.username = username;
     this.accessToken = accessToken;
-    this.authorizationHeader = this.buildAuthorizationHeader();
     this.limit = limit;
   }
 
@@ -216,6 +214,7 @@ export class JiraProjectLoader extends BaseDocumentLoader {
   }
 
   protected async *fetchIssues(): AsyncIterable<JiraIssue[]> {
+    const authorizationHeader = this.buildAuthorizationHeader();
     const url = `${this.baseUrl}${API_ENDPOINTS.SEARCH}`;
     let startAt = 0;
 
@@ -225,7 +224,7 @@ export class JiraProjectLoader extends BaseDocumentLoader {
         const options = {
           method: 'GET',
           headers: {
-            Authorization: this.authorizationHeader,
+            Authorization: authorizationHeader,
             Accept: 'application/json'
           }
         };
