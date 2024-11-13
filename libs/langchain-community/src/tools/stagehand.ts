@@ -3,65 +3,62 @@ import { Tool, type ToolParams, ToolInterface } from "@langchain/core/tools";
 
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { Stagehand } from "@browserbasehq/stagehand";
-import { Toolkit } from "../base.js";
+export { BaseToolkit as Toolkit } from "@langchain/core/tools";
 import { z } from "zod";
 
-// TODO - add documentation link - SEE XX DOCUMENTATION
+//  Documentation is here:
+//  https://js.langchain.com/docs/integrations/tools/stagehand
 
 export class StagehandToolkit extends Toolkit {
   tools: ToolInterface[];
+  stagehand?: Stagehand;
 
-  /**
-   * Creates a StagehandToolkit instance with all Stagehand tools initialized with a shared Stagehand instance.
-   * It populates the tools property of the StagehandToolkit instance.
-   * @returns A Promise that resolves to a StagehandToolkit instance.
-   */
-  static async createInstance(): Promise<StagehandToolkit> {
-    const toolkit = new StagehandToolkit();
-    toolkit.tools = [];
+  constructor(stagehand?: Stagehand) {
+    super();
+    this.stagehand = stagehand;
+    this.tools = this.initializeTools();
+  }
 
-    // Initialize single Stagehand instance to be shared across tools
-    const stagehand = new Stagehand({
-      env: "LOCAL", 
-      enableCaching: true,
-    });
+  private initializeTools(): ToolInterface[] {
+    return [
+      new StagehandActTool(this.stagehand),
+      new StagehandExtractTool(this.stagehand),
+      new StagehandObserveTool(this.stagehand)
+    ];
+  }
 
-    // Create tools with shared Stagehand instance
-    const actTool = new StagehandActTool(stagehand);
-    const extractTool = new StagehandExtractTool(stagehand);
-    const observeTool = new StagehandObserveTool(stagehand);
-
-    toolkit.tools.push(actTool, extractTool, observeTool);
-    
-    return toolkit;
+  static async fromStagehand(stagehand: Stagehand): Promise<StagehandToolkit> {
+    return new StagehandToolkit(stagehand);
   }
 }
 
-
-// ACT TOOL
 export class StagehandActTool extends Tool {
   name = "stagehand_act";
-
-  description =
-    "Use this tool to perform an action on the current web page using Stagehand. The input should be a string describing the action to perform.";
-
-  private stagehand: Stagehand;
+  description = "Use this tool to perform an action on the current web page using Stagehand. The input should be a string describing the action to perform.";
+  private stagehand?: Stagehand;
+  private localStagehand?: Stagehand;
 
   constructor(stagehandInstance?: Stagehand) {
     super();
-    if (stagehandInstance) {
-      this.stagehand = stagehandInstance;
-    } else {
-      this.stagehand = new Stagehand({
+    this.stagehand = stagehandInstance;
+  }
+
+  private async getStagehand(): Promise<Stagehand> {
+    if (this.stagehand) return this.stagehand;
+    
+    if (!this.localStagehand) {
+      this.localStagehand = new Stagehand({
         env: "LOCAL",
         enableCaching: true,
       });
+      await this.localStagehand.init();
     }
+    return this.localStagehand;
   }
 
   async _call(input: string): Promise<string> {
-    await this.stagehand.init();
-    const result = await this.stagehand.act({ action: input });
+    const stagehand = await this.getStagehand();
+    const result = await stagehand.act({ action: input });
     if (result.success) {
       return `Action performed successfully: ${result.message}`;
     } else {
@@ -70,30 +67,32 @@ export class StagehandActTool extends Tool {
   }
 }
 
-// extract tool
-
 export class StagehandExtractTool extends Tool {
   name = "stagehand_extract";
-
-  description =
-    "Use this tool to extract structured information from the current web page using Stagehand. The input should be a JSON string with 'instruction' and 'schema' fields.";
-
-  private stagehand: Stagehand;
+  description = "Use this tool to extract structured information from the current web page using Stagehand. The input should be a JSON string with 'instruction' and 'schema' fields.";
+  private stagehand?: Stagehand;
+  private localStagehand?: Stagehand;
 
   constructor(stagehandInstance?: Stagehand) {
     super();
-    if (stagehandInstance) {
-      this.stagehand = stagehandInstance;
-    } else {
-      this.stagehand = new Stagehand({
+    this.stagehand = stagehandInstance;
+  }
+
+  private async getStagehand(): Promise<Stagehand> {
+    if (this.stagehand) return this.stagehand;
+    
+    if (!this.localStagehand) {
+      this.localStagehand = new Stagehand({
         env: "LOCAL",
         enableCaching: true,
       });
+      await this.localStagehand.init();
     }
+    return this.localStagehand;
   }
 
   async _call(input: string): Promise<string> {
-    await this.stagehand.init();
+    const stagehand = await this.getStagehand();
 
     let parsedInput;
     try {
@@ -108,17 +107,10 @@ export class StagehandExtractTool extends Tool {
       return `Input must contain 'instruction' and 'schema' fields.`;
     }
 
-    let zodSchema;
     try {
-      zodSchema = eval(schema); // Be cautious with eval
-    } catch (error) {
-      return `Invalid schema.`;
-    }
-
-    try {
-      const result = await this.stagehand.extract({
+      const result = await stagehand.extract({
         instruction,
-        schema: zodSchema,
+        schema: z.object(schema)
       });
       return JSON.stringify(result);
     } catch (error) {
@@ -126,36 +118,37 @@ export class StagehandExtractTool extends Tool {
     }
   }
 }
-//Note: Be cautious when using eval as it can execute arbitrary code. It's important to ensure that the input schema is safe and sanitized. Alternatively, predefine schemas or limit the inputs.
 
-// OBSERVE TOOL
 export class StagehandObserveTool extends Tool {
   name = "stagehand_observe";
-
-  description =
-    "Use this tool to observe the current web page and retrieve possible actions using Stagehand. The input can be an optional instruction string.";
-
-  private stagehand: Stagehand;
+  description = "Use this tool to observe the current web page and retrieve possible actions using Stagehand. The input can be an optional instruction string.";
+  private stagehand?: Stagehand;
+  private localStagehand?: Stagehand;
 
   constructor(stagehandInstance?: Stagehand) {
     super();
-    if (stagehandInstance) {
-      this.stagehand = stagehandInstance;
-    } else {
-      this.stagehand = new Stagehand({
+    this.stagehand = stagehandInstance;
+  }
+
+  private async getStagehand(): Promise<Stagehand> {
+    if (this.stagehand) return this.stagehand;
+    
+    if (!this.localStagehand) {
+      this.localStagehand = new Stagehand({
         env: "LOCAL",
         enableCaching: true,
       });
+      await this.localStagehand.init();
     }
+    return this.localStagehand;
   }
 
   async _call(input: string): Promise<string> {
-    await this.stagehand.init();
-
+    const stagehand = await this.getStagehand();
     const instruction = input || undefined;
 
     try {
-      const result = await this.stagehand.observe({ instruction });
+      const result = await stagehand.observe({ instruction });
       return JSON.stringify(result);
     } catch (error) {
       return `Failed to observe page: ${error.message}`;
