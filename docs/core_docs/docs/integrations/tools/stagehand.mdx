@@ -5,10 +5,11 @@ hide_table_of_contents: true
 
 import CodeBlock from "@theme/CodeBlock";
 
-# Stagehand Tool
+# Stagehand Toolkit
 
-The Stagehand Tool provides your agent with the following capabilities:
+The Stagehand Toolkit equips your AI agent with the following capabilities:
 
+- **navigate()**: Navigate to a specific URL
 - **act()**: Perform browser automation actions like clicking, typing, and navigation
 - **extract()**: Extract structured data from web pages using Zod schemas
 - **observe()**: Get a list of possible actions and elements on the current page
@@ -39,7 +40,7 @@ For Anthropic:
 export ANTHROPIC_API_KEY="your-anthropic-api-key"
 ```
 
-## Usage, Standalone
+## Usage, Standalone, Local
 
 ```typescript
 import { Stagehand } from "@browserbasehq/stagehand";
@@ -71,6 +72,23 @@ async function main() {
 
 main();
 ```
+
+## Usage, Standalone, on Browserbase - remote headless browser
+
+If you want to run the browser remotely, you can use the Browserbase platform.
+
+You need to set the `BROWSERBASE_API_KEY` environment variable to your Browserbase API key.
+
+```bash
+export BROWSERBASE_API_KEY="your-browserbase-api-key"
+```
+
+You also need to set `BROWSERBASE_PROJECT_ID` to your Browserbase project ID.
+
+```bash
+export BROWSERBASE_PROJECT_ID="your-browserbase-project-id"
+```
+
 
 ## Usage in an Agent
 
