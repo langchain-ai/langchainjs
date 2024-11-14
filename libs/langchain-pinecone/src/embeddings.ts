@@ -1,5 +1,4 @@
 import { Embeddings, type EmbeddingsParams } from "@langchain/core/embeddings";
-// import { EmbeddingsList } from  "@pinecone-database/pinecone";
 import {
   EmbeddingsList,
   Pinecone,
@@ -22,40 +21,38 @@ export class PineconeEmbeddings
 
   params: Record<string, string>;
 
-  // fields: Partial<PineconeEmbeddingsParams> & Partial<PineconeConfiguration>;
-
   constructor(
     fields?: Partial<PineconeEmbeddingsParams> & Partial<PineconeConfiguration>
   ) {
-    const defaultFields = {maxRetries: 3, ...fields}
+    const defaultFields = { maxRetries: 3, ...fields };
     super(defaultFields);
 
-      if (defaultFields.apiKey) {
-        const config = {
-          apiKey: defaultFields.apiKey,
-          controllerHostUrl: defaultFields.controllerHostUrl,
-          fetchApi: defaultFields.fetchApi,
-          additionalHeaders: defaultFields.additionalHeaders,
-          sourceTag: defaultFields.sourceTag,
-        } as PineconeConfiguration;
-        this.client = getPineconeClient(config);
-      } else {
-        this.client = getPineconeClient();
-      }
+    if (defaultFields.apiKey) {
+      const config = {
+        apiKey: defaultFields.apiKey,
+        controllerHostUrl: defaultFields.controllerHostUrl,
+        fetchApi: defaultFields.fetchApi,
+        additionalHeaders: defaultFields.additionalHeaders,
+        sourceTag: defaultFields.sourceTag,
+      } as PineconeConfiguration;
+      this.client = getPineconeClient(config);
+    } else {
+      this.client = getPineconeClient();
+    }
 
-      if (!defaultFields.model) {
-        this.model = "multilingual-e5-large";
-      } else {
-        this.model = defaultFields.model;
-      }
+    if (!defaultFields.model) {
+      this.model = "multilingual-e5-large";
+    } else {
+      this.model = defaultFields.model;
+    }
 
-      const defaultParams = { inputType: "passage" };
+    const defaultParams = { inputType: "passage" };
 
-      if (defaultFields.params) {
-        this.params = { ...defaultFields.params, ...defaultParams };
-      } else {
-        this.params = defaultParams;
-      }
+    if (defaultFields.params) {
+      this.params = { ...defaultFields.params, ...defaultParams };
+    } else {
+      this.params = defaultParams;
+    }
   }
 
   // @returns A promise that resolves to an array of vectors for each document.
@@ -89,7 +86,7 @@ export class PineconeEmbeddings
 
   async embedQuery(text: string): Promise<number[]> {
     if (!text) {
-      throw new Error("Missing required query parameter: `text`");
+      throw new Error("No query passed for which to generate embeddings");
     }
     let embeddings: EmbeddingsList;
     if (this.params) {
