@@ -4,6 +4,7 @@ hide_table_of_contents: true
 ---
 
 import CodeBlock from "@theme/CodeBlock";
+import Example from "@examples/agents/stagehand_ai_web_browser.ts";
 
 # Stagehand Toolkit
 
@@ -23,7 +24,7 @@ npm install @browserbasehq/stagehand zod
 ```
 
 2. Create a Stagehand Instance
-If you plan to run the browser locally, you'll also need to install Playwright's browser dependencies.
+   If you plan to run the browser locally, you'll also need to install Playwright's browser dependencies.
 
 ```bash
 npm exec playwright install
@@ -32,10 +33,13 @@ npm exec playwright install
 3. Set up your model provider credentials:
 
 For OpenAI:
+
 ```bash
 export OPENAI_API_KEY="your-openai-api-key"
 ```
+
 For Anthropic:
+
 ```bash
 export ANTHROPIC_API_KEY="your-anthropic-api-key"
 ```
@@ -89,62 +93,17 @@ You also need to set `BROWSERBASE_PROJECT_ID` to your Browserbase project ID.
 export BROWSERBASE_PROJECT_ID="your-browserbase-project-id"
 ```
 
+Then initialize the Stagehand instance with the `BROWSERBASE` environment.
+
+```typescript
+const stagehand = new Stagehand({
+  env: "BROWSERBASE",
+});
+```
 
 ## Usage in an Agent
 
-```typescript
-import { Stagehand } from "@browserbasehq/stagehand";
-import { z } from "zod";
-import { ChatOpenAI } from "@langchain/openai";
-import { initializeAgentExecutorWithOptions } from "langchain/agents";
-import { Tool } from "langchain/tools";
-
-const run = async () => {
-
-// Initialize Stagehand
-const stagehand = new Stagehand();
-await stagehand.init();
-
-// Create Stagehand tools
-
-const stagehandToolkit = new StagehandToolkit(stagehand)
-
-// Get list of tools
-const tools = stagehandToolkit.getTools()
-
-// Initialize LangChain components
-const model = new ChatOpenAI({ temperature: 0 });
-
-// Create the agent
-const executor = await initializeAgentExecutorWithOptions(tools, model, {
-agentType: "zero-shot-react-description",
-verbose: true,
-});
-
-// Run the agent
-const result = await executor.invoke({
-input: "Go to github.com/browserbase/stagehand and find the top contributor",
-});
-console.log(result.output);
-};
-```
-
-
-## Key Implementation Details
-
-The Stagehand class implementation can be found here:
-
-```typescript:lib/index.ts
-startLine: 173
-endLine: 197
-```
-
-The act() method uses this system prompt:
-
-```typescript:lib/inference.ts
-startLine: 87
-endLine: 161
-```
+<CodeBlock language="typescript">{Example}</CodeBlock>
 
 ## Related
 

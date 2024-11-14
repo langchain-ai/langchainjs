@@ -1,4 +1,9 @@
-import { Tool, type ToolParams, BaseToolkit as Toolkit, ToolInterface } from "@langchain/core/tools";
+import {
+  Tool,
+  type ToolParams,
+  BaseToolkit as Toolkit,
+  ToolInterface,
+} from "@langchain/core/tools";
 import { Stagehand } from "@browserbasehq/stagehand";
 import { z } from "zod";
 
@@ -29,10 +34,8 @@ export class StagehandToolkit extends Toolkit {
   }
 }
 
-export class StagehandNavigateTool extends Tool {
-  name = "stagehand_navigate";
-  description = "Use this tool to navigate to a specific URL using Stagehand. The input should be a valid URL as a string.";
-  private stagehand?: Stagehand;
+class StagehandToolBase extends Tool {
+  protected stagehand?: Stagehand;
   private localStagehand?: Stagehand;
 
   constructor(stagehandInstance?: Stagehand) {
@@ -40,7 +43,7 @@ export class StagehandNavigateTool extends Tool {
     this.stagehand = stagehandInstance;
   }
 
-  private async getStagehand(): Promise<Stagehand> {
+  protected async getStagehand(): Promise<Stagehand> {
     if (this.stagehand) return this.stagehand;
 
     if (!this.localStagehand) {
@@ -52,41 +55,28 @@ export class StagehandNavigateTool extends Tool {
     }
     return this.localStagehand;
   }
+}
+
+export class StagehandNavigateTool extends StagehandToolBase {
+  name = "stagehand_navigate";
+  description =
+    "Use this tool to navigate to a specific URL using Stagehand. The input should be a valid URL as a string.";
 
   async _call(input: string): Promise<string> {
     const stagehand = await this.getStagehand();
     try {
       await stagehand.page.goto(input);
       return `Successfully navigated to ${input}.`;
-    } catch (error) {
+    } catch (error: any) {
       return `Failed to navigate to ${input}: ${error.message}`;
     }
   }
 }
 
-export class StagehandActTool extends Tool {
+export class StagehandActTool extends StagehandToolBase {
   name = "stagehand_act";
-  description = "Use this tool to perform an action on the current web page using Stagehand. The input should be a string describing the action to perform.";
-  private stagehand?: Stagehand;
-  private localStagehand?: Stagehand;
-
-  constructor(stagehandInstance?: Stagehand) {
-    super();
-    this.stagehand = stagehandInstance;
-  }
-
-  private async getStagehand(): Promise<Stagehand> {
-    if (this.stagehand) return this.stagehand;
-    
-    if (!this.localStagehand) {
-      this.localStagehand = new Stagehand({
-        env: "LOCAL",
-        enableCaching: true,
-      });
-      await this.localStagehand.init();
-    }
-    return this.localStagehand;
-  }
+  description =
+    "Use this tool to perform an action on the current web page using Stagehand. The input should be a string describing the action to perform.";
 
   async _call(input: string): Promise<string> {
     const stagehand = await this.getStagehand();
@@ -98,39 +88,22 @@ export class StagehandActTool extends Tool {
     }
   }
 }
-
-export class StagehandExtractTool extends Tool {
+export class StagehandExtractTool extends StagehandToolBase {
   name = "stagehand_extract";
-  description = "Use this tool to extract structured information from the current web page using Stagehand. The input should be a JSON string with 'instruction' and 'schema' fields.";
-  private stagehand?: Stagehand;
-  private localStagehand?: Stagehand;
-
-  constructor(stagehandInstance?: Stagehand) {
-    super();
-    this.stagehand = stagehandInstance;
-  }
-
-  private async getStagehand(): Promise<Stagehand> {
-    if (this.stagehand) return this.stagehand;
-    
-    if (!this.localStagehand) {
-      this.localStagehand = new Stagehand({
-        env: "LOCAL",
-        enableCaching: true,
-      });
-      await this.localStagehand.init();
-    }
-    return this.localStagehand;
-  }
+  description =
+    "Use this tool to extract structured information from the current web page using Stagehand. The input should be an object with 'instruction' and 'schema' fields.";
 
   async _call(input: string): Promise<string> {
     const stagehand = await this.getStagehand();
-
     let parsedInput;
-    try {
-      parsedInput = JSON.parse(input);
-    } catch (error) {
-      return `Invalid input. Please provide a JSON string with 'instruction' and 'schema' fields.`;
+    if (typeof input === "string") {
+      try {
+        parsedInput = JSON.parse(input);
+      } catch (error) {
+        return `Invalid input. Please provide a JSON string with 'instruction' and 'schema' fields.`;
+      }
+    } else {
+      parsedInput = input;
     }
 
     const { instruction, schema } = parsedInput;
@@ -139,41 +112,87 @@ export class StagehandExtractTool extends Tool {
       return `Input must contain 'instruction' and 'schema' fields.`;
     }
 
+    // Reconstruct the Zod schema
+    let zodSchema;
+    try {
+      zodSchema = this.convertToZodSchema(schema);
+    } catch (error: any) {
+      return `Failed to reconstruct schema: ${error.message}`;
+    }
+
     try {
       const result = await stagehand.extract({
         instruction,
-        schema: z.object(schema)
+        schema: zodSchema,
       });
       return JSON.stringify(result);
-    } catch (error) {
+    } catch (error: any) {
       return `Failed to extract information: ${error.message}`;
+    }
+  }
+
+  private convertToZodSchema(schema: any): z.ZodType<any> {
+    if (Array.isArray(schema.type)) {
+      // Handle cases like type: ["string", "null"]
+      if (schema.type.includes("null")) {
+        const typesWithoutNull = schema.type.filter((t) => t !== "null");
+        if (typesWithoutNull.length === 1) {
+          return this.convertToZodSchema({
+            ...schema,
+            type: typesWithoutNull[0],
+          }).nullable();
+        } else {
+          const zodTypes = typesWithoutNull.map((t) =>
+            this.convertToZodSchema({ ...schema, type: t })
+          );
+          return z.union(zodTypes).nullable();
+        }
+      } else {
+        // Handle union types
+        const zodTypes = schema.type.map((t) =>
+          this.convertToZodSchema({ ...schema, type: t })
+        );
+        return z.union(zodTypes);
+      }
+    }
+
+    switch (schema.type) {
+      case "string":
+        return z.string();
+      case "number":
+        return z.number();
+      case "boolean":
+        return z.boolean();
+      case "object": {
+        const properties = schema.properties || {};
+        const required = schema.required || [];
+        const zodObjShape = Object.fromEntries(
+          Object.entries(properties).map(([key, propertySchema]) => {
+            const isRequired = required.includes(key);
+            const zodPropType = this.convertToZodSchema(propertySchema);
+            return [key, isRequired ? zodPropType : zodPropType.optional()];
+          })
+        );
+        return z.object(zodObjShape);
+      }
+      case "array": {
+        const itemsSchema = schema.items;
+        if (!itemsSchema) {
+          throw new Error(`'items' property is missing for array type.`);
+        }
+        const zodItemType = this.convertToZodSchema(itemsSchema);
+        return z.array(zodItemType);
+      }
+      default:
+        throw new Error(`Unsupported schema type: ${schema.type}`);
     }
   }
 }
 
-export class StagehandObserveTool extends Tool {
+export class StagehandObserveTool extends StagehandToolBase {
   name = "stagehand_observe";
-  description = "Use this tool to observe the current web page and retrieve possible actions using Stagehand. The input can be an optional instruction string.";
-  private stagehand?: Stagehand;
-  private localStagehand?: Stagehand;
-
-  constructor(stagehandInstance?: Stagehand) {
-    super();
-    this.stagehand = stagehandInstance;
-  }
-
-  private async getStagehand(): Promise<Stagehand> {
-    if (this.stagehand) return this.stagehand;
-    
-    if (!this.localStagehand) {
-      this.localStagehand = new Stagehand({
-        env: "LOCAL",
-        enableCaching: true,
-      });
-      await this.localStagehand.init();
-    }
-    return this.localStagehand;
-  }
+  description =
+    "Use this tool to observe the current web page and retrieve possible actions using Stagehand. The input can be an optional instruction string.";
 
   async _call(input: string): Promise<string> {
     const stagehand = await this.getStagehand();
@@ -182,7 +201,7 @@ export class StagehandObserveTool extends Tool {
     try {
       const result = await stagehand.observe({ instruction });
       return JSON.stringify(result);
-    } catch (error) {
+    } catch (error: any) {
       return `Failed to observe page: ${error.message}`;
     }
   }
