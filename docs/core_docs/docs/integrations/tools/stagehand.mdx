@@ -82,48 +82,20 @@ import { initializeAgentExecutorWithOptions } from "langchain/agents";
 import { Tool } from "langchain/tools";
 
 const run = async () => {
+
 // Initialize Stagehand
 const stagehand = new Stagehand();
 await stagehand.init();
+
 // Create Stagehand tools
-class StagehandActTool extends Tool {
-name = "act";
-description = "Performs an action on the web page";
-async call(input: string) {
-const result = await stagehand.act({ action: input });
-return Action completed: ${result.message};
-}
-}
-class StagehandExtractTool extends Tool {
-name = "extract";
-description = "Extracts information from the web page";
-async call(input: string) {
-const schema = z.object({ data: z.string() });
-const result = await stagehand.extract({
-instruction: input,
-schema,
-});
-return JSON.stringify(result);
-}
 
-}
+const stagehandToolkit = new StagehandToolkit(stagehand)
 
-class StagehandObserveTool extends Tool {
-name = "observe";
-description = "Lists possible actions on the current page";
-async call() {
-const actions = await stagehand.observe();
-return JSON.stringify(actions);
-}
-}
+// Get list of tools
+const tools = stagehandToolkit.getTools()
 
 // Initialize LangChain components
 const model = new ChatOpenAI({ temperature: 0 });
-const tools = [
-new StagehandActTool(),
-new StagehandExtractTool(),
-new StagehandObserveTool(),
-];
 
 // Create the agent
 const executor = await initializeAgentExecutorWithOptions(tools, model, {
