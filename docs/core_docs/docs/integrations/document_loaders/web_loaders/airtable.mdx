@@ -1,0 +1,25 @@
+---
+hide_table_of_contents: true
+---
+
+import loadExample from "@examples/document_loaders/airtable_load";
+import CodeBlock from "@theme/CodeBlock";
+
+# AirtableLoader
+
+The `AirtableLoader` class provides functionality to load documents from Airtable tables. It supports two main methods:
+
+1. `load()`: Retrieves all records at once, ideal for small to moderate datasets.
+2. `loadLazy()`: Fetches records one by one, which is more memory-efficient for large datasets.
+
+## Prerequisites
+
+Ensure that your Airtable API token is available as an environment variable:
+
+```typescript
+process.env.AIRTABLE_API_TOKEN = "YOUR_AIRTABLE_API_TOKEN";
+```
+
+## Usage
+
+<CodeBlock language="typescript">{loadExample}</CodeBlock>

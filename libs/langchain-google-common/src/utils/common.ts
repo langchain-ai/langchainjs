@@ -9,12 +9,13 @@ import type {
   GoogleAIModelParams,
   GoogleAIModelRequestParams,
   GoogleAIToolType,
-  GoogleLLMModelFamily,
+  VertexModelFamily,
 } from "../types.js";
 import {
   jsonSchemaToGeminiParameters,
   zodToGeminiParameters,
 } from "./zod_to_gemini_parameters.js";
+import { isModelClaude, validateClaudeParams } from "./anthropic.js";
 
 export function copyAIModelParams(
   params: GoogleAIModelParams | undefined,
@@ -143,13 +144,30 @@ export function copyAIModelParamsInto(
 
 export function modelToFamily(
   modelName: string | undefined
-): GoogleLLMModelFamily {
+): VertexModelFamily {
   if (!modelName) {
     return null;
   } else if (isModelGemini(modelName)) {
     return "gemini";
+  } else if (isModelClaude(modelName)) {
+    return "claude";
   } else {
     return null;
+  }
+}
+
+export function modelToPublisher(modelName: string | undefined): string {
+  const family = modelToFamily(modelName);
+  switch (family) {
+    case "gemini":
+    case "palm":
+      return "google";
+
+    case "claude":
+      return "anthropic";
+
+    default:
+      return "unknown";
   }
 }
 
@@ -161,6 +179,10 @@ export function validateModelParams(
   switch (modelToFamily(model)) {
     case "gemini":
       return validateGeminiParams(testParams);
+
+    case "claude":
+      return validateClaudeParams(testParams);
+
     default:
       throw new Error(
         `Unable to verify model params: ${JSON.stringify(params)}`

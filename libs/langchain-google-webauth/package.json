@@ -1,6 +1,6 @@
 {
   "name": "@langchain/google-webauth",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "Web-based authentication support for Google services",
   "type": "module",
   "engines": {
@@ -32,7 +32,7 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@langchain/google-common": "~0.1.0",
+    "@langchain/google-common": "~0.1.2",
     "web-auth-library": "^1.0.3"
   },
   "peerDependencies": {

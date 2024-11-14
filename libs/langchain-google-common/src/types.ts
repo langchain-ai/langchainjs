@@ -3,8 +3,20 @@ import type {
   BaseChatModelCallOptions,
   BindToolsInput,
 } from "@langchain/core/language_models/chat_models";
+import {
+  BaseMessage,
+  BaseMessageChunk,
+  MessageContent,
+} from "@langchain/core/messages";
+import { ChatGenerationChunk, ChatResult } from "@langchain/core/outputs";
 import type { JsonStream } from "./utils/stream.js";
 import { MediaManager } from "./experimental/utils/media_core.js";
+import {
+  AnthropicResponseData,
+  AnthropicAPIConfig,
+} from "./types-anthropic.js";
+
+export * from "./types-anthropic.js";
 
 /**
  * Parameters needed to setup the client connection.
@@ -45,10 +57,68 @@ export interface GoogleConnectionParams<AuthOptions>
   platformType?: GooglePlatformType;
 }
 
+export const GoogleAISafetyCategory = {
+  Harassment: "HARM_CATEGORY_HARASSMENT",
+  HARASSMENT: "HARM_CATEGORY_HARASSMENT",
+  HARM_CATEGORY_HARASSMENT: "HARM_CATEGORY_HARASSMENT",
+
+  HateSpeech: "HARM_CATEGORY_HATE_SPEECH",
+  HATE_SPEECH: "HARM_CATEGORY_HATE_SPEECH",
+  HARM_CATEGORY_HATE_SPEECH: "HARM_CATEGORY_HATE_SPEECH",
+
+  SexuallyExplicit: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+  SEXUALLY_EXPLICIT: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+  HARM_CATEGORY_SEXUALLY_EXPLICIT: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+
+  Dangerous: "HARM_CATEGORY_DANGEROUS",
+  DANGEROUS: "HARM_CATEGORY_DANGEROUS",
+  HARM_CATEGORY_DANGEROUS: "HARM_CATEGORY_DANGEROUS",
+
+  CivicIntegrity: "HARM_CATEGORY_CIVIC_INTEGRITY",
+  CIVIC_INTEGRITY: "HARM_CATEGORY_CIVIC_INTEGRITY",
+  HARM_CATEGORY_CIVIC_INTEGRITY: "HARM_CATEGORY_CIVIC_INTEGRITY",
+} as const;
+
+export type GoogleAISafetyCategory =
+  (typeof GoogleAISafetyCategory)[keyof typeof GoogleAISafetyCategory];
+
+export const GoogleAISafetyThreshold = {
+  None: "BLOCK_NONE",
+  NONE: "BLOCK_NONE",
+  BLOCK_NONE: "BLOCK_NONE",
+
+  Few: "BLOCK_ONLY_HIGH",
+  FEW: "BLOCK_ONLY_HIGH",
+  BLOCK_ONLY_HIGH: "BLOCK_ONLY_HIGH",
+
+  Some: "BLOCK_MEDIUM_AND_ABOVE",
+  SOME: "BLOCK_MEDIUM_AND_ABOVE",
+  BLOCK_MEDIUM_AND_ABOVE: "BLOCK_MEDIUM_AND_ABOVE",
+
+  Most: "BLOCK_LOW_AND_ABOVE",
+  MOST: "BLOCK_LOW_AND_ABOVE",
+  BLOCK_LOW_AND_ABOVE: "BLOCK_LOW_AND_ABOVE",
+
+  Off: "OFF",
+  OFF: "OFF",
+  BLOCK_OFF: "OFF",
+} as const;
+
+export type GoogleAISafetyThreshold =
+  (typeof GoogleAISafetyThreshold)[keyof typeof GoogleAISafetyThreshold];
+
+export const GoogleAISafetyMethod = {
+  Severity: "SEVERITY",
+  Probability: "PROBABILITY",
+} as const;
+
+export type GoogleAISafetyMethod =
+  (typeof GoogleAISafetyMethod)[keyof typeof GoogleAISafetyMethod];
+
 export interface GoogleAISafetySetting {
-  category: string;
-  threshold: string;
-  method?: string;
+  category: GoogleAISafetyCategory | string;
+  threshold: GoogleAISafetyThreshold | string;
+  method?: GoogleAISafetyMethod | string; // Just for Vertex AI?
 }
 
 export type GoogleAIResponseMimeType = "text/plain" | "application/json";
@@ -149,7 +219,7 @@ export interface GoogleAIBaseLLMInput<AuthOptions>
     GoogleConnectionParams<AuthOptions>,
     GoogleAIModelParams,
     GoogleAISafetyParams,
-    GeminiAPIConfig {}
+    GoogleAIAPIParams {}
 
 export interface GoogleAIBaseLanguageModelCallOptions
   extends BaseChatModelCallOptions,
@@ -314,13 +384,15 @@ export interface GenerateContentResponseData {
 
 export type GoogleLLMModelFamily = null | "palm" | "gemini";
 
+export type VertexModelFamily = GoogleLLMModelFamily | "claude";
+
 export type GoogleLLMResponseData =
   | JsonStream
   | GenerateContentResponseData
   | GenerateContentResponseData[];
 
 export interface GoogleLLMResponse extends GoogleResponse {
-  data: GoogleLLMResponseData;
+  data: GoogleLLMResponseData | AnthropicResponseData;
 }
 
 export interface GoogleAISafetyHandler {
@@ -348,6 +420,42 @@ export interface GeminiJsonSchemaDirty extends GeminiJsonSchema {
   additionalProperties?: boolean;
 }
 
+export type GoogleAIAPI = {
+  messageContentToParts?: (content: MessageContent) => Promise<GeminiPart[]>;
+
+  baseMessageToContent?: (
+    message: BaseMessage,
+    prevMessage: BaseMessage | undefined,
+    useSystemInstruction: boolean
+  ) => Promise<GeminiContent[]>;
+
+  responseToString: (response: GoogleLLMResponse) => string;
+
+  responseToChatGeneration: (
+    response: GoogleLLMResponse
+  ) => ChatGenerationChunk | null;
+
+  chunkToString: (chunk: BaseMessageChunk) => string;
+
+  responseToBaseMessage: (response: GoogleLLMResponse) => BaseMessage;
+
+  responseToChatResult: (response: GoogleLLMResponse) => ChatResult;
+
+  formatData: (
+    input: unknown,
+    parameters: GoogleAIModelRequestParams
+  ) => Promise<unknown>;
+};
+
 export interface GeminiAPIConfig {
+  safetyHandler?: GoogleAISafetyHandler;
   mediaManager?: MediaManager;
+  useSystemInstruction?: boolean;
+}
+
+export type GoogleAIAPIConfig = GeminiAPIConfig | AnthropicAPIConfig;
+
+export interface GoogleAIAPIParams {
+  apiName?: string;
+  apiConfig?: GoogleAIAPIConfig;
 }

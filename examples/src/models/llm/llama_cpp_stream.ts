@@ -2,7 +2,10 @@ import { LlamaCpp } from "@langchain/community/llms/llama_cpp";
 
 const llamaPath = "/Replace/with/path/to/your/model/gguf-llama2-q4_0.bin";
 
-const model = new LlamaCpp({ modelPath: llamaPath, temperature: 0.7 });
+const model = await LlamaCpp.initialize({
+  modelPath: llamaPath,
+  temperature: 0.7,
+});
 
 const prompt = "Tell me a short story about a happy Llama.";
 

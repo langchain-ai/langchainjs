@@ -3,7 +3,7 @@ import { HumanMessage } from "@langchain/core/messages";
 
 const llamaPath = "/Replace/with/path/to/your/model/gguf-llama2-q4_0.bin";
 
-const model = new ChatLlamaCpp({ modelPath: llamaPath });
+const model = await ChatLlamaCpp.initialize({ modelPath: llamaPath });
 
 const response = await model.invoke([
   new HumanMessage({ content: "My name is John." }),
