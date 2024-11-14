@@ -134,7 +134,9 @@ export class StagehandExtractTool extends StagehandToolBase {
     if (Array.isArray(schema.type)) {
       // Handle cases like type: ["string", "null"]
       if (schema.type.includes("null")) {
-        const typesWithoutNull = schema.type.filter((t: string) => t !== "null");
+        const typesWithoutNull = schema.type.filter(
+          (t: string) => t !== "null"
+        );
         if (typesWithoutNull.length === 1) {
           return this.convertToZodSchema({
             ...schema,
