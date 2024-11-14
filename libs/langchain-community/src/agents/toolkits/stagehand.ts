@@ -1,6 +1,5 @@
 import {
   Tool,
-  type ToolParams,
   BaseToolkit as Toolkit,
   ToolInterface,
 } from "@langchain/core/tools";
@@ -34,7 +33,7 @@ export class StagehandToolkit extends Toolkit {
   }
 }
 
-class StagehandToolBase extends Tool {
+abstract class StagehandToolBase extends Tool {
   protected stagehand?: Stagehand;
   private localStagehand?: Stagehand;
 
@@ -123,7 +122,7 @@ export class StagehandExtractTool extends StagehandToolBase {
     try {
       const result = await stagehand.extract({
         instruction,
-        schema: zodSchema,
+        schema: zodSchema as z.ZodObject<any>,
       });
       return JSON.stringify(result);
     } catch (error: any) {
@@ -135,21 +134,21 @@ export class StagehandExtractTool extends StagehandToolBase {
     if (Array.isArray(schema.type)) {
       // Handle cases like type: ["string", "null"]
       if (schema.type.includes("null")) {
-        const typesWithoutNull = schema.type.filter((t) => t !== "null");
+        const typesWithoutNull = schema.type.filter((t: string) => t !== "null");
         if (typesWithoutNull.length === 1) {
           return this.convertToZodSchema({
             ...schema,
             type: typesWithoutNull[0],
           }).nullable();
         } else {
-          const zodTypes = typesWithoutNull.map((t) =>
+          const zodTypes = typesWithoutNull.map((t: string) =>
             this.convertToZodSchema({ ...schema, type: t })
           );
           return z.union(zodTypes).nullable();
         }
       } else {
         // Handle union types
-        const zodTypes = schema.type.map((t) =>
+        const zodTypes = schema.type.map((t: string) =>
           this.convertToZodSchema({ ...schema, type: t })
         );
         return z.union(zodTypes);
