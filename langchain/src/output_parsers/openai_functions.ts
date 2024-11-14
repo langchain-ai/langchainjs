@@ -153,13 +153,20 @@ export class JsonOutputFunctionsParser<
     return this.parse(result);
   }
 
-  async parse(text: string): Promise<Output> {
-    const parsedResult = JSON.parse(text);
-    if (this.argsOnly) {
+  async parse(text: string): Promise<Output>
+  {
+    try {
+      const parsedResult = JSON.parse(text);
+      if (this.argsOnly) {
+        return parsedResult;
+      }
+      parsedResult.arguments = JSON.parse(parsedResult.arguments);
       return parsedResult;
+    } catch (e) {
+      throw new Error(
+        `Failed to parse. Text: "${text}". Error: ${e}`
+      );
     }
-    parsedResult.arguments = JSON.parse(parsedResult.arguments);
-    return parsedResult;
   }
 
   getFormatInstructions(): string {
