@@ -6,6 +6,8 @@ import {
 } from "@pinecone-database/pinecone";
 import { getPineconeClient } from "./client.js";
 
+// todo: docstrings https://docs.pinecone.io/guides/inference/understanding-inference#multilingual-e5-large
+
 export interface PineconeEmbeddingsParams extends EmbeddingsParams {
   model?: string; // Model to use to generate embeddings
   params?: Record<string, string>; // Additional parameters to pass to the embedding model
@@ -85,6 +87,9 @@ export class PineconeEmbeddings
   }
 
   async embedQuery(text: string): Promise<number[]> {
+    // Change inputType to query-specific param for multilingual-e5-large embedding model
+    this.params.inputType = "query";
+
     if (!text) {
       throw new Error("No query passed for which to generate embeddings");
     }

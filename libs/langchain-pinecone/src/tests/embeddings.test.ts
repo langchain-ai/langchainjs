@@ -98,7 +98,7 @@ describe("Tests for the PineconeEmbeddings class", () => {
     expect(mockClient.inference.embed).toHaveBeenCalledWith(
       "multilingual-e5-large",
       [query],
-      { inputType: "passage" }
+      { inputType: "query" }
     );
     expect(embeddings).toEqual([0.1, 0.2, 0.3]);
   });
