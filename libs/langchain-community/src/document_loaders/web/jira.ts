@@ -156,7 +156,7 @@ export type JiraAPIResponse = {
  * JiraProjectLoader.
  */
 export interface JiraProjectLoaderParams {
-  baseUrl: string;
+  host: string;
   projectKey: string;
   username: string;
   accessToken: string;
@@ -174,23 +174,23 @@ export class JiraProjectLoader extends BaseDocumentLoader {
 
   private readonly accessToken: string;
 
-  public readonly baseUrl: string;
+  public readonly host: string;
 
   public readonly projectKey: string;
 
   public readonly username: string;
-  
+
   public readonly limit: number;
 
   constructor({
-    baseUrl,
+    host,
     projectKey,
     username,
     accessToken,
     limit = 100,
   }: JiraProjectLoaderParams) {
     super();
-    this.baseUrl = baseUrl;
+    this.host = host;
     this.projectKey = projectKey;
     this.username = username;
     this.accessToken = accessToken;
@@ -220,7 +220,7 @@ export class JiraProjectLoader extends BaseDocumentLoader {
 
   protected async *fetchIssues(): AsyncIterable<JiraIssue[]> {
     const authorizationHeader = this.buildAuthorizationHeader();
-    const url = `${this.baseUrl}${API_ENDPOINTS.SEARCH}`;
+    const url = `${this.host}${API_ENDPOINTS.SEARCH}`;
     let startAt = 0;
 
     while (true) {
@@ -252,11 +252,11 @@ export class JiraProjectLoader extends BaseDocumentLoader {
     return new Document({
       pageContent: this.formatIssueInfo({
         issue,
-        baseUrl: this.baseUrl,
+        host: this.host,
       }),
       metadata: {
         id: issue.id,
-        baseUrl: this.baseUrl,
+        host: this.host,
         projectKey: this.projectKey,
       },
     });
@@ -264,12 +264,12 @@ export class JiraProjectLoader extends BaseDocumentLoader {
 
   private formatIssueInfo({
     issue,
-    baseUrl,
+    host,
   }: {
     issue: JiraIssue;
-    baseUrl: string;
+    host: string;
   }): string {
-    let text = `Issue: ${this.formatMainIssueInfoText({ issue, baseUrl })}\n`;
+    let text = `Issue: ${this.formatMainIssueInfoText({ issue, host })}\n`;
     text += `Project: ${issue.fields.project.name} (${issue.fields.project.key}, ID ${issue.fields.project.id})\n`;
     text += `Status: ${issue.fields.status.name}\n`;
     text += `Priority: ${issue.fields.priority.name}\n`;
@@ -316,7 +316,7 @@ export class JiraProjectLoader extends BaseDocumentLoader {
     if (issue.fields.parent) {
       text += `Parent Issue: ${this.formatMainIssueInfoText({
         issue: issue.fields.parent,
-        baseUrl,
+        host,
       })}\n`;
     }
 
@@ -325,7 +325,7 @@ export class JiraProjectLoader extends BaseDocumentLoader {
       issue.fields.subtasks.forEach((subtask) => {
         text += `  - ${this.formatMainIssueInfoText({
           issue: subtask,
-          baseUrl,
+          host,
         })}\n`;
       });
     }
@@ -337,13 +337,13 @@ export class JiraProjectLoader extends BaseDocumentLoader {
         if (link.inwardIssue) {
           text += `    - ${this.formatMainIssueInfoText({
             issue: link.inwardIssue,
-            baseUrl,
+            host,
           })}\n`;
         }
         if (link.outwardIssue) {
           text += `    - ${this.formatMainIssueInfoText({
             issue: link.outwardIssue,
-            baseUrl,
+            host,
           })}\n`;
         }
       });
@@ -354,24 +354,24 @@ export class JiraProjectLoader extends BaseDocumentLoader {
 
   private getLinkToIssue({
     issueKey,
-    baseUrl,
+    host,
   }: {
     issueKey: string;
-    baseUrl: string;
+    host: string;
   }): string {
-    return `${baseUrl}/browse/${issueKey}`;
+    return `${host}/browse/${issueKey}`;
   }
 
   private formatMainIssueInfoText({
     issue,
-    baseUrl,
+    host,
   }: {
     issue: JiraIssue | JiraBriefIssue;
-    baseUrl: string;
+    host: string;
   }): string {
     const link = this.getLinkToIssue({
       issueKey: issue.key,
-      baseUrl,
+      host,
     });
 
     const text = `${issue.key} (ID ${issue.id}) - ${issue.fields.summary} (${link})`;

@@ -5,7 +5,7 @@ const accessToken = process.env.JIRA_ACCESS_TOKEN;
 
 if (username && accessToken) {
   const loader = new JiraProjectLoader({
-    baseUrl: "https://example.atlassian.net/wiki",
+    host: "https://example.atlassian.net/wiki",
     projectKey: "PI",
     username,
     accessToken,
