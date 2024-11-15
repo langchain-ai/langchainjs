@@ -114,9 +114,7 @@ describe("Pinecone self query", () => {
       // !process.env.PINECONE_ENVIRONMENT ||
       !testIndexName
     ) {
-      throw new Error(
-        "PINECONE_API_KEY and PINECONE_INDEX must be set"
-      );
+      throw new Error("PINECONE_API_KEY and PINECONE_INDEX must be set");
     }
 
     const embeddings = new OpenAIEmbeddings();
@@ -273,9 +271,7 @@ describe("Pinecone self query", () => {
       // !process.env.PINECONE_ENVIRONMENT ||
       !testIndexName
     ) {
-      throw new Error(
-        "PINECONE_API_KEY and PINECONE_INDEX must be set"
-      );
+      throw new Error("PINECONE_API_KEY and PINECONE_INDEX must be set");
     }
 
     const embeddings = new OpenAIEmbeddings();

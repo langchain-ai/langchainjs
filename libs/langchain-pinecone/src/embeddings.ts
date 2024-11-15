@@ -1,3 +1,5 @@
+/* eslint-disable arrow-body-style */
+
 import { Embeddings, type EmbeddingsParams } from "@langchain/core/embeddings";
 import {
   EmbeddingsList,
@@ -57,7 +59,6 @@ export class PineconeEmbeddings
     }
   }
 
-  // @returns A promise that resolves to an array of vectors for each document.
   async embedDocuments(texts: string[]): Promise<number[][]> {
     if (texts.length === 0) {
       throw new Error(
@@ -65,15 +66,25 @@ export class PineconeEmbeddings
       );
     }
 
-    let embeddings: EmbeddingsList;
+    let embeddings;
     if (this.params) {
-      embeddings = await this.client.inference.embed(
-        this.model,
-        texts,
-        this.params
-      );
+      embeddings = await this.caller.call(async () => {
+        const result: EmbeddingsList = await this.client.inference.embed(
+          this.model,
+          texts,
+          this.params
+        );
+        return result;
+      });
     } else {
-      embeddings = await this.client.inference.embed(this.model, texts, {});
+      embeddings = await this.caller.call(async () => {
+        const result: EmbeddingsList = await this.client.inference.embed(
+          this.model,
+          texts,
+          {}
+        );
+        return result;
+      });
     }
 
     const embeddingsList: number[][] = [];
@@ -95,13 +106,17 @@ export class PineconeEmbeddings
     }
     let embeddings: EmbeddingsList;
     if (this.params) {
-      embeddings = await this.client.inference.embed(
-        this.model,
-        [text],
-        this.params
-      );
+      embeddings = await this.caller.call(async () => {
+        return await this.client.inference.embed(
+          this.model,
+          [text],
+          this.params
+        );
+      });
     } else {
-      embeddings = await this.client.inference.embed(this.model, [text], {});
+      embeddings = await this.caller.call(async () => {
+        return await this.client.inference.embed(this.model, [text], {});
+      });
     }
     if (embeddings[0].values) {
       return embeddings[0].values as number[];
