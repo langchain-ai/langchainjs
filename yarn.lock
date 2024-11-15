@@ -18039,6 +18039,19 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@stripe/agent-toolkit@npm:^0.1.20":
+  version: 0.1.20
+  resolution: "@stripe/agent-toolkit@npm:0.1.20"
+  dependencies:
+    stripe: ^17.0.0
+    zod: ^3.23.8
+  peerDependencies:
+    "@langchain/core": ^0.3.6
+    ai: ^3.4.7
+  checksum: a46efa49bbef9a495c0dfe829361620636a76c72be99bc0c080c8d787bcfc5fc8e22d4fc84a0e0e7f0caf020098476a616b19a17b65b8bf13a4f266316d77a0f
+  languageName: node
+  linkType: hard
+
 "@supabase/auth-js@npm:2.64.4":
   version: 2.64.4
   resolution: "@supabase/auth-js@npm:2.64.4"
@@ -19326,6 +19339,15 @@ __metadata:
   dependencies:
     undici-types: ~5.25.1
   checksum: 2106b9ef9750297cac68249428d7067c4d22c26908854165b70a164e34e900f4c34bb9bf3887c9391206b500d3e87171d03b1846e25788925236a0354390d278
+  languageName: node
+  linkType: hard
+
+"@types/node@npm:>=8.1.0":
+  version: 22.9.0
+  resolution: "@types/node@npm:22.9.0"
+  dependencies:
+    undici-types: ~6.19.8
+  checksum: c014eb3b8a110f1b87b614a40ef288d13e6b08ae9d5dafbd38951a2eebc24d352dc55330ed9d00c97ee9e64483c3cc14c4aa914c5df7ca7b9eaa1a30b2340dbd
   languageName: node
   linkType: hard
 
@@ -23825,6 +23847,7 @@ __metadata:
     "@langchain/scripts": "workspace:*"
     "@mdx-js/react": ^1.6.22
     "@microsoft/fetch-event-source": ^2.0.1
+    "@stripe/agent-toolkit": ^0.1.20
     "@supabase/supabase-js": ^2.45.0
     "@swc/core": ^1.3.62
     "@types/cookie": ^0
@@ -38186,6 +38209,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"qs@npm:^6.11.0":
+  version: 6.13.0
+  resolution: "qs@npm:6.13.0"
+  dependencies:
+    side-channel: ^1.0.6
+  checksum: e9404dc0fc2849245107108ce9ec2766cde3be1b271de0bf1021d049dc5b98d1a2901e67b431ac5509f865420a7ed80b7acb3980099fe1c118a1c5d2e1432ad8
+  languageName: node
+  linkType: hard
+
 "querystringify@npm:^2.1.1":
   version: 2.2.0
   resolution: "querystringify@npm:2.2.0"
@@ -40963,6 +40995,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"stripe@npm:^17.0.0":
+  version: 17.3.1
+  resolution: "stripe@npm:17.3.1"
+  dependencies:
+    "@types/node": ">=8.1.0"
+    qs: ^6.11.0
+  checksum: 89446bc2a8112151e2dfde42e16d1949c41b06d2a5eb9e5b6e0fc77cdb7c6a719ddbab9b001d3a6c3b477e53a0a45d08e207739ecab44cad2e6332ec31a65ace
+  languageName: node
+  linkType: hard
+
 "strnum@npm:^1.0.5":
   version: 1.0.5
   resolution: "strnum@npm:1.0.5"
@@ -42533,7 +42575,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"undici-types@npm:~6.19.2":
+"undici-types@npm:~6.19.2, undici-types@npm:~6.19.8":
   version: 6.19.8
   resolution: "undici-types@npm:6.19.8"
   checksum: de51f1b447d22571cf155dfe14ff6d12c5bdaec237c765085b439c38ca8518fc360e88c70f99469162bf2e14188a7b0bcb06e1ed2dc031042b984b0bb9544017
