@@ -11126,50 +11126,50 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@lancedb/lancedb-darwin-arm64@npm:0.12.0":
-  version: 0.12.0
-  resolution: "@lancedb/lancedb-darwin-arm64@npm:0.12.0"
+"@lancedb/lancedb-darwin-arm64@npm:0.13.0":
+  version: 0.13.0
+  resolution: "@lancedb/lancedb-darwin-arm64@npm:0.13.0"
   conditions: os=darwin & cpu=arm64
   languageName: node
   linkType: hard
 
-"@lancedb/lancedb-darwin-x64@npm:0.12.0":
-  version: 0.12.0
-  resolution: "@lancedb/lancedb-darwin-x64@npm:0.12.0"
+"@lancedb/lancedb-darwin-x64@npm:0.13.0":
+  version: 0.13.0
+  resolution: "@lancedb/lancedb-darwin-x64@npm:0.13.0"
   conditions: os=darwin & cpu=x64
   languageName: node
   linkType: hard
 
-"@lancedb/lancedb-linux-arm64-gnu@npm:0.12.0":
-  version: 0.12.0
-  resolution: "@lancedb/lancedb-linux-arm64-gnu@npm:0.12.0"
+"@lancedb/lancedb-linux-arm64-gnu@npm:0.13.0":
+  version: 0.13.0
+  resolution: "@lancedb/lancedb-linux-arm64-gnu@npm:0.13.0"
   conditions: os=linux & cpu=arm64 & libc=glibc
   languageName: node
   linkType: hard
 
-"@lancedb/lancedb-linux-x64-gnu@npm:0.12.0":
-  version: 0.12.0
-  resolution: "@lancedb/lancedb-linux-x64-gnu@npm:0.12.0"
+"@lancedb/lancedb-linux-x64-gnu@npm:0.13.0":
+  version: 0.13.0
+  resolution: "@lancedb/lancedb-linux-x64-gnu@npm:0.13.0"
   conditions: os=linux & cpu=x64 & libc=glibc
   languageName: node
   linkType: hard
 
-"@lancedb/lancedb-win32-x64-msvc@npm:0.12.0":
-  version: 0.12.0
-  resolution: "@lancedb/lancedb-win32-x64-msvc@npm:0.12.0"
+"@lancedb/lancedb-win32-x64-msvc@npm:0.13.0":
+  version: 0.13.0
+  resolution: "@lancedb/lancedb-win32-x64-msvc@npm:0.13.0"
   conditions: os=win32 & cpu=x64
   languageName: node
   linkType: hard
 
-"@lancedb/lancedb@npm:^0.12.0":
-  version: 0.12.0
-  resolution: "@lancedb/lancedb@npm:0.12.0"
+"@lancedb/lancedb@npm:^0.13.0":
+  version: 0.13.0
+  resolution: "@lancedb/lancedb@npm:0.13.0"
   dependencies:
-    "@lancedb/lancedb-darwin-arm64": 0.12.0
-    "@lancedb/lancedb-darwin-x64": 0.12.0
-    "@lancedb/lancedb-linux-arm64-gnu": 0.12.0
-    "@lancedb/lancedb-linux-x64-gnu": 0.12.0
-    "@lancedb/lancedb-win32-x64-msvc": 0.12.0
+    "@lancedb/lancedb-darwin-arm64": 0.13.0
+    "@lancedb/lancedb-darwin-x64": 0.13.0
+    "@lancedb/lancedb-linux-arm64-gnu": 0.13.0
+    "@lancedb/lancedb-linux-x64-gnu": 0.13.0
+    "@lancedb/lancedb-win32-x64-msvc": 0.13.0
     reflect-metadata: ^0.2.2
   peerDependencies:
     apache-arrow: ">=13.0.0 <=17.0.0"
@@ -11517,7 +11517,7 @@ __metadata:
     "@huggingface/inference": ^2.6.4
     "@ibm-cloud/watsonx-ai": ^1.1.0
     "@jest/globals": ^29.5.0
-    "@lancedb/lancedb": ^0.12.0
+    "@lancedb/lancedb": ^0.13.0
     "@langchain/core": "workspace:*"
     "@langchain/openai": ">=0.2.0 <0.4.0"
     "@langchain/scripts": ">=0.1.0 <0.2.0"
@@ -27393,7 +27393,7 @@ __metadata:
     "@getzep/zep-js": ^0.9.0
     "@gomomento/sdk": ^1.51.1
     "@google/generative-ai": ^0.7.0
-    "@lancedb/lancedb": ^0.12.0
+    "@lancedb/lancedb": ^0.13.0
     "@langchain/anthropic": "workspace:*"
     "@langchain/aws": "workspace:*"
     "@langchain/azure-cosmosdb": "workspace:*"
