@@ -7,12 +7,14 @@ import { FIMCompletionStreamRequest as MistralAIFIMCompletionStreamRequest} from
 import { FIMCompletionResponse as MistralAIFIMCompletionResponse } from "@mistralai/mistralai/models/components/fimcompletionresponse.js";
 import { ChatCompletionChoice as MistralAIChatCompletionChoice} from "@mistralai/mistralai/models/components/chatcompletionchoice.js";
 import { CompletionEvent as MistralAIChatCompletionEvent } from "@mistralai/mistralai/models/components/completionevent.js";
+import { CompletionChunk as MistralAICompetionChunk } from "@mistralai/mistralai/models/components/completionchunk.js";
 import { 
   BeforeRequestHook,
   RequestErrorHook,
   ResponseHook,
   HTTPClient as MistralAIHTTPClient,
 } from "@mistralai/mistralai/lib/http.js";
+import { _mistralContentChunkToMessageContentComplex } from "./utils.js";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { chunkArray } from "@langchain/core/utils/chunk_array";
 import { AsyncCaller } from "@langchain/core/utils/async_caller";
@@ -226,7 +228,11 @@ Either provide one via the "apiKey" field in the constructor, or set the "MISTRA
       prompt,
     };
     const result = await this.completionWithRetry(params, options, false);
-    return result?.choices?.[0].message.content ?? "";
+    let content = result?.choices?.[0].message.content ?? "";
+    if (Array.isArray(content)) {
+      content = content[0].type === "text" ? content[0].text : "";
+    };
+    return content
   }
 
   async _generate(
@@ -244,13 +250,13 @@ Either provide one via the "apiKey" field in the constructor, or set the "MISTRA
         if (this.streaming) {
           const responseData: Array<
             { choices: MistralAIChatCompletionChoice[] } & Partial<
-              Omit<MistralAIFIMCompletionResponse, "choices">
+              Omit<MistralAICompetionChunk, "choices">
             >
           > = [];
           for (let x = 0; x < subPrompts[i].length; x += 1) {
             const choices: MistralAIChatCompletionChoice[] = [];
             let response:
-              | Omit<MistralAIFIMCompletionResponse, "choices" | "usage">
+              | Omit<MistralAICompetionChunk, "choices" | "usage">
               | undefined;
               const stream = await this.completionWithRetry(
               {
@@ -273,22 +279,39 @@ Either provide one via the "apiKey" field in the constructor, or set the "MISTRA
 
               // on all messages, update choice
               for (const part of data.choices) {
+                let content = part.delta.content ?? "";
+                // Convert MistralContentChunk data into a string
+                if (Array.isArray(content)) {
+                  let strContent = ""
+                  for (let contentChunk of content) {
+                    if (contentChunk.type === "text") {
+                      strContent = strContent + contentChunk.text
+                    }
+                    else if (contentChunk.type === "image_url") {
+                      const imageURL = typeof contentChunk.imageUrl === "string"
+                        ? contentChunk.imageUrl
+                        : contentChunk.imageUrl.url
+                      strContent = strContent + imageURL
+                    }
+                  }
+                  content = strContent
+                };
                 if (!choices[part.index]) {
                   choices[part.index] = {
                     index: part.index,
                     message: {
                       role: "assistant",
-                      content: part.delta.content ?? "",
-                      toolCalls: null,
+                      content,
+                      toolCalls: part.delta.toolCalls,
                     },
-                    finishReason: part.finishReason ?? "model_length",
+                    finishReason: part.finishReason ?? "length",
                   };
                 } else {
                   const choice = choices[part.index];
-                  choice.message.content += part.delta.content ?? "";
-                  choice.finishReason = part.finishReason ?? "model_length";
+                  choice.message.content += content;
+                  choice.finishReason = part.finishReason ?? "length";
                 }
-                void runManager?.handleLLMNewToken(part.delta.content ?? "", {
+                void runManager?.handleLLMNewToken(content, {
                   prompt: part.index,
                   completion: part.index,
                 });
@@ -324,12 +347,18 @@ Either provide one via the "apiKey" field in the constructor, or set the "MISTRA
     }
 
     const generations = choices.map((promptChoices) =>
-      promptChoices.map((choice) => ({
-        text: choice.message.content ?? "",
-        generationInfo: {
-          finishReason: choice.finishReason,
-        },
-      }))
+      promptChoices.map((choice) => {
+        let text = choice.message?.content ?? "";
+        if (Array.isArray(text)) {
+          text = text[0].type === "text" ? text[0].text : "";
+        };
+        return {
+          text,
+          generationInfo: {
+            finishReason: choice.finishReason,
+          },
+        }
+      })
     );
     return {
       generations,
@@ -414,8 +443,12 @@ Either provide one via the "apiKey" field in the constructor, or set the "MISTRA
       if (!choice) {
         continue;
       }
+      let text = choice.delta.content ?? "";
+      if (Array.isArray(text)) {
+        text = text[0].type === "text" ? text[0].text : "";
+      };
       const chunk = new GenerationChunk({
-        text: choice.delta.content ?? "",
+        text,
         generationInfo: {
           finishReason: choice.finishReason,
           tokenUsage: data.usage,
