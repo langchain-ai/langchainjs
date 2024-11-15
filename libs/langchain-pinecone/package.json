@@ -32,9 +32,28 @@
   "author": "Pinecone, Inc",
   "license": "MIT",
   "dependencies": {
+    "@langchain/core": "^0.3.0",
+    "@langchain/openai": "^0.0.0",
     "@pinecone-database/pinecone": "4.0.0",
     "flat": "^5.0.2",
+    "openai": "^4.72.0",
     "uuid": "^10.0.0"
+  },
+  "resolutions": {
+    "@langchain/core": "^0.3.0"
+  },
+  "overrides": {
+    "@langchain/core": "^0.3.0"
+  },
+  "npm": {
+    "overrides": {
+      "@langchain/core": "^0.3.0"
+    }
+  },
+  "yarn": {
+    "overrides": {
+      "@langchain/core": "^0.3.0"
+    }
   },
   "peerDependencies": {
     "@langchain/core": ">=0.2.21 <0.4.0"
