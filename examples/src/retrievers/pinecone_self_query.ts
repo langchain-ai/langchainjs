@@ -85,11 +85,10 @@ const attributeInfo: AttributeInfo[] = [
  */
 if (
   !process.env.PINECONE_API_KEY ||
-  !process.env.PINECONE_ENVIRONMENT ||
   !process.env.PINECONE_INDEX
 ) {
   throw new Error(
-    "PINECONE_ENVIRONMENT and PINECONE_API_KEY and PINECONE_INDEX must be set"
+    "PINECONE_API_KEY and PINECONE_INDEX must be set"
   );
 }
 

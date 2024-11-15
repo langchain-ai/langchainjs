@@ -1,11 +1,13 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import { Pinecone } from "@pinecone-database/pinecone";
+import { Pinecone, RecordMetadata } from "@pinecone-database/pinecone";
 import { Document } from "@langchain/core/documents";
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { PineconeStore } from "@langchain/pinecone";
+import { Index } from "@upstash/vector";
+// import { Index } from "@upstash/vector";
 
 // Instantiate a new Pinecone client, which will automatically read the
-// env vars: PINECONE_API_KEY and PINECONE_ENVIRONMENT which come from
+// env vars: PINECONE_API_KEY which comes from
 // the Pinecone dashboard at https://app.pinecone.io
 
 const pinecone = new Pinecone();
@@ -32,6 +34,6 @@ const docs = [
 ];
 
 await PineconeStore.fromDocuments(docs, new OpenAIEmbeddings(), {
-  pineconeIndex,
+  pineconeIndex: pineconeIndex as Index<RecordMetadata>,
   maxConcurrency: 5, // Maximum number of batch requests to allow at once. Each batch is 1000 vectors.
 });

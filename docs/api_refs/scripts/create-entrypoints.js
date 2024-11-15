@@ -38,9 +38,22 @@ const BASE_TYPEDOC_CONFIG = {
  * @param {any} updateFunction
  */
 const updateJsonFile = (relativePath, updateFunction) => {
-  const contents = fs.readFileSync(relativePath).toString();
-  const res = updateFunction(JSON.parse(contents));
-  fs.writeFileSync(relativePath, JSON.stringify(res, null, 2) + "\n");
+  try {
+    let contents = fs.readFileSync(relativePath).toString();
+
+    if (contents.trim() === "") {
+      console.log(`File at path: ${relativePath} is empty. Skipping file.`);
+      return;
+    }
+
+    const parsedContents = JSON.parse(contents);
+    const updatedContents = updateFunction(parsedContents);
+
+    fs.writeFileSync(relativePath, JSON.stringify(updatedContents, null, 2) + "\n");
+  } catch (error) {
+    console.error(`Could not process file at path: ${relativePath}`);
+    throw error;
+  }
 };
 
 const workspacesListBreakStr = `"}
