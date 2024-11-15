@@ -8,13 +8,18 @@ import {
 } from "@pinecone-database/pinecone";
 import { getPineconeClient } from "./client.js";
 
-// todo: docstrings https://docs.pinecone.io/guides/inference/understanding-inference#multilingual-e5-large
-
+/* PineconeEmbeddingsParams holds the optional fields a user can pass to a Pinecone embedding model.
+ * @param model - Model to use to generate embeddings. Default is "multilingual-e5-large".
+ * @param params - Additional parameters to pass to the embedding model. Note: parameters are model-specific. Read
+ *  more about model-specific parameters in the [Pinecone
+ *  documentation](https://docs.pinecone.io/guides/inference/understanding-inference#model-specific-parameters).
+ * */
 export interface PineconeEmbeddingsParams extends EmbeddingsParams {
   model?: string; // Model to use to generate embeddings
   params?: Record<string, string>; // Additional parameters to pass to the embedding model
 }
 
+/* PineconeEmbeddings generates embeddings using the Pinecone Inference API. */
 export class PineconeEmbeddings
   extends Embeddings
   implements PineconeEmbeddingsParams
@@ -59,6 +64,10 @@ export class PineconeEmbeddings
     }
   }
 
+  /* Generate embeddings for a list of input strings using a specified embedding model.
+   *
+   * @param texts - List of input strings for which to generate embeddings.
+   * */
   async embedDocuments(texts: string[]): Promise<number[][]> {
     if (texts.length === 0) {
       throw new Error(
@@ -97,6 +106,9 @@ export class PineconeEmbeddings
     return embeddingsList;
   }
 
+  /* Generate embeddings for a given query string using a specified embedding model.
+   * @param text - Query string for which to generate embeddings.
+   * */
   async embedQuery(text: string): Promise<number[]> {
     // Change inputType to query-specific param for multilingual-e5-large embedding model
     this.params.inputType = "query";

@@ -109,11 +109,7 @@ describe("Pinecone self query", () => {
       },
     ];
 
-    if (
-      !process.env.PINECONE_API_KEY ||
-      // !process.env.PINECONE_ENVIRONMENT ||
-      !testIndexName
-    ) {
+    if (!process.env.PINECONE_API_KEY || !testIndexName) {
       throw new Error("PINECONE_API_KEY and PINECONE_INDEX must be set");
     }
 
@@ -266,11 +262,7 @@ describe("Pinecone self query", () => {
       },
     ];
 
-    if (
-      !process.env.PINECONE_API_KEY ||
-      // !process.env.PINECONE_ENVIRONMENT ||
-      !testIndexName
-    ) {
+    if (!process.env.PINECONE_API_KEY || !testIndexName) {
       throw new Error("PINECONE_API_KEY and PINECONE_INDEX must be set");
     }
 
