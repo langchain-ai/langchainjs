@@ -1,3 +1,6 @@
+import { ContentChunk as MistralAIContentChunk } from "@mistralai/mistralai/models/components/contentchunk.js";
+import { MessageContentComplex } from "@langchain/core/messages";
+
 // Mistral enforces a specific pattern for tool call IDs
 const TOOL_CALL_ID_PATTERN = /^[a-zA-Z0-9]{9}$/;
 
@@ -44,3 +47,24 @@ export function _convertToolCallIdToMistralCompatible(
     }
   }
 }
+
+export function _mistralContentChunkToMessageContentComplex(
+  content: string | MistralAIContentChunk[] | null | undefined
+): string | MessageContentComplex[] {
+  if (!content) {
+    return "";
+  };
+  if (typeof content === "string") {
+    return content;
+  };
+  return content.map((contentChunk) => {
+    // Only Mistral ImageURLChunks need conversion to MessageContentComplex
+    if (contentChunk.type === "image_url") {
+      return {
+        type: contentChunk.type,
+        image_url: contentChunk.imageUrl
+      };
+    };
+    return contentChunk;
+  });
+};

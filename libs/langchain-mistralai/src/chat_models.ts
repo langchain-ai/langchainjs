@@ -5,7 +5,7 @@ import {
   ChatCompletionRequestToolChoice as MistralAIToolChoice,
   Messages as MistralAIMessage,
 } from "@mistralai/mistralai/models/components/chatcompletionrequest.js";
-import { ContentChunk as MistralAIContentChunk} from "@mistralai/mistralai/models/components/contentchunk.js";
+import { ContentChunk as MistralAIContentChunk } from "@mistralai/mistralai/models/components/contentchunk.js";
 import { Tool as MistralAITool } from "@mistralai/mistralai/models/components/tool.js";
 import { ToolCall as MistralAIToolCall } from "@mistralai/mistralai/models/components/toolcall.js";
 import { ChatCompletionStreamRequest as MistralAIChatCompletionStreamRequest } from "@mistralai/mistralai/models/components/chatcompletionstreamrequest.js";
@@ -72,7 +72,10 @@ import {
 } from "@langchain/core/runnables";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { ToolCallChunk } from "@langchain/core/messages/tool";
-import { _convertToolCallIdToMistralCompatible } from "./utils.js";
+import { 
+  _convertToolCallIdToMistralCompatible,
+  _mistralContentChunkToMessageContentComplex
+} from "./utils.js";
 
 interface TokenUsage {
   completionTokens?: number;
@@ -172,24 +175,40 @@ export interface ChatMistralAIInput
   seed?: number;
   /**
    * A list of custom hooks that must follow (req: Request) => Awaitable<Request | void>
-   * They are automatically added when a ChatMistralAI instance is created
+   * They are automatically added when a ChatMistralAI instance is created.
    */
   beforeRequestHooks?: BeforeRequestHook[];
   /**
-   * A list of custom hooks that must follow (err: unknown, req: Request) => Awaitable<void>
-   * They are automatically added when a ChatMistralAI instance is created
+   * A list of custom hooks that must follow (err: unknown, req: Request) => Awaitable<void>.
+   * They are automatically added when a ChatMistralAI instance is created.
    */
   requestErrorHooks?: RequestErrorHook[];
   /**
-   * A list of custom hooks that must follow (res: Response, req: Request) => Awaitable<void>
-   * They are automatically added when a ChatMistralAI instance is created
+   * A list of custom hooks that must follow (res: Response, req: Request) => Awaitable<void>.
+   * They are automatically added when a ChatMistralAI instance is created.
    */
   responseHooks?: ResponseHook[];
   /**
-   * Custom HTTP client to manage API requests
+   * Custom HTTP client to manage API requests.
    * Allows users to add custom fetch implementations, hooks, as well as error and response processing.
    */
   httpClient?: MistralAIHTTPClient;
+  /**
+   * Determines how much the model penalizes the repetition of words or phrases. A higher presence
+   * penalty encourages the model to use a wider variety of words and phrases, making the output
+   * more diverse and creative.
+   */
+  presencePenalty?: number;
+  /**
+   * Penalizes the repetition of words based on their frequency in the generated text. A higher
+   * frequency penalty discourages the model from repeating words that have already appeared frequently
+   * in the output, promoting diversity and reducing repetition.
+   */
+  frequencyPenalty?: number;
+  /**
+   * Number of completions to return for each request, input tokens are only billed once.
+   */
+  numCompletions?: number;
 }
 
 function convertMessagesToMistralMessages(
@@ -215,14 +234,14 @@ function convertMessagesToMistralMessages(
   const getContent = (content: MessageContent, type: MessageType): string | MistralAIContentChunk[] => {
 
     const _generateContentChunk = (complex: MessageContentComplex, role: string): MistralAIContentChunk => {
-      if (complex.type === "image_url" && role === "user") {
+      if (complex.type === "image_url" && (role === "user" || role === "assistant")) {
         return {
           type: complex.type,
           imageUrl: complex?.image_url
         };
       };
       
-      if (complex.type === "text" && (role === "user" || role === "system")) {
+      if (complex.type === "text") {
         return {
           type: complex.type,
           text: complex?.text
@@ -230,8 +249,9 @@ function convertMessagesToMistralMessages(
       };
 
       throw new Error(
-        `ChatMistralAI only supports messages of type MessageContentText for role "human"
-          and "system" and MessageContentImageUrl for role "human". Received: ${JSON.stringify(
+        `ChatMistralAI supports messages of type MessageContentText for role "human", "ai", "function"
+          and "system" and MessageContentImageUrl for role "human", "ai", and "function.
+          Received: ${JSON.stringify(
           content,
           null,
           2
@@ -246,19 +266,20 @@ function convertMessagesToMistralMessages(
     if (Array.isArray(content)) {
       const mistralRole = getRole(type);
 
-      // Mistral "assistant" and "tool" roles can only support string content
-      if (mistralRole === "assistant" || mistralRole === "tool") {
+      // Mistral "tool" role can only support string content
+      if (mistralRole === "tool") {
         let strContent = "";
         content.forEach((messageContentComplex) => {
           // Ignore all non-text complex message types
-          if (messageContentComplex.type === "text") {
-            strContent.concat(strContent, ` ${messageContentComplex.text}`);
+          if (messageContentComplex.type === "text" && "text" in messageContentComplex) {
+            strContent + messageContentComplex.text;
           };
         });
         return strContent;
       };
 
-      // Mistral "system" and "user" roles can support some MistralContentChunks
+      // Mistral "assistant" and "user" roles can support Mistral ContentChunks
+      // Mistral "system" role can support Mistral TextChunks
       let newContent: MistralAIContentChunk[] = [];
       content.forEach((messageContentComplex) => {
         // Mistral content chunks only support type "text" and "image_url"
@@ -336,6 +357,7 @@ function mistralAIResponseToChatMessage(
   if ("toolCalls" in message && Array.isArray(message.toolCalls)) {
     rawToolCalls = message.toolCalls;
   }
+  const content = _mistralContentChunkToMessageContentComplex(message.content);
   switch (message.role) {
     case "assistant": {
       const toolCalls = [];
@@ -353,7 +375,7 @@ function mistralAIResponseToChatMessage(
         }
       }
       return new AIMessage({
-        content: message.content ?? "",
+        content,
         tool_calls: toolCalls,
         invalid_tool_calls: invalidToolCalls,
         additional_kwargs: {},
@@ -367,14 +389,14 @@ function mistralAIResponseToChatMessage(
       });
     }
     default:
-      return new HumanMessage(message.content ?? "");
+      return new HumanMessage({ content });
   }
 }
 
 function _convertDeltaToMessageChunk(
   delta: {
-    role?: string | undefined;
-    content?: string | null | undefined;
+    role?: string | null | undefined;
+    content?: string | MistralAIContentChunk[] | null | undefined;
     toolCalls?: MistralAIToolCall[] | null | undefined;
   },
   usage?: MistralAITokenUsage | null
@@ -412,7 +434,8 @@ function _convertDeltaToMessageChunk(
   if (delta.role) {
     role = delta.role;
   }
-  const content = delta.content ?? "";
+  const content = _mistralContentChunkToMessageContentComplex(delta.content);
+
   let additional_kwargs;
   const toolCallChunks: ToolCallChunk[] = [];
   if (rawToolCallChunksWithIndex !== undefined) {
@@ -868,6 +891,12 @@ export class ChatMistralAI<
 
   httpClient?: MistralAIHTTPClient;
 
+  presencePenalty?: number;
+
+  frequencyPenalty?: number;
+
+  numCompletions?: number;
+
   constructor(fields?: ChatMistralAIInput) {
     super(fields ?? {});
     const apiKey = fields?.apiKey ?? getEnvironmentVariable("MISTRAL_API_KEY");
@@ -893,6 +922,9 @@ export class ChatMistralAI<
     this.requestErrorHooks = fields?.requestErrorHooks ?? this.requestErrorHooks;
     this.responseHooks = fields?.responseHooks ?? this.responseHooks;
     this.httpClient = fields?.httpClient ?? this.httpClient;
+    this.presencePenalty = fields?.presencePenalty ?? this.presencePenalty;
+    this.frequencyPenalty = fields?.frequencyPenalty ?? this.frequencyPenalty;
+    this.numCompletions = fields?.numCompletions ?? this.numCompletions;
     this.addAllHooksToHttpClient();
   }
 
@@ -943,6 +975,9 @@ export class ChatMistralAI<
       safePrompt: this.safePrompt,
       toolChoice: tool_choice,
       responseFormat: response_format,
+      presencePenalty: this.presencePenalty,
+      frequencyPenalty: this.frequencyPenalty,
+      n: this.numCompletions,
     };
     return params;
   }
@@ -1076,7 +1111,10 @@ export class ChatMistralAI<
       if (!("message" in part)) {
         throw new Error("No message found in the choice.");
       }
-      const text = part.message?.content ?? "";
+      let text = part.message?.content ?? "";
+      if (Array.isArray(text)) {
+        text = text[0].type === "text" ? text[0].text : "";
+      };
       const generation: ChatGeneration = {
         text,
         message: mistralAIResponseToChatMessage(part, response?.usage),
@@ -1131,9 +1169,13 @@ export class ChatMistralAI<
         // Do not yield a chunk if the message is empty
         continue;
       }
+      let text = delta.content ?? "";
+      if (Array.isArray(text)) {
+        text = text[0].type === "text" ? text[0].text : "";
+      };
       const generationChunk = new ChatGenerationChunk({
         message,
-        text: delta.content ?? "",
+        text,
         generationInfo: newTokenIndices,
       });
       yield generationChunk;
