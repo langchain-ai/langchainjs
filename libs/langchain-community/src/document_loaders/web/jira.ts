@@ -153,101 +153,34 @@ export type JiraAPIResponse = {
 
 /**
  * Interface representing the parameters for configuring the
- * JiraProjectLoader.
+ * JiraDocumentConverter.
  */
-export interface JiraProjectLoaderParams {
+export interface JiraDocumentConverterParams {
   host: string;
   projectKey: string;
-  username: string;
-  accessToken: string;
-  limit?: number;
 }
 
-const API_ENDPOINTS = {
-  SEARCH: "/rest/api/2/search",
-};
-
 /**
- * Class representing a document loader for loading pages from Confluence.
+ * Class responsible for converting Jira issues to Document objects
  */
-export class JiraProjectLoader extends BaseDocumentLoader {
-
-  private readonly accessToken: string;
-
+export class JiraDocumentConverter {
+  
   public readonly host: string;
-
+  
   public readonly projectKey: string;
-
-  public readonly username: string;
-
-  public readonly limit: number;
 
   constructor({
     host,
-    projectKey,
-    username,
-    accessToken,
-    limit = 100,
-  }: JiraProjectLoaderParams) {
-    super();
+    projectKey
+  }: JiraDocumentConverterParams) {
     this.host = host;
     this.projectKey = projectKey;
-    this.username = username;
-    this.accessToken = accessToken;
-    this.limit = limit;
   }
 
-  private buildAuthorizationHeader(): string {
-    return `Basic ${Buffer.from(
-      `${this.username}:${this.accessToken}`
-    ).toString("base64")}`;
+  public convertToDocuments(issues: JiraIssue[]): Document[] {
+    return issues.map((issue) => this.documentFromIssue(issue));
   }
-
-  public async load(): Promise<Document[]> {
-    const allIssues: JiraIssue[] = [];
-
-    try {
-      for await (const issues of this.fetchIssues()) {
-        allIssues.push(...issues);
-      }
-
-      return allIssues.map((issue) => this.documentFromIssue(issue));
-    } catch (error) {
-      console.error("Error:", error);
-      return [];
-    }
-  }
-
-  protected async *fetchIssues(): AsyncIterable<JiraIssue[]> {
-    const authorizationHeader = this.buildAuthorizationHeader();
-    const url = `${this.host}${API_ENDPOINTS.SEARCH}`;
-    let startAt = 0;
-
-    while (true) {
-      try {
-        const pageUrl = `${url}?jql=project=${this.projectKey}&startAt=${startAt}&maxResults=${this.limit}`;
-        const options = {
-          method: "GET",
-          headers: {
-            Authorization: authorizationHeader,
-            Accept: "application/json",
-          },
-        };
-
-        const response = await fetch(pageUrl, options);
-        const data: JiraAPIResponse = await response.json();
-
-        if (!data.issues || data.issues.length === 0) break;
-
-        yield data.issues;
-        startAt += this.limit;
-      } catch (error) {
-        console.error(error);
-        yield [];
-      }
-    }
-  }
-
+  
   private documentFromIssue(issue: JiraIssue): Document {
     return new Document({
       pageContent: this.formatIssueInfo({
@@ -378,4 +311,106 @@ export class JiraProjectLoader extends BaseDocumentLoader {
 
     return text;
   }
+}
+
+/**
+ * Interface representing the parameters for configuring the
+ * JiraProjectLoader.
+ */
+export interface JiraProjectLoaderParams {
+  host: string;
+  projectKey: string;
+  username: string;
+  accessToken: string;
+  limit?: number;
+}
+
+const API_ENDPOINTS = {
+  SEARCH: "/rest/api/2/search",
+};
+
+/**
+ * Class representing a document loader for loading pages from Confluence.
+ */
+export class JiraProjectLoader extends BaseDocumentLoader {
+
+  private readonly accessToken: string;
+
+  public readonly host: string;
+
+  public readonly projectKey: string;
+
+  public readonly username: string;
+
+  public readonly limit: number;
+
+  private readonly documentConverter: JiraDocumentConverter;
+  
+  constructor({
+    host,
+    projectKey,
+    username,
+    accessToken,
+    limit = 100,
+  }: JiraProjectLoaderParams) {
+    super();
+    this.host = host;
+    this.projectKey = projectKey;
+    this.username = username;
+    this.accessToken = accessToken;
+    this.limit = limit;
+    this.documentConverter = new JiraDocumentConverter({host, projectKey});
+  }
+
+  private buildAuthorizationHeader(): string {
+    return `Basic ${Buffer.from(
+      `${this.username}:${this.accessToken}`
+    ).toString("base64")}`;
+  }
+
+  public async load(): Promise<Document[]> {
+    const allIssues: JiraIssue[] = [];
+
+    try {
+      for await (const issues of this.fetchIssues()) {
+        allIssues.push(...issues);
+      }
+      
+      return this.documentConverter.convertToDocuments(allIssues);
+    } catch (error) {
+      console.error("Error:", error);
+      return [];
+    }
+  }
+
+  protected async *fetchIssues(): AsyncIterable<JiraIssue[]> {
+    const authorizationHeader = this.buildAuthorizationHeader();
+    const url = `${this.host}${API_ENDPOINTS.SEARCH}`;
+    let startAt = 0;
+
+    while (true) {
+      try {
+        const pageUrl = `${url}?jql=project=${this.projectKey}&startAt=${startAt}&maxResults=${this.limit}`;
+        const options = {
+          method: "GET",
+          headers: {
+            Authorization: authorizationHeader,
+            Accept: "application/json",
+          },
+        };
+
+        const response = await fetch(pageUrl, options);
+        const data: JiraAPIResponse = await response.json();
+
+        if (!data.issues || data.issues.length === 0) break;
+
+        yield data.issues;
+        startAt += this.limit;
+      } catch (error) {
+        console.error(error);
+        yield [];
+      }
+    }
+  }
+
 }
