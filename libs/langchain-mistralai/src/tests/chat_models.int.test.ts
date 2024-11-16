@@ -6,10 +6,14 @@ import {
   AIMessage,
   AIMessageChunk,
   HumanMessage,
+  SystemMessage,
   ToolMessage,
 } from "@langchain/core/messages";
+import { ContentChunk as MistralAIContentChunk } from "@mistralai/mistralai/models/components/contentchunk.js";
+import { HTTPClient } from "@mistralai/mistralai/lib/http.js";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { ChatMistralAI } from "../chat_models.js";
+import { _mistralContentChunkToMessageContentComplex } from "../utils.js";
 
 test("Test ChatMistralAI can invoke hello", async () => {
   const model = new ChatMistralAI({
@@ -81,12 +85,8 @@ test("Can call tools using structured tools", async () => {
   const response = await chain.invoke({});
   expect("tool_calls" in response).toBe(true);
   // console.log(response.additional_kwargs.tool_calls?.[0]);
-  expect(response.tool_calls?.[0].name).toBe(
-    "calculator"
-  );
-  expect(
-    response.tool_calls?.[0].args?.calculator
-  ).toBeDefined();
+  expect(response.tool_calls?.[0].name).toBe("calculator");
+  expect(response.tool_calls?.[0].args?.calculator).toBeDefined();
 });
 
 test("Can call tools using raw tools", async () => {
@@ -127,12 +127,8 @@ test("Can call tools using raw tools", async () => {
   const response = await chain.invoke({});
   // console.log(response);
   expect(response.tool_calls?.length).toEqual(1);
-  expect(response.tool_calls?.[0].name).toBe(
-    "calculator"
-  );
-  expect(
-    response.tool_calls?.[0].args?.calculator
-  ).toBeDefined();
+  expect(response.tool_calls?.[0].name).toBe("calculator");
+  expect(response.tool_calls?.[0].args?.calculator).toBeDefined();
 });
 
 test("Can call .stream with tool calling", async () => {
@@ -179,12 +175,8 @@ test("Can call .stream with tool calling", async () => {
 
   expect("tool_calls" in finalRes).toBe(true);
   // console.log(finalRes.additional_kwargs.tool_calls?.[0]);
-  expect(finalRes.tool_calls?.[0].name).toBe(
-    "calculator"
-  );
-  expect(
-    finalRes.tool_calls?.[0].args.calculator
-  ).toBeDefined();
+  expect(finalRes.tool_calls?.[0].name).toBe("calculator");
+  expect(finalRes.tool_calls?.[0].args.calculator).toBeDefined();
 });
 
 test("Can use json mode response format", async () => {
@@ -596,18 +588,10 @@ describe("withStructuredOutput", () => {
     }
     const { raw } = result as { raw: AIMessage };
     expect(raw.tool_calls?.length).toBeGreaterThan(0);
-    expect(raw.tool_calls?.[0].name).toBe(
-      "calculator"
-    );
-    expect(
-      "operation" in (raw.tool_calls?.[0]?.args ?? {})
-    ).toBe(true);
-    expect(
-      "number1" in (raw.tool_calls?.[0]?.args ?? {})
-    ).toBe(true);
-    expect(
-      "number2" in (raw.tool_calls?.[0]?.args ?? {})
-    ).toBe(true);
+    expect(raw.tool_calls?.[0].name).toBe("calculator");
+    expect("operation" in (raw.tool_calls?.[0]?.args ?? {})).toBe(true);
+    expect("number1" in (raw.tool_calls?.[0]?.args ?? {})).toBe(true);
+    expect("number2" in (raw.tool_calls?.[0]?.args ?? {})).toBe(true);
   });
 });
 
@@ -932,4 +916,333 @@ test("withStructuredOutput will always force tool usage", async () => {
   }
   const castMessage = response.raw as AIMessage;
   expect(castMessage.tool_calls).toHaveLength(1);
+});
+
+test("Test ChatMistralAI can invoke with MessageContent input types", async () => {
+  const model = new ChatMistralAI({
+    model: "pixtral-12b-2409",
+  });
+  const messagesListContent = [
+    new SystemMessage({
+      content: "List the top 5 countries in Europe with the highest GDP",
+    }),
+    new HumanMessage({
+      content: [
+        {
+          type: "text",
+          text: "Here is an infographic with European GPDs",
+        },
+        {
+          type: "image_url",
+          image_url: "https://mistral.ai/images/news/pixtral-12b/gdp.png",
+        },
+      ],
+    }),
+  ];
+  const response = await model.invoke(messagesListContent);
+  console.log("response", response);
+  expect(response.content.length).toBeGreaterThan(1);
+});
+
+test("Mistral ContentChunk to MessageContentComplex conversion", () => {
+  const mistralMessages = [
+    {
+      type: "text",
+      text: "Test message",
+    },
+    {
+      type: "image_url",
+      imageUrl: "https://mistral.ai/images/news/pixtral-12b/gdp.png",
+    },
+    {
+      type: "image_url",
+      imageUrl: {
+        url: "https://mistral.ai/images/news/pixtral-12b/gdp.png",
+        detail: "high",
+      },
+    },
+    {
+      type: "image_url",
+      imageUrl: {
+        url: "https://mistral.ai/images/news/pixtral-12b/gdp.png",
+        detail: "medium",
+      },
+    },
+    {
+      type: "image_url",
+      imageUrl: {
+        url: "https://mistral.ai/images/news/pixtral-12b/gdp.png",
+      },
+    },
+  ] as MistralAIContentChunk[];
+
+  expect(_mistralContentChunkToMessageContentComplex(mistralMessages)).toEqual([
+    {
+      type: "text",
+      text: "Test message",
+    },
+    {
+      type: "image_url",
+      image_url: "https://mistral.ai/images/news/pixtral-12b/gdp.png",
+    },
+    {
+      type: "image_url",
+      image_url: {
+        url: "https://mistral.ai/images/news/pixtral-12b/gdp.png",
+        detail: "high",
+      },
+    },
+    {
+      type: "image_url",
+      image_url: {
+        url: "https://mistral.ai/images/news/pixtral-12b/gdp.png",
+      },
+    },
+    {
+      type: "image_url",
+      image_url: {
+        url: "https://mistral.ai/images/news/pixtral-12b/gdp.png",
+      },
+    },
+  ]);
+});
+
+test("Test ChatMistralAI can register BeforeRequestHook function", async () => {
+  const model = new ChatMistralAI({
+    model: "mistral-tiny",
+  });
+  const prompt = ChatPromptTemplate.fromMessages([
+    ["system", "You are a helpful assistant"],
+    ["human", "{input}"],
+  ]);
+
+  let count = 0;
+  const addCount = () => {
+    count += 1;
+  };
+
+  const beforeRequestHook = (): void => {
+    addCount();
+  };
+  model.beforeRequestHooks = [beforeRequestHook];
+  model.addAllHooksToHttpClient();
+
+  await prompt.pipe(model).invoke({
+    input: "Hello",
+  });
+  // console.log(count);
+  expect(count).toEqual(1);
+});
+
+test("Test ChatMistralAI can register RequestErrorHook function", async () => {
+  const fetcher = (): Promise<Response> =>
+    Promise.reject(new Error("Intended fetcher error"));
+  const customHttpClient = new HTTPClient({ fetcher });
+
+  const model = new ChatMistralAI({
+    model: "mistral-tiny",
+    httpClient: customHttpClient,
+    maxRetries: 0,
+  });
+  const prompt = ChatPromptTemplate.fromMessages([
+    ["system", "You are a helpful assistant"],
+    ["human", "{input}"],
+  ]);
+
+  let count = 0;
+  const addCount = () => {
+    count += 1;
+  };
+
+  const RequestErrorHook = (): void => {
+    addCount();
+    console.log("In request error hook");
+  };
+  model.requestErrorHooks = [RequestErrorHook];
+  model.addAllHooksToHttpClient();
+
+  try {
+    await prompt.pipe(model).invoke({
+      input: "Hello",
+    });
+  } catch (e: unknown) {
+    // Intended error, do not rethrow
+  }
+
+  // console.log(count);
+  expect(count).toEqual(1);
+});
+
+test("Test ChatMistralAI can register ResponseHook function", async () => {
+  const model = new ChatMistralAI({
+    model: "mistral-tiny",
+  });
+  const prompt = ChatPromptTemplate.fromMessages([
+    ["system", "You are a helpful assistant"],
+    ["human", "{input}"],
+  ]);
+
+  let count = 0;
+  const addCount = () => {
+    count += 1;
+  };
+
+  const ResponseHook = (): void => {
+    addCount();
+  };
+  model.responseHooks = [ResponseHook];
+  model.addAllHooksToHttpClient();
+
+  await prompt.pipe(model).invoke({
+    input: "Hello",
+  });
+  // console.log(count);
+  expect(count).toEqual(1);
+});
+
+test("Test ChatMistralAI can register multiple hook functions with success", async () => {
+  const model = new ChatMistralAI({
+    model: "mistral-tiny",
+  });
+  const prompt = ChatPromptTemplate.fromMessages([
+    ["system", "You are a helpful assistant"],
+    ["human", "{input}"],
+  ]);
+
+  let count = 0;
+  const addCount = () => {
+    count += 1;
+  };
+
+  const beforeRequestHook = (): void => {
+    addCount();
+  };
+  const ResponseHook = (): void => {
+    addCount();
+  };
+  model.beforeRequestHooks = [beforeRequestHook];
+  model.responseHooks = [ResponseHook];
+  model.addAllHooksToHttpClient();
+
+  await prompt.pipe(model).invoke({
+    input: "Hello",
+  });
+  // console.log(count);
+  expect(count).toEqual(2);
+});
+
+test("Test ChatMistralAI can register multiple hook functions with error", async () => {
+  const fetcher = (): Promise<Response> =>
+    Promise.reject(new Error("Intended fetcher error"));
+  const customHttpClient = new HTTPClient({ fetcher });
+
+  const model = new ChatMistralAI({
+    model: "mistral-tiny",
+    httpClient: customHttpClient,
+    maxRetries: 0,
+  });
+
+  const prompt = ChatPromptTemplate.fromMessages([
+    ["system", "You are a helpful assistant"],
+    ["human", "{input}"],
+  ]);
+
+  let count = 0;
+  const addCount = () => {
+    count += 1;
+  };
+
+  const beforeRequestHook = (): void => {
+    addCount();
+  };
+  const RequestErrorHook = (): void => {
+    addCount();
+  };
+  model.beforeRequestHooks = [beforeRequestHook];
+  model.requestErrorHooks = [RequestErrorHook];
+  model.addAllHooksToHttpClient();
+
+  try {
+    await prompt.pipe(model).invoke({
+      input: "Hello",
+    });
+  } catch (e: unknown) {
+    // Intended error, do not rethrow
+  }
+  // console.log(count);
+  expect(count).toEqual(2);
+});
+
+test("Test ChatMistralAI can remove hook", async () => {
+  const model = new ChatMistralAI({
+    model: "mistral-tiny",
+  });
+  const prompt = ChatPromptTemplate.fromMessages([
+    ["system", "You are a helpful assistant"],
+    ["human", "{input}"],
+  ]);
+
+  let count = 0;
+  const addCount = () => {
+    count += 1;
+  };
+
+  const beforeRequestHook = (): void => {
+    addCount();
+  };
+  model.beforeRequestHooks = [beforeRequestHook];
+  model.addAllHooksToHttpClient();
+
+  await prompt.pipe(model).invoke({
+    input: "Hello",
+  });
+  // console.log(count);
+  expect(count).toEqual(1);
+
+  model.removeHookFromHttpClient(beforeRequestHook);
+
+  await prompt.pipe(model).invoke({
+    input: "Hello",
+  });
+  // console.log(count);
+  expect(count).toEqual(1);
+});
+
+test("Test ChatMistralAI can remove all hooks", async () => {
+  const model = new ChatMistralAI({
+    model: "mistral-tiny",
+  });
+  const prompt = ChatPromptTemplate.fromMessages([
+    ["system", "You are a helpful assistant"],
+    ["human", "{input}"],
+  ]);
+
+  let count = 0;
+  const addCount = () => {
+    count += 1;
+  };
+
+  const beforeRequestHook = (): void => {
+    addCount();
+  };
+  const ResponseHook = (): void => {
+    addCount();
+  };
+  model.beforeRequestHooks = [beforeRequestHook];
+  model.responseHooks = [ResponseHook];
+  model.addAllHooksToHttpClient();
+
+  await prompt.pipe(model).invoke({
+    input: "Hello",
+  });
+  // console.log(count);
+  expect(count).toEqual(2);
+
+  model.removeAllHooksFromHttpClient();
+
+  await prompt.pipe(model).invoke({
+    input: "Hello",
+  });
+  // console.log(count);
+  expect(count).toEqual(2);
 });

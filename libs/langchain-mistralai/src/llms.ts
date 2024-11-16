@@ -3,18 +3,17 @@ import { BaseLLMParams, LLM } from "@langchain/core/language_models/llms";
 import { type BaseLanguageModelCallOptions } from "@langchain/core/language_models/base";
 import { GenerationChunk, LLMResult } from "@langchain/core/outputs";
 import { FIMCompletionRequest as MistralAIFIMCompletionRequest } from "@mistralai/mistralai/models/components/fimcompletionrequest.js";
-import { FIMCompletionStreamRequest as MistralAIFIMCompletionStreamRequest} from "@mistralai/mistralai/models/components/fimcompletionstreamrequest.js";
+import { FIMCompletionStreamRequest as MistralAIFIMCompletionStreamRequest } from "@mistralai/mistralai/models/components/fimcompletionstreamrequest.js";
 import { FIMCompletionResponse as MistralAIFIMCompletionResponse } from "@mistralai/mistralai/models/components/fimcompletionresponse.js";
-import { ChatCompletionChoice as MistralAIChatCompletionChoice} from "@mistralai/mistralai/models/components/chatcompletionchoice.js";
+import { ChatCompletionChoice as MistralAIChatCompletionChoice } from "@mistralai/mistralai/models/components/chatcompletionchoice.js";
 import { CompletionEvent as MistralAIChatCompletionEvent } from "@mistralai/mistralai/models/components/completionevent.js";
 import { CompletionChunk as MistralAICompetionChunk } from "@mistralai/mistralai/models/components/completionchunk.js";
-import { 
+import {
   BeforeRequestHook,
   RequestErrorHook,
   ResponseHook,
   HTTPClient as MistralAIHTTPClient,
 } from "@mistralai/mistralai/lib/http.js";
-import { _mistralContentChunkToMessageContentComplex } from "./utils.js";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { chunkArray } from "@langchain/core/utils/chunk_array";
 import { AsyncCaller } from "@langchain/core/utils/async_caller";
@@ -87,14 +86,14 @@ export interface MistralAIInput extends BaseLLMParams {
    */
   beforeRequestHooks?: BeforeRequestHook[];
   /**
-     * A list of custom hooks that must follow (err: unknown, req: Request) => Awaitable<void>
-     * They are automatically added when a ChatMistralAI instance is created
-     */
+   * A list of custom hooks that must follow (err: unknown, req: Request) => Awaitable<void>
+   * They are automatically added when a ChatMistralAI instance is created
+   */
   requestErrorHooks?: RequestErrorHook[];
   /**
-     * A list of custom hooks that must follow (res: Response, req: Request) => Awaitable<void>
-     * They are automatically added when a ChatMistralAI instance is created
-     */
+   * A list of custom hooks that must follow (res: Response, req: Request) => Awaitable<void>
+   * They are automatically added when a ChatMistralAI instance is created
+   */
   responseHooks?: ResponseHook[];
   /**
    * Optional custom HTTP client to manage API requests
@@ -166,8 +165,10 @@ export class MistralAI
     this.serverURL = fields?.serverURL ?? this.serverURL;
     this.maxRetries = fields?.maxRetries;
     this.maxConcurrency = fields?.maxConcurrency;
-    this.beforeRequestHooks = fields?.beforeRequestHooks ?? this.beforeRequestHooks;
-    this.requestErrorHooks = fields?.requestErrorHooks ?? this.requestErrorHooks;
+    this.beforeRequestHooks =
+      fields?.beforeRequestHooks ?? this.beforeRequestHooks;
+    this.requestErrorHooks =
+      fields?.requestErrorHooks ?? this.requestErrorHooks;
     this.responseHooks = fields?.responseHooks ?? this.responseHooks;
     this.httpClient = fields?.httpClient ?? this.httpClient;
 
@@ -201,7 +202,10 @@ Either provide one via the "apiKey" field in the constructor, or set the "MISTRA
 
   invocationParams(
     options: this["ParsedCallOptions"]
-  ): Omit<MistralAIFIMCompletionRequest | MistralAIFIMCompletionStreamRequest, "prompt"> {
+  ): Omit<
+    MistralAIFIMCompletionRequest | MistralAIFIMCompletionStreamRequest,
+    "prompt"
+  > {
     return {
       model: this.model,
       suffix: options.suffix,
@@ -231,8 +235,8 @@ Either provide one via the "apiKey" field in the constructor, or set the "MISTRA
     let content = result?.choices?.[0].message.content ?? "";
     if (Array.isArray(content)) {
       content = content[0].type === "text" ? content[0].text : "";
-    };
-    return content
+    }
+    return content;
   }
 
   async _generate(
@@ -258,7 +262,7 @@ Either provide one via the "apiKey" field in the constructor, or set the "MISTRA
             let response:
               | Omit<MistralAICompetionChunk, "choices" | "usage">
               | undefined;
-              const stream = await this.completionWithRetry(
+            const stream = await this.completionWithRetry(
               {
                 ...params,
                 prompt: subPrompts[i][x],
@@ -282,20 +286,20 @@ Either provide one via the "apiKey" field in the constructor, or set the "MISTRA
                 let content = part.delta.content ?? "";
                 // Convert MistralContentChunk data into a string
                 if (Array.isArray(content)) {
-                  let strContent = ""
-                  for (let contentChunk of content) {
+                  let strContent = "";
+                  for (const contentChunk of content) {
                     if (contentChunk.type === "text") {
-                      strContent = strContent + contentChunk.text
-                    }
-                    else if (contentChunk.type === "image_url") {
-                      const imageURL = typeof contentChunk.imageUrl === "string"
-                        ? contentChunk.imageUrl
-                        : contentChunk.imageUrl.url
-                      strContent = strContent + imageURL
+                      strContent += contentChunk.text;
+                    } else if (contentChunk.type === "image_url") {
+                      const imageURL =
+                        typeof contentChunk.imageUrl === "string"
+                          ? contentChunk.imageUrl
+                          : contentChunk.imageUrl.url;
+                      strContent += imageURL;
                     }
                   }
-                  content = strContent
-                };
+                  content = strContent;
+                }
                 if (!choices[part.index]) {
                   choices[part.index] = {
                     index: part.index,
@@ -351,13 +355,13 @@ Either provide one via the "apiKey" field in the constructor, or set the "MISTRA
         let text = choice.message?.content ?? "";
         if (Array.isArray(text)) {
           text = text[0].type === "text" ? text[0].text : "";
-        };
+        }
         return {
           text,
           generationInfo: {
             finishReason: choice.finishReason,
           },
-        }
+        };
       })
     );
     return {
@@ -378,7 +382,9 @@ Either provide one via the "apiKey" field in the constructor, or set the "MISTRA
   ): Promise<AsyncIterable<MistralAIChatCompletionEvent>>;
 
   async completionWithRetry(
-    request: MistralAIFIMCompletionRequest | MistralAIFIMCompletionStreamRequest,
+    request:
+      | MistralAIFIMCompletionRequest
+      | MistralAIFIMCompletionStreamRequest,
     options: this["ParsedCallOptions"],
     stream: boolean
   ): Promise<
@@ -394,7 +400,7 @@ Either provide one via the "apiKey" field in the constructor, or set the "MISTRA
       serverURL: this.serverURL,
       timeoutMs: options.timeout,
       // If httpClient exists, pass it into constructor
-      ...( this.httpClient ? {httpClient: this.httpClient} : {})
+      ...(this.httpClient ? { httpClient: this.httpClient } : {}),
     });
     return caller.callWithOptions(
       {
@@ -438,7 +444,7 @@ Either provide one via the "apiKey" field in the constructor, or set the "MISTRA
     };
     const stream = await this.completionWithRetry(params, options, true);
     for await (const message of stream) {
-      const data = message.data
+      const { data } = message;
       const choice = data?.choices[0];
       if (!choice) {
         continue;
@@ -446,7 +452,7 @@ Either provide one via the "apiKey" field in the constructor, or set the "MISTRA
       let text = choice.delta.content ?? "";
       if (Array.isArray(text)) {
         text = text[0].type === "text" ? text[0].text : "";
-      };
+      }
       const chunk = new GenerationChunk({
         text,
         generationInfo: {
@@ -472,26 +478,26 @@ Either provide one via the "apiKey" field in the constructor, or set the "MISTRA
       const hasHooks = [
         this.beforeRequestHooks,
         this.requestErrorHooks,
-        this.responseHooks
-      ].some(hook => hook && hook.length > 0);
+        this.responseHooks,
+      ].some((hook) => hook && hook.length > 0);
       if (hasHooks && !this.httpClient) {
         this.httpClient = new MistralAIHTTPClient();
       }
 
       if (this.beforeRequestHooks) {
-        for(const hook of this.beforeRequestHooks) {
+        for (const hook of this.beforeRequestHooks) {
           this.httpClient?.addHook("beforeRequest", hook);
         }
       }
 
       if (this.requestErrorHooks) {
-        for(const hook of this.requestErrorHooks) {
+        for (const hook of this.requestErrorHooks) {
           this.httpClient?.addHook("requestError", hook);
         }
       }
 
       if (this.responseHooks) {
-        for(const hook of this.responseHooks) {
+        for (const hook of this.responseHooks) {
           this.httpClient?.addHook("response", hook);
         }
       }
@@ -503,19 +509,19 @@ Either provide one via the "apiKey" field in the constructor, or set the "MISTRA
   removeAllHooksFromHttpClient() {
     try {
       if (this.beforeRequestHooks) {
-        for(const hook of this.beforeRequestHooks) {
+        for (const hook of this.beforeRequestHooks) {
           this.httpClient?.removeHook("beforeRequest", hook);
         }
       }
 
       if (this.requestErrorHooks) {
-        for(const hook of this.requestErrorHooks) {
+        for (const hook of this.requestErrorHooks) {
           this.httpClient?.removeHook("requestError", hook);
         }
       }
 
       if (this.responseHooks) {
-        for(const hook of this.responseHooks) {
+        for (const hook of this.responseHooks) {
           this.httpClient?.removeHook("response", hook);
         }
       }
@@ -535,7 +541,6 @@ Either provide one via the "apiKey" field in the constructor, or set the "MISTRA
       throw new Error("Error in removing hook");
     }
   }
-
 
   /** @ignore */
   private async imports() {
