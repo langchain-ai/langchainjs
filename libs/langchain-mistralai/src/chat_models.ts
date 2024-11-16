@@ -334,14 +334,22 @@ function convertMessagesToMistralMessages(
         ),
       };
     }
+
+    // Mistral "assistant" role can only support either content or tool calls but not both
     else if (isAIMessage(message)) {
-      return {
-        role: getRole(message.getType()),
-        content,
-        toolCalls: toolCalls,
+      if (toolCalls === undefined) {
+        return {
+          role: getRole(message.getType()),
+          content
+        };
+      } else {
+        return {
+          role: getRole(message.getType()),
+          toolCalls: toolCalls,
+        };
       };
     }
-
+    
     return {
       role: getRole(message.getType()),
       content,

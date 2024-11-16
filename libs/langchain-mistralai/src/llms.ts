@@ -302,7 +302,7 @@ Either provide one via the "apiKey" field in the constructor, or set the "MISTRA
                     message: {
                       role: "assistant",
                       content,
-                      toolCalls: part.delta.toolCalls,
+                      toolCalls: null,
                     },
                     finishReason: part.finishReason ?? "length",
                   };
