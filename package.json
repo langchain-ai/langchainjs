@@ -46,13 +46,16 @@
   "license": "MIT",
   "devDependencies": {
     "@tsconfig/recommended": "^1.0.2",
-    "@types/jest": "^29.5.3",
+    "@types/jest": "^29.5.14",
+    "@types/oracledb": "^6",
     "@types/semver": "^7",
     "commander": "^11.1.0",
     "dotenv": "^16.0.3",
+    "jest": "^29.7.0",
     "lint-staged": "^13.1.1",
     "prettier": "^2.8.3",
     "semver": "^7.5.4",
+    "ts-jest": "^29.2.5",
     "turbo": "^1.13.3",
     "typescript": "~5.1.6"
   },
@@ -69,5 +72,8 @@
       "eslint --cache --fix"
     ],
     "*.md": "prettier --config .prettierrc --write"
+  },
+  "dependencies": {
+    "oracledb": "^6.7.0"
   }
 }
