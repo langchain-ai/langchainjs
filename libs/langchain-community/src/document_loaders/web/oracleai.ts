@@ -1,9 +1,10 @@
 import { Document } from "@langchain/core/documents";
 import { BaseDocumentLoader } from "@langchain/core/document_loaders/base";
-import { Parser, DomHandler } from "htmlparser2";
+import { Parser } from "htmlparser2";
 import oracledb from "oracledb";
 import crypto from "crypto";
 import fs from "fs";
+import path from 'path';
 
 
 
@@ -16,7 +17,7 @@ interface OutBinds {
     text: oracledb.Lob | null;
 }
 
-class ParseOracleDocMetadata {
+export class ParseOracleDocMetadata {
     private metadata: Metadata;
     private match: boolean;
 
@@ -121,24 +122,6 @@ class OracleDocReader {
     return objectIdHex.slice(0, outLength);
   }
 
-// Helper function to read CLOB data
-  static async readClob(lob: oracledb.Lob): Promise<string> {
-    return new Promise((resolve, reject) => {
-      let clobData = "";
-      lob.setEncoding("utf8");
-      lob.on("data", (chunk) => {
-        clobData += chunk;
-      });
-      lob.on("end", () => {
-        resolve(clobData);
-      });
-      lob.on("error", (err) => {
-        reject(err);
-      });
-    });
-  }
- 
-
   static async readFile(
     conn: oracledb.Connection,
     filePath: string,
@@ -149,7 +132,6 @@ class OracleDocReader {
     try {
       // Read the file as binary data
       const data = await new Promise<Buffer>((resolve, reject) => {
-        const fs = require("fs");
         fs.readFile(filePath, (err: NodeJS.ErrnoException | null, data: Buffer) => {
           if (err) reject(err);
           else resolve(data);
@@ -157,7 +139,7 @@ class OracleDocReader {
       });
 
       if (!data) {
-        return new Document("", metadata);
+        return new Document({pageContent: "", metadata});
       }
 
       const bindVars = {
@@ -185,8 +167,11 @@ class OracleDocReader {
       const textLob = outBinds.text;
 
       // Read and parse metadata
-      let docData = mdataLob ? await OracleDocReader.readClob(mdataLob) : "";
-      let textData = textLob ? await OracleDocReader.readClob(textLob) : "";
+      let docData = await mdataLob?.getData();
+      let textData = await textLob?.getData();
+
+      docData = docData ? docData.toString() : "";
+      textData = textData ? textData.toString() : "";
 
       if (
         docData.startsWith("<!DOCTYPE html") ||
@@ -198,20 +183,17 @@ class OracleDocReader {
       }
 
       // Execute a query to get the current session user
-      const userResult = await conn.execute<{ USERNAME: string }>(
+      const userResult = await conn.execute<string[]>(
         `SELECT USER FROM dual`
       );
 
-      const username = userResult.rows?.[0]?.USERNAME;
+      const username = userResult.rows?.[0]?.[0];
       const docId = OracleDocReader.generateObjectId(`${username}$${filePath}`);
       metadata["_oid"] = docId;
       metadata["_file"] = filePath;
 
-      if (!textData) {
-        return Document("", metadata)
-    } else {
-        return Document(textData, metadata)
-    }
+      textData = textData ?? "";
+      return new Document({pageContent: textData, metadata})
     } catch (ex) {
       console.error(`An exception occurred: ${ex}`);
       console.error(`Skip processing ${filePath}`);
@@ -219,4 +201,67 @@ class OracleDocReader {
     }
   }
 
+}
+
+export enum OracleLoadFromType {
+  FILE,
+  DIR,
+  TABLE,
+};
+
+export class OracleDocLoader extends BaseDocumentLoader {
+  private conn: oracledb.Connection;
+  private loadFrom: string;
+  private loadFromType: OracleLoadFromType;
+  private owner?: string;
+  private colname?: string;
+
+  constructor(conn: oracledb.Connection, loadFrom: string, loadFromType: OracleLoadFromType, 
+              owner?: string, colname?: string) {
+    super();
+    this.conn = conn;
+    this.loadFrom = loadFrom;
+    this.loadFromType = loadFromType;
+    this.owner = owner;
+    this.colname = colname;
+  }
+
+  public async load(): Promise<Document[]> {
+    const documents: Document[] = []
+    const m_params = {"plaintext": "false"}
+
+    switch (this.loadFromType) {
+      case OracleLoadFromType.FILE:
+        const filepath = this.loadFrom
+        const doc = await OracleDocReader.readFile(this.conn, filepath, m_params)
+        if (doc)
+          documents.push(doc);
+        break;
+
+      case OracleLoadFromType.DIR:
+        try {
+          const dirname = this.loadFrom;
+          const files = await fs.promises.readdir(dirname);
+          for (const file of files) {
+            const filepath = path.join(dirname, file);
+            const stats = await fs.promises.lstat(filepath);
+
+            if (stats.isFile()) {
+              const doc = await OracleDocReader.readFile(this.conn, filepath, m_params)
+              if (doc)
+                documents.push(doc);
+            }
+          }
+        } catch (err) {
+          console.error('Error reading directory:', err);
+        }
+        break;
+
+      case OracleLoadFromType.TABLE:
+
+      default:
+        throw new Error("Invalid type to load from");
+    }
+    return documents
+  }
 }
