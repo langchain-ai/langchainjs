@@ -12,7 +12,7 @@ import { ChatCompletionStreamRequest as MistralAIChatCompletionStreamRequest } f
 import { UsageInfo as MistralAITokenUsage } from "@mistralai/mistralai/models/components/usageinfo.js";
 import { CompletionEvent as MistralAIChatCompletionEvent } from "@mistralai/mistralai/models/components/completionevent.js";
 import { ChatCompletionResponse as MistralAIChatCompletionResponse } from "@mistralai/mistralai/models/components/chatcompletionresponse.js";
-import { 
+import {
   BeforeRequestHook,
   RequestErrorHook,
   ResponseHook,
@@ -51,6 +51,7 @@ import {
   ChatGenerationChunk,
   ChatResult,
 } from "@langchain/core/outputs";
+import { AsyncCaller } from "@langchain/core/utils/async_caller";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { NewTokenIndices } from "@langchain/core/callbacks/base";
 import { z } from "zod";
@@ -72,9 +73,9 @@ import {
 } from "@langchain/core/runnables";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { ToolCallChunk } from "@langchain/core/messages/tool";
-import { 
+import {
   _convertToolCallIdToMistralCompatible,
-  _mistralContentChunkToMessageContentComplex
+  _mistralContentChunkToMessageContentComplex,
 } from "./utils.js";
 
 interface TokenUsage {
@@ -238,37 +239,41 @@ function convertMessagesToMistralMessages(
     }
   };
 
-  const getContent = (content: MessageContent, type: MessageType): string | MistralAIContentChunk[] => {
-
-    const _generateContentChunk = (complex: MessageContentComplex, role: string): MistralAIContentChunk => {
-      if (complex.type === "image_url" && (role === "user" || role === "assistant")) {
+  const getContent = (
+    content: MessageContent,
+    type: MessageType
+  ): string | MistralAIContentChunk[] => {
+    const _generateContentChunk = (
+      complex: MessageContentComplex,
+      role: string
+    ): MistralAIContentChunk => {
+      if (
+        complex.type === "image_url" &&
+        (role === "user" || role === "assistant")
+      ) {
         return {
           type: complex.type,
-          imageUrl: complex?.image_url
+          imageUrl: complex?.image_url,
         };
-      };
-      
+      }
+
       if (complex.type === "text") {
         return {
           type: complex.type,
-          text: complex?.text
+          text: complex?.text,
         };
-      };
+      }
 
       throw new Error(
         `ChatMistralAI supports messages of type MessageContentText for role "human", "ai", "function"
           and "system" and MessageContentImageUrl for role "human", "ai", and "function.
-          Received: ${JSON.stringify(
-          content,
-          null,
-          2
-        )}`
+          Received: ${JSON.stringify(content, null, 2)}`
       );
     };
 
     if (typeof content === "string") {
       return content;
-    };
+    }
 
     if (Array.isArray(content)) {
       const mistralRole = getRole(type);
@@ -278,34 +283,36 @@ function convertMessagesToMistralMessages(
         let strContent = "";
         content.forEach((messageContentComplex) => {
           // Ignore all non-text complex message types
-          if (messageContentComplex.type === "text" && "text" in messageContentComplex) {
-            strContent + messageContentComplex.text;
-          };
+          if (
+            messageContentComplex.type === "text" &&
+            "text" in messageContentComplex
+          ) {
+            strContent += messageContentComplex.text;
+          }
         });
         return strContent;
-      };
+      }
 
       // Mistral "assistant" and "user" roles can support Mistral ContentChunks
       // Mistral "system" role can support Mistral TextChunks
-      let newContent: MistralAIContentChunk[] = [];
+      const newContent: MistralAIContentChunk[] = [];
       content.forEach((messageContentComplex) => {
         // Mistral content chunks only support type "text" and "image_url"
-        if (messageContentComplex.type === "text" || messageContentComplex.type == "image_url") {
+        if (
+          messageContentComplex.type === "text" ||
+          messageContentComplex.type === "image_url"
+        ) {
           newContent.push(
             _generateContentChunk(messageContentComplex, mistralRole)
           );
-        };
+        }
       });
       return newContent;
-    };
-    
+    }
+
     throw new Error(
       `ChatMistralAI does not support non text message content for role "ai", "tool", 
-        or "function". Received: ${JSON.stringify(
-        content,
-        null,
-        2
-      )}`
+        or "function". Received: ${JSON.stringify(content, null, 2)}`
     );
   };
 
@@ -329,9 +336,7 @@ function convertMessagesToMistralMessages(
         role: getRole(message.getType()),
         content,
         name: message.name,
-        toolCallId: _convertToolCallIdToMistralCompatible(
-          message.tool_call_id
-        ),
+        toolCallId: _convertToolCallIdToMistralCompatible(message.tool_call_id),
       };
     }
 
@@ -340,16 +345,16 @@ function convertMessagesToMistralMessages(
       if (toolCalls === undefined) {
         return {
           role: getRole(message.getType()),
-          content
+          content,
         };
       } else {
         return {
           role: getRole(message.getType()),
-          toolCalls: toolCalls,
+          toolCalls,
         };
-      };
+      }
     }
-    
+
     return {
       role: getRole(message.getType()),
       content,
@@ -899,6 +904,8 @@ export class ChatMistralAI<
 
   seed?: number;
 
+  maxRetries?: number;
+
   lc_serializable = true;
 
   streamUsage = true;
@@ -935,12 +942,15 @@ export class ChatMistralAI<
     this.safePrompt = fields?.safePrompt ?? this.safePrompt;
     this.randomSeed = fields?.seed ?? fields?.randomSeed ?? this.seed;
     this.seed = this.randomSeed;
+    this.maxRetries = fields?.maxRetries;
     this.httpClient = fields?.httpClient;
     this.modelName = fields?.model ?? fields?.modelName ?? this.model;
     this.model = this.modelName;
     this.streamUsage = fields?.streamUsage ?? this.streamUsage;
-    this.beforeRequestHooks = fields?.beforeRequestHooks ?? this.beforeRequestHooks;
-    this.requestErrorHooks = fields?.requestErrorHooks ?? this.requestErrorHooks;
+    this.beforeRequestHooks =
+      fields?.beforeRequestHooks ?? this.beforeRequestHooks;
+    this.requestErrorHooks =
+      fields?.requestErrorHooks ?? this.requestErrorHooks;
     this.responseHooks = fields?.responseHooks ?? this.responseHooks;
     this.httpClient = fields?.httpClient ?? this.httpClient;
     this.presencePenalty = fields?.presencePenalty ?? this.presencePenalty;
@@ -981,7 +991,10 @@ export class ChatMistralAI<
    */
   invocationParams(
     options?: this["ParsedCallOptions"]
-  ): Omit<MistralAIChatCompletionRequest | MistralAIChatCompletionStreamRequest, "messages"> {
+  ): Omit<
+    MistralAIChatCompletionRequest | MistralAIChatCompletionStreamRequest,
+    "messages"
+  > {
     const { response_format, tools, tool_choice } = options ?? {};
     const mistralAITools: Array<MistralAITool> | undefined = tools?.length
       ? _convertToolToMistralTool(tools)
@@ -1030,19 +1043,25 @@ export class ChatMistralAI<
   ): Promise<MistralAIChatCompletionResponse>;
 
   async completionWithRetry(
-    input: MistralAIChatCompletionRequest | MistralAIChatCompletionStreamRequest,
+    input:
+      | MistralAIChatCompletionRequest
+      | MistralAIChatCompletionStreamRequest,
     streaming: boolean
   ): Promise<
-    MistralAIChatCompletionResponse | AsyncIterable<MistralAIChatCompletionEvent>
+    | MistralAIChatCompletionResponse
+    | AsyncIterable<MistralAIChatCompletionEvent>
   > {
+    const caller = new AsyncCaller({
+      maxRetries: this.maxRetries,
+    });
     const client = new MistralClient({
       apiKey: this.apiKey,
       serverURL: this.serverURL,
       // If httpClient exists, pass it into constructor
-      ...( this.httpClient ? {httpClient: this.httpClient} : {}),
+      ...(this.httpClient ? { httpClient: this.httpClient } : {}),
     });
 
-    return this.caller.call(async () => {
+    return caller.call(async () => {
       try {
         let res:
           | MistralAIChatCompletionResponse
@@ -1134,7 +1153,7 @@ export class ChatMistralAI<
       let text = part.message?.content ?? "";
       if (Array.isArray(text)) {
         text = text[0].type === "text" ? text[0].text : "";
-      };
+      }
       const generation: ChatGeneration = {
         text,
         message: mistralAIResponseToChatMessage(part, response?.usage),
@@ -1192,7 +1211,7 @@ export class ChatMistralAI<
       let text = delta.content ?? "";
       if (Array.isArray(text)) {
         text = text[0].type === "text" ? text[0].text : "";
-      };
+      }
       const generationChunk = new ChatGenerationChunk({
         message,
         text,
@@ -1220,26 +1239,26 @@ export class ChatMistralAI<
       const hasHooks = [
         this.beforeRequestHooks,
         this.requestErrorHooks,
-        this.responseHooks
-      ].some(hook => hook && hook.length > 0);
+        this.responseHooks,
+      ].some((hook) => hook && hook.length > 0);
       if (hasHooks && !this.httpClient) {
         this.httpClient = new MistralAIHTTPClient();
       }
 
       if (this.beforeRequestHooks) {
-        for(const hook of this.beforeRequestHooks) {
+        for (const hook of this.beforeRequestHooks) {
           this.httpClient?.addHook("beforeRequest", hook);
         }
       }
 
       if (this.requestErrorHooks) {
-        for(const hook of this.requestErrorHooks) {
+        for (const hook of this.requestErrorHooks) {
           this.httpClient?.addHook("requestError", hook);
         }
       }
 
       if (this.responseHooks) {
-        for(const hook of this.responseHooks) {
+        for (const hook of this.responseHooks) {
           this.httpClient?.addHook("response", hook);
         }
       }
@@ -1251,19 +1270,19 @@ export class ChatMistralAI<
   removeAllHooksFromHttpClient() {
     try {
       if (this.beforeRequestHooks) {
-        for(const hook of this.beforeRequestHooks) {
+        for (const hook of this.beforeRequestHooks) {
           this.httpClient?.removeHook("beforeRequest", hook);
         }
       }
 
       if (this.requestErrorHooks) {
-        for(const hook of this.requestErrorHooks) {
+        for (const hook of this.requestErrorHooks) {
           this.httpClient?.removeHook("requestError", hook);
         }
       }
 
       if (this.responseHooks) {
-        for(const hook of this.responseHooks) {
+        for (const hook of this.responseHooks) {
           this.httpClient?.removeHook("response", hook);
         }
       }
@@ -1287,7 +1306,7 @@ export class ChatMistralAI<
   /** @ignore */
   _combineLLMOutput() {
     return [];
-  } 
+  }
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1327,11 +1346,11 @@ export class ChatMistralAI<
         { raw: BaseMessage; parsed: RunOutput }
       > {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let schema: z.ZodType<RunOutput> | Record<string, any> = outputSchema;
-    let name = config?.name;
-    let method = config?.method;
-    let includeRaw = config?.includeRaw;
-  
+    const schema: z.ZodType<RunOutput> | Record<string, any> = outputSchema;
+    const name = config?.name;
+    const method = config?.method;
+    const includeRaw = config?.includeRaw;
+
     let llm: Runnable<BaseLanguageModelInput>;
     let outputParser: BaseLLMOutputParser<RunOutput>;
 
@@ -1391,7 +1410,7 @@ export class ChatMistralAI<
             },
           ],
           tool_choice: "any",
-          } as Partial<CallOptions>);
+        } as Partial<CallOptions>);
         outputParser = new JsonOutputKeyToolsParser<RunOutput>({
           returnSingle: true,
           keyName: functionName,

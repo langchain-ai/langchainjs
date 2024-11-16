@@ -53,18 +53,34 @@ export function _mistralContentChunkToMessageContentComplex(
 ): string | MessageContentComplex[] {
   if (!content) {
     return "";
-  };
+  }
   if (typeof content === "string") {
     return content;
-  };
+  }
   return content.map((contentChunk) => {
     // Only Mistral ImageURLChunks need conversion to MessageContentComplex
     if (contentChunk.type === "image_url") {
+      if (
+        typeof contentChunk.imageUrl !== "string" &&
+        contentChunk.imageUrl?.detail
+      ) {
+        const { detail } = contentChunk.imageUrl;
+        // Mistral detail can be any string, but MessageContentComplex only supports
+        // detail to be "high", "auto", or "low"
+        if (detail !== "high" && detail !== "auto" && detail !== "low") {
+          return {
+            type: contentChunk.type,
+            image_url: {
+              url: contentChunk.imageUrl.url,
+            },
+          };
+        }
+      }
       return {
         type: contentChunk.type,
-        image_url: contentChunk.imageUrl
+        image_url: contentChunk.imageUrl,
       };
-    };
+    }
     return contentChunk;
   });
-};
+}

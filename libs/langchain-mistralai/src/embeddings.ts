@@ -1,9 +1,9 @@
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { Embeddings, type EmbeddingsParams } from "@langchain/core/embeddings";
 import { chunkArray } from "@langchain/core/utils/chunk_array";
-import { EmbeddingRequest as MistralAIEmbeddingsRequest} from "@mistralai/mistralai/src/models/components/embeddingrequest.js";
-import { EmbeddingResponse as MistralAIEmbeddingsResponse} from "@mistralai/mistralai/src/models/components/embeddingresponse.js";
-import { 
+import { EmbeddingRequest as MistralAIEmbeddingsRequest } from "@mistralai/mistralai/src/models/components/embeddingrequest.js";
+import { EmbeddingResponse as MistralAIEmbeddingsResponse } from "@mistralai/mistralai/src/models/components/embeddingresponse.js";
+import {
   BeforeRequestHook,
   RequestErrorHook,
   ResponseHook,
@@ -62,21 +62,20 @@ export interface MistralAIEmbeddingsParams extends EmbeddingsParams {
    */
   beforeRequestHooks?: BeforeRequestHook[];
   /**
-     * A list of custom hooks that must follow (err: unknown, req: Request) => Awaitable<void>
-     * They are automatically added when a ChatMistralAI instance is created
-     */
+   * A list of custom hooks that must follow (err: unknown, req: Request) => Awaitable<void>
+   * They are automatically added when a ChatMistralAI instance is created
+   */
   requestErrorHooks?: RequestErrorHook[];
   /**
-     * A list of custom hooks that must follow (res: Response, req: Request) => Awaitable<void>
-     * They are automatically added when a ChatMistralAI instance is created
-     */
+   * A list of custom hooks that must follow (res: Response, req: Request) => Awaitable<void>
+   * They are automatically added when a ChatMistralAI instance is created
+   */
   responseHooks?: ResponseHook[];
   /**
    * Optional custom HTTP client to manage API requests
    * Allows users to add custom fetch implementations, hooks, as well as error and response processing.
    */
   httpClient?: MistralAIHTTPClient;
-
 }
 
 /**
@@ -126,14 +125,15 @@ export class MistralAIEmbeddings
     this.encodingFormat = fields?.encodingFormat ?? this.encodingFormat;
     this.batchSize = fields?.batchSize ?? this.batchSize;
     this.stripNewLines = fields?.stripNewLines ?? this.stripNewLines;
-    this.beforeRequestHooks = fields?.beforeRequestHooks ?? this.beforeRequestHooks;
-    this.requestErrorHooks = fields?.requestErrorHooks ?? this.requestErrorHooks;
+    this.beforeRequestHooks =
+      fields?.beforeRequestHooks ?? this.beforeRequestHooks;
+    this.requestErrorHooks =
+      fields?.requestErrorHooks ?? this.requestErrorHooks;
     this.responseHooks = fields?.responseHooks ?? this.responseHooks;
     this.httpClient = fields?.httpClient ?? this.httpClient;
     this.addAllHooksToHttpClient();
   }
 
-  
   /**
    * Method to generate embeddings for an array of documents. Splits the
    * documents into batches and makes requests to the MistralAI API to generate
@@ -188,20 +188,18 @@ export class MistralAIEmbeddings
   ): Promise<MistralAIEmbeddingsResponse> {
     const { Mistral } = await this.imports();
     const client = new Mistral({
-      apiKey: this.apiKey, 
+      apiKey: this.apiKey,
       serverURL: this.serverURL,
       // If httpClient exists, pass it into constructor
-      ...( this.httpClient ? {httpClient: this.httpClient} : {})
+      ...(this.httpClient ? { httpClient: this.httpClient } : {}),
     });
-    let embeddingsRequest: MistralAIEmbeddingsRequest = {
+    const embeddingsRequest: MistralAIEmbeddingsRequest = {
       model: this.model,
       inputs,
-      encodingFormat: this.encodingFormat
-    }
+      encodingFormat: this.encodingFormat,
+    };
     return this.caller.call(async () => {
-      const res = await client.embeddings.create(
-        embeddingsRequest,
-      );
+      const res = await client.embeddings.create(embeddingsRequest);
       return res;
     });
   }
@@ -215,26 +213,26 @@ export class MistralAIEmbeddings
       const hasHooks = [
         this.beforeRequestHooks,
         this.requestErrorHooks,
-        this.responseHooks
-      ].some(hook => hook && hook.length > 0);
+        this.responseHooks,
+      ].some((hook) => hook && hook.length > 0);
       if (hasHooks && !this.httpClient) {
         this.httpClient = new MistralAIHTTPClient();
       }
 
       if (this.beforeRequestHooks) {
-        for(const hook of this.beforeRequestHooks) {
+        for (const hook of this.beforeRequestHooks) {
           this.httpClient?.addHook("beforeRequest", hook);
         }
       }
 
       if (this.requestErrorHooks) {
-        for(const hook of this.requestErrorHooks) {
+        for (const hook of this.requestErrorHooks) {
           this.httpClient?.addHook("requestError", hook);
         }
       }
 
       if (this.responseHooks) {
-        for(const hook of this.responseHooks) {
+        for (const hook of this.responseHooks) {
           this.httpClient?.addHook("response", hook);
         }
       }
@@ -246,19 +244,19 @@ export class MistralAIEmbeddings
   removeAllHooksFromHttpClient() {
     try {
       if (this.beforeRequestHooks) {
-        for(const hook of this.beforeRequestHooks) {
+        for (const hook of this.beforeRequestHooks) {
           this.httpClient?.removeHook("beforeRequest", hook);
         }
       }
 
       if (this.requestErrorHooks) {
-        for(const hook of this.requestErrorHooks) {
+        for (const hook of this.requestErrorHooks) {
           this.httpClient?.removeHook("requestError", hook);
         }
       }
 
       if (this.responseHooks) {
-        for(const hook of this.responseHooks) {
+        for (const hook of this.responseHooks) {
           this.httpClient?.removeHook("response", hook);
         }
       }
