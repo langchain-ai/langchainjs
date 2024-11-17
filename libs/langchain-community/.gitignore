@@ -866,6 +866,10 @@ document_loaders/web/cheerio.cjs
 document_loaders/web/cheerio.js
 document_loaders/web/cheerio.d.ts
 document_loaders/web/cheerio.d.cts
+document_loaders/web/html.cjs
+document_loaders/web/html.js
+document_loaders/web/html.d.ts
+document_loaders/web/html.d.cts
 document_loaders/web/puppeteer.cjs
 document_loaders/web/puppeteer.js
 document_loaders/web/puppeteer.d.ts
