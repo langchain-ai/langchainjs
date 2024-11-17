@@ -110,7 +110,11 @@ export class LanceDB extends VectorStore {
         "Table not found. Please add vectors to the table first."
       );
     }
-    const results = await this.table.query().nearestTo(query).limit(k).toArray();
+    const results = await this.table
+      .query()
+      .nearestTo(query)
+      .limit(k)
+      .toArray();
 
     const docsAndScore: [Document, number][] = [];
     results.forEach((item) => {
