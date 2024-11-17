@@ -33,6 +33,6 @@ const docs = [
 ];
 
 await PineconeStore.fromDocuments(docs, new OpenAIEmbeddings(), {
-  pineconeIndex: pineconeIndex,
+  pineconeIndex,
   maxConcurrency: 5, // Maximum number of batch requests to allow at once. Each batch is 1000 vectors.
 });
