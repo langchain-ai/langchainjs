@@ -1,8 +1,8 @@
-import { CheerioWebBaseLoader } from "@langchain/community/document_loaders/web/cheerio";
+import { HTMLWebBaseLoader } from "@langchain/community/document_loaders/web/html";
 import { MozillaReadabilityTransformer } from "@langchain/community/document_transformers/mozilla_readability";
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 
-const loader = new CheerioWebBaseLoader(
+const loader = new HTMLWebBaseLoader(
   "https://news.ycombinator.com/item?id=34817881"
 );
 
@@ -11,7 +11,7 @@ const docs = await loader.load();
 const splitter = RecursiveCharacterTextSplitter.fromLanguage("html");
 const transformer = new MozillaReadabilityTransformer();
 
-const sequence = splitter.pipe(transformer);
+const sequence = transformer.pipe(splitter);
 
 const newDocuments = await sequence.invoke(docs);
 
