@@ -11126,38 +11126,65 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@lancedb/vectordb-darwin-arm64@npm:0.4.20":
-  version: 0.4.20
-  resolution: "@lancedb/vectordb-darwin-arm64@npm:0.4.20"
+"@lancedb/lancedb-darwin-arm64@npm:0.13.0":
+  version: 0.13.0
+  resolution: "@lancedb/lancedb-darwin-arm64@npm:0.13.0"
   conditions: os=darwin & cpu=arm64
   languageName: node
   linkType: hard
 
-"@lancedb/vectordb-darwin-x64@npm:0.4.20":
-  version: 0.4.20
-  resolution: "@lancedb/vectordb-darwin-x64@npm:0.4.20"
+"@lancedb/lancedb-darwin-x64@npm:0.13.0":
+  version: 0.13.0
+  resolution: "@lancedb/lancedb-darwin-x64@npm:0.13.0"
   conditions: os=darwin & cpu=x64
   languageName: node
   linkType: hard
 
-"@lancedb/vectordb-linux-arm64-gnu@npm:0.4.20":
-  version: 0.4.20
-  resolution: "@lancedb/vectordb-linux-arm64-gnu@npm:0.4.20"
-  conditions: os=linux & cpu=arm64
+"@lancedb/lancedb-linux-arm64-gnu@npm:0.13.0":
+  version: 0.13.0
+  resolution: "@lancedb/lancedb-linux-arm64-gnu@npm:0.13.0"
+  conditions: os=linux & cpu=arm64 & libc=glibc
   languageName: node
   linkType: hard
 
-"@lancedb/vectordb-linux-x64-gnu@npm:0.4.20":
-  version: 0.4.20
-  resolution: "@lancedb/vectordb-linux-x64-gnu@npm:0.4.20"
-  conditions: os=linux & cpu=x64
+"@lancedb/lancedb-linux-x64-gnu@npm:0.13.0":
+  version: 0.13.0
+  resolution: "@lancedb/lancedb-linux-x64-gnu@npm:0.13.0"
+  conditions: os=linux & cpu=x64 & libc=glibc
   languageName: node
   linkType: hard
 
-"@lancedb/vectordb-win32-x64-msvc@npm:0.4.20":
-  version: 0.4.20
-  resolution: "@lancedb/vectordb-win32-x64-msvc@npm:0.4.20"
+"@lancedb/lancedb-win32-x64-msvc@npm:0.13.0":
+  version: 0.13.0
+  resolution: "@lancedb/lancedb-win32-x64-msvc@npm:0.13.0"
   conditions: os=win32 & cpu=x64
+  languageName: node
+  linkType: hard
+
+"@lancedb/lancedb@npm:^0.13.0":
+  version: 0.13.0
+  resolution: "@lancedb/lancedb@npm:0.13.0"
+  dependencies:
+    "@lancedb/lancedb-darwin-arm64": 0.13.0
+    "@lancedb/lancedb-darwin-x64": 0.13.0
+    "@lancedb/lancedb-linux-arm64-gnu": 0.13.0
+    "@lancedb/lancedb-linux-x64-gnu": 0.13.0
+    "@lancedb/lancedb-win32-x64-msvc": 0.13.0
+    reflect-metadata: ^0.2.2
+  peerDependencies:
+    apache-arrow: ">=13.0.0 <=17.0.0"
+  dependenciesMeta:
+    "@lancedb/lancedb-darwin-arm64":
+      optional: true
+    "@lancedb/lancedb-darwin-x64":
+      optional: true
+    "@lancedb/lancedb-linux-arm64-gnu":
+      optional: true
+    "@lancedb/lancedb-linux-x64-gnu":
+      optional: true
+    "@lancedb/lancedb-win32-x64-msvc":
+      optional: true
+  conditions: (os=darwin | os=linux | os=win32) & (cpu=x64 | cpu=arm64)
   languageName: node
   linkType: hard
 
@@ -11490,6 +11517,7 @@ __metadata:
     "@huggingface/inference": ^2.6.4
     "@ibm-cloud/watsonx-ai": ^1.1.0
     "@jest/globals": ^29.5.0
+    "@lancedb/lancedb": ^0.13.0
     "@langchain/core": "workspace:*"
     "@langchain/openai": ">=0.2.0 <0.4.0"
     "@langchain/scripts": ">=0.1.0 <0.2.0"
@@ -11629,7 +11657,6 @@ __metadata:
     typesense: ^1.5.3
     usearch: ^1.1.1
     uuid: ^10.0.0
-    vectordb: ^0.9.0
     voy-search: 0.6.2
     weaviate-ts-client: ^1.4.0
     web-auth-library: ^1.0.3
@@ -11666,6 +11693,7 @@ __metadata:
     "@gradientai/nodejs-sdk": ^1.2.0
     "@huggingface/inference": ^2.6.4
     "@ibm-cloud/watsonx-ai": "*"
+    "@lancedb/lancedb": ^0.12.0
     "@langchain/core": ">=0.2.21 <0.4.0"
     "@layerup/layerup-security": ^1.5.12
     "@libsql/client": ^0.14.0
@@ -11754,7 +11782,6 @@ __metadata:
     typeorm: ^0.3.20
     typesense: ^1.5.3
     usearch: ^1.1.1
-    vectordb: ^0.1.4
     voy-search: 0.6.2
     weaviate-ts-client: "*"
     web-auth-library: ^1.0.3
@@ -11815,6 +11842,8 @@ __metadata:
     "@gradientai/nodejs-sdk":
       optional: true
     "@huggingface/inference":
+      optional: true
+    "@lancedb/lancedb":
       optional: true
     "@layerup/layerup-security":
       optional: true
@@ -11987,8 +12016,6 @@ __metadata:
     typesense:
       optional: true
     usearch:
-      optional: true
-    vectordb:
       optional: true
     voy-search:
       optional: true
@@ -13231,13 +13258,6 @@ __metadata:
   version: 0.0.4
   resolution: "@neon-rs/load@npm:0.0.4"
   checksum: ceed42a681980f4c96152857f6846434e3a89e25cac14228604a55e7992e96af01f30629026a498341984b405a2687099e56256a9eded9fee5393facca1ef762
-  languageName: node
-  linkType: hard
-
-"@neon-rs/load@npm:^0.0.74":
-  version: 0.0.74
-  resolution: "@neon-rs/load@npm:0.0.74"
-  checksum: d26ec9b08cdf1a7c5aeefe98f77112d205d11b4005a7934b21fe8fd27528847e08e4749e7e6c3fc05ae9f701175a58c11a095ae6af449634df3991a2c82e1dfa
   languageName: node
   linkType: hard
 
@@ -27373,6 +27393,7 @@ __metadata:
     "@getzep/zep-js": ^0.9.0
     "@gomomento/sdk": ^1.51.1
     "@google/generative-ai": ^0.7.0
+    "@lancedb/lancedb": ^0.13.0
     "@langchain/anthropic": "workspace:*"
     "@langchain/aws": "workspace:*"
     "@langchain/azure-cosmosdb": "workspace:*"
@@ -27457,7 +27478,6 @@ __metadata:
     typescript: ~5.1.6
     typesense: ^1.5.3
     uuid: ^10.0.0
-    vectordb: ^0.9.0
     voy-search: 0.6.2
     weaviate-ts-client: ^2.0.0
     zod: ^3.22.4
@@ -38701,7 +38721,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"reflect-metadata@npm:^0.2.1":
+"reflect-metadata@npm:^0.2.1, reflect-metadata@npm:^0.2.2":
   version: 0.2.2
   resolution: "reflect-metadata@npm:0.2.2"
   checksum: a66c7b583e4efdd8f3c3124fbff33da2d0c86d8280617516308b32b2159af7a3698c961db3246387f56f6316b1d33a608f39bb2b49d813316dfc58f6d3bf3210
@@ -43226,35 +43246,6 @@ __metadata:
   version: 1.1.2
   resolution: "vary@npm:1.1.2"
   checksum: ae0123222c6df65b437669d63dfa8c36cee20a504101b2fcd97b8bf76f91259c17f9f2b4d70a1e3c6bbcee7f51b28392833adb6b2770b23b01abec84e369660b
-  languageName: node
-  linkType: hard
-
-"vectordb@npm:^0.9.0":
-  version: 0.9.0
-  resolution: "vectordb@npm:0.9.0"
-  dependencies:
-    "@lancedb/vectordb-darwin-arm64": 0.4.20
-    "@lancedb/vectordb-darwin-x64": 0.4.20
-    "@lancedb/vectordb-linux-arm64-gnu": 0.4.20
-    "@lancedb/vectordb-linux-x64-gnu": 0.4.20
-    "@lancedb/vectordb-win32-x64-msvc": 0.4.20
-    "@neon-rs/load": ^0.0.74
-    axios: ^1.4.0
-  peerDependencies:
-    "@apache-arrow/ts": ^14.0.2
-    apache-arrow: ^14.0.2
-  dependenciesMeta:
-    "@lancedb/vectordb-darwin-arm64":
-      optional: true
-    "@lancedb/vectordb-darwin-x64":
-      optional: true
-    "@lancedb/vectordb-linux-arm64-gnu":
-      optional: true
-    "@lancedb/vectordb-linux-x64-gnu":
-      optional: true
-    "@lancedb/vectordb-win32-x64-msvc":
-      optional: true
-  conditions: (os=darwin | os=linux | os=win32) & (cpu=x64 | cpu=arm64)
   languageName: node
   linkType: hard
 
