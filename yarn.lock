@@ -12599,7 +12599,6 @@ __metadata:
     jest: ^29.5.0
     jest-environment-node: ^29.6.4
     langchain: "workspace:*"
-    openai: ^4.72.0
     prettier: ^2.8.3
     release-it: ^17.6.0
     rollup: ^4.5.2
@@ -14123,15 +14122,6 @@ __metadata:
     encoding: ^0.1.13
     typescript: ^4.9.4
   checksum: 5ff066c23006c6ad8eb3ae5add5aa2633adacf48c539a498f6d97798fb9640254a2ede99f7e47aaff3d885e3df5168ed193990d846acd9bebded7140f18c8eb1
-  languageName: node
-  linkType: hard
-
-"@pinecone-database/pinecone@npm:^3.0.0 || ^4.0.0, @pinecone-database/pinecone@npm:^4.0.0":
-  version: 4.0.0
-  resolution: "@pinecone-database/pinecone@npm:4.0.0"
-  dependencies:
-    encoding: ^0.1.13
-  checksum: 7523d7b8dc6a5d7b5d5cf37c97f6070112473f26d82aec23ca198554634e6bc0883866fcc9a8b2978e287daad8665085cef1d4f16d86a7ba0f8b623d88bdda54
   languageName: node
   linkType: hard
 
@@ -35996,28 +35986,6 @@ __metadata:
   bin:
     openai: bin/cli
   checksum: ba4b3772e806c59b1ea1235a40486392c797906e45dd97914f2cd819b4be2996e207c7b7c67d43236692300354f4e9ffa8ebfca6e97d3555655ebf0f3f01e3f2
-  languageName: node
-  linkType: hard
-
-"openai@npm:^4.72.0":
-  version: 4.72.0
-  resolution: "openai@npm:4.72.0"
-  dependencies:
-    "@types/node": ^18.11.18
-    "@types/node-fetch": ^2.6.4
-    abort-controller: ^3.0.0
-    agentkeepalive: ^4.2.1
-    form-data-encoder: 1.7.2
-    formdata-node: ^4.3.2
-    node-fetch: ^2.6.7
-  peerDependencies:
-    zod: ^3.23.8
-  peerDependenciesMeta:
-    zod:
-      optional: true
-  bin:
-    openai: bin/cli
-  checksum: 483fac9ea6b3215b50be054b16c35d181563d0d2ac5dd9d802d373742dbe2a499d6531bb3d3267ea8835a1563dc185e64b0aecf541b508e576bea8db5884bcf0
   languageName: node
   linkType: hard
 
