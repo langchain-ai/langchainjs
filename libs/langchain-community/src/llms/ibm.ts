@@ -3,12 +3,8 @@ import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { BaseLLM, BaseLLMParams } from "@langchain/core/language_models/llms";
 import { WatsonXAI } from "@ibm-cloud/watsonx-ai";
 import {
-  DeploymentsTextGenerationParams,
-  DeploymentsTextGenerationStreamParams,
   DeploymentTextGenProperties,
   ReturnOptionProperties,
-  TextGenerationParams,
-  TextGenerationStreamParams,
   TextGenLengthPenalty,
   TextGenParameters,
   TextTokenizationParams,
@@ -34,25 +30,28 @@ import {
  * Input to LLM class.
  */
 
-export interface WatsonxCallOptionsLLM
-  extends BaseLanguageModelCallOptions,
-    Omit<
-      Partial<
-        TextGenerationParams &
-          TextGenerationStreamParams &
-          DeploymentsTextGenerationParams &
-          DeploymentsTextGenerationStreamParams
-      >,
-      "input"
-    > {
+export interface WatsonxCallOptionsLLM extends BaseLanguageModelCallOptions {
   maxRetries?: number;
+  parameters?: Partial<WatsonxInputLLM>;
+  idOrName?: string;
 }
 
-export interface WatsonxInputLLM
-  extends TextGenParameters,
-    WatsonxParams,
-    BaseLLMParams {
+export interface WatsonxInputLLM extends WatsonxParams, BaseLLMParams {
   streaming?: boolean;
+  maxNewTokens?: number;
+  decodingMethod?: TextGenParameters.Constants.DecodingMethod | string;
+  lengthPenalty?: TextGenLengthPenalty;
+  minNewTokens?: number;
+  randomSeed?: number;
+  stopSequence?: string[];
+  temperature?: number;
+  timeLimit?: number;
+  topK?: number;
+  topP?: number;
+  repetitionPenalty?: number;
+  truncateInpuTokens?: number;
+  returnOptions?: ReturnOptionProperties;
+  includeStopSequence?: boolean;
 }
 
 /**
@@ -73,7 +72,7 @@ export class WatsonxLLM<
 
   streaming = false;
 
-  model = "ibm/granite-13b-chat-v2";
+  model: string;
 
   maxRetries = 0;
 
@@ -81,7 +80,7 @@ export class WatsonxLLM<
 
   serviceUrl: string;
 
-  max_new_tokens?: number;
+  maxNewTokens?: number;
 
   spaceId?: string;
 
@@ -89,31 +88,31 @@ export class WatsonxLLM<
 
   idOrName?: string;
 
-  decoding_method?: TextGenParameters.Constants.DecodingMethod | string;
+  decodingMethod?: TextGenParameters.Constants.DecodingMethod | string;
 
-  length_penalty?: TextGenLengthPenalty;
+  lengthPenalty?: TextGenLengthPenalty;
 
-  min_new_tokens?: number;
+  minNewTokens?: number;
 
-  random_seed?: number;
+  randomSeed?: number;
 
-  stop_sequences?: string[];
+  stopSequence?: string[];
 
   temperature?: number;
 
-  time_limit?: number;
+  timeLimit?: number;
 
-  top_k?: number;
+  topK?: number;
 
-  top_p?: number;
+  topP?: number;
 
-  repetition_penalty?: number;
+  repetitionPenalty?: number;
 
-  truncate_input_tokens?: number;
+  truncateInpuTokens?: number;
 
-  return_options?: ReturnOptionProperties;
+  returnOptions?: ReturnOptionProperties;
 
-  include_stop_sequence?: boolean;
+  includeStopSequence?: boolean;
 
   maxConcurrency?: number;
 
@@ -123,21 +122,21 @@ export class WatsonxLLM<
     super(fields);
     this.model = fields.model ?? this.model;
     this.version = fields.version;
-    this.max_new_tokens = fields.max_new_tokens ?? this.max_new_tokens;
+    this.maxNewTokens = fields.maxNewTokens ?? this.maxNewTokens;
     this.serviceUrl = fields.serviceUrl;
-    this.decoding_method = fields.decoding_method;
-    this.length_penalty = fields.length_penalty;
-    this.min_new_tokens = fields.min_new_tokens;
-    this.random_seed = fields.random_seed;
-    this.stop_sequences = fields.stop_sequences;
+    this.decodingMethod = fields.decodingMethod;
+    this.lengthPenalty = fields.lengthPenalty;
+    this.minNewTokens = fields.minNewTokens;
+    this.randomSeed = fields.randomSeed;
+    this.stopSequence = fields.stopSequence;
     this.temperature = fields.temperature;
-    this.time_limit = fields.time_limit;
-    this.top_k = fields.top_k;
-    this.top_p = fields.top_p;
-    this.repetition_penalty = fields.repetition_penalty;
-    this.truncate_input_tokens = fields.truncate_input_tokens;
-    this.return_options = fields.return_options;
-    this.include_stop_sequence = fields.include_stop_sequence;
+    this.timeLimit = fields.timeLimit;
+    this.topK = fields.topK;
+    this.topP = fields.topP;
+    this.repetitionPenalty = fields.repetitionPenalty;
+    this.truncateInpuTokens = fields.truncateInpuTokens;
+    this.returnOptions = fields.returnOptions;
+    this.includeStopSequence = fields.includeStopSequence;
     this.maxRetries = fields.maxRetries || this.maxRetries;
     this.maxConcurrency = fields.maxConcurrency;
     this.streaming = fields.streaming || this.streaming;
@@ -150,7 +149,7 @@ export class WatsonxLLM<
 
     if (!fields.projectId && !fields.spaceId && !fields.idOrName)
       throw new Error(
-        "No id specified! At least ide of 1 type has to be specified"
+        "No id specified! At least id of 1 type has to be specified"
       );
     this.projectId = fields?.projectId;
     this.spaceId = fields?.spaceId;
@@ -216,23 +215,23 @@ export class WatsonxLLM<
     const { parameters } = options;
 
     return {
-      max_new_tokens: parameters?.max_new_tokens ?? this.max_new_tokens,
-      decoding_method: parameters?.decoding_method ?? this.decoding_method,
-      length_penalty: parameters?.length_penalty ?? this.length_penalty,
-      min_new_tokens: parameters?.min_new_tokens ?? this.min_new_tokens,
-      random_seed: parameters?.random_seed ?? this.random_seed,
-      stop_sequences: options?.stop ?? this.stop_sequences,
+      max_new_tokens: parameters?.maxNewTokens ?? this.maxNewTokens,
+      decoding_method: parameters?.decodingMethod ?? this.decodingMethod,
+      length_penalty: parameters?.lengthPenalty ?? this.lengthPenalty,
+      min_new_tokens: parameters?.minNewTokens ?? this.minNewTokens,
+      random_seed: parameters?.randomSeed ?? this.randomSeed,
+      stop_sequences: options?.stop ?? this.stopSequence,
       temperature: parameters?.temperature ?? this.temperature,
-      time_limit: parameters?.time_limit ?? this.time_limit,
-      top_k: parameters?.top_k ?? this.top_k,
-      top_p: parameters?.top_p ?? this.top_p,
+      time_limit: parameters?.timeLimit ?? this.timeLimit,
+      top_k: parameters?.topK ?? this.topK,
+      top_p: parameters?.topP ?? this.topP,
       repetition_penalty:
-        parameters?.repetition_penalty ?? this.repetition_penalty,
+        parameters?.repetitionPenalty ?? this.repetitionPenalty,
       truncate_input_tokens:
-        parameters?.truncate_input_tokens ?? this.truncate_input_tokens,
-      return_options: parameters?.return_options ?? this.return_options,
+        parameters?.truncateInpuTokens ?? this.truncateInpuTokens,
+      return_options: parameters?.returnOptions ?? this.returnOptions,
       include_stop_sequence:
-        parameters?.include_stop_sequence ?? this.include_stop_sequence,
+        parameters?.includeStopSequence ?? this.includeStopSequence,
     };
   }
 

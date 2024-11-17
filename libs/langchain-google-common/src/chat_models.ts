@@ -29,9 +29,10 @@ import {
   GoogleAISafetySetting,
   GoogleConnectionParams,
   GooglePlatformType,
-  GeminiContent,
   GeminiTool,
   GoogleAIBaseLanguageModelCallOptions,
+  GoogleAIAPI,
+  GoogleAIAPIParams,
 } from "./types.js";
 import {
   convertToGeminiTools,
@@ -39,7 +40,7 @@ import {
   copyAndValidateModelParamsInto,
 } from "./utils/common.js";
 import { AbstractGoogleLLMConnection } from "./connection.js";
-import { DefaultGeminiSafetyHandler } from "./utils/gemini.js";
+import { DefaultGeminiSafetyHandler, getGeminiAPI } from "./utils/gemini.js";
 import { ApiKeyGoogleAuth, GoogleAbstractedClient } from "./auth.js";
 import { JsonStream } from "./utils/stream.js";
 import { ensureParams } from "./utils/failed_handler.js";
@@ -96,71 +97,21 @@ export class ChatConnection<AuthOptions> extends AbstractGoogleLLMConnection<
     return true;
   }
 
-  async formatContents(
-    input: BaseMessage[],
-    _parameters: GoogleAIModelParams
-  ): Promise<GeminiContent[]> {
-    const inputPromises: Promise<GeminiContent[]>[] = input.map((msg, i) =>
-      this.api.baseMessageToContent(
-        msg,
-        input[i - 1],
-        this.useSystemInstruction
-      )
-    );
-    const inputs = await Promise.all(inputPromises);
-
-    return inputs.reduce((acc, cur) => {
-      // Filter out the system content
-      if (cur.every((content) => content.role === "system")) {
-        return acc;
-      }
-
-      // Combine adjacent function messages
-      if (
-        cur[0]?.role === "function" &&
-        acc.length > 0 &&
-        acc[acc.length - 1].role === "function"
-      ) {
-        acc[acc.length - 1].parts = [
-          ...acc[acc.length - 1].parts,
-          ...cur[0].parts,
-        ];
-      } else {
-        acc.push(...cur);
-      }
-
-      return acc;
-    }, [] as GeminiContent[]);
+  buildGeminiAPI(): GoogleAIAPI {
+    const geminiConfig: GeminiAPIConfig = {
+      useSystemInstruction: this.useSystemInstruction,
+      ...(this.apiConfig as GeminiAPIConfig),
+    };
+    return getGeminiAPI(geminiConfig);
   }
 
-  async formatSystemInstruction(
-    input: BaseMessage[],
-    _parameters: GoogleAIModelParams
-  ): Promise<GeminiContent> {
-    if (!this.useSystemInstruction) {
-      return {} as GeminiContent;
+  get api(): GoogleAIAPI {
+    switch (this.apiName) {
+      case "google":
+        return this.buildGeminiAPI();
+      default:
+        return super.api;
     }
-
-    let ret = {} as GeminiContent;
-    for (let index = 0; index < input.length; index += 1) {
-      const message = input[index];
-      if (message._getType() === "system") {
-        // For system types, we only want it if it is the first message,
-        // if it appears anywhere else, it should be an error.
-        if (index === 0) {
-          // eslint-disable-next-line prefer-destructuring
-          ret = (
-            await this.api.baseMessageToContent(message, undefined, true)
-          )[0];
-        } else {
-          throw new Error(
-            "System messages are only permitted as the first passed message."
-          );
-        }
-      }
-    }
-
-    return ret;
   }
 }
 
@@ -172,7 +123,7 @@ export interface ChatGoogleBaseInput<AuthOptions>
     GoogleConnectionParams<AuthOptions>,
     GoogleAIModelParams,
     GoogleAISafetyParams,
-    GeminiAPIConfig,
+    GoogleAIAPIParams,
     Pick<GoogleAIBaseLanguageModelCallOptions, "streamUsage"> {}
 
 /**
@@ -341,13 +292,14 @@ export abstract class ChatGoogleBase<AuthOptions>
     const response = await this.connection.request(
       messages,
       parameters,
-      options
+      options,
+      runManager
     );
-    const ret = this.connection.api.safeResponseToChatResult(
-      response,
-      this.safetyHandler
-    );
-    await runManager?.handleLLMNewToken(ret.generations[0].text);
+    const ret = this.connection.api.responseToChatResult(response);
+    const chunk = ret?.generations?.[0];
+    if (chunk) {
+      await runManager?.handleLLMNewToken(chunk.text || "");
+    }
     return ret;
   }
 
@@ -361,7 +313,8 @@ export abstract class ChatGoogleBase<AuthOptions>
     const response = await this.streamedConnection.request(
       _messages,
       parameters,
-      options
+      options,
+      runManager
     );
 
     // Get the streaming parser of the response
@@ -372,6 +325,12 @@ export abstract class ChatGoogleBase<AuthOptions>
     // that is either available or added to the queue
     while (!stream.streamDone) {
       const output = await stream.nextChunk();
+      await runManager?.handleCustomEvent(
+        `google-chunk-${this.constructor.name}`,
+        {
+          output,
+        }
+      );
       if (
         output &&
         output.usageMetadata &&
@@ -386,10 +345,7 @@ export abstract class ChatGoogleBase<AuthOptions>
       }
       const chunk =
         output !== null
-          ? this.connection.api.safeResponseToChatGeneration(
-              { data: output },
-              this.safetyHandler
-            )
+          ? this.connection.api.responseToChatGeneration({ data: output })
           : new ChatGenerationChunk({
               text: "",
               generationInfo: { finishReason: "stop" },
@@ -398,8 +354,17 @@ export abstract class ChatGoogleBase<AuthOptions>
                 usage_metadata: usageMetadata,
               }),
             });
-      yield chunk;
-      await runManager?.handleLLMNewToken(chunk.text);
+      if (chunk) {
+        yield chunk;
+        await runManager?.handleLLMNewToken(
+          chunk.text ?? "",
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          { chunk }
+        );
+      }
     }
   }
 

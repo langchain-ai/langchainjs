@@ -1,5 +1,34 @@
 import { GenerationChunk } from "@langchain/core/outputs";
 
+export interface AbstractStream {
+  /**
+   * Add more text to the buffer
+   * @param data
+   */
+  appendBuffer(data: string): void;
+
+  /**
+   * Indicate that there is no more text to be added to the buffer
+   * (ie - our source material is done)
+   */
+  closeBuffer(): void;
+  /**
+   * Get the next chunk that is coming from the stream.
+   * This chunk may be null, usually indicating the last chunk in the stream.
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  nextChunk(): Promise<any>;
+
+  /**
+   * Is the stream done?
+   * A stream is only done if all of the following are true:
+   * - There is no more data to be added to the text buffer
+   * - There is no more data in the text buffer
+   * - There are no chunks that are waiting to be consumed
+   */
+  get streamDone(): boolean;
+}
+
 export function complexValue(value: unknown): unknown {
   if (value === null || typeof value === "undefined") {
     // I dunno what to put here. An error, probably
@@ -68,8 +97,7 @@ export function simpleValue(val: unknown): unknown {
     return val;
   }
 }
-
-export class JsonStream {
+export class JsonStream implements AbstractStream {
   _buffer = "";
 
   _bufferOpen = true;
@@ -247,17 +275,36 @@ export class ComplexJsonStream extends JsonStream {
   }
 }
 
-export class ReadableJsonStream extends JsonStream {
+export class ReadableAbstractStream implements AbstractStream {
+  private baseStream: AbstractStream;
+
   decoder: TextDecoder;
 
-  constructor(body: ReadableStream | null) {
-    super();
+  constructor(baseStream: AbstractStream, body: ReadableStream | null) {
+    this.baseStream = baseStream;
     this.decoder = new TextDecoder("utf-8");
     if (body) {
       void this.run(body);
     } else {
       console.error("Unexpected empty body while streaming");
     }
+  }
+
+  appendBuffer(data: string): void {
+    return this.baseStream.appendBuffer(data);
+  }
+
+  closeBuffer(): void {
+    return this.baseStream.closeBuffer();
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  nextChunk(): Promise<any> {
+    return this.baseStream.nextChunk();
+  }
+
+  get streamDone(): boolean {
+    return this.baseStream.streamDone;
   }
 
   async run(body: ReadableStream) {
@@ -273,5 +320,149 @@ export class ReadableJsonStream extends JsonStream {
         this.closeBuffer();
       }
     }
+  }
+}
+
+export class ReadableJsonStream extends ReadableAbstractStream {
+  constructor(body: ReadableStream | null) {
+    super(new JsonStream(), body);
+  }
+}
+
+export class SseStream implements AbstractStream {
+  _buffer = "";
+
+  _bufferOpen = true;
+
+  appendBuffer(data: string): void {
+    this._buffer += data;
+    this._parseBuffer();
+  }
+
+  closeBuffer(): void {
+    this._bufferOpen = false;
+    this._parseBuffer();
+  }
+
+  /**
+   * Attempt to load an entire event.
+   * For each entire event we load,
+   * send them to be handled.
+   */
+  _parseBuffer(): void {
+    const events = this._buffer.split(/\n\n/);
+    this._buffer = events.pop() ?? "";
+    events.forEach((event) => this._handleEvent(event.trim()));
+
+    if (!this._bufferOpen) {
+      // No more data will be added, and we have parsed
+      // everything. So dump the rest.
+      this._handleEvent(null);
+      this._buffer = "";
+    }
+  }
+
+  /**
+   * Given an event string, get all the fields
+   * in the event. It is assumed there is one field
+   * per line, but that field names can be duplicated,
+   * indicating to append the new value to the previous value
+   * @param event
+   */
+  _parseEvent(event: string | null): Record<string, string> | null {
+    if (!event || event.trim() === "") {
+      return null;
+    }
+    const ret: Record<string, string> = {};
+
+    const lines = event.split(/\n/);
+    lines.forEach((line) => {
+      const match = line.match(/^([^:]+): \s*(.+)\n*$/);
+      if (match && match.length === 3) {
+        const key = match[1];
+        const val = match[2];
+        const cur = ret[key] ?? "";
+        ret[key] = `${cur}${val}`;
+      }
+    });
+
+    return ret;
+  }
+
+  // Set up a potential Promise that the handler can resolve.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  _chunkResolution: (chunk: any) => void;
+
+  // If there is no Promise (it is null), the handler must add it to the queue
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  _chunkPending: Promise<any> | null = null;
+
+  // A queue that will collect chunks while there is no Promise
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  _chunkQueue: any[] = [];
+
+  _handleEvent(event: string | null): void {
+    const chunk = this._parseEvent(event);
+    if (this._chunkPending) {
+      this._chunkResolution(chunk);
+      this._chunkPending = null;
+    } else {
+      this._chunkQueue.push(chunk);
+    }
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async nextChunk(): Promise<any> {
+    if (this._chunkQueue.length > 0) {
+      // If there is data in the queue, return the next queue chunk
+      return this._chunkQueue.shift() as Record<string, string>;
+    } else {
+      // Otherwise, set up a promise that handleChunk will cause to be resolved
+      this._chunkPending = new Promise((resolve) => {
+        this._chunkResolution = resolve;
+      });
+      return this._chunkPending;
+    }
+  }
+
+  get streamDone(): boolean {
+    return (
+      !this._bufferOpen &&
+      this._buffer.length === 0 &&
+      this._chunkQueue.length === 0 &&
+      this._chunkPending === null
+    );
+  }
+}
+
+export class ReadableSseStream extends ReadableAbstractStream {
+  constructor(body: ReadableStream | null) {
+    super(new SseStream(), body);
+  }
+}
+
+export class SseJsonStream extends SseStream {
+  _jsonAttribute: string = "data";
+
+  constructor(jsonAttribute?: string) {
+    super();
+    this._jsonAttribute = jsonAttribute ?? this._jsonAttribute;
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async nextChunk(): Promise<any> {
+    const eventRecord = (await super.nextChunk()) as Record<string, string>;
+    const json = eventRecord?.[this._jsonAttribute];
+    if (!json) {
+      return null;
+    } else {
+      return JSON.parse(json);
+    }
+  }
+}
+
+export class ReadableSseJsonStream extends ReadableAbstractStream {
+  constructor(body: ReadableStream | null) {
+    super(new SseJsonStream(), body);
   }
 }

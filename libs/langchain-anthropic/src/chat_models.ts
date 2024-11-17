@@ -32,7 +32,7 @@ import type {
 
 import { isLangChainTool } from "@langchain/core/utils/function_calling";
 import { AnthropicToolsOutputParser } from "./output_parsers.js";
-import { extractToolCallChunk, handleToolChoice } from "./utils/tools.js";
+import { handleToolChoice } from "./utils/tools.js";
 import { _convertMessagesToAnthropicPayload } from "./utils/message_inputs.js";
 import {
   _makeMessageChunkFromAnthropicEvent,
@@ -815,8 +815,6 @@ export class ChatAnthropicMessages<
 
       const { chunk } = result;
 
-      const newToolCallChunk = extractToolCallChunk(chunk);
-
       // Extract the text content token for text field and runManager.
       const token = extractToken(chunk);
       const generationChunk = new ChatGenerationChunk({
@@ -824,7 +822,7 @@ export class ChatAnthropicMessages<
           // Just yield chunk as it is and tool_use will be concat by BaseChatModel._generateUncached().
           content: chunk.content,
           additional_kwargs: chunk.additional_kwargs,
-          tool_call_chunks: newToolCallChunk ? [newToolCallChunk] : undefined,
+          tool_call_chunks: chunk.tool_call_chunks,
           usage_metadata: shouldStreamUsage ? chunk.usage_metadata : undefined,
           response_metadata: chunk.response_metadata,
           id: chunk.id,

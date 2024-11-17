@@ -13,7 +13,11 @@ import {
   ReadThroughBlobStore,
   SimpleWebBlobStore,
 } from "../experimental/utils/media_core.js";
-import { ReadableJsonStream } from "../utils/stream.js";
+import {
+  ReadableJsonStream,
+  ReadableSseJsonStream,
+  ReadableSseStream,
+} from "../utils/stream.js";
 
 describe("zodToGeminiParameters", () => {
   test("can convert zod schema to gemini schema", () => {
@@ -420,52 +424,112 @@ function toUint8Array(data: string): Uint8Array {
   return new TextEncoder().encode(data);
 }
 
-test("ReadableJsonStream can handle stream", async () => {
-  const data = [
-    toUint8Array("["),
-    toUint8Array('{"i": 1}'),
-    toUint8Array('{"i'),
-    toUint8Array('": 2}'),
-    toUint8Array("]"),
+describe("streaming", () => {
+  test("ReadableJsonStream can handle stream", async () => {
+    const data = [
+      toUint8Array("["),
+      toUint8Array('{"i": 1}'),
+      toUint8Array('{"i'),
+      toUint8Array('": 2}'),
+      toUint8Array("]"),
+    ];
+
+    const source = new ReadableStream({
+      start(controller) {
+        data.forEach((chunk) => controller.enqueue(chunk));
+        controller.close();
+      },
+    });
+    const stream = new ReadableJsonStream(source);
+    expect(await stream.nextChunk()).toEqual({ i: 1 });
+    expect(await stream.nextChunk()).toEqual({ i: 2 });
+    expect(await stream.nextChunk()).toBeNull();
+    expect(stream.streamDone).toEqual(true);
+  });
+
+  test("ReadableJsonStream can handle multibyte stream", async () => {
+    const data = [
+      toUint8Array("["),
+      toUint8Array('{"i": 1, "msg":"hello👋"}'),
+      toUint8Array('{"i": 2,'),
+      toUint8Array('"msg":"こん'),
+      new Uint8Array([0xe3]), // 1st byte of "に"
+      new Uint8Array([0x81, 0xab]), // 2-3rd bytes of "に"
+      toUint8Array("ちは"),
+      new Uint8Array([0xf0, 0x9f]), // first half bytes of "👋"
+      new Uint8Array([0x91, 0x8b]), // second half bytes of "👋"
+      toUint8Array('"}'),
+      toUint8Array("]"),
+    ];
+
+    const source = new ReadableStream({
+      start(controller) {
+        data.forEach((chunk) => controller.enqueue(chunk));
+        controller.close();
+      },
+    });
+    const stream = new ReadableJsonStream(source);
+    expect(await stream.nextChunk()).toEqual({ i: 1, msg: "hello👋" });
+    expect(await stream.nextChunk()).toEqual({ i: 2, msg: "こんにちは👋" });
+    expect(await stream.nextChunk()).toBeNull();
+    expect(stream.streamDone).toEqual(true);
+  });
+
+  const eventData: string[] = [
+    "event: ping\n",
+    'data: {"type": "ping"}\n',
+    "\n",
+    "event: pong\n",
+    'data: {"type": "pong", "value": "ping-pong"}\n',
+    "\n",
+    "\n",
   ];
 
-  const source = new ReadableStream({
-    start(controller) {
-      data.forEach((chunk) => controller.enqueue(chunk));
-      controller.close();
-    },
-  });
-  const stream = new ReadableJsonStream(source);
-  expect(await stream.nextChunk()).toEqual({ i: 1 });
-  expect(await stream.nextChunk()).toEqual({ i: 2 });
-  expect(await stream.nextChunk()).toBeNull();
-  expect(stream.streamDone).toEqual(true);
-});
+  test("SseStream", async () => {
+    const source = new ReadableStream({
+      start(controller) {
+        eventData.forEach((chunk) => controller.enqueue(toUint8Array(chunk)));
+        controller.close();
+      },
+    });
 
-test("ReadableJsonStream can handle multibyte stream", async () => {
-  const data = [
-    toUint8Array("["),
-    toUint8Array('{"i": 1, "msg":"hello👋"}'),
-    toUint8Array('{"i": 2,'),
-    toUint8Array('"msg":"こん'),
-    new Uint8Array([0xe3]), // 1st byte of "に"
-    new Uint8Array([0x81, 0xab]), // 2-3rd bytes of "に"
-    toUint8Array("ちは"),
-    new Uint8Array([0xf0, 0x9f]), // first half bytes of "👋"
-    new Uint8Array([0x91, 0x8b]), // second half bytes of "👋"
-    toUint8Array('"}'),
-    toUint8Array("]"),
-  ];
+    let chunk;
+    const stream = new ReadableSseStream(source);
 
-  const source = new ReadableStream({
-    start(controller) {
-      data.forEach((chunk) => controller.enqueue(chunk));
-      controller.close();
-    },
+    chunk = await stream.nextChunk();
+    expect(chunk.event).toEqual("ping");
+    expect(chunk.data).toEqual('{"type": "ping"}');
+
+    chunk = await stream.nextChunk();
+    expect(chunk.event).toEqual("pong");
+
+    chunk = await stream.nextChunk();
+    expect(chunk).toBeNull();
+
+    expect(stream.streamDone).toEqual(true);
   });
-  const stream = new ReadableJsonStream(source);
-  expect(await stream.nextChunk()).toEqual({ i: 1, msg: "hello👋" });
-  expect(await stream.nextChunk()).toEqual({ i: 2, msg: "こんにちは👋" });
-  expect(await stream.nextChunk()).toBeNull();
-  expect(stream.streamDone).toEqual(true);
+
+  test("SseJsonStream", async () => {
+    const source = new ReadableStream({
+      start(controller) {
+        eventData.forEach((chunk) => controller.enqueue(toUint8Array(chunk)));
+        controller.close();
+      },
+    });
+
+    let chunk;
+    const stream = new ReadableSseJsonStream(source);
+
+    chunk = await stream.nextChunk();
+    expect(chunk.type).toEqual("ping");
+
+    chunk = await stream.nextChunk();
+    expect(chunk.type).toEqual("pong");
+    expect(chunk.value).toEqual("ping-pong");
+
+    chunk = await stream.nextChunk();
+    expect(chunk).toBeNull();
+
+    expect(stream.streamDone).toEqual(true);
+  });
 });

@@ -9,6 +9,7 @@ import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { concat } from "@langchain/core/utils/stream";
 import { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
+import { ChatOpenAI } from "@langchain/openai";
 import { BedrockChat as BedrockChatWeb } from "../bedrock/web.js";
 import { TavilySearchResults } from "../../tools/tavily_search.js";
 
@@ -530,4 +531,32 @@ test("Streaming tool calls with Anthropic", async () => {
   }
   expect(finalChunk?.tool_calls?.[0].name).toBe("weather_tool");
   expect(finalChunk?.tool_calls?.[0].args?.city).toBeDefined();
+});
+
+test("withStructuredOutput result should be compatible with OpenAI typing", async () => {
+  const testSchema = z.object({
+    thinking_process: z
+      .string()
+      .describe(
+        "Think before generating variants and put your reasoning here."
+      ),
+    variants: z
+      .array(
+        z.object({
+          name: z.string(),
+          value: z.string(),
+        })
+      )
+      .describe("Variants of the input"),
+  });
+
+  const _prepareClient = () => {
+    if (Math.random() > 0.5) {
+      return new ChatOpenAI();
+    }
+
+    return new BedrockChatWeb();
+  };
+
+  _prepareClient().withStructuredOutput(testSchema);
 });

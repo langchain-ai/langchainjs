@@ -1,4 +1,5 @@
 /* eslint-disable no-process-env */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import WatsonxAiMlVml_v1 from "@ibm-cloud/watsonx-ai/dist/watsonx-ai-ml/vml_v1.js";
 import { ChatWatsonx, ChatWatsonxInput, WatsonxCallParams } from "../ibm.js";
 import { authenticateAndSetInstance } from "../../utils/ibm.js";
@@ -51,6 +52,7 @@ describe("LLM unit tests", () => {
 
     test("Test basic properties after init", async () => {
       const testProps = {
+        model: "mistralai/mistral-large",
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
         projectId: process.env.WATSONX_AI_PROJECT_ID || "testString",
@@ -62,6 +64,7 @@ describe("LLM unit tests", () => {
 
     test("Test methods after init", () => {
       const testProps: ChatWatsonxInput = {
+        model: "mistralai/mistral-large",
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
         projectId: process.env.WATSONX_AI_PROJECT_ID || "testString",
@@ -82,10 +85,10 @@ describe("LLM unit tests", () => {
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
         projectId: process.env.WATSONX_AI_PROJECT_ID || "testString",
         model: "ibm/granite-13b-chat-v2",
-        max_new_tokens: 100,
+        maxTokens: 100,
         temperature: 0.1,
-        time_limit: 10000,
-        top_p: 1,
+        timeLimit: 10000,
+        topP: 1,
         maxRetries: 3,
         maxConcurrency: 3,
       };
@@ -98,6 +101,7 @@ describe("LLM unit tests", () => {
   describe("Negative tests", () => {
     test("Missing id", async () => {
       const testProps: ChatWatsonxInput = {
+        model: "mistralai/mistral-large",
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
       };
@@ -148,6 +152,7 @@ describe("LLM unit tests", () => {
 
     test("Passing more than one id", async () => {
       const testProps: ChatWatsonxInput = {
+        model: "mistralai/mistral-large",
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
         projectId: process.env.WATSONX_AI_PROJECT_ID || "testString",
@@ -164,6 +169,7 @@ describe("LLM unit tests", () => {
 
     test("Not existing property passed", async () => {
       const testProps = {
+        model: "mistralai/mistral-large",
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
         projectId: process.env.WATSONX_AI_PROJECT_ID || "testString",

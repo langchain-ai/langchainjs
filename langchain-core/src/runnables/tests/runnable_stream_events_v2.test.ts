@@ -871,6 +871,7 @@ test("Runnable streamEvents method with chat model chain", async () => {
         foo: "bar",
         a: "b",
         ls_model_type: "chat",
+        ls_provider: model.getName(),
         ls_stop: undefined,
       },
       data: {
@@ -889,6 +890,7 @@ test("Runnable streamEvents method with chat model chain", async () => {
         a: "b",
         foo: "bar",
         ls_model_type: "chat",
+        ls_provider: model.getName(),
         ls_stop: undefined,
       },
       name: "my_model",
@@ -912,6 +914,7 @@ test("Runnable streamEvents method with chat model chain", async () => {
         a: "b",
         foo: "bar",
         ls_model_type: "chat",
+        ls_provider: model.getName(),
         ls_stop: undefined,
       },
       name: "my_model",
@@ -935,6 +938,7 @@ test("Runnable streamEvents method with chat model chain", async () => {
         a: "b",
         foo: "bar",
         ls_model_type: "chat",
+        ls_provider: model.getName(),
         ls_stop: undefined,
       },
       name: "my_model",
@@ -958,6 +962,7 @@ test("Runnable streamEvents method with chat model chain", async () => {
         a: "b",
         foo: "bar",
         ls_model_type: "chat",
+        ls_provider: model.getName(),
         ls_stop: undefined,
       },
       name: "my_model",
@@ -982,6 +987,7 @@ test("Runnable streamEvents method with chat model chain", async () => {
         foo: "bar",
         a: "b",
         ls_model_type: "chat",
+        ls_provider: model.getName(),
         ls_stop: undefined,
       },
       data: {
@@ -1101,6 +1107,7 @@ test("Chat model that supports streaming, but is invoked, should still emit on_s
         a: "b",
         ls_model_type: "chat",
         ls_stop: undefined,
+        ls_provider: model.getName(),
       },
       data: {
         input: {
@@ -1119,6 +1126,7 @@ test("Chat model that supports streaming, but is invoked, should still emit on_s
         foo: "bar",
         ls_model_type: "chat",
         ls_stop: undefined,
+        ls_provider: model.getName(),
       },
       name: "my_model",
       data: { chunk: new AIMessageChunk({ id: anyString, content: "R" }) },
@@ -1132,6 +1140,7 @@ test("Chat model that supports streaming, but is invoked, should still emit on_s
         foo: "bar",
         ls_model_type: "chat",
         ls_stop: undefined,
+        ls_provider: model.getName(),
       },
       name: "my_model",
       data: { chunk: new AIMessageChunk({ id: anyString, content: "O" }) },
@@ -1145,6 +1154,7 @@ test("Chat model that supports streaming, but is invoked, should still emit on_s
         foo: "bar",
         ls_model_type: "chat",
         ls_stop: undefined,
+        ls_provider: model.getName(),
       },
       name: "my_model",
       data: { chunk: new AIMessageChunk({ id: anyString, content: "A" }) },
@@ -1158,6 +1168,7 @@ test("Chat model that supports streaming, but is invoked, should still emit on_s
         foo: "bar",
         ls_model_type: "chat",
         ls_stop: undefined,
+        ls_provider: model.getName(),
       },
       name: "my_model",
       data: { chunk: new AIMessageChunk({ id: anyString, content: "R" }) },
@@ -1172,6 +1183,7 @@ test("Chat model that supports streaming, but is invoked, should still emit on_s
         a: "b",
         ls_model_type: "chat",
         ls_stop: undefined,
+        ls_provider: model.getName(),
       },
       data: {
         input: {
@@ -1321,6 +1333,7 @@ test("Chat model that doesn't support streaming, but is invoked, should emit one
         a: "b",
         ls_model_type: "chat",
         ls_stop: undefined,
+        ls_provider: model.getName(),
       },
       data: {
         input: {
@@ -1339,6 +1352,7 @@ test("Chat model that doesn't support streaming, but is invoked, should emit one
         foo: "bar",
         ls_model_type: "chat",
         ls_stop: undefined,
+        ls_provider: model.getName(),
       },
       name: "my_model",
       data: {
@@ -1358,6 +1372,7 @@ test("Chat model that doesn't support streaming, but is invoked, should emit one
         a: "b",
         ls_model_type: "chat",
         ls_stop: undefined,
+        ls_provider: model.getName(),
       },
       data: {
         input: {

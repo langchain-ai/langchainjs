@@ -838,6 +838,10 @@ indexes/sqlite.cjs
 indexes/sqlite.js
 indexes/sqlite.d.ts
 indexes/sqlite.d.cts
+document_loaders/web/airtable.cjs
+document_loaders/web/airtable.js
+document_loaders/web/airtable.d.ts
+document_loaders/web/airtable.d.cts
 document_loaders/web/apify_dataset.cjs
 document_loaders/web/apify_dataset.js
 document_loaders/web/apify_dataset.d.ts
@@ -862,6 +866,10 @@ document_loaders/web/cheerio.cjs
 document_loaders/web/cheerio.js
 document_loaders/web/cheerio.d.ts
 document_loaders/web/cheerio.d.cts
+document_loaders/web/html.cjs
+document_loaders/web/html.js
+document_loaders/web/html.d.ts
+document_loaders/web/html.d.cts
 document_loaders/web/puppeteer.cjs
 document_loaders/web/puppeteer.js
 document_loaders/web/puppeteer.d.ts

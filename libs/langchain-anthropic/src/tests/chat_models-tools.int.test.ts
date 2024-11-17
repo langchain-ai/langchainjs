@@ -88,6 +88,44 @@ test("Few shotting with tool calls", async () => {
   expect(res.content).toContain("24");
 });
 
+test("Multipart ToolMessage", async () => {
+  const chat = model.bindTools([new WeatherTool()]);
+  const res = await chat.invoke([
+    new HumanMessage("What is the weather in SF?"),
+    new AIMessage({
+      content: "Let me look up the current weather.",
+      tool_calls: [
+        {
+          id: "toolu_feiwjf9u98r389u498",
+          name: "get_weather",
+          args: {
+            location: "SF",
+          },
+        },
+      ],
+    }),
+    new ToolMessage({
+      tool_call_id: "toolu_feiwjf9u98r389u498",
+      content: [
+        {
+          type: "text",
+          text: "It is currently 24 degrees with hail in San Francisco.",
+        },
+        {
+          type: "image_url",
+          image_url:
+            "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAA5QAAAOUBj+WbPAAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAH0SURBVFiFzZcxSytBEMd/E+PL2aVNKomFpBP1K4iFvEIQrN6neGAZEUWw8xMIthZaSAR5rzPwGi0t9APIK0RBCxMsxiKzst7lLpszeA4Mt7c785//DLs7d6Kq5BURaQOo6kpujLwERKQCdO01UtVeHpxSrujGIWX8ZQTGIgkCItIQkZaI1McVRETqhtlILKrqBwV2AAVugXp8PWbbATpDbOqGpUArsT7E4QaoZYALtpFT1muGkZpQFmvneA2Us7JMwSibr0tkYDWzAGoG8ARUvfk5YA/4CzwC98A5sAs0Pbuq+V5nVjEgi6qNJ4Et4NWyGqRdYAOY8EhkVi+0nD+Af16gQ2ANmAZmgHXgyFv/A5SCsAMJbBvwf2A5w24VeDDb32MhAMx7ZV8KsF8z2xdgdhwE9g3wYIQTcGw+m8NsS9BvLCISOeWjLNjzhHBxtov+pB/DmhkAbZK7uUP/kikBzzaXepQGVKBpPnf2LoYZj9MuvBk5xhUgchrL5oI+258jVOCX+ZzG5iNPK+97QFV7qtp1GuN4Zc/VEfJytpexZLue9t4r8K2PoRZ9ERlwMVcxRTYjimzHFPlBQtGfZHyDj9IG0AoIHnmbLwog0QIa8bXP/JpF9C8bgClN3qBBUngz+gwBTRmPJOXc0VV7InLmxnlx3gDvLHwSZKNszAAAAABJRU5ErkJggg==",
+        },
+      ],
+    }),
+    new AIMessage(
+      "It is currently 24 degrees in San Francisco with hail in San Francisco."
+    ),
+    new HumanMessage("What did you say the weather was?"),
+  ]);
+  expect(res.content).toContain("24");
+});
+
 test("Invalid tool calls should throw an appropriate error", async () => {
   const chat = model.bindTools([new WeatherTool()]);
   let error;

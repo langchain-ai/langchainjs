@@ -37,7 +37,7 @@ class GoogleLLMConnection<AuthOptions> extends AbstractGoogleLLMConnection<
     input: MessageContent,
     _parameters: GoogleAIModelParams
   ): Promise<GeminiContent[]> {
-    const parts = await this.api.messageContentToParts(input);
+    const parts = await this.api.messageContentToParts!(input);
     const contents: GeminiContent[] = [
       {
         role: "user", // Required by Vertex AI
@@ -189,10 +189,7 @@ export abstract class GoogleBaseLLM<AuthOptions>
   ): Promise<string> {
     const parameters = copyAIModelParams(this, options);
     const result = await this.connection.request(prompt, parameters, options);
-    const ret = this.connection.api.safeResponseToString(
-      result,
-      this.safetyHandler
-    );
+    const ret = this.connection.api.responseToString(result);
     return ret;
   }
 
@@ -270,10 +267,7 @@ export abstract class GoogleBaseLLM<AuthOptions>
       {},
       options as BaseLanguageModelCallOptions
     );
-    const ret = this.connection.api.safeResponseToBaseMessage(
-      result,
-      this.safetyHandler
-    );
+    const ret = this.connection.api.responseToBaseMessage(result);
     return ret;
   }
 

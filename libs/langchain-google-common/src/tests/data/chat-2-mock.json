@@ -1,14 +1,6 @@
 {
   "candidates": [
     {
-      "content": {
-        "parts": [
-          {
-            "text": "T"
-          }
-        ],
-        "role": "model"
-      },
       "finishReason": "SAFETY",
       "index": 0,
       "safetyRatings": [
