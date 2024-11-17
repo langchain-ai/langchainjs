@@ -9377,22 +9377,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@edge-runtime/primitives@npm:4.0.2":
-  version: 4.0.2
-  resolution: "@edge-runtime/primitives@npm:4.0.2"
-  checksum: 66ccdadb8bcb02bf7d75d75bc6a611c2d515b09818b8cc4f524944aba58b735aff8a76ba52981a04f89fe616f801d1d947a9b1637a201a3b32f6eca74a6f7001
-  languageName: node
-  linkType: hard
-
-"@edge-runtime/types@npm:^2.2.3":
-  version: 2.2.4
-  resolution: "@edge-runtime/types@npm:2.2.4"
-  dependencies:
-    "@edge-runtime/primitives": 4.0.2
-  checksum: 51b5b1cf8f462dd77038357e1b72737e0e8f37c6e7aa47e0b9cd3aebc81004ad5e41c697d14a66171e5acfddf8bf5a5fc6e76c01dde60daccb5703310a4c4446
-  languageName: node
-  linkType: hard
-
 "@elastic/elasticsearch@npm:^8.4.0":
   version: 8.8.1
   resolution: "@elastic/elasticsearch@npm:8.8.1"
@@ -11530,7 +11514,6 @@ __metadata:
     "@neondatabase/serverless": ^0.9.1
     "@notionhq/client": ^2.2.10
     "@opensearch-project/opensearch": ^2.2.0
-    "@pinecone-database/pinecone": ^1.1.0
     "@planetscale/database": ^1.8.0
     "@premai/prem-sdk": ^0.3.25
     "@qdrant/js-client-rest": ^1.8.2
@@ -12608,7 +12591,7 @@ __metadata:
     "@langchain/core": "workspace:*"
     "@langchain/openai": "workspace:*"
     "@langchain/scripts": ">=0.1.0 <0.2.0"
-    "@pinecone-database/pinecone": ^3.0.0 || ^4.0.0
+    "@pinecone-database/pinecone": ^4.0.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -14130,22 +14113,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@pinecone-database/pinecone@npm:^1.1.0":
-  version: 1.1.0
-  resolution: "@pinecone-database/pinecone@npm:1.1.0"
-  dependencies:
-    "@edge-runtime/types": ^2.2.3
-    "@sinclair/typebox": ^0.29.0
-    "@types/node": ^18.11.17
-    ajv: ^8.12.0
-    cross-fetch: ^3.1.5
-    encoding: ^0.1.13
-    typescript: ^4.9.4
-  checksum: 5ff066c23006c6ad8eb3ae5add5aa2633adacf48c539a498f6d97798fb9640254a2ede99f7e47aaff3d885e3df5168ed193990d846acd9bebded7140f18c8eb1
-  languageName: node
-  linkType: hard
-
-"@pinecone-database/pinecone@npm:^3.0.0 || ^4.0.0, @pinecone-database/pinecone@npm:^4.0.0":
+"@pinecone-database/pinecone@npm:^4.0.0":
   version: 4.0.0
   resolution: "@pinecone-database/pinecone@npm:4.0.0"
   dependencies:
@@ -14819,13 +14787,6 @@ __metadata:
   version: 0.27.8
   resolution: "@sinclair/typebox@npm:0.27.8"
   checksum: 00bd7362a3439021aa1ea51b0e0d0a0e8ca1351a3d54c606b115fdcc49b51b16db6e5f43b4fe7a28c38688523e22a94d49dd31168868b655f0d4d50f032d07a1
-  languageName: node
-  linkType: hard
-
-"@sinclair/typebox@npm:^0.29.0":
-  version: 0.29.6
-  resolution: "@sinclair/typebox@npm:0.29.6"
-  checksum: 02c2ee9e8bcb4e03a2497fc208a5a2ae4f4991347e6f2b2a217027b33eb8ca2bc74e80bfb2654da537453e9e5c25d59dbad2d32d4fe47ffec357330bf343bf7a
   languageName: node
   linkType: hard
 
@@ -19363,13 +19324,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:^18.11.17":
-  version: 18.18.4
-  resolution: "@types/node@npm:18.18.4"
-  checksum: 4901e91c4cc479bb58acbcd79236a97a0ad6db4a53cb1f4ba4cf32af15324c61b16faa6e31c1b09bf538a20feb5f5274239157ce5237f5741db0b9ab71e69c52
-  languageName: node
-  linkType: hard
-
 "@types/node@npm:^18.11.18":
   version: 18.16.19
   resolution: "@types/node@npm:18.16.19"
@@ -20958,7 +20912,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ajv@npm:^8.0.0, ajv@npm:^8.12.0, ajv@npm:^8.6.3, ajv@npm:^8.9.0":
+"ajv@npm:^8.0.0, ajv@npm:^8.6.3, ajv@npm:^8.9.0":
   version: 8.12.0
   resolution: "ajv@npm:8.12.0"
   dependencies:

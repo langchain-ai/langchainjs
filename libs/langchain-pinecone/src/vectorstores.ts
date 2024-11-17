@@ -88,7 +88,7 @@ export type PineconeDeleteParams = {
  *
  * const pinecone = new PineconeClient();
  *
- * // Will automatically read the PINECONE_API_KEY and PINECONE_ENVIRONMENT env vars
+ * // Will automatically read the PINECONE_API_KEY env var
  * const pineconeIndex = pinecone.Index(process.env.PINECONE_INDEX!);
  *
  * const embeddings = new OpenAIEmbeddings({

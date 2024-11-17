@@ -91,7 +91,6 @@
     "@neondatabase/serverless": "^0.9.1",
     "@notionhq/client": "^2.2.10",
     "@opensearch-project/opensearch": "^2.2.0",
-    "@pinecone-database/pinecone": "^1.1.0",
     "@planetscale/database": "^1.8.0",
     "@premai/prem-sdk": "^0.3.25",
     "@qdrant/js-client-rest": "^1.8.2",

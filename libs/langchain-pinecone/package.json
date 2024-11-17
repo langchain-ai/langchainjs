@@ -32,7 +32,7 @@
   "author": "Pinecone, Inc",
   "license": "MIT",
   "dependencies": {
-    "@pinecone-database/pinecone": "^3.0.0 || ^4.0.0",
+    "@pinecone-database/pinecone": "^4.0.0",
     "flat": "^5.0.2",
     "uuid": "^10.0.0"
   },
