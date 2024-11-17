@@ -2,7 +2,6 @@ import {
   AsyncCaller,
   AsyncCallerParams,
 } from "@langchain/core/utils/async_caller";
-import type { SelectorType } from "cheerio";
 import { BaseDocumentLoader } from "@langchain/core/document_loaders/base";
 import { Document } from "@langchain/core/documents";
 import type { DocumentLoader } from "@langchain/core/document_loaders/base";
@@ -32,7 +31,8 @@ export interface WebBaseLoaderParams extends AsyncCallerParams {
    * @deprecated Use CheerioWebBaseLoaderParams from @langchain/community/document_loaders/web/cheerio
    * instead.
    */
-  selector?: SelectorType;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  selector?: any;
 }
 
 export interface WebBaseLoader extends DocumentLoader {
