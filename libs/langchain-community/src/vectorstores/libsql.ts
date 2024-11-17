@@ -3,6 +3,9 @@ import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { VectorStore } from "@langchain/core/vectorstores";
 import type { Client, InStatement } from "@libsql/client";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type MetadataDefault = Record<string, any>;
+
 /**
  * Interface for LibSQLVectorStore configuration options.
  */
@@ -18,8 +21,10 @@ export interface LibSQLVectorStoreArgs {
 /**
  * A vector store using LibSQL/Turso for storage and retrieval.
  */
-export class LibSQLVectorStore extends VectorStore {
-  declare FilterType: (doc: Document) => boolean;
+export class LibSQLVectorStore<
+  Metadata extends MetadataDefault = MetadataDefault
+> extends VectorStore {
+  declare FilterType: (doc: Document<Metadata>) => boolean;
 
   private db;
 
@@ -51,10 +56,10 @@ export class LibSQLVectorStore extends VectorStore {
 
   /**
    * Adds documents to the vector store.
-   * @param {Document[]} documents - The documents to add.
+   * @param {Document<Metadata>[]} documents - The documents to add.
    * @returns {Promise<string[]>} The IDs of the added documents.
    */
-  async addDocuments(documents: Document[]): Promise<string[]> {
+  async addDocuments(documents: Document<Metadata>[]): Promise<string[]> {
     const texts = documents.map(({ pageContent }) => pageContent);
     const embeddings = await this.embeddings.embedDocuments(texts);
 
@@ -64,12 +69,12 @@ export class LibSQLVectorStore extends VectorStore {
   /**
    * Adds vectors to the vector store.
    * @param {number[][]} vectors - The vectors to add.
-   * @param {Document[]} documents - The documents associated with the vectors.
+   * @param {Document<Metadata>[]} documents - The documents associated with the vectors.
    * @returns {Promise<string[]>} The IDs of the added vectors.
    */
   async addVectors(
     vectors: number[][],
-    documents: Document[]
+    documents: Document<Metadata>[]
   ): Promise<string[]> {
     const rows = vectors.map((embedding, idx) => ({
       content: documents[idx].pageContent,
@@ -102,14 +107,14 @@ export class LibSQLVectorStore extends VectorStore {
    * Performs a similarity search using a vector query and returns documents with their scores.
    * @param {number[]} query - The query vector.
    * @param {number} k - The number of results to return.
-   * @returns {Promise<[Document, number][]>} An array of tuples containing the similar documents and their scores.
+   * @returns {Promise<[Document<Metadata>, number][]>} An array of tuples containing the similar documents and their scores.
    */
   async similaritySearchVectorWithScore(
     query: number[],
     k: number
     // filter is currently unused
     // filter?: this["FilterType"]
-  ): Promise<[Document, number][]> {
+  ): Promise<[Document<Metadata>, number][]> {
     // Potential SQL injection risk if query vector is not properly sanitized.
     if (!query.every((num) => typeof num === "number" && !Number.isNaN(num))) {
       throw new Error("Invalid query vector: all elements must be numbers");
@@ -130,7 +135,7 @@ export class LibSQLVectorStore extends VectorStore {
     return results.rows.map((row: any) => {
       const metadata = JSON.parse(row.metadata);
 
-      const doc = new Document({
+      const doc = new Document<Metadata>({
         id: String(row.id),
         metadata,
         pageContent: row.content,
@@ -175,12 +180,12 @@ export class LibSQLVectorStore extends VectorStore {
    * @param {LibSQLVectorStoreArgs} [options] - Configuration options for the vector store.
    * @returns {Promise<LibSQLVectorStore>} A new LibSQLVectorStore instance.
    */
-  static async fromTexts(
+  static async fromTexts<Metadata extends MetadataDefault = MetadataDefault>(
     texts: string[],
-    metadatas: object[] | object,
+    metadatas: Metadata[] | Metadata,
     embeddings: EmbeddingsInterface,
     options: LibSQLVectorStoreArgs
-  ): Promise<LibSQLVectorStore> {
+  ): Promise<LibSQLVectorStore<Metadata>> {
     const docs = texts.map((text, i) => {
       const metadata = Array.isArray(metadatas) ? metadatas[i] : metadatas;
 
@@ -198,12 +203,14 @@ export class LibSQLVectorStore extends VectorStore {
    * @param {LibSQLVectorStoreArgs} [options] - Configuration options for the vector store.
    * @returns {Promise<LibSQLVectorStore>} A new LibSQLVectorStore instance.
    */
-  static async fromDocuments(
-    docs: Document[],
+  static async fromDocuments<
+    Metadata extends MetadataDefault = MetadataDefault
+  >(
+    docs: Document<Metadata>[],
     embeddings: EmbeddingsInterface,
     options: LibSQLVectorStoreArgs
-  ): Promise<LibSQLVectorStore> {
-    const instance = new this(embeddings, options);
+  ): Promise<LibSQLVectorStore<Metadata>> {
+    const instance = new this<Metadata>(embeddings, options);
 
     await instance.addDocuments(docs);
 
