@@ -2,6 +2,10 @@ import { Document } from "@langchain/core/documents";
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { VectorStore } from "@langchain/core/vectorstores";
 import type { Client, InStatement } from "@libsql/client";
+import {
+  SqliteWhereBuilder,
+  WhereCondition,
+} from "../utils/sqlite_where_builder.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type MetadataDefault = Record<string, any>;
@@ -24,7 +28,7 @@ export interface LibSQLVectorStoreArgs {
 export class LibSQLVectorStore<
   Metadata extends MetadataDefault = MetadataDefault
 > extends VectorStore {
-  declare FilterType: (doc: Document<Metadata>) => boolean;
+  declare FilterType: string | InStatement | WhereCondition<Metadata>;
 
   private db;
 
@@ -111,9 +115,8 @@ export class LibSQLVectorStore<
    */
   async similaritySearchVectorWithScore(
     query: number[],
-    k: number
-    // filter is currently unused
-    // filter?: this["FilterType"]
+    k: number,
+    filter?: this["FilterType"]
   ): Promise<[Document<Metadata>, number][]> {
     // Potential SQL injection risk if query vector is not properly sanitized.
     if (!query.every((num) => typeof num === "number" && !Number.isNaN(num))) {
@@ -122,12 +125,35 @@ export class LibSQLVectorStore<
 
     const queryVector = `[${query.join(",")}]`;
 
-    const sql: InStatement = {
+    const sql = {
       sql: `SELECT ${this.table}.rowid as id, ${this.table}.content, ${this.table}.metadata, vector_distance_cos(${this.table}.${this.column}, vector(:queryVector)) AS distance
       FROM vector_top_k('idx_${this.table}_${this.column}', vector(:queryVector), CAST(:k AS INTEGER)) as top_k
       JOIN ${this.table} ON top_k.rowid = ${this.table}.rowid`,
       args: { queryVector, k },
-    };
+    } satisfies InStatement;
+
+    // Filter is a raw sql where clause, so append it to the join
+    if (typeof filter === "string") {
+      sql.sql += ` AND ${filter}`;
+    } else if (typeof filter === "object") {
+      // Filter is an in statement.
+      if ("sql" in filter) {
+        sql.sql += ` AND ${filter.sql}`;
+        sql.args = {
+          ...filter.args,
+          ...sql.args,
+        };
+      } else {
+        const builder = new SqliteWhereBuilder(filter);
+        const where = builder.buildWhereClause();
+
+        sql.sql += ` AND ${where.sql}`;
+        sql.args = {
+          ...where.args,
+          ...sql.args,
+        };
+      }
+    }
 
     const results = await this.db.execute(sql);
 
