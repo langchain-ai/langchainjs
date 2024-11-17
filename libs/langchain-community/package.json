@@ -79,6 +79,7 @@
     "@huggingface/inference": "^2.6.4",
     "@ibm-cloud/watsonx-ai": "^1.1.0",
     "@jest/globals": "^29.5.0",
+    "@lancedb/lancedb": "^0.13.0",
     "@langchain/core": "workspace:*",
     "@langchain/scripts": ">=0.1.0 <0.2.0",
     "@langchain/standard-tests": "0.0.0",
@@ -210,7 +211,6 @@
     "typescript": "~5.1.6",
     "typesense": "^1.5.3",
     "usearch": "^1.1.1",
-    "vectordb": "^0.9.0",
     "voy-search": "0.6.2",
     "weaviate-ts-client": "^1.4.0",
     "web-auth-library": "^1.0.3",
@@ -246,6 +246,7 @@
     "@gradientai/nodejs-sdk": "^1.2.0",
     "@huggingface/inference": "^2.6.4",
     "@ibm-cloud/watsonx-ai": "*",
+    "@lancedb/lancedb": "^0.12.0",
     "@langchain/core": ">=0.2.21 <0.4.0",
     "@layerup/layerup-security": "^1.5.12",
     "@libsql/client": "^0.14.0",
@@ -334,7 +335,6 @@
     "typeorm": "^0.3.20",
     "typesense": "^1.5.3",
     "usearch": "^1.1.1",
-    "vectordb": "^0.1.4",
     "voy-search": "0.6.2",
     "weaviate-ts-client": "*",
     "web-auth-library": "^1.0.3",
@@ -422,6 +422,9 @@
       "optional": true
     },
     "@huggingface/inference": {
+      "optional": true
+    },
+    "@lancedb/lancedb": {
       "optional": true
     },
     "@layerup/layerup-security": {
@@ -680,9 +683,6 @@
       "optional": true
     },
     "usearch": {
-      "optional": true
-    },
-    "vectordb": {
       "optional": true
     },
     "voy-search": {
