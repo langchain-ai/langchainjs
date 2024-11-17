@@ -1,9 +1,8 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import { Pinecone, RecordMetadata } from "@pinecone-database/pinecone";
+import { Pinecone } from "@pinecone-database/pinecone";
 import { Document } from "@langchain/core/documents";
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { PineconeStore } from "@langchain/pinecone";
-import { Index } from "@upstash/vector";
 // import { Index } from "@upstash/vector";
 
 // Instantiate a new Pinecone client, which will automatically read the
@@ -34,6 +33,6 @@ const docs = [
 ];
 
 await PineconeStore.fromDocuments(docs, new OpenAIEmbeddings(), {
-  pineconeIndex: pineconeIndex as Index<RecordMetadata>,
+  pineconeIndex: pineconeIndex,
   maxConcurrency: 5, // Maximum number of batch requests to allow at once. Each batch is 1000 vectors.
 });
