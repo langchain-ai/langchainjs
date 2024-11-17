@@ -5,7 +5,7 @@ import type { Client, InStatement } from "@libsql/client";
 import {
   SqliteWhereBuilder,
   WhereCondition,
-} from "../structured_query/sqlite_where_builder.js";
+} from "../utils/sqlite_where_builder.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type MetadataDefault = Record<string, any>;
@@ -154,8 +154,6 @@ export class LibSQLVectorStore<
         };
       }
     }
-
-    console.log(sql);
 
     const results = await this.db.execute(sql);
 
