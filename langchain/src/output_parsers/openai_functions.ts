@@ -9,6 +9,7 @@ import {
   BaseCumulativeTransformOutputParser,
   type BaseCumulativeTransformOutputParserInput,
   BaseLLMOutputParser,
+  OutputParserException,
 } from "@langchain/core/output_parsers";
 import { parsePartialJson } from "@langchain/core/output_parsers";
 import { Optional } from "../types/type-utils.js";
@@ -153,8 +154,7 @@ export class JsonOutputFunctionsParser<
     return this.parse(result);
   }
 
-  async parse(text: string): Promise<Output>
-  {
+  async parse(text: string): Promise<Output> {
     try {
       const parsedResult = JSON.parse(text);
       if (this.argsOnly) {
@@ -163,7 +163,7 @@ export class JsonOutputFunctionsParser<
       parsedResult.arguments = JSON.parse(parsedResult.arguments);
       return parsedResult;
     } catch (e) {
-      throw new Error(
+      throw new OutputParserException(
         `Failed to parse. Text: "${text}". Error: ${e}`
       );
     }
