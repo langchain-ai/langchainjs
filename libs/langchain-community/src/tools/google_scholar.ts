@@ -1,5 +1,6 @@
 import { Tool } from "@langchain/core/tools";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
+import fetch from "node-fetch"; // For making HTTP requests
 
 /**
  * Interface for parameters required by GoogleScholarAPI class.
@@ -9,7 +10,7 @@ export interface GoogleScholarAPIParams {
 }
 
 /**
- * Tool that queries the Google Scholar API
+ * Tool that queries Google Scholar using SerpApi
  */
 export class GoogleScholarAPI extends Tool {
   static lc_name() {
@@ -18,7 +19,7 @@ export class GoogleScholarAPI extends Tool {
 
   get lc_secrets(): { [key: string]: string } | undefined {
     return {
-      apiKey: "GOOGLE_SCHOLAR_API_KEY",
+      apiKey: "SERP_API_KEY",
     };
   }
 
@@ -26,65 +27,57 @@ export class GoogleScholarAPI extends Tool {
 
   protected apiKey: string;
 
-  description = `A wrapper around the Google Scholar API. Useful for searching academic papers or 
-  articles by keywords or authors. Input should be a search query string.`;
+  description = `A wrapper around Google Scholar API via SerpApi. Useful for querying academic 
+  articles and papers by keywords or authors. Input should be a search query string.`;
 
   constructor(fields?: GoogleScholarAPIParams) {
     super(...arguments);
     const apiKey =
-      fields?.apiKey ?? getEnvironmentVariable("GOOGLE_SCHOLAR_API_KEY");
+      fields?.apiKey ?? getEnvironmentVariable("SERP_API_KEY");
     if (!apiKey) {
       throw new Error(
-        `Google Scholar API key not set. You can set it as "GOOGLE_SCHOLAR_API_KEY" in your environment variables.`
+        `SerpApi key not set. You can set it as "SERP_API_KEY" in your environment variables.`
       );
     }
     this.apiKey = apiKey;
   }
 
   /**
-   * Makes an API call to Google Scholar.
+   * Makes a request to SerpApi for Google Scholar results.
    * @param input - Search query string.
    * @returns A JSON string containing the search results.
    */
   async _call(input: string): Promise<string> {
-    const url = `https://scholar.googleapis.com/v1/search`; // Example API endpoint
-    const body = {
-      query: input,
-      limit: 10, // Maximum number of results to return
-    };
+    const url = `https://serpapi.com/search.json?q=${encodeURIComponent(
+      input
+    )}&engine=google_scholar&api_key=${this.apiKey}`;
 
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        "X-Goog-Api-Key": this.apiKey,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(body),
-    });
+    const response = await fetch(url);
 
     if (!response.ok) {
       let message;
       try {
         const json = await response.json();
-        message = json.error.message;
+        message = json.error;
       } catch (error) {
         message =
-          "Unable to parse error message: Google Scholar API did not return a JSON response.";
+          "Unable to parse error message: SerpApi did not return a JSON response.";
       }
       throw new Error(
-        `Got ${response.status}: ${response.statusText} error from Google Scholar API: ${message}`
+        `Got ${response.status}: ${response.statusText} error from SerpApi: ${message}`
       );
     }
 
     const json = await response.json();
 
-    const results = json.results?.map((item: any) => ({
-      title: item.title,
-      authors: item.authors?.join(", "),
-      publicationDate: item.publication_date,
-      abstract: item.abstract,
-      link: item.link,
-    })) ?? [];
+    const results =
+      json.scholar_results?.map((item: any) => ({
+        title: item.title,
+        link: item.link,
+        snippet: item.snippet,
+        publication_info: item.publication_info?.summary,
+        authors: item.authors?.map((author: any) => author.name).join(", "),
+      })) ?? [];
 
     return JSON.stringify(results, null, 2);
   }
