@@ -1177,11 +1177,10 @@ test("Can stream o1 requests", async () => {
   let finalMsg: AIMessageChunk | undefined;
   let numChunks = 0;
   for await (const chunk of stream) {
-    console.log("chunk", chunk);
     finalMsg = finalMsg ? concat(finalMsg, chunk) : chunk;
     numChunks += 1;
   }
-  console.log(finalMsg);
+
   expect(finalMsg).toBeTruthy();
   if (!finalMsg) {
     throw new Error("No final message found");
