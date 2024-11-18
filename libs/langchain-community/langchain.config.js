@@ -198,7 +198,6 @@ export const config = {
     "retrievers/chaindesk": "retrievers/chaindesk",
     "retrievers/databerry": "retrievers/databerry",
     "retrievers/dria": "retrievers/dria",
-    "retrievers/ibm": "retrievers/ibm",
     "retrievers/metal": "retrievers/metal",
     "retrievers/remote": "retrievers/remote/index",
     "retrievers/supabase": "retrievers/supabase",
@@ -220,6 +219,8 @@ export const config = {
     // graphs
     "graphs/neo4j_graph": "graphs/neo4j_graph",
     "graphs/memgraph_graph": "graphs/memgraph_graph",
+    // document_compressors
+    "document_compressors/ibm": "document_compressors/ibm",
     // document transformers
     "document_transformers/html_to_text": "document_transformers/html_to_text",
     "document_transformers/mozilla_readability":
@@ -429,7 +430,6 @@ export const config = {
     "retrievers/amazon_kendra",
     "retrievers/amazon_knowledge_base",
     "retrievers/dria",
-    "retrievers/ibm",
     "retrievers/metal",
     "retrievers/supabase",
     "retrievers/vectara_summary",
@@ -445,6 +445,8 @@ export const config = {
     "cache/upstash_redis",
     "graphs/neo4j_graph",
     "graphs/memgraph_graph",
+    // document_compressors
+    "document_compressors/ibm",
     // document_transformers
     "document_transformers/html_to_text",
     "document_transformers/mozilla_readability",

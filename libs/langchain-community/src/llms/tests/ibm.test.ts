@@ -40,7 +40,7 @@ export const testProperties = (
     checkProperty<typeof notExTestProps>(notExTestProps, instance, false);
 };
 
-describe("Rerank unit tests", () => {
+describe("LLM unit tests", () => {
   describe("Positive tests", () => {
     test("Test authentication function", () => {
       const instance = authenticateAndSetInstance({

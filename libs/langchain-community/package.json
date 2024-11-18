@@ -2121,15 +2121,6 @@
       "import": "./retrievers/dria.js",
       "require": "./retrievers/dria.cjs"
     },
-    "./retrievers/ibm": {
-      "types": {
-        "import": "./retrievers/ibm.d.ts",
-        "require": "./retrievers/ibm.d.cts",
-        "default": "./retrievers/ibm.d.ts"
-      },
-      "import": "./retrievers/ibm.js",
-      "require": "./retrievers/ibm.cjs"
-    },
     "./retrievers/metal": {
       "types": {
         "import": "./retrievers/metal.d.ts",
@@ -2291,6 +2282,15 @@
       },
       "import": "./graphs/memgraph_graph.js",
       "require": "./graphs/memgraph_graph.cjs"
+    },
+    "./document_compressors/ibm": {
+      "types": {
+        "import": "./document_compressors/ibm.d.ts",
+        "require": "./document_compressors/ibm.d.cts",
+        "default": "./document_compressors/ibm.d.ts"
+      },
+      "import": "./document_compressors/ibm.js",
+      "require": "./document_compressors/ibm.cjs"
     },
     "./document_transformers/html_to_text": {
       "types": {
@@ -3707,10 +3707,6 @@
     "retrievers/dria.js",
     "retrievers/dria.d.ts",
     "retrievers/dria.d.cts",
-    "retrievers/ibm.cjs",
-    "retrievers/ibm.js",
-    "retrievers/ibm.d.ts",
-    "retrievers/ibm.d.cts",
     "retrievers/metal.cjs",
     "retrievers/metal.js",
     "retrievers/metal.d.ts",
@@ -3783,6 +3779,10 @@
     "graphs/memgraph_graph.js",
     "graphs/memgraph_graph.d.ts",
     "graphs/memgraph_graph.d.cts",
+    "document_compressors/ibm.cjs",
+    "document_compressors/ibm.js",
+    "document_compressors/ibm.d.ts",
+    "document_compressors/ibm.d.cts",
     "document_transformers/html_to_text.cjs",
     "document_transformers/html_to_text.js",
     "document_transformers/html_to_text.d.ts",

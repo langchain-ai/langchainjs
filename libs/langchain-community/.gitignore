@@ -626,10 +626,6 @@ retrievers/dria.cjs
 retrievers/dria.js
 retrievers/dria.d.ts
 retrievers/dria.d.cts
-retrievers/ibm.cjs
-retrievers/ibm.js
-retrievers/ibm.d.ts
-retrievers/ibm.d.cts
 retrievers/metal.cjs
 retrievers/metal.js
 retrievers/metal.d.ts
@@ -702,6 +698,10 @@ graphs/memgraph_graph.cjs
 graphs/memgraph_graph.js
 graphs/memgraph_graph.d.ts
 graphs/memgraph_graph.d.cts
+document_compressors/ibm.cjs
+document_compressors/ibm.js
+document_compressors/ibm.d.ts
+document_compressors/ibm.d.cts
 document_transformers/html_to_text.cjs
 document_transformers/html_to_text.js
 document_transformers/html_to_text.d.ts
