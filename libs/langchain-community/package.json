@@ -869,6 +869,15 @@
       "import": "./tools/google_places.js",
       "require": "./tools/google_places.cjs"
     },
+    "./tools/google_trends": {
+      "types": {
+        "import": "./tools/google_trends.d.ts",
+        "require": "./tools/google_trends.d.cts",
+        "default": "./tools/google_trends.d.ts"
+      },
+      "import": "./tools/google_trends.js",
+      "require": "./tools/google_trends.cjs"
+    },
     "./tools/google_routes": {
       "types": {
         "import": "./tools/google_routes.d.ts",
@@ -3150,6 +3159,10 @@
     "tools/google_places.js",
     "tools/google_places.d.ts",
     "tools/google_places.d.cts",
+    "tools/google_trends.cjs",
+    "tools/google_trends.js",
+    "tools/google_trends.d.ts",
+    "tools/google_trends.d.cts",
     "tools/google_routes.cjs",
     "tools/google_routes.js",
     "tools/google_routes.d.ts",

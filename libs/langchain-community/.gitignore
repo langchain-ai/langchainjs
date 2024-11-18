@@ -70,6 +70,10 @@ tools/google_places.cjs
 tools/google_places.js
 tools/google_places.d.ts
 tools/google_places.d.cts
+tools/google_trends.cjs
+tools/google_trends.js
+tools/google_trends.d.ts
+tools/google_trends.d.cts
 tools/google_routes.cjs
 tools/google_routes.js
 tools/google_routes.d.ts

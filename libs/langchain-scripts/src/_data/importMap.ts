@@ -2921,6 +2921,16 @@ export const importMap: Array<DeprecatedEntrypoint> = [
     namedImport: "GooglePlacesAPI",
   },
   {
+    old: "langchain/tools/google_trends",
+    new: "@langchain/community/tools/google_trends",
+    namedImport: "GoogleTrendsAPIParams",
+  },
+  {
+    old: "langchain/tools/google_trends",
+    new: "@langchain/community/tools/google_trends",
+    namedImport: "GoogleTrendsAPI",
+  },
+  {
     old: "langchain/tools/*",
     new: "@langchain/community/tools/google_custom_search",
     namedImport: "GoogleCustomSearchParams",
