@@ -589,8 +589,6 @@ export class ChatGoogleGenerativeAI
       this.model;
     this.model = this.modelName;
 
-    this.convertSystemMessageToHumanContent = this.computeUseSystemInstruction();
-
     this.maxOutputTokens = fields?.maxOutputTokens ?? this.maxOutputTokens;
 
     if (this.maxOutputTokens && this.maxOutputTokens < 0) {
@@ -743,7 +741,7 @@ export class ChatGoogleGenerativeAI
     const prompt = convertBaseMessagesToContent(
       messages,
       this._isMultimodalModel,
-      this.convertSystemMessageToHumanContent
+      this.useSystemInstruction
     );
     let actualPrompt = prompt;
     if (prompt[0].role === "system") {
@@ -814,7 +812,7 @@ export class ChatGoogleGenerativeAI
     const prompt = convertBaseMessagesToContent(
       messages,
       this._isMultimodalModel,
-      this.convertSystemMessageToHumanContent
+      this.useSystemInstruction
     );
     let actualPrompt = prompt;
     if (prompt[0].role === "system") {
