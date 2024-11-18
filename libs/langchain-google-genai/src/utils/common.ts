@@ -61,6 +61,7 @@ export function convertAuthorToRole(
     case "model": // getMessageAuthor returns message.name. code ex.: return message.name ?? type;
       return "model";
     case "system":
+      return "system";
     case "human":
       return "user";
     case "tool":
@@ -179,7 +180,8 @@ export function convertMessageContentToParts(
 
 export function convertBaseMessagesToContent(
   messages: BaseMessage[],
-  isMultimodalModel: boolean
+  isMultimodalModel: boolean,
+  convertSystemMessageToHumanContent: boolean  = false
 ) {
   return messages.reduce<{
     content: Content[];
@@ -223,7 +225,7 @@ export function convertBaseMessagesToContent(
         };
       }
       let actualRole = role;
-      if (actualRole === "function") {
+      if (actualRole === "function" || (actualRole === "system" && !convertSystemMessageToHumanContent)) {
         // GenerativeAI API will throw an error if the role is not "user" or "model."
         actualRole = "user";
       }
@@ -232,7 +234,7 @@ export function convertBaseMessagesToContent(
         parts,
       };
       return {
-        mergeWithPreviousContent: author === "system",
+        mergeWithPreviousContent: author === "system" && !convertSystemMessageToHumanContent,
         content: [...acc.content, content],
       };
     },
