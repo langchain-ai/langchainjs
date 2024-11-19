@@ -629,7 +629,7 @@ export abstract class BaseChatModel<
     runnableConfig.callbacks = runnableConfig.callbacks ?? callbacks;
 
     if (!this.cache) {
-      return this._generateUncached(baseMessages, callOptions, runnableConfig);
+      return await this._generateUncached(baseMessages, callOptions, runnableConfig);
     }
 
     const { cache } = this;
