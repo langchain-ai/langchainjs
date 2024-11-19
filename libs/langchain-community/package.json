@@ -1,6 +1,6 @@
 {
   "name": "@langchain/community",
-  "version": "0.3.12",
+  "version": "0.3.15",
   "description": "Third-party integrations for LangChain.js",
   "type": "module",
   "engines": {
@@ -79,6 +79,7 @@
     "@huggingface/inference": "^2.6.4",
     "@ibm-cloud/watsonx-ai": "^1.1.0",
     "@jest/globals": "^29.5.0",
+    "@lancedb/lancedb": "^0.13.0",
     "@langchain/core": "workspace:*",
     "@langchain/scripts": ">=0.1.0 <0.2.0",
     "@langchain/standard-tests": "0.0.0",
@@ -90,7 +91,6 @@
     "@neondatabase/serverless": "^0.9.1",
     "@notionhq/client": "^2.2.10",
     "@opensearch-project/opensearch": "^2.2.0",
-    "@pinecone-database/pinecone": "^1.1.0",
     "@planetscale/database": "^1.8.0",
     "@premai/prem-sdk": "^0.3.25",
     "@qdrant/js-client-rest": "^1.8.2",
@@ -187,7 +187,7 @@
     "mongodb": "^5.2.0",
     "mysql2": "^3.9.8",
     "neo4j-driver": "^5.17.0",
-    "node-llama-cpp": "^2",
+    "node-llama-cpp": "3.1.1",
     "notion-to-md": "^3.1.0",
     "officeparser": "^4.0.4",
     "pdf-parse": "1.1.1",
@@ -210,7 +210,6 @@
     "typescript": "~5.1.6",
     "typesense": "^1.5.3",
     "usearch": "^1.1.1",
-    "vectordb": "^0.9.0",
     "voy-search": "0.6.2",
     "weaviate-ts-client": "^1.4.0",
     "web-auth-library": "^1.0.3",
@@ -246,6 +245,7 @@
     "@gradientai/nodejs-sdk": "^1.2.0",
     "@huggingface/inference": "^2.6.4",
     "@ibm-cloud/watsonx-ai": "*",
+    "@lancedb/lancedb": "^0.12.0",
     "@langchain/core": ">=0.2.21 <0.4.0",
     "@layerup/layerup-security": "^1.5.12",
     "@libsql/client": "^0.14.0",
@@ -334,7 +334,6 @@
     "typeorm": "^0.3.20",
     "typesense": "^1.5.3",
     "usearch": "^1.1.1",
-    "vectordb": "^0.1.4",
     "voy-search": "0.6.2",
     "weaviate-ts-client": "*",
     "web-auth-library": "^1.0.3",
@@ -422,6 +421,9 @@
       "optional": true
     },
     "@huggingface/inference": {
+      "optional": true
+    },
+    "@lancedb/lancedb": {
       "optional": true
     },
     "@layerup/layerup-security": {
@@ -680,9 +682,6 @@
       "optional": true
     },
     "usearch": {
-      "optional": true
-    },
-    "vectordb": {
       "optional": true
     },
     "voy-search": {
@@ -2598,6 +2597,15 @@
       "import": "./indexes/sqlite.js",
       "require": "./indexes/sqlite.cjs"
     },
+    "./document_loaders/web/airtable": {
+      "types": {
+        "import": "./document_loaders/web/airtable.d.ts",
+        "require": "./document_loaders/web/airtable.d.cts",
+        "default": "./document_loaders/web/airtable.d.ts"
+      },
+      "import": "./document_loaders/web/airtable.js",
+      "require": "./document_loaders/web/airtable.cjs"
+    },
     "./document_loaders/web/apify_dataset": {
       "types": {
         "import": "./document_loaders/web/apify_dataset.d.ts",
@@ -2651,6 +2659,15 @@
       },
       "import": "./document_loaders/web/cheerio.js",
       "require": "./document_loaders/web/cheerio.cjs"
+    },
+    "./document_loaders/web/html": {
+      "types": {
+        "import": "./document_loaders/web/html.d.ts",
+        "require": "./document_loaders/web/html.d.cts",
+        "default": "./document_loaders/web/html.d.ts"
+      },
+      "import": "./document_loaders/web/html.js",
+      "require": "./document_loaders/web/html.cjs"
     },
     "./document_loaders/web/puppeteer": {
       "types": {
@@ -3901,6 +3918,10 @@
     "indexes/sqlite.js",
     "indexes/sqlite.d.ts",
     "indexes/sqlite.d.cts",
+    "document_loaders/web/airtable.cjs",
+    "document_loaders/web/airtable.js",
+    "document_loaders/web/airtable.d.ts",
+    "document_loaders/web/airtable.d.cts",
     "document_loaders/web/apify_dataset.cjs",
     "document_loaders/web/apify_dataset.js",
     "document_loaders/web/apify_dataset.d.ts",
@@ -3925,6 +3946,10 @@
     "document_loaders/web/cheerio.js",
     "document_loaders/web/cheerio.d.ts",
     "document_loaders/web/cheerio.d.cts",
+    "document_loaders/web/html.cjs",
+    "document_loaders/web/html.js",
+    "document_loaders/web/html.d.ts",
+    "document_loaders/web/html.d.cts",
     "document_loaders/web/puppeteer.cjs",
     "document_loaders/web/puppeteer.js",
     "document_loaders/web/puppeteer.d.ts",

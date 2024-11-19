@@ -1,5 +1,5 @@
 /* eslint-disable import/no-extraneous-dependencies */
-import { LlamaModel, LlamaContext } from "node-llama-cpp";
+import { LlamaModel, LlamaContext, getLlama } from "node-llama-cpp";
 import { Embeddings, type EmbeddingsParams } from "@langchain/core/embeddings";
 import {
   LlamaBaseCppInputs,
@@ -19,8 +19,8 @@ export interface LlamaCppEmbeddingsParams
  * @example
  * ```typescript
  * // Initialize LlamaCppEmbeddings with the path to the model file
- * const embeddings = new LlamaCppEmbeddings({
- *   modelPath: "/Replace/with/path/to/your/model/gguf-llama2-q4_0.bin",
+ * const embeddings = await LlamaCppEmbeddings.initialize({
+ *   modelPath: llamaPath,
  * });
  *
  * // Embed a query string using the Llama embeddings
@@ -36,13 +36,27 @@ export class LlamaCppEmbeddings extends Embeddings {
 
   _context: LlamaContext;
 
-  constructor(inputs: LlamaCppEmbeddingsParams) {
+  public constructor(inputs: LlamaCppEmbeddingsParams) {
     super(inputs);
     const _inputs = inputs;
     _inputs.embedding = true;
+  }
 
-    this._model = createLlamaModel(_inputs);
-    this._context = createLlamaContext(this._model, _inputs);
+  /**
+   * Initializes the llama_cpp model for usage in the embeddings wrapper.
+   * @param inputs - the inputs passed onto the model.
+   * @returns A Promise that resolves to the LlamaCppEmbeddings type class.
+   */
+  public static async initialize(
+    inputs: LlamaBaseCppInputs
+  ): Promise<LlamaCppEmbeddings> {
+    const instance = new LlamaCppEmbeddings(inputs);
+    const llama = await getLlama();
+
+    instance._model = await createLlamaModel(inputs, llama);
+    instance._context = await createLlamaContext(instance._model, inputs);
+
+    return instance;
   }
 
   /**
@@ -57,7 +71,7 @@ export class LlamaCppEmbeddings extends Embeddings {
       const encodings = await this.caller.call(
         () =>
           new Promise((resolve) => {
-            resolve(this._context.encode(text));
+            resolve(this._model.tokenize(text));
           })
       );
       tokensArray.push(encodings);
@@ -90,7 +104,7 @@ export class LlamaCppEmbeddings extends Embeddings {
     const encodings = await this.caller.call(
       () =>
         new Promise((resolve) => {
-          resolve(this._context.encode(text));
+          resolve(this._model.tokenize(text));
         })
     );
 

@@ -150,6 +150,22 @@ See a [usage example](/docs/integrations/llm_caching/azure_cosmosdb_nosql).
 import { AzureCosmosDBNoSQLSemanticCache } from "@langchain/azure-cosmosdb";
 ```
 
+## Chat Message History
+
+### Azure Cosmos DB NoSQL Chat Message History
+
+> The AzureCosmosDBNoSQLChatMessageHistory uses Cosmos DB to store chat message history. For longer-term persistence across chat sessions, you can swap out the default in-memory `chatHistory` that backs chat memory classes like `BufferMemory`.
+
+```bash npm2yarn
+npm install @langchain/azure-cosmosdb @langchain/core
+```
+
+See [usage example](/docs/integrations/memory/azure_cosmosdb_nosql.mdx).
+
+```typescript
+import { AzureCosmosDBNoSQLChatMessageHistory } from "@langchain/azure-cosmosdb";
+```
+
 ## Document loaders
 
 ### Azure Blob Storage
