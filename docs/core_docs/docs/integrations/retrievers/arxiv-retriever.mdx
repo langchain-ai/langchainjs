@@ -1,4 +1,4 @@
-# Documentation for ArxivRetriever in LangChain.js
+# ArxivRetriever in LangChain.js (Docs)
 ---
 
 ## Overview
@@ -7,6 +7,13 @@ The `arXiv Retriever` allows users to query the arXiv database for academic arti
 
 ---
 
+## Features
+- Query Flexibility: Search using natural language queries or specific arXiv IDs.
+- Full-Document Retrieval: Option to fetch and parse PDFs.
+- Summaries as Documents: Retrieve summaries for faster results.
+- Customizable Options: Configure maximum results and output format.
+
+---
 ## Installation
 
 Ensure the following dependencies are installed:
@@ -18,19 +25,20 @@ Ensure the following dependencies are installed:
 npm install axios pdf-parse fast-xml-parser
 ```
 ---
-## Features
-- Query Flexibility: Search using natural language queries or specific arXiv IDs.
-- Full-Document Retrieval: Option to fetch and parse PDFs.
-- Summaries as Documents: Retrieve summaries for faster results.
-- Customizable Options: Configure maximum results and output format.
-
----
 
 ## Getting started
 
 #### Import the path
-```bash
+```typescript
 import { ArxivRetriever } from "langchain-community/retrievers/arxiv.js";
+```
+
+#### Instantiate the retriever
+```typescript
+const retriever = new ArxivRetriever({
+  getFullDocuments: false, // Set to true to fetch full documents (PDFs)
+  maxSearchResults: 5,     // Maximum number of results to retrieve
+});
 ```
 ---
 
@@ -47,9 +55,9 @@ import { ArxivRetriever } from "langchain-community/retrievers/arxiv.js";
 
 ### Methods
 
-### `_getRelevantDocuments(query: string): Promise<Document[]>`
+### `invoke(query: string): Promise<Document[]>`
 
-Fetches documents from arXiv based on the input query.
+Use the invoke method to search arXiv for relevant articles. You can use either natural language queries or specific arXiv IDs.
 
 #### Parameters
 
@@ -62,87 +70,9 @@ A `Promise` that resolves to an array of LangChain `Document` instances.
 
 #### Example
 ```typescript
-const documents = await retriever._getRelevantDocuments("machine learning in climate science");
-console.log(documents);
-```
----
-
-## Utility Functions
-
-## `isArXivIdentifier(query: string): boolean`
-
-Checks if a query is a valid arXiv ID.
-
-### Parameters
-
-| Name   | Type     | Description                       |
-|--------|----------|-----------------------------------|
-| `query` | `string` | Query to check for arXiv ID format. |
-
-### Returns
-
-`true` if the query is a valid arXiv ID; otherwise, `false`.
-
-
-## `fetchDirectArxivArticle(arxivIds: string): Promise<ArxivEntry[]>`
-
-Fetches arXiv articles using specific arXiv IDs.
-
-### Parameters
-
-| Name       | Type     | Description                           |
-|------------|----------|---------------------------------------|
-| `arxivIds` | `string` | Comma-separated list of arXiv IDs.    |
-
-### Returns
-
-A `Promise` that resolves to an array of `ArxivEntry` objects.
-
-
-## `fetchArxivResultsByQuery(query: string, maxResults: number): Promise<ArxivEntry[]>`
-
-Fetches results from arXiv using a natural language query.
-
-### Parameters
-
-| Name         | Type     | Default | Description                          |
-|--------------|----------|---------|--------------------------------------|
-| `query`      | `string` |         | Search query.                        |
-| `maxResults` | `number` | `10`    | Maximum number of results to fetch.  |
-
-### Returns
-
-A `Promise` that resolves to an array of `ArxivEntry` objects.
-
-
-## `fetchAndParsePDF(pdfUrl: string): Promise<string>`
-
-Fetches a PDF document and parses its content into text.
-
-### Parameters
-
-| Name     | Type     | Description                 |
-|----------|----------|-----------------------------|
-| `pdfUrl` | `string` | URL of the PDF to retrieve. |
-
-### Returns
-
-A `Promise` that resolves to the parsed text of the PDF.
-
----
-
-## Example
-```bash
-import { ArxivRetriever } from "langchain-community/retrievers/arxiv.js";
-
-const retriever = new ArxivRetriever({
-    getFullDocuments: false,
-    maxSearchResults: 3,
-});
-
-const documents = await retriever._getRelevantDocuments("neural networks in optimization");
+const documents = await retriever.invoke("quantum computing");
 documents.forEach(doc => {
-    console.log("Title:", doc.metadata.title);
-    console.log("Summary:", doc.pageContent);
+  console.log("Title:", doc.metadata.title);
+  console.log("Content:", doc.pageContent); // Parsed PDF content
 });
 ```
