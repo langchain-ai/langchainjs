@@ -35,7 +35,7 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@langchain/openai": ">=0.2.0 <0.4.0",
+    "@langchain/openai": "workspace:*",
     "binary-extensions": "^2.2.0",
     "expr-eval": "^2.0.2",
     "flat": "^5.0.2",

@@ -113,6 +113,7 @@ export const config = {
     "llms/writer": "llms/writer",
     "llms/yandex": "llms/yandex",
     "llms/layerup_security": "llms/layerup_security",
+    "llms/novita": "llms/novita",
     // vectorstores
     "vectorstores/analyticdb": "vectorstores/analyticdb",
     "vectorstores/astradb": "vectorstores/astradb",
