@@ -83,14 +83,8 @@ const attributeInfo: AttributeInfo[] = [
  * Next, we instantiate a vector store. This is where we store the embeddings of the documents.
  * We also need to provide an embeddings object. This is used to embed the documents.
  */
-if (
-  !process.env.PINECONE_API_KEY ||
-  !process.env.PINECONE_ENVIRONMENT ||
-  !process.env.PINECONE_INDEX
-) {
-  throw new Error(
-    "PINECONE_ENVIRONMENT and PINECONE_API_KEY and PINECONE_INDEX must be set"
-  );
+if (!process.env.PINECONE_API_KEY || !process.env.PINECONE_INDEX) {
+  throw new Error("PINECONE_API_KEY and PINECONE_INDEX must be set");
 }
 
 const pinecone = new Pinecone();
