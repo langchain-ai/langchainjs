@@ -188,7 +188,7 @@ export interface GoogleGenerativeAIChatInput
    * - All Gemini 1.5 Flash model versions
    * - Gemini 1.0 Pro version gemini-1.0-pro-002
    */
-  convertSystemMessageToHumanContent?: boolean;
+  convertSystemMessageToHumanContent?: boolean | undefined;
 }
 
 /**
@@ -572,7 +572,7 @@ export class ChatGoogleGenerativeAI
 
   streamUsage = true;
 
-  convertSystemMessageToHumanContent: boolean;
+  convertSystemMessageToHumanContent: boolean | undefined;
 
   private client: GenerativeModel;
 
@@ -588,8 +588,6 @@ export class ChatGoogleGenerativeAI
       fields?.modelName?.replace(/^models\//, "") ??
       this.model;
     this.model = this.modelName;
-
-    this.convertSystemMessageToHumanContent = this.useSystemInstructions();
 
     this.maxOutputTokens = fields?.maxOutputTokens ?? this.maxOutputTokens;
 
@@ -664,7 +662,13 @@ export class ChatGoogleGenerativeAI
     this.streamUsage = fields?.streamUsage ?? this.streamUsage;
   }
 
-  useSystemInstructions() : boolean {
+  get useSystemInstruction(): boolean {
+    return typeof this.convertSystemMessageToHumanContent === "boolean"
+      ? !this.convertSystemMessageToHumanContent
+      : this.computeUseSystemInstruction;
+  }
+  
+  get computeUseSystemInstruction() : boolean {
     // This works on models from April 2024 and later
     //   Vertex AI: gemini-1.5-pro and gemini-1.0-002 and later
     //   AI Studio: gemini-1.5-pro-latest
@@ -737,7 +741,7 @@ export class ChatGoogleGenerativeAI
     const prompt = convertBaseMessagesToContent(
       messages,
       this._isMultimodalModel,
-      this.convertSystemMessageToHumanContent
+      this.useSystemInstruction
     );
     let actualPrompt = prompt;
     if (prompt[0].role === "system") {
@@ -808,7 +812,7 @@ export class ChatGoogleGenerativeAI
     const prompt = convertBaseMessagesToContent(
       messages,
       this._isMultimodalModel,
-      this.convertSystemMessageToHumanContent
+      this.useSystemInstruction
     );
     let actualPrompt = prompt;
     if (prompt[0].role === "system") {
