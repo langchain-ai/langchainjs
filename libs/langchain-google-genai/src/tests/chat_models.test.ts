@@ -253,3 +253,79 @@ test("convertBaseMessagesToContent correctly creates properly formatted content"
     },
   ]);
 });
+
+test("Input has single system message followed by one user message, convert system message is false", async () => {
+  const messages = [
+    new SystemMessage("You are a helpful assistant"),
+    new HumanMessage("What's the weather like in new york?"),
+  ];
+  const messagesAsGoogleContent = convertBaseMessagesToContent(messages, false, false);
+
+  expect(messagesAsGoogleContent).toEqual([
+    {
+      role: "user",
+      parts: [
+        { text: "You are a helpful assistant" },
+        { text: "What's the weather like in new york?" },
+      ],
+    },
+  ]);
+});
+
+test("Input has a system message that is not the first message, convert system message is false", async () => {
+  const messages = [
+    new HumanMessage("What's the weather like in new york?"),
+    new SystemMessage("You are a helpful assistant"),
+  ];
+  expect(
+    () => {
+      convertBaseMessagesToContent(messages, false, false);
+    }
+  ).toThrow();
+});
+
+test("Input has no system message and one user message, convert system message is false", async () => {
+  const messages = [
+    new HumanMessage("What's the weather like in new york?"),
+  ];
+  const messagesAsGoogleContent = convertBaseMessagesToContent(messages, false, false);
+
+  expect(messagesAsGoogleContent).toEqual([
+    {
+      role: "user",
+      parts: [
+        { text: "What's the weather like in new york?" },
+      ],
+    },
+  ]);
+});
+
+test("Input has no system message and multiple user message, convert system message is false", async () => {
+  const messages = [
+    new HumanMessage("What's the weather like in new york?"),
+    new HumanMessage("What's the weather like in toronto?"),
+    new HumanMessage("What's the weather like in los angeles?"),
+  ];
+  const messagesAsGoogleContent = convertBaseMessagesToContent(messages, false, false);
+
+  expect(messagesAsGoogleContent).toEqual([
+    {
+      role: "user",
+      parts: [
+        { text: "What's the weather like in new york?" },
+      ],
+    },
+    {
+      role: "user",
+      parts: [
+        { text: "What's the weather like in toronto?" },
+      ],
+    },
+    {
+      role: "user",
+        parts: [
+          { text: "What's the weather like in los angeles?" },
+        ],
+    },
+  ]);
+});
