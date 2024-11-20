@@ -12,6 +12,7 @@ import {
   TYPE_3_FILTERING_TEST_CASES,
   TYPE_4_FILTERING_TEST_CASES,
   TYPE_5_FILTERING_TEST_CASES,
+  TYPE_6_FILTERING_TEST_CASES,
 } from "./hanavector.fixtures.js";
 // Connection parameters
 const connectionParams = {
@@ -1289,6 +1290,37 @@ describe("Filter Tests", () => {
 
       // Perform a similarity search with the filter
       const docs = await vectorDB.similaritySearch("Foo", 5, filter);
+      const ids = docs.map((doc) => doc.metadata.id);
+
+      // Check if the returned document IDs match the expected IDs
+      expect(ids.length).toBe(expected.length);
+      expect(ids.every((id) => expected.includes(id))).toBe(true);
+    }
+  );
+
+  // Filter Test 6: Testing TYPE_6_FILTERING_TEST_CASES
+  it.each(TYPE_6_FILTERING_TEST_CASES)(
+    "should apply type 6 filtering correctly with filter %j",
+    async (testCase) => {
+      const { filter, expected } = testCase;
+      const tableNameTest = "TEST_TABLE_ENHANCED_FILTER_6";
+      const args = {
+        connection: client,
+        tableName: tableNameTest,
+      };
+      await dropTable(client, tableNameTest);
+
+      // Initialize the HanaDB instance
+      const vectorDB = new HanaDB(embeddings, args);
+      await vectorDB.initialize();
+      expect(vectorDB).toBeDefined();
+
+      // Add documents to the database
+      await vectorDB.addDocuments(DOCUMENTS);
+
+      // Perform a similarity search with the filter
+      const docs = await vectorDB.similaritySearch("Foo", 5, filter);
+      console.log(docs);
       const ids = docs.map((doc) => doc.metadata.id);
 
       // Check if the returned document IDs match the expected IDs

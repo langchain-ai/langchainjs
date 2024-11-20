@@ -17,17 +17,45 @@ const COMPARISONS_TO_SQL: Record<string, string> = {
   $gte: ">=",
 };
 
-interface FilterObject {
-  [key: string]: FilterValue;
-}
-
-type FilterValue =
+// Base value types that can be used in comparisons
+type ComparisonRValue =
   | string
   | number
   | boolean
   | Date
-  | FilterObject
-  | Array<FilterValue>;
+  | Array<string | number | boolean | Date>;
+// Available comparison operators for filtering
+type Comparator =
+  | "$eq"
+  | "$ne"
+  | "$lt"
+  | "$lte"
+  | "$gt"
+  | "$gte"
+  | "$in"
+  | "$nin"
+  | "$between"
+  | "$like";
+// Filter using comparison operators
+// Defines the relationship between a comparison operator and its value
+type ComparatorFilter = {
+  [K in Comparator]?: ComparisonRValue;
+};
+
+type LogicalOperator = "$and" | "$or";
+type LogicalFilter = {
+  [K in LogicalOperator]?: PropertyFilter[];
+};
+type PropertyFilter = {
+  [property: string]: string | number | boolean | Date | ComparatorFilter;
+};
+
+type Filter = PropertyFilter | LogicalFilter;
+
+interface DateValue {
+  type: "date";
+  date: string | Date;
+}
 
 const IN_OPERATORS_TO_SQL: Record<string, string> = {
   $in: "IN",
@@ -362,10 +390,10 @@ export class HanaDB extends VectorStore {
    * @returns A tuple containing the WHERE clause string and an array of query parameters.
    */
   private createWhereByFilter(
-    filter?: FilterObject
-  ): [string, Array<FilterValue>] {
+    filter?: Filter
+  ): [string, Array<ComparisonRValue>] {
     let whereStr = "";
-    let queryTuple: Array<FilterValue> = [];
+    let queryTuple: Array<ComparisonRValue> = [];
 
     if (filter && Object.keys(filter).length > 0) {
       const [where, params] = this.processFilterObject(filter);
@@ -382,13 +410,15 @@ export class HanaDB extends VectorStore {
    * @returns A tuple containing the WHERE clause string and an array of query parameters.
    */
   private processFilterObject(
-    filter: FilterObject
-  ): [string, Array<FilterValue>] {
+    filter: Filter
+  ): [string, Array<ComparisonRValue>] {
     let whereStr = "";
-    const queryTuple: Array<FilterValue> = [];
+    const queryTuple: Array<ComparisonRValue> = [];
 
     Object.keys(filter).forEach((key, i) => {
-      const filterValue = filter[key];
+      const filterValue = filter[key as keyof Filter] as
+        | ComparisonRValue
+        | ComparatorFilter;
       if (i !== 0) {
         whereStr += " AND ";
       }
@@ -396,8 +426,8 @@ export class HanaDB extends VectorStore {
       // Handling logical operators ($and, $or)
       if (key in LOGICAL_OPERATORS_TO_SQL) {
         const logicalOperator = LOGICAL_OPERATORS_TO_SQL[key];
-        const logicalOperands = filterValue as FilterObject[];
-        logicalOperands.forEach((operand: FilterObject, j: number) => {
+        const logicalOperands = filterValue as PropertyFilter[];
+        logicalOperands.forEach((operand: PropertyFilter, j: number) => {
           if (j !== 0) {
             whereStr += ` ${logicalOperator} `;
           }
@@ -428,11 +458,16 @@ export class HanaDB extends VectorStore {
         queryTuple.push(filterValue.toString());
       } else if (typeof filterValue === "object" && filterValue !== null) {
         // Get the special operator key, like $eq, $ne, $in, $between, etc.
-        const specialOp = Object.keys(filterValue)[0];
-        const specialVal = (filterValue as FilterObject)[specialOp];
+        const specialOp = Object.keys(filterValue)[0] as Comparator;
+        const specialVal = (filterValue as ComparatorFilter)[specialOp];
         // Handling of 'special' operators starting with "$"
         if (specialOp in COMPARISONS_TO_SQL) {
           operator = COMPARISONS_TO_SQL[specialOp];
+          if (specialVal === undefined) {
+            throw new Error(
+              `Operator '${specialOp}' expects a non-undefined value.`
+            );
+          }
           if (typeof specialVal === "boolean") {
             queryTuple.push(specialVal.toString());
           } else if (typeof specialVal === "number") {
@@ -440,11 +475,13 @@ export class HanaDB extends VectorStore {
             queryTuple.push(specialVal);
           } else if (
             typeof specialVal === "object" &&
+            specialVal !== null &&
             "type" in specialVal &&
-            specialVal.type === "date"
+            specialVal.type === "date" &&
+            "date" in specialVal
           ) {
             sqlParam = "CAST(? as DATE)";
-            queryTuple.push(specialVal.date);
+            queryTuple.push((specialVal as DateValue).date);
           } else {
             queryTuple.push(specialVal);
           }
@@ -454,8 +491,8 @@ export class HanaDB extends VectorStore {
             throw new Error(`Operator '${specialOp}' expects two values.`);
           }
           const [betweenFrom, betweenTo] = specialVal as [
-            FilterValue,
-            FilterValue
+            ComparisonRValue,
+            ComparisonRValue
           ];
           operator = BETWEEN_OPERATOR_TO_SQL[specialOp];
           sqlParam = "? AND ?";
@@ -615,7 +652,7 @@ export class HanaDB extends VectorStore {
    */
   public async delete(options: {
     ids?: string[];
-    filter?: FilterObject;
+    filter?: Filter;
   }): Promise<void> {
     const { ids, filter } = options;
     if (ids) {
@@ -737,7 +774,7 @@ export class HanaDB extends VectorStore {
   async similaritySearch(
     query: string,
     k: number,
-    filter?: FilterObject
+    filter?: Filter
   ): Promise<Document[]> {
     const results = await this.similaritySearchWithScore(query, k, filter);
     return results.map((result) => result[0]);
@@ -754,7 +791,7 @@ export class HanaDB extends VectorStore {
   async similaritySearchWithScore(
     query: string,
     k: number,
-    filter?: FilterObject
+    filter?: Filter
   ): Promise<[Document, number][]> {
     const queryEmbedding = await this.embeddings.embedQuery(query);
     return this.similaritySearchVectorWithScore(queryEmbedding, k, filter);
@@ -771,7 +808,7 @@ export class HanaDB extends VectorStore {
   async similaritySearchVectorWithScore(
     queryEmbedding: number[],
     k: number,
-    filter?: FilterObject
+    filter?: Filter
   ): Promise<[Document, number][]> {
     const wholeResult = await this.similaritySearchWithScoreAndVectorByVector(
       queryEmbedding,
@@ -792,7 +829,7 @@ export class HanaDB extends VectorStore {
   async similaritySearchWithScoreAndVectorByVector(
     embedding: number[],
     k: number,
-    filter?: FilterObject
+    filter?: Filter
   ): Promise<Array<[Document, number, number[]]>> {
     // Sanitize inputs
     const sanitizedK = HanaDB.sanitizeInt(k);

@@ -124,3 +124,17 @@ export const TYPE_5_FILTERING_TEST_CASES: TestCase[] = [
   { filter: { name: { $like: "a%" } }, expected: [1] },
   { filter: { name: { $like: "%a%" } }, expected: [1, 3] },
 ];
+
+export const TYPE_6_FILTERING_TEST_CASES: TestCase[] = [
+  {
+    filter: {
+      $and: [
+        {
+          $or: [{ id: { $eq: 1 } }, { id: { $in: [2, 3] } }],
+        },
+        { height: { $gte: 5.0 } },
+      ],
+    },
+    expected: [1, 2],
+  },
+];
