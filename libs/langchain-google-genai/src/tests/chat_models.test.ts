@@ -281,7 +281,19 @@ test("Input has a system message that is not the first message, convert system m
     () => {
       convertBaseMessagesToContent(messages, false, false);
     }
-  ).toThrow();
+  ).toThrow("System message should be the first one");
+});
+
+test("Input has multiple system messages, convert system message is false", async () => {
+  const messages = [
+    new SystemMessage("You are a helpful assistant"),
+    new SystemMessage("You are not a helpful assistant"),
+  ];
+  expect(
+    () => {
+      convertBaseMessagesToContent(messages, false, false);
+    }
+  ).toThrow("System message should be the first one");
 });
 
 test("Input has no system message and one user message, convert system message is false", async () => {
