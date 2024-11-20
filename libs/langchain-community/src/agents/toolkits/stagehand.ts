@@ -1,7 +1,8 @@
 import {
   Tool,
   BaseToolkit as Toolkit,
-  ToolInterface,
+  ToolInterface, 
+  StructuredTool,
 } from "@langchain/core/tools";
 import { Stagehand } from "@browserbasehq/stagehand";
 import { z } from "zod";
@@ -87,42 +88,61 @@ export class StagehandActTool extends StagehandToolBase {
     }
   }
 }
-export class StagehandExtractTool extends StagehandToolBase {
+
+// TODO - update Extract tool to accept a zod schema
+
+// import { tool } from "@langchain/core/tools";
+// import { z } from "zod";
+
+
+// const multiply = tool(
+//   ({ a, b }: { a: number; b: number }): number => {
+//     /**
+//      * Multiply two numbers.
+//      */
+//     return a * b;
+//   },
+//   {
+//     name: "multiply",
+//     description: "Multiply two numbers",
+//     schema: z.object({
+//       a: z.number(),
+//       b: z.number(),
+//     }),
+//   }
+// );
+
+// TODO - finish this!!
+export class StagehandExtractTool extends StructuredTool {
   name = "stagehand_extract";
   description =
-    "Use this tool to extract structured information from the current web page using Stagehand. The input should be an object with 'instruction' and 'schema' fields.";
+    "Use this tool to extract structured information from the current web page using Stagehand.";
 
-  async _call(input: string): Promise<string> {
+  // Define the input schema for the tool
+  schema = z.object({
+    instruction: z.string(),
+  });
+
+  private stagehand?: Stagehand;
+  private extractionSchema: z.ZodTypeAny;
+
+  constructor(stagehandInstance?: Stagehand, extractionSchema?: z.ZodTypeAny) {
+    super();
+    this.stagehand = stagehandInstance;
+    if (!extractionSchema) {
+      throw new Error("An extraction schema is required for StagehandExtractTool.");
+    }
+    this.extractionSchema = extractionSchema;
+  }
+
+  async _call(input: { instruction: string }): Promise<string> {
     const stagehand = await this.getStagehand();
-    let parsedInput;
-    if (typeof input === "string") {
-      try {
-        parsedInput = JSON.parse(input);
-      } catch (error) {
-        return `Invalid input. Please provide a JSON string with 'instruction' and 'schema' fields.`;
-      }
-    } else {
-      parsedInput = input;
-    }
-
-    const { instruction, schema } = parsedInput;
-
-    if (!instruction || !schema) {
-      return `Input must contain 'instruction' and 'schema' fields.`;
-    }
-
-    // Reconstruct the Zod schema
-    let zodSchema;
-    try {
-      zodSchema = this.convertToZodSchema(schema);
-    } catch (error: any) {
-      return `Failed to reconstruct schema: ${error.message}`;
-    }
+    const { instruction } = input;
 
     try {
       const result = await stagehand.extract({
         instruction,
-        schema: zodSchema as z.ZodObject<any>,
+        schema: this.extractionSchema,
       });
       return JSON.stringify(result);
     } catch (error: any) {
@@ -130,64 +150,20 @@ export class StagehandExtractTool extends StagehandToolBase {
     }
   }
 
-  private convertToZodSchema(schema: any): z.ZodType<any> {
-    if (Array.isArray(schema.type)) {
-      // Handle cases like type: ["string", "null"]
-      if (schema.type.includes("null")) {
-        const typesWithoutNull = schema.type.filter(
-          (t: string) => t !== "null"
-        );
-        if (typesWithoutNull.length === 1) {
-          return this.convertToZodSchema({
-            ...schema,
-            type: typesWithoutNull[0],
-          }).nullable();
-        } else {
-          const zodTypes = typesWithoutNull.map((t: string) =>
-            this.convertToZodSchema({ ...schema, type: t })
-          );
-          return z.union(zodTypes).nullable();
-        }
-      } else {
-        // Handle union types
-        const zodTypes = schema.type.map((t: string) =>
-          this.convertToZodSchema({ ...schema, type: t })
-        );
-        return z.union(zodTypes);
-      }
-    }
+  protected async getStagehand(): Promise<Stagehand> {
+    if (this.stagehand) return this.stagehand;
 
-    switch (schema.type) {
-      case "string":
-        return z.string();
-      case "number":
-        return z.number();
-      case "boolean":
-        return z.boolean();
-      case "object": {
-        const properties = schema.properties || {};
-        const required = schema.required || [];
-        const zodObjShape = Object.fromEntries(
-          Object.entries(properties).map(([key, propertySchema]) => {
-            const isRequired = required.includes(key);
-            const zodPropType = this.convertToZodSchema(propertySchema);
-            return [key, isRequired ? zodPropType : zodPropType.optional()];
-          })
-        );
-        return z.object(zodObjShape);
-      }
-      case "array": {
-        const itemsSchema = schema.items;
-        if (!itemsSchema) {
-          throw new Error(`'items' property is missing for array type.`);
-        }
-        const zodItemType = this.convertToZodSchema(itemsSchema);
-        return z.array(zodItemType);
-      }
-      default:
-        throw new Error(`Unsupported schema type: ${schema.type}`);
+    if (!this.localStagehand) {
+      this.localStagehand = new Stagehand({
+        env: "LOCAL",
+        enableCaching: true,
+      });
+      await this.localStagehand.init();
     }
+    return this.localStagehand;
   }
+
+  private localStagehand?: Stagehand;
 }
 
 export class StagehandObserveTool extends StagehandToolBase {

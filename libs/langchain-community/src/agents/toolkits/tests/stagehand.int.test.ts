@@ -57,14 +57,9 @@ describe("StagehandToolkit Integration Tests", () => {
         required: ["username", "url"],
       },
     };
-    const result = await extractTool.call(JSON.stringify(input));
-
-    console.log("RESULT");
-    console.log(result);
-
+    const result = await extractTool.call(input); // No need for JSON.stringify
     const parsedResult = JSON.parse(result);
     const { username, url } = parsedResult;
-
     expect(username).toBeDefined();
     expect(url).toBeDefined();
   });
@@ -122,4 +117,36 @@ describe("StagehandToolkit Integration Tests", () => {
     expect(typeof observations[0].description).toBe("string");
     expect(typeof observations[0].selector).toBe("string");
   });
+
+  test("should perform navigation and search using agent", async () => {
+    // Import necessary modules
+    const { ChatOpenAI } = require("@langchain/openai");
+    const { initializeAgentExecutorWithOptions } = require("langchain/agents");
+
+    // Use OpenAI Functions agent to execute the prompt using actions from the Stagehand Toolkit.
+    const llm = new ChatOpenAI({ temperature: 0 });
+
+    const agent = await initializeAgentExecutorWithOptions(
+      toolkit.tools,
+      llm,
+      {
+        agentType: "openai-functions",
+        verbose: true,
+      }
+    );
+
+    // Keep actions atomic
+    await agent.invoke({
+      input: `Navigate to https://www.google.com`,
+    });
+
+    await agent.invoke({
+      input: `Search for "OpenAI"`,
+    });
+
+    // Verify the current URL
+    const currentUrl = await stagehand.page.url();
+    expect(currentUrl).toContain("google.com/search?q=OpenAI");
+  });
+  
 });

@@ -5,6 +5,7 @@ hide_table_of_contents: true
 
 import CodeBlock from "@theme/CodeBlock";
 import Example from "@examples/agents/stagehand_ai_web_browser.ts";
+import { StagehandToolkit } from "@langchain/community/agents/toolkits/stagehand";
 
 # Stagehand Toolkit
 
@@ -44,7 +45,7 @@ For Anthropic:
 export ANTHROPIC_API_KEY="your-anthropic-api-key"
 ```
 
-## Usage, Standalone, Local
+## Usage, Standalone, Local LangChain
 
 ```typescript
 import { Stagehand } from "@browserbasehq/stagehand";
@@ -76,6 +77,49 @@ async function main() {
 
 main();
 ```
+
+## Usage, Standalone, Local Langgraph
+
+```typescript
+import { Stagehand } from "@browserbasehq/stagehand";
+import { StagehandActTool } from "./StagehandActTool";
+import { ChatOpenAI } from "@langchain/openai";
+import { createReactAgent } from "@langchain/langgraph/prebuilt";
+
+async function main() {
+  // Initialize Stagehand once and pass it to the tools
+  const stagehand = new Stagehand({
+    env: "LOCAL",
+    enableCaching: true,
+  });
+  await stagehand.init();
+  await stagehand.page.goto("https://example.com");
+
+  const actTool = new StagehandActTool(stagehand);
+  const tools = [actTool];
+
+  // Initialize the model
+  const model = new ChatOpenAI({
+    modelName: "gpt-4",
+    temperature: 0,
+  });
+
+  // Create the agent using langgraph
+  const agent = createReactAgent({
+    llm: model,
+    tools: tools,
+  });
+
+  // Execute the agent
+  const result = await agent.invoke({ input: "Click on the login button" });
+
+  console.log(`Agent answer: ${result.output}`);
+}
+
+main();
+
+```
+
 
 ## Usage, Standalone, on Browserbase - remote headless browser
 
