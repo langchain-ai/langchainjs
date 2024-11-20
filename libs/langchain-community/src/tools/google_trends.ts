@@ -19,7 +19,7 @@ export class GoogleTrendsAPI extends Tool {
   
     get lc_secrets(): { [key: string]: string } | undefined {
       return {
-        apiKey: "GOOGLE_TRENDS_API_KEY",
+        apiKey: "SERPAPI_API_KEY",
       };
     }
   
@@ -33,10 +33,10 @@ export class GoogleTrendsAPI extends Tool {
     constructor(fields?: GoogleTrendsAPIParams) {
       super(...arguments);
       const apiKey =
-        fields?.apiKey ?? getEnvironmentVariable("GOOGLE_TRENDS_API_KEY");
+        fields?.apiKey ?? getEnvironmentVariable("SERPAPI_API_KEY");
       if (apiKey === undefined) {
         throw new Error(
-          `Google Trends API key not set. You can set it as "GOOGLE_TRENDS_API_KEY" in your environment variables.`
+          `Google Trends API key not set. You can set it as "SERPAPI_API_KEY" in your environment variables.`
         );
       }
       this.apiKey = apiKey;

@@ -10,7 +10,7 @@ describe("GoogleTrendsAPI", () => {
   test("GoogleTrendsAPI returns expected result for valid query", async () => {
     const tool = new GoogleTrendsAPI();
 
-    const result = await tool._call("Island");
+    const result = await tool._call("Coffee");
 
     expect(result).toContain("Query: Coffee");
     expect(result).toContain("Date From:");
@@ -26,10 +26,9 @@ describe("GoogleTrendsAPI", () => {
 
   test("GoogleTrendsAPI returns 'No good Trend Result was found' for a non-existent query", async () => {
     const tool = new GoogleTrendsAPI();
-  
+
     const result = await tool._call("hhdhbfsjbfwl");
-  
+
     expect(result).toBe("No good Trend Result was found");
   });
-
 });
