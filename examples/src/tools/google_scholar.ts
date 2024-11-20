@@ -1,12 +1,12 @@
-import { GoogleScholarAPI } from "@langchain/community/tools/google_scholar";
+import { GoogleScholarAPI } from "../../../libs/langchain-community/src/tools/google_scholar.js";
 
 const scholar = new GoogleScholarAPI({
-  apiKey: "YOUR_SERP_API_KEY", // Alternatively, set this as an environment variable.
+  apiKey: "567433bea61f9193deb1a44f2851537658f29ef4135a1fe3eadabc9390dd4d6e", // Alternatively, set this as an environment variable.
 });
 
 (async () => {
   try {
-    const query = "machine learning applications in healthcare";
+    const query = "Machine Learning";
     const results = await scholar._call(query);
     console.log("Search Results:", results);
   } catch (error) {

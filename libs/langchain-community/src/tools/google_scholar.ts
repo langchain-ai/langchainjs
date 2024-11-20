@@ -69,9 +69,9 @@ export class GoogleScholarAPI extends Tool {
     }
 
     const json = await response.json();
-
+    console.log(json);
     const results =
-      json.scholar_results?.map((item: any) => ({
+      json.organic_results?.map((item: any) => ({
         title: item.title,
         link: item.link,
         snippet: item.snippet,
