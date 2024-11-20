@@ -76,7 +76,7 @@ printFilterResult(
 );
 /* Filter: {"id":{"$ne":1}}
 { name: 'bob', is_active: false, id: 2, height: 5.7 } 
- { name: 'jane', is_active: true, id: 3, height: 2.4 }
+{ name: 'jane', is_active: true, id: 3, height: 2.4 }
 */
 
 // Between range
@@ -194,5 +194,17 @@ printFilterResult(
 { name: 'bob', is_active: false, id: 2, height: 5.7 }
 { name: 'jane', is_active: true, id: 3, height: 2.4 } */
 
-// Disconnect from SAP HANA after the operations
+// You can also define a nested filter with $and and $or.
+advancedFilter = {
+  $and: [{ $or: [{ id: 1 }, { id: 2 }] }, { height: { $gte: 5.0 } }],
+};
+console.log(`Filter: ${JSON.stringify(advancedFilter)}`);
+printFilterResult(
+  await vectorStore.similaritySearch("just testing", 5, advancedFilter)
+);
+/* Filter: {"$and":[{"$or":[{"id":1},{"id":2}]},{"height":{"$gte":5.0}}]}
+{ name: 'adam', is_active: true, id: 1, height: 10 } 
+{ name: 'bob', is_active: false, id: 2, height: 5.7 } */
+
+// Disconnect from SAP HANA aft er the operations
 client.disconnect();

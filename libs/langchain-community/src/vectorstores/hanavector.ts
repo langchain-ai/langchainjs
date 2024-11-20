@@ -557,7 +557,6 @@ export class HanaDB extends VectorStore {
       indexName?: string;
     } = {}
   ): Promise<void> {
-    // Destructure the options inside the function body
     const { m, efConstruction, efSearch, indexName } = options;
 
     // Determine the distance function based on the configured strategy
@@ -565,7 +564,6 @@ export class HanaDB extends VectorStore {
     const defaultIndexName = `${this.tableName}_${distanceFuncName}_idx`;
 
     // Use provided indexName or fallback to default
-    // const finalIndexName = indexName || defaultIndexName;
     const finalIndexName = HanaDB.sanitizeName(indexName || defaultIndexName);
     // Initialize buildConfig and searchConfig objects
     const buildConfig: Record<string, number> = {};

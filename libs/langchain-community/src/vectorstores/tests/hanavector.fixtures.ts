@@ -137,4 +137,6 @@ export const TYPE_6_FILTERING_TEST_CASES: TestCase[] = [
     },
     expected: [1, 2],
   },
+  { filter: { id: 3, height: { $gte: 5.0 } }, expected: [] },
+  { filter: { $and: [{ id: 1 }, { height: { $gte: 5.0 } }] }, expected: [1] },
 ];
