@@ -42,7 +42,7 @@ export class GoogleTrendsAPI extends Tool {
       this.apiKey = apiKey;
     }
 
-    async run(query: string): Promise<string> {
+    async _call(query: string): Promise<string> {
         const serpapiApiKey = this.apiKey;
         const params = new URLSearchParams({
           engine: "google_trends",

@@ -4,7 +4,7 @@ export async function run() {
 
   const tool = new GoogleTrendsAPI(); 
 
-  const res = await tool.run("Monster");
+  const res = await tool._call("Monster");
 
   console.log(res);
 }
