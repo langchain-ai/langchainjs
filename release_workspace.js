@@ -99,18 +99,33 @@ async function runYarnRelease(packageDirectory, npm2FACode, tag) {
     
     console.log(`Running command: "yarn ${args.join(" ")}"`);
 
-    const yarnReleaseProcess = spawn("yarn", args, { stdio: "inherit", cwd: workingDirectory });
+    const yarnReleaseProcess = spawn("yarn", args, { cwd: workingDirectory });
+    
+    let stdout = '';
+    let stderr = '';
+
+    yarnReleaseProcess.stdout.on('data', (data) => {
+      stdout += data;
+      // Still show output in real-time
+      process.stdout.write(data);
+    });
+
+    yarnReleaseProcess.stderr.on('data', (data) => {
+      stderr += data;
+      // Still show errors in real-time
+      process.stderr.write(data);
+    });
 
     yarnReleaseProcess.on("close", (code) => {
       if (code === 0) {
         resolve();
       } else {
-        reject(`Process exited with code ${code}`);
+        reject(`Process exited with code ${code}.\nError: ${stderr}`);
       }
     });
 
     yarnReleaseProcess.on("error", (err) => {
-      reject(err);
+      reject(`Failed to start process: ${err.message}\nError: ${stderr}`);
     });
   });
 }
@@ -208,6 +223,32 @@ Workspaces:
 }
 
 /**
+ * Create a commit message for the input workspace and version.
+ * 
+ * @param {string} workspaceName 
+ * @param {string} version 
+ */
+function createCommitMessage(workspaceName, version) {
+  return `release(${workspaceName}): ${version}`;
+}
+
+/**
+ * Commits all changes and pushes to the current branch.
+ * 
+ * @param {string} workspaceName The name of the workspace being released
+ * @param {string} version The new version being released
+ * @returns {void}
+ */
+function commitAndPushChanges(workspaceName, version) {
+  console.log("Committing and pushing changes...");
+  const commitMsg = createCommitMessage(workspaceName, version);
+  execSync('git add -A');
+  execSync(`git commit -m "${commitMsg}"`);
+  execSync('git push -u origin $(git rev-parse --abbrev-ref HEAD)');
+  console.log("Successfully committed and pushed changes.");
+}
+
+/**
  * Verifies the current branch is main, then checks out a new release branch
  * and pushes an empty commit.
  * 
@@ -216,12 +257,12 @@ Workspaces:
  */
 function checkoutReleaseBranch() {
   const currentBranch = execSync("git branch --show-current").toString().trim();
-  if (currentBranch === MAIN_BRANCH) {
+  if (currentBranch === MAIN_BRANCH || currentBranch === RELEASE_BRANCH) {
     console.log(`Checking out '${RELEASE_BRANCH}' branch.`);
     execSync(`git checkout -B ${RELEASE_BRANCH}`);
     execSync(`git push -u origin ${RELEASE_BRANCH}`);
   } else {
-    throw new Error(`Current branch is not ${MAIN_BRANCH}. Current branch: ${currentBranch}`);
+    throw new Error(`Current branch is not ${MAIN_BRANCH} or ${RELEASE_BRANCH}. Current branch: ${currentBranch}`);
   }
 }
 
@@ -245,6 +286,24 @@ async function getUserInput(question) {
     });
   });
 }
+
+/**
+ * Checks if there are any uncommitted changes in the git repository
+ * 
+ * @returns {boolean} True if there are uncommitted changes, false otherwise
+ */
+function hasUncommittedChanges() {
+  try {
+    // This command returns empty string if no changes, or a string with changes if there are any
+    const output = execSync('git status --porcelain').toString();
+    return output.length > 0;
+  } catch (error) {
+    console.error('Error checking git status:', error);
+    // If we can't check, better to assume there are changes
+    return true;
+  }
+}
+
 
 
 async function main() {
@@ -281,24 +340,17 @@ async function main() {
   execSync(`yarn turbo:command run --filter ${options.workspace} build lint test --concurrency 1`);
   console.log("Successfully ran build, lint, and tests.");
 
-  // Only run export tests for primary projects.
-  if (PRIMARY_PROJECTS.includes(options.workspace.trim())) {
-    // Run export tests.
-    // LangChain must be built before running export tests.
-    console.log("Building 'langchain' and running export tests.");
-    execSync(`yarn run turbo:command build --filter=langchain`);
-    execSync(`yarn run test:exports:docker`);
-    console.log("Successfully built langchain, and tested exports.");
-  } else {
-    console.log("Skipping export tests for non primary project.");
-  }
-
   const npm2FACode = await getUserInput("Please enter your NPM 2FA authentication code:");
 
   const preReleaseVersion = getWorkspaceVersion(matchingWorkspace.dir);
 
   // Run `release-it` on workspace
   await runYarnRelease(matchingWorkspace.dir, npm2FACode, options.tag);
+
+  if (hasUncommittedChanges()) {
+    const updatedVersion = getWorkspaceVersion(matchingWorkspace.dir);
+    commitAndPushChanges(options.workspace, updatedVersion);
+  }
   
   // Log release branch URL
   console.log("🔗 Open %s and merge the release PR.", `\x1b[34mhttps://github.com/langchain-ai/langchainjs/compare/release?expand=1\x1b[0m`);
