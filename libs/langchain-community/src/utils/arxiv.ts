@@ -1,5 +1,5 @@
 import axios from 'axios'; // For HTTP requests
-import pdfParse from 'pdf-parse'; // For parsing PDFs
+import { PDFLoader } from "../document_loaders/fs/pdf.js";
 import { XMLParser } from 'fast-xml-parser'; // For parsing XML
 import { Document } from "@langchain/core/documents";
 
@@ -97,10 +97,20 @@ export async function searchArxiv(query: string, maxResults = 3): Promise<ArxivE
 // Used to fetch and parse PDF to text
 export async function fetchAndParsePDF(pdfUrl: string): Promise<string> {
     try {
-        const response = await axios.get(pdfUrl, { responseType: 'arraybuffer' });
+        // Fetch the PDF as an array buffer
+        const response = await axios.get(pdfUrl, { responseType: "arraybuffer" });
         const buffer = Buffer.from(response.data);
-        const data = await pdfParse(buffer);
-        return data.text;
+
+        // Convert the Buffer to a Blob
+        const blob = new Blob([buffer], { type: "application/pdf" });
+
+        // Use PDFLoader to process the PDF
+        const loader = new PDFLoader(blob, { splitPages: false }); // Pass the Blob
+        const docs: Document[] = await loader.load();
+
+        // Combine all document content into a single string
+        const content = docs.map((doc) => doc.pageContent).join("\n\n");
+        return content;
     } catch (error) {
         throw new Error(`Failed to fetch or parse PDF from ${pdfUrl}`);
     }
