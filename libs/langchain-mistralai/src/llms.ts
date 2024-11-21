@@ -419,7 +419,6 @@ Either provide one via the "apiKey" field in the constructor, or set the "MISTRA
           return res;
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (e: any) {
-          console.log(e, e.status, e.code, e.statusCode, e.message);
           if (
             e.message?.includes("status: 400") ||
             e.message?.toLowerCase().includes("status 400") ||
