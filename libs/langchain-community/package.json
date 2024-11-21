@@ -35,6 +35,7 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
+    "@langchain/langgraph": "^0.2.22",
     "@langchain/openai": ">=0.2.0 <0.4.0",
     "binary-extensions": "^2.2.0",
     "expr-eval": "^2.0.2",

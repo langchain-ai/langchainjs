@@ -1,8 +1,9 @@
 import { expect, describe, test, beforeEach, afterEach } from "@jest/globals";
 import { Stagehand } from "@browserbasehq/stagehand";
-import { StagehandToolkit } from "../stagehand.js";
 import { z } from "zod";
 import { ChatOpenAI } from "@langchain/openai";
+import { createReactAgent } from "@langchain/langgraph/prebuilt";
+import { StagehandToolkit } from "../stagehand.js";
 
 describe("StagehandToolkit Integration Tests", () => {
   let stagehand: Stagehand;
@@ -127,8 +128,37 @@ describe("StagehandToolkit Integration Tests", () => {
     const llmWithTools = llm.bindTools(toolkit.tools);
 
     // Execute queries atomically
-    await llmWithTools.invoke("Navigate to https://www.google.com");
-    await llmWithTools.invoke('Search for "OpenAI"');
+    const result = await llmWithTools.invoke(
+      "Navigate to https://www.google.com"
+    );
+
+    expect(result.tool_calls).toBeDefined();
+    expect(result.tool_calls?.length).toBe(1);
+    const toolCall = result.tool_calls?.[0];
+    expect(toolCall?.name).toBe("stagehand_navigate");
+
+    const navigateTool = toolkit.tools.find(
+      (t) => t.name === "stagehand_navigate"
+    );
+    if (!navigateTool) {
+      throw new Error("Navigate tool not found");
+    }
+    const navigateResult = await navigateTool?.invoke(toolCall?.args?.input);
+    expect(navigateResult).toContain("Successfully navigated");
+
+    const result2 = await llmWithTools.invoke('Search for "OpenAI"');
+    expect(result2.tool_calls).toBeDefined();
+    expect(result2.tool_calls?.length).toBe(1);
+    const actionToolCall = result2.tool_calls?.[0];
+    expect(actionToolCall?.name).toBe("stagehand_act");
+    expect(actionToolCall?.args?.input).toBe("search for OpenAI");
+
+    const actionTool = toolkit.tools.find((t) => t.name === "stagehand_act");
+    if (!actionTool) {
+      throw new Error("Action tool not found");
+    }
+    const actionResult = await actionTool.invoke(actionToolCall?.args?.input);
+    expect(actionResult).toContain("successfully");
 
     // Verify the current URL
     const currentUrl = stagehand.page.url();
@@ -161,23 +191,37 @@ describe("StagehandToolkit Integration Tests", () => {
   });
 
   test("should work with langgraph", async () => {
+    const actTool = toolkit.tools.find((t) => t.name === "stagehand_act");
     const navigateTool = toolkit.tools.find(
       (t) => t.name === "stagehand_navigate"
     );
-    if (!navigateTool) {
-      throw new Error("Navigate tool not found");
+    if (!actTool || !navigateTool) {
+      throw new Error("Required tools not found");
     }
-    await navigateTool.invoke("https://www.google.com/");
+    const tools = [actTool, navigateTool];
 
-    const actionTool = toolkit.tools.find((t) => t.name === "stagehand_act");
-    if (!actionTool) {
-      throw new Error("Action tool not found");
-    }
+    const model = new ChatOpenAI({
+      modelName: "gpt-4",
+      temperature: 0,
+    });
 
-    await actionTool.invoke("click on the about page");
-    await actionTool.invoke("click on the careers page");
-    await actionTool.invoke("input data scientist into role");
-    await actionTool.invoke("input new york city into location");
+    const agent = createReactAgent({
+      llm: model,
+      tools,
+    });
+
+    // Navigate to Google
+    const result1 = await agent.invoke({
+      input: "Navigate to https://www.google.com",
+    });
+    expect(result1.output).toBeDefined();
+
+    // Click through to careers page and search
+    const result2 = await agent.invoke({
+      input:
+        "Click on the About page, then go to Careers and search for Data Scientist roles in New York City",
+    });
+    expect(result2.output).toBeDefined();
 
     const currentUrl = stagehand.page.url();
     expect(currentUrl).toContain("google.com/about/careers");

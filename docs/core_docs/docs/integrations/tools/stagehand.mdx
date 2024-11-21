@@ -21,7 +21,7 @@ The Stagehand Toolkit equips your AI agent with the following capabilities:
 1. Install the required packages:
 
 ```bash
-npm install @langchain/community @langchain/core
+npm install @langchain/langgraph @langchain/community @langchain/core
 ```
 
 2. Create a Stagehand Instance
@@ -70,18 +70,20 @@ const stagehand = new Stagehand({
 // Create a Stagehand Toolkit with all the available actions from the Stagehand.
 const stagehandToolkit = await StagehandToolkit.fromStagehand(stagehand);
 
-const llm = new ChatOpenAI({ temperature: 0 });
-
-if (!llm.bindTools) {
-  throw new Error("Language model does not support tools.");
+const navigateTool = toolkit.tools.find((t) => t.name === "stagehand_navigate");
+if (!navigateTool) {
+  throw new Error("Navigate tool not found");
 }
+await navigateTool.invoke("https://www.google.com");
 
-// Bind tools to the LLM
-const llmWithTools = llm.bindTools(stagehandToolkit.tools);
+const actionTool = toolkit.tools.find((t) => t.name === "stagehand_act");
+if (!actionTool) {
+  throw new Error("Action tool not found");
+}
+await actionTool.invoke('Search for "OpenAI"');
 
-// Execute queries atomically
-await llmWithTools.invoke("Navigate to https://www.google.com");
-await llmWithTools.invoke('Search for "OpenAI"');
+const currentUrl = stagehand.page.url();
+expect(currentUrl).toContain("google.com/search?q=OpenAI");
 ```
 
 ## Usage with Langgraph

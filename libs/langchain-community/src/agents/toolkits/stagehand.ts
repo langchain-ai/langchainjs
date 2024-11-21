@@ -10,32 +10,9 @@ import { z } from "zod";
 //  Documentation is here:
 //  https://js.langchain.com/docs/integrations/tools/stagehand
 
-export class StagehandToolkit extends Toolkit {
-  tools: ToolInterface[];
-  stagehand?: Stagehand;
-
-  constructor(stagehand?: Stagehand) {
-    super();
-    this.stagehand = stagehand;
-    this.tools = this.initializeTools();
-  }
-
-  private initializeTools(): ToolInterface[] {
-    return [
-      new StagehandNavigateTool(this.stagehand),
-      new StagehandActTool(this.stagehand),
-      new StagehandExtractTool(this.stagehand),
-      new StagehandObserveTool(this.stagehand),
-    ];
-  }
-
-  static async fromStagehand(stagehand: Stagehand): Promise<StagehandToolkit> {
-    return new StagehandToolkit(stagehand);
-  }
-}
-
 abstract class StagehandToolBase extends Tool {
   protected stagehand?: Stagehand;
+
   private localStagehand?: Stagehand;
 
   constructor(stagehandInstance?: Stagehand) {
@@ -59,6 +36,7 @@ abstract class StagehandToolBase extends Tool {
 
 export class StagehandNavigateTool extends StagehandToolBase {
   name = "stagehand_navigate";
+
   description =
     "Use this tool to navigate to a specific URL using Stagehand. The input should be a valid URL as a string.";
 
@@ -75,6 +53,7 @@ export class StagehandNavigateTool extends StagehandToolBase {
 
 export class StagehandActTool extends StagehandToolBase {
   name = "stagehand_act";
+
   description =
     "Use this tool to perform an action on the current web page using Stagehand. The input should be a string describing the action to perform.";
 
@@ -91,6 +70,7 @@ export class StagehandActTool extends StagehandToolBase {
 
 export class StagehandExtractTool extends StructuredTool {
   name = "stagehand_extract";
+
   description =
     "Use this tool to extract structured information from the current web page using Stagehand. The input should include an 'instruction' string and a 'schema' object representing the extraction schema in JSON Schema format.";
 
@@ -139,6 +119,7 @@ export class StagehandExtractTool extends StructuredTool {
 
 export class StagehandObserveTool extends StagehandToolBase {
   name = "stagehand_observe";
+
   description =
     "Use this tool to observe the current web page and retrieve possible actions using Stagehand. The input can be an optional instruction string.";
 
@@ -152,5 +133,30 @@ export class StagehandObserveTool extends StagehandToolBase {
     } catch (error: any) {
       return `Failed to observe page: ${error.message}`;
     }
+  }
+}
+
+export class StagehandToolkit extends Toolkit {
+  tools: ToolInterface[];
+
+  stagehand?: Stagehand;
+
+  constructor(stagehand?: Stagehand) {
+    super();
+    this.stagehand = stagehand;
+    this.tools = this.initializeTools();
+  }
+
+  private initializeTools(): ToolInterface[] {
+    return [
+      new StagehandNavigateTool(this.stagehand),
+      new StagehandActTool(this.stagehand),
+      new StagehandExtractTool(this.stagehand),
+      new StagehandObserveTool(this.stagehand),
+    ];
+  }
+
+  static async fromStagehand(stagehand: Stagehand): Promise<StagehandToolkit> {
+    return new StagehandToolkit(stagehand);
   }
 }

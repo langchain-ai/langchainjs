@@ -1,34 +1,41 @@
-import { StagehandToolkit } from "@langchain/community/agents/toolkits/stagehand";
-import { ChatOpenAI } from "@langchain/openai";
 import { Stagehand } from "@browserbasehq/stagehand";
+import {
+  StagehandActTool,
+  StagehandNavigateTool,
+} from "@langchain/community/agents/toolkits/stagehand";
+import { ChatOpenAI } from "@langchain/openai";
+import { createReactAgent } from "@langchain/langgraph/prebuilt";
 
-// Specify your Browserbase credentials.
-process.env.BROWSERBASE_API_KEY = "";
-process.env.BROWSERBASE_PROJECT_ID = "";
+async function main() {
+  // Initialize Stagehand once and pass it to the tools
+  const stagehand = new Stagehand({
+    env: "LOCAL",
+    enableCaching: true,
+  });
 
-// Specify OpenAI API key.
-process.env.OPENAI_API_KEY = "";
+  const actTool = new StagehandActTool(stagehand);
+  const navigateTool = new StagehandNavigateTool(stagehand);
+  const tools = [actTool, navigateTool];
 
-const stagehand = new Stagehand({
-  env: "BROWSERBASE", // run on a remote browser, or "LOCAL" to run on your local machine
-  headless: true,
-  verbose: 2,
-  debugDom: true,
-  enableCaching: false,
-});
+  // Initialize the model
+  const model = new ChatOpenAI({
+    modelName: "gpt-4",
+    temperature: 0,
+  });
 
-// Create a Stagehand Toolkit with all the available actions from the Stagehand.
-const stagehandToolkit = await StagehandToolkit.fromStagehand(stagehand);
+  // Create the agent using langgraph
+  const agent = createReactAgent({
+    llm: model,
+    tools: tools,
+  });
 
-const llm = new ChatOpenAI({ temperature: 0 });
-
-if (!llm.bindTools) {
-  throw new Error("Language model does not support tools.");
+  // Execute the agent
+  const result = await agent.invoke({
+    input: "Navigate to https://www.google.com",
+  });
+  console.log(`Agent answer: ${result.output}`);
+  const result = await agent.invoke({ input: "Search for 'OpenAI'" });
+  console.log(`Agent answer: ${result.output}`);
 }
 
-// Bind tools to the LLM
-const llmWithTools = llm.bindTools(stagehandToolkit.tools);
-
-// Execute queries atomically
-await llmWithTools.invoke("Navigate to https://www.google.com");
-await llmWithTools.invoke('Search for "OpenAI"');
+main();
