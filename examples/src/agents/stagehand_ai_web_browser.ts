@@ -29,13 +29,54 @@ async function main() {
     tools: tools,
   });
 
-  // Execute the agent
-  const result = await agent.invoke({
-    input: "Navigate to https://www.google.com",
+  // Execute the agent using streams
+  const inputs1 = {
+    messages: [
+      {
+        role: "user",
+        content: "Navigate to https://www.google.com"
+      }
+    ]
+  };
+
+  const stream1 = await agent.stream(inputs1, {
+    streamMode: "values",
   });
-  console.log(`Agent answer: ${result.output}`);
-  const result = await agent.invoke({ input: "Search for 'OpenAI'" });
-  console.log(`Agent answer: ${result.output}`);
+
+  for await (const { messages } of stream1) {
+    const msg = messages && messages.length > 0 ? messages[messages.length - 1] : undefined;
+    if (msg?.content) {
+      console.log(msg.content);
+    } else if (msg?.tool_calls && msg.tool_calls.length > 0) {
+      console.log(msg.tool_calls); 
+    } else {
+      console.log(msg);
+    }
+  }
+
+  const inputs2 = {
+    messages: [
+      {
+        role: "user",
+        content: "Search for 'OpenAI'"
+      }
+    ]
+  };
+
+  const stream2 = await agent.stream(inputs2, {
+    streamMode: "values",
+  });
+
+  for await (const { messages } of stream2) {
+    const msg = messages && messages.length > 0 ? messages[messages.length - 1] : undefined;
+    if (msg?.content) {
+      console.log(msg.content);
+    } else if (msg?.tool_calls && msg.tool_calls.length > 0) {
+      console.log(msg.tool_calls);
+    } else {
+      console.log(msg);
+    }
+  }
 }
 
 main();
