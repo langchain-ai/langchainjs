@@ -23,7 +23,7 @@ type ComparisonRValue =
   | number
   | boolean
   | Date
-  | Array<string | number | boolean | Date>;
+  | Array<ComparisonRValue>;
 // Available comparison operators for filtering
 type Comparator =
   | "$eq"
@@ -44,7 +44,7 @@ type ComparatorFilter = {
 
 type LogicalOperator = "$and" | "$or";
 type LogicalFilter = {
-  [K in LogicalOperator]?: PropertyFilter[];
+  [K in LogicalOperator]?: Filter[];
 };
 type PropertyFilter = {
   [property: string]: string | number | boolean | Date | ComparatorFilter;
@@ -418,7 +418,8 @@ export class HanaDB extends VectorStore {
     Object.keys(filter).forEach((key, i) => {
       const filterValue = filter[key as keyof Filter] as
         | ComparisonRValue
-        | ComparatorFilter;
+        | ComparatorFilter
+        | Filter[];
       if (i !== 0) {
         whereStr += " AND ";
       }
@@ -426,8 +427,8 @@ export class HanaDB extends VectorStore {
       // Handling logical operators ($and, $or)
       if (key in LOGICAL_OPERATORS_TO_SQL) {
         const logicalOperator = LOGICAL_OPERATORS_TO_SQL[key];
-        const logicalOperands = filterValue as PropertyFilter[];
-        logicalOperands.forEach((operand: PropertyFilter, j: number) => {
+        const logicalOperands = filterValue as Filter[];
+        logicalOperands.forEach((operand: Filter, j: number) => {
           if (j !== 0) {
             whereStr += ` ${logicalOperator} `;
           }
