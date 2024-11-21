@@ -5,7 +5,7 @@ import {
   StructuredTool,
 } from "@langchain/core/tools";
 import { Stagehand } from "@browserbasehq/stagehand";
-import { z } from "zod";
+import { AnyZodObject, z } from "zod";
 
 //  Documentation is here:
 //  https://js.langchain.com/docs/integrations/tools/stagehand
@@ -34,22 +34,32 @@ abstract class StagehandToolBase extends Tool {
   }
 }
 
+function isErrorWithMessage(error: unknown): error is { message: string } {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "message" in error &&
+    typeof (error as { message: unknown }).message === "string"
+  );
+}
+
 export class StagehandNavigateTool extends StagehandToolBase {
   name = "stagehand_navigate";
 
   description =
     "Use this tool to navigate to a specific URL using Stagehand. The input should be a valid URL as a string.";
 
-  async _call(input: string): Promise<string> {
-    const stagehand = await this.getStagehand();
-    try {
-      await stagehand.page.goto(input);
-      return `Successfully navigated to ${input}.`;
-    } catch (error: any) {
-      return `Failed to navigate to ${input}: ${error.message}`;
+    async _call(input: string): Promise<string> {
+      const stagehand = await this.getStagehand();
+      try {
+        await stagehand.page.goto(input);
+        return `Successfully navigated to ${input}.`;
+      } catch (error: unknown) {
+        const message = isErrorWithMessage(error) ? error.message : String(error);
+        return `Failed to navigate: ${message}`;
+      }
     }
   }
-}
 
 export class StagehandActTool extends StagehandToolBase {
   name = "stagehand_act";
@@ -89,7 +99,7 @@ export class StagehandExtractTool extends StructuredTool {
     this.stagehand = stagehandInstance;
   }
 
-  async _call(input: { instruction: string; schema: any }): Promise<string> {
+  async _call(input: { instruction: string; schema: AnyZodObject }): Promise<string> {
     const stagehand = await this.getStagehand();
     const { instruction, schema } = input;
 
@@ -99,8 +109,9 @@ export class StagehandExtractTool extends StructuredTool {
         schema, // Assuming Stagehand accepts the schema in JSON Schema format
       });
       return JSON.stringify(result);
-    } catch (error: any) {
-      return `Failed to extract information: ${error.message}`;
+    } catch (error: unknown) {
+      const message = isErrorWithMessage(error) ? error.message : String(error);
+      return `Failed to extract information: ${message}`;
     }
   }
 
@@ -123,18 +134,19 @@ export class StagehandObserveTool extends StagehandToolBase {
   description =
     "Use this tool to observe the current web page and retrieve possible actions using Stagehand. The input can be an optional instruction string.";
 
-  async _call(input: string): Promise<string> {
-    const stagehand = await this.getStagehand();
-    const instruction = input || undefined;
-
-    try {
-      const result = await stagehand.observe({ instruction });
-      return JSON.stringify(result);
-    } catch (error: any) {
-      return `Failed to observe page: ${error.message}`;
+    async _call(input: string): Promise<string> {
+      const stagehand = await this.getStagehand();
+      const instruction = input || undefined;
+  
+      try {
+        const result = await stagehand.observe({ instruction });
+        return JSON.stringify(result);
+      } catch (error: unknown) {
+        const message = isErrorWithMessage(error) ? error.message : String(error);
+        return `Failed to observe: ${message}`;
+      }
     }
   }
-}
 
 export class StagehandToolkit extends Toolkit {
   tools: ToolInterface[];

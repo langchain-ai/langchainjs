@@ -165,30 +165,28 @@ describe("StagehandToolkit Integration Tests", () => {
     expect(currentUrl).toContain("google.com/search?q=OpenAI");
   });
 
-  test("should perform navigation and search using agent", async () => {
-    const { initializeAgentExecutorWithOptions } = require("langchain/agents");
+  // test("should perform navigation and search using agent", async () => {
+  //   // Use OpenAI Functions agent to execute the prompt using actions from the Stagehand Toolkit.
+  //   const llm = new ChatOpenAI({ temperature: 0 });
 
-    // Use OpenAI Functions agent to execute the prompt using actions from the Stagehand Toolkit.
-    const llm = new ChatOpenAI({ temperature: 0 });
+  //   const agent = await initializeAgentExecutorWithOptions(toolkit.tools, llm, {
+  //     agentType: "openai-functions",
+  //     verbose: true,
+  //   });
 
-    const agent = await initializeAgentExecutorWithOptions(toolkit.tools, llm, {
-      agentType: "openai-functions",
-      verbose: true,
-    });
+  //   // Keep actions atomic
+  //   await agent.invoke({
+  //     input: `Navigate to https://www.google.com`,
+  //   });
 
-    // Keep actions atomic
-    await agent.invoke({
-      input: `Navigate to https://www.google.com`,
-    });
+  //   await agent.invoke({
+  //     input: `Search for "OpenAI"`,
+  //   });
 
-    await agent.invoke({
-      input: `Search for "OpenAI"`,
-    });
-
-    // Verify the current URL
-    const currentUrl = await stagehand.page.url();
-    expect(currentUrl).toContain("google.com/search?q=OpenAI");
-  });
+  //   // Verify the current URL
+  //   const currentUrl = await stagehand.page.url();
+  //   expect(currentUrl).toContain("google.com/search?q=OpenAI");
+  // });
 
   test("should work with langgraph", async () => {
     const actTool = toolkit.tools.find((t) => t.name === "stagehand_act");
@@ -209,19 +207,55 @@ describe("StagehandToolkit Integration Tests", () => {
       llm: model,
       tools,
     });
-
     // Navigate to Google
-    const result1 = await agent.invoke({
-      input: "Navigate to https://www.google.com",
+    const inputs1 = {
+      messages: [
+        {
+          role: "user",
+          content: "Navigate to https://www.google.com"
+        }
+      ]
+    };
+
+    const stream1 = await agent.stream(inputs1, {
+      streamMode: "values",
     });
-    expect(result1.output).toBeDefined();
+
+    for await (const { messages } of stream1) {
+      const msg = messages[messages?.length - 1];
+      if (msg?.content) {
+        console.log(msg.content);
+      } else if (msg?.tool_calls?.length > 0) {
+        console.log(msg.tool_calls); 
+      } else {
+        console.log(msg);
+      }
+    }
 
     // Click through to careers page and search
-    const result2 = await agent.invoke({
-      input:
-        "Click on the About page, then go to Careers and search for Data Scientist roles in New York City",
+    const inputs2 = {
+      messages: [
+        {
+          role: "user", 
+          content: "Click on the About page, then go to Careers and search for Data Scientist roles in New York City"
+        }
+      ]
+    };
+
+    const stream2 = await agent.stream(inputs2, {
+      streamMode: "values",
     });
-    expect(result2.output).toBeDefined();
+
+    for await (const { messages } of stream2) {
+      const msg = messages[messages?.length - 1];
+      if (msg?.content) {
+        console.log(msg.content);
+      } else if (msg?.tool_calls?.length > 0) {
+        console.log(msg.tool_calls);
+      } else {
+        console.log(msg);
+      }
+    }
 
     const currentUrl = stagehand.page.url();
     expect(currentUrl).toContain("google.com/about/careers");

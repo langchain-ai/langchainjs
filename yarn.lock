@@ -11711,6 +11711,7 @@ __metadata:
     "@ibm-cloud/watsonx-ai": ^1.1.0
     "@jest/globals": ^29.5.0
     "@langchain/core": "workspace:*"
+    "@langchain/langgraph": ^0.2.22
     "@langchain/openai": ">=0.2.0 <0.4.0"
     "@langchain/scripts": ">=0.1.0 <0.2.0"
     "@langchain/standard-tests": 0.0.0
@@ -11829,7 +11830,7 @@ __metadata:
     node-llama-cpp: 3.1.1
     notion-to-md: ^3.1.0
     officeparser: ^4.0.4
-    openai: ^4.72.0
+    openai: ^4.73.0
     pdf-parse: 1.1.1
     pg: ^8.11.0
     pg-copy-streams: ^6.0.5
@@ -12555,6 +12556,17 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@langchain/langgraph-checkpoint@npm:~0.0.12":
+  version: 0.0.12
+  resolution: "@langchain/langgraph-checkpoint@npm:0.0.12"
+  dependencies:
+    uuid: ^10.0.0
+  peerDependencies:
+    "@langchain/core": ">=0.2.31 <0.4.0"
+  checksum: 2e431b00083db874a329de10143d35d6a870265c0665056a05541c32b1cdc6b84424f6e54e08b5716a3ee189e09642402e9e088567a8fa1d6954d258ba3cad3e
+  languageName: node
+  linkType: hard
+
 "@langchain/langgraph-checkpoint@npm:~0.0.6":
   version: 0.0.6
   resolution: "@langchain/langgraph-checkpoint@npm:0.0.6"
@@ -12563,6 +12575,18 @@ __metadata:
   peerDependencies:
     "@langchain/core": ">=0.2.31 <0.4.0"
   checksum: 7303a0f92f6474757bc9484314f36566a0785d8167ead65483fdada2921447e153a24754629ee601a168d2a39b6cc6d0c57ec34d607e10225619b9d5d30c8a5a
+  languageName: node
+  linkType: hard
+
+"@langchain/langgraph-sdk@npm:~0.0.21":
+  version: 0.0.26
+  resolution: "@langchain/langgraph-sdk@npm:0.0.26"
+  dependencies:
+    "@types/json-schema": ^7.0.15
+    p-queue: ^6.6.2
+    p-retry: 4
+    uuid: ^9.0.0
+  checksum: ae3a0ade1856b4a9f4fd302cc0086b8f7516a1da7b75d9fe6f3b9718f84bc54434cae967f82e95998f5bb551f56d5bc5316465fc89994464d954e60fadba828d
   languageName: node
   linkType: hard
 
@@ -12577,6 +12601,20 @@ __metadata:
   peerDependencies:
     "@langchain/core": ">=0.2.31 <0.4.0"
   checksum: 09d423228633f4bfee24b15e9f81eee57e96fecf9914f1e1c1f40f9436d120de912b8c987da356591c6eae0ee2bcf3759ab8e0ff762f87bc4f3f73e4098c12e9
+  languageName: node
+  linkType: hard
+
+"@langchain/langgraph@npm:^0.2.22":
+  version: 0.2.22
+  resolution: "@langchain/langgraph@npm:0.2.22"
+  dependencies:
+    "@langchain/langgraph-checkpoint": ~0.0.12
+    "@langchain/langgraph-sdk": ~0.0.21
+    uuid: ^10.0.0
+    zod: ^3.23.8
+  peerDependencies:
+    "@langchain/core": ">=0.2.36 <0.3.0 || >=0.3.9 < 0.4.0"
+  checksum: 9e7c61dc298a746bd670471c4adac61b384b5596835b217434d1fca83e4af60ee0a53892e5180c239f24c6b4eb95eb122260457d142cdea0aac6da392c798654
   languageName: node
   linkType: hard
 
@@ -19365,7 +19403,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/json-schema@npm:^7.0.11, @types/json-schema@npm:^7.0.12, @types/json-schema@npm:^7.0.6":
+"@types/json-schema@npm:^7.0.11, @types/json-schema@npm:^7.0.12, @types/json-schema@npm:^7.0.15, @types/json-schema@npm:^7.0.6":
   version: 7.0.15
   resolution: "@types/json-schema@npm:7.0.15"
   checksum: 97ed0cb44d4070aecea772b7b2e2ed971e10c81ec87dd4ecc160322ffa55ff330dace1793489540e3e318d90942064bb697cc0f8989391797792d919737b3b98
@@ -36244,9 +36282,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"openai@npm:^4.72.0":
-  version: 4.72.0
-  resolution: "openai@npm:4.72.0"
+"openai@npm:^4.73.0":
+  version: 4.73.0
+  resolution: "openai@npm:4.73.0"
   dependencies:
     "@types/node": ^18.11.18
     "@types/node-fetch": ^2.6.4
@@ -36262,7 +36300,7 @@ __metadata:
       optional: true
   bin:
     openai: bin/cli
-  checksum: 483fac9ea6b3215b50be054b16c35d181563d0d2ac5dd9d802d373742dbe2a499d6531bb3d3267ea8835a1563dc185e64b0aecf541b508e576bea8db5884bcf0
+  checksum: 499f20048a15e777a943c8eefc2ae1e1195a88ec2a61337d98233ae7f2c2cba3ff4f473e08bce25af38d24da3a3da2b3db077919ac104ff2449e246e895b5b62
   languageName: node
   linkType: hard
 
