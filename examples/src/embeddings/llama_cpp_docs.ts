@@ -4,7 +4,7 @@ const llamaPath = "/Replace/with/path/to/your/model/gguf-llama2-q4_0.bin";
 
 const documents = ["Hello World!", "Bye Bye!"];
 
-const embeddings = new LlamaCppEmbeddings({
+const embeddings = await LlamaCppEmbeddings.initialize({
   modelPath: llamaPath,
 });
 

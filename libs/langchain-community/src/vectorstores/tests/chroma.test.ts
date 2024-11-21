@@ -128,7 +128,7 @@ describe("Chroma", () => {
     expect(mockCollection.query).toHaveBeenCalledWith({
       queryEmbeddings: query,
       nResults: expectedResultCount,
-      where: {},
+      where: undefined,
     });
     expect(results).toHaveLength(5);
   });

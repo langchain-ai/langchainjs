@@ -3,10 +3,7 @@
 import WatsonxAiMlVml_v1 from "@ibm-cloud/watsonx-ai/dist/watsonx-ai-ml/vml_v1.js";
 import { WatsonxLLM, WatsonxInputLLM } from "../ibm.js";
 import { authenticateAndSetInstance } from "../../utils/ibm.js";
-import {
-  WatsonxEmbeddings,
-  WatsonxEmbeddingsParams,
-} from "../../embeddings/ibm.js";
+import { WatsonxEmbeddings } from "../../embeddings/ibm.js";
 
 const fakeAuthProp = {
   watsonxAIAuthType: "iam",
@@ -38,7 +35,7 @@ export const testProperties = (
       }
     });
   };
-  checkProperty<WatsonxEmbeddingsParams>(testProps, instance);
+  checkProperty<typeof testProps>(testProps, instance);
   if (notExTestProps)
     checkProperty<typeof notExTestProps>(notExTestProps, instance, false);
 };
@@ -56,6 +53,7 @@ describe("LLM unit tests", () => {
 
     test("Test basic properties after init", async () => {
       const testProps = {
+        model: "ibm/granite-13b-chat-v2",
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
         projectId: process.env.WATSONX_AI_PROJECT_ID || "testString",
@@ -67,6 +65,7 @@ describe("LLM unit tests", () => {
 
     test("Test methods after init", () => {
       const testProps: WatsonxInputLLM = {
+        model: "ibm/granite-13b-chat-v2",
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
         projectId: process.env.WATSONX_AI_PROJECT_ID || "testString",
@@ -82,33 +81,32 @@ describe("LLM unit tests", () => {
     });
 
     test("Test properties after init", async () => {
-      const testProps = {
+      const testProps: WatsonxInputLLM = {
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
         projectId: process.env.WATSONX_AI_PROJECT_ID || "testString",
         model: "ibm/granite-13b-chat-v2",
-        max_new_tokens: 100,
-        decoding_method: "sample",
-        length_penalty: { decay_factor: 1, start_index: 1 },
-        min_new_tokens: 10,
-        random_seed: 1,
-        stop_sequences: ["hello"],
+        maxNewTokens: 100,
+        decodingMethod: "sample",
+        lengthPenalty: { decay_factor: 1, start_index: 1 },
+        minNewTokens: 10,
+        randomSeed: 1,
+        stopSequence: ["hello"],
         temperature: 0.1,
-        time_limit: 10000,
-        top_k: 1,
-        top_p: 1,
-        repetition_penalty: 1,
-        truncate_input_tokens: 1,
-        return_options: {
+        timeLimit: 10000,
+        topK: 1,
+        topP: 1,
+        repetitionPenalty: 1,
+        truncateInpuTokens: 1,
+        returnOptions: {
           input_text: true,
           generated_tokens: true,
           input_tokens: true,
           token_logprobs: true,
           token_ranks: true,
-
           top_n_tokens: 2,
         },
-        include_stop_sequence: false,
+        includeStopSequence: false,
         maxRetries: 3,
         maxConcurrency: 3,
       };
@@ -121,6 +119,7 @@ describe("LLM unit tests", () => {
   describe("Negative tests", () => {
     test("Missing id", async () => {
       const testProps: WatsonxInputLLM = {
+        model: "ibm/granite-13b-chat-v2",
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
       };
@@ -171,6 +170,7 @@ describe("LLM unit tests", () => {
 
     test("Passing more than one id", async () => {
       const testProps: WatsonxInputLLM = {
+        model: "ibm/granite-13b-chat-v2",
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
         projectId: process.env.WATSONX_AI_PROJECT_ID || "testString",
@@ -187,6 +187,7 @@ describe("LLM unit tests", () => {
 
     test("Not existing property passed", async () => {
       const testProps = {
+        model: "ibm/granite-13b-chat-v2",
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
         projectId: process.env.WATSONX_AI_PROJECT_ID || "testString",

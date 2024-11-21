@@ -10,7 +10,7 @@ Functionality related to [Google Cloud Platform](https://cloud.google.com/)
 
 ### Gemini Models
 
-Access Gemini models such as `gemini-pro` and `gemini-pro-vision` through the [`ChatGoogleGenerativeAI`](/docs/integrations/chat/google_generativeai),
+Access Gemini models such as `gemini-1.5-pro` and `gemini-1.5-flex` through the [`ChatGoogleGenerativeAI`](/docs/integrations/chat/google_generativeai),
 or if using VertexAI, via the [`ChatVertexAI`](/docs/integrations/chat/google_vertex_ai) class.
 
 import Tabs from "@theme/Tabs";
@@ -152,6 +152,17 @@ Click [here](/docs/integrations/chat/google_vertex_ai) for the `@langchain/googl
 </Tabs>
 
 The value of `image_url` must be a base64 encoded image (e.g., `data:image/png;base64,abcd124`).
+
+### Non-Gemini Models
+
+See above for setting up authentication through Vertex AI to use these models.
+
+[Anthropic](/docs/integrations/chat/anthropic) Claude models are also available through
+the [Vertex AI](https://cloud.google.com/vertex-ai/generative-ai/docs/partner-models/use-claude)
+platform. See [here](https://cloud.google.com/vertex-ai/generative-ai/docs/partner-models/use-claude)
+for more information about enabling access to the models and the model names to use.
+
+PaLM models are no longer supported.
 
 ## Vector Store
 
