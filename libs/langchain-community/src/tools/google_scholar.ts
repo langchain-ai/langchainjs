@@ -75,8 +75,14 @@ export class GoogleScholarAPI extends Tool {
         title: item.title,
         link: item.link,
         snippet: item.snippet,
-        publication_info: item.publication_info?.summary,
-        authors: item.authors?.map((author: any) => author.name).join(", "),
+        publication_info: item.publication_info?.summary
+          ?.split(" - ") // Split the string at the first hyphen
+          .slice(1) // Remove the part before the first hyphen (authors)
+          .join(" - ") ?? "", // Rejoin the rest as the publication info
+        authors: item.publication_info?.authors
+          ?.map((author: any) => author.name)
+          .join(", ") ?? "", // Extract authors into a separate field
+        total_citations: item.inline_links?.cited_by?.total ?? "",
       })) ?? [];
 
     return JSON.stringify(results, null, 2);
