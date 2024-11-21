@@ -13,9 +13,9 @@ import { UsageInfo as MistralAITokenUsage } from "@mistralai/mistralai/models/co
 import { CompletionEvent as MistralAIChatCompletionEvent } from "@mistralai/mistralai/models/components/completionevent.js";
 import { ChatCompletionResponse as MistralAIChatCompletionResponse } from "@mistralai/mistralai/models/components/chatcompletionresponse.js";
 import {
-  BeforeRequestHook,
-  RequestErrorHook,
-  ResponseHook,
+  type BeforeRequestHook,
+  type RequestErrorHook,
+  type ResponseHook,
   HTTPClient as MistralAIHTTPClient,
 } from "@mistralai/mistralai/lib/http.js";
 import {
@@ -114,6 +114,7 @@ export interface ChatMistralAIInput
   /**
    * The name of the model to use.
    * Alias for `model`
+   * @deprecated Use `model` instead.
    * @default {"mistral-small-latest"}
    */
   modelName?: string;
@@ -258,9 +259,11 @@ function convertMessagesToMistralMessages(
       }
 
       throw new Error(
-        `ChatMistralAI supports messages of type MessageContentText for role "human", "ai", "function"
-          and "system" and MessageContentImageUrl for role "human", "ai", and "function.
-          Received: ${JSON.stringify(content, null, 2)}`
+        `ChatMistralAI only supports messages of "image_url" for roles "user" and "assistant", and "text" for all others.\n\nReceived: ${JSON.stringify(
+          content,
+          null,
+          2
+        )}`
       );
     };
 
@@ -270,22 +273,6 @@ function convertMessagesToMistralMessages(
 
     if (Array.isArray(content)) {
       const mistralRole = getRole(type);
-
-      // Mistral "tool" role can only support string content
-      if (mistralRole === "tool") {
-        let strContent = "";
-        content.forEach((messageContentComplex) => {
-          // Ignore all non-text complex message types
-          if (
-            messageContentComplex.type === "text" &&
-            "text" in messageContentComplex
-          ) {
-            strContent += messageContentComplex.text;
-          }
-        });
-        return strContent;
-      }
-
       // Mistral "assistant" and "user" roles can support Mistral ContentChunks
       // Mistral "system" role can support Mistral TextChunks
       const newContent: MistralAIContentChunk[] = [];
@@ -298,14 +285,21 @@ function convertMessagesToMistralMessages(
           newContent.push(
             _generateContentChunk(messageContentComplex, mistralRole)
           );
+        } else {
+          throw new Error(
+            `Mistral only supports types "text" or "image_url" for complex message types.`
+          );
         }
       });
       return newContent;
     }
 
     throw new Error(
-      `ChatMistralAI does not support non text message content for role "ai", "tool", 
-        or "function". Received: ${JSON.stringify(content, null, 2)}`
+      `Message content must be a string or an array.\n\nReceived: ${JSON.stringify(
+        content,
+        null,
+        2
+      )}`
     );
   };
 
@@ -331,10 +325,8 @@ function convertMessagesToMistralMessages(
         name: message.name,
         toolCallId: _convertToolCallIdToMistralCompatible(message.tool_call_id),
       };
-    }
-
-    // Mistral "assistant" role can only support either content or tool calls but not both
-    else if (isAIMessage(message)) {
+      // Mistral "assistant" role can only support either content or tool calls but not both
+    } else if (isAIMessage(message)) {
       if (toolCalls === undefined) {
         return {
           role: getRole(message.getType()),
@@ -860,8 +852,6 @@ export class ChatMistralAI<
 
   lc_namespace = ["langchain", "chat_models", "mistralai"];
 
-  modelName = "mistral-small-latest";
-
   model = "mistral-small-latest";
 
   apiKey: string;
@@ -931,15 +921,13 @@ export class ChatMistralAI<
     this.seed = this.randomSeed;
     this.maxRetries = fields?.maxRetries;
     this.httpClient = fields?.httpClient;
-    this.modelName = fields?.model ?? fields?.modelName ?? this.model;
-    this.model = this.modelName;
+    this.model = fields?.model ?? fields?.modelName ?? this.model;
     this.streamUsage = fields?.streamUsage ?? this.streamUsage;
     this.beforeRequestHooks =
       fields?.beforeRequestHooks ?? this.beforeRequestHooks;
     this.requestErrorHooks =
       fields?.requestErrorHooks ?? this.requestErrorHooks;
     this.responseHooks = fields?.responseHooks ?? this.responseHooks;
-    this.httpClient = fields?.httpClient ?? this.httpClient;
     this.presencePenalty = fields?.presencePenalty ?? this.presencePenalty;
     this.frequencyPenalty = fields?.frequencyPenalty ?? this.frequencyPenalty;
     this.numCompletions = fields?.numCompletions ?? this.numCompletions;
