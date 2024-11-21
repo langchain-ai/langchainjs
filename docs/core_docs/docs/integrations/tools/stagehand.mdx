@@ -48,7 +48,7 @@ export ANTHROPIC_API_KEY="your-anthropic-api-key"
 ## Usage, Standalone, Local Browser
 
 ```typescript
-import { StagehandToolkit } from "langchain/agents/toolkits/stagehand";
+import { StagehandToolkit } from "langchain/community/agents/toolkits/stagehand";
 import { ChatOpenAI } from "@langchain/openai";
 import { Stagehand } from "@browserbasehq/stagehand";
 
@@ -60,8 +60,8 @@ process.env.BROWSERBASE_PROJECT_ID = "";
 process.env.OPENAI_API_KEY = "";
 
 const stagehand = new Stagehand({
-  env: "BROWSERBASE", // run on a remote browser, or "LOCAL" to run on your local machine
-  headless: true,
+  env: "LOCAL",
+  headless: false,
   verbose: 2,
   debugDom: true,
   enableCaching: false,
@@ -88,7 +88,10 @@ await llmWithTools.invoke('Search for "OpenAI"');
 
 ```typescript
 import { Stagehand } from "@browserbasehq/stagehand";
-import { StagehandActTool } from "./StagehandActTool";
+import {
+  StagehandActTool,
+  StagehandNavigateTool,
+} from "@langchain/community/agents/toolkits/stagehand";
 import { ChatOpenAI } from "@langchain/openai";
 import { createReactAgent } from "@langchain/langgraph/prebuilt";
 
@@ -100,7 +103,8 @@ async function main() {
   });
 
   const actTool = new StagehandActTool(stagehand);
-  const tools = [actTool];
+  const navigateTool = new StagehandNavigateTool(stagehand);
+  const tools = [actTool, navigateTool];
 
   // Initialize the model
   const model = new ChatOpenAI({
@@ -115,14 +119,15 @@ async function main() {
   });
 
   // Execute the agent
-  const result = await agent.invoke({ input: "Navigate to https://www.google.com" });
+  const result = await agent.invoke({
+    input: "Navigate to https://www.google.com",
+  });
   console.log(`Agent answer: ${result.output}`);
   const result = await agent.invoke({ input: "Search for 'OpenAI'" });
   console.log(`Agent answer: ${result.output}`);
 }
 
 main();
-
 ```
 
 ## Usage on Browserbase - remote headless browser

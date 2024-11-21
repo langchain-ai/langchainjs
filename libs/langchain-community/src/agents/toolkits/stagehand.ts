@@ -1,7 +1,7 @@
 import {
   Tool,
   BaseToolkit as Toolkit,
-  ToolInterface, 
+  ToolInterface,
   StructuredTool,
 } from "@langchain/core/tools";
 import { Stagehand } from "@browserbasehq/stagehand";
@@ -89,31 +89,6 @@ export class StagehandActTool extends StagehandToolBase {
   }
 }
 
-// TODO - update Extract tool to accept a zod schema
-
-// import { tool } from "@langchain/core/tools";
-// import { z } from "zod";
-
-
-// const multiply = tool(
-//   ({ a, b }: { a: number; b: number }): number => {
-//     /**
-//      * Multiply two numbers.
-//      */
-//     return a * b;
-//   },
-//   {
-//     name: "multiply",
-//     description: "Multiply two numbers",
-//     schema: z.object({
-//       a: z.number(),
-//       b: z.number(),
-//     }),
-//   }
-// );
-
-// TODO - finish this!!
-
 export class StagehandExtractTool extends StructuredTool {
   name = "stagehand_extract";
   description =
@@ -122,7 +97,9 @@ export class StagehandExtractTool extends StructuredTool {
   // Define the input schema for the tool
   schema = z.object({
     instruction: z.string().describe("Instruction on what to extract"),
-    schema: z.record(z.any()).describe("Extraction schema in JSON Schema format"),
+    schema: z
+      .record(z.any())
+      .describe("Extraction schema in JSON Schema format"),
   });
 
   private stagehand?: Stagehand;
