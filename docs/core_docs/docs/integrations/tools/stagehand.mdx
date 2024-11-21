@@ -70,17 +70,35 @@ const stagehand = new Stagehand({
 // Create a Stagehand Toolkit with all the available actions from the Stagehand.
 const stagehandToolkit = await StagehandToolkit.fromStagehand(stagehand);
 
-const navigateTool = toolkit.tools.find((t) => t.name === "stagehand_navigate");
+const navigateTool = stagehandToolkit.tools.find(
+  (t) => t.name === "stagehand_navigate"
+);
 if (!navigateTool) {
   throw new Error("Navigate tool not found");
 }
 await navigateTool.invoke("https://www.google.com");
 
-const actionTool = toolkit.tools.find((t) => t.name === "stagehand_act");
+const actionTool = stagehandToolkit.tools.find(
+  (t) => t.name === "stagehand_act"
+);
 if (!actionTool) {
   throw new Error("Action tool not found");
 }
 await actionTool.invoke('Search for "OpenAI"');
+
+const observeTool = stagehandToolkit.tools.find(
+  (t) => t.name === "stagehand_observe"
+);
+if (!observeTool) {
+  throw new Error("Observe tool not found");
+}
+const result = await observeTool.invoke(
+  "What actions can be performed on the current page?"
+);
+const observations = JSON.parse(result);
+
+// Handle observations as needed
+console.log(observations);
 
 const currentUrl = stagehand.page.url();
 expect(currentUrl).toContain("google.com/search?q=OpenAI");
@@ -113,7 +131,6 @@ const stagehand = new Stagehand({
   env: "BROWSERBASE",
 });
 ```
-
 
 ## Related
 

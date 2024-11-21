@@ -189,9 +189,9 @@ describe("StagehandToolkit Integration Tests", () => {
       messages: [
         {
           role: "user",
-          content: "Navigate to https://www.google.com"
-        }
-      ]
+          content: "Navigate to https://www.google.com",
+        },
+      ],
     };
 
     const stream1 = await agent.stream(inputs1, {
@@ -199,11 +199,14 @@ describe("StagehandToolkit Integration Tests", () => {
     });
 
     for await (const { messages } of stream1) {
-      const msg = messages && messages.length > 0 ? messages[messages.length - 1] : undefined;
+      const msg =
+        messages && messages.length > 0
+          ? messages[messages.length - 1]
+          : undefined;
       if (msg?.content) {
         console.log(msg.content);
       } else if (msg?.tool_calls && msg.tool_calls.length > 0) {
-        console.log(msg.tool_calls); 
+        console.log(msg.tool_calls);
       } else {
         console.log(msg);
       }
@@ -213,10 +216,10 @@ describe("StagehandToolkit Integration Tests", () => {
     const inputs2 = {
       messages: [
         {
-          role: "user", 
-          content: "Click on the About page"
-        }
-      ]
+          role: "user",
+          content: "Click on the About page",
+        },
+      ],
     };
 
     const stream2 = await agent.stream(inputs2, {

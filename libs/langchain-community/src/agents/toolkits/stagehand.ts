@@ -49,17 +49,17 @@ export class StagehandNavigateTool extends StagehandToolBase {
   description =
     "Use this tool to navigate to a specific URL using Stagehand. The input should be a valid URL as a string.";
 
-    async _call(input: string): Promise<string> {
-      const stagehand = await this.getStagehand();
-      try {
-        await stagehand.page.goto(input);
-        return `Successfully navigated to ${input}.`;
-      } catch (error: unknown) {
-        const message = isErrorWithMessage(error) ? error.message : String(error);
-        return `Failed to navigate: ${message}`;
-      }
+  async _call(input: string): Promise<string> {
+    const stagehand = await this.getStagehand();
+    try {
+      await stagehand.page.goto(input);
+      return `Successfully navigated to ${input}.`;
+    } catch (error: unknown) {
+      const message = isErrorWithMessage(error) ? error.message : String(error);
+      return `Failed to navigate: ${message}`;
     }
   }
+}
 
 export class StagehandActTool extends StagehandToolBase {
   name = "stagehand_act";
@@ -99,7 +99,10 @@ export class StagehandExtractTool extends StructuredTool {
     this.stagehand = stagehandInstance;
   }
 
-  async _call(input: { instruction: string; schema: AnyZodObject }): Promise<string> {
+  async _call(input: {
+    instruction: string;
+    schema: AnyZodObject;
+  }): Promise<string> {
     const stagehand = await this.getStagehand();
     const { instruction, schema } = input;
 
@@ -134,19 +137,19 @@ export class StagehandObserveTool extends StagehandToolBase {
   description =
     "Use this tool to observe the current web page and retrieve possible actions using Stagehand. The input can be an optional instruction string.";
 
-    async _call(input: string): Promise<string> {
-      const stagehand = await this.getStagehand();
-      const instruction = input || undefined;
-  
-      try {
-        const result = await stagehand.observe({ instruction });
-        return JSON.stringify(result);
-      } catch (error: unknown) {
-        const message = isErrorWithMessage(error) ? error.message : String(error);
-        return `Failed to observe: ${message}`;
-      }
+  async _call(input: string): Promise<string> {
+    const stagehand = await this.getStagehand();
+    const instruction = input || undefined;
+
+    try {
+      const result = await stagehand.observe({ instruction });
+      return JSON.stringify(result);
+    } catch (error: unknown) {
+      const message = isErrorWithMessage(error) ? error.message : String(error);
+      return `Failed to observe: ${message}`;
     }
   }
+}
 
 export class StagehandToolkit extends Toolkit {
   tools: ToolInterface[];
