@@ -15,7 +15,6 @@ async function main() {
 
   const actTool = new StagehandActTool(stagehand);
   const navigateTool = new StagehandNavigateTool(stagehand);
-  const tools = [actTool, navigateTool];
 
   // Initialize the model
   const model = new ChatOpenAI({
@@ -26,7 +25,7 @@ async function main() {
   // Create the agent using langgraph
   const agent = createReactAgent({
     llm: model,
-    tools: tools,
+    tools: [actTool, navigateTool],
   });
 
   // Execute the agent using streams
