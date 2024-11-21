@@ -1,6 +1,5 @@
 import { StagehandToolkit } from "@langchain/community/agents/toolkits/stagehand";
 import { ChatOpenAI } from "@langchain/openai";
-import { initializeAgentExecutorWithOptions } from "langchain/agents";
 import { Stagehand } from "@browserbasehq/stagehand";
 
 // Specify your Browserbase credentials.
@@ -21,22 +20,15 @@ const stagehand = new Stagehand({
 // Create a Stagehand Toolkit with all the available actions from the Stagehand.
 const stagehandToolkit = await StagehandToolkit.fromStagehand(stagehand);
 
-// Use OpenAI Functions agent to execute the prompt using actions from the Stagehand Toolkit.
 const llm = new ChatOpenAI({ temperature: 0 });
 
-const agent = await initializeAgentExecutorWithOptions(
-  stagehandToolkit.tools,
-  llm,
-  {
-    agentType: "openai-functions",
-    verbose: true,
-  }
-);
-// keep actions atomic
-await agent.invoke({
-  input: `Navigate to https://www.google.com`,
-});
+if (!llm.bindTools) {
+  throw new Error("Language model does not support tools.");
+}
 
-await agent.invoke({
-  input: `Search for "OpenAI"`,
-});
+// Bind tools to the LLM
+const llmWithTools = llm.bindTools(stagehandToolkit.tools);
+
+// Execute queries atomically
+await llmWithTools.invoke("Navigate to https://www.google.com");
+await llmWithTools.invoke('Search for "OpenAI"');

@@ -45,40 +45,46 @@ For Anthropic:
 export ANTHROPIC_API_KEY="your-anthropic-api-key"
 ```
 
-## Usage, Standalone, Local LangChain
+## Usage, Standalone, Local Browser
 
 ```typescript
+import { StagehandToolkit } from "langchain/agents/toolkits/stagehand";
+import { ChatOpenAI } from "@langchain/openai";
 import { Stagehand } from "@browserbasehq/stagehand";
-import { StagehandActTool } from "./StagehandActTool";
-import { initializeAgentExecutor } from "@langchain/agents";
 
-async function main() {
-  // Initialize Stagehand once and pass it to the tools
-  const stagehand = new Stagehand({
-    env: "LOCAL",
-    enableCaching: true,
-  });
-  await stagehand.init();
-  await stagehand.page.goto("https://example.com");
+// Specify your Browserbase credentials.
+process.env.BROWSERBASE_API_KEY = "";
+process.env.BROWSERBASE_PROJECT_ID = "";
 
-  const actTool = new StagehandActTool(stagehand);
-  const tools = [actTool];
+// Specify OpenAI API key.
+process.env.OPENAI_API_KEY = "";
 
-  const executor = await initializeAgentExecutor(
-    tools,
-    /* your LLM instance */,
-    "zero-shot-react-description"
-  );
+const stagehand = new Stagehand({
+  env: "BROWSERBASE", // run on a remote browser, or "LOCAL" to run on your local machine
+  headless: true,
+  verbose: 2,
+  debugDom: true,
+  enableCaching: false,
+});
 
-  const result = await executor.call({ input: "Click on the login button" });
+// Create a Stagehand Toolkit with all the available actions from the Stagehand.
+const stagehandToolkit = await StagehandToolkit.fromStagehand(stagehand);
 
-  console.log(`Agent answer: ${result.output}`);
+const llm = new ChatOpenAI({ temperature: 0 });
+
+if (!llm.bindTools) {
+  throw new Error("Language model does not support tools.");
 }
 
-main();
+// Bind tools to the LLM
+const llmWithTools = llm.bindTools(stagehandToolkit.tools);
+
+// Execute queries atomically
+await llmWithTools.invoke("Navigate to https://www.google.com");
+await llmWithTools.invoke('Search for "OpenAI"');
 ```
 
-## Usage, Standalone, Local Langgraph
+## Usage with Langgraph
 
 ```typescript
 import { Stagehand } from "@browserbasehq/stagehand";
@@ -92,8 +98,6 @@ async function main() {
     env: "LOCAL",
     enableCaching: true,
   });
-  await stagehand.init();
-  await stagehand.page.goto("https://example.com");
 
   const actTool = new StagehandActTool(stagehand);
   const tools = [actTool];
@@ -111,8 +115,9 @@ async function main() {
   });
 
   // Execute the agent
-  const result = await agent.invoke({ input: "Click on the login button" });
-
+  const result = await agent.invoke({ input: "Navigate to https://www.google.com" });
+  console.log(`Agent answer: ${result.output}`);
+  const result = await agent.invoke({ input: "Search for 'OpenAI'" });
   console.log(`Agent answer: ${result.output}`);
 }
 
@@ -120,8 +125,7 @@ main();
 
 ```
 
-
-## Usage, Standalone, on Browserbase - remote headless browser
+## Usage on Browserbase - remote headless browser
 
 If you want to run the browser remotely, you can use the Browserbase platform.
 

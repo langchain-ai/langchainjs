@@ -113,36 +113,33 @@ export class StagehandActTool extends StagehandToolBase {
 // );
 
 // TODO - finish this!!
+
 export class StagehandExtractTool extends StructuredTool {
   name = "stagehand_extract";
   description =
-    "Use this tool to extract structured information from the current web page using Stagehand.";
+    "Use this tool to extract structured information from the current web page using Stagehand. The input should include an 'instruction' string and a 'schema' object representing the extraction schema in JSON Schema format.";
 
   // Define the input schema for the tool
   schema = z.object({
-    instruction: z.string(),
+    instruction: z.string().describe("Instruction on what to extract"),
+    schema: z.record(z.any()).describe("Extraction schema in JSON Schema format"),
   });
 
   private stagehand?: Stagehand;
-  private extractionSchema: z.ZodTypeAny;
 
-  constructor(stagehandInstance?: Stagehand, extractionSchema?: z.ZodTypeAny) {
+  constructor(stagehandInstance?: Stagehand) {
     super();
     this.stagehand = stagehandInstance;
-    if (!extractionSchema) {
-      throw new Error("An extraction schema is required for StagehandExtractTool.");
-    }
-    this.extractionSchema = extractionSchema;
   }
 
-  async _call(input: { instruction: string }): Promise<string> {
+  async _call(input: { instruction: string; schema: any }): Promise<string> {
     const stagehand = await this.getStagehand();
-    const { instruction } = input;
+    const { instruction, schema } = input;
 
     try {
       const result = await stagehand.extract({
         instruction,
-        schema: this.extractionSchema,
+        schema, // Assuming Stagehand accepts the schema in JSON Schema format
       });
       return JSON.stringify(result);
     } catch (error: any) {
@@ -153,17 +150,14 @@ export class StagehandExtractTool extends StructuredTool {
   protected async getStagehand(): Promise<Stagehand> {
     if (this.stagehand) return this.stagehand;
 
-    if (!this.localStagehand) {
-      this.localStagehand = new Stagehand({
-        env: "LOCAL",
-        enableCaching: true,
-      });
-      await this.localStagehand.init();
-    }
-    return this.localStagehand;
+    // Initialize local Stagehand instance if not provided
+    this.stagehand = new Stagehand({
+      env: "LOCAL",
+      enableCaching: true,
+    });
+    await this.stagehand.init();
+    return this.stagehand;
   }
-
-  private localStagehand?: Stagehand;
 }
 
 export class StagehandObserveTool extends StagehandToolBase {
