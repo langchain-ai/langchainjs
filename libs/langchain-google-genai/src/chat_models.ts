@@ -953,6 +953,7 @@ export class ChatGoogleGenerativeAI
     }
     const llm = this.bind({
       tools,
+      tool_choice: functionName,
     });
 
     if (!includeRaw) {
