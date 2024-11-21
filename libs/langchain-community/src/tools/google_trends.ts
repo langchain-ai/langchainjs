@@ -76,27 +76,27 @@ export class GoogleTrendsAPI extends Tool {
         const avgValue = values.reduce((a: number, b: number) => a + b, 0) / values.length;
         const percentageChange = ((values[values.length - 1] - values[0]) / (values[0] || 1)) * 100;
       
-        const relatedParams = new URLSearchParams({
-          engine: "google_trends",
-          api_key: serpapiApiKey,
-          data_type: "RELATED_TOPICS",
-          q: query,
-        });
+        // const relatedParams = new URLSearchParams({
+        //   engine: "google_trends",
+        //   api_key: serpapiApiKey,
+        //   data_type: "RELATED_TOPICS",
+        //   q: query,
+        // });
       
-        const relatedRes = await fetch(`https://serpapi.com/search.json?${relatedParams.toString()}`, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
+        // const relatedRes = await fetch(`https://serpapi.com/search.json?${relatedParams.toString()}`, {
+        //   method: "GET",
+        //   headers: {
+        //     "Content-Type": "application/json",
+        //   },
+        // });
       
-        if (!relatedRes.ok) {
-          throw new Error(`Error fetching related queries from SerpAPI: ${relatedRes.statusText}`);
-        }
+        // if (!relatedRes.ok) {
+        //   throw new Error(`Error fetching related queries from SerpAPI: ${relatedRes.statusText}`);
+        // }
       
-        const relatedDict = await relatedRes.json();
-        const rising = relatedDict.related_queries?.rising?.map((result: any) => result.query) ?? [];
-        const top = relatedDict.related_queries?.top?.map((result: any) => result.query) ?? [];
+        // const relatedDict = await relatedRes.json();
+        // const rising = relatedDict.related_queries?.rising?.map((result: any) => result.query) ?? [];
+        // const top = relatedDict.related_queries?.top?.map((result: any) => result.query) ?? [];
       
         const doc = [
           `Query: ${query}`,
@@ -106,9 +106,9 @@ export class GoogleTrendsAPI extends Tool {
           `Max Value: ${maxValue}`,
           `Average Value: ${avgValue}`,
           `Percent Change: ${percentageChange.toFixed(2)}%`,
-          `Trend values: ${values.join(", ")}`,
-          `Rising Related Queries: ${rising.join(", ")}`,
-          `Top Related Queries: ${top.join(", ")}`,
+          // `Trend values: ${values.join(", ")}`,
+          // `Rising Related Queries: ${rising.join(", ")}`,
+          // `Top Related Queries: ${top.join(", ")}`,
         ];
       
         return doc.join("\n\n");
