@@ -57,7 +57,7 @@ export class BM25Retriever extends BaseRetriever {
       ...item.document.id && { id: item.document.id },
       pageContent: item.document.pageContent,
       metadata: {
-        score: item.score,
+        bm25Score: item.score,
         ...item.document.metadata,
       }
     }));
