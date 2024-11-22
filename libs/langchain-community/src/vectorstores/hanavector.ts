@@ -122,6 +122,8 @@ export class HanaDB extends VectorStore {
 
   private vectorColumnLength: number;
 
+  declare FilterType: Filter;
+
   private specificMetadataColumns: string[];
 
   _vectorstoreType(): string {
@@ -390,7 +392,7 @@ export class HanaDB extends VectorStore {
    * @returns A tuple containing the WHERE clause string and an array of query parameters.
    */
   private createWhereByFilter(
-    filter?: Filter
+    filter?: this["FilterType"]
   ): [string, Array<ComparisonRValue>] {
     let whereStr = "";
     let queryTuple: Array<ComparisonRValue> = [];
@@ -410,7 +412,7 @@ export class HanaDB extends VectorStore {
    * @returns A tuple containing the WHERE clause string and an array of query parameters.
    */
   private processFilterObject(
-    filter: Filter
+    filter: this["FilterType"]
   ): [string, Array<ComparisonRValue>] {
     let whereStr = "";
     const queryTuple: Array<ComparisonRValue> = [];
@@ -773,7 +775,7 @@ export class HanaDB extends VectorStore {
   async similaritySearch(
     query: string,
     k: number,
-    filter?: Filter
+    filter?: this["FilterType"]
   ): Promise<Document[]> {
     const results = await this.similaritySearchWithScore(query, k, filter);
     return results.map((result) => result[0]);
@@ -790,7 +792,7 @@ export class HanaDB extends VectorStore {
   async similaritySearchWithScore(
     query: string,
     k: number,
-    filter?: Filter
+    filter?: this["FilterType"]
   ): Promise<[Document, number][]> {
     const queryEmbedding = await this.embeddings.embedQuery(query);
     return this.similaritySearchVectorWithScore(queryEmbedding, k, filter);
@@ -807,7 +809,7 @@ export class HanaDB extends VectorStore {
   async similaritySearchVectorWithScore(
     queryEmbedding: number[],
     k: number,
-    filter?: Filter
+    filter?: this["FilterType"]
   ): Promise<[Document, number][]> {
     const wholeResult = await this.similaritySearchWithScoreAndVectorByVector(
       queryEmbedding,
@@ -828,7 +830,7 @@ export class HanaDB extends VectorStore {
   async similaritySearchWithScoreAndVectorByVector(
     embedding: number[],
     k: number,
-    filter?: Filter
+    filter?: this["FilterType"]
   ): Promise<Array<[Document, number, number[]]>> {
     // Sanitize inputs
     const sanitizedK = HanaDB.sanitizeInt(k);
