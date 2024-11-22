@@ -212,8 +212,6 @@ export function formatMessagesForAnthropic(messages: BaseMessage[]): {
           };
         }
       } else {
-
-
         const formattedContent = _formatContent(message.content);
         if (Array.isArray(formattedContent)) {
           const formattedToolsContent = message.tool_calls.map(
@@ -227,7 +225,7 @@ export function formatMessagesForAnthropic(messages: BaseMessage[]): {
 
         return {
           role,
-          content: _formatContent(message.content),
+          content: formattedContent,
         };
       }
     } else {
