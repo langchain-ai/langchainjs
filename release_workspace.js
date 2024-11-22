@@ -461,9 +461,9 @@ async function main() {
 
   // Run build, lint, tests
   console.log("Running build, lint, and tests.");
-  // execSyncWithErrorHandling(
-  //   `yarn turbo:command run --filter ${options.workspace} build lint test --concurrency 1`
-  // );
+  execSyncWithErrorHandling(
+    `yarn turbo:command run --filter ${options.workspace} build lint test --concurrency 1`
+  );
   console.log("Successfully ran build, lint, and tests.");
 
   const npm2FACode = await getUserInput(
