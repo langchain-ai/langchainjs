@@ -1,4 +1,9 @@
-import { Container, CosmosClient, CosmosClientOptions } from "@azure/cosmos";
+import {
+  Container,
+  CosmosClient,
+  CosmosClientOptions,
+  ErrorResponse,
+} from "@azure/cosmos";
 import { DefaultAzureCredential, TokenCredential } from "@azure/identity";
 import { BaseListChatMessageHistory } from "@langchain/core/chat_history";
 import {
@@ -13,6 +18,14 @@ const DEFAULT_DATABASE_NAME = "chatHistoryDB";
 const DEFAULT_CONTAINER_NAME = "chatHistoryContainer";
 
 /**
+ * Lightweight type for listing chat sessions.
+ */
+export type ChatSession = {
+  id: string;
+  context: Record<string, unknown>;
+};
+
+/**
  * Type for the input to the `AzureCosmosDBNoSQLChatMessageHistory` constructor.
  */
 export interface AzureCosmosDBNoSQLChatMessageHistoryInput {
@@ -25,6 +38,7 @@ export interface AzureCosmosDBNoSQLChatMessageHistoryInput {
   containerName?: string;
   credentials?: TokenCredential;
   ttl?: number;
+  context?: Record<string, unknown>;
 }
 
 /**
@@ -68,7 +82,6 @@ export interface AzureCosmosDBNoSQLChatMessageHistoryInput {
  * );
  * ```
  */
-
 export class AzureCosmsosDBNoSQLChatMessageHistory extends BaseListChatMessageHistory {
   lc_namespace = ["langchain", "stores", "message", "azurecosmosdb"];
 
@@ -90,6 +103,8 @@ export class AzureCosmsosDBNoSQLChatMessageHistory extends BaseListChatMessageHi
 
   private initPromise?: Promise<void>;
 
+  private context: Record<string, unknown>;
+
   constructor(chatHistoryInput: AzureCosmosDBNoSQLChatMessageHistoryInput) {
     super();
 
@@ -100,6 +115,7 @@ export class AzureCosmsosDBNoSQLChatMessageHistory extends BaseListChatMessageHi
     this.userId = chatHistoryInput.userId ?? "anonymous";
     this.ttl = chatHistoryInput.ttl;
     this.client = this.initializeClient(chatHistoryInput);
+    this.context = chatHistoryInput.context ?? {};
   }
 
   private initializeClient(
@@ -178,6 +194,7 @@ export class AzureCosmsosDBNoSQLChatMessageHistory extends BaseListChatMessageHi
     await this.container.items.upsert({
       id: this.sessionId,
       userId: this.userId,
+      context: this.context,
       messages,
     });
   }
@@ -199,6 +216,38 @@ export class AzureCosmsosDBNoSQLChatMessageHistory extends BaseListChatMessageHi
       .fetchAll();
     for (const userSession of userSessions) {
       await this.container.item(userSession.id, userId).delete();
+    }
+  }
+
+  async getAllSessionsForUser(userId: string): Promise<ChatSession[]> {
+    await this.initializeContainer();
+    const query = {
+      query: "SELECT c.id, c.context FROM c WHERE c.userId = @userId",
+      parameters: [{ name: "@userId", value: userId }],
+    };
+    const { resources: userSessions } = await this.container.items
+      .query(query)
+      .fetchAll();
+    return userSessions ?? [];
+  }
+
+  getContext(): Record<string, unknown> {
+    return this.context;
+  }
+
+  async setContext(context: Record<string, unknown>): Promise<void> {
+    await this.initializeContainer();
+    this.context = context || {};
+    try {
+      await this.container
+        .item(this.sessionId, this.userId)
+        .patch([{ op: "replace", path: "/context", value: this.context }]);
+    } catch (_error: unknown) {
+      const error = _error as ErrorResponse;
+      // If document does not exist yet, context will be set when adding the first message
+      if (error?.code !== 404) {
+        throw error;
+      }
     }
   }
 }

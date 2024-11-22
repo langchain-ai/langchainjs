@@ -166,3 +166,34 @@ test("Test clear all sessions for a user", async () => {
   expect(deletedResult1).toStrictEqual([]);
   expect(deletedResult2).toStrictEqual([]);
 });
+
+test("Test set context and get all sessions for a user", async () => {
+  const session1 = {
+    userId: "user1",
+    databaseName: DATABASE_NAME,
+    containerName: CONTAINER_NAME,
+    sessionId: new ObjectId().toString(),
+  };
+  const context1 = { title: "Best vocalist" };
+  const chatHistory1 = new AzureCosmsosDBNoSQLChatMessageHistory(session1);
+
+  await chatHistory1.setContext(context1);
+  await chatHistory1.addUserMessage("Who is the best vocalist?");
+  await chatHistory1.addAIMessage("Ozzy Osbourne");
+
+  const chatHistory2 = new AzureCosmsosDBNoSQLChatMessageHistory({
+    ...session1,
+    sessionId: new ObjectId().toString(),
+  });
+  const context2 = { title: "Best guitarist" };
+
+  await chatHistory2.addUserMessage("Who is the best guitarist?");
+  await chatHistory2.addAIMessage("Jimi Hendrix");
+  await chatHistory2.setContext(context2);
+
+  const sessions = await chatHistory1.getAllSessionsForUser("user1");
+
+  expect(sessions.length).toBe(2);
+  expect(sessions[0].context).toEqual(context1);
+  expect(sessions[1].context).toEqual(context2);
+});
