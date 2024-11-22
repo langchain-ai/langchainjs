@@ -121,7 +121,7 @@ function _formatContent(content: MessageContent) {
   if (typeof content === "string") {
     return content;
   } else {
-    const contentBlocks = content.map((contentPart) => {
+    const contentBlocks = content.flatMap((contentPart) => {
       if (contentPart.type === "image_url") {
         let source;
         if (typeof contentPart.image_url === "string") {
@@ -133,7 +133,10 @@ function _formatContent(content: MessageContent) {
           type: "image" as const, // Explicitly setting the type as "image"
           source,
         };
-      } else if (contentPart.type === "text") {
+      } else if (contentPart.type === "text" || contentPart.type === "text_delta") {
+        if (contentPart.text === "") {
+          return [];
+        }
         // Assuming contentPart is of type MessageContentText here
         return {
           type: "text" as const, // Explicitly setting the type as "text"
@@ -148,6 +151,8 @@ function _formatContent(content: MessageContent) {
           ...contentPart,
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } as any;
+      } else if (contentPart.type === "input_json_delta") {
+        return [];
       } else {
         throw new Error("Unsupported message content format");
       }
@@ -216,6 +221,19 @@ export function formatMessagesForAnthropic(messages: BaseMessage[]): {
             `The "tool_calls" field on a message is only respected if content is a string.`
           );
         }
+
+        const formattedContent = _formatContent(message.content);
+        if (Array.isArray(formattedContent)) {
+          const formattedToolsContent = message.tool_calls.map(_convertLangChainToolCallToAnthropic);
+          return {
+            role,
+            content: [
+              ...formattedContent,
+              ...formattedToolsContent
+            ]
+          }
+        }
+
         return {
           role,
           content: _formatContent(message.content),
