@@ -6,6 +6,7 @@ import { ChatPromptTemplate, PromptTemplate } from "@langchain/core/prompts";
 import { RunLogPatch, StreamEvent } from "@langchain/core/tracers/log_stream";
 import { AIMessageChunk } from "@langchain/core/messages";
 import { concat } from "@langchain/core/utils/stream";
+import { awaitAllCallbacks } from "@langchain/core/callbacks/promises";
 import { AgentExecutor, createReactAgent } from "../../agents/index.js";
 import { pull } from "../../hub.js";
 import { initChatModel } from "../universal.js";
@@ -32,7 +33,7 @@ const googleApiKey = process.env.GOOGLE_API_KEY;
 process.env.GOOGLE_API_KEY = "";
 
 test("Initialize non-configurable models", async () => {
-  const gpt4 = await initChatModel("gpt-4", {
+  const gpt4 = await initChatModel("gpt-4o-mini", {
     modelProvider: "openai",
     temperature: 0.25, // Funky temperature to verify it's being set properly.
     apiKey: openAIApiKey,
@@ -67,7 +68,7 @@ test("Create a partially configurable model with no default model", async () => 
 
   const gpt4Result = await configurableModel.invoke("what's your name", {
     configurable: {
-      model: "gpt-4",
+      model: "gpt-4o-mini",
       apiKey: openAIApiKey,
     },
   });
@@ -85,7 +86,7 @@ test("Create a partially configurable model with no default model", async () => 
 });
 
 test("Create a fully configurable model with a default model and a config prefix", async () => {
-  const configurableModelWithDefault = await initChatModel("gpt-4", {
+  const configurableModelWithDefault = await initChatModel("gpt-4o-mini", {
     modelProvider: "openai",
     configurableFields: "any",
     configPrefix: "foo",
@@ -155,7 +156,7 @@ test("Bind tools to a configurable model", async () => {
     }
   );
 
-  const configurableModel = await initChatModel("gpt-4", {
+  const configurableModel = await initChatModel("gpt-4o-mini", {
     configurableFields: ["model", "modelProvider", "apiKey"],
     temperature: 0,
   });
@@ -600,5 +601,40 @@ describe("Can call base runnable methods", () => {
     const result = await modelWithConfig.invoke("What's 8x8?");
     expect(result.tool_calls).toBeDefined();
     expect(result.tool_calls?.[0].name).toBe("GetWeather");
+  });
+});
+
+describe("Serialization", () => {
+  it("does not contain additional fields", async () => {
+    const gpt4 = await initChatModel("gpt-4o-mini", {
+      modelProvider: "openai",
+      temperature: 0.25, // Funky temperature to verify it's being set properly.
+      apiKey: openAIApiKey,
+    });
+    let serializedRepresentation;
+    const res = await gpt4.invoke("foo", {
+      callbacks: [
+        {
+          handleChatModelStart(llm) {
+            serializedRepresentation = llm;
+          },
+        },
+      ],
+      configurable: { extra: "bar" },
+    });
+    await awaitAllCallbacks();
+    expect(res).toBeDefined();
+    const { ChatOpenAI } = await import("@langchain/openai");
+    expect(serializedRepresentation).toEqual(
+      JSON.parse(
+        JSON.stringify(
+          new ChatOpenAI({
+            model: "gpt-4o-mini",
+            temperature: 0.25,
+            apiKey: openAIApiKey,
+          })
+        )
+      )
+    );
   });
 });

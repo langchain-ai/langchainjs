@@ -73,50 +73,51 @@ async function _initChatModelHelper(
       `Unable to infer model provider for { model: ${model} }, please specify modelProvider directly.`
     );
   }
+  const { modelProvider: _unused, ...passedParams } = params;
 
   try {
     switch (modelProviderCopy) {
       case "openai": {
         const { ChatOpenAI } = await import("@langchain/openai");
-        return new ChatOpenAI({ model, ...params });
+        return new ChatOpenAI({ model, ...passedParams });
       }
       case "anthropic": {
         const { ChatAnthropic } = await import("@langchain/anthropic");
-        return new ChatAnthropic({ model, ...params });
+        return new ChatAnthropic({ model, ...passedParams });
       }
       case "azure_openai": {
         const { AzureChatOpenAI } = await import("@langchain/openai");
-        return new AzureChatOpenAI({ model, ...params });
+        return new AzureChatOpenAI({ model, ...passedParams });
       }
       case "cohere": {
         const { ChatCohere } = await import("@langchain/cohere");
-        return new ChatCohere({ model, ...params });
+        return new ChatCohere({ model, ...passedParams });
       }
       case "google-vertexai": {
         const { ChatVertexAI } = await import("@langchain/google-vertexai");
-        return new ChatVertexAI({ model, ...params });
+        return new ChatVertexAI({ model, ...passedParams });
       }
       case "google-genai": {
         const { ChatGoogleGenerativeAI } = await import(
           "@langchain/google-genai"
         );
-        return new ChatGoogleGenerativeAI({ model, ...params });
+        return new ChatGoogleGenerativeAI({ model, ...passedParams });
       }
       case "ollama": {
         const { ChatOllama } = await import("@langchain/ollama");
-        return new ChatOllama({ model, ...params });
+        return new ChatOllama({ model, ...passedParams });
       }
       case "mistralai": {
         const { ChatMistralAI } = await import("@langchain/mistralai");
-        return new ChatMistralAI({ model, ...params });
+        return new ChatMistralAI({ model, ...passedParams });
       }
       case "groq": {
         const { ChatGroq } = await import("@langchain/groq");
-        return new ChatGroq({ model, ...params });
+        return new ChatGroq({ model, ...passedParams });
       }
       case "bedrock": {
         const { ChatBedrockConverse } = await import("@langchain/aws");
-        return new ChatBedrockConverse({ model, ...params });
+        return new ChatBedrockConverse({ model, ...passedParams });
       }
       case "fireworks": {
         const { ChatFireworks } = await import(
@@ -127,7 +128,7 @@ async function _initChatModelHelper(
           // @ts-ignore - Can not install as a proper dependency due to circular dependency
           "@langchain/community/chat_models/fireworks"
         );
-        return new ChatFireworks({ model, ...params });
+        return new ChatFireworks({ model, ...passedParams });
       }
       case "together": {
         const { ChatTogetherAI } = await import(
@@ -138,7 +139,7 @@ async function _initChatModelHelper(
           // @ts-ignore - Can not install as a proper dependency due to circular dependency
           "@langchain/community/chat_models/togetherai"
         );
-        return new ChatTogetherAI({ model, ...params });
+        return new ChatTogetherAI({ model, ...passedParams });
       }
       default: {
         const supported = _SUPPORTED_PROVIDERS.join(", ");
@@ -247,7 +248,10 @@ class _ConfigurableModel<
     if (fields.configurableFields === "any") {
       this._configurableFields = "any";
     } else {
-      this._configurableFields = fields.configurableFields ?? "any";
+      this._configurableFields = fields.configurableFields ?? [
+        "model",
+        "modelProvider",
+      ];
     }
 
     if (fields.configPrefix) {
@@ -786,12 +790,14 @@ export async function initChatModel<
     configPrefix: "",
     ...(fields ?? {}),
   };
-  let configurableFieldsCopy = configurableFields;
+  let configurableFieldsCopy = Array.isArray(configurableFields)
+    ? [...configurableFields]
+    : configurableFields;
 
-  if (!model && !configurableFieldsCopy) {
+  if (!model && configurableFieldsCopy === undefined) {
     configurableFieldsCopy = ["model", "modelProvider"];
   }
-  if (configPrefix && !configurableFieldsCopy) {
+  if (configPrefix && configurableFieldsCopy === undefined) {
     console.warn(
       `{ configPrefix: ${configPrefix} } has been set but no fields are configurable. Set ` +
         `{ configurableFields: [...] } to specify the model params that are ` +
@@ -802,7 +808,7 @@ export async function initChatModel<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const paramsCopy: Record<string, any> = { ...params };
 
-  if (!configurableFieldsCopy) {
+  if (configurableFieldsCopy === undefined) {
     return new _ConfigurableModel<RunInput, CallOptions>({
       defaultConfig: {
         ...paramsCopy,
