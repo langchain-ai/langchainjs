@@ -133,7 +133,10 @@ function _formatContent(content: MessageContent) {
           type: "image" as const, // Explicitly setting the type as "image"
           source,
         };
-      } else if (contentPart.type === "text" || contentPart.type === "text_delta") {
+      } else if (
+        contentPart.type === "text" ||
+        contentPart.type === "text_delta"
+      ) {
         if (contentPart.text === "") {
           return [];
         }
@@ -209,29 +212,17 @@ export function formatMessagesForAnthropic(messages: BaseMessage[]): {
           };
         }
       } else {
-        const { content } = message;
-        const hasMismatchedToolCalls = !message.tool_calls.every((toolCall) =>
-          content.find(
-            (contentPart) =>
-              contentPart.type === "tool_use" && contentPart.id === toolCall.id
-          )
-        );
-        if (hasMismatchedToolCalls) {
-          console.warn(
-            `The "tool_calls" field on a message is only respected if content is a string.`
-          );
-        }
+
 
         const formattedContent = _formatContent(message.content);
         if (Array.isArray(formattedContent)) {
-          const formattedToolsContent = message.tool_calls.map(_convertLangChainToolCallToAnthropic);
+          const formattedToolsContent = message.tool_calls.map(
+            _convertLangChainToolCallToAnthropic
+          );
           return {
             role,
-            content: [
-              ...formattedContent,
-              ...formattedToolsContent
-            ]
-          }
+            content: [...formattedContent, ...formattedToolsContent],
+          };
         }
 
         return {
