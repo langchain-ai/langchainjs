@@ -12375,7 +12375,7 @@ __metadata:
     "@langchain/core": "workspace:*"
     "@langchain/scripts": ">=0.1.0 <0.2.0"
     "@langchain/standard-tests": 0.0.0
-    "@mistralai/mistralai": ^0.4.0
+    "@mistralai/mistralai": ^1.3.1
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -12397,10 +12397,10 @@ __metadata:
     ts-jest: ^29.1.0
     typescript: <5.2.0
     uuid: ^10.0.0
-    zod: ^3.22.4
+    zod: ^3.23.8
     zod-to-json-schema: ^3.22.4
   peerDependencies:
-    "@langchain/core": ">=0.2.21 <0.4.0"
+    "@langchain/core": ">=0.3.7 <0.4.0"
   languageName: unknown
   linkType: soft
 
@@ -13150,12 +13150,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@mistralai/mistralai@npm:^0.4.0":
-  version: 0.4.0
-  resolution: "@mistralai/mistralai@npm:0.4.0"
-  dependencies:
-    node-fetch: ^2.6.7
-  checksum: 1b03fc0b55164c02e5fb29fb2d09ebe4ad44346fc313f7fb3ab09e48f73f975763d1ac9654098d433ea17d7caa20654b2b15510822276acc9fa46db461a254a6
+"@mistralai/mistralai@npm:^1.3.1":
+  version: 1.3.1
+  resolution: "@mistralai/mistralai@npm:1.3.1"
+  peerDependencies:
+    zod: ">= 3"
+  checksum: 9e31a2f760706a9f54347ba2cb2b7784d4f93eb4ff5d87cc7cfac9b7a1a1816f21da2328f5f5e13c11ed8953f1d71f2a2e09d12123ac17d171c189d21b87a977
   languageName: node
   linkType: hard
 

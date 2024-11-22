@@ -2,12 +2,18 @@ import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { BaseLLMParams, LLM } from "@langchain/core/language_models/llms";
 import { type BaseLanguageModelCallOptions } from "@langchain/core/language_models/base";
 import { GenerationChunk, LLMResult } from "@langchain/core/outputs";
+import { FIMCompletionRequest as MistralAIFIMCompletionRequest } from "@mistralai/mistralai/models/components/fimcompletionrequest.js";
+import { FIMCompletionStreamRequest as MistralAIFIMCompletionStreamRequest } from "@mistralai/mistralai/models/components/fimcompletionstreamrequest.js";
+import { FIMCompletionResponse as MistralAIFIMCompletionResponse } from "@mistralai/mistralai/models/components/fimcompletionresponse.js";
+import { ChatCompletionChoice as MistralAIChatCompletionChoice } from "@mistralai/mistralai/models/components/chatcompletionchoice.js";
+import { CompletionEvent as MistralAIChatCompletionEvent } from "@mistralai/mistralai/models/components/completionevent.js";
+import { CompletionChunk as MistralAICompetionChunk } from "@mistralai/mistralai/models/components/completionchunk.js";
 import {
-  ChatCompletionResponse,
-  ChatCompletionResponseChoice,
-  ChatCompletionResponseChunk,
-  type CompletionRequest,
-} from "@mistralai/mistralai";
+  BeforeRequestHook,
+  RequestErrorHook,
+  ResponseHook,
+  HTTPClient as MistralAIHTTPClient,
+} from "@mistralai/mistralai/lib/http.js";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { chunkArray } from "@langchain/core/utils/chunk_array";
 import { AsyncCaller } from "@langchain/core/utils/async_caller";
@@ -34,9 +40,14 @@ export interface MistralAIInput extends BaseLLMParams {
    */
   apiKey?: string;
   /**
-   * Override the default endpoint.
+   * Override the default server URL used by the Mistral SDK.
+   * @deprecated use serverURL instead
    */
   endpoint?: string;
+  /**
+   * Override the default server URL used by the Mistral SDK.
+   */
+  serverURL?: string;
   /**
    * What sampling temperature to use, between 0.0 and 2.0.
    * Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic.
@@ -69,6 +80,26 @@ export interface MistralAIInput extends BaseLLMParams {
    * Batch size to use when passing multiple documents to generate
    */
   batchSize?: number;
+  /**
+   * A list of custom hooks that must follow (req: Request) => Awaitable<Request | void>
+   * They are automatically added when a ChatMistralAI instance is created
+   */
+  beforeRequestHooks?: BeforeRequestHook[];
+  /**
+   * A list of custom hooks that must follow (err: unknown, req: Request) => Awaitable<void>
+   * They are automatically added when a ChatMistralAI instance is created
+   */
+  requestErrorHooks?: RequestErrorHook[];
+  /**
+   * A list of custom hooks that must follow (res: Response, req: Request) => Awaitable<void>
+   * They are automatically added when a ChatMistralAI instance is created
+   */
+  responseHooks?: ResponseHook[];
+  /**
+   * Optional custom HTTP client to manage API requests
+   * Allows users to add custom fetch implementations, hooks, as well as error and response processing.
+   */
+  httpClient?: MistralAIHTTPClient;
 }
 
 /**
@@ -102,11 +133,24 @@ export class MistralAI
 
   apiKey: string;
 
-  endpoint?: string;
+  /**
+   * @deprecated use serverURL instead
+   */
+  endpoint: string;
+
+  serverURL?: string;
 
   maxRetries?: number;
 
   maxConcurrency?: number;
+
+  beforeRequestHooks?: Array<BeforeRequestHook>;
+
+  requestErrorHooks?: Array<RequestErrorHook>;
+
+  responseHooks?: Array<ResponseHook>;
+
+  httpClient?: MistralAIHTTPClient;
 
   constructor(fields?: MistralAIInput) {
     super(fields ?? {});
@@ -118,9 +162,15 @@ export class MistralAI
     this.randomSeed = fields?.randomSeed ?? this.randomSeed;
     this.batchSize = fields?.batchSize ?? this.batchSize;
     this.streaming = fields?.streaming ?? this.streaming;
-    this.endpoint = fields?.endpoint;
+    this.serverURL = fields?.serverURL ?? this.serverURL;
     this.maxRetries = fields?.maxRetries;
     this.maxConcurrency = fields?.maxConcurrency;
+    this.beforeRequestHooks =
+      fields?.beforeRequestHooks ?? this.beforeRequestHooks;
+    this.requestErrorHooks =
+      fields?.requestErrorHooks ?? this.requestErrorHooks;
+    this.responseHooks = fields?.responseHooks ?? this.responseHooks;
+    this.httpClient = fields?.httpClient ?? this.httpClient;
 
     const apiKey = fields?.apiKey ?? getEnvironmentVariable("MISTRAL_API_KEY");
     if (!apiKey) {
@@ -130,6 +180,8 @@ Either provide one via the "apiKey" field in the constructor, or set the "MISTRA
       );
     }
     this.apiKey = apiKey;
+
+    this.addAllHooksToHttpClient();
   }
 
   get lc_secrets(): { [key: string]: string } | undefined {
@@ -150,7 +202,10 @@ Either provide one via the "apiKey" field in the constructor, or set the "MISTRA
 
   invocationParams(
     options: this["ParsedCallOptions"]
-  ): Omit<CompletionRequest, "prompt"> {
+  ): Omit<
+    MistralAIFIMCompletionRequest | MistralAIFIMCompletionStreamRequest,
+    "prompt"
+  > {
     return {
       model: this.model,
       suffix: options.suffix,
@@ -177,7 +232,11 @@ Either provide one via the "apiKey" field in the constructor, or set the "MISTRA
       prompt,
     };
     const result = await this.completionWithRetry(params, options, false);
-    return result.choices[0].message.content ?? "";
+    let content = result?.choices?.[0].message.content ?? "";
+    if (Array.isArray(content)) {
+      content = content[0].type === "text" ? content[0].text : "";
+    }
+    return content;
   }
 
   async _generate(
@@ -186,7 +245,7 @@ Either provide one via the "apiKey" field in the constructor, or set the "MISTRA
     runManager?: CallbackManagerForLLMRun
   ): Promise<LLMResult> {
     const subPrompts = chunkArray(prompts, this.batchSize);
-    const choices: ChatCompletionResponseChoice[][] = [];
+    const choices: MistralAIChatCompletionChoice[][] = [];
 
     const params = this.invocationParams(options);
 
@@ -194,14 +253,14 @@ Either provide one via the "apiKey" field in the constructor, or set the "MISTRA
       const data = await (async () => {
         if (this.streaming) {
           const responseData: Array<
-            { choices: ChatCompletionResponseChoice[] } & Partial<
-              Omit<ChatCompletionResponse, "choices">
+            { choices: MistralAIChatCompletionChoice[] } & Partial<
+              Omit<MistralAICompetionChunk, "choices">
             >
           > = [];
           for (let x = 0; x < subPrompts[i].length; x += 1) {
-            const choices: ChatCompletionResponseChoice[] = [];
+            const choices: MistralAIChatCompletionChoice[] = [];
             let response:
-              | Omit<ChatCompletionResponse, "choices" | "usage">
+              | Omit<MistralAICompetionChunk, "choices" | "usage">
               | undefined;
             const stream = await this.completionWithRetry(
               {
@@ -211,35 +270,52 @@ Either provide one via the "apiKey" field in the constructor, or set the "MISTRA
               options,
               true
             );
-            for await (const message of stream) {
+            for await (const { data } of stream) {
               // on the first message set the response properties
               if (!response) {
                 response = {
-                  id: message.id,
+                  id: data.id,
                   object: "chat.completion",
-                  created: message.created,
-                  model: message.model,
+                  created: data.created,
+                  model: data.model,
                 };
               }
 
               // on all messages, update choice
-              for (const part of message.choices) {
+              for (const part of data.choices) {
+                let content = part.delta.content ?? "";
+                // Convert MistralContentChunk data into a string
+                if (Array.isArray(content)) {
+                  let strContent = "";
+                  for (const contentChunk of content) {
+                    if (contentChunk.type === "text") {
+                      strContent += contentChunk.text;
+                    } else if (contentChunk.type === "image_url") {
+                      const imageURL =
+                        typeof contentChunk.imageUrl === "string"
+                          ? contentChunk.imageUrl
+                          : contentChunk.imageUrl.url;
+                      strContent += imageURL;
+                    }
+                  }
+                  content = strContent;
+                }
                 if (!choices[part.index]) {
                   choices[part.index] = {
                     index: part.index,
                     message: {
-                      role: part.delta.role ?? "assistant",
-                      content: part.delta.content ?? "",
-                      tool_calls: null,
+                      role: "assistant",
+                      content,
+                      toolCalls: null,
                     },
-                    finish_reason: part.finish_reason,
+                    finishReason: part.finishReason ?? "length",
                   };
                 } else {
                   const choice = choices[part.index];
-                  choice.message.content += part.delta.content ?? "";
-                  choice.finish_reason = part.finish_reason;
+                  choice.message.content += content;
+                  choice.finishReason = part.finishReason ?? "length";
                 }
-                void runManager?.handleLLMNewToken(part.delta.content ?? "", {
+                void runManager?.handleLLMNewToken(content, {
                   prompt: part.index,
                   completion: part.index,
                 });
@@ -255,7 +331,7 @@ Either provide one via the "apiKey" field in the constructor, or set the "MISTRA
           }
           return responseData;
         } else {
-          const responseData: Array<ChatCompletionResponse> = [];
+          const responseData: Array<MistralAIFIMCompletionResponse> = [];
           for (let x = 0; x < subPrompts[i].length; x += 1) {
             const res = await this.completionWithRetry(
               {
@@ -271,16 +347,22 @@ Either provide one via the "apiKey" field in the constructor, or set the "MISTRA
         }
       })();
 
-      choices.push(...data.map((d) => d.choices));
+      choices.push(...data.map((d) => d.choices ?? []));
     }
 
     const generations = choices.map((promptChoices) =>
-      promptChoices.map((choice) => ({
-        text: choice.message.content ?? "",
-        generationInfo: {
-          finishReason: choice.finish_reason,
-        },
-      }))
+      promptChoices.map((choice) => {
+        let text = choice.message?.content ?? "";
+        if (Array.isArray(text)) {
+          text = text[0].type === "text" ? text[0].text : "";
+        }
+        return {
+          text,
+          generationInfo: {
+            finishReason: choice.finishReason,
+          },
+        };
+      })
     );
     return {
       generations,
@@ -288,45 +370,63 @@ Either provide one via the "apiKey" field in the constructor, or set the "MISTRA
   }
 
   async completionWithRetry(
-    request: CompletionRequest,
+    request: MistralAIFIMCompletionRequest,
     options: this["ParsedCallOptions"],
     stream: false
-  ): Promise<ChatCompletionResponse>;
+  ): Promise<MistralAIFIMCompletionResponse>;
 
   async completionWithRetry(
-    request: CompletionRequest,
+    request: MistralAIFIMCompletionStreamRequest,
     options: this["ParsedCallOptions"],
     stream: true
-  ): Promise<AsyncGenerator<ChatCompletionResponseChunk, void>>;
+  ): Promise<AsyncIterable<MistralAIChatCompletionEvent>>;
 
   async completionWithRetry(
-    request: CompletionRequest,
+    request:
+      | MistralAIFIMCompletionRequest
+      | MistralAIFIMCompletionStreamRequest,
     options: this["ParsedCallOptions"],
     stream: boolean
   ): Promise<
-    | ChatCompletionResponse
-    | AsyncGenerator<ChatCompletionResponseChunk, void, unknown>
+    MistralAIFIMCompletionResponse | AsyncIterable<MistralAIChatCompletionEvent>
   > {
-    const { MistralClient } = await this.imports();
+    const { Mistral } = await this.imports();
     const caller = new AsyncCaller({
       maxConcurrency: options.maxConcurrency || this.maxConcurrency,
       maxRetries: this.maxRetries,
     });
-    const client = new MistralClient(
-      this.apiKey,
-      this.endpoint,
-      this.maxRetries,
-      options.timeout
-    );
+    const client = new Mistral({
+      apiKey: this.apiKey,
+      serverURL: this.serverURL,
+      timeoutMs: options.timeout,
+      // If httpClient exists, pass it into constructor
+      ...(this.httpClient ? { httpClient: this.httpClient } : {}),
+    });
     return caller.callWithOptions(
       {
         signal: options.signal,
       },
       async () => {
-        if (stream) {
-          return client.completionStream(request);
-        } else {
-          return client.completion(request);
+        try {
+          let res:
+            | MistralAIFIMCompletionResponse
+            | AsyncIterable<MistralAIChatCompletionEvent>;
+          if (stream) {
+            res = await client.fim.stream(request);
+          } else {
+            res = await client.fim.complete(request);
+          }
+          return res;
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } catch (e: any) {
+          if (
+            e.message?.includes("status: 400") ||
+            e.message?.toLowerCase().includes("status 400") ||
+            e.message?.includes("validation failed")
+          ) {
+            e.status = 400;
+          }
+          throw e;
         }
       }
     );
@@ -342,15 +442,20 @@ Either provide one via the "apiKey" field in the constructor, or set the "MISTRA
       prompt,
     };
     const stream = await this.completionWithRetry(params, options, true);
-    for await (const data of stream) {
+    for await (const message of stream) {
+      const { data } = message;
       const choice = data?.choices[0];
       if (!choice) {
         continue;
       }
+      let text = choice.delta.content ?? "";
+      if (Array.isArray(text)) {
+        text = text[0].type === "text" ? text[0].text : "";
+      }
       const chunk = new GenerationChunk({
-        text: choice.delta.content ?? "",
+        text,
         generationInfo: {
-          finishReason: choice.finish_reason,
+          finishReason: choice.finishReason,
           tokenUsage: data.usage,
         },
       });
@@ -363,9 +468,82 @@ Either provide one via the "apiKey" field in the constructor, or set the "MISTRA
     }
   }
 
+  addAllHooksToHttpClient() {
+    try {
+      // To prevent duplicate hooks
+      this.removeAllHooksFromHttpClient();
+
+      // If the user wants to use hooks, but hasn't created an HTTPClient yet
+      const hasHooks = [
+        this.beforeRequestHooks,
+        this.requestErrorHooks,
+        this.responseHooks,
+      ].some((hook) => hook && hook.length > 0);
+      if (hasHooks && !this.httpClient) {
+        this.httpClient = new MistralAIHTTPClient();
+      }
+
+      if (this.beforeRequestHooks) {
+        for (const hook of this.beforeRequestHooks) {
+          this.httpClient?.addHook("beforeRequest", hook);
+        }
+      }
+
+      if (this.requestErrorHooks) {
+        for (const hook of this.requestErrorHooks) {
+          this.httpClient?.addHook("requestError", hook);
+        }
+      }
+
+      if (this.responseHooks) {
+        for (const hook of this.responseHooks) {
+          this.httpClient?.addHook("response", hook);
+        }
+      }
+    } catch {
+      throw new Error("Error in adding all hooks");
+    }
+  }
+
+  removeAllHooksFromHttpClient() {
+    try {
+      if (this.beforeRequestHooks) {
+        for (const hook of this.beforeRequestHooks) {
+          this.httpClient?.removeHook("beforeRequest", hook);
+        }
+      }
+
+      if (this.requestErrorHooks) {
+        for (const hook of this.requestErrorHooks) {
+          this.httpClient?.removeHook("requestError", hook);
+        }
+      }
+
+      if (this.responseHooks) {
+        for (const hook of this.responseHooks) {
+          this.httpClient?.removeHook("response", hook);
+        }
+      }
+    } catch {
+      throw new Error("Error in removing hooks");
+    }
+  }
+
+  removeHookFromHttpClient(
+    hook: BeforeRequestHook | RequestErrorHook | ResponseHook
+  ) {
+    try {
+      this.httpClient?.removeHook("beforeRequest", hook as BeforeRequestHook);
+      this.httpClient?.removeHook("requestError", hook as RequestErrorHook);
+      this.httpClient?.removeHook("response", hook as ResponseHook);
+    } catch {
+      throw new Error("Error in removing hook");
+    }
+  }
+
   /** @ignore */
   private async imports() {
-    const { default: MistralClient } = await import("@mistralai/mistralai");
-    return { MistralClient };
+    const { Mistral } = await import("@mistralai/mistralai");
+    return { Mistral };
   }
 }
