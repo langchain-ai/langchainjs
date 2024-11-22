@@ -34,7 +34,7 @@ export type AzureCosmosDBMongoDBIndexOptions = {
   /** Skips automatic index creation. */
   readonly skipCreate?: boolean;
 
-  readonly indexType?: 'ivf' | 'hnsw' | 'diskann';
+  readonly indexType?: "ivf" | "hnsw" | "diskann";
   /** Number of clusters that the inverted file (IVF) index uses to group the vector data. */
   readonly numLists?: number;
   /** Number of dimensions for vector similarity. */
@@ -51,7 +51,6 @@ export type AzureCosmosDBMongoDBIndexOptions = {
   readonly lBuild?: number;
   /** L value for index searching withe the Diskann idnex */
   readonly lSearch?: number;
-  
 };
 
 /** Azure Cosmos DB for MongoDB vCore delete Parameters. */
@@ -241,7 +240,7 @@ export class AzureCosmosDBMongoDBVectorStore extends VectorStore {
    */
   async createIndex(
     dimensions: number | undefined = undefined,
-    indexType:'ivf' | 'hnsw' | 'diskann' = 'ivf',
+    indexType: "ivf" | "hnsw" | "diskann" = "ivf",
     similarity: AzureCosmosDBMongoDBSimilarityType = AzureCosmosDBMongoDBSimilarityType.COS
   ): Promise<void> {
     await this.connectPromise;
@@ -255,23 +254,24 @@ export class AzureCosmosDBMongoDBVectorStore extends VectorStore {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const cosmosSearchOptions: any = {
-      kind: '',
+      kind: "",
       similarity,
       dimensions: vectorLength,
-    }
+    };
 
-    if (indexType === 'hnsw') {
-      cosmosSearchOptions.kind = 'vector-hnsw';
+    if (indexType === "hnsw") {
+      cosmosSearchOptions.kind = "vector-hnsw";
       cosmosSearchOptions.m = this.indexOptions.m ?? 16;
-      cosmosSearchOptions.efConstruction = this.indexOptions.efConstruction ?? 200;
-    } else if (indexType === 'diskann') {
-      cosmosSearchOptions.kind = 'vector-diskann';
+      cosmosSearchOptions.efConstruction =
+        this.indexOptions.efConstruction ?? 200;
+    } else if (indexType === "diskann") {
+      cosmosSearchOptions.kind = "vector-diskann";
       cosmosSearchOptions.maxDegree = this.indexOptions.maxDegree ?? 40;
       cosmosSearchOptions.lBuild = this.indexOptions.lBuild ?? 50;
       cosmosSearchOptions.lSearch = this.indexOptions.lSearch ?? 40;
-    /** Default to IVF index */
+      /** Default to IVF index */
     } else {
-      cosmosSearchOptions.kind = 'vector-ivf';
+      cosmosSearchOptions.kind = "vector-ivf";
       cosmosSearchOptions.numLists = this.indexOptions.numLists ?? 100;
     }
 
@@ -377,7 +377,7 @@ export class AzureCosmosDBMongoDBVectorStore extends VectorStore {
   async similaritySearchVectorWithScore(
     queryVector: number[],
     k: number,
-    indexType?: 'ivf' | 'hnsw' | 'diskann'
+    indexType?: "ivf" | "hnsw" | "diskann"
   ): Promise<[Document, number][]> {
     await this.initialize();
 
@@ -388,7 +388,9 @@ export class AzureCosmosDBMongoDBVectorStore extends VectorStore {
             vector: queryVector,
             path: this.embeddingKey,
             k: k ?? 4,
-            ...(indexType === 'diskann' ? { lSearch: this.indexOptions.lSearch ?? 40 } : {}),
+            ...(indexType === "diskann"
+              ? { lSearch: this.indexOptions.lSearch ?? 40 }
+              : {}),
           },
           returnStoredSource: true,
         },
@@ -432,13 +434,13 @@ export class AzureCosmosDBMongoDBVectorStore extends VectorStore {
   async maxMarginalRelevanceSearch(
     query: string,
     options: MaxMarginalRelevanceSearchOptions<this["FilterType"]>,
-    indexType: 'ivf' | 'hnsw' | 'diskann'
+    indexType: "ivf" | "hnsw" | "diskann"
   ): Promise<Document[]>;
 
   async maxMarginalRelevanceSearch(
     query: string,
     options: MaxMarginalRelevanceSearchOptions<this["FilterType"]>,
-    indexType?: 'ivf' | 'hnsw' | 'diskann'
+    indexType?: "ivf" | "hnsw" | "diskann"
   ): Promise<Document[]> {
     const { k, fetchK = 20, lambda = 0.5 } = options;
 
@@ -483,7 +485,7 @@ export class AzureCosmosDBMongoDBVectorStore extends VectorStore {
     // Unless skipCreate is set, create the index
     // This operation is no-op if the index already exists
     if (!this.indexOptions.skipCreate) {
-      const indexType = this.indexOptions.indexType || 'ivf';
+      const indexType = this.indexOptions.indexType || "ivf";
       await this.createIndex(
         this.indexOptions.dimensions,
         indexType,
