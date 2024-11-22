@@ -113,7 +113,6 @@ export const config = {
     "llms/writer": "llms/writer",
     "llms/yandex": "llms/yandex",
     "llms/layerup_security": "llms/layerup_security",
-    "llms/novita": "llms/novita",
     // vectorstores
     "vectorstores/analyticdb": "vectorstores/analyticdb",
     "vectorstores/astradb": "vectorstores/astradb",
@@ -178,6 +177,7 @@ export const config = {
     "chat_models/llama_cpp": "chat_models/llama_cpp",
     "chat_models/minimax": "chat_models/minimax",
     "chat_models/moonshot": "chat_models/moonshot",
+    "chat_models/novita": "chat_models/novita",
     "chat_models/ollama": "chat_models/ollama",
     "chat_models/portkey": "chat_models/portkey",
     "chat_models/premai": "chat_models/premai",
