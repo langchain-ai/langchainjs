@@ -6792,6 +6792,7 @@ __metadata:
     node-llama-cpp: 3.1.1
     notion-to-md: ^3.1.0
     officeparser: ^4.0.4
+    openai: ^4.73.0
     pdf-parse: 1.1.1
     pg: ^8.11.0
     pg-copy-streams: ^6.0.5
@@ -6924,6 +6925,7 @@ __metadata:
     neo4j-driver: "*"
     notion-to-md: ^3.1.0
     officeparser: ^4.0.4
+    openai: "*"
     pdf-parse: 1.1.1
     pg: ^8.11.0
     pg-copy-streams: ^6.0.5
@@ -26884,7 +26886,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"openai@npm:^4.32.1, openai@npm:^4.41.1, openai@npm:^4.71.0":
+"openai@npm:^4.32.1, openai@npm:^4.41.1, openai@npm:^4.71.0, openai@npm:^4.73.0":
   version: 4.73.0
   resolution: "openai@npm:4.73.0"
   dependencies:
