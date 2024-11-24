@@ -10,6 +10,26 @@ const RELEASE_BRANCH = "release";
 const MAIN_BRANCH = "main";
 
 /**
+ * Handles execSync errors and logs them in a readable format.
+ * @param {string} command
+ * @param {{ doNotExit?: boolean }} [options] - Optional configuration
+ * @param {boolean} [options.doNotExit] - Whether or not to exit the process on error
+ */
+function execSyncWithErrorHandling(command, options = {}) {
+  try {
+    execSync(
+      command,
+      { stdio: "inherit" } // This will stream output in real-time
+    );
+  } catch (error) {
+    console.error(error.message);
+    if (!options.doNotExit) {
+      process.exit(1);
+    }
+  }
+}
+
+/**
  * Get the version of a workspace inside a directory.
  *
  * @param {string} workspaceDirectory
@@ -131,33 +151,22 @@ async function runYarnRelease(packageDirectory, npm2FACode, tag) {
 
     console.log(`Running command: "yarn ${args.join(" ")}"`);
 
-    const yarnReleaseProcess = spawn("yarn", args, { cwd: workingDirectory });
-
-    let stdout = "";
-    let stderr = "";
-
-    yarnReleaseProcess.stdout.on("data", (data) => {
-      stdout += data;
-      // Still show output in real-time
-      process.stdout.write(data);
-    });
-
-    yarnReleaseProcess.stderr.on("data", (data) => {
-      stderr += data;
-      // Still show errors in real-time
-      process.stderr.write(data);
+    // Use 'inherit' for stdio to allow direct CLI interaction
+    const yarnReleaseProcess = spawn("yarn", args, {
+      stdio: "inherit",
+      cwd: workingDirectory,
     });
 
     yarnReleaseProcess.on("close", (code) => {
       if (code === 0) {
         resolve();
       } else {
-        reject(`Process exited with code ${code}.\nError: ${stderr}`);
+        reject(`Process exited with code ${code}`);
       }
     });
 
     yarnReleaseProcess.on("error", (err) => {
-      reject(`Failed to start process: ${err.message}\nError: ${stderr}`);
+      reject(`Failed to start process: ${err.message}`);
     });
   });
 }
@@ -194,7 +203,7 @@ function bumpDeps(
     console.log(
       "Updated version is not greater than the pre-release version. Pulling from github and checking again."
     );
-    execSync(`git pull origin ${RELEASE_BRANCH}`);
+    execSyncWithErrorHandling(`git pull origin ${RELEASE_BRANCH}`);
     updatedWorkspaceVersion = getWorkspaceVersion(workspaceDirectory);
     if (!semver.gt(updatedWorkspaceVersion, preReleaseVersion)) {
       console.warn(
@@ -213,10 +222,10 @@ function bumpDeps(
     versionString = `${updatedWorkspaceVersion}-${tag}`;
   }
 
-  execSync(`git checkout ${MAIN_BRANCH}`);
+  execSyncWithErrorHandling(`git checkout ${MAIN_BRANCH}`);
   const newBranchName = `bump-${workspaceName}-to-${versionString}`;
   console.log(`Checking out new branch: ${newBranchName}`);
-  execSync(`git checkout -b ${newBranchName}`);
+  execSyncWithErrorHandling(`git checkout -b ${newBranchName}`);
 
   const allWorkspacesWhichDependOn = allWorkspaces.filter(({ packageJSON }) =>
     Object.keys(packageJSON.dependencies ?? {}).includes(workspaceName)
@@ -268,7 +277,7 @@ Workspaces:
     console.log("Updated package.json's! Running yarn install.");
 
     try {
-      execSync(`yarn install`);
+      execSyncWithErrorHandling(`yarn install`);
     } catch (_) {
       console.log(
         "Yarn install failed. Likely because NPM has not finished publishing the new version. Continuing."
@@ -277,12 +286,12 @@ Workspaces:
 
     // Add all current changes, commit, push and log branch URL.
     console.log("Adding and committing all changes.");
-    execSync(`git add -A`);
-    execSync(
+    execSyncWithErrorHandling(`git add -A`);
+    execSyncWithErrorHandling(
       `git commit -m "all[minor]: bump deps on ${workspaceName} to ${versionString}"`
     );
     console.log("Pushing changes.");
-    execSync(`git push -u origin ${newBranchName}`);
+    execSyncWithErrorHandling(`git push -u origin ${newBranchName}`);
     console.log(
       "🔗 Open %s and merge the bump-deps PR.",
       `\x1b[34mhttps://github.com/langchain-ai/langchainjs/compare/${newBranchName}?expand=1\x1b[0m`
@@ -299,7 +308,8 @@ Workspaces:
  * @param {string} version
  */
 function createCommitMessage(workspaceName, version) {
-  return `release(${workspaceName}): ${version}`;
+  const cleanedWorkspaceName = workspaceName.replace("@langchain/", "");
+  return `release(${cleanedWorkspaceName}): ${version}`;
 }
 
 /**
@@ -307,15 +317,28 @@ function createCommitMessage(workspaceName, version) {
  *
  * @param {string} workspaceName The name of the workspace being released
  * @param {string} version The new version being released
+ * @param {boolean} onlyPush Whether or not to only push the changes, and not commit
  * @returns {void}
  */
-function commitAndPushChanges(workspaceName, version) {
-  console.log("Committing and pushing changes...");
-  const commitMsg = createCommitMessage(workspaceName, version);
-  execSync("git add -A");
-  execSync(`git commit -m "${commitMsg}"`);
+function commitAndPushChanges(workspaceName, version, onlyPush) {
+  if (!onlyPush) {
+    console.log("Committing changes...");
+    const commitMsg = createCommitMessage(workspaceName, version);
+    try {
+      execSyncWithErrorHandling("git add -A", { doNotExit: true });
+      execSyncWithErrorHandling(`git commit -m "${commitMsg}"`, {
+        doNotExit: true,
+      });
+    } catch (_) {
+      // No-op. Likely erroring because there are no unstaged changes.
+    }
+  }
+
+  console.log("Pushing changes...");
   // Pushes to the current branch
-  execSync("git push -u origin $(git rev-parse --abbrev-ref HEAD)");
+  execSyncWithErrorHandling(
+    "git push -u origin $(git rev-parse --abbrev-ref HEAD)"
+  );
   console.log("Successfully committed and pushed changes.");
 }
 
@@ -330,8 +353,8 @@ function checkoutReleaseBranch() {
   const currentBranch = execSync("git branch --show-current").toString().trim();
   if (currentBranch === MAIN_BRANCH || currentBranch === RELEASE_BRANCH) {
     console.log(`Checking out '${RELEASE_BRANCH}' branch.`);
-    execSync(`git checkout -B ${RELEASE_BRANCH}`);
-    execSync(`git push -u origin ${RELEASE_BRANCH}`);
+    execSyncWithErrorHandling(`git checkout -B ${RELEASE_BRANCH}`);
+    execSyncWithErrorHandling(`git push -u origin ${RELEASE_BRANCH}`);
   } else {
     throw new Error(
       `Current branch is not ${MAIN_BRANCH} or ${RELEASE_BRANCH}. Current branch: ${currentBranch}`
@@ -361,15 +384,34 @@ async function getUserInput(question) {
 }
 
 /**
- * Checks if there are any uncommitted changes in the git repository
+ * Checks if there are any uncommitted changes in the git repository.
  *
  * @returns {boolean} True if there are uncommitted changes, false otherwise
  */
 function hasUncommittedChanges() {
   try {
-    // This command returns empty string if no changes, or a string with changes if there are any
-    const output = execSync("git status --porcelain").toString();
-    return output.length > 0;
+    // Check for uncommitted changes (both staged and unstaged)
+    const uncommittedOutput = execSync("git status --porcelain").toString();
+
+    return uncommittedOutput.length > 0;
+  } catch (error) {
+    console.error("Error checking git status:", error);
+    // If we can't check, better to assume there are changes
+    return true;
+  }
+}
+
+/**
+ * Checks if there are any staged commits in the git repository.
+ *
+ * @returns {boolean} True if there are staged changes, false otherwise
+ */
+function hasStagedChanges() {
+  try {
+    // Check for staged but unpushed changes
+    const unPushedOutput = execSync("git log '@{u}..'").toString();
+
+    return unPushedOutput.length > 0;
   } catch (error) {
     console.error("Error checking git status:", error);
     // If we can't check, better to assume there are changes
@@ -419,7 +461,7 @@ async function main() {
 
   // Run build, lint, tests
   console.log("Running build, lint, and tests.");
-  execSync(
+  execSyncWithErrorHandling(
     `yarn turbo:command run --filter ${options.workspace} build lint test --concurrency 1`
   );
   console.log("Successfully ran build, lint, and tests.");
@@ -433,9 +475,13 @@ async function main() {
   // Run `release-it` on workspace
   await runYarnRelease(matchingWorkspace.dir, npm2FACode, options.tag);
 
-  if (hasUncommittedChanges()) {
+  const hasStaged = hasStagedChanges();
+  const hasUnCommitted = hasUncommittedChanges();
+  if (hasStaged || hasUnCommitted) {
     const updatedVersion = getWorkspaceVersion(matchingWorkspace.dir);
-    commitAndPushChanges(options.workspace, updatedVersion);
+    // Only push and do not commit if there are staged changes and no uncommitted changes
+    const onlyPush = hasStaged && !hasUnCommitted;
+    commitAndPushChanges(options.workspace, updatedVersion, onlyPush);
   }
 
   // Log release branch URL
@@ -458,4 +504,7 @@ async function main() {
   }
 }
 
-main();
+main().catch((error) => {
+  console.error(error);
+  process.exit(1);
+});
