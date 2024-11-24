@@ -10,7 +10,6 @@ import { ChatOpenAI } from "@langchain/openai";
 import type { ChatPromptTemplate } from "@langchain/core/prompts";
 import { createOpenAIFunctionsAgent, AgentExecutor } from "langchain/agents";
 import { pull } from "langchain/hub";
-import { tr } from "@faker-js/faker";
 
 export async function run() {
     const llm = new ChatOpenAI({
