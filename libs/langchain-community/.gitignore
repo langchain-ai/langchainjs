@@ -922,6 +922,10 @@ document_loaders/web/notionapi.cjs
 document_loaders/web/notionapi.js
 document_loaders/web/notionapi.d.ts
 document_loaders/web/notionapi.d.cts
+document_loaders/web/oracleai.cjs
+document_loaders/web/oracleai.js
+document_loaders/web/oracleai.d.ts
+document_loaders/web/oracleai.d.cts
 document_loaders/web/pdf.cjs
 document_loaders/web/pdf.js
 document_loaders/web/pdf.d.ts

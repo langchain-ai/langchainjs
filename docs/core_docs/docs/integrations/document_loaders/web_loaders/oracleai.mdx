@@ -1,0 +1,73 @@
+---
+hide_table_of_contents: true
+---
+
+# Oracle AI
+
+This example goes over how to load documents using Oracle AI Vector Search.
+
+## Setup
+
+You'll need to install the [oracledb](https://www.npmjs.com/package/oracledb) package:
+
+```bash npm2yarn
+npm install @langchain/community @langchain/core oracledb
+```
+
+## Usage
+
+### Connect to Oracle Database
+You'll need to provide the username, password, hostname and service_name:
+
+```typescript
+import oracledb from 'oracledb';
+
+let connection: oracledb.Connection;
+
+// Replace the placeholders with your information
+const username = "<username>";
+const password = "<password>";
+const dsn = "<hostname>/<service_name>";
+
+try {
+  connection = await oracledb.getConnection({
+      user: username,
+      password:password,
+      connectString: dsn
+  });
+  console.log("Connection Successful");
+} catch  (err) {
+  console.error('Connection failed:', err);
+  throw err;
+}
+```
+
+### Load Documents
+As for loading documents, you have 3 options:
+- Loading a local file.
+- Loading from a local directory.
+- Loading from the Oracle Database.
+
+When loading from the Oracle Database, you must provide the table's name, owner's name, and the name of the column to load. Optionally, you can provide extra column names to be included in the returned documents' metadata:
+
+```typescript
+import { OracleDocLoader, OracleLoadFromType } from "@langchain/community/document_loaders/web/oracleai";
+
+/*
+// Loading a local file (replace <filepath> with the path of the file you want to load.)
+const loader = new OracleDocLoader(connection, <filepath>, OracleLoadFromType.FILE);
+
+
+// Loading from a local directory (replace <dirpath> with the path of the directory you want to load from.)
+const loader = new OracleDocLoader(connection, <dirpath>, OracleLoadFromType.DIR);
+*/
+
+// Loading from Oracle Database table (replace the placeholders with your information, optionally add a [metadata_cols] parameter to include columns as metadata.)
+const loader = new OracleDocLoader(connection, <tablename>, OracleLoadFromType.TABLE, <owner_name>, <colname>);
+
+// Load the docs
+const docs = loader.load();
+console.log("Number of docs loaded:", docs.length);
+console.log("Document-0:", docs[0].page_content); // content
+```
+

@@ -39,9 +39,11 @@
     "binary-extensions": "^2.2.0",
     "expr-eval": "^2.0.2",
     "flat": "^5.0.2",
+    "htmlparser2": "^9.1.0",
     "js-yaml": "^4.1.0",
     "langchain": ">=0.2.3 <0.3.0 || >=0.3.4 <0.4.0",
     "langsmith": "^0.2.0",
+    "oracledb": "^6.7.0",
     "uuid": "^10.0.0",
     "zod": "^3.22.3",
     "zod-to-json-schema": "^3.22.5"
@@ -116,11 +118,11 @@
     "@types/d3-dsv": "^3.0.7",
     "@types/flat": "^5.0.2",
     "@types/html-to-text": "^9",
-    "@types/jest": "^29.5.14",
     "@types/jsdom": "^21.1.1",
     "@types/jsonwebtoken": "^9",
     "@types/lodash": "^4",
     "@types/mozilla-readability": "^0.2.1",
+    "@types/oracledb": "^6",
     "@types/pdf-parse": "^1.1.1",
     "@types/pg": "^8.11.0",
     "@types/pg-copy-streams": "^1.2.2",
@@ -179,7 +181,7 @@
     "interface-datastore": "^8.2.11",
     "ioredis": "^5.3.2",
     "it-all": "^3.0.4",
-    "jest": "^29.7.0",
+    "jest": "^29.5.0",
     "jest-environment-node": "^29.6.4",
     "jsdom": "^22.1.0",
     "jsonwebtoken": "^9.0.2",
@@ -209,7 +211,7 @@
     "rollup": "^3.19.1",
     "sonix-speech-recognition": "^2.1.1",
     "srt-parser-2": "^1.2.3",
-    "ts-jest": "^29.2.5",
+    "ts-jest": "^29.1.0",
     "typeorm": "^0.3.20",
     "typescript": "~5.1.6",
     "typesense": "^1.5.3",
@@ -2792,6 +2794,15 @@
       "import": "./document_loaders/web/notionapi.js",
       "require": "./document_loaders/web/notionapi.cjs"
     },
+    "./document_loaders/web/oracleai": {
+      "types": {
+        "import": "./document_loaders/web/oracleai.d.ts",
+        "require": "./document_loaders/web/oracleai.d.cts",
+        "default": "./document_loaders/web/oracleai.d.ts"
+      },
+      "import": "./document_loaders/web/oracleai.js",
+      "require": "./document_loaders/web/oracleai.cjs"
+    },
     "./document_loaders/web/pdf": {
       "types": {
         "import": "./document_loaders/web/pdf.d.ts",
@@ -4026,6 +4037,10 @@
     "document_loaders/web/notionapi.js",
     "document_loaders/web/notionapi.d.ts",
     "document_loaders/web/notionapi.d.cts",
+    "document_loaders/web/oracleai.cjs",
+    "document_loaders/web/oracleai.js",
+    "document_loaders/web/oracleai.d.ts",
+    "document_loaders/web/oracleai.d.cts",
     "document_loaders/web/pdf.cjs",
     "document_loaders/web/pdf.js",
     "document_loaders/web/pdf.d.ts",
