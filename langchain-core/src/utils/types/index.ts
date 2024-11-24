@@ -16,6 +16,3 @@ export type PartialValues<K extends string = string> = Record<
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ChainValues = Record<string, any>;
-
-// Must export somewhere to avoid portability issues
-export * from "../../types/zod.js";
