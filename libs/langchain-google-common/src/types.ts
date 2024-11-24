@@ -309,6 +309,8 @@ export interface GeminiContent {
 
 export interface GeminiTool {
   functionDeclarations?: GeminiFunctionDeclaration[];
+  googleSearchRetrieval?: object;
+  retrieval?: object;
 }
 
 export interface GeminiFunctionDeclaration {

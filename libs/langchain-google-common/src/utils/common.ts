@@ -62,32 +62,38 @@ function processToolChoice(
 }
 
 export function convertToGeminiTools(tools: GoogleAIToolType[]): GeminiTool[] {
-  const geminiTools: GeminiTool[] = [
-    {
-      functionDeclarations: [],
-    },
-  ];
+  const geminiTools: GeminiTool[] = [];
   tools.forEach((tool) => {
     if (
       "functionDeclarations" in tool &&
       Array.isArray(tool.functionDeclarations)
     ) {
       const funcs: GeminiFunctionDeclaration[] = tool.functionDeclarations;
-      geminiTools[0].functionDeclarations?.push(...funcs);
+      geminiTools.push({ functionDeclarations: [...funcs] });
     } else if (isLangChainTool(tool)) {
       const jsonSchema = zodToGeminiParameters(tool.schema);
-      geminiTools[0].functionDeclarations?.push({
-        name: tool.name,
-        description: tool.description ?? `A function available to call.`,
-        parameters: jsonSchema as GeminiFunctionSchema,
+      geminiTools.push({
+        functionDeclarations: [
+          {
+            name: tool.name,
+            description: tool.description ?? `A function available to call.`,
+            parameters: jsonSchema as GeminiFunctionSchema,
+          },
+        ],
       });
     } else if (isOpenAITool(tool)) {
-      geminiTools[0].functionDeclarations?.push({
-        name: tool.function.name,
-        description:
-          tool.function.description ?? `A function available to call.`,
-        parameters: jsonSchemaToGeminiParameters(tool.function.parameters),
+      geminiTools.push({
+        functionDeclarations: [
+          {
+            name: tool.function.name,
+            description:
+              tool.function.description ?? `A function available to call.`,
+            parameters: jsonSchemaToGeminiParameters(tool.function.parameters),
+          },
+        ],
       });
+    } else if ("googleSearchRetrieval" in tool || "retrieval" in tool) {
+      geminiTools.push(tool);
     }
   });
   return geminiTools;
