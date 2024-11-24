@@ -31,7 +31,7 @@ export class HederaDeleteAccount extends HederaBaseTool {
         .setAccountId(accountId)
         .setTransferAccountId(operatorAccountId)
         .freezeWith(this.client);
-      
+
       const privateKey = PrivateKey.fromStringED25519(accountPrivateKey);
       const signTx = await transaction.sign(privateKey);
       const txResponse = await signTx.execute(this.client);

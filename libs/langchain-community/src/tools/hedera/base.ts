@@ -34,14 +34,12 @@ export abstract class HederaBaseTool extends StructuredTool {
       }
     );
 
-  private HederaBaseToolParamsSchema = z
-    .object({
-      credentials: this.CredentialsSchema.default({}),
-      network: z.enum(["mainnet", "testnet", "previewnet"]).default("testnet"),
-      maxTransactionFee: z.number().default(100),
-      maxQueryPayment: z.number().default(50),
-    })
-    .default({});
+  private HederaBaseToolParamsSchema = z.object({
+    credentials: this.CredentialsSchema.default({}),
+    network: z.enum(["mainnet", "testnet", "previewnet"]).default("testnet"),
+    maxTransactionFee: z.number().default(100),
+    maxQueryPayment: z.number().default(50),
+  });
 
   name = "Hedera Tool";
 

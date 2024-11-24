@@ -27,7 +27,7 @@ export class HederaCreateAccount extends HederaBaseTool {
     const { newAccountPublicKey, initialAmount } = arg;
 
     try {
-      const publicKey = PublicKey.fromString(newAccountPublicKey); 
+      const publicKey = PublicKey.fromString(newAccountPublicKey);
       const newAccount = await new AccountCreateTransaction()
         .setKey(publicKey)
         .setInitialBalance(Hbar.fromTinybars(initialAmount))
