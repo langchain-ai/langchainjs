@@ -1,0 +1,29 @@
+---
+hide_table_of_contents: true
+---
+
+import CodeBlock from "@theme/CodeBlock";
+
+# Hedera Tool
+
+The Hedera Tool gives your agent the ability to create an account, delete an account, transfer
+between accounts, and query the balance of an account.
+
+## Setup
+
+To use the Hedera Tool you need to install the following official peer depencency:
+
+```bash npm2yarn
+npm install @hashgraph/sdk
+```
+
+## Usage
+
+import ToolExample from "@examples/tools/hedera.ts";
+
+<CodeBlock language="typescript">{ToolExample}</CodeBlock>
+
+## Related
+
+- Tool [conceptual guide](/docs/concepts/tools)
+- Tool [how-to guides](/docs/how_to/#tools)
