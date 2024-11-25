@@ -122,6 +122,10 @@ agents/toolkits/connery.cjs
 agents/toolkits/connery.js
 agents/toolkits/connery.d.ts
 agents/toolkits/connery.d.cts
+agents/toolkits/stagehand.cjs
+agents/toolkits/stagehand.js
+agents/toolkits/stagehand.d.ts
+agents/toolkits/stagehand.d.cts
 embeddings/alibaba_tongyi.cjs
 embeddings/alibaba_tongyi.js
 embeddings/alibaba_tongyi.d.ts
