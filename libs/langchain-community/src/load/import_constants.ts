@@ -8,6 +8,7 @@ export const optionalImportEntrypoints: string[] = [
   "langchain_community/tools/gmail",
   "langchain_community/tools/google_calendar",
   "langchain_community/agents/toolkits/aws_sfn",
+  "langchain_community/agents/toolkits/stagehand",
   "langchain_community/embeddings/bedrock",
   "langchain_community/embeddings/cloudflare_workersai",
   "langchain_community/embeddings/cohere",

@@ -1,6 +1,6 @@
 {
   "name": "@langchain/community",
-  "version": "0.3.15",
+  "version": "0.3.16",
   "description": "Third-party integrations for LangChain.js",
   "type": "module",
   "engines": {
@@ -990,6 +990,15 @@
       },
       "import": "./agents/toolkits/connery.js",
       "require": "./agents/toolkits/connery.cjs"
+    },
+    "./agents/toolkits/stagehand": {
+      "types": {
+        "import": "./agents/toolkits/stagehand.d.ts",
+        "require": "./agents/toolkits/stagehand.d.cts",
+        "default": "./agents/toolkits/stagehand.d.ts"
+      },
+      "import": "./agents/toolkits/stagehand.js",
+      "require": "./agents/toolkits/stagehand.cjs"
     },
     "./embeddings/alibaba_tongyi": {
       "types": {
@@ -3216,6 +3225,10 @@
     "agents/toolkits/connery.js",
     "agents/toolkits/connery.d.ts",
     "agents/toolkits/connery.d.cts",
+    "agents/toolkits/stagehand.cjs",
+    "agents/toolkits/stagehand.js",
+    "agents/toolkits/stagehand.d.ts",
+    "agents/toolkits/stagehand.d.cts",
     "embeddings/alibaba_tongyi.cjs",
     "embeddings/alibaba_tongyi.js",
     "embeddings/alibaba_tongyi.d.ts",
