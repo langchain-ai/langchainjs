@@ -109,14 +109,8 @@ describe("Pinecone self query", () => {
       },
     ];
 
-    if (
-      !process.env.PINECONE_API_KEY ||
-      !process.env.PINECONE_ENVIRONMENT ||
-      !testIndexName
-    ) {
-      throw new Error(
-        "PINECONE_ENVIRONMENT and PINECONE_API_KEY and PINECONE_INDEX must be set"
-      );
+    if (!process.env.PINECONE_API_KEY || !testIndexName) {
+      throw new Error("PINECONE_API_KEY and PINECONE_INDEX must be set");
     }
 
     const embeddings = new OpenAIEmbeddings();
@@ -268,14 +262,8 @@ describe("Pinecone self query", () => {
       },
     ];
 
-    if (
-      !process.env.PINECONE_API_KEY ||
-      !process.env.PINECONE_ENVIRONMENT ||
-      !testIndexName
-    ) {
-      throw new Error(
-        "PINECONE_ENVIRONMENT and PINECONE_API_KEY and PINECONE_INDEX must be set"
-      );
+    if (!process.env.PINECONE_API_KEY || !testIndexName) {
+      throw new Error("PINECONE_API_KEY and PINECONE_INDEX must be set");
     }
 
     const embeddings = new OpenAIEmbeddings();

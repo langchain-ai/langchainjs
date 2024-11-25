@@ -27,6 +27,9 @@ export function removeAdditionalProperties(
     if ("additionalProperties" in newObj) {
       delete newObj.additionalProperties;
     }
+    if ("$schema" in newObj) {
+      delete newObj.$schema;
+    }
 
     for (const key in newObj) {
       if (key in newObj) {
