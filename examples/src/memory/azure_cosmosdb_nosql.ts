@@ -44,7 +44,7 @@ const res1 = await chainWithHistory.invoke(
 );
 console.log({ res1 });
 /*
-{ res1: 'Hi Jim! How can I assist you today?' }
+ { res1: 'Hi Jim! How can I assist you today?' }
  */
 
 const res2 = await chainWithHistory.invoke(
@@ -52,7 +52,21 @@ const res2 = await chainWithHistory.invoke(
   { configurable: { sessionId: "langchain-test-session" } }
 );
 console.log({ res2 });
-
 /*
  { res2: { response: 'You said your name was Jim.' } 
-  */
+ */
+
+// Give this session a title
+const chatHistory = (await chainWithHistory.getMessageHistory(
+  "langchain-test-session"
+)) as AzureCosmsosDBNoSQLChatMessageHistory;
+chatHistory.setContext({ title: "Introducing Jim" });
+
+// List all session for the user
+const sessions = await chatHistory.getAllSessionsForUser("user-id");
+console.log(sessions);
+/*
+ [
+  { sessionId: 'langchain-test-session', context: { title: "Introducing Jim"  } }
+ ]
+ */
