@@ -220,6 +220,8 @@ export const config = {
     // graphs
     "graphs/neo4j_graph": "graphs/neo4j_graph",
     "graphs/memgraph_graph": "graphs/memgraph_graph",
+    // document_compressors
+    "document_compressors/ibm": "document_compressors/ibm",
     // document transformers
     "document_transformers/html_to_text": "document_transformers/html_to_text",
     "document_transformers/mozilla_readability":
@@ -446,6 +448,8 @@ export const config = {
     "cache/upstash_redis",
     "graphs/neo4j_graph",
     "graphs/memgraph_graph",
+    // document_compressors
+    "document_compressors/ibm",
     // document_transformers
     "document_transformers/html_to_text",
     "document_transformers/mozilla_readability",

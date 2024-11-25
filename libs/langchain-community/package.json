@@ -2287,6 +2287,15 @@
       "import": "./graphs/memgraph_graph.js",
       "require": "./graphs/memgraph_graph.cjs"
     },
+    "./document_compressors/ibm": {
+      "types": {
+        "import": "./document_compressors/ibm.d.ts",
+        "require": "./document_compressors/ibm.d.cts",
+        "default": "./document_compressors/ibm.d.ts"
+      },
+      "import": "./document_compressors/ibm.js",
+      "require": "./document_compressors/ibm.cjs"
+    },
     "./document_transformers/html_to_text": {
       "types": {
         "import": "./document_transformers/html_to_text.d.ts",
@@ -3783,6 +3792,10 @@
     "graphs/memgraph_graph.js",
     "graphs/memgraph_graph.d.ts",
     "graphs/memgraph_graph.d.cts",
+    "document_compressors/ibm.cjs",
+    "document_compressors/ibm.js",
+    "document_compressors/ibm.d.ts",
+    "document_compressors/ibm.d.cts",
     "document_transformers/html_to_text.cjs",
     "document_transformers/html_to_text.js",
     "document_transformers/html_to_text.d.ts",

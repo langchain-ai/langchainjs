@@ -111,6 +111,7 @@ export const optionalImportEntrypoints: string[] = [
   "langchain_community/retrievers/zep_cloud",
   "langchain_community/graphs/neo4j_graph",
   "langchain_community/graphs/memgraph_graph",
+  "langchain_community/document_compressors/ibm",
   "langchain_community/document_transformers/html_to_text",
   "langchain_community/document_transformers/mozilla_readability",
   "langchain_community/storage/cassandra",
