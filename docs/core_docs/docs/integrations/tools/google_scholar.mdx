@@ -1,0 +1,31 @@
+hide_table_of_contents: true
+---
+
+import CodeBlock from "@theme/CodeBlock";
+
+# Google Scholar Tool
+
+The Google Scholar Tool enables your agent to access scholarly articles and publications data through the Google Scholar API. Use it to retrieve article titles, abstracts, authors, and publication information directly from Google Scholar.
+
+## Setup
+
+You will need to get an API key from SerpAPI, which offers a Google Scholar API as part of its services. Sign up on SerpAPI, retrieve your API key from your account settings, and set it as process.env.SERP_API_KEY or pass it in as an apiKey constructor argument.
+
+## Usage
+
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/openai @langchain/community @langchain/core
+```
+
+import ToolExample from "@examples/tools/google_scholar.ts";
+
+<CodeBlock language="typescript">{ToolExample}</CodeBlock>
+
+## Related
+
+- Tool [conceptual guide](/docs/concepts/tools)
+- Tool [how-to guides](/docs/how_to/#tools)
