@@ -1,12 +1,12 @@
-import { GoogleScholarAPI } from "../../../libs/langchain-community/src/tools/google_scholar.js";
+import { GoogleScholarAPI } from "@langchain/community/tools/google_scholar";
 
 const scholar = new GoogleScholarAPI({
-  apiKey: "567433bea61f9193deb1a44f2851537658f29ef4135a1fe3eadabc9390dd4d6e", // Alternatively, set this as an environment variable.
+  apiKey: process.env.SERPAPI_API_KEY
 });
 
 (async () => {
   try {
-    const query = "Machine Learning";
+    const query = "Attention is all we need";
     const results = await scholar._call(query);
     console.log("Search Results:", results);
   } catch (error) {
