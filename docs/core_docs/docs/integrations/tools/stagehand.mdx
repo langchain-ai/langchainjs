@@ -1,0 +1,139 @@
+---
+sidebar_label: Stagehand AI Web Automation Toolkit
+hide_table_of_contents: true
+---
+
+import CodeBlock from "@theme/CodeBlock";
+import Example from "@examples/agents/stagehand_ai_web_browser.ts";
+import { StagehandToolkit } from "@langchain/community/agents/toolkits/stagehand";
+
+# Stagehand Toolkit
+
+The Stagehand Toolkit equips your AI agent with the following capabilities:
+
+- **navigate()**: Navigate to a specific URL.
+- **act()**: Perform browser automation actions like clicking, typing, and navigation.
+- **extract()**: Extract structured data from web pages using Zod schemas.
+- **observe()**: Get a list of possible actions and elements on the current page.
+
+## Setup
+
+1. Install the required packages:
+
+```bash
+npm install @langchain/langgraph @langchain/community @langchain/core
+```
+
+2. Create a Stagehand Instance
+   If you plan to run the browser locally, you'll also need to install Playwright's browser dependencies.
+
+```bash
+npx playwright install
+```
+
+3. Set up your model provider credentials:
+
+For OpenAI:
+
+```bash
+export OPENAI_API_KEY="your-openai-api-key"
+```
+
+For Anthropic:
+
+```bash
+export ANTHROPIC_API_KEY="your-anthropic-api-key"
+```
+
+## Usage, Standalone, Local Browser
+
+```typescript
+import { StagehandToolkit } from "langchain/community/agents/toolkits/stagehand";
+import { ChatOpenAI } from "@langchain/openai";
+import { Stagehand } from "@browserbasehq/stagehand";
+
+// Specify your Browserbase credentials.
+process.env.BROWSERBASE_API_KEY = "";
+process.env.BROWSERBASE_PROJECT_ID = "";
+
+// Specify OpenAI API key.
+process.env.OPENAI_API_KEY = "";
+
+const stagehand = new Stagehand({
+  env: "LOCAL",
+  headless: false,
+  verbose: 2,
+  debugDom: true,
+  enableCaching: false,
+});
+
+// Create a Stagehand Toolkit with all the available actions from the Stagehand.
+const stagehandToolkit = await StagehandToolkit.fromStagehand(stagehand);
+
+const navigateTool = stagehandToolkit.tools.find(
+  (t) => t.name === "stagehand_navigate"
+);
+if (!navigateTool) {
+  throw new Error("Navigate tool not found");
+}
+await navigateTool.invoke("https://www.google.com");
+
+const actionTool = stagehandToolkit.tools.find(
+  (t) => t.name === "stagehand_act"
+);
+if (!actionTool) {
+  throw new Error("Action tool not found");
+}
+await actionTool.invoke('Search for "OpenAI"');
+
+const observeTool = stagehandToolkit.tools.find(
+  (t) => t.name === "stagehand_observe"
+);
+if (!observeTool) {
+  throw new Error("Observe tool not found");
+}
+const result = await observeTool.invoke(
+  "What actions can be performed on the current page?"
+);
+const observations = JSON.parse(result);
+
+// Handle observations as needed
+console.log(observations);
+
+const currentUrl = stagehand.page.url();
+expect(currentUrl).toContain("google.com/search?q=OpenAI");
+```
+
+## Usage with LangGraph Agents
+
+<CodeBlock language="typescript">{Example}</CodeBlock>
+
+## Usage on Browserbase - remote headless browser
+
+If you want to run the browser remotely, you can use the Browserbase platform.
+
+You need to set the `BROWSERBASE_API_KEY` environment variable to your Browserbase API key.
+
+```bash
+export BROWSERBASE_API_KEY="your-browserbase-api-key"
+```
+
+You also need to set `BROWSERBASE_PROJECT_ID` to your Browserbase project ID.
+
+```bash
+export BROWSERBASE_PROJECT_ID="your-browserbase-project-id"
+```
+
+Then initialize the Stagehand instance with the `BROWSERBASE` environment.
+
+```typescript
+const stagehand = new Stagehand({
+  env: "BROWSERBASE",
+});
+```
+
+## Related
+
+- Tool [conceptual guide](/docs/concepts/tools)
+- Tool [how-to guides](/docs/how_to/#tools)
+- [Stagehand Documentation](https://github.com/browserbase/stagehand#readme)

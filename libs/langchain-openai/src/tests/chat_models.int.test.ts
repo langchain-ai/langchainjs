@@ -1166,3 +1166,31 @@ describe("Audio output", () => {
     ).toBeGreaterThan(1);
   });
 });
+
+test("Can stream o1 requests", async () => {
+  const model = new ChatOpenAI({
+    model: "o1-mini",
+  });
+  const stream = await model.stream(
+    "Write me a very simple hello world program in Python. Ensure it is wrapped in a function called 'hello_world' and has descriptive comments."
+  );
+  let finalMsg: AIMessageChunk | undefined;
+  let numChunks = 0;
+  for await (const chunk of stream) {
+    finalMsg = finalMsg ? concat(finalMsg, chunk) : chunk;
+    numChunks += 1;
+  }
+
+  expect(finalMsg).toBeTruthy();
+  if (!finalMsg) {
+    throw new Error("No final message found");
+  }
+  if (typeof finalMsg.content === "string") {
+    expect(finalMsg.content.length).toBeGreaterThan(10);
+  } else {
+    expect(finalMsg.content.length).toBeGreaterThanOrEqual(1);
+  }
+
+  // A
+  expect(numChunks).toBeGreaterThan(3);
+});
