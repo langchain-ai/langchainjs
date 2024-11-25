@@ -6674,7 +6674,6 @@ __metadata:
     "@jest/globals": ^29.5.0
     "@lancedb/lancedb": ^0.13.0
     "@langchain/core": "workspace:*"
-    "@langchain/langgraph": ^0.2.22
     "@langchain/openai": ">=0.2.0 <0.4.0"
     "@langchain/scripts": ">=0.1.0 <0.2.0"
     "@langchain/standard-tests": 0.0.0
@@ -6792,7 +6791,7 @@ __metadata:
     node-llama-cpp: 3.1.1
     notion-to-md: ^3.1.0
     officeparser: ^4.0.4
-    openai: ^4.73.0
+    openai: "*"
     pdf-parse: 1.1.1
     pg: ^8.11.0
     pg-copy-streams: ^6.0.5
@@ -7555,7 +7554,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@langchain/langgraph@npm:^0.2.22, @langchain/langgraph@npm:^0.2.3":
+"@langchain/langgraph@npm:^0.2.3":
   version: 0.2.22
   resolution: "@langchain/langgraph@npm:0.2.22"
   dependencies:
@@ -26886,7 +26885,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"openai@npm:^4.32.1, openai@npm:^4.41.1, openai@npm:^4.71.0, openai@npm:^4.73.0":
+"openai@npm:*, openai@npm:^4.32.1, openai@npm:^4.41.1, openai@npm:^4.71.0":
   version: 4.73.0
   resolution: "openai@npm:4.73.0"
   dependencies:

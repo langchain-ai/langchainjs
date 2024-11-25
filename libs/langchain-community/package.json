@@ -35,7 +35,6 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@langchain/langgraph": "^0.2.22",
     "@langchain/openai": ">=0.2.0 <0.4.0",
     "binary-extensions": "^2.2.0",
     "expr-eval": "^2.0.2",
@@ -193,7 +192,7 @@
     "node-llama-cpp": "3.1.1",
     "notion-to-md": "^3.1.0",
     "officeparser": "^4.0.4",
-    "openai": "^4.73.0",
+    "openai": "*",
     "pdf-parse": "1.1.1",
     "pg": "^8.11.0",
     "pg-copy-streams": "^6.0.5",
