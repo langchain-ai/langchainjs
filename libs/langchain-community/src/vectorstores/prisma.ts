@@ -446,7 +446,7 @@ export class PrismaVectorStore<
                 // - NOT IN () should return TRUE (everything is not in an empty set)
                 return this.Prisma.sql`${!isInOperator}`;
               }
-              
+
               return this.Prisma.sql`${colRaw} ${opRaw} (${this.Prisma.join(
                 value
               )})`;
