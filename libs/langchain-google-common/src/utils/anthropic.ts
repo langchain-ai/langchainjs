@@ -518,7 +518,7 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
   function baseToAnthropicMessage(
     base: BaseMessage
   ): AnthropicMessage | undefined {
-    const type = base.getType();
+    const type = base._getType();
     switch (type) {
       case "human":
         return baseRoleToAnthropicMessage(base, "user");
