@@ -74,6 +74,10 @@ tools/google_routes.cjs
 tools/google_routes.js
 tools/google_routes.d.ts
 tools/google_routes.d.cts
+tools/hedera.cjs
+tools/hedera.js
+tools/hedera.d.ts
+tools/hedera.d.cts
 tools/ifttt.cjs
 tools/ifttt.js
 tools/ifttt.d.ts
