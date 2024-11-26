@@ -159,7 +159,7 @@ test("Test clear all sessions for a user", async () => {
   const result2 = await chatHistory1.getMessages();
   expect(result2).toEqual(expectedMessages);
 
-  await chatHistory1.clearAllSessionsForUser("user1");
+  await chatHistory1.clearAllSessions();
 
   const deletedResult1 = await chatHistory1.getMessages();
   const deletedResult2 = await chatHistory2.getMessages();
@@ -191,7 +191,7 @@ test("Test set context and get all sessions for a user", async () => {
   await chatHistory2.addAIMessage("Jimi Hendrix");
   await chatHistory2.setContext(context2);
 
-  const sessions = await chatHistory1.getAllSessionsForUser("user1");
+  const sessions = await chatHistory1.getAllSessions();
 
   expect(sessions.length).toBe(2);
   expect(sessions[0].context).toEqual(context1);

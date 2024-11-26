@@ -38,7 +38,6 @@ export interface AzureCosmosDBNoSQLChatMessageHistoryInput {
   containerName?: string;
   credentials?: TokenCredential;
   ttl?: number;
-  context?: Record<string, unknown>;
 }
 
 /**
@@ -103,7 +102,7 @@ export class AzureCosmsosDBNoSQLChatMessageHistory extends BaseListChatMessageHi
 
   private initPromise?: Promise<void>;
 
-  private context: Record<string, unknown>;
+  private context: Record<string, unknown> = {};
 
   constructor(chatHistoryInput: AzureCosmosDBNoSQLChatMessageHistoryInput) {
     super();
@@ -115,7 +114,6 @@ export class AzureCosmsosDBNoSQLChatMessageHistory extends BaseListChatMessageHi
     this.userId = chatHistoryInput.userId ?? "anonymous";
     this.ttl = chatHistoryInput.ttl;
     this.client = this.initializeClient(chatHistoryInput);
-    this.context = chatHistoryInput.context ?? {};
   }
 
   private initializeClient(
@@ -191,10 +189,11 @@ export class AzureCosmsosDBNoSQLChatMessageHistory extends BaseListChatMessageHi
     this.messageList = await this.getMessages();
     this.messageList.push(message);
     const messages = mapChatMessagesToStoredMessages(this.messageList);
+    const context = await this.getContext();
     await this.container.items.upsert({
       id: this.sessionId,
       userId: this.userId,
-      context: this.context,
+      context,
       messages,
     });
   }
@@ -205,25 +204,25 @@ export class AzureCosmsosDBNoSQLChatMessageHistory extends BaseListChatMessageHi
     await this.container.item(this.sessionId, this.userId).delete();
   }
 
-  async clearAllSessionsForUser(userId: string) {
+  async clearAllSessions() {
     await this.initializeContainer();
     const query = {
       query: "SELECT c.id FROM c WHERE c.userId = @userId",
-      parameters: [{ name: "@userId", value: userId }],
+      parameters: [{ name: "@userId", value: this.userId }],
     };
     const { resources: userSessions } = await this.container.items
       .query(query)
       .fetchAll();
     for (const userSession of userSessions) {
-      await this.container.item(userSession.id, userId).delete();
+      await this.container.item(userSession.id, this.userId).delete();
     }
   }
 
-  async getAllSessionsForUser(userId: string): Promise<ChatSession[]> {
+  async getAllSessions(): Promise<ChatSession[]> {
     await this.initializeContainer();
     const query = {
       query: "SELECT c.id, c.context FROM c WHERE c.userId = @userId",
-      parameters: [{ name: "@userId", value: userId }],
+      parameters: [{ name: "@userId", value: this.userId }],
     };
     const { resources: userSessions } = await this.container.items
       .query(query)
@@ -231,7 +230,11 @@ export class AzureCosmsosDBNoSQLChatMessageHistory extends BaseListChatMessageHi
     return userSessions ?? [];
   }
 
-  getContext(): Record<string, unknown> {
+  async getContext(): Promise<Record<string, unknown>> {
+    const document = await this.container
+      .item(this.sessionId, this.userId)
+      .read();
+    this.context = document.resource?.context || this.context;
     return this.context;
   }
 
