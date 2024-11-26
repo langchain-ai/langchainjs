@@ -1,6 +1,6 @@
 {
   "name": "@langchain/google-vertexai-web",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "LangChain.js support for Google Vertex AI Web",
   "type": "module",
   "engines": {
