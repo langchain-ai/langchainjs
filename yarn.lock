@@ -12349,7 +12349,19 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/google-gauth@workspace:libs/langchain-google-gauth, @langchain/google-gauth@~0.1.2":
+"@langchain/google-gauth@npm:~0.1.3":
+  version: 0.1.3
+  resolution: "@langchain/google-gauth@npm:0.1.3"
+  dependencies:
+    "@langchain/google-common": ~0.1.3
+    google-auth-library: ^8.9.0
+  peerDependencies:
+    "@langchain/core": ">=0.2.21 <0.4.0"
+  checksum: ac83e180af492068de82284a396842eb9bb1e5eaa428b5270a192499da737bf192ad48a1c90eeca462e31238e37bd5698c8d071eb1d780a4f4c759270f8ab706
+  languageName: node
+  linkType: hard
+
+"@langchain/google-gauth@workspace:libs/langchain-google-gauth":
   version: 0.0.0-use.local
   resolution: "@langchain/google-gauth@workspace:libs/langchain-google-gauth"
   dependencies:
@@ -12428,7 +12440,7 @@ __metadata:
     "@jest/globals": ^29.5.0
     "@langchain/core": "workspace:*"
     "@langchain/google-common": ^0.1.0
-    "@langchain/google-webauth": ~0.1.2
+    "@langchain/google-webauth": ~0.1.3
     "@langchain/scripts": ">=0.1.0 <0.2.0"
     "@langchain/standard-tests": 0.0.0
     "@swc/core": ^1.3.90
@@ -12464,7 +12476,7 @@ __metadata:
     "@jest/globals": ^29.5.0
     "@langchain/core": "workspace:*"
     "@langchain/google-common": ^0.1.0
-    "@langchain/google-gauth": ~0.1.2
+    "@langchain/google-gauth": ~0.1.3
     "@langchain/scripts": ">=0.1.0 <0.2.0"
     "@langchain/standard-tests": 0.0.0
     "@swc/core": ^1.3.90
@@ -12493,7 +12505,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/google-webauth@workspace:libs/langchain-google-webauth, @langchain/google-webauth@~0.1.2":
+"@langchain/google-webauth@workspace:libs/langchain-google-webauth, @langchain/google-webauth@~0.1.3":
   version: 0.0.0-use.local
   resolution: "@langchain/google-webauth@workspace:libs/langchain-google-webauth"
   dependencies:
