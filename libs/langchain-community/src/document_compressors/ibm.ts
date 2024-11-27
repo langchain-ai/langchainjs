@@ -115,6 +115,9 @@ export class WatsonxRerank
         ...this.scopeId(),
         inputs,
         query,
+        parameters: {
+          truncate_input_tokens: this.truncateInputTokens,
+        },
       })
     );
     const resultDocuments = result.results.map(({ index, score }) => {

@@ -40,6 +40,25 @@ describe("Integration tests on WatsonxRerank", () => {
         expect(typeof item.metadata.relevanceScore).toBe("number")
       );
     });
+
+    test("Basic call with truncation", async () => {
+      const instance = new WatsonxRerank({
+        model: "cross-encoder/ms-marco-minilm-l-12-v2",
+        serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
+        version: "2024-05-31",
+        projectId: process.env.WATSONX_AI_PROJECT_ID ?? "testString",
+        truncateInputTokens: 512,
+      });
+      const longerDocs: Document[] = docs.map((item) => ({
+        pageContent: item.pageContent.repeat(100),
+        metadata: {},
+      }));
+      const result = await instance.compressDocuments(longerDocs, query);
+      expect(result.length).toBe(docs.length);
+      result.forEach((item) =>
+        expect(typeof item.metadata.relevanceScore).toBe("number")
+      );
+    });
   });
 
   describe(".rerank() method", () => {
@@ -57,24 +76,42 @@ describe("Integration tests on WatsonxRerank", () => {
         expect(item.input).toBeUndefined();
       });
     });
-  });
-  test("Basic call with options", async () => {
-    const instance = new WatsonxRerank({
-      model: "cross-encoder/ms-marco-minilm-l-12-v2",
-      serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
-      version: "2024-05-31",
-      projectId: process.env.WATSONX_AI_PROJECT_ID ?? "testString",
+    test("Basic call with options", async () => {
+      const instance = new WatsonxRerank({
+        model: "cross-encoder/ms-marco-minilm-l-12-v2",
+        serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
+        version: "2024-05-31",
+        projectId: process.env.WATSONX_AI_PROJECT_ID ?? "testString",
+      });
+      const result = await instance.rerank(docs, query, {
+        returnOptions: {
+          topN: 3,
+          inputs: true,
+        },
+      });
+      expect(result.length).toBe(3);
+      result.forEach((item) => {
+        expect(typeof item.relevanceScore).toBe("number");
+        expect(item.input).toBeDefined();
+      });
     });
-    const result = await instance.rerank(docs, query, {
-      returnOptions: {
-        topN: 3,
-        inputs: true,
-      },
-    });
-    expect(result.length).toBe(3);
-    result.forEach((item) => {
-      expect(typeof item.relevanceScore).toBe("number");
-      expect(item.input).toBeDefined();
+    test("Basic call with truncation", async () => {
+      const instance = new WatsonxRerank({
+        model: "cross-encoder/ms-marco-minilm-l-12-v2",
+        serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
+        version: "2024-05-31",
+        projectId: process.env.WATSONX_AI_PROJECT_ID ?? "testString",
+      });
+      const longerDocs = docs.map((item) => ({
+        pageContent: item.pageContent.repeat(100),
+      }));
+      const result = await instance.rerank(longerDocs, query, {
+        truncateInputTokens: 512,
+      });
+      result.forEach((item) => {
+        expect(typeof item.relevanceScore).toBe("number");
+        expect(item.input).toBeUndefined();
+      });
     });
   });
 });
