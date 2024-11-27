@@ -11,6 +11,23 @@ import { PineconeStore } from "@langchain/pinecone";
 
 const pinecone = new Pinecone();
 
+// If index already exists:
+// const pineconeIndex = pinecone.Index(process.env.PINECONE_INDEX!);
+
+// If index does not exist, create it:
+await pinecone.createIndex({
+  name: process.env.PINECONE_INDEX!,
+  dimension: 1536,
+  metric: "cosine",
+  spec: {
+    serverless: {
+      cloud: "aws",
+      region: "us-east-1",
+    },
+  },
+  deletionProtection: "disabled", // Note: deletion protection disabled https://docs.pinecone.io/guides/indexes/prevent-index-deletion#disable-deletion-protection
+});
+
 const pineconeIndex = pinecone.Index(process.env.PINECONE_INDEX!);
 
 const docs = [

@@ -16,7 +16,6 @@ import {
 } from "../runnables/config.js";
 import type { RunnableFunc, RunnableInterface } from "../runnables/base.js";
 import { ToolCall, ToolMessage } from "../messages/tool.js";
-import { ZodObjectAny } from "../types/zod.js";
 import { MessageContent } from "../messages/base.js";
 import { AsyncLocalStorageProviderSingleton } from "../singletons/index.js";
 import { _isToolCall, ToolInputParsingException } from "./utils.js";
@@ -31,6 +30,9 @@ type ToolReturnType = any;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ContentAndArtifact = [MessageContent, any];
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type ZodObjectAny = z.ZodObject<any, any, any, any>;
 
 /**
  * Parameters for the Tool classes.
