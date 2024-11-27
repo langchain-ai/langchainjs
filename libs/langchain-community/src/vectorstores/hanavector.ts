@@ -235,7 +235,7 @@ export class HanaDB extends VectorStore {
   }
 
   /**
-   * Sanitizes the input to integer. Throws an error if the value is less than -1.
+   * Sanitizes the input to integer. Throws an error if the value is less than lower bound.
    * @param inputInt The input to be sanitized.
    * @returns The sanitized integer.
    */
