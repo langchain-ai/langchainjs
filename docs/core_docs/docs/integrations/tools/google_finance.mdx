@@ -1,0 +1,36 @@
+---
+hide_table_of_contents: true
+---
+
+import CodeBlock from "@theme/CodeBlock";
+
+# Google Finance Tool
+The Google Finance Tool allows your agent to utilize the Google Finance API to retrieve financial data, such as stock prices, market trends, 
+exchange rates, and other investment-related information from Google Finance.
+
+## Setup
+You should get the API key first before using the Tool. To get the key, first  browse the website 
+(https://serpapi.com/users/sign_in) sign in with your github or google accountfrom () and follow the instruction to get the 
+free plan. (SerpAPI offers Google Finance API as part of its service) After you log in to your SerpApi account, you should 
+see your API key listed in "Your Account - Your Private API Key". After you get the key, set your API key as 
+`process.env.SERPAPI_API_KEY` or pass it in as an apiKey constructor argument.
+
+
+## Usage
+
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/openai @langchain/community @langchain/core
+```
+
+import ToolExample from "@examples/tools/google_finance.ts";
+
+<CodeBlock language="typescript">{ToolExample}</CodeBlock>
+
+## Related
+
+- Tool [conceptual guide](/docs/concepts/tools)
+- Tool [how-to guides](/docs/how_to/#tools)
