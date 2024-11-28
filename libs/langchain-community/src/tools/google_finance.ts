@@ -40,9 +40,17 @@ export class GoogleFinanceAPI extends Tool {
    * Description of the tool for usage documentation.
    */
   description = `A wrapper around Google Finance Search.
-        Useful for when you need to get information about
-        google search Finance from Google Finance.
-        Input should be a search query.`;
+  Useful for when you need to get information about
+  google search Finance from Google Finance.
+  Input should be a search query that includes a stock ticker 
+  (e.g. GOOG:NASDAQ). It provides detailed information on:
+  - Stock summary 
+  - Markets
+  - Graph (price per minute)
+  - Knowledge graph
+  - News articles
+  - Financials
+  - Related searches that may be of interest `;
 
   /**
    * Constructs a new instance of GoogleFinanceAPI.
