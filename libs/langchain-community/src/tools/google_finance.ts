@@ -1,6 +1,5 @@
 import { Tool } from "@langchain/core/tools";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
-import fetch from "node-fetch";
 
 /**
  * Interface for parameters required by the GoogleFinanceAPI class.
