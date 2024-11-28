@@ -45,7 +45,7 @@ export class GoogleFinanceAPI extends Tool {
         Input should be a search query.`;
 
   /**
-   * Constructs a new instance of GoogleScholarAPI.
+   * Constructs a new instance of GoogleFinanceAPI.
    * @param fields - Optional parameters including an API key.
    */
   constructor(fields?: GoogleFinanceAPIParams) {
@@ -73,12 +73,12 @@ export class GoogleFinanceAPI extends Tool {
   async _call(input: string): Promise<string> {
     // Construct the URL for the API request.
     const url = `https://serpapi.com/search.json?q=${encodeURIComponent(
-        input
-    )}&engine=google_finance&api_key=${this.apiKey}`;
-
+      input
+    )}&engine=google_finance&api_key=05f88ace01a07cc3ca26bd86664b5d2e579d2a5db45407f55a39d86ac7d47d1b`;
+  
     // Make an HTTP GET request to the SerpApi service.
     const response = await fetch(url);
-
+  
     // Handle non-OK responses by extracting the error message.
     if (!response.ok) {
       let message;
@@ -94,14 +94,15 @@ export class GoogleFinanceAPI extends Tool {
         `Got ${response.status}: ${response.statusText} error from SerpApi: ${message}`
       );
     }
-
+  
     // Parse the JSON response from SerpApi.
     const json = await response.json();
-
-    // Transform the raw response into a structured format.
-    const results = //TODO: Format response
-
+  
+    // Remove metadata and search parameters from result.
+    if (json.search_metadata) delete json.search_metadata;
+    if (json.search_parameters) delete json.search_parameters;
+  
     // Return the results as a formatted JSON string.
-    return JSON.stringify(results, null, 2);
+    return JSON.stringify(json, null, 2);
   }
 }
