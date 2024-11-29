@@ -1,12 +1,14 @@
 import { JiraProjectLoader } from "@langchain/community/document_loaders/web/jira";
 
+const host = process.env.JIRA_HOST;
 const username = process.env.JIRA_USERNAME;
 const accessToken = process.env.JIRA_ACCESS_TOKEN;
+const projectKey = process.env.JIRA_PROJECT_KEY;
 
 if (username && accessToken) {
   const loader = new JiraProjectLoader({
-    host: "https://example.atlassian.net/wiki",
-    projectKey: "PI",
+    host,
+    projectKey,
     username,
     accessToken,
   });
