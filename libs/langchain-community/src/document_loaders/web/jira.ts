@@ -1,7 +1,7 @@
 import { Document } from "@langchain/core/documents";
 import { BaseDocumentLoader } from "@langchain/core/document_loaders/base";
 
-type JiraStatusCategory = {
+export type JiraStatusCategory = {
   self: string;
   id: number;
   key: string;
@@ -9,7 +9,7 @@ type JiraStatusCategory = {
   name: string;
 };
 
-type JiraStatus = {
+export type JiraStatus = {
   self: string;
   description: string;
   iconUrl: string;
@@ -18,7 +18,7 @@ type JiraStatus = {
   statusCategory: JiraStatusCategory;
 };
 
-type JiraUser = {
+export type JiraUser = {
   accountId: string;
   accountType: string;
   active: boolean;
@@ -34,7 +34,7 @@ type JiraUser = {
   timeZone: string;
 };
 
-type JiraIssueType = {
+export type JiraIssueType = {
   avatarId: number;
   description: string;
   entityId: string;
@@ -46,14 +46,14 @@ type JiraIssueType = {
   subtask: boolean;
 };
 
-type JiraPriority = {
+export type JiraPriority = {
   iconUrl: string;
   id: string;
   name: string;
   self: string;
 };
 
-type JiraProgress = {
+export type JiraProgress = {
   progress: number;
   total: number;
   percent?: number;
@@ -74,7 +74,7 @@ export type JiraProject = {
   simplified: boolean;
 };
 
-type JiraSubTask = {
+export type JiraSubTask = {
   id: string;
   key: string;
   self: string;
@@ -86,7 +86,7 @@ type JiraSubTask = {
   };
 };
 
-type JiraIssueLinkType = {
+export type JiraIssueLinkType = {
   id: string;
   name: string;
   inward: string;
@@ -106,7 +106,7 @@ export type JiraBriefIssue = {
   };
 };
 
-type JiraIssueLink = {
+export type JiraIssueLink = {
   id: string;
   self: string;
   type: JiraIssueLinkType;
