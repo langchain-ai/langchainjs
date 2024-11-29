@@ -1,5 +1,5 @@
 import { test, expect } from "@jest/globals";
-import { JinaEmbeddings } from "../jina.js";
+import { JinaEmbeddings } from "../jina";
 
 test("Test JinaEmbeddings.embedQuery", async () => {
   const embeddings = new JinaEmbeddings();
@@ -31,10 +31,10 @@ test("Test JinaEmbeddings concurrency", async () => {
   );
 });
 
-test("Test JinaEmbeddings.embedImages", async () => {
+test("Test JinaEmbeddings embedImages", async () => {
   const embeddings = new JinaEmbeddings();
-  const res = await embeddings.embedImages([
-    "https://avatars.githubusercontent.com/u/126733545?v=4",
+  const res = await embeddings.embedDocuments([
+    { image: "https://avatars.githubusercontent.com/u/126733545?v=4" },
   ]);
   expect(typeof res[0][0]).toBe("number");
 });
