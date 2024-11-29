@@ -1,5 +1,4 @@
 const { TestEnvironment } = require("jest-environment-node");
-const dotenv = require("dotenv");
 
 class AdjustedTestEnvironmentToSupportFloat32Array extends TestEnvironment {
   constructor(config, context) {
