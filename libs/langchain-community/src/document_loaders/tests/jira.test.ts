@@ -1,20 +1,28 @@
 import { faker } from "@faker-js/faker";
-import { JiraDocumentConverter, JiraIssue, JiraUser, JiraIssueType, JiraPriority, JiraProgress, JiraProject, JiraStatus, JiraStatusCategory } from "../web/jira.js";
-
+import {
+  JiraDocumentConverter,
+  JiraIssue,
+  JiraUser,
+  JiraIssueType,
+  JiraPriority,
+  JiraProgress,
+  JiraProject,
+  JiraStatus,
+  JiraStatusCategory,
+} from "../web/jira.js";
 
 describe("JiraDocumentConverter Unit Tests", () => {
-
   function getConverter() {
     return new JiraDocumentConverter({
       projectKey: "PROJ",
-      host: "https://example.com"
+      host: "https://example.com",
     });
   }
 
   it("should handle missing optional fields", () => {
     const issue: JiraIssue = someJiraIssue();
     delete issue.fields.assignee;
-    delete issue.fields.duedate
+    delete issue.fields.duedate;
 
     const converter = getConverter();
     const document = converter.convertToDocuments([issue])[0];
@@ -26,7 +34,7 @@ describe("JiraDocumentConverter Unit Tests", () => {
     expect(document.metadata).toEqual({
       id: issue.id,
       host: converter.host,
-      projectKey: converter.projectKey
+      projectKey: converter.projectKey,
     });
   });
 
@@ -37,18 +45,32 @@ describe("JiraDocumentConverter Unit Tests", () => {
 
     expect(document.pageContent).toContain(issue.fields.summary);
     expect(document.pageContent).toContain(issue.fields.description);
-    expect(document.pageContent).toContain(issue.fields.labels?.join(", ") || "");
-    expect(document.pageContent).toContain(issue.fields.reporter?.displayName || "");
-    expect(document.pageContent).toContain(issue.fields.assignee?.displayName || "Unassigned");
+    expect(document.pageContent).toContain(
+      issue.fields.labels?.join(", ") || ""
+    );
+    expect(document.pageContent).toContain(
+      issue.fields.reporter?.displayName || ""
+    );
+    expect(document.pageContent).toContain(
+      issue.fields.assignee?.displayName || "Unassigned"
+    );
     expect(document.pageContent).toContain(issue.fields.duedate || "");
-    expect(document.pageContent).toContain(issue.fields.timeestimate?.toString() || "");
-    expect(document.pageContent).toContain(issue.fields.timespent?.toString() || "");
+    expect(document.pageContent).toContain(
+      issue.fields.timeestimate?.toString() || ""
+    );
+    expect(document.pageContent).toContain(
+      issue.fields.timespent?.toString() || ""
+    );
     expect(document.pageContent).toContain(issue.fields.resolutiondate || "");
-    expect(document.pageContent).toContain(issue.fields.progress.percent?.toString() || "");
+    expect(document.pageContent).toContain(
+      issue.fields.progress.percent?.toString() || ""
+    );
   });
 });
 
-export function someJiraIssueType(overrides: Partial<JiraIssueType> = {}): JiraIssueType {
+export function someJiraIssueType(
+  overrides: Partial<JiraIssueType> = {}
+): JiraIssueType {
   const baseIssueType: JiraIssueType = {
     avatarId: faker.number.int({ min: 1, max: 100 }),
     description: faker.lorem.sentence(),
@@ -56,7 +78,7 @@ export function someJiraIssueType(overrides: Partial<JiraIssueType> = {}): JiraI
     hierarchyLevel: faker.number.int({ min: 1, max: 5 }),
     iconUrl: faker.image.url(),
     id: faker.string.numeric(5),
-    name: faker.helpers.arrayElement(['Bug', 'Task', 'Story', 'Epic']),
+    name: faker.helpers.arrayElement(["Bug", "Task", "Story", "Epic"]),
     self: faker.internet.url(),
     subtask: false,
   };
@@ -66,7 +88,6 @@ export function someJiraIssueType(overrides: Partial<JiraIssueType> = {}): JiraI
     ...overrides,
   };
 }
-
 
 export function someJiraUser(overrides: Partial<JiraUser> = {}): JiraUser {
   const baseUser = {
@@ -91,11 +112,19 @@ export function someJiraUser(overrides: Partial<JiraUser> = {}): JiraUser {
   };
 }
 
-export function someJiraPriority(overrides: Partial<JiraPriority> = {}): JiraPriority {
+export function someJiraPriority(
+  overrides: Partial<JiraPriority> = {}
+): JiraPriority {
   const basePriority: JiraPriority = {
     iconUrl: faker.image.url(),
     id: faker.string.numeric(2),
-    name: faker.helpers.arrayElement(['Highest', 'High', 'Medium', 'Low', 'Lowest']),
+    name: faker.helpers.arrayElement([
+      "Highest",
+      "High",
+      "Medium",
+      "Low",
+      "Lowest",
+    ]),
     self: faker.internet.url(),
   };
 
@@ -105,7 +134,9 @@ export function someJiraPriority(overrides: Partial<JiraPriority> = {}): JiraPri
   };
 }
 
-export function someJiraProgress(overrides: Partial<JiraProgress> = {}): JiraProgress {
+export function someJiraProgress(
+  overrides: Partial<JiraProgress> = {}
+): JiraProgress {
   const baseProgress: JiraProgress = {
     progress: faker.number.int({ min: 0, max: 100 }),
     total: 100,
@@ -118,7 +149,9 @@ export function someJiraProgress(overrides: Partial<JiraProgress> = {}): JiraPro
   };
 }
 
-export function someJiraProject(overrides: Partial<JiraProject> = {}): JiraProject {
+export function someJiraProject(
+  overrides: Partial<JiraProject> = {}
+): JiraProject {
   const baseProject: JiraProject = {
     avatarUrls: {
       "16x16": faker.image.avatar(),
@@ -140,13 +173,15 @@ export function someJiraProject(overrides: Partial<JiraProject> = {}): JiraProje
   };
 }
 
-export function someJiraStatusCategory(overrides: Partial<JiraStatusCategory> = {}): JiraStatusCategory {
+export function someJiraStatusCategory(
+  overrides: Partial<JiraStatusCategory> = {}
+): JiraStatusCategory {
   const baseStatusCategory: JiraStatusCategory = {
     self: faker.internet.url(),
     id: faker.number.int({ min: 1, max: 5 }),
-    key: faker.helpers.arrayElement(['new', 'indeterminate', 'done']),
-    colorName: faker.helpers.arrayElement(['blue-gray', 'yellow', 'green']), 
-    name: faker.helpers.arrayElement(['To Do', 'In Progress', 'Done']),
+    key: faker.helpers.arrayElement(["new", "indeterminate", "done"]),
+    colorName: faker.helpers.arrayElement(["blue-gray", "yellow", "green"]),
+    name: faker.helpers.arrayElement(["To Do", "In Progress", "Done"]),
   };
 
   return {
@@ -155,13 +190,19 @@ export function someJiraStatusCategory(overrides: Partial<JiraStatusCategory> = 
   };
 }
 
-
-export function someJiraStatus(overrides: Partial<JiraStatus> = {}): JiraStatus {
+export function someJiraStatus(
+  overrides: Partial<JiraStatus> = {}
+): JiraStatus {
   const baseStatus: JiraStatus = {
     self: faker.internet.url(),
     description: faker.lorem.sentence(),
     iconUrl: faker.image.url(),
-    name: faker.helpers.arrayElement(['To Do', 'In Progress', 'Done', 'Blocked']),
+    name: faker.helpers.arrayElement([
+      "To Do",
+      "In Progress",
+      "Done",
+      "Blocked",
+    ]),
     id: faker.string.numeric(2),
     statusCategory: someJiraStatusCategory(),
   };
@@ -172,10 +213,12 @@ export function someJiraStatus(overrides: Partial<JiraStatus> = {}): JiraStatus 
   };
 }
 
-
 export function someJiraIssue(overrides: Partial<JiraIssue> = {}): JiraIssue {
-  const issueKey = `${faker.string.alpha(4).toUpperCase()}-${faker.number.int({ min: 1, max: 9999 })}`;
-  
+  const issueKey = `${faker.string.alpha(4).toUpperCase()}-${faker.number.int({
+    min: 1,
+    max: 9999,
+  })}`;
+
   const baseIssue: JiraIssue = {
     expand: "renderedFields",
     id: faker.string.numeric(5),
@@ -187,22 +230,32 @@ export function someJiraIssue(overrides: Partial<JiraIssue> = {}): JiraIssue {
       description: faker.lorem.paragraph(),
       issuelinks: [],
       issuetype: someJiraIssueType(),
-      labels: faker.datatype.boolean() ? 
-        Array.from({ length: faker.number.int({ min: 1, max: 5 }) }, () => faker.word.noun()) : 
-        undefined,
+      labels: faker.datatype.boolean()
+        ? Array.from({ length: faker.number.int({ min: 1, max: 5 }) }, () =>
+            faker.word.noun()
+          )
+        : undefined,
       priority: someJiraPriority(),
       progress: someJiraProgress(),
       project: someJiraProject(),
       reporter: faker.datatype.boolean() ? someJiraUser() : undefined,
       creator: someJiraUser(),
-      resolutiondate: faker.datatype.boolean() ? faker.date.recent().toISOString() : undefined,
+      resolutiondate: faker.datatype.boolean()
+        ? faker.date.recent().toISOString()
+        : undefined,
       status: someJiraStatus(),
       subtasks: [],
       summary: faker.lorem.sentence(),
-      timeestimate: faker.datatype.boolean() ? faker.number.int({ min: 1, max: 100 }) * 3600 : undefined,
-      timespent: faker.datatype.boolean() ? faker.number.int({ min: 1, max: 100 }) * 3600 : undefined,
+      timeestimate: faker.datatype.boolean()
+        ? faker.number.int({ min: 1, max: 100 }) * 3600
+        : undefined,
+      timespent: faker.datatype.boolean()
+        ? faker.number.int({ min: 1, max: 100 }) * 3600
+        : undefined,
       updated: faker.date.recent().toISOString(),
-      duedate: faker.datatype.boolean() ? faker.date.future().toISOString() : undefined,
+      duedate: faker.datatype.boolean()
+        ? faker.date.future().toISOString()
+        : undefined,
     },
   };
   console.log(baseIssue.fields.duedate);

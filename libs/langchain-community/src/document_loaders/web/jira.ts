@@ -164,15 +164,11 @@ export interface JiraDocumentConverterParams {
  * Class responsible for converting Jira issues to Document objects
  */
 export class JiraDocumentConverter {
-  
   public readonly host: string;
-  
+
   public readonly projectKey: string;
 
-  constructor({
-    host,
-    projectKey
-  }: JiraDocumentConverterParams) {
+  constructor({ host, projectKey }: JiraDocumentConverterParams) {
     this.host = host;
     this.projectKey = projectKey;
   }
@@ -180,7 +176,7 @@ export class JiraDocumentConverter {
   public convertToDocuments(issues: JiraIssue[]): Document[] {
     return issues.map((issue) => this.documentFromIssue(issue));
   }
-  
+
   private documentFromIssue(issue: JiraIssue): Document {
     return new Document({
       pageContent: this.formatIssueInfo({
@@ -333,7 +329,6 @@ const API_ENDPOINTS = {
  * Class representing a document loader for loading pages from Confluence.
  */
 export class JiraProjectLoader extends BaseDocumentLoader {
-
   private readonly accessToken: string;
 
   public readonly host: string;
@@ -345,7 +340,7 @@ export class JiraProjectLoader extends BaseDocumentLoader {
   public readonly limitPerRequest: number;
 
   private readonly documentConverter: JiraDocumentConverter;
-  
+
   constructor({
     host,
     projectKey,
@@ -359,7 +354,7 @@ export class JiraProjectLoader extends BaseDocumentLoader {
     this.username = username;
     this.accessToken = accessToken;
     this.limitPerRequest = limitPerRequest;
-    this.documentConverter = new JiraDocumentConverter({host, projectKey});
+    this.documentConverter = new JiraDocumentConverter({ host, projectKey });
   }
 
   private buildAuthorizationHeader(): string {
@@ -375,7 +370,7 @@ export class JiraProjectLoader extends BaseDocumentLoader {
       for await (const issues of this.fetchIssues()) {
         allIssues.push(...issues);
       }
-      
+
       return this.documentConverter.convertToDocuments(allIssues);
     } catch (error) {
       console.error("Error:", error);
@@ -412,5 +407,4 @@ export class JiraProjectLoader extends BaseDocumentLoader {
       }
     }
   }
-
 }

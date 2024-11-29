@@ -25,7 +25,7 @@ describe("JiraProjectLoader Integration Tests", () => {
       projectKey: JIRA_PROJECT_KEY,
       username: JIRA_USERNAME,
       accessToken: JIRA_ACCESS_TOKEN,
-      limitPerRequest: 20
+      limitPerRequest: 20,
     });
 
     const docs = await loader.load();
@@ -61,7 +61,7 @@ describe("JiraProjectLoader Integration Tests", () => {
       host: JIRA_HOST,
       projectKey: JIRA_PROJECT_KEY,
       username: "invalid_username",
-      accessToken: "invalid_token"
+      accessToken: "invalid_token",
     });
 
     const docs = await loader.load();
@@ -73,7 +73,7 @@ describe("JiraProjectLoader Integration Tests", () => {
       host: JIRA_HOST,
       projectKey: "INVALID_PROJECT_KEY",
       username: JIRA_USERNAME,
-      accessToken: JIRA_ACCESS_TOKEN
+      accessToken: JIRA_ACCESS_TOKEN,
     });
 
     const docs = await loader.load();
