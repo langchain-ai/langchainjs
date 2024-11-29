@@ -38,6 +38,11 @@ export interface JinaEmbeddingsParams extends EmbeddingsParams {
    * The dimensions of the embedding.
    */
   dimensions?: number;
+
+  /**
+   * Scales the embedding so its Euclidean (L2) norm becomes 1, preserving direction. Useful when downstream involves dot-product, classification, visualization..
+   */
+  normalized?: boolean;
 }
 
 type JinaMultiModelInput =
@@ -61,6 +66,7 @@ interface EmbeddingCreateParams {
   input: JinaEmbeddingsInput[];
   dimensions: number;
   task: "retrieval.query" | "retrieval.passage";
+  normalized?: boolean;
 }
 
 interface EmbeddingResponse {
@@ -94,6 +100,8 @@ export class JinaEmbeddings extends Embeddings implements JinaEmbeddingsParams {
 
   apiKey: string;
 
+  normalized = true;
+
   constructor(
     fields?: Partial<JinaEmbeddingsParams> & {
       apiKey?: string;
@@ -116,6 +124,7 @@ export class JinaEmbeddings extends Embeddings implements JinaEmbeddingsParams {
     this.batchSize = fieldsWithDefaults?.batchSize ?? this.batchSize;
     this.stripNewLines =
       fieldsWithDefaults?.stripNewLines ?? this.stripNewLines;
+    this.normalized = fieldsWithDefaults?.normalized ?? this.normalized;
   }
 
   private doStripNewLines(input: JinaEmbeddingsInput[]) {
@@ -170,6 +179,7 @@ export class JinaEmbeddings extends Embeddings implements JinaEmbeddingsParams {
       input,
       dimensions: this.dimensions,
       task: query ? "retrieval.query" : "retrieval.passage",
+      normalized: this.normalized,
     };
   }
 
