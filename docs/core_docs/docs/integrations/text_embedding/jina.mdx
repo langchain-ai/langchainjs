@@ -34,12 +34,12 @@ Here’s how to create an instance of `JinaEmbeddings`:
 import { JinaEmbeddings } from "@langchain/community/embeddings/jina";
 
 const embeddings = new JinaEmbeddings({
-  apiToken: "YOUR_API_TOKEN",
-  model: "jina-embeddings-v2-base-en", // Optional, defaults to "jina-embeddings-v2-base-en"
+  apiKey: "YOUR_API_TOKEN",
+  model: "jina-clip-v2", // Optional, defaults to "jina-clip-v2"
 });
 ```
 
-If the `apiToken` is not provided, it will be read from the `JINA_API_KEY` environment variable.
+If the `apiKey` is not provided, it will be read from the `JINA_API_KEY` environment variable.
 
 ## Generating Embeddings
 
@@ -59,10 +59,18 @@ console.log(embedding);
 To generate embeddings for multiple documents, use the `embedDocuments` method.
 
 ```typescript
+import { localImageToBase64 } from "@langchain/community/embeddings/jina/util";
 const documents = [
-  "Document 1 text...",
-  "Document 2 text...",
-  "Document 3 text...",
+  'hello',
+  {
+    text: 'hello',
+  },
+  {
+    image: 'https://i.ibb.co/nQNGqL0/beach1.jpg',
+  },
+  {
+    image: await localImageToBase64('beach1.jpg'),
+  },
 ];
 
 const embeddingsArray = await embeddings.embedDocuments(documents);
@@ -87,9 +95,10 @@ Here’s a complete example of how to set up and use the `JinaEmbeddings` class:
 
 ```typescript
 import { JinaEmbeddings } from "@langchain/community/embeddings/jina";
+import { localImageToBase64 } from "@langchain/community/embeddings/jina/util";
 
 const embeddings = new JinaEmbeddings({
-  apiToken: "YOUR_API_TOKEN",
+  apiKey: "YOUR_API_TOKEN",
   model: "jina-embeddings-v2-base-en",
 });
 
@@ -97,7 +106,18 @@ async function runExample() {
   const queryEmbedding = await embeddings.embedQuery("Example query text.");
   console.log("Query Embedding:", queryEmbedding);
 
-  const documents = ["Text 1", "Text 2", "Text 3"];
+  const documents = [
+    'hello',
+    {
+      text: 'hello',
+    },
+    {
+      image: 'https://i.ibb.co/nQNGqL0/beach1.jpg',
+    },
+    {
+      image: await localImageToBase64('beach1.jpg'),
+    },
+  ];
   const documentEmbeddings = await embeddings.embedDocuments(documents);
   console.log("Document Embeddings:", documentEmbeddings);
 }
