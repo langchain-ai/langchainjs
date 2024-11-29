@@ -63,7 +63,7 @@ const chatHistory = (await chainWithHistory.getMessageHistory(
 chatHistory.setContext({ title: "Introducing Jim" });
 
 // List all session for the user
-const sessions = await chatHistory.getAllSessionsForUser("user-id");
+const sessions = await chatHistory.getAllSessions();
 console.log(sessions);
 /*
  [
