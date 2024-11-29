@@ -11740,6 +11740,7 @@ __metadata:
     "@qdrant/js-client-rest": ^1.8.2
     "@raycast/api": ^1.83.1
     "@rockset/client": ^0.9.1
+    "@slack/web-api": ^7.7.0
     "@smithy/eventstream-codec": ^2.0.5
     "@smithy/protocol-http": ^3.0.6
     "@smithy/signature-v4": ^2.0.10
@@ -11915,6 +11916,7 @@ __metadata:
     "@qdrant/js-client-rest": ^1.8.2
     "@raycast/api": ^1.55.2
     "@rockset/client": ^0.9.1
+    "@slack/web-api": ^7.7.0
     "@smithy/eventstream-codec": ^2.0.5
     "@smithy/protocol-http": ^3.0.6
     "@smithy/signature-v4": ^2.0.10
@@ -12079,6 +12081,8 @@ __metadata:
     "@raycast/api":
       optional: true
     "@rockset/client":
+      optional: true
+    "@slack/web-api":
       optional: true
     "@smithy/eventstream-codec":
       optional: true
@@ -15068,6 +15072,42 @@ __metadata:
   dependencies:
     "@sinonjs/commons": ^2.0.0
   checksum: c62aa98e7cefda8dedc101ce227abc888dc46b8ff9706c5f0a8dfd9c3ada97d0a5611384738d9ba0b26b59f99c2ba24efece8e779bb08329e9e87358fa309824
+  languageName: node
+  linkType: hard
+
+"@slack/logger@npm:^4.0.0":
+  version: 4.0.0
+  resolution: "@slack/logger@npm:4.0.0"
+  dependencies:
+    "@types/node": ">=18.0.0"
+  checksum: dc79e9d2032c4bf9ce01d96cc72882f003dd376d036f172d4169662cfc2c9b384a80d5546b06021578dd473e7059f064303f0ba851eeb153387f2081a1e3062e
+  languageName: node
+  linkType: hard
+
+"@slack/types@npm:^2.9.0":
+  version: 2.14.0
+  resolution: "@slack/types@npm:2.14.0"
+  checksum: fbef74d50d0de8f16125f7178bd2e664a69eeefd827b09c6f78153957278fc4400049685c756076e7dbcabd04c22730ac783bcc5d36fd588c7749d35f02c2afd
+  languageName: node
+  linkType: hard
+
+"@slack/web-api@npm:^7.7.0":
+  version: 7.7.0
+  resolution: "@slack/web-api@npm:7.7.0"
+  dependencies:
+    "@slack/logger": ^4.0.0
+    "@slack/types": ^2.9.0
+    "@types/node": ">=18.0.0"
+    "@types/retry": 0.12.0
+    axios: ^1.7.4
+    eventemitter3: ^5.0.1
+    form-data: ^4.0.0
+    is-electron: 2.2.2
+    is-stream: ^2
+    p-queue: ^6
+    p-retry: ^4
+    retry: ^0.13.1
+  checksum: f65986446c8debb2dc09fb00425aa47afb69d2c73958cd4791fc38ee8806873696e510ad2237e19e82c56e048017cd2164b50a971c6523ba2d1cb38fd821ac9c
   languageName: node
   linkType: hard
 
@@ -19536,6 +19576,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/node@npm:>=18.0.0":
+  version: 22.10.1
+  resolution: "@types/node@npm:22.10.1"
+  dependencies:
+    undici-types: ~6.20.0
+  checksum: 5a9b81500f288a8fb757b61bd939f99f72b6cb59347a5bae52dd1c2c87100ebbaa9da4256ef3cb9add2090e8704cda1d9a1ffc14ccd5db47a6466c8bae10ebcb
+  languageName: node
+  linkType: hard
+
 "@types/node@npm:>=8":
   version: 20.8.4
   resolution: "@types/node@npm:20.8.4"
@@ -21911,6 +21960,17 @@ __metadata:
     form-data: ^4.0.0
     proxy-from-env: ^1.1.0
   checksum: 87d4d429927d09942771f3b3a6c13580c183e31d7be0ee12f09be6d5655304996bb033d85e54be81606f4e89684df43be7bf52d14becb73a12727bf33298a082
+  languageName: node
+  linkType: hard
+
+"axios@npm:^1.7.4":
+  version: 1.7.8
+  resolution: "axios@npm:1.7.8"
+  dependencies:
+    follow-redirects: ^1.15.6
+    form-data: ^4.0.0
+    proxy-from-env: ^1.1.0
+  checksum: 3d21652faf8e29fb36c47517d2872bb5e2285127a24f5c53ce23082c4eac7f5a88de84dd49d4a1a83068e5301dcfd9067b41e5fbd00b0d20ab7b0a843559273d
   languageName: node
   linkType: hard
 
@@ -31138,6 +31198,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"is-electron@npm:2.2.2":
+  version: 2.2.2
+  resolution: "is-electron@npm:2.2.2"
+  checksum: de5aa8bd8d72c96675b8d0f93fab4cc21f62be5440f65bc05c61338ca27bd851a64200f31f1bf9facbaa01b3dbfed7997b2186741d84b93b63e0aff1db6a9494
+  languageName: node
+  linkType: hard
+
 "is-extendable@npm:^0.1.0":
   version: 0.1.1
   resolution: "is-extendable@npm:0.1.1"
@@ -31507,7 +31574,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"is-stream@npm:^2.0.0":
+"is-stream@npm:^2, is-stream@npm:^2.0.0":
   version: 2.0.1
   resolution: "is-stream@npm:2.0.1"
   checksum: b8e05ccdf96ac330ea83c12450304d4a591f9958c11fd17bed240af8d5ffe08aedafa4c0f4cfccd4d28dc9d4d129daca1023633d5c11601a6cbc77521f6fae66
@@ -36487,7 +36554,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"p-queue@npm:^6.6.2":
+"p-queue@npm:^6, p-queue@npm:^6.6.2":
   version: 6.6.2
   resolution: "p-queue@npm:6.6.2"
   dependencies:
@@ -36507,7 +36574,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"p-retry@npm:4, p-retry@npm:^4.5.0":
+"p-retry@npm:4, p-retry@npm:^4, p-retry@npm:^4.5.0":
   version: 4.6.2
   resolution: "p-retry@npm:4.6.2"
   dependencies:
@@ -42883,6 +42950,13 @@ __metadata:
   version: 6.19.8
   resolution: "undici-types@npm:6.19.8"
   checksum: de51f1b447d22571cf155dfe14ff6d12c5bdaec237c765085b439c38ca8518fc360e88c70f99469162bf2e14188a7b0bcb06e1ed2dc031042b984b0bb9544017
+  languageName: node
+  linkType: hard
+
+"undici-types@npm:~6.20.0":
+  version: 6.20.0
+  resolution: "undici-types@npm:6.20.0"
+  checksum: b7bc50f012dc6afbcce56c9fd62d7e86b20a62ff21f12b7b5cbf1973b9578d90f22a9c7fe50e638e96905d33893bf2f9f16d98929c4673c2480de05c6c96ea8b
   languageName: node
   linkType: hard
 

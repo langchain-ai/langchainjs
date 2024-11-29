@@ -94,6 +94,10 @@ tools/serper.cjs
 tools/serper.js
 tools/serper.d.ts
 tools/serper.d.cts
+tools/slack.cjs
+tools/slack.js
+tools/slack.d.ts
+tools/slack.d.cts
 tools/stackexchange.cjs
 tools/stackexchange.js
 tools/stackexchange.d.ts
