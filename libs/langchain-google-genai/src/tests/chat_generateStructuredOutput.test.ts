@@ -1,14 +1,12 @@
 /* eslint-disable no-process-env */
-import { test, expect } from "@jest/globals";
-import { ChatGoogleGenerativeAI } from "../chat_models.js";
+import { test, expect } from "@jest/globals"; 
 import { z } from "zod";
-import dotenv from "dotenv";
+import { ChatGoogleGenerativeAI } from "../chat_models.js";
 
-
-dotenv.config();
-if (!process.env.GOOGLE_API_KEY) {
-    throw new Error("Cannot run tests because GOOGLE_API_KEY is not set.");
-  }
+const { GOOGLE_API_KEY } = process.env;
+if (!GOOGLE_API_KEY) {
+  throw new Error("Cannot run tests because GOOGLE_API_KEY is not set.");
+}
 
 const baseSchema = z.object({
   name: z.string(),
@@ -39,13 +37,11 @@ test("Google AI - Throw error if output does not match schema", async () => {
   const request = "Generate structured data where age is a number.";
   try {
     await structuredLlm.invoke(request);
+    throw new Error("Test failed: Expected an error for mismatched schema.");
   } catch (error) {
-    console.error("Schema Mismatch Error:", error);
-    if (error instanceof Error) {
-      expect(error.message).toMatch(/Failed to parse/);
-    } else {
-      throw error;
-    }
+    const errorMessage = typeof error === "object" && error !== null && "message" in error ? (error as { message: string }).message : "Unknown error";
+    console.error("Schema Mismatch Error:", errorMessage);
+    expect(errorMessage).toMatch(/Failed to parse/);
   }
 });
 
@@ -80,13 +76,11 @@ test("Google AI - Handle missing required fields", async () => {
   const request = "Generate a response with only the name field.";
   try {
     await structuredLlm.invoke(request);
+    throw new Error("Test failed: Expected an error for missing required fields.");
   } catch (error) {
-    console.error("Missing Required Fields Error:", error);
-    if (error instanceof Error) {
-      expect(error.message).toMatch(/Failed to parse/);
-    } else {
-      throw error;
-    }
+    const errorMessage = typeof error === "object" && error !== null && "message" in error ? (error as { message: string }).message : "Unknown error";
+    console.error("Missing Required Fields Error:", errorMessage);
+    expect(errorMessage).toMatch(/Failed to parse/);
   }
 });
 
@@ -110,7 +104,7 @@ test("Google AI - Handle optional fields in schema", async () => {
   expect(result).toHaveProperty("email");
 });
 
-test("Google AI - Validate large payloads", async () => {
+test("Google AI - Validate schema with large payloads", async () => {
   const schema = z.object({
     name: z.string(),
     age: z.number(),
@@ -145,81 +139,58 @@ test("Google AI - Throw error for empty response", async () => {
   try {
     const result = await structuredLlm.invoke(request);
     console.log("Empty Response:", result);
+    throw new Error("Test failed: Expected an error for empty response.");
   } catch (error) {
-    console.error("Empty Response Error:", error);
-    if (error instanceof Error) {
-      expect(error.message).toMatch(/Failed to parse/);
-    } else {
-      throw error;
-    }
+    const errorMessage = typeof error === "object" && error !== null && "message" in error ? (error as { message: string }).message : "Unknown error";
+    console.error("Empty Response Error:", errorMessage);
+    expect(errorMessage).toMatch(/Failed to parse/);
   }
 });
 
-test("Google AI - Validate schema with array fields", async () => {
+test("Google AI - Handle schema with deeply nested structures", async () => {
   const schema = z.object({
-    name: z.string(),
-    hobbies: z.array(z.string()),
+    user: z.object({
+      id: z.string(),
+      profile: z.object({
+        details: z.object({
+          name: z.string(),
+          age: z.number(),
+          preferences: z.object({
+            favoriteColor: z.string(),
+            hobbies: z.array(z.string()),
+          }),
+        }),
+      }),
+    }),
   });
   const model = new ChatGoogleGenerativeAI({
     model: "gemini-1.5-flash",
     temperature: 0.7,
   });
   const structuredLlm = model.withStructuredOutput(schema);
-  const request = "Generate structured data with an array of hobbies.";
+  const request = "Generate a deeply nested user profile structure.";
   const result = await structuredLlm.invoke(request);
-  console.log("Array Schema Result:", result);
+  console.log("Deeply Nested Schema Result:", result);
   expect(result).toBeDefined();
-  expect(result).toHaveProperty("name");
-  expect(Array.isArray(result.hobbies)).toBe(true);
+  expect(result.user.profile.details.preferences).toHaveProperty("favoriteColor");
+  expect(Array.isArray(result.user.profile.details.preferences.hobbies)).toBe(true);
 });
 
-test("Google AI - Handle deeply nested schema structures", async () => {
-    const schema = z.object({
-      user: z.object({
-        id: z.string(),
-        profile: z.object({
-          details: z.object({
-            name: z.string(),
-            age: z.number(),
-            preferences: z.object({
-              favoriteColor: z.string(),
-              hobbies: z.array(z.string()),
-            }),
-          }),
-        }),
-      }),
-    });
-    const model = new ChatGoogleGenerativeAI({
-      model: "gemini-1.5-flash",
-      temperature: 0.7,
-    });
-    const structuredLlm = model.withStructuredOutput(schema);
-    const request = "Generate a deeply nested user profile structure.";
-    const result = await structuredLlm.invoke(request);
-    console.log("Deeply Nested Schema Result:", result);
-    expect(result).toBeDefined();
-    expect(result.user.profile.details.preferences).toHaveProperty("favoriteColor");
-    expect(Array.isArray(result.user.profile.details.preferences.hobbies)).toBe(true);
-  });  
-
-  test("Google AI - Handle schema with enum fields", async () => {
-    const schema = z.object({
-      name: z.string(),
-      role: z.enum(["admin", "editor", "viewer"]),
-    });
-  
-    const model = new ChatGoogleGenerativeAI({
-      model: "gemini-1.5-flash",
-      temperature: 0.7,
-    });
-  
-    const structuredLlm = model.withStructuredOutput(schema);
-    const request = "Generate structured data with a name and a role (admin, editor, or viewer).";
-    const result = await structuredLlm.invoke(request);
-  
-    console.log("Enum Fields Result:", result);
-    expect(result).toBeDefined();
-    expect(result).toHaveProperty("name");
-    expect(result).toHaveProperty("role");
-    expect(["admin", "editor", "viewer"]).toContain(result.role);
+test("Google AI - Handle schema with enum fields", async () => {
+  const schema = z.object({
+    name: z.string(),
+    role: z.enum(["admin", "editor", "viewer"]),
   });
+  const model = new ChatGoogleGenerativeAI({
+    model: "gemini-1.5-flash",
+    temperature: 0.7,
+  });
+  const structuredLlm = model.withStructuredOutput(schema);
+  const request = "Generate structured data with a name and a role (admin, editor, or viewer).";
+  const result = await structuredLlm.invoke(request);
+  console.log("Enum Fields Result:", result);
+  expect(result).toBeDefined();
+  expect(result).toHaveProperty("name");
+  expect(result).toHaveProperty("role");
+  expect(["admin", "editor", "viewer"]).toContain(result.role);
+});

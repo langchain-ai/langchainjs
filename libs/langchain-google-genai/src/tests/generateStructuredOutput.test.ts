@@ -169,5 +169,3 @@ describe("generateStructuredOutput", () => {
     expect(Array.isArray(result.hobbies)).toBe(true);
   });
 });
-
-
