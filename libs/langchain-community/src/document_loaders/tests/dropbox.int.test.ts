@@ -137,6 +137,87 @@ describe("DropboxLoader Integration Tests", () => {
         expect(dropboxSourcePath).toEqual(doc.metadata.source);
       });
     });
-    
+
+    it("should load all documents from a Dropbox folder", async () => {
+      const dropboxFilenames = folder1Files.map((path) => path.toLowerCase());
+
+      const dropboxFolderPath = path.join(dropboxTestDataFolder, "folder_1");
+      const localFolderPath = path.join(localTestDataFolder, "folder_1");
+
+      const clientOptions: DropboxOptions = {};
+      const unstructuredOptions: UnstructuredLoaderOptions = {
+        apiKey: "",
+        apiUrl: "http://localhost:8000/general/v0/general",
+      };
+
+      const dropboxLoader = new DropboxLoader({
+        clientOptions,
+        unstructuredOptions,
+        mode: "directory",
+        folderPath: dropboxFolderPath,
+      });
+
+      const directoryLoader = new UnstructuredDirectoryLoader(
+        localFolderPath,
+        unstructuredOptions
+      );
+
+      const [dropboxDocuments, directoryDocuments] = await Promise.all([
+        dropboxLoader.load(),
+        directoryLoader.load(),
+      ]);
+
+      expect(dropboxDocuments).toBeDefined();
+      expect(dropboxDocuments.length).toBe(directoryDocuments.length);
+
+      const dropboxSourcePath = folder1Files.map(
+        (filename) =>
+          "dropbox://" + path.join(dropboxFolderPath, filename).toLowerCase()
+      );
+
+      dropboxDocuments.forEach((doc) => {
+        expect(doc).toBeInstanceOf(Document);
+        expect(doc.pageContent).toBeDefined();
+        expect(dropboxFilenames).toContain(doc.metadata.filename);
+        expect(dropboxSourcePath).toContain(doc.metadata.source);
+      });
+    });
+
+    it("should recursively load all documents from a Dropbox folder", async () => {
+      const dropboxFilenames = allTestFiles.map((path) => path.toLowerCase());
+
+      const clientOptions: DropboxOptions = {};
+      const unstructuredOptions: UnstructuredLoaderOptions = {
+        apiKey: "",
+        apiUrl: "http://localhost:8000/general/v0/general",
+      };
+
+      const dropboxLoader = new DropboxLoader({
+        clientOptions,
+        unstructuredOptions,
+        mode: "directory",
+        folderPath: dropboxTestDataFolder,
+        recursive: true,
+      });
+
+      const directoryLoader = new UnstructuredDirectoryLoader(
+        localTestDataFolder,
+        unstructuredOptions
+      );
+
+      const [dropboxDocuments, directoryDocuments] = await Promise.all([
+        dropboxLoader.load(),
+        directoryLoader.load(),
+      ]);
+
+      expect(dropboxDocuments).toBeDefined();
+      expect(dropboxDocuments.length).toBe(directoryDocuments.length);
+
+      dropboxDocuments.forEach((doc) => {
+        expect(doc).toBeInstanceOf(Document);
+        expect(doc.pageContent).toBeDefined();
+        expect(dropboxFilenames).toContain(doc.metadata.filename);
+      });
+    });
   });
 });
