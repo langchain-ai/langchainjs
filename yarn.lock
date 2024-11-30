@@ -11799,6 +11799,7 @@ __metadata:
     dotenv: ^16.0.3
     dpdm: ^3.12.0
     dria: ^0.0.3
+    dropbox: ^10.34.0
     duck-duck-scrape: ^2.2.5
     epub2: ^3.0.1
     eslint: ^8.33.0
@@ -25890,6 +25891,17 @@ __metadata:
     axios: ^1.6.5
     zod: ^3.22.4
   checksum: 69d66479cb015e87425fba7f1741e4d895b4f43844e6b8897d3e7fe38e579097f2c4673d534141419d15a72866adf4db12acb9b59b42681ef2c4ee2d301b9267
+  languageName: node
+  linkType: hard
+
+"dropbox@npm:^10.34.0":
+  version: 10.34.0
+  resolution: "dropbox@npm:10.34.0"
+  dependencies:
+    node-fetch: ^2.6.1
+  peerDependencies:
+    "@types/node-fetch": ^2.5.7
+  checksum: 5474e31b0e9c8ff68d140a12b8ef5a06e17125f254ad47702e8ab6932fb0405b467c58098e4e6546e29df57f6fa7581f749b6eb0c2a6daec29644a5a8f5cba75
   languageName: node
   linkType: hard
 
