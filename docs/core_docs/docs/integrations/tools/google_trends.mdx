@@ -6,17 +6,18 @@ import CodeBlock from "@theme/CodeBlock";
 
 # Google Trends Tool
 
-The Google Trends Tool allows your agent to utilize the Google Trends API from Serp API to retrieve and analyze search interest data.
+The Google Trends Tool allows your agent to utilize the Google Trends API from SerpApi to retrieve and analyze search interest data.
 This can be useful for understanding trending topics, regional search interest, and historical popularity of search terms.
+
+For API details see [here](https://serpapi.com/google-trends-api)
 
 ## Setup
 
-To use this tool, you'll need to configure access to the Google Trends API. The integration relies on the unofficial
-Google Trends library, as Google does not provide a formal API for accessing trends data.
+To use this tool, you will need to configure access to the Google Trends API from SerpApi.
 
-Get an API key from [SERPApi](https://serpapi.com/users/sign_in)
+Get an API key from [SerpApi](https://serpapi.com/users/sign_in)
 
-Then, set your API key as `process.env.GOOGLE_PLACES_API_KEY` or pass it in as an `apiKey` constructor argument.
+Then, set your API key as `process.env.SERPAPI_API_KEY` or pass it in as an `apiKey` constructor argument.
 
 ## Usage
 
@@ -34,4 +35,5 @@ import ToolExample from "@examples/tools/google_trends.ts";
 
 ## Related
 
-- Tool [https://serpapi.com/google-trends-api]
+- Tool [conceptual guide](/docs/concepts/tools)
+- Tool [how-to guides](/docs/how_to/#tools)
