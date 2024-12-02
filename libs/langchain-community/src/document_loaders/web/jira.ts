@@ -369,34 +369,53 @@ export class JiraProjectLoader extends BaseDocumentLoader {
   }
 
   public async load(): Promise<Document[]> {
-    const allIssues: JiraIssue[] = [];
-
     try {
-      for await (const issues of this.fetchIssues()) {
-        allIssues.push(...issues);
-      }
-
-      return this.documentConverter.convertToDocuments(allIssues);
+      const allJiraIssues = await this.loadAsIssues();
+      return this.documentConverter.convertToDocuments(allJiraIssues);
     } catch (error) {
       console.error("Error:", error);
       return [];
     }
   }
 
+  public async loadAsIssues(): Promise<JiraIssue[]> {
+    const allIssues: JiraIssue[] = [];
+
+    for await (const issues of this.fetchIssues()) {
+      allIssues.push(...issues);
+    }
+
+    return allIssues;
+  }
+
+  protected toJiraDateString(date: Date | undefined): string | undefined {
+    if (!date) {
+      return undefined;
+    }
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const dayOfMonth = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${dayOfMonth}`;
+  }
+
   protected async *fetchIssues(): AsyncIterable<JiraIssue[]> {
     const authorizationHeader = this.buildAuthorizationHeader();
     const url = `${this.host}${API_ENDPOINTS.SEARCH}`;
+    const createdAfterAsString = this.toJiraDateString(this.createdAfter);
     let startAt = 0;
 
     while (true) {
       try {
         const jqlProps = [
           `project=${this.projectKey}`,
-          `startAt=${startAt}`,
-          `maxResults=${this.limitPerRequest}`,
-          ...(this.createdAfter ? [`created>${this.createdAfter.toISOString()}`] : [])
+          ...(createdAfterAsString ? [`created>=${createdAfterAsString}`] : []),
         ];
-        const pageUrl = `${url}?jql=${jqlProps.join('&')}`;
+        const params = new URLSearchParams({
+          jql: jqlProps.join(" AND "),
+          startAt: `${startAt}`,
+          maxResults: `${this.limitPerRequest}`,
+        });
+        const pageUrl = `${url}?${params}`;
 
         const options = {
           method: "GET",
