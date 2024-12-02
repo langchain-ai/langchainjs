@@ -109,7 +109,7 @@ export class FileChatMessageHistory extends BaseListChatMessageHistory {
     }
   }
 
-  private async loadStore(): Promise<FileChatStore> {
+  protected async loadStore(): Promise<FileChatStore> {
     try {
       await fs.access(this.filePath, fs.constants.F_OK);
       const store = await fs.readFile(this.filePath, "utf-8");
@@ -123,7 +123,7 @@ export class FileChatMessageHistory extends BaseListChatMessageHistory {
     }
   }
 
-  private async saveStore(): Promise<void> {
+  protected async saveStore(): Promise<void> {
     try {
       await fs.mkdir(dirname(this.filePath), { recursive: true });
       await fs.writeFile(this.filePath, JSON.stringify(store));
