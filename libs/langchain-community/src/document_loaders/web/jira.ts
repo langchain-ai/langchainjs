@@ -319,6 +319,7 @@ export interface JiraProjectLoaderParams {
   username: string;
   accessToken: string;
   limitPerRequest?: number;
+  createdAfter?: Date;
 }
 
 const API_ENDPOINTS = {
@@ -339,6 +340,8 @@ export class JiraProjectLoader extends BaseDocumentLoader {
 
   public readonly limitPerRequest: number;
 
+  private readonly createdAfter?: Date;
+
   private readonly documentConverter: JiraDocumentConverter;
 
   constructor({
@@ -347,6 +350,7 @@ export class JiraProjectLoader extends BaseDocumentLoader {
     username,
     accessToken,
     limitPerRequest = 100,
+    createdAfter,
   }: JiraProjectLoaderParams) {
     super();
     this.host = host;
@@ -354,6 +358,7 @@ export class JiraProjectLoader extends BaseDocumentLoader {
     this.username = username;
     this.accessToken = accessToken;
     this.limitPerRequest = limitPerRequest;
+    this.createdAfter = createdAfter;
     this.documentConverter = new JiraDocumentConverter({ host, projectKey });
   }
 
@@ -385,7 +390,14 @@ export class JiraProjectLoader extends BaseDocumentLoader {
 
     while (true) {
       try {
-        const pageUrl = `${url}?jql=project=${this.projectKey}&startAt=${startAt}&maxResults=${this.limitPerRequest}`;
+        const jqlProps = [
+          `project=${this.projectKey}`,
+          `startAt=${startAt}`,
+          `maxResults=${this.limitPerRequest}`,
+          ...(this.createdAfter ? [`created>${this.createdAfter.toISOString()}`] : [])
+        ];
+        const pageUrl = `${url}?jql=${jqlProps.join('&')}`;
+
         const options = {
           method: "GET",
           headers: {

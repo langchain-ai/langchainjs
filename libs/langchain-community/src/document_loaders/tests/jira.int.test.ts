@@ -1,6 +1,7 @@
 /**
  * NOTE: Env var should be set, and configured project should exist
  */
+import { Document } from "@langchain/core/documents";
 import { expect, test } from "@jest/globals";
 import { JiraProjectLoader } from "../web/jira.js";
 
@@ -19,16 +20,34 @@ describe("JiraProjectLoader Integration Tests", () => {
     return value;
   }
 
-  test("should load Jira project issues successfully", async () => {
+  async function loadJiraDocs({createdAfter = undefined}: {createdAfter?: Date} = {}): Promise<Document[]> {
     const loader = new JiraProjectLoader({
       host: JIRA_HOST,
       projectKey: JIRA_PROJECT_KEY,
       username: JIRA_USERNAME,
       accessToken: JIRA_ACCESS_TOKEN,
       limitPerRequest: 20,
+      createdAfter
     });
 
-    const docs = await loader.load();
+    return loader.load();
+  }
+
+  test("should load Jira project issues successfully", async () => {
+    const now = new Date();
+    let months = 1;
+
+    let docs: Document[] = [];
+    while (docs.length === 0 && months < 120) {
+      const createdAfter = new Date(now);
+      createdAfter.setDate(now.getDate() - months * 30);
+      docs = await loadJiraDocs({createdAfter});
+      months *= 1.2;
+    }
+
+    if (months >= 10) {
+      docs = await loadJiraDocs({});
+    }
 
     expect(docs).toBeDefined();
     expect(Array.isArray(docs)).toBe(true);

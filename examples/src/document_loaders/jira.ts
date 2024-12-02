@@ -6,11 +6,15 @@ const accessToken = process.env.JIRA_ACCESS_TOKEN;
 const projectKey = process.env.JIRA_PROJECT_KEY;
 
 if (username && accessToken) {
+  // Created within last 30 days
+  const createdAfter = new Date();
+  createdAfter.setDate(createdAfter.getDate() - 30);
   const loader = new JiraProjectLoader({
     host,
     projectKey,
     username,
     accessToken,
+    createdAfter
   });
 
   const documents = await loader.load();
