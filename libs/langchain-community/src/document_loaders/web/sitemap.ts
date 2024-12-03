@@ -1,13 +1,13 @@
 import { Document, DocumentInterface } from "@langchain/core/documents";
 import { chunkArray } from "@langchain/core/utils/chunk_array";
-import { CheerioWebBaseLoader, WebBaseLoaderParams } from "./cheerio.js";
+import { CheerioWebBaseLoader, CheerioWebBaseLoaderParams } from "./cheerio.js";
 
 /**
  * Interface representing the parameters for initializing a SitemapLoader.
  * @interface SitemapLoaderParams
- * @extends WebBaseLoaderParams
+ * @extends CheerioWebBaseLoaderParams
  */
-export interface SitemapLoaderParams extends WebBaseLoaderParams {
+export interface SitemapLoaderParams extends CheerioWebBaseLoaderParams {
   /**
    * @property {(string | RegExp)[] | undefined} filterUrls - A list of regexes. Only URLs that match one of the filter URLs will be loaded.
    * WARNING: The filter URLs are interpreted as regular expressions. Escape special characters if needed.

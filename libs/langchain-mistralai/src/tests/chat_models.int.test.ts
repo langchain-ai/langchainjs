@@ -5,14 +5,17 @@ import { z } from "zod";
 import {
   AIMessage,
   AIMessageChunk,
-  BaseMessage,
   HumanMessage,
+  SystemMessage,
   ToolMessage,
 } from "@langchain/core/messages";
+import { ContentChunk as MistralAIContentChunk } from "@mistralai/mistralai/models/components/contentchunk.js";
+import { HTTPClient } from "@mistralai/mistralai/lib/http.js";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { ChatMistralAI } from "../chat_models.js";
+import { _mistralContentChunkToMessageContentComplex } from "../utils.js";
 
-test("Test ChatMistralAI can invoke", async () => {
+test("Test ChatMistralAI can invoke hello", async () => {
   const model = new ChatMistralAI({
     model: "mistral-tiny",
   });
@@ -80,19 +83,13 @@ test("Can call tools using structured tools", async () => {
 
   const chain = prompt.pipe(model);
   const response = await chain.invoke({});
-  expect("tool_calls" in response.additional_kwargs).toBe(true);
+  expect("tool_calls" in response).toBe(true);
   // console.log(response.additional_kwargs.tool_calls?.[0]);
-  expect(response.additional_kwargs.tool_calls?.[0].function.name).toBe(
-    "calculator"
-  );
-  expect(
-    JSON.parse(
-      response.additional_kwargs.tool_calls?.[0].function.arguments ?? "{}"
-    ).calculator
-  ).toBeDefined();
+  expect(response.tool_calls?.[0].name).toBe("calculator");
+  expect(response.tool_calls?.[0].args?.calculator).toBeDefined();
 });
 
-test("Can call tools", async () => {
+test("Can call tools using raw tools", async () => {
   const tools = [
     {
       type: "function",
@@ -130,20 +127,8 @@ test("Can call tools", async () => {
   const response = await chain.invoke({});
   // console.log(response);
   expect(response.tool_calls?.length).toEqual(1);
-  expect(response.tool_calls?.[0].args).toEqual(
-    JSON.parse(
-      response.additional_kwargs.tool_calls?.[0].function.arguments ?? "{}"
-    )
-  );
-  expect("tool_calls" in response.additional_kwargs).toBe(true);
-  expect(response.additional_kwargs.tool_calls?.[0].function.name).toBe(
-    "calculator"
-  );
-  expect(
-    JSON.parse(
-      response.additional_kwargs.tool_calls?.[0].function.arguments ?? "{}"
-    ).calculator
-  ).toBeDefined();
+  expect(response.tool_calls?.[0].name).toBe("calculator");
+  expect(response.tool_calls?.[0].args?.calculator).toBeDefined();
 });
 
 test("Can call .stream with tool calling", async () => {
@@ -179,7 +164,7 @@ test("Can call .stream with tool calling", async () => {
 
   const chain = prompt.pipe(model);
   const response = await chain.stream({});
-  let finalRes: BaseMessage | null = null;
+  let finalRes: AIMessageChunk | null = null;
   for await (const chunk of response) {
     // console.log(chunk);
     finalRes = chunk;
@@ -188,16 +173,10 @@ test("Can call .stream with tool calling", async () => {
     throw new Error("No final response found");
   }
 
-  expect("tool_calls" in finalRes.additional_kwargs).toBe(true);
+  expect("tool_calls" in finalRes).toBe(true);
   // console.log(finalRes.additional_kwargs.tool_calls?.[0]);
-  expect(finalRes.additional_kwargs.tool_calls?.[0].function.name).toBe(
-    "calculator"
-  );
-  expect(
-    JSON.parse(
-      finalRes.additional_kwargs.tool_calls?.[0].function.arguments ?? "{}"
-    ).calculator
-  ).toBeDefined();
+  expect(finalRes.tool_calls?.[0].name).toBe("calculator");
+  expect(finalRes.tool_calls?.[0].args.calculator).toBeDefined();
 });
 
 test("Can use json mode response format", async () => {
@@ -302,7 +281,7 @@ test("Can stream and concat responses for a complex tool", async () => {
 
   const chain = prompt.pipe(model);
   const response = await chain.stream({});
-  let finalRes: BaseMessage[] = [];
+  let finalRes: AIMessageChunk[] = [];
   for await (const chunk of response) {
     // console.log(chunk);
     finalRes = finalRes.concat(chunk);
@@ -311,11 +290,10 @@ test("Can stream and concat responses for a complex tool", async () => {
     throw new Error("No final response found");
   }
 
-  expect(finalRes[0].additional_kwargs.tool_calls?.[0]).toBeDefined();
-  const toolCall = finalRes[0].additional_kwargs.tool_calls?.[0];
-  expect(toolCall?.function.name).toBe("person_traits");
-  const args = JSON.parse(toolCall?.function.arguments ?? "{}");
-  const { person } = args;
+  expect(finalRes[0].tool_calls?.[0]).toBeDefined();
+  const toolCall = finalRes[0].tool_calls?.[0];
+  expect(toolCall?.name).toBe("person_traits");
+  const person = toolCall?.args?.person;
   expect(person).toBeDefined();
   expect(person.name).toBeDefined();
   expect(person.age).toBeDefined();
@@ -406,7 +384,7 @@ describe("withStructuredOutput", () => {
     ]);
     const chain = prompt.pipe(modelWithStructuredOutput);
     const result = await chain.invoke({});
-    // console.log(result);
+    console.log(result);
     expect("operation" in result).toBe(true);
     expect("number1" in result).toBe(true);
     expect("number2" in result).toBe(true);
@@ -609,28 +587,11 @@ describe("withStructuredOutput", () => {
       throw new Error("raw not in result");
     }
     const { raw } = result as { raw: AIMessage };
-    expect(raw.additional_kwargs.tool_calls?.length).toBeGreaterThan(0);
-    expect(raw.additional_kwargs.tool_calls?.[0].function.name).toBe(
-      "calculator"
-    );
-    expect(
-      "operation" in
-        JSON.parse(
-          raw.additional_kwargs.tool_calls?.[0].function.arguments ?? ""
-        )
-    ).toBe(true);
-    expect(
-      "number1" in
-        JSON.parse(
-          raw.additional_kwargs.tool_calls?.[0].function.arguments ?? ""
-        )
-    ).toBe(true);
-    expect(
-      "number2" in
-        JSON.parse(
-          raw.additional_kwargs.tool_calls?.[0].function.arguments ?? ""
-        )
-    ).toBe(true);
+    expect(raw.tool_calls?.length).toBeGreaterThan(0);
+    expect(raw.tool_calls?.[0].name).toBe("calculator");
+    expect("operation" in (raw.tool_calls?.[0]?.args ?? {})).toBe(true);
+    expect("number1" in (raw.tool_calls?.[0]?.args ?? {})).toBe(true);
+    expect("number2" in (raw.tool_calls?.[0]?.args ?? {})).toBe(true);
   });
 });
 
@@ -812,7 +773,7 @@ describe("codestral-latest", () => {
     expect(fullMessage.toLowerCase()).toContain("world");
   });
 
-  test("Can call tools using structured tools codestral-latest", async () => {
+  test("Can call tools using codestral-latest structured tools", async () => {
     class CodeSandbox extends StructuredTool {
       name = "code_sandbox";
 
@@ -850,16 +811,15 @@ describe("codestral-latest", () => {
         "Write a function that takes in a single argument and logs it to the console. Ensure the code is in Python.",
     });
     // console.log(response);
-    expect("tool_calls" in response.additional_kwargs).toBe(true);
-    // console.log(response.additional_kwargs.tool_calls?.[0]);
-    if (!response.additional_kwargs.tool_calls?.[0]) {
+    expect("tool_calls" in response).toBe(true);
+    // console.log(response.tool_calls?.[0]);
+    if (!response.tool_calls?.[0]) {
       throw new Error("No tool call found");
     }
-    const sandboxTool = response.additional_kwargs.tool_calls[0];
-    expect(sandboxTool.function.name).toBe("code_sandbox");
-    const parsedArgs = JSON.parse(sandboxTool.function.arguments);
-    expect(parsedArgs.code).toBeDefined();
-    // console.log(parsedArgs.code);
+    const sandboxTool = response.tool_calls[0];
+    expect(sandboxTool.name).toBe("code_sandbox");
+    expect(sandboxTool.args?.code).toBeDefined();
+    // console.log(sandboxTool.args?.code);
   });
 });
 
@@ -956,4 +916,333 @@ test("withStructuredOutput will always force tool usage", async () => {
   }
   const castMessage = response.raw as AIMessage;
   expect(castMessage.tool_calls).toHaveLength(1);
+});
+
+test("Test ChatMistralAI can invoke with MessageContent input types", async () => {
+  const model = new ChatMistralAI({
+    model: "pixtral-12b-2409",
+  });
+  const messagesListContent = [
+    new SystemMessage({
+      content: "List the top 5 countries in Europe with the highest GDP",
+    }),
+    new HumanMessage({
+      content: [
+        {
+          type: "text",
+          text: "Here is an infographic with European GPDs",
+        },
+        {
+          type: "image_url",
+          image_url: "https://mistral.ai/images/news/pixtral-12b/gdp.png",
+        },
+      ],
+    }),
+  ];
+  const response = await model.invoke(messagesListContent);
+  console.log("response", response);
+  expect(response.content.length).toBeGreaterThan(1);
+});
+
+test("Mistral ContentChunk to MessageContentComplex conversion", () => {
+  const mistralMessages = [
+    {
+      type: "text",
+      text: "Test message",
+    },
+    {
+      type: "image_url",
+      imageUrl: "https://mistral.ai/images/news/pixtral-12b/gdp.png",
+    },
+    {
+      type: "image_url",
+      imageUrl: {
+        url: "https://mistral.ai/images/news/pixtral-12b/gdp.png",
+        detail: "high",
+      },
+    },
+    {
+      type: "image_url",
+      imageUrl: {
+        url: "https://mistral.ai/images/news/pixtral-12b/gdp.png",
+        detail: "medium",
+      },
+    },
+    {
+      type: "image_url",
+      imageUrl: {
+        url: "https://mistral.ai/images/news/pixtral-12b/gdp.png",
+      },
+    },
+  ] as MistralAIContentChunk[];
+
+  expect(_mistralContentChunkToMessageContentComplex(mistralMessages)).toEqual([
+    {
+      type: "text",
+      text: "Test message",
+    },
+    {
+      type: "image_url",
+      image_url: "https://mistral.ai/images/news/pixtral-12b/gdp.png",
+    },
+    {
+      type: "image_url",
+      image_url: {
+        url: "https://mistral.ai/images/news/pixtral-12b/gdp.png",
+        detail: "high",
+      },
+    },
+    {
+      type: "image_url",
+      image_url: {
+        url: "https://mistral.ai/images/news/pixtral-12b/gdp.png",
+      },
+    },
+    {
+      type: "image_url",
+      image_url: {
+        url: "https://mistral.ai/images/news/pixtral-12b/gdp.png",
+      },
+    },
+  ]);
+});
+
+test("Test ChatMistralAI can register BeforeRequestHook function", async () => {
+  const model = new ChatMistralAI({
+    model: "mistral-tiny",
+  });
+  const prompt = ChatPromptTemplate.fromMessages([
+    ["system", "You are a helpful assistant"],
+    ["human", "{input}"],
+  ]);
+
+  let count = 0;
+  const addCount = () => {
+    count += 1;
+  };
+
+  const beforeRequestHook = (): void => {
+    addCount();
+  };
+  model.beforeRequestHooks = [beforeRequestHook];
+  model.addAllHooksToHttpClient();
+
+  await prompt.pipe(model).invoke({
+    input: "Hello",
+  });
+  // console.log(count);
+  expect(count).toEqual(1);
+});
+
+test("Test ChatMistralAI can register RequestErrorHook function", async () => {
+  const fetcher = (): Promise<Response> =>
+    Promise.reject(new Error("Intended fetcher error"));
+  const customHttpClient = new HTTPClient({ fetcher });
+
+  const model = new ChatMistralAI({
+    model: "mistral-tiny",
+    httpClient: customHttpClient,
+    maxRetries: 0,
+  });
+  const prompt = ChatPromptTemplate.fromMessages([
+    ["system", "You are a helpful assistant"],
+    ["human", "{input}"],
+  ]);
+
+  let count = 0;
+  const addCount = () => {
+    count += 1;
+  };
+
+  const RequestErrorHook = (): void => {
+    addCount();
+    console.log("In request error hook");
+  };
+  model.requestErrorHooks = [RequestErrorHook];
+  model.addAllHooksToHttpClient();
+
+  try {
+    await prompt.pipe(model).invoke({
+      input: "Hello",
+    });
+  } catch (e: unknown) {
+    // Intended error, do not rethrow
+  }
+
+  // console.log(count);
+  expect(count).toEqual(1);
+});
+
+test("Test ChatMistralAI can register ResponseHook function", async () => {
+  const model = new ChatMistralAI({
+    model: "mistral-tiny",
+  });
+  const prompt = ChatPromptTemplate.fromMessages([
+    ["system", "You are a helpful assistant"],
+    ["human", "{input}"],
+  ]);
+
+  let count = 0;
+  const addCount = () => {
+    count += 1;
+  };
+
+  const ResponseHook = (): void => {
+    addCount();
+  };
+  model.responseHooks = [ResponseHook];
+  model.addAllHooksToHttpClient();
+
+  await prompt.pipe(model).invoke({
+    input: "Hello",
+  });
+  // console.log(count);
+  expect(count).toEqual(1);
+});
+
+test("Test ChatMistralAI can register multiple hook functions with success", async () => {
+  const model = new ChatMistralAI({
+    model: "mistral-tiny",
+  });
+  const prompt = ChatPromptTemplate.fromMessages([
+    ["system", "You are a helpful assistant"],
+    ["human", "{input}"],
+  ]);
+
+  let count = 0;
+  const addCount = () => {
+    count += 1;
+  };
+
+  const beforeRequestHook = (): void => {
+    addCount();
+  };
+  const ResponseHook = (): void => {
+    addCount();
+  };
+  model.beforeRequestHooks = [beforeRequestHook];
+  model.responseHooks = [ResponseHook];
+  model.addAllHooksToHttpClient();
+
+  await prompt.pipe(model).invoke({
+    input: "Hello",
+  });
+  // console.log(count);
+  expect(count).toEqual(2);
+});
+
+test("Test ChatMistralAI can register multiple hook functions with error", async () => {
+  const fetcher = (): Promise<Response> =>
+    Promise.reject(new Error("Intended fetcher error"));
+  const customHttpClient = new HTTPClient({ fetcher });
+
+  const model = new ChatMistralAI({
+    model: "mistral-tiny",
+    httpClient: customHttpClient,
+    maxRetries: 0,
+  });
+
+  const prompt = ChatPromptTemplate.fromMessages([
+    ["system", "You are a helpful assistant"],
+    ["human", "{input}"],
+  ]);
+
+  let count = 0;
+  const addCount = () => {
+    count += 1;
+  };
+
+  const beforeRequestHook = (): void => {
+    addCount();
+  };
+  const RequestErrorHook = (): void => {
+    addCount();
+  };
+  model.beforeRequestHooks = [beforeRequestHook];
+  model.requestErrorHooks = [RequestErrorHook];
+  model.addAllHooksToHttpClient();
+
+  try {
+    await prompt.pipe(model).invoke({
+      input: "Hello",
+    });
+  } catch (e: unknown) {
+    // Intended error, do not rethrow
+  }
+  // console.log(count);
+  expect(count).toEqual(2);
+});
+
+test("Test ChatMistralAI can remove hook", async () => {
+  const model = new ChatMistralAI({
+    model: "mistral-tiny",
+  });
+  const prompt = ChatPromptTemplate.fromMessages([
+    ["system", "You are a helpful assistant"],
+    ["human", "{input}"],
+  ]);
+
+  let count = 0;
+  const addCount = () => {
+    count += 1;
+  };
+
+  const beforeRequestHook = (): void => {
+    addCount();
+  };
+  model.beforeRequestHooks = [beforeRequestHook];
+  model.addAllHooksToHttpClient();
+
+  await prompt.pipe(model).invoke({
+    input: "Hello",
+  });
+  // console.log(count);
+  expect(count).toEqual(1);
+
+  model.removeHookFromHttpClient(beforeRequestHook);
+
+  await prompt.pipe(model).invoke({
+    input: "Hello",
+  });
+  // console.log(count);
+  expect(count).toEqual(1);
+});
+
+test("Test ChatMistralAI can remove all hooks", async () => {
+  const model = new ChatMistralAI({
+    model: "mistral-tiny",
+  });
+  const prompt = ChatPromptTemplate.fromMessages([
+    ["system", "You are a helpful assistant"],
+    ["human", "{input}"],
+  ]);
+
+  let count = 0;
+  const addCount = () => {
+    count += 1;
+  };
+
+  const beforeRequestHook = (): void => {
+    addCount();
+  };
+  const ResponseHook = (): void => {
+    addCount();
+  };
+  model.beforeRequestHooks = [beforeRequestHook];
+  model.responseHooks = [ResponseHook];
+  model.addAllHooksToHttpClient();
+
+  await prompt.pipe(model).invoke({
+    input: "Hello",
+  });
+  // console.log(count);
+  expect(count).toEqual(2);
+
+  model.removeAllHooksFromHttpClient();
+
+  await prompt.pipe(model).invoke({
+    input: "Hello",
+  });
+  // console.log(count);
+  expect(count).toEqual(2);
 });

@@ -9,6 +9,8 @@ import { getEnvironmentVariable } from "@langchain/core/utils/env";
  * The WatsonxAIParams interface defines the input parameters for
  * the WatsonxAI class.
  */
+
+/** @deprecated Please use newer implementation @langchain/community/llms/ibm instead */
 export interface WatsonxAIParams extends BaseLLMParams {
   /**
    * WatsonX AI Complete Endpoint.

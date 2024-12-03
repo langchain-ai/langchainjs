@@ -19,6 +19,7 @@ import {
 import { CallbackManager } from "@langchain/core/callbacks/manager";
 import { NewTokenIndices } from "@langchain/core/callbacks/base";
 import { InMemoryCache } from "@langchain/core/caches";
+import { concat } from "@langchain/core/utils/stream";
 import { ChatOpenAI } from "../chat_models.js";
 
 // Save the original value of the 'LANGCHAIN_CALLBACKS_BACKGROUND' environment variable
@@ -985,4 +986,211 @@ test("Test ChatOpenAI stream method", async () => {
     chunks.push(chunk);
   }
   expect(chunks.length).toEqual(1);
+});
+
+describe("Audio output", () => {
+  test("Audio output", async () => {
+    const model = new ChatOpenAI({
+      maxRetries: 0,
+      model: "gpt-4o-audio-preview",
+      temperature: 0,
+      modalities: ["text", "audio"],
+      audio: {
+        voice: "alloy",
+        format: "wav",
+      },
+    });
+
+    const response = await model.invoke("Make me an audio clip of you yelling");
+    expect(response.additional_kwargs.audio).toBeTruthy();
+    if (!response.additional_kwargs.audio) {
+      throw new Error("Not in additional kwargs");
+    }
+    // console.log(
+    //   "response.additional_kwargs.audio",
+    //   response.additional_kwargs.audio
+    // );
+    expect(Object.keys(response.additional_kwargs.audio).sort()).toEqual([
+      "data",
+      "expires_at",
+      "id",
+      "transcript",
+    ]);
+  });
+
+  test("Audio output can stream", async () => {
+    const model = new ChatOpenAI({
+      maxRetries: 0,
+      model: "gpt-4o-audio-preview",
+      temperature: 0,
+      modalities: ["text", "audio"],
+      audio: {
+        voice: "alloy",
+        format: "pcm16",
+      },
+    });
+
+    const stream = await model.stream("Make me an audio clip of you yelling");
+    let finalMsg: AIMessageChunk | undefined;
+    for await (const chunk of stream) {
+      finalMsg = finalMsg ? concat(finalMsg, chunk) : chunk;
+    }
+    if (!finalMsg) {
+      throw new Error("No final message found");
+    }
+
+    expect(finalMsg.additional_kwargs.audio).toBeTruthy();
+    if (!finalMsg.additional_kwargs.audio) {
+      throw new Error("Not in additional kwargs");
+    }
+    // console.log(
+    //   "response.additional_kwargs.audio",
+    //   finalMsg.additional_kwargs.audio
+    // );
+    expect(Object.keys(finalMsg.additional_kwargs.audio).sort()).toEqual([
+      "data",
+      "expires_at",
+      "id",
+      "index",
+      "transcript",
+    ]);
+  });
+
+  test("Can bind audio output args", async () => {
+    const model = new ChatOpenAI({
+      maxRetries: 0,
+      model: "gpt-4o-audio-preview",
+      temperature: 0,
+    }).bind({
+      modalities: ["text", "audio"],
+      audio: {
+        voice: "alloy",
+        format: "wav",
+      },
+    });
+
+    const response = await model.invoke("Make me an audio clip of you yelling");
+    expect(response.additional_kwargs.audio).toBeTruthy();
+    if (!response.additional_kwargs.audio) {
+      throw new Error("Not in additional kwargs");
+    }
+    expect(Object.keys(response.additional_kwargs.audio).sort()).toEqual([
+      "data",
+      "expires_at",
+      "id",
+      "transcript",
+    ]);
+  });
+
+  test("Audio output in chat history", async () => {
+    const model = new ChatOpenAI({
+      model: "gpt-4o-audio-preview",
+      temperature: 0,
+      modalities: ["text", "audio"],
+      audio: {
+        voice: "alloy",
+        format: "wav",
+      },
+      maxRetries: 0,
+    });
+
+    const input = [
+      {
+        role: "user",
+        content: "Make me an audio clip of you yelling",
+      },
+    ];
+
+    const response = await model.invoke(input);
+    expect(response.additional_kwargs.audio).toBeTruthy();
+    expect(
+      (response.additional_kwargs.audio as Record<string, any>).transcript
+        .length
+    ).toBeGreaterThan(1);
+    // console.log("response", (response.additional_kwargs.audio as any).transcript);
+    const response2 = await model.invoke([
+      ...input,
+      response,
+      {
+        role: "user",
+        content: "What did you just say?",
+      },
+    ]);
+    // console.log("response2", (response2.additional_kwargs.audio as any).transcript);
+    expect(response2.additional_kwargs.audio).toBeTruthy();
+    expect(
+      (response2.additional_kwargs.audio as Record<string, any>).transcript
+        .length
+    ).toBeGreaterThan(1);
+  });
+
+  test("Users can pass audio as inputs", async () => {
+    const model = new ChatOpenAI({
+      maxRetries: 0,
+      model: "gpt-4o-audio-preview",
+      temperature: 0,
+      modalities: ["text", "audio"],
+      audio: {
+        voice: "alloy",
+        format: "wav",
+      },
+    });
+
+    const response = await model.invoke("Make me an audio clip of you yelling");
+    // console.log("response", (response.additional_kwargs.audio as any).transcript);
+    expect(response.additional_kwargs.audio).toBeTruthy();
+    expect(
+      (response.additional_kwargs.audio as Record<string, any>).transcript
+        .length
+    ).toBeGreaterThan(1);
+
+    const userInput = {
+      type: "input_audio",
+      input_audio: {
+        data: (response.additional_kwargs.audio as any).data,
+        format: "wav",
+      },
+    };
+
+    const userInputRes = await model.invoke([
+      new HumanMessage({
+        content: [userInput],
+      }),
+    ]);
+    // console.log("userInputRes.content", userInputRes.content);
+    // console.log("userInputRes.additional_kwargs.audio", userInputRes.additional_kwargs.audio);
+    expect(userInputRes.additional_kwargs.audio).toBeTruthy();
+    expect(
+      (userInputRes.additional_kwargs.audio as Record<string, any>).transcript
+        .length
+    ).toBeGreaterThan(1);
+  });
+});
+
+test("Can stream o1 requests", async () => {
+  const model = new ChatOpenAI({
+    model: "o1-mini",
+  });
+  const stream = await model.stream(
+    "Write me a very simple hello world program in Python. Ensure it is wrapped in a function called 'hello_world' and has descriptive comments."
+  );
+  let finalMsg: AIMessageChunk | undefined;
+  let numChunks = 0;
+  for await (const chunk of stream) {
+    finalMsg = finalMsg ? concat(finalMsg, chunk) : chunk;
+    numChunks += 1;
+  }
+
+  expect(finalMsg).toBeTruthy();
+  if (!finalMsg) {
+    throw new Error("No final message found");
+  }
+  if (typeof finalMsg.content === "string") {
+    expect(finalMsg.content.length).toBeGreaterThan(10);
+  } else {
+    expect(finalMsg.content.length).toBeGreaterThanOrEqual(1);
+  }
+
+  // A
+  expect(numChunks).toBeGreaterThan(3);
 });

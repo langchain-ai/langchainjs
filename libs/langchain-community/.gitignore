@@ -122,6 +122,10 @@ agents/toolkits/connery.cjs
 agents/toolkits/connery.js
 agents/toolkits/connery.d.ts
 agents/toolkits/connery.d.cts
+agents/toolkits/stagehand.cjs
+agents/toolkits/stagehand.js
+agents/toolkits/stagehand.d.ts
+agents/toolkits/stagehand.d.cts
 embeddings/alibaba_tongyi.cjs
 embeddings/alibaba_tongyi.js
 embeddings/alibaba_tongyi.d.ts
@@ -162,6 +166,10 @@ embeddings/hf_transformers.cjs
 embeddings/hf_transformers.js
 embeddings/hf_transformers.d.ts
 embeddings/hf_transformers.d.cts
+embeddings/ibm.cjs
+embeddings/ibm.js
+embeddings/ibm.d.ts
+embeddings/ibm.d.cts
 embeddings/jina.cjs
 embeddings/jina.js
 embeddings/jina.d.ts
@@ -254,6 +262,10 @@ llms/hf.cjs
 llms/hf.js
 llms/hf.d.ts
 llms/hf.d.cts
+llms/ibm.cjs
+llms/ibm.js
+llms/ibm.d.ts
+llms/ibm.d.cts
 llms/llama_cpp.cjs
 llms/llama_cpp.js
 llms/llama_cpp.d.ts
@@ -522,6 +534,10 @@ chat_models/friendli.cjs
 chat_models/friendli.js
 chat_models/friendli.d.ts
 chat_models/friendli.d.cts
+chat_models/ibm.cjs
+chat_models/ibm.js
+chat_models/ibm.d.ts
+chat_models/ibm.d.cts
 chat_models/iflytek_xinghuo.cjs
 chat_models/iflytek_xinghuo.js
 chat_models/iflytek_xinghuo.d.ts
@@ -686,6 +702,10 @@ graphs/memgraph_graph.cjs
 graphs/memgraph_graph.js
 graphs/memgraph_graph.d.ts
 graphs/memgraph_graph.d.cts
+document_compressors/ibm.cjs
+document_compressors/ibm.js
+document_compressors/ibm.d.ts
+document_compressors/ibm.d.cts
 document_transformers/html_to_text.cjs
 document_transformers/html_to_text.js
 document_transformers/html_to_text.d.ts
@@ -826,6 +846,10 @@ indexes/sqlite.cjs
 indexes/sqlite.js
 indexes/sqlite.d.ts
 indexes/sqlite.d.cts
+document_loaders/web/airtable.cjs
+document_loaders/web/airtable.js
+document_loaders/web/airtable.d.ts
+document_loaders/web/airtable.d.cts
 document_loaders/web/apify_dataset.cjs
 document_loaders/web/apify_dataset.js
 document_loaders/web/apify_dataset.d.ts
@@ -850,6 +874,10 @@ document_loaders/web/cheerio.cjs
 document_loaders/web/cheerio.js
 document_loaders/web/cheerio.d.ts
 document_loaders/web/cheerio.d.cts
+document_loaders/web/html.cjs
+document_loaders/web/html.js
+document_loaders/web/html.d.ts
+document_loaders/web/html.d.cts
 document_loaders/web/puppeteer.cjs
 document_loaders/web/puppeteer.js
 document_loaders/web/puppeteer.d.ts

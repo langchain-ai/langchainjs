@@ -90,7 +90,7 @@ export const getOutputValue = (
   outputKey?: string
 ) => {
   const value = getValue(outputValues, outputKey);
-  if (!value) {
+  if (!value && value !== "") {
     const keys = Object.keys(outputValues);
     throw new Error(
       `output values have ${keys.length} keys, you must specify an output key or pass only 1 key as output`

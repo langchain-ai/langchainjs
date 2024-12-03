@@ -3,12 +3,30 @@ import { Pinecone } from "@pinecone-database/pinecone";
 import { Document } from "@langchain/core/documents";
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { PineconeStore } from "@langchain/pinecone";
+// import { Index } from "@upstash/vector";
 
 // Instantiate a new Pinecone client, which will automatically read the
-// env vars: PINECONE_API_KEY and PINECONE_ENVIRONMENT which come from
+// env vars: PINECONE_API_KEY which comes from
 // the Pinecone dashboard at https://app.pinecone.io
 
 const pinecone = new Pinecone();
+
+// If index already exists:
+// const pineconeIndex = pinecone.Index(process.env.PINECONE_INDEX!);
+
+// If index does not exist, create it:
+await pinecone.createIndex({
+  name: process.env.PINECONE_INDEX!,
+  dimension: 1536,
+  metric: "cosine",
+  spec: {
+    serverless: {
+      cloud: "aws",
+      region: "us-east-1",
+    },
+  },
+  deletionProtection: "disabled", // Note: deletion protection disabled https://docs.pinecone.io/guides/indexes/prevent-index-deletion#disable-deletion-protection
+});
 
 const pineconeIndex = pinecone.Index(process.env.PINECONE_INDEX!);
 

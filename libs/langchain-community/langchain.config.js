@@ -29,6 +29,7 @@ export const config = {
     "notion-to-md/build/utils/notion.js",
     "@getzep/zep-cloud/api",
     "@supabase/postgrest-js",
+    "@ibm-cloud/watsonx-ai/dist/watsonx-ai-ml/vml_v1.js",
   ],
   entrypoints: {
     load: "load/index",
@@ -64,6 +65,7 @@ export const config = {
     "agents/toolkits/aws_sfn": "agents/toolkits/aws_sfn",
     "agents/toolkits/base": "agents/toolkits/base",
     "agents/toolkits/connery": "agents/toolkits/connery/index",
+    "agents/toolkits/stagehand": "agents/toolkits/stagehand",
     // embeddings
     "embeddings/alibaba_tongyi": "embeddings/alibaba_tongyi",
     "embeddings/baidu_qianfan": "embeddings/baidu_qianfan",
@@ -75,6 +77,7 @@ export const config = {
     "embeddings/gradient_ai": "embeddings/gradient_ai",
     "embeddings/hf": "embeddings/hf",
     "embeddings/hf_transformers": "embeddings/hf_transformers",
+    "embeddings/ibm": "embeddings/ibm",
     "embeddings/jina": "embeddings/jina",
     "embeddings/llama_cpp": "embeddings/llama_cpp",
     "embeddings/minimax": "embeddings/minimax",
@@ -99,6 +102,7 @@ export const config = {
     "llms/friendli": "llms/friendli",
     "llms/gradient_ai": "llms/gradient_ai",
     "llms/hf": "llms/hf",
+    "llms/ibm": "llms/ibm",
     "llms/llama_cpp": "llms/llama_cpp",
     "llms/ollama": "llms/ollama",
     "llms/portkey": "llms/portkey",
@@ -168,6 +172,7 @@ export const config = {
     "chat_models/deepinfra": "chat_models/deepinfra",
     "chat_models/fireworks": "chat_models/fireworks",
     "chat_models/friendli": "chat_models/friendli",
+    "chat_models/ibm": "chat_models/ibm",
     "chat_models/iflytek_xinghuo": "chat_models/iflytek_xinghuo/index",
     "chat_models/iflytek_xinghuo/web": "chat_models/iflytek_xinghuo/web",
     "chat_models/llama_cpp": "chat_models/llama_cpp",
@@ -185,7 +190,8 @@ export const config = {
     // callbacks
     "callbacks/handlers/llmonitor": "callbacks/handlers/llmonitor",
     "callbacks/handlers/lunary": "callbacks/handlers/lunary",
-    "callbacks/handlers/upstash_ratelimit": "callbacks/handlers/upstash_ratelimit",
+    "callbacks/handlers/upstash_ratelimit":
+      "callbacks/handlers/upstash_ratelimit",
     // retrievers
     "retrievers/amazon_kendra": "retrievers/amazon_kendra",
     "retrievers/amazon_knowledge_base": "retrievers/amazon_knowledge_base",
@@ -214,6 +220,8 @@ export const config = {
     // graphs
     "graphs/neo4j_graph": "graphs/neo4j_graph",
     "graphs/memgraph_graph": "graphs/memgraph_graph",
+    // document_compressors
+    "document_compressors/ibm": "document_compressors/ibm",
     // document transformers
     "document_transformers/html_to_text": "document_transformers/html_to_text",
     "document_transformers/mozilla_readability":
@@ -256,6 +264,7 @@ export const config = {
     "indexes/memory": "indexes/memory",
     "indexes/sqlite": "indexes/sqlite",
     // document_loaders
+    "document_loaders/web/airtable": "document_loaders/web/airtable",
     "document_loaders/web/apify_dataset": "document_loaders/web/apify_dataset",
     "document_loaders/web/assemblyai": "document_loaders/web/assemblyai",
     "document_loaders/web/azure_blob_storage_container":
@@ -264,6 +273,7 @@ export const config = {
       "document_loaders/web/azure_blob_storage_file",
     "document_loaders/web/browserbase": "document_loaders/web/browserbase",
     "document_loaders/web/cheerio": "document_loaders/web/cheerio",
+    "document_loaders/web/html": "document_loaders/web/html",
     "document_loaders/web/puppeteer": "document_loaders/web/puppeteer",
     "document_loaders/web/playwright": "document_loaders/web/playwright",
     "document_loaders/web/college_confidential":
@@ -306,18 +316,20 @@ export const config = {
     "utils/event_source_parse": "utils/event_source_parse",
     "utils/cassandra": "utils/cassandra",
     // experimental
-    "experimental/callbacks/handlers/datadog": "experimental/callbacks/handlers/datadog",
+    "experimental/callbacks/handlers/datadog":
+      "experimental/callbacks/handlers/datadog",
     "experimental/graph_transformers/llm":
       "experimental/graph_transformers/llm",
     "experimental/multimodal_embeddings/googlevertexai":
       "experimental/multimodal_embeddings/googlevertexai",
     "experimental/hubs/makersuite/googlemakersuitehub":
       "experimental/hubs/makersuite/googlemakersuitehub",
-    "experimental/chat_models/ollama_functions": "experimental/chat_models/ollama_functions",
+    "experimental/chat_models/ollama_functions":
+      "experimental/chat_models/ollama_functions",
     "experimental/llms/chrome_ai": "experimental/llms/chrome_ai",
     "experimental/tools/pyinterpreter": "experimental/tools/pyinterpreter",
     // chains
-    "chains/graph_qa/cypher": "chains/graph_qa/cypher"
+    "chains/graph_qa/cypher": "chains/graph_qa/cypher",
   },
   requiresOptionalDependency: [
     "tools/aws_sfn",
@@ -327,6 +339,7 @@ export const config = {
     "tools/gmail",
     "tools/google_calendar",
     "agents/toolkits/aws_sfn",
+    "agents/toolkits/stagehand",
     "callbacks/handlers/llmonitor",
     "callbacks/handlers/lunary",
     "callbacks/handlers/upstash_ratelimit",
@@ -336,6 +349,7 @@ export const config = {
     "embeddings/tensorflow",
     "embeddings/hf",
     "embeddings/hf_transformers",
+    "embeddings/ibm",
     "embeddings/jina",
     "embeddings/llama_cpp",
     "embeddings/gradient_ai",
@@ -349,6 +363,7 @@ export const config = {
     "llms/gradient_ai",
     "llms/hf",
     "llms/raycast",
+    "llms/ibm",
     "llms/replicate",
     "llms/sagemaker_endpoint",
     "llms/watsonx_ai",
@@ -410,6 +425,7 @@ export const config = {
     "chat_models/premai",
     "chat_models/tencent_hunyuan",
     "chat_models/tencent_hunyuan/web",
+    "chat_models/ibm",
     "chat_models/iflytek_xinghuo",
     "chat_models/iflytek_xinghuo/web",
     "chat_models/webllm",
@@ -432,6 +448,8 @@ export const config = {
     "cache/upstash_redis",
     "graphs/neo4j_graph",
     "graphs/memgraph_graph",
+    // document_compressors
+    "document_compressors/ibm",
     // document_transformers
     "document_transformers/html_to_text",
     "document_transformers/mozilla_readability",
@@ -513,7 +531,7 @@ export const config = {
     // chains
     "chains/graph_qa/cypher",
     // langgraph checkpointers
-    "langgraph/checkpointers/vercel_kv"
+    "langgraph/checkpointers/vercel_kv",
   ],
   packageSuffix: "community",
   tsConfigPath: resolve("./tsconfig.json"),

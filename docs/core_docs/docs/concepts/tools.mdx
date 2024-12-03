@@ -1,0 +1,178 @@
+# Tools
+
+:::info Prerequisites
+
+- [Chat models](/docs/concepts/chat_models/)
+
+:::
+
+## Overview
+
+The **tool** abstraction in LangChain associates a TypeScript **function** with a **schema** that defines the function's **name**, **description** and **input**.
+
+**Tools** can be passed to [chat models](/docs/concepts/chat_models) that support [tool calling](/docs/concepts/tool_calling) allowing the model to request the execution of a specific function with specific inputs.
+
+## Key concepts
+
+- Tools are a way to encapsulate a function and its schema in a way that can be passed to a chat model.
+- Create tools using the [tool](https://api.js.langchain.com/functions/_langchain_core.tools.tool-1.html) function, which simplifies the process of tool creation, supporting the following:
+  - Defining tools that return **artifacts** (e.g. images, etc.)
+  - Hiding input arguments from the schema (and hence from the model) using **injected tool arguments**.
+
+## Tool interface
+
+The tool interface is defined in the [`StructuredTool`](https://api.js.langchain.com/classes/_langchain_core.tools.StructuredTool.html) class which is a subclass of the [Runnable Interface](/docs/concepts/runnables).
+
+The key attributes that correspond to the tool's **schema**:
+
+- **name**: The name of the tool.
+- **description**: A description of what the tool does.
+- **args**: Property that returns the JSON schema for the tool's arguments.
+
+The key methods to execute the function associated with the **tool**:
+
+- **invoke**: Invokes the tool with the given arguments.
+
+## Create tools using the `tool` function
+
+The recommended way to create tools is using the [tool](https://api.js.langchain.com/functions/_langchain_core.tools.tool-1.html) function. This function is designed to simplify the process of tool creation and should be used in most cases.
+
+```typescript
+import { tool } from "@langchain/core/tools";
+import { z } from "zod";
+
+const multiply = tool(
+  ({ a, b }: { a: number; b: number }): number => {
+    /**
+     * Multiply two numbers.
+     */
+    return a * b;
+  },
+  {
+    name: "multiply",
+    description: "Multiply two numbers",
+    schema: z.object({
+      a: z.number(),
+      b: z.number(),
+    }),
+  }
+);
+```
+
+For more details on how to create tools, see the [how to create custom tools](/docs/how_to/custom_tools/) guide.
+
+:::note
+LangChain has a few other ways to create tools; e.g., by sub-classing the [`StructuredTool`](https://api.js.langchain.com/classes/_langchain_core.tools.StructuredTool.html) class or by using `StructuredTool`. These methods are shown in the [how to create custom tools guide](/docs/how_to/custom_tools/), but
+we generally recommend using the `tool` function for most cases.
+:::
+
+## Use the tool directly
+
+Once you have defined a tool, you can use it directly by calling the function. For example, to use the `multiply` tool defined above:
+
+```typescript
+await multiply.invoke({ a: 2, b: 3 });
+```
+
+### Inspect
+
+You can also inspect the tool's schema and other properties:
+
+```typescript
+console.log(multiply.name); // multiply
+console.log(multiply.description); // Multiply two numbers.
+```
+
+:::note
+If you're using pre-built LangChain or LangGraph components like [createReactAgent](https://langchain-ai.github.io/langgraphjs/reference/functions/langgraph_prebuilt.createReactAgent.html),you might not need to interact with tools directly. However, understanding how to use them can be valuable for debugging and testing. Additionally, when building custom LangGraph workflows, you may find it necessary to work with tools directly.
+:::
+
+## Configuring the schema
+
+The `tool` function offers additional options to configure the schema of the tool (e.g., modify name, description
+or parse the function's doc-string to infer the schema).
+
+Please see the [API reference for tool](https://api.js.langchain.com/functions/_langchain_core.tools.tool-1.html) for more details and review the [how to create custom tools](/docs/how_to/custom_tools/) guide for examples.
+
+## Tool artifacts
+
+**Tools** are utilities that can be called by a model, and whose outputs are designed to be fed back to a model. Sometimes, however, there are artifacts of a tool's execution that we want to make accessible to downstream components in our chain or agent, but that we don't want to expose to the model itself. For example if a tool returns a custom object, a dataframe or an image, we may want to pass some metadata about this output to the model without passing the actual output to the model. At the same time, we may want to be able to access this full output elsewhere, for example in downstream tools.
+
+```typescript
+const someTool = tool(({ ... }) => {
+    // do something
+}, {
+  // ... tool schema args
+  // Set the returnType to "content_and_artifact"
+  responseFormat: "content_and_artifact"
+});
+```
+
+See [how to return artifacts from tools](/docs/how_to/tool_artifacts/) for more details.
+
+### RunnableConfig
+
+You can use the `RunnableConfig` object to pass custom run time values to tools.
+
+If you need to access the [RunnableConfig](/docs/concepts/runnables/#RunnableConfig) object from within a tool. This can be done by using the `RunnableConfig` in the tool's function signature.
+
+```typescript
+import { RunnableConfig } from "@langchain/core/runnables";
+
+const someTool = tool(
+    async (args: any, config: RunnableConfig): Promise<[string, any]> => {
+        /**
+         * Tool that does something.
+         */
+    },
+    {
+        name: "some_tool",
+        description: "Tool that does something",
+        schema: z.object({ ... }),
+        returnType: "content_and_artifact"
+    }
+);
+
+
+await someTool.invoke(..., { configurable: { value: "some_value" } });
+```
+
+The `config` will not be part of the tool's schema and will be injected at runtime with appropriate values.
+
+## Best practices
+
+When designing tools to be used by models, keep the following in mind:
+
+- Tools that are well-named, correctly-documented and properly type-hinted are easier for models to use.
+- Design simple and narrowly scoped tools, as they are easier for models to use correctly.
+- Use chat models that support [tool-calling](/docs/concepts/tool_calling) APIs to take advantage of tools.
+
+## Toolkits
+
+<span data-heading-keywords="toolkit,toolkits"></span>
+
+LangChain has a concept of **toolkits**. This a very thin abstraction that groups tools together that
+are designed to be used together for specific tasks.
+
+### Interface
+
+All Toolkits expose a `getTools` method which returns a list of tools. You can therefore do:
+
+```typescript
+// Initialize a toolkit
+const toolkit = new ExampleTookit(...)
+
+// Get list of tools
+const tools = toolkit.getTools()
+```
+
+## Related resources
+
+See the following resources for more information:
+
+- [API Reference for `tool`](https://api.js.langchain.com/functions/_langchain_core.tools.tool-1.html)
+- [How to create custom tools](/docs/how_to/custom_tools/)
+- [How to pass run time values to tools](/docs/how_to/tool_runtime/)
+- [All LangChain tool how-to guides](https://docs.langchain.com/docs/how_to/#tools)
+- [Additional how-to guides that show usage with LangGraph](https://langchain-ai.github.io/langgraphjs/how-tos/tool-calling/)
+- Tool integrations, see the [tool integration docs](https://docs.langchain.com/docs/integrations/tools/).
