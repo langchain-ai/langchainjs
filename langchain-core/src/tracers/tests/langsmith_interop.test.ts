@@ -11,13 +11,19 @@ import {
   expect,
 } from "@jest/globals";
 import { traceable } from "langsmith/traceable";
+import { Client } from "langsmith";
 
 import { RunnableLambda } from "../../runnables/base.js";
 import { BaseMessage, HumanMessage } from "../../messages/index.js";
+import { setDefaultLangChainClientSingleton } from "../../singletons/tracer.js";
 
 let fetchMock: any;
 
 const originalTracingEnvValue = process.env.LANGCHAIN_TRACING_V2;
+
+const client = new Client({
+  autoBatchTracing: false,
+});
 
 beforeEach(() => {
   fetchMock = jest.spyOn(global, "fetch").mockImplementation(() =>
@@ -29,6 +35,7 @@ beforeEach(() => {
       },
     } as any)
   );
+  setDefaultLangChainClientSingleton(client);
   process.env.LANGCHAIN_TRACING_V2 = "true";
 });
 
@@ -50,7 +57,7 @@ test.each(["true", "false"])(
         await new Promise((resolve) => setTimeout(resolve, 300));
         return msg.content + name;
       },
-      { name: "aiGreet", tracingEnabled: true }
+      { name: "aiGreet", tracingEnabled: true, client }
     );
 
     const root = RunnableLambda.from(async (messages: BaseMessage[]) => {
@@ -197,7 +204,7 @@ test.each(["true", "false"])(
         expect(getContextVariable("foo")).toEqual("baz");
         return msg.content + name;
       },
-      { name: "aiGreet", tracingEnabled: true }
+      { name: "aiGreet", tracingEnabled: true, client }
     );
 
     const root = RunnableLambda.from(async (messages: BaseMessage[]) => {
@@ -485,7 +492,7 @@ test.each(["true", "false"])(
         const contents = await nested.invoke([msg]);
         return contents[0] + name;
       },
-      { name: "aiGreet", tracingEnabled: true }
+      { name: "aiGreet", tracingEnabled: true, client }
     );
 
     await aiGreet(new HumanMessage({ content: "Hello!" }), "mitochondria");
@@ -632,7 +639,7 @@ test.each(["true", "false"])(
         expect(getContextVariable("foo")).toEqual("bar");
         return contents[0] + name;
       },
-      { name: "aiGreet", tracingEnabled: true }
+      { name: "aiGreet", tracingEnabled: true, client }
     );
 
     await aiGreet(new HumanMessage({ content: "Hello!" }), "mitochondria");
@@ -781,7 +788,7 @@ test.each(["true", "false"])(
           yield letter;
         }
       },
-      { name: "aiGreet", tracingEnabled: true }
+      { name: "aiGreet", tracingEnabled: true, client }
     );
 
     for await (const _ of aiGreet(
