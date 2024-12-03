@@ -259,7 +259,11 @@ test("Input has single system message followed by one user message, convert syst
     new SystemMessage("You are a helpful assistant"),
     new HumanMessage("What's the weather like in new york?"),
   ];
-  const messagesAsGoogleContent = convertBaseMessagesToContent(messages, false, false);
+  const messagesAsGoogleContent = convertBaseMessagesToContent(
+    messages,
+    false,
+    false
+  );
 
   expect(messagesAsGoogleContent).toEqual([
     {
@@ -277,11 +281,9 @@ test("Input has a system message that is not the first message, convert system m
     new HumanMessage("What's the weather like in new york?"),
     new SystemMessage("You are a helpful assistant"),
   ];
-  expect(
-    () => {
-      convertBaseMessagesToContent(messages, false, false);
-    }
-  ).toThrow("System message should be the first one");
+  expect(() => {
+    convertBaseMessagesToContent(messages, false, false);
+  }).toThrow("System message should be the first one");
 });
 
 test("Input has multiple system messages, convert system message is false", async () => {
@@ -289,25 +291,23 @@ test("Input has multiple system messages, convert system message is false", asyn
     new SystemMessage("You are a helpful assistant"),
     new SystemMessage("You are not a helpful assistant"),
   ];
-  expect(
-    () => {
-      convertBaseMessagesToContent(messages, false, false);
-    }
-  ).toThrow("System message should be the first one");
+  expect(() => {
+    convertBaseMessagesToContent(messages, false, false);
+  }).toThrow("System message should be the first one");
 });
 
 test("Input has no system message and one user message, convert system message is false", async () => {
-  const messages = [
-    new HumanMessage("What's the weather like in new york?"),
-  ];
-  const messagesAsGoogleContent = convertBaseMessagesToContent(messages, false, false);
+  const messages = [new HumanMessage("What's the weather like in new york?")];
+  const messagesAsGoogleContent = convertBaseMessagesToContent(
+    messages,
+    false,
+    false
+  );
 
   expect(messagesAsGoogleContent).toEqual([
     {
       role: "user",
-      parts: [
-        { text: "What's the weather like in new york?" },
-      ],
+      parts: [{ text: "What's the weather like in new york?" }],
     },
   ]);
 });
@@ -318,26 +318,24 @@ test("Input has no system message and multiple user message, convert system mess
     new HumanMessage("What's the weather like in toronto?"),
     new HumanMessage("What's the weather like in los angeles?"),
   ];
-  const messagesAsGoogleContent = convertBaseMessagesToContent(messages, false, false);
+  const messagesAsGoogleContent = convertBaseMessagesToContent(
+    messages,
+    false,
+    false
+  );
 
   expect(messagesAsGoogleContent).toEqual([
     {
       role: "user",
-      parts: [
-        { text: "What's the weather like in new york?" },
-      ],
+      parts: [{ text: "What's the weather like in new york?" }],
     },
     {
       role: "user",
-      parts: [
-        { text: "What's the weather like in toronto?" },
-      ],
+      parts: [{ text: "What's the weather like in toronto?" }],
     },
     {
       role: "user",
-        parts: [
-          { text: "What's the weather like in los angeles?" },
-        ],
+      parts: [{ text: "What's the weather like in los angeles?" }],
     },
   ]);
 });
@@ -345,23 +343,23 @@ test("Input has no system message and multiple user message, convert system mess
 test("Input has single system message followed by one user message, convert system message is true", async () => {
   const messages = [
     new SystemMessage("You are a helpful assistant"),
-    new HumanMessage("What's the weather like in new york?")
+    new HumanMessage("What's the weather like in new york?"),
   ];
 
-  const messagesAsGoogleContent = convertBaseMessagesToContent(messages, false, true);
+  const messagesAsGoogleContent = convertBaseMessagesToContent(
+    messages,
+    false,
+    true
+  );
 
   expect(messagesAsGoogleContent).toEqual([
     {
       role: "system",
-      parts: [
-        { text: "You are a helpful assistant" }
-      ]
+      parts: [{ text: "You are a helpful assistant" }],
     },
     {
       role: "user",
-      parts: [
-        { text: "What's the weather like in new york?" }
-      ],
+      parts: [{ text: "What's the weather like in new york?" }],
     },
   ]);
 });
@@ -369,7 +367,7 @@ test("Input has single system message followed by one user message, convert syst
 test("Input has single system message that is not the first message, convert system message is true", async () => {
   const messages = [
     new HumanMessage("What's the weather like in new york?"),
-    new SystemMessage("You are a helpful assistant")
+    new SystemMessage("You are a helpful assistant"),
   ];
 
   expect(() => convertBaseMessagesToContent(messages, false, true)).toThrow(
@@ -380,7 +378,7 @@ test("Input has single system message that is not the first message, convert sys
 test("Input has multiple system message, convert system message is true", async () => {
   const messages = [
     new SystemMessage("What's the weather like in new york?"),
-    new SystemMessage("You are a helpful assistant")
+    new SystemMessage("You are a helpful assistant"),
   ];
 
   expect(() => convertBaseMessagesToContent(messages, false, true)).toThrow(
@@ -389,18 +387,18 @@ test("Input has multiple system message, convert system message is true", async 
 });
 
 test("Input has no system message and one user message, convert system message is true", async () => {
-  const messages = [
-    new HumanMessage("What's the weather like in new york?")
-  ];
+  const messages = [new HumanMessage("What's the weather like in new york?")];
 
-  const messagesAsGoogleContent = convertBaseMessagesToContent(messages, false, true);
+  const messagesAsGoogleContent = convertBaseMessagesToContent(
+    messages,
+    false,
+    true
+  );
 
   expect(messagesAsGoogleContent).toEqual([
     {
       role: "user",
-      parts: [
-        { text: "What's the weather like in new york?" }
-      ],
+      parts: [{ text: "What's the weather like in new york?" }],
     },
   ]);
 });
@@ -409,29 +407,27 @@ test("Input has no system message and multiple user messages, convert system mes
   const messages = [
     new HumanMessage("What's the weather like in new york?"),
     new HumanMessage("Will it rain today?"),
-    new HumanMessage("How about next week?")
+    new HumanMessage("How about next week?"),
   ];
 
-  const messagesAsGoogleContent = convertBaseMessagesToContent(messages, false, true);
+  const messagesAsGoogleContent = convertBaseMessagesToContent(
+    messages,
+    false,
+    true
+  );
 
   expect(messagesAsGoogleContent).toEqual([
     {
       role: "user",
-      parts: [
-        { text: "What's the weather like in new york?" }
-      ],
+      parts: [{ text: "What's the weather like in new york?" }],
     },
     {
       role: "user",
-      parts: [
-        { text: "Will it rain today?" }
-      ],
+      parts: [{ text: "Will it rain today?" }],
     },
     {
       role: "user",
-        parts: [
-          { text: "How about next week?" }
-        ],
+      parts: [{ text: "How about next week?" }],
     },
   ]);
 });

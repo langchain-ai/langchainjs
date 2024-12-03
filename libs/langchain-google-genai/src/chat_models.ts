@@ -667,8 +667,8 @@ export class ChatGoogleGenerativeAI
       ? !this.convertSystemMessageToHumanContent
       : this.computeUseSystemInstruction;
   }
-  
-  get computeUseSystemInstruction() : boolean {
+
+  get computeUseSystemInstruction(): boolean {
     // This works on models from April 2024 and later
     //   Vertex AI: gemini-1.5-pro and gemini-1.0-002 and later
     //   AI Studio: gemini-1.5-pro-latest
@@ -747,7 +747,7 @@ export class ChatGoogleGenerativeAI
     if (prompt[0].role === "system") {
       const [systemInstruction] = prompt;
       this.client.systemInstruction = systemInstruction;
-      actualPrompt = prompt.slice(1)
+      actualPrompt = prompt.slice(1);
     }
     const parameters = this.invocationParams(options);
 
@@ -818,7 +818,7 @@ export class ChatGoogleGenerativeAI
     if (prompt[0].role === "system") {
       const [systemInstruction] = prompt;
       this.client.systemInstruction = systemInstruction;
-      actualPrompt = prompt.slice(1)
+      actualPrompt = prompt.slice(1);
     }
     const parameters = this.invocationParams(options);
     const request = {
