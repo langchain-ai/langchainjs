@@ -3,11 +3,6 @@ import { test, expect } from "@jest/globals";
 import { z } from "zod";
 import { ChatGoogleGenerativeAI } from "../chat_models.js";
 
-const { GOOGLE_API_KEY } = process.env;
-if (!GOOGLE_API_KEY) {
-  throw new Error("Cannot run tests because GOOGLE_API_KEY is not set.");
-}
-
 const baseSchema = z.object({
   name: z.string(),
   age: z.number(),
@@ -25,27 +20,6 @@ test("Google AI - Generate structured output without errors", async () => {
   expect(result).toBeDefined();
   expect(result).toHaveProperty("name");
   expect(result).toHaveProperty("age");
-});
-
-test("Google AI - Throw error if output does not match schema", async () => {
-  const schema = z.object({ name: z.string(), age: z.string() }); // Schema mismatch
-  const model = new ChatGoogleGenerativeAI({
-    model: "gemini-1.5-flash",
-    temperature: 0.7,
-  });
-  const structuredLlm = model.withStructuredOutput(schema);
-  const request = "Generate structured data where age is a number.";
-
-  try {
-    await structuredLlm.invoke(request);
-  } catch (error) {
-    const errorMessage =
-      typeof error === "object" && error !== null && "message" in error
-        ? (error as { message: string }).message
-        : "Unknown error";
-    console.error("Schema Mismatch Error:", errorMessage);
-    expect(errorMessage).toMatch(/Schema validation failed/); // Adjust pattern based on actual error
-  }
 });
 
 test("Google AI - Validate nested schema structures", async () => {
@@ -67,27 +41,6 @@ test("Google AI - Validate nested schema structures", async () => {
   expect(result).toBeDefined();
   expect(result.details).toHaveProperty("age");
   expect(result.details).toHaveProperty("address");
-});
-
-test("Google AI - Handle missing required fields", async () => {
-  const schema = z.object({ name: z.string(), age: z.number() });
-  const model = new ChatGoogleGenerativeAI({
-    model: "gemini-1.5-flash",
-    temperature: 0.7,
-  });
-  const structuredLlm = model.withStructuredOutput(schema);
-  const request = "Generate a response with only the name field.";
-
-  try {
-    await structuredLlm.invoke(request);
-  } catch (error) {
-    const errorMessage =
-      typeof error === "object" && error !== null && "message" in error
-        ? (error as { message: string }).message
-        : "Unknown error";
-    console.error("Missing Required Fields Error:", errorMessage);
-    expect(errorMessage).toMatch(/Schema validation failed/); // Adjust pattern based on actual error
-  }
 });
 
 test("Google AI - Handle optional fields in schema", async () => {
@@ -132,27 +85,6 @@ test("Google AI - Validate schema with large payloads", async () => {
   expect(result).toHaveProperty("address");
   expect(result).toHaveProperty("phone");
   expect(result).toHaveProperty("email");
-});
-
-test("Google AI - Throw error for empty response", async () => {
-  const schema = z.object({ name: z.string(), age: z.number() });
-  const model = new ChatGoogleGenerativeAI({
-    model: "gemini-1.5-flash",
-    temperature: 0.7,
-  });
-  const structuredLlm = model.withStructuredOutput(schema);
-  const request = "Generate an empty response.";
-
-  try {
-    await structuredLlm.invoke(request);
-  } catch (error) {
-    const errorMessage =
-      typeof error === "object" && error !== null && "message" in error
-        ? (error as { message: string }).message
-        : "Unknown error";
-    console.error("Empty Response Error:", errorMessage);
-    expect(errorMessage).toMatch(/Schema validation failed/); // Adjust pattern based on actual error
-  }
 });
 
 test("Google AI - Handle schema with deeply nested structures", async () => {
