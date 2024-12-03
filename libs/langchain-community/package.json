@@ -1,6 +1,6 @@
 {
   "name": "@langchain/community",
-  "version": "0.3.14",
+  "version": "0.3.16",
   "description": "Third-party integrations for LangChain.js",
   "type": "module",
   "engines": {
@@ -41,7 +41,7 @@
     "flat": "^5.0.2",
     "js-yaml": "^4.1.0",
     "langchain": ">=0.2.3 <0.3.0 || >=0.3.4 <0.4.0",
-    "langsmith": "^0.2.0",
+    "langsmith": "^0.2.8",
     "uuid": "^10.0.0",
     "zod": "^3.22.3",
     "zod-to-json-schema": "^3.22.5"
@@ -62,12 +62,13 @@
     "@azure/search-documents": "^12.0.0",
     "@azure/storage-blob": "^12.15.0",
     "@browserbasehq/sdk": "^1.1.5",
+    "@browserbasehq/stagehand": "^1.0.0",
     "@clickhouse/client": "^0.2.5",
     "@cloudflare/ai": "1.0.12",
     "@cloudflare/workers-types": "^4.20230922.0",
     "@datastax/astra-db-ts": "^1.0.1",
     "@elastic/elasticsearch": "^8.4.0",
-    "@faker-js/faker": "^7.6.0",
+    "@faker-js/faker": "8.4.1",
     "@getmetal/metal-sdk": "^4.0.0",
     "@getzep/zep-cloud": "^1.0.6",
     "@getzep/zep-js": "^0.9.0",
@@ -91,8 +92,8 @@
     "@neondatabase/serverless": "^0.9.1",
     "@notionhq/client": "^2.2.10",
     "@opensearch-project/opensearch": "^2.2.0",
-    "@pinecone-database/pinecone": "^1.1.0",
     "@planetscale/database": "^1.8.0",
+    "@playwright/test": "^1.48.2",
     "@premai/prem-sdk": "^0.3.25",
     "@qdrant/js-client-rest": "^1.8.2",
     "@raycast/api": "^1.83.1",
@@ -191,6 +192,7 @@
     "node-llama-cpp": "3.1.1",
     "notion-to-md": "^3.1.0",
     "officeparser": "^4.0.4",
+    "openai": "*",
     "pdf-parse": "1.1.1",
     "pg": "^8.11.0",
     "pg-copy-streams": "^6.0.5",
@@ -232,6 +234,7 @@
     "@azure/search-documents": "^12.0.0",
     "@azure/storage-blob": "^12.15.0",
     "@browserbasehq/sdk": "*",
+    "@browserbasehq/stagehand": "^1.0.0",
     "@clickhouse/client": "^0.2.5",
     "@cloudflare/ai": "*",
     "@datastax/astra-db-ts": "^1.0.0",
@@ -320,6 +323,7 @@
     "neo4j-driver": "*",
     "notion-to-md": "^3.1.0",
     "officeparser": "^4.0.4",
+    "openai": "*",
     "pdf-parse": "1.1.1",
     "pg": "^8.11.0",
     "pg-copy-streams": "^6.0.5",
@@ -986,6 +990,15 @@
       },
       "import": "./agents/toolkits/connery.js",
       "require": "./agents/toolkits/connery.cjs"
+    },
+    "./agents/toolkits/stagehand": {
+      "types": {
+        "import": "./agents/toolkits/stagehand.d.ts",
+        "require": "./agents/toolkits/stagehand.d.cts",
+        "default": "./agents/toolkits/stagehand.d.ts"
+      },
+      "import": "./agents/toolkits/stagehand.js",
+      "require": "./agents/toolkits/stagehand.cjs"
     },
     "./embeddings/alibaba_tongyi": {
       "types": {
@@ -2283,6 +2296,15 @@
       "import": "./graphs/memgraph_graph.js",
       "require": "./graphs/memgraph_graph.cjs"
     },
+    "./document_compressors/ibm": {
+      "types": {
+        "import": "./document_compressors/ibm.d.ts",
+        "require": "./document_compressors/ibm.d.cts",
+        "default": "./document_compressors/ibm.d.ts"
+      },
+      "import": "./document_compressors/ibm.js",
+      "require": "./document_compressors/ibm.cjs"
+    },
     "./document_transformers/html_to_text": {
       "types": {
         "import": "./document_transformers/html_to_text.d.ts",
@@ -3203,6 +3225,10 @@
     "agents/toolkits/connery.js",
     "agents/toolkits/connery.d.ts",
     "agents/toolkits/connery.d.cts",
+    "agents/toolkits/stagehand.cjs",
+    "agents/toolkits/stagehand.js",
+    "agents/toolkits/stagehand.d.ts",
+    "agents/toolkits/stagehand.d.cts",
     "embeddings/alibaba_tongyi.cjs",
     "embeddings/alibaba_tongyi.js",
     "embeddings/alibaba_tongyi.d.ts",
@@ -3779,6 +3805,10 @@
     "graphs/memgraph_graph.js",
     "graphs/memgraph_graph.d.ts",
     "graphs/memgraph_graph.d.cts",
+    "document_compressors/ibm.cjs",
+    "document_compressors/ibm.js",
+    "document_compressors/ibm.d.ts",
+    "document_compressors/ibm.d.cts",
     "document_transformers/html_to_text.cjs",
     "document_transformers/html_to_text.js",
     "document_transformers/html_to_text.d.ts",

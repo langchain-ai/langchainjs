@@ -16,3 +16,7 @@ export const getDefaultLangChainClientSingleton = () => {
   }
   return client;
 };
+
+export const setDefaultLangChainClientSingleton = (newClient: Client) => {
+  client = newClient;
+};

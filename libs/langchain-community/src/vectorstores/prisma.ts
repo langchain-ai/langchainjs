@@ -437,6 +437,16 @@ export class PrismaVectorStore<
                   )}`
                 );
               }
+
+              if (value.length === 0) {
+                const isInOperator = OpMap[opNameKey] === OpMap.in;
+
+                // For empty arrays:
+                // - IN () should return FALSE (nothing can be in an empty set)
+                // - NOT IN () should return TRUE (everything is not in an empty set)
+                return this.Prisma.sql`${!isInOperator}`;
+              }
+
               return this.Prisma.sql`${colRaw} ${opRaw} (${this.Prisma.join(
                 value
               )})`;
