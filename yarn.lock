@@ -11829,7 +11829,7 @@ __metadata:
     jsdom: ^22.1.0
     jsonwebtoken: ^9.0.2
     langchain: ">=0.2.3 <0.3.0 || >=0.3.4 <0.4.0"
-    langsmith: ^0.2.0
+    langsmith: ^0.2.8
     llmonitor: ^0.5.9
     lodash: ^4.17.21
     lunary: ^0.7.10
@@ -12263,7 +12263,7 @@ __metadata:
     jest: ^29.5.0
     jest-environment-node: ^29.6.4
     js-tiktoken: ^1.0.12
-    langsmith: ^0.2.0
+    langsmith: ^0.2.8
     ml-matrix: ^6.10.4
     mustache: ^4.2.0
     p-queue: ^6.6.2
@@ -27675,7 +27675,7 @@ __metadata:
     ioredis: ^5.3.2
     js-yaml: ^4.1.0
     langchain: "workspace:*"
-    langsmith: ^0.2.0
+    langsmith: ^0.2.8
     mongodb: ^6.3.0
     pg: ^8.11.0
     pickleparser: ^0.2.1
@@ -33329,7 +33329,7 @@ __metadata:
     js-tiktoken: ^1.0.12
     js-yaml: ^4.1.0
     jsonpointer: ^5.0.1
-    langsmith: ^0.2.0
+    langsmith: ^0.2.8
     openai: ^4.41.1
     openapi-types: ^12.1.3
     p-retry: 4
@@ -33408,9 +33408,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"langsmith@npm:^0.2.0":
-  version: 0.2.0
-  resolution: "langsmith@npm:0.2.0"
+"langsmith@npm:^0.2.8":
+  version: 0.2.8
+  resolution: "langsmith@npm:0.2.8"
   dependencies:
     "@types/uuid": ^10.0.0
     commander: ^10.0.1
@@ -33423,7 +33423,7 @@ __metadata:
   peerDependenciesMeta:
     openai:
       optional: true
-  checksum: 0cd92d0e31526d309af197a3502c93a00ac8c09f6b2864161a18a5c1e8b95b0e8203bad2dfe3b4beb26055fc815a8d70730592a58c9af7e202917b13d01f695c
+  checksum: 8695df08a09b9885b0308c66fbf9802edbe20e286fec3db8faa75ed1893a7aafae014441e311677bb60abb33af49da7f7d8404f55fffbdad5aec61cf65215fc8
   languageName: node
   linkType: hard
 
