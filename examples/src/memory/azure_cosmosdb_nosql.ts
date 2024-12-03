@@ -60,10 +60,12 @@ console.log({ res2 });
 const chatHistory = (await chainWithHistory.getMessageHistory(
   "langchain-test-session"
 )) as AzureCosmsosDBNoSQLChatMessageHistory;
-chatHistory.setContext({ title: "Introducing Jim" });
+
+await chatHistory.setContext({ title: "Introducing Jim" });
 
 // List all session for the user
 const sessions = await chatHistory.getAllSessions();
+
 console.log(sessions);
 /*
  [
