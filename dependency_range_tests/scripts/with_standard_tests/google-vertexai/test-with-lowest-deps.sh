@@ -26,6 +26,7 @@ node "update_resolutions_lowest.js"
 
 # Navigate back to monorepo root and install dependencies
 cd "$monorepo_dir"
+touch yarn.lock
 yarn
 
 # Navigate into `@langchain/package` to build and run tests

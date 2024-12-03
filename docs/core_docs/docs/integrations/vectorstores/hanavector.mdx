@@ -35,11 +35,46 @@ import ExampleLoader from "@examples/indexes/vector_stores/hana_vector/fromDocs.
 
 <CodeBlock language="typescript">{ExampleLoader}</CodeBlock>
 
+## Creating an HNSW Vector Index
+
+A vector index can significantly speed up top-k nearest neighbor queries for vectors. Users can create a Hierarchical Navigable Small World (HNSW) vector index using the `create_hnsw_index` function.
+
+For more information about creating an index at the database level, such as parameters requirement, please refer to the [official documentation](https://help.sap.com/docs/hana-cloud-database/sap-hana-cloud-sap-hana-database-vector-engine-guide/create-vector-index-statement-data-definition).
+
+import ExampleIndex from "@examples/indexes/vector_stores/hana_vector/createHnswIndex.ts";
+
+<CodeBlock language="typescript">{ExampleIndex}</CodeBlock>
+
 ## Basic Vectorstore Operations
 
 import ExampleBasic from "@examples/indexes/vector_stores/hana_vector/basics.ts";
 
 <CodeBlock language="typescript">{ExampleBasic}</CodeBlock>
+
+## Advanced filtering
+
+import { Table, Tr, Th, Td } from "@mdx-js/react";
+
+In addition to the basic value-based filtering capabilities, it is possible to use more advanced filtering. The table below shows the available filter operators.
+
+| Operator   | Semantic                                                                   |
+| ---------- | -------------------------------------------------------------------------- |
+| `$eq`      | Equality (==)                                                              |
+| `$ne`      | Inequality (!=)                                                            |
+| `$lt`      | Less than (<)                                                              |
+| `$lte`     | Less than or equal (<=)                                                    |
+| `$gt`      | Greater than (>)                                                           |
+| `$gte`     | Greater than or equal (>=)                                                 |
+| `$in`      | Contained in a set of given values (in)                                    |
+| `$nin`     | Not contained in a set of given values (not in)                            |
+| `$between` | Between the range of two boundary values                                   |
+| `$like`    | Text equality based on the "LIKE" semantics in SQL (using "%" as wildcard) |
+| `$and`     | Logical "and", supporting 2 or more operands                               |
+| `$or`      | Logical "or", supporting 2 or more operands                                |
+
+import ExampleAdvancedFilter from "@examples/indexes/vector_stores/hana_vector/advancedFiltering.ts";
+
+<CodeBlock language="typescript">{ExampleAdvancedFilter}</CodeBlock>
 
 ## Using a VectorStore as a retriever in chains for retrieval augmented generation (RAG)
 
