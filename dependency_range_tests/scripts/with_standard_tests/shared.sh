@@ -19,6 +19,8 @@ original_package_json_dir="/package.json"
 original_turbo_json_dir="/turbo.json"
 original_standard_tests_updater_script_dir="/scripts/with_standard_tests/node"
 
+corepack enable
+
 # enable extended globbing for omitting build artifacts
 shopt -s extglob
 
