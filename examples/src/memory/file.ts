@@ -1,5 +1,5 @@
 import { ChatOpenAI } from "@langchain/openai";
-import { FileChatMessageHistory } from "@langchain/community/stores/message/file_system";
+import { FileSystemChatMessageHistory } from "@langchain/community/stores/message/file_system";
 import { RunnableWithMessageHistory } from "@langchain/core/runnables";
 import { StringOutputParser } from "@langchain/core/output_parsers";
 import {
@@ -28,7 +28,7 @@ const chainWithHistory = new RunnableWithMessageHistory({
   inputMessagesKey: "input",
   historyMessagesKey: "chat_history",
   getMessageHistory: async (sessionId) => {
-    const chatHistory = new FileChatMessageHistory({
+    const chatHistory = new FileSystemChatMessageHistory({
       sessionId,
       userId: "user-id",
     });
@@ -57,8 +57,9 @@ console.log({ res2 });
 // Give this session a title
 const chatHistory = (await chainWithHistory.getMessageHistory(
   "langchain-test-session"
-)) as FileChatMessageHistory;
-chatHistory.setContext({ title: "Introducing Jim" });
+)) as FileSystemChatMessageHistory;
+
+await chatHistory.setContext({ title: "Introducing Jim" });
 
 // List all session for the user
 const sessions = await chatHistory.getAllSessions();
