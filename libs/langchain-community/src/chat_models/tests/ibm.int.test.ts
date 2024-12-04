@@ -13,6 +13,7 @@ import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { tool } from "@langchain/core/tools";
 import { NewTokenIndices } from "@langchain/core/callbacks/base";
 import { ChatWatsonx } from "../ibm.js";
+import { WatsonxCallbackManager } from "../../utils/ibm.js";
 
 describe("Tests for chat", () => {
   describe("Test ChatWatsonx invoke and generate", () => {
@@ -517,7 +518,9 @@ describe("Tests for chat", () => {
         }
       );
       const llmWithTools = service.bindTools([calculatorTool]);
-      const res = await llmWithTools.invoke("What is 3 * 12");
+      const res = await llmWithTools.invoke(
+        "You are bad at calculations and need to use calculator at all times. What is 3 * 12"
+      );
 
       expect(res).toBeInstanceOf(AIMessage);
       expect(res.tool_calls?.[0].name).toBe("calculator");
@@ -829,6 +832,110 @@ describe("Tests for chat", () => {
       expect(typeof result.operation).toBe("string");
       expect(typeof result.number1).toBe("number");
       expect(typeof result.number2).toBe("number");
+    });
+  });
+
+  describe("Test watsonx callbacks", () => {
+    test("Single request callback", async () => {
+      let callbackFlag = false;
+      const service = new ChatWatsonx({
+        model: "mistralai/mistral-large",
+        version: "2024-05-31",
+        serviceUrl: process.env.WATSONX_AI_SERVICE_URL ?? "testString",
+        projectId: process.env.WATSONX_AI_PROJECT_ID ?? "testString",
+        maxTokens: 10,
+        callbacks: WatsonxCallbackManager.fromHandlers({
+          requestCallback(req) {
+            callbackFlag = !!req;
+          },
+        }),
+      });
+      const hello = await service.stream("Print hello world");
+      const chunks = [];
+      for await (const chunk of hello) {
+        chunks.push(chunk);
+      }
+      expect(callbackFlag).toBe(true);
+    });
+    test("Single response callback", async () => {
+      let callbackFlag = false;
+      const service = new ChatWatsonx({
+        model: "mistralai/mistral-large",
+        version: "2024-05-31",
+        serviceUrl: process.env.WATSONX_AI_SERVICE_URL ?? "testString",
+        projectId: process.env.WATSONX_AI_PROJECT_ID ?? "testString",
+        maxTokens: 10,
+        callbacks: WatsonxCallbackManager.fromHandlers({
+          responseCallback(res) {
+            callbackFlag = !!res;
+          },
+        }),
+      });
+      const hello = await service.stream("Print hello world");
+      const chunks = [];
+      for await (const chunk of hello) {
+        chunks.push(chunk);
+      }
+      expect(callbackFlag).toBe(true);
+    });
+    test("Both callbacks", async () => {
+      let callbackFlagReq = false;
+      let callbackFlagRes = false;
+      const service = new ChatWatsonx({
+        model: "mistralai/mistral-large",
+        version: "2024-05-31",
+        serviceUrl: process.env.WATSONX_AI_SERVICE_URL ?? "testString",
+        projectId: process.env.WATSONX_AI_PROJECT_ID ?? "testString",
+        maxTokens: 10,
+        callbacks: WatsonxCallbackManager.fromHandlers({
+          requestCallback(req) {
+            callbackFlagReq = !!req;
+          },
+          responseCallback(res) {
+            callbackFlagRes = !!res;
+          },
+        }),
+      });
+      const hello = await service.stream("Print hello world");
+      const chunks = [];
+      for await (const chunk of hello) {
+        chunks.push(chunk);
+      }
+      expect(callbackFlagReq).toBe(true);
+      expect(callbackFlagRes).toBe(true);
+    });
+    test("Multiple callbacks", async () => {
+      let callbackFlagReq = false;
+      let callbackFlagRes = false;
+      let langchainCallback = false;
+
+      const service = new ChatWatsonx({
+        model: "mistralai/mistral-large",
+        version: "2024-05-31",
+        serviceUrl: process.env.WATSONX_AI_SERVICE_URL ?? "testString",
+        projectId: process.env.WATSONX_AI_PROJECT_ID ?? "testString",
+        maxTokens: 10,
+        callbacks: WatsonxCallbackManager.fromHandlers({
+          requestCallback(req) {
+            callbackFlagReq = !!req;
+          },
+          responseCallback(res) {
+            callbackFlagRes = !!res;
+          },
+          async handleLLMEnd(output) {
+            expect(output.generations).toBeDefined();
+            langchainCallback = !!output;
+          },
+        }),
+      });
+      const hello = await service.stream("Print hello world");
+      const chunks = [];
+      for await (const chunk of hello) {
+        chunks.push(chunk);
+      }
+      expect(callbackFlagReq).toBe(true);
+      expect(callbackFlagRes).toBe(true);
+      expect(langchainCallback).toBe(true);
     });
   });
 });

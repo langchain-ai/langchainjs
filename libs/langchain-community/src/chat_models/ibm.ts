@@ -18,7 +18,6 @@ import {
   FunctionDefinition,
   StructuredOutputMethodOptions,
 } from "@langchain/core/language_models/base";
-import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {
   BaseChatModel,
   BaseChatModelCallOptions,
@@ -68,6 +67,7 @@ import { WatsonxAuth, WatsonxParams } from "../types/ibm.js";
 import {
   _convertToolCallIdToMistralCompatible,
   authenticateAndSetInstance,
+  WatsonxCallbackManagerForLLMRun,
   WatsonxToolsOutputParser,
 } from "../utils/ibm.js";
 
@@ -330,7 +330,9 @@ function _convertToolChoiceToWatsonxToolChoice(
       `Unrecognized tool_choice type. Expected string or TextChatParameterTools. Recieved ${toolChoice}`
     );
 }
-
+// class BaseCallbackHandlerMethodsClass {
+//   responseCallback: () => any;
+// }
 export class ChatWatsonx<
     CallOptions extends WatsonxCallOptionsChat = WatsonxCallOptionsChat
   >
@@ -541,7 +543,7 @@ export class ChatWatsonx<
   async _generate(
     messages: BaseMessage[],
     options: this["ParsedCallOptions"],
-    runManager?: CallbackManagerForLLMRun
+    runManager?: WatsonxCallbackManagerForLLMRun
   ): Promise<ChatResult> {
     if (this.streaming) {
       const stream = this._streamResponseChunks(messages, options, runManager);
@@ -631,19 +633,25 @@ export class ChatWatsonx<
   async *_streamResponseChunks(
     messages: BaseMessage[],
     options: this["ParsedCallOptions"],
-    _runManager?: CallbackManagerForLLMRun
+    _runManager?: WatsonxCallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
     const params = { ...this.invocationParams(options), ...this.scopeId() };
     const watsonxMessages = _convertMessagesToWatsonxMessages(
       messages,
       this.model
     );
+    const watsonxHandlers = _runManager?.handlers.filter(
+      (item) => item.name === "watsonxHandler"
+    )?.[0]?.watsonxHandlers;
     const callback = () =>
-      this.service.textChatStream({
-        ...params,
-        messages: watsonxMessages,
-        returnObject: true,
-      });
+      this.service.textChatStream(
+        {
+          ...params,
+          messages: watsonxMessages,
+          returnObject: true,
+        },
+        watsonxHandlers
+      );
     const stream = await this.completionWithRetry(callback, options);
     let defaultRole;
     let usage: TextChatUsage | undefined;
