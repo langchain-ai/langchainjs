@@ -172,7 +172,6 @@ describe("Text generation", () => {
       let usedTokens = 0;
       const model = new WatsonxLLM({
         model: "ibm/granite-13b-chat-v2",
-        maxConcurrency: 1,
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
         projectId: process.env.WATSONX_AI_PROJECT_ID,
@@ -190,7 +189,7 @@ describe("Text generation", () => {
         }),
       });
 
-      const res = await model.invoke(" Print hello world?");
+      const res = await model.invoke("Print hello world?");
       expect(countedTokens).toBe(usedTokens);
       expect(res).toBe(streamedText);
     });

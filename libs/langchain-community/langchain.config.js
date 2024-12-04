@@ -65,6 +65,7 @@ export const config = {
     "agents/toolkits/aws_sfn": "agents/toolkits/aws_sfn",
     "agents/toolkits/base": "agents/toolkits/base",
     "agents/toolkits/connery": "agents/toolkits/connery/index",
+    "agents/toolkits/stagehand": "agents/toolkits/stagehand",
     // embeddings
     "embeddings/alibaba_tongyi": "embeddings/alibaba_tongyi",
     "embeddings/baidu_qianfan": "embeddings/baidu_qianfan",
@@ -177,6 +178,7 @@ export const config = {
     "chat_models/llama_cpp": "chat_models/llama_cpp",
     "chat_models/minimax": "chat_models/minimax",
     "chat_models/moonshot": "chat_models/moonshot",
+    "chat_models/novita": "chat_models/novita",
     "chat_models/ollama": "chat_models/ollama",
     "chat_models/portkey": "chat_models/portkey",
     "chat_models/premai": "chat_models/premai",
@@ -219,6 +221,8 @@ export const config = {
     // graphs
     "graphs/neo4j_graph": "graphs/neo4j_graph",
     "graphs/memgraph_graph": "graphs/memgraph_graph",
+    // document_compressors
+    "document_compressors/ibm": "document_compressors/ibm",
     // document transformers
     "document_transformers/html_to_text": "document_transformers/html_to_text",
     "document_transformers/mozilla_readability":
@@ -239,6 +243,7 @@ export const config = {
     "stores/message/convex": "stores/message/convex",
     "stores/message/dynamodb": "stores/message/dynamodb",
     "stores/message/firestore": "stores/message/firestore",
+    "stores/message/file_system": "stores/message/file_system",
     "stores/message/in_memory": "stores/message/in_memory",
     "stores/message/ipfs_datastore": "stores/message/ipfs_datastore",
     "stores/message/ioredis": "stores/message/ioredis",
@@ -336,6 +341,7 @@ export const config = {
     "tools/gmail",
     "tools/google_calendar",
     "agents/toolkits/aws_sfn",
+    "agents/toolkits/stagehand",
     "callbacks/handlers/llmonitor",
     "callbacks/handlers/lunary",
     "callbacks/handlers/upstash_ratelimit",
@@ -444,6 +450,8 @@ export const config = {
     "cache/upstash_redis",
     "graphs/neo4j_graph",
     "graphs/memgraph_graph",
+    // document_compressors
+    "document_compressors/ibm",
     // document_transformers
     "document_transformers/html_to_text",
     "document_transformers/mozilla_readability",

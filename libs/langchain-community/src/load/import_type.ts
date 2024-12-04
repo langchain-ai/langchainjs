@@ -39,6 +39,7 @@ export interface SecretMap {
   MINIMAX_API_KEY?: string;
   MINIMAX_GROUP_ID?: string;
   MOONSHOT_API_KEY?: string;
+  NOVITA_API_KEY?: string;
   PLANETSCALE_DATABASE_URL?: string;
   PLANETSCALE_HOST?: string;
   PLANETSCALE_PASSWORD?: string;
