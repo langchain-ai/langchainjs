@@ -229,7 +229,7 @@ export class AzureCosmosDBMongoDBSemanticCache extends BaseCache {
   constructor(
     embeddings: EmbeddingsInterface,
     dbConfig: AzureCosmosDBMongoDBConfig,
-    similarityScoreThreshold: number = 0.6,
+    similarityScoreThreshold: number = 0.0,
   ) {
     super()
 
