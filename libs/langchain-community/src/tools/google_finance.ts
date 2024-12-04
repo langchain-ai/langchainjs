@@ -2,9 +2,9 @@ import { Tool } from "@langchain/core/tools";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 
 /**
- * Interface for parameters required by the GoogleFinanceAPI class.
+ * Interface for parameters required by the SERPGoogleFinanceAPITool class.
  */
-export interface GoogleFinanceAPIParams {
+export interface SERPGoogleFinanceAPIToolParams {
   /**
    * Optional API key for accessing the SerpApi service.
    */
@@ -14,7 +14,7 @@ export interface GoogleFinanceAPIParams {
 /**
  * Tool for querying Google Finance using the SerpApi service.
  */
-export class GoogleFinanceAPI extends Tool {
+export class SERPGoogleFinanceAPITool extends Tool {
   static lc_name() {
     return "GoogleFinanceAPI";
   }
@@ -52,10 +52,10 @@ export class GoogleFinanceAPI extends Tool {
   - Related searches that may be of interest `;
 
   /**
-   * Constructs a new instance of GoogleFinanceAPI.
+   * Constructs a new instance of SERPGoogleFinanceAPITool.
    * @param fields - Optional parameters including an API key.
    */
-  constructor(fields?: GoogleFinanceAPIParams) {
+  constructor(fields?: SERPGoogleFinanceAPIToolParams) {
     super(...arguments);
 
     // Retrieve API key from fields or environment variables.
@@ -80,7 +80,7 @@ export class GoogleFinanceAPI extends Tool {
     // Construct the URL for the API request.
     const url = `https://serpapi.com/search.json?q=${encodeURIComponent(
       input
-    )}&engine=google_finance&api_key=05f88ace01a07cc3ca26bd86664b5d2e579d2a5db45407f55a39d86ac7d47d1b`;
+    )}&engine=google_finance&api_key=${encodeURIComponent(this.apiKey)}`;
 
     // Make an HTTP GET request to the SerpApi service.
     const response = await fetch(url);

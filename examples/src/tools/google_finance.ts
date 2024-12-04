@@ -1,6 +1,6 @@
-import { GoogleFinanceAPI } from "@langchain/community/tools/google_finance";
+import { SERPGoogleFinanceAPITool } from "@langchain/community/tools/google_finance";
 import { OpenAI } from "@langchain/openai";
-import { initializeAgentExecutorWithOptions } from "langchain/agents";
+import { createReactAgent } from "@langchain/langgraph/prebuilt";
 
 export async function run() {
   const model = new OpenAI({
@@ -8,16 +8,22 @@ export async function run() {
     apiKey: process.env.OPENAI_API_KEY,
   });
 
-  const tools = [new GoogleFinanceAPI()];
+  const tools = [
+    new SERPGoogleFinanceAPITool({ apiKey: process.env.SERPAPI_API_KEY }),
+  ];
 
-  const financeAgent = await initializeAgentExecutorWithOptions(tools, model, {
-    agentType: "zero-shot-react-description",
-    verbose: true,
+  const financeAgent = createReactAgent({
+    llm: model,
+    tools: tools,
   });
 
-  const result = await financeAgent.invoke({
-    input: "What is the price of GOOG:NASDAQ?",
-  });
+  const inputs = {
+    messages: [{ role: "user", content: "what is the price of GOOG:NASDAQ?" }],
+  };
 
-  console.log(result.output);
+  const stream = await financeAgent.stream(inputs, { streamMode: "values" });
+
+  for await (const { messages } of stream) {
+    console.log(messages);
+  }
 }

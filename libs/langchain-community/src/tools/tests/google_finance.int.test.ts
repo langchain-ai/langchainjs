@@ -1,14 +1,14 @@
 import { expect, describe } from "@jest/globals";
-import { GoogleFinanceAPI } from "../google_finance.js";
+import { SERPGoogleFinanceAPITool } from "../google_finance.js";
 
-describe("GoogleFinanceAPI", () => {
+describe("SERPGoogleFinanceAPITool", () => {
   test("should be setup with correct parameters", async () => {
-    const instance = new GoogleFinanceAPI();
+    const instance = new SERPGoogleFinanceAPITool();
     expect(instance.name).toBe("google_finance");
   });
 
-  test("GoogleFinanceAPI returns expected result for valid query", async () => {
-    const tool = new GoogleFinanceAPI();
+  test("SERPGoogleFinanceAPITool returns expected result for valid query", async () => {
+    const tool = new SERPGoogleFinanceAPITool();
 
     const result = await tool.invoke("GOOG:NASDAQ");
 
@@ -17,8 +17,8 @@ describe("GoogleFinanceAPI", () => {
     expect(result).toContain("NASDAQ");
   });
 
-  test("GoogleFinanceAPI returns '' for query on a non-existent ticker symbol", async () => {
-    const tool = new GoogleFinanceAPI();
+  test("SERPGoogleFinanceAPITool returns '' for query on a non-existent ticker symbol", async () => {
+    const tool = new SERPGoogleFinanceAPITool();
 
     const result = await tool.invoke("mkvdfmvkdmvkdovkam");
 
