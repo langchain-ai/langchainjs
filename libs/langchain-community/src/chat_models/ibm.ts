@@ -330,9 +330,6 @@ function _convertToolChoiceToWatsonxToolChoice(
       `Unrecognized tool_choice type. Expected string or TextChatParameterTools. Recieved ${toolChoice}`
     );
 }
-// class BaseCallbackHandlerMethodsClass {
-//   responseCallback: () => any;
-// }
 export class ChatWatsonx<
     CallOptions extends WatsonxCallOptionsChat = WatsonxCallOptionsChat
   >

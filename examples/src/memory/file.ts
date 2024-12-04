@@ -1,5 +1,5 @@
 import { ChatOpenAI } from "@langchain/openai";
-import { AzureCosmsosDBNoSQLChatMessageHistory } from "@langchain/azure-cosmosdb";
+import { FileSystemChatMessageHistory } from "@langchain/community/stores/message/file_system";
 import { RunnableWithMessageHistory } from "@langchain/core/runnables";
 import { StringOutputParser } from "@langchain/core/output_parsers";
 import {
@@ -28,11 +28,9 @@ const chainWithHistory = new RunnableWithMessageHistory({
   inputMessagesKey: "input",
   historyMessagesKey: "chat_history",
   getMessageHistory: async (sessionId) => {
-    const chatHistory = new AzureCosmsosDBNoSQLChatMessageHistory({
+    const chatHistory = new FileSystemChatMessageHistory({
       sessionId,
       userId: "user-id",
-      databaseName: "DATABASE_NAME",
-      containerName: "CONTAINER_NAME",
     });
     return chatHistory;
   },
@@ -59,13 +57,12 @@ console.log({ res2 });
 // Give this session a title
 const chatHistory = (await chainWithHistory.getMessageHistory(
   "langchain-test-session"
-)) as AzureCosmsosDBNoSQLChatMessageHistory;
+)) as FileSystemChatMessageHistory;
 
 await chatHistory.setContext({ title: "Introducing Jim" });
 
 // List all session for the user
 const sessions = await chatHistory.getAllSessions();
-
 console.log(sessions);
 /*
  [
