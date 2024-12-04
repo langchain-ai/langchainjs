@@ -7,6 +7,9 @@ import {
   GenerateContentRequest,
   SafetySetting,
   Part as GenerativeAIPart,
+  ModelParams,
+  RequestOptions,
+  type CachedContent,
 } from "@google/generative-ai";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {
@@ -660,6 +663,21 @@ export class ChatGoogleGenerativeAI
       }
     );
     this.streamUsage = fields?.streamUsage ?? this.streamUsage;
+  }
+
+  useCachedContent(
+    cachedContent: CachedContent,
+    modelParams?: ModelParams,
+    requestOptions?: RequestOptions
+  ): void {
+    if (!this.apiKey) return;
+    this.client = new GenerativeAI(
+      this.apiKey
+    ).getGenerativeModelFromCachedContent(
+      cachedContent,
+      modelParams,
+      requestOptions
+    );
   }
 
   get useSystemInstruction(): boolean {
