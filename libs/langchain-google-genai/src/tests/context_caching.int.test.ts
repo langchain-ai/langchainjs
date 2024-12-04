@@ -17,11 +17,13 @@ const model = new ChatGoogleGenerativeAI({});
 let fileResult: UploadFileResponse;
 
 beforeAll(async () => {
-  const displayName = "Gettysburg audio";
+  // Download video file and save in src/tests/data
+  // curl -O https://storage.googleapis.com/generativeai-downloads/data/Sherlock_Jr_FullMovie.mp4
+  const displayName = "Sherlock Jr. video";
 
   const filename = fileURLToPath(import.meta.url);
   const dirname = path.dirname(filename);
-  const pathToVideoFile = path.join(dirname, "/data/gettysburg10.wav");
+  const pathToVideoFile = path.join(dirname, "/data/Sherlock_Jr_FullMovie.mp4");
 
   const contextCache = new GoogleAICacheManager(
     process.env.GOOGLE_API_KEY || ""
@@ -29,7 +31,7 @@ beforeAll(async () => {
   const fileCache = new GoogleAIFileManager(process.env.GOOGLE_API_KEY || "");
   fileResult = await fileCache.uploadFile(pathToVideoFile, {
     displayName,
-    mimeType: "audio/wav",
+    mimeType: "video/mp4",
   });
 
   const { name } = fileResult.file;
@@ -45,8 +47,8 @@ beforeAll(async () => {
   }
 
   const systemInstruction =
-    "You are an expert audio analyzer, and your job is to answer " +
-    "the user's query based on the audio file you have access to.";
+    "You are an expert video analyzer, and your job is to answer " +
+    "the user's query based on the video file you have access to.";
   const cachedContent = await contextCache.create({
     model: "models/gemini-1.5-flash-001",
     displayName: "gettysburg audio",
@@ -71,7 +73,11 @@ beforeAll(async () => {
 }, 10 * 60 * 1000); // Set timeout to 10 minutes to upload file
 
 test("Test Google AI", async () => {
-  const res = await model.invoke("Transcribe the provided audio clip");
+  const res = await model.invoke(
+    "Introduce different characters in the movie by describing " +
+      "their personality, looks, and names. Also list the " +
+      "timestamps they were introduced for the first time."
+  );
 
   console.log(res);
   expect(res).toBeTruthy();
