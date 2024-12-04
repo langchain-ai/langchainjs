@@ -5,48 +5,51 @@ import { test } from "@jest/globals";
 import { fileURLToPath } from "node:url";
 import * as path from "node:path";
 
-import { FileState, UploadFileResponse } from "@google/generative-ai/server";
-import { GoogleGenerativeAIContextCache } from "../context_caching.js";
+import {
+  FileState,
+  UploadFileResponse,
+  GoogleAIFileManager,
+  GoogleAICacheManager,
+} from "@google/generative-ai/server";
 import { ChatGoogleGenerativeAI } from "../chat_models.js";
 
 const model = new ChatGoogleGenerativeAI({});
 let fileResult: UploadFileResponse;
 
 beforeAll(async () => {
-  // Download video file and save in src/tests/data
-  // curl -O https://storage.googleapis.com/generativeai-downloads/data/Sherlock_Jr_FullMovie.mp4
-  const displayName = "Sherlock Jr. video";
+  const displayName = "Gettysburg audio";
 
   const filename = fileURLToPath(import.meta.url);
   const dirname = path.dirname(filename);
-  const pathToVideoFile = path.join(dirname, "/data/Sherlock_Jr_FullMovie.mp4");
+  const pathToVideoFile = path.join(dirname, "/data/gettysburg10.wav");
 
-  const contextCache = new GoogleGenerativeAIContextCache(
+  const contextCache = new GoogleAICacheManager(
     process.env.GOOGLE_API_KEY || ""
   );
-  fileResult = await contextCache.uploadFile(pathToVideoFile, {
+  const fileCache = new GoogleAIFileManager(process.env.GOOGLE_API_KEY || "");
+  fileResult = await fileCache.uploadFile(pathToVideoFile, {
     displayName,
-    mimeType: "video/mp4",
+    mimeType: "audio/wav",
   });
 
   const { name } = fileResult.file;
 
   // Poll getFile() on a set interval (2 seconds here) to check file state.
-  let file = await contextCache.getFile(name);
+  let file = await fileCache.getFile(name);
   while (file.state === FileState.PROCESSING) {
     // Sleep for 2 seconds
     await new Promise((resolve) => {
       setTimeout(resolve, 2_000);
     });
-    file = await contextCache.getFile(name);
+    file = await fileCache.getFile(name);
   }
 
   const systemInstruction =
-    "You are an expert video analyzer, and your job is to answer " +
-    "the user's query based on the video file you have access to.";
-  const cachedContent = await contextCache.createCache({
+    "You are an expert audio analyzer, and your job is to answer " +
+    "the user's query based on the audio file you have access to.";
+  const cachedContent = await contextCache.create({
     model: "models/gemini-1.5-flash-001",
-    displayName: "sherlock jr movie",
+    displayName: "gettysburg audio",
     systemInstruction,
     contents: [
       {
@@ -68,11 +71,7 @@ beforeAll(async () => {
 }, 10 * 60 * 1000); // Set timeout to 10 minutes to upload file
 
 test("Test Google AI", async () => {
-  const res = await model.invoke(
-    "Introduce different characters in the movie by describing " +
-      "their personality, looks, and names. Also list the " +
-      "timestamps they were introduced for the first time."
-  );
+  const res = await model.invoke("Transcribe the provided audio clip");
 
   console.log(res);
   expect(res).toBeTruthy();

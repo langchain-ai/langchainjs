@@ -9,7 +9,7 @@ import {
   Part as GenerativeAIPart,
   ModelParams,
   RequestOptions,
-  CachedContent,
+  type CachedContent,
 } from "@google/generative-ai";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {
