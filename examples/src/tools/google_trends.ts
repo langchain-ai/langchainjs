@@ -1,9 +1,9 @@
-import { GoogleTrendsAPI } from "@langchain/community/tools/google_trends";
+import { SERPGoogleTrendsTool } from "@langchain/community/tools/google_trends";
 
 export async function run() {
-  const tool = new GoogleTrendsAPI();
+  const tool = new SERPGoogleTrendsTool();
 
-  const res = await tool._call("Monster");
+  const res = await tool.invoke("Monster");
 
   console.log(res);
 }

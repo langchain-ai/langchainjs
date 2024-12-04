@@ -11,6 +11,9 @@ This can be useful for understanding trending topics, regional search interest, 
 
 For API details see [here](https://serpapi.com/google-trends-api)
 
+SerpApi caches queries, so the first query will be slower while subsequent identical queries will be fast.
+Occasionally, related queries will not work while interest over time will be fine. You can check your query [here](https://serpapi.com/playground?engine=google_trends&q=monster&data_type=RELATED_QUERIES).
+
 ## Setup
 
 To use this tool, you will need to configure access to the Google Trends API from SerpApi.

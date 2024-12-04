@@ -2,18 +2,33 @@ import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { Tool } from "@langchain/core/tools";
 
 /**
- * Interface for parameters required by GoogleTrendsAPI class.
+ * Interfaces for the response from the SerpApi Google Trends API.
  */
-export interface GoogleTrendsAPIParams {
+interface TimelineValue {
+  query: string;
+  value: string;
+  extracted_value: number;
+}
+
+interface TimelineData {
+  date: string;
+  timestamp: string;
+  values: TimelineValue[];
+}
+
+/**
+ * Interface for parameters required by SERPGoogleTrendsTool class.
+ */
+export interface SERPGoogleTrendsToolParams {
   apiKey?: string;
 }
 
 /**
  * Tool that queries the Google Trends API. Uses default interest over time.
  */
-export class GoogleTrendsAPI extends Tool {
+export class SERPGoogleTrendsTool extends Tool {
   static lc_name() {
-    return "GoogleTrendsAPI";
+    return "SERPGoogleTrendsTool";
   }
 
   get lc_secrets(): { [key: string]: string } | undefined {
@@ -29,7 +44,7 @@ export class GoogleTrendsAPI extends Tool {
   description = `A wrapper around Google Trends API. Useful for analyzing and retrieving trending search data based on keywords, 
     categories, or regions. Input should be a search query or specific parameters for trends analysis.`;
 
-  constructor(fields?: GoogleTrendsAPIParams) {
+  constructor(fields?: SERPGoogleTrendsToolParams) {
     super(...arguments);
     const apiKey = fields?.apiKey ?? getEnvironmentVariable("SERPAPI_API_KEY");
     if (apiKey === undefined) {
@@ -45,6 +60,9 @@ export class GoogleTrendsAPI extends Tool {
      * Related queries only accepts one at a time, and multiple
      * queries at once on interest over time (default) is effectively the same as
      * each query one by one.
+     *
+     * SerpApi caches queries, so the first time will be slower
+     * and subsequent identical queries will be very fast.
      */
     if (query.split(",").length > 1) {
       throw new Error("Please do one query at a time");
@@ -80,7 +98,7 @@ export class GoogleTrendsAPI extends Tool {
     const startDate = totalResults[0].date.split(" ");
     const endDate = totalResults[totalResults.length - 1].date.split(" ");
     const values = totalResults.map(
-      (result: any) => result.values[0].extracted_value
+      (result: TimelineData) => result.values[0].extracted_value
     );
     const minValue = Math.min(...values);
     const maxValue = Math.max(...values);
@@ -109,6 +127,7 @@ export class GoogleTrendsAPI extends Tool {
     let rising = [];
     let top = [];
     if (!relatedRes.ok) {
+      // Sometimes related queries from SerpAPI will fail, but interest over time will be fine
       console.error(
         `Error fetching related queries from SerpAPI: ${relatedRes.statusText}`
       );
@@ -116,11 +135,12 @@ export class GoogleTrendsAPI extends Tool {
       const relatedDict = await relatedRes.json();
       rising =
         relatedDict.related_queries?.rising?.map(
-          (result: any) => result.query
+          (result: { query: string }) => result.query
         ) ?? [];
       top =
-        relatedDict.related_queries?.top?.map((result: any) => result.query) ??
-        [];
+        relatedDict.related_queries?.top?.map(
+          (result: { query: string }) => result.query
+        ) ?? [];
     }
 
     const doc = [

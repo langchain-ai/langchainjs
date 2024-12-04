@@ -1,14 +1,14 @@
 import { expect, describe } from "@jest/globals";
-import { GoogleTrendsAPI } from "../google_trends.js";
+import { SERPGoogleTrendsTool } from "../google_trends.js";
 
-describe("GoogleTrendsAPI", () => {
+describe("SERPGoogleTrendsTool", () => {
   test("should be setup with correct parameters", async () => {
-    const instance = new GoogleTrendsAPI();
+    const instance = new SERPGoogleTrendsTool();
     expect(instance.name).toBe("google_trends");
   });
 
-  test("GoogleTrendsAPI returns expected result for valid query", async () => {
-    const tool = new GoogleTrendsAPI();
+  test("SERPGoogleTrendsTool returns expected result for valid query", async () => {
+    const tool = new SERPGoogleTrendsTool();
 
     const result = await tool._call("Coffee");
 
@@ -24,8 +24,8 @@ describe("GoogleTrendsAPI", () => {
     expect(result).toContain("Top Related Queries:");
   });
 
-  test("GoogleTrendsAPI returns 'No good Trend Result was found' for a non-existent query", async () => {
-    const tool = new GoogleTrendsAPI();
+  test("SERPGoogleTrendsTool returns 'No good Trend Result was found' for a non-existent query", async () => {
+    const tool = new SERPGoogleTrendsTool();
 
     const result = await tool._call("earghajgpajrpgjaprgag");
 
