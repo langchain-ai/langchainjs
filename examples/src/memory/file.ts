@@ -1,5 +1,5 @@
 import { ChatOpenAI } from "@langchain/openai";
-import { FileChatMessageHistory } from "@langchain/community/memory/file_history";
+import { FileChatMessageHistory } from "@langchain/community/stores/message/file_system";
 import { RunnableWithMessageHistory } from "@langchain/core/runnables";
 import { StringOutputParser } from "@langchain/core/output_parsers";
 import {
