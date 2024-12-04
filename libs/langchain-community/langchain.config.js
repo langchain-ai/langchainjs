@@ -243,6 +243,7 @@ export const config = {
     "stores/message/convex": "stores/message/convex",
     "stores/message/dynamodb": "stores/message/dynamodb",
     "stores/message/firestore": "stores/message/firestore",
+    "stores/message/file_system": "stores/message/file_system",
     "stores/message/in_memory": "stores/message/in_memory",
     "stores/message/ipfs_datastore": "stores/message/ipfs_datastore",
     "stores/message/ioredis": "stores/message/ioredis",

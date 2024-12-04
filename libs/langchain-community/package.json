@@ -2449,6 +2449,15 @@
       "import": "./stores/message/firestore.js",
       "require": "./stores/message/firestore.cjs"
     },
+    "./stores/message/file_system": {
+      "types": {
+        "import": "./stores/message/file_system.d.ts",
+        "require": "./stores/message/file_system.d.cts",
+        "default": "./stores/message/file_system.d.ts"
+      },
+      "import": "./stores/message/file_system.js",
+      "require": "./stores/message/file_system.cjs"
+    },
     "./stores/message/in_memory": {
       "types": {
         "import": "./stores/message/in_memory.d.ts",
@@ -3873,6 +3882,10 @@
     "stores/message/firestore.js",
     "stores/message/firestore.d.ts",
     "stores/message/firestore.d.cts",
+    "stores/message/file_system.cjs",
+    "stores/message/file_system.js",
+    "stores/message/file_system.d.ts",
+    "stores/message/file_system.d.cts",
     "stores/message/in_memory.cjs",
     "stores/message/in_memory.js",
     "stores/message/in_memory.d.ts",
