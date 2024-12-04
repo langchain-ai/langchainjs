@@ -1972,6 +1972,15 @@
       "import": "./chat_models/moonshot.js",
       "require": "./chat_models/moonshot.cjs"
     },
+    "./chat_models/novita": {
+      "types": {
+        "import": "./chat_models/novita.d.ts",
+        "require": "./chat_models/novita.d.cts",
+        "default": "./chat_models/novita.d.ts"
+      },
+      "import": "./chat_models/novita.js",
+      "require": "./chat_models/novita.cjs"
+    },
     "./chat_models/ollama": {
       "types": {
         "import": "./chat_models/ollama.d.ts",
@@ -3670,6 +3679,10 @@
     "chat_models/moonshot.js",
     "chat_models/moonshot.d.ts",
     "chat_models/moonshot.d.cts",
+    "chat_models/novita.cjs",
+    "chat_models/novita.js",
+    "chat_models/novita.d.ts",
+    "chat_models/novita.d.cts",
     "chat_models/ollama.cjs",
     "chat_models/ollama.js",
     "chat_models/ollama.d.ts",
