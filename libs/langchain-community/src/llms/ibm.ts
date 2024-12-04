@@ -259,7 +259,9 @@ export class WatsonxLLM<
     input: string,
     options: this["ParsedCallOptions"],
     stream: true
-  ): Promise<AsyncIterable<string>>;
+  ): Promise<
+    AsyncIterable<WatsonXAI.ObjectStreamed<WatsonXAI.TextGenResponse>>
+  >;
 
   private async generateSingleMessage(
     input: string,
@@ -294,14 +296,16 @@ export class WatsonxLLM<
                 input,
               },
             },
+            returnObject: true,
           })
         : await this.service.generateTextStream({
             input,
             parameters,
             ...this.scopeId(),
             ...requestOptions,
+            returnObject: true,
           });
-      return textStream as unknown as AsyncIterable<string>;
+      return textStream;
     } else {
       const textGenerationPromise = idOrName
         ? this.service.deploymentGenerateText({
@@ -367,7 +371,7 @@ export class WatsonxLLM<
   async _generate(
     prompts: string[],
     options: this["ParsedCallOptions"],
-    _runManager?: CallbackManagerForLLMRun
+    runManager?: CallbackManagerForLLMRun
   ): Promise<LLMResult> {
     const tokenUsage: TokenUsage = {
       generated_token_count: 0,
@@ -379,70 +383,38 @@ export class WatsonxLLM<
           if (options.signal?.aborted) {
             throw new Error("AbortError");
           }
-          const callback = () =>
-            this.generateSingleMessage(prompt, options, true);
 
-          type ReturnMessage = ReturnType<typeof callback>;
-          const stream = await this.completionWithRetry<ReturnMessage>(
-            callback,
-            options
-          );
-
-          const responseChunk: ResponseChunk = {
-            id: 0,
-            event: "",
-            data: {
-              results: [],
-            },
-          };
-          const messages: ResponseChunk[] = [];
-          type ResponseChunkKeys = keyof ResponseChunk;
-          for await (const chunk of stream) {
-            if (chunk.length > 0) {
-              const index = chunk.indexOf(": ");
-              const [key, value] = [
-                chunk.substring(0, index) as ResponseChunkKeys,
-                chunk.substring(index + 2),
-              ];
-              if (key === "id") {
-                responseChunk[key] = Number(value);
-              } else if (key === "event") {
-                responseChunk[key] = String(value);
-              } else {
-                responseChunk[key] = JSON.parse(value);
-              }
-            } else if (chunk.length === 0) {
-              messages.push(JSON.parse(JSON.stringify(responseChunk)));
-              Object.assign(responseChunk, { id: 0, event: "", data: {} });
-            }
-          }
-
+          const stream = this._streamResponseChunks(prompt, options);
           const geneartionsArray: GenerationInfo[] = [];
-          for (const message of messages) {
-            message.data.results.forEach((item, index) => {
-              const generationInfo: GenerationInfo = {
-                text: "",
-                stop_reason: "",
-                generated_token_count: 0,
-                input_token_count: 0,
-              };
-              void _runManager?.handleLLMNewToken(item.generated_text ?? "", {
+
+          for await (const chunk of stream) {
+            const completion = chunk?.generationInfo?.completion ?? 0;
+            const generationInfo: GenerationInfo = {
+              text: "",
+              stop_reason: "",
+              generated_token_count: 0,
+              input_token_count: 0,
+            };
+            geneartionsArray[completion] ??= generationInfo;
+            geneartionsArray[completion].generated_token_count =
+              chunk?.generationInfo?.usage_metadata.generated_token_count ?? 0;
+            geneartionsArray[completion].input_token_count +=
+              chunk?.generationInfo?.usage_metadata.input_token_count ?? 0;
+            geneartionsArray[completion].stop_reason =
+              chunk?.generationInfo?.stop_reason;
+            geneartionsArray[completion].text += chunk.text;
+            if (chunk.text)
+              void runManager?.handleLLMNewToken(chunk.text, {
                 prompt: promptIdx,
-                completion: 1,
+                completion: 0,
               });
-              geneartionsArray[index] ??= generationInfo;
-              geneartionsArray[index].generated_token_count =
-                item.generated_token_count;
-              geneartionsArray[index].input_token_count +=
-                item.input_token_count;
-              geneartionsArray[index].stop_reason = item.stop_reason;
-              geneartionsArray[index].text += item.generated_text;
-            });
           }
+
           return geneartionsArray.map((item) => {
             const { text, ...rest } = item;
-            tokenUsage.generated_token_count += rest.generated_token_count;
+            tokenUsage.generated_token_count = rest.generated_token_count;
             tokenUsage.input_token_count += rest.input_token_count;
+
             return {
               text,
               generationInfo: rest,
@@ -527,35 +499,23 @@ export class WatsonxLLM<
         throw new Error("AbortError");
       }
 
-      type Keys = keyof typeof responseChunk;
-      if (chunk.length > 0) {
-        const index = chunk.indexOf(": ");
-        const [key, value] = [
-          chunk.substring(0, index) as Keys,
-          chunk.substring(index + 2),
-        ];
-        if (key === "id") {
-          responseChunk[key] = Number(value);
-        } else if (key === "event") {
-          responseChunk[key] = String(value);
-        } else {
-          responseChunk[key] = JSON.parse(value);
-        }
-      } else if (
-        chunk.length === 0 &&
-        responseChunk.data?.results?.length > 0
-      ) {
-        for (const item of responseChunk.data.results) {
-          yield new GenerationChunk({
-            text: item.generated_text,
-            generationInfo: {
+      for (const [index, item] of chunk.data.results.entries()) {
+        yield new GenerationChunk({
+          text: item.generated_text,
+          generationInfo: {
+            stop_reason: item.stop_reason,
+            completion: index,
+            usage_metadata: {
+              generated_token_count: item.generated_token_count,
+              input_token_count: item.input_token_count,
               stop_reason: item.stop_reason,
             },
-          });
-          await runManager?.handleLLMNewToken(item.generated_text ?? "");
-        }
-        Object.assign(responseChunk, { id: 0, event: "", data: {} });
+          },
+        });
+        if (item.generated_text)
+          void runManager?.handleLLMNewToken(item.generated_text);
       }
+      Object.assign(responseChunk, { id: 0, event: "", data: {} });
     }
   }
 

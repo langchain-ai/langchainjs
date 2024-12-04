@@ -1,4 +1,4 @@
-import { connect, Table, Connection, WriteMode } from "vectordb";
+import { connect, Table, Connection } from "@lancedb/lancedb";
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { VectorStore } from "@langchain/core/vectorstores";
 import { Document } from "@langchain/core/documents";
@@ -12,7 +12,7 @@ export type LanceDBArgs = {
   textKey?: string;
   uri?: string;
   tableName?: string;
-  mode?: WriteMode;
+  mode?: "create" | "overwrite";
 };
 
 /**
@@ -29,7 +29,7 @@ export class LanceDB extends VectorStore {
 
   private tableName: string;
 
-  private mode?: WriteMode;
+  private mode?: "create" | "overwrite";
 
   constructor(embeddings: EmbeddingsInterface, args?: LanceDBArgs) {
     super(embeddings, args || {});
@@ -38,7 +38,7 @@ export class LanceDB extends VectorStore {
     this.textKey = args?.textKey || "text";
     this.uri = args?.uri || "~/lancedb";
     this.tableName = args?.tableName || "langchain";
-    this.mode = args?.mode || WriteMode.Overwrite;
+    this.mode = args?.mode || "overwrite";
   }
 
   /**
@@ -86,7 +86,7 @@ export class LanceDB extends VectorStore {
     if (!this.table) {
       const db: Connection = await connect(this.uri);
       this.table = await db.createTable(this.tableName, data, {
-        writeMode: this.mode,
+        mode: this.mode,
       });
 
       return;
@@ -110,7 +110,11 @@ export class LanceDB extends VectorStore {
         "Table not found. Please add vectors to the table first."
       );
     }
-    const results = await this.table.search(query).limit(k).execute();
+    const results = await this.table
+      .query()
+      .nearestTo(query)
+      .limit(k)
+      .toArray();
 
     const docsAndScore: [Document, number][] = [];
     results.forEach((item) => {

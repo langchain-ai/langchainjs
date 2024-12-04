@@ -5,38 +5,27 @@ import type {
   SelectorType,
 } from "cheerio";
 import { Document } from "@langchain/core/documents";
-import {
-  AsyncCaller,
-  AsyncCallerParams,
-} from "@langchain/core/utils/async_caller";
+import { AsyncCaller } from "@langchain/core/utils/async_caller";
 import { BaseDocumentLoader } from "@langchain/core/document_loaders/base";
-import type { DocumentLoader } from "@langchain/core/document_loaders/base";
+import type { WebBaseLoaderParams, WebBaseLoader } from "./html.js";
+
+/**
+ * @deprecated Either import the CheerioWebBaseLoaderParams from @langchain/community/document_loaders/web/cheerio
+ * or use the WebBaseLoaderParams from @langchain/community/document_loaders/web/html.
+ */
+export { WebBaseLoaderParams };
 
 /**
  * Represents the parameters for configuring the CheerioWebBaseLoader. It
- * extends the AsyncCallerParams interface and adds additional parameters
- * specific to web-based loaders.
+ * extends the WebBaseLoaderParams interface and adds additional parameters
+ * specific to loading with Cheerio.
  */
-export interface WebBaseLoaderParams extends AsyncCallerParams {
-  /**
-   * The timeout in milliseconds for the fetch request. Defaults to 10s.
-   */
-  timeout?: number;
-
+export interface CheerioWebBaseLoaderParams extends WebBaseLoaderParams {
   /**
    * The selector to use to extract the text from the document. Defaults to
    * "body".
    */
   selector?: SelectorType;
-
-  /**
-   * The text decoder to use to decode the response. Defaults to UTF-8.
-   */
-  textDecoder?: TextDecoder;
-  /**
-   * The headers to use in the fetch request.
-   */
-  headers?: HeadersInit;
 }
 
 /**
@@ -45,14 +34,14 @@ export interface WebBaseLoaderParams extends AsyncCallerParams {
  * web-based documents using Cheerio.
  * @example
  * ```typescript
- * const loader = new CheerioWebBaseLoader("https:exampleurl.com");
+ * const loader = new CheerioWebBaseLoader("https://exampleurl.com");
  * const docs = await loader.load();
  * console.log({ docs });
  * ```
  */
 export class CheerioWebBaseLoader
   extends BaseDocumentLoader
-  implements DocumentLoader
+  implements WebBaseLoader
 {
   timeout: number;
 
@@ -64,7 +53,7 @@ export class CheerioWebBaseLoader
 
   headers?: HeadersInit;
 
-  constructor(public webPath: string, fields?: WebBaseLoaderParams) {
+  constructor(public webPath: string, fields?: CheerioWebBaseLoaderParams) {
     super();
     const { timeout, selector, textDecoder, headers, ...rest } = fields ?? {};
     this.timeout = timeout ?? 10000;

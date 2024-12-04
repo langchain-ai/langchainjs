@@ -64,7 +64,7 @@ beforeAll(async () => {
     ttlSeconds: 300,
   });
 
-  model.enableCachedContent(cachedContent);
+  model.useCachedContent(cachedContent);
 }, 10 * 60 * 1000); // Set timeout to 10 minutes to upload file
 
 test("Test Google AI", async () => {
