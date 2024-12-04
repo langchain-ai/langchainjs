@@ -1,5 +1,6 @@
 import { promises as fs } from "node:fs";
 import { dirname } from "node:path";
+
 import { BaseListChatMessageHistory } from "@langchain/core/chat_history";
 import {
   BaseMessage,
@@ -33,9 +34,9 @@ export type FileChatStore = {
 };
 
 /**
- * Type for the input to the `FileChatMessageHistory` constructor.
+ * Type for the input to the `FileSystemChatMessageHistory` constructor.
  */
-export interface FileChatMessageHistoryInput {
+export interface FileSystemChatMessageHistoryInput {
   sessionId: string;
   userId?: string;
   filePath?: string;
@@ -45,6 +46,7 @@ let store: FileChatStore;
 
 /**
  * Store chat message history using a local JSON file.
+ * For demo and development purposes only.
  *
  * @example
  * ```typescript
@@ -57,7 +59,7 @@ let store: FileChatStore;
  *     "system",
  *     "You are a helpful assistant. Answer all questions to the best of your ability.",
  *   ],
- *   new MessagesPlaceholder("chat_history"),
+ *   ["placeholder", "chat_history"],
  *   ["human", "{input}"],
  * ]);
  *
@@ -67,7 +69,7 @@ let store: FileChatStore;
  *  inputMessagesKey: "input",
  *  historyMessagesKey: "chat_history",
  *   getMessageHistory: async (sessionId) => {
- *     const chatHistory = new FileChatMessageHistory({
+ *     const chatHistory = new FileSystemChatMessageHistory({
  *       sessionId: sessionId,
  *       userId: "userId",  // Optional
  *     })
@@ -80,7 +82,7 @@ let store: FileChatStore;
  * );
  * ```
  */
-export class FileChatMessageHistory extends BaseListChatMessageHistory {
+export class FileSystemChatMessageHistory extends BaseListChatMessageHistory {
   lc_namespace = ["langchain", "stores", "message", "file"];
 
   private sessionId: string;
@@ -89,12 +91,12 @@ export class FileChatMessageHistory extends BaseListChatMessageHistory {
 
   private filePath: string;
 
-  constructor(chatHistoryInput: FileChatMessageHistoryInput) {
+  constructor(chatHistoryInput: FileSystemChatMessageHistoryInput) {
     super();
 
     this.sessionId = chatHistoryInput.sessionId;
     this.userId = chatHistoryInput.userId ?? "";
-    this.filePath = chatHistoryInput.filePath || FILE_HISTORY_DEFAULT_FILE_PATH;
+    this.filePath = chatHistoryInput.filePath ?? FILE_HISTORY_DEFAULT_FILE_PATH;
   }
 
   private async init(): Promise<void> {
@@ -104,7 +106,7 @@ export class FileChatMessageHistory extends BaseListChatMessageHistory {
     try {
       store = await this.loadStore();
     } catch (error) {
-      console.error("Error initializing FileChatMessageHistory:", error);
+      console.error("Error initializing FileSystemChatMessageHistory:", error);
       throw error;
     }
   }
@@ -119,7 +121,9 @@ export class FileChatMessageHistory extends BaseListChatMessageHistory {
       if (error.code === "ENOENT") {
         return {};
       }
-      throw new Error(`Error loading FileChatMessageHistory store: ${error}`);
+      throw new Error(
+        `Error loading FileSystemChatMessageHistory store: ${error}`
+      );
     }
   }
 
@@ -128,7 +132,9 @@ export class FileChatMessageHistory extends BaseListChatMessageHistory {
       await fs.mkdir(dirname(this.filePath), { recursive: true });
       await fs.writeFile(this.filePath, JSON.stringify(store));
     } catch (error) {
-      throw new Error(`Error saving FileChatMessageHistory store: ${error}`);
+      throw new Error(
+        `Error saving FileSystemChatMessageHistory store: ${error}`
+      );
     }
   }
 

@@ -770,6 +770,10 @@ stores/message/firestore.cjs
 stores/message/firestore.js
 stores/message/firestore.d.ts
 stores/message/firestore.d.cts
+stores/message/file_system.cjs
+stores/message/file_system.js
+stores/message/file_system.d.ts
+stores/message/file_system.d.cts
 stores/message/in_memory.cjs
 stores/message/in_memory.js
 stores/message/in_memory.d.ts
@@ -818,10 +822,6 @@ memory/chat_memory.cjs
 memory/chat_memory.js
 memory/chat_memory.d.ts
 memory/chat_memory.d.cts
-memory/file_history.cjs
-memory/file_history.js
-memory/file_history.d.ts
-memory/file_history.d.cts
 memory/motorhead_memory.cjs
 memory/motorhead_memory.js
 memory/motorhead_memory.d.ts

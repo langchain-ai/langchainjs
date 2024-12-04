@@ -242,6 +242,7 @@ export const config = {
     "stores/message/convex": "stores/message/convex",
     "stores/message/dynamodb": "stores/message/dynamodb",
     "stores/message/firestore": "stores/message/firestore",
+    "stores/message/file_system": "stores/message/file_system",
     "stores/message/in_memory": "stores/message/in_memory",
     "stores/message/ipfs_datastore": "stores/message/ipfs_datastore",
     "stores/message/ioredis": "stores/message/ioredis",
@@ -255,7 +256,6 @@ export const config = {
     "stores/message/zep_cloud": "stores/message/zep_cloud",
     // memory
     "memory/chat_memory": "memory/chat_memory",
-    "memory/file_history": "memory/file_chat_history",
     "memory/motorhead_memory": "memory/motorhead_memory",
     "memory/zep": "memory/zep",
     "memory/zep_cloud": "memory/zep_cloud",

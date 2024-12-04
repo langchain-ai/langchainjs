@@ -6,8 +6,8 @@ import { HumanMessage, AIMessage } from "@langchain/core/messages";
 import { v4 as uuid } from "uuid";
 import {
   FILE_HISTORY_DEFAULT_FILE_PATH,
-  FileChatMessageHistory,
-} from "../file_chat_history.js";
+  FileSystemChatMessageHistory,
+} from "../message/file_system.js";
 
 afterAll(async () => {
   try {
@@ -17,11 +17,11 @@ afterAll(async () => {
   }
 });
 
-test("FileChatMessageHistory works", async () => {
+test("FileSystemChatMessageHistory works", async () => {
   const input = {
     sessionId: uuid(),
   };
-  const chatHistory = new FileChatMessageHistory(input);
+  const chatHistory = new FileSystemChatMessageHistory(input);
   const blankResult = await chatHistory.getMessages();
   expect(blankResult).toStrictEqual([]);
 
@@ -36,18 +36,18 @@ test("FileChatMessageHistory works", async () => {
   expect(resultWithHistory).toEqual(expectedMessages);
 });
 
-test("FileChatMessageHistory persist sessions", async () => {
+test("FileSystemChatMessageHistory persist sessions", async () => {
   const input = {
     sessionId: uuid(),
   };
-  const chatHistory1 = new FileChatMessageHistory(input);
+  const chatHistory1 = new FileSystemChatMessageHistory(input);
   const blankResult = await chatHistory1.getMessages();
   expect(blankResult).toStrictEqual([]);
 
   await chatHistory1.addUserMessage("Who is the best vocalist?");
   await chatHistory1.addAIMessage("Ozzy Osbourne");
 
-  const chatHistory2 = new FileChatMessageHistory(input);
+  const chatHistory2 = new FileSystemChatMessageHistory(input);
   const expectedMessages = [
     new HumanMessage("Who is the best vocalist?"),
     new AIMessage("Ozzy Osbourne"),
@@ -56,12 +56,12 @@ test("FileChatMessageHistory persist sessions", async () => {
   expect(resultWithHistory).toEqual(expectedMessages);
 });
 
-test("FileChatMessageHistory clear session", async () => {
+test("FileSystemChatMessageHistory clear session", async () => {
   const input = {
     sessionId: uuid(),
     userId: uuid(),
   };
-  const chatHistory = new FileChatMessageHistory(input);
+  const chatHistory = new FileSystemChatMessageHistory(input);
 
   await chatHistory.addUserMessage("Who is the best vocalist?");
   await chatHistory.addAIMessage("Ozzy Osbourne");
@@ -79,12 +79,12 @@ test("FileChatMessageHistory clear session", async () => {
   expect(blankResult).toStrictEqual([]);
 });
 
-test("FileChatMessageHistory clear all sessions", async () => {
+test("FileSystemChatMessageHistory clear all sessions", async () => {
   const input1 = {
     sessionId: uuid(),
     userId: "user1",
   };
-  const chatHistory1 = new FileChatMessageHistory(input1);
+  const chatHistory1 = new FileSystemChatMessageHistory(input1);
 
   await chatHistory1.addUserMessage("Who is the best vocalist?");
   await chatHistory1.addAIMessage("Ozzy Osbourne");
@@ -93,7 +93,7 @@ test("FileChatMessageHistory clear all sessions", async () => {
     sessionId: uuid(),
     userId: "user1",
   };
-  const chatHistory2 = new FileChatMessageHistory(input2);
+  const chatHistory2 = new FileSystemChatMessageHistory(input2);
 
   await chatHistory2.addUserMessage("Who is the best vocalist?");
   await chatHistory2.addAIMessage("Ozzy Osbourne");
@@ -117,19 +117,19 @@ test("FileChatMessageHistory clear all sessions", async () => {
   expect(deletedResult2).toStrictEqual([]);
 });
 
-test("FileChatMessageHistory set context and get all sessions", async () => {
+test("FileSystemChatMessageHistory set context and get all sessions", async () => {
   const session1 = {
     sessionId: uuid(),
     userId: "user1",
   };
   const context1 = { title: "Best vocalist" };
-  const chatHistory1 = new FileChatMessageHistory(session1);
+  const chatHistory1 = new FileSystemChatMessageHistory(session1);
 
   await chatHistory1.setContext(context1);
   await chatHistory1.addUserMessage("Who is the best vocalist?");
   await chatHistory1.addAIMessage("Ozzy Osbourne");
 
-  const chatHistory2 = new FileChatMessageHistory({
+  const chatHistory2 = new FileSystemChatMessageHistory({
     sessionId: uuid(),
     userId: "user1",
   });

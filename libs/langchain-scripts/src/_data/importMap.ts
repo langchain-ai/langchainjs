@@ -3356,11 +3356,6 @@ export const importMap: Array<DeprecatedEntrypoint> = [
     namedImport: "RemoteRetrieverValues",
   },
   {
-    old: "langchain/memory/file_history",
-    new: "@langchain/community/memory/file_history",
-    namedImport: "FileChatMessageHistory",
-  },
-  {
     old: "langchain/memory/zep",
     new: "@langchain/community/memory/zep",
     namedImport: "ZepMemoryInput",
