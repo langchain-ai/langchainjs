@@ -1,3 +1,4 @@
+import { RunnableConfig } from "../../runnables.js";
 import { AsyncLocalStorageProviderSingleton } from "../singletons/index.js";
 import { raceWithSignal } from "./signal.js";
 
@@ -180,6 +181,24 @@ export function concat<
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function pickRunnableConfigKeys<CallOptions extends Record<string, any>>(
+  config?: CallOptions
+): RunnableConfig | undefined {
+  return config
+    ? {
+        configurable: config.configurable,
+        recursionLimit: config.recursionLimit,
+        callbacks: config.callbacks,
+        tags: config.tags,
+        metadata: config.metadata,
+        maxConcurrency: config.maxConcurrency,
+        timeout: config.timeout,
+        signal: config.signal,
+      }
+    : undefined;
+}
+
 export class AsyncGeneratorWithSetup<
   S = unknown,
   T = unknown,
@@ -215,7 +234,7 @@ export class AsyncGeneratorWithSetup<
     // to each generator is available.
     this.setup = new Promise((resolve, reject) => {
       void AsyncLocalStorageProviderSingleton.runWithConfig(
-        params.config,
+        pickRunnableConfigKeys(params.config as RunnableConfig),
         async () => {
           this.firstResult = params.generator.next();
           if (params.startSetup) {
@@ -238,7 +257,7 @@ export class AsyncGeneratorWithSetup<
     }
 
     return AsyncLocalStorageProviderSingleton.runWithConfig(
-      this.config,
+      pickRunnableConfigKeys(this.config as RunnableConfig),
       this.signal
         ? async () => {
             return raceWithSignal(this.generator.next(...args), this.signal);

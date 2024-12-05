@@ -29,6 +29,7 @@ import {
   atee,
   pipeGeneratorWithSetup,
   AsyncGeneratorWithSetup,
+  pickRunnableConfigKeys,
 } from "../utils/stream.js";
 import { raceWithSignal } from "../utils/signal.js";
 import {
@@ -2529,7 +2530,7 @@ export class RunnableLambda<
         recursionLimit: (config?.recursionLimit ?? DEFAULT_RECURSION_LIMIT) - 1,
       });
       void AsyncLocalStorageProviderSingleton.runWithConfig(
-        childConfig,
+        pickRunnableConfigKeys(childConfig),
         async () => {
           try {
             let output = await this.func(input, {
@@ -2627,7 +2628,7 @@ export class RunnableLambda<
     const output = await new Promise<RunOutput | Runnable>(
       (resolve, reject) => {
         void AsyncLocalStorageProviderSingleton.runWithConfig(
-          childConfig,
+          pickRunnableConfigKeys(childConfig),
           async () => {
             try {
               const res = await this.func(finalChunk as RunInput, {

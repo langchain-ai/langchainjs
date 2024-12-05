@@ -1,4 +1,5 @@
 import { AsyncLocalStorageProviderSingleton } from "../singletons/index.js";
+import { pickRunnableConfigKeys } from "../utils/stream.js";
 import { RunnableConfig } from "./config.js";
 
 export function isIterableIterator(
@@ -36,7 +37,7 @@ export function* consumeIteratorInContext<T>(
 ): IterableIterator<T> {
   while (true) {
     const { value, done } = AsyncLocalStorageProviderSingleton.runWithConfig(
-      context,
+      pickRunnableConfigKeys(context),
       iter.next.bind(iter),
       true
     );
@@ -56,7 +57,7 @@ export async function* consumeAsyncIterableInContext<T>(
   while (true) {
     const { value, done } =
       await AsyncLocalStorageProviderSingleton.runWithConfig(
-        context,
+        pickRunnableConfigKeys(context),
         iterator.next.bind(iter),
         true
       );

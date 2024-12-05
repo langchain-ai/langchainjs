@@ -20,6 +20,7 @@ import { MessageContent } from "../messages/base.js";
 import { AsyncLocalStorageProviderSingleton } from "../singletons/index.js";
 import { _isToolCall, ToolInputParsingException } from "./utils.js";
 import { isZodSchema } from "../utils/types/is_zod_schema.js";
+import { pickRunnableConfigKeys } from "../utils/stream.js";
 
 export { ToolInputParsingException };
 
@@ -594,7 +595,7 @@ export function tool<
             callbacks: runManager?.getChild(),
           });
           void AsyncLocalStorageProviderSingleton.runWithConfig(
-            childConfig,
+            pickRunnableConfigKeys(childConfig),
             async () => {
               try {
                 // TS doesn't restrict the type here based on the guard above
@@ -625,7 +626,7 @@ export function tool<
           callbacks: runManager?.getChild(),
         });
         void AsyncLocalStorageProviderSingleton.runWithConfig(
-          childConfig,
+          pickRunnableConfigKeys(childConfig),
           async () => {
             try {
               // TS doesn't restrict the type here based on the guard above
