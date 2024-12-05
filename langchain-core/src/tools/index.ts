@@ -12,6 +12,7 @@ import {
 import {
   ensureConfig,
   patchConfig,
+  pickRunnableConfigKeys,
   type RunnableConfig,
 } from "../runnables/config.js";
 import type { RunnableFunc, RunnableInterface } from "../runnables/base.js";
@@ -594,7 +595,7 @@ export function tool<
             callbacks: runManager?.getChild(),
           });
           void AsyncLocalStorageProviderSingleton.runWithConfig(
-            childConfig,
+            pickRunnableConfigKeys(childConfig),
             async () => {
               try {
                 // TS doesn't restrict the type here based on the guard above
@@ -625,7 +626,7 @@ export function tool<
           callbacks: runManager?.getChild(),
         });
         void AsyncLocalStorageProviderSingleton.runWithConfig(
-          childConfig,
+          pickRunnableConfigKeys(childConfig),
           async () => {
             try {
               // TS doesn't restrict the type here based on the guard above
