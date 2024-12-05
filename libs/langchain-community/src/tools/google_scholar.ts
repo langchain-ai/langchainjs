@@ -3,7 +3,7 @@ import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import fetch from "node-fetch"; // For making HTTP requests
 
 /**
- * Interface for parameters required by the GoogleScholarAPI class.
+ * Interface for parameters required by the SERPGoogleScholarAPITool class.
  */
 export interface GoogleScholarAPIParams {
   /**
@@ -15,12 +15,12 @@ export interface GoogleScholarAPIParams {
 /**
  * Tool for querying Google Scholar using the SerpApi service.
  */
-export class GoogleScholarAPI extends Tool {
+export class SERPGoogleScholarAPITool extends Tool {
   /**
    * Specifies the name of the tool, used internally by LangChain.
    */
   static lc_name() {
-    return "GoogleScholarAPI";
+    return "SERPGoogleScholarAPITool";
   }
 
   /**
@@ -34,7 +34,7 @@ export class GoogleScholarAPI extends Tool {
   }
 
   // Name of the tool, used for logging or identification within LangChain.
-  name = "google_scholar";
+  name = "serp_google_scholar";
 
   // The API key used for making requests to SerpApi.
   protected apiKey: string;
@@ -46,7 +46,7 @@ export class GoogleScholarAPI extends Tool {
   articles and papers by keywords or authors. Input should be a search query string.`;
 
   /**
-   * Constructs a new instance of GoogleScholarAPI.
+   * Constructs a new instance of SERPGoogleScholarAPITool.
    * @param fields - Optional parameters including an API key.
    */
   constructor(fields?: GoogleScholarAPIParams) {
@@ -71,7 +71,7 @@ export class GoogleScholarAPI extends Tool {
    * @returns A JSON string containing the search results.
    * @throws Error if the API request fails or returns an error.
    */
-  async _call(input: string): Promise<string> {
+  async invoke(input: string): Promise<string> {
     // Construct the URL for the API request.
     const url = `https://serpapi.com/search.json?q=${encodeURIComponent(
       input
