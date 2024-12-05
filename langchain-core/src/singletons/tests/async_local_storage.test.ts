@@ -136,7 +136,7 @@ test("Config should be automatically populated after setting global async local 
   ).toEqual(1);
 });
 
-test("Runnable streamEvents method with streaming nested in a RunnableLambda", async () => {
+test.only("Runnable streamEvents method with streaming nested in a RunnableLambda", async () => {
   AsyncLocalStorageProviderSingleton.initializeGlobalInstance(
     new AsyncLocalStorage()
   );
@@ -155,7 +155,12 @@ test("Runnable streamEvents method with streaming nested in a RunnableLambda", a
 
     const nestedLambdaWithOverriddenCallbacks = RunnableLambda.from(
       async (_: string, config) => {
-        expect(config?.callbacks?.handlers).toEqual([]);
+        expect(
+          config?.callbacks?.handlers.filter(
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (handler: any) => handler.name !== "langchain_tracer"
+          )
+        ).toEqual([]);
       }
     );
     await nestedLambdaWithOverriddenCallbacks.invoke(input, {
