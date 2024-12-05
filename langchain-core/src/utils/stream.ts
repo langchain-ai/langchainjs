@@ -1,12 +1,11 @@
-import { RunnableConfig } from "../../runnables.js";
+import { pickRunnableConfigKeys } from "../runnables/types.js";
 import { AsyncLocalStorageProviderSingleton } from "../singletons/index.js";
+import { IterableReadableStreamInterface } from "../types/stream.js";
 import { raceWithSignal } from "./signal.js";
 
-// Make this a type to override ReadableStream's async iterator type in case
-// the popular web-streams-polyfill is imported - the supplied types
-// in that case don't quite match.
-export type IterableReadableStreamInterface<T> = ReadableStream<T> &
-  AsyncIterable<T>;
+// Re-exported for backwards compatibility
+// Do NOT import this type from this file inside the project. Instead, always import from `types/stream.js`
+export { IterableReadableStreamInterface };
 
 /*
  * Support async iterator syntax for ReadableStreams in all environments.
@@ -181,24 +180,6 @@ export function concat<
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function pickRunnableConfigKeys<CallOptions extends Record<string, any>>(
-  config?: CallOptions
-): RunnableConfig | undefined {
-  return config
-    ? {
-        configurable: config.configurable,
-        recursionLimit: config.recursionLimit,
-        callbacks: config.callbacks,
-        tags: config.tags,
-        metadata: config.metadata,
-        maxConcurrency: config.maxConcurrency,
-        timeout: config.timeout,
-        signal: config.signal,
-      }
-    : undefined;
-}
-
 export class AsyncGeneratorWithSetup<
   S = unknown,
   T = unknown,
@@ -234,7 +215,9 @@ export class AsyncGeneratorWithSetup<
     // to each generator is available.
     this.setup = new Promise((resolve, reject) => {
       void AsyncLocalStorageProviderSingleton.runWithConfig(
-        pickRunnableConfigKeys(params.config as RunnableConfig),
+        pickRunnableConfigKeys(
+          params.config as Record<string, unknown> | undefined
+        ),
         async () => {
           this.firstResult = params.generator.next();
           if (params.startSetup) {
@@ -257,7 +240,9 @@ export class AsyncGeneratorWithSetup<
     }
 
     return AsyncLocalStorageProviderSingleton.runWithConfig(
-      pickRunnableConfigKeys(this.config as RunnableConfig),
+      pickRunnableConfigKeys(
+        this.config as Record<string, unknown> | undefined
+      ),
       this.signal
         ? async () => {
             return raceWithSignal(this.generator.next(...args), this.signal);

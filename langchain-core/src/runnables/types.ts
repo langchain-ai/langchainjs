@@ -1,7 +1,7 @@
 import type { z } from "zod";
-import type { IterableReadableStreamInterface } from "../utils/stream.js";
 import type { SerializableInterface } from "../load/serializable.js";
 import type { BaseCallbackConfig } from "../callbacks/manager.js";
+import type { IterableReadableStreamInterface } from "../types/stream.js";
 
 export type RunnableBatchOptions = {
   /** @deprecated Pass in via the standard runnable config object instead */
@@ -107,4 +107,22 @@ export interface RunnableConfig<
    * @see https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal
    */
   signal?: AbortSignal;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function pickRunnableConfigKeys<CallOptions extends Record<string, any>>(
+  config?: CallOptions
+): RunnableConfig | undefined {
+  return config
+    ? {
+        configurable: config.configurable,
+        recursionLimit: config.recursionLimit,
+        callbacks: config.callbacks,
+        tags: config.tags,
+        metadata: config.metadata,
+        maxConcurrency: config.maxConcurrency,
+        timeout: config.timeout,
+        signal: config.signal,
+      }
+    : undefined;
 }

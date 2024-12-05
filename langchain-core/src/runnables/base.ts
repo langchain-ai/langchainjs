@@ -29,7 +29,6 @@ import {
   atee,
   pipeGeneratorWithSetup,
   AsyncGeneratorWithSetup,
-  pickRunnableConfigKeys,
 } from "../utils/stream.js";
 import { raceWithSignal } from "../utils/signal.js";
 import {
@@ -56,6 +55,7 @@ import {
 } from "./iter.js";
 import { _isToolCall, ToolInputParsingException } from "../tools/utils.js";
 import { ToolCall } from "../messages/tool.js";
+import { pickRunnableConfigKeys } from "./types.js";
 
 export { type RunnableInterface, RunnableBatchOptions };
 

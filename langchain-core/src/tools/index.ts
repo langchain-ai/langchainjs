@@ -20,7 +20,7 @@ import { MessageContent } from "../messages/base.js";
 import { AsyncLocalStorageProviderSingleton } from "../singletons/index.js";
 import { _isToolCall, ToolInputParsingException } from "./utils.js";
 import { isZodSchema } from "../utils/types/is_zod_schema.js";
-import { pickRunnableConfigKeys } from "../utils/stream.js";
+import { pickRunnableConfigKeys } from "../runnables/types.js";
 
 export { ToolInputParsingException };
 
