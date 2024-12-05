@@ -4,7 +4,7 @@ import { getEnvironmentVariable } from "@langchain/core/utils/env";
 
 export interface JinaEmbeddingsParams extends EmbeddingsParams {
   /** Model name to use */
-  modelName:
+  model:
     | "jina-clip-v2"
     | "jina-embeddings-v3"
     | "jina-colbert-v2"
@@ -58,7 +58,7 @@ type JinaMultiModelInput =
 export type JinaEmbeddingsInput = string | JinaMultiModelInput;
 
 interface EmbeddingCreateParams {
-  model: JinaEmbeddingsParams["modelName"];
+  model: JinaEmbeddingsParams["model"];
 
   /**
    * input can be strings or JinaMultiModelInputs,if you want embed image,you should use JinaMultiModelInputs
@@ -88,7 +88,7 @@ interface EmbeddingErrorResponse {
 }
 
 export class JinaEmbeddings extends Embeddings implements JinaEmbeddingsParams {
-  modelName: JinaEmbeddingsParams["modelName"] = "jina-clip-v2";
+  model: JinaEmbeddingsParams["model"] = "jina-clip-v2";
 
   batchSize = 24;
 
@@ -119,7 +119,7 @@ export class JinaEmbeddings extends Embeddings implements JinaEmbeddingsParams {
 
     this.apiKey = apiKey;
 
-    this.modelName = fieldsWithDefaults?.modelName ?? this.modelName;
+    this.model = fieldsWithDefaults?.model ?? this.model;
     this.dimensions = fieldsWithDefaults?.dimensions ?? this.dimensions;
     this.batchSize = fieldsWithDefaults?.batchSize ?? this.batchSize;
     this.stripNewLines =
@@ -175,7 +175,7 @@ export class JinaEmbeddings extends Embeddings implements JinaEmbeddingsParams {
     query?: boolean
   ): EmbeddingCreateParams {
     return {
-      model: this.modelName,
+      model: this.model,
       input,
       dimensions: this.dimensions,
       task: query ? "retrieval.query" : "retrieval.passage",
