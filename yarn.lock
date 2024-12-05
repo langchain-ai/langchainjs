@@ -8676,6 +8676,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@cfworker/json-schema@npm:^4.0.0":
+  version: 4.0.0
+  resolution: "@cfworker/json-schema@npm:4.0.0"
+  checksum: 64de0268feca99641f4d357bf747729238392351eb75c14577b1c520eb92f39672e56dba499462eabcf2413bfbe99db2f6b4604fa8ccedb2cff00762c9487ec3
+  languageName: node
+  linkType: hard
+
 "@chainsafe/is-ip@npm:^2.0.1":
   version: 2.0.2
   resolution: "@chainsafe/is-ip@npm:2.0.2"
@@ -12319,6 +12326,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@langchain/core@workspace:langchain-core"
   dependencies:
+    "@cfworker/json-schema": ^4.0.0
     "@jest/globals": ^29.5.0
     "@langchain/scripts": ">=0.1.0 <0.2.0"
     "@swc/core": ^1.3.90
