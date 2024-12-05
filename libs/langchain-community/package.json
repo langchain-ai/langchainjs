@@ -78,7 +78,7 @@
     "@google-cloud/storage": "^7.7.0",
     "@gradientai/nodejs-sdk": "^1.2.0",
     "@huggingface/inference": "^2.6.4",
-    "@ibm-cloud/watsonx-ai": "^1.1.0",
+    "@ibm-cloud/watsonx-ai": "^1.3.0",
     "@jest/globals": "^29.5.0",
     "@lancedb/lancedb": "^0.13.0",
     "@langchain/core": "workspace:*",

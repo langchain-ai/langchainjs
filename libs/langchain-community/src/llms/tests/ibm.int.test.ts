@@ -4,6 +4,7 @@ import { LLMResult } from "@langchain/core/outputs";
 import { StringPromptValue } from "@langchain/core/prompt_values";
 import { TokenUsage } from "../../types/ibm.js";
 import { WatsonxLLM, WatsonxInputLLM } from "../ibm.js";
+import { WatsonxCallbackManager } from "../../utils/ibm.js";
 
 const originalBackground = process.env.LANGCHAIN_CALLBACKS_BACKGROUND;
 
@@ -175,7 +176,7 @@ describe("Text generation", () => {
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
         projectId: process.env.WATSONX_AI_PROJECT_ID,
-        maxNewTokens: 5,
+        maxNewTokens: 10,
         streaming: true,
 
         callbacks: CallbackManager.fromHandlers({
@@ -189,7 +190,7 @@ describe("Text generation", () => {
         }),
       });
 
-      const res = await model.invoke("Print hello world?");
+      const res = await model.invoke("Print hello world, please!");
       expect(countedTokens).toBe(usedTokens);
       expect(res).toBe(streamedText);
     });
@@ -418,6 +419,109 @@ describe("Text generation", () => {
         // @ts-expect-error Intentionally passing wrong parameter
         instance.getNumTokens(12, { wrong: "Wrong" })
       ).rejects.toThrowError();
+    });
+  });
+
+  describe("Test watsonx callbacks", () => {
+    test("Single request callback", async () => {
+      let callbackFlag = false;
+      const service = new WatsonxLLM({
+        model: "mistralai/mistral-large",
+        version: "2024-05-31",
+        serviceUrl: process.env.WATSONX_AI_SERVICE_URL ?? "testString",
+        projectId: process.env.WATSONX_AI_PROJECT_ID ?? "testString",
+        callbacks: WatsonxCallbackManager.fromHandlers({
+          requestCallback(req) {
+            callbackFlag = !!req;
+          },
+        }),
+      });
+      const hello = await service.stream("Print hello world");
+      const chunks = [];
+      for await (const chunk of hello) {
+        chunks.push(chunk);
+      }
+      expect(callbackFlag).toBe(true);
+    });
+    test("Single response callback", async () => {
+      let callbackFlag = false;
+      const service = new WatsonxLLM({
+        model: "mistralai/mistral-large",
+        version: "2024-05-31",
+        serviceUrl: process.env.WATSONX_AI_SERVICE_URL ?? "testString",
+        projectId: process.env.WATSONX_AI_PROJECT_ID ?? "testString",
+        maxNewTokens: 10,
+        callbacks: WatsonxCallbackManager.fromHandlers({
+          responseCallback(res) {
+            callbackFlag = !!res;
+          },
+        }),
+      });
+      const hello = await service.stream("Print hello world");
+      const chunks = [];
+      for await (const chunk of hello) {
+        chunks.push(chunk);
+      }
+      expect(callbackFlag).toBe(true);
+    });
+    test("Both callbacks", async () => {
+      let callbackFlagReq = false;
+      let callbackFlagRes = false;
+      const service = new WatsonxLLM({
+        model: "mistralai/mistral-large",
+        version: "2024-05-31",
+        serviceUrl: process.env.WATSONX_AI_SERVICE_URL ?? "testString",
+        projectId: process.env.WATSONX_AI_PROJECT_ID ?? "testString",
+        maxNewTokens: 10,
+        callbacks: WatsonxCallbackManager.fromHandlers({
+          requestCallback(req) {
+            callbackFlagReq = !!req;
+          },
+          responseCallback(res) {
+            callbackFlagRes = !!res;
+          },
+        }),
+      });
+      const hello = await service.stream("Print hello world");
+      const chunks = [];
+      for await (const chunk of hello) {
+        chunks.push(chunk);
+      }
+      expect(callbackFlagReq).toBe(true);
+      expect(callbackFlagRes).toBe(true);
+    });
+    test("Multiple callbacks", async () => {
+      let callbackFlagReq = false;
+      let callbackFlagRes = false;
+      let langchainCallback = false;
+
+      const service = new WatsonxLLM({
+        model: "mistralai/mistral-large",
+        version: "2024-05-31",
+        serviceUrl: process.env.WATSONX_AI_SERVICE_URL ?? "testString",
+        projectId: process.env.WATSONX_AI_PROJECT_ID ?? "testString",
+        maxNewTokens: 10,
+        callbacks: WatsonxCallbackManager.fromHandlers({
+          requestCallback(req) {
+            callbackFlagReq = !!req;
+          },
+          responseCallback(res) {
+            callbackFlagRes = !!res;
+          },
+          async handleLLMEnd(output) {
+            expect(output.generations).toBeDefined();
+            langchainCallback = !!output;
+          },
+        }),
+      });
+      const hello = await service.stream("Print hello world");
+      const chunks = [];
+      for await (const chunk of hello) {
+        chunks.push(chunk);
+      }
+      expect(callbackFlagReq).toBe(true);
+      expect(callbackFlagRes).toBe(true);
+      expect(langchainCallback).toBe(true);
     });
   });
 });

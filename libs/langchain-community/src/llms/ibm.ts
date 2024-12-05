@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { BaseLLM, BaseLLMParams } from "@langchain/core/language_models/llms";
 import { WatsonXAI } from "@ibm-cloud/watsonx-ai";
 import {
@@ -17,7 +16,10 @@ import {
 } from "@langchain/core/outputs";
 import { BaseLanguageModelCallOptions } from "@langchain/core/language_models/base";
 import { AsyncCaller } from "@langchain/core/utils/async_caller";
-import { authenticateAndSetInstance } from "../utils/ibm.js";
+import {
+  authenticateAndSetInstance,
+  WatsonxCallbackManagerForLLMRun,
+} from "../utils/ibm.js";
 import {
   GenerationInfo,
   ResponseChunk,
@@ -258,7 +260,8 @@ export class WatsonxLLM<
   private async generateSingleMessage(
     input: string,
     options: this["ParsedCallOptions"],
-    stream: true
+    stream: true,
+    handlers?: WatsonXAI.RequestCallbacks
   ): Promise<
     AsyncIterable<WatsonXAI.ObjectStreamed<WatsonXAI.TextGenResponse>>
   >;
@@ -266,13 +269,15 @@ export class WatsonxLLM<
   private async generateSingleMessage(
     input: string,
     options: this["ParsedCallOptions"],
-    stream: false
+    stream: false,
+    handlers?: WatsonXAI.RequestCallbacks
   ): Promise<Generation[]>;
 
   private async generateSingleMessage(
     input: string,
     options: this["ParsedCallOptions"],
-    stream: boolean
+    stream: true | false,
+    handlers?: WatsonXAI.RequestCallbacks
   ) {
     const {
       signal,
@@ -287,43 +292,58 @@ export class WatsonxLLM<
     const parameters = this.invocationParams(options);
     if (stream) {
       const textStream = idOrName
-        ? await this.service.deploymentGenerateTextStream({
-            idOrName,
-            ...requestOptions,
-            parameters: {
-              ...parameters,
-              prompt_variables: {
-                input,
+        ? await this.service.deploymentGenerateTextStream(
+            {
+              idOrName,
+              ...requestOptions,
+              parameters: {
+                ...parameters,
+                prompt_variables: {
+                  input,
+                },
               },
+              returnObject: true,
             },
-            returnObject: true,
-          })
-        : await this.service.generateTextStream({
-            input,
-            parameters,
-            ...this.scopeId(),
-            ...requestOptions,
-            returnObject: true,
-          });
-      return textStream;
+            handlers
+          )
+        : await this.service.generateTextStream(
+            {
+              input,
+              parameters,
+              ...this.scopeId(),
+              ...requestOptions,
+              returnObject: true,
+            },
+            handlers
+          );
+
+      return textStream as AsyncIterable<
+        WatsonXAI.ObjectStreamed<WatsonXAI.TextGenResponse>
+      >;
     } else {
       const textGenerationPromise = idOrName
-        ? this.service.deploymentGenerateText({
-            ...requestOptions,
-            idOrName,
-            parameters: {
-              ...parameters,
-              prompt_variables: {
-                input,
+        ? this.service.deploymentGenerateText(
+            {
+              ...requestOptions,
+              idOrName,
+              parameters: {
+                ...parameters,
+                prompt_variables: {
+                  input,
+                },
               },
             },
-          })
-        : this.service.generateText({
-            input,
-            parameters,
-            ...this.scopeId(),
-            ...requestOptions,
-          });
+            handlers
+          )
+        : this.service.generateText(
+            {
+              input,
+              parameters,
+              ...this.scopeId(),
+              ...requestOptions,
+            },
+            handlers
+          );
 
       const textGeneration = await textGenerationPromise;
       const singleGeneration: Generation[] = textGeneration.result.results.map(
@@ -371,7 +391,7 @@ export class WatsonxLLM<
   async _generate(
     prompts: string[],
     options: this["ParsedCallOptions"],
-    runManager?: CallbackManagerForLLMRun
+    runManager?: WatsonxCallbackManagerForLLMRun
   ): Promise<LLMResult> {
     const tokenUsage: TokenUsage = {
       generated_token_count: 0,
@@ -383,8 +403,11 @@ export class WatsonxLLM<
           if (options.signal?.aborted) {
             throw new Error("AbortError");
           }
-
-          const stream = this._streamResponseChunks(prompt, options);
+          const stream = this._streamResponseChunks(
+            prompt,
+            options,
+            runManager
+          );
           const geneartionsArray: GenerationInfo[] = [];
 
           for await (const chunk of stream) {
@@ -403,11 +426,10 @@ export class WatsonxLLM<
             geneartionsArray[completion].stop_reason =
               chunk?.generationInfo?.stop_reason;
             geneartionsArray[completion].text += chunk.text;
-            if (chunk.text)
-              void runManager?.handleLLMNewToken(chunk.text, {
-                prompt: promptIdx,
-                completion: 0,
-              });
+            void runManager?.handleLLMNewToken(chunk.text, {
+              prompt: promptIdx,
+              completion: 0,
+            });
           }
 
           return geneartionsArray.map((item) => {
@@ -481,9 +503,13 @@ export class WatsonxLLM<
   async *_streamResponseChunks(
     prompt: string,
     options: this["ParsedCallOptions"],
-    runManager?: CallbackManagerForLLMRun
+    runManager?: WatsonxCallbackManagerForLLMRun
   ): AsyncGenerator<GenerationChunk> {
-    const callback = () => this.generateSingleMessage(prompt, options, true);
+    const watsonxHandlers = runManager?.handlers.filter(
+      (item) => item.name === "watsonxHandler"
+    )?.[0]?.watsonxHandlers;
+    const callback = () =>
+      this.generateSingleMessage(prompt, options, true, watsonxHandlers);
     type ReturnStream = ReturnType<typeof callback>;
     const streamInferDeployedPrompt =
       await this.completionWithRetry<ReturnStream>(callback);
@@ -512,7 +538,7 @@ export class WatsonxLLM<
             },
           },
         });
-        if (item.generated_text)
+        if (!this.streaming)
           void runManager?.handleLLMNewToken(item.generated_text);
       }
       Object.assign(responseChunk, { id: 0, event: "", data: {} });
