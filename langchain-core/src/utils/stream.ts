@@ -1,4 +1,3 @@
-import { pickRunnableConfigKeys } from "../runnables/config.js";
 import { AsyncLocalStorageProviderSingleton } from "../singletons/index.js";
 import type { IterableReadableStreamInterface } from "../types/stream.js";
 import { raceWithSignal } from "./signal.js";
@@ -215,9 +214,7 @@ export class AsyncGeneratorWithSetup<
     // to each generator is available.
     this.setup = new Promise((resolve, reject) => {
       void AsyncLocalStorageProviderSingleton.runWithConfig(
-        pickRunnableConfigKeys(
-          params.config as Record<string, unknown> | undefined
-        ),
+        params.config,
         async () => {
           this.firstResult = params.generator.next();
           if (params.startSetup) {
@@ -240,9 +237,7 @@ export class AsyncGeneratorWithSetup<
     }
 
     return AsyncLocalStorageProviderSingleton.runWithConfig(
-      pickRunnableConfigKeys(
-        this.config as Record<string, unknown> | undefined
-      ),
+      this.config,
       this.signal
         ? async () => {
             return raceWithSignal(this.generator.next(...args), this.signal);

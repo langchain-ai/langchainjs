@@ -7,6 +7,7 @@ import {
 } from "./globals.js";
 import { CallbackManager } from "../../callbacks/manager.js";
 import { LangChainTracer } from "../../tracers/tracer_langchain.js";
+import { pickRunnableConfigKeys } from "../../runnables/config.js";
 
 export class MockAsyncLocalStorage implements AsyncLocalStorageInterface {
   getStore(): any {
@@ -46,12 +47,13 @@ class AsyncLocalStorageProvider {
     callback: () => T,
     avoidCreatingRootRunTree?: boolean
   ): T {
+    const cleanedConfig = pickRunnableConfigKeys(config);
     const callbackManager = CallbackManager._configureSync(
-      config?.callbacks,
+      cleanedConfig?.callbacks,
       undefined,
-      config?.tags,
+      cleanedConfig?.tags,
       undefined,
-      config?.metadata
+      cleanedConfig?.metadata
     );
     const storage = this.getInstance();
     const previousValue = storage.getStore();
@@ -72,7 +74,7 @@ class AsyncLocalStorageProvider {
     }
 
     if (runTree) {
-      runTree.extra = { ...runTree.extra, [LC_CHILD_KEY]: config };
+      runTree.extra = { ...runTree.extra, [LC_CHILD_KEY]: cleanedConfig };
     }
 
     if (
