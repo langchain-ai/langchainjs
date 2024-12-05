@@ -82,6 +82,7 @@ export function getEnvironmentVariable(name: string): string | undefined {
   // https://github.com/langchain-ai/langchainjs/issues/1412
   try {
     if (typeof process !== "undefined") {
+      // eslint-disable-next-line no-process-env
       return process.env?.[name];
     } else if (isDeno()) {
       return Deno?.env.get(name);
