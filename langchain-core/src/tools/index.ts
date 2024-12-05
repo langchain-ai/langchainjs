@@ -12,6 +12,7 @@ import {
 import {
   ensureConfig,
   patchConfig,
+  pickRunnableConfigKeys,
   type RunnableConfig,
 } from "../runnables/config.js";
 import type { RunnableFunc, RunnableInterface } from "../runnables/base.js";
@@ -20,7 +21,6 @@ import { MessageContent } from "../messages/base.js";
 import { AsyncLocalStorageProviderSingleton } from "../singletons/index.js";
 import { _isToolCall, ToolInputParsingException } from "./utils.js";
 import { isZodSchema } from "../utils/types/is_zod_schema.js";
-import { pickRunnableConfigKeys } from "../runnables/types.js";
 
 export { ToolInputParsingException };
 

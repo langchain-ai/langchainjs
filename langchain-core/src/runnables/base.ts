@@ -6,7 +6,7 @@ import {
   type TraceableFunction,
   isTraceableFunction,
 } from "langsmith/singletons/traceable";
-import type { RunnableInterface, RunnableBatchOptions } from "./types.js";
+import type { RunnableInterface, RunnableBatchOptions, RunnableConfig } from "./types.js";
 import { CallbackManagerForChainRun } from "../callbacks/manager.js";
 import {
   LogStreamCallbackHandler,
@@ -33,11 +33,11 @@ import {
 import { raceWithSignal } from "../utils/signal.js";
 import {
   DEFAULT_RECURSION_LIMIT,
-  RunnableConfig,
   ensureConfig,
   getCallbackManagerForConfig,
   mergeConfigs,
   patchConfig,
+  pickRunnableConfigKeys,
 } from "./config.js";
 import { AsyncCaller } from "../utils/async_caller.js";
 import { Run } from "../tracers/base.js";
@@ -55,7 +55,6 @@ import {
 } from "./iter.js";
 import { _isToolCall, ToolInputParsingException } from "../tools/utils.js";
 import { ToolCall } from "../messages/tool.js";
-import { pickRunnableConfigKeys } from "./types.js";
 
 export { type RunnableInterface, RunnableBatchOptions };
 

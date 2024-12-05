@@ -1,4 +1,4 @@
-import { pickRunnableConfigKeys } from "../runnables/types.js";
+import { pickRunnableConfigKeys } from "../runnables/config.js";
 import { AsyncLocalStorageProviderSingleton } from "../singletons/index.js";
 import { IterableReadableStreamInterface } from "../types/stream.js";
 import { raceWithSignal } from "./signal.js";
