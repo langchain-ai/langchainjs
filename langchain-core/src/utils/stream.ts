@@ -1,11 +1,11 @@
 import { pickRunnableConfigKeys } from "../runnables/config.js";
 import { AsyncLocalStorageProviderSingleton } from "../singletons/index.js";
-import { IterableReadableStreamInterface } from "../types/stream.js";
+import type { IterableReadableStreamInterface } from "../types/stream.js";
 import { raceWithSignal } from "./signal.js";
 
 // Re-exported for backwards compatibility
 // Do NOT import this type from this file inside the project. Instead, always import from `types/stream.js`
-export { IterableReadableStreamInterface };
+export type { IterableReadableStreamInterface };
 
 /*
  * Support async iterator syntax for ReadableStreams in all environments.
