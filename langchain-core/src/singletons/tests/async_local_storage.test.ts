@@ -136,7 +136,7 @@ test("Config should be automatically populated after setting global async local 
   ).toEqual(1);
 });
 
-test.only("Runnable streamEvents method with streaming nested in a RunnableLambda", async () => {
+test("Runnable streamEvents method with streaming nested in a RunnableLambda", async () => {
   AsyncLocalStorageProviderSingleton.initializeGlobalInstance(
     new AsyncLocalStorage()
   );
