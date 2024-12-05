@@ -5,9 +5,9 @@ import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { AsyncCaller } from "@langchain/core/utils/async_caller";
 
 interface KwargsParams {
-    view?: string
-    maxRecords?: number
-    filterByFormula?: string
+  view?: string;
+  maxRecords?: number;
+  filterByFormula?: string;
 }
 
 export interface AirtableLoaderOptions {
