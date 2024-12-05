@@ -29,7 +29,6 @@ export {
   patchConfig,
   ensureConfig,
   mergeConfigs,
-  pickRunnableConfigKeys,
 } from "./config.js";
 export { RunnablePassthrough } from "./passthrough.js";
 export { type RouterInput, RouterRunnable } from "./router.js";

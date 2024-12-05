@@ -6,11 +6,7 @@ import {
   type TraceableFunction,
   isTraceableFunction,
 } from "langsmith/singletons/traceable";
-import type {
-  RunnableInterface,
-  RunnableBatchOptions,
-  RunnableConfig,
-} from "./types.js";
+import type { RunnableInterface, RunnableBatchOptions } from "./types.js";
 import { CallbackManagerForChainRun } from "../callbacks/manager.js";
 import {
   LogStreamCallbackHandler,
@@ -37,11 +33,11 @@ import {
 import { raceWithSignal } from "../utils/signal.js";
 import {
   DEFAULT_RECURSION_LIMIT,
+  RunnableConfig,
   ensureConfig,
   getCallbackManagerForConfig,
   mergeConfigs,
   patchConfig,
-  pickRunnableConfigKeys,
 } from "./config.js";
 import { AsyncCaller } from "../utils/async_caller.js";
 import { Run } from "../tracers/base.js";
@@ -2533,7 +2529,7 @@ export class RunnableLambda<
         recursionLimit: (config?.recursionLimit ?? DEFAULT_RECURSION_LIMIT) - 1,
       });
       void AsyncLocalStorageProviderSingleton.runWithConfig(
-        pickRunnableConfigKeys(childConfig),
+        childConfig,
         async () => {
           try {
             let output = await this.func(input, {
@@ -2631,7 +2627,7 @@ export class RunnableLambda<
     const output = await new Promise<RunOutput | Runnable>(
       (resolve, reject) => {
         void AsyncLocalStorageProviderSingleton.runWithConfig(
-          pickRunnableConfigKeys(childConfig),
+          childConfig,
           async () => {
             try {
               const res = await this.func(finalChunk as RunInput, {

@@ -233,21 +233,3 @@ export function patchConfig<CallOptions extends RunnableConfig>(
   }
   return newConfig;
 }
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function pickRunnableConfigKeys<CallOptions extends Record<string, any>>(
-  config?: CallOptions
-): Partial<RunnableConfig> | undefined {
-  return config
-    ? {
-        configurable: config.configurable,
-        recursionLimit: config.recursionLimit,
-        callbacks: config.callbacks,
-        tags: config.tags,
-        metadata: config.metadata,
-        maxConcurrency: config.maxConcurrency,
-        timeout: config.timeout,
-        signal: config.signal,
-      }
-    : undefined;
-}
