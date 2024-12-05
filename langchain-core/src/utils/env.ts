@@ -5,6 +5,9 @@ declare global {
         version: {
           deno: string;
         };
+        env: {
+          get: (name: string) => string | undefined;
+        };
       }
     | undefined;
 }
@@ -78,10 +81,13 @@ export function getEnvironmentVariable(name: string): string | undefined {
   // Certain Deno setups will throw an error if you try to access environment variables
   // https://github.com/langchain-ai/langchainjs/issues/1412
   try {
-    return typeof process !== "undefined"
-      ? // eslint-disable-next-line no-process-env
-        process.env?.[name]
-      : undefined;
+    if (typeof process !== "undefined") {
+      return process.env?.[name];
+    } else if (isDeno()) {
+      return Deno?.env.get(name);
+    } else {
+      return undefined;
+    }
   } catch (e) {
     return undefined;
   }
