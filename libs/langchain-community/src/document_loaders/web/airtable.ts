@@ -4,10 +4,16 @@ import { Document } from "@langchain/core/documents";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { AsyncCaller } from "@langchain/core/utils/async_caller";
 
+interface KwargsParams {
+    view?: string
+    maxRecords?: number
+    filterByFormula?: string
+}
+
 export interface AirtableLoaderOptions {
   tableId: string;
   baseId: string;
-  kwargs?: Record<string, any>;
+  kwargs?: KwargsParams;
 }
 
 interface AirtableRecord {
@@ -28,7 +34,7 @@ export class AirtableLoader extends BaseDocumentLoader {
 
   private readonly baseId: string;
 
-  private readonly kwargs: Record<string, any>;
+  private readonly kwargs: KwargsParams;
 
   private static readonly BASE_URL = "https://api.airtable.com/v0";
 
@@ -123,6 +129,8 @@ export class AirtableLoader extends BaseDocumentLoader {
     );
     if (offset) url.searchParams.append("offset", offset);
     if (this.kwargs.view) url.searchParams.append("view", this.kwargs.view);
+    if (this.kwargs.maxRecords) url.searchParams.append("maxRecords", this.kwargs.maxRecords.toString());
+    if (this.kwargs.filterByFormula) url.searchParams.append("filterByFormula", this.kwargs.filterByFormula);
     return url.toString();
   }
 
