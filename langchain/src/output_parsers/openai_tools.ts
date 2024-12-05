@@ -54,47 +54,48 @@ export class JsonOutputToolsParser extends BaseLLMOutputParser<
    * @param generations The output of the LLM to parse.
    * @returns A JSON object representation of the function call or its arguments.
    */
-  async parseResult(generations: ChatGeneration[]): Promise<ParsedToolCall[]> {
-    const toolCalls = generations[0].message.additional_kwargs.tool_calls;
-    if (!toolCalls) {
-      throw new Error(
-        `No tools_call in message ${JSON.stringify(generations)}`
-      );
-    }
-    const clonedToolCalls = JSON.parse(JSON.stringify(toolCalls));
-    const parsedToolCalls = [];
-    for (const toolCall of clonedToolCalls) {
-      if (toolCall.function !== undefined) {
-        // @ts-expect-error name and arguemnts are defined by Object.defineProperty
-        const parsedToolCall: ParsedToolCall = {
-          type: toolCall.function.name,
-          args: JSON.parse(toolCall.function.arguments),
-        };
-
-        if (this.returnId) {
-          parsedToolCall.id = toolCall.id;
+     async parseResult(generations) {
+        const toolCalls = generations[0].message.additional_kwargs.tool_calls || generations[0].message.tool_calls 
+        if (!toolCalls) {
+            throw new Error(`No tools_call in message ${JSON.stringify(generations)}`);
+        }
+        const clonedToolCalls = JSON.parse(JSON.stringify(toolCalls));
+        const parsedToolCalls = [];
+        for (const toolCall of clonedToolCalls) {
+            let parsedToolCall  = null
+            if (toolCall.function !== undefined) {
+                // @ts-expect-error name and arguemnts are defined by Object.defineProperty
+                 parsedToolCall = {
+                    type: toolCall.function.name,
+                    args: JSON.parse(toolCall.function.arguments),
+                };
+                if (this.returnId) {
+                    parsedToolCall.id = toolCall.id;
+                }
+            }else  {
+                 parsedToolCall = {
+                    type: toolCall.name,
+                    args: toolCall.args,
+                    id: toolCall.id
+                };
+            }
+                // backward-compatibility with previous
+                // versions of Langchain JS, which uses `name` and `arguments`
+                Object.defineProperty(parsedToolCall, "name", {
+                    get() {
+                        return this.type;
+                    },
+                });
+                Object.defineProperty(parsedToolCall, "arguments", {
+                    get() {
+                        return this.args;
+                    },
+                });
+                parsedToolCalls.push(parsedToolCall);
         }
 
-        // backward-compatibility with previous
-        // versions of Langchain JS, which uses `name` and `arguments`
-        Object.defineProperty(parsedToolCall, "name", {
-          get() {
-            return this.type;
-          },
-        });
-
-        Object.defineProperty(parsedToolCall, "arguments", {
-          get() {
-            return this.args;
-          },
-        });
-
-        parsedToolCalls.push(parsedToolCall);
-      }
+        return parsedToolCalls;
     }
-    return parsedToolCalls;
-  }
-}
 
 export type JsonOutputKeyToolsParserParams = {
   keyName: string;
