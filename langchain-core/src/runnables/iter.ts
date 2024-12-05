@@ -1,4 +1,4 @@
-import type { RunnableConfig } from "../../dist/runnables/types.js";
+import type { RunnableConfig } from "../runnables/types.js";
 import { AsyncLocalStorageProviderSingleton } from "../singletons/index.js";
 import { pickRunnableConfigKeys } from "./config.js";
 
