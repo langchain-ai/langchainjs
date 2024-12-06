@@ -420,4 +420,109 @@ describe("Text generation", () => {
       ).rejects.toThrowError();
     });
   });
+
+  describe("Test watsonx callbacks", () => {
+    test("Single request callback", async () => {
+      let callbackFlag = false;
+      const service = new WatsonxLLM({
+        model: "mistralai/mistral-large",
+        version: "2024-05-31",
+        serviceUrl: process.env.WATSONX_AI_SERVICE_URL ?? "testString",
+        projectId: process.env.WATSONX_AI_PROJECT_ID ?? "testString",
+        watsonxCallbacks: {
+          requestCallback(req) {
+            callbackFlag = !!req;
+          },
+        },
+      });
+      const hello = await service.stream("Print hello world");
+      const chunks = [];
+      for await (const chunk of hello) {
+        chunks.push(chunk);
+      }
+      expect(callbackFlag).toBe(true);
+    });
+    test("Single response callback", async () => {
+      let callbackFlag = false;
+      const service = new WatsonxLLM({
+        model: "mistralai/mistral-large",
+        version: "2024-05-31",
+        serviceUrl: process.env.WATSONX_AI_SERVICE_URL ?? "testString",
+        projectId: process.env.WATSONX_AI_PROJECT_ID ?? "testString",
+        maxNewTokens: 10,
+        watsonxCallbacks: {
+          responseCallback(res) {
+            callbackFlag = !!res;
+          },
+        },
+      });
+      const hello = await service.stream("Print hello world");
+      const chunks = [];
+      for await (const chunk of hello) {
+        chunks.push(chunk);
+      }
+      expect(callbackFlag).toBe(true);
+    });
+    test("Both callbacks", async () => {
+      let callbackFlagReq = false;
+      let callbackFlagRes = false;
+      const service = new WatsonxLLM({
+        model: "mistralai/mistral-large",
+        version: "2024-05-31",
+        serviceUrl: process.env.WATSONX_AI_SERVICE_URL ?? "testString",
+        projectId: process.env.WATSONX_AI_PROJECT_ID ?? "testString",
+        maxNewTokens: 10,
+        watsonxCallbacks: {
+          requestCallback(req) {
+            callbackFlagReq = !!req;
+          },
+          responseCallback(res) {
+            callbackFlagRes = !!res;
+          },
+        },
+      });
+      const hello = await service.stream("Print hello world");
+      const chunks = [];
+      for await (const chunk of hello) {
+        chunks.push(chunk);
+      }
+      expect(callbackFlagReq).toBe(true);
+      expect(callbackFlagRes).toBe(true);
+    });
+    test("Multiple callbacks", async () => {
+      let callbackFlagReq = false;
+      let callbackFlagRes = false;
+      let langchainCallback = false;
+
+      const service = new WatsonxLLM({
+        model: "mistralai/mistral-large",
+        version: "2024-05-31",
+        serviceUrl: process.env.WATSONX_AI_SERVICE_URL ?? "testString",
+        projectId: process.env.WATSONX_AI_PROJECT_ID ?? "testString",
+        maxNewTokens: 10,
+        watsonxCallbacks: {
+          requestCallback(req) {
+            callbackFlagReq = !!req;
+          },
+          responseCallback(res) {
+            callbackFlagRes = !!res;
+          },
+        },
+        callbacks: CallbackManager.fromHandlers({
+          async handleLLMEnd(output) {
+            expect(output.generations).toBeDefined();
+            langchainCallback = !!output;
+          },
+        }),
+      });
+      const hello = await service.stream("Print hello world");
+      const chunks = [];
+      for await (const chunk of hello) {
+        chunks.push(chunk);
+      }
+      expect(callbackFlagReq).toBe(true);
+      expect(callbackFlagRes).toBe(true);
+      expect(langchainCallback).toBe(true);
+    });
+  });
 });
