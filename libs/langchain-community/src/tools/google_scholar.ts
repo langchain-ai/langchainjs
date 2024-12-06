@@ -1,6 +1,5 @@
 import { Tool } from "@langchain/core/tools";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
-import fetch from "node-fetch"; // For making HTTP requests
 
 /**
  * Interface for parameters required by the SERPGoogleScholarAPITool class.
@@ -71,7 +70,7 @@ export class SERPGoogleScholarAPITool extends Tool {
    * @returns A JSON string containing the search results.
    * @throws Error if the API request fails or returns an error.
    */
-  async invoke(input: string): Promise<string> {
+  async _call(input: string): Promise<string> {
     // Construct the URL for the API request.
     const url = `https://serpapi.com/search.json?q=${encodeURIComponent(
       input
