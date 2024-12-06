@@ -1,3 +1,4 @@
+import { deepCompareStrict } from "@cfworker/json-schema";
 import { BaseOutputParser } from "./base.js";
 import {
   type BaseMessage,
@@ -12,7 +13,6 @@ import {
   GenerationChunk,
   ChatGenerationChunk,
 } from "../outputs.js";
-import { deepCompareStrict } from "../utils/@cfworker/json-schema/index.js";
 
 /**
  * Class to parse the output of an LLM call that also allows streaming inputs.
