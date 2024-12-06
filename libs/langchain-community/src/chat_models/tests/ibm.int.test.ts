@@ -150,7 +150,7 @@ describe("Tests for chat", () => {
         controller.abort();
         return res;
       }).rejects.toThrow();
-    }, 5000);
+    });
   });
 
   describe("Test ChatWatsonx invoke and generate with stream mode", () => {
@@ -357,7 +357,7 @@ describe("Tests for chat", () => {
         controller.abort();
         return res;
       }).rejects.toThrow();
-    }, 5000);
+    });
   });
 
   describe("Test ChatWatsonx stream", () => {
@@ -415,7 +415,7 @@ describe("Tests for chat", () => {
         }
         expect(hasEntered).toBe(true);
       }).rejects.toThrow();
-    }, 5000);
+    });
     test("Token count and response equality", async () => {
       let generation = "";
       const service = new ChatWatsonx({

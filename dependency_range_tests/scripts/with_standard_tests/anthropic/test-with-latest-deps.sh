@@ -27,6 +27,7 @@ node "update_resolutions_latest.js"
 
 # Navigate back to monorepo root and install dependencies
 cd "$monorepo_dir"
+touch yarn.lock
 yarn
 
 # Navigate into `@langchain/anthropic` to build and run tests
