@@ -33,7 +33,7 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@cfworker/json-schema": "^4.0.0",
+    "@cfworker/json-schema": "^4.0.2",
     "ansi-styles": "^5.0.0",
     "camelcase": "6",
     "decamelize": "1.2.0",
