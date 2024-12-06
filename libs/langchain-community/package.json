@@ -98,6 +98,7 @@
     "@qdrant/js-client-rest": "^1.8.2",
     "@raycast/api": "^1.83.1",
     "@rockset/client": "^0.9.1",
+    "@slack/web-api": "^7.7.0",
     "@smithy/eventstream-codec": "^2.0.5",
     "@smithy/protocol-http": "^3.0.6",
     "@smithy/signature-v4": "^2.0.10",
@@ -265,6 +266,7 @@
     "@qdrant/js-client-rest": "^1.8.2",
     "@raycast/api": "^1.55.2",
     "@rockset/client": "^0.9.1",
+    "@slack/web-api": "^7.7.0",
     "@smithy/eventstream-codec": "^2.0.5",
     "@smithy/protocol-http": "^3.0.6",
     "@smithy/signature-v4": "^2.0.10",
@@ -471,6 +473,9 @@
       "optional": true
     },
     "@rockset/client": {
+      "optional": true
+    },
+    "@slack/web-api": {
       "optional": true
     },
     "@smithy/eventstream-codec": {
@@ -927,6 +932,15 @@
       },
       "import": "./tools/serper.js",
       "require": "./tools/serper.cjs"
+    },
+    "./tools/slack": {
+      "types": {
+        "import": "./tools/slack.d.ts",
+        "require": "./tools/slack.d.cts",
+        "default": "./tools/slack.d.ts"
+      },
+      "import": "./tools/slack.js",
+      "require": "./tools/slack.cjs"
     },
     "./tools/stackexchange": {
       "types": {
@@ -3215,6 +3229,10 @@
     "tools/serper.js",
     "tools/serper.d.ts",
     "tools/serper.d.cts",
+    "tools/slack.cjs",
+    "tools/slack.js",
+    "tools/slack.d.ts",
+    "tools/slack.d.cts",
     "tools/stackexchange.cjs",
     "tools/stackexchange.js",
     "tools/stackexchange.d.ts",

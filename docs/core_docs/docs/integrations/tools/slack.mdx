@@ -1,0 +1,43 @@
+---
+hide_table_of_contents: true
+---
+
+import CodeBlock from "@theme/CodeBlock";
+
+# Slack Tool
+
+The Slack Tool gives your agent the ability to search, schedule and post messages to Slack Channels.
+
+
+## Setup
+
+To use the Slack Tool you need to install the following official peer dependency:
+
+```bash npm2yarn
+npm install @slack/web-api
+```
+
+## Usage, standalone
+
+import ToolExample from "@examples/tools/slack.ts";
+
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/openai @langchain/core
+```
+
+<CodeBlock language="typescript">{ToolExample}</CodeBlock>
+
+## Usage, in an Agent
+
+import AgentExample from "@examples/agents/slack.ts";
+
+<CodeBlock language="typescript">{AgentExample}</CodeBlock>
+
+## Related
+
+- Tool [conceptual guide](/docs/concepts/tools)
+- Tool [how-to guides](/docs/how_to/#tools)
