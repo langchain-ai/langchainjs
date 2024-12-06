@@ -280,6 +280,12 @@ docs/integrations/retrievers/bm25.md
 docs/integrations/retrievers/bm25.mdx
 docs/integrations/retrievers/bedrock-knowledge-bases.md
 docs/integrations/retrievers/bedrock-knowledge-bases.mdx
+docs/integrations/toolkits/vectorstore.md
+docs/integrations/toolkits/vectorstore.mdx
+docs/integrations/toolkits/sql.md
+docs/integrations/toolkits/sql.mdx
+docs/integrations/toolkits/openapi.md
+docs/integrations/toolkits/openapi.mdx
 docs/integrations/text_embedding/togetherai.md
 docs/integrations/text_embedding/togetherai.mdx
 docs/integrations/text_embedding/pinecone.md
