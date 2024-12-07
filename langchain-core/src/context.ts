@@ -1,7 +1,11 @@
 /* __LC_ALLOW_ENTRYPOINT_SIDE_EFFECTS__ */
-import { AsyncLocalStorage } from "node:async_hooks";
 import { RunTree } from "langsmith";
 import { isRunTree } from "langsmith/run_trees";
+import { AsyncLocalStorage } from "node:async_hooks";
+import {
+  BaseCallbackHandler,
+  CallbackHandlerMethods,
+} from "./callbacks/base.js";
 import {
   _CONTEXT_VARIABLES_KEY,
   AsyncLocalStorageProviderSingleton,
@@ -129,3 +133,26 @@ export function getContextVariable<T = any>(name: PropertyKey): T | undefined {
   const runTree = AsyncLocalStorageProviderSingleton.getInstance().getStore();
   return runTree?.[_CONTEXT_VARIABLES_KEY]?.[name];
 }
+
+// TODO: support Symbol?
+const LC_CONFIGURE_HOOKS_KEY = "lc:configure_hooks";
+
+export const getConfigureHooks = () =>
+  getContextVariable<ConfigureHook[]>(LC_CONFIGURE_HOOKS_KEY) || [];
+
+export const registerConfigureHook = (config: ConfigureHook) => {
+  if (config.envVar && !config.handlerClass) {
+    throw new Error(
+      "If envVar is set, handlerClass must also be set to a non-None value."
+    );
+  }
+
+  setContextVariable(LC_CONFIGURE_HOOKS_KEY, [...getConfigureHooks(), config]);
+};
+
+type ConfigureHook = {
+  contextVar: string;
+  inheritable: boolean;
+  handlerClass?: BaseCallbackHandler | CallbackHandlerMethods;
+  envVar?: string;
+};
