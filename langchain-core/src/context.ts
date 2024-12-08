@@ -134,8 +134,7 @@ export function getContextVariable<T = any>(name: PropertyKey): T | undefined {
   return runTree?.[_CONTEXT_VARIABLES_KEY]?.[name];
 }
 
-// TODO: support Symbol?
-const LC_CONFIGURE_HOOKS_KEY = "lc:configure_hooks";
+const LC_CONFIGURE_HOOKS_KEY = Symbol("lc:configure_hooks");
 
 export const getConfigureHooks = () =>
   getContextVariable<ConfigureHook[]>(LC_CONFIGURE_HOOKS_KEY) || [];
