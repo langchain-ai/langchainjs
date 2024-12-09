@@ -483,7 +483,6 @@ export const config = {
     // utils
     "utils/convex",
     "utils/cassandra",
-    "utils/local_image_to_base64",
     // indexes
     "indexes/postgres",
     "indexes/sqlite",
