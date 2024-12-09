@@ -29,7 +29,6 @@ interface CustomLogInfo extends Logform.TransformableInfo {
 }
 
 
-// eslint-disable-next-line no-process-env
 const logLevel = process.env.LOG_LEVEL?.toLowerCase() || 'error';
 
 const logger = createLogger({
@@ -237,7 +236,7 @@ async function createHNSWIndex(
     };
 
     // if params then copy params to config
-    let config: { [key: string]: any } = params
+    const config: { [key: string]: any } = params
       ? { ...params }
       : { ...defaults };
 
@@ -260,7 +259,7 @@ async function createHNSWIndex(
       }
     });
 
-    const idxName = config["idxName"];
+    const idxName = config.idxName;
     const baseSql = `CREATE VECTOR INDEX ${idxName} 
                               ON ${oraclevs.tableName}(embedding) 
                               ORGANIZATION INMEMORY NEIGHBOR GRAPH`;
@@ -293,7 +292,7 @@ async function createHNSWIndex(
     const ddl =
       baseSql + accuracyPart + distancePart + parametersPart + parallelPart;
 
-    const idxExists = await indexExists(connection, config["idxName"]);
+    const idxExists = await indexExists(connection, config.idxName);
     if (!idxExists) {
       await connection.execute(ddl);
       console.log("Index created successfully...");
@@ -320,7 +319,7 @@ async function createIVFIndex(
     };
 
     // Combine defaults with any provided params. Note: params could contain keys not explicitly declared in IndexConfig
-    let config: { [key: string]: any } = params
+    const config: { [key: string]: any } = params
       ? { ...params }
       : { ...defaults };
 
@@ -370,7 +369,7 @@ async function createIVFIndex(
     const ddl =
       baseSql + accuracyPart + distancePart + parametersPart + parallelPart;
 
-    const idxExists = await indexExists(connection, config["idxName"]);
+    const idxExists = await indexExists(connection, config.idxName);
     if (!idxExists) {
       await connection.execute(ddl);
       console.log("Index created successfully...");
@@ -422,10 +421,15 @@ export async function dropIndexIfExists(
 
 export class OracleVS extends VectorStore {
   readonly client: oracledb.Pool | oracledb.Connection;
+
   readonly embeddings: Embeddings;
+
   embeddingDimension: number | undefined;
+
   readonly tableName: string;
+
   readonly distanceStrategy: DistanceStrategy;
+
   readonly query: string;
 
   _vectorstoreType(): string {
@@ -456,7 +460,7 @@ export class OracleVS extends VectorStore {
     } catch (error: unknown) {
       handleError(error);
     } finally {
-      if(connection)
+      if (connection)
         await this.retConnection(connection)
     }
   }
@@ -510,7 +514,7 @@ export class OracleVS extends VectorStore {
       throw new Error("Vectors input null. Nothing to add...");
     }
 
-    let ids: string[] = options?.ids || [];
+    const ids: string[] = options?.ids || [];
     let connection: oracledb.Connection | null = null;
 
     try {
@@ -596,7 +600,7 @@ export class OracleVS extends VectorStore {
    */
   public async similaritySearchByVectorReturningEmbeddings(
     query: number[],
-    k: number = 4,
+    k = 4,
     filter?: this["FilterType"]
   ): Promise<[Document, number, Float32Array | number[]][]> {
     const docsScoresAndEmbeddings : Array<[Document, number, Float32Array | number[]]> = [];
@@ -620,7 +624,6 @@ export class OracleVS extends VectorStore {
 
       // Execute the query
       connection = await this.getConnection()
-      // @ts-ignore
       const resultSet = await connection.execute(sqlQuery, [
         convertedEmbedding,
       ]);
@@ -632,7 +635,6 @@ export class OracleVS extends VectorStore {
           // @ts-ignore
           const text = resultSet.rows[idx][1];
           // @ts-ignore
-          // const metadata = JSON.parse(resultSet.rows[idx][2]) || "{}";
           const metadata = resultSet.rows[idx][2];
           // @ts-ignore
           const distance = resultSet.rows[idx][3];

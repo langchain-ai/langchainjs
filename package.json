@@ -72,5 +72,9 @@
       "eslint --cache --fix"
     ],
     "*.md": "prettier --config .prettierrc --write"
+  },
+  "dependencies": {
+    "@langchain/community": "workspace:^",
+    "langchain": "workspace:^"
   }
 }
