@@ -194,6 +194,7 @@
     "mysql2": "^3.9.8",
     "neo4j-driver": "^5.17.0",
     "node-llama-cpp": "3.1.1",
+    "node-llama-cpp": "^2",
     "notion-to-md": "^3.1.0",
     "officeparser": "^4.0.4",
     "openai": "*",
@@ -433,10 +434,10 @@
     "@huggingface/inference": {
       "optional": true
     },
-    "@lancedb/lancedb": {
+    "@layerup/layerup-security": {
       "optional": true
     },
-    "@layerup/layerup-security": {
+    "@libsql/client": {
       "optional": true
     },
     "@libsql/client": {

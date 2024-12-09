@@ -58,9 +58,12 @@
     "@swc/core": "^1.3.90",
     "@swc/jest": "^0.2.29",
     "@tsconfig/recommended": "^1.0.3",
+<<<<<<< HEAD
     "@types/lodash": "^4",
     "@typescript-eslint/eslint-plugin": "^6.12.0",
     "@typescript-eslint/parser": "^6.12.0",
+=======
+>>>>>>> d719938957659922a35c075329fd647089eda940
     "dotenv": "^16.3.1",
     "dpdm": "^3.12.0",
     "eslint-config-airbnb-base": "^15.0.0",
