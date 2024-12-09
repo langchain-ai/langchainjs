@@ -57,7 +57,8 @@
     "typescript": "~5.1.6"
   },
   "dependencies": {
-    "@langchain/community": "workspace:^"
+    "@langchain/community": "workspace:^",
+    "langchain": "workspace:^"
   },
   "resolutions": {
     "dpdm@^3.12.0": "patch:dpdm@npm%3A3.12.0#./.yarn/patches/dpdm-npm-3.12.0-0dfdd8e3b8.patch",
@@ -72,9 +73,5 @@
       "eslint --cache --fix"
     ],
     "*.md": "prettier --config .prettierrc --write"
-  },
-  "dependencies": {
-    "@langchain/community": "workspace:^",
-    "langchain": "workspace:^"
   }
 }
