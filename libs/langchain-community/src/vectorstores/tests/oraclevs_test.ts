@@ -1,20 +1,11 @@
-import * as oracledb from 'oracledb';
-import * as dotenv from 'dotenv';
-import {createIndex, OracleVS} from "./oravsjs";
-import {Document, DocumentInterface} from "@langchain/core/documents";
-import {Embeddings} from "@langchain/core/embeddings";
+import oracledb from 'oracledb';
 import {promises as fs} from "fs";
 import {MaxMarginalRelevanceSearchOptions} from "@langchain/core/vectorstores";
+import {Document, DocumentInterface} from "@langchain/core/documents";
+import {Embeddings} from "@langchain/core/embeddings";
 import {Callbacks} from "@langchain/core/callbacks/manager";
-
-interface DBConfig {
-  user: string;
-  password: string;
-  connectString: string;
-  poolMin?: number;
-  poolMax?: number;
-  poolIncrement?: number;
-}
+import {DistanceStrategy, createIndex, OracleVS} from "../oraclevs.js";
+import { HuggingFaceTransformersEmbeddings } from "../../embeddings/hf_transformers.js";
 
 interface DataRow {
   id: string;
@@ -22,52 +13,67 @@ interface DataRow {
   text: string;
 }
 
-dotenv.config();
+async function dbConnect(): Promise<oracledb.Connection> {
+  // Create a connection
+  const connection = await oracledb.getConnection({
+    user: 'shailendra',
+    password: 'shailendra',
+    connectString: '138.2.233.65:1521/freepdb1'
+  });
+  console.log('Connection pool started')
+  return connection
 
-async function dbConnect(): Promise<oracledb.Pool> {
+}
+
+async function dbPool(): Promise<oracledb.Pool> {
   // Create a connection pool
   const pool = await oracledb.createPool({
-    user: 'vector',
-    password: 'vector',
-    connectString: '152.67.235.198:1521/orclpdb1'
+    user: 'shailendra',
+    password: 'shailendra',
+    connectString: '138.2.233.65:1521/freepdb1'
   });
 
   console.log('Connection pool started')
   return pool
 }
 
-function getEmbeddingFunction(device: string): EmbeddingFunction | Embeddings | null {
-  let embeddingFunction: EmbeddingFunction | Embeddings | null = null;
-  try {
-    const modelName: string = "sentence-transformers/all-mpnet-base-v2";
-    const modelKwargs = { device };
-    embeddingFunction = new HuggingFaceEmbeddings(modelName, modelKwargs);
-  } catch (ex) {
-    console.error("An exception occurred ::", ex);
-    // Assuming you have some way to log or handle the traceback. TypeScript/JavaScript does not have a direct equivalent to Python's traceback.print_exc()
-  }
-  return embeddingFunction;
-}
 
 class TestsOracleVS {
-  private client: oracledb.Pool | null = null;
-  private docsDir: string = "./resources/downloads/oradocs/";
-  private filename: string;
-  private oraclevs: OracleVS;
+  client: any | null = null;
 
-  constructor(filename: string, embeddingFunction: Embeddings, dbConfig: Record<string, any>) {
+  docsDir = "/Users/skmishra/repo/frameworks/oraclevsjs/resources/downloads/oradocs/";
+
+  filename: string;
+
+  embeddingFunction: HuggingFaceTransformersEmbeddings;
+
+  dbConfig: Record<string, any>= {};
+
+  oraclevs!: OracleVS;
+
+  constructor(filename: string,
+              embeddingFunction: HuggingFaceTransformersEmbeddings) {
     this.filename = filename;
+    this.embeddingFunction = embeddingFunction;
+  }
+
+  async init(): Promise<void> {
+    this.client = await dbPool()
+
+    // code to create dbConfig
+    this.dbConfig = {
+      "client": this.client,
+      "tableName": "some_tablenm",
+      "distanceStrategy": DistanceStrategy.DOT_PRODUCT,
+      "query": "What are salient features of oracledb",
+    };
+
     try {
-      this.oraclevs = new OracleVS(embeddingFunction, dbConfig)
-      this.filename = filename;
+      this.oraclevs = new OracleVS(this.embeddingFunction, this.dbConfig);
     } catch (error) {
       console.error("An exception occurred ::", error);
       // Handle error
     }
-  }
-
-  async init(): Promise<void> {
-    this.client = await dbConnect()
   }
 
   private createDocument(row: DataRow): Document {
@@ -75,9 +81,7 @@ class TestsOracleVS {
       id: row.id,
       link: row.link,
     };
-
-    // Assuming Document accepts metadata and pageContent in its constructor or has a method to set these
-    return new Document({pageContent: row.text, metadata: metadata});
+    return new Document({pageContent: row.text, metadata});
   }
 
   public async testIngestJson(): Promise<Document[]> {
@@ -94,16 +98,17 @@ class TestsOracleVS {
 
   public async testCreateIndex(): Promise<void> {
     try {
-      const connection = await this.oraclevs.getConnection()
+      const connection : oracledb.Connection= await dbConnect()
 
       await createIndex(connection, this.oraclevs, {
-        idx_name: "IVF",
-        idx_type: "IVF",
-        neighbor_part: 64,
+        idxName: "IVF",
+        idxType: "IVF",
+        neighborPart: 64,
         accuracy: 90
       });
 
       console.log("Index created successfully");
+      await connection.close();
     } catch (ex) {
       console.error("Exception occurred while index creation", ex);
       // TypeScript/JavaScript does not have a direct equivalent to Python's traceback.print_exc(),
@@ -125,8 +130,9 @@ class TestsOracleVS {
 
   public async testSimilaritySearchByVectorReturningEmbeddings(
     embedding: number[],
-    k: number = 4,
-    filter: OracleVS["FilterType"] = null,
+    // eslint-disable-next-line default-param-last
+    k = 4,
+    filter?: OracleVS["FilterType"],
   ): Promise<[Document, number, Float32Array | number[]][]> {
     return await this.oraclevs.similaritySearchByVectorReturningEmbeddings( embedding, k, filter);
   }
@@ -134,8 +140,14 @@ class TestsOracleVS {
   public async testMaxMarginalRelevanceSearch(
     query: string,
     options?: MaxMarginalRelevanceSearchOptions<OracleVS["FilterType"]>,
-    _callbacks?: Callbacks | undefined
+    _callbacks?: Callbacks
   ): Promise<DocumentInterface[]> {
+    if (!options) {
+      // eslint-disable-next-line no-param-reassign
+      options = { k: 10, fetchK: 20 }; // Default values for the options
+    }
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
     return this.oraclevs.maxMarginalRelevanceSearch(query, options, _callbacks);
   }
 
@@ -144,13 +156,22 @@ class TestsOracleVS {
     options?: MaxMarginalRelevanceSearchOptions<OracleVS["FilterType"]>,
     _callbacks?: Callbacks | undefined
   ): Promise<DocumentInterface[]> {
-    return this.oraclevs.maxMarginalRelevanceSearchByVector(query, options, _callbacks);
+    if (!options) {
+      // eslint-disable-next-line no-param-reassign
+      options = { k: 10, fetchK: 20 }; // Default values for the options
+    }
+    return this.oraclevs!.maxMarginalRelevanceSearchByVector(query, options, _callbacks);
   }
+
   public async testMaxMarginalRelevanceSearchWithScoreByVector(
     embedding: number[],
     options?: MaxMarginalRelevanceSearchOptions<OracleVS["FilterType"]>,
-    _callbacks?: Callbacks | undefined // implement passing to embedQuery later
+    _callbacks?: Callbacks | undefined
   ): Promise<Array<{ document: Document; score: number }>> {
+    if (!options) {
+      // eslint-disable-next-line no-param-reassign
+      options = { k: 10, fetchK: 20 }; // Default values for the options
+    }
     return this.oraclevs.maxMarginalRelevanceSearchWithScoreByVector(embedding, options, _callbacks)
   }
 
@@ -161,37 +182,35 @@ class TestsOracleVS {
 
 async function runTestsOracleVS() {
   // Initialize dotenv to load environment variables
-  dotenv.config();
   const query = "What is the language used by Oracle database";
-  // Setup DB config - assuming these values are stored in your .env file
-  const dbConfig: DBConfig = {
-    user: process.env.DB_USER || 'vector',
-    password: process.env.DB_PASSWORD || 'vector',
-    connectString: process.env.DB_CONNECT_STRING || '152.67.235.198:1521/orclpdb1',
-    poolMin: parseInt(process.env.DB_POOL_MIN || '4'),
-    poolMax: parseInt(process.env.DB_POOL_MAX || '10'),
-    poolIncrement: parseInt(process.env.DB_POOL_INCREMENT || '2')
-  };
 
-  // Set up the embedding function
-  const device: string = "cpu"; // Assuming CPU usage, adjust as necessary
-  const embeddingFunction: Embeddings | null = getEmbeddingFunction(device);
-
+  // Set up the embedding function model: "Xenova/all-MiniLM-L6-v2"
+  const embeddingFunction = new HuggingFaceTransformersEmbeddings();
   if (!embeddingFunction) {
     console.error("Failed to initialize the embedding function.");
     return;
   }
 
+  // eslint-disable-next-line no-instanceof/no-instanceof
+  if (!(embeddingFunction instanceof Embeddings)) {
+    console.error("Embedding function is not an instance of Embeddings.");
+    return;
+  }
+
+  console.log("Embedding function initialized successfully");
+
   // Initialize the TestsOracleVS class
   const testsOracleVS = new TestsOracleVS("concepts23c_small.json",
-    embeddingFunction, dbConfig);
+    embeddingFunction);
 
   // Initialize connection and other setup
   await testsOracleVS.init();
 
   // Ingest JSON data to create documents
   const documents = await testsOracleVS.testIngestJson();
-  console.log("Ingested Documents:", documents);
+  await OracleVS.fromDocuments(documents,
+    testsOracleVS.embeddingFunction,
+    testsOracleVS.dbConfig)
 
   // Create an index
   await testsOracleVS.testCreateIndex();
@@ -200,7 +219,7 @@ async function runTestsOracleVS() {
   // const embedding: number[] = [0.1, 0.2, 0.3, 0.4]; // Example embedding
 
   // Perform a similarity search by vector
-  const embedding = await this.embeddings.embedQuery(query);
+  const embedding = await embeddingFunction.embedQuery(query);
   const similaritySearchByVector = await testsOracleVS.testSimilaritySearchByVector(embedding, 5);
   console.log("Similarity Search Results:", similaritySearchByVector);
 
@@ -214,11 +233,11 @@ async function runTestsOracleVS() {
   console.log("Max Marginal Relevance Search:", maxMarginalRelevanceSearch);
 
   const maxMarginalRelevanceSearchByVector =
-    testsOracleVS.testMaxMarginalRelevanceSearchByVector(embedding)
+    await testsOracleVS.testMaxMarginalRelevanceSearchByVector(embedding)
   console.log("Max Marginal Relevance Search By Vector:", maxMarginalRelevanceSearchByVector);
 
   const maxMarginalRelevanceSearchWithScoreByVector =
-    testsOracleVS.testMaxMarginalRelevanceSearchWithScoreByVector(embedding)
+    await testsOracleVS.testMaxMarginalRelevanceSearchWithScoreByVector(embedding)
   console.log("Max Marginal Relevance Search By Vector:", maxMarginalRelevanceSearchWithScoreByVector);
 
 }

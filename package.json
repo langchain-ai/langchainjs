@@ -47,12 +47,9 @@
   "devDependencies": {
     "@tsconfig/recommended": "^1.0.2",
     "@types/jest": "^29.5.3",
-    "@types/oracledb": "^6",
     "@types/semver": "^7",
-    "@types/winston": "^2.4.4",
     "commander": "^11.1.0",
     "dotenv": "^16.0.3",
-    "eslint-plugin-import": "^2.29.1",
     "lint-staged": "^13.1.1",
     "prettier": "^2.8.3",
     "semver": "^7.5.4",
@@ -60,9 +57,7 @@
     "typescript": "~5.1.6"
   },
   "dependencies": {
-    "oracledb": "latest",
-    "turbo": "latest",
-    "winston": "^3.13.0"
+    "@langchain/community": "workspace:^"
   },
   "resolutions": {
     "dpdm@^3.12.0": "patch:dpdm@npm%3A3.12.0#./.yarn/patches/dpdm-npm-3.12.0-0dfdd8e3b8.patch",

@@ -2,12 +2,12 @@ import * as oracledb from "oracledb";
 // oracledb.fetchAsString = [oracledb.CLOB];
 import { createHash } from "crypto";
 import { v4 as uuidv4 } from 'uuid';
-import {MaxMarginalRelevanceSearchOptions, VectorStore,} from '@langchain/core/vectorstores';
-import {Document, DocumentInterface} from '@langchain/core/documents';
+import {MaxMarginalRelevanceSearchOptions, VectorStore,} from "@langchain/core/vectorstores";
+import {Document, DocumentInterface} from "@langchain/core/documents";
 import {Embeddings} from '@langchain/core/embeddings';
-import {Callbacks} from '@langchain/core/callbacks/manager';
+import {Callbacks} from "@langchain/core/callbacks/manager";
 import {createLogger, format, transports, Logform} from 'winston'
-import { maximalMarginalRelevance } from '@langchain/core/utils/math';
+import { maximalMarginalRelevance } from "@langchain/core/utils/math";
 
 
 export enum DistanceStrategy {
