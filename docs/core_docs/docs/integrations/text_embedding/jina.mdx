@@ -61,15 +61,15 @@ To generate embeddings for multiple documents, use the `embedDocuments` method.
 ```typescript
 import { localImageToBase64 } from "@langchain/community/utils/local_image_to_base64";
 const documents = [
-  'hello',
+  "hello",
   {
-    text: 'hello',
+    text: "hello",
   },
   {
-    image: 'https://i.ibb.co/nQNGqL0/beach1.jpg',
+    image: "https://i.ibb.co/nQNGqL0/beach1.jpg",
   },
   {
-    image: await localImageToBase64('beach1.jpg'),
+    image: await localImageToBase64("beach1.jpg"),
   },
 ];
 
@@ -107,15 +107,15 @@ async function runExample() {
   console.log("Query Embedding:", queryEmbedding);
 
   const documents = [
-    'hello',
+    "hello",
     {
-      text: 'hello',
+      text: "hello",
     },
     {
-      image: 'https://i.ibb.co/nQNGqL0/beach1.jpg',
+      image: "https://i.ibb.co/nQNGqL0/beach1.jpg",
     },
     {
-      image: await localImageToBase64('beach1.jpg'),
+      image: await localImageToBase64("beach1.jpg"),
     },
   ];
   const documentEmbeddings = await embeddings.embedDocuments(documents);
