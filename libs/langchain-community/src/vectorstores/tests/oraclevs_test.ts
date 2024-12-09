@@ -17,7 +17,7 @@ async function dbConnect(): Promise<oracledb.Connection> {
   // Create a connection
   const connection = await oracledb.getConnection({
     user: 'shailendra',
-    password: 'shailendra',
+    password: 'shailendra1',
     connectString: '138.2.233.65:1521/freepdb1'
   });
   console.log('Connection pool started')
@@ -29,7 +29,7 @@ async function dbPool(): Promise<oracledb.Pool> {
   // Create a connection pool
   const pool = await oracledb.createPool({
     user: 'shailendra',
-    password: 'shailendra',
+    password: 'shailendra1',
     connectString: '138.2.233.65:1521/freepdb1'
   });
 

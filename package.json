@@ -71,6 +71,7 @@
     "*.md": "prettier --config .prettierrc --write"
   },
   "dependencies": {
-    "@langchain/community": "workspace:^"
+    "@langchain/community": "workspace:^",
+    "langchain": "workspace:^"
   }
 }

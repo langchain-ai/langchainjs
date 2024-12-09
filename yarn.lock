@@ -30707,7 +30707,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"langchain@>=0.2.3 <0.3.0 || >=0.3.4 <0.4.0, langchain@workspace:*, langchain@workspace:langchain":
+"langchain@>=0.2.3 <0.3.0 || >=0.3.4 <0.4.0, langchain@workspace:*, langchain@workspace:^, langchain@workspace:langchain":
   version: 0.0.0-use.local
   resolution: "langchain@workspace:langchain"
   dependencies:
@@ -31156,6 +31156,7 @@ __metadata:
     "@types/semver": ^7
     commander: ^11.1.0
     dotenv: ^16.0.3
+    langchain: "workspace:^"
     lint-staged: ^13.1.1
     prettier: ^2.8.3
     semver: ^7.5.4
