@@ -26,7 +26,7 @@ class ChatWatsonxStandardIntegrationTests extends ChatModelIntegrationTests<
       chatModelHasToolCalling: true,
       chatModelHasStructuredOutput: true,
       constructorArgs: {
-        model: "mistralai/mistral-large",
+        model: "meta-llama/llama-3-1-70b-instruct",
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL ?? "testString",
         projectId: process.env.WATSONX_AI_PROJECT_ID ?? "testString",

@@ -7,6 +7,9 @@ import {
   GenerateContentRequest,
   SafetySetting,
   Part as GenerativeAIPart,
+  ModelParams,
+  RequestOptions,
+  type CachedContent,
 } from "@google/generative-ai";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {
@@ -180,6 +183,15 @@ export interface GoogleGenerativeAIChatInput
    * @default false
    */
   json?: boolean;
+
+  /**
+   * Whether or not model supports system instructions.
+   * The following models support system instructions:
+   * - All Gemini 1.5 Pro model versions
+   * - All Gemini 1.5 Flash model versions
+   * - Gemini 1.0 Pro version gemini-1.0-pro-002
+   */
+  convertSystemMessageToHumanContent?: boolean | undefined;
 }
 
 /**
@@ -563,6 +575,8 @@ export class ChatGoogleGenerativeAI
 
   streamUsage = true;
 
+  convertSystemMessageToHumanContent: boolean | undefined;
+
   private client: GenerativeModel;
 
   get _isMultimodalModel() {
@@ -651,6 +665,44 @@ export class ChatGoogleGenerativeAI
     this.streamUsage = fields?.streamUsage ?? this.streamUsage;
   }
 
+  useCachedContent(
+    cachedContent: CachedContent,
+    modelParams?: ModelParams,
+    requestOptions?: RequestOptions
+  ): void {
+    if (!this.apiKey) return;
+    this.client = new GenerativeAI(
+      this.apiKey
+    ).getGenerativeModelFromCachedContent(
+      cachedContent,
+      modelParams,
+      requestOptions
+    );
+  }
+
+  get useSystemInstruction(): boolean {
+    return typeof this.convertSystemMessageToHumanContent === "boolean"
+      ? !this.convertSystemMessageToHumanContent
+      : this.computeUseSystemInstruction;
+  }
+
+  get computeUseSystemInstruction(): boolean {
+    // This works on models from April 2024 and later
+    //   Vertex AI: gemini-1.5-pro and gemini-1.0-002 and later
+    //   AI Studio: gemini-1.5-pro-latest
+    if (this.modelName === "gemini-1.0-pro-001") {
+      return false;
+    } else if (this.modelName.startsWith("gemini-pro-vision")) {
+      return false;
+    } else if (this.modelName.startsWith("gemini-1.0-pro-vision")) {
+      return false;
+    } else if (this.modelName === "gemini-pro") {
+      // on AI Studio gemini-pro is still pointing at gemini-1.0-pro-001
+      return false;
+    }
+    return true;
+  }
+
   getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
     return {
       ls_provider: "google_genai",
@@ -706,8 +758,15 @@ export class ChatGoogleGenerativeAI
   ): Promise<ChatResult> {
     const prompt = convertBaseMessagesToContent(
       messages,
-      this._isMultimodalModel
+      this._isMultimodalModel,
+      this.useSystemInstruction
     );
+    let actualPrompt = prompt;
+    if (prompt[0].role === "system") {
+      const [systemInstruction] = prompt;
+      this.client.systemInstruction = systemInstruction;
+      actualPrompt = prompt.slice(1);
+    }
     const parameters = this.invocationParams(options);
 
     // Handle streaming
@@ -734,7 +793,7 @@ export class ChatGoogleGenerativeAI
 
     const res = await this.completionWithRetry({
       ...parameters,
-      contents: prompt,
+      contents: actualPrompt,
     });
 
     let usageMetadata: UsageMetadata | undefined;
@@ -770,12 +829,19 @@ export class ChatGoogleGenerativeAI
   ): AsyncGenerator<ChatGenerationChunk> {
     const prompt = convertBaseMessagesToContent(
       messages,
-      this._isMultimodalModel
+      this._isMultimodalModel,
+      this.useSystemInstruction
     );
+    let actualPrompt = prompt;
+    if (prompt[0].role === "system") {
+      const [systemInstruction] = prompt;
+      this.client.systemInstruction = systemInstruction;
+      actualPrompt = prompt.slice(1);
+    }
     const parameters = this.invocationParams(options);
     const request = {
       ...parameters,
-      contents: prompt,
+      contents: actualPrompt,
     };
     const stream = await this.caller.callWithOptions(
       { signal: options?.signal },
