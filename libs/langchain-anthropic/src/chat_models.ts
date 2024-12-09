@@ -28,7 +28,7 @@ import { z } from "zod";
 import type {
   MessageCreateParams,
   Tool as AnthropicTool,
-} from "@anthropic-ai/sdk/resources/index.mjs";
+} from "@anthropic-ai/sdk/resources/messages";
 
 import { isLangChainTool } from "@langchain/core/utils/function_calling";
 import { AnthropicToolsOutputParser } from "./output_parsers.js";
