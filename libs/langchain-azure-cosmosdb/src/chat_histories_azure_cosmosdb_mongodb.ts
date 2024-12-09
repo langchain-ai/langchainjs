@@ -1,4 +1,8 @@
-import { Collection, Document as AzureCosmosMongoDBDocument } from "mongodb";
+import {
+  Collection,
+  Document as AzureCosmosMongoDBDocument,
+  PushOperator,
+} from "mongodb";
 import { BaseListChatMessageHistory } from "@langchain/core/chat_history";
 import {
   BaseMessage,
@@ -42,7 +46,7 @@ export class AzureCosmosDBMongoChatMessageHistory extends BaseListChatMessageHis
     await this.collection.updateOne(
       { [this.idKey]: this.sessionId },
       {
-        $push: { messages: { $each: messages } },
+        $push: { messages: { $each: messages } } as PushOperator<Document>,
       },
       { upsert: true }
     );
