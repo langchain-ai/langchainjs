@@ -33,6 +33,7 @@ import {
 } from "@langchain/core/outputs";
 import { AsyncCaller } from "@langchain/core/utils/async_caller";
 import {
+  RequestCallbacks,
   TextChatMessagesTextChatMessageAssistant,
   TextChatParameterTools,
   TextChatParams,
@@ -81,12 +82,14 @@ export interface WatsonxDeltaStream {
 export interface WatsonxCallParams
   extends Partial<Omit<TextChatParams, "modelId" | "toolChoice">> {
   maxRetries?: number;
+  watsonxCallbacks?: RequestCallbacks;
 }
 export interface WatsonxCallOptionsChat
   extends Omit<BaseChatModelCallOptions, "stop">,
     WatsonxCallParams {
   promptIndex?: number;
   tool_choice?: TextChatParameterTools | string | "auto" | "any";
+  watsonxCallbacks?: RequestCallbacks;
 }
 
 type ChatWatsonxToolType = BindToolsInput | TextChatParameterTools;
@@ -420,6 +423,8 @@ export class ChatWatsonx<
 
   streaming: boolean;
 
+  watsonxCallbacks?: RequestCallbacks;
+
   constructor(fields: ChatWatsonxInput & WatsonxAuth) {
     super(fields);
     if (
@@ -450,7 +455,7 @@ export class ChatWatsonx<
     this.n = fields?.n ?? this.n;
     this.model = fields?.model ?? this.model;
     this.version = fields?.version ?? this.version;
-
+    this.watsonxCallbacks = fields?.watsonxCallbacks ?? this.watsonxCallbacks;
     const {
       watsonxAIApikey,
       watsonxAIAuthType,
@@ -500,6 +505,10 @@ export class ChatWatsonx<
       ? _convertToolChoiceToWatsonxToolChoice(options.tool_choice)
       : {};
     return { ...params, ...toolChoiceResult };
+  }
+
+  invocationCallbacks(options: this["ParsedCallOptions"]) {
+    return options.watsonxCallbacks ?? this.watsonxCallbacks;
   }
 
   override bindTools(
@@ -590,15 +599,19 @@ export class ChatWatsonx<
         ...this.invocationParams(options),
         ...this.scopeId(),
       };
+      const watsonxCallbacks = this.invocationCallbacks(options);
       const watsonxMessages = _convertMessagesToWatsonxMessages(
         messages,
         this.model
       );
       const callback = () =>
-        this.service.textChat({
-          ...params,
-          messages: watsonxMessages,
-        });
+        this.service.textChat(
+          {
+            ...params,
+            messages: watsonxMessages,
+          },
+          watsonxCallbacks
+        );
       const { result } = await this.completionWithRetry(callback, options);
       const generations: ChatGeneration[] = [];
       for (const part of result.choices) {
@@ -638,12 +651,16 @@ export class ChatWatsonx<
       messages,
       this.model
     );
+    const watsonxCallbacks = this.invocationCallbacks(options);
     const callback = () =>
-      this.service.textChatStream({
-        ...params,
-        messages: watsonxMessages,
-        returnObject: true,
-      });
+      this.service.textChatStream(
+        {
+          ...params,
+          messages: watsonxMessages,
+          returnObject: true,
+        },
+        watsonxCallbacks
+      );
     const stream = await this.completionWithRetry(callback, options);
     let defaultRole;
     let usage: TextChatUsage | undefined;
