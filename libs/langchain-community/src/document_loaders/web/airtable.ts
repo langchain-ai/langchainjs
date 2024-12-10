@@ -4,7 +4,7 @@ import { Document } from "@langchain/core/documents";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { AsyncCaller } from "@langchain/core/utils/async_caller";
 
-interface KwargsParams {
+export interface AirtableRequestParams {
   view?: string;
   maxRecords?: number;
   filterByFormula?: string;
@@ -13,7 +13,7 @@ interface KwargsParams {
 export interface AirtableLoaderOptions {
   tableId: string;
   baseId: string;
-  kwargs?: KwargsParams;
+  kwargs?: AirtableRequestParams;
 }
 
 interface AirtableRecord {
@@ -34,7 +34,7 @@ export class AirtableLoader extends BaseDocumentLoader {
 
   private readonly baseId: string;
 
-  private readonly kwargs: KwargsParams;
+  private readonly kwargs: AirtableRequestParams;
 
   private static readonly BASE_URL = "https://api.airtable.com/v0";
 
