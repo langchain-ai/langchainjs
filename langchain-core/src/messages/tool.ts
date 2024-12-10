@@ -27,10 +27,23 @@ export interface ToolMessageFieldsWithToolCallId extends BaseMessageFields {
   status?: "success" | "error";
 }
 
+export interface DirectToolOutput {
+  readonly lc_tool_output: boolean;
+}
+
+export function isDirectToolOutput(x: unknown): x is DirectToolOutput {
+  return (
+    x != null &&
+    typeof x === "object" &&
+    "lc_tool_output" in x &&
+    x.lc_tool_output === true
+  );
+}
+
 /**
  * Represents a tool message in a conversation.
  */
-export class ToolMessage extends BaseMessage {
+export class ToolMessage extends BaseMessage implements DirectToolOutput {
   static lc_name() {
     return "ToolMessage";
   }
@@ -39,6 +52,8 @@ export class ToolMessage extends BaseMessage {
     // exclude snake case conversion to pascal case
     return { tool_call_id: "tool_call_id" };
   }
+
+  lc_tool_output = true;
 
   /**
    * Status of the tool invocation.
