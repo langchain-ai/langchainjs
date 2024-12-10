@@ -6,6 +6,7 @@ import {
   BaseCallbackHandler,
   CallbackHandlerMethods,
   HandleLLMNewTokenCallbackFields,
+  isBaseCallbackHandler,
   NewTokenIndices,
 } from "./base.js";
 import { ConsoleCallbackHandler } from "../tracers/console.js";
@@ -21,8 +22,10 @@ import { Serialized } from "../load/serializable.js";
 import type { DocumentInterface } from "../documents/document.js";
 import { isTracingEnabled } from "../utils/callbacks.js";
 import { isBaseTracer } from "../tracers/base.js";
-import { getConfigureHooks, getContextVariable } from "../context.js";
-
+import {
+  getContextVariable,
+  _getConfigureHooks,
+} from "../singletons/async_local_storage/context.js";
 
 type BaseCallbackManagerMethods = {
   [K in keyof CallbackHandlerMethods]?: (
@@ -1257,25 +1260,24 @@ export class CallbackManager
 
     for (const {
       contextVar,
-      inheritable,
+      inheritable = true,
       handlerClass,
       envVar,
-    } of getConfigureHooks()) {
-      const createOne =
+    } of _getConfigureHooks()) {
+      const createIfNotInContext =
         envVar && getEnvironmentVariable(envVar) === "true" && handlerClass;
-      if (getContextVariable(contextVar) || createOne) {
-        const varHandler = ensureHandler(
-          (getContextVariable(contextVar) as
-            | BaseCallbackHandler
-            | CallbackHandlerMethods
-            | undefined) || handlerClass!
-        );
-        if (
-          !callbackManager?.handlers.some(
-            (handler) => handler.name === varHandler.name
-          )
-        ) {
-          callbackManager?.addHandler(varHandler, inheritable);
+      let handler: BaseCallbackHandler | undefined;
+      const contextVarValue =
+        contextVar !== undefined ? getContextVariable(contextVar) : undefined;
+      if (contextVarValue && isBaseCallbackHandler(contextVarValue)) {
+        handler = contextVarValue;
+      } else if (createIfNotInContext) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        handler = new (handlerClass as any)();
+      }
+      if (handler !== undefined) {
+        if (!callbackManager?.handlers.some((h) => h.name === handler.name)) {
+          callbackManager?.addHandler(handler, inheritable);
         }
       }
     }
