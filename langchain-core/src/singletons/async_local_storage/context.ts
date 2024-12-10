@@ -1,9 +1,9 @@
 import { isRunTree, RunTree } from "langsmith/run_trees";
+import { BaseCallbackHandler } from "../../callbacks/base.js";
 import {
   _CONTEXT_VARIABLES_KEY,
-  AsyncLocalStorageProviderSingleton,
-} from "./index.js";
-import { BaseCallbackHandler } from "../../callbacks/base.js";
+  getGlobalAsyncLocalStorageInstance,
+} from "./globals.js";
 
 /**
  * Set a context variable. Context variables are scoped to any
@@ -57,7 +57,14 @@ import { BaseCallbackHandler } from "../../callbacks/base.js";
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function setContextVariable<T>(name: PropertyKey, value: T): void {
-  const runTree = AsyncLocalStorageProviderSingleton.getInstance().getStore();
+  // Avoid using global singleton due to circuluar dependency issues
+  const asyncLocalStorageInstance = getGlobalAsyncLocalStorageInstance();
+  if (asyncLocalStorageInstance === undefined) {
+    throw new Error(
+      `Internal error: Global shared async local storage instance has not been initialized.`
+    );
+  }
+  const runTree = asyncLocalStorageInstance.getStore();
   const contextVars = { ...runTree?.[_CONTEXT_VARIABLES_KEY] };
   contextVars[name] = value;
   let newValue = {};
@@ -66,7 +73,7 @@ export function setContextVariable<T>(name: PropertyKey, value: T): void {
   }
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (newValue as any)[_CONTEXT_VARIABLES_KEY] = contextVars;
-  AsyncLocalStorageProviderSingleton.getInstance().enterWith(newValue);
+  asyncLocalStorageInstance.enterWith(newValue);
 }
 
 /**
@@ -120,7 +127,12 @@ export function setContextVariable<T>(name: PropertyKey, value: T): void {
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function getContextVariable<T = any>(name: PropertyKey): T | undefined {
-  const runTree = AsyncLocalStorageProviderSingleton.getInstance().getStore();
+  // Avoid using global singleton due to circuluar dependency issues
+  const asyncLocalStorageInstance = getGlobalAsyncLocalStorageInstance();
+  if (asyncLocalStorageInstance === undefined) {
+    return undefined;
+  }
+  const runTree = asyncLocalStorageInstance.getStore();
   return runTree?.[_CONTEXT_VARIABLES_KEY]?.[name];
 }
 

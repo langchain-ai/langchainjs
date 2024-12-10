@@ -1273,10 +1273,10 @@ export class CallbackManager
         handler = contextVarValue;
       } else if (createIfNotInContext) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        handler = new (handlerClass as any)();
+        handler = new (handlerClass as any)({});
       }
       if (handler !== undefined) {
-        if (!callbackManager?.handlers.some((h) => h.name === handler.name)) {
+        if (!callbackManager?.handlers.some((h) => h.name === handler!.name)) {
           callbackManager?.addHandler(handler, inheritable);
         }
       }
