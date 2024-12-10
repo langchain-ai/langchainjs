@@ -394,3 +394,13 @@ export abstract class BaseCallbackHandler
     return new Handler();
   }
 }
+
+export const isBaseCallbackHandler = (x: unknown) => {
+  const callbackHandler = x as BaseCallbackHandler;
+  return (
+    callbackHandler !== undefined &&
+    typeof callbackHandler.copy === "function" &&
+    typeof callbackHandler.name === "string" &&
+    typeof callbackHandler.awaitHandlers === "boolean"
+  );
+};
