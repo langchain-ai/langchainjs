@@ -129,8 +129,10 @@ export class AirtableLoader extends BaseDocumentLoader {
     );
     if (offset) url.searchParams.append("offset", offset);
     if (this.kwargs.view) url.searchParams.append("view", this.kwargs.view);
-    if (this.kwargs.maxRecords) url.searchParams.append("maxRecords", this.kwargs.maxRecords.toString());
-    if (this.kwargs.filterByFormula) url.searchParams.append("filterByFormula", this.kwargs.filterByFormula);
+    if (this.kwargs.maxRecords)
+      url.searchParams.append("maxRecords", this.kwargs.maxRecords.toString());
+    if (this.kwargs.filterByFormula)
+      url.searchParams.append("filterByFormula", this.kwargs.filterByFormula);
     return url.toString();
   }
 
