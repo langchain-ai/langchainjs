@@ -27,6 +27,13 @@ export interface ToolMessageFieldsWithToolCallId extends BaseMessageFields {
   status?: "success" | "error";
 }
 
+/**
+ * Marker parameter for objects that tools can return directly.
+ *
+ * If a custom BaseTool is invoked with a ToolCall and the output of custom code is
+ * not an instance of DirectToolOutput, the output will automatically be coerced to
+ * a string and wrapped in a ToolMessage.
+ */
 export interface DirectToolOutput {
   readonly lc_direct_tool_output: boolean;
 }
