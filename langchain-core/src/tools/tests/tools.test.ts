@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { DynamicStructuredTool, tool } from "../index.js";
 import { ToolMessage } from "../../messages/tool.js";
+import { RunnableConfig } from "../../runnables/types.js";
 
 test("Tool should error if responseFormat is content_and_artifact but the function doesn't return a tuple", async () => {
   const weatherSchema = z.object({
@@ -10,7 +11,9 @@ test("Tool should error if responseFormat is content_and_artifact but the functi
   });
 
   const weatherTool = tool(
-    (_) => {
+    // Should be able to type this as base RunnableConfig without issue,
+    // though true type is more specific
+    (_, _config: RunnableConfig) => {
       return "str";
     },
     {
