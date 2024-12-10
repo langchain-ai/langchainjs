@@ -455,7 +455,7 @@ export class ChatOllama
 
   format?: string;
 
-  keepAlive?: string | number = "5m";
+  keepAlive?: string | number;
 
   client: Ollama;
 
@@ -504,7 +504,7 @@ export class ChatOllama
     this.penalizeNewline = fields?.penalizeNewline;
     this.streaming = fields?.streaming;
     this.format = fields?.format;
-    this.keepAlive = fields?.keepAlive ?? this.keepAlive;
+    this.keepAlive = fields?.keepAlive;
     this.checkOrPullModel = fields?.checkOrPullModel ?? this.checkOrPullModel;
   }
 
