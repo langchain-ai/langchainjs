@@ -66,7 +66,7 @@ export class Ollama extends LLM<OllamaCallOptions> implements OllamaInput {
 
   baseUrl = "http://localhost:11434";
 
-  keepAlive: string | number = "5m";
+  keepAlive?: string | number;
 
   embeddingOnly?: boolean;
 
@@ -138,7 +138,7 @@ export class Ollama extends LLM<OllamaCallOptions> implements OllamaInput {
       host: this.baseUrl,
       headers: fields?.headers,
     });
-    this.keepAlive = fields?.keepAlive ?? this.keepAlive;
+    this.keepAlive = fields?.keepAlive;
 
     this.embeddingOnly = fields?.embeddingOnly;
     this.f16KV = fields?.f16Kv;

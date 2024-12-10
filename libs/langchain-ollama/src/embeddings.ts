@@ -50,7 +50,7 @@ export class OllamaEmbeddings extends Embeddings {
 
   baseUrl = "http://localhost:11434";
 
-  keepAlive: string | number = "5m";
+  keepAlive?: string | number;
 
   requestOptions?: Partial<OllamaOptions>;
 
@@ -68,7 +68,7 @@ export class OllamaEmbeddings extends Embeddings {
     this.baseUrl = fields?.baseUrl ?? this.baseUrl;
 
     this.model = fields?.model ?? this.model;
-    this.keepAlive = fields?.keepAlive ?? this.keepAlive;
+    this.keepAlive = fields?.keepAlive;
     this.truncate = fields?.truncate ?? this.truncate;
     this.requestOptions = fields?.requestOptions
       ? this._convertOptions(fields?.requestOptions)
