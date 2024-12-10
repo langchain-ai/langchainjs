@@ -1,0 +1,535 @@
+# Oracle AI Vector Search with Document Processing
+
+Oracle AI Vector Search is designed for Artificial Intelligence (AI) workloads that allows you to query data based on semantics, rather than keywords. One of the biggest benefits of Oracle AI Vector Search is that semantic search on unstructured data can be combined with relational search on business data in one single system. This is not only powerful but also significantly more effective because you don't need to add a specialized vector database, eliminating the pain of data fragmentation between multiple systems.
+
+In addition, your vectors can benefit from all of Oracle Database’s most powerful features, like the following:
+
+* [Partitioning Support](https://www.oracle.com/database/technologies/partitioning.html)
+* [Real Application Clusters scalability](https://www.oracle.com/database/real-application-clusters/)
+* [Exadata smart scans](https://www.oracle.com/database/technologies/exadata/software/smartscan/)
+* [Shard processing across geographically distributed databases](https://www.oracle.com/database/distributed-database/)
+* [Transactions](https://docs.oracle.com/en/database/oracle/oracle-database/23/cncpt/transactions.html)
+* [Parallel SQL](https://docs.oracle.com/en/database/oracle/oracle-database/21/vldbg/parallel-exec-intro.html#GUID-D28717E4-0F77-44F5-BB4E-234C31D4E4BA)
+* [Disaster recovery](https://www.oracle.com/database/data-guard/)
+* [Security](https://www.oracle.com/security/database-security/)
+* [Oracle Machine Learning](https://www.oracle.com/artificial-intelligence/database-machine-learning/)
+* [Oracle Graph Database](https://www.oracle.com/database/integrated-graph-database/)
+* [Oracle Spatial and Graph](https://www.oracle.com/database/spatial/)
+* [Oracle Blockchain](https://docs.oracle.com/en/database/oracle/oracle-database/23/arpls/dbms_blockchain_table.html#GUID-B469E277-978E-4378-A8C1-26D3FF96C9A6)
+* [JSON](https://docs.oracle.com/en/database/oracle/oracle-database/23/adjsn/json-in-oracle-database.html)
+
+This guide demonstrates how Oracle AI Vector Search can be used with Langchain to serve an end-to-end RAG pipeline. This guide goes through examples of:
+
+* Loading the documents from various sources using OracleDocLoader
+* Summarizing them within/outside the database using OracleSummary
+* Generating embeddings for them within/outside the database using OracleEmbeddings
+* Chunking them according to different requirements using Advanced Oracle Capabilities from OracleTextSplitter
+* Storing and Indexing them in a Vector Store and querying them for queries in OracleVS
+
+If you are just starting with Oracle Database, consider exploring the [free Oracle 23 AI](https://www.oracle.com/database/free/#resources) which provides a great introduction to setting up your database environment. While working with the database, it is often advisable to avoid using the system user by default; instead, you can create your own user for enhanced security and customization. For detailed steps on user creation, refer to our [end-to-end guide](https://github.com/langchain-ai/langchain/blob/master/cookbook/oracleai_demo.ipynb) which also shows how to set up a user in Oracle. Additionally, understanding user privileges is crucial for managing database security effectively. You can learn more about this topic in the official [Oracle guide](https://docs.oracle.com/en/database/oracle/oracle-database/19/admqs/administering-user-accounts-and-security.html#GUID-36B21D72-1BBB-46C9-A0C9-F0D2A8591B8D) on administering user accounts and security.
+
+## Prerequisites
+
+Please install the Oracle Javascript Client driver node-oracledb to use Langchain with Oracle AI Vector Search.
+
+```bash npm2yarn
+npm install oracledb
+```
+
+## Create Demo User
+
+First, create a demo user with all the required privileges.
+
+```sql
+-- Drop user
+begin
+  execute immediate 'drop user testuser cascade';
+exception
+  when others then
+    dbms_output.put_line('Error dropping user: ' || SQLERRM);
+end;
+/
+ 
+-- Create user and grant privileges
+create user testuser identified by testuser;
+grant connect, unlimited tablespace, create credential, create procedure, create any index to testuser;
+create or replace directory MODEL_DIR as '/path/to/models';
+grant read, write on directory MODEL_DIR to public;
+grant create mining model to testuser;
+
+-- Network access
+begin
+  DBMS_NETWORK_ACL_ADMIN.APPEND_HOST_ACE(
+    host => '*',
+    ace => xs$ace_type(privilege_list => xs$name_list('connect'),
+      principal_name => 'testuser',
+      principal_type => xs_acl.ptype_db)
+  );
+end;
+/
+```
+
+## Process Documents using Oracle AI
+
+Consider the following scenario: users possess documents stored either in an Oracle Database or a file system and intend to utilize this data with Oracle AI Vector Search powered by Langchain.
+
+To prepare the documents for analysis, a comprehensive preprocessing workflow is necessary. Initially, the documents must be retrieved, summarized (if required), and chunked as needed. Subsequent steps involve generating embeddings for these chunks and integrating them into the Oracle AI Vector Store. Users can then conduct semantic searches on this data.
+
+The Oracle AI Vector Search Langchain library encompasses a suite of document processing tools that facilitate document loading, chunking, summary generation, and embedding creation.
+
+In the sections that follow, we will detail the utilization of Oracle AI Langchain APIs to effectively implement each of these processes.
+
+## Connect to Demo User
+
+The following sample code will show how to connect to Oracle Database. By default, node-oracledb runs in a ‘Thin’ mode which connects directly to Oracle Database. This mode does not need Oracle Client libraries. However, some additional functionality is available when node-oracledb uses them. node-oracledb is said to be in ‘Thick’ mode when Oracle Client libraries are used. Both modes have comprehensive functionality supporting Oracle Database. See the following guide that talks about features supported in each mode. You might want to switch to thick-mode if you are unable to use thin-mode.
+
+```typescript
+import oracledb from "oracledb";
+
+const username = "testuser";
+const password = "testuser";
+const dsn = "";
+
+let conn;
+try {
+  try {
+    conn = await oracledb.getConnection({
+      user: username,
+      password: password,
+      connectionString: dsn
+    });
+    console.log("Connection successful");
+  } catch (err) {
+    console.log("Connection failed")
+    throw err;
+  }
+} catch (err) {
+  console.error(err);
+}
+finally {
+  if (conn)
+  {
+    try {
+      await conn.close();
+    } catch (err) {
+      console.error(err);
+    }
+  }
+}
+```
+```
+Connection successful
+```
+
+## Populate a Demo Table
+
+Create a demo table and insert some sample documents.
+
+```typescript
+try {
+  const drop_table_sql: string = "begin execute immediate 'drop table demo_tab'; exception when others then null; end;";
+  await conn.execute(drop_table_sql);
+
+  const create_table_sql: string = "create table demo_tab (id number, data clob)";
+  await conn.execute(create_table_sql);
+
+  const insert_row_sql: string = "insert into demo_tab values (:id, :data)";
+  const rows_to_insert = [{
+      id: 1,
+      data: "If the answer to any preceding questions is yes, then the database stops the search and allocates space from the specified tablespace; otherwise, space is allocated from the database default shared temporary tablespace.",
+    }, {
+      id: 2,
+      data: "A tablespace can be online (accessible) or offline (not accessible) whenever the database is open.\nA tablespace is usually online so that its data is available to users. The SYSTEM tablespace and temporary tablespaces cannot be taken offline.",
+    }, {
+      id: 3,
+      data: "The database stores LOBs differently from other data types. Creating a LOB column implicitly creates a LOB segment and a LOB index. The tablespace containing the LOB segment and LOB index, which are always stored together, may be different from the tablespace containing the table.\nSometimes the database can store small amounts of LOB data in the table itself rather than in a separate LOB segment.",
+    },
+  ];
+  const result = await conn.executeMany(insert_row_sql, rows_to_insert);
+
+  await conn.commit();
+
+  console.log("Table created and populated")
+} catch (err) {
+  console.log("Table creation failed");
+  throw err;
+}
+```
+```
+Connection successful
+Table created and populated
+```
+
+With the inclusion of a demo user and a populated sample table, the remaining configuration involves setting up embedding and summary functionalities. Users are presented with multiple provider options, including local database solutions and third-party services such as Ocigenai, Hugging Face, and OpenAI. Should users opt for a third-party provider, they are required to establish credentials containing the necessary authentication details. Conversely, if selecting a database as the provider for embeddings, it is necessary to upload an ONNX model to the Oracle Database. No additional setup is required for summary functionalities when using the database option.
+
+## Load ONNX Model
+
+Oracle accommodates a variety of embedding providers, enabling users to choose between proprietary database solutions and third-party services such as OCIGENAI and HuggingFace. This selection dictates the methodology for generating and managing embeddings.
+
+**Important** : Should users opt for the database option, they must upload an ONNX model into the Oracle Database. Conversely, if a third-party provider is selected for embedding generation, uploading an ONNX model to Oracle Database is not required.
+
+A significant advantage of utilizing an ONNX model directly within Oracle is the enhanced security and performance it offers by eliminating the need to transmit data to external parties. Additionally, this method avoids the latency typically associated with network or REST API calls.
+
+Below is the example code to upload an ONNX model into Oracle Database:
+
+```typescript
+import {OracleEmbeddings} from "@langchain/community/embeddings/oracle";
+
+// please update with your related information
+// make sure that you have onnx file in the system
+const onnx_dir = "MODEL_DIR";
+const onnx_file = "ALL-MINILM-L12-V2.onnx";
+const model_name = "demo_model";
+
+try {
+  await OracleEmbeddings.loadOnnxModel(conn, onnx_dir, onnx_file, model_name);
+  console.log("ONNX model loaded");
+} catch (err) {
+  console.log("ONNX model loading failed");
+  throw err;
+}
+```
+```
+Connection successful
+ONNX model loaded
+```
+
+## Create Credential
+
+When selecting third-party providers for generating embeddings, users are required to establish credentials to securely access the provider's endpoints.
+
+**Important**: No credentials are necessary when opting for the 'database' provider to generate embeddings. However, should users decide to utilize a third-party provider, they must create credentials specific to the chosen provider.
+
+Below is an illustrative example:
+
+```typescript
+try {
+  await conn.execute(`
+    declare
+      jo json_object_t;
+    begin
+      -- HuggingFace
+       
+      begin
+        dbms_vector_chain.drop_credential(credential_name  => 'HF_CRED');
+      exception
+        when others then null;
+      end;
+
+      jo := json_object_t();
+      jo.put('access_token', '<access_token>');
+      dbms_vector_chain.create_credential(
+        credential_name   =>  'HF_CRED',
+        params            => json(jo.to_string));
+
+      -- OCIGenAI
+
+      begin
+        dbms_vector_chain.drop_credential(credential_name  => 'OCI_CRED');
+      exception
+        when others then null;
+      end;
+       
+      jo := json_object_t();
+      jo.put('user_ocid','<user_ocid>');
+      jo.put('tenancy_ocid','<tenancy_ocid>');
+      jo.put('compartment_ocid','<compartment_ocid>');
+      jo.put('private_key','<private_key>');
+      jo.put('fingerprint','<fingerprint>');
+      dbms_vector_chain.create_credential(
+        credential_name   => 'OCI_CRED',
+        params            => json(jo.to_string));
+    end;`);
+  console.log("Credentials created")
+} catch (err) {
+  console.log("Credentials creation failed");
+  throw err;
+}
+```
+```
+Connection successful
+Credentials created
+```
+
+## Load Documents
+
+Users have the flexibility to load documents from either the Oracle Database, a file system, or both, by appropriately configuring the loader parameters. For comprehensive details on these parameters, please consult the Oracle AI Vector Search Guide.
+
+A significant advantage of utilizing OracleDocLoader is its capability to process over 150 distinct file formats, eliminating the need for multiple loaders for different document types. For a complete list of the supported formats, please refer to the Oracle Text Supported Document Formats.
+
+Below is a sample code snippet that demonstrates how to use OracleDocLoader
+
+```typescript
+import {OracleDocLoader} from "@langchain/community/document_loaders/fs/oracle";
+
+// loading from Oracle Database table
+// make sure you have the table with this specification
+const loader_params = {
+  "owner": "testuser",
+  "tablename": "demo_tab",
+  "colname": "data",
+};
+
+// load the docs
+const loader = new OracleDocLoader(conn, loader_params);
+const docs = await loader.load();
+
+// verify
+console.log(`Number of docs loaded: ${docs.length}`);
+//console.log(`Document-0: ${docs[0].pageContent}`);
+```
+```
+Connection successful
+Number of docs loaded: 3
+```
+
+Oracle accommodates a variety of embedding providers, enabling users to choose between proprietary database solutions and third-party services such as OCIGENAI and HuggingFace. This selection dictates the methodology for generating and managing embeddings.
+
+**Important** : Should users opt for the database option, they must upload an ONNX model into the Oracle Database. Conversely, if a third-party provider is selected for embedding generation, uploading an ONNX model to Oracle Database is not required.
+
+A significant advantage of utilizing an ONNX model directly within Oracle is the enhanced security and performance it offers by eliminating the need to transmit data to external parties. Additionally, this method avoids the latency typically associated with network or REST API calls.
+
+Below is the example code to upload an ONNX model into Oracle Database:
+
+## Generate Summary
+
+Now that the user loaded the documents, they may want to generate a summary for each document. The Oracle AI Vector Search Langchain library offers a suite of APIs designed for document summarization. It supports multiple summarization providers such as Database, OCIGENAI, HuggingFace, among others, allowing users to select the provider that best meets their needs. To utilize these capabilities, users must configure the summary parameters as specified. For detailed information on these parameters, please consult the Oracle AI Vector Search Guide book.
+
+**Note**: The users may need to set proxy if they want to use some 3rd party summary generation providers other than Oracle's in-house and default provider: 'database'. If you don't have proxy, please remove the proxy parameter when you instantiate the OracleSummary.
+
+The following sample code will show how to generate summary:
+
+```typescript
+import {OracleSummary} from "@langchain/community/utils/oracle";
+
+// proxy to be used when we instantiate summary and embedder object
+const proxy = "";
+
+// using 'database' provider
+const summary_params = {
+  "provider": "database",
+  "glevel": "S",
+  "numParagraphs": 1,
+  "language": "english",
+};
+
+// get the summary instance
+// Remove proxy if not required
+const model = new OracleSummary(conn, summary_params, proxy);
+
+let list_summary = [];
+for (let[, doc]of docs.entries()) {
+  const summary = await model.getSummary(doc.pageContent);
+  list_summary.push(summary);
+}
+
+// verify
+console.log(`Number of Summaries: ${list_summary.length}`);
+//console.log(`Summary-0: ${list_summary[0]}`) // content
+```
+```
+Connection successful
+Number of Summaries: 3
+```
+
+## Split Documents
+
+The documents may vary in size, ranging from small to very large. Users often prefer to chunk their documents into smaller sections to facilitate the generation of embeddings. A wide array of customization options is available for this splitting process. For comprehensive details regarding these parameters, please consult the Oracle AI Vector Search Guide.
+
+Below is a sample code illustrating how to implement this:
+
+```typescript
+import {OracleTextSplitter} from "@langchain/textsplitters/oracle";
+
+// split by default parameters
+const splitter_params = {"normalize": "all"};
+
+// get the splitter instance
+const splitter = new OracleTextSplitter(conn, splitter_params);
+
+let list_chunks = [];
+for (let[, doc]of docs.entries()) {
+  let chunks = await splitter.splitText(doc.pageContent);
+  list_chunks.push(chunks);
+}
+
+// verify
+console.log(`Number of Chunks: ${list_chunks.length}`);
+//console.log(`Chunk-0: ${list_chunks[0]}`); // content
+```
+```
+Connection successful
+Number of Chunks: 3
+```
+
+## Generate Embeddings
+
+Now that the documents are chunked as per requirements, the users may want to generate embeddings for these chunks. Oracle AI Vector Search provides multiple methods for generating embeddings, utilizing either locally hosted ONNX models or third-party APIs. For comprehensive instructions on configuring these alternatives, please refer to the Oracle AI Vector Search Guide.
+
+**Note**: Users may need to configure a proxy to utilize third-party embedding generation providers, excluding the 'database' provider that utilizes an ONNX model.
+
+The following sample code will show how to generate embeddings:
+
+```typescript
+import {OracleEmbeddings} from "@langchain/community/embeddings/oracle";
+  
+// proxy to be used when we instantiate summary and embedder object
+const proxy = "";
+
+// using ONNX model loaded to Oracle Database
+const embedder_params = {
+  "provider": "database",
+  "model": "demo_model"
+};
+
+// get the embedding instance
+// Remove proxy if not required
+const embedder = new OracleEmbeddings(conn, embedder_params, proxy);
+
+let embeddings = [];
+for (let[, doc]of docs.entries()) {
+  let chunks = await splitter.splitText(doc.pageContent);
+  for (let[, chunk]of chunks.entries()) {
+    const embed = await embedder.embedQuery(chunk);
+    embeddings.push(embed);
+  }
+}
+
+// verify
+console.log(`Number of embeddings: ${embeddings.length}`);
+//console.log(`Embedding-0: ${embeddings[0]}`); // content
+```
+```
+Connection successful
+Number of embeddings: 3
+```
+
+## Create Oracle AI Vector Store
+
+Now that you know how to use Oracle AI Langchain library APIs individually to process the documents, let us show how to integrate with Oracle AI Vector Store to facilitate the semantic searches.
+
+Let's combine all document processing stages together. Here is the sample code below:
+
+```typescript
+/*
+In this sample example, we will use 'database' provider for both summary and embeddings.
+So, we don't need to do the followings:
+- set proxy for 3rd party providers
+- create credential for 3rd party providers
+
+If you choose to use 3rd party provider,
+please follow the necessary steps for proxy and credential.
+*/
+
+import {OracleTextSplitter} from "@langchain/textsplitters/oracle";
+import {OracleDocLoader} from "@langchain/community/document_loaders/fs/oracle";
+import {OracleSummary} from "@langchain/community/utils/oracle";
+import {OracleEmbeddings} from "@langchain/community/embeddings/oracle";
+import {Document} from "langchain/document";
+import oracledb from "oracledb";
+
+// oracle connection
+// please update with your username, password, hostname, and service_name
+const username = "testuser";
+const password = "testuser";
+const dsn = "";
+
+let conn;
+try {
+  try {
+    conn = await oracledb.getConnection({
+      user: username,
+      password: password,
+      connectionString: dsn
+    });
+    console.log("Connection successful");
+  } catch (err) {
+    console.log("Connection failed")
+    throw err;
+  }
+
+  // load onnx model
+  // please update with your related information
+  const onnx_dir = "MODEL_DIR";
+  const onnx_file = "ALL-MINILM-L12-V2.onnx";
+  const model_name = "demo_model";
+
+  try {
+    await OracleEmbeddings.loadOnnxModel(conn, onnx_dir, onnx_file, model_name);
+    console.log("ONNX model loaded");
+  } catch (err) {
+    console.log("ONNX model loading failed");
+    throw err;
+  }
+
+  // params
+  // please update necessary fields with related information
+  const loader_params = {
+    "owner": "testuser",
+    "tablename": "demo_tab",
+    "colname": "data",
+  };
+  const summary_params = {
+    "provider": "database",
+    "glevel": "S",
+    "numParagraphs": 1,
+    "language": "english",
+  };
+  const splitter_params = {
+    "normalize": "all"
+  };
+  const embedder_params = {
+    "provider": "database",
+    "model": "database"
+  };
+
+  // instantiate loader, summary, splitter, and embedder
+  const loader = new OracleDocLoader(conn, loader_params);
+  const model = new OracleSummary(conn, summary_params);
+  const splitter = new OracleTextSplitter(conn, splitter_params);
+  const embedder = new OracleEmbeddings(conn, embedder_params);
+
+  const docs = await loader.load();
+
+  // process the documents
+  let chunks_with_mdata = [];
+  for (let[doc_id, doc]of docs.entries()) {
+    let summary = await model.getSummary(doc.pageContent);
+    let chunks = await splitter.splitText(doc.pageContent);
+    for (let[chunk_id, chunk]of chunks.entries()) {
+      let chunk_metadata = doc.metadata;
+      chunk_metadata["id"] = doc_id + "$" + chunk_id;
+      chunk_metadata["document_id"] = doc_id;
+      chunk_metadata["document_summary"] = summary;
+      chunks_with_mdata.push(
+        new Document({
+          pageContent: chunk,
+          metadata: chunk_metadata
+        }));
+    }
+  }
+
+  // verify
+  console.log(`Number of total chunks with metadata: ${chunks_with_mdata.length}`);
+  //console.log(chunks_with_mdata);
+} catch (err) {
+  console.error(err);
+}
+finally {
+  if (conn)
+  {
+    try {
+      await conn.close();
+    } catch (err) {
+      console.error(err);
+    }
+  }
+}
+```
+```
+Connection successful
+ONNX model loaded
+Number of total chunks with metadata: 3
+```
+
+At this point, we have processed the documents and generated chunks with metadata. Next, we will create Oracle AI Vector Store with those chunks.
