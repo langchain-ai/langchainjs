@@ -14,8 +14,8 @@ import { MongoClient } from "mongodb";
 import {
   AzureCosmosDBMongoDBConfig,
   AzureCosmosDBMongoDBVectorStore,
-  AzureCosmosDBMongoDBSimilarityType
- } from "./azure_cosmosdb_mongodb.js"
+  AzureCosmosDBMongoDBSimilarityType,
+} from "./azure_cosmosdb_mongodb.js";
 import {
   AzureCosmosDBNoSQLConfig,
   AzureCosmosDBNoSQLVectorStore,
@@ -215,7 +215,7 @@ export class AzureCosmosDBNoSQLSemanticCache extends BaseCache {
  */
 export class AzureCosmosDBMongoDBSemanticCache extends BaseCache {
   private embeddings: EmbeddingsInterface;
-  
+
   private config: AzureCosmosDBMongoDBConfig;
 
   private similarityScoreThreshold: number;
@@ -229,11 +229,11 @@ export class AzureCosmosDBMongoDBSemanticCache extends BaseCache {
   constructor(
     embeddings: EmbeddingsInterface,
     dbConfig: AzureCosmosDBMongoDBConfig,
-    similarityScoreThreshold: number = 0.0,
+    similarityScoreThreshold: number = 0.0
   ) {
-    super()
+    super();
 
-    const connectionString = 
+    const connectionString =
       dbConfig.connectionString ??
       getEnvironmentVariable("AZURE_COSMOSDB_MONGODB_CONNECTION_STRING");
 
@@ -244,31 +244,31 @@ export class AzureCosmosDBMongoDBSemanticCache extends BaseCache {
     }
 
     if (!dbConfig.client) {
-      this.client = new MongoClient (connectionString!, {
+      this.client = new MongoClient(connectionString!, {
         appName: "langchainjs",
       });
     }
 
     this.config = {
       ...dbConfig,
-      client: this.client
-    }
+      client: this.client,
+    };
     this.similarityScoreThreshold = similarityScoreThreshold;
     this.embeddings = embeddings;
-    this.vectorDistanceFunction = 
-      dbConfig?.indexOptions?.similarity ?? AzureCosmosDBMongoDBSimilarityType.COS;
-
+    this.vectorDistanceFunction =
+      dbConfig?.indexOptions?.similarity ??
+      AzureCosmosDBMongoDBSimilarityType.COS;
   }
 
   private getLlmCache(llmKey: string) {
-    const key = getCacheKey(llmKey)
+    const key = getCacheKey(llmKey);
     if (!this.cacheDict[key]) {
-      this.cacheDict[key] =  new AzureCosmosDBMongoDBVectorStore(
+      this.cacheDict[key] = new AzureCosmosDBMongoDBVectorStore(
         this.embeddings,
         this.config
-      )
+      );
     }
-    return this.cacheDict[key]
+    return this.cacheDict[key];
   }
 
   /**
@@ -279,10 +279,14 @@ export class AzureCosmosDBMongoDBSemanticCache extends BaseCache {
    * @returns An array of Generations if found, null otherwise.
    */
   async lookup(prompt: string, llmKey: string): Promise<Generation[] | null> {
-    const llmCache = this.getLlmCache(llmKey)
+    const llmCache = this.getLlmCache(llmKey);
 
-    const queryEmbedding = await this.embeddings.embedQuery(prompt)
-    const results = await llmCache.similaritySearchVectorWithScore(queryEmbedding, 1, this.config.indexOptions?.indexType)
+    const queryEmbedding = await this.embeddings.embedQuery(prompt);
+    const results = await llmCache.similaritySearchVectorWithScore(
+      queryEmbedding,
+      1,
+      this.config.indexOptions?.indexType
+    );
     if (!results.length) return null;
 
     const generations = results
@@ -301,7 +305,7 @@ export class AzureCosmosDBMongoDBSemanticCache extends BaseCache {
       })
       .filter((gen) => gen !== undefined);
 
-      return generations.length > 0 ? generations : null;
+    return generations.length > 0 ? generations : null;
   }
 
   /**
@@ -311,7 +315,11 @@ export class AzureCosmosDBMongoDBSemanticCache extends BaseCache {
    * @param llmKey The LLM key used to construct the cache key.
    * @param value The value to be stored in the cache.
    */
-  public async update(prompt: string, llmKey: string, returnValue: Generation[]): Promise<void> {
+  public async update(
+    prompt: string,
+    llmKey: string,
+    returnValue: Generation[]
+  ): Promise<void> {
     const serializedGenerations = returnValue.map((generation) =>
       JSON.stringify(serializeGeneration(generation))
     );
