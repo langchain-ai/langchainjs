@@ -298,7 +298,7 @@ export class WatsonxLLM<
     const watsonxCallbacks = this.invocationCallbacks(options);
     if (stream) {
       const textStream = idOrName
-        ? await this.service.deploymentGenerateTextStream({
+        ? this.service.deploymentGenerateTextStream({
             idOrName,
             ...requestOptions,
             parameters: {
@@ -309,7 +309,7 @@ export class WatsonxLLM<
             },
             returnObject: true,
           })
-        : await this.service.generateTextStream(
+        : this.service.generateTextStream(
             {
               input,
               parameters,
@@ -319,7 +319,9 @@ export class WatsonxLLM<
             },
             watsonxCallbacks
           );
-      return textStream;
+      return (await textStream) as AsyncIterable<
+        WatsonXAI.ObjectStreamed<WatsonXAI.TextGenResponse>
+      >;
     } else {
       const textGenerationPromise = idOrName
         ? this.service.deploymentGenerateText(
