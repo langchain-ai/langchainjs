@@ -617,3 +617,50 @@ describe("GAuth Anthropic Chat", () => {
     expect(toolCalls?.[0].args).toHaveProperty("location");
   });
 });
+
+describe("GoogleSearchRetrievalTool", () => {
+  test("Supports GoogleSearchRetrievalTool", async () => {
+    const searchRetrievalTool = {
+      googleSearchRetrieval: {
+        dynamicRetrievalConfig: {
+          mode: "MODE_DYNAMIC",
+          dynamicThreshold: 0.7, // default is 0.7
+        },
+      },
+    };
+    const model = new ChatVertexAI({
+      model: "gemini-1.5-pro",
+      temperature: 0,
+      maxRetries: 0,
+    }).bindTools([searchRetrievalTool]);
+
+    const result = await model.invoke("Who won the 2024 MLB World Series?");
+    expect(result.content as string).toContain("Dodgers");
+  });
+
+  test("Can stream GoogleSearchRetrievalTool", async () => {
+    const searchRetrievalTool = {
+      googleSearchRetrieval: {
+        dynamicRetrievalConfig: {
+          mode: "MODE_DYNAMIC",
+          dynamicThreshold: 0.7, // default is 0.7
+        },
+      },
+    };
+    const model = new ChatVertexAI({
+      model: "gemini-1.5-pro",
+      temperature: 0,
+      maxRetries: 0,
+    }).bindTools([searchRetrievalTool]);
+
+    const stream = await model.stream("Who won the 2024 MLB World Series?");
+    let finalMsg: AIMessageChunk | undefined;
+    for await (const msg of stream) {
+      finalMsg = finalMsg ? concat(finalMsg, msg) : msg;
+    }
+    if (!finalMsg) {
+      throw new Error("finalMsg is undefined");
+    }
+    expect(finalMsg.content as string).toContain("Dodgers");
+  });
+});
