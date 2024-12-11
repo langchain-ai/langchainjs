@@ -24,7 +24,7 @@ function InstallationInfo({ children }) {
 }
 
 export default function VectorStoreTabs(props) {
-  const { customVarName, additionalDependencies } = props;
+  const additionalDependencies = props;
 
   const tabItems = [
     {
