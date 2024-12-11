@@ -49,7 +49,7 @@ const DEFAULTS = {
  * @property {boolean} [hideMistral]
  * @property {boolean} [hideCohere]
  *
- * @property {string} [customVarName] - Custom variable name for the model. Defaults to `"model"`.
+ * @property {string} [customVarName] - Custom variable name for the model. Defaults to `"embeddings"`.
  */
 
 /**
