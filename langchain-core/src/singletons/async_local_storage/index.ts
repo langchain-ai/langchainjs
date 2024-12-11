@@ -4,6 +4,7 @@ import {
   AsyncLocalStorageInterface,
   getGlobalAsyncLocalStorageInstance,
   setGlobalAsyncLocalStorageInstance,
+  _CONTEXT_VARIABLES_KEY,
 } from "./globals.js";
 import { CallbackManager } from "../../callbacks/manager.js";
 import { LangChainTracer } from "../../tracers/tracer_langchain.js";
@@ -25,8 +26,6 @@ export class MockAsyncLocalStorage implements AsyncLocalStorageInterface {
 const mockAsyncLocalStorage = new MockAsyncLocalStorage();
 
 const LC_CHILD_KEY = Symbol.for("lc:child_config");
-
-export const _CONTEXT_VARIABLES_KEY = Symbol.for("lc:context_variables");
 
 class AsyncLocalStorageProvider {
   getInstance(): AsyncLocalStorageInterface {
