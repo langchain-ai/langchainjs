@@ -5,10 +5,6 @@ import TabItem from "@theme/TabItem";
 import CodeBlock from "@theme-original/CodeBlock";
 import Npm2Yarn from "@theme/Npm2Yarn";
 
-function InstallationInfo({ children }) {
-  return <Npm2Yarn>{children}</Npm2Yarn>;
-}
-
 const DEFAULTS = {
   openaiParams: `{\n  model: "text-embedding-3-large"\n}`,
   azureParams: `{\n  azureOpenAIApiEmbeddingsDeploymentName: "text-embedding-ada-002"\n}`,
@@ -120,7 +116,7 @@ export default function EmbeddingTabs(props) {
         {displayedTabs.map((tab) => (
           <TabItem value={tab.value} label={tab.label} key={tab.value}>
             <h4>Install dependencies</h4>
-            <InstallationInfo>{tab.dependencies}</InstallationInfo>
+            <Npm2Yarn>{tab.dependencies}</Npm2Yarn>
             <CodeBlock language="bash">{tab.envs}</CodeBlock>
             <CodeBlock language="typescript">{tab.text}</CodeBlock>
           </TabItem>

@@ -4,10 +4,6 @@ import TabItem from "@theme/TabItem";
 import CodeBlock from "@theme-original/CodeBlock";
 import Npm2Yarn from "@theme/Npm2Yarn";
 
-function InstallationInfo({ children }) {
-  return <Npm2Yarn>{children}</Npm2Yarn>;
-}
-
 export default function VectorStoreTabs(props) {
   const { customVarName } = props;
 
@@ -18,7 +14,7 @@ export default function VectorStoreTabs(props) {
       value: "Memory",
       label: "Memory",
       text: `import { MemoryVectorStore } from "langchain/vectorstores/memory";\n\nconst ${vectorStoreVarName} = new MemoryVectorStore(embeddings);`,
-      dependencies: "@langchain/community",
+      dependencies: "@langchain",
       default: true,
     },
     {
@@ -99,7 +95,7 @@ const ${vectorStoreVarName} = await QdrantVectorStore.fromExistingCollection(emb
         {tabItems.map((tab) => (
           <TabItem value={tab.value} label={tab.label} key={tab.value}>
             <h4>Install dependencies</h4>
-            <InstallationInfo>{tab.dependencies}</InstallationInfo>
+            <Npm2Yarn>{tab.dependencies}</Npm2Yarn>
             <CodeBlock language="typescript">{tab.text}</CodeBlock>
           </TabItem>
         ))}
