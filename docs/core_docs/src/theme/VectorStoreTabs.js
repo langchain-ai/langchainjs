@@ -3,29 +3,12 @@ import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
 import CodeBlock from "@theme-original/CodeBlock";
 import Npm2Yarn from "@theme/Npm2Yarn";
-import Admonition from "@theme/Admonition";
 
 function InstallationInfo({ children }) {
-  return (
-    <>
-      <Admonition type="tip">
-        <p>
-          See{" "}
-          <a href="/docs/how_to/installation/#installing-integration-packages">
-            this section for general instructions on installing integration
-            packages
-          </a>
-          .
-        </p>
-      </Admonition>
-      <Npm2Yarn>{children}</Npm2Yarn>
-    </>
-  );
+  return <Npm2Yarn>{children}</Npm2Yarn>;
 }
 
-export default function VectorStoreTabs(props) {
-  const additionalDependencies = props;
-
+export default function VectorStoreTabs() {
   const tabItems = [
     {
       value: "Memory",
@@ -111,9 +94,7 @@ const vectorStore = await QdrantVectorStore.fromExistingCollection(embeddings, {
       <Tabs groupId="vectorStoreTabs">
         {tabItems.map((tab) => (
           <TabItem value={tab.value} label={tab.label} key={tab.value}>
-            <InstallationInfo>
-              {[tab.dependencies, additionalDependencies].join(" ")}
-            </InstallationInfo>
+            <InstallationInfo>{tab.dependencies}</InstallationInfo>
             <CodeBlock language="typescript">{tab.text}</CodeBlock>
           </TabItem>
         ))}
