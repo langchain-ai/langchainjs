@@ -2,30 +2,50 @@ import React from "react";
 import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
 import CodeBlock from "@theme-original/CodeBlock";
+import Npm2Yarn from "@theme/Npm2Yarn";
+import Admonition from "@theme/Admonition";
+
+function InstallationInfo({ children }) {
+  return (
+    <>
+      <Admonition type="tip">
+        <p>
+          See{" "}
+          <a href="/docs/how_to/installation/#installing-integration-packages">
+            this section for general instructions on installing integration
+            packages
+          </a>
+          .
+        </p>
+      </Admonition>
+      <Npm2Yarn>{children}</Npm2Yarn>
+    </>
+  );
+}
 
 export default function VectorStoreTabs(props) {
-  const customVarName = props;
+  const { customVarName, additionalDependencies } = props;
 
   const tabItems = [
     {
       value: "Memory",
       label: "Memory",
       text: `import { MemoryVectorStore } from "langchain/vectorstores/memory";\n\nconst vectorStore = new MemoryVectorStore(embeddings);`,
-      packageName: "@langchain/community",
+      dependencies: "@langchain/community",
       default: true,
-      },
+    },
     {
       value: "Chroma",
       label: "Chroma",
       text: `import { Chroma } from "@langchain/community/vectorstores/chroma";\n\nconst vectorStore = new Chroma(embeddings, {\n  collectionName: "a-test-collection",\n});`,
-      packageName: "@langchain/community",
+      dependencies: "@langchain/community",
       default: true,
     },
     {
       value: "FAISS",
       label: "FAISS",
       text: `import { FaissStore } from "@langchain/community/vectorstores/faiss";\n\nconst vectorStore = new FaissStore(embeddings, {});`,
-      packageName: "@langchain/community",
+      dependencies: "@langchain/community",
       default: false,
     },
     {
@@ -45,7 +65,7 @@ const vectorStore = new MongoDBAtlasVectorSearch(embeddings, {
   textKey: "text",
   embeddingKey: "embedding",
 });`,
-      packageName: "@langchain/mongodb",
+      dependencies: "@langchain/mongodb",
       default: false,
     },
     {
@@ -54,7 +74,7 @@ const vectorStore = new MongoDBAtlasVectorSearch(embeddings, {
       text: `import PGVectorStore from "@langchain/community/vectorstores/pgvector";
 
   const vectorStore = await PGVectorStore.initialize(embeddings, {})`,
-      packageName: "@langchain/community",
+      dependencies: "@langchain/community",
       default: false,
     },
     {
@@ -68,7 +88,7 @@ const vectorStore = new PineconeStore(embeddings, {
   pineconeIndex,
   maxConcurrency: 5,
 });`,
-      packageName: "@langchain/pinecone",
+      dependencies: "@langchain/pinecone",
       default: false,
     },
     {
@@ -80,23 +100,24 @@ const vectorStore = await QdrantVectorStore.fromExistingCollection(embeddings, {
   url: process.env.QDRANT_URL,
   collectionName: "langchainjs-testing",
 });`,
-      packageName: "@langchain/qdrant",
+      dependencies: "@langchain/qdrant",
       default: false,
     },
   ];
 
   return (
-    <Tabs groupId="vectorStoreTabs">
-      {tabItems.map((tabItem) => (
-        <TabItem
-          key={tabItem.value}
-          value={tabItem.value}
-          label={tabItem.label}
-          default={tabItem.default}
-        >
-          <CodeBlock language="typescript">{tabItem.text}</CodeBlock>
-        </TabItem>
-      ))}
-    </Tabs>
+    <div>
+      <h3>Pick your vector store:</h3>
+      <Tabs groupId="vectorStoreTabs">
+        {tabItems.map((tab) => (
+          <TabItem value={tab.value} label={tab.label} key={tab.value}>
+            <InstallationInfo>
+              {[tab.dependencies, additionalDependencies].join(" ")}
+            </InstallationInfo>
+            <CodeBlock language="typescript">{tab.text}</CodeBlock>
+          </TabItem>
+        ))}
+      </Tabs>
+    </div>
   );
 }
