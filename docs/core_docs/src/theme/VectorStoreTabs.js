@@ -56,7 +56,7 @@ const vectorStore = new MongoDBAtlasVectorSearch(embeddings, {
       label: "PGVector",
       text: `import PGVectorStore from "@langchain/community/vectorstores/pgvector";
 
-  const vectorStore = await PGVectorStore.initialize(embeddings, {})`,
+const vectorStore = await PGVectorStore.initialize(embeddings, {})`,
       dependencies: "@langchain/community",
       default: false,
     },
