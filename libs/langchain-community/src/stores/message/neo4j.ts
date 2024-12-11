@@ -15,23 +15,22 @@ export type Neo4jChatMessageHistoryConfigInput = {
   username: string;
   password: string;
   windowSize?: number;
-}
+};
 
 const defaultConfig = {
   sessionNodeLabel: "ChatSession",
   messageNodeLabel: "ChatMessage",
   windowSize: 3,
-}
+};
 
 export class Neo4jChatMessageHistory extends BaseListChatMessageHistory {
-
   lc_namespace: string[] = ["langchain", "stores", "message", "neo4j"];
   sessionId: string | number;
   sessionNodeLabel: string;
   messageNodeLabel: string;
   windowSize: number;
 
-  #driver: Driver;
+  private driver: Driver;
 
   constructor({
     sessionId = uuidv4(),
@@ -42,7 +41,7 @@ export class Neo4jChatMessageHistory extends BaseListChatMessageHistory {
     password,
     windowSize = defaultConfig.windowSize,
   }: Neo4jChatMessageHistoryConfigInput) {
-    super()
+    super();
 
     this.sessionId = sessionId;
     this.sessionNodeLabel = sessionNodeLabel;
@@ -51,23 +50,41 @@ export class Neo4jChatMessageHistory extends BaseListChatMessageHistory {
 
     if (url && username && password) {
       try {
-        this.#driver = neo4j.driver(url, auth.basic(username, password));
+        this.driver = neo4j.driver(url, auth.basic(username, password));
       } catch (e) {
         throw new Neo4jError({
-          message: "Could not create a Neo4j driver instance. Please check the connection details.",
-          cause: e
+          message:
+            "Could not create a Neo4j driver instance. Please check the connection details.",
+          cause: e,
         });
       }
     } else {
       throw new Neo4jError({
-        message: "Neo4j connection details not provided."
+        message: "Neo4j connection details not provided.",
       });
     }
   }
 
+  static async initialize(
+    props: Neo4jChatMessageHistoryConfigInput
+  ): Promise<Neo4jChatMessageHistory> {
+    const instance = new Neo4jChatMessageHistory(props);
+
+    try {
+      await instance.verifyConnectivity();
+    } catch (e) {
+      throw new Neo4jError({
+        message: `Could not verify connection to the Neo4j database. Cause: ${e}`,
+        cause: e,
+      });
+    }
+
+    return instance;
+  }
+
   async verifyConnectivity() {
-    const connectivity = await this.#driver.getServerInfo();
-    return connectivity
+    const connectivity = await this.driver.getServerInfo();
+    return connectivity;
   }
 
   async getMessages(): Promise<BaseMessage[]> {
@@ -75,27 +92,26 @@ export class Neo4jChatMessageHistory extends BaseListChatMessageHistory {
       MERGE (chatSession:${this.sessionNodeLabel} {id: $sessionId})
       WITH chatSession
       MATCH (chatSession)-[:LAST_MESSAGE]->(lastMessage)
-      MATCH p=(lastMessage)<-[:NEXT*0..${(this.windowSize * 2) - 1}]-()
+      MATCH p=(lastMessage)<-[:NEXT*0..${this.windowSize * 2 - 1}]-()
       WITH p, length(p) AS length
       ORDER BY length DESC LIMIT 1
       UNWIND reverse(nodes(p)) AS node
       RETURN {data:{content: node.content}, type:node.type} AS result
-    `
+    `;
 
     try {
-      const messages = await this.#driver.session().run(
-        getMessagesCypherQuery,
-        {
-          sessionId: this.sessionId
-        }
-      )
-      const results = messages.records.map((record: Record) => record.get('result'))
+      const messages = await this.driver.session().run(getMessagesCypherQuery, {
+        sessionId: this.sessionId,
+      });
+      const results = messages.records.map((record: Record) =>
+        record.get("result")
+      );
 
-      return mapStoredMessagesToChatMessages(results)
+      return mapStoredMessagesToChatMessages(results);
     } catch (e) {
       throw new Neo4jError({
         message: `Ohno! Couldn't get messages. Cause: ${e}`,
-        cause: e
+        cause: e,
       });
     }
   }
@@ -111,21 +127,19 @@ export class Neo4jChatMessageHistory extends BaseListChatMessageHistory {
       WHERE lastMessage IS NOT NULL
       CREATE (lastMessage)-[:NEXT]->(newLastMessage)
       DELETE lastMessageRel
-    `
+    `;
 
     try {
-      await this.#driver.session().run(
-        addMessageCypherQuery,
-        {
-          sessionId: this.sessionId,
-          type: message.getType(),
-          content: message.content
-        })
+      await this.driver.session().run(addMessageCypherQuery, {
+        sessionId: this.sessionId,
+        type: message.getType(),
+        content: message.content,
+      });
     } catch (e) {
       throw new Neo4jError({
         message: `Ohno! Couldn't add message. Cause: ${e}`,
-        cause: e
-      })
+        cause: e,
+      });
     }
   }
 
@@ -134,23 +148,21 @@ export class Neo4jChatMessageHistory extends BaseListChatMessageHistory {
       MATCH p=(chatSession:${this.sessionNodeLabel} {id: $sessionId})-[:LAST_MESSAGE]->(lastMessage)<-[:NEXT*0..]-()
       UNWIND nodes(p) as node
       DETACH DELETE node
-    `
+    `;
 
     try {
-      await this.#driver.session().run(
-        clearMessagesCypherQuery,
-        {
-          sessionId: this.sessionId,
-        })
+      await this.driver.session().run(clearMessagesCypherQuery, {
+        sessionId: this.sessionId,
+      });
     } catch (e) {
       throw new Neo4jError({
         message: `Ohno! Couldn't clear chat history. Cause: ${e}`,
-        cause: e
-      })
+        cause: e,
+      });
     }
   }
 
   async close() {
-    await this.#driver.close()
+    await this.driver.close();
   }
 }
