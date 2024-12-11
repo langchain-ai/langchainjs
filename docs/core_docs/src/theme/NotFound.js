@@ -305,6 +305,10 @@ const suggestedLinks = {
     canonical: "/docs/integrations/llms/together",
     alternative: ["/v0.1/docs/integrations/llms/togetherai/"],
   },
+  "/docs/integrations/llms/fake/": {
+    canonical: "https://api.js.langchain.com/classes/_langchain_core.utils_testing.FakeLLM.html",
+    alternative: ["/v0.1/docs/integrations/llms/fake/"],
+  },
   "/docs/integrations/retrievers/vectorstore/": {
     canonical: "/docs/how_to/vectorstore_retriever",
     alternative: ["/v0.1/docs/integrations/retrievers/vectorstore/"],
@@ -316,6 +320,38 @@ const suggestedLinks = {
   "/docs/langgraph/": {
     canonical: "https://langchain-ai.github.io/langgraphjs/",
     alternative: ["/v0.1/docs/langgraph/"],
+  },
+  "/docs/modules/": {
+    canonical: "/docs/concepts/",
+    alternative: ["/v0.1/docs/modules/"],
+  },
+  "/docs/modules/agents": {
+    canonical: "/docs/concepts/agents/",
+    alternative: ["/v0.1/docs/modules/agents/"],
+  },
+  "/docs/modules/agents/concepts/": {
+    canonical: "/docs/concepts/agents/",
+    alternative: ["/v0.1/docs/modules/agents/concepts/"],
+  },
+  "/docs/modules/agents/agent_types/": {
+    canonical: "/docs/how_to/migrate_agent/",
+    alternative: ["/v0.1/docs/modules/agents/agent_types/"],
+  },
+  "/docs/modules/agents/how_to/agent_structured/": {
+    canonical: "/docs/how_to/migrate_agent/",
+    alternative: ["/v0.1/docs/modules/agents/how_to/agent_structured/"],
+  },
+  "/docs/modules/agents/how_to/max_iterations/": {
+    canonical: "/docs/how_to/migrate_agent/",
+    alternative: ["/v0.1/docs/modules/agents/how_to/max_iterations/"],
+  },
+  "/docs/modules/agents/how_to/streaming/": {
+    canonical: "/docs/how_to/migrate_agent/",
+    alternative: ["/v0.1/docs/modules/agents/how_to/streaming/"],
+  },
+  "/docs/modules/agents/quick_start/": {
+    canonical: "https://langchain-ai.github.io/langgraphjs//",
+    alternative: ["/v0.1//docs/modules/agents/quick_start/"],
   },
   "/docs/modules/agents/agent_types/chat_conversation_agent/": {
     canonical: "/docs/how_to/migrate_agent",
@@ -447,6 +483,10 @@ const suggestedLinks = {
     canonical: "/docs/how_to/#callbacks",
     alternative: ["/v0.1/docs/modules/callbacks/how_to/with_listeners/"],
   },
+  "/docs/modules/chains/": {
+    canonical: "/docs/how_to/sequence",
+    alternative: ["/v0.1/docs/modules/chains/"],
+  },
   "/docs/modules/chains/additional/analyze_document/": {
     canonical:
       "https://js.langchain.com/v0.1/docs/modules/chains/additional/analyze_document/",
@@ -567,6 +607,50 @@ const suggestedLinks = {
   "/docs/modules/chains/popular/vector_db_qa/": {
     canonical: "/docs/tutorials/rag",
     alternative: ["/v0.1/docs/modules/chains/popular/vector_db_qa/"],
+  },
+  "/docs/modules/data_connection/": {
+    canonical: "/docs/concepts/rag",
+    alternative: ["/v0.1/docs/modules/data_connection/"],
+  },
+  "/docs/modules/data_connection/document_loaders/": {
+    canonical: "/docs/concepts/document_loaders",
+    alternative: ["/v0.1/docs/modules/data_connection/document_loaders/"],
+  },
+  "/docs/modules/data_connection/document_loaders/csv/": {
+    canonical: "/docs/integrations/document_loaders/file_loaders/csv/",
+    alternative: ["/v0.1/docs/modules/data_connection/document_loaders/csv/"],
+  },
+  "/docs/modules/data_connection/document_loaders/custom/": {
+    canonical: "/docs/how_to/document_loader_custom/",
+    alternative: ["/v0.1/docs/modules/data_connection/document_loaders/custom/"],
+  },
+  "/docs/modules/data_connection/document_loaders/file_directory/": {
+    canonical: "/docs/integrations/document_loaders/file_loaders/directory/",
+    alternative: ["/v0.1/docs/modules/data_connection/document_loaders/file_directory/"],
+  },
+  "/docs/modules/data_connection/document_loaders/json/": {
+    canonical: "/docs/integrations/document_loaders/file_loaders/json/",
+    alternative: ["/v0.1/docs/modules/data_connection/document_loaders/json/"],
+  },
+  "/docs/modules/data_connection/document_loaders/pdf/": {
+    canonical: "/docs/integrations/document_loaders/file_loaders/pdf/",
+    alternative: ["/v0.1/docs/modules/data_connection/document_loaders/pdf/"],
+  },
+  "/docs/modules/data_connection/document_transformers/": {
+    canonical: "/docs/concepts/text_splitters/",
+    alternative: ["/v0.1/docs/modules/data_connection/document_transformers/"],
+  },
+  "/docs/modules/data_connection/document_transformers/character_text_splitter/": {
+    canonical: "/docs/how_to/character_text_splitter/",
+    alternative: ["/v0.1/docs/modules/data_connection/document_transformers/character_text_splitter/"],
+  },
+  "/docs/modules/data_connection/document_transformers/code_splitter/": {
+    canonical: "/docs/how_to/code_splitter/",
+    alternative: ["/v0.1/docs/modules/data_connection/document_transformers/code_splitter/"],
+  },
+  "/docs/modules/data_connection/document_transformers/recursive_text_splitter/": {
+    canonical: "/docs/how_to/recursive_text_splitter/",
+    alternative: ["/v0.1/docs/modules/data_connection/document_transformers/recursive_text_splitter/"],
   },
   "/docs/modules/data_connection/document_loaders/creating_documents/": {
     canonical: "/docs/concepts#document",
@@ -865,6 +949,10 @@ const suggestedLinks = {
     alternative: [
       "/v0.1/docs/modules/model_io/output_parsers/types/json_functions/",
     ],
+  },
+  "/docs/modules/model_io/output_parsers/types/structured/": {
+    canonical: "/docs/how_to/structured_output/",
+    alternative: ["/v0.1/docs/modules/model_io/output_parsers/types/structured/"],
   },
   "/docs/modules/model_io/output_parsers/types/string/": {
     canonical:
