@@ -6,7 +6,7 @@ import { HumanMessage, AIMessage } from "@langchain/core/messages";
 import { CosmosClient } from "@azure/cosmos";
 import { DefaultAzureCredential } from "@azure/identity";
 import { ObjectId } from "mongodb";
-import { AzureCosmsosDBNoSQLChatMessageHistory } from "../chat_histories.js";
+import { AzureCosmsosDBNoSQLChatMessageHistory } from "../chat_histories/nosql.js";
 
 const DATABASE_NAME = "langchainTestDB";
 const CONTAINER_NAME = "testContainer";
