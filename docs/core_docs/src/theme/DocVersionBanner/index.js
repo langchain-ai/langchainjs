@@ -371,7 +371,8 @@ const suggestedLinks = {
     alternative: ["/v0.1/docs/integrations/llms/togetherai/"],
   },
   "/docs/integrations/llms/fake/": {
-    canonical: "https://api.js.langchain.com/classes/_langchain_core.utils_testing.FakeLLM.html",
+    canonical:
+      "https://api.js.langchain.com/classes/_langchain_core.utils_testing.FakeLLM.html",
     alternative: ["/v0.1/docs/integrations/llms/fake/"],
   },
   "/docs/integrations/retrievers/vectorstore/": {
@@ -687,11 +688,15 @@ const suggestedLinks = {
   },
   "/docs/modules/data_connection/document_loaders/custom/": {
     canonical: "/docs/how_to/document_loader_custom/",
-    alternative: ["/v0.1/docs/modules/data_connection/document_loaders/custom/"],
+    alternative: [
+      "/v0.1/docs/modules/data_connection/document_loaders/custom/",
+    ],
   },
   "/docs/modules/data_connection/document_loaders/file_directory/": {
     canonical: "/docs/integrations/document_loaders/file_loaders/directory/",
-    alternative: ["/v0.1/docs/modules/data_connection/document_loaders/file_directory/"],
+    alternative: [
+      "/v0.1/docs/modules/data_connection/document_loaders/file_directory/",
+    ],
   },
   "/docs/modules/data_connection/document_loaders/json/": {
     canonical: "/docs/integrations/document_loaders/file_loaders/json/",
@@ -705,18 +710,26 @@ const suggestedLinks = {
     canonical: "/docs/concepts/text_splitters/",
     alternative: ["/v0.1/docs/modules/data_connection/document_transformers/"],
   },
-  "/docs/modules/data_connection/document_transformers/character_text_splitter/": {
-    canonical: "/docs/how_to/character_text_splitter/",
-    alternative: ["/v0.1/docs/modules/data_connection/document_transformers/character_text_splitter/"],
-  },
+  "/docs/modules/data_connection/document_transformers/character_text_splitter/":
+    {
+      canonical: "/docs/how_to/character_text_splitter/",
+      alternative: [
+        "/v0.1/docs/modules/data_connection/document_transformers/character_text_splitter/",
+      ],
+    },
   "/docs/modules/data_connection/document_transformers/code_splitter/": {
     canonical: "/docs/how_to/code_splitter/",
-    alternative: ["/v0.1/docs/modules/data_connection/document_transformers/code_splitter/"],
+    alternative: [
+      "/v0.1/docs/modules/data_connection/document_transformers/code_splitter/",
+    ],
   },
-  "/docs/modules/data_connection/document_transformers/recursive_text_splitter/": {
-    canonical: "/docs/how_to/recursive_text_splitter/",
-    alternative: ["/v0.1/docs/modules/data_connection/document_transformers/recursive_text_splitter/"],
-  },
+  "/docs/modules/data_connection/document_transformers/recursive_text_splitter/":
+    {
+      canonical: "/docs/how_to/recursive_text_splitter/",
+      alternative: [
+        "/v0.1/docs/modules/data_connection/document_transformers/recursive_text_splitter/",
+      ],
+    },
   "/docs/modules/data_connection/document_loaders/creating_documents/": {
     canonical: "/docs/concepts#document",
     alternative: [
@@ -1017,7 +1030,9 @@ const suggestedLinks = {
   },
   "/docs/modules/model_io/output_parsers/types/structured/": {
     canonical: "/docs/how_to/structured_output/",
-    alternative: ["/v0.1/docs/modules/model_io/output_parsers/types/structured/"],
+    alternative: [
+      "/v0.1/docs/modules/model_io/output_parsers/types/structured/",
+    ],
   },
   "/docs/modules/model_io/output_parsers/types/string/": {
     canonical:
