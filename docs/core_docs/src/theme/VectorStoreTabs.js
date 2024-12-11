@@ -14,7 +14,7 @@ export default function VectorStoreTabs(props) {
       value: "Memory",
       label: "Memory",
       text: `import { MemoryVectorStore } from "langchain/vectorstores/memory";\n\nconst ${vectorStoreVarName} = new MemoryVectorStore(embeddings);`,
-      dependencies: "@langchain",
+      dependencies: "langchain",
       default: true,
     },
     {
