@@ -41,7 +41,7 @@ const DEFAULTS = {
  * @param {EmbeddingTabsProps} props - Component props.
  */
 export default function EmbeddingTabs(props) {
-  const customVarName = props;
+  const { customVarName } = props;
 
   const embeddingsVarName = customVarName ?? "embeddings";
 

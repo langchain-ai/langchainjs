@@ -8,26 +8,30 @@ function InstallationInfo({ children }) {
   return <Npm2Yarn>{children}</Npm2Yarn>;
 }
 
-export default function VectorStoreTabs() {
+export default function VectorStoreTabs(props) {
+  const { customVarName } = props;
+
+  const vectorStoreVarName = customVarName ?? "vectorStore";
+
   const tabItems = [
     {
       value: "Memory",
       label: "Memory",
-      text: `import { MemoryVectorStore } from "langchain/vectorstores/memory";\n\nconst vectorStore = new MemoryVectorStore(embeddings);`,
+      text: `import { MemoryVectorStore } from "langchain/vectorstores/memory";\n\nconst ${vectorStoreVarName} = new MemoryVectorStore(embeddings);`,
       dependencies: "@langchain/community",
       default: true,
     },
     {
       value: "Chroma",
       label: "Chroma",
-      text: `import { Chroma } from "@langchain/community/vectorstores/chroma";\n\nconst vectorStore = new Chroma(embeddings, {\n  collectionName: "a-test-collection",\n});`,
+      text: `import { Chroma } from "@langchain/community/vectorstores/chroma";\n\nconst ${vectorStoreVarName} = new Chroma(embeddings, {\n  collectionName: "a-test-collection",\n});`,
       dependencies: "@langchain/community",
       default: true,
     },
     {
       value: "FAISS",
       label: "FAISS",
-      text: `import { FaissStore } from "@langchain/community/vectorstores/faiss";\n\nconst vectorStore = new FaissStore(embeddings, {});`,
+      text: `import { FaissStore } from "@langchain/community/vectorstores/faiss";\n\nconst ${vectorStoreVarName} = new FaissStore(embeddings, {});`,
       dependencies: "@langchain/community",
       default: false,
     },
@@ -42,7 +46,7 @@ const collection = client
   .db(process.env.MONGODB_ATLAS_DB_NAME)
   .collection(process.env.MONGODB_ATLAS_COLLECTION_NAME);
 
-const vectorStore = new MongoDBAtlasVectorSearch(embeddings, {
+const ${vectorStoreVarName} = new MongoDBAtlasVectorSearch(embeddings, {
   collection: collection,
   indexName: "vector_index",
   textKey: "text",
@@ -56,7 +60,7 @@ const vectorStore = new MongoDBAtlasVectorSearch(embeddings, {
       label: "PGVector",
       text: `import PGVectorStore from "@langchain/community/vectorstores/pgvector";
 
-const vectorStore = await PGVectorStore.initialize(embeddings, {})`,
+const ${vectorStoreVarName} = await PGVectorStore.initialize(embeddings, {})`,
       dependencies: "@langchain/community",
       default: false,
     },
@@ -67,7 +71,7 @@ const vectorStore = await PGVectorStore.initialize(embeddings, {})`,
 import { Pinecone as PineconeClient } from "@pinecone-database/pinecone";
 
 const pinecone = new PineconeClient();
-const vectorStore = new PineconeStore(embeddings, {
+const ${vectorStoreVarName} = new PineconeStore(embeddings, {
   pineconeIndex,
   maxConcurrency: 5,
 });`,
@@ -79,7 +83,7 @@ const vectorStore = new PineconeStore(embeddings, {
       label: "Qdrant",
       text: `import { QdrantVectorStore } from "@langchain/qdrant";
 
-const vectorStore = await QdrantVectorStore.fromExistingCollection(embeddings, {
+const ${vectorStoreVarName} = await QdrantVectorStore.fromExistingCollection(embeddings, {
   url: process.env.QDRANT_URL,
   collectionName: "langchainjs-testing",
 });`,
