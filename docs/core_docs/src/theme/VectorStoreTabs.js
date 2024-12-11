@@ -94,6 +94,7 @@ const vectorStore = await QdrantVectorStore.fromExistingCollection(embeddings, {
       <Tabs groupId="vectorStoreTabs">
         {tabItems.map((tab) => (
           <TabItem value={tab.value} label={tab.label} key={tab.value}>
+            <h4>Install dependencies</h4>
             <InstallationInfo>{tab.dependencies}</InstallationInfo>
             <CodeBlock language="typescript">{tab.text}</CodeBlock>
           </TabItem>

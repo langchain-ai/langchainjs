@@ -4,24 +4,9 @@ import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
 import CodeBlock from "@theme-original/CodeBlock";
 import Npm2Yarn from "@theme/Npm2Yarn";
-import Admonition from "@theme/Admonition";
 
 function InstallationInfo({ children }) {
-  return (
-    <>
-      <Admonition type="tip">
-        <p>
-          See{" "}
-          <a href="/docs/how_to/installation/#installing-integration-packages">
-            this section for general instructions on installing integration
-            packages
-          </a>
-          .
-        </p>
-      </Admonition>
-      <Npm2Yarn>{children}</Npm2Yarn>
-    </>
-  );
+  return <Npm2Yarn>{children}</Npm2Yarn>;
 }
 
 const DEFAULTS = {
@@ -56,7 +41,7 @@ const DEFAULTS = {
  * @param {EmbeddingTabsProps} props - Component props.
  */
 export default function EmbeddingTabs(props) {
-  const { customVarName, additionalDependencies } = props;
+  const customVarName = props;
 
   const embeddingsVarName = customVarName ?? "embeddings";
 
@@ -135,12 +120,8 @@ export default function EmbeddingTabs(props) {
         {displayedTabs.map((tab) => (
           <TabItem value={tab.value} label={tab.label} key={tab.value}>
             <h4>Install dependencies</h4>
-            <InstallationInfo>
-              {[tab.dependencies, additionalDependencies].join(" ")}
-            </InstallationInfo>
-            <h4>Add environment variables</h4>
+            <InstallationInfo>{tab.dependencies}</InstallationInfo>
             <CodeBlock language="bash">{tab.envs}</CodeBlock>
-            <h4>Instantiate the model</h4>
             <CodeBlock language="typescript">{tab.text}</CodeBlock>
           </TabItem>
         ))}
