@@ -116,7 +116,7 @@ export default function EmbeddingTabs(props) {
       envs: `MISTRAL_API_KEY=your-api-key`,
       dependencies: "@langchain/mistralai",
     },
-    mistral: {
+    cohere: {
       value: "cohereParams",
       label: "Cohere",
       default: false,
@@ -126,9 +126,7 @@ export default function EmbeddingTabs(props) {
     },
   };
 
-  const displayedTabs = (props.onlyWso ? MODELS_WSO : providers).map(
-    (provider) => tabs[provider]
-  );
+  const displayedTabs = providers.map((provider) => tabs[provider]);
 
   return (
     <div>
