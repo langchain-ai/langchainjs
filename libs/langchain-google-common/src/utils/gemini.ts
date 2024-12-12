@@ -1015,34 +1015,27 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     };
   }
 
-  function structuredToolsToGeminiTools(
-    tools: StructuredToolParams[]
-  ): GeminiTool[] {
-    return [
-      {
-        functionDeclarations: tools.map(structuredToolToFunctionDeclaration),
-      },
-    ];
-  }
-
   function formatTools(parameters: GoogleAIModelRequestParams): GeminiTool[] {
     const tools: GoogleAIToolType[] | undefined = parameters?.tools;
     if (!tools || tools.length === 0) {
       return [];
     }
-
-    if (tools.every(isLangChainTool)) {
-      return structuredToolsToGeminiTools(tools);
-    } else {
-      if (
-        tools.length === 1 &&
-        (!("functionDeclarations" in tools[0]) ||
-          !tools[0].functionDeclarations?.length)
-      ) {
-        return [];
+    return tools.reduce((acc: GeminiTool[], tool) => {
+      if (isLangChainTool(tool)) {
+        if (!acc[0]) {
+          acc[0] = { functionDeclarations: [] };
+        }
+        if (!acc[0].functionDeclarations) {
+          acc[0].functionDeclarations = [];
+        }
+        acc[0].functionDeclarations.push(
+          structuredToolToFunctionDeclaration(tool)
+        );
+      } else {
+        acc.push(tool as GeminiTool);
       }
-      return tools as GeminiTool[];
-    }
+      return acc;
+    }, []) as GeminiTool[];
   }
 
   function formatToolConfig(
