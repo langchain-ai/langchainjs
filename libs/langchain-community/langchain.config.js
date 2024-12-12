@@ -117,6 +117,7 @@ export const config = {
     // vectorstores
     "vectorstores/analyticdb": "vectorstores/analyticdb",
     "vectorstores/astradb": "vectorstores/astradb",
+    "vectorstores/azion_edgesql": "vectorstores/azion_edgesql",
     "vectorstores/azure_aisearch": "vectorstores/azure_aisearch",
     "vectorstores/azure_cosmosdb": "vectorstores/azure_cosmosdb",
     "vectorstores/cassandra": "vectorstores/cassandra",
@@ -196,6 +197,7 @@ export const config = {
     // retrievers
     "retrievers/amazon_kendra": "retrievers/amazon_kendra",
     "retrievers/amazon_knowledge_base": "retrievers/amazon_knowledge_base",
+    "retrievers/azion_edgesql": "retrievers/azion_edgesql",
     "retrievers/bm25": "retrievers/bm25",
     "retrievers/chaindesk": "retrievers/chaindesk",
     "retrievers/databerry": "retrievers/databerry",
@@ -377,6 +379,7 @@ export const config = {
     "llms/layerup_security",
     "vectorstores/analyticdb",
     "vectorstores/astradb",
+    "vectorstores/azion_edgesql",
     "vectorstores/azure_aisearch",
     "vectorstores/azure_cosmosdb",
     "vectorstores/cassandra",
@@ -434,6 +437,7 @@ export const config = {
     "chat_models/zhipuai",
     "retrievers/amazon_kendra",
     "retrievers/amazon_knowledge_base",
+    "retrievers/azion_edgesql",
     "retrievers/dria",
     "retrievers/metal",
     "retrievers/supabase",
