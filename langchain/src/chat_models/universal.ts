@@ -175,7 +175,11 @@ async function _initChatModelHelper(
  * _inferModelProvider("unknown-model"); // returns undefined
  */
 export function _inferModelProvider(modelName: string): string | undefined {
-  if (modelName.startsWith("gpt-3") || modelName.startsWith("gpt-4")) {
+  if (
+    modelName.startsWith("gpt-3") ||
+    modelName.startsWith("gpt-4") ||
+    modelName.startsWith("o1")
+  ) {
     return "openai";
   } else if (modelName.startsWith("claude")) {
     return "anthropic";

@@ -4,6 +4,7 @@ import { BaseLLM, BaseLLMParams } from "@langchain/core/language_models/llms";
 import { WatsonXAI } from "@ibm-cloud/watsonx-ai";
 import {
   DeploymentTextGenProperties,
+  RequestCallbacks,
   ReturnOptionProperties,
   TextGenLengthPenalty,
   TextGenParameters,
@@ -34,6 +35,7 @@ export interface WatsonxCallOptionsLLM extends BaseLanguageModelCallOptions {
   maxRetries?: number;
   parameters?: Partial<WatsonxInputLLM>;
   idOrName?: string;
+  watsonxCallbacks?: RequestCallbacks;
 }
 
 export interface WatsonxInputLLM extends WatsonxParams, BaseLLMParams {
@@ -52,6 +54,7 @@ export interface WatsonxInputLLM extends WatsonxParams, BaseLLMParams {
   truncateInpuTokens?: number;
   returnOptions?: ReturnOptionProperties;
   includeStopSequence?: boolean;
+  watsonxCallbacks?: RequestCallbacks;
 }
 
 /**
@@ -116,6 +119,8 @@ export class WatsonxLLM<
 
   maxConcurrency?: number;
 
+  watsonxCallbacks?: RequestCallbacks;
+
   private service: WatsonXAI;
 
   constructor(fields: WatsonxInputLLM & WatsonxAuth) {
@@ -140,6 +145,7 @@ export class WatsonxLLM<
     this.maxRetries = fields.maxRetries || this.maxRetries;
     this.maxConcurrency = fields.maxConcurrency;
     this.streaming = fields.streaming || this.streaming;
+    this.watsonxCallbacks = fields.watsonxCallbacks || this.watsonxCallbacks;
     if (
       (fields.projectId && fields.spaceId) ||
       (fields.idOrName && fields.projectId) ||
@@ -235,6 +241,10 @@ export class WatsonxLLM<
     };
   }
 
+  invocationCallbacks(options: this["ParsedCallOptions"]) {
+    return options.watsonxCallbacks ?? this.watsonxCallbacks;
+  }
+
   scopeId() {
     if (this.projectId)
       return { projectId: this.projectId, modelId: this.model };
@@ -285,9 +295,10 @@ export class WatsonxLLM<
     const tokenUsage = { generated_token_count: 0, input_token_count: 0 };
     const idOrName = options?.idOrName ?? this.idOrName;
     const parameters = this.invocationParams(options);
+    const watsonxCallbacks = this.invocationCallbacks(options);
     if (stream) {
       const textStream = idOrName
-        ? await this.service.deploymentGenerateTextStream({
+        ? this.service.deploymentGenerateTextStream({
             idOrName,
             ...requestOptions,
             parameters: {
@@ -298,32 +309,43 @@ export class WatsonxLLM<
             },
             returnObject: true,
           })
-        : await this.service.generateTextStream({
-            input,
-            parameters,
-            ...this.scopeId(),
-            ...requestOptions,
-            returnObject: true,
-          });
-      return textStream;
+        : this.service.generateTextStream(
+            {
+              input,
+              parameters,
+              ...this.scopeId(),
+              ...requestOptions,
+              returnObject: true,
+            },
+            watsonxCallbacks
+          );
+      return (await textStream) as AsyncIterable<
+        WatsonXAI.ObjectStreamed<WatsonXAI.TextGenResponse>
+      >;
     } else {
       const textGenerationPromise = idOrName
-        ? this.service.deploymentGenerateText({
-            ...requestOptions,
-            idOrName,
-            parameters: {
-              ...parameters,
-              prompt_variables: {
-                input,
+        ? this.service.deploymentGenerateText(
+            {
+              ...requestOptions,
+              idOrName,
+              parameters: {
+                ...parameters,
+                prompt_variables: {
+                  input,
+                },
               },
             },
-          })
-        : this.service.generateText({
-            input,
-            parameters,
-            ...this.scopeId(),
-            ...requestOptions,
-          });
+            watsonxCallbacks
+          )
+        : this.service.generateText(
+            {
+              input,
+              parameters,
+              ...this.scopeId(),
+              ...requestOptions,
+            },
+            watsonxCallbacks
+          );
 
       const textGeneration = await textGenerationPromise;
       const singleGeneration: Generation[] = textGeneration.result.results.map(
@@ -403,11 +425,10 @@ export class WatsonxLLM<
             geneartionsArray[completion].stop_reason =
               chunk?.generationInfo?.stop_reason;
             geneartionsArray[completion].text += chunk.text;
-            if (chunk.text)
-              void runManager?.handleLLMNewToken(chunk.text, {
-                prompt: promptIdx,
-                completion: 0,
-              });
+            void runManager?.handleLLMNewToken(chunk.text, {
+              prompt: promptIdx,
+              completion: 0,
+            });
           }
 
           return geneartionsArray.map((item) => {
@@ -512,7 +533,7 @@ export class WatsonxLLM<
             },
           },
         });
-        if (item.generated_text)
+        if (!this.streaming)
           void runManager?.handleLLMNewToken(item.generated_text);
       }
       Object.assign(responseChunk, { id: 0, event: "", data: {} });
