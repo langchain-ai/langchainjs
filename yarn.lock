@@ -10620,14 +10620,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@ibm-cloud/watsonx-ai@npm:^1.1.0":
-  version: 1.1.0
-  resolution: "@ibm-cloud/watsonx-ai@npm:1.1.0"
+"@ibm-cloud/watsonx-ai@npm:^1.3.0":
+  version: 1.3.0
+  resolution: "@ibm-cloud/watsonx-ai@npm:1.3.0"
   dependencies:
-    "@types/node": ^12.0.8
+    "@types/node": ^18.0.0
     extend: 3.0.2
-    ibm-cloud-sdk-core: ^4.2.5
-  checksum: 0151bb0abe2a7d1dbcd6f8367ea02dfc924f15bdcbe8ec58bb89c8e055fa35c399b2253d6be3b84292f96c9161e49bcd6d6f5e1df0f2cd9adf21d1f3c0bc24b4
+    ibm-cloud-sdk-core: ^5.0.2
+  checksum: 6a2127391ca70005b942d3c4ab1abc738946c42bbf3ee0f8eb6f778434b5f8806d622f1f36446f00b9fb82dc2c8aea3526426ec46cc53fa8a075ba7a294da096
   languageName: node
   linkType: hard
 
@@ -11802,7 +11802,7 @@ __metadata:
     "@google-cloud/storage": ^7.7.0
     "@gradientai/nodejs-sdk": ^1.2.0
     "@huggingface/inference": ^2.6.4
-    "@ibm-cloud/watsonx-ai": ^1.1.0
+    "@ibm-cloud/watsonx-ai": ^1.3.0
     "@jest/globals": ^29.5.0
     "@lancedb/lancedb": ^0.13.0
     "@langchain/core": "workspace:*"
@@ -12650,40 +12650,28 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/langgraph-checkpoint@npm:~0.0.13":
-  version: 0.0.13
-  resolution: "@langchain/langgraph-checkpoint@npm:0.0.13"
+"@langchain/langgraph-checkpoint@npm:~0.0.6":
+  version: 0.0.6
+  resolution: "@langchain/langgraph-checkpoint@npm:0.0.6"
   dependencies:
     uuid: ^10.0.0
   peerDependencies:
     "@langchain/core": ">=0.2.31 <0.4.0"
-  checksum: 721f6a99119e4445504d34d311f0c38c025ca65be04731c49915c08d6e7a2b5c9917b16e8c2f7b1ff9dd9f23ae56a4aa0918d902e0044ebdc8bf80704671163b
+  checksum: 7303a0f92f6474757bc9484314f36566a0785d8167ead65483fdada2921447e153a24754629ee601a168d2a39b6cc6d0c57ec34d607e10225619b9d5d30c8a5a
   languageName: node
   linkType: hard
 
-"@langchain/langgraph-sdk@npm:~0.0.21":
-  version: 0.0.32
-  resolution: "@langchain/langgraph-sdk@npm:0.0.32"
+"@langchain/langgraph@npm:0.2.3, @langchain/langgraph@npm:^0.2.3":
+  version: 0.2.3
+  resolution: "@langchain/langgraph@npm:0.2.3"
   dependencies:
-    "@types/json-schema": ^7.0.15
-    p-queue: ^6.6.2
-    p-retry: 4
-    uuid: ^9.0.0
-  checksum: dd0e3fd1f3880e1ddff65108f338e75365bdff60f8ca5dc4e1b1e1be79fa216f1e599fa5d7f62ab9b44778787426f20b82db4e97463d6f3f4eda43f81666bfe9
-  languageName: node
-  linkType: hard
-
-"@langchain/langgraph@npm:^0.2.32":
-  version: 0.2.32
-  resolution: "@langchain/langgraph@npm:0.2.32"
-  dependencies:
-    "@langchain/langgraph-checkpoint": ~0.0.13
-    "@langchain/langgraph-sdk": ~0.0.21
+    "@langchain/langgraph-checkpoint": ~0.0.6
+    double-ended-queue: ^2.1.0-0
     uuid: ^10.0.0
     zod: ^3.23.8
   peerDependencies:
-    "@langchain/core": ">=0.2.36 <0.3.0 || >=0.3.9 < 0.4.0"
-  checksum: dd313d471abdf2413a4867eaa6c291dedfd3b750d3b3a742684a8123e26c790c5ab0eadfa0e0db90195b4317fec60a8630b0f4fd62a50edcfc430b1654e81f55
+    "@langchain/core": ">=0.2.31 <0.4.0"
+  checksum: 09d423228633f4bfee24b15e9f81eee57e96fecf9914f1e1c1f40f9436d120de912b8c987da356591c6eae0ee2bcf3759ab8e0ff762f87bc4f3f73e4098c12e9
   languageName: node
   linkType: hard
 
@@ -19443,7 +19431,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/json-schema@npm:^7.0.11, @types/json-schema@npm:^7.0.12, @types/json-schema@npm:^7.0.15, @types/json-schema@npm:^7.0.6":
+"@types/json-schema@npm:^7.0.11, @types/json-schema@npm:^7.0.12, @types/json-schema@npm:^7.0.6":
   version: 7.0.15
   resolution: "@types/json-schema@npm:7.0.15"
   checksum: 97ed0cb44d4070aecea772b7b2e2ed971e10c81ec87dd4ecc160322ffa55ff330dace1793489540e3e318d90942064bb697cc0f8989391797792d919737b3b98
@@ -19641,17 +19629,19 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:^12.0.8":
-  version: 12.20.55
-  resolution: "@types/node@npm:12.20.55"
-  checksum: e4f86785f4092706e0d3b0edff8dca5a13b45627e4b36700acd8dfe6ad53db71928c8dee914d4276c7fd3b6ccd829aa919811c9eb708a2c8e4c6eb3701178c37
-  languageName: node
-  linkType: hard
-
 "@types/node@npm:^17.0.5":
   version: 17.0.45
   resolution: "@types/node@npm:17.0.45"
   checksum: aa04366b9103b7d6cfd6b2ef64182e0eaa7d4462c3f817618486ea0422984c51fc69fd0d436eae6c9e696ddfdbec9ccaa27a917f7c2e8c75c5d57827fe3d95e8
+  languageName: node
+  linkType: hard
+
+"@types/node@npm:^18.0.0":
+  version: 18.19.67
+  resolution: "@types/node@npm:18.19.67"
+  dependencies:
+    undici-types: ~5.26.4
+  checksum: 700f92c6a0b63352ce6327286392adab30bb17623c2a788811e9cf092c4dc2fb5e36ca4727247a981b3f44185fdceef20950a3b7a8ab72721e514ac037022a08
   languageName: node
   linkType: hard
 
@@ -22010,17 +22000,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"axios@npm:^1.7.5":
-  version: 1.7.7
-  resolution: "axios@npm:1.7.7"
-  dependencies:
-    follow-redirects: ^1.15.6
-    form-data: ^4.0.0
-    proxy-from-env: ^1.1.0
-  checksum: 882d4fe0ec694a07c7f5c1f68205eb6dc5a62aecdb632cc7a4a3d0985188ce3030e0b277e1a8260ac3f194d314ae342117660a151fabffdc5081ca0b5a8b47fe
-  languageName: node
-  linkType: hard
-
 "axobject-query@npm:^3.1.1, axobject-query@npm:^3.2.1":
   version: 3.2.1
   resolution: "axobject-query@npm:3.2.1"
@@ -24140,7 +24119,7 @@ __metadata:
     "@docusaurus/preset-classic": 2.4.3
     "@docusaurus/remark-plugin-npm2yarn": 2.4.3
     "@docusaurus/theme-mermaid": 2.4.3
-    "@langchain/langgraph": ^0.2.32
+    "@langchain/langgraph": 0.2.3
     "@langchain/scripts": "workspace:*"
     "@mdx-js/react": ^1.6.22
     "@microsoft/fetch-event-source": ^2.0.1
@@ -25666,13 +25645,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"diff-sequences@npm:^27.5.1":
-  version: 27.5.1
-  resolution: "diff-sequences@npm:27.5.1"
-  checksum: a00db5554c9da7da225db2d2638d85f8e41124eccbd56cbaefb3b276dcbb1c1c2ad851c32defe2055a54a4806f030656cbf6638105fd6ce97bb87b90b32a33ca
-  languageName: node
-  linkType: hard
-
 "diff-sequences@npm:^29.4.3":
   version: 29.4.3
   resolution: "diff-sequences@npm:29.4.3"
@@ -25929,6 +25901,13 @@ __metadata:
   version: 16.4.5
   resolution: "dotenv@npm:16.4.5"
   checksum: 301a12c3d44fd49888b74eb9ccf9f07a1f5df43f489e7fcb89647a2edcd84c42d6bc349dc8df099cd18f07c35c7b04685c1a4f3e6a6a9e6b30f8d48c15b7f49c
+  languageName: node
+  linkType: hard
+
+"double-ended-queue@npm:^2.1.0-0":
+  version: 2.1.0-0
+  resolution: "double-ended-queue@npm:2.1.0-0"
+  checksum: 3030cf9dcf6f8e7d8cb6ae5b7304890445d7c32233a614e400ba7b378086ad76f5822d0e501afd5ffe0af1de4bcb842fa23d4c79174d54f6566399435fafc271
   languageName: node
   linkType: hard
 
@@ -27710,7 +27689,7 @@ __metadata:
     "@langchain/google-vertexai": "workspace:*"
     "@langchain/google-vertexai-web": "workspace:*"
     "@langchain/groq": "workspace:*"
-    "@langchain/langgraph": ^0.2.32
+    "@langchain/langgraph": ^0.2.3
     "@langchain/mistralai": "workspace:*"
     "@langchain/mongodb": "workspace:*"
     "@langchain/nomic": "workspace:*"
@@ -27881,18 +27860,6 @@ __metadata:
   version: 2.0.3
   resolution: "expand-template@npm:2.0.3"
   checksum: 588c19847216421ed92befb521767b7018dc88f88b0576df98cb242f20961425e96a92cbece525ef28cc5becceae5d544ae0f5b9b5e2aa05acb13716ca5b3099
-  languageName: node
-  linkType: hard
-
-"expect@npm:^27.5.1":
-  version: 27.5.1
-  resolution: "expect@npm:27.5.1"
-  dependencies:
-    "@jest/types": ^27.5.1
-    jest-get-type: ^27.5.1
-    jest-matcher-utils: ^27.5.1
-    jest-message-util: ^27.5.1
-  checksum: b2c66beb52de53ef1872165aace40224e722bca3c2274c54cfa74b6d617d55cf0ccdbf36783ccd64dbea501b280098ed33fd0b207d4f15bc03cd3c7a24364a6a
   languageName: node
   linkType: hard
 
@@ -30570,30 +30537,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ibm-cloud-sdk-core@npm:^4.2.5":
-  version: 4.3.4
-  resolution: "ibm-cloud-sdk-core@npm:4.3.4"
-  dependencies:
-    "@types/debug": ^4.1.12
-    "@types/node": ~10.14.19
-    "@types/tough-cookie": ^4.0.0
-    axios: ^1.7.5
-    camelcase: ^6.3.0
-    debug: ^4.3.4
-    dotenv: ^16.4.5
-    expect: ^27.5.1
-    extend: 3.0.2
-    file-type: 16.5.4
-    form-data: 4.0.0
-    isstream: 0.1.2
-    jsonwebtoken: ^9.0.2
-    mime-types: 2.1.35
-    retry-axios: ^2.6.0
-    tough-cookie: ^4.1.3
-  checksum: 27d6bd692cde66766a7cea36e75d53a6a089e2b2b726cf86108ab48f9d452bb6d6a01324d2160e3bb54df7750240129bae989934ab2fd80c0950ecdb5bfc07b3
-  languageName: node
-  linkType: hard
-
 "ibm-cloud-sdk-core@npm:^5.0.2":
   version: 5.0.2
   resolution: "ibm-cloud-sdk-core@npm:5.0.2"
@@ -32180,18 +32123,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"jest-diff@npm:^27.5.1":
-  version: 27.5.1
-  resolution: "jest-diff@npm:27.5.1"
-  dependencies:
-    chalk: ^4.0.0
-    diff-sequences: ^27.5.1
-    jest-get-type: ^27.5.1
-    pretty-format: ^27.5.1
-  checksum: 8be27c1e1ee57b2bb2bef9c0b233c19621b4c43d53a3c26e2c00a4e805eb4ea11fe1694a06a9fb0e80ffdcfdc0d2b1cb0b85920b3f5c892327ecd1e7bd96b865
-  languageName: node
-  linkType: hard
-
 "jest-diff@npm:^29.5.0":
   version: 29.5.0
   resolution: "jest-diff@npm:29.5.0"
@@ -32278,13 +32209,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"jest-get-type@npm:^27.5.1":
-  version: 27.5.1
-  resolution: "jest-get-type@npm:27.5.1"
-  checksum: 63064ab70195c21007d897c1157bf88ff94a790824a10f8c890392e7d17eda9c3900513cb291ca1c8d5722cad79169764e9a1279f7c8a9c4cd6e9109ff04bbc0
-  languageName: node
-  linkType: hard
-
 "jest-get-type@npm:^29.4.3":
   version: 29.4.3
   resolution: "jest-get-type@npm:29.4.3"
@@ -32355,18 +32279,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"jest-matcher-utils@npm:^27.5.1":
-  version: 27.5.1
-  resolution: "jest-matcher-utils@npm:27.5.1"
-  dependencies:
-    chalk: ^4.0.0
-    jest-diff: ^27.5.1
-    jest-get-type: ^27.5.1
-    pretty-format: ^27.5.1
-  checksum: bb2135fc48889ff3fe73888f6cc7168ddab9de28b51b3148f820c89fdfd2effdcad005f18be67d0b9be80eda208ad47290f62f03d0a33f848db2dd0273c8217a
-  languageName: node
-  linkType: hard
-
 "jest-matcher-utils@npm:^29.5.0":
   version: 29.5.0
   resolution: "jest-matcher-utils@npm:29.5.0"
@@ -32400,23 +32312,6 @@ __metadata:
     jest-get-type: ^29.6.3
     pretty-format: ^29.7.0
   checksum: d7259e5f995d915e8a37a8fd494cb7d6af24cd2a287b200f831717ba0d015190375f9f5dc35393b8ba2aae9b2ebd60984635269c7f8cff7d85b077543b7744cd
-  languageName: node
-  linkType: hard
-
-"jest-message-util@npm:^27.5.1":
-  version: 27.5.1
-  resolution: "jest-message-util@npm:27.5.1"
-  dependencies:
-    "@babel/code-frame": ^7.12.13
-    "@jest/types": ^27.5.1
-    "@types/stack-utils": ^2.0.0
-    chalk: ^4.0.0
-    graceful-fs: ^4.2.9
-    micromatch: ^4.0.4
-    pretty-format: ^27.5.1
-    slash: ^3.0.0
-    stack-utils: ^2.0.3
-  checksum: eb6d637d1411c71646de578c49826b6da8e33dd293e501967011de9d1916d53d845afbfb52a5b661ff1c495be7c13f751c48c7f30781fd94fbd64842e8195796
   languageName: node
   linkType: hard
 
@@ -38038,17 +37933,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"pretty-format@npm:^27.5.1":
-  version: 27.5.1
-  resolution: "pretty-format@npm:27.5.1"
-  dependencies:
-    ansi-regex: ^5.0.1
-    ansi-styles: ^5.0.0
-    react-is: ^17.0.1
-  checksum: cf610cffcb793885d16f184a62162f2dd0df31642d9a18edf4ca298e909a8fe80bdbf556d5c9573992c102ce8bf948691da91bf9739bee0ffb6e79c8a8a6e088
-  languageName: node
-  linkType: hard
-
 "pretty-format@npm:^29.0.0, pretty-format@npm:^29.6.1":
   version: 29.6.1
   resolution: "pretty-format@npm:29.6.1"
@@ -38746,13 +38630,6 @@ __metadata:
   version: 16.13.1
   resolution: "react-is@npm:16.13.1"
   checksum: f7a19ac3496de32ca9ae12aa030f00f14a3d45374f1ceca0af707c831b2a6098ef0d6bdae51bd437b0a306d7f01d4677fcc8de7c0d331eb47ad0f46130e53c5f
-  languageName: node
-  linkType: hard
-
-"react-is@npm:^17.0.1":
-  version: 17.0.2
-  resolution: "react-is@npm:17.0.2"
-  checksum: 9d6d111d8990dc98bc5402c1266a808b0459b5d54830bbea24c12d908b536df7883f268a7868cfaedde3dd9d4e0d574db456f84d2e6df9c4526f99bb4b5344d8
   languageName: node
   linkType: hard
 
