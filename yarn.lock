@@ -12650,28 +12650,40 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/langgraph-checkpoint@npm:~0.0.6":
-  version: 0.0.6
-  resolution: "@langchain/langgraph-checkpoint@npm:0.0.6"
+"@langchain/langgraph-checkpoint@npm:~0.0.13":
+  version: 0.0.13
+  resolution: "@langchain/langgraph-checkpoint@npm:0.0.13"
   dependencies:
     uuid: ^10.0.0
   peerDependencies:
     "@langchain/core": ">=0.2.31 <0.4.0"
-  checksum: 7303a0f92f6474757bc9484314f36566a0785d8167ead65483fdada2921447e153a24754629ee601a168d2a39b6cc6d0c57ec34d607e10225619b9d5d30c8a5a
+  checksum: 721f6a99119e4445504d34d311f0c38c025ca65be04731c49915c08d6e7a2b5c9917b16e8c2f7b1ff9dd9f23ae56a4aa0918d902e0044ebdc8bf80704671163b
   languageName: node
   linkType: hard
 
-"@langchain/langgraph@npm:0.2.3, @langchain/langgraph@npm:^0.2.3":
-  version: 0.2.3
-  resolution: "@langchain/langgraph@npm:0.2.3"
+"@langchain/langgraph-sdk@npm:~0.0.21":
+  version: 0.0.32
+  resolution: "@langchain/langgraph-sdk@npm:0.0.32"
   dependencies:
-    "@langchain/langgraph-checkpoint": ~0.0.6
-    double-ended-queue: ^2.1.0-0
+    "@types/json-schema": ^7.0.15
+    p-queue: ^6.6.2
+    p-retry: 4
+    uuid: ^9.0.0
+  checksum: dd0e3fd1f3880e1ddff65108f338e75365bdff60f8ca5dc4e1b1e1be79fa216f1e599fa5d7f62ab9b44778787426f20b82db4e97463d6f3f4eda43f81666bfe9
+  languageName: node
+  linkType: hard
+
+"@langchain/langgraph@npm:^0.2.32":
+  version: 0.2.32
+  resolution: "@langchain/langgraph@npm:0.2.32"
+  dependencies:
+    "@langchain/langgraph-checkpoint": ~0.0.13
+    "@langchain/langgraph-sdk": ~0.0.21
     uuid: ^10.0.0
     zod: ^3.23.8
   peerDependencies:
-    "@langchain/core": ">=0.2.31 <0.4.0"
-  checksum: 09d423228633f4bfee24b15e9f81eee57e96fecf9914f1e1c1f40f9436d120de912b8c987da356591c6eae0ee2bcf3759ab8e0ff762f87bc4f3f73e4098c12e9
+    "@langchain/core": ">=0.2.36 <0.3.0 || >=0.3.9 < 0.4.0"
+  checksum: dd313d471abdf2413a4867eaa6c291dedfd3b750d3b3a742684a8123e26c790c5ab0eadfa0e0db90195b4317fec60a8630b0f4fd62a50edcfc430b1654e81f55
   languageName: node
   linkType: hard
 
@@ -19431,7 +19443,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/json-schema@npm:^7.0.11, @types/json-schema@npm:^7.0.12, @types/json-schema@npm:^7.0.6":
+"@types/json-schema@npm:^7.0.11, @types/json-schema@npm:^7.0.12, @types/json-schema@npm:^7.0.15, @types/json-schema@npm:^7.0.6":
   version: 7.0.15
   resolution: "@types/json-schema@npm:7.0.15"
   checksum: 97ed0cb44d4070aecea772b7b2e2ed971e10c81ec87dd4ecc160322ffa55ff330dace1793489540e3e318d90942064bb697cc0f8989391797792d919737b3b98
@@ -24128,7 +24140,7 @@ __metadata:
     "@docusaurus/preset-classic": 2.4.3
     "@docusaurus/remark-plugin-npm2yarn": 2.4.3
     "@docusaurus/theme-mermaid": 2.4.3
-    "@langchain/langgraph": 0.2.3
+    "@langchain/langgraph": ^0.2.32
     "@langchain/scripts": "workspace:*"
     "@mdx-js/react": ^1.6.22
     "@microsoft/fetch-event-source": ^2.0.1
@@ -25920,13 +25932,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"double-ended-queue@npm:^2.1.0-0":
-  version: 2.1.0-0
-  resolution: "double-ended-queue@npm:2.1.0-0"
-  checksum: 3030cf9dcf6f8e7d8cb6ae5b7304890445d7c32233a614e400ba7b378086ad76f5822d0e501afd5ffe0af1de4bcb842fa23d4c79174d54f6566399435fafc271
-  languageName: node
-  linkType: hard
-
 "dpdm@npm:3.12.0":
   version: 3.12.0
   resolution: "dpdm@npm:3.12.0"
@@ -27705,7 +27710,7 @@ __metadata:
     "@langchain/google-vertexai": "workspace:*"
     "@langchain/google-vertexai-web": "workspace:*"
     "@langchain/groq": "workspace:*"
-    "@langchain/langgraph": ^0.2.3
+    "@langchain/langgraph": ^0.2.32
     "@langchain/mistralai": "workspace:*"
     "@langchain/mongodb": "workspace:*"
     "@langchain/nomic": "workspace:*"
