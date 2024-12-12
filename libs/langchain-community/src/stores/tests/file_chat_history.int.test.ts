@@ -143,5 +143,7 @@ test("FileSystemChatMessageHistory set context and get all sessions", async () =
 
   expect(sessions.length).toBe(2);
   expect(sessions[0].context).toEqual(context1);
+  expect(sessions[0].id).toBeDefined();
   expect(sessions[1].context).toEqual(context2);
+  expect(sessions[1].id).toBeDefined();
 });
