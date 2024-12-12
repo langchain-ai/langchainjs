@@ -1,4 +1,3 @@
-import axios from 'axios'; // For HTTP requests
 import { PDFLoader } from "../document_loaders/fs/pdf.js";
 import { XMLParser } from 'fast-xml-parser'; // For parsing XML
 import { Document } from "@langchain/core/documents";
@@ -26,8 +25,13 @@ export async function fetchDirectArxivArticle(arxivIds: string): Promise<ArxivEn
     try {
         const idList = arxivIds.split(/[\s,]+/).map(id => id.trim()).filter(Boolean).join(',');
         const url = `http://export.arxiv.org/api/query?id_list=${idList}`;
-        const response = await axios.get(url);
-        const xml = response.data;
+        const response = await fetch(url);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const xml = await response.text();
 
         const parser = new XMLParser({
             ignoreAttributes: false,
@@ -58,8 +62,13 @@ export async function fetchArxivResultsByQuery(query: string, start = 0, maxResu
     try {
         const encodedQuery = encodeURIComponent(query);
         const url = `http://export.arxiv.org/api/query?search_query=all:${encodedQuery}&start=${start}&max_results=${maxResults}`;
-        const response = await axios.get(url);
-        const xml = response.data;
+        const response = await fetch(url);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const xml = await response.text();
 
         const parser = new XMLParser({
             ignoreAttributes: false,
@@ -97,11 +106,16 @@ export async function searchArxiv(query: string, maxResults = 3): Promise<ArxivE
 // Used to fetch and parse PDF to text
 export async function fetchAndParsePDF(pdfUrl: string): Promise<string> {
     try {
-        // Fetch the PDF as an array buffer
-        const response = await axios.get(pdfUrl, { responseType: "arraybuffer" });
-        const buffer = Buffer.from(response.data);
+        // Fetch the PDF
+        const response = await fetch(pdfUrl);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const buffer = await response.arrayBuffer();
 
-        // Convert the Buffer to a Blob
+        // Convert the ArrayBuffer to a Blob
         const blob = new Blob([buffer], { type: "application/pdf" });
 
         // Use PDFLoader to process the PDF
