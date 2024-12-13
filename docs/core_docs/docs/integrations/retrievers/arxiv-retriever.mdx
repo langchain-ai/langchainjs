@@ -3,7 +3,7 @@
 
 ## Overview
 
-The `arXiv Retriever` allows users to query the arXiv database for academic articles. It supports both full-document retrieval (PDF parsing) and summary-based retrieval.
+The `arXiv Retriever` allows users to query the arXiv database for academic articles. It supports both full-document retrieval (PDF parsing) and summary-based retrieval. For detailed documentation of all ArxivRetriever features and configurations, head to [API reference](#https://arxiv.org/)
 
 ---
 
@@ -14,7 +14,16 @@ The `arXiv Retriever` allows users to query the arXiv database for academic arti
 - Customizable Options: Configure maximum results and output format.
 
 ---
-## Installation
+
+## Integration details
+
+| Retriever        | Source                       | Package                                 |
+| ---------------- | ---------------------------- | --------------------------------------- |
+| `ArxivRetriever` | Academic articles from arXiv | `@langchain-community/retrievers/arxiv` |
+
+---
+
+## Setup/Installation
 
 Ensure the following dependencies are installed:
 - `pdf-parse` for parsing PDFs
@@ -25,20 +34,71 @@ npm install pdf-parse fast-xml-parser
 ```
 ---
 
-## Getting started
 
-#### Import the path
-```typescript
-import { ArxivRetriever } from "langchain-community/retrievers/arxiv.js";
-```
-
-#### Instantiate the retriever
+## Instantiate the retriever
 ```typescript
 const retriever = new ArxivRetriever({
   getFullDocuments: false, // Set to true to fetch full documents (PDFs)
   maxSearchResults: 5,     // Maximum number of results to retrieve
 });
 ```
+---
+## Usage
+
+Use the `invoke` method to search arXiv for relevant articles. You can use either natural language queries or specific arXiv IDs.
+
+```typescript
+const query = "quantum computing";
+
+const documents = await retriever.invoke(query);
+documents.forEach(doc => {
+  console.log("Title:", doc.metadata.title);
+  console.log("Content:", doc.pageContent); // Parsed PDF content
+});
+```
+
+---
+
+## Use within a chain
+
+Like other retrievers, `ArxivRetriever` can be incorporated into LLM applications via chains. Below is an example of using the retriever within a chain:
+
+```typescript
+import { ChatOpenAI } from "@langchain/openai";
+import { ChatPromptTemplate } from "@langchain/core/prompts";
+import { RunnablePassthrough, RunnableSequence } from "@langchain/core/runnables";
+import { StringOutputParser } from "@langchain/core/output_parsers";
+import type { Document } from "@langchain/core/documents";
+
+const llm = new ChatOpenAI({
+  model: "gpt-4o-mini",
+  temperature: 0,
+});
+
+const prompt = ChatPromptTemplate.fromTemplate(`
+Answer the question based only on the context provided.
+
+Context: {context}
+
+Question: {question}`);
+
+const formatDocs = (docs: Document[]) => {
+  return docs.map((doc) => doc.pageContent).join("\n\n");
+};
+
+const ragChain = RunnableSequence.from([
+  {
+    context: retriever.pipe(formatDocs),
+    question: new RunnablePassthrough(),
+  },
+  prompt,
+  llm,
+  new StringOutputParser(),
+]);
+
+await ragChain.invoke("What are the latest advances in quantum computing?");
+```
+
 ---
 
 ## Class: ArxivRetriever
@@ -49,7 +109,6 @@ const retriever = new ArxivRetriever({
 |-------------------|-----------|---------|------------------------------------------------------|
 | `getFullDocuments` | `boolean` | `false` | Whether to fetch full documents (PDFs) instead of summaries. |
 | `maxSearchResults` | `number`  | `10`    | Maximum number of results to fetch from arXiv.      |
-
 
 
 ### Methods
@@ -75,3 +134,13 @@ documents.forEach(doc => {
   console.log("Content:", doc.pageContent); // Parsed PDF content
 });
 ```
+
+For detailed documentation of all ArxivRetriever features and configurations, head to [API reference](#https://arxiv.org/)
+
+
+
+
+
+
+
+
