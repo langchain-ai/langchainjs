@@ -240,6 +240,8 @@ docs/integrations/vectorstores/pinecone.md
 docs/integrations/vectorstores/pinecone.mdx
 docs/integrations/vectorstores/pgvector.md
 docs/integrations/vectorstores/pgvector.mdx
+docs/integrations/vectorstores/mariadb.md
+docs/integrations/vectorstores/mariadb.mdx
 docs/integrations/vectorstores/mongodb_atlas.md
 docs/integrations/vectorstores/mongodb_atlas.mdx
 docs/integrations/vectorstores/memory.md
