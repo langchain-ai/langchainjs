@@ -215,6 +215,15 @@
       "import": "./example_selectors.js",
       "require": "./example_selectors.cjs"
     },
+    "./filter": {
+      "types": {
+        "import": "./filter.d.ts",
+        "require": "./filter.d.cts",
+        "default": "./filter.d.ts"
+      },
+      "import": "./filter.js",
+      "require": "./filter.cjs"
+    },
     "./indexing": {
       "types": {
         "import": "./indexing.d.ts",
@@ -680,6 +689,10 @@
     "example_selectors.js",
     "example_selectors.d.ts",
     "example_selectors.d.cts",
+    "filter.cjs",
+    "filter.js",
+    "filter.d.ts",
+    "filter.d.cts",
     "indexing.cjs",
     "indexing.js",
     "indexing.d.ts",

@@ -26,6 +26,7 @@ export const config = {
     "document_loaders/langsmith": "document_loaders/langsmith",
     embeddings: "embeddings",
     example_selectors: "example_selectors/index",
+    filter: "filter",
     indexing: "indexing/index",
     "language_models/base": "language_models/base",
     "language_models/chat_models": "language_models/chat_models",
