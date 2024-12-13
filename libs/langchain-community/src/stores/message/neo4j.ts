@@ -100,10 +100,10 @@ export class Neo4jChatMessageHistory extends BaseListChatMessageHistory {
     `;
 
     try {
-      const messages = await this.driver.session().run(getMessagesCypherQuery, {
+      const { records } = await this.driver.executeQuery(getMessagesCypherQuery, {
         sessionId: this.sessionId,
       });
-      const results = messages.records.map((record: Record) =>
+      const results = records.map((record: Record) =>
         record.get("result")
       );
 
@@ -130,7 +130,7 @@ export class Neo4jChatMessageHistory extends BaseListChatMessageHistory {
     `;
 
     try {
-      await this.driver.session().run(addMessageCypherQuery, {
+      await this.driver.executeQuery(addMessageCypherQuery, {
         sessionId: this.sessionId,
         type: message.getType(),
         content: message.content,
@@ -151,7 +151,7 @@ export class Neo4jChatMessageHistory extends BaseListChatMessageHistory {
     `;
 
     try {
-      await this.driver.session().run(clearMessagesCypherQuery, {
+      await this.driver.executeQuery(clearMessagesCypherQuery, {
         sessionId: this.sessionId,
       });
     } catch (e) {
