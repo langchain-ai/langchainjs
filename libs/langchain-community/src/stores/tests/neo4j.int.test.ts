@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from "@jest/globals";
-import { Neo4jChatMessageHistory } from "../message/neo4j.js";
 import { HumanMessage, AIMessage } from "@langchain/core/messages";
 import neo4j from "neo4j-driver";
+import { Neo4jChatMessageHistory } from "../message/neo4j.js";
 
 const goodConfig = {
   url: "bolt://host.docker.internal:7687",
@@ -20,7 +20,7 @@ describe("The Neo4jChatMessageHistory class", () => {
     it("Requires a url, username and password, throwing an error if not provided", async () => {
       const badConfig = {};
       await expect(
-        // @ts-expect-error
+        // @ts-expect-error Bad config
         Neo4jChatMessageHistory.initialize(badConfig)
       ).rejects.toThrow(neo4j.Neo4jError);
     });
@@ -113,7 +113,7 @@ describe("The Neo4jChatMessageHistory class", () => {
         new HumanMessage("How many bottles of beer are currently on the wall?"),
         new AIMessage("There are currently 98 bottles of beer on the wall."),
       ];
-      for (let message of messages) {
+      for (const message of messages) {
         await instance?.addMessage(message);
       }
       const results = await instance?.getMessages();

@@ -1,5 +1,4 @@
-import neo4j from "neo4j-driver";
-import { Driver, Record, Neo4jError, auth } from "neo4j-driver";
+import neo4j, { Driver, Record, Neo4jError, auth } from "neo4j-driver";
 import { v4 as uuidv4 } from "uuid";
 import { BaseListChatMessageHistory } from "@langchain/core/chat_history";
 import {
@@ -25,9 +24,13 @@ const defaultConfig = {
 
 export class Neo4jChatMessageHistory extends BaseListChatMessageHistory {
   lc_namespace: string[] = ["langchain", "stores", "message", "neo4j"];
+
   sessionId: string | number;
+
   sessionNodeLabel: string;
+
   messageNodeLabel: string;
+
   windowSize: number;
 
   private driver: Driver;
@@ -100,12 +103,13 @@ export class Neo4jChatMessageHistory extends BaseListChatMessageHistory {
     `;
 
     try {
-      const { records } = await this.driver.executeQuery(getMessagesCypherQuery, {
-        sessionId: this.sessionId,
-      });
-      const results = records.map((record: Record) =>
-        record.get("result")
+      const { records } = await this.driver.executeQuery(
+        getMessagesCypherQuery,
+        {
+          sessionId: this.sessionId,
+        }
       );
+      const results = records.map((record: Record) => record.get("result"));
 
       return mapStoredMessagesToChatMessages(results);
     } catch (e) {
