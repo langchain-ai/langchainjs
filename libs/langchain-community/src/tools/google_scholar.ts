@@ -52,8 +52,7 @@ export class SERPGoogleScholarAPITool extends Tool {
     super(...arguments);
 
     // Retrieve API key from fields or environment variables.
-    const apiKey =
-      fields?.apiKey ?? getEnvironmentVariable("SERPAPI_API_KEY");
+    const apiKey = fields?.apiKey ?? getEnvironmentVariable("SERPAPI_API_KEY");
 
     // Throw an error if no API key is found.
     if (!apiKey) {
@@ -105,13 +104,15 @@ export class SERPGoogleScholarAPITool extends Tool {
         title: item.title, // Title of the article or paper.
         link: item.link, // Direct link to the article or paper.
         snippet: item.snippet, // Brief snippet or description.
-        publication_info: item.publication_info?.summary
-          ?.split(" - ") // Split the summary at hyphens.
-          .slice(1) // Remove the authors from the start of the string.
-          .join(" - ") ?? "", // Rejoin remaining parts as publication info.
-        authors: item.publication_info?.authors
-          ?.map((author: any) => author.name) // Extract the list of author names.
-          .join(", ") ?? "", // Join author names with a comma.
+        publication_info:
+          item.publication_info?.summary
+            ?.split(" - ") // Split the summary at hyphens.
+            .slice(1) // Remove the authors from the start of the string.
+            .join(" - ") ?? "", // Rejoin remaining parts as publication info.
+        authors:
+          item.publication_info?.authors
+            ?.map((author: any) => author.name) // Extract the list of author names.
+            .join(", ") ?? "", // Join author names with a comma.
         total_citations: item.inline_links?.cited_by?.total ?? "", // Total number of citations.
       })) ?? `No results found for ${input} on Google Scholar.`;
 

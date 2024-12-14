@@ -1,7 +1,7 @@
 import { SERPGoogleScholarAPITool } from "@langchain/community/tools/google_scholar";
 
 const scholar = new SERPGoogleScholarAPITool({
-  apiKey: process.env.SERPAPI_API_KEY
+  apiKey: process.env.SERPAPI_API_KEY,
 });
 
 (async () => {
