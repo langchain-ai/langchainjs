@@ -892,6 +892,15 @@
       "import": "./tools/google_routes.js",
       "require": "./tools/google_routes.cjs"
     },
+    "./tools/google_scholar": {
+      "types": {
+        "import": "./tools/google_scholar.d.ts",
+        "require": "./tools/google_scholar.d.cts",
+        "default": "./tools/google_scholar.d.ts"
+      },
+      "import": "./tools/google_scholar.js",
+      "require": "./tools/google_scholar.cjs"
+    },
     "./tools/ifttt": {
       "types": {
         "import": "./tools/ifttt.d.ts",
@@ -3217,6 +3226,10 @@
     "tools/google_routes.js",
     "tools/google_routes.d.ts",
     "tools/google_routes.d.cts",
+    "tools/google_scholar.cjs",
+    "tools/google_scholar.js",
+    "tools/google_scholar.d.ts",
+    "tools/google_scholar.d.cts",
     "tools/ifttt.cjs",
     "tools/ifttt.js",
     "tools/ifttt.d.ts",

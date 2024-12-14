@@ -53,6 +53,7 @@ export const config = {
     "tools/google_places": "tools/google_places",
     "tools/google_trends": "tools/google_trends",
     "tools/google_routes": "tools/google_routes",
+    "tools/google_scholar": "tools/google_scholar",
     "tools/ifttt": "tools/ifttt",
     "tools/searchapi": "tools/searchapi",
     "tools/searxng_search": "tools/searxng_search",
