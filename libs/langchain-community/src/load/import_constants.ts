@@ -130,6 +130,7 @@ export const optionalImportEntrypoints: string[] = [
   "langchain_community/stores/message/ioredis",
   "langchain_community/stores/message/momento",
   "langchain_community/stores/message/mongodb",
+  "langchain_community/stores/message/neo4j",
   "langchain_community/stores/message/planetscale",
   "langchain_community/stores/message/postgres",
   "langchain_community/stores/message/redis",

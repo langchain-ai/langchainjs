@@ -2521,6 +2521,15 @@
       "import": "./stores/message/mongodb.js",
       "require": "./stores/message/mongodb.cjs"
     },
+    "./stores/message/neo4j": {
+      "types": {
+        "import": "./stores/message/neo4j.d.ts",
+        "require": "./stores/message/neo4j.d.cts",
+        "default": "./stores/message/neo4j.d.ts"
+      },
+      "import": "./stores/message/neo4j.js",
+      "require": "./stores/message/neo4j.cjs"
+    },
     "./stores/message/planetscale": {
       "types": {
         "import": "./stores/message/planetscale.d.ts",
@@ -3932,6 +3941,10 @@
     "stores/message/mongodb.js",
     "stores/message/mongodb.d.ts",
     "stores/message/mongodb.d.cts",
+    "stores/message/neo4j.cjs",
+    "stores/message/neo4j.js",
+    "stores/message/neo4j.d.ts",
+    "stores/message/neo4j.d.cts",
     "stores/message/planetscale.cjs",
     "stores/message/planetscale.js",
     "stores/message/planetscale.d.ts",
