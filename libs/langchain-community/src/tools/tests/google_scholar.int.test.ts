@@ -1,17 +1,18 @@
 import { test, expect, describe } from "@jest/globals";
 import { SERPGoogleScholarAPITool } from "../google_scholar.js";
+import { getEnvironmentVariable } from "@langchain/core/utils/env";
 
 describe("SERPGoogleScholarAPITool", () => {
   test("should be setup with correct parameters", async () => {
     const instance = new SERPGoogleScholarAPITool({
-      apiKey: process.env.SERPAPI_API_KEY,
+      apiKey: getEnvironmentVariable("SERPAPI_API_KEY"),
     });
     expect(instance.name).toBe("serp_google_scholar");
   });
 
   test("SERPGoogleScholarAPITool returns a string for valid query", async () => {
     const tool = new SERPGoogleScholarAPITool({
-      apiKey: process.env.SERPAPI_API_KEY,
+      apiKey: getEnvironmentVariable("SERPAPI_API_KEY"),
     });
     const result = await tool.invoke("Artificial Intelligence");
     expect(typeof result).toBe("string");
@@ -19,7 +20,7 @@ describe("SERPGoogleScholarAPITool", () => {
 
   test("SERPGoogleScholarAPITool returns non-empty string for valid query", async () => {
     const tool = new SERPGoogleScholarAPITool({
-      apiKey: process.env.SERPAPI_API_KEY,
+      apiKey: getEnvironmentVariable("SERPAPI_API_KEY"),
     });
     const result = await tool.invoke("Artificial Intelligence");
     expect(result.length).toBeGreaterThan(0);
@@ -27,7 +28,7 @@ describe("SERPGoogleScholarAPITool", () => {
 
   test("SERPGoogleScholarAPITool returns 'No results found' for bad query", async () => {
     const tool = new SERPGoogleScholarAPITool({
-      apiKey: process.env.SERPAPI_API_KEY,
+      apiKey: getEnvironmentVariable("SERPAPI_API_KEY"),
     });
     const result = await tool.invoke("dsalkfjsdlfjasdflasdl");
     expect(result).toBe(
