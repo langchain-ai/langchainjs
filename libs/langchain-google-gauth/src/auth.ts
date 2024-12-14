@@ -85,32 +85,20 @@ export class GAuthClient implements GoogleAbstractedClient {
   }
 
   async request(opts: GoogleAbstractedClientOps): Promise<unknown> {
-    try {
-      const ret = await this.gauth.request(opts);
-      const [contentType] = ret?.headers?.["content-type"]?.split(/;/) ?? [""];
-      if (opts.responseType !== "stream") {
-        return ret;
-      } else if (contentType === "text/event-stream") {
-        return {
-          ...ret,
-          data: new NodeSseJsonStream(ret.data),
-        };
-      } else {
-        return {
-          ...ret,
-          data: new NodeJsonStream(ret.data),
-        };
-      }
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (xx: any) {
-      console.error("call to gauth.request", JSON.stringify(xx, null, 2));
-      console.error(
-        "call to gauth.request opts=",
-        JSON.stringify(opts, null, 2)
-      );
-      console.error("call to gauth.request message:", xx?.message);
-      throw xx;
+    const ret = await this.gauth.request(opts);
+    const [contentType] = ret?.headers?.["content-type"]?.split(/;/) ?? [""];
+    if (opts.responseType !== "stream") {
+      return ret;
+    } else if (contentType === "text/event-stream") {
+      return {
+        ...ret,
+        data: new NodeSseJsonStream(ret.data),
+      };
+    } else {
+      return {
+        ...ret,
+        data: new NodeJsonStream(ret.data),
+      };
     }
   }
 }
