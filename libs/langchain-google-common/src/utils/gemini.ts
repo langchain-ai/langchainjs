@@ -1020,22 +1020,24 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     if (!tools || tools.length === 0) {
       return [];
     }
-    return tools.reduce((acc: GeminiTool[], tool) => {
-      if (isLangChainTool(tool)) {
-        if (!acc[0]) {
-          acc[0] = { functionDeclarations: [] };
-        }
-        if (!acc[0].functionDeclarations) {
-          acc[0].functionDeclarations = [];
-        }
-        acc[0].functionDeclarations.push(
-          structuredToolToFunctionDeclaration(tool)
-        );
-      } else {
-        acc.push(tool as GeminiTool);
-      }
-      return acc;
-    }, []) as GeminiTool[];
+
+    // Group all LangChain tools into a single functionDeclarations array
+    const langChainTools = tools.filter(isLangChainTool);
+    const otherTools = tools.filter(
+      (tool) => !isLangChainTool(tool)
+    ) as GeminiTool[];
+
+    const result: GeminiTool[] = [...otherTools];
+
+    if (langChainTools.length > 0) {
+      result.push({
+        functionDeclarations: langChainTools.map(
+          structuredToolToFunctionDeclaration
+        ),
+      });
+    }
+
+    return result;
   }
 
   function formatToolConfig(
