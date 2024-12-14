@@ -1,6 +1,6 @@
 import { test, expect, describe } from "@jest/globals";
-import { SERPGoogleScholarAPITool } from "../google_scholar.js";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
+import { SERPGoogleScholarAPITool } from "../google_scholar.js";
 
 describe("SERPGoogleScholarAPITool", () => {
   test("should be setup with correct parameters", async () => {
