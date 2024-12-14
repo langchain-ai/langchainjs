@@ -70,6 +70,10 @@ tools/google_places.cjs
 tools/google_places.js
 tools/google_places.d.ts
 tools/google_places.d.cts
+tools/google_trends.cjs
+tools/google_trends.js
+tools/google_trends.d.ts
+tools/google_trends.d.cts
 tools/google_routes.cjs
 tools/google_routes.js
 tools/google_routes.d.ts
@@ -558,6 +562,10 @@ chat_models/moonshot.cjs
 chat_models/moonshot.js
 chat_models/moonshot.d.ts
 chat_models/moonshot.d.cts
+chat_models/novita.cjs
+chat_models/novita.js
+chat_models/novita.d.ts
+chat_models/novita.d.cts
 chat_models/ollama.cjs
 chat_models/ollama.js
 chat_models/ollama.d.ts
@@ -770,6 +778,10 @@ stores/message/firestore.cjs
 stores/message/firestore.js
 stores/message/firestore.d.ts
 stores/message/firestore.d.cts
+stores/message/file_system.cjs
+stores/message/file_system.js
+stores/message/file_system.d.ts
+stores/message/file_system.d.cts
 stores/message/in_memory.cjs
 stores/message/in_memory.js
 stores/message/in_memory.d.ts

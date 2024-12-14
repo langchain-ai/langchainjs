@@ -131,6 +131,10 @@ test("Should stream chunks from each step as they are produced", async () => {
   const chunks = [];
 
   for await (const chunk of stream) {
+    if (chunk.chat?.id !== undefined) {
+      chunk.chat.id = expect.any(String) as any;
+      chunk.chat.lc_kwargs.id = expect.any(String);
+    }
     chunks.push(chunk);
   }
 

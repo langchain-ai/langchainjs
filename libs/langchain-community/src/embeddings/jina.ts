@@ -1,94 +1,113 @@
-import { existsSync, readFileSync } from "fs";
-import { parse } from "url";
-import { Embeddings, EmbeddingsParams } from "@langchain/core/embeddings";
+import { Embeddings, type EmbeddingsParams } from "@langchain/core/embeddings";
+import { chunkArray } from "@langchain/core/utils/chunk_array";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 
-/**
- * The default Jina API URL for embedding requests.
- */
-const JINA_API_URL = "https://api.jina.ai/v1/embeddings";
-
-/**
- * Check if a URL is a local file.
- * @param url - The URL to check.
- * @returns True if the URL is a local file, False otherwise.
- */
-function isLocal(url: string): boolean {
-  const urlParsed = parse(url);
-  if (urlParsed.protocol === null || urlParsed.protocol === "file:") {
-    return existsSync(urlParsed.pathname || "");
-  }
-  return false;
-}
-
-/**
- * Get the bytes string of a file.
- * @param filePath - The path to the file.
- * @returns The bytes string of the file.
- */
-function getBytesStr(filePath: string): string {
-  const imageFile = readFileSync(filePath);
-  return Buffer.from(imageFile).toString("base64");
-}
-
-/**
- * Input parameters for the Jina embeddings
- */
 export interface JinaEmbeddingsParams extends EmbeddingsParams {
-  /**
-   * The API key to use for authentication.
-   * If not provided, it will be read from the `JINA_API_KEY` environment variable.
-   */
-  apiKey?: string;
+  /** Model name to use */
+  model:
+    | "jina-clip-v2"
+    | "jina-embeddings-v3"
+    | "jina-colbert-v2"
+    | "jina-clip-v1"
+    | "jina-colbert-v1-en"
+    | "jina-embeddings-v2-base-es"
+    | "jina-embeddings-v2-base-code"
+    | "jina-embeddings-v2-base-de"
+    | "jina-embeddings-v2-base-zh"
+    | "jina-embeddings-v2-base-en"
+    | string;
+
+  baseUrl?: string;
 
   /**
-   * The model ID to use for generating embeddings.
-   * Default: `jina-embeddings-v2-base-en`
+   * Timeout to use when making requests to Jina.
    */
-  model?: string;
+  timeout?: number;
+
+  /**
+   * The maximum number of documents to embed in a single request.
+   */
+  batchSize?: number;
+
+  /**
+   * Whether to strip new lines from the input text.
+   */
+  stripNewLines?: boolean;
+
+  /**
+   * The dimensions of the embedding.
+   */
+  dimensions?: number;
+
+  /**
+   * Scales the embedding so its Euclidean (L2) norm becomes 1, preserving direction. Useful when downstream involves dot-product, classification, visualization..
+   */
+  normalized?: boolean;
 }
 
-/**
- * Response from the Jina embeddings API.
- */
-export interface JinaEmbeddingsResponse {
-  /**
-   * The embeddings generated for the input texts.
-   */
-  data: { index: number; embedding: number[] }[];
+type JinaMultiModelInput =
+  | {
+      text: string;
+      image?: never;
+    }
+  | {
+      image: string;
+      text?: never;
+    };
+
+export type JinaEmbeddingsInput = string | JinaMultiModelInput;
+
+interface EmbeddingCreateParams {
+  model: JinaEmbeddingsParams["model"];
 
   /**
-   * The detail of the response e.g usage, model used etc.
+   * input can be strings or JinaMultiModelInputs,if you want embed image,you should use JinaMultiModelInputs
    */
-  detail?: string;
+  input: JinaEmbeddingsInput[];
+  dimensions: number;
+  task: "retrieval.query" | "retrieval.passage";
+  normalized?: boolean;
 }
 
-/**
- * A class for generating embeddings using the Jina API.
- * @example
- * ```typescript
- * // Embed a query using the JinaEmbeddings class
- * const model = new JinaEmbeddings();
- * const res = await model.embedQuery(
- *   "What would be a good name for a semantic search engine ?",
- * );
- * console.log({ res });
- * ```
- */
+interface EmbeddingResponse {
+  model: string;
+  object: string;
+  usage: {
+    total_tokens: number;
+    prompt_tokens: number;
+  };
+  data: {
+    object: string;
+    index: number;
+    embedding: number[];
+  }[];
+}
+
+interface EmbeddingErrorResponse {
+  detail: string;
+}
+
 export class JinaEmbeddings extends Embeddings implements JinaEmbeddingsParams {
+  model: JinaEmbeddingsParams["model"] = "jina-clip-v2";
+
+  batchSize = 24;
+
+  baseUrl = "https://api.jina.ai/v1/embeddings";
+
+  stripNewLines = true;
+
+  dimensions = 1024;
+
   apiKey: string;
 
-  model: string;
+  normalized = true;
 
-  /**
-   * Constructor for the JinaEmbeddings class.
-   * @param fields - An optional object with properties to configure the instance.
-   */
-  constructor(fields?: Partial<JinaEmbeddingsParams> & { verbose?: boolean }) {
-    const fieldsWithDefaults = {
-      model: "jina-embeddings-v2-base-en",
-      ...fields,
-    };
+  constructor(
+    fields?: Partial<JinaEmbeddingsParams> & {
+      apiKey?: string;
+    }
+  ) {
+    const fieldsWithDefaults = { maxConcurrency: 2, ...fields };
     super(fieldsWithDefaults);
 
     const apiKey =
@@ -96,67 +115,90 @@ export class JinaEmbeddings extends Embeddings implements JinaEmbeddingsParams {
       getEnvironmentVariable("JINA_API_KEY") ||
       getEnvironmentVariable("JINA_AUTH_TOKEN");
 
-    if (!apiKey) {
-      throw new Error("Jina API key not found");
-    }
+    if (!apiKey) throw new Error("Jina API key not found");
+
+    this.apiKey = apiKey;
 
     this.model = fieldsWithDefaults?.model ?? this.model;
-    this.apiKey = apiKey;
+    this.dimensions = fieldsWithDefaults?.dimensions ?? this.dimensions;
+    this.batchSize = fieldsWithDefaults?.batchSize ?? this.batchSize;
+    this.stripNewLines =
+      fieldsWithDefaults?.stripNewLines ?? this.stripNewLines;
+    this.normalized = fieldsWithDefaults?.normalized ?? this.normalized;
   }
 
-  /**
-   * Generates embeddings for an array of inputs.
-   * @param input - An array of strings or objects to generate embeddings for.
-   * @returns A Promise that resolves to an array of embeddings.
-   */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private async _embed(input: any): Promise<number[][]> {
-    const response = await fetch(JINA_API_URL, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${this.apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ input, model: this.model }),
+  private doStripNewLines(input: JinaEmbeddingsInput[]) {
+    if (this.stripNewLines) {
+      return input.map((i) => {
+        if (typeof i === "string") {
+          return i.replace(/\n/g, " ");
+        }
+        if (i.text) {
+          return { text: i.text.replace(/\n/g, " ") };
+        }
+        return i;
+      });
+    }
+    return input;
+  }
+
+  async embedDocuments(input: JinaEmbeddingsInput[]): Promise<number[][]> {
+    const batches = chunkArray(this.doStripNewLines(input), this.batchSize);
+    const batchRequests = batches.map((batch) => {
+      const params = this.getParams(batch);
+      return this.embeddingWithRetry(params);
     });
 
-    const json = (await response.json()) as JinaEmbeddingsResponse;
+    const batchResponses = await Promise.all(batchRequests);
+    const embeddings: number[][] = [];
 
-    if (!json.data) {
-      throw new Error(json.detail || "Unknown error from Jina API");
+    for (let i = 0; i < batchResponses.length; i += 1) {
+      const batch = batches[i];
+      const batchResponse = batchResponses[i] || [];
+      for (let j = 0; j < batch.length; j += 1) {
+        embeddings.push(batchResponse[j]);
+      }
     }
 
-    const sortedEmbeddings = json.data.sort((a, b) => a.index - b.index);
-
-    return sortedEmbeddings.map((item) => item.embedding);
+    return embeddings;
   }
 
-  /**
-   * Generates embeddings for an array of texts.
-   * @param texts - An array of strings to generate embeddings for.
-   * @returns A Promise that resolves to an array of embeddings.
-   */
-  async embedDocuments(texts: string[]): Promise<number[][]> {
-    return this._embed(texts);
-  }
+  async embedQuery(input: JinaEmbeddingsInput): Promise<number[]> {
+    const params = this.getParams(this.doStripNewLines([input]), true);
 
-  /**
-   * Generates an embedding for a single text.
-   * @param text - A string to generate an embedding for.
-   * @returns A Promise that resolves to an array of numbers representing the embedding.
-   */
-  async embedQuery(text: string): Promise<number[]> {
-    const embeddings = await this._embed([text]);
+    const embeddings = (await this.embeddingWithRetry(params)) || [[]];
     return embeddings[0];
   }
 
-  /**
-   * Generates embeddings for an array of image URIs.
-   * @param uris - An array of image URIs to generate embeddings for.
-   * @returns A Promise that resolves to an array of embeddings.
-   */
-  async embedImages(uris: string[]): Promise<number[][]> {
-    const input = uris.map((uri) => (isLocal(uri) ? getBytesStr(uri) : uri));
-    return this._embed(input);
+  private getParams(
+    input: JinaEmbeddingsInput[],
+    query?: boolean
+  ): EmbeddingCreateParams {
+    return {
+      model: this.model,
+      input,
+      dimensions: this.dimensions,
+      task: query ? "retrieval.query" : "retrieval.passage",
+      normalized: this.normalized,
+    };
+  }
+
+  private async embeddingWithRetry(body: EmbeddingCreateParams) {
+    const response = await fetch(this.baseUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${this.apiKey}`,
+      },
+      body: JSON.stringify(body),
+    });
+    const embeddingData: EmbeddingResponse | EmbeddingErrorResponse =
+      await response.json();
+    if ("detail" in embeddingData && embeddingData.detail) {
+      throw new Error(`${embeddingData.detail}`);
+    }
+    return (embeddingData as EmbeddingResponse).data.map(
+      ({ embedding }) => embedding
+    );
   }
 }

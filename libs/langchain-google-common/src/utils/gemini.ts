@@ -231,10 +231,10 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
       throw new Error("Missing Image URL");
     }
 
-    const mineTypeAndData = extractMimeType(url);
-    if (mineTypeAndData) {
+    const mimeTypeAndData = extractMimeType(url);
+    if (mimeTypeAndData) {
       return {
-        inlineData: mineTypeAndData,
+        inlineData: mimeTypeAndData,
       };
     } else {
       // FIXME - need some way to get mime type
