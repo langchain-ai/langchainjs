@@ -189,8 +189,8 @@ export class FileSystemChatMessageHistory extends BaseListChatMessageHistory {
   async getAllSessions(): Promise<FileChatSession[]> {
     await this.init();
     const userSessions = store[this.userId]
-      ? Object.values(store[this.userId]).map((session) => ({
-          id: session.id,
+      ? Object.entries(store[this.userId]).map(([id, session]) => ({
+          id,
           context: session.context,
         }))
       : [];

@@ -12,6 +12,14 @@ hide_table_of_contents: true
 If you'd like to write your own chat model, see [this how-to](/docs/how_to/custom_chat). If you'd like to contribute an integration, see [Contributing integrations](/docs/contributing).
 :::
 
+import ChatModelTabs from "@theme/ChatModelTabs";
+
+<ChatModelTabs openaiParams={`{ model: "gpt-4o-mini" }`} />
+
+```python
+await model.invoke("Hello, world!")
+```
+
 ## Featured providers
 
 | Model                                                                    | Stream | JSON mode | [Tool Calling](/docs/how_to/tool_calling/) | [`withStructuredOutput()`](/docs/how_to/structured_output/#the-.withstructuredoutput-method) | [Multimodal](/docs/how_to/multimodal_inputs/) |

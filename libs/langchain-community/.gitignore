@@ -70,6 +70,10 @@ tools/google_places.cjs
 tools/google_places.js
 tools/google_places.d.ts
 tools/google_places.d.cts
+tools/google_trends.cjs
+tools/google_trends.js
+tools/google_trends.d.ts
+tools/google_trends.d.cts
 tools/google_routes.cjs
 tools/google_routes.js
 tools/google_routes.d.ts
@@ -798,6 +802,10 @@ stores/message/mongodb.cjs
 stores/message/mongodb.js
 stores/message/mongodb.d.ts
 stores/message/mongodb.d.cts
+stores/message/neo4j.cjs
+stores/message/neo4j.js
+stores/message/neo4j.d.ts
+stores/message/neo4j.d.cts
 stores/message/planetscale.cjs
 stores/message/planetscale.js
 stores/message/planetscale.d.ts
