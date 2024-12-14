@@ -545,7 +545,7 @@ describe("GAuth Anthropic Chat", () => {
     console.log(aiMessage.lc_kwargs);
   });
 
-  test("stream", async () => {
+  test.only("stream", async () => {
     const model = new ChatVertexAI({
       modelName,
       callbacks,
