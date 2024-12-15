@@ -32,8 +32,8 @@ export function _makeMessageChunkFromAnthropicEvent(
     }
     const { input_tokens, output_tokens, ...rest } = usage ?? {};
     const usageMetadata: UsageMetadata = {
-      input_tokens: input_tokens,
-      output_tokens: output_tokens,
+      input_tokens,
+      output_tokens,
       total_tokens: input_tokens + output_tokens,
     };
     return {
