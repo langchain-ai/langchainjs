@@ -688,7 +688,7 @@ LangChain has many different types of output parsers. This is a list of output p
 
 The current date is ${new Date().toISOString()}`;
 
-test.only("system prompt caching", async () => {
+test("system prompt caching", async () => {
   const model = new ChatAnthropic({
     model: "claude-3-haiku-20240307",
     clientOptions: {
