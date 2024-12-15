@@ -1,5 +1,5 @@
-import { FalkorDBGraph } from "langchain/graphs/falkordb_graph";
-import { OpenAI } from "langchain/llms/openai";
+import { FalkorDBGraph } from "@langchain/community/graphs/falkordb_graph";
+import { OpenAI } from "@langchain/llms/openai";
 import { GraphCypherQAChain } from "langchain/chains/graph_qa/cypher";
 
 /**
