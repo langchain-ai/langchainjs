@@ -1,31 +1,31 @@
 import { v4 as uuidv4 } from "uuid";
 import { AgentAction, AgentFinish } from "../agents.js";
-import type { ChainValues } from "../utils/types/index.js";
-import { LLMResult } from "../outputs.js";
-import {
-  BaseCallbackHandler,
-  CallbackHandlerMethods,
-  HandleLLMNewTokenCallbackFields,
-  isBaseCallbackHandler,
-  NewTokenIndices,
-} from "./base.js";
-import { ConsoleCallbackHandler } from "../tracers/console.js";
+import type { DocumentInterface } from "../documents/document.js";
+import { Serialized } from "../load/serializable.js";
 import { type BaseMessage } from "../messages/base.js";
 import { getBufferString } from "../messages/utils.js";
-import { getEnvironmentVariable } from "../utils/env.js";
+import { LLMResult } from "../outputs.js";
+import {
+  _getConfigureHooks,
+  getContextVariable,
+} from "../singletons/async_local_storage/context.js";
+import { isBaseTracer } from "../tracers/base.js";
+import { ConsoleCallbackHandler } from "../tracers/console.js";
 import {
   LangChainTracer,
   LangChainTracerFields,
 } from "../tracers/tracer_langchain.js";
-import { consumeCallback } from "./promises.js";
-import { Serialized } from "../load/serializable.js";
-import type { DocumentInterface } from "../documents/document.js";
 import { isTracingEnabled } from "../utils/callbacks.js";
-import { isBaseTracer } from "../tracers/base.js";
+import { getEnvironmentVariable } from "../utils/env.js";
+import type { ChainValues } from "../utils/types/index.js";
 import {
-  getContextVariable,
-  _getConfigureHooks,
-} from "../singletons/async_local_storage/context.js";
+  BaseCallbackHandler,
+  CallbackHandlerMethods,
+  HandleLLMNewTokenCallbackFields,
+  NewTokenIndices,
+  isBaseCallbackHandler,
+} from "./base.js";
+import { consumeCallback } from "./promises.js";
 
 type BaseCallbackManagerMethods = {
   [K in keyof CallbackHandlerMethods]?: (
@@ -1276,8 +1276,12 @@ export class CallbackManager
         handler = new (handlerClass as any)({});
       }
       if (handler !== undefined) {
-        if (!callbackManager?.handlers.some((h) => h.name === handler!.name)) {
-          callbackManager?.addHandler(handler, inheritable);
+        if (!callbackManager) {
+          callbackManager = new CallbackManager();
+        }
+
+        if (!callbackManager.handlers.some((h) => h.name === handler!.name)) {
+          callbackManager.addHandler(handler, inheritable);
         }
       }
     }
