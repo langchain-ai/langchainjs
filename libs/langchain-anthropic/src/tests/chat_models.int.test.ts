@@ -722,7 +722,7 @@ test("system prompt caching", async () => {
     0
   );
   const stream = await model.stream(messages);
-  let agg = undefined;
+  let agg;
   for await (const chunk of stream) {
     agg = agg === undefined ? chunk : concat(agg, chunk);
   }
