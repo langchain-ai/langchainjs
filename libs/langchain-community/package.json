@@ -1,6 +1,6 @@
 {
   "name": "@langchain/community",
-  "version": "0.3.18",
+  "version": "0.3.19",
   "description": "Third-party integrations for LangChain.js",
   "type": "module",
   "engines": {
@@ -874,6 +874,15 @@
       "import": "./tools/google_places.js",
       "require": "./tools/google_places.cjs"
     },
+    "./tools/google_trends": {
+      "types": {
+        "import": "./tools/google_trends.d.ts",
+        "require": "./tools/google_trends.d.cts",
+        "default": "./tools/google_trends.d.ts"
+      },
+      "import": "./tools/google_trends.js",
+      "require": "./tools/google_trends.cjs"
+    },
     "./tools/google_routes": {
       "types": {
         "import": "./tools/google_routes.d.ts",
@@ -882,6 +891,15 @@
       },
       "import": "./tools/google_routes.js",
       "require": "./tools/google_routes.cjs"
+    },
+    "./tools/google_scholar": {
+      "types": {
+        "import": "./tools/google_scholar.d.ts",
+        "require": "./tools/google_scholar.d.cts",
+        "default": "./tools/google_scholar.d.ts"
+      },
+      "import": "./tools/google_scholar.js",
+      "require": "./tools/google_scholar.cjs"
     },
     "./tools/ifttt": {
       "types": {
@@ -2512,6 +2530,15 @@
       "import": "./stores/message/mongodb.js",
       "require": "./stores/message/mongodb.cjs"
     },
+    "./stores/message/neo4j": {
+      "types": {
+        "import": "./stores/message/neo4j.d.ts",
+        "require": "./stores/message/neo4j.d.cts",
+        "default": "./stores/message/neo4j.d.ts"
+      },
+      "import": "./stores/message/neo4j.js",
+      "require": "./stores/message/neo4j.cjs"
+    },
     "./stores/message/planetscale": {
       "types": {
         "import": "./stores/message/planetscale.d.ts",
@@ -3191,10 +3218,18 @@
     "tools/google_places.js",
     "tools/google_places.d.ts",
     "tools/google_places.d.cts",
+    "tools/google_trends.cjs",
+    "tools/google_trends.js",
+    "tools/google_trends.d.ts",
+    "tools/google_trends.d.cts",
     "tools/google_routes.cjs",
     "tools/google_routes.js",
     "tools/google_routes.d.ts",
     "tools/google_routes.d.cts",
+    "tools/google_scholar.cjs",
+    "tools/google_scholar.js",
+    "tools/google_scholar.d.ts",
+    "tools/google_scholar.d.cts",
     "tools/ifttt.cjs",
     "tools/ifttt.js",
     "tools/ifttt.d.ts",
@@ -3919,6 +3954,10 @@
     "stores/message/mongodb.js",
     "stores/message/mongodb.d.ts",
     "stores/message/mongodb.d.cts",
+    "stores/message/neo4j.cjs",
+    "stores/message/neo4j.js",
+    "stores/message/neo4j.d.ts",
+    "stores/message/neo4j.d.cts",
     "stores/message/planetscale.cjs",
     "stores/message/planetscale.js",
     "stores/message/planetscale.d.ts",
