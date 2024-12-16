@@ -306,7 +306,7 @@ function mergeMessages(messages: AnthropicMessageCreateParams["messages"]) {
     );
   };
 
-  for (let i = 1; i < messages.length; i++) {
+  for (let i = 1; i < messages.length; i += 1) {
     const nextMessage = messages[i];
 
     if (
