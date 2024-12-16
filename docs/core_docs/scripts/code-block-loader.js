@@ -223,6 +223,13 @@ async function webpackLoader(content, map, meta) {
 
     imports.forEach((imp) => {
       const { imported, source } = imp;
+
+      if (source.startsWith("@langchain/langgraph")) {
+        // TODO: Add support for verifying LangGraph API reference links so we can use exact URLs.
+        imp.docs = "https://langchain-ai.github.io/langgraphjs/reference/";
+        return;
+      }
+
       const apiRefPath = findApiRefPath(imported, source);
 
       if (apiRefPath) {
@@ -233,7 +240,7 @@ async function webpackLoader(content, map, meta) {
         const cleanedResourcePath = this.resourcePath.includes("examples/")
           ? this.resourcePath.split("examples/")[1]
           : this.resourcePath;
-    
+
         console.warn(
           {
             imported,
