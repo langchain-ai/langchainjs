@@ -27,7 +27,6 @@ test("Test ChatAnthropic", async () => {
   });
   const message = new HumanMessage("Hello!");
   const res = await chat.invoke([message]);
-  // console.log({ res });
   expect(res.response_metadata.usage).toBeDefined();
 });
 
@@ -713,12 +712,12 @@ test("system prompt caching", async () => {
   ];
   const res = await model.invoke(messages);
   expect(
-    res.response_metadata.usage.cache_creation_input_tokens
+    res.usage_metadata?.input_token_details?.cache_creation
   ).toBeGreaterThan(0);
-  expect(res.response_metadata.usage.cache_read_input_tokens).toBe(0);
+  expect(res.usage_metadata?.input_token_details?.cache_read).toBe(0);
   const res2 = await model.invoke(messages);
-  expect(res2.response_metadata.usage.cache_creation_input_tokens).toBe(0);
-  expect(res2.response_metadata.usage.cache_read_input_tokens).toBeGreaterThan(
+  expect(res2.usage_metadata?.input_token_details?.cache_creation).toBe(0);
+  expect(res2.usage_metadata?.input_token_details?.cache_read).toBeGreaterThan(
     0
   );
   const stream = await model.stream(messages);
@@ -727,8 +726,8 @@ test("system prompt caching", async () => {
     agg = agg === undefined ? chunk : concat(agg, chunk);
   }
   expect(agg).toBeDefined();
-  expect(agg!.response_metadata.usage.cache_creation_input_tokens).toBe(0);
-  expect(agg!.response_metadata.usage.cache_read_input_tokens).toBeGreaterThan(
+  expect(agg!.usage_metadata?.input_token_details?.cache_creation).toBe(0);
+  expect(agg!.usage_metadata?.input_token_details?.cache_read).toBeGreaterThan(
     0
   );
 });
@@ -771,12 +770,12 @@ test.skip("tool caching", async () => {
   const res = await model.invoke(messages);
   console.log(res);
   expect(
-    res.response_metadata.usage.cache_creation_input_tokens
+    res.usage_metadata?.input_token_details?.cache_creation
   ).toBeGreaterThan(0);
-  expect(res.response_metadata.usage.cache_read_input_tokens).toBe(0);
+  expect(res.usage_metadata?.input_token_details?.cache_read).toBe(0);
   const res2 = await model.invoke(messages);
-  expect(res2.response_metadata.usage.cache_creation_input_tokens).toBe(0);
-  expect(res2.response_metadata.usage.cache_read_input_tokens).toBeGreaterThan(
+  expect(res2.usage_metadata?.input_token_details?.cache_creation).toBe(0);
+  expect(res2.usage_metadata?.input_token_details?.cache_read).toBeGreaterThan(
     0
   );
 });
@@ -791,7 +790,7 @@ test.skip("Test ChatAnthropic with custom client", async () => {
   const message = new HumanMessage("Hello!");
   const res = await chat.invoke([message]);
   // console.log({ res });
-  expect(res.response_metadata.usage).toBeDefined();
+  expect(res.usage_metadata?.input_token_details).toBeDefined();
 });
 
 test("human message caching", async () => {
@@ -826,12 +825,12 @@ test("human message caching", async () => {
 
   const res = await model.invoke(messages);
   expect(
-    res.response_metadata.usage.cache_creation_input_tokens
+    res.usage_metadata?.input_token_details?.cache_creation
   ).toBeGreaterThan(0);
-  expect(res.response_metadata.usage.cache_read_input_tokens).toBe(0);
+  expect(res.usage_metadata?.input_token_details?.cache_read).toBe(0);
   const res2 = await model.invoke(messages);
-  expect(res2.response_metadata.usage.cache_creation_input_tokens).toBe(0);
-  expect(res2.response_metadata.usage.cache_read_input_tokens).toBeGreaterThan(
+  expect(res2.usage_metadata?.input_token_details?.cache_creation).toBe(0);
+  expect(res2.usage_metadata?.input_token_details?.cache_read).toBeGreaterThan(
     0
   );
 });
