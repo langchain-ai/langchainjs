@@ -30,16 +30,22 @@ export function _makeMessageChunkFromAnthropicEvent(
         filteredAdditionalKwargs[key] = value;
       }
     }
+    const { input_tokens, output_tokens, ...rest } = usage ?? {};
     const usageMetadata: UsageMetadata = {
-      input_tokens: usage.input_tokens,
-      output_tokens: usage.output_tokens,
-      total_tokens: usage.input_tokens + usage.output_tokens,
+      input_tokens,
+      output_tokens,
+      total_tokens: input_tokens + output_tokens,
     };
     return {
       chunk: new AIMessageChunk({
         content: fields.coerceContentToString ? "" : [],
         additional_kwargs: filteredAdditionalKwargs,
         usage_metadata: fields.streamUsage ? usageMetadata : undefined,
+        response_metadata: {
+          usage: {
+            ...rest,
+          },
+        },
         id: data.message.id,
       }),
     };
