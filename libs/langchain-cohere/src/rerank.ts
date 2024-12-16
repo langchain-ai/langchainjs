@@ -60,7 +60,7 @@ export class CohereRerank extends BaseDocumentCompressor {
     documents: Array<DocumentInterface>,
     query: string
   ): Promise<Array<DocumentInterface>> {
-    if (documents == null || documents.length == 0) {
+    if (documents == null || documents.length === 0) {
       return [];
     }
     const _docs = documents.map((doc) => doc.pageContent);

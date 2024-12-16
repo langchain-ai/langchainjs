@@ -21,7 +21,7 @@ export async function formatDocuments({
   documents: Document[];
   config?: RunnableConfig;
 }) {
-  if (documents == null || documents.length == 0) {
+  if (documents == null || documents.length === 0) {
     return "";
   }
   const formattedDocs = await Promise.all(
