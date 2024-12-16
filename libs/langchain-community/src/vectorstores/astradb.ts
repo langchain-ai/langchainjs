@@ -7,6 +7,7 @@ import {
   CreateCollectionOptions,
   Db,
   InsertManyError,
+  InsertManyOptions,
 } from "@datastax/astra-db-ts";
 
 import {
@@ -135,19 +136,22 @@ export class AstraDBVectorStore extends VectorStore {
    *
    * @param vectors Vectors to save.
    * @param documents The documents associated with the vectors.
+   * @param options Optional configuration for saving vectors:
+   *        - `ids`: An array of unique identifiers for the documents. If not provided, IDs will be auto-generated.
+   *        - `insertOptions`: Additional options to customize the `insertMany` operation (e.g., `ordered`, `bypassDocumentValidation`).
    * @returns Promise that resolves when the vectors have been added.
    */
   async addVectors(
     vectors: number[][],
     documents: Document[],
-    options?: string[]
+    options?: { ids?: string[]; insertOptions?: InsertManyOptions }
   ) {
     if (!this.collection) {
       throw new Error("Must connect to a collection before adding vectors");
     }
 
     const docs = vectors.map((embedding, idx) => ({
-      [this.idKey]: options?.[idx] ?? uuid.v4(),
+      [this.idKey]: options?.ids?.[idx] ?? uuid.v4(),
       [this.contentKey]: documents[idx].pageContent,
       $vector: embedding,
       ...documents[idx].metadata,
@@ -161,6 +165,7 @@ export class AstraDBVectorStore extends VectorStore {
     try {
       insertResults = await this.collection.insertMany(docs, {
         ordered: false,
+        ...options?.insertOptions,
       });
     } catch (error) {
       if (isInsertManyError(error)) {
@@ -192,10 +197,15 @@ export class AstraDBVectorStore extends VectorStore {
    * Method that adds documents to AstraDB.
    *
    * @param documents Array of documents to add to AstraDB.
-   * @param options Optional ids for the documents.
+   * @param options Optional configuration for saving documents:
+   *        - `ids`: An array of unique identifiers for the documents. If not provided, IDs will be auto-generated.
+   *        - `insertOptions`: Additional options to customize the `insertMany` operation (e.g., `ordered`, `bypassDocumentValidation`).
    * @returns Promise that resolves the documents have been added.
    */
-  async addDocuments(documents: Document[], options?: string[]) {
+  async addDocuments(
+    documents: Document[],
+    options?: { ids?: string[]; insertOptions?: InsertManyOptions }
+  ) {
     if (!this.collection) {
       throw new Error("Must connect to a collection before adding vectors");
     }
