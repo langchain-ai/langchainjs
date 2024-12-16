@@ -5,6 +5,16 @@ const swc = require("@swc/core");
 const path = require("path");
 const fs = require("fs");
 
+// Directories generated inside the API docs (excluding "modules").
+const CATEGORIES = [
+  "classes",
+  "enums",
+  "functions",
+  "interfaces",
+  "types",
+  "variables",
+];
+
 /**
  * Edge cases where the import will not match the proper API ref path.
  * This is typically caused by a re-export, or an aliased export so we
@@ -90,15 +100,6 @@ const SYMBOLS_TO_SKIP_MAP = {
 async function webpackLoader(content, map, meta) {
   const cb = this.async();
   const BASE_URL = "https://api.js.langchain.com";
-  // Directories generated inside the API docs (excluding "modules").
-  const CATEGORIES = [
-    "classes",
-    "enums",
-    "functions",
-    "interfaces",
-    "types",
-    "variables",
-  ];
 
   if (!this.resourcePath.endsWith(".ts")) {
     cb(null, JSON.stringify({ content, imports: [] }), map, meta);
@@ -177,12 +178,13 @@ async function webpackLoader(content, map, meta) {
       let cleanedSource = "";
       if (source.startsWith("@langchain/")) {
         cleanedSource = source
-          .replace("@langchain/", "langchain_")
-          .replaceAll("/", "_")
-          .replaceAll("-", "_");
+          .replace("@langchain/", "_langchain_")
+          .replace(/(?<=_langchain_[^/]+)\//, ".")
+          .replaceAll(/\//g, "_")
+          .replaceAll(/-/g, "_");
       } else if (source.startsWith("langchain")) {
         cleanedSource = source
-          .replace("langchain/", "langchain_")
+          .replace("langchain/", "langchain.")
           .replaceAll("/", "_")
           .replaceAll("-", "_");
       } else {
@@ -191,6 +193,7 @@ async function webpackLoader(content, map, meta) {
         );
       }
       const componentPath = `${cleanedSource}.${imported}.html`;
+      const componentIndexPath = `${cleanedSource}.index.${imported}.html`;
 
       /**
        * Defaults to null, reassigned to string if a match is found.
@@ -202,11 +205,19 @@ async function webpackLoader(content, map, meta) {
           return;
         }
         const fullPath = `${category}/${componentPath}`;
+        const fullIndexPath = `${category}/${componentIndexPath}`;
+
         const pathExists = fs.existsSync(getDocsPath(fullPath));
         if (pathExists) {
           actualPath = fullPath;
+          return;
+        }
+        const indexPathExists = fs.existsSync(getDocsPath(fullIndexPath));
+        if (indexPathExists) {
+          actualPath = fullIndexPath;
         }
       });
+
       return actualPath;
     };
 
@@ -222,6 +233,7 @@ async function webpackLoader(content, map, meta) {
         const cleanedResourcePath = this.resourcePath.includes("examples/")
           ? this.resourcePath.split("examples/")[1]
           : this.resourcePath;
+    
         console.warn(
           {
             imported,
