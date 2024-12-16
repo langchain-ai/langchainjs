@@ -30,11 +30,17 @@ export function _makeMessageChunkFromAnthropicEvent(
         filteredAdditionalKwargs[key] = value;
       }
     }
-    const { input_tokens, output_tokens, ...rest } = usage ?? {};
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { input_tokens, output_tokens, ...rest }: Record<string, any> =
+      usage ?? {};
     const usageMetadata: UsageMetadata = {
       input_tokens,
       output_tokens,
       total_tokens: input_tokens + output_tokens,
+      input_token_details: {
+        cache_creation: rest.cache_creation_input_tokens,
+        cache_read: rest.cache_read_input_tokens,
+      },
     };
     return {
       chunk: new AIMessageChunk({
@@ -54,6 +60,12 @@ export function _makeMessageChunkFromAnthropicEvent(
       input_tokens: 0,
       output_tokens: data.usage.output_tokens,
       total_tokens: data.usage.output_tokens,
+      input_token_details: {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        cache_creation: (data.usage as any).cache_creation_input_tokens,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        cache_read: (data.usage as any).cache_read_input_tokens,
+      },
     };
     return {
       chunk: new AIMessageChunk({
@@ -171,6 +183,10 @@ export function anthropicResponseToChatMessages(
           input_tokens: usage.input_tokens ?? 0,
           output_tokens: usage.output_tokens ?? 0,
           total_tokens: (usage.input_tokens ?? 0) + (usage.output_tokens ?? 0),
+          input_token_details: {
+            cache_creation: usage.cache_creation_input_tokens,
+            cache_read: usage.cache_read_input_tokens,
+          },
         }
       : undefined;
   if (messages.length === 1 && messages[0].type === "text") {
