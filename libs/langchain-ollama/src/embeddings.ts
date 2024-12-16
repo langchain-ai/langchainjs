@@ -35,7 +35,7 @@ interface OllamaEmbeddingsParams extends EmbeddingsParams {
   /**
    * Optional HTTP Headers to include in the request.
    */
-  headers?: Headers;
+  headers?: Record<string, string>;
 
   /**
    * Advanced Ollama API request parameters in camelCase, see
