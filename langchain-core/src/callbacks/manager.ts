@@ -1245,18 +1245,6 @@ export class CallbackManager
         }
       }
     }
-    if (inheritableTags || localTags) {
-      if (callbackManager) {
-        callbackManager.addTags(inheritableTags ?? []);
-        callbackManager.addTags(localTags ?? [], false);
-      }
-    }
-    if (inheritableMetadata || localMetadata) {
-      if (callbackManager) {
-        callbackManager.addMetadata(inheritableMetadata ?? {});
-        callbackManager.addMetadata(localMetadata ?? {}, false);
-      }
-    }
 
     for (const {
       contextVar,
@@ -1276,9 +1264,26 @@ export class CallbackManager
         handler = new (handlerClass as any)({});
       }
       if (handler !== undefined) {
-        if (!callbackManager?.handlers.some((h) => h.name === handler!.name)) {
-          callbackManager?.addHandler(handler, inheritable);
+        if (!callbackManager) {
+          callbackManager = new CallbackManager();
         }
+
+        if (!callbackManager.handlers.some((h) => h.name === handler!.name)) {
+          callbackManager.addHandler(handler, inheritable);
+        }
+      }
+    }
+
+    if (inheritableTags || localTags) {
+      if (callbackManager) {
+        callbackManager.addTags(inheritableTags ?? []);
+        callbackManager.addTags(localTags ?? [], false);
+      }
+    }
+    if (inheritableMetadata || localMetadata) {
+      if (callbackManager) {
+        callbackManager.addMetadata(inheritableMetadata ?? {});
+        callbackManager.addMetadata(localMetadata ?? {}, false);
       }
     }
 
