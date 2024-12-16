@@ -625,3 +625,64 @@ test("Can bound and invoke different tool types", async () => {
   );
   expect(result.tool_calls?.length).toBeGreaterThanOrEqual(1);
 });
+
+test("Can call and use two tool calls at once", async () => {
+  const tool = {
+    name: "generate_random_joke",
+    description: "Generate a random joke.",
+    schema: z.object({
+      prompt: z.string().describe("The prompt to generate the joke for."),
+    }),
+  };
+  const largeModel = new ChatAnthropic({
+    model: "claude-3-5-sonnet-latest",
+    temperature: 0,
+  }).bindTools([tool]);
+
+  const inputMessage = new HumanMessage(
+    "Generate three (3) random jokes. Please use the generate_random_joke tool, and call it three times in your response to me. Ensure you call the tool three times before responding to me. This is very important."
+  );
+
+  const result = await largeModel.invoke([inputMessage]);
+  expect(result.tool_calls).toHaveLength(3);
+
+  const toolResult1 = new ToolMessage({
+    tool_call_id: result.tool_calls?.[0].id || "",
+    name: "generate_random_joke",
+    content: [
+      {
+        type: "text",
+        text: "This is a joke.",
+      },
+    ],
+  });
+  const toolResult2 = new ToolMessage({
+    tool_call_id: result.tool_calls?.[1].id || "",
+    name: "generate_random_joke",
+    content: [
+      {
+        type: "text",
+        text: "This is the second joke!!",
+      },
+    ],
+  });
+  const toolResult3 = new ToolMessage({
+    tool_call_id: result.tool_calls?.[2].id || "",
+    name: "generate_random_joke",
+    content: "This is the third joke!!",
+  });
+
+  const responseHumanMessage = new HumanMessage(
+    "Please rate all these jokes on a scale of 1-10. Rate them on how funny you think they are."
+  );
+  const result2 = await largeModel.invoke([
+    inputMessage,
+    result,
+    toolResult1,
+    toolResult2,
+    toolResult3,
+    responseHumanMessage,
+  ]);
+
+  expect(result2.content.length).toBeGreaterThan(5);
+});
