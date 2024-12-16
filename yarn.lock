@@ -12673,9 +12673,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@langchain/langgraph@npm:^0.2.32":
-  version: 0.2.32
-  resolution: "@langchain/langgraph@npm:0.2.32"
+"@langchain/langgraph@npm:^0.2.34":
+  version: 0.2.34
+  resolution: "@langchain/langgraph@npm:0.2.34"
   dependencies:
     "@langchain/langgraph-checkpoint": ~0.0.13
     "@langchain/langgraph-sdk": ~0.0.21
@@ -12683,7 +12683,7 @@ __metadata:
     zod: ^3.23.8
   peerDependencies:
     "@langchain/core": ">=0.2.36 <0.3.0 || >=0.3.9 < 0.4.0"
-  checksum: dd313d471abdf2413a4867eaa6c291dedfd3b750d3b3a742684a8123e26c790c5ab0eadfa0e0db90195b4317fec60a8630b0f4fd62a50edcfc430b1654e81f55
+  checksum: b60a639ef0b368637c8663f2ca89ea95192408d4117c1ea7d93cfa8cb4edb016c684bb7f8ace5ba1cbbb7279c99e5dfa0929dcdf2a284a0c85ae4b5a73baa23e
   languageName: node
   linkType: hard
 
@@ -24130,7 +24130,7 @@ __metadata:
     "@docusaurus/preset-classic": 2.4.3
     "@docusaurus/remark-plugin-npm2yarn": 2.4.3
     "@docusaurus/theme-mermaid": 2.4.3
-    "@langchain/langgraph": ^0.2.32
+    "@langchain/langgraph": ^0.2.34
     "@langchain/scripts": "workspace:*"
     "@mdx-js/react": ^1.6.22
     "@microsoft/fetch-event-source": ^2.0.1
@@ -27693,7 +27693,7 @@ __metadata:
     "@langchain/google-vertexai": "workspace:*"
     "@langchain/google-vertexai-web": "workspace:*"
     "@langchain/groq": "workspace:*"
-    "@langchain/langgraph": ^0.2.32
+    "@langchain/langgraph": ^0.2.34
     "@langchain/mistralai": "workspace:*"
     "@langchain/mongodb": "workspace:*"
     "@langchain/nomic": "workspace:*"
