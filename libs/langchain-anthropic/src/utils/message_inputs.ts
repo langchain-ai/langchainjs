@@ -12,8 +12,12 @@ import {
 } from "@langchain/core/messages";
 import { ToolCall } from "@langchain/core/messages/tool";
 import {
+  AnthropicImageBlockParam,
   AnthropicMessageCreateParams,
+  AnthropicTextBlockParam,
   AnthropicToolResponse,
+  AnthropicToolResultBlockParam,
+  AnthropicToolUseBlockParam,
 } from "../types.js";
 
 function _formatImage(imageUrl: string) {
@@ -250,7 +254,79 @@ export function _convertMessagesToAnthropicPayload(
     }
   });
   return {
-    messages: formattedMessages,
+    messages: mergeMessages(formattedMessages),
     system,
   } as AnthropicMessageCreateParams;
+}
+
+function mergeMessages(messages: AnthropicMessageCreateParams["messages"]) {
+  if (!messages || messages.length <= 1) {
+    return messages;
+  }
+
+  const result: AnthropicMessageCreateParams["messages"] = [];
+  let currentMessage = messages[0];
+
+  const normalizeContent = (
+    content:
+      | string
+      | Array<
+          | AnthropicTextBlockParam
+          | AnthropicImageBlockParam
+          | AnthropicToolUseBlockParam
+          | AnthropicToolResultBlockParam
+        >
+  ): Array<
+    | AnthropicTextBlockParam
+    | AnthropicImageBlockParam
+    | AnthropicToolUseBlockParam
+    | AnthropicToolResultBlockParam
+  > => {
+    if (typeof content === "string") {
+      return [
+        {
+          type: "text",
+          text: content,
+        },
+      ];
+    }
+    return content;
+  };
+
+  const isToolResultMessage = (msg: (typeof messages)[0]) => {
+    if (msg.role !== "user") return false;
+
+    if (typeof msg.content === "string") {
+      return false;
+    }
+
+    return (
+      Array.isArray(msg.content) &&
+      msg.content.every((item) => item.type === "tool_result")
+    );
+  };
+
+  for (let i = 1; i < messages.length; i++) {
+    const nextMessage = messages[i];
+
+    if (
+      isToolResultMessage(currentMessage) &&
+      isToolResultMessage(nextMessage)
+    ) {
+      // Merge the messages by combining their content arrays
+      currentMessage = {
+        ...currentMessage,
+        content: [
+          ...normalizeContent(currentMessage.content),
+          ...normalizeContent(nextMessage.content),
+        ],
+      };
+    } else {
+      result.push(currentMessage);
+      currentMessage = nextMessage;
+    }
+  }
+
+  result.push(currentMessage);
+  return result;
 }
