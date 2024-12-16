@@ -721,6 +721,16 @@ test("system prompt caching", async () => {
   expect(res2.response_metadata.usage.cache_read_input_tokens).toBeGreaterThan(
     0
   );
+  const stream = await model.stream(messages);
+  let agg;
+  for await (const chunk of stream) {
+    agg = agg === undefined ? chunk : concat(agg, chunk);
+  }
+  expect(agg).toBeDefined();
+  expect(agg!.response_metadata.usage.cache_creation_input_tokens).toBe(0);
+  expect(agg!.response_metadata.usage.cache_read_input_tokens).toBeGreaterThan(
+    0
+  );
 });
 
 // TODO: Add proper test with long tool content
