@@ -20,6 +20,8 @@ export interface AzureCosmosDBMongoChatHistoryDBConfig {
   readonly collectionName?: string;
 }
 
+const ID_KEY = "sessionId";
+
 export class AzureCosmosDBMongoChatMessageHistory extends BaseListChatMessageHistory {
   lc_namespace = ["langchain", "stores", "message", "azurecosmosdb"];
 
@@ -39,8 +41,6 @@ export class AzureCosmosDBMongoChatMessageHistory extends BaseListChatMessageHis
 
   private sessionId: string;
 
-  private idKey = "sessionId";
-
   initialize: () => Promise<void>;
 
   constructor(
@@ -54,9 +54,7 @@ export class AzureCosmosDBMongoChatMessageHistory extends BaseListChatMessageHis
       getEnvironmentVariable("AZURE_COSMOSDB_MONGODB_CONNECTION_STRING");
 
     if (!dbConfig.client && !connectionString) {
-      throw new Error(
-        "Mongo client or connection string must be set."
-      );
+      throw new Error("Mongo client or connection string must be set.");
     }
 
     if (!dbConfig.client) {
@@ -68,8 +66,8 @@ export class AzureCosmosDBMongoChatMessageHistory extends BaseListChatMessageHis
 
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const client = dbConfig.client || this.client!;
-    const databaseName = dbConfig.databaseName ?? "documentsDB";
-    const collectionName = dbConfig.collectionName ?? "documents";
+    const databaseName = dbConfig.databaseName ?? "chatHistoryDB";
+    const collectionName = dbConfig.collectionName ?? "chatHistory";
 
     this.sessionId = sessionId;
 
@@ -121,7 +119,7 @@ export class AzureCosmosDBMongoChatMessageHistory extends BaseListChatMessageHis
     await this.initialize();
 
     const document = await this.collection.findOne({
-      [this.idKey]: this.sessionId,
+      [ID_KEY]: this.sessionId,
     });
     const messages = document?.messages || [];
     return mapStoredMessagesToChatMessages(messages);
@@ -137,7 +135,7 @@ export class AzureCosmosDBMongoChatMessageHistory extends BaseListChatMessageHis
 
     const messages = mapChatMessagesToStoredMessages([message]);
     await this.collection.updateOne(
-      { [this.idKey]: this.sessionId },
+      { [ID_KEY]: this.sessionId },
       {
         $push: { messages: { $each: messages } } as PushOperator<Document>,
       },
@@ -152,6 +150,6 @@ export class AzureCosmosDBMongoChatMessageHistory extends BaseListChatMessageHis
   async clear(): Promise<void> {
     await this.initialize();
 
-    await this.collection.deleteOne({ [this.idKey]: this.sessionId });
+    await this.collection.deleteOne({ [ID_KEY]: this.sessionId });
   }
 }

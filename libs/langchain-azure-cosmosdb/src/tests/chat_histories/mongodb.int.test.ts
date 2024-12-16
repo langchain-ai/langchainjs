@@ -5,7 +5,7 @@ import { AIMessage, HumanMessage } from "@langchain/core/messages";
 import {
   AzureCosmosDBMongoChatMessageHistory,
   AzureCosmosDBMongoChatHistoryDBConfig,
-} from "../chat_histories/mongodb.js";
+} from "../../chat_histories/mongodb.js";
 
 afterAll(async () => {
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
