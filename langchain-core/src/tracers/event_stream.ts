@@ -2,6 +2,7 @@ import { BaseTracer, type Run } from "./base.js";
 import {
   BaseCallbackHandler,
   BaseCallbackHandlerInput,
+  CallbackHandlerPrefersStreaming,
 } from "../callbacks/base.js";
 import { IterableReadableStream } from "../utils/stream.js";
 import { AIMessageChunk } from "../messages/ai.js";
@@ -145,7 +146,10 @@ export const isStreamEventsHandler = (
  * handler that logs the execution of runs and emits `RunLog` instances to a
  * `RunLogStream`.
  */
-export class EventStreamCallbackHandler extends BaseTracer {
+export class EventStreamCallbackHandler
+  extends BaseTracer
+  implements CallbackHandlerPrefersStreaming
+{
   protected autoClose = true;
 
   protected includeNames?: string[];
@@ -171,6 +175,8 @@ export class EventStreamCallbackHandler extends BaseTracer {
   public receiveStream: IterableReadableStream<StreamEvent>;
 
   name = "event_stream_tracer";
+
+  lc_prefer_streaming = true;
 
   constructor(fields?: EventStreamCallbackHandlerInput) {
     super({ _awaitHandler: true, ...fields });

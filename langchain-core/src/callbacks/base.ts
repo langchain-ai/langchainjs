@@ -286,6 +286,19 @@ abstract class BaseCallbackHandlerMethodsClass {
 export type CallbackHandlerMethods = BaseCallbackHandlerMethodsClass;
 
 /**
+ * Interface for handlers that can indicate a preference for streaming responses.
+ * When implemented, this allows the handler to signal whether it prefers to receive
+ * streaming responses from language models rather than complete responses.
+ */
+export interface CallbackHandlerPrefersStreaming {
+  readonly lc_prefer_streaming: boolean;
+}
+
+export function callbackHandlerPrefersStreaming(x: BaseCallbackHandler) {
+  return "lc_prefer_streaming" in x && x.lc_prefer_streaming;
+}
+
+/**
  * Abstract base class for creating callback handlers in the LangChain
  * framework. It provides a set of optional methods that can be overridden
  * in derived classes to handle various events during the execution of a
