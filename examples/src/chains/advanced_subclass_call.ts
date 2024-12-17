@@ -3,6 +3,7 @@ import { BaseChain, ChainInputs } from "langchain/chains";
 import { BasePromptTemplate, PromptTemplate } from "@langchain/core/prompts";
 import { CallbackManagerForChainRun } from "@langchain/core/callbacks/manager";
 import { ChainValues } from "@langchain/core/utils/types";
+// todo: remove before mergign
 
 export interface MyCustomChainInputs extends ChainInputs {
   llm: BaseLanguageModelInterface;
