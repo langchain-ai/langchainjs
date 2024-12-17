@@ -1,0 +1,23 @@
+---
+sidebar_class_name: node-only
+---
+
+# Jira
+
+:::tip Compatibility
+Only available on Node.js.
+:::
+
+This covers how to load document objects from issues in a Jira projects.
+
+## Credentials
+
+- You'll need to set up an access token and provide it along with your jira username in order to authenticate the request
+- You'll also need the `project key` for the project containing the issues to load as documents.
+
+## Usage
+
+import CodeBlock from "@theme/CodeBlock";
+import Example from "@examples/document_loaders/jira.ts";
+
+<CodeBlock language="typescript">{Example}</CodeBlock>
