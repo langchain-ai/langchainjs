@@ -42,10 +42,11 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 18.x
+
       - name: Cache turbo build setup
         uses: actions/cache@v4
         with: 
-          path: .turbo
+          path: node_modules/.cache/turbo
           key: ${{ runner.os }}-turbo-${{ github.sha }}
           restore-keys: |
             ${{ runner.os }}-turbo-
