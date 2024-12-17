@@ -41,4 +41,4 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
       - name: Build examples
-        run: yarn turbo:command build --filter=examples
+        run: yarn turbo:command build --filter=examples --concurrency=1
