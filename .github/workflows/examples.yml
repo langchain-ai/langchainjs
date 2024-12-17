@@ -28,6 +28,10 @@ concurrency:
 
 jobs:
   build:
+    env:
+     TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+     TURBO_TEAM: ${{ vars.TURBO_TEAM }}
+     TURBO_REMOTE_ONLY: true
     name: Build
     runs-on: ubuntu-latest
     strategy:
@@ -38,7 +42,16 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 18.x
+      - name: Cache turbo build setup
+        uses: actions/cache@v4
+        with: 
+          path: .turbo
+          key: ${{ runner.os }}-turbo-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-turbo-
+
       - name: Install dependencies
         run: yarn install --immutable
+        
       - name: Build examples
         run: yarn turbo:command build --filter=examples
