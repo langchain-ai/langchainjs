@@ -47,6 +47,11 @@ interface OptionalEnumFieldProps {
   fieldKwargs?: object;
 }
 
+interface SchemaProperty {
+  key: string;
+  value: string;
+}
+
 function toTitleCase(str: string): string {
   return str
     .split(" ")
@@ -86,43 +91,102 @@ function createOptionalEnumType({
   return schema;
 }
 
-function createSchema(allowedNodes: string[], allowedRelationships: string[]) {
+function createNodeSchema(allowedNodes: string[], nodeProperties: string[]) {
+  const nodeSchema = z.object({
+    id: z.string(),
+    type: createOptionalEnumType({
+      enumValues: allowedNodes,
+      description: "The type or label of the node.",
+    }),
+  });
+
+  return nodeProperties.length > 0
+    ? nodeSchema.extend({
+        properties: z
+          .array(
+            z.object({
+              key: createOptionalEnumType({
+                enumValues: nodeProperties,
+                description: "Property key.",
+              }),
+              value: z.string().describe("Extracted value."),
+            })
+          )
+          .describe(`List of node properties`),
+      })
+    : nodeSchema;
+}
+
+function createRelationshipSchema(
+  allowedNodes: string[],
+  allowedRelationships: string[],
+  relationshipProperties: string[]
+) {
+  const relationshipSchema = z.object({
+    sourceNodeId: z.string(),
+    sourceNodeType: createOptionalEnumType({
+      enumValues: allowedNodes,
+      description: "The source node of the relationship.",
+    }),
+    relationshipType: createOptionalEnumType({
+      enumValues: allowedRelationships,
+      description: "The type of the relationship.",
+      isRel: true,
+    }),
+    targetNodeId: z.string(),
+    targetNodeType: createOptionalEnumType({
+      enumValues: allowedNodes,
+      description: "The target node of the relationship.",
+    }),
+  });
+
+  return relationshipProperties.length > 0
+    ? relationshipSchema.extend({
+        properties: z
+          .array(
+            z.object({
+              key: createOptionalEnumType({
+                enumValues: relationshipProperties,
+                description: "Property key.",
+              }),
+              value: z.string().describe("Extracted value."),
+            })
+          )
+          .describe(`List of relationship properties`),
+      })
+    : relationshipSchema;
+}
+
+function createSchema(
+  allowedNodes: string[],
+  allowedRelationships: string[],
+  nodeProperties: string[],
+  relationshipProperties: string[]
+) {
+  const nodeSchema = createNodeSchema(allowedNodes, nodeProperties);
+  const relationshipSchema = createRelationshipSchema(
+    allowedNodes,
+    allowedRelationships,
+    relationshipProperties
+  );
+
   const dynamicGraphSchema = z.object({
-    nodes: z
-      .array(
-        z.object({
-          id: z.string(),
-          type: createOptionalEnumType({
-            enumValues: allowedNodes,
-            description: "The type or label of the node.",
-          }),
-        })
-      )
-      .describe("List of nodes"),
+    nodes: z.array(nodeSchema).describe("List of nodes"),
     relationships: z
-      .array(
-        z.object({
-          sourceNodeId: z.string(),
-          sourceNodeType: createOptionalEnumType({
-            enumValues: allowedNodes,
-            description: "The source node of the relationship.",
-          }),
-          relationshipType: createOptionalEnumType({
-            enumValues: allowedRelationships,
-            description: "The type of the relationship.",
-            isRel: true,
-          }),
-          targetNodeId: z.string(),
-          targetNodeType: createOptionalEnumType({
-            enumValues: allowedNodes,
-            description: "The target node of the relationship.",
-          }),
-        })
-      )
+      .array(relationshipSchema)
       .describe("List of relationships."),
   });
 
   return dynamicGraphSchema;
+}
+
+function convertPropertiesToRecord(
+  properties: SchemaProperty[]
+): Record<string, string> {
+  return properties.reduce((accumulator: Record<string, string>, prop) => {
+    accumulator[prop.key] = prop.value;
+    return accumulator;
+  }, {});
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -130,6 +194,9 @@ function mapToBaseNode(node: any): Node {
   return new Node({
     id: node.id,
     type: node.type ? toTitleCase(node.type) : "",
+    properties: node.properties
+      ? convertPropertiesToRecord(node.properties)
+      : {},
   });
 }
 
@@ -149,6 +216,9 @@ function mapToBaseRelationship(relationship: any): Relationship {
         : "",
     }),
     type: relationship.relationshipType.replace(" ", "_").toUpperCase(),
+    properties: relationship.properties
+      ? convertPropertiesToRecord(relationship.properties)
+      : {},
   });
 }
 
@@ -158,6 +228,8 @@ export interface LLMGraphTransformerProps {
   allowedRelationships?: string[];
   prompt?: ChatPromptTemplate;
   strictMode?: boolean;
+  nodeProperties?: string[];
+  relationshipProperties?: string[];
 }
 
 export class LLMGraphTransformer {
@@ -170,12 +242,18 @@ export class LLMGraphTransformer {
 
   strictMode: boolean;
 
+  nodeProperties: string[];
+
+  relationshipProperties: string[];
+
   constructor({
     llm,
     allowedNodes = [],
     allowedRelationships = [],
     prompt = DEFAULT_PROMPT,
     strictMode = true,
+    nodeProperties = [],
+    relationshipProperties = [],
   }: LLMGraphTransformerProps) {
     if (typeof llm.withStructuredOutput !== "function") {
       throw new Error(
@@ -186,9 +264,16 @@ export class LLMGraphTransformer {
     this.allowedNodes = allowedNodes;
     this.allowedRelationships = allowedRelationships;
     this.strictMode = strictMode;
+    this.nodeProperties = nodeProperties;
+    this.relationshipProperties = relationshipProperties;
 
     // Define chain
-    const schema = createSchema(allowedNodes, allowedRelationships);
+    const schema = createSchema(
+      allowedNodes,
+      allowedRelationships,
+      nodeProperties,
+      relationshipProperties
+    );
     const structuredLLM = llm.withStructuredOutput(zodToJsonSchema(schema));
     this.chain = prompt.pipe(structuredLLM);
   }

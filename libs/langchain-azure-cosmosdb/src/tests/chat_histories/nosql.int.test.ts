@@ -6,7 +6,7 @@ import { HumanMessage, AIMessage } from "@langchain/core/messages";
 import { CosmosClient } from "@azure/cosmos";
 import { DefaultAzureCredential } from "@azure/identity";
 import { ObjectId } from "mongodb";
-import { AzureCosmsosDBNoSQLChatMessageHistory } from "../chat_histories.js";
+import { AzureCosmsosDBNoSQLChatMessageHistory } from "../../chat_histories/nosql.js";
 
 const DATABASE_NAME = "langchainTestDB";
 const CONTAINER_NAME = "testContainer";
@@ -159,10 +159,41 @@ test("Test clear all sessions for a user", async () => {
   const result2 = await chatHistory1.getMessages();
   expect(result2).toEqual(expectedMessages);
 
-  await chatHistory1.clearAllSessionsForUser("user1");
+  await chatHistory1.clearAllSessions();
 
   const deletedResult1 = await chatHistory1.getMessages();
   const deletedResult2 = await chatHistory2.getMessages();
   expect(deletedResult1).toStrictEqual([]);
   expect(deletedResult2).toStrictEqual([]);
+});
+
+test("Test set context and get all sessions for a user", async () => {
+  const session1 = {
+    userId: "user1",
+    databaseName: DATABASE_NAME,
+    containerName: CONTAINER_NAME,
+    sessionId: new ObjectId().toString(),
+  };
+  const context1 = { title: "Best vocalist" };
+  const chatHistory1 = new AzureCosmsosDBNoSQLChatMessageHistory(session1);
+
+  await chatHistory1.setContext(context1);
+  await chatHistory1.addUserMessage("Who is the best vocalist?");
+  await chatHistory1.addAIMessage("Ozzy Osbourne");
+
+  const chatHistory2 = new AzureCosmsosDBNoSQLChatMessageHistory({
+    ...session1,
+    sessionId: new ObjectId().toString(),
+  });
+  const context2 = { title: "Best guitarist" };
+
+  await chatHistory2.addUserMessage("Who is the best guitarist?");
+  await chatHistory2.addAIMessage("Jimi Hendrix");
+  await chatHistory2.setContext(context2);
+
+  const sessions = await chatHistory1.getAllSessions();
+
+  expect(sessions.length).toBe(2);
+  expect(sessions[0].context).toEqual(context1);
+  expect(sessions[1].context).toEqual(context2);
 });

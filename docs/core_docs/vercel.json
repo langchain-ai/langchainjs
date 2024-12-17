@@ -62,6 +62,18 @@
       "destination": "/docs/integrations/llms/together/"
     },
     {
+      "source": "/docs/tutorials/query_analysis(/?)",
+      "destination": "/docs/tutorials/rag#query-analysis/"
+    },
+    {
+      "source": "/docs/tutorials/local_rag(/?)",
+      "destination": "/docs/tutorials/rag/"
+    },
+    {
+      "source": "/docs/tutorials/pdf_qa(/?)",
+      "destination": "/docs/tutorials/retrievers/"
+    },
+    {
       "source": "/docs/tutorials/agents(/?)",
       "destination": "https://langchain-ai.github.io/langgraphjs/tutorials/quickstart/"
     },
