@@ -108,7 +108,13 @@ function _constructMessageFromParams(
   } else if (type === "system") {
     return new SystemMessage(rest);
   } else if (type === "developer") {
-    return new SystemMessage(rest);
+    return new SystemMessage({
+      ...rest,
+      additional_kwargs: {
+        ...rest.additional_kwargs,
+        __openai_role__: "developer",
+      },
+    });
   } else if (type === "tool" && "tool_call_id" in rest) {
     return new ToolMessage({
       ...rest,
