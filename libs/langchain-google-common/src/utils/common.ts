@@ -9,12 +9,13 @@ import type {
   GoogleAIModelParams,
   GoogleAIModelRequestParams,
   GoogleAIToolType,
-  GoogleLLMModelFamily,
+  VertexModelFamily,
 } from "../types.js";
 import {
   jsonSchemaToGeminiParameters,
   zodToGeminiParameters,
 } from "./zod_to_gemini_parameters.js";
+import { isModelClaude, validateClaudeParams } from "./anthropic.js";
 
 export function copyAIModelParams(
   params: GoogleAIModelParams | undefined,
@@ -61,32 +62,43 @@ function processToolChoice(
 }
 
 export function convertToGeminiTools(tools: GoogleAIToolType[]): GeminiTool[] {
-  const geminiTools: GeminiTool[] = [
-    {
-      functionDeclarations: [],
-    },
-  ];
+  const geminiTools: GeminiTool[] = [];
+  let functionDeclarationsIndex = -1;
   tools.forEach((tool) => {
-    if (
-      "functionDeclarations" in tool &&
-      Array.isArray(tool.functionDeclarations)
-    ) {
-      const funcs: GeminiFunctionDeclaration[] = tool.functionDeclarations;
-      geminiTools[0].functionDeclarations?.push(...funcs);
-    } else if (isLangChainTool(tool)) {
-      const jsonSchema = zodToGeminiParameters(tool.schema);
-      geminiTools[0].functionDeclarations?.push({
-        name: tool.name,
-        description: tool.description ?? `A function available to call.`,
-        parameters: jsonSchema as GeminiFunctionSchema,
-      });
-    } else if (isOpenAITool(tool)) {
-      geminiTools[0].functionDeclarations?.push({
-        name: tool.function.name,
-        description:
-          tool.function.description ?? `A function available to call.`,
-        parameters: jsonSchemaToGeminiParameters(tool.function.parameters),
-      });
+    if ("googleSearchRetrieval" in tool || "retrieval" in tool) {
+      geminiTools.push(tool);
+    } else {
+      if (functionDeclarationsIndex === -1) {
+        geminiTools.push({
+          functionDeclarations: [],
+        });
+        functionDeclarationsIndex = geminiTools.length - 1;
+      }
+      if (
+        "functionDeclarations" in tool &&
+        Array.isArray(tool.functionDeclarations)
+      ) {
+        const funcs: GeminiFunctionDeclaration[] = tool.functionDeclarations;
+        geminiTools[functionDeclarationsIndex].functionDeclarations!.push(
+          ...funcs
+        );
+      } else if (isLangChainTool(tool)) {
+        const jsonSchema = zodToGeminiParameters(tool.schema);
+        geminiTools[functionDeclarationsIndex].functionDeclarations!.push({
+          name: tool.name,
+          description: tool.description ?? `A function available to call.`,
+          parameters: jsonSchema as GeminiFunctionSchema,
+        });
+      } else if (isOpenAITool(tool)) {
+        geminiTools[functionDeclarationsIndex].functionDeclarations!.push({
+          name: tool.function.name,
+          description:
+            tool.function.description ?? `A function available to call.`,
+          parameters: jsonSchemaToGeminiParameters(tool.function.parameters),
+        });
+      } else {
+        throw new Error(`Received invalid tool: ${JSON.stringify(tool)}`);
+      }
     }
   });
   return geminiTools;
@@ -143,13 +155,30 @@ export function copyAIModelParamsInto(
 
 export function modelToFamily(
   modelName: string | undefined
-): GoogleLLMModelFamily {
+): VertexModelFamily {
   if (!modelName) {
     return null;
   } else if (isModelGemini(modelName)) {
     return "gemini";
+  } else if (isModelClaude(modelName)) {
+    return "claude";
   } else {
     return null;
+  }
+}
+
+export function modelToPublisher(modelName: string | undefined): string {
+  const family = modelToFamily(modelName);
+  switch (family) {
+    case "gemini":
+    case "palm":
+      return "google";
+
+    case "claude":
+      return "anthropic";
+
+    default:
+      return "unknown";
   }
 }
 
@@ -161,6 +190,10 @@ export function validateModelParams(
   switch (modelToFamily(model)) {
     case "gemini":
       return validateGeminiParams(testParams);
+
+    case "claude":
+      return validateClaudeParams(testParams);
+
     default:
       throw new Error(
         `Unable to verify model params: ${JSON.stringify(params)}`

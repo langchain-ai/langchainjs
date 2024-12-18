@@ -1,35 +1,37 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { BaseLanguageModelCallOptions } from "@langchain/core/language_models/base";
 import {
   AsyncCaller,
   AsyncCallerCallOptions,
 } from "@langchain/core/utils/async_caller";
 import { getRuntimeEnvironment } from "@langchain/core/utils/env";
-import { StructuredToolParams } from "@langchain/core/tools";
-import { isLangChainTool } from "@langchain/core/utils/function_calling";
+import { BaseRunManager } from "@langchain/core/callbacks/manager";
+import { BaseCallbackHandler } from "@langchain/core/callbacks/base";
 import type {
   GoogleAIBaseLLMInput,
   GoogleConnectionParams,
-  GoogleLLMModelFamily,
   GooglePlatformType,
   GoogleResponse,
   GoogleLLMResponse,
-  GeminiContent,
-  GeminiGenerationConfig,
-  GeminiRequest,
-  GeminiSafetySetting,
-  GeminiTool,
-  GeminiFunctionDeclaration,
   GoogleAIModelRequestParams,
   GoogleRawResponse,
-  GoogleAIToolType,
+  GoogleAIAPI,
+  VertexModelFamily,
+  GoogleAIAPIConfig,
+  AnthropicAPIConfig,
+  GeminiAPIConfig,
 } from "./types.js";
 import {
   GoogleAbstractedClient,
   GoogleAbstractedClientOps,
   GoogleAbstractedClientOpsMethod,
 } from "./auth.js";
-import { zodToGeminiParameters } from "./utils/zod_to_gemini_parameters.js";
-import { getGeminiAPI } from "./utils/index.js";
+import {
+  getGeminiAPI,
+  modelToFamily,
+  modelToPublisher,
+} from "./utils/index.js";
+import { getAnthropicAPI } from "./utils/anthropic.js";
 
 export abstract class GoogleConnection<
   CallOptions extends AsyncCallerCallOptions,
@@ -148,9 +150,9 @@ export abstract class GoogleHostConnection<
   // Use the "platform" getter if you need this.
   platformType: GooglePlatformType | undefined;
 
-  endpoint = "us-central1-aiplatform.googleapis.com";
+  _endpoint: string | undefined;
 
-  location = "us-central1";
+  _location: string | undefined;
 
   apiVersion = "v1";
 
@@ -164,8 +166,8 @@ export abstract class GoogleHostConnection<
     this.caller = caller;
 
     this.platformType = fields?.platformType;
-    this.endpoint = fields?.endpoint ?? this.endpoint;
-    this.location = fields?.location ?? this.location;
+    this._endpoint = fields?.endpoint;
+    this._location = fields?.location;
     this.apiVersion = fields?.apiVersion ?? this.apiVersion;
     this.client = client;
   }
@@ -176,6 +178,22 @@ export abstract class GoogleHostConnection<
 
   get computedPlatformType(): GooglePlatformType {
     return "gcp";
+  }
+
+  get location(): string {
+    return this._location ?? this.computedLocation;
+  }
+
+  get computedLocation(): string {
+    return "us-central1";
+  }
+
+  get endpoint(): string {
+    return this._endpoint ?? this.computedEndpoint;
+  }
+
+  get computedEndpoint(): string {
+    return `${this.location}-aiplatform.googleapis.com`;
   }
 
   buildMethod(): GoogleAbstractedClientOpsMethod {
@@ -213,8 +231,9 @@ export abstract class GoogleAIConnection<
 
   client: GoogleAbstractedClient;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  api: any; // FIXME: Make this a real type
+  _apiName?: string;
+
+  apiConfig?: GoogleAIAPIConfig;
 
   constructor(
     fields: GoogleAIBaseLLMInput<AuthOptions> | undefined,
@@ -226,14 +245,39 @@ export abstract class GoogleAIConnection<
     this.client = client;
     this.modelName = fields?.model ?? fields?.modelName ?? this.model;
     this.model = this.modelName;
-    this.api = getGeminiAPI(fields);
+
+    this._apiName = fields?.apiName;
+    this.apiConfig = {
+      safetyHandler: fields?.safetyHandler, // For backwards compatibility
+      ...fields?.apiConfig,
+    };
   }
 
-  get modelFamily(): GoogleLLMModelFamily {
-    if (this.model.startsWith("gemini")) {
-      return "gemini";
-    } else {
-      return null;
+  get modelFamily(): VertexModelFamily {
+    return modelToFamily(this.model);
+  }
+
+  get modelPublisher(): string {
+    return modelToPublisher(this.model);
+  }
+
+  get computedAPIName(): string {
+    // At least at the moment, model publishers and APIs map the same
+    return this.modelPublisher;
+  }
+
+  get apiName(): string {
+    return this._apiName ?? this.computedAPIName;
+  }
+
+  get api(): GoogleAIAPI {
+    switch (this.apiName) {
+      case "google":
+        return getGeminiAPI(this.apiConfig as GeminiAPIConfig);
+      case "anthropic":
+        return getAnthropicAPI(this.apiConfig as AnthropicAPIConfig);
+      default:
+        throw new Error(`Unknown API: ${this.apiName}`);
     }
   }
 
@@ -242,6 +286,19 @@ export abstract class GoogleAIConnection<
       return "gai";
     } else {
       return "gcp";
+    }
+  }
+
+  get computedLocation(): string {
+    switch (this.apiName) {
+      case "google":
+        return super.computedLocation;
+      case "anthropic":
+        return "us-east5";
+      default:
+        throw new Error(
+          `Unknown apiName: ${this.apiName}. Can't get location.`
+        );
     }
   }
 
@@ -256,7 +313,8 @@ export abstract class GoogleAIConnection<
   async buildUrlVertex(): Promise<string> {
     const projectId = await this.client.getProjectId();
     const method = await this.buildUrlMethod();
-    const url = `https://${this.endpoint}/${this.apiVersion}/projects/${projectId}/locations/${this.location}/publishers/google/models/${this.model}:${method}`;
+    const publisher = this.modelPublisher;
+    const url = `https://${this.endpoint}/${this.apiVersion}/projects/${projectId}/locations/${this.location}/publishers/${publisher}/models/${this.model}:${method}`;
     return url;
   }
 
@@ -277,10 +335,37 @@ export abstract class GoogleAIConnection<
   async request(
     input: InputType,
     parameters: GoogleAIModelRequestParams,
-    options: CallOptions
-  ): Promise<GoogleResponse> {
-    const data = await this.formatData(input, parameters);
+
+    options: CallOptions,
+    runManager?: BaseRunManager
+  ): Promise<ResponseType> {
+    const moduleName = this.constructor.name;
+    const streamingParameters: GoogleAIModelRequestParams = {
+      ...parameters,
+      streaming: this.streaming,
+    };
+    const data = await this.formatData(input, streamingParameters);
+
+    await runManager?.handleCustomEvent(`google-request-${moduleName}`, {
+      data,
+      parameters: streamingParameters,
+      options,
+      connection: {
+        ...this,
+        url: await this.buildUrl(),
+        urlMethod: await this.buildUrlMethod(),
+        modelFamily: this.modelFamily,
+        modelPublisher: this.modelPublisher,
+        computedPlatformType: this.computedPlatformType,
+      },
+    });
+
     const response = await this._request(data, options);
+
+    await runManager?.handleCustomEvent(`google-response-${moduleName}`, {
+      response,
+    });
+
     return response;
   }
 }
@@ -298,141 +383,202 @@ export abstract class AbstractGoogleLLMConnection<
     return this.streaming ? "streamGenerateContent" : "generateContent";
   }
 
+  async buildUrlMethodClaude(): Promise<string> {
+    return this.streaming ? "streamRawPredict" : "rawPredict";
+  }
+
   async buildUrlMethod(): Promise<string> {
     switch (this.modelFamily) {
       case "gemini":
         return this.buildUrlMethodGemini();
+      case "claude":
+        return this.buildUrlMethodClaude();
       default:
         throw new Error(`Unknown model family: ${this.modelFamily}`);
     }
   }
 
-  abstract formatContents(
-    input: MessageType,
-    parameters: GoogleAIModelRequestParams
-  ): Promise<GeminiContent[]>;
-
-  formatGenerationConfig(
-    _input: MessageType,
-    parameters: GoogleAIModelRequestParams
-  ): GeminiGenerationConfig {
-    return {
-      temperature: parameters.temperature,
-      topK: parameters.topK,
-      topP: parameters.topP,
-      maxOutputTokens: parameters.maxOutputTokens,
-      stopSequences: parameters.stopSequences,
-      responseMimeType: parameters.responseMimeType,
-    };
-  }
-
-  formatSafetySettings(
-    _input: MessageType,
-    parameters: GoogleAIModelRequestParams
-  ): GeminiSafetySetting[] {
-    return parameters.safetySettings ?? [];
-  }
-
-  async formatSystemInstruction(
-    _input: MessageType,
-    _parameters: GoogleAIModelRequestParams
-  ): Promise<GeminiContent> {
-    return {} as GeminiContent;
-  }
-
-  structuredToolToFunctionDeclaration(
-    tool: StructuredToolParams
-  ): GeminiFunctionDeclaration {
-    const jsonSchema = zodToGeminiParameters(tool.schema);
-    return {
-      name: tool.name,
-      description: tool.description ?? `A function available to call.`,
-      parameters: jsonSchema,
-    };
-  }
-
-  structuredToolsToGeminiTools(tools: StructuredToolParams[]): GeminiTool[] {
-    return [
-      {
-        functionDeclarations: tools.map(
-          this.structuredToolToFunctionDeclaration
-        ),
-      },
-    ];
-  }
-
-  formatTools(
-    _input: MessageType,
-    parameters: GoogleAIModelRequestParams
-  ): GeminiTool[] {
-    const tools: GoogleAIToolType[] | undefined = parameters?.tools;
-    if (!tools || tools.length === 0) {
-      return [];
-    }
-
-    if (tools.every(isLangChainTool)) {
-      return this.structuredToolsToGeminiTools(tools);
-    } else {
-      if (
-        tools.length === 1 &&
-        (!("functionDeclarations" in tools[0]) ||
-          !tools[0].functionDeclarations?.length)
-      ) {
-        return [];
-      }
-      return tools as GeminiTool[];
-    }
-  }
-
-  formatToolConfig(
-    parameters: GoogleAIModelRequestParams
-  ): GeminiRequest["toolConfig"] | undefined {
-    if (!parameters.tool_choice || typeof parameters.tool_choice !== "string") {
-      return undefined;
-    }
-
-    return {
-      functionCallingConfig: {
-        mode: parameters.tool_choice as "auto" | "any" | "none",
-        allowedFunctionNames: parameters.allowed_function_names,
-      },
-    };
-  }
-
   async formatData(
     input: MessageType,
     parameters: GoogleAIModelRequestParams
-  ): Promise<GeminiRequest> {
-    const contents = await this.formatContents(input, parameters);
-    const generationConfig = this.formatGenerationConfig(input, parameters);
-    const tools = this.formatTools(input, parameters);
-    const toolConfig = this.formatToolConfig(parameters);
-    const safetySettings = this.formatSafetySettings(input, parameters);
-    const systemInstruction = await this.formatSystemInstruction(
-      input,
-      parameters
-    );
+  ): Promise<unknown> {
+    return this.api.formatData(input, parameters);
+  }
+}
 
-    const ret: GeminiRequest = {
-      contents,
-      generationConfig,
+export interface GoogleCustomEventInfo {
+  subEvent: string;
+  module: string;
+}
+
+export abstract class GoogleRequestCallbackHandler extends BaseCallbackHandler {
+  customEventInfo(eventName: string): GoogleCustomEventInfo {
+    const names = eventName.split("-");
+    return {
+      subEvent: names[1],
+      module: names[2],
     };
-    if (tools && tools.length) {
-      ret.tools = tools;
+  }
+
+  abstract handleCustomRequestEvent(
+    eventName: string,
+    eventInfo: GoogleCustomEventInfo,
+    data: any,
+    runId: string,
+    tags?: string[],
+    metadata?: Record<string, any>
+  ): any;
+
+  abstract handleCustomResponseEvent(
+    eventName: string,
+    eventInfo: GoogleCustomEventInfo,
+    data: any,
+    runId: string,
+    tags?: string[],
+    metadata?: Record<string, any>
+  ): any;
+
+  abstract handleCustomChunkEvent(
+    eventName: string,
+    eventInfo: GoogleCustomEventInfo,
+    data: any,
+    runId: string,
+    tags?: string[],
+    metadata?: Record<string, any>
+  ): any;
+
+  handleCustomEvent(
+    eventName: string,
+    data: any,
+    runId: string,
+    tags?: string[],
+    metadata?: Record<string, any>
+  ): any {
+    if (!eventName) {
+      return undefined;
     }
-    if (toolConfig) {
-      ret.toolConfig = toolConfig;
+    const eventInfo = this.customEventInfo(eventName);
+    switch (eventInfo.subEvent) {
+      case "request":
+        return this.handleCustomRequestEvent(
+          eventName,
+          eventInfo,
+          data,
+          runId,
+          tags,
+          metadata
+        );
+      case "response":
+        return this.handleCustomResponseEvent(
+          eventName,
+          eventInfo,
+          data,
+          runId,
+          tags,
+          metadata
+        );
+      case "chunk":
+        return this.handleCustomChunkEvent(
+          eventName,
+          eventInfo,
+          data,
+          runId,
+          tags,
+          metadata
+        );
+      default:
+        console.error(
+          `Unexpected eventInfo for ${eventName} ${JSON.stringify(
+            eventInfo,
+            null,
+            1
+          )}`
+        );
     }
-    if (safetySettings && safetySettings.length) {
-      ret.safetySettings = safetySettings;
-    }
-    if (
-      systemInstruction?.role &&
-      systemInstruction?.parts &&
-      systemInstruction?.parts?.length
-    ) {
-      ret.systemInstruction = systemInstruction;
-    }
-    return ret;
+  }
+}
+
+export class GoogleRequestLogger extends GoogleRequestCallbackHandler {
+  name: string = "GoogleRequestLogger";
+
+  log(eventName: string, data: any, tags?: string[]): undefined {
+    const tagStr = tags ? `[${tags}]` : "[]";
+    console.log(`${eventName} ${tagStr} ${JSON.stringify(data, null, 1)}`);
+  }
+
+  handleCustomRequestEvent(
+    eventName: string,
+    _eventInfo: GoogleCustomEventInfo,
+    data: any,
+    _runId: string,
+    tags?: string[],
+    _metadata?: Record<string, any>
+  ): any {
+    this.log(eventName, data, tags);
+  }
+
+  handleCustomResponseEvent(
+    eventName: string,
+    _eventInfo: GoogleCustomEventInfo,
+    data: any,
+    _runId: string,
+    tags?: string[],
+    _metadata?: Record<string, any>
+  ): any {
+    this.log(eventName, data, tags);
+  }
+
+  handleCustomChunkEvent(
+    eventName: string,
+    _eventInfo: GoogleCustomEventInfo,
+    data: any,
+    _runId: string,
+    tags?: string[],
+    _metadata?: Record<string, any>
+  ): any {
+    this.log(eventName, data, tags);
+  }
+}
+
+export class GoogleRequestRecorder extends GoogleRequestCallbackHandler {
+  name = "GoogleRequestRecorder";
+
+  request: any = {};
+
+  response: any = {};
+
+  chunk: any[] = [];
+
+  handleCustomRequestEvent(
+    _eventName: string,
+    _eventInfo: GoogleCustomEventInfo,
+    data: any,
+    _runId: string,
+    _tags?: string[],
+    _metadata?: Record<string, any>
+  ): any {
+    this.request = data;
+  }
+
+  handleCustomResponseEvent(
+    _eventName: string,
+    _eventInfo: GoogleCustomEventInfo,
+    data: any,
+    _runId: string,
+    _tags?: string[],
+    _metadata?: Record<string, any>
+  ): any {
+    this.response = data;
+  }
+
+  handleCustomChunkEvent(
+    _eventName: string,
+    _eventInfo: GoogleCustomEventInfo,
+    data: any,
+    _runId: string,
+    _tags?: string[],
+    _metadata?: Record<string, any>
+  ): any {
+    this.chunk.push(data);
   }
 }

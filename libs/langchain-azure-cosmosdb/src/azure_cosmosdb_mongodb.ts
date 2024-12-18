@@ -34,7 +34,7 @@ export type AzureCosmosDBMongoDBIndexOptions = {
   /** Skips automatic index creation. */
   readonly skipCreate?: boolean;
 
-  readonly indexType?: "ivf" | "hnsw";
+  readonly indexType?: "ivf" | "hnsw" | "diskann";
   /** Number of clusters that the inverted file (IVF) index uses to group the vector data. */
   readonly numLists?: number;
   /** Number of dimensions for vector similarity. */
@@ -45,6 +45,12 @@ export type AzureCosmosDBMongoDBIndexOptions = {
   readonly m?: number;
   /** The size of the dynamic candidate list for constructing the graph with the HNSW index. */
   readonly efConstruction?: number;
+  /** Max number of neighbors withe the Diskann idnex */
+  readonly maxDegree?: number;
+  /** L value for index building withe the Diskann idnex */
+  readonly lBuild?: number;
+  /** L value for index searching withe the Diskann idnex */
+  readonly lSearch?: number;
 };
 
 /** Azure Cosmos DB for MongoDB vCore delete Parameters. */
@@ -234,7 +240,7 @@ export class AzureCosmosDBMongoDBVectorStore extends VectorStore {
    */
   async createIndex(
     dimensions: number | undefined = undefined,
-    indexType: "ivf" | "hnsw" = "ivf",
+    indexType: "ivf" | "hnsw" | "diskann" = "ivf",
     similarity: AzureCosmosDBMongoDBSimilarityType = AzureCosmosDBMongoDBSimilarityType.COS
   ): Promise<void> {
     await this.connectPromise;
@@ -246,23 +252,36 @@ export class AzureCosmosDBMongoDBVectorStore extends VectorStore {
       vectorLength = queryEmbedding.length;
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const cosmosSearchOptions: any = {
+      kind: "",
+      similarity,
+      dimensions: vectorLength,
+    };
+
+    if (indexType === "hnsw") {
+      cosmosSearchOptions.kind = "vector-hnsw";
+      cosmosSearchOptions.m = this.indexOptions.m ?? 16;
+      cosmosSearchOptions.efConstruction =
+        this.indexOptions.efConstruction ?? 200;
+    } else if (indexType === "diskann") {
+      cosmosSearchOptions.kind = "vector-diskann";
+      cosmosSearchOptions.maxDegree = this.indexOptions.maxDegree ?? 40;
+      cosmosSearchOptions.lBuild = this.indexOptions.lBuild ?? 50;
+      cosmosSearchOptions.lSearch = this.indexOptions.lSearch ?? 40;
+      /** Default to IVF index */
+    } else {
+      cosmosSearchOptions.kind = "vector-ivf";
+      cosmosSearchOptions.numLists = this.indexOptions.numLists ?? 100;
+    }
+
     const createIndexCommands = {
       createIndexes: this.collection.collectionName,
       indexes: [
         {
           name: this.indexName,
           key: { [this.embeddingKey]: "cosmosSearch" },
-          cosmosSearchOptions: {
-            kind: indexType === "hnsw" ? "vector-hnsw" : "vector-ivf",
-            ...(indexType === "hnsw"
-              ? {
-                  m: this.indexOptions.m ?? 16,
-                  efConstruction: this.indexOptions.efConstruction ?? 200,
-                }
-              : { numLists: this.indexOptions.numLists ?? 100 }),
-            similarity,
-            dimensions: vectorLength,
-          },
+          cosmosSearchOptions,
         },
       ],
     };
@@ -357,7 +376,8 @@ export class AzureCosmosDBMongoDBVectorStore extends VectorStore {
    */
   async similaritySearchVectorWithScore(
     queryVector: number[],
-    k = 4
+    k: number,
+    indexType?: "ivf" | "hnsw" | "diskann"
   ): Promise<[Document, number][]> {
     await this.initialize();
 
@@ -367,7 +387,10 @@ export class AzureCosmosDBMongoDBVectorStore extends VectorStore {
           cosmosSearch: {
             vector: queryVector,
             path: this.embeddingKey,
-            k,
+            k: k ?? 4,
+            ...(indexType === "diskann"
+              ? { lSearch: this.indexOptions.lSearch ?? 40 }
+              : {}),
           },
           returnStoredSource: true,
         },
@@ -406,13 +429,26 @@ export class AzureCosmosDBMongoDBVectorStore extends VectorStore {
   async maxMarginalRelevanceSearch(
     query: string,
     options: MaxMarginalRelevanceSearchOptions<this["FilterType"]>
+  ): Promise<Document[]>;
+
+  async maxMarginalRelevanceSearch(
+    query: string,
+    options: MaxMarginalRelevanceSearchOptions<this["FilterType"]>,
+    indexType: "ivf" | "hnsw" | "diskann"
+  ): Promise<Document[]>;
+
+  async maxMarginalRelevanceSearch(
+    query: string,
+    options: MaxMarginalRelevanceSearchOptions<this["FilterType"]>,
+    indexType?: "ivf" | "hnsw" | "diskann"
   ): Promise<Document[]> {
     const { k, fetchK = 20, lambda = 0.5 } = options;
 
     const queryEmbedding = await this.embeddings.embedQuery(query);
     const docs = await this.similaritySearchVectorWithScore(
       queryEmbedding,
-      fetchK
+      fetchK,
+      indexType
     );
     const embeddingList = docs.map((doc) => doc[0].metadata[this.embeddingKey]);
 
@@ -449,7 +485,7 @@ export class AzureCosmosDBMongoDBVectorStore extends VectorStore {
     // Unless skipCreate is set, create the index
     // This operation is no-op if the index already exists
     if (!this.indexOptions.skipCreate) {
-      const indexType = this.indexOptions.indexType === "hnsw" ? "hnsw" : "ivf";
+      const indexType = this.indexOptions.indexType || "ivf";
       await this.createIndex(
         this.indexOptions.dimensions,
         indexType,

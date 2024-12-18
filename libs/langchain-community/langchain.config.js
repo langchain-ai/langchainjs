@@ -51,7 +51,9 @@ export const config = {
     "tools/google_calendar": "tools/google_calendar/index",
     "tools/google_custom_search": "tools/google_custom_search",
     "tools/google_places": "tools/google_places",
+    "tools/google_trends": "tools/google_trends",
     "tools/google_routes": "tools/google_routes",
+    "tools/google_scholar": "tools/google_scholar",
     "tools/ifttt": "tools/ifttt",
     "tools/searchapi": "tools/searchapi",
     "tools/searxng_search": "tools/searxng_search",
@@ -65,6 +67,7 @@ export const config = {
     "agents/toolkits/aws_sfn": "agents/toolkits/aws_sfn",
     "agents/toolkits/base": "agents/toolkits/base",
     "agents/toolkits/connery": "agents/toolkits/connery/index",
+    "agents/toolkits/stagehand": "agents/toolkits/stagehand",
     // embeddings
     "embeddings/alibaba_tongyi": "embeddings/alibaba_tongyi",
     "embeddings/baidu_qianfan": "embeddings/baidu_qianfan",
@@ -177,6 +180,7 @@ export const config = {
     "chat_models/llama_cpp": "chat_models/llama_cpp",
     "chat_models/minimax": "chat_models/minimax",
     "chat_models/moonshot": "chat_models/moonshot",
+    "chat_models/novita": "chat_models/novita",
     "chat_models/ollama": "chat_models/ollama",
     "chat_models/portkey": "chat_models/portkey",
     "chat_models/premai": "chat_models/premai",
@@ -189,7 +193,8 @@ export const config = {
     // callbacks
     "callbacks/handlers/llmonitor": "callbacks/handlers/llmonitor",
     "callbacks/handlers/lunary": "callbacks/handlers/lunary",
-    "callbacks/handlers/upstash_ratelimit": "callbacks/handlers/upstash_ratelimit",
+    "callbacks/handlers/upstash_ratelimit":
+      "callbacks/handlers/upstash_ratelimit",
     // retrievers
     "retrievers/amazon_kendra": "retrievers/amazon_kendra",
     "retrievers/amazon_knowledge_base": "retrievers/amazon_knowledge_base",
@@ -218,6 +223,8 @@ export const config = {
     // graphs
     "graphs/neo4j_graph": "graphs/neo4j_graph",
     "graphs/memgraph_graph": "graphs/memgraph_graph",
+    // document_compressors
+    "document_compressors/ibm": "document_compressors/ibm",
     // document transformers
     "document_transformers/html_to_text": "document_transformers/html_to_text",
     "document_transformers/mozilla_readability":
@@ -238,11 +245,13 @@ export const config = {
     "stores/message/convex": "stores/message/convex",
     "stores/message/dynamodb": "stores/message/dynamodb",
     "stores/message/firestore": "stores/message/firestore",
+    "stores/message/file_system": "stores/message/file_system",
     "stores/message/in_memory": "stores/message/in_memory",
     "stores/message/ipfs_datastore": "stores/message/ipfs_datastore",
     "stores/message/ioredis": "stores/message/ioredis",
     "stores/message/momento": "stores/message/momento",
     "stores/message/mongodb": "stores/message/mongodb",
+    "stores/message/neo4j": "stores/message/neo4j",
     "stores/message/planetscale": "stores/message/planetscale",
     "stores/message/postgres": "stores/message/postgres",
     "stores/message/redis": "stores/message/redis",
@@ -260,6 +269,7 @@ export const config = {
     "indexes/memory": "indexes/memory",
     "indexes/sqlite": "indexes/sqlite",
     // document_loaders
+    "document_loaders/web/airtable": "document_loaders/web/airtable",
     "document_loaders/web/apify_dataset": "document_loaders/web/apify_dataset",
     "document_loaders/web/assemblyai": "document_loaders/web/assemblyai",
     "document_loaders/web/azure_blob_storage_container":
@@ -268,6 +278,7 @@ export const config = {
       "document_loaders/web/azure_blob_storage_file",
     "document_loaders/web/browserbase": "document_loaders/web/browserbase",
     "document_loaders/web/cheerio": "document_loaders/web/cheerio",
+    "document_loaders/web/html": "document_loaders/web/html",
     "document_loaders/web/puppeteer": "document_loaders/web/puppeteer",
     "document_loaders/web/playwright": "document_loaders/web/playwright",
     "document_loaders/web/college_confidential":
@@ -310,18 +321,20 @@ export const config = {
     "utils/event_source_parse": "utils/event_source_parse",
     "utils/cassandra": "utils/cassandra",
     // experimental
-    "experimental/callbacks/handlers/datadog": "experimental/callbacks/handlers/datadog",
+    "experimental/callbacks/handlers/datadog":
+      "experimental/callbacks/handlers/datadog",
     "experimental/graph_transformers/llm":
       "experimental/graph_transformers/llm",
     "experimental/multimodal_embeddings/googlevertexai":
       "experimental/multimodal_embeddings/googlevertexai",
     "experimental/hubs/makersuite/googlemakersuitehub":
       "experimental/hubs/makersuite/googlemakersuitehub",
-    "experimental/chat_models/ollama_functions": "experimental/chat_models/ollama_functions",
+    "experimental/chat_models/ollama_functions":
+      "experimental/chat_models/ollama_functions",
     "experimental/llms/chrome_ai": "experimental/llms/chrome_ai",
     "experimental/tools/pyinterpreter": "experimental/tools/pyinterpreter",
     // chains
-    "chains/graph_qa/cypher": "chains/graph_qa/cypher"
+    "chains/graph_qa/cypher": "chains/graph_qa/cypher",
   },
   requiresOptionalDependency: [
     "tools/aws_sfn",
@@ -331,6 +344,7 @@ export const config = {
     "tools/gmail",
     "tools/google_calendar",
     "agents/toolkits/aws_sfn",
+    "agents/toolkits/stagehand",
     "callbacks/handlers/llmonitor",
     "callbacks/handlers/lunary",
     "callbacks/handlers/upstash_ratelimit",
@@ -439,6 +453,8 @@ export const config = {
     "cache/upstash_redis",
     "graphs/neo4j_graph",
     "graphs/memgraph_graph",
+    // document_compressors
+    "document_compressors/ibm",
     // document_transformers
     "document_transformers/html_to_text",
     "document_transformers/mozilla_readability",
@@ -459,6 +475,7 @@ export const config = {
     "stores/message/ipfs_datastore",
     "stores/message/momento",
     "stores/message/mongodb",
+    "stores/message/neo4j",
     "stores/message/planetscale",
     "stores/message/postgres",
     "stores/message/redis",
@@ -520,7 +537,7 @@ export const config = {
     // chains
     "chains/graph_qa/cypher",
     // langgraph checkpointers
-    "langgraph/checkpointers/vercel_kv"
+    "langgraph/checkpointers/vercel_kv",
   ],
   packageSuffix: "community",
   tsConfigPath: resolve("./tsconfig.json"),

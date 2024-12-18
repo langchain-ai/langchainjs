@@ -170,7 +170,7 @@ yarn
 Then, you will need to switch directories into `langchain-core` and build core by running:
 
 ```bash
-cd ../langchain-core
+cd ../../langchain-core
 yarn
 yarn build
 ```
