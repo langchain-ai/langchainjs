@@ -52,6 +52,25 @@ export class PlaywrightWebBaseLoader
     url: string,
     options?: PlaywrightWebBaseLoaderOptions
   ): Promise<string> {
+    // fix: SSRF
+    // https://huntr.com/bounties/23f45984-7336-48d8-a373-75b39bcd6367
+    const isValidHttpUrl = (inputUrl: string): boolean => {
+      try {
+        const parsedUrl = new URL(inputUrl);
+        return (
+          parsedUrl.protocol === "http:" || parsedUrl.protocol === "https:"
+        );
+      } catch {
+        return false;
+      }
+    };
+
+    if (!isValidHttpUrl(url)) {
+      throw new Error(
+        "Invalid URL: Only HTTP and HTTPS protocols are allowed."
+      );
+    }
+
     const { chromium } = await PlaywrightWebBaseLoader.imports();
 
     const browser = await chromium.launch({
