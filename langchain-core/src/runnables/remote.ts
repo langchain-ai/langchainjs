@@ -14,8 +14,6 @@ import {
   AIMessageChunk,
   ChatMessage,
   ChatMessageChunk,
-  DeveloperMessage,
-  DeveloperMessageChunk,
   FunctionMessage,
   FunctionMessageChunk,
   HumanMessage,
@@ -72,11 +70,6 @@ function revive(obj: any): any {
           content: obj.content,
         });
       }
-      if (obj.type === "DeveloperMessage" || obj.type === "developer") {
-        return new DeveloperMessage({
-          content: obj.content,
-        });
-      }
       if (obj.type === "ChatMessage" || obj.type === "generic") {
         return new ChatMessage({
           content: obj.content,
@@ -108,11 +101,6 @@ function revive(obj: any): any {
       }
       if (obj.type === "SystemMessageChunk") {
         return new SystemMessageChunk({
-          content: obj.content,
-        });
-      }
-      if (obj.type === "DeveloperMessageChunk") {
-        return new DeveloperMessageChunk({
           content: obj.content,
         });
       }

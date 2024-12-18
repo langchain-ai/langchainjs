@@ -16,7 +16,6 @@ import {
   ChatMessageFieldsWithRole,
   ChatMessageChunk,
 } from "./chat.js";
-import { DeveloperMessage, DeveloperMessageChunk } from "./developer.js";
 import {
   FunctionMessage,
   FunctionMessageFieldsWithName,
@@ -88,11 +87,6 @@ function _constructMessageFromParams(
       className === "SystemMessageChunk"
     ) {
       type = "system";
-    } else if (
-      className === "DeveloperMessage" ||
-      className === "DeveloperMessageChunk"
-    ) {
-      type = "developer";
     } else {
       type = "unknown";
     }
@@ -114,7 +108,7 @@ function _constructMessageFromParams(
   } else if (type === "system") {
     return new SystemMessage(rest);
   } else if (type === "developer") {
-    return new DeveloperMessage(rest);
+    return new SystemMessage(rest);
   } else if (type === "tool" && "tool_call_id" in rest) {
     return new ToolMessage({
       ...rest,
@@ -125,7 +119,7 @@ function _constructMessageFromParams(
   } else {
     const error = addLangChainErrorFields(
       new Error(
-        `Unable to coerce message from array: only human, AI, system, or tool message coercion is currently supported.\n\nReceived: ${JSON.stringify(
+        `Unable to coerce message from array: only human, AI, system, developer, or tool message coercion is currently supported.\n\nReceived: ${JSON.stringify(
           params,
           null,
           2
@@ -174,8 +168,6 @@ export function getBufferString(
       role = aiPrefix;
     } else if (m._getType() === "system") {
       role = "System";
-    } else if (m._getType() === "developer") {
-      role = "Developer";
     } else if (m._getType() === "function") {
       role = "Function";
     } else if (m._getType() === "tool") {
@@ -231,8 +223,6 @@ export function mapStoredMessageToChatMessage(message: StoredMessage) {
       return new AIMessage(storedMessage.data);
     case "system":
       return new SystemMessage(storedMessage.data);
-    case "developer":
-      return new DeveloperMessage(storedMessage.data);
     case "function":
       if (storedMessage.data.name === undefined) {
         throw new Error("Name must be defined for function messages");
@@ -309,9 +299,6 @@ export function convertToChunk(message: BaseMessage) {
   } else if (type === "system") {
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
     return new SystemMessageChunk({ ...message });
-  } else if (type === "developer") {
-    // eslint-disable-next-line @typescript-eslint/no-use-before-define
-    return new DeveloperMessageChunk({ ...message });
   } else if (type === "function") {
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
     return new FunctionMessageChunk({ ...message });

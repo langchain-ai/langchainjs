@@ -13,7 +13,6 @@ import {
   ChatMessageChunk,
   ChatMessageFieldsWithRole,
 } from "./chat.js";
-import { DeveloperMessage, DeveloperMessageChunk } from "./developer.js";
 import {
   FunctionMessage,
   FunctionMessageChunk,
@@ -908,8 +907,8 @@ const _MSG_CHUNK_MAP: Record<
     messageChunk: SystemMessageChunk,
   },
   developer: {
-    message: DeveloperMessage,
-    messageChunk: DeveloperMessageChunk,
+    message: SystemMessage,
+    messageChunk: SystemMessageChunk,
   },
   tool: {
     message: ToolMessage,
@@ -984,9 +983,9 @@ function _switchTypeToMessage(
       break;
     case "developer":
       if (returnChunk) {
-        chunk = new DeveloperMessageChunk(fields);
+        chunk = new SystemMessageChunk(fields);
       } else {
-        msg = new DeveloperMessage(fields);
+        msg = new SystemMessage(fields);
       }
       break;
     case "tool":
