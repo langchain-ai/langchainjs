@@ -60,11 +60,17 @@ export function isSystemMessageChunk(
 
 /**
  * Represents a developer message in a conversation.
+ *
+ * Currently an alias of SystemMessage to match preferred terminology for
+ * some model providers.
  */
 export class DeveloperMessage extends SystemMessage {}
 
 /**
  * Represents a chunk of a developer message, which can be concatenated with
  * other developer message chunks.
+ *
+ * Currently an alias of SystemMessageChunk to match preferred terminology for
+ * some model providers.
  */
 export class DeveloperMessageChunk extends SystemMessageChunk {}
