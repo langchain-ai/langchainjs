@@ -13,6 +13,7 @@ import {
   isBaseMessage,
   MessageContent,
   MessageContentComplex,
+  DeveloperMessage,
 } from "../messages/index.js";
 import {
   type ChatPromptValueInterface,
@@ -705,6 +706,33 @@ export class SystemMessagePromptTemplate<
 }
 
 /**
+ * Class that represents a developer message prompt template. It extends the
+ * BaseMessageStringPromptTemplate.
+ * @example
+ * ```typescript
+ * const message = DeveloperMessagePromptTemplate.fromTemplate("{text}");
+ * const formatted = await message.format({ text: "Hello world!" });
+ *
+ * const chatPrompt = ChatPromptTemplate.fromMessages([message]);
+ * const formattedChatPrompt = await chatPrompt.invoke({
+ *   text: "Hello world!",
+ * });
+ * ```
+ */
+export class DeveloperMessagePromptTemplate<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  RunInput extends InputValues = any
+> extends _StringImageMessagePromptTemplate<RunInput> {
+  static _messageClass(): typeof SystemMessage {
+    return DeveloperMessage;
+  }
+
+  static lc_name() {
+    return "DeveloperMessagePromptTemplate";
+  }
+}
+
+/**
  * Interface for the input of a ChatPromptTemplate.
  */
 export interface ChatPromptTemplateInput<
@@ -814,6 +842,8 @@ function _coerceMessagePromptTemplateLike<
     return AIMessagePromptTemplate.fromTemplate(templateData, extra);
   } else if (message._getType() === "system") {
     return SystemMessagePromptTemplate.fromTemplate(templateData, extra);
+  } else if (message._getType() === "developer") {
+    return DeveloperMessagePromptTemplate.fromTemplate(templateData, extra);
   } else if (ChatMessage.isInstance(message)) {
     return ChatMessagePromptTemplate.fromTemplate(
       message.content as string,

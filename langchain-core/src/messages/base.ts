@@ -34,6 +34,7 @@ export type MessageType =
   | "human"
   | "ai"
   | "generic"
+  | "developer"
   | "system"
   | "function"
   | "tool"
