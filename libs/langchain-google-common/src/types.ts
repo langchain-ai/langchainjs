@@ -309,6 +309,22 @@ export interface GeminiContent {
 
 export interface GeminiTool {
   functionDeclarations?: GeminiFunctionDeclaration[];
+  googleSearchRetrieval?: GoogleSearchRetrieval;
+  retrieval?: VertexAIRetrieval;
+}
+
+export interface GoogleSearchRetrieval {
+  dynamicRetrievalConfig?: {
+    mode?: string;
+    dynamicThreshold?: number;
+  };
+}
+
+export interface VertexAIRetrieval {
+  vertexAiSearch: {
+    datastore: string;
+  };
+  disableAttribution?: boolean;
 }
 
 export interface GeminiFunctionDeclaration {

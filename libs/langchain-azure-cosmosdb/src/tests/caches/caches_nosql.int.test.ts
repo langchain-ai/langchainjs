@@ -4,6 +4,7 @@
 import {
   CosmosClient,
   IndexingMode,
+  VectorEmbedding,
   VectorEmbeddingPolicy,
 } from "@azure/cosmos";
 import { DefaultAzureCredential } from "@azure/identity";
@@ -33,7 +34,7 @@ function vectorEmbeddingPolicy(
         dataType: "float32",
         distanceFunction,
         dimensions: dimension,
-      },
+      } as VectorEmbedding,
     ],
   };
 }

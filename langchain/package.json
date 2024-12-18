@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.3.6",
+  "version": "0.3.7",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -520,7 +520,7 @@
     "js-tiktoken": "^1.0.12",
     "js-yaml": "^4.1.0",
     "jsonpointer": "^5.0.1",
-    "langsmith": "^0.2.0",
+    "langsmith": "^0.2.8",
     "openapi-types": "^12.1.3",
     "p-retry": "4",
     "uuid": "^10.0.0",

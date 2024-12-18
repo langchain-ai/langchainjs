@@ -1,4 +1,9 @@
-import { Container, CosmosClient, CosmosClientOptions } from "@azure/cosmos";
+import {
+  Container,
+  CosmosClient,
+  CosmosClientOptions,
+  ErrorResponse,
+} from "@azure/cosmos";
 import { DefaultAzureCredential, TokenCredential } from "@azure/identity";
 import { BaseListChatMessageHistory } from "@langchain/core/chat_history";
 import {
@@ -11,6 +16,14 @@ import { getEnvironmentVariable } from "@langchain/core/utils/env";
 const USER_AGENT_SUFFIX = "langchainjs-cdbnosql-chathistory-javascript";
 const DEFAULT_DATABASE_NAME = "chatHistoryDB";
 const DEFAULT_CONTAINER_NAME = "chatHistoryContainer";
+
+/**
+ * Lightweight type for listing chat sessions.
+ */
+export type ChatSession = {
+  id: string;
+  context: Record<string, unknown>;
+};
 
 /**
  * Type for the input to the `AzureCosmosDBNoSQLChatMessageHistory` constructor.
@@ -68,7 +81,6 @@ export interface AzureCosmosDBNoSQLChatMessageHistoryInput {
  * );
  * ```
  */
-
 export class AzureCosmsosDBNoSQLChatMessageHistory extends BaseListChatMessageHistory {
   lc_namespace = ["langchain", "stores", "message", "azurecosmosdb"];
 
@@ -89,6 +101,8 @@ export class AzureCosmsosDBNoSQLChatMessageHistory extends BaseListChatMessageHi
   private messageList: BaseMessage[] = [];
 
   private initPromise?: Promise<void>;
+
+  private context: Record<string, unknown> = {};
 
   constructor(chatHistoryInput: AzureCosmosDBNoSQLChatMessageHistoryInput) {
     super();
@@ -175,9 +189,11 @@ export class AzureCosmsosDBNoSQLChatMessageHistory extends BaseListChatMessageHi
     this.messageList = await this.getMessages();
     this.messageList.push(message);
     const messages = mapChatMessagesToStoredMessages(this.messageList);
+    const context = await this.getContext();
     await this.container.items.upsert({
       id: this.sessionId,
       userId: this.userId,
+      context,
       messages,
     });
   }
@@ -188,17 +204,53 @@ export class AzureCosmsosDBNoSQLChatMessageHistory extends BaseListChatMessageHi
     await this.container.item(this.sessionId, this.userId).delete();
   }
 
-  async clearAllSessionsForUser(userId: string) {
+  async clearAllSessions() {
     await this.initializeContainer();
     const query = {
       query: "SELECT c.id FROM c WHERE c.userId = @userId",
-      parameters: [{ name: "@userId", value: userId }],
+      parameters: [{ name: "@userId", value: this.userId }],
     };
     const { resources: userSessions } = await this.container.items
       .query(query)
       .fetchAll();
     for (const userSession of userSessions) {
-      await this.container.item(userSession.id, userId).delete();
+      await this.container.item(userSession.id, this.userId).delete();
+    }
+  }
+
+  async getAllSessions(): Promise<ChatSession[]> {
+    await this.initializeContainer();
+    const query = {
+      query: "SELECT c.id, c.context FROM c WHERE c.userId = @userId",
+      parameters: [{ name: "@userId", value: this.userId }],
+    };
+    const { resources: userSessions } = await this.container.items
+      .query(query)
+      .fetchAll();
+    return userSessions ?? [];
+  }
+
+  async getContext(): Promise<Record<string, unknown>> {
+    const document = await this.container
+      .item(this.sessionId, this.userId)
+      .read();
+    this.context = document.resource?.context || this.context;
+    return this.context;
+  }
+
+  async setContext(context: Record<string, unknown>): Promise<void> {
+    await this.initializeContainer();
+    this.context = context || {};
+    try {
+      await this.container
+        .item(this.sessionId, this.userId)
+        .patch([{ op: "replace", path: "/context", value: this.context }]);
+    } catch (_error: unknown) {
+      const error = _error as ErrorResponse;
+      // If document does not exist yet, context will be set when adding the first message
+      if (error?.code !== 404) {
+        throw error;
+      }
     }
   }
 }
