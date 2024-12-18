@@ -983,9 +983,21 @@ function _switchTypeToMessage(
       break;
     case "developer":
       if (returnChunk) {
-        chunk = new SystemMessageChunk(fields);
+        chunk = new SystemMessageChunk({
+          ...fields,
+          additional_kwargs: {
+            ...fields.additional_kwargs,
+            __openai_role__: "developer",
+          },
+        });
       } else {
-        msg = new SystemMessage(fields);
+        msg = new SystemMessage({
+          ...fields,
+          additional_kwargs: {
+            ...fields.additional_kwargs,
+            __openai_role__: "developer",
+          },
+        });
       }
       break;
     case "tool":
