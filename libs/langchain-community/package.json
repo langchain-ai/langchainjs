@@ -37,7 +37,6 @@
   "dependencies": {
     "@langchain/openai": ">=0.2.0 <0.4.0",
     "binary-extensions": "^2.2.0",
-    "dropbox": "^10.34.0",
     "expr-eval": "^2.0.2",
     "flat": "^5.0.2",
     "js-yaml": "^4.1.0",
@@ -157,6 +156,7 @@
     "dotenv": "^16.0.3",
     "dpdm": "^3.12.0",
     "dria": "^0.0.3",
+    "dropbox": "^10.34.0",
     "duck-duck-scrape": "^2.2.5",
     "epub2": "^3.0.1",
     "eslint": "^8.33.0",
@@ -300,6 +300,7 @@
     "d3-dsv": "^2.0.0",
     "discord.js": "^14.14.1",
     "dria": "^0.0.3",
+    "dropbox": "^10.34.0",
     "duck-duck-scrape": "^2.2.5",
     "epub2": "^3.0.1",
     "faiss-node": "^0.5.1",
@@ -574,6 +575,9 @@
       "optional": true
     },
     "dria": {
+      "optional": true
+    },
+    "dropbox": {
       "optional": true
     },
     "duck-duck-scrape": {

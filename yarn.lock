@@ -12048,6 +12048,7 @@ __metadata:
     d3-dsv: ^2.0.0
     discord.js: ^14.14.1
     dria: ^0.0.3
+    dropbox: ^10.34.0
     duck-duck-scrape: ^2.2.5
     epub2: ^3.0.1
     faiss-node: ^0.5.1
@@ -12246,6 +12247,8 @@ __metadata:
     discord.js:
       optional: true
     dria:
+      optional: true
+    dropbox:
       optional: true
     duck-duck-scrape:
       optional: true
