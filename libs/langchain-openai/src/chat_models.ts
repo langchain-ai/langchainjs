@@ -167,13 +167,15 @@ function openAIResponseToChatMessage(
       if (includeRawResponse !== undefined) {
         additional_kwargs.__raw_response = rawResponse;
       }
-      let response_metadata: Record<string, unknown> | undefined;
-      if (rawResponse.system_fingerprint) {
-        response_metadata = {
-          usage: { ...rawResponse.usage },
-          system_fingerprint: rawResponse.system_fingerprint,
-        };
-      }
+      const response_metadata: Record<string, unknown> | undefined = {
+        model_name: rawResponse.model,
+        ...AIMessage(
+          rawResponse.system_fingerprint && {
+            usage: { ...rawResponse.usage },
+            system_fingerprint: rawResponse.system_fingerprint,
+          }
+        ),
+      };
 
       if (message.audio) {
         additional_kwargs.audio = message.audio;
@@ -1414,6 +1416,7 @@ export class ChatOpenAI<
         // Only include system fingerprint in the last chunk for now
         // to avoid concatenation issues
         generationInfo.system_fingerprint = data.system_fingerprint;
+        generationInfo.model_name = data.model;
       }
       if (this.logprobs) {
         generationInfo.logprobs = choice.logprobs;
