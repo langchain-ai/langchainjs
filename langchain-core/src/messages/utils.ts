@@ -89,8 +89,8 @@ function _constructMessageFromParams(
     ) {
       type = "system";
     } else if (
-      className === "SystemMessage" ||
-      className === "SystemMessageChunk"
+      className === "DeveloperMessage" ||
+      className === "DeveloperMessageChunk"
     ) {
       type = "developer";
     } else {
