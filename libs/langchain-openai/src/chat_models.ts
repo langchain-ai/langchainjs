@@ -169,12 +169,12 @@ function openAIResponseToChatMessage(
       }
       const response_metadata: Record<string, unknown> | undefined = {
         model_name: rawResponse.model,
-        ...AIMessage(
-          rawResponse.system_fingerprint && {
-            usage: { ...rawResponse.usage },
-            system_fingerprint: rawResponse.system_fingerprint,
-          }
-        ),
+        ...(rawResponse.system_fingerprint
+          ? {
+              usage: { ...rawResponse.usage },
+              system_fingerprint: rawResponse.system_fingerprint,
+            }
+          : {}),
       };
 
       if (message.audio) {
