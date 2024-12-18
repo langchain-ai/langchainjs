@@ -6,6 +6,7 @@ import {
   BaseCallbackHandler,
   CallbackHandlerMethods,
   HandleLLMNewTokenCallbackFields,
+  isBaseCallbackHandler,
   NewTokenIndices,
 } from "./base.js";
 import { ConsoleCallbackHandler } from "../tracers/console.js";
@@ -21,6 +22,10 @@ import { Serialized } from "../load/serializable.js";
 import type { DocumentInterface } from "../documents/document.js";
 import { isTracingEnabled } from "../utils/callbacks.js";
 import { isBaseTracer } from "../tracers/base.js";
+import {
+  getContextVariable,
+  _getConfigureHooks,
+} from "../singletons/async_local_storage/context.js";
 
 type BaseCallbackManagerMethods = {
   [K in keyof CallbackHandlerMethods]?: (
@@ -1240,6 +1245,35 @@ export class CallbackManager
         }
       }
     }
+
+    for (const {
+      contextVar,
+      inheritable = true,
+      handlerClass,
+      envVar,
+    } of _getConfigureHooks()) {
+      const createIfNotInContext =
+        envVar && getEnvironmentVariable(envVar) === "true" && handlerClass;
+      let handler: BaseCallbackHandler | undefined;
+      const contextVarValue =
+        contextVar !== undefined ? getContextVariable(contextVar) : undefined;
+      if (contextVarValue && isBaseCallbackHandler(contextVarValue)) {
+        handler = contextVarValue;
+      } else if (createIfNotInContext) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        handler = new (handlerClass as any)({});
+      }
+      if (handler !== undefined) {
+        if (!callbackManager) {
+          callbackManager = new CallbackManager();
+        }
+
+        if (!callbackManager.handlers.some((h) => h.name === handler!.name)) {
+          callbackManager.addHandler(handler, inheritable);
+        }
+      }
+    }
+
     if (inheritableTags || localTags) {
       if (callbackManager) {
         callbackManager.addTags(inheritableTags ?? []);
@@ -1252,6 +1286,7 @@ export class CallbackManager
         callbackManager.addMetadata(localMetadata ?? {}, false);
       }
     }
+
     return callbackManager;
   }
 }
@@ -1267,36 +1302,8 @@ export function ensureHandler(
 }
 
 /**
- * @example
- * ```typescript
- * const prompt = PromptTemplate.fromTemplate(`What is the answer to {question}?`);
- *
- * // Example of using LLMChain to process a series of questions
- * const chain = new LLMChain({
- *   llm: new ChatOpenAI({ temperature: 0.9 }),
- *   prompt,
- * });
- *
- * // Process questions using the chain
- * const processQuestions = async (questions) => {
- *   for (const question of questions) {
- *     const result = await chain.call({ question });
- *     console.log(result);
- *   }
- * };
- *
- * // Example questions
- * const questions = [
- *   "What is your name?",
- *   "What is your quest?",
- *   "What is your favorite color?",
- * ];
- *
- * // Run the example
-const logFunction = handler.raiseError ? console.error : console.warn; 
-* processQuestions(questions).catch(consolelogFunction;
- *
- * ```
+ * @deprecated Use [`traceable`](https://docs.smith.langchain.com/observability/how_to_guides/tracing/annotate_code)
+ * from "langsmith" instead.
  */
 export class TraceGroup {
   private runManager?: CallbackManagerForChainRun;

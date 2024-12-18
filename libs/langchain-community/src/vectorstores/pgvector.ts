@@ -261,9 +261,15 @@ export class PGVectorStore extends VectorStore {
     this.chunkSize = config.chunkSize ?? 500;
     this.distanceStrategy = config.distanceStrategy ?? this.distanceStrategy;
 
-    this._verbose =
-      getEnvironmentVariable("LANGCHAIN_VERBOSE") === "true" ??
-      !!config.verbose;
+    const langchainVerbose = getEnvironmentVariable("LANGCHAIN_VERBOSE");
+
+    if (langchainVerbose === "true") {
+      this._verbose = true;
+    } else if (langchainVerbose === "false") {
+      this._verbose = false;
+    } else {
+      this._verbose = config.verbose;
+    }
   }
 
   get computedTableName() {

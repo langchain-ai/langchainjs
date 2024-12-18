@@ -11,7 +11,7 @@ import {
  * main content from a web page.
  * @example
  * ```typescript
- * const loader = new CheerioWebBaseLoader("https://example.com/article");
+ * const loader = new HTMLWebBaseLoader("https://example.com/article");
  * const docs = await loader.load();
  *
  * const splitter = new RecursiveCharacterTextSplitter({
@@ -20,7 +20,7 @@ import {
  * const transformer = new MozillaReadabilityTransformer();
  *
  * // The sequence processes the loaded documents through the splitter and then the transformer.
- * const sequence = splitter.pipe(transformer);
+ * const sequence = transformer.pipe(splitter);
  *
  * // Invoke the sequence to transform the documents into a more readable format.
  * const newDocuments = await sequence.invoke(docs);

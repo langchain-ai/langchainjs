@@ -30,7 +30,7 @@ Use this if you want to respond directly and conversationally to the human. Mark
 \`\`\`json
 {{{{
     "action": "Final Answer",
-    "action_input": string // You should put what you want to return to use here and make sure to use valid json newline characters.
+    "action_input": string // You should put what you want to return to user here and make sure to use valid json newline characters.
 }}}}
 \`\`\`
 

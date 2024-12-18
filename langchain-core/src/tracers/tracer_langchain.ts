@@ -1,4 +1,4 @@
-import { Client } from "langsmith";
+import type { Client, LangSmithTracingClientInterface } from "langsmith";
 import { RunTree } from "langsmith/run_trees";
 import { getCurrentRunTree } from "langsmith/singletons/traceable";
 
@@ -11,6 +11,7 @@ import {
 import { getEnvironmentVariable, getRuntimeEnvironment } from "../utils/env.js";
 import { BaseTracer } from "./base.js";
 import { BaseCallbackHandlerInput } from "../callbacks/base.js";
+import { getDefaultLangChainClientSingleton } from "../singletons/tracer.js";
 
 export interface Run extends BaseRun {
   id: string;
@@ -35,7 +36,7 @@ export interface RunUpdate extends BaseRunUpdate {
 export interface LangChainTracerFields extends BaseCallbackHandlerInput {
   exampleId?: string;
   projectName?: string;
-  client?: Client;
+  client?: LangSmithTracingClientInterface;
 }
 
 export class LangChainTracer
@@ -48,7 +49,7 @@ export class LangChainTracer
 
   exampleId?: string;
 
-  client: Client;
+  client: LangSmithTracingClientInterface;
 
   constructor(fields: LangChainTracerFields = {}) {
     super(fields);
@@ -59,14 +60,7 @@ export class LangChainTracer
       getEnvironmentVariable("LANGCHAIN_PROJECT") ??
       getEnvironmentVariable("LANGCHAIN_SESSION");
     this.exampleId = exampleId;
-    const clientParams =
-      getEnvironmentVariable("LANGCHAIN_CALLBACKS_BACKGROUND") === "false"
-        ? {
-            // LangSmith has its own backgrounding system
-            blockOnRootRunFinalization: true,
-          }
-        : {};
-    this.client = client ?? new Client(clientParams);
+    this.client = client ?? getDefaultLangChainClientSingleton();
 
     const traceableTree = LangChainTracer.getTraceableRunTree();
     if (traceableTree) {
@@ -162,7 +156,7 @@ export class LangChainTracer
         parent_run: undefined,
 
         // inherited properties
-        client: this.client,
+        client: this.client as Client,
         project_name: this.projectName,
         reference_example_id: this.exampleId,
         tracingEnabled: true,

@@ -15,7 +15,9 @@ import {
   IndexingPolicy,
   SqlParameter,
   SqlQuerySpec,
+  VectorEmbedding,
   VectorEmbeddingPolicy,
+  VectorIndex,
 } from "@azure/cosmos";
 import { DefaultAzureCredential, TokenCredential } from "@azure/identity";
 
@@ -78,7 +80,7 @@ export interface AzureCosmosDBNoSQLConfig
   readonly metadataKey?: string;
 }
 
-const USER_AGENT_PREFIX = "langchainjs-azure-cosmosdb-nosql";
+const USER_AGENT_SUFFIX = "langchainjs-cdbnosql-vectorstore-javascript";
 
 /**
  * Azure Cosmos DB for NoSQL vCore vector store.
@@ -151,14 +153,14 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
         this.client = new CosmosClient({
           endpoint,
           key,
-          userAgentSuffix: USER_AGENT_PREFIX,
+          userAgentSuffix: USER_AGENT_SUFFIX,
         });
       } else {
         // Use managed identity
         this.client = new CosmosClient({
           endpoint,
           aadCredentials: dbConfig.credentials ?? new DefaultAzureCredential(),
-          userAgentSuffix: USER_AGENT_PREFIX,
+          userAgentSuffix: USER_AGENT_SUFFIX,
         } as CosmosClientOptions);
       }
     }
@@ -186,7 +188,7 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
           distanceFunction: "cosine",
           // Will be determined automatically during initialization
           dimensions: 0,
-        },
+        } as VectorEmbedding,
       ];
     }
 
@@ -195,7 +197,7 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
         {
           path: "/vector",
           type: "quantizedFlat",
-        },
+        } as VectorIndex,
       ];
     }
 
