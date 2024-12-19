@@ -104,15 +104,23 @@ ${JSON.stringify(zodToJsonSchema(this.schema))}
       const json = text.includes("```")
         ? text.trim().split(/```(?:json)?/)[1]
         : text.trim();
+
       return await this.schema.parseAsync(JSON.parse(json));
     } catch (e) {
-      try {
-        return await this.schema.parseAsync(JSON.parse(text.trim()));
-      } catch (e2) {
-        throw new OutputParserException(
-          `Failed to parse. Text: "${text}". Error: ${e2}`,
-          text
-        );
+      // eslint-disable-next-line no-instanceof/no-instanceof
+      if (e instanceof SyntaxError && e.message.includes("JSON")) {
+        // In case the error is JSON.parse related, try to parse the text directly
+        try {
+          return await this.schema.parseAsync(JSON.parse(text.trim()));
+        } catch (e2) {
+          throw new OutputParserException(
+            `Failed to parse. Text: "${text}". Error: ${e2}`,
+            text
+          );
+        }
+      } else {
+        // Otherwise, throw the original error (e.g. ZodError)
+        throw e;
       }
     }
   }

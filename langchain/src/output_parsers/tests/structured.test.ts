@@ -99,3 +99,31 @@ test("StructuredOutputParser throws error for JSON with backticks both inside an
 
   await expect(parser.parse(text)).rejects.toThrow("Failed to parse");
 });
+
+test("StructuredOutputParser handles valid JSON without triple backticks not conforming to schema", async () => {
+  const parser = StructuredOutputParser.fromZodSchema(
+    z.object({
+      name: z.string().describe("Human name"),
+      age: z.number().describe("Human age"),
+    })
+  );
+  const text = '{"name": "John Doe", "age": null}';
+
+  await expect(parser.parse(text)).rejects.toThrow(
+    "Expected number, received null"
+  );
+});
+
+test("StructuredOutputParser handles valid JSON with backticks and not conforming to schema", async () => {
+  const parser = StructuredOutputParser.fromZodSchema(
+    z.object({
+      name: z.string().describe("Human name"),
+      age: z.number().describe("Human age"),
+    })
+  );
+  const text = '```json\n{"name": "John Doe", "age": null }```';
+
+  await expect(parser.parse(text)).rejects.toThrow(
+    "Expected number, received null"
+  );
+});
