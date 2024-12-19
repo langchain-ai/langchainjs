@@ -257,7 +257,13 @@ function _convertDeltaToMessageChunk(
   } else if (role === "system") {
     return new SystemMessageChunk({ content, response_metadata });
   } else if (role === "developer") {
-    return new SystemMessageChunk({ content, response_metadata });
+    return new SystemMessageChunk({
+      content,
+      response_metadata,
+      additional_kwargs: {
+        __openai_role__: "developer",
+      },
+    });
   } else if (role === "function") {
     return new FunctionMessageChunk({
       content,
