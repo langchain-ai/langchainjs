@@ -82,7 +82,7 @@ export type VisitorOperationResult = {
  */
 export type VisitorComparisonResult = {
   [attr: string]: {
-    [comparator: string]: string | number;
+    [comparator: string]: string | number | boolean;
   };
 };
 
@@ -155,7 +155,7 @@ export class Comparison extends FilterDirective {
   constructor(
     public comparator: Comparator,
     public attribute: string,
-    public value: string | number
+    public value: string | number | boolean
   ) {
     super();
   }
