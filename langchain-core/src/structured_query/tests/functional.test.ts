@@ -41,17 +41,17 @@ describe("FunctionalTranslator", () => {
   });
 
   describe("visitComparison", () => {
-    const attributeByType = {
+    const attributesByType = {
       string: "stringValue",
       number: "numberValue",
       boolean: "booleanValue",
     };
     
     describe("returns true or false for valid comparisons", () => {
-      const inputValues = {
-        string: "value",
-        number: 1,
-        boolean: true,
+      const inputValuesByAttribute: { [key in string]: string | number | boolean } = {
+        stringValue: "value",
+        numberValue: 1,
+        booleanValue: true,
       };
       
       const validDocumentsByComparator: { [key in string]: Document<Record<string, unknown>>[] } = {
@@ -202,8 +202,8 @@ describe("FunctionalTranslator", () => {
       
       const stringComparators = translator.getAllowedComparatorsForType("string");
       for (const comparator of stringComparators) {
-        const value = inputValues.string;
-        const attribute = attributeByType.string;
+        const attribute = attributesByType.string;
+        const value = inputValuesByAttribute[attribute];
         const validDocuments = validDocumentsByComparator[comparator];
         for (const validDocument of validDocuments) {
           test(`${value} -> ${comparator} -> ${validDocument.metadata[attribute]}`, () => {
@@ -237,8 +237,8 @@ describe("FunctionalTranslator", () => {
 
       const numberComparators = translator.getAllowedComparatorsForType("number");
       for (const comparator of numberComparators) {
-        const value = inputValues.number;
-        const attribute = attributeByType.number;
+        const attribute = attributesByType.number;
+        const value = inputValuesByAttribute[attribute];
         const validDocuments = validDocumentsByComparator[comparator];
         for (const validDocument of validDocuments) {
           test(`${value} -> ${comparator} -> ${validDocument.metadata[attribute]}`, () => {
@@ -272,8 +272,8 @@ describe("FunctionalTranslator", () => {
 
       const booleanComparators = translator.getAllowedComparatorsForType("boolean");
       for (const comparator of booleanComparators) {
-        const value = inputValues.boolean;
-        const attribute = attributeByType.boolean;
+        const attribute = attributesByType.boolean;
+        const value = inputValuesByAttribute[attribute];
         const validDocuments = validDocumentsByComparator[comparator];
         for (const validDocument of validDocuments) {
           test(`${value} -> ${comparator} -> ${validDocument.metadata[attribute]}`, () => {
