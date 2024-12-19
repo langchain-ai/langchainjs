@@ -38,6 +38,11 @@ class EmbeddingsConnection<
     return "predict";
   }
 
+  get modelPublisher(): string {
+    // All the embedding models are currently published by "google"
+    return "google";
+  }
+
   async formatData(
     input: GoogleEmbeddingsInstance[],
     parameters: GoogleAIModelRequestParams
