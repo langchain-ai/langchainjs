@@ -119,7 +119,7 @@ export class BasicTranslator<
     } else {
       throw new Error("Unknown comparator or operator");
     }
-    return `$${func}`;
+    return `${func}`;
   }
 
   /**
