@@ -469,6 +469,7 @@ export abstract class ChatGoogleBase<AuthOptions>
     }
     const llm = this.bind({
       tools,
+      tool_choice: functionName,
     });
 
     if (!includeRaw) {
