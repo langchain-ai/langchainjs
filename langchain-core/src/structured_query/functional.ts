@@ -67,13 +67,11 @@ export class FunctionalTranslator extends BaseTranslator {
   }
   
   /**
-   * Returns the allowed comparators based
-   * on the data type of the input.
+   * Returns the allowed comparators for a given data type.
    * @param input The input value to get the allowed comparators for.
    * @returns An array of allowed comparators for the input data type.
    */
-  getAllowedComparatorsForInput(input: string | number | boolean): Comparator[] {
-    const inputType = typeof input;
+  getAllowedComparatorsForType(inputType: string): Comparator[] {
     switch (inputType) {
       case "string": {
         return [Comparators.eq, Comparators.ne, Comparators.gt, Comparators.gte, Comparators.lt, Comparators.lte];
@@ -183,7 +181,7 @@ export class FunctionalTranslator extends BaseTranslator {
     const { comparator, attribute, value } = comparison;
     const undefinedTrue = [Comparators.ne];
     if (this.allowedComparators.includes(comparator)) {
-      if (this.getAllowedComparatorsForInput(value).includes(comparator)) {
+      if (this.getAllowedComparatorsForType(typeof value).includes(comparator)) {
         throw new Error(`'${comparator}' comparator not allowed to be used with ${typeof value}`);
       }
       const comparatorFunction = this.getComparatorFunction(comparator);
