@@ -65,7 +65,7 @@ export class FunctionalTranslator extends BaseTranslator {
   formatFunction(): string {
     throw new Error("Not implemented");
   }
-  
+
   /**
    * Returns the allowed comparators for a given data type.
    * @param input The input value to get the allowed comparators for.
@@ -74,10 +74,24 @@ export class FunctionalTranslator extends BaseTranslator {
   getAllowedComparatorsForType(inputType: string): Comparator[] {
     switch (inputType) {
       case "string": {
-        return [Comparators.eq, Comparators.ne, Comparators.gt, Comparators.gte, Comparators.lt, Comparators.lte];
+        return [
+          Comparators.eq,
+          Comparators.ne,
+          Comparators.gt,
+          Comparators.gte,
+          Comparators.lt,
+          Comparators.lte,
+        ];
       }
       case "number": {
-        return [Comparators.eq, Comparators.ne, Comparators.gt, Comparators.gte, Comparators.lt, Comparators.lte];
+        return [
+          Comparators.eq,
+          Comparators.ne,
+          Comparators.gt,
+          Comparators.gte,
+          Comparators.lt,
+          Comparators.lte,
+        ];
       }
       case "boolean": {
         return [Comparators.eq, Comparators.ne];
@@ -87,7 +101,7 @@ export class FunctionalTranslator extends BaseTranslator {
       }
     }
   }
-  
+
   /**
    * Returns a function that performs a comparison based on the provided
    * comparator.
@@ -181,8 +195,12 @@ export class FunctionalTranslator extends BaseTranslator {
     const { comparator, attribute, value } = comparison;
     const undefinedTrue = [Comparators.ne];
     if (this.allowedComparators.includes(comparator)) {
-      if (!this.getAllowedComparatorsForType(typeof value).includes(comparator)) {
-        throw new Error(`'${comparator}' comparator not allowed to be used with ${typeof value}`);
+      if (
+        !this.getAllowedComparatorsForType(typeof value).includes(comparator)
+      ) {
+        throw new Error(
+          `'${comparator}' comparator not allowed to be used with ${typeof value}`
+        );
       }
       const comparatorFunction = this.getComparatorFunction(comparator);
       return (document: Document) => {

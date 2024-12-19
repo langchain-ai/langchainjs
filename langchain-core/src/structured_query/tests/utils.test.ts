@@ -56,7 +56,7 @@ test("Casting values correctly", () => {
     expect(typeof value).toBe("number");
     expect(isFloat(value)).toBe(true);
   });
-  
+
   booleanBoolean.map(castValue).forEach((value) => {
     expect(typeof value).toBe("boolean");
     expect(isBoolean(value)).toBe(true);

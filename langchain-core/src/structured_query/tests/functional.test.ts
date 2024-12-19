@@ -47,15 +47,19 @@ describe("FunctionalTranslator", () => {
         number: "numberValue",
         boolean: "booleanValue",
       };
-      
-      const inputValuesByAttribute: { [key in string]: string | number | boolean } = {
+
+      const inputValuesByAttribute: {
+        [key in string]: string | number | boolean;
+      } = {
         stringValue: "value",
         numberValue: 1,
         booleanValue: true,
       };
-      
+
       // documents that will match against the comparison
-      const validDocumentsByComparator: { [key in string]: Document<Record<string, unknown>>[] } = {
+      const validDocumentsByComparator: {
+        [key in string]: Document<Record<string, unknown>>[];
+      } = {
         [Comparators.eq]: [
           new Document({
             pageContent: "",
@@ -137,9 +141,11 @@ describe("FunctionalTranslator", () => {
           }),
         ],
       };
-      
+
       // documents that will not match against the comparison
-      const invalidDocumentsByComparator: { [key in string]: Document<Record<string, unknown>>[] } = {
+      const invalidDocumentsByComparator: {
+        [key in string]: Document<Record<string, unknown>>[];
+      } = {
         [Comparators.eq]: [
           new Document({
             pageContent: "",
@@ -201,8 +207,10 @@ describe("FunctionalTranslator", () => {
           }),
         ],
       };
-      
-      function generateComparatorTestsForType(type: "string" | "number" | "boolean") {
+
+      function generateComparatorTestsForType(
+        type: "string" | "number" | "boolean"
+      ) {
         const comparators = translator.getAllowedComparatorsForType(type);
         for (const comparator of comparators) {
           const attribute = attributesByType[type];
@@ -237,7 +245,7 @@ describe("FunctionalTranslator", () => {
           }
         }
       }
-      
+
       generateComparatorTestsForType("string");
       generateComparatorTestsForType("number");
       generateComparatorTestsForType("boolean");

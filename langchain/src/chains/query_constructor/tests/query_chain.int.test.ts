@@ -76,10 +76,10 @@ test("Query Chain Test", async () => {
       type: "number",
     },
     {
-        name: "isReleased",
-        description: "Whether the movie has been released",
-        type: "boolean",
-    }
+      name: "isReleased",
+      description: "Whether the movie has been released",
+      type: "boolean",
+    },
   ];
   const documentContents = "Brief summary of a movie";
 

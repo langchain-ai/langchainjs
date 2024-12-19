@@ -76,7 +76,7 @@ export function isString(value: unknown): boolean {
  * Checks if the provided value is a boolean.
  */
 export function isBoolean(value: unknown): boolean {
-    return typeof value === "boolean";
+  return typeof value === "boolean";
 }
 
 /**
