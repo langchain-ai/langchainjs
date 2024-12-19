@@ -176,7 +176,7 @@ describe("FunctionalTranslator", () => {
             metadata: {
               stringValue: "val",
               numberValue: 0,
-              booleanValue: false,
+              booleanValue: true,
             },
           }),
         ],
