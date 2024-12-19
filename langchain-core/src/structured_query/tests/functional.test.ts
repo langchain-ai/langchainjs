@@ -41,13 +41,13 @@ describe("FunctionalTranslator", () => {
   });
 
   describe("visitComparison", () => {
-    const attributesByType = {
-      string: "stringValue",
-      number: "numberValue",
-      boolean: "booleanValue",
-    };
-    
     describe("returns true or false for valid comparisons", () => {
+      const attributesByType = {
+        string: "stringValue",
+        number: "numberValue",
+        boolean: "booleanValue",
+      };
+      
       const inputValuesByAttribute: { [key in string]: string | number | boolean } = {
         stringValue: "value",
         numberValue: 1,
