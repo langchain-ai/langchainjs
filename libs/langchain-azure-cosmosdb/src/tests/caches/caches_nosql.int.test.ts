@@ -9,7 +9,7 @@ import {
 } from "@azure/cosmos";
 import { DefaultAzureCredential } from "@azure/identity";
 import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
-import { AzureCosmosDBNoSQLSemanticCache } from "../caches.js";
+import { AzureCosmosDBNoSQLSemanticCache } from "../../caches/caches_nosql.js";
 
 const DATABASE_NAME = "langchainTestCacheDB";
 const CONTAINER_NAME = "testContainer";
