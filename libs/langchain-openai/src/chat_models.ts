@@ -1841,7 +1841,6 @@ export class ChatOpenAI<
     | OpenAIClient.Chat.Completions.ChatCompletion
   > {
     const requestOptions = this._getClientOptions(options);
-    console.log(request, requestOptions);
     return this.caller.call(async () => {
       try {
         const res = await this.client.chat.completions.create(
