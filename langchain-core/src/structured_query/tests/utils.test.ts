@@ -1,6 +1,6 @@
 /* eslint-disable no-process-env */
 import { test, expect } from "@jest/globals";
-import { castValue, isFloat, isInt, isString } from "../utils.js";
+import { castValue, isFloat, isInt, isString, isBoolean } from "../utils.js";
 
 test("Casting values correctly", () => {
   const stringString = [
@@ -28,6 +28,8 @@ test("Casting values correctly", () => {
 
   const floatFloat = ["1.1", 2.2, 3.3];
 
+  const booleanBoolean = [true, false];
+
   stringString.map(castValue).forEach((value) => {
     expect(typeof value).toBe("string");
     expect(isString(value)).toBe(true);
@@ -53,5 +55,10 @@ test("Casting values correctly", () => {
   floatFloat.map(castValue).forEach((value) => {
     expect(typeof value).toBe("number");
     expect(isFloat(value)).toBe(true);
+  });
+  
+  booleanBoolean.map(castValue).forEach((value) => {
+    expect(typeof value).toBe("boolean");
+    expect(isBoolean(value)).toBe(true);
   });
 });
