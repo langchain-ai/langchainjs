@@ -54,6 +54,7 @@ describe("FunctionalTranslator", () => {
         booleanValue: true,
       };
       
+      // documents that will match against the comparison
       const validDocumentsByComparator: { [key in string]: Document<Record<string, unknown>>[] } = {
         [Comparators.eq]: [
           new Document({
@@ -137,6 +138,7 @@ describe("FunctionalTranslator", () => {
         ],
       };
       
+      // documents that will not match against the comparison
       const invalidDocumentsByComparator: { [key in string]: Document<Record<string, unknown>>[] } = {
         [Comparators.eq]: [
           new Document({
