@@ -202,109 +202,45 @@ describe("FunctionalTranslator", () => {
         ],
       };
       
-      const stringComparators = translator.getAllowedComparatorsForType("string");
-      for (const comparator of stringComparators) {
-        const attribute = attributesByType.string;
-        const value = inputValuesByAttribute[attribute];
-        const validDocuments = validDocumentsByComparator[comparator];
-        for (const validDocument of validDocuments) {
-          test(`${value} -> ${comparator} -> ${validDocument.metadata[attribute]}`, () => {
-            const comparison = translator.visitComparison({
-              attribute,
-              comparator,
-              value,
-              exprName: "Comparison",
-              accept: (visitor: Visitor) => visitor,
+      function generateComparatorTestsForType(type: "string" | "number" | "boolean") {
+        const comparators = translator.getAllowedComparatorsForType(type);
+        for (const comparator of comparators) {
+          const attribute = attributesByType[type];
+          const value = inputValuesByAttribute[attribute];
+          const validDocuments = validDocumentsByComparator[comparator];
+          for (const validDocument of validDocuments) {
+            test(`${value} -> ${comparator} -> ${validDocument.metadata[attribute]}`, () => {
+              const comparison = translator.visitComparison({
+                attribute,
+                comparator,
+                value,
+                exprName: "Comparison",
+                accept: (visitor: Visitor) => visitor,
+              });
+              const result = comparison(validDocument);
+              expect(result).toBeTruthy();
             });
-            const result = comparison(validDocument);
-            expect(result).toBeTruthy();
-          });
-        }
-
-        const invalidDocuments = invalidDocumentsByComparator[comparator];
-        for (const invalidDocument of invalidDocuments) {
-          test(`${value} -> ${comparator} -> ${invalidDocument.metadata[attribute]}`, () => {
-            const comparison = translator.visitComparison({
-              attribute,
-              comparator,
-              value,
-              exprName: "Comparison",
-              accept: (visitor: Visitor) => visitor,
+          }
+          const invalidDocuments = invalidDocumentsByComparator[comparator];
+          for (const invalidDocument of invalidDocuments) {
+            test(`${value} -> ${comparator} -> ${invalidDocument.metadata[attribute]}`, () => {
+              const comparison = translator.visitComparison({
+                attribute,
+                comparator,
+                value,
+                exprName: "Comparison",
+                accept: (visitor: Visitor) => visitor,
+              });
+              const result = comparison(invalidDocument);
+              expect(result).toBeFalsy();
             });
-            const result = comparison(invalidDocument);
-            expect(result).toBeFalsy();
-          });
-        }
-      }
-
-      const numberComparators = translator.getAllowedComparatorsForType("number");
-      for (const comparator of numberComparators) {
-        const attribute = attributesByType.number;
-        const value = inputValuesByAttribute[attribute];
-        const validDocuments = validDocumentsByComparator[comparator];
-        for (const validDocument of validDocuments) {
-          test(`${value} -> ${comparator} -> ${validDocument.metadata[attribute]}`, () => {
-            const comparison = translator.visitComparison({
-              attribute,
-              comparator,
-              value,
-              exprName: "Comparison",
-              accept: (visitor: Visitor) => visitor,
-            });
-            const result = comparison(validDocument);
-            expect(result).toBeTruthy();
-          });
-        }
-
-        const invalidDocuments = invalidDocumentsByComparator[comparator];
-        for (const invalidDocument of invalidDocuments) {
-          test(`${value} -> ${comparator} -> ${invalidDocument.metadata[attribute]}`, () => {
-            const comparison = translator.visitComparison({
-              attribute,
-              comparator,
-              value,
-              exprName: "Comparison",
-              accept: (visitor: Visitor) => visitor,
-            });
-            const result = comparison(invalidDocument);
-            expect(result).toBeFalsy();
-          });
+          }
         }
       }
-
-      const booleanComparators = translator.getAllowedComparatorsForType("boolean");
-      for (const comparator of booleanComparators) {
-        const attribute = attributesByType.boolean;
-        const value = inputValuesByAttribute[attribute];
-        const validDocuments = validDocumentsByComparator[comparator];
-        for (const validDocument of validDocuments) {
-          test(`${value} -> ${comparator} -> ${validDocument.metadata[attribute]}`, () => {
-            const comparison = translator.visitComparison({
-              attribute,
-              comparator,
-              value,
-              exprName: "Comparison",
-              accept: (visitor: Visitor) => visitor,
-            });
-            const result = comparison(validDocument);
-            expect(result).toBeTruthy();
-          });
-        }
-        const invalidDocuments = invalidDocumentsByComparator[comparator];
-        for (const invalidDocument of invalidDocuments) {
-          test(`${value} -> ${comparator} -> ${invalidDocument.metadata[attribute]}`, () => {
-            const comparison = translator.visitComparison({
-              attribute,
-              comparator,
-              value,
-              exprName: "Comparison",
-              accept: (visitor: Visitor) => visitor,
-            });
-            const result = comparison(invalidDocument);
-            expect(result).toBeFalsy();
-          });
-        }
-      }
+      
+      generateComparatorTestsForType("string");
+      generateComparatorTestsForType("number");
+      generateComparatorTestsForType("boolean");
     });
   });
 });
