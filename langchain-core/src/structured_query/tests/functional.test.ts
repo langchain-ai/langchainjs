@@ -1,3 +1,4 @@
+import { test, expect } from "@jest/globals";
 import { Document } from "../../documents/document.js";
 import { FunctionalTranslator } from "../functional.js";
 import { Comparators, Visitor } from "../ir.js";
@@ -53,7 +54,7 @@ describe("FunctionalTranslator", () => {
         boolean: true,
       };
       
-      const validDocumentsByComparator: { [key in string]: Document<Record<string, any>>[] } = {
+      const validDocumentsByComparator: { [key in string]: Document<Record<string, unknown>>[] } = {
         [Comparators.eq]: [
           new Document({
             pageContent: "",
@@ -132,7 +133,7 @@ describe("FunctionalTranslator", () => {
         ],
       };
       
-      const invalidDocumentsByComparator: { [key in string]: Document<Record<string, any>>[] } = {
+      const invalidDocumentsByComparator: { [key in string]: Document<Record<string, unknown>>[] } = {
         [Comparators.eq]: [
           new Document({
             pageContent: "",
