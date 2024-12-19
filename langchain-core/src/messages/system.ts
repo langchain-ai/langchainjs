@@ -57,14 +57,3 @@ export function isSystemMessageChunk(
 ): x is SystemMessageChunk {
   return x._getType() === "system";
 }
-
-/**
- * Represents a developer message in a conversation.
- */
-export class DeveloperMessage extends SystemMessage {}
-
-/**
- * Represents a chunk of a developer message, which can be concatenated with
- * other developer message chunks.
- */
-export class DeveloperMessageChunk extends SystemMessageChunk {}

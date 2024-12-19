@@ -1195,6 +1195,7 @@ test("Can stream o1 requests", async () => {
 test("Allows developer messages with o1", async () => {
   const model = new ChatOpenAI({
     model: "o1",
+    reasoningEffort: "low",
   });
   const res = await model.invoke([
     {

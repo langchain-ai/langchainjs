@@ -1113,6 +1113,8 @@ export class ChatOpenAI<
 
   modalities?: Array<OpenAIClient.Chat.ChatCompletionModality>;
 
+  reasoningEffort?: OpenAIClient.Chat.ChatCompletionReasoningEffort;
+
   constructor(
     fields?: ChatOpenAIFields,
     /** @deprecated */
@@ -1183,6 +1185,7 @@ export class ChatOpenAI<
     this.__includeRawResponse = fields?.__includeRawResponse;
     this.audio = fields?.audio;
     this.modalities = fields?.modalities;
+    this.reasoningEffort = fields?.reasoningEffort;
 
     if (this.azureOpenAIApiKey || this.azureADTokenProvider) {
       if (
@@ -1358,8 +1361,9 @@ export class ChatOpenAI<
     if (options?.prediction !== undefined) {
       params.prediction = options.prediction;
     }
-    if (options?.reasoning_effort !== undefined) {
-      params.reasoning_effort = options.reasoning_effort;
+    const reasoningEffort = options?.reasoning_effort ?? this.reasoningEffort;
+    if (reasoningEffort !== undefined) {
+      params.reasoning_effort = reasoningEffort;
     }
     return params;
   }
@@ -1837,6 +1841,7 @@ export class ChatOpenAI<
     | OpenAIClient.Chat.Completions.ChatCompletion
   > {
     const requestOptions = this._getClientOptions(options);
+    console.log(request, requestOptions);
     return this.caller.call(async () => {
       try {
         const res = await this.client.chat.completions.create(
