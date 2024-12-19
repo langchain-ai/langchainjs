@@ -17,8 +17,8 @@ import { castValue, isFilterEmpty } from "./utils.js";
  * the result of a comparison operation.
  */
 type ValueType = {
-  eq: string | number;
-  ne: string | number;
+  eq: string | number | boolean;
+  ne: string | number | boolean;
   lt: string | number;
   lte: string | number;
   gt: string | number;
