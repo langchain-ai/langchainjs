@@ -86,6 +86,7 @@ describe("FunctionalTranslator", () => {
           }),
         ],
         [Comparators.gte]: [
+          // test for greater than
           new Document({
             pageContent: "",
             metadata: {
@@ -94,6 +95,7 @@ describe("FunctionalTranslator", () => {
               booleanValue: true,
             },
           }),
+          // test for equal to
           new Document({
             pageContent: "",
             metadata: {
@@ -114,6 +116,7 @@ describe("FunctionalTranslator", () => {
           }),
         ],
         [Comparators.lte]: [
+          // test for less than
           new Document({
             pageContent: "",
             metadata: {
@@ -122,6 +125,7 @@ describe("FunctionalTranslator", () => {
               booleanValue: true,
             },
           }),
+          // test for equal to
           new Document({
             pageContent: "",
             metadata: {
