@@ -1157,8 +1157,6 @@ describe("Audio output", () => {
         content: [userInput],
       }),
     ]);
-    // console.log("userInputRes.content", userInputRes.content);
-    // console.log("userInputRes.additional_kwargs.audio", userInputRes.additional_kwargs.audio);
     expect(userInputRes.additional_kwargs.audio).toBeTruthy();
     expect(
       (userInputRes.additional_kwargs.audio as Record<string, any>).transcript
@@ -1191,6 +1189,23 @@ test("Can stream o1 requests", async () => {
     expect(finalMsg.content.length).toBeGreaterThanOrEqual(1);
   }
 
-  // A
   expect(numChunks).toBeGreaterThan(3);
+});
+
+test("Allows developer messages with o1", async () => {
+  const model = new ChatOpenAI({
+    model: "o1",
+    reasoningEffort: "low",
+  });
+  const res = await model.invoke([
+    {
+      role: "developer",
+      content: `Always respond only with the word "testing"`,
+    },
+    {
+      role: "user",
+      content: "hi",
+    },
+  ]);
+  expect(res.content).toEqual("testing");
 });
