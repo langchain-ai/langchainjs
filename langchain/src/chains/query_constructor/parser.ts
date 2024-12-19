@@ -94,7 +94,7 @@ export class QueryTransformer {
               return new Comparison(
                 funcName as Comparator,
                 traverse(node.args[0]) as string,
-                traverse(node.args[1]) as string | number
+                traverse(node.args[1]) as string | number | boolean
               );
             }
             throw new Error("Comparator must have exactly 2 arguments");
