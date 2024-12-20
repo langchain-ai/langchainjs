@@ -124,7 +124,9 @@ export class AirtableLoader extends BaseDocumentLoader {
    * @param offset - An optional string representing the offset for pagination.
    * @returns A record containing the combined properties of `kwargs` and the provided offset.
    */
-  private constructRequestBody(offset?: string): Record<string, any> { return { ...this.kwargs, offset }; }
+  private constructRequestBody(offset?: string): Record<string, any> {
+    return { ...this.kwargs, offset };
+  }
 
   /**
    * Sends the API request to Airtable and handles the response.
@@ -134,16 +136,18 @@ export class AirtableLoader extends BaseDocumentLoader {
    * @returns A promise that resolves to an AirtableResponse object.
    * @throws Will throw an error if the Airtable API request fails.
    */
-  private async fetchRecords(body: Record<string, any>): Promise<AirtableResponse> {
+  private async fetchRecords(
+    body: Record<string, any>
+  ): Promise<AirtableResponse> {
     const url = `${AirtableLoader.BASE_URL}/${this.baseId}/${this.tableId}`;
     try {
       const response = await fetch(url, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${this.apiToken}`,
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(body)
+        body: JSON.stringify(body),
       });
 
       if (!response.ok) {
