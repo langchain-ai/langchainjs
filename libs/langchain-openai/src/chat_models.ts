@@ -15,6 +15,7 @@ import {
   OpenAIToolCall,
   isAIMessage,
   UsageMetadata,
+  BaseMessageFields,
 } from "@langchain/core/messages";
 import {
   type ChatGeneration,
@@ -1677,9 +1678,13 @@ export class ChatOpenAI<
         }
         // Fields are not serialized unless passed to the constructor
         // Doing this ensures all fields on the message are serialized
-        generation.message = new AIMessage({
-          ...generation.message,
-        });
+        generation.message = new AIMessage(
+          Object.fromEntries(
+            Object.entries(generation.message).filter(
+              ([key]) => !key.startsWith("lc_")
+            )
+          ) as BaseMessageFields
+        );
         generations.push(generation);
       }
       return {
