@@ -27,7 +27,7 @@ export type VectaraVisitorStructuredQueryResult = {
   filter?: { filter?: VectaraOperationResult | VectaraComparisonResult };
 };
 
-type Value = number | string;
+type Value = number | string | boolean;
 function processValue(value: Value): string {
   /** Convert a value to a string and add single quotes if it is a string. */
   if (typeof value === "string") {
