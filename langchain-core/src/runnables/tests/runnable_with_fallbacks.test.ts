@@ -75,6 +75,7 @@ test("RunnableWithFallbacks stream events with local storage and callbacks added
     const res = await llmWithFallbacks.invoke(input);
     const stream = await llmWithFallbacks.stream(input);
     for await (const _ of stream) {
+      void _;
     }
     return res;
   });
