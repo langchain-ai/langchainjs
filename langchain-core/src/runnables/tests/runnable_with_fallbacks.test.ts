@@ -1,7 +1,11 @@
 /* eslint-disable no-promise-executor-return */
 /* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable no-process-env */
 import { test, expect } from "@jest/globals";
+import { AsyncLocalStorage } from "node:async_hooks";
 import { FakeLLM, FakeStreamingLLM } from "../../utils/testing/index.js";
+import { RunnableLambda } from "../base.js";
+import { AsyncLocalStorageProviderSingleton } from "../../singletons/index.js";
 
 test("RunnableWithFallbacks", async () => {
   const llm = new FakeLLM({
@@ -54,4 +58,36 @@ test("RunnableWithFallbacks stream", async () => {
   }
   expect(chunks.length).toBeGreaterThan(1);
   expect(chunks.join("")).toEqual("What up");
+});
+
+test("RunnableWithFallbacks stream events with local storage and callbacks added via env vars", async () => {
+  process.env.LANGCHAIN_VERBOSE = "true";
+  AsyncLocalStorageProviderSingleton.initializeGlobalInstance(
+    new AsyncLocalStorage()
+  );
+  const llm = new FakeStreamingLLM({
+    thrownErrorString: "Bad error!",
+  });
+  const llmWithFallbacks = llm.withFallbacks({
+    fallbacks: [new FakeStreamingLLM({})],
+  });
+  const runnable = RunnableLambda.from(async (input: any) => {
+    const res = await llmWithFallbacks.invoke(input);
+    const stream = await llmWithFallbacks.stream(input);
+    for await (const _ of stream) {
+    }
+    return res;
+  });
+  const stream = await runnable.streamEvents("hi", {
+    version: "v2",
+  });
+  const chunks = [];
+  for await (const chunk of stream) {
+    if (chunk.event === "on_llm_stream") {
+      chunks.push(chunk);
+    }
+  }
+  expect(chunks.length).toBeGreaterThan(1);
+  console.log(JSON.stringify(chunks, null, 2));
+  expect(chunks.map((chunk) => chunk.data.chunk.text).join("")).toEqual("hihi");
 });
