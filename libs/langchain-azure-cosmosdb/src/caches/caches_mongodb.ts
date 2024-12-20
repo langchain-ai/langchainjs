@@ -7,27 +7,23 @@ import {
 import { Generation } from "@langchain/core/outputs";
 import { Document } from "@langchain/core/documents";
 import { EmbeddingsInterface } from "@langchain/core/embeddings";
-import { CosmosClient, CosmosClientOptions } from "@azure/cosmos";
-import { DefaultAzureCredential } from "@azure/identity";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
+import { MongoClient } from "mongodb";
 import {
-  AzureCosmosDBNoSQLConfig,
-  AzureCosmosDBNoSQLVectorStore,
-} from "./azure_cosmosdb_nosql.js";
-
-const USER_AGENT_SUFFIX = "langchainjs-cdbnosql-semanticcache-javascript";
-const DEFAULT_CONTAINER_NAME = "semanticCacheContainer";
+  AzureCosmosDBMongoDBConfig,
+  AzureCosmosDBMongoDBVectorStore,
+  AzureCosmosDBMongoDBSimilarityType,
+} from "../azure_cosmosdb_mongodb.js";
 
 /**
- * Represents a Semantic Cache that uses CosmosDB NoSQL backend as the underlying
+ * Represents a Semantic Cache that uses CosmosDB MongoDB backend as the underlying
  * storage system.
  *
  * @example
  * ```typescript
  * const embeddings = new OpenAIEmbeddings();
- * const cache = new AzureCosmosDBNoSQLSemanticCache(embeddings, {
- *   databaseName: DATABASE_NAME,
- *   containerName: CONTAINER_NAME
+ * const cache = new AzureCosmosDBMongoDBSemanticCache(embeddings, {
+ *   client?: MongoClient
  * });
  * const model = new ChatOpenAI({cache});
  *
@@ -36,81 +32,61 @@ const DEFAULT_CONTAINER_NAME = "semanticCacheContainer";
  * console.log(response);
  * ```
  */
-export class AzureCosmosDBNoSQLSemanticCache extends BaseCache {
+export class AzureCosmosDBMongoDBSemanticCache extends BaseCache {
   private embeddings: EmbeddingsInterface;
 
-  private config: AzureCosmosDBNoSQLConfig;
+  private config: AzureCosmosDBMongoDBConfig;
 
   private similarityScoreThreshold: number;
 
-  private cacheDict: { [key: string]: AzureCosmosDBNoSQLVectorStore } = {};
+  private cacheDict: { [key: string]: AzureCosmosDBMongoDBVectorStore } = {};
+
+  private readonly client: MongoClient | undefined;
 
   private vectorDistanceFunction: string;
 
   constructor(
     embeddings: EmbeddingsInterface,
-    dbConfig: AzureCosmosDBNoSQLConfig,
+    dbConfig: AzureCosmosDBMongoDBConfig,
     similarityScoreThreshold: number = 0.6
   ) {
     super();
-    let client: CosmosClient;
 
     const connectionString =
       dbConfig.connectionString ??
-      getEnvironmentVariable("AZURE_COSMOSDB_NOSQL_CONNECTION_STRING");
+      getEnvironmentVariable("AZURE_COSMOSDB_MONGODB_CONNECTION_STRING");
 
-    const endpoint =
-      dbConfig.endpoint ??
-      getEnvironmentVariable("AZURE_COSMOSDB_NOSQL_ENDPOINT");
-
-    if (!dbConfig.client && !connectionString && !endpoint) {
+    if (!dbConfig.client && !connectionString) {
       throw new Error(
-        "AzureCosmosDBNoSQLSemanticCache client, connection string or endpoint must be set."
+        "AzureCosmosDBMongoDBSemanticCache client or connection string must be set."
       );
     }
 
     if (!dbConfig.client) {
-      if (connectionString) {
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        let [endpoint, key] = connectionString!.split(";");
-        [, endpoint] = endpoint.split("=");
-        [, key] = key.split("=");
-
-        client = new CosmosClient({
-          endpoint,
-          key,
-          userAgentSuffix: USER_AGENT_SUFFIX,
-        });
-      } else {
-        // Use managed identity
-        client = new CosmosClient({
-          endpoint,
-          aadCredentials: dbConfig.credentials ?? new DefaultAzureCredential(),
-          userAgentSuffix: USER_AGENT_SUFFIX,
-        } as CosmosClientOptions);
-      }
+      this.client = new MongoClient(connectionString!, {
+        appName: "langchainjs",
+      });
     } else {
-      client = dbConfig.client;
+      this.client = dbConfig.client;
     }
-
-    this.vectorDistanceFunction =
-      dbConfig.vectorEmbeddingPolicy?.vectorEmbeddings[0].distanceFunction ??
-      "cosine";
 
     this.config = {
       ...dbConfig,
-      client,
-      databaseName: dbConfig.databaseName,
-      containerName: dbConfig.containerName ?? DEFAULT_CONTAINER_NAME,
+      client: this.client,
+      collectionName: dbConfig.collectionName ?? "semanticCacheContainer",
     };
-    this.embeddings = embeddings;
+
     this.similarityScoreThreshold = similarityScoreThreshold;
+    this.embeddings = embeddings;
+    this.vectorDistanceFunction =
+      dbConfig?.indexOptions?.similarity ??
+      AzureCosmosDBMongoDBSimilarityType.COS;
   }
 
   private getLlmCache(llmKey: string) {
     const key = getCacheKey(llmKey);
     if (!this.cacheDict[key]) {
-      this.cacheDict[key] = new AzureCosmosDBNoSQLVectorStore(
+      this.cacheDict[key] = new AzureCosmosDBMongoDBVectorStore(
         this.embeddings,
         this.config
       );
@@ -125,18 +101,25 @@ export class AzureCosmosDBNoSQLSemanticCache extends BaseCache {
    * @param llmKey The LLM key used to construct the cache key.
    * @returns An array of Generations if found, null otherwise.
    */
-  public async lookup(prompt: string, llmKey: string) {
+  async lookup(prompt: string, llmKey: string): Promise<Generation[] | null> {
     const llmCache = this.getLlmCache(llmKey);
 
-    const results = await llmCache.similaritySearchWithScore(prompt, 1);
+    const queryEmbedding = await this.embeddings.embedQuery(prompt);
+    const results = await llmCache.similaritySearchVectorWithScore(
+      queryEmbedding,
+      1,
+      this.config.indexOptions?.indexType
+    );
     if (!results.length) return null;
 
     const generations = results
       .flatMap(([document, score]) => {
         const isSimilar =
-          (this.vectorDistanceFunction === "euclidean" &&
+          (this.vectorDistanceFunction ===
+            AzureCosmosDBMongoDBSimilarityType.L2 &&
             score <= this.similarityScoreThreshold) ||
-          (this.vectorDistanceFunction !== "euclidean" &&
+          (this.vectorDistanceFunction !==
+            AzureCosmosDBMongoDBSimilarityType.L2 &&
             score >= this.similarityScoreThreshold);
 
         if (!isSimilar) return undefined;
@@ -161,20 +144,24 @@ export class AzureCosmosDBNoSQLSemanticCache extends BaseCache {
     prompt: string,
     llmKey: string,
     returnValue: Generation[]
-  ) {
+  ): Promise<void> {
     const serializedGenerations = returnValue.map((generation) =>
       JSON.stringify(serializeGeneration(generation))
     );
+
     const llmCache = this.getLlmCache(llmKey);
+
     const metadata = {
       llm_string: llmKey,
       prompt,
       return_value: serializedGenerations,
     };
+
     const doc = new Document({
       pageContent: prompt,
       metadata,
     });
+
     await llmCache.addDocuments([doc]);
   }
 
