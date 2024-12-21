@@ -73,12 +73,19 @@ export function isString(value: unknown): boolean {
 }
 
 /**
+ * Checks if the provided value is a boolean.
+ */
+export function isBoolean(value: unknown): boolean {
+  return typeof value === "boolean";
+}
+
+/**
  * Casts a value that might be string or number to actual string or number.
  * Since LLM might return back an integer/float as a string, we need to cast
  * it back to a number, as many vector databases can't handle number as string
  * values as a comparator.
  */
-export function castValue(input: unknown): string | number {
+export function castValue(input: unknown): string | number | boolean {
   let value;
   if (isString(input)) {
     value = input as string;
@@ -86,6 +93,8 @@ export function castValue(input: unknown): string | number {
     value = parseInt(input as string, 10);
   } else if (isFloat(input)) {
     value = parseFloat(input as string);
+  } else if (isBoolean(input)) {
+    value = Boolean(input);
   } else {
     throw new Error("Unsupported value type");
   }
