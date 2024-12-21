@@ -1,6 +1,5 @@
 import {
   isFilterEmpty,
-  isBoolean,
   isFloat,
   isInt,
   isObject,
@@ -29,8 +28,8 @@ import {
  * structured query. It can be a string or a number.
  */
 type ValueType = {
-  eq: string | number | boolean;
-  ne: string | number | boolean;
+  eq: string | number;
+  ne: string | number;
   lt: string | number;
   lte: string | number;
   gt: string | number;
@@ -127,7 +126,7 @@ export class SupabaseTranslator<
    * @param includeType Whether to include the data type in the column name.
    * @returns The built column name.
    */
-  buildColumnName(attr: string, value: string | number | boolean, includeType = true) {
+  buildColumnName(attr: string, value: string | number, includeType = true) {
     let column = "";
     if (isString(value)) {
       column = `metadata->>${attr}`;
@@ -135,8 +134,6 @@ export class SupabaseTranslator<
       column = `metadata->${attr}${includeType ? "::int" : ""}`;
     } else if (isFloat(value)) {
       column = `metadata->${attr}${includeType ? "::float" : ""}`;
-    } else if(isBoolean(value)) {
-      column = `metadata->${attr}${includeType ? "::bool" : ""}`;
     } else {
       throw new Error("Data type not supported");
     }
