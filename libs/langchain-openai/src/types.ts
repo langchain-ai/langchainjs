@@ -188,6 +188,12 @@ export interface OpenAIChatInput extends OpenAIBaseInput {
    * [Learn more](https://platform.openai.com/docs/guides/audio).
    */
   audio?: OpenAIClient.Chat.ChatCompletionAudioParam;
+
+  /**
+   * Constrains effort on reasoning for reasoning models. Currently supported values are low, medium, and high.
+   * Reducing reasoning effort can result in faster responses and fewer tokens used on reasoning in a response.
+   */
+  reasoningEffort?: OpenAIClient.ChatCompletionReasoningEffort;
 }
 
 export declare interface AzureOpenAIInput {

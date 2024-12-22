@@ -44,23 +44,23 @@ The conceptual guide does not cover step-by-step instructions or specific implem
 
 - **[AIMessageChunk](/docs/concepts/messages#aimessagechunk)**: A partial response from an AI message. Used when streaming responses from a chat model.
 - **[AIMessage](/docs/concepts/messages#aimessage)**: Represents a complete response from an AI model.
-- **[StructuredTool](/docs/concepts/tools#structuredtool)**: The base class for all tools in LangChain.
+- **[StructuredTool](https://api.js.langchain.com/classes/_langchain_core.tools.StructuredTool.html)**: The base class for all tools in LangChain.
 - **[batch](/docs/concepts/runnables)**: Use to execute a runnable with batch inputs a Runnable.
-- **[bindTools](/docs/concepts/chat_models#bind-tools)**: Allows models to interact with tools.
+- **[bindTools](/docs/concepts/tool_calling/#tool-binding)**: Allows models to interact with tools.
 - **[Caching](/docs/concepts/chat_models#caching)**: Storing results to avoid redundant calls to a chat model.
 - **[Context window](/docs/concepts/chat_models#context-window)**: The maximum size of input a chat model can process.
 - **[Conversation patterns](/docs/concepts/chat_history#conversation-patterns)**: Common patterns in chat interactions.
 - **[Document](https://api.js.langchain.com/classes/_langchain_core.documents.Document.html)**: LangChain's representation of a document.
-- **[Embedding models](/docs/concepts/multimodality#embedding-models)**: Models that generate vector embeddings for various data types.
+- **[Embedding models](/docs/concepts/embedding_models)**: Models that generate vector embeddings for various data types.
 - **[HumanMessage](/docs/concepts/messages#humanmessage)**: Represents a message from a human user.
 - **[input and output types](/docs/concepts/runnables#input-and-output-types)**: Types used for input and output in Runnables.
-- **[Integration packages](/docs/concepts/architecture#partner-packages)**: Third-party packages that integrate with LangChain.
+- **[Integration packages](/docs/concepts/architecture#integration-packages)**: Third-party packages that integrate with LangChain.
 - **[invoke](/docs/concepts/runnables)**: A standard method to invoke a Runnable.
 - **[JSON mode](/docs/concepts/structured_outputs#json-mode)**: Returning responses in JSON format.
-- **[@langchain/community](/docs/concepts/architecture#langchain-community)**: Community-driven components for LangChain.
-- **[@langchain/core](/docs/concepts/architecture#langchain-core)**: Core langchain package. Includes base interfaces and in-memory implementations.
+- **[@langchain/community](/docs/concepts/architecture#langchaincommunity)**: Community-driven components for LangChain.
+- **[@langchain/core](/docs/concepts/architecture#langchaincore)**: Core langchain package. Includes base interfaces and in-memory implementations.
 - **[langchain](/docs/concepts/architecture#langchain)**: A package for higher level components (e.g., some pre-built chains).
-- **[@langchain/langgraph](/docs/concepts/architecture#langgraph)**: Powerful orchestration layer for LangChain. Use to build complex pipelines and workflows.
+- **[@langchain/langgraph](/docs/concepts/architecture#langchainlanggraph)**: Powerful orchestration layer for LangChain. Use to build complex pipelines and workflows.
 - **[Managing chat history](/docs/concepts/chat_history#managing-chat-history)**: Techniques to maintain and manage the chat history.
 - **[OpenAI format](/docs/concepts/messages#openai-format)**: OpenAI's message format for chat models.
 - **[Propagation of RunnableConfig](/docs/concepts/runnables#propagation-of-runnableconfig)**: Propagating configuration through Runnables.
@@ -69,7 +69,7 @@ The conceptual guide does not cover step-by-step instructions or specific implem
 - **[RunnableConfig](/docs/concepts/runnables#runnableconfig)**: Use to pass run time information to Runnables (e.g., `runName`, `runId`, `tags`, `metadata`, `maxConcurrency`, `recursionLimit`, `configurable`).
 - **[Standard parameters for chat models](/docs/concepts/chat_models#standard-parameters)**: Parameters such as API key, `temperature`, and `maxTokens`,
 - **[stream](/docs/concepts/streaming)**: Use to stream output from a Runnable or a graph.
-- **[Tokenization](/docs/concepts/tokens)**: The process of converting data into tokens and vice versa.
+- **[Tokenization](/docs/concepts/tokens#how-tokens-work-in-language-models)**: The process of converting data into tokens and vice versa.
 - **[Tokens](/docs/concepts/tokens)**: The basic unit that a language model reads, processes, and generates under the hood.
 - **[Tool artifacts](/docs/concepts/tools#tool-artifacts)**: Add artifacts to the output of a tool that will not be sent to the model, but will be available for downstream processing.
 - **[Tool binding](/docs/concepts/tool_calling#tool-binding)**: Binding tools to models.

@@ -12413,7 +12413,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/google-common@^0.1.0, @langchain/google-common@workspace:*, @langchain/google-common@workspace:libs/langchain-google-common, @langchain/google-common@~0.1.4":
+"@langchain/google-common@^0.1.0, @langchain/google-common@workspace:*, @langchain/google-common@workspace:libs/langchain-google-common, @langchain/google-common@~0.1.5":
   version: 0.0.0-use.local
   resolution: "@langchain/google-common@workspace:libs/langchain-google-common"
   dependencies:
@@ -12448,13 +12448,13 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/google-gauth@workspace:libs/langchain-google-gauth, @langchain/google-gauth@~0.1.4":
+"@langchain/google-gauth@workspace:libs/langchain-google-gauth, @langchain/google-gauth@~0.1.5":
   version: 0.0.0-use.local
   resolution: "@langchain/google-gauth@workspace:libs/langchain-google-gauth"
   dependencies:
     "@jest/globals": ^29.5.0
     "@langchain/core": "workspace:*"
-    "@langchain/google-common": ~0.1.4
+    "@langchain/google-common": ~0.1.5
     "@langchain/scripts": ">=0.1.0 <0.2.0"
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
@@ -12527,7 +12527,7 @@ __metadata:
     "@jest/globals": ^29.5.0
     "@langchain/core": "workspace:*"
     "@langchain/google-common": ^0.1.0
-    "@langchain/google-webauth": ~0.1.4
+    "@langchain/google-webauth": ~0.1.5
     "@langchain/scripts": ">=0.1.0 <0.2.0"
     "@langchain/standard-tests": 0.0.0
     "@swc/core": ^1.3.90
@@ -12563,7 +12563,7 @@ __metadata:
     "@jest/globals": ^29.5.0
     "@langchain/core": "workspace:*"
     "@langchain/google-common": ^0.1.0
-    "@langchain/google-gauth": ~0.1.4
+    "@langchain/google-gauth": ~0.1.5
     "@langchain/scripts": ">=0.1.0 <0.2.0"
     "@langchain/standard-tests": 0.0.0
     "@swc/core": ^1.3.90
@@ -12592,13 +12592,13 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/google-webauth@workspace:libs/langchain-google-webauth, @langchain/google-webauth@~0.1.4":
+"@langchain/google-webauth@workspace:libs/langchain-google-webauth, @langchain/google-webauth@~0.1.5":
   version: 0.0.0-use.local
   resolution: "@langchain/google-webauth@workspace:libs/langchain-google-webauth"
   dependencies:
     "@jest/globals": ^29.5.0
     "@langchain/core": "workspace:*"
-    "@langchain/google-common": ~0.1.4
+    "@langchain/google-common": ~0.1.5
     "@langchain/scripts": ">=0.1.0 <0.2.0"
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
@@ -12904,7 +12904,7 @@ __metadata:
     jest: ^29.5.0
     jest-environment-node: ^29.6.4
     js-tiktoken: ^1.0.12
-    openai: ^4.71.0
+    openai: ^4.77.0
     prettier: ^2.8.3
     release-it: ^17.6.0
     rimraf: ^5.0.1
@@ -36216,9 +36216,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"openai@npm:^4.71.0":
-  version: 4.71.0
-  resolution: "openai@npm:4.71.0"
+"openai@npm:^4.77.0":
+  version: 4.77.0
+  resolution: "openai@npm:4.77.0"
   dependencies:
     "@types/node": ^18.11.18
     "@types/node-fetch": ^2.6.4
@@ -36234,7 +36234,7 @@ __metadata:
       optional: true
   bin:
     openai: bin/cli
-  checksum: ba4b3772e806c59b1ea1235a40486392c797906e45dd97914f2cd819b4be2996e207c7b7c67d43236692300354f4e9ffa8ebfca6e97d3555655ebf0f3f01e3f2
+  checksum: e311130e3b35a7dc924e7125cca3246b7ac958b3c451f2f4ef2cae72144c82429f9c6db7bf67059fc9e10f3911087ebf8a9a4b2919ac915235ed3c324897b146
   languageName: node
   linkType: hard
 
