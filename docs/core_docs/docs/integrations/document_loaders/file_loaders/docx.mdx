@@ -23,3 +23,28 @@ const loader = new DocxLoader(
 
 const docs = await loader.load();
 ```
+
+
+# Doc files
+
+This example goes over how to load data from doc files.
+
+# Setup
+
+```bash npm2yarn
+npm install @langchain/community @langchain/core word-extractor
+```
+
+# Usage
+
+```typescript
+import { DocxLoader } from "@langchain/community/document_loaders/fs/docx";
+
+const loader = new DocxLoader(
+  "src/document_loaders/tests/example_data/attentio.docx",
+  {
+    type: "doc",
+  }
+);
+
+const docs = await loader.load();
