@@ -19,7 +19,7 @@ The `arXiv Retriever` allows users to query the arXiv database for academic arti
 | ---------------- | ---------------------------- | ---------------------------------------------------------------------------- |
 | `ArxivRetriever` | Academic articles from arXiv | [`@langchain/community`](https://www.npmjs.com/package/@langchain/community) |
 
-## Setup/Installation
+## Setup
 
 Ensure the following dependencies are installed:
 
@@ -30,7 +30,7 @@ Ensure the following dependencies are installed:
 npm install pdf-parse fast-xml-parser
 ```
 
-## Instantiate the retriever
+## Instantiation
 
 ```typescript
 const retriever = new ArxivRetriever({
@@ -95,5 +95,7 @@ const ragChain = RunnableSequence.from([
 
 await ragChain.invoke("What are the latest advances in quantum computing?");
 ```
+
+## API reference
 
 For detailed documentation of all ArxivRetriever features and configurations, head to the [API reference](https://api.js.langchain.com/classes/_langchain_community.retrievers_arxiv.ArxivRetriever.html)
