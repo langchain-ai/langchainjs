@@ -1,3 +1,4 @@
+/* eslint-disable import/no-extraneous-dependencies */
 import { Document } from "@langchain/core/documents";
 import { XMLParser } from "fast-xml-parser";
 
