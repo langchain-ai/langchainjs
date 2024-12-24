@@ -438,6 +438,7 @@ export const config = {
     "chat_models/zhipuai",
     "retrievers/amazon_kendra",
     "retrievers/amazon_knowledge_base",
+    "retrievers/arxiv",
     "retrievers/dria",
     "retrievers/metal",
     "retrievers/supabase",
