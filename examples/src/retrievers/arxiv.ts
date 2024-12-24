@@ -7,7 +7,7 @@ export const run = async () => {
 
   const queryId = "1605.08386 2103.03404";
   const retrieverById = new ArxivRetriever({
-    returnFullDocuments: true,
+    getFullDocuments: true,
     maxSearchResults: 5,
   });
   const documentsById = await retrieverById.invoke(queryId);
@@ -42,7 +42,7 @@ export const run = async () => {
 
   const queryNat = "What is the ImageBind model?";
   const retrieverByNat = new ArxivRetriever({
-    returnFullDocuments: false,
+    getFullDocuments: false,
     maxSearchResults: 2,
   });
   const documentsByQuery = await retrieverByNat.invoke(queryNat);

@@ -4,7 +4,7 @@ import { ArxivRetriever } from "../arxiv.js";
 test("ArxivRetriever fetching document summaries test", async () => {
   // Sample integration test for ArxivRetriever using the "machine learning" query
   const retriever = new ArxivRetriever({
-    returnFullDocuments: false,
+    getFullDocuments: false,
     maxSearchResults: 5,
   });
   const query = "machine learning";
@@ -43,7 +43,7 @@ test("ArxivRetriever fetching document summaries test", async () => {
 test("ArxivRetriever fetching document summaries with invalid query test", async () => {
   // Sample test for ArxivRetriever using an invalid query
   const retriever = new ArxivRetriever({
-    returnFullDocuments: false,
+    getFullDocuments: false,
     maxSearchResults: 5,
   });
   const query = "fjalsdkjfw";
@@ -56,7 +56,7 @@ test("ArxivRetriever fetching document summaries with invalid query test", async
 test("ArxivRetriever fetching document summaries with empty query test", async () => {
   // Sample test for ArxivRetriever using an empty query
   const retriever = new ArxivRetriever({
-    returnFullDocuments: false,
+    getFullDocuments: false,
     maxSearchResults: 5,
   });
   const query = "";
@@ -70,7 +70,7 @@ test("ArxivRetriever fetching document summaries with invalid maxSearchResults t
   // Sample test for ArxivRetriever using an invalid maxSearchResults
   try {
     const retriever = new ArxivRetriever({
-      returnFullDocuments: true,
+      getFullDocuments: true,
       maxSearchResults: -1,
     });
     const query = "machine learning";
@@ -87,7 +87,7 @@ test("ArxivRetriever fetching document summaries with zero maxSearchResults test
   // Sample test for ArxivRetriever using an zero maxSearchResults
   try {
     const retriever = new ArxivRetriever({
-      returnFullDocuments: true,
+      getFullDocuments: true,
       maxSearchResults: 0,
     });
     const query = "machine learning";
@@ -103,7 +103,7 @@ test("ArxivRetriever fetching document summaries with zero maxSearchResults test
 test("ArxivRetriever fetching full documents test", async () => {
   // Sample test for fetching full documents with ArxivRetriever
   const retriever = new ArxivRetriever({
-    returnFullDocuments: true,
+    getFullDocuments: true,
     maxSearchResults: 5,
   });
   const query = "machine learning";
@@ -145,7 +145,7 @@ test("ArxivRetriever fetching full documents test", async () => {
 test("ArxivRetriever fetching full documents with invalid query test", async () => {
   // Sample test for fetching full documents with ArxivRetriever using an invalid query
   const retriever = new ArxivRetriever({
-    returnFullDocuments: true,
+    getFullDocuments: true,
     maxSearchResults: 5,
   });
   const query = "fjalsdkjfw";
@@ -158,7 +158,7 @@ test("ArxivRetriever fetching full documents with invalid query test", async () 
 test("ArxivRetriever fetching full documents with empty query test", async () => {
   // Sample test for fetching full documents with ArxivRetriever using an empty query
   const retriever = new ArxivRetriever({
-    returnFullDocuments: true,
+    getFullDocuments: true,
     maxSearchResults: 5,
   });
   const query = "";
@@ -172,7 +172,7 @@ test("ArxivRetriever fetching full documents with invalid maxSearchResults test"
   // Sample test for fetching full documents with ArxivRetriever using an invalid maxSearchResults
   try {
     const retriever = new ArxivRetriever({
-      returnFullDocuments: true,
+      getFullDocuments: true,
       maxSearchResults: -1,
     });
     const query = "machine learning";
@@ -189,7 +189,7 @@ test("ArxivRetriever fetching full documents with zero maxSearchResults", async 
   // Sample test for fetching full documents with ArxivRetriever using an zero maxSearchResults
   try {
     const retriever = new ArxivRetriever({
-      returnFullDocuments: true,
+      getFullDocuments: true,
       maxSearchResults: 0,
     });
     const query = "machine learning";
@@ -206,7 +206,7 @@ test("ArxivRetriever search articles by id test", async () => {
   // Sample test for fetching articles by arXiv IDs
   const fetchIds = "2103.03404 2103.03405";
   const retriever = new ArxivRetriever({
-    returnFullDocuments: false,
+    getFullDocuments: false,
     maxSearchResults: 5,
   });
   const results = await retriever.invoke(fetchIds);
@@ -244,7 +244,7 @@ test("ArxivRetriever search articles by id with invalid id test", async () => {
   // Sample test for fetching articles by arXiv IDs with an invalid ID
   const fetchIds = "2103.03404 2103.03405 1234.56789";
   const retriever = new ArxivRetriever({
-    returnFullDocuments: false,
+    getFullDocuments: false,
     maxSearchResults: 5,
   });
   const results = await retriever.invoke(fetchIds);
@@ -257,7 +257,7 @@ test("ArxivRetriever search articles by id with empty id test", async () => {
   // Sample test for fetching articles by arXiv IDs with an empty ID
   const fetchIds = "";
   const retriever = new ArxivRetriever({
-    returnFullDocuments: false,
+    getFullDocuments: false,
     maxSearchResults: 5,
   });
   const results = await retriever.invoke(fetchIds);
@@ -271,7 +271,7 @@ test("ArxivRetriever search articles by id with invalid maxSearchResults test", 
   try {
     const fetchIds = "2103.03404 2103.03405";
     const retriever = new ArxivRetriever({
-      returnFullDocuments: false,
+      getFullDocuments: false,
       maxSearchResults: -1,
     });
     const results = await retriever.invoke(fetchIds);
@@ -288,7 +288,7 @@ test("ArxivRetriever search articles by id with invalid id and maxSearchResults 
   try {
     const fetchIds = "2103.03404 2103.03405 1234.56789";
     const retriever = new ArxivRetriever({
-      returnFullDocuments: false,
+      getFullDocuments: false,
       maxSearchResults: -1,
     });
     const results = await retriever.invoke(fetchIds);
@@ -305,7 +305,7 @@ test("ArxivRetriever search articles by id with invalid id and zero maxSearchRes
   try {
     const fetchIds = "2103.03404 2103.03405 1234.56789";
     const retriever = new ArxivRetriever({
-      returnFullDocuments: false,
+      getFullDocuments: false,
       maxSearchResults: 0,
     });
     const results = await retriever.invoke(fetchIds);

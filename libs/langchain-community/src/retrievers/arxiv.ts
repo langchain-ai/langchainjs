@@ -7,7 +7,7 @@ import {
 } from "../utils/arxiv.js";
 
 export type ArxivRetrieverOptions = {
-  returnFullDocuments?: boolean;
+  getFullDocuments?: boolean;
   maxSearchResults?: number;
 } & BaseRetrieverInput;
 
@@ -22,14 +22,13 @@ export class ArxivRetriever extends BaseRetriever {
 
   lc_namespace = ["langchain", "retrievers", "arxiv_retriever"];
 
-  returnFullDocuments = false;
+  getFullDocuments = false;
 
   maxSearchResults = 10;
 
   constructor(options: ArxivRetrieverOptions = {}) {
     super(options);
-    this.returnFullDocuments =
-      options.returnFullDocuments ?? this.returnFullDocuments;
+    this.getFullDocuments = options.getFullDocuments ?? this.getFullDocuments;
     this.maxSearchResults = options.maxSearchResults ?? this.maxSearchResults;
   }
 
@@ -37,7 +36,7 @@ export class ArxivRetriever extends BaseRetriever {
     try {
       const results = await searchArxiv(query, this.maxSearchResults);
 
-      if (this.returnFullDocuments) {
+      if (this.getFullDocuments) {
         // Fetch and parse PDFs to get full documents
         return await loadDocsFromResults(results);
       } else {
