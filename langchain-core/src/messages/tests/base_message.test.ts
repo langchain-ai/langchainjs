@@ -346,6 +346,7 @@ describe("Message like coercion", () => {
         role: "system",
         content: "6",
       },
+      { role: "developer", content: "6.1" },
       {
         role: "user",
         content: [{ type: "image_url", image_url: { url: "7.1" } }],
@@ -374,6 +375,13 @@ describe("Message like coercion", () => {
       new SystemMessage({
         id: "foobar",
         content: "6",
+        additional_kwargs: {},
+      }),
+      new SystemMessage({
+        content: "6.1",
+        additional_kwargs: {
+          __openai_role__: "developer",
+        },
       }),
       new HumanMessage({
         content: [{ type: "image_url", image_url: { url: "7.1" } }],

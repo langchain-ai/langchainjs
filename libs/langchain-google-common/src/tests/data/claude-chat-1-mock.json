@@ -1,0 +1,18 @@
+{
+  "id": "msg_vrtx_01AGfmYa73qH7wpmFsVFr4rq",
+  "type": "message",
+  "role": "assistant",
+  "model": "claude-3-5-sonnet-20240620",
+  "content": [
+    {
+      "type": "text",
+      "text": "1 + 1 = 2\n\nThis is one of the most basic arithmetic equations. It represents the addition of two units, resulting in a sum of two."
+    }
+  ],
+  "stop_reason": "end_turn",
+  "stop_sequence": null,
+  "usage": {
+    "input_tokens": 16,
+    "output_tokens": 39
+  }
+}

@@ -2,6 +2,7 @@ import { ChatMistralAI } from "../chat_models.js";
 import {
   _isValidMistralToolCallId,
   _convertToolCallIdToMistralCompatible,
+  _mistralContentChunkToMessageContentComplex,
 } from "../utils.js";
 
 describe("Mistral Tool Call ID Conversion", () => {

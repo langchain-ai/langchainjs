@@ -2,12 +2,13 @@
 
 import { test, expect } from "@jest/globals";
 import { CallbackManager } from "@langchain/core/callbacks/manager";
+import { HTTPClient } from "@mistralai/mistralai/lib/http.js";
 import { MistralAI } from "../llms.js";
 
 // Save the original value of the 'LANGCHAIN_CALLBACKS_BACKGROUND' environment variable
 const originalBackground = process.env.LANGCHAIN_CALLBACKS_BACKGROUND;
 
-test("Test MistralAI", async () => {
+test("Test MistralAI default", async () => {
   const model = new MistralAI({
     maxTokens: 5,
     model: "codestral-latest",
@@ -172,4 +173,197 @@ test("Test MistralAI stream method with early break", async () => {
     }
   }
   expect(i).toBeGreaterThan(5);
+});
+
+test("Test MistralAI can register BeforeRequestHook function", async () => {
+  const model = new MistralAI({
+    model: "codestral-latest",
+  });
+
+  let count = 0;
+  const addCount = () => {
+    count += 1;
+  };
+
+  const beforeRequestHook = (): void => {
+    addCount();
+  };
+  model.beforeRequestHooks = [beforeRequestHook];
+  model.addAllHooksToHttpClient();
+
+  await model.invoke("Log 'Hello world' to the console in javascript: .");
+  // console.log(count);
+  expect(count).toEqual(1);
+});
+
+test("Test MistralAI can register RequestErrorHook function", async () => {
+  const fetcher = (): Promise<Response> =>
+    Promise.reject(new Error("Intended fetcher error"));
+  const customHttpClient = new HTTPClient({ fetcher });
+
+  const model = new MistralAI({
+    model: "codestral-latest",
+    httpClient: customHttpClient,
+    maxRetries: 0,
+  });
+
+  let count = 0;
+  const addCount = () => {
+    count += 1;
+  };
+
+  const RequestErrorHook = (): void => {
+    addCount();
+    console.log("In request error hook");
+  };
+  model.requestErrorHooks = [RequestErrorHook];
+  model.addAllHooksToHttpClient();
+
+  try {
+    await model.invoke("Log 'Hello world' to the console in javascript: .");
+  } catch (e: unknown) {
+    // Intended error, do not rethrow
+  }
+
+  // console.log(count);
+  expect(count).toEqual(1);
+});
+
+test("Test MistralAI can register ResponseHook function", async () => {
+  const model = new MistralAI({
+    model: "codestral-latest",
+  });
+
+  let count = 0;
+  const addCount = () => {
+    count += 1;
+  };
+
+  const ResponseHook = (): void => {
+    addCount();
+  };
+  model.responseHooks = [ResponseHook];
+  model.addAllHooksToHttpClient();
+
+  await model.invoke("Log 'Hello world' to the console in javascript: .");
+  // console.log(count);
+  expect(count).toEqual(1);
+});
+
+test("Test MistralAI can register multiple hook functions with success", async () => {
+  const model = new MistralAI({
+    model: "codestral-latest",
+  });
+
+  let count = 0;
+  const addCount = () => {
+    count += 1;
+  };
+
+  const beforeRequestHook = (): void => {
+    addCount();
+  };
+  const ResponseHook = (): void => {
+    addCount();
+  };
+  model.beforeRequestHooks = [beforeRequestHook];
+  model.responseHooks = [ResponseHook];
+  model.addAllHooksToHttpClient();
+
+  await model.invoke("Log 'Hello world' to the console in javascript: ");
+  // console.log(count);
+  expect(count).toEqual(2);
+});
+
+test("Test MistralAI can register multiple hook functions with error", async () => {
+  const fetcher = (): Promise<Response> =>
+    Promise.reject(new Error("Intended fetcher error"));
+  const customHttpClient = new HTTPClient({ fetcher });
+
+  const model = new MistralAI({
+    model: "codestral-latest",
+    httpClient: customHttpClient,
+    maxRetries: 0,
+  });
+
+  let count = 0;
+  const addCount = () => {
+    count += 1;
+  };
+
+  const beforeRequestHook = (): void => {
+    addCount();
+  };
+  const RequestErrorHook = (): void => {
+    addCount();
+  };
+  model.beforeRequestHooks = [beforeRequestHook];
+  model.requestErrorHooks = [RequestErrorHook];
+  model.addAllHooksToHttpClient();
+
+  try {
+    await model.invoke("Log 'Hello world' to the console in javascript: ");
+  } catch (e: unknown) {
+    // Intended error, do not rethrow
+  }
+  // console.log(count);
+  expect(count).toEqual(2);
+});
+
+test("Test MistralAI can remove hook", async () => {
+  const model = new MistralAI({
+    model: "codestral-latest",
+  });
+
+  let count = 0;
+  const addCount = () => {
+    count += 1;
+  };
+
+  const beforeRequestHook = (): void => {
+    addCount();
+  };
+  model.beforeRequestHooks = [beforeRequestHook];
+  model.addAllHooksToHttpClient();
+
+  await model.invoke("Log 'Hello world' to the console in javascript: ");
+  // console.log(count);
+  expect(count).toEqual(1);
+
+  model.removeHookFromHttpClient(beforeRequestHook);
+
+  await model.invoke("Log 'Hello world' to the console in javascript: ");
+  // console.log(count);
+  expect(count).toEqual(1);
+});
+
+test("Test MistralAI can remove all hooks", async () => {
+  const model = new MistralAI({
+    model: "codestral-latest",
+  });
+
+  let count = 0;
+  const addCount = () => {
+    count += 1;
+  };
+
+  const beforeRequestHook = (): void => {
+    addCount();
+  };
+  const ResponseHook = (): void => {
+    addCount();
+  };
+  model.beforeRequestHooks = [beforeRequestHook];
+  model.responseHooks = [ResponseHook];
+  model.addAllHooksToHttpClient();
+
+  await model.invoke("Log 'Hello world' to the console in javascript: ");
+  // console.log(count);
+  expect(count).toEqual(2);
+
+  model.removeAllHooksFromHttpClient();
+
+  await model.invoke("Log 'Hello world' to the console in javascript: ");
+  // console.log(count);
+  expect(count).toEqual(2);
 });

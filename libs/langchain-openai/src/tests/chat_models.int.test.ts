@@ -1157,12 +1157,55 @@ describe("Audio output", () => {
         content: [userInput],
       }),
     ]);
-    // console.log("userInputRes.content", userInputRes.content);
-    // console.log("userInputRes.additional_kwargs.audio", userInputRes.additional_kwargs.audio);
     expect(userInputRes.additional_kwargs.audio).toBeTruthy();
     expect(
       (userInputRes.additional_kwargs.audio as Record<string, any>).transcript
         .length
     ).toBeGreaterThan(1);
   });
+});
+
+test("Can stream o1 requests", async () => {
+  const model = new ChatOpenAI({
+    model: "o1-mini",
+  });
+  const stream = await model.stream(
+    "Write me a very simple hello world program in Python. Ensure it is wrapped in a function called 'hello_world' and has descriptive comments."
+  );
+  let finalMsg: AIMessageChunk | undefined;
+  let numChunks = 0;
+  for await (const chunk of stream) {
+    finalMsg = finalMsg ? concat(finalMsg, chunk) : chunk;
+    numChunks += 1;
+  }
+
+  expect(finalMsg).toBeTruthy();
+  if (!finalMsg) {
+    throw new Error("No final message found");
+  }
+  if (typeof finalMsg.content === "string") {
+    expect(finalMsg.content.length).toBeGreaterThan(10);
+  } else {
+    expect(finalMsg.content.length).toBeGreaterThanOrEqual(1);
+  }
+
+  expect(numChunks).toBeGreaterThan(3);
+});
+
+test("Allows developer messages with o1", async () => {
+  const model = new ChatOpenAI({
+    model: "o1",
+    reasoningEffort: "low",
+  });
+  const res = await model.invoke([
+    {
+      role: "developer",
+      content: `Always respond only with the word "testing"`,
+    },
+    {
+      role: "user",
+      content: "hi",
+    },
+  ]);
+  expect(res.content).toEqual("testing");
 });

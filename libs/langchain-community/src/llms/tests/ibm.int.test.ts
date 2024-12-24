@@ -11,6 +11,7 @@ describe("Text generation", () => {
   describe("Test invoke method", () => {
     test("Correct value", async () => {
       const watsonXInstance = new WatsonxLLM({
+        model: "ibm/granite-13b-chat-v2",
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
         projectId: process.env.WATSONX_AI_PROJECT_ID,
@@ -18,8 +19,21 @@ describe("Text generation", () => {
       await watsonXInstance.invoke("Hello world?");
     });
 
+    test("Overwritte params", async () => {
+      const watsonXInstance = new WatsonxLLM({
+        model: "ibm/granite-13b-chat-v2",
+        version: "2024-05-31",
+        serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
+        projectId: process.env.WATSONX_AI_PROJECT_ID,
+      });
+      await watsonXInstance.invoke("Hello world?", {
+        parameters: { maxNewTokens: 10 },
+      });
+    });
+
     test("Invalid projectId", async () => {
       const watsonXInstance = new WatsonxLLM({
+        model: "ibm/granite-13b-chat-v2",
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
         projectId: "Test wrong value",
@@ -29,6 +43,7 @@ describe("Text generation", () => {
 
     test("Invalid credentials", async () => {
       const watsonXInstance = new WatsonxLLM({
+        model: "ibm/granite-13b-chat-v2",
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
         projectId: "Test wrong value",
@@ -41,6 +56,7 @@ describe("Text generation", () => {
 
     test("Wrong value", async () => {
       const watsonXInstance = new WatsonxLLM({
+        model: "ibm/granite-13b-chat-v2",
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
         projectId: process.env.WATSONX_AI_PROJECT_ID,
@@ -51,6 +67,7 @@ describe("Text generation", () => {
 
     test("Stop", async () => {
       const watsonXInstance = new WatsonxLLM({
+        model: "ibm/granite-13b-chat-v2",
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
         projectId: process.env.WATSONX_AI_PROJECT_ID,
@@ -62,10 +79,11 @@ describe("Text generation", () => {
 
     test("Stop with timeout", async () => {
       const watsonXInstance = new WatsonxLLM({
+        model: "ibm/granite-13b-chat-v2",
         version: "2024-05-31",
         serviceUrl: "sdadasdas" as string,
         projectId: process.env.WATSONX_AI_PROJECT_ID,
-        max_new_tokens: 5,
+        maxNewTokens: 5,
         maxRetries: 3,
       });
 
@@ -76,10 +94,11 @@ describe("Text generation", () => {
 
     test("Signal in call options", async () => {
       const watsonXInstance = new WatsonxLLM({
+        model: "ibm/granite-13b-chat-v2",
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
         projectId: process.env.WATSONX_AI_PROJECT_ID,
-        max_new_tokens: 5,
+        maxNewTokens: 5,
         maxRetries: 3,
       });
       const controllerNoAbortion = new AbortController();
@@ -100,6 +119,7 @@ describe("Text generation", () => {
 
     test("Concurenccy", async () => {
       const model = new WatsonxLLM({
+        model: "ibm/granite-13b-chat-v2",
         maxConcurrency: 1,
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
@@ -119,9 +139,10 @@ describe("Text generation", () => {
           input_token_count: 0,
         };
         const model = new WatsonxLLM({
-          maxConcurrency: 1,
+          model: "ibm/granite-13b-chat-v2",
           version: "2024-05-31",
-          max_new_tokens: 1,
+          maxNewTokens: 1,
+          maxConcurrency: 1,
           serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
           projectId: process.env.WATSONX_AI_PROJECT_ID,
           callbacks: CallbackManager.fromHandlers({
@@ -150,10 +171,11 @@ describe("Text generation", () => {
       let streamedText = "";
       let usedTokens = 0;
       const model = new WatsonxLLM({
+        model: "ibm/granite-13b-chat-v2",
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
         projectId: process.env.WATSONX_AI_PROJECT_ID,
-        max_new_tokens: 5,
+        maxNewTokens: 5,
         streaming: true,
 
         callbacks: CallbackManager.fromHandlers({
@@ -167,7 +189,7 @@ describe("Text generation", () => {
         }),
       });
 
-      const res = await model.invoke(" Print hello world?");
+      const res = await model.invoke("Print hello world?");
       expect(countedTokens).toBe(usedTokens);
       expect(res).toBe(streamedText);
     });
@@ -176,10 +198,11 @@ describe("Text generation", () => {
   describe("Test generate methods", () => {
     test("Basic usage", async () => {
       const model = new WatsonxLLM({
+        model: "ibm/granite-13b-chat-v2",
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
         projectId: process.env.WATSONX_AI_PROJECT_ID,
-        max_new_tokens: 5,
+        maxNewTokens: 5,
       });
       const res = await model.generate([
         "Print hello world!",
@@ -190,10 +213,11 @@ describe("Text generation", () => {
 
     test("Stop", async () => {
       const model = new WatsonxLLM({
+        model: "ibm/granite-13b-chat-v2",
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
         projectId: process.env.WATSONX_AI_PROJECT_ID,
-        max_new_tokens: 100,
+        maxNewTokens: 100,
       });
 
       const res = await model.generate(
@@ -215,10 +239,11 @@ describe("Text generation", () => {
       const nrNewTokens = [0, 0, 0];
       const completions = ["", "", ""];
       const model = new WatsonxLLM({
+        model: "ibm/granite-13b-chat-v2",
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
         projectId: process.env.WATSONX_AI_PROJECT_ID,
-        max_new_tokens: 5,
+        maxNewTokens: 5,
         streaming: true,
         callbacks: CallbackManager.fromHandlers({
           async handleLLMNewToken(token: string, idx) {
@@ -245,10 +270,11 @@ describe("Text generation", () => {
 
     test("Prompt value", async () => {
       const model = new WatsonxLLM({
+        model: "ibm/granite-13b-chat-v2",
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
         projectId: process.env.WATSONX_AI_PROJECT_ID,
-        max_new_tokens: 5,
+        maxNewTokens: 5,
       });
       const res = await model.generatePrompt([
         new StringPromptValue("Print hello world!"),
@@ -264,10 +290,11 @@ describe("Text generation", () => {
       let countedTokens = 0;
       let streamedText = "";
       const model = new WatsonxLLM({
+        model: "ibm/granite-13b-chat-v2",
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
         projectId: process.env.WATSONX_AI_PROJECT_ID,
-        max_new_tokens: 100,
+        maxNewTokens: 100,
         callbacks: CallbackManager.fromHandlers({
           async handleLLMNewToken(token: string) {
             countedTokens += 1;
@@ -286,10 +313,11 @@ describe("Text generation", () => {
 
     test("Stop", async () => {
       const model = new WatsonxLLM({
+        model: "ibm/granite-13b-chat-v2",
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
         projectId: process.env.WATSONX_AI_PROJECT_ID,
-        max_new_tokens: 100,
+        maxNewTokens: 100,
       });
 
       const stream = await model.stream("Print hello world!", {
@@ -304,10 +332,11 @@ describe("Text generation", () => {
 
     test("Timeout", async () => {
       const model = new WatsonxLLM({
+        model: "ibm/granite-13b-chat-v2",
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
         projectId: process.env.WATSONX_AI_PROJECT_ID,
-        max_new_tokens: 1000,
+        maxNewTokens: 1000,
       });
       await expect(async () => {
         const stream = await model.stream(
@@ -325,10 +354,11 @@ describe("Text generation", () => {
 
     test("Signal in call options", async () => {
       const model = new WatsonxLLM({
+        model: "ibm/granite-13b-chat-v2",
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
         projectId: process.env.WATSONX_AI_PROJECT_ID,
-        max_new_tokens: 1000,
+        maxNewTokens: 1000,
       });
       const controller = new AbortController();
       await expect(async () => {
@@ -354,6 +384,7 @@ describe("Text generation", () => {
   describe("Test getNumToken method", () => {
     test("Passing correct value", async () => {
       const testProps: WatsonxInputLLM = {
+        model: "ibm/granite-13b-chat-v2",
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
         projectId: process.env.WATSONX_AI_PROJECT_ID,
@@ -371,6 +402,7 @@ describe("Text generation", () => {
 
     test("Passing wrong value", async () => {
       const testProps: WatsonxInputLLM = {
+        model: "ibm/granite-13b-chat-v2",
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
         projectId: process.env.WATSONX_AI_PROJECT_ID,
@@ -386,6 +418,111 @@ describe("Text generation", () => {
         // @ts-expect-error Intentionally passing wrong parameter
         instance.getNumTokens(12, { wrong: "Wrong" })
       ).rejects.toThrowError();
+    });
+  });
+
+  describe("Test watsonx callbacks", () => {
+    test("Single request callback", async () => {
+      let callbackFlag = false;
+      const service = new WatsonxLLM({
+        model: "mistralai/mistral-large",
+        version: "2024-05-31",
+        serviceUrl: process.env.WATSONX_AI_SERVICE_URL ?? "testString",
+        projectId: process.env.WATSONX_AI_PROJECT_ID ?? "testString",
+        watsonxCallbacks: {
+          requestCallback(req) {
+            callbackFlag = !!req;
+          },
+        },
+      });
+      const hello = await service.stream("Print hello world");
+      const chunks = [];
+      for await (const chunk of hello) {
+        chunks.push(chunk);
+      }
+      expect(callbackFlag).toBe(true);
+    });
+    test("Single response callback", async () => {
+      let callbackFlag = false;
+      const service = new WatsonxLLM({
+        model: "mistralai/mistral-large",
+        version: "2024-05-31",
+        serviceUrl: process.env.WATSONX_AI_SERVICE_URL ?? "testString",
+        projectId: process.env.WATSONX_AI_PROJECT_ID ?? "testString",
+        maxNewTokens: 10,
+        watsonxCallbacks: {
+          responseCallback(res) {
+            callbackFlag = !!res;
+          },
+        },
+      });
+      const hello = await service.stream("Print hello world");
+      const chunks = [];
+      for await (const chunk of hello) {
+        chunks.push(chunk);
+      }
+      expect(callbackFlag).toBe(true);
+    });
+    test("Both callbacks", async () => {
+      let callbackFlagReq = false;
+      let callbackFlagRes = false;
+      const service = new WatsonxLLM({
+        model: "mistralai/mistral-large",
+        version: "2024-05-31",
+        serviceUrl: process.env.WATSONX_AI_SERVICE_URL ?? "testString",
+        projectId: process.env.WATSONX_AI_PROJECT_ID ?? "testString",
+        maxNewTokens: 10,
+        watsonxCallbacks: {
+          requestCallback(req) {
+            callbackFlagReq = !!req;
+          },
+          responseCallback(res) {
+            callbackFlagRes = !!res;
+          },
+        },
+      });
+      const hello = await service.stream("Print hello world");
+      const chunks = [];
+      for await (const chunk of hello) {
+        chunks.push(chunk);
+      }
+      expect(callbackFlagReq).toBe(true);
+      expect(callbackFlagRes).toBe(true);
+    });
+    test("Multiple callbacks", async () => {
+      let callbackFlagReq = false;
+      let callbackFlagRes = false;
+      let langchainCallback = false;
+
+      const service = new WatsonxLLM({
+        model: "mistralai/mistral-large",
+        version: "2024-05-31",
+        serviceUrl: process.env.WATSONX_AI_SERVICE_URL ?? "testString",
+        projectId: process.env.WATSONX_AI_PROJECT_ID ?? "testString",
+        maxNewTokens: 10,
+        watsonxCallbacks: {
+          requestCallback(req) {
+            callbackFlagReq = !!req;
+          },
+          responseCallback(res) {
+            callbackFlagRes = !!res;
+          },
+        },
+        callbacks: CallbackManager.fromHandlers({
+          async handleLLMEnd(output) {
+            expect(output.generations).toBeDefined();
+            langchainCallback = !!output;
+          },
+        }),
+      });
+      const hello = await service.stream("Print hello world");
+      const chunks = [];
+      for await (const chunk of hello) {
+        chunks.push(chunk);
+      }
+      expect(callbackFlagReq).toBe(true);
+      expect(callbackFlagRes).toBe(true);
+      expect(langchainCallback).toBe(true);
     });
   });
 });

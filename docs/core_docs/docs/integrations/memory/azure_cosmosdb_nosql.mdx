@@ -1,0 +1,42 @@
+---
+hide_table_of_contents: true
+---
+
+import CodeBlock from "@theme/CodeBlock";
+
+# Azure Cosmos DB NoSQL Chat Message History
+
+The AzureCosmosDBNoSQLChatMessageHistory uses Cosmos DB to store chat message history. For longer-term persistence across chat sessions, you can swap out the default in-memory `chatHistory` that backs chat memory classes like `BufferMemory`.
+If you don't have an Azure account, you can [create a free account](https://azure.microsoft.com/free/) to get started.
+
+## Setup
+
+You'll first need to install the [`@langchain/azure-cosmosdb`](https://www.npmjs.com/package/@langchain/azure-cosmosdb) package:
+
+```bash npm2yarn
+npm install @langchain/azure-cosmosdb @langchain/core
+```
+
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/openai @langchain/community @langchain/core
+```
+
+You'll also need to have an Azure Cosmos DB for NoSQL instance running. You can deploy a free version on Azure Portal without any cost, following [this guide](https://learn.microsoft.com/azure/cosmos-db/nosql/quickstart-portal).
+
+Once you have your instance running, make sure you have the connection string. If you are using Managed Identity, you need to have the endpoint. You can find them in the Azure Portal, under the "Settings / Keys" section of your instance.
+
+:::info
+
+When using Azure Managed Identity and role-based access control, you must ensure that the database and container have been created beforehand. RBAC does not provide permissions to create databases and containers. You can get more information about the permission model in the [Azure Cosmos DB documentation](https://learn.microsoft.com/azure/cosmos-db/how-to-setup-rbac#permission-model).
+
+:::
+
+## Usage
+
+import Example from "@examples/memory/azure_cosmosdb_nosql.ts";
+
+<CodeBlock language="typescript">{Example}</CodeBlock>

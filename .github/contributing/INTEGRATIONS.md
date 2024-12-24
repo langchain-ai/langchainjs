@@ -122,16 +122,9 @@ Above, we have a document loader that we're sure will always require a specific 
 
 We highly appreciate documentation and integration tests showing how to set up and use your integration. Providing this will make it much easier for reviewers to verify that your integration works and will streamline the review process.
 
-New docs pages should be added as `.mdx` files in the appropriate location under `docs/` (`.mdx` is an extended markdown format that allows use of additional statements like `import`). Code examples within docs pages should be under `examples` and imported like this:
+New docs pages should be added as the appropriate template from here:
 
-```md
-import CodeBlock from "@theme/CodeBlock";
-import LangCoExample from "@examples/document_loaders/langco.ts";
-
-<CodeBlock language="typescript">{LangCoExample}</CodeBlock>
-```
-
-This allows the linter and formatter to pick up example code blocks within docs as well.
+https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-scripts/src/cli/docs/templates
 
 ### Linting and formatting
 
