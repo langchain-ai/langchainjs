@@ -48,6 +48,7 @@ import {
   GeminiTool,
   GoogleAIModelRequestParams,
   GoogleAIToolType,
+  GeminiSearchToolAttributes,
 } from "../types.js";
 import { zodToGeminiParameters } from "./zod_to_gemini_parameters.js";
 
@@ -1015,17 +1016,44 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     };
   }
 
+  function searchToolName(tool: GeminiTool): string | undefined {
+    for (const name of GeminiSearchToolAttributes) {
+      if (name in tool) {
+        return name
+      }
+    }
+    return undefined;
+  }
+
+  function cleanGeminiTool(tool: GeminiTool): GeminiTool {
+    const orig = searchToolName(tool);
+    const adj = config?.googleSearchToolAdjustment;
+    if (orig && adj && adj !== orig) {
+      return {
+        [adj as string]: {},
+      }
+    } else {
+      return tool;
+    }
+  }
+
   function formatTools(parameters: GoogleAIModelRequestParams): GeminiTool[] {
     const tools: GoogleAIToolType[] | undefined = parameters?.tools;
     if (!tools || tools.length === 0) {
       return [];
     }
 
-    // Group all LangChain tools into a single functionDeclarations array
-    const langChainTools = tools.filter(isLangChainTool);
-    const otherTools = tools.filter(
-      (tool) => !isLangChainTool(tool)
-    ) as GeminiTool[];
+    // Group all LangChain tools into a single functionDeclarations array.
+    // Gemini Tools may be normalized to different tool names
+    const langChainTools: StructuredToolParams[] = [];
+    const otherTools: GeminiTool[] = [];
+    tools.forEach(tool => {
+      if (isLangChainTool(tool)) {
+        langChainTools.push(tool);
+      } else {
+        otherTools.push(cleanGeminiTool(tool as GeminiTool));
+      }
+    })
 
     const result: GeminiTool[] = [...otherTools];
 

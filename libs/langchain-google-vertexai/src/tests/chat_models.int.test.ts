@@ -66,6 +66,7 @@ const testGeminiModelNames = [
   ["gemini-1.5-pro-002"],
   ["gemini-1.5-flash-002"],
   ["gemini-2.0-flash-exp"],
+  // ["gemini-2.0-flash-thinking-exp-1219"],
 ]
 
 /*
@@ -74,6 +75,7 @@ const testGeminiModelNames = [
  */
 const testGeminiModelDelay: Record<string, number> = {
   "gemini-2.0-flash-exp": 5000,
+  "gemini-2.0-flash-thinking-exp-1219": 5000,
 }
 
 describe.each(testGeminiModelNames)("GAuth Gemini Chat (%s)", (modelName) => {
@@ -549,6 +551,67 @@ describe.each(testGeminiModelNames)("GAuth Gemini Chat (%s)", (modelName) => {
     expect(typeof response.content).toBe("string");
     expect((response.content as string).length).toBeGreaterThan(15);
   });
+
+  test("Supports GoogleSearchRetrievalTool", async () => {
+    const searchRetrievalTool = {
+      googleSearchRetrieval: {
+        dynamicRetrievalConfig: {
+          mode: "MODE_DYNAMIC",
+          dynamicThreshold: 0.7, // default is 0.7
+        },
+      },
+    };
+    const model = new ChatVertexAI({
+      modelName,
+      temperature: 0,
+      maxRetries: 0,
+    }).bindTools([searchRetrievalTool]);
+
+    const result = await model.invoke("Who won the 2024 MLB World Series?");
+    expect(result.content as string).toContain("Dodgers");
+  });
+
+  test("Supports GoogleSearchTool", async () => {
+    const searchTool: GeminiTool = {
+      googleSearch: {
+      },
+    };
+    const model = new ChatVertexAI({
+      modelName,
+      temperature: 0,
+      maxRetries: 0,
+    }).bindTools([searchTool]);
+
+    const result = await model.invoke("Who won the 2024 MLB World Series?");
+    expect(result.content as string).toContain("Dodgers");
+  });
+
+  test("Can stream GoogleSearchRetrievalTool", async () => {
+    const searchRetrievalTool = {
+      googleSearchRetrieval: {
+        dynamicRetrievalConfig: {
+          mode: "MODE_DYNAMIC",
+          dynamicThreshold: 0.7, // default is 0.7
+        },
+      },
+    };
+    const model = new ChatVertexAI({
+      modelName,
+      temperature: 0,
+      maxRetries: 0,
+    }).bindTools([searchRetrievalTool]);
+
+    const stream = await model.stream("Who won the 2024 MLB World Series?");
+    let finalMsg: AIMessageChunk | undefined;
+    for await (const msg of stream) {
+      finalMsg = finalMsg ? concat(finalMsg, msg) : msg;
+    }
+    if (!finalMsg) {
+      throw new Error("finalMsg is undefined");
+    }
+    expect(finalMsg.content as string).toContain("Dodgers");
+  });
+
 });
 
 describe("GAuth Anthropic Chat", () => {
@@ -659,52 +722,5 @@ describe("GAuth Anthropic Chat", () => {
     expect(toolCalls?.length).toBe(1);
     expect(toolCalls?.[0].name).toBe("current_weather_tool");
     expect(toolCalls?.[0].args).toHaveProperty("location");
-  });
-});
-
-describe("GoogleSearchRetrievalTool", () => {
-  test("Supports GoogleSearchRetrievalTool", async () => {
-    const searchRetrievalTool = {
-      googleSearchRetrieval: {
-        dynamicRetrievalConfig: {
-          mode: "MODE_DYNAMIC",
-          dynamicThreshold: 0.7, // default is 0.7
-        },
-      },
-    };
-    const model = new ChatVertexAI({
-      model: "gemini-1.5-pro",
-      temperature: 0,
-      maxRetries: 0,
-    }).bindTools([searchRetrievalTool]);
-
-    const result = await model.invoke("Who won the 2024 MLB World Series?");
-    expect(result.content as string).toContain("Dodgers");
-  });
-
-  test("Can stream GoogleSearchRetrievalTool", async () => {
-    const searchRetrievalTool = {
-      googleSearchRetrieval: {
-        dynamicRetrievalConfig: {
-          mode: "MODE_DYNAMIC",
-          dynamicThreshold: 0.7, // default is 0.7
-        },
-      },
-    };
-    const model = new ChatVertexAI({
-      model: "gemini-1.5-pro",
-      temperature: 0,
-      maxRetries: 0,
-    }).bindTools([searchRetrievalTool]);
-
-    const stream = await model.stream("Who won the 2024 MLB World Series?");
-    let finalMsg: AIMessageChunk | undefined;
-    for await (const msg of stream) {
-      finalMsg = finalMsg ? concat(finalMsg, msg) : msg;
-    }
-    if (!finalMsg) {
-      throw new Error("finalMsg is undefined");
-    }
-    expect(finalMsg.content as string).toContain("Dodgers");
   });
 });

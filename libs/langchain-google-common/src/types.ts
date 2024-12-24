@@ -307,11 +307,36 @@ export interface GeminiContent {
   role: GeminiRole; // Vertex AI requires the role
 }
 
+/*
+ * If additional attributes are added here, they should also be
+ * added to the attributes below
+ */
 export interface GeminiTool {
   functionDeclarations?: GeminiFunctionDeclaration[];
-  googleSearchRetrieval?: GoogleSearchRetrieval;
+  googleSearchRetrieval?: GoogleSearchRetrieval;  // Gemini-1.5
+  googleSearch?: GoogleSearch;  // Gemini-2.0
   retrieval?: VertexAIRetrieval;
 }
+
+/*
+ * The known strings in this type should match those in GeminiSearchToolAttribuets
+ */
+export type GoogleSearchToolSetting =
+  | boolean
+  | "googleSearchRetrieval"
+  | "googleSearch"
+  | string;
+
+export const GeminiSearchToolAttributes = [
+  "googleSearchRetrieval",
+  "googleSearch",
+]
+
+export const GeminiToolAttributes = [
+  "functionDeclaration",
+  "retrieval",
+  ...GeminiSearchToolAttributes,
+]
 
 export interface GoogleSearchRetrieval {
   dynamicRetrievalConfig?: {
@@ -319,6 +344,8 @@ export interface GoogleSearchRetrieval {
     dynamicThreshold?: number;
   };
 }
+
+export interface GoogleSearch {}
 
 export interface VertexAIRetrieval {
   vertexAiSearch: {
@@ -467,6 +494,18 @@ export interface GeminiAPIConfig {
   safetyHandler?: GoogleAISafetyHandler;
   mediaManager?: MediaManager;
   useSystemInstruction?: boolean;
+
+  /**
+   * How to handle the Google Search tool, since the name (and format)
+   * of the tool changes between Gemini 1.5 and Gemini 2.0.
+   * true - Change based on the model version. (Default)
+   * false - Do not change the tool name provided
+   * string value - Use this as the attribute name for the search
+   *   tool, adapting any tool attributes if possible.
+   * When the model is created, a "true" or default setting
+   * will be changed to a string based on the model.
+   */
+  googleSearchToolAdjustment?: GoogleSearchToolSetting;
 }
 
 export type GoogleAIAPIConfig = GeminiAPIConfig | AnthropicAPIConfig;

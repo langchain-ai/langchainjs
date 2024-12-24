@@ -1,10 +1,11 @@
 import { isOpenAITool } from "@langchain/core/language_models/base";
 import { isLangChainTool } from "@langchain/core/utils/function_calling";
 import { isModelGemini, validateGeminiParams } from "./gemini.js";
-import type {
+import {
   GeminiFunctionDeclaration,
   GeminiFunctionSchema,
   GeminiTool,
+  GeminiToolAttributes,
   GoogleAIBaseLanguageModelCallOptions,
   GoogleAIModelParams,
   GoogleAIModelRequestParams,
@@ -61,12 +62,25 @@ function processToolChoice(
   throw new Error("Object inputs for tool_choice not supported.");
 }
 
+function isGeminiTool(tool: GoogleAIToolType): boolean {
+  for (const toolAttribute of GeminiToolAttributes) {
+    if (toolAttribute in tool) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function isGeminiNonFunctionTool(tool: GoogleAIToolType): boolean {
+  return isGeminiTool(tool) && !("functionDeclaration" in tool);
+}
+
 export function convertToGeminiTools(tools: GoogleAIToolType[]): GeminiTool[] {
   const geminiTools: GeminiTool[] = [];
   let functionDeclarationsIndex = -1;
   tools.forEach((tool) => {
-    if ("googleSearchRetrieval" in tool || "retrieval" in tool) {
-      geminiTools.push(tool);
+    if (isGeminiNonFunctionTool(tool)) {
+      geminiTools.push(tool as GeminiTool);
     } else {
       if (functionDeclarationsIndex === -1) {
         geminiTools.push({
