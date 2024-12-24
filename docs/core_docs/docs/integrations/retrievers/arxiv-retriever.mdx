@@ -1,11 +1,9 @@
-# ArxivRetriever in LangChain.js (Docs)
+# ArxivRetriever
 ---
 
 ## Overview
 
 The `arXiv Retriever` allows users to query the arXiv database for academic articles. It supports both full-document retrieval (PDF parsing) and summary-based retrieval. For detailed documentation of all ArxivRetriever features and configurations, head to [API reference](#https://arxiv.org/)
-
----
 
 ## Features
 - Query Flexibility: Search using natural language queries or specific arXiv IDs.
@@ -13,15 +11,11 @@ The `arXiv Retriever` allows users to query the arXiv database for academic arti
 - Summaries as Documents: Retrieve summaries for faster results.
 - Customizable Options: Configure maximum results and output format.
 
----
-
 ## Integration details
 
 | Retriever        | Source                       | Package                                 |
 | ---------------- | ---------------------------- | --------------------------------------- |
-| `ArxivRetriever` | Academic articles from arXiv | `@langchain-community/retrievers/arxiv` |
-
----
+| `ArxivRetriever` | Academic articles from arXiv | [`@langchain/community`](https://www.npmjs.com/package/@langchain/community) |
 
 ## Setup/Installation
 
@@ -29,20 +23,21 @@ Ensure the following dependencies are installed:
 - `pdf-parse` for parsing PDFs
 - `fast-xml-parser` for parsing XML responses from the arXiv API
 
-```bash
+```npm2yarn
 npm install pdf-parse fast-xml-parser
 ```
 ---
 
 
 ## Instantiate the retriever
+
 ```typescript
 const retriever = new ArxivRetriever({
   getFullDocuments: false, // Set to true to fetch full documents (PDFs)
   maxSearchResults: 5,     // Maximum number of results to retrieve
 });
 ```
----
+
 ## Usage
 
 Use the `invoke` method to search arXiv for relevant articles. You can use either natural language queries or specific arXiv IDs.
@@ -56,8 +51,6 @@ documents.forEach(doc => {
   console.log("Content:", doc.pageContent); // Parsed PDF content
 });
 ```
-
----
 
 ## Use within a chain
 
@@ -99,48 +92,4 @@ const ragChain = RunnableSequence.from([
 await ragChain.invoke("What are the latest advances in quantum computing?");
 ```
 
----
-
-## Class: ArxivRetriever
-
-### Parameters
-
-| Name              | Type      | Default | Description                                          |
-|-------------------|-----------|---------|------------------------------------------------------|
-| `getFullDocuments` | `boolean` | `false` | Whether to fetch full documents (PDFs) instead of summaries. |
-| `maxSearchResults` | `number`  | `10`    | Maximum number of results to fetch from arXiv.      |
-
-
-### Methods
-
-### `invoke(query: string): Promise<Document[]>`
-
-Use the invoke method to search arXiv for relevant articles. You can use either natural language queries or specific arXiv IDs.
-
-#### Parameters
-
-| Name   | Type     | Description                            |
-|--------|----------|----------------------------------------|
-| `query` | `string` | A natural language query or arXiv ID. |
-
-#### Returns
-A `Promise` that resolves to an array of LangChain `Document` instances.
-
-#### Example
-```typescript
-const documents = await retriever.invoke("quantum computing");
-documents.forEach(doc => {
-  console.log("Title:", doc.metadata.title);
-  console.log("Content:", doc.pageContent); // Parsed PDF content
-});
-```
-
-For detailed documentation of all ArxivRetriever features and configurations, head to [API reference](#https://arxiv.org/)
-
-
-
-
-
-
-
-
+For detailed documentation of all ArxivRetriever features and configurations, head to the [API reference](https://api.js.langchain.com/classes/_langchain_community.retrievers_arxiv.ArxivRetriever.html)
