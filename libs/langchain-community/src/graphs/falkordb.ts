@@ -1,6 +1,4 @@
-import { createClient } from "redis";
-import { Graph } from "redisgraph.js";
-
+import { FalkorDB, Graph } from "falkordb";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 
 interface FalkorDBGraphConfig {
@@ -16,7 +14,7 @@ interface StructuredSchema {
 }
 
 export class FalkorDBGraph {
-  private driver;
+  private driver: FalkorDB;
   private graph: Graph;
   private schema = "";
   private structuredSchema: StructuredSchema = {
@@ -26,24 +24,29 @@ export class FalkorDBGraph {
   };
   private enhancedSchema: boolean;
 
-  constructor({ url, graph = "falkordb", enhancedSchema = false }: FalkorDBGraphConfig) {
+  constructor({ enhancedSchema = false }: FalkorDBGraphConfig) {
     try {
-      this.driver = createClient({ url });
-      this.graph = new Graph(graph); // Initialize the Graph instance
       this.enhancedSchema = enhancedSchema;
     } catch (error) {
-      throw new Error(
-        "Could not create a FalkorDB driver instance. Please check the connection details."
-      );
+      console.error("Error in FalkorDBGraph constructor:", error);
+      throw new Error("Failed to initialize FalkorDBGraph.");
     }
   }
 
   static async initialize(config: FalkorDBGraphConfig): Promise<FalkorDBGraph> {
     const graph = new FalkorDBGraph(config);
+    const driver = await FalkorDB.connect({
+      socket: {
+        host: new URL(config.url).hostname,
+        port: parseInt(new URL(config.url).port),
+      },
+    });
+    graph.driver = driver; 
     await graph.verifyConnectivity();
-    await graph.refreshSchema();
+    
     return graph;
   }
+  
 
   getSchema(): string {
     return this.schema;
@@ -53,25 +56,18 @@ export class FalkorDBGraph {
     return this.structuredSchema;
   }
 
-  async query(query: string): Promise<any[]> {
-    const resultSet = await this.graph.query(query); // Run the query
-    const rows = [];
-  
-    // Iterate through the ResultSet
-    while (resultSet.hasNext()) {
-      const record = resultSet.next(); // Get the next record
-      const keys = record.keys(); // Get column names
-      const values = record.values(); // Get values
-      const obj = Object.fromEntries(keys.map((key, i) => [key, values[i]])); // Map keys to values
-      rows.push(obj); // Add the object to rows
-    }
-  
-    return rows;
+  async selectGraph(graphName: string): Promise<void> {
+    this.graph = await this.driver.selectGraph(graphName);
+  }
+
+  async query(query: string): Promise<any> {
+    return await this.graph.query(query);
   }
 
   async verifyConnectivity(): Promise<void> {
-    await this.driver.connect(); // Ensure the Redis client is connected
+    await this.driver.info()
   }
+  
 
   async refreshSchema(): Promise<void> {
     const nodePropertiesQuery = `
@@ -98,26 +94,30 @@ export class FalkorDBGraph {
       RETURN DISTINCT {start: src_label, type: type(r), end: dst_label} AS output
     `;
 
-    const nodeProperties = await this.query(nodePropertiesQuery);
-    const relationshipsProperties = await this.query(relPropertiesQuery);
-    const relationships = await this.query(relQuery);
+    const nodePropertiesResult = await this.query(nodePropertiesQuery);
+  const relationshipsPropertiesResult = await this.query(relPropertiesQuery);
+  const relationshipsResult = await this.query(relQuery);
 
-    this.structuredSchema = {
-      nodeProps: Object.fromEntries(
-        nodeProperties.map((el: { output: { label: string; properties: string[] } }) => [el.output.label, el.output.properties])
-      ),
-      relProps: Object.fromEntries(
-        relationshipsProperties.map((el: { output: { type: string; properties: string[] } }) => [el.output.type, el.output.properties])
-      ),
-      relationships: relationships.map((el: { output: { start: string; type: string; end: string } }) => el.output),
-    };
+  const nodeProperties = nodePropertiesResult.data || [];
+  const relationshipsProperties = relationshipsPropertiesResult.data || [];
+  const relationships = relationshipsResult.data || [];
 
-    if (this.enhancedSchema) {
-      this.enhanceSchemaDetails();
-    }
+  this.structuredSchema = {
+    nodeProps: Object.fromEntries(
+      nodeProperties.map((el: { output: { label: string; properties: string[] } }) => [el.output.label, el.output.properties])
+    ),
+    relProps: Object.fromEntries(
+      relationshipsProperties.map((el: { output: { type: string; properties: string[] } }) => [el.output.type, el.output.properties])
+    ),
+    relationships: relationships.map((el: { output: { start: string; type: string; end: string } }) => el.output),
+  };
 
-    this.schema = this.formatSchema();
+  if (this.enhancedSchema) {
+    await this.enhanceSchemaDetails();
   }
+
+  this.schema = this.formatSchema();
+}
 
   private async enhanceSchemaDetails(): Promise<void> {
     console.log("Enhanced schema details not yet implemented for FalkorDB.");
@@ -149,6 +149,6 @@ export class FalkorDBGraph {
   }
 
   async close(): Promise<void> {
-    await this.driver.quit();
+    await this.driver.close();
   }
 }

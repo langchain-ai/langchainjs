@@ -38,6 +38,7 @@
     "@langchain/openai": ">=0.2.0 <0.4.0",
     "binary-extensions": "^2.2.0",
     "expr-eval": "^2.0.2",
+    "falkordb": "^6.2.5",
     "flat": "^5.0.2",
     "js-yaml": "^4.1.0",
     "langchain": ">=0.2.3 <0.3.0 || >=0.3.4 <0.4.0",
@@ -189,6 +190,7 @@
     "mongodb": "^5.2.0",
     "mysql2": "^3.9.8",
     "neo4j-driver": "^5.17.0",
+    "falkordb": "^6.2.5",
     "node-llama-cpp": "3.1.1",
     "notion-to-md": "^3.1.0",
     "officeparser": "^4.0.4",
@@ -321,6 +323,7 @@
     "mongodb": ">=5.2.0",
     "mysql2": "^3.9.8",
     "neo4j-driver": "*",
+    "falkordb": "*",
     "notion-to-md": "^3.1.0",
     "officeparser": "^4.0.4",
     "openai": "*",
@@ -637,6 +640,9 @@
     },
     "neo4j-driver": {
       "optional": true
+    },
+    "falkordb": {
+    "optional": true
     },
     "notion-to-md": {
       "optional": true
@@ -2323,6 +2329,15 @@
       "import": "./graphs/memgraph_graph.js",
       "require": "./graphs/memgraph_graph.cjs"
     },
+    "./graphs/falkordb": {
+      "types": {
+        "import": "./graphs/falkordb.d.ts",
+        "require": "./graphs/falkordb.d.cts",
+        "default": "./graphs/falkordb.d.ts"
+      },
+      "import": "./graphs/falkordb.js",
+      "require": "./graphs/falkordb.cjs"
+    },
     "./document_compressors/ibm": {
       "types": {
         "import": "./document_compressors/ibm.d.ts",
@@ -3862,6 +3877,10 @@
     "graphs/memgraph_graph.js",
     "graphs/memgraph_graph.d.ts",
     "graphs/memgraph_graph.d.cts",
+    "graphs/falkordb.cjs",
+    "graphs/falkordb.js",
+    "graphs/falkordb.d.ts",
+    "graphs/falkordb.d.cts",
     "document_compressors/ibm.cjs",
     "document_compressors/ibm.js",
     "document_compressors/ibm.d.ts",

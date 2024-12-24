@@ -1,5 +1,5 @@
-import { FalkorDBGraph } from "@langchain/community/graphs/falkordb_graph";
-import { OpenAI } from "@langchain/llms/openai";
+import { FalkorDBGraph } from "@langchain/community/graphs/falkordb";
+import { OpenAI } from "@langchain/openai";
 import { GraphCypherQAChain } from "langchain/chains/graph_qa/cypher";
 
 /**
@@ -17,6 +17,8 @@ await graph.query(
   "CREATE (a:Actor {name:'Bruce Willis'})" +
     "-[:ACTED_IN]->(:Movie {title: 'Pulp Fiction'})"
 );
+
+await graph.refreshSchema();
 
 const chain = GraphCypherQAChain.fromLLM({
   llm: model,
