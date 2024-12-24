@@ -38,7 +38,6 @@
     "@langchain/openai": ">=0.2.0 <0.4.0",
     "binary-extensions": "^2.2.0",
     "expr-eval": "^2.0.2",
-    "falkordb": "^6.2.5",
     "flat": "^5.0.2",
     "js-yaml": "^4.1.0",
     "langchain": ">=0.2.3 <0.3.0 || >=0.3.4 <0.4.0",
