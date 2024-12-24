@@ -47,12 +47,12 @@ export interface LlamaCppCallOptions extends BaseLanguageModelCallOptions {
  *  To use this model you need to have the `node-llama-cpp` module installed.
  *  This can be installed using `npm install -S node-llama-cpp` and the minimum
  *  version supported in version 2.0.0.
- *  This also requires that have a locally built version of Llama2 installed.
+ *  This also requires that have a locally built version of Llama3 installed.
  * @example
  * ```typescript
  * // Initialize the ChatLlamaCpp model with the path to the model binary file.
  * const model = await ChatLlamaCpp.initialize({
- *   modelPath: "/Replace/with/path/to/your/model/gguf-llama2-q4_0.bin",
+ *   modelPath: "/Replace/with/path/to/your/model/gguf-llama3-Q4_0.bin",
  *   temperature: 0.5,
  * });
  *
