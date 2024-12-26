@@ -191,7 +191,9 @@ export class FunctionalTranslator extends BaseTranslator {
    * @param comparison The comparison part of a structured query.
    * @returns A function that takes a `Document` as an argument and returns a boolean based on the comparison.
    */
-  visitComparison(comparison: Comparison<string | number | boolean>): this["VisitComparisonOutput"] {
+  visitComparison(
+    comparison: Comparison<string | number | boolean>
+  ): this["VisitComparisonOutput"] {
     const { comparator, attribute, value } = comparison;
     const undefinedTrue = [Comparators.ne];
     if (this.allowedComparators.includes(comparator)) {

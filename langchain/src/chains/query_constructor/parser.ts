@@ -91,7 +91,7 @@ export class QueryTransformer {
           }
           if (funcName in Comparators) {
             if (node.args && node.args.length === 2) {
-              const [ attribute, value ] = node.args;
+              const [attribute, value] = node.args;
               return new Comparison(
                 funcName as Comparator,
                 traverse(attribute) as string,
