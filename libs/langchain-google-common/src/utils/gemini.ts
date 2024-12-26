@@ -36,7 +36,7 @@ import type {
   GoogleAISafetyHandler,
   GeminiPartFunctionCall,
   GoogleAIAPI,
-  GeminiAPIConfig,
+  GeminiAPIConfig, GeminiGroundingSupport,
 } from "../types.js";
 import { GoogleAISafetyError } from "./safety.js";
 import { MediaBlob } from "../experimental/utils/media_core.js";
@@ -691,6 +691,8 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
         severity: rating.severity,
         severity_score: rating.severityScore,
       })),
+      citation_metadata: data.candidates[0]?.citationMetadata,
+      grounding_metadata: data.candidates[0]?.groundingMetadata,
       finish_reason: data.candidates[0]?.finishReason,
     };
   }
@@ -750,7 +752,30 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     });
   }
 
-  function responseToChatGenerations(
+  function groundingSupportByPart(
+    groundingSupports?: GeminiGroundingSupport[]
+  ): GeminiGroundingSupport[][] {
+    const ret: GeminiGroundingSupport[][] = [];
+
+    if (!groundingSupports || groundingSupports.length === 0){
+      return [];
+    }
+
+    groundingSupports?.forEach((groundingSupport) => {
+      const segment = groundingSupport?.segment;
+      const partIndex = segment?.partIndex ?? 0;
+      if (ret[partIndex]) {
+        ret[partIndex].push(groundingSupport);
+      } else {
+        ret[partIndex] = [groundingSupport];
+      }
+
+    });
+
+    return ret;
+  }
+
+  function responseToGroundedChatGenerations(
     response: GoogleLLMResponse
   ): ChatGeneration[] {
     const parts = responseToParts(response);
@@ -759,7 +784,43 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
       return [];
     }
 
-    let ret = parts.map((part) => partToChatGeneration(part));
+    // Citation and grounding information connected to each part / ChatGeneration
+    // to make sure they are available in downstream filters.
+    const candidate = (response?.data as GenerateContentResponseData)?.candidates?.[0];
+    const groundingMetadata = candidate?.groundingMetadata;
+    const citationMetadata = candidate?.citationMetadata;
+    const groundingParts = groundingSupportByPart(groundingMetadata?.groundingSupports);
+
+    const ret = parts.map((part, index) => {
+      const gen = partToChatGeneration(part);
+      if (!gen.generationInfo) {
+        gen.generationInfo = {};
+      }
+      if (groundingMetadata) {
+        gen.generationInfo.groundingMetadata = groundingMetadata;
+        const groundingPart = groundingParts[index];
+        if (groundingPart) {
+          gen.generationInfo.groundingSupport = groundingPart;
+        }
+      }
+      if (citationMetadata) {
+        gen.generationInfo.citationMetadata = citationMetadata;
+      }
+      return gen;
+    });
+
+    return ret;
+  }
+
+  function responseToChatGenerations(
+    response: GoogleLLMResponse
+  ): ChatGeneration[] {
+    let ret = responseToGroundedChatGenerations(response);
+
+    if (ret.length === 0) {
+      return [];
+    }
+
     if (ret.every((item) => typeof item.message.content === "string")) {
       const combinedContent = ret.map((item) => item.message.content).join("");
       const combinedText = ret.map((item) => item.text).join("");

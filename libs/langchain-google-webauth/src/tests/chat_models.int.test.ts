@@ -22,7 +22,7 @@ import {
   ReadThroughBlobStore,
   SimpleWebBlobStore,
 } from "@langchain/google-common/experimental/utils/media_core";
-import {GeminiTool, GooglePlatformType, GoogleRequestLogger, GoogleRequestRecorder} from "@langchain/google-common";
+import {GeminiTool, GooglePlatformType, GoogleRequestRecorder} from "@langchain/google-common";
 import {BaseCallbackHandler} from "@langchain/core/callbacks/base";
 import {InMemoryStore} from "@langchain/core/stores";
 import {BlobStoreGoogleCloudStorage} from "@langchain/google-gauth";
@@ -287,6 +287,8 @@ const testGeminiModelNames = [
   {modelName: "gemini-1.5-flash-002", platformType: "gcp", apiVersion: "v1"},
   {modelName: "gemini-2.0-flash-exp", platformType: "gai", apiVersion: "v1beta"},
   {modelName: "gemini-2.0-flash-exp", platformType: "gcp", apiVersion: "v1"},
+
+  // Flash Thinking doesn't have functions or other features
   // {modelName: "gemini-2.0-flash-thinking-exp", platformType: "gai"},
   // {modelName: "gemini-2.0-flash-thinking-exp", platformType: "gcp"},
 ]
@@ -305,18 +307,20 @@ describe.each(testGeminiModelNames)("Webauth ($platformType) Gemini Chat ($model
   let callbacks: BaseCallbackHandler[];
 
   function newChatGoogle(fields?: ChatGoogleInput): ChatGoogle {
+    // const logger = new GoogleRequestLogger();
+    recorder = new GoogleRequestRecorder();
+    callbacks = [recorder];
+
     return new ChatGoogle({
       modelName,
       platformType: platformType as GooglePlatformType,
       apiVersion,
+      callbacks,
       ...fields ?? {},
     })
   }
 
   beforeEach(async () => {
-    recorder = new GoogleRequestRecorder();
-    callbacks = [recorder, new GoogleRequestLogger()];
-
     const delay = testGeminiModelDelay[modelName] ?? 0;
     if (delay) {
       console.log(`Delaying for ${delay}ms`)
@@ -326,9 +330,7 @@ describe.each(testGeminiModelNames)("Webauth ($platformType) Gemini Chat ($model
   });
 
   test("invoke", async () => {
-    const model = newChatGoogle({
-      callbacks,
-    });
+    const model = newChatGoogle();
     const res = await model.invoke("What is 1 + 1?");
     expect(res).toBeDefined();
     expect(res._getType()).toEqual("ai");
@@ -339,6 +341,12 @@ describe.each(testGeminiModelNames)("Webauth ($platformType) Gemini Chat ($model
     expect(typeof aiMessage.content).toBe("string");
     const text = aiMessage.content as string;
     expect(text).toMatch(/(1 + 1 (equals|is|=) )?2.? ?/);
+
+    expect(res).toHaveProperty("response_metadata");
+    expect(res.response_metadata).not.toHaveProperty("groundingMetadata");
+    expect(res.response_metadata).not.toHaveProperty("groundingSupport");
+
+    console.log(recorder);
   });
 
   test(`generate`, async () => {
@@ -364,9 +372,7 @@ describe.each(testGeminiModelNames)("Webauth ($platformType) Gemini Chat ($model
   });
 
   test("stream", async () => {
-    const model = newChatGoogle({
-      callbacks,
-    });
+    const model = newChatGoogle();
     const input: BaseLanguageModelInput = new ChatPromptValue([
       new SystemMessage(
         "You will reply to all requests to flip a coin with either H, indicating heads, or T, indicating tails."
@@ -650,6 +656,7 @@ describe.each(testGeminiModelNames)("Webauth ($platformType) Gemini Chat ($model
     let tokensString = "";
     const result = await modelWithStreaming.invoke("What is 1 + 1?", {
       callbacks: [
+        ...callbacks,
         {
           handleLLMNewToken: (tok) => {
             totalTokenCount += 1;
@@ -779,6 +786,9 @@ describe.each(testGeminiModelNames)("Webauth ($platformType) Gemini Chat ($model
 
     const result = await model.invoke("Who won the 2024 MLB World Series?");
     expect(result.content as string).toContain("Dodgers");
+    expect(result).toHaveProperty("response_metadata");
+    expect(result.response_metadata).toHaveProperty("groundingMetadata");
+    expect(result.response_metadata).toHaveProperty("groundingSupport");
   });
 
   test("Supports GoogleSearchTool", async () => {
@@ -793,6 +803,9 @@ describe.each(testGeminiModelNames)("Webauth ($platformType) Gemini Chat ($model
 
     const result = await model.invoke("Who won the 2024 MLB World Series?");
     expect(result.content as string).toContain("Dodgers");
+    expect(result).toHaveProperty("response_metadata");
+    expect(result.response_metadata).toHaveProperty("groundingMetadata");
+    expect(result.response_metadata).toHaveProperty("groundingSupport");
   });
 
   test("Can stream GoogleSearchRetrievalTool", async () => {

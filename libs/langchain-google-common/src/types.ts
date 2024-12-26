@@ -299,6 +299,71 @@ export type GeminiSafetyRating = {
   probability: string;
 } & Record<string, unknown>;
 
+export interface GeminiCitationMetadata {
+  citations: GeminiCitation[];
+}
+
+export interface GeminiCitation {
+  startIndex: number;
+  endIndex: number;
+  uri: string;
+  title: string;
+  license: string;
+  publicationDate: GoogleTypeDate;
+}
+
+export interface GoogleTypeDate {
+  year: number;  // 1-9999 or 0 to specify a date without a year
+  month: number; // 1-12 or 0 to specify a year without a month and day
+  day: number;   // Must be from 1 to 31 and valid for the year and month, or 0 to specify a year by itself or a year and month where the day isn't significant
+}
+
+export interface GeminiGroundingMetadata {
+  webSearchQueries?: string[];
+  searchEntryPoint?: GeminiSearchEntryPoint;
+  groundingChunks: GeminiGroundingChunk[];
+  groundingSupports?: GeminiGroundingSupport[];
+  retrievalMetadata?: GeminiRetrievalMetadata;
+}
+
+export interface GeminiSearchEntryPoint {
+  renderedContent?: string;
+  sdkBlob?: string;  // Base64 encoded JSON representing array of tuple.
+}
+
+export interface GeminiGroundingChunk {
+  web: GeminiGroundingChunkWeb;
+  retrievedContext: GeminiGroundingChunkRetrievedContext;
+}
+
+export interface GeminiGroundingChunkWeb {
+  uri: string;
+  title: string;
+}
+
+export interface GeminiGroundingChunkRetrievedContext {
+  uri: string;
+  title: string;
+  text: string;
+}
+
+export interface GeminiGroundingSupport {
+  segment: GeminiSegment;
+  groundingChunkIndices: number[];
+  confidenceScores: number[];
+}
+
+export interface GeminiSegment {
+  partIndex: number;
+  startIndex: number;
+  endIndex: number;
+  text: string;
+}
+
+export interface GeminiRetrievalMetadata {
+  googleSearchDynamicRetrievalScore: number;
+}
+
 // The "system" content appears to only be valid in the systemInstruction
 export type GeminiRole = "system" | "user" | "model" | "function";
 
@@ -412,6 +477,8 @@ interface GeminiResponseCandidate {
   index: number;
   tokenCount?: number;
   safetyRatings: GeminiSafetyRating[];
+  citationMetadata?: GeminiCitationMetadata;
+  groundingMetadata?: GeminiGroundingMetadata;
 }
 
 interface GeminiResponsePromptFeedback {
