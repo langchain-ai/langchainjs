@@ -91,10 +91,11 @@ export class QueryTransformer {
           }
           if (funcName in Comparators) {
             if (node.args && node.args.length === 2) {
+              const [ attribute, value ] = node.args;
               return new Comparison(
                 funcName as Comparator,
-                traverse(node.args[0]) as string,
-                traverse(node.args[1]) as string | number | boolean
+                traverse(attribute) as string,
+                traverse(value) as string | number
               );
             }
             throw new Error("Comparator must have exactly 2 arguments");
