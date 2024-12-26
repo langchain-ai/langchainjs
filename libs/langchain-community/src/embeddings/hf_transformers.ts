@@ -2,7 +2,7 @@ import type {
   PretrainedOptions,
   FeatureExtractionPipelineOptions,
   FeatureExtractionPipeline,
-} from "@xenova/transformers";
+} from "@huggingface/transformers";
 import { Embeddings, type EmbeddingsParams } from "@langchain/core/embeddings";
 import { chunkArray } from "@langchain/core/utils/chunk_array";
 
@@ -125,7 +125,7 @@ export class HuggingFaceTransformersEmbeddings
 
   private async runEmbedding(texts: string[]) {
     const pipe = await (this.pipelinePromise ??= (
-      await import("@xenova/transformers")
+      await import("@huggingface/transformers")
     ).pipeline("feature-extraction", this.model, this.pretrainedOptions));
 
     return this.caller.call(async () => {
