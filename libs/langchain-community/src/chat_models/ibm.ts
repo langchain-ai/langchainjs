@@ -17,11 +17,11 @@ import {
   BaseLanguageModelInput,
   FunctionDefinition,
   StructuredOutputMethodOptions,
-  type BaseLanguageModelCallOptions,
 } from "@langchain/core/language_models/base";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {
   BaseChatModel,
+  BaseChatModelCallOptions,
   BindToolsInput,
   LangSmithParams,
   type BaseChatModelParams,
@@ -33,6 +33,7 @@ import {
 } from "@langchain/core/outputs";
 import { AsyncCaller } from "@langchain/core/utils/async_caller";
 import {
+  RequestCallbacks,
   TextChatMessagesTextChatMessageAssistant,
   TextChatParameterTools,
   TextChatParams,
@@ -79,13 +80,16 @@ export interface WatsonxDeltaStream {
 }
 
 export interface WatsonxCallParams
-  extends Partial<Omit<TextChatParams, "modelId">> {
+  extends Partial<Omit<TextChatParams, "modelId" | "toolChoice">> {
   maxRetries?: number;
+  watsonxCallbacks?: RequestCallbacks;
 }
 export interface WatsonxCallOptionsChat
-  extends Omit<BaseLanguageModelCallOptions, "stop">,
+  extends Omit<BaseChatModelCallOptions, "stop">,
     WatsonxCallParams {
   promptIndex?: number;
+  tool_choice?: TextChatParameterTools | string | "auto" | "any";
+  watsonxCallbacks?: RequestCallbacks;
 }
 
 type ChatWatsonxToolType = BindToolsInput | TextChatParameterTools;
@@ -307,6 +311,29 @@ function _convertDeltaToMessageChunk(
   return null;
 }
 
+function _convertToolChoiceToWatsonxToolChoice(
+  toolChoice: TextChatParameterTools | string | "auto" | "any"
+) {
+  if (typeof toolChoice === "string") {
+    if (toolChoice === "any" || toolChoice === "required") {
+      return { toolChoiceOption: "required" };
+    } else if (toolChoice === "auto" || toolChoice === "none") {
+      return { toolChoiceOption: toolChoice };
+    } else {
+      return {
+        toolChoice: {
+          type: "function",
+          function: { name: toolChoice },
+        },
+      };
+    }
+  } else if ("type" in toolChoice) return { toolChoice };
+  else
+    throw new Error(
+      `Unrecognized tool_choice type. Expected string or TextChatParameterTools. Recieved ${toolChoice}`
+    );
+}
+
 export class ChatWatsonx<
     CallOptions extends WatsonxCallOptionsChat = WatsonxCallOptionsChat
   >
@@ -396,6 +423,8 @@ export class ChatWatsonx<
 
   streaming: boolean;
 
+  watsonxCallbacks?: RequestCallbacks;
+
   constructor(fields: ChatWatsonxInput & WatsonxAuth) {
     super(fields);
     if (
@@ -426,7 +455,7 @@ export class ChatWatsonx<
     this.n = fields?.n ?? this.n;
     this.model = fields?.model ?? this.model;
     this.version = fields?.version ?? this.version;
-
+    this.watsonxCallbacks = fields?.watsonxCallbacks ?? this.watsonxCallbacks;
     const {
       watsonxAIApikey,
       watsonxAIAuthType,
@@ -457,7 +486,7 @@ export class ChatWatsonx<
   }
 
   invocationParams(options: this["ParsedCallOptions"]) {
-    return {
+    const params = {
       maxTokens: options.maxTokens ?? this.maxTokens,
       temperature: options?.temperature ?? this.temperature,
       timeLimit: options?.timeLimit ?? this.timeLimit,
@@ -470,10 +499,16 @@ export class ChatWatsonx<
       tools: options.tools
         ? _convertToolToWatsonxTool(options.tools)
         : undefined,
-      toolChoice: options.toolChoice,
       responseFormat: options.responseFormat,
-      toolChoiceOption: options.toolChoiceOption,
     };
+    const toolChoiceResult = options.tool_choice
+      ? _convertToolChoiceToWatsonxToolChoice(options.tool_choice)
+      : {};
+    return { ...params, ...toolChoiceResult };
+  }
+
+  invocationCallbacks(options: this["ParsedCallOptions"]) {
+    return options.watsonxCallbacks ?? this.watsonxCallbacks;
   }
 
   override bindTools(
@@ -560,21 +595,24 @@ export class ChatWatsonx<
         .map(([_, value]) => value);
       return { generations, llmOutput: { tokenUsage } };
     } else {
-      const params: Omit<TextChatParams, "messages"> = {
+      const params = {
         ...this.invocationParams(options),
         ...this.scopeId(),
       };
+      const watsonxCallbacks = this.invocationCallbacks(options);
       const watsonxMessages = _convertMessagesToWatsonxMessages(
         messages,
         this.model
       );
       const callback = () =>
-        this.service.textChat({
-          ...params,
-          messages: watsonxMessages,
-        });
+        this.service.textChat(
+          {
+            ...params,
+            messages: watsonxMessages,
+          },
+          watsonxCallbacks
+        );
       const { result } = await this.completionWithRetry(callback, options);
-
       const generations: ChatGeneration[] = [];
       for (const part of result.choices) {
         const generation: ChatGeneration = {
@@ -613,18 +651,25 @@ export class ChatWatsonx<
       messages,
       this.model
     );
+    const watsonxCallbacks = this.invocationCallbacks(options);
     const callback = () =>
-      this.service.textChatStream({
-        ...params,
-        messages: watsonxMessages,
-        returnObject: true,
-      });
+      this.service.textChatStream(
+        {
+          ...params,
+          messages: watsonxMessages,
+          returnObject: true,
+        },
+        watsonxCallbacks
+      );
     const stream = await this.completionWithRetry(callback, options);
     let defaultRole;
+    let usage: TextChatUsage | undefined;
+    let currentCompletion = 0;
     for await (const chunk of stream) {
       if (options.signal?.aborted) {
         throw new Error("AbortError");
       }
+      if (chunk?.data?.usage) usage = chunk.data.usage;
       const { data } = chunk;
       const choice = data.choices[0] as TextChatResultChoice &
         Record<"delta", TextChatResultMessage>;
@@ -636,7 +681,7 @@ export class ChatWatsonx<
       if (!delta) {
         continue;
       }
-
+      currentCompletion = choice.index ?? 0;
       const newTokenIndices = {
         prompt: options.promptIndex ?? 0,
         completion: choice.index ?? 0,
@@ -680,6 +725,26 @@ export class ChatWatsonx<
         { chunk: generationChunk }
       );
     }
+
+    const generationChunk = new ChatGenerationChunk({
+      message: new AIMessageChunk({
+        content: "",
+        response_metadata: {
+          usage,
+        },
+        usage_metadata: {
+          input_tokens: usage?.prompt_tokens ?? 0,
+          output_tokens: usage?.completion_tokens ?? 0,
+          total_tokens: usage?.total_tokens ?? 0,
+        },
+      }),
+      text: "",
+      generationInfo: {
+        prompt: options.promptIndex ?? 0,
+        completion: currentCompletion ?? 0,
+      },
+    });
+    yield generationChunk;
   }
 
   /** @ignore */
@@ -758,7 +823,7 @@ export class ChatWatsonx<
             },
           ],
           // Ideally that would be set to required but this is not supported yet
-          toolChoice: {
+          tool_choice: {
             type: "function",
             function: {
               name: functionName,
@@ -794,7 +859,7 @@ export class ChatWatsonx<
             },
           ],
           // Ideally that would be set to required but this is not supported yet
-          toolChoice: {
+          tool_choice: {
             type: "function",
             function: {
               name: functionName,

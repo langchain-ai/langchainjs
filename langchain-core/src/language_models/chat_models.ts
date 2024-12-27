@@ -44,11 +44,10 @@ import {
   RunnableSequence,
   RunnableToolLike,
 } from "../runnables/base.js";
-import { isStreamEventsHandler } from "../tracers/event_stream.js";
-import { isLogStreamHandler } from "../tracers/log_stream.js";
 import { concat } from "../utils/stream.js";
 import { RunnablePassthrough } from "../runnables/passthrough.js";
 import { isZodSchema } from "../utils/types/is_zod_schema.js";
+import { callbackHandlerPrefersStreaming } from "../callbacks/base.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ToolChoice = string | Record<string, any> | "auto" | "any";
@@ -370,9 +369,9 @@ export abstract class BaseChatModel<
     // Even if stream is not explicitly called, check if model is implicitly
     // called from streamEvents() or streamLog() to get all streamed events.
     // Bail out if _streamResponseChunks not overridden
-    const hasStreamingHandler = !!runManagers?.[0].handlers.find((handler) => {
-      return isStreamEventsHandler(handler) || isLogStreamHandler(handler);
-    });
+    const hasStreamingHandler = !!runManagers?.[0].handlers.find(
+      callbackHandlerPrefersStreaming
+    );
     if (
       hasStreamingHandler &&
       baseMessages.length === 1 &&

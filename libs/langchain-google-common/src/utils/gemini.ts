@@ -231,10 +231,10 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
       throw new Error("Missing Image URL");
     }
 
-    const mineTypeAndData = extractMimeType(url);
-    if (mineTypeAndData) {
+    const mimeTypeAndData = extractMimeType(url);
+    if (mimeTypeAndData) {
       return {
-        inlineData: mineTypeAndData,
+        inlineData: mimeTypeAndData,
       };
     } else {
       // FIXME - need some way to get mime type
@@ -1015,34 +1015,29 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     };
   }
 
-  function structuredToolsToGeminiTools(
-    tools: StructuredToolParams[]
-  ): GeminiTool[] {
-    return [
-      {
-        functionDeclarations: tools.map(structuredToolToFunctionDeclaration),
-      },
-    ];
-  }
-
   function formatTools(parameters: GoogleAIModelRequestParams): GeminiTool[] {
     const tools: GoogleAIToolType[] | undefined = parameters?.tools;
     if (!tools || tools.length === 0) {
       return [];
     }
 
-    if (tools.every(isLangChainTool)) {
-      return structuredToolsToGeminiTools(tools);
-    } else {
-      if (
-        tools.length === 1 &&
-        (!("functionDeclarations" in tools[0]) ||
-          !tools[0].functionDeclarations?.length)
-      ) {
-        return [];
-      }
-      return tools as GeminiTool[];
+    // Group all LangChain tools into a single functionDeclarations array
+    const langChainTools = tools.filter(isLangChainTool);
+    const otherTools = tools.filter(
+      (tool) => !isLangChainTool(tool)
+    ) as GeminiTool[];
+
+    const result: GeminiTool[] = [...otherTools];
+
+    if (langChainTools.length > 0) {
+      result.push({
+        functionDeclarations: langChainTools.map(
+          structuredToolToFunctionDeclaration
+        ),
+      });
     }
+
+    return result;
   }
 
   function formatToolConfig(
@@ -1052,10 +1047,20 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
       return undefined;
     }
 
+    if (["auto", "any", "none"].includes(parameters.tool_choice)) {
+      return {
+        functionCallingConfig: {
+          mode: parameters.tool_choice as "auto" | "any" | "none",
+          allowedFunctionNames: parameters.allowed_function_names,
+        },
+      };
+    }
+
+    // force tool choice to be a single function name in case of structured output
     return {
       functionCallingConfig: {
-        mode: parameters.tool_choice as "auto" | "any" | "none",
-        allowedFunctionNames: parameters.allowed_function_names,
+        mode: "any",
+        allowedFunctionNames: [parameters.tool_choice],
       },
     };
   }

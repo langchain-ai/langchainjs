@@ -12,8 +12,12 @@ import {
 } from "@langchain/core/messages";
 import { ToolCall } from "@langchain/core/messages/tool";
 import {
+  AnthropicImageBlockParam,
   AnthropicMessageCreateParams,
+  AnthropicTextBlockParam,
   AnthropicToolResponse,
+  AnthropicToolResultBlockParam,
+  AnthropicToolUseBlockParam,
 } from "../types.js";
 
 function _formatImage(imageUrl: string) {
@@ -35,15 +39,15 @@ function _formatImage(imageUrl: string) {
   } as any;
 }
 
-function _mergeMessages(
+function _ensureMessageContents(
   messages: BaseMessage[]
 ): (SystemMessage | HumanMessage | AIMessage)[] {
   // Merge runs of human/tool messages into single human messages with content blocks.
-  const merged = [];
+  const updatedMsgs = [];
   for (const message of messages) {
     if (message._getType() === "tool") {
       if (typeof message.content === "string") {
-        const previousMessage = merged[merged.length - 1];
+        const previousMessage = updatedMsgs[updatedMsgs.length - 1];
         if (
           previousMessage?._getType() === "human" &&
           Array.isArray(previousMessage.content) &&
@@ -58,7 +62,7 @@ function _mergeMessages(
           });
         } else {
           // If not, we create a new human message with the tool result.
-          merged.push(
+          updatedMsgs.push(
             new HumanMessage({
               content: [
                 {
@@ -71,7 +75,7 @@ function _mergeMessages(
           );
         }
       } else {
-        merged.push(
+        updatedMsgs.push(
           new HumanMessage({
             content: [
               {
@@ -84,30 +88,10 @@ function _mergeMessages(
         );
       }
     } else {
-      const previousMessage = merged[merged.length - 1];
-      if (
-        previousMessage?._getType() === "human" &&
-        message._getType() === "human"
-      ) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        let combinedContent: Record<string, any>[];
-        if (typeof previousMessage.content === "string") {
-          combinedContent = [{ type: "text", text: previousMessage.content }];
-        } else {
-          combinedContent = previousMessage.content;
-        }
-        if (typeof message.content === "string") {
-          combinedContent.push({ type: "text", text: message.content });
-        } else {
-          combinedContent = combinedContent.concat(message.content);
-        }
-        previousMessage.content = combinedContent;
-      } else {
-        merged.push(message);
-      }
+      updatedMsgs.push(message);
     }
   }
-  return merged;
+  return updatedMsgs;
 }
 
 export function _convertLangChainToolCallToAnthropic(
@@ -202,7 +186,7 @@ function _formatContent(content: MessageContent) {
 export function _convertMessagesToAnthropicPayload(
   messages: BaseMessage[]
 ): AnthropicMessageCreateParams {
-  const mergedMessages = _mergeMessages(messages);
+  const mergedMessages = _ensureMessageContents(messages);
   let system;
   if (mergedMessages.length > 0 && mergedMessages[0]._getType() === "system") {
     system = messages[0].content;
@@ -270,7 +254,79 @@ export function _convertMessagesToAnthropicPayload(
     }
   });
   return {
-    messages: formattedMessages,
+    messages: mergeMessages(formattedMessages),
     system,
   } as AnthropicMessageCreateParams;
+}
+
+function mergeMessages(messages: AnthropicMessageCreateParams["messages"]) {
+  if (!messages || messages.length <= 1) {
+    return messages;
+  }
+
+  const result: AnthropicMessageCreateParams["messages"] = [];
+  let currentMessage = messages[0];
+
+  const normalizeContent = (
+    content:
+      | string
+      | Array<
+          | AnthropicTextBlockParam
+          | AnthropicImageBlockParam
+          | AnthropicToolUseBlockParam
+          | AnthropicToolResultBlockParam
+        >
+  ): Array<
+    | AnthropicTextBlockParam
+    | AnthropicImageBlockParam
+    | AnthropicToolUseBlockParam
+    | AnthropicToolResultBlockParam
+  > => {
+    if (typeof content === "string") {
+      return [
+        {
+          type: "text",
+          text: content,
+        },
+      ];
+    }
+    return content;
+  };
+
+  const isToolResultMessage = (msg: (typeof messages)[0]) => {
+    if (msg.role !== "user") return false;
+
+    if (typeof msg.content === "string") {
+      return false;
+    }
+
+    return (
+      Array.isArray(msg.content) &&
+      msg.content.every((item) => item.type === "tool_result")
+    );
+  };
+
+  for (let i = 1; i < messages.length; i += 1) {
+    const nextMessage = messages[i];
+
+    if (
+      isToolResultMessage(currentMessage) &&
+      isToolResultMessage(nextMessage)
+    ) {
+      // Merge the messages by combining their content arrays
+      currentMessage = {
+        ...currentMessage,
+        content: [
+          ...normalizeContent(currentMessage.content),
+          ...normalizeContent(nextMessage.content),
+        ],
+      };
+    } else {
+      result.push(currentMessage);
+      currentMessage = nextMessage;
+    }
+  }
+
+  result.push(currentMessage);
+  return result;
 }
