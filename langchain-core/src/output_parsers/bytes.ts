@@ -13,7 +13,9 @@ export class BytesOutputParser extends BaseTransformOutputParser<Uint8Array> {
 
   lc_serializable = true;
 
-  protected textEncoder = new TextEncoder();
+  // TODO: Figure out why explicit typing is needed
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  protected textEncoder: any = new TextEncoder();
 
   parse(text: string): Promise<Uint8Array> {
     return Promise.resolve(this.textEncoder.encode(text));

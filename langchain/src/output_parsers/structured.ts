@@ -106,10 +106,14 @@ ${JSON.stringify(zodToJsonSchema(this.schema))}
         : text.trim();
       return await this.schema.parseAsync(JSON.parse(json));
     } catch (e) {
-      throw new OutputParserException(
-        `Failed to parse. Text: "${text}". Error: ${e}`,
-        text
-      );
+      try {
+        return await this.schema.parseAsync(JSON.parse(text.trim()));
+      } catch (e2) {
+        throw new OutputParserException(
+          `Failed to parse. Text: "${text}". Error: ${e2}`,
+          text
+        );
+      }
     }
   }
 }

@@ -262,6 +262,8 @@ export type StructuredOutputMethodOptions<IncludeRaw extends boolean = false> =
     name?: string;
     method?: "functionCalling" | "jsonMode" | "jsonSchema" | string;
     includeRaw?: IncludeRaw;
+    /** Whether to use strict mode. Currently only supported by OpenAI models. */
+    strict?: boolean;
   };
 
 /** @deprecated Use StructuredOutputMethodOptions instead */
@@ -514,7 +516,6 @@ export abstract class BaseLanguageModel<
   withStructuredOutput?<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   >(
     schema:
       | z.ZodType<RunOutput>

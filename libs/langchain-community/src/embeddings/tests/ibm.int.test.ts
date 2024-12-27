@@ -5,6 +5,7 @@ import { WatsonxEmbeddings } from "../ibm.js";
 describe("Test embeddings", () => {
   test("embedQuery method", async () => {
     const embeddings = new WatsonxEmbeddings({
+      model: "ibm/slate-125m-english-rtrvr",
       version: "2024-05-31",
       serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
       projectId: process.env.WATSONX_AI_PROJECT_ID,
@@ -15,6 +16,7 @@ describe("Test embeddings", () => {
 
   test("embedDocuments", async () => {
     const embeddings = new WatsonxEmbeddings({
+      model: "ibm/slate-125m-english-rtrvr",
       version: "2024-05-31",
       serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
       projectId: process.env.WATSONX_AI_PROJECT_ID,
@@ -27,6 +29,7 @@ describe("Test embeddings", () => {
 
   test("Concurrency", async () => {
     const embeddings = new WatsonxEmbeddings({
+      model: "ibm/slate-125m-english-rtrvr",
       version: "2024-05-31",
       serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
       projectId: process.env.WATSONX_AI_PROJECT_ID,
@@ -50,6 +53,7 @@ describe("Test embeddings", () => {
 
   test("List models", async () => {
     const embeddings = new WatsonxEmbeddings({
+      model: "ibm/slate-125m-english-rtrvr",
       version: "2024-05-31",
       serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
       projectId: process.env.WATSONX_AI_PROJECT_ID,

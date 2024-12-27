@@ -6,6 +6,7 @@ import { BM25 } from "../utils/@furkantoprak/bm25/BM25.js";
 export type BM25RetrieverOptions = {
   docs: Document[];
   k: number;
+  includeScore?: boolean;
 } & BaseRetrieverInput;
 
 /**
@@ -14,6 +15,8 @@ export type BM25RetrieverOptions = {
  * The k parameter determines the number of documents to return for each query.
  */
 export class BM25Retriever extends BaseRetriever {
+  includeScore = false;
+
   static lc_name() {
     return "BM25Retriever";
   }
@@ -35,6 +38,7 @@ export class BM25Retriever extends BaseRetriever {
     super(options);
     this.docs = options.docs;
     this.k = options.k;
+    this.includeScore = options.includeScore ?? this.includeScore;
   }
 
   private preprocessFunc(text: string): string[] {
@@ -53,6 +57,19 @@ export class BM25Retriever extends BaseRetriever {
 
     scoredDocs.sort((a, b) => b.score - a.score);
 
-    return scoredDocs.slice(0, this.k).map((item) => item.document);
+    return scoredDocs.slice(0, this.k).map((item) => {
+      if (this.includeScore) {
+        return new Document({
+          ...(item.document.id && { id: item.document.id }),
+          pageContent: item.document.pageContent,
+          metadata: {
+            bm25Score: item.score,
+            ...item.document.metadata,
+          },
+        });
+      } else {
+        return item.document;
+      }
+    });
   }
 }

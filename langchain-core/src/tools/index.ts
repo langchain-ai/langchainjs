@@ -12,11 +12,11 @@ import {
 import {
   ensureConfig,
   patchConfig,
+  pickRunnableConfigKeys,
   type RunnableConfig,
 } from "../runnables/config.js";
 import type { RunnableFunc, RunnableInterface } from "../runnables/base.js";
-import { ToolCall, ToolMessage } from "../messages/tool.js";
-import { ZodObjectAny } from "../types/zod.js";
+import { isDirectToolOutput, ToolCall, ToolMessage } from "../messages/tool.js";
 import { MessageContent } from "../messages/base.js";
 import { AsyncLocalStorageProviderSingleton } from "../singletons/index.js";
 import { _isToolCall, ToolInputParsingException } from "./utils.js";
@@ -31,6 +31,9 @@ type ToolReturnType = any;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ContentAndArtifact = [MessageContent, any];
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type ZodObjectAny = z.ZodObject<any, any, any, any>;
 
 /**
  * Parameters for the Tool classes.
@@ -53,6 +56,11 @@ export interface ToolParams extends BaseLangChainParams {
    */
   verboseParsingErrors?: boolean;
 }
+
+export type ToolRunnableConfig<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ConfigurableFieldType extends Record<string, any> = Record<string, any>
+> = RunnableConfig<ConfigurableFieldType> & { toolCall?: ToolCall };
 
 /**
  * Schema for defining tools.
@@ -156,7 +164,7 @@ export abstract class StructuredTool<
   protected abstract _call(
     arg: z.output<T>,
     runManager?: CallbackManagerForToolRun,
-    parentConfig?: RunnableConfig
+    parentConfig?: ToolRunnableConfig
   ): Promise<ToolReturnType>;
 
   /**
@@ -179,21 +187,23 @@ export abstract class StructuredTool<
       | ToolCall
       | undefined;
 
+    let enrichedConfig: ToolRunnableConfig = ensureConfig(config);
     if (_isToolCall(input)) {
       tool_call_id = input.id;
       toolInput = input.args;
+      enrichedConfig = {
+        ...enrichedConfig,
+        toolCall: input,
+        configurable: {
+          ...enrichedConfig.configurable,
+          tool_call_id,
+        },
+      };
     } else {
       toolInput = input;
     }
 
-    const ensuredConfig = ensureConfig(config);
-    return this.call(toolInput, {
-      ...ensuredConfig,
-      configurable: {
-        ...ensuredConfig.configurable,
-        tool_call_id,
-      },
-    });
+    return this.call(toolInput, enrichedConfig);
   }
 
   /**
@@ -208,8 +218,8 @@ export abstract class StructuredTool<
    * @returns A Promise that resolves with a string.
    */
   async call(
-    arg: (z.output<T> extends string ? string : never) | z.input<T> | ToolCall,
-    configArg?: Callbacks | RunnableConfig,
+    arg: (z.output<T> extends string ? string : never) | z.input<T>,
+    configArg?: Callbacks | ToolRunnableConfig,
     /** @deprecated */
     tags?: string[]
   ): Promise<ToolReturnType> {
@@ -226,7 +236,7 @@ export abstract class StructuredTool<
     }
 
     const config = parseCallbackConfigArg(configArg);
-    const callbackManager_ = await CallbackManager.configure(
+    const callbackManager_ = CallbackManager.configure(
       config.callbacks,
       this.callbacks,
       config.tags || tags,
@@ -347,7 +357,7 @@ export interface DynamicToolInput extends BaseDynamicToolInput {
   func: (
     input: string,
     runManager?: CallbackManagerForToolRun,
-    config?: RunnableConfig
+    config?: ToolRunnableConfig
   ) => Promise<ToolReturnType>;
 }
 
@@ -397,7 +407,7 @@ export class DynamicTool extends Tool {
    */
   async call(
     arg: string | undefined | z.input<this["schema"]> | ToolCall,
-    configArg?: RunnableConfig | Callbacks
+    configArg?: ToolRunnableConfig | Callbacks
   ): Promise<ToolReturnType> {
     const config = parseCallbackConfigArg(configArg);
     if (config.runName === undefined) {
@@ -410,7 +420,7 @@ export class DynamicTool extends Tool {
   async _call(
     input: string,
     runManager?: CallbackManagerForToolRun,
-    parentConfig?: RunnableConfig
+    parentConfig?: ToolRunnableConfig
   ): Promise<ToolReturnType> {
     return this.func(input, runManager, parentConfig);
   }
@@ -550,18 +560,18 @@ interface ToolWrapperParams<
  * @returns {DynamicStructuredTool<T>} A new StructuredTool instance.
  */
 export function tool<T extends z.ZodString>(
-  func: RunnableFunc<z.output<T>, ToolReturnType>,
+  func: RunnableFunc<z.output<T>, ToolReturnType, ToolRunnableConfig>,
   fields: ToolWrapperParams<T>
 ): DynamicTool;
 
 export function tool<T extends ZodObjectAny>(
-  func: RunnableFunc<z.output<T>, ToolReturnType>,
+  func: RunnableFunc<z.output<T>, ToolReturnType, ToolRunnableConfig>,
   fields: ToolWrapperParams<T>
 ): DynamicStructuredTool<T>;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function tool<T extends Record<string, any>>(
-  func: RunnableFunc<T, ToolReturnType>,
+  func: RunnableFunc<T, ToolReturnType, ToolRunnableConfig>,
   fields: ToolWrapperParams<T>
 ): DynamicStructuredTool<T>;
 
@@ -569,7 +579,11 @@ export function tool<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   T extends ZodObjectAny | z.ZodString | Record<string, any> = ZodObjectAny
 >(
-  func: RunnableFunc<T extends ZodObjectAny ? z.output<T> : T, ToolReturnType>,
+  func: RunnableFunc<
+    T extends ZodObjectAny ? z.output<T> : T,
+    ToolReturnType,
+    ToolRunnableConfig
+  >,
   fields: ToolWrapperParams<T>
 ):
   | DynamicStructuredTool<T extends ZodObjectAny ? T : ZodObjectAny>
@@ -592,7 +606,7 @@ export function tool<
             callbacks: runManager?.getChild(),
           });
           void AsyncLocalStorageProviderSingleton.runWithConfig(
-            childConfig,
+            pickRunnableConfigKeys(childConfig),
             async () => {
               try {
                 // TS doesn't restrict the type here based on the guard above
@@ -623,7 +637,7 @@ export function tool<
           callbacks: runManager?.getChild(),
         });
         void AsyncLocalStorageProviderSingleton.runWithConfig(
-          childConfig,
+          pickRunnableConfigKeys(childConfig),
           async () => {
             try {
               // TS doesn't restrict the type here based on the guard above
@@ -646,7 +660,7 @@ function _formatToolOutput(params: {
   toolCallId?: string;
 }): ToolReturnType {
   const { content, artifact, toolCallId } = params;
-  if (toolCallId) {
+  if (toolCallId && !isDirectToolOutput(content)) {
     if (
       typeof content === "string" ||
       (Array.isArray(content) &&
