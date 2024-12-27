@@ -141,12 +141,12 @@ export class AzureCosmosDBMongoChatMessageHistory extends BaseListChatMessageHis
     await this.initialize();
 
     const messages = mapChatMessagesToStoredMessages([message]);
-    const context =  await this.getContext();
+    const context = await this.getContext();
     await this.collection.updateOne(
       { [ID_KEY]: this.sessionId },
       {
         $push: { messages: { $each: messages } } as PushOperator<Document>,
-        $set: {context},
+        $set: { context },
       },
       { upsert: true }
     );
@@ -165,12 +165,12 @@ export class AzureCosmosDBMongoChatMessageHistory extends BaseListChatMessageHis
   async getAllSessions(): Promise<ChatSession[]> {
     await this.initialize();
     const documents = await this.collection.find().toArray();
-    
-    const chatSessions: ChatSession[] = documents.map(doc => ({
-      id: doc[ID_KEY],  
-      context: doc.context || {},  
+
+    const chatSessions: ChatSession[] = documents.map((doc) => ({
+      id: doc[ID_KEY],
+      context: doc.context || {},
     }));
-  
+
     return chatSessions;
   }
 
@@ -179,33 +179,33 @@ export class AzureCosmosDBMongoChatMessageHistory extends BaseListChatMessageHis
     try {
       await this.collection.deleteMany({});
     } catch (error) {
-      console.log('Error clearing sessions:', error)
+      console.log("Error clearing sessions:", error);
     }
   }
 
   async getContext(): Promise<Record<string, unknown>> {
     await this.initialize();
-  
+
     const document = await this.collection.findOne({
       [ID_KEY]: this.sessionId,
     });
-    this.context = document?.context || this.context; 
+    this.context = document?.context || this.context;
     return this.context;
   }
 
   async setContext(context: Record<string, unknown>): Promise<void> {
-    await this.initialize()
+    await this.initialize();
 
     try {
       await this.collection.updateOne(
-        { [ID_KEY]: this.sessionId }, 
+        { [ID_KEY]: this.sessionId },
         {
-          $set: { context }, 
+          $set: { context },
         },
-        { upsert: true } 
+        { upsert: true }
       );
     } catch (error) {
-      console.log('Error setting context', error)
+      console.log("Error setting context", error);
     }
   }
 }
