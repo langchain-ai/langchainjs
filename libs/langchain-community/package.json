@@ -1,6 +1,6 @@
 {
   "name": "@langchain/community",
-  "version": "0.3.19",
+  "version": "0.3.20",
   "description": "Third-party integrations for LangChain.js",
   "type": "module",
   "engines": {
@@ -166,6 +166,7 @@
     "eslint-plugin-no-instanceof": "^1.0.1",
     "eslint-plugin-prettier": "^4.2.1",
     "faiss-node": "^0.5.1",
+    "fast-xml-parser": "^4.5.1",
     "firebase-admin": "^11.9.0 || ^12.0.0",
     "google-auth-library": "^9.10.0",
     "googleapis": "^126.0.1",
@@ -302,6 +303,7 @@
     "duck-duck-scrape": "^2.2.5",
     "epub2": "^3.0.1",
     "faiss-node": "^0.5.1",
+    "fast-xml-parser": "*",
     "firebase-admin": "^11.9.0 || ^12.0.0",
     "google-auth-library": "*",
     "googleapis": "*",
@@ -582,6 +584,9 @@
       "optional": true
     },
     "faiss-node": {
+      "optional": true
+    },
+    "fast-xml-parser": {
       "optional": true
     },
     "firebase-admin": {
@@ -2124,6 +2129,15 @@
       },
       "import": "./retrievers/amazon_knowledge_base.js",
       "require": "./retrievers/amazon_knowledge_base.cjs"
+    },
+    "./retrievers/arxiv": {
+      "types": {
+        "import": "./retrievers/arxiv.d.ts",
+        "require": "./retrievers/arxiv.d.cts",
+        "default": "./retrievers/arxiv.d.ts"
+      },
+      "import": "./retrievers/arxiv.js",
+      "require": "./retrievers/arxiv.cjs"
     },
     "./retrievers/bm25": {
       "types": {
@@ -3774,6 +3788,10 @@
     "retrievers/amazon_knowledge_base.js",
     "retrievers/amazon_knowledge_base.d.ts",
     "retrievers/amazon_knowledge_base.d.cts",
+    "retrievers/arxiv.cjs",
+    "retrievers/arxiv.js",
+    "retrievers/arxiv.d.ts",
+    "retrievers/arxiv.d.cts",
     "retrievers/bm25.cjs",
     "retrievers/bm25.js",
     "retrievers/bm25.d.ts",
