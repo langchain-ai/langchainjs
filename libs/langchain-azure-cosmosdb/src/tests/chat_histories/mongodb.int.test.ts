@@ -93,3 +93,46 @@ test("Test clear Azure Cosmos MongoDB history store", async () => {
 
   await mongoClient.close();
 });
+
+test("Test getAllSessions and clearAllSessions", async () => {
+  expect(process.env.AZURE_COSMOSDB_MONGODB_CONNECTION_STRING).toBeDefined();
+
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const mongoClient = new MongoClient(
+    process.env.AZURE_COSMOSDB_MONGODB_CONNECTION_STRING!
+  );
+  const dbcfg: AzureCosmosDBMongoChatHistoryDBConfig = {
+    client: mongoClient,
+    connectionString: process.env.AZURE_COSMOSDB_MONGODB_CONNECTION_STRING,
+    databaseName: "langchain",
+    collectionName: "chathistory",
+  };
+
+  const sessionId1 = new ObjectId().toString();
+  const sessionId2 = new ObjectId().toString();
+
+  const chatHistory1 = new AzureCosmosDBMongoChatMessageHistory(
+    dbcfg,
+    sessionId1
+  );
+  const chatHistory2 = new AzureCosmosDBMongoChatMessageHistory(
+    dbcfg,
+    sessionId2
+  );
+
+  await chatHistory1.addUserMessage("What is AI?");
+  await chatHistory1.addAIChatMessage("AI stands for Artificial Intelligence.");
+  await chatHistory2.addUserMessage("What is the best programming language?");
+  await chatHistory2.addAIChatMessage("It depends on the use case.");
+
+  const allSessions = await chatHistory1.getAllSessions();
+  expect(allSessions.length).toBe(2); 
+  expect(allSessions[0].id).toBe(sessionId1);
+  expect(allSessions[1].id).toBe(sessionId2);
+
+  await chatHistory1.clearAllSessions();
+  const clearedSessions = await chatHistory1.getAllSessions();
+  expect(clearedSessions.length).toBe(0); 
+
+  await mongoClient.close();
+});
