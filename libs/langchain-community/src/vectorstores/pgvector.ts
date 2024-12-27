@@ -922,8 +922,8 @@ export class PGVectorStore extends VectorStore {
       true
     );
 
-    const embeddingList = docs.map(
-      (doc) => doc[0].metadata[this.vectorColumnName]
+    const embeddingList = docs.map((doc) =>
+      JSON.parse(doc[0].metadata[this.vectorColumnName])
     );
 
     const mmrIndexes = maximalMarginalRelevance(
