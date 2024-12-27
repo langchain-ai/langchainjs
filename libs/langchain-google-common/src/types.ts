@@ -313,9 +313,9 @@ export interface GeminiCitation {
 }
 
 export interface GoogleTypeDate {
-  year: number;  // 1-9999 or 0 to specify a date without a year
+  year: number; // 1-9999 or 0 to specify a date without a year
   month: number; // 1-12 or 0 to specify a year without a month and day
-  day: number;   // Must be from 1 to 31 and valid for the year and month, or 0 to specify a year by itself or a year and month where the day isn't significant
+  day: number; // Must be from 1 to 31 and valid for the year and month, or 0 to specify a year by itself or a year and month where the day isn't significant
 }
 
 export interface GeminiGroundingMetadata {
@@ -328,7 +328,7 @@ export interface GeminiGroundingMetadata {
 
 export interface GeminiSearchEntryPoint {
   renderedContent?: string;
-  sdkBlob?: string;  // Base64 encoded JSON representing array of tuple.
+  sdkBlob?: string; // Base64 encoded JSON representing array of tuple.
 }
 
 export interface GeminiGroundingChunk {
@@ -378,8 +378,8 @@ export interface GeminiContent {
  */
 export interface GeminiTool {
   functionDeclarations?: GeminiFunctionDeclaration[];
-  googleSearchRetrieval?: GoogleSearchRetrieval;  // Gemini-1.5
-  googleSearch?: GoogleSearch;  // Gemini-2.0
+  googleSearchRetrieval?: GoogleSearchRetrieval; // Gemini-1.5
+  googleSearch?: GoogleSearch; // Gemini-2.0
   retrieval?: VertexAIRetrieval;
 }
 
@@ -395,13 +395,13 @@ export type GoogleSearchToolSetting =
 export const GeminiSearchToolAttributes = [
   "googleSearchRetrieval",
   "googleSearch",
-]
+];
 
 export const GeminiToolAttributes = [
   "functionDeclaration",
   "retrieval",
   ...GeminiSearchToolAttributes,
-]
+];
 
 export interface GoogleSearchRetrieval {
   dynamicRetrievalConfig?: {

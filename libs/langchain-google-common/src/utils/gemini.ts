@@ -36,7 +36,8 @@ import type {
   GoogleAISafetyHandler,
   GeminiPartFunctionCall,
   GoogleAIAPI,
-  GeminiAPIConfig, GeminiGroundingSupport,
+  GeminiAPIConfig,
+  GeminiGroundingSupport,
 } from "../types.js";
 import { GoogleAISafetyError } from "./safety.js";
 import { MediaBlob } from "../experimental/utils/media_core.js";
@@ -757,7 +758,7 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
   ): GeminiGroundingSupport[][] {
     const ret: GeminiGroundingSupport[][] = [];
 
-    if (!groundingSupports || groundingSupports.length === 0){
+    if (!groundingSupports || groundingSupports.length === 0) {
       return [];
     }
 
@@ -769,7 +770,6 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
       } else {
         ret[partIndex] = [groundingSupport];
       }
-
     });
 
     return ret;
@@ -786,10 +786,13 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
 
     // Citation and grounding information connected to each part / ChatGeneration
     // to make sure they are available in downstream filters.
-    const candidate = (response?.data as GenerateContentResponseData)?.candidates?.[0];
+    const candidate = (response?.data as GenerateContentResponseData)
+      ?.candidates?.[0];
     const groundingMetadata = candidate?.groundingMetadata;
     const citationMetadata = candidate?.citationMetadata;
-    const groundingParts = groundingSupportByPart(groundingMetadata?.groundingSupports);
+    const groundingParts = groundingSupportByPart(
+      groundingMetadata?.groundingSupports
+    );
 
     const ret = parts.map((part, index) => {
       const gen = partToChatGeneration(part);
@@ -1080,7 +1083,7 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
   function searchToolName(tool: GeminiTool): string | undefined {
     for (const name of GeminiSearchToolAttributes) {
       if (name in tool) {
-        return name
+        return name;
       }
     }
     return undefined;
@@ -1092,7 +1095,7 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     if (orig && adj && adj !== orig) {
       return {
         [adj as string]: {},
-      }
+      };
     } else {
       return tool;
     }
@@ -1108,13 +1111,13 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     // Gemini Tools may be normalized to different tool names
     const langChainTools: StructuredToolParams[] = [];
     const otherTools: GeminiTool[] = [];
-    tools.forEach(tool => {
+    tools.forEach((tool) => {
       if (isLangChainTool(tool)) {
         langChainTools.push(tool);
       } else {
         otherTools.push(cleanGeminiTool(tool as GeminiTool));
       }
-    })
+    });
 
     const result: GeminiTool[] = [...otherTools];
 

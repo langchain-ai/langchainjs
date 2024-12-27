@@ -98,7 +98,10 @@ export class ChatConnection<AuthOptions> extends AbstractGoogleLLMConnection<
     return true;
   }
 
-  computeGoogleSearchToolAdjustmentFromModel(): Exclude<GoogleSearchToolSetting, boolean> {
+  computeGoogleSearchToolAdjustmentFromModel(): Exclude<
+    GoogleSearchToolSetting,
+    boolean
+  > {
     if (this.modelName.startsWith("gemini-1.0")) {
       return "googleSearchRetrieval";
     } else if (this.modelName.startsWith("gemini-1.5")) {
@@ -108,7 +111,9 @@ export class ChatConnection<AuthOptions> extends AbstractGoogleLLMConnection<
     }
   }
 
-  computeGoogleSearchToolAdjustment(apiConfig: GeminiAPIConfig): Exclude<GoogleSearchToolSetting, true> {
+  computeGoogleSearchToolAdjustment(
+    apiConfig: GeminiAPIConfig
+  ): Exclude<GoogleSearchToolSetting, true> {
     const adj = apiConfig.googleSearchToolAdjustment;
     if (adj === undefined || adj === true) {
       return this.computeGoogleSearchToolAdjustmentFromModel();
@@ -118,8 +123,10 @@ export class ChatConnection<AuthOptions> extends AbstractGoogleLLMConnection<
   }
 
   buildGeminiAPI(): GoogleAIAPI {
-    const apiConfig: GeminiAPIConfig = this.apiConfig as GeminiAPIConfig ?? {};
-    const googleSearchToolAdjustment = this.computeGoogleSearchToolAdjustment(apiConfig);
+    const apiConfig: GeminiAPIConfig =
+      (this.apiConfig as GeminiAPIConfig) ?? {};
+    const googleSearchToolAdjustment =
+      this.computeGoogleSearchToolAdjustment(apiConfig);
     const geminiConfig: GeminiAPIConfig = {
       useSystemInstruction: this.useSystemInstruction,
       googleSearchToolAdjustment,

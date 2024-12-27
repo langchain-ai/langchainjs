@@ -67,7 +67,7 @@ const testGeminiModelNames = [
   ["gemini-1.5-flash-002"],
   ["gemini-2.0-flash-exp"],
   // ["gemini-2.0-flash-thinking-exp-1219"],
-]
+];
 
 /*
  * Some models may have usage quotas still.
@@ -76,7 +76,7 @@ const testGeminiModelNames = [
 const testGeminiModelDelay: Record<string, number> = {
   "gemini-2.0-flash-exp": 5000,
   "gemini-2.0-flash-thinking-exp-1219": 5000,
-}
+};
 
 describe.each(testGeminiModelNames)("GAuth Gemini Chat (%s)", (modelName) => {
   let recorder: GoogleRequestRecorder;
@@ -88,9 +88,9 @@ describe.each(testGeminiModelNames)("GAuth Gemini Chat (%s)", (modelName) => {
 
     const delay = testGeminiModelDelay[modelName] ?? 0;
     if (delay) {
-      console.log(`Delaying for ${delay}ms`)
+      console.log(`Delaying for ${delay}ms`);
       // eslint-disable-next-line no-promise-executor-return
-      await new Promise(resolve => setTimeout(resolve,delay));
+      await new Promise((resolve) => setTimeout(resolve, delay));
     }
   });
 
@@ -573,8 +573,7 @@ describe.each(testGeminiModelNames)("GAuth Gemini Chat (%s)", (modelName) => {
 
   test("Supports GoogleSearchTool", async () => {
     const searchTool: GeminiTool = {
-      googleSearch: {
-      },
+      googleSearch: {},
     };
     const model = new ChatVertexAI({
       modelName,
@@ -611,7 +610,6 @@ describe.each(testGeminiModelNames)("GAuth Gemini Chat (%s)", (modelName) => {
     }
     expect(finalMsg.content as string).toContain("Dodgers");
   });
-
 });
 
 describe("GAuth Anthropic Chat", () => {

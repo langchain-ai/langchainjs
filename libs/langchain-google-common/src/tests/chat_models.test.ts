@@ -1135,7 +1135,9 @@ describe("Mock ChatGoogle - Gemini", () => {
     expect(result).toHaveProperty("response_metadata");
     expect(result.response_metadata).toHaveProperty("groundingMetadata");
     expect(result.response_metadata).toHaveProperty("groundingSupport");
-    expect(Array.isArray(result.response_metadata.groundingSupport)).toEqual(true);
+    expect(Array.isArray(result.response_metadata.groundingSupport)).toEqual(
+      true
+    );
     expect(result.response_metadata.groundingSupport).toHaveLength(4);
   });
 
@@ -1248,7 +1250,6 @@ describe("Mock ChatGoogle - Gemini", () => {
 
     expect(record.opts.data.tools[0]).toHaveProperty("googleSearch");
   });
-
 });
 
 describe("Mock ChatGoogle - Anthropic", () => {

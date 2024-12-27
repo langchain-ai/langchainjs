@@ -40,12 +40,8 @@
               "endIndex": 100,
               "text": "The Los Angeles Dodgers won the 2024 World Series, defeating the New York Yankees 4-1 in the series."
             },
-            "groundingChunkIndices": [
-              0
-            ],
-            "confidenceScores": [
-              0.95898277
-            ]
+            "groundingChunkIndices": [0],
+            "confidenceScores": [0.95898277]
           },
           {
             "segment": {
@@ -53,12 +49,8 @@
               "endIndex": 377,
               "text": "It was also their first World Series win in a full season since 1988."
             },
-            "groundingChunkIndices": [
-              1
-            ],
-            "confidenceScores": [
-              0.96841997
-            ]
+            "groundingChunkIndices": [1],
+            "confidenceScores": [0.96841997]
           },
           {
             "segment": {
@@ -66,12 +58,8 @@
               "endIndex": 508,
               "text": "Mookie Betts earned his third World Series ring (2018, 2020, and 2024), becoming the only active player with three championships."
             },
-            "groundingChunkIndices": [
-              2
-            ],
-            "confidenceScores": [
-              0.99043523
-            ]
+            "groundingChunkIndices": [2],
+            "confidenceScores": [0.99043523]
           },
           {
             "segment": {
@@ -79,17 +67,11 @@
               "endIndex": 611,
               "text": "Shohei Ohtani, in his first year with the Dodgers, also experienced his first post-season appearance."
             },
-            "groundingChunkIndices": [
-              0
-            ],
-            "confidenceScores": [
-              0.95767003
-            ]
+            "groundingChunkIndices": [0],
+            "confidenceScores": [0.95767003]
           }
         ],
-        "webSearchQueries": [
-          "2024 MLB World Series winner"
-        ]
+        "webSearchQueries": ["2024 MLB World Series winner"]
       },
       "avgLogprobs": -0.040494912748883484
     }
