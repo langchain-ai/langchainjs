@@ -20,6 +20,11 @@ export interface AzureCosmosDBMongoChatHistoryDBConfig {
   readonly collectionName?: string;
 }
 
+export type ChatSession = {
+  id: string;
+  context: Record<string, unknown>;
+};
+
 const ID_KEY = "sessionId";
 
 export class AzureCosmosDBMongoChatMessageHistory extends BaseListChatMessageHistory {
@@ -32,6 +37,8 @@ export class AzureCosmosDBMongoChatMessageHistory extends BaseListChatMessageHis
   }
 
   private initPromise?: Promise<void>;
+
+  private context: Record<string, unknown> = {};
 
   private readonly client: MongoClient | undefined;
 
@@ -134,10 +141,12 @@ export class AzureCosmosDBMongoChatMessageHistory extends BaseListChatMessageHis
     await this.initialize();
 
     const messages = mapChatMessagesToStoredMessages([message]);
+    const context =  await this.getContext();
     await this.collection.updateOne(
       { [ID_KEY]: this.sessionId },
       {
         $push: { messages: { $each: messages } } as PushOperator<Document>,
+        $set: {context},
       },
       { upsert: true }
     );
@@ -151,5 +160,52 @@ export class AzureCosmosDBMongoChatMessageHistory extends BaseListChatMessageHis
     await this.initialize();
 
     await this.collection.deleteOne({ [ID_KEY]: this.sessionId });
+  }
+
+  async getAllSessions(): Promise<ChatSession[]> {
+    await this.initialize();
+    const documents = await this.collection.find().toArray();
+    
+    const chatSessions: ChatSession[] = documents.map(doc => ({
+      id: doc[ID_KEY],  
+      context: doc.context || {},  
+    }));
+  
+    return chatSessions;
+  }
+
+  async clearAllSessions() {
+    await this.initialize();
+    try {
+      await this.collection.deleteMany({});
+    } catch (error) {
+      console.log('Error clearing sessions:', error)
+    }
+  }
+
+  async getContext(): Promise<Record<string, unknown>> {
+    await this.initialize();
+  
+    const document = await this.collection.findOne({
+      [ID_KEY]: this.sessionId,
+    });
+    this.context = document?.context || this.context; 
+    return this.context;
+  }
+
+  async setContext(context: Record<string, unknown>): Promise<void> {
+    await this.initialize()
+
+    try {
+      await this.collection.updateOne(
+        { [ID_KEY]: this.sessionId }, 
+        {
+          $set: { context }, 
+        },
+        { upsert: true } 
+      );
+    } catch (error) {
+      console.log('Error setting context', error)
+    }
   }
 }
