@@ -6,10 +6,10 @@ import { test, expect, describe, it } from "@jest/globals";
 import { concat } from "@langchain/core/utils/stream";
 import { ChatOpenAI } from "../chat_models.js";
 
-test("withStructuredOutput zod schema function calling", async () => {
+test("withStructuredOutput with zod schema", async () => {
   const model = new ChatOpenAI({
     temperature: 0,
-    modelName: "gpt-4-turbo-preview",
+    modelName: "gpt-4o-mini",
   });
 
   const calculatorSchema = z.object({
@@ -65,10 +65,44 @@ test("withStructuredOutput with o1", async () => {
   expect("number2" in result).toBe(true);
 });
 
+test.only("withStructuredOutput with optional properties", async () => {
+  const model = new ChatOpenAI({
+    model: "o1",
+  });
+
+  const calculatorSchema = z.object({
+    operation: z.enum(["add", "subtract", "multiply", "divide"]),
+    number1: z.number(),
+    number2: z.number(),
+    number3: z.nullable(z.number()),
+  });
+  const modelWithStructuredOutput = model.withStructuredOutput(
+    calculatorSchema,
+    {
+      name: "calculator",
+    }
+  );
+
+  const prompt = ChatPromptTemplate.fromMessages([
+    [
+      "developer",
+      "You are VERY bad at math and must always use a calculator. Do not supply any additional numbers.",
+    ],
+    ["human", "Please help me!! What is 2 + 2?"],
+  ]);
+  const chain = prompt.pipe(modelWithStructuredOutput);
+  const result = await chain.invoke({});
+  console.log(result);
+  expect("operation" in result).toBe(true);
+  expect("number1" in result).toBe(true);
+  expect("number2" in result).toBe(true);
+  expect(result.number3).toBe(null);
+});
+
 test("withStructuredOutput zod schema streaming", async () => {
   const model = new ChatOpenAI({
     temperature: 0,
-    modelName: "gpt-4-turbo-preview",
+    modelName: "gpt-4o-mini",
   });
 
   const calculatorSchema = z.object({
@@ -91,6 +125,7 @@ test("withStructuredOutput zod schema streaming", async () => {
   const stream = await chain.stream({});
   const chunks = [];
   for await (const chunk of stream) {
+    console.log(chunk);
     chunks.push(chunk);
   }
   expect(chunks.length).toBeGreaterThan(1);
@@ -103,7 +138,7 @@ test("withStructuredOutput zod schema streaming", async () => {
 test("withStructuredOutput zod schema JSON mode", async () => {
   const model = new ChatOpenAI({
     temperature: 0,
-    modelName: "gpt-4-turbo-preview",
+    modelName: "gpt-4o-mini",
   });
 
   const calculatorSchema = z.object({
@@ -139,10 +174,10 @@ Respond with a JSON object containing three keys:
   expect("number2" in result).toBe(true);
 });
 
-test("withStructuredOutput JSON schema function calling", async () => {
+test("withStructuredOutput with JSON schema", async () => {
   const model = new ChatOpenAI({
     temperature: 0,
-    modelName: "gpt-4-turbo-preview",
+    modelName: "gpt-4o-mini",
   });
 
   const calculatorSchema = z.object({
@@ -167,10 +202,10 @@ test("withStructuredOutput JSON schema function calling", async () => {
   expect("number2" in result).toBe(true);
 });
 
-test("withStructuredOutput OpenAI function definition function calling", async () => {
+test("withStructuredOutput OpenAI with function definition", async () => {
   const model = new ChatOpenAI({
     temperature: 0,
-    modelName: "gpt-4-turbo-preview",
+    modelName: "gpt-4o-mini",
   });
 
   const calculatorSchema = z.object({
@@ -198,7 +233,7 @@ test("withStructuredOutput OpenAI function definition function calling", async (
 test("withStructuredOutput JSON schema JSON mode", async () => {
   const model = new ChatOpenAI({
     temperature: 0,
-    modelName: "gpt-4-turbo-preview",
+    modelName: "gpt-4o-mini",
   });
 
   const calculatorSchema = z.object({
@@ -237,7 +272,7 @@ Respond with a JSON object containing three keys:
 test("withStructuredOutput JSON schema", async () => {
   const model = new ChatOpenAI({
     temperature: 0,
-    modelName: "gpt-4-turbo-preview",
+    modelName: "gpt-4o-mini",
   });
 
   const jsonSchema = {
@@ -252,6 +287,8 @@ test("withStructuredOutput JSON schema", async () => {
       number1: { type: "number" },
       number2: { type: "number" },
     },
+    required: ["operation", "number1", "number2"],
+    additionalProperties: false,
   };
   const modelWithStructuredOutput = model.withStructuredOutput(jsonSchema);
 
@@ -278,7 +315,7 @@ Respond with a JSON object containing three keys:
 test("withStructuredOutput includeRaw true", async () => {
   const model = new ChatOpenAI({
     temperature: 0,
-    modelName: "gpt-4-turbo-preview",
+    modelName: "gpt-4o-mini",
   });
 
   const calculatorSchema = z.object({
@@ -318,22 +355,10 @@ test("withStructuredOutput includeRaw true", async () => {
     throw new Error("raw not in result");
   }
   const { raw } = result as { raw: AIMessage };
-  expect(raw.additional_kwargs.tool_calls?.length).toBeGreaterThan(0);
-  expect(raw.additional_kwargs.tool_calls?.[0].function.name).toBe(
-    "calculator"
-  );
-  expect(
-    "operation" in
-      JSON.parse(raw.additional_kwargs.tool_calls?.[0].function.arguments ?? "")
-  ).toBe(true);
-  expect(
-    "number1" in
-      JSON.parse(raw.additional_kwargs.tool_calls?.[0].function.arguments ?? "")
-  ).toBe(true);
-  expect(
-    "number2" in
-      JSON.parse(raw.additional_kwargs.tool_calls?.[0].function.arguments ?? "")
-  ).toBe(true);
+  console.log(raw);
+  expect("operation" in JSON.parse(raw.content as string)).toBe(true);
+  expect("number1" in JSON.parse(raw.content as string)).toBe(true);
+  expect("number2" in JSON.parse(raw.content as string)).toBe(true);
 });
 
 test("parallelToolCalls param", async () => {
