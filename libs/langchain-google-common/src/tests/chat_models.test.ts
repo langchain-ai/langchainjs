@@ -35,7 +35,7 @@ import {
 import { removeAdditionalProperties } from "../utils/zod_to_gemini_parameters.js";
 import { MessageGeminiSafetyHandler } from "../utils/index.js";
 
-class ChatGoogle extends ChatGoogleBase<MockClientAuthInfo> {
+export class ChatGoogle extends ChatGoogleBase<MockClientAuthInfo> {
   constructor(fields?: ChatGoogleBaseInput<MockClientAuthInfo>) {
     super(fields);
   }
