@@ -95,6 +95,18 @@ export abstract class BaseGoogleSearchOutputParser extends BaseLLMOutputParser<s
 
   abstract textSuffix(text: string, grounding: GroundingInfo): string | undefined;
 
+  /**
+   * Google requires us to
+   * "Display the Search Suggestion exactly as provided without any modifications"
+   * So this will typically be called from the textSuffix() method to get
+   * a string that renders HTML.
+   * See https://ai.google.dev/gemini-api/docs/grounding/search-suggestions
+   * @param grounding
+   */
+  searchSuggestion(grounding: GroundingInfo): string {
+    return grounding.metadata.searchEntryPoint?.renderedContent ?? "";
+  }
+
   annotateText(text: string, grounding: GroundingInfo): string {
     const prefix = this.textPrefix(text, grounding) ?? "";
     const suffix = this.textSuffix(text, grounding) ?? "";
@@ -139,17 +151,69 @@ export class SimpleGoogleSearchOutputParser extends BaseGoogleSearchOutputParser
 
   chunkToString(chunk: GeminiGroundingChunk, index: number): string {
     const info = chunk.retrievedContext ?? chunk.web;
-    return `${index}. ${info.title} - ${info.uri}`
+    return `${index+1}. ${info.title} - ${info.uri}`
   }
 
   textSuffix(_text: string, grounding: GroundingInfo): string {
     let ret = "\n";
     const chunks: GeminiGroundingChunk[] = grounding.metadata.groundingChunks;
     chunks.forEach((chunk, index) => {
-      ret = `${ret}${this.chunkToString(chunk, index+1)}\n`;
+      ret = `${ret}${this.chunkToString(chunk, index)}\n`;
     })
     return ret;
   }
 
 }
 
+export class MarkdownGoogleSearchOutputParser extends BaseGoogleSearchOutputParser {
+
+  // FIXME: What should this be?
+  lc_namespace: string[] = ["google_common", "output_parsers"];
+
+  segmentPrefix(_grounding: GroundingInfo, _support: GeminiGroundingSupport, _index: number): string | undefined {
+    return undefined;
+  }
+
+  chunkLink(grounding: GroundingInfo, index: number): string {
+    const chunk = grounding.metadata.groundingChunks[index];
+    const url = chunk.retrievedContext?.uri ?? chunk.web?.uri;
+    const num = index+1;
+    return `[[${num}](${url})]`;
+  }
+
+  segmentSuffix(grounding: GroundingInfo, support: GeminiGroundingSupport, _index: number): string | undefined {
+    let ret = "";
+    support.groundingChunkIndices.forEach(chunkIndex => {
+      const link = this.chunkLink(grounding, chunkIndex)
+      ret = `${ret}${link}`;
+    })
+    return ret;
+  }
+
+  textPrefix(_text: string, _grounding: GroundingInfo): string | undefined {
+    return undefined;
+  }
+
+  chunkSuffixLink(chunk: GeminiGroundingChunk, index: number): string {
+    const num = index + 1;
+    const info = chunk.retrievedContext ?? chunk.web;
+    const url = info.uri;
+    const site = info.title;
+    return `${num}. [${site}](${url})`
+  }
+
+  textSuffix(_text: string, grounding: GroundingInfo): string | undefined {
+    let ret = "\n**Search Sources**\n";
+    const chunks: GeminiGroundingChunk[] = grounding.metadata.groundingChunks;
+    chunks.forEach((chunk, index) => {
+      ret = `${ret}${this.chunkSuffixLink(chunk, index)}\n`;
+    })
+
+    const search = this.searchSuggestion(grounding);
+    ret = `${ret}\n${search}`
+
+    return ret;
+
+  }
+
+}
