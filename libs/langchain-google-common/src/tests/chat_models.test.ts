@@ -1105,6 +1105,151 @@ describe("Mock ChatGoogle - Gemini", () => {
 
     // console.log(JSON.stringify(record?.opts?.data, null, 1));
   });
+
+  test("6. GoogleSearchRetrievalTool result", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-6-mock.json",
+    };
+
+    const searchRetrievalTool = {
+      googleSearchRetrieval: {
+        dynamicRetrievalConfig: {
+          mode: "MODE_DYNAMIC",
+          dynamicThreshold: 0.7, // default is 0.7
+        },
+      },
+    };
+    const model = new ChatGoogle({
+      authOptions,
+      modelName: "gemini-1.5-pro-002",
+      temperature: 0,
+      maxRetries: 0,
+    }).bindTools([searchRetrievalTool]);
+
+    const result = await model.invoke("Who won the 2024 MLB World Series?");
+    expect(result.content as string).toContain("Dodgers");
+    expect(result).toHaveProperty("response_metadata");
+    expect(result.response_metadata).toHaveProperty("groundingMetadata");
+    expect(result.response_metadata).toHaveProperty("groundingSupport");
+    expect(Array.isArray(result.response_metadata.groundingSupport)).toEqual(
+      true
+    );
+    expect(result.response_metadata.groundingSupport).toHaveLength(4);
+  });
+
+  test("6. GoogleSearchRetrievalTool request 1.5 ", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-6-mock.json",
+    };
+
+    const searchRetrievalTool = {
+      googleSearchRetrieval: {
+        dynamicRetrievalConfig: {
+          mode: "MODE_DYNAMIC",
+          dynamicThreshold: 0.7, // default is 0.7
+        },
+      },
+    };
+    const model = new ChatGoogle({
+      authOptions,
+      modelName: "gemini-1.5-pro-002",
+      temperature: 0,
+      maxRetries: 0,
+    }).bindTools([searchRetrievalTool]);
+
+    const result = await model.invoke("Who won the 2024 MLB World Series?");
+    expect(result.content as string).toContain("Dodgers");
+
+    expect(record.opts.data.tools[0]).toHaveProperty("googleSearchRetrieval");
+  });
+
+  test("6. GoogleSearchRetrievalTool request 2.0 ", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-6-mock.json",
+    };
+
+    const searchRetrievalTool = {
+      googleSearchRetrieval: {
+        dynamicRetrievalConfig: {
+          mode: "MODE_DYNAMIC",
+          dynamicThreshold: 0.7, // default is 0.7
+        },
+      },
+    };
+    const model = new ChatGoogle({
+      authOptions,
+      modelName: "gemini-2.0-flash",
+      temperature: 0,
+      maxRetries: 0,
+    }).bindTools([searchRetrievalTool]);
+
+    const result = await model.invoke("Who won the 2024 MLB World Series?");
+    expect(result.content as string).toContain("Dodgers");
+
+    expect(record.opts.data.tools[0]).toHaveProperty("googleSearch");
+  });
+
+  test("6. GoogleSearchTool request 1.5 ", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-6-mock.json",
+    };
+
+    const searchTool = {
+      googleSearch: {},
+    };
+    const model = new ChatGoogle({
+      authOptions,
+      modelName: "gemini-1.5-pro-002",
+      temperature: 0,
+      maxRetries: 0,
+    }).bindTools([searchTool]);
+
+    const result = await model.invoke("Who won the 2024 MLB World Series?");
+    expect(result.content as string).toContain("Dodgers");
+
+    expect(record.opts.data.tools[0]).toHaveProperty("googleSearchRetrieval");
+  });
+
+  test("6. GoogleSearchTool request 2.0 ", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-6-mock.json",
+    };
+
+    const searchTool = {
+      googleSearch: {},
+    };
+    const model = new ChatGoogle({
+      authOptions,
+      modelName: "gemini-2.0-flash",
+      temperature: 0,
+      maxRetries: 0,
+    }).bindTools([searchTool]);
+
+    const result = await model.invoke("Who won the 2024 MLB World Series?");
+    expect(result.content as string).toContain("Dodgers");
+
+    expect(record.opts.data.tools[0]).toHaveProperty("googleSearch");
+  });
 });
 
 describe("Mock ChatGoogle - Anthropic", () => {

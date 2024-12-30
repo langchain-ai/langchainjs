@@ -82,7 +82,7 @@ export type VisitorOperationResult = {
  */
 export type VisitorComparisonResult = {
   [attr: string]: {
-    [comparator: string]: string | number;
+    [comparator: string]: string | number | boolean;
   };
 };
 
@@ -149,13 +149,13 @@ export abstract class FilterDirective extends Expression {}
  * Class representing a comparison filter directive. It extends the
  * FilterDirective class.
  */
-export class Comparison extends FilterDirective {
+export class Comparison<ValueTypes = string | number> extends FilterDirective {
   exprName = "Comparison" as const;
 
   constructor(
     public comparator: Comparator,
     public attribute: string,
-    public value: string | number
+    public value: ValueTypes
   ) {
     super();
   }
