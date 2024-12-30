@@ -1,4 +1,4 @@
-import { test, expect } from "@jest/globals";
+import { test, expect, describe } from "@jest/globals";
 import { Document } from "../../documents/document.js";
 import { FunctionalTranslator } from "../functional.js";
 import { Comparators, Visitor } from "../ir.js";
