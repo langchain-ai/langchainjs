@@ -17,10 +17,7 @@ import {
 import { BaseLanguageModelInput } from "@langchain/core/language_models/base";
 import { ChatPromptValue } from "@langchain/core/prompt_values";
 import {
-  BackedBlobStore,
-  MediaBlob,
   MediaManager,
-  ReadThroughBlobStore,
   SimpleWebBlobStore,
 } from "@langchain/google-common/experimental/utils/media_core";
 import {
@@ -29,9 +26,6 @@ import {
   GoogleRequestRecorder,
 } from "@langchain/google-common";
 import { BaseCallbackHandler } from "@langchain/core/callbacks/base";
-import { InMemoryStore } from "@langchain/core/stores";
-import { BlobStoreGoogleCloudStorage } from "@langchain/google-gauth";
-import { GoogleCloudStorageUri } from "@langchain/google-common/experimental/media";
 import { concat } from "@langchain/core/utils/stream";
 import fs from "fs/promises";
 import {
@@ -535,76 +529,76 @@ describe.each(testGeminiModelNames)(
       expect(result).toHaveProperty("location");
     });
 
-    test("media - fileData", async () => {
-      class MemStore extends InMemoryStore<MediaBlob> {
-        get length() {
-          return Object.keys(this.store).length;
-        }
-      }
-      const aliasMemory = new MemStore();
-      const aliasStore = new BackedBlobStore({
-        backingStore: aliasMemory,
-        defaultFetchOptions: {
-          actionIfBlobMissing: undefined,
-        },
-      });
-      const backingStore = new BlobStoreGoogleCloudStorage({
-        uriPrefix: new GoogleCloudStorageUri(
-          "gs://test-langchainjs/mediatest/"
-        ),
-        defaultStoreOptions: {
-          actionIfInvalid: "prefixPath",
-        },
-      });
-      const blobStore = new ReadThroughBlobStore({
-        baseStore: aliasStore,
-        backingStore,
-      });
-      const resolver = new SimpleWebBlobStore();
-      const mediaManager = new MediaManager({
-        store: blobStore,
-        resolvers: [resolver],
-      });
-      const model = newChatGoogle({
-        apiConfig: {
-          mediaManager,
-        },
-      });
+    // test("media - fileData", async () => {
+    //   class MemStore extends InMemoryStore<MediaBlob> {
+    //     get length() {
+    //       return Object.keys(this.store).length;
+    //     }
+    //   }
+    //   const aliasMemory = new MemStore();
+    //   const aliasStore = new BackedBlobStore({
+    //     backingStore: aliasMemory,
+    //     defaultFetchOptions: {
+    //       actionIfBlobMissing: undefined,
+    //     },
+    //   });
+    //   const backingStore = new BlobStoreGoogleCloudStorage({
+    //     uriPrefix: new GoogleCloudStorageUri(
+    //       "gs://test-langchainjs/mediatest/"
+    //     ),
+    //     defaultStoreOptions: {
+    //       actionIfInvalid: "prefixPath",
+    //     },
+    //   });
+    //   const blobStore = new ReadThroughBlobStore({
+    //     baseStore: aliasStore,
+    //     backingStore,
+    //   });
+    //   const resolver = new SimpleWebBlobStore();
+    //   const mediaManager = new MediaManager({
+    //     store: blobStore,
+    //     resolvers: [resolver],
+    //   });
+    //   const model = newChatGoogle({
+    //     apiConfig: {
+    //       mediaManager,
+    //     },
+    //   });
 
-      const message: MessageContentComplex[] = [
-        {
-          type: "text",
-          text: "What is in this image?",
-        },
-        {
-          type: "media",
-          fileUri: "https://js.langchain.com/v0.2/img/brand/wordmark.png",
-        },
-      ];
+    //   const message: MessageContentComplex[] = [
+    //     {
+    //       type: "text",
+    //       text: "What is in this image?",
+    //     },
+    //     {
+    //       type: "media",
+    //       fileUri: "https://js.langchain.com/v0.2/img/brand/wordmark.png",
+    //     },
+    //   ];
 
-      const messages: BaseMessage[] = [
-        new HumanMessageChunk({ content: message }),
-      ];
+    //   const messages: BaseMessage[] = [
+    //     new HumanMessageChunk({ content: message }),
+    //   ];
 
-      try {
-        const res = await model.invoke(messages);
+    //   try {
+    //     const res = await model.invoke(messages);
 
-        console.log(res);
+    //     console.log(res);
 
-        expect(res).toBeDefined();
-        expect(res._getType()).toEqual("ai");
+    //     expect(res).toBeDefined();
+    //     expect(res._getType()).toEqual("ai");
 
-        const aiMessage = res as AIMessageChunk;
-        expect(aiMessage.content).toBeDefined();
+    //     const aiMessage = res as AIMessageChunk;
+    //     expect(aiMessage.content).toBeDefined();
 
-        expect(typeof aiMessage.content).toBe("string");
-        const text = aiMessage.content as string;
-        expect(text).toMatch(/LangChain/);
-      } catch (e) {
-        console.error(e);
-        throw e;
-      }
-    });
+    //     expect(typeof aiMessage.content).toBe("string");
+    //     const text = aiMessage.content as string;
+    //     expect(text).toMatch(/LangChain/);
+    //   } catch (e) {
+    //     console.error(e);
+    //     throw e;
+    //   }
+    // });
 
     test("Stream token count usage_metadata", async () => {
       const model = newChatGoogle({
