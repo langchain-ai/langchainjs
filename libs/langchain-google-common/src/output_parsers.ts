@@ -149,7 +149,7 @@ export abstract class BaseGoogleSearchOutputParser extends BaseLLMOutputParser<s
     return `${prefix}${body}${suffix}`;
   }
 
-  parseResult(
+  async parseResult(
     generations: Generations,
     _callbacks?: Callbacks
   ): Promise<string> {
@@ -157,10 +157,10 @@ export abstract class BaseGoogleSearchOutputParser extends BaseLLMOutputParser<s
 
     const grounding = this.generationsToGroundingInfo(generations);
     if (!grounding) {
-      return Promise.resolve(text);
+      return text;
     }
 
-    return Promise.resolve(this.annotateText(text, grounding));
+    return this.annotateText(text, grounding);
   }
 }
 
