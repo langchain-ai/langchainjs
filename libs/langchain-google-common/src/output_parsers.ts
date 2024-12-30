@@ -165,7 +165,6 @@ export abstract class BaseGoogleSearchOutputParser extends BaseLLMOutputParser<s
 }
 
 export class SimpleGoogleSearchOutputParser extends BaseGoogleSearchOutputParser {
-
   protected segmentPrefix(
     _grounding: GroundingInfo,
     _support: GeminiGroundingSupport,
@@ -203,7 +202,6 @@ export class SimpleGoogleSearchOutputParser extends BaseGoogleSearchOutputParser
 }
 
 export class MarkdownGoogleSearchOutputParser extends BaseGoogleSearchOutputParser {
-
   protected segmentPrefix(
     _grounding: GroundingInfo,
     _support: GeminiGroundingSupport,
@@ -232,11 +230,17 @@ export class MarkdownGoogleSearchOutputParser extends BaseGoogleSearchOutputPars
     return ret;
   }
 
-  protected textPrefix(_text: string, _grounding: GroundingInfo): string | undefined {
+  protected textPrefix(
+    _text: string,
+    _grounding: GroundingInfo
+  ): string | undefined {
     return undefined;
   }
 
-  protected chunkSuffixLink(chunk: GeminiGroundingChunk, index: number): string {
+  protected chunkSuffixLink(
+    chunk: GeminiGroundingChunk,
+    index: number
+  ): string {
     const num = index + 1;
     const info = chunk.retrievedContext ?? chunk.web;
     const url = info.uri;
@@ -244,7 +248,10 @@ export class MarkdownGoogleSearchOutputParser extends BaseGoogleSearchOutputPars
     return `${num}. [${site}](${url})`;
   }
 
-  protected textSuffix(_text: string, grounding: GroundingInfo): string | undefined {
+  protected textSuffix(
+    _text: string,
+    grounding: GroundingInfo
+  ): string | undefined {
     let ret = "\n**Search Sources**\n";
     const chunks: GeminiGroundingChunk[] = grounding.metadata.groundingChunks;
     chunks.forEach((chunk, index) => {
