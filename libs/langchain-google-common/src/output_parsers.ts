@@ -16,6 +16,8 @@ type GroundingInfo = {
 };
 
 export abstract class BaseGoogleSearchOutputParser extends BaseLLMOutputParser<string> {
+  lc_namespace: string[] = ["google_common", "output_parsers"];
+
   generationToGroundingInfo(
     generation: Generation | ChatGeneration
   ): GroundingInfo | undefined {
@@ -163,8 +165,6 @@ export abstract class BaseGoogleSearchOutputParser extends BaseLLMOutputParser<s
 }
 
 export class SimpleGoogleSearchOutputParser extends BaseGoogleSearchOutputParser {
-  // FIXME: What should this be?
-  lc_namespace: string[] = ["google_common", "output_parsers"];
 
   protected segmentPrefix(
     _grounding: GroundingInfo,
@@ -203,8 +203,6 @@ export class SimpleGoogleSearchOutputParser extends BaseGoogleSearchOutputParser
 }
 
 export class MarkdownGoogleSearchOutputParser extends BaseGoogleSearchOutputParser {
-  // FIXME: What should this be?
-  lc_namespace: string[] = ["google_common", "output_parsers"];
 
   protected segmentPrefix(
     _grounding: GroundingInfo,
