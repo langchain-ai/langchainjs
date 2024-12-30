@@ -299,6 +299,71 @@ export type GeminiSafetyRating = {
   probability: string;
 } & Record<string, unknown>;
 
+export interface GeminiCitationMetadata {
+  citations: GeminiCitation[];
+}
+
+export interface GeminiCitation {
+  startIndex: number;
+  endIndex: number;
+  uri: string;
+  title: string;
+  license: string;
+  publicationDate: GoogleTypeDate;
+}
+
+export interface GoogleTypeDate {
+  year: number; // 1-9999 or 0 to specify a date without a year
+  month: number; // 1-12 or 0 to specify a year without a month and day
+  day: number; // Must be from 1 to 31 and valid for the year and month, or 0 to specify a year by itself or a year and month where the day isn't significant
+}
+
+export interface GeminiGroundingMetadata {
+  webSearchQueries?: string[];
+  searchEntryPoint?: GeminiSearchEntryPoint;
+  groundingChunks: GeminiGroundingChunk[];
+  groundingSupports?: GeminiGroundingSupport[];
+  retrievalMetadata?: GeminiRetrievalMetadata;
+}
+
+export interface GeminiSearchEntryPoint {
+  renderedContent?: string;
+  sdkBlob?: string; // Base64 encoded JSON representing array of tuple.
+}
+
+export interface GeminiGroundingChunk {
+  web: GeminiGroundingChunkWeb;
+  retrievedContext: GeminiGroundingChunkRetrievedContext;
+}
+
+export interface GeminiGroundingChunkWeb {
+  uri: string;
+  title: string;
+}
+
+export interface GeminiGroundingChunkRetrievedContext {
+  uri: string;
+  title: string;
+  text: string;
+}
+
+export interface GeminiGroundingSupport {
+  segment: GeminiSegment;
+  groundingChunkIndices: number[];
+  confidenceScores: number[];
+}
+
+export interface GeminiSegment {
+  partIndex: number;
+  startIndex: number;
+  endIndex: number;
+  text: string;
+}
+
+export interface GeminiRetrievalMetadata {
+  googleSearchDynamicRetrievalScore: number;
+}
+
 // The "system" content appears to only be valid in the systemInstruction
 export type GeminiRole = "system" | "user" | "model" | "function";
 
@@ -307,11 +372,36 @@ export interface GeminiContent {
   role: GeminiRole; // Vertex AI requires the role
 }
 
+/*
+ * If additional attributes are added here, they should also be
+ * added to the attributes below
+ */
 export interface GeminiTool {
   functionDeclarations?: GeminiFunctionDeclaration[];
-  googleSearchRetrieval?: GoogleSearchRetrieval;
+  googleSearchRetrieval?: GoogleSearchRetrieval; // Gemini-1.5
+  googleSearch?: GoogleSearch; // Gemini-2.0
   retrieval?: VertexAIRetrieval;
 }
+
+/*
+ * The known strings in this type should match those in GeminiSearchToolAttribuets
+ */
+export type GoogleSearchToolSetting =
+  | boolean
+  | "googleSearchRetrieval"
+  | "googleSearch"
+  | string;
+
+export const GeminiSearchToolAttributes = [
+  "googleSearchRetrieval",
+  "googleSearch",
+];
+
+export const GeminiToolAttributes = [
+  "functionDeclaration",
+  "retrieval",
+  ...GeminiSearchToolAttributes,
+];
 
 export interface GoogleSearchRetrieval {
   dynamicRetrievalConfig?: {
@@ -319,6 +409,8 @@ export interface GoogleSearchRetrieval {
     dynamicThreshold?: number;
   };
 }
+
+export interface GoogleSearch {}
 
 export interface VertexAIRetrieval {
   vertexAiSearch: {
@@ -385,6 +477,8 @@ interface GeminiResponseCandidate {
   index: number;
   tokenCount?: number;
   safetyRatings: GeminiSafetyRating[];
+  citationMetadata?: GeminiCitationMetadata;
+  groundingMetadata?: GeminiGroundingMetadata;
 }
 
 interface GeminiResponsePromptFeedback {
@@ -467,6 +561,18 @@ export interface GeminiAPIConfig {
   safetyHandler?: GoogleAISafetyHandler;
   mediaManager?: MediaManager;
   useSystemInstruction?: boolean;
+
+  /**
+   * How to handle the Google Search tool, since the name (and format)
+   * of the tool changes between Gemini 1.5 and Gemini 2.0.
+   * true - Change based on the model version. (Default)
+   * false - Do not change the tool name provided
+   * string value - Use this as the attribute name for the search
+   *   tool, adapting any tool attributes if possible.
+   * When the model is created, a "true" or default setting
+   * will be changed to a string based on the model.
+   */
+  googleSearchToolAdjustment?: GoogleSearchToolSetting;
 }
 
 export type GoogleAIAPIConfig = GeminiAPIConfig | AnthropicAPIConfig;
