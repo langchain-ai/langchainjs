@@ -62,7 +62,7 @@ function processToolChoice(
   throw new Error("Object inputs for tool_choice not supported.");
 }
 
-function isGeminiTool(tool: GoogleAIToolType): boolean {
+function isGeminiTool(tool: GoogleAIToolType): tool is GeminiTool {
   for (const toolAttribute of GeminiToolAttributes) {
     if (toolAttribute in tool) {
       return true;
@@ -71,7 +71,7 @@ function isGeminiTool(tool: GoogleAIToolType): boolean {
   return false;
 }
 
-function isGeminiNonFunctionTool(tool: GoogleAIToolType): boolean {
+function isGeminiNonFunctionTool(tool: GoogleAIToolType): tool is GeminiTool {
   return isGeminiTool(tool) && !("functionDeclaration" in tool);
 }
 
@@ -80,7 +80,7 @@ export function convertToGeminiTools(tools: GoogleAIToolType[]): GeminiTool[] {
   let functionDeclarationsIndex = -1;
   tools.forEach((tool) => {
     if (isGeminiNonFunctionTool(tool)) {
-      geminiTools.push(tool as GeminiTool);
+      geminiTools.push(tool);
     } else {
       if (functionDeclarationsIndex === -1) {
         geminiTools.push({
