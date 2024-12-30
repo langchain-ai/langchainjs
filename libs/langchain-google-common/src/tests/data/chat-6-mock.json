@@ -67,7 +67,7 @@
               "endIndex": 611,
               "text": "Shohei Ohtani, in his first year with the Dodgers, also experienced his first post-season appearance."
             },
-            "groundingChunkIndices": [0,2],
+            "groundingChunkIndices": [0, 2],
             "confidenceScores": [0.95767003]
           }
         ],
