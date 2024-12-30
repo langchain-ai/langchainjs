@@ -158,8 +158,8 @@ describe.skip("AstraDBVectorStore", () => {
       fail("Should have thrown error");
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
-      expect(e.message).toContain(
-        "already exists with different collection options"
+      expect(e.message).toMatch(
+        /Collection already exists.*different settings/
       );
     }
   }, 60000);
@@ -213,11 +213,40 @@ describe.skip("AstraDBVectorStore", () => {
 
     await store.addDocuments([
       { pageContent: "upserted", metadata: { a: 1, _id: "123456789" } },
+      { pageContent: "upserted", metadata: { a: 2 } },
     ]);
 
     const collection = await db.collection(astraConfig.collection);
     const doc = await collection.findOne({ _id: "123456789" });
 
     expect(doc?.text).toEqual("upserted");
+  });
+
+  test("addDocuments with insertOptions (timeout)", async () => {
+    const store = new AstraDBVectorStore(new FakeEmbeddings(), {
+      ...astraConfig,
+      collectionOptions: {
+        vector: {
+          dimension: 4,
+          metric: "cosine",
+        },
+      },
+    });
+    await store.initialize();
+
+    const documents = [
+      new Document({ pageContent: "Test document 1", metadata: { key: "value1" } }),
+      new Document({ pageContent: "Test document 2", metadata: { key: "value2" } }),
+    ];
+
+    try {
+      // Setting maxTimeMS to 1 to trigger a timeout
+      await store.addDocuments(documents, {
+        insertOptions: { maxTimeMS: 1 },
+      });
+      fail("Should have thrown timeout error");
+    } catch (e: any) {
+      expect(e.message).toContain("Command timed out");
+    }
   });
 });
