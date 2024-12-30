@@ -221,6 +221,7 @@ export const config = {
     "caches/ioredis": "caches/ioredis",
     "caches/momento": "caches/momento",
     "caches/upstash_redis": "caches/upstash_redis",
+    "caches/vercel_kv": "caches/vercel_kv",
     // graphs
     "graphs/neo4j_graph": "graphs/neo4j_graph",
     "graphs/memgraph_graph": "graphs/memgraph_graph",
@@ -450,9 +451,12 @@ export const config = {
     "structured_query/supabase",
     "structured_query/vectara",
     "retrievers/zep_cloud",
+    // cache
     "cache/cloudflare_kv",
     "cache/momento",
     "cache/upstash_redis",
+    "cache/vercel_kv",
+    //graphs
     "graphs/neo4j_graph",
     "graphs/memgraph_graph",
     // document_compressors
