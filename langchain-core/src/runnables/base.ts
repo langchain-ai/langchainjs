@@ -2840,7 +2840,7 @@ export class RunnableWithFallbacks<RunInput, RunOutput> extends Runnable<
     options?: Partial<RunnableConfig>
   ): Promise<RunOutput> {
     const config = ensureConfig(options);
-    const callbackManager_ = await getCallbackManagerForConfig(options);
+    const callbackManager_ = await getCallbackManagerForConfig(config);
     const { runId, ...otherConfigFields } = config;
     const runManager = await callbackManager_?.handleChainStart(
       this.toJSON(),
@@ -2851,27 +2851,33 @@ export class RunnableWithFallbacks<RunInput, RunOutput> extends Runnable<
       undefined,
       otherConfigFields?.runName
     );
-    let firstError;
-    for (const runnable of this.runnables()) {
-      config?.signal?.throwIfAborted();
-      try {
-        const output = await runnable.invoke(
-          input,
-          patchConfig(otherConfigFields, { callbacks: runManager?.getChild() })
-        );
-        await runManager?.handleChainEnd(_coerceToDict(output, "output"));
-        return output;
-      } catch (e) {
-        if (firstError === undefined) {
-          firstError = e;
+    const childConfig = patchConfig(otherConfigFields, {
+      callbacks: runManager?.getChild(),
+    });
+    const res = await AsyncLocalStorageProviderSingleton.runWithConfig(
+      childConfig,
+      async () => {
+        let firstError;
+        for (const runnable of this.runnables()) {
+          config?.signal?.throwIfAborted();
+          try {
+            const output = await runnable.invoke(input, childConfig);
+            await runManager?.handleChainEnd(_coerceToDict(output, "output"));
+            return output;
+          } catch (e) {
+            if (firstError === undefined) {
+              firstError = e;
+            }
+          }
         }
+        if (firstError === undefined) {
+          throw new Error("No error stored at end of fallback.");
+        }
+        await runManager?.handleChainError(firstError);
+        throw firstError;
       }
-    }
-    if (firstError === undefined) {
-      throw new Error("No error stored at end of fallback.");
-    }
-    await runManager?.handleChainError(firstError);
-    throw firstError;
+    );
+    return res;
   }
 
   async *_streamIterator(
@@ -2879,7 +2885,7 @@ export class RunnableWithFallbacks<RunInput, RunOutput> extends Runnable<
     options?: Partial<RunnableConfig> | undefined
   ): AsyncGenerator<RunOutput> {
     const config = ensureConfig(options);
-    const callbackManager_ = await getCallbackManagerForConfig(options);
+    const callbackManager_ = await getCallbackManagerForConfig(config);
     const { runId, ...otherConfigFields } = config;
     const runManager = await callbackManager_?.handleChainStart(
       this.toJSON(),
@@ -2898,7 +2904,8 @@ export class RunnableWithFallbacks<RunInput, RunOutput> extends Runnable<
         callbacks: runManager?.getChild(),
       });
       try {
-        stream = await runnable.stream(input, childConfig);
+        const originalStream = await runnable.stream(input, childConfig);
+        stream = consumeAsyncIterableInContext(childConfig, originalStream);
         break;
       } catch (e) {
         if (firstError === undefined) {

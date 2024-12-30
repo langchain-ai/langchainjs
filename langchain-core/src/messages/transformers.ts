@@ -906,6 +906,10 @@ const _MSG_CHUNK_MAP: Record<
     message: SystemMessage,
     messageChunk: SystemMessageChunk,
   },
+  developer: {
+    message: SystemMessage,
+    messageChunk: SystemMessageChunk,
+  },
   tool: {
     message: ToolMessage,
     messageChunk: ToolMessageChunk,
@@ -975,6 +979,25 @@ function _switchTypeToMessage(
         chunk = new SystemMessageChunk(fields);
       } else {
         msg = new SystemMessage(fields);
+      }
+      break;
+    case "developer":
+      if (returnChunk) {
+        chunk = new SystemMessageChunk({
+          ...fields,
+          additional_kwargs: {
+            ...fields.additional_kwargs,
+            __openai_role__: "developer",
+          },
+        });
+      } else {
+        msg = new SystemMessage({
+          ...fields,
+          additional_kwargs: {
+            ...fields.additional_kwargs,
+            __openai_role__: "developer",
+          },
+        });
       }
       break;
     case "tool":
