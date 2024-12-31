@@ -10,6 +10,11 @@ It runs locally and even works directly in the browser, allowing you to create w
 
 You'll need to install the [@huggingface/transformers](https://www.npmjs.com/package/@huggingface/transformers) package as a peer dependency:
 
+:::tip Compatibility
+If you are using a version of community older than 0.3.21, install the older `@xenova/transformers` package and
+import the embeddings from `"@langchain/community/embeddings/hf_transformers"` below.
+:::
+
 ```bash npm2yarn
 npm install @huggingface/transformers
 ```
