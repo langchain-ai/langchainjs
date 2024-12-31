@@ -146,6 +146,10 @@ embeddings/bedrock.cjs
 embeddings/bedrock.js
 embeddings/bedrock.d.ts
 embeddings/bedrock.d.cts
+embeddings/bytedance_doubao.cjs
+embeddings/bytedance_doubao.js
+embeddings/bytedance_doubao.d.ts
+embeddings/bytedance_doubao.d.cts
 embeddings/cloudflare_workersai.cjs
 embeddings/cloudflare_workersai.js
 embeddings/cloudflare_workersai.d.ts

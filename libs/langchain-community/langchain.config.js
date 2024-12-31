@@ -72,6 +72,7 @@ export const config = {
     "embeddings/alibaba_tongyi": "embeddings/alibaba_tongyi",
     "embeddings/baidu_qianfan": "embeddings/baidu_qianfan",
     "embeddings/bedrock": "embeddings/bedrock",
+    "embeddings/bytedance_doubao": "embeddings/bytedance_doubao",
     "embeddings/cloudflare_workersai": "embeddings/cloudflare_workersai",
     "embeddings/cohere": "embeddings/cohere",
     "embeddings/deepinfra": "embeddings/deepinfra",

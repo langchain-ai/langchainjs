@@ -1050,6 +1050,15 @@
       "import": "./embeddings/bedrock.js",
       "require": "./embeddings/bedrock.cjs"
     },
+    "./embeddings/bytedance_doubao": {
+      "types": {
+        "import": "./embeddings/bytedance_doubao.d.ts",
+        "require": "./embeddings/bytedance_doubao.d.cts",
+        "default": "./embeddings/bytedance_doubao.d.ts"
+      },
+      "import": "./embeddings/bytedance_doubao.js",
+      "require": "./embeddings/bytedance_doubao.cjs"
+    },
     "./embeddings/cloudflare_workersai": {
       "types": {
         "import": "./embeddings/cloudflare_workersai.d.ts",
@@ -3308,6 +3317,10 @@
     "embeddings/bedrock.js",
     "embeddings/bedrock.d.ts",
     "embeddings/bedrock.d.cts",
+    "embeddings/bytedance_doubao.cjs",
+    "embeddings/bytedance_doubao.js",
+    "embeddings/bytedance_doubao.d.ts",
+    "embeddings/bytedance_doubao.d.cts",
     "embeddings/cloudflare_workersai.cjs",
     "embeddings/cloudflare_workersai.js",
     "embeddings/cloudflare_workersai.d.ts",
