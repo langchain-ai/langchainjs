@@ -15,6 +15,7 @@
   "../../langchain/src/embeddings/tensorflow.ts",
   "../../langchain/src/embeddings/hf.ts",
   "../../langchain/src/embeddings/hf_transformers.ts",
+  "../../langchain/src/embeddings/huggingface_transformers.ts",
   "../../langchain/src/embeddings/googlevertexai.ts",
   "../../langchain/src/embeddings/googlepalm.ts",
   "../../langchain/src/embeddings/minimax.ts",

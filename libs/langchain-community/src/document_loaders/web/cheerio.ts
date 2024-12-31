@@ -130,8 +130,9 @@ export class CheerioWebBaseLoader
    */
   async load(): Promise<Document[]> {
     const $ = await this.scrape();
+    const title = $("title").text();
     const text = $(this.selector).text();
-    const metadata = { source: this.webPath };
+    const metadata = { source: this.webPath, title };
     return [new Document({ pageContent: text, metadata })];
   }
 
