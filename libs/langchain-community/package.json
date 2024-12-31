@@ -125,6 +125,7 @@
     "@types/pg": "^8.11.0",
     "@types/pg-copy-streams": "^1.2.2",
     "@types/uuid": "^9",
+    "@types/word-extractor": "^1",
     "@types/ws": "^8",
     "@typescript-eslint/eslint-plugin": "^5.58.0",
     "@typescript-eslint/parser": "^5.58.0",
@@ -217,6 +218,7 @@
     "voy-search": "0.6.2",
     "weaviate-ts-client": "^1.4.0",
     "web-auth-library": "^1.0.3",
+    "word-extractor": "^1.0.4",
     "youtube-transcript": "^1.0.6",
     "youtubei.js": "^9.1.0"
   },
@@ -344,6 +346,7 @@
     "voy-search": "0.6.2",
     "weaviate-ts-client": "*",
     "web-auth-library": "^1.0.3",
+    "word-extractor": "*",
     "ws": "^8.14.2",
     "youtube-transcript": "^1.0.6",
     "youtubei.js": "^9.1.0"
@@ -701,6 +704,9 @@
       "optional": true
     },
     "web-auth-library": {
+      "optional": true
+    },
+    "word-extractor": {
       "optional": true
     },
     "ws": {
