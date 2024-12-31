@@ -48,7 +48,9 @@ export abstract class BaseGoogleSearchOutputParser extends BaseLLMOutputParser<s
     return undefined;
   }
 
-  protected generationToString(generation: Generation | ChatGeneration): string {
+  protected generationToString(
+    generation: Generation | ChatGeneration
+  ): string {
     if ("message" in generation) {
       const content: MessageContent = generation?.message?.content;
       if (typeof content === "string") {
@@ -109,7 +111,10 @@ export abstract class BaseGoogleSearchOutputParser extends BaseLLMOutputParser<s
     return `${textBefore}${textPrefix}${textSegment}${textSuffix}${textAfter}`;
   }
 
-  protected annotateTextSegments(text: string, grounding: GroundingInfo): string {
+  protected annotateTextSegments(
+    text: string,
+    grounding: GroundingInfo
+  ): string {
     // Go through each support info in reverse, since the segment info
     // is sorted, and we won't need to adjust string indexes this way.
     let ret = text;
