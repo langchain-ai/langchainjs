@@ -606,17 +606,14 @@ export class PGVectorStore extends VectorStore {
   }
 
   /**
-   * Method to perform a similarity search in the vector store. It returns
-   * the `k` most similar documents to the query vector, along with their
-   * similarity scores.
-   *
+   * Method to perform a similarity search in the vector store. It returns the `k` most similar documents to the query text.
    * @param query - Query vector.
    * @param k - Number of most similar documents to return.
    * @param filter - Optional filter to apply to the search.
    * @param includeEmbedding Whether to include the embedding vectors in the results.
    * @returns Promise that resolves with an array of tuples, each containing a `Document` and its similarity score.
    */
-  async similaritySearchVectorWithScore(
+  private async searchPostgres(
     query: number[],
     k: number,
     filter?: this["FilterType"],
@@ -707,6 +704,23 @@ export class PGVectorStore extends VectorStore {
       }
     }
     return results;
+  }
+
+  /**
+   * Method to perform a similarity search in the vector store. It returns
+   * the `k` most similar documents to the query vector, along with their
+   * similarity scores.
+   * @param query - Query vector.
+   * @param k - Number of most similar documents to return.
+   * @param filter - Optional filter to apply to the search.
+   * @returns Promise that resolves with an array of tuples, each containing a `Document` and its similarity score.
+   */
+  async similaritySearchVectorWithScore(
+    query: number[],
+    k: number,
+    filter?: this["FilterType"]
+  ): Promise<[Document, number][]> {
+    return this.searchPostgres(query, k, filter, false);
   }
 
   /**
@@ -915,7 +929,7 @@ export class PGVectorStore extends VectorStore {
     const { k = 4, fetchK = 20, lambda = 0.5, filter } = options;
     const queryEmbedding = await this.embeddings.embedQuery(query);
 
-    const docs = await this.similaritySearchVectorWithScore(
+    const docs = await this.searchPostgres(
       queryEmbedding,
       fetchK,
       filter,
