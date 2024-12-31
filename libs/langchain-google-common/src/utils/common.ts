@@ -1,10 +1,11 @@
 import { isOpenAITool } from "@langchain/core/language_models/base";
 import { isLangChainTool } from "@langchain/core/utils/function_calling";
 import { isModelGemini, validateGeminiParams } from "./gemini.js";
-import type {
+import {
   GeminiFunctionDeclaration,
   GeminiFunctionSchema,
   GeminiTool,
+  GeminiToolAttributes,
   GoogleAIBaseLanguageModelCallOptions,
   GoogleAIModelParams,
   GoogleAIModelRequestParams,
@@ -61,33 +62,57 @@ function processToolChoice(
   throw new Error("Object inputs for tool_choice not supported.");
 }
 
+function isGeminiTool(tool: GoogleAIToolType): tool is GeminiTool {
+  for (const toolAttribute of GeminiToolAttributes) {
+    if (toolAttribute in tool) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function isGeminiNonFunctionTool(tool: GoogleAIToolType): tool is GeminiTool {
+  return isGeminiTool(tool) && !("functionDeclaration" in tool);
+}
+
 export function convertToGeminiTools(tools: GoogleAIToolType[]): GeminiTool[] {
-  const geminiTools: GeminiTool[] = [
-    {
-      functionDeclarations: [],
-    },
-  ];
+  const geminiTools: GeminiTool[] = [];
+  let functionDeclarationsIndex = -1;
   tools.forEach((tool) => {
-    if (
-      "functionDeclarations" in tool &&
-      Array.isArray(tool.functionDeclarations)
-    ) {
-      const funcs: GeminiFunctionDeclaration[] = tool.functionDeclarations;
-      geminiTools[0].functionDeclarations?.push(...funcs);
-    } else if (isLangChainTool(tool)) {
-      const jsonSchema = zodToGeminiParameters(tool.schema);
-      geminiTools[0].functionDeclarations?.push({
-        name: tool.name,
-        description: tool.description ?? `A function available to call.`,
-        parameters: jsonSchema as GeminiFunctionSchema,
-      });
-    } else if (isOpenAITool(tool)) {
-      geminiTools[0].functionDeclarations?.push({
-        name: tool.function.name,
-        description:
-          tool.function.description ?? `A function available to call.`,
-        parameters: jsonSchemaToGeminiParameters(tool.function.parameters),
-      });
+    if (isGeminiNonFunctionTool(tool)) {
+      geminiTools.push(tool);
+    } else {
+      if (functionDeclarationsIndex === -1) {
+        geminiTools.push({
+          functionDeclarations: [],
+        });
+        functionDeclarationsIndex = geminiTools.length - 1;
+      }
+      if (
+        "functionDeclarations" in tool &&
+        Array.isArray(tool.functionDeclarations)
+      ) {
+        const funcs: GeminiFunctionDeclaration[] = tool.functionDeclarations;
+        geminiTools[functionDeclarationsIndex].functionDeclarations!.push(
+          ...funcs
+        );
+      } else if (isLangChainTool(tool)) {
+        const jsonSchema = zodToGeminiParameters(tool.schema);
+        geminiTools[functionDeclarationsIndex].functionDeclarations!.push({
+          name: tool.name,
+          description: tool.description ?? `A function available to call.`,
+          parameters: jsonSchema as GeminiFunctionSchema,
+        });
+      } else if (isOpenAITool(tool)) {
+        geminiTools[functionDeclarationsIndex].functionDeclarations!.push({
+          name: tool.function.name,
+          description:
+            tool.function.description ?? `A function available to call.`,
+          parameters: jsonSchemaToGeminiParameters(tool.function.parameters),
+        });
+      } else {
+        throw new Error(`Received invalid tool: ${JSON.stringify(tool)}`);
+      }
     }
   });
   return geminiTools;

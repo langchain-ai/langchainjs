@@ -15,7 +15,9 @@ import {
   IndexingPolicy,
   SqlParameter,
   SqlQuerySpec,
+  VectorEmbedding,
   VectorEmbeddingPolicy,
+  VectorIndex,
 } from "@azure/cosmos";
 import { DefaultAzureCredential, TokenCredential } from "@azure/identity";
 
@@ -186,7 +188,7 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
           distanceFunction: "cosine",
           // Will be determined automatically during initialization
           dimensions: 0,
-        },
+        } as VectorEmbedding,
       ];
     }
 
@@ -195,7 +197,7 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
         {
           path: "/vector",
           type: "quantizedFlat",
-        },
+        } as VectorIndex,
       ];
     }
 

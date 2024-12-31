@@ -24,9 +24,8 @@ import {
 } from "./base.js";
 import type { RunnableConfig } from "../runnables/config.js";
 import type { BaseCache } from "../caches/base.js";
-import { isStreamEventsHandler } from "../tracers/event_stream.js";
-import { isLogStreamHandler } from "../tracers/log_stream.js";
 import { concat } from "../utils/stream.js";
+import { callbackHandlerPrefersStreaming } from "../callbacks/base.js";
 
 export type SerializedLLM = {
   _model: string;
@@ -270,9 +269,9 @@ export abstract class BaseLLM<
     // Even if stream is not explicitly called, check if model is implicitly
     // called from streamEvents() or streamLog() to get all streamed events.
     // Bail out if _streamResponseChunks not overridden
-    const hasStreamingHandler = !!runManagers?.[0].handlers.find((handler) => {
-      return isStreamEventsHandler(handler) || isLogStreamHandler(handler);
-    });
+    const hasStreamingHandler = !!runManagers?.[0].handlers.find(
+      callbackHandlerPrefersStreaming
+    );
     let output: LLMResult;
     if (
       hasStreamingHandler &&

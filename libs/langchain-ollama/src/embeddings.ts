@@ -35,7 +35,7 @@ interface OllamaEmbeddingsParams extends EmbeddingsParams {
   /**
    * Optional HTTP Headers to include in the request.
    */
-  headers?: Headers;
+  headers?: Headers | Record<string, string>;
 
   /**
    * Advanced Ollama API request parameters in camelCase, see
@@ -50,7 +50,7 @@ export class OllamaEmbeddings extends Embeddings {
 
   baseUrl = "http://localhost:11434";
 
-  keepAlive: string | number = "5m";
+  keepAlive?: string | number;
 
   requestOptions?: Partial<OllamaOptions>;
 
@@ -63,12 +63,12 @@ export class OllamaEmbeddings extends Embeddings {
 
     this.client = new Ollama({
       host: fields?.baseUrl,
-      headers: fields?.headers,
+      headers: fields?.headers ? new Headers(fields.headers) : undefined,
     });
     this.baseUrl = fields?.baseUrl ?? this.baseUrl;
 
     this.model = fields?.model ?? this.model;
-    this.keepAlive = fields?.keepAlive ?? this.keepAlive;
+    this.keepAlive = fields?.keepAlive;
     this.truncate = fields?.truncate ?? this.truncate;
     this.requestOptions = fields?.requestOptions
       ? this._convertOptions(fields?.requestOptions)

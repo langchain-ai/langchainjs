@@ -33,6 +33,7 @@ import {
   GoogleAIBaseLanguageModelCallOptions,
   GoogleAIAPI,
   GoogleAIAPIParams,
+  GoogleSearchToolSetting,
 } from "./types.js";
 import {
   convertToGeminiTools,
@@ -97,10 +98,39 @@ export class ChatConnection<AuthOptions> extends AbstractGoogleLLMConnection<
     return true;
   }
 
+  computeGoogleSearchToolAdjustmentFromModel(): Exclude<
+    GoogleSearchToolSetting,
+    boolean
+  > {
+    if (this.modelName.startsWith("gemini-1.0")) {
+      return "googleSearchRetrieval";
+    } else if (this.modelName.startsWith("gemini-1.5")) {
+      return "googleSearchRetrieval";
+    } else {
+      return "googleSearch";
+    }
+  }
+
+  computeGoogleSearchToolAdjustment(
+    apiConfig: GeminiAPIConfig
+  ): Exclude<GoogleSearchToolSetting, true> {
+    const adj = apiConfig.googleSearchToolAdjustment;
+    if (adj === undefined || adj === true) {
+      return this.computeGoogleSearchToolAdjustmentFromModel();
+    } else {
+      return adj;
+    }
+  }
+
   buildGeminiAPI(): GoogleAIAPI {
+    const apiConfig: GeminiAPIConfig =
+      (this.apiConfig as GeminiAPIConfig) ?? {};
+    const googleSearchToolAdjustment =
+      this.computeGoogleSearchToolAdjustment(apiConfig);
     const geminiConfig: GeminiAPIConfig = {
       useSystemInstruction: this.useSystemInstruction,
-      ...(this.apiConfig as GeminiAPIConfig),
+      googleSearchToolAdjustment,
+      ...apiConfig,
     };
     return getGeminiAPI(geminiConfig);
   }
@@ -208,7 +238,12 @@ export abstract class ChatGoogleBase<AuthOptions>
   }
 
   buildApiKey(fields?: GoogleAIBaseLLMInput<AuthOptions>): string | undefined {
-    return fields?.apiKey ?? getEnvironmentVariable("GOOGLE_API_KEY");
+    if (fields?.platformType !== "gcp") {
+      return fields?.apiKey ?? getEnvironmentVariable("GOOGLE_API_KEY");
+    } else {
+      // GCP doesn't support API Keys
+      return undefined;
+    }
   }
 
   buildClient(
@@ -469,6 +504,7 @@ export abstract class ChatGoogleBase<AuthOptions>
     }
     const llm = this.bind({
       tools,
+      tool_choice: functionName,
     });
 
     if (!includeRaw) {

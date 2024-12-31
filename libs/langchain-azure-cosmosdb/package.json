@@ -1,6 +1,6 @@
 {
   "name": "@langchain/azure-cosmosdb",
-  "version": "0.2.3",
+  "version": "0.2.6",
   "description": "Azure CosmosDB integration for LangChain.js",
   "type": "module",
   "engines": {
@@ -32,9 +32,9 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@azure/cosmos": "4.0.1-beta.3",
-    "@azure/identity": "^4.2.0",
-    "mongodb": "^6.8.0"
+    "@azure/cosmos": "^4.2.0",
+    "@azure/identity": "^4.5.0",
+    "mongodb": "^6.10.0"
   },
   "peerDependencies": {
     "@langchain/core": ">=0.2.21 <0.4.0"

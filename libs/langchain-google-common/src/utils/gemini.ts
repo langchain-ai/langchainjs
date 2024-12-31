@@ -37,6 +37,7 @@ import type {
   GeminiPartFunctionCall,
   GoogleAIAPI,
   GeminiAPIConfig,
+  GeminiGroundingSupport,
 } from "../types.js";
 import { GoogleAISafetyError } from "./safety.js";
 import { MediaBlob } from "../experimental/utils/media_core.js";
@@ -48,6 +49,7 @@ import {
   GeminiTool,
   GoogleAIModelRequestParams,
   GoogleAIToolType,
+  GeminiSearchToolAttributes,
 } from "../types.js";
 import { zodToGeminiParameters } from "./zod_to_gemini_parameters.js";
 
@@ -231,10 +233,10 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
       throw new Error("Missing Image URL");
     }
 
-    const mineTypeAndData = extractMimeType(url);
-    if (mineTypeAndData) {
+    const mimeTypeAndData = extractMimeType(url);
+    if (mimeTypeAndData) {
       return {
-        inlineData: mineTypeAndData,
+        inlineData: mimeTypeAndData,
       };
     } else {
       // FIXME - need some way to get mime type
@@ -690,6 +692,8 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
         severity: rating.severity,
         severity_score: rating.severityScore,
       })),
+      citation_metadata: data.candidates[0]?.citationMetadata,
+      grounding_metadata: data.candidates[0]?.groundingMetadata,
       finish_reason: data.candidates[0]?.finishReason,
     };
   }
@@ -749,7 +753,29 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     });
   }
 
-  function responseToChatGenerations(
+  function groundingSupportByPart(
+    groundingSupports?: GeminiGroundingSupport[]
+  ): GeminiGroundingSupport[][] {
+    const ret: GeminiGroundingSupport[][] = [];
+
+    if (!groundingSupports || groundingSupports.length === 0) {
+      return [];
+    }
+
+    groundingSupports?.forEach((groundingSupport) => {
+      const segment = groundingSupport?.segment;
+      const partIndex = segment?.partIndex ?? 0;
+      if (ret[partIndex]) {
+        ret[partIndex].push(groundingSupport);
+      } else {
+        ret[partIndex] = [groundingSupport];
+      }
+    });
+
+    return ret;
+  }
+
+  function responseToGroundedChatGenerations(
     response: GoogleLLMResponse
   ): ChatGeneration[] {
     const parts = responseToParts(response);
@@ -758,7 +784,46 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
       return [];
     }
 
-    let ret = parts.map((part) => partToChatGeneration(part));
+    // Citation and grounding information connected to each part / ChatGeneration
+    // to make sure they are available in downstream filters.
+    const candidate = (response?.data as GenerateContentResponseData)
+      ?.candidates?.[0];
+    const groundingMetadata = candidate?.groundingMetadata;
+    const citationMetadata = candidate?.citationMetadata;
+    const groundingParts = groundingSupportByPart(
+      groundingMetadata?.groundingSupports
+    );
+
+    const ret = parts.map((part, index) => {
+      const gen = partToChatGeneration(part);
+      if (!gen.generationInfo) {
+        gen.generationInfo = {};
+      }
+      if (groundingMetadata) {
+        gen.generationInfo.groundingMetadata = groundingMetadata;
+        const groundingPart = groundingParts[index];
+        if (groundingPart) {
+          gen.generationInfo.groundingSupport = groundingPart;
+        }
+      }
+      if (citationMetadata) {
+        gen.generationInfo.citationMetadata = citationMetadata;
+      }
+      return gen;
+    });
+
+    return ret;
+  }
+
+  function responseToChatGenerations(
+    response: GoogleLLMResponse
+  ): ChatGeneration[] {
+    let ret = responseToGroundedChatGenerations(response);
+
+    if (ret.length === 0) {
+      return [];
+    }
+
     if (ret.every((item) => typeof item.message.content === "string")) {
       const combinedContent = ret.map((item) => item.message.content).join("");
       const combinedText = ret.map((item) => item.text).join("");
@@ -1015,14 +1080,25 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     };
   }
 
-  function structuredToolsToGeminiTools(
-    tools: StructuredToolParams[]
-  ): GeminiTool[] {
-    return [
-      {
-        functionDeclarations: tools.map(structuredToolToFunctionDeclaration),
-      },
-    ];
+  function searchToolName(tool: GeminiTool): string | undefined {
+    for (const name of GeminiSearchToolAttributes) {
+      if (name in tool) {
+        return name;
+      }
+    }
+    return undefined;
+  }
+
+  function cleanGeminiTool(tool: GeminiTool): GeminiTool {
+    const orig = searchToolName(tool);
+    const adj = config?.googleSearchToolAdjustment;
+    if (orig && adj && adj !== orig) {
+      return {
+        [adj as string]: {},
+      };
+    } else {
+      return tool;
+    }
   }
 
   function formatTools(parameters: GoogleAIModelRequestParams): GeminiTool[] {
@@ -1031,18 +1107,29 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
       return [];
     }
 
-    if (tools.every(isLangChainTool)) {
-      return structuredToolsToGeminiTools(tools);
-    } else {
-      if (
-        tools.length === 1 &&
-        (!("functionDeclarations" in tools[0]) ||
-          !tools[0].functionDeclarations?.length)
-      ) {
-        return [];
+    // Group all LangChain tools into a single functionDeclarations array.
+    // Gemini Tools may be normalized to different tool names
+    const langChainTools: StructuredToolParams[] = [];
+    const otherTools: GeminiTool[] = [];
+    tools.forEach((tool) => {
+      if (isLangChainTool(tool)) {
+        langChainTools.push(tool);
+      } else {
+        otherTools.push(cleanGeminiTool(tool as GeminiTool));
       }
-      return tools as GeminiTool[];
+    });
+
+    const result: GeminiTool[] = [...otherTools];
+
+    if (langChainTools.length > 0) {
+      result.push({
+        functionDeclarations: langChainTools.map(
+          structuredToolToFunctionDeclaration
+        ),
+      });
     }
+
+    return result;
   }
 
   function formatToolConfig(
@@ -1052,10 +1139,20 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
       return undefined;
     }
 
+    if (["auto", "any", "none"].includes(parameters.tool_choice)) {
+      return {
+        functionCallingConfig: {
+          mode: parameters.tool_choice as "auto" | "any" | "none",
+          allowedFunctionNames: parameters.allowed_function_names,
+        },
+      };
+    }
+
+    // force tool choice to be a single function name in case of structured output
     return {
       functionCallingConfig: {
-        mode: parameters.tool_choice as "auto" | "any" | "none",
-        allowedFunctionNames: parameters.allowed_function_names,
+        mode: "any",
+        allowedFunctionNames: [parameters.tool_choice],
       },
     };
   }

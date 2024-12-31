@@ -15,6 +15,7 @@ import {
   OpenAIToolCall,
   isAIMessage,
   UsageMetadata,
+  BaseMessageFields,
 } from "@langchain/core/messages";
 import {
   type ChatGeneration,
@@ -95,7 +96,13 @@ interface OpenAILLMOutput {
 }
 
 // TODO import from SDK when available
-type OpenAIRoleEnum = "system" | "assistant" | "user" | "function" | "tool";
+type OpenAIRoleEnum =
+  | "system"
+  | "developer"
+  | "assistant"
+  | "user"
+  | "function"
+  | "tool";
 
 type OpenAICompletionParam =
   OpenAIClient.Chat.Completions.ChatCompletionMessageParam;
@@ -105,6 +112,7 @@ type OpenAIFnCallOption = OpenAIClient.Chat.ChatCompletionFunctionCallOption;
 function extractGenericMessageCustomRole(message: ChatMessage) {
   if (
     message.role !== "system" &&
+    message.role !== "developer" &&
     message.role !== "assistant" &&
     message.role !== "user" &&
     message.role !== "function" &&
@@ -166,13 +174,15 @@ function openAIResponseToChatMessage(
       if (includeRawResponse !== undefined) {
         additional_kwargs.__raw_response = rawResponse;
       }
-      let response_metadata: Record<string, unknown> | undefined;
-      if (rawResponse.system_fingerprint) {
-        response_metadata = {
-          usage: { ...rawResponse.usage },
-          system_fingerprint: rawResponse.system_fingerprint,
-        };
-      }
+      const response_metadata: Record<string, unknown> | undefined = {
+        model_name: rawResponse.model,
+        ...(rawResponse.system_fingerprint
+          ? {
+              usage: { ...rawResponse.usage },
+              system_fingerprint: rawResponse.system_fingerprint,
+            }
+          : {}),
+      };
 
       if (message.audio) {
         additional_kwargs.audio = message.audio;
@@ -249,6 +259,14 @@ function _convertDeltaToMessageChunk(
     });
   } else if (role === "system") {
     return new SystemMessageChunk({ content, response_metadata });
+  } else if (role === "developer") {
+    return new SystemMessageChunk({
+      content,
+      response_metadata,
+      additional_kwargs: {
+        __openai_role__: "developer",
+      },
+    });
   } else if (role === "function") {
     return new FunctionMessageChunk({
       content,
@@ -270,13 +288,18 @@ function _convertDeltaToMessageChunk(
 
 // Used in LangSmith, export is important here
 export function _convertMessagesToOpenAIParams(
-  messages: BaseMessage[]
+  messages: BaseMessage[],
+  model?: string
 ): OpenAICompletionParam[] {
   // TODO: Function messages do not support array content, fix cast
   return messages.flatMap((message) => {
+    let role = messageToOpenAIRole(message);
+    if (role === "system" && model?.startsWith("o1")) {
+      role = "developer";
+    }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const completionParam: Record<string, any> = {
-      role: messageToOpenAIRole(message),
+      role,
       content: message.content,
     };
     if (message.name != null) {
@@ -428,6 +451,12 @@ export interface ChatOpenAICallOptions
    * [Learn more](https://platform.openai.com/docs/guides/latency-optimization#use-predicted-outputs).
    */
   prediction?: OpenAIClient.ChatCompletionPredictionContent;
+
+  /**
+   * Constrains effort on reasoning for reasoning models. Currently supported values are low, medium, and high.
+   * Reducing reasoning effort can result in faster responses and fewer tokens used on reasoning in a response.
+   */
+  reasoning_effort?: OpenAIClient.Chat.ChatCompletionReasoningEffort;
 }
 
 export interface ChatOpenAIFields
@@ -994,6 +1023,7 @@ export class ChatOpenAI<
       "promptIndex",
       "response_format",
       "seed",
+      "reasoning_effort",
     ];
   }
 
@@ -1092,6 +1122,8 @@ export class ChatOpenAI<
 
   modalities?: Array<OpenAIClient.Chat.ChatCompletionModality>;
 
+  reasoningEffort?: OpenAIClient.Chat.ChatCompletionReasoningEffort;
+
   constructor(
     fields?: ChatOpenAIFields,
     /** @deprecated */
@@ -1162,6 +1194,7 @@ export class ChatOpenAI<
     this.__includeRawResponse = fields?.__includeRawResponse;
     this.audio = fields?.audio;
     this.modalities = fields?.modalities;
+    this.reasoningEffort = fields?.reasoningEffort;
 
     if (this.azureOpenAIApiKey || this.azureADTokenProvider) {
       if (
@@ -1337,6 +1370,10 @@ export class ChatOpenAI<
     if (options?.prediction !== undefined) {
       params.prediction = options.prediction;
     }
+    const reasoningEffort = options?.reasoning_effort ?? this.reasoningEffort;
+    if (reasoningEffort !== undefined) {
+      params.reasoning_effort = reasoningEffort;
+    }
     return params;
   }
 
@@ -1360,7 +1397,7 @@ export class ChatOpenAI<
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
     const messagesMapped: OpenAICompletionParam[] =
-      _convertMessagesToOpenAIParams(messages);
+      _convertMessagesToOpenAIParams(messages, this.model);
     const params = {
       ...this.invocationParams(options, {
         streaming: true,
@@ -1409,6 +1446,7 @@ export class ChatOpenAI<
         // Only include system fingerprint in the last chunk for now
         // to avoid concatenation issues
         generationInfo.system_fingerprint = data.system_fingerprint;
+        generationInfo.model_name = data.model;
       }
       if (this.logprobs) {
         generationInfo.logprobs = choice.logprobs;
@@ -1489,7 +1527,7 @@ export class ChatOpenAI<
     const usageMetadata = {} as UsageMetadata;
     const params = this.invocationParams(options);
     const messagesMapped: OpenAICompletionParam[] =
-      _convertMessagesToOpenAIParams(messages);
+      _convertMessagesToOpenAIParams(messages, this.model);
 
     if (params.stream) {
       const stream = this._streamResponseChunks(messages, options, runManager);
@@ -1640,9 +1678,13 @@ export class ChatOpenAI<
         }
         // Fields are not serialized unless passed to the constructor
         // Doing this ensures all fields on the message are serialized
-        generation.message = new AIMessage({
-          ...generation.message,
-        });
+        generation.message = new AIMessage(
+          Object.fromEntries(
+            Object.entries(generation.message).filter(
+              ([key]) => !key.startsWith("lc_")
+            )
+          ) as BaseMessageFields
+        );
         generations.push(generation);
       }
       return {
