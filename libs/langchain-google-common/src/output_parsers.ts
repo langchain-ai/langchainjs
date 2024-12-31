@@ -18,7 +18,7 @@ type GroundingInfo = {
 export abstract class BaseGoogleSearchOutputParser extends BaseLLMOutputParser<string> {
   lc_namespace: string[] = ["google_common", "output_parsers"];
 
-  generationToGroundingInfo(
+  protected generationToGroundingInfo(
     generation: Generation | ChatGeneration
   ): GroundingInfo | undefined {
     if ("message" in generation) {
@@ -36,7 +36,7 @@ export abstract class BaseGoogleSearchOutputParser extends BaseLLMOutputParser<s
     return undefined;
   }
 
-  generationsToGroundingInfo(
+  protected generationsToGroundingInfo(
     generations: Generations
   ): GroundingInfo | undefined {
     for (const generation of generations) {
@@ -48,7 +48,7 @@ export abstract class BaseGoogleSearchOutputParser extends BaseLLMOutputParser<s
     return undefined;
   }
 
-  generationToString(generation: Generation | ChatGeneration): string {
+  protected generationToString(generation: Generation | ChatGeneration): string {
     if ("message" in generation) {
       const content: MessageContent = generation?.message?.content;
       if (typeof content === "string") {
@@ -70,7 +70,7 @@ export abstract class BaseGoogleSearchOutputParser extends BaseLLMOutputParser<s
     return generation.text;
   }
 
-  generationsToString(generations: Generations): string {
+  protected generationsToString(generations: Generations): string {
     return generations
       .map((generation) => this.generationToString(generation))
       .reduce(
@@ -90,7 +90,7 @@ export abstract class BaseGoogleSearchOutputParser extends BaseLLMOutputParser<s
     index: number
   ): string | undefined;
 
-  annotateSegment(
+  protected annotateSegment(
     text: string,
     grounding: GroundingInfo,
     support: GeminiGroundingSupport,
@@ -109,7 +109,7 @@ export abstract class BaseGoogleSearchOutputParser extends BaseLLMOutputParser<s
     return `${textBefore}${textPrefix}${textSegment}${textSuffix}${textAfter}`;
   }
 
-  annotateTextSegments(text: string, grounding: GroundingInfo): string {
+  protected annotateTextSegments(text: string, grounding: GroundingInfo): string {
     // Go through each support info in reverse, since the segment info
     // is sorted, and we won't need to adjust string indexes this way.
     let ret = text;
@@ -138,11 +138,11 @@ export abstract class BaseGoogleSearchOutputParser extends BaseLLMOutputParser<s
    * See https://ai.google.dev/gemini-api/docs/grounding/search-suggestions
    * @param grounding
    */
-  searchSuggestion(grounding: GroundingInfo): string {
+  protected searchSuggestion(grounding: GroundingInfo): string {
     return grounding.metadata.searchEntryPoint?.renderedContent ?? "";
   }
 
-  annotateText(text: string, grounding: GroundingInfo): string {
+  protected annotateText(text: string, grounding: GroundingInfo): string {
     const prefix = this.textPrefix(text, grounding) ?? "";
     const suffix = this.textSuffix(text, grounding) ?? "";
     const body = this.annotateTextSegments(text, grounding);
