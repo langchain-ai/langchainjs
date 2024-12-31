@@ -1,9 +1,9 @@
 import { JiraProjectLoader } from "@langchain/community/document_loaders/web/jira";
 
-const host = process.env.JIRA_HOST || 'https://jira.example.com';
+const host = process.env.JIRA_HOST || "https://jira.example.com";
 const username = process.env.JIRA_USERNAME;
 const accessToken = process.env.JIRA_ACCESS_TOKEN;
-const projectKey = process.env.JIRA_PROJECT_KEY || 'PROJ';
+const projectKey = process.env.JIRA_PROJECT_KEY || "PROJ";
 
 if (username && accessToken) {
   // Created within last 30 days
@@ -14,7 +14,7 @@ if (username && accessToken) {
     projectKey,
     username,
     accessToken,
-    createdAfter
+    createdAfter,
   });
 
   const documents = await loader.load();
