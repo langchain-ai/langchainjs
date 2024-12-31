@@ -1,26 +1,13 @@
-/* eslint-disable */
-// @ts-nocheck
 import type {
   PretrainedOptions,
   FeatureExtractionPipelineOptions,
   FeatureExtractionPipeline,
-} from "@xenova/transformers";
+} from "@huggingface/transformers";
 import { Embeddings, type EmbeddingsParams } from "@langchain/core/embeddings";
 import { chunkArray } from "@langchain/core/utils/chunk_array";
 
-/**
- * @deprecated Import from
- * "@langchain/community/embeddings/huggingface_transformers"
- * instead and use the new "@huggingface/transformers" peer dependency.
- */
 export interface HuggingFaceTransformersEmbeddingsParams
   extends EmbeddingsParams {
-  /**
-   * Model name to use
-   * Alias for `model`
-   */
-  modelName: string;
-
   /** Model name to use */
   model: string;
 
@@ -50,17 +37,29 @@ export interface HuggingFaceTransformersEmbeddingsParams
    */
   pipelineOptions?: FeatureExtractionPipelineOptions;
 }
+
 /**
- * @deprecated Import from
- * "@langchain/community/embeddings/huggingface_transformers"
- * instead and use the new "@huggingface/transformers" peer dependency.
+ * @example
+ * ```typescript
+ * const model = new HuggingFaceTransformersEmbeddings({
+ *   model: "Xenova/all-MiniLM-L6-v2",
+ * });
+ *
+ * // Embed a single query
+ * const res = await model.embedQuery(
+ *   "What would be a good company name for a company that makes colorful socks?"
+ * );
+ * console.log({ res });
+ *
+ * // Embed multiple documents
+ * const documentRes = await model.embedDocuments(["Hello world", "Bye bye"]);
+ * console.log({ documentRes });
+ * ```
  */
 export class HuggingFaceTransformersEmbeddings
   extends Embeddings
   implements HuggingFaceTransformersEmbeddingsParams
 {
-  modelName = "Xenova/all-MiniLM-L6-v2";
-
   model = "Xenova/all-MiniLM-L6-v2";
 
   batchSize = 512;
@@ -77,8 +76,8 @@ export class HuggingFaceTransformersEmbeddings
 
   constructor(fields?: Partial<HuggingFaceTransformersEmbeddingsParams>) {
     super(fields ?? {});
-    this.modelName = fields?.model ?? fields?.modelName ?? this.model;
-    this.model = this.modelName;
+
+    this.model = fields?.model ?? this.model;
     this.stripNewLines = fields?.stripNewLines ?? this.stripNewLines;
     this.timeout = fields?.timeout;
     this.pretrainedOptions = fields?.pretrainedOptions ?? {};
@@ -88,22 +87,27 @@ export class HuggingFaceTransformersEmbeddings
       ...fields?.pipelineOptions,
     };
   }
+
   async embedDocuments(texts: string[]): Promise<number[][]> {
     const batches = chunkArray(
       this.stripNewLines ? texts.map((t) => t.replace(/\n/g, " ")) : texts,
       this.batchSize
     );
+
     const batchRequests = batches.map((batch) => this.runEmbedding(batch));
     const batchResponses = await Promise.all(batchRequests);
     const embeddings: number[][] = [];
+
     for (let i = 0; i < batchResponses.length; i += 1) {
       const batchResponse = batchResponses[i];
       for (let j = 0; j < batchResponse.length; j += 1) {
         embeddings.push(batchResponse[j]);
       }
     }
+
     return embeddings;
   }
+
   async embedQuery(text: string): Promise<number[]> {
     const data = await this.runEmbedding([
       this.stripNewLines ? text.replace(/\n/g, " ") : text,
@@ -113,7 +117,7 @@ export class HuggingFaceTransformersEmbeddings
 
   private async runEmbedding(texts: string[]) {
     const pipe = await (this.pipelinePromise ??= (
-      await import("@xenova/transformers")
+      await import("@huggingface/transformers")
     ).pipeline("feature-extraction", this.model, this.pretrainedOptions));
 
     return this.caller.call(async () => {
