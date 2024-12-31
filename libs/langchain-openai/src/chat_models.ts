@@ -2035,24 +2035,7 @@ export class ChatOpenAI<
       } else {
         outputParser = new JsonOutputParser<RunOutput>();
       }
-    } else if (method === "jsonSchema") {
-      llm = this.bind({
-        response_format: {
-          type: "json_schema",
-          json_schema: {
-            name: name ?? "extract",
-            description: schema.description,
-            schema,
-            strict: config?.strict,
-          },
-        },
-      } as Partial<CallOptions>);
-      if (isZodSchema(schema)) {
-        outputParser = StructuredOutputParser.fromZodSchema(schema);
-      } else {
-        outputParser = new JsonOutputParser<RunOutput>();
-      }
-    } else {
+    } else if (method === "tool_calling") {
       let functionName = name ?? "extract";
       // Is function calling
       if (isZodSchema(schema)) {
@@ -2120,6 +2103,25 @@ export class ChatOpenAI<
           keyName: functionName,
         });
       }
+    } else {
+      let finalSchema = schema;
+      if (!isZodSchema(schema)) {
+        if (schema.parameters !== undefined) {
+          finalSchema = schema.parameters;
+        }
+      }
+      llm = this.bind({
+        response_format: {
+          type: "json_schema",
+          json_schema: {
+            name: name ?? "extract",
+            description: schema.description,
+            schema: finalSchema,
+            strict: config?.strict ?? true,
+          },
+        },
+      } as Partial<CallOptions>);
+      outputParser = new JsonOutputParser<RunOutput>();
     }
 
     if (!includeRaw) {
