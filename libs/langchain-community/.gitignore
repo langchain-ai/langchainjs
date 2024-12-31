@@ -174,6 +174,10 @@ embeddings/hf_transformers.cjs
 embeddings/hf_transformers.js
 embeddings/hf_transformers.d.ts
 embeddings/hf_transformers.d.cts
+embeddings/huggingface_transformers.cjs
+embeddings/huggingface_transformers.js
+embeddings/huggingface_transformers.d.ts
+embeddings/huggingface_transformers.d.cts
 embeddings/ibm.cjs
 embeddings/ibm.js
 embeddings/ibm.d.ts
