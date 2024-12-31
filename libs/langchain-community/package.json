@@ -78,6 +78,7 @@
     "@google-cloud/storage": "^7.7.0",
     "@gradientai/nodejs-sdk": "^1.2.0",
     "@huggingface/inference": "^2.6.4",
+    "@huggingface/transformers": "^3.2.3",
     "@ibm-cloud/watsonx-ai": "^1.3.0",
     "@jest/globals": "^29.5.0",
     "@lancedb/lancedb": "^0.13.0",
@@ -134,7 +135,6 @@
     "@vercel/postgres": "^0.5.0",
     "@writerai/writer-sdk": "^0.40.2",
     "@xata.io/client": "^0.28.0",
-    "@huggingface/transformers": "^3.2.3",
     "@zilliz/milvus2-sdk-node": ">=2.3.5",
     "apify-client": "^2.7.1",
     "assemblyai": "^4.6.0",
@@ -249,6 +249,7 @@
     "@google-cloud/storage": "^6.10.1 || ^7.7.0",
     "@gradientai/nodejs-sdk": "^1.2.0",
     "@huggingface/inference": "^2.6.4",
+    "@huggingface/transformers": "^3.2.3",
     "@ibm-cloud/watsonx-ai": "*",
     "@lancedb/lancedb": "^0.12.0",
     "@langchain/core": ">=0.2.21 <0.4.0",
@@ -282,7 +283,6 @@
     "@vercel/postgres": "^0.5.0",
     "@writerai/writer-sdk": "^0.40.2",
     "@xata.io/client": "^0.28.0",
-    "@huggingface/transformers": "^3.2.3",
     "@zilliz/milvus2-sdk-node": ">=2.3.5",
     "apify-client": "^2.7.1",
     "assemblyai": "^4.6.0",
@@ -430,6 +430,9 @@
     "@huggingface/inference": {
       "optional": true
     },
+    "@huggingface/transformers": {
+      "optional": true
+    },
     "@lancedb/lancedb": {
       "optional": true
     },
@@ -521,9 +524,6 @@
       "optional": true
     },
     "@xata.io/client": {
-      "optional": true
-    },
-    "@huggingface/transformers": {
       "optional": true
     },
     "@zilliz/milvus2-sdk-node": {
@@ -1112,6 +1112,15 @@
       },
       "import": "./embeddings/hf_transformers.js",
       "require": "./embeddings/hf_transformers.cjs"
+    },
+    "./embeddings/huggingface_transformers": {
+      "types": {
+        "import": "./embeddings/huggingface_transformers.d.ts",
+        "require": "./embeddings/huggingface_transformers.d.cts",
+        "default": "./embeddings/huggingface_transformers.d.ts"
+      },
+      "import": "./embeddings/huggingface_transformers.js",
+      "require": "./embeddings/huggingface_transformers.cjs"
     },
     "./embeddings/ibm": {
       "types": {
@@ -3336,6 +3345,10 @@
     "embeddings/hf_transformers.js",
     "embeddings/hf_transformers.d.ts",
     "embeddings/hf_transformers.d.cts",
+    "embeddings/huggingface_transformers.cjs",
+    "embeddings/huggingface_transformers.js",
+    "embeddings/huggingface_transformers.d.ts",
+    "embeddings/huggingface_transformers.d.cts",
     "embeddings/ibm.cjs",
     "embeddings/ibm.js",
     "embeddings/ibm.d.ts",
