@@ -1,7 +1,3 @@
-import * as fsDefault from "node:fs";
-import { promises as fsPromises } from "node:fs";
-import * as path from "node:path";
-import * as os from "node:os";
 import { files as DropboxFiles } from "dropbox/types/dropbox_types.js";
 import { Dropbox, DropboxOptions, DropboxAuth } from "dropbox";
 
@@ -46,10 +42,6 @@ export interface DropboxLoaderConfig {
    * Defaults to `"file"`.
    */
   mode?: "file" | "directory";
-  /**
-   * The file system module to use. Defaults to Node's `fs` module.
-   */
-  fs?: typeof fsDefault;
   /**
    * The UnstructuredLoader class to use for processing files.
    * Defaults to the UnstructuredLoader provided by `langchain`.
@@ -112,11 +104,6 @@ export class DropboxLoader extends BaseDocumentLoader {
   protected mode: "file" | "directory";
 
   /**
-   * The file system module to use.
-   */
-  protected fs: typeof fsDefault;
-
-  /**
    * The UnstructuredLoader class to use for processing files.
    */
   protected _UnstructuredLoader: typeof UnstructuredLoaderDefault;
@@ -133,7 +120,6 @@ export class DropboxLoader extends BaseDocumentLoader {
     filePaths,
     recursive = false,
     mode = "file",
-    fs = fsDefault,
     UnstructuredLoader = UnstructuredLoaderDefault,
   }: DropboxLoaderConfig) {
     super();
@@ -147,9 +133,7 @@ export class DropboxLoader extends BaseDocumentLoader {
     this.filePaths = filePaths || [];
     this.recursive = recursive;
     this.mode = mode;
-    this.fs = fs;
     this._UnstructuredLoader = UnstructuredLoader;
-
     this.dropboxClient = DropboxLoader._getDropboxClient(clientOptions);
   }
 
@@ -236,15 +220,13 @@ export class DropboxLoader extends BaseDocumentLoader {
   /**
    * Downloads a file from Dropbox, processes it into `Document` instances using the `UnstructuredLoader`,
    * and returns the resulting documents. This method handles the entire lifecycle of the file processing,
-   * including downloading, temporary storage, processing, metadata augmentation, and cleanup.
+   * including downloading, processing, and metadata augmentation.
    *
    * @param filePath - The path to the file in Dropbox.
    * @returns A promise that resolves to an array of `Document` instances generated from a dropbox file.
    */
   private async _loadFile(filePath: string): Promise<Document[]> {
     const client: Dropbox = this.dropboxClient;
-    let tempDir: string | undefined;
-    let localFilePath: string | undefined;
     try {
       const fetchRes = await client.filesDownload({ path: filePath });
       const fileMetadata =
@@ -258,26 +240,12 @@ export class DropboxLoader extends BaseDocumentLoader {
 
       const fileBinary = fileMetadata.fileBinary;
 
-      // Create temporary directory
-      tempDir = await fsPromises.mkdtemp(
-        path.join(os.tmpdir(), "dropboxfileloader-")
-      );
-
-      // Normalize the file path
-      const normalizedFilePath = filePath.startsWith("/")
-        ? filePath.slice(1)
-        : filePath;
-      localFilePath = path.join(tempDir, normalizedFilePath);
-
-      await fsPromises.mkdir(path.dirname(localFilePath), { recursive: true });
-
-      await fsPromises.writeFile(localFilePath, fileBinary, {
-        encoding: "binary",
-      });
-
       // Create an unstructured loader and load the file.
       const unstructuredLoader = new this._UnstructuredLoader(
-        localFilePath,
+        {
+          fileName: fileMetadata.name,
+          buffer: fileBinary,
+        },
         this.unstructuredOptions
       );
       const docs = await unstructuredLoader.load();
@@ -293,22 +261,6 @@ export class DropboxLoader extends BaseDocumentLoader {
       console.error(`Error processing file ${filePath}:`, error);
       console.error(`File ${filePath} was skipped.`);
       return []; // Proceed to the next file
-    } finally {
-      // Cleanup temporary files
-      if (localFilePath) {
-        try {
-          await fsPromises.unlink(localFilePath);
-        } catch (err) {
-          console.warn(`Failed to delete file ${localFilePath}:`, err);
-        }
-      }
-      if (tempDir) {
-        try {
-          await fsPromises.rm(tempDir, { recursive: true, force: true });
-        } catch (err) {
-          console.warn(`Failed to delete temp directory ${tempDir}:`, err);
-        }
-      }
     }
   }
 

@@ -184,7 +184,7 @@ describe("DropboxLoader Integration Tests", () => {
     });
 
     it("should recursively load all documents from a Dropbox folder", async () => {
-      const dropboxFilenames = allTestFiles.map((path) => path.toLowerCase());
+      const dropboxFilenames = allTestFiles;
 
       const clientOptions: DropboxOptions = {};
       const unstructuredOptions: UnstructuredLoaderOptions = {
