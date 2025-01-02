@@ -2334,6 +2334,15 @@
       "import": "./caches/upstash_redis.js",
       "require": "./caches/upstash_redis.cjs"
     },
+    "./caches/vercel_kv": {
+      "types": {
+        "import": "./caches/vercel_kv.d.ts",
+        "require": "./caches/vercel_kv.d.cts",
+        "default": "./caches/vercel_kv.d.ts"
+      },
+      "import": "./caches/vercel_kv.js",
+      "require": "./caches/vercel_kv.cjs"
+    },
     "./graphs/neo4j_graph": {
       "types": {
         "import": "./graphs/neo4j_graph.d.ts",
@@ -3900,6 +3909,10 @@
     "caches/upstash_redis.js",
     "caches/upstash_redis.d.ts",
     "caches/upstash_redis.d.cts",
+    "caches/vercel_kv.cjs",
+    "caches/vercel_kv.js",
+    "caches/vercel_kv.d.ts",
+    "caches/vercel_kv.d.cts",
     "graphs/neo4j_graph.cjs",
     "graphs/neo4j_graph.js",
     "graphs/neo4j_graph.d.ts",
