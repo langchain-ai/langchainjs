@@ -1,8 +1,12 @@
 import pg, { type Pool, type PoolClient, type PoolConfig } from "pg";
-import { VectorStore } from "@langchain/core/vectorstores";
+import {
+  MaxMarginalRelevanceSearchOptions,
+  VectorStore,
+} from "@langchain/core/vectorstores";
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { Document } from "@langchain/core/documents";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
+import { maximalMarginalRelevance } from "@langchain/core/utils/math";
 
 type Metadata = Record<string, unknown>;
 
@@ -602,19 +606,18 @@ export class PGVectorStore extends VectorStore {
   }
 
   /**
-   * Method to perform a similarity search in the vector store. It returns
-   * the `k` most similar documents to the query vector, along with their
-   * similarity scores.
-   *
+   * Method to perform a similarity search in the vector store. It returns the `k` most similar documents to the query text.
    * @param query - Query vector.
    * @param k - Number of most similar documents to return.
    * @param filter - Optional filter to apply to the search.
+   * @param includeEmbedding Whether to include the embedding vectors in the results.
    * @returns Promise that resolves with an array of tuples, each containing a `Document` and its similarity score.
    */
-  async similaritySearchVectorWithScore(
+  private async searchPostgres(
     query: number[],
     k: number,
-    filter?: this["FilterType"]
+    filter?: this["FilterType"],
+    includeEmbedding?: boolean
   ): Promise<[Document, number][]> {
     const embeddingString = `[${query.join(",")}]`;
     const _filter: this["FilterType"] = filter ?? {};
@@ -694,10 +697,30 @@ export class PGVectorStore extends VectorStore {
           metadata: doc[this.metadataColumnName],
           id: doc[this.idColumnName],
         });
+        if (includeEmbedding) {
+          document.metadata[this.vectorColumnName] = doc[this.vectorColumnName];
+        }
         results.push([document, doc._distance]);
       }
     }
     return results;
+  }
+
+  /**
+   * Method to perform a similarity search in the vector store. It returns
+   * the `k` most similar documents to the query vector, along with their
+   * similarity scores.
+   * @param query - Query vector.
+   * @param k - Number of most similar documents to return.
+   * @param filter - Optional filter to apply to the search.
+   * @returns Promise that resolves with an array of tuples, each containing a `Document` and its similarity score.
+   */
+  async similaritySearchVectorWithScore(
+    query: number[],
+    k: number,
+    filter?: this["FilterType"]
+  ): Promise<[Document, number][]> {
+    return this.searchPostgres(query, k, filter, false);
   }
 
   /**
@@ -884,5 +907,47 @@ export class PGVectorStore extends VectorStore {
         `Failed to create HNSW index on table ${this.computedTableName}, error: ${e}`
       );
     }
+  }
+
+  /**
+   * Return documents selected using the maximal marginal relevance.
+   * Maximal marginal relevance optimizes for similarity to the query AND
+   * diversity among selected documents.
+   * @param query Text to look up documents similar to.
+   * @param options.k=4 Number of documents to return.
+   * @param options.fetchK=20 Number of documents to fetch before passing to
+   *     the MMR algorithm.
+   * @param options.lambda=0.5 Number between 0 and 1 that determines the
+   *     degree of diversity among the results, where 0 corresponds to maximum
+   *     diversity and 1 to minimum diversity.
+   * @returns List of documents selected by maximal marginal relevance.
+   */
+  async maxMarginalRelevanceSearch(
+    query: string,
+    options: MaxMarginalRelevanceSearchOptions<this["FilterType"]>
+  ): Promise<Document[]> {
+    const { k = 4, fetchK = 20, lambda = 0.5, filter } = options;
+    const queryEmbedding = await this.embeddings.embedQuery(query);
+
+    const docs = await this.searchPostgres(
+      queryEmbedding,
+      fetchK,
+      filter,
+      true
+    );
+
+    const embeddingList = docs.map((doc) =>
+      JSON.parse(doc[0].metadata[this.vectorColumnName])
+    );
+
+    const mmrIndexes = maximalMarginalRelevance(
+      queryEmbedding,
+      embeddingList,
+      lambda,
+      k
+    );
+
+    const mmrDocs = mmrIndexes.map((index) => docs[index][0]);
+    return mmrDocs;
   }
 }
