@@ -73,6 +73,32 @@ describe("PGVectorStore", () => {
     expect(results).toHaveLength(1);
     expect(results[0].pageContent).toEqual("Cat drinks milk");
   });
+  
+  test.only("Test MMR search", async () => {
+    const documents = [
+      {
+        pageContent: "hello",
+        metadata: { a: 1 },
+      },
+      {
+        pageContent: "Cat drinks milk",
+        metadata: { a: 2 },
+      },
+      {
+        pageContent: "foo",
+        metadata: { a: 2 },
+      },
+      { pageContent: "hi", metadata: { a: 1 } },
+    ];
+    await pgvectorVectorStore.addDocuments(documents);
+    const results = await pgvectorVectorStore.maxMarginalRelevanceSearch("milk", {
+      k: 2,
+    });
+
+    expect(results).toHaveLength(2);
+    expect(results[0].pageContent).toEqual("Cat drinks milk");
+    expect(results[1].pageContent).toEqual("foo");
+  });
 
   test("PGvector can save documents with a list greater than default chunk size", async () => {
     // Extract the default chunk size and add one.
