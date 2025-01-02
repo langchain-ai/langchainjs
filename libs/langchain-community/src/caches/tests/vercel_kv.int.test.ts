@@ -3,7 +3,7 @@ import { ChatOpenAI } from "@langchain/openai";
 import { createClient } from "@vercel/kv";
 import { VercelKVCache } from "../vercel_kv.js";
 
-test.skip("VercelKVCache works with ChatOpenAI", async () => {
+test("VercelKVCache works with ChatOpenAI", async () => {
   if (
     !process.env.VERCEL_KV_API_URL ||
     !process.env.VERCEL_KV_API_TOKEN ||
