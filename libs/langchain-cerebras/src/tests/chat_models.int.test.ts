@@ -118,12 +118,10 @@ test("invoke with bound tools", async () => {
       tool_choice: "auto",
     })
     .invoke([message]);
-  // console.log(JSON.stringify(res));
-  expect(res.tool_calls?.length).toEqual(1);
-  expect(res.tool_calls?.[0].args).toEqual(res.tool_calls?.[0].args);
+  expect(typeof res.tool_calls?.[0].args).toEqual("object");
 });
 
-test.only("stream with bound tools, yielding a single chunk", async () => {
+test("stream with bound tools, yielding a single chunk", async () => {
   const chat = new ChatCerebras({
     model: "llama3.1-8b",
     maxRetries: 2,

@@ -45,6 +45,7 @@ import {
 export interface ChatCerebrasInput extends BaseChatModelParams {
   model: string;
   apiKey?: string;
+  streaming?: boolean;
   maxTokens?: number;
   maxCompletionTokens?: number;
   temperature?: number;
@@ -113,6 +114,8 @@ export class ChatCerebras
 
   seed?: number;
 
+  streaming?: boolean;
+
   constructor(fields: ChatCerebrasInput) {
     super(fields ?? {});
     this.model = fields.model;
@@ -120,6 +123,7 @@ export class ChatCerebras
     this.temperature = fields.temperature;
     this.topP = fields.topP;
     this.seed = fields.seed;
+    this.streaming = fields.streaming;
     this.client = new Cerebras({
       apiKey: fields.apiKey ?? getEnvironmentVariable("CEREBRAS_API_KEY"),
       timeout: fields.timeout,
@@ -179,35 +183,90 @@ export class ChatCerebras
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
-    let finalChunk: AIMessageChunk | undefined;
-    for await (const chunk of this._streamResponseChunks(
-      messages,
-      options,
-      runManager
-    )) {
-      if (!finalChunk) {
-        finalChunk = chunk.message;
-      } else {
-        finalChunk = concat(finalChunk, chunk.message);
+    // Handle streaming
+    if (this.streaming) {
+      let finalChunk: AIMessageChunk | undefined;
+      for await (const chunk of this._streamResponseChunks(
+        messages,
+        options,
+        runManager
+      )) {
+        if (!finalChunk) {
+          finalChunk = chunk.message;
+        } else {
+          finalChunk = concat(finalChunk, chunk.message);
+        }
       }
+
+      // Convert from AIMessageChunk to AIMessage since `generate` expects AIMessage.
+      const nonChunkMessage = new AIMessage({
+        id: finalChunk?.id,
+        content: finalChunk?.content ?? "",
+        tool_calls: finalChunk?.tool_calls,
+        response_metadata: finalChunk?.response_metadata,
+        usage_metadata: finalChunk?.usage_metadata,
+      });
+      return {
+        generations: [
+          {
+            text:
+              typeof nonChunkMessage.content === "string"
+                ? nonChunkMessage.content
+                : "",
+            message: nonChunkMessage,
+          },
+        ],
+      };
     }
 
-    // Convert from AIMessageChunk to AIMessage since `generate` expects AIMessage.
-    const nonChunkMessage = new AIMessage({
-      id: finalChunk?.id,
-      content: finalChunk?.content ?? "",
-      tool_calls: finalChunk?.tool_calls,
-      response_metadata: finalChunk?.response_metadata,
-      usage_metadata: finalChunk?.usage_metadata,
+    const res = await this.caller.call(async () => {
+      const res = await this.client.chat.completions.create(
+        {
+          ...this.invocationParams(options),
+          messages: convertToCerebrasMessageParams(messages),
+          stream: false,
+        },
+        {
+          headers: options.headers,
+          httpAgent: options.httpAgent,
+        }
+      );
+      return res;
     });
+
+    const { choices, ...rest } = res;
+    // TODO: Remove casts when underlying types are fixed
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const choice = (choices as any)[0];
+    const content = choice?.message?.content ?? "";
+    const usage: UsageMetadata = {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      input_tokens: (rest.usage as any)?.prompt_tokens,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      output_tokens: (rest.usage as any)?.completion_tokens,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      total_tokens: (rest.usage as any)?.total_tokens,
+    };
+
     return {
       generations: [
         {
-          text:
-            typeof nonChunkMessage.content === "string"
-              ? nonChunkMessage.content
-              : "",
-          message: nonChunkMessage,
+          text: content,
+          message: new AIMessage({
+            content,
+            tool_calls: choice?.message?.tool_calls?.map(
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              (toolCall: any) => ({
+                id: toolCall.id,
+                name: toolCall.function?.name,
+                args: JSON.parse(toolCall.function?.arguments),
+                index: toolCall.index,
+                type: "tool_call",
+              })
+            ),
+            usage_metadata: usage,
+            response_metadata: rest,
+          }),
         },
       ],
     };
@@ -222,7 +281,6 @@ export class ChatCerebras
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
-    // All models have a built in `this.caller` property for retries
     const stream = await this.caller.call(async () => {
       const res = await this.client.chat.completions.create(
         {
@@ -262,7 +320,7 @@ export class ChatCerebras
         generationInfo.system_fingerprint = system_fingerprint;
         generationInfo.model = model;
       }
-      yield new ChatGenerationChunk({
+      const generationChunk = new ChatGenerationChunk({
         text: content,
         message: new AIMessageChunk({
           content,
@@ -281,7 +339,15 @@ export class ChatCerebras
         }),
         generationInfo,
       });
-      await runManager?.handleLLMNewToken(content);
+      yield generationChunk;
+      await runManager?.handleLLMNewToken(
+        content,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        { chunk: generationChunk }
+      );
     }
   }
 

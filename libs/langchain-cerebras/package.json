@@ -1,7 +1,7 @@
 {
   "name": "@langchain/cerebras",
   "version": "0.0.0",
-  "description": "Sample integration for LangChain.js",
+  "description": "Cerebras integration for LangChain.js",
   "type": "module",
   "engines": {
     "node": ">=18"
