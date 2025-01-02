@@ -33,6 +33,18 @@ test("invoke with stop sequence", async () => {
   expect((res.content as string).toLowerCase()).not.toContain("six");
 });
 
+test("invoke with streaming: true", async () => {
+  const chat = new ChatCerebras({
+    model: "llama3.1-8b",
+    maxRetries: 2,
+    streaming: true,
+  });
+  const message = new HumanMessage("What color is the sky?");
+  const res = await chat.invoke([message]);
+  console.log({ res });
+  expect(res.content.length).toBeGreaterThan(10);
+});
+
 test("invoke should respect passed headers", async () => {
   const chat = new ChatCerebras({
     model: "llama3.1-8b",
@@ -247,4 +259,26 @@ test("Cerebras can stream tool calls", async () => {
   expect(finalMessage.tool_calls?.[0].name).toBe("get_current_weather");
   expect(finalMessage.tool_calls?.[0].args).toHaveProperty("location");
   expect(finalMessage.tool_calls?.[0].id).toBeDefined();
+});
+
+test("json mode", async () => {
+  const llm = new ChatCerebras({
+    model: "llama3.1-8b",
+    temperature: 0,
+  });
+
+  const messages = [
+    {
+      role: "system",
+      content:
+        "You are a math tutor that handles math exercises and makes output in json in format { result: number }.",
+    },
+    { role: "user", content: "2 + 2" },
+  ];
+
+  const res = await llm.invoke(messages, {
+    response_format: { type: "json_object" },
+  });
+
+  expect(JSON.parse(res.content)).toEqual({ result: 4 });
 });

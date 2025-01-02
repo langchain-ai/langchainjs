@@ -296,19 +296,23 @@ export class ChatCerebras
       return res;
     });
     for await (const chunk of stream) {
-      const { choices, system_fingerprint, model, id, ...rest } = chunk;
+      const { choices, system_fingerprint, model, id, object, ...rest } = chunk;
       // TODO: Remove casts when underlying types are fixed
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const choice = (choices as any)[0];
       const content = choice?.delta?.content ?? "";
-      const usage: UsageMetadata = {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        input_tokens: (rest.usage as any)?.prompt_tokens,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        output_tokens: (rest.usage as any)?.completion_tokens,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        total_tokens: (rest.usage as any)?.total_tokens,
-      };
+      console.log(rest.usage);
+      let usage: UsageMetadata | undefined;
+      if (rest.usage !== undefined) {
+        usage = {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          input_tokens: (rest.usage as any).prompt_tokens,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          output_tokens: (rest.usage as any).completion_tokens,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          total_tokens: (rest.usage as any).total_tokens,
+        };
+      }
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const generationInfo: Record<string, any> = {};
@@ -319,6 +323,7 @@ export class ChatCerebras
         generationInfo.id = id;
         generationInfo.system_fingerprint = system_fingerprint;
         generationInfo.model = model;
+        generationInfo.object = object;
       }
       const generationChunk = new ChatGenerationChunk({
         text: content,
