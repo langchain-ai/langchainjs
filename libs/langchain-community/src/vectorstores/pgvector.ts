@@ -947,7 +947,11 @@ export class PGVectorStore extends VectorStore {
       k
     );
 
-    const mmrDocs = mmrIndexes.map((index) => docs[index][0]);
+    const mmrDocs = mmrIndexes.map((index) => {
+      const doc = docs[index][0];
+      delete doc.metadata[this.vectorColumnName];
+      return docs[index][0];
+    });
     return mmrDocs;
   }
 }
