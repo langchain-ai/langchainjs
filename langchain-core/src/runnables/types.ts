@@ -107,4 +107,9 @@ export interface RunnableConfig<
    * @see https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal
    */
   signal?: AbortSignal;
+
+  /**
+   * Whether to concatenate the stream of outputs into a single output or not.
+   */
+  concatSupported?: boolean;
 }
