@@ -73,7 +73,7 @@ describe("PGVectorStore", () => {
     expect(results).toHaveLength(1);
     expect(results[0].pageContent).toEqual("Cat drinks milk");
   });
-  
+
   test.only("Test MMR search", async () => {
     const documents = [
       {
@@ -91,9 +91,12 @@ describe("PGVectorStore", () => {
       { pageContent: "hi", metadata: { a: 1 } },
     ];
     await pgvectorVectorStore.addDocuments(documents);
-    const results = await pgvectorVectorStore.maxMarginalRelevanceSearch("milk", {
-      k: 2,
-    });
+    const results = await pgvectorVectorStore.maxMarginalRelevanceSearch(
+      "milk",
+      {
+        k: 2,
+      }
+    );
 
     expect(results).toHaveLength(2);
     expect(results[0].pageContent).toEqual("Cat drinks milk");
