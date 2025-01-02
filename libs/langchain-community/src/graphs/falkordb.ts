@@ -15,13 +15,17 @@ interface StructuredSchema {
 
 export class FalkorDBGraph {
   private driver: FalkorDB;
+
   private graph: Graph;
+
   private schema = "";
+
   private structuredSchema: StructuredSchema = {
     nodeProps: {},
     relProps: {},
     relationships: [],
   };
+
   private enhancedSchema: boolean;
 
   constructor({ enhancedSchema = false }: FalkorDBGraphConfig) {
@@ -38,7 +42,7 @@ export class FalkorDBGraph {
     const driver = await FalkorDB.connect({
       socket: {
         host: new URL(config.url).hostname,
-        port: parseInt(new URL(config.url).port),
+        port: parseInt(new URL(config.url).port, 10),
       },
     });
     graph.driver = driver; 
