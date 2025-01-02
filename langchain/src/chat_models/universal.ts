@@ -115,6 +115,10 @@ async function _initChatModelHelper(
         const { ChatGroq } = await import("@langchain/groq");
         return new ChatGroq({ model, ...passedParams });
       }
+      case "cerebras": {
+        const { ChatCerebras } = await import("@langchain/cerebras");
+        return new ChatCerebras({ model, ...passedParams });
+      }
       case "bedrock": {
         const { ChatBedrockConverse } = await import("@langchain/aws");
         return new ChatBedrockConverse({ model, ...passedParams });
@@ -598,6 +602,7 @@ export async function initChatModel<
  *   - mistralai (@langchain/mistralai)
  *   - groq (@langchain/groq)
  *   - ollama (@langchain/ollama)
+ *   - cerebras (@langchain/cerebras)
  * @param {string[] | "any"} [fields.configurableFields] - Which model parameters are configurable:
  *   - undefined: No configurable fields.
  *   - "any": All fields are configurable. (See Security Note in description)
