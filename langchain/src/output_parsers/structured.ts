@@ -101,10 +101,10 @@ ${JSON.stringify(zodToJsonSchema(this.schema))}
    */
   async parse(text: string): Promise<z.infer<T>> {
     try {
-      const json = text.includes("```")
-        ? text.trim().split(/```(?:json)?/)[1]
-        : text.trim();
-      return await this.schema.parseAsync(JSON.parse(json));
+      const jsonRegex = /{[\s\S]*}/;
+      const match = text.match(jsonRegex);
+      const jsonString = match ? match[0] : text.trim();
+      return await this.schema.parseAsync(JSON.parse(jsonString));
     } catch (e) {
       try {
         return await this.schema.parseAsync(JSON.parse(text.trim()));
