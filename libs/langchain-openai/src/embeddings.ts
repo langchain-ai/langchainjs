@@ -6,6 +6,8 @@ import {
   AzureOpenAIInput,
   OpenAICoreRequestOptions,
   LegacyOpenAIInput,
+  EmbedQueryMethodOptions,
+  EmbedQueryRawResult,
 } from "./types.js";
 import { getEndpoint, OpenAIEndpointConfig } from "./utils/azure.js";
 import { wrapOpenAIClientError } from "./utils/openai.js";
@@ -240,9 +242,23 @@ export class OpenAIEmbeddings
    * Method to generate an embedding for a single document. Calls the
    * embeddingWithRetry method with the document as the input.
    * @param text Document to generate an embedding for.
+   * @param options Options to pass to the embedQuery method.
    * @returns Promise that resolves to an embedding for the document.
    */
-  async embedQuery(text: string): Promise<number[]> {
+  async embedQuery(
+    text: string,
+    options?: EmbedQueryMethodOptions<false>
+  ): Promise<number[]>;
+
+  async embedQuery(
+    text: string,
+    options?: EmbedQueryMethodOptions<true>
+  ): Promise<EmbedQueryRawResult>;
+
+  async embedQuery(
+    text: string,
+    options?: EmbedQueryMethodOptions<boolean>
+  ): Promise<number[] | EmbedQueryRawResult> {
     const params: OpenAIClient.EmbeddingCreateParams = {
       model: this.model,
       input: this.stripNewLines ? text.replace(/\n/g, " ") : text,
@@ -250,7 +266,17 @@ export class OpenAIEmbeddings
     if (this.dimensions) {
       params.dimensions = this.dimensions;
     }
-    const { data } = await this.embeddingWithRetry(params);
+
+    const result = await this.embeddingWithRetry(params);
+    const { data } = result;
+
+    if (options?.includeRaw) {
+      return {
+        embedding: data[0].embedding,
+        raw: result,
+      };
+    }
+
     return data[0].embedding;
   }
 

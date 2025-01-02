@@ -1,7 +1,7 @@
 /* eslint-disable no-process-env */
 /* eslint-disable import/no-extraneous-dependencies */
 import { test, expect } from "@jest/globals";
-import { OpenAIEmbeddings } from "@langchain/openai";
+import { EmbedQueryMethodOptions, EmbedQueryRawResult, OpenAIEmbeddings } from "@langchain/openai";
 import { Document } from "@langchain/core/documents";
 import { SingleStoreVectorStore, SearchStrategy } from "../singlestore.js";
 
@@ -25,7 +25,11 @@ class MockEmbeddings extends OpenAIEmbeddings {
     ];
   }
 
-  async embedQuery(document: string): Promise<number[]> {
+  async embedQuery(document: string, options?: EmbedQueryMethodOptions<false>): Promise<number[]>;
+
+  async embedQuery(document: string, options?: EmbedQueryMethodOptions<true>): Promise<EmbedQueryRawResult>;
+
+  async embedQuery(document: string, _options?: EmbedQueryMethodOptions<boolean>): Promise<number[] | EmbedQueryRawResult> {
     return this.embed(document);
   }
 }
