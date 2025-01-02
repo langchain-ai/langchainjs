@@ -1,4 +1,4 @@
-import { OpenAI } from "@langchain/openai";
+import { ChatOpenAI } from "@langchain/openai";
 import { VercelKVCache } from "@langchain/community/caches/vercel_kv";
 import { createClient } from "@vercel/kv";
 
@@ -11,4 +11,7 @@ const cache = new VercelKVCache({
   ttl: 3600,
 });
 
-const model = new OpenAI({ cache });
+const model = new ChatOpenAI({
+  model: "gpt-4o-mini",
+  cache,
+});
