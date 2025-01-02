@@ -15,6 +15,7 @@ export const optionalImportEntrypoints: string[] = [
   "langchain_community/embeddings/gradient_ai",
   "langchain_community/embeddings/hf",
   "langchain_community/embeddings/hf_transformers",
+  "langchain_community/embeddings/huggingface_transformers",
   "langchain_community/embeddings/ibm",
   "langchain_community/embeddings/jina",
   "langchain_community/embeddings/llama_cpp",

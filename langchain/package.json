@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.3.8",
+  "version": "0.3.9",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -413,6 +413,7 @@
     "@jest/globals": "^29.5.0",
     "@langchain/anthropic": "*",
     "@langchain/aws": "*",
+    "@langchain/cerebras": "*",
     "@langchain/cohere": "*",
     "@langchain/core": "workspace:*",
     "@langchain/google-genai": "*",
@@ -460,6 +461,7 @@
   "peerDependencies": {
     "@langchain/anthropic": "*",
     "@langchain/aws": "*",
+    "@langchain/cerebras": "*",
     "@langchain/cohere": "*",
     "@langchain/core": ">=0.2.21 <0.4.0",
     "@langchain/google-genai": "*",
@@ -478,6 +480,9 @@
       "optional": true
     },
     "@langchain/aws": {
+      "optional": true
+    },
+    "@langchain/cerebras": {
       "optional": true
     },
     "@langchain/cohere": {
