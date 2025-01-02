@@ -301,7 +301,6 @@ export class ChatCerebras
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const choice = (choices as any)[0];
       const content = choice?.delta?.content ?? "";
-      console.log(rest.usage);
       let usage: UsageMetadata | undefined;
       if (rest.usage !== undefined) {
         usage = {

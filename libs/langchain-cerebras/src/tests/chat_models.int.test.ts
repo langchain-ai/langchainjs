@@ -280,5 +280,5 @@ test("json mode", async () => {
     response_format: { type: "json_object" },
   });
 
-  expect(JSON.parse(res.content)).toEqual({ result: 4 });
+  expect(JSON.parse(res.content as string)).toEqual({ result: 4 });
 });
