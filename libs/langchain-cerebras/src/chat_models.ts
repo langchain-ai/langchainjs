@@ -66,7 +66,343 @@ export interface ChatCerebrasCallOptions
 }
 
 /**
- * Integration with a chat model.
+ * Cerebras chat model integration.
+ *
+ * Setup:
+ * Install `@langchain/cerebras` and set an environment variable named `CEREBRAS_API_KEY`.
+ *
+ * ```bash
+ * npm install @langchain/cerebras
+ * export CEREBRAS_API_KEY="your-api-key"
+ * ```
+ *
+ * ## [Constructor args](https://api.js.langchain.com/classes/langchain_cerebras.ChatCerebras.html#constructor)
+ *
+ * ## [Runtime args](https://api.js.langchain.com/interfaces/langchain_cerebras.ChatCerebrasCallOptions.html)
+ *
+ * Runtime args can be passed as the second argument to any of the base runnable methods `.invoke`. `.stream`, `.batch`, etc.
+ * They can also be passed via `.bind`, or the second arg in `.bindTools`, like shown in the examples below:
+ *
+ * ```typescript
+ * // When calling `.bind`, call options should be passed via the first argument
+ * const llmWithArgsBound = llm.bind({
+ *   stop: ["\n"],
+ *   tools: [...],
+ * });
+ *
+ * // When calling `.bindTools`, call options should be passed via the second argument
+ * const llmWithTools = llm.bindTools(
+ *   [...],
+ *   {
+ *     tool_choice: "auto",
+ *   }
+ * );
+ * ```
+ *
+ * ## Examples
+ *
+ * <details open>
+ * <summary><strong>Instantiate</strong></summary>
+ *
+ * ```typescript
+ * import { ChatCerebras } from '@langchain/cerebras';
+ *
+ * const llm = new ChatCerebras({
+ *   model: "llama-3.3-70b",
+ *   temperature: 0,
+ *   // other params...
+ * });
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Invoking</strong></summary>
+ *
+ * ```typescript
+ * const input = `Translate "I love programming" into French.`;
+ *
+ * // Models also accept a list of chat messages or a formatted prompt
+ * const result = await llm.invoke(input);
+ * console.log(result);
+ * ```
+ *
+ * ```txt
+ * AIMessage {
+ *   "id": "run-9281952d-d4c5-424c-9c18-c6ad62dd6684",
+ *   "content": "J'adore la programmation.",
+ *   "additional_kwargs": {},
+ *   "response_metadata": {
+ *     "id": "chatcmpl-bb411272-aac5-44a5-b793-ae70bd94fd3d",
+ *     "created": 1735784442,
+ *     "model": "llama-3.3-70b",
+ *     "system_fingerprint": "fp_2e2a2a083c",
+ *     "object": "chat.completion",
+ *     "time_info": {
+ *       "queue_time": 0.000096069,
+ *       "prompt_time": 0.002166527,
+ *       "completion_time": 0.012331633,
+ *       "total_time": 0.01629185676574707,
+ *       "created": 1735784442
+ *     }
+ *   },
+ *   "tool_calls": [],
+ *   "invalid_tool_calls": [],
+ *   "usage_metadata": {
+ *     "input_tokens": 55,
+ *     "output_tokens": 9,
+ *     "total_tokens": 64
+ *   }
+ * }
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Streaming Chunks</strong></summary>
+ *
+ * ```typescript
+ * for await (const chunk of await llm.stream(input)) {
+ *   console.log(chunk);
+ * }
+ * ```
+ *
+ * ```txt
+ * AIMessageChunk {
+ *   "id": "run-1756a5b2-2ce0-47a9-81e0-2195bf893bd4",
+ *   "content": "",
+ *   "additional_kwargs": {},
+ *   "response_metadata": {
+ *     "created": 1735785346,
+ *     "object": "chat.completion.chunk"
+ *   },
+ *   "tool_calls": [],
+ *   "tool_call_chunks": [],
+ *   "invalid_tool_calls": [],
+ *   "usage_metadata": {}
+ * }
+ * AIMessageChunk {
+ *   "id": "run-1756a5b2-2ce0-47a9-81e0-2195bf893bd4",
+ *   "content": "J",
+ *   "additional_kwargs": {},
+ *   "response_metadata": {
+ *     "created": 1735785346,
+ *     "object": "chat.completion.chunk"
+ *   },
+ *   "tool_calls": [],
+ *   "tool_call_chunks": [],
+ *   "invalid_tool_calls": [],
+ *   "usage_metadata": {}
+ * }
+ * AIMessageChunk {
+ *   "id": "run-1756a5b2-2ce0-47a9-81e0-2195bf893bd4",
+ *   "content": "'",
+ *   "additional_kwargs": {},
+ *   "response_metadata": {
+ *     "created": 1735785346,
+ *     "object": "chat.completion.chunk"
+ *   },
+ *   "tool_calls": [],
+ *   "tool_call_chunks": [],
+ *   "invalid_tool_calls": [],
+ *   "usage_metadata": {}
+ * }
+ * AIMessageChunk {
+ *   "id": "run-1756a5b2-2ce0-47a9-81e0-2195bf893bd4",
+ *   "content": "ad",
+ *   "additional_kwargs": {},
+ *   "response_metadata": {
+ *     "created": 1735785346,
+ *     "object": "chat.completion.chunk"
+ *   },
+ *   "tool_calls": [],
+ *   "tool_call_chunks": [],
+ *   "invalid_tool_calls": [],
+ *   "usage_metadata": {}
+ * }
+ * AIMessageChunk {
+ *   "id": "run-1756a5b2-2ce0-47a9-81e0-2195bf893bd4",
+ *   "content": "ore",
+ *   "additional_kwargs": {},
+ *   "response_metadata": {
+ *     "created": 1735785346,
+ *     "object": "chat.completion.chunk"
+ *   },
+ *   "tool_calls": [],
+ *   "tool_call_chunks": [],
+ *   "invalid_tool_calls": [],
+ *   "usage_metadata": {}
+ * }
+ * AIMessageChunk {
+ *   "id": "run-1756a5b2-2ce0-47a9-81e0-2195bf893bd4",
+ *   "content": " la",
+ *   "additional_kwargs": {},
+ *   "response_metadata": {
+ *     "created": 1735785346,
+ *     "object": "chat.completion.chunk"
+ *   },
+ *   "tool_calls": [],
+ *   "tool_call_chunks": [],
+ *   "invalid_tool_calls": [],
+ *   "usage_metadata": {}
+ * }
+ * ...
+ * AIMessageChunk {
+ *   "id": "run-1756a5b2-2ce0-47a9-81e0-2195bf893bd4",
+ *   "content": "",
+ *   "additional_kwargs": {},
+ *   "response_metadata": {
+ *     "finish_reason": "stop",
+ *     "id": "chatcmpl-15c80082-4475-423c-b140-7b0a556311ca",
+ *     "system_fingerprint": "fp_2e2a2a083c",
+ *     "model": "llama-3.3-70b",
+ *     "created": 1735785346,
+ *     "object": "chat.completion.chunk",
+ *     "time_info": {
+ *       "queue_time": 0.000100589,
+ *       "prompt_time": 0.002167348,
+ *       "completion_time": 0.012320277,
+ *       "total_time": 0.0169985294342041,
+ *       "created": 1735785346
+ *     }
+ *   },
+ *   "tool_calls": [],
+ *   "tool_call_chunks": [],
+ *   "invalid_tool_calls": [],
+ *   "usage_metadata": {
+ *     "input_tokens": 55,
+ *     "output_tokens": 9,
+ *     "total_tokens": 64
+ *   }
+ * }
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Aggregate Streamed Chunks</strong></summary>
+ *
+ * ```typescript
+ * import { AIMessageChunk } from '@langchain/core/messages';
+ * import { concat } from '@langchain/core/utils/stream';
+ *
+ * const stream = await llm.stream(input);
+ * let full: AIMessageChunk | undefined;
+ * for await (const chunk of stream) {
+ *   full = !full ? chunk : concat(full, chunk);
+ * }
+ * console.log(full);
+ * ```
+ *
+ * ```txt
+ * AIMessageChunk {
+ *   "content": "J'adore la programmation.",
+ *   "additional_kwargs": {},
+ *   "tool_calls": [],
+ *   "tool_call_chunks": [],
+ *   "invalid_tool_calls": []
+ * }
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Bind tools</strong></summary>
+ *
+ * ```typescript
+ * import { z } from 'zod';
+ *
+ * const llmForToolCalling = new ChatCerebras({
+ *   model: "llama-3.3-70b",
+ *   temperature: 0,
+ *   // other params...
+ * });
+ *
+ * const GetWeather = {
+ *   name: "GetWeather",
+ *   description: "Get the current weather in a given location",
+ *   schema: z.object({
+ *     location: z.string().describe("The city and state, e.g. San Francisco, CA")
+ *   }),
+ * }
+ *
+ * const GetPopulation = {
+ *   name: "GetPopulation",
+ *   description: "Get the current population in a given location",
+ *   schema: z.object({
+ *     location: z.string().describe("The city and state, e.g. San Francisco, CA")
+ *   }),
+ * }
+ *
+ * const llmWithTools = llmForToolCalling.bindTools([GetWeather, GetPopulation]);
+ * const aiMsg = await llmWithTools.invoke(
+ *   "Which city is hotter today and which is bigger: LA or NY?"
+ * );
+ * console.log(aiMsg.tool_calls);
+ * ```
+ *
+ * ```txt
+ * [
+ *   {
+ *     name: 'GetWeather',
+ *     args: { location: 'Los Angeles, CA' },
+ *     type: 'tool_call',
+ *     id: 'call_cd34'
+ *   },
+ *   {
+ *     name: 'GetWeather',
+ *     args: { location: 'New York, NY' },
+ *     type: 'tool_call',
+ *     id: 'call_68rf'
+ *   },
+ *   {
+ *     name: 'GetPopulation',
+ *     args: { location: 'Los Angeles, CA' },
+ *     type: 'tool_call',
+ *     id: 'call_f81z'
+ *   },
+ *   {
+ *     name: 'GetPopulation',
+ *     args: { location: 'New York, NY' },
+ *     type: 'tool_call',
+ *     id: 'call_8byt'
+ *   }
+ * ]
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Structured Output</strong></summary>
+ *
+ * ```typescript
+ * import { z } from 'zod';
+ *
+ * const Joke = z.object({
+ *   setup: z.string().describe("The setup of the joke"),
+ *   punchline: z.string().describe("The punchline to the joke"),
+ *   rating: z.number().optional().describe("How funny the joke is, from 1 to 10")
+ * }).describe('Joke to tell user.');
+ *
+ * const structuredLlm = llmForToolCalling.withStructuredOutput(Joke, { name: "Joke" });
+ * const jokeResult = await structuredLlm.invoke("Tell me a joke about cats");
+ * console.log(jokeResult);
+ * ```
+ *
+ * ```txt
+ * {
+ *   setup: "Why don't cats play poker in the wild?",
+ *   punchline: 'Because there are too many cheetahs.'
+ * }
+ * ```
+ * </details>
+ *
+ * <br />
  */
 export class ChatCerebras
   extends BaseChatModel<ChatCerebrasCallOptions>
@@ -234,18 +570,18 @@ export class ChatCerebras
       return res;
     });
 
-    const { choices, ...rest } = res;
+    const { choices, usage, ...rest } = res;
     // TODO: Remove casts when underlying types are fixed
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const choice = (choices as any)[0];
     const content = choice?.message?.content ?? "";
-    const usage: UsageMetadata = {
+    const usageMetadata: UsageMetadata = {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      input_tokens: (rest.usage as any)?.prompt_tokens,
+      input_tokens: (usage as any)?.prompt_tokens,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      output_tokens: (rest.usage as any)?.completion_tokens,
+      output_tokens: (usage as any)?.completion_tokens,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      total_tokens: (rest.usage as any)?.total_tokens,
+      total_tokens: (usage as any)?.total_tokens,
     };
 
     return {
@@ -264,7 +600,7 @@ export class ChatCerebras
                 type: "tool_call",
               })
             ),
-            usage_metadata: usage,
+            usage_metadata: usageMetadata,
             response_metadata: rest,
           }),
         },
@@ -296,20 +632,21 @@ export class ChatCerebras
       return res;
     });
     for await (const chunk of stream) {
-      const { choices, system_fingerprint, model, id, object, ...rest } = chunk;
+      const { choices, system_fingerprint, model, id, object, usage, ...rest } =
+        chunk;
       // TODO: Remove casts when underlying types are fixed
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const choice = (choices as any)[0];
       const content = choice?.delta?.content ?? "";
-      let usage: UsageMetadata | undefined;
-      if (rest.usage !== undefined) {
-        usage = {
+      let usageMetadata: UsageMetadata | undefined;
+      if (usage !== undefined) {
+        usageMetadata = {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          input_tokens: (rest.usage as any).prompt_tokens,
+          input_tokens: (usage as any).prompt_tokens,
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          output_tokens: (rest.usage as any).completion_tokens,
+          output_tokens: (usage as any).completion_tokens,
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          total_tokens: (rest.usage as any).total_tokens,
+          total_tokens: (usage as any).total_tokens,
         };
       }
 
@@ -338,7 +675,7 @@ export class ChatCerebras
               type: "tool_call_chunk",
             })
           ),
-          usage_metadata: usage,
+          usage_metadata: usageMetadata,
           response_metadata: rest,
         }),
         generationInfo,
