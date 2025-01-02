@@ -18,10 +18,6 @@ import {
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { ChatGenerationChunk, ChatResult } from "@langchain/core/outputs";
 import {
-  convertToCerebrasMessageParams,
-  formatToCerebrasToolChoice,
-} from "./utils.js";
-import {
   Runnable,
   RunnableLambda,
   RunnablePassthrough,
@@ -35,8 +31,13 @@ import {
 import { convertToOpenAITool } from "@langchain/core/utils/function_calling";
 import { concat } from "@langchain/core/utils/stream";
 import { isZodSchema } from "@langchain/core/utils/types";
-import zodToJsonSchema from "zod-to-json-schema";
+import { zodToJsonSchema } from "zod-to-json-schema";
 import { z } from "zod";
+
+import {
+  convertToCerebrasMessageParams,
+  formatToCerebrasToolChoice,
+} from "./utils.js";
 
 /**
  * Input to chat model class.
@@ -238,28 +239,35 @@ export class ChatCerebras
     });
     for await (const chunk of stream) {
       const { choices, system_fingerprint, model, id, ...rest } = chunk;
+      // TODO: Remove casts when underlying types are fixed
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const choice = (choices as any)[0];
-      // TODO: Remove cast when underlying types are fixed
       const content = choice?.delta?.content ?? "";
       const usage: UsageMetadata = {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         input_tokens: (rest.usage as any)?.prompt_tokens,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         output_tokens: (rest.usage as any)?.completion_tokens,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         total_tokens: (rest.usage as any)?.total_tokens,
       };
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const generationInfo: Record<string, any> = {};
       if (choice.finish_reason != null) {
         generationInfo.finish_reason = choice.finish_reason;
         // Only include system fingerprint and related in the last chunk for now
         // to avoid concatenation issues
         generationInfo.id = id;
-        generationInfo.system_fingerprint = chunk.system_fingerprint;
-        generationInfo.model = chunk.model;
+        generationInfo.system_fingerprint = system_fingerprint;
+        generationInfo.model = model;
       }
       yield new ChatGenerationChunk({
         text: content,
         message: new AIMessageChunk({
           content,
           tool_call_chunks: choice?.delta.tool_calls?.map(
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             (toolCallChunk: any) => ({
               id: toolCallChunk.id,
               name: toolCallChunk.function?.name,
