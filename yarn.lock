@@ -8691,6 +8691,21 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@cerebras/cerebras_cloud_sdk@npm:^1.15.0":
+  version: 1.15.0
+  resolution: "@cerebras/cerebras_cloud_sdk@npm:1.15.0"
+  dependencies:
+    "@types/node": ^18.11.18
+    "@types/node-fetch": ^2.6.4
+    abort-controller: ^3.0.0
+    agentkeepalive: ^4.2.1
+    form-data-encoder: 1.7.2
+    formdata-node: ^4.3.2
+    node-fetch: ^2.6.7
+  checksum: 192b6c473fa2cf7d7b77b1523e935c21f0d8084365ec795e02a0dcb608e85a4b742c1584338311cad816c46b2f50772ab7b7902a2e5d5fd12800eae085db9b06
+  languageName: node
+  linkType: hard
+
 "@cfworker/json-schema@npm:^4.0.2":
   version: 4.0.2
   resolution: "@cfworker/json-schema@npm:4.0.2"
@@ -33356,6 +33371,40 @@ __metadata:
   checksum: 74204547b3bfc358b3edfd207f3b3d30411e652c3892c9f869a2cf74dfadb130b5ef312b3d85cb5b4a363d38f74f1a2df5fe3f643554a61349fe814a29ce8ef3
   languageName: node
   linkType: hard
+
+"langchain-cerebras@workspace:libs/langchain-cerebras":
+  version: 0.0.0-use.local
+  resolution: "langchain-cerebras@workspace:libs/langchain-cerebras"
+  dependencies:
+    "@cerebras/cerebras_cloud_sdk": ^1.15.0
+    "@jest/globals": ^29.5.0
+    "@langchain/scripts": ">=0.1.0 <0.2.0"
+    "@swc/core": ^1.3.90
+    "@swc/jest": ^0.2.29
+    "@tsconfig/recommended": ^1.0.3
+    "@typescript-eslint/eslint-plugin": ^6.12.0
+    "@typescript-eslint/parser": ^6.12.0
+    dotenv: ^16.3.1
+    dpdm: ^3.12.0
+    eslint: ^8.33.0
+    eslint-config-airbnb-base: ^15.0.0
+    eslint-config-prettier: ^8.6.0
+    eslint-plugin-import: ^2.27.5
+    eslint-plugin-no-instanceof: ^1.0.1
+    eslint-plugin-prettier: ^4.2.1
+    jest: ^29.5.0
+    jest-environment-node: ^29.6.4
+    prettier: ^2.8.3
+    release-it: ^15.10.1
+    rollup: ^4.5.2
+    ts-jest: ^29.1.0
+    typescript: <5.2.0
+    zod: ^3.22.4
+    zod-to-json-schema: ^3.22.3
+  peerDependencies:
+    "@langchain/core": ">=0.3.0 <0.4.0"
+  languageName: unknown
+  linkType: soft
 
 "langchain@>=0.2.3 <0.3.0 || >=0.3.4 <0.4.0, langchain@workspace:*, langchain@workspace:langchain":
   version: 0.0.0-use.local
