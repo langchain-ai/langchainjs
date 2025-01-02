@@ -95,44 +95,8 @@ for await (const doc of loader.loadLazy()) {
 }
 ```
 
-### Authentication with Environment Variables
-
-You can set the `DROPBOX_ACCESS_TOKEN` environment variable instead of passing the access token in `clientOptions`:
-
-```bash
-export DROPBOX_ACCESS_TOKEN=your-dropbox-access-token
-```
-
-Then initialize the loader without specifying `accessToken`:
-
-```typescript
-import { DropboxLoader } from "@langchain/community/document_loaders/web/dropbox";
-
-const loader = new DropboxLoader({
-  clientOptions: {},
-  unstructuredOptions: {
-    apiUrl: "http://localhost:8000/general/v0/general",
-  },
-  filePaths: ["/important/notes.txt"],
-});
-
-const docs = await loader.load();
-console.log(docs[0].pageContent);
-```
-
-## Configuration Options
-
-Here are the configuration options for the `DropboxLoader`:
-
-| Option                | Type                                 | Description                                                                                                                                                                                                                        |
-| --------------------- | ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `clientOptions`       | `DropboxOptions`                     | Configuration options for initializing the Dropbox client, including authentication details. Refer to the [Dropbox SDK Documentation](https://dropbox.github.io/dropbox-sdk-js/Dropbox.html#Dropbox__anchor) for more information. |
-| `unstructuredOptions` | `UnstructuredLoaderOptions`          | Options for the `UnstructuredLoader` used to process downloaded files. Includes the `apiUrl` for your Unstructured server.                                                                                                         |
-| `folderPath`          | `string` (optional)                  | The path to the folder in Dropbox from which to load files. Defaults to the root folder (`""`) if not specified.                                                                                                                   |
-| `filePaths`           | `string[]` (optional)                | An array of specific file paths in Dropbox to load. Required if `mode` is set to `"file"`.                                                                                                                                         |
-| `recursive`           | `boolean` (optional)                 | Indicates whether to recursively traverse folders when `mode` is `"directory"`. Defaults to `false`.                                                                                                                               |
-| `mode`                | `"file"` or `"directory"` (optional) | The mode of operation. Set to `"file"` to load specific files or `"directory"` to load all files in a directory. Defaults to `"file"`.                                                                                             |
-
 ## API References
 
-- [Dropbox SDK for JavaScript](https://github.com/dropbox/dropbox-sdk-js)
+- `clientOptions`, refer to [Dropbox SDK Documentation](https://dropbox.github.io/dropbox-sdk-js/Dropbox.html#Dropbox__anchor)
+- `unstructuredOptions` refer to [UnstructuredLoader API reference](
+  https://api.js.langchain.com/classes/langchain_community_document_loaders_fs_unstructured.UnstructuredLoader.html)
