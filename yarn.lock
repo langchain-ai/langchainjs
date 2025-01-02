@@ -20840,15 +20840,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@upstash/redis@npm:1.22.0":
-  version: 1.22.0
-  resolution: "@upstash/redis@npm:1.22.0"
-  dependencies:
-    isomorphic-fetch: ^3.0.0
-  checksum: 894b7d4e318c55fdcbf0f322efd9ace94a37f1b8f9d7cb2cdf8b8b4859814379665c7e00feef3565578455d98492710d14ed4a2b043ec412b5d640a4d5a2dd55
-  languageName: node
-  linkType: hard
-
 "@upstash/redis@npm:^1.28.3":
   version: 1.31.1
   resolution: "@upstash/redis@npm:1.31.1"
@@ -20880,15 +20871,6 @@ __metadata:
   version: 1.1.1
   resolution: "@upstash/vector@npm:1.1.1"
   checksum: 2eeaa655b46d9182dfdb5e12ff58654e820df18e7b03e8cfff2795cbdb370cc7652a198638f36e8f29dab3e6a67004cda693b62e0885dc87472a08f908ffe0e6
-  languageName: node
-  linkType: hard
-
-"@vercel/kv@npm:^0.2.3":
-  version: 0.2.3
-  resolution: "@vercel/kv@npm:0.2.3"
-  dependencies:
-    "@upstash/redis": 1.22.0
-  checksum: 3a2b1e3a0ebf605b69341b449bd81edde94f9d00393cc6971759b950c90cff782e1e4fa5daf672f4769aa8301e00f7b7fdec07cdd98d40530652d83c043125ed
   languageName: node
   linkType: hard
 
@@ -27850,7 +27832,7 @@ __metadata:
     "@typescript-eslint/parser": ^5.51.0
     "@upstash/redis": ^1.32.0
     "@upstash/vector": ^1.1.1
-    "@vercel/kv": ^0.2.3
+    "@vercel/kv": ^3.0.0
     "@xata.io/client": ^0.28.0
     "@zilliz/milvus2-sdk-node": ^2.3.5
     axios: ^0.26.0
