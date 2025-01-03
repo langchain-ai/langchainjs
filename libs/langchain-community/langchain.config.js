@@ -403,6 +403,7 @@ export const config = {
     "vectorstores/hanavector",
     "vectorstores/lancedb",
     "vectorstores/libsql",
+    "vectorstores/mariadb",
     "vectorstores/milvus",
     "vectorstores/momento_vector_index",
     "vectorstores/mongodb_atlas",
