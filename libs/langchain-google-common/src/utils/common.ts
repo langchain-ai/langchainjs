@@ -140,6 +140,8 @@ export function copyAIModelParamsInto(
     options?.stopSequences ?? params?.stopSequences ?? target.stopSequences;
   ret.safetySettings =
     options?.safetySettings ?? params?.safetySettings ?? target.safetySettings;
+  ret.logprobs = options?.logprobs ?? params?.logprobs ?? target.logprobs;
+  ret.topLogprobs = options?.topLogprobs ?? params?.topLogprobs ?? target.topLogprobs;
   ret.convertSystemMessageToHumanContent =
     options?.convertSystemMessageToHumanContent ??
     params?.convertSystemMessageToHumanContent ??

@@ -38,6 +38,7 @@ import type {
   GoogleAIAPI,
   GeminiAPIConfig,
   GeminiGroundingSupport,
+  GeminiResponseCandidate,
 } from "../types.js";
 import { GoogleAISafetyError } from "./safety.js";
 import { MediaBlob } from "../experimental/utils/media_core.js";
@@ -674,6 +675,21 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     return safeResponseTo(response, responseToString);
   }
 
+  type Logprob = {
+    token: string,
+    logprob: number,
+    bytes: number[],
+    top_logprobs: Omit<Logprob, "top_logprobs">
+  }
+
+  function candidateToLogprobs(_candidate: GeminiResponseCandidate) {
+    // FIXME - continue here
+    const content: Logprob[] = [];
+    return {
+      content,
+    }
+  }
+
   function responseToGenerationInfo(response: GoogleLLMResponse) {
     if (!Array.isArray(response.data)) {
       return {};
@@ -695,6 +711,8 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
       citation_metadata: data.candidates[0]?.citationMetadata,
       grounding_metadata: data.candidates[0]?.groundingMetadata,
       finish_reason: data.candidates[0]?.finishReason,
+      avgLogprobs: data.candidates[0]?.avgLogprobs,
+      logprobs: candidateToLogprobs(data.candidates[0]),
     };
   }
 
@@ -1021,6 +1039,8 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
       maxOutputTokens: parameters.maxOutputTokens,
       stopSequences: parameters.stopSequences,
       responseMimeType: parameters.responseMimeType,
+      responseLogprobs: parameters.logprobs,
+      logprobs: parameters.topLogprobs,
     };
   }
 

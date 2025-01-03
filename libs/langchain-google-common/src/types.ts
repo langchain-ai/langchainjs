@@ -184,6 +184,18 @@ export interface GoogleAIModelParams {
    * @default false
    */
   streaming?: boolean;
+
+  /**
+   * Whether to return log probabilities of the output tokens or not.
+   * If true, returns the log probabilities of each output token returned in the content of message.
+   */
+  logprobs?: boolean;
+
+  /**
+   * An integer between 0 and 5 specifying the number of most likely tokens to return at each token position,
+   * each with an associated log probability. logprobs must be set to true if this parameter is used.
+   */
+  topLogprobs?: number;
 }
 
 export type GoogleAIToolType = BindToolsInput | GeminiTool;
@@ -364,6 +376,21 @@ export interface GeminiRetrievalMetadata {
   googleSearchDynamicRetrievalScore: number;
 }
 
+export interface GeminiLogprobsResult {
+  topCandidates: GeminiLogprobsTopCandidate[];
+  chosenCandidates: GeminiLogprobsResultCandidate[];
+}
+
+export interface GeminiLogprobsTopCandidate {
+  candidates: GeminiLogprobsResultCandidate[];
+}
+
+export interface GeminiLogprobsResultCandidate {
+  token: string;
+  tokenId: number;
+  logProbability: number;
+}
+
 // The "system" content appears to only be valid in the systemInstruction
 export type GeminiRole = "system" | "user" | "model" | "function";
 
@@ -452,6 +479,8 @@ export interface GeminiGenerationConfig {
   topP?: number;
   topK?: number;
   responseMimeType?: GoogleAIResponseMimeType;
+  responseLogprobs?: boolean;
+  logprobs?: number;
 }
 
 export interface GeminiRequest {
@@ -468,7 +497,7 @@ export interface GeminiRequest {
   generationConfig?: GeminiGenerationConfig;
 }
 
-interface GeminiResponseCandidate {
+export interface GeminiResponseCandidate {
   content: {
     parts: GeminiPart[];
     role: string;
@@ -479,6 +508,8 @@ interface GeminiResponseCandidate {
   safetyRatings: GeminiSafetyRating[];
   citationMetadata?: GeminiCitationMetadata;
   groundingMetadata?: GeminiGroundingMetadata;
+  avgLogprobs?: number;
+  logprobsResult: GeminiLogprobsResult;
 }
 
 interface GeminiResponsePromptFeedback {

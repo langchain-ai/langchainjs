@@ -191,6 +191,10 @@ export abstract class ChatGoogleBase<AuthOptions>
 
   stopSequences: string[] = [];
 
+  logprobs: false;
+
+  topLogprobs: 0;
+
   safetySettings: GoogleAISafetySetting[] = [];
 
   // May intentionally be undefined, meaning to compute this.
