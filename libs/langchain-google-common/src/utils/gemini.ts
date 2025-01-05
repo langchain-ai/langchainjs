@@ -38,7 +38,7 @@ import type {
   GoogleAIAPI,
   GeminiAPIConfig,
   GeminiGroundingSupport,
-  GeminiResponseCandidate,
+  GeminiResponseCandidate, GeminiLogprobsResult, GeminiLogprobsResultCandidate, GeminiLogprobsTopCandidate,
 } from "../types.js";
 import { GoogleAISafetyError } from "./safety.js";
 import { MediaBlob } from "../experimental/utils/media_core.js";
@@ -679,12 +679,37 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     token: string,
     logprob: number,
     bytes: number[],
-    top_logprobs: Omit<Logprob, "top_logprobs">
+    top_logprobs?: Omit<Logprob, "top_logprobs">[];
   }
 
-  function candidateToLogprobs(_candidate: GeminiResponseCandidate) {
-    // FIXME - continue here
+  type LogprobContent = {
+    content: Logprob[];
+  }
+
+  function logprobResultToLogprob(result: GeminiLogprobsResultCandidate): Omit<Logprob, "top_logprobs"> {
+    const token = result?.token;
+    const logprob = result?.logProbability;
+    const encoder = new TextEncoder();
+    const bytes = Array.from(encoder.encode(token));
+    return {
+      token,
+      logprob,
+      bytes,
+    }
+  }
+
+  function candidateToLogprobs(candidate: GeminiResponseCandidate): LogprobContent | undefined {
+    const logprobs: GeminiLogprobsResult = candidate?.logprobsResult;
+    const chosenTokens: GeminiLogprobsResultCandidate[] = logprobs?.chosenCandidates ?? [];
+    const topTokens: GeminiLogprobsTopCandidate[] = logprobs?.topCandidates ?? [];
     const content: Logprob[] = [];
+    for (let co= 0; co<chosenTokens.length; co+=1) {
+      const chosen = chosenTokens[co];
+      const top = topTokens[co]?.candidates ?? [];
+      const logprob: Logprob = logprobResultToLogprob(chosen)
+      logprob.top_logprobs = top.map((l) => logprobResultToLogprob(l));
+      content.push(logprob);
+    }
     return {
       content,
     }
@@ -876,6 +901,20 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
         }),
       ];
     }
+
+    // Add logprobs information to the message
+    const candidate = (response?.data as GenerateContentResponseData)
+      ?.candidates?.[0];
+    const avgLogprobs = candidate?.avgLogprobs;
+    const logprobs = candidateToLogprobs(candidate);
+    if (logprobs) {
+      ret[0].message.response_metadata = {
+        ...ret[0].message.response_metadata,
+        logprobs,
+        avgLogprobs,
+      }
+    }
+
     return ret;
   }
 

@@ -1250,6 +1250,37 @@ describe("Mock ChatGoogle - Gemini", () => {
 
     expect(record.opts.data.tools[0]).toHaveProperty("googleSearch");
   });
+
+  test("7. logprobs", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-7-mock.json",
+    };
+
+    const model = new ChatGoogle({
+      authOptions,
+      modelName: "gemini-1.5-flash-002",
+      logprobs: true,
+      topLogprobs: 5,
+    });
+    const result = await model.invoke("What are some names for a company that makes fancy socks?");
+    // console.log(JSON.stringify(result,null,1));
+    expect(result.response_metadata).toHaveProperty("logprobs");
+    expect(result.response_metadata.logprobs).toHaveProperty("content");
+    const logprobs = result.response_metadata.logprobs.content;
+    expect(Array.isArray(logprobs)).toBeTruthy();
+    expect(logprobs).toHaveLength(303);
+    const first = logprobs[0];
+    expect(first.token).toEqual("Here");
+    expect(first.logprob).toEqual(-0.25194553);
+    expect(first.bytes).toEqual([72, 101, 114, 101]);
+    expect(first).toHaveProperty("top_logprobs");
+    expect(Array.isArray(first.top_logprobs)).toBeTruthy();
+    expect(first.top_logprobs).toHaveLength(5);
+  });
 });
 
 describe("Mock ChatGoogle - Anthropic", () => {
