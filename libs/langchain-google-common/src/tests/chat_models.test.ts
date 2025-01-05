@@ -1266,7 +1266,9 @@ describe("Mock ChatGoogle - Gemini", () => {
       logprobs: true,
       topLogprobs: 5,
     });
-    const result = await model.invoke("What are some names for a company that makes fancy socks?");
+    const result = await model.invoke(
+      "What are some names for a company that makes fancy socks?"
+    );
     // console.log(JSON.stringify(result,null,1));
     expect(result.response_metadata).toHaveProperty("logprobs");
     expect(result.response_metadata.logprobs).toHaveProperty("content");
