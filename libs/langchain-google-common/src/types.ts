@@ -162,6 +162,36 @@ export interface GoogleAIModelParams {
    */
   topK?: number;
 
+  /**
+   * Presence penalty applied to the next token's logprobs
+   * if the token has already been seen in the response.
+   * This penalty is binary on/off and not dependant on the
+   * number of times the token is used (after the first).
+   * Use frequencyPenalty for a penalty that increases with each use.
+   * A positive penalty will discourage the use of tokens that have
+   * already been used in the response, increasing the vocabulary.
+   * A negative penalty will encourage the use of tokens that have
+   * already been used in the response, decreasing the vocabulary.
+   */
+  presencePenalty?: number;
+
+  /**
+   * Frequency penalty applied to the next token's logprobs,
+   * multiplied by the number of times each token has been seen
+   * in the respponse so far.
+   * A positive penalty will discourage the use of tokens that
+   * have already been used, proportional to the number of times
+   * the token has been used:
+   * The more a token is used, the more dificult it is for the model
+   * to use that token again increasing the vocabulary of responses.
+   * Caution: A _negative_ penalty will encourage the model to reuse
+   * tokens proportional to the number of times the token has been used.
+   * Small negative values will reduce the vocabulary of a response.
+   * Larger negative values will cause the model to start repeating
+   * a common token until it hits the maxOutputTokens limit.
+   */
+  frequencyPenalty?: number;
+
   stopSequences?: string[];
 
   safetySettings?: GoogleAISafetySetting[];
@@ -187,13 +217,16 @@ export interface GoogleAIModelParams {
 
   /**
    * Whether to return log probabilities of the output tokens or not.
-   * If true, returns the log probabilities of each output token returned in the content of message.
+   * If true, returns the log probabilities of each output token
+   * returned in the content of message.
    */
   logprobs?: boolean;
 
   /**
-   * An integer between 0 and 5 specifying the number of most likely tokens to return at each token position,
-   * each with an associated log probability. logprobs must be set to true if this parameter is used.
+   * An integer between 0 and 5 specifying the number of
+   * most likely tokens to return at each token position,
+   * each with an associated log probability.
+   * logprobs must be set to true if this parameter is used.
    */
   topLogprobs?: number;
 }
@@ -478,6 +511,8 @@ export interface GeminiGenerationConfig {
   temperature?: number;
   topP?: number;
   topK?: number;
+  presencePenalty?: number;
+  frequencyPenalty?: number;
   responseMimeType?: GoogleAIResponseMimeType;
   responseLogprobs?: boolean;
   logprobs?: number;

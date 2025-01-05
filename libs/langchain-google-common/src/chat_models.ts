@@ -189,6 +189,10 @@ export abstract class ChatGoogleBase<AuthOptions>
 
   topK = 40;
 
+  presencePenalty = undefined;
+
+  frequencyPenalty = undefined;
+
   stopSequences: string[] = [];
 
   logprobs: false;
