@@ -23,9 +23,9 @@ export abstract class BaseGoogleSearchOutputParser extends BaseLLMOutputParser<s
   ): GroundingInfo | undefined {
     if ("message" in generation) {
       const responseMetadata = generation?.message?.response_metadata;
-      const metadata = responseMetadata.groundingMetadata;
+      const metadata = responseMetadata?.groundingMetadata;
       const supports =
-        responseMetadata.groundingSupport ?? metadata.groundingSupports ?? [];
+        responseMetadata?.groundingSupport ?? metadata?.groundingSupports ?? [];
       if (metadata) {
         return {
           metadata,
