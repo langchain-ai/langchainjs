@@ -201,8 +201,8 @@ export class AzionRetriever extends BaseRetriever {
   ) {
     super(args)
 
-    this.ftsTable = args.ftsTable || "document_fts"
-    this.vectorTable = args.vectorTable || "documents"
+    this.ftsTable = this.sanitizeItem(args.ftsTable) || "document_fts"
+    this.vectorTable = this.sanitizeItem(args.vectorTable) || "documents"
     this.similarityK = Math.max(1, args.similarityK || 1); 
     this.ftsK = Math.max(1, args.ftsK || 1);
     this.dbName = args.dbName || "azioncopilotprod"
@@ -225,14 +225,17 @@ export class AzionRetriever extends BaseRetriever {
   protected generateFilters(
     filters: AzionFilter[]
   ): string {
-    if (filters.length === 0) return '';
-    
-    return 'AND ' + filters.map(({operator, column, value}) => {
+    if (!filters || filters?.length === 0) {
+      return '';
+    }
+
+    return filters.map(({operator, column, value}) => {
+      const columnRef = this.expandedMetadata ? this.sanitizeItem(column) : `metadata->>'$.${this.sanitizeItem(column)}'`;
       if (['IN', 'NOT IN'].includes(operator.toUpperCase())) {
-        return `${column} ${operator} (${value})`;
+        return `${columnRef} ${operator} (${this.sanitizeItem(value)})`;
       }
-      return `${column} ${operator} '${value}'`;
-    }).join(' AND ');
+      return `${columnRef} ${operator} '${this.sanitizeItem(value)}'`;
+    }).join(' AND ') + ' AND ';
   }
 
   /**
@@ -257,15 +260,15 @@ export class AzionRetriever extends BaseRetriever {
     const ftsQuery = `
       SELECT id, content, ${metadata.replace('hybrid', 'fts')}
       FROM ${this.ftsTable} 
-      WHERE ${this.ftsTable}  MATCH '${queryEntities}' ${filters}
+      WHERE ${filters} ${this.ftsTable} MATCH '${queryEntities}'
       ORDER BY rank 
       LIMIT ${rowsNumber}
     `;
-    
+
     const similarityQuery = `
       SELECT id, content, ${metadata.replace('hybrid', 'similarity')}
       FROM ${this.vectorTable}  
-      WHERE rowid IN vector_top_k('${this.vectorTable}_idx', vector('[${embeddedQuery}]'), ${rowsNumber}) ${filters}
+      WHERE ${filters} rowid IN vector_top_k('${this.vectorTable}_idx', vector('[${embeddedQuery}]'), ${rowsNumber})
     `;
     
     return { ftsQuery, similarityQuery };
@@ -307,10 +310,10 @@ export class AzionRetriever extends BaseRetriever {
     }
 
     if (this.expandedMetadata) {
-      return `json_object('searchtype','${this.searchType}',${this.metadataItems.map(item => `'${item}', ${item}`).join(', ')}) as metadata`
+      return `json_object('searchtype','${this.searchType}',${this.metadataItems.map(item => `'${this.sanitizeItem(item)}', ${this.sanitizeItem(item)}`).join(', ')}) as metadata`
     }
 
-    return `json_patch(json_object(${this.metadataItems?.map(item => `'${item}', metadata->>'$.${item}'`).join(', ')}), '{"searchtype":"${this.searchType}"}') as metadata`
+    return `json_patch(json_object(${this.metadataItems?.map(item => `'${this.sanitizeItem(item)}', metadata->>'$.${this.sanitizeItem(item)}'`).join(', ')}), '{"searchtype":"${this.searchType}"}') as metadata`
   }
 
   /**
@@ -328,7 +331,7 @@ export class AzionRetriever extends BaseRetriever {
 
     if (!response) {
       console.error('RESPONSE ERROR: ', errorQuery);
-      return this.searchError(errorQuery)
+      throw this.searchError(errorQuery)
     }
     const searches = this.mapRows(response.results)
     const result  = this.mapSearches(searches)
@@ -367,7 +370,7 @@ export class AzionRetriever extends BaseRetriever {
 
     if (!response) {
       console.error('RESPONSE ERROR: ', errorQuery);
-      return this.searchError(errorQuery)
+      throw this.searchError(errorQuery)
     }
 
     const results = this.mapRows(response.results)
@@ -386,15 +389,8 @@ export class AzionRetriever extends BaseRetriever {
     error: {
     message: string;
     operation: string;} | undefined
-  ): Promise<[Document][]> {
-    return Promise.resolve([
-      [
-        new Document({
-          pageContent: JSON.stringify(error),
-          metadata: { searchtype: 'error' },
-        }),
-      ],
-    ]);
+  ): Error {
+    throw new Error(error?.message, { cause: error?.operation })
   }
 
   /**
@@ -414,6 +410,7 @@ export class AzionRetriever extends BaseRetriever {
     }
     
     return result.map(([doc]) => doc);
+  
   }
 
   /**
@@ -495,5 +492,19 @@ private mapRows(
         id: resp.id.toString(), 
       })
     ]);
+  }
+
+  /**
+   * Sanitizes an item by removing non-alphanumeric characters.
+   * @param {string} item The item to sanitize.
+   * @returns {string} The sanitized item.
+   */
+  private sanitizeItem(
+    item: string | undefined
+  ): string {
+    if (item){
+      return item.replace(/[^a-zA-Z0-9\s]/g, '')
+    }
+    return ''
   }
 }
