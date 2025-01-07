@@ -1,7 +1,7 @@
 /* eslint-disable no-process-env */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
-import { AzionRetriever } from "@langchain/community/retrievers/azion";
+import { AzionRetriever } from "@langchain/community/retrievers/azion_edgesql";
 import { jest, test, expect } from "@jest/globals";
 
 // Increase timeout to 30 seconds
@@ -18,9 +18,9 @@ test("Azion search", async () => {
     searchType: "hybrid",
     similarityK: 2,
     ftsK: 2,
-    dbName: 'vectorstore',
-    vectorTable:'vectors',
-    ftsTable:'vectors'
+    dbName: 'langchain',
+    vectorTable:'documents',
+    ftsTable:'documents_fts'
   });
 
   expect(retrieverHybrid).toBeDefined();
@@ -33,9 +33,9 @@ test("Azion search", async () => {
     searchType: "similarity",
     similarityK: 2,
     ftsK: 2,
-    dbName: 'vectorstore',
-    vectorTable:'vectors',
-    ftsTable:'vectors'
+    dbName: 'langchain',
+    vectorTable:'documents',
+    ftsTable:'documents_fts'
   });
 
   const results2 = await retrieverSimilarity._getRelevantDocuments("hello");

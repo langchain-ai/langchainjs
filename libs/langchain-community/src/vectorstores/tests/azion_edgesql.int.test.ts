@@ -1,7 +1,7 @@
 /* eslint-disable no-process-env */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { OpenAIEmbeddings } from "@langchain/openai";
-import { AzionVectorStore } from "@langchain/community/vectorstores/azionedgesql";
+import { AzionVectorStore } from "@langchain/community/vectorstores/azion_edgesql";
 import { Document } from "@langchain/core/documents";
 import { jest, test, expect, describe, beforeAll } from "@jest/globals";
 
@@ -10,8 +10,8 @@ jest.setTimeout(60000);
 
 describe("AzionVectorStore", () => {
   let vectorStore: AzionVectorStore;
-  const dbName = "testvectorstore";
-  const tableName = "testvectors";
+  const dbName = "langchain";
+  const tableName = "documents";
   
   const testDocs = [
     new Document({
@@ -32,12 +32,11 @@ describe("AzionVectorStore", () => {
     const embeddings = new OpenAIEmbeddings();
     
     // Test static factory method
-    vectorStore = await AzionVectorStore.createVectorStore(
+    vectorStore = await AzionVectorStore.initialize(
       embeddings,
       {
         dbName,
-        tableName,
-        expandedMetadata: true
+        tableName
       },
       {
         columns: ["category", "type"],
@@ -55,7 +54,7 @@ describe("AzionVectorStore", () => {
   });
 
   test("should perform similarity search", async () => {
-    const results = await vectorStore.AzionSimilaritySearch(
+    const results = await vectorStore.azionSimilaritySearch(
       "what helps with headaches?",
       {
         kvector: 2,
@@ -70,7 +69,7 @@ describe("AzionVectorStore", () => {
   });
 
   test("should perform full text search", async () => {
-    const results = await vectorStore.AzionFullTextSearch(
+    const results = await vectorStore.azionFullTextSearch(
       "exercise headaches",
       {
         kfts: 1,
@@ -85,7 +84,7 @@ describe("AzionVectorStore", () => {
   });
 
   test("should perform hybrid search", async () => {
-    const results = await vectorStore.AzionHybridSearch(
+    const results = await vectorStore.azionHybridSearch(
       "pain relief medicine",
       {
         kfts: 2,
@@ -101,7 +100,7 @@ describe("AzionVectorStore", () => {
   });
 
   test("should handle filters correctly", async () => {
-    const results = await vectorStore.AzionSimilaritySearch(
+    const results = await vectorStore.azionSimilaritySearch(
       "medicine",
       {
         kvector: 2,
@@ -122,7 +121,7 @@ describe("AzionVectorStore", () => {
   });
 
   test("should handle empty search results", async () => {
-    const results = await vectorStore.AzionSimilaritySearch(
+    const results = await vectorStore.azionSimilaritySearch(
       "nonexistent content",
       {
         kvector: 2,
@@ -142,7 +141,7 @@ describe("AzionVectorStore", () => {
 
     await vectorStore.addDocuments([newDoc]);
 
-    const results = await vectorStore.AzionFullTextSearch(
+    const results = await vectorStore.azionFullTextSearch(
       "meditation stress",
       {
         kfts: 1,
