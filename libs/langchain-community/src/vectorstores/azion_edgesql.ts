@@ -130,7 +130,7 @@ export interface AzionVectorStoreArgs {
  * });
  * 
  * // OR: Initialize using the static create method
- * const vectorStore = await AzionVectorStore.createVectorStore(embeddings, {
+ * const vectorStore = await AzionVectorStore.initialize(embeddings, {
  *   dbName: "mydb",
  *   tableName: "documents"
  * }, {
@@ -202,7 +202,7 @@ export class AzionVectorStore extends VectorStore {
    *     - "hybrid": Both vector and full-text search capabilities
    * @returns {Promise<AzionVectorStore>} A promise that resolves with the configured vector store instance
    */
-  static async createVectorStore(
+  static async initialize(
     embeddings: EmbeddingsInterface, 
     args: AzionVectorStoreArgs,
     setupOptions: AzionSetupOptions
@@ -465,6 +465,7 @@ export class AzionVectorStore extends VectorStore {
       const { error } = await useExecute(this.dbName,chunk)
       this.errorHandler(error, "Error inserting chunk")
     }
+    console.log("Chunks inserted!")
   }
 
   /**
@@ -608,17 +609,18 @@ export class AzionVectorStore extends VectorStore {
     const metadata = this.generateMetadata(metadataItems, 'similarity')
 
     const filters = this.generateFilters(filter)
-
+    
     const similarityQuery = `
-      SELECT id, content, ${metadata}, 1 - vector_distance_cos(embedding, vector('[${vector}]')) as similarity
+      SELECT 
+      id, content, ${metadata}, 1 - vector_distance_cos(embedding, vector('[${vector}]')) as similarity
       FROM ${this.tableName}  
-      WHERE rowid IN vector_top_k('${this.tableName}_idx', vector('[${vector}]'), ${k}) ${filters}`
+      WHERE ${filters} rowid IN vector_top_k('${this.tableName}_idx', vector('[${vector}]'), ${k})`
 
     const { data, error } = await useQuery(this.dbName, [similarityQuery])
 
     if (!data) {
       this.errorHandler(error, "Error performing similarity search")
-      return this.searchError(error)
+      throw this.searchError(error)
     }
 
     const searches = this.mapRows(data.results)
@@ -635,7 +637,7 @@ export class AzionVectorStore extends VectorStore {
    *                - metadataItems: Optional metadata fields to include in the results
    * @returns A promise that resolves with the full-text search results when the search is complete.
    */
-  async AzionFullTextSearch(
+  async azionFullTextSearch(
     query: string,
     options: fullTextSearchOptions
   ){
@@ -647,14 +649,14 @@ export class AzionVectorStore extends VectorStore {
     const fullTextQuery = `
       SELECT id, content, ${metadata}, rank as bm25_similarity
       FROM ${this.tableName}_fts  
-      WHERE ${this.tableName}_fts MATCH '${query.toString().replace(/[^a-zA-Z0-9\s]/g, '').split(' ').join(' OR ')}' ${filters}
+      WHERE ${filters} ${this.tableName}_fts MATCH '${query.toString().replace(/[^a-zA-Z0-9\s]/g, '').split(' ').join(' OR ')}'
       LIMIT ${kfts}`
 
     const { data, error } = await useQuery(this.dbName, [fullTextQuery])
 
     if (!data) {
       this.errorHandler(error, "Error performing full-text search")
-      return this.searchError(error)
+      throw this.searchError(error)
     }
     
     const searches = this.mapRows(data?.results)
@@ -672,14 +674,14 @@ export class AzionVectorStore extends VectorStore {
    *                - metadataItems: Optional metadata fields to include in the results
    * @returns A promise that resolves with the hybrid search results when the search is complete.
    */
-  async AzionHybridSearch(
+  async azionHybridSearch(
     query: string,
     hybridSearchOptions: hybridSearchOptions
   ): Promise<[Document, number][]> {
     const {kfts, kvector, filter, metadataItems} = hybridSearchOptions
 
     const vector = await this.embeddings.embedQuery(query)
-    const ftsResults = await this.AzionFullTextSearch(query, {kfts, filter, metadataItems})
+    const ftsResults = await this.azionFullTextSearch(query, {kfts, filter, metadataItems})
 
     const vectorResults = await this.similaritySearchVectorWithScore(vector, kvector, filter, metadataItems)
     
@@ -695,7 +697,7 @@ export class AzionVectorStore extends VectorStore {
    *                - metadataItems: Optional metadata fields to include in results
    * @returns A promise that resolves with the similarity search results when the search is complete.
    */
-  async AzionSimilaritySearch(
+  async azionSimilaritySearch(
     query: string,
     options: similaritySearchOptions
   ): Promise<[Document, number][]>{
@@ -713,16 +715,25 @@ export class AzionVectorStore extends VectorStore {
     error: {
     message: string;
     operation: string;} | undefined
-  ): Promise<[Document, number][]> {
-    return Promise.resolve([
-      [
-        new Document({
-          pageContent: JSON.stringify(error),
-          metadata: { searchtype: 'error' },
-        }),
-        0
-      ],
-    ]);
+  ): Error {
+    throw new Error(error?.message, { cause: error?.operation })
+  }
+
+  /**
+   * Deletes documents from the vector store.
+   * @param {string[]} ids The IDs of the documents to delete.
+   * @returns {Promise<void>} A promise that resolves when the documents have been deleted.
+   */
+  async delete(
+    ids: string[]
+  ): Promise<void> {
+    const deleteStatement = `DELETE FROM ${this.tableName} WHERE id IN (${ids.join(',')})`
+    const { error } = await useExecute(this.dbName, [deleteStatement])
+    if (error) {
+      this.errorHandler(error, `Error deleting document from ${this.tableName}`)
+    } else {
+      console.log(`Deleted ${ids.length} items from ${this.tableName}`)
+    }
   }
 
   /**
@@ -822,16 +833,15 @@ export class AzionVectorStore extends VectorStore {
     metadataItems: string[] | undefined,
     searchType: string
   ): string {
-
     if (!metadataItems) {
       return `json_object('searchtype', '${searchType}') as metadata`
     }
 
     if (this.expandedMetadata) {
-      return `json_object('searchtype','${searchType}',${metadataItems.map(item => `'${item}', ${item}`).join(', ')}) as metadata`
+      return `json_object('searchtype','${searchType}',${metadataItems.map(item => `'${this.sanitizeItem(item)}', ${this.sanitizeItem(item)}`).join(', ')}) as metadata`
     }
 
-    return `json_patch(json_object(${metadataItems?.map(item => `'${item}', metadata->>'$.${item}'`).join(', ')}), '{"searchtype":"${searchType}"}') as metadata`
+    return `json_patch(json_object(${metadataItems?.map(item => `'${this.sanitizeItem(item)}', metadata->>'$.${this.sanitizeItem(item)}'`).join(', ')}), '{"searchtype":"${searchType}"}') as metadata`
   }
 
   /**
@@ -842,17 +852,17 @@ export class AzionVectorStore extends VectorStore {
   private generateFilters(
     filters: AzionFilter[] | undefined
   ): string {
-
     if (!filters || filters?.length === 0) {
       return '';
     }
 
-    return 'AND ' + filters.map(({operator, column, value}) => {
+    return filters.map(({operator, column, value}) => {
+      const columnRef = this.expandedMetadata ? this.sanitizeItem(column) : `metadata->>'$.${this.sanitizeItem(column)}'`;
       if (['IN', 'NOT IN'].includes(operator.toUpperCase())) {
-        return `${column} ${operator} (${value})`;
+        return `${columnRef} ${operator} (${this.sanitizeItem(value)})`;
       }
-      return `${column} ${operator} '${value}'`;
-    }).join(' AND ');
+      return `${columnRef} ${operator} '${this.sanitizeItem(value)}'`;
+    }).join(' AND ') + ' AND ';
   }
 
       /**
@@ -896,5 +906,19 @@ export class AzionVectorStore extends VectorStore {
     value: string
   ): string {
   return value.replace(/'/g, " ").replace(/"/g, ' ')
+  }
+
+   /**
+   * Sanitizes an item by removing non-alphanumeric characters.
+   * @param {string} item The item to sanitize.
+   * @returns {string} The sanitized item.
+   */
+   private sanitizeItem(
+    item: string | undefined
+  ): string {
+    if (item){
+      return item.replace(/[^a-zA-Z0-9\s]/g, '')
+    }
+    return ''
   }
 }
