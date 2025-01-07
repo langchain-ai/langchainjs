@@ -7,13 +7,10 @@ import {
   type MessageType,
   BaseMessageFields,
   _mergeLists,
-} from "./base.js";
-import {
-  InvalidToolCall,
   ToolCall,
   ToolCallChunk,
-  defaultToolCallParser,
-} from "./tool.js";
+} from "./base.js";
+import { InvalidToolCall, defaultToolCallParser } from "./tool.js";
 
 export type AIMessageFields = BaseMessageFields & {
   tool_calls?: ToolCall[];
