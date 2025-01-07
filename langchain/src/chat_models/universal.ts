@@ -40,6 +40,8 @@ const _SUPPORTED_PROVIDERS = [
   "azure_openai",
   "cohere",
   "google-vertexai",
+  "google-vertexai-web",
+  "google-genai",
   "google-genai",
   "ollama",
   "together",
@@ -95,6 +97,10 @@ async function _initChatModelHelper(
       }
       case "google-vertexai": {
         const { ChatVertexAI } = await import("@langchain/google-vertexai");
+        return new ChatVertexAI({ model, ...passedParams });
+      }
+      case "google-vertexai-web": {
+        const { ChatVertexAI } = await import("@langchain/google-vertexai-web");
         return new ChatVertexAI({ model, ...passedParams });
       }
       case "google-genai": {
@@ -594,6 +600,7 @@ export async function initChatModel<
  *   - anthropic (@langchain/anthropic)
  *   - azure_openai (@langchain/openai)
  *   - google-vertexai (@langchain/google-vertexai)
+ *   - google-vertexai-web (@langchain/google-vertexai-web)
  *   - google-genai (@langchain/google-genai)
  *   - bedrock (@langchain/aws)
  *   - cohere (@langchain/cohere)
