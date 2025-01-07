@@ -8691,6 +8691,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@bufbuild/protobuf@npm:^2.0.0":
+  version: 2.2.3
+  resolution: "@bufbuild/protobuf@npm:2.2.3"
+  checksum: 567ca0497669a8944fe84a9fdfa236e4a91d5879190c0ec0c8727d5220cbc21a85d06a114ac1eb35387fc5cb1dcbb7adc583c4d4f6a2ecb34fbe61dcaa7e7e9b
+  languageName: node
+  linkType: hard
+
 "@cerebras/cerebras_cloud_sdk@npm:^1.15.0":
   version: 1.15.0
   resolution: "@cerebras/cerebras_cloud_sdk@npm:1.15.0"
@@ -12040,8 +12047,7 @@ __metadata:
     weaviate-ts-client: ^1.4.0
     web-auth-library: ^1.0.3
     word-extractor: ^1.0.4
-    youtube-transcript: ^1.0.6
-    youtubei.js: ^9.1.0
+    youtubei.js: ^12.2.0
     zod: ^3.22.3
     zod-to-json-schema: ^3.22.5
   peerDependencies:
@@ -12170,8 +12176,7 @@ __metadata:
     web-auth-library: ^1.0.3
     word-extractor: "*"
     ws: ^8.14.2
-    youtube-transcript: ^1.0.6
-    youtubei.js: ^9.1.0
+    youtubei.js: "*"
   peerDependenciesMeta:
     "@arcjet/redact":
       optional: true
@@ -12412,8 +12417,6 @@ __metadata:
     word-extractor:
       optional: true
     ws:
-      optional: true
-    youtube-transcript:
       optional: true
     youtubei.js:
       optional: true
@@ -23126,13 +23129,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"centra@npm:^2.6.0":
-  version: 2.6.0
-  resolution: "centra@npm:2.6.0"
-  checksum: 3b4d44762bceb9e20f7e45d01ffb9e462523cf8a0186f6710c08863f0455bceabfbcb754d6b01ea095c3bdee09c4ebef912669dc2b391a9af400e9ba7e398bc5
-  languageName: node
-  linkType: hard
-
 "chalk@npm:5.2.0, chalk@npm:^5.0.0, chalk@npm:^5.2.0":
   version: 5.2.0
   resolution: "chalk@npm:5.2.0"
@@ -32880,12 +32876,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"jintr@npm:^1.1.0":
-  version: 1.1.0
-  resolution: "jintr@npm:1.1.0"
+"jintr@npm:^3.2.0":
+  version: 3.2.0
+  resolution: "jintr@npm:3.2.0"
   dependencies:
     acorn: ^8.8.0
-  checksum: b61269ff80a46c71e837e893a4754fc2d0a941e3d577dc6307f0e67cebebf81e66f646c86bf6159fe7d851d829595d7a9e9e26392b9ede7b6b39d9664f1d090d
+  checksum: 8f526719fd77d6f7cd52c47c06c86573cb37a15e22ce8129a228ff605d7ea3d662d7c8ef37cad7b4df767f53ca11418ffa49ad4aa8776f62d94362aba8317ff3
   languageName: node
   linkType: hard
 
@@ -37262,15 +37258,6 @@ __metadata:
   dependencies:
     split2: ^4.1.0
   checksum: 947ac096c031eebdf08d989de2e9f6f156b8133d6858c7c2c06c041e1e71dda6f5f3bad3c0ec1e96a09497bbc6ef89e762eefe703b5ef9cb2804392ec52ec400
-  languageName: node
-  linkType: hard
-
-"phin@npm:^3.5.0":
-  version: 3.7.0
-  resolution: "phin@npm:3.7.0"
-  dependencies:
-    centra: ^2.6.0
-  checksum: b0a35e943615c40a3ccd7d6a2dd062568258e6b36dceed3150d13d28cad906e9028e756ad6efe66963b43937879e8a3593f986d17aac968d42982b4e8702e539
   languageName: node
   linkType: hard
 
@@ -44833,23 +44820,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"youtube-transcript@npm:^1.0.6":
-  version: 1.0.6
-  resolution: "youtube-transcript@npm:1.0.6"
+"youtubei.js@npm:^12.2.0":
+  version: 12.2.0
+  resolution: "youtubei.js@npm:12.2.0"
   dependencies:
-    phin: ^3.5.0
-  checksum: 7ca6a608834d2eb43d2d353ad58bb3fa86663e2f5730146a768c5c3ac423911680451a38c57f827aa7af8fb7df78a4ce3702019d988d87d9ed266f9d81aeb833
-  languageName: node
-  linkType: hard
-
-"youtubei.js@npm:^9.1.0":
-  version: 9.1.0
-  resolution: "youtubei.js@npm:9.1.0"
-  dependencies:
-    jintr: ^1.1.0
+    "@bufbuild/protobuf": ^2.0.0
+    jintr: ^3.2.0
     tslib: ^2.5.0
     undici: ^5.19.1
-  checksum: 7a537d79435c362c3d4f0e101f85edca6b34c584b9cafeee28c4214fdcdcbb6b2ebba2571175e21a984cc5d66d0fe673d761f400dd232ecb16803bce878cb41d
+  checksum: 4c89a019c6b94363328e8d0d35b8d8266de1ee3db963a39b655bdaa15e4d899a107876ead53b7a1268837b9a756fecaf53be0b399545a7fe290c6da303010c8f
   languageName: node
   linkType: hard
 

@@ -1,4 +1,3 @@
-import { TranscriptResponse, YoutubeTranscript } from "youtube-transcript";
 import { Innertube } from "youtubei.js";
 import { Document } from "@langchain/core/documents";
 import { BaseDocumentLoader } from "@langchain/core/document_loaders/base";
@@ -92,24 +91,30 @@ export class YoutubeLoader extends BaseDocumentLoader {
    * @returns An array of Documents representing the retrieved data.
    */
   async load(): Promise<Document[]> {
-    let transcript: TranscriptResponse[] | undefined;
+    let transcript: string | undefined;
     const metadata: VideoMetadata = {
       source: this.videoId,
     };
     try {
-      transcript = await YoutubeTranscript.fetchTranscript(this.videoId, {
+      const youtube = await Innertube.create({
         lang: this.language,
+        retrieve_player: false,
       });
+      const info = await youtube.getInfo(this.videoId);
+      const transcriptData = await info.getTranscript();
+      transcript =
+        transcriptData.transcript.content?.body?.initial_segments
+          .map((segment) => segment.snippet.text)
+          .join(" ") ?? "";
       if (transcript === undefined) {
         throw new Error("Transcription not found");
       }
       if (this.addVideoInfo) {
-        const youtube = await Innertube.create();
-        const info = (await youtube.getBasicInfo(this.videoId)).basic_info;
-        metadata.description = info.short_description;
-        metadata.title = info.title;
-        metadata.view_count = info.view_count;
-        metadata.author = info.author;
+        const basicInfo = info.basic_info;
+        metadata.description = basicInfo.short_description;
+        metadata.title = basicInfo.title;
+        metadata.view_count = basicInfo.view_count;
+        metadata.author = basicInfo.author;
       }
     } catch (e: unknown) {
       throw new Error(
@@ -117,7 +122,7 @@ export class YoutubeLoader extends BaseDocumentLoader {
       );
     }
     const document = new Document({
-      pageContent: transcript.map((item) => item.text).join(" "),
+      pageContent: transcript,
       metadata,
     });
 
