@@ -10,7 +10,7 @@ import {
  * Represents a human message in a conversation.
  */
 export class HumanMessage extends BaseMessage {
-  declare tool_calls?: never[];
+  declare tool_calls?: never;
 
   static lc_name() {
     return "HumanMessage";
@@ -26,11 +26,11 @@ export class HumanMessage extends BaseMessage {
  * other human message chunks.
  */
 export class HumanMessageChunk extends BaseMessageChunk {
-  declare tool_calls?: never[];
+  declare tool_calls?: never;
 
-  declare tool_call_chunks?: never[];
+  declare tool_call_chunks?: never;
 
-  declare invalid_tool_calls?: never[];
+  declare invalid_tool_calls?: never;
 
   static lc_name() {
     return "HumanMessageChunk";

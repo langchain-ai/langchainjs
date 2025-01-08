@@ -12,7 +12,7 @@ export interface RemoveMessageFields
  * Message responsible for deleting other messages.
  */
 export class RemoveMessage extends BaseMessage {
-  declare tool_calls?: never[];
+  declare tool_calls?: never;
 
   /**
    * The ID of the message to remove.

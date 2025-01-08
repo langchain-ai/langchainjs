@@ -54,7 +54,7 @@ export function isDirectToolOutput(x: unknown): x is DirectToolOutput {
  * Represents a tool message in a conversation.
  */
 export class ToolMessage extends BaseMessage implements DirectToolOutput {
-  declare tool_calls?: never[];
+  declare tool_calls?: never;
 
   static lc_name() {
     return "ToolMessage";
@@ -130,11 +130,11 @@ export class ToolMessage extends BaseMessage implements DirectToolOutput {
  * with other tool message chunks.
  */
 export class ToolMessageChunk extends BaseMessageChunk {
-  declare tool_calls?: never[];
+  declare tool_calls?: never;
 
-  declare tool_call_chunks?: never[];
+  declare tool_call_chunks?: never;
 
-  declare invalid_tool_calls?: never[];
+  declare invalid_tool_calls?: never;
 
   tool_call_id: string;
 

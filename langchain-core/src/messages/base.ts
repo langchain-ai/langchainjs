@@ -236,7 +236,7 @@ export abstract class BaseMessage
    */
   id?: string;
 
-  tool_calls?: never[] | ToolCall[];
+  tool_calls?: never | ToolCall[];
 
   /**
    * @deprecated Use .getType() instead or import the proper typeguard.
@@ -554,9 +554,9 @@ export type InvalidToolCall = {
  * of `BaseMessageChunk` instances.
  */
 export abstract class BaseMessageChunk extends BaseMessage {
-  tool_call_chunks?: never[] | ToolCallChunk[];
+  tool_call_chunks?: never | ToolCallChunk[];
 
-  invalid_tool_calls?: never[] | InvalidToolCall[];
+  invalid_tool_calls?: never | InvalidToolCall[];
 
   abstract concat(chunk: BaseMessageChunk): BaseMessageChunk;
 }

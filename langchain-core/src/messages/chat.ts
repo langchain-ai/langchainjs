@@ -18,7 +18,7 @@ export class ChatMessage
   extends BaseMessage
   implements ChatMessageFieldsWithRole
 {
-  declare tool_calls?: never[];
+  declare tool_calls?: never;
 
   static lc_name() {
     return "ChatMessage";
@@ -64,11 +64,11 @@ export class ChatMessage
  * other chat message chunks.
  */
 export class ChatMessageChunk extends BaseMessageChunk {
-  declare tool_calls?: never[];
+  declare tool_calls?: never;
 
-  declare tool_call_chunks?: never[];
+  declare tool_call_chunks?: never;
 
-  declare invalid_tool_calls?: never[];
+  declare invalid_tool_calls?: never;
 
   static lc_name() {
     return "ChatMessageChunk";
