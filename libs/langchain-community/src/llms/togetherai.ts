@@ -115,19 +115,19 @@ export interface TogetherAIInputs extends BaseLLMParams {
 
 export interface TogetherAICallOptions
   extends BaseLLMCallOptions,
-  Pick<
-    TogetherAIInputs,
-    | "modelName"
-    | "model"
-    | "temperature"
-    | "topP"
-    | "topK"
-    | "repetitionPenalty"
-    | "logprobs"
-    | "safetyModel"
-    | "maxTokens"
-    | "stop"
-  > { }
+    Pick<
+      TogetherAIInputs,
+      | "modelName"
+      | "model"
+      | "temperature"
+      | "topP"
+      | "topK"
+      | "repetitionPenalty"
+      | "logprobs"
+      | "safetyModel"
+      | "maxTokens"
+      | "stop"
+    > {}
 
 export class TogetherAI extends LLM<TogetherAICallOptions> {
   lc_serializable = true;
