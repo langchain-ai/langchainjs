@@ -119,6 +119,40 @@ export interface ChatGroqInput extends BaseChatModelParams {
    * This limits ensures computational efficiency and resource management.
    */
   maxTokens?: number;
+  /**
+   * Override the default base URL for the API
+   */
+  baseUrl?: string;
+  /**
+   * The maximum amount of time (in milliseconds) the client will wait for a response
+   */
+  timeout?: number;
+  /**
+   * HTTP agent used to manage connections
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  httpAgent?: any;
+  /**
+   * Custom fetch function implementation
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  fetch?: (...args: any) => any;
+
+  /**
+   * Maximum number of retry attempts
+   * @default 2
+   */
+  maxRetries?: number;
+
+  /**
+   * Default headers included with every request
+   */
+  defaultHeaders?: Record<string, string>;
+
+  /**
+   * Default query parameters included with every request
+   */
+  defaultQuery?: Record<string, string>;
 }
 
 type GroqRoleEnum = "system" | "assistant" | "user" | "function";
@@ -687,10 +721,21 @@ export class ChatGroq extends BaseChatModel<
         `Groq API key not found. Please set the GROQ_API_KEY environment variable or provide the key into "apiKey"`
       );
     }
+    const defaultHeaders = {
+      "User-Agent": "langchainjs",
+      ...(fields?.defaultHeaders || {}),
+    };
 
     this.client = new Groq({
       apiKey,
       dangerouslyAllowBrowser: true,
+      baseURL: fields?.baseUrl,
+      timeout: fields?.timeout,
+      httpAgent: fields?.httpAgent,
+      fetch: fields?.fetch,
+      maxRetries: fields?.maxRetries,
+      defaultHeaders,
+      defaultQuery: fields?.defaultQuery,
     });
     this.apiKey = apiKey;
     this.temperature = fields?.temperature ?? this.temperature;
