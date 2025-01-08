@@ -139,12 +139,6 @@ export interface ChatGroqInput extends BaseChatModelParams {
   fetch?: (...args: any) => any;
 
   /**
-   * Maximum number of retry attempts
-   * @default 2
-   */
-  maxRetries?: number;
-
-  /**
    * Default headers included with every request
    */
   defaultHeaders?: Record<string, string>;
@@ -723,7 +717,7 @@ export class ChatGroq extends BaseChatModel<
     }
     const defaultHeaders = {
       "User-Agent": "langchainjs",
-      ...(fields?.defaultHeaders || {}),
+      ...(fields?.defaultHeaders ?? {}),
     };
 
     this.client = new Groq({
@@ -733,7 +727,7 @@ export class ChatGroq extends BaseChatModel<
       timeout: fields?.timeout,
       httpAgent: fields?.httpAgent,
       fetch: fields?.fetch,
-      maxRetries: fields?.maxRetries,
+      maxRetries: 0,
       defaultHeaders,
       defaultQuery: fields?.defaultQuery,
     });
