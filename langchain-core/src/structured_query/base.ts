@@ -100,7 +100,7 @@ export class BasicTranslator<
         this.allowedComparators.indexOf(func as Comparator) === -1
       ) {
         throw new Error(
-          `Comparator ${func} not allowed. Allowed operators: ${this.allowedComparators.join(
+          `Comparator ${func} not allowed. Allowed comparators: ${this.allowedComparators.join(
             ", "
           )}`
         );

@@ -79,6 +79,7 @@ export const config = {
     "embeddings/gradient_ai": "embeddings/gradient_ai",
     "embeddings/hf": "embeddings/hf",
     "embeddings/hf_transformers": "embeddings/hf_transformers",
+    "embeddings/huggingface_transformers": "embeddings/huggingface_transformers",
     "embeddings/ibm": "embeddings/ibm",
     "embeddings/jina": "embeddings/jina",
     "embeddings/llama_cpp": "embeddings/llama_cpp",
@@ -221,6 +222,7 @@ export const config = {
     "caches/ioredis": "caches/ioredis",
     "caches/momento": "caches/momento",
     "caches/upstash_redis": "caches/upstash_redis",
+    "caches/vercel_kv": "caches/vercel_kv",
     // graphs
     "graphs/neo4j_graph": "graphs/neo4j_graph",
     "graphs/memgraph_graph": "graphs/memgraph_graph",
@@ -287,6 +289,7 @@ export const config = {
     "document_loaders/web/gitbook": "document_loaders/web/gitbook",
     "document_loaders/web/hn": "document_loaders/web/hn",
     "document_loaders/web/imsdb": "document_loaders/web/imsdb",
+    "document_loaders/web/jira": "document_loaders/web/jira",
     "document_loaders/web/figma": "document_loaders/web/figma",
     "document_loaders/web/firecrawl": "document_loaders/web/firecrawl",
     "document_loaders/web/github": "document_loaders/web/github",
@@ -355,6 +358,7 @@ export const config = {
     "embeddings/tensorflow",
     "embeddings/hf",
     "embeddings/hf_transformers",
+    "embeddings/huggingface_transformers",
     "embeddings/ibm",
     "embeddings/jina",
     "embeddings/llama_cpp",
@@ -450,9 +454,12 @@ export const config = {
     "structured_query/supabase",
     "structured_query/vectara",
     "retrievers/zep_cloud",
+    // cache
     "cache/cloudflare_kv",
     "cache/momento",
     "cache/upstash_redis",
+    "cache/vercel_kv",
+    //graphs
     "graphs/neo4j_graph",
     "graphs/memgraph_graph",
     // document_compressors

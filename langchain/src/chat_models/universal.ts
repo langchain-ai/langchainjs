@@ -40,6 +40,8 @@ const _SUPPORTED_PROVIDERS = [
   "azure_openai",
   "cohere",
   "google-vertexai",
+  "google-vertexai-web",
+  "google-genai",
   "google-genai",
   "ollama",
   "together",
@@ -97,6 +99,10 @@ async function _initChatModelHelper(
         const { ChatVertexAI } = await import("@langchain/google-vertexai");
         return new ChatVertexAI({ model, ...passedParams });
       }
+      case "google-vertexai-web": {
+        const { ChatVertexAI } = await import("@langchain/google-vertexai-web");
+        return new ChatVertexAI({ model, ...passedParams });
+      }
       case "google-genai": {
         const { ChatGoogleGenerativeAI } = await import(
           "@langchain/google-genai"
@@ -114,6 +120,10 @@ async function _initChatModelHelper(
       case "groq": {
         const { ChatGroq } = await import("@langchain/groq");
         return new ChatGroq({ model, ...passedParams });
+      }
+      case "cerebras": {
+        const { ChatCerebras } = await import("@langchain/cerebras");
+        return new ChatCerebras({ model, ...passedParams });
       }
       case "bedrock": {
         const { ChatBedrockConverse } = await import("@langchain/aws");
@@ -590,6 +600,7 @@ export async function initChatModel<
  *   - anthropic (@langchain/anthropic)
  *   - azure_openai (@langchain/openai)
  *   - google-vertexai (@langchain/google-vertexai)
+ *   - google-vertexai-web (@langchain/google-vertexai-web)
  *   - google-genai (@langchain/google-genai)
  *   - bedrock (@langchain/aws)
  *   - cohere (@langchain/cohere)
@@ -598,6 +609,7 @@ export async function initChatModel<
  *   - mistralai (@langchain/mistralai)
  *   - groq (@langchain/groq)
  *   - ollama (@langchain/ollama)
+ *   - cerebras (@langchain/cerebras)
  * @param {string[] | "any"} [fields.configurableFields] - Which model parameters are configurable:
  *   - undefined: No configurable fields.
  *   - "any": All fields are configurable. (See Security Note in description)

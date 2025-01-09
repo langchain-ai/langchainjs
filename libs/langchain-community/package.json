@@ -1,6 +1,6 @@
 {
   "name": "@langchain/community",
-  "version": "0.3.20",
+  "version": "0.3.22",
   "description": "Third-party integrations for LangChain.js",
   "type": "module",
   "engines": {
@@ -78,6 +78,7 @@
     "@google-cloud/storage": "^7.7.0",
     "@gradientai/nodejs-sdk": "^1.2.0",
     "@huggingface/inference": "^2.6.4",
+    "@huggingface/transformers": "^3.2.3",
     "@ibm-cloud/watsonx-ai": "^1.3.0",
     "@jest/globals": "^29.5.0",
     "@lancedb/lancedb": "^0.13.0",
@@ -124,17 +125,17 @@
     "@types/pg": "^8.11.0",
     "@types/pg-copy-streams": "^1.2.2",
     "@types/uuid": "^9",
+    "@types/word-extractor": "^1",
     "@types/ws": "^8",
     "@typescript-eslint/eslint-plugin": "^5.58.0",
     "@typescript-eslint/parser": "^5.58.0",
     "@upstash/ratelimit": "^2.0.3",
     "@upstash/redis": "^1.32.0",
     "@upstash/vector": "^1.1.1",
-    "@vercel/kv": "^0.2.3",
-    "@vercel/postgres": "^0.5.0",
+    "@vercel/kv": "^3.0.0",
+    "@vercel/postgres": "^0.10.0",
     "@writerai/writer-sdk": "^0.40.2",
     "@xata.io/client": "^0.28.0",
-    "@xenova/transformers": "^2.17.2",
     "@zilliz/milvus2-sdk-node": ">=2.3.5",
     "apify-client": "^2.7.1",
     "assemblyai": "^4.6.0",
@@ -217,6 +218,7 @@
     "voy-search": "0.6.2",
     "weaviate-ts-client": "^1.4.0",
     "web-auth-library": "^1.0.3",
+    "word-extractor": "^1.0.4",
     "youtube-transcript": "^1.0.6",
     "youtubei.js": "^9.1.0"
   },
@@ -249,6 +251,7 @@
     "@google-cloud/storage": "^6.10.1 || ^7.7.0",
     "@gradientai/nodejs-sdk": "^1.2.0",
     "@huggingface/inference": "^2.6.4",
+    "@huggingface/transformers": "^3.2.3",
     "@ibm-cloud/watsonx-ai": "*",
     "@lancedb/lancedb": "^0.12.0",
     "@langchain/core": ">=0.2.21 <0.4.0",
@@ -278,11 +281,10 @@
     "@upstash/ratelimit": "^1.1.3 || ^2.0.3",
     "@upstash/redis": "^1.20.6",
     "@upstash/vector": "^1.1.1",
-    "@vercel/kv": "^0.2.3",
-    "@vercel/postgres": "^0.5.0",
+    "@vercel/kv": "*",
+    "@vercel/postgres": "*",
     "@writerai/writer-sdk": "^0.40.2",
     "@xata.io/client": "^0.28.0",
-    "@xenova/transformers": "^2.17.2",
     "@zilliz/milvus2-sdk-node": ">=2.3.5",
     "apify-client": "^2.7.1",
     "assemblyai": "^4.6.0",
@@ -344,6 +346,7 @@
     "voy-search": "0.6.2",
     "weaviate-ts-client": "*",
     "web-auth-library": "^1.0.3",
+    "word-extractor": "*",
     "ws": "^8.14.2",
     "youtube-transcript": "^1.0.6",
     "youtubei.js": "^9.1.0"
@@ -428,6 +431,9 @@
       "optional": true
     },
     "@huggingface/inference": {
+      "optional": true
+    },
+    "@huggingface/transformers": {
       "optional": true
     },
     "@lancedb/lancedb": {
@@ -521,9 +527,6 @@
       "optional": true
     },
     "@xata.io/client": {
-      "optional": true
-    },
-    "@xenova/transformers": {
       "optional": true
     },
     "@zilliz/milvus2-sdk-node": {
@@ -701,6 +704,9 @@
       "optional": true
     },
     "web-auth-library": {
+      "optional": true
+    },
+    "word-extractor": {
       "optional": true
     },
     "ws": {
@@ -1112,6 +1118,15 @@
       },
       "import": "./embeddings/hf_transformers.js",
       "require": "./embeddings/hf_transformers.cjs"
+    },
+    "./embeddings/huggingface_transformers": {
+      "types": {
+        "import": "./embeddings/huggingface_transformers.d.ts",
+        "require": "./embeddings/huggingface_transformers.d.cts",
+        "default": "./embeddings/huggingface_transformers.d.ts"
+      },
+      "import": "./embeddings/huggingface_transformers.js",
+      "require": "./embeddings/huggingface_transformers.cjs"
     },
     "./embeddings/ibm": {
       "types": {
@@ -2319,6 +2334,15 @@
       "import": "./caches/upstash_redis.js",
       "require": "./caches/upstash_redis.cjs"
     },
+    "./caches/vercel_kv": {
+      "types": {
+        "import": "./caches/vercel_kv.d.ts",
+        "require": "./caches/vercel_kv.d.cts",
+        "default": "./caches/vercel_kv.d.ts"
+      },
+      "import": "./caches/vercel_kv.js",
+      "require": "./caches/vercel_kv.cjs"
+    },
     "./graphs/neo4j_graph": {
       "types": {
         "import": "./graphs/neo4j_graph.d.ts",
@@ -2804,6 +2828,15 @@
       },
       "import": "./document_loaders/web/imsdb.js",
       "require": "./document_loaders/web/imsdb.cjs"
+    },
+    "./document_loaders/web/jira": {
+      "types": {
+        "import": "./document_loaders/web/jira.d.ts",
+        "require": "./document_loaders/web/jira.d.cts",
+        "default": "./document_loaders/web/jira.d.ts"
+      },
+      "import": "./document_loaders/web/jira.js",
+      "require": "./document_loaders/web/jira.cjs"
     },
     "./document_loaders/web/figma": {
       "types": {
@@ -3336,6 +3369,10 @@
     "embeddings/hf_transformers.js",
     "embeddings/hf_transformers.d.ts",
     "embeddings/hf_transformers.d.cts",
+    "embeddings/huggingface_transformers.cjs",
+    "embeddings/huggingface_transformers.js",
+    "embeddings/huggingface_transformers.d.ts",
+    "embeddings/huggingface_transformers.d.cts",
     "embeddings/ibm.cjs",
     "embeddings/ibm.js",
     "embeddings/ibm.d.ts",
@@ -3872,6 +3909,10 @@
     "caches/upstash_redis.js",
     "caches/upstash_redis.d.ts",
     "caches/upstash_redis.d.cts",
+    "caches/vercel_kv.cjs",
+    "caches/vercel_kv.js",
+    "caches/vercel_kv.d.ts",
+    "caches/vercel_kv.d.cts",
     "graphs/neo4j_graph.cjs",
     "graphs/neo4j_graph.js",
     "graphs/neo4j_graph.d.ts",
@@ -4088,6 +4129,10 @@
     "document_loaders/web/imsdb.js",
     "document_loaders/web/imsdb.d.ts",
     "document_loaders/web/imsdb.d.cts",
+    "document_loaders/web/jira.cjs",
+    "document_loaders/web/jira.js",
+    "document_loaders/web/jira.d.ts",
+    "document_loaders/web/jira.d.cts",
     "document_loaders/web/figma.cjs",
     "document_loaders/web/figma.js",
     "document_loaders/web/figma.d.ts",
