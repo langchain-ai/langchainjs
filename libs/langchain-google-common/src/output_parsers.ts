@@ -198,7 +198,8 @@ export class SimpleGoogleSearchOutputParser extends BaseGoogleSearchOutputParser
 
   protected textSuffix(_text: string, grounding: GroundingInfo): string {
     let ret = "\n";
-    const chunks: GeminiGroundingChunk[] = grounding?.metadata?.groundingChunks ??[];
+    const chunks: GeminiGroundingChunk[] =
+      grounding?.metadata?.groundingChunks ?? [];
     chunks.forEach((chunk, index) => {
       ret = `${ret}${this.chunkToString(chunk, index)}\n`;
     });

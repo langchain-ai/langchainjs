@@ -232,5 +232,5 @@ describe("GoogleSearchOutputParsers", () => {
     const chain = model.pipe(parser);
     const result = await chain.invoke("Flip a coin.");
     expect(result).toEqual("T");
-  })
+  });
 });
