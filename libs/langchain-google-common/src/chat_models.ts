@@ -189,15 +189,15 @@ export abstract class ChatGoogleBase<AuthOptions>
 
   topK = 40;
 
-  presencePenalty = undefined;
+  presencePenalty: number;
 
-  frequencyPenalty = undefined;
+  frequencyPenalty: number;
 
   stopSequences: string[] = [];
 
-  logprobs: false;
+  logprobs: boolean = false;
 
-  topLogprobs: 0;
+  topLogprobs: number = 0;
 
   safetySettings: GoogleAISafetySetting[] = [];
 
