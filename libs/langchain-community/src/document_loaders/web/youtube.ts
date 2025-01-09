@@ -27,8 +27,7 @@ interface VideoMetadata {
 
 /**
  * A document loader for loading data from YouTube videos. It uses the
- * youtube-transcript and youtubei.js libraries to fetch the transcript
- * and video metadata.
+ * youtubei.js library to fetch the transcript and video metadata.
  * @example
  * ```typescript
  * const loader = new YoutubeLoader(
@@ -86,8 +85,7 @@ export class YoutubeLoader extends BaseDocumentLoader {
 
   /**
    * Loads the transcript and video metadata from the specified YouTube
-   * video. It uses the youtube-transcript library to fetch the transcript
-   * and the youtubei.js library to fetch the video metadata.
+   * video. It uses the youtubei.js library to fetch the video metadata and transcripts.
    * @returns An array of Documents representing the retrieved data.
    */
   async load(): Promise<Document[]> {
