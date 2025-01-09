@@ -4,7 +4,7 @@ import { ByteDanceDoubaoEmbeddings } from "../bytedance_doubao.js";
 const modelName = 'ep-xxx-xxx';
 test.skip("Test ByteDanceDoubaoEmbeddings.embedQuery", async () => {
   const embeddings = new ByteDanceDoubaoEmbeddings({
-    modelName,
+    model: modelName,
   });
   const res = await embeddings.embedQuery("Hello world");
   expect(typeof res[0]).toBe("number");
@@ -12,7 +12,7 @@ test.skip("Test ByteDanceDoubaoEmbeddings.embedQuery", async () => {
 
 test.skip("Test ByteDanceDoubaoEmbeddings.embedDocuments", async () => {
   const embeddings = new ByteDanceDoubaoEmbeddings({
-    modelName,
+    model: modelName,
   });
   const res = await embeddings.embedDocuments(["Hello world", "Bye bye"]);
   expect(res).toHaveLength(2);
@@ -22,7 +22,7 @@ test.skip("Test ByteDanceDoubaoEmbeddings.embedDocuments", async () => {
 
 test.skip("Test ByteDanceDoubaoEmbeddings concurrency", async () => {
   const embeddings = new ByteDanceDoubaoEmbeddings({
-    modelName,
+    model: modelName,
     batchSize: 1,
   });
   const res = await embeddings.embedDocuments([

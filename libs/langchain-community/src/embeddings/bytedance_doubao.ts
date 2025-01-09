@@ -4,7 +4,7 @@ import { chunkArray } from "@langchain/core/utils/chunk_array";
 
 export interface ByteDanceDoubaoEmbeddingsParams extends EmbeddingsParams {
   /** Model name to use */
-  modelName: string;
+  model: string;
 
   /**
    * Timeout to use when making requests to ByteDanceDoubao.
@@ -24,7 +24,7 @@ export interface ByteDanceDoubaoEmbeddingsParams extends EmbeddingsParams {
 }
 
 interface EmbeddingCreateParams {
-  model: ByteDanceDoubaoEmbeddingsParams["modelName"];
+  model: ByteDanceDoubaoEmbeddingsParams["model"];
   input: string[];
   encoding_format?: "float";
 }
@@ -53,7 +53,7 @@ interface EmbeddingErrorResponse {
 export class ByteDanceDoubaoEmbeddings
   extends Embeddings
   implements ByteDanceDoubaoEmbeddingsParams {
-  modelName: ByteDanceDoubaoEmbeddingsParams["modelName"] = "";
+  model = "";
 
   batchSize = 24;
 
@@ -77,7 +77,7 @@ export class ByteDanceDoubaoEmbeddings
 
     this.apiKey = apiKey;
 
-    this.modelName = fieldsWithDefaults?.modelName ?? this.modelName;
+    this.model = fieldsWithDefaults?.model ?? this.model;
     this.batchSize = fieldsWithDefaults?.batchSize ?? this.batchSize;
     this.stripNewLines =
       fieldsWithDefaults?.stripNewLines ?? this.stripNewLines;
@@ -139,7 +139,7 @@ export class ByteDanceDoubaoEmbeddings
     texts: EmbeddingCreateParams["input"]
   ): EmbeddingCreateParams {
     return {
-      model: this.modelName,
+      model: this.model,
       input: texts,
     };
   }
