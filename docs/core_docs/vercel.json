@@ -92,6 +92,10 @@
     {
       "source": "/docs/troubleshooting/errors/MULTIPLE_SUBGRAPHS(/?)",
       "destination": "https://langchain-ai.github.io/langgraphjs/troubleshooting/errors/MULTIPLE_SUBGRAPHS/"
+    },
+    {
+      "source": "/docs/integrations/llms/watsonx_ai(/?)",
+      "destination": "https://js.langchain.com/docs/integrations/llms/ibm/"
     }
   ]
 }
