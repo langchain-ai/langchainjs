@@ -691,6 +691,7 @@ export class ChatGroq extends BaseChatModel<
     this.client = new Groq({
       apiKey,
       dangerouslyAllowBrowser: true,
+      maxRetries: 0,
     });
     this.apiKey = apiKey;
     this.temperature = fields?.temperature ?? this.temperature;
