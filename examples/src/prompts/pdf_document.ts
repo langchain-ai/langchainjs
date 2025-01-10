@@ -1,12 +1,10 @@
-import { HumanMessage } from "@langchain/core/message";
+import { base } from "@faker-js/faker";
 import { ChatAnthropic } from "@langchain/anthropic";
 
 export const run = async () => {
   const llm = new ChatAnthropic({
-    model: "claude-3-5-sonnet-20240620", // Only claude-3-5-sonnet-20240620 or later supports documents
+    model: "claude-3-5-sonnet-20240620", // Only claude-3-5-sonnet-20240620 , claude-3-5-sonnet-20241022 as of Jan 2025 support PDF documents as in base64
   });
-
-  const prompt = "Summarise the contents of this PDF";
 
   // PDF needs to be in Base64.
   const getLocalFile = async (path: string) => {
@@ -14,6 +12,7 @@ export const run = async () => {
     const base64File = localFile.toString("base64");
     return base64File;
   };
+
   // Or remotely
   const getRemoteFile = async (url: string) => {
     const response = await fetch(url);
@@ -26,8 +25,11 @@ export const run = async () => {
     "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"
   );
 
-  const response = await llm.invoke(
-    new HumanMessage({
+  const prompt = "Summarise the contents of this PDF";
+
+  const response = await llm.invoke([
+    {
+      role: "user",
       content: [
         {
           type: "text",
@@ -38,8 +40,8 @@ export const run = async () => {
           source: base64,
         },
       ],
-    })
-  );
+    },
+  ]);
   console.log(response.content);
   //console.log(response.content);
   return response.content;
