@@ -136,10 +136,21 @@ export function copyAIModelParamsInto(
     target.maxOutputTokens;
   ret.topP = options?.topP ?? params?.topP ?? target.topP;
   ret.topK = options?.topK ?? params?.topK ?? target.topK;
+  ret.presencePenalty =
+    options?.presencePenalty ??
+    params?.presencePenalty ??
+    target.presencePenalty;
+  ret.frequencyPenalty =
+    options?.frequencyPenalty ??
+    params?.frequencyPenalty ??
+    target.frequencyPenalty;
   ret.stopSequences =
     options?.stopSequences ?? params?.stopSequences ?? target.stopSequences;
   ret.safetySettings =
     options?.safetySettings ?? params?.safetySettings ?? target.safetySettings;
+  ret.logprobs = options?.logprobs ?? params?.logprobs ?? target.logprobs;
+  ret.topLogprobs =
+    options?.topLogprobs ?? params?.topLogprobs ?? target.topLogprobs;
   ret.convertSystemMessageToHumanContent =
     options?.convertSystemMessageToHumanContent ??
     params?.convertSystemMessageToHumanContent ??
