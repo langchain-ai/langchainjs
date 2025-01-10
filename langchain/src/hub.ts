@@ -55,12 +55,18 @@ export async function pull<T extends Runnable>(
     includeModel: options?.includeModel,
   });
 
-  const prompt = await load<T>(JSON.stringify(promptObject.manifest));
-  return prompt.withConfig({
-    metadata: {
-      lc_hub_owner: promptObject.owner,
-      lc_hub_repo: promptObject.repo,
-      lc_hub_commit_hash: promptObject.commit_hash,
-    },
-  });
+  if (promptObject.manifest.kwargs?.metadata === undefined) {
+    promptObject.manifest.kwargs = {
+      ...promptObject.manifest.kwargs,
+      metadata: {},
+    };
+  }
+
+  promptObject.manifest.kwargs.metadata = {
+    ...promptObject.manifest.kwargs.metadata,
+    lc_hub_owner: promptObject.owner,
+    lc_hub_repo: promptObject.repo,
+    lc_hub_commit_hash: promptObject.commit_hash,
+  };
+  return load<T>(JSON.stringify(promptObject.manifest));
 }
