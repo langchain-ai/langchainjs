@@ -214,4 +214,23 @@ describe("GoogleSearchOutputParsers", () => {
 
     expect(result).toEqual(expectation);
   });
+
+  test("non-grounded", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-1-mock.json",
+    };
+
+    const model = new ChatGoogle({
+      authOptions,
+      modelName: "gemini-1.5-pro-002",
+    });
+    const parser = new SimpleGoogleSearchOutputParser();
+    const chain = model.pipe(parser);
+    const result = await chain.invoke("Flip a coin.");
+    expect(result).toEqual("T");
+  });
 });

@@ -23,9 +23,9 @@ export abstract class BaseGoogleSearchOutputParser extends BaseLLMOutputParser<s
   ): GroundingInfo | undefined {
     if ("message" in generation) {
       const responseMetadata = generation?.message?.response_metadata;
-      const metadata = responseMetadata.groundingMetadata;
+      const metadata = responseMetadata?.groundingMetadata;
       const supports =
-        responseMetadata.groundingSupport ?? metadata.groundingSupports ?? [];
+        responseMetadata?.groundingSupport ?? metadata?.groundingSupports ?? [];
       if (metadata) {
         return {
           metadata,
@@ -144,7 +144,7 @@ export abstract class BaseGoogleSearchOutputParser extends BaseLLMOutputParser<s
    * @param grounding
    */
   protected searchSuggestion(grounding: GroundingInfo): string {
-    return grounding.metadata.searchEntryPoint?.renderedContent ?? "";
+    return grounding?.metadata?.searchEntryPoint?.renderedContent ?? "";
   }
 
   protected annotateText(text: string, grounding: GroundingInfo): string {
@@ -198,7 +198,8 @@ export class SimpleGoogleSearchOutputParser extends BaseGoogleSearchOutputParser
 
   protected textSuffix(_text: string, grounding: GroundingInfo): string {
     let ret = "\n";
-    const chunks: GeminiGroundingChunk[] = grounding.metadata.groundingChunks;
+    const chunks: GeminiGroundingChunk[] =
+      grounding?.metadata?.groundingChunks ?? [];
     chunks.forEach((chunk, index) => {
       ret = `${ret}${this.chunkToString(chunk, index)}\n`;
     });
