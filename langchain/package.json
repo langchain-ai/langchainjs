@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.3.9",
+  "version": "0.3.10",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -418,6 +418,7 @@
     "@langchain/core": "workspace:*",
     "@langchain/google-genai": "*",
     "@langchain/google-vertexai": "*",
+    "@langchain/google-vertexai-web": "*",
     "@langchain/groq": "*",
     "@langchain/mistralai": "*",
     "@langchain/ollama": "*",
@@ -466,6 +467,7 @@
     "@langchain/core": ">=0.2.21 <0.4.0",
     "@langchain/google-genai": "*",
     "@langchain/google-vertexai": "*",
+    "@langchain/google-vertexai-web": "*",
     "@langchain/groq": "*",
     "@langchain/mistralai": "*",
     "@langchain/ollama": "*",
@@ -492,6 +494,9 @@
       "optional": true
     },
     "@langchain/google-vertexai": {
+      "optional": true
+    },
+    "@langchain/google-vertexai-web": {
       "optional": true
     },
     "@langchain/groq": {

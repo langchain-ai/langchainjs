@@ -8691,6 +8691,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@bufbuild/protobuf@npm:^2.0.0":
+  version: 2.2.3
+  resolution: "@bufbuild/protobuf@npm:2.2.3"
+  checksum: 567ca0497669a8944fe84a9fdfa236e4a91d5879190c0ec0c8727d5220cbc21a85d06a114ac1eb35387fc5cb1dcbb7adc583c4d4f6a2ecb34fbe61dcaa7e7e9b
+  languageName: node
+  linkType: hard
+
 "@cerebras/cerebras_cloud_sdk@npm:^1.15.0":
   version: 1.15.0
   resolution: "@cerebras/cerebras_cloud_sdk@npm:1.15.0"
@@ -11946,8 +11953,8 @@ __metadata:
     "@upstash/ratelimit": ^2.0.3
     "@upstash/redis": ^1.32.0
     "@upstash/vector": ^1.1.1
-    "@vercel/kv": ^0.2.3
-    "@vercel/postgres": ^0.5.0
+    "@vercel/kv": ^3.0.0
+    "@vercel/postgres": ^0.10.0
     "@writerai/writer-sdk": ^0.40.2
     "@xata.io/client": ^0.28.0
     "@zilliz/milvus2-sdk-node": ">=2.3.5"
@@ -12040,8 +12047,7 @@ __metadata:
     weaviate-ts-client: ^1.4.0
     web-auth-library: ^1.0.3
     word-extractor: ^1.0.4
-    youtube-transcript: ^1.0.6
-    youtubei.js: ^9.1.0
+    youtubei.js: ^12.2.0
     zod: ^3.22.3
     zod-to-json-schema: ^3.22.5
   peerDependencies:
@@ -12103,8 +12109,8 @@ __metadata:
     "@upstash/ratelimit": ^1.1.3 || ^2.0.3
     "@upstash/redis": ^1.20.6
     "@upstash/vector": ^1.1.1
-    "@vercel/kv": ^0.2.3
-    "@vercel/postgres": ^0.5.0
+    "@vercel/kv": "*"
+    "@vercel/postgres": "*"
     "@writerai/writer-sdk": ^0.40.2
     "@xata.io/client": ^0.28.0
     "@zilliz/milvus2-sdk-node": ">=2.3.5"
@@ -12170,8 +12176,7 @@ __metadata:
     web-auth-library: ^1.0.3
     word-extractor: "*"
     ws: ^8.14.2
-    youtube-transcript: ^1.0.6
-    youtubei.js: ^9.1.0
+    youtubei.js: "*"
   peerDependenciesMeta:
     "@arcjet/redact":
       optional: true
@@ -12413,8 +12418,6 @@ __metadata:
       optional: true
     ws:
       optional: true
-    youtube-transcript:
-      optional: true
     youtubei.js:
       optional: true
   languageName: unknown
@@ -12603,7 +12606,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/google-vertexai-web@workspace:*, @langchain/google-vertexai-web@workspace:libs/langchain-google-vertexai-web":
+"@langchain/google-vertexai-web@*, @langchain/google-vertexai-web@workspace:*, @langchain/google-vertexai-web@workspace:libs/langchain-google-vertexai-web":
   version: 0.0.0-use.local
   resolution: "@langchain/google-vertexai-web@workspace:libs/langchain-google-vertexai-web"
   dependencies:
@@ -13662,21 +13665,21 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@neondatabase/serverless@npm:0.6.0":
-  version: 0.6.0
-  resolution: "@neondatabase/serverless@npm:0.6.0"
-  dependencies:
-    "@types/pg": 8.6.6
-  checksum: 25b81ba6b37e0ac56a746a1219de6107dd74d6f2d093bc23dc33b6fb8f33d00f80cb37eb0648afacd32ab0020b20c1809e3ec6e5c34d23fa21ae5b76d6041332
-  languageName: node
-  linkType: hard
-
 "@neondatabase/serverless@npm:^0.9.1":
   version: 0.9.1
   resolution: "@neondatabase/serverless@npm:0.9.1"
   dependencies:
     "@types/pg": 8.6.6
   checksum: b74b30386006d80d02d9d70bbfd7b25be4265ca731e6d716b7ee7801524489b10411969ef2ece03cc858e558c24ae32ecb11fa151bded1218f3dec0ffdd0e26d
+  languageName: node
+  linkType: hard
+
+"@neondatabase/serverless@npm:^0.9.3":
+  version: 0.9.5
+  resolution: "@neondatabase/serverless@npm:0.9.5"
+  dependencies:
+    "@types/pg": 8.11.6
+  checksum: b53c4b21c6eaf995a12bd84adf2c839022b7eb8b216cb07319a784a6f60965cf9ae497560a2aa767f5f8a407f1a45783f13b9f9e8f5c2078118a6a5ae174fdb2
   languageName: node
   linkType: hard
 
@@ -19859,6 +19862,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/pg@npm:8.11.6":
+  version: 8.11.6
+  resolution: "@types/pg@npm:8.11.6"
+  dependencies:
+    "@types/node": "*"
+    pg-protocol: "*"
+    pg-types: ^4.0.1
+  checksum: 231f7e5bfe8b4d14cca398d24cd55f4f14f582f815b62059e6f3ee74108cf92089fbd946568ebc35fa402f238ed9c8a8c1e10e7084e83e4ca3aff75957243014
+  languageName: node
+  linkType: hard
+
 "@types/pg@npm:8.6.6":
   version: 8.6.6
   resolution: "@types/pg@npm:8.6.6"
@@ -20829,15 +20843,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@upstash/redis@npm:1.22.0":
-  version: 1.22.0
-  resolution: "@upstash/redis@npm:1.22.0"
-  dependencies:
-    isomorphic-fetch: ^3.0.0
-  checksum: 894b7d4e318c55fdcbf0f322efd9ace94a37f1b8f9d7cb2cdf8b8b4859814379665c7e00feef3565578455d98492710d14ed4a2b043ec412b5d640a4d5a2dd55
-  languageName: node
-  linkType: hard
-
 "@upstash/redis@npm:^1.28.3":
   version: 1.31.1
   resolution: "@upstash/redis@npm:1.31.1"
@@ -20856,6 +20861,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@upstash/redis@npm:^1.34.0":
+  version: 1.34.3
+  resolution: "@upstash/redis@npm:1.34.3"
+  dependencies:
+    crypto-js: ^4.2.0
+  checksum: 4c738eb82e3d8906999345379ff0c96913627cdf96ec54b6880fa8fb5616331a92228b889c076b4a93bee4bb31324f5afa68aa927fb751d308fc83464de68e79
+  languageName: node
+  linkType: hard
+
 "@upstash/vector@npm:^1.1.1":
   version: 1.1.1
   resolution: "@upstash/vector@npm:1.1.1"
@@ -20863,12 +20877,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@vercel/kv@npm:^0.2.3":
-  version: 0.2.3
-  resolution: "@vercel/kv@npm:0.2.3"
+"@vercel/kv@npm:^3.0.0":
+  version: 3.0.0
+  resolution: "@vercel/kv@npm:3.0.0"
   dependencies:
-    "@upstash/redis": 1.22.0
-  checksum: 3a2b1e3a0ebf605b69341b449bd81edde94f9d00393cc6971759b950c90cff782e1e4fa5daf672f4769aa8301e00f7b7fdec07cdd98d40530652d83c043125ed
+    "@upstash/redis": ^1.34.0
+  checksum: 5bebab15c770e32409c03054dbd58e3e5a4d77d1a813c91e6613a9382a96b391878b67a1e2fbe8f7e197899a2dc589212ee6f6b11ab272798954e63816c6eba1
   languageName: node
   linkType: hard
 
@@ -20883,15 +20897,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@vercel/postgres@npm:^0.5.0":
-  version: 0.5.0
-  resolution: "@vercel/postgres@npm:0.5.0"
+"@vercel/postgres@npm:^0.10.0":
+  version: 0.10.0
+  resolution: "@vercel/postgres@npm:0.10.0"
   dependencies:
-    "@neondatabase/serverless": 0.6.0
-    bufferutil: 4.0.7
-    utf-8-validate: 6.0.3
-    ws: 8.14.2
-  checksum: 9fe0f496753a481d06566e7b846956c2129af081080f6618a4f9f8efb90ae53cc2aa1b3598a95ecc04f612b0ffdfcfffd20921fd1187fdc3db99b35d24b73a3f
+    "@neondatabase/serverless": ^0.9.3
+    bufferutil: ^4.0.8
+    ws: ^8.17.1
+  checksum: 45c29baa73bed4b07a5c06ae283647d43c89d843ebd3cb4864b59ec4217ef5d24832e569cd08d61f8b7875522fc207bb364547ea7e9423dd37521fba24ccec20
   languageName: node
   linkType: hard
 
@@ -22816,13 +22829,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"bufferutil@npm:4.0.7":
-  version: 4.0.7
-  resolution: "bufferutil@npm:4.0.7"
+"bufferutil@npm:^4.0.8":
+  version: 4.0.9
+  resolution: "bufferutil@npm:4.0.9"
   dependencies:
     node-gyp: latest
     node-gyp-build: ^4.3.0
-  checksum: f75aa87e3d1b99b87a95f60a855e63f70af07b57fb8443e75a2ddfef2e47788d130fdd46e3a78fd7e0c10176082b26dfbed970c5b8632e1cc299cafa0e93ce45
+  checksum: 51ce9ee19bc4b72c2eb9f9a231dd95e786ca5a00a6bdfcae83f1d5cd8169301c79245ce96913066a5a1bbe45c44e95bc5a1761a18798b835585c1a05af65b209
   languageName: node
   linkType: hard
 
@@ -23113,13 +23126,6 @@ __metadata:
   version: 1.1.0
   resolution: "ccount@npm:1.1.0"
   checksum: b335a79d0aa4308919cf7507babcfa04ac63d389ebed49dbf26990d4607c8a4713cde93cc83e707d84571ddfe1e7615dad248be9bc422ae4c188210f71b08b78
-  languageName: node
-  linkType: hard
-
-"centra@npm:^2.6.0":
-  version: 2.6.0
-  resolution: "centra@npm:2.6.0"
-  checksum: 3b4d44762bceb9e20f7e45d01ffb9e462523cf8a0186f6710c08863f0455bceabfbcb754d6b01ea095c3bdee09c4ebef912669dc2b391a9af400e9ba7e398bc5
   languageName: node
   linkType: hard
 
@@ -27822,7 +27828,7 @@ __metadata:
     "@typescript-eslint/parser": ^5.51.0
     "@upstash/redis": ^1.32.0
     "@upstash/vector": ^1.1.1
-    "@vercel/kv": ^0.2.3
+    "@vercel/kv": ^3.0.0
     "@xata.io/client": ^0.28.0
     "@zilliz/milvus2-sdk-node": ^2.3.5
     axios: ^0.26.0
@@ -32870,12 +32876,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"jintr@npm:^1.1.0":
-  version: 1.1.0
-  resolution: "jintr@npm:1.1.0"
+"jintr@npm:^3.2.0":
+  version: 3.2.0
+  resolution: "jintr@npm:3.2.0"
   dependencies:
     acorn: ^8.8.0
-  checksum: b61269ff80a46c71e837e893a4754fc2d0a941e3d577dc6307f0e67cebebf81e66f646c86bf6159fe7d851d829595d7a9e9e26392b9ede7b6b39d9664f1d090d
+  checksum: 8f526719fd77d6f7cd52c47c06c86573cb37a15e22ce8129a228ff605d7ea3d662d7c8ef37cad7b4df767f53ca11418ffa49ad4aa8776f62d94362aba8317ff3
   languageName: node
   linkType: hard
 
@@ -33423,6 +33429,7 @@ __metadata:
     "@langchain/core": "workspace:*"
     "@langchain/google-genai": "*"
     "@langchain/google-vertexai": "*"
+    "@langchain/google-vertexai-web": "*"
     "@langchain/groq": "*"
     "@langchain/mistralai": "*"
     "@langchain/ollama": "*"
@@ -33482,6 +33489,7 @@ __metadata:
     "@langchain/core": ">=0.2.21 <0.4.0"
     "@langchain/google-genai": "*"
     "@langchain/google-vertexai": "*"
+    "@langchain/google-vertexai-web": "*"
     "@langchain/groq": "*"
     "@langchain/mistralai": "*"
     "@langchain/ollama": "*"
@@ -33502,6 +33510,8 @@ __metadata:
     "@langchain/google-genai":
       optional: true
     "@langchain/google-vertexai":
+      optional: true
+    "@langchain/google-vertexai-web":
       optional: true
     "@langchain/groq":
       optional: true
@@ -37248,15 +37258,6 @@ __metadata:
   dependencies:
     split2: ^4.1.0
   checksum: 947ac096c031eebdf08d989de2e9f6f156b8133d6858c7c2c06c041e1e71dda6f5f3bad3c0ec1e96a09497bbc6ef89e762eefe703b5ef9cb2804392ec52ec400
-  languageName: node
-  linkType: hard
-
-"phin@npm:^3.5.0":
-  version: 3.7.0
-  resolution: "phin@npm:3.7.0"
-  dependencies:
-    centra: ^2.6.0
-  checksum: b0a35e943615c40a3ccd7d6a2dd062568258e6b36dceed3150d13d28cad906e9028e756ad6efe66963b43937879e8a3593f986d17aac968d42982b4e8702e539
   languageName: node
   linkType: hard
 
@@ -43581,16 +43582,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"utf-8-validate@npm:6.0.3":
-  version: 6.0.3
-  resolution: "utf-8-validate@npm:6.0.3"
-  dependencies:
-    node-gyp: latest
-    node-gyp-build: ^4.3.0
-  checksum: 5e21383c81ff7469c1912119ca69d07202d944c73ddd8a54b84dddcc546b939054e5101c78c294e494d206fe93bd43428adc635a0660816b3ec9c8ec89286ac4
-  languageName: node
-  linkType: hard
-
 "util-deprecate@npm:^1.0.1, util-deprecate@npm:^1.0.2, util-deprecate@npm:~1.0.1":
   version: 1.0.2
   resolution: "util-deprecate@npm:1.0.2"
@@ -44829,23 +44820,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"youtube-transcript@npm:^1.0.6":
-  version: 1.0.6
-  resolution: "youtube-transcript@npm:1.0.6"
+"youtubei.js@npm:^12.2.0":
+  version: 12.2.0
+  resolution: "youtubei.js@npm:12.2.0"
   dependencies:
-    phin: ^3.5.0
-  checksum: 7ca6a608834d2eb43d2d353ad58bb3fa86663e2f5730146a768c5c3ac423911680451a38c57f827aa7af8fb7df78a4ce3702019d988d87d9ed266f9d81aeb833
-  languageName: node
-  linkType: hard
-
-"youtubei.js@npm:^9.1.0":
-  version: 9.1.0
-  resolution: "youtubei.js@npm:9.1.0"
-  dependencies:
-    jintr: ^1.1.0
+    "@bufbuild/protobuf": ^2.0.0
+    jintr: ^3.2.0
     tslib: ^2.5.0
     undici: ^5.19.1
-  checksum: 7a537d79435c362c3d4f0e101f85edca6b34c584b9cafeee28c4214fdcdcbb6b2ebba2571175e21a984cc5d66d0fe673d761f400dd232ecb16803bce878cb41d
+  checksum: 4c89a019c6b94363328e8d0d35b8d8266de1ee3db963a39b655bdaa15e4d899a107876ead53b7a1268837b9a756fecaf53be0b399545a7fe290c6da303010c8f
   languageName: node
   linkType: hard
 
