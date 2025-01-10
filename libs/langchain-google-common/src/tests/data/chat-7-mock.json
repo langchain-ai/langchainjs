@@ -41,7 +41,7 @@
             "candidates": [
               {
                 "token": " are",
-                "logProbability": -1.1922384e-07
+                "logProbability": -1.1922384e-7
               },
               {
                 "token": "'",
@@ -65,7 +65,7 @@
             "candidates": [
               {
                 "token": " some",
-                "logProbability": -3.5760596e-07
+                "logProbability": -3.5760596e-7
               },
               {
                 "token": " a",
@@ -113,7 +113,7 @@
             "candidates": [
               {
                 "token": " ideas",
-                "logProbability": -3.802634e-05
+                "logProbability": -3.802634e-5
               },
               {
                 "token": " suggestions",
@@ -161,7 +161,7 @@
             "candidates": [
               {
                 "token": " a",
-                "logProbability": -2.3844768e-07
+                "logProbability": -2.3844768e-7
               },
               {
                 "token": " colorful",
@@ -257,7 +257,7 @@
             "candidates": [
               {
                 "token": " colorful",
-                "logProbability": -3.7668888e-05
+                "logProbability": -3.7668888e-5
               },
               {
                 "token": " colourful",
@@ -305,7 +305,7 @@
             "candidates": [
               {
                 "token": ",",
-                "logProbability": -9.537907e-07
+                "logProbability": -9.537907e-7
               },
               {
                 "token": " categorized",
@@ -401,7 +401,7 @@
             "candidates": [
               {
                 "token": ":",
-                "logProbability": -1.3112239e-06
+                "logProbability": -1.3112239e-6
               },
               {
                 "token": " for",
@@ -569,7 +569,7 @@
             "candidates": [
               {
                 "token": ":**",
-                "logProbability": -3.5760596e-07
+                "logProbability": -3.5760596e-7
               },
               {
                 "token": " Names",
@@ -641,7 +641,7 @@
             "candidates": [
               {
                 "token": " Sock",
-                "logProbability": -3.1831478e-05
+                "logProbability": -3.1831478e-5
               },
               {
                 "token": " Rainbow",
@@ -689,7 +689,7 @@
             "candidates": [
               {
                 "token": "\n",
-                "logProbability": -7.987648e-06
+                "logProbability": -7.987648e-6
               },
               {
                 "token": " Socks",
@@ -857,7 +857,7 @@
             "candidates": [
               {
                 "token": "\n",
-                "logProbability": -5.9602587e-07
+                "logProbability": -5.9602587e-7
               },
               {
                 "token": " ",
@@ -1049,7 +1049,7 @@
             "candidates": [
               {
                 "token": "\n",
-                "logProbability": -1.0729074e-06
+                "logProbability": -1.0729074e-6
               },
               {
                 "token": " ",
@@ -1193,7 +1193,7 @@
             "candidates": [
               {
                 "token": "\n",
-                "logProbability": -8.344534e-07
+                "logProbability": -8.344534e-7
               },
               {
                 "token": " (",
@@ -1265,7 +1265,7 @@
             "candidates": [
               {
                 "token": " Sock",
-                "logProbability": -1.8953595e-05
+                "logProbability": -1.8953595e-5
               },
               {
                 "token": " Stripe",
@@ -1409,7 +1409,7 @@
             "candidates": [
               {
                 "token": "astic",
-                "logProbability": -3.5760596e-07
+                "logProbability": -3.5760596e-7
               },
               {
                 "token": "ropolis",
@@ -1553,7 +1553,7 @@
             "candidates": [
               {
                 "token": " Fancy",
-                "logProbability": -7.271795e-06
+                "logProbability": -7.271795e-6
               },
               {
                 "token": " Funky",
@@ -1673,7 +1673,7 @@
             "candidates": [
               {
                 "token": "ms",
-                "logProbability": -1.1922384e-07
+                "logProbability": -1.1922384e-7
               },
               {
                 "token": "mis",
@@ -1937,7 +1937,7 @@
             "candidates": [
               {
                 "token": "isticated",
-                "logProbability": -8.344534e-07
+                "logProbability": -8.344534e-7
               },
               {
                 "token": "istic",
@@ -2009,7 +2009,7 @@
             "candidates": [
               {
                 "token": ":**",
-                "logProbability": -1.1922384e-07
+                "logProbability": -1.1922384e-7
               },
               {
                 "token": " (",
@@ -2153,7 +2153,7 @@
             "candidates": [
               {
                 "token": "us",
-                "logProbability": -1.7881898e-06
+                "logProbability": -1.7881898e-6
               },
               {
                 "token": "uss",
@@ -2177,7 +2177,7 @@
             "candidates": [
               {
                 "token": "settes",
-                "logProbability": -2.3844768e-07
+                "logProbability": -2.3844768e-7
               },
               {
                 "token": "sette",
@@ -2345,7 +2345,7 @@
             "candidates": [
               {
                 "token": "\")",
-                "logProbability": -4.3627377e-05
+                "logProbability": -4.3627377e-5
               },
               {
                 "token": ",\"",
@@ -2369,7 +2369,7 @@
             "candidates": [
               {
                 "token": "\n",
-                "logProbability": -2.1458147e-06
+                "logProbability": -2.1458147e-6
               },
               {
                 "token": "  ",
@@ -2489,7 +2489,7 @@
             "candidates": [
               {
                 "token": "\n",
-                "logProbability": -1.4304238e-06
+                "logProbability": -1.4304238e-6
               },
               {
                 "token": " ",
@@ -2585,7 +2585,7 @@
             "candidates": [
               {
                 "token": " Cry",
-                "logProbability": -2.121776e-05
+                "logProbability": -2.121776e-5
               },
               {
                 "token": " Kry",
@@ -2729,7 +2729,7 @@
             "candidates": [
               {
                 "token": "\n",
-                "logProbability": -4.1724998e-06
+                "logProbability": -4.1724998e-6
               },
               {
                 "token": " ",
@@ -2849,7 +2849,7 @@
             "candidates": [
               {
                 "token": "\n",
-                "logProbability": -1.9075815e-06
+                "logProbability": -1.9075815e-6
               },
               {
                 "token": " (",
@@ -3209,7 +3209,7 @@
             "candidates": [
               {
                 "token": "**",
-                "logProbability": -4.7689537e-07
+                "logProbability": -4.7689537e-7
               },
               {
                 "token": " **",
@@ -3329,7 +3329,7 @@
             "candidates": [
               {
                 "token": ":**",
-                "logProbability": -3.2185512e-06
+                "logProbability": -3.2185512e-6
               },
               {
                 "token": " (",
@@ -3353,7 +3353,7 @@
             "candidates": [
               {
                 "token": "\n\n",
-                "logProbability": -1.1922384e-07
+                "logProbability": -1.1922384e-7
               },
               {
                 "token": "\n\n\n",
@@ -3665,7 +3665,7 @@
             "candidates": [
               {
                 "token": "\n",
-                "logProbability": -4.6607358e-05
+                "logProbability": -4.6607358e-5
               },
               {
                 "token": " (",
@@ -4145,7 +4145,7 @@
             "candidates": [
               {
                 "token": "**",
-                "logProbability": -2.3844768e-07
+                "logProbability": -2.3844768e-7
               },
               {
                 "token": " **",
@@ -4217,7 +4217,7 @@
             "candidates": [
               {
                 "token": " (",
-                "logProbability": -3.4570896e-06
+                "logProbability": -3.4570896e-6
               },
               {
                 "token": ":**",
@@ -4361,7 +4361,7 @@
             "candidates": [
               {
                 "token": "*",
-                "logProbability": -4.5415305e-05
+                "logProbability": -4.5415305e-5
               },
               {
                 "token": "*[",
@@ -4553,7 +4553,7 @@
             "candidates": [
               {
                 "token": ".",
-                "logProbability": -1.4424305e-05
+                "logProbability": -1.4424305e-5
               },
               {
                 "token": "\n",
@@ -4601,7 +4601,7 @@
             "candidates": [
               {
                 "token": "*",
-                "logProbability": -7.152119e-07
+                "logProbability": -7.152119e-7
               },
               {
                 "token": "  ",
@@ -4745,7 +4745,7 @@
             "candidates": [
               {
                 "token": "**",
-                "logProbability": -9.202131e-05
+                "logProbability": -9.202131e-5
               },
               {
                 "token": "When",
@@ -4793,7 +4793,7 @@
             "candidates": [
               {
                 "token": " for",
-                "logProbability": -1.7523887e-05
+                "logProbability": -1.7523887e-5
               },
               {
                 "token": " when",
@@ -4913,7 +4913,7 @@
             "candidates": [
               {
                 "token": "\n\n",
-                "logProbability": -2.3844768e-07
+                "logProbability": -2.3844768e-7
               },
               {
                 "token": "\n\n\n",
@@ -5009,7 +5009,7 @@
             "candidates": [
               {
                 "token": " for",
-                "logProbability": -8.2248516e-05
+                "logProbability": -8.2248516e-5
               },
               {
                 "token": " availability",
@@ -5129,7 +5129,7 @@
             "candidates": [
               {
                 "token": " the",
-                "logProbability": -5.9600343e-06
+                "logProbability": -5.9600343e-6
               },
               {
                 "token": " your",
@@ -5153,7 +5153,7 @@
             "candidates": [
               {
                 "token": " name",
-                "logProbability": -1.2277732e-05
+                "logProbability": -1.2277732e-5
               },
               {
                 "token": " domain",
@@ -5201,7 +5201,7 @@
             "candidates": [
               {
                 "token": "'",
-                "logProbability": -3.2185512e-06
+                "logProbability": -3.2185512e-6
               },
               {
                 "token": "’",
@@ -5225,7 +5225,7 @@
             "candidates": [
               {
                 "token": "t",
-                "logProbability": -9.537907e-07
+                "logProbability": -9.537907e-7
               },
               {
                 "token": "s",
@@ -5249,7 +5249,7 @@
             "candidates": [
               {
                 "token": " already",
-                "logProbability": -1.6689067e-06
+                "logProbability": -1.6689067e-6
               },
               {
                 "token": " taken",
@@ -5369,7 +5369,7 @@
             "candidates": [
               {
                 "token": " domain",
-                "logProbability": -7.140589e-05
+                "logProbability": -7.140589e-5
               },
               {
                 "token": " domains",
@@ -5393,7 +5393,7 @@
             "candidates": [
               {
                 "token": ",",
-                "logProbability": -4.7680274e-05
+                "logProbability": -4.7680274e-5
               },
               {
                 "token": " and",
@@ -5465,7 +5465,7 @@
             "candidates": [
               {
                 "token": "\n",
-                "logProbability": -4.7689537e-07
+                "logProbability": -4.7689537e-7
               },
               {
                 "token": "  ",
@@ -5633,7 +5633,7 @@
             "candidates": [
               {
                 "token": " memorable",
-                "logProbability": -1.8834444e-05
+                "logProbability": -1.8834444e-5
               },
               {
                 "token": " catchy",
@@ -5657,7 +5657,7 @@
             "candidates": [
               {
                 "token": ":**",
-                "logProbability": -1.6689067e-06
+                "logProbability": -1.6689067e-6
               },
               {
                 "token": ".**",
@@ -5705,7 +5705,7 @@
             "candidates": [
               {
                 "token": " to",
-                "logProbability": -4.8873435e-06
+                "logProbability": -4.8873435e-6
               },
               {
                 "token": " for",
@@ -5753,7 +5753,7 @@
             "candidates": [
               {
                 "token": " and",
-                "logProbability": -1.02513495e-05
+                "logProbability": -1.02513495e-5
               },
               {
                 "token": ",",
@@ -5801,7 +5801,7 @@
             "candidates": [
               {
                 "token": ".",
-                "logProbability": -2.861005e-05
+                "logProbability": -2.861005e-5
               },
               {
                 "token": " with",
@@ -5873,7 +5873,7 @@
             "candidates": [
               {
                 "token": " **",
-                "logProbability": -3.5760596e-07
+                "logProbability": -3.5760596e-7
               },
               {
                 "token": "  ",
@@ -5921,7 +5921,7 @@
             "candidates": [
               {
                 "token": " your",
-                "logProbability": -7.712471e-05
+                "logProbability": -7.712471e-5
               },
               {
                 "token": " the",
@@ -5945,7 +5945,7 @@
             "candidates": [
               {
                 "token": " brand",
-                "logProbability": -1.0729074e-06
+                "logProbability": -1.0729074e-6
               },
               {
                 "token": " target",
@@ -6041,7 +6041,7 @@
             "candidates": [
               {
                 "token": " a",
-                "logProbability": -1.4662876e-05
+                "logProbability": -1.4662876e-5
               },
               {
                 "token": " something",
@@ -6065,7 +6065,7 @@
             "candidates": [
               {
                 "token": " name",
-                "logProbability": -4.923015e-05
+                "logProbability": -4.923015e-5
               },
               {
                 "token": " style",
@@ -6137,7 +6137,7 @@
             "candidates": [
               {
                 "token": " with",
-                "logProbability": -3.5760596e-07
+                "logProbability": -3.5760596e-7
               },
               {
                 "token": " your",
@@ -6377,7 +6377,7 @@
             "candidates": [
               {
                 "token": " **",
-                "logProbability": -1.0729074e-06
+                "logProbability": -1.0729074e-6
               },
               {
                 "token": "  ",
@@ -6425,7 +6425,7 @@
             "candidates": [
               {
                 "token": " it",
-                "logProbability": -2.2649522e-06
+                "logProbability": -2.2649522e-6
               },
               {
                 "token": " the",
@@ -6473,7 +6473,7 @@
             "candidates": [
               {
                 "token": " loud",
-                "logProbability": -1.1922384e-07
+                "logProbability": -1.1922384e-7
               },
               {
                 "token": "loud",
@@ -6497,7 +6497,7 @@
             "candidates": [
               {
                 "token": ":**",
-                "logProbability": -2.3844768e-07
+                "logProbability": -2.3844768e-7
               },
               {
                 "token": "!",
@@ -6617,7 +6617,7 @@
             "candidates": [
               {
                 "token": " good",
-                "logProbability": -7.355035e-05
+                "logProbability": -7.355035e-5
               },
               {
                 "token": " pleasing",
@@ -6713,7 +6713,7 @@
             "candidates": [
               {
                 "token": " to",
-                "logProbability": -4.7689537e-07
+                "logProbability": -4.7689537e-7
               },
               {
                 "token": " pronounce",
@@ -6737,7 +6737,7 @@
             "candidates": [
               {
                 "token": " pronounce",
-                "logProbability": -1.1922384e-07
+                "logProbability": -1.1922384e-7
               },
               {
                 "token": " understand",
@@ -6761,7 +6761,7 @@
             "candidates": [
               {
                 "token": ".",
-                "logProbability": -5.48322e-06
+                "logProbability": -5.48322e-6
               },
               {
                 "token": "\n\n\n",
@@ -6833,7 +6833,7 @@
             "candidates": [
               {
                 "token": " to",
-                "logProbability": -4.649037e-06
+                "logProbability": -4.649037e-6
               },
               {
                 "token": " also",
@@ -7193,7 +7193,7 @@
             "candidates": [
               {
                 "token": "Good",
-                "logProbability": -3.802634e-05
+                "logProbability": -3.802634e-5
               },
               {
                 "token": "I",
@@ -7217,7 +7217,7 @@
             "candidates": [
               {
                 "token": " luck",
-                "logProbability": -3.815163e-06
+                "logProbability": -3.815163e-6
               },
               {
                 "token": " Luck",
@@ -7241,7 +7241,7 @@
             "candidates": [
               {
                 "token": "!",
-                "logProbability": -1.251619e-05
+                "logProbability": -1.251619e-5
               },
               {
                 "token": " with",
@@ -7265,7 +7265,7 @@
             "candidates": [
               {
                 "token": "\n",
-                "logProbability": -1.1922384e-07
+                "logProbability": -1.1922384e-7
               },
               {
                 "token": "\n\n",
@@ -7293,11 +7293,11 @@
           },
           {
             "token": " are",
-            "logProbability": -1.1922384e-07
+            "logProbability": -1.1922384e-7
           },
           {
             "token": " some",
-            "logProbability": -3.5760596e-07
+            "logProbability": -3.5760596e-7
           },
           {
             "token": " name",
@@ -7305,7 +7305,7 @@
           },
           {
             "token": " ideas",
-            "logProbability": -3.802634e-05
+            "logProbability": -3.802634e-5
           },
           {
             "token": " for",
@@ -7313,7 +7313,7 @@
           },
           {
             "token": " a",
-            "logProbability": -2.3844768e-07
+            "logProbability": -2.3844768e-7
           },
           {
             "token": " company",
@@ -7329,7 +7329,7 @@
           },
           {
             "token": " colorful",
-            "logProbability": -3.7668888e-05
+            "logProbability": -3.7668888e-5
           },
           {
             "token": " socks",
@@ -7337,7 +7337,7 @@
           },
           {
             "token": ",",
-            "logProbability": -9.537907e-07
+            "logProbability": -9.537907e-7
           },
           {
             "token": " categorized",
@@ -7353,7 +7353,7 @@
           },
           {
             "token": ":",
-            "logProbability": -1.3112239e-06
+            "logProbability": -1.3112239e-6
           },
           {
             "token": "\n\n",
@@ -7381,7 +7381,7 @@
           },
           {
             "token": ":**",
-            "logProbability": -3.5760596e-07
+            "logProbability": -3.5760596e-7
           },
           {
             "token": "\n\n",
@@ -7393,7 +7393,7 @@
           },
           {
             "token": " Sock",
-            "logProbability": -3.1831478e-05
+            "logProbability": -3.1831478e-5
           },
           {
             "token": "Hop",
@@ -7401,7 +7401,7 @@
           },
           {
             "token": "\n",
-            "logProbability": -7.987648e-06
+            "logProbability": -7.987648e-6
           },
           {
             "token": "*",
@@ -7429,7 +7429,7 @@
           },
           {
             "token": "\n",
-            "logProbability": -5.9602587e-07
+            "logProbability": -5.9602587e-7
           },
           {
             "token": "*",
@@ -7461,7 +7461,7 @@
           },
           {
             "token": "\n",
-            "logProbability": -1.0729074e-06
+            "logProbability": -1.0729074e-6
           },
           {
             "token": "*",
@@ -7485,7 +7485,7 @@
           },
           {
             "token": "\n",
-            "logProbability": -8.344534e-07
+            "logProbability": -8.344534e-7
           },
           {
             "token": "*",
@@ -7497,7 +7497,7 @@
           },
           {
             "token": " Sock",
-            "logProbability": -1.8953595e-05
+            "logProbability": -1.8953595e-5
           },
           {
             "token": " Drawer",
@@ -7521,7 +7521,7 @@
           },
           {
             "token": "astic",
-            "logProbability": -3.5760596e-07
+            "logProbability": -3.5760596e-7
           },
           {
             "token": "\n",
@@ -7545,7 +7545,7 @@
           },
           {
             "token": " Fancy",
-            "logProbability": -7.271795e-06
+            "logProbability": -7.271795e-6
           },
           {
             "token": " Free",
@@ -7565,7 +7565,7 @@
           },
           {
             "token": "ms",
-            "logProbability": -1.1922384e-07
+            "logProbability": -1.1922384e-7
           },
           {
             "token": "ical",
@@ -7609,7 +7609,7 @@
           },
           {
             "token": "isticated",
-            "logProbability": -8.344534e-07
+            "logProbability": -8.344534e-7
           },
           {
             "token": " &",
@@ -7621,7 +7621,7 @@
           },
           {
             "token": ":**",
-            "logProbability": -1.1922384e-07
+            "logProbability": -1.1922384e-7
           },
           {
             "token": "\n\n",
@@ -7645,11 +7645,11 @@
           },
           {
             "token": "us",
-            "logProbability": -1.7881898e-06
+            "logProbability": -1.7881898e-6
           },
           {
             "token": "settes",
-            "logProbability": -2.3844768e-07
+            "logProbability": -2.3844768e-7
           },
           {
             "token": " (",
@@ -7677,11 +7677,11 @@
           },
           {
             "token": "\")",
-            "logProbability": -4.3627377e-05
+            "logProbability": -4.3627377e-5
           },
           {
             "token": "\n",
-            "logProbability": -2.1458147e-06
+            "logProbability": -2.1458147e-6
           },
           {
             "token": "*",
@@ -7701,7 +7701,7 @@
           },
           {
             "token": "\n",
-            "logProbability": -1.4304238e-06
+            "logProbability": -1.4304238e-6
           },
           {
             "token": "*",
@@ -7717,7 +7717,7 @@
           },
           {
             "token": " Cry",
-            "logProbability": -2.121776e-05
+            "logProbability": -2.121776e-5
           },
           {
             "token": "\n",
@@ -7741,7 +7741,7 @@
           },
           {
             "token": "\n",
-            "logProbability": -4.1724998e-06
+            "logProbability": -4.1724998e-6
           },
           {
             "token": "*",
@@ -7761,7 +7761,7 @@
           },
           {
             "token": "\n",
-            "logProbability": -1.9075815e-06
+            "logProbability": -1.9075815e-6
           },
           {
             "token": "*",
@@ -7821,7 +7821,7 @@
           },
           {
             "token": "**",
-            "logProbability": -4.7689537e-07
+            "logProbability": -4.7689537e-7
           },
           {
             "token": "Unique",
@@ -7841,11 +7841,11 @@
           },
           {
             "token": ":**",
-            "logProbability": -3.2185512e-06
+            "logProbability": -3.2185512e-6
           },
           {
             "token": "\n\n",
-            "logProbability": -1.1922384e-07
+            "logProbability": -1.1922384e-7
           },
           {
             "token": "*",
@@ -7897,7 +7897,7 @@
           },
           {
             "token": "\n",
-            "logProbability": -4.6607358e-05
+            "logProbability": -4.6607358e-5
           },
           {
             "token": "*",
@@ -7977,7 +7977,7 @@
           },
           {
             "token": "**",
-            "logProbability": -2.3844768e-07
+            "logProbability": -2.3844768e-7
           },
           {
             "token": "Location",
@@ -7989,7 +7989,7 @@
           },
           {
             "token": " (",
-            "logProbability": -3.4570896e-06
+            "logProbability": -3.4570896e-6
           },
           {
             "token": "if",
@@ -8013,7 +8013,7 @@
           },
           {
             "token": "*",
-            "logProbability": -4.5415305e-05
+            "logProbability": -4.5415305e-5
           },
           {
             "token": " [",
@@ -8045,7 +8045,7 @@
           },
           {
             "token": ".",
-            "logProbability": -1.4424305e-05
+            "logProbability": -1.4424305e-5
           },
           {
             "token": "\n",
@@ -8053,7 +8053,7 @@
           },
           {
             "token": "*",
-            "logProbability": -7.152119e-07
+            "logProbability": -7.152119e-7
           },
           {
             "token": " [",
@@ -8077,7 +8077,7 @@
           },
           {
             "token": "**",
-            "logProbability": -9.202131e-05
+            "logProbability": -9.202131e-5
           },
           {
             "token": "Tips",
@@ -8085,7 +8085,7 @@
           },
           {
             "token": " for",
-            "logProbability": -1.7523887e-05
+            "logProbability": -1.7523887e-5
           },
           {
             "token": " choosing",
@@ -8105,7 +8105,7 @@
           },
           {
             "token": "\n\n",
-            "logProbability": -2.3844768e-07
+            "logProbability": -2.3844768e-7
           },
           {
             "token": "*",
@@ -8121,7 +8121,7 @@
           },
           {
             "token": " for",
-            "logProbability": -8.2248516e-05
+            "logProbability": -8.2248516e-5
           },
           {
             "token": " availability",
@@ -8141,11 +8141,11 @@
           },
           {
             "token": " the",
-            "logProbability": -5.9600343e-06
+            "logProbability": -5.9600343e-6
           },
           {
             "token": " name",
-            "logProbability": -1.2277732e-05
+            "logProbability": -1.2277732e-5
           },
           {
             "token": " isn",
@@ -8153,15 +8153,15 @@
           },
           {
             "token": "'",
-            "logProbability": -3.2185512e-06
+            "logProbability": -3.2185512e-6
           },
           {
             "token": "t",
-            "logProbability": -9.537907e-07
+            "logProbability": -9.537907e-7
           },
           {
             "token": " already",
-            "logProbability": -1.6689067e-06
+            "logProbability": -1.6689067e-6
           },
           {
             "token": " in",
@@ -8181,11 +8181,11 @@
           },
           {
             "token": " domain",
-            "logProbability": -7.140589e-05
+            "logProbability": -7.140589e-5
           },
           {
             "token": ",",
-            "logProbability": -4.7680274e-05
+            "logProbability": -4.7680274e-5
           },
           {
             "token": " trademarks",
@@ -8197,7 +8197,7 @@
           },
           {
             "token": "\n",
-            "logProbability": -4.7689537e-07
+            "logProbability": -4.7689537e-7
           },
           {
             "token": "*",
@@ -8225,11 +8225,11 @@
           },
           {
             "token": " memorable",
-            "logProbability": -1.8834444e-05
+            "logProbability": -1.8834444e-5
           },
           {
             "token": ":**",
-            "logProbability": -1.6689067e-06
+            "logProbability": -1.6689067e-6
           },
           {
             "token": " Easy",
@@ -8237,7 +8237,7 @@
           },
           {
             "token": " to",
-            "logProbability": -4.8873435e-06
+            "logProbability": -4.8873435e-6
           },
           {
             "token": " recall",
@@ -8245,7 +8245,7 @@
           },
           {
             "token": " and",
-            "logProbability": -1.02513495e-05
+            "logProbability": -1.02513495e-5
           },
           {
             "token": " share",
@@ -8253,7 +8253,7 @@
           },
           {
             "token": ".",
-            "logProbability": -2.861005e-05
+            "logProbability": -2.861005e-5
           },
           {
             "token": "\n",
@@ -8265,7 +8265,7 @@
           },
           {
             "token": " **",
-            "logProbability": -3.5760596e-07
+            "logProbability": -3.5760596e-7
           },
           {
             "token": "Reflect",
@@ -8273,11 +8273,11 @@
           },
           {
             "token": " your",
-            "logProbability": -7.712471e-05
+            "logProbability": -7.712471e-5
           },
           {
             "token": " brand",
-            "logProbability": -1.0729074e-06
+            "logProbability": -1.0729074e-6
           },
           {
             "token": ":**",
@@ -8293,11 +8293,11 @@
           },
           {
             "token": " a",
-            "logProbability": -1.4662876e-05
+            "logProbability": -1.4662876e-5
           },
           {
             "token": " name",
-            "logProbability": -4.923015e-05
+            "logProbability": -4.923015e-5
           },
           {
             "token": " that",
@@ -8309,7 +8309,7 @@
           },
           {
             "token": " with",
-            "logProbability": -3.5760596e-07
+            "logProbability": -3.5760596e-7
           },
           {
             "token": " your",
@@ -8349,7 +8349,7 @@
           },
           {
             "token": " **",
-            "logProbability": -1.0729074e-06
+            "logProbability": -1.0729074e-6
           },
           {
             "token": "Say",
@@ -8357,7 +8357,7 @@
           },
           {
             "token": " it",
-            "logProbability": -2.2649522e-06
+            "logProbability": -2.2649522e-6
           },
           {
             "token": " out",
@@ -8365,11 +8365,11 @@
           },
           {
             "token": " loud",
-            "logProbability": -1.1922384e-07
+            "logProbability": -1.1922384e-7
           },
           {
             "token": ":**",
-            "logProbability": -2.3844768e-07
+            "logProbability": -2.3844768e-7
           },
           {
             "token": "  ",
@@ -8389,7 +8389,7 @@
           },
           {
             "token": " good",
-            "logProbability": -7.355035e-05
+            "logProbability": -7.355035e-5
           },
           {
             "token": " and",
@@ -8405,15 +8405,15 @@
           },
           {
             "token": " to",
-            "logProbability": -4.7689537e-07
+            "logProbability": -4.7689537e-7
           },
           {
             "token": " pronounce",
-            "logProbability": -1.1922384e-07
+            "logProbability": -1.1922384e-7
           },
           {
             "token": ".",
-            "logProbability": -5.48322e-06
+            "logProbability": -5.48322e-6
           },
           {
             "token": "\n\n\n",
@@ -8425,7 +8425,7 @@
           },
           {
             "token": " to",
-            "logProbability": -4.649037e-06
+            "logProbability": -4.649037e-6
           },
           {
             "token": " also",
@@ -8485,19 +8485,19 @@
           },
           {
             "token": "Good",
-            "logProbability": -3.802634e-05
+            "logProbability": -3.802634e-5
           },
           {
             "token": " luck",
-            "logProbability": -3.815163e-06
+            "logProbability": -3.815163e-6
           },
           {
             "token": "!",
-            "logProbability": -1.251619e-05
+            "logProbability": -1.251619e-5
           },
           {
             "token": "\n",
-            "logProbability": -1.1922384e-07
+            "logProbability": -1.1922384e-7
           }
         ]
       }
