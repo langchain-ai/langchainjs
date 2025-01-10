@@ -52,7 +52,8 @@ interface EmbeddingErrorResponse {
 
 export class ByteDanceDoubaoEmbeddings
   extends Embeddings
-  implements ByteDanceDoubaoEmbeddingsParams {
+  implements ByteDanceDoubaoEmbeddingsParams
+{
   model: string;
 
   batchSize = 24;

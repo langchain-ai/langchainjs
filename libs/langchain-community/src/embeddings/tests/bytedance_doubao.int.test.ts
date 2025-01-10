@@ -1,7 +1,7 @@
 import { test, expect } from "@jest/globals";
 import { ByteDanceDoubaoEmbeddings } from "../bytedance_doubao.js";
 
-const modelName = 'ep-xxx-xxx';
+const modelName = "ep-xxx-xxx";
 test.skip("Test ByteDanceDoubaoEmbeddings.embedQuery", async () => {
   const embeddings = new ByteDanceDoubaoEmbeddings({
     model: modelName,
