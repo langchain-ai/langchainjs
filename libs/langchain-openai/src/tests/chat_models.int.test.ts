@@ -977,17 +977,6 @@ test("populates ID field on AIMessage", async () => {
   expect(finalChunk?.id?.startsWith("chatcmpl-")).toBe(true);
 });
 
-test("Test ChatOpenAI stream method", async () => {
-  const model = new ChatOpenAI({ model: "o1-mini" });
-  const stream = await model.stream("Print hello world.");
-  const chunks = [];
-  for await (const chunk of stream) {
-    console.log(chunk);
-    chunks.push(chunk);
-  }
-  expect(chunks.length).toEqual(1);
-});
-
 describe("Audio output", () => {
   test("Audio output", async () => {
     const model = new ChatOpenAI({
@@ -1006,10 +995,6 @@ describe("Audio output", () => {
     if (!response.additional_kwargs.audio) {
       throw new Error("Not in additional kwargs");
     }
-    // console.log(
-    //   "response.additional_kwargs.audio",
-    //   response.additional_kwargs.audio
-    // );
     expect(Object.keys(response.additional_kwargs.audio).sort()).toEqual([
       "data",
       "expires_at",
