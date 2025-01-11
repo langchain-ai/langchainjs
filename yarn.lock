@@ -12999,7 +12999,7 @@ __metadata:
     zod: ^3.22.4
     zod-to-json-schema: ^3.22.3
   peerDependencies:
-    "@langchain/core": ">=0.2.26 <0.4.0"
+    "@langchain/core": ">=0.3.29 <0.4.0"
   languageName: unknown
   linkType: soft
 
