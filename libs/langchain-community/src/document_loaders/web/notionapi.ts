@@ -89,7 +89,9 @@ export type NotionAPILoaderOptions = {
  *   id: "<PAGE_ID>",
  *   type: "page",
  * });
- * const pageDocs = await pageLoader.loadAndSplit();
+ * const pageDocs = await pageLoader.load();
+ * const splitDocs = await splitter.splitDocuments(pageDocs);
+ * 
  * const dbLoader = new NotionAPILoader({
  *   clientOptions: { auth: "<NOTION_INTEGRATION_TOKEN>" },
  *   id: "<DATABASE_ID>",
@@ -130,7 +132,7 @@ export class NotionAPILoader extends BaseDocumentLoader {
       ...options.callerOptions,
     });
     this.notionClient = new Client({
-      logger: () => {}, // Suppress Notion SDK logger
+      logger: () => { }, // Suppress Notion SDK logger
       ...options.clientOptions,
     });
     this.n2mClient = new NotionToMarkdown({
@@ -143,7 +145,7 @@ export class NotionAPILoader extends BaseDocumentLoader {
     this.pageQueueTotal = 0;
     this.documents = [];
     this.rootTitle = "";
-    this.onDocumentLoaded = options.onDocumentLoaded ?? ((_ti, _cu) => {});
+    this.onDocumentLoaded = options.onDocumentLoaded ?? ((_ti, _cu) => { });
     this.propertiesAsHeader = options.propertiesAsHeader || false;
   }
 
@@ -200,9 +202,8 @@ export class NotionAPILoader extends BaseDocumentLoader {
       case "status":
         return prop[prop.type]?.name ?? "";
       case "date":
-        return `${prop[prop.type]?.start ?? ""}${
-          prop[prop.type]?.end ? ` - ${prop[prop.type]?.end}` : ""
-        }`;
+        return `${prop[prop.type]?.start ?? ""}${prop[prop.type]?.end ? ` - ${prop[prop.type]?.end}` : ""
+          }`;
       case "email":
         return prop[prop.type] || "";
       case "phone_number":
@@ -290,7 +291,7 @@ export class NotionAPILoader extends BaseDocumentLoader {
     if (block.has_children) {
       const block_id =
         block.type === "synced_block" &&
-        block.synced_block?.synced_from?.block_id
+          block.synced_block?.synced_from?.block_id
           ? block.synced_block.synced_from.block_id
           : block.id;
 
@@ -349,11 +350,11 @@ export class NotionAPILoader extends BaseDocumentLoader {
     const [pageData, pageId] =
       typeof page === "string"
         ? [
-            this.caller.call(() =>
-              this.notionClient.pages.retrieve({ page_id: page })
-            ),
-            page,
-          ]
+          this.caller.call(() =>
+            this.notionClient.pages.retrieve({ page_id: page })
+          ),
+          page,
+        ]
         : [page, page.id];
 
     const [pageDetails, pageBlocks] = await Promise.all([
