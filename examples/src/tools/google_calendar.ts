@@ -12,6 +12,7 @@ export async function run() {
   const model = new ChatOpenAI({
     temperature: 0,
     apiKey: process.env.OPENAI_API_KEY,
+    model: "gpt-4o-mini",
   });
 
   const googleCalendarParams = {
