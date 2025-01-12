@@ -1,7 +1,7 @@
 import { google } from "googleapis";
 import { Tool } from "@langchain/core/tools";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
-import { BaseLLM } from "@langchain/core/language_models/llms";
+import { BaseChatModel } from "@langchain/core/language_models/chat_models";
 
 export interface GoogleCalendarAgentParams {
   credentials?: {
@@ -10,7 +10,7 @@ export interface GoogleCalendarAgentParams {
     calendarId?: string;
   };
   scopes?: string[];
-  model?: BaseLLM;
+  model?: BaseChatModel;
 }
 
 export class GoogleCalendarBase extends Tool {
@@ -27,7 +27,7 @@ export class GoogleCalendarBase extends Tool {
 
   protected scopes: string[];
 
-  protected llm: BaseLLM;
+  protected llm: BaseChatModel;
 
   constructor(
     fields: GoogleCalendarAgentParams = {

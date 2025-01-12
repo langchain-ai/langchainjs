@@ -1,6 +1,6 @@
-import { AgentExecutor, createOpenAIToolsAgent } from "langchain/agents";
+import { AgentExecutor, createReactAgent } from "langchain/agents";
 import { pull } from "langchain/hub";
-import { OpenAI, ChatOpenAI } from "@langchain/openai";
+import { ChatOpenAI } from "@langchain/openai";
 import { Calculator } from "@langchain/community/tools/calculator";
 import {
   GoogleCalendarCreateTool,
@@ -9,7 +9,7 @@ import {
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 
 export async function run() {
-  const model = new OpenAI({
+  const model = new ChatOpenAI({
     temperature: 0,
     apiKey: process.env.OPENAI_API_KEY,
   });
@@ -33,13 +33,9 @@ export async function run() {
     new GoogleCalendarViewTool(googleCalendarParams),
   ];
 
-  const llm = new ChatOpenAI({
-    temperature: 0,
-    apiKey: process.env.OPENAI_API_KEY,
-  });
-  const prompt: ChatPromptTemplate = await pull("hwchase17/openai-tools-agent");
-  const calendarAgent = await createOpenAIToolsAgent({
-    llm,
+  const prompt: ChatPromptTemplate = await pull("hwchase17/react");
+  const calendarAgent = await createReactAgent({
+    llm: model,
     tools,
     prompt,
   });

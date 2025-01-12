@@ -1,7 +1,7 @@
 import { calendar_v3 } from "googleapis";
 import type { JWT } from "googleapis-common";
 import { PromptTemplate } from "@langchain/core/prompts";
-import { BaseLLM } from "@langchain/core/language_models/llms";
+import { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import { CallbackManagerForToolRun } from "@langchain/core/callbacks/manager";
 import { StringOutputParser } from "@langchain/core/output_parsers";
 
@@ -11,7 +11,7 @@ import { getTimezoneOffsetInHours } from "../utils/get-timezone-offset-in-hours.
 type RunViewEventParams = {
   calendarId: string;
   auth: JWT;
-  model: BaseLLM;
+  model: BaseChatModel;
 };
 
 const runViewEvents = async (
