@@ -432,6 +432,7 @@ describe("trimMessages can trim", () => {
       "runnables",
     ]);
     expect("bound" in trimmedMessages).toBeTruthy();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     expect("func" in (trimmedMessages as any).bound).toBeTruthy();
     // `func` is protected, so we need to cast it to any to access it
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
