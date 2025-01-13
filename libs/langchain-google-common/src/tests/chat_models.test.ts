@@ -1320,7 +1320,7 @@ describe("Mock ChatGoogle - Gemini", () => {
     expect(result).toBeDefined();
     const data = record?.opts?.data;
     expect(data).toBeDefined();
-    expect(data.generationConfig.responseLogprobs).toEqual(false);
+    expect(data.generationConfig.responseLogprobs).not.toBeDefined();
     expect(data.generationConfig.logprobs).not.toBeDefined();
   });
 

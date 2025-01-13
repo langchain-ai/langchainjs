@@ -195,7 +195,7 @@ export abstract class ChatGoogleBase<AuthOptions>
 
   stopSequences: string[] = [];
 
-  logprobs: boolean = false;
+  logprobs: boolean;
 
   topLogprobs: number = 0;
 
