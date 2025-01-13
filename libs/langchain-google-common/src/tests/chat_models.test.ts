@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { expect, test } from "@jest/globals";
+import { expect, test, jest } from "@jest/globals";
 import {
   AIMessage,
   BaseMessage,
@@ -16,7 +16,13 @@ import { Serialized } from "@langchain/core/load/serializable";
 import { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { ChatGoogleBase, ChatGoogleBaseInput } from "../chat_models.js";
-import { authOptions, MockClient, MockClientAuthInfo, mockId } from "./mock.js";
+import {
+  authOptions,
+  MockClient,
+  MockClientAuthInfo,
+  MockClientError,
+  mockId,
+} from "./mock.js";
 import {
   GeminiTool,
   GoogleAIBaseLLMInput,
@@ -167,6 +173,39 @@ describe("Mock ChatGoogle - Gemini", () => {
     expect(data.contents[1].parts).toBeDefined();
     expect(data.contents[1].parts.length).toBeGreaterThanOrEqual(1);
     expect(data.systemInstruction).not.toBeDefined();
+  });
+
+  test("1. Basic request format - retryable request", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-1-mock.json",
+    };
+    const model = new ChatGoogle({
+      authOptions,
+    });
+    const messages: BaseMessageLike[] = [
+      new HumanMessage("Flip a coin and tell me H for heads and T for tails"),
+      new AIMessage("H"),
+      new HumanMessage("Flip it again"),
+    ];
+
+    const retryableError = new MockClientError(429);
+    const requestSpy = jest
+      .spyOn(MockClient.prototype, "request")
+      .mockRejectedValueOnce(retryableError);
+
+    await model.invoke(messages);
+
+    expect(record.opts).toBeDefined();
+    expect(record.opts.data).toBeDefined();
+    const { data } = record.opts;
+    expect(data.contents).toBeDefined();
+    expect(data.contents.length).toEqual(3);
+
+    expect(requestSpy).toHaveBeenCalledTimes(2);
   });
 
   test("1. Invoke request format", async () => {
