@@ -1092,10 +1092,12 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     };
 
     // Add the logprobs if explicitly set
-    console.log('parameters.logprobs', parameters.logprobs);
     if (typeof parameters.logprobs !== "undefined") {
       ret.responseLogprobs = parameters.logprobs;
-      if (parameters.logprobs && typeof parameters.topLogprobs !== "undefined") {
+      if (
+        parameters.logprobs &&
+        typeof parameters.topLogprobs !== "undefined"
+      ) {
         ret.logprobs = parameters.topLogprobs;
       }
     }
