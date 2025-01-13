@@ -431,10 +431,11 @@ describe("trimMessages can trim", () => {
       "langchain_core",
       "runnables",
     ]);
-    expect("func" in trimmedMessages).toBeTruthy();
+    expect("bound" in trimmedMessages).toBeTruthy();
+    expect("func" in (trimmedMessages as any).bound).toBeTruthy();
     // `func` is protected, so we need to cast it to any to access it
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    expect(typeof (trimmedMessages as any).func).toBe("function");
+    expect(typeof (trimmedMessages as any).bound.func).toBe("function");
   });
 });
 

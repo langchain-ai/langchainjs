@@ -643,7 +643,9 @@ export function trimMessages(
     const trimmerOptions = messagesOrOptions;
     return RunnableLambda.from((input: BaseMessage[]) =>
       _trimMessagesHelper(input, trimmerOptions)
-    );
+    ).withConfig({
+      runName: "trim_messages",
+    });
   }
 }
 
