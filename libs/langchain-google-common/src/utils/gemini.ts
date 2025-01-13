@@ -1080,7 +1080,7 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
   function formatGenerationConfig(
     parameters: GoogleAIModelRequestParams
   ): GeminiGenerationConfig {
-    return {
+    const ret: GeminiGenerationConfig = {
       temperature: parameters.temperature,
       topK: parameters.topK,
       topP: parameters.topP,
@@ -1089,9 +1089,18 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
       maxOutputTokens: parameters.maxOutputTokens,
       stopSequences: parameters.stopSequences,
       responseMimeType: parameters.responseMimeType,
-      responseLogprobs: parameters.logprobs,
-      logprobs: parameters.topLogprobs,
     };
+
+    // Add the logprobs if explicitly set
+    console.log('parameters.logprobs', parameters.logprobs);
+    if (typeof parameters.logprobs !== "undefined") {
+      ret.responseLogprobs = parameters.logprobs;
+      if (parameters.logprobs && typeof parameters.topLogprobs !== "undefined") {
+        ret.logprobs = parameters.topLogprobs;
+      }
+    }
+
+    return ret;
   }
 
   function formatSafetySettings(

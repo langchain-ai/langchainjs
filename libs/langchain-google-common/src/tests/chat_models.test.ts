@@ -1251,7 +1251,80 @@ describe("Mock ChatGoogle - Gemini", () => {
     expect(record.opts.data.tools[0]).toHaveProperty("googleSearch");
   });
 
-  test("7. logprobs", async () => {
+  test("7. logprobs request true", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-7-mock.json",
+    };
+
+    const model = new ChatGoogle({
+      authOptions,
+      modelName: "gemini-1.5-flash-002",
+      logprobs: true,
+      topLogprobs: 5,
+    });
+    const result = await model.invoke(
+      "What are some names for a company that makes fancy socks?"
+    );
+    expect(result).toBeDefined();
+    const data = record?.opts?.data;
+    expect(data).toBeDefined();
+    expect(data.generationConfig.responseLogprobs).toEqual(true);
+    expect(data.generationConfig.logprobs).toEqual(5);
+  });
+
+  test("7. logprobs request false", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-7-mock.json",
+    };
+
+    const model = new ChatGoogle({
+      authOptions,
+      modelName: "gemini-1.5-flash-002",
+      logprobs: false,
+      topLogprobs: 5,
+    });
+    const result = await model.invoke(
+      "What are some names for a company that makes fancy socks?"
+    );
+    expect(result).toBeDefined();
+    const data = record?.opts?.data;
+    expect(data).toBeDefined();
+    expect(data.generationConfig.responseLogprobs).toEqual(false);
+    expect(data.generationConfig.logprobs).not.toBeDefined();
+  });
+
+  test("7. logprobs request not defined", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-7-mock.json",
+    };
+
+    const model = new ChatGoogle({
+      authOptions,
+      modelName: "gemini-1.5-flash-002",
+    });
+    const result = await model.invoke(
+      "What are some names for a company that makes fancy socks?"
+    );
+    expect(result).toBeDefined();
+    const data = record?.opts?.data;
+    expect(data).toBeDefined();
+    expect(data.generationConfig.responseLogprobs).toEqual(false);
+    expect(data.generationConfig.logprobs).not.toBeDefined();
+  });
+
+  test("7. logprobs response", async () => {
     const record: Record<string, any> = {};
     const projectId = mockId();
     const authOptions: MockClientAuthInfo = {
