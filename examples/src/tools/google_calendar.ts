@@ -32,7 +32,7 @@ export async function run() {
     new GoogleCalendarViewTool(googleCalendarParams),
   ];
 
-  const calendarAgent = await createReactAgent({
+  const calendarAgent = createReactAgent({
     llm: model,
     tools
   });
