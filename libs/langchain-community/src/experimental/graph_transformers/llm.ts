@@ -216,7 +216,7 @@ function mapToBaseRelationship({ fallbackRelationshipType = "unknown" }: { fallb
           ? toTitleCase(relationship.targetNodeType)
           : "",
       }),
-      type: (relationship.relationshipType || "unknown").replace(" ", "_").toUpperCase(),
+      type: (relationship.relationshipType || fallbackRelationshipType).replace(" ", "_").toUpperCase(),
       properties: relationship.properties
         ? convertPropertiesToRecord(relationship.properties)
         : {},
