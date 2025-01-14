@@ -187,7 +187,9 @@ export class AzureCosmosDBMongoChatMessageHistory extends BaseListChatMessageHis
   async clearAllSessions() {
     await this.initialize();
     try {
-      await this.collection.deleteMany({});
+      await this.collection.deleteMany({
+        [ID_USER]: this.userId,
+      });
     } catch (error) {
       console.error("Error clearing chat history sessions:", error);
       throw error;
