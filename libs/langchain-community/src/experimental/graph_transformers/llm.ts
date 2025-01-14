@@ -201,25 +201,27 @@ function mapToBaseNode(node: any): Node {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function mapToBaseRelationship(relationship: any): Relationship {
-  return new Relationship({
-    source: new Node({
-      id: relationship.sourceNodeId,
-      type: relationship.sourceNodeType
-        ? toTitleCase(relationship.sourceNodeType)
-        : "",
-    }),
-    target: new Node({
-      id: relationship.targetNodeId,
-      type: relationship.targetNodeType
-        ? toTitleCase(relationship.targetNodeType)
-        : "",
-    }),
-    type: relationship.relationshipType.replace(" ", "_").toUpperCase(),
-    properties: relationship.properties
-      ? convertPropertiesToRecord(relationship.properties)
-      : {},
-  });
+function mapToBaseRelationship({ fallbackRelationshipType = "unknown" }: { fallbackRelationshipType: string }) {
+  return function (relationship: any): Relationship {
+    return new Relationship({
+      source: new Node({
+        id: relationship.sourceNodeId,
+        type: relationship.sourceNodeType
+          ? toTitleCase(relationship.sourceNodeType)
+          : "",
+      }),
+      target: new Node({
+        id: relationship.targetNodeId,
+        type: relationship.targetNodeType
+          ? toTitleCase(relationship.targetNodeType)
+          : "",
+      }),
+      type: (relationship.relationshipType || "unknown").replace(" ", "_").toUpperCase(),
+      properties: relationship.properties
+        ? convertPropertiesToRecord(relationship.properties)
+        : {},
+    });
+  }
 }
 
 export interface LLMGraphTransformerProps {
@@ -246,6 +248,8 @@ export class LLMGraphTransformer {
 
   relationshipProperties: string[];
 
+  fallbackRelationshipType: string = "unknown";
+
   constructor({
     llm,
     allowedNodes = [],
@@ -254,6 +258,7 @@ export class LLMGraphTransformer {
     strictMode = true,
     nodeProperties = [],
     relationshipProperties = [],
+    fallbackRelationshipType = "unknown,
   }: LLMGraphTransformerProps) {
     if (typeof llm.withStructuredOutput !== "function") {
       throw new Error(
@@ -266,6 +271,7 @@ export class LLMGraphTransformer {
     this.strictMode = strictMode;
     this.nodeProperties = nodeProperties;
     this.relationshipProperties = relationshipProperties;
+    this.fallbackRelationshipType = fallbackRelationshipType
 
     // Define chain
     const schema = createSchema(
@@ -296,7 +302,9 @@ export class LLMGraphTransformer {
 
     let relationships: Relationship[] = [];
     if (rawSchema?.relationships) {
-      relationships = rawSchema.relationships.map(mapToBaseRelationship);
+      relationships = rawSchema.relationships.map(
+        mapToBaseRelationship({ fallbackRelationshipType: this.fallbackRelationshipType })
+      );
     }
 
     if (
