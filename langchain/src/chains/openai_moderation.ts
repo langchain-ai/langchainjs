@@ -12,7 +12,7 @@ import { BaseChain, ChainInputs } from "./base.js";
  */
 export interface OpenAIModerationChainInput
   extends ChainInputs,
-    AsyncCallerParams {
+  AsyncCallerParams {
   apiKey?: string;
   /** @deprecated Use "apiKey" instead. */
   openAIApiKey?: string;
@@ -27,7 +27,7 @@ export interface OpenAIModerationChainInput
  * OpenAIModerationChainInput interface.
  * @example
  * ```typescript
- * const moderation = new ChatOpenAIModerationChain({ throwError: true });
+ * const moderation = new OpenAIModerationChain({ throwError: true });
  *
  * const badString = "Bad naughty words from user";
  *
@@ -56,8 +56,7 @@ export interface OpenAIModerationChainInput
  */
 export class OpenAIModerationChain
   extends BaseChain
-  implements OpenAIModerationChainInput
-{
+  implements OpenAIModerationChainInput {
   static lc_name() {
     return "OpenAIModerationChain";
   }
