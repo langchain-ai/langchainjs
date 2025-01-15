@@ -80,7 +80,8 @@ export const config = {
     "embeddings/gradient_ai": "embeddings/gradient_ai",
     "embeddings/hf": "embeddings/hf",
     "embeddings/hf_transformers": "embeddings/hf_transformers",
-    "embeddings/huggingface_transformers": "embeddings/huggingface_transformers",
+    "embeddings/huggingface_transformers":
+      "embeddings/huggingface_transformers",
     "embeddings/ibm": "embeddings/ibm",
     "embeddings/jina": "embeddings/jina",
     "embeddings/llama_cpp": "embeddings/llama_cpp",
@@ -317,6 +318,7 @@ export const config = {
     "document_loaders/fs/csv": "document_loaders/fs/csv",
     "document_loaders/fs/notion": "document_loaders/fs/notion",
     "document_loaders/fs/obsidian": "document_loaders/fs/obsidian",
+    "document_loaders/fs/acreom": "document_loaders/fs/acreom",
     "document_loaders/fs/unstructured": "document_loaders/fs/unstructured",
     "document_loaders/fs/openai_whisper_audio":
       "document_loaders/fs/openai_whisper_audio",
