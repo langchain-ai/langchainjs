@@ -11,6 +11,7 @@ import {
   OpenAIChatInput,
   OpenAICoreRequestOptions,
 } from "../types.js";
+import { getEnvironmentVariable } from "@langchain/core/utils/env";
 
 /**
  * Azure OpenAI chat model integration.
@@ -453,16 +454,34 @@ export class AzureChatOpenAI extends ChatOpenAI {
         configuration?: ClientOptions & LegacyOpenAIInput;
       }
   ) {
-    const newFields = fields ? { ...fields } : fields;
-    if (newFields) {
-      // don't rewrite the fields if they are already set
-      newFields.azureOpenAIApiDeploymentName =
-        newFields.azureOpenAIApiDeploymentName ?? newFields.deploymentName;
-      newFields.azureOpenAIApiKey =
-        newFields.azureOpenAIApiKey ?? newFields.openAIApiKey;
-      newFields.azureOpenAIApiVersion =
-        newFields.azureOpenAIApiVersion ?? newFields.openAIApiVersion;
-    }
+    const newFields = fields ? { ...fields } : {};
+    newFields.azureOpenAIApiDeploymentName =
+      newFields.azureOpenAIApiDeploymentName ?? newFields.deploymentName;
+    newFields.azureOpenAIApiKey =
+      newFields.azureOpenAIApiKey ??
+      newFields.openAIApiKey ??
+      getEnvironmentVariable("AZURE_OPENAI_API_KEY");
+    newFields.azureOpenAIApiVersion =
+      newFields.azureOpenAIApiVersion ?? newFields.openAIApiVersion;
+    newFields.azureOpenAIApiInstanceName =
+      fields?.azureOpenAIApiInstanceName ??
+      getEnvironmentVariable("AZURE_OPENAI_API_INSTANCE_NAME");
+
+    newFields.azureOpenAIApiDeploymentName =
+      fields?.azureOpenAIApiDeploymentName ??
+      getEnvironmentVariable("AZURE_OPENAI_API_DEPLOYMENT_NAME");
+
+    newFields.azureOpenAIApiVersion =
+      fields?.azureOpenAIApiVersion ??
+      getEnvironmentVariable("AZURE_OPENAI_API_VERSION");
+
+    newFields.azureOpenAIBasePath =
+      fields?.azureOpenAIBasePath ??
+      getEnvironmentVariable("AZURE_OPENAI_BASE_PATH");
+
+    newFields.azureOpenAIEndpoint =
+      fields?.azureOpenAIEndpoint ??
+      getEnvironmentVariable("AZURE_OPENAI_ENDPOINT");
 
     super(newFields);
   }

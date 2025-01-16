@@ -1138,9 +1138,7 @@ export class ChatOpenAI<
       getEnvironmentVariable("OPENAI_API_KEY");
     this.apiKey = this.openAIApiKey;
 
-    this.azureOpenAIApiKey =
-      fields?.azureOpenAIApiKey ??
-      getEnvironmentVariable("AZURE_OPENAI_API_KEY");
+    this.azureOpenAIApiKey = fields?.azureOpenAIApiKey;
 
     this.azureADTokenProvider = fields?.azureADTokenProvider ?? undefined;
 
@@ -1150,29 +1148,19 @@ export class ChatOpenAI<
       );
     }
 
-    this.azureOpenAIApiInstanceName =
-      fields?.azureOpenAIApiInstanceName ??
-      getEnvironmentVariable("AZURE_OPENAI_API_INSTANCE_NAME");
+    this.azureOpenAIApiInstanceName = fields?.azureOpenAIApiInstanceName;
 
-    this.azureOpenAIApiDeploymentName =
-      fields?.azureOpenAIApiDeploymentName ??
-      getEnvironmentVariable("AZURE_OPENAI_API_DEPLOYMENT_NAME");
+    this.azureOpenAIApiDeploymentName = fields?.azureOpenAIApiDeploymentName;
 
-    this.azureOpenAIApiVersion =
-      fields?.azureOpenAIApiVersion ??
-      getEnvironmentVariable("AZURE_OPENAI_API_VERSION");
+    this.azureOpenAIApiVersion = fields?.azureOpenAIApiVersion;
 
-    this.azureOpenAIBasePath =
-      fields?.azureOpenAIBasePath ??
-      getEnvironmentVariable("AZURE_OPENAI_BASE_PATH");
+    this.azureOpenAIBasePath = fields?.azureOpenAIBasePath;
+
+    this.azureOpenAIEndpoint = fields?.azureOpenAIEndpoint;
 
     this.organization =
       fields?.configuration?.organization ??
       getEnvironmentVariable("OPENAI_ORGANIZATION");
-
-    this.azureOpenAIEndpoint =
-      fields?.azureOpenAIEndpoint ??
-      getEnvironmentVariable("AZURE_OPENAI_ENDPOINT");
 
     this.modelName = fields?.model ?? fields?.modelName ?? this.model;
     this.model = this.modelName;
