@@ -1,3 +1,4 @@
+import process from "node:process";
 import { type ClientOptions, AzureOpenAI as AzureOpenAIClient } from "openai";
 import {
   LangSmithParams,
@@ -504,9 +505,7 @@ export class AzureChatOpenAI extends ChatOpenAI {
 
       params.defaultHeaders = {
         ...params.defaultHeaders,
-        "User-Agent": params.defaultHeaders?.["User-Agent"]
-          ? `${params.defaultHeaders["User-Agent"]}: langchainjs-azure-openai-v2`
-          : `langchainjs-azure-openai-v2`,
+        "User-Agent": `langchainjs-azure-openai/2.0.0 (node.js/${process.version}; ${process.platform}; ${process.arch}) ${params.defaultHeaders?.["User-Agent"] || ""}`
       };
 
       this.client = new AzureOpenAIClient({
