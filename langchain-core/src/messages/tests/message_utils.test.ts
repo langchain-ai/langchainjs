@@ -198,7 +198,7 @@ describe("trimMessages can trim", () => {
     };
   };
 
-  it("should trim with strategy last", async () => {
+  it("should not mutate messages if no trimming occurs with strategy last", async () => {
     const trimmer = trimMessages({
       maxTokens: 128000,
       strategy: "last",
