@@ -2,7 +2,7 @@ import { google, calendar_v3 } from "googleapis";
 import type { JWT, GaxiosResponse } from "googleapis-common";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { CallbackManagerForToolRun } from "@langchain/core/callbacks/manager";
-import { BaseChatModel } from "@langchain/core/language_models/chat_models";
+import { BaseLanguageModel } from "@langchain/core/language_models/base";
 import { StringOutputParser } from "@langchain/core/output_parsers";
 import { CREATE_EVENT_PROMPT } from "../prompts/index.js";
 import { getTimezoneOffsetInHours } from "../utils/get-timezone-offset-in-hours.js";
@@ -61,7 +61,7 @@ const createEvent = async (
 type RunCreateEventParams = {
   calendarId: string;
   auth: JWT;
-  model: BaseChatModel;
+  model: BaseLanguageModel;
 };
 
 const runCreateEvent = async (

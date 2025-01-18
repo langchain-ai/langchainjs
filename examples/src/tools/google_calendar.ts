@@ -34,7 +34,7 @@ export async function run() {
 
   const calendarAgent = createReactAgent({
     llm: model,
-    tools
+    tools,
   });
 
   const createInput = `Create a meeting with John Doe next Friday at 4pm - adding to the agenda of it the result of 99 + 99`;
