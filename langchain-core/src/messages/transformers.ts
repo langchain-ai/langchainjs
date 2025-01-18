@@ -274,7 +274,7 @@ function _mergeMessageRuns(messages: BaseMessage[]): BaseMessage[] {
   }
   const merged: BaseMessage[] = [];
   for (const msg of messages) {
-    const curr = msg; // Create a shallow copy of the message
+    const curr = msg;
     const last = merged.pop();
     if (!last) {
       merged.push(curr);
@@ -861,20 +861,24 @@ async function _lastMaxTokens(
     ...rest
   } = options;
 
+  // Create a copy of messages to avoid mutation
+  let messagesCopy = [...messages];
+
   if (endOn) {
     const endOnArr = Array.isArray(endOn) ? endOn : [endOn];
     while (
-      messages &&
-      !_isMessageType(messages[messages.length - 1], endOnArr)
+      messagesCopy.length > 0 &&
+      !_isMessageType(messagesCopy[messagesCopy.length - 1], endOnArr)
     ) {
-      messages.pop();
+      messagesCopy = messagesCopy.slice(0, -1);
     }
   }
 
-  const swappedSystem = includeSystem && messages[0]._getType() === "system";
+  const swappedSystem =
+    includeSystem && messagesCopy[0]?._getType() === "system";
   let reversed_ = swappedSystem
-    ? messages.slice(0, 1).concat(messages.slice(1).reverse())
-    : messages.reverse();
+    ? messagesCopy.slice(0, 1).concat(messagesCopy.slice(1).reverse())
+    : messagesCopy.reverse();
 
   reversed_ = await _firstMaxTokens(reversed_, {
     ...rest,
