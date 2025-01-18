@@ -37,12 +37,15 @@ export const run = async () => {
         },
         {
           type: "document",
-          source: base64,
+          source: {
+            media_type: "application/pdf",
+            type: "base64",
+            data: base64,
+          },
         },
       ],
     },
   ]);
   console.log(response.content);
-  //console.log(response.content);
   return response.content;
 };

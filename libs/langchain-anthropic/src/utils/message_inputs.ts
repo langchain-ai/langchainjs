@@ -135,14 +135,7 @@ function _formatContent(content: MessageContent) {
         // PDF
         return {
           type: "document",
-          source:
-            typeof contentPart.source === "string"
-              ? {
-                  media_type: "application/pdf",
-                  type: "base64",
-                  data: contentPart.source,
-                }
-              : contentPart.source,
+          source: contentPart.source,
           ...(cacheControl ? { cache_control: cacheControl } : {}),
         };
       } else if (
