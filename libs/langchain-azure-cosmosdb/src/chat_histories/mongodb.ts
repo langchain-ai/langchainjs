@@ -20,7 +20,13 @@ export interface AzureCosmosDBMongoChatHistoryDBConfig {
   readonly collectionName?: string;
 }
 
+export type ChatSessionMongo = {
+  id: string;
+  context: Record<string, unknown>;
+};
+
 const ID_KEY = "sessionId";
+const ID_USER = "userId";
 
 export class AzureCosmosDBMongoChatMessageHistory extends BaseListChatMessageHistory {
   lc_namespace = ["langchain", "stores", "message", "azurecosmosdb"];
@@ -33,6 +39,8 @@ export class AzureCosmosDBMongoChatMessageHistory extends BaseListChatMessageHis
 
   private initPromise?: Promise<void>;
 
+  private context: Record<string, unknown> = {};
+
   private readonly client: MongoClient | undefined;
 
   private database: Db;
@@ -41,11 +49,14 @@ export class AzureCosmosDBMongoChatMessageHistory extends BaseListChatMessageHis
 
   private sessionId: string;
 
+  private userId: string;
+
   initialize: () => Promise<void>;
 
   constructor(
     dbConfig: AzureCosmosDBMongoChatHistoryDBConfig,
-    sessionId: string
+    sessionId: string,
+    userId: string
   ) {
     super();
 
@@ -70,6 +81,7 @@ export class AzureCosmosDBMongoChatMessageHistory extends BaseListChatMessageHis
     const collectionName = dbConfig.collectionName ?? "chatHistory";
 
     this.sessionId = sessionId;
+    this.userId = userId ?? "anonymous";
 
     // Deferring initialization to the first call to `initialize`
     this.initialize = () => {
@@ -120,6 +132,7 @@ export class AzureCosmosDBMongoChatMessageHistory extends BaseListChatMessageHis
 
     const document = await this.collection.findOne({
       [ID_KEY]: this.sessionId,
+      [ID_USER]: this.userId,
     });
     const messages = document?.messages || [];
     return mapStoredMessagesToChatMessages(messages);
@@ -134,10 +147,12 @@ export class AzureCosmosDBMongoChatMessageHistory extends BaseListChatMessageHis
     await this.initialize();
 
     const messages = mapChatMessagesToStoredMessages([message]);
+    const context = await this.getContext();
     await this.collection.updateOne(
-      { [ID_KEY]: this.sessionId },
+      { [ID_KEY]: this.sessionId, [ID_USER]: this.userId },
       {
         $push: { messages: { $each: messages } } as PushOperator<Document>,
+        $set: { context },
       },
       { upsert: true }
     );
@@ -150,6 +165,66 @@ export class AzureCosmosDBMongoChatMessageHistory extends BaseListChatMessageHis
   async clear(): Promise<void> {
     await this.initialize();
 
-    await this.collection.deleteOne({ [ID_KEY]: this.sessionId });
+    await this.collection.deleteOne({
+      [ID_KEY]: this.sessionId,
+      [ID_USER]: this.userId,
+    });
+  }
+
+  async getAllSessions(): Promise<ChatSessionMongo[]> {
+    await this.initialize();
+    const documents = await this.collection
+      .find({
+        [ID_USER]: this.userId,
+      })
+      .toArray();
+
+    const chatSessions: ChatSessionMongo[] = documents.map((doc) => ({
+      id: doc[ID_KEY],
+      user_id: doc[ID_USER],
+      context: doc.context || {},
+    }));
+
+    return chatSessions;
+  }
+
+  async clearAllSessions() {
+    await this.initialize();
+    try {
+      await this.collection.deleteMany({
+        [ID_USER]: this.userId,
+      });
+    } catch (error) {
+      console.error("Error clearing chat history sessions:", error);
+      throw error;
+    }
+  }
+
+  async getContext(): Promise<Record<string, unknown>> {
+    await this.initialize();
+
+    const document = await this.collection.findOne({
+      [ID_KEY]: this.sessionId,
+      [ID_USER]: this.userId,
+    });
+    this.context = document?.context || this.context;
+    return this.context;
+  }
+
+  async setContext(context: Record<string, unknown>): Promise<void> {
+    await this.initialize();
+
+    try {
+      await this.collection.updateOne(
+        { [ID_KEY]: this.sessionId },
+        {
+          $set: { context },
+        },
+        { upsert: true }
+      );
+    } catch (error) {
+      console.error("Error setting chat history context", error);
+      throw error;
+    }
   }
 }
