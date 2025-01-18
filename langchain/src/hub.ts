@@ -50,8 +50,23 @@ export async function pull<T extends Runnable>(
   options?: { apiKey?: string; apiUrl?: string; includeModel?: boolean }
 ) {
   const client = new Client(options);
-  const result = await client._pullPrompt(ownerRepoCommit, {
+
+  const promptObject = await client.pullPromptCommit(ownerRepoCommit, {
     includeModel: options?.includeModel,
   });
-  return load<T>(result);
+
+  if (promptObject.manifest.kwargs?.metadata === undefined) {
+    promptObject.manifest.kwargs = {
+      ...promptObject.manifest.kwargs,
+      metadata: {},
+    };
+  }
+
+  promptObject.manifest.kwargs.metadata = {
+    ...promptObject.manifest.kwargs.metadata,
+    lc_hub_owner: promptObject.owner,
+    lc_hub_repo: promptObject.repo,
+    lc_hub_commit_hash: promptObject.commit_hash,
+  };
+  return load<T>(JSON.stringify(promptObject.manifest));
 }

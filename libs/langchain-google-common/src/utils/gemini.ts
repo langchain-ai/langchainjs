@@ -38,6 +38,10 @@ import type {
   GoogleAIAPI,
   GeminiAPIConfig,
   GeminiGroundingSupport,
+  GeminiResponseCandidate,
+  GeminiLogprobsResult,
+  GeminiLogprobsResultCandidate,
+  GeminiLogprobsTopCandidate,
 } from "../types.js";
 import { GoogleAISafetyError } from "./safety.js";
 import { MediaBlob } from "../experimental/utils/media_core.js";
@@ -674,6 +678,52 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     return safeResponseTo(response, responseToString);
   }
 
+  type Logprob = {
+    token: string;
+    logprob: number;
+    bytes: number[];
+    top_logprobs?: Omit<Logprob, "top_logprobs">[];
+  };
+
+  type LogprobContent = {
+    content: Logprob[];
+  };
+
+  function logprobResultToLogprob(
+    result: GeminiLogprobsResultCandidate
+  ): Omit<Logprob, "top_logprobs"> {
+    const token = result?.token;
+    const logprob = result?.logProbability;
+    const encoder = new TextEncoder();
+    const bytes = Array.from(encoder.encode(token));
+    return {
+      token,
+      logprob,
+      bytes,
+    };
+  }
+
+  function candidateToLogprobs(
+    candidate: GeminiResponseCandidate
+  ): LogprobContent | undefined {
+    const logprobs: GeminiLogprobsResult = candidate?.logprobsResult;
+    const chosenTokens: GeminiLogprobsResultCandidate[] =
+      logprobs?.chosenCandidates ?? [];
+    const topTokens: GeminiLogprobsTopCandidate[] =
+      logprobs?.topCandidates ?? [];
+    const content: Logprob[] = [];
+    for (let co = 0; co < chosenTokens.length; co += 1) {
+      const chosen = chosenTokens[co];
+      const top = topTokens[co]?.candidates ?? [];
+      const logprob: Logprob = logprobResultToLogprob(chosen);
+      logprob.top_logprobs = top.map((l) => logprobResultToLogprob(l));
+      content.push(logprob);
+    }
+    return {
+      content,
+    };
+  }
+
   function responseToGenerationInfo(response: GoogleLLMResponse) {
     if (!Array.isArray(response.data)) {
       return {};
@@ -695,6 +745,8 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
       citation_metadata: data.candidates[0]?.citationMetadata,
       grounding_metadata: data.candidates[0]?.groundingMetadata,
       finish_reason: data.candidates[0]?.finishReason,
+      avgLogprobs: data.candidates[0]?.avgLogprobs,
+      logprobs: candidateToLogprobs(data.candidates[0]),
     };
   }
 
@@ -858,6 +910,20 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
         }),
       ];
     }
+
+    // Add logprobs information to the message
+    const candidate = (response?.data as GenerateContentResponseData)
+      ?.candidates?.[0];
+    const avgLogprobs = candidate?.avgLogprobs;
+    const logprobs = candidateToLogprobs(candidate);
+    if (logprobs) {
+      ret[0].message.response_metadata = {
+        ...ret[0].message.response_metadata,
+        logprobs,
+        avgLogprobs,
+      };
+    }
+
     return ret;
   }
 
@@ -1014,14 +1080,29 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
   function formatGenerationConfig(
     parameters: GoogleAIModelRequestParams
   ): GeminiGenerationConfig {
-    return {
+    const ret: GeminiGenerationConfig = {
       temperature: parameters.temperature,
       topK: parameters.topK,
       topP: parameters.topP,
+      presencePenalty: parameters.presencePenalty,
+      frequencyPenalty: parameters.frequencyPenalty,
       maxOutputTokens: parameters.maxOutputTokens,
       stopSequences: parameters.stopSequences,
       responseMimeType: parameters.responseMimeType,
     };
+
+    // Add the logprobs if explicitly set
+    if (typeof parameters.logprobs !== "undefined") {
+      ret.responseLogprobs = parameters.logprobs;
+      if (
+        parameters.logprobs &&
+        typeof parameters.topLogprobs !== "undefined"
+      ) {
+        ret.logprobs = parameters.topLogprobs;
+      }
+    }
+
+    return ret;
   }
 
   function formatSafetySettings(

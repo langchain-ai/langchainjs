@@ -1223,6 +1223,10 @@ export class ChatOpenAI<
       this.streamUsage = false;
     }
 
+    if (this.model === "o1") {
+      this.disableStreaming = true;
+    }
+
     this.streaming = fields?.streaming ?? false;
     this.streamUsage = fields?.streamUsage ?? this.streamUsage;
 
