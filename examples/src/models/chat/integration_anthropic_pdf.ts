@@ -1,5 +1,7 @@
 import { ChatAnthropic } from "@langchain/anthropic";
 
+import * as fs from "fs";
+
 export const run = async () => {
   const llm = new ChatAnthropic({
     model: "claude-3-5-sonnet-20240620", // Only claude-3-5-sonnet-20240620 , claude-3-5-sonnet-20241022 as of Jan 2025 support PDF documents as in base64
