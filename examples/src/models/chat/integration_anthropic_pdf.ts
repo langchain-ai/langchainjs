@@ -1,4 +1,3 @@
-import { base } from "@faker-js/faker";
 import { ChatAnthropic } from "@langchain/anthropic";
 
 export const run = async () => {
