@@ -173,9 +173,11 @@ export class AzureCosmosDBMongoChatMessageHistory extends BaseListChatMessageHis
 
   async getAllSessions(): Promise<ChatSessionMongo[]> {
     await this.initialize();
-    const documents = await this.collection.find({
-      [ID_USER]: this.userId,
-    }).toArray();
+    const documents = await this.collection
+      .find({
+        [ID_USER]: this.userId,
+      })
+      .toArray();
 
     const chatSessions: ChatSessionMongo[] = documents.map((doc) => ({
       id: doc[ID_KEY],
