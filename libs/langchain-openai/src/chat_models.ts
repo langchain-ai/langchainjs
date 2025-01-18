@@ -1124,6 +1124,8 @@ export class ChatOpenAI<
 
   reasoningEffort?: OpenAIClient.Chat.ChatCompletionReasoningEffort;
 
+  disableStreaming?: boolean;
+
   constructor(
     fields?: ChatOpenAIFields,
     /** @deprecated */
