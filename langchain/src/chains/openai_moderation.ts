@@ -12,7 +12,7 @@ import { BaseChain, ChainInputs } from "./base.js";
  */
 export interface OpenAIModerationChainInput
   extends ChainInputs,
-  AsyncCallerParams {
+    AsyncCallerParams {
   apiKey?: string;
   /** @deprecated Use "apiKey" instead. */
   openAIApiKey?: string;
@@ -56,7 +56,8 @@ export interface OpenAIModerationChainInput
  */
 export class OpenAIModerationChain
   extends BaseChain
-  implements OpenAIModerationChainInput {
+  implements OpenAIModerationChainInput
+{
   static lc_name() {
     return "OpenAIModerationChain";
   }
