@@ -201,7 +201,7 @@ function mapToBaseNode(node: any): Node {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function mapToBaseRelationship({ fallbackRelationshipType = "unknown" }: { fallbackRelationshipType: string }) {
+function mapToBaseRelationship({ fallbackRelationshipType }: { fallbackRelationshipType: string | null }) {
   return function (relationship: any): Relationship {
     return new Relationship({
       source: new Node({
@@ -232,6 +232,7 @@ export interface LLMGraphTransformerProps {
   strictMode?: boolean;
   nodeProperties?: string[];
   relationshipProperties?: string[];
+  fallbackRelationshipType?: string | null
 }
 
 export class LLMGraphTransformer {
@@ -248,7 +249,7 @@ export class LLMGraphTransformer {
 
   relationshipProperties: string[];
 
-  fallbackRelationshipType: string = "unknown";
+  fallbackRelationshipType: string | null = null;
 
   constructor({
     llm,
@@ -258,7 +259,7 @@ export class LLMGraphTransformer {
     strictMode = true,
     nodeProperties = [],
     relationshipProperties = [],
-    fallbackRelationshipType = "unknown,
+    fallbackRelationshipType = null,
   }: LLMGraphTransformerProps) {
     if (typeof llm.withStructuredOutput !== "function") {
       throw new Error(
