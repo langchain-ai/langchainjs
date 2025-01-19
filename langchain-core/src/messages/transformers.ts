@@ -274,7 +274,7 @@ function _mergeMessageRuns(messages: BaseMessage[]): BaseMessage[] {
   }
   const merged: BaseMessage[] = [];
   for (const msg of messages) {
-    const curr = msg; // Create a shallow copy of the message
+    const curr = msg;
     const last = merged.pop();
     if (!last) {
       merged.push(curr);
@@ -643,7 +643,9 @@ export function trimMessages(
     const trimmerOptions = messagesOrOptions;
     return RunnableLambda.from((input: BaseMessage[]) =>
       _trimMessagesHelper(input, trimmerOptions)
-    );
+    ).withConfig({
+      runName: "trim_messages",
+    });
   }
 }
 
@@ -859,20 +861,24 @@ async function _lastMaxTokens(
     ...rest
   } = options;
 
+  // Create a copy of messages to avoid mutation
+  let messagesCopy = [...messages];
+
   if (endOn) {
     const endOnArr = Array.isArray(endOn) ? endOn : [endOn];
     while (
-      messages &&
-      !_isMessageType(messages[messages.length - 1], endOnArr)
+      messagesCopy.length > 0 &&
+      !_isMessageType(messagesCopy[messagesCopy.length - 1], endOnArr)
     ) {
-      messages.pop();
+      messagesCopy = messagesCopy.slice(0, -1);
     }
   }
 
-  const swappedSystem = includeSystem && messages[0]._getType() === "system";
+  const swappedSystem =
+    includeSystem && messagesCopy[0]?._getType() === "system";
   let reversed_ = swappedSystem
-    ? messages.slice(0, 1).concat(messages.slice(1).reverse())
-    : messages.reverse();
+    ? messagesCopy.slice(0, 1).concat(messagesCopy.slice(1).reverse())
+    : messagesCopy.reverse();
 
   reversed_ = await _firstMaxTokens(reversed_, {
     ...rest,
@@ -903,6 +909,10 @@ const _MSG_CHUNK_MAP: Record<
     messageChunk: AIMessageChunk,
   },
   system: {
+    message: SystemMessage,
+    messageChunk: SystemMessageChunk,
+  },
+  developer: {
     message: SystemMessage,
     messageChunk: SystemMessageChunk,
   },
@@ -975,6 +985,25 @@ function _switchTypeToMessage(
         chunk = new SystemMessageChunk(fields);
       } else {
         msg = new SystemMessage(fields);
+      }
+      break;
+    case "developer":
+      if (returnChunk) {
+        chunk = new SystemMessageChunk({
+          ...fields,
+          additional_kwargs: {
+            ...fields.additional_kwargs,
+            __openai_role__: "developer",
+          },
+        });
+      } else {
+        msg = new SystemMessage({
+          ...fields,
+          additional_kwargs: {
+            ...fields.additional_kwargs,
+            __openai_role__: "developer",
+          },
+        });
       }
       break;
     case "tool":

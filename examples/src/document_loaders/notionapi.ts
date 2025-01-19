@@ -12,10 +12,12 @@ const pageLoader = new NotionAPILoader({
 
 const splitter = new RecursiveCharacterTextSplitter();
 
-// A page contents is likely to be more than 1000 characters so it's split into multiple documents (important for vectorization)
-const pageDocs = await pageLoader.loadAndSplit(splitter);
+// Load the documents
+const pageDocs = await pageLoader.load();
+// Split the documents using the text splitter
+const splitDocs = await splitter.splitDocuments(pageDocs);
 
-console.log({ pageDocs });
+console.log({ splitDocs });
 
 // Loading a database (each row is a separate document with all properties as metadata)
 const dbLoader = new NotionAPILoader({

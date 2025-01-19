@@ -20,14 +20,13 @@ export function failedAttemptHandler(error: any) {
   if (status === 0) {
     // What is this?
     console.error("failedAttemptHandler", error);
+    throw error;
   }
 
   // What errors shouldn't be retried?
   if (STATUS_NO_RETRY.includes(+status)) {
     throw error;
   }
-
-  throw error;
 }
 
 export function ensureParams(params?: AsyncCallerParams): AsyncCallerParams {

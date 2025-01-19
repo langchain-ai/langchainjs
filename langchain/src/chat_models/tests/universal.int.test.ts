@@ -422,6 +422,19 @@ describe("Works with all model providers", () => {
     expect(togetherResult).toBeDefined();
     expect(togetherResult.content.length).toBeGreaterThan(0);
   });
+
+  it("Can invoke google-vertexai-web", async () => {
+    const vertexAIWeb = await initChatModel(undefined, {
+      modelProvider: "google-vertexai-web",
+      temperature: 0,
+    });
+
+    const vertexAIWebResult = await vertexAIWeb.invoke(
+      "what's your name? Use the 'name' tool to respond."
+    );
+    expect(vertexAIWebResult).toBeDefined();
+    expect(vertexAIWebResult.content.length).toBeGreaterThan(0);
+  });
 });
 
 test("Is compatible with agents", async () => {

@@ -106,7 +106,7 @@ export function convertToConverseMessages(messages: BaseMessage[]): {
               };
             } else {
               const blockValues = Object.fromEntries(
-                Object.values(block).filter(([key]) => key !== "type")
+                Object.entries(block).filter(([key]) => key !== "type")
               );
               throw new Error(
                 `Unsupported content block type: ${

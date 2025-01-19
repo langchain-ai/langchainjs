@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.3.7",
+  "version": "0.3.11",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -413,10 +413,12 @@
     "@jest/globals": "^29.5.0",
     "@langchain/anthropic": "*",
     "@langchain/aws": "*",
+    "@langchain/cerebras": "*",
     "@langchain/cohere": "*",
     "@langchain/core": "workspace:*",
     "@langchain/google-genai": "*",
     "@langchain/google-vertexai": "*",
+    "@langchain/google-vertexai-web": "*",
     "@langchain/groq": "*",
     "@langchain/mistralai": "*",
     "@langchain/ollama": "*",
@@ -460,10 +462,12 @@
   "peerDependencies": {
     "@langchain/anthropic": "*",
     "@langchain/aws": "*",
+    "@langchain/cerebras": "*",
     "@langchain/cohere": "*",
     "@langchain/core": ">=0.2.21 <0.4.0",
     "@langchain/google-genai": "*",
     "@langchain/google-vertexai": "*",
+    "@langchain/google-vertexai-web": "*",
     "@langchain/groq": "*",
     "@langchain/mistralai": "*",
     "@langchain/ollama": "*",
@@ -480,6 +484,9 @@
     "@langchain/aws": {
       "optional": true
     },
+    "@langchain/cerebras": {
+      "optional": true
+    },
     "@langchain/cohere": {
       "optional": true
     },
@@ -487,6 +494,9 @@
       "optional": true
     },
     "@langchain/google-vertexai": {
+      "optional": true
+    },
+    "@langchain/google-vertexai-web": {
       "optional": true
     },
     "@langchain/groq": {

@@ -137,7 +137,8 @@ export class VercelKVStore extends BaseStore<string, Uint8Array> {
     for (const key of batch) {
       yield this._getDeprefixedKey(key);
     }
-    while (cursor !== 0) {
+    // Backwards compatibility for older @vercel/kv versions
+    while (String(cursor) !== "0") {
       [cursor, batch] = await this.client.scan(cursor, {
         match: pattern,
         count: this.yieldKeysScanBatchSize,

@@ -284,7 +284,6 @@ export class BedrockLLMInputOutputAdapter {
       if (tools.length > 0) {
         inputBody.tools = tools;
       }
-      return { ...inputBody, ...modelKwargs };
     } else if (provider === "cohere") {
       const {
         system,
