@@ -54,6 +54,10 @@ example_selectors.cjs
 example_selectors.js
 example_selectors.d.ts
 example_selectors.d.cts
+filter.cjs
+filter.js
+filter.d.ts
+filter.d.cts
 indexing.cjs
 indexing.js
 indexing.d.ts

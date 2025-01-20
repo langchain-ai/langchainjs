@@ -58,6 +58,7 @@
   "../../langchain/src/vectorstores/faiss.ts",
   "../../langchain/src/vectorstores/weaviate.ts",
   "../../langchain/src/vectorstores/lancedb.ts",
+  "../../langchain/src/vectorstores/mariadb.ts",
   "../../langchain/src/vectorstores/momento_vector_index.ts",
   "../../langchain/src/vectorstores/mongodb_atlas.ts",
   "../../langchain/src/vectorstores/pinecone.ts",

@@ -402,6 +402,10 @@ vectorstores/libsql.cjs
 vectorstores/libsql.js
 vectorstores/libsql.d.ts
 vectorstores/libsql.d.cts
+vectorstores/mariadb.cjs
+vectorstores/mariadb.js
+vectorstores/mariadb.d.ts
+vectorstores/mariadb.d.cts
 vectorstores/milvus.cjs
 vectorstores/milvus.js
 vectorstores/milvus.d.ts
