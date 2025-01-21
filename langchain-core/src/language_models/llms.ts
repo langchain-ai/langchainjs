@@ -244,12 +244,10 @@ export abstract class BaseLLM<
     existingRunManagers?: CallbackManagerForLLMRun[]
   ): Promise<LLMResult> {
     let runManagers: CallbackManagerForLLMRun[] | undefined;
-    if (existingRunManagers !== undefined && existingRunManagers.length > 0) {
-      if (existingRunManagers.length !== prompts.length) {
-        throw new Error(
-          "Received invalid number of existing run managers for LLM call. Please contact us for help."
-        );
-      }
+    if (
+      existingRunManagers !== undefined &&
+      existingRunManagers.length === prompts.length
+    ) {
       runManagers = existingRunManagers;
     } else {
       const callbackManager_ = await CallbackManager.configure(

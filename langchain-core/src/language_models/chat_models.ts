@@ -353,12 +353,10 @@ export abstract class BaseChatModel<
     );
 
     let runManagers: CallbackManagerForLLMRun[] | undefined;
-    if (existingRunManagers !== undefined && existingRunManagers.length > 0) {
-      if (existingRunManagers.length !== baseMessages.length) {
-        throw new Error(
-          "Received invalid number of existing run managers for chat model call. Please contact us for help."
-        );
-      }
+    if (
+      existingRunManagers !== undefined &&
+      existingRunManagers.length === baseMessages.length
+    ) {
       runManagers = existingRunManagers;
     } else {
       const inheritableMetadata = {
