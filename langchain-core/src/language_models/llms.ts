@@ -374,7 +374,6 @@ export abstract class BaseLLM<
       options: parsedOptions,
       invocation_params: this?.invocationParams(parsedOptions),
       batch_size: prompts.length,
-      cached: true,
     };
     const runManagers = await callbackManager_?.handleLLMStart(
       this.toJSON(),
@@ -426,12 +425,28 @@ export abstract class BaseLLM<
           if (result.length) {
             await runManager?.handleLLMNewToken(result[0].text);
           }
-          return runManager?.handleLLMEnd({
-            generations: [result],
-          });
+          return runManager?.handleLLMEnd(
+            {
+              generations: [result],
+            },
+            undefined,
+            undefined,
+            undefined,
+            {
+              cached: true,
+            }
+          );
         } else {
           // status === "rejected"
-          await runManager?.handleLLMError(promiseResult.reason);
+          await runManager?.handleLLMError(
+            promiseResult.reason,
+            undefined,
+            undefined,
+            undefined,
+            {
+              cached: true,
+            }
+          );
           return Promise.reject(promiseResult.reason);
         }
       })
