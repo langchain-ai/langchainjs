@@ -48,6 +48,7 @@ import { concat } from "../utils/stream.js";
 import { RunnablePassthrough } from "../runnables/passthrough.js";
 import { isZodSchema } from "../utils/types/is_zod_schema.js";
 import { callbackHandlerPrefersStreaming } from "../callbacks/base.js";
+import { isAIMessage, isBaseMessage } from "../../messages.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ToolChoice = string | Record<string, any> | "auto" | "any";
@@ -343,41 +344,52 @@ export abstract class BaseChatModel<
   async _generateUncached(
     messages: BaseMessageLike[][],
     parsedOptions: this["ParsedCallOptions"],
-    handledOptions: RunnableConfig
+    handledOptions: RunnableConfig,
+    existingRunManagers?: CallbackManagerForLLMRun[]
   ): Promise<LLMResult> {
     const baseMessages = messages.map((messageList) =>
       messageList.map(coerceMessageLikeToMessage)
     );
 
-    const inheritableMetadata = {
-      ...handledOptions.metadata,
-      ...this.getLsParams(parsedOptions),
-    };
-    // create callback manager and start run
-    const callbackManager_ = await CallbackManager.configure(
-      handledOptions.callbacks,
-      this.callbacks,
-      handledOptions.tags,
-      this.tags,
-      inheritableMetadata,
-      this.metadata,
-      { verbose: this.verbose }
-    );
-    const extra = {
-      options: parsedOptions,
-      invocation_params: this?.invocationParams(parsedOptions),
-      batch_size: 1,
-    };
-    const runManagers = await callbackManager_?.handleChatModelStart(
-      this.toJSON(),
-      baseMessages,
-      handledOptions.runId,
-      undefined,
-      extra,
-      undefined,
-      undefined,
-      handledOptions.runName
-    );
+    let runManagers;
+    if (existingRunManagers !== undefined && existingRunManagers.length > 0) {
+      if (existingRunManagers.length !== baseMessages.length) {
+        throw new Error(
+          "Received invalid number of existing run managers for chat model call. Please contact us for help."
+        );
+      }
+      runManagers = existingRunManagers;
+    } else {
+      const inheritableMetadata = {
+        ...handledOptions.metadata,
+        ...this.getLsParams(parsedOptions),
+      };
+      // create callback manager and start run
+      const callbackManager_ = await CallbackManager.configure(
+        handledOptions.callbacks,
+        this.callbacks,
+        handledOptions.tags,
+        this.tags,
+        inheritableMetadata,
+        this.metadata,
+        { verbose: this.verbose }
+      );
+      const extra = {
+        options: parsedOptions,
+        invocation_params: this?.invocationParams(parsedOptions),
+        batch_size: 1,
+      };
+      runManagers = await callbackManager_?.handleChatModelStart(
+        this.toJSON(),
+        baseMessages,
+        handledOptions.runId,
+        undefined,
+        extra,
+        undefined,
+        undefined,
+        handledOptions.runName
+      );
+    }
     const generations: ChatGeneration[][] = [];
     const llmOutputs: LLMResult["llmOutput"][] = [];
     // Even if stream is not explicitly called, check if model is implicitly
@@ -511,7 +523,12 @@ export abstract class BaseChatModel<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     parsedOptions: any;
     handledOptions: RunnableConfig;
-  }): Promise<LLMResult & { missingPromptIndices: number[] }> {
+  }): Promise<
+    LLMResult & {
+      missingPromptIndices: number[];
+      existingRunManagers?: CallbackManagerForLLMRun[];
+    }
+  > {
     const baseMessages = messages.map((messageList) =>
       messageList.map(coerceMessageLikeToMessage)
     );
@@ -580,7 +597,24 @@ export abstract class BaseChatModel<
       cachedResults.map(async ({ result: promiseResult, runManager }, i) => {
         if (promiseResult.status === "fulfilled") {
           const result = promiseResult.value as Generation[];
-          generations[i] = result;
+          generations[i] = result.map((result) => {
+            if (
+              "message" in result &&
+              isBaseMessage(result.message) &&
+              isAIMessage(result.message)
+            ) {
+              result.message.usage_metadata = {
+                input_tokens: 0,
+                output_tokens: 0,
+                total_tokens: 0,
+              };
+            }
+            result.generationInfo = {
+              ...result.generationInfo,
+              tokenUsage: {},
+            };
+            return result;
+          });
           if (result.length) {
             await runManager?.handleLLMNewToken(result[0].text);
           }
@@ -598,6 +632,7 @@ export abstract class BaseChatModel<
     const output = {
       generations,
       missingPromptIndices,
+      existingRunManagers: runManagers,
     };
 
     // This defines RUN_KEY as a non-enumerable property on the output object
@@ -650,20 +685,24 @@ export abstract class BaseChatModel<
       callOptions as CallOptions
     );
 
-    const { generations, missingPromptIndices } = await this._generateCached({
-      messages: baseMessages,
-      cache,
-      llmStringKey,
-      parsedOptions: callOptions,
-      handledOptions: runnableConfig,
-    });
+    const { generations, missingPromptIndices, existingRunManagers } =
+      await this._generateCached({
+        messages: baseMessages,
+        cache,
+        llmStringKey,
+        parsedOptions: callOptions,
+        handledOptions: runnableConfig,
+      });
 
     let llmOutput = {};
     if (missingPromptIndices.length > 0) {
       const results = await this._generateUncached(
         missingPromptIndices.map((i) => baseMessages[i]),
         callOptions,
-        runnableConfig
+        runnableConfig,
+        existingRunManagers !== undefined
+          ? missingPromptIndices.map((i) => existingRunManagers?.[i])
+          : undefined
       );
       await Promise.all(
         results.generations.map(async (generation, index) => {

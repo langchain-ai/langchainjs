@@ -240,32 +240,43 @@ export abstract class BaseLLM<
   async _generateUncached(
     prompts: string[],
     parsedOptions: this["ParsedCallOptions"],
-    handledOptions: BaseCallbackConfig
+    handledOptions: BaseCallbackConfig,
+    existingRunManagers?: CallbackManagerForLLMRun[]
   ): Promise<LLMResult> {
-    const callbackManager_ = await CallbackManager.configure(
-      handledOptions.callbacks,
-      this.callbacks,
-      handledOptions.tags,
-      this.tags,
-      handledOptions.metadata,
-      this.metadata,
-      { verbose: this.verbose }
-    );
-    const extra = {
-      options: parsedOptions,
-      invocation_params: this?.invocationParams(parsedOptions),
-      batch_size: prompts.length,
-    };
-    const runManagers = await callbackManager_?.handleLLMStart(
-      this.toJSON(),
-      prompts,
-      handledOptions.runId,
-      undefined,
-      extra,
-      undefined,
-      undefined,
-      handledOptions?.runName
-    );
+    let runManagers;
+    if (existingRunManagers !== undefined && existingRunManagers.length > 0) {
+      if (existingRunManagers.length !== prompts.length) {
+        throw new Error(
+          "Received invalid number of existing run managers for LLM call. Please contact us for help."
+        );
+      }
+      runManagers = existingRunManagers;
+    } else {
+      const callbackManager_ = await CallbackManager.configure(
+        handledOptions.callbacks,
+        this.callbacks,
+        handledOptions.tags,
+        this.tags,
+        handledOptions.metadata,
+        this.metadata,
+        { verbose: this.verbose }
+      );
+      const extra = {
+        options: parsedOptions,
+        invocation_params: this?.invocationParams(parsedOptions),
+        batch_size: prompts.length,
+      };
+      runManagers = await callbackManager_?.handleLLMStart(
+        this.toJSON(),
+        prompts,
+        handledOptions.runId,
+        undefined,
+        extra,
+        undefined,
+        undefined,
+        handledOptions?.runName
+      );
+    }
     // Even if stream is not explicitly called, check if model is implicitly
     // called from streamEvents() or streamLog() to get all streamed events.
     // Bail out if _streamResponseChunks not overridden
@@ -346,7 +357,12 @@ export abstract class BaseLLM<
     parsedOptions: any;
     handledOptions: RunnableConfig;
     runId?: string;
-  }): Promise<LLMResult & { missingPromptIndices: number[] }> {
+  }): Promise<
+    LLMResult & {
+      missingPromptIndices: number[];
+      existingRunManagers?: CallbackManagerForLLMRun[];
+    }
+  > {
     const callbackManager_ = await CallbackManager.configure(
       handledOptions.callbacks,
       this.callbacks,
@@ -401,7 +417,13 @@ export abstract class BaseLLM<
       cachedResults.map(async ({ result: promiseResult, runManager }, i) => {
         if (promiseResult.status === "fulfilled") {
           const result = promiseResult.value as Generation[];
-          generations[i] = result;
+          generations[i] = result.map((result) => {
+            result.generationInfo = {
+              ...result.generationInfo,
+              tokenUsage: {},
+            };
+            return result;
+          });
           if (result.length) {
             await runManager?.handleLLMNewToken(result[0].text);
           }
@@ -419,6 +441,7 @@ export abstract class BaseLLM<
     const output = {
       generations,
       missingPromptIndices,
+      existingRunManagers: runManagers,
     };
 
     // This defines RUN_KEY as a non-enumerable property on the output object
@@ -465,21 +488,25 @@ export abstract class BaseLLM<
     const llmStringKey = this._getSerializedCacheKeyParametersForCall(
       callOptions as CallOptions
     );
-    const { generations, missingPromptIndices } = await this._generateCached({
-      prompts,
-      cache,
-      llmStringKey,
-      parsedOptions: callOptions,
-      handledOptions: runnableConfig,
-      runId: runnableConfig.runId,
-    });
+    const { generations, missingPromptIndices, existingRunManagers } =
+      await this._generateCached({
+        prompts,
+        cache,
+        llmStringKey,
+        parsedOptions: callOptions,
+        handledOptions: runnableConfig,
+        runId: runnableConfig.runId,
+      });
 
     let llmOutput = {};
     if (missingPromptIndices.length > 0) {
       const results = await this._generateUncached(
         missingPromptIndices.map((i) => prompts[i]),
         callOptions,
-        runnableConfig
+        runnableConfig,
+        existingRunManagers !== undefined
+          ? missingPromptIndices.map((i) => existingRunManagers?.[i])
+          : undefined
       );
       await Promise.all(
         results.generations.map(async (generation, index) => {
