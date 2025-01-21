@@ -243,7 +243,7 @@ export abstract class BaseLLM<
     handledOptions: BaseCallbackConfig,
     existingRunManagers?: CallbackManagerForLLMRun[]
   ): Promise<LLMResult> {
-    let runManagers;
+    let runManagers: CallbackManagerForLLMRun[] | undefined;
     if (existingRunManagers !== undefined && existingRunManagers.length > 0) {
       if (existingRunManagers.length !== prompts.length) {
         throw new Error(

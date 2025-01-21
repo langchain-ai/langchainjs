@@ -9,6 +9,8 @@ import {
   coerceMessageLikeToMessage,
   AIMessageChunk,
   isAIMessageChunk,
+  isBaseMessage,
+  isAIMessage,
 } from "../messages/index.js";
 import type { BasePromptValueInterface } from "../prompt_values.js";
 import {
@@ -48,7 +50,6 @@ import { concat } from "../utils/stream.js";
 import { RunnablePassthrough } from "../runnables/passthrough.js";
 import { isZodSchema } from "../utils/types/is_zod_schema.js";
 import { callbackHandlerPrefersStreaming } from "../callbacks/base.js";
-import { isAIMessage, isBaseMessage } from "../../messages.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ToolChoice = string | Record<string, any> | "auto" | "any";
@@ -351,7 +352,7 @@ export abstract class BaseChatModel<
       messageList.map(coerceMessageLikeToMessage)
     );
 
-    let runManagers;
+    let runManagers: CallbackManagerForLLMRun[] | undefined;
     if (existingRunManagers !== undefined && existingRunManagers.length > 0) {
       if (existingRunManagers.length !== baseMessages.length) {
         throw new Error(
