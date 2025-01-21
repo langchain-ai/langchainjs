@@ -287,6 +287,54 @@ test("Test ChatModel can cache complex messages", async () => {
   expect(cachedMsg.content).toEqual(JSON.stringify(contentToCache, null, 2));
 });
 
+test("Test ChatModel with cache does not start multiple chat model runs", async () => {
+  const model = new FakeChatModel({
+    cache: true,
+  });
+  if (!model.cache) {
+    throw new Error("Cache not enabled");
+  }
+
+  const contentToCache = [
+    {
+      type: "text",
+      text: "Hello there again!",
+    },
+  ];
+  const humanMessage = new HumanMessage({
+    content: contentToCache,
+  });
+
+  const prompt = getBufferString([humanMessage]);
+  const llmKey = model._getSerializedCacheKeyParametersForCall({});
+
+  const value = await model.cache.lookup(prompt, llmKey);
+  expect(value).toBeNull();
+
+  // Invoke model to trigger cache update
+  const eventStream = model.streamEvents([humanMessage], { version: "v2" });
+
+  expect(await model.cache.lookup(prompt, llmKey)).toBeDefined();
+
+  const events = [];
+  for await (const event of eventStream) {
+    events.push(event);
+  }
+  expect(events.length).toEqual(2);
+  expect(events[0].event).toEqual("on_chat_model_start");
+  expect(events[1].event).toEqual("on_chat_model_end");
+
+  const eventStream2 = model.streamEvents([humanMessage], { version: "v2" });
+
+  const events2 = [];
+  for await (const event of eventStream2) {
+    events2.push(event);
+  }
+  expect(events2.length).toEqual(2);
+  expect(events2[0].event).toEqual("on_chat_model_start");
+  expect(events2[1].event).toEqual("on_chat_model_end");
+});
+
 test("Test ChatModel can emit a custom event", async () => {
   const model = new FakeListChatModel({
     responses: ["hi"],

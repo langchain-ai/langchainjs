@@ -42,6 +42,36 @@ test("Test FakeLLM uses callbacks with a cache", async () => {
   expect(response2).toEqual(acc);
 });
 
+test("Test LLM with cache does not start multiple LLM runs", async () => {
+  const model = new FakeLLM({
+    cache: true,
+  });
+  if (!model.cache) {
+    throw new Error("Cache not enabled");
+  }
+
+  // Invoke model to trigger cache update
+  const eventStream = model.streamEvents("Hello there!", { version: "v2" });
+
+  const events = [];
+  for await (const event of eventStream) {
+    events.push(event);
+  }
+  expect(events.length).toEqual(2);
+  expect(events[0].event).toEqual("on_llm_start");
+  expect(events[1].event).toEqual("on_llm_end");
+
+  const eventStream2 = model.streamEvents("Hello there!", { version: "v2" });
+
+  const events2 = [];
+  for await (const event of eventStream2) {
+    events2.push(event);
+  }
+  expect(events2.length).toEqual(2);
+  expect(events2[0].event).toEqual("on_llm_start");
+  expect(events2[1].event).toEqual("on_llm_end");
+});
+
 test("Test FakeStreamingLLM works when streaming through a prompt", async () => {
   const prompt = HumanMessagePromptTemplate.fromTemplate("hello there {name}");
   const model = new FakeStreamingLLM({});
