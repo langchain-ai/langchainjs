@@ -346,7 +346,7 @@ export abstract class BaseChatModel<
     messages: BaseMessageLike[][],
     parsedOptions: this["ParsedCallOptions"],
     handledOptions: RunnableConfig,
-    existingRunManagers?: CallbackManagerForLLMRun[]
+    startedRunManagers?: CallbackManagerForLLMRun[]
   ): Promise<LLMResult> {
     const baseMessages = messages.map((messageList) =>
       messageList.map(coerceMessageLikeToMessage)
@@ -354,10 +354,10 @@ export abstract class BaseChatModel<
 
     let runManagers: CallbackManagerForLLMRun[] | undefined;
     if (
-      existingRunManagers !== undefined &&
-      existingRunManagers.length === baseMessages.length
+      startedRunManagers !== undefined &&
+      startedRunManagers.length === baseMessages.length
     ) {
-      runManagers = existingRunManagers;
+      runManagers = startedRunManagers;
     } else {
       const inheritableMetadata = {
         ...handledOptions.metadata,
@@ -525,7 +525,7 @@ export abstract class BaseChatModel<
   }): Promise<
     LLMResult & {
       missingPromptIndices: number[];
-      existingRunManagers?: CallbackManagerForLLMRun[];
+      startedRunManagers?: CallbackManagerForLLMRun[];
     }
   > {
     const baseMessages = messages.map((messageList) =>
@@ -633,7 +633,7 @@ export abstract class BaseChatModel<
     const output = {
       generations,
       missingPromptIndices,
-      existingRunManagers: runManagers,
+      startedRunManagers: runManagers,
     };
 
     // This defines RUN_KEY as a non-enumerable property on the output object
@@ -686,7 +686,7 @@ export abstract class BaseChatModel<
       callOptions as CallOptions
     );
 
-    const { generations, missingPromptIndices, existingRunManagers } =
+    const { generations, missingPromptIndices, startedRunManagers } =
       await this._generateCached({
         messages: baseMessages,
         cache,
@@ -701,8 +701,8 @@ export abstract class BaseChatModel<
         missingPromptIndices.map((i) => baseMessages[i]),
         callOptions,
         runnableConfig,
-        existingRunManagers !== undefined
-          ? missingPromptIndices.map((i) => existingRunManagers?.[i])
+        startedRunManagers !== undefined
+          ? missingPromptIndices.map((i) => startedRunManagers?.[i])
           : undefined
       );
       await Promise.all(
