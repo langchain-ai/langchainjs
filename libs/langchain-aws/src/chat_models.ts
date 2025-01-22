@@ -886,7 +886,7 @@ export class ChatBedrockConverse
             undefined,
             undefined,
             {
-              chunk: chunk as ChatGenerationChunk,
+              chunk: textChatGeneration,
             }
           );
         } else if (chunk.metadata) {
