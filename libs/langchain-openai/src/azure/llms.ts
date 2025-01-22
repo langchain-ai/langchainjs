@@ -57,28 +57,26 @@ export class AzureOpenAI extends OpenAI {
       }
   ) {
     super(fields);
+
     this.azureOpenAIApiDeploymentName =
       (fields?.azureOpenAIApiCompletionsDeploymentName ||
         fields?.azureOpenAIApiDeploymentName) ??
       (getEnvironmentVariable("AZURE_OPENAI_API_COMPLETIONS_DEPLOYMENT_NAME") ||
         getEnvironmentVariable("AZURE_OPENAI_API_DEPLOYMENT_NAME"));
+
     this.azureOpenAIApiKey =
       fields?.azureOpenAIApiKey ??
       fields?.openAIApiKey ??
       fields?.apiKey ??
       getEnvironmentVariable("AZURE_OPENAI_API_KEY");
-    this.azureOpenAIApiVersion =
-      fields?.azureOpenAIApiVersion ?? fields?.openAIApiVersion;
+
     this.azureOpenAIApiInstanceName =
       fields?.azureOpenAIApiInstanceName ??
       getEnvironmentVariable("AZURE_OPENAI_API_INSTANCE_NAME");
 
-    this.azureOpenAIApiDeploymentName =
-      fields?.azureOpenAIApiDeploymentName ??
-      getEnvironmentVariable("AZURE_OPENAI_API_DEPLOYMENT_NAME");
-
     this.azureOpenAIApiVersion =
       fields?.azureOpenAIApiVersion ??
+      fields?.openAIApiVersion ??
       getEnvironmentVariable("AZURE_OPENAI_API_VERSION");
 
     this.azureOpenAIBasePath =
@@ -89,19 +87,10 @@ export class AzureOpenAI extends OpenAI {
       fields?.azureOpenAIEndpoint ??
       getEnvironmentVariable("AZURE_OPENAI_ENDPOINT");
 
-    if (!this.azureOpenAIApiKey && !this.apiKey && !this.azureADTokenProvider) {
-      throw new Error("Azure OpenAI API key or Token Provider not found");
-    }
-    this.azureOpenAIApiKey =
-      fields?.azureOpenAIApiKey ??
-      getEnvironmentVariable("AZURE_OPENAI_API_KEY");
-
     this.azureADTokenProvider = fields?.azureADTokenProvider ?? undefined;
 
     if (!this.azureOpenAIApiKey && !this.apiKey && !this.azureADTokenProvider) {
-      throw new Error(
-        "OpenAI or Azure OpenAI API key or Token Provider not found"
-      );
+      throw new Error("Azure OpenAI API key or Token Provider not found");
     }
   }
 
