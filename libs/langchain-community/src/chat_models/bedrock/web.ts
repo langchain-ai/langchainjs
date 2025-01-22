@@ -924,7 +924,9 @@ export class BedrockChat
               undefined,
               undefined,
               undefined,
-              { chunk }
+              {
+                chunk: chunk as ChatGenerationChunk,
+              }
             );
           } else {
             const text = BedrockLLMInputOutputAdapter.prepareOutput(
