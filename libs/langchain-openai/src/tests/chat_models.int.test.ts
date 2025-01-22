@@ -579,6 +579,12 @@ test("ChatOpenAI can cache generations", async () => {
   expect(lookupSpy).toHaveBeenCalledTimes(2);
   expect(updateSpy).toHaveBeenCalledTimes(2);
 
+  const res2 = await chat.generate([[message], [message]]);
+  expect(res2.generations.length).toBe(2);
+
+  expect(lookupSpy).toHaveBeenCalledTimes(4);
+  expect(updateSpy).toHaveBeenCalledTimes(2);
+
   lookupSpy.mockRestore();
   updateSpy.mockRestore();
 });

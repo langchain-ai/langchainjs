@@ -131,6 +131,13 @@ function _formatContent(content: MessageContent) {
           source,
           ...(cacheControl ? { cache_control: cacheControl } : {}),
         };
+      } else if (contentPart.type === "document") {
+        // PDF
+        return {
+          type: "document",
+          source: contentPart.source,
+          ...(cacheControl ? { cache_control: cacheControl } : {}),
+        };
       } else if (
         textTypes.find((t) => t === contentPart.type) &&
         "text" in contentPart
