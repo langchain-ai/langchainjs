@@ -157,7 +157,6 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
       getEnvironmentVariable("OPENAI_ORGANIZATION");
 
     this.model = fields?.model ?? fields?.modelName ?? this.model;
-    console.log(this.model);
     if (
       (this.model?.startsWith("gpt-3.5-turbo") ||
         this.model?.startsWith("gpt-4") ||

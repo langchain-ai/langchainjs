@@ -239,7 +239,7 @@ test("Test OpenAIChat in streaming mode with multiple prompts", async () => {
 
   const model = new OpenAI({
     maxTokens: 5,
-    modelName: "gpt-3.5-turbo",
+    modelName: "gpt-3.5-turbo-instruct",
     streaming: true,
     n: 1,
     callbacks: CallbackManager.fromHandlers({
