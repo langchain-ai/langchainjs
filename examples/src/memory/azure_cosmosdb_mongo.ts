@@ -39,7 +39,8 @@ const chainWithHistory = new RunnableWithMessageHistory({
   getMessageHistory: async (sessionId) => {
     const chatHistory = new AzureCosmosDBMongoChatMessageHistory(
       dbcfg,
-      sessionId
+      sessionId,
+      "user-id"
     );
     return chatHistory;
   },
@@ -75,7 +76,11 @@ const sessions = await chatHistory.getAllSessions();
 
 console.log(sessions);
 /*
- [
-  { sessionId: 'langchain-test-session', context: { title: "Introducing Jim"  } }
- ]
+[
+  {
+    id: 'langchain-test-session',
+    user_id: 'user-id',
+    context: { title: 'Introducing Jim' }
+  }
+]
  */
