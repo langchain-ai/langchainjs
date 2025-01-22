@@ -61,10 +61,8 @@ export interface OpenAIEmbeddingsParams extends EmbeddingsParams {
  */
 export class OpenAIEmbeddings
   extends Embeddings
-  implements OpenAIEmbeddingsParams
+  implements Partial<OpenAIEmbeddingsParams>
 {
-  modelName: string;
-
   model: string;
 
   batchSize = 512;
@@ -113,9 +111,8 @@ export class OpenAIEmbeddings
       fieldsWithDefaults?.configuration?.organization ??
       getEnvironmentVariable("OPENAI_ORGANIZATION");
 
-    this.modelName =
+    this.model =
       fieldsWithDefaults?.model ?? fieldsWithDefaults?.modelName ?? this.model;
-    this.model = this.modelName;
     this.batchSize = fieldsWithDefaults?.batchSize ?? this.batchSize;
     this.stripNewLines =
       fieldsWithDefaults?.stripNewLines ?? this.stripNewLines;

@@ -1,5 +1,6 @@
 import { type ClientOptions, AzureOpenAI as AzureOpenAIClient } from "openai";
 import { type BaseLLMParams } from "@langchain/core/language_models/llms";
+import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { OpenAI } from "../llms.js";
 import { OpenAIEndpointConfig, getEndpoint } from "../utils/azure.js";
 import type {
@@ -7,7 +8,6 @@ import type {
   AzureOpenAIInput,
   OpenAICoreRequestOptions,
 } from "../types.js";
-import { getEnvironmentVariable } from "@langchain/core/utils/env";
 
 export class AzureOpenAI extends OpenAI {
   azureOpenAIApiVersion?: string;

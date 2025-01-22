@@ -112,9 +112,7 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
 
   logitBias?: Record<string, number>;
 
-  modelName: string;
-
-  model: string;
+  model = "gpt-3.5-turbo";
 
   modelKwargs?: OpenAIInput["modelKwargs"];
 
@@ -146,9 +144,7 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
         configuration?: ClientOptions;
       }
   ) {
-    let model = fields?.model ?? fields?.modelName;
     super(fields ?? {});
-    model = model ?? this.model;
 
     this.openAIApiKey =
       fields?.apiKey ??
@@ -160,8 +156,25 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
       fields?.configuration?.organization ??
       getEnvironmentVariable("OPENAI_ORGANIZATION");
 
-    this.modelName = model;
-    this.model = model;
+    this.model = fields?.model ?? fields?.modelName ?? this.model;
+    if (
+      (this.model?.startsWith("gpt-3.5-turbo") ||
+        this.model?.startsWith("gpt-4") ||
+        this.model?.startsWith("o1")) &&
+      !this.model?.includes("-instruct")
+    ) {
+      throw new Error(
+        [
+          `Your chosen OpenAI model, "${this.model}", is a chat model and not a text-in/text-out LLM.`,
+          `Passing it into the "OpenAI" class is no longer supported.`,
+          `Please use the "ChatOpenAI" class instead.`,
+          "",
+          `See this page for more information:`,
+          "|",
+          `└> https://js.langchain.com/docs/integrations/chat/openai`,
+        ].join("\n")
+      );
+    }
     this.modelKwargs = fields?.modelKwargs ?? {};
     this.batchSize = fields?.batchSize ?? this.batchSize;
     this.timeout = fields?.timeout;
