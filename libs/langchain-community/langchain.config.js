@@ -461,8 +461,9 @@ export const config = {
     "cache/upstash_redis",
     "cache/vercel_kv",
     //graphs
-    "graphs/neo4j_graph",
+    "graphs/document",
     "graphs/memgraph_graph",
+    "graphs/neo4j_graph",
     // document_compressors
     "document_compressors/ibm",
     // document_transformers
