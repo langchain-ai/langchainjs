@@ -918,7 +918,14 @@ export class BedrockChat
               yield chunk;
             }
             // eslint-disable-next-line no-void
-            void runManager?.handleLLMNewToken(chunk.text);
+            void runManager?.handleLLMNewToken(
+              chunk.text,
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              { chunk }
+            );
           } else {
             const text = BedrockLLMInputOutputAdapter.prepareOutput(
               provider,
