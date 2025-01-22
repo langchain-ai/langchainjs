@@ -201,7 +201,11 @@ function mapToBaseNode(node: any): Node {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function mapToBaseRelationship({ fallbackRelationshipType }: { fallbackRelationshipType: string | null }) {
+function mapToBaseRelationship({
+  fallbackRelationshipType,
+}: {
+  fallbackRelationshipType: string | null;
+}) {
   return function (relationship: any): Relationship {
     return new Relationship({
       source: new Node({
@@ -216,12 +220,14 @@ function mapToBaseRelationship({ fallbackRelationshipType }: { fallbackRelations
           ? toTitleCase(relationship.targetNodeType)
           : "",
       }),
-      type: (relationship.relationshipType || fallbackRelationshipType).replace(" ", "_").toUpperCase(),
+      type: (relationship.relationshipType || fallbackRelationshipType)
+        .replace(" ", "_")
+        .toUpperCase(),
       properties: relationship.properties
         ? convertPropertiesToRecord(relationship.properties)
         : {},
     });
-  }
+  };
 }
 
 export interface LLMGraphTransformerProps {
@@ -238,7 +244,7 @@ export interface LLMGraphTransformerProps {
    * The LLM may rarely create relationships without a type, causing extraction to fail.
    * Use this to provide a fallback relationship type in such case.
    */
-  fallbackRelationshipType?: string | null
+  fallbackRelationshipType?: string | null;
 }
 
 export class LLMGraphTransformer {
@@ -278,7 +284,7 @@ export class LLMGraphTransformer {
     this.strictMode = strictMode;
     this.nodeProperties = nodeProperties;
     this.relationshipProperties = relationshipProperties;
-    this.fallbackRelationshipType = fallbackRelationshipType
+    this.fallbackRelationshipType = fallbackRelationshipType;
 
     // Define chain
     const schema = createSchema(
@@ -310,7 +316,9 @@ export class LLMGraphTransformer {
     let relationships: Relationship[] = [];
     if (rawSchema?.relationships) {
       relationships = rawSchema.relationships.map(
-        mapToBaseRelationship({ fallbackRelationshipType: this.fallbackRelationshipType })
+        mapToBaseRelationship({
+          fallbackRelationshipType: this.fallbackRelationshipType,
+        })
       );
     }
 
