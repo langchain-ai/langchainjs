@@ -1,6 +1,6 @@
 {
   "name": "@langchain/community",
-  "version": "0.3.24",
+  "version": "0.3.26",
   "description": "Third-party integrations for LangChain.js",
   "type": "module",
   "engines": {
@@ -41,7 +41,7 @@
     "flat": "^5.0.2",
     "js-yaml": "^4.1.0",
     "langchain": ">=0.2.3 <0.3.0 || >=0.3.4 <0.4.0",
-    "langsmith": "^0.2.8",
+    "langsmith": ">=0.2.8 <0.4.0",
     "uuid": "^10.0.0",
     "zod": "^3.22.3",
     "zod-to-json-schema": "^3.22.5"
