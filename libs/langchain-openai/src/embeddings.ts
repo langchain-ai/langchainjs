@@ -102,7 +102,7 @@ export class OpenAIEmbeddings
 
     super(fieldsWithDefaults);
 
-    let apiKey =
+    const apiKey =
       fieldsWithDefaults?.apiKey ??
       fieldsWithDefaults?.openAIApiKey ??
       getEnvironmentVariable("OPENAI_API_KEY");
