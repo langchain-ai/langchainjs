@@ -5,7 +5,6 @@ import { LLMResult } from "@langchain/core/outputs";
 import { StringPromptValue } from "@langchain/core/prompt_values";
 import { CallbackManager } from "@langchain/core/callbacks/manager";
 import { NewTokenIndices } from "@langchain/core/callbacks/base";
-import { OpenAIChat } from "../legacy.js";
 import { OpenAI } from "../llms.js";
 
 // Save the original value of the 'LANGCHAIN_CALLBACKS_BACKGROUND' environment variable
@@ -128,14 +127,6 @@ test("Test OpenAI with maxTokens -1", async () => {
   // @ts-expect-error unused var
   const res = await model.call("Print hello world", ["world"]);
   // console.log({ res });
-});
-
-test("Test OpenAI with chat model returns OpenAIChat", async () => {
-  const model = new OpenAI({ modelName: "gpt-3.5-turbo" });
-  expect(model).toBeInstanceOf(OpenAIChat);
-  const res = await model.invoke("Print hello world");
-  // console.log({ res });
-  expect(typeof res).toBe("string");
 });
 
 test("Test OpenAI with instruct model returns OpenAI", async () => {

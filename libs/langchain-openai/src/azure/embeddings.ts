@@ -4,15 +4,24 @@ import {
   OpenAI as OpenAIClient,
 } from "openai";
 import { OpenAIEmbeddings, OpenAIEmbeddingsParams } from "../embeddings.js";
-import {
-  AzureOpenAIInput,
-  OpenAICoreRequestOptions,
-  LegacyOpenAIInput,
-} from "../types.js";
+import { AzureOpenAIInput, OpenAICoreRequestOptions } from "../types.js";
 import { getEndpoint, OpenAIEndpointConfig } from "../utils/azure.js";
 import { wrapOpenAIClientError } from "../utils/openai.js";
+import { getEnvironmentVariable } from "@langchain/core/utils/env";
 
 export class AzureOpenAIEmbeddings extends OpenAIEmbeddings {
+  azureOpenAIApiVersion?: string;
+
+  azureOpenAIApiKey?: string;
+
+  azureADTokenProvider?: () => Promise<string>;
+
+  azureOpenAIApiInstanceName?: string;
+
+  azureOpenAIApiDeploymentName?: string;
+
+  azureOpenAIBasePath?: string;
+
   constructor(
     fields?: Partial<OpenAIEmbeddingsParams> &
       Partial<AzureOpenAIInput> & {
@@ -22,21 +31,28 @@ export class AzureOpenAIEmbeddings extends OpenAIEmbeddings {
         configuration?: ClientOptions;
         deploymentName?: string;
         openAIApiVersion?: string;
-      },
-    configuration?: ClientOptions & LegacyOpenAIInput
+      }
   ) {
-    const newFields = { ...fields };
-    if (Object.entries(newFields).length) {
-      // don't rewrite the fields if they are already set
-      newFields.azureOpenAIApiDeploymentName =
-        newFields.azureOpenAIApiDeploymentName ?? newFields.deploymentName;
-      newFields.azureOpenAIApiKey =
-        newFields.azureOpenAIApiKey ?? newFields.apiKey;
-      newFields.azureOpenAIApiVersion =
-        newFields.azureOpenAIApiVersion ?? newFields.openAIApiVersion;
-    }
-
-    super(newFields, configuration);
+    super(fields);
+    this.batchSize = fields?.batchSize ?? 1;
+    this.azureOpenAIApiKey =
+      fields?.azureOpenAIApiKey ??
+      getEnvironmentVariable("AZURE_OPENAI_API_KEY");
+    this.azureADTokenProvider = fields?.azureADTokenProvider;
+    this.azureOpenAIApiVersion =
+      fields?.azureOpenAIApiVersion ??
+      getEnvironmentVariable("AZURE_OPENAI_API_VERSION");
+    this.azureOpenAIBasePath =
+      fields?.azureOpenAIBasePath ??
+      getEnvironmentVariable("AZURE_OPENAI_BASE_PATH");
+    this.azureOpenAIApiInstanceName =
+      fields?.azureOpenAIApiInstanceName ??
+      getEnvironmentVariable("AZURE_OPENAI_API_INSTANCE_NAME");
+    this.azureOpenAIApiDeploymentName =
+      (fields?.azureOpenAIApiEmbeddingsDeploymentName ||
+        fields?.azureOpenAIApiDeploymentName) ??
+      (getEnvironmentVariable("AZURE_OPENAI_API_EMBEDDINGS_DEPLOYMENT_NAME") ||
+        getEnvironmentVariable("AZURE_OPENAI_API_DEPLOYMENT_NAME"));
   }
 
   protected async embeddingWithRetry(

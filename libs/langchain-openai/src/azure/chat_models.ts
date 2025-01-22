@@ -3,15 +3,16 @@ import {
   LangSmithParams,
   type BaseChatModelParams,
 } from "@langchain/core/language_models/chat_models";
+import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { ChatOpenAI } from "../chat_models.js";
 import { OpenAIEndpointConfig, getEndpoint } from "../utils/azure.js";
 import {
   AzureOpenAIInput,
-  LegacyOpenAIInput,
   OpenAIChatInput,
   OpenAICoreRequestOptions,
 } from "../types.js";
-import { getEnvironmentVariable } from "@langchain/core/utils/env";
+
+export type { AzureOpenAIInput };
 
 /**
  * Azure OpenAI chat model integration.
@@ -426,12 +427,27 @@ import { getEnvironmentVariable } from "@langchain/core/utils/env";
  * </details>
  */
 export class AzureChatOpenAI extends ChatOpenAI {
+  azureOpenAIApiVersion?: string;
+
+  azureOpenAIApiKey?: string;
+
+  azureADTokenProvider?: () => Promise<string>;
+
+  azureOpenAIApiInstanceName?: string;
+
+  azureOpenAIApiDeploymentName?: string;
+
+  azureOpenAIBasePath?: string;
+
+  azureOpenAIEndpoint?: string;
+
   _llmType(): string {
     return "azure_openai";
   }
 
   get lc_aliases(): Record<string, string> {
     return {
+      ...super.lc_aliases,
       openAIApiKey: "openai_api_key",
       openAIApiVersion: "openai_api_version",
       openAIBasePath: "openai_api_base",
@@ -443,6 +459,13 @@ export class AzureChatOpenAI extends ChatOpenAI {
     };
   }
 
+  get lc_secrets(): { [key: string]: string } | undefined {
+    return {
+      ...super.lc_secrets,
+      azureOpenAIApiKey: "AZURE_OPENAI_API_KEY",
+    };
+  }
+
   constructor(
     fields?: Partial<OpenAIChatInput> &
       Partial<AzureOpenAIInput> & {
@@ -451,39 +474,42 @@ export class AzureChatOpenAI extends ChatOpenAI {
         openAIBasePath?: string;
         deploymentName?: string;
       } & BaseChatModelParams & {
-        configuration?: ClientOptions & LegacyOpenAIInput;
+        configuration?: ClientOptions;
       }
   ) {
-    const newFields = fields ? { ...fields } : {};
-    newFields.azureOpenAIApiDeploymentName =
-      newFields.azureOpenAIApiDeploymentName ?? newFields.deploymentName;
-    newFields.azureOpenAIApiKey =
-      newFields.azureOpenAIApiKey ??
-      newFields.openAIApiKey ??
+    super(fields);
+    this.azureOpenAIApiDeploymentName =
+      fields?.azureOpenAIApiDeploymentName ?? fields?.deploymentName;
+    this.azureOpenAIApiKey =
+      fields?.azureOpenAIApiKey ??
+      fields?.openAIApiKey ??
+      fields?.apiKey ??
       getEnvironmentVariable("AZURE_OPENAI_API_KEY");
-    newFields.azureOpenAIApiVersion =
-      newFields.azureOpenAIApiVersion ?? newFields.openAIApiVersion;
-    newFields.azureOpenAIApiInstanceName =
+    this.azureOpenAIApiVersion =
+      fields?.azureOpenAIApiVersion ?? fields?.openAIApiVersion;
+    this.azureOpenAIApiInstanceName =
       fields?.azureOpenAIApiInstanceName ??
       getEnvironmentVariable("AZURE_OPENAI_API_INSTANCE_NAME");
 
-    newFields.azureOpenAIApiDeploymentName =
+    this.azureOpenAIApiDeploymentName =
       fields?.azureOpenAIApiDeploymentName ??
       getEnvironmentVariable("AZURE_OPENAI_API_DEPLOYMENT_NAME");
 
-    newFields.azureOpenAIApiVersion =
+    this.azureOpenAIApiVersion =
       fields?.azureOpenAIApiVersion ??
       getEnvironmentVariable("AZURE_OPENAI_API_VERSION");
 
-    newFields.azureOpenAIBasePath =
+    this.azureOpenAIBasePath =
       fields?.azureOpenAIBasePath ??
       getEnvironmentVariable("AZURE_OPENAI_BASE_PATH");
 
-    newFields.azureOpenAIEndpoint =
+    this.azureOpenAIEndpoint =
       fields?.azureOpenAIEndpoint ??
       getEnvironmentVariable("AZURE_OPENAI_ENDPOINT");
 
-    super(newFields);
+    if (!this.azureOpenAIApiKey && !this.apiKey && !this.azureADTokenProvider) {
+      throw new Error("Azure OpenAI API key or Token Provider not found");
+    }
   }
 
   getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {

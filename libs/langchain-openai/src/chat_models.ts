@@ -64,11 +64,9 @@ import type {
   ResponseFormatJSONSchema,
 } from "openai/resources/shared";
 import type {
-  AzureOpenAIInput,
   OpenAICallOptions,
   OpenAIChatInput,
   OpenAICoreRequestOptions,
-  LegacyOpenAIInput,
   ChatOpenAIResponseFormat,
 } from "./types.js";
 import { type OpenAIEndpointConfig, getEndpoint } from "./utils/azure.js";
@@ -83,7 +81,7 @@ import {
 } from "./utils/openai-format-fndef.js";
 import { _convertToOpenAITool } from "./utils/tools.js";
 
-export type { AzureOpenAIInput, OpenAICallOptions, OpenAIChatInput };
+export type { OpenAICallOptions, OpenAIChatInput };
 
 interface TokenUsage {
   completionTokens?: number;
@@ -461,9 +459,8 @@ export interface ChatOpenAICallOptions
 
 export interface ChatOpenAIFields
   extends Partial<OpenAIChatInput>,
-    Partial<AzureOpenAIInput>,
     BaseChatModelParams {
-  configuration?: ClientOptions & LegacyOpenAIInput;
+  configuration?: ClientOptions;
 }
 
 /**
@@ -1006,7 +1003,7 @@ export class ChatOpenAI<
     CallOptions extends ChatOpenAICallOptions = ChatOpenAICallOptions
   >
   extends BaseChatModel<CallOptions, AIMessageChunk>
-  implements OpenAIChatInput, AzureOpenAIInput
+  implements Partial<OpenAIChatInput>
 {
   static lc_name() {
     return "ChatOpenAI";
@@ -1033,7 +1030,6 @@ export class ChatOpenAI<
     return {
       openAIApiKey: "OPENAI_API_KEY",
       apiKey: "OPENAI_API_KEY",
-      azureOpenAIApiKey: "AZURE_OPENAI_API_KEY",
       organization: "OPENAI_ORGANIZATION",
     };
   }
@@ -1043,28 +1039,24 @@ export class ChatOpenAI<
       modelName: "model",
       openAIApiKey: "openai_api_key",
       apiKey: "openai_api_key",
-      azureOpenAIApiVersion: "azure_openai_api_version",
-      azureOpenAIApiKey: "azure_openai_api_key",
-      azureOpenAIApiInstanceName: "azure_openai_api_instance_name",
-      azureOpenAIApiDeploymentName: "azure_openai_api_deployment_name",
     };
   }
 
-  temperature = 1;
+  temperature?: number;
 
-  topP = 1;
+  topP?: number;
 
-  frequencyPenalty = 0;
+  frequencyPenalty?: number;
 
-  presencePenalty = 0;
+  presencePenalty?: number;
 
   n = 1;
 
   logitBias?: Record<string, number>;
 
-  modelName = "gpt-3.5-turbo";
+  modelName: string;
 
-  model = "gpt-3.5-turbo";
+  model: string;
 
   modelKwargs?: OpenAIChatInput["modelKwargs"];
 
@@ -1090,20 +1082,6 @@ export class ChatOpenAI<
 
   apiKey?: string;
 
-  azureOpenAIApiVersion?: string;
-
-  azureOpenAIApiKey?: string;
-
-  azureADTokenProvider?: () => Promise<string>;
-
-  azureOpenAIApiInstanceName?: string;
-
-  azureOpenAIApiDeploymentName?: string;
-
-  azureOpenAIBasePath?: string;
-
-  azureOpenAIEndpoint?: string;
-
   organization?: string;
 
   __includeRawResponse?: boolean;
@@ -1124,11 +1102,7 @@ export class ChatOpenAI<
 
   reasoningEffort?: OpenAIClient.Chat.ChatCompletionReasoningEffort;
 
-  constructor(
-    fields?: ChatOpenAIFields,
-    /** @deprecated */
-    configuration?: ClientOptions & LegacyOpenAIInput
-  ) {
+  constructor(fields?: ChatOpenAIFields) {
     super(fields ?? {});
 
     this.openAIApiKey =
@@ -1137,27 +1111,6 @@ export class ChatOpenAI<
       fields?.configuration?.apiKey ??
       getEnvironmentVariable("OPENAI_API_KEY");
     this.apiKey = this.openAIApiKey;
-
-    this.azureOpenAIApiKey = fields?.azureOpenAIApiKey;
-
-    this.azureADTokenProvider = fields?.azureADTokenProvider ?? undefined;
-
-    if (!this.azureOpenAIApiKey && !this.apiKey && !this.azureADTokenProvider) {
-      throw new Error(
-        "OpenAI or Azure OpenAI API key or Token Provider not found"
-      );
-    }
-
-    this.azureOpenAIApiInstanceName = fields?.azureOpenAIApiInstanceName;
-
-    this.azureOpenAIApiDeploymentName = fields?.azureOpenAIApiDeploymentName;
-
-    this.azureOpenAIApiVersion = fields?.azureOpenAIApiVersion;
-
-    this.azureOpenAIBasePath = fields?.azureOpenAIBasePath;
-
-    this.azureOpenAIEndpoint = fields?.azureOpenAIEndpoint;
-
     this.organization =
       fields?.configuration?.organization ??
       getEnvironmentVariable("OPENAI_ORGANIZATION");
@@ -1184,33 +1137,6 @@ export class ChatOpenAI<
     this.modalities = fields?.modalities;
     this.reasoningEffort = fields?.reasoningEffort;
 
-    if (this.azureOpenAIApiKey || this.azureADTokenProvider) {
-      if (
-        !this.azureOpenAIApiInstanceName &&
-        !this.azureOpenAIBasePath &&
-        !this.azureOpenAIEndpoint
-      ) {
-        throw new Error("Azure OpenAI API instance name not found");
-      }
-
-      if (!this.azureOpenAIApiDeploymentName && this.azureOpenAIBasePath) {
-        const parts = this.azureOpenAIBasePath.split("/openai/deployments/");
-        if (parts.length === 2) {
-          const [, deployment] = parts;
-          this.azureOpenAIApiDeploymentName = deployment;
-        }
-      }
-      if (!this.azureOpenAIApiDeploymentName) {
-        throw new Error("Azure OpenAI API deployment name not found");
-      }
-      if (!this.azureOpenAIApiVersion) {
-        throw new Error("Azure OpenAI API version not found");
-      }
-      this.apiKey = this.apiKey ?? "";
-      // Streaming usage is not supported by Azure deployments, so default to false
-      this.streamUsage = false;
-    }
-
     if (this.model === "o1") {
       this.disableStreaming = true;
     }
@@ -1221,15 +1147,7 @@ export class ChatOpenAI<
     this.clientConfig = {
       apiKey: this.apiKey,
       organization: this.organization,
-      baseURL: configuration?.basePath ?? fields?.configuration?.basePath,
       dangerouslyAllowBrowser: true,
-      defaultHeaders:
-        configuration?.baseOptions?.headers ??
-        fields?.configuration?.baseOptions?.headers,
-      defaultQuery:
-        configuration?.baseOptions?.params ??
-        fields?.configuration?.baseOptions?.params,
-      ...configuration,
       ...fields?.configuration,
     };
 
@@ -1890,12 +1808,7 @@ export class ChatOpenAI<
   protected _getClientOptions(options: OpenAICoreRequestOptions | undefined) {
     if (!this.client) {
       const openAIEndpointConfig: OpenAIEndpointConfig = {
-        azureOpenAIApiDeploymentName: this.azureOpenAIApiDeploymentName,
-        azureOpenAIApiInstanceName: this.azureOpenAIApiInstanceName,
-        azureOpenAIApiKey: this.azureOpenAIApiKey,
-        azureOpenAIBasePath: this.azureOpenAIBasePath,
         baseURL: this.clientConfig.baseURL,
-        azureOpenAIEndpoint: this.azureOpenAIEndpoint,
       };
 
       const endpoint = getEndpoint(openAIEndpointConfig);
@@ -1915,16 +1828,6 @@ export class ChatOpenAI<
       ...this.clientConfig,
       ...options,
     } as OpenAICoreRequestOptions;
-    if (this.azureOpenAIApiKey) {
-      requestOptions.headers = {
-        "api-key": this.azureOpenAIApiKey,
-        ...requestOptions.headers,
-      };
-      requestOptions.query = {
-        "api-version": this.azureOpenAIApiVersion,
-        ...requestOptions.query,
-      };
-    }
     return requestOptions;
   }
 

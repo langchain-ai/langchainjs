@@ -14,20 +14,11 @@ import type {
   OpenAICallOptions,
   OpenAICoreRequestOptions,
   OpenAIInput,
-  LegacyOpenAIInput,
 } from "./types.js";
 import { OpenAIEndpointConfig, getEndpoint } from "./utils/azure.js";
-import { OpenAIChat, OpenAIChatCallOptions } from "./legacy.js";
 import { wrapOpenAIClientError } from "./utils/openai.js";
 
-export type {
-  AzureOpenAIInput,
-  OpenAICallOptions,
-  OpenAIInput,
-  OpenAIChatCallOptions,
-};
-
-export { OpenAIChat };
+export type { AzureOpenAIInput, OpenAICallOptions, OpenAIInput };
 
 /**
  * Interface for tracking token usage in OpenAI calls.
@@ -72,7 +63,7 @@ interface TokenUsage {
  */
 export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
   extends BaseLLM<CallOptions>
-  implements OpenAIInput, AzureOpenAIInput
+  implements Partial<OpenAIInput>
 {
   static lc_name() {
     return "OpenAI";
@@ -105,15 +96,15 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
     };
   }
 
-  temperature = 0.7;
+  temperature?: number;
 
-  maxTokens = 256;
+  maxTokens?: number;
 
-  topP = 1;
+  topP?: number;
 
-  frequencyPenalty = 0;
+  frequencyPenalty?: number;
 
-  presencePenalty = 0;
+  presencePenalty?: number;
 
   n = 1;
 
@@ -121,9 +112,9 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
 
   logitBias?: Record<string, number>;
 
-  modelName = "gpt-3.5-turbo-instruct";
+  modelName: string;
 
-  model = "gpt-3.5-turbo-instruct";
+  model: string;
 
   modelKwargs?: OpenAIInput["modelKwargs"];
 
@@ -143,18 +134,6 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
 
   apiKey?: string;
 
-  azureOpenAIApiVersion?: string;
-
-  azureOpenAIApiKey?: string;
-
-  azureADTokenProvider?: () => Promise<string>;
-
-  azureOpenAIApiInstanceName?: string;
-
-  azureOpenAIApiDeploymentName?: string;
-
-  azureOpenAIBasePath?: string;
-
   organization?: string;
 
   protected client: OpenAIClient;
@@ -163,35 +142,11 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
 
   constructor(
     fields?: Partial<OpenAIInput> &
-      Partial<AzureOpenAIInput> &
       BaseLLMParams & {
-        configuration?: ClientOptions & LegacyOpenAIInput;
-      },
-    /** @deprecated */
-    configuration?: ClientOptions & LegacyOpenAIInput
+        configuration?: ClientOptions;
+      }
   ) {
     let model = fields?.model ?? fields?.modelName;
-    if (
-      (model?.startsWith("gpt-3.5-turbo") || model?.startsWith("gpt-4")) &&
-      !model?.includes("-instruct")
-    ) {
-      console.warn(
-        [
-          `Your chosen OpenAI model, "${model}", is a chat model and not a text-in/text-out LLM.`,
-          `Passing it into the "OpenAI" class is deprecated and only permitted for backwards-compatibility. You may experience odd behavior.`,
-          `Please use the "ChatOpenAI" class instead.`,
-          "",
-          `See this page for more information:`,
-          "|",
-          `└> https://js.langchain.com/docs/integrations/chat/openai`,
-        ].join("\n")
-      );
-      // eslint-disable-next-line no-constructor-return
-      return new OpenAIChat(
-        fields,
-        configuration
-      ) as unknown as OpenAI<CallOptions>;
-    }
     super(fields ?? {});
     model = model ?? this.model;
 
@@ -200,36 +155,6 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
       fields?.openAIApiKey ??
       getEnvironmentVariable("OPENAI_API_KEY");
     this.apiKey = this.openAIApiKey;
-
-    this.azureOpenAIApiKey =
-      fields?.azureOpenAIApiKey ??
-      getEnvironmentVariable("AZURE_OPENAI_API_KEY");
-
-    this.azureADTokenProvider = fields?.azureADTokenProvider ?? undefined;
-
-    if (!this.azureOpenAIApiKey && !this.apiKey && !this.azureADTokenProvider) {
-      throw new Error(
-        "OpenAI or Azure OpenAI API key or Token Provider not found"
-      );
-    }
-
-    this.azureOpenAIApiInstanceName =
-      fields?.azureOpenAIApiInstanceName ??
-      getEnvironmentVariable("AZURE_OPENAI_API_INSTANCE_NAME");
-
-    this.azureOpenAIApiDeploymentName =
-      (fields?.azureOpenAIApiCompletionsDeploymentName ||
-        fields?.azureOpenAIApiDeploymentName) ??
-      (getEnvironmentVariable("AZURE_OPENAI_API_COMPLETIONS_DEPLOYMENT_NAME") ||
-        getEnvironmentVariable("AZURE_OPENAI_API_DEPLOYMENT_NAME"));
-
-    this.azureOpenAIApiVersion =
-      fields?.azureOpenAIApiVersion ??
-      getEnvironmentVariable("AZURE_OPENAI_API_VERSION");
-
-    this.azureOpenAIBasePath =
-      fields?.azureOpenAIBasePath ??
-      getEnvironmentVariable("AZURE_OPENAI_BASE_PATH");
 
     this.organization =
       fields?.configuration?.organization ??
@@ -259,31 +184,10 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
       throw new Error("Cannot stream results when bestOf > 1");
     }
 
-    if (this.azureOpenAIApiKey || this.azureADTokenProvider) {
-      if (!this.azureOpenAIApiInstanceName && !this.azureOpenAIBasePath) {
-        throw new Error("Azure OpenAI API instance name not found");
-      }
-      if (!this.azureOpenAIApiDeploymentName) {
-        throw new Error("Azure OpenAI API deployment name not found");
-      }
-      if (!this.azureOpenAIApiVersion) {
-        throw new Error("Azure OpenAI API version not found");
-      }
-      this.apiKey = this.apiKey ?? "";
-    }
-
     this.clientConfig = {
       apiKey: this.apiKey,
       organization: this.organization,
-      baseURL: configuration?.basePath ?? fields?.configuration?.basePath,
       dangerouslyAllowBrowser: true,
-      defaultHeaders:
-        configuration?.baseOptions?.headers ??
-        fields?.configuration?.baseOptions?.headers,
-      defaultQuery:
-        configuration?.baseOptions?.params ??
-        fields?.configuration?.baseOptions?.params,
-      ...configuration,
       ...fields?.configuration,
     };
   }
@@ -550,10 +454,6 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
   protected _getClientOptions(options: OpenAICoreRequestOptions | undefined) {
     if (!this.client) {
       const openAIEndpointConfig: OpenAIEndpointConfig = {
-        azureOpenAIApiDeploymentName: this.azureOpenAIApiDeploymentName,
-        azureOpenAIApiInstanceName: this.azureOpenAIApiInstanceName,
-        azureOpenAIApiKey: this.azureOpenAIApiKey,
-        azureOpenAIBasePath: this.azureOpenAIBasePath,
         baseURL: this.clientConfig.baseURL,
       };
 
@@ -576,16 +476,6 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
       ...this.clientConfig,
       ...options,
     } as OpenAICoreRequestOptions;
-    if (this.azureOpenAIApiKey) {
-      requestOptions.headers = {
-        "api-key": this.azureOpenAIApiKey,
-        ...requestOptions.headers,
-      };
-      requestOptions.query = {
-        "api-version": this.azureOpenAIApiVersion,
-        ...requestOptions.query,
-      };
-    }
     return requestOptions;
   }
 
