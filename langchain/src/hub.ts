@@ -1,5 +1,6 @@
 import { Client } from "langsmith";
 import { Runnable } from "@langchain/core/runnables";
+import type { BaseLanguageModel } from "@langchain/core/language_models/base";
 import { load } from "./load/index.js";
 
 /**
@@ -47,7 +48,13 @@ export async function push(
  */
 export async function pull<T extends Runnable>(
   ownerRepoCommit: string,
-  options?: { apiKey?: string; apiUrl?: string; includeModel?: boolean }
+  options?: {
+    apiKey?: string;
+    apiUrl?: string;
+    includeModel?: boolean;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    modelClass?: new (...args: any[]) => BaseLanguageModel;
+  }
 ) {
   const client = new Client(options);
 
@@ -68,5 +75,68 @@ export async function pull<T extends Runnable>(
     lc_hub_repo: promptObject.repo,
     lc_hub_commit_hash: promptObject.commit_hash,
   };
-  return load<T>(JSON.stringify(promptObject.manifest));
+
+  const modelImportMap: Record<string, any> = {};
+  // TODO: Fix in 0.4.0. We can't get lc_id without instantiating the class, so we
+  // must put them inline here. In the future, make this less hacky
+  // This should probably use dynamic imports and have a web-only entrypoint
+  // in a future breaking release
+  if (options?.modelClass !== undefined) {
+    const modelLcName = (options.modelClass as any)?.lc_name();
+    let importMapKey;
+    if (modelLcName === "ChatAnthropic") {
+      importMapKey = "chat_models__anthropic";
+    } else if (modelLcName === "ChatAzureOpenAI") {
+      importMapKey = "chat_models__openai";
+    } else if (modelLcName === "ChatGoogleVertexAI") {
+      importMapKey = "chat_models__vertexai";
+    } else if (modelLcName === "ChatGoogleGenerativeAI") {
+      importMapKey = "chat_models__google_genai";
+    } else if (modelLcName === "ChatBedrockConverse") {
+      importMapKey = "chat_models__chat_bedrock_converse";
+    } else if (modelLcName === "ChatMistral") {
+      importMapKey = "chat_models__mistralai";
+    } else if (modelLcName === "ChatFireworks") {
+      importMapKey = "chat_models__fireworks";
+    } else if (modelLcName === "ChatGroq") {
+      importMapKey = "chat_models__groq";
+    } else {
+      throw new Error("Received unsupport model class when pulling prompt.");
+    }
+    modelImportMap[importMapKey] = {
+      ...modelImportMap[importMapKey],
+      [modelLcName]: options.modelClass,
+    };
+  }
+
+  try {
+    const loadedPrompt = await load<T>(
+      JSON.stringify(promptObject.manifest),
+      undefined,
+      undefined,
+      modelImportMap
+    );
+    return loadedPrompt;
+  } catch (e: any) {
+    if (options?.includeModel && options?.modelClass === undefined) {
+      throw new Error(
+        [
+          e.message,
+          "",
+          `To load prompts with an associated non-OpenAI model, you must pass a "modelClass" parameter like this:`,
+          "",
+          "```",
+          `import { ChatAnthropic } from "@langchain/anthropic";`,
+          "",
+          `const prompt = await pull("my-prompt", {`,
+          `  includeModel: true,`,
+          `  modelClass: ChatAnthropic,`,
+          `});`,
+          "```",
+        ].join("\n")
+      );
+    } else {
+      throw e;
+    }
+  }
 }
