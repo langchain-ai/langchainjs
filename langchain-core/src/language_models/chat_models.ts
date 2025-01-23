@@ -399,6 +399,7 @@ export abstract class BaseChatModel<
     );
     if (
       hasStreamingHandler &&
+      !this.disableStreaming &&
       baseMessages.length === 1 &&
       this._streamResponseChunks !==
         BaseChatModel.prototype._streamResponseChunks
