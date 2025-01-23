@@ -18,7 +18,7 @@ export const config = {
     /@langchain\/community/,
     "axios", // axios is a dependency of openai
     "mysql2/promise",
-    "notion-to-md/build/utils/notion.js"
+    "notion-to-md/build/utils/notion.js",
   ],
   entrypoints: {
     load: "load/index",
@@ -67,7 +67,7 @@ export const config = {
     // text_splitter
     text_splitter: "text_splitter",
     // memory
-    "memory": "memory/index",
+    memory: "memory/index",
     "memory/chat_memory": "memory/chat_memory",
     // document
     document: "document",
@@ -146,11 +146,7 @@ export const config = {
     "schema/query_constructor": "schema/query_constructor",
     "schema/prompt_template": "schema/prompt_template",
   },
-  deprecatedOmitFromImportMap: [
-    "document",
-    "load/serializable",
-    "runnables",
-  ],
+  deprecatedOmitFromImportMap: ["document", "load/serializable", "runnables"],
   requiresOptionalDependency: [
     "agents/load",
     "agents/toolkits/sql",
@@ -201,6 +197,7 @@ export const config = {
     "document_loaders/fs/csv",
     "document_loaders/fs/notion",
     "document_loaders/fs/obsidian",
+    "document_loaders/fs/acreom",
     "document_loaders/fs/unstructured",
     "document_loaders/fs/openai_whisper_audio",
     "document_loaders/fs/pptx",
@@ -293,9 +290,7 @@ export const config = {
       path: "@langchain/core/prompts",
     },
     {
-      modules: [
-        "ImagePromptTemplate",
-      ],
+      modules: ["ImagePromptTemplate"],
       alias: ["prompts", "image"],
       path: "@langchain/core/prompts",
     },
@@ -337,7 +332,7 @@ export const config = {
       modules: ["ChatGenerationChunk", "GenerationChunk"],
       alias: ["schema", "output"],
       path: "@langchain/core/outputs",
-    }
+    },
   ],
   shouldTestExports: true,
   tsConfigPath: resolve("./tsconfig.json"),
