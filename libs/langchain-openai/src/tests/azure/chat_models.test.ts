@@ -1,3 +1,4 @@
+/* eslint-disable no-process-env */
 import { AzureChatOpenAI } from "../../azure/chat_models.js";
 
 beforeEach(() => {
