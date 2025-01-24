@@ -37,10 +37,12 @@ export class AzureOpenAIEmbeddings extends OpenAIEmbeddings {
     this.batchSize = fields?.batchSize ?? 1;
     this.azureOpenAIApiKey =
       fields?.azureOpenAIApiKey ??
+      fields?.apiKey ??
       getEnvironmentVariable("AZURE_OPENAI_API_KEY");
 
     this.azureOpenAIApiVersion =
       fields?.azureOpenAIApiVersion ??
+      fields?.openAIApiVersion ??
       getEnvironmentVariable("AZURE_OPENAI_API_VERSION");
 
     this.azureOpenAIBasePath =

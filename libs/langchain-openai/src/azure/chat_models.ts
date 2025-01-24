@@ -266,7 +266,7 @@ export type { AzureOpenAIInput };
  * const Joke = z.object({
  *   setup: z.string().describe("The setup of the joke"),
  *   punchline: z.string().describe("The punchline to the joke"),
- *   rating: z.number().optional().describe("How funny the joke is, from 1 to 10")
+ *   rating: z.number().nullable().describe("How funny the joke is, from 1 to 10")
  * }).describe('Joke to tell user.');
  *
  * const structuredLlm = llm.withStructuredOutput(Joke, { name: "Joke" });
