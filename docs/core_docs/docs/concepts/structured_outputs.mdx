@@ -91,7 +91,10 @@ const model = new ChatOpenAI({
 });
 
 // Create a tool with ResponseFormatter as its schema.
-const responseFormatterTool = tool(() => {},{ name: "responseFormatter", schema: ResponseFormatter })
+const responseFormatterTool = tool(() => {}, {
+  name: "responseFormatter",
+  schema: ResponseFormatter,
+});
 
 // Bind the created tool to the model
 const modelWithTools = model.bindTools([responseFormatterTool]);
