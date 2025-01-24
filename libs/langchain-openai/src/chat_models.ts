@@ -1918,6 +1918,20 @@ export class ChatOpenAI<
       );
     }
 
+    if (
+      !this.model.startsWith("gpt-3") &&
+      !this.model.startsWith("gpt-4-") &&
+      this.model !== "gpt-4"
+    ) {
+      if (method === undefined) {
+        method = "jsonSchema";
+      }
+    } else if (method === "jsonSchema") {
+      console.warn(
+        `[WARNING]: JSON Schema is not supported for model "${this.model}". Falling back to tool calling.`
+      );
+    }
+
     if (method === "jsonMode") {
       llm = this.bind({
         response_format: { type: "json_object" },
