@@ -109,6 +109,29 @@ export async function pull<T extends Runnable>(
     };
   }
 
+  // Some nested mustache prompts have improperly parsed variables that include a dot.
+  if (promptObject.manifest.kwargs.template_format === "mustache") {
+    const stripDotNotation = (varName: string) => varName.split(".")[0];
+
+    const { input_variables } = promptObject.manifest.kwargs;
+    if (Array.isArray(input_variables)) {
+      promptObject.manifest.kwargs.input_variables =
+        input_variables.map(stripDotNotation);
+    }
+
+    const { messages } = promptObject.manifest.kwargs;
+    if (Array.isArray(messages)) {
+      promptObject.manifest.kwargs.messages = messages.map((message: any) => {
+        const nestedVars = message?.kwargs?.prompt?.kwargs?.input_variables;
+        if (Array.isArray(nestedVars)) {
+          message.kwargs.prompt.kwargs.input_variables =
+            nestedVars.map(stripDotNotation);
+        }
+        return message;
+      });
+    }
+  }
+
   try {
     const loadedPrompt = await load<T>(
       JSON.stringify(promptObject.manifest),
