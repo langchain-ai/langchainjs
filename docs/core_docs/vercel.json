@@ -96,6 +96,10 @@
     {
       "source": "/docs/integrations/llms/watsonx_ai(/?)",
       "destination": "https://js.langchain.com/docs/integrations/llms/ibm/"
+    },
+    {
+      "source": "/docs/modules/model_io/prompts/quick_start/",
+      "destination": "/docs/concepts/prompt_templates"
     }
   ]
 }

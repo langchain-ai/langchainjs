@@ -2347,14 +2347,14 @@
       "import": "./caches/vercel_kv.js",
       "require": "./caches/vercel_kv.cjs"
     },
-    "./graphs/neo4j_graph": {
+    "./graphs/document": {
       "types": {
-        "import": "./graphs/neo4j_graph.d.ts",
-        "require": "./graphs/neo4j_graph.d.cts",
-        "default": "./graphs/neo4j_graph.d.ts"
+        "import": "./graphs/document.d.ts",
+        "require": "./graphs/document.d.cts",
+        "default": "./graphs/document.d.ts"
       },
-      "import": "./graphs/neo4j_graph.js",
-      "require": "./graphs/neo4j_graph.cjs"
+      "import": "./graphs/document.js",
+      "require": "./graphs/document.cjs"
     },
     "./graphs/memgraph_graph": {
       "types": {
@@ -2364,6 +2364,15 @@
       },
       "import": "./graphs/memgraph_graph.js",
       "require": "./graphs/memgraph_graph.cjs"
+    },
+    "./graphs/neo4j_graph": {
+      "types": {
+        "import": "./graphs/neo4j_graph.d.ts",
+        "require": "./graphs/neo4j_graph.d.cts",
+        "default": "./graphs/neo4j_graph.d.ts"
+      },
+      "import": "./graphs/neo4j_graph.js",
+      "require": "./graphs/neo4j_graph.cjs"
     },
     "./document_compressors/ibm": {
       "types": {
@@ -3921,14 +3930,18 @@
     "caches/vercel_kv.js",
     "caches/vercel_kv.d.ts",
     "caches/vercel_kv.d.cts",
-    "graphs/neo4j_graph.cjs",
-    "graphs/neo4j_graph.js",
-    "graphs/neo4j_graph.d.ts",
-    "graphs/neo4j_graph.d.cts",
+    "graphs/document.cjs",
+    "graphs/document.js",
+    "graphs/document.d.ts",
+    "graphs/document.d.cts",
     "graphs/memgraph_graph.cjs",
     "graphs/memgraph_graph.js",
     "graphs/memgraph_graph.d.ts",
     "graphs/memgraph_graph.d.cts",
+    "graphs/neo4j_graph.cjs",
+    "graphs/neo4j_graph.js",
+    "graphs/neo4j_graph.d.ts",
+    "graphs/neo4j_graph.d.cts",
     "document_compressors/ibm.cjs",
     "document_compressors/ibm.js",
     "document_compressors/ibm.d.ts",
