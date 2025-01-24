@@ -1,4 +1,5 @@
 /* eslint-disable no-process-env */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { tool } from "@langchain/core/tools";
 import { z } from "zod";
 import { it } from "@jest/globals";
@@ -8,7 +9,7 @@ import { AIMessageChunk } from "@langchain/core/messages";
 import { concat } from "@langchain/core/utils/stream";
 import { awaitAllCallbacks } from "@langchain/core/callbacks/promises";
 import { AgentExecutor, createReactAgent } from "../../agents/index.js";
-import { pull } from "../../hub.js";
+import { pull } from "../../hub/index.js";
 import { initChatModel } from "../universal.js";
 
 // Make copies of API keys and remove them from the environment to avoid conflicts.

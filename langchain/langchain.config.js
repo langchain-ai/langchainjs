@@ -118,7 +118,8 @@ export const config = {
     "storage/in_memory": "storage/in_memory",
     "storage/file_system": "storage/file_system",
     // hub
-    hub: "hub",
+    hub: "hub/index",
+    "hub/node": "hub/node",
     // utilities
     "util/document": "util/document",
     "util/math": "util/math",
@@ -217,6 +218,7 @@ export const config = {
     "storage/file_system",
     // Prevent export due to circular dependency with "load" entrypoint
     "hub",
+    "hub/node",
     "experimental/prompts/handlebars",
   ],
   extraImportMapEntries: [

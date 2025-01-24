@@ -294,6 +294,10 @@ hub.cjs
 hub.js
 hub.d.ts
 hub.d.cts
+hub/node.cjs
+hub/node.js
+hub/node.d.ts
+hub/node.d.cts
 util/document.cjs
 util/document.js
 util/document.d.ts
