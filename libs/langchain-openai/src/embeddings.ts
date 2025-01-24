@@ -14,6 +14,7 @@ export interface OpenAIEmbeddingsParams extends EmbeddingsParams {
   /**
    * Model name to use
    * Alias for `model`
+   * @deprecated Use "model" instead.
    */
   modelName: string;
   /** Model name to use */
@@ -63,7 +64,7 @@ export class OpenAIEmbeddings
   extends Embeddings
   implements Partial<OpenAIEmbeddingsParams>
 {
-  model: string;
+  model = "text-embedding-ada-002";
 
   batchSize = 512;
 

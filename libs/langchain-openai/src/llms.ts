@@ -112,7 +112,7 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
 
   logitBias?: Record<string, number>;
 
-  model = "gpt-3.5-turbo";
+  model = "gpt-3.5-turbo-instruct";
 
   modelKwargs?: OpenAIInput["modelKwargs"];
 
