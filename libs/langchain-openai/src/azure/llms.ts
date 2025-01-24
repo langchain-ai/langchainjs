@@ -87,7 +87,7 @@ export class AzureOpenAI extends OpenAI {
       fields?.azureOpenAIEndpoint ??
       getEnvironmentVariable("AZURE_OPENAI_ENDPOINT");
 
-    this.azureADTokenProvider = fields?.azureADTokenProvider ?? undefined;
+    this.azureADTokenProvider = fields?.azureADTokenProvider;
 
     if (!this.azureOpenAIApiKey && !this.apiKey && !this.azureADTokenProvider) {
       throw new Error("Azure OpenAI API key or Token Provider not found");

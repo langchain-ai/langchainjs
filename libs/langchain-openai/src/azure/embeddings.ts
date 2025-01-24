@@ -38,21 +38,26 @@ export class AzureOpenAIEmbeddings extends OpenAIEmbeddings {
     this.azureOpenAIApiKey =
       fields?.azureOpenAIApiKey ??
       getEnvironmentVariable("AZURE_OPENAI_API_KEY");
-    this.azureADTokenProvider = fields?.azureADTokenProvider;
+
     this.azureOpenAIApiVersion =
       fields?.azureOpenAIApiVersion ??
       getEnvironmentVariable("AZURE_OPENAI_API_VERSION");
+
     this.azureOpenAIBasePath =
       fields?.azureOpenAIBasePath ??
       getEnvironmentVariable("AZURE_OPENAI_BASE_PATH");
+
     this.azureOpenAIApiInstanceName =
       fields?.azureOpenAIApiInstanceName ??
       getEnvironmentVariable("AZURE_OPENAI_API_INSTANCE_NAME");
+
     this.azureOpenAIApiDeploymentName =
       (fields?.azureOpenAIApiEmbeddingsDeploymentName ||
         fields?.azureOpenAIApiDeploymentName) ??
       (getEnvironmentVariable("AZURE_OPENAI_API_EMBEDDINGS_DEPLOYMENT_NAME") ||
         getEnvironmentVariable("AZURE_OPENAI_API_DEPLOYMENT_NAME"));
+
+    this.azureADTokenProvider = fields?.azureADTokenProvider;
   }
 
   protected async embeddingWithRetry(

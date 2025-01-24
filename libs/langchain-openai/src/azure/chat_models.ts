@@ -478,25 +478,24 @@ export class AzureChatOpenAI extends ChatOpenAI {
       }
   ) {
     super(fields);
-    this.azureOpenAIApiDeploymentName =
-      fields?.azureOpenAIApiDeploymentName ?? fields?.deploymentName;
     this.azureOpenAIApiKey =
       fields?.azureOpenAIApiKey ??
       fields?.openAIApiKey ??
       fields?.apiKey ??
       getEnvironmentVariable("AZURE_OPENAI_API_KEY");
-    this.azureOpenAIApiVersion =
-      fields?.azureOpenAIApiVersion ?? fields?.openAIApiVersion;
+
     this.azureOpenAIApiInstanceName =
       fields?.azureOpenAIApiInstanceName ??
       getEnvironmentVariable("AZURE_OPENAI_API_INSTANCE_NAME");
 
     this.azureOpenAIApiDeploymentName =
       fields?.azureOpenAIApiDeploymentName ??
+      fields?.deploymentName ??
       getEnvironmentVariable("AZURE_OPENAI_API_DEPLOYMENT_NAME");
 
     this.azureOpenAIApiVersion =
       fields?.azureOpenAIApiVersion ??
+      fields?.openAIApiVersion ??
       getEnvironmentVariable("AZURE_OPENAI_API_VERSION");
 
     this.azureOpenAIBasePath =
@@ -506,6 +505,8 @@ export class AzureChatOpenAI extends ChatOpenAI {
     this.azureOpenAIEndpoint =
       fields?.azureOpenAIEndpoint ??
       getEnvironmentVariable("AZURE_OPENAI_ENDPOINT");
+
+    this.azureADTokenProvider = fields?.azureADTokenProvider;
 
     if (!this.azureOpenAIApiKey && !this.apiKey && !this.azureADTokenProvider) {
       throw new Error("Azure OpenAI API key or Token Provider not found");
