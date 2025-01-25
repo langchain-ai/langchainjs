@@ -25,7 +25,7 @@ test("Test Azure OpenAI serialization from base path", async () => {
     azureOpenAIApiKey: "foo",
   });
   expect(JSON.stringify(chat)).toEqual(
-    `{"lc":1,"type":"constructor","id":["langchain","chat_models","azure_openai","AzureChatOpenAI"],"kwargs":{"openai_api_version":"2024-08-01-preview","azure_open_ai_api_key":{"lc":1,"type":"secret","id":["AZURE_OPENAI_API_KEY"]},"azure_endpoint":"https://foobar.openai.azure.com","deployment_name":"gpt-4o-mini"}}`
+    `{"lc":1,"type":"constructor","id":["langchain","chat_models","azure_openai","AzureChatOpenAI"],"kwargs":{"openai_api_version":"2024-08-01-preview","azure_open_ai_api_key":{"lc":1,"type":"secret","id":["AZURE_OPENAI_API_KEY"]},"azure_endpoint":"https://foobar.openai.azure.com","deployment_name":"gpt-4o"}}`
   );
 });
 
