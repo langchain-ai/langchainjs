@@ -114,6 +114,9 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
 
   model = "gpt-3.5-turbo-instruct";
 
+  /** @deprecated Use "model" instead */
+  modelName: string;
+
   modelKwargs?: OpenAIInput["modelKwargs"];
 
   batchSize = 20;
@@ -175,6 +178,7 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
         ].join("\n")
       );
     }
+    this.modelName = this.model;
     this.modelKwargs = fields?.modelKwargs ?? {};
     this.batchSize = fields?.batchSize ?? this.batchSize;
     this.timeout = fields?.timeout;

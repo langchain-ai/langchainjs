@@ -1054,6 +1054,9 @@ export class ChatOpenAI<
 
   logitBias?: Record<string, number>;
 
+  /** @deprecated Use "model" instead */
+  modelName: string;
+
   model = "gpt-3.5-turbo";
 
   modelKwargs?: OpenAIChatInput["modelKwargs"];
@@ -1114,6 +1117,7 @@ export class ChatOpenAI<
       getEnvironmentVariable("OPENAI_ORGANIZATION");
 
     this.model = fields?.model ?? fields?.modelName ?? this.model;
+    this.modelName = this.model;
     this.modelKwargs = fields?.modelKwargs ?? {};
     this.timeout = fields?.timeout;
 

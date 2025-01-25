@@ -1227,3 +1227,15 @@ test("Allows developer messages with o1", async () => {
   ]);
   expect(res.content).toEqual("testing");
 });
+
+test.only("", async () => {
+  class ChatDeepseek extends ChatOpenAI {}
+  const model = new ChatDeepseek({
+    configuration: {
+      baseURL: "https://api.deepseek.com",
+    },
+    apiKey: process.env.DEEPSEEK_API_KEY,
+    model: "deepseek-reasoner",
+  });
+  const res = await model.invoke("why is the sky blue");
+});
