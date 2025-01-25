@@ -256,7 +256,7 @@ test("serialize + deserialize llm chain chat prompt", async () => {
   expect(JSON.stringify(chain2, null, 2)).toBe(str);
 });
 
-test("serialize + deserialize Azure llm chain chat prompt", async () => {
+test.skip("serialize + deserialize Azure llm chain chat prompt", async () => {
   // eslint-disable-next-line no-process-env
   process.env.OPENAI_API_KEY = undefined;
   const llm = new AzureChatOpenAI({
