@@ -1,6 +1,7 @@
 /* eslint-disable no-process-env */
 
 import { test, jest, expect } from "@jest/globals";
+import { z } from "zod";
 import {
   BaseMessage,
   ChatMessage,
@@ -949,4 +950,18 @@ testFn("Test Azure ChatOpenAI with bearer token provider", async () => {
   // @ts-expect-error unused var
   const res = await chat.invoke([["system", "Say hi"], message]);
   // console.log(res);
+});
+
+test("Test Azure ChatOpenAI withStructuredOutput", async () => {
+  const chat = new AzureChatOpenAI({
+    modelName: "gpt-4o-mini",
+  });
+  const message = new HumanMessage("Good!");
+  const model = await chat.withStructuredOutput(
+    z.object({
+      sentiment: z.string(),
+    })
+  );
+  const res = await model.invoke([message]);
+  expect(res.sentiment).toBeDefined();
 });

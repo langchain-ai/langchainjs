@@ -4,7 +4,14 @@ import {
   type BaseChatModelParams,
 } from "@langchain/core/language_models/chat_models";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
-import { ChatOpenAI } from "../chat_models.js";
+import { BaseLanguageModelInput } from "@langchain/core/language_models/base";
+import { BaseMessage } from "@langchain/core/messages";
+import { Runnable } from "@langchain/core/runnables";
+import { z } from "zod";
+import {
+  ChatOpenAI,
+  ChatOpenAIStructuredOutputMethodOptions,
+} from "../chat_models.js";
 import { OpenAIEndpointConfig, getEndpoint } from "../utils/azure.js";
 import {
   AzureOpenAIInput,
@@ -634,5 +641,65 @@ export class AzureChatOpenAI extends ChatOpenAI {
     }
 
     return json;
+  }
+
+  withStructuredOutput<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>
+  >(
+    outputSchema:
+      | z.ZodType<RunOutput>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      | Record<string, any>,
+    config?: ChatOpenAIStructuredOutputMethodOptions<false>
+  ): Runnable<BaseLanguageModelInput, RunOutput>;
+
+  withStructuredOutput<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>
+  >(
+    outputSchema:
+      | z.ZodType<RunOutput>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      | Record<string, any>,
+    config?: ChatOpenAIStructuredOutputMethodOptions<true>
+  ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
+
+  withStructuredOutput<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>
+  >(
+    outputSchema:
+      | z.ZodType<RunOutput>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      | Record<string, any>,
+    config?: ChatOpenAIStructuredOutputMethodOptions<boolean>
+  ):
+    | Runnable<BaseLanguageModelInput, RunOutput>
+    | Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
+
+  withStructuredOutput<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>
+  >(
+    outputSchema:
+      | z.ZodType<RunOutput>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      | Record<string, any>,
+    config?: ChatOpenAIStructuredOutputMethodOptions<boolean>
+  ):
+    | Runnable<BaseLanguageModelInput, RunOutput>
+    | Runnable<
+        BaseLanguageModelInput,
+        { raw: BaseMessage; parsed: RunOutput }
+      > {
+    const ensuredConfig = { ...config };
+    // Not all Azure gpt-4o deployments models support jsonSchema yet
+    if (this.model.startsWith("gpt-4o")) {
+      if (ensuredConfig?.method === undefined) {
+        ensuredConfig.method = "functionCalling";
+      }
+    }
+    return super.withStructuredOutput<RunOutput>(outputSchema, ensuredConfig);
   }
 }
