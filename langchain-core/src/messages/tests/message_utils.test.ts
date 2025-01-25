@@ -1,4 +1,5 @@
 import { it, describe, test, expect } from "@jest/globals";
+import { v4 } from "uuid";
 import {
   filterMessages,
   mergeMessageRuns,
@@ -15,7 +16,6 @@ import {
   mapChatMessagesToStoredMessages,
   mapStoredMessagesToChatMessages,
 } from "../utils.js";
-import { v4 } from "uuid";
 
 describe("filterMessage", () => {
   const getMessages = () => [
