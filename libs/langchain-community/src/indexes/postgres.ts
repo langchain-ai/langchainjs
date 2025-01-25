@@ -27,7 +27,9 @@ export class PostgresRecordManager implements RecordManagerInterface {
     const { postgresConnectionOptions, tableName, pool } = config;
     this.namespace = namespace;
     if (!postgresConnectionOptions && !pool) {
-      throw new Error("You must provide either a `postgresConnectionOptions` object or a `pool` instance.");
+      throw new Error(
+        "You must provide either a `postgresConnectionOptions` object or a `pool` instance."
+      );
     }
     this.pool = pool ?? new pg.Pool(postgresConnectionOptions);
     this.tableName = tableName || "upsertion_records";
