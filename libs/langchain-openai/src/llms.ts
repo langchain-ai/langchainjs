@@ -10,7 +10,6 @@ import {
 } from "@langchain/core/language_models/llms";
 import { chunkArray } from "@langchain/core/utils/chunk_array";
 import type {
-  AzureOpenAIInput,
   OpenAICallOptions,
   OpenAICoreRequestOptions,
   OpenAIInput,
@@ -18,7 +17,7 @@ import type {
 import { OpenAIEndpointConfig, getEndpoint } from "./utils/azure.js";
 import { wrapOpenAIClientError } from "./utils/openai.js";
 
-export type { AzureOpenAIInput, OpenAICallOptions, OpenAIInput };
+export type { OpenAICallOptions, OpenAIInput };
 
 /**
  * Interface for tracking token usage in OpenAI calls.
@@ -35,11 +34,7 @@ interface TokenUsage {
  * To use you should have the `openai` package installed, with the
  * `OPENAI_API_KEY` environment variable set.
  *
- * To use with Azure you should have the `openai` package installed, with the
- * `AZURE_OPENAI_API_KEY`,
- * `AZURE_OPENAI_API_INSTANCE_NAME`,
- * `AZURE_OPENAI_API_DEPLOYMENT_NAME`
- * and `AZURE_OPENAI_API_VERSION` environment variable set.
+ * To use with Azure, import the `AzureOpenAI` class.
  *
  * @remarks
  * Any parameters that are valid to be passed to {@link
@@ -79,7 +74,6 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
     return {
       openAIApiKey: "OPENAI_API_KEY",
       apiKey: "OPENAI_API_KEY",
-      azureOpenAIApiKey: "AZURE_OPENAI_API_KEY",
       organization: "OPENAI_ORGANIZATION",
     };
   }
@@ -89,10 +83,6 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
       modelName: "model",
       openAIApiKey: "openai_api_key",
       apiKey: "openai_api_key",
-      azureOpenAIApiVersion: "azure_openai_api_version",
-      azureOpenAIApiKey: "azure_openai_api_key",
-      azureOpenAIApiInstanceName: "azure_openai_api_instance_name",
-      azureOpenAIApiDeploymentName: "azure_openai_api_deployment_name",
     };
   }
 

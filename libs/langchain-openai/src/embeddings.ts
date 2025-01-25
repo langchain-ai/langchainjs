@@ -2,7 +2,7 @@ import { type ClientOptions, OpenAI as OpenAIClient } from "openai";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { Embeddings, type EmbeddingsParams } from "@langchain/core/embeddings";
 import { chunkArray } from "@langchain/core/utils/chunk_array";
-import { AzureOpenAIInput, OpenAICoreRequestOptions } from "./types.js";
+import { OpenAICoreRequestOptions } from "./types.js";
 import { getEndpoint, OpenAIEndpointConfig } from "./utils/azure.js";
 import { wrapOpenAIClientError } from "./utils/openai.js";
 
@@ -46,9 +46,10 @@ export interface OpenAIEmbeddingsParams extends EmbeddingsParams {
 }
 
 /**
- * Class for generating embeddings using the OpenAI API. Extends the
- * Embeddings class and implements OpenAIEmbeddingsParams and
- * AzureOpenAIInput.
+ * Class for generating embeddings using the OpenAI API.
+ *
+ * To use with Azure, import the `AzureOpenAIEmbeddings` class.
+ *
  * @example
  * ```typescript
  * // Embed a query using OpenAIEmbeddings to generate embeddings for a given text
@@ -89,18 +90,17 @@ export class OpenAIEmbeddings
   protected clientConfig: ClientOptions;
 
   constructor(
-    fields?: Partial<OpenAIEmbeddingsParams> &
-      Partial<AzureOpenAIInput> & {
-        verbose?: boolean;
-        /**
-         * The OpenAI API key to use.
-         * Alias for `apiKey`.
-         */
-        openAIApiKey?: string;
-        /** The OpenAI API key to use. */
-        apiKey?: string;
-        configuration?: ClientOptions;
-      }
+    fields?: Partial<OpenAIEmbeddingsParams> & {
+      verbose?: boolean;
+      /**
+       * The OpenAI API key to use.
+       * Alias for `apiKey`.
+       */
+      openAIApiKey?: string;
+      /** The OpenAI API key to use. */
+      apiKey?: string;
+      configuration?: ClientOptions;
+    }
   ) {
     const fieldsWithDefaults = { maxConcurrency: 2, ...fields };
 

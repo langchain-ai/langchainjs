@@ -466,6 +466,8 @@ export interface ChatOpenAIFields
 /**
  * OpenAI chat model integration.
  *
+ * To use with Azure, import the `AzureChatOpenAI` class.
+ *
  * Setup:
  * Install `@langchain/openai` and set an environment variable named `OPENAI_API_KEY`.
  *
