@@ -8,7 +8,7 @@ import { tool } from "@langchain/core/tools";
 import { z } from "zod";
 import { AsyncLocalStorage } from "async_hooks";
 import { TavilySearchResults } from "../../util/testing/tools/tavily_search.js";
-import { pull } from "../../hub.js";
+import { pull } from "../../hub/index.js";
 import { AgentExecutor, createOpenAIToolsAgent } from "../index.js";
 
 const tools = [new TavilySearchResults({ maxResults: 1 })];

@@ -306,6 +306,10 @@
     "hub.js",
     "hub.d.ts",
     "hub.d.cts",
+    "hub/node.cjs",
+    "hub/node.js",
+    "hub/node.d.ts",
+    "hub/node.d.cts",
     "util/document.cjs",
     "util/document.js",
     "util/document.d.ts",
@@ -1221,6 +1225,15 @@
       },
       "import": "./hub.js",
       "require": "./hub.cjs"
+    },
+    "./hub/node": {
+      "types": {
+        "import": "./hub/node.d.ts",
+        "require": "./hub/node.d.cts",
+        "default": "./hub/node.d.ts"
+      },
+      "import": "./hub/node.js",
+      "require": "./hub/node.cjs"
     },
     "./util/document": {
       "types": {

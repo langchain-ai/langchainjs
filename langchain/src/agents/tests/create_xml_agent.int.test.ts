@@ -2,7 +2,7 @@ import { test, expect } from "@jest/globals";
 import type { PromptTemplate } from "@langchain/core/prompts";
 import { ChatOpenAI } from "@langchain/openai";
 import { TavilySearchResults } from "../../util/testing/tools/tavily_search.js";
-import { pull } from "../../hub.js";
+import { pull } from "../../hub/index.js";
 import { AgentExecutor, createXmlAgent } from "../index.js";
 
 const tools = [new TavilySearchResults({ maxResults: 1 })];

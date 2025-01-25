@@ -75,6 +75,7 @@ async function _initChatModelHelper(
       `Unable to infer model provider for { model: ${model} }, please specify modelProvider directly.`
     );
   }
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { modelProvider: _unused, ...passedParams } = params;
 
   try {
