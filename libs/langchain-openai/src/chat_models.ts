@@ -145,145 +145,6 @@ export function messageToOpenAIRole(message: BaseMessage): OpenAIRoleEnum {
   }
 }
 
-function openAIResponseToChatMessage(
-  message: OpenAIClient.Chat.Completions.ChatCompletionMessage,
-  rawResponse: OpenAIClient.Chat.Completions.ChatCompletion,
-  includeRawResponse?: boolean
-): BaseMessage {
-  const rawToolCalls: OpenAIToolCall[] | undefined = message.tool_calls as
-    | OpenAIToolCall[]
-    | undefined;
-  switch (message.role) {
-    case "assistant": {
-      const toolCalls = [];
-      const invalidToolCalls = [];
-      for (const rawToolCall of rawToolCalls ?? []) {
-        try {
-          toolCalls.push(parseToolCall(rawToolCall, { returnId: true }));
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        } catch (e: any) {
-          invalidToolCalls.push(makeInvalidToolCall(rawToolCall, e.message));
-        }
-      }
-      const additional_kwargs: Record<string, unknown> = {
-        function_call: message.function_call,
-        tool_calls: rawToolCalls,
-      };
-      if (includeRawResponse !== undefined) {
-        additional_kwargs.__raw_response = rawResponse;
-      }
-      const response_metadata: Record<string, unknown> | undefined = {
-        model_name: rawResponse.model,
-        ...(rawResponse.system_fingerprint
-          ? {
-              usage: { ...rawResponse.usage },
-              system_fingerprint: rawResponse.system_fingerprint,
-            }
-          : {}),
-      };
-
-      if (message.audio) {
-        additional_kwargs.audio = message.audio;
-      }
-
-      return new AIMessage({
-        content: message.content || "",
-        tool_calls: toolCalls,
-        invalid_tool_calls: invalidToolCalls,
-        additional_kwargs,
-        response_metadata,
-        id: rawResponse.id,
-      });
-    }
-    default:
-      return new ChatMessage(message.content || "", message.role ?? "unknown");
-  }
-}
-
-function _convertDeltaToMessageChunk(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  delta: Record<string, any>,
-  rawResponse: OpenAIClient.Chat.Completions.ChatCompletionChunk,
-  defaultRole?: OpenAIRoleEnum,
-  includeRawResponse?: boolean
-) {
-  const role = delta.role ?? defaultRole;
-  const content = delta.content ?? "";
-  let additional_kwargs: Record<string, unknown>;
-  if (delta.function_call) {
-    additional_kwargs = {
-      function_call: delta.function_call,
-    };
-  } else if (delta.tool_calls) {
-    additional_kwargs = {
-      tool_calls: delta.tool_calls,
-    };
-  } else {
-    additional_kwargs = {};
-  }
-  if (includeRawResponse) {
-    additional_kwargs.__raw_response = rawResponse;
-  }
-
-  if (delta.audio) {
-    additional_kwargs.audio = {
-      ...delta.audio,
-      index: rawResponse.choices[0].index,
-    };
-  }
-
-  const response_metadata = { usage: { ...rawResponse.usage } };
-  if (role === "user") {
-    return new HumanMessageChunk({ content, response_metadata });
-  } else if (role === "assistant") {
-    const toolCallChunks: ToolCallChunk[] = [];
-    if (Array.isArray(delta.tool_calls)) {
-      for (const rawToolCall of delta.tool_calls) {
-        toolCallChunks.push({
-          name: rawToolCall.function?.name,
-          args: rawToolCall.function?.arguments,
-          id: rawToolCall.id,
-          index: rawToolCall.index,
-          type: "tool_call_chunk",
-        });
-      }
-    }
-    return new AIMessageChunk({
-      content,
-      tool_call_chunks: toolCallChunks,
-      additional_kwargs,
-      id: rawResponse.id,
-      response_metadata,
-    });
-  } else if (role === "system") {
-    return new SystemMessageChunk({ content, response_metadata });
-  } else if (role === "developer") {
-    return new SystemMessageChunk({
-      content,
-      response_metadata,
-      additional_kwargs: {
-        __openai_role__: "developer",
-      },
-    });
-  } else if (role === "function") {
-    return new FunctionMessageChunk({
-      content,
-      additional_kwargs,
-      name: delta.name,
-      response_metadata,
-    });
-  } else if (role === "tool") {
-    return new ToolMessageChunk({
-      content,
-      additional_kwargs,
-      tool_call_id: delta.tool_call_id,
-      response_metadata,
-    });
-  } else {
-    return new ChatMessageChunk({ content, role, response_metadata });
-  }
-}
-
 // Used in LangSmith, export is important here
 export function _convertMessagesToOpenAIParams(
   messages: BaseMessage[],
@@ -1290,6 +1151,146 @@ export class ChatOpenAI<
     return params;
   }
 
+  protected _convertOpenAIChatCompletionMessageToBaseMessage(
+    message: OpenAIClient.Chat.Completions.ChatCompletionMessage,
+    rawResponse: OpenAIClient.Chat.Completions.ChatCompletion
+  ): BaseMessage {
+    const rawToolCalls: OpenAIToolCall[] | undefined = message.tool_calls as
+      | OpenAIToolCall[]
+      | undefined;
+    switch (message.role) {
+      case "assistant": {
+        const toolCalls = [];
+        const invalidToolCalls = [];
+        for (const rawToolCall of rawToolCalls ?? []) {
+          try {
+            toolCalls.push(parseToolCall(rawToolCall, { returnId: true }));
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          } catch (e: any) {
+            invalidToolCalls.push(makeInvalidToolCall(rawToolCall, e.message));
+          }
+        }
+        const additional_kwargs: Record<string, unknown> = {
+          function_call: message.function_call,
+          tool_calls: rawToolCalls,
+        };
+        if (this.__includeRawResponse !== undefined) {
+          additional_kwargs.__raw_response = rawResponse;
+        }
+        const response_metadata: Record<string, unknown> | undefined = {
+          model_name: rawResponse.model,
+          ...(rawResponse.system_fingerprint
+            ? {
+                usage: { ...rawResponse.usage },
+                system_fingerprint: rawResponse.system_fingerprint,
+              }
+            : {}),
+        };
+
+        if (message.audio) {
+          additional_kwargs.audio = message.audio;
+        }
+
+        return new AIMessage({
+          content: message.content || "",
+          tool_calls: toolCalls,
+          invalid_tool_calls: invalidToolCalls,
+          additional_kwargs,
+          response_metadata,
+          id: rawResponse.id,
+        });
+      }
+      default:
+        return new ChatMessage(
+          message.content || "",
+          message.role ?? "unknown"
+        );
+    }
+  }
+
+  protected _convertOpenAIDeltaToBaseMessageChunk(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    delta: Record<string, any>,
+    rawResponse: OpenAIClient.Chat.Completions.ChatCompletionChunk,
+    defaultRole?: OpenAIRoleEnum
+  ) {
+    const role = delta.role ?? defaultRole;
+    const content = delta.content ?? "";
+    let additional_kwargs: Record<string, unknown>;
+    if (delta.function_call) {
+      additional_kwargs = {
+        function_call: delta.function_call,
+      };
+    } else if (delta.tool_calls) {
+      additional_kwargs = {
+        tool_calls: delta.tool_calls,
+      };
+    } else {
+      additional_kwargs = {};
+    }
+    if (this.__includeRawResponse) {
+      additional_kwargs.__raw_response = rawResponse;
+    }
+
+    if (delta.audio) {
+      additional_kwargs.audio = {
+        ...delta.audio,
+        index: rawResponse.choices[0].index,
+      };
+    }
+
+    const response_metadata = { usage: { ...rawResponse.usage } };
+    if (role === "user") {
+      return new HumanMessageChunk({ content, response_metadata });
+    } else if (role === "assistant") {
+      const toolCallChunks: ToolCallChunk[] = [];
+      if (Array.isArray(delta.tool_calls)) {
+        for (const rawToolCall of delta.tool_calls) {
+          toolCallChunks.push({
+            name: rawToolCall.function?.name,
+            args: rawToolCall.function?.arguments,
+            id: rawToolCall.id,
+            index: rawToolCall.index,
+            type: "tool_call_chunk",
+          });
+        }
+      }
+      return new AIMessageChunk({
+        content,
+        tool_call_chunks: toolCallChunks,
+        additional_kwargs,
+        id: rawResponse.id,
+        response_metadata,
+      });
+    } else if (role === "system") {
+      return new SystemMessageChunk({ content, response_metadata });
+    } else if (role === "developer") {
+      return new SystemMessageChunk({
+        content,
+        response_metadata,
+        additional_kwargs: {
+          __openai_role__: "developer",
+        },
+      });
+    } else if (role === "function") {
+      return new FunctionMessageChunk({
+        content,
+        additional_kwargs,
+        name: delta.name,
+        response_metadata,
+      });
+    } else if (role === "tool") {
+      return new ToolMessageChunk({
+        content,
+        additional_kwargs,
+        tool_call_id: delta.tool_call_id,
+        response_metadata,
+      });
+    } else {
+      return new ChatMessageChunk({ content, role, response_metadata });
+    }
+  }
+
   /** @ignore */
   _identifyingParams(): Omit<
     OpenAIClient.Chat.ChatCompletionCreateParams,
@@ -1335,11 +1336,10 @@ export class ChatOpenAI<
       if (!delta) {
         continue;
       }
-      const chunk = _convertDeltaToMessageChunk(
+      const chunk = this._convertOpenAIDeltaToBaseMessageChunk(
         delta,
         data,
-        defaultRole,
-        this.__includeRawResponse
+        defaultRole
       );
       defaultRole = delta.role ?? defaultRole;
       const newTokenIndices = {
@@ -1576,10 +1576,9 @@ export class ChatOpenAI<
         const text = part.message?.content ?? "";
         const generation: ChatGeneration = {
           text,
-          message: openAIResponseToChatMessage(
+          message: this._convertOpenAIChatCompletionMessageToBaseMessage(
             part.message ?? { role: "assistant" },
-            data,
-            this.__includeRawResponse
+            data
           ),
         };
         generation.generationInfo = {
