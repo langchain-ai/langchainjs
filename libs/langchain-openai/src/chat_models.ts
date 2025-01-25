@@ -1151,7 +1151,7 @@ export class ChatOpenAI<
     return params;
   }
 
-  protected _convertOpenAIResponseToChatMessage(
+  protected _convertOpenAIChatCompletionMessageToBaseMessage(
     message: OpenAIClient.Chat.Completions.ChatCompletionMessage,
     rawResponse: OpenAIClient.Chat.Completions.ChatCompletion
   ): BaseMessage {
@@ -1208,7 +1208,7 @@ export class ChatOpenAI<
     }
   }
 
-  protected _convertOpenAIDeltaToMessageChunk(
+  protected _convertOpenAIDeltaToBaseMessageChunk(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     delta: Record<string, any>,
     rawResponse: OpenAIClient.Chat.Completions.ChatCompletionChunk,
@@ -1336,7 +1336,7 @@ export class ChatOpenAI<
       if (!delta) {
         continue;
       }
-      const chunk = this._convertOpenAIDeltaToMessageChunk(
+      const chunk = this._convertOpenAIDeltaToBaseMessageChunk(
         delta,
         data,
         defaultRole
@@ -1576,7 +1576,7 @@ export class ChatOpenAI<
         const text = part.message?.content ?? "";
         const generation: ChatGeneration = {
           text,
-          message: this._convertOpenAIResponseToChatMessage(
+          message: this._convertOpenAIChatCompletionMessageToBaseMessage(
             part.message ?? { role: "assistant" },
             data
           ),

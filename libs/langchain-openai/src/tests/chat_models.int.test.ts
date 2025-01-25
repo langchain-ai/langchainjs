@@ -21,6 +21,11 @@ import { NewTokenIndices } from "@langchain/core/callbacks/base";
 import { InMemoryCache } from "@langchain/core/caches";
 import { concat } from "@langchain/core/utils/stream";
 import { ChatOpenAI } from "../chat_models.js";
+import {
+  ChatCompletion,
+  ChatCompletionChunk,
+  ChatCompletionMessage,
+} from "openai/resources/index.mjs";
 
 // Save the original value of the 'LANGCHAIN_CALLBACKS_BACKGROUND' environment variable
 const originalBackground = process.env.LANGCHAIN_CALLBACKS_BACKGROUND;
@@ -1226,4 +1231,56 @@ test("Allows developer messages with o1", async () => {
     },
   ]);
   expect(res.content).toEqual("testing");
+});
+
+test.skip("Allow overriding", async () => {
+  class ChatDeepSeek extends ChatOpenAI {
+    protected override _convertOpenAIDeltaToBaseMessageChunk(
+      delta: Record<string, any>,
+      rawResponse: ChatCompletionChunk,
+      defaultRole?:
+        | "function"
+        | "user"
+        | "system"
+        | "developer"
+        | "assistant"
+        | "tool"
+    ) {
+      const messageChunk = super._convertOpenAIDeltaToBaseMessageChunk(
+        delta,
+        rawResponse,
+        defaultRole
+      );
+      messageChunk.additional_kwargs.reasoning_content =
+        delta.reasoning_content;
+      return messageChunk;
+    }
+    protected override _convertOpenAIChatCompletionMessageToBaseMessage(
+      message: ChatCompletionMessage,
+      rawResponse: ChatCompletion
+    ) {
+      const langChainMessage =
+        super._convertOpenAIChatCompletionMessageToBaseMessage(
+          message,
+          rawResponse
+        );
+      langChainMessage.additional_kwargs.reasoning_content = (
+        message as any
+      ).reasoning_content;
+      return langChainMessage;
+    }
+  }
+  const model = new ChatDeepSeek({
+    model: "deepseek-reasoner",
+    configuration: {
+      baseURL: "https://api.deepseek.com",
+    },
+    apiKey: process.env.DEEPSEEK_API_KEY,
+  });
+  const res = await model.invoke("what color is the sky?");
+  console.log(res);
+  const stream = await model.stream("what color is the sky?");
+  for await (const chunk of stream) {
+    console.log(chunk);
+  }
 });
