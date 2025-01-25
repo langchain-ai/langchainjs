@@ -3,6 +3,12 @@ import { AzureChatOpenAI } from "../../azure/chat_models.js";
 
 beforeEach(() => {
   delete process.env.OPENAI_API_KEY;
+  delete process.env.AZURE_OPENAI_API_KEY;
+  delete process.env.AZURE_OPENAI_API_DEPLOYMENT_NAME;
+  delete process.env.AZURE_OPENAI_BASE_PATH;
+  delete process.env.AZURE_OPENAI_API_VERSION;
+  delete process.env.AZURE_OPENAI_API_COMPLETIONS_DEPLOYMENT_NAME;
+  delete process.env.AZURE_OPENAI_API_EMBEDDINGS_DEPLOYMENT_NAME;
 });
 
 test("Test Azure OpenAI serialization from azure endpoint", async () => {
