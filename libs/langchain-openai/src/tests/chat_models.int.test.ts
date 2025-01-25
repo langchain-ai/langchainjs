@@ -20,12 +20,12 @@ import { CallbackManager } from "@langchain/core/callbacks/manager";
 import { NewTokenIndices } from "@langchain/core/callbacks/base";
 import { InMemoryCache } from "@langchain/core/caches";
 import { concat } from "@langchain/core/utils/stream";
-import { ChatOpenAI } from "../chat_models.js";
 import {
   ChatCompletion,
   ChatCompletionChunk,
   ChatCompletionMessage,
 } from "openai/resources/index.mjs";
+import { ChatOpenAI } from "../chat_models.js";
 
 // Save the original value of the 'LANGCHAIN_CALLBACKS_BACKGROUND' environment variable
 const originalBackground = process.env.LANGCHAIN_CALLBACKS_BACKGROUND;
@@ -1255,6 +1255,7 @@ test.skip("Allow overriding", async () => {
         delta.reasoning_content;
       return messageChunk;
     }
+
     protected override _convertOpenAIChatCompletionMessageToBaseMessage(
       message: ChatCompletionMessage,
       rawResponse: ChatCompletion
