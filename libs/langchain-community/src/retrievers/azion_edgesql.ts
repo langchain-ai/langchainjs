@@ -351,7 +351,23 @@ export class AzionRetriever extends BaseRetriever {
         entityExtractionPrompt,
         new HumanMessage(query),
       ]);
-      return entityQuery.content.toString().replace(/[^a-zA-Z0-9\s]/g, ' ').split(' ').join(' OR ')
+      return this.convert2FTSQuery(entityQuery.content.toString())
+  }
+
+  /**
+   * Converts a query to a FTS query.
+   * @param query The user query
+   * @returns The converted FTS query
+   */
+  protected convert2FTSQuery(
+    query: string
+  ): string {
+    return query
+      .replace(/[^a-záàâãéèêíïóôõöúçñA-ZÁÀÂÃÉÈÊÍÏÓÔÕÖÚÇÑ0-9\s]/g, '') // Remove special chars keeping accents
+      .replace(/\s+/g, ' ') // Remove multiple spaces
+      .trim() // Remove leading/trailing spaces
+      .split(' ')
+      .join(' OR ');
   }
   
   /**
