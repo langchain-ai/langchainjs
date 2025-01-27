@@ -72,9 +72,9 @@ export interface ChatXAIInput extends BaseChatModelParams {
  * export XAI_API_KEY="your-api-key"
  * ```
  *
- * ## [Constructor args](https://api.js.langchain.com/classes/langchain_xai.ChatXAI.html#constructor)
+ * ## [Constructor args](https://api.js.langchain.com/classes/_langchain_xai.ChatXAI.html#constructor)
  *
- * ## [Runtime args](https://api.js.langchain.com/interfaces/langchain_xai.ChatXAICallOptions.html)
+ * ## [Runtime args](https://api.js.langchain.com/interfaces/_langchain_xai.ChatXAICallOptions.html)
  *
  * Runtime args can be passed as the second argument to any of the base runnable methods `.invoke`. `.stream`, `.batch`, etc.
  * They can also be passed via `.bind`, or the second arg in `.bindTools`, like shown in the examples below:
