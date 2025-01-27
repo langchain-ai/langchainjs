@@ -1,5 +1,10 @@
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
-import { ChatOpenAI, ChatOpenAICallOptions, ChatOpenAIFields, OpenAIClient } from "@langchain/openai";
+import {
+  ChatOpenAI,
+  ChatOpenAICallOptions,
+  ChatOpenAIFields,
+  OpenAIClient,
+} from "@langchain/openai";
 
 export interface ChatDeepseekCallOptions extends ChatOpenAICallOptions {
   headers?: Record<string, string>;
@@ -317,8 +322,7 @@ export class ChatDeepseek extends ChatOpenAI<ChatDeepseekCallOptions> {
       rawResponse,
       defaultRole
     );
-    messageChunk.additional_kwargs.reasoning_content =
-      delta.reasoning_content;
+    messageChunk.additional_kwargs.reasoning_content = delta.reasoning_content;
     return messageChunk;
   }
 

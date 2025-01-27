@@ -11,5 +11,7 @@ test("Can send deepseek-reasoner requests", async () => {
   // Models also accept a list of chat messages or a formatted prompt
   const result = await llm.invoke(input);
   console.log(result);
-  expect((result.additional_kwargs.reasoning_content as any).length).toBeGreaterThan(10);
+  expect(
+    (result.additional_kwargs.reasoning_content as any).length
+  ).toBeGreaterThan(10);
 });
