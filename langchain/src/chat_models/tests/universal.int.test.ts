@@ -437,7 +437,7 @@ describe("Works with all model providers", () => {
     expect(vertexAIWebResult.content.length).toBeGreaterThan(0);
   });
 
-  it.only("Can invoke deepseek", async () => {
+  it("Can invoke deepseek", async () => {
     const deepSeek = await initChatModel("deepseek-chat", {
       modelProvider: "deepseek",
       temperature: 0,
