@@ -172,6 +172,8 @@ export function convertMessageContentToParts(
         };
       } else if (
         c.type?.includes("/") &&
+        // Ensure it's a single slash.
+        c.type.split("/").length === 2 &&
         "data" in c &&
         typeof c.data === "string"
       ) {
