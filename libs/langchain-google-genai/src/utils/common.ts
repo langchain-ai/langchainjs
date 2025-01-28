@@ -170,6 +170,19 @@ export function convertMessageContentToParts(
             args: c.input,
           },
         };
+      } else if (
+        c.type?.includes("/") &&
+        // Ensure it's a single slash.
+        c.type.split("/").length === 2 &&
+        "data" in c &&
+        typeof c.data === "string"
+      ) {
+        return {
+          inlineData: {
+            mimeType: c.type,
+            data: c.data,
+          },
+        };
       }
       throw new Error(`Unknown content type ${(c as { type: string }).type}`);
     });
