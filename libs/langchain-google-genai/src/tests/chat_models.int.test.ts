@@ -726,7 +726,7 @@ describe("CodeExecutionTool", () => {
   });
 });
 
-test.only("pass pdf to request", async () => {
+test("pass pdf to request", async () => {
   const model = new ChatGoogleGenerativeAI({
     model: "gemini-2.0-flash-exp",
     temperature: 0,
