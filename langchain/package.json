@@ -420,6 +420,7 @@
     "@langchain/cerebras": "*",
     "@langchain/cohere": "*",
     "@langchain/core": "workspace:*",
+    "@langchain/deepseek": "*",
     "@langchain/google-genai": "*",
     "@langchain/google-vertexai": "*",
     "@langchain/google-vertexai-web": "*",
@@ -469,6 +470,7 @@
     "@langchain/cerebras": "*",
     "@langchain/cohere": "*",
     "@langchain/core": ">=0.2.21 <0.4.0",
+    "@langchain/deepseek": "*",
     "@langchain/google-genai": "*",
     "@langchain/google-vertexai": "*",
     "@langchain/google-vertexai-web": "*",
@@ -492,6 +494,9 @@
       "optional": true
     },
     "@langchain/cohere": {
+      "optional": true
+    },
+    "@langchain/deepseek": {
       "optional": true
     },
     "@langchain/google-genai": {

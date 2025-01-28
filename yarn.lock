@@ -12465,7 +12465,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/deepseek@workspace:*, @langchain/deepseek@workspace:libs/langchain-deepseek":
+"@langchain/deepseek@*, @langchain/deepseek@workspace:*, @langchain/deepseek@workspace:libs/langchain-deepseek":
   version: 0.0.0-use.local
   resolution: "@langchain/deepseek@workspace:libs/langchain-deepseek"
   dependencies:
@@ -33477,6 +33477,7 @@ __metadata:
     "@langchain/cerebras": "*"
     "@langchain/cohere": "*"
     "@langchain/core": "workspace:*"
+    "@langchain/deepseek": "*"
     "@langchain/google-genai": "*"
     "@langchain/google-vertexai": "*"
     "@langchain/google-vertexai-web": "*"
@@ -33537,6 +33538,7 @@ __metadata:
     "@langchain/cerebras": "*"
     "@langchain/cohere": "*"
     "@langchain/core": ">=0.2.21 <0.4.0"
+    "@langchain/deepseek": "*"
     "@langchain/google-genai": "*"
     "@langchain/google-vertexai": "*"
     "@langchain/google-vertexai-web": "*"
@@ -33556,6 +33558,8 @@ __metadata:
     "@langchain/cerebras":
       optional: true
     "@langchain/cohere":
+      optional: true
+    "@langchain/deepseek":
       optional: true
     "@langchain/google-genai":
       optional: true

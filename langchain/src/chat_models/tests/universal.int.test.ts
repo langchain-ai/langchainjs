@@ -436,6 +436,17 @@ describe("Works with all model providers", () => {
     expect(vertexAIWebResult).toBeDefined();
     expect(vertexAIWebResult.content.length).toBeGreaterThan(0);
   });
+
+  it("Can invoke deepseek", async () => {
+    const deepSeek = await initChatModel("deepseek-chat", {
+      modelProvider: "deepseek",
+      temperature: 0,
+    });
+
+    const deepSeekResult = await deepSeek.invoke("what's your name");
+    expect(deepSeekResult).toBeDefined();
+    expect(deepSeekResult.content.length).toBeGreaterThan(0);
+  });
 });
 
 test("Is compatible with agents", async () => {
