@@ -2,6 +2,7 @@
 /* eslint-disable no-promise-executor-return */
 
 import { RedisClientType, createClient } from "redis";
+import { SchemaFieldTypes } from "redis";
 import { v4 as uuidv4 } from "uuid";
 import { test, expect } from "@jest/globals";
 import { faker } from "@faker-js/faker";
@@ -21,6 +22,9 @@ describe("RedisVectorStore", () => {
       redisClient: client as RedisClientType,
       indexName: "test-index",
       keyPrefix: "test:",
+      metadataSchema: {
+        ["foo"]: SchemaFieldTypes.TEXT,
+      }
     });
   });
 
@@ -66,9 +70,7 @@ describe("RedisVectorStore", () => {
     ]);
 
     // If the filter wasn't working, we'd get all 3 documents back
-    const results = await vectorStore.similaritySearch(pageContent, 3, [
-      `${uuid}`,
-    ]);
+    const results = await vectorStore.similaritySearch(pageContent, 3, `@foo:(${uuid})`);
 
     expect(results).toEqual([
       new Document({ metadata: { foo: uuid }, pageContent }),
