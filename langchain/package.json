@@ -420,6 +420,7 @@
     "@langchain/cerebras": "*",
     "@langchain/cohere": "*",
     "@langchain/core": "workspace:*",
+    "@langchain/deepseek": "*",
     "@langchain/google-genai": "*",
     "@langchain/google-vertexai": "*",
     "@langchain/google-vertexai-web": "*",
