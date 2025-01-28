@@ -170,23 +170,23 @@ export class TavilySearchResults extends Tool {
 
   protected kwargs: Record<string, unknown> = {};
 
-  protected includeImages = false;
+  protected includeImages?: boolean;
 
-  protected includeImageDescriptions = false;
+  protected includeImageDescriptions?: boolean;
 
-  protected includeAnswer = false;
+  protected includeAnswer?: boolean;
 
-  protected includeRawContent = false;
+  protected includeRawContent?: boolean;
 
-  protected includeDomains: string[] = [];
+  protected includeDomains?: string[];
 
-  protected excludeDomains: string[] = [];
+  protected excludeDomains?: string[];
 
-  protected searchDepth: "basic" | "deep" = "basic";
+  protected searchDepth?: "basic" | "deep";
 
-  protected topic = "general";
+  protected topic?: string;
 
-  protected days = 3;
+  protected days?: number;
 
   constructor(fields?: TavilySearchAPIRetrieverFields) {
     super(fields);
