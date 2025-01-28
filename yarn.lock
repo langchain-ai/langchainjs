@@ -33538,6 +33538,7 @@ __metadata:
     "@langchain/cerebras": "*"
     "@langchain/cohere": "*"
     "@langchain/core": ">=0.2.21 <0.4.0"
+    "@langchain/deepseek": "*"
     "@langchain/google-genai": "*"
     "@langchain/google-vertexai": "*"
     "@langchain/google-vertexai-web": "*"
