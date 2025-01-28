@@ -1,10 +1,15 @@
+import { BaseLanguageModelInput } from "@langchain/core/language_models/base";
+import { BaseMessage } from "@langchain/core/messages";
+import { Runnable } from "@langchain/core/runnables";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import {
   ChatOpenAI,
   ChatOpenAICallOptions,
   ChatOpenAIFields,
+  ChatOpenAIStructuredOutputMethodOptions,
   OpenAIClient,
 } from "@langchain/openai";
+import { z } from "zod";
 
 export interface ChatDeepSeekCallOptions extends ChatOpenAICallOptions {
   headers?: Record<string, string>;
@@ -114,7 +119,9 @@ export interface ChatDeepSeekInput extends ChatOpenAIFields {
  * ```txt
  * AIMessage {
  *   "content": "The French translation of \"I love programming\" is \"J'aime programmer\". In this sentence, \"J'aime\" is the first person singular conjugation of the French verb \"aimer\" which means \"to love\", and \"programmer\" is the French infinitive for \"to program\". I hope this helps! Let me know if you have any other questions.",
- *   "additional_kwargs": {},
+ *   "additional_kwargs": {
+ *     "reasoning_content": "...",
+ *   },
  *   "response_metadata": {
  *     "tokenUsage": {
  *       "completionTokens": 82,
@@ -143,7 +150,9 @@ export interface ChatDeepSeekInput extends ChatOpenAIFields {
  * ```txt
  * AIMessageChunk {
  *   "content": "",
- *   "additional_kwargs": {},
+ *   "additional_kwargs": {
+ *     "reasoning_content": "...",
+ *   },
  *   "response_metadata": {
  *     "finishReason": null
  *   },
@@ -153,7 +162,9 @@ export interface ChatDeepSeekInput extends ChatOpenAIFields {
  * }
  * AIMessageChunk {
  *   "content": "The",
- *   "additional_kwargs": {},
+ *   "additional_kwargs": {
+ *     "reasoning_content": "...",
+ *   },
  *   "response_metadata": {
  *     "finishReason": null
  *   },
@@ -163,7 +174,9 @@ export interface ChatDeepSeekInput extends ChatOpenAIFields {
  * }
  * AIMessageChunk {
  *   "content": " French",
- *   "additional_kwargs": {},
+ *   "additional_kwargs": {
+ *     "reasoning_content": "...",
+ *   },
  *   "response_metadata": {
  *     "finishReason": null
  *   },
@@ -173,7 +186,9 @@ export interface ChatDeepSeekInput extends ChatOpenAIFields {
  * }
  * AIMessageChunk {
  *   "content": " translation",
- *   "additional_kwargs": {},
+ *   "additional_kwargs": {
+ *     "reasoning_content": "...",
+ *   },
  *   "response_metadata": {
  *     "finishReason": null
  *   },
@@ -183,7 +198,9 @@ export interface ChatDeepSeekInput extends ChatOpenAIFields {
  * }
  * AIMessageChunk {
  *   "content": " of",
- *   "additional_kwargs": {},
+ *   "additional_kwargs": {
+ *     "reasoning_content": "...",
+ *   },
  *   "response_metadata": {
  *     "finishReason": null
  *   },
@@ -193,7 +210,9 @@ export interface ChatDeepSeekInput extends ChatOpenAIFields {
  * }
  * AIMessageChunk {
  *   "content": " \"",
- *   "additional_kwargs": {},
+ *   "additional_kwargs": {
+ *     "reasoning_content": "...",
+ *   },
  *   "response_metadata": {
  *     "finishReason": null
  *   },
@@ -203,7 +222,9 @@ export interface ChatDeepSeekInput extends ChatOpenAIFields {
  * }
  * AIMessageChunk {
  *   "content": "I",
- *   "additional_kwargs": {},
+ *   "additional_kwargs": {
+ *     "reasoning_content": "...",
+ *   },
  *   "response_metadata": {
  *     "finishReason": null
  *   },
@@ -213,7 +234,9 @@ export interface ChatDeepSeekInput extends ChatOpenAIFields {
  * }
  * AIMessageChunk {
  *   "content": " love",
- *   "additional_kwargs": {},
+ *   "additional_kwargs": {
+ *     "reasoning_content": "...",
+ *   },
  *   "response_metadata": {
  *     "finishReason": null
  *   },
@@ -224,7 +247,9 @@ export interface ChatDeepSeekInput extends ChatOpenAIFields {
  * ...
  * AIMessageChunk {
  *   "content": ".",
- *   "additional_kwargs": {},
+ *   "additional_kwargs": {
+ *     "reasoning_content": "...",
+ *   },
  *   "response_metadata": {
  *     "finishReason": null
  *   },
@@ -234,7 +259,9 @@ export interface ChatDeepSeekInput extends ChatOpenAIFields {
  * }
  * AIMessageChunk {
  *   "content": "",
- *   "additional_kwargs": {},
+ *   "additional_kwargs": {
+ *     "reasoning_content": "...",
+ *   },
  *   "response_metadata": {
  *     "finishReason": "stop"
  *   },
@@ -265,7 +292,9 @@ export interface ChatDeepSeekInput extends ChatOpenAIFields {
  * ```txt
  * AIMessageChunk {
  *   "content": "The French translation of \"I love programming\" is \"J'aime programmer\". In this sentence, \"J'aime\" is the first person singular conjugation of the French verb \"aimer\" which means \"to love\", and \"programmer\" is the French infinitive for \"to program\". I hope this helps! Let me know if you have any other questions.",
- *   "additional_kwargs": {},
+ *   "additional_kwargs": {
+ *     "reasoning_content": "...",
+ *   },
  *   "response_metadata": {
  *     "finishReason": "stop"
  *   },
@@ -443,5 +472,63 @@ export class ChatDeepSeek extends ChatOpenAI<ChatDeepSeekCallOptions> {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (message as any).reasoning_content;
     return langChainMessage;
+  }
+
+  withStructuredOutput<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>
+  >(
+    outputSchema:
+      | z.ZodType<RunOutput>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      | Record<string, any>,
+    config?: ChatOpenAIStructuredOutputMethodOptions<false>
+  ): Runnable<BaseLanguageModelInput, RunOutput>;
+
+  withStructuredOutput<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>
+  >(
+    outputSchema:
+      | z.ZodType<RunOutput>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      | Record<string, any>,
+    config?: ChatOpenAIStructuredOutputMethodOptions<true>
+  ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
+
+  withStructuredOutput<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>
+  >(
+    outputSchema:
+      | z.ZodType<RunOutput>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      | Record<string, any>,
+    config?: ChatOpenAIStructuredOutputMethodOptions<boolean>
+  ):
+    | Runnable<BaseLanguageModelInput, RunOutput>
+    | Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
+
+  withStructuredOutput<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>
+  >(
+    outputSchema:
+      | z.ZodType<RunOutput>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      | Record<string, any>,
+    config?: ChatOpenAIStructuredOutputMethodOptions<boolean>
+  ):
+    | Runnable<BaseLanguageModelInput, RunOutput>
+    | Runnable<
+        BaseLanguageModelInput,
+        { raw: BaseMessage; parsed: RunOutput }
+      > {
+    const ensuredConfig = { ...config };
+    // Deepseek does not support json schema yet
+    if (ensuredConfig?.method === undefined) {
+      ensuredConfig.method = "functionCalling";
+    }
+    return super.withStructuredOutput<RunOutput>(outputSchema, ensuredConfig);
   }
 }
