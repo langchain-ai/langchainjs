@@ -545,7 +545,7 @@ export class ChatGoogleGenerativeAI
     };
   }
 
-  lc_namespace = ["langchain", "chat_models", "google_genai"];
+  lc_namespace = ["langchain_google_genai", "chat_models"];
 
   get lc_aliases() {
     return {
