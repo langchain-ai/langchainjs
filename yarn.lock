@@ -33559,6 +33559,8 @@ __metadata:
       optional: true
     "@langchain/cohere":
       optional: true
+    "@langchain/deepseek":
+      optional: true
     "@langchain/google-genai":
       optional: true
     "@langchain/google-vertexai":
