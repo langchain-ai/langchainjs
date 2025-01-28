@@ -47,7 +47,7 @@ class ChatDeepSeekStandardIntegrationTests extends ChatModelIntegrationTests<
     >;
   } = {
     invoke: [
-      /*"cache_read_input" "reasoning_output" */
+      // "cache_read_input" "reasoning_output"
     ],
     stream: [],
   };
