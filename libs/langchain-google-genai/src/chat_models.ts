@@ -528,6 +528,47 @@ export interface GoogleGenerativeAIChatInput
  * </details>
  *
  * <br />
+ *
+ * <details>
+ * <summary><strong>Document Messages</strong></summary>
+ *
+ * This example will show you how to pass documents such as PDFs to Google
+ * Generative AI through messages.
+ *
+ * ```typescript
+ * const pdfPath = "/Users/my_user/Downloads/invoice.pdf";
+ * const pdfBase64 = await fs.readFile(pdfPath, "base64");
+ *
+ * const response = await llm.invoke([
+ *   ["system", "Use the provided documents to answer the question"],
+ *   [
+ *     "user",
+ *     [
+ *       {
+ *         type: "application/pdf", // If the `type` field includes a single slash (`/`), it will be treated as inline data.
+ *         data: pdfBase64,
+ *       },
+ *       {
+ *         type: "text",
+ *         text: "Summarize the contents of this PDF",
+ *       },
+ *     ],
+ *   ],
+ * ]);
+ *
+ * console.log(response.content);
+ * ```
+ *
+ * ```txt
+ * This is a billing invoice from Twitter Developers for X API Basic Access. The transaction date is January 7, 2025,
+ * and the amount is $194.34, which has been paid. The subscription period is from January 7, 2025 21:02 to February 7, 2025 00:00 (UTC).
+ * The tax is $0.00, with a tax rate of 0%. The total amount is $194.34. The payment was made using a Visa card ending in 7022,
+ * expiring in 12/2026. The billing address is Brace Sproul, 1234 Main Street, San Francisco, CA, US 94103. The company being billed is
+ * X Corp, located at 865 FM 1209 Building 2, Bastrop, TX, US 78602. Terms and conditions apply.
+ * ```
+ * </details>
+ *
+ * <br />
  */
 export class ChatGoogleGenerativeAI
   extends BaseChatModel<GoogleGenerativeAIChatCallOptions, AIMessageChunk>

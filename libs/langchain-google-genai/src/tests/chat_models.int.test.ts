@@ -747,7 +747,7 @@ test.only("pass pdf to request", async () => {
         },
         {
           type: "text",
-          text: "Summarise the contents of this PDF",
+          text: "Summarize the contents of this PDF",
         },
       ],
     ],
