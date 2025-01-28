@@ -45,6 +45,7 @@
     "@langchain/cohere": "workspace:*",
     "@langchain/community": "workspace:*",
     "@langchain/core": "workspace:*",
+    "@langchain/deepseek": "workspace:*",
     "@langchain/exa": "workspace:*",
     "@langchain/google-common": "workspace:*",
     "@langchain/google-genai": "workspace:*",

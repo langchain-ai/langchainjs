@@ -1,35 +1,28 @@
-import {
-  BaseChatModelCallOptions,
-  BindToolsInput,
-  LangSmithParams,
-  type BaseChatModelParams,
-} from "@langchain/core/language_models/chat_models";
-import { Serialized } from "@langchain/core/load/serializable";
+import { BaseLanguageModelInput } from "@langchain/core/language_models/base";
+import { BaseMessage } from "@langchain/core/messages";
+import { Runnable } from "@langchain/core/runnables";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import {
-  type OpenAICoreRequestOptions,
-  type OpenAIClient,
   ChatOpenAI,
-  OpenAIToolChoice,
+  ChatOpenAICallOptions,
+  ChatOpenAIFields,
+  ChatOpenAIStructuredOutputMethodOptions,
+  OpenAIClient,
 } from "@langchain/openai";
+import { z } from "zod";
 
-type ChatXAIToolType = BindToolsInput | OpenAIClient.ChatCompletionTool;
-
-export interface ChatXAICallOptions extends BaseChatModelCallOptions {
+export interface ChatDeepSeekCallOptions extends ChatOpenAICallOptions {
   headers?: Record<string, string>;
-  tools?: ChatXAIToolType[];
-  tool_choice?: OpenAIToolChoice | string | "auto" | "any";
 }
 
-export interface ChatXAIInput extends BaseChatModelParams {
+export interface ChatDeepSeekInput extends ChatOpenAIFields {
   /**
-   * The xAI API key to use for requests.
-   * @default process.env.XAI_API_KEY
+   * The Deepseek API key to use for requests.
+   * @default process.env.DEEPSEEK_API_KEY
    */
   apiKey?: string;
   /**
    * The name of the model to use.
-   * @default "grok-beta"
    */
   model?: string;
   /**
@@ -49,7 +42,6 @@ export interface ChatXAIInput extends BaseChatModelParams {
   streaming?: boolean;
   /**
    * The temperature to use for sampling.
-   * @default 0.7
    */
   temperature?: number;
   /**
@@ -60,21 +52,21 @@ export interface ChatXAIInput extends BaseChatModelParams {
 }
 
 /**
- * xAI chat model integration.
+ * Deepseek chat model integration.
  *
- * The xAI API is compatible to the OpenAI API with some limitations.
+ * The Deepseek API is compatible to the OpenAI API with some limitations.
  *
  * Setup:
- * Install `@langchain/xai` and set an environment variable named `XAI_API_KEY`.
+ * Install `@langchain/deepseek` and set an environment variable named `DEEPSEEK_API_KEY`.
  *
  * ```bash
- * npm install @langchain/xai
- * export XAI_API_KEY="your-api-key"
+ * npm install @langchain/deepseek
+ * export DEEPSEEK_API_KEY="your-api-key"
  * ```
  *
- * ## [Constructor args](https://api.js.langchain.com/classes/_langchain_xai.ChatXAI.html#constructor)
+ * ## [Constructor args](https://api.js.langchain.com/classes/_langchain_deepseek.ChatDeepSeek.html#constructor)
  *
- * ## [Runtime args](https://api.js.langchain.com/interfaces/_langchain_xai.ChatXAICallOptions.html)
+ * ## [Runtime args](https://api.js.langchain.com/interfaces/_langchain_deepseek.ChatDeepSeekCallOptions.html)
  *
  * Runtime args can be passed as the second argument to any of the base runnable methods `.invoke`. `.stream`, `.batch`, etc.
  * They can also be passed via `.bind`, or the second arg in `.bindTools`, like shown in the examples below:
@@ -101,10 +93,10 @@ export interface ChatXAIInput extends BaseChatModelParams {
  * <summary><strong>Instantiate</strong></summary>
  *
  * ```typescript
- * import { ChatXAI } from '@langchain/xai';
+ * import { ChatDeepSeek } from '@langchain/deepseek';
  *
- * const llm = new ChatXAI({
- *   model: "grok-beta",
+ * const llm = new ChatDeepSeek({
+ *   model: "deepseek-reasoner",
  *   temperature: 0,
  *   // other params...
  * });
@@ -127,7 +119,9 @@ export interface ChatXAIInput extends BaseChatModelParams {
  * ```txt
  * AIMessage {
  *   "content": "The French translation of \"I love programming\" is \"J'aime programmer\". In this sentence, \"J'aime\" is the first person singular conjugation of the French verb \"aimer\" which means \"to love\", and \"programmer\" is the French infinitive for \"to program\". I hope this helps! Let me know if you have any other questions.",
- *   "additional_kwargs": {},
+ *   "additional_kwargs": {
+ *     "reasoning_content": "...",
+ *   },
  *   "response_metadata": {
  *     "tokenUsage": {
  *       "completionTokens": 82,
@@ -156,7 +150,9 @@ export interface ChatXAIInput extends BaseChatModelParams {
  * ```txt
  * AIMessageChunk {
  *   "content": "",
- *   "additional_kwargs": {},
+ *   "additional_kwargs": {
+ *     "reasoning_content": "...",
+ *   },
  *   "response_metadata": {
  *     "finishReason": null
  *   },
@@ -166,7 +162,9 @@ export interface ChatXAIInput extends BaseChatModelParams {
  * }
  * AIMessageChunk {
  *   "content": "The",
- *   "additional_kwargs": {},
+ *   "additional_kwargs": {
+ *     "reasoning_content": "...",
+ *   },
  *   "response_metadata": {
  *     "finishReason": null
  *   },
@@ -176,7 +174,9 @@ export interface ChatXAIInput extends BaseChatModelParams {
  * }
  * AIMessageChunk {
  *   "content": " French",
- *   "additional_kwargs": {},
+ *   "additional_kwargs": {
+ *     "reasoning_content": "...",
+ *   },
  *   "response_metadata": {
  *     "finishReason": null
  *   },
@@ -186,7 +186,9 @@ export interface ChatXAIInput extends BaseChatModelParams {
  * }
  * AIMessageChunk {
  *   "content": " translation",
- *   "additional_kwargs": {},
+ *   "additional_kwargs": {
+ *     "reasoning_content": "...",
+ *   },
  *   "response_metadata": {
  *     "finishReason": null
  *   },
@@ -196,7 +198,9 @@ export interface ChatXAIInput extends BaseChatModelParams {
  * }
  * AIMessageChunk {
  *   "content": " of",
- *   "additional_kwargs": {},
+ *   "additional_kwargs": {
+ *     "reasoning_content": "...",
+ *   },
  *   "response_metadata": {
  *     "finishReason": null
  *   },
@@ -206,7 +210,9 @@ export interface ChatXAIInput extends BaseChatModelParams {
  * }
  * AIMessageChunk {
  *   "content": " \"",
- *   "additional_kwargs": {},
+ *   "additional_kwargs": {
+ *     "reasoning_content": "...",
+ *   },
  *   "response_metadata": {
  *     "finishReason": null
  *   },
@@ -216,7 +222,9 @@ export interface ChatXAIInput extends BaseChatModelParams {
  * }
  * AIMessageChunk {
  *   "content": "I",
- *   "additional_kwargs": {},
+ *   "additional_kwargs": {
+ *     "reasoning_content": "...",
+ *   },
  *   "response_metadata": {
  *     "finishReason": null
  *   },
@@ -226,7 +234,9 @@ export interface ChatXAIInput extends BaseChatModelParams {
  * }
  * AIMessageChunk {
  *   "content": " love",
- *   "additional_kwargs": {},
+ *   "additional_kwargs": {
+ *     "reasoning_content": "...",
+ *   },
  *   "response_metadata": {
  *     "finishReason": null
  *   },
@@ -237,7 +247,9 @@ export interface ChatXAIInput extends BaseChatModelParams {
  * ...
  * AIMessageChunk {
  *   "content": ".",
- *   "additional_kwargs": {},
+ *   "additional_kwargs": {
+ *     "reasoning_content": "...",
+ *   },
  *   "response_metadata": {
  *     "finishReason": null
  *   },
@@ -247,7 +259,9 @@ export interface ChatXAIInput extends BaseChatModelParams {
  * }
  * AIMessageChunk {
  *   "content": "",
- *   "additional_kwargs": {},
+ *   "additional_kwargs": {
+ *     "reasoning_content": "...",
+ *   },
  *   "response_metadata": {
  *     "finishReason": "stop"
  *   },
@@ -278,7 +292,9 @@ export interface ChatXAIInput extends BaseChatModelParams {
  * ```txt
  * AIMessageChunk {
  *   "content": "The French translation of \"I love programming\" is \"J'aime programmer\". In this sentence, \"J'aime\" is the first person singular conjugation of the French verb \"aimer\" which means \"to love\", and \"programmer\" is the French infinitive for \"to program\". I hope this helps! Let me know if you have any other questions.",
- *   "additional_kwargs": {},
+ *   "additional_kwargs": {
+ *     "reasoning_content": "...",
+ *   },
  *   "response_metadata": {
  *     "finishReason": "stop"
  *   },
@@ -297,8 +313,8 @@ export interface ChatXAIInput extends BaseChatModelParams {
  * ```typescript
  * import { z } from 'zod';
  *
- * const llmForToolCalling = new ChatXAI({
- *   model: "grok-beta",
+ * const llmForToolCalling = new ChatDeepSeek({
+ *   model: "deepseek-chat",
  *   temperature: 0,
  *   // other params...
  * });
@@ -385,113 +401,134 @@ export interface ChatXAIInput extends BaseChatModelParams {
  *
  * <br />
  */
-export class ChatXAI extends ChatOpenAI<ChatXAICallOptions> {
+export class ChatDeepSeek extends ChatOpenAI<ChatDeepSeekCallOptions> {
   static lc_name() {
-    return "ChatXAI";
+    return "ChatDeepSeek";
   }
 
   _llmType() {
-    return "xAI";
+    return "deepseek";
   }
 
   get lc_secrets(): { [key: string]: string } | undefined {
     return {
-      apiKey: "XAI_API_KEY",
+      apiKey: "DEEPSEEK_API_KEY",
     };
   }
 
   lc_serializable = true;
 
-  lc_namespace = ["langchain", "chat_models", "xai"];
+  lc_namespace = ["langchain", "chat_models", "deepseek"];
 
-  constructor(fields?: Partial<ChatXAIInput>) {
-    const apiKey = fields?.apiKey || getEnvironmentVariable("XAI_API_KEY");
+  constructor(fields?: Partial<ChatDeepSeekInput>) {
+    const apiKey = fields?.apiKey || getEnvironmentVariable("DEEPSEEK_API_KEY");
     if (!apiKey) {
       throw new Error(
-        `xAI API key not found. Please set the XAI_API_KEY environment variable or provide the key into "apiKey" field.`
+        `Deepseek API key not found. Please set the DEEPSEEK_API_KEY environment variable or pass the key into "apiKey" field.`
       );
     }
 
     super({
       ...fields,
-      model: fields?.model || "grok-beta",
       apiKey,
       configuration: {
-        baseURL: "https://api.x.ai/v1",
+        baseURL: "https://api.deepseek.com",
+        ...fields?.configuration,
       },
     });
   }
 
-  toJSON(): Serialized {
-    const result = super.toJSON();
-
-    if (
-      "kwargs" in result &&
-      typeof result.kwargs === "object" &&
-      result.kwargs != null
-    ) {
-      delete result.kwargs.openai_api_key;
-      delete result.kwargs.configuration;
-    }
-
-    return result;
+  protected override _convertOpenAIDeltaToBaseMessageChunk(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    delta: Record<string, any>,
+    rawResponse: OpenAIClient.ChatCompletionChunk,
+    defaultRole?:
+      | "function"
+      | "user"
+      | "system"
+      | "developer"
+      | "assistant"
+      | "tool"
+  ) {
+    const messageChunk = super._convertOpenAIDeltaToBaseMessageChunk(
+      delta,
+      rawResponse,
+      defaultRole
+    );
+    messageChunk.additional_kwargs.reasoning_content = delta.reasoning_content;
+    return messageChunk;
   }
 
-  getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
-    const params = super.getLsParams(options);
-    params.ls_provider = "xai";
-    return params;
+  protected override _convertOpenAIChatCompletionMessageToBaseMessage(
+    message: OpenAIClient.ChatCompletionMessage,
+    rawResponse: OpenAIClient.ChatCompletion
+  ) {
+    const langChainMessage =
+      super._convertOpenAIChatCompletionMessageToBaseMessage(
+        message,
+        rawResponse
+      );
+    langChainMessage.additional_kwargs.reasoning_content =
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (message as any).reasoning_content;
+    return langChainMessage;
   }
 
-  async completionWithRetry(
-    request: OpenAIClient.Chat.ChatCompletionCreateParamsStreaming,
-    options?: OpenAICoreRequestOptions
-  ): Promise<AsyncIterable<OpenAIClient.Chat.Completions.ChatCompletionChunk>>;
+  withStructuredOutput<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>
+  >(
+    outputSchema:
+      | z.ZodType<RunOutput>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      | Record<string, any>,
+    config?: ChatOpenAIStructuredOutputMethodOptions<false>
+  ): Runnable<BaseLanguageModelInput, RunOutput>;
 
-  async completionWithRetry(
-    request: OpenAIClient.Chat.ChatCompletionCreateParamsNonStreaming,
-    options?: OpenAICoreRequestOptions
-  ): Promise<OpenAIClient.Chat.Completions.ChatCompletion>;
+  withStructuredOutput<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>
+  >(
+    outputSchema:
+      | z.ZodType<RunOutput>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      | Record<string, any>,
+    config?: ChatOpenAIStructuredOutputMethodOptions<true>
+  ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
 
-  /**
-   * Calls the xAI API with retry logic in case of failures.
-   * @param request The request to send to the xAI API.
-   * @param options Optional configuration for the API call.
-   * @returns The response from the xAI API.
-   */
-  async completionWithRetry(
-    request:
-      | OpenAIClient.Chat.ChatCompletionCreateParamsStreaming
-      | OpenAIClient.Chat.ChatCompletionCreateParamsNonStreaming,
-    options?: OpenAICoreRequestOptions
-  ): Promise<
-    | AsyncIterable<OpenAIClient.Chat.Completions.ChatCompletionChunk>
-    | OpenAIClient.Chat.Completions.ChatCompletion
-  > {
-    delete request.frequency_penalty;
-    delete request.presence_penalty;
-    delete request.logit_bias;
-    delete request.functions;
+  withStructuredOutput<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>
+  >(
+    outputSchema:
+      | z.ZodType<RunOutput>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      | Record<string, any>,
+    config?: ChatOpenAIStructuredOutputMethodOptions<boolean>
+  ):
+    | Runnable<BaseLanguageModelInput, RunOutput>
+    | Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
 
-    const newRequestMessages = request.messages.map((msg) => {
-      if (!msg.content) {
-        return {
-          ...msg,
-          content: "",
-        };
-      }
-      return msg;
-    });
-
-    const newRequest = {
-      ...request,
-      messages: newRequestMessages,
-    };
-
-    if (newRequest.stream === true) {
-      return super.completionWithRetry(newRequest, options);
+  withStructuredOutput<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>
+  >(
+    outputSchema:
+      | z.ZodType<RunOutput>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      | Record<string, any>,
+    config?: ChatOpenAIStructuredOutputMethodOptions<boolean>
+  ):
+    | Runnable<BaseLanguageModelInput, RunOutput>
+    | Runnable<
+        BaseLanguageModelInput,
+        { raw: BaseMessage; parsed: RunOutput }
+      > {
+    const ensuredConfig = { ...config };
+    // Deepseek does not support json schema yet
+    if (ensuredConfig?.method === undefined) {
+      ensuredConfig.method = "functionCalling";
     }
-
-    return super.completionWithRetry(newRequest, options);
+    return super.withStructuredOutput<RunOutput>(outputSchema, ensuredConfig);
   }
 }
