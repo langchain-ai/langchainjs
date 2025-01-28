@@ -1881,6 +1881,88 @@ test("LLM that doesn't support streaming, but is invoked, should emit one on_str
   ]);
 });
 
+test.skip("Test typing", async () => {
+  const tool = new DynamicTool({
+    func: async () => "hello",
+    name: "parameterless",
+    description: "A tool that does nothing",
+  });
+  const events = [];
+  const eventStream = await tool.streamEvents({}, { version: "v2" });
+  for await (const { event, data } of eventStream) {
+    events.push(event);
+    // These shouldn't run, we're just testing type checking
+    if (event === "on_llm_start") {
+      // @ts-expect-error Assert typing is not any
+      void data.input.foo;
+    }
+    if (event === "on_llm_stream") {
+      // @ts-expect-error Assert typing is not any
+      void data.chunk.foo;
+    }
+    if (event === "on_llm_end") {
+      // @ts-expect-error Assert typing is not any
+      void data.output.foo;
+    }
+    if (event === "on_chat_model_start") {
+      // @ts-expect-error Assert typing is not any
+      void data.input.foo;
+    }
+    if (event === "on_chat_model_stream") {
+      // @ts-expect-error Assert typing is not any
+      void data.chunk.foo;
+    }
+    if (event === "on_chat_model_end") {
+      // @ts-expect-error Assert typing is not any
+      void data.output.foo;
+    }
+    if (event === "on_chain_start") {
+      // Typing is any
+      void data.input.foo;
+    }
+    if (event === "on_chain_stream") {
+      // Typing is any
+      void data.chunk.foo;
+    }
+    if (event === "on_chain_end") {
+      // Typing is any
+      void data.output.foo;
+    }
+    if (event === "on_prompt_start") {
+      // Typing is any
+      void data.input.foo;
+    }
+    if (event === "on_prompt_end") {
+      // Typing is any
+      void data.output.foo;
+    }
+    if (event === "on_retriever_start") {
+      // Typing is any
+      void data.input.foo;
+    }
+    if (event === "on_retriever_end") {
+      // Typing is any
+      void data.output.foo;
+    }
+    if (event === "on_tool_start") {
+      // Typing is any
+      void data.input.foo;
+    }
+    if (event === "on_tool_end") {
+      // Typing is any
+      void data.output.foo;
+    }
+    if (event === "on_custom_event") {
+      // Typing is any
+      void data.output.foo;
+    }
+    // @ts-expect-error Invalid event name
+    if (event === "something else") {
+      void 0;
+    }
+  }
+});
+
 test("Runnable streamEvents method with simple tools", async () => {
   const tool = new DynamicTool({
     func: async () => "hello",
