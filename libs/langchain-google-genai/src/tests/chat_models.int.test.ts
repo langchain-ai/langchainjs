@@ -753,5 +753,7 @@ test.only("pass pdf to request", async () => {
     ],
   ]);
 
+  expect(response.content.length).toBeGreaterThan(10);
+
   console.log(response.content);
 });
