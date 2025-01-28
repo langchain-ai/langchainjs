@@ -2,6 +2,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { expect, test } from "@jest/globals";
+import * as fs from "fs/promises";
 import {
   AIMessageChunk,
   HumanMessage,
@@ -833,4 +834,37 @@ test("human message caching", async () => {
   expect(res2.usage_metadata?.input_token_details?.cache_read).toBeGreaterThan(
     0
   );
+});
+
+test("Can accept PDF documents", async () => {
+  const model = new ChatAnthropic({
+    model: "claude-3-5-sonnet-latest",
+  });
+
+  const pdfPath =
+    "../langchain-community/src/document_loaders/tests/example_data/Jacob_Lee_Resume_2023.pdf";
+  const pdfBase64 = await fs.readFile(pdfPath, "base64");
+
+  const response = await model.invoke([
+    ["system", "Use the provided documents to answer the question"],
+    [
+      "user",
+      [
+        {
+          type: "document",
+          source: {
+            type: "base64",
+            media_type: "application/pdf",
+            data: pdfBase64,
+          },
+        },
+        {
+          type: "text",
+          text: "Summarize the contents of this PDF",
+        },
+      ],
+    ],
+  ]);
+
+  expect(response.content.length).toBeGreaterThan(10);
 });
