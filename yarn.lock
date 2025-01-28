@@ -12465,7 +12465,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/deepseek@workspace:libs/langchain-deepseek":
+"@langchain/deepseek@workspace:*, @langchain/deepseek@workspace:libs/langchain-deepseek":
   version: 0.0.0-use.local
   resolution: "@langchain/deepseek@workspace:libs/langchain-deepseek"
   dependencies:
@@ -27840,6 +27840,7 @@ __metadata:
     "@langchain/cohere": "workspace:*"
     "@langchain/community": "workspace:*"
     "@langchain/core": "workspace:*"
+    "@langchain/deepseek": "workspace:*"
     "@langchain/exa": "workspace:*"
     "@langchain/google-common": "workspace:*"
     "@langchain/google-genai": "workspace:*"
