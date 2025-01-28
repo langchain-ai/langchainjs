@@ -725,3 +725,33 @@ describe("CodeExecutionTool", () => {
     expect(codeResult).toBeDefined();
   });
 });
+
+test.only("pass pdf to request", async () => {
+  const model = new ChatGoogleGenerativeAI({
+    model: "gemini-2.0-flash-exp",
+    temperature: 0,
+    maxRetries: 0,
+  });
+  const pdfPath =
+    "/Users/bracesproul/Downloads/twitter_api_invoice_01_07_24.pdf";
+  const pdfBase64 = await fs.readFile(pdfPath, "base64");
+
+  const response = await model.invoke([
+    ["system", "Use the provided documents to answer the question"],
+    [
+      "user",
+      [
+        {
+          type: "application/pdf",
+          data: pdfBase64,
+        },
+        {
+          type: "text",
+          text: "Summarise the contents of this PDF",
+        },
+      ],
+    ],
+  ]);
+
+  console.log(response.content);
+});
