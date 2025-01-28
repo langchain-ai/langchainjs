@@ -4,10 +4,10 @@ import { ChatModelIntegrationTests } from "@langchain/standard-tests";
 import { AIMessage, AIMessageChunk } from "@langchain/core/messages";
 import { concat } from "@langchain/core/utils/stream";
 import { BaseLanguageModelInput } from "@langchain/core/language_models/base";
-import { ChatDeepseek, ChatDeepseekCallOptions } from "../chat_models.js";
+import { ChatDeepSeek, ChatDeepSeekCallOptions } from "../chat_models.js";
 
-class ChatDeepseekStandardIntegrationTests extends ChatModelIntegrationTests<
-  ChatDeepseekCallOptions,
+class ChatDeepSeekStandardIntegrationTests extends ChatModelIntegrationTests<
+  ChatDeepSeekCallOptions,
   AIMessageChunk
 > {
   constructor() {
@@ -17,7 +17,7 @@ class ChatDeepseekStandardIntegrationTests extends ChatModelIntegrationTests<
       );
     }
     super({
-      Cls: ChatDeepseek,
+      Cls: ChatDeepSeek,
       chatModelHasToolCalling: false,
       chatModelHasStructuredOutput: false,
       supportsParallelToolCalls: false,
@@ -46,7 +46,7 @@ class ChatDeepseekStandardIntegrationTests extends ChatModelIntegrationTests<
   } = { invoke: ["cache_read_input", "reasoning_output"], stream: [] };
 
   async invokeWithReasoningOutput(stream: boolean) {
-    const chatModel = new ChatDeepseek({
+    const chatModel = new ChatDeepSeek({
       model: "deepseek-reasoner",
       streamUsage: true,
       temperature: 1,
@@ -58,10 +58,10 @@ class ChatDeepseekStandardIntegrationTests extends ChatModelIntegrationTests<
   }
 
   // async testUsageMetadataStreaming() {
-  //   // ChatDeepseek does not support streaming tokens by
+  //   // ChatDeepSeek does not support streaming tokens by
   //   // default, so we must pass in a call option to
   //   // enable streaming tokens.
-  //   const callOptions: ChatDeepseek["ParsedCallOptions"] = {
+  //   const callOptions: ChatDeepSeek["ParsedCallOptions"] = {
   //     stream_options: {
   //       include_usage: true,
   //     },
@@ -72,7 +72,7 @@ class ChatDeepseekStandardIntegrationTests extends ChatModelIntegrationTests<
   async testInvokeMoreComplexTools() {
     this.skipTestMessage(
       "testInvokeMoreComplexTools",
-      "ChatDeepseek",
+      "ChatDeepSeek",
       "Deepseek does not support tool schemas which contain object with unknown/any parameters." +
         "\nDeepseek only supports objects in schemas when the parameters are defined."
     );
@@ -89,15 +89,15 @@ class ChatDeepseekStandardIntegrationTests extends ChatModelIntegrationTests<
   }
 }
 
-const testClass = new ChatDeepseekStandardIntegrationTests();
+const testClass = new ChatDeepSeekStandardIntegrationTests();
 
-test.skip("ChatDeepseekStandardIntegrationTests", async () => {
+test.skip("ChatDeepSeekStandardIntegrationTests", async () => {
   const testResults = await testClass.runTests();
   expect(testResults).toBe(true);
 });
 
 async function invoke(
-  chatModel: ChatDeepseek,
+  chatModel: ChatDeepSeek,
   input: BaseLanguageModelInput,
   stream: boolean
 ): Promise<AIMessage> {

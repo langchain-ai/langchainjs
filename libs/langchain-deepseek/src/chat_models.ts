@@ -6,11 +6,11 @@ import {
   OpenAIClient,
 } from "@langchain/openai";
 
-export interface ChatDeepseekCallOptions extends ChatOpenAICallOptions {
+export interface ChatDeepSeekCallOptions extends ChatOpenAICallOptions {
   headers?: Record<string, string>;
 }
 
-export interface ChatDeepseekInput extends ChatOpenAIFields {
+export interface ChatDeepSeekInput extends ChatOpenAIFields {
   /**
    * The Deepseek API key to use for requests.
    * @default process.env.DEEPSEEK_API_KEY
@@ -59,18 +59,27 @@ export interface ChatDeepseekInput extends ChatOpenAIFields {
  * export DEEPSEEK_API_KEY="your-api-key"
  * ```
  *
- * ## [Constructor args](https://api.js.langchain.com/classes/_langchain_deepseek.ChatDeepseek.html#constructor)
+ * ## [Constructor args](https://api.js.langchain.com/classes/_langchain_deepseek.ChatDeepSeek.html#constructor)
  *
- * ## [Runtime args](https://api.js.langchain.com/interfaces/_langchain_deepseek.ChatDeepseekCallOptions.html)
+ * ## [Runtime args](https://api.js.langchain.com/interfaces/_langchain_deepseek.ChatDeepSeekCallOptions.html)
  *
  * Runtime args can be passed as the second argument to any of the base runnable methods `.invoke`. `.stream`, `.batch`, etc.
- * They can also be passed via `.bind`, as shown in the examples below:
+ * They can also be passed via `.bind`, or the second arg in `.bindTools`, like shown in the examples below:
  *
  * ```typescript
  * // When calling `.bind`, call options should be passed via the first argument
  * const llmWithArgsBound = llm.bind({
  *   stop: ["\n"],
+ *   tools: [...],
  * });
+ *
+ * // When calling `.bindTools`, call options should be passed via the second argument
+ * const llmWithTools = llm.bindTools(
+ *   [...],
+ *   {
+ *     tool_choice: "auto",
+ *   }
+ * );
  * ```
  *
  * ## Examples
@@ -79,9 +88,9 @@ export interface ChatDeepseekInput extends ChatOpenAIFields {
  * <summary><strong>Instantiate</strong></summary>
  *
  * ```typescript
- * import { ChatDeepseek } from '@langchain/deepseek';
+ * import { ChatDeepSeek } from '@langchain/deepseek';
  *
- * const llm = new ChatDeepseek({
+ * const llm = new ChatDeepSeek({
  *   model: "deepseek-reasoner",
  *   temperature: 0,
  *   // other params...
@@ -268,10 +277,104 @@ export interface ChatDeepseekInput extends ChatOpenAIFields {
  * </details>
  *
  * <br />
+ *
+ * <details>
+ * <summary><strong>Bind tools</strong></summary>
+ *
+ * ```typescript
+ * import { z } from 'zod';
+ *
+ * const llmForToolCalling = new ChatDeepSeek({
+ *   model: "deepseek-chat",
+ *   temperature: 0,
+ *   // other params...
+ * });
+ *
+ * const GetWeather = {
+ *   name: "GetWeather",
+ *   description: "Get the current weather in a given location",
+ *   schema: z.object({
+ *     location: z.string().describe("The city and state, e.g. San Francisco, CA")
+ *   }),
+ * }
+ *
+ * const GetPopulation = {
+ *   name: "GetPopulation",
+ *   description: "Get the current population in a given location",
+ *   schema: z.object({
+ *     location: z.string().describe("The city and state, e.g. San Francisco, CA")
+ *   }),
+ * }
+ *
+ * const llmWithTools = llmForToolCalling.bindTools([GetWeather, GetPopulation]);
+ * const aiMsg = await llmWithTools.invoke(
+ *   "Which city is hotter today and which is bigger: LA or NY?"
+ * );
+ * console.log(aiMsg.tool_calls);
+ * ```
+ *
+ * ```txt
+ * [
+ *   {
+ *     name: 'GetWeather',
+ *     args: { location: 'Los Angeles, CA' },
+ *     type: 'tool_call',
+ *     id: 'call_cd34'
+ *   },
+ *   {
+ *     name: 'GetWeather',
+ *     args: { location: 'New York, NY' },
+ *     type: 'tool_call',
+ *     id: 'call_68rf'
+ *   },
+ *   {
+ *     name: 'GetPopulation',
+ *     args: { location: 'Los Angeles, CA' },
+ *     type: 'tool_call',
+ *     id: 'call_f81z'
+ *   },
+ *   {
+ *     name: 'GetPopulation',
+ *     args: { location: 'New York, NY' },
+ *     type: 'tool_call',
+ *     id: 'call_8byt'
+ *   }
+ * ]
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Structured Output</strong></summary>
+ *
+ * ```typescript
+ * import { z } from 'zod';
+ *
+ * const Joke = z.object({
+ *   setup: z.string().describe("The setup of the joke"),
+ *   punchline: z.string().describe("The punchline to the joke"),
+ *   rating: z.number().optional().describe("How funny the joke is, from 1 to 10")
+ * }).describe('Joke to tell user.');
+ *
+ * const structuredLlm = llmForToolCalling.withStructuredOutput(Joke, { name: "Joke" });
+ * const jokeResult = await structuredLlm.invoke("Tell me a joke about cats");
+ * console.log(jokeResult);
+ * ```
+ *
+ * ```txt
+ * {
+ *   setup: "Why don't cats play poker in the wild?",
+ *   punchline: 'Because there are too many cheetahs.'
+ * }
+ * ```
+ * </details>
+ *
+ * <br />
  */
-export class ChatDeepseek extends ChatOpenAI<ChatDeepseekCallOptions> {
+export class ChatDeepSeek extends ChatOpenAI<ChatDeepSeekCallOptions> {
   static lc_name() {
-    return "ChatDeepseek";
+    return "ChatDeepSeek";
   }
 
   _llmType() {
@@ -288,7 +391,7 @@ export class ChatDeepseek extends ChatOpenAI<ChatDeepseekCallOptions> {
 
   lc_namespace = ["langchain", "chat_models", "deepseek"];
 
-  constructor(fields?: Partial<ChatDeepseekInput>) {
+  constructor(fields?: Partial<ChatDeepSeekInput>) {
     const apiKey = fields?.apiKey || getEnvironmentVariable("DEEPSEEK_API_KEY");
     if (!apiKey) {
       throw new Error(
@@ -307,6 +410,7 @@ export class ChatDeepseek extends ChatOpenAI<ChatDeepseekCallOptions> {
   }
 
   protected override _convertOpenAIDeltaToBaseMessageChunk(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     delta: Record<string, any>,
     rawResponse: OpenAIClient.ChatCompletionChunk,
     defaultRole?:
@@ -335,9 +439,9 @@ export class ChatDeepseek extends ChatOpenAI<ChatDeepseekCallOptions> {
         message,
         rawResponse
       );
-    langChainMessage.additional_kwargs.reasoning_content = (
-      message as any
-    ).reasoning_content;
+    langChainMessage.additional_kwargs.reasoning_content =
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (message as any).reasoning_content;
     return langChainMessage;
   }
 }

@@ -2,15 +2,15 @@
 import { test, expect } from "@jest/globals";
 import { ChatModelUnitTests } from "@langchain/standard-tests";
 import { AIMessageChunk } from "@langchain/core/messages";
-import { ChatDeepseek, ChatDeepseekCallOptions } from "../chat_models.js";
+import { ChatDeepSeek, ChatDeepSeekCallOptions } from "../chat_models.js";
 
-class ChatDeepseekStandardUnitTests extends ChatModelUnitTests<
-  ChatDeepseekCallOptions,
+class ChatDeepSeekStandardUnitTests extends ChatModelUnitTests<
+  ChatDeepSeekCallOptions,
   AIMessageChunk
 > {
   constructor() {
     super({
-      Cls: ChatDeepseek,
+      Cls: ChatDeepSeek,
       chatModelHasToolCalling: true,
       chatModelHasStructuredOutput: true,
       constructorArgs: {},
@@ -31,9 +31,9 @@ class ChatDeepseekStandardUnitTests extends ChatModelUnitTests<
   }
 }
 
-const testClass = new ChatDeepseekStandardUnitTests();
+const testClass = new ChatDeepSeekStandardUnitTests();
 
-test("ChatDeepseekStandardUnitTests", () => {
+test("ChatDeepSeekStandardUnitTests", () => {
   const testResults = testClass.runTests();
   expect(testResults).toBe(true);
 });
