@@ -733,7 +733,7 @@ test.only("pass pdf to request", async () => {
     maxRetries: 0,
   });
   const pdfPath =
-    "/Users/bracesproul/Downloads/twitter_api_invoice_01_07_24.pdf";
+    "../langchain-community/src/document_loaders/tests/example_data/Jacob_Lee_Resume_2023.pdf";
   const pdfBase64 = await fs.readFile(pdfPath, "base64");
 
   const response = await model.invoke([
