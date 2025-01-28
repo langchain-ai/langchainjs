@@ -1,5 +1,5 @@
-import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { Tool } from "@langchain/core/tools";
+import { getEnvironmentVariable } from "@langchain/core/utils/env";
 
 /**
  * Interface for the parameters required to instantiate a BraveSearch
@@ -50,28 +50,51 @@ export class BraveSearch extends Tool {
       Accept: "application/json",
     };
     const searchUrl = new URL(
-      `https://api.search.brave.com/res/v1/web/search?q=${encodeURIComponent(
-        input
-      )}`
+      `https://api.search.brave.com/res/v1/web/search?q=${encodeURIComponent(input)}`
     );
-
-    const response = await fetch(searchUrl, { headers });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error ${response.status}`);
+  
+    const maxRetries = 5;
+    const baseDelay = 1000; // 1 second
+    const backoffMultiplier = 2;
+    let retryCount = 0;
+  
+    while (retryCount <= maxRetries) {
+      try {
+        const response = await fetch(searchUrl, { headers });
+  
+        if (!response.ok) {
+          if (response.status === 429) {
+            let waitTime = baseDelay * Math.pow(backoffMultiplier, retryCount);
+            const rateLimitReset = response.headers.get("X-RateLimit-Reset");
+            if (rateLimitReset) {
+              waitTime = parseInt(rateLimitReset, 10) * 1000; // Convert seconds to milliseconds
+            }
+            await new Promise((resolve) => setTimeout(resolve, waitTime));
+            retryCount++;
+            continue;
+          }
+          throw new Error(`HTTP error ${response.status}`);
+        }
+  
+        const parsedResponse = await response.json();
+        const webSearchResults = parsedResponse.web?.results;
+        const finalResults = Array.isArray(webSearchResults)
+          ? webSearchResults.map((item: { title?: string; url?: string; description?: string }) => ({
+              title: item.title,
+              link: item.url,
+              snippet: item.description,
+            }))
+          : [];
+        return JSON.stringify(finalResults);
+      } catch (error) {
+        if (retryCount >= maxRetries) {
+          throw new Error(`Failed after ${maxRetries} retries: ${error}`);
+        }
+        retryCount++;
+        const waitTime = baseDelay * Math.pow(backoffMultiplier, retryCount);
+        await new Promise((resolve) => setTimeout(resolve, waitTime));
+      }
     }
-
-    const parsedResponse = await response.json();
-    const webSearchResults = parsedResponse.web?.results;
-    const finalResults = Array.isArray(webSearchResults)
-      ? webSearchResults.map(
-          (item: { title?: string; url?: string; description?: string }) => ({
-            title: item.title,
-            link: item.url,
-            snippet: item.description,
-          })
-        )
-      : [];
-    return JSON.stringify(finalResults);
+    throw new Error("Unexpected error in _call method.");
   }
 }
