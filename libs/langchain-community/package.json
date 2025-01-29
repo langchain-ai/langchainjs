@@ -98,7 +98,6 @@
     "@tensorflow/tfjs-converter": "^3.6.0",
     "@tensorflow/tfjs-core": "^3.6.0",
     "@tsconfig/recommended": "^1.0.2",
-    "@types/better-sqlite3": "^7.6.9",
     "@types/flat": "^5.0.2",
     "@types/html-to-text": "^9",
     "@types/jsdom": "^21.1.1",
@@ -119,7 +118,6 @@
     "@xata.io/client": "^0.28.0",
     "@xenova/transformers": "^2.5.4",
     "@zilliz/milvus2-sdk-node": ">=2.2.11",
-    "better-sqlite3": "^9.4.0",
     "cassandra-driver": "^4.7.2",
     "cborg": "^4.1.1",
     "chromadb": "^1.8.1",
@@ -232,7 +230,6 @@
     "@xata.io/client": "^0.28.0",
     "@xenova/transformers": "^2.5.4",
     "@zilliz/milvus2-sdk-node": ">=2.2.7",
-    "better-sqlite3": "^9.4.0",
     "cassandra-driver": "^4.7.2",
     "cborg": "^4.1.1",
     "chromadb": "*",
@@ -421,9 +418,6 @@
       "optional": true
     },
     "@zilliz/milvus2-sdk-node": {
-      "optional": true
-    },
-    "better-sqlite3": {
       "optional": true
     },
     "cassandra-driver": {

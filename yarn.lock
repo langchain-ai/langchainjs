@@ -9035,7 +9035,6 @@ __metadata:
     "@tensorflow/tfjs-converter": ^3.6.0
     "@tensorflow/tfjs-core": ^3.6.0
     "@tsconfig/recommended": ^1.0.2
-    "@types/better-sqlite3": ^7.6.9
     "@types/flat": ^5.0.2
     "@types/html-to-text": ^9
     "@types/jsdom": ^21.1.1
@@ -9056,7 +9055,6 @@ __metadata:
     "@xata.io/client": ^0.28.0
     "@xenova/transformers": ^2.5.4
     "@zilliz/milvus2-sdk-node": ">=2.2.11"
-    better-sqlite3: ^9.4.0
     cassandra-driver: ^4.7.2
     cborg: ^4.1.1
     chromadb: ^1.8.1
@@ -9174,7 +9172,6 @@ __metadata:
     "@xata.io/client": ^0.28.0
     "@xenova/transformers": ^2.5.4
     "@zilliz/milvus2-sdk-node": ">=2.2.7"
-    better-sqlite3: ^9.4.0
     cassandra-driver: ^4.7.2
     cborg: ^4.1.1
     chromadb: "*"
@@ -9315,8 +9312,6 @@ __metadata:
     "@xenova/transformers":
       optional: true
     "@zilliz/milvus2-sdk-node":
-      optional: true
-    better-sqlite3:
       optional: true
     cassandra-driver:
       optional: true
@@ -14276,15 +14271,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/better-sqlite3@npm:^7.6.9":
-  version: 7.6.9
-  resolution: "@types/better-sqlite3@npm:7.6.9"
-  dependencies:
-    "@types/node": "*"
-  checksum: 6572076639dde1e65ad8fe0e319e797fa40793ca805ec39aa1d072d3f145f218775eafd27d7266fb4e42a6291d8b8b836278e7880b15ef728c750dfcbba2ee52
-  languageName: node
-  linkType: hard
-
 "@types/body-parser@npm:*":
   version: 1.19.2
   resolution: "@types/body-parser@npm:1.19.2"
@@ -17321,17 +17307,6 @@ __metadata:
   version: 2.2.3
   resolution: "before-after-hook@npm:2.2.3"
   checksum: a1a2430976d9bdab4cd89cb50d27fa86b19e2b41812bf1315923b0cba03371ebca99449809226425dd3bcef20e010db61abdaff549278e111d6480034bebae87
-  languageName: node
-  linkType: hard
-
-"better-sqlite3@npm:^9.4.0":
-  version: 9.4.0
-  resolution: "better-sqlite3@npm:9.4.0"
-  dependencies:
-    bindings: ^1.5.0
-    node-gyp: latest
-    prebuild-install: ^7.1.1
-  checksum: a1a470fae20dfba82d6e74ae90b35ea8996c60922e95574162732d6e076e84c0c90fc4ff77ab8c27554671899eb15f284e2c8de5e4ee406aa9f7eb170eca5bee
   languageName: node
   linkType: hard
 
