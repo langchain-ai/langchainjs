@@ -1002,7 +1002,7 @@ export class ChatOpenAI<
     this.reasoningEffort = fields?.reasoningEffort;
 
     if (this.model === "o1") {
-      this.disableStreaming = fields?.disableStreaming ?? true;
+      this.disableStreaming = true;
     }
 
     this.streaming = fields?.streaming ?? false;
@@ -1310,15 +1310,6 @@ export class ChatOpenAI<
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
-    if (this.streaming === false) {
-      const result = await this._generate(messages, options, runManager);
-      yield new ChatGenerationChunk({
-        message: new AIMessageChunk({ ...result.generations[0].message }),
-        text: result.generations[0].text,
-      });
-      return;
-    }
-
     const messagesMapped: OpenAICompletionParam[] =
       _convertMessagesToOpenAIParams(messages, this.model);
     const params = {
@@ -1607,6 +1598,24 @@ export class ChatOpenAI<
         );
         generations.push(generation);
       }
+
+      await runManager?.handleLLMNewToken(
+        generations[0].text ?? "",
+        {
+          prompt: usageMetadata.input_tokens,
+          completion: usageMetadata.output_tokens,
+        },
+        undefined,
+        undefined,
+        undefined,
+        {
+          chunk: new ChatGenerationChunk({
+            message: new AIMessageChunk({ ...generations[0].message }),
+            text: generations[0].text ?? "",
+          }),
+        }
+      );
+
       return {
         generations,
         llmOutput: {

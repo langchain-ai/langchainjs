@@ -26,6 +26,7 @@ import {
   ChatCompletionMessage,
 } from "openai/resources/index.mjs";
 import { ChatOpenAI } from "../chat_models.js";
+import { RunnableLambda } from "@langchain/core/runnables";
 
 // Save the original value of the 'LANGCHAIN_CALLBACKS_BACKGROUND' environment variable
 const originalBackground = process.env.LANGCHAIN_CALLBACKS_BACKGROUND;
@@ -1286,20 +1287,23 @@ test.skip("Allow overriding", async () => {
   }
 });
 
-test("Streaming with o1 will yield at least one chunk with content", async () => {
+test.only("Streaming with o1 will yield at least one chunk with content", async () => {
   const model = new ChatOpenAI({
     model: "o1",
-    disableStreaming: false,
-    streaming: false,
   });
 
-  const result = model.streamEvents([["user", "What color is the sky?"]], {
+  const runnable = RunnableLambda.from(() => model.streamEvents(["user", "What color is the sky?"], {
     version: "v2",
+  }));
+
+  const result = runnable.streamEvents({}, {
+    version: "v2"
   });
 
   let content = "";
   let numStreamChunks = 0;
   for await (const chunk of result) {
+    console.log(chunk.event)
     if (chunk.event === "on_chat_model_stream") {
       content += chunk.data.chunk.content;
       numStreamChunks += 1;
