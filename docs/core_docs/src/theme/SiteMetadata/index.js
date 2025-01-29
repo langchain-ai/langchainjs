@@ -137,13 +137,13 @@ export default function SiteMetadata() {
 
 const suggestedLinks = {
   "/docs/changelog/core/": {
-    "canonical": "https://github.com/langchain-ai/langchain/releases?q=tag:%22langchain-core%3D%3D0%22&expanded=true",
+    "canonical": "https://github.com/langchain-ai/langchainjs/releases?q=tag:%22langchain-core%3D%3D0%22&expanded=true",
     "alternative": [
       "/v0.1/docs/changelog/core/"
     ]
   },
   "/docs/changelog/langchain/": {
-    "canonical": "https://github.com/langchain-ai/langchain/releases?q=tag:%22langchain%3D%3D0%22&expanded=true",
+    "canonical": "https://github.com/langchain-ai/langchainjs/releases?q=tag:%22langchain%3D%3D0%22&expanded=true",
     "alternative": [
       "/v0.1/docs/changelog/langchain/"
     ]
@@ -197,13 +197,13 @@ const suggestedLinks = {
     ]
   },
   "/docs/expression_language/how_to/decorator/": {
-    "canonical": "/docs/how_to/functions/#the-convenience-chain-decorator",
+    "canonical": "/docs/how_to/functions/",
     "alternative": [
       "/v0.1/docs/expression_language/how_to/decorator/"
     ]
   },
   "/docs/expression_language/how_to/inspect/": {
-    "canonical": "/docs/how_to/inspect/",
+    "canonical": "https://docs.smith.langchain.com/",
     "alternative": [
       "/v0.1/docs/expression_language/how_to/inspect/"
     ]
@@ -281,7 +281,7 @@ const suggestedLinks = {
     ]
   },
   "/docs/expression_language/why/": {
-    "canonical": "/docs/concepts/#langchain-expression-language-lcel",
+    "canonical": "/docs/concepts/lcel/",
     "alternative": [
       "/v0.1/docs/expression_language/why/"
     ]
@@ -329,15 +329,9 @@ const suggestedLinks = {
     ]
   },
   "/docs/guides/development/local_llms/": {
-    "canonical": "/docs/how_to/local_llms/",
+    "canonical": "/docs/integrations/chat/",
     "alternative": [
       "/v0.1/docs/guides/development/local_llms/"
-    ]
-  },
-  "/docs/guides/development/pydantic_compatibility/": {
-    "canonical": "/docs/how_to/pydantic_compatibility/",
-    "alternative": [
-      "/v0.1/docs/guides/development/pydantic_compatibility/"
     ]
   },
   "/docs/guides/productionization/": {
@@ -809,7 +803,7 @@ const suggestedLinks = {
     ]
   },
   "/docs/modules/agents/": {
-    "canonical": "/docs/how_to/#agents",
+    "canonical": "https://langchain-ai.github.io/langgraphjs/",
     "alternative": [
       "/v0.1/docs/modules/agents/"
     ]
@@ -875,7 +869,7 @@ const suggestedLinks = {
     ]
   },
   "/docs/modules/agents/concepts/": {
-    "canonical": "https://langchain-ai.github.io/langgraph/concepts/",
+    "canonical": "https://langchain-ai.github.io/langgraphjs/concepts/",
     "alternative": [
       "/v0.1/docs/modules/agents/concepts/"
     ]
@@ -929,7 +923,7 @@ const suggestedLinks = {
     ]
   },
   "/docs/modules/agents/quick_start/": {
-    "canonical": "https://langchain-ai.github.io/langgraph/",
+    "canonical": "https://langchain-ai.github.io/langgraphjs/",
     "alternative": [
       "/v0.1/docs/modules/agents/quick_start/"
     ]
@@ -940,22 +934,10 @@ const suggestedLinks = {
       "/v0.1/docs/modules/callbacks/"
     ]
   },
-  "/docs/modules/callbacks/async_callbacks/": {
-    "canonical": "/docs/how_to/callbacks_async/",
-    "alternative": [
-      "/v0.1/docs/modules/callbacks/async_callbacks/"
-    ]
-  },
   "/docs/modules/callbacks/custom_callbacks/": {
     "canonical": "/docs/how_to/custom_callbacks/",
     "alternative": [
       "/v0.1/docs/modules/callbacks/custom_callbacks/"
-    ]
-  },
-  "/docs/modules/callbacks/filecallbackhandler/": {
-    "canonical": null,
-    "alternative": [
-      "/v0.1/docs/modules/callbacks/filecallbackhandler/"
     ]
   },
   "/docs/modules/callbacks/multiple_callbacks/": {
@@ -983,7 +965,7 @@ const suggestedLinks = {
     ]
   },
   "/docs/modules/composition/": {
-    "canonical": "https://langchain-ai.github.io/langgraph/concepts/",
+    "canonical": "https://langchain-ai.github.io/langgraphjs/concepts/",
     "alternative": [
       "/v0.1/docs/modules/composition/"
     ]
@@ -1343,7 +1325,7 @@ const suggestedLinks = {
     ]
   },
   "/docs/modules/model_io/chat/message_types/": {
-    "canonical": "/docs/concepts/#messages",
+    "canonical": "/docs/concepts/messages",
     "alternative": [
       "/v0.1/docs/modules/model_io/chat/message_types/"
     ]
@@ -1379,13 +1361,13 @@ const suggestedLinks = {
     ]
   },
   "/docs/modules/model_io/concepts/": {
-    "canonical": "/docs/concepts/#chat-models",
+    "canonical": "/docs/concepts/chat_models",
     "alternative": [
       "/v0.1/docs/modules/model_io/concepts/"
     ]
   },
   "/docs/modules/model_io/llms/": {
-    "canonical": "/docs/concepts/#llms",
+    "canonical": "/docs/concepts/",
     "alternative": [
       "/v0.1/docs/modules/model_io/llms/"
     ]
@@ -2636,14 +2618,14 @@ const suggestedLinks = {
   "/docs/modules/model_io/models/chat/custom_chat_model/": {"canonical": "/docs/how_to/custom_chat_model/", "alternative": ["/v0.1/docs/modules/model_io/chat/custom_chat_model/"]},
   "/docs/modules/model_io/models/chat/function_calling/": {"canonical": "/docs/how_to/tool_calling/", "alternative": ["/v0.1/docs/modules/model_io/chat/function_calling/"]},
   "/docs/modules/model_io/models/chat/logprobs/": {"canonical": "/docs/how_to/logprobs/", "alternative": ["/v0.1/docs/modules/model_io/chat/logprobs/"]},
-  "/docs/modules/model_io/models/chat/message_types/": {"canonical": "/docs/concepts/#messages", "alternative": ["/v0.1/docs/modules/model_io/chat/message_types/"]},
+  "/docs/modules/model_io/models/chat/message_types/": {"canonical": "/docs/concepts/messages", "alternative": ["/v0.1/docs/modules/model_io/chat/message_types/"]},
   "/docs/modules/model_io/models/chat/quick_start/": {"canonical": "/docs/tutorials/llm_chain/", "alternative": ["/v0.1/docs/modules/model_io/chat/quick_start/"]},
   "/docs/modules/model_io/models/chat/response_metadata/": {"canonical": "/docs/how_to/response_metadata/", "alternative": ["/v0.1/docs/modules/model_io/chat/response_metadata/"]},
   "/docs/modules/model_io/models/chat/streaming/": {"canonical": "/docs/how_to/streaming/", "alternative": ["/v0.1/docs/modules/model_io/chat/streaming/"]},
   "/docs/modules/model_io/models/chat/structured_output/": {"canonical": "/docs/how_to/structured_output/", "alternative": ["/v0.1/docs/modules/model_io/chat/structured_output/"]},
   "/docs/modules/model_io/models/chat/token_usage_tracking/": {"canonical": "/docs/how_to/chat_token_usage_tracking/", "alternative": ["/v0.1/docs/modules/model_io/chat/token_usage_tracking/"]},
-  "/docs/modules/model_io/models/concepts/": {"canonical": "/docs/concepts/#chat-models", "alternative": ["/v0.1/docs/modules/model_io/concepts/"]},
-  "/docs/modules/model_io/models/llms/": {"canonical": "/docs/concepts/#llms", "alternative": ["/v0.1/docs/modules/model_io/llms/"]},
+  "/docs/modules/model_io/models/concepts/": {"canonical": "/docs/concepts/chat_models", "alternative": ["/v0.1/docs/modules/model_io/concepts/"]},
+  "/docs/modules/model_io/models/llms/": {"canonical": "/docs/concepts/", "alternative": ["/v0.1/docs/modules/model_io/llms/"]},
   "/docs/modules/model_io/models/llms/custom_llm/": {"canonical": "/docs/how_to/custom_llm/", "alternative": ["/v0.1/docs/modules/model_io/llms/custom_llm/"]},
   "/docs/modules/model_io/models/llms/llm_caching/": {"canonical": "/docs/how_to/llm_caching/", "alternative": ["/v0.1/docs/modules/model_io/llms/llm_caching/"]},
   "/docs/modules/model_io/models/llms/quick_start/": {"canonical": "/docs/tutorials/llm_chain/", "alternative": ["/v0.1/docs/modules/model_io/llms/quick_start/"]},
@@ -2688,13 +2670,13 @@ const suggestedLinks = {
   "/docs/modules/model_io/chat/how_to/custom_chat_model/": {"canonical": "/docs/how_to/custom_chat_model/", "alternative": ["/v0.1/docs/modules/model_io/chat/custom_chat_model/"]},
   "/docs/modules/model_io/chat/how_to/function_calling/": {"canonical": "/docs/how_to/tool_calling/", "alternative": ["/v0.1/docs/modules/model_io/chat/function_calling/"]},
   "/docs/modules/model_io/chat/how_to/logprobs/": {"canonical": "/docs/how_to/logprobs/", "alternative": ["/v0.1/docs/modules/model_io/chat/logprobs/"]},
-  "/docs/modules/model_io/chat/how_to/message_types/": {"canonical": "/docs/concepts/#messages", "alternative": ["/v0.1/docs/modules/model_io/chat/message_types/"]},
+  "/docs/modules/model_io/chat/how_to/message_types/": {"canonical": "/docs/concepts/messages", "alternative": ["/v0.1/docs/modules/model_io/chat/message_types/"]},
   "/docs/modules/model_io/chat/how_to/quick_start/": {"canonical": "/docs/tutorials/llm_chain/", "alternative": ["/v0.1/docs/modules/model_io/chat/quick_start/"]},
   "/docs/modules/model_io/chat/how_to/response_metadata/": {"canonical": "/docs/how_to/response_metadata/", "alternative": ["/v0.1/docs/modules/model_io/chat/response_metadata/"]},
   "/docs/modules/model_io/chat/how_to/streaming/": {"canonical": "/docs/how_to/streaming/", "alternative": ["/v0.1/docs/modules/model_io/chat/streaming/"]},
   "/docs/modules/model_io/chat/how_to/structured_output/": {"canonical": "/docs/how_to/structured_output/", "alternative": ["/v0.1/docs/modules/model_io/chat/structured_output/"]},
   "/docs/modules/model_io/chat/how_to/token_usage_tracking/": {"canonical": "/docs/how_to/chat_token_usage_tracking/", "alternative": ["/v0.1/docs/modules/model_io/chat/token_usage_tracking/"]},
-  "/docs/modules/model_io/llms/how_to/": {"canonical": "/docs/concepts/#llms", "alternative": ["/v0.1/docs/modules/model_io/llms/"]},
+  "/docs/modules/model_io/llms/how_to/": {"canonical": "/docs/concepts/", "alternative": ["/v0.1/docs/modules/model_io/llms/"]},
   "/docs/modules/model_io/llms/how_to/custom_llm/": {"canonical": "/docs/how_to/custom_llm/", "alternative": ["/v0.1/docs/modules/model_io/llms/custom_llm/"]},
   "/docs/modules/model_io/llms/how_to/llm_caching/": {"canonical": "/docs/how_to/llm_caching/", "alternative": ["/v0.1/docs/modules/model_io/llms/llm_caching/"]},
   "/docs/modules/model_io/llms/how_to/quick_start/": {"canonical": "/docs/tutorials/llm_chain/", "alternative": ["/v0.1/docs/modules/model_io/llms/quick_start/"]},
@@ -2708,14 +2690,14 @@ const suggestedLinks = {
   "/en/latest/modules/models/chat/custom_chat_model/": {"canonical": "/docs/how_to/custom_chat_model/", "alternative": ["/v0.1/docs/modules/model_io/chat/custom_chat_model/"]},
   "/en/latest/modules/models/chat/function_calling/": {"canonical": "/docs/how_to/tool_calling/", "alternative": ["/v0.1/docs/modules/model_io/chat/function_calling/"]},
   "/en/latest/modules/models/chat/logprobs/": {"canonical": "/docs/how_to/logprobs/", "alternative": ["/v0.1/docs/modules/model_io/chat/logprobs/"]},
-  "/en/latest/modules/models/chat/message_types/": {"canonical": "/docs/concepts/#messages", "alternative": ["/v0.1/docs/modules/model_io/chat/message_types/"]},
+  "/en/latest/modules/models/chat/message_types/": {"canonical": "/docs/concepts/messages", "alternative": ["/v0.1/docs/modules/model_io/chat/message_types/"]},
   "/en/latest/modules/models/chat/quick_start/": {"canonical": "/docs/tutorials/llm_chain/", "alternative": ["/v0.1/docs/modules/model_io/chat/quick_start/"]},
   "/en/latest/modules/models/chat/response_metadata/": {"canonical": "/docs/how_to/response_metadata/", "alternative": ["/v0.1/docs/modules/model_io/chat/response_metadata/"]},
   "/en/latest/modules/models/chat/streaming/": {"canonical": "/docs/how_to/streaming/", "alternative": ["/v0.1/docs/modules/model_io/chat/streaming/"]},
   "/en/latest/modules/models/chat/structured_output/": {"canonical": "/docs/how_to/structured_output/", "alternative": ["/v0.1/docs/modules/model_io/chat/structured_output/"]},
   "/en/latest/modules/models/chat/token_usage_tracking/": {"canonical": "/docs/how_to/chat_token_usage_tracking/", "alternative": ["/v0.1/docs/modules/model_io/chat/token_usage_tracking/"]},
-  "/en/latest/modules/models/concepts/": {"canonical": "/docs/concepts/#chat-models", "alternative": ["/v0.1/docs/modules/model_io/concepts/"]},
-  "/en/latest/modules/models/llms/": {"canonical": "/docs/concepts/#llms", "alternative": ["/v0.1/docs/modules/model_io/llms/"]},
+  "/en/latest/modules/models/concepts/": {"canonical": "/docs/concepts/chat_models", "alternative": ["/v0.1/docs/modules/model_io/concepts/"]},
+  "/en/latest/modules/models/llms/": {"canonical": "/docs/concepts/", "alternative": ["/v0.1/docs/modules/model_io/llms/"]},
   "/en/latest/modules/models/llms/custom_llm/": {"canonical": "/docs/how_to/custom_llm/", "alternative": ["/v0.1/docs/modules/model_io/llms/custom_llm/"]},
   "/en/latest/modules/models/llms/llm_caching/": {"canonical": "/docs/how_to/llm_caching/", "alternative": ["/v0.1/docs/modules/model_io/llms/llm_caching/"]},
   "/en/latest/modules/models/llms/quick_start/": {"canonical": "/docs/tutorials/llm_chain/", "alternative": ["/v0.1/docs/modules/model_io/llms/quick_start/"]},
@@ -2966,8 +2948,7 @@ const suggestedLinks = {
   "/docs/guides/extending_langchain/": {"canonical": "/docs/how_to/#custom", "alternative": ["/v0.1/docs/guides/development/extending_langchain/"]},
   "/docs/guides/fallbacks/": {"canonical": "https://docs.smith.langchain.com/", "alternative": ["/v0.1/docs/guides/productionization/fallbacks/"]},
   "/docs/guides/model_laboratory/": {"canonical": "https://docs.smith.langchain.com/", "alternative": ["/v0.1/docs/guides/productionization/evaluation/"]},
-  "/docs/guides/pydantic_compatibility/": {"canonical": "/docs/how_to/pydantic_compatibility/", "alternative": ["/v0.1/docs/guides/development/pydantic_compatibility/"]},
-  "/docs/guides/local_llms/": {"canonical": "/docs/how_to/local_llms/", "alternative": ["/v0.1/docs/guides/development/local_llms/"]},
+  "/docs/guides/local_llms/": {"canonical": "/docs/integrations/chat/", "alternative": ["/v0.1/docs/guides/development/local_llms/"]},
   "/docs/modules/model_io/quick_start/": {"canonical": "/docs/how_to/#chat-models", "alternative": ["/v0.1/docs/modules/model_io/"]},
   "/docs/expression_language/how_to/generators/": {"canonical": "/docs/how_to/functions/", "alternative": ["/v0.1/docs/expression_language/primitives/functions/"]},
   "/docs/expression_language/how_to/functions/": {"canonical": "/docs/how_to/functions/", "alternative": ["/v0.1/docs/expression_language/primitives/functions/"]},
