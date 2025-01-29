@@ -2271,6 +2271,7 @@ test("streamEvents method handles errors", async () => {
   });
 
   try {
+    // eslint-disable-next-line no-unreachable-loop
     for await (const _ of model.streamEvents("Hello! Tell me about yourself.", {
       version: "v2",
     })) {
