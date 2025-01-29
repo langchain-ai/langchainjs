@@ -83,7 +83,8 @@ test("Test LangChain Hub while loading model with dynamic imports", async () => 
     includeModel: true,
   });
   const res = await pulledPrompt.invoke({
-    question: "Who is the current president of the USA as of today? You must use the provided tool for the latest info.",
+    question:
+      "Who is the current president of the USA as of today? You must use the provided tool for the latest info.",
   });
   expect(res).toBeInstanceOf(AIMessage);
   expect(res.tool_calls?.length).toEqual(1);

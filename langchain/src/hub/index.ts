@@ -1,7 +1,12 @@
 import { Runnable } from "@langchain/core/runnables";
 import type { BaseLanguageModel } from "@langchain/core/language_models/base";
 import { load } from "../load/index.js";
-import { basePush, basePull, generateModelImportMap, generateOptionalImportMap } from "./base.js";
+import {
+  basePush,
+  basePull,
+  generateModelImportMap,
+  generateOptionalImportMap,
+} from "./base.js";
 
 export { basePush as push };
 
@@ -37,7 +42,7 @@ export async function pull<T extends Runnable>(
       JSON.stringify(promptObject.manifest),
       undefined,
       generateOptionalImportMap(options?.modelClass),
-      generateModelImportMap(options?.modelClass),
+      generateModelImportMap(options?.modelClass)
     );
     return loadedPrompt;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
