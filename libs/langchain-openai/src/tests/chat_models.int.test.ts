@@ -1286,7 +1286,7 @@ test.skip("Allow overriding", async () => {
   }
 });
 
-test.only("Streaming with o1 will yield at least one chunk with content", async () => {
+test("Streaming with o1 will yield at least one chunk with content", async () => {
   const model = new ChatOpenAI({
     model: "o1",
     disableStreaming: false,
@@ -1307,5 +1307,5 @@ test.only("Streaming with o1 will yield at least one chunk with content", async 
   }
 
   expect(content.length).toBeGreaterThan(10);
-  expect(numStreamChunks).toBe(1)
+  expect(numStreamChunks).toBe(1);
 });

@@ -1451,7 +1451,6 @@ export class ChatOpenAI<
     const messagesMapped: OpenAICompletionParam[] =
       _convertMessagesToOpenAIParams(messages, this.model);
 
-    console.log("GENERATING!!", params.stream, this.streaming);
     if (params.stream) {
       const stream = this._streamResponseChunks(messages, options, runManager);
       const finalChunks: Record<number, ChatGenerationChunk> = {};
