@@ -65,7 +65,14 @@ function useDefaultCanonicalUrl() {
   });
   const canonicalPathnameNoVersion = canonicalPathname.startsWith('/v0.') ? "/"+canonicalPathname.split('/').slice(2).join('/') : canonicalPathname;
   const suggestedLookup = suggestedLinks[canonicalPathnameNoVersion];
-  const finalPathname = suggestedLookup?.canonical || canonicalPathname;
+  let finalPathname;
+  if (suggestedLookup?.canonical) {
+    finalPathname = suggestedLookup.canonical;
+  } else if (canonicalPathnameNoVersion.startsWith("/docs/integrations/")) {
+    finalPathname = canonicalPathnameNoVersion;
+  } else {
+    finalPathname = canonicalPathname;
+  }
   if (finalPathname.startsWith("https://")) {
     return finalPathname;
   }
@@ -280,7 +287,7 @@ const suggestedLinks = {
     ]
   },
   "/docs/get_started/installation/": {
-    "canonical": "/docs/tutorials/",
+    "canonical": "/docs/how_to/installation/",
     "alternative": [
       "/v0.1/docs/get_started/installation/"
     ]
