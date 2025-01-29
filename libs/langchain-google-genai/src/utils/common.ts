@@ -86,7 +86,7 @@ function messageContentMedia(content: MessageContentComplex): Part {
       fileData: {
         mimeType: content.mimeType,
         fileUri: content.fileUri,
-        },
+      },
     };
   }
 
