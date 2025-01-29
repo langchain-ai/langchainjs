@@ -1285,3 +1285,27 @@ test.skip("Allow overriding", async () => {
     console.log(chunk);
   }
 });
+
+test.only("Streaming with o1 will yield at least one chunk with content", async () => {
+  const model = new ChatOpenAI({
+    model: "o1",
+    disableStreaming: false,
+    streaming: false,
+  });
+
+  const result = model.streamEvents([["user", "What color is the sky?"]], {
+    version: "v2",
+  });
+
+  let content = "";
+  let numStreamChunks = 0;
+  for await (const chunk of result) {
+    if (chunk.event === "on_chat_model_stream") {
+      content += chunk.data.chunk.content;
+      numStreamChunks += 1;
+    }
+  }
+
+  expect(content.length).toBeGreaterThan(10);
+  expect(numStreamChunks).toBe(1)
+});

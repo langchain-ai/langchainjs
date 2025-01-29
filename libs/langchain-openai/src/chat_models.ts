@@ -1002,7 +1002,8 @@ export class ChatOpenAI<
     this.reasoningEffort = fields?.reasoningEffort;
 
     if (this.model === "o1") {
-      this.disableStreaming = true;
+      this.disableStreaming =
+        fields?.disableStreaming != null ? fields?.disableStreaming : true;
     }
 
     this.streaming = fields?.streaming ?? false;
@@ -1310,6 +1311,15 @@ export class ChatOpenAI<
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
+    if (this.streaming === false) {
+      const result = await this._generate(messages, options, runManager);
+      yield new ChatGenerationChunk({
+        message: new AIMessageChunk({ ...result.generations[0].message }),
+        text: result.generations[0].text,
+      });
+      return;
+    }
+
     const messagesMapped: OpenAICompletionParam[] =
       _convertMessagesToOpenAIParams(messages, this.model);
     const params = {
@@ -1320,7 +1330,6 @@ export class ChatOpenAI<
       stream: true as const,
     };
     let defaultRole: OpenAIRoleEnum | undefined;
-
     const streamIterable = await this.completionWithRetry(params, options);
     let usage: OpenAIClient.Completions.CompletionUsage | undefined;
     for await (const data of streamIterable) {
@@ -1442,6 +1451,7 @@ export class ChatOpenAI<
     const messagesMapped: OpenAICompletionParam[] =
       _convertMessagesToOpenAIParams(messages, this.model);
 
+    console.log("GENERATING!!", params.stream, this.streaming);
     if (params.stream) {
       const stream = this._streamResponseChunks(messages, options, runManager);
       const finalChunks: Record<number, ChatGenerationChunk> = {};
