@@ -1002,8 +1002,7 @@ export class ChatOpenAI<
     this.reasoningEffort = fields?.reasoningEffort;
 
     if (this.model === "o1") {
-      this.disableStreaming =
-        fields?.disableStreaming != null ? fields?.disableStreaming : true;
+      this.disableStreaming = fields?.disableStreaming ?? true;
     }
 
     this.streaming = fields?.streaming ?? false;
