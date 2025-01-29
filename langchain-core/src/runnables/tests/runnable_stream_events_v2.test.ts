@@ -2263,3 +2263,22 @@ test("Runnable streamEvents method should respect passed signal", async () => {
     }
   }).rejects.toThrowError();
 });
+
+test("streamEvents method handles errors", async () => {
+  let caughtError: unknown;
+  const model = new FakeListChatModel({
+    responses: ["abc"],
+  });
+
+  try {
+    for await (const _ of model.streamEvents("Hello! Tell me about yourself.", {
+      version: "v2",
+    })) {
+      throw new Error("should catch this error");
+    }
+  } catch (e) {
+    caughtError = e;
+  }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  expect((caughtError as any)?.message).toEqual("should catch this error");
+});

@@ -914,12 +914,18 @@ export abstract class Runnable<
       // eslint-disable-next-line no-param-reassign
       config.callbacks = copiedCallbacks;
     }
+    const abortController = new AbortController();
     // Call the runnable in streaming mode,
     // add each chunk to the output stream
     const outerThis = this;
     async function consumeRunnableStream() {
       try {
-        const runnableStream = await outerThis.stream(input, config);
+        const runnableStream = await outerThis.stream(input, {
+          ...config,
+          signal: options?.signal
+            ? AbortSignal.any([options.signal, abortController.signal])
+            : abortController.signal,
+        });
         const tappedStream = eventStreamer.tapOutputIterable(
           runId,
           runnableStream
@@ -927,6 +933,7 @@ export abstract class Runnable<
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         for await (const _ of tappedStream) {
           // Just iterate so that the callback handler picks up events
+          if (abortController.signal.aborted) break;
         }
       } finally {
         await eventStreamer.finish();
@@ -959,6 +966,7 @@ export abstract class Runnable<
         yield event;
       }
     } finally {
+      abortController.abort();
       await runnableStreamConsumePromise;
     }
   }
