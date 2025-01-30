@@ -53,7 +53,8 @@ export type PuppeteerWebBaseLoaderOptions = {
  */
 export class PuppeteerWebBaseLoader
   extends BaseDocumentLoader
-  implements DocumentLoader {
+  implements DocumentLoader
+{
   options: PuppeteerWebBaseLoaderOptions | undefined;
 
   constructor(public webPath: string, options?: PuppeteerWebBaseLoaderOptions) {
@@ -73,8 +74,7 @@ export class PuppeteerWebBaseLoader
       browser = await connect({
         browserWSEndpoint: options?.launchOptions?.browserWSEndpoint,
       });
-    }
-    else {
+    } else {
       browser = await launch({
         headless: true,
         defaultViewport: null,
