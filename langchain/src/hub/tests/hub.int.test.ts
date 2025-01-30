@@ -79,12 +79,13 @@ test("Test LangChain Hub while loading model", async () => {
 });
 
 test("Test LangChain Hub while loading model with dynamic imports", async () => {
-  const pulledPrompt = await nodePull("jacob/lahzo-testing", {
+  const pulledPrompt = await nodePull("jacob/groq-test", {
     includeModel: true,
   });
   const res = await pulledPrompt.invoke({
-    agent: { name: "testing" },
-    messages: [new AIMessage("foo")],
+    question:
+      "Who is the current president of the USA as of today? You must use the provided tool for the latest info.",
   });
   expect(res).toBeInstanceOf(AIMessage);
+  expect(res.tool_calls?.length).toEqual(1);
 });

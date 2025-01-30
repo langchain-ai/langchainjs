@@ -1,7 +1,12 @@
 import { Runnable } from "@langchain/core/runnables";
 import type { BaseLanguageModel } from "@langchain/core/language_models/base";
 import { load } from "../load/index.js";
-import { basePush, basePull, generateModelImportMap } from "./base.js";
+import {
+  basePush,
+  basePull,
+  generateModelImportMap,
+  generateOptionalImportMap,
+} from "./base.js";
 
 export { basePush as push };
 
@@ -36,7 +41,7 @@ export async function pull<T extends Runnable>(
     const loadedPrompt = await load<T>(
       JSON.stringify(promptObject.manifest),
       undefined,
-      undefined,
+      generateOptionalImportMap(options?.modelClass),
       generateModelImportMap(options?.modelClass)
     );
     return loadedPrompt;

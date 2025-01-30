@@ -96,10 +96,6 @@ export function generateModelImportMap(
 ) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const modelImportMap: Record<string, any> = {};
-  // TODO: Fix in 0.4.0. We can't get lc_id without instantiating the class, so we
-  // must put them inline here. In the future, make this less hacky
-  // This should probably use dynamic imports and have a web-only entrypoint
-  // in a future breaking release
   if (modelClass !== undefined) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const modelLcName = (modelClass as any)?.lc_name();
@@ -129,4 +125,30 @@ export function generateModelImportMap(
     };
   }
   return modelImportMap;
+}
+
+export function generateOptionalImportMap(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  modelClass?: new (...args: any[]) => BaseLanguageModel
+) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const optionalImportMap: Record<string, any> = {};
+  if (modelClass !== undefined) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const modelLcName = (modelClass as any)?.lc_name();
+    let optionalImportMapKey;
+    if (modelLcName === "ChatGoogleGenerativeAI") {
+      optionalImportMapKey = "langchain_google_genai/chat_models";
+    } else if (modelLcName === "ChatBedrockConverse") {
+      optionalImportMapKey = "langchain_aws/chat_models";
+    } else if (modelLcName === "ChatGroq") {
+      optionalImportMapKey = "langchain_groq/chat_models";
+    }
+    if (optionalImportMapKey !== undefined) {
+      optionalImportMap[optionalImportMapKey] = {
+        [modelLcName]: modelClass,
+      };
+    }
+  }
+  return optionalImportMap;
 }
