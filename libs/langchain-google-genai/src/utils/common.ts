@@ -81,6 +81,14 @@ function messageContentMedia(content: MessageContentComplex): Part {
       },
     };
   }
+  if ("mimeType" in content && "fileUri" in content) {
+    return {
+      fileData: {
+        mimeType: content.mimeType,
+        fileUri: content.fileUri,
+      },
+    };
+  }
 
   throw new Error("Invalid media content");
 }
