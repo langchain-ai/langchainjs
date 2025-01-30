@@ -10477,7 +10477,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-typed-document-node/core@npm:^3.1.1":
+"@graphql-typed-document-node/core@npm:^3.1.1, @graphql-typed-document-node/core@npm:^3.2.0":
   version: 3.2.0
   resolution: "@graphql-typed-document-node/core@npm:3.2.0"
   peerDependencies:
@@ -10503,6 +10503,16 @@ __metadata:
     "@grpc/proto-loader": ^0.7.13
     "@js-sdsl/ordered-map": ^4.4.2
   checksum: 498d144016eac26fc069bc57d649bf4776ae6bd1a24e62823a8b07b7d39a4414caa72a799f8287278b79e11ec4ecf989dbac01518c3981d8f947db15916c6727
+  languageName: node
+  linkType: hard
+
+"@grpc/grpc-js@npm:^1.10.8":
+  version: 1.12.5
+  resolution: "@grpc/grpc-js@npm:1.12.5"
+  dependencies:
+    "@grpc/proto-loader": ^0.7.13
+    "@js-sdsl/ordered-map": ^4.4.2
+  checksum: 415bad10412b713f1f4094e6af3d2067d03794540fecc16cd3cdcd6079e4a632178da25485dfef9a07add8bf498cfccf1a54f8184d671eb256932c47cfe7f785
   languageName: node
   linkType: hard
 
@@ -13301,6 +13311,7 @@ __metadata:
     ts-jest: ^29.1.0
     typescript: <5.2.0
     uuid: ^10.0.0
+    weaviate-client: ^3.3.6
     weaviate-ts-client: ^2.0.0
   peerDependencies:
     "@langchain/core": ">=0.2.21 <0.4.0"
@@ -21199,6 +21210,13 @@ __metadata:
   version: 2.0.0
   resolution: "abbrev@npm:2.0.0"
   checksum: 0e994ad2aa6575f94670d8a2149afe94465de9cedaaaac364e7fb43a40c3691c980ff74899f682f4ca58fa96b4cbd7421a015d3a6defe43a442117d7821a2f36
+  languageName: node
+  linkType: hard
+
+"abort-controller-x@npm:^0.4.0, abort-controller-x@npm:^0.4.3":
+  version: 0.4.3
+  resolution: "abort-controller-x@npm:0.4.3"
+  checksum: a8009c8185060bd5b291b5db8ca30460d5e5ac5b6b3d707e498c50ab313c5d9d79da719534696512ab6987d249ca1c86b8d048687b762db82002955f0ea222bd
   languageName: node
   linkType: hard
 
@@ -29986,10 +30004,29 @@ __metadata:
   languageName: node
   linkType: hard
 
+"graphql-request@npm:^6.1.0":
+  version: 6.1.0
+  resolution: "graphql-request@npm:6.1.0"
+  dependencies:
+    "@graphql-typed-document-node/core": ^3.2.0
+    cross-fetch: ^3.1.5
+  peerDependencies:
+    graphql: 14 - 16
+  checksum: 6d62630a0169574442320651c1f7626c0c602025c3c46b19e09417c9579bb209306ee63de9793a03be2e1701bb7f13971f8545d99bc6573e340f823af0ad35b2
+  languageName: node
+  linkType: hard
+
 "graphql@npm:^16.6.0":
   version: 16.6.0
   resolution: "graphql@npm:16.6.0"
   checksum: bf1d9e3c1938ce3c1a81e909bd3ead1ae4707c577f91cff1ca2eca474bfbc7873d5d7b942e1e9777ff5a8304421dba57a4b76d7a29eb19de8711cb70e3c2415e
+  languageName: node
+  linkType: hard
+
+"graphql@npm:^16.9.0":
+  version: 16.10.0
+  resolution: "graphql@npm:16.10.0"
+  checksum: 969c2d1061d69ad6fe08a7fe642428212b0b8485a2f9b5d8650203eb6c3221479e81ec6a757708f849d84b85afcb3ebc5a8ff2f71778bb66c5e4850f051c170e
   languageName: node
   linkType: hard
 
@@ -35521,6 +35558,36 @@ __metadata:
   bin:
     next: dist/bin/next
   checksum: d142407f47012eb57ba3932f91453960c79d7df2fef03ded581f32195b98a4378e13c49709f498a112d142109a8edd73f40357ee102a6bd4d7b1f76de9f0877a
+  languageName: node
+  linkType: hard
+
+"nice-grpc-client-middleware-retry@npm:^3.1.9":
+  version: 3.1.9
+  resolution: "nice-grpc-client-middleware-retry@npm:3.1.9"
+  dependencies:
+    abort-controller-x: ^0.4.0
+    nice-grpc-common: ^2.0.2
+  checksum: fc94b606d27169192b84a2b869e7026d960fda7a7fb56d66c1ccc326a4423efed0edcfed601e96319f3c348bab1d6ef93c8e8f6e0ca3f9de84de9f793f9cc634
+  languageName: node
+  linkType: hard
+
+"nice-grpc-common@npm:^2.0.2":
+  version: 2.0.2
+  resolution: "nice-grpc-common@npm:2.0.2"
+  dependencies:
+    ts-error: ^1.0.6
+  checksum: d9b600a7044495c508f3e3faab7caa49675f329c7209e829f41a31ef390bbe493c7be2d6c63056831f383299bae034852a84090e7fd9c6a6e8c52f919b03ed44
+  languageName: node
+  linkType: hard
+
+"nice-grpc@npm:^2.1.10":
+  version: 2.1.10
+  resolution: "nice-grpc@npm:2.1.10"
+  dependencies:
+    "@grpc/grpc-js": ^1.10.8
+    abort-controller-x: ^0.4.0
+    nice-grpc-common: ^2.0.2
+  checksum: 00779438d0d3f90aa7c026b286d1ee90e2c48aae2ead417e8c2a4194d0ae6e84cef3cee5cea30ae447b81c0c3d46b3360049de6221c65fb48658d2d35bbb65d5
   languageName: node
   linkType: hard
 
@@ -42214,6 +42281,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"ts-error@npm:^1.0.6":
+  version: 1.0.6
+  resolution: "ts-error@npm:1.0.6"
+  checksum: 043d15c155bf3aeeb146523f24650a773a4aa607587252692640eb233f9d832b73e207c4f076c2e7bc68e9897979eec0586cf631a919f3a3c542fb981d35a5d7
+  languageName: node
+  linkType: hard
+
 "ts-interface-checker@npm:^0.1.9":
   version: 0.1.13
   resolution: "ts-interface-checker@npm:0.1.13"
@@ -43893,6 +43967,22 @@ __metadata:
   dependencies:
     defaults: ^1.0.3
   checksum: 814e9d1ddcc9798f7377ffa448a5a3892232b9275ebb30a41b529607691c0491de47cba426e917a4d08ded3ee7e9ba2f3fe32e62ee3cd9c7d3bafb7754bd553c
+  languageName: node
+  linkType: hard
+
+"weaviate-client@npm:^3.3.6":
+  version: 3.3.6
+  resolution: "weaviate-client@npm:3.3.6"
+  dependencies:
+    abort-controller-x: ^0.4.3
+    graphql: ^16.9.0
+    graphql-request: ^6.1.0
+    long: ^5.2.3
+    nice-grpc: ^2.1.10
+    nice-grpc-client-middleware-retry: ^3.1.9
+    nice-grpc-common: ^2.0.2
+    uuid: ^9.0.1
+  checksum: 2b2ad1a08ee356320d6766f1c1a8af85a14967b3a323b2aca4cbdfe2742568461ffb408ddff06bbb6ec8809466bbcb655a30caa188f09faf4192abde4dcb2875
   languageName: node
   linkType: hard
 
