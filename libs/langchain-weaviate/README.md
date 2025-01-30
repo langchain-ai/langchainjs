@@ -27,20 +27,19 @@ export WEAVIATE_API_KEY=
 ```
 
 ```typescript
-import weaviate, { ApiKey } from 'weaviate-ts-client';
+import { OpenAIEmbeddings } from "@langchain/openai";
+import weaviate, { ApiKey } from "weaviate-ts-client";
 import { WeaviateStore } from "@langchain/weaviate";
 
 // Weaviate SDK has a TypeScript issue so we must do this.
-const client = (weaviate as any).client({
+const client = weaviate.client({
   scheme: process.env.WEAVIATE_SCHEME || "https",
   host: process.env.WEAVIATE_HOST || "localhost",
-  apiKey: new ApiKey(
-    process.env.WEAVIATE_API_KEY || "default"
-  ),
+  apiKey: new ApiKey(process.env.WEAVIATE_API_KEY || "default"),
 });
 
 // Create a store and fill it with some texts + metadata
-await WeaviateStore.fromTexts(
+const store = await WeaviateStore.fromTexts(
   ["hello world", "hi there", "how are you", "bye now"],
   [{ foo: "bar" }, { foo: "baz" }, { foo: "qux" }, { foo: "bar" }],
   new OpenAIEmbeddings(),
@@ -51,6 +50,8 @@ await WeaviateStore.fromTexts(
     metadataKeys: ["foo"],
   }
 );
+
+console.log(await store.similaritySearch("hello"));
 ```
 
 ## Development
