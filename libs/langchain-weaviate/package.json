@@ -33,6 +33,7 @@
   "license": "MIT",
   "dependencies": {
     "uuid": "^10.0.0",
+    "weaviate-client": "^3.3.6",
     "weaviate-ts-client": "^2.0.0"
   },
   "peerDependencies": {

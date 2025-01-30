@@ -1,9 +1,6 @@
 import * as uuid from "uuid";
-import type {
-  WeaviateClient,
-  WeaviateObject,
-  WhereFilter,
-} from "weaviate-ts-client";
+import { WeaviateClient } from "weaviate-client";
+import type { WhereFilter } from "weaviate-ts-client";
 import {
   MaxMarginalRelevanceSearchOptions,
   VectorStore,
@@ -68,11 +65,6 @@ export interface WeaviateLibArgs {
   textKey?: string;
   metadataKeys?: string[];
   tenant?: string;
-}
-
-interface ResultRow {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  [key: string]: any;
 }
 
 /**
@@ -149,7 +141,7 @@ export class WeaviateStore extends VectorStore {
     options?: { ids?: string[] }
   ) {
     const documentIds = options?.ids ?? documents.map((_) => uuid.v4());
-    const batch: WeaviateObject[] = documents.map((document, index) => {
+    const batch = documents.map((document, index) => {
       if (Object.hasOwn(document.metadata, "id"))
         throw new Error(
           "Document inserted to Weaviate vectorstore should not have `id` in their metadata."
@@ -169,20 +161,16 @@ export class WeaviateStore extends VectorStore {
     });
 
     try {
-      const responses = await this.client.batch
-        .objectsBatcher()
-        .withObjects(...batch)
-        .do();
+      const collection = this.client.collections.get(this.indexName);
+      const response = await collection.data.insertMany(batch);
+
       // if storing vectors fails, we need to know why
       const errorMessages: string[] = [];
-      responses.forEach((response) => {
-        if (response?.result?.errors?.error) {
+      Object.values(response.errors).forEach((error) => {
+        if (error) {
           errorMessages.push(
-            ...response.result.errors.error.map(
-              (err) =>
-                err.message ??
-                "!! Unfortunately no error message was presented in the API response !!"
-            )
+            error.message ??
+              "!! Unfortunately no error message was presented in the API response !!"
           );
         }
       });
@@ -221,32 +209,27 @@ export class WeaviateStore extends VectorStore {
     ids?: string[];
     filter?: WeaviateFilter;
   }): Promise<void> {
-    const { ids, filter } = params;
+    const { ids /*, filter */ } = params;
 
+    const collection = this.client.collections.get(this.indexName);
     if (ids && ids.length > 0) {
       for (const id of ids) {
-        let deleter = this.client.data
-          .deleter()
-          .withClassName(this.indexName)
-          .withId(id);
+        await collection.data.deleteById(id);
 
-        if (this.tenant) {
-          deleter = deleter.withTenant(this.tenant);
-        }
-
-        await deleter.do();
+        // if (this.tenant) { TODO
+        //   deleter = deleter.withTenant(this.tenant);
+        // }
       }
-    } else if (filter) {
-      let batchDeleter = this.client.batch
-        .objectsBatchDeleter()
-        .withClassName(this.indexName)
-        .withWhere(filter.where);
-
-      if (this.tenant) {
-        batchDeleter = batchDeleter.withTenant(this.tenant);
-      }
-
-      await batchDeleter.do();
+      // } else if (filter) {
+      // await collection.data.deleteMany(filter);
+      // let batchDeleter = this.client.batch
+      //   .objectsBatchDeleter()
+      //   .withClassName(this.indexName)
+      //   .withWhere(filter.where);
+      // if (this.tenant) { TODO
+      //   batchDeleter = batchDeleter.withTenant(this.tenant);
+      // }
+      // await batchDeleter.do();
     } else {
       throw new Error(
         `This method requires either "ids" or "filter" to be set in the input object`
@@ -291,40 +274,56 @@ export class WeaviateStore extends VectorStore {
     filter?: WeaviateFilter
   ): Promise<[Document, number, number[]][]> {
     try {
-      let builder = this.client.graphql
-        .get()
-        .withClassName(this.indexName)
-        .withFields(
-          `${this.queryAttrs.join(" ")} _additional { distance vector id }`
-        )
-        .withNearVector({
-          vector: query,
-          distance: filter?.distance,
-        })
-        .withLimit(k);
+      k;
+      filter;
+      const collection = this.client.collections.get(this.indexName);
 
-      if (this.tenant) {
-        builder = builder.withTenant(this.tenant);
-      }
+      const properties = (await collection.config.get()).properties.map(
+        (p) => p.name
+      );
 
-      if (filter?.where) {
-        builder = builder.withWhere(filter.where);
-      }
-
-      const result = await builder.do();
+      const result = await collection.query.nearVector(query, {
+        includeVector: true,
+        returnProperties: properties,
+        returnMetadata: "all",
+      });
+      // collection.query;
+      // let builder = this.client.graphql
+      //   .get()
+      //   .withClassName(this.indexName)
+      //   .withFields(
+      //     `${this.queryAttrs.join(" ")} _additional { distance vector id }`
+      //   )
+      //   .withNearVector({
+      //     vector: query,
+      //     distance: filter?.distance,
+      //   })
+      //   .withLimit(k);
+      //
+      // // if (this.tenant) {
+      // //   builder = builder.withTenant(this.tenant);
+      // // }
+      //
+      // // if (filter?.where) {
+      // //   builder = builder.withWhere(filter.where);
+      // // }
+      //
+      // const result = await builder.do();
 
       const documents: [Document, number, number[]][] = [];
-      for (const data of result.data.Get[this.indexName]) {
-        const { [this.textKey]: text, _additional, ...rest }: ResultRow = data;
+      // properties: { text: 'hello world', foo: 'bar' },
+      for (const data of result.objects) {
+        const { metadata, uuid, properties } = data;
+        console.log(data);
 
         documents.push([
           new Document({
-            pageContent: text,
-            metadata: rest,
-            id: _additional.id,
+            pageContent: String(properties[this.textKey]),
+            metadata,
+            id: uuid,
           }),
-          _additional.distance,
-          _additional.vector,
+          0,
+          [0],
         ]);
       }
       return documents;
