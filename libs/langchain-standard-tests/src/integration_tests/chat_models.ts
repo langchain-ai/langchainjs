@@ -5,6 +5,7 @@ import { BaseChatModelCallOptions } from "@langchain/core/language_models/chat_m
 import {
   AIMessage,
   AIMessageChunk,
+  BaseMessage,
   BaseMessageChunk,
   HumanMessage,
   ToolMessage,
@@ -1270,7 +1271,7 @@ export abstract class ChatModelIntegrationTests<
     const modelWithTools = model.bindTools([weatherTool]);
 
     // Initialize the conversation with a weather query
-    const messages = [
+    const messages: BaseMessage[] = [
       new HumanMessage(
         "What's the weather like in San Francisco right now? Use the 'get_current_weather' tool to find the answer."
       ),
@@ -1362,7 +1363,7 @@ export abstract class ChatModelIntegrationTests<
     const modelWithTools = model.bindTools([weatherTool]);
 
     // Initialize the conversation with a weather query
-    const messages = [
+    const messages: BaseMessage[] = [
       new HumanMessage(
         "What's the weather like in San Francisco right now? Use the 'get_current_weather' tool to find the answer."
       ),
