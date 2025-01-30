@@ -58,9 +58,9 @@ beforeAll(async () => {
         role: "user",
         parts: [
           {
-            fileData: {
-              mimeType: fileResult.file.mimeType,
-              fileUri: fileResult.file.uri,
+            file_data: {
+              mime_type: fileResult.file.mimeType,
+              file_uri: fileResult.file.uri,
             },
           },
         ],

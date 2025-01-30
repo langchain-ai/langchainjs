@@ -75,17 +75,17 @@ export function convertAuthorToRole(
 function messageContentMedia(content: MessageContentComplex): Part {
   if ("mimeType" in content && "data" in content) {
     return {
-      inlineData: {
-        mimeType: content.mimeType,
+      inline_data: {
+        mime_type: content.mimeType,
         data: content.data,
       },
     };
   }
   if ("mimeType" in content && "fileUri" in content) {
     return {
-      fileData: {
-        mimeType: content.mimeType,
-        fileUri: content.fileUri,
+      file_data: {
+        mime_type: content.mimeType,
+        file_uri: content.fileUri,
       },
     };
   }
@@ -164,9 +164,9 @@ export function convertMessageContentToParts(
         }
 
         return {
-          inlineData: {
+          inline_data: {
             data,
-            mimeType,
+            mime_type: mimeType,
           },
         };
       } else if (c.type === "media") {
@@ -186,8 +186,8 @@ export function convertMessageContentToParts(
         typeof c.data === "string"
       ) {
         return {
-          inlineData: {
-            mimeType: c.type,
+          inline_data: {
+            mime_type: c.type,
             data: c.data,
           },
         };
