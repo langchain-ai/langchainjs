@@ -135,6 +135,7 @@ export const optionalImportEntrypoints: string[] = [
   "langchain_community/stores/message/neo4j",
   "langchain_community/stores/message/planetscale",
   "langchain_community/stores/message/postgres",
+  "langchain_community/stores/message/aurora_dsql",
   "langchain_community/stores/message/redis",
   "langchain_community/stores/message/upstash_redis",
   "langchain_community/stores/message/xata",
