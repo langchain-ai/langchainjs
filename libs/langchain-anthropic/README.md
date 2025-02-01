@@ -50,7 +50,6 @@ Then initialize
 
 ```typescript
 import { ChatAnthropic } from "@langchain/anthropic";
-import { HumanMessage } from '@langchain/core/messages'
 
 const model = new ChatAnthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -65,7 +64,6 @@ const response = await model.invoke({
 
 ```typescript
 import { ChatAnthropic } from "@langchain/anthropic";
-import { HumanMessage } from '@langchain/core/messages'
 
 const model = new ChatAnthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
