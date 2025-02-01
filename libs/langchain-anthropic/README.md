@@ -55,7 +55,10 @@ import { HumanMessage } from '@langchain/core/messages'
 const model = new ChatAnthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
-const response = await model.invoke([new HumanMessage("Hello world!")]);
+const response = await model.invoke({
+  role: "user",
+  content: "Hello world!",
+});
 ```
 
 ### Streaming
@@ -68,7 +71,10 @@ const model = new ChatAnthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
   model: "claude-3-sonnet-20240229",
 });
-const response = await model.stream([new HumanMessage("Hello world!")]);
+const response = await model.stream({
+  role: "user",
+  content: "Hello world!",
+});
 ```
 
 ## Development
