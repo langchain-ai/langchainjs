@@ -12,35 +12,35 @@ describe("AzionVectorStore", () => {
   let vectorStore: AzionVectorStore;
   const dbName = "langchain";
   const tableName = "documents";
-  
+
   const testDocs = [
     new Document({
       pageContent: "Aspirin is good for headaches",
-      metadata: { category: "medicine", type: "pain relief" }
+      metadata: { category: "medicine", type: "pain relief" },
     }),
     new Document({
       pageContent: "Ibuprofen reduces inflammation and pain",
-      metadata: { category: "medicine", type: "pain relief" }
+      metadata: { category: "medicine", type: "pain relief" },
     }),
     new Document({
       pageContent: "Regular exercise helps prevent headaches",
-      metadata: { category: "lifestyle", type: "prevention" }
-    })
+      metadata: { category: "lifestyle", type: "prevention" },
+    }),
   ];
 
   beforeAll(async () => {
     const embeddings = new OpenAIEmbeddings();
-    
+
     // Test static factory method
     vectorStore = await AzionVectorStore.initialize(
       embeddings,
       {
         dbName,
-        tableName
+        tableName,
       },
       {
         columns: ["category", "type"],
-        mode: "hybrid"
+        mode: "hybrid",
       }
     );
 
@@ -59,7 +59,7 @@ describe("AzionVectorStore", () => {
       {
         kvector: 2,
         filter: [{ operator: "=", column: "category", value: "medicine" }],
-        metadataItems: ["category", "type"]
+        metadataItems: ["category", "type"],
       }
     );
 
@@ -74,7 +74,7 @@ describe("AzionVectorStore", () => {
       {
         kfts: 1,
         filter: [{ operator: "=", column: "category", value: "lifestyle" }],
-        metadataItems: ["category", "type"]
+        metadataItems: ["category", "type"],
       }
     );
 
@@ -90,7 +90,7 @@ describe("AzionVectorStore", () => {
         kfts: 2,
         kvector: 2,
         filter: [{ operator: "=", column: "type", value: "pain relief" }],
-        metadataItems: ["category", "type"]
+        metadataItems: ["category", "type"],
       }
     );
 
@@ -100,17 +100,14 @@ describe("AzionVectorStore", () => {
   });
 
   test("should handle filters correctly", async () => {
-    const results = await vectorStore.azionSimilaritySearch(
-      "medicine",
-      {
-        kvector: 2,
-        filter: [
-          { operator: "=", column: "category", value: "medicine" },
-          { operator: "=", column: "type", value: "pain relief" }
-        ],
-        metadataItems: ["category", "type"]
-      }
-    );
+    const results = await vectorStore.azionSimilaritySearch("medicine", {
+      kvector: 2,
+      filter: [
+        { operator: "=", column: "category", value: "medicine" },
+        { operator: "=", column: "type", value: "pain relief" },
+      ],
+      metadataItems: ["category", "type"],
+    });
 
     expect(results).toBeDefined();
     expect(results.length).toBeGreaterThan(0);
@@ -125,7 +122,7 @@ describe("AzionVectorStore", () => {
       "nonexistent content",
       {
         kvector: 2,
-        filter: [{ operator: "=", column: "category", value: "nonexistent" }]
+        filter: [{ operator: "=", column: "category", value: "nonexistent" }],
       }
     );
 
@@ -136,18 +133,15 @@ describe("AzionVectorStore", () => {
   test("should add new documents", async () => {
     const newDoc = new Document({
       pageContent: "Meditation can help with stress headaches",
-      metadata: { category: "lifestyle", type: "stress relief" }
+      metadata: { category: "lifestyle", type: "stress relief" },
     });
 
     await vectorStore.addDocuments([newDoc]);
 
-    const results = await vectorStore.azionFullTextSearch(
-      "meditation stress",
-      {
-        kfts: 1,
-        filter: [{ operator: "=", column: "type", value: "stress relief" }]
-      }
-    );
+    const results = await vectorStore.azionFullTextSearch("meditation stress", {
+      kfts: 1,
+      filter: [{ operator: "=", column: "type", value: "stress relief" }],
+    });
 
     expect(results).toBeDefined();
     expect(results.length).toBe(1);

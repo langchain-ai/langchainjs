@@ -8,7 +8,6 @@ import { jest, test, expect } from "@jest/globals";
 jest.setTimeout(30000);
 
 test("Azion search", async () => {
-  
   const embeddings = new OpenAIEmbeddings();
   const entityExtractor = new ChatOpenAI({
     modelName: "gpt-4o-mini",
@@ -18,9 +17,9 @@ test("Azion search", async () => {
     searchType: "hybrid",
     similarityK: 2,
     ftsK: 2,
-    dbName: 'langchain',
-    vectorTable:'documents',
-    ftsTable:'documents_fts'
+    dbName: "langchain",
+    vectorTable: "documents",
+    ftsTable: "documents_fts",
   });
 
   expect(retrieverHybrid).toBeDefined();
@@ -33,9 +32,9 @@ test("Azion search", async () => {
     searchType: "similarity",
     similarityK: 2,
     ftsK: 2,
-    dbName: 'langchain',
-    vectorTable:'documents',
-    ftsTable:'documents_fts'
+    dbName: "langchain",
+    vectorTable: "documents",
+    ftsTable: "documents_fts",
   });
 
   const results2 = await retrieverSimilarity._getRelevantDocuments("hello");
