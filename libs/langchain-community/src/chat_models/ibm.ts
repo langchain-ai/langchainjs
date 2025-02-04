@@ -150,7 +150,7 @@ function _convertToolToWatsonxTool(
 
 function _convertMessagesToWatsonxMessages(
   messages: BaseMessage[],
-  model: string
+  model?: string
 ): TextChatResultMessage[] {
   const getRole = (role: MessageType) => {
     switch (role) {
@@ -174,7 +174,7 @@ function _convertMessagesToWatsonxMessages(
       return message.tool_calls
         .map((toolCall) => ({
           ...toolCall,
-          id: _convertToValidToolId(model, toolCall.id ?? ""),
+          id: _convertToValidToolId(model ?? "", toolCall.id ?? ""),
         }))
         .map(convertLangChainToolCallToOpenAI) as TextChatToolCall[];
     }
@@ -189,7 +189,7 @@ function _convertMessagesToWatsonxMessages(
         role: getRole(message._getType()),
         content,
         name: message.name,
-        tool_call_id: _convertToValidToolId(model, message.tool_call_id),
+        tool_call_id: _convertToValidToolId(model ?? "", message.tool_call_id),
       };
     }
 
@@ -252,7 +252,7 @@ function _watsonxResponseToChatMessage(
 function _convertDeltaToMessageChunk(
   delta: WatsonxDeltaStream,
   rawData: TextChatResponse,
-  model: string,
+  model?: string,
   usage?: TextChatUsage,
   defaultRole?: TextChatMessagesTextChatMessageAssistant.Constants.Role
 ) {
@@ -268,7 +268,7 @@ function _convertDeltaToMessageChunk(
         } => ({
           ...toolCall,
           index,
-          id: _convertToValidToolId(model, toolCall.id),
+          id: _convertToValidToolId(model ?? "", toolCall.id),
           type: "function",
         })
       )
@@ -321,7 +321,7 @@ function _convertDeltaToMessageChunk(
       return new ToolMessageChunk({
         content,
         additional_kwargs,
-        tool_call_id: _convertToValidToolId(model, rawToolCalls?.[0].id),
+        tool_call_id: _convertToValidToolId(model ?? "", rawToolCalls?.[0].id),
       });
   } else if (role === "function") {
     return new FunctionMessageChunk({
@@ -410,7 +410,7 @@ export class ChatWatsonx<
     };
   }
 
-  model: string;
+  model?: string;
 
   version = "2024-05-31";
 
@@ -523,7 +523,6 @@ export class ChatWatsonx<
     const { signal, promptIndex, ...rest } = options;
     if (this.idOrName && Object.keys(rest).length > 0)
       throw new Error("Options cannot be provided to a deployed model");
-    if (this.idOrName) return undefined;
 
     const params = {
       maxTokens: options.maxTokens ?? this.maxTokens,
@@ -564,9 +563,9 @@ export class ChatWatsonx<
     | { idOrName: string }
     | { projectId: string; modelId: string }
     | { spaceId: string; modelId: string } {
-    if (this.projectId)
+    if (this.projectId && this.model)
       return { projectId: this.projectId, modelId: this.model };
-    else if (this.spaceId)
+    else if (this.spaceId && this.model)
       return { spaceId: this.spaceId, modelId: this.model };
     else if (this.idOrName) return { idOrName: this.idOrName };
     else throw new Error("No scope id provided");

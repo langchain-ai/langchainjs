@@ -454,10 +454,11 @@ export class WatsonxLLM<
             geneartionsArray[completion].stop_reason =
               chunk?.generationInfo?.stop_reason;
             geneartionsArray[completion].text += chunk.text;
-            void runManager?.handleLLMNewToken(chunk.text, {
-              prompt: promptIdx,
-              completion: 0,
-            });
+            if (chunk.text)
+              void runManager?.handleLLMNewToken(chunk.text, {
+                prompt: promptIdx,
+                completion: 0,
+              });
           }
 
           return geneartionsArray.map((item) => {
