@@ -45,6 +45,8 @@ export interface SupabaseLibArgs {
   upsertBatchSize?: number;
 }
 
+const _DOCUMENT_ID_KEY = "__document_id";
+
 /**
  * Supabase vector store integration.
  *
@@ -238,7 +240,10 @@ export class SupabaseVectorStore extends VectorStore {
     const rows = vectors.map((embedding, idx) => ({
       content: documents[idx].pageContent,
       embedding,
-      metadata: documents[idx].metadata,
+      metadata: {
+        ...documents[idx].metadata,
+        ...(documents[idx].id ? { [_DOCUMENT_ID_KEY]: documents[idx].id } : {}),
+      },
     }));
 
     // upsert returns 500/502/504 (yes really any of them) if given too many rows/characters
@@ -330,6 +335,9 @@ export class SupabaseVectorStore extends VectorStore {
     const searches = await this._searchSupabase(query, k, filter);
     const result: [Document, number][] = searches.map((resp) => [
       new Document({
+        id: (resp.metadata as Record<string, unknown> | undefined)?.[
+          _DOCUMENT_ID_KEY
+        ] as string | undefined,
         metadata: resp.metadata,
         pageContent: resp.content,
       }),
@@ -377,6 +385,9 @@ export class SupabaseVectorStore extends VectorStore {
     return mmrIndexes.map(
       (idx) =>
         new Document({
+          id: (searches[idx].metadata as Record<string, unknown> | undefined)?.[
+            _DOCUMENT_ID_KEY
+          ] as string | undefined,
           metadata: searches[idx].metadata,
           pageContent: searches[idx].content,
         })
