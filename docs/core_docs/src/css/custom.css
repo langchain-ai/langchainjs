@@ -313,9 +313,9 @@ nav, h1, h2, h3, h4 {
 }
 
 .announcement-bar-text {
-  font-size: 18px;
+  font-size: 16px;
 }
 
 div[class^='announcementBar_'] {
-  padding: 12px 0; 
+  padding: 20px 0; 
 }
