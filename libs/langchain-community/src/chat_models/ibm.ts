@@ -407,8 +407,8 @@ export class ChatWatsonx<
       ls_provider: "watsonx",
       ls_model_name: this.model,
       ls_model_type: "chat",
-      ls_temperature: params?.temperature ?? undefined,
-      ls_max_tokens: params?.maxTokens ?? undefined,
+      ls_temperature: params.temperature ?? undefined,
+      ls_max_tokens: params.maxTokens ?? undefined,
     };
   }
 
