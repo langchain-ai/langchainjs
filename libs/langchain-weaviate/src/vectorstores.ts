@@ -322,7 +322,7 @@ export class WeaviateStore extends VectorStore {
             pageContent: text,
             metadata: {
               ...rest,
-              collectionName: this.indexName
+              collectionName: this.indexName,
             },
             id: _additional.id,
           }),
