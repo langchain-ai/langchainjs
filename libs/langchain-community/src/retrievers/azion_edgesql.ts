@@ -1,9 +1,9 @@
-import { QueryResult, useQuery } from 'azion/sql';
-import type { EmbeddingsInterface } from '@langchain/core/embeddings';
-import { Document } from '@langchain/core/documents';
-import { BaseRetriever, BaseRetrieverInput } from '@langchain/core/retrievers';
-import { ChatOpenAI } from '@langchain/openai';
-import { SystemMessage, HumanMessage } from '@langchain/core/messages';
+import { QueryResult, useQuery } from "azion/sql";
+import type { EmbeddingsInterface } from "@langchain/core/embeddings";
+import { Document } from "@langchain/core/documents";
+import { BaseRetriever, BaseRetrieverInput } from "@langchain/core/retrievers";
+import { ChatOpenAI } from "@langchain/openai";
+import { SystemMessage, HumanMessage } from "@langchain/core/messages";
 
 export type AzionMetadata = Record<string, any>;
 
@@ -13,7 +13,7 @@ export type AzionMetadata = Record<string, any>;
  * @property column - The database column to filter on
  * @property value - The value to compare against
  */
-export type AzionFilter = {operator: Operator, column: Column, value: string};
+export type AzionFilter = { operator: Operator; column: Column; value: string };
 
 /**
  * Represents a database column name
@@ -23,12 +23,20 @@ export type Column = string;
 /**
  * Valid SQL operators that can be used in filter conditions
  */
-export type Operator = 
-  | '=' | '!=' | '>' | '<>' | '<'  // Basic comparison operators
-  | '>=' | '<='                    // Range operators
-  | 'LIKE' | 'NOT LIKE'           // Pattern matching
-  | 'IN' | 'NOT IN'              // Set membership
-  | 'IS NULL' | 'IS NOT NULL';   // NULL checks
+export type Operator =
+  | "="
+  | "!="
+  | ">"
+  | "<>"
+  | "<" // Basic comparison operators
+  | ">="
+  | "<=" // Range operators
+  | "LIKE"
+  | "NOT LIKE" // Pattern matching
+  | "IN"
+  | "NOT IN" // Set membership
+  | "IS NULL"
+  | "IS NOT NULL"; // NULL checks
 
 /**
  * Interface for the response returned when searching embeddings.
@@ -49,7 +57,7 @@ export interface AzionRetrieverArgs extends BaseRetrieverInput {
   /**
    * Search type to perform. Cosine similarity and hybrid (vector + FTS) are currently supported.
    */
-  searchType?: 'hybrid' | 'similarity';
+  searchType?: "hybrid" | "similarity";
 
   /**
    * The number of documents retrieved with cosine similarity (vector) search. Minimum is 1.
@@ -84,12 +92,12 @@ export interface AzionRetrieverArgs extends BaseRetrieverInput {
   /**
    * Name of the table to perform vector similarity seach. Default is 'documents'
    */
-  vectorTable?: string
+  vectorTable?: string;
 
-    /**
+  /**
    * Name of the table to perform full text search. Default is 'document_fts'
    */
-  ftsTable?: string
+  ftsTable?: string;
 
   /**
    * Filters to apply to the search. Default is an empty array.
@@ -111,7 +119,7 @@ export interface AzionRetrieverArgs extends BaseRetrieverInput {
  * // Initialize embeddings and chat model
  * const embeddings = new OpenAIEmbeddings();
  * const chatModel = new ChatOpenAI();
- * 
+ *
  * // Create retriever with hybrid search
  * const retriever = new AzionRetriever(embeddings, chatModel, {
  *   searchType: 'hybrid',
@@ -125,12 +133,12 @@ export interface AzionRetrieverArgs extends BaseRetrieverInput {
  *     { operator: '=', column: 'status', value: 'published' }
  *   ]
  * });
- * 
+ *
  * // Retrieve relevant documents
  * const docs = await retriever._getRelevantDocuments(
  *   "What are coral reefs in Australia?"
  * );
- * 
+ *
  * // Create retriever with similarity search only
  * const simRetriever = new AzionRetriever(embeddings, chatModel, {
  *   searchType: 'similarity',
@@ -138,11 +146,11 @@ export interface AzionRetrieverArgs extends BaseRetrieverInput {
  *   dbName: 'my_docs',
  *   vectorTable: 'documents'
  * });
- * 
+ *
  * // Customize entity extraction prompt
  * const customRetriever = new AzionRetriever(embeddings, chatModel, {
  *   searchType: 'hybrid',
- *   similarityK: 3, 
+ *   similarityK: 3,
  *   ftsK: 2,
  *   dbName: 'my_docs',
  *   promptEntityExtractor: "Extract key entities from: {{query}}"
@@ -152,14 +160,14 @@ export interface AzionRetrieverArgs extends BaseRetrieverInput {
 
 export class AzionRetriever extends BaseRetriever {
   static lc_name() {
-    return 'azionRetriever';
+    return "azionRetriever";
   }
 
   /** Namespace for the retriever in LangChain */
-  lc_namespace = ['langchain', 'retrievers', 'azion'];
+  lc_namespace = ["langchain", "retrievers", "azion"];
 
   /** Type of search to perform - either hybrid (combining vector + FTS) or similarity only */
-  searchType?: 'hybrid' | 'similarity';
+  searchType?: "hybrid" | "similarity";
 
   /** Number of results to return from similarity search. Minimum is 1. */
   similarityK: number;
@@ -192,29 +200,31 @@ export class AzionRetriever extends BaseRetriever {
   filters: AzionFilter[];
 
   /** Whether the metadata is contained in a single column or multiple columns */
-  expandedMetadata: boolean
+  expandedMetadata: boolean;
 
   constructor(
     embeddings: EmbeddingsInterface,
     entityExtractor: ChatOpenAI,
     args: AzionRetrieverArgs
   ) {
-    super(args)
+    super(args);
 
-    this.ftsTable = this.sanitizeItem(args.ftsTable) || "document_fts"
-    this.vectorTable = this.sanitizeItem(args.vectorTable) || "documents"
-    this.similarityK = Math.max(1, args.similarityK || 1); 
+    this.ftsTable = this.sanitizeItem(args.ftsTable) || "document_fts";
+    this.vectorTable = this.sanitizeItem(args.vectorTable) || "documents";
+    this.similarityK = Math.max(1, args.similarityK || 1);
     this.ftsK = Math.max(1, args.ftsK || 1);
-    this.dbName = args.dbName || "azioncopilotprod"
+    this.dbName = args.dbName || "azioncopilotprod";
 
     this.embeddings = embeddings;
-    this.searchType = args.searchType || "similarity"
+    this.searchType = args.searchType || "similarity";
 
-    this.entityExtractor = entityExtractor
-    this.metadataItems = args.metadataItems || undefined
-    this.promptEntityExtractor = args.promptEntityExtractor || "Provide them as a space-separated string in lowercase, translated to English."
-    this.filters = args.filters || []
-    this.expandedMetadata = args.expandedMetadata || false
+    this.entityExtractor = entityExtractor;
+    this.metadataItems = args.metadataItems || undefined;
+    this.promptEntityExtractor =
+      args.promptEntityExtractor ||
+      "Provide them as a space-separated string in lowercase, translated to English.";
+    this.filters = args.filters || [];
+    this.expandedMetadata = args.expandedMetadata || false;
   }
 
   /**
@@ -222,20 +232,24 @@ export class AzionRetriever extends BaseRetriever {
    * @param {AzionFilter[]} filters - The filters to apply to the search.
    * @returns {string} A string of filters for the SQL query.
    */
-  protected generateFilters(
-    filters: AzionFilter[]
-  ): string {
+  protected generateFilters(filters: AzionFilter[]): string {
     if (!filters || filters?.length === 0) {
-      return '';
+      return "";
     }
 
-    return filters.map(({operator, column, value}) => {
-      const columnRef = this.expandedMetadata ? this.sanitizeItem(column) : `metadata->>'$.${this.sanitizeItem(column)}'`;
-      if (['IN', 'NOT IN'].includes(operator.toUpperCase())) {
-        return `${columnRef} ${operator} (${this.sanitizeItem(value)})`;
-      }
-      return `${columnRef} ${operator} '${this.sanitizeItem(value)}'`;
-    }).join(' AND ') + ' AND ';
+    return (
+      filters
+        .map(({ operator, column, value }) => {
+          const columnRef = this.expandedMetadata
+            ? this.sanitizeItem(column)
+            : `metadata->>'$.${this.sanitizeItem(column)}'`;
+          if (["IN", "NOT IN"].includes(operator.toUpperCase())) {
+            return `${columnRef} ${operator} (${this.sanitizeItem(value)})`;
+          }
+          return `${columnRef} ${operator} '${this.sanitizeItem(value)}'`;
+        })
+        .join(" AND ") + " AND "
+    );
   }
 
   /**
@@ -246,19 +260,19 @@ export class AzionRetriever extends BaseRetriever {
    * @returns An object containing the FTS query and similarity query strings.
    */
   protected generateSqlQueries(
-    embeddedQuery: number[], 
-    queryEntities: string, 
+    embeddedQuery: number[],
+    queryEntities: string,
     metadata: string
-  ): { ftsQuery: string, similarityQuery: string } {
-    const filters = this.generateFilters(this.filters)
-    
-    let rowsNumber = this.similarityK
+  ): { ftsQuery: string; similarityQuery: string } {
+    const filters = this.generateFilters(this.filters);
+
+    let rowsNumber = this.similarityK;
     if (this.searchType === "hybrid") {
-      rowsNumber+=this.ftsK
+      rowsNumber += this.ftsK;
     }
 
     const ftsQuery = `
-      SELECT id, content, ${metadata.replace('hybrid', 'fts')}
+      SELECT id, content, ${metadata.replace("hybrid", "fts")}
       FROM ${this.ftsTable} 
       WHERE ${filters} ${this.ftsTable} MATCH '${queryEntities}'
       ORDER BY rank 
@@ -266,11 +280,13 @@ export class AzionRetriever extends BaseRetriever {
     `;
 
     const similarityQuery = `
-      SELECT id, content, ${metadata.replace('hybrid', 'similarity')}
+      SELECT id, content, ${metadata.replace("hybrid", "similarity")}
       FROM ${this.vectorTable}  
-      WHERE ${filters} rowid IN vector_top_k('${this.vectorTable}_idx', vector('[${embeddedQuery}]'), ${rowsNumber})
+      WHERE ${filters} rowid IN vector_top_k('${
+      this.vectorTable
+    }_idx', vector('[${embeddedQuery}]'), ${rowsNumber})
     `;
-    
+
     return { ftsQuery, similarityQuery };
   }
 
@@ -279,25 +295,27 @@ export class AzionRetriever extends BaseRetriever {
    * @param query The user query.
    * @returns An array of SQL statements.
    */
-  protected async generateStatements(
-    query: string
-  ): Promise<string[]> {
-    const embeddedQuery = await this.embeddings.embedQuery(query)
+  protected async generateStatements(query: string): Promise<string[]> {
+    const embeddedQuery = await this.embeddings.embedQuery(query);
 
-    const metadata = this.generateMetadata()
+    const metadata = this.generateMetadata();
 
-    let queryEntities = ''
-    if (this.searchType === 'hybrid') {
-      queryEntities = await this.extractEntities(query)
+    let queryEntities = "";
+    if (this.searchType === "hybrid") {
+      queryEntities = await this.extractEntities(query);
     }
-  
-    const { ftsQuery, similarityQuery } = this.generateSqlQueries(embeddedQuery, queryEntities, metadata);
-    
+
+    const { ftsQuery, similarityQuery } = this.generateSqlQueries(
+      embeddedQuery,
+      queryEntities,
+      metadata
+    );
+
     if (this.searchType === "similarity") {
-      return [similarityQuery]
+      return [similarityQuery];
     }
-    
-    return [similarityQuery, ftsQuery]
+
+    return [similarityQuery, ftsQuery];
   }
 
   /**
@@ -306,14 +324,25 @@ export class AzionRetriever extends BaseRetriever {
    */
   protected generateMetadata(): string {
     if (!this.metadataItems) {
-      return `json_object('searchtype', '${this.searchType}') as metadata`
+      return `json_object('searchtype', '${this.searchType}') as metadata`;
     }
 
     if (this.expandedMetadata) {
-      return `json_object('searchtype','${this.searchType}',${this.metadataItems.map(item => `'${this.sanitizeItem(item)}', ${this.sanitizeItem(item)}`).join(', ')}) as metadata`
+      return `json_object('searchtype','${this.searchType}',${this.metadataItems
+        .map(
+          (item) => `'${this.sanitizeItem(item)}', ${this.sanitizeItem(item)}`
+        )
+        .join(", ")}) as metadata`;
     }
 
-    return `json_patch(json_object(${this.metadataItems?.map(item => `'${this.sanitizeItem(item)}', metadata->>'$.${this.sanitizeItem(item)}'`).join(', ')}), '{"searchtype":"${this.searchType}"}') as metadata`
+    return `json_patch(json_object(${this.metadataItems
+      ?.map(
+        (item) =>
+          `'${this.sanitizeItem(item)}', metadata->>'$.${this.sanitizeItem(
+            item
+          )}'`
+      )
+      .join(", ")}), '{"searchtype":"${this.searchType}"}') as metadata`;
   }
 
   /**
@@ -324,18 +353,20 @@ export class AzionRetriever extends BaseRetriever {
   protected async similaritySearchWithScore(
     query: string
   ): Promise<[Document][]> {
+    const statements = await this.generateStatements(query);
 
-    const statements = await this.generateStatements(query)
-
-    const { data: response, error: errorQuery } = await useQuery(this.dbName,statements);
+    const { data: response, error: errorQuery } = await useQuery(
+      this.dbName,
+      statements
+    );
 
     if (!response) {
-      console.error('RESPONSE ERROR: ', errorQuery);
-      throw this.searchError(errorQuery)
+      console.error("RESPONSE ERROR: ", errorQuery);
+      throw this.searchError(errorQuery);
     }
-    const searches = this.mapRows(response.results)
-    const result  = this.mapSearches(searches)
-    return result
+    const searches = this.mapRows(response.results);
+    const result = this.mapSearches(searches);
+    return result;
   }
 
   /**
@@ -344,14 +375,14 @@ export class AzionRetriever extends BaseRetriever {
    * @returns A promise that resolves with the extracted entities when the extraction is complete.
    */
   protected async extractEntities(query: string): Promise<string> {
-      const entityExtractionPrompt = new SystemMessage(
-        this.promptEntityExtractor
-      );
-      const entityQuery = await this.entityExtractor.invoke([
-        entityExtractionPrompt,
-        new HumanMessage(query),
-      ]);
-      return this.convert2FTSQuery(entityQuery.content.toString())
+    const entityExtractionPrompt = new SystemMessage(
+      this.promptEntityExtractor
+    );
+    const entityQuery = await this.entityExtractor.invoke([
+      entityExtractionPrompt,
+      new HumanMessage(query),
+    ]);
+    return this.convert2FTSQuery(entityQuery.content.toString());
   }
 
   /**
@@ -359,41 +390,39 @@ export class AzionRetriever extends BaseRetriever {
    * @param query The user query
    * @returns The converted FTS query
    */
-  protected convert2FTSQuery(
-    query: string
-  ): string {
+  protected convert2FTSQuery(query: string): string {
     return query
-      .replace(/[^a-záàâãéèêíïóôõöúçñA-ZÁÀÂÃÉÈÊÍÏÓÔÕÖÚÇÑ0-9\s]/g, '') // Remove special chars keeping accents
-      .replace(/\s+/g, ' ') // Remove multiple spaces
+      .replace(/[^a-záàâãéèêíïóôõöúçñA-ZÁÀÂÃÉÈÊÍÏÓÔÕÖÚÇÑ0-9\s]/g, "") // Remove special chars keeping accents
+      .replace(/\s+/g, " ") // Remove multiple spaces
       .trim() // Remove leading/trailing spaces
-      .split(' ')
-      .join(' OR ');
+      .split(" ")
+      .join(" OR ");
   }
-  
+
   /**
    * Performs a hybrid search on the vector store, using cosine similarity and FTS search, and
    * returns the top 'similarityK' + 'ftsK' similar documents.
    * @param query The user query
    * @returns A promise that resolves with the hybrid search results when the search is complete.
    */
-  protected async hybridSearchAzion(
-    query: string
-  ): Promise<[Document][]> {
+  protected async hybridSearchAzion(query: string): Promise<[Document][]> {
+    const statements = await this.generateStatements(query);
 
-    const statements = await this.generateStatements(query)
-  
-    const { data: response, error: errorQuery } = await useQuery(this.dbName,statements)
+    const { data: response, error: errorQuery } = await useQuery(
+      this.dbName,
+      statements
+    );
 
     if (!response) {
-      console.error('RESPONSE ERROR: ', errorQuery);
-      throw this.searchError(errorQuery)
+      console.error("RESPONSE ERROR: ", errorQuery);
+      throw this.searchError(errorQuery);
     }
 
-    const results = this.mapRows(response.results)
+    const results = this.mapRows(response.results);
 
-    const finalResults = this.removeDuplicates(results)
- 
-    return this.mapSearches(finalResults)
+    const finalResults = this.removeDuplicates(results);
+
+    return this.mapSearches(finalResults);
   }
 
   /**
@@ -402,11 +431,14 @@ export class AzionRetriever extends BaseRetriever {
    * @returns A promise that resolves to an array containing a single Document representing the error
    */
   protected searchError(
-    error: {
-    message: string;
-    operation: string;} | undefined
+    error:
+      | {
+          message: string;
+          operation: string;
+        }
+      | undefined
   ): Error {
-    throw new Error(error?.message, { cause: error?.operation })
+    throw new Error(error?.message, { cause: error?.operation });
   }
 
   /**
@@ -414,19 +446,16 @@ export class AzionRetriever extends BaseRetriever {
    * @param query The user query
    * @returns A promise that resolves with the completion of the search results.
    */
-  async _getRelevantDocuments(
-    query: string
-  ): Promise<Document[]> {
+  async _getRelevantDocuments(query: string): Promise<Document[]> {
     let result: [Document][];
-    
-    if (this.searchType === 'similarity') {
+
+    if (this.searchType === "similarity") {
       result = await this.similaritySearchWithScore(query);
     } else {
       result = await this.hybridSearchAzion(query);
     }
-    
+
     return result.map(([doc]) => doc);
-  
   }
 
   /**
@@ -440,73 +469,74 @@ export class AzionRetriever extends BaseRetriever {
     const uniqueResults: SearchEmbeddingsResponse[] = [];
     const seenIds = new Set<number>();
 
-    let similarityCount = 0
-    let ftsCount = 0
-    const maxItems = this.ftsK + this.similarityK
+    let similarityCount = 0;
+    let ftsCount = 0;
+    const maxItems = this.ftsK + this.similarityK;
 
     for (const result of results) {
       if (!seenIds.has(result.id)) {
-        if (result.metadata.searchtype === 'similarity' && similarityCount < this.similarityK) {
-          seenIds.add(result.id)
-          uniqueResults.push(result)
-          similarityCount++
-        } else if (result.metadata.searchtype === 'fts' && ftsCount < this.ftsK) {
-          seenIds.add(result.id)
-          uniqueResults.push(result)
-          ftsCount++
+        if (
+          result.metadata.searchtype === "similarity" &&
+          similarityCount < this.similarityK
+        ) {
+          seenIds.add(result.id);
+          uniqueResults.push(result);
+          similarityCount++;
+        } else if (
+          result.metadata.searchtype === "fts" &&
+          ftsCount < this.ftsK
+        ) {
+          seenIds.add(result.id);
+          uniqueResults.push(result);
+          ftsCount++;
         }
       }
-      if (similarityCount + ftsCount === maxItems) break
+      if (similarityCount + ftsCount === maxItems) break;
     }
     return uniqueResults;
   }
 
-/**
- * Converts query results to SearchEmbeddingsResponse objects.
- * @param {QueryResult[]} results - The raw query results from the database.
- * @returns {SearchEmbeddingsResponse[]} An array of SearchEmbeddingsResponse objects.
- */
-private mapRows(
-  results: QueryResult[] | undefined
-): SearchEmbeddingsResponse[] {
-
-  if (!results) {
-    return []
-  }
-
-  return results.flatMap((
-      queryResult: QueryResult
-    ): SearchEmbeddingsResponse[] => {
-
-      if (!queryResult.rows || !queryResult.columns) {
-        return []
-      }
-
-      return queryResult.rows.map(
-        (row): SearchEmbeddingsResponse => ({
-          id: Number(row[0]),
-          content: String(row[1]),
-          metadata: JSON.parse(String(row[2]))
-        })
-      );
+  /**
+   * Converts query results to SearchEmbeddingsResponse objects.
+   * @param {QueryResult[]} results - The raw query results from the database.
+   * @returns {SearchEmbeddingsResponse[]} An array of SearchEmbeddingsResponse objects.
+   */
+  private mapRows(
+    results: QueryResult[] | undefined
+  ): SearchEmbeddingsResponse[] {
+    if (!results) {
+      return [];
     }
-  );
-}
+
+    return results.flatMap(
+      (queryResult: QueryResult): SearchEmbeddingsResponse[] => {
+        if (!queryResult.rows || !queryResult.columns) {
+          return [];
+        }
+
+        return queryResult.rows.map(
+          (row): SearchEmbeddingsResponse => ({
+            id: Number(row[0]),
+            content: String(row[1]),
+            metadata: JSON.parse(String(row[2])),
+          })
+        );
+      }
+    );
+  }
 
   /**
    * Maps search results to Document objects.
    * @param {SearchEmbeddingsResponse[]} searches An array of SearchEmbeddingsResponse objects.
    * @returns An array of tuples, each containing a single Document object.
    */
-  protected mapSearches(
-    searches: SearchEmbeddingsResponse[]
-  ): [Document][] {
+  protected mapSearches(searches: SearchEmbeddingsResponse[]): [Document][] {
     return searches.map((resp: SearchEmbeddingsResponse) => [
       new Document({
         metadata: resp.metadata,
         pageContent: resp.content,
-        id: resp.id.toString(), 
-      })
+        id: resp.id.toString(),
+      }),
     ]);
   }
 
@@ -515,12 +545,10 @@ private mapRows(
    * @param {string} item The item to sanitize.
    * @returns {string} The sanitized item.
    */
-  private sanitizeItem(
-    item: string | undefined
-  ): string {
-    if (item){
-      return item.replace(/[^a-zA-Z0-9\s]/g, '')
+  private sanitizeItem(item: string | undefined): string {
+    if (item) {
+      return item.replace(/[^a-zA-Z0-9\s]/g, "");
     }
-    return ''
+    return "";
   }
 }
