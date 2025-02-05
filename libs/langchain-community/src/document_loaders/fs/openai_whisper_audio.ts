@@ -17,7 +17,7 @@ const MODEL_NAME = "whisper-1";
  */
 export class OpenAIWhisperAudio extends BufferLoader {
   private readonly openAIClient: OpenAIClient;
-  private readonly transcriptionCreateParams?: OpenAIClient.Audio.TranscriptionCreateParams;
+  private readonly transcriptionCreateParams?: Partial<OpenAIClient.Audio.TranscriptionCreateParams>;
 
   constructor(
     filePathOrBlob: string | Blob,
