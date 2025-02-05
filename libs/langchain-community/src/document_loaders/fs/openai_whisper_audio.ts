@@ -41,7 +41,7 @@ export class OpenAIWhisperAudio extends BufferLoader {
       await this.openAIClient.audio.transcriptions.create({
         file: await toFile(raw, fileName),
         model: MODEL_NAME,
-        ...this.transcriptionCreateParams
+        ...this.transcriptionCreateParams,
       });
     const document = new Document({
       pageContent: transcriptionResponse.text,
