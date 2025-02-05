@@ -25,10 +25,6 @@ import {
 } from "@langchain/core/runnables";
 import { isZodSchema } from "@langchain/core/utils/types";
 import { z } from "zod";
-import type {
-  MessageCreateParams,
-  Tool as AnthropicTool,
-} from "@anthropic-ai/sdk/resources/messages";
 
 import { isLangChainTool } from "@langchain/core/utils/function_calling";
 import { AnthropicToolsOutputParser } from "./output_parsers.js";
@@ -64,12 +60,36 @@ export interface ChatAnthropicCallOptions
   headers?: Record<string, string>;
 }
 
-function _toolsInParams(params: AnthropicMessageCreateParams): boolean {
+function _toolsInParams(
+  params: AnthropicMessageCreateParams | AnthropicStreamingMessageCreateParams
+): boolean {
   return !!(params.tools && params.tools.length > 0);
 }
 
+function _documentsInParams(
+  params: AnthropicMessageCreateParams | AnthropicStreamingMessageCreateParams
+): boolean {
+  for (const message of params.messages ?? []) {
+    if (typeof message.content === "string") {
+      continue;
+    }
+    for (const block of message.content ?? []) {
+      if (
+        typeof block === "object" &&
+        block != null &&
+        block.type === "document" &&
+        typeof block.citations === "object" &&
+        block.citations.enabled
+      ) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function isAnthropicTool(tool: any): tool is AnthropicTool {
+function isAnthropicTool(tool: any): tool is Anthropic.Messages.Tool {
   return "input_schema" in tool;
 }
 
@@ -685,7 +705,7 @@ export class ChatAnthropicMessages<
    */
   formatStructuredToolToAnthropic(
     tools: ChatAnthropicCallOptions["tools"]
-  ): AnthropicTool[] | undefined {
+  ): Anthropic.Messages.Tool[] | undefined {
     if (!tools || !tools.length) {
       return undefined;
     }
@@ -697,7 +717,8 @@ export class ChatAnthropicMessages<
         return {
           name: tool.function.name,
           description: tool.function.description,
-          input_schema: tool.function.parameters as AnthropicTool.InputSchema,
+          input_schema: tool.function
+            .parameters as Anthropic.Messages.Tool.InputSchema,
         };
       }
       if (isLangChainTool(tool)) {
@@ -706,7 +727,7 @@ export class ChatAnthropicMessages<
           description: tool.description,
           input_schema: zodToJsonSchema(
             tool.schema
-          ) as AnthropicTool.InputSchema,
+          ) as Anthropic.Messages.Tool.InputSchema,
         };
       }
       throw new Error(
@@ -740,9 +761,9 @@ export class ChatAnthropicMessages<
   > &
     Kwargs {
     const tool_choice:
-      | MessageCreateParams.ToolChoiceAuto
-      | MessageCreateParams.ToolChoiceAny
-      | MessageCreateParams.ToolChoiceTool
+      | Anthropic.Messages.ToolChoiceAuto
+      | Anthropic.Messages.ToolChoiceAny
+      | Anthropic.Messages.ToolChoiceTool
       | undefined = handleToolChoice(options?.tool_choice);
 
     return {
@@ -784,22 +805,17 @@ export class ChatAnthropicMessages<
   ): AsyncGenerator<ChatGenerationChunk> {
     const params = this.invocationParams(options);
     const formattedMessages = _convertMessagesToAnthropicPayload(messages);
-    const coerceContentToString = !_toolsInParams({
+    const payload = {
       ...params,
       ...formattedMessages,
-      stream: false,
-    });
+      stream: true,
+    } as const;
+    const coerceContentToString =
+      !_toolsInParams(payload) && !_documentsInParams(payload);
 
-    const stream = await this.createStreamWithRetry(
-      {
-        ...params,
-        ...formattedMessages,
-        stream: true,
-      },
-      {
-        headers: options.headers,
-      }
-    );
+    const stream = await this.createStreamWithRetry(payload, {
+      headers: options.headers,
+    });
 
     for await (const data of stream) {
       if (options.signal?.aborted) {
@@ -1041,7 +1057,7 @@ export class ChatAnthropicMessages<
 
     let functionName = name ?? "extract";
     let outputParser: BaseLLMOutputParser<RunOutput>;
-    let tools: AnthropicTool[];
+    let tools: Anthropic.Messages.Tool[];
     if (isZodSchema(schema)) {
       const jsonSchema = zodToJsonSchema(schema);
       tools = [
@@ -1049,7 +1065,7 @@ export class ChatAnthropicMessages<
           name: functionName,
           description:
             jsonSchema.description ?? "A function available to call.",
-          input_schema: jsonSchema as AnthropicTool.InputSchema,
+          input_schema: jsonSchema as Anthropic.Messages.Tool.InputSchema,
         },
       ];
       outputParser = new AnthropicToolsOutputParser({
@@ -1058,20 +1074,20 @@ export class ChatAnthropicMessages<
         zodSchema: schema,
       });
     } else {
-      let anthropicTools: AnthropicTool;
+      let anthropicTools: Anthropic.Messages.Tool;
       if (
         typeof schema.name === "string" &&
         typeof schema.description === "string" &&
         typeof schema.input_schema === "object" &&
         schema.input_schema != null
       ) {
-        anthropicTools = schema as AnthropicTool;
+        anthropicTools = schema as Anthropic.Messages.Tool;
         functionName = schema.name;
       } else {
         anthropicTools = {
           name: functionName,
           description: schema.description ?? "",
-          input_schema: schema as AnthropicTool.InputSchema,
+          input_schema: schema as Anthropic.Messages.Tool.InputSchema,
         };
       }
       tools = [anthropicTools];
