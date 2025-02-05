@@ -3,8 +3,7 @@ import {
   LangSmithParams,
   type BaseChatModelParams,
 } from "@langchain/core/language_models/chat_models";
-import { getEnv } from "@langchain/core/utils/env";
-import { getEnvironmentVariable } from "@langchain/core/utils/env";
+import { getEnv, getEnvironmentVariable } from "@langchain/core/utils/env";
 import { BaseLanguageModelInput } from "@langchain/core/language_models/base";
 import { BaseMessage } from "@langchain/core/messages";
 import { Runnable } from "@langchain/core/runnables";
