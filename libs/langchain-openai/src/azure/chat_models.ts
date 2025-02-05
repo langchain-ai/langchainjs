@@ -1,9 +1,9 @@
-import process from "node:process";
 import { type ClientOptions, AzureOpenAI as AzureOpenAIClient } from "openai";
 import {
   LangSmithParams,
   type BaseChatModelParams,
 } from "@langchain/core/language_models/chat_models";
+import { getEnv } from "@langchain/core/utils/env";
 import { ChatOpenAI } from "../chat_models.js";
 import { OpenAIEndpointConfig, getEndpoint } from "../utils/azure.js";
 import {
@@ -503,9 +503,16 @@ export class AzureChatOpenAI extends ChatOpenAI {
         delete params.baseURL;
       }
 
+      let env = getEnv();
+      if (env === "node" || env === "deno") {
+        env = `(${env}/${process.version}; ${process.platform}; ${process.arch})`;
+      }
+
       params.defaultHeaders = {
         ...params.defaultHeaders,
-        "User-Agent": `langchainjs-azure-openai/2.0.0 (node.js/${process.version}; ${process.platform}; ${process.arch}) ${params.defaultHeaders?.["User-Agent"] || ""}`
+        "User-Agent": `langchainjs-azure-openai/2.0.0 (${env}) ${
+          params.defaultHeaders?.["User-Agent"] || ""
+        }`,
       };
 
       this.client = new AzureOpenAIClient({
