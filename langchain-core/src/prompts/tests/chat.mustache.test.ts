@@ -149,3 +149,34 @@ test("Mustache image template with nested URL and chat prompts HumanMessagePromp
 
   expect(template.inputVariables.sort()).toEqual(["image_url", "name"]);
 });
+
+test("Mustache image template with nested props", async () => {
+  const template = ChatPromptTemplate.fromMessages(
+    [
+      ["human", "{{agent.name}}"],
+      ["placeholder", "{{messages}}"],
+    ],
+    {
+      templateFormat: "mustache",
+    }
+  );
+
+  const messages = await template.formatMessages({
+    agent: { name: "testing" },
+    messages: [
+      {
+        role: "assistant",
+        content: "hi there!",
+      },
+    ],
+  });
+
+  expect(messages).toEqual([
+    new HumanMessage({
+      content: "testing",
+    }),
+    new AIMessage("hi there!"),
+  ]);
+
+  expect(template.inputVariables.sort()).toEqual(["agent", "messages"]);
+});

@@ -7,6 +7,7 @@ import { FakeChatModel, FakeListChatModel } from "../../utils/testing/index.js";
 import { HumanMessage } from "../../messages/human.js";
 import { getBufferString } from "../../messages/utils.js";
 import { AIMessage } from "../../messages/ai.js";
+import { RunCollectorCallbackHandler } from "../../tracers/run_collector.js";
 
 test("Test ChatModel accepts array shorthand for messages", async () => {
   const model = new FakeChatModel({});
@@ -285,6 +286,64 @@ test("Test ChatModel can cache complex messages", async () => {
   if (!("message" in value[0])) return;
   const cachedMsg = value[0].message as AIMessage;
   expect(cachedMsg.content).toEqual(JSON.stringify(contentToCache, null, 2));
+});
+
+test("Test ChatModel with cache does not start multiple chat model runs", async () => {
+  const model = new FakeChatModel({
+    cache: true,
+  });
+  if (!model.cache) {
+    throw new Error("Cache not enabled");
+  }
+
+  const contentToCache = [
+    {
+      type: "text",
+      text: "Hello there again!",
+    },
+  ];
+  const humanMessage = new HumanMessage({
+    content: contentToCache,
+  });
+
+  const prompt = getBufferString([humanMessage]);
+  const llmKey = model._getSerializedCacheKeyParametersForCall({});
+
+  const value = await model.cache.lookup(prompt, llmKey);
+  expect(value).toBeNull();
+
+  const runCollector = new RunCollectorCallbackHandler();
+
+  // Invoke model to trigger cache update
+  const eventStream = model.streamEvents([humanMessage], {
+    version: "v2",
+    callbacks: [runCollector],
+  });
+
+  expect(await model.cache.lookup(prompt, llmKey)).toBeDefined();
+
+  const events = [];
+  for await (const event of eventStream) {
+    events.push(event);
+  }
+  expect(events.length).toEqual(2);
+  expect(events[0].event).toEqual("on_chat_model_start");
+  expect(events[1].event).toEqual("on_chat_model_end");
+  expect(runCollector.tracedRuns[0].extra?.cached).not.toBe(true);
+
+  const eventStream2 = model.streamEvents([humanMessage], {
+    version: "v2",
+    callbacks: [runCollector],
+  });
+
+  const events2 = [];
+  for await (const event of eventStream2) {
+    events2.push(event);
+  }
+  expect(events2.length).toEqual(2);
+  expect(events2[0].event).toEqual("on_chat_model_start");
+  expect(events2[1].event).toEqual("on_chat_model_end");
+  expect(runCollector.tracedRuns[1].extra?.cached).toBe(true);
 });
 
 test("Test ChatModel can emit a custom event", async () => {

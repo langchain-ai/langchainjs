@@ -1,13 +1,15 @@
 import { it, describe, test, expect } from "@jest/globals";
+import { v4 } from "uuid";
 import {
   filterMessages,
   mergeMessageRuns,
   trimMessages,
 } from "../transformers.js";
-import { AIMessage } from "../ai.js";
+import { AIMessage, AIMessageChunk } from "../ai.js";
 import { ChatMessage } from "../chat.js";
 import { HumanMessage } from "../human.js";
 import { SystemMessage } from "../system.js";
+import { ToolMessage } from "../tool.js";
 import { BaseMessage } from "../base.js";
 import {
   getBufferString,
@@ -187,6 +189,7 @@ describe("trimMessages can trim", () => {
             defaultMsgSuffixLen;
         }
       }
+      console.log(count);
       return count;
     };
 
@@ -195,6 +198,117 @@ describe("trimMessages can trim", () => {
       dummyTokenCounter,
     };
   };
+
+  it("should not mutate messages", async () => {
+    const messages: BaseMessage[] = [
+      new HumanMessage({
+        content: `My name is Jane Doe.
+          this is a long text
+          `,
+        id: v4(),
+      }),
+      new HumanMessage({
+        content: `My name is Jane Doe.feiowfjoaejfioewaijof ewoif ioawej foiaew iofewi ao
+          this is a longer text than the first text.
+          `,
+        id: v4(),
+      }),
+    ];
+
+    const repr = JSON.stringify(messages);
+
+    await trimMessages(messages, {
+      maxTokens: 14,
+      strategy: "last",
+      tokenCounter: () => 100,
+      allowPartial: true,
+    });
+
+    expect(repr).toEqual(JSON.stringify(messages));
+  });
+
+  it("should not mutate messages if no trimming occurs with strategy last", async () => {
+    const trimmer = trimMessages({
+      maxTokens: 128000,
+      strategy: "last",
+      startOn: [HumanMessage],
+      endOn: [AIMessage, ToolMessage],
+      tokenCounter: () => 1,
+    });
+    const messages = [
+      new HumanMessage({
+        content: "Fetch the last 5 emails from Flora Testington's inbox.",
+        additional_kwargs: {},
+        response_metadata: {},
+        id: undefined,
+        name: undefined,
+      }),
+      new AIMessageChunk({
+        id: "chatcmpl-abcdefg",
+        content: "",
+        additional_kwargs: {
+          tool_calls: [
+            {
+              function: {
+                name: "getEmails",
+                arguments: JSON.stringify({
+                  inboxName: "flora@foo.org",
+                  amount: 5,
+                  folder: "Inbox",
+                  searchString: null,
+                  from: null,
+                  subject: null,
+                }),
+              },
+              id: "foobarbaz",
+              index: 0,
+              type: "function",
+            },
+          ],
+        },
+        response_metadata: {
+          usage: {},
+        },
+        tool_calls: [
+          {
+            name: "getEmails",
+            args: {
+              inboxName: "flora@foo.org",
+              amount: 5,
+              folder: "Inbox",
+              searchString: null,
+              from: null,
+              subject: null,
+            },
+            id: "foobarbaz",
+            type: "tool_call",
+          },
+        ],
+        tool_call_chunks: [
+          {
+            name: "getEmails",
+            args: '{"inboxName":"flora@foo.org","amount":5,"folder":"Inbox","searchString":null,"from":null,"subject":null,"cc":[],"bcc":[]}',
+            id: "foobarbaz",
+            type: "tool_call_chunk",
+          },
+        ],
+        invalid_tool_calls: [],
+        name: undefined,
+      }),
+      new ToolMessage({
+        content: "a whole bunch of emails!",
+        name: "getEmails",
+        additional_kwargs: {},
+        response_metadata: {},
+        tool_call_id: "foobarbaz",
+        artifact: undefined,
+        id: undefined,
+        status: undefined,
+      }),
+    ];
+    const trimmedMessages = await trimmer.invoke(messages);
+    expect(trimmedMessages).toEqual(messages);
+  });
 
   it("First 30 tokens, not allowing partial messages", async () => {
     const { messages, dummyTokenCounter } = messagesAndTokenCounterFactory();
@@ -319,6 +433,7 @@ describe("trimMessages can trim", () => {
 
   it("Last 30 tokens, including system message, allowing partial messages, end on HumanMessage", async () => {
     const { messages, dummyTokenCounter } = messagesAndTokenCounterFactory();
+    console.log(messages);
     const trimmedMessages = await trimMessages(messages, {
       maxTokens: 30,
       tokenCounter: dummyTokenCounter,

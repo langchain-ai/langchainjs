@@ -53,8 +53,10 @@ export declare interface OpenAIBaseInput {
   /**
    * Model name to use
    * Alias for `model`
+   * @deprecated Use "model" instead.
    */
   modelName: string;
+
   /** Model name to use */
   model: string;
 
@@ -125,19 +127,6 @@ export declare interface OpenAIInput extends OpenAIBaseInput {
 
   /** Batch size to use when passing multiple documents to generate */
   batchSize: number;
-}
-
-/**
- * @deprecated Use "baseURL", "defaultHeaders", and "defaultParams" instead.
- */
-export interface LegacyOpenAIInput {
-  /** @deprecated Use baseURL instead */
-  basePath?: string;
-  /** @deprecated Use defaultHeaders and defaultQuery instead */
-  baseOptions?: {
-    headers?: Record<string, string>;
-    params?: Record<string, string>;
-  };
 }
 
 export interface OpenAIChatInput extends OpenAIBaseInput {

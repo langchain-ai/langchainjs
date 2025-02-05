@@ -1,4 +1,5 @@
 /* eslint-disable no-process-env */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { tool } from "@langchain/core/tools";
 import { z } from "zod";
 import { it } from "@jest/globals";
@@ -8,7 +9,7 @@ import { AIMessageChunk } from "@langchain/core/messages";
 import { concat } from "@langchain/core/utils/stream";
 import { awaitAllCallbacks } from "@langchain/core/callbacks/promises";
 import { AgentExecutor, createReactAgent } from "../../agents/index.js";
-import { pull } from "../../hub.js";
+import { pull } from "../../hub/index.js";
 import { initChatModel } from "../universal.js";
 
 // Make copies of API keys and remove them from the environment to avoid conflicts.
@@ -434,6 +435,17 @@ describe("Works with all model providers", () => {
     );
     expect(vertexAIWebResult).toBeDefined();
     expect(vertexAIWebResult.content.length).toBeGreaterThan(0);
+  });
+
+  it("Can invoke deepseek", async () => {
+    const deepSeek = await initChatModel("deepseek-chat", {
+      modelProvider: "deepseek",
+      temperature: 0,
+    });
+
+    const deepSeekResult = await deepSeek.invoke("what's your name");
+    expect(deepSeekResult).toBeDefined();
+    expect(deepSeekResult.content.length).toBeGreaterThan(0);
   });
 });
 

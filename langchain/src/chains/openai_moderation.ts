@@ -27,7 +27,7 @@ export interface OpenAIModerationChainInput
  * OpenAIModerationChainInput interface.
  * @example
  * ```typescript
- * const moderation = new ChatOpenAIModerationChain({ throwError: true });
+ * const moderation = new OpenAIModerationChain({ throwError: true });
  *
  * const badString = "Bad naughty words from user";
  *

@@ -49,6 +49,8 @@ const _SUPPORTED_PROVIDERS = [
   "mistralai",
   "groq",
   "bedrock",
+  "cerebras",
+  "deepseek",
 ] as const;
 
 export type ChatModelProvider = (typeof _SUPPORTED_PROVIDERS)[number];
@@ -75,6 +77,7 @@ async function _initChatModelHelper(
       `Unable to infer model provider for { model: ${model} }, please specify modelProvider directly.`
     );
   }
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { modelProvider: _unused, ...passedParams } = params;
 
   try {
@@ -128,6 +131,10 @@ async function _initChatModelHelper(
       case "bedrock": {
         const { ChatBedrockConverse } = await import("@langchain/aws");
         return new ChatBedrockConverse({ model, ...passedParams });
+      }
+      case "deepseek": {
+        const { ChatDeepSeek } = await import("@langchain/deepseek");
+        return new ChatDeepSeek({ model, ...passedParams });
       }
       case "fireworks": {
         const { ChatFireworks } = await import(
@@ -610,6 +617,7 @@ export async function initChatModel<
  *   - groq (@langchain/groq)
  *   - ollama (@langchain/ollama)
  *   - cerebras (@langchain/cerebras)
+ *   - deepseek (@langchain/deepseek)
  * @param {string[] | "any"} [fields.configurableFields] - Which model parameters are configurable:
  *   - undefined: No configurable fields.
  *   - "any": All fields are configurable. (See Security Note in description)

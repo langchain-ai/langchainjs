@@ -2,6 +2,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { expect, test } from "@jest/globals";
+import * as fs from "fs/promises";
 import {
   AIMessageChunk,
   HumanMessage,
@@ -833,4 +834,98 @@ test("human message caching", async () => {
   expect(res2.usage_metadata?.input_token_details?.cache_read).toBeGreaterThan(
     0
   );
+});
+
+test("Can accept PDF documents", async () => {
+  const model = new ChatAnthropic({
+    model: "claude-3-5-sonnet-latest",
+  });
+
+  const pdfPath =
+    "../langchain-community/src/document_loaders/tests/example_data/Jacob_Lee_Resume_2023.pdf";
+  const pdfBase64 = await fs.readFile(pdfPath, "base64");
+
+  const response = await model.invoke([
+    ["system", "Use the provided documents to answer the question"],
+    [
+      "user",
+      [
+        {
+          type: "document",
+          source: {
+            type: "base64",
+            media_type: "application/pdf",
+            data: pdfBase64,
+          },
+        },
+        {
+          type: "text",
+          text: "Summarize the contents of this PDF",
+        },
+      ],
+    ],
+  ]);
+
+  expect(response.content.length).toBeGreaterThan(10);
+});
+
+test("Citations", async () => {
+  const citationsModel = new ChatAnthropic({
+    model: "claude-3-5-sonnet-latest",
+  });
+
+  const messages = [
+    {
+      role: "user",
+      content: [
+        {
+          type: "document",
+          source: {
+            type: "text",
+            media_type: "text/plain",
+            data: "The grass the user is asking about is bluegrass. The sky is orange because it's night.",
+          },
+          title: "My Document",
+          context: "This is a trustworthy document.",
+          citations: {
+            enabled: true,
+          },
+        },
+        {
+          type: "text",
+          text: "What color is the grass and sky?",
+        },
+      ],
+    },
+  ];
+
+  const response = await citationsModel.invoke(messages);
+
+  expect(response.content.length).toBeGreaterThan(2);
+  expect(Array.isArray(response.content)).toBe(true);
+  const blocksWithCitations = (response.content as any[]).filter(
+    (block) => block.citations !== undefined
+  );
+  expect(blocksWithCitations.length).toEqual(2);
+  expect(typeof blocksWithCitations[0].citations[0]).toEqual("object");
+
+  const stream = await citationsModel.stream(messages);
+  let aggregated;
+  let chunkHasCitation = false;
+  for await (const chunk of stream) {
+    aggregated = aggregated === undefined ? chunk : concat(aggregated, chunk);
+    if (
+      !chunkHasCitation &&
+      Array.isArray(chunk.content) &&
+      chunk.content.some((c: any) => c.citations !== undefined)
+    ) {
+      chunkHasCitation = true;
+    }
+  }
+  expect(chunkHasCitation).toBe(true);
+  expect(Array.isArray(aggregated?.content)).toBe(true);
+  expect(aggregated?.content.length).toBeGreaterThan(2);
+  expect(
+    (aggregated?.content as any[]).some((c) => c.citations !== undefined)
+  ).toBe(true);
 });

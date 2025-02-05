@@ -139,7 +139,7 @@ export class AirtableLoader extends BaseDocumentLoader {
   private async fetchRecords(
     body: Record<string, any>
   ): Promise<AirtableResponse> {
-    const url = `${AirtableLoader.BASE_URL}/${this.baseId}/${this.tableId}`;
+    const url = `${AirtableLoader.BASE_URL}/${this.baseId}/${this.tableId}/listRecords`;
     try {
       const response = await fetch(url, {
         method: "POST",
