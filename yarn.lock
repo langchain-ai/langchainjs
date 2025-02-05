@@ -241,9 +241,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@anthropic-ai/sdk@npm:^0.32.1":
-  version: 0.32.1
-  resolution: "@anthropic-ai/sdk@npm:0.32.1"
+"@anthropic-ai/sdk@npm:^0.36.3":
+  version: 0.36.3
+  resolution: "@anthropic-ai/sdk@npm:0.36.3"
   dependencies:
     "@types/node": ^18.11.18
     "@types/node-fetch": ^2.6.4
@@ -252,7 +252,7 @@ __metadata:
     form-data-encoder: 1.7.2
     formdata-node: ^4.3.2
     node-fetch: ^2.6.7
-  checksum: b48982e0ce066c99afe19448c5d6b38916c2c8873fbdcd4e5116abc45bcf241359604684856bfbd20fcfe00bf544d6d6e7bcf2686a9eb198bd671839b5cd0a67
+  checksum: 783a051fea42bb8cc52f92b1aaf1d5d1fb9412f8cc54c0cc3b4f6b5c3b97056bcdebc7c17d0b7efca67a8cf92642e2c9c50d49af80d2bd33b4cf286edf51664c
   languageName: node
   linkType: hard
 
@@ -10669,14 +10669,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@ibm-cloud/watsonx-ai@npm:^1.3.0":
-  version: 1.3.0
-  resolution: "@ibm-cloud/watsonx-ai@npm:1.3.0"
+"@ibm-cloud/watsonx-ai@npm:^1.4.0":
+  version: 1.4.0
+  resolution: "@ibm-cloud/watsonx-ai@npm:1.4.0"
   dependencies:
+    "@langchain/textsplitters": ^0.1.0
     "@types/node": ^18.0.0
     extend: 3.0.2
     ibm-cloud-sdk-core: ^5.0.2
-  checksum: 6a2127391ca70005b942d3c4ab1abc738946c42bbf3ee0f8eb6f778434b5f8806d622f1f36446f00b9fb82dc2c8aea3526426ec46cc53fa8a075ba7a294da096
+  checksum: 5250816f9ad93839cf26e3788eeace8155721765c39c65547eff8ebbd5fc8a0dfa107f6e799593f1209f4b3489be24aa674aa92b7ecbc5fc2bd29390a28e84ff
   languageName: node
   linkType: hard
 
@@ -11536,7 +11537,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@langchain/anthropic@workspace:libs/langchain-anthropic"
   dependencies:
-    "@anthropic-ai/sdk": ^0.32.1
+    "@anthropic-ai/sdk": ^0.36.3
     "@anthropic-ai/vertex-sdk": ^0.4.1
     "@jest/globals": ^29.5.0
     "@langchain/core": "workspace:*"
@@ -11899,7 +11900,7 @@ __metadata:
     "@gradientai/nodejs-sdk": ^1.2.0
     "@huggingface/inference": ^2.6.4
     "@huggingface/transformers": ^3.2.3
-    "@ibm-cloud/watsonx-ai": ^1.3.0
+    "@ibm-cloud/watsonx-ai": ^1.4.0
     "@jest/globals": ^29.5.0
     "@lancedb/lancedb": ^0.13.0
     "@langchain/core": "workspace:*"
@@ -12033,7 +12034,7 @@ __metadata:
     pyodide: ^0.26.2
     redis: ^4.6.6
     release-it: ^17.6.0
-    replicate: ^0.29.4
+    replicate: ^1.0.1
     rollup: ^3.19.1
     sonix-speech-recognition: ^2.1.1
     srt-parser-2: ^1.2.3
@@ -12165,7 +12166,7 @@ __metadata:
     puppeteer: "*"
     pyodide: ">=0.24.1 <0.27.0"
     redis: "*"
-    replicate: ^0.29.4
+    replicate: "*"
     sonix-speech-recognition: ^2.1.1
     srt-parser-2: ^1.2.3
     typeorm: ^0.3.20
@@ -13237,7 +13238,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/textsplitters@>=0.0.0 <0.2.0, @langchain/textsplitters@workspace:*, @langchain/textsplitters@workspace:libs/langchain-textsplitters":
+"@langchain/textsplitters@>=0.0.0 <0.2.0, @langchain/textsplitters@^0.1.0, @langchain/textsplitters@workspace:*, @langchain/textsplitters@workspace:libs/langchain-textsplitters":
   version: 0.0.0-use.local
   resolution: "@langchain/textsplitters@workspace:libs/langchain-textsplitters"
   dependencies:
@@ -39505,15 +39506,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"replicate@npm:^0.29.4":
-  version: 0.29.4
-  resolution: "replicate@npm:0.29.4"
+"replicate@npm:^1.0.1":
+  version: 1.0.1
+  resolution: "replicate@npm:1.0.1"
   dependencies:
     readable-stream: ">=4.0.0"
   dependenciesMeta:
     readable-stream:
       optional: true
-  checksum: 9405e19f619134a312aa77b3c04156549e4c8ba5e0711a494b99358abd0378646c22cd9bf07e6f9c8ab4a2f80b69ba22ed0a5b8ec0610684e9fa5d413e3b5729
+  checksum: b41d6663f229a7f49a4026ef5690716806c337c303946f7ed42f56d90dfdfde699a59a4ff2a5042f7f1a8184794791703c328fc115ef6d9560721c0b052471a1
   languageName: node
   linkType: hard
 

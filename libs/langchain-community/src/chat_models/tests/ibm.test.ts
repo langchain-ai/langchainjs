@@ -1,7 +1,12 @@
 /* eslint-disable no-process-env */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import WatsonxAiMlVml_v1 from "@ibm-cloud/watsonx-ai/dist/watsonx-ai-ml/vml_v1.js";
-import { ChatWatsonx, ChatWatsonxInput, WatsonxCallParams } from "../ibm.js";
+import {
+  ChatWatsonx,
+  ChatWatsonxConstructor,
+  ChatWatsonxInput,
+  WatsonxCallParams,
+} from "../ibm.js";
 import { authenticateAndSetInstance } from "../../utils/ibm.js";
 
 const fakeAuthProp = {
@@ -13,7 +18,7 @@ export function getKey<K>(key: K): K {
 }
 export const testProperties = (
   instance: ChatWatsonx,
-  testProps: ChatWatsonxInput,
+  testProps: ChatWatsonxConstructor,
   notExTestProps?: { [key: string]: any }
 ) => {
   const checkProperty = <T extends { [key: string]: any }>(
@@ -24,13 +29,19 @@ export const testProperties = (
     Object.keys(testProps).forEach((key) => {
       const keys = getKey<keyof T>(key);
       type Type = Pick<T, typeof keys>;
-
       if (typeof testProps[key as keyof T] === "object")
-        checkProperty<Type>(testProps[key as keyof T], instance[key], existing);
+        checkProperty<Type>(
+          testProps[key as keyof T],
+          instance[key as keyof typeof instance],
+          existing
+        );
       else {
         if (existing)
-          expect(instance[key as keyof T]).toBe(testProps[key as keyof T]);
-        else if (instance) expect(instance[key as keyof T]).toBeUndefined();
+          expect(instance[key as keyof typeof instance]).toBe(
+            testProps[key as keyof T]
+          );
+        else if (instance)
+          expect(instance[key as keyof typeof instance]).toBeUndefined();
       }
     });
   };
@@ -59,6 +70,40 @@ describe("LLM unit tests", () => {
       };
       const instance = new ChatWatsonx({ ...testProps, ...fakeAuthProp });
 
+      testProperties(instance, testProps);
+    });
+
+    test("Authenticate with projectId", async () => {
+      const testProps = {
+        model: "mistralai/mistral-large",
+        version: "2024-05-31",
+        serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
+        projectId: process.env.WATSONX_AI_PROJECT_ID || "testString",
+      };
+      const instance = new ChatWatsonx({ ...testProps, ...fakeAuthProp });
+
+      testProperties(instance, testProps);
+    });
+
+    test("Authenticate with spaceId", async () => {
+      const testProps = {
+        model: "mistralai/mistral-large",
+        version: "2024-05-31",
+        serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
+        spaceId: process.env.WATSONX_AI_SPACE_ID || "testString",
+      };
+      const instance = new ChatWatsonx({ ...testProps, ...fakeAuthProp });
+
+      testProperties(instance, testProps);
+    });
+
+    test("Authenticate with idOrName", async () => {
+      const testProps = {
+        version: "2024-05-31",
+        serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
+        idOrName: process.env.WATSONX_AI_ID_OR_NAME || "testString",
+      };
+      const instance = new ChatWatsonx({ ...testProps, ...fakeAuthProp });
       testProperties(instance, testProps);
     });
 
