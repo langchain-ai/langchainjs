@@ -1,4 +1,4 @@
-import { type ClientOptions, OpenAIClient, toFile } from "@langchain/openai";
+import { type ClientOptions, type TranscriptionCreateParams, OpenAIClient, toFile } from "@langchain/openai";
 
 import { Document } from "@langchain/core/documents";
 import { BufferLoader } from "langchain/document_loaders/fs/buffer";
@@ -17,15 +17,18 @@ const MODEL_NAME = "whisper-1";
  */
 export class OpenAIWhisperAudio extends BufferLoader {
   private readonly openAIClient: OpenAIClient;
+  private readonly transcriptionCreateParams?: TranscriptionCreateParams;
 
   constructor(
     filePathOrBlob: string | Blob,
     fields?: {
       clientOptions?: ClientOptions;
+      transcriptionCreateParams?: TranscriptionCreateParams;
     }
   ) {
     super(filePathOrBlob);
     this.openAIClient = new OpenAIClient(fields?.clientOptions);
+    this.transcriptionCreateParams = fields?.transcriptionCreateParams ?? {};
   }
 
   protected async parse(
@@ -38,6 +41,7 @@ export class OpenAIWhisperAudio extends BufferLoader {
       await this.openAIClient.audio.transcriptions.create({
         file: await toFile(raw, fileName),
         model: MODEL_NAME,
+        ...this.transcriptionCreateParams
       });
     const document = new Document({
       pageContent: transcriptionResponse.text,
