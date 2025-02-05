@@ -1,4 +1,4 @@
-import { type ClientOptions, type TranscriptionCreateParams, OpenAIClient, toFile } from "@langchain/openai";
+import { type ClientOptions, OpenAIClient, toFile } from "@langchain/openai";
 
 import { Document } from "@langchain/core/documents";
 import { BufferLoader } from "langchain/document_loaders/fs/buffer";
@@ -17,13 +17,13 @@ const MODEL_NAME = "whisper-1";
  */
 export class OpenAIWhisperAudio extends BufferLoader {
   private readonly openAIClient: OpenAIClient;
-  private readonly transcriptionCreateParams?: TranscriptionCreateParams;
+  private readonly transcriptionCreateParams?: OpenAIClient.Audio.TranscriptionCreateParams;
 
   constructor(
     filePathOrBlob: string | Blob,
     fields?: {
       clientOptions?: ClientOptions;
-      transcriptionCreateParams?: TranscriptionCreateParams;
+      transcriptionCreateParams?: OpenAIClient.Audio.TranscriptionCreateParams;
     }
   ) {
     super(filePathOrBlob);
