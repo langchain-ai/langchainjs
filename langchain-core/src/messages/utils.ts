@@ -87,6 +87,16 @@ function _constructMessageFromParams(
       className === "SystemMessageChunk"
     ) {
       type = "system";
+    } else if (
+      className === "FunctionMessage" ||
+      className === "FunctionMessageChunk"
+    ) {
+      type = "function";
+    } else if (
+      className === "ToolMessage" ||
+      className === "ToolMessageChunk"
+    ) {
+      type = "tool";
     } else {
       type = "unknown";
     }
