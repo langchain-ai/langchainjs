@@ -6,8 +6,7 @@ import {
   createDatabase,
   getTables,
   type AzionDatabaseResponse,
-  QueryResult,
-  AzionDatabaseQueryResponse,
+  QueryResult
 } from "azion/sql";
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { Document } from "@langchain/core/documents";
@@ -668,11 +667,7 @@ export class AzionVectorStore extends VectorStore {
     const fullTextQuery = `
       SELECT id, content, ${metadata}, rank as bm25_similarity
       FROM ${this.tableName}_fts  
-      WHERE ${filters} ${this.tableName}_fts MATCH '${query
-      .toString()
-      .replace(/[^a-zA-Z0-9\s]/g, "")
-      .split(" ")
-      .join(" OR ")}'
+      WHERE ${filters} ${this.tableName}_fts MATCH '${this.convert2FTSQuery(query)}'
       LIMIT ${kfts}`;
 
     const { data, error } = await useQuery(this.dbName, [fullTextQuery]);
@@ -985,4 +980,17 @@ export class AzionVectorStore extends VectorStore {
     }
     return "";
   }
+    /**
+   * Converts a query to a FTS query.
+   * @param query The user query
+   * @returns The converted FTS query
+   */
+    protected convert2FTSQuery(query: string): string {
+      return query
+        .replace(/[^a-záàâãéèêíïóôõöúçñA-ZÁÀÂÃÉÈÊÍÏÓÔÕÖÚÇÑ0-9\s]/g, "") // Remove special chars keeping accents
+        .replace(/\s+/g, " ") // Remove multiple spaces
+        .trim() // Remove leading/trailing spaces
+        .split(" ")
+        .join(" OR ");
+    }
 }
