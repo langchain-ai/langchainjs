@@ -2,8 +2,8 @@ import { QueryResult, useQuery } from "azion/sql";
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { Document } from "@langchain/core/documents";
 import { BaseRetriever, BaseRetrieverInput } from "@langchain/core/retrievers";
-import { ChatOpenAI } from "@langchain/openai";
 import { SystemMessage, HumanMessage } from "@langchain/core/messages";
+import { BaseChatModel } from "@langchain/core/language_models/chat_models";
 
 export type AzionMetadata = Record<string, any>;
 
@@ -80,6 +80,11 @@ export interface AzionRetrieverArgs extends BaseRetrieverInput {
   promptEntityExtractor?: string;
 
   /**
+   * The chatmodel to extract entities to perform Full text search on the database
+   */
+  entityExtractor?: BaseChatModel;
+
+  /**
    * Max items to maintain per searchtype. Default is 3.
    */
   maxItemsSearch?: number;
@@ -135,7 +140,7 @@ export interface AzionRetrieverArgs extends BaseRetrieverInput {
  * });
  *
  * // Retrieve relevant documents
- * const docs = await retriever._getRelevantDocuments(
+ * const docs = await retriever.invoke(
  *   "What are coral reefs in Australia?"
  * );
  *
@@ -181,8 +186,8 @@ export class AzionRetriever extends BaseRetriever {
   /** Name of the database to search */
   dbName: string;
 
-  /** ChatOpenAI model used to extract entities from queries */
-  entityExtractor: ChatOpenAI;
+  /** Optional ChatModel used to extract entities from queries */
+  entityExtractor?: BaseChatModel;
 
   /** Prompt template for entity extraction */
   promptEntityExtractor: string;
@@ -204,21 +209,20 @@ export class AzionRetriever extends BaseRetriever {
 
   constructor(
     embeddings: EmbeddingsInterface,
-    entityExtractor: ChatOpenAI,
     args: AzionRetrieverArgs
   ) {
     super(args);
 
-    this.ftsTable = this.sanitizeItem(args.ftsTable) || "document_fts";
-    this.vectorTable = this.sanitizeItem(args.vectorTable) || "documents";
+    this.ftsTable = args.ftsTable || "vectors_fts";
+    this.vectorTable = args.vectorTable || "vectors";
     this.similarityK = Math.max(1, args.similarityK || 1);
     this.ftsK = Math.max(1, args.ftsK || 1);
-    this.dbName = args.dbName || "azioncopilotprod";
+    this.dbName = args.dbName || "vectorstore";
 
     this.embeddings = embeddings;
     this.searchType = args.searchType || "similarity";
 
-    this.entityExtractor = entityExtractor;
+    this.entityExtractor = args.entityExtractor || undefined;
     this.metadataItems = args.metadataItems || undefined;
     this.promptEntityExtractor =
       args.promptEntityExtractor ||
@@ -374,10 +378,18 @@ export class AzionRetriever extends BaseRetriever {
    * @param query The user query
    * @returns A promise that resolves with the extracted entities when the extraction is complete.
    */
-  protected async extractEntities(query: string): Promise<string> {
+  protected async extractEntities(
+    query: string
+  ): Promise<string> {
+
+    if (!this.entityExtractor) {
+      return this.convert2FTSQuery(query);
+    }
+
     const entityExtractionPrompt = new SystemMessage(
       this.promptEntityExtractor
     );
+
     const entityQuery = await this.entityExtractor.invoke([
       entityExtractionPrompt,
       new HumanMessage(query),
@@ -412,7 +424,7 @@ export class AzionRetriever extends BaseRetriever {
       this.dbName,
       statements
     );
-
+    
     if (!response) {
       console.error("RESPONSE ERROR: ", errorQuery);
       throw this.searchError(errorQuery);
