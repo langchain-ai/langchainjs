@@ -24,7 +24,7 @@ export class OpenAIWhisperAudio extends BufferLoader {
     filePathOrBlob: string | Blob,
     fields?: {
       clientOptions?: ClientOptions;
-      transcriptionCreateParams?: OpenAIClient.Audio.TranscriptionCreateParams;
+      transcriptionCreateParams?: Partial<OpenAIClient.Audio.TranscriptionCreateParams>;
     }
   ) {
     super(filePathOrBlob);
