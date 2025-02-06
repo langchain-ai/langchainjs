@@ -560,10 +560,11 @@ export class AzureChatOpenAI extends ChatOpenAI {
         env = `(${env}/${process.version}; ${process.platform}; ${process.arch})`;
       }
 
+      const specifiedUserAgent = params.defaultHeaders?.["User-Agent"];
       params.defaultHeaders = {
         ...params.defaultHeaders,
-        "User-Agent": `langchainjs-azure-openai/2.0.0 (${env}) ${
-          params.defaultHeaders?.["User-Agent"] || ""
+        "User-Agent": `langchainjs-azure-openai/2.0.0 (${env})${
+          specifiedUserAgent ? ` ${specifiedUserAgent}` : ""
         }`,
       };
 
