@@ -1,6 +1,6 @@
 {
   "name": "@langchain/community",
-  "version": "0.3.21",
+  "version": "0.3.29",
   "description": "Third-party integrations for LangChain.js",
   "type": "module",
   "engines": {
@@ -35,13 +35,13 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@langchain/openai": ">=0.2.0 <0.4.0",
+    "@langchain/openai": ">=0.2.0 <0.5.0",
     "binary-extensions": "^2.2.0",
     "expr-eval": "^2.0.2",
     "flat": "^5.0.2",
     "js-yaml": "^4.1.0",
     "langchain": ">=0.2.3 <0.3.0 || >=0.3.4 <0.4.0",
-    "langsmith": "^0.2.8",
+    "langsmith": ">=0.2.8 <0.4.0",
     "uuid": "^10.0.0",
     "zod": "^3.22.3",
     "zod-to-json-schema": "^3.22.5"
@@ -79,7 +79,7 @@
     "@gradientai/nodejs-sdk": "^1.2.0",
     "@huggingface/inference": "^2.6.4",
     "@huggingface/transformers": "^3.2.3",
-    "@ibm-cloud/watsonx-ai": "^1.3.0",
+    "@ibm-cloud/watsonx-ai": "^1.4.0",
     "@jest/globals": "^29.5.0",
     "@lancedb/lancedb": "^0.13.0",
     "@langchain/core": "workspace:*",
@@ -132,8 +132,8 @@
     "@upstash/ratelimit": "^2.0.3",
     "@upstash/redis": "^1.32.0",
     "@upstash/vector": "^1.1.1",
-    "@vercel/kv": "^0.2.3",
-    "@vercel/postgres": "^0.5.0",
+    "@vercel/kv": "^3.0.0",
+    "@vercel/postgres": "^0.10.0",
     "@writerai/writer-sdk": "^0.40.2",
     "@xata.io/client": "^0.28.0",
     "@zilliz/milvus2-sdk-node": ">=2.3.5",
@@ -207,7 +207,7 @@
     "pyodide": "^0.26.2",
     "redis": "^4.6.6",
     "release-it": "^17.6.0",
-    "replicate": "^0.29.4",
+    "replicate": "^1.0.1",
     "rollup": "^3.19.1",
     "sonix-speech-recognition": "^2.1.1",
     "srt-parser-2": "^1.2.3",
@@ -220,8 +220,7 @@
     "weaviate-ts-client": "^1.4.0",
     "web-auth-library": "^1.0.3",
     "word-extractor": "^1.0.4",
-    "youtube-transcript": "^1.0.6",
-    "youtubei.js": "^9.1.0"
+    "youtubei.js": "^12.2.0"
   },
   "peerDependencies": {
     "@arcjet/redact": "^v1.0.0-alpha.23",
@@ -282,8 +281,8 @@
     "@upstash/ratelimit": "^1.1.3 || ^2.0.3",
     "@upstash/redis": "^1.20.6",
     "@upstash/vector": "^1.1.1",
-    "@vercel/kv": "^0.2.3",
-    "@vercel/postgres": "^0.5.0",
+    "@vercel/kv": "*",
+    "@vercel/postgres": "*",
     "@writerai/writer-sdk": "^0.40.2",
     "@xata.io/client": "^0.28.0",
     "@zilliz/milvus2-sdk-node": ">=2.3.5",
@@ -339,7 +338,7 @@
     "puppeteer": "*",
     "pyodide": ">=0.24.1 <0.27.0",
     "redis": "*",
-    "replicate": "^0.29.4",
+    "replicate": "*",
     "sonix-speech-recognition": "^2.1.1",
     "srt-parser-2": "^1.2.3",
     "typeorm": "^0.3.20",
@@ -350,8 +349,7 @@
     "web-auth-library": "^1.0.3",
     "word-extractor": "*",
     "ws": "^8.14.2",
-    "youtube-transcript": "^1.0.6",
-    "youtubei.js": "^9.1.0"
+    "youtubei.js": "*"
   },
   "peerDependenciesMeta": {
     "@arcjet/redact": {
@@ -717,9 +715,6 @@
     "ws": {
       "optional": true
     },
-    "youtube-transcript": {
-      "optional": true
-    },
     "youtubei.js": {
       "optional": true
     }
@@ -1060,6 +1055,15 @@
       },
       "import": "./embeddings/bedrock.js",
       "require": "./embeddings/bedrock.cjs"
+    },
+    "./embeddings/bytedance_doubao": {
+      "types": {
+        "import": "./embeddings/bytedance_doubao.d.ts",
+        "require": "./embeddings/bytedance_doubao.d.cts",
+        "default": "./embeddings/bytedance_doubao.d.ts"
+      },
+      "import": "./embeddings/bytedance_doubao.js",
+      "require": "./embeddings/bytedance_doubao.cjs"
     },
     "./embeddings/cloudflare_workersai": {
       "types": {
@@ -2339,14 +2343,23 @@
       "import": "./caches/upstash_redis.js",
       "require": "./caches/upstash_redis.cjs"
     },
-    "./graphs/neo4j_graph": {
+    "./caches/vercel_kv": {
       "types": {
-        "import": "./graphs/neo4j_graph.d.ts",
-        "require": "./graphs/neo4j_graph.d.cts",
-        "default": "./graphs/neo4j_graph.d.ts"
+        "import": "./caches/vercel_kv.d.ts",
+        "require": "./caches/vercel_kv.d.cts",
+        "default": "./caches/vercel_kv.d.ts"
       },
-      "import": "./graphs/neo4j_graph.js",
-      "require": "./graphs/neo4j_graph.cjs"
+      "import": "./caches/vercel_kv.js",
+      "require": "./caches/vercel_kv.cjs"
+    },
+    "./graphs/document": {
+      "types": {
+        "import": "./graphs/document.d.ts",
+        "require": "./graphs/document.d.cts",
+        "default": "./graphs/document.d.ts"
+      },
+      "import": "./graphs/document.js",
+      "require": "./graphs/document.cjs"
     },
     "./graphs/memgraph_graph": {
       "types": {
@@ -2356,6 +2369,15 @@
       },
       "import": "./graphs/memgraph_graph.js",
       "require": "./graphs/memgraph_graph.cjs"
+    },
+    "./graphs/neo4j_graph": {
+      "types": {
+        "import": "./graphs/neo4j_graph.d.ts",
+        "require": "./graphs/neo4j_graph.d.cts",
+        "default": "./graphs/neo4j_graph.d.ts"
+      },
+      "import": "./graphs/neo4j_graph.js",
+      "require": "./graphs/neo4j_graph.cjs"
     },
     "./document_compressors/ibm": {
       "types": {
@@ -3346,6 +3368,10 @@
     "embeddings/bedrock.js",
     "embeddings/bedrock.d.ts",
     "embeddings/bedrock.d.cts",
+    "embeddings/bytedance_doubao.cjs",
+    "embeddings/bytedance_doubao.js",
+    "embeddings/bytedance_doubao.d.ts",
+    "embeddings/bytedance_doubao.d.cts",
     "embeddings/cloudflare_workersai.cjs",
     "embeddings/cloudflare_workersai.js",
     "embeddings/cloudflare_workersai.d.ts",
@@ -3914,14 +3940,22 @@
     "caches/upstash_redis.js",
     "caches/upstash_redis.d.ts",
     "caches/upstash_redis.d.cts",
-    "graphs/neo4j_graph.cjs",
-    "graphs/neo4j_graph.js",
-    "graphs/neo4j_graph.d.ts",
-    "graphs/neo4j_graph.d.cts",
+    "caches/vercel_kv.cjs",
+    "caches/vercel_kv.js",
+    "caches/vercel_kv.d.ts",
+    "caches/vercel_kv.d.cts",
+    "graphs/document.cjs",
+    "graphs/document.js",
+    "graphs/document.d.ts",
+    "graphs/document.d.cts",
     "graphs/memgraph_graph.cjs",
     "graphs/memgraph_graph.js",
     "graphs/memgraph_graph.d.ts",
     "graphs/memgraph_graph.d.cts",
+    "graphs/neo4j_graph.cjs",
+    "graphs/neo4j_graph.js",
+    "graphs/neo4j_graph.d.ts",
+    "graphs/neo4j_graph.d.cts",
     "document_compressors/ibm.cjs",
     "document_compressors/ibm.js",
     "document_compressors/ibm.d.ts",

@@ -2,24 +2,6 @@
 import { test, expect } from "@jest/globals";
 import { AzureOpenAIEmbeddings as OpenAIEmbeddings } from "../../azure/embeddings.js";
 
-beforeAll(() => {
-  if (!process.env.AZURE_OPENAI_API_KEY) {
-    process.env.AZURE_OPENAI_API_KEY = process.env.TEST_AZURE_OPENAI_API_KEY;
-  }
-  if (!process.env.AZURE_OPENAI_API_DEPLOYMENT_NAME) {
-    process.env.AZURE_OPENAI_API_DEPLOYMENT_NAME =
-      process.env.TEST_AZURE_OPENAI_API_DEPLOYMENT_NAME;
-  }
-  if (!process.env.AZURE_OPENAI_BASE_PATH) {
-    process.env.AZURE_OPENAI_BASE_PATH =
-      process.env.TEST_AZURE_OPENAI_BASE_PATH;
-  }
-  if (!process.env.AZURE_OPENAI_API_VERSION) {
-    process.env.AZURE_OPENAI_API_VERSION =
-      process.env.TEST_AZURE_OPENAI_API_VERSION;
-  }
-});
-
 test("Test AzureOpenAIEmbeddings.embedQuery", async () => {
   const embeddings = new OpenAIEmbeddings();
   const res = await embeddings.embedQuery("Hello world");

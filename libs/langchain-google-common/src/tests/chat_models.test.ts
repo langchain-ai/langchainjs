@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { expect, test } from "@jest/globals";
+import { expect, test, jest } from "@jest/globals";
 import {
   AIMessage,
   BaseMessage,
@@ -16,7 +16,13 @@ import { Serialized } from "@langchain/core/load/serializable";
 import { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { ChatGoogleBase, ChatGoogleBaseInput } from "../chat_models.js";
-import { authOptions, MockClient, MockClientAuthInfo, mockId } from "./mock.js";
+import {
+  authOptions,
+  MockClient,
+  MockClientAuthInfo,
+  MockClientError,
+  mockId,
+} from "./mock.js";
 import {
   GeminiTool,
   GoogleAIBaseLLMInput,
@@ -167,6 +173,39 @@ describe("Mock ChatGoogle - Gemini", () => {
     expect(data.contents[1].parts).toBeDefined();
     expect(data.contents[1].parts.length).toBeGreaterThanOrEqual(1);
     expect(data.systemInstruction).not.toBeDefined();
+  });
+
+  test("1. Basic request format - retryable request", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-1-mock.json",
+    };
+    const model = new ChatGoogle({
+      authOptions,
+    });
+    const messages: BaseMessageLike[] = [
+      new HumanMessage("Flip a coin and tell me H for heads and T for tails"),
+      new AIMessage("H"),
+      new HumanMessage("Flip it again"),
+    ];
+
+    const retryableError = new MockClientError(429);
+    const requestSpy = jest
+      .spyOn(MockClient.prototype, "request")
+      .mockRejectedValueOnce(retryableError);
+
+    await model.invoke(messages);
+
+    expect(record.opts).toBeDefined();
+    expect(record.opts.data).toBeDefined();
+    const { data } = record.opts;
+    expect(data.contents).toBeDefined();
+    expect(data.contents.length).toEqual(3);
+
+    expect(requestSpy).toHaveBeenCalledTimes(2);
   });
 
   test("1. Invoke request format", async () => {
@@ -1249,6 +1288,112 @@ describe("Mock ChatGoogle - Gemini", () => {
     expect(result.content as string).toContain("Dodgers");
 
     expect(record.opts.data.tools[0]).toHaveProperty("googleSearch");
+  });
+
+  test("7. logprobs request true", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-7-mock.json",
+    };
+
+    const model = new ChatGoogle({
+      authOptions,
+      modelName: "gemini-1.5-flash-002",
+      logprobs: true,
+      topLogprobs: 5,
+    });
+    const result = await model.invoke(
+      "What are some names for a company that makes fancy socks?"
+    );
+    expect(result).toBeDefined();
+    const data = record?.opts?.data;
+    expect(data).toBeDefined();
+    expect(data.generationConfig.responseLogprobs).toEqual(true);
+    expect(data.generationConfig.logprobs).toEqual(5);
+  });
+
+  test("7. logprobs request false", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-7-mock.json",
+    };
+
+    const model = new ChatGoogle({
+      authOptions,
+      modelName: "gemini-1.5-flash-002",
+      logprobs: false,
+      topLogprobs: 5,
+    });
+    const result = await model.invoke(
+      "What are some names for a company that makes fancy socks?"
+    );
+    expect(result).toBeDefined();
+    const data = record?.opts?.data;
+    expect(data).toBeDefined();
+    expect(data.generationConfig.responseLogprobs).toEqual(false);
+    expect(data.generationConfig.logprobs).not.toBeDefined();
+  });
+
+  test("7. logprobs request not defined", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-7-mock.json",
+    };
+
+    const model = new ChatGoogle({
+      authOptions,
+      modelName: "gemini-1.5-flash-002",
+    });
+    const result = await model.invoke(
+      "What are some names for a company that makes fancy socks?"
+    );
+    expect(result).toBeDefined();
+    const data = record?.opts?.data;
+    expect(data).toBeDefined();
+    expect(data.generationConfig.responseLogprobs).not.toBeDefined();
+    expect(data.generationConfig.logprobs).not.toBeDefined();
+  });
+
+  test("7. logprobs response", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-7-mock.json",
+    };
+
+    const model = new ChatGoogle({
+      authOptions,
+      modelName: "gemini-1.5-flash-002",
+      logprobs: true,
+      topLogprobs: 5,
+    });
+    const result = await model.invoke(
+      "What are some names for a company that makes fancy socks?"
+    );
+    // console.log(JSON.stringify(result,null,1));
+    expect(result.response_metadata).toHaveProperty("logprobs");
+    expect(result.response_metadata.logprobs).toHaveProperty("content");
+    const logprobs = result.response_metadata.logprobs.content;
+    expect(Array.isArray(logprobs)).toBeTruthy();
+    expect(logprobs).toHaveLength(303);
+    const first = logprobs[0];
+    expect(first.token).toEqual("Here");
+    expect(first.logprob).toEqual(-0.25194553);
+    expect(first.bytes).toEqual([72, 101, 114, 101]);
+    expect(first).toHaveProperty("top_logprobs");
+    expect(Array.isArray(first.top_logprobs)).toBeTruthy();
+    expect(first.top_logprobs).toHaveLength(5);
   });
 });
 

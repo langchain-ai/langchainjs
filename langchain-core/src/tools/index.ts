@@ -115,6 +115,12 @@ export interface StructuredToolInterface<T extends ZodObjectAny = ZodObjectAny>
    */
   description: string;
 
+  /**
+   * Whether to return the tool's output directly.
+   *
+   * Setting this to true means that after the tool is called,
+   * an agent should stop looping.
+   */
   returnDirect: boolean;
 }
 
@@ -133,9 +139,14 @@ export abstract class StructuredTool<
 
   abstract schema: T | z.ZodEffects<T>;
 
+  /**
+   * Whether to return the tool's output directly.
+   *
+   * Setting this to true means that after the tool is called,
+   * an agent should stop looping.
+   */
   returnDirect = false;
 
-  // TODO: Make default in 0.3
   verboseParsingErrors = false;
 
   get lc_namespace() {
@@ -347,6 +358,12 @@ export abstract class Tool extends StructuredTool<ZodObjectAny> {
 export interface BaseDynamicToolInput extends ToolParams {
   name: string;
   description: string;
+  /**
+   * Whether to return the tool's output directly.
+   *
+   * Setting this to true means that after the tool is called,
+   * an agent should stop looping.
+   */
   returnDirect?: boolean;
 }
 
@@ -540,6 +557,13 @@ interface ToolWrapperParams<
    * @default "content"
    */
   responseFormat?: ResponseFormat;
+  /**
+   * Whether to return the tool's output directly.
+   *
+   * Setting this to true means that after the tool is called,
+   * an agent should stop looping.
+   */
+  returnDirect?: boolean;
 }
 
 /**

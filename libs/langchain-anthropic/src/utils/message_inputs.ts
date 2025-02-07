@@ -18,6 +18,7 @@ import {
   AnthropicToolResponse,
   AnthropicToolResultBlockParam,
   AnthropicToolUseBlockParam,
+  AnthropicDocumentBlockParam,
 } from "../types.js";
 
 function _formatImage(imageUrl: string) {
@@ -129,6 +130,12 @@ function _formatContent(content: MessageContent) {
         return {
           type: "image" as const, // Explicitly setting the type as "image"
           source,
+          ...(cacheControl ? { cache_control: cacheControl } : {}),
+        };
+      } else if (contentPart.type === "document") {
+        // PDF
+        return {
+          ...contentPart,
           ...(cacheControl ? { cache_control: cacheControl } : {}),
         };
       } else if (
@@ -275,12 +282,14 @@ function mergeMessages(messages: AnthropicMessageCreateParams["messages"]) {
           | AnthropicImageBlockParam
           | AnthropicToolUseBlockParam
           | AnthropicToolResultBlockParam
+          | AnthropicDocumentBlockParam
         >
   ): Array<
     | AnthropicTextBlockParam
     | AnthropicImageBlockParam
     | AnthropicToolUseBlockParam
     | AnthropicToolResultBlockParam
+    | AnthropicDocumentBlockParam
   > => {
     if (typeof content === "string") {
       return [

@@ -194,6 +194,7 @@ describe("strict tool calling", () => {
       }),
       {
         strict: true,
+        method: "functionCalling",
       }
     );
 
@@ -238,7 +239,8 @@ describe("strict tool calling", () => {
     const modelWithTools = model.withStructuredOutput(
       z.object({
         location: z.string().describe("The location to get the weather for"),
-      })
+      }),
+      { method: "functionCalling" }
     );
 
     // This will fail since we're not returning a valid response in our mocked fetch function.

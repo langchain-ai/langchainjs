@@ -40,6 +40,8 @@ const _SUPPORTED_PROVIDERS = [
   "azure_openai",
   "cohere",
   "google-vertexai",
+  "google-vertexai-web",
+  "google-genai",
   "google-genai",
   "ollama",
   "together",
@@ -47,6 +49,8 @@ const _SUPPORTED_PROVIDERS = [
   "mistralai",
   "groq",
   "bedrock",
+  "cerebras",
+  "deepseek",
 ] as const;
 
 export type ChatModelProvider = (typeof _SUPPORTED_PROVIDERS)[number];
@@ -73,6 +77,7 @@ async function _initChatModelHelper(
       `Unable to infer model provider for { model: ${model} }, please specify modelProvider directly.`
     );
   }
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { modelProvider: _unused, ...passedParams } = params;
 
   try {
@@ -95,6 +100,10 @@ async function _initChatModelHelper(
       }
       case "google-vertexai": {
         const { ChatVertexAI } = await import("@langchain/google-vertexai");
+        return new ChatVertexAI({ model, ...passedParams });
+      }
+      case "google-vertexai-web": {
+        const { ChatVertexAI } = await import("@langchain/google-vertexai-web");
         return new ChatVertexAI({ model, ...passedParams });
       }
       case "google-genai": {
@@ -122,6 +131,10 @@ async function _initChatModelHelper(
       case "bedrock": {
         const { ChatBedrockConverse } = await import("@langchain/aws");
         return new ChatBedrockConverse({ model, ...passedParams });
+      }
+      case "deepseek": {
+        const { ChatDeepSeek } = await import("@langchain/deepseek");
+        return new ChatDeepSeek({ model, ...passedParams });
       }
       case "fireworks": {
         const { ChatFireworks } = await import(
@@ -594,6 +607,7 @@ export async function initChatModel<
  *   - anthropic (@langchain/anthropic)
  *   - azure_openai (@langchain/openai)
  *   - google-vertexai (@langchain/google-vertexai)
+ *   - google-vertexai-web (@langchain/google-vertexai-web)
  *   - google-genai (@langchain/google-genai)
  *   - bedrock (@langchain/aws)
  *   - cohere (@langchain/cohere)
@@ -603,6 +617,7 @@ export async function initChatModel<
  *   - groq (@langchain/groq)
  *   - ollama (@langchain/ollama)
  *   - cerebras (@langchain/cerebras)
+ *   - deepseek (@langchain/deepseek)
  * @param {string[] | "any"} [fields.configurableFields] - Which model parameters are configurable:
  *   - undefined: No configurable fields.
  *   - "any": All fields are configurable. (See Security Note in description)

@@ -771,16 +771,30 @@ function _coerceMessagePromptTemplateLike<
   ) {
     const messageContent = messagePromptTemplateLike[1];
     if (
-      typeof messageContent !== "string" ||
-      messageContent[0] !== "{" ||
-      messageContent[messageContent.length - 1] !== "}"
+      extra?.templateFormat === "mustache" &&
+      typeof messageContent === "string" &&
+      messageContent.slice(0, 2) === "{{" &&
+      messageContent.slice(-2) === "}}"
     ) {
-      throw new Error(
-        `Invalid placeholder template: "${messagePromptTemplateLike[1]}". Expected a variable name surrounded by curly braces.`
-      );
+      const variableName = messageContent.slice(2, -2);
+      return new MessagesPlaceholder({ variableName, optional: true });
+    } else if (
+      typeof messageContent === "string" &&
+      messageContent[0] === "{" &&
+      messageContent[messageContent.length - 1] === "}"
+    ) {
+      const variableName = messageContent.slice(1, -1);
+      return new MessagesPlaceholder({ variableName, optional: true });
     }
-    const variableName = messageContent.slice(1, -1);
-    return new MessagesPlaceholder({ variableName, optional: true });
+    throw new Error(
+      `Invalid placeholder template for format ${
+        extra?.templateFormat ?? `"f-string"`
+      }: "${
+        messagePromptTemplateLike[1]
+      }". Expected a variable name surrounded by ${
+        extra?.templateFormat === "mustache" ? "double" : "single"
+      } curly braces.`
+    );
   }
   const message = coerceMessageLikeToMessage(messagePromptTemplateLike);
   let templateData:

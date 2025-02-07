@@ -72,6 +72,7 @@ export const config = {
     "embeddings/alibaba_tongyi": "embeddings/alibaba_tongyi",
     "embeddings/baidu_qianfan": "embeddings/baidu_qianfan",
     "embeddings/bedrock": "embeddings/bedrock",
+    "embeddings/bytedance_doubao": "embeddings/bytedance_doubao",
     "embeddings/cloudflare_workersai": "embeddings/cloudflare_workersai",
     "embeddings/cohere": "embeddings/cohere",
     "embeddings/deepinfra": "embeddings/deepinfra",
@@ -222,9 +223,11 @@ export const config = {
     "caches/ioredis": "caches/ioredis",
     "caches/momento": "caches/momento",
     "caches/upstash_redis": "caches/upstash_redis",
+    "caches/vercel_kv": "caches/vercel_kv",
     // graphs
-    "graphs/neo4j_graph": "graphs/neo4j_graph",
+    "graphs/document": "graphs/document",
     "graphs/memgraph_graph": "graphs/memgraph_graph",
+    "graphs/neo4j_graph": "graphs/neo4j_graph",
     // document_compressors
     "document_compressors/ibm": "document_compressors/ibm",
     // document transformers
@@ -454,11 +457,14 @@ export const config = {
     "structured_query/supabase",
     "structured_query/vectara",
     "retrievers/zep_cloud",
+    // cache
     "cache/cloudflare_kv",
     "cache/momento",
     "cache/upstash_redis",
-    "graphs/neo4j_graph",
+    "cache/vercel_kv",
+    //graphs
     "graphs/memgraph_graph",
+    "graphs/neo4j_graph",
     // document_compressors
     "document_compressors/ibm",
     // document_transformers
