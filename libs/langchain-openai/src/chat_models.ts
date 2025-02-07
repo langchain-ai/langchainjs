@@ -905,6 +905,45 @@ export class ChatOpenAI<
     };
   }
 
+  get lc_serializable_keys(): string[] {
+    return [
+      "configuration",
+      "logprobs",
+      "topLogprobs",
+      "prefixMessages",
+      "supportsStrictToolCalling",
+      "modalities",
+      "audio",
+      "reasoningEffort",
+      "temperature",
+      "maxTokens",
+      "topP",
+      "frequencyPenalty",
+      "presencePenalty",
+      "n",
+      "logitBias",
+      "user",
+      "streaming",
+      "streamUsage",
+      "modelName",
+      "model",
+      "modelKwargs",
+      "stop",
+      "stopSequences",
+      "timeout",
+      "openAIApiKey",
+      "apiKey",
+      "cache",
+      "maxConcurrency",
+      "maxRetries",
+      "verbose",
+      "callbacks",
+      "tags",
+      "metadata",
+      "disableStreaming",
+    ];
+  }
+
   temperature?: number;
 
   topP?: number;

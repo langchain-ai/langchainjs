@@ -13035,7 +13035,7 @@ __metadata:
     zod: ^3.22.4
     zod-to-json-schema: ^3.22.3
   peerDependencies:
-    "@langchain/core": ">=0.3.29 <0.4.0"
+    "@langchain/core": ">=0.3.39 <0.4.0"
   languageName: unknown
   linkType: soft
 
@@ -13200,6 +13200,7 @@ __metadata:
     tsx: ^4.16.2
     typescript: ^5.4.5
   bin:
+    extract_serializable_fields: bin/extract_serializable_fields.js
     filter_spam_comment: bin/filter_spam_comment.js
     lc_build: bin/build.js
     notebook_validate: bin/validate_notebook.js
