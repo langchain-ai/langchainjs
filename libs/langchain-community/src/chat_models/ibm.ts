@@ -102,9 +102,11 @@ export interface WatsonxCallOptionsChat
 }
 
 export interface WatsonxCallOptionsDeployedChat
-  extends WatsonxCallDeployedParams,
+  extends Omit<BaseChatModelCallOptions, "stop">,
+    WatsonxCallDeployedParams,
     WatsonxChatBasicOptions {
   promptIndex?: number;
+  tool_choice?: TextChatParameterTools | string | "auto" | "any";
 }
 
 type ChatWatsonxToolType = BindToolsInput | TextChatParameterTools;
