@@ -552,19 +552,16 @@ describe("Tests for chat", () => {
         }
       );
       const llmWithTools = service.bindTools([calculatorTool]);
-      const res = await llmWithTools.stream(
+      const res = await llmWithTools.invoke(
         "You are bad at calculations and need to use calculator at all times. What is 3 * 12"
       );
-      for await (const chunk of res) {
-        console.log(chunk);
-      }
 
-      // expect(res).toBeInstanceOf(AIMessage);
-      // expect(res.tool_calls?.[0].name).toBe("calculator");
-      // expect(typeof res.tool_calls?.[0].args?.operation).toBe("string");
-      // expect(typeof res.tool_calls?.[0].args?.number1).toBe("number");
-      // expect(typeof res.tool_calls?.[0].args?.number2).toBe("number");
-      // expect(res.response_metadata.finish_reason).toBe("tool_calls");
+      expect(res).toBeInstanceOf(AIMessage);
+      expect(res.tool_calls?.[0].name).toBe("calculator");
+      expect(typeof res.tool_calls?.[0].args?.operation).toBe("string");
+      expect(typeof res.tool_calls?.[0].args?.number1).toBe("number");
+      expect(typeof res.tool_calls?.[0].args?.number2).toBe("number");
+      expect(res.response_metadata.finish_reason).toBe("tool_calls");
     });
     test("Passing tool to chat model extended", async () => {
       const service = new ChatWatsonx({
