@@ -51,7 +51,7 @@ function extractConstructorParams(
 
           result = {
             type: typeString,
-            fields: fields,
+            fields,
           };
         }
       });
