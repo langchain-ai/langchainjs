@@ -102,6 +102,23 @@ test("Ollama can call withStructuredOutput includeRaw", async () => {
   expect(result).toBeDefined();
   expect(result.parsed.location).toBeDefined();
   expect(result.parsed.location).not.toBe("");
+  expect((result.raw as AIMessage).tool_calls?.length).toBe(0);
+});
+
+test("Ollama can call withStructuredOutput includeRaw with tool calling", async () => {
+  const model = new ChatOllama({
+    model: "llama3-groq-tool-use",
+    maxRetries: 1,
+  }).withStructuredOutput(weatherTool.schema, {
+    name: weatherTool.name,
+    includeRaw: true,
+    method: "functionCalling",
+  });
+
+  const result = await model.invoke(messageHistory);
+  expect(result).toBeDefined();
+  expect(result.parsed.location).toBeDefined();
+  expect(result.parsed.location).not.toBe("");
   expect((result.raw as AIMessage).tool_calls?.[0]).toBeDefined();
   expect((result.raw as AIMessage).tool_calls?.[0].id).toBeDefined();
   expect((result.raw as AIMessage).tool_calls?.[0].id).not.toBe("");
