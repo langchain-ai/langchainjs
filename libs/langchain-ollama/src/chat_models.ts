@@ -31,6 +31,11 @@ import {
 } from "@langchain/core/runnables";
 import { convertToOpenAITool } from "@langchain/core/utils/function_calling";
 import { concat } from "@langchain/core/utils/stream";
+import {
+  JsonOutputParser,
+  StructuredOutputParser,
+} from "@langchain/core/output_parsers";
+import { isZodSchema } from "@langchain/core/utils/types";
 import { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import {
@@ -38,9 +43,6 @@ import {
   convertToOllamaMessages,
 } from "./utils.js";
 import { OllamaCamelCaseOptions } from "./types.js";
-import { isZodSchema } from "@langchain/core/utils/types";
-import { JsonOutputParser } from "@langchain/core/output_parsers";
-import { StructuredOutputParser } from "@langchain/core/output_parsers";
 
 export interface ChatOllamaCallOptions extends BaseChatModelCallOptions {
   /**
@@ -878,7 +880,9 @@ export class ChatOllama
         parsedWithFallback,
       ]);
     } else {
-      return super.withStructuredOutput<RunOutput>(outputSchema, config);
+      // TODO: Fix this type in core
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return super.withStructuredOutput<RunOutput>(outputSchema, config as any);
     }
   }
 }
