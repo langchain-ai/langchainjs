@@ -89,13 +89,14 @@ test("Ollama can call withStructuredOutput", async () => {
   expect(result.location).not.toBe("");
 });
 
-test("Ollama can call withStructuredOutput includeRaw", async () => {
+test("Ollama can call withStructuredOutput includeRaw JSON Schema", async () => {
   const model = new ChatOllama({
     model: "llama3-groq-tool-use",
     maxRetries: 1,
   }).withStructuredOutput(weatherTool.schema, {
     name: weatherTool.name,
     includeRaw: true,
+    method: "jsonSchema",
   });
 
   const result = await model.invoke(messageHistory);
@@ -112,7 +113,6 @@ test("Ollama can call withStructuredOutput includeRaw with tool calling", async 
   }).withStructuredOutput(weatherTool.schema, {
     name: weatherTool.name,
     includeRaw: true,
-    method: "functionCalling",
   });
 
   const result = await model.invoke(messageHistory);
