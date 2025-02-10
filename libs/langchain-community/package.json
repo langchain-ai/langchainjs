@@ -257,7 +257,6 @@
     "@ibm-cloud/watsonx-ai": "*",
     "@lancedb/lancedb": "^0.12.0",
     "@langchain/core": ">=0.2.21 <0.4.0",
-    "@langchain/langgraph": "*",
     "@layerup/layerup-security": "^1.5.12",
     "@libsql/client": "^0.14.0",
     "@mendable/firecrawl-js": "^1.4.3",
