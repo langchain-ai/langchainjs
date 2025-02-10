@@ -473,6 +473,21 @@ export class AzureChatOpenAI extends ChatOpenAI {
     };
   }
 
+  get lc_serializable_keys(): string[] {
+    return [
+      ...super.lc_serializable_keys,
+      "azureOpenAIApiKey",
+      "azureOpenAIApiVersion",
+      "azureOpenAIBasePath",
+      "azureOpenAIEndpoint",
+      "azureOpenAIApiInstanceName",
+      "azureOpenAIApiDeploymentName",
+      "deploymentName",
+      "openAIApiKey",
+      "openAIApiVersion",
+    ];
+  }
+
   constructor(
     fields?: Partial<OpenAIChatInput> &
       Partial<AzureOpenAIInput> & {

@@ -1,6 +1,6 @@
 {
   "name": "@langchain/community",
-  "version": "0.3.28",
+  "version": "0.3.29",
   "description": "Third-party integrations for LangChain.js",
   "type": "module",
   "engines": {
@@ -206,7 +206,7 @@
     "pyodide": "^0.26.2",
     "redis": "^4.6.6",
     "release-it": "^17.6.0",
-    "replicate": "^0.29.4",
+    "replicate": "^1.0.1",
     "rollup": "^3.19.1",
     "sonix-speech-recognition": "^2.1.1",
     "srt-parser-2": "^1.2.3",
@@ -336,7 +336,7 @@
     "puppeteer": "*",
     "pyodide": ">=0.24.1 <0.27.0",
     "redis": "*",
-    "replicate": "^0.29.4",
+    "replicate": "*",
     "sonix-speech-recognition": "^2.1.1",
     "srt-parser-2": "^1.2.3",
     "typeorm": "^0.3.20",
