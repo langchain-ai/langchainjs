@@ -96,7 +96,6 @@ test("Ollama can call withStructuredOutput includeRaw JSON Schema", async () => 
   }).withStructuredOutput(weatherTool.schema, {
     name: weatherTool.name,
     includeRaw: true,
-    method: "jsonSchema",
   });
 
   const result = await model.invoke(messageHistory);
@@ -113,6 +112,7 @@ test("Ollama can call withStructuredOutput includeRaw with tool calling", async 
   }).withStructuredOutput(weatherTool.schema, {
     name: weatherTool.name,
     includeRaw: true,
+    method: "functionCalling",
   });
 
   const result = await model.invoke(messageHistory);
