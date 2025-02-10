@@ -12,7 +12,10 @@ import { LLMResult } from "@langchain/core/outputs";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { tool } from "@langchain/core/tools";
 import { NewTokenIndices } from "@langchain/core/callbacks/base";
-import { createReactAgent } from "@langchain/langgraph/prebuilt";
+import {
+  BaseChatModel,
+  BaseChatModelCallOptions,
+} from "@langchain/core/language_models/chat_models";
 import { ChatWatsonx } from "../ibm.js";
 
 describe("Tests for chat", () => {
@@ -723,24 +726,14 @@ describe("Tests for chat", () => {
         version: "2024-05-31",
         model: "mistralai/mistral-large",
       });
-      const storage = [
-        { id: 1, name: "Apple", category: "fruit" },
-        { id: 2, name: "Carrot", category: "vegetable" },
-        { id: 3, name: "Banana", category: "fruit" },
-      ];
-      const searchStorage = tool(
-        () => JSON.stringify(storage.map((item) => item.name)),
-        {
-          name: "searchStorage",
-          description:
-            "Can retireve items that are currently stored in my home storage",
-        }
-      );
-
-      const tools = [searchStorage];
-
-      const graph = createReactAgent({ llm: model, tools });
-      expect(graph).toBeDefined();
+      const testModel = (
+        model: BaseChatModel<BaseChatModelCallOptions, AIMessageChunk>
+      ) => {
+        // eslint-disable-next-line no-instanceof/no-instanceof
+        if (model instanceof BaseChatModel) return true;
+        else throw new Error("Wrong model passed");
+      };
+      expect(testModel(model)).toBeTruthy();
     });
   });
 
