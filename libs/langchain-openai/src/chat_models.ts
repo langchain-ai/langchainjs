@@ -921,7 +921,6 @@ export class ChatOpenAI<
       "reasoningEffort",
       "temperature",
       "maxTokens",
-      "maxCompletionTokens",
       "topP",
       "frequencyPenalty",
       "presencePenalty",
@@ -981,8 +980,6 @@ export class ChatOpenAI<
   streamUsage = true;
 
   maxTokens?: number;
-
-  maxCompletionTokens?: number;
 
   logprobs?: boolean;
 
@@ -1045,8 +1042,7 @@ export class ChatOpenAI<
     this.audio = fields?.audio;
     this.modalities = fields?.modalities;
     this.reasoningEffort = fields?.reasoningEffort;
-    this.maxTokens = fields?.maxTokens;
-    this.maxCompletionTokens = fields?.maxCompletionTokens;
+    this.maxTokens = fields?.maxCompletionTokens ?? fields?.maxTokens;
 
     if (this.model === "o1") {
       this.disableStreaming = true;
@@ -1196,7 +1192,7 @@ export class ChatOpenAI<
     }
     if (isReasoningModel(params.model)) {
       params.max_completion_tokens =
-        this.maxCompletionTokens === -1 ? undefined : this.maxCompletionTokens;
+        this.maxTokens === -1 ? undefined : this.maxTokens;
     } else {
       params.max_tokens = this.maxTokens === -1 ? undefined : this.maxTokens;
     }
