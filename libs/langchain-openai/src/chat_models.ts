@@ -153,7 +153,7 @@ export function _convertMessagesToOpenAIParams(
   // TODO: Function messages do not support array content, fix cast
   return messages.flatMap((message) => {
     let role = messageToOpenAIRole(message);
-    if (role === "system" && isReasoningModel(model ?? "")) {
+    if (role === "system" && isReasoningModel(model)) {
       role = "developer";
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -224,8 +224,8 @@ function _convertChatOpenAIToolTypeToOpenAITool(
   return _convertToOpenAITool(tool, fields);
 }
 
-function isReasoningModel(model: string) {
-  return model.startsWith("o1") || model.startsWith("o3");
+function isReasoningModel(model?: string) {
+  return model?.startsWith("o1") || model?.startsWith("o3");
 }
 
 // TODO: Use the base structured output options param in next breaking release.
