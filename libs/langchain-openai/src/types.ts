@@ -23,6 +23,13 @@ export declare interface OpenAIBaseInput {
    */
   maxTokens?: number;
 
+  /**
+   * Maximum number of tokens to generate in the completion. -1 returns as many
+   * tokens as possible given the prompt and the model's maximum context size.
+   * Alias for `maxTokens` for reasoning models.
+   */
+  maxCompletionTokens?: number;
+
   /** Total probability mass of tokens to consider at each step */
   topP: number;
 
