@@ -13,7 +13,6 @@ describe("RecursiveUrlLoader", () => {
     jest.restoreAllMocks();
   });
 
-
   test("loading valid url", async () => {
     const url = "https://js.langchain.com/docs/introduction";
 

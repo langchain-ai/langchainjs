@@ -7,7 +7,7 @@ import {
 } from "@langchain/core/document_loaders/base";
 
 const virtualConsole = new VirtualConsole();
-virtualConsole.on("error", () => { });
+virtualConsole.on("error", () => {});
 
 export interface RecursiveUrlLoaderOptions {
   excludeDirs?: string[];
