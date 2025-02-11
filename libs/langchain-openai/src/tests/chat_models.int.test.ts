@@ -1233,6 +1233,26 @@ test("Allows developer messages with o1", async () => {
   expect(res.content).toEqual("testing");
 });
 
+test("Works with maxCompletionTokens with o3", async () => {
+  const model = new ChatOpenAI({
+    model: "o3-mini",
+    reasoningEffort: "low",
+    maxCompletionTokens: 100,
+  });
+  const res = await model.invoke([
+    {
+      role: "system",
+      content: `Always respond only with the word "testing"`,
+    },
+    {
+      role: "user",
+      content: "hi",
+    },
+  ]);
+  console.log(res);
+  expect(res.content).toEqual("testing");
+});
+
 test.skip("Allow overriding", async () => {
   class ChatDeepSeek extends ChatOpenAI {
     protected override _convertOpenAIDeltaToBaseMessageChunk(
