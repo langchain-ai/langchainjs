@@ -3,3 +3,8 @@
 // in that case don't quite match.
 export type IterableReadableStreamInterface<T> = ReadableStream<T> &
   AsyncIterable<T>;
+
+export {
+  type StreamEvent,
+  type StreamEventData,
+} from "../tracers/event_stream.js";
