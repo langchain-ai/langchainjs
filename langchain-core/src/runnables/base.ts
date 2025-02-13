@@ -2730,6 +2730,132 @@ export class RunnableLambda<
   }
 }
 
+export class RunnableGenerator<
+  RunInput,
+  RunOutput,
+  CallOptions extends RunnableConfig = RunnableConfig,
+> extends RunnableLambda<RunInput, RunOutput, CallOptions> {
+  static lc_name() {
+    return 'RunnableGenerator';
+  }
+
+  lc_namespace = ['langchain_core', 'runnables'];
+
+  protected func: RunnableFunc<
+    RunInput,
+    RunOutput | Runnable<RunInput, RunOutput, CallOptions>,
+    CallOptions
+  >;
+
+  constructor(fields: {
+    func: RunnableFunc<
+      RunInput,
+      RunOutput | Runnable<RunInput, RunOutput, CallOptions>,
+      CallOptions
+    >;
+  }) {
+    super(fields);
+    this.func = fields.func;
+  }
+
+  /**
+   * Static helper to create a new RunnableGenerator from a function.
+   */
+  static from<RunInput, RunOutput, CallOptions extends RunnableConfig = RunnableConfig>(
+    func: RunnableFunc<
+      RunInput,
+      RunOutput | Runnable<RunInput, RunOutput, CallOptions>,
+      CallOptions
+    >
+  ): RunnableGenerator<RunInput, RunOutput, CallOptions> {
+    return new RunnableGenerator({ func });
+  }
+
+  /**
+   * The _transform implementation processes each chunk from the input generator individually.
+   * For each chunk, the function is invoked immediately, and its result is yielded (or streamed)
+   * without accumulating the full input.
+   */
+  async *_transform(
+    generator: AsyncGenerator<RunInput>,
+    runManager?: CallbackManagerForChainRun,
+    config?: Partial<CallOptions>
+  ): AsyncGenerator<RunOutput> {
+    const childConfig = patchConfig(config, {
+      callbacks: runManager?.getChild(),
+      recursionLimit: (config?.recursionLimit ?? DEFAULT_RECURSION_LIMIT) - 1,
+    });
+
+    for await (const chunk of generator) {
+      // Process each chunk individually.
+      const output = await this.func(chunk, childConfig);
+
+      // If the result is a Runnable, stream its output.
+      if (output && Runnable.isRunnable(output)) {
+        if (config?.recursionLimit === 0) {
+          throw new Error('Recursion limit reached.');
+        }
+
+        const stream = await output.stream(chunk, childConfig);
+
+        for await (const streamChunk of stream) {
+          yield streamChunk;
+        }
+      }
+      // If the output is an async iterable, yield each item.
+      else if (isAsyncIterable(output)) {
+        for await (const streamChunk of consumeAsyncIterableInContext(childConfig, output)) {
+          config?.signal?.throwIfAborted();
+          yield streamChunk as RunOutput;
+        }
+      }
+      // If the output is a synchronous iterator, yield each item.
+      else if (isIterableIterator(output)) {
+        for (const streamChunk of consumeIteratorInContext(childConfig, output)) {
+          config?.signal?.throwIfAborted();
+          yield streamChunk as RunOutput;
+        }
+      }
+      // Otherwise, yield the plain output.
+      else {
+        yield output as RunOutput;
+      }
+    }
+  }
+
+  /**
+   * Transform the input generator using _transform.
+   */
+  transform(
+    generator: AsyncGenerator<RunInput>,
+    options?: Partial<CallOptions>
+  ): AsyncGenerator<RunOutput> {
+    return this._transformStreamWithConfig(generator, this._transform.bind(this), options);
+  }
+
+  /**
+   * Helper to create a stream from an input.
+   */
+  async stream(
+    input: RunInput,
+    options?: Partial<CallOptions>
+  ): Promise<IterableReadableStream<RunOutput>> {
+    async function* generator() {
+      yield input;
+    }
+
+    const config = ensureConfig(options);
+
+    const wrappedGenerator = new AsyncGeneratorWithSetup({
+      generator: this.transform(generator(), config),
+      config,
+    });
+
+    await wrappedGenerator.setup;
+    return IterableReadableStream.fromAsyncGenerator(wrappedGenerator);
+  }
+}
+
 /**
  * A runnable that runs a mapping of runnables in parallel,
  * and returns a mapping of their outputs.
