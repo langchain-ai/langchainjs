@@ -27,6 +27,7 @@ import {
 } from "@langchain/google-common";
 import { BaseCallbackHandler } from "@langchain/core/callbacks/base";
 import { concat } from "@langchain/core/utils/stream";
+import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import fs from "fs/promises";
 import {
   ChatPromptTemplate,
@@ -327,11 +328,16 @@ describe.each(testGeminiModelNames)(
       recorder = new GoogleRequestRecorder();
       callbacks = [recorder];
 
+      const apiKey = platformType === "gai"
+        ? getEnvironmentVariable("TEST_API_KEY")
+        : undefined;
+
       return new ChatGoogle({
         modelName,
         platformType: platformType as GooglePlatformType,
         apiVersion,
         callbacks,
+        apiKey,
         ...(fields ?? {}),
       });
     }
@@ -348,6 +354,13 @@ describe.each(testGeminiModelNames)(
     test("invoke", async () => {
       const model = newChatGoogle();
       const res = await model.invoke("What is 1 + 1?");
+
+      const connectionUrl = recorder?.request?.connection?.url;
+      const connectionUrlMatch = model.platform === "gcp"
+        ? /https:\/\/.+-aiplatform.googleapis.com/
+        : /https:\/\/generativelanguage.googleapis.com/;
+      expect(connectionUrl).toMatch(connectionUrlMatch);
+
       expect(res).toBeDefined();
       expect(res._getType()).toEqual("ai");
 
