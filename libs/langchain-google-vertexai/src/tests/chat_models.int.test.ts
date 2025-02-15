@@ -101,7 +101,9 @@ describe.each(testGeminiModelNames)("GAuth Gemini Chat (%s)", (modelName) => {
     });
     const res = await model.invoke("What is 1 + 1?");
 
-    expect(recorder?.request?.connection?.url).toMatch(/https:\/\/.+-aiplatform.googleapis.com/);
+    expect(recorder?.request?.connection?.url).toMatch(
+      /https:\/\/.+-aiplatform.googleapis.com/
+    );
 
     expect(res).toBeDefined();
     expect(res._getType()).toEqual("ai");
@@ -635,7 +637,9 @@ describe("Express Gemini Chat", () => {
     });
     const res = await model.invoke("What is 1 + 1?");
 
-    expect(recorder?.request?.connection?.url).toMatch(/https:\/\/aiplatform.googleapis.com/);
+    expect(recorder?.request?.connection?.url).toMatch(
+      /https:\/\/aiplatform.googleapis.com/
+    );
 
     expect(res).toBeDefined();
     expect(res._getType()).toEqual("ai");
@@ -647,9 +651,7 @@ describe("Express Gemini Chat", () => {
     const text = aiMessage.content as string;
     expect(text).toMatch(/(1 + 1 (equals|is|=) )?2.? ?/);
   });
-
-
-})
+});
 
 describe("GAuth Anthropic Chat", () => {
   let recorder: GoogleRequestRecorder;

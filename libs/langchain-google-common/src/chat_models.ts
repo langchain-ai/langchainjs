@@ -246,7 +246,7 @@ export abstract class ChatGoogleBase<AuthOptions>
   }
 
   buildApiKey(fields?: GoogleAIBaseLLMInput<AuthOptions>): string | undefined {
-      return fields?.apiKey ?? getEnvironmentVariable("GOOGLE_API_KEY");
+    return fields?.apiKey ?? getEnvironmentVariable("GOOGLE_API_KEY");
   }
 
   buildClient(

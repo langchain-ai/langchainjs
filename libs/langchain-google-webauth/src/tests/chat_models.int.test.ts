@@ -328,9 +328,10 @@ describe.each(testGeminiModelNames)(
       recorder = new GoogleRequestRecorder();
       callbacks = [recorder];
 
-      const apiKey = platformType === "gai"
-        ? getEnvironmentVariable("TEST_API_KEY")
-        : undefined;
+      const apiKey =
+        platformType === "gai"
+          ? getEnvironmentVariable("TEST_API_KEY")
+          : undefined;
 
       return new ChatGoogle({
         modelName,
@@ -356,9 +357,10 @@ describe.each(testGeminiModelNames)(
       const res = await model.invoke("What is 1 + 1?");
 
       const connectionUrl = recorder?.request?.connection?.url;
-      const connectionUrlMatch = model.platform === "gcp"
-        ? /https:\/\/.+-aiplatform.googleapis.com/
-        : /https:\/\/generativelanguage.googleapis.com/;
+      const connectionUrlMatch =
+        model.platform === "gcp"
+          ? /https:\/\/.+-aiplatform.googleapis.com/
+          : /https:\/\/generativelanguage.googleapis.com/;
       expect(connectionUrl).toMatch(connectionUrlMatch);
 
       expect(res).toBeDefined();
