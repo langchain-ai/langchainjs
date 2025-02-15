@@ -218,6 +218,7 @@ describe("Mock ChatGoogle - Gemini", () => {
     };
     const model = new ChatGoogle({
       authOptions,
+      temperature: 0.8,
     });
     const messages: BaseMessageLike[] = [
       new HumanMessage("Flip a coin and tell me H for heads and T for tails"),
@@ -229,6 +230,13 @@ describe("Mock ChatGoogle - Gemini", () => {
     expect(record.opts).toBeDefined();
     expect(record.opts.data).toBeDefined();
     const { data } = record.opts;
+
+    expect(data).toHaveProperty("generationConfig");
+    const { generationConfig } = data;
+    expect(generationConfig).toHaveProperty("temperature");
+    expect(generationConfig.temperature).toEqual(0.8);
+    expect(generationConfig).not.toHaveProperty("topP")
+
     expect(data.contents).toBeDefined();
     expect(data.contents.length).toEqual(3);
     expect(data.contents[0].role).toEqual("user");

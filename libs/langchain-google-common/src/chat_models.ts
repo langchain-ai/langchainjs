@@ -181,13 +181,13 @@ export abstract class ChatGoogleBase<AuthOptions>
 
   modelName = "gemini-pro";
 
-  temperature = 0.7;
+  temperature: number;
 
-  maxOutputTokens = 1024;
+  maxOutputTokens: number;
 
-  topP = 0.8;
+  topP: number;
 
-  topK = 40;
+  topK: number;
 
   presencePenalty: number;
 
