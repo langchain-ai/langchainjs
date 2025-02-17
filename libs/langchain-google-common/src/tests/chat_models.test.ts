@@ -39,7 +39,7 @@ import {
   ReadThroughBlobStore,
 } from "../experimental/utils/media_core.js";
 import { removeAdditionalProperties } from "../utils/zod_to_gemini_parameters.js";
-import { MessageGeminiSafetyHandler } from "../utils/index.js";
+import {MessageGeminiSafetyHandler} from "../utils/index.js";
 
 export class ChatGoogle extends ChatGoogleBase<MockClientAuthInfo> {
   constructor(fields?: ChatGoogleBaseInput<MockClientAuthInfo>) {
@@ -1066,6 +1066,7 @@ describe("Mock ChatGoogle - Gemini", () => {
     // console.log(JSON.stringify(result, null, 1));
     expect(result).toHaveProperty("content");
     expect(result.content).toBe("");
+
     const args = result?.lc_kwargs?.additional_kwargs;
     expect(args).toBeDefined();
     expect(args).toHaveProperty("tool_calls");
@@ -1082,7 +1083,83 @@ describe("Mock ChatGoogle - Gemini", () => {
     expect(func).toHaveProperty("arguments");
     expect(typeof func.arguments).toBe("string");
     expect(func.arguments.replaceAll("\n", "")).toBe('{"testName":"cobalt"}');
+
+    expect(result).toHaveProperty("tool_calls");
+    expect(result.tool_calls).toHaveLength(1);
+    const toolCall = result!.tool_calls![0];
+    expect(toolCall?.type).toEqual("tool_call");
+    expect(toolCall?.name).toEqual("test");
+    expect(toolCall?.args?.testName).toEqual("cobalt");
   });
+
+  test("4a. Functions - results", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-4a-mock.json",
+    };
+
+    const tools: GeminiTool[] = [
+      {
+        "functionDeclarations": [
+          {
+            "description": "Get the schema for a specific resource type",
+            "name": "get_resource_schema",
+            "parameters": {
+              "properties": {
+                "resourceType": {
+                  "description": "The type of resource to get schema for",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "resourceType"
+              ],
+              "type": "object"
+            }
+          }
+        ]
+      }
+    ];
+
+    const model = new ChatGoogle({
+      authOptions,
+    }).bind({
+      tools,
+    });
+
+    const result = await model.invoke("What?");
+
+    // console.log(JSON.stringify(result, null, 1));
+    expect(result).toHaveProperty("content");
+    expect(result.content).toMatch("Okay, I will");
+
+    const args = result?.lc_kwargs?.additional_kwargs;
+    expect(args).toBeDefined();
+    expect(args).toHaveProperty("tool_calls");
+    expect(Array.isArray(args.tool_calls)).toBeTruthy();
+    expect(args.tool_calls).toHaveLength(2);
+    const call = args.tool_calls[0];
+    expect(call).toHaveProperty("type");
+    expect(call.type).toBe("function");
+    expect(call).toHaveProperty("function");
+    const func = call.function;
+    expect(func).toBeDefined();
+    expect(func).toHaveProperty("name");
+    expect(func.name).toBe("get_resource_schema");
+    expect(func).toHaveProperty("arguments");
+    expect(typeof func.arguments).toBe("string");
+    expect(func.arguments.replaceAll("\n", "")).toBe('{"resourceType":"user"}');
+
+    expect(result).toHaveProperty("tool_calls");
+    expect(result.tool_calls).toHaveLength(2);
+    const toolCall = result!.tool_calls![0];
+    expect(toolCall?.type).toEqual("tool_call");
+    expect(toolCall?.name).toEqual("get_resource_schema");
+    expect(toolCall?.args?.resourceType).toEqual("user");
+  })
 
   test("5. Functions - function reply", async () => {
     const record: Record<string, any> = {};
