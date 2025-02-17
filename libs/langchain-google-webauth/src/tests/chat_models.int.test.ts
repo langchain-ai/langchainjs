@@ -23,6 +23,7 @@ import {
 import {
   GeminiTool,
   GooglePlatformType,
+  GoogleRequestLogger,
   GoogleRequestRecorder,
 } from "@langchain/google-common";
 import { BaseCallbackHandler } from "@langchain/core/callbacks/base";
@@ -296,11 +297,11 @@ const testGeminiModelNames = [
   },
   { modelName: "gemini-1.5-flash-002", platformType: "gcp", apiVersion: "v1" },
   {
-    modelName: "gemini-2.0-flash-exp",
+    modelName: "gemini-2.0-flash-001",
     platformType: "gai",
     apiVersion: "v1beta",
   },
-  { modelName: "gemini-2.0-flash-exp", platformType: "gcp", apiVersion: "v1" },
+  { modelName: "gemini-2.0-flash-001", platformType: "gcp", apiVersion: "v1" },
 
   // Flash Thinking doesn't have functions or other features
   // {modelName: "gemini-2.0-flash-thinking-exp", platformType: "gai"},
@@ -325,7 +326,7 @@ describe.each(testGeminiModelNames)(
     function newChatGoogle(fields?: ChatGoogleInput): ChatGoogle {
       // const logger = new GoogleRequestLogger();
       recorder = new GoogleRequestRecorder();
-      callbacks = [recorder];
+      callbacks = [recorder, new GoogleRequestLogger()];
 
       return new ChatGoogle({
         modelName,
@@ -434,6 +435,8 @@ describe.each(testGeminiModelNames)(
       ];
       const model = newChatGoogle().bind({
         tools,
+        temperature: 0.1,
+        maxOutputTokens: 8000,
       });
       const result = await model.invoke("Run a test on the cobalt project");
       expect(result).toHaveProperty("content");
@@ -823,6 +826,7 @@ describe.each(testGeminiModelNames)(
       const result = await model.invoke("Who won the 2024 MLB World Series?");
       expect(result.content as string).toContain("Dodgers");
       expect(result).toHaveProperty("response_metadata");
+      console.log(JSON.stringify(result.response_metadata, null, 1));
       expect(result.response_metadata).toHaveProperty("groundingMetadata");
       expect(result.response_metadata).toHaveProperty("groundingSupport");
     });
