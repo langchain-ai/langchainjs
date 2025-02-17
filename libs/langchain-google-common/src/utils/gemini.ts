@@ -799,7 +799,7 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     const message = partToMessageChunk(part);
     const text = partToText(part);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const generationInfo: Record<string,any> = {};
+    const generationInfo: Record<string, any> = {};
 
     // Handle some of the "reasoning" elements
     // if (Object.hasOwn(part, "thought")) {
@@ -878,10 +878,15 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
   type GenerationTypes = {
     content: ChatGeneration[];
     reasoning: ChatGeneration[];
-  }
+  };
 
-  function combineContent(gen: ChatGeneration[], forceComplex: boolean = false): MessageContent {
-    const allString = gen.every((item) => typeof item.message.content === "string");
+  function combineContent(
+    gen: ChatGeneration[],
+    forceComplex: boolean = false
+  ): MessageContent {
+    const allString = gen.every(
+      (item) => typeof item.message.content === "string"
+    );
     if (allString && !forceComplex) {
       // Everything is a string, and we don't want to force it to return
       // MessageContentComplex[], so concatenate the content into one string
@@ -891,18 +896,18 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
       // it into an array of complex types.
       const ret: MessageContentComplex[] = [];
       gen.forEach((item) => {
-        if (typeof item.message.content === "string"){
+        if (typeof item.message.content === "string") {
           // If this is a string, turn it into a text type
           ret.push({
-            text: item.message.content
-          })
+            text: item.message.content,
+          });
         } else {
           // Otherwise, add all the complex types to what we're returning
           item.message.content.forEach((c) => {
             ret.push(c);
-          })
+          });
         }
-      })
+      });
       return ret;
     }
   }
@@ -919,27 +924,33 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
       ret.tool_calls!.push(...(message?.tool_calls ?? []));
       ret.invalid_tool_calls!.push(...(message?.invalid_tool_calls ?? []));
       ret.tool_call_chunks!.push(...(message?.tool_call_chunks ?? []));
-    })
+    });
 
     return ret;
   }
 
-  function combineAdditionalKwargs(gen: ChatGeneration[]): Record<string,unknown> {
+  function combineAdditionalKwargs(
+    gen: ChatGeneration[]
+  ): Record<string, unknown> {
     const ret: Record<string, unknown> = {};
 
     gen.forEach((item: ChatGeneration) => {
       const message: AIMessageChunk = item?.message as AIMessageChunk;
       const kwargs = message?.additional_kwargs ?? {};
       const keys = Object.keys(kwargs);
-      keys.forEach(key => {
+      keys.forEach((key) => {
         const value = kwargs[key];
-        if (Object.hasOwn(ret, key) && Array.isArray(ret[key]) && Array.isArray(value)) {
+        if (
+          Object.hasOwn(ret, key) &&
+          Array.isArray(ret[key]) &&
+          Array.isArray(value)
+        ) {
           (ret[key] as Array<unknown>).push(...value);
         } else {
           ret[key] = value;
         }
-      })
-    })
+      });
+    });
 
     return ret;
   }
@@ -978,7 +989,7 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
       usage_metadata: usageMetadata,
       tool_calls: combinedToolCalls.tool_calls,
       invalid_tool_calls: combinedToolCalls.invalid_tool_calls,
-    })
+    });
     console.log(message);
     return [
       new ChatGenerationChunk({
@@ -1002,12 +1013,12 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
       } else {
         content.push(gen);
       }
-    })
+    });
 
     return {
       content,
       reasoning,
-    }
+    };
   }
 
   /**

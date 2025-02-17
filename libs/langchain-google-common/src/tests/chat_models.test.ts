@@ -39,7 +39,7 @@ import {
   ReadThroughBlobStore,
 } from "../experimental/utils/media_core.js";
 import { removeAdditionalProperties } from "../utils/zod_to_gemini_parameters.js";
-import {MessageGeminiSafetyHandler} from "../utils/index.js";
+import { MessageGeminiSafetyHandler } from "../utils/index.js";
 
 export class ChatGoogle extends ChatGoogleBase<MockClientAuthInfo> {
   constructor(fields?: ChatGoogleBaseInput<MockClientAuthInfo>) {
@@ -1103,25 +1103,23 @@ describe("Mock ChatGoogle - Gemini", () => {
 
     const tools: GeminiTool[] = [
       {
-        "functionDeclarations": [
+        functionDeclarations: [
           {
-            "description": "Get the schema for a specific resource type",
-            "name": "get_resource_schema",
-            "parameters": {
-              "properties": {
-                "resourceType": {
-                  "description": "The type of resource to get schema for",
-                  "type": "string"
-                }
+            description: "Get the schema for a specific resource type",
+            name: "get_resource_schema",
+            parameters: {
+              properties: {
+                resourceType: {
+                  description: "The type of resource to get schema for",
+                  type: "string",
+                },
               },
-              "required": [
-                "resourceType"
-              ],
-              "type": "object"
-            }
-          }
-        ]
-      }
+              required: ["resourceType"],
+              type: "object",
+            },
+          },
+        ],
+      },
     ];
 
     const model = new ChatGoogle({
@@ -1159,7 +1157,7 @@ describe("Mock ChatGoogle - Gemini", () => {
     expect(toolCall?.type).toEqual("tool_call");
     expect(toolCall?.name).toEqual("get_resource_schema");
     expect(toolCall?.args?.resourceType).toEqual("user");
-  })
+  });
 
   test("5. Functions - function reply", async () => {
     const record: Record<string, any> = {};

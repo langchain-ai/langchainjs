@@ -48,16 +48,8 @@
                   "endIndex": 100,
                   "text": "The Los Angeles Dodgers won the 2024 MLB World Series, defeating the New York Yankees in five games."
                 },
-                "groundingChunkIndices": [
-                  0,
-                  1,
-                  2
-                ],
-                "confidenceScores": [
-                  0.9690907,
-                  0.9268405,
-                  0.71132255
-                ]
+                "groundingChunkIndices": [0, 1, 2],
+                "confidenceScores": [0.9690907, 0.9268405, 0.71132255]
               }
             ],
             "retrievalMetadata": {},
