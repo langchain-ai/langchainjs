@@ -42,7 +42,6 @@ const _SUPPORTED_PROVIDERS = [
   "google-vertexai",
   "google-vertexai-web",
   "google-genai",
-  "google-genai",
   "ollama",
   "together",
   "fireworks",
@@ -601,6 +600,7 @@ export async function initChatModel<
  * @template {extends ConfigurableChatModelCallOptions = ConfigurableChatModelCallOptions} CallOptions - Call options for the model.
  *
  * @param {string | ChatModelProvider} [model] - The name of the model, e.g. "gpt-4", "claude-3-opus-20240229".
+ *   Can be prefixed with the model provider, e.g. "openai:gpt-4", "anthropic:claude-3-opus-20240229".
  * @param {Object} [fields] - Additional configuration options.
  * @param {string} [fields.modelProvider] - The model provider. Supported values include:
  *   - openai (@langchain/openai)
@@ -632,14 +632,12 @@ export async function initChatModel<
  * ```typescript
  * import { initChatModel } from "langchain/chat_models/universal";
  *
- * const gpt4 = await initChatModel("gpt-4", {
- *   modelProvider: "openai",
+ * const gpt4 = await initChatModel("openai:gpt-4", {
  *   temperature: 0.25,
  * });
  * const gpt4Result = await gpt4.invoke("what's your name");
  *
- * const claude = await initChatModel("claude-3-opus-20240229", {
- *   modelProvider: "anthropic",
+ * const claude = await initChatModel("anthropic:claude-3-opus-20240229", {
  *   temperature: 0.25,
  * });
  * const claudeResult = await claude.invoke("what's your name");
@@ -810,10 +808,20 @@ export async function initChatModel<
     configPrefix?: string;
   }
 ): Promise<_ConfigurableModel<RunInput, CallOptions>> {
-  const { configurableFields, configPrefix, modelProvider, ...params } = {
+  // eslint-disable-next-line prefer-const
+  let { configurableFields, configPrefix, modelProvider, ...params } = {
     configPrefix: "",
     ...(fields ?? {}),
   };
+  if (modelProvider === undefined && model?.includes(":")) {
+    const modelComponents = model.split(":", 2);
+    if (
+      _SUPPORTED_PROVIDERS.includes(modelComponents[0] as ChatModelProvider)
+    ) {
+      // eslint-disable-next-line no-param-reassign
+      [modelProvider, model] = modelComponents;
+    }
+  }
   let configurableFieldsCopy = Array.isArray(configurableFields)
     ? [...configurableFields]
     : configurableFields;

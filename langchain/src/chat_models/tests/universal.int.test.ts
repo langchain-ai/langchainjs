@@ -61,6 +61,21 @@ test("Initialize non-configurable models", async () => {
   expect(geminiResult.content.length).toBeGreaterThan(0);
 });
 
+test("Works with model provider in model name", async () => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let error: any;
+  const o3Mini = await initChatModel("openai:o3-mini", {
+    temperature: 0.25,
+    apiKey: openAIApiKey,
+  });
+  try {
+    await o3Mini.invoke("what's your name");
+  } catch (e) {
+    error = e;
+  }
+  expect(error.message).toContain("temperature");
+});
+
 test("Create a partially configurable model with no default model", async () => {
   const configurableModel = await initChatModel(undefined, {
     temperature: 0,
