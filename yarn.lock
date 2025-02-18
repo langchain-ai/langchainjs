@@ -11990,7 +11990,6 @@ __metadata:
     eslint-plugin-no-instanceof: ^1.0.1
     eslint-plugin-prettier: ^4.2.1
     expr-eval: ^2.0.2
-    faiss-node: ^0.5.1
     fast-xml-parser: ^4.5.1
     firebase-admin: ^11.9.0 || ^12.0.0
     flat: ^5.0.2
@@ -12133,7 +12132,6 @@ __metadata:
     dria: ^0.0.3
     duck-duck-scrape: ^2.2.5
     epub2: ^3.0.1
-    faiss-node: ^0.5.1
     fast-xml-parser: "*"
     firebase-admin: ^11.9.0 || ^12.0.0
     google-auth-library: "*"
@@ -12334,8 +12332,6 @@ __metadata:
     duck-duck-scrape:
       optional: true
     epub2:
-      optional: true
-    faiss-node:
       optional: true
     fast-xml-parser:
       optional: true

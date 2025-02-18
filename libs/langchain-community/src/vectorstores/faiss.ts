@@ -1,3 +1,4 @@
+// eslint-disable-next-line no-unused-imports
 import type { IndexFlatL2 } from "faiss-node";
 import type { NameRegistry, Parser } from "pickleparser";
 import * as uuid from "uuid";
