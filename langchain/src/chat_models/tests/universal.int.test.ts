@@ -61,6 +61,15 @@ test("Initialize non-configurable models", async () => {
   expect(geminiResult.content.length).toBeGreaterThan(0);
 });
 
+test("Works with model provider in model name", async () => {
+  const gpt4 = await initChatModel("openai:gpt-4o-mini", {
+    temperature: 0.25,
+    apiKey: openAIApiKey,
+  });
+  const result = await gpt4.invoke("what's your name");
+  expect(result).toBeDefined();
+});
+
 test("Create a partially configurable model with no default model", async () => {
   const configurableModel = await initChatModel(undefined, {
     temperature: 0,
