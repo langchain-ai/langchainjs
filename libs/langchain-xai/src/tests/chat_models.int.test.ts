@@ -194,7 +194,7 @@ test("Few shotting with tool calls", async () => {
   expect(res.content).toContain("24");
 });
 
-test.only("xAI can stream tool calls", async () => {
+test("xAI can stream tool calls", async () => {
   const model = new ChatXAI({
     model: "grok-2-1212",
     temperature: 0,
