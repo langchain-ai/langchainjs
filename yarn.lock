@@ -13305,7 +13305,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/xai@workspace:*, @langchain/xai@workspace:libs/langchain-xai":
+"@langchain/xai@*, @langchain/xai@workspace:*, @langchain/xai@workspace:libs/langchain-xai":
   version: 0.0.0-use.local
   resolution: "@langchain/xai@workspace:libs/langchain-xai"
   dependencies:
@@ -33472,6 +33472,7 @@ __metadata:
     "@langchain/openai": ">=0.1.0 <0.5.0"
     "@langchain/scripts": ">=0.1.0 <0.2.0"
     "@langchain/textsplitters": ">=0.0.0 <0.2.0"
+    "@langchain/xai": "*"
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.2
@@ -33530,6 +33531,7 @@ __metadata:
     "@langchain/groq": "*"
     "@langchain/mistralai": "*"
     "@langchain/ollama": "*"
+    "@langchain/xai": "*"
     axios: "*"
     cheerio: "*"
     handlebars: ^4.7.8
@@ -33557,6 +33559,8 @@ __metadata:
     "@langchain/mistralai":
       optional: true
     "@langchain/ollama":
+      optional: true
+    "@langchain/xai":
       optional: true
     axios:
       optional: true
