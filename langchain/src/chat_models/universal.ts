@@ -856,7 +856,6 @@ export async function initChatModel<
     if (modelProvider) {
       paramsCopy.modelProvider = modelProvider;
     }
-    console.log("paramsCopy", paramsCopy);
     return new _ConfigurableModel<RunInput, CallOptions>({
       defaultConfig: paramsCopy,
       configPrefix,
