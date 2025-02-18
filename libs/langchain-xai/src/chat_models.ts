@@ -396,7 +396,7 @@ export class ChatXAI extends ChatOpenAI<ChatXAICallOptions> {
   }
 
   _llmType() {
-    return "xAI";
+    return "xai";
   }
 
   get lc_secrets(): { [key: string]: string } | undefined {

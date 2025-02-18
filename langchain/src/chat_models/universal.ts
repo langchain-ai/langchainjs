@@ -50,6 +50,7 @@ const _SUPPORTED_PROVIDERS = [
   "bedrock",
   "cerebras",
   "deepseek",
+  "xai",
 ] as const;
 
 export type ChatModelProvider = (typeof _SUPPORTED_PROVIDERS)[number];
@@ -135,6 +136,10 @@ async function _initChatModelHelper(
         const { ChatDeepSeek } = await import("@langchain/deepseek");
         return new ChatDeepSeek({ model, ...passedParams });
       }
+      case "xai": {
+        const { ChatXAI } = await import("@langchain/xai");
+        return new ChatXAI({ model, ...passedParams });
+      }
       case "fireworks": {
         const { ChatFireworks } = await import(
           // We can not 'expect-error' because if you explicitly build `@langchain/community`
@@ -194,7 +199,8 @@ export function _inferModelProvider(modelName: string): string | undefined {
   if (
     modelName.startsWith("gpt-3") ||
     modelName.startsWith("gpt-4") ||
-    modelName.startsWith("o1")
+    modelName.startsWith("o1") ||
+    modelName.startsWith("o3")
   ) {
     return "openai";
   } else if (modelName.startsWith("claude")) {
@@ -618,6 +624,7 @@ export async function initChatModel<
  *   - ollama (@langchain/ollama)
  *   - cerebras (@langchain/cerebras)
  *   - deepseek (@langchain/deepseek)
+ *   - xai (@langchain/xai)
  * @param {string[] | "any"} [fields.configurableFields] - Which model parameters are configurable:
  *   - undefined: No configurable fields.
  *   - "any": All fields are configurable. (See Security Note in description)
