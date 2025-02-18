@@ -814,7 +814,7 @@ export async function initChatModel<
     ...(fields ?? {}),
   };
   if (modelProvider === undefined && model?.includes(":")) {
-    const modelComponents = model.split(":", 1);
+    const modelComponents = model.split(":", 2);
     if (
       _SUPPORTED_PROVIDERS.includes(modelComponents[0] as ChatModelProvider)
     ) {

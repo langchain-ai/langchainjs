@@ -7,7 +7,7 @@ const gpt4o = await initChatModel("gpt-4o", {
 });
 
 // You can also specify the model provider in the model name like this in
-// langchain>=0.3.17:
+// langchain>=0.3.18:
 
 // Returns a @langchain/anthropic ChatAnthropic instance.
 const claudeOpus = await initChatModel("anthropic:claude-3-opus-20240229", {
