@@ -62,12 +62,18 @@ test("Initialize non-configurable models", async () => {
 });
 
 test("Works with model provider in model name", async () => {
-  const gpt4 = await initChatModel("openai:gpt-4o-mini", {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let error: any;
+  const o3Mini = await initChatModel("openai:o3-mini", {
     temperature: 0.25,
     apiKey: openAIApiKey,
   });
-  const result = await gpt4.invoke("what's your name");
-  expect(result).toBeDefined();
+  try {
+    await o3Mini.invoke("what's your name");
+  } catch (e) {
+    error = e;
+  }
+  expect(error.message).toContain("temperature");
 });
 
 test("Create a partially configurable model with no default model", async () => {
