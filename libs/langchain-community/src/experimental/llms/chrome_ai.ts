@@ -194,7 +194,7 @@ export class ChromeAI extends LLM<ChromeAICallOptions> {
 
       let previousContent = "";
       for await (const chunk of iterableStream) {
-        const newContent = chunk.slice(previousContent.length);
+        const newContent = chunk;
         previousContent += newContent;
         yield new GenerationChunk({
           text: newContent,
