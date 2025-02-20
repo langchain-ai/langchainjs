@@ -11990,7 +11990,6 @@ __metadata:
     eslint-plugin-no-instanceof: ^1.0.1
     eslint-plugin-prettier: ^4.2.1
     expr-eval: ^2.0.2
-    faiss-node: ^0.5.1
     fast-xml-parser: ^4.5.1
     firebase-admin: ^11.9.0 || ^12.0.0
     flat: ^5.0.2
@@ -12133,7 +12132,6 @@ __metadata:
     dria: ^0.0.3
     duck-duck-scrape: ^2.2.5
     epub2: ^3.0.1
-    faiss-node: ^0.5.1
     fast-xml-parser: "*"
     firebase-admin: ^11.9.0 || ^12.0.0
     google-auth-library: "*"
@@ -12334,8 +12332,6 @@ __metadata:
     duck-duck-scrape:
       optional: true
     epub2:
-      optional: true
-    faiss-node:
       optional: true
     fast-xml-parser:
       optional: true
@@ -13309,7 +13305,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/xai@workspace:*, @langchain/xai@workspace:libs/langchain-xai":
+"@langchain/xai@*, @langchain/xai@workspace:*, @langchain/xai@workspace:libs/langchain-xai":
   version: 0.0.0-use.local
   resolution: "@langchain/xai@workspace:libs/langchain-xai"
   dependencies:
@@ -13339,7 +13335,7 @@ __metadata:
     rollup: ^4.5.2
     ts-jest: ^29.1.0
     typescript: <5.2.0
-    zod: ^3.22.4
+    zod: ^3.24.2
     zod-to-json-schema: ^3.23.1
   peerDependencies:
     "@langchain/core": ">=0.2.21 <0.4.0"
@@ -27897,7 +27893,6 @@ __metadata:
     eslint-plugin-prettier: ^4.2.1
     eslint-plugin-unused-imports: ^3.0.0
     exa-js: ^1.0.12
-    faiss-node: ^0.5.1
     firebase-admin: ^12.0.0
     graphql: ^16.6.0
     hdb: ^0.19.8
@@ -28213,18 +28208,6 @@ __metadata:
   bin:
     extract-zip: cli.js
   checksum: 8cbda9debdd6d6980819cc69734d874ddd71051c9fe5bde1ef307ebcedfe949ba57b004894b585f758b7c9eeeea0e3d87f2dda89b7d25320459c2c9643ebb635
-  languageName: node
-  linkType: hard
-
-"faiss-node@npm:^0.5.1":
-  version: 0.5.1
-  resolution: "faiss-node@npm:0.5.1"
-  dependencies:
-    bindings: ^1.5.0
-    node-addon-api: ^6.0.0
-    node-gyp: latest
-    prebuild-install: ^7.1.1
-  checksum: 9c8ba45c004151be6e94460a30b46fdd854de5f067fd18757f388e103276bb4d479db66cd0475961c447c40c11df629612144d31af932984d4b5ca5c5276f508
   languageName: node
   linkType: hard
 
@@ -33489,6 +33472,7 @@ __metadata:
     "@langchain/openai": ">=0.1.0 <0.5.0"
     "@langchain/scripts": ">=0.1.0 <0.2.0"
     "@langchain/textsplitters": ">=0.0.0 <0.2.0"
+    "@langchain/xai": "*"
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.2
@@ -33547,6 +33531,7 @@ __metadata:
     "@langchain/groq": "*"
     "@langchain/mistralai": "*"
     "@langchain/ollama": "*"
+    "@langchain/xai": "*"
     axios: "*"
     cheerio: "*"
     handlebars: ^4.7.8
@@ -33574,6 +33559,8 @@ __metadata:
     "@langchain/mistralai":
       optional: true
     "@langchain/ollama":
+      optional: true
+    "@langchain/xai":
       optional: true
     axios:
       optional: true
@@ -35560,15 +35547,6 @@ __metadata:
   dependencies:
     node-gyp: latest
   checksum: 3de396e23cc209f539c704583e8e99c148850226f6e389a641b92e8967953713228109f919765abc1f4355e801e8f41842f96210b8d61c7dcc10a477002dcf00
-  languageName: node
-  linkType: hard
-
-"node-addon-api@npm:^6.0.0":
-  version: 6.0.0
-  resolution: "node-addon-api@npm:6.0.0"
-  dependencies:
-    node-gyp: latest
-  checksum: a34a901b9f0d6d201a173e12ed378033e4e0f27f77fd27c225dc7e6f96e88a88e94bd78b2b0404fc95deee20a137f1cbfc92738cbfba38862ed9b6c2e61c1ab2
   languageName: node
   linkType: hard
 

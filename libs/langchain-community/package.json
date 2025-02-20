@@ -1,6 +1,6 @@
 {
   "name": "@langchain/community",
-  "version": "0.3.30",
+  "version": "0.3.31",
   "description": "Third-party integrations for LangChain.js",
   "type": "module",
   "engines": {
@@ -166,7 +166,6 @@
     "eslint-plugin-jest": "^27.6.0",
     "eslint-plugin-no-instanceof": "^1.0.1",
     "eslint-plugin-prettier": "^4.2.1",
-    "faiss-node": "^0.5.1",
     "fast-xml-parser": "^4.5.1",
     "firebase-admin": "^11.9.0 || ^12.0.0",
     "google-auth-library": "^9.10.0",
@@ -303,7 +302,6 @@
     "dria": "^0.0.3",
     "duck-duck-scrape": "^2.2.5",
     "epub2": "^3.0.1",
-    "faiss-node": "^0.5.1",
     "fast-xml-parser": "*",
     "firebase-admin": "^11.9.0 || ^12.0.0",
     "google-auth-library": "*",
@@ -582,9 +580,6 @@
       "optional": true
     },
     "epub2": {
-      "optional": true
-    },
-    "faiss-node": {
       "optional": true
     },
     "fast-xml-parser": {
