@@ -235,7 +235,7 @@ describe("Mock ChatGoogle - Gemini", () => {
     const { generationConfig } = data;
     expect(generationConfig).toHaveProperty("temperature");
     expect(generationConfig.temperature).toEqual(0.8);
-    expect(generationConfig).not.toHaveProperty("topP")
+    expect(generationConfig).not.toHaveProperty("topP");
 
     expect(data.contents).toBeDefined();
     expect(data.contents.length).toEqual(3);
