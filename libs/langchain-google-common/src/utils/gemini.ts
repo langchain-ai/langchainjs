@@ -1226,6 +1226,14 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
       }
     }
 
+    // Remove any undefined properties, so we don't send them
+    let attribute: keyof GeminiGenerationConfig;
+    for (attribute in ret) {
+      if (ret[attribute] === undefined) {
+        delete ret[attribute];
+      }
+    }
+
     return ret;
   }
 
