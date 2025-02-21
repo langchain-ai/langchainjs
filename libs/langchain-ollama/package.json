@@ -1,6 +1,6 @@
 {
   "name": "@langchain/ollama",
-  "version": "0.1.5",
+  "version": "0.2.0",
   "description": "Ollama integration for LangChain.js",
   "type": "module",
   "engines": {
@@ -32,8 +32,10 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "ollama": "^0.5.9",
-    "uuid": "^10.0.0"
+    "ollama": "^0.5.12",
+    "uuid": "^10.0.0",
+    "zod": "^3.24.1",
+    "zod-to-json-schema": "^3.24.1"
   },
   "peerDependencies": {
     "@langchain/core": ">=0.2.21 <0.4.0"
@@ -62,9 +64,7 @@
     "release-it": "^17.6.0",
     "rollup": "^4.5.2",
     "ts-jest": "^29.1.0",
-    "typescript": "<5.2.0",
-    "zod": "^3.22.4",
-    "zod-to-json-schema": "^3.23.0"
+    "typescript": "<5.2.0"
   },
   "publishConfig": {
     "access": "public"

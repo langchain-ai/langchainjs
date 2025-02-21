@@ -4,6 +4,8 @@ This website is built using [Docusaurus 2](https://docusaurus.io/), a modern sta
 
 ### Installation
 
+First, make sure you have [dependencies installed](https://github.com/langchain-ai/langchainjs/blob/main/CONTRIBUTING.md#install-dependencies).
+
 ```
 $ yarn
 ```
