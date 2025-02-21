@@ -6,7 +6,6 @@ import { HumanMessage, AIMessage } from "@langchain/core/messages";
 import { DsqlSigner } from "@aws-sdk/dsql-signer";
 import { AuroraDsqlChatMessageHistory } from "../message/aurora_dsql.js";
 
-
 async function getAdminAuthToken() {
   if (!process.env.DSQL_ENDPOINT)
     throw new Error("No endpoint configured for DSQL");
@@ -17,12 +16,12 @@ async function getAdminAuthToken() {
       accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
       secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
       // sessionToken: process.env.AWS_SESSION_TOKEN!
-    }
+    },
   });
   return await signer.getDbConnectAdminAuthToken();
 }
 
- async function getPostgresqlPool() {
+async function getPostgresqlPool() {
   const token = await getAdminAuthToken();
   if (!token) throw new Error("Auth token error for DSQL");
 
@@ -175,5 +174,4 @@ describe.skip("Postgres Chat History", () => {
     expect(resultWithHistory).toEqual(expectedMessages);
     expect(resultWithHistory[0].id).toEqual(aiMessageId);
   });
-
 });
