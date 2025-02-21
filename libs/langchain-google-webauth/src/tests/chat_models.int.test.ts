@@ -23,6 +23,7 @@ import {
 import {
   GeminiTool,
   GooglePlatformType,
+  GoogleRequestLogger,
   GoogleRequestRecorder,
 } from "@langchain/google-common";
 import { BaseCallbackHandler } from "@langchain/core/callbacks/base";
@@ -326,7 +327,7 @@ describe.each(testGeminiModelNames)(
     function newChatGoogle(fields?: ChatGoogleInput): ChatGoogle {
       // const logger = new GoogleRequestLogger();
       recorder = new GoogleRequestRecorder();
-      callbacks = [recorder];
+      callbacks = [recorder, new GoogleRequestLogger()];
 
       const apiKey =
         platformType === "gai"
@@ -449,6 +450,8 @@ describe.each(testGeminiModelNames)(
       ];
       const model = newChatGoogle().bind({
         tools,
+        temperature: 0.1,
+        maxOutputTokens: 8000,
       });
       const result = await model.invoke("Run a test on the cobalt project");
       expect(result).toHaveProperty("content");
@@ -838,6 +841,7 @@ describe.each(testGeminiModelNames)(
       const result = await model.invoke("Who won the 2024 MLB World Series?");
       expect(result.content as string).toContain("Dodgers");
       expect(result).toHaveProperty("response_metadata");
+      console.log(JSON.stringify(result.response_metadata, null, 1));
       expect(result.response_metadata).toHaveProperty("groundingMetadata");
       expect(result.response_metadata).toHaveProperty("groundingSupport");
     });
