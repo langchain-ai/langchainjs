@@ -990,7 +990,6 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
       tool_calls: combinedToolCalls.tool_calls,
       invalid_tool_calls: combinedToolCalls.invalid_tool_calls,
     });
-    console.log(message);
     return [
       new ChatGenerationChunk({
         message,
