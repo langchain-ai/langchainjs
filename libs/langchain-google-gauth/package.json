@@ -36,7 +36,7 @@
   "license": "MIT",
   "dependencies": {
     "@langchain/google-common": "~0.1.8",
-    "google-auth-library": "^8.9.0"
+    "google-auth-library": "^9.15.1"
   },
   "peerDependencies": {
     "@langchain/core": ">=0.2.21 <0.4.0"
