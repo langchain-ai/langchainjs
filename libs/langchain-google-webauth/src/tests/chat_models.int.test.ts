@@ -27,6 +27,7 @@ import {
 } from "@langchain/google-common";
 import { BaseCallbackHandler } from "@langchain/core/callbacks/base";
 import { concat } from "@langchain/core/utils/stream";
+import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import fs from "fs/promises";
 import {
   ChatPromptTemplate,
@@ -296,11 +297,11 @@ const testGeminiModelNames = [
   },
   { modelName: "gemini-1.5-flash-002", platformType: "gcp", apiVersion: "v1" },
   {
-    modelName: "gemini-2.0-flash-exp",
+    modelName: "gemini-2.0-flash-001",
     platformType: "gai",
     apiVersion: "v1beta",
   },
-  { modelName: "gemini-2.0-flash-exp", platformType: "gcp", apiVersion: "v1" },
+  { modelName: "gemini-2.0-flash-001", platformType: "gcp", apiVersion: "v1" },
 
   // Flash Thinking doesn't have functions or other features
   // {modelName: "gemini-2.0-flash-thinking-exp", platformType: "gai"},
@@ -327,11 +328,17 @@ describe.each(testGeminiModelNames)(
       recorder = new GoogleRequestRecorder();
       callbacks = [recorder];
 
+      const apiKey =
+        platformType === "gai"
+          ? getEnvironmentVariable("TEST_API_KEY")
+          : undefined;
+
       return new ChatGoogle({
         modelName,
         platformType: platformType as GooglePlatformType,
         apiVersion,
         callbacks,
+        apiKey,
         ...(fields ?? {}),
       });
     }
@@ -348,6 +355,14 @@ describe.each(testGeminiModelNames)(
     test("invoke", async () => {
       const model = newChatGoogle();
       const res = await model.invoke("What is 1 + 1?");
+
+      const connectionUrl = recorder?.request?.connection?.url;
+      const connectionUrlMatch =
+        model.platform === "gcp"
+          ? /https:\/\/.+-aiplatform.googleapis.com/
+          : /https:\/\/generativelanguage.googleapis.com/;
+      expect(connectionUrl).toMatch(connectionUrlMatch);
+
       expect(res).toBeDefined();
       expect(res._getType()).toEqual("ai");
 

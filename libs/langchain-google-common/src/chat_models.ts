@@ -246,12 +246,7 @@ export abstract class ChatGoogleBase<AuthOptions>
   }
 
   buildApiKey(fields?: GoogleAIBaseLLMInput<AuthOptions>): string | undefined {
-    if (fields?.platformType !== "gcp") {
-      return fields?.apiKey ?? getEnvironmentVariable("GOOGLE_API_KEY");
-    } else {
-      // GCP doesn't support API Keys
-      return undefined;
-    }
+    return fields?.apiKey ?? getEnvironmentVariable("GOOGLE_API_KEY");
   }
 
   buildClient(
