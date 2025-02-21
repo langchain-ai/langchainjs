@@ -22,6 +22,7 @@ import {
 } from "@langchain/core/outputs";
 import { StructuredToolParams } from "@langchain/core/tools";
 import { isLangChainTool } from "@langchain/core/utils/function_calling";
+import { concat } from "@langchain/core/utils/stream";
 import type {
   GoogleLLMResponse,
   GoogleAIModelParams,
@@ -911,14 +912,16 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     return gen.map((item) => item.text ?? "").join("");
   }
 
+  /*
+   * We don't really need the entire AIMessageChunk here, but it is
+   * a conventient way to combine all the Tool Calling information.
+   */
   function combineToolCalls(gen: ChatGeneration[]): AIMessageChunk {
-    const ret = new AIMessageChunk("");
+    let ret = new AIMessageChunk("");
 
     gen.forEach((item: ChatGeneration) => {
       const message: AIMessageChunk = item?.message as AIMessageChunk;
-      ret.tool_calls!.push(...(message?.tool_calls ?? []));
-      ret.invalid_tool_calls!.push(...(message?.invalid_tool_calls ?? []));
-      ret.tool_call_chunks!.push(...(message?.tool_call_chunks ?? []));
+      ret = concat(ret, message);
     });
 
     return ret;
