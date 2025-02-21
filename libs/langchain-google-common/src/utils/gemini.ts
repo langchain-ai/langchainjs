@@ -801,11 +801,6 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const generationInfo: Record<string, any> = {};
 
-    // Handle some of the "reasoning" elements
-    // if (Object.hasOwn(part, "thought")) {
-    //   generationInfo.thought = (part as GeminiPartText).thought;
-    // }
-
     return new ChatGenerationChunk({
       text,
       message,
