@@ -13,7 +13,7 @@ import { StringOutputParser } from "@langchain/core/output_parsers";
 
 async function getPostgresqlPool() {
   const signer = new DsqlSigner({
-    hostname: process.env.DSQL_ENDPOINT,
+    hostname: process.env.DSQL_ENDPOINT!,
   });
 
   const token = await signer.getDbConnectAdminAuthToken();
