@@ -841,8 +841,7 @@ export class ChatOllama
           parsed: RunOutput;
         }
       > {
-    // TODO: Make this method the default in a minor bump
-    if (config?.method === "jsonSchema") {
+    if (config?.method === undefined || config?.method === "jsonSchema") {
       const outputSchemaIsZod = isZodSchema(outputSchema);
       const jsonSchema = outputSchemaIsZod
         ? zodToJsonSchema(outputSchema)
