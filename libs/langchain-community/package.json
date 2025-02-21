@@ -58,6 +58,7 @@
     "@aws-sdk/client-sagemaker-runtime": "^3.749.0",
     "@aws-sdk/client-sfn": "^3.749.0",
     "@aws-sdk/credential-provider-node": "^3.749.0",
+    "@aws-sdk/dsql-signer": "^3.738.0",
     "@aws-sdk/types": "^3.734.0",
     "@azure/search-documents": "^12.0.0",
     "@azure/storage-blob": "^12.15.0",
@@ -379,6 +380,9 @@
       "optional": true
     },
     "@aws-sdk/credential-provider-node": {
+      "optional": true
+    },
+    "@aws-sdk/dsql-signer": {
       "optional": true
     },
     "@azure/search-documents": {
@@ -2603,6 +2607,15 @@
       "import": "./stores/message/postgres.js",
       "require": "./stores/message/postgres.cjs"
     },
+    "./stores/message/aurora_dsql": {
+      "types": {
+        "import": "./stores/message/aurora_dsql.d.ts",
+        "require": "./stores/message/aurora_dsql.d.cts",
+        "default": "./stores/message/aurora_dsql.d.ts"
+      },
+      "import": "./stores/message/aurora_dsql.js",
+      "require": "./stores/message/aurora_dsql.cjs"
+    },
     "./stores/message/redis": {
       "types": {
         "import": "./stores/message/redis.d.ts",
@@ -4041,6 +4054,10 @@
     "stores/message/postgres.js",
     "stores/message/postgres.d.ts",
     "stores/message/postgres.d.cts",
+    "stores/message/aurora_dsql.cjs",
+    "stores/message/aurora_dsql.js",
+    "stores/message/aurora_dsql.d.ts",
+    "stores/message/aurora_dsql.d.cts",
     "stores/message/redis.cjs",
     "stores/message/redis.js",
     "stores/message/redis.d.ts",
