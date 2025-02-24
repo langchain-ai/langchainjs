@@ -35,7 +35,8 @@ type Comparator =
   | "$in"
   | "$nin"
   | "$between"
-  | "$like";
+  | "$like"
+  | "$contains"; 
 // Filter using comparison operators
 // Defines the relationship between a comparison operator and its value
 type ComparatorFilter = {
@@ -74,6 +75,11 @@ const LOGICAL_OPERATORS_TO_SQL: Record<string, string> = {
   $and: "AND",
   $or: "OR",
 };
+
+const CONTAINS_OPERATOR = "$contains";
+
+const INTERMEDIATE_TABLE_NAME = "intermediate_result";
+
 
 const HANA_DISTANCE_FUNCTION: Record<DistanceStrategy, [string, string]> = {
   cosine: ["COSINE_SIMILARITY", "DESC"],
@@ -509,7 +515,18 @@ export class HanaDB extends VectorStore {
               `Operator '${specialOp}' expects a non-undefined value.`
             );
           }
-        } else if (specialOp in IN_OPERATORS_TO_SQL) {
+        } else if (specialOp == CONTAINS_OPERATOR) {
+          // Special handling for keyword search
+          operator = CONTAINS_OPERATOR;
+          if (specialVal !== undefined) {
+            queryTuple.push(specialVal.toString());
+          } else {
+            throw new Error(
+              `Operator '${specialOp}' expects a non-undefined value.`
+            );
+          }
+        }        
+        else if (specialOp in IN_OPERATORS_TO_SQL) {
           operator = IN_OPERATORS_TO_SQL[specialOp];
           if (Array.isArray(specialVal)) {
             const placeholders = Array(specialVal.length).fill("?").join(",");
@@ -527,13 +544,87 @@ export class HanaDB extends VectorStore {
         throw new Error(`Unsupported filter data-type: ${typeof filterValue}`);
       }
 
-      // Metadata column handling
-      const selector = this.specificMetadataColumns.includes(key)
+      if (operator === CONTAINS_OPERATOR) {
+        // Instead of a normal clause, create a keyword search condition.
+        whereStr += `SCORE(? IN ("${key}" EXACT SEARCH MODE 'text')) > 0`;
+      } else {
+      // Metadata column handling (not required in keyword search)
+        const selector = this.specificMetadataColumns.includes(key)
         ? `"${key}"`
         : `JSON_VALUE(${this.metadataColumn}, '$.${key}')`;
       whereStr += `${selector} ${operator} ${sqlParam}`;
+      }
     });
     return [whereStr, queryTuple];
+  }
+
+  /**
+   * Extract metadata columns used with `$contains` in the filter.
+   *
+   * Scans the filter to find unspecific metadata columns used 
+   * with the `$contains` operator.
+   *
+   * @param filter - (Optional) A filter object that may include nested filter conditions.
+   * @returns An array of unique metadata field names (as strings) that are used
+   *          with the "$contains" operator.
+   */
+  private extractKeywordSearchColumns(filter?: this["FilterType"]): string[] {
+    const keywordColumns = new Set<string>();
+  
+    const recurseFilters = (f?: this["FilterType"], parentKey?: string): void => {
+      if (!f || typeof f !== "object") return;
+  
+      Object.entries(f).forEach(([key, value]) => {
+        if (key === CONTAINS_OPERATOR) {
+          if (
+            parentKey &&
+            parentKey !== this.contentColumn &&
+            !this.specificMetadataColumns.includes(parentKey)
+          ) {
+            keywordColumns.add(parentKey);
+          }
+        } else if (key in LOGICAL_OPERATORS_TO_SQL) {
+          // Assume it's an array of filters
+          (value as this["FilterType"][]).forEach((subfilter) => recurseFilters(subfilter));
+        } else if (typeof value === "object" && value !== null) {
+          recurseFilters(value as this["FilterType"], key);
+        }
+      });
+    };
+  
+    recurseFilters(filter);
+    return [...keywordColumns];
+  }
+    
+  /**
+   * Generate a SQL `WITH` clause to project metadata columns for keyword search.
+   *
+   * 
+   * Example:
+   *       Input: ["title", "author"]
+   *       Output:
+   *       WITH intermediate_result AS (
+   *           SELECT *,
+   *           JSON_VALUE(metadata_column, '$.title') AS "title",
+   *           JSON_VALUE(metadata_column, '$.author') AS "author"
+   *           FROM "table_name"
+   *       )
+   *     *
+   * @param projectedMetadataColumns - List of metadata column names for projection.
+   * @returns A SQL `WITH` clause string.
+   */
+  private createMetadataProjection(
+    projectedMetadataColumns: string[]
+  ): string {
+    const metadataColumns = projectedMetadataColumns.map(
+      (col) =>
+        `JSON_VALUE(${this.metadataColumn}, '$.${col}') AS "${col}"`
+    );
+    return (
+      `WITH ${INTERMEDIATE_TABLE_NAME} AS (` +
+      `SELECT *, ${metadataColumns.join(", ")} ` +
+      `FROM "${this.tableName}")`
+    );
   }
 
   /**
@@ -778,9 +869,7 @@ export class HanaDB extends VectorStore {
    * Splits the given metadata object into two parts:
    * 1. The original metadata (unchanged).
    * 2. An array of special metadata values corresponding to each column
-   *    listed in `specificMetadataColumns`. For each column in that list,
-   *    the function extracts the value from the metadata or returns `null`
-   *    if it does not exist.
+   *    listed in `specificMetadataColumns`. 
    *
    * @param metadata - The metadata object from which to extract special values.
    * @returns A tuple where the first element is the original metadata object,
@@ -872,12 +961,23 @@ export class HanaDB extends VectorStore {
     const distanceFuncName = HANA_DISTANCE_FUNCTION[this.distanceStrategy][0];
     // Convert the embedding vector to a string for SQL query
     const embeddingAsString = sanitizedEmbedding.join(",");
-    let sqlStr = `SELECT TOP ${sanitizedK}
+
+    // Keyword search: extract metadata columns used with $contains
+    const projectedMetadataColumns = this.extractKeywordSearchColumns(filter);
+    let metadataProjection = "";
+    let fromClause = `"${this.tableName}"`;
+    if (projectedMetadataColumns.length > 0) {
+      metadataProjection = this.createMetadataProjection(projectedMetadataColumns);
+      fromClause = INTERMEDIATE_TABLE_NAME;
+    }
+
+    let sqlStr = `${metadataProjection}
+                    SELECT TOP ${sanitizedK}
                     "${this.contentColumn}", 
                     "${this.metadataColumn}", 
                     TO_NVARCHAR("${this.vectorColumn}") AS VECTOR, 
                     ${distanceFuncName}("${this.vectorColumn}", TO_REAL_VECTOR('[${embeddingAsString}]')) AS CS
-                    FROM "${this.tableName}"`;
+                    FROM ${fromClause}`;
     // Add order by clause to sort by similarity
     const orderStr = ` ORDER BY CS ${
       HANA_DISTANCE_FUNCTION[this.distanceStrategy][1]
