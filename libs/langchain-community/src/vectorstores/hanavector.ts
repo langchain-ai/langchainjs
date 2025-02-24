@@ -515,7 +515,7 @@ export class HanaDB extends VectorStore {
               `Operator '${specialOp}' expects a non-undefined value.`
             );
           }
-        } else if (specialOp == CONTAINS_OPERATOR) {
+        } else if (specialOp === CONTAINS_OPERATOR) {
           // Special handling for keyword search
           operator = CONTAINS_OPERATOR;
           if (specialVal !== undefined) {
@@ -875,7 +875,7 @@ export class HanaDB extends VectorStore {
    * @returns A tuple where the first element is the original metadata object,
    *          and the second element is an array of special metadata values.
    */
-  private splitOffSpecialMetadata(metadata: any): [any, any[]] {
+  private splitOffSpecialMetadata(metadata: any): [any, (string | null)[]] {
     const specialMetadata: (string | null)[] = [];
     if (!metadata) {
       return [{}, []];
