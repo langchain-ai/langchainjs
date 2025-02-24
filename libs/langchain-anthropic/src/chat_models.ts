@@ -39,6 +39,7 @@ import {
   AnthropicMessageStreamEvent,
   AnthropicRequestOptions,
   AnthropicStreamingMessageCreateParams,
+  AnthropicThinkingConfigParam,
   AnthropicToolChoice,
   ChatAnthropicToolType,
 } from "./types.js";
@@ -86,6 +87,12 @@ function _documentsInParams(
     }
   }
   return false;
+}
+
+function _thinkingInParams(
+  params: AnthropicMessageCreateParams | AnthropicStreamingMessageCreateParams
+): boolean {
+  return !!(params.thinking && params.thinking.type === "enabled");
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -173,6 +180,11 @@ export interface AnthropicInput {
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   createClient?: (options: ClientOptions) => any;
+
+  /**
+   * Options for extended thinking.
+   */
+  thinking?: AnthropicThinkingConfigParam;
 }
 
 /**
@@ -631,6 +643,8 @@ export class ChatAnthropicMessages<
 
   clientOptions: ClientOptions;
 
+  thinking: AnthropicThinkingConfigParam = { type: "disabled" };
+
   // Used for non-streaming requests
   protected batchClient: Anthropic;
 
@@ -679,6 +693,8 @@ export class ChatAnthropicMessages<
 
     this.streaming = fields?.streaming ?? false;
     this.streamUsage = fields?.streamUsage ?? this.streamUsage;
+
+    this.thinking = fields?.thinking ?? this.thinking;
 
     this.createClient =
       fields?.createClient ??
@@ -766,6 +782,30 @@ export class ChatAnthropicMessages<
       | Anthropic.Messages.ToolChoiceTool
       | undefined = handleToolChoice(options?.tool_choice);
 
+    if (this.thinking.type === "enabled") {
+      if (this.topK !== -1) {
+        throw new Error("topK is not supported when thinking is enabled");
+      }
+      if (this.topP !== -1) {
+        throw new Error("topP is not supported when thinking is enabled");
+      }
+      if (this.temperature !== 1) {
+        throw new Error(
+          "temperature is not supported when thinking is enabled"
+        );
+      }
+
+      return {
+        model: this.model,
+        stop_sequences: options?.stop ?? this.stopSequences,
+        stream: this.streaming,
+        max_tokens: this.maxTokens,
+        tools: this.formatStructuredToolToAnthropic(options?.tools),
+        tool_choice,
+        thinking: this.thinking,
+        ...this.invocationKwargs,
+      };
+    }
     return {
       model: this.model,
       temperature: this.temperature,
@@ -776,6 +816,7 @@ export class ChatAnthropicMessages<
       max_tokens: this.maxTokens,
       tools: this.formatStructuredToolToAnthropic(options?.tools),
       tool_choice,
+      thinking: this.thinking,
       ...this.invocationKwargs,
     };
   }
@@ -811,7 +852,9 @@ export class ChatAnthropicMessages<
       stream: true,
     } as const;
     const coerceContentToString =
-      !_toolsInParams(payload) && !_documentsInParams(payload);
+      !_toolsInParams(payload) &&
+      !_documentsInParams(payload) &&
+      !_thinkingInParams(payload);
 
     const stream = await this.createStreamWithRetry(payload, {
       headers: options.headers,
