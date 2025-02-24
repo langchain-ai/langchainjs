@@ -745,23 +745,56 @@ export class HanaDB extends VectorStore {
     const texts = documents.map((doc) => doc.pageContent);
     const metadatas = documents.map((doc) => doc.metadata);
     const client = this.connection;
-    const sqlParams: [string, string, string][] = texts.map((text, i) => {
+    const sqlParams: [string, string, string, ...any[]][] = texts.map((text, i) => {
       const metadata = Array.isArray(metadatas) ? metadatas[i] : metadatas;
+      const [remainingMetadata, specialMetadata] = this.splitOffSpecialMetadata(metadata);
       // Ensure embedding is generated or provided
       const embeddingString = `[${vectors[i].join(", ")}]`;
       // Prepare the SQL parameters
       return [
         text,
-        JSON.stringify(this.sanitizeMetadataKeys(metadata)),
-        embeddingString,
+        JSON.stringify(this.sanitizeMetadataKeys(remainingMetadata)),
+        embeddingString, 
+        ...specialMetadata
       ];
     });
+    // Build the column list for the INSERT statement.
+    let specificMetadataColumnsString = "";
+    if (this.specificMetadataColumns.length > 0) {
+      specificMetadataColumnsString =
+        ', "' + this.specificMetadataColumns.join('", "') + '"';
+    }
+    const extraPlaceholders = this.specificMetadataColumns.map(() => ", ?").join("");
+
     // Insert data into the table, bulk insert.
-    const sqlStr = `INSERT INTO "${this.tableName}" ("${this.contentColumn}", "${this.metadataColumn}", "${this.vectorColumn}") 
-                    VALUES (?, ?, TO_REAL_VECTOR(?));`;
+    const sqlStr = `INSERT INTO "${this.tableName}" ("${this.contentColumn}", "${this.metadataColumn}", "${this.vectorColumn}"${specificMetadataColumnsString}) 
+                    VALUES (?, ?, TO_REAL_VECTOR(?)${extraPlaceholders});`;
     const stm = await this.prepareQuery(client, sqlStr);
     await this.executeStatement(stm, sqlParams);
     // stm.execBatch(sqlParams);
+  }
+
+  /**
+   * Splits the given metadata object into two parts:
+   * 1. The original metadata (unchanged).
+   * 2. An array of special metadata values corresponding to each column
+   *    listed in `specificMetadataColumns`. For each column in that list,
+   *    the function extracts the value from the metadata or returns `null`
+   *    if it does not exist.
+   *
+   * @param metadata - The metadata object from which to extract special values.
+   * @returns A tuple where the first element is the original metadata object,
+   *          and the second element is an array of special metadata values.
+   */
+  private splitOffSpecialMetadata(metadata: any): [any, any[]] {
+    const specialMetadata: (string | null)[] = [];
+    if (!metadata) {
+      return [{}, []];
+    }
+    for (const columnName of this.specificMetadataColumns) {
+      specialMetadata.push(metadata[columnName] ?? null);
+    }
+    return [metadata, specialMetadata];
   }
 
   /**
