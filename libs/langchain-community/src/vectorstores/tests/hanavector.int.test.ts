@@ -1147,6 +1147,114 @@ describe("HNSW Index Creation Tests", () => {
   });
 });
 
+describe("Keyword Search Tests", () => {
+  test("keyword search on content and specific metadata column", async () => {
+    const tableNameTest = "TEST_TABLE_KEYWORD_SEARCH_WITHOUT_UNSPECIFIC_METADATA_COL";
+    await dropTable(client, tableNameTest);
+
+    // Create table manually with extra columns "quality" and "start"
+    const sqlStr = `
+      CREATE TABLE "${tableNameTest}" (
+        "VEC_TEXT" NCLOB,
+        "VEC_META" NCLOB,
+        "VEC_VECTOR" REAL_VECTOR,
+        "quality" NVARCHAR(100),
+        "start" INTEGER
+      )
+    `;
+    try {
+      await executeQuery(client, sqlStr);
+    } catch (error) {
+      console.log(error)
+    }
+
+    // Create the vector store using fromTexts with a specific metadata column "quality"
+    const texts = ["foo bar", "hello foo world", "baz"];
+    const metadatas = [
+      { quality: "bad", start: 0, id: 1 },
+      { quality: "good", start: 10, id: 2 },
+      { quality: "ugly", start: 20, id: 3 },
+    ];
+    const vectorStore = await HanaDB.fromTexts(texts, metadatas, embeddings, {
+      connection: client,
+      tableName: tableNameTest,
+      specificMetadataColumns: ["quality"],
+    });
+
+    // Keyword search on content column using $contains operator on VEC_TEXT
+    let keyword = "foo";
+    let docs = await vectorStore.similaritySearch(keyword, 3, {
+      VEC_TEXT: { $contains: keyword },
+    });
+    expect(docs.length).toEqual(2);
+    expect(docs[0].pageContent).toContain(keyword);
+    expect(docs[1].pageContent).toContain(keyword);
+
+
+    // Keyword search on content column with a non-existing keyword
+    let nonExistingKeyword = "nonexistent";
+    docs = await vectorStore.similaritySearch(nonExistingKeyword, 3, {
+      VEC_TEXT: { $contains: nonExistingKeyword },
+    });
+    expect(docs.length).toEqual(0);
+
+    // Keyword search on the specific metadata column "quality"
+    keyword = "good";
+    docs = await vectorStore.similaritySearch(keyword, 3, {
+      quality: { $contains: keyword },
+    });
+    expect(docs.length).toEqual(1);
+    expect(docs[0].metadata.quality).toContain(keyword);
+
+    // Keyword search on metadata with a non-existing keyword
+    nonExistingKeyword = "terrible";
+    docs = await vectorStore.similaritySearch(nonExistingKeyword, 3, {
+      quality: { $contains: nonExistingKeyword },
+    });
+    expect(docs.length).toEqual(0);
+  });
+
+  test("keyword search on unspecific metadata column", async () => {
+    const tableNameTest = "TEST_TABLE_KEYWORD_SEARCH_WITH_UNSPECIFIC_METADATA_COL";
+    await dropTable(client, tableNameTest);
+
+    // Create the vector store without providing specific metadata columns.
+    const texts = ["foo bar", "hello foo world", "baz"];
+    const metadatas = [
+      { quality: "good", id: 1 },
+      { quality: "bad", id: 2 },
+      { quality: "ugly", id: 3 },
+    ];
+    const vectorStore = await HanaDB.fromTexts(texts, metadatas, embeddings, {
+      connection: client,
+      tableName: tableNameTest,
+    });
+
+    // Using a simple filter (without $contains) on unspecific metadata column "quality"
+    const keyword = "good";
+    let docs = await vectorStore.similaritySearch("hello", 5, { quality: keyword });
+    expect(docs.length).toEqual(1);
+    // Assuming the document with "good" appears in the content (e.g. "foo bar")
+    expect(docs[0].metadata.quality).toContain(keyword);
+
+    // Using $contains operator on unspecific metadata column "quality"
+    docs = await vectorStore.similaritySearch("hello", 5, {
+      quality: { $contains: keyword },
+    });
+    expect(docs.length).toEqual(1);
+    expect(docs[0].pageContent).toContain("foo");
+    expect(docs[0].metadata.quality).toContain(keyword);
+
+    // Test with a non-existing keyword on the unspecific metadata column
+    const nonExistingKeyword = "terrible";
+    docs = await vectorStore.similaritySearch(nonExistingKeyword, 3, {
+      quality: { $contains: nonExistingKeyword },
+    });
+    expect(docs.length).toEqual(0);
+  });
+});
+
+
 describe("Filter Tests", () => {
   // Filter Test 1: Applying various filters from TYPE_1_FILTERING_TEST_CASES
   it.each(TYPE_1_FILTERING_TEST_CASES)(

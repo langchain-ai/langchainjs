@@ -123,6 +123,8 @@ export const TYPE_4_FILTERING_TEST_CASES: TestCase[] = [
 export const TYPE_5_FILTERING_TEST_CASES: TestCase[] = [
   { filter: { name: { $like: "a%" } }, expected: [1] },
   { filter: { name: { $like: "%a%" } }, expected: [1, 3] },
+  { filter: { name: { $contains: "bob" } }, expected: [2] },
+  { filter: { name: { $contains: "bo" } }, expected: [] },
 ];
 
 export const TYPE_6_FILTERING_TEST_CASES: TestCase[] = [
