@@ -82,6 +82,16 @@ import ExampleChain from "@examples/indexes/vector_stores/hana_vector/chains.ts"
 
 <CodeBlock language="typescript">{ExampleChain}</CodeBlock>
 
+## Internal Embedding Functionality
+
+SAP HANA Cloud Vector Engine supports computing embeddings directly in the database by leveraging its native `VECTOR_EMBEDDING` function. This approach eliminates the need for an external embedding service, improving performance and enhancing data security.
+
+To enable this functionality, instantiate a `HanaInternalEmbeddings` object with the internal embedding model ID and pass this instance to your `HanaDB` vector store.
+
+import ExampleInternalEmbeddings from "@examples/indexes/vector_stores/hana_vector/internalEmbeddings.ts";
+
+<CodeBlock language="typescript">{ExampleInternalEmbeddings}</CodeBlock>
+
 ## Related
 
 - Vector store [conceptual guide](/docs/concepts/#vectorstores)
