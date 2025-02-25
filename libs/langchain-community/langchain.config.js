@@ -79,6 +79,7 @@ export const config = {
     "embeddings/deepinfra": "embeddings/deepinfra",
     "embeddings/fireworks": "embeddings/fireworks",
     "embeddings/gradient_ai": "embeddings/gradient_ai",
+    "embeddings/hana_internal": "embeddings/hana_internal",
     "embeddings/hf": "embeddings/hf",
     "embeddings/hf_transformers": "embeddings/hf_transformers",
     "embeddings/huggingface_transformers":
