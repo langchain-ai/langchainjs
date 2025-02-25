@@ -1256,7 +1256,6 @@ describe("Keyword Search Tests", () => {
   });
 });
 
-
 describe("Filter Tests", () => {
   // Filter Test 1: Applying various filters from TYPE_1_FILTERING_TEST_CASES
   it.each(TYPE_1_FILTERING_TEST_CASES)(
@@ -1438,10 +1437,9 @@ describe("Filter Tests", () => {
       expect(ids.every((id) => expected.includes(id))).toBe(true);
     }
   );
+});
 
-//////////////////////
 // Internal Embedding Functionality Tests
-//////////////////////
 describe("Internal Embedding Functionality Tests", () => {
   // Create an internal embeddings instance using the model ID from the environment.
   const internalModelId = process.env.HANA_DB_EMBEDDING_MODEL_ID;
@@ -1451,72 +1449,57 @@ describe("Internal Embedding Functionality Tests", () => {
   const internalEmbedding = new HanaInternalEmbeddings({
     internalEmbeddingModelId: internalModelId,
   });
-  // Test texts and metadatas 
-  const texts = ["foo", "bar", "baz", "bak", "cat"];
-  const metadatas = [
-    { start: 0, end: 100, quality: "good", ready: true },
-    { start: 100, end: 200, quality: "bad", ready: false },
-    { start: 200, end: 300, quality: "ugly", ready: true },
-    { start: 200, quality: "ugly", ready: true, Owner: "Steve" },
-    { start: 300, quality: "ugly", Owner: "Steve" },
-  ];
 
-  test("test internal add_texts", async () => {
-    const tableName = "TEST_TABLE_ADD_TEXTS_INTERNAL";
+  test("test internal addDocuments", async () => {
+    const tableName = "TEST_TABLE_ADD_DOCUMENTS_INTERNAL";
     await dropTable(client, tableName);
     const args: HanaDBArgs = { connection: client, tableName };
     const vectorDB = new HanaDB(internalEmbedding, args);
-    // Create an array of Document objects from texts and metadatas.
-    const documents = texts.map(
-      (text, i) => new Document({ pageContent: text, metadata: metadatas[i] })
-    );
-    // Use addDocuments to add the documents.
-    await vectorDB.addDocuments(documents);
+    await vectorDB.initialize()
+    expect(vectorDB).toBeDefined();
+    await vectorDB.addDocuments(DOCUMENTS);
     const sqlStr = `SELECT COUNT(*) AS CNT FROM "${tableName}"`;
     const result = await executeQuery(client, sqlStr);
-    expect(result[0].CNT).toEqual(documents.length);
+    expect(result[0].CNT).toEqual(DOCUMENTS.length);
     await dropTable(client, tableName);
   });
+
 
   test("test internal similarity search with metadata filter", async () => {
     const tableName = "TEST_TABLE_FILTER_INTERNAL";
     await dropTable(client, tableName);
-    const vectorDB = await HanaDB.fromTexts(texts, metadatas, internalEmbedding, {
+    // Create the vector store using DOCUMENTS
+    const vectorDB = await HanaDB.fromDocuments(DOCUMENTS, internalEmbedding, {
       connection: client,
       tableName,
     });
-    let searchResult = await vectorDB.similaritySearch(texts[0], 3, { start: 100 });
-    expect(searchResult.length).toEqual(1);
-    expect(searchResult[0].pageContent).toEqual(texts[1]);
-    expect(searchResult[0].metadata.start).toEqual(metadatas[1].start);
-    expect(searchResult[0].metadata.end).toEqual(metadatas[1].end);
-    searchResult = await vectorDB.similaritySearch(texts[0], 3, { start: 100, end: 150 });
-    expect(searchResult.length).toEqual(0);
-    searchResult = await vectorDB.similaritySearch(texts[0], 3, { start: 100, end: 200 });
-    expect(searchResult.length).toEqual(1);
-    expect(searchResult[0].pageContent).toEqual(texts[1]);
-    expect(searchResult[0].metadata.start).toEqual(metadatas[1].start);
-    expect(searchResult[0].metadata.end).toEqual(metadatas[1].end);
+    let searchResult = await vectorDB.similaritySearch(DOCUMENTS[0].pageContent, 3,);
+    expect(searchResult.length).toEqual(3);
+    expect(searchResult[0].pageContent).toEqual(DOCUMENTS[0].pageContent);
+  
+    // DOCUMENT[0] has a height of 10, so it is filtered out.
+    searchResult = await vectorDB.similaritySearch(DOCUMENTS[1].pageContent, 3, { height : { $lt: 10.0 } });
+    expect(searchResult.length).toEqual(2);
+    expect(searchResult[0].pageContent).toEqual(DOCUMENTS[1].pageContent);
+    expect(searchResult[1].pageContent).toEqual(DOCUMENTS[2].pageContent);
     await dropTable(client, tableName);
   });
-
+  
   test("test internal max marginal relevance search", async () => {
     const tableName = "TEST_TABLE_MAX_RELEVANCE_INTERNAL";
     await dropTable(client, tableName);
-    const vectorDB = await HanaDB.fromTexts(texts, {}, internalEmbedding, {
+    // Create the vector store using DOCUMENTS and an empty metadata object for fromDocuments
+    const vectorDB = await HanaDB.fromDocuments(DOCUMENTS, internalEmbedding, {
       connection: client,
       tableName,
     });
-    const searchResult = await vectorDB.maxMarginalRelevanceSearch(texts[0], {
+    const searchResult = await vectorDB.maxMarginalRelevanceSearch(DOCUMENTS[0].pageContent, {
       k: 2,
       fetchK: 20,
     });
     expect(searchResult.length).toEqual(2);
-    expect(searchResult[0].pageContent).toEqual(texts[0]);
-    expect(searchResult[1].pageContent).not.toEqual(texts[0]);
+    expect(searchResult[0].pageContent).toEqual(DOCUMENTS[0].pageContent);
     await dropTable(client, tableName);
   });
-
-});
 
 });

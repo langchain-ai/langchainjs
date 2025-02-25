@@ -181,6 +181,7 @@ export class HanaDB extends VectorStore {
    */
   public setEmbeddings(embeddings: EmbeddingsInterface): void {
     this.embeddings = embeddings
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     if ((embeddings as any).isHanaInternalEmbeddings === true) {
       this.useInternalEmbeddings = true;
       this.internalEmbeddingModelId = (embeddings as HanaInternalEmbeddings).getModelId();

@@ -34,6 +34,7 @@ export class HanaInternalEmbeddings extends Embeddings {
    * A flag to indicate this class is HANA-specific.
    */
   public readonly isHanaInternalEmbeddings = true;
+  
   constructor(fields: HanaInternalEmbeddingsParams) {
     super(fields);
     this.modelId = fields.internalEmbeddingModelId;
