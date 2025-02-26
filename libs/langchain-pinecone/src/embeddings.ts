@@ -99,8 +99,9 @@ export class PineconeEmbeddings
     const embeddingsList: number[][] = [];
 
     for (let i = 0; i < embeddings.data.length; i += 1) {
-      if (embeddings.data[i].values) {
-        embeddingsList.push(embeddings.data[i].values as number[]);
+      const embedding = embeddings.data[i];
+      if ("values" in embedding && embedding.values) {
+        embeddingsList.push(embedding.values);
       }
     }
     return embeddingsList;
@@ -130,7 +131,7 @@ export class PineconeEmbeddings
         return await this.client.inference.embed(this.model, [text], {});
       });
     }
-    if (embeddings.data[0].values) {
+    if ("values" in embeddings.data[0]) {
       return embeddings.data[0].values as number[];
     } else {
       return [];
