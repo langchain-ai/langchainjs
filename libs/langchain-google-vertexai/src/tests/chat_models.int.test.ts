@@ -661,13 +661,16 @@ describe("Express Gemini Chat", () => {
   });
 });
 
-describe("GAuth Anthropic Chat", () => {
+const testAnthropicModelNames = [
+  // ["claude-3-sonnet@20240229"],
+  // ["claude-3-5-sonnet@20240620"],
+  ["claude-3-5-sonnet-v2@20241022"],
+  ["claude-3-7-sonnet@20250219"],
+]
+
+describe.each(testAnthropicModelNames)("GAuth Anthropic Chat (%s)", (modelName) => {
   let recorder: GoogleRequestRecorder;
   let callbacks: BaseCallbackHandler[];
-
-  // const modelName: string = "claude-3-5-sonnet@20240620";
-  // const modelName: string = "claude-3-sonnet@20240229";
-  const modelName: string = "claude-3-5-sonnet-v2@20241022";
 
   beforeEach(() => {
     recorder = new GoogleRequestRecorder();
