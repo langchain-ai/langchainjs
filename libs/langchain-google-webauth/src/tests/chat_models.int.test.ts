@@ -303,6 +303,12 @@ const testGeminiModelNames = [
     apiVersion: "v1beta",
   },
   { modelName: "gemini-2.0-flash-001", platformType: "gcp", apiVersion: "v1" },
+  {
+    modelName: "gemini-2.0-flash-lite-001",
+    platformType: "gai",
+    apiVersion: "v1beta",
+  },
+  { modelName: "gemini-2.0-flash-lite-001", platformType: "gcp", apiVersion: "v1" },
 
   // Flash Thinking doesn't have functions or other features
   // {modelName: "gemini-2.0-flash-thinking-exp", platformType: "gai"},
@@ -427,6 +433,8 @@ describe.each(testGeminiModelNames)(
     });
 
     test("function", async () => {
+      // gemini-2.0-flash-001: Test occasionally fails due to model regression
+      // gemini-2.0-flash-lite-001: Not supported
       const tools: GeminiTool[] = [
         {
           functionDeclarations: [
@@ -809,6 +817,7 @@ describe.each(testGeminiModelNames)(
     });
 
     test("Supports GoogleSearchRetrievalTool", async () => {
+      // gemini-2.0-flash-lite-001: Not supported
       const searchRetrievalTool = {
         googleSearchRetrieval: {
           dynamicRetrievalConfig: {
@@ -830,6 +839,7 @@ describe.each(testGeminiModelNames)(
     });
 
     test("Supports GoogleSearchTool", async () => {
+      // gemini-2.0-flash-lite-001: Not supported
       const searchTool: GeminiTool = {
         googleSearch: {},
       };
@@ -847,6 +857,7 @@ describe.each(testGeminiModelNames)(
     });
 
     test("Can stream GoogleSearchRetrievalTool", async () => {
+      // gemini-2.0-flash-lite-001: Not supported
       const searchRetrievalTool = {
         googleSearchRetrieval: {
           dynamicRetrievalConfig: {

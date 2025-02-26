@@ -66,6 +66,7 @@ const testGeminiModelNames = [
   ["gemini-1.5-pro-002"],
   ["gemini-1.5-flash-002"],
   ["gemini-2.0-flash-001"],
+  ["gemini-2.0-flash-lite-001"],
   // ["gemini-2.0-flash-thinking-exp-1219"],
 ];
 
@@ -167,6 +168,8 @@ describe.each(testGeminiModelNames)("GAuth Gemini Chat (%s)", (modelName) => {
   });
 
   test("function", async () => {
+    // gemini-2.0-flash-001: Test occasionally fails due to model regression
+    // gemini-2.0-flash-lite-001: Not supported
     const tools: GeminiTool[] = [
       {
         functionDeclarations: [
@@ -560,6 +563,7 @@ describe.each(testGeminiModelNames)("GAuth Gemini Chat (%s)", (modelName) => {
   });
 
   test("Supports GoogleSearchRetrievalTool", async () => {
+    // gemini-2.0-flash-lite-001: Not supported
     const searchRetrievalTool = {
       googleSearchRetrieval: {
         dynamicRetrievalConfig: {
@@ -579,6 +583,7 @@ describe.each(testGeminiModelNames)("GAuth Gemini Chat (%s)", (modelName) => {
   });
 
   test("Supports GoogleSearchTool", async () => {
+    // gemini-2.0-flash-lite-001: Not supported
     const searchTool: GeminiTool = {
       googleSearch: {},
     };
@@ -593,6 +598,7 @@ describe.each(testGeminiModelNames)("GAuth Gemini Chat (%s)", (modelName) => {
   });
 
   test("Can stream GoogleSearchRetrievalTool", async () => {
+    // gemini-2.0-flash-lite-001: Not supported
     const searchRetrievalTool = {
       googleSearchRetrieval: {
         dynamicRetrievalConfig: {
