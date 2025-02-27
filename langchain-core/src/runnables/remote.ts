@@ -122,7 +122,7 @@ function revive(obj: any): any {
           content: obj.content,
           tool_call_id: obj.tool_call_id,
           status: obj.status,
-          artifact: obj.artifact
+          artifact: obj.artifact,
         });
       }
       if (obj.type === "AIMessageChunk") {
