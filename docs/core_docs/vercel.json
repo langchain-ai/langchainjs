@@ -100,6 +100,10 @@
     {
       "source": "/docs/modules/model_io/prompts/quick_start/",
       "destination": "/docs/concepts/prompt_templates"
+    },
+    {
+      "source": "/docs/modules/model_io/prompts(/?)",
+      "destination": "/docs/concepts/prompt_templates"
     }
   ]
 }

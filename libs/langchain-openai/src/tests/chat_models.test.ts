@@ -259,3 +259,15 @@ describe("strict tool calling", () => {
     }
   });
 });
+
+test("Test OpenAI serialization doesn't pass along extra params", async () => {
+  const chat = new ChatOpenAI({
+    apiKey: "test-key",
+    model: "o3-mini",
+    somethingUnexpected: true,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } as any);
+  expect(JSON.stringify(chat)).toEqual(
+    `{"lc":1,"type":"constructor","id":["langchain","chat_models","openai","ChatOpenAI"],"kwargs":{"openai_api_key":{"lc":1,"type":"secret","id":["OPENAI_API_KEY"]},"model":"o3-mini"}}`
+  );
+});

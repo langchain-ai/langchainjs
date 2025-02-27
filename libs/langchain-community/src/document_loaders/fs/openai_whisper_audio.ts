@@ -18,14 +18,18 @@ const MODEL_NAME = "whisper-1";
 export class OpenAIWhisperAudio extends BufferLoader {
   private readonly openAIClient: OpenAIClient;
 
+  private readonly transcriptionCreateParams?: Partial<OpenAIClient.Audio.TranscriptionCreateParams>;
+
   constructor(
     filePathOrBlob: string | Blob,
     fields?: {
       clientOptions?: ClientOptions;
+      transcriptionCreateParams?: Partial<OpenAIClient.Audio.TranscriptionCreateParams>;
     }
   ) {
     super(filePathOrBlob);
     this.openAIClient = new OpenAIClient(fields?.clientOptions);
+    this.transcriptionCreateParams = fields?.transcriptionCreateParams ?? {};
   }
 
   protected async parse(
@@ -38,6 +42,7 @@ export class OpenAIWhisperAudio extends BufferLoader {
       await this.openAIClient.audio.transcriptions.create({
         file: await toFile(raw, fileName),
         model: MODEL_NAME,
+        ...this.transcriptionCreateParams,
       });
     const document = new Document({
       pageContent: transcriptionResponse.text,

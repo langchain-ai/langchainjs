@@ -65,7 +65,7 @@ const calculatorTool = tool((_) => "no-op", {
 const testGeminiModelNames = [
   ["gemini-1.5-pro-002"],
   ["gemini-1.5-flash-002"],
-  ["gemini-2.0-flash-exp"],
+  ["gemini-2.0-flash-001"],
   // ["gemini-2.0-flash-thinking-exp-1219"],
 ];
 
@@ -100,6 +100,11 @@ describe.each(testGeminiModelNames)("GAuth Gemini Chat (%s)", (modelName) => {
       modelName,
     });
     const res = await model.invoke("What is 1 + 1?");
+
+    expect(recorder?.request?.connection?.url).toMatch(
+      /https:\/\/.+-aiplatform.googleapis.com/
+    );
+
     expect(res).toBeDefined();
     expect(res._getType()).toEqual("ai");
 
@@ -307,7 +312,8 @@ describe.each(testGeminiModelNames)("GAuth Gemini Chat (%s)", (modelName) => {
     });
     const blobStore = new ReadThroughBlobStore({
       baseStore: aliasStore,
-      backingStore,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      backingStore: backingStore as any,
     });
     const resolver = new SimpleWebBlobStore();
     const mediaManager = new MediaManager({
@@ -317,7 +323,8 @@ describe.each(testGeminiModelNames)("GAuth Gemini Chat (%s)", (modelName) => {
     const model = new ChatGoogle({
       modelName,
       apiConfig: {
-        mediaManager,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        mediaManager: mediaManager as any,
       },
     });
 
@@ -609,6 +616,42 @@ describe.each(testGeminiModelNames)("GAuth Gemini Chat (%s)", (modelName) => {
       throw new Error("finalMsg is undefined");
     }
     expect(finalMsg.content as string).toContain("Dodgers");
+  });
+});
+
+describe("Express Gemini Chat", () => {
+  // We don't do a lot of tests or across every model, since there are
+  // pretty severe rate limits.
+  const modelName = "gemini-2.0-flash-001";
+
+  let recorder: GoogleRequestRecorder;
+  let callbacks: BaseCallbackHandler[];
+
+  beforeEach(async () => {
+    recorder = new GoogleRequestRecorder();
+    callbacks = [recorder, new GoogleRequestLogger()];
+  });
+
+  test("invoke", async () => {
+    const model = new ChatVertexAI({
+      callbacks,
+      modelName,
+    });
+    const res = await model.invoke("What is 1 + 1?");
+
+    expect(recorder?.request?.connection?.url).toMatch(
+      /https:\/\/aiplatform.googleapis.com/
+    );
+
+    expect(res).toBeDefined();
+    expect(res._getType()).toEqual("ai");
+
+    const aiMessage = res as AIMessageChunk;
+    expect(aiMessage.content).toBeDefined();
+
+    expect(typeof aiMessage.content).toBe("string");
+    const text = aiMessage.content as string;
+    expect(text).toMatch(/(1 + 1 (equals|is|=) )?2.? ?/);
   });
 });
 

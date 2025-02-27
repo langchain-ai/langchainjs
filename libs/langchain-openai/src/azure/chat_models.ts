@@ -3,7 +3,7 @@ import {
   LangSmithParams,
   type BaseChatModelParams,
 } from "@langchain/core/language_models/chat_models";
-import { getEnvironmentVariable } from "@langchain/core/utils/env";
+import { getEnv, getEnvironmentVariable } from "@langchain/core/utils/env";
 import { BaseLanguageModelInput } from "@langchain/core/language_models/base";
 import { BaseMessage } from "@langchain/core/messages";
 import { Runnable } from "@langchain/core/runnables";
@@ -473,6 +473,21 @@ export class AzureChatOpenAI extends ChatOpenAI {
     };
   }
 
+  get lc_serializable_keys(): string[] {
+    return [
+      ...super.lc_serializable_keys,
+      "azureOpenAIApiKey",
+      "azureOpenAIApiVersion",
+      "azureOpenAIBasePath",
+      "azureOpenAIEndpoint",
+      "azureOpenAIApiInstanceName",
+      "azureOpenAIApiDeploymentName",
+      "deploymentName",
+      "openAIApiKey",
+      "openAIApiVersion",
+    ];
+  }
+
   constructor(
     fields?: Partial<OpenAIChatInput> &
       Partial<AzureOpenAIInput> & {
@@ -555,11 +570,17 @@ export class AzureChatOpenAI extends ChatOpenAI {
         delete params.baseURL;
       }
 
+      let env = getEnv();
+      if (env === "node" || env === "deno") {
+        env = `(${env}/${process.version}; ${process.platform}; ${process.arch})`;
+      }
+
+      const specifiedUserAgent = params.defaultHeaders?.["User-Agent"];
       params.defaultHeaders = {
         ...params.defaultHeaders,
-        "User-Agent": params.defaultHeaders?.["User-Agent"]
-          ? `${params.defaultHeaders["User-Agent"]}: langchainjs-azure-openai-v2`
-          : `langchainjs-azure-openai-v2`,
+        "User-Agent": `langchainjs-azure-openai/2.0.0 (${env})${
+          specifiedUserAgent ? ` ${specifiedUserAgent}` : ""
+        }`,
       };
 
       this.client = new AzureOpenAIClient({

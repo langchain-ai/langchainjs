@@ -181,13 +181,13 @@ export abstract class ChatGoogleBase<AuthOptions>
 
   modelName = "gemini-pro";
 
-  temperature = 0.7;
+  temperature: number;
 
-  maxOutputTokens = 1024;
+  maxOutputTokens: number;
 
-  topP = 0.8;
+  topP: number;
 
-  topK = 40;
+  topK: number;
 
   presencePenalty: number;
 
@@ -246,12 +246,7 @@ export abstract class ChatGoogleBase<AuthOptions>
   }
 
   buildApiKey(fields?: GoogleAIBaseLLMInput<AuthOptions>): string | undefined {
-    if (fields?.platformType !== "gcp") {
-      return fields?.apiKey ?? getEnvironmentVariable("GOOGLE_API_KEY");
-    } else {
-      // GCP doesn't support API Keys
-      return undefined;
-    }
+    return fields?.apiKey ?? getEnvironmentVariable("GOOGLE_API_KEY");
   }
 
   buildClient(
