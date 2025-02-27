@@ -20,12 +20,22 @@ import type {
   ContentBlockDeltaEvent,
   ConverseStreamMetadataEvent,
   ContentBlockStartEvent,
+  ReasoningContentBlock,
+  ReasoningContentBlockDelta,
+  ReasoningTextBlock,
 } from "@aws-sdk/client-bedrock-runtime";
 import type { DocumentType as __DocumentType } from "@smithy/types";
 import { isLangChainTool } from "@langchain/core/utils/function_calling";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { ChatGenerationChunk } from "@langchain/core/outputs";
-import { ChatBedrockConverseToolType, BedrockToolChoice } from "./types.js";
+import {
+  ChatBedrockConverseToolType,
+  BedrockToolChoice,
+  MessageContentReasoningBlock,
+  MessageContentReasoningBlockReasoningText,
+  MessageContentReasoningBlockReasoningTextPartial,
+  MessageContentReasoningBlockRedacted,
+} from "./types.js";
 
 export function extractImageInfo(base64: string): ContentBlock.ImageMember {
   // Extract the format from the base64 string
@@ -99,22 +109,34 @@ export function convertToConverseMessages(messages: BaseMessage[]): {
             text: castMsg.content,
           });
         } else if (Array.isArray(castMsg.content)) {
-          const contentBlocks: ContentBlock[] = castMsg.content.map((block) => {
-            if (block.type === "text" && block.text !== "") {
-              return {
-                text: block.text,
-              };
-            } else {
-              const blockValues = Object.fromEntries(
-                Object.entries(block).filter(([key]) => key !== "type")
-              );
-              throw new Error(
-                `Unsupported content block type: ${
-                  block.type
-                } with content of ${JSON.stringify(blockValues, null, 2)}`
-              );
+          const concatenatedBlocks = concatenateLangchainReasoningBlocks(
+            castMsg.content
+          );
+          const contentBlocks: ContentBlock[] = concatenatedBlocks.map(
+            (block) => {
+              if (block.type === "text" && block.text !== "") {
+                return {
+                  text: block.text,
+                };
+              } else if (block.type === "reasoning_content") {
+                return {
+                  reasoningContent:
+                    langchainReasoningBlockToBedrockReasoningBlock(
+                      block as MessageContentReasoningBlock
+                    ),
+                };
+              } else {
+                const blockValues = Object.fromEntries(
+                  Object.entries(block).filter(([key]) => key !== "type")
+                );
+                throw new Error(
+                  `Unsupported content block type: ${
+                    block.type
+                  } with content of ${JSON.stringify(blockValues, null, 2)}`
+                );
+              }
             }
-          });
+          );
 
           assistantMsg.content = [
             ...(assistantMsg.content ? assistantMsg.content : []),
@@ -411,6 +433,12 @@ export function convertConverseMessageToLangChainMessage(
         });
       } else if ("text" in c && typeof c.text === "string") {
         content.push({ type: "text", text: c.text });
+      } else if ("reasoningContent" in c) {
+        content.push(
+          bedrockReasoningBlockToLangchainReasoningBlock(
+            c.reasoningContent as ReasoningContentBlock
+          )
+        );
       } else {
         content.push(c);
       }
@@ -450,6 +478,17 @@ export function handleConverseStreamContentBlockDelta(
             index,
             type: "tool_call_chunk",
           },
+        ],
+      }),
+    });
+  } else if (contentBlockDelta.delta.reasoningContent) {
+    return new ChatGenerationChunk({
+      text: "",
+      message: new AIMessageChunk({
+        content: [
+          bedrockReasoningDeltaToLangchainPartialReasoningBlock(
+            contentBlockDelta.delta.reasoningContent
+          ),
         ],
       }),
     });
@@ -511,4 +550,158 @@ export function handleConverseStreamMetadata(
       },
     }),
   });
+}
+
+export function bedrockReasoningDeltaToLangchainPartialReasoningBlock(
+  reasoningContent: ReasoningContentBlockDelta
+):
+  | MessageContentReasoningBlockReasoningTextPartial
+  | MessageContentReasoningBlockRedacted {
+  const { text, redactedContent, signature } = reasoningContent;
+  if (text) {
+    return {
+      type: "reasoning_content",
+      reasoningText: { text },
+    };
+  }
+  if (signature) {
+    return {
+      type: "reasoning_content",
+      reasoningText: { signature },
+    };
+  }
+  if (redactedContent) {
+    return {
+      type: "reasoning_content",
+      redactedContent: Buffer.from(redactedContent).toString("base64"),
+    };
+  }
+  throw new Error("Invalid reasoning content");
+}
+
+export function bedrockReasoningBlockToLangchainReasoningBlock(
+  reasoningContent: ReasoningContentBlock
+): MessageContentReasoningBlock {
+  const { reasoningText, redactedContent } = reasoningContent;
+  if (reasoningText) {
+    return {
+      type: "reasoning_content",
+      reasoningText: reasoningText as Required<ReasoningTextBlock>,
+    };
+  }
+
+  if (redactedContent) {
+    return {
+      type: "reasoning_content",
+      redactedContent: Buffer.from(redactedContent).toString("base64"),
+    };
+  }
+  throw new Error("Invalid reasoning content");
+}
+
+export function langchainReasoningBlockToBedrockReasoningBlock(
+  content: MessageContentReasoningBlock
+): ReasoningContentBlock {
+  if (content.type !== "reasoning_content") {
+    throw new Error("Invalid reasoning content");
+  }
+  if ("reasoningText" in content) {
+    return {
+      reasoningText: content.reasoningText as ReasoningTextBlock,
+    };
+  }
+  if ("redactedContent" in content) {
+    return {
+      redactedContent: Buffer.from(content.redactedContent, "base64"),
+    };
+  }
+  throw new Error("Invalid reasoning content");
+}
+
+export function concatenateLangchainReasoningBlocks(
+  content: Array<MessageContentComplex | MessageContentReasoningBlock>
+): MessageContentComplex[] {
+  const concatenatedBlocks: MessageContentComplex[] = [];
+  let concatenatedBlock: Partial<MessageContentReasoningBlock> = {};
+
+  for (const block of content) {
+    if (block.type !== "reasoning_content") {
+      // if it's some other block type, end the current block, but keep it so we preserve order
+      if (Object.keys(concatenatedBlock).length > 0) {
+        concatenatedBlocks.push(
+          concatenatedBlock as MessageContentReasoningBlock
+        );
+        concatenatedBlock = {};
+      }
+      concatenatedBlocks.push(block);
+      continue;
+    }
+
+    // non-redacted block
+    if ("reasoningText" in block && typeof block.reasoningText === "object") {
+      if ("redactedContent" in concatenatedBlock) {
+        // new type of block, so end the previous one
+        concatenatedBlocks.push(
+          concatenatedBlock as MessageContentReasoningBlock
+        );
+        concatenatedBlock = {};
+      }
+      const { text, signature } = block.reasoningText as Partial<
+        MessageContentReasoningBlockReasoningText["reasoningText"]
+      >;
+      const { text: prevText, signature: prevSignature } = (
+        "reasoningText" in concatenatedBlock
+          ? concatenatedBlock.reasoningText
+          : {}
+      ) as Partial<MessageContentReasoningBlockReasoningText["reasoningText"]>;
+
+      concatenatedBlock = {
+        type: "reasoning_content",
+        reasoningText: {
+          ...((concatenatedBlock as MessageContentReasoningBlockReasoningText)
+            .reasoningText ?? {}),
+          ...(prevText !== undefined || text !== undefined
+            ? { text: (prevText ?? "") + (text ?? "") }
+            : {}),
+          ...(prevSignature !== undefined || signature !== undefined
+            ? { signature: (prevSignature ?? "") + (signature ?? "") }
+            : {}),
+        },
+      };
+      // if a partial block chunk has a signature, the next one will begin a new reasoning block.
+      // full blocks always have signatures, so we start one now, anyway
+      if ("signature" in block.reasoningText) {
+        concatenatedBlocks.push(
+          concatenatedBlock as MessageContentReasoningBlock
+        );
+        concatenatedBlock = {};
+      }
+    }
+
+    if ("redactedContent" in block) {
+      if ("reasoningText" in concatenatedBlock) {
+        // New type of block, so end the previous one. We should't really hit
+        // this, as we'll have created a new block upon encountering the
+        // signature above, but better safe than sorry.
+        concatenatedBlocks.push(
+          concatenatedBlock as MessageContentReasoningBlock
+        );
+        concatenatedBlock = {};
+      }
+      const { redactedContent } = block;
+      const prevRedactedContent = (
+        "redactedContent" in concatenatedBlock
+          ? concatenatedBlock.redactedContent!
+          : ""
+      ) as Partial<MessageContentReasoningBlockRedacted["redactedContent"]>;
+      concatenatedBlock = {
+        type: "reasoning_content",
+        redactedContent: prevRedactedContent + redactedContent,
+      };
+    }
+  }
+  if (Object.keys(concatenatedBlock).length > 0) {
+    concatenatedBlocks.push(concatenatedBlock as MessageContentReasoningBlock);
+  }
+  return concatenatedBlocks;
 }
