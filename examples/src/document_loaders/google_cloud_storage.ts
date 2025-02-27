@@ -6,7 +6,7 @@ const loader = new GoogleCloudStorageLoader({
   storageOptions: {
     keyFilename: "/path/to/keyfile.json",
   },
-  unstructuredConfig: {
+  unstructuredLoaderOptions: {
     apiUrl: "http://localhost:8000/general/v0/general",
     apiKey: "", // this will be soon required
   },
