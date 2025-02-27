@@ -453,6 +453,14 @@ export function handleConverseStreamContentBlockDelta(
         ],
       }),
     });
+  } else if (contentBlockDelta.delta.reasoningContent) {
+    return new ChatGenerationChunk({
+      text: "",
+      message: new AIMessageChunk({
+        content: "",
+        additional_kwargs: { reasoning_content: contentBlockDelta.delta.reasoningContent.text },
+      }),
+    });
   } else {
     throw new Error(
       `Unsupported content block type(s): ${JSON.stringify(
