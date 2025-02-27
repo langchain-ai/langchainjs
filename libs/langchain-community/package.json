@@ -2823,6 +2823,15 @@
       "import": "./document_loaders/web/college_confidential.js",
       "require": "./document_loaders/web/college_confidential.cjs"
     },
+    "./document_loaders/web/google_cloud_storage": {
+      "types": {
+        "import": "./document_loaders/web/google_cloud_storage.d.ts",
+        "require": "./document_loaders/web/google_cloud_storage.d.cts",
+        "default": "./document_loaders/web/google_cloud_storage.d.ts"
+      },
+      "import": "./document_loaders/web/google_cloud_storage.js",
+      "require": "./document_loaders/web/google_cloud_storage.cjs"
+    },
     "./document_loaders/web/gitbook": {
       "types": {
         "import": "./document_loaders/web/gitbook.d.ts",
@@ -2930,15 +2939,6 @@
       },
       "import": "./document_loaders/web/s3.js",
       "require": "./document_loaders/web/s3.cjs"
-    },
-    "./document_loaders/web/google_cloud_storage": {
-      "types": {
-        "import": "./document_loaders/web/google_cloud_storage.d.ts",
-        "require": "./document_loaders/web/google_cloud_storage.d.cts",
-        "default": "./document_loaders/web/google_cloud_storage.d.ts"
-      },
-      "import": "./document_loaders/web/google_cloud_storage.js",
-      "require": "./document_loaders/web/google_cloud_storage.cjs"
     },
     "./document_loaders/web/sitemap": {
       "types": {
@@ -4159,6 +4159,10 @@
     "document_loaders/web/college_confidential.js",
     "document_loaders/web/college_confidential.d.ts",
     "document_loaders/web/college_confidential.d.cts",
+    "document_loaders/web/google_cloud_storage.cjs",
+    "document_loaders/web/google_cloud_storage.js",
+    "document_loaders/web/google_cloud_storage.d.ts",
+    "document_loaders/web/google_cloud_storage.d.cts",
     "document_loaders/web/gitbook.cjs",
     "document_loaders/web/gitbook.js",
     "document_loaders/web/gitbook.d.ts",
@@ -4207,10 +4211,6 @@
     "document_loaders/web/s3.js",
     "document_loaders/web/s3.d.ts",
     "document_loaders/web/s3.d.cts",
-    "document_loaders/web/google_cloud_storage.cjs",
-    "document_loaders/web/google_cloud_storage.js",
-    "document_loaders/web/google_cloud_storage.d.ts",
-    "document_loaders/web/google_cloud_storage.d.cts",
     "document_loaders/web/sitemap.cjs",
     "document_loaders/web/sitemap.js",
     "document_loaders/web/sitemap.d.ts",
