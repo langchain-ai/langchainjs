@@ -29,28 +29,28 @@ export interface RunnableInterface<
 > extends SerializableInterface {
   lc_serializable: boolean;
 
-  invoke(input: RunInput, options?: Partial<CallOptions>): Promise<RunOutput>;
+  invoke(input?: RunInput, options?: Partial<CallOptions>): Promise<RunOutput>;
 
   batch(
-    inputs: RunInput[],
+    inputs?: RunInput[],
     options?: Partial<CallOptions> | Partial<CallOptions>[],
     batchOptions?: RunnableBatchOptions & { returnExceptions?: false }
   ): Promise<RunOutput[]>;
 
   batch(
-    inputs: RunInput[],
+    inputs?: RunInput[],
     options?: Partial<CallOptions> | Partial<CallOptions>[],
     batchOptions?: RunnableBatchOptions & { returnExceptions: true }
   ): Promise<(RunOutput | Error)[]>;
 
   batch(
-    inputs: RunInput[],
+    inputs?: RunInput[],
     options?: Partial<CallOptions> | Partial<CallOptions>[],
     batchOptions?: RunnableBatchOptions
   ): Promise<(RunOutput | Error)[]>;
 
   stream(
-    input: RunInput,
+    input?: RunInput,
     options?: Partial<CallOptions>
   ): Promise<IterableReadableStreamInterface<RunOutput>>;
 
