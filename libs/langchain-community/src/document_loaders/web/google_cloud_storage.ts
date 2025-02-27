@@ -1,11 +1,13 @@
-import { Storage, StorageOptions } from '@google-cloud/storage'
+import { Storage, StorageOptions } from "@google-cloud/storage";
 import * as os from "node:os";
 import * as path from "node:path";
 import * as fsDefault from "node:fs";
 import { BaseDocumentLoader } from "@langchain/core/document_loaders/base";
 import { Document } from "@langchain/core/documents";
-import { UnstructuredLoaderOptions, UnstructuredLoader } from "../fs/unstructured.js";
-
+import {
+  UnstructuredLoaderOptions,
+  UnstructuredLoader,
+} from "../fs/unstructured.js";
 
 /**
  * Represents the parameters for the GoogleCloudStorageLoader class. It includes
@@ -17,8 +19,8 @@ export type GcsLoaderConfig = {
   bucket: string;
   file: string;
   unstructuredLoaderOptions: UnstructuredLoaderOptions;
-  storageOptions: StorageOptions
-}
+  storageOptions: StorageOptions;
+};
 
 /**
  * A class that extends the BaseDocumentLoader class. It represents a
@@ -30,7 +32,7 @@ export type GcsLoaderConfig = {
  *   file: "<file-path>",
  *   storageOptions: {
  *     keyFilename: "<key-file-name-path>"
- *   } 
+ *   }
  *   unstructuredConfig: {
  *     apiUrl: "<unstructured-API-URL>",
  *     apiKey: "<unstructured-API-key>"
@@ -55,7 +57,7 @@ export class GoogleCloudStorageLoader extends BaseDocumentLoader {
     file,
     bucket,
     unstructuredLoaderOptions,
-    storageOptions
+    storageOptions,
   }: GcsLoaderConfig) {
     super();
     this._fs = fs;
@@ -72,7 +74,7 @@ export class GoogleCloudStorageLoader extends BaseDocumentLoader {
     const filePath = path.join(tempDir, this.file);
 
     try {
-      const storage = new Storage(this.storageOptions)
+      const storage = new Storage(this.storageOptions);
       const bucket = storage.bucket(this.bucket);
 
       const [buffer] = await bucket.file(this.file).download();
@@ -87,7 +89,10 @@ export class GoogleCloudStorageLoader extends BaseDocumentLoader {
     }
 
     try {
-      const unstructuredLoader = new UnstructuredLoader(filePath, this.unstructuredLoaderOptions);
+      const unstructuredLoader = new UnstructuredLoader(
+        filePath,
+        this.unstructuredLoaderOptions
+      );
       const docs = await unstructuredLoader.load();
       return docs;
     } catch {
