@@ -96,4 +96,44 @@ export abstract class GmailBaseTool extends StructuredTool {
 
     return google.gmail({ version: "v1", auth });
   }
+
+  parseHeaderAndBody(payload: gmail_v1.Schema$MessagePart | undefined) {
+    if (!payload) {
+      return { body: "" };
+    }
+
+    const headers = payload.headers || [];
+
+    const subject = headers.find((header) => header.name === "Subject");
+    const sender = headers.find((header) => header.name === "From");
+
+    let body = "";
+    if (payload.parts) {
+      body = payload.parts
+        .map((part) =>
+          part.mimeType === "text/plain"
+            ? this.decodeBody(part.body?.data ?? "")
+            : ""
+        )
+        .join("");
+    } else if (payload.body?.data) {
+      body = this.decodeBody(payload.body.data);
+    }
+
+    return { subject, sender, body };
+  }
+
+  decodeBody(body: string) {
+    if (body) {
+      try {
+        // Gmail uses URL-safe base64 encoding, so we need to handle it properly
+        // Replace URL-safe characters and decode
+        return atob(body.replace(/-/g, "+").replace(/_/g, "/"));
+      } catch (error) {
+        // Keep the original encoded body if decoding fails
+        return body;
+      }
+    }
+    return "";
+  }
 }
