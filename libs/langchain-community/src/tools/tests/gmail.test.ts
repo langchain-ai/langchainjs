@@ -22,7 +22,18 @@ describe("GmailBaseTool using GmailGetMessage", () => {
     expect(instance.name).toBe("gmail_get_message");
   });
 
-  it("should throw an error if both privateKey and keyfile are missing", async () => {
+  it("should be setup with only access_token", async () => {
+    const params = {
+      credentials: {
+        access_token: "access_token",
+      },
+      scopes: ["gmail_scope1"],
+    };
+    const instance = new GmailGetMessage(params);
+    expect(instance.name).toBe("gmail_get_message");
+  });
+
+  it("should throw an error if access_token, privateKey and keyfile are missing", async () => {
     const params = {
       credentials: {},
       scopes: ["gmail_scope1"],
