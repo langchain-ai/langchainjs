@@ -9,6 +9,7 @@ export interface GmailBaseToolParams {
     privateKey?: string;
     keyfile?: string;
     subject?: string;
+    access_token?: string;
   };
   scopes?: string[];
 }
@@ -18,7 +19,6 @@ export abstract class GmailBaseTool extends StructuredTool {
     .object({
       clientEmail: z
         .string()
-        .min(1)
         .default(getEnvironmentVariable("GMAIL_CLIENT_EMAIL") ?? ""),
       privateKey: z
         .string()
@@ -29,13 +29,23 @@ export abstract class GmailBaseTool extends StructuredTool {
       subject: z
         .string()
         .default(getEnvironmentVariable("GMAIL_SUBJECT") ?? ""),
+      access_token: z.string().default(""),
     })
     .refine(
       (credentials) =>
-        credentials.privateKey !== "" || credentials.keyfile !== "",
+        credentials.access_token !== "" || credentials.clientEmail !== "",
+      {
+        message: "Missing GMAIL_CLIENT_EMAIL to interact with Gmail",
+      }
+    )
+    .refine(
+      (credentials) =>
+        credentials.privateKey !== "" ||
+        credentials.keyfile !== "" ||
+        credentials.access_token !== "",
       {
         message:
-          "Missing GMAIL_PRIVATE_KEY or GMAIL_KEYFILE to interact with Gmail",
+          "Missing GMAIL_PRIVATE_KEY or GMAIL_KEYFILE or access_token to interact with Gmail",
       }
     );
 
@@ -63,7 +73,8 @@ export abstract class GmailBaseTool extends StructuredTool {
       credentials.clientEmail,
       credentials.privateKey,
       credentials.keyfile,
-      credentials.subject
+      credentials.subject,
+      credentials.access_token
     );
   }
 
@@ -72,8 +83,15 @@ export abstract class GmailBaseTool extends StructuredTool {
     email: string,
     key?: string,
     keyfile?: string,
-    subject?: string
+    subject?: string,
+    access_token?: string
   ) {
+    if (access_token) {
+      const auth = new google.auth.OAuth2();
+      auth.setCredentials({ access_token });
+      return google.gmail({ version: "v1", auth });
+    }
+
     const auth = new google.auth.JWT(email, keyfile, key, scopes, subject);
 
     return google.gmail({ version: "v1", auth });
