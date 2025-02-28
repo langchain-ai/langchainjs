@@ -1139,13 +1139,38 @@ export class ChatAnthropicMessages<
         keyName: functionName,
       });
     }
-    const llm = this.bind({
-      tools,
-      tool_choice: {
-        type: "tool",
-        name: functionName,
-      },
-    } as Partial<CallOptions>);
+    let llm;
+    if (this.thinking?.type === "enabled") {
+      const thinkingAdmonition =
+        "Anthropic structured output relies on forced tool calling, " +
+        "which is not supported when `thinking` is enabled. This method will raise " +
+        "OutputParserException if tool calls are not " +
+        "generated. Consider disabling `thinking` or adjust your prompt to ensure " +
+        "the tool is called.";
+
+      console.warn(thinkingAdmonition);
+
+      llm = this.bind({
+        tools,
+      } as Partial<CallOptions>);
+
+      const raiseIfNoToolCalls = (message: AIMessageChunk) => {
+        if (!message.tool_calls || message.tool_calls.length === 0) {
+          throw new Error(thinkingAdmonition);
+        }
+        return message;
+      };
+
+      llm = llm.pipe(raiseIfNoToolCalls);
+    } else {
+      llm = this.bind({
+        tools,
+        tool_choice: {
+          type: "tool",
+          name: functionName,
+        },
+      } as Partial<CallOptions>);
+    }
 
     if (!includeRaw) {
       return llm.pipe(outputParser).withConfig({
