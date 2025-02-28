@@ -9,7 +9,7 @@ export interface GmailBaseToolParams {
     privateKey?: string;
     keyfile?: string;
     subject?: string;
-    access_token?: string;
+    accessToken?: string;
   };
   scopes?: string[];
 }
@@ -29,11 +29,11 @@ export abstract class GmailBaseTool extends StructuredTool {
       subject: z
         .string()
         .default(getEnvironmentVariable("GMAIL_SUBJECT") ?? ""),
-      access_token: z.string().default(""),
+      accessToken: z.string().default(""),
     })
     .refine(
       (credentials) =>
-        credentials.access_token !== "" || credentials.clientEmail !== "",
+        credentials.accessToken !== "" || credentials.clientEmail !== "",
       {
         message: "Missing GMAIL_CLIENT_EMAIL to interact with Gmail",
       }
@@ -42,10 +42,10 @@ export abstract class GmailBaseTool extends StructuredTool {
       (credentials) =>
         credentials.privateKey !== "" ||
         credentials.keyfile !== "" ||
-        credentials.access_token !== "",
+        credentials.accessToken !== "",
       {
         message:
-          "Missing GMAIL_PRIVATE_KEY or GMAIL_KEYFILE or access_token to interact with Gmail",
+          "Missing GMAIL_PRIVATE_KEY or GMAIL_KEYFILE or accessToken to interact with Gmail",
       }
     );
 
@@ -74,7 +74,7 @@ export abstract class GmailBaseTool extends StructuredTool {
       credentials.privateKey,
       credentials.keyfile,
       credentials.subject,
-      credentials.access_token
+      credentials.accessToken
     );
   }
 
@@ -84,11 +84,11 @@ export abstract class GmailBaseTool extends StructuredTool {
     key?: string,
     keyfile?: string,
     subject?: string,
-    access_token?: string
+    accessToken?: string
   ) {
-    if (access_token) {
+    if (accessToken) {
       const auth = new google.auth.OAuth2();
-      auth.setCredentials({ access_token });
+      auth.setCredentials({ access_token: accessToken });
       return google.gmail({ version: "v1", auth });
     }
 
