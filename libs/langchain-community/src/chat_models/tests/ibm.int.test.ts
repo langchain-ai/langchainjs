@@ -17,10 +17,6 @@ import {
   BaseChatModelCallOptions,
 } from "@langchain/core/language_models/chat_models";
 import { ChatWatsonx } from "../ibm.js";
-import {
-  BaseChatModel,
-  BaseChatModelCallOptions,
-} from "@langchain/core/language_models/chat_models";
 
 describe("Tests for chat", () => {
   describe("Test ChatWatsonx invoke and generate", () => {
