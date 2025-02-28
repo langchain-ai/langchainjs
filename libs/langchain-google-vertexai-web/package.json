@@ -1,6 +1,6 @@
 {
   "name": "@langchain/google-vertexai-web",
-  "version": "0.1.8",
+  "version": "0.2.0",
   "description": "LangChain.js support for Google Vertex AI Web",
   "type": "module",
   "engines": {
@@ -32,7 +32,7 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@langchain/google-webauth": "~0.1.8"
+    "@langchain/google-webauth": "~0.2.0"
   },
   "peerDependencies": {
     "@langchain/core": ">=0.2.21 <0.4.0"

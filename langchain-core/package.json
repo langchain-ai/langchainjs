@@ -1,6 +1,6 @@
 {
   "name": "@langchain/core",
-  "version": "0.3.38",
+  "version": "0.3.41",
   "description": "Core LangChain.js abstractions and schemas",
   "type": "module",
   "engines": {
@@ -494,6 +494,15 @@
       "import": "./tracers/tracer_langchain_v1.js",
       "require": "./tracers/tracer_langchain_v1.cjs"
     },
+    "./types/stream": {
+      "types": {
+        "import": "./types/stream.d.ts",
+        "require": "./types/stream.d.cts",
+        "default": "./types/stream.d.ts"
+      },
+      "import": "./types/stream.js",
+      "require": "./types/stream.cjs"
+    },
     "./utils/async_caller": {
       "types": {
         "import": "./utils/async_caller.d.ts",
@@ -804,6 +813,10 @@
     "tracers/tracer_langchain_v1.js",
     "tracers/tracer_langchain_v1.d.ts",
     "tracers/tracer_langchain_v1.d.cts",
+    "types/stream.cjs",
+    "types/stream.js",
+    "types/stream.d.ts",
+    "types/stream.d.cts",
     "utils/async_caller.cjs",
     "utils/async_caller.js",
     "utils/async_caller.d.ts",

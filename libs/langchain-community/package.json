@@ -1,6 +1,6 @@
 {
   "name": "@langchain/community",
-  "version": "0.3.29",
+  "version": "0.3.33",
   "description": "Third-party integrations for LangChain.js",
   "type": "module",
   "engines": {
@@ -49,16 +49,17 @@
   "devDependencies": {
     "@arcjet/redact": "^v1.0.0-alpha.23",
     "@aws-crypto/sha256-js": "^5.0.0",
-    "@aws-sdk/client-bedrock-agent-runtime": "^3.583.0",
-    "@aws-sdk/client-bedrock-runtime": "^3.422.0",
-    "@aws-sdk/client-dynamodb": "^3.310.0",
-    "@aws-sdk/client-kendra": "^3.352.0",
-    "@aws-sdk/client-lambda": "^3.310.0",
-    "@aws-sdk/client-s3": "^3.310.0",
-    "@aws-sdk/client-sagemaker-runtime": "^3.414.0",
-    "@aws-sdk/client-sfn": "^3.362.0",
-    "@aws-sdk/credential-provider-node": "^3.388.0",
-    "@aws-sdk/types": "^3.357.0",
+    "@aws-sdk/client-bedrock-agent-runtime": "^3.749.0",
+    "@aws-sdk/client-bedrock-runtime": "^3.749.0",
+    "@aws-sdk/client-dynamodb": "^3.749.0",
+    "@aws-sdk/client-kendra": "^3.749.0",
+    "@aws-sdk/client-lambda": "^3.749.0",
+    "@aws-sdk/client-s3": "^3.749.0",
+    "@aws-sdk/client-sagemaker-runtime": "^3.749.0",
+    "@aws-sdk/client-sfn": "^3.749.0",
+    "@aws-sdk/credential-provider-node": "^3.749.0",
+    "@aws-sdk/dsql-signer": "^3.738.0",
+    "@aws-sdk/types": "^3.734.0",
     "@azure/search-documents": "^12.0.0",
     "@azure/storage-blob": "^12.15.0",
     "@browserbasehq/sdk": "^1.1.5",
@@ -75,7 +76,7 @@
     "@gomomento/sdk": "^1.51.1",
     "@gomomento/sdk-core": "^1.51.1",
     "@google-ai/generativelanguage": "^2.5.0",
-    "@google-cloud/storage": "^7.7.0",
+    "@google-cloud/storage": "^7.15.2",
     "@gradientai/nodejs-sdk": "^1.2.0",
     "@huggingface/inference": "^2.6.4",
     "@huggingface/transformers": "^3.2.3",
@@ -166,7 +167,6 @@
     "eslint-plugin-jest": "^27.6.0",
     "eslint-plugin-no-instanceof": "^1.0.1",
     "eslint-plugin-prettier": "^4.2.1",
-    "faiss-node": "^0.5.1",
     "fast-xml-parser": "^4.5.1",
     "firebase-admin": "^11.9.0 || ^12.0.0",
     "google-auth-library": "^9.10.0",
@@ -224,14 +224,14 @@
   "peerDependencies": {
     "@arcjet/redact": "^v1.0.0-alpha.23",
     "@aws-crypto/sha256-js": "^5.0.0",
-    "@aws-sdk/client-bedrock-agent-runtime": "^3.583.0",
-    "@aws-sdk/client-bedrock-runtime": "^3.422.0",
-    "@aws-sdk/client-dynamodb": "^3.310.0",
-    "@aws-sdk/client-kendra": "^3.352.0",
-    "@aws-sdk/client-lambda": "^3.310.0",
-    "@aws-sdk/client-s3": "^3.310.0",
-    "@aws-sdk/client-sagemaker-runtime": "^3.310.0",
-    "@aws-sdk/client-sfn": "^3.310.0",
+    "@aws-sdk/client-bedrock-agent-runtime": "^3.749.0",
+    "@aws-sdk/client-bedrock-runtime": "^3.749.0",
+    "@aws-sdk/client-dynamodb": "^3.749.0",
+    "@aws-sdk/client-kendra": "^3.749.0",
+    "@aws-sdk/client-lambda": "^3.749.0",
+    "@aws-sdk/client-s3": "^3.749.0",
+    "@aws-sdk/client-sagemaker-runtime": "^3.749.0",
+    "@aws-sdk/client-sfn": "^3.749.0",
     "@aws-sdk/credential-provider-node": "^3.388.0",
     "@azure/search-documents": "^12.0.0",
     "@azure/storage-blob": "^12.15.0",
@@ -303,7 +303,6 @@
     "dria": "^0.0.3",
     "duck-duck-scrape": "^2.2.5",
     "epub2": "^3.0.1",
-    "faiss-node": "^0.5.1",
     "fast-xml-parser": "*",
     "firebase-admin": "^11.9.0 || ^12.0.0",
     "google-auth-library": "*",
@@ -381,6 +380,9 @@
       "optional": true
     },
     "@aws-sdk/credential-provider-node": {
+      "optional": true
+    },
+    "@aws-sdk/dsql-signer": {
       "optional": true
     },
     "@azure/search-documents": {
@@ -582,9 +584,6 @@
       "optional": true
     },
     "epub2": {
-      "optional": true
-    },
-    "faiss-node": {
       "optional": true
     },
     "fast-xml-parser": {
@@ -2608,6 +2607,15 @@
       "import": "./stores/message/postgres.js",
       "require": "./stores/message/postgres.cjs"
     },
+    "./stores/message/aurora_dsql": {
+      "types": {
+        "import": "./stores/message/aurora_dsql.d.ts",
+        "require": "./stores/message/aurora_dsql.d.cts",
+        "default": "./stores/message/aurora_dsql.d.ts"
+      },
+      "import": "./stores/message/aurora_dsql.js",
+      "require": "./stores/message/aurora_dsql.cjs"
+    },
     "./stores/message/redis": {
       "types": {
         "import": "./stores/message/redis.d.ts",
@@ -2814,6 +2822,15 @@
       },
       "import": "./document_loaders/web/college_confidential.js",
       "require": "./document_loaders/web/college_confidential.cjs"
+    },
+    "./document_loaders/web/google_cloud_storage": {
+      "types": {
+        "import": "./document_loaders/web/google_cloud_storage.d.ts",
+        "require": "./document_loaders/web/google_cloud_storage.d.cts",
+        "default": "./document_loaders/web/google_cloud_storage.d.ts"
+      },
+      "import": "./document_loaders/web/google_cloud_storage.js",
+      "require": "./document_loaders/web/google_cloud_storage.cjs"
     },
     "./document_loaders/web/gitbook": {
       "types": {
@@ -4046,6 +4063,10 @@
     "stores/message/postgres.js",
     "stores/message/postgres.d.ts",
     "stores/message/postgres.d.cts",
+    "stores/message/aurora_dsql.cjs",
+    "stores/message/aurora_dsql.js",
+    "stores/message/aurora_dsql.d.ts",
+    "stores/message/aurora_dsql.d.cts",
     "stores/message/redis.cjs",
     "stores/message/redis.js",
     "stores/message/redis.d.ts",
@@ -4138,6 +4159,10 @@
     "document_loaders/web/college_confidential.js",
     "document_loaders/web/college_confidential.d.ts",
     "document_loaders/web/college_confidential.d.cts",
+    "document_loaders/web/google_cloud_storage.cjs",
+    "document_loaders/web/google_cloud_storage.js",
+    "document_loaders/web/google_cloud_storage.d.ts",
+    "document_loaders/web/google_cloud_storage.d.cts",
     "document_loaders/web/gitbook.cjs",
     "document_loaders/web/gitbook.js",
     "document_loaders/web/gitbook.d.ts",

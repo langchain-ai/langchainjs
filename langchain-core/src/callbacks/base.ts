@@ -328,6 +328,10 @@ export abstract class BaseCallbackHandler
     return undefined;
   }
 
+  get lc_serializable_keys(): string[] | undefined {
+    return undefined;
+  }
+
   /**
    * The name of the serializable. Override to provide an alias or
    * to preserve the serialized module name in minified environments.
