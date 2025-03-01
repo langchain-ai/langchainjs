@@ -13,6 +13,7 @@ The Gmail Tool allows your agent to create and view messages from a linked email
 You can authenticate via two methods:
 
 1. Provide an access token, obtained via OAuth2 token exchange, to the credentials object.
+   This can be a string or a function so that token expiry and validation can be handled.
    This can be done using an Identity Provider that supports getting access tokens from federated connections.
    This is the most secure method as the access and scope will be limited to the specific end user.
    This method will be more appropriate when using the tool in an application that is meant to be used by end

@@ -22,7 +22,9 @@ export class GmailSearch extends GmailBaseTool {
     const { query, maxResults = 10, resource = "messages" } = arg;
 
     try {
-      const response = await this.gmail.users.messages.list({
+      const gmail = await this.getGmailClient();
+
+      const response = await gmail.users.messages.list({
         userId: "me",
         q: query,
         maxResults,
@@ -41,12 +43,12 @@ export class GmailSearch extends GmailBaseTool {
       }
 
       if (resource === "messages") {
-        const parsedMessages = await this.parseMessages(messages);
+        const parsedMessages = await this.parseMessages(gmail, messages);
         return `Result for the query ${query}:\n${JSON.stringify(
           parsedMessages
         )}`;
       } else if (resource === "threads") {
-        const parsedThreads = await this.parseThreads(messages);
+        const parsedThreads = await this.parseThreads(gmail, messages);
         return `Result for the query ${query}:\n${JSON.stringify(
           parsedThreads
         )}`;
@@ -59,12 +61,13 @@ export class GmailSearch extends GmailBaseTool {
   }
 
   async parseMessages(
+    gmail: gmail_v1.Gmail,
     messages: gmail_v1.Schema$Message[]
   ): Promise<gmail_v1.Schema$Message[]> {
     const parsedMessages = await Promise.all(
       messages.map(async (message) => {
         try {
-          const { data } = await this.gmail.users.messages.get({
+          const { data } = await gmail.users.messages.get({
             userId: "me",
             format: "full",
             id: message.id ?? "",
@@ -91,6 +94,7 @@ export class GmailSearch extends GmailBaseTool {
   }
 
   async parseThreads(
+    gmail: gmail_v1.Gmail,
     messages: gmail_v1.Schema$Message[]
   ): Promise<gmail_v1.Schema$Thread[]> {
     const parsedThreads = await Promise.all(
@@ -98,7 +102,7 @@ export class GmailSearch extends GmailBaseTool {
         try {
           const {
             data: { messages },
-          } = await this.gmail.users.threads.get({
+          } = await gmail.users.threads.get({
             userId: "me",
             format: "full",
             id: message.threadId ?? "",

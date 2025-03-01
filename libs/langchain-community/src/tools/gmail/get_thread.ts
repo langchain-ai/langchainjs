@@ -18,7 +18,9 @@ export class GmailGetThread extends GmailBaseTool {
   async _call(arg: z.output<typeof this.schema>) {
     const { threadId } = arg;
 
-    const { data } = await this.gmail.users.threads.get({
+    const gmail = await this.getGmailClient();
+
+    const { data } = await gmail.users.threads.get({
       userId: "me",
       format: "full",
 

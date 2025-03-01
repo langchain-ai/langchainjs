@@ -21,7 +21,7 @@ export async function run() {
   //       clientEmail: process.env.GMAIL_CLIENT_EMAIL,
   //       privateKey: process.env.GMAIL_PRIVATE_KEY,
   //       // Either (privateKey + clientEmail) or accessToken is required
-  //       accessToken: "your access token",
+  //       accessToken: "an access token or function to get access token",
   //     },
   //     scopes: ["https://mail.google.com/"], // Not required if using access token
   //   };
