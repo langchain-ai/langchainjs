@@ -94,16 +94,6 @@ export function convertToConverseMessages(messages: BaseMessage[]): {
           content: [],
         };
 
-        if (castMsg.tool_calls && castMsg.tool_calls.length) {
-          assistantMsg.content = castMsg.tool_calls.map((tc) => ({
-            toolUse: {
-              toolUseId: tc.id,
-              name: tc.name,
-              input: tc.args,
-            },
-          }));
-        }
-
         if (typeof castMsg.content === "string" && castMsg.content !== "") {
           assistantMsg.content?.push({
             text: castMsg.content,
@@ -143,6 +133,21 @@ export function convertToConverseMessages(messages: BaseMessage[]): {
             ...contentBlocks,
           ];
         }
+
+        // Important: this must be placed after any reasoning content blocks, else claude models will return an error.
+        if (castMsg.tool_calls && castMsg.tool_calls.length) {
+          assistantMsg.content = [
+            ...(assistantMsg.content ? assistantMsg.content : []),
+            ...castMsg.tool_calls.map((tc) => ({
+              toolUse: {
+                toolUseId: tc.id,
+                name: tc.name,
+                input: tc.args,
+              },
+            })),
+          ];
+        }
+
         return assistantMsg;
       } else if (msg._getType() === "human" || msg._getType() === "generic") {
         if (typeof msg.content === "string" && msg.content !== "") {
