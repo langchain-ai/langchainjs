@@ -22,10 +22,21 @@ describe("GmailBaseTool using GmailGetMessage", () => {
     expect(instance.name).toBe("gmail_get_message");
   });
 
-  it("should be setup with only accessToken", async () => {
+  it("should be setup with only accessToken string", async () => {
     const params = {
       credentials: {
         accessToken: "access_token",
+      },
+      scopes: ["gmail_scope1"],
+    };
+    const instance = new GmailGetMessage(params);
+    expect(instance.name).toBe("gmail_get_message");
+  });
+
+  it("should be setup with only accessToken function", async () => {
+    const params = {
+      credentials: {
+        accessToken: () => Promise.resolve("access_token"),
       },
       scopes: ["gmail_scope1"],
     };
