@@ -1,0 +1,169 @@
+---
+sidebar_class_name: node-only
+---
+
+import CodeBlock from "@theme/CodeBlock";
+
+# Google BigQuery Vector Store
+
+:::tip Compatibility
+Only available on Node.js.
+:::
+
+The Google BigQuery provide the search embeddings stored in BigQuery Table.
+This guide provides a quick overview for getting started with `GoogleBigQueryVectorSearch`
+
+## Setup
+
+To use Google BigQuery stores, you'll need to launch a Google BigQuery service on GCP and install the `@langchain/google-bigquery` integration package.  
+You also need to install the [`@google-cloud/bigquery`](https://github.com/googleapis/nodejs-bigquery) package to initialize a `Table` instance via `BigQuery`.
+
+This guide will use [OpenAI embeddings](/docs/integrations/text_embedding/openai), which require you to install the `@langchain/openai` integration package. You can also use [other supported embeddings models](/docs/integrations/text_embedding) if you wish.
+
+```{=mdx}
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+import Npm2Yarn from "@theme/Npm2Yarn";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+<Npm2Yarn>
+  @langchain/google-bigquery @langchain/core @google-cloud/bigquery @langchain/openai
+</Npm2Yarn>
+```
+
+You can set up a BigQuery service locally by [`bigquery-emulator`](https://github.com/goccy/bigquery-emulator).
+
+If you are using OpenAI embeddings for this guide, you'll need to set your OpenAI key as well:
+
+```typescript
+process.env.OPENAI_API_KEY = "YOUR_API_KEY";
+```
+
+If you want to get automated tracing of your model calls you can also set your [LangSmith](https://docs.smith.langchain.com/) API key by uncommenting below:
+
+```typescript
+// process.env.LANGSMITH_TRACING="true"
+// process.env.LANGSMITH_API_KEY="your-api-key"
+```
+
+## Usage
+
+### Instantiation
+
+Following provide the minimal initialization for setting up the `GoogleBigQueryVectorSearch`:
+
+```typescript
+import { BigQuery } from "@google-cloud/bigquery";
+import { GoogleBigQueryVectorSearch } from "@langchain/google-bigquery";
+import { OpenAIEmbeddings } from "@langchain/openai";
+
+const embeddings = new OpenAIEmbeddings({
+  model: "text-embedding-3-small",
+});
+
+// Create a BigQuery client that uses Application Default Credentials(ADC)
+// see https://cloud.google.com/docs/authentication/production#providing_credentials_to_your_application for all the authentication options
+const bigQueryClient = new BigQuery();
+const table = bigQueryClient.dataset().table();
+
+const vectorStore = new GoogleBigQueryVectorSearch(embeddings, {
+  table,
+});
+```
+
+Apart from `table` param, you can custom the `GoogleBigQueryVectorSearch` by your needs
+
+```typescript
+const vectorStore = new GoogleBigQueryVectorSearch(embeddings, {
+  table,
+  textKey: "text_field", // The name of the table field containing the raw content. Defaults to "text"
+  embeddingKey: "embedding_field", // The name of the table field containing the embedding text. Defaults to "embedding"
+  documentKey: "id_field", // The name of the table field representing an unique id. Defaults to "_id"
+  distanceType: "COSINE", // Only used when vector search, which specifies the type of metric to use to compute the distance between two vectors. Default is "EUCLIDEAN"
+  useBruteForce: true, // Only used when vector search, which determines whether to use brute force search by skipping the vector index if one is available. Default is false
+  fractionListsToSearch: 0.005, // Only used when vector search, which specifies the percentage of lists to search. No default value.
+});
+```
+
+### Adding documents
+
+```typescript
+const documents = [
+  new Document({
+    pageContent: "this apple",
+    metadata: {
+      color: "red",
+      category: "edible",
+    },
+  }),
+  new Document({
+    pageContent: "this blueberry",
+    metadata: {
+      color: "blue",
+      category: "edible",
+    },
+  }),
+  new Document({
+    pageContent: "this firetruck",
+    metadata: {
+      color: "red",
+      category: "machine",
+    },
+  }),
+];
+
+// Add all the documents to store
+await vectorStore.addDocuments(documents);
+```
+
+### Querying Documents
+
+Doing a straightforward search which returns all results by searching a keyword
+
+```typescript
+const results = await vectorStore.similaritySearch("this", 3);
+for (const doc of results) {
+  console.log(` ${doc.pageContent} [${JSON.stringify(doc.metadata, null)}]`);
+}
+```
+
+You can also get the corrsponding score by `similaritySearchWithScore` method
+
+```typescript
+const results = await vectorStore.similaritySearchWithScore("this", 3);
+for (const [doc, score] of results) {
+  console.log(
+    `${score}: ${doc.pageContent} [${JSON.stringify(doc.metadata, null)}]`
+  );
+}
+```
+
+### Querying documents with filter
+
+The vectorstore supports two methods for applying filters to metadata fields when performing document searches
+
+#### Object-based Filters
+
+You can pass a Json object where the keys represent metadata fields and the values specify the filter condition.  
+This method applies an equality filter between the key and the corresponding value. When multiple key-value pairs are provided, they are combined using a logical AND operation.
+
+```typescript
+const filters = {
+  namespace: "color",
+  category: "machine",
+};
+const result = await vectorStore.similaritySearch("this", 2, filters);
+```
+
+#### SQL-based Filters
+
+Comming soon
+
+## Related
+
+- Vector store [conceptual guide](/docs/concepts/#vectorstores)
+- Vector store [how-to guides](/docs/how_to/#vectorstores)
+
+## API reference
+
+For detailed documentation of all `GoogleBigQueryVectorSearch` features and configurations head to the [API reference](https://api.js.langchain.com/classes/langchain_google-bigquery.GoogleBigQueryVectorSearch.html).
