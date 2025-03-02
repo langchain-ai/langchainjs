@@ -23,6 +23,13 @@ export interface AnthropicMessageContentImage
   };
 }
 
+export interface AnthropicMessageContentThinking
+  extends AnthropicMessageContentBase {
+  type: "thinking";
+  thinking?: string;
+  signature: string;
+}
+
 // TODO: Define this
 export type AnthropicMessageContentToolUseInput = object;
 
@@ -50,7 +57,8 @@ export type AnthropicMessageContent =
   | AnthropicMessageContentText
   | AnthropicMessageContentImage
   | AnthropicMessageContentToolUse
-  | AnthropicMessageContentToolResult;
+  | AnthropicMessageContentToolResult
+  | AnthropicMessageContentThinking;
 
 export interface AnthropicMessage {
   role: string;
@@ -94,6 +102,18 @@ export interface AnthropicTool {
   input_schema: AnthropicToolInputSchema;
 }
 
+export interface AnthropicThinkingEnabled {
+  type: "enabled";
+
+  budget_tokens: number;
+}
+
+export interface AnthropicThinkingDisabled {
+  type: "disabled";
+}
+
+export type AnthropicThinking = AnthropicThinkingEnabled | AnthropicThinkingDisabled;
+
 export interface AnthropicRequest {
   anthropic_version: string;
   messages: AnthropicMessage[];
@@ -107,6 +127,7 @@ export interface AnthropicRequest {
   metadata?: AnthropicMetadata;
   tool_choice?: AnthropicToolChoice;
   tools?: AnthropicTool[];
+  thinking?: AnthropicThinking;
 }
 
 export type AnthropicRequestSettings = Pick<
@@ -126,7 +147,13 @@ export interface AnthropicContentToolUse {
   input: object;
 }
 
-export type AnthropicContent = AnthropicContentText | AnthropicContentToolUse;
+export interface AnthropicContentThinking {
+  type: "thinking";
+  thinking?: string;
+  signature: string;
+}
+
+export type AnthropicContent = AnthropicContentText | AnthropicContentToolUse | AnthropicContentThinking;
 
 export interface AnthropicUsage {
   input_tokens: number;
@@ -152,6 +179,7 @@ export interface AnthropicResponseMessage {
 
 export interface AnthropicAPIConfig {
   version?: string;
+  thinking?: AnthropicThinking;
 }
 
 export type AnthropicStreamEventType =

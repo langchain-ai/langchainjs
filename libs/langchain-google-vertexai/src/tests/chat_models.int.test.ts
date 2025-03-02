@@ -36,6 +36,7 @@ import {
 import { InMemoryStore } from "@langchain/core/stores";
 import { BaseCallbackHandler } from "@langchain/core/callbacks/base";
 import {
+  AnthropicAPIConfig,
   GoogleRequestLogger,
   GoogleRequestRecorder,
 } from "@langchain/google-common";
@@ -666,7 +667,7 @@ const testAnthropicModelNames = [
   // ["claude-3-5-sonnet@20240620"],
   ["claude-3-5-sonnet-v2@20241022"],
   ["claude-3-7-sonnet@20250219"],
-]
+];
 
 describe.each(testAnthropicModelNames)("GAuth Anthropic Chat (%s)", (modelName) => {
   let recorder: GoogleRequestRecorder;
@@ -772,5 +773,65 @@ describe.each(testAnthropicModelNames)("GAuth Anthropic Chat (%s)", (modelName) 
     expect(toolCalls?.length).toBe(1);
     expect(toolCalls?.[0].name).toBe("current_weather_tool");
     expect(toolCalls?.[0].args).toHaveProperty("location");
+  });
+
+});
+
+const testAnthropicThinkingModelNames = [
+  ["claude-3-7-sonnet@20250219"],
+]
+describe.each(testAnthropicThinkingModelNames)("GAuth Anthropic Thinking (%s)", (modelName) => {
+  let recorder: GoogleRequestRecorder;
+  let callbacks: BaseCallbackHandler[];
+
+  beforeEach(() => {
+    recorder = new GoogleRequestRecorder();
+    callbacks = [recorder, new GoogleRequestLogger()];
+  });
+
+  test("thinking multiturn invoke", async () => {
+    const apiConfig: AnthropicAPIConfig = {
+      thinking: { type: "enabled", budget_tokens: 2000 },
+    }
+    const model = new ChatVertexAI({
+      modelName,
+      callbacks,
+      maxOutputTokens: 5000,
+      apiConfig,
+    });
+
+    async function doInvoke(messages: BaseMessage[]) {
+      const response = await model.invoke(messages);
+
+      expect(Array.isArray(response.content)).toBe(true);
+        const content = response.content as MessageContentComplex[];
+      expect(content.some((block) => "thinking" in (block as MessageContentComplex))).toBe(true);
+
+      let thinkingCount = 0;
+      for (const block of response.content) {
+        expect(typeof block).toBe("object");
+        const complexBlock = block as MessageContentComplex;
+        if (complexBlock.type === "thinking") {
+          thinkingCount += 1;
+          expect(Object.keys(block).sort()).toEqual(
+            ["type", "thinking", "signature"].sort()
+          );
+          expect(complexBlock.thinking).toBeTruthy();
+          expect(typeof complexBlock.thinking).toBe("string");
+          expect(complexBlock.signature).toBeTruthy();
+          expect(typeof complexBlock.signature).toBe("string");
+        }
+      }
+      expect(thinkingCount).toEqual(1);
+      return response;
+    }
+
+    const invokeMessages = [new HumanMessage("Hello")];
+
+    invokeMessages.push(await doInvoke(invokeMessages));
+    invokeMessages.push(new HumanMessage("What is 42+7?"));
+
+    // test a second time to make sure that we've got input translation working correctly
+    await model.invoke(invokeMessages);
   });
 });
