@@ -3,10 +3,20 @@ import type { JWT } from "googleapis-common";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { BaseLanguageModel } from "@langchain/core/language_models/base";
 import { CallbackManagerForToolRun } from "@langchain/core/callbacks/manager";
-import { StringOutputParser } from "@langchain/core/output_parsers";
+import { StructuredOutputParser } from "@langchain/core/output_parsers";
+import { z } from "zod";
 
 import { VIEW_EVENTS_PROMPT } from "../prompts/index.js";
 import { getTimezoneOffsetInHours } from "../utils/get-timezone-offset-in-hours.js";
+
+const eventSchema = z.object({
+  time_min: z.string(),
+  time_max: z.string(),
+  user_timezone: z.string(),
+  max_results: z.number(),
+  search_query: z.string().optional(),
+});
+const parser = StructuredOutputParser.fromZodSchema(eventSchema);
 
 type RunViewEventParams = {
   calendarId: string;
@@ -26,7 +36,7 @@ const runViewEvents = async (
     inputVariables: ["date", "query", "u_timezone", "dayName"],
   });
 
-  const viewEventsChain = prompt.pipe(model).pipe(new StringOutputParser());
+  const viewEventsChain = prompt.pipe(model).pipe(parser);
 
   const date = new Date().toISOString();
   const u_timezone = getTimezoneOffsetInHours();
@@ -41,13 +51,12 @@ const runViewEvents = async (
     },
     runManager?.getChild()
   );
-  const loaded = JSON.parse(output);
 
   try {
     const response = await calendar.events.list({
       auth,
       calendarId,
-      ...loaded,
+      ...output,
     });
 
     const curatedItems =
