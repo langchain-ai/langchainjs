@@ -3,9 +3,21 @@ import type { GaxiosResponse } from "googleapis-common";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { CallbackManagerForToolRun } from "@langchain/core/callbacks/manager";
 import { BaseLanguageModel } from "@langchain/core/language_models/base";
-import { StringOutputParser } from "@langchain/core/output_parsers";
+import { StructuredOutputParser } from "@langchain/core/output_parsers";
 import { CREATE_EVENT_PROMPT } from "../prompts/index.js";
 import { getTimezoneOffsetInHours } from "../utils/get-timezone-offset-in-hours.js";
+import { z } from "zod";
+
+const eventSchema = z.object({
+  event_summary: z.string(),
+  event_start_time: z.string(),
+  event_end_time: z.string(),
+  event_location: z.string().optional(),
+  event_description: z.string().optional(),
+  user_timezone: z.string(),
+});
+
+const parser = StructuredOutputParser.fromZodSchema(eventSchema);
 
 type CreateEventParams = {
   eventSummary: string;
@@ -71,7 +83,7 @@ const runCreateEvent = async (
     template: CREATE_EVENT_PROMPT,
     inputVariables: ["date", "query", "u_timezone", "dayName"],
   });
-  const createEventChain = prompt.pipe(model).pipe(new StringOutputParser());
+  const createEventChain = prompt.pipe(model).pipe(parser);
 
   const date = new Date().toISOString();
   const u_timezone = getTimezoneOffsetInHours();
@@ -86,7 +98,6 @@ const runCreateEvent = async (
     },
     runManager?.getChild()
   );
-  const loaded = JSON.parse(output);
 
   const [
     eventSummary,
@@ -95,7 +106,7 @@ const runCreateEvent = async (
     eventLocation,
     eventDescription,
     userTimezone,
-  ] = Object.values(loaded);
+  ] = Object.values(output);
 
   const event = await createEvent(
     {
