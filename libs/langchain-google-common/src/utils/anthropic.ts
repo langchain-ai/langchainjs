@@ -22,12 +22,12 @@ import {
 import {
   AnthropicAPIConfig,
   AnthropicContent,
-  AnthropicContentText,
+  AnthropicContentText, AnthropicContentThinking,
   AnthropicContentToolUse,
   AnthropicMessage,
   AnthropicMessageContent,
   AnthropicMessageContentImage,
-  AnthropicMessageContentText,
+  AnthropicMessageContentText, AnthropicMessageContentThinking,
   AnthropicMessageContentToolResult,
   AnthropicMessageContentToolResultContent,
   AnthropicRequest,
@@ -128,6 +128,15 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
     };
   }
 
+  function thinkingContentToMessageFields(
+    thinkingContent: AnthropicContentThinking
+  ): AIMessageFields {
+    // TODO: Once a reasoning/thinking type is defined in LangChain, use it
+    return {
+      content: [thinkingContent],
+    };
+  }
+
   function anthropicContentToMessageFields(
     anthropicContent: AnthropicContent
   ): AIMessageFields | undefined {
@@ -137,7 +146,10 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
         return textContentToMessageFields(anthropicContent);
       case "tool_use":
         return toolUseContentToMessageFields(anthropicContent);
+      case "thinking":
+        return thinkingContentToMessageFields(anthropicContent);
       default:
+        console.error(`Unknown message type: ${type}`, anthropicContent);
         return undefined;
     }
   }
@@ -451,6 +463,21 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
     };
   }
 
+  function thinkingContentToAnthropicContent(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    content: Record<string,any>
+  ): AnthropicMessageContentThinking | undefined {
+    // TODO: Once a Langchain Thinking type is defined, use it
+    const ret: AnthropicContentThinking = {
+      type: "thinking",
+      signature: content.signature,
+    }
+    if (content.thinking) {
+      ret.thinking = content.thinking;
+    }
+    return ret;
+  }
+
   function contentComplexToAnthropicContent(
     content: MessageContentComplex
   ): AnthropicMessageContent | undefined {
@@ -462,6 +489,8 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
         return imageContentToAnthropicContent(
           content as MessageContentImageUrl
         );
+      case "thinking":
+        return thinkingContentToAnthropicContent(content as Record<string,unknown>);
       default:
         console.warn(`Unexpected content type: ${type}`);
         return undefined;
@@ -695,6 +724,9 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
     }
     if (system?.length) {
       ret.system = system;
+    }
+    if (config?.thinking) {
+      ret.thinking = config?.thinking;
     }
 
     return ret;

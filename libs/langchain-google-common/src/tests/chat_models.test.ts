@@ -24,6 +24,7 @@ import {
   mockId,
 } from "./mock.js";
 import {
+  AnthropicAPIConfig,
   GeminiTool,
   GoogleAIBaseLLMInput,
   GoogleAISafetyCategory,
@@ -1533,7 +1534,117 @@ describe("Mock ChatGoogle - Anthropic", () => {
       "1 + 1 = 2\n\nThis is one of the most basic arithmetic equations. It represents the addition of two units, resulting in a sum of two."
     );
   });
+
+  test("2. Thinking request 1 format", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "claude-chat-2-mock.json",
+    };
+    const apiConfig: AnthropicAPIConfig = {
+      thinking: { type: "enabled", budget_tokens: 2000 },
+    }
+    const model = new ChatGoogle({
+      modelName: "claude-3-7-sonnet@20250219",
+      platformType: "gcp",
+      authOptions,
+      apiConfig,
+    });
+    const messages: BaseMessageLike[] = [new HumanMessage("Hi there")];
+    await model.invoke(messages);
+
+    console.log("record", record?.opts?.data);
+    expect(record?.opts?.data).toHaveProperty("thinking");
+    expect(record.opts.data.thinking.type).toEqual("enabled");
+    expect(record.opts.data.thinking.budget_tokens).toEqual(2000);
+  });
+
+  test("2. Thinking response 1 format", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "claude-chat-2-mock.json",
+    };
+    const apiConfig: AnthropicAPIConfig = {
+      thinking: { type: "enabled", budget_tokens: 2000 },
+    }
+    const model = new ChatGoogle({
+      modelName: "claude-3-7-sonnet@20250219",
+      platformType: "gcp",
+      authOptions,
+      apiConfig,
+    });
+    const messages: BaseMessageLike[] = [new HumanMessage("Hi there")];
+    const response = await model.invoke(messages);
+
+    console.log(JSON.stringify(response,null,1));
+    expect(Array.isArray(response.content)).toBe(true);
+    expect(response.content).toHaveLength(2);
+    const content = response.content as MessageContentComplex[];
+    expect(content.some((block) => "thinking" in (block as MessageContentComplex))).toBe(true);
+
+    let thinkingCount = 0;
+    for (const block of response.content) {
+      expect(typeof block).toBe("object");
+      const complexBlock = block as MessageContentComplex;
+      if (complexBlock.type === "thinking") {
+        thinkingCount += 1;
+        expect(Object.keys(block).sort()).toEqual(
+          ["type", "thinking", "signature"].sort()
+        );
+        expect(complexBlock.thinking).toBeTruthy();
+        expect(typeof complexBlock.thinking).toBe("string");
+        expect(complexBlock.signature).toBeTruthy();
+        expect(typeof complexBlock.signature).toBe("string");
+      }
+    }
+    expect(thinkingCount).toEqual(1);
+
+  });
+
+  test("2. Thinking request 2 format", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "claude-chat-2-mock.json",
+    };
+    const apiConfig: AnthropicAPIConfig = {
+      thinking: { type: "enabled", budget_tokens: 2000 },
+    }
+    const model = new ChatGoogle({
+      modelName: "claude-3-7-sonnet@20250219",
+      platformType: "gcp",
+      authOptions,
+      apiConfig,
+    });
+    const messages1: BaseMessageLike[] = [new HumanMessage("Hi there")];
+    const response1 = await model.invoke(messages1);
+
+    const messages2: BaseMessageLike[] = [
+      ...messages1,
+      response1,
+      new HumanMessage("What is 42 + 7?"),
+    ];
+    await model.invoke(messages2)
+
+    console.log("record", record?.opts?.data);
+    const testMessages = record?.opts?.data?.messages;
+    expect(Array.isArray(testMessages)).toEqual(true);
+    expect(testMessages).toHaveLength(3);
+    const content = testMessages[1]?.content;
+    expect(Array.isArray(content)).toEqual(true);
+    expect(content[0].type).toEqual("thinking");
+    expect(content[0].signature).toEqual("EuoBCkgIARACGAIiQAaRslZizmvsLlYS8BV0r0n6hzeTQrjPx/D8WBjoiz7E7uyphiQs+FIoF7ec1VULelnEi5NlAuogSfxyOfM8O/4SDCoF2ccJFJxrfz8gjhoMlV/iOHFZ9gLnW1kuIjDn2GrBrlPRzqQD1H7Z4wQHTEkVnv5AUUCzJdER3Pfyf6nSjM3fTb/f2SFp6hKW8uMqUJd0RLm38/Ofu548THF6TGT4Do1sY9M+HETggt6OYE0QMvMEWGQaAw8vuWBR+AzkbnuqmZ05hAAuumoGqM2kF5CiD/fwyxBDz4QYSSP+rBQn");
+  });
+
 });
+
 function extractKeys(obj: Record<string, any>, keys: string[] = []) {
   for (const key in obj) {
     if (Object.prototype.hasOwnProperty.call(obj, key)) {
