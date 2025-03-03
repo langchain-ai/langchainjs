@@ -1,6 +1,6 @@
 {
   "name": "@langchain/xai",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "xAI integration for LangChain.js",
   "type": "module",
   "engines": {
@@ -35,7 +35,8 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@langchain/openai": "~0.3.0"
+    "@langchain/openai": "~0.4.4",
+    "zod": "^3.24.2"
   },
   "peerDependencies": {
     "@langchain/core": ">=0.2.21 <0.4.0"
@@ -67,7 +68,6 @@
     "rollup": "^4.5.2",
     "ts-jest": "^29.1.0",
     "typescript": "<5.2.0",
-    "zod": "^3.22.4",
     "zod-to-json-schema": "^3.23.1"
   },
   "publishConfig": {

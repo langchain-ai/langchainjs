@@ -24,11 +24,11 @@ class ChatMistralAIStandardIntegrationTests extends ChatModelIntegrationTests<
     });
   }
 
-  async testCacheComplexMessageTypes() {
+  async testToolMessageHistoriesListContent() {
     this.skipTestMessage(
-      "testCacheComplexMessageTypes",
+      "testToolMessageHistoriesListContent",
       "ChatMistralAI",
-      "Complex message types not properly implemented"
+      "tool_use message blocks not supported"
     );
   }
 }

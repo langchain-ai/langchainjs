@@ -1950,7 +1950,7 @@ test("Runnable streamEvents method with simple tools", async () => {
   ]);
 });
 
-test("Runnable streamEvents method with a custom event", async () => {
+test("Runnable methods with a custom event", async () => {
   const lambda = RunnableLambda.from(
     async (params: { x: number; y: string }, config) => {
       await dispatchCustomEvent("testEvent", { someval: "test" }, config);
@@ -1958,6 +1958,9 @@ test("Runnable streamEvents method with a custom event", async () => {
       return JSON.stringify({ x: params.x, y: params.y });
     }
   );
+  // Invoke shouldn't fail
+  const res = await lambda.invoke({ x: 1, y: "2" });
+  expect(res).toEqual(JSON.stringify({ x: 1, y: "2" }));
   const events = [];
   const eventStream = await lambda.streamEvents(
     { x: 1, y: "2" },
@@ -2259,4 +2262,24 @@ test("Runnable streamEvents method should respect passed signal", async () => {
       controller.abort();
     }
   }).rejects.toThrowError();
+});
+
+test("streamEvents method handles errors", async () => {
+  let caughtError: unknown;
+  const model = new FakeListChatModel({
+    responses: ["abc"],
+  });
+
+  try {
+    // eslint-disable-next-line no-unreachable-loop
+    for await (const _ of model.streamEvents("Hello! Tell me about yourself.", {
+      version: "v2",
+    })) {
+      throw new Error("should catch this error");
+    }
+  } catch (e) {
+    caughtError = e;
+  }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  expect((caughtError as any)?.message).toEqual("should catch this error");
 });

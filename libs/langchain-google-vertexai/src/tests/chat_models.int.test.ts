@@ -59,20 +59,52 @@ const calculatorTool = tool((_) => "no-op", {
   }),
 });
 
-describe("GAuth Gemini Chat", () => {
+/*
+ * Which models do we want to run the test suite against?
+ */
+const testGeminiModelNames = [
+  ["gemini-1.5-pro-002"],
+  ["gemini-1.5-flash-002"],
+  ["gemini-2.0-flash-001"],
+  // ["gemini-2.0-flash-thinking-exp-1219"],
+];
+
+/*
+ * Some models may have usage quotas still.
+ * For those models, set how long (in millis) to wait in between each test.
+ */
+const testGeminiModelDelay: Record<string, number> = {
+  "gemini-2.0-flash-exp": 5000,
+  "gemini-2.0-flash-thinking-exp-1219": 5000,
+};
+
+describe.each(testGeminiModelNames)("GAuth Gemini Chat (%s)", (modelName) => {
   let recorder: GoogleRequestRecorder;
   let callbacks: BaseCallbackHandler[];
 
-  beforeEach(() => {
+  beforeEach(async () => {
     recorder = new GoogleRequestRecorder();
     callbacks = [recorder, new GoogleRequestLogger()];
+
+    const delay = testGeminiModelDelay[modelName] ?? 0;
+    if (delay) {
+      console.log(`Delaying for ${delay}ms`);
+      // eslint-disable-next-line no-promise-executor-return
+      await new Promise((resolve) => setTimeout(resolve, delay));
+    }
   });
 
   test("invoke", async () => {
     const model = new ChatVertexAI({
       callbacks,
+      modelName,
     });
     const res = await model.invoke("What is 1 + 1?");
+
+    expect(recorder?.request?.connection?.url).toMatch(
+      /https:\/\/.+-aiplatform.googleapis.com/
+    );
+
     expect(res).toBeDefined();
     expect(res._getType()).toEqual("ai");
 
@@ -84,8 +116,10 @@ describe("GAuth Gemini Chat", () => {
     expect(text).toMatch(/(1 + 1 (equals|is|=) )?2.? ?/);
   });
 
-  test("generate", async () => {
-    const model = new ChatVertexAI();
+  test(`generate`, async () => {
+    const model = new ChatVertexAI({
+      modelName,
+    });
     const messages: BaseMessage[] = [
       new SystemMessage(
         "You will reply to all requests to flip a coin with either H, indicating heads, or T, indicating tails."
@@ -103,12 +137,13 @@ describe("GAuth Gemini Chat", () => {
 
     expect(typeof aiMessage.content).toBe("string");
     const text = aiMessage.content as string;
-    expect(["H", "T"]).toContainEqual(text);
+    expect(["H", "T"]).toContainEqual(text.trim());
   });
 
   test("stream", async () => {
     const model = new ChatVertexAI({
       callbacks,
+      modelName,
     });
     const input: BaseLanguageModelInput = new ChatPromptValue([
       new SystemMessage(
@@ -153,7 +188,11 @@ describe("GAuth Gemini Chat", () => {
         ],
       },
     ];
-    const model = new ChatVertexAI().bind({ tools });
+    const model = new ChatVertexAI({
+      modelName,
+    }).bind({
+      tools,
+    });
     const result = await model.invoke("Run a test on the cobalt project");
     expect(result).toHaveProperty("content");
     expect(result.content).toBe("");
@@ -197,7 +236,11 @@ describe("GAuth Gemini Chat", () => {
         ],
       },
     ];
-    const model = new ChatVertexAI().bind({ tools });
+    const model = new ChatVertexAI({
+      modelName,
+    }).bind({
+      tools,
+    });
     const toolResult = {
       testPassed: true,
     };
@@ -241,7 +284,9 @@ describe("GAuth Gemini Chat", () => {
         required: ["location"],
       },
     };
-    const model = new ChatVertexAI().withStructuredOutput(tool);
+    const model = new ChatVertexAI({
+      modelName,
+    }).withStructuredOutput(tool);
     const result = await model.invoke("What is the weather in Paris?");
     expect(result).toHaveProperty("location");
   });
@@ -267,7 +312,8 @@ describe("GAuth Gemini Chat", () => {
     });
     const blobStore = new ReadThroughBlobStore({
       baseStore: aliasStore,
-      backingStore,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      backingStore: backingStore as any,
     });
     const resolver = new SimpleWebBlobStore();
     const mediaManager = new MediaManager({
@@ -275,9 +321,10 @@ describe("GAuth Gemini Chat", () => {
       resolvers: [resolver],
     });
     const model = new ChatGoogle({
-      modelName: "gemini-1.5-flash",
+      modelName,
       apiConfig: {
-        mediaManager,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        mediaManager: mediaManager as any,
       },
     });
 
@@ -320,6 +367,7 @@ describe("GAuth Gemini Chat", () => {
     const model = new ChatVertexAI({
       temperature: 0,
       maxOutputTokens: 10,
+      modelName,
     });
     let res: AIMessageChunk | null = null;
     for await (const chunk of await model.stream(
@@ -347,6 +395,7 @@ describe("GAuth Gemini Chat", () => {
     const model = new ChatVertexAI({
       temperature: 0,
       streamUsage: false,
+      modelName,
     });
     let res: AIMessageChunk | null = null;
     for await (const chunk of await model.stream(
@@ -366,6 +415,7 @@ describe("GAuth Gemini Chat", () => {
     const model = new ChatVertexAI({
       temperature: 0,
       maxOutputTokens: 10,
+      modelName,
     });
     const res = await model.invoke("Why is the sky blue? Be concise.");
     // console.log(res);
@@ -384,6 +434,7 @@ describe("GAuth Gemini Chat", () => {
     const modelWithStreaming = new ChatVertexAI({
       maxOutputTokens: 50,
       streaming: true,
+      modelName,
     });
 
     let totalTokenCount = 0;
@@ -407,7 +458,7 @@ describe("GAuth Gemini Chat", () => {
 
   test("Can force a model to invoke a tool", async () => {
     const model = new ChatVertexAI({
-      model: "gemini-1.5-pro",
+      modelName,
     });
     const modelWithTools = model.bind({
       tools: [calculatorTool, weatherTool],
@@ -425,8 +476,10 @@ describe("GAuth Gemini Chat", () => {
     expect(result.tool_calls?.[0].args).toHaveProperty("expression");
   });
 
-  test("ChatGoogleGenerativeAI can stream tools", async () => {
-    const model = new ChatVertexAI({});
+  test(`stream tools`, async () => {
+    const model = new ChatVertexAI({
+      modelName,
+    });
 
     const weatherTool = tool(
       (_) => "The weather in San Francisco today is 18 degrees and sunny.",
@@ -474,7 +527,7 @@ describe("GAuth Gemini Chat", () => {
     const audioMimeType = "audio/wav";
 
     const model = new ChatVertexAI({
-      model: "gemini-1.5-flash",
+      model: modelName,
       temperature: 0,
       maxRetries: 0,
     });
@@ -504,6 +557,101 @@ describe("GAuth Gemini Chat", () => {
 
     expect(typeof response.content).toBe("string");
     expect((response.content as string).length).toBeGreaterThan(15);
+  });
+
+  test("Supports GoogleSearchRetrievalTool", async () => {
+    const searchRetrievalTool = {
+      googleSearchRetrieval: {
+        dynamicRetrievalConfig: {
+          mode: "MODE_DYNAMIC",
+          dynamicThreshold: 0.7, // default is 0.7
+        },
+      },
+    };
+    const model = new ChatVertexAI({
+      modelName,
+      temperature: 0,
+      maxRetries: 0,
+    }).bindTools([searchRetrievalTool]);
+
+    const result = await model.invoke("Who won the 2024 MLB World Series?");
+    expect(result.content as string).toContain("Dodgers");
+  });
+
+  test("Supports GoogleSearchTool", async () => {
+    const searchTool: GeminiTool = {
+      googleSearch: {},
+    };
+    const model = new ChatVertexAI({
+      modelName,
+      temperature: 0,
+      maxRetries: 0,
+    }).bindTools([searchTool]);
+
+    const result = await model.invoke("Who won the 2024 MLB World Series?");
+    expect(result.content as string).toContain("Dodgers");
+  });
+
+  test("Can stream GoogleSearchRetrievalTool", async () => {
+    const searchRetrievalTool = {
+      googleSearchRetrieval: {
+        dynamicRetrievalConfig: {
+          mode: "MODE_DYNAMIC",
+          dynamicThreshold: 0.7, // default is 0.7
+        },
+      },
+    };
+    const model = new ChatVertexAI({
+      modelName,
+      temperature: 0,
+      maxRetries: 0,
+    }).bindTools([searchRetrievalTool]);
+
+    const stream = await model.stream("Who won the 2024 MLB World Series?");
+    let finalMsg: AIMessageChunk | undefined;
+    for await (const msg of stream) {
+      finalMsg = finalMsg ? concat(finalMsg, msg) : msg;
+    }
+    if (!finalMsg) {
+      throw new Error("finalMsg is undefined");
+    }
+    expect(finalMsg.content as string).toContain("Dodgers");
+  });
+});
+
+describe("Express Gemini Chat", () => {
+  // We don't do a lot of tests or across every model, since there are
+  // pretty severe rate limits.
+  const modelName = "gemini-2.0-flash-001";
+
+  let recorder: GoogleRequestRecorder;
+  let callbacks: BaseCallbackHandler[];
+
+  beforeEach(async () => {
+    recorder = new GoogleRequestRecorder();
+    callbacks = [recorder, new GoogleRequestLogger()];
+  });
+
+  test("invoke", async () => {
+    const model = new ChatVertexAI({
+      callbacks,
+      modelName,
+    });
+    const res = await model.invoke("What is 1 + 1?");
+
+    expect(recorder?.request?.connection?.url).toMatch(
+      /https:\/\/aiplatform.googleapis.com/
+    );
+
+    expect(res).toBeDefined();
+    expect(res._getType()).toEqual("ai");
+
+    const aiMessage = res as AIMessageChunk;
+    expect(aiMessage.content).toBeDefined();
+
+    expect(typeof aiMessage.content).toBe("string");
+    const text = aiMessage.content as string;
+    expect(text).toMatch(/(1 + 1 (equals|is|=) )?2.? ?/);
   });
 });
 

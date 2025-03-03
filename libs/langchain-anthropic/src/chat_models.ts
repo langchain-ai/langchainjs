@@ -25,10 +25,6 @@ import {
 } from "@langchain/core/runnables";
 import { isZodSchema } from "@langchain/core/utils/types";
 import { z } from "zod";
-import type {
-  MessageCreateParams,
-  Tool as AnthropicTool,
-} from "@anthropic-ai/sdk/resources/index.mjs";
 
 import { isLangChainTool } from "@langchain/core/utils/function_calling";
 import { AnthropicToolsOutputParser } from "./output_parsers.js";
@@ -43,6 +39,7 @@ import {
   AnthropicMessageStreamEvent,
   AnthropicRequestOptions,
   AnthropicStreamingMessageCreateParams,
+  AnthropicThinkingConfigParam,
   AnthropicToolChoice,
   ChatAnthropicToolType,
 } from "./types.js";
@@ -64,12 +61,42 @@ export interface ChatAnthropicCallOptions
   headers?: Record<string, string>;
 }
 
-function _toolsInParams(params: AnthropicMessageCreateParams): boolean {
+function _toolsInParams(
+  params: AnthropicMessageCreateParams | AnthropicStreamingMessageCreateParams
+): boolean {
   return !!(params.tools && params.tools.length > 0);
 }
 
+function _documentsInParams(
+  params: AnthropicMessageCreateParams | AnthropicStreamingMessageCreateParams
+): boolean {
+  for (const message of params.messages ?? []) {
+    if (typeof message.content === "string") {
+      continue;
+    }
+    for (const block of message.content ?? []) {
+      if (
+        typeof block === "object" &&
+        block != null &&
+        block.type === "document" &&
+        typeof block.citations === "object" &&
+        block.citations.enabled
+      ) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+function _thinkingInParams(
+  params: AnthropicMessageCreateParams | AnthropicStreamingMessageCreateParams
+): boolean {
+  return !!(params.thinking && params.thinking.type === "enabled");
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function isAnthropicTool(tool: any): tool is AnthropicTool {
+function isAnthropicTool(tool: any): tool is Anthropic.Messages.Tool {
   return "input_schema" in tool;
 }
 
@@ -153,6 +180,11 @@ export interface AnthropicInput {
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   createClient?: (options: ClientOptions) => any;
+
+  /**
+   * Options for extended thinking.
+   */
+  thinking?: AnthropicThinkingConfigParam;
 }
 
 /**
@@ -611,6 +643,8 @@ export class ChatAnthropicMessages<
 
   clientOptions: ClientOptions;
 
+  thinking: AnthropicThinkingConfigParam = { type: "disabled" };
+
   // Used for non-streaming requests
   protected batchClient: Anthropic;
 
@@ -660,6 +694,8 @@ export class ChatAnthropicMessages<
     this.streaming = fields?.streaming ?? false;
     this.streamUsage = fields?.streamUsage ?? this.streamUsage;
 
+    this.thinking = fields?.thinking ?? this.thinking;
+
     this.createClient =
       fields?.createClient ??
       ((options: ClientOptions) => new Anthropic(options));
@@ -685,7 +721,7 @@ export class ChatAnthropicMessages<
    */
   formatStructuredToolToAnthropic(
     tools: ChatAnthropicCallOptions["tools"]
-  ): AnthropicTool[] | undefined {
+  ): Anthropic.Messages.Tool[] | undefined {
     if (!tools || !tools.length) {
       return undefined;
     }
@@ -697,7 +733,8 @@ export class ChatAnthropicMessages<
         return {
           name: tool.function.name,
           description: tool.function.description,
-          input_schema: tool.function.parameters as AnthropicTool.InputSchema,
+          input_schema: tool.function
+            .parameters as Anthropic.Messages.Tool.InputSchema,
         };
       }
       if (isLangChainTool(tool)) {
@@ -706,7 +743,7 @@ export class ChatAnthropicMessages<
           description: tool.description,
           input_schema: zodToJsonSchema(
             tool.schema
-          ) as AnthropicTool.InputSchema,
+          ) as Anthropic.Messages.Tool.InputSchema,
         };
       }
       throw new Error(
@@ -740,11 +777,35 @@ export class ChatAnthropicMessages<
   > &
     Kwargs {
     const tool_choice:
-      | MessageCreateParams.ToolChoiceAuto
-      | MessageCreateParams.ToolChoiceAny
-      | MessageCreateParams.ToolChoiceTool
+      | Anthropic.Messages.ToolChoiceAuto
+      | Anthropic.Messages.ToolChoiceAny
+      | Anthropic.Messages.ToolChoiceTool
       | undefined = handleToolChoice(options?.tool_choice);
 
+    if (this.thinking.type === "enabled") {
+      if (this.topK !== -1) {
+        throw new Error("topK is not supported when thinking is enabled");
+      }
+      if (this.topP !== -1) {
+        throw new Error("topP is not supported when thinking is enabled");
+      }
+      if (this.temperature !== 1) {
+        throw new Error(
+          "temperature is not supported when thinking is enabled"
+        );
+      }
+
+      return {
+        model: this.model,
+        stop_sequences: options?.stop ?? this.stopSequences,
+        stream: this.streaming,
+        max_tokens: this.maxTokens,
+        tools: this.formatStructuredToolToAnthropic(options?.tools),
+        tool_choice,
+        thinking: this.thinking,
+        ...this.invocationKwargs,
+      };
+    }
     return {
       model: this.model,
       temperature: this.temperature,
@@ -755,6 +816,7 @@ export class ChatAnthropicMessages<
       max_tokens: this.maxTokens,
       tools: this.formatStructuredToolToAnthropic(options?.tools),
       tool_choice,
+      thinking: this.thinking,
       ...this.invocationKwargs,
     };
   }
@@ -784,22 +846,19 @@ export class ChatAnthropicMessages<
   ): AsyncGenerator<ChatGenerationChunk> {
     const params = this.invocationParams(options);
     const formattedMessages = _convertMessagesToAnthropicPayload(messages);
-    const coerceContentToString = !_toolsInParams({
+    const payload = {
       ...params,
       ...formattedMessages,
-      stream: false,
-    });
+      stream: true,
+    } as const;
+    const coerceContentToString =
+      !_toolsInParams(payload) &&
+      !_documentsInParams(payload) &&
+      !_thinkingInParams(payload);
 
-    const stream = await this.createStreamWithRetry(
-      {
-        ...params,
-        ...formattedMessages,
-        stream: true,
-      },
-      {
-        headers: options.headers,
-      }
-    );
+    const stream = await this.createStreamWithRetry(payload, {
+      headers: options.headers,
+    });
 
     for await (const data of stream) {
       if (options.signal?.aborted) {
@@ -1041,7 +1100,7 @@ export class ChatAnthropicMessages<
 
     let functionName = name ?? "extract";
     let outputParser: BaseLLMOutputParser<RunOutput>;
-    let tools: AnthropicTool[];
+    let tools: Anthropic.Messages.Tool[];
     if (isZodSchema(schema)) {
       const jsonSchema = zodToJsonSchema(schema);
       tools = [
@@ -1049,7 +1108,7 @@ export class ChatAnthropicMessages<
           name: functionName,
           description:
             jsonSchema.description ?? "A function available to call.",
-          input_schema: jsonSchema as AnthropicTool.InputSchema,
+          input_schema: jsonSchema as Anthropic.Messages.Tool.InputSchema,
         },
       ];
       outputParser = new AnthropicToolsOutputParser({
@@ -1058,20 +1117,20 @@ export class ChatAnthropicMessages<
         zodSchema: schema,
       });
     } else {
-      let anthropicTools: AnthropicTool;
+      let anthropicTools: Anthropic.Messages.Tool;
       if (
         typeof schema.name === "string" &&
         typeof schema.description === "string" &&
         typeof schema.input_schema === "object" &&
         schema.input_schema != null
       ) {
-        anthropicTools = schema as AnthropicTool;
+        anthropicTools = schema as Anthropic.Messages.Tool;
         functionName = schema.name;
       } else {
         anthropicTools = {
           name: functionName,
           description: schema.description ?? "",
-          input_schema: schema as AnthropicTool.InputSchema,
+          input_schema: schema as Anthropic.Messages.Tool.InputSchema,
         };
       }
       tools = [anthropicTools];
@@ -1080,13 +1139,38 @@ export class ChatAnthropicMessages<
         keyName: functionName,
       });
     }
-    const llm = this.bind({
-      tools,
-      tool_choice: {
-        type: "tool",
-        name: functionName,
-      },
-    } as Partial<CallOptions>);
+    let llm;
+    if (this.thinking?.type === "enabled") {
+      const thinkingAdmonition =
+        "Anthropic structured output relies on forced tool calling, " +
+        "which is not supported when `thinking` is enabled. This method will raise " +
+        "OutputParserException if tool calls are not " +
+        "generated. Consider disabling `thinking` or adjust your prompt to ensure " +
+        "the tool is called.";
+
+      console.warn(thinkingAdmonition);
+
+      llm = this.bind({
+        tools,
+      } as Partial<CallOptions>);
+
+      const raiseIfNoToolCalls = (message: AIMessageChunk) => {
+        if (!message.tool_calls || message.tool_calls.length === 0) {
+          throw new Error(thinkingAdmonition);
+        }
+        return message;
+      };
+
+      llm = llm.pipe(raiseIfNoToolCalls);
+    } else {
+      llm = this.bind({
+        tools,
+        tool_choice: {
+          type: "tool",
+          name: functionName,
+        },
+      } as Partial<CallOptions>);
+    }
 
     if (!includeRaw) {
       return llm.pipe(outputParser).withConfig({

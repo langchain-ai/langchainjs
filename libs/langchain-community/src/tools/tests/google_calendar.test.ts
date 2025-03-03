@@ -1,5 +1,5 @@
 import { jest, expect, describe } from "@jest/globals";
-import { LLM } from "@langchain/core/language_models/llms";
+import { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import {
   GoogleCalendarCreateTool,
   GoogleCalendarViewTool,
@@ -25,13 +25,13 @@ jest.mock("@langchain/core/utils/env", () => ({
 //   runViewEvents: jest.fn(),
 // }));
 
-class FakeLLM extends LLM {
+class FakeLLM extends BaseChatModel {
   _llmType() {
     return "fake";
   }
 
-  async _call(prompt: string): Promise<string> {
-    return prompt;
+  async _generate() {
+    return {} as any;
   }
 }
 

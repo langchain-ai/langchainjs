@@ -28,9 +28,29 @@ export interface ToolMessageFieldsWithToolCallId extends BaseMessageFields {
 }
 
 /**
+ * Marker parameter for objects that tools can return directly.
+ *
+ * If a custom BaseTool is invoked with a ToolCall and the output of custom code is
+ * not an instance of DirectToolOutput, the output will automatically be coerced to
+ * a string and wrapped in a ToolMessage.
+ */
+export interface DirectToolOutput {
+  readonly lc_direct_tool_output: boolean;
+}
+
+export function isDirectToolOutput(x: unknown): x is DirectToolOutput {
+  return (
+    x != null &&
+    typeof x === "object" &&
+    "lc_direct_tool_output" in x &&
+    x.lc_direct_tool_output === true
+  );
+}
+
+/**
  * Represents a tool message in a conversation.
  */
-export class ToolMessage extends BaseMessage {
+export class ToolMessage extends BaseMessage implements DirectToolOutput {
   static lc_name() {
     return "ToolMessage";
   }
@@ -39,6 +59,8 @@ export class ToolMessage extends BaseMessage {
     // exclude snake case conversion to pascal case
     return { tool_call_id: "tool_call_id" };
   }
+
+  lc_direct_tool_output = true;
 
   /**
    * Status of the tool invocation.

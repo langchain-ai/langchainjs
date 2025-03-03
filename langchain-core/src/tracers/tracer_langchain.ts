@@ -1,4 +1,4 @@
-import { Client } from "langsmith";
+import type { Client, LangSmithTracingClientInterface } from "langsmith";
 import { RunTree } from "langsmith/run_trees";
 import { getCurrentRunTree } from "langsmith/singletons/traceable";
 
@@ -36,7 +36,7 @@ export interface RunUpdate extends BaseRunUpdate {
 export interface LangChainTracerFields extends BaseCallbackHandlerInput {
   exampleId?: string;
   projectName?: string;
-  client?: Client;
+  client?: LangSmithTracingClientInterface;
 }
 
 export class LangChainTracer
@@ -49,7 +49,7 @@ export class LangChainTracer
 
   exampleId?: string;
 
-  client: Client;
+  client: LangSmithTracingClientInterface;
 
   constructor(fields: LangChainTracerFields = {}) {
     super(fields);
@@ -104,6 +104,7 @@ export class LangChainTracer
       trace_id: run.trace_id,
       dotted_order: run.dotted_order,
       parent_run_id: run.parent_run_id,
+      extra: run.extra,
     };
     await this.client.updateRun(run.id, runUpdate);
   }
@@ -156,7 +157,7 @@ export class LangChainTracer
         parent_run: undefined,
 
         // inherited properties
-        client: this.client,
+        client: this.client as Client,
         project_name: this.projectName,
         reference_example_id: this.exampleId,
         tracingEnabled: true,

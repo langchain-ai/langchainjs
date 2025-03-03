@@ -13,7 +13,7 @@ export class BytesOutputParser extends BaseTransformOutputParser<Uint8Array> {
 
   lc_serializable = true;
 
-  protected textEncoder = new TextEncoder();
+  protected textEncoder: InstanceType<typeof TextEncoder> = new TextEncoder();
 
   parse(text: string): Promise<Uint8Array> {
     return Promise.resolve(this.textEncoder.encode(text));

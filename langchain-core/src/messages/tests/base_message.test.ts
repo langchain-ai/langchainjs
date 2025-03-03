@@ -346,6 +346,7 @@ describe("Message like coercion", () => {
         role: "system",
         content: "6",
       },
+      { role: "developer", content: "6.1" },
       {
         role: "user",
         content: [{ type: "image_url", image_url: { url: "7.1" } }],
@@ -374,6 +375,13 @@ describe("Message like coercion", () => {
       new SystemMessage({
         id: "foobar",
         content: "6",
+        additional_kwargs: {},
+      }),
+      new SystemMessage({
+        content: "6.1",
+        additional_kwargs: {
+          __openai_role__: "developer",
+        },
       }),
       new HumanMessage({
         content: [{ type: "image_url", image_url: { url: "7.1" } }],
@@ -395,6 +403,43 @@ describe("Message like coercion", () => {
         tool_call_id: "10.2",
       }),
     ]);
+  });
+  it("should convert serialized messages", async () => {
+    const originalMessages = [
+      new SystemMessage({
+        id: "foobar",
+        content: "6",
+        additional_kwargs: {},
+      }),
+      new SystemMessage({
+        content: "6.1",
+        additional_kwargs: {
+          __openai_role__: "developer",
+        },
+      }),
+      new HumanMessage({
+        content: [{ type: "image_url", image_url: { url: "7.1" } }],
+      }),
+      new AIMessage({
+        content: [{ type: "text", text: "8.1" }],
+        tool_calls: [
+          {
+            id: "8.5",
+            name: "8.4",
+            args: { "8.2": "8.3" },
+            type: "tool_call",
+          },
+        ],
+      }),
+      new ToolMessage({
+        name: undefined,
+        content: "10.2",
+        tool_call_id: "10.2",
+      }),
+    ];
+    const serialized = JSON.parse(JSON.stringify(originalMessages));
+    const deserialized = serialized.map(coerceMessageLikeToMessage);
+    expect(deserialized).toEqual(originalMessages);
   });
 });
 

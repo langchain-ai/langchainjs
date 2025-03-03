@@ -34,6 +34,7 @@ export type MessageType =
   | "human"
   | "ai"
   | "generic"
+  | "developer"
   | "system"
   | "function"
   | "tool"
@@ -106,6 +107,9 @@ export function mergeContent(
 ): MessageContent {
   // If first content is a string
   if (typeof firstContent === "string") {
+    if (firstContent === "") {
+      return secondContent;
+    }
     if (typeof secondContent === "string") {
       return firstContent + secondContent;
     } else {
@@ -120,6 +124,9 @@ export function mergeContent(
       ]
     );
   } else {
+    if (secondContent === "") {
+      return firstContent;
+    }
     // Otherwise, add the second content as a new element of the list
     return [...firstContent, { type: "text", text: secondContent }];
   }

@@ -7,6 +7,9 @@ import {
   GenerateContentRequest,
   SafetySetting,
   Part as GenerativeAIPart,
+  ModelParams,
+  RequestOptions,
+  type CachedContent,
 } from "@google/generative-ai";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {
@@ -98,7 +101,7 @@ export interface GoogleGenerativeAIChatInput
   /**
    * Controls the randomness of the output.
    *
-   * Values can range from [0.0,1.0], inclusive. A value closer to 1.0
+   * Values can range from [0.0,2.0], inclusive. A value closer to 2.0
    * will produce responses that are more varied and creative, while
    * a value closer to 0.0 will typically result in less surprising
    * responses from the model.
@@ -180,6 +183,15 @@ export interface GoogleGenerativeAIChatInput
    * @default false
    */
   json?: boolean;
+
+  /**
+   * Whether or not model supports system instructions.
+   * The following models support system instructions:
+   * - All Gemini 1.5 Pro model versions
+   * - All Gemini 1.5 Flash model versions
+   * - Gemini 1.0 Pro version gemini-1.0-pro-002
+   */
+  convertSystemMessageToHumanContent?: boolean | undefined;
 }
 
 /**
@@ -516,6 +528,47 @@ export interface GoogleGenerativeAIChatInput
  * </details>
  *
  * <br />
+ *
+ * <details>
+ * <summary><strong>Document Messages</strong></summary>
+ *
+ * This example will show you how to pass documents such as PDFs to Google
+ * Generative AI through messages.
+ *
+ * ```typescript
+ * const pdfPath = "/Users/my_user/Downloads/invoice.pdf";
+ * const pdfBase64 = await fs.readFile(pdfPath, "base64");
+ *
+ * const response = await llm.invoke([
+ *   ["system", "Use the provided documents to answer the question"],
+ *   [
+ *     "user",
+ *     [
+ *       {
+ *         type: "application/pdf", // If the `type` field includes a single slash (`/`), it will be treated as inline data.
+ *         data: pdfBase64,
+ *       },
+ *       {
+ *         type: "text",
+ *         text: "Summarize the contents of this PDF",
+ *       },
+ *     ],
+ *   ],
+ * ]);
+ *
+ * console.log(response.content);
+ * ```
+ *
+ * ```txt
+ * This is a billing invoice from Twitter Developers for X API Basic Access. The transaction date is January 7, 2025,
+ * and the amount is $194.34, which has been paid. The subscription period is from January 7, 2025 21:02 to February 7, 2025 00:00 (UTC).
+ * The tax is $0.00, with a tax rate of 0%. The total amount is $194.34. The payment was made using a Visa card ending in 7022,
+ * expiring in 12/2026. The billing address is Brace Sproul, 1234 Main Street, San Francisco, CA, US 94103. The company being billed is
+ * X Corp, located at 865 FM 1209 Building 2, Bastrop, TX, US 78602. Terms and conditions apply.
+ * ```
+ * </details>
+ *
+ * <br />
  */
 export class ChatGoogleGenerativeAI
   extends BaseChatModel<GoogleGenerativeAIChatCallOptions, AIMessageChunk>
@@ -563,10 +616,16 @@ export class ChatGoogleGenerativeAI
 
   streamUsage = true;
 
+  convertSystemMessageToHumanContent: boolean | undefined;
+
   private client: GenerativeModel;
 
   get _isMultimodalModel() {
-    return this.model.includes("vision") || this.model.startsWith("gemini-1.5");
+    return (
+      this.model.includes("vision") ||
+      this.model.startsWith("gemini-1.5") ||
+      this.model.startsWith("gemini-2")
+    );
   }
 
   constructor(fields?: GoogleGenerativeAIChatInput) {
@@ -585,8 +644,8 @@ export class ChatGoogleGenerativeAI
     }
 
     this.temperature = fields?.temperature ?? this.temperature;
-    if (this.temperature && (this.temperature < 0 || this.temperature > 1)) {
-      throw new Error("`temperature` must be in the range of [0.0,1.0]");
+    if (this.temperature && (this.temperature < 0 || this.temperature > 2)) {
+      throw new Error("`temperature` must be in the range of [0.0,2.0]");
     }
 
     this.topP = fields?.topP ?? this.topP;
@@ -651,6 +710,44 @@ export class ChatGoogleGenerativeAI
     this.streamUsage = fields?.streamUsage ?? this.streamUsage;
   }
 
+  useCachedContent(
+    cachedContent: CachedContent,
+    modelParams?: ModelParams,
+    requestOptions?: RequestOptions
+  ): void {
+    if (!this.apiKey) return;
+    this.client = new GenerativeAI(
+      this.apiKey
+    ).getGenerativeModelFromCachedContent(
+      cachedContent,
+      modelParams,
+      requestOptions
+    );
+  }
+
+  get useSystemInstruction(): boolean {
+    return typeof this.convertSystemMessageToHumanContent === "boolean"
+      ? !this.convertSystemMessageToHumanContent
+      : this.computeUseSystemInstruction;
+  }
+
+  get computeUseSystemInstruction(): boolean {
+    // This works on models from April 2024 and later
+    //   Vertex AI: gemini-1.5-pro and gemini-1.0-002 and later
+    //   AI Studio: gemini-1.5-pro-latest
+    if (this.modelName === "gemini-1.0-pro-001") {
+      return false;
+    } else if (this.modelName.startsWith("gemini-pro-vision")) {
+      return false;
+    } else if (this.modelName.startsWith("gemini-1.0-pro-vision")) {
+      return false;
+    } else if (this.modelName === "gemini-pro") {
+      // on AI Studio gemini-pro is still pointing at gemini-1.0-pro-001
+      return false;
+    }
+    return true;
+  }
+
   getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
     return {
       ls_provider: "google_genai",
@@ -706,8 +803,15 @@ export class ChatGoogleGenerativeAI
   ): Promise<ChatResult> {
     const prompt = convertBaseMessagesToContent(
       messages,
-      this._isMultimodalModel
+      this._isMultimodalModel,
+      this.useSystemInstruction
     );
+    let actualPrompt = prompt;
+    if (prompt[0].role === "system") {
+      const [systemInstruction] = prompt;
+      this.client.systemInstruction = systemInstruction;
+      actualPrompt = prompt.slice(1);
+    }
     const parameters = this.invocationParams(options);
 
     // Handle streaming
@@ -734,7 +838,7 @@ export class ChatGoogleGenerativeAI
 
     const res = await this.completionWithRetry({
       ...parameters,
-      contents: prompt,
+      contents: actualPrompt,
     });
 
     let usageMetadata: UsageMetadata | undefined;
@@ -770,12 +874,19 @@ export class ChatGoogleGenerativeAI
   ): AsyncGenerator<ChatGenerationChunk> {
     const prompt = convertBaseMessagesToContent(
       messages,
-      this._isMultimodalModel
+      this._isMultimodalModel,
+      this.useSystemInstruction
     );
+    let actualPrompt = prompt;
+    if (prompt[0].role === "system") {
+      const [systemInstruction] = prompt;
+      this.client.systemInstruction = systemInstruction;
+      actualPrompt = prompt.slice(1);
+    }
     const parameters = this.invocationParams(options);
     const request = {
       ...parameters,
-      contents: prompt,
+      contents: actualPrompt,
     };
     const stream = await this.caller.callWithOptions(
       { signal: options?.signal },
@@ -794,21 +905,21 @@ export class ChatGoogleGenerativeAI
         options.streamUsage !== false
       ) {
         const genAIUsageMetadata = response.usageMetadata as {
-          promptTokenCount: number;
-          candidatesTokenCount: number;
-          totalTokenCount: number;
+          promptTokenCount: number | undefined;
+          candidatesTokenCount: number | undefined;
+          totalTokenCount: number | undefined;
         };
         if (!usageMetadata) {
           usageMetadata = {
-            input_tokens: genAIUsageMetadata.promptTokenCount,
-            output_tokens: genAIUsageMetadata.candidatesTokenCount,
-            total_tokens: genAIUsageMetadata.totalTokenCount,
+            input_tokens: genAIUsageMetadata.promptTokenCount ?? 0,
+            output_tokens: genAIUsageMetadata.candidatesTokenCount ?? 0,
+            total_tokens: genAIUsageMetadata.totalTokenCount ?? 0,
           };
         } else {
           // Under the hood, LangChain combines the prompt tokens. Google returns the updated
           // total each time, so we need to find the difference between the tokens.
           const outputTokenDiff =
-            genAIUsageMetadata.candidatesTokenCount -
+            (genAIUsageMetadata.candidatesTokenCount ?? 0) -
             usageMetadata.output_tokens;
           usageMetadata = {
             input_tokens: 0,

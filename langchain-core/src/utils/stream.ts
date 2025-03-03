@@ -1,11 +1,12 @@
+import { pickRunnableConfigKeys } from "../runnables/config.js";
 import { AsyncLocalStorageProviderSingleton } from "../singletons/index.js";
+import type { IterableReadableStreamInterface } from "../types/_internal.js";
 import { raceWithSignal } from "./signal.js";
 
-// Make this a type to override ReadableStream's async iterator type in case
-// the popular web-streams-polyfill is imported - the supplied types
-// in that case don't quite match.
-export type IterableReadableStreamInterface<T> = ReadableStream<T> &
-  AsyncIterable<T>;
+// Re-exported for backwards compatibility
+// Do NOT import this type from this file inside the project. Instead, always import from `types/_internal.js`
+// when using internally
+export type { IterableReadableStreamInterface };
 
 /*
  * Support async iterator syntax for ReadableStreams in all environments.
@@ -215,7 +216,9 @@ export class AsyncGeneratorWithSetup<
     // to each generator is available.
     this.setup = new Promise((resolve, reject) => {
       void AsyncLocalStorageProviderSingleton.runWithConfig(
-        params.config,
+        pickRunnableConfigKeys(
+          params.config as Record<string, unknown> | undefined
+        ),
         async () => {
           this.firstResult = params.generator.next();
           if (params.startSetup) {
@@ -238,7 +241,9 @@ export class AsyncGeneratorWithSetup<
     }
 
     return AsyncLocalStorageProviderSingleton.runWithConfig(
-      this.config,
+      pickRunnableConfigKeys(
+        this.config as Record<string, unknown> | undefined
+      ),
       this.signal
         ? async () => {
             return raceWithSignal(this.generator.next(...args), this.signal);

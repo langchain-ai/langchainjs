@@ -1,6 +1,6 @@
 {
   "name": "@langchain/community",
-  "version": "0.3.15",
+  "version": "0.3.33",
   "description": "Third-party integrations for LangChain.js",
   "type": "module",
   "engines": {
@@ -35,13 +35,13 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@langchain/openai": ">=0.2.0 <0.4.0",
+    "@langchain/openai": ">=0.2.0 <0.5.0",
     "binary-extensions": "^2.2.0",
     "expr-eval": "^2.0.2",
     "flat": "^5.0.2",
     "js-yaml": "^4.1.0",
     "langchain": ">=0.2.3 <0.3.0 || >=0.3.4 <0.4.0",
-    "langsmith": "^0.2.0",
+    "langsmith": ">=0.2.8 <0.4.0",
     "uuid": "^10.0.0",
     "zod": "^3.22.3",
     "zod-to-json-schema": "^3.22.5"
@@ -49,35 +49,38 @@
   "devDependencies": {
     "@arcjet/redact": "^v1.0.0-alpha.23",
     "@aws-crypto/sha256-js": "^5.0.0",
-    "@aws-sdk/client-bedrock-agent-runtime": "^3.583.0",
-    "@aws-sdk/client-bedrock-runtime": "^3.422.0",
-    "@aws-sdk/client-dynamodb": "^3.310.0",
-    "@aws-sdk/client-kendra": "^3.352.0",
-    "@aws-sdk/client-lambda": "^3.310.0",
-    "@aws-sdk/client-s3": "^3.310.0",
-    "@aws-sdk/client-sagemaker-runtime": "^3.414.0",
-    "@aws-sdk/client-sfn": "^3.362.0",
-    "@aws-sdk/credential-provider-node": "^3.388.0",
-    "@aws-sdk/types": "^3.357.0",
+    "@aws-sdk/client-bedrock-agent-runtime": "^3.749.0",
+    "@aws-sdk/client-bedrock-runtime": "^3.749.0",
+    "@aws-sdk/client-dynamodb": "^3.749.0",
+    "@aws-sdk/client-kendra": "^3.749.0",
+    "@aws-sdk/client-lambda": "^3.749.0",
+    "@aws-sdk/client-s3": "^3.749.0",
+    "@aws-sdk/client-sagemaker-runtime": "^3.749.0",
+    "@aws-sdk/client-sfn": "^3.749.0",
+    "@aws-sdk/credential-provider-node": "^3.749.0",
+    "@aws-sdk/dsql-signer": "^3.738.0",
+    "@aws-sdk/types": "^3.734.0",
     "@azure/search-documents": "^12.0.0",
     "@azure/storage-blob": "^12.15.0",
     "@browserbasehq/sdk": "^1.1.5",
+    "@browserbasehq/stagehand": "^1.0.0",
     "@clickhouse/client": "^0.2.5",
     "@cloudflare/ai": "1.0.12",
     "@cloudflare/workers-types": "^4.20230922.0",
     "@datastax/astra-db-ts": "^1.0.1",
     "@elastic/elasticsearch": "^8.4.0",
-    "@faker-js/faker": "^7.6.0",
+    "@faker-js/faker": "8.4.1",
     "@getmetal/metal-sdk": "^4.0.0",
     "@getzep/zep-cloud": "^1.0.6",
     "@getzep/zep-js": "^0.9.0",
     "@gomomento/sdk": "^1.51.1",
     "@gomomento/sdk-core": "^1.51.1",
     "@google-ai/generativelanguage": "^2.5.0",
-    "@google-cloud/storage": "^7.7.0",
+    "@google-cloud/storage": "^7.15.2",
     "@gradientai/nodejs-sdk": "^1.2.0",
     "@huggingface/inference": "^2.6.4",
-    "@ibm-cloud/watsonx-ai": "^1.1.0",
+    "@huggingface/transformers": "^3.2.3",
+    "@ibm-cloud/watsonx-ai": "^1.4.0",
     "@jest/globals": "^29.5.0",
     "@lancedb/lancedb": "^0.13.0",
     "@langchain/core": "workspace:*",
@@ -92,6 +95,7 @@
     "@notionhq/client": "^2.2.10",
     "@opensearch-project/opensearch": "^2.2.0",
     "@planetscale/database": "^1.8.0",
+    "@playwright/test": "^1.48.2",
     "@premai/prem-sdk": "^0.3.25",
     "@qdrant/js-client-rest": "^1.8.2",
     "@raycast/api": "^1.83.1",
@@ -122,17 +126,17 @@
     "@types/pg": "^8.11.0",
     "@types/pg-copy-streams": "^1.2.2",
     "@types/uuid": "^9",
+    "@types/word-extractor": "^1",
     "@types/ws": "^8",
     "@typescript-eslint/eslint-plugin": "^5.58.0",
     "@typescript-eslint/parser": "^5.58.0",
     "@upstash/ratelimit": "^2.0.3",
     "@upstash/redis": "^1.32.0",
     "@upstash/vector": "^1.1.1",
-    "@vercel/kv": "^0.2.3",
-    "@vercel/postgres": "^0.5.0",
+    "@vercel/kv": "^3.0.0",
+    "@vercel/postgres": "^0.10.0",
     "@writerai/writer-sdk": "^0.40.2",
     "@xata.io/client": "^0.28.0",
-    "@xenova/transformers": "^2.17.2",
     "@zilliz/milvus2-sdk-node": ">=2.3.5",
     "apify-client": "^2.7.1",
     "assemblyai": "^4.6.0",
@@ -163,7 +167,7 @@
     "eslint-plugin-jest": "^27.6.0",
     "eslint-plugin-no-instanceof": "^1.0.1",
     "eslint-plugin-prettier": "^4.2.1",
-    "faiss-node": "^0.5.1",
+    "fast-xml-parser": "^4.5.1",
     "firebase-admin": "^11.9.0 || ^12.0.0",
     "google-auth-library": "^9.10.0",
     "googleapis": "^126.0.1",
@@ -190,6 +194,7 @@
     "node-llama-cpp": "3.1.1",
     "notion-to-md": "^3.1.0",
     "officeparser": "^4.0.4",
+    "openai": "*",
     "pdf-parse": "1.1.1",
     "pg": "^8.11.0",
     "pg-copy-streams": "^6.0.5",
@@ -201,7 +206,7 @@
     "pyodide": "^0.26.2",
     "redis": "^4.6.6",
     "release-it": "^17.6.0",
-    "replicate": "^0.29.4",
+    "replicate": "^1.0.1",
     "rollup": "^3.19.1",
     "sonix-speech-recognition": "^2.1.1",
     "srt-parser-2": "^1.2.3",
@@ -213,24 +218,25 @@
     "voy-search": "0.6.2",
     "weaviate-ts-client": "^1.4.0",
     "web-auth-library": "^1.0.3",
-    "youtube-transcript": "^1.0.6",
-    "youtubei.js": "^9.1.0"
+    "word-extractor": "^1.0.4",
+    "youtubei.js": "^12.2.0"
   },
   "peerDependencies": {
     "@arcjet/redact": "^v1.0.0-alpha.23",
     "@aws-crypto/sha256-js": "^5.0.0",
-    "@aws-sdk/client-bedrock-agent-runtime": "^3.583.0",
-    "@aws-sdk/client-bedrock-runtime": "^3.422.0",
-    "@aws-sdk/client-dynamodb": "^3.310.0",
-    "@aws-sdk/client-kendra": "^3.352.0",
-    "@aws-sdk/client-lambda": "^3.310.0",
-    "@aws-sdk/client-s3": "^3.310.0",
-    "@aws-sdk/client-sagemaker-runtime": "^3.310.0",
-    "@aws-sdk/client-sfn": "^3.310.0",
+    "@aws-sdk/client-bedrock-agent-runtime": "^3.749.0",
+    "@aws-sdk/client-bedrock-runtime": "^3.749.0",
+    "@aws-sdk/client-dynamodb": "^3.749.0",
+    "@aws-sdk/client-kendra": "^3.749.0",
+    "@aws-sdk/client-lambda": "^3.749.0",
+    "@aws-sdk/client-s3": "^3.749.0",
+    "@aws-sdk/client-sagemaker-runtime": "^3.749.0",
+    "@aws-sdk/client-sfn": "^3.749.0",
     "@aws-sdk/credential-provider-node": "^3.388.0",
     "@azure/search-documents": "^12.0.0",
     "@azure/storage-blob": "^12.15.0",
     "@browserbasehq/sdk": "*",
+    "@browserbasehq/stagehand": "^1.0.0",
     "@clickhouse/client": "^0.2.5",
     "@cloudflare/ai": "*",
     "@datastax/astra-db-ts": "^1.0.0",
@@ -244,6 +250,7 @@
     "@google-cloud/storage": "^6.10.1 || ^7.7.0",
     "@gradientai/nodejs-sdk": "^1.2.0",
     "@huggingface/inference": "^2.6.4",
+    "@huggingface/transformers": "^3.2.3",
     "@ibm-cloud/watsonx-ai": "*",
     "@lancedb/lancedb": "^0.12.0",
     "@langchain/core": ">=0.2.21 <0.4.0",
@@ -273,11 +280,10 @@
     "@upstash/ratelimit": "^1.1.3 || ^2.0.3",
     "@upstash/redis": "^1.20.6",
     "@upstash/vector": "^1.1.1",
-    "@vercel/kv": "^0.2.3",
-    "@vercel/postgres": "^0.5.0",
+    "@vercel/kv": "*",
+    "@vercel/postgres": "*",
     "@writerai/writer-sdk": "^0.40.2",
     "@xata.io/client": "^0.28.0",
-    "@xenova/transformers": "^2.17.2",
     "@zilliz/milvus2-sdk-node": ">=2.3.5",
     "apify-client": "^2.7.1",
     "assemblyai": "^4.6.0",
@@ -297,7 +303,7 @@
     "dria": "^0.0.3",
     "duck-duck-scrape": "^2.2.5",
     "epub2": "^3.0.1",
-    "faiss-node": "^0.5.1",
+    "fast-xml-parser": "*",
     "firebase-admin": "^11.9.0 || ^12.0.0",
     "google-auth-library": "*",
     "googleapis": "*",
@@ -319,6 +325,7 @@
     "neo4j-driver": "*",
     "notion-to-md": "^3.1.0",
     "officeparser": "^4.0.4",
+    "openai": "*",
     "pdf-parse": "1.1.1",
     "pg": "^8.11.0",
     "pg-copy-streams": "^6.0.5",
@@ -328,7 +335,7 @@
     "puppeteer": "*",
     "pyodide": ">=0.24.1 <0.27.0",
     "redis": "*",
-    "replicate": "^0.29.4",
+    "replicate": "*",
     "sonix-speech-recognition": "^2.1.1",
     "srt-parser-2": "^1.2.3",
     "typeorm": "^0.3.20",
@@ -337,9 +344,9 @@
     "voy-search": "0.6.2",
     "weaviate-ts-client": "*",
     "web-auth-library": "^1.0.3",
+    "word-extractor": "*",
     "ws": "^8.14.2",
-    "youtube-transcript": "^1.0.6",
-    "youtubei.js": "^9.1.0"
+    "youtubei.js": "*"
   },
   "peerDependenciesMeta": {
     "@arcjet/redact": {
@@ -373,6 +380,9 @@
       "optional": true
     },
     "@aws-sdk/credential-provider-node": {
+      "optional": true
+    },
+    "@aws-sdk/dsql-signer": {
       "optional": true
     },
     "@azure/search-documents": {
@@ -421,6 +431,9 @@
       "optional": true
     },
     "@huggingface/inference": {
+      "optional": true
+    },
+    "@huggingface/transformers": {
       "optional": true
     },
     "@lancedb/lancedb": {
@@ -516,9 +529,6 @@
     "@xata.io/client": {
       "optional": true
     },
-    "@xenova/transformers": {
-      "optional": true
-    },
     "@zilliz/milvus2-sdk-node": {
       "optional": true
     },
@@ -576,7 +586,7 @@
     "epub2": {
       "optional": true
     },
-    "faiss-node": {
+    "fast-xml-parser": {
       "optional": true
     },
     "firebase-admin": {
@@ -693,10 +703,10 @@
     "web-auth-library": {
       "optional": true
     },
-    "ws": {
+    "word-extractor": {
       "optional": true
     },
-    "youtube-transcript": {
+    "ws": {
       "optional": true
     },
     "youtubei.js": {
@@ -869,6 +879,15 @@
       "import": "./tools/google_places.js",
       "require": "./tools/google_places.cjs"
     },
+    "./tools/google_trends": {
+      "types": {
+        "import": "./tools/google_trends.d.ts",
+        "require": "./tools/google_trends.d.cts",
+        "default": "./tools/google_trends.d.ts"
+      },
+      "import": "./tools/google_trends.js",
+      "require": "./tools/google_trends.cjs"
+    },
     "./tools/google_routes": {
       "types": {
         "import": "./tools/google_routes.d.ts",
@@ -877,6 +896,15 @@
       },
       "import": "./tools/google_routes.js",
       "require": "./tools/google_routes.cjs"
+    },
+    "./tools/google_scholar": {
+      "types": {
+        "import": "./tools/google_scholar.d.ts",
+        "require": "./tools/google_scholar.d.cts",
+        "default": "./tools/google_scholar.d.ts"
+      },
+      "import": "./tools/google_scholar.js",
+      "require": "./tools/google_scholar.cjs"
     },
     "./tools/ifttt": {
       "types": {
@@ -986,6 +1014,15 @@
       "import": "./agents/toolkits/connery.js",
       "require": "./agents/toolkits/connery.cjs"
     },
+    "./agents/toolkits/stagehand": {
+      "types": {
+        "import": "./agents/toolkits/stagehand.d.ts",
+        "require": "./agents/toolkits/stagehand.d.cts",
+        "default": "./agents/toolkits/stagehand.d.ts"
+      },
+      "import": "./agents/toolkits/stagehand.js",
+      "require": "./agents/toolkits/stagehand.cjs"
+    },
     "./embeddings/alibaba_tongyi": {
       "types": {
         "import": "./embeddings/alibaba_tongyi.d.ts",
@@ -1012,6 +1049,15 @@
       },
       "import": "./embeddings/bedrock.js",
       "require": "./embeddings/bedrock.cjs"
+    },
+    "./embeddings/bytedance_doubao": {
+      "types": {
+        "import": "./embeddings/bytedance_doubao.d.ts",
+        "require": "./embeddings/bytedance_doubao.d.cts",
+        "default": "./embeddings/bytedance_doubao.d.ts"
+      },
+      "import": "./embeddings/bytedance_doubao.js",
+      "require": "./embeddings/bytedance_doubao.cjs"
     },
     "./embeddings/cloudflare_workersai": {
       "types": {
@@ -1075,6 +1121,15 @@
       },
       "import": "./embeddings/hf_transformers.js",
       "require": "./embeddings/hf_transformers.cjs"
+    },
+    "./embeddings/huggingface_transformers": {
+      "types": {
+        "import": "./embeddings/huggingface_transformers.d.ts",
+        "require": "./embeddings/huggingface_transformers.d.cts",
+        "default": "./embeddings/huggingface_transformers.d.ts"
+      },
+      "import": "./embeddings/huggingface_transformers.js",
+      "require": "./embeddings/huggingface_transformers.cjs"
     },
     "./embeddings/ibm": {
       "types": {
@@ -1958,6 +2013,15 @@
       "import": "./chat_models/moonshot.js",
       "require": "./chat_models/moonshot.cjs"
     },
+    "./chat_models/novita": {
+      "types": {
+        "import": "./chat_models/novita.d.ts",
+        "require": "./chat_models/novita.d.cts",
+        "default": "./chat_models/novita.d.ts"
+      },
+      "import": "./chat_models/novita.js",
+      "require": "./chat_models/novita.cjs"
+    },
     "./chat_models/ollama": {
       "types": {
         "import": "./chat_models/ollama.d.ts",
@@ -2083,6 +2147,15 @@
       },
       "import": "./retrievers/amazon_knowledge_base.js",
       "require": "./retrievers/amazon_knowledge_base.cjs"
+    },
+    "./retrievers/arxiv": {
+      "types": {
+        "import": "./retrievers/arxiv.d.ts",
+        "require": "./retrievers/arxiv.d.cts",
+        "default": "./retrievers/arxiv.d.ts"
+      },
+      "import": "./retrievers/arxiv.js",
+      "require": "./retrievers/arxiv.cjs"
     },
     "./retrievers/bm25": {
       "types": {
@@ -2264,14 +2337,23 @@
       "import": "./caches/upstash_redis.js",
       "require": "./caches/upstash_redis.cjs"
     },
-    "./graphs/neo4j_graph": {
+    "./caches/vercel_kv": {
       "types": {
-        "import": "./graphs/neo4j_graph.d.ts",
-        "require": "./graphs/neo4j_graph.d.cts",
-        "default": "./graphs/neo4j_graph.d.ts"
+        "import": "./caches/vercel_kv.d.ts",
+        "require": "./caches/vercel_kv.d.cts",
+        "default": "./caches/vercel_kv.d.ts"
       },
-      "import": "./graphs/neo4j_graph.js",
-      "require": "./graphs/neo4j_graph.cjs"
+      "import": "./caches/vercel_kv.js",
+      "require": "./caches/vercel_kv.cjs"
+    },
+    "./graphs/document": {
+      "types": {
+        "import": "./graphs/document.d.ts",
+        "require": "./graphs/document.d.cts",
+        "default": "./graphs/document.d.ts"
+      },
+      "import": "./graphs/document.js",
+      "require": "./graphs/document.cjs"
     },
     "./graphs/memgraph_graph": {
       "types": {
@@ -2281,6 +2363,24 @@
       },
       "import": "./graphs/memgraph_graph.js",
       "require": "./graphs/memgraph_graph.cjs"
+    },
+    "./graphs/neo4j_graph": {
+      "types": {
+        "import": "./graphs/neo4j_graph.d.ts",
+        "require": "./graphs/neo4j_graph.d.cts",
+        "default": "./graphs/neo4j_graph.d.ts"
+      },
+      "import": "./graphs/neo4j_graph.js",
+      "require": "./graphs/neo4j_graph.cjs"
+    },
+    "./document_compressors/ibm": {
+      "types": {
+        "import": "./document_compressors/ibm.d.ts",
+        "require": "./document_compressors/ibm.d.cts",
+        "default": "./document_compressors/ibm.d.ts"
+      },
+      "import": "./document_compressors/ibm.js",
+      "require": "./document_compressors/ibm.cjs"
     },
     "./document_transformers/html_to_text": {
       "types": {
@@ -2426,6 +2526,15 @@
       "import": "./stores/message/firestore.js",
       "require": "./stores/message/firestore.cjs"
     },
+    "./stores/message/file_system": {
+      "types": {
+        "import": "./stores/message/file_system.d.ts",
+        "require": "./stores/message/file_system.d.cts",
+        "default": "./stores/message/file_system.d.ts"
+      },
+      "import": "./stores/message/file_system.js",
+      "require": "./stores/message/file_system.cjs"
+    },
     "./stores/message/in_memory": {
       "types": {
         "import": "./stores/message/in_memory.d.ts",
@@ -2471,6 +2580,15 @@
       "import": "./stores/message/mongodb.js",
       "require": "./stores/message/mongodb.cjs"
     },
+    "./stores/message/neo4j": {
+      "types": {
+        "import": "./stores/message/neo4j.d.ts",
+        "require": "./stores/message/neo4j.d.cts",
+        "default": "./stores/message/neo4j.d.ts"
+      },
+      "import": "./stores/message/neo4j.js",
+      "require": "./stores/message/neo4j.cjs"
+    },
     "./stores/message/planetscale": {
       "types": {
         "import": "./stores/message/planetscale.d.ts",
@@ -2488,6 +2606,15 @@
       },
       "import": "./stores/message/postgres.js",
       "require": "./stores/message/postgres.cjs"
+    },
+    "./stores/message/aurora_dsql": {
+      "types": {
+        "import": "./stores/message/aurora_dsql.d.ts",
+        "require": "./stores/message/aurora_dsql.d.cts",
+        "default": "./stores/message/aurora_dsql.d.ts"
+      },
+      "import": "./stores/message/aurora_dsql.js",
+      "require": "./stores/message/aurora_dsql.cjs"
     },
     "./stores/message/redis": {
       "types": {
@@ -2696,6 +2823,15 @@
       "import": "./document_loaders/web/college_confidential.js",
       "require": "./document_loaders/web/college_confidential.cjs"
     },
+    "./document_loaders/web/google_cloud_storage": {
+      "types": {
+        "import": "./document_loaders/web/google_cloud_storage.d.ts",
+        "require": "./document_loaders/web/google_cloud_storage.d.cts",
+        "default": "./document_loaders/web/google_cloud_storage.d.ts"
+      },
+      "import": "./document_loaders/web/google_cloud_storage.js",
+      "require": "./document_loaders/web/google_cloud_storage.cjs"
+    },
     "./document_loaders/web/gitbook": {
       "types": {
         "import": "./document_loaders/web/gitbook.d.ts",
@@ -2722,6 +2858,15 @@
       },
       "import": "./document_loaders/web/imsdb.js",
       "require": "./document_loaders/web/imsdb.cjs"
+    },
+    "./document_loaders/web/jira": {
+      "types": {
+        "import": "./document_loaders/web/jira.d.ts",
+        "require": "./document_loaders/web/jira.d.cts",
+        "default": "./document_loaders/web/jira.d.ts"
+      },
+      "import": "./document_loaders/web/jira.js",
+      "require": "./document_loaders/web/jira.cjs"
     },
     "./document_loaders/web/figma": {
       "types": {
@@ -3150,10 +3295,18 @@
     "tools/google_places.js",
     "tools/google_places.d.ts",
     "tools/google_places.d.cts",
+    "tools/google_trends.cjs",
+    "tools/google_trends.js",
+    "tools/google_trends.d.ts",
+    "tools/google_trends.d.cts",
     "tools/google_routes.cjs",
     "tools/google_routes.js",
     "tools/google_routes.d.ts",
     "tools/google_routes.d.cts",
+    "tools/google_scholar.cjs",
+    "tools/google_scholar.js",
+    "tools/google_scholar.d.ts",
+    "tools/google_scholar.d.cts",
     "tools/ifttt.cjs",
     "tools/ifttt.js",
     "tools/ifttt.d.ts",
@@ -3202,6 +3355,10 @@
     "agents/toolkits/connery.js",
     "agents/toolkits/connery.d.ts",
     "agents/toolkits/connery.d.cts",
+    "agents/toolkits/stagehand.cjs",
+    "agents/toolkits/stagehand.js",
+    "agents/toolkits/stagehand.d.ts",
+    "agents/toolkits/stagehand.d.cts",
     "embeddings/alibaba_tongyi.cjs",
     "embeddings/alibaba_tongyi.js",
     "embeddings/alibaba_tongyi.d.ts",
@@ -3214,6 +3371,10 @@
     "embeddings/bedrock.js",
     "embeddings/bedrock.d.ts",
     "embeddings/bedrock.d.cts",
+    "embeddings/bytedance_doubao.cjs",
+    "embeddings/bytedance_doubao.js",
+    "embeddings/bytedance_doubao.d.ts",
+    "embeddings/bytedance_doubao.d.cts",
     "embeddings/cloudflare_workersai.cjs",
     "embeddings/cloudflare_workersai.js",
     "embeddings/cloudflare_workersai.d.ts",
@@ -3242,6 +3403,10 @@
     "embeddings/hf_transformers.js",
     "embeddings/hf_transformers.d.ts",
     "embeddings/hf_transformers.d.cts",
+    "embeddings/huggingface_transformers.cjs",
+    "embeddings/huggingface_transformers.js",
+    "embeddings/huggingface_transformers.d.ts",
+    "embeddings/huggingface_transformers.d.cts",
     "embeddings/ibm.cjs",
     "embeddings/ibm.js",
     "embeddings/ibm.d.ts",
@@ -3634,6 +3799,10 @@
     "chat_models/moonshot.js",
     "chat_models/moonshot.d.ts",
     "chat_models/moonshot.d.cts",
+    "chat_models/novita.cjs",
+    "chat_models/novita.js",
+    "chat_models/novita.d.ts",
+    "chat_models/novita.d.cts",
     "chat_models/ollama.cjs",
     "chat_models/ollama.js",
     "chat_models/ollama.d.ts",
@@ -3690,6 +3859,10 @@
     "retrievers/amazon_knowledge_base.js",
     "retrievers/amazon_knowledge_base.d.ts",
     "retrievers/amazon_knowledge_base.d.cts",
+    "retrievers/arxiv.cjs",
+    "retrievers/arxiv.js",
+    "retrievers/arxiv.d.ts",
+    "retrievers/arxiv.d.cts",
     "retrievers/bm25.cjs",
     "retrievers/bm25.js",
     "retrievers/bm25.d.ts",
@@ -3770,14 +3943,26 @@
     "caches/upstash_redis.js",
     "caches/upstash_redis.d.ts",
     "caches/upstash_redis.d.cts",
-    "graphs/neo4j_graph.cjs",
-    "graphs/neo4j_graph.js",
-    "graphs/neo4j_graph.d.ts",
-    "graphs/neo4j_graph.d.cts",
+    "caches/vercel_kv.cjs",
+    "caches/vercel_kv.js",
+    "caches/vercel_kv.d.ts",
+    "caches/vercel_kv.d.cts",
+    "graphs/document.cjs",
+    "graphs/document.js",
+    "graphs/document.d.ts",
+    "graphs/document.d.cts",
     "graphs/memgraph_graph.cjs",
     "graphs/memgraph_graph.js",
     "graphs/memgraph_graph.d.ts",
     "graphs/memgraph_graph.d.cts",
+    "graphs/neo4j_graph.cjs",
+    "graphs/neo4j_graph.js",
+    "graphs/neo4j_graph.d.ts",
+    "graphs/neo4j_graph.d.cts",
+    "document_compressors/ibm.cjs",
+    "document_compressors/ibm.js",
+    "document_compressors/ibm.d.ts",
+    "document_compressors/ibm.d.cts",
     "document_transformers/html_to_text.cjs",
     "document_transformers/html_to_text.js",
     "document_transformers/html_to_text.d.ts",
@@ -3842,6 +4027,10 @@
     "stores/message/firestore.js",
     "stores/message/firestore.d.ts",
     "stores/message/firestore.d.cts",
+    "stores/message/file_system.cjs",
+    "stores/message/file_system.js",
+    "stores/message/file_system.d.ts",
+    "stores/message/file_system.d.cts",
     "stores/message/in_memory.cjs",
     "stores/message/in_memory.js",
     "stores/message/in_memory.d.ts",
@@ -3862,6 +4051,10 @@
     "stores/message/mongodb.js",
     "stores/message/mongodb.d.ts",
     "stores/message/mongodb.d.cts",
+    "stores/message/neo4j.cjs",
+    "stores/message/neo4j.js",
+    "stores/message/neo4j.d.ts",
+    "stores/message/neo4j.d.cts",
     "stores/message/planetscale.cjs",
     "stores/message/planetscale.js",
     "stores/message/planetscale.d.ts",
@@ -3870,6 +4063,10 @@
     "stores/message/postgres.js",
     "stores/message/postgres.d.ts",
     "stores/message/postgres.d.cts",
+    "stores/message/aurora_dsql.cjs",
+    "stores/message/aurora_dsql.js",
+    "stores/message/aurora_dsql.d.ts",
+    "stores/message/aurora_dsql.d.cts",
     "stores/message/redis.cjs",
     "stores/message/redis.js",
     "stores/message/redis.d.ts",
@@ -3962,6 +4159,10 @@
     "document_loaders/web/college_confidential.js",
     "document_loaders/web/college_confidential.d.ts",
     "document_loaders/web/college_confidential.d.cts",
+    "document_loaders/web/google_cloud_storage.cjs",
+    "document_loaders/web/google_cloud_storage.js",
+    "document_loaders/web/google_cloud_storage.d.ts",
+    "document_loaders/web/google_cloud_storage.d.cts",
     "document_loaders/web/gitbook.cjs",
     "document_loaders/web/gitbook.js",
     "document_loaders/web/gitbook.d.ts",
@@ -3974,6 +4175,10 @@
     "document_loaders/web/imsdb.js",
     "document_loaders/web/imsdb.d.ts",
     "document_loaders/web/imsdb.d.cts",
+    "document_loaders/web/jira.cjs",
+    "document_loaders/web/jira.js",
+    "document_loaders/web/jira.d.ts",
+    "document_loaders/web/jira.d.cts",
     "document_loaders/web/figma.cjs",
     "document_loaders/web/figma.js",
     "document_loaders/web/figma.d.ts",

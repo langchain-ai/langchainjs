@@ -61,6 +61,7 @@ export function convertAuthorToRole(
     case "model": // getMessageAuthor returns message.name. code ex.: return message.name ?? type;
       return "model";
     case "system":
+      return "system";
     case "human":
       return "user";
     case "tool":
@@ -77,6 +78,14 @@ function messageContentMedia(content: MessageContentComplex): Part {
       inlineData: {
         mimeType: content.mimeType,
         data: content.data,
+      },
+    };
+  }
+  if ("mimeType" in content && "fileUri" in content) {
+    return {
+      fileData: {
+        mimeType: content.mimeType,
+        fileUri: content.fileUri,
       },
     };
   }
@@ -169,6 +178,19 @@ export function convertMessageContentToParts(
             args: c.input,
           },
         };
+      } else if (
+        c.type?.includes("/") &&
+        // Ensure it's a single slash.
+        c.type.split("/").length === 2 &&
+        "data" in c &&
+        typeof c.data === "string"
+      ) {
+        return {
+          inlineData: {
+            mimeType: c.type,
+            data: c.data,
+          },
+        };
       }
       throw new Error(`Unknown content type ${(c as { type: string }).type}`);
     });
@@ -179,7 +201,8 @@ export function convertMessageContentToParts(
 
 export function convertBaseMessagesToContent(
   messages: BaseMessage[],
-  isMultimodalModel: boolean
+  isMultimodalModel: boolean,
+  convertSystemMessageToHumanContent: boolean = false
 ) {
   return messages.reduce<{
     content: Content[];
@@ -223,7 +246,10 @@ export function convertBaseMessagesToContent(
         };
       }
       let actualRole = role;
-      if (actualRole === "function") {
+      if (
+        actualRole === "function" ||
+        (actualRole === "system" && !convertSystemMessageToHumanContent)
+      ) {
         // GenerativeAI API will throw an error if the role is not "user" or "model."
         actualRole = "user";
       }
@@ -232,7 +258,8 @@ export function convertBaseMessagesToContent(
         parts,
       };
       return {
-        mergeWithPreviousContent: author === "system",
+        mergeWithPreviousContent:
+          author === "system" && !convertSystemMessageToHumanContent,
         content: [...acc.content, content],
       };
     },

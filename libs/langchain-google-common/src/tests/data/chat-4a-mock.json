@@ -1,0 +1,55 @@
+{
+  "candidates": [
+    {
+      "content": {
+        "role": "model",
+        "parts": [
+          {
+            "text": "Okay, I will provide a breakdown of users by group. Here's the plan:\n\n1.  **Understand the user's query:** The user wants to see how many users are in each user group. This requires information from the `user` and `usergroup` resources.\n2.  **Get resource schemas:** I need to understand the structure of the `user` and `usergroup` resources, especially how they relate to each other. I'll use the `get_resource_schema` tool to get the schemas.\n3.  **Explore relationships:** I'll examine the schemas to find the field that links users to user groups. This will likely be a foreign key relationship.\n4.  **Fetch data:** I'll use the `perform_term_analysis` tool to count the number of users in each group.\n5.  **Prepare the response:** I'll format the data into a table showing the user group and the number of users in that group.\n\nNow, let's get the schemas.\n\n"
+          },
+          {
+            "functionCall": {
+              "name": "get_resource_schema",
+              "args": {
+                "resourceType": "user"
+              }
+            }
+          },
+          {
+            "functionCall": {
+              "name": "get_resource_schema",
+              "args": {
+                "resourceType": "usergroup"
+              }
+            }
+          },
+          {
+            "text": "\n"
+          }
+        ]
+      },
+      "finishReason": "STOP",
+      "avgLogprobs": -0.058524003008749916
+    }
+  ],
+  "promptFeedback": {
+    "safetyRatings": [
+      {
+        "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+        "probability": "NEGLIGIBLE"
+      },
+      {
+        "category": "HARM_CATEGORY_HATE_SPEECH",
+        "probability": "NEGLIGIBLE"
+      },
+      {
+        "category": "HARM_CATEGORY_HARASSMENT",
+        "probability": "NEGLIGIBLE"
+      },
+      {
+        "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
+        "probability": "NEGLIGIBLE"
+      }
+    ]
+  }
+}
