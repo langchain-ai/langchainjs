@@ -5,6 +5,14 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vrknetha/langchainjs-mcp-adapters.git"
+  },
+  "homepage": "https://github.com/vrknetha/langchainjs-mcp-adapters#readme",
+  "bugs": {
+    "url": "https://github.com/vrknetha/langchainjs-mcp-adapters/issues"
+  },
   "scripts": {
     "build": "tsc",
     "test": "jest",
