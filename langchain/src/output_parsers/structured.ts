@@ -107,28 +107,25 @@ ${JSON.stringify(zodToJsonSchema(this.schema))}
 
       return await this.schema.parseAsync(JSON.parse(json));
     } catch (e) {
+      const formatError = (err: unknown): string => {
+        // eslint-disable-next-line no-instanceof/no-instanceof
+        return err instanceof Error ? err.message : JSON.stringify(err);
+      };
+
       // eslint-disable-next-line no-instanceof/no-instanceof
       if (e instanceof SyntaxError && e.message.includes("JSON")) {
         // In case the error is JSON.parse related, try to parse the text directly
         try {
           return await this.schema.parseAsync(JSON.parse(text.trim()));
         } catch (e2) {
-          const errorStr =
-            // eslint-disable-next-line no-instanceof/no-instanceof
-            e2 instanceof Error ? e2.message : JSON.stringify(e2);
-
           throw new OutputParserException(
-            `Failed to parse. Text: "${text}". Error: ${errorStr}`,
+            `Failed to parse. Text: "${text}". Error: ${formatError(e2)}`,
             text
           );
         }
       } else {
-        const errorStr =
-          // eslint-disable-next-line no-instanceof/no-instanceof
-          e instanceof Error ? e.message : JSON.stringify(e);
-
         throw new OutputParserException(
-          `Failed to parse. Text: "${text}". Error: ${errorStr}`,
+          `Failed to parse. Text: "${text}". Error: ${formatError(e)}`,
           text
         );
       }
