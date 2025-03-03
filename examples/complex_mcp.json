@@ -1,0 +1,21 @@
+{
+  "servers": {
+    "math": {
+      "command": "python",
+      "args": ["./examples/math_server.py"],
+      "env": {
+        "DEBUG": "true",
+        "PYTHONPATH": "./examples"
+      }
+    },
+    "weather": {
+      "transport": "sse",
+      "url": "http://localhost:8000/sse"
+    },
+    "custom-server": {
+      "transport": "stdio",
+      "command": "node",
+      "args": ["./examples/custom_server.js"]
+    }
+  }
+}

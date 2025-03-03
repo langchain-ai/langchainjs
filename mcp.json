@@ -1,0 +1,13 @@
+{
+  "servers": {
+    "math": {
+      "transport": "stdio",
+      "command": "python",
+      "args": ["./examples/math_server.py"]
+    },
+    "weather": {
+      "transport": "sse",
+      "url": "http://localhost:8000/sse"
+    }
+  }
+}

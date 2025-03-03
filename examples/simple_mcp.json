@@ -1,0 +1,12 @@
+{
+  "servers": {
+    "math": {
+      "command": "python",
+      "args": ["./examples/math_server.py"]
+    },
+    "weather-sse": {
+      "transport": "sse",
+      "url": "http://localhost:8000/sse"
+    }
+  }
+}
