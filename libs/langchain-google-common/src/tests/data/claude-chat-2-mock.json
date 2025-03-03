@@ -1,0 +1,25 @@
+{
+  "id": "msg_vrtx_01JH6jJkJDHA1K8GKWnVuw28",
+  "type": "message",
+  "role": "assistant",
+  "model": "claude-3-7-sonnet-20250219",
+  "content": [
+    {
+      "type": "thinking",
+      "thinking": "The human has greeted me with a simple \"Hello\". I'll respond with a friendly greeting and offer to help them with anything they might need.",
+      "signature": "EuoBCkgIARACGAIiQAaRslZizmvsLlYS8BV0r0n6hzeTQrjPx/D8WBjoiz7E7uyphiQs+FIoF7ec1VULelnEi5NlAuogSfxyOfM8O/4SDCoF2ccJFJxrfz8gjhoMlV/iOHFZ9gLnW1kuIjDn2GrBrlPRzqQD1H7Z4wQHTEkVnv5AUUCzJdER3Pfyf6nSjM3fTb/f2SFp6hKW8uMqUJd0RLm38/Ofu548THF6TGT4Do1sY9M+HETggt6OYE0QMvMEWGQaAw8vuWBR+AzkbnuqmZ05hAAuumoGqM2kF5CiD/fwyxBDz4QYSSP+rBQn"
+    },
+    {
+      "type": "text",
+      "text": "Hi there! It's nice to meet you. I'm an AI assistant and I'm here to help with information, answer questions, or just chat. How are you doing today, and is there something specific I can assist you with?"
+    }
+  ],
+  "stop_reason": "end_turn",
+  "stop_sequence": null,
+  "usage": {
+    "input_tokens": 36,
+    "cache_creation_input_tokens": 0,
+    "cache_read_input_tokens": 0,
+    "output_tokens": 90
+  }
+}
