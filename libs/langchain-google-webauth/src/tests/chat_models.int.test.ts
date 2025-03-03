@@ -308,7 +308,11 @@ const testGeminiModelNames = [
     platformType: "gai",
     apiVersion: "v1beta",
   },
-  { modelName: "gemini-2.0-flash-lite-001", platformType: "gcp", apiVersion: "v1" },
+  {
+    modelName: "gemini-2.0-flash-lite-001",
+    platformType: "gcp",
+    apiVersion: "v1",
+  },
 
   // Flash Thinking doesn't have functions or other features
   // {modelName: "gemini-2.0-flash-thinking-exp", platformType: "gai"},
