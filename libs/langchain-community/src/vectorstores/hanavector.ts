@@ -901,7 +901,7 @@ export class HanaDB extends VectorStore {
     const metadatas = documents.map((doc) => doc.metadata);
     const client = this.connection;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const sqlParams: [string, string, ...any[]][] = texts.map((text, i) => {
+    const sqlParams: [string, string, string, string, ...(string | null)[]][] = texts.map((text, i) => {
       const metadata = Array.isArray(metadatas) ? metadatas[i] : metadatas;
       const [remainingMetadata, specialMetadata] = this.splitOffSpecialMetadata(metadata);
       // Prepare the SQL parameters
