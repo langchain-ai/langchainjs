@@ -625,10 +625,10 @@ export class HanaDB extends VectorStore {
   private extractKeywordSearchColumns(filter?: this["FilterType"]): string[] {
     const keywordColumns = new Set<string>();
   
-    const recurseFilters = (f?: this["FilterType"], parentKey?: string): void => {
-      if (!f || typeof f !== "object") return;
+    const recurseFilters = (filterObj?: this["FilterType"], parentKey?: string): void => {
+      if (!filterObj || typeof filterObj !== "object") return;
   
-      Object.entries(f).forEach(([key, value]) => {
+      Object.entries(filterObj).forEach(([key, value]) => {
         if (key === CONTAINS_OPERATOR) {
           if (
             parentKey &&
