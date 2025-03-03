@@ -52,7 +52,6 @@ import { MultiServerMCPClient } from 'langchainjs-mcp-adapters';
 
 const client = new MultiServerMCPClient({
   'math-server': {
-    transport: 'stdio',
     command: 'python',
     args: ['./math_server.py'],
   },
@@ -94,24 +93,6 @@ await client.close();
 ```
 
 Example `mcp.json` file:
-
-```json
-{
-  "servers": {
-    "math": {
-      "transport": "stdio",
-      "command": "python",
-      "args": ["./examples/math_server.py"]
-    },
-    "weather": {
-      "transport": "sse",
-      "url": "http://localhost:8000/sse"
-    }
-  }
-}
-```
-
-You can also omit the `transport` field for stdio servers, as it's the default transport:
 
 ```json
 {

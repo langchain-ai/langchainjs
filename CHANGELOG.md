@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.3] - 2023-03-11
+
+### Changed
+
+- Version bump to resolve npm publishing conflict
+- Automated version management in GitHub Actions workflow
+
+## [0.1.2] - 2023-03-10
+
 ### Added
 
 - GitHub Actions workflows for PR validation, CI, and npm publishing
@@ -14,6 +23,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - lint-staged for running linters on staged files
 - Issue and PR templates
 - CHANGELOG.md and CONTRIBUTING.md
+- Improved npm publishing workflow with automatic version conflict resolution
+
+### Fixed
+
+- Fixed Husky deprecation warnings
 
 ## [0.1.0] - 2023-03-03
 
