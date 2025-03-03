@@ -1643,6 +1643,87 @@ describe("Mock ChatGoogle - Anthropic", () => {
     expect(content[0].signature).toEqual("EuoBCkgIARACGAIiQAaRslZizmvsLlYS8BV0r0n6hzeTQrjPx/D8WBjoiz7E7uyphiQs+FIoF7ec1VULelnEi5NlAuogSfxyOfM8O/4SDCoF2ccJFJxrfz8gjhoMlV/iOHFZ9gLnW1kuIjDn2GrBrlPRzqQD1H7Z4wQHTEkVnv5AUUCzJdER3Pfyf6nSjM3fTb/f2SFp6hKW8uMqUJd0RLm38/Ofu548THF6TGT4Do1sY9M+HETggt6OYE0QMvMEWGQaAw8vuWBR+AzkbnuqmZ05hAAuumoGqM2kF5CiD/fwyxBDz4QYSSP+rBQn");
   });
 
+  test("3. Redacted response format", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "claude-chat-3-mock.json",
+    };
+    const apiConfig: AnthropicAPIConfig = {
+      thinking: { type: "enabled", budget_tokens: 2000 },
+    }
+    const model = new ChatGoogle({
+      modelName: "claude-3-7-sonnet@20250219",
+      platformType: "gcp",
+      authOptions,
+      apiConfig,
+    });
+    const messages: BaseMessageLike[] = [new HumanMessage("Hi there")];
+    const response = await model.invoke(messages);
+
+    console.log(JSON.stringify(response,null,1));
+    expect(Array.isArray(response.content)).toBe(true);
+    expect(response.content).toHaveLength(2);
+    const content = response.content as MessageContentComplex[];
+
+    let thinkingCount = 0;
+    for (const block of content) {
+      expect(typeof block).toBe("object");
+      const complexBlock = block as MessageContentComplex;
+      if (complexBlock.type === "redacted_thinking") {
+        thinkingCount += 1;
+        expect(Object.keys(block).sort()).toEqual(
+          ["type", "data"].sort()
+        );
+        expect(complexBlock).not.toHaveProperty("thinking");
+        expect(complexBlock).toHaveProperty("data");
+        expect(typeof complexBlock.data).toBe("string");
+      }
+    }
+    expect(thinkingCount).toEqual(1);
+
+  });
+
+  test("3. Redacted request format", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "claude-chat-3-mock.json",
+    };
+    const apiConfig: AnthropicAPIConfig = {
+      thinking: { type: "enabled", budget_tokens: 2000 },
+    }
+    const model = new ChatGoogle({
+      modelName: "claude-3-7-sonnet@20250219",
+      platformType: "gcp",
+      authOptions,
+      apiConfig,
+    });
+    const messages1: BaseMessageLike[] = [new HumanMessage("Hi there")];
+    const response1 = await model.invoke(messages1);
+    const messages2: BaseMessageLike[] = [
+      ...messages1,
+      response1,
+      new HumanMessage("What is 42 + 7?"),
+    ];
+    await model.invoke(messages2)
+
+    console.log("record", record?.opts?.data);
+    const testMessages = record?.opts?.data?.messages;
+    expect(Array.isArray(testMessages)).toEqual(true);
+    expect(testMessages).toHaveLength(3);
+    const content = testMessages[1]?.content;
+    console.log(content)
+    expect(Array.isArray(content)).toEqual(true);
+    expect(content[0].type).toEqual("redacted_thinking");
+    expect(content[0].data).toEqual("EroICooBCAEQAhgCIkDvEnr8/MqMckuryHRx//D3wPtlP+0whuFFRSLNu/gEvZzyALMEneb5I6SQ2wshZF0RSyXs7sfUDq481kb1xUjWKkDRrtG/WX1wSVRTvowEpP+qJpYZqMJNhI28E8Vo+5Mm/3qrk0yIukRoOWKTVGGoPFfJEP539gMa1AxnJlToaefjEgxW4f83l8+aMIMJF9UaDFZlJEIPQWk99r6EqiIwvtTVG2j01jARQXRWfM214Q8F/q4ctTOOZjxRjtT9v453gMqjZ10ljYrvBVBjyHCCKtwGquvKhyBgtsT1BgOKWAanjGHV5Bz1OB7hZmumkMisVVmxfOt7XW+BiyEFLLne7wL3KdKpzn+Js7AbDLbJ822ncksYPYOMnCAYE7IFntUcwXEeZf+/UzWVuwnlvbDtXYFnzYvkiY4+hO0DTBEzjnskpM6BoB7jfi5gYE50a8VLnEJHQS+RzbdB8CWYh5nmH3dN0Zro1SZowtwxlcTyGU0SKlrATCgxccdL41no39K36C/FNeRjYl1PIPIlIrgS04AfJpXEw0mKTDasvPTdQtu8iXh9u+yT4YL1xlnr1shPN8KNQgL8/s8s5D4T7XL6M6AhvMFcw0NgXd8MpCgjFeDV/Y77IyeSavnsTlAjXBJ3lGkaRmyUxIEuQxTF+weGqebm88JHAVkGhM6+0cy8RLpcHjxJ+6BUNMKLwZBxNu8RGtISM0KUUs5hfJ5idfanHE+dXWmMbYq/B5Y67jcm4tR2rRwFORuI6BimwfKXj5IVDuSZxk5teF9uq5huDvva3y3QbrjWkzUF3ruiNkGoXpR1xDxf/42VPCO4lQgeQKhPo262118LsvcauphNL7cgkKw7hn7TVqX6CftdnMSMhNkJWqnQbzkzSS1eIvNd2a+5uio0ASzhuH6bnInZ2DT9vhQZYJPDqRb9iTAezrzE/mC8cLmduY6ULS39254Tt4JqSsZ0IhChyUHysgZp+Ntlq7Stgypmzk5Kco9faYtrGz/0LkuF2Uxm2rE+VVd2N+ypm63PprllU6zW1AdxvSL8Rx6NdNIPlr8d04Iz7bXY0ATv/JhAWeRTsWcRvIKjwEmTClmuYciZzqW/qGAiGgRzie/wscKrjR+CDZarg8QsTEv98Z/LANCGLNIoh48xQ6h4LKiNRytC5QzL2ZaIjRojlm3bGhpIGmBjKhZKQDjsuwwf2hL/JvyXxwbT3hCex/vQbnvp7BLD52tzy0kR0lmrrsQ6nAq3PEHJETZGbZazczrWt38STbAFA9yerg+aMyyvuTC8OXv77YMztqa122B0X9HK22qCHl1TaOivKS9pho5tjq0qAOWce+WCgx5F252V9QfTLz+QRLrGnPwftTuL9LA7DWT8P4C3g0AW3a0hiwjWuFZem3PTRgYW4gp9nbaewDFVzz220CVPgxNrGQM=");
+
+  });
+
 });
 
 function extractKeys(obj: Record<string, any>, keys: string[] = []) {

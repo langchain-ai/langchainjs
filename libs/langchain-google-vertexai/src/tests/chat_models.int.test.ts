@@ -834,4 +834,48 @@ describe.each(testAnthropicThinkingModelNames)("GAuth Anthropic Thinking (%s)", 
     // test a second time to make sure that we've got input translation working correctly
     await model.invoke(invokeMessages);
   });
+
+  test("thinking redacted multiturn invoke", async () => {
+    const apiConfig: AnthropicAPIConfig = {
+      thinking: { type: "enabled", budget_tokens: 2000 },
+    }
+    const model = new ChatVertexAI({
+      modelName,
+      callbacks,
+      maxOutputTokens: 5000,
+      apiConfig,
+    });
+
+    async function doInvoke(messages: BaseMessage[]) {
+      const response = await model.invoke(messages);
+
+      expect(Array.isArray(response.content)).toBe(true);
+      const content = response.content as MessageContentComplex[];
+
+      let thinkingCount = 0;
+      for (const block of content) {
+        expect(typeof block).toBe("object");
+        const complexBlock = block as MessageContentComplex;
+        if (complexBlock.type === "redacted_thinking") {
+          thinkingCount += 1;
+          expect(Object.keys(block).sort()).toEqual(
+            ["type", "data"].sort()
+          );
+          expect(complexBlock).not.toHaveProperty("thinking");
+          expect(complexBlock).toHaveProperty("data");
+          expect(typeof complexBlock.data).toBe("string");
+        }
+      }
+      expect(thinkingCount).toEqual(1);
+      return response;
+    }
+
+    const invokeMessages = [new HumanMessage("ANTHROPIC_MAGIC_STRING_TRIGGER_REDACTED_THINKING_46C9A13E193C177646C7398A98432ECCCE4C1253D5E2D82641AC0E52CC2876CB")];
+
+    invokeMessages.push(await doInvoke(invokeMessages));
+    invokeMessages.push(new HumanMessage("What is 42+7?"));
+
+    // test a second time to make sure that we've got input translation working correctly
+    await model.invoke(invokeMessages);
+  });
 });

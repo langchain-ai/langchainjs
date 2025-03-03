@@ -26,8 +26,14 @@ export interface AnthropicMessageContentImage
 export interface AnthropicMessageContentThinking
   extends AnthropicMessageContentBase {
   type: "thinking";
-  thinking?: string;
+  thinking: string;
   signature: string;
+}
+
+export interface AnthropicMessageContentRedactedThinking
+  extends AnthropicMessageContentBase {
+  type: "redacted_thinking";
+  data: string;
 }
 
 // TODO: Define this
@@ -58,7 +64,8 @@ export type AnthropicMessageContent =
   | AnthropicMessageContentImage
   | AnthropicMessageContentToolUse
   | AnthropicMessageContentToolResult
-  | AnthropicMessageContentThinking;
+  | AnthropicMessageContentThinking
+  | AnthropicMessageContentRedactedThinking;
 
 export interface AnthropicMessage {
   role: string;
@@ -149,11 +156,16 @@ export interface AnthropicContentToolUse {
 
 export interface AnthropicContentThinking {
   type: "thinking";
-  thinking?: string;
+  thinking: string;
   signature: string;
 }
 
-export type AnthropicContent = AnthropicContentText | AnthropicContentToolUse | AnthropicContentThinking;
+export interface AnthropicContentRedactedThinking {
+  type: "redacted_thinking";
+  data: string;
+}
+
+export type AnthropicContent = AnthropicContentText | AnthropicContentToolUse | AnthropicContentThinking | AnthropicContentRedactedThinking;
 
 export interface AnthropicUsage {
   input_tokens: number;
