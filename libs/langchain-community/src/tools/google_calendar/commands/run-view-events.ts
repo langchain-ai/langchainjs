@@ -2,7 +2,6 @@ import { calendar_v3 } from "googleapis";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { BaseLanguageModel } from "@langchain/core/language_models/base";
 import { CallbackManagerForToolRun } from "@langchain/core/callbacks/manager";
-import { StructuredOutputParser } from "@langchain/core/output_parsers";
 import { z } from "zod";
 
 import { VIEW_EVENTS_PROMPT } from "../prompts/index.js";
@@ -15,7 +14,6 @@ const eventSchema = z.object({
   max_results: z.number(),
   search_query: z.string().optional(),
 });
-const parser = StructuredOutputParser.fromZodSchema(eventSchema);
 
 type RunViewEventParams = {
   calendarId: string;
@@ -33,7 +31,11 @@ const runViewEvents = async (
     inputVariables: ["date", "query", "u_timezone", "dayName"],
   });
 
-  const viewEventsChain = prompt.pipe(model).pipe(parser);
+  if (!model?.withStructuredOutput) {
+    throw new Error("Model does not support structured output");
+  }
+
+  const viewEventsChain = prompt.pipe(model.withStructuredOutput(eventSchema));
 
   const date = new Date().toISOString();
   const u_timezone = getTimezoneOffsetInHours();
