@@ -52,7 +52,30 @@ jobs:
 
       - name: Version bump (manual)
         if: github.event_name == 'workflow_dispatch'
-        run: npm version ${{ github.event.inputs.version }} --no-git-tag-version
+        run: |
+          # Get current version before bump
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          echo "Current version: $CURRENT_VERSION"
+
+          # Try to bump version
+          npm version ${{ github.event.inputs.version }} --no-git-tag-version
+
+          # Get new version after bump
+          NEW_VERSION=$(node -p "require('./package.json').version")
+          echo "New version: $NEW_VERSION"
+
+          # Check if this version already exists on npm
+          if npm view langchainjs-mcp-adapters@$NEW_VERSION version &> /dev/null; then
+            echo "Version $NEW_VERSION already exists on npm. Incrementing patch version."
+            # Reset to current version
+            npm version $CURRENT_VERSION --no-git-tag-version --allow-same-version
+            # Bump to next patch version
+            npm version patch --no-git-tag-version
+          fi
+
+          # Final version after all checks
+          FINAL_VERSION=$(node -p "require('./package.json').version")
+          echo "Final version to publish: $FINAL_VERSION"
 
       - name: Publish to npm
         run: npm publish
