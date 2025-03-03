@@ -250,6 +250,8 @@ docs/integrations/vectorstores/mongodb_atlas.md
 docs/integrations/vectorstores/mongodb_atlas.mdx
 docs/integrations/vectorstores/memory.md
 docs/integrations/vectorstores/memory.mdx
+docs/integrations/vectorstores/mariadb.md
+docs/integrations/vectorstores/mariadb.mdx
 docs/integrations/vectorstores/hnswlib.md
 docs/integrations/vectorstores/hnswlib.mdx
 docs/integrations/vectorstores/faiss.md
