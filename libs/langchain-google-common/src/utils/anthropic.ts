@@ -21,12 +21,12 @@ import {
 } from "@langchain/core/messages/tool";
 import {
   AnthropicAPIConfig,
-  AnthropicContent,
+  AnthropicContent, AnthropicContentRedactedThinking,
   AnthropicContentText, AnthropicContentThinking,
   AnthropicContentToolUse,
   AnthropicMessage,
   AnthropicMessageContent,
-  AnthropicMessageContentImage,
+  AnthropicMessageContentImage, AnthropicMessageContentRedactedThinking,
   AnthropicMessageContentText, AnthropicMessageContentThinking,
   AnthropicMessageContentToolResult,
   AnthropicMessageContentToolResultContent,
@@ -137,6 +137,15 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
     };
   }
 
+  function redactedThinkingContentToMessageFields(
+    thinkingContent: AnthropicContentRedactedThinking
+  ): AIMessageFields {
+    // TODO: Once a reasoning/thinking type is defined in LangChain, use it
+    return {
+      content: [thinkingContent],
+    };
+  }
+
   function anthropicContentToMessageFields(
     anthropicContent: AnthropicContent
   ): AIMessageFields | undefined {
@@ -148,6 +157,8 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
         return toolUseContentToMessageFields(anthropicContent);
       case "thinking":
         return thinkingContentToMessageFields(anthropicContent);
+      case "redacted_thinking":
+        return redactedThinkingContentToMessageFields(anthropicContent);
       default:
         console.error(`Unknown message type: ${type}`, anthropicContent);
         return undefined;
@@ -468,14 +479,22 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
     content: Record<string,any>
   ): AnthropicMessageContentThinking | undefined {
     // TODO: Once a Langchain Thinking type is defined, use it
-    const ret: AnthropicContentThinking = {
+    return {
       type: "thinking",
+      thinking: content.thinking,
       signature: content.signature,
     }
-    if (content.thinking) {
-      ret.thinking = content.thinking;
+  }
+
+  function redactedThinkingContentToAnthropicContent(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    content: Record<string,any>
+  ): AnthropicMessageContentRedactedThinking | undefined {
+    // TODO: Once a Langchain Thinking type is defined, use it
+    return {
+      type: "redacted_thinking",
+      data: content.data,
     }
-    return ret;
   }
 
   function contentComplexToAnthropicContent(
@@ -491,6 +510,8 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
         );
       case "thinking":
         return thinkingContentToAnthropicContent(content as Record<string,unknown>);
+      case "redacted_thinking":
+        return redactedThinkingContentToAnthropicContent(content as Record<string,unknown>);
       default:
         console.warn(`Unexpected content type: ${type}`);
         return undefined;
