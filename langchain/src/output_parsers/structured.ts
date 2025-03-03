@@ -113,14 +113,24 @@ ${JSON.stringify(zodToJsonSchema(this.schema))}
         try {
           return await this.schema.parseAsync(JSON.parse(text.trim()));
         } catch (e2) {
+          const errorStr =
+            // eslint-disable-next-line no-instanceof/no-instanceof
+            e2 instanceof Error ? e2.message : JSON.stringify(e2);
+
           throw new OutputParserException(
-            `Failed to parse. Text: "${text}". Error: ${e2}`,
+            `Failed to parse. Text: "${text}". Error: ${errorStr}`,
             text
           );
         }
       } else {
-        // Otherwise, throw the original error (e.g. ZodError)
-        throw e;
+        const errorStr =
+          // eslint-disable-next-line no-instanceof/no-instanceof
+          e instanceof Error ? e.message : JSON.stringify(e);
+
+        throw new OutputParserException(
+          `Failed to parse. Text: "${text}". Error: ${errorStr}`,
+          text
+        );
       }
     }
   }

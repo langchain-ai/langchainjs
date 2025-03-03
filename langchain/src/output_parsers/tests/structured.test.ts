@@ -1,4 +1,4 @@
-import { expect, test } from "@jest/globals";
+import { expect, test, jest } from "@jest/globals";
 import { z } from "zod";
 import { StructuredOutputParser } from "../structured.js";
 
@@ -126,4 +126,19 @@ test("StructuredOutputParser handles valid JSON with backticks and not conformin
   await expect(parser.parse(text)).rejects.toThrow(
     "Expected number, received null"
   );
+});
+
+test("StructuredOutputParser handles plain object exceptions", async () => {
+  const schema = z.object({
+    name: z.string().describe("Human name"),
+    age: z.number().describe("Human age"),
+  });
+
+  // throw a regular object as an error from the parser
+  jest.spyOn(schema, "parseAsync").mockRejectedValue({ plain: "some error" });
+
+  const parser = StructuredOutputParser.fromZodSchema(schema);
+  const text = '```json\n{"name": "John Doe", "age": 32 }```';
+
+  await expect(parser.parse(text)).rejects.toThrow("some error");
 });
