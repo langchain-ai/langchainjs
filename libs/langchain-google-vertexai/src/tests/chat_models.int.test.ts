@@ -669,213 +669,224 @@ const testAnthropicModelNames = [
   ["claude-3-7-sonnet@20250219"],
 ];
 
-describe.each(testAnthropicModelNames)("GAuth Anthropic Chat (%s)", (modelName) => {
-  let recorder: GoogleRequestRecorder;
-  let callbacks: BaseCallbackHandler[];
+describe.each(testAnthropicModelNames)(
+  "GAuth Anthropic Chat (%s)",
+  (modelName) => {
+    let recorder: GoogleRequestRecorder;
+    let callbacks: BaseCallbackHandler[];
 
-  beforeEach(() => {
-    recorder = new GoogleRequestRecorder();
-    callbacks = [recorder, new GoogleRequestLogger()];
-  });
-
-  test("invoke", async () => {
-    const model = new ChatVertexAI({
-      modelName,
-      callbacks,
-    });
-    const res = await model.invoke("What is 1 + 1?");
-    expect(res).toBeDefined();
-    expect(res._getType()).toEqual("ai");
-
-    const aiMessage = res as AIMessageChunk;
-    expect(aiMessage.content).toBeDefined();
-
-    expect(typeof aiMessage.content).toBe("string");
-    const text = aiMessage.content as string;
-    expect(text).toMatch(/(1 + 1 (equals|is|=) )?2.? ?/);
-
-    const connection = recorder?.request?.connection;
-    expect(connection?.url).toEqual(
-      `https://us-east5-aiplatform.googleapis.com/v1/projects/test-vertex-ai-382612/locations/us-east5/publishers/anthropic/models/${modelName}:rawPredict`
-    );
-
-    console.log(JSON.stringify(aiMessage, null, 1));
-    console.log(aiMessage.lc_kwargs);
-  });
-
-  test("stream", async () => {
-    const model = new ChatVertexAI({
-      modelName,
-      callbacks,
-    });
-    const stream = await model.stream("How are you today? Be verbose.");
-    const chunks = [];
-    for await (const chunk of stream) {
-      console.log(chunk);
-      chunks.push(chunk);
-    }
-    expect(chunks.length).toBeGreaterThan(1);
-  });
-
-  test("tool invocation", async () => {
-    const model = new ChatVertexAI({
-      modelName,
-      callbacks,
-    });
-    const modelWithTools = model.bind({
-      tools: [weatherTool],
+    beforeEach(() => {
+      recorder = new GoogleRequestRecorder();
+      callbacks = [recorder, new GoogleRequestLogger()];
     });
 
-    const result = await modelWithTools.invoke(
-      "Whats the weather like in paris today?"
-    );
+    test("invoke", async () => {
+      const model = new ChatVertexAI({
+        modelName,
+        callbacks,
+      });
+      const res = await model.invoke("What is 1 + 1?");
+      expect(res).toBeDefined();
+      expect(res._getType()).toEqual("ai");
 
-    const request = recorder?.request ?? {};
-    const data = request?.data;
-    expect(data).toHaveProperty("tools");
-    expect(data.tools).toHaveLength(1);
+      const aiMessage = res as AIMessageChunk;
+      expect(aiMessage.content).toBeDefined();
 
-    expect(result.tool_calls).toHaveLength(1);
-    expect(result.tool_calls?.[0]).toBeDefined();
-    expect(result.tool_calls?.[0].name).toBe("get_weather");
-    expect(result.tool_calls?.[0].args).toHaveProperty("location");
-  });
+      expect(typeof aiMessage.content).toBe("string");
+      const text = aiMessage.content as string;
+      expect(text).toMatch(/(1 + 1 (equals|is|=) )?2.? ?/);
 
-  test("stream tools", async () => {
-    const model = new ChatVertexAI({
-      modelName,
-      callbacks,
+      const connection = recorder?.request?.connection;
+      expect(connection?.url).toEqual(
+        `https://us-east5-aiplatform.googleapis.com/v1/projects/test-vertex-ai-382612/locations/us-east5/publishers/anthropic/models/${modelName}:rawPredict`
+      );
+
+      console.log(JSON.stringify(aiMessage, null, 1));
+      console.log(aiMessage.lc_kwargs);
     });
 
-    const weatherTool = tool(
-      (_) => "The weather in San Francisco today is 18 degrees and sunny.",
-      {
-        name: "current_weather_tool",
-        description: "Get the current weather for a given location.",
-        schema: z.object({
-          location: z.string().describe("The location to get the weather for."),
-        }),
+    test("stream", async () => {
+      const model = new ChatVertexAI({
+        modelName,
+        callbacks,
+      });
+      const stream = await model.stream("How are you today? Be verbose.");
+      const chunks = [];
+      for await (const chunk of stream) {
+        console.log(chunk);
+        chunks.push(chunk);
       }
-    );
-
-    const modelWithTools = model.bindTools([weatherTool]);
-    const stream = await modelWithTools.stream(
-      "Whats the weather like today in San Francisco?"
-    );
-    let finalChunk: AIMessageChunk | undefined;
-    for await (const chunk of stream) {
-      finalChunk = !finalChunk ? chunk : concat(finalChunk, chunk);
-    }
-
-    expect(finalChunk).toBeDefined();
-    const toolCalls = finalChunk?.tool_calls;
-    expect(toolCalls).toBeDefined();
-    expect(toolCalls?.length).toBe(1);
-    expect(toolCalls?.[0].name).toBe("current_weather_tool");
-    expect(toolCalls?.[0].args).toHaveProperty("location");
-  });
-
-});
-
-const testAnthropicThinkingModelNames = [
-  ["claude-3-7-sonnet@20250219"],
-]
-describe.each(testAnthropicThinkingModelNames)("GAuth Anthropic Thinking (%s)", (modelName) => {
-  let recorder: GoogleRequestRecorder;
-  let callbacks: BaseCallbackHandler[];
-
-  beforeEach(() => {
-    recorder = new GoogleRequestRecorder();
-    callbacks = [recorder, new GoogleRequestLogger()];
-  });
-
-  test("thinking multiturn invoke", async () => {
-    const apiConfig: AnthropicAPIConfig = {
-      thinking: { type: "enabled", budget_tokens: 2000 },
-    }
-    const model = new ChatVertexAI({
-      modelName,
-      callbacks,
-      maxOutputTokens: 5000,
-      apiConfig,
+      expect(chunks.length).toBeGreaterThan(1);
     });
 
-    async function doInvoke(messages: BaseMessage[]) {
-      const response = await model.invoke(messages);
+    test("tool invocation", async () => {
+      const model = new ChatVertexAI({
+        modelName,
+        callbacks,
+      });
+      const modelWithTools = model.bind({
+        tools: [weatherTool],
+      });
 
-      expect(Array.isArray(response.content)).toBe(true);
+      const result = await modelWithTools.invoke(
+        "Whats the weather like in paris today?"
+      );
+
+      const request = recorder?.request ?? {};
+      const data = request?.data;
+      expect(data).toHaveProperty("tools");
+      expect(data.tools).toHaveLength(1);
+
+      expect(result.tool_calls).toHaveLength(1);
+      expect(result.tool_calls?.[0]).toBeDefined();
+      expect(result.tool_calls?.[0].name).toBe("get_weather");
+      expect(result.tool_calls?.[0].args).toHaveProperty("location");
+    });
+
+    test("stream tools", async () => {
+      const model = new ChatVertexAI({
+        modelName,
+        callbacks,
+      });
+
+      const weatherTool = tool(
+        (_) => "The weather in San Francisco today is 18 degrees and sunny.",
+        {
+          name: "current_weather_tool",
+          description: "Get the current weather for a given location.",
+          schema: z.object({
+            location: z
+              .string()
+              .describe("The location to get the weather for."),
+          }),
+        }
+      );
+
+      const modelWithTools = model.bindTools([weatherTool]);
+      const stream = await modelWithTools.stream(
+        "Whats the weather like today in San Francisco?"
+      );
+      let finalChunk: AIMessageChunk | undefined;
+      for await (const chunk of stream) {
+        finalChunk = !finalChunk ? chunk : concat(finalChunk, chunk);
+      }
+
+      expect(finalChunk).toBeDefined();
+      const toolCalls = finalChunk?.tool_calls;
+      expect(toolCalls).toBeDefined();
+      expect(toolCalls?.length).toBe(1);
+      expect(toolCalls?.[0].name).toBe("current_weather_tool");
+      expect(toolCalls?.[0].args).toHaveProperty("location");
+    });
+  }
+);
+
+const testAnthropicThinkingModelNames = [["claude-3-7-sonnet@20250219"]];
+describe.each(testAnthropicThinkingModelNames)(
+  "GAuth Anthropic Thinking (%s)",
+  (modelName) => {
+    let recorder: GoogleRequestRecorder;
+    let callbacks: BaseCallbackHandler[];
+
+    beforeEach(() => {
+      recorder = new GoogleRequestRecorder();
+      callbacks = [recorder, new GoogleRequestLogger()];
+    });
+
+    test("thinking multiturn invoke", async () => {
+      const apiConfig: AnthropicAPIConfig = {
+        thinking: { type: "enabled", budget_tokens: 2000 },
+      };
+      const model = new ChatVertexAI({
+        modelName,
+        callbacks,
+        maxOutputTokens: 5000,
+        apiConfig,
+      });
+
+      async function doInvoke(messages: BaseMessage[]) {
+        const response = await model.invoke(messages);
+
+        expect(Array.isArray(response.content)).toBe(true);
         const content = response.content as MessageContentComplex[];
-      expect(content.some((block) => "thinking" in (block as MessageContentComplex))).toBe(true);
+        expect(
+          content.some(
+            (block) => "thinking" in (block as MessageContentComplex)
+          )
+        ).toBe(true);
 
-      let thinkingCount = 0;
-      for (const block of response.content) {
-        expect(typeof block).toBe("object");
-        const complexBlock = block as MessageContentComplex;
-        if (complexBlock.type === "thinking") {
-          thinkingCount += 1;
-          expect(Object.keys(block).sort()).toEqual(
-            ["type", "thinking", "signature"].sort()
-          );
-          expect(complexBlock.thinking).toBeTruthy();
-          expect(typeof complexBlock.thinking).toBe("string");
-          expect(complexBlock.signature).toBeTruthy();
-          expect(typeof complexBlock.signature).toBe("string");
+        let thinkingCount = 0;
+        for (const block of response.content) {
+          expect(typeof block).toBe("object");
+          const complexBlock = block as MessageContentComplex;
+          if (complexBlock.type === "thinking") {
+            thinkingCount += 1;
+            expect(Object.keys(block).sort()).toEqual(
+              ["type", "thinking", "signature"].sort()
+            );
+            expect(complexBlock.thinking).toBeTruthy();
+            expect(typeof complexBlock.thinking).toBe("string");
+            expect(complexBlock.signature).toBeTruthy();
+            expect(typeof complexBlock.signature).toBe("string");
+          }
         }
+        expect(thinkingCount).toEqual(1);
+        return response;
       }
-      expect(thinkingCount).toEqual(1);
-      return response;
-    }
 
-    const invokeMessages = [new HumanMessage("Hello")];
+      const invokeMessages = [new HumanMessage("Hello")];
 
-    invokeMessages.push(await doInvoke(invokeMessages));
-    invokeMessages.push(new HumanMessage("What is 42+7?"));
+      invokeMessages.push(await doInvoke(invokeMessages));
+      invokeMessages.push(new HumanMessage("What is 42+7?"));
 
-    // test a second time to make sure that we've got input translation working correctly
-    await model.invoke(invokeMessages);
-  });
-
-  test("thinking redacted multiturn invoke", async () => {
-    const apiConfig: AnthropicAPIConfig = {
-      thinking: { type: "enabled", budget_tokens: 2000 },
-    }
-    const model = new ChatVertexAI({
-      modelName,
-      callbacks,
-      maxOutputTokens: 5000,
-      apiConfig,
+      // test a second time to make sure that we've got input translation working correctly
+      await model.invoke(invokeMessages);
     });
 
-    async function doInvoke(messages: BaseMessage[]) {
-      const response = await model.invoke(messages);
+    test("thinking redacted multiturn invoke", async () => {
+      const apiConfig: AnthropicAPIConfig = {
+        thinking: { type: "enabled", budget_tokens: 2000 },
+      };
+      const model = new ChatVertexAI({
+        modelName,
+        callbacks,
+        maxOutputTokens: 5000,
+        apiConfig,
+      });
 
-      expect(Array.isArray(response.content)).toBe(true);
-      const content = response.content as MessageContentComplex[];
+      async function doInvoke(messages: BaseMessage[]) {
+        const response = await model.invoke(messages);
 
-      let thinkingCount = 0;
-      for (const block of content) {
-        expect(typeof block).toBe("object");
-        const complexBlock = block as MessageContentComplex;
-        if (complexBlock.type === "redacted_thinking") {
-          thinkingCount += 1;
-          expect(Object.keys(block).sort()).toEqual(
-            ["type", "data"].sort()
-          );
-          expect(complexBlock).not.toHaveProperty("thinking");
-          expect(complexBlock).toHaveProperty("data");
-          expect(typeof complexBlock.data).toBe("string");
+        expect(Array.isArray(response.content)).toBe(true);
+        const content = response.content as MessageContentComplex[];
+
+        let thinkingCount = 0;
+        for (const block of content) {
+          expect(typeof block).toBe("object");
+          const complexBlock = block as MessageContentComplex;
+          if (complexBlock.type === "redacted_thinking") {
+            thinkingCount += 1;
+            expect(Object.keys(block).sort()).toEqual(["type", "data"].sort());
+            expect(complexBlock).not.toHaveProperty("thinking");
+            expect(complexBlock).toHaveProperty("data");
+            expect(typeof complexBlock.data).toBe("string");
+          }
         }
+        expect(thinkingCount).toEqual(1);
+        return response;
       }
-      expect(thinkingCount).toEqual(1);
-      return response;
-    }
 
-    const invokeMessages = [new HumanMessage("ANTHROPIC_MAGIC_STRING_TRIGGER_REDACTED_THINKING_46C9A13E193C177646C7398A98432ECCCE4C1253D5E2D82641AC0E52CC2876CB")];
+      const invokeMessages = [
+        new HumanMessage(
+          "ANTHROPIC_MAGIC_STRING_TRIGGER_REDACTED_THINKING_46C9A13E193C177646C7398A98432ECCCE4C1253D5E2D82641AC0E52CC2876CB"
+        ),
+      ];
 
-    invokeMessages.push(await doInvoke(invokeMessages));
-    invokeMessages.push(new HumanMessage("What is 42+7?"));
+      invokeMessages.push(await doInvoke(invokeMessages));
+      invokeMessages.push(new HumanMessage("What is 42+7?"));
 
-    // test a second time to make sure that we've got input translation working correctly
-    await model.invoke(invokeMessages);
-  });
-});
+      // test a second time to make sure that we've got input translation working correctly
+      await model.invoke(invokeMessages);
+    });
+  }
+);

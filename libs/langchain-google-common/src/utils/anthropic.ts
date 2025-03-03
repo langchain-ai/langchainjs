@@ -21,13 +21,17 @@ import {
 } from "@langchain/core/messages/tool";
 import {
   AnthropicAPIConfig,
-  AnthropicContent, AnthropicContentRedactedThinking,
-  AnthropicContentText, AnthropicContentThinking,
+  AnthropicContent,
+  AnthropicContentRedactedThinking,
+  AnthropicContentText,
+  AnthropicContentThinking,
   AnthropicContentToolUse,
   AnthropicMessage,
   AnthropicMessageContent,
-  AnthropicMessageContentImage, AnthropicMessageContentRedactedThinking,
-  AnthropicMessageContentText, AnthropicMessageContentThinking,
+  AnthropicMessageContentImage,
+  AnthropicMessageContentRedactedThinking,
+  AnthropicMessageContentText,
+  AnthropicMessageContentThinking,
   AnthropicMessageContentToolResult,
   AnthropicMessageContentToolResultContent,
   AnthropicRequest,
@@ -476,25 +480,25 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
 
   function thinkingContentToAnthropicContent(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    content: Record<string,any>
+    content: Record<string, any>
   ): AnthropicMessageContentThinking | undefined {
     // TODO: Once a Langchain Thinking type is defined, use it
     return {
       type: "thinking",
       thinking: content.thinking,
       signature: content.signature,
-    }
+    };
   }
 
   function redactedThinkingContentToAnthropicContent(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    content: Record<string,any>
+    content: Record<string, any>
   ): AnthropicMessageContentRedactedThinking | undefined {
     // TODO: Once a Langchain Thinking type is defined, use it
     return {
       type: "redacted_thinking",
       data: content.data,
-    }
+    };
   }
 
   function contentComplexToAnthropicContent(
@@ -509,9 +513,13 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
           content as MessageContentImageUrl
         );
       case "thinking":
-        return thinkingContentToAnthropicContent(content as Record<string,unknown>);
+        return thinkingContentToAnthropicContent(
+          content as Record<string, unknown>
+        );
       case "redacted_thinking":
-        return redactedThinkingContentToAnthropicContent(content as Record<string,unknown>);
+        return redactedThinkingContentToAnthropicContent(
+          content as Record<string, unknown>
+        );
       default:
         console.warn(`Unexpected content type: ${type}`);
         return undefined;

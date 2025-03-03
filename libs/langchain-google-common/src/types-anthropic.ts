@@ -119,7 +119,9 @@ export interface AnthropicThinkingDisabled {
   type: "disabled";
 }
 
-export type AnthropicThinking = AnthropicThinkingEnabled | AnthropicThinkingDisabled;
+export type AnthropicThinking =
+  | AnthropicThinkingEnabled
+  | AnthropicThinkingDisabled;
 
 export interface AnthropicRequest {
   anthropic_version: string;
@@ -165,7 +167,11 @@ export interface AnthropicContentRedactedThinking {
   data: string;
 }
 
-export type AnthropicContent = AnthropicContentText | AnthropicContentToolUse | AnthropicContentThinking | AnthropicContentRedactedThinking;
+export type AnthropicContent =
+  | AnthropicContentText
+  | AnthropicContentToolUse
+  | AnthropicContentThinking
+  | AnthropicContentRedactedThinking;
 
 export interface AnthropicUsage {
   input_tokens: number;
