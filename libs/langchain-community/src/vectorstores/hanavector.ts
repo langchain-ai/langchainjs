@@ -169,7 +169,7 @@ export class HanaDB extends VectorStore {
   }
 
   /**
-   * Use this method yto chanbe the embeddings instance
+   * Use this method to change the embeddings instance.
    * 
    * Sets the embedding instance and configures the internal embedding mode 
    * if applicable.
