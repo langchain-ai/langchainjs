@@ -78,42 +78,37 @@ Example Output:
 "Message sent. Message Id: unique_message_id_string"
 `;
 
-export const SEARCH_DESCRIPTION = `A tool for searching email messages or threads in Gmail using a specific query. It offers the flexibility to choose between messages and threads as the search resource.
+export const SEARCH_DESCRIPTION = `A tool for searching Gmail messages or threads using a specific query. Offers the flexibility to choose between messages and threads as the search resource.
 
-INPUT example:
+INPUT:
 {
-  "query": "specific search query",
+  "query": "search query",
   "maxResults": 10, // Optional: number of results to return
   "resource": "messages" // Optional: can be "messages" or "threads"
 }
 
 OUTPUT:
-The output is a JSON list of either email messages or threads, depending on the specified resource, that matches the search query. For 'messages', the output includes details like the message ID, thread ID, snippet, body, subject, and sender of each message. For 'threads', it includes the thread ID, snippet, body, subject, and sender of the first message in each thread. If no data is returned, or if the specified resource is invalid, the tool throws an error with a relevant message.
+JSON list of matching email messages or threads based on the specified resource. If no data is returned, or if the specified resource is invalid, throw error with a relevant message.
 
-Example Output for 'messages':
-"Result for the query 'specific search query':
-[
-  {
-    'id': 'message_id',
-    'threadId': 'thread_id',
-    'snippet': 'message snippet',
-    'body': 'message body',
-    'subject': 'message subject',
-    'sender': 'sender's email'
-  },
-  ... (other messages matching the query)
+Example result for messages:
+"[{
+  'id': 'message_id',
+  'threadId': 'thread_id',
+  'snippet': 'message snippet',
+  'body': 'message body',
+  'subject': 'message subject',
+  'sender': 'message sender'
+}, 
+... (other messages matching the query)
 ]"
 
-Example Output for 'threads':
-"Result for the query 'specific search query':
-[
-  {
-    'id': 'thread_id',
-    'snippet': 'thread snippet',
-    'body': 'first message body',
-    'subject': 'first message subject',
-    'sender': 'first message sender'
-  },
-  ... (other threads matching the query)
-]"
-`;
+Example result for threads:
+"[{
+  'id': 'thread_id',
+  'snippet': 'thread snippet',
+  'body': 'first message body',
+  'subject': 'first message subject',
+  'sender': 'first message sender'
+},
+... (other threads matching the query)
+]"`;
