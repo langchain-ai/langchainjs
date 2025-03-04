@@ -11,6 +11,7 @@ export {
   RunnableMap,
   RunnableParallel,
   RunnableLambda,
+  RunnableGenerator,
   RunnableWithFallbacks,
   RunnableAssign,
   RunnablePick,
