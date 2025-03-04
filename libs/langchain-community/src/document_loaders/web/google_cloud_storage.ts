@@ -19,7 +19,7 @@ export type GcsLoaderConfig = {
   bucket: string;
   file: string;
   unstructuredLoaderOptions: UnstructuredLoaderOptions;
-  storageOptions: StorageOptions;
+  storageOptions?: StorageOptions;
 };
 
 /**
@@ -46,7 +46,7 @@ export class GoogleCloudStorageLoader extends BaseDocumentLoader {
 
   private file: string;
 
-  private storageOptions: StorageOptions;
+  private storageOptions: StorageOptions | undefined;
 
   private _fs: typeof fsDefault;
 
