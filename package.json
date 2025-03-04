@@ -2,8 +2,8 @@
   "name": "langchainjs-mcp-adapters",
   "version": "0.1.5",
   "description": "LangChain.js adapters for Model Context Protocol (MCP)",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
   "type": "module",
   "repository": {
     "type": "git",
