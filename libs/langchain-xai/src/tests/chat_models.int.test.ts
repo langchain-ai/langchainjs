@@ -68,7 +68,7 @@ test("streaming", async () => {
 test("invoke with bound tools", async () => {
   const chat = new ChatXAI({
     maxRetries: 0,
-    model: "grok-beta",
+    model: "grok-2-1212",
   });
   const message = new HumanMessage("What is the current weather in Hawaii?");
   const res = await chat
@@ -144,7 +144,7 @@ test("stream with bound tools, yielding a single chunk", async () => {
 
 test("Few shotting with tool calls", async () => {
   const chat = new ChatXAI({
-    model: "grok-beta",
+    model: "grok-2-1212",
     temperature: 0,
   }).bind({
     tools: [
@@ -194,9 +194,9 @@ test("Few shotting with tool calls", async () => {
   expect(res.content).toContain("24");
 });
 
-test("Groq can stream tool calls", async () => {
+test("xAI can stream tool calls", async () => {
   const model = new ChatXAI({
-    model: "grok-beta",
+    model: "grok-2-1212",
     temperature: 0,
   });
 

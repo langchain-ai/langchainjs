@@ -218,6 +218,7 @@ describe("Mock ChatGoogle - Gemini", () => {
     };
     const model = new ChatGoogle({
       authOptions,
+      temperature: 0.8,
     });
     const messages: BaseMessageLike[] = [
       new HumanMessage("Flip a coin and tell me H for heads and T for tails"),
@@ -229,6 +230,13 @@ describe("Mock ChatGoogle - Gemini", () => {
     expect(record.opts).toBeDefined();
     expect(record.opts.data).toBeDefined();
     const { data } = record.opts;
+
+    expect(data).toHaveProperty("generationConfig");
+    const { generationConfig } = data;
+    expect(generationConfig).toHaveProperty("temperature");
+    expect(generationConfig.temperature).toEqual(0.8);
+    expect(generationConfig).not.toHaveProperty("topP");
+
     expect(data.contents).toBeDefined();
     expect(data.contents.length).toEqual(3);
     expect(data.contents[0].role).toEqual("user");
@@ -1066,6 +1074,7 @@ describe("Mock ChatGoogle - Gemini", () => {
     // console.log(JSON.stringify(result, null, 1));
     expect(result).toHaveProperty("content");
     expect(result.content).toBe("");
+
     const args = result?.lc_kwargs?.additional_kwargs;
     expect(args).toBeDefined();
     expect(args).toHaveProperty("tool_calls");
@@ -1082,6 +1091,80 @@ describe("Mock ChatGoogle - Gemini", () => {
     expect(func).toHaveProperty("arguments");
     expect(typeof func.arguments).toBe("string");
     expect(func.arguments.replaceAll("\n", "")).toBe('{"testName":"cobalt"}');
+
+    expect(result).toHaveProperty("tool_calls");
+    expect(result.tool_calls).toHaveLength(1);
+    const toolCall = result!.tool_calls![0];
+    expect(toolCall?.type).toEqual("tool_call");
+    expect(toolCall?.name).toEqual("test");
+    expect(toolCall?.args?.testName).toEqual("cobalt");
+  });
+
+  test("4a. Functions - results", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-4a-mock.json",
+    };
+
+    const tools: GeminiTool[] = [
+      {
+        functionDeclarations: [
+          {
+            description: "Get the schema for a specific resource type",
+            name: "get_resource_schema",
+            parameters: {
+              properties: {
+                resourceType: {
+                  description: "The type of resource to get schema for",
+                  type: "string",
+                },
+              },
+              required: ["resourceType"],
+              type: "object",
+            },
+          },
+        ],
+      },
+    ];
+
+    const model = new ChatGoogle({
+      authOptions,
+    }).bind({
+      tools,
+    });
+
+    const result = await model.invoke("What?");
+
+    // console.log(JSON.stringify(result, null, 1));
+    expect(result).toHaveProperty("content");
+    expect(result.content).toMatch("Okay, I will");
+
+    const args = result?.lc_kwargs?.additional_kwargs;
+    expect(args).toBeDefined();
+    expect(args).toHaveProperty("tool_calls");
+    expect(Array.isArray(args.tool_calls)).toBeTruthy();
+    expect(args.tool_calls).toHaveLength(2);
+    const call = args.tool_calls[0];
+    expect(call).toHaveProperty("type");
+    expect(call.type).toBe("function");
+    expect(call).toHaveProperty("function");
+    const func = call.function;
+    expect(func).toBeDefined();
+    expect(func).toHaveProperty("name");
+    expect(func.name).toBe("get_resource_schema");
+    expect(func).toHaveProperty("arguments");
+    expect(typeof func.arguments).toBe("string");
+    expect(func.arguments.replaceAll("\n", "")).toBe('{"resourceType":"user"}');
+
+    expect(result).toHaveProperty("tool_calls");
+    expect(result.tool_calls).toHaveLength(2);
+    const toolCall = result!.tool_calls![0];
+    expect(toolCall?.type).toEqual("tool_call");
+    expect(toolCall?.name).toEqual("get_resource_schema");
+    expect(toolCall?.args?.resourceType).toEqual("user");
   });
 
   test("5. Functions - function reply", async () => {

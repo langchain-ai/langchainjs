@@ -62,7 +62,7 @@ export type RedisVectorStoreIndexOptions = Omit<
 /**
  * Interface for the configuration of the RedisVectorStore. It includes
  * the Redis client, index name, index options, key prefix, content key,
- * metadata key, vector key, and filter.
+ * metadata key, vector key, filter and ttl.
  */
 export interface RedisVectorStoreConfig {
   redisClient:
@@ -76,6 +76,7 @@ export interface RedisVectorStoreConfig {
   metadataKey?: string;
   vectorKey?: string;
   filter?: RedisVectorStoreFilterType;
+  ttl?: number; // ttl in second
 }
 
 /**
@@ -123,6 +124,8 @@ export class RedisVectorStore extends VectorStore {
 
   filter?: RedisVectorStoreFilterType;
 
+  ttl?: number;
+
   _vectorstoreType(): string {
     return "redis";
   }
@@ -144,6 +147,7 @@ export class RedisVectorStore extends VectorStore {
     this.metadataKey = _dbConfig.metadataKey ?? "metadata";
     this.vectorKey = _dbConfig.vectorKey ?? "content_vector";
     this.filter = _dbConfig.filter;
+    this.ttl = _dbConfig.ttl;
     this.createIndexOptions = {
       ON: "HASH",
       PREFIX: this.keyPrefix,
@@ -207,6 +211,10 @@ export class RedisVectorStore extends VectorStore {
         [this.contentKey]: documents[idx].pageContent,
         [this.metadataKey]: this.escapeSpecialChars(JSON.stringify(metadata)),
       });
+
+      if (this.ttl) {
+        multi.expire(key, this.ttl);
+      }
 
       // write batch
       if (idx % batchSize === 0) {
@@ -332,7 +340,7 @@ export class RedisVectorStore extends VectorStore {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       if ((err as any)?.message.includes("unknown command")) {
         throw new Error(
-          "Failed to run FT.INFO command. Please ensure that you are running a RediSearch-capable Redis instance: https://js.langchain.com/docs/modules/data_connection/vectorstores/integrations/redis#setup"
+          "Failed to run FT.INFO command. Please ensure that you are running a RediSearch-capable Redis instance: https://js.langchain.com/docs/integrations/vectorstores/redis/#setup"
         );
       }
       // index doesn't exist

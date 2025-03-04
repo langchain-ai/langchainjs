@@ -12,7 +12,7 @@
     "type": "git",
     "url": "git@github.com:langchain-ai/langchainjs.git"
   },
-  "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/@langchain/deepseek",
+  "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-deepseek",
   "scripts": {
     "build": "yarn turbo:command build:internal --filter=@langchain/deepseek",
     "build:internal": "yarn lc_build --create-entrypoints --pre --tree-shaking",

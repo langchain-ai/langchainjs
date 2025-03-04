@@ -101,7 +101,7 @@ export interface GoogleGenerativeAIChatInput
   /**
    * Controls the randomness of the output.
    *
-   * Values can range from [0.0,1.0], inclusive. A value closer to 1.0
+   * Values can range from [0.0,2.0], inclusive. A value closer to 2.0
    * will produce responses that are more varied and creative, while
    * a value closer to 0.0 will typically result in less surprising
    * responses from the model.
@@ -644,8 +644,8 @@ export class ChatGoogleGenerativeAI
     }
 
     this.temperature = fields?.temperature ?? this.temperature;
-    if (this.temperature && (this.temperature < 0 || this.temperature > 1)) {
-      throw new Error("`temperature` must be in the range of [0.0,1.0]");
+    if (this.temperature && (this.temperature < 0 || this.temperature > 2)) {
+      throw new Error("`temperature` must be in the range of [0.0,2.0]");
     }
 
     this.topP = fields?.topP ?? this.topP;
@@ -905,21 +905,21 @@ export class ChatGoogleGenerativeAI
         options.streamUsage !== false
       ) {
         const genAIUsageMetadata = response.usageMetadata as {
-          promptTokenCount: number;
-          candidatesTokenCount: number;
-          totalTokenCount: number;
+          promptTokenCount: number | undefined;
+          candidatesTokenCount: number | undefined;
+          totalTokenCount: number | undefined;
         };
         if (!usageMetadata) {
           usageMetadata = {
-            input_tokens: genAIUsageMetadata.promptTokenCount,
-            output_tokens: genAIUsageMetadata.candidatesTokenCount,
-            total_tokens: genAIUsageMetadata.totalTokenCount,
+            input_tokens: genAIUsageMetadata.promptTokenCount ?? 0,
+            output_tokens: genAIUsageMetadata.candidatesTokenCount ?? 0,
+            total_tokens: genAIUsageMetadata.totalTokenCount ?? 0,
           };
         } else {
           // Under the hood, LangChain combines the prompt tokens. Google returns the updated
           // total each time, so we need to find the difference between the tokens.
           const outputTokenDiff =
-            genAIUsageMetadata.candidatesTokenCount -
+            (genAIUsageMetadata.candidatesTokenCount ?? 0) -
             usageMetadata.output_tokens;
           usageMetadata = {
             input_tokens: 0,

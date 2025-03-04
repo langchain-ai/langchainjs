@@ -1,6 +1,6 @@
 {
   "name": "@langchain/google-gauth",
-  "version": "0.1.8",
+  "version": "0.2.0",
   "description": "Google auth based authentication support for Google services",
   "type": "module",
   "engines": {
@@ -35,8 +35,8 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@langchain/google-common": "~0.1.8",
-    "google-auth-library": "^8.9.0"
+    "@langchain/google-common": "~0.2.0",
+    "google-auth-library": "^9.15.1"
   },
   "peerDependencies": {
     "@langchain/core": ">=0.2.21 <0.4.0"

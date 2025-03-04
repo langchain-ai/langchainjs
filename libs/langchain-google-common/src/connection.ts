@@ -281,8 +281,15 @@ export abstract class GoogleAIConnection<
     }
   }
 
+  get isApiKey(): boolean {
+    return this.client.clientType === "apiKey";
+  }
+
   get computedPlatformType(): GooglePlatformType {
-    if (this.client.clientType === "apiKey") {
+    // This is not a completely correct assumption, since GCP can
+    // have an API Key. But if so, then people need to set the platform
+    // type explicitly.
+    if (this.isApiKey) {
       return "gai";
     } else {
       return "gcp";
@@ -310,12 +317,27 @@ export abstract class GoogleAIConnection<
     return url;
   }
 
-  async buildUrlVertex(): Promise<string> {
+  async buildUrlVertexExpress(): Promise<string> {
+    const method = await this.buildUrlMethod();
+    const publisher = this.modelPublisher;
+    const url = `https://aiplatform.googleapis.com/${this.apiVersion}/publishers/${publisher}/models/${this.model}:${method}`;
+    return url;
+  }
+
+  async buildUrlVertexLocation(): Promise<string> {
     const projectId = await this.client.getProjectId();
     const method = await this.buildUrlMethod();
     const publisher = this.modelPublisher;
     const url = `https://${this.endpoint}/${this.apiVersion}/projects/${projectId}/locations/${this.location}/publishers/${publisher}/models/${this.model}:${method}`;
     return url;
+  }
+
+  async buildUrlVertex(): Promise<string> {
+    if (this.isApiKey) {
+      return this.buildUrlVertexExpress();
+    } else {
+      return this.buildUrlVertexLocation();
+    }
   }
 
   async buildUrl(): Promise<string> {

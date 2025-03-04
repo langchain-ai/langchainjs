@@ -1,3 +1,4 @@
+import { BaseLanguageModelInput } from "@langchain/core/language_models/base";
 import {
   BaseChatModelCallOptions,
   BindToolsInput,
@@ -5,13 +6,17 @@ import {
   type BaseChatModelParams,
 } from "@langchain/core/language_models/chat_models";
 import { Serialized } from "@langchain/core/load/serializable";
+import { AIMessageChunk, BaseMessage } from "@langchain/core/messages";
+import { Runnable } from "@langchain/core/runnables";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import {
   type OpenAICoreRequestOptions,
   type OpenAIClient,
   ChatOpenAI,
   OpenAIToolChoice,
+  ChatOpenAIStructuredOutputMethodOptions,
 } from "@langchain/openai";
+import { z } from "zod";
 
 type ChatXAIToolType = BindToolsInput | OpenAIClient.ChatCompletionTool;
 
@@ -391,7 +396,7 @@ export class ChatXAI extends ChatOpenAI<ChatXAICallOptions> {
   }
 
   _llmType() {
-    return "xAI";
+    return "xai";
   }
 
   get lc_secrets(): { [key: string]: string } | undefined {
@@ -493,5 +498,105 @@ export class ChatXAI extends ChatOpenAI<ChatXAICallOptions> {
     }
 
     return super.completionWithRetry(newRequest, options);
+  }
+
+  protected override _convertOpenAIDeltaToBaseMessageChunk(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    delta: Record<string, any>,
+    rawResponse: OpenAIClient.ChatCompletionChunk,
+    defaultRole?:
+      | "function"
+      | "user"
+      | "system"
+      | "developer"
+      | "assistant"
+      | "tool"
+  ) {
+    const messageChunk: AIMessageChunk =
+      super._convertOpenAIDeltaToBaseMessageChunk(
+        delta,
+        rawResponse,
+        defaultRole
+      );
+    // Make concatenating chunks work without merge warning
+    if (!rawResponse.choices[0]?.finish_reason) {
+      delete messageChunk.response_metadata.usage;
+      delete messageChunk.usage_metadata;
+    } else {
+      messageChunk.usage_metadata = messageChunk.response_metadata.usage;
+    }
+    return messageChunk;
+  }
+
+  protected override _convertOpenAIChatCompletionMessageToBaseMessage(
+    message: OpenAIClient.ChatCompletionMessage,
+    rawResponse: OpenAIClient.ChatCompletion
+  ) {
+    const langChainMessage =
+      super._convertOpenAIChatCompletionMessageToBaseMessage(
+        message,
+        rawResponse
+      );
+    langChainMessage.additional_kwargs.reasoning_content =
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (message as any).reasoning_content;
+    return langChainMessage;
+  }
+
+  override withStructuredOutput<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>
+  >(
+    outputSchema:
+      | z.ZodType<RunOutput>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      | Record<string, any>,
+    config?: ChatOpenAIStructuredOutputMethodOptions<false>
+  ): Runnable<BaseLanguageModelInput, RunOutput>;
+
+  override withStructuredOutput<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>
+  >(
+    outputSchema:
+      | z.ZodType<RunOutput>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      | Record<string, any>,
+    config?: ChatOpenAIStructuredOutputMethodOptions<true>
+  ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
+
+  override withStructuredOutput<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>
+  >(
+    outputSchema:
+      | z.ZodType<RunOutput>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      | Record<string, any>,
+    config?: ChatOpenAIStructuredOutputMethodOptions<boolean>
+  ):
+    | Runnable<BaseLanguageModelInput, RunOutput>
+    | Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
+
+  override withStructuredOutput<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>
+  >(
+    outputSchema:
+      | z.ZodType<RunOutput>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      | Record<string, any>,
+    config?: ChatOpenAIStructuredOutputMethodOptions<boolean>
+  ):
+    | Runnable<BaseLanguageModelInput, RunOutput>
+    | Runnable<
+        BaseLanguageModelInput,
+        { raw: BaseMessage; parsed: RunOutput }
+      > {
+    const ensuredConfig = { ...config };
+    if (ensuredConfig?.method === undefined) {
+      ensuredConfig.method = "functionCalling";
+    }
+    return super.withStructuredOutput<RunOutput>(outputSchema, ensuredConfig);
   }
 }

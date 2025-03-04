@@ -110,7 +110,12 @@ export function _makeMessageChunkFromAnthropicEvent(
     };
   } else if (
     data.type === "content_block_delta" &&
-    ["text_delta", "citations_delta"].includes(data.delta.type)
+    [
+      "text_delta",
+      "citations_delta",
+      "thinking_delta",
+      "signature_delta",
+    ].includes(data.delta.type)
   ) {
     if (fields.coerceContentToString && "text" in data.delta) {
       return {
@@ -125,6 +130,17 @@ export function _makeMessageChunkFromAnthropicEvent(
         contentBlock.citations = [contentBlock.citation];
         delete contentBlock.citation;
       }
+      if (
+        contentBlock.type === "thinking_delta" ||
+        contentBlock.type === "signature_delta"
+      ) {
+        return {
+          chunk: new AIMessageChunk({
+            content: [{ index: data.index, ...contentBlock, type: "thinking" }],
+          }),
+        };
+      }
+
       return {
         chunk: new AIMessageChunk({
           content: [{ index: data.index, ...contentBlock, type: "text" }],
@@ -175,8 +191,30 @@ export function _makeMessageChunkFromAnthropicEvent(
         }),
       };
     }
+  } else if (
+    data.type === "content_block_start" &&
+    data.content_block.type === "redacted_thinking"
+  ) {
+    return {
+      chunk: new AIMessageChunk({
+        content: fields.coerceContentToString
+          ? ""
+          : [{ index: data.index, ...data.content_block }],
+      }),
+    };
+  } else if (
+    data.type === "content_block_start" &&
+    data.content_block.type === "thinking"
+  ) {
+    const content = data.content_block.thinking;
+    return {
+      chunk: new AIMessageChunk({
+        content: fields.coerceContentToString
+          ? content
+          : [{ index: data.index, ...data.content_block }],
+      }),
+    };
   }
-
   return null;
 }
 

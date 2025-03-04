@@ -5,6 +5,7 @@ import { expect, test } from "@jest/globals";
 import * as fs from "fs/promises";
 import {
   AIMessageChunk,
+  BaseMessage,
   HumanMessage,
   SystemMessage,
 } from "@langchain/core/messages";
@@ -20,6 +21,7 @@ import { CallbackManager } from "@langchain/core/callbacks/manager";
 import { concat } from "@langchain/core/utils/stream";
 import { AnthropicVertex } from "@anthropic-ai/vertex-sdk";
 import { ChatAnthropic } from "../chat_models.js";
+import { AnthropicMessageResponse } from "../types.js";
 
 test("Test ChatAnthropic", async () => {
   const chat = new ChatAnthropic({
@@ -928,4 +930,164 @@ test("Citations", async () => {
   expect(
     (aggregated?.content as any[]).some((c) => c.citations !== undefined)
   ).toBe(true);
+});
+
+test("Test thinking blocks multiturn invoke", async () => {
+  const model = new ChatAnthropic({
+    model: "claude-3-7-sonnet-latest",
+    maxTokens: 5000,
+    thinking: { type: "enabled", budget_tokens: 2000 },
+  });
+
+  async function doInvoke(messages: BaseMessage[]) {
+    const response = await model.invoke(messages);
+
+    expect(Array.isArray(response.content)).toBe(true);
+    const content = response.content as AnthropicMessageResponse[];
+    expect(content.some((block) => "thinking" in (block as any))).toBe(true);
+
+    for (const block of response.content) {
+      expect(typeof block).toBe("object");
+      if ((block as any).type === "thinking") {
+        expect(Object.keys(block).sort()).toEqual(
+          ["type", "thinking", "signature"].sort()
+        );
+        expect((block as any).thinking).toBeTruthy();
+        expect(typeof (block as any).thinking).toBe("string");
+        expect((block as any).signature).toBeTruthy();
+        expect(typeof (block as any).signature).toBe("string");
+      }
+    }
+    return response;
+  }
+
+  const invokeMessages = [new HumanMessage("Hello")];
+
+  invokeMessages.push(await doInvoke(invokeMessages));
+  invokeMessages.push(new HumanMessage("What is 42+7?"));
+
+  // test a second time to make sure that we've got input translation working correctly
+  await model.invoke(invokeMessages);
+});
+
+test("Test thinking blocks multiturn streaming", async () => {
+  const model = new ChatAnthropic({
+    model: "claude-3-7-sonnet-latest",
+    maxTokens: 5000,
+    thinking: { type: "enabled", budget_tokens: 2000 },
+  });
+
+  async function doStreaming(messages: BaseMessage[]) {
+    let full: AIMessageChunk | null = null;
+    for await (const chunk of await model.stream(messages)) {
+      full = full ? concat(full, chunk) : chunk;
+    }
+    expect(full).toBeInstanceOf(AIMessageChunk);
+    expect(Array.isArray(full?.content)).toBe(true);
+    const content3 = full?.content as AnthropicMessageResponse[];
+    expect(content3.some((block) => "thinking" in (block as any))).toBe(true);
+
+    for (const block of full?.content || []) {
+      expect(typeof block).toBe("object");
+      if ((block as any).type === "thinking") {
+        expect(Object.keys(block).sort()).toEqual(
+          ["type", "thinking", "signature", "index"].sort()
+        );
+        expect((block as any).thinking).toBeTruthy();
+        expect(typeof (block as any).thinking).toBe("string");
+        expect((block as any).signature).toBeTruthy();
+        expect(typeof (block as any).signature).toBe("string");
+      }
+    }
+    return full as AIMessageChunk;
+  }
+
+  const streamingMessages = [new HumanMessage("Hello")];
+
+  streamingMessages.push(await doStreaming(streamingMessages));
+  streamingMessages.push(new HumanMessage("What is 42+7?"));
+
+  // test a second time to make sure that we've got input translation working correctly
+  await doStreaming(streamingMessages);
+});
+
+test("Test redacted thinking blocks multiturn invoke", async () => {
+  const model = new ChatAnthropic({
+    model: "claude-3-7-sonnet-latest",
+    maxTokens: 5000,
+    thinking: { type: "enabled", budget_tokens: 2000 },
+  });
+
+  async function doInvoke(messages: BaseMessage[]) {
+    const response = await model.invoke(messages);
+    let hasReasoning = false;
+
+    for (const block of response.content) {
+      expect(typeof block).toBe("object");
+      if ((block as any).type === "redacted_thinking") {
+        hasReasoning = true;
+        expect(Object.keys(block).sort()).toEqual(["type", "data"].sort());
+        expect((block as any).data).toBeTruthy();
+        expect(typeof (block as any).data).toBe("string");
+      }
+    }
+    expect(hasReasoning).toBe(true);
+    return response;
+  }
+
+  const invokeMessages = [
+    new HumanMessage(
+      "ANTHROPIC_MAGIC_STRING_TRIGGER_REDACTED_THINKING_46C9A13E193C177646C7398A98432ECCCE4C1253D5E2D82641AC0E52CC2876CB"
+    ),
+  ];
+
+  invokeMessages.push(await doInvoke(invokeMessages));
+  invokeMessages.push(new HumanMessage("What is 42+7?"));
+
+  // test a second time to make sure that we've got input translation working correctly
+  await doInvoke(invokeMessages);
+});
+
+test("Test redacted thinking blocks multiturn streaming", async () => {
+  const model = new ChatAnthropic({
+    model: "claude-3-7-sonnet-latest",
+    maxTokens: 5000,
+    thinking: { type: "enabled", budget_tokens: 2000 },
+  });
+
+  async function doStreaming(messages: BaseMessage[]) {
+    let full: AIMessageChunk | null = null;
+    for await (const chunk of await model.stream(messages)) {
+      full = full ? concat(full, chunk) : chunk;
+    }
+    expect(full).toBeInstanceOf(AIMessageChunk);
+    expect(Array.isArray(full?.content)).toBe(true);
+    let streamHasReasoning = false;
+
+    for (const block of full?.content || []) {
+      expect(typeof block).toBe("object");
+      if ((block as any).type === "redacted_thinking") {
+        streamHasReasoning = true;
+        expect(Object.keys(block).sort()).toEqual(
+          ["type", "data", "index"].sort()
+        );
+        expect((block as any).data).toBeTruthy();
+        expect(typeof (block as any).data).toBe("string");
+      }
+    }
+    expect(streamHasReasoning).toBe(true);
+    return full as AIMessageChunk;
+  }
+
+  const streamingMessages = [
+    new HumanMessage(
+      "ANTHROPIC_MAGIC_STRING_TRIGGER_REDACTED_THINKING_46C9A13E193C177646C7398A98432ECCCE4C1253D5E2D82641AC0E52CC2876CB"
+    ),
+  ];
+
+  streamingMessages.push(await doStreaming(streamingMessages));
+  streamingMessages.push(new HumanMessage("What is 42+7?"));
+
+  // test a second time to make sure that we've got input translation working correctly
+  await doStreaming(streamingMessages);
 });

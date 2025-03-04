@@ -100,6 +100,18 @@
     {
       "source": "/docs/modules/model_io/prompts/quick_start/",
       "destination": "/docs/concepts/prompt_templates"
+    },
+    {
+      "source": "/docs/modules/model_io/prompts(/?)",
+      "destination": "/docs/concepts/prompt_templates"
+    },
+    {
+      "source": "/docs/guides/expression_language/cookbook(/?)",
+      "destination": "/docs/how_to/sequence"
+    },
+    {
+      "source": "/docs/modules/model_io/models(/?)",
+      "destination": "/docs/integrations/chat/"
     }
   ]
 }
