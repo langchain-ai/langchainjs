@@ -699,6 +699,9 @@ export class ChatBedrockConverse
       new BedrockRuntimeClient({
         region,
         credentials,
+        endpoint: rest.endpointHost
+          ? `https://${rest.endpointHost}`
+          : undefined,
       });
 
     this.region = region;
