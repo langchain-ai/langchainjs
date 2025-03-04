@@ -1,4 +1,4 @@
-import { google } from "googleapis";
+import { google, calendar_v3 } from "googleapis";
 import { Tool } from "@langchain/core/tools";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { BaseLanguageModel } from "@langchain/core/language_models/base";
@@ -7,6 +7,9 @@ export interface GoogleCalendarAgentParams {
   credentials?: {
     clientEmail?: string;
     privateKey?: string;
+    keyfile?: string;
+    subject?: string;
+    accessToken?: string | (() => Promise<string>);
     calendarId?: string;
   };
   scopes?: string[];
@@ -19,22 +22,23 @@ export class GoogleCalendarBase extends Tool {
   description =
     "A tool to lookup Google Calendar events and create events in Google Calendar";
 
-  protected clientEmail: string;
-
-  protected privateKey: string;
-
   protected calendarId: string;
-
-  protected scopes: string[];
 
   protected llm: BaseLanguageModel;
 
+  protected params: GoogleCalendarAgentParams;
+
+  protected calendar?: calendar_v3.Calendar;
+
   constructor(
-    fields: GoogleCalendarAgentParams = {
+    { credentials, scopes, model }: GoogleCalendarAgentParams = {
       credentials: {
         clientEmail: getEnvironmentVariable("GOOGLE_CALENDAR_CLIENT_EMAIL"),
         privateKey: getEnvironmentVariable("GOOGLE_CALENDAR_PRIVATE_KEY"),
-        calendarId: getEnvironmentVariable("GOOGLE_CALENDAR_CALENDAR_ID"),
+        keyfile: getEnvironmentVariable("GOOGLE_CALENDAR_KEYFILE"),
+        subject: getEnvironmentVariable("GOOGLE_CALENDAR_SUBJECT"),
+        calendarId:
+          getEnvironmentVariable("GOOGLE_CALENDAR_CALENDAR_ID") || "primary",
       },
       scopes: [
         "https://www.googleapis.com/auth/calendar",
@@ -44,52 +48,76 @@ export class GoogleCalendarBase extends Tool {
   ) {
     super(...arguments);
 
-    if (!fields.model) {
+    if (!model) {
       throw new Error("Missing llm instance to interact with Google Calendar");
     }
 
-    if (!fields.credentials) {
+    if (!credentials) {
       throw new Error("Missing credentials to authenticate to Google Calendar");
     }
 
-    if (!fields.credentials.clientEmail) {
-      throw new Error(
-        "Missing GOOGLE_CALENDAR_CLIENT_EMAIL to interact with Google Calendar"
-      );
+    if (!credentials.accessToken) {
+      if (!credentials.clientEmail) {
+        throw new Error(
+          "Missing GOOGLE_CALENDAR_CLIENT_EMAIL to interact with Google Calendar"
+        );
+      }
+
+      if (!credentials.privateKey && !credentials.keyfile) {
+        throw new Error(
+          "Missing GOOGLE_CALENDAR_PRIVATE_KEY or GOOGLE_CALENDAR_KEYFILE or accessToken to interact with Google Calendar"
+        );
+      }
     }
 
-    if (!fields.credentials.privateKey) {
-      throw new Error(
-        "Missing GOOGLE_CALENDAR_PRIVATE_KEY to interact with Google Calendar"
-      );
-    }
-
-    if (!fields.credentials.calendarId) {
+    if (!credentials.calendarId) {
       throw new Error(
         "Missing GOOGLE_CALENDAR_CALENDAR_ID to interact with Google Calendar"
       );
     }
 
-    this.clientEmail = fields.credentials.clientEmail;
-    this.privateKey = fields.credentials.privateKey;
-    this.calendarId = fields.credentials.calendarId;
-    this.scopes = fields.scopes || [];
-    this.llm = fields.model;
+    this.params = { credentials, scopes };
+    this.calendarId = credentials.calendarId;
+    this.llm = model;
   }
 
   getModel() {
     return this.llm;
   }
 
-  async getAuth() {
+  async getCalendarClient() {
+    const { credentials, scopes } = this.params;
+
+    if (credentials?.accessToken) {
+      // always return a new instance so that we don't end up using expired access tokens
+      const auth = new google.auth.OAuth2();
+      const accessToken =
+        typeof credentials.accessToken === "function"
+          ? await credentials.accessToken()
+          : credentials.accessToken;
+
+      auth.setCredentials({
+        // get fresh access token if a function is provided
+        access_token: accessToken,
+      });
+      return google.calendar({ version: "v3", auth });
+    }
+
+    // when not using access token its ok to use singleton instance
+    if (this.calendar) {
+      return this.calendar;
+    }
+
     const auth = new google.auth.JWT(
-      this.clientEmail,
-      undefined,
-      this.privateKey,
-      this.scopes
+      credentials?.clientEmail,
+      credentials?.keyfile,
+      credentials?.privateKey,
+      scopes,
+      credentials?.subject
     );
 
-    return auth;
+    this.calendar = google.calendar({ version: "v3", auth });
+    return this.calendar;
   }
 
   async _call(input: string) {

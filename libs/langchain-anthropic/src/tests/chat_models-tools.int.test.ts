@@ -1,7 +1,7 @@
 /* eslint-disable no-process-env */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { expect, test } from "@jest/globals";
+import { jest, expect, test } from "@jest/globals";
 import {
   AIMessage,
   AIMessageChunk,
@@ -685,4 +685,87 @@ test("Can call and use two tool calls at once", async () => {
   ]);
 
   expect(result2.content.length).toBeGreaterThan(5);
+});
+
+test("structured output with thinking enabled", async () => {
+  const llm = new ChatAnthropic({
+    modelName: "claude-3-7-sonnet-latest",
+    maxTokens: 5000,
+    thinking: { type: "enabled", budget_tokens: 2000 },
+  });
+
+  // Mock console.warn to check for warnings
+  const originalWarn = console.warn;
+  const mockWarn = jest.fn();
+  console.warn = mockWarn;
+
+  try {
+    const structuredLlm = llm.withStructuredOutput(
+      z
+        .object({
+          username: z.string().describe("The generated username"),
+          theme: z.string().describe("The theme of the username"),
+        })
+        .describe("Generate a username based on user characteristics"),
+      { name: "GenerateUsername" }
+    );
+
+    const query = "Generate a username for Sally with green hair";
+    const response = await structuredLlm.invoke(query);
+
+    expect(typeof response.username).toBe("string");
+    expect(typeof response.theme).toBe("string");
+
+    // Check that a warning was issued
+    expect(mockWarn).toHaveBeenCalledWith(
+      expect.stringContaining("structured output")
+    );
+
+    // Test error handling
+    await expect(structuredLlm.invoke("Hello")).rejects.toThrow();
+
+    // Test streaming
+    const stream = await structuredLlm.stream(query);
+    let finalChunk;
+    for await (const chunk of stream) {
+      finalChunk = chunk;
+    }
+    expect(typeof finalChunk?.username).toBe("string");
+  } finally {
+    console.warn = originalWarn;
+  }
+});
+
+/**
+ * Structured output currently relies on forced tool use, which is not supported
+ * when `thinking` is enabled. When this test fails, it means that the feature
+ * is supported and the workarounds in `with_structured_output` should be removed.
+ */
+test("structured output with thinking force tool use", async () => {
+  const llm = new ChatAnthropic({
+    modelName: "claude-3-7-sonnet-latest",
+    maxTokens: 5000,
+    thinking: { type: "enabled", budget_tokens: 2000 },
+  }).bindTools(
+    [
+      {
+        name: "GenerateUsername",
+        description: "Generate a username based on user characteristics",
+        schema: z.object({
+          name: z.string().describe("The user's name"),
+          characteristics: z.string().describe("The user's characteristics"),
+        }),
+      },
+    ],
+    {
+      tool_choice: {
+        type: "tool",
+        name: "GenerateUsername",
+      },
+    }
+  );
+
+  await expect(
+    llm.invoke("Generate a username for Sally with green hair")
+  ).rejects.toThrow();
 });

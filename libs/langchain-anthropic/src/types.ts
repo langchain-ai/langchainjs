@@ -16,6 +16,7 @@ export type AnthropicMessageCreateParams =
   Anthropic.MessageCreateParamsNonStreaming;
 export type AnthropicStreamingMessageCreateParams =
   Anthropic.MessageCreateParamsStreaming;
+export type AnthropicThinkingConfigParam = Anthropic.ThinkingConfigParam;
 export type AnthropicMessageStreamEvent = Anthropic.MessageStreamEvent;
 export type AnthropicRequestOptions = Anthropic.RequestOptions;
 export type AnthropicToolChoice =
@@ -34,3 +35,6 @@ export type AnthropicToolUseBlockParam = Anthropic.Messages.ToolUseBlockParam;
 export type AnthropicToolResultBlockParam =
   Anthropic.Messages.ToolResultBlockParam;
 export type AnthropicDocumentBlockParam = Anthropic.Messages.DocumentBlockParam;
+export type AnthropicThinkingBlockParam = Anthropic.Messages.ThinkingBlockParam;
+export type AnthropicRedactedThinkingBlockParam =
+  Anthropic.Messages.RedactedThinkingBlockParam;

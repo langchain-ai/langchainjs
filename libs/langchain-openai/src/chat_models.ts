@@ -153,7 +153,7 @@ export function _convertMessagesToOpenAIParams(
   // TODO: Function messages do not support array content, fix cast
   return messages.flatMap((message) => {
     let role = messageToOpenAIRole(message);
-    if (role === "system" && model?.startsWith("o1")) {
+    if (role === "system" && isReasoningModel(model)) {
       role = "developer";
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -222,6 +222,10 @@ function _convertChatOpenAIToolTypeToOpenAITool(
     return tool;
   }
   return _convertToOpenAITool(tool, fields);
+}
+
+function isReasoningModel(model?: string) {
+  return model?.startsWith("o1") || model?.startsWith("o3");
 }
 
 // TODO: Use the base structured output options param in next breaking release.
@@ -905,6 +909,45 @@ export class ChatOpenAI<
     };
   }
 
+  get lc_serializable_keys(): string[] {
+    return [
+      "configuration",
+      "logprobs",
+      "topLogprobs",
+      "prefixMessages",
+      "supportsStrictToolCalling",
+      "modalities",
+      "audio",
+      "reasoningEffort",
+      "temperature",
+      "maxTokens",
+      "topP",
+      "frequencyPenalty",
+      "presencePenalty",
+      "n",
+      "logitBias",
+      "user",
+      "streaming",
+      "streamUsage",
+      "modelName",
+      "model",
+      "modelKwargs",
+      "stop",
+      "stopSequences",
+      "timeout",
+      "openAIApiKey",
+      "apiKey",
+      "cache",
+      "maxConcurrency",
+      "maxRetries",
+      "verbose",
+      "callbacks",
+      "tags",
+      "metadata",
+      "disableStreaming",
+    ];
+  }
+
   temperature?: number;
 
   topP?: number;
@@ -988,7 +1031,6 @@ export class ChatOpenAI<
     this.topP = fields?.topP ?? this.topP;
     this.frequencyPenalty = fields?.frequencyPenalty ?? this.frequencyPenalty;
     this.presencePenalty = fields?.presencePenalty ?? this.presencePenalty;
-    this.maxTokens = fields?.maxTokens;
     this.logprobs = fields?.logprobs;
     this.topLogprobs = fields?.topLogprobs;
     this.n = fields?.n ?? this.n;
@@ -1000,6 +1042,7 @@ export class ChatOpenAI<
     this.audio = fields?.audio;
     this.modalities = fields?.modalities;
     this.reasoningEffort = fields?.reasoningEffort;
+    this.maxTokens = fields?.maxCompletionTokens ?? fields?.maxTokens;
 
     if (this.model === "o1") {
       this.disableStreaming = true;
@@ -1112,7 +1155,6 @@ export class ChatOpenAI<
       top_p: this.topP,
       frequency_penalty: this.frequencyPenalty,
       presence_penalty: this.presencePenalty,
-      max_tokens: this.maxTokens === -1 ? undefined : this.maxTokens,
       logprobs: this.logprobs,
       top_logprobs: this.topLogprobs,
       n: this.n,
@@ -1147,6 +1189,12 @@ export class ChatOpenAI<
     const reasoningEffort = options?.reasoning_effort ?? this.reasoningEffort;
     if (reasoningEffort !== undefined) {
       params.reasoning_effort = reasoningEffort;
+    }
+    if (isReasoningModel(params.model)) {
+      params.max_completion_tokens =
+        this.maxTokens === -1 ? undefined : this.maxTokens;
+    } else {
+      params.max_tokens = this.maxTokens === -1 ? undefined : this.maxTokens;
     }
     return params;
   }
