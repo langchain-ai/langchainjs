@@ -1,3 +1,5 @@
+import { RequestCallbacks } from "@ibm-cloud/watsonx-ai/dist/watsonx-ai-ml/vml_v1.js";
+
 export interface TokenUsage {
   generated_token_count: number;
   input_token_count: number;
@@ -17,13 +19,27 @@ export interface WatsonxInit {
   version: string;
 }
 
-export interface WatsonxParams extends WatsonxInit {
+export interface WatsonxChatBasicOptions {
+  maxConcurrency?: number;
+  maxRetries?: number;
+  streaming?: boolean;
+  watsonxCallbacks?: RequestCallbacks;
+}
+
+export interface WatsonxParams extends WatsonxInit, WatsonxChatBasicOptions {
   model: string;
   spaceId?: string;
   projectId?: string;
+}
+
+export type Neverify<T> = {
+  [K in keyof T]?: never;
+};
+
+export interface WatsonxDeployedParams
+  extends WatsonxInit,
+    WatsonxChatBasicOptions {
   idOrName?: string;
-  maxConcurrency?: number;
-  maxRetries?: number;
 }
 
 export interface GenerationInfo {

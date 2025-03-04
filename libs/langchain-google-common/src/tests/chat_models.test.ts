@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { expect, test } from "@jest/globals";
+import { expect, test, jest } from "@jest/globals";
 import {
   AIMessage,
   BaseMessage,
@@ -16,7 +16,13 @@ import { Serialized } from "@langchain/core/load/serializable";
 import { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { ChatGoogleBase, ChatGoogleBaseInput } from "../chat_models.js";
-import { authOptions, MockClient, MockClientAuthInfo, mockId } from "./mock.js";
+import {
+  authOptions,
+  MockClient,
+  MockClientAuthInfo,
+  MockClientError,
+  mockId,
+} from "./mock.js";
 import {
   GeminiTool,
   GoogleAIBaseLLMInput,
@@ -35,7 +41,7 @@ import {
 import { removeAdditionalProperties } from "../utils/zod_to_gemini_parameters.js";
 import { MessageGeminiSafetyHandler } from "../utils/index.js";
 
-class ChatGoogle extends ChatGoogleBase<MockClientAuthInfo> {
+export class ChatGoogle extends ChatGoogleBase<MockClientAuthInfo> {
   constructor(fields?: ChatGoogleBaseInput<MockClientAuthInfo>) {
     super(fields);
   }
@@ -169,7 +175,7 @@ describe("Mock ChatGoogle - Gemini", () => {
     expect(data.systemInstruction).not.toBeDefined();
   });
 
-  test("1. Invoke request format", async () => {
+  test("1. Basic request format - retryable request", async () => {
     const record: Record<string, any> = {};
     const projectId = mockId();
     const authOptions: MockClientAuthInfo = {
@@ -185,11 +191,52 @@ describe("Mock ChatGoogle - Gemini", () => {
       new AIMessage("H"),
       new HumanMessage("Flip it again"),
     ];
+
+    const retryableError = new MockClientError(429);
+    const requestSpy = jest
+      .spyOn(MockClient.prototype, "request")
+      .mockRejectedValueOnce(retryableError);
+
     await model.invoke(messages);
 
     expect(record.opts).toBeDefined();
     expect(record.opts.data).toBeDefined();
     const { data } = record.opts;
+    expect(data.contents).toBeDefined();
+    expect(data.contents.length).toEqual(3);
+
+    expect(requestSpy).toHaveBeenCalledTimes(2);
+  });
+
+  test("1. Invoke request format", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-1-mock.json",
+    };
+    const model = new ChatGoogle({
+      authOptions,
+      temperature: 0.8,
+    });
+    const messages: BaseMessageLike[] = [
+      new HumanMessage("Flip a coin and tell me H for heads and T for tails"),
+      new AIMessage("H"),
+      new HumanMessage("Flip it again"),
+    ];
+    await model.invoke(messages);
+
+    expect(record.opts).toBeDefined();
+    expect(record.opts.data).toBeDefined();
+    const { data } = record.opts;
+
+    expect(data).toHaveProperty("generationConfig");
+    const { generationConfig } = data;
+    expect(generationConfig).toHaveProperty("temperature");
+    expect(generationConfig.temperature).toEqual(0.8);
+    expect(generationConfig).not.toHaveProperty("topP");
+
     expect(data.contents).toBeDefined();
     expect(data.contents.length).toEqual(3);
     expect(data.contents[0].role).toEqual("user");
@@ -1027,6 +1074,7 @@ describe("Mock ChatGoogle - Gemini", () => {
     // console.log(JSON.stringify(result, null, 1));
     expect(result).toHaveProperty("content");
     expect(result.content).toBe("");
+
     const args = result?.lc_kwargs?.additional_kwargs;
     expect(args).toBeDefined();
     expect(args).toHaveProperty("tool_calls");
@@ -1043,6 +1091,80 @@ describe("Mock ChatGoogle - Gemini", () => {
     expect(func).toHaveProperty("arguments");
     expect(typeof func.arguments).toBe("string");
     expect(func.arguments.replaceAll("\n", "")).toBe('{"testName":"cobalt"}');
+
+    expect(result).toHaveProperty("tool_calls");
+    expect(result.tool_calls).toHaveLength(1);
+    const toolCall = result!.tool_calls![0];
+    expect(toolCall?.type).toEqual("tool_call");
+    expect(toolCall?.name).toEqual("test");
+    expect(toolCall?.args?.testName).toEqual("cobalt");
+  });
+
+  test("4a. Functions - results", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-4a-mock.json",
+    };
+
+    const tools: GeminiTool[] = [
+      {
+        functionDeclarations: [
+          {
+            description: "Get the schema for a specific resource type",
+            name: "get_resource_schema",
+            parameters: {
+              properties: {
+                resourceType: {
+                  description: "The type of resource to get schema for",
+                  type: "string",
+                },
+              },
+              required: ["resourceType"],
+              type: "object",
+            },
+          },
+        ],
+      },
+    ];
+
+    const model = new ChatGoogle({
+      authOptions,
+    }).bind({
+      tools,
+    });
+
+    const result = await model.invoke("What?");
+
+    // console.log(JSON.stringify(result, null, 1));
+    expect(result).toHaveProperty("content");
+    expect(result.content).toMatch("Okay, I will");
+
+    const args = result?.lc_kwargs?.additional_kwargs;
+    expect(args).toBeDefined();
+    expect(args).toHaveProperty("tool_calls");
+    expect(Array.isArray(args.tool_calls)).toBeTruthy();
+    expect(args.tool_calls).toHaveLength(2);
+    const call = args.tool_calls[0];
+    expect(call).toHaveProperty("type");
+    expect(call.type).toBe("function");
+    expect(call).toHaveProperty("function");
+    const func = call.function;
+    expect(func).toBeDefined();
+    expect(func).toHaveProperty("name");
+    expect(func.name).toBe("get_resource_schema");
+    expect(func).toHaveProperty("arguments");
+    expect(typeof func.arguments).toBe("string");
+    expect(func.arguments.replaceAll("\n", "")).toBe('{"resourceType":"user"}');
+
+    expect(result).toHaveProperty("tool_calls");
+    expect(result.tool_calls).toHaveLength(2);
+    const toolCall = result!.tool_calls![0];
+    expect(toolCall?.type).toEqual("tool_call");
+    expect(toolCall?.name).toEqual("get_resource_schema");
+    expect(toolCall?.args?.resourceType).toEqual("user");
   });
 
   test("5. Functions - function reply", async () => {
@@ -1104,6 +1226,257 @@ describe("Mock ChatGoogle - Gemini", () => {
     expect(result).toBeDefined();
 
     // console.log(JSON.stringify(record?.opts?.data, null, 1));
+  });
+
+  test("6. GoogleSearchRetrievalTool result", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-6-mock.json",
+    };
+
+    const searchRetrievalTool = {
+      googleSearchRetrieval: {
+        dynamicRetrievalConfig: {
+          mode: "MODE_DYNAMIC",
+          dynamicThreshold: 0.7, // default is 0.7
+        },
+      },
+    };
+    const model = new ChatGoogle({
+      authOptions,
+      modelName: "gemini-1.5-pro-002",
+      temperature: 0,
+      maxRetries: 0,
+    }).bindTools([searchRetrievalTool]);
+
+    const result = await model.invoke("Who won the 2024 MLB World Series?");
+    expect(result.content as string).toContain("Dodgers");
+    expect(result).toHaveProperty("response_metadata");
+    expect(result.response_metadata).toHaveProperty("groundingMetadata");
+    expect(result.response_metadata).toHaveProperty("groundingSupport");
+    expect(Array.isArray(result.response_metadata.groundingSupport)).toEqual(
+      true
+    );
+    expect(result.response_metadata.groundingSupport).toHaveLength(4);
+  });
+
+  test("6. GoogleSearchRetrievalTool request 1.5 ", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-6-mock.json",
+    };
+
+    const searchRetrievalTool = {
+      googleSearchRetrieval: {
+        dynamicRetrievalConfig: {
+          mode: "MODE_DYNAMIC",
+          dynamicThreshold: 0.7, // default is 0.7
+        },
+      },
+    };
+    const model = new ChatGoogle({
+      authOptions,
+      modelName: "gemini-1.5-pro-002",
+      temperature: 0,
+      maxRetries: 0,
+    }).bindTools([searchRetrievalTool]);
+
+    const result = await model.invoke("Who won the 2024 MLB World Series?");
+    expect(result.content as string).toContain("Dodgers");
+
+    expect(record.opts.data.tools[0]).toHaveProperty("googleSearchRetrieval");
+  });
+
+  test("6. GoogleSearchRetrievalTool request 2.0 ", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-6-mock.json",
+    };
+
+    const searchRetrievalTool = {
+      googleSearchRetrieval: {
+        dynamicRetrievalConfig: {
+          mode: "MODE_DYNAMIC",
+          dynamicThreshold: 0.7, // default is 0.7
+        },
+      },
+    };
+    const model = new ChatGoogle({
+      authOptions,
+      modelName: "gemini-2.0-flash",
+      temperature: 0,
+      maxRetries: 0,
+    }).bindTools([searchRetrievalTool]);
+
+    const result = await model.invoke("Who won the 2024 MLB World Series?");
+    expect(result.content as string).toContain("Dodgers");
+
+    expect(record.opts.data.tools[0]).toHaveProperty("googleSearch");
+  });
+
+  test("6. GoogleSearchTool request 1.5 ", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-6-mock.json",
+    };
+
+    const searchTool = {
+      googleSearch: {},
+    };
+    const model = new ChatGoogle({
+      authOptions,
+      modelName: "gemini-1.5-pro-002",
+      temperature: 0,
+      maxRetries: 0,
+    }).bindTools([searchTool]);
+
+    const result = await model.invoke("Who won the 2024 MLB World Series?");
+    expect(result.content as string).toContain("Dodgers");
+
+    expect(record.opts.data.tools[0]).toHaveProperty("googleSearchRetrieval");
+  });
+
+  test("6. GoogleSearchTool request 2.0 ", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-6-mock.json",
+    };
+
+    const searchTool = {
+      googleSearch: {},
+    };
+    const model = new ChatGoogle({
+      authOptions,
+      modelName: "gemini-2.0-flash",
+      temperature: 0,
+      maxRetries: 0,
+    }).bindTools([searchTool]);
+
+    const result = await model.invoke("Who won the 2024 MLB World Series?");
+    expect(result.content as string).toContain("Dodgers");
+
+    expect(record.opts.data.tools[0]).toHaveProperty("googleSearch");
+  });
+
+  test("7. logprobs request true", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-7-mock.json",
+    };
+
+    const model = new ChatGoogle({
+      authOptions,
+      modelName: "gemini-1.5-flash-002",
+      logprobs: true,
+      topLogprobs: 5,
+    });
+    const result = await model.invoke(
+      "What are some names for a company that makes fancy socks?"
+    );
+    expect(result).toBeDefined();
+    const data = record?.opts?.data;
+    expect(data).toBeDefined();
+    expect(data.generationConfig.responseLogprobs).toEqual(true);
+    expect(data.generationConfig.logprobs).toEqual(5);
+  });
+
+  test("7. logprobs request false", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-7-mock.json",
+    };
+
+    const model = new ChatGoogle({
+      authOptions,
+      modelName: "gemini-1.5-flash-002",
+      logprobs: false,
+      topLogprobs: 5,
+    });
+    const result = await model.invoke(
+      "What are some names for a company that makes fancy socks?"
+    );
+    expect(result).toBeDefined();
+    const data = record?.opts?.data;
+    expect(data).toBeDefined();
+    expect(data.generationConfig.responseLogprobs).toEqual(false);
+    expect(data.generationConfig.logprobs).not.toBeDefined();
+  });
+
+  test("7. logprobs request not defined", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-7-mock.json",
+    };
+
+    const model = new ChatGoogle({
+      authOptions,
+      modelName: "gemini-1.5-flash-002",
+    });
+    const result = await model.invoke(
+      "What are some names for a company that makes fancy socks?"
+    );
+    expect(result).toBeDefined();
+    const data = record?.opts?.data;
+    expect(data).toBeDefined();
+    expect(data.generationConfig.responseLogprobs).not.toBeDefined();
+    expect(data.generationConfig.logprobs).not.toBeDefined();
+  });
+
+  test("7. logprobs response", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-7-mock.json",
+    };
+
+    const model = new ChatGoogle({
+      authOptions,
+      modelName: "gemini-1.5-flash-002",
+      logprobs: true,
+      topLogprobs: 5,
+    });
+    const result = await model.invoke(
+      "What are some names for a company that makes fancy socks?"
+    );
+    // console.log(JSON.stringify(result,null,1));
+    expect(result.response_metadata).toHaveProperty("logprobs");
+    expect(result.response_metadata.logprobs).toHaveProperty("content");
+    const logprobs = result.response_metadata.logprobs.content;
+    expect(Array.isArray(logprobs)).toBeTruthy();
+    expect(logprobs).toHaveLength(303);
+    const first = logprobs[0];
+    expect(first.token).toEqual("Here");
+    expect(first.logprob).toEqual(-0.25194553);
+    expect(first.bytes).toEqual([72, 101, 114, 101]);
+    expect(first).toHaveProperty("top_logprobs");
+    expect(Array.isArray(first.top_logprobs)).toBeTruthy();
+    expect(first.top_logprobs).toHaveLength(5);
   });
 });
 

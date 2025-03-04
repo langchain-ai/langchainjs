@@ -70,11 +70,11 @@ export default function ChatModelTabs(props) {
   const groqParams = props.groqParams ?? DEFAULTS.groqParams;
   const vertexParams = props.vertexParams ?? DEFAULTS.vertexParams;
   const providers = props.providers ?? [
+    "groq",
     "openai",
     "anthropic",
     "fireworks",
     "mistral",
-    "groq",
     "vertex",
   ];
 

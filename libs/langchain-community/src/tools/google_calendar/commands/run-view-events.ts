@@ -1,7 +1,6 @@
 import { calendar_v3 } from "googleapis";
-import type { JWT } from "googleapis-common";
 import { PromptTemplate } from "@langchain/core/prompts";
-import { BaseLLM } from "@langchain/core/language_models/llms";
+import { BaseLanguageModel } from "@langchain/core/language_models/base";
 import { CallbackManagerForToolRun } from "@langchain/core/callbacks/manager";
 import { StringOutputParser } from "@langchain/core/output_parsers";
 
@@ -10,17 +9,15 @@ import { getTimezoneOffsetInHours } from "../utils/get-timezone-offset-in-hours.
 
 type RunViewEventParams = {
   calendarId: string;
-  auth: JWT;
-  model: BaseLLM;
+  calendar: calendar_v3.Calendar;
+  model: BaseLanguageModel;
 };
 
 const runViewEvents = async (
   query: string,
-  { model, auth, calendarId }: RunViewEventParams,
+  { model, calendar, calendarId }: RunViewEventParams,
   runManager?: CallbackManagerForToolRun
 ) => {
-  const calendar = new calendar_v3.Calendar({});
-
   const prompt = new PromptTemplate({
     template: VIEW_EVENTS_PROMPT,
     inputVariables: ["date", "query", "u_timezone", "dayName"],
@@ -45,7 +42,6 @@ const runViewEvents = async (
 
   try {
     const response = await calendar.events.list({
-      auth,
       calendarId,
       ...loaded,
     });

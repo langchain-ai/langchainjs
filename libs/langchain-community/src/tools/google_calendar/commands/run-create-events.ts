@@ -1,8 +1,8 @@
-import { google, calendar_v3 } from "googleapis";
-import type { JWT, GaxiosResponse } from "googleapis-common";
+import { calendar_v3 } from "googleapis";
+import type { GaxiosResponse } from "googleapis-common";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { CallbackManagerForToolRun } from "@langchain/core/callbacks/manager";
-import { BaseLLM } from "@langchain/core/language_models/llms";
+import { BaseLanguageModel } from "@langchain/core/language_models/base";
 import { StringOutputParser } from "@langchain/core/output_parsers";
 import { CREATE_EVENT_PROMPT } from "../prompts/index.js";
 import { getTimezoneOffsetInHours } from "../utils/get-timezone-offset-in-hours.js";
@@ -26,9 +26,8 @@ const createEvent = async (
     eventDescription = "",
   }: CreateEventParams,
   calendarId: string,
-  auth: JWT
+  calendar: calendar_v3.Calendar
 ) => {
-  const calendar = google.calendar("v3");
   const event = {
     summary: eventSummary,
     location: eventLocation,
@@ -45,7 +44,6 @@ const createEvent = async (
 
   try {
     const createdEvent = await calendar.events.insert({
-      auth,
       calendarId,
       requestBody: event,
     });
@@ -60,13 +58,13 @@ const createEvent = async (
 
 type RunCreateEventParams = {
   calendarId: string;
-  auth: JWT;
-  model: BaseLLM;
+  calendar: calendar_v3.Calendar;
+  model: BaseLanguageModel;
 };
 
 const runCreateEvent = async (
   query: string,
-  { calendarId, auth, model }: RunCreateEventParams,
+  { calendarId, calendar, model }: RunCreateEventParams,
   runManager?: CallbackManagerForToolRun
 ) => {
   const prompt = new PromptTemplate({
@@ -109,7 +107,7 @@ const runCreateEvent = async (
       eventDescription,
     } as CreateEventParams,
     calendarId,
-    auth
+    calendar
   );
 
   if (!(event as { error: string }).error) {

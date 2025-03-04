@@ -6,7 +6,11 @@ import {
   type TraceableFunction,
   isTraceableFunction,
 } from "langsmith/singletons/traceable";
-import type { RunnableInterface, RunnableBatchOptions } from "./types.js";
+import type {
+  RunnableInterface,
+  RunnableBatchOptions,
+  RunnableConfig,
+} from "./types.js";
 import { CallbackManagerForChainRun } from "../callbacks/manager.js";
 import {
   LogStreamCallbackHandler,
@@ -33,11 +37,11 @@ import {
 import { raceWithSignal } from "../utils/signal.js";
 import {
   DEFAULT_RECURSION_LIMIT,
-  RunnableConfig,
   ensureConfig,
   getCallbackManagerForConfig,
   mergeConfigs,
   patchConfig,
+  pickRunnableConfigKeys,
 } from "./config.js";
 import { AsyncCaller } from "../utils/async_caller.js";
 import { Run } from "../tracers/base.js";
@@ -910,12 +914,40 @@ export abstract class Runnable<
       // eslint-disable-next-line no-param-reassign
       config.callbacks = copiedCallbacks;
     }
+    const abortController = new AbortController();
     // Call the runnable in streaming mode,
     // add each chunk to the output stream
     const outerThis = this;
     async function consumeRunnableStream() {
       try {
-        const runnableStream = await outerThis.stream(input, config);
+        let signal;
+        if (options?.signal) {
+          if ("any" in AbortSignal) {
+            // Use native AbortSignal.any() if available (Node 19+)
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            signal = (AbortSignal as any).any([
+              abortController.signal,
+              options.signal,
+            ]);
+          } else {
+            // Fallback for Node 18 and below - just use the provided signal
+            signal = options.signal;
+            // Ensure we still abort our controller when the parent signal aborts
+            options.signal.addEventListener(
+              "abort",
+              () => {
+                abortController.abort();
+              },
+              { once: true }
+            );
+          }
+        } else {
+          signal = abortController.signal;
+        }
+        const runnableStream = await outerThis.stream(input, {
+          ...config,
+          signal,
+        });
         const tappedStream = eventStreamer.tapOutputIterable(
           runId,
           runnableStream
@@ -923,6 +955,7 @@ export abstract class Runnable<
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         for await (const _ of tappedStream) {
           // Just iterate so that the callback handler picks up events
+          if (abortController.signal.aborted) break;
         }
       } finally {
         await eventStreamer.finish();
@@ -955,6 +988,7 @@ export abstract class Runnable<
         yield event;
       }
     } finally {
+      abortController.abort();
       await runnableStreamConsumePromise;
     }
   }
@@ -2529,7 +2563,7 @@ export class RunnableLambda<
         recursionLimit: (config?.recursionLimit ?? DEFAULT_RECURSION_LIMIT) - 1,
       });
       void AsyncLocalStorageProviderSingleton.runWithConfig(
-        childConfig,
+        pickRunnableConfigKeys(childConfig),
         async () => {
           try {
             let output = await this.func(input, {
@@ -2627,7 +2661,7 @@ export class RunnableLambda<
     const output = await new Promise<RunOutput | Runnable>(
       (resolve, reject) => {
         void AsyncLocalStorageProviderSingleton.runWithConfig(
-          childConfig,
+          pickRunnableConfigKeys(childConfig),
           async () => {
             try {
               const res = await this.func(finalChunk as RunInput, {
@@ -2836,7 +2870,7 @@ export class RunnableWithFallbacks<RunInput, RunOutput> extends Runnable<
     options?: Partial<RunnableConfig>
   ): Promise<RunOutput> {
     const config = ensureConfig(options);
-    const callbackManager_ = await getCallbackManagerForConfig(options);
+    const callbackManager_ = await getCallbackManagerForConfig(config);
     const { runId, ...otherConfigFields } = config;
     const runManager = await callbackManager_?.handleChainStart(
       this.toJSON(),
@@ -2847,27 +2881,33 @@ export class RunnableWithFallbacks<RunInput, RunOutput> extends Runnable<
       undefined,
       otherConfigFields?.runName
     );
-    let firstError;
-    for (const runnable of this.runnables()) {
-      config?.signal?.throwIfAborted();
-      try {
-        const output = await runnable.invoke(
-          input,
-          patchConfig(otherConfigFields, { callbacks: runManager?.getChild() })
-        );
-        await runManager?.handleChainEnd(_coerceToDict(output, "output"));
-        return output;
-      } catch (e) {
-        if (firstError === undefined) {
-          firstError = e;
+    const childConfig = patchConfig(otherConfigFields, {
+      callbacks: runManager?.getChild(),
+    });
+    const res = await AsyncLocalStorageProviderSingleton.runWithConfig(
+      childConfig,
+      async () => {
+        let firstError;
+        for (const runnable of this.runnables()) {
+          config?.signal?.throwIfAborted();
+          try {
+            const output = await runnable.invoke(input, childConfig);
+            await runManager?.handleChainEnd(_coerceToDict(output, "output"));
+            return output;
+          } catch (e) {
+            if (firstError === undefined) {
+              firstError = e;
+            }
+          }
         }
+        if (firstError === undefined) {
+          throw new Error("No error stored at end of fallback.");
+        }
+        await runManager?.handleChainError(firstError);
+        throw firstError;
       }
-    }
-    if (firstError === undefined) {
-      throw new Error("No error stored at end of fallback.");
-    }
-    await runManager?.handleChainError(firstError);
-    throw firstError;
+    );
+    return res;
   }
 
   async *_streamIterator(
@@ -2875,7 +2915,7 @@ export class RunnableWithFallbacks<RunInput, RunOutput> extends Runnable<
     options?: Partial<RunnableConfig> | undefined
   ): AsyncGenerator<RunOutput> {
     const config = ensureConfig(options);
-    const callbackManager_ = await getCallbackManagerForConfig(options);
+    const callbackManager_ = await getCallbackManagerForConfig(config);
     const { runId, ...otherConfigFields } = config;
     const runManager = await callbackManager_?.handleChainStart(
       this.toJSON(),
@@ -2894,7 +2934,8 @@ export class RunnableWithFallbacks<RunInput, RunOutput> extends Runnable<
         callbacks: runManager?.getChild(),
       });
       try {
-        stream = await runnable.stream(input, childConfig);
+        const originalStream = await runnable.stream(input, childConfig);
+        stream = consumeAsyncIterableInContext(childConfig, originalStream);
         break;
       } catch (e) {
         if (firstError === undefined) {

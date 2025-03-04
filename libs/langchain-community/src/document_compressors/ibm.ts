@@ -159,7 +159,7 @@ export class WatsonxRerank
         ? {
             index: document.index,
             relevanceScore: document.score,
-            input: document?.input,
+            input: document?.input.text,
           }
         : {
             index: document.index,

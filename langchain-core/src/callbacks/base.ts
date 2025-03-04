@@ -97,7 +97,8 @@ abstract class BaseCallbackHandlerMethodsClass {
     err: Error,
     runId: string,
     parentRunId?: string,
-    tags?: string[]
+    tags?: string[],
+    extraParams?: Record<string, unknown>
   ): // eslint-disable-next-line @typescript-eslint/no-explicit-any
   Promise<any> | any;
 
@@ -108,7 +109,8 @@ abstract class BaseCallbackHandlerMethodsClass {
     output: LLMResult,
     runId: string,
     parentRunId?: string,
-    tags?: string[]
+    tags?: string[],
+    extraParams?: Record<string, unknown>
   ): // eslint-disable-next-line @typescript-eslint/no-explicit-any
   Promise<any> | any;
 
@@ -286,6 +288,19 @@ abstract class BaseCallbackHandlerMethodsClass {
 export type CallbackHandlerMethods = BaseCallbackHandlerMethodsClass;
 
 /**
+ * Interface for handlers that can indicate a preference for streaming responses.
+ * When implemented, this allows the handler to signal whether it prefers to receive
+ * streaming responses from language models rather than complete responses.
+ */
+export interface CallbackHandlerPrefersStreaming {
+  readonly lc_prefer_streaming: boolean;
+}
+
+export function callbackHandlerPrefersStreaming(x: BaseCallbackHandler) {
+  return "lc_prefer_streaming" in x && x.lc_prefer_streaming;
+}
+
+/**
  * Abstract base class for creating callback handlers in the LangChain
  * framework. It provides a set of optional methods that can be overridden
  * in derived classes to handle various events during the execution of a
@@ -310,6 +325,10 @@ export abstract class BaseCallbackHandler
   }
 
   get lc_aliases(): { [key: string]: string } | undefined {
+    return undefined;
+  }
+
+  get lc_serializable_keys(): string[] | undefined {
     return undefined;
   }
 
@@ -394,3 +413,13 @@ export abstract class BaseCallbackHandler
     return new Handler();
   }
 }
+
+export const isBaseCallbackHandler = (x: unknown) => {
+  const callbackHandler = x as BaseCallbackHandler;
+  return (
+    callbackHandler !== undefined &&
+    typeof callbackHandler.copy === "function" &&
+    typeof callbackHandler.name === "string" &&
+    typeof callbackHandler.awaitHandlers === "boolean"
+  );
+};

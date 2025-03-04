@@ -39,17 +39,11 @@ export async function dispatchCustomEvent(
   payload: any,
   config?: RunnableConfig
 ) {
-  const callbackManager = await getCallbackManagerForConfig(config);
-  const parentRunId = callbackManager?.getParentRunId();
-  // We want to get the callback manager for the parent run.
-  // This is a work-around for now to be able to dispatch adhoc events from
-  // within a tool or a lambda and have the metadata events associated
-  // with the parent run rather than have a new run id generated for each.
-  if (callbackManager === undefined || parentRunId === undefined) {
+  if (config === undefined) {
     throw new Error(
       [
         "Unable to dispatch a custom event without a parent run id.",
-        "This function can only be called from within an existing run (e.g.,",
+        `"dispatchCustomEvent" can only be called from within an existing run (e.g.,`,
         "inside a tool or a RunnableLambda).",
         `\n\nIf you continue to see this error, please import from "@langchain/core/callbacks/dispatch/web"`,
         "and explicitly pass in a config parameter.",
@@ -60,7 +54,11 @@ export async function dispatchCustomEvent(
       ].join(" ")
     );
   }
+  const callbackManager = await getCallbackManagerForConfig(config);
+  const parentRunId = callbackManager?.getParentRunId();
   // We pass parent id as the current run id here intentionally since events dispatch
   // from within things like RunnableLambda
-  await callbackManager.handleCustomEvent?.(name, payload, parentRunId);
+  if (callbackManager !== undefined && parentRunId !== undefined) {
+    await callbackManager.handleCustomEvent?.(name, payload, parentRunId);
+  }
 }

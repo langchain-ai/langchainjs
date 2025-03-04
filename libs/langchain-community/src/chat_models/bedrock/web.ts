@@ -916,20 +916,40 @@ export class BedrockChat
             }
             if (isChatGenerationChunk(chunk)) {
               yield chunk;
+              // eslint-disable-next-line no-void
+              void runManager?.handleLLMNewToken(
+                chunk.text,
+                undefined,
+                undefined,
+                undefined,
+                undefined,
+                {
+                  chunk,
+                }
+              );
+            } else {
+              // eslint-disable-next-line no-void
+              void runManager?.handleLLMNewToken(chunk.text);
             }
-            // eslint-disable-next-line no-void
-            void runManager?.handleLLMNewToken(chunk.text);
           } else {
             const text = BedrockLLMInputOutputAdapter.prepareOutput(
               provider,
               chunkResult
             );
-            yield new ChatGenerationChunk({
+            const chunk = new ChatGenerationChunk({
               text,
               message: new AIMessageChunk({ content: text }),
             });
+            yield chunk;
             // eslint-disable-next-line no-void
-            void runManager?.handleLLMNewToken(text);
+            void runManager?.handleLLMNewToken(
+              text,
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              { chunk }
+            );
           }
         }
       }
