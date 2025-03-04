@@ -252,7 +252,8 @@ export class MultiServerMCPClient {
             if (useNodeEventSource) {
               try {
                 // Dynamically import the eventsource package
-                const EventSource = require('eventsource');
+                const EventSourceModule = await import('eventsource');
+                const EventSource = EventSourceModule.default;
 
                 // Define EventSource globally
                 (globalThis as any).EventSource = EventSource;
