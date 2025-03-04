@@ -5,7 +5,7 @@ import { AIMessageChunk } from "@langchain/core/messages";
 import {
   ChatBedrockConverse,
   ChatBedrockConverseCallOptions,
-} from "../chat_models.js";
+} from "../chat_models/converse.js";
 
 class ChatBedrockConverseStandardUnitTests extends ChatModelUnitTests<
   ChatBedrockConverseCallOptions,

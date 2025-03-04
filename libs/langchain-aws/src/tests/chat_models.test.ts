@@ -17,7 +17,7 @@ import {
   convertToConverseMessages,
   handleConverseStreamContentBlockDelta,
 } from "../common.js";
-import { ChatBedrockConverse } from "../chat_models.js";
+import { ChatBedrockConverse } from "../chat_models/converse.js";
 
 describe("convertToConverseMessages", () => {
   const testCases: {

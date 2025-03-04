@@ -13,7 +13,7 @@ import {
 import { tool } from "@langchain/core/tools";
 import { z } from "zod";
 import { concat } from "@langchain/core/utils/stream";
-import { ChatBedrockConverse } from "../chat_models.js";
+import { ChatBedrockConverse } from "../chat_models/converse.js";
 import { concatenateLangchainReasoningBlocks } from "../common.js";
 import { MessageContentReasoningBlockReasoningText } from "../types.js";
 
