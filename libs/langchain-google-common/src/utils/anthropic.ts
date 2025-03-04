@@ -34,7 +34,8 @@ import {
   AnthropicMessageContentText,
   AnthropicMessageContentThinking,
   AnthropicMessageContentToolResult,
-  AnthropicMessageContentToolResultContent, AnthropicMessageContentToolUse,
+  AnthropicMessageContentToolResultContent,
+  AnthropicMessageContentToolUse,
   AnthropicRequest,
   AnthropicRequestSettings,
   AnthropicResponseData,
@@ -544,16 +545,20 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
     return ret;
   }
 
-  function toolCallToAnthropicContent(toolCall: ToolCall): AnthropicMessageContentToolUse {
+  function toolCallToAnthropicContent(
+    toolCall: ToolCall
+  ): AnthropicMessageContentToolUse {
     return {
       type: "tool_use",
       id: toolCall.id!,
       name: toolCall.name,
       input: toolCall.args,
-    }
+    };
   }
 
-  function toolCallsToAnthropicContent(toolCalls: ToolCall[] | undefined): AnthropicMessageContentToolUse[] {
+  function toolCallsToAnthropicContent(
+    toolCalls: ToolCall[] | undefined
+  ): AnthropicMessageContentToolUse[] {
     if (toolCalls === undefined) {
       return [];
     }

@@ -915,7 +915,9 @@ describe.each(testAnthropicThinkingModelNames)(
         ),
       ];
       const modelWithTools = model.bindTools(tools);
-      const messages = [new HumanMessage("What is the current weather in London?")];
+      const messages = [
+        new HumanMessage("What is the current weather in London?"),
+      ];
 
       const result = await modelWithTools.invoke(messages);
       messages.push(result);

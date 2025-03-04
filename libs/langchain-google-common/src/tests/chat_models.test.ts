@@ -1783,7 +1783,6 @@ describe("Mock ChatGoogle - Anthropic", () => {
     expect(toolResultContent.type).toEqual("text");
     expect(toolResultContent.text).toEqual("Mock response");
   });
-
 });
 
 function extractKeys(obj: Record<string, any>, keys: string[] = []) {
