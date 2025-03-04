@@ -19,6 +19,8 @@ type StdioConnection = {
 type SSEConnection = {
   transport: 'sse';
   url: string;
+  headers?: Record<string, string>;
+  useNodeEventSource?: boolean;
 };
 
 type Connection = StdioConnection | SSEConnection;
@@ -93,10 +95,22 @@ export class MultiServerMCPClient {
               continue;
             }
 
-            processedConnections[serverName] = {
+            const sseConfig: SSEConnection = {
               transport: 'sse',
               url: config.url,
             };
+
+            // Add optional headers if they exist
+            if (config.headers && typeof config.headers === 'object') {
+              sseConfig.headers = config.headers;
+            }
+
+            // Add optional useNodeEventSource flag if it exists
+            if (typeof config.useNodeEventSource === 'boolean') {
+              sseConfig.useNodeEventSource = config.useNodeEventSource;
+            }
+
+            processedConnections[serverName] = sseConfig;
           } else {
             logger.warn(
               `Server "${serverName}" has unsupported transport type: ${config.transport}. Skipping.`
@@ -132,10 +146,22 @@ export class MultiServerMCPClient {
             processedConnections[serverName] = stdioConfig;
           } else if (config.url) {
             // Looks like SSE
-            processedConnections[serverName] = {
+            const sseConfig: SSEConnection = {
               transport: 'sse',
               url: config.url,
             };
+
+            // Add optional headers if they exist
+            if (config.headers && typeof config.headers === 'object') {
+              sseConfig.headers = config.headers;
+            }
+
+            // Add optional useNodeEventSource flag if it exists
+            if (typeof config.useNodeEventSource === 'boolean') {
+              sseConfig.useNodeEventSource = config.useNodeEventSource;
+            }
+
+            processedConnections[serverName] = sseConfig;
           } else {
             logger.warn(`Server "${serverName}" has invalid configuration. Skipping.`);
             continue;
@@ -207,11 +233,47 @@ export class MultiServerMCPClient {
             await transport.close();
           };
         } else if (connection.transport === 'sse') {
-          const { url } = connection;
+          const { url, headers, useNodeEventSource } = connection;
 
           logger.debug(`Creating SSE transport for server "${serverName}" with URL: ${url}`);
 
-          const transport = new SSEClientTransport(new URL(url));
+          let transport;
+
+          if (headers) {
+            logger.debug(`Using custom headers for SSE transport to server "${serverName}"`);
+
+            const transportOptions: any = {
+              requestInit: {
+                headers: headers,
+              },
+            };
+
+            // If useNodeEventSource is true, set up the EventSource for Node.js
+            if (useNodeEventSource) {
+              try {
+                // Dynamically import the eventsource package
+                const EventSource = require('eventsource');
+
+                // Define EventSource globally
+                (globalThis as any).EventSource = EventSource;
+
+                logger.debug(`Using Node.js EventSource for server "${serverName}"`);
+
+                // Add eventSourceInit with fetch function for Node.js
+                transportOptions.eventSourceInit = {
+                  headers: headers,
+                };
+              } catch (error) {
+                logger.warn(
+                  `Failed to load eventsource package for server "${serverName}". Headers may not be applied to SSE connection: ${error}`
+                );
+              }
+            }
+
+            transport = new SSEClientTransport(new URL(url), transportOptions);
+          } else {
+            transport = new SSEClientTransport(new URL(url));
+          }
 
           client = new Client({
             name: 'langchain-mcp-adapter',
@@ -287,5 +349,69 @@ export class MultiServerMCPClient {
     this.serverNameToTools.clear();
 
     logger.info('All MCP connections closed');
+  }
+
+  /**
+   * Connect to an MCP server via stdio transport.
+   *
+   * @param serverName - A name to identify this server
+   * @param command - The command to run
+   * @param args - Arguments for the command
+   * @param env - Optional environment variables
+   * @returns A map of server names to arrays of tools
+   */
+  async connectToServerViaStdio(
+    serverName: string,
+    command: string,
+    args: string[],
+    env?: Record<string, string>
+  ): Promise<Map<string, StructuredTool[]>> {
+    const connections: Record<string, Connection> = {
+      [serverName]: {
+        transport: 'stdio',
+        command,
+        args,
+        env,
+      },
+    };
+
+    this.connections = connections;
+    return this.initializeConnections();
+  }
+
+  /**
+   * Connect to an MCP server via SSE transport.
+   *
+   * @param serverName - A name to identify this server
+   * @param url - The URL of the SSE server
+   * @param headers - Optional headers to include in the requests
+   * @param useNodeEventSource - Whether to use Node.js EventSource (requires eventsource package)
+   * @returns A map of server names to arrays of tools
+   */
+  async connectToServerViaSSE(
+    serverName: string,
+    url: string,
+    headers?: Record<string, string>,
+    useNodeEventSource?: boolean
+  ): Promise<Map<string, StructuredTool[]>> {
+    const connection: SSEConnection = {
+      transport: 'sse',
+      url,
+    };
+
+    if (headers) {
+      connection.headers = headers;
+    }
+
+    if (useNodeEventSource) {
+      connection.useNodeEventSource = useNodeEventSource;
+    }
+
+    const connections: Record<string, Connection> = {
+      [serverName]: connection,
+    };
+
+    this.connections = connections;
+    return this.initializeConnections();
   }
 }

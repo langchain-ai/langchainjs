@@ -1,12 +1,37 @@
 # LangChain.js MCP Adapters
 
-This package provides adapters for using [Model Context Protocol (MCP)](https://github.com/model-context-protocol/model-context-protocol) tools with LangChain.js.
+This package provides adapters for using [Model Context Protocol (MCP)](https://github.com/modelcontextprotocol/specification) tools with LangChain.js. It enables seamless integration between LangChain.js and MCP servers, allowing you to use MCP tools in your LangChain applications.
+
+[![npm version](https://img.shields.io/npm/v/langchainjs-mcp-adapters.svg)](https://www.npmjs.com/package/langchainjs-mcp-adapters)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+## Features
+
+- Connect to MCP servers using stdio or SSE transports
+- Connect to multiple MCP servers simultaneously
+- Configure connections using a JSON configuration file
+- **Support for custom headers in SSE connections** (great for authentication!)
+- Integrate MCP tools with LangChain.js agents
+- Comprehensive logging capabilities
 
 ## Installation
 
 ```bash
 npm install langchainjs-mcp-adapters
 ```
+
+For Node.js environments with SSE connections requiring headers, you need to install the optional dependency:
+
+```bash
+npm install eventsource
+```
+
+## Prerequisites
+
+- Node.js >= 18
+- For stdio transport: Python MCP servers require Python 3.8+
+- For SSE transport: A running MCP server with SSE endpoint
+- For SSE with headers in Node.js: The `eventsource` package
 
 ## Usage
 
@@ -31,6 +56,17 @@ await client.connectToServerViaStdio(
 await client.connectToServerViaSSE(
   'weather-server', // A name to identify this server
   'http://localhost:8000/sse' // URL of the SSE server
+);
+
+// Connect to a server using SSE with custom headers
+await client.connectToServerViaSSE(
+  'auth-server', // A name to identify this server
+  'http://localhost:8000/sse', // URL of the SSE server
+  {
+    Authorization: 'Bearer your-token-here',
+    'X-Custom-Header': 'custom-value',
+  },
+  true // Use Node.js EventSource (requires eventsource package)
 );
 
 // Get all tools from all connected servers
@@ -59,10 +95,19 @@ const client = new MultiServerMCPClient({
     transport: 'sse',
     url: 'http://localhost:8000/sse',
   },
+  'auth-server': {
+    transport: 'sse',
+    url: 'http://localhost:8000/sse',
+    headers: {
+      Authorization: 'Bearer your-token-here',
+      'X-Custom-Header': 'custom-value',
+    },
+    useNodeEventSource: true, // Use Node.js EventSource for headers support
+  },
 });
 
 // Initialize all connections
-await client.initialize();
+await client.initializeConnections();
 
 // Get all tools
 const tools = client.getTools();
@@ -83,7 +128,7 @@ const client = MultiServerMCPClient.fromConfigFile();
 // Or specify a custom path: MultiServerMCPClient.fromConfigFile("./config/mcp.json");
 
 // Initialize all connections
-await client.initialize();
+await client.initializeConnections();
 
 // Get all tools
 const tools = client.getTools();
@@ -104,6 +149,15 @@ Example `mcp.json` file:
     "weather": {
       "transport": "sse",
       "url": "http://localhost:8000/sse"
+    },
+    "auth-server": {
+      "transport": "sse",
+      "url": "http://localhost:8000/sse",
+      "headers": {
+        "Authorization": "Bearer your-token-here",
+        "X-Custom-Header": "custom-value"
+      },
+      "useNodeEventSource": true
     }
   }
 }
@@ -115,7 +169,7 @@ The client will attempt to connect to all servers defined in the configuration f
 // Error handling when initializing connections
 try {
   const client = MultiServerMCPClient.fromConfigFile();
-  await client.initialize();
+  await client.initializeConnections();
   // Use the client...
 } catch (error) {
   console.error('Failed to connect to any servers:', error.message);
@@ -166,6 +220,33 @@ console.log(result.output);
 
 // Close the client when done
 await client.close();
+```
+
+### Using with Google's Gemini Models
+
+The package also supports integration with Google's Gemini models:
+
+```typescript
+import { MultiServerMCPClient } from 'langchainjs-mcp-adapters';
+import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
+import { createGoogleGenerativeAIFunctionsAgent, AgentExecutor } from 'langchain/agents';
+import { ChatPromptTemplate } from '@langchain/core/prompts';
+
+// Create a client and connect to servers
+const client = new MultiServerMCPClient();
+await client.connectToServerViaStdio('math-server', 'python', ['./math_server.py']);
+
+// Get tools
+const tools = client.getTools();
+
+// Create a Gemini agent
+const model = new ChatGoogleGenerativeAI({
+  modelName: 'gemini-pro',
+  apiKey: process.env.GOOGLE_API_KEY,
+});
+
+// Create and run the agent
+// ... similar to the OpenAI example
 ```
 
 ## Example MCP Servers
@@ -232,77 +313,50 @@ The package includes several example files that demonstrate how to use MCP adapt
 
 1. `math_example.ts` - Basic example using a math server with stdio transport
 2. `sse_example.ts` - Example using a weather server with SSE transport
-3. `multi_sse_example.ts` - Example connecting to multiple servers with different transport types
-4. `config_example.ts` - Example using server configurations from an `mcp.json` file
+3. `multi_transport_example.ts` - Example connecting to multiple servers with different transport types
+4. `json_config_example.ts` - Example using server configurations from an `mcp.json` file
+5. `gemini_example.ts` - Example using Google's Gemini models
+6. `logging_example.ts` - Example demonstrating logging capabilities
+7. `sse_with_headers_example.ts` - Example showing how to use custom headers with SSE connections
 
 To run the examples:
 
 ```bash
+# First build the project
+npm run build
+
 # Start the weather server with SSE transport
 python examples/weather_server.py
 
-# In another terminal, run the SSE example
-node --loader ts-node/esm examples/sse_example.ts
+# In another terminal, run the examples using Node.js
+node dist/examples/math_example.js
+node dist/examples/sse_example.js
+node dist/examples/json_config_example.js
+```
 
-# Or run the multi-server example
-node --loader ts-node/esm examples/multi_sse_example.ts
+## Troubleshooting
 
-# Or run the config-based example (requires mcp.json in the project root)
-node --loader ts-node/esm examples/config_example.ts
+### Common Issues
+
+1. **Connection Failures**: Ensure the MCP server is running and accessible
+2. **Tool Execution Errors**: Check the server logs for error messages
+3. **Transport Issues**: Verify the transport configuration (stdio or SSE)
+4. **Headers Not Applied**: When using headers with SSE, make sure you've installed the `eventsource` package and set `useNodeEventSource` to true
+
+### Debugging
+
+Enable debug logging to get more information:
+
+```typescript
+import { logger } from 'langchainjs-mcp-adapters';
+
+// Set logger level to debug
+logger.level = 'debug';
 ```
 
 ## Development
 
-### GitHub Actions Workflows
-
-This project uses GitHub Actions for continuous integration and deployment:
-
-#### PR Validation
-
-The PR validation workflow runs automatically on all pull requests to the `main` branch. It performs:
-
-- Code linting with ESLint
-- Type checking with TypeScript
-- Unit tests with Jest
-- Format checking with Prettier
-
-#### Continuous Integration
-
-The CI workflow runs on the `main` branch after merges and:
-
-- Runs linting and tests
-- Builds the package
-- Generates and uploads test coverage reports
-
-#### Publishing to npm
-
-The package can be published to npm in two ways:
-
-1. **Automatic publishing on GitHub Release**:
-
-   - Create a new release in GitHub
-   - The workflow will automatically publish the package with the release version
-
-2. **Manual publishing**:
-   - Go to the "Actions" tab in GitHub
-   - Select the "Publish to npm" workflow
-   - Click "Run workflow"
-   - Choose the version bump type (patch, minor, major) or specify a version
-
-### Setting up npm publishing
-
-To enable npm publishing, you need to:
-
-1. Create an npm access token with publish permissions
-2. Add the token as a GitHub repository secret named `NPM_TOKEN`
-
-### Contributing
-
-Please see [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to this project.
-
-### Changelog
-
-For a detailed list of changes between versions, see the [CHANGELOG.md](CHANGELOG.md) file.
+For information about contributing to this project, including GitHub Actions workflows, npm publishing, and more, please see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 

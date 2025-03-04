@@ -45,6 +45,9 @@
     "langchain": "^0.3.19",
     "winston": "^3.17.0"
   },
+  "optionalDependencies": {
+    "eventsource": "^2.0.2"
+  },
   "devDependencies": {
     "@eslint/js": "^9.21.0",
     "@types/jest": "^29.5.12",
