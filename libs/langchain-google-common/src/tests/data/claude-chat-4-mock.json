@@ -1,0 +1,33 @@
+{
+  "id": "msg_vrtx_011x9BBwsQV1Tw7EovUfniy1",
+  "type": "message",
+  "role": "assistant",
+  "model": "claude-3-7-sonnet-20250219",
+  "content": [
+    {
+      "type": "thinking",
+      "thinking": "The user is asking about the current weather in London. I have a tool available called \"weather_poet\" that can get the current weather conditions for a location, presented in a poetic manner.\n\nLet's check the required parameters for the weather_poet function:\n- location: This is required and the user has specified \"London\" as the location.\n\nI have all the required information to make this function call, so I'll use the weather_poet function to get the current weather conditions for London.",
+      "signature": "EuoBCkgIARACGAIiQM6csT/IYo3bddFPWiO3KxEVJ59FlmZOFRq5kI153m4gIjzGwXBfx52OWbOafSSTy34+LG7vlTBPQwAY+tcI9DESDKy0qJE7vV3GBA5m2RoMMhwsNewwi28ufyUgIjChEv/zImAxeJMySPdnmhD+F9rAfdUiWKnYVQoa8kRRnIXaJigFSrUwlYGVI81MCQwqUHBp/OX/e/bbXatnxcDp9WDnSayAY9JPshHT4IJSXOKR3Gl9q/WRMSd0ucmSaLkFA2BswY1Ho4drjNxEvIco9aJdynbMzPK8mKPP4Ns9nOtB"
+    },
+    {
+      "type": "text",
+      "text": "I'll check the current weather in London for you, presented with a poetic touch."
+    },
+    {
+      "type": "tool_use",
+      "id": "toolu_vrtx_016zrD7kGCijSm76SA6QGjJw",
+      "name": "weather_poet",
+      "input": {
+        "location": "London"
+      }
+    }
+  ],
+  "stop_reason": "tool_use",
+  "stop_sequence": null,
+  "usage": {
+    "input_tokens": 431,
+    "cache_creation_input_tokens": 0,
+    "cache_read_input_tokens": 0,
+    "output_tokens": 185
+  }
+}

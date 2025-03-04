@@ -888,5 +888,57 @@ describe.each(testAnthropicThinkingModelNames)(
       // test a second time to make sure that we've got input translation working correctly
       await model.invoke(invokeMessages);
     });
+
+    test("tool invocations with thinking enabled", async () => {
+      const apiConfig: AnthropicAPIConfig = {
+        thinking: { type: "enabled", budget_tokens: 2000 },
+      };
+      const model = new ChatVertexAI({
+        modelName,
+        callbacks,
+        maxOutputTokens: 5000,
+        apiConfig,
+      });
+
+      const tools = [
+        tool(
+          ({ location }: { location: string }) =>
+            `In ${location}, the clouds are heavy with the promise of rain.`,
+          {
+            name: "weather_poet",
+            description:
+              "Gets the current weather conditions for the location, written in a poetic manner.",
+            schema: z.object({
+              location: z.string().describe("Location to get the weather for"),
+            }),
+          }
+        ),
+      ];
+      const modelWithTools = model.bindTools(tools);
+      const messages = [new HumanMessage("What is the current weather in London?")];
+
+      const result = await modelWithTools.invoke(messages);
+      messages.push(result);
+
+      expect(result.tool_calls).toBeDefined();
+      expect(result.tool_calls).toHaveLength(1);
+      // console.log("result.tool_calls?.[0]", result.tool_calls?.[0]);
+
+      expect(typeof result.tool_calls![0]).toBe("object");
+      expect(result.tool_calls![0].name).toBe("weather_poet");
+
+      expect(typeof result.tool_calls![0].id).toBe("string");
+      expect(result.tool_calls![0].id!.length).toBeGreaterThan(0);
+
+      expect(typeof result.tool_calls![0].args).toBe("object");
+      expect(typeof result.tool_calls![0].args.location).toBe("string");
+      expect(result.tool_calls![0].args.location.length).toBeGreaterThan(0);
+
+      const toolResultMessage = await tools[0].invoke(result.tool_calls![0]);
+      messages.push(toolResultMessage);
+
+      const result2 = await modelWithTools.invoke(messages);
+      expect(result2.content).toBeDefined();
+    });
   }
 );
