@@ -36,11 +36,10 @@ import {
 import { InMemoryStore } from "@langchain/core/stores";
 import { BaseCallbackHandler } from "@langchain/core/callbacks/base";
 import {
-  AnthropicAPIConfig,
   GoogleRequestLogger,
   GoogleRequestRecorder,
 } from "@langchain/google-common";
-import { GeminiTool } from "../types.js";
+import { AnthropicAPIConfig, GeminiTool } from "../types.js";
 import { ChatVertexAI } from "../chat_models.js";
 
 const weatherTool = tool((_) => "no-op", {
