@@ -10,14 +10,15 @@ import {
   TextContent,
   UserMessage,
   ChatChoice,
-  ChatContent
+  ChatContent,
 } from "oci-generativeaiinference/lib/model";
 
 import { OciGenAiBaseChat } from "./index.js";
 
-
-
-export type GenericCallOptions = Omit<GenericChatRequest, "apiFormat" | "messages" | "isStream" | "stop">;
+export type GenericCallOptions = Omit<
+  GenericChatRequest,
+  "apiFormat" | "messages" | "isStream" | "stop"
+>;
 
 export class OciGenAiGenericChat extends OciGenAiBaseChat<GenericCallOptions> {
   override _createRequest(
@@ -27,11 +28,12 @@ export class OciGenAiGenericChat extends OciGenAiBaseChat<GenericCallOptions> {
   ): GenericChatRequest {
     return <GenericChatRequest>{
       apiFormat: GenericChatRequest.apiFormat,
-      messages: OciGenAiGenericChat._convertBaseMessagesToGenericMessages(messages),
+      messages:
+        OciGenAiGenericChat._convertBaseMessagesToGenericMessages(messages),
       ...options.requestParams,
       isStream: !!stream,
-      stop: options.stop
-    }
+      stop: options.stop,
+    };
   }
 
   override _parseResponse(response: GenericChatResponse): string {
@@ -39,11 +41,13 @@ export class OciGenAiGenericChat extends OciGenAiBaseChat<GenericCallOptions> {
       throw new Error("Invalid GenericChatResponse object");
     }
 
-    return response.choices?.map(
-      (choice: ChatChoice) => choice.message.content?.map(
-        (content: ChatContent) => (<TextContent>content).text
-      ).join("")
-    ).join("");
+    return response.choices
+      ?.map((choice: ChatChoice) =>
+        choice.message.content
+          ?.map((content: ChatContent) => (<TextContent>content).text)
+          .join("")
+      )
+      .join("");
   }
 
   override _parseStreamedResponseChunk(chunk: unknown): string | undefined {
@@ -58,14 +62,19 @@ export class OciGenAiGenericChat extends OciGenAiBaseChat<GenericCallOptions> {
     return OciGenAiGenericChat._getChunkDataText(chunk);
   }
 
-  static _convertBaseMessagesToGenericMessages(messages: BaseMessage[]): Message[] {
+  static _convertBaseMessagesToGenericMessages(
+    messages: BaseMessage[]
+  ): Message[] {
     return messages.map(this._convertBaseMessageToGenericMessage);
   }
 
-  static _convertBaseMessageToGenericMessage(baseMessage: BaseMessage): Message {
+  static _convertBaseMessageToGenericMessage(
+    baseMessage: BaseMessage
+  ): Message {
     const messageType: string = baseMessage.getType();
     const text: string = baseMessage.content as string;
-    const messageRole: string = OciGenAiGenericChat._convertBaseMessageTypeToRole(messageType);
+    const messageRole: string =
+      OciGenAiGenericChat._convertBaseMessageTypeToRole(messageType);
 
     return OciGenAiGenericChat._createMessage(messageRole, text);
   }
@@ -73,19 +82,15 @@ export class OciGenAiGenericChat extends OciGenAiBaseChat<GenericCallOptions> {
   static _convertBaseMessageTypeToRole(baseMessageType: string): string {
     switch (baseMessageType) {
       case "ai":
-
         return AssistantMessage.role;
 
       case "system":
-
         return SystemMessage.role;
 
       case "human":
-
         return UserMessage.role;
 
       default:
-
         throw new Error(`Message type '${baseMessageType}' is not supported`);
     }
   }
@@ -93,18 +98,22 @@ export class OciGenAiGenericChat extends OciGenAiBaseChat<GenericCallOptions> {
   static _createMessage(role: string, text: string): Message {
     return {
       role,
-      content: OciGenAiGenericChat._createTextContent(text)
-    }
+      content: OciGenAiGenericChat._createTextContent(text),
+    };
   }
 
   static _createTextContent(text: string): TextContent[] {
-    return [{
-      type: TextContent.type,
-      text
-    }];
+    return [
+      {
+        type: TextContent.type,
+        text,
+      },
+    ];
   }
 
-  static _isGenericResponse(response: unknown): response is GenericChatResponse {
+  static _isGenericResponse(
+    response: unknown
+  ): response is GenericChatResponse {
     return (
       response !== null &&
       typeof response === "object" &&
@@ -123,10 +132,8 @@ export class OciGenAiGenericChat extends OciGenAiBaseChat<GenericCallOptions> {
     return (
       choice !== null &&
       typeof choice === "object" &&
-      (
-        OciGenAiGenericChat._isValidMessage((<ChatChoice>choice).message) ||
-        OciGenAiGenericChat._isFinalChunk(choice)
-      )
+      (OciGenAiGenericChat._isValidMessage((<ChatChoice>choice).message) ||
+        OciGenAiGenericChat._isFinalChunk(choice))
     );
   }
 
@@ -155,7 +162,9 @@ export class OciGenAiGenericChat extends OciGenAiBaseChat<GenericCallOptions> {
   }
 
   static _getChunkDataText(chunkData: ChatChoice): string | undefined {
-    return chunkData.message?.content?.map((message: TextContent) => message.text).join(" ");
+    return chunkData.message?.content
+      ?.map((message: TextContent) => message.text)
+      .join(" ");
   }
 
   static _isFinalChunk(chunkData: unknown) {
@@ -169,11 +178,12 @@ export class OciGenAiGenericChat extends OciGenAiBaseChat<GenericCallOptions> {
   override getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
     return {
       ls_provider: "oci_genai_generic",
-      ls_model_name: this._params.onDemandModelId || this._params.dedicatedEndpointId || "",
+      ls_model_name:
+        this._params.onDemandModelId || this._params.dedicatedEndpointId || "",
       ls_model_type: "chat",
       ls_temperature: options.requestParams?.temperature || 0,
       ls_max_tokens: options.requestParams?.maxTokens || 0,
-      ls_stop: options.stop || []
+      ls_stop: options.stop || [],
     };
   }
 }

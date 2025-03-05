@@ -17,7 +17,7 @@ class OciGenAiCohereChatStandardUnitTests extends ChatModelUnitTests<
       constructorArgs: {
         compartmentId: "oci.compartment.ocid",
         onDemandModelId: "oci.model.ocid",
-      }
+      },
     });
   }
 }
@@ -41,7 +41,7 @@ class OciGenAiGenericChatStandardUnitTests extends ChatModelUnitTests<
       constructorArgs: {
         compartmentId: "oci.compartment.ocid",
         onDemandModelId: "oci.model.ocid",
-      }
+      },
     });
   }
 }

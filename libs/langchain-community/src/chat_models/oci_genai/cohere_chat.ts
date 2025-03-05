@@ -21,7 +21,10 @@ interface CohereStreamedResponseChunkData {
   text: string;
 }
 
-export type CohereCallOptions = Omit<CohereChatRequest, "apiFormat" | "message" | "chatHistory" | "isStream" | "stopSequences">;
+export type CohereCallOptions = Omit<
+  CohereChatRequest,
+  "apiFormat" | "message" | "chatHistory" | "isStream" | "stopSequences"
+>;
 
 export class OciGenAiCohereChat extends OciGenAiBaseChat<CohereCallOptions> {
   override _createRequest(
@@ -29,7 +32,8 @@ export class OciGenAiCohereChat extends OciGenAiBaseChat<CohereCallOptions> {
     options: this["ParsedCallOptions"],
     stream?: boolean
   ): CohereChatRequest {
-    const historyMessage: HistoryMessageInfo = OciGenAiCohereChat._splitMessageAndHistory(messages);
+    const historyMessage: HistoryMessageInfo =
+      OciGenAiCohereChat._splitMessageAndHistory(messages);
 
     return <CohereChatRequest>{
       apiFormat: CohereChatRequest.apiFormat,
@@ -37,8 +41,8 @@ export class OciGenAiCohereChat extends OciGenAiBaseChat<CohereCallOptions> {
       chatHistory: historyMessage.chatHistory,
       ...options.requestParams,
       isStream: !!stream,
-      stopSequences: options.stop
-    }
+      stopSequences: options.stop,
+    };
   }
 
   override _parseResponse(response: CohereChatResponse | undefined): string {
@@ -63,7 +67,8 @@ export class OciGenAiCohereChat extends OciGenAiBaseChat<CohereCallOptions> {
     let lastUserMessageIndex = -1;
 
     for (let i = 0; i < messages.length; i += 1) {
-      const cohereMessage: CohereMessage = this._convertBaseMessageToCohereMessage(messages[i]);
+      const cohereMessage: CohereMessage =
+        this._convertBaseMessageToCohereMessage(messages[i]);
       chatHistory.push(cohereMessage);
 
       if (cohereMessage.role === CohereUserMessage.role) {
@@ -78,38 +83,36 @@ export class OciGenAiCohereChat extends OciGenAiBaseChat<CohereCallOptions> {
 
     return {
       chatHistory,
-      message: lastUserMessage
+      message: lastUserMessage,
     };
   }
 
-  static _convertBaseMessageToCohereMessage(baseMessage: BaseMessage): CohereMessage {
+  static _convertBaseMessageToCohereMessage(
+    baseMessage: BaseMessage
+  ): CohereMessage {
     const messageType: string = baseMessage.getType();
     const message: string = baseMessage.content as string;
 
     switch (messageType) {
       case "ai":
-
         return <CohereChatBotMessage>{
           role: CohereChatBotMessage.role,
-          message
-        }
+          message,
+        };
 
       case "system":
-
         return <CohereSystemMessage>{
           role: CohereSystemMessage.role,
-          message
-        }
+          message,
+        };
 
       case "human":
-
         return <CohereUserMessage>{
           role: CohereUserMessage.role,
-          message
-        }
+          message,
+        };
 
       default:
-
         throw new Error(`Message type '${messageType}' is not supported`);
     }
   }
@@ -122,23 +125,27 @@ export class OciGenAiCohereChat extends OciGenAiBaseChat<CohereCallOptions> {
     );
   }
 
-  static _isCohereChunkData(chunkData: unknown): chunkData is CohereStreamedResponseChunkData {
+  static _isCohereChunkData(
+    chunkData: unknown
+  ): chunkData is CohereStreamedResponseChunkData {
     return (
       chunkData !== null &&
       typeof chunkData === "object" &&
       typeof (<CohereStreamedResponseChunkData>chunkData).text === "string" &&
-      (<CohereStreamedResponseChunkData>chunkData).apiFormat === CohereChatRequest.apiFormat
+      (<CohereStreamedResponseChunkData>chunkData).apiFormat ===
+        CohereChatRequest.apiFormat
     );
   }
 
   override getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
     return {
       ls_provider: "oci_genai_cohere",
-      ls_model_name: this._params.onDemandModelId || this._params.dedicatedEndpointId,
+      ls_model_name:
+        this._params.onDemandModelId || this._params.dedicatedEndpointId,
       ls_model_type: "chat",
       ls_temperature: options.requestParams?.temperature,
       ls_max_tokens: options.requestParams?.maxTokens,
-      ls_stop: options.stop
+      ls_stop: options.stop,
     };
   }
 }

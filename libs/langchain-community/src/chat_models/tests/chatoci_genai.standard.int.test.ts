@@ -10,7 +10,9 @@ import { ChatModelIntegrationTests } from "@langchain/standard-tests";
 import { OciGenAiCohereChat } from "../oci_genai/cohere_chat.js";
 import { OciGenAiGenericChat } from "../oci_genai/generic_chat.js";
 
-type OciGenAiChatConstructor = new (args: any) => OciGenAiCohereChat | OciGenAiGenericChat;
+type OciGenAiChatConstructor = new (args: any) =>
+  | OciGenAiCohereChat
+  | OciGenAiGenericChat;
 
 class OciGenAiChatStandardIntegrationTests extends ChatModelIntegrationTests<
   BaseChatModelCallOptions,
@@ -28,8 +30,8 @@ class OciGenAiChatStandardIntegrationTests extends ChatModelIntegrationTests<
       supportsParallelToolCalls: false,
       constructorArgs: {
         compartmentId: process.env.OCI_GENAI_INTEGRATION_TESTS_COMPARTMENT_ID,
-        onDemandModelId
-      }
+        onDemandModelId,
+      },
     });
   }
 
@@ -50,11 +52,7 @@ class OciGenAiChatStandardIntegrationTests extends ChatModelIntegrationTests<
   }
 
   _skipTestMessage(testName: string) {
-    this.skipTestMessage(
-      testName,
-      this.classTypeName,
-      "Not implemented"
-    );
+    this.skipTestMessage(testName, this.classTypeName, "Not implemented");
   }
 }
 

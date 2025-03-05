@@ -1,25 +1,29 @@
 import { AIMessageChunk, BaseMessage } from "@langchain/core/messages";
 import { ChatGenerationChunk } from "@langchain/core/outputs";
-import { SimpleChatModel, } from "@langchain/core/language_models/chat_models";
+import { SimpleChatModel } from "@langchain/core/language_models/chat_models";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 
 import { ChatResponse } from "oci-generativeaiinference/lib/response";
 import { ChatRequest } from "oci-generativeaiinference/lib/request";
-import { DedicatedServingMode, OnDemandServingMode } from "oci-generativeaiinference/lib/model";
+import {
+  DedicatedServingMode,
+  OnDemandServingMode,
+} from "oci-generativeaiinference/lib/model";
 
 import {
   OciGenAiChatCallResponseType,
   OciGenAiModelBaseParams,
   OciGenAiModelCallOptions,
   OciGenAiSupportedRequestType,
-  OciGenAiSupportedResponseType
+  OciGenAiSupportedResponseType,
 } from "./types.js";
 
 import { OciGenAiSdkClient } from "./oci_genai_sdk_client.js";
 import { JsonServerEventsIterator } from "./server_events_iterator.js";
 
-export abstract class OciGenAiBaseChat<RequestType>
-  extends SimpleChatModel<OciGenAiModelCallOptions<RequestType>> {
+export abstract class OciGenAiBaseChat<RequestType> extends SimpleChatModel<
+  OciGenAiModelCallOptions<RequestType>
+> {
   _sdkClient: OciGenAiSdkClient | undefined;
 
   _params: Partial<OciGenAiModelBaseParams>;
@@ -35,11 +39,16 @@ export abstract class OciGenAiBaseChat<RequestType>
     stream?: boolean
   ): OciGenAiSupportedRequestType;
 
-  abstract _parseResponse(response: OciGenAiSupportedResponseType | undefined): string;
+  abstract _parseResponse(
+    response: OciGenAiSupportedResponseType | undefined
+  ): string;
 
   abstract _parseStreamedResponseChunk(chunk: unknown): string | undefined;
 
-  async _call(messages: BaseMessage[], options: this["ParsedCallOptions"]): Promise<string> {
+  async _call(
+    messages: BaseMessage[],
+    options: this["ParsedCallOptions"]
+  ): Promise<string> {
     const response: ChatResponse = await this._makeRequest(messages, options);
     return this._parseResponse(response?.chatResult?.chatResponse);
   }
@@ -49,7 +58,11 @@ export abstract class OciGenAiBaseChat<RequestType>
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
-    const response: ReadableStream<Uint8Array> = await this._makeRequest(messages, options, true);
+    const response: ReadableStream<Uint8Array> = await this._makeRequest(
+      messages,
+      options,
+      true
+    );
     const responseChunkIterator = new JsonServerEventsIterator(response);
 
     for await (const responseChunk of responseChunkIterator) {
@@ -61,7 +74,8 @@ export abstract class OciGenAiBaseChat<RequestType>
     responseChunkData: unknown,
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
-    const text: string | undefined = this._parseStreamedResponseChunk(responseChunkData);
+    const text: string | undefined =
+      this._parseStreamedResponseChunk(responseChunkData);
 
     if (text === undefined) {
       return;
@@ -76,9 +90,13 @@ export abstract class OciGenAiBaseChat<RequestType>
     options: this["ParsedCallOptions"],
     stream?: boolean
   ): Promise<ResponseType> {
-    const request: OciGenAiSupportedRequestType = this._prepareRequest(messages, options, stream);
+    const request: OciGenAiSupportedRequestType = this._prepareRequest(
+      messages,
+      options,
+      stream
+    );
     await this._setupClient();
-    return <ResponseType>(await this._chat(request));
+    return <ResponseType>await this._chat(request);
   }
 
   async _setupClient() {
@@ -92,7 +110,7 @@ export abstract class OciGenAiBaseChat<RequestType>
   _createStreamResponse(text: string) {
     return new ChatGenerationChunk({
       message: new AIMessageChunk({ content: text }),
-      text
+      text,
     });
   }
 
@@ -117,15 +135,21 @@ export abstract class OciGenAiBaseChat<RequestType>
     }
   }
 
-  async _chat(chatRequest: OciGenAiSupportedRequestType): Promise<OciGenAiChatCallResponseType> {
+  async _chat(
+    chatRequest: OciGenAiSupportedRequestType
+  ): Promise<OciGenAiChatCallResponseType> {
     try {
       return await this._callChat(chatRequest);
     } catch (error) {
-      throw new Error(`Error executing chat API, error: ${(<Error>error)?.message}`)
+      throw new Error(
+        `Error executing chat API, error: ${(<Error>error)?.message}`
+      );
     }
   }
 
-  async _callChat(chatRequest: OciGenAiSupportedRequestType): Promise<OciGenAiChatCallResponseType> {
+  async _callChat(
+    chatRequest: OciGenAiSupportedRequestType
+  ): Promise<OciGenAiChatCallResponseType> {
     if (!OciGenAiBaseChat._isSdkClient(this._sdkClient)) {
       throw new Error("OCI SDK client not initialized");
     }
@@ -139,9 +163,9 @@ export abstract class OciGenAiBaseChat<RequestType>
       chatDetails: {
         chatRequest,
         compartmentId: this._getCompartmentId(),
-        servingMode: this._getServingMode()
-      }
-    }
+        servingMode: this._getServingMode(),
+      },
+    };
   }
 
   static _isSdkClient(sdkClient: unknown): sdkClient is OciGenAiSdkClient {
@@ -158,14 +182,14 @@ export abstract class OciGenAiBaseChat<RequestType>
     if (typeof this._params?.onDemandModelId === "string") {
       return <OnDemandServingMode>{
         servingType: OnDemandServingMode.servingType,
-        modelId: this._params.onDemandModelId
-      }
+        modelId: this._params.onDemandModelId,
+      };
     }
 
     return <DedicatedServingMode>{
       servingType: DedicatedServingMode.servingType,
-      endpointId: this._params.dedicatedEndpointId
-    }
+      endpointId: this._params.dedicatedEndpointId,
+    };
   }
 
   _getCompartmentId(): string {
@@ -181,12 +205,14 @@ export abstract class OciGenAiBaseChat<RequestType>
       !OciGenAiBaseChat._isValidString(this._params.onDemandModelId) &&
       !OciGenAiBaseChat._isValidString(this._params.dedicatedEndpointId)
     ) {
-      throw new Error("Either onDemandModelId or dedicatedEndpointId must be supplied");
+      throw new Error(
+        "Either onDemandModelId or dedicatedEndpointId must be supplied"
+      );
     }
   }
 
   static _isValidString(value: unknown): value is string {
-    return (typeof value === "string" && value.length > 0);
+    return typeof value === "string" && value.length > 0;
   }
 
   _llmType() {

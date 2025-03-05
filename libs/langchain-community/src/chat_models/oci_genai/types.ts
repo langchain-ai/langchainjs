@@ -1,5 +1,8 @@
-import { BaseChatModelCallOptions, BaseChatModelParams } from "@langchain/core/language_models/chat_models";
-import { AuthParams, ClientConfiguration } from "oci-common"
+import {
+  BaseChatModelCallOptions,
+  BaseChatModelParams,
+} from "@langchain/core/language_models/chat_models";
+import { AuthParams, ClientConfiguration } from "oci-common";
 import { GenerativeAiInferenceClient } from "oci-generativeaiinference";
 
 import {
@@ -15,7 +18,7 @@ import { ChatResponse } from "oci-generativeaiinference/lib/response";
 export enum OciGenAiNewClientAuthType {
   ConfigFile,
   InstancePrincipal,
-  Other
+  Other,
 }
 
 export interface ConfigFileAuthParams {
@@ -40,16 +43,23 @@ export interface OciGenAiServingParams {
   dedicatedEndpointId?: string;
 }
 
-export type OciGenAiSupportedRequestType = GenericChatRequest | CohereChatRequest;
-export type OciGenAiModelBaseParams =
-  BaseChatModelParams &
+export type OciGenAiSupportedRequestType =
+  | GenericChatRequest
+  | CohereChatRequest;
+export type OciGenAiModelBaseParams = BaseChatModelParams &
   OciGenAiClientParams &
   Omit<ChatDetails, "chatRequest" | "servingMode"> &
   OciGenAiServingParams;
 
-export interface OciGenAiModelCallOptions<RequestType> extends BaseChatModelCallOptions {
+export interface OciGenAiModelCallOptions<RequestType>
+  extends BaseChatModelCallOptions {
   requestParams?: RequestType;
 }
 
-export type OciGenAiSupportedResponseType = GenericChatResponse | CohereChatResponse;
-export type OciGenAiChatCallResponseType = ChatResponse | ReadableStream<Uint8Array> | null;
+export type OciGenAiSupportedResponseType =
+  | GenericChatResponse
+  | CohereChatResponse;
+export type OciGenAiChatCallResponseType =
+  | ChatResponse
+  | ReadableStream<Uint8Array>
+  | null;
