@@ -173,8 +173,8 @@ export class LibSQLVectorStore<
 
   /**
    * Deletes vectors from the store.
-   * @param {Object} params - Delete parameters.
-   * @param {string[] | number[]} [params.ids] - The ids of the vectors to delete.
+   * @param {Object} _params - Delete parameters.
+   * @param {string[] | number[]} [_params.ids] - The ids of the vectors to delete.
    * @returns {Promise<void>}
    */
   async delete(params: {

@@ -193,6 +193,8 @@
     "neo4j-driver": "^5.17.0",
     "node-llama-cpp": "3.1.1",
     "notion-to-md": "^3.1.0",
+    "oci-common": "^2.102.2",
+    "oci-generativeaiinference": "^2.102.2",
     "officeparser": "^4.0.4",
     "openai": "*",
     "pdf-parse": "1.1.1",
@@ -324,6 +326,8 @@
     "mysql2": "^3.9.8",
     "neo4j-driver": "*",
     "notion-to-md": "^3.1.0",
+    "oci-common": "^2.102.2",
+    "oci-generativeaiinference": "^2.102.2",
     "officeparser": "^4.0.4",
     "openai": "*",
     "pdf-parse": "1.1.1",
@@ -644,6 +648,12 @@
       "optional": true
     },
     "notion-to-md": {
+      "optional": true
+    },
+    "oci-common": {
+      "optional": true
+    },
+    "oci-generativeaiinference": {
       "optional": true
     },
     "officeparser": {
@@ -2030,6 +2040,15 @@
       },
       "import": "./chat_models/ollama.js",
       "require": "./chat_models/ollama.cjs"
+    },
+    "./chat_models/oci_genai": {
+      "types": {
+        "import": "./chat_models/oci_genai.d.ts",
+        "require": "./chat_models/oci_genai.d.cts",
+        "default": "./chat_models/oci_genai.d.ts"
+      },
+      "import": "./chat_models/oci_genai.js",
+      "require": "./chat_models/oci_genai.cjs"
     },
     "./chat_models/portkey": {
       "types": {
@@ -3807,6 +3826,10 @@
     "chat_models/ollama.js",
     "chat_models/ollama.d.ts",
     "chat_models/ollama.d.cts",
+    "chat_models/oci_genai.cjs",
+    "chat_models/oci_genai.js",
+    "chat_models/oci_genai.d.ts",
+    "chat_models/oci_genai.d.cts",
     "chat_models/portkey.cjs",
     "chat_models/portkey.js",
     "chat_models/portkey.d.ts",

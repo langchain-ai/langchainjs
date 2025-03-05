@@ -582,6 +582,10 @@ chat_models/ollama.cjs
 chat_models/ollama.js
 chat_models/ollama.d.ts
 chat_models/ollama.d.cts
+chat_models/oci_genai.cjs
+chat_models/oci_genai.js
+chat_models/oci_genai.d.ts
+chat_models/oci_genai.d.cts
 chat_models/portkey.cjs
 chat_models/portkey.js
 chat_models/portkey.d.ts
