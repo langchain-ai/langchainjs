@@ -1368,7 +1368,6 @@ export class ChatOpenAI<
       stream: true as const,
     };
     let defaultRole: OpenAIRoleEnum | undefined;
-
     const streamIterable = await this.completionWithRetry(params, options);
     let usage: OpenAIClient.Completions.CompletionUsage | undefined;
     for await (const data of streamIterable) {
@@ -1647,6 +1646,24 @@ export class ChatOpenAI<
         );
         generations.push(generation);
       }
+
+      await runManager?.handleLLMNewToken(
+        generations[0].text ?? "",
+        {
+          prompt: usageMetadata.input_tokens,
+          completion: usageMetadata.output_tokens,
+        },
+        undefined,
+        undefined,
+        undefined,
+        {
+          chunk: new ChatGenerationChunk({
+            message: new AIMessageChunk({ ...generations[0].message }),
+            text: generations[0].text ?? "",
+          }),
+        }
+      );
+
       return {
         generations,
         llmOutput: {
