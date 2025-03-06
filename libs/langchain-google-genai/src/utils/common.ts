@@ -340,6 +340,13 @@ export function mapGenerateContentResultToChatResult(
 
   return {
     generations: [generation],
+    llmOutput: {
+      tokenUsage: {
+        promptTokens: extra?.usageMetadata?.input_tokens,
+        completionTokens: extra?.usageMetadata?.output_tokens,
+        totalTokens: extra?.usageMetadata?.total_tokens,
+      },
+    },
   };
 }
 
