@@ -27,6 +27,10 @@ import {
 import { GenerationChunk, ChatGenerationChunk, RUN_KEY } from "../outputs.js";
 import { convertEventStreamToIterableReadableDataStream } from "../utils/event_source_parse.js";
 import { IterableReadableStream, concat } from "../utils/stream.js";
+import {
+  EventStreamCallbackHandlerInput,
+  StreamEventV2,
+} from "../tracers/event_stream.js";
 
 type RemoteRunnableOptions = {
   timeout?: number;
@@ -599,11 +603,14 @@ export class RemoteRunnable<
 
   _streamEvents(
     input: RunInput,
-    options: Partial<CallOptions> & { version: "v1" | "v2" },
-    streamOptions?: Omit<LogStreamCallbackHandlerInput, "autoClose"> | undefined
+    config: Partial<CallOptions> & { version?: "v1" | "v2" },
+    streamOptions?:
+      | Omit<EventStreamCallbackHandlerInput, "autoClose">
+      | undefined
   ): AsyncGenerator<StreamEvent> {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const outerThis = this;
+    const options = { version: "v2", ...config };
     const generator = async function* () {
       const [config, kwargs] =
         outerThis._separateRunnableConfigFromCallOptions(options);
@@ -680,27 +687,46 @@ export class RemoteRunnable<
 
   streamEvents(
     input: RunInput,
-    options: Partial<CallOptions> & { version: "v1" | "v2" },
-    streamOptions?: Omit<LogStreamCallbackHandlerInput, "autoClose">
-  ): IterableReadableStream<StreamEvent>;
-
-  streamEvents(
-    input: RunInput,
     options: Partial<CallOptions> & {
-      version: "v1" | "v2";
+      version?: "v1" | "v2";
       encoding: "text/event-stream";
     },
-    streamOptions?: Omit<LogStreamCallbackHandlerInput, "autoClose">
+    streamOptions?: Omit<EventStreamCallbackHandlerInput, "autoClose">
   ): IterableReadableStream<Uint8Array>;
 
   streamEvents(
     input: RunInput,
     options: Partial<CallOptions> & {
-      version: "v1" | "v2";
-      encoding?: "text/event-stream" | undefined;
+      version?: "v2";
     },
-    streamOptions?: Omit<LogStreamCallbackHandlerInput, "autoClose">
-  ): IterableReadableStream<StreamEvent | Uint8Array> {
+    streamOptions?: Omit<EventStreamCallbackHandlerInput, "autoClose">
+  ): IterableReadableStream<StreamEventV2>;
+
+  streamEvents(
+    input: RunInput,
+    options: Partial<CallOptions> & {
+      version: "v1";
+    },
+    streamOptions?: Omit<EventStreamCallbackHandlerInput, "autoClose">
+  ): IterableReadableStream<StreamEvent>;
+
+  streamEvents(
+    input: RunInput,
+    options: Partial<CallOptions> & {
+      version?: "v1" | "v2";
+      encoding?: "text/event-stream";
+    },
+    streamOptions?: Omit<EventStreamCallbackHandlerInput, "autoClose">
+  ): IterableReadableStream<StreamEventV2 | StreamEvent | Uint8Array>;
+
+  streamEvents(
+    input: RunInput,
+    options: Partial<CallOptions> & {
+      version?: "v1" | "v2";
+      encoding?: "text/event-stream";
+    },
+    streamOptions?: Omit<EventStreamCallbackHandlerInput, "autoClose">
+  ): IterableReadableStream<StreamEventV2 | StreamEvent | Uint8Array> {
     if (options.version !== "v1" && options.version !== "v2") {
       throw new Error(
         `Only versions "v1" and "v2" of the events schema is currently supported.`
