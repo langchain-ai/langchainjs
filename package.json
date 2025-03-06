@@ -69,5 +69,8 @@
       "eslint --cache --fix"
     ],
     "*.md": "prettier --config .prettierrc --write"
+  },
+  "dependencies": {
+    "@openfga/sdk": "^0.6.2"
   }
 }
