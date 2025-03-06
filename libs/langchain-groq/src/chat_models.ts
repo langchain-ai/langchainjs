@@ -86,12 +86,12 @@ export interface ChatGroqInput extends BaseChatModelParams {
   /**
    * The name of the model to use.
    * Alias for `model`
-   * @default "mixtral-8x7b-32768"
+   * @default "llama-3.3-70b-versatile"
    */
   modelName?: string;
   /**
    * The name of the model to use.
-   * @default "mixtral-8x7b-32768"
+   * @default "llama-3.3-70b-versatile"
    */
   model?: string;
   /**
@@ -385,7 +385,7 @@ function _convertDeltaToMessageChunk(
  * import { ChatGroq } from '@langchain/groq';
  *
  * const llm = new ChatGroq({
- *   model: "mixtral-8x7b-32768",
+ *   model: "llama-3.3-70b-versatile",
  *   temperature: 0,
  *   // other params...
  * });
@@ -674,9 +674,9 @@ export class ChatGroq extends BaseChatModel<
 
   client: Groq;
 
-  modelName = "mixtral-8x7b-32768";
+  modelName = "llama-3.3-70b-versatile";
 
-  model = "mixtral-8x7b-32768";
+  model = "llama-3.3-70b-versatile";
 
   temperature = 0.7;
 
