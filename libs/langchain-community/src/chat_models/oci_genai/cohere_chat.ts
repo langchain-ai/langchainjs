@@ -133,7 +133,7 @@ export class OciGenAiCohereChat extends OciGenAiBaseChat<CohereCallOptions> {
       typeof chunkData === "object" &&
       typeof (<CohereStreamedResponseChunkData>chunkData).text === "string" &&
       (<CohereStreamedResponseChunkData>chunkData).apiFormat ===
-        CohereChatRequest.apiFormat
+      CohereChatRequest.apiFormat
     );
   }
 
@@ -141,11 +141,11 @@ export class OciGenAiCohereChat extends OciGenAiBaseChat<CohereCallOptions> {
     return {
       ls_provider: "oci_genai_cohere",
       ls_model_name:
-        this._params.onDemandModelId || this._params.dedicatedEndpointId,
+        this._params.onDemandModelId || this._params.dedicatedEndpointId || "",
       ls_model_type: "chat",
-      ls_temperature: options.requestParams?.temperature,
-      ls_max_tokens: options.requestParams?.maxTokens,
-      ls_stop: options.stop,
+      ls_temperature: options.requestParams?.temperature || 0,
+      ls_max_tokens: options.requestParams?.maxTokens || 0,
+      ls_stop: options.stop || []
     };
   }
 }
