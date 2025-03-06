@@ -27,6 +27,8 @@ npm install @langchain/community @langchain/core @google-cloud/storage
 
 Once Unstructured is configured, you can use the Google Cloud Storage loader to load files and then convert them into a Document.
 
+In addition, you can optionally provide a `storageOptions` parameter to specify not only your storage options but also other authentication ways if you don't want Application Default Credentials(ADC) as default manner.
+
 import CodeBlock from "@theme/CodeBlock";
 import Example from "@examples/document_loaders/google_cloud_storage.ts";
 
