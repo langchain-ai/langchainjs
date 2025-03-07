@@ -1,3 +1,5 @@
+import fs from "node:fs";
+import path from "node:path";
 import { LangChainConfig } from "../types.js";
 
 export function _verifyObjectIsLangChainConfig(
@@ -121,4 +123,22 @@ export function _verifyObjectIsLangChainConfig(
     return false;
   }
   return true;
+}
+
+/**
+ * Checks if a project has a tsup configuration file
+ * @returns true if the project has a tsup configuration file
+ */
+export function hasTsupConfig(): boolean {
+  const tsupConfigPaths = [
+    "tsup.config.ts",
+    "tsup.config.js",
+    "tsup.config.cjs",
+    "tsup.config.mjs",
+  ];
+
+  return tsupConfigPaths.some((configPath) => {
+    const fullPath = path.resolve(process.cwd(), configPath);
+    return fs.existsSync(fullPath);
+  });
 }

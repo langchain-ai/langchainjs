@@ -22,7 +22,7 @@
   "scripts": {
     "build": "yarn clean && yarn turbo:command build:internal --filter=@langchain/scripts",
     "build:internal": "tsc --project ./tsconfig.build.json && yarn move:artifacts && yarn build:generated",
-    "move:artifacts": "rimraf dist && mkdir -p dist && mv dist_build/* dist/",
+    "move:artifacts": "rimraf dist && mkdir -p dist && cp -r dist_build/* dist/ && mkdir -p dist/build && cp src/build/tsup.config.template.ts dist/build/",
     "build:generated": "node bin/build.js --create-entrypoints --pre --tree-shaking",
     "build:turbo": "yarn turbo:command build --filter=@langchain/scripts",
     "lint:eslint": "NODE_OPTIONS=--max-old-space-size=4096 eslint --cache --ext .ts,.js src/",
@@ -52,6 +52,7 @@
     "rimraf": "^5.0.1",
     "rollup": "^4.5.2",
     "ts-morph": "^21.0.1",
+    "tsup": "^8.4.0",
     "typescript": "^5.4.5"
   },
   "devDependencies": {
