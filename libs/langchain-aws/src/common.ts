@@ -20,9 +20,11 @@ import type {
   ContentBlockDeltaEvent,
   ConverseStreamMetadataEvent,
   ContentBlockStartEvent,
+  InvokeModelResponse,
   ReasoningContentBlock,
   ReasoningContentBlockDelta,
   ReasoningTextBlock,
+  ConversationRole,
 } from "@aws-sdk/client-bedrock-runtime";
 import type { DocumentType as __DocumentType } from "@smithy/types";
 import { isLangChainTool } from "@langchain/core/utils/function_calling";
@@ -30,11 +32,14 @@ import { zodToJsonSchema } from "zod-to-json-schema";
 import { ChatGenerationChunk } from "@langchain/core/outputs";
 import {
   ChatBedrockConverseToolType,
+  ChatBedrockInvokeModelToolType,
   BedrockToolChoice,
+  BedrockInvokeModelTool,
   MessageContentReasoningBlock,
   MessageContentReasoningBlockReasoningText,
   MessageContentReasoningBlockReasoningTextPartial,
   MessageContentReasoningBlockRedacted,
+  InvokeModelBodyResponse,
 } from "./types.js";
 
 export function extractImageInfo(base64: string): ContentBlock.ImageMember {
@@ -66,6 +71,212 @@ export function extractImageInfo(base64: string): ContentBlock.ImageMember {
       },
     },
   };
+}
+
+interface ExtendTextMember extends ContentBlock.TextMember {
+  type: string;
+}
+
+interface BedrockInvokeModelMessage {
+  role: ConversationRole | undefined;
+  content: Array<ExtendTextMember | ContentBlock> | undefined;
+}
+
+export function convertToInvokeModelMessages(messages: BaseMessage[]): {
+  invokeModelMessages: BedrockInvokeModelMessage[];
+  invokeModelSystem: BedrockSystemContentBlock[];
+} {
+  const invokeModelSystem: BedrockSystemContentBlock[] = messages
+    .filter((msg) => msg._getType() === "system")
+    .map((msg) => {
+      if (typeof msg.content === "string") {
+        return { text: msg.content, type: "text" };
+      } else if (msg.content.length === 1 && msg.content[0].type === "text") {
+        return { text: msg.content[0].text, type: "text" };
+      }
+      throw new Error(
+        "System message content must be either a string, or a content array containing a single text object."
+      );
+    });
+  const invokeModelMessages: BedrockInvokeModelMessage[] = messages
+    .filter((msg) => msg._getType() !== "system")
+    .map((msg) => {
+      if (msg._getType() === "ai") {
+        const castMsg = msg as AIMessage;
+        const assistantMsg: BedrockInvokeModelMessage = {
+          role: "assistant",
+          content: [],
+        };
+        if (typeof castMsg.content === "string" && castMsg.content !== "") {
+          assistantMsg.content?.push({
+            text: castMsg.content,
+            type: "text",
+          });
+        } else if (Array.isArray(castMsg.content)) {
+          const concatenatedBlocks = concatenateLangchainReasoningBlocks(
+            castMsg.content
+          );
+          const contentBlocks: ContentBlock[] = concatenatedBlocks.map(
+            (block) => {
+              if (block.type === "text" && block.text !== "") {
+                return {
+                  text: block.text,
+                  type: "text",
+                };
+              } else if (block.type === "reasoning_content") {
+                return {
+                  reasoningContent:
+                    langchainReasoningBlockToBedrockReasoningBlock(
+                      block as MessageContentReasoningBlock
+                    ),
+                };
+              } else {
+                const blockValues = Object.fromEntries(
+                  Object.entries(block).filter(([key]) => key !== "type")
+                );
+                throw new Error(
+                  `Unsupported content block type: ${
+                    block.type
+                  } with content of ${JSON.stringify(blockValues, null, 2)}`
+                );
+              }
+            }
+          );
+
+          assistantMsg.content = [
+            ...(assistantMsg.content ? assistantMsg.content : []),
+            ...contentBlocks,
+          ];
+        }
+
+        // Important: this must be placed after any reasoning content blocks, else claude models will return an error.
+        if (castMsg.tool_calls && castMsg.tool_calls.length) {
+          assistantMsg.content = [
+            ...(assistantMsg.content ? assistantMsg.content : []),
+            ...castMsg.tool_calls.map((tc) => ({
+              toolUse: {
+                toolUseId: tc.id,
+                name: tc.name,
+                input: tc.args,
+              },
+            })),
+          ];
+        }
+
+        return assistantMsg;
+      } else if (msg._getType() === "human" || msg._getType() === "generic") {
+        if (typeof msg.content === "string" && msg.content !== "") {
+          return {
+            role: "user" as const,
+            content: [
+              {
+                text: msg.content,
+                type: "text",
+              },
+            ],
+          };
+        } else if (Array.isArray(msg.content)) {
+          const contentBlocks: ContentBlock[] = msg.content.flatMap((block) => {
+            if (block.type === "image_url") {
+              const base64: string =
+                typeof block.image_url === "string"
+                  ? block.image_url
+                  : block.image_url.url;
+              return extractImageInfo(base64);
+            } else if (block.type === "text") {
+              return {
+                text: block.text,
+                type: "text",
+              };
+            } else if (
+              block.type === "document" &&
+              block.document !== undefined
+            ) {
+              return {
+                document: block.document,
+              };
+            } else if (block.type === "image" && block.image !== undefined) {
+              return {
+                image: block.image,
+              };
+            } else {
+              throw new Error(`Unsupported content block type: ${block.type}`);
+            }
+          });
+          return {
+            role: "user" as const,
+            content: contentBlocks,
+          };
+        } else {
+          throw new Error(
+            `Invalid message content: empty string. '${msg._getType()}' must contain non-empty content.`
+          );
+        }
+      } else if (msg._getType() === "tool") {
+        const castMsg = msg as ToolMessage;
+        if (typeof castMsg.content === "string") {
+          return {
+            // Tool use messages are always from the user
+            role: "user" as const,
+            content: [
+              {
+                toolResult: {
+                  toolUseId: castMsg.tool_call_id,
+                  content: [
+                    {
+                      text: castMsg.content,
+                    },
+                  ],
+                },
+              },
+            ],
+          };
+        } else {
+          return {
+            // Tool use messages are always from the user
+            role: "user" as const,
+            content: [
+              {
+                toolResult: {
+                  toolUseId: castMsg.tool_call_id,
+                  content: [
+                    {
+                      json: castMsg.content,
+                    },
+                  ],
+                },
+              },
+            ],
+          };
+        }
+      } else {
+        throw new Error(`Unsupported message type: ${msg._getType()}`);
+      }
+    });
+
+  // Combine consecutive user tool result messages into a single message
+  const combinedInvokeModelMessages = invokeModelMessages.reduce<BedrockMessage[]>(
+    (acc, curr) => {
+      const lastMessage = acc[acc.length - 1];
+
+      if (
+        lastMessage &&
+        lastMessage.role === "user" &&
+        lastMessage.content?.some((c) => "toolResult" in c) &&
+        curr.role === "user" &&
+        curr.content?.some((c) => "toolResult" in c)
+      ) {
+        lastMessage.content = lastMessage.content.concat(curr.content);
+      } else {
+        acc.push(curr);
+      }
+
+      return acc;
+    },
+    []
+  );
+
+  return { invokeModelMessages: combinedInvokeModelMessages, invokeModelSystem };
 }
 
 export function convertToConverseMessages(messages: BaseMessage[]): {
@@ -269,6 +480,43 @@ export function isBedrockTool(tool: unknown): tool is BedrockTool {
   return false;
 }
 
+export function isInvokeModelTool(
+  tool: unknown
+): tool is BedrockInvokeModelTool {
+  if (typeof tool === "object" && tool && "input_schema" in tool) {
+    return true;
+  }
+  return false;
+}
+
+export function convertToInvokeModelTools(
+  tools: ChatBedrockInvokeModelToolType[]
+): BedrockInvokeModelTool[] {
+  if (tools.every(isOpenAITool)) {
+    return tools.map((tool) => ({
+      name: tool.function.name,
+      description: tool.function.description,
+      input_schema: {
+        ...tool.function.parameters,
+      },
+    }));
+  } else if (tools.every(isLangChainTool)) {
+    return tools.map((tool) => ({
+      name: tool.name,
+      description: tool.description,
+      input_schema: {
+        ...zodToJsonSchema(tool.schema),
+      },
+    }));
+  } else if (tools.every(isInvokeModelTool)) {
+    return tools;
+  }
+
+  throw new Error(
+    "Invalid tools passed. Must be an array of StructuredToolInterface, ToolDefinition, or BedrockInvokeModelTool."
+  );
+}
+
 export function convertToConverseTools(
   tools: ChatBedrockConverseToolType[]
 ): BedrockTool[] {
@@ -306,6 +554,72 @@ export type BedrockConverseToolChoice =
   | "auto"
   | string
   | BedrockToolChoice;
+
+export function convertToBedrockInvokeModelToolChoice(
+  toolChoice: BedrockConverseToolChoice,
+  tools: BedrockInvokeModelTool[],
+  fields: {
+    model: string;
+    supportsToolChoiceValues?: Array<"auto" | "any" | "tool">;
+  }
+) {
+  const supportsToolChoiceValues = fields.supportsToolChoiceValues ?? [];
+
+  let bedrockToolChoice: BedrockToolChoice;
+  if (typeof toolChoice === "string") {
+    switch (toolChoice) {
+      case "any":
+        bedrockToolChoice = {
+          any: {},
+        };
+        break;
+      case "auto":
+        bedrockToolChoice = {
+          auto: {},
+        };
+        break;
+      default: {
+        const foundTool = tools.find((tool) => tool?.name === toolChoice);
+        if (!foundTool) {
+          throw new Error(
+            `Tool with name ${toolChoice} not found in tools list.`
+          );
+        }
+        bedrockToolChoice = {
+          tool: {
+            name: toolChoice,
+          },
+        };
+      }
+    }
+  } else {
+    bedrockToolChoice = toolChoice;
+  }
+
+  const toolChoiceType = Object.keys(bedrockToolChoice)[0] as
+    | "auto"
+    | "any"
+    | "tool";
+  if (!supportsToolChoiceValues.includes(toolChoiceType)) {
+    let supportedTxt = "";
+    if (supportsToolChoiceValues.length) {
+      supportedTxt =
+        `Model ${fields.model} does not currently support 'tool_choice' ` +
+        `of type ${toolChoiceType}. The following 'tool_choice' types ` +
+        `are supported: ${supportsToolChoiceValues.join(", ")}.`;
+    } else {
+      supportedTxt = `Model ${fields.model} does not currently support 'tool_choice'.`;
+    }
+
+    throw new Error(
+      `${supportedTxt} Please see` +
+        "https://docs.aws.amazon.com/bedrock/latest/APIReference/API_runtime_ToolChoice.html" +
+        "for the latest documentation on models that support tool choice."
+    );
+  }
+
+  return bedrockToolChoice;
+}
 
 export function convertToBedrockToolChoice(
   toolChoice: BedrockConverseToolChoice,
@@ -373,6 +687,85 @@ export function convertToBedrockToolChoice(
   }
 
   return bedrockToolChoice;
+}
+
+export function convertInvokeModelMessageToLangChainMessage(
+  body: Uint8Array,
+  responseMetadata: Omit<InvokeModelResponse, "body">
+) {
+  const bodyResponse = <InvokeModelBodyResponse>(
+    JSON.parse(new TextDecoder().decode(body))
+  );
+
+  const { id, content, role, usage, ...rest } = bodyResponse;
+  if (!content) {
+    throw new Error("No message content found in response.");
+  }
+  if (role !== "assistant") {
+    throw new Error(
+      `Unsupported message role received in InvokeModel response: ${bodyResponse.role}`
+    );
+  }
+
+  let tokenUsage: UsageMetadata | undefined;
+  if (usage) {
+    const input_tokens = usage.input_tokens ?? 0;
+    const output_tokens = usage.output_tokens ?? 0;
+    tokenUsage = {
+      input_tokens,
+      output_tokens,
+      total_tokens: input_tokens + output_tokens,
+    };
+  }
+
+  if (
+    content?.length === 1 &&
+    "text" in content[0] &&
+    typeof content[0].text === "string"
+  ) {
+    return new AIMessage({
+      content: content[0].text,
+      response_metadata: {
+        ...responseMetadata,
+        ...rest,
+      },
+      usage_metadata: tokenUsage,
+      id,
+    });
+  } else {
+    const toolCalls: ToolCall[] = [];
+    const complexContent: MessageContentComplex[] = [];
+    content.forEach((c) => {
+      if (c.type === "tool_use" && c.input && typeof c.input === "object") {
+        toolCalls.push({
+          id: c.id,
+          name: c.name,
+          args: c.input,
+          type: "tool_call",
+        });
+      } else if ("text" in c && typeof c.text === "string") {
+        complexContent.push({ type: "text", text: c.text });
+      } else if ("reasoningContent" in c) {
+        complexContent.push(
+          bedrockReasoningBlockToLangchainReasoningBlock(
+            c.reasoningContent as ReasoningContentBlock
+          )
+        );
+      } else {
+        complexContent.push(c);
+      }
+    });
+    return new AIMessage({
+      content: complexContent,
+      tool_calls: toolCalls,
+      response_metadata: {
+        ...responseMetadata,
+        ...rest,
+      },
+      usage_metadata: tokenUsage,
+      id,
+    });
+  }
 }
 
 export function convertConverseMessageToLangChainMessage(
