@@ -334,6 +334,37 @@ node dist/examples/sse_example.js
 node dist/examples/json_config_example.js
 ```
 
+## Known Limitations
+
+### React Agents and LLM Compatibility
+
+The React agent implementation in LangChain has specific requirements for LLMs, including:
+
+1. The LLM must implement a `bindTools` method (e.g., ChatOpenAI and ChatGoogleGenerativeAI)
+2. The model may have specific expectations for tool schemas (especially Gemini models)
+
+If you encounter errors like these when using MCP tools with React agents:
+
+```
+llm [object Object] must define bindTools method
+```
+
+or:
+
+```
+GenerateContentRequest.tools[0].function_declarations[0].parameters.properties: should be non-empty for OBJECT type
+```
+
+We recommend:
+
+1. Using standard agent implementations like `initializeAgentExecutorWithOptions` instead of React agents
+2. Ensuring your MCP tools have well-defined parameter schemas
+3. Using a different LLM if you're experiencing model-specific schema issues
+
+### Tools with Empty Schemas
+
+Some LLM integrations, particularly Google's Gemini models, require tools to have non-empty parameter schemas. If you're using MCP tools that don't have input parameters (or have empty schemas) with these integrations, you might encounter errors.
+
 ## Troubleshooting
 
 ### Common Issues
