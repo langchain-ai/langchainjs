@@ -94,8 +94,18 @@ export function convertMcpToolToLangchainTool(
         }
       });
 
+      // Check if the schema is empty after conversion
+      if (Object.keys(schemaShape).length === 0) {
+        logger.warn(
+          `Tool "${toolName}" has an empty input schema. Some LLMs and agent implementations (especially React agents and Gemini models) require tools to have parameters.`
+        );
+      }
+
       zodSchema = z.object(schemaShape);
     } else {
+      logger.warn(
+        `Tool "${toolName}" has no input schema definition. Some LLMs and agent implementations (especially React agents and Gemini models) require tools to have parameters.`
+      );
       zodSchema = z.object({});
     }
   } catch (error) {

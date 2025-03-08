@@ -1,6 +1,15 @@
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StructuredTool } from '@langchain/core/tools';
 import { convertMcpToolToLangchainTool, loadMcpTools } from '../src/tools';
+import logger from '../src/logger.js';
+
+// Mock logger
+jest.mock('../src/logger.js', () => ({
+  warn: jest.fn(),
+  debug: jest.fn(),
+  info: jest.fn(),
+  error: jest.fn(),
+}));
 
 // Mock Client
 const mockClient: jest.Mocked<Client> = {
@@ -117,6 +126,97 @@ describe('tools', () => {
 
       // Verify the result is the content object
       expect(result).toBe('[object Object]'); // String(_convertCallToolResult) converts objects to string
+    });
+
+    it('should warn about empty schema properties', () => {
+      // Create a LangChain tool from an MCP tool with empty properties
+      convertMcpToolToLangchainTool(mockClient, 'empty-tool', 'A tool with empty schema', {
+        type: 'object',
+        properties: {},
+      });
+
+      // Verify warning was logged
+      expect(logger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Tool "empty-tool" has an empty input schema')
+      );
+    });
+
+    it('should warn about missing schema definition', () => {
+      // Create a LangChain tool from an MCP tool with no schema
+      convertMcpToolToLangchainTool(mockClient, 'no-schema-tool', 'A tool with no schema', null);
+
+      // Verify warning was logged
+      expect(logger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Tool "no-schema-tool" has no input schema definition')
+      );
+    });
+
+    it('should handle general errors when calling a tool', async () => {
+      // Mock a generic error from callTool
+      mockClient.callTool.mockRejectedValue(new Error('Generic error'));
+
+      // Create a LangChain tool from an MCP tool
+      const tool = convertMcpToolToLangchainTool(
+        mockClient,
+        'error-tool',
+        'A tool that will error',
+        {
+          type: 'object',
+          properties: {
+            input: { type: 'string' },
+          },
+          required: ['input'],
+        }
+      );
+
+      // Invoke the tool and expect it to throw
+      await expect(tool.invoke({ input: 'test' })).rejects.toThrow(
+        'Error calling tool error-tool: Error: Generic error'
+      );
+
+      // Verify error was logged
+      expect(logger.error).toHaveBeenCalledWith(
+        expect.stringContaining('Error calling tool error-tool:'),
+        expect.any(Error)
+      );
+    });
+
+    it('should handle tool results without text content or with multiple content items', async () => {
+      // Mock tool call result with multiple content items of different types
+      const mockToolResult = {
+        content: [
+          {
+            type: 'image',
+            data: 'base64-data',
+          },
+          {
+            type: 'other',
+            value: 123,
+          },
+        ],
+      };
+
+      mockClient.callTool.mockResolvedValue(mockToolResult);
+
+      // Create a LangChain tool from an MCP tool
+      const tool = convertMcpToolToLangchainTool(
+        mockClient,
+        'multi-content',
+        'A tool with multiple content',
+        {
+          type: 'object',
+          properties: {
+            input: { type: 'string' },
+          },
+          required: ['input'],
+        }
+      );
+
+      // Invoke the tool
+      const result = await tool.invoke({ input: 'test' });
+
+      // Should return the whole content array as string
+      expect(result).toBe(mockToolResult.content.toString());
     });
   });
 
