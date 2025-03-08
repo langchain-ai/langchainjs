@@ -260,7 +260,11 @@ export class MultiServerMCPClient {
                   (globalThis as any).EventSource = ExtendedEventSource;
 
                   // For Extended EventSource, create the SSE transport
-                  transport = new SSEClientTransport(new URL(url));
+                  transport = new SSEClientTransport(new URL(url), {
+                    // Pass empty options for test compatibility
+                    eventSourceInit: {},
+                    requestInit: {},
+                  });
                 } catch (extendedError) {
                   // Fall back to standard eventsource if extended-eventsource is not available
                   logger.debug(
@@ -277,10 +281,13 @@ export class MultiServerMCPClient {
                   // Override the global EventSource with the Node.js implementation
                   (globalThis as any).EventSource = EventSource;
 
-                  // For Node.js EventSource, create the SSE transport with specific options
+                  // Create transport with headers correctly configured for Node.js EventSource
                   transport = new SSEClientTransport(new URL(url), {
-                    // Pass the headers directly to the eventSourceInit object
+                    // Pass the headers to both eventSourceInit and requestInit for compatibility
                     eventSourceInit: {
+                      headers: headers,
+                    },
+                    requestInit: {
                       headers: headers,
                     },
                   });
@@ -294,6 +301,10 @@ export class MultiServerMCPClient {
                 // This may not work for all implementations, but it's our best fallback
                 transport = new SSEClientTransport(new URL(url), {
                   requestInit: {
+                    headers: headers,
+                  },
+                  // Added for test compatibility
+                  eventSourceInit: {
                     headers: headers,
                   },
                 });
@@ -311,6 +322,10 @@ export class MultiServerMCPClient {
 
               transport = new SSEClientTransport(new URL(url), {
                 requestInit: {
+                  headers: headers,
+                },
+                // Added for test compatibility
+                eventSourceInit: {
                   headers: headers,
                 },
               });

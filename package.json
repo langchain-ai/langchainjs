@@ -41,10 +41,9 @@
     "@langchain/google-genai": "^0.1.10",
     "@langchain/langgraph": "^0.2.54",
     "@langchain/openai": "^0.4.4",
-    "@modelcontextprotocol/sdk": "^1.6.1",
+    "@modelcontextprotocol/sdk": "^1.x",
     "dotenv": "^16.4.7",
-    "extended-eventsource": "^2.1.0",
-    "langchain": "^0.3.19",
+    "langchain": "^0.1.0",
     "winston": "^3.17.0"
   },
   "peerDependencies": {
@@ -62,6 +61,7 @@
     "@typescript-eslint/parser": "^7.3.1",
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^10.0.2",
+    "eventsource": "^3.0.5",
     "husky": "^9.0.11",
     "jest": "^29.7.0",
     "lint-staged": "^15.2.2",
