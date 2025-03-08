@@ -1,0 +1,35 @@
+---
+sidebar_label: Perplexity
+---
+
+import CodeBlock from "@theme/CodeBlock";
+
+# Perplexity
+
+## Setup
+
+1. Create a Perplexity account and get your API key [here](https://www.perplexity.ai/settings/api).
+2. Export or set your API key inline. The ChatPerplexity class defaults to process.env.PERPLEXITY_API_KEY.
+
+```bash
+export PERPLEXITY_API_KEY=your-api-key
+```
+
+You can use models provided by Perplexity as follows:
+
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/community @langchain/core
+```
+
+import Perplexity from "@examples/models/chat/integration_perplexity.ts";
+
+<CodeBlock language="typescript">{Perplexity}</CodeBlock>
+
+## Related
+
+- Chat model [conceptual guide](/docs/concepts/chat_models)
+- Chat model [how-to guides](/docs/how_to/#chat-models)
