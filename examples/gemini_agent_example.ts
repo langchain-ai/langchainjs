@@ -67,7 +67,7 @@ async function main() {
     // Initialize the agent executor with a simple agent type
     // Add a type assertion to work around version incompatibility issues
     const executor = await initializeAgentExecutorWithOptions(
-      // @ts-ignore Type assertion to work around version incompatibility issues
+      // @ts-expect-error Type assertion to work around version incompatibility issues
       allTools,
       model,
       {

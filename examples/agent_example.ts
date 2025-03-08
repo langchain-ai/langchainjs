@@ -1,7 +1,6 @@
 import { MultiServerMCPClient } from '../src/client.js';
 import { ChatOpenAI } from '@langchain/openai';
 import { initializeAgentExecutorWithOptions } from 'langchain/agents';
-import { ChatPromptTemplate } from '@langchain/core/prompts';
 import dotenv from 'dotenv';
 
 // Load environment variables from .env file
@@ -58,7 +57,7 @@ async function main() {
     // Use the standard agent executor instead of createOpenAIFunctionsAgent
     // Add a type assertion to work around the version incompatibility
     const agentExecutor = await initializeAgentExecutorWithOptions(
-      // @ts-ignore Type assertion to work around version incompatibility issues
+      // @ts-expect-error Type assertion to work around version incompatibility issues
       allTools,
       model,
       {

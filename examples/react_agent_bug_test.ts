@@ -57,7 +57,7 @@ async function main() {
     console.log('\n--- APPROACH 1: Standard Agent (RECOMMENDED) ---');
     console.log('Creating standard agent...');
     const standardExecutor = await initializeAgentExecutorWithOptions(
-      // @ts-ignore Type assertion to work around version incompatibility issues
+      // @ts-expect-error Type assertion to work around version incompatibility issues
       tools,
       llm,
       {
