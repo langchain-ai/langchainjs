@@ -43,11 +43,16 @@
     "@langchain/openai": "^0.4.4",
     "@modelcontextprotocol/sdk": "^1.6.1",
     "dotenv": "^16.4.7",
+    "extended-eventsource": "^2.1.0",
     "langchain": "^0.3.19",
     "winston": "^3.17.0"
   },
+  "peerDependencies": {
+    "@modelcontextprotocol/sdk": "^1.x",
+    "langchain": "^0.1.0"
+  },
   "optionalDependencies": {
-    "eventsource": "^2.0.2"
+    "extended-eventsource": "^1.x"
   },
   "devDependencies": {
     "@eslint/js": "^9.21.0",
