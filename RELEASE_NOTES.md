@@ -1,3 +1,38 @@
+# Release v0.1.7: Improved SSE Headers Support and Test Coverage
+
+## Overview
+
+This release focuses on improving SSE headers support, enhancing error handling, and significantly boosting test coverage to over 80%. It also includes fixes for CI/CD workflows and development tooling.
+
+## Bug Fixes
+
+- **SSE Headers Support**: Fixed issues with passing headers to the eventsource library
+- **Error Handling**: Improved error handling for SSE connections and client initialization
+- **Type Compatibility**: Fixed type errors in agent integration tests to work with different versions of @langchain/core
+
+## Improvements
+
+- **Test Coverage**: Increased test coverage from ~30% to over 80%
+- **CI/CD Workflows**: Fixed GitHub Actions issues with type compatibility
+- **ESLint Configuration**: Updated to properly exclude the dist directory from linting
+- **Build Process**: Improved to avoid linting errors and streamline development
+
+## Requirements
+
+For SSE connections with headers in Node.js environments, you need to install the optional dependency:
+
+```bash
+npm install eventsource
+```
+
+For best results with SSE headers support, consider using the extended-eventsource library:
+
+```bash
+npm install extended-eventsource
+```
+
+---
+
 # Release v0.1.5: SSE Headers Support
 
 ## Overview

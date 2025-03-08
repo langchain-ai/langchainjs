@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.7] - 2024-05-08
+
+### Fixed
+
+- Fixed SSE headers support to properly pass headers to eventsource
+- Improved error handling for SSE connections
+- Added proper support for Node.js eventsource library
+- Fixed type errors in agent integration tests
+
+### Added
+
+- Improved test coverage to over 80%
+- Added comprehensive error handling tests
+- Added integration tests for different connection types
+
+### Changed
+
+- Updated ESLint configuration to properly exclude dist directory
+- Improved build process to avoid linting errors
+
 ## [0.1.3] - 2023-03-11
 
 ### Changed
