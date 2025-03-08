@@ -65,10 +65,16 @@ async function main() {
     });
 
     // Initialize the agent executor with a simple agent type
-    const executor = await initializeAgentExecutorWithOptions(allTools, model, {
-      agentType: 'chat-zero-shot-react-description',
-      verbose: true,
-    });
+    // Add a type assertion to work around version incompatibility issues
+    const executor = await initializeAgentExecutorWithOptions(
+      // @ts-expect-error Type assertion to work around version incompatibility issues
+      allTools,
+      model,
+      {
+        agentType: 'chat-zero-shot-react-description',
+        verbose: true,
+      }
+    );
 
     // Run the agent with different queries
     const queries = [

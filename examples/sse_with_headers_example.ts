@@ -1,112 +1,95 @@
 /**
- * Example of using SSE transport with custom headers
+ * This example demonstrates how to connect to an MCP server via SSE with headers.
  *
- * This example demonstrates how to connect to an MCP server using SSE transport
- * with custom headers for authentication.
+ * To properly use headers with SSE, consider the following approaches:
  *
- * To run this example:
- * 1. Start an MCP server that supports SSE and requires authentication
- * 2. Set the SERVER_URL and AUTH_TOKEN environment variables
- * 3. Run: ts-node examples/sse_with_headers_example.ts
+ * 1. For Node.js: Use the extended-eventsource package (recommended)
+ *    npm install --save extended-eventsource
+ *
+ * 2. For browsers: Consider using a server-side proxy or query parameters
  */
 
 import { MultiServerMCPClient } from '../src/index.js';
-import dotenv from 'dotenv';
-
-// Load environment variables
-dotenv.config();
-
-const SERVER_URL = process.env.SERVER_URL || 'http://localhost:8000/sse';
-const AUTH_TOKEN = process.env.AUTH_TOKEN || 'your-auth-token';
 
 async function main() {
-  console.log('Connecting to MCP server with SSE transport and custom headers...');
+  console.log('SSE with Headers Example');
+  console.log('========================\n');
 
-  // Create a client
+  // Create a new client
   const client = new MultiServerMCPClient();
 
-  try {
-    // Method 1: Using the connectToServerViaSSE method
-    console.log('Method 1: Using connectToServerViaSSE with headers');
-    await client.connectToServerViaSSE(
-      'auth-server',
-      SERVER_URL,
-      {
-        Authorization: `Bearer ${AUTH_TOKEN}`,
-        'X-Custom-Header': 'custom-value',
-      },
-      true // Use Node.js EventSource for headers support
-    );
+  // Define headers for authentication and other purposes
+  const headers = {
+    Authorization: 'Bearer my-access-token',
+    'X-Api-Key': 'my-api-key',
+    'X-Custom-Header': 'CustomValue',
+  };
 
-    // Get all tools
-    const tools = client.getTools();
-    console.log(`Successfully loaded ${tools.size} servers with tools`);
+  // Method 1: Using the connectToServerViaSSE method with headers
+  console.log('Method 1: Using connectToServerViaSSE with headers');
+  await client.connectToServerViaSSE(
+    'my-server',
+    'https://example.com/sse-endpoint',
+    headers,
+    true // Set to true to use Node.js EventSource for better headers support
+  );
 
-    // Print tool names
-    for (const [serverName, serverTools] of tools.entries()) {
-      console.log(`Server: ${serverName}, Tools: ${serverTools.length}`);
-      for (const tool of serverTools) {
-        console.log(`  - ${tool.name}: ${tool.description}`);
-      }
-    }
+  // Get the tools from the server
+  let serverTools = client.getTools();
+  console.log(`Retrieved ${serverTools.size} server tools from the first connection\n`);
 
-    // Close the client
-    await client.close();
+  // Method 2: Alternative approach using a server with query parameters (for browsers)
+  console.log('Method 2: Using SSE with authorization in query parameters (browser-compatible)');
+  console.log('Note: This is less secure but works in browsers that cannot send custom headers');
 
-    // Method 2: Using the constructor
-    console.log('\nMethod 2: Using constructor with configuration object');
-    const client2 = new MultiServerMCPClient({
-      'auth-server': {
-        transport: 'sse',
-        url: SERVER_URL,
-        headers: {
-          Authorization: `Bearer ${AUTH_TOKEN}`,
-          'X-Custom-Header': 'custom-value',
-        },
-        useNodeEventSource: true,
-      },
-    });
+  // Create a second client
+  const client2 = new MultiServerMCPClient();
 
-    // Initialize connections
-    await client2.initializeConnections();
+  // Connect using a URL with query parameters instead of headers
+  await client2.connectToServerViaSSE(
+    'browser-compatible',
+    `https://example.com/sse-endpoint?token=${encodeURIComponent('my-access-token')}`,
+    undefined, // No headers
+    false // Use browser EventSource
+  );
 
-    // Get all tools
-    const tools2 = client2.getTools();
-    console.log(`Successfully loaded ${tools2.size} servers with tools`);
+  // Get tools from the second connection
+  serverTools = client2.getTools();
+  console.log(`Retrieved ${serverTools.size} server tools from the second connection\n`);
 
-    // Print tool names
-    for (const [serverName, serverTools] of tools2.entries()) {
-      console.log(`Server: ${serverName}, Tools: ${serverTools.length}`);
-      for (const tool of serverTools) {
-        console.log(`  - ${tool.name}: ${tool.description}`);
-      }
-    }
+  // Method 3: Using a proxy server (recommended for browser environments)
+  console.log('Method 3: Using a proxy server (recommended for browsers)');
+  console.log('In this approach, your backend adds the necessary headers to the SSE request');
 
-    // Close the client
-    await client2.close();
+  // Create a third client
+  const client3 = new MultiServerMCPClient();
 
-    // Method 3: Using a configuration file
-    console.log('\nMethod 3: Using a configuration file');
-    console.log('Create a JSON file with the following content:');
-    console.log(`
-{
-  "servers": {
-    "auth-server": {
-      "transport": "sse",
-      "url": "${SERVER_URL}",
-      "headers": {
-        "Authorization": "Bearer your-token-here",
-        "X-Custom-Header": "custom-value"
-      },
-      "useNodeEventSource": true
-    }
-  }
-}
-    `);
-    console.log('Then load it with: MultiServerMCPClient.fromConfigFile("path/to/config.json")');
-  } catch (error) {
-    console.error('Error:', error);
-  }
+  // Connect to your proxy server that will add headers
+  await client3.connectToServerViaSSE(
+    'proxy-server',
+    'https://your-proxy-server.com/sse-proxy',
+    undefined, // No headers needed here as the proxy adds them
+    false // Use browser EventSource
+  );
+
+  // Get tools from the third connection
+  serverTools = client3.getTools();
+  console.log(`Retrieved ${serverTools.size} server tools from the third connection\n`);
+
+  // Close all clients
+  console.log('Closing all connections...');
+  await client.close();
+  await client2.close();
+  await client3.close();
+
+  console.log('All connections closed');
+  console.log('\nSummary of approaches for SSE with headers:');
+  console.log('1. Node.js: Use extended-eventsource (npm install extended-eventsource)');
+  console.log('2. Browsers: Use query parameters (less secure)');
+  console.log('3. Best practice: Use a server-side proxy for browser environments');
 }
 
-main().catch(console.error);
+// Run the example
+main().catch(error => {
+  console.error('Error in SSE example:', error);
+});

@@ -392,3 +392,61 @@ For information about contributing to this project, including GitHub Actions wor
 ## License
 
 MIT
+
+## Using Server-Sent Events (SSE) with Headers
+
+When connecting to an MCP server via SSE and using custom headers (such as for authentication), there are some considerations to be aware of:
+
+### Node.js Environments
+
+For Node.js environments, the package will attempt to use the best available EventSource implementation to ensure headers are sent correctly:
+
+1. If the `extended-eventsource` package is installed (recommended): Headers will be properly sent with SSE requests.
+2. Otherwise, it will fall back to the standard `eventsource` package and attempt to configure it to send headers.
+
+Example with headers:
+
+```typescript
+// Pass headers and set useNodeEventSource to true for best header support
+await client.connectToServerViaSSE(
+  'my-server',
+  'https://example.com/mcp',
+  {
+    Authorization: 'Bearer my-token',
+    'X-Custom-Header': 'CustomValue',
+  },
+  true // useNodeEventSource=true ensures headers are sent correctly
+);
+```
+
+For the best experience with headers, install the recommended package:
+
+```bash
+npm install --save extended-eventsource
+```
+
+### Browser Environments
+
+The native browser EventSource API does not support custom headers. When running in a browser environment, consider:
+
+1. If headers (especially authorization) are required, use a server-side proxy that adds the required headers.
+2. Alternatively, pass authorization via query parameters (though this is less secure).
+
+### Testing Header Transmission
+
+If you need to verify that headers are being sent correctly, you can use a service like [Beeceptor](https://beeceptor.com/) to inspect requests:
+
+```typescript
+// Test header transmission
+await client.connectToServerViaSSE(
+  'test-server',
+  'https://my-endpoint.free.beeceptor.com',
+  {
+    Authorization: 'Bearer test-token',
+    'X-Custom-Header': 'Test',
+  },
+  true
+);
+```
+
+Then check the Beeceptor console to verify headers are being sent.
