@@ -1,6 +1,6 @@
 import { MultiServerMCPClient } from '../src/client.js';
 import { ChatOpenAI } from '@langchain/openai';
-import { createOpenAIFunctionsAgent, AgentExecutor } from 'langchain/agents';
+import { initializeAgentExecutorWithOptions } from 'langchain/agents';
 import { ChatPromptTemplate } from '@langchain/core/prompts';
 import dotenv from 'dotenv';
 
@@ -55,24 +55,17 @@ async function main() {
       modelName: 'gpt-4o', // or any other model that supports function calling
     });
 
-    const prompt = ChatPromptTemplate.fromMessages([
-      [
-        'system',
-        "You are a helpful assistant that can perform calculations and get weather information. Use the tools available to you to answer the user's questions.",
-      ],
-      ['human', '{input}'],
-    ]);
-
-    const agent = await createOpenAIFunctionsAgent({
-      llm: model,
-      tools: allTools,
-      prompt,
-    });
-
-    const agentExecutor = new AgentExecutor({
-      agent,
-      tools: allTools,
-    });
+    // Use the standard agent executor instead of createOpenAIFunctionsAgent
+    // Add a type assertion to work around the version incompatibility
+    const agentExecutor = await initializeAgentExecutorWithOptions(
+      // @ts-ignore Type assertion to work around version incompatibility issues
+      allTools,
+      model,
+      {
+        agentType: 'openai-functions',
+        verbose: true,
+      }
+    );
 
     // Run the agent with different queries
     const queries = [

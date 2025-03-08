@@ -16,14 +16,14 @@
   "scripts": {
     "build": "tsc",
     "test": "jest",
-    "lint": "eslint .",
-    "lint:fix": "eslint . --fix",
+    "lint": "eslint --ignore-pattern 'dist/**' .",
+    "lint:fix": "eslint --ignore-pattern 'dist/**' . --fix",
     "format": "prettier --write \"src/**/*.ts\" \"examples/**/*.ts\"",
     "prepare": "husky"
   },
   "lint-staged": {
     "*.{js,ts}": [
-      "eslint --fix",
+      "eslint --fix --ignore-pattern 'dist/**' --ignore-pattern 'examples/**'",
       "prettier --write"
     ]
   },

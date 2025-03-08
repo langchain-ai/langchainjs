@@ -56,10 +56,15 @@ async function main() {
     // This approach consistently works with MCP tools
     console.log('\n--- APPROACH 1: Standard Agent (RECOMMENDED) ---');
     console.log('Creating standard agent...');
-    const standardExecutor = await initializeAgentExecutorWithOptions(tools, llm, {
-      agentType: 'chat-zero-shot-react-description',
-      verbose: true,
-    });
+    const standardExecutor = await initializeAgentExecutorWithOptions(
+      // @ts-ignore Type assertion to work around version incompatibility issues
+      tools,
+      llm,
+      {
+        agentType: 'chat-zero-shot-react-description',
+        verbose: true,
+      }
+    );
 
     // Test the agent with a simple math query
     console.log('Running standard agent...');
