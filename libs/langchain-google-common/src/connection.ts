@@ -53,7 +53,7 @@ export abstract class GoogleConnection<
     this.streaming = streaming ?? false;
   }
 
-  abstract buildUrl(): Promise<string>;
+  abstract buildUrl(callMethod?: string): Promise<string>;
 
   abstract buildMethod(): GoogleAbstractedClientOpsMethod;
 
@@ -95,7 +95,8 @@ export abstract class GoogleConnection<
   async _buildOpts(
     data: unknown | undefined,
     _options: CallOptions,
-    requestHeaders: Record<string, string> = {}
+    requestHeaders: Record<string, string> = {},
+    callMethod?: string
   ): Promise<GoogleAbstractedClientOps> {
     const url = await this.buildUrl();
     const method = this.buildMethod();
@@ -126,9 +127,10 @@ export abstract class GoogleConnection<
   async _request(
     data: unknown | undefined,
     options: CallOptions,
-    requestHeaders: Record<string, string> = {}
+    requestHeaders: Record<string, string> = {},
+    callMethod?: string
   ): Promise<ResponseType> {
-    const opts = await this._buildOpts(data, options, requestHeaders);
+    const opts = await this._buildOpts(data, options, requestHeaders, callMethod);
     const callResponse = await this.caller.callWithOptions(
       { signal: options?.signal },
       async () => this.client.request(opts)
@@ -311,24 +313,24 @@ export abstract class GoogleAIConnection<
 
   abstract buildUrlMethod(): Promise<string>;
 
-  async buildUrlGenerativeLanguage(): Promise<string> {
+  async buildUrlGenerativeLanguage(callMethod?: string): Promise<string> {
     const method = await this.buildUrlMethod();
-    const url = `https://generativelanguage.googleapis.com/${this.apiVersion}/models/${this.model}:${method}`;
+    const url = `https://generativelanguage.googleapis.com/${this.apiVersion}/models/${this.model}:${callMethod ?? method}`;
     return url;
   }
 
-  async buildUrlVertexExpress(): Promise<string> {
+  async buildUrlVertexExpress(callMethod?: string): Promise<string> {
     const method = await this.buildUrlMethod();
     const publisher = this.modelPublisher;
-    const url = `https://aiplatform.googleapis.com/${this.apiVersion}/publishers/${publisher}/models/${this.model}:${method}`;
+    const url = `https://aiplatform.googleapis.com/${this.apiVersion}/publishers/${publisher}/models/${this.model}:${callMethod ?? method}`;
     return url;
   }
 
-  async buildUrlVertexLocation(): Promise<string> {
+  async buildUrlVertexLocation(callMethod?: string): Promise<string> {
     const projectId = await this.client.getProjectId();
     const method = await this.buildUrlMethod();
     const publisher = this.modelPublisher;
-    const url = `https://${this.endpoint}/${this.apiVersion}/projects/${projectId}/locations/${this.location}/publishers/${publisher}/models/${this.model}:${method}`;
+    const url = `https://${this.endpoint}/${this.apiVersion}/projects/${projectId}/locations/${this.location}/publishers/${publisher}/models/${this.model}:${callMethod ?? method}`;
     return url;
   }
 
@@ -340,12 +342,12 @@ export abstract class GoogleAIConnection<
     }
   }
 
-  async buildUrl(): Promise<string> {
+  async buildUrl(callMethod?: string): Promise<string> {
     switch (this.platform) {
       case "gai":
-        return this.buildUrlGenerativeLanguage();
+        return this.buildUrlGenerativeLanguage(callMethod);
       default:
-        return this.buildUrlVertex();
+        return this.buildUrlVertex(callMethod);
     }
   }
 
@@ -425,6 +427,12 @@ export abstract class AbstractGoogleLLMConnection<
     parameters: GoogleAIModelRequestParams
   ): Promise<unknown> {
     return this.api.formatData(input, parameters);
+  }
+
+  async getNumTokens(input: MessageType) {
+    const data = this.formatData(input)
+    const { totalTokens } = await this._request(data, {}, {}, 'countTokens');
+    return totalTokens
   }
 }
 
