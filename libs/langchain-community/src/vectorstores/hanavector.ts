@@ -624,31 +624,31 @@ export class HanaDB extends VectorStore {
    */
   private extractKeywordSearchColumns(filter?: this["FilterType"]): string[] {
     const keywordColumns = new Set<string>();
-  
-    const recurseFilters = (filterObj?: this["FilterType"], parentKey?: string): void => {
-      if (!filterObj || typeof filterObj !== "object") return;
-  
-      Object.entries(filterObj).forEach(([key, value]) => {
-        if (key === CONTAINS_OPERATOR) {
-          if (
-            parentKey &&
-            parentKey !== this.contentColumn &&
-            !this.specificMetadataColumns.includes(parentKey)
-          ) {
-            keywordColumns.add(parentKey);
-          }
-        } else if (key in LOGICAL_OPERATORS_TO_SQL) {
-          // Assume it's an array of filters
-          (value as this["FilterType"][]).forEach((subfilter) => recurseFilters(subfilter));
-        } else if (typeof value === "object" && value !== null) {
-          recurseFilters(value as this["FilterType"], key);
-        }
-      });
-    };
-  
-    recurseFilters(filter);
+    this.recurseFiltersHelper(keywordColumns, filter);
     return [...keywordColumns];
   }
+
+  private recurseFiltersHelper(keywordColumns: Set<string>, filterObj?: this["FilterType"], parentKey?: string): void {
+    if (!filterObj || typeof filterObj !== "object") return;
+  
+    Object.entries(filterObj).forEach(([key, value]) => {
+      if (key === CONTAINS_OPERATOR) {
+        if (
+          parentKey &&
+          parentKey !== this.contentColumn &&
+          !this.specificMetadataColumns.includes(parentKey)
+        ) {
+          keywordColumns.add(parentKey);
+        }
+      } else if (key in LOGICAL_OPERATORS_TO_SQL) {
+        // Assume it's an array of filters
+        (value as this["FilterType"][]).forEach((subfilter) => this.recurseFiltersHelper(keywordColumns, subfilter));
+      } else if (typeof value === "object" && value !== null) {
+        this.recurseFiltersHelper(keywordColumns, value as this["FilterType"], key);
+      }
+    });
+  }
+
     
   /**
    * Generate a SQL `WITH` clause to project metadata columns for keyword search.
