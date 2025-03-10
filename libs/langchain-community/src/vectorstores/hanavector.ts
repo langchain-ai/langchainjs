@@ -672,7 +672,7 @@ export class HanaDB extends VectorStore {
   ): string {
     const metadataColumns = projectedMetadataColumns.map(
       (col) =>
-        `JSON_VALUE(${this.metadataColumn}, '$.${col}') AS "${col}"`
+        `JSON_VALUE(${this.metadataColumn}, '$.${HanaDB.sanitizeName(col)}') AS "${HanaDB.sanitizeName(col)}"`
     );
     return (
       `WITH ${INTERMEDIATE_TABLE_NAME} AS (` +
