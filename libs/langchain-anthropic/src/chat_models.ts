@@ -631,9 +631,9 @@ export class ChatAnthropicMessages<
 
   maxTokens = 2048;
 
-  modelName = "claude-2.1";
+  modelName = "claude-3-7-sonnet-20250219";
 
-  model = "claude-2.1";
+  model = "claude-3-7-sonnet-20250219";
 
   invocationKwargs?: Kwargs;
 
