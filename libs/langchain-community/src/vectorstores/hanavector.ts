@@ -1227,7 +1227,7 @@ export class HanaDB extends VectorStore {
     if (this.useInternalEmbeddings){
       const sqlStr = `SELECT TO_NVARCHAR(VECTOR_EMBEDDING(?, 'QUERY', ?))
        AS VECTOR FROM sys.DUMMY;`
-      const queryTuple = [query, this.internalEmbeddingModelId]
+      const queryTuple = [query, this.internalEmbeddingModelId];
       const client = this.connection;
       const stm = await this.prepareQuery(client, sqlStr);
       const resultSet = await this.executeStatement(stm, queryTuple);
