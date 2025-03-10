@@ -6,7 +6,7 @@ import { HanaDB, HanaDBArgs } from "@langchain/community/vectorstores/hanavector
 // Initialize the internal embeddings instance using the internal model ID.
 // This instance will use SAP HANA's built-in VECTOR_EMBEDDING function of HanaDB.
 const internalEmbeddings = new HanaInternalEmbeddings({
-  internalEmbeddingModelId: process.env.HANA_DB_EMBEDDING_MODEL_ID || "your_model_id",
+  internalEmbeddingModelId: process.env.HANA_DB_EMBEDDING_MODEL_ID || "SAP_NEB.20240715",
 });
 
 // Set up connection parameters from environment variables.
