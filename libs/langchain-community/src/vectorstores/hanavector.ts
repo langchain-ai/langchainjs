@@ -1237,7 +1237,7 @@ export class HanaDB extends VectorStore {
           return HanaDB.parseFloatArrayFromString(row.VECTOR);
         }
       );
-      queryEmbedding = result[0]
+      queryEmbedding = result[0];
     }
     else {
       queryEmbedding = await this.embeddings.embedQuery(query);
