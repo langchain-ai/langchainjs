@@ -922,7 +922,6 @@ export class HanaDB extends VectorStore {
                     VALUES (?, ?, VECTOR_EMBEDDING(?, 'DOCUMENT', ?)${extraPlaceholders});`;
     const stm = await this.prepareQuery(client, sqlStr);
     await this.executeStatement(stm, sqlParams);
-    // stm.execBatch(sqlParams);
   }
 
   /**
