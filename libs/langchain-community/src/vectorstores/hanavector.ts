@@ -205,7 +205,7 @@ export class HanaDB extends VectorStore {
       throw new Error("Internal embedding model id is not set");
     }
     const sqlStr =
-      "SELECT TO_NVARCHAR(VECTOR_EMBEDDING('test', 'QUERY', ?)) AS TEST FROM sys.DUMMY;";
+      "SELECT COUNT(TO_NVARCHAR(VECTOR_EMBEDDING('test', 'QUERY', ?))) AS TEST FROM sys.DUMMY;";
     const client = this.connection;
     const stm = await this.prepareQuery(client, sqlStr);
     await this.executeStatement(stm, [this.internalEmbeddingModelId]);
