@@ -521,7 +521,7 @@ export abstract class Runnable<
         async () =>
           callbackManager_?.handleChainStart(
             this.toJSON(),
-            { input: "" },
+            finalInput,
             config.runId,
             config.runType,
             undefined,
