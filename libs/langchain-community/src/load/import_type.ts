@@ -45,6 +45,8 @@ export interface SecretMap {
   PLANETSCALE_PASSWORD?: string;
   PLANETSCALE_USERNAME?: string;
   PREM_API_KEY?: string;
+  NOXTUA_API_KEY?: string;
+  NOXTUA_TENANT_ID?: string;
   QDRANT_API_KEY?: string;
   QDRANT_URL?: string;
   REDIS_PASSWORD?: string;

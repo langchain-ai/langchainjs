@@ -51,6 +51,7 @@ const _SUPPORTED_PROVIDERS = [
   "cerebras",
   "deepseek",
   "xai",
+  "xayn",
 ] as const;
 
 export type ChatModelProvider = (typeof _SUPPORTED_PROVIDERS)[number];
@@ -161,6 +162,12 @@ async function _initChatModelHelper(
           "@langchain/community/chat_models/togetherai"
         );
         return new ChatTogetherAI({ model, ...passedParams });
+      }
+      case "xayn": {
+        const { ChatNoxtua } = await import(
+          "@langchain/community/chat_models/noxtua"
+        );
+        return new ChatNoxtua({ model, ...passedParams });
       }
       default: {
         const supported = _SUPPORTED_PROVIDERS.join(", ");
