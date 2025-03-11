@@ -20,9 +20,13 @@ type NoxtuaUnsupportedArgs =
 
 type NoxtuaUnsupportedCallOptions = "functions" | "function_call";
 
-export type ChatNoxtuaCallOptions = Partial<
-  Omit<ChatOpenAICallOptions, NoxtuaUnsupportedCallOptions>
->;
+export interface ChatNoxtuaCallOptions
+  extends Omit<ChatOpenAICallOptions, NoxtuaUnsupportedCallOptions> {
+  response_format: {
+    type: "json_object";
+    schema: Record<string, unknown>;
+  };
+}
 
 export class ChatNoxtua extends ChatOpenAI<ChatNoxtuaCallOptions> {
   static lc_name() {
@@ -46,6 +50,8 @@ export class ChatNoxtua extends ChatOpenAI<ChatNoxtuaCallOptions> {
 
   noxtuaApiKey?: string;
 
+  apiUrl?: string;
+
   apiKey?: string;
 
   constructor(
@@ -54,18 +60,18 @@ export class ChatNoxtua extends ChatOpenAI<ChatNoxtuaCallOptions> {
     > &
       BaseChatModelParams & {
         tenantId: string;
-        /**
-         * Prefer `apiKey`
-         */
+        noxtuaApiUrl?: string;
+        apiUrl?: string;
         noxtuaApiKey?: string;
-        /**
-         * The Noxtua API key to use.
-         */
         apiKey?: string;
       }
   ) {
     const tenantId =
       fields?.tenantId || getEnvironmentVariable("NOXTUA_TENANT_ID");
+    const apiUrl =
+      fields?.apiUrl ||
+      fields?.noxtuaApiUrl ||
+      getEnvironmentVariable("NOXTUA_API_URL");
     const noxtuaApiKey =
       fields?.apiKey ||
       fields?.noxtuaApiKey ||
@@ -84,12 +90,13 @@ export class ChatNoxtua extends ChatOpenAI<ChatNoxtuaCallOptions> {
     }
 
     super({
-      defaultHeaders: {
-        "tenant-id": tenantId,
-        Authorization: `Bearer ${noxtuaApiKey}`,
-      },
+      ...fields,
       configuration: {
-        baseURL: "https://kong.noxtua.ai/v2/api",
+        baseURL: apiUrl,
+        defaultHeaders: {
+          "tenant-id": tenantId,
+          Authorization: `Bearer ${noxtuaApiKey}`,
+        },
       },
       streamUsage: true,
     });
@@ -97,6 +104,7 @@ export class ChatNoxtua extends ChatOpenAI<ChatNoxtuaCallOptions> {
     this.tenantId = tenantId;
     this.noxtuaApiKey = noxtuaApiKey;
     this.apiKey = noxtuaApiKey;
+    this.apiUrl = apiUrl;
   }
 
   getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
