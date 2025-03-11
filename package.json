@@ -1,6 +1,5 @@
 {
   "name": "langchainjs",
-  "version": "0.3.34",
   "private": true,
   "engines": {
     "node": ">=18"

@@ -165,6 +165,11 @@ async function _initChatModelHelper(
       }
       case "xayn": {
         const { ChatNoxtua } = await import(
+          // We can not 'expect-error' because if you explicitly build `@langchain/community`
+          // this import will be able to be resolved, thus there will be no error. However
+          // this will never be the case in CI.
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore - Can not install as a proper dependency due to circular dependency
           "@langchain/community/chat_models/noxtua"
         );
         return new ChatNoxtua({ model, ...passedParams });
