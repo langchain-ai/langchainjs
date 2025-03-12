@@ -2,9 +2,6 @@
 title: Oracle Cloud Infrastructure Generative AI
 ---
 
-
-
-
 Oracle Cloud Infrastructure (OCI) Generative AI is a fully managed
 service that provides a set of state-of-the-art, customizable large
 language models (LLMs) that cover a wide range of use cases, and which
@@ -23,7 +20,7 @@ LangChainJS.
 
 In order to use this integration you will need the following: 1. An OCI
 tenancy. If you do not already have and account, please create one
-[here](https://signup.oraclecloud.com/). 2. Setup an [authentication
+[here](https://signup.cloud.oracle.com?sourceType=:ex:of:::::LangChainJSIntegration&SC=:ex:of:::::LangChainJSIntegration&pcode=). 2. Setup an [authentication
 method](https://docs.oracle.com/en-us/iaas/Content/API/Concepts/sdk_authentication_methods.htm)
 (Using a [configuration
 file](https://docs.oracle.com/en-us/iaas/Content/API/Concepts/sdkconfig.htm)
@@ -31,13 +28,11 @@ with [API Key
 authentication](https://docs.oracle.com/en-us/iaas/Content/API/Concepts/apisigningkey.htm#apisigningkey_topic_How_to_Generate_an_API_Signing_Key_Console)
 is the simplest to start with). 3. Please make sure that your OCI
 tenancy is registered in one of the [supported
-regions](https://docs.oracle.com/en-us/iaas/Content/generative-ai/overview.htm#regions).
-4. You will need the ID (aka OCID) of a compartment in which your OCI
+regions](https://docs.oracle.com/en-us/iaas/Content/generative-ai/overview.htm#regions). 4. You will need the ID (aka OCID) of a compartment in which your OCI
 user has [access to use the Generative AI
 service](https://docs.oracle.com/en-us/iaas/Content/generative-ai/iam-policies.htm).
 You can either use the `root` compartment or [create your
-own](https://docs.oracle.com/en-us/iaas/Content/Identity/compartments/To_create_a_compartment.htm).
-5. Retrieve the desired model name from the [available
+own](https://docs.oracle.com/en-us/iaas/Content/Identity/compartments/To_create_a_compartment.htm). 5. Retrieve the desired model name from the [available
 models](https://docs.oracle.com/en-us/iaas/Content/generative-ai/pretrained-models.htm)
 list (please make sure not to select a deprecated model).
 
@@ -76,8 +71,7 @@ Authentication will be attempted using a [configuration
 file](https://docs.oracle.com/en-us/iaas/Content/API/Concepts/sdkconfig.htm)
 which should be already setup and available under `~/.oci/config`. The
 `config` file is expected to contain a `DEFAULT` profile with the
-correct information. Please see the prerequisites for more information.
-2. The retry strategy will be set to a single attempt. If the first API
+correct information. Please see the prerequisites for more information. 2. The retry strategy will be set to a single attempt. If the first API
 call was not successful, the request will fail. 3. The region will be
 set to `us-chicago-1`. Please make sure that your tenancy is registered
 this region.
@@ -110,8 +104,7 @@ The first example will create an SDK client with the following
 configuration: 1. [Instance Principal
 authentication](https://docs.oracle.com/en-us/iaas/Content/API/Concepts/sdk_authentication_methods.htm#sdk_authentication_methods_instance_principaldita).
 Please note that this authentication method requires
-[configuration](https://docs.oracle.com/en-us/iaas/Content/Identity/Tasks/callingservicesfrominstances.htm).
-2. Using the Sao Paulo region. 3. Up to 3 attempts will be made in case
+[configuration](https://docs.oracle.com/en-us/iaas/Content/Identity/Tasks/callingservicesfrominstances.htm). 2. Using the Sao Paulo region. 3. Up to 3 attempts will be made in case
 API calls fail.
 
 ```python
@@ -262,3 +255,9 @@ documentation](https://docs.oracle.com/en-us/iaas/Content/generative-ai/home.htm
 If you are interested in the python version of this integration, you can
 find more information
 [here](https://python.langchain.com/docs/integrations/llms/oci_generative_ai/).
+
+
+## Related
+
+- Chat model [conceptual guide](/docs/concepts/#chat-models)
+- Chat model [how-to guides](/docs/how_to/#chat-models)
