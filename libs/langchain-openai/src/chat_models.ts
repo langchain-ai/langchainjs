@@ -624,7 +624,6 @@ export interface ChatOpenAICallOptions
     BaseFunctionCallOptions {
   tools?: ChatOpenAIToolType[];
   tool_choice?: OpenAIToolChoice | OpenAIResponsesToolChoice;
-  previous_response_id?: string;
   promptIndex?: number;
   response_format?: ChatOpenAIResponseFormat;
   seed?: number;
@@ -707,6 +706,12 @@ export interface ChatOpenAICallOptions
    * Specify additional output data to include in the model response.
    */
   include?: OpenAIResponsesCreateParams["include"];
+
+  /**
+   * The unique ID of the previous response to the model. Use this to create
+   * multi-turn conversations.
+   */
+  previous_response_id?: OpenAIResponsesCreateParams["previous_response_id"];
 }
 
 type ChatCompletionInvocationParams = Omit<
@@ -1554,6 +1559,8 @@ export class ChatOpenAI<
         // if include_usage is set or streamUsage then stream must be set to true.
         stream: this.streaming,
         previous_response_id: options?.previous_response_id,
+        truncation: options?.truncation,
+        include: options?.include,
         tools: options?.tools?.length
           ? options.tools
               .map((tool) => {
@@ -1584,6 +1591,7 @@ export class ChatOpenAI<
               }
             })(),
         text: (() => {
+          if (options?.text) return options.text;
           const format = this.createResponseFormat(options?.response_format);
           if (format?.type === "json_schema") {
             if (format.json_schema.schema != null) {
