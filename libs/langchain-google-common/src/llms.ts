@@ -177,6 +177,11 @@ export abstract class GoogleBaseLLM<AuthOptions>
     return prompt;
   }
 
+  async getNumTokens(input: string): Promise<number> {
+    const parameters = copyAIModelParams(this, undefined);
+    return this.connection.requestCountTokens(input, parameters);
+  }
+
   /**
    * For some given input string and options, return a string output.
    *

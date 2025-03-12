@@ -306,6 +306,11 @@ export abstract class ChatGoogleBase<AuthOptions>
     return copyAIModelParams(this, options);
   }
 
+  async getNumTokens(messages: BaseMessage[]): Promise<number> {
+    const parameters = this.invocationParams();
+    return this.connection.requestCountTokens(messages, parameters);
+  }
+
   async _generate(
     messages: BaseMessage[],
     options: this["ParsedCallOptions"],

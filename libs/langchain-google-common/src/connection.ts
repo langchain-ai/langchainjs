@@ -96,9 +96,9 @@ export abstract class GoogleConnection<
     data: unknown | undefined,
     _options: CallOptions,
     requestHeaders: Record<string, string> = {},
-    callMethod?: string
+    callMethod: string | undefined = undefined
   ): Promise<GoogleAbstractedClientOps> {
-    const url = await this.buildUrl();
+    const url = await this.buildUrl(callMethod);
     const method = this.buildMethod();
     const infoHeaders = (await this._clientInfoHeaders()) ?? {};
     const additionalHeaders = (await this.additionalHeaders()) ?? {};
@@ -127,16 +127,24 @@ export abstract class GoogleConnection<
   async _request(
     data: unknown | undefined,
     options: CallOptions,
-    requestHeaders: Record<string, string> = {},
-    callMethod?: string
+    requestHeaders: Record<string, string> = {}
   ): Promise<ResponseType> {
-    const opts = await this._buildOpts(data, options, requestHeaders, callMethod);
+    const opts = await this._buildOpts(data, options, requestHeaders);
     const callResponse = await this.caller.callWithOptions(
       { signal: options?.signal },
       async () => this.client.request(opts)
     );
     const response: unknown = callResponse; // Done for typecast safety, I guess
     return <ResponseType>response;
+  }
+
+  async _requestCountTokens(data: unknown | undefined): Promise<number> {
+    const opts = await this._buildOpts(data, {} as CallOptions, {}, 'countTokens');
+    const { totalTokens } = await this.caller.callWithOptions(
+      {},
+      async () => this.client.request(opts)
+    ) as { totalTokens: number };
+    return totalTokens;
   }
 }
 
@@ -334,11 +342,11 @@ export abstract class GoogleAIConnection<
     return url;
   }
 
-  async buildUrlVertex(): Promise<string> {
+  async buildUrlVertex(callMethod?: string): Promise<string> {
     if (this.isApiKey) {
-      return this.buildUrlVertexExpress();
+      return this.buildUrlVertexExpress(callMethod);
     } else {
-      return this.buildUrlVertexLocation();
+      return this.buildUrlVertexLocation(callMethod);
     }
   }
 
@@ -355,6 +363,14 @@ export abstract class GoogleAIConnection<
     input: InputType,
     parameters: GoogleAIModelRequestParams
   ): Promise<unknown>;
+
+  async requestCountTokens(
+    input: InputType,
+    parameters: GoogleAIModelRequestParams
+  ): Promise<number> {
+    const data = await this.formatData(input, parameters);
+    return await this._requestCountTokens(data);
+  }
 
   async request(
     input: InputType,
@@ -427,12 +443,6 @@ export abstract class AbstractGoogleLLMConnection<
     parameters: GoogleAIModelRequestParams
   ): Promise<unknown> {
     return this.api.formatData(input, parameters);
-  }
-
-  async getNumTokens(input: MessageType) {
-    const data = this.formatData(input)
-    const { totalTokens } = await this._request(data, {}, {}, 'countTokens');
-    return totalTokens
   }
 }
 
