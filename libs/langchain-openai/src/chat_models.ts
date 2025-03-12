@@ -1447,23 +1447,35 @@ export class ChatOpenAI<
   protected _convertOpenAIResponsesMessageToBaseMessage(
     response: OpenAIResponsesCreateStream
   ): BaseMessage {
+    if (response.error) {
+      // TODO: might be incorrect
+      throw wrapOpenAIClientError(response.error);
+    }
+
+    const content: MessageContent = [];
     const tool_calls: ToolCall[] = [];
     const invalid_tool_calls: InvalidToolCall[] = [];
+    const additional_kwargs: {
+      [key: string]: unknown;
+      reasoning?: unknown;
+      tool_outputs?: unknown[];
+    } = {};
 
-    let content: MessageContent = [];
     for (const item of response.output) {
       if (item.type === "message") {
         // TODO: how to handle refusals?
-        content = item.content.map((part) => {
-          if (part.type === "output_text") {
-            return {
-              type: "text",
-              text: part.text,
-              annotations: part.annotations,
-            };
-          }
-          return part;
-        });
+        content.push(
+          ...item.content.map((part) => {
+            if (part.type === "output_text") {
+              return {
+                type: "text",
+                text: part.text,
+                annotations: part.annotations,
+              };
+            }
+            return part;
+          })
+        );
       } else if (item.type === "function_call") {
         const fnAdapter = {
           function: { name: item.name, arguments: item.arguments },
@@ -1484,8 +1496,11 @@ export class ChatOpenAI<
           }
           invalid_tool_calls.push(makeInvalidToolCall(fnAdapter, errMessage));
         }
+      } else if (item.type === "reasoning") {
+        additional_kwargs.reasoning = item;
       } else {
-        throw new Error(`Unknown item type: ${item.type}`);
+        additional_kwargs.tool_outputs ??= [];
+        additional_kwargs.tool_outputs.push(item);
       }
     }
 
@@ -1494,6 +1509,8 @@ export class ChatOpenAI<
       content,
       tool_calls,
       invalid_tool_calls,
+      usage_metadata: response.usage,
+      additional_kwargs,
       response_metadata: { model_name: response.model, usage: response.usage },
     });
   }
