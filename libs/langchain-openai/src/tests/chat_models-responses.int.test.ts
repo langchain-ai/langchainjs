@@ -1,3 +1,4 @@
+/* eslint-disable no-process-env */
 import { test, expect } from "@jest/globals";
 import {
   AIMessage,
@@ -12,6 +13,7 @@ import { z } from "zod";
 import { ChatOpenAI } from "../chat_models.js";
 
 function assertResponse(message: BaseMessage | BaseMessageChunk | undefined) {
+  if (message == null) throw new Error("`message` is null");
   if (!isAIMessage(message)) throw new Error("Message is not an AIMessage");
   expect(Array.isArray(message.content)).toBe(true);
 
@@ -23,6 +25,8 @@ function assertResponse(message: BaseMessage | BaseMessageChunk | undefined) {
     if (block.type === "text") {
       expect(typeof block.text).toBe("string");
 
+      // TODO: add `annotations` to `MessageContentText`
+      // @ts-expect-error `annotations` is not typed
       for (const annotation of block.annotations ?? []) {
         expect(typeof annotation).toBe("object");
         expect(annotation).not.toBeNull();
@@ -44,11 +48,12 @@ function assertResponse(message: BaseMessage | BaseMessageChunk | undefined) {
   }
 
   expect(message.usage_metadata).toBeDefined();
-  expect(message.usage_metadata.input_tokens).toBeGreaterThan(0);
-  expect(message.usage_metadata.output_tokens).toBeGreaterThan(0);
-  expect(message.usage_metadata.total_tokens).toBeGreaterThan(0);
+  expect(message.usage_metadata?.input_tokens).toBeGreaterThan(0);
+  expect(message.usage_metadata?.output_tokens).toBeGreaterThan(0);
+  expect(message.usage_metadata?.total_tokens).toBeGreaterThan(0);
   expect(message.response_metadata.model_name).toBeDefined();
-  for (const toolOutput of message.additional_kwargs.tool_outputs ?? []) {
+  for (const toolOutput of (message.additional_kwargs.tool_outputs ??
+    []) as Record<string, unknown>[]) {
     expect(toolOutput.id).toBeDefined();
     expect(toolOutput.status).toBeDefined();
     expect(toolOutput.type).toBeDefined();
@@ -174,7 +179,7 @@ test("Test function calling", async () => {
     expect(isAIMessageChunk(chunk)).toBe(true);
     full = full?.concat(chunk as AIMessageChunk) ?? chunk;
   }
-  expect(full.tool_calls).toMatchObject([
+  expect(full?.tool_calls).toMatchObject([
     { name: "multiply", args: { x: 5, y: 4 } },
   ]);
 
@@ -194,10 +199,18 @@ test("Test stateful API", async () => {
     previous_response_id: response.response_metadata.id,
   });
   expect(Array.isArray(secondResponse.content)).toBe(true);
-  expect(secondResponse.content[0].text.toLowerCase()).toContain("bobo");
+
+  let text: string | undefined;
+  if (typeof secondResponse.content === "string") {
+    text = secondResponse.content;
+  } else if (secondResponse.content[0]?.type === "text") {
+    text = secondResponse.content[0].text;
+  }
+
+  expect(text?.toLowerCase()).toContain("bobo");
 });
 
-test.skip("Test file search", async () => {
+test("Test file search", async () => {
   const llm = new ChatOpenAI({ modelName: "gpt-4o-mini" });
   const tool = {
     type: "file_search",
@@ -216,6 +229,8 @@ test.skip("Test file search", async () => {
     expect(isAIMessageChunk(chunk)).toBe(true);
     full = full?.concat(chunk as AIMessageChunk) ?? chunk;
   }
+
+  if (full == null) throw new Error("`full` is null");
   expect(isAIMessageChunk(full)).toBe(true);
   assertResponse(full);
 });
