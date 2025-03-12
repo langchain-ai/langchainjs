@@ -204,12 +204,12 @@ export function _convertMessagesToOpenAIParams(
 
 const _FUNCTION_CALL_IDS_MAP_KEY = "__openai_function_call_ids__";
 
-export function _convertMessagesToOpenAIResponsesParams(
+function _convertMessagesToOpenAIResponsesParams(
   messages: BaseMessage[],
   model?: string
-): OpenAIResponsesInputItem[] {
+): ResponsesInputItem[] {
   return messages.flatMap(
-    (lcMsg): OpenAIResponsesInputItem | OpenAIResponsesInputItem[] => {
+    (lcMsg): ResponsesInputItem | ResponsesInputItem[] => {
       let role = messageToOpenAIRole(lcMsg);
       if (role === "system" && isReasoningModel(model)) role = "developer";
 
@@ -240,7 +240,7 @@ export function _convertMessagesToOpenAIResponsesParams(
 
         if (isAIMessage(lcMsg) && !!lcMsg.tool_calls?.length) {
           return lcMsg.tool_calls.map(
-            (toolCall): OpenAIResponsesInputItem => ({
+            (toolCall): ResponsesInputItem => ({
               type: "function_call",
               name: toolCall.name,
               arguments: JSON.stringify(toolCall.args),
@@ -252,7 +252,7 @@ export function _convertMessagesToOpenAIResponsesParams(
 
         if (lcMsg.additional_kwargs.tool_calls != null) {
           return lcMsg.additional_kwargs.tool_calls.map(
-            (toolCall): OpenAIResponsesInputItem => ({
+            (toolCall): ResponsesInputItem => ({
               type: "function_call",
               name: toolCall.function.name,
               call_id: toolCall.id,
@@ -342,19 +342,19 @@ export function _convertMessagesToOpenAIResponsesParams(
 }
 
 function _convertOpenAIResponsesMessageToBaseMessage(
-  response: OpenAIResponsesCreateStream
+  response: ResponsesCreateInvoke
 ): BaseMessage {
   if (response.error) {
-    // TODO: might be incorrect
-    throw wrapOpenAIClientError(response.error);
+    // TODO: add support for `addLangChainErrorFields`
+    const error = new Error(response.error.message);
+    error.name = response.error.code;
+    throw error;
   }
 
   const content: MessageContent = [];
   const tool_calls: ToolCall[] = [];
   const invalid_tool_calls: InvalidToolCall[] = [];
   const response_metadata: Record<string, unknown> = {
-    // for compatibility with chat completion calls.
-    model_name: response.model,
     model: response.model,
     created_at: response.created_at,
     id: response.id,
@@ -363,6 +363,9 @@ function _convertOpenAIResponsesMessageToBaseMessage(
     object: response.object,
     status: response.status,
     user: response.user,
+
+    // for compatibility with chat completion calls.
+    model_name: response.model,
   };
 
   const additional_kwargs: {
@@ -426,7 +429,7 @@ function _convertOpenAIResponsesMessageToBaseMessage(
 }
 
 function _convertOpenAIResponsesDeltaToBaseMessageChunk(
-  chunk: OpenAIResponseReturnStreamEvents
+  chunk: ResponseReturnStreamEvents
 ) {
   const content: Record<string, unknown>[] = [];
   let generationInfo: Record<string, unknown> = {};
@@ -521,49 +524,50 @@ type ExtractAsyncIterableType<T> = T extends AsyncIterable<infer U> ? U : never;
 type ExcludeController<T> = T extends { controller: unknown } ? never : T;
 type ExcludeNonController<T> = T extends { controller: unknown } ? T : never;
 
-type OpenAIResponsesCreate = OpenAIClient.Responses["create"];
-type OpenAIResponsesCreateParams = Parameters<
-  OpenAIClient.Responses["create"]
->[0];
+type ResponsesCreate = OpenAIClient.Responses["create"];
+type ResponsesCreateParams = Parameters<OpenAIClient.Responses["create"]>[0];
 
-type OpenAIResponsesTool = Exclude<
-  OpenAIResponsesCreateParams["tools"],
-  undefined
->[number];
+type ResponsesTool = Exclude<ResponsesCreateParams["tools"], undefined>[number];
 
-type OpenAIResponsesToolChoice = Exclude<
-  OpenAIResponsesCreateParams["tool_choice"],
+type ResponsesToolChoice = Exclude<
+  ResponsesCreateParams["tool_choice"],
   undefined
 >;
 
-type OpenAIResponsesInputItem = Exclude<
-  OpenAIResponsesCreateParams["input"],
+type ResponsesInputItem = Exclude<
+  ResponsesCreateParams["input"],
   string | undefined
 >[number];
 
-type OpenAIResponsesCreateInvoke = ExcludeNonController<
-  Awaited<ReturnType<OpenAIResponsesCreate>>
+type ResponsesCreateInvoke = ExcludeController<
+  Awaited<ReturnType<ResponsesCreate>>
 >;
 
-type OpenAIResponsesCreateStream = ExcludeController<
-  Awaited<ReturnType<OpenAIResponsesCreate>>
+type ResponsesCreateStream = ExcludeNonController<
+  Awaited<ReturnType<ResponsesCreate>>
 >;
 
-type OpenAIResponseReturnStreamEvents =
-  ExtractAsyncIterableType<OpenAIResponsesCreateInvoke>;
+type ResponseInvocationParams = Omit<ResponsesCreateParams, "input">;
+type ResponseReturnStreamEvents =
+  ExtractAsyncIterableType<ResponsesCreateStream>;
+
+type ChatCompletionInvocationParams = Omit<
+  OpenAIClient.Chat.ChatCompletionCreateParams,
+  "messages"
+>;
 
 type ChatOpenAIToolType =
   | BindToolsInput
   | OpenAIClient.ChatCompletionTool
-  | OpenAIResponsesTool;
+  | ResponsesTool;
 
-function isBuiltInTool(tool: ChatOpenAIToolType): tool is OpenAIResponsesTool {
+function isBuiltInTool(tool: ChatOpenAIToolType): tool is ResponsesTool {
   return "type" in tool && tool.type !== "function";
 }
 
 function isBuiltInToolChoice(
-  tool_choice: OpenAIToolChoice | OpenAIResponsesToolChoice | undefined
-): tool_choice is OpenAIResponsesToolChoice {
+  tool_choice: OpenAIToolChoice | ResponsesToolChoice | undefined
+): tool_choice is ResponsesToolChoice {
   return (
     tool_choice != null &&
     typeof tool_choice === "object" &&
@@ -623,7 +627,7 @@ export interface ChatOpenAICallOptions
   extends OpenAICallOptions,
     BaseFunctionCallOptions {
   tools?: ChatOpenAIToolType[];
-  tool_choice?: OpenAIToolChoice | OpenAIResponsesToolChoice;
+  tool_choice?: OpenAIToolChoice | ResponsesToolChoice;
   promptIndex?: number;
   response_format?: ChatOpenAIResponseFormat;
   seed?: number;
@@ -695,30 +699,24 @@ export interface ChatOpenAICallOptions
    * Configuration options for a text response from the model. Can be plain text or
    * structured JSON data.
    */
-  text?: OpenAIResponsesCreateParams["text"];
+  text?: ResponsesCreateParams["text"];
 
   /**
    * The truncation strategy to use for the model response.
    */
-  truncation?: OpenAIResponsesCreateParams["truncation"];
+  truncation?: ResponsesCreateParams["truncation"];
 
   /**
    * Specify additional output data to include in the model response.
    */
-  include?: OpenAIResponsesCreateParams["include"];
+  include?: ResponsesCreateParams["include"];
 
   /**
    * The unique ID of the previous response to the model. Use this to create
    * multi-turn conversations.
    */
-  previous_response_id?: OpenAIResponsesCreateParams["previous_response_id"];
+  previous_response_id?: ResponsesCreateParams["previous_response_id"];
 }
-
-type ChatCompletionInvocationParams = Omit<
-  OpenAIClient.Chat.ChatCompletionCreateParams,
-  "messages"
->;
-type ResponsesInvocationParams = Omit<OpenAIResponsesCreateParams, "input">;
 
 export interface ChatOpenAIFields
   extends Partial<OpenAIChatInput>,
@@ -1534,28 +1532,29 @@ export class ChatOpenAI<
     options?: this["ParsedCallOptions"],
     extra?: { streaming?: boolean }
   ): Type extends "responses"
-    ? ResponsesInvocationParams
+    ? ResponseInvocationParams
     : ChatCompletionInvocationParams {
+    let strict: boolean | undefined;
+    if (options?.strict !== undefined) {
+      strict = options.strict;
+    } else if (this.supportsStrictToolCalling !== undefined) {
+      strict = this.supportsStrictToolCalling;
+    }
+
+    let streamOptionsConfig = {};
+    if (options?.stream_options !== undefined) {
+      streamOptionsConfig = { stream_options: options.stream_options };
+    } else if (this.streamUsage && (this.streaming || extra?.streaming)) {
+      streamOptionsConfig = { stream_options: { include_usage: true } };
+    }
+
     if (this._useResponseApi(options)) {
-      let strict: boolean | undefined;
-      if (options?.strict !== undefined) {
-        strict = options.strict;
-      } else if (this.supportsStrictToolCalling !== undefined) {
-        strict = this.supportsStrictToolCalling;
-      }
-
-      let streamOptionsConfig = {};
-      if (options?.stream_options !== undefined) {
-        streamOptionsConfig = { stream_options: options.stream_options };
-      } else if (this.streamUsage && this.streaming) {
-        streamOptionsConfig = { stream_options: { include_usage: true } };
-      }
-
-      const params: Omit<OpenAIResponsesCreateParams, "input"> = {
+      const params: ResponseInvocationParams = {
         model: this.model,
         temperature: this.temperature,
         top_p: this.topP,
         user: this.user,
+
         // if include_usage is set or streamUsage then stream must be set to true.
         stream: this.streaming,
         previous_response_id: options?.previous_response_id,
@@ -1578,7 +1577,7 @@ export class ChatOpenAI<
                   return null;
                 }
               })
-              .filter((tool): tool is OpenAIResponsesTool => tool !== null)
+              .filter((tool): tool is ResponsesTool => tool !== null)
           : undefined,
         tool_choice: isBuiltInToolChoice(options?.tool_choice)
           ? options?.tool_choice
@@ -1624,24 +1623,7 @@ export class ChatOpenAI<
       return params as any;
     }
 
-    let strict: boolean | undefined;
-    if (options?.strict !== undefined) {
-      strict = options.strict;
-    } else if (this.supportsStrictToolCalling !== undefined) {
-      strict = this.supportsStrictToolCalling;
-    }
-
-    let streamOptionsConfig = {};
-    if (options?.stream_options !== undefined) {
-      streamOptionsConfig = { stream_options: options.stream_options };
-    } else if (this.streamUsage && (this.streaming || extra?.streaming)) {
-      streamOptionsConfig = { stream_options: { include_usage: true } };
-    }
-
-    const params: Omit<
-      OpenAIClient.Chat.ChatCompletionCreateParams,
-      "messages"
-    > = {
+    const params: ChatCompletionInvocationParams = {
       model: this.model,
       temperature: this.temperature,
       top_p: this.topP,
@@ -1855,11 +1837,9 @@ export class ChatOpenAI<
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
     if (this._useResponseApi(options)) {
-      const streamIterable = await this._responseWithRetry(
+      const streamIterable = await this.responseApiWithRetry(
         {
-          ...this.invocationParams<"responses">(options, {
-            streaming: true,
-          }),
+          ...this.invocationParams<"responses">(options, { streaming: true }),
           input: _convertMessagesToOpenAIResponsesParams(messages, this.model),
           stream: true,
         },
@@ -1877,6 +1857,7 @@ export class ChatOpenAI<
 
     const messagesMapped: OpenAICompletionParam[] =
       _convertMessagesToOpenAIParams(messages, this.model);
+
     const params = {
       ...this.invocationParams(options, {
         streaming: true,
@@ -2024,7 +2005,7 @@ export class ChatOpenAI<
     }
 
     const input = _convertMessagesToOpenAIResponsesParams(messages, this.model);
-    const data = await this._responseWithRetry(
+    const data = await this.responseApiWithRetry(
       { input, ...invocationParams },
       { signal: options?.signal, ...options?.options }
     );
@@ -2414,20 +2395,20 @@ export class ChatOpenAI<
     });
   }
 
-  protected async _responseWithRetry(
-    request: OpenAIResponsesCreateParams & { stream: true },
+  protected async responseApiWithRetry(
+    request: ResponsesCreateParams & { stream: true },
     options?: OpenAICoreRequestOptions
-  ): Promise<OpenAIResponsesCreateInvoke>;
+  ): Promise<ResponsesCreateStream>;
 
-  protected async _responseWithRetry(
-    request: OpenAIResponsesCreateParams,
+  protected async responseApiWithRetry(
+    request: ResponsesCreateParams,
     options?: OpenAICoreRequestOptions
-  ): Promise<OpenAIResponsesCreateStream>;
+  ): Promise<ResponsesCreateInvoke>;
 
-  protected async _responseWithRetry(
-    request: OpenAIResponsesCreateParams | OpenAIResponsesCreateParams,
+  protected async responseApiWithRetry(
+    request: ResponsesCreateParams | ResponsesCreateParams,
     options?: OpenAICoreRequestOptions
-  ): Promise<OpenAIResponsesCreateInvoke | OpenAIResponsesCreateStream> {
+  ): Promise<ResponsesCreateStream | ResponsesCreateInvoke> {
     return this.caller.call(async () => {
       const requestOptions = this._getClientOptions(options);
       try {
@@ -2437,7 +2418,7 @@ export class ChatOpenAI<
         const error = wrapOpenAIClientError(e);
         throw error;
       }
-    }) as Promise<OpenAIResponsesCreateInvoke | OpenAIResponsesCreateStream>;
+    });
   }
 
   /**
