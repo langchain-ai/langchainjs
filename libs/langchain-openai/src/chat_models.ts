@@ -505,7 +505,7 @@ function _convertOpenAIResponsesDeltaToBaseMessageChunk(
   }
 
   return new ChatGenerationChunk({
-    // TODO: why do I need to do this?
+    // Legacy reasons, `onLLMNewToken` should pulls this out
     text: content.map((part) => part.text).join(""),
     message: new AIMessageChunk({
       id,
