@@ -34,7 +34,7 @@ export class ChatNoxtua extends ChatOpenAI<ChatNoxtuaCallOptions> {
   }
 
   _llmType() {
-    return "noxtua";
+    return "noxtua_ai";
   }
 
   get lc_secrets(): { [key: string]: string } | undefined {
@@ -59,7 +59,7 @@ export class ChatNoxtua extends ChatOpenAI<ChatNoxtuaCallOptions> {
       Omit<OpenAIChatInput, "openAIApiKey" | NoxtuaUnsupportedArgs>
     > &
       BaseChatModelParams & {
-        tenantId: string;
+        tenantId?: string;
         noxtuaApiUrl?: string;
         apiUrl?: string;
         noxtuaApiKey?: string;
