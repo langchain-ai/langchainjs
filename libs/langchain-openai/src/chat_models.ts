@@ -1541,13 +1541,6 @@ export class ChatOpenAI<
       strict = this.supportsStrictToolCalling;
     }
 
-    let streamOptionsConfig = {};
-    if (options?.stream_options !== undefined) {
-      streamOptionsConfig = { stream_options: options.stream_options };
-    } else if (this.streamUsage && (this.streaming || extra?.streaming)) {
-      streamOptionsConfig = { stream_options: { include_usage: true } };
-    }
-
     if (this._useResponseApi(options)) {
       const params: ResponseInvocationParams = {
         model: this.model,
@@ -1608,7 +1601,6 @@ export class ChatOpenAI<
           }
           return { format };
         })(),
-        ...streamOptionsConfig,
         parallel_tool_calls: options?.parallel_tool_calls,
         max_output_tokens: this.maxTokens === -1 ? undefined : this.maxTokens,
         ...this.modelKwargs,
@@ -1621,6 +1613,13 @@ export class ChatOpenAI<
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return params as any;
+    }
+
+    let streamOptionsConfig = {};
+    if (options?.stream_options !== undefined) {
+      streamOptionsConfig = { stream_options: options.stream_options };
+    } else if (this.streamUsage && (this.streaming || extra?.streaming)) {
+      streamOptionsConfig = { stream_options: { include_usage: true } };
     }
 
     const params: ChatCompletionInvocationParams = {
