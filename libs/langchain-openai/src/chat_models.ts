@@ -446,6 +446,8 @@ function _convertOpenAIResponsesDeltaToBaseMessageChunk(
     });
   } else if (chunk.type === "response.output_text.annotation.added") {
     content.push({
+      type: "text",
+      text: "",
       annotations: [chunk.annotation],
       index: chunk.content_index,
     });
