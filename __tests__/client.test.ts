@@ -1,11 +1,11 @@
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 import { SSEClientTransport } from '@modelcontextprotocol/sdk/client/sse.js';
-import { StructuredTool } from '@langchain/core/tools';
 import { MultiServerMCPClient } from '../src/client';
 import * as toolsModule from '../src/tools';
 import fs from 'fs';
-import path from 'path';
+import { z } from 'zod';
+import { StructuredToolInterface } from '@langchain/core/tools';
 
 // Mock the Client class
 jest.mock('@modelcontextprotocol/sdk/client/index.js', () => {
@@ -280,7 +280,10 @@ describe('MultiServerMCPClient', () => {
 
       await client.initializeConnections();
 
-      const serverTools = client.getTools();
+      const serverTools = client.getTools(true) as Map<
+        string,
+        StructuredToolInterface<z.ZodObject<any>>[]
+      >;
       expect(serverTools.size).toBe(2); // Two servers
 
       const server1Tools = serverTools.get('server1');
@@ -417,14 +420,24 @@ describe('MultiServerMCPClient', () => {
       toolsMap.set('server2', [{ name: 'tool2' } as any]);
       (client as any).serverNameToTools = toolsMap;
 
-      // Call the getTools method
-      const result = client.getTools();
+      // Call the getTools method with byServer=true to get the map
+      const byServerResult = client.getTools(true) as Map<
+        string,
+        StructuredToolInterface<z.ZodObject<any>>[]
+      >;
 
-      // Verify the result
-      expect(result).toBe(toolsMap);
-      expect(result.size).toBe(2);
-      expect(result.get('server1')).toEqual([{ name: 'tool1' }]);
-      expect(result.get('server2')).toEqual([{ name: 'tool2' }]);
+      // Verify the result for byServer=true
+      expect(byServerResult).toBe(toolsMap);
+      expect(byServerResult.size).toBe(2);
+
+      // Call getTools with default params to get a flattened array
+      const flatResult = client.getTools() as StructuredToolInterface<z.ZodObject<any>>[];
+
+      // Verify the flattened result
+      expect(Array.isArray(flatResult)).toBe(true);
+      expect(flatResult.length).toBe(2); // 1 tool from each server
+      expect(flatResult).toContainEqual({ name: 'tool1' });
+      expect(flatResult).toContainEqual({ name: 'tool2' });
     });
   });
 
@@ -626,8 +639,13 @@ describe('MultiServerMCPClient', () => {
       // Initialize should handle the unsupported transport
       const result = await client.initializeConnections();
 
-      // Should still be able to get an empty map of tools
-      expect(client.getTools().size).toBe(0);
+      // Should still be able to get an empty map of tools when using byServer=true
+      expect(
+        (client.getTools(true) as Map<string, StructuredToolInterface<z.ZodObject<any>>[]>).size
+      ).toBe(0);
+
+      // Should get an empty array when using default flattened mode
+      expect(client.getTools()).toEqual([]);
 
       // Should be able to close without errors
       await client.close();

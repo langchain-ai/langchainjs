@@ -1,95 +1,190 @@
-import { MultiServerMCPClient } from '../src/client.js';
 import { ChatOpenAI } from '@langchain/openai';
-import { initializeAgentExecutorWithOptions } from 'langchain/agents';
+import { AgentExecutor, createOpenAIFunctionsAgent, createReactAgent } from 'langchain/agents';
+import {
+  ChatPromptTemplate,
+  SystemMessagePromptTemplate,
+  HumanMessagePromptTemplate,
+  AIMessagePromptTemplate,
+} from '@langchain/core/prompts';
+import { StructuredToolInterface } from '@langchain/core/tools';
+import { z } from 'zod';
 import dotenv from 'dotenv';
+import logger from '../src/logger.js';
+
+// MCP client imports
+import { MultiServerMCPClient } from '../src/index.js';
 
 // Load environment variables from .env file
 dotenv.config();
 
 /**
- * This example demonstrates how to use MCP tools with a LangChain agent.
- *
- * It connects to both a math server and a weather server, retrieves the available tools,
- * and creates an agent that can use these tools to solve problems.
- *
- * Note: You need to set the OPENAI_API_KEY environment variable to run this example.
+ * Example demonstrating how to use MCP tools with LangChain agents
+ * This example connects to a math server and uses its tools
  */
-async function main() {
-  if (!process.env.OPENAI_API_KEY) {
-    console.error('Please set the OPENAI_API_KEY environment variable in the .env file');
-    process.exit(1);
-  }
-
-  // Create a client with configurations for both servers
-  const client = new MultiServerMCPClient({
-    math: {
-      transport: 'stdio',
-      command: 'python',
-      args: ['./examples/math_server.py'],
-    },
-    weather: {
-      transport: 'stdio',
-      command: 'python',
-      args: ['./examples/weather_server.py'],
-    },
-  });
-
+async function runExample() {
   try {
-    // Initialize connections to both servers
-    console.log('Initializing connections to servers...');
-    await client.initializeConnections();
-    console.log('Connected to servers');
+    logger.info('Initializing MCP client...');
 
-    // Get all tools from all servers
-    const serverTools = client.getTools();
-
-    // Flatten all tools for use with the agent
-    const allTools = Array.from(serverTools.values()).flat();
-    console.log(`Available tools: ${allTools.map(tool => tool.name).join(', ')}`);
-
-    // Create an agent
-    console.log('\nCreating agent...');
-    const model = new ChatOpenAI({
-      temperature: 0,
-      modelName: 'gpt-4o', // or any other model that supports function calling
+    // Create a client with configurations for the math server only
+    const client = new MultiServerMCPClient({
+      math: {
+        transport: 'stdio',
+        command: 'python',
+        args: ['./examples/math_server.py'],
+      },
     });
 
-    // Use the standard agent executor instead of createOpenAIFunctionsAgent
-    // Add a type assertion to work around the version incompatibility
-    const agentExecutor = await initializeAgentExecutorWithOptions(
-      // @ts-expect-error Type assertion to work around version incompatibility issues
-      allTools,
-      model,
-      {
-        agentType: 'openai-functions',
-        verbose: true,
-      }
+    // Initialize connections to the server
+    await client.initializeConnections();
+    logger.info('Connected to server');
+
+    // Get all tools (flattened array is the default now)
+    const mcpTools = client.getTools() as StructuredToolInterface<z.ZodObject<any>>[];
+
+    if (mcpTools.length === 0) {
+      throw new Error('No tools found');
+    }
+
+    logger.info(
+      `Loaded ${mcpTools.length} MCP tools: ${mcpTools.map(tool => tool.name).join(', ')}`
     );
 
-    // Run the agent with different queries
-    const queries = [
-      'What is 5 + 3?',
-      'What is 7 * 9?',
-      "What's the current temperature in Tokyo?",
-      "What's the 3-day forecast for London?",
-      "If it's 72°F in New York, what is that in Celsius?",
-    ];
+    // Create an OpenAI model
+    const model = new ChatOpenAI({
+      modelName: process.env.OPENAI_MODEL_NAME || 'gpt-4-turbo-preview',
+      temperature: 0,
+    });
 
+    // Define queries for testing
+    const queries = ['What is 5 + 3?', 'What is 7 * 9?'];
+
+    // ================================================
+    // Create an OpenAI Functions Agent
+    // ================================================
+    console.log('\n=== CREATING OPENAI FUNCTIONS AGENT ===');
+
+    // Create a prompt template for the OpenAI Functions agent
+    const openAIFunctionsPrompt = ChatPromptTemplate.fromMessages([
+      [
+        'system',
+        `You are a helpful assistant that can solve math problems using tools.
+        
+When you need to perform a calculation, use the appropriate math tool.
+For the add tool, provide parameters in the correct format with "a" and "b" values.
+For the multiply tool, provide parameters in the correct format with "a" and "b" values.
+
+Always use the tools when calculations are needed.`,
+      ],
+      ['human', '{input}'],
+      ['ai', '{agent_scratchpad}'],
+    ]);
+
+    // Create the OpenAI Functions agent
+    const openAIFunctionsAgent = await createOpenAIFunctionsAgent({
+      llm: model,
+      tools: mcpTools,
+      prompt: openAIFunctionsPrompt,
+    });
+
+    // Create an agent executor for the OpenAI Functions agent
+    const openAIExecutor = new AgentExecutor({
+      agent: openAIFunctionsAgent,
+      tools: mcpTools,
+      verbose: true,
+      maxIterations: 3, // Limit iterations for demo purposes
+    });
+
+    // ================================================
+    // Create a React Agent
+    // ================================================
+    console.log('\n=== CREATING REACT AGENT ===');
+
+    // Create a prompt template for the React agent
+    const reactPromptTemplate = ChatPromptTemplate.fromMessages([
+      SystemMessagePromptTemplate.fromTemplate(
+        `You are a helpful assistant that can solve math problems using tools.
+        
+When you need to perform a calculation, use the appropriate math tool.
+For the add tool, provide the parameters in JSON format when using tools.
+For the multiply tool, provide the parameters in JSON format when using tools.
+
+Always use the tools when calculations are needed.
+
+You have access to the following tools:
+{tools}
+
+Available tool names: {tool_names}
+
+This is the format you must follow:
+Question: The input question you must answer
+Thought: You should always think about what to do
+Action: The action to take, should be one of the tool names: add, multiply
+Action Input: The input to the action as a valid JSON object with keys "a" and "b"
+Observation: The result of the action
+... (this Thought/Action/Action Input/Observation can repeat N times)
+Thought: I now know the final answer
+Final Answer: The final answer to the original input question`
+      ),
+      HumanMessagePromptTemplate.fromTemplate('{input}'),
+      AIMessagePromptTemplate.fromTemplate('{agent_scratchpad}'),
+    ]);
+
+    // Create React agent
+    console.log('Creating React agent...');
+    const reactAgent = await createReactAgent({
+      llm: model,
+      tools: mcpTools,
+      prompt: reactPromptTemplate,
+    });
+
+    // Create an agent executor for the React agent
+    const reactExecutor = new AgentExecutor({
+      agent: reactAgent,
+      tools: mcpTools,
+      verbose: true,
+    });
+
+    // ================================================
+    // Test queries
+    // ================================================
+
+    // Run the OpenAI Functions agent
+    console.log('\n=== RUNNING OPENAI FUNCTIONS AGENT ===');
     for (const query of queries) {
       console.log(`\n--- Query: "${query}" ---`);
-      const result = await agentExecutor.invoke({
-        input: query,
-      });
-      console.log(`Answer: ${result.output}`);
+      try {
+        const result = await openAIExecutor.invoke({
+          input: query,
+        });
+        console.log(`Answer: ${result.output}`);
+      } catch (error) {
+        console.error(`Error processing query "${query}":`, error);
+      }
     }
-  } catch (error) {
-    console.error('Error:', error);
-  } finally {
-    // Close the client
+
+    // Run the React agent
+    console.log('\n=== RUNNING REACT AGENT ===');
+    for (const query of queries) {
+      console.log(`\n--- Query: "${query}" ---`);
+      try {
+        const result = await reactExecutor.invoke({
+          input: query,
+        });
+        console.log(`Answer: ${result.output}`);
+      } catch (error) {
+        console.error(`Error processing query "${query}":`, error);
+      }
+    }
+
+    // Close the client when done
     console.log('\nClosing client...');
     await client.close();
-    console.log('Client closed');
+    logger.info('Client closed');
+  } catch (error) {
+    console.error('Error:', error);
+    process.exit(1);
   }
 }
 
-main().catch(console.error);
+// Run the example
+runExample();

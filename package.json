@@ -37,18 +37,17 @@
   "author": "Ravi Kiran Vemula",
   "license": "MIT",
   "dependencies": {
+    "@dmitryrechkin/json-schema-to-zod": "^1.0.1",
     "@langchain/core": "^0.3.40",
     "@langchain/google-genai": "^0.1.10",
     "@langchain/langgraph": "^0.2.54",
     "@langchain/openai": "^0.4.4",
-    "@modelcontextprotocol/sdk": "^1.x",
+    "@modelcontextprotocol/sdk": "^1.7.0",
     "dotenv": "^16.4.7",
-    "langchain": "^0.1.0",
     "winston": "^3.17.0"
   },
   "peerDependencies": {
-    "@modelcontextprotocol/sdk": "^1.x",
-    "langchain": "^0.1.0"
+    "langchain": "^0.3.19"
   },
   "optionalDependencies": {
     "extended-eventsource": "^1.x"
@@ -70,6 +69,17 @@
     "ts-node": "^10.9.2",
     "typescript": "^5.4.2",
     "typescript-eslint": "^8.26.0"
+  },
+  "overrides": {
+    "@langchain/core": "^0.3.40"
+  },
+  "resolutions": {
+    "@langchain/core": "^0.3.40"
+  },
+  "pnpm": {
+    "overrides": {
+      "@langchain/core": "^0.3.40"
+    }
   },
   "engines": {
     "node": ">=18"

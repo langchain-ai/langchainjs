@@ -1,18 +1,34 @@
 # LangChain.js MCP Adapters
 
-This package provides adapters for using [Model Context Protocol (MCP)](https://github.com/modelcontextprotocol/specification) tools with LangChain.js. It enables seamless integration between LangChain.js and MCP servers, allowing you to use MCP tools in your LangChain applications.
-
 [![npm version](https://img.shields.io/npm/v/langchainjs-mcp-adapters.svg)](https://www.npmjs.com/package/langchainjs-mcp-adapters)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
+A library for seamlessly integrating [Model Context Protocol (MCP)](https://github.com/modelcontextprotocol/specification) tools with LangChain.js. This adapter enables LangChain agents to leverage MCP's standardized tool protocol across different model providers and agent frameworks.
+
 ## Features
 
-- Connect to MCP servers using stdio or SSE transports
-- Connect to multiple MCP servers simultaneously
-- Configure connections using a JSON configuration file
-- **Support for custom headers in SSE connections** (great for authentication!)
-- Integrate MCP tools with LangChain.js agents
-- Comprehensive logging capabilities
+- 🔌 **Transport Options**
+
+  - Connect to MCP servers via stdio (local) or SSE (remote)
+  - Support for custom headers in SSE connections for authentication
+  - Configurable reconnection strategies for both transport types
+
+- 🔄 **Multi-Server Management**
+
+  - Connect to multiple MCP servers simultaneously
+  - Auto-organize tools by server or access them as a flattened collection
+  - Convenient configuration via JSON file
+
+- 🧩 **Agent Integration**
+
+  - Compatible with all LangChain agent frameworks
+  - Optimized for OpenAI, Anthropic, and Google models
+  - Tools ready for use with LangGraph workflows
+
+- 🛠️ **Development Features**
+  - Comprehensive logging system
+  - Flexible configuration options
+  - Robust error handling
 
 ## Installation
 
@@ -20,10 +36,18 @@ This package provides adapters for using [Model Context Protocol (MCP)](https://
 npm install langchainjs-mcp-adapters
 ```
 
-For Node.js environments with SSE connections requiring headers, you need to install the optional dependency:
+### Optional Dependencies
+
+For SSE connections with custom headers in Node.js:
 
 ```bash
 npm install eventsource
+```
+
+For enhanced SSE header support:
+
+```bash
+npm install extended-eventsource
 ```
 
 ## Prerequisites
@@ -35,9 +59,7 @@ npm install eventsource
 
 ## Usage
 
-### Connecting to an MCP Server
-
-You can connect to an MCP server using either stdio or SSE transport:
+### Basic Connection
 
 ```typescript
 import { MultiServerMCPClient } from 'langchainjs-mcp-adapters';
@@ -45,117 +67,64 @@ import { MultiServerMCPClient } from 'langchainjs-mcp-adapters';
 // Create a client
 const client = new MultiServerMCPClient();
 
-// Connect to a server using stdio
+// Connect to a local server via stdio
 await client.connectToServerViaStdio(
-  'math-server', // A name to identify this server
+  'math-server', // Server name
   'python', // Command to run
-  ['./math_server.py'] // Arguments for the command
+  ['./math_server.py'] // Command arguments
 );
 
-// Connect to a server using SSE
+// Connect to a remote server via SSE
 await client.connectToServerViaSSE(
-  'weather-server', // A name to identify this server
-  'http://localhost:8000/sse' // URL of the SSE server
+  'weather-server', // Server name
+  'http://localhost:8000/sse' // SSE endpoint URL
 );
 
-// Connect to a server using SSE with custom headers
+// Get all tools from all servers as a flattened array
+const tools = client.getTools();
+
+// Get tools from specific servers
+const mathTools = client.getTools(['math-server']);
+
+// Get tools grouped by server name
+const toolsByServer = client.getToolsByServer();
+
+// Close all connections when done
+await client.close();
+```
+
+### With Authentication Headers
+
+```typescript
+// Connect to a server with authentication
 await client.connectToServerViaSSE(
-  'auth-server', // A name to identify this server
-  'http://localhost:8000/sse', // URL of the SSE server
+  'auth-server',
+  'https://api.example.com/mcp/sse',
   {
-    Authorization: 'Bearer your-token-here',
-    'X-Custom-Header': 'custom-value',
+    Authorization: 'Bearer token',
+    'X-API-Key': 'your-api-key',
   },
-  true // Use Node.js EventSource (requires eventsource package)
+  true // Use Node.js EventSource for header support
 );
-
-// Get all tools from all connected servers
-const tools = client.getTools();
-
-// Use the tools
-const result = await tools[0].invoke({ param1: 'value1', param2: 'value2' });
-
-// Close the client when done
-await client.close();
 ```
 
-### Initializing Multiple Connections
+### Configuration via JSON
 
-You can also initialize multiple connections at once:
-
-```typescript
-import { MultiServerMCPClient } from 'langchainjs-mcp-adapters';
-
-const client = new MultiServerMCPClient({
-  'math-server': {
-    command: 'python',
-    args: ['./math_server.py'],
-  },
-  'weather-server': {
-    transport: 'sse',
-    url: 'http://localhost:8000/sse',
-  },
-  'auth-server': {
-    transport: 'sse',
-    url: 'http://localhost:8000/sse',
-    headers: {
-      Authorization: 'Bearer your-token-here',
-      'X-Custom-Header': 'custom-value',
-    },
-    useNodeEventSource: true, // Use Node.js EventSource for headers support
-  },
-});
-
-// Initialize all connections
-await client.initializeConnections();
-
-// Get all tools
-const tools = client.getTools();
-
-// Close all connections when done
-await client.close();
-```
-
-### Using Configuration File
-
-You can define your MCP server configurations in a JSON file (`mcp.json`) and load them:
-
-```typescript
-import { MultiServerMCPClient } from 'langchainjs-mcp-adapters';
-
-// Create a client from the config file
-const client = MultiServerMCPClient.fromConfigFile();
-// Or specify a custom path: MultiServerMCPClient.fromConfigFile("./config/mcp.json");
-
-// Initialize all connections
-await client.initializeConnections();
-
-// Get all tools
-const tools = client.getTools();
-
-// Close all connections when done
-await client.close();
-```
-
-Example `mcp.json` file:
+Define your server connections in a JSON file:
 
 ```json
 {
   "servers": {
     "math": {
+      "transport": "stdio",
       "command": "python",
-      "args": ["./examples/math_server.py"]
+      "args": ["./math_server.py"]
     },
     "weather": {
       "transport": "sse",
-      "url": "http://localhost:8000/sse"
-    },
-    "auth-server": {
-      "transport": "sse",
       "url": "http://localhost:8000/sse",
       "headers": {
-        "Authorization": "Bearer your-token-here",
-        "X-Custom-Header": "custom-value"
+        "Authorization": "Bearer token"
       },
       "useNodeEventSource": true
     }
@@ -163,22 +132,23 @@ Example `mcp.json` file:
 }
 ```
 
-The client will attempt to connect to all servers defined in the configuration file. If a server is not available, it will log an error and continue with the available servers. If no servers are available, it will throw an error.
+Then load it in your code:
 
 ```typescript
-// Error handling when initializing connections
-try {
-  const client = MultiServerMCPClient.fromConfigFile();
-  await client.initializeConnections();
-  // Use the client...
-} catch (error) {
-  console.error('Failed to connect to any servers:', error.message);
-}
+import { MultiServerMCPClient } from 'langchainjs-mcp-adapters';
+
+// Load from default location (./mcp.json)
+const client = MultiServerMCPClient.fromConfigFile();
+// Or specify a custom path
+// const client = MultiServerMCPClient.fromConfigFile('./config/mcp.json');
+
+await client.initializeConnections();
+const tools = client.getTools();
 ```
 
-### Using with LangChain Agents
+## Integration with LangChain Agents
 
-You can use MCP tools with LangChain agents:
+### OpenAI Functions Agent
 
 ```typescript
 import { MultiServerMCPClient } from 'langchainjs-mcp-adapters';
@@ -186,74 +156,173 @@ import { ChatOpenAI } from '@langchain/openai';
 import { createOpenAIFunctionsAgent, AgentExecutor } from 'langchain/agents';
 import { ChatPromptTemplate } from '@langchain/core/prompts';
 
-// Create a client and connect to servers
+// Create client and connect to server
 const client = new MultiServerMCPClient();
 await client.connectToServerViaStdio('math-server', 'python', ['./math_server.py']);
-
-// Get tools
 const tools = client.getTools();
 
-// Create an agent
-const model = new ChatOpenAI({ temperature: 0 });
+// Create an OpenAI model
+const model = new ChatOpenAI({
+  modelName: 'gpt-4o',
+  temperature: 0,
+});
+
+// Create a prompt template
 const prompt = ChatPromptTemplate.fromMessages([
   ['system', 'You are a helpful assistant that can use tools to solve problems.'],
   ['human', '{input}'],
+  ['ai', '{agent_scratchpad}'],
 ]);
 
-const agent = createOpenAIFunctionsAgent({
+// Create the agent
+const agent = await createOpenAIFunctionsAgent({
   llm: model,
   tools,
   prompt,
 });
 
-const agentExecutor = new AgentExecutor({
+// Create the executor
+const executor = new AgentExecutor({
   agent,
   tools,
 });
 
 // Run the agent
-const result = await agentExecutor.invoke({
-  input: 'What is 5 + 3?',
+const result = await executor.invoke({
+  input: "What's 5 + 3?",
 });
-
-console.log(result.output);
-
-// Close the client when done
-await client.close();
 ```
 
-### Using with Google's Gemini Models
-
-The package also supports integration with Google's Gemini models:
+### React Agent
 
 ```typescript
 import { MultiServerMCPClient } from 'langchainjs-mcp-adapters';
-import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
-import { createGoogleGenerativeAIFunctionsAgent, AgentExecutor } from 'langchain/agents';
+import { ChatOpenAI } from '@langchain/openai';
+import { createReactAgent, AgentExecutor } from 'langchain/agents';
 import { ChatPromptTemplate } from '@langchain/core/prompts';
 
-// Create a client and connect to servers
+// Create client and connect to server
 const client = new MultiServerMCPClient();
 await client.connectToServerViaStdio('math-server', 'python', ['./math_server.py']);
-
-// Get tools
 const tools = client.getTools();
 
-// Create a Gemini agent
-const model = new ChatGoogleGenerativeAI({
-  modelName: 'gemini-pro',
-  apiKey: process.env.GOOGLE_API_KEY,
+// Create an OpenAI model
+const model = new ChatOpenAI({
+  modelName: 'gpt-4o',
+  temperature: 0,
 });
 
-// Create and run the agent
-// ... similar to the OpenAI example
+// Create a prompt template with specific format for React
+const prompt = ChatPromptTemplate.fromMessages([
+  [
+    'system',
+    `You are a helpful assistant that solves problems step-by-step.
+  
+You have access to the following tools:
+{tools}
+
+Available tool names: {tool_names}
+
+Use this format:
+Question: The input question
+Thought: Your reasoning
+Action: The tool name to use
+Action Input: The input to the tool as JSON
+Observation: The result from the tool
+... (repeat Thought/Action/Action Input/Observation as needed)
+Thought: I know the answer now
+Final Answer: The final answer to the question`,
+  ],
+  ['human', '{input}'],
+  ['ai', '{agent_scratchpad}'],
+]);
+
+// Create the React agent
+const agent = await createReactAgent({
+  llm: model,
+  tools,
+  prompt,
+});
+
+// Create the executor
+const executor = new AgentExecutor({
+  agent,
+  tools,
+});
+
+// Run the agent
+const result = await executor.invoke({
+  input: "What's 5 + 3?",
+});
+```
+
+### LangGraph Integration
+
+```typescript
+import { MultiServerMCPClient } from 'langchainjs-mcp-adapters';
+import { ChatOpenAI } from '@langchain/openai';
+import { StateGraph, END } from '@langchain/langgraph';
+import { ToolNode } from '@langchain/langgraph/prebuilt';
+import { HumanMessage, AIMessage } from '@langchain/core/messages';
+import { MessagesAnnotation } from '@langchain/langgraph';
+
+// Create client and get tools
+const client = new MultiServerMCPClient();
+await client.connectToServerViaStdio('math-server', 'python', ['./math_server.py']);
+const tools = client.getTools();
+
+// Create model and tool nodes
+const model = new ChatOpenAI({
+  modelName: 'gpt-4o',
+  temperature: 0,
+}).bindTools(tools);
+
+// Create the tool node
+const toolNode = new ToolNode(tools);
+
+// Create the LLM node
+const llmNode = async state => {
+  const response = await model.invoke(state.messages);
+  return { messages: [response] };
+};
+
+// Create a graph
+const workflow = new StateGraph({
+  channels: MessagesAnnotation,
+});
+
+// Add nodes to the graph
+workflow.addNode('llm', llmNode);
+workflow.addNode('tools', toolNode);
+
+// Define edges
+workflow.addEdge('llm', 'tools');
+workflow.addEdge('tools', 'llm');
+
+// Add conditional edge to end the conversation
+workflow.addConditionalEdges('tools', state => {
+  const lastMsg = state.messages[state.messages.length - 1];
+  // Check if the last message doesn't contain tool calls
+  return lastMsg._getType() === 'ai' && (!lastMsg.tool_calls || lastMsg.tool_calls.length === 0)
+    ? END
+    : 'llm';
+});
+
+// Set the entry point
+workflow.setEntryPoint('llm');
+
+// Compile the graph
+const app = workflow.compile();
+
+// Run the graph
+const result = await app.invoke({
+  messages: [new HumanMessage("What's 5 + 3?")],
+});
 ```
 
 ## Example MCP Servers
 
-### Math Server (stdio transport)
-
-Here's an example of a simple MCP server in Python using stdio transport:
+### Math Server (stdio)
 
 ```python
 from mcp.server.fastmcp import FastMCP
@@ -276,9 +345,7 @@ if __name__ == "__main__":
     mcp.run(transport="stdio")
 ```
 
-### Weather Server (SSE transport)
-
-Here's an example of an MCP server using SSE transport:
+### Weather Server (SSE)
 
 ```python
 from mcp.server.fastmcp import FastMCP
@@ -293,7 +360,7 @@ def get_temperature(city: str) -> str:
     temperatures = {
         "new york": "72°F",
         "london": "65°F",
-        "tokyo": "25 degrees Celsius",
+        "tokyo": "25°C",
     }
 
     city_lower = city.lower()
@@ -307,76 +374,56 @@ if __name__ == "__main__":
     mcp.run(transport="sse")
 ```
 
-## Running the Examples
-
-The package includes several example files that demonstrate how to use MCP adapters:
-
-1. `math_example.ts` - Basic example using a math server with stdio transport
-2. `sse_example.ts` - Example using a weather server with SSE transport
-3. `multi_transport_example.ts` - Example connecting to multiple servers with different transport types
-4. `json_config_example.ts` - Example using server configurations from an `mcp.json` file
-5. `gemini_example.ts` - Example using Google's Gemini models
-6. `logging_example.ts` - Example demonstrating logging capabilities
-7. `sse_with_headers_example.ts` - Example showing how to use custom headers with SSE connections
-
-To run the examples:
-
-```bash
-# First build the project
-npm run build
-
-# Start the weather server with SSE transport
-python examples/weather_server.py
-
-# In another terminal, run the examples using Node.js
-node dist/examples/math_example.js
-node dist/examples/sse_example.js
-node dist/examples/json_config_example.js
-```
-
 ## Known Limitations
 
-### React Agents and LLM Compatibility
+### Agent Compatibility
 
-The React agent implementation in LangChain has specific requirements for LLMs, including:
+Different agent implementations have varying requirements for tools:
 
-1. The LLM must implement a `bindTools` method (e.g., ChatOpenAI and ChatGoogleGenerativeAI)
-2. The model may have specific expectations for tool schemas (especially Gemini models)
+1. **OpenAI Functions Agent**:
 
-If you encounter errors like these when using MCP tools with React agents:
+   - Most reliable with well-defined parameter schemas
+   - Handles complex parameter types well
 
-```
-llm [object Object] must define bindTools method
-```
+2. **React Agent**:
 
-or:
+   - Requires the LLM to implement a `bindTools` method
+   - May struggle with parsing complex tool inputs/outputs
+   - More sensitive to prompt formatting
 
-```
-GenerateContentRequest.tools[0].function_declarations[0].parameters.properties: should be non-empty for OBJECT type
-```
+3. **LLM Compatibility**:
+   - Google's Gemini models require non-empty parameter schemas
+   - Some LLMs (like Anthropic Claude) have limitations on function calling
 
-We recommend:
+### Browser Environments
 
-1. Using standard agent implementations like `initializeAgentExecutorWithOptions` instead of React agents
-2. Ensuring your MCP tools have well-defined parameter schemas
-3. Using a different LLM if you're experiencing model-specific schema issues
+When using in browsers:
 
-### Tools with Empty Schemas
-
-Some LLM integrations, particularly Google's Gemini models, require tools to have non-empty parameter schemas. If you're using MCP tools that don't have input parameters (or have empty schemas) with these integrations, you might encounter errors.
+- Native EventSource API doesn't support custom headers
+- Consider using a proxy or pass authentication via query parameters
+- May require CORS configuration on the server side
 
 ## Troubleshooting
 
 ### Common Issues
 
-1. **Connection Failures**: Ensure the MCP server is running and accessible
-2. **Tool Execution Errors**: Check the server logs for error messages
-3. **Transport Issues**: Verify the transport configuration (stdio or SSE)
-4. **Headers Not Applied**: When using headers with SSE, make sure you've installed the `eventsource` package and set `useNodeEventSource` to true
+1. **Connection Failures**:
 
-### Debugging
+   - Verify the MCP server is running
+   - Check command paths and network connectivity
 
-Enable debug logging to get more information:
+2. **Tool Execution Errors**:
+
+   - Examine server logs for error messages
+   - Ensure input parameters match the expected schema
+
+3. **Headers Not Applied**:
+   - Install the recommended `extended-eventsource` package
+   - Set `useNodeEventSource: true` in SSE connections
+
+### Debug Logging
+
+Enable verbose logging to diagnose issues:
 
 ```typescript
 import { logger } from 'langchainjs-mcp-adapters';
@@ -385,68 +432,10 @@ import { logger } from 'langchainjs-mcp-adapters';
 logger.level = 'debug';
 ```
 
-## Development
-
-For information about contributing to this project, including GitHub Actions workflows, npm publishing, and more, please see [CONTRIBUTING.md](CONTRIBUTING.md).
-
 ## License
 
 MIT
 
-## Using Server-Sent Events (SSE) with Headers
+## Contributing
 
-When connecting to an MCP server via SSE and using custom headers (such as for authentication), there are some considerations to be aware of:
-
-### Node.js Environments
-
-For Node.js environments, the package will attempt to use the best available EventSource implementation to ensure headers are sent correctly:
-
-1. If the `extended-eventsource` package is installed (recommended): Headers will be properly sent with SSE requests.
-2. Otherwise, it will fall back to the standard `eventsource` package and attempt to configure it to send headers.
-
-Example with headers:
-
-```typescript
-// Pass headers and set useNodeEventSource to true for best header support
-await client.connectToServerViaSSE(
-  'my-server',
-  'https://example.com/mcp',
-  {
-    Authorization: 'Bearer my-token',
-    'X-Custom-Header': 'CustomValue',
-  },
-  true // useNodeEventSource=true ensures headers are sent correctly
-);
-```
-
-For the best experience with headers, install the recommended package:
-
-```bash
-npm install --save extended-eventsource
-```
-
-### Browser Environments
-
-The native browser EventSource API does not support custom headers. When running in a browser environment, consider:
-
-1. If headers (especially authorization) are required, use a server-side proxy that adds the required headers.
-2. Alternatively, pass authorization via query parameters (though this is less secure).
-
-### Testing Header Transmission
-
-If you need to verify that headers are being sent correctly, you can use a service like [Beeceptor](https://beeceptor.com/) to inspect requests:
-
-```typescript
-// Test header transmission
-await client.connectToServerViaSSE(
-  'test-server',
-  'https://my-endpoint.free.beeceptor.com',
-  {
-    Authorization: 'Bearer test-token',
-    'X-Custom-Header': 'Test',
-  },
-  true
-);
-```
-
-Then check the Beeceptor console to verify headers are being sent.
+Contributions are welcome! Please check out our [contributing guidelines](CONTRIBUTING.md) for more information.
