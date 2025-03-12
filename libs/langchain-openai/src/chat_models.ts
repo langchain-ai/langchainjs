@@ -16,6 +16,8 @@ import {
   isAIMessage,
   UsageMetadata,
   BaseMessageFields,
+  MessageContent,
+  InvalidToolCall,
 } from "@langchain/core/messages";
 import {
   type ChatGeneration,
@@ -56,7 +58,7 @@ import {
   parseToolCall,
 } from "@langchain/core/output_parsers/openai_tools";
 import { zodToJsonSchema } from "zod-to-json-schema";
-import { ToolCallChunk } from "@langchain/core/messages/tool";
+import { ToolCall, ToolCallChunk } from "@langchain/core/messages/tool";
 import { zodResponseFormat } from "openai/helpers/zod";
 import type {
   ResponseFormatText,
@@ -200,7 +202,127 @@ export function _convertMessagesToOpenAIParams(
   });
 }
 
-type ChatOpenAIToolType = BindToolsInput | OpenAIClient.ChatCompletionTool;
+export function _convertMessagesToOpenAIResponsesParams(
+  messages: BaseMessage[],
+  model?: string
+): OpenAIResponsesInputItem[] {
+  return messages.flatMap(
+    (message): OpenAIResponsesInputItem | OpenAIResponsesInputItem[] => {
+      let role = messageToOpenAIRole(message);
+      if (role === "system" && isReasoningModel(model)) role = "developer";
+      if (role === "tool") {
+        const toolMessage = message as ToolMessage;
+        return {
+          type: "function_call_output",
+          call_id: toolMessage.tool_call_id,
+          id: toolMessage.id,
+          output: JSON.stringify(toolMessage.content),
+          status: "completed",
+        };
+      }
+
+      if (message.additional_kwargs.function_call != null) {
+        throw new Error("Function call is not supported in Responses API");
+      }
+      if (role === "function") {
+        throw new Error("Function messages are not supported in Responses API");
+      }
+
+      if (isAIMessage(message) && !!message.tool_calls?.length) {
+        return message.tool_calls.map(
+          (toolCall): OpenAIResponsesInputItem => ({
+            type: "function_call",
+            name: toolCall.name,
+            arguments: JSON.stringify(toolCall.args),
+            call_id: toolCall.id!,
+            id: toolCall.id!,
+          })
+        );
+      } else if (message.additional_kwargs.tool_calls != null) {
+        return message.additional_kwargs.tool_calls.map(
+          (toolCall): OpenAIResponsesInputItem => ({
+            type: "function_call",
+            name: toolCall.function.name,
+            call_id: toolCall.id,
+            id: toolCall.id,
+            arguments: toolCall.function.arguments,
+          })
+        );
+      }
+
+      return {
+        type: "message",
+        role,
+        content:
+          typeof message.content === "string"
+            ? message.content
+            : message.content.map((item) => {
+                if (item.type === "text") {
+                  return { type: "input_text", text: item.text };
+                }
+
+                if (item.type === "image_url") {
+                  const image_url =
+                    typeof item.image_url === "string"
+                      ? item.image_url
+                      : item.image_url.url;
+                  const detail =
+                    typeof item.image_url === "string"
+                      ? "auto"
+                      : item.image_url.detail;
+
+                  // TODO: handle file_id
+                  return { type: "input_image", image_url, detail };
+                }
+
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                return item as any;
+              }),
+      };
+    }
+  );
+}
+
+// Utility types to get hidden OpenAPI response types
+type ExtractAsyncIterableType<T> = T extends AsyncIterable<infer U> ? U : never;
+type ExcludeController<T> = T extends { controller: unknown } ? never : T;
+type ExcludeNonController<T> = T extends { controller: unknown } ? T : never;
+
+type OpenAIResponsesCreate = OpenAIClient.Responses["create"];
+type OpenAIResponsesCreateParams = Parameters<
+  OpenAIClient.Responses["create"]
+>[0];
+
+type OpenAIResponsesTool = Exclude<
+  OpenAIResponsesCreateParams["tools"],
+  undefined
+>[number];
+
+type OpenAIResponsesToolChoice = Exclude<
+  OpenAIResponsesCreateParams["tool_choice"],
+  undefined
+>;
+
+type OpenAIResponsesInputItem = Exclude<
+  OpenAIResponsesCreateParams["input"],
+  string | undefined
+>[number];
+
+type OpenAIResponsesCreateInvoke = ExcludeNonController<
+  Awaited<ReturnType<OpenAIResponsesCreate>>
+>;
+
+type OpenAIResponsesCreateStream = ExcludeController<
+  Awaited<ReturnType<OpenAIResponsesCreate>>
+>;
+
+type OpenAIResponseReturnStreamEvents =
+  ExtractAsyncIterableType<OpenAIResponsesCreateInvoke>;
+
+type ChatOpenAIToolType =
+  | BindToolsInput
+  | OpenAIClient.ChatCompletionTool
+  | OpenAIResponsesTool;
 
 function _convertChatOpenAIToolTypeToOpenAITool(
   tool: ChatOpenAIToolType,
@@ -228,6 +350,21 @@ function isReasoningModel(model?: string) {
   return model?.startsWith("o1") || model?.startsWith("o3");
 }
 
+function isBuiltInTool(tool: ChatOpenAIToolType): tool is OpenAIResponsesTool {
+  return "type" in tool && tool.type !== "function";
+}
+
+function isBuiltInToolChoice(
+  tool_choice: OpenAIToolChoice | OpenAIResponsesToolChoice | undefined
+): tool_choice is OpenAIResponsesToolChoice {
+  return (
+    tool_choice != null &&
+    typeof tool_choice === "object" &&
+    "type" in tool_choice &&
+    tool_choice.type !== "function"
+  );
+}
+
 // TODO: Use the base structured output options param in next breaking release.
 export interface ChatOpenAIStructuredOutputMethodOptions<
   IncludeRaw extends boolean
@@ -253,7 +390,7 @@ export interface ChatOpenAICallOptions
   extends OpenAICallOptions,
     BaseFunctionCallOptions {
   tools?: ChatOpenAIToolType[];
-  tool_choice?: OpenAIToolChoice;
+  tool_choice?: OpenAIToolChoice | OpenAIResponsesToolChoice;
   promptIndex?: number;
   response_format?: ChatOpenAIResponseFormat;
   seed?: number;
@@ -1089,7 +1226,9 @@ export class ChatOpenAI<
     }
     return this.bind({
       tools: tools.map((tool) =>
-        _convertChatOpenAIToolTypeToOpenAITool(tool, { strict })
+        isBuiltInTool(tool)
+          ? tool
+          : _convertChatOpenAIToolTypeToOpenAITool(tool, { strict })
       ),
       ...kwargs,
     } as Partial<CallOptions>);
@@ -1130,8 +1269,112 @@ export class ChatOpenAI<
     options?: this["ParsedCallOptions"],
     extra?: {
       streaming?: boolean;
+      type?: "completion";
     }
-  ): Omit<OpenAIClient.Chat.ChatCompletionCreateParams, "messages"> {
+  ): Omit<OpenAIClient.Chat.ChatCompletionCreateParams, "messages">;
+
+  invocationParams(
+    options: this["ParsedCallOptions"],
+    extra: {
+      streaming?: boolean;
+      type: "responses";
+    }
+  ): Omit<OpenAIResponsesCreateParams, "input">;
+
+  invocationParams(
+    options: this["ParsedCallOptions"],
+    extra?: {
+      streaming?: boolean;
+      type?: "responses" | "completion";
+    }
+  ):
+    | Omit<OpenAIClient.Chat.ChatCompletionCreateParams, "messages">
+    | Omit<OpenAIResponsesCreateParams, "input"> {
+    if (
+      extra?.type === "responses" ||
+      (options?.tools != null && isBuiltInTool(options.tools))
+    ) {
+      let strict: boolean | undefined;
+      if (options?.strict !== undefined) {
+        strict = options.strict;
+      } else if (this.supportsStrictToolCalling !== undefined) {
+        strict = this.supportsStrictToolCalling;
+      }
+
+      let streamOptionsConfig = {};
+      if (options?.stream_options !== undefined) {
+        streamOptionsConfig = { stream_options: options.stream_options };
+      } else if (this.streamUsage && this.streaming) {
+        streamOptionsConfig = { stream_options: { include_usage: true } };
+      }
+
+      const params: Omit<OpenAIResponsesCreateParams, "input"> = {
+        model: this.model,
+        temperature: this.temperature,
+        top_p: this.topP,
+        user: this.user,
+        // if include_usage is set or streamUsage then stream must be set to true.
+        stream: this.streaming,
+        tools: options?.tools?.length
+          ? options.tools
+              .map((tool) => {
+                if (isBuiltInTool(tool)) {
+                  return tool;
+                } else if (isOpenAITool(tool)) {
+                  return {
+                    type: "function",
+                    name: tool.function.name,
+                    parameters: tool.function.parameters,
+                    description: tool.function.description,
+                    strict,
+                  };
+                } else {
+                  return null;
+                }
+              })
+              .filter((tool): tool is OpenAIResponsesTool => tool !== null)
+          : undefined,
+        tool_choice: isBuiltInToolChoice(options.tool_choice)
+          ? options.tool_choice
+          : (() => {
+              const formatted = formatToOpenAIToolChoice(options?.tool_choice);
+              if (typeof formatted === "object" && "type" in formatted) {
+                return { type: "function", name: formatted.function.name };
+              } else {
+                return undefined;
+              }
+            })(),
+        text: (() => {
+          const format = this.createResponseFormat(options?.response_format);
+          if (format?.type === "json_schema") {
+            if (format.json_schema.schema != null) {
+              return {
+                format: {
+                  type: "json_schema",
+                  schema: format.json_schema.schema,
+                  description: format.json_schema.description,
+                  name: format.json_schema.name,
+                  strict: format.json_schema.strict,
+                },
+              };
+            }
+            return undefined;
+          }
+          return { format };
+        })(),
+        ...streamOptionsConfig,
+        parallel_tool_calls: options?.parallel_tool_calls,
+        max_output_tokens: this.maxTokens === -1 ? undefined : this.maxTokens,
+        ...this.modelKwargs,
+      };
+
+      const reasoningEffort = options?.reasoning_effort ?? this.reasoningEffort;
+      if (reasoningEffort !== undefined) {
+        params.reasoning = { effort: reasoningEffort };
+      }
+      return params;
+    }
+
     let strict: boolean | undefined;
     if (options?.strict !== undefined) {
       strict = options.strict;
@@ -1170,7 +1413,9 @@ export class ChatOpenAI<
             _convertChatOpenAIToolTypeToOpenAITool(tool, { strict })
           )
         : undefined,
-      tool_choice: formatToOpenAIToolChoice(options?.tool_choice),
+      tool_choice: formatToOpenAIToolChoice(
+        options?.tool_choice as OpenAIToolChoice
+      ),
       response_format: this.createResponseFormat(options?.response_format),
       seed: options?.seed,
       ...streamOptionsConfig,
@@ -1197,6 +1442,103 @@ export class ChatOpenAI<
       params.max_tokens = this.maxTokens === -1 ? undefined : this.maxTokens;
     }
     return params;
+  }
+
+  protected _convertOpenAIResponsesMessageToBaseMessage(
+    response: OpenAIResponsesCreateStream
+  ): BaseMessage {
+    const tool_calls: ToolCall[] = [];
+    const invalid_tool_calls: InvalidToolCall[] = [];
+
+    let content: MessageContent = [];
+    for (const item of response.output) {
+      if (item.type === "message") {
+        // TODO: how to handle refusals?
+        content = item.content.map((part) => {
+          if (part.type === "output_text") {
+            return {
+              type: "text",
+              text: part.text,
+              annotations: part.annotations,
+            };
+          }
+          return part;
+        });
+      } else if (item.type === "function_call") {
+        const fnAdapter = {
+          function: { name: item.name, arguments: item.arguments },
+          id: item.call_id,
+        };
+
+        try {
+          tool_calls.push(parseToolCall(fnAdapter, { returnId: true }));
+        } catch (e: unknown) {
+          let errMessage: string | undefined;
+          if (
+            typeof e === "object" &&
+            e != null &&
+            "message" in e &&
+            typeof e.message === "string"
+          ) {
+            errMessage = e.message;
+          }
+          invalid_tool_calls.push(makeInvalidToolCall(fnAdapter, errMessage));
+        }
+      } else {
+        throw new Error(`Unknown item type: ${item.type}`);
+      }
+    }
+
+    return new AIMessage({
+      id: response.id,
+      content,
+      tool_calls,
+      invalid_tool_calls,
+      response_metadata: { model_name: response.model, usage: response.usage },
+    });
+  }
+
+  protected _convertOpenAIResponsesDeltaToBaseMessageChunk(
+    chunk: OpenAIResponseReturnStreamEvents
+  ) {
+    const content: Record<string, unknown>[] = [];
+    let generationInfo: Record<string, unknown> = {};
+    let usage_metadata: UsageMetadata | undefined;
+
+    if (chunk.type === "response.output_text.delta") {
+      content.push({
+        type: "text",
+        text: chunk.delta,
+        index: chunk.content_index,
+      });
+    } else if (chunk.type === "response.output_text.annotation.added") {
+      content.push({
+        annotations: chunk.annotation,
+        index: chunk.content_index,
+      });
+    } else if (chunk.type === "response.completed") {
+      usage_metadata = chunk.response.usage;
+    } else if (
+      chunk.type === "response.web_search_call.completed" ||
+      chunk.type === "response.file_search_call.completed"
+    ) {
+      generationInfo = {
+        tool_outputs: {
+          id: chunk.item_id,
+          type: chunk.type.replace("response.", "").replace(".completed", ""),
+          status: "completed",
+        },
+      };
+    } else {
+      return null;
+    }
+
+    return new ChatGenerationChunk({
+      // TODO: why do I need to do this?
+      text: content.map((part) => part.text).join(""),
+      message: new AIMessageChunk({ content, usage_metadata }),
+      generationInfo,
+    });
   }
 
   protected _convertOpenAIChatCompletionMessageToBaseMessage(
@@ -1358,6 +1700,28 @@ export class ChatOpenAI<
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
+    if (options.tools?.some(isBuiltInTool)) {
+      const streamIterable = await this._responseWithRetry(
+        {
+          ...this.invocationParams(options, {
+            streaming: true,
+            type: "responses",
+          }),
+          input: _convertMessagesToOpenAIResponsesParams(messages, this.model),
+          stream: true,
+        },
+        options
+      );
+
+      for await (const data of streamIterable) {
+        const chunk = this._convertOpenAIResponsesDeltaToBaseMessageChunk(data);
+        if (chunk == null) continue;
+        yield chunk;
+      }
+
+      return;
+    }
+
     const messagesMapped: OpenAICompletionParam[] =
       _convertMessagesToOpenAIParams(messages, this.model);
     const params = {
@@ -1480,11 +1844,54 @@ export class ChatOpenAI<
   }
 
   /** @ignore */
+  async _responseApiGenerate(
+    messages: BaseMessage[],
+    options: this["ParsedCallOptions"],
+    _runManager?: CallbackManagerForLLMRun
+  ): Promise<ChatResult> {
+    const invocationParams = this.invocationParams(options, {
+      type: "responses",
+    });
+
+    const data = await this._responseWithRetry(
+      {
+        input: _convertMessagesToOpenAIResponsesParams(messages, this.model),
+        ...invocationParams,
+      },
+      { signal: options?.signal, ...options?.options }
+    );
+
+    return {
+      generations: [
+        {
+          text: data.output_text,
+          message: this._convertOpenAIResponsesMessageToBaseMessage(data),
+        },
+      ],
+      llmOutput: {
+        ...(data.usage
+          ? {
+              estimatedTokenUsage: {
+                promptTokens: data.usage.input_tokens,
+                completionTokens: data.usage.output_tokens,
+                totalTokens: data.usage.total_tokens,
+              },
+            }
+          : undefined),
+      },
+    };
+  }
+
+  /** @ignore */
   async _generate(
     messages: BaseMessage[],
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
+    if (options.tools?.some(isBuiltInTool)) {
+      return this._responseApiGenerate(messages, options, runManager);
+    }
+
     const usageMetadata = {} as UsageMetadata;
     const params = this.invocationParams(options);
     const messagesMapped: OpenAICompletionParam[] =
@@ -1827,6 +2234,32 @@ export class ChatOpenAI<
         throw error;
       }
     });
+  }
+
+  protected async _responseWithRetry(
+    request: OpenAIResponsesCreateParams & { stream: true },
+    options?: OpenAICoreRequestOptions
+  ): Promise<OpenAIResponsesCreateInvoke>;
+
+  protected async _responseWithRetry(
+    request: OpenAIResponsesCreateParams,
+    options?: OpenAICoreRequestOptions
+  ): Promise<OpenAIResponsesCreateStream>;
+
+  protected async _responseWithRetry(
+    request: OpenAIResponsesCreateParams | OpenAIResponsesCreateParams,
+    options?: OpenAICoreRequestOptions
+  ): Promise<OpenAIResponsesCreateInvoke | OpenAIResponsesCreateStream> {
+    return this.caller.call(async () => {
+      const requestOptions = this._getClientOptions(options);
+      try {
+        const res = await this.client.responses.create(request, requestOptions);
+        return res;
+      } catch (e) {
+        const error = wrapOpenAIClientError(e);
+        throw error;
+      }
+    }) as Promise<OpenAIResponsesCreateInvoke | OpenAIResponsesCreateStream>;
   }
 
   /**
