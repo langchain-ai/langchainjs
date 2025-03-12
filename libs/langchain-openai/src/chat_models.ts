@@ -1847,11 +1847,31 @@ export class ChatOpenAI<
   async _responseApiGenerate(
     messages: BaseMessage[],
     options: this["ParsedCallOptions"],
-    _runManager?: CallbackManagerForLLMRun
+    runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
     const invocationParams = this.invocationParams(options, {
       type: "responses",
     });
+
+    if (invocationParams.stream) {
+      const stream = this._streamResponseChunks(messages, options, runManager);
+      let finalChunk: ChatGenerationChunk | undefined;
+      for await (const chunk of stream) {
+        chunk.message.response_metadata = {
+          ...chunk.generationInfo,
+          ...chunk.message.response_metadata,
+        };
+        finalChunk = finalChunk?.concat(chunk) ?? chunk;
+      }
+
+      return {
+        generations: finalChunk ? [finalChunk] : [],
+        llmOutput: {
+          estimatedTokenUsage: (finalChunk?.message as AIMessage | undefined)
+            ?.usage_metadata,
+        },
+      };
+    }
 
     const data = await this._responseWithRetry(
       {
