@@ -462,6 +462,7 @@
     "rollup": "^3.19.1",
     "ts-jest": "^29.1.0",
     "typeorm": "^0.3.20",
+    "reflect-metadata": "^0.2.2",
     "typescript": "~5.1.6",
     "wikipedia": "^2.1.2"
   },
