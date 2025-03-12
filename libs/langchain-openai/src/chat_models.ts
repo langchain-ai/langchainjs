@@ -14,21 +14,21 @@ import {
   ToolMessageChunk,
   OpenAIToolCall,
   isAIMessage,
-  UsageMetadata,
-  BaseMessageFields,
-  MessageContent,
-  InvalidToolCall,
+  type UsageMetadata,
+  type BaseMessageFields,
+  type MessageContent,
+  type InvalidToolCall,
 } from "@langchain/core/messages";
 import {
-  type ChatGeneration,
   ChatGenerationChunk,
+  type ChatGeneration,
   type ChatResult,
 } from "@langchain/core/outputs";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import {
   BaseChatModel,
-  BindToolsInput,
-  LangSmithParams,
+  type BindToolsInput,
+  type LangSmithParams,
   type BaseChatModelParams,
 } from "@langchain/core/language_models/chat_models";
 import {
@@ -58,7 +58,7 @@ import {
   parseToolCall,
 } from "@langchain/core/output_parsers/openai_tools";
 import { zodToJsonSchema } from "zod-to-json-schema";
-import { ToolCall, ToolCallChunk } from "@langchain/core/messages/tool";
+import type { ToolCall, ToolCallChunk } from "@langchain/core/messages/tool";
 import { zodResponseFormat } from "openai/helpers/zod";
 import type {
   ResponseFormatText,
@@ -202,6 +202,8 @@ export function _convertMessagesToOpenAIParams(
   });
 }
 
+const _FUNCTION_CALL_IDS_MAP_KEY = "__openai_function_call_ids__";
+
 export function _convertMessagesToOpenAIResponsesParams(
   messages: BaseMessage[],
   model?: string
@@ -260,9 +262,7 @@ export function _convertMessagesToOpenAIResponsesParams(
           );
         }
 
-        // eslint-disable-next-line prefer-destructuring
-        let content = lcMsg.content;
-
+        let { content } = lcMsg;
         if (lcMsg.additional_kwargs.refusal != null) {
           if (typeof content === "string") {
             content = [{ type: "output_text", text: content, annotations: [] }];
@@ -341,7 +341,182 @@ export function _convertMessagesToOpenAIResponsesParams(
   );
 }
 
-// Utility types to get hidden OpenAPI response types
+function _convertOpenAIResponsesMessageToBaseMessage(
+  response: OpenAIResponsesCreateStream
+): BaseMessage {
+  if (response.error) {
+    // TODO: might be incorrect
+    throw wrapOpenAIClientError(response.error);
+  }
+
+  const content: MessageContent = [];
+  const tool_calls: ToolCall[] = [];
+  const invalid_tool_calls: InvalidToolCall[] = [];
+  const response_metadata: Record<string, unknown> = {
+    // for compatibility with chat completion calls.
+    model_name: response.model,
+    model: response.model,
+    created_at: response.created_at,
+    id: response.id,
+    incomplete_details: response.incomplete_details,
+    metadata: response.metadata,
+    object: response.object,
+    status: response.status,
+    user: response.user,
+  };
+
+  const additional_kwargs: {
+    [key: string]: unknown;
+    reasoning?: unknown;
+    tool_outputs?: unknown[];
+  } = {};
+
+  for (const item of response.output) {
+    if (item.type === "message") {
+      // TODO: how to handle refusals?
+      content.push(
+        ...item.content.map((part) => {
+          if (part.type === "output_text") {
+            return {
+              type: "text",
+              text: part.text,
+              annotations: part.annotations,
+            };
+          }
+          return part;
+        })
+      );
+    } else if (item.type === "function_call") {
+      const fnAdapter = {
+        function: { name: item.name, arguments: item.arguments },
+        id: item.call_id,
+      };
+
+      try {
+        tool_calls.push(parseToolCall(fnAdapter, { returnId: true }));
+      } catch (e: unknown) {
+        let errMessage: string | undefined;
+        if (
+          typeof e === "object" &&
+          e != null &&
+          "message" in e &&
+          typeof e.message === "string"
+        ) {
+          errMessage = e.message;
+        }
+        invalid_tool_calls.push(makeInvalidToolCall(fnAdapter, errMessage));
+      }
+    } else if (item.type === "reasoning") {
+      additional_kwargs.reasoning = item;
+    } else {
+      additional_kwargs.tool_outputs ??= [];
+      additional_kwargs.tool_outputs.push(item);
+    }
+  }
+
+  return new AIMessage({
+    id: response.id,
+    content,
+    tool_calls,
+    invalid_tool_calls,
+    usage_metadata: response.usage,
+    additional_kwargs,
+    response_metadata,
+  });
+}
+
+function _convertOpenAIResponsesDeltaToBaseMessageChunk(
+  chunk: OpenAIResponseReturnStreamEvents
+) {
+  const content: Record<string, unknown>[] = [];
+  let generationInfo: Record<string, unknown> = {};
+  let usage_metadata: UsageMetadata | undefined;
+  const tool_call_chunks: ToolCallChunk[] = [];
+  const response_metadata: Record<string, unknown> = {};
+  const additional_kwargs: Record<string, unknown> = {};
+  let id: string | undefined;
+  if (chunk.type === "response.output_text.delta") {
+    content.push({
+      type: "text",
+      text: chunk.delta,
+      index: chunk.content_index,
+    });
+  } else if (chunk.type === "response.output_text.annotation.added") {
+    content.push({
+      annotations: [chunk.annotation],
+      index: chunk.content_index,
+    });
+  } else if (
+    chunk.type === "response.output_item.added" &&
+    chunk.item.type === "message"
+  ) {
+    id = chunk.item.id;
+  } else if (
+    chunk.type === "response.output_item.added" &&
+    chunk.item.type === "function_call"
+  ) {
+    tool_call_chunks.push({
+      type: "tool_call_chunk",
+      name: chunk.item.name,
+      args: chunk.item.arguments,
+      id: chunk.item.id,
+      index: chunk.output_index,
+    });
+
+    additional_kwargs[_FUNCTION_CALL_IDS_MAP_KEY] = {
+      [chunk.item.call_id]: chunk.item.id,
+    };
+  } else if (
+    chunk.type === "response.output_item.done" &&
+    (chunk.item.type === "web_search_call" ||
+      chunk.item.type === "file_search_call")
+  ) {
+    additional_kwargs.tool_outputs = [chunk.item];
+  } else if (chunk.type === "response.created") {
+    response_metadata.id = chunk.response.id;
+    response_metadata.model_name = chunk.response.model;
+    response_metadata.model = chunk.response.model;
+  } else if (chunk.type === "response.completed") {
+    usage_metadata = chunk.response.usage;
+  } else if (chunk.type === "response.function_call_arguments.delta") {
+    tool_call_chunks.push({
+      type: "tool_call_chunk",
+      args: chunk.delta,
+      index: chunk.output_index,
+    });
+  } else if (
+    chunk.type === "response.web_search_call.completed" ||
+    chunk.type === "response.file_search_call.completed"
+  ) {
+    generationInfo = {
+      tool_outputs: {
+        id: chunk.item_id,
+        type: chunk.type.replace("response.", "").replace(".completed", ""),
+        status: "completed",
+      },
+    };
+  } else if (chunk.type === "response.refusal.done") {
+    additional_kwargs.refusal = chunk.refusal;
+  } else {
+    return null;
+  }
+
+  return new ChatGenerationChunk({
+    // TODO: why do I need to do this?
+    text: content.map((part) => part.text).join(""),
+    message: new AIMessageChunk({
+      id,
+      content,
+      tool_call_chunks,
+      usage_metadata,
+      additional_kwargs,
+      response_metadata,
+    }),
+    generationInfo,
+  });
+}
+
+// Utility types to get hidden OpenAI response types
 type ExtractAsyncIterableType<T> = T extends AsyncIterable<infer U> ? U : never;
 type ExcludeController<T> = T extends { controller: unknown } ? never : T;
 type ExcludeNonController<T> = T extends { controller: unknown } ? T : never;
@@ -382,6 +557,21 @@ type ChatOpenAIToolType =
   | OpenAIClient.ChatCompletionTool
   | OpenAIResponsesTool;
 
+function isBuiltInTool(tool: ChatOpenAIToolType): tool is OpenAIResponsesTool {
+  return "type" in tool && tool.type !== "function";
+}
+
+function isBuiltInToolChoice(
+  tool_choice: OpenAIToolChoice | OpenAIResponsesToolChoice | undefined
+): tool_choice is OpenAIResponsesToolChoice {
+  return (
+    tool_choice != null &&
+    typeof tool_choice === "object" &&
+    "type" in tool_choice &&
+    tool_choice.type !== "function"
+  );
+}
+
 function _convertChatOpenAIToolTypeToOpenAITool(
   tool: ChatOpenAIToolType,
   fields?: {
@@ -408,21 +598,6 @@ function isReasoningModel(model?: string) {
   return model?.startsWith("o1") || model?.startsWith("o3");
 }
 
-function isBuiltInTool(tool: ChatOpenAIToolType): tool is OpenAIResponsesTool {
-  return "type" in tool && tool.type !== "function";
-}
-
-function isBuiltInToolChoice(
-  tool_choice: OpenAIToolChoice | OpenAIResponsesToolChoice | undefined
-): tool_choice is OpenAIResponsesToolChoice {
-  return (
-    tool_choice != null &&
-    typeof tool_choice === "object" &&
-    "type" in tool_choice &&
-    tool_choice.type !== "function"
-  );
-}
-
 // TODO: Use the base structured output options param in next breaking release.
 export interface ChatOpenAIStructuredOutputMethodOptions<
   IncludeRaw extends boolean
@@ -443,8 +618,6 @@ export interface ChatOpenAIStructuredOutputMethodOptions<
    */
   strict?: boolean;
 }
-
-const _FUNCTION_CALL_IDS_MAP_KEY = "__openai_function_call_ids__";
 
 export interface ChatOpenAICallOptions
   extends OpenAICallOptions,
@@ -518,7 +691,29 @@ export interface ChatOpenAICallOptions
    * Reducing reasoning effort can result in faster responses and fewer tokens used on reasoning in a response.
    */
   reasoning_effort?: OpenAIClient.Chat.ChatCompletionReasoningEffort;
+
+  /**
+   * Configuration options for a text response from the model. Can be plain text or
+   * structured JSON data.
+   */
+  text?: OpenAIResponsesCreateParams["text"];
+
+  /**
+   * The truncation strategy to use for the model response.
+   */
+  truncation?: OpenAIResponsesCreateParams["truncation"];
+
+  /**
+   * Specify additional output data to include in the model response.
+   */
+  include?: OpenAIResponsesCreateParams["include"];
 }
+
+type ChatCompletionInvocationParams = Omit<
+  OpenAIClient.Chat.ChatCompletionCreateParams,
+  "messages"
+>;
+type ResponsesInvocationParams = Omit<OpenAIResponsesCreateParams, "input">;
 
 export interface ChatOpenAIFields
   extends Partial<OpenAIChatInput>,
@@ -1330,32 +1525,13 @@ export class ChatOpenAI<
   /**
    * Get the parameters used to invoke the model
    */
-  invocationParams(
+  invocationParams<Type extends "responses" | "completion" = "completion">(
     options?: this["ParsedCallOptions"],
-    extra?: {
-      streaming?: boolean;
-      type?: "completion";
-    }
-  ): Omit<OpenAIClient.Chat.ChatCompletionCreateParams, "messages">;
-
-  invocationParams(
-    options: this["ParsedCallOptions"],
-    extra: {
-      streaming?: boolean;
-      type: "responses";
-    }
-  ): Omit<OpenAIResponsesCreateParams, "input">;
-
-  invocationParams(
-    options: this["ParsedCallOptions"],
-    extra?: {
-      streaming?: boolean;
-      type?: "responses" | "completion";
-    }
-  ):
-    | Omit<OpenAIClient.Chat.ChatCompletionCreateParams, "messages">
-    | Omit<OpenAIResponsesCreateParams, "input"> {
-    if (extra?.type === "responses" || this._useResponseApi(options)) {
+    extra?: { streaming?: boolean }
+  ): Type extends "responses"
+    ? ResponsesInvocationParams
+    : ChatCompletionInvocationParams {
+    if (this._useResponseApi(options)) {
       let strict: boolean | undefined;
       if (options?.strict !== undefined) {
         strict = options.strict;
@@ -1397,8 +1573,8 @@ export class ChatOpenAI<
               })
               .filter((tool): tool is OpenAIResponsesTool => tool !== null)
           : undefined,
-        tool_choice: isBuiltInToolChoice(options.tool_choice)
-          ? options.tool_choice
+        tool_choice: isBuiltInToolChoice(options?.tool_choice)
+          ? options?.tool_choice
           : (() => {
               const formatted = formatToOpenAIToolChoice(options?.tool_choice);
               if (typeof formatted === "object" && "type" in formatted) {
@@ -1435,7 +1611,9 @@ export class ChatOpenAI<
       if (reasoningEffort !== undefined) {
         params.reasoning = { effort: reasoningEffort };
       }
-      return params;
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return params as any;
     }
 
     let strict: boolean | undefined;
@@ -1504,182 +1682,9 @@ export class ChatOpenAI<
     } else {
       params.max_tokens = this.maxTokens === -1 ? undefined : this.maxTokens;
     }
-    return params;
-  }
 
-  protected _convertOpenAIResponsesMessageToBaseMessage(
-    response: OpenAIResponsesCreateStream
-  ): BaseMessage {
-    if (response.error) {
-      // TODO: might be incorrect
-      throw wrapOpenAIClientError(response.error);
-    }
-
-    const content: MessageContent = [];
-    const tool_calls: ToolCall[] = [];
-    const invalid_tool_calls: InvalidToolCall[] = [];
-    const response_metadata: Record<string, unknown> = {
-      // for compatibility with chat completion calls.
-      model_name: response.model,
-      model: response.model,
-      created_at: response.created_at,
-      id: response.id,
-      incomplete_details: response.incomplete_details,
-      metadata: response.metadata,
-      object: response.object,
-      status: response.status,
-      user: response.user,
-    };
-
-    const additional_kwargs: {
-      [key: string]: unknown;
-      reasoning?: unknown;
-      tool_outputs?: unknown[];
-    } = {};
-
-    for (const item of response.output) {
-      if (item.type === "message") {
-        // TODO: how to handle refusals?
-        content.push(
-          ...item.content.map((part) => {
-            if (part.type === "output_text") {
-              return {
-                type: "text",
-                text: part.text,
-                annotations: part.annotations,
-              };
-            }
-            return part;
-          })
-        );
-      } else if (item.type === "function_call") {
-        const fnAdapter = {
-          function: { name: item.name, arguments: item.arguments },
-          id: item.call_id,
-        };
-
-        try {
-          tool_calls.push(parseToolCall(fnAdapter, { returnId: true }));
-        } catch (e: unknown) {
-          let errMessage: string | undefined;
-          if (
-            typeof e === "object" &&
-            e != null &&
-            "message" in e &&
-            typeof e.message === "string"
-          ) {
-            errMessage = e.message;
-          }
-          invalid_tool_calls.push(makeInvalidToolCall(fnAdapter, errMessage));
-        }
-      } else if (item.type === "reasoning") {
-        additional_kwargs.reasoning = item;
-      } else {
-        additional_kwargs.tool_outputs ??= [];
-        additional_kwargs.tool_outputs.push(item);
-      }
-    }
-
-    return new AIMessage({
-      id: response.id,
-      content,
-      tool_calls,
-      invalid_tool_calls,
-      usage_metadata: response.usage,
-      additional_kwargs,
-      response_metadata,
-    });
-  }
-
-  protected _convertOpenAIResponsesDeltaToBaseMessageChunk(
-    chunk: OpenAIResponseReturnStreamEvents
-  ) {
-    const content: Record<string, unknown>[] = [];
-    let generationInfo: Record<string, unknown> = {};
-    let tool_call_chunks: any[] = [];
-    let usage_metadata: UsageMetadata | undefined;
-    const response_metadata: Record<string, unknown> = {};
-    const additional_kwargs: Record<string, unknown> = {};
-    let id: string | undefined;
-    if (chunk.type === "response.output_text.delta") {
-      content.push({
-        type: "text",
-        text: chunk.delta,
-        index: chunk.content_index,
-      });
-    } else if (chunk.type === "response.output_text.annotation.added") {
-      content.push({
-        annotations: [chunk.annotation],
-        index: chunk.content_index,
-      });
-    } else if (
-      chunk.type === "response.output_item.added" &&
-      chunk.item.type === "message"
-    ) {
-      id = chunk.item.id;
-    } else if (
-      chunk.type === "response.output_item.added" &&
-      chunk.item.type === "function_call"
-    ) {
-      tool_call_chunks.push({
-        type: "tool_call_chunk",
-        name: chunk.item.name,
-        args: chunk.item.arguments,
-        id: chunk.item.id,
-        index: chunk.output_index,
-      });
-
-      additional_kwargs[_FUNCTION_CALL_IDS_MAP_KEY] = {
-        [chunk.item.call_id]: chunk.item.id,
-      };
-    } else if (
-      chunk.type === "response.output_item.done" &&
-      (chunk.item.type === "web_search_call" ||
-        chunk.item.type === "file_search_call")
-    ) {
-      additional_kwargs.tool_outputs = [chunk.item];
-    } else if (chunk.type === "response.created") {
-      response_metadata.id = chunk.response.id;
-      response_metadata.model_name = chunk.response.model;
-      response_metadata.model = chunk.response.model;
-    } else if (chunk.type === "response.completed") {
-      usage_metadata = chunk.response.usage;
-    } else if (chunk.type === "response.function_call_arguments.delta") {
-      tool_call_chunks.push({
-        type: "tool_call_chunk",
-        args: chunk.delta,
-        index: chunk.output_index,
-      });
-    } else if (
-      chunk.type === "response.web_search_call.completed" ||
-      chunk.type === "response.file_search_call.completed"
-    ) {
-      generationInfo = {
-        tool_outputs: {
-          id: chunk.item_id,
-          type: chunk.type.replace("response.", "").replace(".completed", ""),
-          status: "completed",
-        },
-      };
-    } else if (chunk.type === "response.refusal.done") {
-      additional_kwargs.refusal = chunk.refusal;
-    } else {
-      return null;
-    }
-
-    return new ChatGenerationChunk({
-      // TODO: why do I need to do this?
-      text: content.map((part) => part.text).join(""),
-      message: new AIMessageChunk({
-        id,
-        content,
-        tool_call_chunks,
-        usage_metadata,
-        additional_kwargs,
-        response_metadata,
-      }),
-      generationInfo,
-    });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return params as any;
   }
 
   protected _convertOpenAIChatCompletionMessageToBaseMessage(
@@ -1844,9 +1849,8 @@ export class ChatOpenAI<
     if (this._useResponseApi(options)) {
       const streamIterable = await this._responseWithRetry(
         {
-          ...this.invocationParams(options, {
+          ...this.invocationParams<"responses">(options, {
             streaming: true,
-            type: "responses",
           }),
           input: _convertMessagesToOpenAIResponsesParams(messages, this.model),
           stream: true,
@@ -1855,7 +1859,7 @@ export class ChatOpenAI<
       );
 
       for await (const data of streamIterable) {
-        const chunk = this._convertOpenAIResponsesDeltaToBaseMessageChunk(data);
+        const chunk = _convertOpenAIResponsesDeltaToBaseMessageChunk(data);
         if (chunk == null) continue;
         yield chunk;
       }
@@ -1990,10 +1994,7 @@ export class ChatOpenAI<
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
-    const invocationParams = this.invocationParams(options, {
-      type: "responses",
-    });
-
+    const invocationParams = this.invocationParams<"responses">(options);
     if (invocationParams.stream) {
       const stream = this._streamResponseChunks(messages, options, runManager);
       let finalChunk: ChatGenerationChunk | undefined;
@@ -2024,7 +2025,7 @@ export class ChatOpenAI<
       generations: [
         {
           text: data.output_text,
-          message: this._convertOpenAIResponsesMessageToBaseMessage(data),
+          message: _convertOpenAIResponsesMessageToBaseMessage(data),
         },
       ],
       llmOutput: {
@@ -2040,13 +2041,13 @@ export class ChatOpenAI<
     };
   }
 
-  protected _useResponseApi(options: this["ParsedCallOptions"]) {
-    const usesBuiltInTools = options.tools?.some(isBuiltInTool);
+  protected _useResponseApi(options: this["ParsedCallOptions"] | undefined) {
+    const usesBuiltInTools = options?.tools?.some(isBuiltInTool);
     const hasResponsesOnlyKwargs =
-      options.previous_response_id != null ||
-      options.text != null ||
-      options.truncation != null ||
-      options.include != null;
+      options?.previous_response_id != null ||
+      options?.text != null ||
+      options?.truncation != null ||
+      options?.include != null;
 
     return this.useResponsesApi || usesBuiltInTools || hasResponsesOnlyKwargs;
   }
