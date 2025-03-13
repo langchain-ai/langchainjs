@@ -309,7 +309,14 @@ export class MultiServerMCPClient {
   static fromConfigFile(configPath: string): MultiServerMCPClient {
     try {
       const configData = fs.readFileSync(configPath, 'utf8');
-      const config = JSON.parse(configData) as MCPConfig;
+      const config = JSON.parse(configData);
+
+      // Validate that config has a servers property
+      if (!config || typeof config !== 'object' || !('servers' in config)) {
+        logger.error(`Invalid MCP configuration from ${configPath}: missing 'servers' property`);
+        throw new MCPClientError(`Invalid MCP configuration: missing 'servers' property`);
+      }
+
       logger.info(`Loaded MCP configuration from ${configPath}`);
       return new MultiServerMCPClient(config.servers);
     } catch (error) {
@@ -593,13 +600,8 @@ export class MultiServerMCPClient {
     maxAttempts = 3,
     delayMs = 1000
   ): Promise<void> {
-    let attempts = 0;
     let connected = false;
-
-    // Clean up the existing client entry
-    this.clients.delete(serverName);
-
-    // Keep the tools entry for now
+    let attempts = 0;
 
     while (!connected && (maxAttempts === undefined || attempts < maxAttempts)) {
       attempts++;
@@ -652,50 +654,67 @@ export class MultiServerMCPClient {
     }
 
     if (!connected) {
-      logger.error(`Failed to reconnect to server "${serverName}" after ${attempts} attempts`);
+      this.handleReconnectionFailure(serverName, attempts);
     }
+  }
+
+  /**
+   * Handle the failure of reconnection attempts.
+   *
+   * @param serverName - The name of the server that failed to reconnect
+   * @param attempts - The number of attempts made
+   * @private
+   */
+  private handleReconnectionFailure(serverName: string, attempts: number): void {
+    logger.error(`Failed to reconnect to server "${serverName}" after ${attempts} attempts`);
+    // Could implement additional failure handling here, such as:
+    // - Notify a monitoring service
+    // - Try an alternative server
+    // - Implement exponential backoff for future reconnection attempts
   }
 
   /**
    * Get tools from specified servers as a flattened array.
    *
-   * This is the recommended format for using with LangChain agents.
-   *
-   * @param serverNames - Optional array of server names to filter tools by.
-   *                      If not provided, returns tools from all servers.
-   * @returns A flattened array of tools from the specified servers (or all servers),
-   *          ready for LangChain agents
+   * @param servers - Optional array of server names to filter tools by.
+   *                 If not provided, returns tools from all servers.
+   * @returns A flattened array of tools from the specified servers (or all servers)
    */
-  getTools(serverNames?: string[]): StructuredToolInterface<z.ZodObject<any>>[] {
-    const allTools: StructuredToolInterface<z.ZodObject<any>>[] = [];
-
-    if (!serverNames || serverNames.length === 0) {
-      // If no server names provided, return all tools
-      for (const tools of this.serverNameToTools.values()) {
-        allTools.push(...tools);
-      }
-    } else {
-      // Return tools only from specified servers
-      for (const serverName of serverNames) {
-        const tools = this.serverNameToTools.get(serverName);
-        if (tools) {
-          allTools.push(...tools);
-        }
-      }
+  getTools(servers?: string[]): StructuredToolInterface<z.ZodObject<any>>[] {
+    if (!servers || servers.length === 0) {
+      return this.getAllToolsAsFlatArray();
     }
+    return this.getToolsFromServers(servers);
+  }
 
+  /**
+   * Get all tools from all servers as a flat array.
+   *
+   * @returns A flattened array of all tools
+   */
+  private getAllToolsAsFlatArray(): StructuredToolInterface<z.ZodObject<any>>[] {
+    const allTools: StructuredToolInterface<z.ZodObject<any>>[] = [];
+    for (const tools of this.serverNameToTools.values()) {
+      allTools.push(...tools);
+    }
     return allTools;
   }
 
   /**
-   * Get all tools from all servers organized by server name.
+   * Get tools from specific servers as a flat array.
    *
-   * This is useful when you need to know which tools came from which server.
-   *
-   * @returns A map of server names to arrays of tools
+   * @param serverNames - Names of servers to get tools from
+   * @returns A flattened array of tools from the specified servers
    */
-  getToolsByServer(): Map<string, StructuredToolInterface<z.ZodObject<any>>[]> {
-    return this.serverNameToTools;
+  private getToolsFromServers(serverNames: string[]): StructuredToolInterface<z.ZodObject<any>>[] {
+    const allTools: StructuredToolInterface<z.ZodObject<any>>[] = [];
+    for (const serverName of serverNames) {
+      const tools = this.serverNameToTools.get(serverName);
+      if (tools) {
+        allTools.push(...tools);
+      }
+    }
+    return allTools;
   }
 
   /**

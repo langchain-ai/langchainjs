@@ -16,6 +16,7 @@
   "scripts": {
     "build": "tsc",
     "test": "jest",
+    "test:coverage": "jest --coverage",
     "lint": "eslint --ignore-pattern 'dist/**' .",
     "lint:fix": "eslint --ignore-pattern 'dist/**' . --fix",
     "format": "prettier --write \"src/**/*.ts\" \"examples/**/*.ts\"",

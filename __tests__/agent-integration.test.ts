@@ -10,6 +10,10 @@ import { loadMcpTools } from '../src/tools';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { FakeListChatModel } from '@langchain/core/utils/testing';
 import { initializeAgentExecutorWithOptions } from 'langchain/agents';
+import { MultiServerMCPClient } from '../src/client';
+import { StructuredTool } from '@langchain/core/tools';
+import { z } from 'zod';
+import { ChatOpenAI } from '@langchain/openai';
 
 // Skip actually running this test since it's for documentation purposes
 // and requires actual LLM integration
@@ -25,6 +29,31 @@ const mockClient: jest.Mocked<Client> = {
   callTool: jest.fn(),
   close: jest.fn(),
 } as unknown as jest.Mocked<Client>;
+
+// Mock the problematic ESM dependency
+jest.mock('@dmitryrechkin/json-schema-to-zod', () => ({
+  JSONSchemaToZod: {
+    convert: jest.fn().mockImplementation(schema => {
+      // Simple implementation to handle basic test cases
+      if (schema && schema.type === 'object' && schema.properties) {
+        const schemaShape: Record<string, any> = {};
+        Object.entries(schema.properties).forEach(([key, value]: [string, any]) => {
+          if (value.type === 'number' || value.type === 'integer') {
+            schemaShape[key] = z.number();
+          } else if (value.type === 'string') {
+            schemaShape[key] = z.string();
+          } else if (value.type === 'boolean') {
+            schemaShape[key] = z.boolean();
+          } else {
+            schemaShape[key] = z.any();
+          }
+        });
+        return z.object(schemaShape);
+      }
+      return z.object({});
+    }),
+  },
+}));
 
 describe('Agent Integration (Recommended Approach)', () => {
   beforeEach(() => {
@@ -77,7 +106,6 @@ describe('Agent Integration (Recommended Approach)', () => {
     });
 
     // Create a standard agent executor (RECOMMENDED)
-    // @ts-expect-error Type assertion to work around version incompatibility issues between different @langchain/core versions
     const executor = await initializeAgentExecutorWithOptions(tools, llm, {
       agentType: 'chat-zero-shot-react-description',
       verbose: true,
