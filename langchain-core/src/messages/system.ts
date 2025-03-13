@@ -10,6 +10,8 @@ import {
  * Represents a system message in a conversation.
  */
 export class SystemMessage extends BaseMessage {
+  declare tool_calls?: never;
+
   static lc_name() {
     return "SystemMessage";
   }
@@ -24,6 +26,12 @@ export class SystemMessage extends BaseMessage {
  * other system message chunks.
  */
 export class SystemMessageChunk extends BaseMessageChunk {
+  declare tool_calls?: never;
+
+  declare tool_call_chunks?: never;
+
+  declare invalid_tool_calls?: never;
+
   static lc_name() {
     return "SystemMessageChunk";
   }
