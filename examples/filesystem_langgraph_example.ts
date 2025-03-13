@@ -13,8 +13,7 @@
 import { ChatOpenAI } from '@langchain/openai';
 import { StateGraph, END, START, MessagesAnnotation } from '@langchain/langgraph';
 import { ToolNode } from '@langchain/langgraph/prebuilt';
-import { HumanMessage, AIMessage, BaseMessage, SystemMessage } from '@langchain/core/messages';
-import { ChatPromptTemplate, MessagesPlaceholder } from '@langchain/core/prompts';
+import { HumanMessage, AIMessage, SystemMessage } from '@langchain/core/messages';
 import { StructuredToolInterface } from '@langchain/core/tools';
 import { z } from 'zod';
 import dotenv from 'dotenv';

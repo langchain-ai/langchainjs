@@ -1,17 +1,17 @@
 {
-  "name": "langchainjs-mcp-adapters",
-  "version": "0.2.1",
+  "name": "@langchain/mcp-adapters",
+  "version": "0.2.2",
   "description": "LangChain.js adapters for Model Context Protocol (MCP)",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
   "type": "module",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/vrknetha/langchainjs-mcp-adapters.git"
+    "url": "git+https://github.com/langchain-ai/langchainjs-mcp-adapters.git"
   },
-  "homepage": "https://github.com/vrknetha/langchainjs-mcp-adapters#readme",
+  "homepage": "https://github.com/langchain-ai/langchainjs-mcp-adapters#readme",
   "bugs": {
-    "url": "https://github.com/vrknetha/langchainjs-mcp-adapters/issues"
+    "url": "https://github.com/langchain-ai/langchainjs-mcp-adapters/issues"
   },
   "scripts": {
     "build": "tsc",

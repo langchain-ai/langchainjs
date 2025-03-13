@@ -6,7 +6,6 @@
  */
 
 import { ChatOpenAI } from '@langchain/openai';
-import { HumanMessage, AIMessage, SystemMessage } from '@langchain/core/messages';
 import path from 'path';
 import fs from 'fs';
 import dotenv from 'dotenv';

@@ -1,31 +1,9 @@
 # LangChain.js MCP Adapters
 
-> **IMPORTANT UPDATE**: This library has been moved to the official LangChain.js repository. Please install the new package `@langchain/mcp-adapters` instead. This repository is now archived and will no longer receive updates.
-
 [![npm version](https://img.shields.io/npm/v/@langchain/mcp-adapters.svg)](https://www.npmjs.com/package/@langchain/mcp-adapters)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-A library for seamlessly integrating [Model Context Protocol (MCP)](https://github.com/modelcontextprotocol/specification) tools with LangChain.js. This adapter enables LangChain agents to leverage MCP's standardized tool protocol across different model providers and agent frameworks.
-
-## Migration to @langchain/mcp-adapters
-
-This library has been officially integrated into the LangChain.js ecosystem. To use the latest version, install:
-
-```bash
-npm install @langchain/mcp-adapters
-```
-
-Then update your imports:
-
-```typescript
-// Old import
-import { MultiServerMCPClient } from 'langchainjs-mcp-adapters';
-
-// New import
-import { MultiServerMCPClient } from '@langchain/mcp-adapters';
-```
-
-All functionality remains the same, but you'll benefit from improved integration with other LangChain packages and ongoing maintenance.
+This library provides a lightweight wrapper that makes [Anthropic Model Context Protocol (MCP)](https://modelcontextprotocol.io/introduction) tools compatible with [LangChain.js](https://github.com/langchain-ai/langchainjs) and [LangGraph.js](https://github.com/langchain-ai/langgraphjs).
 
 ## Features
 
@@ -43,9 +21,8 @@ All functionality remains the same, but you'll benefit from improved integration
 
 - 🧩 **Agent Integration**
 
-  - Compatible with all LangChain agent frameworks
+  - Compatible with LangChain.js and LangGraph.js
   - Optimized for OpenAI, Anthropic, and Google models
-  - Tools ready for use with LangGraph workflows
 
 - 🛠️ **Development Features**
   - Comprehensive logging system
@@ -53,8 +30,6 @@ All functionality remains the same, but you'll benefit from improved integration
   - Robust error handling
 
 ## Installation
-
-> **DEPRECATED**: This package is deprecated. Please use `@langchain/mcp-adapters` instead.
 
 ```bash
 npm install @langchain/mcp-adapters
@@ -81,7 +56,158 @@ npm install extended-eventsource
 - For SSE transport: A running MCP server with SSE endpoint
 - For SSE with headers in Node.js: The `eventsource` package
 
-## Usage
+# Quickstart
+
+Here is a simple example of using the MCP tools with a LangGraph agent.
+
+```bash
+npm install @langchain/mcp-adapters @langchain/langgraph @langchain/core @langchain/openai
+
+export OPENAI_API_KEY=<your_api_key>
+```
+
+### Server
+
+First, let's create an MCP server that can add and multiply numbers.
+
+```python
+# math_server.py
+from mcp.server.fastmcp import FastMCP
+
+mcp = FastMCP("Math")
+
+@mcp.tool()
+def add(a: int, b: int) -> int:
+    """Add two numbers"""
+    return a + b
+
+@mcp.tool()
+def multiply(a: int, b: int) -> int:
+    """Multiply two numbers"""
+    return a * b
+
+if __name__ == "__main__":
+    mcp.run(transport="stdio")
+```
+
+### Client
+
+```ts
+import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
+import { ChatOpenAI } from "@langchain/openai";
+import { createReactAgent } from "@langchain/langgraph/prebuilt";
+import { loadMcpTools } from "@langchain/mcp-adapters"
+
+// Initialize the ChatOpenAI model
+const model = new ChatOpenAI({ modelName: "gpt-4" });
+
+// Create transport for stdio connection
+const transport = new StdioClientTransport({
+  command: "python",
+  args: ["math_server.py"]
+});
+
+// Initialize the client
+const client = new Client(
+  {
+    name: "math-client",
+    version: "1.0.0"
+  }
+);
+
+try {
+  // Connect to the transport
+  await client.connect(transport);
+
+  // Get tools
+  const tools = await loadMcpTools(client);
+
+  // Create and run the agent
+  const agent = createReactAgent({ llm: model, tools });
+  const agentResponse = await agent.invoke({
+    messages: [{role: "user", content: "what's (3 + 5) x 12?"}]
+  });
+  console.log(agentResponse);
+
+} catch(e) {
+  console.error(e)
+} finally {
+  // Clean up connection
+  await client.close();
+}
+```
+
+## Multiple MCP Servers
+
+The library also allows you to connect to multiple MCP servers and load tools from them:
+
+### Server
+
+```python
+# math_server.py
+...
+
+# weather_server.py
+from mcp.server.fastmcp import FastMCP
+
+# Create a server
+mcp = FastMCP(name="Weather")
+
+@mcp.tool()
+def get_temperature(city: str) -> str:
+    """Get the current temperature for a city."""
+    # Mock implementation
+    temperatures = {
+        "new york": "72°F",
+        "london": "65°F",
+        "tokyo": "25°C",
+    }
+
+    city_lower = city.lower()
+    if city_lower in temperatures:
+        return f"The current temperature in {city} is {temperatures[city_lower]}."
+    else:
+        return "Temperature data not available for this city"
+
+# Run the server with SSE transport
+if __name__ == "__main__":
+    mcp.run(transport="sse")
+```
+
+### Client
+
+```ts
+import { MultiServerMCPClient } from '@langchain/mcp-adapters';
+import { ChatOpenAI } from '@langchain/openai';
+import { createReactAgent } from '@langchain/langgraph/prebuilt';
+
+// Create client and connect to server
+const client = new MultiServerMCPClient();
+await client.connectToServerViaStdio('math-server', 'python', ['math_server.py']);
+await client.connectToServerViaSSE('weather-server', 'http://localhost:8000/sse');
+const tools = client.getTools();
+
+// Create an OpenAI model
+const model = new ChatOpenAI({
+  modelName: 'gpt-4o',
+  temperature: 0,
+});
+
+// Create the React agent
+const agent = createReactAgent({
+  llm: model,
+  tools,
+});
+
+// Run the agent
+const mathResponse = await agent.invoke({messages: [{role: "user", content: "what's (3 + 5) x 12?"}]})
+const weatherResponse = await agent.invoke({messages: [{role: "user", content: "what is the weather in nyc?"}]})
+
+await client.close()
+```
+
+Below are more detailed examples of how to configure `MultiServerMCPClient`.
 
 ### Basic Connection
 
@@ -170,256 +296,7 @@ await client.initializeConnections();
 const tools = client.getTools();
 ```
 
-## Integration with LangChain Agents
-
-### OpenAI Functions Agent
-
-```typescript
-import { MultiServerMCPClient } from '@langchain/mcp-adapters';
-import { ChatOpenAI } from '@langchain/openai';
-import { createOpenAIFunctionsAgent, AgentExecutor } from 'langchain/agents';
-import { ChatPromptTemplate } from '@langchain/core/prompts';
-
-// Create client and connect to server
-const client = new MultiServerMCPClient();
-await client.connectToServerViaStdio('math-server', 'python', ['./math_server.py']);
-const tools = client.getTools();
-
-// Create an OpenAI model
-const model = new ChatOpenAI({
-  modelName: 'gpt-4o',
-  temperature: 0,
-});
-
-// Create a prompt template
-const prompt = ChatPromptTemplate.fromMessages([
-  ['system', 'You are a helpful assistant that can use tools to solve problems.'],
-  ['human', '{input}'],
-  ['ai', '{agent_scratchpad}'],
-]);
-
-// Create the agent
-const agent = await createOpenAIFunctionsAgent({
-  llm: model,
-  tools,
-  prompt,
-});
-
-// Create the executor
-const executor = new AgentExecutor({
-  agent,
-  tools,
-});
-
-// Run the agent
-const result = await executor.invoke({
-  input: "What's 5 + 3?",
-});
-```
-
-### React Agent
-
-```typescript
-import { MultiServerMCPClient } from '@langchain/mcp-adapters';
-import { ChatOpenAI } from '@langchain/openai';
-import { createReactAgent, AgentExecutor } from 'langchain/agents';
-import { ChatPromptTemplate } from '@langchain/core/prompts';
-
-// Create client and connect to server
-const client = new MultiServerMCPClient();
-await client.connectToServerViaStdio('math-server', 'python', ['./math_server.py']);
-const tools = client.getTools();
-
-// Create an OpenAI model
-const model = new ChatOpenAI({
-  modelName: 'gpt-4o',
-  temperature: 0,
-});
-
-// Create a prompt template with specific format for React
-const prompt = ChatPromptTemplate.fromMessages([
-  [
-    'system',
-    `You are a helpful assistant that solves problems step-by-step.
-  
-You have access to the following tools:
-{tools}
-
-Available tool names: {tool_names}
-
-Use this format:
-Question: The input question
-Thought: Your reasoning
-Action: The tool name to use
-Action Input: The input to the tool as JSON
-Observation: The result from the tool
-... (repeat Thought/Action/Action Input/Observation as needed)
-Thought: I know the answer now
-Final Answer: The final answer to the question`,
-  ],
-  ['human', '{input}'],
-  ['ai', '{agent_scratchpad}'],
-]);
-
-// Create the React agent
-const agent = await createReactAgent({
-  llm: model,
-  tools,
-  prompt,
-});
-
-// Create the executor
-const executor = new AgentExecutor({
-  agent,
-  tools,
-});
-
-// Run the agent
-const result = await executor.invoke({
-  input: "What's 5 + 3?",
-});
-```
-
-### LangGraph Integration
-
-```typescript
-import { MultiServerMCPClient } from '@langchain/mcp-adapters';
-import { ChatOpenAI } from '@langchain/openai';
-import { StateGraph, END } from '@langchain/langgraph';
-import { ToolNode } from '@langchain/langgraph/prebuilt';
-import { HumanMessage, AIMessage } from '@langchain/core/messages';
-import { MessagesAnnotation } from '@langchain/langgraph';
-
-// Create client and get tools
-const client = new MultiServerMCPClient();
-await client.connectToServerViaStdio('math-server', 'python', ['./math_server.py']);
-const tools = client.getTools();
-
-// Create model and tool nodes
-const model = new ChatOpenAI({
-  modelName: 'gpt-4o',
-  temperature: 0,
-}).bindTools(tools);
-
-// Create the tool node
-const toolNode = new ToolNode(tools);
-
-// Create the LLM node
-const llmNode = async state => {
-  const response = await model.invoke(state.messages);
-  return { messages: [response] };
-};
-
-// Create a graph
-const workflow = new StateGraph({
-  channels: MessagesAnnotation,
-});
-
-// Add nodes to the graph
-workflow.addNode('llm', llmNode);
-workflow.addNode('tools', toolNode);
-
-// Define edges
-workflow.addEdge('llm', 'tools');
-workflow.addEdge('tools', 'llm');
-
-// Add conditional edge to end the conversation
-workflow.addConditionalEdges('tools', state => {
-  const lastMsg = state.messages[state.messages.length - 1];
-  // Check if the last message doesn't contain tool calls
-  return lastMsg._getType() === 'ai' && (!lastMsg.tool_calls || lastMsg.tool_calls.length === 0)
-    ? END
-    : 'llm';
-});
-
-// Set the entry point
-workflow.setEntryPoint('llm');
-
-// Compile the graph
-const app = workflow.compile();
-
-// Run the graph
-const result = await app.invoke({
-  messages: [new HumanMessage("What's 5 + 3?")],
-});
-```
-
-## Example MCP Servers
-
-### Math Server (stdio)
-
-```python
-from mcp.server.fastmcp import FastMCP
-
-# Create a server
-mcp = FastMCP(name="Math")
-
-@mcp.tool()
-def add(a: int, b: int) -> int:
-    """Add two integers and return the result."""
-    return a + b
-
-@mcp.tool()
-def multiply(a: int, b: int) -> int:
-    """Multiply two integers and return the result."""
-    return a * b
-
-# Run the server with stdio transport
-if __name__ == "__main__":
-    mcp.run(transport="stdio")
-```
-
-### Weather Server (SSE)
-
-```python
-from mcp.server.fastmcp import FastMCP
-
-# Create a server
-mcp = FastMCP(name="Weather")
-
-@mcp.tool()
-def get_temperature(city: str) -> str:
-    """Get the current temperature for a city."""
-    # Mock implementation
-    temperatures = {
-        "new york": "72°F",
-        "london": "65°F",
-        "tokyo": "25°C",
-    }
-
-    city_lower = city.lower()
-    if city_lower in temperatures:
-        return f"The current temperature in {city} is {temperatures[city_lower]}."
-    else:
-        return "Temperature data not available for this city"
-
-# Run the server with SSE transport
-if __name__ == "__main__":
-    mcp.run(transport="sse")
-```
-
-## Known Limitations
-
-### Agent Compatibility
-
-Different agent implementations have varying requirements for tools:
-
-1. **OpenAI Functions Agent**:
-
-   - Most reliable with well-defined parameter schemas
-   - Handles complex parameter types well
-
-2. **React Agent**:
-
-   - Requires the LLM to implement a `bindTools` method
-   - May struggle with parsing complex tool inputs/outputs
-   - More sensitive to prompt formatting
-
-3. **LLM Compatibility**:
-   - Google's Gemini models require non-empty parameter schemas
-   - Some LLMs (like Anthropic Claude) have limitations on function calling
-
-### Browser Environments
+## Browser Environments
 
 When using in browsers:
 
@@ -459,6 +336,10 @@ logger.level = 'debug';
 ## License
 
 MIT
+
+## Acknowledgements
+
+Big thanks to [@vrknetha](https://github.com/vrknetha), [@cawstudios](https://caw.tech)  for the initial implementation!
 
 ## Contributing
 
