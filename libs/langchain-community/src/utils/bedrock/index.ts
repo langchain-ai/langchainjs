@@ -117,7 +117,7 @@ export interface BaseBedrockInput {
   */
   model: string;
 
-  /** Optional URL Encoded overide for URL module parameter in fetch. Necessary for invoking an Application Inference Profile.
+  /** Optional URL Encoded overide for URL model parameter in fetch. Necessary for invoking an Application Inference Profile.
       For example, "arn%3Aaws%3Abedrock%3Aus-east-1%3A1234567890%3Aapplication-inference-profile%2Fabcdefghi", will override this.model in final /invoke URL call.
       Must still provide `model` as normal modelId to benefit from all the metadata.
   */
