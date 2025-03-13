@@ -563,7 +563,7 @@ export function bedrockReasoningDeltaToLangchainPartialReasoningBlock(
   | MessageContentReasoningBlockReasoningTextPartial
   | MessageContentReasoningBlockRedacted {
   const { text, redactedContent, signature } = reasoningContent;
-  if (text || typeof text === 'string') {
+  if (typeof text === 'string') {
     return {
       type: "reasoning_content",
       reasoningText: { text },
