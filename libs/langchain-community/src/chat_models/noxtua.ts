@@ -34,7 +34,7 @@ export class ChatNoxtua extends ChatOpenAI<ChatNoxtuaCallOptions> {
   }
 
   _llmType() {
-    return "noxtua_ai";
+    return "noxtua";
   }
 
   get lc_secrets(): { [key: string]: string } | undefined {
@@ -48,11 +48,11 @@ export class ChatNoxtua extends ChatOpenAI<ChatNoxtuaCallOptions> {
 
   tenantId?: string;
 
-  noxtuaApiKey?: string;
-
   apiUrl?: string;
 
   apiKey?: string;
+
+  authToken?: string;
 
   constructor(
     fields?: Partial<
@@ -64,11 +64,13 @@ export class ChatNoxtua extends ChatOpenAI<ChatNoxtuaCallOptions> {
         apiUrl?: string;
         noxtuaApiKey?: string;
         apiKey?: string;
+        noxtuaAuthToken?: string;
+        authToken?: string;
       }
   ) {
     const tenantId =
       fields?.tenantId || getEnvironmentVariable("NOXTUA_TENANT_ID");
-    const apiUrl =
+    const noxtuaApiUrl =
       fields?.apiUrl ||
       fields?.noxtuaApiUrl ||
       getEnvironmentVariable("NOXTUA_API_URL");
@@ -76,35 +78,41 @@ export class ChatNoxtua extends ChatOpenAI<ChatNoxtuaCallOptions> {
       fields?.apiKey ||
       fields?.noxtuaApiKey ||
       getEnvironmentVariable("NOXTUA_API_KEY");
+    const noxtuaAuthToken =
+      fields?.authToken ||
+      fields?.noxtuaAuthToken ||
+      getEnvironmentVariable("NOXTUA_AUTH_TOKEN");
+    const defaultHeaders: { [key: string]: string } = {};
 
-    if (!tenantId) {
-      throw new Error(
-        `Noxtua tenantId not found. Please set the NOXTUA_TENANT_ID environment variable or provide the key into "tenantId"`
-      );
+    if (tenantId) {
+      defaultHeaders["tenant-id"] = tenantId;
     }
 
-    if (!noxtuaApiKey) {
-      throw new Error(
-        `Noxtua API key not found. Please set the NOXTUA_API_KEY environment variable or provide the key into "noxtuaApiKey"`
-      );
+    if (noxtuaApiKey) {
+      defaultHeaders["x-api-key"] = noxtuaApiKey;
+    }
+
+    if (noxtuaAuthToken) {
+      defaultHeaders["Authorization"] = `Bearer ${noxtuaAuthToken}`;
     }
 
     super({
       ...fields,
       configuration: {
-        baseURL: apiUrl,
+        baseURL: noxtuaApiUrl,
         defaultHeaders: {
           "tenant-id": tenantId,
-          Authorization: `Bearer ${noxtuaApiKey}`,
+          "x-api-key": noxtuaApiKey,
+          Authorization: `Bearer ${noxtuaAuthToken}`,
         },
       },
       streamUsage: true,
     });
 
     this.tenantId = tenantId;
-    this.noxtuaApiKey = noxtuaApiKey;
     this.apiKey = noxtuaApiKey;
-    this.apiUrl = apiUrl;
+    this.apiUrl = noxtuaApiUrl;
+    this.authToken = noxtuaAuthToken;
   }
 
   getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
@@ -138,12 +146,6 @@ export class ChatNoxtua extends ChatOpenAI<ChatNoxtuaCallOptions> {
     options?: OpenAICoreRequestOptions
   ): Promise<OpenAIClient.Chat.Completions.ChatCompletion>;
 
-  /**
-   * Calls the Fireworks API with retry logic in case of failures.
-   * @param request The request to send to the Fireworks API.
-   * @param options Optional configuration for the API call.
-   * @returns The response from the Fireworks API.
-   */
   async completionWithRetry(
     request:
       | OpenAIClient.Chat.ChatCompletionCreateParamsStreaming
