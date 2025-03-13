@@ -41,6 +41,8 @@ export class ChatNoxtua extends ChatOpenAI<ChatNoxtuaCallOptions> {
     return {
       noxtuaApiKey: "NOXTUA_API_KEY",
       apiKey: "NOXTUA_API_KEY",
+      noxtuaAuthToken: "NOXTUA_AUTH_TOKEN",
+      authToken: "NOXTUA_AUTH_TOKEN"
     };
   }
 
