@@ -18,5 +18,10 @@ export default {
   extensionsToTreatAsEsm: ['.ts'],
   moduleNameMapper: {
     '^(\\.{1,2}/.*)\\.js$': '$1',
+    '^node:(.*)$': '$1',
   },
+  transformIgnorePatterns: [
+    '/node_modules/(?!(@dmitryrechkin/json-schema-to-zod|pkce-challenge|@modelcontextprotocol)/)',
+  ],
+  setupFiles: ['<rootDir>/jest.setup.js'],
 };
