@@ -635,9 +635,9 @@ export class BedrockChat
     this.guardrailIdentifier =
       fields?.guardrailIdentifier ?? this.guardrailIdentifier;
     this.guardrailConfig = fields?.guardrailConfig;
-    // Permit Application Inference Profile override (expects to be url-encoded)
-    if (fields?.modelAlias) {
-      this.model = fields?.modelAlias;
+    // Permit Application Inference Profile override in fetch URL (expects to be url-encoded)
+    if (fields?.applicationInferenceProfile) {
+      this.model = fields?.applicationInferenceProfile;
     }
   }
 

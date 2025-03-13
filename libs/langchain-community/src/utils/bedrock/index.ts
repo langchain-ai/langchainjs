@@ -117,11 +117,11 @@ export interface BaseBedrockInput {
   */
   model: string;
 
-  /** Optional URL Encoded model alias to use. Necessary for invoking an Application Inference Profile
+  /** Optional URL Encoded overide for URL module parameter in fetch. Necessary for invoking an Application Inference Profile.
       For example, "arn%3Aaws%3Abedrock%3Aus-east-1%3A1234567890%3Aapplication-inference-profile%2Fabcdefghi", will override this.model in final /invoke URL call.
       Must still provide `model` as normal modelId to benefit from all the metadata.
   */
-  modelAlias?: string;
+  applicationInferenceProfile?: string;
 
   /** The AWS region e.g. `us-west-2`.
       Fallback to AWS_DEFAULT_REGION env variable or region specified in ~/.aws/config in case it is not provided here.
