@@ -12,6 +12,6 @@
     "sourceMap": true,
     "downlevelIteration": true
   },
-  "include": ["src/**/*", "examples/**/*"],
+  "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "**/*.test.ts"]
 }
