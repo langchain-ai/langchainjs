@@ -1,9 +1,31 @@
 # LangChain.js MCP Adapters
 
-[![npm version](https://img.shields.io/npm/v/langchainjs-mcp-adapters.svg)](https://www.npmjs.com/package/langchainjs-mcp-adapters)
+> **IMPORTANT UPDATE**: This library has been moved to the official LangChain.js repository. Please install the new package `@langchain/mcp-adapters` instead. This repository is now archived and will no longer receive updates.
+
+[![npm version](https://img.shields.io/npm/v/@langchain/mcp-adapters.svg)](https://www.npmjs.com/package/@langchain/mcp-adapters)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 A library for seamlessly integrating [Model Context Protocol (MCP)](https://github.com/modelcontextprotocol/specification) tools with LangChain.js. This adapter enables LangChain agents to leverage MCP's standardized tool protocol across different model providers and agent frameworks.
+
+## Migration to @langchain/mcp-adapters
+
+This library has been officially integrated into the LangChain.js ecosystem. To use the latest version, install:
+
+```bash
+npm install @langchain/mcp-adapters
+```
+
+Then update your imports:
+
+```typescript
+// Old import
+import { MultiServerMCPClient } from 'langchainjs-mcp-adapters';
+
+// New import
+import { MultiServerMCPClient } from '@langchain/mcp-adapters';
+```
+
+All functionality remains the same, but you'll benefit from improved integration with other LangChain packages and ongoing maintenance.
 
 ## Features
 
@@ -32,8 +54,10 @@ A library for seamlessly integrating [Model Context Protocol (MCP)](https://gith
 
 ## Installation
 
+> **DEPRECATED**: This package is deprecated. Please use `@langchain/mcp-adapters` instead.
+
 ```bash
-npm install langchainjs-mcp-adapters
+npm install @langchain/mcp-adapters
 ```
 
 ### Optional Dependencies
@@ -62,7 +86,7 @@ npm install extended-eventsource
 ### Basic Connection
 
 ```typescript
-import { MultiServerMCPClient } from 'langchainjs-mcp-adapters';
+import { MultiServerMCPClient } from '@langchain/mcp-adapters';
 
 // Create a client
 const client = new MultiServerMCPClient();
@@ -135,7 +159,7 @@ Define your server connections in a JSON file:
 Then load it in your code:
 
 ```typescript
-import { MultiServerMCPClient } from 'langchainjs-mcp-adapters';
+import { MultiServerMCPClient } from '@langchain/mcp-adapters';
 
 // Load from default location (./mcp.json)
 const client = MultiServerMCPClient.fromConfigFile();
@@ -151,7 +175,7 @@ const tools = client.getTools();
 ### OpenAI Functions Agent
 
 ```typescript
-import { MultiServerMCPClient } from 'langchainjs-mcp-adapters';
+import { MultiServerMCPClient } from '@langchain/mcp-adapters';
 import { ChatOpenAI } from '@langchain/openai';
 import { createOpenAIFunctionsAgent, AgentExecutor } from 'langchain/agents';
 import { ChatPromptTemplate } from '@langchain/core/prompts';
@@ -196,7 +220,7 @@ const result = await executor.invoke({
 ### React Agent
 
 ```typescript
-import { MultiServerMCPClient } from 'langchainjs-mcp-adapters';
+import { MultiServerMCPClient } from '@langchain/mcp-adapters';
 import { ChatOpenAI } from '@langchain/openai';
 import { createReactAgent, AgentExecutor } from 'langchain/agents';
 import { ChatPromptTemplate } from '@langchain/core/prompts';
@@ -259,7 +283,7 @@ const result = await executor.invoke({
 ### LangGraph Integration
 
 ```typescript
-import { MultiServerMCPClient } from 'langchainjs-mcp-adapters';
+import { MultiServerMCPClient } from '@langchain/mcp-adapters';
 import { ChatOpenAI } from '@langchain/openai';
 import { StateGraph, END } from '@langchain/langgraph';
 import { ToolNode } from '@langchain/langgraph/prebuilt';
@@ -426,7 +450,7 @@ When using in browsers:
 Enable verbose logging to diagnose issues:
 
 ```typescript
-import { logger } from 'langchainjs-mcp-adapters';
+import { logger } from '@langchain/mcp-adapters';
 
 // Set logger level to debug
 logger.level = 'debug';
