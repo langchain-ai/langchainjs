@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { calendar_v3 } from "googleapis";
 import type { GaxiosResponse } from "googleapis-common";
 import { PromptTemplate } from "@langchain/core/prompts";
@@ -5,7 +6,6 @@ import { CallbackManagerForToolRun } from "@langchain/core/callbacks/manager";
 import { BaseLanguageModel } from "@langchain/core/language_models/base";
 import { CREATE_EVENT_PROMPT } from "../prompts/index.js";
 import { getTimezoneOffsetInHours } from "../utils/get-timezone-offset-in-hours.js";
-import { z } from "zod";
 
 const eventSchema = z.object({
   event_summary: z.string(),
