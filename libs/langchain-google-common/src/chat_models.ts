@@ -53,6 +53,7 @@ import type {
   GeminiFunctionSchema,
   GoogleAIToolType,
   GeminiAPIConfig,
+  GoogleAIModelModality,
 } from "./types.js";
 import { zodToGeminiParameters } from "./utils/zod_to_gemini_parameters.js";
 
@@ -201,6 +202,8 @@ export abstract class ChatGoogleBase<AuthOptions>
 
   safetySettings: GoogleAISafetySetting[] = [];
 
+  responseModalities?: GoogleAIModelModality[];
+  
   // May intentionally be undefined, meaning to compute this.
   convertSystemMessageToHumanContent: boolean | undefined;
 

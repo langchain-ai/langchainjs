@@ -1213,6 +1213,7 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
       maxOutputTokens: parameters.maxOutputTokens,
       stopSequences: parameters.stopSequences,
       responseMimeType: parameters.responseMimeType,
+      responseModalities: parameters.responseModalities,
     };
 
     // Add the logprobs if explicitly set
