@@ -2629,7 +2629,8 @@ export class RunnableLambda<
   }
 
   async invoke(
-    input: RunInput,
+    // eslint-disable-next-line default-param-last
+    input = {} as RunInput,
     options?: Partial<CallOptions>
   ): Promise<RunOutput> {
     return this._callWithConfig(this._invoke.bind(this), input, options);
