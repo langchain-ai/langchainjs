@@ -136,6 +136,10 @@ export class ChatPerplexity
       throw new Error("Perplexity API key not found");
     }
 
+    if (!this.model) {
+      throw new Error("Perplexity model not found");
+    }
+
     this.client = new OpenAI({
       apiKey: this.apiKey,
       baseURL: "https://api.perplexity.ai",
