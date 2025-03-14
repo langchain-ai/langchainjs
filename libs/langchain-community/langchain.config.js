@@ -434,7 +434,6 @@ export const config = {
     "chat_models/bedrock",
     "chat_models/bedrock/web",
     "chat_models/llama_cpp",
-    "chat_models/perplexity",
     "chat_models/portkey",
     "chat_models/premai",
     "chat_models/tencent_hunyuan",
