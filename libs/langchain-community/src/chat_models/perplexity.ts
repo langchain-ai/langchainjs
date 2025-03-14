@@ -88,9 +88,9 @@ export class ChatPerplexity
     return "ChatPerplexity";
   }
 
-  model = "llama-3.1-sonar-small-128k-online";
+  model?: string;
 
-  temperature = 0.2;
+  temperature?: number;
 
   maxTokens?: number;
 
@@ -98,19 +98,19 @@ export class ChatPerplexity
 
   timeout?: number;
 
-  streaming = false;
+  streaming?: boolean;
 
-  topP = 0.9;
+  topP?: number;
 
-  returnImages = false;
+  returnImages?: boolean;
 
-  returnRelatedQuestions = false;
+  returnRelatedQuestions?: boolean;
 
-  topK = 0;
+  topK?: number;
 
-  presencePenalty = 0;
+  presencePenalty?: number;
 
-  frequencyPenalty = 1;
+  frequencyPenalty?: number;
 
   private client: OpenAI;
 
