@@ -92,6 +92,7 @@ export const optionalImportEntrypoints: string[] = [
   "langchain_community/chat_models/llama_cpp",
   "langchain_community/chat_models/portkey",
   "langchain_community/chat_models/premai",
+  "langchain_community/chat_models/noxtua",
   "langchain_community/chat_models/tencent_hunyuan",
   "langchain_community/chat_models/tencent_hunyuan/web",
   "langchain_community/chat_models/webllm",
