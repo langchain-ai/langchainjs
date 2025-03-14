@@ -235,7 +235,7 @@ export class ChatPerplexity
   async *_streamResponseChunks(
     messages: BaseMessage[],
     _options: this["ParsedCallOptions"],
-    _runManager?: CallbackManagerForLLMRun
+    runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
     const messagesList = messages.map((message) =>
       this.messageToPerplexityRole(message)
@@ -282,8 +282,8 @@ export class ChatPerplexity
       yield generationChunk;
 
       // Emit the chunk to the callback manager if provided
-      if (_runManager) {
-        await _runManager.handleLLMNewToken(delta.content);
+      if (runManager) {
+        await runManager.handleLLMNewToken(delta.content);
       }
     }
   }
