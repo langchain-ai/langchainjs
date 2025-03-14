@@ -33,7 +33,7 @@ export type PerplexityRole = "system" | "user" | "assistant";
  */
 export interface PerplexityChatInput {
   /** Model name to use */
-  modelName?: string;
+  model?: string;
 
   /** Maximum number of tokens to generate */
   maxTokens?: number;
@@ -88,7 +88,7 @@ export class ChatPerplexity
     return "ChatPerplexity";
   }
 
-  modelName = "llama-3.1-sonar-small-128k-online";
+  model = "llama-3.1-sonar-small-128k-online";
 
   temperature = 0.2;
 
@@ -117,7 +117,7 @@ export class ChatPerplexity
   constructor(fields?: Partial<PerplexityChatInput> & BaseChatModelParams) {
     super(fields ?? {});
 
-    this.modelName = fields?.modelName ?? this.modelName;
+    this.model = fields?.model ?? this.model;
     this.temperature = fields?.temperature ?? this.temperature;
     this.maxTokens = fields?.maxTokens;
     this.apiKey =
@@ -151,7 +151,7 @@ export class ChatPerplexity
    */
   invocationParams() {
     return {
-      model: this.modelName,
+      model: this.model,
       temperature: this.temperature,
       max_tokens: this.maxTokens,
       stream: this.streaming,
