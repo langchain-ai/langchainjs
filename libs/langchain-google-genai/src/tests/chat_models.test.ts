@@ -28,7 +28,7 @@ function extractKeys(obj: Record<string, any>, keys: string[] = []) {
   return keys;
 }
 
-test("Google AI - `temperature` must be in range [0.0,1.0]", async () => {
+test("Google AI - `temperature` must be in range [0.0,2.0]", async () => {
   expect(
     () =>
       new ChatGoogleGenerativeAI({
@@ -38,7 +38,7 @@ test("Google AI - `temperature` must be in range [0.0,1.0]", async () => {
   expect(
     () =>
       new ChatGoogleGenerativeAI({
-        temperature: 1.1,
+        temperature: 2.1,
       })
   ).toThrow();
 });

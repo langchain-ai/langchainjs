@@ -259,6 +259,7 @@ export const config = {
     "stores/message/neo4j": "stores/message/neo4j",
     "stores/message/planetscale": "stores/message/planetscale",
     "stores/message/postgres": "stores/message/postgres",
+    "stores/message/aurora_dsql": "stores/message/aurora_dsql",
     "stores/message/redis": "stores/message/redis",
     "stores/message/upstash_redis": "stores/message/upstash_redis",
     "stores/message/xata": "stores/message/xata",
@@ -288,6 +289,7 @@ export const config = {
     "document_loaders/web/playwright": "document_loaders/web/playwright",
     "document_loaders/web/college_confidential":
       "document_loaders/web/college_confidential",
+    "document_loaders/web/google_cloud_storage": "document_loaders/web/google_cloud_storage",
     "document_loaders/web/gitbook": "document_loaders/web/gitbook",
     "document_loaders/web/hn": "document_loaders/web/hn",
     "document_loaders/web/imsdb": "document_loaders/web/imsdb",
@@ -489,6 +491,7 @@ export const config = {
     "stores/message/neo4j",
     "stores/message/planetscale",
     "stores/message/postgres",
+    "stores/message/aurora_dsql",
     "stores/message/redis",
     "stores/message/upstash_redis",
     "stores/message/xata",

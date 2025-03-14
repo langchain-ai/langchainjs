@@ -1,10 +1,13 @@
-import { JSDOM } from "jsdom";
+import { JSDOM, VirtualConsole } from "jsdom";
 import { Document } from "@langchain/core/documents";
 import { AsyncCaller } from "@langchain/core/utils/async_caller";
 import {
   BaseDocumentLoader,
   DocumentLoader,
 } from "@langchain/core/document_loaders/base";
+
+const virtualConsole = new VirtualConsole();
+virtualConsole.on("error", () => {});
 
 export interface RecursiveUrlLoaderOptions {
   excludeDirs?: string[];
@@ -62,7 +65,7 @@ export class RecursiveUrlLoader
 
   private getChildLinks(html: string, baseUrl: string): Array<string> {
     const allLinks = Array.from(
-      new JSDOM(html).window.document.querySelectorAll("a")
+      new JSDOM(html, { virtualConsole }).window.document.querySelectorAll("a")
     ).map((a) => a.href);
     const absolutePaths = [];
     // eslint-disable-next-line no-script-url
@@ -117,7 +120,7 @@ export class RecursiveUrlLoader
   private extractMetadata(rawHtml: string, url: string) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const metadata: Record<string, any> = { source: url };
-    const { document } = new JSDOM(rawHtml).window;
+    const { document } = new JSDOM(rawHtml, { virtualConsole }).window;
 
     const title = document.getElementsByTagName("title")[0];
     if (title) {

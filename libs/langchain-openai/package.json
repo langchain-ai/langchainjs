@@ -1,6 +1,6 @@
 {
   "name": "@langchain/openai",
-  "version": "0.4.2",
+  "version": "0.4.4",
   "description": "OpenAI integrations for LangChain.js",
   "type": "module",
   "engines": {
@@ -41,7 +41,7 @@
     "zod-to-json-schema": "^3.22.3"
   },
   "peerDependencies": {
-    "@langchain/core": ">=0.3.29 <0.4.0"
+    "@langchain/core": ">=0.3.39 <0.4.0"
   },
   "devDependencies": {
     "@azure/identity": "^4.2.1",
