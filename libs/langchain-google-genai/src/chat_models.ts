@@ -905,21 +905,21 @@ export class ChatGoogleGenerativeAI
         options.streamUsage !== false
       ) {
         const genAIUsageMetadata = response.usageMetadata as {
-          promptTokenCount: number;
-          candidatesTokenCount: number;
-          totalTokenCount: number;
+          promptTokenCount: number | undefined;
+          candidatesTokenCount: number | undefined;
+          totalTokenCount: number | undefined;
         };
         if (!usageMetadata) {
           usageMetadata = {
-            input_tokens: genAIUsageMetadata.promptTokenCount,
-            output_tokens: genAIUsageMetadata.candidatesTokenCount,
-            total_tokens: genAIUsageMetadata.totalTokenCount,
+            input_tokens: genAIUsageMetadata.promptTokenCount ?? 0,
+            output_tokens: genAIUsageMetadata.candidatesTokenCount ?? 0,
+            total_tokens: genAIUsageMetadata.totalTokenCount ?? 0,
           };
         } else {
           // Under the hood, LangChain combines the prompt tokens. Google returns the updated
           // total each time, so we need to find the difference between the tokens.
           const outputTokenDiff =
-            genAIUsageMetadata.candidatesTokenCount -
+            (genAIUsageMetadata.candidatesTokenCount ?? 0) -
             usageMetadata.output_tokens;
           usageMetadata = {
             input_tokens: 0,

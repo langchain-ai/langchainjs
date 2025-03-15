@@ -514,7 +514,7 @@ export class ChatZhipuAI extends BaseChatModel implements ChatZhipuAIParams {
     for await (const chunk of stream) {
       if (chunk !== "[DONE]") {
         const deserializedChunk = this._deserialize(chunk);
-        const { choices, id } = deserializedChunk;
+        const { choices, usage, id } = deserializedChunk;
         const text = choices[0]?.delta?.content ?? "";
         const finished = !!choices[0]?.finish_reason;
         yield new ChatGenerationChunk({
@@ -524,7 +524,8 @@ export class ChatZhipuAI extends BaseChatModel implements ChatZhipuAIParams {
             ? {
                 finished,
                 request_id: id,
-                usage: chunk.usage,
+                // The usage of tokens is counted at the end of the stream
+                usage,
               }
             : undefined,
         });

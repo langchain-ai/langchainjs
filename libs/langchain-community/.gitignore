@@ -938,6 +938,10 @@ document_loaders/web/college_confidential.cjs
 document_loaders/web/college_confidential.js
 document_loaders/web/college_confidential.d.ts
 document_loaders/web/college_confidential.d.cts
+document_loaders/web/google_cloud_storage.cjs
+document_loaders/web/google_cloud_storage.js
+document_loaders/web/google_cloud_storage.d.ts
+document_loaders/web/google_cloud_storage.d.cts
 document_loaders/web/gitbook.cjs
 document_loaders/web/gitbook.js
 document_loaders/web/gitbook.d.ts

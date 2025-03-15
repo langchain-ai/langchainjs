@@ -520,6 +520,56 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@aws-sdk/client-bedrock-agent-runtime@npm:^3.755.0":
+  version: 3.755.0
+  resolution: "@aws-sdk/client-bedrock-agent-runtime@npm:3.755.0"
+  dependencies:
+    "@aws-crypto/sha256-browser": 5.2.0
+    "@aws-crypto/sha256-js": 5.2.0
+    "@aws-sdk/core": 3.750.0
+    "@aws-sdk/credential-provider-node": 3.750.0
+    "@aws-sdk/middleware-host-header": 3.734.0
+    "@aws-sdk/middleware-logger": 3.734.0
+    "@aws-sdk/middleware-recursion-detection": 3.734.0
+    "@aws-sdk/middleware-user-agent": 3.750.0
+    "@aws-sdk/region-config-resolver": 3.734.0
+    "@aws-sdk/types": 3.734.0
+    "@aws-sdk/util-endpoints": 3.743.0
+    "@aws-sdk/util-user-agent-browser": 3.734.0
+    "@aws-sdk/util-user-agent-node": 3.750.0
+    "@smithy/config-resolver": ^4.0.1
+    "@smithy/core": ^3.1.4
+    "@smithy/eventstream-serde-browser": ^4.0.1
+    "@smithy/eventstream-serde-config-resolver": ^4.0.1
+    "@smithy/eventstream-serde-node": ^4.0.1
+    "@smithy/fetch-http-handler": ^5.0.1
+    "@smithy/hash-node": ^4.0.1
+    "@smithy/invalid-dependency": ^4.0.1
+    "@smithy/middleware-content-length": ^4.0.1
+    "@smithy/middleware-endpoint": ^4.0.5
+    "@smithy/middleware-retry": ^4.0.6
+    "@smithy/middleware-serde": ^4.0.2
+    "@smithy/middleware-stack": ^4.0.1
+    "@smithy/node-config-provider": ^4.0.1
+    "@smithy/node-http-handler": ^4.0.2
+    "@smithy/protocol-http": ^5.0.1
+    "@smithy/smithy-client": ^4.1.5
+    "@smithy/types": ^4.1.0
+    "@smithy/url-parser": ^4.0.1
+    "@smithy/util-base64": ^4.0.0
+    "@smithy/util-body-length-browser": ^4.0.0
+    "@smithy/util-body-length-node": ^4.0.0
+    "@smithy/util-defaults-mode-browser": ^4.0.6
+    "@smithy/util-defaults-mode-node": ^4.0.6
+    "@smithy/util-endpoints": ^3.0.1
+    "@smithy/util-middleware": ^4.0.1
+    "@smithy/util-retry": ^4.0.1
+    "@smithy/util-utf8": ^4.0.0
+    tslib: ^2.6.2
+  checksum: 702f690cbd27d24d7c81e9c7b2a3d558ff8129eec7f870f2ab4d1eac564be3212ec02a3cad808422bdd0e92d2f695497eb290de75e621bbf3265bb5756996c14
+  languageName: node
+  linkType: hard
+
 "@aws-sdk/client-bedrock-runtime@npm:^3.749.0":
   version: 3.749.0
   resolution: "@aws-sdk/client-bedrock-runtime@npm:3.749.0"
@@ -570,6 +620,59 @@ __metadata:
     tslib: ^2.6.2
     uuid: ^9.0.1
   checksum: 5d015a3c7364ebe0f786625737a9252621a463ebf2ff67c3c6fc848f11d0ce0c5d7696925089d65dc3cebad8871f370dddb95f87d1c0eeb2072f411ecba2339c
+  languageName: node
+  linkType: hard
+
+"@aws-sdk/client-bedrock-runtime@npm:^3.755.0":
+  version: 3.755.0
+  resolution: "@aws-sdk/client-bedrock-runtime@npm:3.755.0"
+  dependencies:
+    "@aws-crypto/sha256-browser": 5.2.0
+    "@aws-crypto/sha256-js": 5.2.0
+    "@aws-sdk/core": 3.750.0
+    "@aws-sdk/credential-provider-node": 3.750.0
+    "@aws-sdk/middleware-host-header": 3.734.0
+    "@aws-sdk/middleware-logger": 3.734.0
+    "@aws-sdk/middleware-recursion-detection": 3.734.0
+    "@aws-sdk/middleware-user-agent": 3.750.0
+    "@aws-sdk/region-config-resolver": 3.734.0
+    "@aws-sdk/types": 3.734.0
+    "@aws-sdk/util-endpoints": 3.743.0
+    "@aws-sdk/util-user-agent-browser": 3.734.0
+    "@aws-sdk/util-user-agent-node": 3.750.0
+    "@smithy/config-resolver": ^4.0.1
+    "@smithy/core": ^3.1.4
+    "@smithy/eventstream-serde-browser": ^4.0.1
+    "@smithy/eventstream-serde-config-resolver": ^4.0.1
+    "@smithy/eventstream-serde-node": ^4.0.1
+    "@smithy/fetch-http-handler": ^5.0.1
+    "@smithy/hash-node": ^4.0.1
+    "@smithy/invalid-dependency": ^4.0.1
+    "@smithy/middleware-content-length": ^4.0.1
+    "@smithy/middleware-endpoint": ^4.0.5
+    "@smithy/middleware-retry": ^4.0.6
+    "@smithy/middleware-serde": ^4.0.2
+    "@smithy/middleware-stack": ^4.0.1
+    "@smithy/node-config-provider": ^4.0.1
+    "@smithy/node-http-handler": ^4.0.2
+    "@smithy/protocol-http": ^5.0.1
+    "@smithy/smithy-client": ^4.1.5
+    "@smithy/types": ^4.1.0
+    "@smithy/url-parser": ^4.0.1
+    "@smithy/util-base64": ^4.0.0
+    "@smithy/util-body-length-browser": ^4.0.0
+    "@smithy/util-body-length-node": ^4.0.0
+    "@smithy/util-defaults-mode-browser": ^4.0.6
+    "@smithy/util-defaults-mode-node": ^4.0.6
+    "@smithy/util-endpoints": ^3.0.1
+    "@smithy/util-middleware": ^4.0.1
+    "@smithy/util-retry": ^4.0.1
+    "@smithy/util-stream": ^4.1.1
+    "@smithy/util-utf8": ^4.0.0
+    "@types/uuid": ^9.0.1
+    tslib: ^2.6.2
+    uuid: ^9.0.1
+  checksum: 48122560e216a12f44f169632b3010ba49c3020aee7960448ea1cf1ca3ca892c7a96716ba03dc7f7dc252599d1a5757eb210270a5ea2a05257e38dfd5e55a1c3
   languageName: node
   linkType: hard
 
@@ -766,6 +869,55 @@ __metadata:
     tslib: ^2.6.2
     uuid: ^9.0.1
   checksum: 02016ecb68c434b7eedcd7a2fe4320ad5f58a32e984db3f8ceb67681de29115581dc06fe32800a8415090def7abaf63873fc7ab545dbb46288c7807f29b40bc8
+  languageName: node
+  linkType: hard
+
+"@aws-sdk/client-kendra@npm:^3.750.0":
+  version: 3.750.0
+  resolution: "@aws-sdk/client-kendra@npm:3.750.0"
+  dependencies:
+    "@aws-crypto/sha256-browser": 5.2.0
+    "@aws-crypto/sha256-js": 5.2.0
+    "@aws-sdk/core": 3.750.0
+    "@aws-sdk/credential-provider-node": 3.750.0
+    "@aws-sdk/middleware-host-header": 3.734.0
+    "@aws-sdk/middleware-logger": 3.734.0
+    "@aws-sdk/middleware-recursion-detection": 3.734.0
+    "@aws-sdk/middleware-user-agent": 3.750.0
+    "@aws-sdk/region-config-resolver": 3.734.0
+    "@aws-sdk/types": 3.734.0
+    "@aws-sdk/util-endpoints": 3.743.0
+    "@aws-sdk/util-user-agent-browser": 3.734.0
+    "@aws-sdk/util-user-agent-node": 3.750.0
+    "@smithy/config-resolver": ^4.0.1
+    "@smithy/core": ^3.1.4
+    "@smithy/fetch-http-handler": ^5.0.1
+    "@smithy/hash-node": ^4.0.1
+    "@smithy/invalid-dependency": ^4.0.1
+    "@smithy/middleware-content-length": ^4.0.1
+    "@smithy/middleware-endpoint": ^4.0.5
+    "@smithy/middleware-retry": ^4.0.6
+    "@smithy/middleware-serde": ^4.0.2
+    "@smithy/middleware-stack": ^4.0.1
+    "@smithy/node-config-provider": ^4.0.1
+    "@smithy/node-http-handler": ^4.0.2
+    "@smithy/protocol-http": ^5.0.1
+    "@smithy/smithy-client": ^4.1.5
+    "@smithy/types": ^4.1.0
+    "@smithy/url-parser": ^4.0.1
+    "@smithy/util-base64": ^4.0.0
+    "@smithy/util-body-length-browser": ^4.0.0
+    "@smithy/util-body-length-node": ^4.0.0
+    "@smithy/util-defaults-mode-browser": ^4.0.6
+    "@smithy/util-defaults-mode-node": ^4.0.6
+    "@smithy/util-endpoints": ^3.0.1
+    "@smithy/util-middleware": ^4.0.1
+    "@smithy/util-retry": ^4.0.1
+    "@smithy/util-utf8": ^4.0.0
+    "@types/uuid": ^9.0.1
+    tslib: ^2.6.2
+    uuid: ^9.0.1
+  checksum: a30d472bc0ec4a7e7f4bc55f9b11199e232417168e2dbc28280f4c50f33b23484c050f18bdbdc46dc168aaa4e4e082ebaa41ea8f3ec1f3bebe1fda8e306a59dd
   languageName: node
   linkType: hard
 
@@ -1543,7 +1695,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@aws-sdk/credential-provider-node@npm:3.750.0":
+"@aws-sdk/credential-provider-node@npm:3.750.0, @aws-sdk/credential-provider-node@npm:^3.750.0":
   version: 3.750.0
   resolution: "@aws-sdk/credential-provider-node@npm:3.750.0"
   dependencies:
@@ -6809,6 +6961,29 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@google-cloud/storage@npm:^7.15.2":
+  version: 7.15.2
+  resolution: "@google-cloud/storage@npm:7.15.2"
+  dependencies:
+    "@google-cloud/paginator": ^5.0.0
+    "@google-cloud/projectify": ^4.0.0
+    "@google-cloud/promisify": ^4.0.0
+    abort-controller: ^3.0.0
+    async-retry: ^1.3.3
+    duplexify: ^4.1.3
+    fast-xml-parser: ^4.4.1
+    gaxios: ^6.0.2
+    google-auth-library: ^9.6.3
+    html-entities: ^2.5.2
+    mime: ^3.0.0
+    p-limit: ^3.0.1
+    retry-request: ^7.0.0
+    teeny-request: ^9.0.0
+    uuid: ^8.0.0
+  checksum: 1c3a2614349ca9e16bc2949e1dad511e321ca38551a51987a972955a88bf21f7ad31dccec9b63233c5d678cccb84654575098f85a592a8d335b09cab8859ea4c
+  languageName: node
+  linkType: hard
+
 "@google-cloud/storage@npm:^7.7.0":
   version: 7.7.0
   resolution: "@google-cloud/storage@npm:7.7.0"
@@ -7952,10 +8127,10 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@langchain/aws@workspace:libs/langchain-aws"
   dependencies:
-    "@aws-sdk/client-bedrock-agent-runtime": ^3.749.0
-    "@aws-sdk/client-bedrock-runtime": ^3.749.0
-    "@aws-sdk/client-kendra": ^3.749.0
-    "@aws-sdk/credential-provider-node": ^3.749.0
+    "@aws-sdk/client-bedrock-agent-runtime": ^3.755.0
+    "@aws-sdk/client-bedrock-runtime": ^3.755.0
+    "@aws-sdk/client-kendra": ^3.750.0
+    "@aws-sdk/credential-provider-node": ^3.750.0
     "@aws-sdk/types": ^3.734.0
     "@jest/globals": ^29.5.0
     "@langchain/core": "workspace:*"
@@ -7985,7 +8160,7 @@ __metadata:
     zod: ^3.22.4
     zod-to-json-schema: ^3.22.5
   peerDependencies:
-    "@langchain/core": ">=0.2.21 <0.4.0"
+    "@langchain/core": ">=0.3.41 <0.4.0"
   languageName: unknown
   linkType: soft
 
@@ -8277,7 +8452,7 @@ __metadata:
     "@gomomento/sdk": ^1.51.1
     "@gomomento/sdk-core": ^1.51.1
     "@google-ai/generativelanguage": ^2.5.0
-    "@google-cloud/storage": ^7.7.0
+    "@google-cloud/storage": ^7.15.2
     "@gradientai/nodejs-sdk": ^1.2.0
     "@huggingface/inference": ^2.6.4
     "@huggingface/transformers": ^3.2.3
@@ -8919,19 +9094,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/google-common@npm:^0.1.0":
-  version: 0.1.8
-  resolution: "@langchain/google-common@npm:0.1.8"
-  dependencies:
-    uuid: ^10.0.0
-    zod-to-json-schema: ^3.22.4
-  peerDependencies:
-    "@langchain/core": ">=0.2.21 <0.4.0"
-  checksum: f6c2c15d13fdcecf34bf0add9eaee2cfe0c3c3708c7f9182df935abc130fddff899e95f284e5f30bc63d26ddbbd91a6fb362ce47a1f3a1a973e030ae77c0ab47
-  languageName: node
-  linkType: hard
-
-"@langchain/google-common@workspace:*, @langchain/google-common@workspace:libs/langchain-google-common, @langchain/google-common@~0.2.0":
+"@langchain/google-common@^0.2.0, @langchain/google-common@^0.2.2, @langchain/google-common@workspace:*, @langchain/google-common@workspace:libs/langchain-google-common":
   version: 0.0.0-use.local
   resolution: "@langchain/google-common@workspace:libs/langchain-google-common"
   dependencies:
@@ -8966,13 +9129,13 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/google-gauth@workspace:libs/langchain-google-gauth, @langchain/google-gauth@~0.2.0":
+"@langchain/google-gauth@workspace:libs/langchain-google-gauth, @langchain/google-gauth@~0.2.2":
   version: 0.0.0-use.local
   resolution: "@langchain/google-gauth@workspace:libs/langchain-google-gauth"
   dependencies:
     "@jest/globals": ^29.5.0
     "@langchain/core": "workspace:*"
-    "@langchain/google-common": ~0.2.0
+    "@langchain/google-common": ^0.2.2
     "@langchain/scripts": ">=0.1.0 <0.2.0"
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
@@ -9044,8 +9207,8 @@ __metadata:
   dependencies:
     "@jest/globals": ^29.5.0
     "@langchain/core": "workspace:*"
-    "@langchain/google-common": ^0.1.0
-    "@langchain/google-webauth": ~0.2.0
+    "@langchain/google-common": ^0.2.0
+    "@langchain/google-webauth": ~0.2.2
     "@langchain/scripts": ">=0.1.0 <0.2.0"
     "@langchain/standard-tests": 0.0.0
     "@swc/core": ^1.3.90
@@ -9080,8 +9243,8 @@ __metadata:
   dependencies:
     "@jest/globals": ^29.5.0
     "@langchain/core": "workspace:*"
-    "@langchain/google-common": ^0.1.0
-    "@langchain/google-gauth": ~0.2.0
+    "@langchain/google-common": ^0.2.0
+    "@langchain/google-gauth": ~0.2.2
     "@langchain/scripts": ">=0.1.0 <0.2.0"
     "@langchain/standard-tests": 0.0.0
     "@swc/core": ^1.3.90
@@ -9110,13 +9273,13 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/google-webauth@workspace:libs/langchain-google-webauth, @langchain/google-webauth@~0.2.0":
+"@langchain/google-webauth@workspace:libs/langchain-google-webauth, @langchain/google-webauth@~0.2.2":
   version: 0.0.0-use.local
   resolution: "@langchain/google-webauth@workspace:libs/langchain-google-webauth"
   dependencies:
     "@jest/globals": ^29.5.0
     "@langchain/core": "workspace:*"
-    "@langchain/google-common": ~0.2.0
+    "@langchain/google-common": ^0.2.2
     "@langchain/scripts": ">=0.1.0 <0.2.0"
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
@@ -9458,7 +9621,7 @@ __metadata:
     "@langchain/core": "workspace:*"
     "@langchain/openai": "workspace:*"
     "@langchain/scripts": ">=0.1.0 <0.2.0"
-    "@pinecone-database/pinecone": ^4.0.0
+    "@pinecone-database/pinecone": ^5.0.2
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -9484,6 +9647,7 @@ __metadata:
     uuid: ^10.0.0
   peerDependencies:
     "@langchain/core": ">=0.2.21 <0.4.0"
+    "@pinecone-database/pinecone": ^5.0.2
   languageName: unknown
   linkType: soft
 
@@ -10981,12 +11145,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@pinecone-database/pinecone@npm:^4.0.0":
-  version: 4.0.0
-  resolution: "@pinecone-database/pinecone@npm:4.0.0"
-  dependencies:
-    encoding: ^0.1.13
-  checksum: 7523d7b8dc6a5d7b5d5cf37c97f6070112473f26d82aec23ca198554634e6bc0883866fcc9a8b2978e287daad8665085cef1d4f16d86a7ba0f8b623d88bdda54
+"@pinecone-database/pinecone@npm:^5.0.2":
+  version: 5.0.2
+  resolution: "@pinecone-database/pinecone@npm:5.0.2"
+  checksum: 070a82fd8049ca3678bc5e3e430176cdb927005f4c27076e139641b89317364189fdc54d901c66ef2c0d631c3456997cfdd3892715e4dc09d1ee9ba47bfdacff
   languageName: node
   linkType: hard
 
@@ -20914,6 +21076,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"duplexify@npm:^4.1.3":
+  version: 4.1.3
+  resolution: "duplexify@npm:4.1.3"
+  dependencies:
+    end-of-stream: ^1.4.1
+    inherits: ^2.0.3
+    readable-stream: ^3.1.1
+    stream-shift: ^1.0.2
+  checksum: 9636a027345de3dd3c801594d01a7c73d9ce260019538beb1ee650bba7544e72f40a4d4902b52e1ab283dc32a06f210d42748773af02ff15e3064a9659deab7f
+  languageName: node
+  linkType: hard
+
 "eastasianwidth@npm:^0.2.0":
   version: 0.2.0
   resolution: "eastasianwidth@npm:0.2.0"
@@ -22603,7 +22777,7 @@ __metadata:
     "@langchain/yandex": "workspace:*"
     "@layerup/layerup-security": ^1.5.12
     "@opensearch-project/opensearch": ^2.2.0
-    "@pinecone-database/pinecone": ^4.0.0
+    "@pinecone-database/pinecone": ^5.0.2
     "@planetscale/database": ^1.8.0
     "@prisma/client": ^4.11.0
     "@qdrant/js-client-rest": ^1.9.0
@@ -24459,7 +24633,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"google-auth-library@npm:^9.15.1":
+"google-auth-library@npm:^9.15.1, google-auth-library@npm:^9.6.3":
   version: 9.15.1
   resolution: "google-auth-library@npm:9.15.1"
   dependencies:
@@ -25096,7 +25270,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"html-entities@npm:^2.3.3":
+"html-entities@npm:^2.3.3, html-entities@npm:^2.5.2":
   version: 2.5.2
   resolution: "html-entities@npm:2.5.2"
   checksum: b23f4a07d33d49ade1994069af4e13d31650e3fb62621e92ae10ecdf01d1a98065c78fd20fdc92b4c7881612210b37c275f2c9fba9777650ab0d6f2ceb3b99b6
@@ -35960,6 +36134,13 @@ __metadata:
   version: 1.0.1
   resolution: "stream-shift@npm:1.0.1"
   checksum: 59b82b44b29ec3699b5519a49b3cedcc6db58c72fb40c04e005525dfdcab1c75c4e0c180b923c380f204bed78211b9bad8faecc7b93dece4d004c3f6ec75737b
+  languageName: node
+  linkType: hard
+
+"stream-shift@npm:^1.0.2":
+  version: 1.0.3
+  resolution: "stream-shift@npm:1.0.3"
+  checksum: a24c0a3f66a8f9024bd1d579a533a53be283b4475d4e6b4b3211b964031447bdf6532dd1f3c2b0ad66752554391b7c62bd7ca4559193381f766534e723d50242
   languageName: node
   linkType: hard
 
