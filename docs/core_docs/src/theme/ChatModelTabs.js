@@ -29,7 +29,7 @@ const DEFAULTS = {
   anthropicParams: `{\n  model: "claude-3-5-sonnet-20240620",\n  temperature: 0\n}`,
   fireworksParams: `{\n  model: "accounts/fireworks/models/llama-v3p1-70b-instruct",\n  temperature: 0\n}`,
   mistralParams: `{\n  model: "mistral-large-latest",\n  temperature: 0\n}`,
-  groqParams: `{\n  model: "mixtral-8x7b-32768",\n  temperature: 0\n}`,
+  groqParams: `{\n  model: "llama-3.3-70b-versatile",\n  temperature: 0\n}`,
   vertexParams: `{\n  model: "gemini-1.5-flash",\n  temperature: 0\n}`,
 };
 

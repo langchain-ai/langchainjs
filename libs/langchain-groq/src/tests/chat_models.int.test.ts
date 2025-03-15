@@ -13,6 +13,7 @@ import { ChatGroq } from "../chat_models.js";
 test("invoke", async () => {
   const chat = new ChatGroq({
     maxRetries: 0,
+    model: "llama-3.3-70b-versatile",
   });
   const message = new HumanMessage("What color is the sky?");
   const res = await chat.invoke([message]);
@@ -23,6 +24,7 @@ test("invoke", async () => {
 test("invoke with stop sequence", async () => {
   const chat = new ChatGroq({
     maxRetries: 0,
+    model: "llama-3.3-70b-versatile",
   });
   const message = new HumanMessage("Count to ten.");
   const res = await chat.bind({ stop: ["5", "five"] }).invoke([message]);
@@ -34,6 +36,7 @@ test("invoke with stop sequence", async () => {
 test("invoke should respect passed headers", async () => {
   const chat = new ChatGroq({
     maxRetries: 0,
+    model: "llama-3.3-70b-versatile",
   });
   const message = new HumanMessage("Count to ten.");
   await expect(async () => {
@@ -46,6 +49,7 @@ test("invoke should respect passed headers", async () => {
 test("stream should respect passed headers", async () => {
   const chat = new ChatGroq({
     maxRetries: 0,
+    model: "llama-3.3-70b-versatile",
   });
   const message = new HumanMessage("Count to ten.");
   await expect(async () => {
@@ -56,7 +60,9 @@ test("stream should respect passed headers", async () => {
 });
 
 test("generate", async () => {
-  const chat = new ChatGroq();
+  const chat = new ChatGroq({
+    model: "llama-3.3-70b-versatile",
+  });
   const message = new HumanMessage("Hello!");
   const res = await chat.generate([[message]]);
   // console.log(JSON.stringify(res, null, 2));
@@ -64,7 +70,9 @@ test("generate", async () => {
 });
 
 test("streaming", async () => {
-  const chat = new ChatGroq();
+  const chat = new ChatGroq({
+    model: "llama-3.3-70b-versatile",
+  });
   const message = new HumanMessage("What color is the sky?");
   const stream = await chat.stream([message]);
   let iters = 0;
@@ -80,7 +88,7 @@ test("streaming", async () => {
 test("invoke with bound tools", async () => {
   const chat = new ChatGroq({
     maxRetries: 0,
-    modelName: "mixtral-8x7b-32768",
+    model: "llama-3.3-70b-versatile",
   });
   const message = new HumanMessage("What is the current weather in Hawaii?");
   const res = await chat
@@ -120,6 +128,7 @@ test("invoke with bound tools", async () => {
 test("stream with bound tools, yielding a single chunk", async () => {
   const chat = new ChatGroq({
     maxRetries: 0,
+    model: "llama-3.3-70b-versatile",
   });
   const message = new HumanMessage("What is the current weather in Hawaii?");
   const stream = await chat
@@ -156,7 +165,7 @@ test("stream with bound tools, yielding a single chunk", async () => {
 
 test("Few shotting with tool calls", async () => {
   const chat = new ChatGroq({
-    modelName: "mixtral-8x7b-32768",
+    model: "llama-3.3-70b-versatile",
     temperature: 0,
   }).bind({
     tools: [
