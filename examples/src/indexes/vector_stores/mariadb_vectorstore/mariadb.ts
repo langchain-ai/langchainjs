@@ -1,5 +1,4 @@
 import { OpenAIEmbeddings } from "@langchain/openai";
-import { FilterExpressionBuilder } from "@langchain/core/filter";
 import {
   DistanceStrategy,
   MariaDBStore,
@@ -40,32 +39,16 @@ console.log(results);
 // [ Document { pageContent: 'Cat drinks milk', metadata: { country: 'GE', year: 2020 }, id: ... } ]
 
 // Filtering is supported
-const b = new FilterExpressionBuilder();
-let filter = b.gte("year", 2021); // year >= 2021
-const results2 = await vectorStore.similaritySearch("water", 1, filter);
+const results2 = await vectorStore.similaritySearch("water", 1, {
+  b: { $gte: { year: 2021 } },
+});
 console.log(results2);
 // [ Document { pageContent: 'what's this', metadata: { country: 'EN', year: 2021, city: 'london' } } ]
 
-// more complex filter
-filter = b.and(b.gte("year", 2021), b.in("country", ["US", "EN"])); // year >= 2021 AND country IN ['US, 'EN']
-const results3 = await vectorStore.similaritySearch("water", 1, filter);
+await vectorStore.delete({ filter: { b: { $gte: { year: 2021 } } } });
+
+const results3 = await vectorStore.similaritySearch("water", 1);
 console.log(results3);
-// [ Document { pageContent: 'what's this', metadata: { country: 'EN', year: 2021, city: 'london' }, id: ... } ]
-
-await vectorStore.delete({ filter: b.gte("year", 2021) });
-
-const results4 = await vectorStore.similaritySearch("water", 1);
-console.log(results4);
 // [   Document { pageContent: 'Cat drinks milk', metadata: { country: 'GE', year: 2020 }, id: ... } ]
-
-// Filtering using array is supported
-const results5 = await vectorStore.similaritySearch(
-  "water",
-  1,
-  b.in("b", ["tag1"])
-);
-
-console.log(results5);
-// [ ]
 
 await vectorStore.end();
