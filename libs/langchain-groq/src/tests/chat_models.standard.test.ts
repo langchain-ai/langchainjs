@@ -2,7 +2,11 @@
 import { test, expect } from "@jest/globals";
 import { ChatModelUnitTests } from "@langchain/standard-tests";
 import { AIMessageChunk } from "@langchain/core/messages";
-import { ChatGroq, ChatGroqCallOptions, ChatGroqInput } from "../chat_models.js";
+import {
+  ChatGroq,
+  ChatGroqCallOptions,
+  ChatGroqInput,
+} from "../chat_models.js";
 
 class ChatGroqStandardUnitTests extends ChatModelUnitTests<
   ChatGroqCallOptions,
