@@ -1,6 +1,6 @@
 import { isOpenAITool } from "@langchain/core/language_models/base";
 import { isLangChainTool } from "@langchain/core/utils/function_calling";
-import { isModelGemini, validateGeminiParams } from "./gemini.js";
+import {isModelGemini, isModelGemma, validateGeminiParams} from "./gemini.js";
 import {
   GeminiFunctionDeclaration,
   GeminiFunctionSchema,
@@ -185,6 +185,8 @@ export function modelToFamily(
     return null;
   } else if (isModelGemini(modelName)) {
     return "gemini";
+  } else if (isModelGemma(modelName)) {
+    return "gemma";
   } else if (isModelClaude(modelName)) {
     return "claude";
   } else {
@@ -196,6 +198,7 @@ export function modelToPublisher(modelName: string | undefined): string {
   const family = modelToFamily(modelName);
   switch (family) {
     case "gemini":
+    case "gemma":
     case "palm":
       return "google";
 
@@ -214,6 +217,7 @@ export function validateModelParams(
   const model = testParams.model ?? testParams.modelName;
   switch (modelToFamily(model)) {
     case "gemini":
+    case "gemma":  // TODO: Are we sure?
       return validateGeminiParams(testParams);
 
     case "claude":

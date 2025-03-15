@@ -273,6 +273,7 @@ export abstract class GoogleAIConnection<
   get api(): GoogleAIAPI {
     switch (this.apiName) {
       case "google":
+      case "gemma":   // TODO: Is this true?
         return getGeminiAPI(this.apiConfig as GeminiAPIConfig);
       case "anthropic":
         return getAnthropicAPI(this.apiConfig as AnthropicAPIConfig);
@@ -412,6 +413,7 @@ export abstract class AbstractGoogleLLMConnection<
   async buildUrlMethod(): Promise<string> {
     switch (this.modelFamily) {
       case "gemini":
+      case "gemma": // TODO: Is this true?
         return this.buildUrlMethodGemini();
       case "claude":
         return this.buildUrlMethodClaude();
