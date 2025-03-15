@@ -582,6 +582,10 @@ chat_models/ollama.cjs
 chat_models/ollama.js
 chat_models/ollama.d.ts
 chat_models/ollama.d.cts
+chat_models/perplexity.cjs
+chat_models/perplexity.js
+chat_models/perplexity.d.ts
+chat_models/perplexity.d.cts
 chat_models/portkey.cjs
 chat_models/portkey.js
 chat_models/portkey.d.ts
