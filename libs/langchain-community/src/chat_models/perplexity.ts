@@ -155,7 +155,7 @@ export class ChatPerplexity
    */
   invocationParams() {
     return {
-      model: this.model,
+      model: this.model as string,
       temperature: this.temperature,
       max_tokens: this.maxTokens,
       stream: this.streaming,
