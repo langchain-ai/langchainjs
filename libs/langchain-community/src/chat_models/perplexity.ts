@@ -22,6 +22,8 @@ import {
 } from "@langchain/core/outputs";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import OpenAI from "openai";
+import { NewTokenIndices } from "@langchain/core/callbacks/base";
+import { TokenUsage } from "@langchain/core/language_models/base";
 
 /**
  * Type representing the role of a message in the Perplexity chat model.
@@ -204,12 +206,32 @@ export class ChatPerplexity
 
   async _generate(
     messages: BaseMessage[],
-    _options?: this["ParsedCallOptions"],
-    _runManager?: CallbackManagerForLLMRun
+    options: this["ParsedCallOptions"],
+    runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
+    const tokenUsage: TokenUsage = {};
     const messagesList = messages.map((message) =>
       this.messageToPerplexityRole(message)
     );
+
+    if (this.streaming) {
+      const stream = this._streamResponseChunks(messages, options, runManager);
+      const finalChunks: Record<number, ChatGenerationChunk> = {};
+      for await (const chunk of stream) {
+        const index =
+          (chunk.generationInfo as NewTokenIndices)?.completion ?? 0;
+        if (finalChunks[index] === undefined) {
+          finalChunks[index] = chunk;
+        } else {
+          finalChunks[index] = finalChunks[index].concat(chunk);
+        }
+      }
+
+      const generations = Object.entries(finalChunks)
+        .sort(([aKey], [bKey]) => parseInt(aKey, 10) - parseInt(bKey, 10))
+        .map(([_, value]) => value);
+      return { generations };
+    }
 
     const response = await this.client.chat.completions.create({
       messages: messagesList,
@@ -231,8 +253,17 @@ export class ChatPerplexity
       }),
     });
 
+    if (response.usage) {
+      tokenUsage.promptTokens = response.usage.prompt_tokens;
+      tokenUsage.completionTokens = response.usage.completion_tokens;
+      tokenUsage.totalTokens = response.usage.total_tokens;
+    }
+
     return {
       generations,
+      llmOutput: {
+        tokenUsage,
+      },
     };
   }
 
@@ -281,6 +312,9 @@ export class ChatPerplexity
       const generationChunk = new ChatGenerationChunk({
         message: messageChunk,
         text: delta.content,
+        generationInfo: {
+          finishReason: choice.finish_reason,
+        },
       });
 
       yield generationChunk;
