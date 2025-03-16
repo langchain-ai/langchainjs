@@ -64,7 +64,6 @@ const apiKeyModelNames = [
 ];
 
 describe.each(apiKeyModelNames)("Google APIKey Chat (%s)", (modelName) => {
-
   let recorder: GoogleRequestRecorder;
   let callbacks: BaseCallbackHandler[];
 
