@@ -214,6 +214,55 @@ PaLM models are no longer supported.
 ```typescript
 import { MatchingEngine } from "langchain/vectorstores/googlevertexai";
 ```
+### Postgres Vector Store
+
+The [PostgresVectorStore](docs/integrations/vectorstores/google_cloudsql_pg.ipynb) from the
+@langchain/google-cloud-sql-pg provides a way to use the CloudSQL for PostgresSQL to store
+vector embeddings using the class.
+
+```bash
+$ yarn add @langchain/google-cloud-sql-pg
+```
+
+Set your environment variables:
+
+```bash
+PROJECT_ID="your-project-id"
+REGION="your-project-region"
+INSTANCE_NAME="your-instance"
+DB_NAME="your-database-name"
+DB_USER="your-database-user"
+PASSWORD="your-database-password"
+```
+
+Create a DB connection through the PostgresEngine class:
+
+```typescript
+const engine: PostgresEngine = await PostgresEngine.fromInstance(
+  process.env.PROJECT_ID ?? "",
+  process.env.REGION ?? "",
+  process.env.INSTANCE_NAME ?? "",
+  process.env.DB_NAME ?? "",
+  peArgs
+);
+```
+
+Initialize the vector store table:
+
+```typescript
+await engine.initVectorstoreTable("my_vector_store_table", 768, vectorStoreArgs);
+```
+
+Create a vector store instance:
+
+```typescript
+const vectorStore = await PostgresVectorStore.create(
+  engine,
+  embeddingService,
+  "my_vector_store_table",
+  pvectorArgs
+);
+```
 
 ## Tools
 
