@@ -174,6 +174,7 @@ describe.each(apiKeyModelNames)("Google APIKey Chat (%s)", (modelName) => {
     }
   });
 
+  // Gemma 3 reports: "Function calling is not enabled for models/gemma-3-27b-it"
   test.skip("Tool call", async () => {
     const model = newChatGoogle();
     const chat = model.bindTools([new WeatherTool()]);
@@ -243,9 +244,7 @@ describe.each(apiKeyModelNames)("Google APIKey Chat (%s)", (modelName) => {
       store: canonicalStore,
       resolvers: [resolver],
     });
-    const model = new ChatGoogle({
-      modelName: "gemini-1.5-flash",
-      apiVersion: "v1beta",
+    const model = newChatGoogle({
       apiConfig: {
         mediaManager,
       },
