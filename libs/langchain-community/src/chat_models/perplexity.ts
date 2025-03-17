@@ -25,7 +25,11 @@ import {
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import OpenAI from "openai";
 import { NewTokenIndices } from "@langchain/core/callbacks/base";
-import { RunnableSequence } from "@langchain/core/runnables";
+import {
+  RunnableSequence,
+  Runnable,
+  RunnablePassthrough,
+} from "@langchain/core/runnables";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import {
   BaseLanguageModelInput,
@@ -33,7 +37,6 @@ import {
   TokenUsage,
 } from "@langchain/core/language_models/base";
 import { z } from "zod";
-import { Runnable, RunnablePassthrough } from "@langchain/core/runnables";
 import { isZodSchema } from "@langchain/core/utils/types";
 import {
   JsonOutputParser,
@@ -201,25 +204,17 @@ export class ChatPerplexity
     role: PerplexityRole;
     content: string;
   } {
-    if (message instanceof ChatMessage) {
-      return {
-        role: message.role as PerplexityRole,
-        content: message.content.toString(),
-      };
-    }
-    if (message instanceof HumanMessage) {
+    if (message._getType() === "human") {
       return {
         role: "user",
         content: message.content.toString(),
       };
-    }
-    if (message instanceof AIMessage) {
+    } else if (message._getType() === "ai") {
       return {
         role: "assistant",
         content: message.content.toString(),
       };
-    }
-    if (message instanceof SystemMessage) {
+    } else if (message._getType() === "system") {
       return {
         role: "system",
         content: message.content.toString(),
@@ -409,7 +404,7 @@ export class ChatPerplexity
         `Perplexity only supports "jsonSchema" as a structured output method.`
       );
     }
-    let llm: Runnable<BaseLanguageModelInput> = this.bind({
+    const llm: Runnable<BaseLanguageModelInput> = this.bind({
       response_format: {
         type: "json_schema",
         json_schema: {
