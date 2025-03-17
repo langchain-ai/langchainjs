@@ -10,9 +10,11 @@ import {
   SystemMessage,
   SystemMessageChunk,
 } from "@langchain/core/messages";
+import { concat } from "@langchain/core/utils/stream";
 import {
   BaseChatModel,
   BaseChatModelParams,
+  BaseChatModelCallOptions,
 } from "@langchain/core/language_models/chat_models";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {
@@ -23,7 +25,21 @@ import {
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import OpenAI from "openai";
 import { NewTokenIndices } from "@langchain/core/callbacks/base";
-import { TokenUsage } from "@langchain/core/language_models/base";
+import { RunnableSequence } from "@langchain/core/runnables";
+import { zodToJsonSchema } from "zod-to-json-schema";
+import {
+  BaseLanguageModelInput,
+  StructuredOutputMethodOptions,
+  TokenUsage,
+} from "@langchain/core/language_models/base";
+import { z } from "zod";
+import { Runnable, RunnablePassthrough } from "@langchain/core/runnables";
+import { isZodSchema } from "@langchain/core/utils/types";
+import {
+  JsonOutputParser,
+  StructuredOutputParser,
+  type BaseLLMOutputParser,
+} from "@langchain/core/output_parsers";
 
 /**
  * Type representing the role of a message in the Perplexity chat model.
@@ -33,9 +49,9 @@ export type PerplexityRole = "system" | "user" | "assistant";
 /**
  * Interface defining the parameters for the Perplexity chat model.
  */
-export interface PerplexityChatInput {
+export interface PerplexityChatInput extends BaseChatModelParams {
   /** Model name to use */
-  model?: string;
+  model: string;
 
   /** Maximum number of tokens to generate */
   maxTokens?: number;
@@ -79,18 +95,29 @@ export interface PerplexityChatInput {
   timeout?: number;
 }
 
+export interface PerplexityChatCallOptions extends BaseChatModelCallOptions {
+  response_format?: {
+    type: "json_schema";
+    json_schema: {
+      name: string;
+      description: string;
+      schema: Record<string, unknown>;
+    };
+  };
+}
+
 /**
  * Wrapper around Perplexity large language models that use the Chat endpoint.
  */
 export class ChatPerplexity
-  extends BaseChatModel
+  extends BaseChatModel<PerplexityChatCallOptions>
   implements PerplexityChatInput
 {
   static lc_name() {
     return "ChatPerplexity";
   }
 
-  model?: string;
+  model: string;
 
   temperature?: number;
 
@@ -116,10 +143,10 @@ export class ChatPerplexity
 
   private client: OpenAI;
 
-  constructor(fields?: Partial<PerplexityChatInput> & BaseChatModelParams) {
+  constructor(fields: PerplexityChatInput) {
     super(fields ?? {});
 
-    this.model = fields?.model ?? this.model;
+    this.model = fields.model;
     this.temperature = fields?.temperature ?? this.temperature;
     this.maxTokens = fields?.maxTokens;
     this.apiKey =
@@ -138,10 +165,6 @@ export class ChatPerplexity
       throw new Error("Perplexity API key not found");
     }
 
-    if (!this.model) {
-      throw new Error("Perplexity model not found");
-    }
-
     this.client = new OpenAI({
       apiKey: this.apiKey,
       baseURL: "https://api.perplexity.ai",
@@ -155,7 +178,7 @@ export class ChatPerplexity
   /**
    * Get the parameters used to invoke the model
    */
-  invocationParams() {
+  invocationParams(options?: this["ParsedCallOptions"]) {
     return {
       model: this.model as string,
       temperature: this.temperature,
@@ -167,6 +190,7 @@ export class ChatPerplexity
       top_k: this.topK,
       presence_penalty: this.presencePenalty,
       frequency_penalty: this.frequencyPenalty,
+      response_format: options?.response_format,
     };
   }
 
@@ -223,7 +247,7 @@ export class ChatPerplexity
         if (finalChunks[index] === undefined) {
           finalChunks[index] = chunk;
         } else {
-          finalChunks[index] = finalChunks[index].concat(chunk);
+          finalChunks[index] = concat(finalChunks[index], chunk);
         }
       }
 
@@ -235,7 +259,7 @@ export class ChatPerplexity
 
     const response = await this.client.chat.completions.create({
       messages: messagesList,
-      ...this.invocationParams(),
+      ...this.invocationParams(options),
       stream: false,
     });
 
@@ -269,7 +293,7 @@ export class ChatPerplexity
 
   async *_streamResponseChunks(
     messages: BaseMessage[],
-    _options: this["ParsedCallOptions"],
+    options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
     const messagesList = messages.map((message) =>
@@ -278,7 +302,8 @@ export class ChatPerplexity
 
     const stream = await this.client.chat.completions.create({
       messages: messagesList,
-      ...this.invocationParams(),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ...(this.invocationParams(options)),
       stream: true,
     });
 
@@ -324,5 +349,108 @@ export class ChatPerplexity
         await runManager.handleLLMNewToken(delta.content);
       }
     }
+  }
+
+  withStructuredOutput<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>
+  >(
+    outputSchema:
+      | z.ZodType<RunOutput>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      | Record<string, any>,
+    config?: StructuredOutputMethodOptions<false>
+  ): Runnable<BaseLanguageModelInput, RunOutput>;
+
+  withStructuredOutput<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>
+  >(
+    outputSchema:
+      | z.ZodType<RunOutput>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      | Record<string, any>,
+    config?: StructuredOutputMethodOptions<true>
+  ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
+
+  withStructuredOutput<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>
+  >(
+    outputSchema:
+      | z.ZodType<RunOutput>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      | Record<string, any>,
+    config?: StructuredOutputMethodOptions<boolean>
+  ):
+    | Runnable<BaseLanguageModelInput, RunOutput>
+    | Runnable<
+        BaseLanguageModelInput,
+        {
+          raw: BaseMessage;
+          parsed: RunOutput;
+        }
+      > {
+    if (config?.strict) {
+      throw new Error(`"strict" mode is not supported for this model.`);
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let schema: z.ZodType<RunOutput> | Record<string, any> = outputSchema;
+    if (isZodSchema(schema)) {
+      schema = zodToJsonSchema(schema);
+    }
+    const name = config?.name;
+    const description =
+      schema.description ?? "Format to use when returning your response";
+    const method = config?.method ?? "jsonSchema";
+    const includeRaw = config?.includeRaw;
+    if (method !== "jsonSchema") {
+      throw new Error(`Perplexity only supports "jsonSchema" as a structured output method.`);
+    }
+    let llm: Runnable<BaseLanguageModelInput> = this.bind({
+      response_format: {
+        type: "json_schema",
+        json_schema: {
+          name: name ?? "extract",
+          description,
+          schema,
+        },
+      },
+    });
+
+    let outputParser: BaseLLMOutputParser;
+
+    if (isZodSchema(schema)) {
+      outputParser = StructuredOutputParser.fromZodSchema(schema);
+    } else {
+      outputParser = new JsonOutputParser();
+    }
+
+    if (!includeRaw) {
+      return llm.pipe(outputParser) as Runnable<
+        BaseLanguageModelInput,
+        RunOutput
+      >;
+    }
+
+    const parserAssign = RunnablePassthrough.assign({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      parsed: (input: any, config) => outputParser.invoke(input.raw, config),
+    });
+    const parserNone = RunnablePassthrough.assign({
+      parsed: () => null,
+    });
+    const parsedWithFallback = parserAssign.withFallbacks({
+      fallbacks: [parserNone],
+    });
+    return RunnableSequence.from<
+      BaseLanguageModelInput,
+      { raw: BaseMessage; parsed: RunOutput }
+    >([
+      {
+        raw: llm,
+      },
+      parsedWithFallback,
+    ]);
   }
 }
