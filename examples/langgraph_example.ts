@@ -169,12 +169,19 @@ async function runExample() {
     }
   } catch (error) {
     console.error('Error:', error);
+    process.exit(1); // Exit with error code
   } finally {
     // Close all client connections
     if (client) {
       await client.close();
-      console.log('\nClosed all connections');
+      console.log('\nClosed all MCP connections');
     }
+
+    // Exit process after a short delay to allow for cleanup
+    setTimeout(() => {
+      console.log('Example completed, exiting process.');
+      process.exit(0);
+    }, 500);
   }
 }
 

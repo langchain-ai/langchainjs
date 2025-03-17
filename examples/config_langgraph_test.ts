@@ -1,8 +1,8 @@
 /**
- * Configuration Test with Math Server
+ * Configuration Test with Math Server using LangGraph
  *
  * This example demonstrates using configuration files (auth_mcp.json and complex_mcp.json)
- * and directly connecting to the local math_server.py script.
+ * and directly connecting to the local math_server.py script using LangGraph.
  */
 
 import { ChatOpenAI } from '@langchain/openai';
@@ -10,13 +10,11 @@ import path from 'path';
 import fs from 'fs';
 import dotenv from 'dotenv';
 import logger from '../src/logger.js';
-import { AgentExecutor, createReactAgent } from 'langchain/agents';
-import {
-  ChatPromptTemplate,
-  SystemMessagePromptTemplate,
-  HumanMessagePromptTemplate,
-  MessagesPlaceholder,
-} from '@langchain/core/prompts';
+import { StateGraph, END, START, MessagesAnnotation } from '@langchain/langgraph';
+import { ToolNode } from '@langchain/langgraph/prebuilt';
+import { HumanMessage, AIMessage, SystemMessage } from '@langchain/core/messages';
+import { StructuredToolInterface } from '@langchain/core/tools';
+import { z } from 'zod';
 
 // MCP client imports
 import { MultiServerMCPClient } from '../src/index.js';
@@ -26,7 +24,7 @@ dotenv.config();
 
 /**
  * This example demonstrates using multiple configuration files to
- * connect to different MCP servers and use their tools
+ * connect to different MCP servers and use their tools with LangGraph
  */
 async function runConfigTest() {
   try {
@@ -43,13 +41,13 @@ async function runConfigTest() {
 
     // Load the auth configuration to verify it parses correctly
     const authConfig = JSON.parse(fs.readFileSync(authConfigPath, 'utf-8'));
-    console.log('Successfully parsed auth_mcp.json with the following servers:');
-    console.log('Servers:', Object.keys(authConfig.servers));
+    logger.info('Successfully parsed auth_mcp.json with the following servers:');
+    logger.info('Servers:', Object.keys(authConfig.servers));
 
     // Print auth headers (redacted for security) to verify they're present
     Object.entries(authConfig.servers).forEach(([serverName, serverConfig]: [string, any]) => {
       if (serverConfig.headers) {
-        console.log(
+        logger.info(
           `Server ${serverName} has headers:`,
           Object.keys(serverConfig.headers).map(key => `${key}: ***`)
         );
@@ -65,8 +63,8 @@ async function runConfigTest() {
     }
 
     const complexConfig = JSON.parse(fs.readFileSync(complexConfigPath, 'utf-8'));
-    console.log('Successfully parsed complex_mcp.json with the following servers:');
-    console.log('Servers:', Object.keys(complexConfig.servers));
+    logger.info('Successfully parsed complex_mcp.json with the following servers:');
+    logger.info('Servers:', Object.keys(complexConfig.servers));
 
     // Step 3: Connect directly to the math server using explicit path
     logger.info('Connecting to math server directly...');
@@ -87,55 +85,58 @@ async function runConfigTest() {
     await client.initializeConnections();
 
     // Get tools from the math server
-    const tools = client.getTools();
-    logger.info(`Loaded ${tools.length} tools from math server`);
+    const mcpTools = client.getTools() as StructuredToolInterface<z.ZodObject<any>>[];
+    logger.info(`Loaded ${mcpTools.length} tools from math server`);
 
     // Log the names of available tools
-    const toolNames = tools.map(tool => tool.name);
-    console.log('Available tools:', toolNames.join(', '));
+    const toolNames = mcpTools.map(tool => tool.name);
+    logger.info('Available tools:', toolNames.join(', '));
 
     // Create an OpenAI model for the agent
     const model = new ChatOpenAI({
       modelName: process.env.OPENAI_MODEL_NAME || 'gpt-4o',
       temperature: 0,
+    }).bindTools(mcpTools);
+
+    // Create a tool node for the LangGraph
+    const toolNode = new ToolNode(mcpTools);
+
+    // Define the function that calls the model
+    const llmNode = async (state: typeof MessagesAnnotation.State) => {
+      logger.info('Calling LLM with messages:', state.messages.length);
+      const response = await model.invoke(state.messages);
+      return { messages: [response] };
+    };
+
+    // Create a new graph with MessagesAnnotation
+    const workflow = new StateGraph(MessagesAnnotation);
+
+    // Add the nodes to the graph
+    workflow.addNode('llm', llmNode);
+    workflow.addNode('tools', toolNode);
+
+    // Add edges - need to cast to any to fix TypeScript errors
+    workflow.addEdge(START as any, 'llm' as any);
+    workflow.addEdge('tools' as any, 'llm' as any);
+
+    // Add conditional logic to determine the next step
+    workflow.addConditionalEdges('llm' as any, state => {
+      const lastMessage = state.messages[state.messages.length - 1];
+
+      // If the last message has tool calls, we need to execute the tools
+      const aiMessage = lastMessage as AIMessage;
+      if (aiMessage.tool_calls && aiMessage.tool_calls.length > 0) {
+        logger.info('Tool calls detected, routing to tools node');
+        return 'tools' as any;
+      }
+
+      // If there are no tool calls, we're done
+      logger.info('No tool calls, ending the workflow');
+      return END as any;
     });
 
-    // Create the proper prompt template for the React agent
-    const prompt = ChatPromptTemplate.fromMessages([
-      SystemMessagePromptTemplate.fromTemplate(
-        `You are a helpful assistant that can use tools to answer math questions.
-
-When you need to perform a calculation, use the appropriate math tool.
-
-{tools}
-
-Use the following format:
-
-Question: the input question you must answer
-Thought: you should always think about what to do
-Action: the action to take, should be one of [{tool_names}]
-Action Input: the input to the action
-Observation: the result of the action
-... (this Thought/Action/Action Input/Observation can repeat N times)
-Thought: I now know the final answer
-Final Answer: the final answer to the original input question`
-      ),
-      HumanMessagePromptTemplate.fromTemplate('{input}'),
-      new MessagesPlaceholder('agent_scratchpad'),
-    ]);
-
-    // Create the React agent with the math tools
-    const reactAgent = await createReactAgent({
-      llm: model,
-      tools: tools,
-      prompt,
-    });
-
-    const executor = new AgentExecutor({
-      agent: reactAgent,
-      tools: tools,
-      verbose: true,
-    });
+    // Compile the graph
+    const app = workflow.compile();
 
     // Define test queries that use math tools
     const testQueries = [
@@ -147,26 +148,36 @@ Final Answer: the final answer to the original input question`
 
     // Run each test query
     for (const query of testQueries) {
-      console.log(`\n=== Running query: "${query}" ===`);
+      logger.info(`\n=== Running query: "${query}" ===`);
 
       try {
-        const result = await executor.invoke({
-          input: query,
-        });
+        // Create initial messages with a system message and the user query
+        const messages = [
+          new SystemMessage(
+            'You are a helpful assistant that can use tools to solve math problems.'
+          ),
+          new HumanMessage(query),
+        ];
 
-        console.log(`\nFinal Answer: ${result.output}`);
+        // Run the LangGraph workflow
+        const result = await app.invoke({ messages });
+
+        // Get the last AI message as the response
+        const lastMessage = result.messages.filter(message => message._getType() === 'ai').pop();
+
+        logger.info(`\nFinal Answer: ${lastMessage?.content}`);
       } catch (error) {
-        console.error(`Error processing query "${query}":`, error);
+        logger.error(`Error processing query "${query}":`, error);
       }
     }
 
     // Close all connections
-    console.log('\nClosing connections...');
+    logger.info('\nClosing connections...');
     await client.close();
 
-    console.log('Test completed successfully');
+    logger.info('Test completed successfully');
   } catch (error) {
-    console.error('Error running test:', error);
+    logger.error('Error running test:', error);
   }
 }
 

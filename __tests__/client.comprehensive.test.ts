@@ -1,42 +1,32 @@
-// Mock problematic dependencies first
-jest.mock('@dmitryrechkin/json-schema-to-zod', () => {
-  return {
-    JSONSchemaToZod: {
-      convert: jest.fn().mockReturnValue({}),
-    },
-  };
-});
-
 // Mock fs module before imports
 jest.mock('fs', () => {
   // Create a map to store mock file contents
-  const mockFiles: Record<string, string> = {
-    './config.json': JSON.stringify({
+  const mockFiles = {
+    './mcp.json': JSON.stringify({
       servers: {
-        'test-server': {
+        test: {
           transport: 'stdio',
-          command: 'python',
-          args: ['./script.py'],
+          command: 'echo',
+          args: ['hello'],
         },
       },
     }),
-    './invalid.json': 'invalid json',
-    './invalid-structure.json': JSON.stringify({ notServers: [] }),
-    './error.json': 'some content',
+    './invalid-structure.json': JSON.stringify({ invalid: 'structure' }),
+    './error.json': 'invalid json',
   };
 
   return {
-    readFileSync: jest.fn((path: string, encoding?: string) => {
+    readFileSync: jest.fn((path: string, _encoding?: string) => {
       if (path === './nonexistent.json') {
         throw new Error('File not found');
       }
-      if (mockFiles[path]) {
-        return mockFiles[path];
+      if (Object.prototype.hasOwnProperty.call(mockFiles, path)) {
+        return mockFiles[path as keyof typeof mockFiles];
       }
       throw new Error(`Mock file not found: ${path}`);
     }),
     existsSync: jest.fn((path: string) => {
-      return path in mockFiles;
+      return Object.prototype.hasOwnProperty.call(mockFiles, path);
     }),
   };
 });
@@ -99,9 +89,7 @@ jest.mock(
 jest.mock(
   '@modelcontextprotocol/sdk/client/stdio.js',
   () => {
-    // Define the onclose handler type
-    type OnCloseHandler = () => void;
-
+    // Using the OnCloseHandler type defined at the top level
     return {
       StdioClientTransport: jest.fn().mockImplementation(config => {
         const transport = {
@@ -121,9 +109,7 @@ jest.mock(
 jest.mock(
   '@modelcontextprotocol/sdk/client/sse.js',
   () => {
-    // Define the onclose handler type
-    type OnCloseHandler = () => void;
-
+    // Using the OnCloseHandler type defined at the top level
     return {
       SSEClientTransport: jest.fn().mockImplementation(config => {
         const transport = {
@@ -140,9 +126,11 @@ jest.mock(
   { virtual: true }
 );
 
+// Define the onclose handler type once at the top level
+type OnCloseHandler = () => void;
+
 // Import modules after mocking
 import * as fs from 'fs';
-import * as path from 'path';
 import { MultiServerMCPClient, MCPClientError } from '../src/client.js';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
@@ -184,9 +172,6 @@ const mockSSEMethods = {
   close: jest.fn().mockResolvedValue(undefined),
   triggerOnclose: jest.fn(),
 };
-
-// Define the types for onclose handlers
-type OnCloseHandler = () => void;
 
 // Reset mocks before each test
 beforeEach(() => {
@@ -352,9 +337,9 @@ describe('MultiServerMCPClient', () => {
         })
       );
 
-      const client = MultiServerMCPClient.fromConfigFile('./config.json');
+      const client = MultiServerMCPClient.fromConfigFile('./mcp.json');
       expect(client).toBeDefined();
-      expect(fs.readFileSync).toHaveBeenCalledWith('./config.json', 'utf8');
+      expect(fs.readFileSync).toHaveBeenCalledWith('./mcp.json', 'utf8');
     });
 
     test('should throw error for nonexistent config file', () => {

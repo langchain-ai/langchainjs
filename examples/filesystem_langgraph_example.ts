@@ -86,11 +86,11 @@ For reading multiple files, you can use the read_multiple_files tool.`;
     // ================================================
     // Create a LangGraph agent flow
     // ================================================
-    console.log('\n=== CREATING LANGGRAPH AGENT FLOW ===');
+    logger.info('\n=== CREATING LANGGRAPH AGENT FLOW ===');
 
     // Define the function that calls the model
     const llmNode = async (state: typeof MessagesAnnotation.State) => {
-      console.log(`Calling LLM with ${state.messages.length} messages`);
+      logger.info(`Calling LLM with ${state.messages.length} messages`);
 
       // Add system message if it's the first call
       let messages = state.messages;
@@ -120,17 +120,17 @@ For reading multiple files, you can use the read_multiple_files tool.`;
       // Cast to AIMessage to access tool_calls property
       const aiMessage = lastMessage as AIMessage;
       if (aiMessage.tool_calls && aiMessage.tool_calls.length > 0) {
-        console.log('Tool calls detected, routing to tools node');
+        logger.info('Tool calls detected, routing to tools node');
 
         // Log what tools are being called
         const toolNames = aiMessage.tool_calls.map(tc => tc.name).join(', ');
-        console.log(`Tools being called: ${toolNames}`);
+        logger.info(`Tools being called: ${toolNames}`);
 
         return 'tools' as any;
       }
 
       // If there are no tool calls, we're done
-      console.log('No tool calls, ending the workflow');
+      logger.info('No tool calls, ending the workflow');
       return END as any;
     });
 
@@ -165,8 +165,8 @@ For reading multiple files, you can use the read_multiple_files tool.`;
     console.log('\n=== RUNNING LANGGRAPH AGENT ===');
 
     for (const example of examples) {
-      console.log(`\n--- Example: ${example.name} ---`);
-      console.log(`Query: ${example.query}`);
+      logger.info(`\n--- Example: ${example.name} ---`);
+      logger.info(`Query: ${example.query}`);
 
       // Run the LangGraph agent
       const result = await app.invoke({
@@ -175,10 +175,10 @@ For reading multiple files, you can use the read_multiple_files tool.`;
 
       // Display the final answer
       const finalMessage = result.messages[result.messages.length - 1];
-      console.log(`\nResult: ${finalMessage.content}`);
+      logger.info(`\nResult: ${finalMessage.content}`);
 
       // Let's list the directory to see the changes
-      console.log('\nDirectory listing after operations:');
+      logger.info('\nDirectory listing after operations:');
       try {
         const listResult = await app.invoke({
           messages: [
@@ -188,23 +188,25 @@ For reading multiple files, you can use the read_multiple_files tool.`;
           ],
         });
         const listMessage = listResult.messages[listResult.messages.length - 1];
-        console.log(listMessage.content);
+        logger.info(listMessage.content);
       } catch (error) {
-        console.error('Error listing directory:', error);
+        logger.error('Error listing directory:', error);
       }
     }
   } catch (error) {
-    console.error('Error:', error);
+    logger.error('Error:', error);
+    process.exit(1); // Exit with error code
   } finally {
-    // Close all client connections
     if (client) {
       await client.close();
-      console.log('\nClosed all connections');
+      logger.info('Closed all MCP connections');
     }
 
-    // Exit process with successful code
-    console.log('Example execution completed successfully.');
-    setTimeout(() => process.exit(0), 100); // Small delay to ensure logs are printed
+    // Exit process after a short delay to allow for cleanup
+    setTimeout(() => {
+      logger.info('Example completed, exiting process.');
+      process.exit(0);
+    }, 500);
   }
 }
 
@@ -216,11 +218,11 @@ async function setupTestDirectory() {
 
   if (!fs.existsSync(testDir)) {
     fs.mkdirSync(testDir, { recursive: true });
-    console.log(`Created test directory: ${testDir}`);
+    logger.info(`Created test directory: ${testDir}`);
   }
 }
 
 // Set up test directory and run the example
 setupTestDirectory()
   .then(() => runExample())
-  .catch(error => console.error('Setup error:', error));
+  .catch(error => logger.error('Setup error:', error));

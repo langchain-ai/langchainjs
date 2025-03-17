@@ -93,28 +93,26 @@ if __name__ == "__main__":
 ### Client
 
 ```ts
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
-import { ChatOpenAI } from "@langchain/openai";
-import { createReactAgent } from "@langchain/langgraph/prebuilt";
-import { loadMcpTools } from "@langchain/mcp-adapters"
+import { Client } from '@modelcontextprotocol/sdk/client/index.js';
+import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
+import { ChatOpenAI } from '@langchain/openai';
+import { createReactAgent } from '@langchain/langgraph/prebuilt';
+import { loadMcpTools } from '@langchain/mcp-adapters';
 
 // Initialize the ChatOpenAI model
-const model = new ChatOpenAI({ modelName: "gpt-4" });
+const model = new ChatOpenAI({ modelName: 'gpt-4' });
 
 // Create transport for stdio connection
 const transport = new StdioClientTransport({
-  command: "python",
-  args: ["math_server.py"]
+  command: 'python',
+  args: ['math_server.py'],
 });
 
 // Initialize the client
-const client = new Client(
-  {
-    name: "math-client",
-    version: "1.0.0"
-  }
-);
+const client = new Client({
+  name: 'math-client',
+  version: '1.0.0',
+});
 
 try {
   // Connect to the transport
@@ -126,12 +124,11 @@ try {
   // Create and run the agent
   const agent = createReactAgent({ llm: model, tools });
   const agentResponse = await agent.invoke({
-    messages: [{role: "user", content: "what's (3 + 5) x 12?"}]
+    messages: [{ role: 'user', content: "what's (3 + 5) x 12?" }],
   });
   console.log(agentResponse);
-
-} catch(e) {
-  console.error(e)
+} catch (e) {
+  console.error(e);
 } finally {
   // Clean up connection
   await client.close();
@@ -201,10 +198,14 @@ const agent = createReactAgent({
 });
 
 // Run the agent
-const mathResponse = await agent.invoke({messages: [{role: "user", content: "what's (3 + 5) x 12?"}]})
-const weatherResponse = await agent.invoke({messages: [{role: "user", content: "what is the weather in nyc?"}]})
+const mathResponse = await agent.invoke({
+  messages: [{ role: 'user', content: "what's (3 + 5) x 12?" }],
+});
+const weatherResponse = await agent.invoke({
+  messages: [{ role: 'user', content: 'what is the weather in nyc?' }],
+});
 
-await client.close()
+await client.close();
 ```
 
 Below are more detailed examples of how to configure `MultiServerMCPClient`.
@@ -243,6 +244,9 @@ const toolsByServer = client.getToolsByServer();
 await client.close();
 ```
 
+> [!NOTE]
+> For stdio connections, the `transport` field is optional. If not specified, it defaults to 'stdio'.
+
 ### With Authentication Headers
 
 ```typescript
@@ -266,7 +270,6 @@ Define your server connections in a JSON file:
 {
   "servers": {
     "math": {
-      "transport": "stdio",
       "command": "python",
       "args": ["./math_server.py"]
     },
@@ -296,6 +299,170 @@ await client.initializeConnections();
 const tools = client.getTools();
 ```
 
+## Enhanced Configuration Management
+
+LangChainJS-MCP-Adapters provides flexible and powerful configuration management capabilities:
+
+### Automatic Default Configuration
+
+The client automatically looks for and loads a `mcp.json` file from the current working directory if no explicit configuration is provided:
+
+```typescript
+// This will automatically load from ./mcp.json if it exists
+const client = new MultiServerMCPClient();
+await client.initializeConnections();
+```
+
+### Configuration Loading Options
+
+There are multiple ways to load configurations:
+
+```typescript
+// Method 1: Automatic default loading
+const client1 = new MultiServerMCPClient(); // Automatically checks for mcp.json
+
+// Method 2: From specified config file
+const client2 = MultiServerMCPClient.fromConfigFile('./config/custom-mcp.json');
+```
+
+### Combining Multiple Configuration Sources
+
+You can combine configurations from multiple sources - they will be merged rather than replaced:
+
+```typescript
+// Start with default configuration or empty if no mcp.json exists
+const client = new MultiServerMCPClient();
+
+// Add another configuration file
+client.addConfigFromFile('./team1-servers.json');
+
+// Add yet another configuration file
+client.addConfigFromFile('./team2-servers.json');
+
+// Add configurations directly in code
+client.addConnections({
+  'custom-server': {
+    transport: 'stdio',
+    command: 'python',
+    args: ['./special_server.py'],
+  },
+});
+
+// Initialize all connections from all sources
+await client.initializeConnections();
+```
+
+### Configuration Processing Order
+
+Configurations are processed in the order they are added:
+
+1. Constructor argument or automatic `mcp.json` (if present)
+2. Each `addConfigFromFile()` call in sequence
+3. Each `addConnections()` call in sequence
+
+If the same server name appears in multiple configurations, **the later configuration takes precedence**, allowing for overriding settings.
+
+### Direct Connection Methods
+
+For simple use cases, you can bypass configuration files entirely and connect to servers directly using the provided connection methods:
+
+```typescript
+const client = new MultiServerMCPClient();
+
+// Add a stdio connection
+await client.connectToServerViaStdio(
+  'math-server',
+  'python',
+  ['./math_server.py'],
+  // Optional environment variables
+  { PYTHONPATH: './lib' },
+  // Optional restart configuration
+  { enabled: true, maxAttempts: 3, delayMs: 2000 }
+);
+
+// Add an SSE connection
+await client.connectToServerViaSSE(
+  'remote-server',
+  'https://api.example.com/mcp/sse',
+  // Optional headers
+  { Authorization: 'Bearer token' },
+  // Optional Node.js EventSource flag
+  true,
+  // Optional reconnection configuration
+  { enabled: true, maxAttempts: 5, delayMs: 1000 }
+);
+```
+
+### Environment Variable Substitution
+
+Configuration files support environment variable substitution using `${ENV_VAR}` syntax in both string values and environment variable objects:
+
+```json
+{
+  "servers": {
+    "api-server": {
+      "transport": "sse",
+      "url": "https://${API_DOMAIN}/sse",
+      "headers": {
+        "Authorization": "Bearer ${API_TOKEN}"
+      }
+    },
+    "local-server": {
+      "transport": "stdio",
+      "command": "python",
+      "args": ["./server.py"],
+      "env": {
+        "OPENAI_API_KEY": "${OPENAI_API_KEY}",
+        "DEBUG_LEVEL": "info"
+      }
+    }
+  }
+}
+```
+
+### Configuration File Structure
+
+Below is the complete schema for the configuration file:
+
+```json
+{
+  "servers": {
+    "server-name": {
+      // For stdio transport (transport field is optional for stdio)
+      "transport": "stdio", // Optional for stdio, defaults to "stdio" if command and args are present
+      "command": "python",
+      "args": ["./server.py"],
+      "env": {
+        "ENV_VAR": "value"
+      },
+      "encoding": "utf-8",
+      "encodingErrorHandler": "strict",
+      "restart": {
+        "enabled": true,
+        "maxAttempts": 3,
+        "delayMs": 1000
+      },
+
+      // For SSE transport (transport field is required)
+      "transport": "sse",
+      "url": "http://localhost:8000/sse",
+      "headers": {
+        "Authorization": "Bearer token"
+      },
+      "useNodeEventSource": true,
+      "reconnect": {
+        "enabled": true,
+        "maxAttempts": 3,
+        "delayMs": 1000
+      }
+    }
+  }
+}
+```
+
+> [!NOTE]
+> For stdio connections, the `transport` field is optional. If not specified, it defaults to 'stdio' when `command` and `args` are present.
+
 ## Browser Environments
 
 When using in browsers:
@@ -324,12 +491,30 @@ When using in browsers:
 
 ### Debug Logging
 
-Enable verbose logging to diagnose issues:
+Logging is disabled by default for optimal performance. Enable logging when needed for diagnostics:
+
+```typescript
+import { enableLogging, disableLogging } from '@langchain/mcp-adapters';
+
+// Enable logging at info level (default)
+enableLogging();
+
+// Or specify a specific level
+enableLogging('debug'); // Most verbose
+enableLogging('info'); // General information
+enableLogging('warn'); // Warnings only
+enableLogging('error'); // Errors only
+
+// Disable logging when done
+disableLogging();
+```
+
+You can also access the logger directly:
 
 ```typescript
 import { logger } from '@langchain/mcp-adapters';
 
-// Set logger level to debug
+// Advanced logging configuration
 logger.level = 'debug';
 ```
 
@@ -339,7 +524,7 @@ MIT
 
 ## Acknowledgements
 
-Big thanks to [@vrknetha](https://github.com/vrknetha), [@cawstudios](https://caw.tech)  for the initial implementation!
+Big thanks to [@vrknetha](https://github.com/vrknetha), [@cawstudios](https://caw.tech) for the initial implementation!
 
 ## Contributing
 

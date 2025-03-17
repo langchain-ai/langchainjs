@@ -20,7 +20,8 @@
     "lint": "eslint --ignore-pattern 'dist/**' .",
     "lint:fix": "eslint --ignore-pattern 'dist/**' . --fix",
     "format": "prettier --write \"src/**/*.ts\" \"examples/**/*.ts\"",
-    "prepare": "husky"
+    "prepare": "husky",
+    "build:examples": "tsc -p tsconfig.examples.json"
   },
   "lint-staged": {
     "*.{js,ts}": [
@@ -38,7 +39,6 @@
   "author": "Ravi Kiran Vemula",
   "license": "MIT",
   "dependencies": {
-    "@dmitryrechkin/json-schema-to-zod": "^1.0.1",
     "@modelcontextprotocol/sdk": "^1.7.0",
     "winston": "^3.17.0"
   },
@@ -51,10 +51,12 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.21.0",
+    "@langchain/openai": "^0.4.4",
     "@types/jest": "^29.5.12",
     "@types/node": "^20.11.30",
     "@typescript-eslint/eslint-plugin": "^7.3.1",
     "@typescript-eslint/parser": "^7.3.1",
+    "dotenv": "^16.4.7",
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^10.0.2",
     "eventsource": "^3.0.5",
