@@ -125,24 +125,21 @@ describe("LLM unit tests", () => {
 
       testProperties(instance, testProps);
     });
-  });
-
-  describe("Negative tests", () => {
     test("Missing id", async () => {
       const testProps: WatsonxInputLLM = {
         model: "ibm/granite-13b-chat-v2",
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
       };
-      expect(
-        () =>
-          new WatsonxLLM({
-            ...testProps,
-            ...fakeAuthProp,
-          })
-      ).toThrowError();
+      const instance = new WatsonxLLM({
+        ...testProps,
+        ...fakeAuthProp,
+      });
+      expect(instance).toBeDefined();
     });
+  });
 
+  describe("Negative tests", () => {
     test("Missing other props", async () => {
       // @ts-expect-error Intentionally passing not enough parameters
       const testPropsProjectId: WatsonxInputLLM = {
@@ -153,17 +150,6 @@ describe("LLM unit tests", () => {
         () =>
           new WatsonxLLM({
             ...testPropsProjectId,
-            ...fakeAuthProp,
-          })
-      ).toThrowError();
-      // @ts-expect-error Intentionally passing not enough parameters
-      const testPropsServiceUrl: WatsonxInputLLM = {
-        serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
-      };
-      expect(
-        () =>
-          new WatsonxLLM({
-            ...testPropsServiceUrl,
             ...fakeAuthProp,
           })
       ).toThrowError();

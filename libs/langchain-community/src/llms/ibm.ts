@@ -184,11 +184,6 @@ export class WatsonxLLM<
     )
       throw new Error("Maximum 1 id type can be specified per instance");
 
-    if (!("projectId" in fields || "spaceId" in fields || "idOrName" in fields))
-      throw new Error(
-        "No id specified! At least id of 1 type has to be specified"
-      );
-
     this.serviceUrl = fields?.serviceUrl;
     const {
       watsonxAIApikey,
@@ -281,7 +276,7 @@ export class WatsonxLLM<
       return { spaceId: this.spaceId, modelId: this.model };
     else if (this.idOrName)
       return { idOrName: this.idOrName, modelId: this.model };
-    else return { spaceId: this.spaceId, modelId: this.model };
+    else return { modelId: this.model };
   }
 
   async listModels() {
