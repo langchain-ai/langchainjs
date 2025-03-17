@@ -41,6 +41,7 @@ export interface SecretMap {
   MOONSHOT_API_KEY?: string;
   NOVITA_API_KEY?: string;
   NOXTUA_API_KEY?: string;
+  NOXTUA_AUTH_TOKEN?: string;
   PLANETSCALE_DATABASE_URL?: string;
   PLANETSCALE_HOST?: string;
   PLANETSCALE_PASSWORD?: string;

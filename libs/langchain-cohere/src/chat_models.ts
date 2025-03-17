@@ -723,7 +723,7 @@ export class ChatCohere<
 
   client: CohereClient;
 
-  model = "command-r-plus";
+  model = "command-a-03-2025";
 
   temperature = 0.3;
 
@@ -762,12 +762,6 @@ export class ChatCohere<
   }
 
   invocationParams(options: this["ParsedCallOptions"]) {
-    if (options.tool_choice) {
-      throw new Error(
-        "'tool_choice' call option is not supported by ChatCohere."
-      );
-    }
-
     const params = {
       model: this.model,
       preamble: options.preamble,
