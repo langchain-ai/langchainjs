@@ -725,10 +725,16 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
   }
 
   function responseToGenerationInfo(response: GoogleLLMResponse) {
-    if (!Array.isArray(response.data)) {
+    const data =
+      Array.isArray(response.data) && response.data[0]
+        ? response.data[0]
+        : response.data &&
+          (response.data as GenerateContentResponseData).candidates
+        ? (response.data as GenerateContentResponseData)
+        : undefined;
+    if (!data) {
       return {};
     }
-    const data = response.data[0];
     return {
       usage_metadata: {
         prompt_token_count: data.usageMetadata?.promptTokenCount,
@@ -745,6 +751,7 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
       citation_metadata: data.candidates[0]?.citationMetadata,
       grounding_metadata: data.candidates[0]?.groundingMetadata,
       finish_reason: data.candidates[0]?.finishReason,
+      finish_message: data.candidates[0]?.finishMessage,
       avgLogprobs: data.candidates[0]?.avgLogprobs,
       logprobs: candidateToLogprobs(data.candidates[0]),
     };

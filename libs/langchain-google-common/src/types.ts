@@ -124,7 +124,6 @@ export interface GoogleAISafetySetting {
 export type GoogleAIResponseMimeType = "text/plain" | "application/json";
 
 export const GoogleAIResponseModality = {
-  ModalityUnspectified: "MODALITY_UNSPECIFIED",
   Text: "TEXT",
   Image: "IMAGE",
   Audio: "AUDIO",
@@ -562,6 +561,7 @@ export interface GeminiResponseCandidate {
   groundingMetadata?: GeminiGroundingMetadata;
   avgLogprobs?: number;
   logprobsResult: GeminiLogprobsResult;
+  finishMessage?: string;
 }
 
 interface GeminiResponsePromptFeedback {
