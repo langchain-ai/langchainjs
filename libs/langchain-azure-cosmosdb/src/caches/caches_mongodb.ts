@@ -64,7 +64,7 @@ export class AzureCosmosDBMongoDBSemanticCache extends BaseCache {
 
     if (!dbConfig.client) {
       this.client = new MongoClient(connectionString!, {
-        appName: "langchainjs",
+        appName: "LANGCHAIN_JS",
       });
     } else {
       this.client = dbConfig.client;
