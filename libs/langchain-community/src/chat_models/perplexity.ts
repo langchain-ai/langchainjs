@@ -303,7 +303,7 @@ export class ChatPerplexity
     const stream = await this.client.chat.completions.create({
       messages: messagesList,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      ...(this.invocationParams(options)),
+      ...this.invocationParams(options),
       stream: true,
     });
 
@@ -405,7 +405,9 @@ export class ChatPerplexity
     const method = config?.method ?? "jsonSchema";
     const includeRaw = config?.includeRaw;
     if (method !== "jsonSchema") {
-      throw new Error(`Perplexity only supports "jsonSchema" as a structured output method.`);
+      throw new Error(
+        `Perplexity only supports "jsonSchema" as a structured output method.`
+      );
     }
     let llm: Runnable<BaseLanguageModelInput> = this.bind({
       response_format: {
