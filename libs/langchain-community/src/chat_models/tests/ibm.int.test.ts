@@ -12,11 +12,15 @@ import { LLMResult } from "@langchain/core/outputs";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { tool } from "@langchain/core/tools";
 import { NewTokenIndices } from "@langchain/core/callbacks/base";
+import {
+  BaseChatModel,
+  BaseChatModelCallOptions,
+} from "@langchain/core/language_models/chat_models";
 import { ChatWatsonx } from "../ibm.js";
 
 describe("Tests for chat", () => {
   describe("Test ChatWatsonx invoke and generate", () => {
-    test("Basic invoke", async () => {
+    test("Basic invoke with projectId", async () => {
       const service = new ChatWatsonx({
         model: "mistralai/mistral-large",
         version: "2024-05-31",
@@ -25,6 +29,37 @@ describe("Tests for chat", () => {
       });
       const res = await service.invoke("Print hello world");
       expect(res).toBeInstanceOf(AIMessage);
+    });
+    test("Basic invoke with spaceId", async () => {
+      const service = new ChatWatsonx({
+        model: "mistralai/mistral-large",
+        version: "2024-05-31",
+        serviceUrl: process.env.WATSONX_AI_SERVICE_URL ?? "testString",
+        spaceId: process.env.WATSONX_AI_SPACE_ID ?? "testString",
+      });
+      const res = await service.invoke("Print hello world");
+      expect(res).toBeInstanceOf(AIMessage);
+    });
+    test("Basic invoke with idOrName", async () => {
+      const service = new ChatWatsonx({
+        version: "2024-05-31",
+        serviceUrl: process.env.WATSONX_AI_SERVICE_URL ?? "testString",
+        idOrName: process.env.WATSONX_AI_ID_OR_NAME ?? "testString",
+      });
+      const res = await service.invoke("Print hello world");
+      expect(res).toBeInstanceOf(AIMessage);
+    });
+    test("Invalide invoke with idOrName and options as second argument", async () => {
+      const service = new ChatWatsonx({
+        version: "2024-05-31",
+        serviceUrl: process.env.WATSONX_AI_SERVICE_URL ?? "testString",
+        idOrName: process.env.WATSONX_AI_ID_OR_NAME ?? "testString",
+      });
+      await expect(() =>
+        service.invoke("Print hello world", {
+          maxTokens: 100,
+        })
+      ).rejects.toThrow("Options cannot be provided to a deployed model");
     });
     test("Basic generate", async () => {
       const service = new ChatWatsonx({
@@ -682,6 +717,24 @@ describe("Tests for chat", () => {
       expect(res.tool_calls[0].args.a).not.toBe(res.tool_calls[1].args.a);
       expect(res.tool_calls[0].args.b).not.toBe(res.tool_calls[1].args.b);
     });
+    test("React agent creation", async () => {
+      const model = new ChatWatsonx({
+        projectId: process.env.WATSONX_AI_PROJECT_ID,
+        serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
+        watsonxAIApikey: process.env.WATSONX_AI_APIKEY,
+        watsonxAIAuthType: "iam",
+        version: "2024-05-31",
+        model: "mistralai/mistral-large",
+      });
+      const testModel = (
+        model: BaseChatModel<BaseChatModelCallOptions, AIMessageChunk>
+      ) => {
+        // eslint-disable-next-line no-instanceof/no-instanceof
+        if (model instanceof BaseChatModel) return true;
+        else throw new Error("Wrong model passed");
+      };
+      expect(testModel(model)).toBeTruthy();
+    });
   });
 
   describe("Test withStructuredOutput usage", () => {
@@ -710,7 +763,7 @@ describe("Tests for chat", () => {
 
     test("Schema with zod and stream", async () => {
       const service = new ChatWatsonx({
-        model: "mistralai/mistral-large",
+        model: "meta-llama/llama-3-1-70b-instruct",
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL ?? "testString",
         projectId: process.env.WATSONX_AI_PROJECT_ID ?? "testString",
@@ -731,6 +784,7 @@ describe("Tests for chat", () => {
       for await (const chunk of res) {
         expect(typeof chunk).toBe("object");
         object = chunk;
+        console.log(chunk);
       }
       expect("setup" in object).toBe(true);
       expect("punchline" in object).toBe(true);

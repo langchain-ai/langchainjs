@@ -24,7 +24,7 @@ describe("PineconeStore", () => {
 
   beforeAll(async () => {
     const embeddings = new SyntheticEmbeddings({
-      vectorSize: 1536,
+      vectorSize: 1024,
     });
 
     const pinecone = new Pinecone({
@@ -239,7 +239,7 @@ describe("PineconeStore", () => {
     const documentId = uuid.v4();
     const pageContent = faker.lorem.sentence(5);
     const embeddings = new SyntheticEmbeddings({
-      vectorSize: 1536,
+      vectorSize: 1024,
     });
 
     const store = new PineconeStore(embeddings, {

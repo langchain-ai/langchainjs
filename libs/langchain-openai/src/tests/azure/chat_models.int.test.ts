@@ -1,6 +1,7 @@
 /* eslint-disable no-process-env */
 
 import { test, jest, expect } from "@jest/globals";
+import { z } from "zod";
 import {
   BaseMessage,
   ChatMessage,
@@ -27,24 +28,6 @@ import { AzureChatOpenAI } from "../../azure/chat_models.js";
 
 // Save the original value of the 'LANGCHAIN_CALLBACKS_BACKGROUND' environment variable
 const originalBackground = process.env.LANGCHAIN_CALLBACKS_BACKGROUND;
-
-beforeAll(() => {
-  if (!process.env.AZURE_OPENAI_API_KEY) {
-    process.env.AZURE_OPENAI_API_KEY = process.env.TEST_AZURE_OPENAI_API_KEY;
-  }
-  if (!process.env.AZURE_OPENAI_API_DEPLOYMENT_NAME) {
-    process.env.AZURE_OPENAI_API_DEPLOYMENT_NAME =
-      process.env.TEST_AZURE_OPENAI_API_DEPLOYMENT_NAME;
-  }
-  if (!process.env.AZURE_OPENAI_BASE_PATH) {
-    process.env.AZURE_OPENAI_BASE_PATH =
-      process.env.TEST_AZURE_OPENAI_BASE_PATH;
-  }
-  if (!process.env.AZURE_OPENAI_API_VERSION) {
-    process.env.AZURE_OPENAI_API_VERSION =
-      process.env.TEST_AZURE_OPENAI_API_VERSION;
-  }
-});
 
 test("Test Azure ChatOpenAI call method", async () => {
   const chat = new AzureChatOpenAI({
@@ -967,4 +950,18 @@ testFn("Test Azure ChatOpenAI with bearer token provider", async () => {
   // @ts-expect-error unused var
   const res = await chat.invoke([["system", "Say hi"], message]);
   // console.log(res);
+});
+
+test("Test Azure ChatOpenAI withStructuredOutput", async () => {
+  const chat = new AzureChatOpenAI({
+    modelName: "gpt-4o-mini",
+  });
+  const message = new HumanMessage("Good!");
+  const model = await chat.withStructuredOutput(
+    z.object({
+      sentiment: z.string(),
+    })
+  );
+  const res = await model.invoke([message]);
+  expect(res.sentiment).toBeDefined();
 });

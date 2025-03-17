@@ -139,6 +139,7 @@ export const config = {
     "vectorstores/hanavector": "vectorstores/hanavector",
     "vectorstores/lancedb": "vectorstores/lancedb",
     "vectorstores/libsql": "vectorstores/libsql",
+    "vectorstores/mariadb": "vectorstores/mariadb",
     "vectorstores/milvus": "vectorstores/milvus",
     "vectorstores/momento_vector_index": "vectorstores/momento_vector_index",
     "vectorstores/mongodb_atlas": "vectorstores/mongodb_atlas",
@@ -227,8 +228,9 @@ export const config = {
     "caches/upstash_redis": "caches/upstash_redis",
     "caches/vercel_kv": "caches/vercel_kv",
     // graphs
-    "graphs/neo4j_graph": "graphs/neo4j_graph",
+    "graphs/document": "graphs/document",
     "graphs/memgraph_graph": "graphs/memgraph_graph",
+    "graphs/neo4j_graph": "graphs/neo4j_graph",
     // document_compressors
     "document_compressors/ibm": "document_compressors/ibm",
     // document transformers
@@ -260,6 +262,7 @@ export const config = {
     "stores/message/neo4j": "stores/message/neo4j",
     "stores/message/planetscale": "stores/message/planetscale",
     "stores/message/postgres": "stores/message/postgres",
+    "stores/message/aurora_dsql": "stores/message/aurora_dsql",
     "stores/message/redis": "stores/message/redis",
     "stores/message/upstash_redis": "stores/message/upstash_redis",
     "stores/message/xata": "stores/message/xata",
@@ -289,6 +292,7 @@ export const config = {
     "document_loaders/web/playwright": "document_loaders/web/playwright",
     "document_loaders/web/college_confidential":
       "document_loaders/web/college_confidential",
+    "document_loaders/web/google_cloud_storage": "document_loaders/web/google_cloud_storage",
     "document_loaders/web/gitbook": "document_loaders/web/gitbook",
     "document_loaders/web/hn": "document_loaders/web/hn",
     "document_loaders/web/imsdb": "document_loaders/web/imsdb",
@@ -405,6 +409,7 @@ export const config = {
     "vectorstores/hanavector",
     "vectorstores/lancedb",
     "vectorstores/libsql",
+    "vectorstores/mariadb",
     "vectorstores/milvus",
     "vectorstores/momento_vector_index",
     "vectorstores/mongodb_atlas",
@@ -463,8 +468,8 @@ export const config = {
     "cache/upstash_redis",
     "cache/vercel_kv",
     //graphs
-    "graphs/neo4j_graph",
     "graphs/memgraph_graph",
+    "graphs/neo4j_graph",
     // document_compressors
     "document_compressors/ibm",
     // document_transformers
@@ -490,6 +495,7 @@ export const config = {
     "stores/message/neo4j",
     "stores/message/planetscale",
     "stores/message/postgres",
+    "stores/message/aurora_dsql",
     "stores/message/redis",
     "stores/message/upstash_redis",
     "stores/message/xata",

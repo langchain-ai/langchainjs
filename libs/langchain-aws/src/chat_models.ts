@@ -699,6 +699,9 @@ export class ChatBedrockConverse
       new BedrockRuntimeClient({
         region,
         credentials,
+        endpoint: rest.endpointHost
+          ? `https://${rest.endpointHost}`
+          : undefined,
       });
 
     this.region = region;
@@ -879,7 +882,16 @@ export class ChatBedrockConverse
             chunk.contentBlockDelta
           );
           yield textChatGeneration;
-          await runManager?.handleLLMNewToken(textChatGeneration.text);
+          await runManager?.handleLLMNewToken(
+            textChatGeneration.text,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            {
+              chunk: textChatGeneration,
+            }
+          );
         } else if (chunk.metadata) {
           yield handleConverseStreamMetadata(chunk.metadata, {
             streamUsage,

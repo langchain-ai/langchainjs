@@ -81,6 +81,14 @@ function messageContentMedia(content: MessageContentComplex): Part {
       },
     };
   }
+  if ("mimeType" in content && "fileUri" in content) {
+    return {
+      fileData: {
+        mimeType: content.mimeType,
+        fileUri: content.fileUri,
+      },
+    };
+  }
 
   throw new Error("Invalid media content");
 }
@@ -168,6 +176,19 @@ export function convertMessageContentToParts(
           functionCall: {
             name: c.name,
             args: c.input,
+          },
+        };
+      } else if (
+        c.type?.includes("/") &&
+        // Ensure it's a single slash.
+        c.type.split("/").length === 2 &&
+        "data" in c &&
+        typeof c.data === "string"
+      ) {
+        return {
+          inlineData: {
+            mimeType: c.type,
+            data: c.data,
           },
         };
       }
@@ -319,6 +340,13 @@ export function mapGenerateContentResultToChatResult(
 
   return {
     generations: [generation],
+    llmOutput: {
+      tokenUsage: {
+        promptTokens: extra?.usageMetadata?.input_tokens,
+        completionTokens: extra?.usageMetadata?.output_tokens,
+        totalTokens: extra?.usageMetadata?.total_tokens,
+      },
+    },
   };
 }
 

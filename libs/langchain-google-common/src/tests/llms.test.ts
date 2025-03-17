@@ -1,4 +1,4 @@
-import { expect, test } from "@jest/globals";
+import { expect, test, jest } from "@jest/globals";
 import {
   BaseMessage,
   HumanMessageChunk,
@@ -10,6 +10,7 @@ import {
   authOptions,
   MockClient,
   MockClientAuthInfo,
+  MockClientError,
   mockFile,
   mockId,
 } from "./mock.js";
@@ -192,6 +193,32 @@ describe("Mock Google LLM", () => {
     );
     // expect(record.opts.url).toEqual(`https://us-central1-aiplatform.googleapis.com/v1/projects/${projectId}/locations/us-central1/publishers/google/models/gemini-pro:generateContent`)
     // console.log("record", JSON.stringify(record, null, 2));
+  });
+
+  test("1: generateContent - retryable request", async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "llm-1-mock.json",
+    };
+    const model = new GoogleLLM({
+      authOptions,
+    });
+
+    const retryableError = new MockClientError(429);
+    const requestSpy = jest
+      .spyOn(MockClient.prototype, "request")
+      .mockRejectedValueOnce(retryableError);
+
+    const response = await model.invoke("Hello world");
+
+    expect(response).toEqual(
+      "1. Sock it to Me!\n2. Heel Yeah Socks\n3. Sole Mates\n4. Happy Soles\n5. Toe-tally Awesome Socks\n6. Sock Appeal\n7. Footsie Wootsies\n8. Thread Heads\n9. Sock Squad\n10. Sock-a-licious\n11. Darn Good Socks\n12. Sockcessories\n13. Sole Searching\n14. Sockstar\n15. Socktopia\n16. Sockology\n17. Elevated Toes\n18. The Urban Sole\n19. The Hippie Sole\n20. Sole Fuel"
+    );
+    expect(requestSpy).toHaveBeenCalledTimes(2);
   });
 
   test("1: invoke", async () => {
