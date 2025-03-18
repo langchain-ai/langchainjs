@@ -1,6 +1,11 @@
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
-import { StructuredTool, StructuredToolInterface } from '@langchain/core/tools';
-import { z } from 'zod';
+import {
+  DynamicStructuredTool,
+  ResponseFormat,
+  StructuredToolInterface,
+} from '@langchain/core/tools';
+import { JSONSchema, JSONSchemaToZod } from '@dmitryrechkin/json-schema-to-zod';
+
 import logger from './logger.js';
 
 interface TextContent {
@@ -72,73 +77,53 @@ function _convertCallToolResult(
 }
 
 /**
- * Valid response formats for MCP tools
- */
-export type ResponseFormat = 'text' | 'content_and_artifact';
-
-/**
- * Convert an MCP tool to a LangChain tool.
+ * Call an MCP tool.
+ *
+ * Use this with `.bind` to capture the fist three arguments, then pass to the constructor of DynamicStructuredTool.
+ *
+ * @internal
  *
  * @param client - The MCP client
- * @param tool - The MCP tool to convert
- * @param toolSchema - Tool schema (kept for backward compatibility, not used in current implementation)
- * @param responseFormat - Response format ('text' or 'content_and_artifact')
- * @returns A LangChain tool
+ * @param name - The name of the tool (forwarded to the client)
+ * @param responseFormat - The response format
+ * @param args - The arguments to pass to the tool
+ * @returns A tuple of [textContent, nonTextContent]
  */
-export function convertMcpToolToLangchainTool(
+async function _callTool(
   client: Client,
-  tool: { name: string; description?: string; inputSchema?: any },
-  toolSchema?: any,
-  responseFormat: ResponseFormat = 'content_and_artifact'
-): StructuredToolInterface {
-  // Create a minimal MCPTool class extending StructuredTool
-  class MCPTool extends StructuredTool {
-    name = tool.name;
-    description = tool.description || '';
-    schema = z.object({}).passthrough();
-    override responseFormat: ResponseFormat;
+  name: string,
+  responseFormat: ResponseFormat,
+  args: Record<string, unknown>
+): Promise<string | [string | string[], NonTextContent[] | null]> {
+  try {
+    logger.info(`Calling tool ${name}(${JSON.stringify(args)})`);
+    const result = await client.callTool({
+      name,
+      arguments: args,
+    });
 
-    constructor(responseFormat: ResponseFormat) {
-      super({
-        responseFormat,
-        verboseParsingErrors: false,
-      });
-      this.responseFormat = responseFormat;
+    const [textContent, nonTextContent] = _convertCallToolResult({
+      ...result,
+      isError: result.isError === true,
+      content: result.content || [],
+    });
+
+    logger.info(`Tool ${name} returned: ${JSON.stringify({ textContent, nonTextContent })}`);
+
+    // Return based on the response format
+    if (responseFormat === 'content_and_artifact') {
+      return [textContent, nonTextContent];
     }
 
-    protected async _call(
-      args: Record<string, unknown>
-    ): Promise<string | [string | string[], NonTextContent[] | null]> {
-      try {
-        const result = await client.callTool({
-          name: tool.name,
-          arguments: args,
-        });
-
-        const [textContent, nonTextContent] = _convertCallToolResult({
-          ...result,
-          isError: result.isError === true,
-          content: result.content || [],
-        });
-
-        // Return based on the response format
-        if (this.responseFormat === 'content_and_artifact') {
-          return [textContent, nonTextContent] as [string | string[], NonTextContent[] | null];
-        }
-
-        // Default to returning just the text content
-        return typeof textContent === 'string' ? textContent : textContent.join('\n');
-      } catch (error) {
-        if (error instanceof ToolException) {
-          throw error;
-        }
-        throw new ToolException(`Error calling tool ${tool.name}: ${String(error)}`);
-      }
+    // Default to returning just the text content
+    return typeof textContent === 'string' ? textContent : textContent.join('\n');
+  } catch (error) {
+    logger.error(`Error calling tool ${name}: ${String(error)}`);
+    if (error instanceof ToolException) {
+      throw error;
     }
+    throw new ToolException(`Error calling tool ${name}: ${String(error)}`);
   }
-
-  // Return an instance of our tool with the specified response format
-  return new MCPTool(responseFormat);
 }
 
 /**
@@ -150,28 +135,36 @@ export function convertMcpToolToLangchainTool(
  */
 export async function loadMcpTools(
   client: Client,
-  responseFormat: ResponseFormat = 'text'
+  responseFormat: ResponseFormat = 'content',
+  throwOnLoadError: boolean = true
 ): Promise<StructuredToolInterface[]> {
-  try {
-    // Get tools in a single operation
-    const toolsResponse = await client.listTools();
-    logger.info(`Found ${toolsResponse.tools?.length || 0} MCP tools`);
+  // Get tools in a single operation
+  const toolsResponse = await client.listTools();
+  logger.info(`Found ${toolsResponse.tools?.length || 0} MCP tools`);
 
-    // Filter out tools without names and convert in a single map operation
-    return (toolsResponse.tools || [])
-      .filter(tool => !!tool.name)
-      .map(tool => {
-        try {
-          logger.debug(`Successfully loaded tool: ${tool.name}`);
-          return convertMcpToolToLangchainTool(client, tool, undefined, responseFormat);
-        } catch (error) {
-          logger.error(`Failed to load tool "${tool.name}":`, error);
-          return null;
+  // Filter out tools without names and convert in a single map operation
+  return (toolsResponse.tools || [])
+    .filter(tool => !!tool.name)
+    .map(tool => {
+      try {
+        const dst = new DynamicStructuredTool({
+          name: tool.name,
+          description: tool.description || '',
+          schema: JSONSchemaToZod.convert(
+            (tool.inputSchema ?? { type: 'object', properties: {} }) as JSONSchema
+          ),
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          func: _callTool.bind(null, client, tool.name, responseFormat) as any,
+        });
+        logger.debug(`Successfully loaded tool: ${dst.name}`);
+        return dst;
+      } catch (error) {
+        logger.error(`Failed to load tool "${tool.name}":`, error);
+        if (throwOnLoadError) {
+          throw error;
         }
-      })
-      .filter(Boolean) as StructuredToolInterface[];
-  } catch (error) {
-    logger.error('Failed to list MCP tools:', error);
-    return [];
-  }
+        return null;
+      }
+    })
+    .filter(Boolean) as StructuredToolInterface[];
 }

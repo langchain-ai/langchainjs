@@ -15,8 +15,9 @@
   },
   "scripts": {
     "build": "run-s \"build:main -- {@}\" \"build:examples -- {@}\" --",
-    "test": "jest",
-    "test:coverage": "jest --coverage",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:watch": "vitest",
     "lint": "eslint --ignore-pattern 'dist/**' .",
     "lint:fix": "eslint --ignore-pattern 'dist/**' . --fix",
     "format": "prettier --write \"src/**/*.ts\" \"examples/**/*.ts\"",
@@ -40,6 +41,7 @@
   "author": "Ravi Kiran Vemula",
   "license": "MIT",
   "dependencies": {
+    "@dmitryrechkin/json-schema-to-zod": "^1.0.1",
     "@modelcontextprotocol/sdk": "^1.7.0",
     "winston": "^3.17.0"
   },
@@ -53,8 +55,7 @@
     "@eslint/js": "^9.21.0",
     "@langchain/langgraph": "^0.2.56",
     "@langchain/openai": "^0.4.4",
-    "@types/jest": "^29.5.12",
-    "@types/node": "^20.11.30",
+    "@types/node": "^22.13.10",
     "@typescript-eslint/eslint-plugin": "^7.3.1",
     "@typescript-eslint/parser": "^7.3.1",
     "dotenv": "^16.4.7",
@@ -62,14 +63,13 @@
     "eslint-config-prettier": "^10.0.2",
     "eventsource": "^3.0.5",
     "husky": "^9.0.11",
-    "jest": "^29.7.0",
     "lint-staged": "^15.2.2",
     "npm-run-all": "^4.1.5",
     "prettier": "^3.2.5",
-    "ts-jest": "^29.1.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.4.2",
-    "typescript-eslint": "^8.26.0"
+    "typescript-eslint": "^8.26.0",
+    "vitest": "^3.0.9"
   },
   "engines": {
     "node": ">=18"

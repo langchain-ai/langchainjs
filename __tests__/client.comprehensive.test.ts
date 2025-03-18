@@ -1,5 +1,7 @@
+import { vi, describe, test, expect, beforeEach, afterEach } from 'vitest';
+
 // Mock fs module before imports
-jest.mock('fs', () => {
+vi.mock('fs', () => {
   // Create a map to store mock file contents
   const mockFiles = {
     './mcp.json': JSON.stringify({
@@ -16,7 +18,7 @@ jest.mock('fs', () => {
   };
 
   return {
-    readFileSync: jest.fn((path: string, _encoding?: string) => {
+    readFileSync: vi.fn((path: string, _encoding?: string) => {
       if (path === './nonexistent.json') {
         throw new Error('File not found');
       }
@@ -25,27 +27,29 @@ jest.mock('fs', () => {
       }
       throw new Error(`Mock file not found: ${path}`);
     }),
-    existsSync: jest.fn((path: string) => {
+    existsSync: vi.fn((path: string) => {
       return Object.prototype.hasOwnProperty.call(mockFiles, path);
     }),
   };
 });
 
 // Mock path module
-jest.mock('path', () => ({
-  join: jest.fn((...args) => args.join('/')),
-  resolve: jest.fn((...args) => args.join('/')),
-  dirname: jest.fn(path => path.split('/').slice(0, -1).join('/')),
-  basename: jest.fn(path => path.split('/').pop()),
-}));
+vi.mock('path', () => {
+  return {
+    join: vi.fn((...args) => args.join('/')),
+    resolve: vi.fn((...args) => args.join('/')),
+    dirname: vi.fn((path: string) => path.split('/').slice(0, -1).join('/')),
+    basename: vi.fn((path: string) => path.split('/').pop()),
+  };
+});
 
 // Mock the logger module
-jest.mock('../src/logger.js', () => {
+vi.mock('../src/logger.js', () => {
   const mockLogger = {
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
-    debug: jest.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+    debug: vi.fn(),
   };
   return {
     __esModule: true,
@@ -55,30 +59,32 @@ jest.mock('../src/logger.js', () => {
 });
 
 // Set up mocks for external modules
-jest.mock(
+vi.mock(
   '@modelcontextprotocol/sdk/client/index.js',
   () => {
     return {
-      Client: jest.fn().mockImplementation(() => ({
-        connect: jest.fn().mockResolvedValue(undefined),
-        listTools: jest.fn().mockResolvedValue({
-          tools: [
-            {
-              name: 'tool1',
-              description: 'Test tool 1',
-              inputSchema: { type: 'object', properties: {} },
-            },
-            {
-              name: 'tool2',
-              description: 'Test tool 2',
-              inputSchema: { type: 'object', properties: {} },
-            },
-          ],
-        }),
-        callTool: jest.fn().mockResolvedValue({
-          content: [{ type: 'text', text: 'result' }],
-        }),
-        close: jest.fn().mockResolvedValue(undefined),
+      Client: vi.fn().mockImplementation(() => ({
+        connect: vi.fn().mockReturnValue(Promise.resolve()),
+        listTools: vi.fn().mockReturnValue(
+          Promise.resolve({
+            tools: [
+              {
+                name: 'tool1',
+                description: 'Test tool 1',
+                inputSchema: { type: 'object', properties: {} },
+              },
+              {
+                name: 'tool2',
+                description: 'Test tool 2',
+                inputSchema: { type: 'object', properties: {} },
+              },
+            ],
+          })
+        ),
+        callTool: vi
+          .fn()
+          .mockReturnValue(Promise.resolve({ content: [{ type: 'text', text: 'result' }] })),
+        close: vi.fn().mockReturnValue(Promise.resolve()),
         tools: [], // Add the tools property
       })),
     };
@@ -86,16 +92,16 @@ jest.mock(
   { virtual: true }
 );
 
-jest.mock(
+vi.mock(
   '@modelcontextprotocol/sdk/client/stdio.js',
   () => {
     // Using the OnCloseHandler type defined at the top level
     return {
-      StdioClientTransport: jest.fn().mockImplementation(config => {
+      StdioClientTransport: vi.fn().mockImplementation(config => {
         const transport = {
-          connect: jest.fn().mockResolvedValue(undefined),
-          send: jest.fn().mockResolvedValue(undefined),
-          close: jest.fn().mockResolvedValue(undefined),
+          connect: vi.fn().mockReturnValue(Promise.resolve()),
+          send: vi.fn().mockReturnValue(Promise.resolve()),
+          close: vi.fn().mockReturnValue(Promise.resolve()),
           onclose: null as OnCloseHandler | null,
           config,
         };
@@ -106,16 +112,16 @@ jest.mock(
   { virtual: true }
 );
 
-jest.mock(
+vi.mock(
   '@modelcontextprotocol/sdk/client/sse.js',
   () => {
     // Using the OnCloseHandler type defined at the top level
     return {
-      SSEClientTransport: jest.fn().mockImplementation(config => {
+      SSEClientTransport: vi.fn().mockImplementation(config => {
         const transport = {
-          connect: jest.fn().mockResolvedValue(undefined),
-          send: jest.fn().mockResolvedValue(undefined),
-          close: jest.fn().mockResolvedValue(undefined),
+          connect: vi.fn().mockReturnValue(Promise.resolve()),
+          send: vi.fn().mockReturnValue(Promise.resolve()),
+          close: vi.fn().mockReturnValue(Promise.resolve()),
           onclose: null as OnCloseHandler | null,
           config,
         };
@@ -130,52 +136,54 @@ jest.mock(
 type OnCloseHandler = () => void;
 
 // Import modules after mocking
-import * as fs from 'fs';
-import { MultiServerMCPClient, MCPClientError } from '../src/client.js';
-import { Client } from '@modelcontextprotocol/sdk/client/index.js';
-import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
-import { SSEClientTransport } from '@modelcontextprotocol/sdk/client/sse.js';
+const fs = await import('fs');
+const { StdioClientTransport } = await import('@modelcontextprotocol/sdk/client/stdio.js');
+const { SSEClientTransport } = await import('@modelcontextprotocol/sdk/client/sse.js');
+const { MultiServerMCPClient, MCPClientError } = await import('../src/client.js');
+const { Client } = await import('@modelcontextprotocol/sdk/client/index.js');
 
 // Create mock objects that will be accessible throughout the tests
 const mockClientMethods = {
-  connect: jest.fn().mockResolvedValue(undefined),
-  listTools: jest.fn().mockResolvedValue({
-    tools: [
-      {
-        name: 'tool1',
-        description: 'Test tool 1',
-        inputSchema: { type: 'object', properties: {} },
-      },
-      {
-        name: 'tool2',
-        description: 'Test tool 2',
-        inputSchema: { type: 'object', properties: {} },
-      },
-    ],
-  }),
-  callTool: jest.fn().mockResolvedValue({
-    content: [{ type: 'text', text: 'result' }],
-  }),
-  close: jest.fn().mockResolvedValue(undefined),
+  connect: vi.fn().mockReturnValue(Promise.resolve()),
+  listTools: vi.fn().mockReturnValue(
+    Promise.resolve({
+      tools: [
+        {
+          name: 'tool1',
+          description: 'Test tool 1',
+          inputSchema: { type: 'object', properties: {} },
+        },
+        {
+          name: 'tool2',
+          description: 'Test tool 2',
+          inputSchema: { type: 'object', properties: {} },
+        },
+      ],
+    })
+  ),
+  callTool: vi
+    .fn()
+    .mockReturnValue(Promise.resolve({ content: [{ type: 'text', text: 'result' }] })),
+  close: vi.fn().mockReturnValue(Promise.resolve()),
 };
 
 const mockStdioMethods = {
-  connect: jest.fn().mockResolvedValue(undefined),
-  send: jest.fn().mockResolvedValue(undefined),
-  close: jest.fn().mockResolvedValue(undefined),
-  triggerOnclose: jest.fn(),
+  connect: vi.fn().mockReturnValue(Promise.resolve()),
+  send: vi.fn().mockReturnValue(Promise.resolve()),
+  close: vi.fn().mockReturnValue(Promise.resolve()),
+  triggerOnclose: vi.fn(),
 };
 
 const mockSSEMethods = {
-  connect: jest.fn().mockResolvedValue(undefined),
-  send: jest.fn().mockResolvedValue(undefined),
-  close: jest.fn().mockResolvedValue(undefined),
-  triggerOnclose: jest.fn(),
+  connect: vi.fn().mockReturnValue(Promise.resolve()),
+  send: vi.fn().mockReturnValue(Promise.resolve()),
+  close: vi.fn().mockReturnValue(Promise.resolve()),
+  triggerOnclose: vi.fn(),
 };
 
 // Reset mocks before each test
 beforeEach(() => {
-  jest.clearAllMocks();
+  vi.clearAllMocks();
 
   // Reset mock methods
   Object.values(mockClientMethods).forEach(mock => mock.mockClear());
@@ -183,7 +191,7 @@ beforeEach(() => {
   Object.values(mockSSEMethods).forEach(mock => mock.mockClear());
 
   // Reset mock implementations
-  mockClientMethods.listTools.mockResolvedValue({
+  mockClientMethods.listTools.mockReturnValue({
     tools: [
       {
         name: 'tool1',
@@ -199,7 +207,7 @@ beforeEach(() => {
   });
 
   // Reset the mock implementations for the imported modules
-  (Client as jest.Mock).mockImplementation(() => ({
+  (Client as vi.Mock).mockImplementation(() => ({
     connect: mockClientMethods.connect,
     listTools: mockClientMethods.listTools,
     callTool: mockClientMethods.callTool,
@@ -207,7 +215,7 @@ beforeEach(() => {
     tools: [],
   }));
 
-  (StdioClientTransport as jest.Mock).mockImplementation(config => {
+  (StdioClientTransport as vi.Mock).mockImplementation(config => {
     const transport = {
       connect: mockStdioMethods.connect,
       send: mockStdioMethods.send,
@@ -215,13 +223,13 @@ beforeEach(() => {
       onclose: null as OnCloseHandler | null,
       config,
     };
-    mockStdioMethods.triggerOnclose = jest.fn(() => {
+    mockStdioMethods.triggerOnclose = vi.fn(() => {
       if (transport.onclose) transport.onclose();
     });
     return transport;
   });
 
-  (SSEClientTransport as jest.Mock).mockImplementation(config => {
+  (SSEClientTransport as vi.Mock).mockImplementation(config => {
     const transport = {
       connect: mockSSEMethods.connect,
       send: mockSSEMethods.send,
@@ -229,7 +237,7 @@ beforeEach(() => {
       onclose: null as OnCloseHandler | null,
       config,
     };
-    mockSSEMethods.triggerOnclose = jest.fn(() => {
+    mockSSEMethods.triggerOnclose = vi.fn(() => {
       if (transport.onclose) transport.onclose();
     });
     return transport;
@@ -238,7 +246,7 @@ beforeEach(() => {
 
 describe('MultiServerMCPClient', () => {
   afterEach(() => {
-    jest.resetAllMocks();
+    vi.resetAllMocks();
   });
 
   describe('Constructor', () => {
@@ -251,7 +259,7 @@ describe('MultiServerMCPClient', () => {
       expect(tools).toEqual([]);
     });
 
-    test('should process valid stdio connection config', () => {
+    test('should process valid stdio connection config', async () => {
       const config = {
         'test-server': {
           transport: 'stdio' as const,
@@ -264,13 +272,12 @@ describe('MultiServerMCPClient', () => {
       expect(client).toBeDefined();
 
       // Initialize connections and verify
-      return client.initializeConnections().then(() => {
-        expect(StdioClientTransport).toHaveBeenCalled();
-        expect(Client).toHaveBeenCalled();
-      });
+      await client.initializeConnections();
+      expect(StdioClientTransport).toHaveBeenCalled();
+      expect(Client).toHaveBeenCalled();
     });
 
-    test('should process valid SSE connection config', () => {
+    test('should process valid SSE connection config', async () => {
       const config = {
         'test-server': {
           transport: 'sse' as const,
@@ -284,13 +291,12 @@ describe('MultiServerMCPClient', () => {
       expect(client).toBeDefined();
 
       // Initialize connections and verify
-      return client.initializeConnections().then(() => {
-        expect(SSEClientTransport).toHaveBeenCalled();
-        expect(Client).toHaveBeenCalled();
-      });
+      await client.initializeConnections();
+      expect(SSEClientTransport).toHaveBeenCalled();
+      expect(Client).toHaveBeenCalled();
     });
 
-    test('should handle invalid connection type gracefully', () => {
+    test('should handle invalid connection type gracefully', async () => {
       const config = {
         'test-server': {
           transport: 'invalid' as any,
@@ -298,34 +304,28 @@ describe('MultiServerMCPClient', () => {
         },
       };
 
-      const client = new MultiServerMCPClient(config);
-      expect(client).toBeDefined();
-
-      // Initialize connections and verify no error is thrown
-      return client.initializeConnections().then(() => {
-        // No connections should be initialized
-        expect(SSEClientTransport).not.toHaveBeenCalled();
-        expect(StdioClientTransport).not.toHaveBeenCalled();
-      });
+      // Should throw error during initialization
+      expect(() => {
+        new MultiServerMCPClient(config);
+      }).toThrow(MCPClientError);
     });
 
-    test('should gracefully handle empty config', () => {
+    test('should gracefully handle empty config', async () => {
       const client = new MultiServerMCPClient({});
       expect(client).toBeDefined();
 
       // Initialize connections and verify no error is thrown
-      return client.initializeConnections().then(() => {
-        // No connections should be initialized
-        expect(SSEClientTransport).not.toHaveBeenCalled();
-        expect(StdioClientTransport).not.toHaveBeenCalled();
-      });
+      await client.initializeConnections();
+      // No connections should be initialized
+      expect(SSEClientTransport).not.toHaveBeenCalled();
+      expect(StdioClientTransport).not.toHaveBeenCalled();
     });
   });
 
   describe('Configuration Loading', () => {
-    test('should load config from a valid file', () => {
+    test('should load config from a valid file', async () => {
       // Mock fs.readFileSync to return valid JSON
-      (fs.readFileSync as jest.Mock).mockReturnValueOnce(
+      (fs.readFileSync as vi.Mock).mockReturnValueOnce(
         JSON.stringify({
           servers: {
             'test-server': {
@@ -343,7 +343,7 @@ describe('MultiServerMCPClient', () => {
     });
 
     test('should throw error for nonexistent config file', () => {
-      (fs.existsSync as jest.Mock).mockReturnValueOnce(false);
+      (fs.existsSync as vi.Mock).mockReturnValueOnce(false);
 
       expect(() => {
         MultiServerMCPClient.fromConfigFile('./nonexistent.json');
@@ -351,7 +351,7 @@ describe('MultiServerMCPClient', () => {
     });
 
     test('should throw error for invalid JSON in config file', () => {
-      (fs.readFileSync as jest.Mock).mockReturnValueOnce('invalid json');
+      (fs.readFileSync as vi.Mock).mockReturnValueOnce('invalid json');
 
       expect(() => {
         MultiServerMCPClient.fromConfigFile('./invalid.json');
@@ -360,7 +360,7 @@ describe('MultiServerMCPClient', () => {
 
     test('should throw error for invalid config structure', () => {
       // Mock readFileSync to return a config without the required 'servers' property
-      (fs.readFileSync as jest.Mock).mockReturnValueOnce(
+      (fs.readFileSync as vi.Mock).mockReturnValueOnce(
         JSON.stringify({
           notServers: {}, // This missing 'servers' property
         })
@@ -378,7 +378,7 @@ describe('MultiServerMCPClient', () => {
     });
 
     test('should throw error for file system errors', () => {
-      (fs.readFileSync as jest.Mock).mockImplementationOnce(() => {
+      (fs.readFileSync as vi.Mock).mockImplementationOnce(() => {
         throw new Error('File system error');
       });
 
@@ -390,23 +390,20 @@ describe('MultiServerMCPClient', () => {
 
   describe('Connection Management', () => {
     test('should initialize stdio connections correctly', async () => {
-      // Create a properly structured config
-      const config = {
+      // Create a client instance with the config
+      const client = new MultiServerMCPClient({
         'stdio-server': {
           transport: 'stdio',
           command: 'python',
           args: ['./script.py'],
         },
-      };
-
-      // Create a client instance with the config
-      const client = new MultiServerMCPClient(config);
+      });
 
       // Reset mocks to ensure clean state
-      jest.clearAllMocks();
+      vi.clearAllMocks();
 
       // Set up specific implementation for the StdioClientTransport mock
-      (StdioClientTransport as jest.Mock).mockImplementationOnce(options => {
+      (StdioClientTransport as vi.Mock).mockImplementationOnce(options => {
         return {
           connect: mockStdioMethods.connect,
           send: mockStdioMethods.send,
@@ -432,22 +429,19 @@ describe('MultiServerMCPClient', () => {
     });
 
     test('should initialize SSE connections correctly', async () => {
-      // Create a properly structured config for SSE
-      const config = {
+      // Create a client instance with the config
+      const client = new MultiServerMCPClient({
         'sse-server': {
           transport: 'sse',
           url: 'http://example.com/sse',
         },
-      };
-
-      // Create a client instance with the config
-      const client = new MultiServerMCPClient(config);
+      });
 
       // Reset mocks to ensure clean state
-      jest.clearAllMocks();
+      vi.clearAllMocks();
 
       // Set up specific implementation for the SSEClientTransport mock
-      (SSEClientTransport as jest.Mock).mockImplementationOnce((url, options) => {
+      (SSEClientTransport as vi.Mock).mockImplementationOnce((url, options) => {
         return {
           connect: mockSSEMethods.connect,
           send: mockSSEMethods.send,
@@ -468,9 +462,9 @@ describe('MultiServerMCPClient', () => {
       expect(mockClientMethods.connect).toHaveBeenCalled();
     });
 
-    test('should handle connection failures gracefully', async () => {
+    test('should throw on connection failures', async () => {
       // Mock connection failure
-      mockClientMethods.connect.mockRejectedValueOnce(new Error('Connection failed'));
+      mockClientMethods.connect.mockReturnValueOnce(Promise.reject(new Error('Connection failed')));
 
       const client = new MultiServerMCPClient({
         'test-server': {
@@ -480,18 +474,15 @@ describe('MultiServerMCPClient', () => {
         },
       });
 
-      // Should not throw error
-      await client.initializeConnections();
-
-      // Still called connect but handled error
-      expect(mockClientMethods.connect).toHaveBeenCalled();
-      // Should not try to list tools after failed connection
-      expect(mockClientMethods.listTools).not.toHaveBeenCalled();
+      // Should throw error
+      await expect(client.initializeConnections()).rejects.toThrow();
     });
 
-    test('should handle tool loading failures gracefully', async () => {
+    test('should throw on tool loading failures', async () => {
       // Mock tool loading failure
-      mockClientMethods.listTools.mockRejectedValueOnce(new Error('Failed to list tools'));
+      mockClientMethods.listTools.mockReturnValueOnce(
+        Promise.reject(new Error('Failed to list tools'))
+      );
 
       const client = new MultiServerMCPClient({
         'test-server': {
@@ -501,16 +492,8 @@ describe('MultiServerMCPClient', () => {
         },
       });
 
-      // Should not throw error
-      await client.initializeConnections();
-
-      // Connection succeeded but tool loading failed
-      expect(mockClientMethods.connect).toHaveBeenCalled();
-      expect(mockClientMethods.listTools).toHaveBeenCalled();
-
-      // Should have empty tools
-      const tools = client.getTools();
-      expect(tools).toEqual([]);
+      // Should throw error
+      await expect(client.initializeConnections()).rejects.toThrow();
     });
   });
 
@@ -532,7 +515,7 @@ describe('MultiServerMCPClient', () => {
       await client.initializeConnections();
 
       // Clear previous calls
-      (StdioClientTransport as jest.Mock).mockClear();
+      (StdioClientTransport as vi.Mock).mockClear();
       mockClientMethods.connect.mockClear();
 
       // Trigger onclose handler
@@ -563,7 +546,7 @@ describe('MultiServerMCPClient', () => {
       await client.initializeConnections();
 
       // Clear previous calls
-      (SSEClientTransport as jest.Mock).mockClear();
+      (SSEClientTransport as vi.Mock).mockClear();
       mockClientMethods.connect.mockClear();
 
       // Trigger onclose handler
@@ -584,7 +567,7 @@ describe('MultiServerMCPClient', () => {
       const client = new MultiServerMCPClient();
 
       // Clear previous mock invocations
-      (StdioClientTransport as jest.Mock).mockClear();
+      (StdioClientTransport as vi.Mock).mockClear();
 
       // Connect with reconnection enabled
       await client.connectToServerViaStdio(
@@ -623,7 +606,7 @@ describe('MultiServerMCPClient', () => {
       await client.initializeConnections();
 
       // Clear previous calls
-      (StdioClientTransport as jest.Mock).mockClear();
+      (StdioClientTransport as vi.Mock).mockClear();
 
       // Trigger onclose handler
       mockStdioMethods.triggerOnclose();
@@ -639,12 +622,14 @@ describe('MultiServerMCPClient', () => {
   describe('Tool Management', () => {
     test('should get all tools as a flattened array', async () => {
       // Mock tool response
-      mockClientMethods.listTools.mockResolvedValue({
-        tools: [
-          { name: 'tool1', description: 'Tool 1', inputSchema: {} },
-          { name: 'tool2', description: 'Tool 2', inputSchema: {} },
-        ],
-      });
+      mockClientMethods.listTools.mockReturnValue(
+        Promise.resolve({
+          tools: [
+            { name: 'tool1', description: 'Tool 1', inputSchema: {} },
+            { name: 'tool2', description: 'Tool 2', inputSchema: {} },
+          ],
+        })
+      );
 
       const client = new MultiServerMCPClient({
         server1: {
@@ -717,7 +702,7 @@ describe('MultiServerMCPClient', () => {
 
     test('should handle errors during cleanup gracefully', async () => {
       // Mock close to throw error
-      mockStdioMethods.close.mockRejectedValueOnce(new Error('Close failed'));
+      mockStdioMethods.close.mockReturnValueOnce(Promise.reject(new Error('Close failed')));
 
       const client = new MultiServerMCPClient({
         'test-server': {
@@ -738,8 +723,8 @@ describe('MultiServerMCPClient', () => {
 
     test('should clean up all resources even if some fail', async () => {
       // First close fails, second succeeds
-      mockStdioMethods.close.mockRejectedValueOnce(new Error('Close failed'));
-      mockSSEMethods.close.mockResolvedValue(undefined);
+      mockStdioMethods.close.mockReturnValueOnce(Promise.reject(new Error('Close failed')));
+      mockSSEMethods.close.mockReturnValueOnce(Promise.resolve());
 
       const client = new MultiServerMCPClient({
         'stdio-server': {
@@ -821,7 +806,7 @@ describe('MultiServerMCPClient', () => {
       expect(StdioClientTransport).toHaveBeenCalled();
 
       // Simulate connection close to test restart
-      (StdioClientTransport as jest.Mock).mockClear();
+      (StdioClientTransport as vi.Mock).mockClear();
       mockStdioMethods.triggerOnclose();
 
       // Wait for reconnection
@@ -833,7 +818,7 @@ describe('MultiServerMCPClient', () => {
 
     test('should connect to an SSE server correctly', async () => {
       // Clear previous mock invocations
-      (SSEClientTransport as jest.Mock).mockClear();
+      (SSEClientTransport as vi.Mock).mockClear();
 
       const client = new MultiServerMCPClient();
       await client.connectToServerViaSSE('test-server', 'http://localhost:8000/sse');
@@ -846,7 +831,7 @@ describe('MultiServerMCPClient', () => {
 
     test('should connect with headers', async () => {
       // Clear previous mock invocations
-      (SSEClientTransport as jest.Mock).mockClear();
+      (SSEClientTransport as vi.Mock).mockClear();
 
       const client = new MultiServerMCPClient();
       const headers = { Authorization: 'Bearer token' };
@@ -860,7 +845,7 @@ describe('MultiServerMCPClient', () => {
 
     test('should connect with useNodeEventSource option', async () => {
       // Clear previous mock invocations
-      (SSEClientTransport as jest.Mock).mockClear();
+      (SSEClientTransport as vi.Mock).mockClear();
 
       const client = new MultiServerMCPClient();
       await client.connectToServerViaSSE(
@@ -891,7 +876,7 @@ describe('MultiServerMCPClient', () => {
       expect(SSEClientTransport).toHaveBeenCalled();
 
       // Simulate connection close to test reconnect
-      (SSEClientTransport as jest.Mock).mockClear();
+      (SSEClientTransport as vi.Mock).mockClear();
       mockSSEMethods.triggerOnclose();
 
       // Wait for reconnection
@@ -909,7 +894,7 @@ describe('MultiServerMCPClient', () => {
 
       // Clear mock history
       mockStdioMethods.close.mockClear();
-      (StdioClientTransport as jest.Mock).mockClear();
+      (StdioClientTransport as vi.Mock).mockClear();
 
       // Connect again with same name (should close previous)
       await client.connectToServerViaStdio('test-server', 'node', ['script.js']);
@@ -936,16 +921,18 @@ describe('MultiServerMCPClient', () => {
       expect(result).toEqual([]);
     });
 
-    test('should handle transport creation errors', async () => {
+    test('should throw on transport creation errors', async () => {
       // Force an error when creating transport
-      (StdioClientTransport as jest.Mock).mockImplementationOnce(() => {
+      (StdioClientTransport as vi.Mock).mockImplementationOnce(() => {
         throw new Error('Transport creation failed');
       });
 
       const client = new MultiServerMCPClient();
 
-      // Should not throw
-      await client.connectToServerViaStdio('test-server', 'python', ['./script.py']);
+      // Should throw error when connecting
+      await expect(
+        client.connectToServerViaStdio('test-server', 'python', ['./script.py'])
+      ).rejects.toThrow();
 
       // Should have attempted to create transport
       expect(StdioClientTransport).toHaveBeenCalled();

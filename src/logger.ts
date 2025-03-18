@@ -97,7 +97,7 @@ try {
  * Create the logger instance with our configuration.
  * By default, logging is disabled (silent) but can be enabled by setting the level.
  */
-const logger = winston.createLogger({
+export const logger = winston.createLogger({
   level: defaultLevel, // Start with silent logging by default
   levels,
   format,
@@ -111,7 +111,7 @@ const logger = winston.createLogger({
  */
 export function enableLogging(level: keyof typeof levels | 'silent' = 'info'): void {
   logger.level = level;
-  logger.info(`Logging enabled at level: ${level}`);
+  logger.debug(`Logging enabled at level: ${level}`);
 }
 
 /**

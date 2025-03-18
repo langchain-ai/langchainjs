@@ -2,7 +2,6 @@ import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 import { SSEClientTransport } from '@modelcontextprotocol/sdk/client/sse.js';
 import { StructuredToolInterface } from '@langchain/core/tools';
-import { z } from 'zod';
 import { loadMcpTools } from './tools.js';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -94,7 +93,7 @@ export class MCPClientError extends Error {
  */
 export class MultiServerMCPClient {
   private clients: Map<string, Client> = new Map();
-  private serverNameToTools: Map<string, StructuredToolInterface<z.ZodObject<any>>[]> = new Map();
+  private serverNameToTools: Map<string, StructuredToolInterface[]> = new Map();
   private connections?: Record<string, Connection>;
   private cleanupFunctions: Array<() => Promise<void>> = [];
   private transportInstances: Map<string, StdioClientTransport | SSEClientTransport> = new Map();
@@ -104,7 +103,7 @@ export class MultiServerMCPClient {
    *
    * @param connections - Optional connections to initialize
    */
-  constructor(connections?: Record<string, any>) {
+  constructor(connections?: Record<string, Connection>) {
     if (connections) {
       this.connections = this.processConnections(connections);
     } else {
@@ -212,7 +211,9 @@ export class MultiServerMCPClient {
    * @param connections - Raw connection configurations
    * @returns Processed connection configurations
    */
-  private processConnections(connections: Record<string, any>): Record<string, Connection> {
+  private processConnections(
+    connections: Record<string, Partial<Connection>>
+  ): Record<string, Connection> {
     const processedConnections: Record<string, Connection> = {};
 
     for (const [serverName, config] of Object.entries(connections)) {
@@ -221,17 +222,21 @@ export class MultiServerMCPClient {
         continue;
       }
 
-      try {
-        // Determine the connection type and process accordingly
-        if (this.isStdioConnection(config)) {
-          processedConnections[serverName] = this.processStdioConfig(serverName, config);
-        } else if (this.isSSEConnection(config)) {
-          processedConnections[serverName] = this.processSSEConfig(serverName, config);
-        } else {
-          logger.warn(`Server "${serverName}" has invalid or unsupported configuration. Skipping.`);
-        }
-      } catch (error) {
-        logger.error(`Error processing configuration for server "${serverName}": ${error}`);
+      // Determine the connection type and process accordingly
+      if (MultiServerMCPClient.isStdioConnection(config)) {
+        processedConnections[serverName] = MultiServerMCPClient.processStdioConfig(
+          serverName,
+          config
+        );
+      } else if (MultiServerMCPClient.isSSEConnection(config)) {
+        processedConnections[serverName] = MultiServerMCPClient.processSSEConfig(
+          serverName,
+          config
+        );
+      } else {
+        throw new MCPClientError(
+          `Server "${serverName}" has invalid or unsupported configuration. Skipping.`
+        );
       }
     }
 
@@ -241,45 +246,108 @@ export class MultiServerMCPClient {
   /**
    * Check if a configuration is for a stdio connection
    */
-  private isStdioConnection(config: any): boolean {
+  private static isStdioConnection(config: unknown): config is StdioConnection {
     // When transport is missing, default to stdio if it has command and args
     // OR when transport is explicitly set to 'stdio'
     return (
-      (config.transport === 'stdio' || !config.transport) &&
-      config.command &&
-      Array.isArray(config.args)
+      typeof config === 'object' &&
+      config !== null &&
+      (!('transport' in config) || config.transport === 'stdio') &&
+      'command' in config &&
+      (!('args' in config) || Array.isArray(config.args))
     );
   }
 
   /**
    * Check if a configuration is for an SSE connection
    */
-  private isSSEConnection(config: any): boolean {
+  private static isSSEConnection(config: unknown): config is SSEConnection {
     // Only consider it an SSE connection if transport is explicitly set to 'sse'
-    return config.transport === 'sse' && typeof config.url === 'string';
+    return (
+      typeof config === 'object' &&
+      config !== null &&
+      'transport' in config &&
+      config.transport === 'sse' &&
+      'url' in config &&
+      typeof config.url === 'string'
+    );
   }
 
   /**
    * Process stdio connection configuration
    */
-  private processStdioConfig(serverName: string, config: any): StdioConnection {
+  private static processStdioConfig(
+    serverName: string,
+    config: Partial<StdioConnection>
+  ): StdioConnection {
+    if (!config.command || typeof config.command !== 'string') {
+      throw new MCPClientError(`Missing or invalid command for server "${serverName}"`);
+    }
+
+    if (config.args !== undefined && !Array.isArray(config.args)) {
+      throw new MCPClientError(
+        `Invalid args for server "${serverName} - must be an array of strings`
+      );
+    }
+
+    if (config.args !== undefined && !config.args.every(arg => typeof arg === 'string')) {
+      throw new MCPClientError(
+        `Invalid args for server "${serverName} - must be an array of strings`
+      );
+    }
+
     // Always set transport to 'stdio' regardless of whether it was in the original config
     const stdioConfig: StdioConnection = {
       transport: 'stdio',
       command: config.command,
-      args: config.args,
+      args: config.args ?? [],
     };
+
+    if (config.env && typeof config.env !== 'object') {
+      throw new MCPClientError(
+        `Invalid env for server "${serverName} - must be an object of key-value pairs`
+      );
+    }
+
+    if (config.env && typeof config.env === 'object' && Array.isArray(config.env)) {
+      throw new MCPClientError(
+        `Invalid env for server "${serverName} - must be an object of key-value pairs`
+      );
+    }
+
+    if (
+      config.env &&
+      typeof config.env === 'object' &&
+      !Object.values(config.env).every(value => typeof value === 'string')
+    ) {
+      throw new MCPClientError(
+        `Invalid env for server "${serverName} - must be an object of key-value pairs with string values`
+      );
+    }
 
     // Add optional properties if they exist
     if (config.env && typeof config.env === 'object') {
       stdioConfig.env = config.env;
     }
 
+    if (config.encoding !== undefined && typeof config.encoding !== 'string') {
+      throw new MCPClientError(`Invalid encoding for server "${serverName} - must be a string`);
+    }
+
     if (typeof config.encoding === 'string') {
       stdioConfig.encoding = config.encoding;
     }
 
-    if (['strict', 'ignore', 'replace'].includes(config.encodingErrorHandler)) {
+    if (
+      config.encodingErrorHandler !== undefined &&
+      !['strict', 'ignore', 'replace'].includes(config.encodingErrorHandler)
+    ) {
+      throw new MCPClientError(
+        `Invalid encodingErrorHandler for server "${serverName} - must be one of: strict, ignore, replace`
+      );
+    }
+
+    if (['strict', 'ignore', 'replace'].includes(config.encodingErrorHandler ?? '')) {
       stdioConfig.encodingErrorHandler = config.encodingErrorHandler as
         | 'strict'
         | 'ignore'
@@ -287,13 +355,38 @@ export class MultiServerMCPClient {
     }
 
     // Add restart configuration if present
+    if (config.restart && typeof config.restart !== 'object') {
+      throw new MCPClientError(`Invalid restart for server "${serverName} - must be an object`);
+    }
+
     if (config.restart && typeof config.restart === 'object') {
+      if (config.restart.enabled !== undefined && typeof config.restart.enabled !== 'boolean') {
+        throw new MCPClientError(
+          `Invalid restart.enabled for server "${serverName} - must be a boolean`
+        );
+      }
+
       stdioConfig.restart = {
         enabled: Boolean(config.restart.enabled),
       };
 
+      if (
+        config.restart.maxAttempts !== undefined &&
+        typeof config.restart.maxAttempts !== 'number'
+      ) {
+        throw new MCPClientError(
+          `Invalid restart.maxAttempts for server "${serverName} - must be a number`
+        );
+      }
+
       if (typeof config.restart.maxAttempts === 'number') {
         stdioConfig.restart.maxAttempts = config.restart.maxAttempts;
+      }
+
+      if (config.restart.delayMs !== undefined && typeof config.restart.delayMs !== 'number') {
+        throw new MCPClientError(
+          `Invalid restart.delayMs for server "${serverName} - must be a number`
+        );
       }
 
       if (typeof config.restart.delayMs === 'number') {
@@ -307,15 +400,60 @@ export class MultiServerMCPClient {
   /**
    * Process SSE connection configuration
    */
-  private processSSEConfig(serverName: string, config: any): SSEConnection {
+  private static processSSEConfig(serverName: string, config: SSEConnection): SSEConnection {
+    if (!config.url || typeof config.url !== 'string') {
+      throw new MCPClientError(`Missing or invalid url for server "${serverName}"`);
+    }
+
+    try {
+      const url = new URL(config.url);
+      if (!url.protocol.startsWith('http')) {
+        throw new MCPClientError(
+          `Invalid url for server "${serverName} - must be a valid HTTP or HTTPS URL`
+        );
+      }
+    } catch {
+      throw new MCPClientError(`Invalid url for server "${serverName} - must be a valid URL`);
+    }
+
+    if (!config.transport || config.transport !== 'sse') {
+      throw new MCPClientError(`Invalid transport for server "${serverName} - must be 'sse'`);
+    }
+
     const sseConfig: SSEConnection = {
       transport: 'sse',
       url: config.url,
     };
 
+    if (config.headers && typeof config.headers !== 'object') {
+      throw new MCPClientError(`Invalid headers for server "${serverName} - must be an object`);
+    }
+
+    if (config.headers && typeof config.headers === 'object' && Array.isArray(config.headers)) {
+      throw new MCPClientError(
+        `Invalid headers for server "${serverName} - must be an object of key-value pairs`
+      );
+    }
+
+    if (
+      config.headers &&
+      typeof config.headers === 'object' &&
+      !Object.values(config.headers).every(value => typeof value === 'string')
+    ) {
+      throw new MCPClientError(
+        `Invalid headers for server "${serverName} - must be an object of key-value pairs with string values`
+      );
+    }
+
     // Add optional headers if they exist
     if (config.headers && typeof config.headers === 'object') {
       sseConfig.headers = config.headers;
+    }
+
+    if (config.useNodeEventSource !== undefined && typeof config.useNodeEventSource !== 'boolean') {
+      throw new MCPClientError(
+        `Invalid useNodeEventSource for server "${serverName} - must be a boolean`
+      );
     }
 
     // Add optional useNodeEventSource flag if it exists
@@ -323,14 +461,39 @@ export class MultiServerMCPClient {
       sseConfig.useNodeEventSource = config.useNodeEventSource;
     }
 
+    if (config.reconnect && typeof config.reconnect !== 'object') {
+      throw new MCPClientError(`Invalid reconnect for server "${serverName} - must be an object`);
+    }
+
     // Add reconnection configuration if present
     if (config.reconnect && typeof config.reconnect === 'object') {
+      if (config.reconnect.enabled !== undefined && typeof config.reconnect.enabled !== 'boolean') {
+        throw new MCPClientError(
+          `Invalid reconnect.enabled for server "${serverName} - must be a boolean`
+        );
+      }
+
       sseConfig.reconnect = {
         enabled: Boolean(config.reconnect.enabled),
       };
 
+      if (
+        config.reconnect.maxAttempts !== undefined &&
+        typeof config.reconnect.maxAttempts !== 'number'
+      ) {
+        throw new MCPClientError(
+          `Invalid reconnect.maxAttempts for server "${serverName} - must be a number`
+        );
+      }
+
       if (typeof config.reconnect.maxAttempts === 'number') {
         sseConfig.reconnect.maxAttempts = config.reconnect.maxAttempts;
+      }
+
+      if (config.reconnect.delayMs !== undefined && typeof config.reconnect.delayMs !== 'number') {
+        throw new MCPClientError(
+          `Invalid reconnect.delayMs for server "${serverName} - must be a number`
+        );
       }
 
       if (typeof config.reconnect.delayMs === 'number') {
@@ -377,33 +540,25 @@ export class MultiServerMCPClient {
    * @returns A map of server names to arrays of tools
    * @throws {MCPClientError} If initialization fails
    */
-  async initializeConnections(): Promise<Map<string, StructuredToolInterface<z.ZodObject<any>>[]>> {
+  async initializeConnections(): Promise<Map<string, StructuredToolInterface[]>> {
     if (!this.connections || Object.keys(this.connections).length === 0) {
       logger.warn('No connections to initialize');
       return new Map();
     }
 
     for (const [serverName, connection] of Object.entries(this.connections)) {
-      try {
-        logger.info(`Initializing connection to server "${serverName}"...`);
+      logger.info(`Initializing connection to server "${serverName}"...`);
 
-        if (connection.transport === 'stdio') {
-          await this.initializeStdioConnection(serverName, connection);
-        } else if (connection.transport === 'sse') {
-          await this.initializeSSEConnection(serverName, connection);
-        } else {
-          // This should never happen due to the validation in the constructor
-          throw new MCPClientError(
-            `Unsupported transport type for server "${serverName}"`,
-            serverName
-          );
-        }
-      } catch (error) {
-        if (error instanceof MCPClientError) {
-          logger.error(error.message);
-        } else {
-          logger.error(`Failed to connect to server "${serverName}": ${error}`);
-        }
+      if (connection.transport === 'stdio') {
+        await this.initializeStdioConnection(serverName, connection);
+      } else if (connection.transport === 'sse') {
+        await this.initializeSSEConnection(serverName, connection);
+      } else {
+        // This should never happen due to the validation in the constructor
+        throw new MCPClientError(
+          `Unsupported transport type for server "${serverName}"`,
+          serverName
+        );
       }
     }
 
@@ -674,8 +829,7 @@ export class MultiServerMCPClient {
       this.serverNameToTools.set(serverName, tools);
       logger.info(`Successfully loaded ${tools.length} tools from server "${serverName}"`);
     } catch (error) {
-      logger.error(`Failed to load tools from server "${serverName}": ${error}`);
-      // Continue even if tool loading fails - the connection is still established
+      throw new MCPClientError(`Failed to load tools from server "${serverName}": ${error}`);
     }
   }
 
@@ -752,7 +906,7 @@ export class MultiServerMCPClient {
    *                 If not provided, returns tools from all servers.
    * @returns A flattened array of tools from the specified servers (or all servers)
    */
-  getTools(servers?: string[]): StructuredToolInterface<z.ZodObject<any>>[] {
+  getTools(servers?: string[]): StructuredToolInterface[] {
     if (!servers || servers.length === 0) {
       return this.getAllToolsAsFlatArray();
     }
@@ -764,8 +918,8 @@ export class MultiServerMCPClient {
    *
    * @returns A flattened array of all tools
    */
-  private getAllToolsAsFlatArray(): StructuredToolInterface<z.ZodObject<any>>[] {
-    const allTools: StructuredToolInterface<z.ZodObject<any>>[] = [];
+  private getAllToolsAsFlatArray(): StructuredToolInterface[] {
+    const allTools: StructuredToolInterface[] = [];
     for (const tools of this.serverNameToTools.values()) {
       allTools.push(...tools);
     }
@@ -778,8 +932,8 @@ export class MultiServerMCPClient {
    * @param serverNames - Names of servers to get tools from
    * @returns A flattened array of tools from the specified servers
    */
-  private getToolsFromServers(serverNames: string[]): StructuredToolInterface<z.ZodObject<any>>[] {
-    const allTools: StructuredToolInterface<z.ZodObject<any>>[] = [];
+  private getToolsFromServers(serverNames: string[]): StructuredToolInterface[] {
+    const allTools: StructuredToolInterface[] = [];
     for (const serverName of serverNames) {
       const tools = this.serverNameToTools.get(serverName);
       if (tools) {
@@ -837,7 +991,7 @@ export class MultiServerMCPClient {
     args: string[],
     env?: Record<string, string>,
     restart?: StdioConnection['restart']
-  ): Promise<Map<string, StructuredToolInterface<z.ZodObject<any>>[]>> {
+  ): Promise<Map<string, StructuredToolInterface[]>> {
     const connections: Record<string, Connection> = {
       [serverName]: {
         transport: 'stdio',
@@ -868,7 +1022,7 @@ export class MultiServerMCPClient {
     headers?: Record<string, string>,
     useNodeEventSource?: boolean,
     reconnect?: SSEConnection['reconnect']
-  ): Promise<Map<string, StructuredToolInterface<z.ZodObject<any>>[]>> {
+  ): Promise<Map<string, StructuredToolInterface[]>> {
     const connection: SSEConnection = {
       transport: 'sse',
       url,
