@@ -31,28 +31,28 @@ dotenv.config();
  * Example demonstrating how to use MCP filesystem tools with LangGraph agent flows
  * This example focuses on file operations like reading multiple files and writing files
  */
-async function runExample() {
-  let client: MultiServerMCPClient | null = null;
-
+export async function runExample(client?: MultiServerMCPClient) {
   try {
-    logger.info('Initializing MCP client...');
+    console.log('Initializing MCP client...');
 
     // Create a client with configurations for the filesystem server
-    client = new MultiServerMCPClient({
-      filesystem: {
-        transport: 'stdio',
-        command: 'npx',
-        args: [
-          '-y',
-          '@modelcontextprotocol/server-filesystem',
-          './examples/filesystem_test', // This directory needs to exist
-        ],
-      },
-    });
+    client =
+      client ??
+      new MultiServerMCPClient({
+        filesystem: {
+          transport: 'stdio',
+          command: 'npx',
+          args: [
+            '-y',
+            '@modelcontextprotocol/server-filesystem',
+            './examples/filesystem_test', // This directory needs to exist
+          ],
+        },
+      });
 
     // Initialize connections to the server
     await client.initializeConnections();
-    logger.info('Connected to server');
+    console.log('Connected to server');
 
     // Get all tools (flattened array is the default now)
     const mcpTools = client.getTools() as StructuredToolInterface<z.ZodObject<any>>[];
@@ -61,7 +61,7 @@ async function runExample() {
       throw new Error('No tools found');
     }
 
-    logger.info(
+    console.log(
       `Loaded ${mcpTools.length} MCP tools: ${mcpTools.map(tool => tool.name).join(', ')}`
     );
 
@@ -76,7 +76,7 @@ For file writing operations, format the content properly based on the file type.
 For reading multiple files, you can use the read_multiple_files tool.`;
 
     const model = new ChatOpenAI({
-      modelName: process.env.OPENAI_MODEL_NAME || 'gpt-4-turbo-preview',
+      modelName: process.env.OPENAI_MODEL_NAME || 'gpt-4o-mini',
       temperature: 0,
     }).bindTools(mcpTools);
 
@@ -86,11 +86,11 @@ For reading multiple files, you can use the read_multiple_files tool.`;
     // ================================================
     // Create a LangGraph agent flow
     // ================================================
-    logger.info('\n=== CREATING LANGGRAPH AGENT FLOW ===');
+    console.log('\n=== CREATING LANGGRAPH AGENT FLOW ===');
 
     // Define the function that calls the model
     const llmNode = async (state: typeof MessagesAnnotation.State) => {
-      logger.info(`Calling LLM with ${state.messages.length} messages`);
+      console.log(`Calling LLM with ${state.messages.length} messages`);
 
       // Add system message if it's the first call
       let messages = state.messages;
@@ -120,17 +120,17 @@ For reading multiple files, you can use the read_multiple_files tool.`;
       // Cast to AIMessage to access tool_calls property
       const aiMessage = lastMessage as AIMessage;
       if (aiMessage.tool_calls && aiMessage.tool_calls.length > 0) {
-        logger.info('Tool calls detected, routing to tools node');
+        console.log('Tool calls detected, routing to tools node');
 
         // Log what tools are being called
         const toolNames = aiMessage.tool_calls.map(tc => tc.name).join(', ');
-        logger.info(`Tools being called: ${toolNames}`);
+        console.log(`Tools being called: ${toolNames}`);
 
         return 'tools' as any;
       }
 
       // If there are no tool calls, we're done
-      logger.info('No tool calls, ending the workflow');
+      console.log('No tool calls, ending the workflow');
       return END as any;
     });
 
@@ -165,8 +165,8 @@ For reading multiple files, you can use the read_multiple_files tool.`;
     console.log('\n=== RUNNING LANGGRAPH AGENT ===');
 
     for (const example of examples) {
-      logger.info(`\n--- Example: ${example.name} ---`);
-      logger.info(`Query: ${example.query}`);
+      console.log(`\n--- Example: ${example.name} ---`);
+      console.log(`Query: ${example.query}`);
 
       // Run the LangGraph agent
       const result = await app.invoke({
@@ -175,10 +175,10 @@ For reading multiple files, you can use the read_multiple_files tool.`;
 
       // Display the final answer
       const finalMessage = result.messages[result.messages.length - 1];
-      logger.info(`\nResult: ${finalMessage.content}`);
+      console.log(`\nResult: ${finalMessage.content}`);
 
       // Let's list the directory to see the changes
-      logger.info('\nDirectory listing after operations:');
+      console.log('\nDirectory listing after operations:');
       try {
         const listResult = await app.invoke({
           messages: [
@@ -188,7 +188,7 @@ For reading multiple files, you can use the read_multiple_files tool.`;
           ],
         });
         const listMessage = listResult.messages[listResult.messages.length - 1];
-        logger.info(listMessage.content);
+        console.log(listMessage.content);
       } catch (error) {
         logger.error('Error listing directory:', error);
       }
@@ -199,12 +199,12 @@ For reading multiple files, you can use the read_multiple_files tool.`;
   } finally {
     if (client) {
       await client.close();
-      logger.info('Closed all MCP connections');
+      console.log('Closed all MCP connections');
     }
 
     // Exit process after a short delay to allow for cleanup
     setTimeout(() => {
-      logger.info('Example completed, exiting process.');
+      console.log('Example completed, exiting process.');
       process.exit(0);
     }, 500);
   }
@@ -218,11 +218,13 @@ async function setupTestDirectory() {
 
   if (!fs.existsSync(testDir)) {
     fs.mkdirSync(testDir, { recursive: true });
-    logger.info(`Created test directory: ${testDir}`);
+    console.log(`Created test directory: ${testDir}`);
   }
 }
 
-// Set up test directory and run the example
-setupTestDirectory()
-  .then(() => runExample())
-  .catch(error => logger.error('Setup error:', error));
+const isMainModule = import.meta.url === `file://${process.argv[1]}`;
+if (isMainModule) {
+  setupTestDirectory()
+    .then(() => runExample())
+    .catch(error => logger.error('Setup error:', error));
+}
