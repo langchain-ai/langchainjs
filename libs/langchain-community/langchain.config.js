@@ -80,7 +80,8 @@ export const config = {
     "embeddings/gradient_ai": "embeddings/gradient_ai",
     "embeddings/hf": "embeddings/hf",
     "embeddings/hf_transformers": "embeddings/hf_transformers",
-    "embeddings/huggingface_transformers": "embeddings/huggingface_transformers",
+    "embeddings/huggingface_transformers":
+      "embeddings/huggingface_transformers",
     "embeddings/ibm": "embeddings/ibm",
     "embeddings/jina": "embeddings/jina",
     "embeddings/llama_cpp": "embeddings/llama_cpp",
@@ -185,6 +186,7 @@ export const config = {
     "chat_models/moonshot": "chat_models/moonshot",
     "chat_models/novita": "chat_models/novita",
     "chat_models/ollama": "chat_models/ollama",
+    "chat_models/perplexity": "chat_models/perplexity",
     "chat_models/portkey": "chat_models/portkey",
     "chat_models/premai": "chat_models/premai",
     "chat_models/tencent_hunyuan": "chat_models/tencent_hunyuan/index",
