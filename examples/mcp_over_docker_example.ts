@@ -10,8 +10,8 @@
  * 3. Structured handling of complex multi-file operations
  */
 
-import { logger, MultiServerMCPClient } from '../src';
-import { runExample as runFileSystemExample } from './filesystem_langgraph_example';
+import { logger, MultiServerMCPClient } from '../src/index.js';
+import { runExample as runFileSystemExample } from './filesystem_langgraph_example.js';
 
 async function runExample() {
   const client = new MultiServerMCPClient({

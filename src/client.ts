@@ -105,23 +105,23 @@ export class MultiServerMCPClient {
    */
   constructor(connections?: Record<string, Connection>) {
     if (connections) {
-      this.connections = this.processConnections(connections);
+      this.connections = MultiServerMCPClient.processConnections(connections);
     } else {
       // Try to load from default mcp.json if no connections are provided
-      this.tryLoadDefaultConfig();
+      this.connections = MultiServerMCPClient.tryLoadDefaultConfig();
     }
   }
 
   /**
    * Try to load the default configuration file (mcp.json) from the root directory
    */
-  private tryLoadDefaultConfig(): void {
+  private static tryLoadDefaultConfig(): Record<string, Connection> | undefined {
     try {
       const defaultConfigPath = path.join(process.cwd(), 'mcp.json');
       if (fs.existsSync(defaultConfigPath)) {
         logger.info(`Found default configuration at ${defaultConfigPath}, loading automatically`);
-        const config = this.loadConfigFromFile(defaultConfigPath);
-        this.connections = this.processConnections(config.servers);
+        const config = MultiServerMCPClient.loadConfigFromFile(defaultConfigPath);
+        return MultiServerMCPClient.processConnections(config.servers);
       } else {
         logger.debug('No default mcp.json found in root directory');
       }
@@ -137,7 +137,7 @@ export class MultiServerMCPClient {
    * @param configPath - Path to the configuration file
    * @returns The parsed configuration
    */
-  private loadConfigFromFile(configPath: string): MCPConfig {
+  private static loadConfigFromFile(configPath: string): MCPConfig {
     const configData = fs.readFileSync(configPath, 'utf8');
     const config = JSON.parse(configData);
 
@@ -148,7 +148,13 @@ export class MultiServerMCPClient {
     }
 
     // Process environment variables in the configuration
-    this.processEnvVarsInConfig(config.servers);
+    MultiServerMCPClient.processEnvVarsInConfig(
+      Object.fromEntries(
+        Object.entries(config.servers as Record<string, StdioConnection>).filter(
+          ([_, value]) => value.transport === 'stdio'
+        )
+      )
+    );
 
     return config;
   }
@@ -159,7 +165,7 @@ export class MultiServerMCPClient {
    *
    * @param servers - The servers configuration object
    */
-  private processEnvVarsInConfig(servers: Record<string, any>): void {
+  private static processEnvVarsInConfig(servers: Record<string, StdioConnection>): void {
     for (const [serverName, config] of Object.entries(servers)) {
       if (typeof config !== 'object' || config === null) continue;
 
@@ -179,7 +185,7 @@ export class MultiServerMCPClient {
       }
 
       // Process any other string properties recursively
-      this.processEnvVarsRecursively(config);
+      MultiServerMCPClient.processEnvVarsRecursively(config);
     }
   }
 
@@ -188,7 +194,7 @@ export class MultiServerMCPClient {
    *
    * @param obj - The object to process
    */
-  private processEnvVarsRecursively(obj: any): void {
+  private static processEnvVarsRecursively<T extends object>(obj: T): void {
     if (typeof obj !== 'object' || obj === null) return;
 
     for (const [key, value] of Object.entries(obj)) {
@@ -196,11 +202,11 @@ export class MultiServerMCPClient {
         const envVar = value.slice(2, -1);
         const envValue = process.env[envVar];
         if (envValue) {
-          obj[key] = envValue;
+          obj[key as keyof T] = envValue as T[keyof T];
         }
       } else if (typeof value === 'object' && value !== null && key !== 'env') {
         // Skip env object as it's handled separately
-        this.processEnvVarsRecursively(value);
+        MultiServerMCPClient.processEnvVarsRecursively(value);
       }
     }
   }
@@ -211,7 +217,7 @@ export class MultiServerMCPClient {
    * @param connections - Raw connection configurations
    * @returns Processed connection configurations
    */
-  private processConnections(
+  private static processConnections(
     connections: Record<string, Partial<Connection>>
   ): Record<string, Connection> {
     const processedConnections: Record<string, Connection> = {};
@@ -514,16 +520,16 @@ export class MultiServerMCPClient {
   static fromConfigFile(configPath: string): MultiServerMCPClient {
     try {
       const client = new MultiServerMCPClient();
-      const config = client.loadConfigFromFile(configPath);
+      const config = MultiServerMCPClient.loadConfigFromFile(configPath);
 
       // Merge with existing connections if any
       if (client.connections) {
         client.connections = {
           ...client.connections,
-          ...client.processConnections(config.servers),
+          ...MultiServerMCPClient.processConnections(config.servers),
         };
       } else {
-        client.connections = client.processConnections(config.servers);
+        client.connections = MultiServerMCPClient.processConnections(config.servers);
       }
 
       logger.info(`Loaded MCP configuration from ${configPath}`);
@@ -746,6 +752,7 @@ export class MultiServerMCPClient {
       logger.debug(`Setting headers for Extended EventSource: ${JSON.stringify(headers)}`);
 
       // Override the global EventSource with the extended implementation
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (globalThis as any).EventSource = ExtendedEventSource;
 
       // For Extended EventSource, create the SSE transport
@@ -769,6 +776,7 @@ export class MultiServerMCPClient {
         logger.debug(`Setting headers for EventSource: ${JSON.stringify(headers)}`);
 
         // Override the global EventSource with the Node.js implementation
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (globalThis as any).EventSource = EventSource;
 
         // Create transport with headers correctly configured for Node.js EventSource
@@ -1057,16 +1065,16 @@ export class MultiServerMCPClient {
    */
   addConfigFromFile(configPath: string): MultiServerMCPClient {
     try {
-      const config = this.loadConfigFromFile(configPath);
+      const config = MultiServerMCPClient.loadConfigFromFile(configPath);
 
       // Merge with existing connections if any
       if (this.connections) {
         this.connections = {
           ...this.connections,
-          ...this.processConnections(config.servers),
+          ...MultiServerMCPClient.processConnections(config.servers),
         };
       } else {
-        this.connections = this.processConnections(config.servers);
+        this.connections = MultiServerMCPClient.processConnections(config.servers);
       }
 
       logger.info(`Added MCP configuration from ${configPath}`);
@@ -1083,8 +1091,8 @@ export class MultiServerMCPClient {
    * @param connections - Server connections to add
    * @returns This client instance for method chaining
    */
-  addConnections(connections: Record<string, any>): MultiServerMCPClient {
-    const processedConnections = this.processConnections(connections);
+  addConnections(connections: Record<string, Connection>): MultiServerMCPClient {
+    const processedConnections = MultiServerMCPClient.processConnections(connections);
 
     // Merge with existing connections if any
     if (this.connections) {
