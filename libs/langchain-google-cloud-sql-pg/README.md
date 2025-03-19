@@ -57,7 +57,7 @@ const embeddingService = new SyntheticEmbeddings({ vectorSize: 768 });
 -   You can pass the schemaName, contentColumn, embeddingColum, metadataColumns and others through the VectorStoreTableArgs interface to the init_vectorstore_table method.
 -   Passing an empty object to these methods allows you to use the default values.
 
-### VectorStore usage
+### Vector Store usage
 
 Use a PostgresVectorStore to store embedded data and perform vector similarity search for Postgres.
 
@@ -83,9 +83,7 @@ PostgresVectorStore interface methods availables:
 
 See the full [Vector Store](https://js.langchain.com/docs/integrations/vectorstores/google_cloudsql_pg) tutorial.
 
-<!-- TODO: ### Document Loader usage -->
-
-### ChatMessageHistory usage
+### Chat Message History usage
 
 Use `PostgresChatMessageHistory` to store messages and provide conversation history in Postgres.
 
@@ -108,3 +106,22 @@ PostgresChatMessageHistory interface methods availables:
 -   clear
 
 See the full [Chat Message History](https://js.langchain.com/docs/integrations/memory/google_cloudsql_pg) tutorial.
+
+### Document Loader usage
+
+Use a document loader to load data as LangChain `Document`s.
+
+```typescript
+const documentLoaderArgs: PostgresLoaderOptions = {
+  tableName: "test_table_custom",
+  contentColumns: [ "fruit_name", "variety"],
+  metadataColumns: ["fruit_id", "quantity_in_stock", "price_per_unit", "organic"],
+  format: "text"
+};
+
+const documentLoaderInstance = await PostgresLoader.create(PEInstance, documentLoaderArgs);
+
+const documents = await documentLoaderInstance.load();
+```
+
+See the full [Loader](https://js.langchain.com/docs/integrations/document_loaders/web_loaders/google_cloudsql_pg) tutorial.
