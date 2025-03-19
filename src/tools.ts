@@ -1,12 +1,26 @@
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
+import type {
+  CallToolResult,
+  TextContent,
+  ImageContent,
+  EmbeddedResource,
+  ReadResourceResult,
+} from '@modelcontextprotocol/sdk/types.js';
 import {
   DynamicStructuredTool,
-  ResponseFormat,
-  StructuredToolInterface,
+  type DynamicStructuredToolInput,
+  type StructuredToolInterface,
 } from '@langchain/core/tools';
+import {
+  MessageContent,
+  MessageContentComplex,
+  MessageContentImageUrl,
+  MessageContentText,
+} from '@langchain/core/messages';
 import { JSONSchema, JSONSchemaToZod } from '@dmitryrechkin/json-schema-to-zod';
 
 import debug from 'debug';
+import { z } from 'zod';
 
 const {
   default: { name: packageName },
@@ -15,21 +29,26 @@ const moduleName = 'tools';
 
 const debugLog = debug(`${packageName}:${moduleName}`);
 
-interface TextContent {
-  type: 'text';
-  text: string;
-}
+export type CallToolResultContentType = CallToolResult['content'][number]['type'];
+export type CallToolResultContent = TextContent | ImageContent | EmbeddedResource;
 
-interface NonTextContent {
-  type: string;
-  [key: string]: unknown;
-}
+async function _embeddedResourceToArtifact(
+  resource: EmbeddedResource,
+  client: Client
+): Promise<EmbeddedResource[]> {
+  if (!resource.blob && !resource.text && resource.uri) {
+    const response: ReadResourceResult = await client.readResource({
+      uri: resource.resource.uri,
+    });
 
-interface CallToolResult {
-  isError?: boolean;
-  content?: (TextContent | NonTextContent)[] | string | object;
-  type?: string;
-  [key: string]: unknown;
+    return response.contents.map(content => ({
+      type: 'resource',
+      resource: {
+        ...content,
+      },
+    }));
+  }
+  return [resource];
 }
 
 /**
@@ -49,38 +68,63 @@ export class ToolException extends Error {
  * @param result - The result from the MCP tool call
  * @returns A tuple of [textContent, nonTextContent]
  */
-function _convertCallToolResult(
-  result: CallToolResult
-): [string | string[], NonTextContent[] | null] {
-  if (!result || !Array.isArray(result.content)) {
-    return ['', null];
-  }
-
-  const textContents: TextContent[] = [];
-  const nonTextContents: NonTextContent[] = [];
-
-  // Separate text and non-text content
-  for (const content of result.content) {
-    if (content.type === 'text' && 'text' in content) {
-      textContents.push(content as TextContent);
-    } else {
-      nonTextContents.push(content as NonTextContent);
-    }
-  }
-
-  // Create the text content output
-  const textOutput = textContents.map(content => content.text);
-  const finalTextOutput = textOutput.length === 1 ? textOutput[0] : textOutput;
-
-  // Check for errors
-  if (result.isError) {
-    debugLog('ERROR: MCP tool returned an error result');
+async function _convertCallToolResult(
+  serverName: string,
+  toolName: string,
+  result: CallToolResult,
+  client: Client
+): Promise<[MessageContent, EmbeddedResource[]]> {
+  if (!result) {
     throw new ToolException(
-      typeof finalTextOutput === 'string' ? finalTextOutput : textOutput.join('\n')
+      `MCP tool '${toolName}' on server '${serverName}' returned an invalid result - tool call response was undefined`
     );
   }
 
-  return [finalTextOutput, nonTextContents.length > 0 ? nonTextContents : null];
+  if (!Array.isArray(result.content)) {
+    throw new ToolException(
+      `MCP tool '${toolName}' on server '${serverName}' returned an invalid result - expected an array of content, but was ${typeof result.content}`
+    );
+  }
+
+  if (result.isError) {
+    throw new ToolException(
+      `MCP tool '${toolName}' on server '${serverName}' returned an error: ${result.content.map(content => content.text).join('\n')}`
+    );
+  }
+
+  const mcpTextAndImageContent: MessageContentComplex[] = result.content
+    .filter(content => content.type === 'text' || content.type === 'image')
+    .map(content => {
+      switch (content.type) {
+        case 'text':
+          return {
+            type: 'text',
+            text: content.text,
+          } as MessageContentText;
+        case 'image':
+          return {
+            type: 'image_url',
+            image_url: {
+              url: `data:${content.mimeType};base64,${content.data}`,
+            },
+          } as MessageContentImageUrl;
+      }
+    });
+
+  // Create the text content output
+  const artifacts = (
+    await Promise.all(
+      result.content
+        .filter(content => content.type === 'resource')
+        .map(content => _embeddedResourceToArtifact(content, client))
+    )
+  ).flat();
+
+  if (mcpTextAndImageContent.length === 1 && mcpTextAndImageContent[0].type === 'text') {
+    return [mcpTextAndImageContent[0].text, artifacts];
+  }
+
+  return [mcpTextAndImageContent, artifacts];
 }
 
 /**
@@ -91,58 +135,43 @@ function _convertCallToolResult(
  * @internal
  *
  * @param client - The MCP client
- * @param name - The name of the tool (forwarded to the client)
- * @param responseFormat - The response format
+ * @param toolName - The name of the tool (forwarded to the client)
  * @param args - The arguments to pass to the tool
  * @returns A tuple of [textContent, nonTextContent]
  */
 async function _callTool(
+  serverName: string,
+  toolName: string,
   client: Client,
-  name: string,
-  responseFormat: ResponseFormat,
   args: Record<string, unknown>
-): Promise<string | [string | string[], NonTextContent[] | null]> {
+): Promise<[MessageContent, EmbeddedResource[]]> {
+  let result: CallToolResult;
   try {
-    debugLog(`INFO: Calling tool ${name}(${JSON.stringify(args)})`);
-    const result = await client.callTool({
-      name,
+    debugLog(`INFO: Calling tool ${toolName}(${JSON.stringify(args)})`);
+    result = (await client.callTool({
+      name: toolName,
       arguments: args,
-    });
-
-    const [textContent, nonTextContent] = _convertCallToolResult({
-      ...result,
-      isError: result.isError === true,
-      content: result.content || [],
-    });
-
-    debugLog(`INFO: Tool ${name} returned: ${JSON.stringify({ textContent, nonTextContent })}`);
-
-    // Return based on the response format
-    if (responseFormat === 'content_and_artifact') {
-      return [textContent, nonTextContent];
-    }
-
-    // Default to returning just the text content
-    return typeof textContent === 'string' ? textContent : textContent.join('\n');
+    })) as CallToolResult;
   } catch (error) {
-    debugLog(`ERROR: Error calling tool ${name}: ${String(error)}`);
+    debugLog(`Error calling tool ${toolName}: ${String(error)}`);
     if (error instanceof ToolException) {
       throw error;
     }
-    throw new ToolException(`Error calling tool ${name}: ${String(error)}`);
+    throw new ToolException(`Error calling tool ${toolName}: ${String(error)}`);
   }
+
+  return _convertCallToolResult(serverName, toolName, result, client);
 }
 
 /**
  * Load all tools from an MCP client.
  *
  * @param client - The MCP client
- * @param responseFormat - Response format ('text' or 'content_and_artifact')
  * @returns A list of LangChain tools
  */
 export async function loadMcpTools(
+  serverName: string,
   client: Client,
-  responseFormat: ResponseFormat = 'content',
   throwOnLoadError: boolean = true
 ): Promise<StructuredToolInterface[]> {
   // Get tools in a single operation
@@ -160,8 +189,13 @@ export async function loadMcpTools(
           schema: JSONSchemaToZod.convert(
             (tool.inputSchema ?? { type: 'object', properties: {} }) as JSONSchema
           ),
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          func: _callTool.bind(null, client, tool.name, responseFormat) as any,
+          responseFormat: 'content_and_artifact',
+          func: _callTool.bind(
+            null,
+            serverName,
+            tool.name,
+            client
+          ) as DynamicStructuredToolInput<z.AnyZodObject>['func'],
         });
         debugLog(`INFO: Successfully loaded tool: ${dst.name}`);
         return dst;

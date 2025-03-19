@@ -1,7 +1,7 @@
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 import { SSEClientTransport } from '@modelcontextprotocol/sdk/client/sse.js';
-import { StructuredToolInterface } from '@langchain/core/tools';
+import type { StructuredToolInterface } from '@langchain/core/tools';
 import { loadMcpTools } from './tools.js';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -740,7 +740,6 @@ export class MultiServerMCPClient {
 
     return new SSEClientTransport(new URL(url), {
       requestInit: { headers },
-      eventSourceInit: { headers }, // Added for test compatibility
     });
   }
 
@@ -779,7 +778,10 @@ export class MultiServerMCPClient {
       try {
         // Dynamically import the eventsource package
         const EventSourceModule = await import('eventsource');
-        const EventSource = EventSourceModule.default;
+        const EventSource =
+          'default' in EventSourceModule
+            ? EventSourceModule.default
+            : EventSourceModule.EventSource;
 
         debugLog(`DEBUG: Using Node.js EventSource for server "${serverName}"`);
         debugLog(`DEBUG: Setting headers for EventSource: ${JSON.stringify(headers)}`);
@@ -791,7 +793,6 @@ export class MultiServerMCPClient {
         // Create transport with headers correctly configured for Node.js EventSource
         return new SSEClientTransport(new URL(url), {
           // Pass the headers to both eventSourceInit and requestInit for compatibility
-          eventSourceInit: { headers },
           requestInit: { headers },
         });
       } catch (nodeError) {
@@ -802,7 +803,6 @@ export class MultiServerMCPClient {
         // Last resort fallback
         return new SSEClientTransport(new URL(url), {
           requestInit: { headers },
-          eventSourceInit: { headers },
         });
       }
     }
@@ -844,7 +844,7 @@ export class MultiServerMCPClient {
   private async loadToolsForServer(serverName: string, client: Client): Promise<void> {
     try {
       debugLog(`DEBUG: Loading tools for server "${serverName}"...`);
-      const tools = await loadMcpTools(client);
+      const tools = await loadMcpTools(serverName, client);
       this.serverNameToTools.set(serverName, tools);
       debugLog(`INFO: Successfully loaded ${tools.length} tools from server "${serverName}"`);
     } catch (error) {

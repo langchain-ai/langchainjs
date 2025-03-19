@@ -1,1 +1,6 @@
-export { MultiServerMCPClient } from './client.js';
+export {
+  MultiServerMCPClient,
+  type Connection,
+  type StdioConnection,
+  type SSEConnection,
+} from './client.js';
