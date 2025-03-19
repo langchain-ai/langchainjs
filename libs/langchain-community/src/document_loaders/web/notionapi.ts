@@ -89,7 +89,9 @@ export type NotionAPILoaderOptions = {
  *   id: "<PAGE_ID>",
  *   type: "page",
  * });
- * const pageDocs = await pageLoader.loadAndSplit();
+ * const pageDocs = await pageLoader.load();
+ * const splitDocs = await splitter.splitDocuments(pageDocs);
+ *
  * const dbLoader = new NotionAPILoader({
  *   clientOptions: { auth: "<NOTION_INTEGRATION_TOKEN>" },
  *   id: "<DATABASE_ID>",

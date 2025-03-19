@@ -3,7 +3,7 @@ import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { BaseLLM, BaseLLMParams } from "@langchain/core/language_models/llms";
 import { WatsonXAI } from "@ibm-cloud/watsonx-ai";
 import {
-  DeploymentTextGenProperties,
+  RequestCallbacks,
   ReturnOptionProperties,
   TextGenLengthPenalty,
   TextGenParameters,
@@ -20,9 +20,11 @@ import { AsyncCaller } from "@langchain/core/utils/async_caller";
 import { authenticateAndSetInstance } from "../utils/ibm.js";
 import {
   GenerationInfo,
+  Neverify,
   ResponseChunk,
   TokenUsage,
   WatsonxAuth,
+  WatsonxDeployedParams,
   WatsonxParams,
 } from "../types/ibm.js";
 
@@ -30,14 +32,7 @@ import {
  * Input to LLM class.
  */
 
-export interface WatsonxCallOptionsLLM extends BaseLanguageModelCallOptions {
-  maxRetries?: number;
-  parameters?: Partial<WatsonxInputLLM>;
-  idOrName?: string;
-}
-
-export interface WatsonxInputLLM extends WatsonxParams, BaseLLMParams {
-  streaming?: boolean;
+export interface WatsonxLLMParams {
   maxNewTokens?: number;
   decodingMethod?: TextGenParameters.Constants.DecodingMethod | string;
   lengthPenalty?: TextGenLengthPenalty;
@@ -54,6 +49,34 @@ export interface WatsonxInputLLM extends WatsonxParams, BaseLLMParams {
   includeStopSequence?: boolean;
 }
 
+export interface WatsonxDeploymentLLMParams {
+  idOrName: string;
+}
+
+export interface WatsonxCallOptionsLLM extends BaseLanguageModelCallOptions {
+  maxRetries?: number;
+  parameters?: Partial<WatsonxLLMParams>;
+  watsonxCallbacks?: RequestCallbacks;
+}
+
+export interface WatsonxInputLLM
+  extends WatsonxParams,
+    BaseLLMParams,
+    WatsonxLLMParams,
+    Neverify<WatsonxDeploymentLLMParams> {}
+
+export interface WatsonxDeployedInputLLM
+  extends WatsonxDeployedParams,
+    BaseLLMParams,
+    Neverify<WatsonxLLMParams> {
+  model?: never;
+}
+
+export type WatsonxLLMConstructor = BaseLLMParams &
+  WatsonxLLMParams &
+  Partial<WatsonxParams> &
+  WatsonxDeployedParams;
+
 /**
  * Integration with an LLM.
  */
@@ -61,7 +84,7 @@ export class WatsonxLLM<
     CallOptions extends WatsonxCallOptionsLLM = WatsonxCallOptionsLLM
   >
   extends BaseLLM<CallOptions>
-  implements WatsonxInputLLM
+  implements WatsonxLLMConstructor
 {
   // Used for tracing, replace with the same name as your class
   static lc_name() {
@@ -116,44 +139,50 @@ export class WatsonxLLM<
 
   maxConcurrency?: number;
 
+  watsonxCallbacks?: RequestCallbacks;
+
   private service: WatsonXAI;
 
-  constructor(fields: WatsonxInputLLM & WatsonxAuth) {
+  constructor(
+    fields: (WatsonxInputLLM | WatsonxDeployedInputLLM) & WatsonxAuth
+  ) {
     super(fields);
-    this.model = fields.model ?? this.model;
-    this.version = fields.version;
-    this.maxNewTokens = fields.maxNewTokens ?? this.maxNewTokens;
-    this.serviceUrl = fields.serviceUrl;
-    this.decodingMethod = fields.decodingMethod;
-    this.lengthPenalty = fields.lengthPenalty;
-    this.minNewTokens = fields.minNewTokens;
-    this.randomSeed = fields.randomSeed;
-    this.stopSequence = fields.stopSequence;
-    this.temperature = fields.temperature;
-    this.timeLimit = fields.timeLimit;
-    this.topK = fields.topK;
-    this.topP = fields.topP;
-    this.repetitionPenalty = fields.repetitionPenalty;
-    this.truncateInpuTokens = fields.truncateInpuTokens;
-    this.returnOptions = fields.returnOptions;
-    this.includeStopSequence = fields.includeStopSequence;
+
+    if (fields.model) {
+      this.model = fields.model ?? this.model;
+      this.version = fields.version;
+      this.maxNewTokens = fields.maxNewTokens ?? this.maxNewTokens;
+      this.serviceUrl = fields.serviceUrl;
+      this.decodingMethod = fields.decodingMethod;
+      this.lengthPenalty = fields.lengthPenalty;
+      this.minNewTokens = fields.minNewTokens;
+      this.randomSeed = fields.randomSeed;
+      this.stopSequence = fields.stopSequence;
+      this.temperature = fields.temperature;
+      this.timeLimit = fields.timeLimit;
+      this.topK = fields.topK;
+      this.topP = fields.topP;
+      this.repetitionPenalty = fields.repetitionPenalty;
+      this.truncateInpuTokens = fields.truncateInpuTokens;
+      this.returnOptions = fields.returnOptions;
+      this.includeStopSequence = fields.includeStopSequence;
+      this.projectId = fields?.projectId;
+      this.spaceId = fields?.spaceId;
+    } else {
+      this.idOrName = fields?.idOrName;
+    }
+
     this.maxRetries = fields.maxRetries || this.maxRetries;
     this.maxConcurrency = fields.maxConcurrency;
     this.streaming = fields.streaming || this.streaming;
+    this.watsonxCallbacks = fields.watsonxCallbacks || this.watsonxCallbacks;
+
     if (
-      (fields.projectId && fields.spaceId) ||
-      (fields.idOrName && fields.projectId) ||
-      (fields.spaceId && fields.idOrName)
+      ("projectId" in fields && "spaceId" in fields) ||
+      ("projectId" in fields && "idOrName" in fields) ||
+      ("spaceId" in fields && "idOrName" in fields)
     )
       throw new Error("Maximum 1 id type can be specified per instance");
-
-    if (!fields.projectId && !fields.spaceId && !fields.idOrName)
-      throw new Error(
-        "No id specified! At least id of 1 type has to be specified"
-      );
-    this.projectId = fields?.projectId;
-    this.spaceId = fields?.spaceId;
-    this.idOrName = fields?.idOrName;
 
     this.serviceUrl = fields?.serviceUrl;
     const {
@@ -209,11 +238,12 @@ export class WatsonxLLM<
     };
   }
 
-  invocationParams(
-    options: this["ParsedCallOptions"]
-  ): TextGenParameters | DeploymentTextGenProperties {
+  invocationParams(options: this["ParsedCallOptions"]) {
     const { parameters } = options;
-
+    const { signal, ...rest } = options;
+    if (this.idOrName && Object.keys(rest).length > 0)
+      throw new Error("Options cannot be provided to a deployed model");
+    if (this.idOrName) return undefined;
     return {
       max_new_tokens: parameters?.maxNewTokens ?? this.maxNewTokens,
       decoding_method: parameters?.decodingMethod ?? this.decodingMethod,
@@ -235,6 +265,10 @@ export class WatsonxLLM<
     };
   }
 
+  invocationCallbacks(options: this["ParsedCallOptions"]) {
+    return options.watsonxCallbacks ?? this.watsonxCallbacks;
+  }
+
   scopeId() {
     if (this.projectId)
       return { projectId: this.projectId, modelId: this.model };
@@ -242,7 +276,7 @@ export class WatsonxLLM<
       return { spaceId: this.spaceId, modelId: this.model };
     else if (this.idOrName)
       return { idOrName: this.idOrName, modelId: this.model };
-    else return { spaceId: this.spaceId, modelId: this.model };
+    else return { modelId: this.model };
   }
 
   async listModels() {
@@ -283,11 +317,12 @@ export class WatsonxLLM<
       ...requestOptions
     } = options;
     const tokenUsage = { generated_token_count: 0, input_token_count: 0 };
-    const idOrName = options?.idOrName ?? this.idOrName;
+    const idOrName = this.idOrName;
     const parameters = this.invocationParams(options);
+    const watsonxCallbacks = this.invocationCallbacks(options);
     if (stream) {
       const textStream = idOrName
-        ? await this.service.deploymentGenerateTextStream({
+        ? this.service.deploymentGenerateTextStream({
             idOrName,
             ...requestOptions,
             parameters: {
@@ -298,32 +333,43 @@ export class WatsonxLLM<
             },
             returnObject: true,
           })
-        : await this.service.generateTextStream({
-            input,
-            parameters,
-            ...this.scopeId(),
-            ...requestOptions,
-            returnObject: true,
-          });
-      return textStream;
+        : this.service.generateTextStream(
+            {
+              input,
+              parameters,
+              ...this.scopeId(),
+              ...requestOptions,
+              returnObject: true,
+            },
+            watsonxCallbacks
+          );
+      return (await textStream) as AsyncIterable<
+        WatsonXAI.ObjectStreamed<WatsonXAI.TextGenResponse>
+      >;
     } else {
       const textGenerationPromise = idOrName
-        ? this.service.deploymentGenerateText({
-            ...requestOptions,
-            idOrName,
-            parameters: {
-              ...parameters,
-              prompt_variables: {
-                input,
+        ? this.service.deploymentGenerateText(
+            {
+              ...requestOptions,
+              idOrName,
+              parameters: {
+                ...parameters,
+                prompt_variables: {
+                  input,
+                },
               },
             },
-          })
-        : this.service.generateText({
-            input,
-            parameters,
-            ...this.scopeId(),
-            ...requestOptions,
-          });
+            watsonxCallbacks
+          )
+        : this.service.generateText(
+            {
+              input,
+              parameters,
+              ...this.scopeId(),
+              ...requestOptions,
+            },
+            watsonxCallbacks
+          );
 
       const textGeneration = await textGenerationPromise;
       const singleGeneration: Generation[] = textGeneration.result.results.map(
@@ -512,7 +558,7 @@ export class WatsonxLLM<
             },
           },
         });
-        if (item.generated_text)
+        if (!this.streaming)
           void runManager?.handleLLMNewToken(item.generated_text);
       }
       Object.assign(responseChunk, { id: 0, event: "", data: {} });

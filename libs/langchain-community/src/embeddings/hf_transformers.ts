@@ -1,3 +1,5 @@
+/* eslint-disable */
+// @ts-nocheck
 import type {
   PretrainedOptions,
   FeatureExtractionPipelineOptions,
@@ -6,6 +8,11 @@ import type {
 import { Embeddings, type EmbeddingsParams } from "@langchain/core/embeddings";
 import { chunkArray } from "@langchain/core/utils/chunk_array";
 
+/**
+ * @deprecated Import from
+ * "@langchain/community/embeddings/huggingface_transformers"
+ * instead and use the new "@huggingface/transformers" peer dependency.
+ */
 export interface HuggingFaceTransformersEmbeddingsParams
   extends EmbeddingsParams {
   /**
@@ -13,6 +20,7 @@ export interface HuggingFaceTransformersEmbeddingsParams
    * Alias for `model`
    */
   modelName: string;
+
   /** Model name to use */
   model: string;
 
@@ -42,24 +50,10 @@ export interface HuggingFaceTransformersEmbeddingsParams
    */
   pipelineOptions?: FeatureExtractionPipelineOptions;
 }
-
 /**
- * @example
- * ```typescript
- * const model = new HuggingFaceTransformersEmbeddings({
- *   model: "Xenova/all-MiniLM-L6-v2",
- * });
- *
- * // Embed a single query
- * const res = await model.embedQuery(
- *   "What would be a good company name for a company that makes colorful socks?"
- * );
- * console.log({ res });
- *
- * // Embed multiple documents
- * const documentRes = await model.embedDocuments(["Hello world", "Bye bye"]);
- * console.log({ documentRes });
- * ```
+ * @deprecated Import from
+ * "@langchain/community/embeddings/huggingface_transformers"
+ * instead and use the new "@huggingface/transformers" peer dependency.
  */
 export class HuggingFaceTransformersEmbeddings
   extends Embeddings
@@ -83,7 +77,6 @@ export class HuggingFaceTransformersEmbeddings
 
   constructor(fields?: Partial<HuggingFaceTransformersEmbeddingsParams>) {
     super(fields ?? {});
-
     this.modelName = fields?.model ?? fields?.modelName ?? this.model;
     this.model = this.modelName;
     this.stripNewLines = fields?.stripNewLines ?? this.stripNewLines;
@@ -95,27 +88,22 @@ export class HuggingFaceTransformersEmbeddings
       ...fields?.pipelineOptions,
     };
   }
-
   async embedDocuments(texts: string[]): Promise<number[][]> {
     const batches = chunkArray(
       this.stripNewLines ? texts.map((t) => t.replace(/\n/g, " ")) : texts,
       this.batchSize
     );
-
     const batchRequests = batches.map((batch) => this.runEmbedding(batch));
     const batchResponses = await Promise.all(batchRequests);
     const embeddings: number[][] = [];
-
     for (let i = 0; i < batchResponses.length; i += 1) {
       const batchResponse = batchResponses[i];
       for (let j = 0; j < batchResponse.length; j += 1) {
         embeddings.push(batchResponse[j]);
       }
     }
-
     return embeddings;
   }
-
   async embedQuery(text: string): Promise<number[]> {
     const data = await this.runEmbedding([
       this.stripNewLines ? text.replace(/\n/g, " ") : text,

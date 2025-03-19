@@ -14,6 +14,7 @@
   },
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-scripts/",
   "bin": {
+    "extract_serializable_fields": "bin/extract_serializable_fields.js",
     "filter_spam_comment": "bin/filter_spam_comment.js",
     "lc_build": "bin/build.js",
     "notebook_validate": "bin/validate_notebook.js"

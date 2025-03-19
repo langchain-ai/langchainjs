@@ -33,6 +33,7 @@ import {
   GoogleAIBaseLanguageModelCallOptions,
   GoogleAIAPI,
   GoogleAIAPIParams,
+  GoogleSearchToolSetting,
 } from "./types.js";
 import {
   convertToGeminiTools,
@@ -97,10 +98,39 @@ export class ChatConnection<AuthOptions> extends AbstractGoogleLLMConnection<
     return true;
   }
 
+  computeGoogleSearchToolAdjustmentFromModel(): Exclude<
+    GoogleSearchToolSetting,
+    boolean
+  > {
+    if (this.modelName.startsWith("gemini-1.0")) {
+      return "googleSearchRetrieval";
+    } else if (this.modelName.startsWith("gemini-1.5")) {
+      return "googleSearchRetrieval";
+    } else {
+      return "googleSearch";
+    }
+  }
+
+  computeGoogleSearchToolAdjustment(
+    apiConfig: GeminiAPIConfig
+  ): Exclude<GoogleSearchToolSetting, true> {
+    const adj = apiConfig.googleSearchToolAdjustment;
+    if (adj === undefined || adj === true) {
+      return this.computeGoogleSearchToolAdjustmentFromModel();
+    } else {
+      return adj;
+    }
+  }
+
   buildGeminiAPI(): GoogleAIAPI {
+    const apiConfig: GeminiAPIConfig =
+      (this.apiConfig as GeminiAPIConfig) ?? {};
+    const googleSearchToolAdjustment =
+      this.computeGoogleSearchToolAdjustment(apiConfig);
     const geminiConfig: GeminiAPIConfig = {
       useSystemInstruction: this.useSystemInstruction,
-      ...(this.apiConfig as GeminiAPIConfig),
+      googleSearchToolAdjustment,
+      ...apiConfig,
     };
     return getGeminiAPI(geminiConfig);
   }
@@ -151,15 +181,23 @@ export abstract class ChatGoogleBase<AuthOptions>
 
   modelName = "gemini-pro";
 
-  temperature = 0.7;
+  temperature: number;
 
-  maxOutputTokens = 1024;
+  maxOutputTokens: number;
 
-  topP = 0.8;
+  topP: number;
 
-  topK = 40;
+  topK: number;
+
+  presencePenalty: number;
+
+  frequencyPenalty: number;
 
   stopSequences: string[] = [];
+
+  logprobs: boolean;
+
+  topLogprobs: number = 0;
 
   safetySettings: GoogleAISafetySetting[] = [];
 
@@ -469,6 +507,7 @@ export abstract class ChatGoogleBase<AuthOptions>
     }
     const llm = this.bind({
       tools,
+      tool_choice: functionName,
     });
 
     if (!includeRaw) {

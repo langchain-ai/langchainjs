@@ -6,6 +6,7 @@ import {
   BaseCallbackHandler,
   CallbackHandlerMethods,
   HandleLLMNewTokenCallbackFields,
+  isBaseCallbackHandler,
   NewTokenIndices,
 } from "./base.js";
 import { ConsoleCallbackHandler } from "../tracers/console.js";
@@ -21,6 +22,10 @@ import { Serialized } from "../load/serializable.js";
 import type { DocumentInterface } from "../documents/document.js";
 import { isTracingEnabled } from "../utils/callbacks.js";
 import { isBaseTracer } from "../tracers/base.js";
+import {
+  getContextVariable,
+  _getConfigureHooks,
+} from "../singletons/async_local_storage/context.js";
 
 type BaseCallbackManagerMethods = {
   [K in keyof CallbackHandlerMethods]?: (
@@ -298,7 +303,13 @@ export class CallbackManagerForLLMRun
     );
   }
 
-  async handleLLMError(err: Error | unknown): Promise<void> {
+  async handleLLMError(
+    err: Error | unknown,
+    _runId?: string,
+    _parentRunId?: string,
+    _tags?: string[],
+    extraParams?: Record<string, unknown>
+  ): Promise<void> {
     await Promise.all(
       this.handlers.map((handler) =>
         consumeCallback(async () => {
@@ -308,7 +319,8 @@ export class CallbackManagerForLLMRun
                 err,
                 this.runId,
                 this._parentRunId,
-                this.tags
+                this.tags,
+                extraParams
               );
             } catch (err) {
               const logFunction = handler.raiseError
@@ -327,7 +339,13 @@ export class CallbackManagerForLLMRun
     );
   }
 
-  async handleLLMEnd(output: LLMResult): Promise<void> {
+  async handleLLMEnd(
+    output: LLMResult,
+    _runId?: string,
+    _parentRunId?: string,
+    _tags?: string[],
+    extraParams?: Record<string, unknown>
+  ): Promise<void> {
     await Promise.all(
       this.handlers.map((handler) =>
         consumeCallback(async () => {
@@ -337,7 +355,8 @@ export class CallbackManagerForLLMRun
                 output,
                 this.runId,
                 this._parentRunId,
-                this.tags
+                this.tags,
+                extraParams
               );
             } catch (err) {
               const logFunction = handler.raiseError
@@ -1240,6 +1259,35 @@ export class CallbackManager
         }
       }
     }
+
+    for (const {
+      contextVar,
+      inheritable = true,
+      handlerClass,
+      envVar,
+    } of _getConfigureHooks()) {
+      const createIfNotInContext =
+        envVar && getEnvironmentVariable(envVar) === "true" && handlerClass;
+      let handler: BaseCallbackHandler | undefined;
+      const contextVarValue =
+        contextVar !== undefined ? getContextVariable(contextVar) : undefined;
+      if (contextVarValue && isBaseCallbackHandler(contextVarValue)) {
+        handler = contextVarValue;
+      } else if (createIfNotInContext) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        handler = new (handlerClass as any)({});
+      }
+      if (handler !== undefined) {
+        if (!callbackManager) {
+          callbackManager = new CallbackManager();
+        }
+
+        if (!callbackManager.handlers.some((h) => h.name === handler!.name)) {
+          callbackManager.addHandler(handler, inheritable);
+        }
+      }
+    }
+
     if (inheritableTags || localTags) {
       if (callbackManager) {
         callbackManager.addTags(inheritableTags ?? []);
@@ -1252,6 +1300,7 @@ export class CallbackManager
         callbackManager.addMetadata(localMetadata ?? {}, false);
       }
     }
+
     return callbackManager;
   }
 }

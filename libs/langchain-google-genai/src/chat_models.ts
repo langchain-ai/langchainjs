@@ -101,7 +101,7 @@ export interface GoogleGenerativeAIChatInput
   /**
    * Controls the randomness of the output.
    *
-   * Values can range from [0.0,1.0], inclusive. A value closer to 1.0
+   * Values can range from [0.0,2.0], inclusive. A value closer to 2.0
    * will produce responses that are more varied and creative, while
    * a value closer to 0.0 will typically result in less surprising
    * responses from the model.
@@ -528,6 +528,47 @@ export interface GoogleGenerativeAIChatInput
  * </details>
  *
  * <br />
+ *
+ * <details>
+ * <summary><strong>Document Messages</strong></summary>
+ *
+ * This example will show you how to pass documents such as PDFs to Google
+ * Generative AI through messages.
+ *
+ * ```typescript
+ * const pdfPath = "/Users/my_user/Downloads/invoice.pdf";
+ * const pdfBase64 = await fs.readFile(pdfPath, "base64");
+ *
+ * const response = await llm.invoke([
+ *   ["system", "Use the provided documents to answer the question"],
+ *   [
+ *     "user",
+ *     [
+ *       {
+ *         type: "application/pdf", // If the `type` field includes a single slash (`/`), it will be treated as inline data.
+ *         data: pdfBase64,
+ *       },
+ *       {
+ *         type: "text",
+ *         text: "Summarize the contents of this PDF",
+ *       },
+ *     ],
+ *   ],
+ * ]);
+ *
+ * console.log(response.content);
+ * ```
+ *
+ * ```txt
+ * This is a billing invoice from Twitter Developers for X API Basic Access. The transaction date is January 7, 2025,
+ * and the amount is $194.34, which has been paid. The subscription period is from January 7, 2025 21:02 to February 7, 2025 00:00 (UTC).
+ * The tax is $0.00, with a tax rate of 0%. The total amount is $194.34. The payment was made using a Visa card ending in 7022,
+ * expiring in 12/2026. The billing address is Brace Sproul, 1234 Main Street, San Francisco, CA, US 94103. The company being billed is
+ * X Corp, located at 865 FM 1209 Building 2, Bastrop, TX, US 78602. Terms and conditions apply.
+ * ```
+ * </details>
+ *
+ * <br />
  */
 export class ChatGoogleGenerativeAI
   extends BaseChatModel<GoogleGenerativeAIChatCallOptions, AIMessageChunk>
@@ -580,7 +621,11 @@ export class ChatGoogleGenerativeAI
   private client: GenerativeModel;
 
   get _isMultimodalModel() {
-    return this.model.includes("vision") || this.model.startsWith("gemini-1.5");
+    return (
+      this.model.includes("vision") ||
+      this.model.startsWith("gemini-1.5") ||
+      this.model.startsWith("gemini-2")
+    );
   }
 
   constructor(fields?: GoogleGenerativeAIChatInput) {
@@ -599,8 +644,8 @@ export class ChatGoogleGenerativeAI
     }
 
     this.temperature = fields?.temperature ?? this.temperature;
-    if (this.temperature && (this.temperature < 0 || this.temperature > 1)) {
-      throw new Error("`temperature` must be in the range of [0.0,1.0]");
+    if (this.temperature && (this.temperature < 0 || this.temperature > 2)) {
+      throw new Error("`temperature` must be in the range of [0.0,2.0]");
     }
 
     this.topP = fields?.topP ?? this.topP;
@@ -860,21 +905,21 @@ export class ChatGoogleGenerativeAI
         options.streamUsage !== false
       ) {
         const genAIUsageMetadata = response.usageMetadata as {
-          promptTokenCount: number;
-          candidatesTokenCount: number;
-          totalTokenCount: number;
+          promptTokenCount: number | undefined;
+          candidatesTokenCount: number | undefined;
+          totalTokenCount: number | undefined;
         };
         if (!usageMetadata) {
           usageMetadata = {
-            input_tokens: genAIUsageMetadata.promptTokenCount,
-            output_tokens: genAIUsageMetadata.candidatesTokenCount,
-            total_tokens: genAIUsageMetadata.totalTokenCount,
+            input_tokens: genAIUsageMetadata.promptTokenCount ?? 0,
+            output_tokens: genAIUsageMetadata.candidatesTokenCount ?? 0,
+            total_tokens: genAIUsageMetadata.totalTokenCount ?? 0,
           };
         } else {
           // Under the hood, LangChain combines the prompt tokens. Google returns the updated
           // total each time, so we need to find the difference between the tokens.
           const outputTokenDiff =
-            genAIUsageMetadata.candidatesTokenCount -
+            (genAIUsageMetadata.candidatesTokenCount ?? 0) -
             usageMetadata.output_tokens;
           usageMetadata = {
             input_tokens: 0,

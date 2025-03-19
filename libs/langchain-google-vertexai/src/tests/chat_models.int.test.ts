@@ -39,7 +39,7 @@ import {
   GoogleRequestLogger,
   GoogleRequestRecorder,
 } from "@langchain/google-common";
-import { GeminiTool } from "../types.js";
+import { AnthropicAPIConfig, GeminiTool } from "../types.js";
 import { ChatVertexAI } from "../chat_models.js";
 
 const weatherTool = tool((_) => "no-op", {
@@ -59,20 +59,53 @@ const calculatorTool = tool((_) => "no-op", {
   }),
 });
 
-describe("GAuth Gemini Chat", () => {
+/*
+ * Which models do we want to run the test suite against?
+ */
+const testGeminiModelNames = [
+  ["gemini-1.5-pro-002"],
+  ["gemini-1.5-flash-002"],
+  ["gemini-2.0-flash-001"],
+  ["gemini-2.0-flash-lite-001"],
+  // ["gemini-2.0-flash-thinking-exp-1219"],
+];
+
+/*
+ * Some models may have usage quotas still.
+ * For those models, set how long (in millis) to wait in between each test.
+ */
+const testGeminiModelDelay: Record<string, number> = {
+  "gemini-2.0-flash-exp": 5000,
+  "gemini-2.0-flash-thinking-exp-1219": 5000,
+};
+
+describe.each(testGeminiModelNames)("GAuth Gemini Chat (%s)", (modelName) => {
   let recorder: GoogleRequestRecorder;
   let callbacks: BaseCallbackHandler[];
 
-  beforeEach(() => {
+  beforeEach(async () => {
     recorder = new GoogleRequestRecorder();
     callbacks = [recorder, new GoogleRequestLogger()];
+
+    const delay = testGeminiModelDelay[modelName] ?? 0;
+    if (delay) {
+      console.log(`Delaying for ${delay}ms`);
+      // eslint-disable-next-line no-promise-executor-return
+      await new Promise((resolve) => setTimeout(resolve, delay));
+    }
   });
 
   test("invoke", async () => {
     const model = new ChatVertexAI({
       callbacks,
+      modelName,
     });
     const res = await model.invoke("What is 1 + 1?");
+
+    expect(recorder?.request?.connection?.url).toMatch(
+      /https:\/\/.+-aiplatform.googleapis.com/
+    );
+
     expect(res).toBeDefined();
     expect(res._getType()).toEqual("ai");
 
@@ -84,8 +117,10 @@ describe("GAuth Gemini Chat", () => {
     expect(text).toMatch(/(1 + 1 (equals|is|=) )?2.? ?/);
   });
 
-  test("generate", async () => {
-    const model = new ChatVertexAI();
+  test(`generate`, async () => {
+    const model = new ChatVertexAI({
+      modelName,
+    });
     const messages: BaseMessage[] = [
       new SystemMessage(
         "You will reply to all requests to flip a coin with either H, indicating heads, or T, indicating tails."
@@ -103,12 +138,13 @@ describe("GAuth Gemini Chat", () => {
 
     expect(typeof aiMessage.content).toBe("string");
     const text = aiMessage.content as string;
-    expect(["H", "T"]).toContainEqual(text);
+    expect(["H", "T"]).toContainEqual(text.trim());
   });
 
   test("stream", async () => {
     const model = new ChatVertexAI({
       callbacks,
+      modelName,
     });
     const input: BaseLanguageModelInput = new ChatPromptValue([
       new SystemMessage(
@@ -132,6 +168,8 @@ describe("GAuth Gemini Chat", () => {
   });
 
   test("function", async () => {
+    // gemini-2.0-flash-001: Test occasionally fails due to model regression
+    // gemini-2.0-flash-lite-001: Not supported
     const tools: GeminiTool[] = [
       {
         functionDeclarations: [
@@ -153,7 +191,11 @@ describe("GAuth Gemini Chat", () => {
         ],
       },
     ];
-    const model = new ChatVertexAI().bind({ tools });
+    const model = new ChatVertexAI({
+      modelName,
+    }).bind({
+      tools,
+    });
     const result = await model.invoke("Run a test on the cobalt project");
     expect(result).toHaveProperty("content");
     expect(result.content).toBe("");
@@ -197,7 +239,11 @@ describe("GAuth Gemini Chat", () => {
         ],
       },
     ];
-    const model = new ChatVertexAI().bind({ tools });
+    const model = new ChatVertexAI({
+      modelName,
+    }).bind({
+      tools,
+    });
     const toolResult = {
       testPassed: true,
     };
@@ -241,7 +287,9 @@ describe("GAuth Gemini Chat", () => {
         required: ["location"],
       },
     };
-    const model = new ChatVertexAI().withStructuredOutput(tool);
+    const model = new ChatVertexAI({
+      modelName,
+    }).withStructuredOutput(tool);
     const result = await model.invoke("What is the weather in Paris?");
     expect(result).toHaveProperty("location");
   });
@@ -267,7 +315,8 @@ describe("GAuth Gemini Chat", () => {
     });
     const blobStore = new ReadThroughBlobStore({
       baseStore: aliasStore,
-      backingStore,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      backingStore: backingStore as any,
     });
     const resolver = new SimpleWebBlobStore();
     const mediaManager = new MediaManager({
@@ -275,9 +324,10 @@ describe("GAuth Gemini Chat", () => {
       resolvers: [resolver],
     });
     const model = new ChatGoogle({
-      modelName: "gemini-1.5-flash",
+      modelName,
       apiConfig: {
-        mediaManager,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        mediaManager: mediaManager as any,
       },
     });
 
@@ -320,6 +370,7 @@ describe("GAuth Gemini Chat", () => {
     const model = new ChatVertexAI({
       temperature: 0,
       maxOutputTokens: 10,
+      modelName,
     });
     let res: AIMessageChunk | null = null;
     for await (const chunk of await model.stream(
@@ -347,6 +398,7 @@ describe("GAuth Gemini Chat", () => {
     const model = new ChatVertexAI({
       temperature: 0,
       streamUsage: false,
+      modelName,
     });
     let res: AIMessageChunk | null = null;
     for await (const chunk of await model.stream(
@@ -366,6 +418,7 @@ describe("GAuth Gemini Chat", () => {
     const model = new ChatVertexAI({
       temperature: 0,
       maxOutputTokens: 10,
+      modelName,
     });
     const res = await model.invoke("Why is the sky blue? Be concise.");
     // console.log(res);
@@ -384,6 +437,7 @@ describe("GAuth Gemini Chat", () => {
     const modelWithStreaming = new ChatVertexAI({
       maxOutputTokens: 50,
       streaming: true,
+      modelName,
     });
 
     let totalTokenCount = 0;
@@ -407,7 +461,7 @@ describe("GAuth Gemini Chat", () => {
 
   test("Can force a model to invoke a tool", async () => {
     const model = new ChatVertexAI({
-      model: "gemini-1.5-pro",
+      modelName,
     });
     const modelWithTools = model.bind({
       tools: [calculatorTool, weatherTool],
@@ -425,8 +479,10 @@ describe("GAuth Gemini Chat", () => {
     expect(result.tool_calls?.[0].args).toHaveProperty("expression");
   });
 
-  test("ChatGoogleGenerativeAI can stream tools", async () => {
-    const model = new ChatVertexAI({});
+  test(`stream tools`, async () => {
+    const model = new ChatVertexAI({
+      modelName,
+    });
 
     const weatherTool = tool(
       (_) => "The weather in San Francisco today is 18 degrees and sunny.",
@@ -474,7 +530,7 @@ describe("GAuth Gemini Chat", () => {
     const audioMimeType = "audio/wav";
 
     const model = new ChatVertexAI({
-      model: "gemini-1.5-flash",
+      model: modelName,
       temperature: 0,
       maxRetries: 0,
     });
@@ -505,27 +561,94 @@ describe("GAuth Gemini Chat", () => {
     expect(typeof response.content).toBe("string");
     expect((response.content as string).length).toBeGreaterThan(15);
   });
+
+  test("Supports GoogleSearchRetrievalTool", async () => {
+    // gemini-2.0-flash-lite-001: Not supported
+    const searchRetrievalTool = {
+      googleSearchRetrieval: {
+        dynamicRetrievalConfig: {
+          mode: "MODE_DYNAMIC",
+          dynamicThreshold: 0.7, // default is 0.7
+        },
+      },
+    };
+    const model = new ChatVertexAI({
+      modelName,
+      temperature: 0,
+      maxRetries: 0,
+    }).bindTools([searchRetrievalTool]);
+
+    const result = await model.invoke("Who won the 2024 MLB World Series?");
+    expect(result.content as string).toContain("Dodgers");
+  });
+
+  test("Supports GoogleSearchTool", async () => {
+    // gemini-2.0-flash-lite-001: Not supported
+    const searchTool: GeminiTool = {
+      googleSearch: {},
+    };
+    const model = new ChatVertexAI({
+      modelName,
+      temperature: 0,
+      maxRetries: 0,
+    }).bindTools([searchTool]);
+
+    const result = await model.invoke("Who won the 2024 MLB World Series?");
+    expect(result.content as string).toContain("Dodgers");
+  });
+
+  test("Can stream GoogleSearchRetrievalTool", async () => {
+    // gemini-2.0-flash-lite-001: Not supported
+    const searchRetrievalTool = {
+      googleSearchRetrieval: {
+        dynamicRetrievalConfig: {
+          mode: "MODE_DYNAMIC",
+          dynamicThreshold: 0.7, // default is 0.7
+        },
+      },
+    };
+    const model = new ChatVertexAI({
+      modelName,
+      temperature: 0,
+      maxRetries: 0,
+    }).bindTools([searchRetrievalTool]);
+
+    const stream = await model.stream("Who won the 2024 MLB World Series?");
+    let finalMsg: AIMessageChunk | undefined;
+    for await (const msg of stream) {
+      finalMsg = finalMsg ? concat(finalMsg, msg) : msg;
+    }
+    if (!finalMsg) {
+      throw new Error("finalMsg is undefined");
+    }
+    expect(finalMsg.content as string).toContain("Dodgers");
+  });
 });
 
-describe("GAuth Anthropic Chat", () => {
+describe("Express Gemini Chat", () => {
+  // We don't do a lot of tests or across every model, since there are
+  // pretty severe rate limits.
+  const modelName = "gemini-2.0-flash-001";
+
   let recorder: GoogleRequestRecorder;
   let callbacks: BaseCallbackHandler[];
 
-  // const modelName: string = "claude-3-5-sonnet@20240620";
-  // const modelName: string = "claude-3-sonnet@20240229";
-  const modelName: string = "claude-3-5-sonnet-v2@20241022";
-
-  beforeEach(() => {
+  beforeEach(async () => {
     recorder = new GoogleRequestRecorder();
     callbacks = [recorder, new GoogleRequestLogger()];
   });
 
   test("invoke", async () => {
     const model = new ChatVertexAI({
-      modelName,
       callbacks,
+      modelName,
     });
     const res = await model.invoke("What is 1 + 1?");
+
+    expect(recorder?.request?.connection?.url).toMatch(
+      /https:\/\/aiplatform.googleapis.com/
+    );
+
     expect(res).toBeDefined();
     expect(res._getType()).toEqual("ai");
 
@@ -535,85 +658,288 @@ describe("GAuth Anthropic Chat", () => {
     expect(typeof aiMessage.content).toBe("string");
     const text = aiMessage.content as string;
     expect(text).toMatch(/(1 + 1 (equals|is|=) )?2.? ?/);
-
-    const connection = recorder?.request?.connection;
-    expect(connection?.url).toEqual(
-      `https://us-east5-aiplatform.googleapis.com/v1/projects/test-vertex-ai-382612/locations/us-east5/publishers/anthropic/models/${modelName}:rawPredict`
-    );
-
-    console.log(JSON.stringify(aiMessage, null, 1));
-    console.log(aiMessage.lc_kwargs);
-  });
-
-  test("stream", async () => {
-    const model = new ChatVertexAI({
-      modelName,
-      callbacks,
-    });
-    const stream = await model.stream("How are you today? Be verbose.");
-    const chunks = [];
-    for await (const chunk of stream) {
-      console.log(chunk);
-      chunks.push(chunk);
-    }
-    expect(chunks.length).toBeGreaterThan(1);
-  });
-
-  test("tool invocation", async () => {
-    const model = new ChatVertexAI({
-      modelName,
-      callbacks,
-    });
-    const modelWithTools = model.bind({
-      tools: [weatherTool],
-    });
-
-    const result = await modelWithTools.invoke(
-      "Whats the weather like in paris today?"
-    );
-
-    const request = recorder?.request ?? {};
-    const data = request?.data;
-    expect(data).toHaveProperty("tools");
-    expect(data.tools).toHaveLength(1);
-
-    expect(result.tool_calls).toHaveLength(1);
-    expect(result.tool_calls?.[0]).toBeDefined();
-    expect(result.tool_calls?.[0].name).toBe("get_weather");
-    expect(result.tool_calls?.[0].args).toHaveProperty("location");
-  });
-
-  test("stream tools", async () => {
-    const model = new ChatVertexAI({
-      modelName,
-      callbacks,
-    });
-
-    const weatherTool = tool(
-      (_) => "The weather in San Francisco today is 18 degrees and sunny.",
-      {
-        name: "current_weather_tool",
-        description: "Get the current weather for a given location.",
-        schema: z.object({
-          location: z.string().describe("The location to get the weather for."),
-        }),
-      }
-    );
-
-    const modelWithTools = model.bindTools([weatherTool]);
-    const stream = await modelWithTools.stream(
-      "Whats the weather like today in San Francisco?"
-    );
-    let finalChunk: AIMessageChunk | undefined;
-    for await (const chunk of stream) {
-      finalChunk = !finalChunk ? chunk : concat(finalChunk, chunk);
-    }
-
-    expect(finalChunk).toBeDefined();
-    const toolCalls = finalChunk?.tool_calls;
-    expect(toolCalls).toBeDefined();
-    expect(toolCalls?.length).toBe(1);
-    expect(toolCalls?.[0].name).toBe("current_weather_tool");
-    expect(toolCalls?.[0].args).toHaveProperty("location");
   });
 });
+
+const testAnthropicModelNames = [
+  // ["claude-3-sonnet@20240229"],
+  // ["claude-3-5-sonnet@20240620"],
+  ["claude-3-5-sonnet-v2@20241022"],
+  ["claude-3-7-sonnet@20250219"],
+];
+
+describe.each(testAnthropicModelNames)(
+  "GAuth Anthropic Chat (%s)",
+  (modelName) => {
+    let recorder: GoogleRequestRecorder;
+    let callbacks: BaseCallbackHandler[];
+
+    beforeEach(() => {
+      recorder = new GoogleRequestRecorder();
+      callbacks = [recorder, new GoogleRequestLogger()];
+    });
+
+    test("invoke", async () => {
+      const model = new ChatVertexAI({
+        modelName,
+        callbacks,
+      });
+      const res = await model.invoke("What is 1 + 1?");
+      expect(res).toBeDefined();
+      expect(res._getType()).toEqual("ai");
+
+      const aiMessage = res as AIMessageChunk;
+      expect(aiMessage.content).toBeDefined();
+
+      expect(typeof aiMessage.content).toBe("string");
+      const text = aiMessage.content as string;
+      expect(text).toMatch(/(1 + 1 (equals|is|=) )?2.? ?/);
+
+      const connection = recorder?.request?.connection;
+      expect(connection?.url).toEqual(
+        `https://us-east5-aiplatform.googleapis.com/v1/projects/test-vertex-ai-382612/locations/us-east5/publishers/anthropic/models/${modelName}:rawPredict`
+      );
+
+      console.log(JSON.stringify(aiMessage, null, 1));
+      console.log(aiMessage.lc_kwargs);
+    });
+
+    test("stream", async () => {
+      const model = new ChatVertexAI({
+        modelName,
+        callbacks,
+      });
+      const stream = await model.stream("How are you today? Be verbose.");
+      const chunks = [];
+      for await (const chunk of stream) {
+        console.log(chunk);
+        chunks.push(chunk);
+      }
+      expect(chunks.length).toBeGreaterThan(1);
+    });
+
+    test("tool invocation", async () => {
+      const model = new ChatVertexAI({
+        modelName,
+        callbacks,
+      });
+      const modelWithTools = model.bind({
+        tools: [weatherTool],
+      });
+
+      const result = await modelWithTools.invoke(
+        "Whats the weather like in paris today?"
+      );
+
+      const request = recorder?.request ?? {};
+      const data = request?.data;
+      expect(data).toHaveProperty("tools");
+      expect(data.tools).toHaveLength(1);
+
+      expect(result.tool_calls).toHaveLength(1);
+      expect(result.tool_calls?.[0]).toBeDefined();
+      expect(result.tool_calls?.[0].name).toBe("get_weather");
+      expect(result.tool_calls?.[0].args).toHaveProperty("location");
+    });
+
+    test("stream tools", async () => {
+      const model = new ChatVertexAI({
+        modelName,
+        callbacks,
+      });
+
+      const weatherTool = tool(
+        (_) => "The weather in San Francisco today is 18 degrees and sunny.",
+        {
+          name: "current_weather_tool",
+          description: "Get the current weather for a given location.",
+          schema: z.object({
+            location: z
+              .string()
+              .describe("The location to get the weather for."),
+          }),
+        }
+      );
+
+      const modelWithTools = model.bindTools([weatherTool]);
+      const stream = await modelWithTools.stream(
+        "Whats the weather like today in San Francisco?"
+      );
+      let finalChunk: AIMessageChunk | undefined;
+      for await (const chunk of stream) {
+        finalChunk = !finalChunk ? chunk : concat(finalChunk, chunk);
+      }
+
+      expect(finalChunk).toBeDefined();
+      const toolCalls = finalChunk?.tool_calls;
+      expect(toolCalls).toBeDefined();
+      expect(toolCalls?.length).toBe(1);
+      expect(toolCalls?.[0].name).toBe("current_weather_tool");
+      expect(toolCalls?.[0].args).toHaveProperty("location");
+    });
+  }
+);
+
+const testAnthropicThinkingModelNames = [["claude-3-7-sonnet@20250219"]];
+describe.each(testAnthropicThinkingModelNames)(
+  "GAuth Anthropic Thinking (%s)",
+  (modelName) => {
+    let recorder: GoogleRequestRecorder;
+    let callbacks: BaseCallbackHandler[];
+
+    beforeEach(() => {
+      recorder = new GoogleRequestRecorder();
+      callbacks = [recorder, new GoogleRequestLogger()];
+    });
+
+    test("thinking multiturn invoke", async () => {
+      const apiConfig: AnthropicAPIConfig = {
+        thinking: { type: "enabled", budget_tokens: 2000 },
+      };
+      const model = new ChatVertexAI({
+        modelName,
+        callbacks,
+        maxOutputTokens: 5000,
+        apiConfig,
+      });
+
+      async function doInvoke(messages: BaseMessage[]) {
+        const response = await model.invoke(messages);
+
+        expect(Array.isArray(response.content)).toBe(true);
+        const content = response.content as MessageContentComplex[];
+        expect(
+          content.some(
+            (block) => "thinking" in (block as MessageContentComplex)
+          )
+        ).toBe(true);
+
+        let thinkingCount = 0;
+        for (const block of response.content) {
+          expect(typeof block).toBe("object");
+          const complexBlock = block as MessageContentComplex;
+          if (complexBlock.type === "thinking") {
+            thinkingCount += 1;
+            expect(Object.keys(block).sort()).toEqual(
+              ["type", "thinking", "signature"].sort()
+            );
+            expect(complexBlock.thinking).toBeTruthy();
+            expect(typeof complexBlock.thinking).toBe("string");
+            expect(complexBlock.signature).toBeTruthy();
+            expect(typeof complexBlock.signature).toBe("string");
+          }
+        }
+        expect(thinkingCount).toEqual(1);
+        return response;
+      }
+
+      const invokeMessages = [new HumanMessage("Hello")];
+
+      invokeMessages.push(await doInvoke(invokeMessages));
+      invokeMessages.push(new HumanMessage("What is 42+7?"));
+
+      // test a second time to make sure that we've got input translation working correctly
+      await model.invoke(invokeMessages);
+    });
+
+    test("thinking redacted multiturn invoke", async () => {
+      const apiConfig: AnthropicAPIConfig = {
+        thinking: { type: "enabled", budget_tokens: 2000 },
+      };
+      const model = new ChatVertexAI({
+        modelName,
+        callbacks,
+        maxOutputTokens: 5000,
+        apiConfig,
+      });
+
+      async function doInvoke(messages: BaseMessage[]) {
+        const response = await model.invoke(messages);
+
+        expect(Array.isArray(response.content)).toBe(true);
+        const content = response.content as MessageContentComplex[];
+
+        let thinkingCount = 0;
+        for (const block of content) {
+          expect(typeof block).toBe("object");
+          const complexBlock = block as MessageContentComplex;
+          if (complexBlock.type === "redacted_thinking") {
+            thinkingCount += 1;
+            expect(Object.keys(block).sort()).toEqual(["type", "data"].sort());
+            expect(complexBlock).not.toHaveProperty("thinking");
+            expect(complexBlock).toHaveProperty("data");
+            expect(typeof complexBlock.data).toBe("string");
+          }
+        }
+        expect(thinkingCount).toEqual(1);
+        return response;
+      }
+
+      const invokeMessages = [
+        new HumanMessage(
+          "ANTHROPIC_MAGIC_STRING_TRIGGER_REDACTED_THINKING_46C9A13E193C177646C7398A98432ECCCE4C1253D5E2D82641AC0E52CC2876CB"
+        ),
+      ];
+
+      invokeMessages.push(await doInvoke(invokeMessages));
+      invokeMessages.push(new HumanMessage("What is 42+7?"));
+
+      // test a second time to make sure that we've got input translation working correctly
+      await model.invoke(invokeMessages);
+    });
+
+    test("tool invocations with thinking enabled", async () => {
+      const apiConfig: AnthropicAPIConfig = {
+        thinking: { type: "enabled", budget_tokens: 2000 },
+      };
+      const model = new ChatVertexAI({
+        modelName,
+        callbacks,
+        maxOutputTokens: 5000,
+        apiConfig,
+      });
+
+      const tools = [
+        tool(
+          ({ location }: { location: string }) =>
+            `In ${location}, the clouds are heavy with the promise of rain.`,
+          {
+            name: "weather_poet",
+            description:
+              "Gets the current weather conditions for the location, written in a poetic manner.",
+            schema: z.object({
+              location: z.string().describe("Location to get the weather for"),
+            }),
+          }
+        ),
+      ];
+      const modelWithTools = model.bindTools(tools);
+      const messages = [
+        new HumanMessage("What is the current weather in London?"),
+      ];
+
+      const result = await modelWithTools.invoke(messages);
+      messages.push(result);
+
+      expect(result.tool_calls).toBeDefined();
+      expect(result.tool_calls).toHaveLength(1);
+      // console.log("result.tool_calls?.[0]", result.tool_calls?.[0]);
+
+      expect(typeof result.tool_calls![0]).toBe("object");
+      expect(result.tool_calls![0].name).toBe("weather_poet");
+
+      expect(typeof result.tool_calls![0].id).toBe("string");
+      expect(result.tool_calls![0].id!.length).toBeGreaterThan(0);
+
+      expect(typeof result.tool_calls![0].args).toBe("object");
+      expect(typeof result.tool_calls![0].args.location).toBe("string");
+      expect(result.tool_calls![0].args.location.length).toBeGreaterThan(0);
+
+      const toolResultMessage = await tools[0].invoke(result.tool_calls![0]);
+      messages.push(toolResultMessage);
+
+      const result2 = await modelWithTools.invoke(messages);
+      expect(result2.content).toBeDefined();
+    });
+  }
+);
