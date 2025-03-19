@@ -39,10 +39,29 @@ export class ChatNoxtua extends ChatOpenAI<ChatNoxtuaCallOptions> {
 
   get lc_secrets(): { [key: string]: string } | undefined {
     return {
+      noxtuaApiUrl: "NOXTUA_API_URL",
+      apiUrl: "NOXTUA_API_URL",
+      noxtuaTenantId: "NOXTUA_TENANT_ID",
+      tenantId: "NOXTUA_TENANT_ID",
       noxtuaApiKey: "NOXTUA_API_KEY",
       apiKey: "NOXTUA_API_KEY",
       noxtuaAuthToken: "NOXTUA_AUTH_TOKEN",
-      authToken: "NOXTUA_AUTH_TOKEN"
+      authToken: "NOXTUA_AUTH_TOKEN",
+    };
+  }
+
+  get lc_aliases(): Record<string, string> {
+    super.lc_aliases;
+    return {
+      modelName: "model",
+      noxtuaApiUrl: "noxtua_api_url",
+      apiUrl: "noxtua_api_url",
+      noxtuaTenantId: "noxtua_tenant_id",
+      tenantId: "noxtua_tenant_id",
+      noxtuaApiKey: "noxtua_api_key",
+      apiKey: "noxtua_api_key",
+      noxtuaAuthToken: "noxtua_auth_token",
+      authToken: "noxtua_auth_token",
     };
   }
 
@@ -61,6 +80,7 @@ export class ChatNoxtua extends ChatOpenAI<ChatNoxtuaCallOptions> {
       Omit<OpenAIChatInput, "openAIApiKey" | NoxtuaUnsupportedArgs>
     > &
       BaseChatModelParams & {
+        noxtuaTenantId?: string;
         tenantId?: string;
         noxtuaApiUrl?: string;
         apiUrl?: string;
@@ -70,8 +90,10 @@ export class ChatNoxtua extends ChatOpenAI<ChatNoxtuaCallOptions> {
         authToken?: string;
       }
   ) {
-    const tenantId =
-      fields?.tenantId || getEnvironmentVariable("NOXTUA_TENANT_ID");
+    const noxtuaTenantId =
+      fields?.tenantId ||
+      fields?.noxtuaTenantId ||
+      getEnvironmentVariable("NOXTUA_TENANT_ID");
     const noxtuaApiUrl =
       fields?.apiUrl ||
       fields?.noxtuaApiUrl ||
@@ -86,8 +108,8 @@ export class ChatNoxtua extends ChatOpenAI<ChatNoxtuaCallOptions> {
       getEnvironmentVariable("NOXTUA_AUTH_TOKEN");
     const defaultHeaders: { [key: string]: string } = {};
 
-    if (tenantId) {
-      defaultHeaders["tenant-id"] = tenantId;
+    if (noxtuaTenantId) {
+      defaultHeaders["tenant-id"] = noxtuaTenantId;
     }
 
     if (noxtuaApiKey) {
@@ -103,7 +125,7 @@ export class ChatNoxtua extends ChatOpenAI<ChatNoxtuaCallOptions> {
       configuration: {
         baseURL: noxtuaApiUrl,
         defaultHeaders: {
-          "tenant-id": tenantId,
+          "tenant-id": noxtuaTenantId,
           "x-api-key": noxtuaApiKey,
           Authorization: `Bearer ${noxtuaAuthToken}`,
         },
@@ -111,7 +133,7 @@ export class ChatNoxtua extends ChatOpenAI<ChatNoxtuaCallOptions> {
       streamUsage: true,
     });
 
-    this.tenantId = tenantId;
+    this.tenantId = noxtuaTenantId;
     this.apiKey = noxtuaApiKey;
     this.apiUrl = noxtuaApiUrl;
     this.authToken = noxtuaAuthToken;
