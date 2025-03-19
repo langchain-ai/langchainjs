@@ -76,7 +76,7 @@ describe("Document loader creation", () => {
     }
 
     async function createInstance() {
-      postgresLoaderInstance = await PostgresLoader.create(PEInstance, documentLoaderArgs)
+      await PostgresLoader.create(PEInstance, documentLoaderArgs)
     }
 
     await expect(createInstance).rejects.toThrow("At least one of the parameters 'table_name' or 'query' needs to be provided");
@@ -84,13 +84,13 @@ describe("Document loader creation", () => {
 
 
   test('should throw an error if an invalid format is provided', async () => {
-    const documentLoaderArgs: PostgresLoaderOptions = {
+    const documentLoaderArgs = {
       tableName: CUSTOM_TABLE2,
       format: 'invalid_format',
     };
 
     async function createInstance() {
-      postgresLoaderInstance = await PostgresLoader.create(PEInstance, documentLoaderArgs);
+      await PostgresLoader.create(PEInstance, documentLoaderArgs);
     }
 
     await expect(createInstance).rejects.toThrow("format must be type: 'csv', 'text', 'json', 'yaml'");
@@ -104,7 +104,7 @@ describe("Document loader creation", () => {
     };
 
     async function createInstance() {
-      postgresLoaderInstance = await PostgresLoader.create(PEInstance, documentLoaderArgs);
+      await PostgresLoader.create(PEInstance, documentLoaderArgs);
     }
 
     await expect(createInstance()).rejects.toThrow("Only one of 'format' or 'formatter' should be specified.");
@@ -118,7 +118,7 @@ describe("Document loader creation", () => {
     };
 
     async function createInstance() {
-      postgresLoaderInstance = await PostgresLoader.create(PEInstance, documentLoaderArgs);
+      await PostgresLoader.create(PEInstance, documentLoaderArgs);
     }
 
     await expect(createInstance()).rejects.toThrow("Only one of 'table_name' or 'query' should be specified.");
@@ -132,7 +132,7 @@ describe("Document loader creation", () => {
     };
 
     async function createInstance() {
-      postgresLoaderInstance = await PostgresLoader.create(PEInstance, documentLoaderArgs);
+      await PostgresLoader.create(PEInstance, documentLoaderArgs);
     }
 
     await expect(createInstance()).rejects.toThrow(`Column Imnotacolunm not found in query result fruit_id,fruit_name,variety,quantity_in_stock,price_per_unit,organic.`);

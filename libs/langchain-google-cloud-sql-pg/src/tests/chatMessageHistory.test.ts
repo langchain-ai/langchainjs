@@ -64,9 +64,9 @@ describe("ChatMessageHistory creation", () => {
   test("should create a new PostgresChatMessageHistory instance", async () => {
     await PEInstance.initChatHistoryTable(CHAT_MSG_TABLE)
 
-    const historyInstace = await PostgresChatMessageHistory.create(PEInstance, "test", CHAT_MSG_TABLE)
+    const historyInstance = await PostgresChatMessageHistory.create(PEInstance, "test", CHAT_MSG_TABLE)
 
-    expect(historyInstace).toBeDefined();
+    expect(historyInstance).toBeDefined();
   })
 
   afterAll(async () => {
@@ -83,7 +83,7 @@ describe("ChatMessageHistory creation", () => {
 
 describe("ChatMessageHistory methods", () => {
   let PEInstance: PostgresEngine;
-  let historyInstace: PostgresChatMessageHistory;
+  let historyInstance: PostgresChatMessageHistory;
 
   beforeAll(async () => {
     PEInstance = await PostgresEngine.fromEngineArgs(
@@ -92,15 +92,15 @@ describe("ChatMessageHistory methods", () => {
 
     await PEInstance.pool.raw(`DROP TABLE IF EXISTS ${CHAT_MSG_TABLE}`)
     await PEInstance.initChatHistoryTable(CHAT_MSG_TABLE)
-    historyInstace = await PostgresChatMessageHistory.create(PEInstance, "test", CHAT_MSG_TABLE)
+    historyInstance = await PostgresChatMessageHistory.create(PEInstance, "test", CHAT_MSG_TABLE)
   });
 
   test("should add a message to the store", async () => {
     const msg1 = new HumanMessage("Hi!")
     const msg2 = new AIMessage("what's up?")
 
-    await historyInstace.addMessage(msg1);
-    await historyInstace.addMessage(msg2)
+    await historyInstance.addMessage(msg1);
+    await historyInstance.addMessage(msg2)
 
     const { rows } = await PEInstance.pool.raw(`SELECT * FROM "${CHAT_MSG_TABLE}"`);
     expect(rows).toHaveLength(2);
@@ -112,7 +112,7 @@ describe("ChatMessageHistory methods", () => {
     const msg2 = new AIMessage("what's up?")
     const msg3 = new HumanMessage("How are you?")
     const messages: BaseMessage[] = [msg1, msg2, msg3]
-    await historyInstace.addMessages(messages);
+    await historyInstance.addMessages(messages);
 
     const { rows } = await PEInstance.pool.raw(`SELECT * FROM "${CHAT_MSG_TABLE}"`);
     expect(rows).toHaveLength(3);
@@ -123,9 +123,9 @@ describe("ChatMessageHistory methods", () => {
     const msg1 = new HumanMessage("Hi!");
     const msg2 = new AIMessage("what's up?");
 
-    await historyInstace.addMessages([msg1, msg2]);
+    await historyInstance.addMessages([msg1, msg2]);
 
-    const messages = await historyInstace.getMessages();
+    const messages = await historyInstance.getMessages();
 
     expect(messages).toHaveLength(2);
     expect(messages[0].content).toBe("Hi!");
@@ -142,8 +142,8 @@ describe("ChatMessageHistory methods", () => {
   });
 
   test("should clear all messages added to the store", async () => {
-    await historyInstace.clear();
-    const messages = await historyInstace.getMessages();
+    await historyInstance.clear();
+    const messages = await historyInstance.getMessages();
     expect(messages.length).toBe(0)
   });
 

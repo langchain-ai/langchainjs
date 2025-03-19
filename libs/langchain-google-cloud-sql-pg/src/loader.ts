@@ -149,6 +149,9 @@ export class PostgresLoader extends BaseDocumentLoader {
   async *lazyLoad(): AsyncGenerator<Document> {
     const { query, contentColumns, metadataColumns, formatter, metadataJsonColumn } = this;
     try {
+      if (!query) {
+        throw new Error("Query is undefined");
+      }
       const result = await this.engine.pool.raw(query);
 
       for (const row of result.rows) {

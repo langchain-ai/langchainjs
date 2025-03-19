@@ -9,7 +9,7 @@ Main features:
 
 ##  Before you begin
 
-In order to use this package, you first need to go throught the following steps:
+In order to use this package, you first need to go through the following steps:
 1.  [Select or create a Cloud Platform project.](https://console.cloud.google.com/project)
 2.  [Enable billing for your project.](https://cloud.google.com/billing/docs/how-to/modify-project#enable_billing_for_a_project)
 3.  [Enable the Cloud SQL Admin API.](https://cloud.google.com/sql/docs/postgres/admin-api)
@@ -85,4 +85,26 @@ See the full [Vector Store](https://js.langchain.com/docs/integrations/vectorsto
 
 <!-- TODO: ### Document Loader usage -->
 
-<!-- TODO: ### ChatMessageHistory usage -->
+### ChatMessageHistory usage
+
+Use `PostgresChatMessageHistory` to store messages and provide conversation history in Postgres.
+
+First, initialize the Chat History Table and then create the ChatMessageHistory instance.
+
+```javascript
+// ChatHistory table initialization
+await engine.initChatHistoryTable("chat_message_table");
+
+const historyInstance = await PostgresChatMessageHistory.create(engine, "test", "chat_message_table");
+```
+
+The create method of the PostgresChatMessageHistory receives the engine, the session Id and the table name.
+
+PostgresChatMessageHistory interface methods availables:
+
+-   addMessage
+-   addMessages
+-   getMessages
+-   clear
+
+See the full [Chat Message History](https://js.langchain.com/docs/integrations/memory/google_cloudsql_pg) tutorial.

@@ -214,7 +214,6 @@ PaLM models are no longer supported.
 ```typescript
 import { MatchingEngine } from "langchain/vectorstores/googlevertexai";
 ```
-
 ### Postgres Vector Store
 
 The [PostgresVectorStore](docs/integrations/vectorstores/google_cloudsql_pg) from the
@@ -283,4 +282,59 @@ We can easily load this wrapper as a Tool (to use with an Agent). We can do this
 ```typescript
 const tools = [new GoogleCustomSearch({})];
 // Pass this variable into your agent.
+```
+
+## Chat history
+
+### Postgres Chat Message History
+
+The [PostgresChatMessageHistory](docs/integrations/memory/google_cloudsql_pg) from
+`@langchain/google-cloud-sql-pg` provides a way to use the CloudSQL for PostgresSQL to store messages and provide conversation history.
+
+```bash
+$ yarn add @langchain/google-cloud-sql-pg
+```
+
+*Note:* See the [Postgres Vector Store](#Postgres Vector Store) section on this page to learn
+how to install the package and initialize a DB connection.
+
+Initialize the chat history table:
+
+```typescript
+await engine.initChatHistoryTable("chat_message_table");
+```
+
+Create a chat message history instance:
+
+```typescript
+const historyInstance = await PostgresChatMessageHistory.create(
+  engine,
+  "test",
+  "chat_message_table"
+);
+```
+
+## Document Loaders
+
+### Postgres Loader
+
+The [PostgresLoader](docs/integrations/memory/google_cloudsql_pg) from
+`@langchain/google-cloud-sql-pg` provides a way to use the CloudSQL for PostgresSQL to load data as LangChain `Document`s.
+
+*Note:* See the [Postgres Vector Store](#Postgres Vector Store) section on this page to learn
+how to install the package and initialize a DB connection.
+
+Create a loader instance:
+
+```typescript
+const documentLoaderArgs: PostgresLoaderOptions = {
+  tableName: "test_table_custom",
+  contentColumns: [ "fruit_name", "variety"],
+  metadataColumns: ["fruit_id", "quantity_in_stock", "price_per_unit", "organic"],
+  format: "text"
+};
+
+const documentLoaderInstance = await PostgresLoader.create(PEInstance, documentLoaderArgs);
+
+const documents = await documentLoaderInstance.load();
 ```
