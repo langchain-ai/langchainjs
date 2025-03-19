@@ -6,16 +6,14 @@
  * 2. Adding the firecrawl server directly in code
  */
 
+/* eslint-disable no-console */
 import { ChatOpenAI } from '@langchain/openai';
 import { StateGraph, END, START, MessagesAnnotation } from '@langchain/langgraph';
 import { ToolNode } from '@langchain/langgraph/prebuilt';
 import { HumanMessage, AIMessage, BaseMessage } from '@langchain/core/messages';
-import { StructuredToolInterface } from '@langchain/core/tools';
-import { z } from 'zod';
 import dotenv from 'dotenv';
 import fs from 'fs';
 import path from 'path';
-import logger from '../src/logger.js';
 
 // MCP client imports
 import { MultiServerMCPClient } from '../src/index.js';
@@ -41,7 +39,7 @@ function createMathServerConfigFile() {
   };
 
   fs.writeFileSync(partialConfigPath, JSON.stringify(configContent, null, 2));
-  logger.info(`Created math server configuration file at ${partialConfigPath}`);
+  console.log(`Created math server configuration file at ${partialConfigPath}`);
 }
 
 /**
@@ -55,17 +53,17 @@ async function runExample() {
     // Create the math server configuration file
     createMathServerConfigFile();
 
-    logger.info('Initializing MCP client from math server configuration file...');
+    console.log('Initializing MCP client from math server configuration file...');
 
     // Create a client from the configuration file
     client = MultiServerMCPClient.fromConfigFile(partialConfigPath);
 
     // Initialize connections to the math server
     await client.initializeConnections();
-    logger.info('Connected to math server from configuration');
+    console.log('Connected to math server from configuration');
 
     // Now add the firecrawl server directly in code
-    logger.info('Adding firecrawl server directly in code...');
+    console.log('Adding firecrawl server directly in code...');
     await client.connectToServerViaStdio('firecrawl', 'npx', ['-y', 'firecrawl-mcp'], {
       // Adding the API key from environment
       FIRECRAWL_API_KEY: process.env.FIRECRAWL_API_KEY || '',
@@ -73,10 +71,10 @@ async function runExample() {
       FIRECRAWL_RETRY_MAX_ATTEMPTS: '3',
     });
 
-    logger.info('Connected to firecrawl server directly');
+    console.log('Connected to firecrawl server directly');
 
     // Get all tools from all servers
-    const mcpTools = client.getTools() as StructuredToolInterface<z.ZodObject<any>>[];
+    const mcpTools = client.getTools();
 
     if (mcpTools.length === 0) {
       throw new Error('No tools found');
@@ -88,13 +86,13 @@ async function runExample() {
       tool => client!.getServerForTool(tool.name) === 'firecrawl'
     );
 
-    logger.info(
+    console.log(
       `Loaded ${mathTools.length} math tools: ${mathTools.map(tool => tool.name).join(', ')}`
     );
-    logger.info(
+    console.log(
       `Loaded ${firecrawlTools.length} firecrawl tools: ${firecrawlTools.map(tool => tool.name).join(', ')}`
     );
-    logger.info(`Loaded ${mcpTools.length} tools in total`);
+    console.log(`Loaded ${mcpTools.length} tools in total`);
 
     // Create an OpenAI model and bind the tools
     const model = new ChatOpenAI({
@@ -118,29 +116,29 @@ async function runExample() {
     };
 
     // Create a new graph with MessagesAnnotation
-    const workflow = new StateGraph(MessagesAnnotation);
+    const workflow = new StateGraph(MessagesAnnotation)
 
-    // Add the nodes to the graph
-    workflow.addNode('llm', llmNode);
-    workflow.addNode('tools', toolNode);
+      // Add the nodes to the graph
+      .addNode('llm', llmNode)
+      .addNode('tools', toolNode)
 
-    // Add edges - these define how nodes are connected
-    workflow.addEdge(START as any, 'llm' as any);
-    workflow.addEdge('tools' as any, 'llm' as any);
+      // Add edges - these define how nodes are connected
+      .addEdge(START, 'llm')
+      .addEdge('tools', 'llm')
 
-    // Conditional routing to end or continue the tool loop
-    workflow.addConditionalEdges('llm' as any, state => {
-      const lastMessage = state.messages[state.messages.length - 1];
-      const aiMessage = lastMessage as AIMessage;
+      // Conditional routing to end or continue the tool loop
+      .addConditionalEdges('llm', state => {
+        const lastMessage = state.messages[state.messages.length - 1];
+        const aiMessage = lastMessage as AIMessage;
 
-      if (aiMessage.tool_calls && aiMessage.tool_calls.length > 0) {
-        console.log('Tool calls detected, routing to tools node');
-        return 'tools' as any;
-      }
+        if (aiMessage.tool_calls && aiMessage.tool_calls.length > 0) {
+          console.log('Tool calls detected, routing to tools node');
+          return 'tools';
+        }
 
-      console.log('No tool calls, ending the workflow');
-      return END as any;
-    });
+        console.log('No tool calls, ending the workflow');
+        return END;
+      });
 
     // Compile the graph
     const app = workflow.compile();
@@ -182,7 +180,7 @@ async function runExample() {
     // Clean up our config file
     if (fs.existsSync(partialConfigPath)) {
       fs.unlinkSync(partialConfigPath);
-      logger.info(`Cleaned up math server configuration file at ${partialConfigPath}`);
+      console.log(`Cleaned up math server configuration file at ${partialConfigPath}`);
     }
 
     // Exit process after a short delay to allow for cleanup

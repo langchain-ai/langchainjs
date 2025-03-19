@@ -5,16 +5,14 @@
  * and directly connecting to the local math_server.py script using LangGraph.
  */
 
+/* eslint-disable no-console */
 import { ChatOpenAI } from '@langchain/openai';
 import path from 'path';
 import fs from 'fs';
 import dotenv from 'dotenv';
-import logger from '../src/logger.js';
 import { StateGraph, END, START, MessagesAnnotation } from '@langchain/langgraph';
 import { ToolNode } from '@langchain/langgraph/prebuilt';
 import { HumanMessage, AIMessage, SystemMessage } from '@langchain/core/messages';
-import { StructuredToolInterface } from '@langchain/core/tools';
-import { z } from 'zod';
 
 // MCP client imports
 import { MultiServerMCPClient } from '../src/index.js';
@@ -29,10 +27,10 @@ dotenv.config();
 async function runConfigTest() {
   try {
     // Log when we start
-    logger.info('Starting test with configuration files...');
+    console.log('Starting test with configuration files...');
 
     // Step 1: Load and verify auth_mcp.json configuration (just testing parsing)
-    logger.info('Parsing auth_mcp.json configuration...');
+    console.log('Parsing auth_mcp.json configuration...');
     const authConfigPath = path.join(process.cwd(), 'examples', 'auth_mcp.json');
 
     if (!fs.existsSync(authConfigPath)) {
@@ -41,13 +39,18 @@ async function runConfigTest() {
 
     // Load the auth configuration to verify it parses correctly
     const authConfig = JSON.parse(fs.readFileSync(authConfigPath, 'utf-8'));
-    logger.info('Successfully parsed auth_mcp.json with the following servers:');
-    logger.info('Servers:', Object.keys(authConfig.servers));
+    console.log('Successfully parsed auth_mcp.json with the following servers:');
+    console.log('Servers:', Object.keys(authConfig.servers));
 
     // Print auth headers (redacted for security) to verify they're present
-    Object.entries(authConfig.servers).forEach(([serverName, serverConfig]: [string, any]) => {
-      if (serverConfig.headers) {
-        logger.info(
+    Object.entries(authConfig.servers).forEach(([serverName, serverConfig]) => {
+      if (
+        serverConfig &&
+        typeof serverConfig === 'object' &&
+        'headers' in serverConfig &&
+        serverConfig.headers
+      ) {
+        console.log(
           `Server ${serverName} has headers:`,
           Object.keys(serverConfig.headers).map(key => `${key}: ***`)
         );
@@ -55,7 +58,7 @@ async function runConfigTest() {
     });
 
     // Step 2: Load and verify complex_mcp.json configuration
-    logger.info('Parsing complex_mcp.json configuration...');
+    console.log('Parsing complex_mcp.json configuration...');
     const complexConfigPath = path.join(process.cwd(), 'examples', 'complex_mcp.json');
 
     if (!fs.existsSync(complexConfigPath)) {
@@ -63,11 +66,11 @@ async function runConfigTest() {
     }
 
     const complexConfig = JSON.parse(fs.readFileSync(complexConfigPath, 'utf-8'));
-    logger.info('Successfully parsed complex_mcp.json with the following servers:');
-    logger.info('Servers:', Object.keys(complexConfig.servers));
+    console.log('Successfully parsed complex_mcp.json with the following servers:');
+    console.log('Servers:', Object.keys(complexConfig.servers));
 
     // Step 3: Connect directly to the math server using explicit path
-    logger.info('Connecting to math server directly...');
+    console.log('Connecting to math server directly...');
 
     // Define the python executable (use 'python3' on systems where 'python' might not be in PATH)
     const pythonCmd = process.platform === 'win32' ? 'python' : 'python3';
@@ -85,12 +88,12 @@ async function runConfigTest() {
     await client.initializeConnections();
 
     // Get tools from the math server
-    const mcpTools = client.getTools() as StructuredToolInterface<z.ZodObject<any>>[];
-    logger.info(`Loaded ${mcpTools.length} tools from math server`);
+    const mcpTools = client.getTools();
+    console.log(`Loaded ${mcpTools.length} tools from math server`);
 
     // Log the names of available tools
     const toolNames = mcpTools.map(tool => tool.name);
-    logger.info('Available tools:', toolNames.join(', '));
+    console.log('Available tools:', toolNames.join(', '));
 
     // Create an OpenAI model for the agent
     const model = new ChatOpenAI({
@@ -103,37 +106,37 @@ async function runConfigTest() {
 
     // Define the function that calls the model
     const llmNode = async (state: typeof MessagesAnnotation.State) => {
-      logger.info('Calling LLM with messages:', state.messages.length);
+      console.log('Calling LLM with messages:', state.messages.length);
       const response = await model.invoke(state.messages);
       return { messages: [response] };
     };
 
     // Create a new graph with MessagesAnnotation
-    const workflow = new StateGraph(MessagesAnnotation);
+    const workflow = new StateGraph(MessagesAnnotation)
 
-    // Add the nodes to the graph
-    workflow.addNode('llm', llmNode);
-    workflow.addNode('tools', toolNode);
+      // Add the nodes to the graph
+      .addNode('llm', llmNode)
+      .addNode('tools', toolNode)
 
-    // Add edges - need to cast to any to fix TypeScript errors
-    workflow.addEdge(START as any, 'llm' as any);
-    workflow.addEdge('tools' as any, 'llm' as any);
+      // Add edges - need to cast to any to fix TypeScript errors
+      .addEdge(START, 'llm')
+      .addEdge('tools', 'llm')
 
-    // Add conditional logic to determine the next step
-    workflow.addConditionalEdges('llm' as any, state => {
-      const lastMessage = state.messages[state.messages.length - 1];
+      // Add conditional logic to determine the next step
+      .addConditionalEdges('llm', state => {
+        const lastMessage = state.messages[state.messages.length - 1];
 
-      // If the last message has tool calls, we need to execute the tools
-      const aiMessage = lastMessage as AIMessage;
-      if (aiMessage.tool_calls && aiMessage.tool_calls.length > 0) {
-        logger.info('Tool calls detected, routing to tools node');
-        return 'tools' as any;
-      }
+        // If the last message has tool calls, we need to execute the tools
+        const aiMessage = lastMessage as AIMessage;
+        if (aiMessage.tool_calls && aiMessage.tool_calls.length > 0) {
+          console.log('Tool calls detected, routing to tools node');
+          return 'tools';
+        }
 
-      // If there are no tool calls, we're done
-      logger.info('No tool calls, ending the workflow');
-      return END as any;
-    });
+        // If there are no tool calls, we're done
+        console.log('No tool calls, ending the workflow');
+        return END;
+      });
 
     // Compile the graph
     const app = workflow.compile();
@@ -148,7 +151,7 @@ async function runConfigTest() {
 
     // Run each test query
     for (const query of testQueries) {
-      logger.info(`\n=== Running query: "${query}" ===`);
+      console.log(`\n=== Running query: "${query}" ===`);
 
       try {
         // Create initial messages with a system message and the user query
@@ -165,29 +168,29 @@ async function runConfigTest() {
         // Get the last AI message as the response
         const lastMessage = result.messages.filter(message => message._getType() === 'ai').pop();
 
-        logger.info(`\nFinal Answer: ${lastMessage?.content}`);
+        console.log(`\nFinal Answer: ${lastMessage?.content}`);
       } catch (error) {
-        logger.error(`Error processing query "${query}":`, error);
+        console.error(`Error processing query "${query}":`, error);
       }
     }
 
     // Close all connections
-    logger.info('\nClosing connections...');
+    console.log('\nClosing connections...');
     await client.close();
 
-    logger.info('Test completed successfully');
+    console.log('Test completed successfully');
   } catch (error) {
-    logger.error('Error running test:', error);
+    console.error('Error running test:', error);
   }
 }
 
 // Run the test
 runConfigTest()
   .then(() => {
-    logger.info('Configuration test completed successfully');
+    console.log('Configuration test completed successfully');
     process.exit(0);
   })
   .catch(error => {
-    logger.error('Error running configuration test:', error);
+    console.error('Error running configuration test:', error);
     process.exit(1);
   });

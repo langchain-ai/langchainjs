@@ -5,12 +5,10 @@
  * And getting tools from the Firecrawl server with automatic initialization
  */
 
+/* eslint-disable no-console */
 import { ChatOpenAI } from '@langchain/openai';
 import { HumanMessage } from '@langchain/core/messages';
-import { StructuredToolInterface } from '@langchain/core/tools';
-import { z } from 'zod';
 import dotenv from 'dotenv';
-import logger, { enableLogging } from '../src/logger.js';
 import { createReactAgent } from '@langchain/langgraph/prebuilt';
 
 // MCP client imports
@@ -23,9 +21,6 @@ dotenv.config();
  * Example demonstrating loading from default configuration
  */
 async function runExample() {
-  // Enable logging for testing
-  enableLogging('debug');
-
   let client: MultiServerMCPClient | null = null;
 
   // Add a timeout to prevent the process from hanging indefinitely
@@ -35,15 +30,15 @@ async function runExample() {
   }, 30000);
 
   try {
-    logger.info('Initializing MCP client from default configuration file...');
+    console.log('Initializing MCP client from default configuration file...');
 
     // The client will automatically look for and load mcp.json from the current directory
     client = new MultiServerMCPClient();
     await client.initializeConnections();
-    logger.info('Connected to servers from default configuration');
+    console.log('Connected to servers from default configuration');
 
     // Get Firecrawl tools specifically
-    const mcpTools = client.getTools() as StructuredToolInterface<z.ZodObject<any>>[];
+    const mcpTools = client.getTools();
     const firecrawlTools = mcpTools.filter(
       tool => client!.getServerForTool(tool.name) === 'firecrawl'
     );
@@ -52,7 +47,7 @@ async function runExample() {
       throw new Error('No Firecrawl tools found');
     }
 
-    logger.info(`Found ${firecrawlTools.length} Firecrawl tools`);
+    console.log(`Found ${firecrawlTools.length} Firecrawl tools`);
 
     // Initialize the LLM
     const model = new ChatOpenAI({
@@ -69,34 +64,34 @@ async function runExample() {
     // Define a query for testing Firecrawl
     const query = 'Scrape the content from https://example.com and summarize it in bullet points';
 
-    logger.info(`Running agent with query: ${query}`);
+    console.log(`Running agent with query: ${query}`);
 
     // Run the agent
     const result = await agent.invoke({
       messages: [new HumanMessage(query)],
     });
 
-    logger.info('Agent execution completed');
+    console.log('Agent execution completed');
     console.log('\nFinal output:');
     console.log(result);
 
     // Clear the timeout since the example completed successfully
     clearTimeout(timeout);
   } catch (error) {
-    logger.error('Error in example:', error);
+    console.log('Error in example:', error);
   } finally {
     // Close all MCP connections
     if (client) {
-      logger.info('Closing all MCP connections...');
+      console.log('Closing all MCP connections...');
       await client.close();
-      logger.info('All MCP connections closed');
+      console.log('All MCP connections closed');
     }
 
     // Clear the timeout if it hasn't fired yet
     clearTimeout(timeout);
 
     // Complete the example
-    logger.info('Example execution completed');
+    console.log('Example execution completed');
     process.exit(0);
   }
 }

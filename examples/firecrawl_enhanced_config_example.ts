@@ -7,16 +7,14 @@
  * 3. Environment variable substitution
  */
 
+/* eslint-disable no-console */
 import { ChatOpenAI } from '@langchain/openai';
 import { StateGraph, END, START, MessagesAnnotation } from '@langchain/langgraph';
 import { ToolNode } from '@langchain/langgraph/prebuilt';
-import { HumanMessage, AIMessage, BaseMessage } from '@langchain/core/messages';
-import { StructuredToolInterface } from '@langchain/core/tools';
-import { z } from 'zod';
+import { HumanMessage, AIMessage } from '@langchain/core/messages';
 import dotenv from 'dotenv';
 import fs from 'fs';
 import path from 'path';
-import logger from '../src/logger.js';
 
 // MCP client imports
 import { MultiServerMCPClient } from '../src/index.js';
@@ -43,7 +41,7 @@ function createAdditionalConfigFile() {
   };
 
   fs.writeFileSync(additionalConfigPath, JSON.stringify(configContent, null, 2));
-  logger.info(`Created additional configuration file at ${additionalConfigPath}`);
+  console.log(`Created additional configuration file at ${additionalConfigPath}`);
 }
 
 /**
@@ -62,7 +60,7 @@ async function runExample() {
     // Create the additional configuration file
     createAdditionalConfigFile();
 
-    logger.info('Initializing MCP client with enhanced configuration loading...');
+    console.log('Initializing MCP client with enhanced configuration loading...');
 
     // Create a client - it will automatically load from mcp.json if it exists
     client = new MultiServerMCPClient();
@@ -82,16 +80,16 @@ async function runExample() {
 
     // Initialize all connections from the merged configurations
     await client.initializeConnections();
-    logger.info('Connected to servers from all configurations');
+    console.log('Connected to servers from all configurations');
 
     // Get all tools from all servers
-    const mcpTools = client.getTools() as StructuredToolInterface<z.ZodObject<any>>[];
+    const mcpTools = client.getTools();
 
     if (mcpTools.length === 0) {
       throw new Error('No tools found');
     }
 
-    logger.info(`Loaded ${mcpTools.length} MCP tools in total`);
+    console.log(`Loaded ${mcpTools.length} MCP tools in total`);
 
     // Filter tools from different servers
     const firecrawlTools = mcpTools.filter(
@@ -99,12 +97,12 @@ async function runExample() {
     );
 
     if (firecrawlTools.length === 0) {
-      logger.warn('No Firecrawl tools found, using math tools for the example');
+      console.log('No Firecrawl tools found, using math tools for the example');
       // In this case, use math tools as a fallback
       const mathTools = mcpTools.filter(tool => client!.getServerForTool(tool.name) === 'math');
 
       if (mathTools.length > 0) {
-        logger.info(
+        console.log(
           `Using ${mathTools.length} math tools: ${mathTools.map(tool => tool.name).join(', ')}`
         );
         // Run a simple math example and exit
@@ -116,7 +114,7 @@ async function runExample() {
       }
     }
 
-    logger.info(
+    console.log(
       `Loaded ${firecrawlTools.length} Firecrawl tools: ${firecrawlTools.map(tool => tool.name).join(', ')}`
     );
 
@@ -142,29 +140,29 @@ async function runExample() {
     };
 
     // Create a new graph with MessagesAnnotation
-    const workflow = new StateGraph(MessagesAnnotation);
+    const workflow = new StateGraph(MessagesAnnotation)
 
-    // Add the nodes to the graph
-    workflow.addNode('llm', llmNode);
-    workflow.addNode('tools', toolNode);
+      // Add the nodes to the graph
+      .addNode('llm', llmNode)
+      .addNode('tools', toolNode)
 
-    // Add edges - these define how nodes are connected
-    workflow.addEdge(START as any, 'llm' as any);
-    workflow.addEdge('tools' as any, 'llm' as any);
+      // Add edges - these define how nodes are connected
+      .addEdge(START, 'llm')
+      .addEdge('tools', 'llm')
 
-    // Conditional routing to end or continue the tool loop
-    workflow.addConditionalEdges('llm' as any, state => {
-      const lastMessage = state.messages[state.messages.length - 1];
-      const aiMessage = lastMessage as AIMessage;
+      // Conditional routing to end or continue the tool loop
+      .addConditionalEdges('llm', state => {
+        const lastMessage = state.messages[state.messages.length - 1];
+        const aiMessage = lastMessage as AIMessage;
 
-      if (aiMessage.tool_calls && aiMessage.tool_calls.length > 0) {
-        console.log('Tool calls detected, routing to tools node');
-        return 'tools' as any;
-      }
+        if (aiMessage.tool_calls && aiMessage.tool_calls.length > 0) {
+          console.log('Tool calls detected, routing to tools node');
+          return 'tools';
+        }
 
-      console.log('No tool calls, ending the workflow');
-      return END as any;
-    });
+        console.log('No tool calls, ending the workflow');
+        return END;
+      });
 
     // Compile the graph
     const app = workflow.compile();
@@ -184,7 +182,7 @@ async function runExample() {
       });
 
       // Run with a 20-second timeout
-      const timeoutPromise = new Promise((_, reject) => {
+      const timeoutPromise = new Promise<never>((_, reject) => {
         setTimeout(
           () => reject(new Error('LangGraph execution timed out after 20 seconds')),
           20000
@@ -192,7 +190,7 @@ async function runExample() {
       });
 
       // Race between the LangGraph execution and the timeout
-      const result = (await Promise.race([langgraphPromise, timeoutPromise])) as any;
+      const result = await Promise.race([langgraphPromise, timeoutPromise]);
 
       // Display the final response
       const finalMessage = result.messages[result.messages.length - 1];
@@ -217,7 +215,7 @@ async function runExample() {
     // Clean up our additional config file
     if (fs.existsSync(additionalConfigPath)) {
       fs.unlinkSync(additionalConfigPath);
-      logger.info(`Cleaned up additional configuration file at ${additionalConfigPath}`);
+      console.log(`Cleaned up additional configuration file at ${additionalConfigPath}`);
     }
 
     // Exit process after a short delay to allow for cleanup

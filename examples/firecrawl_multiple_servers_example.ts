@@ -5,15 +5,13 @@
  * It includes both the Firecrawl server for web scraping and the Math server for calculations.
  */
 
+/* eslint-disable no-console */
 import { ChatOpenAI } from '@langchain/openai';
 import { createReactAgent } from '@langchain/langgraph/prebuilt';
 import { HumanMessage } from '@langchain/core/messages';
-import { StructuredToolInterface } from '@langchain/core/tools';
-import { z } from 'zod';
 import dotenv from 'dotenv';
 import fs from 'fs';
 import path from 'path';
-import logger from '../src/logger.js';
 
 // MCP client imports
 import { MultiServerMCPClient, enableLogging } from '../src/index.js';
@@ -54,7 +52,7 @@ function createMultipleServersConfigFile() {
   };
 
   fs.writeFileSync(multipleServersConfigPath, JSON.stringify(configContent, null, 2));
-  logger.info(`Created multiple servers configuration file at ${multipleServersConfigPath}`);
+  console.log(`Created multiple servers configuration file at ${multipleServersConfigPath}`);
 }
 
 /**
@@ -71,23 +69,23 @@ async function runExample() {
     // Create the multiple servers configuration file
     createMultipleServersConfigFile();
 
-    logger.info('Initializing MCP client from multiple servers configuration file...');
+    console.log('Initializing MCP client from multiple servers configuration file...');
 
     // Create a client from the configuration file
     client = MultiServerMCPClient.fromConfigFile(multipleServersConfigPath);
 
     // Initialize connections to all servers in the configuration
     await client.initializeConnections();
-    logger.info('Connected to servers from multiple servers configuration');
+    console.log('Connected to servers from multiple servers configuration');
 
     // Get all tools from all servers
-    const mcpTools = client.getTools() as StructuredToolInterface<z.ZodObject<any>>[];
+    const mcpTools = client.getTools();
 
     if (mcpTools.length === 0) {
       throw new Error('No tools found');
     }
 
-    logger.info(
+    console.log(
       `Loaded ${mcpTools.length} MCP tools: ${mcpTools.map(tool => tool.name).join(', ')}`
     );
 
@@ -143,7 +141,7 @@ async function runExample() {
     // Clean up our config file
     if (fs.existsSync(multipleServersConfigPath)) {
       fs.unlinkSync(multipleServersConfigPath);
-      logger.info(`Cleaned up multiple servers configuration file at ${multipleServersConfigPath}`);
+      console.log(`Cleaned up multiple servers configuration file at ${multipleServersConfigPath}`);
     }
 
     // Exit process after a short delay to allow for cleanup

@@ -10,14 +10,12 @@
  * 3. Structured handling of complex multi-file operations
  */
 
+/* eslint-disable no-console */
 import { ChatOpenAI } from '@langchain/openai';
 import { StateGraph, END, START, MessagesAnnotation } from '@langchain/langgraph';
 import { ToolNode } from '@langchain/langgraph/prebuilt';
 import { HumanMessage, AIMessage, SystemMessage } from '@langchain/core/messages';
-import { StructuredToolInterface } from '@langchain/core/tools';
-import { z } from 'zod';
 import dotenv from 'dotenv';
-import logger from '../src/logger.js';
 import fs from 'fs';
 import path from 'path';
 
@@ -55,7 +53,7 @@ export async function runExample(client?: MultiServerMCPClient) {
     console.log('Connected to server');
 
     // Get all tools (flattened array is the default now)
-    const mcpTools = client.getTools() as StructuredToolInterface<z.ZodObject<any>>[];
+    const mcpTools = client.getTools();
 
     if (mcpTools.length === 0) {
       throw new Error('No tools found');
@@ -103,36 +101,36 @@ For reading multiple files, you can use the read_multiple_files tool.`;
     };
 
     // Create a new graph with MessagesAnnotation
-    const workflow = new StateGraph(MessagesAnnotation);
+    const workflow = new StateGraph(MessagesAnnotation)
 
-    // Add the nodes to the graph
-    workflow.addNode('llm', llmNode);
-    workflow.addNode('tools', toolNode);
+      // Add the nodes to the graph
+      .addNode('llm', llmNode)
+      .addNode('tools', toolNode)
 
-    // Add edges - these define how nodes are connected
-    workflow.addEdge(START as any, 'llm' as any);
-    workflow.addEdge('tools' as any, 'llm' as any);
+      // Add edges - these define how nodes are connected
+      .addEdge(START, 'llm')
+      .addEdge('tools', 'llm')
 
-    // Conditional routing to end or continue the tool loop
-    workflow.addConditionalEdges('llm' as any, state => {
-      const lastMessage = state.messages[state.messages.length - 1];
+      // Conditional routing to end or continue the tool loop
+      .addConditionalEdges('llm', state => {
+        const lastMessage = state.messages[state.messages.length - 1];
 
-      // Cast to AIMessage to access tool_calls property
-      const aiMessage = lastMessage as AIMessage;
-      if (aiMessage.tool_calls && aiMessage.tool_calls.length > 0) {
-        console.log('Tool calls detected, routing to tools node');
+        // Cast to AIMessage to access tool_calls property
+        const aiMessage = lastMessage as AIMessage;
+        if (aiMessage.tool_calls && aiMessage.tool_calls.length > 0) {
+          console.log('Tool calls detected, routing to tools node');
 
-        // Log what tools are being called
-        const toolNames = aiMessage.tool_calls.map(tc => tc.name).join(', ');
-        console.log(`Tools being called: ${toolNames}`);
+          // Log what tools are being called
+          const toolNames = aiMessage.tool_calls.map(tc => tc.name).join(', ');
+          console.log(`Tools being called: ${toolNames}`);
 
-        return 'tools' as any;
-      }
+          return 'tools';
+        }
 
-      // If there are no tool calls, we're done
-      console.log('No tool calls, ending the workflow');
-      return END as any;
-    });
+        // If there are no tool calls, we're done
+        console.log('No tool calls, ending the workflow');
+        return END;
+      });
 
     // Compile the graph
     const app = workflow.compile();
@@ -190,11 +188,11 @@ For reading multiple files, you can use the read_multiple_files tool.`;
         const listMessage = listResult.messages[listResult.messages.length - 1];
         console.log(listMessage.content);
       } catch (error) {
-        logger.error('Error listing directory:', error);
+        console.error('Error listing directory:', error);
       }
     }
   } catch (error) {
-    logger.error('Error:', error);
+    console.error('Error:', error);
     process.exit(1); // Exit with error code
   } finally {
     if (client) {
@@ -226,5 +224,5 @@ const isMainModule = import.meta.url === `file://${process.argv[1]}`;
 if (isMainModule) {
   setupTestDirectory()
     .then(() => runExample())
-    .catch(error => logger.error('Setup error:', error));
+    .catch(error => console.error('Setup error:', error));
 }

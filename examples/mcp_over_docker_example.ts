@@ -10,7 +10,8 @@
  * 3. Structured handling of complex multi-file operations
  */
 
-import { logger, MultiServerMCPClient } from '../src/index.js';
+/* eslint-disable no-console */
+import { MultiServerMCPClient } from '../src/index.js';
 import { runExample as runFileSystemExample } from './filesystem_langgraph_example.js';
 
 async function runExample() {
@@ -35,5 +36,5 @@ async function runExample() {
 
 const isMainModule = import.meta.url === `file://${process.argv[1]}`;
 if (isMainModule) {
-  runExample().catch(error => logger.error('Setup error:', error));
+  runExample().catch(error => console.error('Setup error:', error));
 }

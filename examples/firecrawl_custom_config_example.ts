@@ -5,14 +5,12 @@
  * And getting tools from the Firecrawl server with automatic initialization
  */
 
+/* eslint-disable no-console */
 import { ChatOpenAI } from '@langchain/openai';
 import { HumanMessage } from '@langchain/core/messages';
-import { StructuredToolInterface } from '@langchain/core/tools';
-import { z } from 'zod';
 import dotenv from 'dotenv';
 import * as fs from 'fs';
 import * as path from 'path';
-import logger from '../src/logger.js';
 import { createReactAgent } from '@langchain/langgraph/prebuilt';
 
 // MCP client imports
@@ -61,18 +59,18 @@ async function runExample() {
   try {
     // Create a custom configuration file
     const configPath = createConfigFile();
-    logger.info(`Created custom configuration file at: ${configPath}`);
+    console.log(`Created custom configuration file at: ${configPath}`);
 
     // Initialize the MCP client with the custom configuration
-    logger.info('Initializing MCP client from custom configuration file...');
+    console.log('Initializing MCP client from custom configuration file...');
     client = MultiServerMCPClient.fromConfigFile(configPath);
 
     // Connect to the servers
     await client.initializeConnections();
-    logger.info('Connected to servers from custom configuration');
+    console.log('Connected to servers from custom configuration');
 
     // Get Firecrawl tools specifically
-    const mcpTools = client.getTools() as StructuredToolInterface<z.ZodObject<any>>[];
+    const mcpTools = client.getTools();
     const firecrawlTools = mcpTools.filter(
       tool => client!.getServerForTool(tool.name) === 'firecrawl'
     );
@@ -81,7 +79,7 @@ async function runExample() {
       throw new Error('No Firecrawl tools found');
     }
 
-    logger.info(`Found ${firecrawlTools.length} Firecrawl tools`);
+    console.log(`Found ${firecrawlTools.length} Firecrawl tools`);
 
     // Initialize the LLM
     const model = new ChatOpenAI({
@@ -99,14 +97,14 @@ async function runExample() {
     const query =
       'Find the latest news about artificial intelligence and summarize the top 3 stories';
 
-    logger.info(`Running agent with query: ${query}`);
+    console.log(`Running agent with query: ${query}`);
 
     // Run the agent
     const result = await agent.invoke({
       messages: [new HumanMessage(query)],
     });
 
-    logger.info('Agent execution completed');
+    console.log('Agent execution completed');
     console.log('\nFinal output:');
     console.log(result);
 
@@ -115,22 +113,22 @@ async function runExample() {
 
     // Clean up the temporary configuration file
     fs.unlinkSync(configPath);
-    logger.info('Removed temporary configuration file');
+    console.log('Removed temporary configuration file');
   } catch (error) {
-    logger.error('Error in example:', error);
+    console.error('Error in example:', error);
   } finally {
     // Close all MCP connections
     if (client) {
-      logger.info('Closing all MCP connections...');
+      console.log('Closing all MCP connections...');
       await client.close();
-      logger.info('All MCP connections closed');
+      console.log('All MCP connections closed');
     }
 
     // Clear the timeout if it hasn't fired yet
     clearTimeout(timeout);
 
     // Complete the example
-    logger.info('Example execution completed');
+    console.log('Example execution completed');
     process.exit(0);
   }
 }

@@ -22,14 +22,12 @@
  * - Ability to expand the graph with additional nodes for more complex workflows
  */
 
+/* eslint-disable no-console */
 import { ChatOpenAI } from '@langchain/openai';
 import { StateGraph, END, START, MessagesAnnotation } from '@langchain/langgraph';
 import { ToolNode } from '@langchain/langgraph/prebuilt';
 import { HumanMessage, AIMessage, BaseMessage } from '@langchain/core/messages';
-import { StructuredToolInterface } from '@langchain/core/tools';
-import { z } from 'zod';
 import dotenv from 'dotenv';
-import logger from '../src/logger.js';
 
 // MCP client imports
 import { MultiServerMCPClient } from '../src/index.js';
@@ -45,7 +43,7 @@ async function runExample() {
   let client: MultiServerMCPClient | null = null;
 
   try {
-    logger.info('Initializing MCP client...');
+    console.log('Initializing MCP client...');
 
     // Create a client with configurations for the math server only
     client = new MultiServerMCPClient({
@@ -58,7 +56,7 @@ async function runExample() {
 
     // Initialize connections to the server
     await client.initializeConnections();
-    logger.info('Connected to server');
+    console.log('Connected to server');
 
     // Connect to the math server
     await client.connectToServerViaStdio('math', 'npx', [
@@ -67,13 +65,13 @@ async function runExample() {
     ]);
 
     // Get the tools (flattened array is the default now)
-    const mcpTools = client.getTools() as StructuredToolInterface<z.ZodObject<any>>[];
+    const mcpTools = client.getTools();
 
     if (mcpTools.length === 0) {
       throw new Error('No tools found');
     }
 
-    logger.info(
+    console.log(
       `Loaded ${mcpTools.length} MCP tools: ${mcpTools.map(tool => tool.name).join(', ')}`
     );
 
@@ -107,35 +105,35 @@ async function runExample() {
     };
 
     // Create a new graph with MessagesAnnotation
-    const workflow = new StateGraph(MessagesAnnotation);
+    const workflow = new StateGraph(MessagesAnnotation)
 
-    // Add the nodes to the graph
-    workflow.addNode('llm', llmNode);
-    workflow.addNode('tools', toolNode);
+      // Add the nodes to the graph
+      .addNode('llm', llmNode)
+      .addNode('tools', toolNode)
 
-    // Add edges - these define how nodes are connected
-    // START -> llm: Entry point to the graph
-    // tools -> llm: After tools are executed, return to LLM for next step
-    workflow.addEdge(START as any, 'llm' as any);
-    workflow.addEdge('tools' as any, 'llm' as any);
+      // Add edges - these define how nodes are connected
+      // START -> llm: Entry point to the graph
+      // tools -> llm: After tools are executed, return to LLM for next step
+      .addEdge(START, 'llm')
+      .addEdge('tools', 'llm')
 
-    // Conditional routing to end or continue the tool loop
-    // This is the core of the agent's decision-making process
-    workflow.addConditionalEdges('llm' as any, state => {
-      const lastMessage = state.messages[state.messages.length - 1];
+      // Conditional routing to end or continue the tool loop
+      // This is the core of the agent's decision-making process
+      .addConditionalEdges('llm', state => {
+        const lastMessage = state.messages[state.messages.length - 1];
 
-      // If the last message has tool calls, we need to execute the tools
-      // Cast to AIMessage to access tool_calls property
-      const aiMessage = lastMessage as AIMessage;
-      if (aiMessage.tool_calls && aiMessage.tool_calls.length > 0) {
-        console.log('Tool calls detected, routing to tools node');
-        return 'tools' as any;
-      }
+        // If the last message has tool calls, we need to execute the tools
+        // Cast to AIMessage to access tool_calls property
+        const aiMessage = lastMessage as AIMessage;
+        if (aiMessage.tool_calls && aiMessage.tool_calls.length > 0) {
+          console.log('Tool calls detected, routing to tools node');
+          return 'tools';
+        }
 
-      // If there are no tool calls, we're done
-      console.log('No tool calls, ending the workflow');
-      return END as any;
-    });
+        // If there are no tool calls, we're done
+        console.log('No tool calls, ending the workflow');
+        return END;
+      });
 
     // Compile the graph
     // This creates a runnable LangChain object that we can invoke
