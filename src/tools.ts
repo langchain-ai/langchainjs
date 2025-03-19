@@ -6,7 +6,14 @@ import {
 } from '@langchain/core/tools';
 import { JSONSchema, JSONSchemaToZod } from '@dmitryrechkin/json-schema-to-zod';
 
-import logger from './logger.js';
+import debug from 'debug';
+
+const {
+  default: { name: packageName },
+} = await import('../package.json');
+const moduleName = 'tools';
+
+const debugLog = debug(`${packageName}:${moduleName}`);
 
 interface TextContent {
   type: 'text';
@@ -67,7 +74,7 @@ function _convertCallToolResult(
 
   // Check for errors
   if (result.isError) {
-    logger.error('MCP tool returned an error result');
+    debugLog('ERROR: MCP tool returned an error result');
     throw new ToolException(
       typeof finalTextOutput === 'string' ? finalTextOutput : textOutput.join('\n')
     );
@@ -96,7 +103,7 @@ async function _callTool(
   args: Record<string, unknown>
 ): Promise<string | [string | string[], NonTextContent[] | null]> {
   try {
-    logger.info(`Calling tool ${name}(${JSON.stringify(args)})`);
+    debugLog(`INFO: Calling tool ${name}(${JSON.stringify(args)})`);
     const result = await client.callTool({
       name,
       arguments: args,
@@ -108,7 +115,7 @@ async function _callTool(
       content: result.content || [],
     });
 
-    logger.info(`Tool ${name} returned: ${JSON.stringify({ textContent, nonTextContent })}`);
+    debugLog(`INFO: Tool ${name} returned: ${JSON.stringify({ textContent, nonTextContent })}`);
 
     // Return based on the response format
     if (responseFormat === 'content_and_artifact') {
@@ -118,7 +125,7 @@ async function _callTool(
     // Default to returning just the text content
     return typeof textContent === 'string' ? textContent : textContent.join('\n');
   } catch (error) {
-    logger.error(`Error calling tool ${name}: ${String(error)}`);
+    debugLog(`ERROR: Error calling tool ${name}: ${String(error)}`);
     if (error instanceof ToolException) {
       throw error;
     }
@@ -140,7 +147,7 @@ export async function loadMcpTools(
 ): Promise<StructuredToolInterface[]> {
   // Get tools in a single operation
   const toolsResponse = await client.listTools();
-  logger.info(`Found ${toolsResponse.tools?.length || 0} MCP tools`);
+  debugLog(`INFO: Found ${toolsResponse.tools?.length || 0} MCP tools`);
 
   // Filter out tools without names and convert in a single map operation
   return (toolsResponse.tools || [])
@@ -156,10 +163,10 @@ export async function loadMcpTools(
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           func: _callTool.bind(null, client, tool.name, responseFormat) as any,
         });
-        logger.debug(`Successfully loaded tool: ${dst.name}`);
+        debugLog(`INFO: Successfully loaded tool: ${dst.name}`);
         return dst;
       } catch (error) {
-        logger.error(`Failed to load tool "${tool.name}":`, error);
+        debugLog(`ERROR: Failed to load tool "${tool.name}":`, error);
         if (throwOnLoadError) {
           throw error;
         }

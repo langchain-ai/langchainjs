@@ -5,7 +5,14 @@ import { StructuredToolInterface } from '@langchain/core/tools';
 import { loadMcpTools } from './tools.js';
 import * as fs from 'fs';
 import * as path from 'path';
-import logger from './logger.js';
+import debug from 'debug';
+
+const {
+  default: { name: packageName },
+} = await import('../package.json');
+const moduleName = 'client';
+
+const debugLog = debug(`${packageName}:${moduleName}`);
 
 /**
  * Configuration for stdio transport connection
@@ -119,14 +126,16 @@ export class MultiServerMCPClient {
     try {
       const defaultConfigPath = path.join(process.cwd(), 'mcp.json');
       if (fs.existsSync(defaultConfigPath)) {
-        logger.info(`Found default configuration at ${defaultConfigPath}, loading automatically`);
+        debugLog(
+          `INFO: Found default configuration at ${defaultConfigPath}, loading automatically`
+        );
         const config = MultiServerMCPClient.loadConfigFromFile(defaultConfigPath);
         return MultiServerMCPClient.processConnections(config.servers);
       } else {
-        logger.debug('No default mcp.json found in root directory');
+        debugLog(`INFO: No default mcp.json found in root directory`);
       }
     } catch (error) {
-      logger.warn(`Failed to load default configuration: ${error}`);
+      debugLog(`WARN: Failed to load default configuration: ${error}`);
       // Do not throw here, just continue with no configs
     }
   }
@@ -143,7 +152,7 @@ export class MultiServerMCPClient {
 
     // Validate that config has a servers property
     if (!config || typeof config !== 'object' || !('servers' in config)) {
-      logger.error(`Invalid MCP configuration from ${configPath}: missing 'servers' property`);
+      debugLog(`ERROR: Invalid MCP configuration from ${configPath}: missing 'servers' property`);
       throw new MCPClientError(`Invalid MCP configuration: missing 'servers' property`);
     }
 
@@ -178,7 +187,7 @@ export class MultiServerMCPClient {
             if (envValue) {
               config.env[key] = envValue;
             } else {
-              logger.warn(`Environment variable ${envVar} not found for server "${serverName}"`);
+              debugLog(`WARN: Environment variable ${envVar} not found for server "${serverName}"`);
             }
           }
         }
@@ -224,7 +233,7 @@ export class MultiServerMCPClient {
 
     for (const [serverName, config] of Object.entries(connections)) {
       if (typeof config !== 'object' || config === null) {
-        logger.warn(`Invalid configuration for server "${serverName}". Skipping.`);
+        debugLog(`WARN: Invalid configuration for server "${serverName}". Skipping.`);
         continue;
       }
 
@@ -532,10 +541,10 @@ export class MultiServerMCPClient {
         client.connections = MultiServerMCPClient.processConnections(config.servers);
       }
 
-      logger.info(`Loaded MCP configuration from ${configPath}`);
+      debugLog(`INFO: Loaded MCP configuration from ${configPath}`);
       return client;
     } catch (error) {
-      logger.error(`Failed to load MCP configuration from ${configPath}: ${error}`);
+      debugLog(`ERROR: Failed to load MCP configuration from ${configPath}: ${error}`);
       throw new MCPClientError(`Failed to load MCP configuration: ${error}`);
     }
   }
@@ -548,12 +557,12 @@ export class MultiServerMCPClient {
    */
   async initializeConnections(): Promise<Map<string, StructuredToolInterface[]>> {
     if (!this.connections || Object.keys(this.connections).length === 0) {
-      logger.warn('No connections to initialize');
+      debugLog(`WARN: No connections to initialize`);
       return new Map();
     }
 
     for (const [serverName, connection] of Object.entries(this.connections)) {
-      logger.info(`Initializing connection to server "${serverName}"...`);
+      debugLog(`INFO: Initializing connection to server "${serverName}"...`);
 
       if (connection.transport === 'stdio') {
         await this.initializeStdioConnection(serverName, connection);
@@ -580,8 +589,8 @@ export class MultiServerMCPClient {
   ): Promise<void> {
     const { command, args, env, restart } = connection;
 
-    logger.debug(
-      `Creating stdio transport for server "${serverName}" with command: ${command} ${args.join(' ')}`
+    debugLog(
+      `DEBUG: Creating stdio transport for server "${serverName}" with command: ${command} ${args.join(' ')}`
     );
 
     const transport = new StdioClientTransport({
@@ -614,7 +623,7 @@ export class MultiServerMCPClient {
     this.clients.set(serverName, client);
 
     const cleanup = async () => {
-      logger.debug(`Closing stdio transport for server "${serverName}"`);
+      debugLog(`DEBUG: Closing stdio transport for server "${serverName}"`);
       await transport.close();
     };
 
@@ -641,7 +650,7 @@ export class MultiServerMCPClient {
 
       // Only attempt restart if we haven't cleaned up
       if (this.clients.has(serverName)) {
-        logger.info(`Process for server "${serverName}" exited, attempting to restart...`);
+        debugLog(`INFO: Process for server "${serverName}" exited, attempting to restart...`);
         await this.attemptReconnect(serverName, connection, restart.maxAttempts, restart.delayMs);
       }
     };
@@ -656,7 +665,7 @@ export class MultiServerMCPClient {
   ): Promise<void> {
     const { url, headers, useNodeEventSource, reconnect } = connection;
 
-    logger.debug(`Creating SSE transport for server "${serverName}" with URL: ${url}`);
+    debugLog(`DEBUG: Creating SSE transport for server "${serverName}" with URL: ${url}`);
 
     try {
       const transport = await this.createSSETransport(serverName, url, headers, useNodeEventSource);
@@ -684,7 +693,7 @@ export class MultiServerMCPClient {
       this.clients.set(serverName, client);
 
       const cleanup = async () => {
-        logger.debug(`Closing SSE transport for server "${serverName}"`);
+        debugLog(`DEBUG: Closing SSE transport for server "${serverName}"`);
         await transport.close();
       };
 
@@ -714,7 +723,7 @@ export class MultiServerMCPClient {
       return new SSEClientTransport(new URL(url));
     }
 
-    logger.debug(`Using custom headers for SSE transport to server "${serverName}"`);
+    debugLog(`DEBUG: Using custom headers for SSE transport to server "${serverName}"`);
 
     // If useNodeEventSource is true, try Node.js implementations
     if (useNodeEventSource) {
@@ -722,11 +731,11 @@ export class MultiServerMCPClient {
     }
 
     // For browser environments, use the basic requestInit approach
-    logger.debug(
-      `Using browser EventSource for server "${serverName}". Headers may not be applied correctly.`
+    debugLog(
+      `DEBUG: Using browser EventSource for server "${serverName}". Headers may not be applied correctly.`
     );
-    logger.debug(
-      `For better headers support in browsers, consider using a custom SSE implementation.`
+    debugLog(
+      `DEBUG: For better headers support in browsers, consider using a custom SSE implementation.`
     );
 
     return new SSEClientTransport(new URL(url), {
@@ -748,8 +757,8 @@ export class MultiServerMCPClient {
       const ExtendedEventSourceModule = await import('extended-eventsource');
       const ExtendedEventSource = ExtendedEventSourceModule.EventSource;
 
-      logger.debug(`Using Extended EventSource for server "${serverName}"`);
-      logger.debug(`Setting headers for Extended EventSource: ${JSON.stringify(headers)}`);
+      debugLog(`DEBUG: Using Extended EventSource for server "${serverName}"`);
+      debugLog(`DEBUG: Setting headers for Extended EventSource: ${JSON.stringify(headers)}`);
 
       // Override the global EventSource with the extended implementation
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -763,8 +772,8 @@ export class MultiServerMCPClient {
       });
     } catch (extendedError) {
       // Fall back to standard eventsource if extended-eventsource is not available
-      logger.debug(
-        `Extended EventSource not available, falling back to standard EventSource: ${extendedError}`
+      debugLog(
+        `DEBUG: Extended EventSource not available, falling back to standard EventSource: ${extendedError}`
       );
 
       try {
@@ -772,8 +781,8 @@ export class MultiServerMCPClient {
         const EventSourceModule = await import('eventsource');
         const EventSource = EventSourceModule.default;
 
-        logger.debug(`Using Node.js EventSource for server "${serverName}"`);
-        logger.debug(`Setting headers for EventSource: ${JSON.stringify(headers)}`);
+        debugLog(`DEBUG: Using Node.js EventSource for server "${serverName}"`);
+        debugLog(`DEBUG: Setting headers for EventSource: ${JSON.stringify(headers)}`);
 
         // Override the global EventSource with the Node.js implementation
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -786,8 +795,8 @@ export class MultiServerMCPClient {
           requestInit: { headers },
         });
       } catch (nodeError) {
-        logger.warn(
-          `Failed to load EventSource packages for server "${serverName}". Headers may not be applied to SSE connection: ${nodeError}`
+        debugLog(
+          `WARN: Failed to load EventSource packages for server "${serverName}". Headers may not be applied to SSE connection: ${nodeError}`
         );
 
         // Last resort fallback
@@ -816,7 +825,9 @@ export class MultiServerMCPClient {
 
       // Only attempt reconnect if we haven't cleaned up
       if (this.clients.has(serverName)) {
-        logger.info(`SSE connection for server "${serverName}" closed, attempting to reconnect...`);
+        debugLog(
+          `INFO: SSE connection for server "${serverName}" closed, attempting to reconnect...`
+        );
         await this.attemptReconnect(
           serverName,
           connection,
@@ -832,10 +843,10 @@ export class MultiServerMCPClient {
    */
   private async loadToolsForServer(serverName: string, client: Client): Promise<void> {
     try {
-      logger.debug(`Loading tools for server "${serverName}"...`);
+      debugLog(`DEBUG: Loading tools for server "${serverName}"...`);
       const tools = await loadMcpTools(client);
       this.serverNameToTools.set(serverName, tools);
-      logger.info(`Successfully loaded ${tools.length} tools from server "${serverName}"`);
+      debugLog(`INFO: Successfully loaded ${tools.length} tools from server "${serverName}"`);
     } catch (error) {
       throw new MCPClientError(`Failed to load tools from server "${serverName}": ${error}`);
     }
@@ -864,8 +875,8 @@ export class MultiServerMCPClient {
 
     while (!connected && (maxAttempts === undefined || attempts < maxAttempts)) {
       attempts++;
-      logger.info(
-        `Reconnection attempt ${attempts}${maxAttempts ? `/${maxAttempts}` : ''} for server "${serverName}"`
+      debugLog(
+        `INFO: Reconnection attempt ${attempts}${maxAttempts ? `/${maxAttempts}` : ''} for server "${serverName}"`
       );
 
       try {
@@ -884,17 +895,17 @@ export class MultiServerMCPClient {
         // Check if connected
         if (this.clients.has(serverName)) {
           connected = true;
-          logger.info(`Successfully reconnected to server "${serverName}"`);
+          debugLog(`INFO: Successfully reconnected to server "${serverName}"`);
         }
       } catch (error) {
-        logger.error(
-          `Failed to reconnect to server "${serverName}" (attempt ${attempts}): ${error}`
+        debugLog(
+          `ERROR: Failed to reconnect to server "${serverName}" (attempt ${attempts}): ${error}`
         );
       }
     }
 
     if (!connected) {
-      logger.error(`Failed to reconnect to server "${serverName}" after ${attempts} attempts`);
+      debugLog(`ERROR: Failed to reconnect to server "${serverName}" after ${attempts} attempts`);
     }
   }
 
@@ -965,13 +976,13 @@ export class MultiServerMCPClient {
    * Close all connections.
    */
   async close(): Promise<void> {
-    logger.info('Closing all MCP connections...');
+    debugLog(`INFO: Closing all MCP connections...`);
 
     for (const cleanup of this.cleanupFunctions) {
       try {
         await cleanup();
       } catch (error) {
-        logger.error(`Error during cleanup: ${error}`);
+        debugLog(`ERROR: Error during cleanup: ${error}`);
       }
     }
 
@@ -980,7 +991,7 @@ export class MultiServerMCPClient {
     this.serverNameToTools.clear();
     this.transportInstances.clear();
 
-    logger.info('All MCP connections closed');
+    debugLog(`INFO: All MCP connections closed`);
   }
 
   /**
@@ -1077,10 +1088,10 @@ export class MultiServerMCPClient {
         this.connections = MultiServerMCPClient.processConnections(config.servers);
       }
 
-      logger.info(`Added MCP configuration from ${configPath}`);
+      debugLog(`INFO: Added MCP configuration from ${configPath}`);
       return this;
     } catch (error) {
-      logger.error(`Failed to add MCP configuration from ${configPath}: ${error}`);
+      debugLog(`ERROR: Failed to add MCP configuration from ${configPath}: ${error}`);
       throw new MCPClientError(`Failed to add MCP configuration: ${error}`);
     }
   }
@@ -1104,7 +1115,7 @@ export class MultiServerMCPClient {
       this.connections = processedConnections;
     }
 
-    logger.info(`Added ${Object.keys(processedConnections).length} connections to client`);
+    debugLog(`INFO: Added ${Object.keys(processedConnections).length} connections to client`);
     return this;
   }
 

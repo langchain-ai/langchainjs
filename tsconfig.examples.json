@@ -10,7 +10,8 @@
     "skipLibCheck": true,
     "sourceMap": true,
     "downlevelIteration": true,
-    "noEmit": true // we just want type checking - no need to output for inclusion in the published module
+    "noEmit": true, // we just want type checking - no need to output for inclusion in the published module
+    "resolveJsonModule": true
   },
   "include": ["examples/**/*", "src/**/*"],
   "exclude": ["node_modules", "dist", "**/*.test.ts"]

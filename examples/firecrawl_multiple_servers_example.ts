@@ -14,7 +14,7 @@ import fs from 'fs';
 import path from 'path';
 
 // MCP client imports
-import { MultiServerMCPClient, enableLogging } from '../src/index.js';
+import { MultiServerMCPClient } from '../src/index.js';
 
 // Load environment variables from .env file
 dotenv.config();
@@ -63,9 +63,6 @@ async function runExample() {
   let client: MultiServerMCPClient | null = null;
 
   try {
-    // Enable logging for better visibility
-    enableLogging('info');
-
     // Create the multiple servers configuration file
     createMultipleServersConfigFile();
 

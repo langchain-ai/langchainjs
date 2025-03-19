@@ -3,7 +3,7 @@
 [![npm version](https://img.shields.io/npm/v/@langchain/mcp-adapters.svg)](https://www.npmjs.com/package/@langchain/mcp-adapters)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-This library provides a lightweight wrapper that makes [Anthropic Model Context Protocol (MCP)](https://modelcontextprotocol.io/introduction) tools compatible with [LangChain.js](https://github.com/langchain-ai/langchainjs) and [LangGraph.js](https://github.com/langchain-ai/langgraphjs).
+This library provides a lightweight wrapper that makes[Anthropic Model Context Protocol (MCP)](https://modelcontextprotocol.io/introduction) tools compatible with [LangChain.js](https://github.com/langchain-ai/langchainjs) and [LangGraph.js](https://github.com/langchain-ai/langgraphjs).
 
 ## Features
 
@@ -25,7 +25,6 @@ This library provides a lightweight wrapper that makes [Anthropic Model Context 
   - Optimized for OpenAI, Anthropic, and Google models
 
 - 🛠️ **Development Features**
-  - Comprehensive logging system
   - Flexible configuration options
   - Robust error handling
 
@@ -491,32 +490,29 @@ When using in browsers:
 
 ### Debug Logging
 
-Logging is disabled by default for optimal performance. Enable logging when needed for diagnostics:
+This package makes use of the [debug](https://www.npmjs.com/package/debug) package for debug logging.
 
-```typescript
-import { enableLogging, disableLogging } from '@langchain/mcp-adapters';
+Logging is disabled by default, and can be enabled by setting the `DEBUG` environment variable as per
+the instructions in the debug package.
 
-// Enable logging at info level (default)
-enableLogging();
+To output all debug logs from this package:
 
-// Or specify a specific level
-enableLogging('debug'); // Most verbose
-enableLogging('info'); // General information
-enableLogging('warn'); // Warnings only
-enableLogging('error'); // Errors only
-
-// Disable logging when done
-disableLogging();
+```bash
+DEBUG='@langchain/mcp-adapters:*'
 ```
 
-You can also access the logger directly:
+To output debug logs only from the `client` module:
 
-```typescript
-import { logger } from '@langchain/mcp-adapters';
-
-// Advanced logging configuration
-logger.level = 'debug';
+```bash
+DEBUG='@langchain/mcp-adapters:client'
 ```
+
+To output debug logs only from the `tools` module:
+
+```bash
+DEBUG='@langchain/mcp-adapters:tools'
+```
+
 
 ## License
 
