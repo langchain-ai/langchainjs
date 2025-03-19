@@ -3,7 +3,7 @@ import { OpenAI } from "@langchain/openai";
 import { LLMChain } from "langchain/chains";
 import { MemoryVectorStore } from "langchain/vectorstores/memory";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
-import { HuggingFaceTransformersEmbeddings } from "@langchain/community/embeddings/huggingface_transformers";
+import { HuggingFaceTransformersEmbeddings } from "@langchain/community/embeddings/hf_transformers";
 import { Document } from "@langchain/core/documents";
 
 // Test exports

@@ -1,6 +1,6 @@
 import { LlamaCppEmbeddings } from "@langchain/community/embeddings/llama_cpp";
 
-const llamaPath = "/Replace/with/path/to/your/model/gguf-llama3-Q4_0.bin";
+const llamaPath = "/Replace/with/path/to/your/model/gguf-llama2-q4_0.bin";
 
 const documents = ["Hello World!", "Bye Bye!"];
 

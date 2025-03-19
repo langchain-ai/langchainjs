@@ -1,11 +1,11 @@
 # @langchain/pinecone
 
-This package contains the LangChain.js integrations for Pinecone through their SDK.
+This package contains the LangChain.js integrations for  through their SDK.
 
 ## Installation
 
 ```bash npm2yarn
-npm install @langchain/pinecone @langchain/core @pinecone-database/pinecone
+npm install @langchain/pinecone @langchain/core
 ```
 
 ## Development

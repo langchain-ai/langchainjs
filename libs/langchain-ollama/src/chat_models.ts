@@ -3,10 +3,7 @@ import {
   UsageMetadata,
   type BaseMessage,
 } from "@langchain/core/messages";
-import {
-  BaseLanguageModelInput,
-  StructuredOutputMethodOptions,
-} from "@langchain/core/language_models/base";
+import { BaseLanguageModelInput } from "@langchain/core/language_models/base";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {
   type BaseChatModelParams,
@@ -24,20 +21,9 @@ import type {
   Message as OllamaMessage,
   Tool as OllamaTool,
 } from "ollama";
-import {
-  Runnable,
-  RunnablePassthrough,
-  RunnableSequence,
-} from "@langchain/core/runnables";
+import { Runnable } from "@langchain/core/runnables";
 import { convertToOpenAITool } from "@langchain/core/utils/function_calling";
 import { concat } from "@langchain/core/utils/stream";
-import {
-  JsonOutputParser,
-  StructuredOutputParser,
-} from "@langchain/core/output_parsers";
-import { isZodSchema } from "@langchain/core/utils/types";
-import { z } from "zod";
-import { zodToJsonSchema } from "zod-to-json-schema";
 import {
   convertOllamaMessagesToLangChain,
   convertToOllamaMessages,
@@ -50,8 +36,6 @@ export interface ChatOllamaCallOptions extends BaseChatModelCallOptions {
    */
   stop?: string[];
   tools?: BindToolsInput[];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  format?: string | Record<string, any>;
 }
 
 export interface PullModelOptions {
@@ -98,8 +82,7 @@ export interface ChatOllamaInput
    */
   checkOrPullModel?: boolean;
   streaming?: boolean;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  format?: string | Record<string, any>;
+  format?: string;
 }
 
 /**
@@ -470,10 +453,9 @@ export class ChatOllama
 
   streaming?: boolean;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  format?: string | Record<string, any>;
+  format?: string;
 
-  keepAlive?: string | number;
+  keepAlive?: string | number = "5m";
 
   client: Ollama;
 
@@ -522,7 +504,7 @@ export class ChatOllama
     this.penalizeNewline = fields?.penalizeNewline;
     this.streaming = fields?.streaming;
     this.format = fields?.format;
-    this.keepAlive = fields?.keepAlive;
+    this.keepAlive = fields?.keepAlive ?? this.keepAlive;
     this.checkOrPullModel = fields?.checkOrPullModel ?? this.checkOrPullModel;
   }
 
@@ -593,7 +575,7 @@ export class ChatOllama
 
     return {
       model: this.model,
-      format: options?.format ?? this.format,
+      format: this.format,
       keep_alive: this.keepAlive,
       options: {
         numa: this.numa,
@@ -780,109 +762,5 @@ export class ChatOllama
         usage_metadata: usageMetadata,
       }),
     });
-  }
-
-  withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
-  >(
-    outputSchema:
-      | z.ZodType<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      | Record<string, any>,
-    config?: StructuredOutputMethodOptions<false>
-  ): Runnable<BaseLanguageModelInput, RunOutput>;
-
-  withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
-  >(
-    outputSchema:
-      | z.ZodType<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      | Record<string, any>,
-    config?: StructuredOutputMethodOptions<true>
-  ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
-
-  withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
-  >(
-    outputSchema:
-      | z.ZodType<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      | Record<string, any>,
-    config?: StructuredOutputMethodOptions<boolean>
-  ):
-    | Runnable<BaseLanguageModelInput, RunOutput>
-    | Runnable<
-        BaseLanguageModelInput,
-        {
-          raw: BaseMessage;
-          parsed: RunOutput;
-        }
-      >;
-
-  withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
-  >(
-    outputSchema:
-      | z.ZodType<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      | Record<string, any>,
-    config?: StructuredOutputMethodOptions<boolean>
-  ):
-    | Runnable<BaseLanguageModelInput, RunOutput>
-    | Runnable<
-        BaseLanguageModelInput,
-        {
-          raw: BaseMessage;
-          parsed: RunOutput;
-        }
-      > {
-    if (config?.method === undefined || config?.method === "jsonSchema") {
-      const outputSchemaIsZod = isZodSchema(outputSchema);
-      const jsonSchema = outputSchemaIsZod
-        ? zodToJsonSchema(outputSchema)
-        : outputSchema;
-      const llm = this.bind({
-        format: jsonSchema,
-      });
-      const outputParser = outputSchemaIsZod
-        ? StructuredOutputParser.fromZodSchema(outputSchema)
-        : new JsonOutputParser<RunOutput>();
-
-      if (!config?.includeRaw) {
-        return llm.pipe(outputParser) as Runnable<
-          BaseLanguageModelInput,
-          RunOutput
-        >;
-      }
-
-      const parserAssign = RunnablePassthrough.assign({
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        parsed: (input: any, config) => outputParser.invoke(input.raw, config),
-      });
-      const parserNone = RunnablePassthrough.assign({
-        parsed: () => null,
-      });
-      const parsedWithFallback = parserAssign.withFallbacks({
-        fallbacks: [parserNone],
-      });
-      return RunnableSequence.from<
-        BaseLanguageModelInput,
-        { raw: BaseMessage; parsed: RunOutput }
-      >([
-        {
-          raw: llm,
-        },
-        parsedWithFallback,
-      ]);
-    } else {
-      // TODO: Fix this type in core
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return super.withStructuredOutput<RunOutput>(outputSchema, config as any);
-    }
   }
 }

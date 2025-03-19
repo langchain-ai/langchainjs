@@ -24,6 +24,5 @@ export const optionalImportEntrypoints: string[] = [
   "langchain/stores/file/node",
   "langchain/storage/file_system",
   "langchain/hub",
-  "langchain/hub/node",
   "langchain/experimental/prompts/handlebars",
 ];

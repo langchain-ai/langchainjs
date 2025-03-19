@@ -161,22 +161,6 @@ import AdvancedUpstashRedisCacheExample from "@examples/cache/upstash_redis_adva
 
 <CodeBlock language="typescript">{AdvancedUpstashRedisCacheExample}</CodeBlock>
 
-## Caching with Vercel KV
-
-LangChain provides an Vercel KV-based cache. Like the Redis-based cache, this cache is useful if you want to share the cache across multiple processes or servers. The Vercel KV client uses HTTP and supports edge environments. To use it, you'll need to install the `@vercel/kv` package:
-
-```bash npm2yarn
-npm install @vercel/kv
-```
-
-You'll also need an Vercel account and a [KV database](https://vercel.com/docs/storage/vercel-kv/kv-reference) to connect to. Once you've done that, retrieve your REST URL and REST token.
-
-Then, you can pass a `cache` option when you instantiate the LLM. For example:
-
-import VercelKVCacheExample from "@examples/cache/vercel_kv.ts";
-
-<CodeBlock language="typescript">{VercelKVCacheExample}</CodeBlock>
-
 ## Caching with Cloudflare KV
 
 :::info

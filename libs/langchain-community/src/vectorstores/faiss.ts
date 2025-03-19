@@ -1,5 +1,3 @@
-/* eslint-disable */
-// @ts-nocheck
 import type { IndexFlatL2 } from "faiss-node";
 import type { NameRegistry, Parser } from "pickleparser";
 import * as uuid from "uuid";

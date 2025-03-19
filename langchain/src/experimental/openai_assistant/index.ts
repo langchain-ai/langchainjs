@@ -115,7 +115,7 @@ export class OpenAIAssistantRunnable<
           {
             role: "user",
             content: input.content,
-            attachments: input.attachments,
+            file_ids: input.fileIds,
             metadata: input.messagesMetadata,
           },
         ],
@@ -129,7 +129,7 @@ export class OpenAIAssistantRunnable<
       await this.client.beta.threads.messages.create(input.threadId, {
         content: input.content,
         role: "user",
-        attachments: input.attachments,
+        file_ids: input.file_ids,
         metadata: input.messagesMetadata,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } as any);

@@ -4,17 +4,10 @@ import { Document } from "@langchain/core/documents";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { AsyncCaller } from "@langchain/core/utils/async_caller";
 
-export interface AirtableRequestParams {
-  view?: string;
-  maxRecords?: number;
-  filterByFormula?: string;
-  fields?: string[];
-}
-
 export interface AirtableLoaderOptions {
   tableId: string;
   baseId: string;
-  kwargs?: AirtableRequestParams;
+  kwargs?: Record<string, any>;
 }
 
 interface AirtableRecord {
@@ -35,7 +28,7 @@ export class AirtableLoader extends BaseDocumentLoader {
 
   private readonly baseId: string;
 
-  private readonly kwargs: AirtableRequestParams;
+  private readonly kwargs: Record<string, any>;
 
   private static readonly BASE_URL = "https://api.airtable.com/v0";
 
@@ -77,8 +70,8 @@ export class AirtableLoader extends BaseDocumentLoader {
 
     try {
       do {
-        const body = this.constructRequestBody(offset);
-        const data = await this.asyncCaller.call(() => this.fetchRecords(body));
+        const url = this.constructUrl(offset);
+        const data = await this.asyncCaller.call(() => this.fetchRecords(url));
         data.records.forEach((record: AirtableRecord) =>
           documents.push(this.createDocument(record))
         );
@@ -103,8 +96,8 @@ export class AirtableLoader extends BaseDocumentLoader {
     let offset: string | undefined;
     try {
       do {
-        const body = this.constructRequestBody(offset);
-        const data = await this.asyncCaller.call(() => this.fetchRecords(body));
+        const url = this.constructUrl(offset);
+        const data = await this.asyncCaller.call(() => this.fetchRecords(url));
 
         for (const record of data.records) {
           yield this.createDocument(record);
@@ -119,35 +112,33 @@ export class AirtableLoader extends BaseDocumentLoader {
   }
 
   /**
-   * Constructs the request body for an API call.
+   * Constructs the Airtable API request URL with pagination and query parameters.
    *
-   * @param offset - An optional string representing the offset for pagination.
-   * @returns A record containing the combined properties of `kwargs` and the provided offset.
+   * @param offset - The pagination offset returned by the previous request.
+   * @returns A fully constructed URL for the API request.
    */
-  private constructRequestBody(offset?: string): Record<string, any> {
-    return { ...this.kwargs, offset };
+  private constructUrl(offset?: string): string {
+    const url = new URL(
+      `${AirtableLoader.BASE_URL}/${this.baseId}/${this.tableId}`
+    );
+    if (offset) url.searchParams.append("offset", offset);
+    if (this.kwargs.view) url.searchParams.append("view", this.kwargs.view);
+    return url.toString();
   }
 
   /**
    * Sends the API request to Airtable and handles the response.
    * Includes a timeout to prevent hanging on unresponsive requests.
    *
-   * @param body - The request payload to be sent to the Airtable API.
+   * @param url - The Airtable API request URL.
    * @returns A promise that resolves to an AirtableResponse object.
-   * @throws Will throw an error if the Airtable API request fails.
    */
-  private async fetchRecords(
-    body: Record<string, any>
-  ): Promise<AirtableResponse> {
-    const url = `${AirtableLoader.BASE_URL}/${this.baseId}/${this.tableId}/listRecords`;
+  private async fetchRecords(url: string): Promise<AirtableResponse> {
     try {
       const response = await fetch(url, {
-        method: "POST",
         headers: {
           Authorization: `Bearer ${this.apiToken}`,
-          "Content-Type": "application/json",
         },
-        body: JSON.stringify(body),
       });
 
       if (!response.ok) {

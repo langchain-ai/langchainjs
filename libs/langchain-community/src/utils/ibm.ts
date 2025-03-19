@@ -184,18 +184,10 @@ export class WatsonxToolsOutputParser<
       const tool = message.tool_calls;
       return tool;
     });
-
     if (tools[0] === undefined) {
-      if (this.latestCorrect) {
-        tools.push(this.latestCorrect);
-      } else {
-        const toolCall: ToolCall = { name: "", args: {} };
-        tools.push(toolCall);
-      }
+      if (this.latestCorrect) tools.push(this.latestCorrect);
     }
-
     const [tool] = tools;
-    tool.name = "";
     this.latestCorrect = tool;
     return tool.args as T;
   }

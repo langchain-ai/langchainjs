@@ -194,7 +194,6 @@ describe("strict tool calling", () => {
       }),
       {
         strict: true,
-        method: "functionCalling",
       }
     );
 
@@ -239,8 +238,7 @@ describe("strict tool calling", () => {
     const modelWithTools = model.withStructuredOutput(
       z.object({
         location: z.string().describe("The location to get the weather for"),
-      }),
-      { method: "functionCalling" }
+      })
     );
 
     // This will fail since we're not returning a valid response in our mocked fetch function.
@@ -258,16 +256,4 @@ describe("strict tool calling", () => {
       throw new Error("Body not found in request.");
     }
   });
-});
-
-test("Test OpenAI serialization doesn't pass along extra params", async () => {
-  const chat = new ChatOpenAI({
-    apiKey: "test-key",
-    model: "o3-mini",
-    somethingUnexpected: true,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } as any);
-  expect(JSON.stringify(chat)).toEqual(
-    `{"lc":1,"type":"constructor","id":["langchain","chat_models","openai","ChatOpenAI"],"kwargs":{"openai_api_key":{"lc":1,"type":"secret","id":["OPENAI_API_KEY"]},"model":"o3-mini"}}`
-  );
 });

@@ -53,7 +53,6 @@ export interface SecretMap {
   REMOTE_RETRIEVER_AUTH_BEARER?: string;
   REPLICATE_API_TOKEN?: string;
   SEARXNG_API_BASE?: string;
-  SERPAPI_API_KEY?: string;
   TENCENT_SECRET_ID?: string;
   TENCENT_SECRET_KEY?: string;
   TOGETHER_AI_API_KEY?: string;

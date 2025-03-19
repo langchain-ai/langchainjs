@@ -72,7 +72,6 @@ const ALLOWED_MODEL_PROVIDERS = [
   "cohere",
   "meta",
   "mistral",
-  "deepseek",
 ];
 
 const PRELUDE_TOTAL_LENGTH_BYTES = 4;
@@ -636,10 +635,6 @@ export class BedrockChat
     this.guardrailIdentifier =
       fields?.guardrailIdentifier ?? this.guardrailIdentifier;
     this.guardrailConfig = fields?.guardrailConfig;
-    // Permit Application Inference Profile override in fetch URL (expects to be url-encoded)
-    if (fields?.applicationInferenceProfile) {
-      this.model = fields?.applicationInferenceProfile;
-    }
   }
 
   override invocationParams(options?: this["ParsedCallOptions"]) {
@@ -921,40 +916,20 @@ export class BedrockChat
             }
             if (isChatGenerationChunk(chunk)) {
               yield chunk;
-              // eslint-disable-next-line no-void
-              void runManager?.handleLLMNewToken(
-                chunk.text,
-                undefined,
-                undefined,
-                undefined,
-                undefined,
-                {
-                  chunk,
-                }
-              );
-            } else {
-              // eslint-disable-next-line no-void
-              void runManager?.handleLLMNewToken(chunk.text);
             }
+            // eslint-disable-next-line no-void
+            void runManager?.handleLLMNewToken(chunk.text);
           } else {
             const text = BedrockLLMInputOutputAdapter.prepareOutput(
               provider,
               chunkResult
             );
-            const chunk = new ChatGenerationChunk({
+            yield new ChatGenerationChunk({
               text,
               message: new AIMessageChunk({ content: text }),
             });
-            yield chunk;
             // eslint-disable-next-line no-void
-            void runManager?.handleLLMNewToken(
-              text,
-              undefined,
-              undefined,
-              undefined,
-              undefined,
-              { chunk }
-            );
+            void runManager?.handleLLMNewToken(text);
           }
         }
       }

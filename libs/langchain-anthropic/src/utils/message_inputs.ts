@@ -12,15 +12,8 @@ import {
 } from "@langchain/core/messages";
 import { ToolCall } from "@langchain/core/messages/tool";
 import {
-  AnthropicImageBlockParam,
   AnthropicMessageCreateParams,
-  AnthropicTextBlockParam,
   AnthropicToolResponse,
-  AnthropicToolResultBlockParam,
-  AnthropicToolUseBlockParam,
-  AnthropicDocumentBlockParam,
-  AnthropicThinkingBlockParam,
-  AnthropicRedactedThinkingBlockParam,
 } from "../types.js";
 
 function _formatImage(imageUrl: string) {
@@ -134,27 +127,6 @@ function _formatContent(content: MessageContent) {
           source,
           ...(cacheControl ? { cache_control: cacheControl } : {}),
         };
-      } else if (contentPart.type === "document") {
-        // PDF
-        return {
-          ...contentPart,
-          ...(cacheControl ? { cache_control: cacheControl } : {}),
-        };
-      } else if (contentPart.type === "thinking") {
-        const block: AnthropicThinkingBlockParam = {
-          type: "thinking" as const, // Explicitly setting the type as "thinking"
-          thinking: contentPart.thinking,
-          signature: contentPart.signature,
-          ...(cacheControl ? { cache_control: cacheControl } : {}),
-        };
-        return block;
-      } else if (contentPart.type === "redacted_thinking") {
-        const block: AnthropicRedactedThinkingBlockParam = {
-          type: "redacted_thinking" as const, // Explicitly setting the type as "redacted_thinking"
-          data: contentPart.data,
-          ...(cacheControl ? { cache_control: cacheControl } : {}),
-        };
-        return block;
       } else if (
         textTypes.find((t) => t === contentPart.type) &&
         "text" in contentPart
@@ -278,85 +250,7 @@ export function _convertMessagesToAnthropicPayload(
     }
   });
   return {
-    messages: mergeMessages(formattedMessages),
+    messages: formattedMessages,
     system,
   } as AnthropicMessageCreateParams;
-}
-
-function mergeMessages(messages: AnthropicMessageCreateParams["messages"]) {
-  if (!messages || messages.length <= 1) {
-    return messages;
-  }
-
-  const result: AnthropicMessageCreateParams["messages"] = [];
-  let currentMessage = messages[0];
-
-  const normalizeContent = (
-    content:
-      | string
-      | Array<
-          | AnthropicTextBlockParam
-          | AnthropicImageBlockParam
-          | AnthropicToolUseBlockParam
-          | AnthropicToolResultBlockParam
-          | AnthropicDocumentBlockParam
-          | AnthropicThinkingBlockParam
-          | AnthropicRedactedThinkingBlockParam
-        >
-  ): Array<
-    | AnthropicTextBlockParam
-    | AnthropicImageBlockParam
-    | AnthropicToolUseBlockParam
-    | AnthropicToolResultBlockParam
-    | AnthropicDocumentBlockParam
-    | AnthropicThinkingBlockParam
-    | AnthropicRedactedThinkingBlockParam
-  > => {
-    if (typeof content === "string") {
-      return [
-        {
-          type: "text",
-          text: content,
-        },
-      ];
-    }
-    return content;
-  };
-
-  const isToolResultMessage = (msg: (typeof messages)[0]) => {
-    if (msg.role !== "user") return false;
-
-    if (typeof msg.content === "string") {
-      return false;
-    }
-
-    return (
-      Array.isArray(msg.content) &&
-      msg.content.every((item) => item.type === "tool_result")
-    );
-  };
-
-  for (let i = 1; i < messages.length; i += 1) {
-    const nextMessage = messages[i];
-
-    if (
-      isToolResultMessage(currentMessage) &&
-      isToolResultMessage(nextMessage)
-    ) {
-      // Merge the messages by combining their content arrays
-      currentMessage = {
-        ...currentMessage,
-        content: [
-          ...normalizeContent(currentMessage.content),
-          ...normalizeContent(nextMessage.content),
-        ],
-      };
-    } else {
-      result.push(currentMessage);
-      currentMessage = nextMessage;
-    }
-  }
-
-  result.push(currentMessage);
-  return result;
 }

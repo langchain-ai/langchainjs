@@ -68,11 +68,8 @@ export * as schema__query_constructor from "../schema/query_constructor.js";
 export * as schema__prompt_template from "../schema/prompt_template.js";
 import {
   ChatOpenAI,
-  AzureChatOpenAI,
   OpenAI,
-  AzureOpenAI,
-  OpenAIEmbeddings,
-  AzureOpenAIEmbeddings
+  OpenAIEmbeddings
 } from "@langchain/openai";
 import {
   PromptTemplate,
@@ -130,26 +127,14 @@ const chat_models__openai = {
   ChatOpenAI
 };
 export { chat_models__openai };
-const chat_models__azure_openai = {
-  AzureChatOpenAI
-};
-export { chat_models__azure_openai };
 const llms__openai = {
   OpenAI
 };
 export { llms__openai };
-const llms__azure_openai = {
-  AzureOpenAI
-};
-export { llms__azure_openai };
 const embeddings__openai = {
   OpenAIEmbeddings
 };
 export { embeddings__openai };
-const embeddings__azure_openai = {
-  AzureOpenAIEmbeddings
-};
-export { embeddings__azure_openai };
 const prompts__prompt = {
   PromptTemplate
 };

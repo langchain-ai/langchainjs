@@ -3,7 +3,7 @@ import { OpenAI } from "@langchain/openai";
 import { LLMChain } from "langchain/chains";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { MemoryVectorStore } from "langchain/vectorstores/memory";
-import { HuggingFaceTransformersEmbeddings } from "@langchain/community/embeddings/huggingface_transformers";
+import { HuggingFaceTransformersEmbeddings } from "@langchain/community/embeddings/hf_transformers";
 import { Document } from "@langchain/core/documents";
 
 async function test(useAzure: boolean = false) {
@@ -24,9 +24,7 @@ async function test(useAzure: boolean = false) {
         openAIApiKey: "sk-XXXX",
       };
 
-  const vs = new MemoryVectorStore(
-    new HuggingFaceTransformersEmbeddings({ model: "Xenova/all-MiniLM-L6-v2" })
-  );
+  const vs = new MemoryVectorStore(new HuggingFaceTransformersEmbeddings({ model: "Xenova/all-MiniLM-L6-v2", }));
 
   await vs.addVectors(
     [

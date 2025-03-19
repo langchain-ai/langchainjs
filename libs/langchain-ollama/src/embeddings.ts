@@ -7,7 +7,7 @@ import { OllamaCamelCaseOptions } from "./types.js";
  * Interface for OllamaEmbeddings parameters. Extends EmbeddingsParams and
  * defines additional parameters specific to the OllamaEmbeddings class.
  */
-export interface OllamaEmbeddingsParams extends EmbeddingsParams {
+interface OllamaEmbeddingsParams extends EmbeddingsParams {
   /**
    * The Ollama model to use for embeddings.
    * @default "mxbai-embed-large"
@@ -35,7 +35,7 @@ export interface OllamaEmbeddingsParams extends EmbeddingsParams {
   /**
    * Optional HTTP Headers to include in the request.
    */
-  headers?: Headers | Record<string, string>;
+  headers?: Headers;
 
   /**
    * Advanced Ollama API request parameters in camelCase, see
@@ -50,7 +50,7 @@ export class OllamaEmbeddings extends Embeddings {
 
   baseUrl = "http://localhost:11434";
 
-  keepAlive?: string | number;
+  keepAlive: string | number = "5m";
 
   requestOptions?: Partial<OllamaOptions>;
 
@@ -63,12 +63,12 @@ export class OllamaEmbeddings extends Embeddings {
 
     this.client = new Ollama({
       host: fields?.baseUrl,
-      headers: fields?.headers ? new Headers(fields.headers) : undefined,
+      headers: fields?.headers,
     });
     this.baseUrl = fields?.baseUrl ?? this.baseUrl;
 
     this.model = fields?.model ?? this.model;
-    this.keepAlive = fields?.keepAlive;
+    this.keepAlive = fields?.keepAlive ?? this.keepAlive;
     this.truncate = fields?.truncate ?? this.truncate;
     this.requestOptions = fields?.requestOptions
       ? this._convertOptions(fields?.requestOptions)

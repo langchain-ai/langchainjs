@@ -16,12 +16,6 @@ import {
 //   AIMessageChunk,
 // } from "@langchain/core/messages";
 
-// Uncomment if implementing tool calling
-
-// import {
-//   type BindToolsInput,
-// } from "@langchain/core/language_models/chat_models";
-
 /**
  * Input to chat model class.
  */
@@ -30,10 +24,10 @@ export interface ChatIntegrationInput extends BaseChatModelParams {}
 /**
  * Integration with a chat model.
  */
-export class ChatIntegration
-  // Extend BaseLanguageModelCallOptions and pass it as the generic here
-  // to support typing for additional runtime parameters for your integration
-  extends SimpleChatModel<BaseLanguageModelCallOptions>
+export class ChatIntegration<
+    CallOptions extends BaseLanguageModelCallOptions = BaseLanguageModelCallOptions
+  >
+  extends SimpleChatModel<CallOptions>
   implements ChatIntegrationInput
 {
   // Used for tracing, replace with the same name as your class
@@ -102,22 +96,6 @@ export class ChatIntegration
   //       await runManager?.handleLLMNewToken(chunk.response ?? "");
   //     }
   //   }
-  // }
-
-  /**
-   * Implement to support tool calling.
-   * You must also pass the bound tools into your actual chat completion call.
-   * See {@link ../../langchain-cerberas/src/chat_model.ts} for
-   * an example.
-   */
-  // override bindTools(
-  //   tools: BindToolsInput[],
-  //   kwargs?: Partial<this["ParsedCallOptions"]>
-  // ): Runnable<BaseLanguageModelInput, AIMessageChunk, BaseLanguageModelCallOptions> {
-  //   return this.bind({
-  //     tools: tools.map((tool) => convertToIntegrationFormat(tool)),
-  //     ...kwargs,
-  //   });
   // }
 
   /** @ignore */

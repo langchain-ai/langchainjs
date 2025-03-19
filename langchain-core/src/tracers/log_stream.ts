@@ -6,7 +6,6 @@ import { BaseTracer, type Run } from "./base.js";
 import {
   BaseCallbackHandler,
   BaseCallbackHandlerInput,
-  CallbackHandlerPrefersStreaming,
   HandleLLMNewTokenCallbackFields,
 } from "../callbacks/base.js";
 import { IterableReadableStream } from "../utils/stream.js";
@@ -211,10 +210,7 @@ function isChatGenerationChunk(
  * handler that logs the execution of runs and emits `RunLog` instances to a
  * `RunLogStream`.
  */
-export class LogStreamCallbackHandler
-  extends BaseTracer
-  implements CallbackHandlerPrefersStreaming
-{
+export class LogStreamCallbackHandler extends BaseTracer {
   protected autoClose = true;
 
   protected includeNames?: string[];
@@ -244,8 +240,6 @@ export class LogStreamCallbackHandler
   public receiveStream: IterableReadableStream<RunLogPatch>;
 
   name = "log_stream_tracer";
-
-  lc_prefer_streaming = true;
 
   constructor(fields?: LogStreamCallbackHandlerInput) {
     super({ _awaitHandler: true, ...fields });

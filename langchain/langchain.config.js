@@ -118,8 +118,7 @@ export const config = {
     "storage/in_memory": "storage/in_memory",
     "storage/file_system": "storage/file_system",
     // hub
-    hub: "hub/index",
-    "hub/node": "hub/node",
+    hub: "hub",
     // utilities
     "util/document": "util/document",
     "util/math": "util/math",
@@ -218,7 +217,6 @@ export const config = {
     "storage/file_system",
     // Prevent export due to circular dependency with "load" entrypoint
     "hub",
-    "hub/node",
     "experimental/prompts/handlebars",
   ],
   extraImportMapEntries: [
@@ -228,28 +226,13 @@ export const config = {
       path: "@langchain/openai",
     },
     {
-      modules: ["AzureChatOpenAI"],
-      alias: ["chat_models", "azure_openai"],
-      path: "@langchain/openai",
-    },
-    {
       modules: ["OpenAI"],
       alias: ["llms", "openai"],
       path: "@langchain/openai",
     },
     {
-      modules: ["AzureOpenAI"],
-      alias: ["llms", "azure_openai"],
-      path: "@langchain/openai",
-    },
-    {
       modules: ["OpenAIEmbeddings"],
       alias: ["embeddings", "openai"],
-      path: "@langchain/openai",
-    },
-    {
-      modules: ["AzureOpenAIEmbeddings"],
-      alias: ["embeddings", "azure_openai"],
       path: "@langchain/openai",
     },
     {

@@ -373,7 +373,7 @@ test("Test MessagesPlaceholder not optional with invalid input should throw", as
       badInput,
       null,
       2
-    )}\n\nAdditional message: Unable to coerce message from array: only human, AI, system, developer, or tool message coercion is currently supported.`
+    )}\n\nAdditional message: Unable to coerce message from array: only human, AI, system, or tool message coercion is currently supported.`
   );
 });
 

@@ -1,1 +1,1 @@
-export { deepCompareStrict, Validator } from "@cfworker/json-schema";
+export { deepCompareStrict, Validator } from "./@cfworker/json-schema/index.js";

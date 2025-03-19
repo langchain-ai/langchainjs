@@ -37,18 +37,20 @@ export async function consumeCallback<T>(
   if (wait === true) {
     // Clear config since callbacks are not part of the root run
     // Avoid using global singleton due to circuluar dependency issues
-    const asyncLocalStorageInstance = getGlobalAsyncLocalStorageInstance();
-    if (asyncLocalStorageInstance !== undefined) {
-      await asyncLocalStorageInstance.run(undefined, async () => promiseFn());
+    if (getGlobalAsyncLocalStorageInstance() !== undefined) {
+      await getGlobalAsyncLocalStorageInstance().run(undefined, async () =>
+        promiseFn()
+      );
     } else {
       await promiseFn();
     }
   } else {
     queue = getQueue();
     void queue.add(async () => {
-      const asyncLocalStorageInstance = getGlobalAsyncLocalStorageInstance();
-      if (asyncLocalStorageInstance !== undefined) {
-        await asyncLocalStorageInstance.run(undefined, async () => promiseFn());
+      if (getGlobalAsyncLocalStorageInstance() !== undefined) {
+        await getGlobalAsyncLocalStorageInstance().run(undefined, async () =>
+          promiseFn()
+        );
       } else {
         await promiseFn();
       }

@@ -61,9 +61,7 @@ export class GmailSendMessage extends GmailBaseTool {
     });
 
     try {
-      const gmail = await this.getGmailClient();
-
-      const response = await gmail.users.messages.send({
+      const response = await this.gmail.users.messages.send({
         userId: "me",
         requestBody: {
           raw: rawMessage,

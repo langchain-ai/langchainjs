@@ -27,7 +27,7 @@ interface TogetherAIInferenceResult {
   };
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   subjobs: Array<any>;
-  output?: {
+  output: {
     choices: Array<{
       finish_reason: string;
       index: number;
@@ -36,11 +36,6 @@ interface TogetherAIInferenceResult {
     raw_compute_time: number;
     result_type: string;
   };
-  choices?: Array<{
-    finish_reason: string;
-    index: number;
-    text: string;
-  }>;
 }
 
 /**
@@ -252,11 +247,8 @@ export class TogetherAI extends LLM<TogetherAICallOptions> {
       prompt,
       options
     );
-    if (response.output) {
-      return response.output.choices[0]?.text ?? "";
-    } else {
-      return response.choices?.[0]?.text ?? "";
-    }
+    const outputText = response.output.choices[0].text;
+    return outputText ?? "";
   }
 
   async *_streamResponseChunks(

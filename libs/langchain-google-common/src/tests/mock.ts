@@ -117,12 +117,3 @@ export class MockClient implements GoogleAbstractedClient {
     }
   }
 }
-
-export class MockClientError extends Error {
-  public response: { status: number };
-
-  constructor(status: number) {
-    super();
-    this.response = { status };
-  }
-}

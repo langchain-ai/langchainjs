@@ -1,5 +1,5 @@
 import { jest, expect, describe } from "@jest/globals";
-import { BaseChatModel } from "@langchain/core/language_models/chat_models";
+import { LLM } from "@langchain/core/language_models/llms";
 import {
   GoogleCalendarCreateTool,
   GoogleCalendarViewTool,
@@ -25,13 +25,13 @@ jest.mock("@langchain/core/utils/env", () => ({
 //   runViewEvents: jest.fn(),
 // }));
 
-class FakeLLM extends BaseChatModel {
+class FakeLLM extends LLM {
   _llmType() {
     return "fake";
   }
 
-  async _generate() {
-    return {} as any;
+  async _call(prompt: string): Promise<string> {
+    return prompt;
   }
 }
 
@@ -41,32 +41,6 @@ describe("GoogleCalendarCreateTool", () => {
       credentials: {
         clientEmail: "test@email.com",
         privateKey: "privateKey",
-        calendarId: "calendarId",
-      },
-      model: new FakeLLM({}),
-    };
-
-    const instance = new GoogleCalendarCreateTool(params);
-    expect(instance.name).toBe("google_calendar_create");
-  });
-
-  it("should be setup with accessToken", async () => {
-    const params = {
-      credentials: {
-        accessToken: "accessToken",
-        calendarId: "calendarId",
-      },
-      model: new FakeLLM({}),
-    };
-
-    const instance = new GoogleCalendarCreateTool(params);
-    expect(instance.name).toBe("google_calendar_create");
-  });
-
-  it("should be setup with accessToken function", async () => {
-    const params = {
-      credentials: {
-        accessToken: () => Promise.resolve("accessToken"),
         calendarId: "calendarId",
       },
       model: new FakeLLM({}),
@@ -104,19 +78,6 @@ describe("GoogleCalendarViewTool", () => {
       credentials: {
         clientEmail: "test@email.com",
         privateKey: "privateKey",
-        calendarId: "calendarId",
-      },
-      model: new FakeLLM({}),
-    };
-
-    const instance = new GoogleCalendarViewTool(params);
-    expect(instance.name).toBe("google_calendar_view");
-  });
-
-  it("should be setup with accessToken", async () => {
-    const params = {
-      credentials: {
-        accessToken: "accessToken",
         calendarId: "calendarId",
       },
       model: new FakeLLM({}),

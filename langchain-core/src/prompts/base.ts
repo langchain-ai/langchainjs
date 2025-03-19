@@ -74,14 +74,6 @@ export abstract class BasePromptTemplate<
 
   partialVariables: PartialValues<PartialVariableName>;
 
-  /**
-   * Metadata to be used for tracing.
-   */
-  metadata?: Record<string, unknown>;
-
-  /** Tags to be used for tracing. */
-  tags?: string[];
-
   constructor(input: BasePromptTemplateInput) {
     super(input);
     const { inputVariables } = input;
@@ -135,15 +127,10 @@ export abstract class BasePromptTemplate<
     input: RunInput,
     options?: BaseCallbackConfig
   ): Promise<RunOutput> {
-    const metadata = {
-      ...this.metadata,
-      ...options?.metadata,
-    };
-    const tags = [...(this.tags ?? []), ...(options?.tags ?? [])];
     return this._callWithConfig(
       (input: RunInput) => this.formatPromptValue(input),
       input,
-      { ...options, tags, metadata, runType: "prompt" }
+      { ...options, runType: "prompt" }
     );
   }
 

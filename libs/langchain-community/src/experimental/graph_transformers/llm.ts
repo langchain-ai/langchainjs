@@ -3,7 +3,11 @@ import { zodToJsonSchema } from "zod-to-json-schema";
 import { BaseLanguageModel } from "@langchain/core/language_models/base";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { Document } from "@langchain/core/documents";
-import { Node, Relationship, GraphDocument } from "../../graphs/document.js";
+import {
+  Node,
+  Relationship,
+  GraphDocument,
+} from "../../graphs/graph_document.js";
 
 export const SYSTEM_PROMPT = `
 # Knowledge Graph Instructions for GPT-4\n
@@ -197,33 +201,25 @@ function mapToBaseNode(node: any): Node {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function mapToBaseRelationship({
-  fallbackRelationshipType,
-}: {
-  fallbackRelationshipType: string | null;
-}) {
-  return function (relationship: any): Relationship {
-    return new Relationship({
-      source: new Node({
-        id: relationship.sourceNodeId,
-        type: relationship.sourceNodeType
-          ? toTitleCase(relationship.sourceNodeType)
-          : "",
-      }),
-      target: new Node({
-        id: relationship.targetNodeId,
-        type: relationship.targetNodeType
-          ? toTitleCase(relationship.targetNodeType)
-          : "",
-      }),
-      type: (relationship.relationshipType || fallbackRelationshipType)
-        .replace(" ", "_")
-        .toUpperCase(),
-      properties: relationship.properties
-        ? convertPropertiesToRecord(relationship.properties)
-        : {},
-    });
-  };
+function mapToBaseRelationship(relationship: any): Relationship {
+  return new Relationship({
+    source: new Node({
+      id: relationship.sourceNodeId,
+      type: relationship.sourceNodeType
+        ? toTitleCase(relationship.sourceNodeType)
+        : "",
+    }),
+    target: new Node({
+      id: relationship.targetNodeId,
+      type: relationship.targetNodeType
+        ? toTitleCase(relationship.targetNodeType)
+        : "",
+    }),
+    type: relationship.relationshipType.replace(" ", "_").toUpperCase(),
+    properties: relationship.properties
+      ? convertPropertiesToRecord(relationship.properties)
+      : {},
+  });
 }
 
 export interface LLMGraphTransformerProps {
@@ -234,13 +230,6 @@ export interface LLMGraphTransformerProps {
   strictMode?: boolean;
   nodeProperties?: string[];
   relationshipProperties?: string[];
-
-  /**
-   * @description
-   * The LLM may rarely create relationships without a type, causing extraction to fail.
-   * Use this to provide a fallback relationship type in such case.
-   */
-  fallbackRelationshipType?: string | null;
 }
 
 export class LLMGraphTransformer {
@@ -257,8 +246,6 @@ export class LLMGraphTransformer {
 
   relationshipProperties: string[];
 
-  fallbackRelationshipType: string | null = null;
-
   constructor({
     llm,
     allowedNodes = [],
@@ -267,7 +254,6 @@ export class LLMGraphTransformer {
     strictMode = true,
     nodeProperties = [],
     relationshipProperties = [],
-    fallbackRelationshipType = null,
   }: LLMGraphTransformerProps) {
     if (typeof llm.withStructuredOutput !== "function") {
       throw new Error(
@@ -280,7 +266,6 @@ export class LLMGraphTransformer {
     this.strictMode = strictMode;
     this.nodeProperties = nodeProperties;
     this.relationshipProperties = relationshipProperties;
-    this.fallbackRelationshipType = fallbackRelationshipType;
 
     // Define chain
     const schema = createSchema(
@@ -311,11 +296,7 @@ export class LLMGraphTransformer {
 
     let relationships: Relationship[] = [];
     if (rawSchema?.relationships) {
-      relationships = rawSchema.relationships.map(
-        mapToBaseRelationship({
-          fallbackRelationshipType: this.fallbackRelationshipType,
-        })
-      );
+      relationships = rawSchema.relationships.map(mapToBaseRelationship);
     }
 
     if (

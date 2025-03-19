@@ -18,10 +18,6 @@ export type UpstashRedisCacheProps = {
    * An existing Upstash Redis client.
    */
   client?: Redis;
-  /**
-   * Time-to-live (TTL) for cached items in seconds.
-   */
-  ttl?: number;
 };
 
 /**
@@ -34,7 +30,6 @@ export type UpstashRedisCacheProps = {
  *     url: "UPSTASH_REDIS_REST_URL",
  *     token: "UPSTASH_REDIS_REST_TOKEN",
  *   },
- *   ttl: 3600, // Optional: Cache entries will expire after 1 hour
  * });
  * // Initialize the OpenAI model with Upstash Redis cache for caching responses
  * const model = new ChatOpenAI({
@@ -47,12 +42,9 @@ export type UpstashRedisCacheProps = {
 export class UpstashRedisCache extends BaseCache {
   private redisClient: Redis;
 
-  private ttl?: number;
-
   constructor(props: UpstashRedisCacheProps) {
     super();
-    const { config, client, ttl } = props;
-    this.ttl = ttl;
+    const { config, client } = props;
 
     if (client) {
       this.redisClient = client;
@@ -92,13 +84,10 @@ export class UpstashRedisCache extends BaseCache {
   public async update(prompt: string, llmKey: string, value: Generation[]) {
     for (let i = 0; i < value.length; i += 1) {
       const key = getCacheKey(prompt, llmKey, String(i));
-      const serializedValue = JSON.stringify(serializeGeneration(value[i]));
-
-      if (this.ttl) {
-        await this.redisClient.set(key, serializedValue, { ex: this.ttl });
-      } else {
-        await this.redisClient.set(key, serializedValue);
-      }
+      await this.redisClient.set(
+        key,
+        JSON.stringify(serializeGeneration(value[i]))
+      );
     }
   }
 }

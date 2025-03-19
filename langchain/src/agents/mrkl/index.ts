@@ -128,7 +128,7 @@ export class ZeroShotAgent extends Agent {
       .map((tool) => `${tool.name}: ${tool.description}`)
       .join("\n");
 
-    const toolNames = tools.map((tool) => `"${tool.name}"`).join(", ");
+    const toolNames = tools.map((tool) => tool.name);
 
     const formatInstructions = renderTemplate(FORMAT_INSTRUCTIONS, "f-string", {
       tool_names: toolNames,

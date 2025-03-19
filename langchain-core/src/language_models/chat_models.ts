@@ -9,8 +9,6 @@ import {
   coerceMessageLikeToMessage,
   AIMessageChunk,
   isAIMessageChunk,
-  isBaseMessage,
-  isAIMessage,
 } from "../messages/index.js";
 import type { BasePromptValueInterface } from "../prompt_values.js";
 import {
@@ -46,10 +44,11 @@ import {
   RunnableSequence,
   RunnableToolLike,
 } from "../runnables/base.js";
+import { isStreamEventsHandler } from "../tracers/event_stream.js";
+import { isLogStreamHandler } from "../tracers/log_stream.js";
 import { concat } from "../utils/stream.js";
 import { RunnablePassthrough } from "../runnables/passthrough.js";
 import { isZodSchema } from "../utils/types/is_zod_schema.js";
-import { callbackHandlerPrefersStreaming } from "../callbacks/base.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ToolChoice = string | Record<string, any> | "auto" | "any";
@@ -76,18 +75,7 @@ export type SerializedLLM = {
 /**
  * Represents the parameters for a base chat model.
  */
-export type BaseChatModelParams = BaseLanguageModelParams & {
-  /**
-   * Whether to disable streaming.
-   *
-   * If streaming is bypassed, then `stream()` will defer to
-   * `invoke()`.
-   *
-   * - If true, will always bypass streaming case.
-   * - If false (default), will always use streaming case if available.
-   */
-  disableStreaming?: boolean;
-};
+export type BaseChatModelParams = BaseLanguageModelParams;
 
 /**
  * Represents the call options for a base chat model.
@@ -165,8 +153,6 @@ export abstract class BaseChatModel<
   // Only ever instantiated in main LangChain
   lc_namespace = ["langchain", "chat_models", this._llmType()];
 
-  disableStreaming = false;
-
   constructor(fields: BaseChatModelParams) {
     super(fields);
   }
@@ -235,8 +221,7 @@ export abstract class BaseChatModel<
     // Subclass check required to avoid double callbacks with default implementation
     if (
       this._streamResponseChunks ===
-        BaseChatModel.prototype._streamResponseChunks ||
-      this.disableStreaming
+      BaseChatModel.prototype._streamResponseChunks
     ) {
       yield this.invoke(input, options);
     } else {
@@ -345,61 +330,51 @@ export abstract class BaseChatModel<
   async _generateUncached(
     messages: BaseMessageLike[][],
     parsedOptions: this["ParsedCallOptions"],
-    handledOptions: RunnableConfig,
-    startedRunManagers?: CallbackManagerForLLMRun[]
+    handledOptions: RunnableConfig
   ): Promise<LLMResult> {
     const baseMessages = messages.map((messageList) =>
       messageList.map(coerceMessageLikeToMessage)
     );
 
-    let runManagers: CallbackManagerForLLMRun[] | undefined;
-    if (
-      startedRunManagers !== undefined &&
-      startedRunManagers.length === baseMessages.length
-    ) {
-      runManagers = startedRunManagers;
-    } else {
-      const inheritableMetadata = {
-        ...handledOptions.metadata,
-        ...this.getLsParams(parsedOptions),
-      };
-      // create callback manager and start run
-      const callbackManager_ = await CallbackManager.configure(
-        handledOptions.callbacks,
-        this.callbacks,
-        handledOptions.tags,
-        this.tags,
-        inheritableMetadata,
-        this.metadata,
-        { verbose: this.verbose }
-      );
-      const extra = {
-        options: parsedOptions,
-        invocation_params: this?.invocationParams(parsedOptions),
-        batch_size: 1,
-      };
-      runManagers = await callbackManager_?.handleChatModelStart(
-        this.toJSON(),
-        baseMessages,
-        handledOptions.runId,
-        undefined,
-        extra,
-        undefined,
-        undefined,
-        handledOptions.runName
-      );
-    }
+    const inheritableMetadata = {
+      ...handledOptions.metadata,
+      ...this.getLsParams(parsedOptions),
+    };
+    // create callback manager and start run
+    const callbackManager_ = await CallbackManager.configure(
+      handledOptions.callbacks,
+      this.callbacks,
+      handledOptions.tags,
+      this.tags,
+      inheritableMetadata,
+      this.metadata,
+      { verbose: this.verbose }
+    );
+    const extra = {
+      options: parsedOptions,
+      invocation_params: this?.invocationParams(parsedOptions),
+      batch_size: 1,
+    };
+    const runManagers = await callbackManager_?.handleChatModelStart(
+      this.toJSON(),
+      baseMessages,
+      handledOptions.runId,
+      undefined,
+      extra,
+      undefined,
+      undefined,
+      handledOptions.runName
+    );
     const generations: ChatGeneration[][] = [];
     const llmOutputs: LLMResult["llmOutput"][] = [];
     // Even if stream is not explicitly called, check if model is implicitly
     // called from streamEvents() or streamLog() to get all streamed events.
     // Bail out if _streamResponseChunks not overridden
-    const hasStreamingHandler = !!runManagers?.[0].handlers.find(
-      callbackHandlerPrefersStreaming
-    );
+    const hasStreamingHandler = !!runManagers?.[0].handlers.find((handler) => {
+      return isStreamEventsHandler(handler) || isLogStreamHandler(handler);
+    });
     if (
       hasStreamingHandler &&
-      !this.disableStreaming &&
       baseMessages.length === 1 &&
       this._streamResponseChunks !==
         BaseChatModel.prototype._streamResponseChunks
@@ -523,12 +498,7 @@ export abstract class BaseChatModel<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     parsedOptions: any;
     handledOptions: RunnableConfig;
-  }): Promise<
-    LLMResult & {
-      missingPromptIndices: number[];
-      startedRunManagers?: CallbackManagerForLLMRun[];
-    }
-  > {
+  }): Promise<LLMResult & { missingPromptIndices: number[] }> {
     const baseMessages = messages.map((messageList) =>
       messageList.map(coerceMessageLikeToMessage)
     );
@@ -551,6 +521,7 @@ export abstract class BaseChatModel<
       options: parsedOptions,
       invocation_params: this?.invocationParams(parsedOptions),
       batch_size: 1,
+      cached: true,
     };
     const runManagers = await callbackManager_?.handleChatModelStart(
       this.toJSON(),
@@ -596,51 +567,16 @@ export abstract class BaseChatModel<
       cachedResults.map(async ({ result: promiseResult, runManager }, i) => {
         if (promiseResult.status === "fulfilled") {
           const result = promiseResult.value as Generation[];
-          generations[i] = result.map((result) => {
-            if (
-              "message" in result &&
-              isBaseMessage(result.message) &&
-              isAIMessage(result.message)
-            ) {
-              // eslint-disable-next-line no-param-reassign
-              result.message.usage_metadata = {
-                input_tokens: 0,
-                output_tokens: 0,
-                total_tokens: 0,
-              };
-            }
-            // eslint-disable-next-line no-param-reassign
-            result.generationInfo = {
-              ...result.generationInfo,
-              tokenUsage: {},
-            };
-            return result;
-          });
+          generations[i] = result;
           if (result.length) {
             await runManager?.handleLLMNewToken(result[0].text);
           }
-          return runManager?.handleLLMEnd(
-            {
-              generations: [result],
-            },
-            undefined,
-            undefined,
-            undefined,
-            {
-              cached: true,
-            }
-          );
+          return runManager?.handleLLMEnd({
+            generations: [result],
+          });
         } else {
           // status === "rejected"
-          await runManager?.handleLLMError(
-            promiseResult.reason,
-            undefined,
-            undefined,
-            undefined,
-            {
-              cached: true,
-            }
-          );
+          await runManager?.handleLLMError(promiseResult.reason);
           return Promise.reject(promiseResult.reason);
         }
       })
@@ -649,7 +585,6 @@ export abstract class BaseChatModel<
     const output = {
       generations,
       missingPromptIndices,
-      startedRunManagers: runManagers,
     };
 
     // This defines RUN_KEY as a non-enumerable property on the output object
@@ -702,24 +637,20 @@ export abstract class BaseChatModel<
       callOptions as CallOptions
     );
 
-    const { generations, missingPromptIndices, startedRunManagers } =
-      await this._generateCached({
-        messages: baseMessages,
-        cache,
-        llmStringKey,
-        parsedOptions: callOptions,
-        handledOptions: runnableConfig,
-      });
+    const { generations, missingPromptIndices } = await this._generateCached({
+      messages: baseMessages,
+      cache,
+      llmStringKey,
+      parsedOptions: callOptions,
+      handledOptions: runnableConfig,
+    });
 
     let llmOutput = {};
     if (missingPromptIndices.length > 0) {
       const results = await this._generateUncached(
         missingPromptIndices.map((i) => baseMessages[i]),
         callOptions,
-        runnableConfig,
-        startedRunManagers !== undefined
-          ? missingPromptIndices.map((i) => startedRunManagers?.[i])
-          : undefined
+        runnableConfig
       );
       await Promise.all(
         results.generations.map(async (generation, index) => {

@@ -3,7 +3,6 @@ import { z } from "zod";
 
 import { DynamicStructuredTool, tool } from "../index.js";
 import { ToolMessage } from "../../messages/tool.js";
-import { RunnableConfig } from "../../runnables/types.js";
 
 test("Tool should error if responseFormat is content_and_artifact but the function doesn't return a tuple", async () => {
   const weatherSchema = z.object({
@@ -11,9 +10,7 @@ test("Tool should error if responseFormat is content_and_artifact but the functi
   });
 
   const weatherTool = tool(
-    // Should be able to type this as base RunnableConfig without issue,
-    // though true type is more specific
-    (_, _config: RunnableConfig) => {
+    (_) => {
       return "str";
     },
     {
@@ -54,15 +51,9 @@ test("Does not return tool message if responseFormat is content_and_artifact and
   const weatherSchema = z.object({
     location: z.string(),
   });
-  const toolCall = {
-    args: { location: "San Francisco" },
-    name: "weather",
-    type: "tool_call",
-  } as const;
 
   const weatherTool = tool(
-    (input, config) => {
-      expect(config.toolCall).toEqual(toolCall);
+    (input) => {
       return ["msg_content", input];
     },
     {
@@ -72,7 +63,11 @@ test("Does not return tool message if responseFormat is content_and_artifact and
     }
   );
 
-  const toolResult = await weatherTool.invoke(toolCall);
+  const toolResult = await weatherTool.invoke({
+    args: { location: "San Francisco" },
+    name: "weather",
+    type: "tool_call",
+  });
 
   expect(toolResult).toBe("msg_content");
 });
@@ -82,16 +77,8 @@ test("Returns tool message if responseFormat is content_and_artifact and returns
     location: z.string(),
   });
 
-  const toolCall = {
-    id: "testid",
-    args: { location: "San Francisco" },
-    name: "weather",
-    type: "tool_call",
-  } as const;
-
   const weatherTool = tool(
-    (input, config) => {
-      expect(config.toolCall).toEqual(toolCall);
+    (input) => {
       return ["msg_content", input];
     },
     {
@@ -101,7 +88,12 @@ test("Returns tool message if responseFormat is content_and_artifact and returns
     }
   );
 
-  const toolResult = await weatherTool.invoke(toolCall);
+  const toolResult = await weatherTool.invoke({
+    id: "testid",
+    args: { location: "San Francisco" },
+    name: "weather",
+    type: "tool_call",
+  });
 
   expect(toolResult).toBeInstanceOf(ToolMessage);
   expect(toolResult.content).toBe("msg_content");
@@ -109,55 +101,10 @@ test("Returns tool message if responseFormat is content_and_artifact and returns
   expect(toolResult.name).toBe("weather");
 });
 
-test("Does not double wrap a returned tool message even if a tool call with id is passed in", async () => {
-  const weatherSchema = z.object({
-    location: z.string(),
-  });
-
-  const toolCall = {
-    id: "testid",
-    args: { location: "San Francisco" },
-    name: "weather",
-    type: "tool_call",
-  } as const;
-
-  const weatherTool = tool(
-    (_, config) => {
-      expect(config.toolCall).toEqual(toolCall);
-      return new ToolMessage({
-        tool_call_id: "not_original",
-        content: "bar",
-        name: "baz",
-      });
-    },
-    {
-      name: "weather",
-      schema: weatherSchema,
-    }
-  );
-
-  const toolResult = await weatherTool.invoke(toolCall);
-
-  expect(toolResult).toBeInstanceOf(ToolMessage);
-  expect(toolResult.tool_call_id).toBe("not_original");
-  expect(toolResult.content).toBe("bar");
-  expect(toolResult.name).toBe("baz");
-});
-
 test("Tool can accept single string input", async () => {
-  const toolCall = {
-    id: "testid",
-    args: { input: "b" },
-    name: "string_tool",
-    type: "tool_call",
-  } as const;
-
   const stringTool = tool<z.ZodString>(
     (input: string, config): string => {
       expect(config).toMatchObject({ configurable: { foo: "bar" } });
-      if (config.configurable.usesToolCall) {
-        expect(config.toolCall).toEqual(toolCall);
-      }
       return `${input}a`;
     },
     {
@@ -169,13 +116,6 @@ test("Tool can accept single string input", async () => {
 
   const result = await stringTool.invoke("b", { configurable: { foo: "bar" } });
   expect(result).toBe("ba");
-
-  const result2 = await stringTool.invoke(toolCall, {
-    configurable: { foo: "bar", usesToolCall: true },
-  });
-  expect(result2).toBeInstanceOf(ToolMessage);
-  expect(result2.content).toBe("ba");
-  expect(result2.name).toBe("string_tool");
 });
 
 test("Tool declared with JSON schema", async () => {

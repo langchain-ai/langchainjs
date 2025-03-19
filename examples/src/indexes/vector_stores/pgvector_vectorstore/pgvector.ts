@@ -6,7 +6,7 @@ import {
 import { PoolConfig } from "pg";
 
 // First, follow set-up instructions at
-// https://js.langchain.com/docs/integrations/vectorstores/pgvector/#setting-up-an-instance
+// https://js.langchain.com/docs/modules/indexes/vector_stores/integrations/pgvector
 
 const config = {
   postgresConnectionOptions: {

@@ -205,14 +205,14 @@ export class SqlDatabaseChain extends BaseChain {
     const maxToken = await calculateMaxTokens({
       prompt: stringWeSend,
       // Cast here to allow for other models that may not fit the union
-      modelName: llm.model as TiktokenModel,
+      modelName: llm.modelName as TiktokenModel,
     });
 
-    if (maxToken < (llm.maxTokens ?? -1)) {
+    if (maxToken < llm.maxTokens) {
       throw new Error(`The combination of the database structure and your question is too big for the model ${
-        llm.model
+        llm.modelName
       } which can compute only a max tokens of ${getModelContextSize(
-        llm.model
+        llm.modelName
       )}.
       We suggest you to use the includeTables parameters when creating the SqlDatabase object to select only a subset of the tables. You can also use a model which can handle more tokens.`);
     }

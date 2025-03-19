@@ -34,15 +34,6 @@ class ChatWatsonxStandardIntegrationTests extends ChatModelIntegrationTests<
       },
     });
   }
-
-  async testInvokeMoreComplexTools() {
-    this.skipTestMessage(
-      "testInvokeMoreComplexTools",
-      "ChatWatsonx",
-      "Watsonx does not support tool schemas which contain object with unknown/any parameters." +
-        "Watsonx only supports objects in schemas when the parameters are defined."
-    );
-  }
 }
 
 const testClass = new ChatWatsonxStandardIntegrationTests();

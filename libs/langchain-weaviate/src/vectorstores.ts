@@ -320,10 +320,7 @@ export class WeaviateStore extends VectorStore {
         documents.push([
           new Document({
             pageContent: text,
-            metadata: {
-              ...rest,
-              collectionName: this.indexName,
-            },
+            metadata: rest,
             id: _additional.id,
           }),
           _additional.distance,

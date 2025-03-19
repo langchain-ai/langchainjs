@@ -87,16 +87,6 @@ function _constructMessageFromParams(
       className === "SystemMessageChunk"
     ) {
       type = "system";
-    } else if (
-      className === "FunctionMessage" ||
-      className === "FunctionMessageChunk"
-    ) {
-      type = "function";
-    } else if (
-      className === "ToolMessage" ||
-      className === "ToolMessageChunk"
-    ) {
-      type = "tool";
     } else {
       type = "unknown";
     }
@@ -117,14 +107,6 @@ function _constructMessageFromParams(
     return new AIMessage({ ...other, tool_calls });
   } else if (type === "system") {
     return new SystemMessage(rest);
-  } else if (type === "developer") {
-    return new SystemMessage({
-      ...rest,
-      additional_kwargs: {
-        ...rest.additional_kwargs,
-        __openai_role__: "developer",
-      },
-    });
   } else if (type === "tool" && "tool_call_id" in rest) {
     return new ToolMessage({
       ...rest,
@@ -135,7 +117,7 @@ function _constructMessageFromParams(
   } else {
     const error = addLangChainErrorFields(
       new Error(
-        `Unable to coerce message from array: only human, AI, system, developer, or tool message coercion is currently supported.\n\nReceived: ${JSON.stringify(
+        `Unable to coerce message from array: only human, AI, system, or tool message coercion is currently supported.\n\nReceived: ${JSON.stringify(
           params,
           null,
           2

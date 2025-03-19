@@ -1,20 +1,11 @@
-import { z } from "zod";
-import { calendar_v3 } from "googleapis";
-import type { GaxiosResponse } from "googleapis-common";
+import { google, calendar_v3 } from "googleapis";
+import type { JWT, GaxiosResponse } from "googleapis-common";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { CallbackManagerForToolRun } from "@langchain/core/callbacks/manager";
-import { BaseLanguageModel } from "@langchain/core/language_models/base";
+import { BaseLLM } from "@langchain/core/language_models/llms";
+import { StringOutputParser } from "@langchain/core/output_parsers";
 import { CREATE_EVENT_PROMPT } from "../prompts/index.js";
 import { getTimezoneOffsetInHours } from "../utils/get-timezone-offset-in-hours.js";
-
-const eventSchema = z.object({
-  event_summary: z.string(),
-  event_start_time: z.string(),
-  event_end_time: z.string(),
-  event_location: z.string().optional(),
-  event_description: z.string().optional(),
-  user_timezone: z.string(),
-});
 
 type CreateEventParams = {
   eventSummary: string;
@@ -35,8 +26,9 @@ const createEvent = async (
     eventDescription = "",
   }: CreateEventParams,
   calendarId: string,
-  calendar: calendar_v3.Calendar
+  auth: JWT
 ) => {
+  const calendar = google.calendar("v3");
   const event = {
     summary: eventSummary,
     location: eventLocation,
@@ -53,6 +45,7 @@ const createEvent = async (
 
   try {
     const createdEvent = await calendar.events.insert({
+      auth,
       calendarId,
       requestBody: event,
     });
@@ -67,23 +60,20 @@ const createEvent = async (
 
 type RunCreateEventParams = {
   calendarId: string;
-  calendar: calendar_v3.Calendar;
-  model: BaseLanguageModel;
+  auth: JWT;
+  model: BaseLLM;
 };
 
 const runCreateEvent = async (
   query: string,
-  { calendarId, calendar, model }: RunCreateEventParams,
+  { calendarId, auth, model }: RunCreateEventParams,
   runManager?: CallbackManagerForToolRun
 ) => {
   const prompt = new PromptTemplate({
     template: CREATE_EVENT_PROMPT,
     inputVariables: ["date", "query", "u_timezone", "dayName"],
   });
-  if (!model?.withStructuredOutput) {
-    throw new Error("Model does not support structured output");
-  }
-  const createEventChain = prompt.pipe(model.withStructuredOutput(eventSchema));
+  const createEventChain = prompt.pipe(model).pipe(new StringOutputParser());
 
   const date = new Date().toISOString();
   const u_timezone = getTimezoneOffsetInHours();
@@ -98,6 +88,7 @@ const runCreateEvent = async (
     },
     runManager?.getChild()
   );
+  const loaded = JSON.parse(output);
 
   const [
     eventSummary,
@@ -106,7 +97,7 @@ const runCreateEvent = async (
     eventLocation,
     eventDescription,
     userTimezone,
-  ] = Object.values(output);
+  ] = Object.values(loaded);
 
   const event = await createEvent(
     {
@@ -118,7 +109,7 @@ const runCreateEvent = async (
       eventDescription,
     } as CreateEventParams,
     calendarId,
-    calendar
+    auth
   );
 
   if (!(event as { error: string }).error) {

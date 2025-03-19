@@ -1,11 +1,10 @@
 import { isOpenAITool } from "@langchain/core/language_models/base";
 import { isLangChainTool } from "@langchain/core/utils/function_calling";
 import { isModelGemini, validateGeminiParams } from "./gemini.js";
-import {
+import type {
   GeminiFunctionDeclaration,
   GeminiFunctionSchema,
   GeminiTool,
-  GeminiToolAttributes,
   GoogleAIBaseLanguageModelCallOptions,
   GoogleAIModelParams,
   GoogleAIModelRequestParams,
@@ -62,57 +61,33 @@ function processToolChoice(
   throw new Error("Object inputs for tool_choice not supported.");
 }
 
-function isGeminiTool(tool: GoogleAIToolType): tool is GeminiTool {
-  for (const toolAttribute of GeminiToolAttributes) {
-    if (toolAttribute in tool) {
-      return true;
-    }
-  }
-  return false;
-}
-
-function isGeminiNonFunctionTool(tool: GoogleAIToolType): tool is GeminiTool {
-  return isGeminiTool(tool) && !("functionDeclaration" in tool);
-}
-
 export function convertToGeminiTools(tools: GoogleAIToolType[]): GeminiTool[] {
-  const geminiTools: GeminiTool[] = [];
-  let functionDeclarationsIndex = -1;
+  const geminiTools: GeminiTool[] = [
+    {
+      functionDeclarations: [],
+    },
+  ];
   tools.forEach((tool) => {
-    if (isGeminiNonFunctionTool(tool)) {
-      geminiTools.push(tool);
-    } else {
-      if (functionDeclarationsIndex === -1) {
-        geminiTools.push({
-          functionDeclarations: [],
-        });
-        functionDeclarationsIndex = geminiTools.length - 1;
-      }
-      if (
-        "functionDeclarations" in tool &&
-        Array.isArray(tool.functionDeclarations)
-      ) {
-        const funcs: GeminiFunctionDeclaration[] = tool.functionDeclarations;
-        geminiTools[functionDeclarationsIndex].functionDeclarations!.push(
-          ...funcs
-        );
-      } else if (isLangChainTool(tool)) {
-        const jsonSchema = zodToGeminiParameters(tool.schema);
-        geminiTools[functionDeclarationsIndex].functionDeclarations!.push({
-          name: tool.name,
-          description: tool.description ?? `A function available to call.`,
-          parameters: jsonSchema as GeminiFunctionSchema,
-        });
-      } else if (isOpenAITool(tool)) {
-        geminiTools[functionDeclarationsIndex].functionDeclarations!.push({
-          name: tool.function.name,
-          description:
-            tool.function.description ?? `A function available to call.`,
-          parameters: jsonSchemaToGeminiParameters(tool.function.parameters),
-        });
-      } else {
-        throw new Error(`Received invalid tool: ${JSON.stringify(tool)}`);
-      }
+    if (
+      "functionDeclarations" in tool &&
+      Array.isArray(tool.functionDeclarations)
+    ) {
+      const funcs: GeminiFunctionDeclaration[] = tool.functionDeclarations;
+      geminiTools[0].functionDeclarations?.push(...funcs);
+    } else if (isLangChainTool(tool)) {
+      const jsonSchema = zodToGeminiParameters(tool.schema);
+      geminiTools[0].functionDeclarations?.push({
+        name: tool.name,
+        description: tool.description ?? `A function available to call.`,
+        parameters: jsonSchema as GeminiFunctionSchema,
+      });
+    } else if (isOpenAITool(tool)) {
+      geminiTools[0].functionDeclarations?.push({
+        name: tool.function.name,
+        description:
+          tool.function.description ?? `A function available to call.`,
+        parameters: jsonSchemaToGeminiParameters(tool.function.parameters),
+      });
     }
   });
   return geminiTools;
@@ -136,21 +111,10 @@ export function copyAIModelParamsInto(
     target.maxOutputTokens;
   ret.topP = options?.topP ?? params?.topP ?? target.topP;
   ret.topK = options?.topK ?? params?.topK ?? target.topK;
-  ret.presencePenalty =
-    options?.presencePenalty ??
-    params?.presencePenalty ??
-    target.presencePenalty;
-  ret.frequencyPenalty =
-    options?.frequencyPenalty ??
-    params?.frequencyPenalty ??
-    target.frequencyPenalty;
   ret.stopSequences =
     options?.stopSequences ?? params?.stopSequences ?? target.stopSequences;
   ret.safetySettings =
     options?.safetySettings ?? params?.safetySettings ?? target.safetySettings;
-  ret.logprobs = options?.logprobs ?? params?.logprobs ?? target.logprobs;
-  ret.topLogprobs =
-    options?.topLogprobs ?? params?.topLogprobs ?? target.topLogprobs;
   ret.convertSystemMessageToHumanContent =
     options?.convertSystemMessageToHumanContent ??
     params?.convertSystemMessageToHumanContent ??

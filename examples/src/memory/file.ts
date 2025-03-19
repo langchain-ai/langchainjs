@@ -66,6 +66,6 @@ const sessions = await chatHistory.getAllSessions();
 console.log(sessions);
 /*
  [
-  { id: 'langchain-test-session', context: { title: "Introducing Jim"  } }
+  { sessionId: 'langchain-test-session', context: { title: "Introducing Jim"  } }
  ]
  */

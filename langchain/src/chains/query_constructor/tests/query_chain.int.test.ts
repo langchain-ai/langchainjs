@@ -33,10 +33,6 @@ test("Query Chain Test", async () => {
       new Comparison(Comparators.lt, "length", 90),
     ])
   );
-  const sq6 = new StructuredQuery(
-    "",
-    new Comparison(Comparators.eq, "isReleased", true)
-  );
 
   const filter1 = { length: { $lt: 90 } };
   const filter3 = { rating: { $gt: 8.5 } };
@@ -47,7 +43,6 @@ test("Query Chain Test", async () => {
       { length: { $lt: 90 } },
     ],
   };
-  const filter6 = { isReleased: { $eq: true } };
 
   const attributeInfo: AttributeInfo[] = [
     {
@@ -74,11 +69,6 @@ test("Query Chain Test", async () => {
       name: "length",
       description: "The length of the movie in minutes",
       type: "number",
-    },
-    {
-      name: "isReleased",
-      description: "Whether the movie has been released",
-      type: "boolean",
     },
   ];
   const documentContents = "Brief summary of a movie";
@@ -110,28 +100,22 @@ test("Query Chain Test", async () => {
     query:
       "Which movies are either comedy or drama and are less than 90 minutes?",
   });
-  const c6 = queryChain.invoke({
-    query: "Which movies have already been released?",
-  });
 
-  const [r1, r3, r4, r5, r6] = await Promise.all([c1, c3, c4, c5, c6]);
+  const [r1, r3, r4, r5] = await Promise.all([c1, c3, c4, c5]);
 
   expect(r1).toMatchObject(sq1);
   expect(r3).toMatchObject(sq3);
   expect(r4).toMatchObject(sq4);
   expect(r5).toMatchObject(sq5);
-  expect(r6).toMatchObject(sq6);
   const testTranslator = new BasicTranslator();
 
   const { filter: parsedFilter1 } = testTranslator.visitStructuredQuery(r1);
   const { filter: parsedFilter3 } = testTranslator.visitStructuredQuery(r3);
   const { filter: parsedFilter4 } = testTranslator.visitStructuredQuery(r4);
   const { filter: parsedFilter5 } = testTranslator.visitStructuredQuery(r5);
-  const { filter: parsedFilter6 } = testTranslator.visitStructuredQuery(r6);
 
   expect(parsedFilter1).toMatchObject(filter1);
   expect(parsedFilter3).toMatchObject(filter3);
   expect(parsedFilter4).toMatchObject(filter4);
   expect(parsedFilter5).toMatchObject(filter5);
-  expect(parsedFilter6).toMatchObject(filter6);
 });

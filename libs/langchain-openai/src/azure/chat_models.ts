@@ -3,23 +3,14 @@ import {
   LangSmithParams,
   type BaseChatModelParams,
 } from "@langchain/core/language_models/chat_models";
-import { getEnv, getEnvironmentVariable } from "@langchain/core/utils/env";
-import { BaseLanguageModelInput } from "@langchain/core/language_models/base";
-import { BaseMessage } from "@langchain/core/messages";
-import { Runnable } from "@langchain/core/runnables";
-import { z } from "zod";
-import {
-  ChatOpenAI,
-  ChatOpenAIStructuredOutputMethodOptions,
-} from "../chat_models.js";
+import { ChatOpenAI } from "../chat_models.js";
 import { OpenAIEndpointConfig, getEndpoint } from "../utils/azure.js";
 import {
   AzureOpenAIInput,
+  LegacyOpenAIInput,
   OpenAIChatInput,
   OpenAICoreRequestOptions,
 } from "../types.js";
-
-export type { AzureOpenAIInput };
 
 /**
  * Azure OpenAI chat model integration.
@@ -273,7 +264,7 @@ export type { AzureOpenAIInput };
  * const Joke = z.object({
  *   setup: z.string().describe("The setup of the joke"),
  *   punchline: z.string().describe("The punchline to the joke"),
- *   rating: z.number().nullable().describe("How funny the joke is, from 1 to 10")
+ *   rating: z.number().optional().describe("How funny the joke is, from 1 to 10")
  * }).describe('Joke to tell user.');
  *
  * const structuredLlm = llm.withStructuredOutput(Joke, { name: "Joke" });
@@ -434,27 +425,12 @@ export type { AzureOpenAIInput };
  * </details>
  */
 export class AzureChatOpenAI extends ChatOpenAI {
-  azureOpenAIApiVersion?: string;
-
-  azureOpenAIApiKey?: string;
-
-  azureADTokenProvider?: () => Promise<string>;
-
-  azureOpenAIApiInstanceName?: string;
-
-  azureOpenAIApiDeploymentName?: string;
-
-  azureOpenAIBasePath?: string;
-
-  azureOpenAIEndpoint?: string;
-
   _llmType(): string {
     return "azure_openai";
   }
 
   get lc_aliases(): Record<string, string> {
     return {
-      ...super.lc_aliases,
       openAIApiKey: "openai_api_key",
       openAIApiVersion: "openai_api_version",
       openAIBasePath: "openai_api_base",
@@ -466,28 +442,6 @@ export class AzureChatOpenAI extends ChatOpenAI {
     };
   }
 
-  get lc_secrets(): { [key: string]: string } | undefined {
-    return {
-      ...super.lc_secrets,
-      azureOpenAIApiKey: "AZURE_OPENAI_API_KEY",
-    };
-  }
-
-  get lc_serializable_keys(): string[] {
-    return [
-      ...super.lc_serializable_keys,
-      "azureOpenAIApiKey",
-      "azureOpenAIApiVersion",
-      "azureOpenAIBasePath",
-      "azureOpenAIEndpoint",
-      "azureOpenAIApiInstanceName",
-      "azureOpenAIApiDeploymentName",
-      "deploymentName",
-      "openAIApiKey",
-      "openAIApiVersion",
-    ];
-  }
-
   constructor(
     fields?: Partial<OpenAIChatInput> &
       Partial<AzureOpenAIInput> & {
@@ -496,43 +450,21 @@ export class AzureChatOpenAI extends ChatOpenAI {
         openAIBasePath?: string;
         deploymentName?: string;
       } & BaseChatModelParams & {
-        configuration?: ClientOptions;
+        configuration?: ClientOptions & LegacyOpenAIInput;
       }
   ) {
-    super(fields);
-    this.azureOpenAIApiKey =
-      fields?.azureOpenAIApiKey ??
-      fields?.openAIApiKey ??
-      fields?.apiKey ??
-      getEnvironmentVariable("AZURE_OPENAI_API_KEY");
-
-    this.azureOpenAIApiInstanceName =
-      fields?.azureOpenAIApiInstanceName ??
-      getEnvironmentVariable("AZURE_OPENAI_API_INSTANCE_NAME");
-
-    this.azureOpenAIApiDeploymentName =
-      fields?.azureOpenAIApiDeploymentName ??
-      fields?.deploymentName ??
-      getEnvironmentVariable("AZURE_OPENAI_API_DEPLOYMENT_NAME");
-
-    this.azureOpenAIApiVersion =
-      fields?.azureOpenAIApiVersion ??
-      fields?.openAIApiVersion ??
-      getEnvironmentVariable("AZURE_OPENAI_API_VERSION");
-
-    this.azureOpenAIBasePath =
-      fields?.azureOpenAIBasePath ??
-      getEnvironmentVariable("AZURE_OPENAI_BASE_PATH");
-
-    this.azureOpenAIEndpoint =
-      fields?.azureOpenAIEndpoint ??
-      getEnvironmentVariable("AZURE_OPENAI_ENDPOINT");
-
-    this.azureADTokenProvider = fields?.azureADTokenProvider;
-
-    if (!this.azureOpenAIApiKey && !this.apiKey && !this.azureADTokenProvider) {
-      throw new Error("Azure OpenAI API key or Token Provider not found");
+    const newFields = fields ? { ...fields } : fields;
+    if (newFields) {
+      // don't rewrite the fields if they are already set
+      newFields.azureOpenAIApiDeploymentName =
+        newFields.azureOpenAIApiDeploymentName ?? newFields.deploymentName;
+      newFields.azureOpenAIApiKey =
+        newFields.azureOpenAIApiKey ?? newFields.openAIApiKey;
+      newFields.azureOpenAIApiVersion =
+        newFields.azureOpenAIApiVersion ?? newFields.openAIApiVersion;
     }
+
+    super(newFields);
   }
 
   getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
@@ -570,17 +502,11 @@ export class AzureChatOpenAI extends ChatOpenAI {
         delete params.baseURL;
       }
 
-      let env = getEnv();
-      if (env === "node" || env === "deno") {
-        env = `(${env}/${process.version}; ${process.platform}; ${process.arch})`;
-      }
-
-      const specifiedUserAgent = params.defaultHeaders?.["User-Agent"];
       params.defaultHeaders = {
         ...params.defaultHeaders,
-        "User-Agent": `langchainjs-azure-openai/2.0.0 (${env})${
-          specifiedUserAgent ? ` ${specifiedUserAgent}` : ""
-        }`,
+        "User-Agent": params.defaultHeaders?.["User-Agent"]
+          ? `${params.defaultHeaders["User-Agent"]}: langchainjs-azure-openai-v2`
+          : `langchainjs-azure-openai-v2`,
       };
 
       this.client = new AzureOpenAIClient({
@@ -662,65 +588,5 @@ export class AzureChatOpenAI extends ChatOpenAI {
     }
 
     return json;
-  }
-
-  withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
-  >(
-    outputSchema:
-      | z.ZodType<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      | Record<string, any>,
-    config?: ChatOpenAIStructuredOutputMethodOptions<false>
-  ): Runnable<BaseLanguageModelInput, RunOutput>;
-
-  withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
-  >(
-    outputSchema:
-      | z.ZodType<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      | Record<string, any>,
-    config?: ChatOpenAIStructuredOutputMethodOptions<true>
-  ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
-
-  withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
-  >(
-    outputSchema:
-      | z.ZodType<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      | Record<string, any>,
-    config?: ChatOpenAIStructuredOutputMethodOptions<boolean>
-  ):
-    | Runnable<BaseLanguageModelInput, RunOutput>
-    | Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
-
-  withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
-  >(
-    outputSchema:
-      | z.ZodType<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      | Record<string, any>,
-    config?: ChatOpenAIStructuredOutputMethodOptions<boolean>
-  ):
-    | Runnable<BaseLanguageModelInput, RunOutput>
-    | Runnable<
-        BaseLanguageModelInput,
-        { raw: BaseMessage; parsed: RunOutput }
-      > {
-    const ensuredConfig = { ...config };
-    // Not all Azure gpt-4o deployments models support jsonSchema yet
-    if (this.model.startsWith("gpt-4o")) {
-      if (ensuredConfig?.method === undefined) {
-        ensuredConfig.method = "functionCalling";
-      }
-    }
-    return super.withStructuredOutput<RunOutput>(outputSchema, ensuredConfig);
   }
 }

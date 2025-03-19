@@ -104,7 +104,6 @@ export class LangChainTracer
       trace_id: run.trace_id,
       dotted_order: run.dotted_order,
       parent_run_id: run.parent_run_id,
-      extra: run.extra,
     };
     await this.client.updateRun(run.id, runUpdate);
   }

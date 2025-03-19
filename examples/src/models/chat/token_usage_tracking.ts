@@ -1,7 +1,7 @@
 import { ChatOpenAI } from "@langchain/openai";
 
 const chatModel = new ChatOpenAI({
-  model: "gpt-4o-mini",
+  model: "gpt-4-turbo",
 });
 
 const res = await chatModel.invoke("Tell me a joke.");

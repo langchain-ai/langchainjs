@@ -42,7 +42,7 @@ export interface LlamaCppCallOptions extends BaseLLMCallOptions {
  *  To use this model you need to have the `node-llama-cpp` module installed.
  *  This can be installed using `npm install -S node-llama-cpp` and the minimum
  *  version supported in version 2.0.0.
- *  This also requires that have a locally built version of Llama3 installed.
+ *  This also requires that have a locally built version of Llama2 installed.
  */
 export class LlamaCpp extends LLM<LlamaCppCallOptions> {
   lc_serializable = true;

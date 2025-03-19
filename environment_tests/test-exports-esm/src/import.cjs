@@ -4,7 +4,7 @@ async function test() {
   const { LLMChain } = await import("langchain/chains");
   const { ChatPromptTemplate } = await import("@langchain/core/prompts");
   const { MemoryVectorStore } = await import("langchain/vectorstores/memory");
-  const { HuggingFaceTransformersEmbeddings } = await import("@langchain/community/embeddings/huggingface_transformers");
+  const { HuggingFaceTransformersEmbeddings } = await import("@langchain/community/embeddings/hf_transformers");
   const { Document } = await import("@langchain/core/documents");
 
   // Test exports

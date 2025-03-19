@@ -3,7 +3,7 @@ async function test() {
   const { OpenAI } = await import("@langchain/openai");
   const { LLMChain } = await import("langchain/chains");
   const { ChatPromptTemplate } = await import("@langchain/core/prompts");
-  const { HuggingFaceTransformersEmbeddings } = await import("@langchain/community/embeddings/huggingface_transformers");
+  const { HuggingFaceTransformersEmbeddings } = await import("@langchain/community/embeddings/hf_transformers");
   const { Document } = await import("@langchain/core/documents");
   const { MemoryVectorStore } = await import("langchain/vectorstores/memory");
 

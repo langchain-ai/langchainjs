@@ -37,16 +37,3 @@ services:
     image: qdrant/qdrant:v1.9.1
     ports:
       - 6333:6333
-  neo4j:
-    image: neo4j:latest
-    volumes:
-        - $HOME/neo4j/logs:/var/lib/neo4j/logs
-        - $HOME/neo4j/config:/var/lib/neo4j/config
-        - $HOME/neo4j/data:/var/lib/neo4j/data
-        - $HOME/neo4j/plugins:/var/lib/neo4j/plugins
-    environment:
-        - NEO4J_dbms_security_auth__enabled=false
-    ports:
-      - "7474:7474"
-      - "7687:7687"
-    restart: always

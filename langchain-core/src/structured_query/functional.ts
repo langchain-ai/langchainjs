@@ -17,8 +17,8 @@ import { castValue, isFilterEmpty } from "./utils.js";
  * the result of a comparison operation.
  */
 type ValueType = {
-  eq: string | number | boolean;
-  ne: string | number | boolean;
+  eq: string | number;
+  ne: string | number;
   lt: string | number;
   lte: string | number;
   gt: string | number;
@@ -64,42 +64,6 @@ export class FunctionalTranslator extends BaseTranslator {
 
   formatFunction(): string {
     throw new Error("Not implemented");
-  }
-
-  /**
-   * Returns the allowed comparators for a given data type.
-   * @param input The input value to get the allowed comparators for.
-   * @returns An array of allowed comparators for the input data type.
-   */
-  getAllowedComparatorsForType(inputType: string): Comparator[] {
-    switch (inputType) {
-      case "string": {
-        return [
-          Comparators.eq,
-          Comparators.ne,
-          Comparators.gt,
-          Comparators.gte,
-          Comparators.lt,
-          Comparators.lte,
-        ];
-      }
-      case "number": {
-        return [
-          Comparators.eq,
-          Comparators.ne,
-          Comparators.gt,
-          Comparators.gte,
-          Comparators.lt,
-          Comparators.lte,
-        ];
-      }
-      case "boolean": {
-        return [Comparators.eq, Comparators.ne];
-      }
-      default: {
-        throw new Error(`Unsupported data type: ${inputType}`);
-      }
-    }
   }
 
   /**
@@ -191,19 +155,10 @@ export class FunctionalTranslator extends BaseTranslator {
    * @param comparison The comparison part of a structured query.
    * @returns A function that takes a `Document` as an argument and returns a boolean based on the comparison.
    */
-  visitComparison(
-    comparison: Comparison<string | number | boolean>
-  ): this["VisitComparisonOutput"] {
+  visitComparison(comparison: Comparison): this["VisitComparisonOutput"] {
     const { comparator, attribute, value } = comparison;
     const undefinedTrue = [Comparators.ne];
     if (this.allowedComparators.includes(comparator)) {
-      if (
-        !this.getAllowedComparatorsForType(typeof value).includes(comparator)
-      ) {
-        throw new Error(
-          `'${comparator}' comparator not allowed to be used with ${typeof value}`
-        );
-      }
       const comparatorFunction = this.getComparatorFunction(comparator);
       return (document: Document) => {
         const documentValue = document.metadata[attribute];

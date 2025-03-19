@@ -17,7 +17,6 @@ const correctQuery = new StructuredQuery(
     ]),
     new Comparison(Comparators.lt, "length", 180),
     new Comparison(Comparators.eq, "genre", "pop"),
-    new Comparison(Comparators.eq, "hasLyrics", true),
   ])
 );
 
@@ -36,7 +35,7 @@ test("StructuredQueryOutputParser test", async () => {
   const exampleOutput = `json\`\`\`
 {
     "query": "teenager love",
-    "filter": "and(or(eq(\\"artist\\", \\"Taylor Swift\\"), eq(\\"artist\\", \\"Katy Perry\\")), lt(\\"length\\", 180), eq(\\"genre\\", \\"pop\\"), eq(\\"hasLyrics\\", true))"
+    "filter": "and(or(eq(\\"artist\\", \\"Taylor Swift\\"), eq(\\"artist\\", \\"Katy Perry\\")), lt(\\"length\\", 180), eq(\\"genre\\", \\"pop\\"))"
 }
 \`\`\``;
 

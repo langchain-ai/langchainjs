@@ -18,14 +18,12 @@ export class GmailGetThread extends GmailBaseTool {
   async _call(arg: z.output<typeof this.schema>) {
     const { threadId } = arg;
 
-    const gmail = await this.getGmailClient();
-
-    const { data } = await gmail.users.threads.get({
+    const thread = await this.gmail.users.threads.get({
       userId: "me",
-      format: "full",
-
       id: threadId,
     });
+
+    const { data } = thread;
 
     if (!data) {
       throw new Error("No data returned from Gmail");
@@ -51,17 +49,21 @@ export class GmailGetThread extends GmailBaseTool {
           throw new Error("No headers returned from Gmail");
         }
 
-        const { subject, sender, body } = this.parseHeaderAndBody(payload);
+        const subject = headers.find((header) => header.name === "Subject");
 
         if (!subject) {
           throw new Error("No subject returned from Gmail");
         }
 
+        const body = headers.find((header) => header.name === "Body");
+
         if (!body) {
           throw new Error("No body returned from Gmail");
         }
 
-        if (!sender) {
+        const from = headers.find((header) => header.name === "From");
+
+        if (!from) {
           throw new Error("No from returned from Gmail");
         }
 
@@ -87,8 +89,8 @@ export class GmailGetThread extends GmailBaseTool {
 
         return {
           subject: subject.value,
-          body,
-          from: sender.value,
+          body: body.value,
+          from: from.value,
           to: to.value,
           date: date.value,
           messageId: messageIdHeader.value,

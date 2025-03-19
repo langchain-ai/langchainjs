@@ -2,7 +2,7 @@ import { ChatLlamaCpp } from "@langchain/community/chat_models/llama_cpp";
 import { LLMChain } from "langchain/chains";
 import { PromptTemplate } from "@langchain/core/prompts";
 
-const llamaPath = "/Replace/with/path/to/your/model/gguf-llama3-Q4_0.bin";
+const llamaPath = "/Replace/with/path/to/your/model/gguf-llama2-q4_0.bin";
 
 const model = await ChatLlamaCpp.initialize({
   modelPath: llamaPath,

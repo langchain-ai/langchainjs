@@ -75,7 +75,7 @@ export class PineconeEmbeddings
       );
     }
 
-    let embeddings: EmbeddingsList;
+    let embeddings;
     if (this.params) {
       embeddings = await this.caller.call(async () => {
         const result: EmbeddingsList = await this.client.inference.embed(
@@ -98,10 +98,9 @@ export class PineconeEmbeddings
 
     const embeddingsList: number[][] = [];
 
-    for (let i = 0; i < embeddings.data.length; i += 1) {
-      const embedding = embeddings.data[i];
-      if ("values" in embedding && embedding.values) {
-        embeddingsList.push(embedding.values);
+    for (let i = 0; i < embeddings.length; i += 1) {
+      if (embeddings[i].values) {
+        embeddingsList.push(embeddings[i].values as number[]);
       }
     }
     return embeddingsList;
@@ -131,8 +130,8 @@ export class PineconeEmbeddings
         return await this.client.inference.embed(this.model, [text], {});
       });
     }
-    if ("values" in embeddings.data[0]) {
-      return embeddings.data[0].values as number[];
+    if (embeddings[0].values) {
+      return embeddings[0].values as number[];
     } else {
       return [];
     }
