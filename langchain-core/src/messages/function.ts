@@ -15,6 +15,8 @@ export interface FunctionMessageFieldsWithName extends BaseMessageFields {
  * Represents a function message in a conversation.
  */
 export class FunctionMessage extends BaseMessage {
+  declare tool_calls?: never;
+
   static lc_name() {
     return "FunctionMessage";
   }
@@ -49,6 +51,12 @@ export class FunctionMessage extends BaseMessage {
  * with other function message chunks.
  */
 export class FunctionMessageChunk extends BaseMessageChunk {
+  declare tool_calls?: never;
+
+  declare tool_call_chunks?: never;
+
+  declare invalid_tool_calls?: never;
+
   static lc_name() {
     return "FunctionMessageChunk";
   }

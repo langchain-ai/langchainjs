@@ -8,6 +8,19 @@ import {
   AIMessageChunk,
   coerceMessageLikeToMessage,
   SystemMessage,
+  isAIMessageChunk,
+  isHumanMessageChunk,
+  isSystemMessageChunk,
+  BaseMessageChunk,
+  SystemMessageChunk,
+  isAIMessage,
+  isHumanMessage,
+  isSystemMessage,
+  isToolMessage,
+  BaseMessage,
+  isChatMessage,
+  isToolMessageChunk,
+  isChatMessageChunk,
 } from "../index.js";
 import { load } from "../../load/index.js";
 import { concat } from "../../utils/stream.js";
@@ -498,4 +511,93 @@ describe("usage_metadata serialized", () => {
     expect(jsonConcatenatedAIMessageChunk).toContain("output_tokens");
     expect(jsonConcatenatedAIMessageChunk).toContain("total_tokens");
   });
+});
+
+it("Should narrow tool call typing when accessing a base message array", async () => {
+  const messages: BaseMessage[] = [new SystemMessage("test")];
+  messages.push(new AIMessage("foo"));
+  if (messages[0].tool_calls?.[0] !== undefined) {
+    // Allow checking existence on BaseMessage with no errors
+    void messages[0].tool_calls[0]?.args;
+  }
+
+  const msg = messages[0];
+  if (isAIMessage(msg)) {
+    // Should allow access from AI messages
+    void msg.tool_calls?.[0].args;
+  }
+  if (isHumanMessage(msg)) {
+    // @ts-expect-error Typing should not allow access from human messages
+    void msg.tool_calls?.[0].args;
+  }
+  if (isSystemMessage(msg)) {
+    // @ts-expect-error Typing should not allow access from system messages
+    void msg.tool_calls?.[0].args;
+  }
+  if (isToolMessage(msg)) {
+    // @ts-expect-error Typing should not allow access from tool messages
+    void msg.tool_calls?.[0].args;
+  }
+  if (isChatMessage(msg)) {
+    // @ts-expect-error Typing should not allow access from chat messages
+    void msg.tool_calls?.[0].args;
+  }
+
+  const messageChunks: BaseMessageChunk[] = [new SystemMessageChunk("test")];
+  if (messageChunks[0].tool_calls?.[0] !== undefined) {
+    // Allow checking existence on BaseMessage with no errors
+    void messageChunks[0].tool_calls[0].args;
+  }
+
+  if (messageChunks[0].tool_call_chunks?.[0] !== undefined) {
+    // Allow checking existence on BaseMessage with no errors
+    void messageChunks[0].tool_call_chunks[0].args;
+  }
+
+  if (messageChunks[0].invalid_tool_calls?.[0] !== undefined) {
+    // Allow checking existence on BaseMessage with no errors
+    void messageChunks[0].invalid_tool_calls[0].args;
+  }
+
+  const msgChunk = messageChunks[0];
+  if (isAIMessageChunk(msgChunk)) {
+    // Typing should allow access from AI message chunks
+    void msgChunk.tool_calls?.[0].args;
+    // Typing should allow access from AI message chunks
+    void msgChunk.tool_call_chunks?.[0].args;
+    // Typing should allow access from AI message chunks
+    void msgChunk.invalid_tool_calls?.[0].args;
+  }
+  if (isHumanMessageChunk(msgChunk)) {
+    // @ts-expect-error Typing should not allow access from human message chunks
+    void msgChunk.tool_calls?.[0].args;
+    // @ts-expect-error Typing should not allow access from human message chunks
+    void msgChunk.tool_call_chunks?.[0].args;
+    // @ts-expect-error Typing should not allow access from human message chunks
+    void msgChunk.invalid_tool_calls?.[0].args;
+  }
+  if (isSystemMessageChunk(msgChunk)) {
+    // @ts-expect-error Typing should not allow access from system message chunks
+    void msgChunk.tool_calls?.[0].args;
+    // @ts-expect-error Typing should not allow access from system message chunks
+    void msgChunk.tool_call_chunks?.[0].args;
+    // @ts-expect-error Typing should not allow access from system message chunks
+    void msgChunk.invalid_tool_calls?.[0].args;
+  }
+  if (isToolMessageChunk(msgChunk)) {
+    // @ts-expect-error Typing should not allow access from tool message chunks
+    void msgChunk.tool_calls?.[0].args;
+    // @ts-expect-error Typing should not allow access from tool message chunks
+    void msgChunk.tool_call_chunks?.[0].args;
+    // @ts-expect-error Typing should not allow access from tool message chunks
+    void msgChunk.invalid_tool_calls?.[0].args;
+  }
+  if (isChatMessageChunk(msgChunk)) {
+    // @ts-expect-error Typing should not allow access from chat message chunks
+    void msgChunk.tool_calls?.[0].args;
+    // @ts-expect-error Typing should not allow access from chat message chunks
+    void msgChunk.tool_call_chunks?.[0].args;
+    // @ts-expect-error Typing should not allow access from chat message chunks
+    void msgChunk.invalid_tool_calls?.[0].args;
+  }
 });
