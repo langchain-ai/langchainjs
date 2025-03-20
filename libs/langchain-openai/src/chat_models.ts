@@ -2463,7 +2463,7 @@ export class ChatOpenAI<
       const requestOptions = this._getClientOptions(options);
       try {
         // use parse if dealing with json_schema
-        if (request.text?.format?.type === "json_schema") {
+        if (request.text?.format?.type === "json_schema" && !request.stream) {
           return await this.client.responses.parse(request, requestOptions);
         }
         return await this.client.responses.create(request, requestOptions);

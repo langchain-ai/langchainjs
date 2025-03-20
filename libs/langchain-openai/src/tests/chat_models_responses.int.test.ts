@@ -11,6 +11,7 @@ import {
 import { tool } from "@langchain/core/tools";
 import { z } from "zod";
 import { ChatOpenAI } from "../chat_models.js";
+import { zodToJsonSchema } from "zod-to-json-schema";
 
 function assertResponse(message: BaseMessage | BaseMessageChunk | undefined) {
   if (message == null) throw new Error("`message` is null");
@@ -60,58 +61,10 @@ function assertResponse(message: BaseMessage | BaseMessageChunk | undefined) {
   }
 }
 
-test("Test ChatOpenAI with built-in web search", async () => {
+test("Test with built-in web search", async () => {
   const llm = new ChatOpenAI({ modelName: "gpt-4o-mini" });
 
   // Test invoking with web search
-  const firstResponse = await llm.invoke(
-    "What was a positive news story from today?",
-    { tools: [{ type: "web_search_preview" }] }
-  );
-  assertResponse(firstResponse);
-
-  // Test streaming
-  let full: AIMessageChunk | undefined;
-  for await (const chunk of await llm.stream(
-    "What was a positive news story from today?",
-    { tools: [{ type: "web_search_preview" }] }
-  )) {
-    expect(isAIMessageChunk(chunk)).toBe(true);
-    full = full?.concat(chunk as AIMessageChunk) ?? chunk;
-  }
-  assertResponse(full);
-
-  // Use OpenAI's stateful API
-  const response = await llm.invoke("what about a negative one", {
-    tools: [{ type: "web_search_preview" }],
-    previous_response_id: firstResponse.response_metadata.id,
-  });
-  assertResponse(response);
-
-  // Manually pass in chat history
-  const historyResponse = await llm.invoke(
-    [
-      firstResponse,
-      {
-        role: "user",
-        content: [{ type: "text", text: "what about a negative one" }],
-      },
-    ],
-    { tools: [{ type: "web_search_preview" }] }
-  );
-  assertResponse(historyResponse);
-
-  // Bind tool
-  const boundResponse = await llm
-    .bindTools([{ type: "web_search_preview" }])
-    .invoke("What was a positive news story from today?");
-
-  assertResponse(boundResponse);
-});
-
-test("Test ChatOpenAI with built-in web search", async () => {
-  const llm = new ChatOpenAI({ modelName: "gpt-4o-mini" });
-
   const firstResponse = await llm.invoke(
     "What was a positive news story from today?",
     { tools: [{ type: "web_search_preview" }] }
@@ -185,6 +138,98 @@ test("Test function calling", async () => {
 
   const response = await llm.invoke("whats some good news from today");
   assertResponse(response);
+});
+
+test("Test structured output", async () => {
+  const schema = z.object({ response: z.string() });
+  const response_format = {
+    type: "json_schema" as const,
+    json_schema: {
+      name: "get_output",
+      description: "Get output for user",
+      schema: zodToJsonSchema(schema),
+      strict: true,
+    },
+  };
+
+  const llm = new ChatOpenAI({
+    modelName: "gpt-4o-mini",
+    useResponsesApi: true,
+  });
+  const response = await llm.invoke("how are ya", { response_format });
+
+  const parsed = schema.parse(JSON.parse(response.text));
+  expect(parsed).toEqual(response.additional_kwargs.parsed);
+  expect(parsed.response).toBeDefined();
+
+  // test stream
+  let full: AIMessageChunk | undefined;
+  for await (const chunk of await llm.stream("how are ya", {
+    response_format,
+  })) {
+    expect(isAIMessageChunk(chunk)).toBe(true);
+    full = full?.concat(chunk as AIMessageChunk) ?? chunk;
+  }
+  const parsedFull = schema.parse(JSON.parse(full?.text ?? ""));
+  expect(parsedFull).toEqual(full?.additional_kwargs.parsed);
+  expect(parsedFull.response).toBeDefined();
+});
+
+test("Test function calling and structured output", async () => {
+  const multiply = tool((args) => args.x * args.y, {
+    name: "multiply",
+    description: "Multiply two numbers",
+    schema: z.object({ x: z.number(), y: z.number() }),
+  });
+
+  const schema = z.object({ response: z.string() });
+  const response_format = {
+    type: "json_schema" as const,
+    json_schema: {
+      name: "get_output",
+      description: "Get output for user",
+      schema: zodToJsonSchema(schema),
+      strict: true,
+    },
+  };
+
+  const llm = new ChatOpenAI({
+    modelName: "gpt-4o-mini",
+    useResponsesApi: true,
+  });
+
+  // Test structured output
+  const response = await llm.invoke("how are ya", { response_format });
+  const parsed = schema.parse(JSON.parse(response.text));
+  expect(parsed).toEqual(response.additional_kwargs.parsed);
+  expect(parsed.response).toBeDefined();
+
+  // Test function calling
+  const aiMsg = await llm
+    .bindTools([multiply], { response_format, strict: true })
+    .invoke("whats 5 * 4");
+
+  expect(aiMsg.tool_calls?.length).toBe(1);
+  expect(aiMsg.tool_calls?.[0].name).toBe("multiply");
+  expect(new Set(Object.keys(aiMsg.tool_calls?.[0].args ?? {}))).toEqual(
+    new Set(["x", "y"])
+  );
+});
+
+test("Test reasoning", async () => {
+  const llm = new ChatOpenAI({ modelName: "o3-mini", useResponsesApi: true });
+  const response = await llm.invoke("Hello", { reasoning_effort: "low" });
+  expect(response).toBeInstanceOf(AIMessage);
+  expect(response.additional_kwargs.reasoning).toBeDefined();
+
+  const llmWithEffort = new ChatOpenAI({
+    modelName: "o3-mini",
+    reasoningEffort: "low",
+    useResponsesApi: true,
+  });
+  const response2 = await llmWithEffort.invoke("Hello");
+  expect(response2).toBeInstanceOf(AIMessage);
+  expect(response2.additional_kwargs.reasoning).toBeDefined();
 });
 
 test("Test stateful API", async () => {
