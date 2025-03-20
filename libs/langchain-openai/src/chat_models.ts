@@ -219,6 +219,40 @@ function _convertMessagesToOpenAIResponsesParams(
 
       if (role === "tool") {
         const toolMessage = lcMsg as ToolMessage;
+
+        // Handle computer call output
+        if (toolMessage.additional_kwargs?.type === "computer_call_output") {
+          const output = (() => {
+            if (typeof toolMessage.content === "string") {
+              return {
+                type: "computer_screenshot" as const,
+                image_url: toolMessage.content,
+              };
+            }
+
+            if (Array.isArray(toolMessage.content)) {
+              return toolMessage.content.find(
+                (i) => i.type === "computer_screenshot"
+              ) as {
+                type: "computer_screenshot";
+                image_url: string;
+              };
+            }
+
+            return toolMessage.content as {
+              type: "computer_screenshot";
+              image_url: string;
+            };
+          })();
+
+          return {
+            type: "computer_call_output",
+            output,
+            call_id: toolMessage.tool_call_id,
+            id: toolMessage.id,
+          };
+        }
+
         return {
           type: "function_call_output",
           call_id: toolMessage.tool_call_id,

@@ -9563,35 +9563,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/openai@npm:>=0.1.0 <0.5.0, @langchain/openai@npm:>=0.2.0 <0.5.0, @langchain/openai@npm:^0.4.2":
-  version: 0.4.4
-  resolution: "@langchain/openai@npm:0.4.4"
-  dependencies:
-    js-tiktoken: ^1.0.12
-    openai: ^4.77.0
-    zod: ^3.22.4
-    zod-to-json-schema: ^3.22.3
-  peerDependencies:
-    "@langchain/core": ">=0.3.39 <0.4.0"
-  checksum: fb8fe03764637a790b47f4a0c7d7050c796b43a4c03590e77b00c3183c52581f52d4077cec7b57ad4eeb7710d3bbbf1d8286e225da5e844580592d4e3218b1f2
-  languageName: node
-  linkType: hard
-
-"@langchain/openai@npm:~0.3.0":
-  version: 0.3.17
-  resolution: "@langchain/openai@npm:0.3.17"
-  dependencies:
-    js-tiktoken: ^1.0.12
-    openai: ^4.77.0
-    zod: ^3.22.4
-    zod-to-json-schema: ^3.22.3
-  peerDependencies:
-    "@langchain/core": ">=0.3.29 <0.4.0"
-  checksum: af88894dcfa8381c0b0df924e085796995f5d5ba2a2657ea72b4181b35c5d92b0040c5cf305378c1f48a8f1f04d4a3b0b29ba1d84f80cedf5dab8bc46d7d5c6c
-  languageName: node
-  linkType: hard
-
-"@langchain/openai@workspace:*, @langchain/openai@workspace:^, @langchain/openai@workspace:libs/langchain-openai":
+"@langchain/openai@>=0.1.0 <0.5.0, @langchain/openai@>=0.2.0 <0.5.0, @langchain/openai@^0.4.2, @langchain/openai@workspace:*, @langchain/openai@workspace:^, @langchain/openai@workspace:libs/langchain-openai":
   version: 0.0.0-use.local
   resolution: "@langchain/openai@workspace:libs/langchain-openai"
   dependencies:
@@ -9625,6 +9597,20 @@ __metadata:
     "@langchain/core": ">=0.3.39 <0.4.0"
   languageName: unknown
   linkType: soft
+
+"@langchain/openai@npm:~0.3.0":
+  version: 0.3.17
+  resolution: "@langchain/openai@npm:0.3.17"
+  dependencies:
+    js-tiktoken: ^1.0.12
+    openai: ^4.77.0
+    zod: ^3.22.4
+    zod-to-json-schema: ^3.22.3
+  peerDependencies:
+    "@langchain/core": ">=0.3.29 <0.4.0"
+  checksum: af88894dcfa8381c0b0df924e085796995f5d5ba2a2657ea72b4181b35c5d92b0040c5cf305378c1f48a8f1f04d4a3b0b29ba1d84f80cedf5dab8bc46d7d5c6c
+  languageName: node
+  linkType: hard
 
 "@langchain/pinecone@workspace:*, @langchain/pinecone@workspace:libs/langchain-pinecone":
   version: 0.0.0-use.local
@@ -31250,31 +31236,6 @@ __metadata:
   linkType: hard
 
 "openai@npm:*, openai@npm:^4.32.1, openai@npm:^4.41.1, openai@npm:^4.77.0, openai@npm:^4.87.3":
-  version: 4.87.3
-  resolution: "openai@npm:4.87.3"
-  dependencies:
-    "@types/node": ^18.11.18
-    "@types/node-fetch": ^2.6.4
-    abort-controller: ^3.0.0
-    agentkeepalive: ^4.2.1
-    form-data-encoder: 1.7.2
-    formdata-node: ^4.3.2
-    node-fetch: ^2.6.7
-  peerDependencies:
-    ws: ^8.18.0
-    zod: ^3.23.8
-  peerDependenciesMeta:
-    ws:
-      optional: true
-    zod:
-      optional: true
-  bin:
-    openai: bin/cli
-  checksum: 2cbb548c5b6dfa21c87b012fee81010925d8106626e4adc0ba86e2a5974aca3b5ec29e3ddc2f354d8c95e1d64da8d384f1495ceabbbf2948269fc2dab34bb3fc
-  languageName: node
-  linkType: hard
-
-"openai@npm:^4.87.3":
   version: 4.87.3
   resolution: "openai@npm:4.87.3"
   dependencies:
