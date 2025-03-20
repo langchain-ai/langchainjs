@@ -200,12 +200,12 @@ test("Test function calling and structured output", async () => {
 
   // Test structured output
   const response = await llm.invoke("how are ya", { response_format });
-  const parsed = schema.parse(JSON.parse(response.text));
+  let parsed = schema.parse(JSON.parse(response.text));
   expect(parsed).toEqual(response.additional_kwargs.parsed);
   expect(parsed.response).toBeDefined();
 
   // Test function calling
-  const aiMsg = await llm
+  let aiMsg = await llm
     .bindTools([multiply], { response_format, strict: true })
     .invoke("whats 5 * 4");
 
@@ -214,6 +214,14 @@ test("Test function calling and structured output", async () => {
   expect(new Set(Object.keys(aiMsg.tool_calls?.[0].args ?? {}))).toEqual(
     new Set(["x", "y"])
   );
+
+  aiMsg = await llm
+    .bindTools([multiply], { response_format, strict: true })
+    .invoke("Tell me a joke");
+
+  parsed = schema.parse(JSON.parse(response.text));
+  expect(parsed).toEqual(response.additional_kwargs.parsed);
+  expect(parsed.response).toBeDefined();
 });
 
 test("Test reasoning", async () => {

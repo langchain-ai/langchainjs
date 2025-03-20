@@ -525,7 +525,15 @@ function _convertOpenAIResponsesDeltaToBaseMessageChunk(
     response_metadata.model_name = chunk.response.model;
     response_metadata.model = chunk.response.model;
   } else if (chunk.type === "response.completed") {
+    const msg = _convertOpenAIResponsesMessageToBaseMessage(chunk.response);
+
     usage_metadata = chunk.response.usage;
+    if (chunk.response.text?.format?.type === "json_schema") {
+      additional_kwargs.parsed ??= JSON.parse(msg.text);
+    }
+    for (const [key, value] of Object.entries(chunk.response)) {
+      if (key !== "id") response_metadata[key] = value;
+    }
   } else if (chunk.type === "response.function_call_arguments.delta") {
     tool_call_chunks.push({
       type: "tool_call_chunk",
