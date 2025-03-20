@@ -267,10 +267,9 @@ function _convertMessagesToOpenAIResponsesParams(
       if (role === "assistant") {
         const functionCallIds =
           // eslint-disable-next-line @typescript-eslint/no-use-before-define
-          lcMsg.additional_kwargs[_FUNCTION_CALL_IDS_MAP_KEY] as Record<
-            string,
-            string
-          >;
+          lcMsg.additional_kwargs[_FUNCTION_CALL_IDS_MAP_KEY] as
+            | Record<string, string>
+            | undefined;
 
         if (isAIMessage(lcMsg) && !!lcMsg.tool_calls?.length) {
           return lcMsg.tool_calls.map(
@@ -279,7 +278,8 @@ function _convertMessagesToOpenAIResponsesParams(
               name: toolCall.name,
               arguments: JSON.stringify(toolCall.args),
               call_id: toolCall.id!,
-              id: functionCallIds[toolCall.id!],
+              // @ts-expect-error Might come from a non-Responses API message
+              id: functionCallIds?.[toolCall.id!],
             })
           );
         }
@@ -290,7 +290,8 @@ function _convertMessagesToOpenAIResponsesParams(
               type: "function_call",
               name: toolCall.function.name,
               call_id: toolCall.id,
-              id: functionCallIds[toolCall.id],
+              // @ts-expect-error Might come from a non-Responses API message
+              id: functionCallIds?.[toolCall.id],
               arguments: toolCall.function.arguments,
             })
           );
@@ -406,6 +407,7 @@ function _convertOpenAIResponsesMessageToBaseMessage(
     [key: string]: unknown;
     reasoning?: unknown;
     tool_outputs?: unknown[];
+    [_FUNCTION_CALL_IDS_MAP_KEY]?: Record<string, string>;
   } = {};
 
   for (const item of response.output) {
@@ -443,6 +445,9 @@ function _convertOpenAIResponsesMessageToBaseMessage(
         }
         invalid_tool_calls.push(makeInvalidToolCall(fnAdapter, errMessage));
       }
+
+      additional_kwargs[_FUNCTION_CALL_IDS_MAP_KEY] ??= {};
+      additional_kwargs[_FUNCTION_CALL_IDS_MAP_KEY][item.call_id] = item.id;
     } else if (item.type === "reasoning") {
       additional_kwargs.reasoning = item;
     } else {
@@ -1635,6 +1640,7 @@ export class ChatOpenAI<
             }
             return undefined;
           }
+
           return { format };
         })(),
         parallel_tool_calls: options?.parallel_tool_calls,
@@ -2647,6 +2653,7 @@ export class ChatOpenAI<
         },
       } as Partial<CallOptions>);
       if (isZodSchema(schema)) {
+        // TODO: use .parsed if possible
         outputParser = StructuredOutputParser.fromZodSchema(schema);
       } else {
         outputParser = new JsonOutputParser<RunOutput>();
