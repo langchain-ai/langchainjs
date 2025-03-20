@@ -43,13 +43,13 @@ import { NewTokenIndices } from "@langchain/core/callbacks/base";
 import { z } from "zod";
 import {
   Runnable,
+  RunnableLambda,
   RunnablePassthrough,
   RunnableSequence,
 } from "@langchain/core/runnables";
 import {
   JsonOutputParser,
   StructuredOutputParser,
-  type BaseLLMOutputParser,
 } from "@langchain/core/output_parsers";
 import {
   JsonOutputKeyToolsParser,
@@ -377,7 +377,7 @@ function _convertMessagesToOpenAIResponsesParams(
 }
 
 function _convertOpenAIResponsesMessageToBaseMessage(
-  response: ResponsesCreateInvoke
+  response: ResponsesCreateInvoke | ResponsesParseInvoke
 ): BaseMessage {
   if (response.error) {
     // TODO: add support for `addLangChainErrorFields`
@@ -407,6 +407,7 @@ function _convertOpenAIResponsesMessageToBaseMessage(
     [key: string]: unknown;
     reasoning?: unknown;
     tool_outputs?: unknown[];
+    parsed?: unknown;
     [_FUNCTION_CALL_IDS_MAP_KEY]?: Record<string, string>;
   } = {};
 
@@ -416,6 +417,9 @@ function _convertOpenAIResponsesMessageToBaseMessage(
       content.push(
         ...item.content.map((part) => {
           if (part.type === "output_text") {
+            if ("parsed" in part && part.parsed != null) {
+              additional_kwargs.parsed = part.parsed;
+            }
             return {
               type: "text",
               text: part.text,
@@ -566,6 +570,7 @@ type ExcludeController<T> = T extends { controller: unknown } ? never : T;
 type ExcludeNonController<T> = T extends { controller: unknown } ? T : never;
 
 type ResponsesCreate = OpenAIClient.Responses["create"];
+type ResponsesParse = OpenAIClient.Responses["parse"];
 type ResponsesCreateParams = Parameters<OpenAIClient.Responses["create"]>[0];
 
 type ResponsesTool = Exclude<ResponsesCreateParams["tools"], undefined>[number];
@@ -582,6 +587,10 @@ type ResponsesInputItem = Exclude<
 
 type ResponsesCreateInvoke = ExcludeController<
   Awaited<ReturnType<ResponsesCreate>>
+>;
+
+type ResponsesParseInvoke = ExcludeController<
+  Awaited<ReturnType<ResponsesParse>>
 >;
 
 type ResponsesCreateStream = ExcludeNonController<
@@ -2453,8 +2462,11 @@ export class ChatOpenAI<
     return this.caller.call(async () => {
       const requestOptions = this._getClientOptions(options);
       try {
-        const res = await this.client.responses.create(request, requestOptions);
-        return res;
+        // use parse if dealing with json_schema
+        if (request.text?.format?.type === "json_schema") {
+          return await this.client.responses.parse(request, requestOptions);
+        }
+        return await this.client.responses.create(request, requestOptions);
       } catch (e) {
         const error = wrapOpenAIClientError(e);
         throw error;
@@ -2609,7 +2621,7 @@ export class ChatOpenAI<
       includeRaw = config?.includeRaw;
     }
     let llm: Runnable<BaseLanguageModelInput>;
-    let outputParser: BaseLLMOutputParser<RunOutput>;
+    let outputParser: Runnable<AIMessageChunk, RunOutput>;
 
     if (config?.strict !== undefined && method === "jsonMode") {
       throw new Error(
@@ -2653,8 +2665,15 @@ export class ChatOpenAI<
         },
       } as Partial<CallOptions>);
       if (isZodSchema(schema)) {
-        // TODO: use .parsed if possible
-        outputParser = StructuredOutputParser.fromZodSchema(schema);
+        const altParser = StructuredOutputParser.fromZodSchema(schema);
+        outputParser = RunnableLambda.from<AIMessageChunk, RunOutput>(
+          (aiMessage: AIMessageChunk) => {
+            if ("parsed" in aiMessage.additional_kwargs) {
+              return aiMessage.additional_kwargs.parsed as RunOutput;
+            }
+            return altParser;
+          }
+        );
       } else {
         outputParser = new JsonOutputParser<RunOutput>();
       }
@@ -2748,12 +2767,7 @@ export class ChatOpenAI<
     return RunnableSequence.from<
       BaseLanguageModelInput,
       { raw: BaseMessage; parsed: RunOutput }
-    >([
-      {
-        raw: llm,
-      },
-      parsedWithFallback,
-    ]);
+    >([{ raw: llm }, parsedWithFallback]);
   }
 }
 

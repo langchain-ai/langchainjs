@@ -25,6 +25,14 @@ class ChatOpenAIResponsesStandardIntegrationTests extends ChatModelIntegrationTe
       },
     });
   }
+
+  async testInvokeMoreComplexTools() {
+    this.skipTestMessage(
+      "testInvokeMoreComplexTools",
+      "ChatOpenAI",
+      "OpenAI Responses API does not support Record<string, unknown>"
+    );
+  }
 }
 
 const testClass = new ChatOpenAIResponsesStandardIntegrationTests();
