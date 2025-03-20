@@ -166,6 +166,7 @@ async function _callTool(
 /**
  * Load all tools from an MCP client.
  *
+ * @param serverName - The name of the server to load tools from
  * @param client - The MCP client
  * @returns A list of LangChain tools
  */

@@ -118,7 +118,7 @@ try {
   await client.connect(transport);
 
   // Get tools
-  const tools = await loadMcpTools(client);
+  const tools = await loadMcpTools("math", client);
 
   // Create and run the agent
   const agent = createReactAgent({ llm: model, tools });
