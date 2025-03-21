@@ -214,6 +214,7 @@ PaLM models are no longer supported.
 ```typescript
 import { MatchingEngine } from "langchain/vectorstores/googlevertexai";
 ```
+
 ### Postgres Vector Store
 
 The [PostgresVectorStore](docs/integrations/vectorstores/google_cloudsql_pg) from the
@@ -250,7 +251,11 @@ const engine: PostgresEngine = await PostgresEngine.fromInstance(
 Initialize the vector store table:
 
 ```typescript
-await engine.initVectorstoreTable("my_vector_store_table", 768, vectorStoreArgs);
+await engine.initVectorstoreTable(
+  "my_vector_store_table",
+  768,
+  vectorStoreArgs
+);
 ```
 
 Create a vector store instance:
@@ -295,7 +300,7 @@ The [PostgresChatMessageHistory](docs/integrations/memory/google_cloudsql_pg) fr
 $ yarn add @langchain/google-cloud-sql-pg
 ```
 
-*Note:* See the [Postgres Vector Store](#Postgres Vector Store) section on this page to learn
+_Note:_ See the [Postgres Vector Store](#Postgres Vector Store) section on this page to learn
 how to install the package and initialize a DB connection.
 
 Initialize the chat history table:
@@ -321,7 +326,7 @@ const historyInstance = await PostgresChatMessageHistory.create(
 The [PostgresLoader](docs/integrations/memory/google_cloudsql_pg) from
 `@langchain/google-cloud-sql-pg` provides a way to use the CloudSQL for PostgresSQL to load data as LangChain `Document`s.
 
-*Note:* See the [Postgres Vector Store](#Postgres Vector Store) section on this page to learn
+_Note:_ See the [Postgres Vector Store](#Postgres Vector Store) section on this page to learn
 how to install the package and initialize a DB connection.
 
 Create a loader instance:
@@ -329,12 +334,20 @@ Create a loader instance:
 ```typescript
 const documentLoaderArgs: PostgresLoaderOptions = {
   tableName: "test_table_custom",
-  contentColumns: [ "fruit_name", "variety"],
-  metadataColumns: ["fruit_id", "quantity_in_stock", "price_per_unit", "organic"],
-  format: "text"
+  contentColumns: ["fruit_name", "variety"],
+  metadataColumns: [
+    "fruit_id",
+    "quantity_in_stock",
+    "price_per_unit",
+    "organic",
+  ],
+  format: "text",
 };
 
-const documentLoaderInstance = await PostgresLoader.create(PEInstance, documentLoaderArgs);
+const documentLoaderInstance = await PostgresLoader.create(
+  PEInstance,
+  documentLoaderArgs
+);
 
 const documents = await documentLoaderInstance.load();
 ```

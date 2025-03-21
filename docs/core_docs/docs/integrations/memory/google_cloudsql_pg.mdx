@@ -33,9 +33,10 @@ gcloud config set project YOUR-PROJECT-ID
 ```
 
 If you don't know your project ID, try the following:
-*   Run `gcloud config list`.
-*   Run `gcloud projects list`.
-*   See the support page: [Locate the project ID](https://support.google.com/googleapi/answer/7014113).
+
+- Run `gcloud config list`.
+- Run `gcloud projects list`.
+- See the support page: [Locate the project ID](https://support.google.com/googleapi/answer/7014113).
 
 ## Setting up a PostgresChatMessageHistory instance
 
@@ -108,7 +109,7 @@ to pass an array of messages.
 import { AIMessage, BaseMessage, HumanMessage } from "@langchain/core/messages";
 
 // Add one message
-const msg = new HumanMessage("Hi!")
+const msg = new HumanMessage("Hi!");
 await historyInstance.addMessage(msg);
 
 // Add an array of messages

@@ -4,7 +4,7 @@ import { AIMessage, BaseMessage, HumanMessage } from "@langchain/core/messages";
 import PostgresEngine, { PostgresEngineArgs } from "../engine.js";
 import { PostgresChatMessageHistory } from "../chatMessageHistory.js";
 
-dotenv.config()
+dotenv.config();
 
 const CHAT_MSG_TABLE = "test_message_table";
 const HOST = "127.0.0.1";
@@ -17,19 +17,16 @@ const pgArgs: PostgresEngineArgs = {
   // eslint-disable-next-line no-process-env
   user: process.env.DB_USER ?? "",
   // eslint-disable-next-line no-process-env
-  password: process.env.PASSWORD ?? ""
-}
+  password: process.env.PASSWORD ?? "",
+};
 
 describe("ChatMessageHistory creation", () => {
   let PEInstance: PostgresEngine;
 
   beforeAll(async () => {
-    PEInstance = await PostgresEngine.fromEngineArgs(
-      url,
-    );
+    PEInstance = await PostgresEngine.fromEngineArgs(url);
 
-    await PEInstance.pool.raw(`DROP TABLE IF EXISTS ${CHAT_MSG_TABLE}`)
-
+    await PEInstance.pool.raw(`DROP TABLE IF EXISTS ${CHAT_MSG_TABLE}`);
   });
 
   test("should throw an Error if the table has incorrect schema", async () => {
@@ -39,10 +36,14 @@ describe("ChatMessageHistory creation", () => {
       session_id TEXT NOT NULL,
       data JSONB NOT NULL,
       type TEXT NOT NULL);`
-    )
+    );
 
     async function createChatMsgInstance() {
-      await PostgresChatMessageHistory.create(PEInstance, "test", CHAT_MSG_TABLE)
+      await PostgresChatMessageHistory.initialize(
+        PEInstance,
+        "test",
+        CHAT_MSG_TABLE
+      );
     }
 
     await expect(createChatMsgInstance).rejects.toThrowError(
@@ -55,66 +56,76 @@ describe("ChatMessageHistory creation", () => {
         \n    data JSONB NOT NULL,
         \n    type TEXT NOT NULL
         \n);
-      `)
+      `
+      )
     );
 
-    await PEInstance.pool.raw(`DROP TABLE ${CHAT_MSG_TABLE}`)
-  })
+    await PEInstance.pool.raw(`DROP TABLE ${CHAT_MSG_TABLE}`);
+  });
 
   test("should create a new PostgresChatMessageHistory instance", async () => {
-    await PEInstance.initChatHistoryTable(CHAT_MSG_TABLE)
+    await PEInstance.initChatHistoryTable(CHAT_MSG_TABLE);
 
-    const historyInstance = await PostgresChatMessageHistory.create(PEInstance, "test", CHAT_MSG_TABLE)
+    const historyInstance = await PostgresChatMessageHistory.initialize(
+      PEInstance,
+      "test",
+      CHAT_MSG_TABLE
+    );
 
     expect(historyInstance).toBeDefined();
-  })
+  });
 
   afterAll(async () => {
-    await PEInstance.pool.raw(`DROP TABLE "${CHAT_MSG_TABLE}"`)
+    await PEInstance.pool.raw(`DROP TABLE "${CHAT_MSG_TABLE}"`);
 
     try {
       await PEInstance.closeConnection();
     } catch (error) {
       throw new Error(`Error on closing connection: ${error}`);
     }
-  })
+  });
 });
-
 
 describe("ChatMessageHistory methods", () => {
   let PEInstance: PostgresEngine;
   let historyInstance: PostgresChatMessageHistory;
 
   beforeAll(async () => {
-    PEInstance = await PostgresEngine.fromEngineArgs(
-      url,
-    );
+    PEInstance = await PostgresEngine.fromEngineArgs(url);
 
-    await PEInstance.pool.raw(`DROP TABLE IF EXISTS ${CHAT_MSG_TABLE}`)
-    await PEInstance.initChatHistoryTable(CHAT_MSG_TABLE)
-    historyInstance = await PostgresChatMessageHistory.create(PEInstance, "test", CHAT_MSG_TABLE)
+    await PEInstance.pool.raw(`DROP TABLE IF EXISTS ${CHAT_MSG_TABLE}`);
+    await PEInstance.initChatHistoryTable(CHAT_MSG_TABLE);
+    historyInstance = await PostgresChatMessageHistory.initialize(
+      PEInstance,
+      "test",
+      CHAT_MSG_TABLE
+    );
   });
 
   test("should add a message to the store", async () => {
-    const msg1 = new HumanMessage("Hi!")
-    const msg2 = new AIMessage("what's up?")
+    const msg1 = new HumanMessage("Hi!");
+    const msg2 = new AIMessage("what's up?");
 
     await historyInstance.addMessage(msg1);
-    await historyInstance.addMessage(msg2)
+    await historyInstance.addMessage(msg2);
 
-    const { rows } = await PEInstance.pool.raw(`SELECT * FROM "${CHAT_MSG_TABLE}"`);
+    const { rows } = await PEInstance.pool.raw(
+      `SELECT * FROM "${CHAT_MSG_TABLE}"`
+    );
     expect(rows).toHaveLength(2);
   });
 
   test("should add a list of messages to the store", async () => {
     await PEInstance.pool.raw(`TRUNCATE TABLE "${CHAT_MSG_TABLE}"`);
-    const msg1 = new HumanMessage("Hi!")
-    const msg2 = new AIMessage("what's up?")
-    const msg3 = new HumanMessage("How are you?")
-    const messages: BaseMessage[] = [msg1, msg2, msg3]
+    const msg1 = new HumanMessage("Hi!");
+    const msg2 = new AIMessage("what's up?");
+    const msg3 = new HumanMessage("How are you?");
+    const messages: BaseMessage[] = [msg1, msg2, msg3];
     await historyInstance.addMessages(messages);
 
-    const { rows } = await PEInstance.pool.raw(`SELECT * FROM "${CHAT_MSG_TABLE}"`);
+    const { rows } = await PEInstance.pool.raw(
+      `SELECT * FROM "${CHAT_MSG_TABLE}"`
+    );
     expect(rows).toHaveLength(3);
   });
 
@@ -137,23 +148,23 @@ describe("ChatMessageHistory methods", () => {
         : new AIMessage(message)
     );
 
-    expect(transformed[0]).toBeInstanceOf(HumanMessage)
-    expect(transformed[1]).toBeInstanceOf(AIMessage)
+    expect(transformed[0]).toBeInstanceOf(HumanMessage);
+    expect(transformed[1]).toBeInstanceOf(AIMessage);
   });
 
   test("should clear all messages added to the store", async () => {
     await historyInstance.clear();
     const messages = await historyInstance.getMessages();
-    expect(messages.length).toBe(0)
+    expect(messages.length).toBe(0);
   });
 
   afterAll(async () => {
-    await PEInstance.pool.raw(`DROP TABLE "${CHAT_MSG_TABLE}"`)
+    await PEInstance.pool.raw(`DROP TABLE "${CHAT_MSG_TABLE}"`);
 
     try {
       await PEInstance.closeConnection();
     } catch (error) {
       throw new Error(`Error on closing connection: ${error}`);
     }
-  })
+  });
 });

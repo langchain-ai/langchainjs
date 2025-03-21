@@ -16,11 +16,23 @@ class StrategyMixin {
  * Enumerator of the Distance strategies.
  */
 export class DistanceStrategy extends StrategyMixin {
-  public static EUCLIDEAN =  new StrategyMixin("<->", "l2_distance", "vector_l2_ops");
+  public static EUCLIDEAN = new StrategyMixin(
+    "<->",
+    "l2_distance",
+    "vector_l2_ops"
+  );
 
-  public static COSINE_DISTANCE = new StrategyMixin("<=>", "cosine_distance", "vector_cosine_ops");
+  public static COSINE_DISTANCE = new StrategyMixin(
+    "<=>",
+    "cosine_distance",
+    "vector_cosine_ops"
+  );
 
-  public static INNER_PRODUCT = new StrategyMixin("<#>", "inner_product", "vector_ip_ops"); 
+  public static INNER_PRODUCT = new StrategyMixin(
+    "<#>",
+    "inner_product",
+    "vector_ip_ops"
+  );
 }
 
 export const DEFAULT_DISTANCE_STRATEGY = DistanceStrategy.COSINE_DISTANCE;

@@ -4,7 +4,7 @@ The LangChain package for CloudSQL for Postgres provides a way to connect to Clo
 
 
 Main features:
-* The package creates a shared connection pool to connect to Google Cloud Postgress databases utilizing different ways for authentication such as IAM, user and password authorization.
+* The package creates a shared connection pool to connect to Google Cloud Postgres databases utilizing different ways for authentication such as IAM, user and password authorization.
 * Store metadata in columns instead of JSON, resulting in significant performance improvements.
 
 ##  Before you begin
@@ -69,12 +69,12 @@ const pvectorArgs: PostgresVectorStoreArgs = {
     metadataColumns: ["page", "source"]
 }
 
-const vectorStoreInstance = await PostgresVectorStore.create(engine, embeddingService, "my-table", pvectorArgs)
+const vectorStoreInstance = await PostgresVectorStore.initialize(engine, embeddingService, "my-table", pvectorArgs)
 ```
 -   You can pass the schemaName, contentColumn, embeddingColumn, distanceStrategy and others through the PostgresVectorStoreArgs interface to the PostgresVectorStore creation.
 -   Passing an empty object to these methods allows you to use the default values.
 
-PostgresVectorStore interface methods availables:
+PostgresVectorStore interface methods available:
 
 -   addDocuments
 -   addVectors
@@ -93,12 +93,12 @@ First, initialize the Chat History Table and then create the ChatMessageHistory 
 // ChatHistory table initialization
 await engine.initChatHistoryTable("chat_message_table");
 
-const historyInstance = await PostgresChatMessageHistory.create(engine, "test", "chat_message_table");
+const historyInstance = await PostgresChatMessageHistory.initialize(engine, "test", "chat_message_table");
 ```
 
 The create method of the PostgresChatMessageHistory receives the engine, the session Id and the table name.
 
-PostgresChatMessageHistory interface methods availables:
+PostgresChatMessageHistory interface methods available:
 
 -   addMessage
 -   addMessages
@@ -112,6 +112,8 @@ See the full [Chat Message History](https://js.langchain.com/docs/integrations/m
 Use a document loader to load data as LangChain `Document`s.
 
 ```typescript
+import { PostgresEngine, PostgresLoader } from "@langchain/google-cloud-sql-pg";
+
 const documentLoaderArgs: PostgresLoaderOptions = {
   tableName: "test_table_custom",
   contentColumns: [ "fruit_name", "variety"],
@@ -119,7 +121,7 @@ const documentLoaderArgs: PostgresLoaderOptions = {
   format: "text"
 };
 
-const documentLoaderInstance = await PostgresLoader.create(PEInstance, documentLoaderArgs);
+const documentLoaderInstance = await PostgresLoader.initialize(PEInstance, documentLoaderArgs);
 
 const documents = await documentLoaderInstance.load();
 ```

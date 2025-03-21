@@ -1,25 +1,32 @@
 import { EmbeddingsInterface } from "@langchain/core/embeddings";
-import { MaxMarginalRelevanceSearchOptions, VectorStore } from "@langchain/core/vectorstores";
+import {
+  MaxMarginalRelevanceSearchOptions,
+  VectorStore,
+} from "@langchain/core/vectorstores";
 import { Document } from "@langchain/core/documents";
 import { v4 as uuidv4 } from "uuid";
 import { maximalMarginalRelevance } from "@langchain/core/utils/math";
-import { DEFAULT_DISTANCE_STRATEGY, DistanceStrategy, QueryOptions } from "./indexes.js";
+import {
+  DEFAULT_DISTANCE_STRATEGY,
+  DistanceStrategy,
+  QueryOptions,
+} from "./indexes.js";
 import PostgresEngine from "./engine.js";
 import { customZip } from "./utils/utils.js";
 
 export interface PostgresVectorStoreArgs {
-  schemaName?: string,
-  contentColumn?: string,
-  embeddingColumn?: string,
-  metadataColumns?: Array<string>,
-  idColumn?: string,
-  distanceStrategy?: DistanceStrategy,
-  k?: number,
-  fetchK?: number,
-  lambdaMult?: number,
-  ignoreMetadataColumns?: Array<string>,
-  metadataJsonColumn?: string,
-  indexQueryOptions?: QueryOptions
+  schemaName?: string;
+  contentColumn?: string;
+  embeddingColumn?: string;
+  metadataColumns?: Array<string>;
+  idColumn?: string;
+  distanceStrategy?: DistanceStrategy;
+  k?: number;
+  fetchK?: number;
+  lambdaMult?: number;
+  ignoreMetadataColumns?: Array<string>;
+  metadataJsonColumn?: string;
+  indexQueryOptions?: QueryOptions;
 }
 
 export interface dbConfigArgs {
@@ -28,6 +35,152 @@ export interface dbConfigArgs {
   dbConfig?: PostgresVectorStoreArgs;
 }
 
+/**
+ * Google Cloud SQL for PostgreSQL vector store integration.
+ *
+ * Setup:
+ * Install `@langchain/google-cloud-sql-pg`
+ *
+ * ```bash
+ * npm install @langchain/google-cloud-sql-pg
+ * ```
+ *
+ * <details open>
+ * <summary><strong>Instantiate</strong></summary>
+ *
+ * ```typescript
+ * import { Column, PostgresEngine, PostgresEngineArgs, PostgresVectorStore, VectorStoreTableArgs } from "@langchain/google-cloud-sql-pg";
+ * // Or other embeddings
+ * import { OpenAIEmbeddings } from '@langchain/openai';
+ *
+ *
+ * const embeddings = new OpenAIEmbeddings({
+ *   model: "text-embedding-3-small",
+ * });
+ *
+ * const pgArgs: PostgresEngineArgs = {
+ *     user: "db-user",
+ *     password: "password"
+ * }
+ * // Create a shared connection pool
+ * const engine: PostgresEngine = await PostgresEngine.fromInstance(
+ *  "project-id",
+ *  "region",
+ *  "instance-name",
+ *  "database-name",
+ *  pgArgs
+ * );
+ * // (Optional) Specify metadata columns for filtering
+ * // All other metadata will be added to JSON
+ * const vectorStoreTableArgs: VectorStoreTableArgs = {
+ *   metadataColumns: [new Column("baz", "TEXT")],
+ * };
+ * // Create a vector store table
+ * await engine.initVectorstoreTable("my-table", 768, vectorStoreTableArgs);
+ * // Customize the vector store
+ * const pvectorArgs: PostgresVectorStoreArgs = {
+ *     idColumn: "ID_COLUMN",
+ *     contentColumn: "CONTENT_COLUMN",
+ *     embeddingColumn: "EMBEDDING_COLUMN",
+ *     metadataColumns: ["baz"]
+ * }
+ *
+ * const vectorStore = await PostgresVectorStore.initialize(engine, embeddingService, "my-table", pvectorArgs);
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Add documents</strong></summary>
+ *
+ * ```typescript
+ * import type { Document } from '@langchain/core/documents';
+ *
+ * const document1 = { pageContent: "foo", metadata: { baz: "bar" } };
+ * const document2 = { pageContent: "thud", metadata: { bar: "baz" } };
+ * const document3 = { pageContent: "i will be deleted :(", metadata: {} };
+ *
+ * const documents: Document[] = [document1, document2, document3];
+ * const ids = ["1", "2", "3"];
+ * await vectorStore.addDocuments(documents, { ids });
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Delete documents</strong></summary>
+ *
+ * ```typescript
+ * await vectorStore.delete({ ids: ["3"] });
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Similarity search</strong></summary>
+ *
+ * ```typescript
+ * const results = await vectorStore.similaritySearch("thud", 1);
+ * for (const doc of results) {
+ *   console.log(`* ${doc.pageContent} [${JSON.stringify(doc.metadata, null)}]`);
+ * }
+ * // Output:thud [{"baz":"bar"}]
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ *
+ * <details>
+ * <summary><strong>Similarity search with filter</strong></summary>
+ *
+ * ```typescript
+ * const resultsWithFilter = await vectorStore.similaritySearch("thud", 1, "baz = 'bar'");
+ *
+ * for (const doc of resultsWithFilter) {
+ *   console.log(`* ${doc.pageContent} [${JSON.stringify(doc.metadata, null)}]`);
+ * }
+ * // Output:foo [{"baz":"bar"}]
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ *
+ * <details>
+ * <summary><strong>Similarity search with score</strong></summary>
+ *
+ * ```typescript
+ * const resultsWithScore = await vectorStore.similaritySearchWithScore("qux", 1);
+ * for (const [doc, score] of resultsWithScore) {
+ *   console.log(`* [SIM=${score.toFixed(6)}] ${doc.pageContent} [${JSON.stringify(doc.metadata, null)}]`);
+ * }
+ * // Output:[SIM=0.000000] qux [{"bar":"baz","baz":"bar"}]
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>As a retriever</strong></summary>
+ *
+ * ```typescript
+ * const retriever = vectorStore.asRetriever({
+ *   searchType: "mmr", // Leave blank for standard similarity search
+ *   k: 1,
+ * });
+ * const resultAsRetriever = await retriever.invoke("thud");
+ * console.log(resultAsRetriever);
+ *
+ * // Output: [Document({ metadata: { "baz":"bar" }, pageContent: "thud" })]
+ * ```
+ * </details>
+ *
+ * <br />
+ */
 export class PostgresVectorStore extends VectorStore {
   declare FilterType: string;
 
@@ -75,7 +228,9 @@ export class PostgresVectorStore extends VectorStore {
     this.schemaName = dbConfig.schemaName;
     this.contentColumn = dbConfig.contentColumn;
     this.embeddingColumn = dbConfig.embeddingColumn;
-    this.metadataColumns = dbConfig.metadataColumns ? dbConfig.metadataColumns : [];
+    this.metadataColumns = dbConfig.metadataColumns
+      ? dbConfig.metadataColumns
+      : [];
     this.ignoreMetadataColumns = dbConfig.ignoreMetadataColumns;
     this.idColumn = dbConfig.idColumn;
     this.metadataJsonColumn = dbConfig.metadataJsonColumn;
@@ -105,7 +260,7 @@ export class PostgresVectorStore extends VectorStore {
    * @param {QueryOptions} indexQueryOptions Optional - Index query option.
    * @returns PostgresVectorStore instance.
    */
-  static async create(
+  static async initialize(
     engine: PostgresEngine,
     embeddings: EmbeddingsInterface,
     tableName: string,
@@ -121,21 +276,24 @@ export class PostgresVectorStore extends VectorStore {
       k = 4,
       fetchK = 20,
       lambdaMult = 0.5,
-      indexQueryOptions
+      indexQueryOptions,
     }: PostgresVectorStoreArgs = {}
   ): Promise<PostgresVectorStore> {
-
     if (metadataColumns !== undefined && ignoreMetadataColumns !== undefined) {
-      throw Error("Can not use both metadata_columns and ignore_metadata_columns.");
+      throw Error(
+        "Can not use both metadata_columns and ignore_metadata_columns."
+      );
     }
 
-    const { rows } = await engine.pool.raw(`SELECT column_name, data_type FROM information_schema.columns WHERE table_name = '${tableName}' AND table_schema = '${schemaName}'`);
+    const { rows } = await engine.pool.raw(
+      `SELECT column_name, data_type FROM information_schema.columns WHERE table_name = '${tableName}' AND table_schema = '${schemaName}'`
+    );
     const columns: { [key: string] } = {};
 
     for (const index in rows) {
       if (rows[index]) {
         const row = rows[index];
-        columns[row.column_name] = row.data_type
+        columns[row.column_name] = row.data_type;
       }
     }
 
@@ -150,7 +308,9 @@ export class PostgresVectorStore extends VectorStore {
     const contentType = columns[contentColumn];
 
     if (contentType !== "text" && !contentType.includes("char")) {
-      throw Error(`Content column: ${contentColumn}, is type: ${contentType}. It must be a type of character string.`);
+      throw Error(
+        `Content column: ${contentColumn}, is type: ${contentType}. It must be a type of character string.`
+      );
     }
 
     if (!Object.prototype.hasOwnProperty.call(columns, embeddingColumn)) {
@@ -158,10 +318,17 @@ export class PostgresVectorStore extends VectorStore {
     }
 
     if (columns[embeddingColumn] !== "USER-DEFINED") {
-      throw Error(`Embedding column: ${embeddingColumn} is not of type Vector.`);
+      throw Error(
+        `Embedding column: ${embeddingColumn} is not of type Vector.`
+      );
     }
 
-    const jsonColumn = Object.prototype.hasOwnProperty.call(columns, metadataJsonColumn) ? metadataJsonColumn : "";
+    const jsonColumn = Object.prototype.hasOwnProperty.call(
+      columns,
+      metadataJsonColumn
+    )
+      ? metadataJsonColumn
+      : "";
 
     for (const column of metadataColumns) {
       if (!Object.prototype.hasOwnProperty.call(columns, column)) {
@@ -171,7 +338,10 @@ export class PostgresVectorStore extends VectorStore {
 
     const allColumns = columns;
     let allMetadataColumns: string[];
-    if (ignoreMetadataColumns !== undefined && ignoreMetadataColumns.length > 0) {
+    if (
+      ignoreMetadataColumns !== undefined &&
+      ignoreMetadataColumns.length > 0
+    ) {
       for (const column of ignoreMetadataColumns) {
         delete allColumns[column];
       }
@@ -181,64 +351,81 @@ export class PostgresVectorStore extends VectorStore {
       delete allColumns[embeddingColumn];
       allMetadataColumns = Object.keys(allColumns);
     }
-    return new PostgresVectorStore(
-      embeddings,
-      {
-        engine,
-        tableName,
-        schemaName,
-        contentColumn,
-        embeddingColumn,
-        metadataColumns: allMetadataColumns,
-        ignoreMetadataColumns,
-        idColumn,
-        metadataJsonColumn: jsonColumn,
-        distanceStrategy,
-        k,
-        fetchK,
-        lambdaMult,
-        indexQueryOptions
-      }
-    )
+    return new PostgresVectorStore(embeddings, {
+      engine,
+      tableName,
+      schemaName,
+      contentColumn,
+      embeddingColumn,
+      metadataColumns: allMetadataColumns,
+      ignoreMetadataColumns,
+      idColumn,
+      metadataJsonColumn: jsonColumn,
+      distanceStrategy,
+      k,
+      fetchK,
+      lambdaMult,
+      indexQueryOptions,
+    });
   }
 
-  static async fromTexts(texts: string[], metadatas: object[] | object, embeddings: EmbeddingsInterface, dbConfig: dbConfigArgs): Promise<VectorStore> {
+  static async fromTexts(
+    texts: string[],
+    metadatas: object[] | object,
+    embeddings: EmbeddingsInterface,
+    dbConfig: dbConfigArgs
+  ): Promise<VectorStore> {
     const documents: Document[] = [];
 
     for (let i = 0; i < texts.length; i += 1) {
       const doc = new Document({
         pageContent: texts[i],
-        metadata: Array.isArray(metadatas) ? metadatas[i] : metadatas
-      })
+        metadata: Array.isArray(metadatas) ? metadatas[i] : metadatas,
+      });
       documents.push(doc);
     }
 
     return PostgresVectorStore.fromDocuments(documents, embeddings, dbConfig);
   }
 
-  static async fromDocuments(docs: Document[], embeddings: EmbeddingsInterface, dbConfig: dbConfigArgs): Promise<VectorStore> {
+  static async fromDocuments(
+    docs: Document[],
+    embeddings: EmbeddingsInterface,
+    dbConfig: dbConfigArgs
+  ): Promise<VectorStore> {
     const { engine } = dbConfig;
     const { tableName } = dbConfig;
     const config = dbConfig.dbConfig;
-    const vectorStore = await this.create(engine, embeddings, tableName, config);
+    const vectorStore = await this.initialize(
+      engine,
+      embeddings,
+      tableName,
+      config
+    );
 
-    await vectorStore.addDocuments(docs)
+    await vectorStore.addDocuments(docs);
 
     return vectorStore;
   }
 
-  async addVectors(vectors: number[][], documents: Document[], options?: { ids?: string[] }): Promise<string[] | void> {
+  async addVectors(
+    vectors: number[][],
+    documents: Document[],
+    options?: { ids?: string[] }
+  ): Promise<string[] | void> {
     let ids: string[] = [];
-    const metadatas: Record[] = []
+    const metadatas: Record[] = [];
 
     if (vectors.length !== documents.length) {
-      throw new Error("The number of vectors must match the number of documents provided.");
+      throw new Error(
+        "The number of vectors must match the number of documents provided."
+      );
     }
 
     if (options?.ids) {
       ids = options.ids;
     } else {
-      documents.forEach(document => {
+      documents.forEach((document) => {
         if (document.id !== undefined) {
           ids.push(document.id);
         } else {
@@ -248,25 +435,30 @@ export class PostgresVectorStore extends VectorStore {
     }
 
     if (options && options.ids && options.ids.length !== documents.length) {
-      throw new Error("The number of ids must match the number of documents provided.");
+      throw new Error(
+        "The number of ids must match the number of documents provided."
+      );
     }
 
-    documents.forEach(document => {
-      metadatas.push(document.metadata)
+    documents.forEach((document) => {
+      metadatas.push(document.metadata);
     });
 
     const tuples = customZip(ids, documents, vectors, metadatas);
 
     // Insert embeddings
     for (const [id, document, embedding, metadata] of tuples) {
-      const metadataColNames = this.metadataColumns.length > 0 ? `, "${this.metadataColumns.join("\",\"")}"` : "";
+      const metadataColNames =
+        this.metadataColumns.length > 0
+          ? `, "${this.metadataColumns.join('","')}"`
+          : "";
 
-      let stmt = `INSERT INTO "${this.schemaName}"."${this.tableName}"("${this.idColumn}", "${this.contentColumn}", "${this.embeddingColumn}" ${metadataColNames}`
+      let stmt = `INSERT INTO "${this.schemaName}"."${this.tableName}"("${this.idColumn}", "${this.contentColumn}", "${this.embeddingColumn}" ${metadataColNames}`;
       const values: { [key: string] } = {
         id,
         content: document.pageContent,
-        embedding: `[${embedding.toString()}]`
-      }
+        embedding: `[${embedding.toString()}]`,
+      };
       let valuesStmt = " VALUES (:id, :content, :embedding";
 
       // Add metadata
@@ -274,10 +466,10 @@ export class PostgresVectorStore extends VectorStore {
       for (const metadataColumn of this.metadataColumns) {
         if (Object.prototype.hasOwnProperty.call(metadata, metadataColumn)) {
           valuesStmt += `, :${metadataColumn}`;
-          values[metadataColumn] = metadata[metadataColumn]
-          delete extra[metadataColumn]
+          values[metadataColumn] = metadata[metadataColumn];
+          delete extra[metadataColumn];
         } else {
-          valuesStmt += " ,null"
+          valuesStmt += " ,null";
         }
       }
 
@@ -285,20 +477,20 @@ export class PostgresVectorStore extends VectorStore {
       stmt += this.metadataJsonColumn ? `, ${this.metadataJsonColumn})` : ")";
       if (this.metadataJsonColumn) {
         valuesStmt += ", :extra)";
-        Object.assign(values, { "extra": JSON.stringify(extra) })
+        Object.assign(values, { extra: JSON.stringify(extra) });
       } else {
-        valuesStmt += ")"
+        valuesStmt += ")";
       }
 
       const query = stmt + valuesStmt;
-      await this.engine.pool.raw(query, values)
+      await this.engine.pool.raw(query, values);
     }
 
     return options?.ids;
   }
 
   _vectorstoreType(): string {
-    return "cloudsqlpostgresql"
+    return "cloudsqlpostgresql";
   }
 
   /**
@@ -310,11 +502,14 @@ export class PostgresVectorStore extends VectorStore {
    * @returns A promise resolving to an array of document IDs or void, based on implementation.
    * @abstract
    */
-  async addDocuments(documents: Document[], options?: { ids?: string[] }): Promise<string[] | void> {
+  async addDocuments(
+    documents: Document[],
+    options?: { ids?: string[] }
+  ): Promise<string[] | void> {
     const texts = [];
 
     for (const doc of documents) {
-      texts.push(doc.pageContent)
+      texts.push(doc.pageContent);
     }
 
     const embeddings = await this.embeddings.embedDocuments(texts);
@@ -337,12 +532,19 @@ export class PostgresVectorStore extends VectorStore {
     await this.engine.pool.raw(query);
   }
 
-  async similaritySearchVectorWithScore(embedding: number[], k: number, filter?: this["FilterType"]): Promise<[Document, number][]> {
-    const results = await this.queryCollection(embedding, k, filter)
+  async similaritySearchVectorWithScore(
+    embedding: number[],
+    k: number,
+    filter?: this["FilterType"]
+  ): Promise<[Document, number][]> {
+    const results = await this.queryCollection(embedding, k, filter);
     const documentsWithScores: [Document, number][] = [];
 
     for (const row of results) {
-      const metadata = (this.metadataJsonColumn && row[this.metadataJsonColumn]) ? row[this.metadataJsonColumn] : {};
+      const metadata =
+        this.metadataJsonColumn && row[this.metadataJsonColumn]
+          ? row[this.metadataJsonColumn]
+          : {};
 
       for (const col of this.metadataColumns) {
         metadata[col] = row[col];
@@ -350,25 +552,36 @@ export class PostgresVectorStore extends VectorStore {
 
       documentsWithScores.push([
         new Document({ pageContent: row[this.contentColumn], metadata }),
-        row.distance
+        row.distance,
       ]);
     }
 
     return documentsWithScores;
   }
 
-  private async queryCollection(embedding: number[], k?: number | undefined, filter?: this["FilterType"] | undefined) {
+  private async queryCollection(
+    embedding: number[],
+    k?: number | undefined,
+    filter?: this["FilterType"] | undefined
+  ) {
     const fetchK = k ?? this.k;
     const { operator } = this.distanceStrategy;
     const { searchFunction } = this.distanceStrategy;
     const _filter = filter !== undefined ? `WHERE ${filter}` : "";
-    const metadataColNames = this.metadataColumns.length > 0 ? `, "${this.metadataColumns.join("\",\"")}"` : "";
-    const metadataJsonColName = this.metadataJsonColumn ? `, "${this.metadataJsonColumn}"` : "";
+    const metadataColNames =
+      this.metadataColumns.length > 0
+        ? `, "${this.metadataColumns.join('","')}"`
+        : "";
+    const metadataJsonColName = this.metadataJsonColumn
+      ? `, "${this.metadataJsonColumn}"`
+      : "";
 
-    const query = `SELECT "${this.idColumn}", "${this.contentColumn}", "${this.embeddingColumn}" ${metadataColNames} ${metadataJsonColName}, ${searchFunction}("${this.embeddingColumn}", '[${embedding}]') as distance FROM "${this.schemaName}"."${this.tableName}" ${_filter} ORDER BY "${this.embeddingColumn}" ${operator} '[${embedding}]' LIMIT ${fetchK};`
+    const query = `SELECT "${this.idColumn}", "${this.contentColumn}", "${this.embeddingColumn}" ${metadataColNames} ${metadataJsonColName}, ${searchFunction}("${this.embeddingColumn}", '[${embedding}]') as distance FROM "${this.schemaName}"."${this.tableName}" ${_filter} ORDER BY "${this.embeddingColumn}" ${operator} '[${embedding}]' LIMIT ${fetchK};`;
 
     if (this.indexQueryOptions) {
-      await this.engine.pool.raw(`SET LOCAL ${this.indexQueryOptions.to_string()}`)
+      await this.engine.pool.raw(
+        `SET LOCAL ${this.indexQueryOptions.to_string()}`
+      );
     }
 
     const { rows } = await this.engine.pool.raw(query);
@@ -380,9 +593,12 @@ export class PostgresVectorStore extends VectorStore {
     query: string,
     options: MaxMarginalRelevanceSearchOptions<this["FilterType"]>
   ): Promise<Document[]> {
-
     const vector = await this.embeddings.embedQuery(query);
-    const results = await this.queryCollection(vector, options?.k, options?.filter);
+    const results = await this.queryCollection(
+      vector,
+      options?.k,
+      options?.filter
+    );
     const k = options?.k ? options.k : this.k;
     const documentsWithScores: [Document, number][] = [];
     let docsList: Document[] = [];
@@ -414,7 +630,9 @@ export class PostgresVectorStore extends VectorStore {
       ]);
     }
 
-    docsList = documentsWithScores.filter((_, i) => mmrSelected.includes(i)).map(([doc, _]) => doc);
+    docsList = documentsWithScores
+      .filter((_, i) => mmrSelected.includes(i))
+      .map(([doc, _]) => doc);
 
     return docsList;
   }

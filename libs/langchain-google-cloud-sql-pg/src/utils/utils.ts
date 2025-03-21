@@ -7,44 +7,51 @@ import { GoogleAuth } from "google-auth-library";
  * @param {GoogleAuth} auth - object to use in finding the associated IAM principal email address.
  * @returns {string} email - email address associated with the current authenticated IAM principal
  */
-export const getIAMPrincipalEmail = async (auth: GoogleAuth): Promise<string> => {
+export const getIAMPrincipalEmail = async (
+  auth: GoogleAuth
+): Promise<string> => {
   const credentials = await auth.getCredentials();
 
-  if ('client_email' in credentials && credentials.client_email !== undefined) {
+  if ("client_email" in credentials && credentials.client_email !== undefined) {
     return credentials.client_email.replace(".gserviceaccount.com", "");
   }
 
   const accessToken = await auth.getAccessToken();
-  const client = await auth.getClient()
+  const client = await auth.getClient();
 
   const url = `https://oauth2.googleapis.com/tokeninfo?access_token=${accessToken}`;
-  const clientResponse = await client.request({ url }).then((res: { data; }) => res.data)
+  const clientResponse = await client
+    .request({ url })
+    .then((res: { data }) => res.data);
 
-  if (!('email' in clientResponse)) {
+  if (!("email" in clientResponse)) {
     throw new Error(
       "Failed to automatically obtain authenticated IAM principal's " +
-      "email address using environment's ADC credentials!"
-    )
+        "email address using environment's ADC credentials!"
+    );
   }
-  const { email } = clientResponse
+  const { email } = clientResponse;
   return email.replace(".gserviceaccount.com", "");
-}
+};
 
 export const customZip = (...arrays) => {
-  const minLength = Math.min(...arrays.map(arr => arr.length));
+  const minLength = Math.min(...arrays.map((arr) => arr.length));
   const result = [];
   for (let i = 0; i < minLength; i += 1) {
-    result.push(arrays.map(arr => arr[i]));
+    result.push(arrays.map((arr) => arr[i]));
   }
   return result;
-}
+};
 
 /*
   Formatter functions
 */
 
 // txt document formatter.
-export function textFormatter(row: { [key: string] }, content_columns: string[]): string {
+export function textFormatter(
+  row: { [key: string] },
+  content_columns: string[]
+): string {
   return content_columns
     .filter((column) => column in row)
     .map((column) => String(row[column]))
@@ -52,7 +59,10 @@ export function textFormatter(row: { [key: string] }, content_columns: string[])
 }
 
 // CSV document formatter.
-export function csvFormatter(row: { [key: string] }, content_columns: string[]): string {
+export function csvFormatter(
+  row: { [key: string] },
+  content_columns: string[]
+): string {
   return content_columns
     .filter((column) => column in row)
     .map((column) => String(row[column]))
@@ -60,7 +70,10 @@ export function csvFormatter(row: { [key: string] }, content_columns: string[]):
 }
 
 // YAML document formatter
-export function yamlFormatter(row: { [key: string] }, content_columns: string[]): string {
+export function yamlFormatter(
+  row: { [key: string] },
+  content_columns: string[]
+): string {
   return content_columns
     .filter((column) => column in row)
     .map((column) => `${column}: ${String(row[column])}`)
@@ -68,7 +81,10 @@ export function yamlFormatter(row: { [key: string] }, content_columns: string[])
 }
 
 // JSON document formatter
-export function jsonFormatter(row: { [key: string] }, content_columns: string[]): string {
+export function jsonFormatter(
+  row: { [key: string] },
+  content_columns: string[]
+): string {
   const dictionary: { [key: string] } = {};
   for (const column of content_columns) {
     if (column in row) {

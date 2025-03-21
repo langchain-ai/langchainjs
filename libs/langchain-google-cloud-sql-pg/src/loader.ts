@@ -1,7 +1,12 @@
 import { Document } from "@langchain/core/documents";
-import { BaseDocumentLoader } from '@langchain/core/document_loaders/base';
-import PostgresEngine from './engine.js';
-import { textFormatter, csvFormatter, yamlFormatter, jsonFormatter } from './utils/utils.js';
+import { BaseDocumentLoader } from "@langchain/core/document_loaders/base";
+import PostgresEngine from "./engine.js";
+import {
+  textFormatter,
+  csvFormatter,
+  yamlFormatter,
+  jsonFormatter,
+} from "./utils/utils.js";
 
 const DEFAULT_METADATA_COL = "langchain_metadata";
 type Row = { [key: string] };
@@ -17,7 +22,6 @@ export interface PostgresLoaderOptions {
   query?: string;
   metadataJsonColumn?: string | null;
 }
-
 
 function parseDocFromRow(
   contentColumns: string[],
@@ -35,18 +39,71 @@ function parseDocFromRow(
     });
   }
 
-  metadataColumns.forEach(column => {
+  metadataColumns.forEach((column) => {
     if (column in row && column !== metadataJsonColumn) {
       metadata[column] = row[column];
     }
   });
 
-
   return { pageContent, metadata };
 }
 
+/**
+ * Google Cloud SQL for PostgreSQL vector store integration.
+ *
+ * Setup:
+ * Install`@langchain/google-cloud-sql-pg`
+ *
+ * ```bash
+ * npm install @langchain/google-cloud-sql-pg
+ * ```
+ *
+ * <details open >
+ * <summary><strong>Use with Table Name < /strong></summary >
+ *
+ * ```typescript
+ * import { PostgresEngine, PostgresLoader } from "@langchain/google-cloud-sql-pg";
+ *
+ * const documentLoaderArgs: PostgresLoaderOptions = {
+ *   tableName: "test_table_custom",
+ *   contentColumns: [ "fruit_name", "variety"],
+ *   metadataColumns: ["fruit_id", "quantity_in_stock", "price_per_unit", "organic"],
+ *   format: "text"
+ * };
+ *
+ * const documentLoaderInstance = await PostgresLoader.initialize(PEInstance, documentLoaderArgs);
+ *
+ * const documents = await documentLoaderInstance.load();
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details open >
+ * <summary><strong>Use with Query < /strong></summary >
+ *
+ * ```typescript
+ * import { PostgresEngine, PostgresLoader } from "@langchain/google-cloud-sql-pg";
+ *
+ * const documentLoaderArgs: PostgresLoaderOptions = {
+ *   query: "SELECT * FROM my_table WHERE organic = true;",
+ *   contentColumns: [ "fruit_name", "variety"],
+ *   metadataColumns: ["fruit_id", "quantity_in_stock", "price_per_unit", "organic"],
+ *   format: "text"
+ * };
+ *
+ * const documentLoaderInstance = await PostgresLoader.initialize(PEInstance, documentLoaderArgs);
+ *
+ * for await (const doc of documentLoaderInstance.lazyLoad()) {
+ *   console.log(doc);
+ *   break; // break based on required condition
+ * }
+ * ```
+ * </details>
+ *
+ * <br />
+ */
 export class PostgresLoader extends BaseDocumentLoader {
-
   private engine: PostgresEngine;
 
   tableName?: string;
@@ -75,16 +132,33 @@ export class PostgresLoader extends BaseDocumentLoader {
     this.metadataJsonColumn = options.metadataJsonColumn;
   }
 
-  static async create(engine: PostgresEngine, { schemaName = 'public', tableName, contentColumns, metadataColumns, format, query, formatter, metadataJsonColumn }: PostgresLoaderOptions): Promise<PostgresLoader> {
-
+  static async initialize(
+    engine: PostgresEngine,
+    {
+      schemaName = "public",
+      tableName,
+      contentColumns,
+      metadataColumns,
+      format,
+      query,
+      formatter,
+      metadataJsonColumn,
+    }: PostgresLoaderOptions
+  ): Promise<PostgresLoader> {
     if (tableName && query) {
-      throw new Error("Only one of 'table_name' or 'query' should be specified.");
+      throw new Error(
+        "Only one of 'table_name' or 'query' should be specified."
+      );
     }
     if (!tableName && !query) {
-      throw new Error("At least one of the parameters 'table_name' or 'query' needs to be provided");
+      throw new Error(
+        "At least one of the parameters 'table_name' or 'query' needs to be provided"
+      );
     }
     if (format && formatter) {
-      throw new Error("Only one of 'format' or 'formatter' should be specified.");
+      throw new Error(
+        "Only one of 'format' or 'formatter' should be specified."
+      );
     }
 
     if (format && !["csv", "text", "json", "yaml"].includes(format)) {
@@ -111,28 +185,44 @@ export class PostgresLoader extends BaseDocumentLoader {
 
     try {
       const result = await engine.pool.raw(queryStmt);
-      const columnNames = result.fields.map((field: { name: string; }) => field.name);
+      const columnNames = result.fields.map(
+        (field: { name: string }) => field.name
+      );
 
       const contentColumnNames = contentColumns || [columnNames[0]];
-      const metadataColumnNames = metadataColumns || columnNames.filter((col: string) => !contentColumnNames.includes(col));
+      const metadataColumnNames =
+        metadataColumns ||
+        columnNames.filter((col: string) => !contentColumnNames.includes(col));
 
       if (metadataJsonColumn && !columnNames.includes(metadataJsonColumn)) {
-        throw new Error(`Column ${metadataJsonColumn} not found in query result ${columnNames}.`);
+        throw new Error(
+          `Column ${metadataJsonColumn} not found in query result ${columnNames}.`
+        );
       }
       let jsonColumnName = metadataJsonColumn;
       if (!jsonColumnName && columnNames.includes(DEFAULT_METADATA_COL)) {
         jsonColumnName = DEFAULT_METADATA_COL;
       }
 
-      const allNames = [...(contentColumnNames || []), ...(metadataColumnNames || [])];
-      allNames.forEach(name => {
+      const allNames = [
+        ...(contentColumnNames || []),
+        ...(metadataColumnNames || []),
+      ];
+      allNames.forEach((name) => {
         if (!columnNames.includes(name)) {
-          throw new Error(`Column ${name} not found in query result ${columnNames}.`);
+          throw new Error(
+            `Column ${name} not found in query result ${columnNames}.`
+          );
         }
       });
 
-      return new PostgresLoader(engine, { contentColumns: contentColumnNames, metadataColumns: metadataColumnNames, query: queryStmt, formatter: formatFunc, metadataJsonColumn: jsonColumnName });
-
+      return new PostgresLoader(engine, {
+        contentColumns: contentColumnNames,
+        metadataColumns: metadataColumnNames,
+        query: queryStmt,
+        formatter: formatFunc,
+        metadataJsonColumn: jsonColumnName,
+      });
     } catch (error) {
       throw Error(error);
     }
@@ -147,7 +237,13 @@ export class PostgresLoader extends BaseDocumentLoader {
   }
 
   async *lazyLoad(): AsyncGenerator<Document> {
-    const { query, contentColumns, metadataColumns, formatter, metadataJsonColumn } = this;
+    const {
+      query,
+      contentColumns,
+      metadataColumns,
+      formatter,
+      metadataJsonColumn,
+    } = this;
     try {
       if (!query) {
         throw new Error("Query is undefined");
@@ -156,11 +252,14 @@ export class PostgresLoader extends BaseDocumentLoader {
 
       for (const row of result.rows) {
         const rowData: Row = {};
-        const columnNames = [...(contentColumns || []), ...(metadataColumns || [])];
+        const columnNames = [
+          ...(contentColumns || []),
+          ...(metadataColumns || []),
+        ];
         if (metadataJsonColumn) {
           columnNames.push(metadataJsonColumn);
         }
-        columnNames.forEach(column => {
+        columnNames.forEach((column) => {
           rowData[column] = row[column];
         });
 
@@ -175,6 +274,5 @@ export class PostgresLoader extends BaseDocumentLoader {
     } catch (error) {
       throw Error(error);
     }
-
   }
 }

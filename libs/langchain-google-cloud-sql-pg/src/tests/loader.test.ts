@@ -4,18 +4,25 @@ import * as dotenv from "dotenv";
 import { PostgresLoader, PostgresLoaderOptions } from "../loader.js";
 import PostgresEngine, { PostgresEngineArgs } from "../engine.js";
 
-
-dotenv.config()
+dotenv.config();
 
 const SCHEMA_NAME = "public";
 const CUSTOM_TABLE = "test_table_custom";
 const CUSTOM_TABLE2 = "test_table";
-const CONTENT_COLUMN = ["fruit_id", "fruit_name", "variety", "quantity_in_stock", "price_per_unit", "organic"];
+const CONTENT_COLUMN = [
+  "fruit_id",
+  "fruit_name",
+  "variety",
+  "quantity_in_stock",
+  "price_per_unit",
+  "organic",
+];
 const METADATA_COLUMNS = ["variety"];
-const FORMATTER = (row: { [key: string] }, content_columns: string[]): string => content_columns
-  .filter((column) => column in row)
-  .map((column) => String(row[column]))
-  .join(" ");
+const FORMATTER = (row: { [key: string] }, content_columns: string[]): string =>
+  content_columns
+    .filter((column) => column in row)
+    .map((column) => String(row[column]))
+    .join(" ");
 const DEFAULT_METADATA_COL = "langchain_metadata";
 const HOST = "127.0.0.1";
 const USER = "myuser";
@@ -27,8 +34,8 @@ const pgArgs: PostgresEngineArgs = {
   // eslint-disable-next-line no-process-env
   user: process.env.DB_USER ?? "",
   // eslint-disable-next-line no-process-env
-  password: process.env.PASSWORD ?? ""
-}
+  password: process.env.PASSWORD ?? "",
+};
 
 const documentLoaderArgs: PostgresLoaderOptions = {
   tableName: CUSTOM_TABLE,
@@ -40,18 +47,14 @@ const documentLoaderArgs: PostgresLoaderOptions = {
   formatter: FORMATTER,
 };
 
-
 describe("Document loader creation", () => {
   let PEInstance: PostgresEngine;
   let postgresLoaderInstance: PostgresLoader;
 
   beforeAll(async () => {
-    PEInstance = await PostgresEngine.fromEngineArgs(
-      url,
-    );
+    PEInstance = await PostgresEngine.fromEngineArgs(url);
 
-    await PEInstance.pool.raw(`DROP TABLE IF EXISTS "${CUSTOM_TABLE2}"`)
-
+    await PEInstance.pool.raw(`DROP TABLE IF EXISTS "${CUSTOM_TABLE2}"`);
 
     await PEInstance.pool.raw(`CREATE TABLE IF NOT EXISTS "${CUSTOM_TABLE2}" (
       fruit_id SERIAL PRIMARY KEY,
@@ -60,43 +63,44 @@ describe("Document loader creation", () => {
       quantity_in_stock INT NOT NULL,
       price_per_unit INT NOT NULL,
       organic INT NOT NULL
-    );`)
+    );`);
 
     await PEInstance.pool.raw(` INSERT INTO "${CUSTOM_TABLE2}" (
         fruit_name, variety, quantity_in_stock, price_per_unit, organic
-    ) VALUES ('Apple', 'Granny Smith', 150, 1, 1); `)
-
-
+    ) VALUES ('Apple', 'Granny Smith', 150, 1, 1); `);
   });
 
-  test('should throw an error if no table name or query is provided', async () => {
+  test("should throw an error if no table name or query is provided", async () => {
     const documentLoaderArgs: PostgresLoaderOptions = {
       schemaName: undefined,
       query: undefined,
-    }
-
-    async function createInstance() {
-      await PostgresLoader.create(PEInstance, documentLoaderArgs)
-    }
-
-    await expect(createInstance).rejects.toThrow("At least one of the parameters 'table_name' or 'query' needs to be provided");
-  });
-
-
-  test('should throw an error if an invalid format is provided', async () => {
-    const documentLoaderArgs = {
-      tableName: CUSTOM_TABLE2,
-      format: 'invalid_format',
     };
 
     async function createInstance() {
-      await PostgresLoader.create(PEInstance, documentLoaderArgs);
+      await PostgresLoader.initialize(PEInstance, documentLoaderArgs);
     }
 
-    await expect(createInstance).rejects.toThrow("format must be type: 'csv', 'text', 'json', 'yaml'");
+    await expect(createInstance).rejects.toThrow(
+      "At least one of the parameters 'table_name' or 'query' needs to be provided"
+    );
   });
 
-  test('should throw an error if both format and formatter are provided', async () => {
+  test("should throw an error if an invalid format is provided", async () => {
+    const documentLoaderArgs = {
+      tableName: CUSTOM_TABLE2,
+      format: "invalid_format",
+    };
+
+    async function createInstance() {
+      await PostgresLoader.initialize(PEInstance, documentLoaderArgs);
+    }
+
+    await expect(createInstance).rejects.toThrow(
+      "format must be type: 'csv', 'text', 'json', 'yaml'"
+    );
+  });
+
+  test("should throw an error if both format and formatter are provided", async () => {
     const documentLoaderArgs: PostgresLoaderOptions = {
       tableName: CUSTOM_TABLE2,
       format: "text",
@@ -104,13 +108,15 @@ describe("Document loader creation", () => {
     };
 
     async function createInstance() {
-      await PostgresLoader.create(PEInstance, documentLoaderArgs);
+      await PostgresLoader.initialize(PEInstance, documentLoaderArgs);
     }
 
-    await expect(createInstance()).rejects.toThrow("Only one of 'format' or 'formatter' should be specified.");
+    await expect(createInstance()).rejects.toThrow(
+      "Only one of 'format' or 'formatter' should be specified."
+    );
   });
 
-  test('should throw an error if both table name and query are provided', async () => {
+  test("should throw an error if both table name and query are provided", async () => {
     const documentLoaderArgs: PostgresLoaderOptions = {
       tableName: CUSTOM_TABLE2,
       schemaName: SCHEMA_NAME,
@@ -118,28 +124,31 @@ describe("Document loader creation", () => {
     };
 
     async function createInstance() {
-      await PostgresLoader.create(PEInstance, documentLoaderArgs);
+      await PostgresLoader.initialize(PEInstance, documentLoaderArgs);
     }
 
-    await expect(createInstance()).rejects.toThrow("Only one of 'table_name' or 'query' should be specified.");
+    await expect(createInstance()).rejects.toThrow(
+      "Only one of 'table_name' or 'query' should be specified."
+    );
   });
 
-  test('should throw an error if content columns or metadata columns not match with column names', async () => {
+  test("should throw an error if content columns or metadata columns not match with column names", async () => {
     const documentLoaderArgs: PostgresLoaderOptions = {
       tableName: CUSTOM_TABLE2,
       schemaName: SCHEMA_NAME,
-      contentColumns: ["Imnotacolunm"]
+      contentColumns: ["Imnotacolunm"],
     };
 
     async function createInstance() {
-      await PostgresLoader.create(PEInstance, documentLoaderArgs);
+      await PostgresLoader.initialize(PEInstance, documentLoaderArgs);
     }
 
-    await expect(createInstance()).rejects.toThrow(`Column Imnotacolunm not found in query result fruit_id,fruit_name,variety,quantity_in_stock,price_per_unit,organic.`);
-
+    await expect(createInstance()).rejects.toThrow(
+      `Column Imnotacolunm not found in query result fruit_id,fruit_name,variety,quantity_in_stock,price_per_unit,organic.`
+    );
   });
 
-  test('should create a new document Loader instance', async () => {
+  test("should create a new document Loader instance", async () => {
     const documentLoaderArgs: PostgresLoaderOptions = {
       tableName: CUSTOM_TABLE2,
       schemaName: "public",
@@ -148,33 +157,31 @@ describe("Document loader creation", () => {
       format: "text",
       query: "",
       formatter: undefined,
-    }
+    };
 
-    const documentLoaderInstance = await PostgresLoader.create(PEInstance, documentLoaderArgs)
+    const documentLoaderInstance = await PostgresLoader.initialize(
+      PEInstance,
+      documentLoaderArgs
+    );
 
     expect(documentLoaderInstance).toBeDefined();
   });
 
   afterAll(async () => {
-
     try {
       await PEInstance.closeConnection();
     } catch (error) {
       throw new Error(`Error on closing connection: ${error}`);
     }
-  })
-
-})
+  });
+});
 
 describe("Document loader methods", () => {
-
   let PEInstance: PostgresEngine;
   let postgresLoaderInstance: PostgresLoader;
 
   beforeAll(async () => {
-    PEInstance = await PostgresEngine.fromEngineArgs(
-      url,
-    );
+    PEInstance = await PostgresEngine.fromEngineArgs(url);
 
     const documentLoaderArgs: PostgresLoaderOptions = {
       tableName: CUSTOM_TABLE,
@@ -184,12 +191,9 @@ describe("Document loader methods", () => {
       format: "text",
       query: "",
       formatter: undefined,
-    }
+    };
 
-
-
-    await PEInstance.pool.raw(`DROP TABLE IF EXISTS "${CUSTOM_TABLE}"`)
-
+    await PEInstance.pool.raw(`DROP TABLE IF EXISTS "${CUSTOM_TABLE}"`);
 
     await PEInstance.pool.raw(`CREATE TABLE IF NOT EXISTS "${CUSTOM_TABLE}" (
       fruit_id SERIAL PRIMARY KEY,
@@ -198,26 +202,25 @@ describe("Document loader methods", () => {
       quantity_in_stock INT NOT NULL,
       price_per_unit INT NOT NULL,
       organic INT NOT NULL
-    );`)
+    );`);
 
     await PEInstance.pool.raw(` INSERT INTO "${CUSTOM_TABLE}" (
         fruit_name, variety, quantity_in_stock, price_per_unit, organic
-    ) VALUES ('Apple', 'Granny Smith', 150, 1, 1); `)
+    ) VALUES ('Apple', 'Granny Smith', 150, 1, 1); `);
 
+    postgresLoaderInstance = await PostgresLoader.initialize(
+      PEInstance,
+      documentLoaderArgs
+    );
+  });
 
-    postgresLoaderInstance = await PostgresLoader.create(PEInstance, documentLoaderArgs)
-
-
-  })
-
-  test('should load documents correctly', async () => {
+  test("should load documents correctly", async () => {
     const documents = await postgresLoaderInstance.load();
     expect(documents).toBeDefined();
     expect(documents.length).toBeGreaterThan(0);
-    expect(documents[0]).toHaveProperty('pageContent');
-    expect(documents[0]).toHaveProperty('metadata');
+    expect(documents[0]).toHaveProperty("pageContent");
+    expect(documents[0]).toHaveProperty("metadata");
   });
-
 
   afterAll(async () => {
     try {
@@ -225,6 +228,5 @@ describe("Document loader methods", () => {
     } catch (error) {
       throw new Error(`Error on closing connection: ${error}`);
     }
-  })
-
-})
+  });
+});

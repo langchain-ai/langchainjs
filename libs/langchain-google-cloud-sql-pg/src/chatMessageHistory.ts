@@ -1,5 +1,11 @@
 import { BaseChatMessageHistory } from "@langchain/core/chat_history";
-import { AIMessage, BaseMessage, HumanMessage, StoredMessage, mapStoredMessagesToChatMessages } from "@langchain/core/messages";
+import {
+  AIMessage,
+  BaseMessage,
+  HumanMessage,
+  StoredMessage,
+  mapStoredMessagesToChatMessages,
+} from "@langchain/core/messages";
 import PostgresEngine from "./engine.js";
 
 export interface PostgresChatMessageHistoryInput {
@@ -10,7 +16,12 @@ export interface PostgresChatMessageHistoryInput {
 }
 
 export class PostgresChatMessageHistory extends BaseChatMessageHistory {
-  lc_namespace: string[] = ["langchain", "stores", "message", "google-cloud-sql-pg"];
+  lc_namespace: string[] = [
+    "langchain",
+    "stores",
+    "message",
+    "google-cloud-sql-pg",
+  ];
 
   engine: PostgresEngine;
 
@@ -20,7 +31,12 @@ export class PostgresChatMessageHistory extends BaseChatMessageHistory {
 
   schemaName: string;
 
-  constructor({ engine, sessionId, tableName, schemaName = "public" }: PostgresChatMessageHistoryInput) {
+  constructor({
+    engine,
+    sessionId,
+    tableName,
+    schemaName = "public",
+  }: PostgresChatMessageHistoryInput) {
     super();
     this.engine = engine;
     this.sessionId = sessionId;
@@ -32,12 +48,12 @@ export class PostgresChatMessageHistory extends BaseChatMessageHistory {
    * Create a new PostgresChatMessageHistory instance.
    *
    * @param {PostgresEngine} engine Postgres engine instance to use.
-   * @param {string} sessionId Retrieve the table content witht this session ID.
+   * @param {string} sessionId Retrieve the table content with this session ID.
    * @param {string} tableName Table name that stores that chat message history.
    * @param {string} schemaName Schema name for the chat message history table. Default: "public".
    * @returns PostgresChatMessageHistory instance.
    */
-  static async create(
+  static async initialize(
     engine: PostgresEngine,
     sessionId: string,
     tableName: string,
@@ -65,10 +81,16 @@ export class PostgresChatMessageHistory extends BaseChatMessageHistory {
         \n    data JSONB NOT NULL,
         \n    type TEXT NOT NULL
         \n);
-      `);
+      `
+      );
     }
 
-    return new PostgresChatMessageHistory({ engine, sessionId, tableName, schemaName })
+    return new PostgresChatMessageHistory({
+      engine,
+      sessionId,
+      tableName,
+      schemaName,
+    });
   }
 
   addUserMessage(message: string): Promise<void> {
@@ -113,10 +135,10 @@ export class PostgresChatMessageHistory extends BaseChatMessageHistory {
     const values: { [key: string] } = {
       session_id: this.sessionId,
       data: JSON.stringify(message.toDict()),
-      type: message.getType()
-    }
+      type: message.getType(),
+    };
 
-    await this.engine.pool.raw(query, values)
+    await this.engine.pool.raw(query, values);
   }
 
   /**
@@ -125,7 +147,7 @@ export class PostgresChatMessageHistory extends BaseChatMessageHistory {
    */
   async addMessages(messages: BaseMessage[]): Promise<void> {
     for (const msg of messages) {
-      await this.addMessage(msg)
+      await this.addMessage(msg);
     }
   }
 
@@ -138,6 +160,6 @@ export class PostgresChatMessageHistory extends BaseChatMessageHistory {
       session_id: this.sessionId,
     };
 
-    await this.engine.pool.raw(query, values)
+    await this.engine.pool.raw(query, values);
   }
 }

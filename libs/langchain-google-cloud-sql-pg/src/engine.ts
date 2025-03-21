@@ -1,24 +1,28 @@
-import { AuthTypes, Connector, IpAddressTypes } from "@google-cloud/cloud-sql-connector";
+import {
+  AuthTypes,
+  Connector,
+  IpAddressTypes,
+} from "@google-cloud/cloud-sql-connector";
 import { GoogleAuth } from "google-auth-library";
 import knex from "knex";
 import { getIAMPrincipalEmail } from "./utils/utils.js";
 
 export interface PostgresEngineArgs {
-  ipType?: IpAddressTypes,
-  user?: string,
-  password?: string,
-  iamAccountEmail?: string,
+  ipType?: IpAddressTypes;
+  user?: string;
+  password?: string;
+  iamAccountEmail?: string;
 }
 
 export interface VectorStoreTableArgs {
-  schemaName?: string,
-  contentColumn?: string,
-  embeddingColumn?: string,
-  metadataColumns?: Column[],
-  metadataJsonColumn?: string,
-  idColumn?: string | Column,
-  overwriteExisting?: boolean,
-  storeMetadata?: boolean
+  schemaName?: string;
+  contentColumn?: string;
+  embeddingColumn?: string;
+  metadataColumns?: Column[];
+  metadataJsonColumn?: string;
+  idColumn?: string | Column;
+  overwriteExisting?: boolean;
+  storeMetadata?: boolean;
 }
 
 export class Column {
@@ -33,7 +37,7 @@ export class Column {
     this.dataType = dataType;
     this.nullable = nullable;
 
-    this.postInitilization()
+    this.postInitilization();
   }
 
   private postInitilization() {
@@ -44,14 +48,42 @@ export class Column {
     if (typeof this.dataType !== "string") {
       throw Error("Column data_type must be type string");
     }
-
   }
 }
 
 const USER_AGENT = "langchain-google-cloud-sql-pg-js";
 
+/**
+ * Cloud SQL shared connection pool
+ *
+ * Setup:
+ * Install `@langchain/google-cloud-sql-pg`
+ *
+ * <details open>
+ * <summary><strong>Instantiate</strong></summary>
+ *
+ * ```typescript
+ * import { Column, PostgresEngine, PostgresEngineArgs } from "@langchain/google-cloud-sql-pg";
+ *
+ * const pgArgs: PostgresEngineArgs = {
+ *    user: "db-user",
+ *    password: "password"
+ *}
+ *
+ * const engine: PostgresEngine = await PostgresEngine.fromInstance(
+ *  "project-id",
+ *  "region",
+ *  "instance-name",
+ *  "database-name",
+ *  pgArgs
+ * );
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ */
 export class PostgresEngine {
-
   private static _createKey = Symbol("key");
 
   pool: knex.Knex;
@@ -60,7 +92,7 @@ export class PostgresEngine {
 
   constructor(key: symbol, pool: knex.Knex) {
     if (key !== PostgresEngine._createKey) {
-      throw Error("Only create class through 'create' method!")
+      throw Error("Only create class through 'create' method!");
     }
     this.pool = pool;
   }
@@ -86,16 +118,19 @@ export class PostgresEngine {
       ipType = IpAddressTypes.PUBLIC,
       user,
       password,
-      iamAccountEmail
-    }: PostgresEngineArgs = {}): Promise<PostgresEngine> {
-
+      iamAccountEmail,
+    }: PostgresEngineArgs = {}
+  ): Promise<PostgresEngine> {
     let dbUser: string;
     let enableIAMAuth: boolean;
 
-    if ((!user && password) || (user && !password)) { // XOR for strings
-      throw Error("Only one of 'user' or 'password' were specified. Either " +
-        "both should be specified to use basic user/password " +
-        "authentication or neither for IAM DB authentication.");
+    if ((!user && password) || (user && !password)) {
+      // XOR for strings
+      throw Error(
+        "Only one of 'user' or 'password' were specified. Either " +
+          "both should be specified to use basic user/password " +
+          "authentication or neither for IAM DB authentication."
+      );
     }
 
     // User and password are given so we use the basic auth
@@ -105,14 +140,14 @@ export class PostgresEngine {
     } else {
       enableIAMAuth = true;
       if (iamAccountEmail !== undefined) {
-        dbUser = iamAccountEmail
+        dbUser = iamAccountEmail;
       } else {
         // Get application default credentials
         const auth = new GoogleAuth({
-          scopes: "https://www.googleapis.com/auth/cloud-platform"
+          scopes: "https://www.googleapis.com/auth/cloud-platform",
         });
         // dbUser should be the iam principal email by passing the credentials obtained
-        dbUser = await getIAMPrincipalEmail(auth)
+        dbUser = await getIAMPrincipalEmail(auth);
       }
     }
 
@@ -120,11 +155,11 @@ export class PostgresEngine {
     const clientOpts = await PostgresEngine.connector.getOptions({
       instanceConnectionName: `${projectId}:${region}:${instance}`,
       ipType,
-      authType: enableIAMAuth ? AuthTypes.IAM : AuthTypes.PASSWORD
-    })
+      authType: enableIAMAuth ? AuthTypes.IAM : AuthTypes.PASSWORD,
+    });
 
     const dbConfig: knex.Knex.Config = {
-      client: 'pg',
+      client: "pg",
       connection: {
         ...clientOpts,
         ...(password ? { password } : {}),
@@ -133,9 +168,9 @@ export class PostgresEngine {
       },
     };
 
-    const engine = knex(dbConfig)
+    const engine = knex(dbConfig);
 
-    return new PostgresEngine(PostgresEngine._createKey, engine)
+    return new PostgresEngine(PostgresEngine._createKey, engine);
   }
 
   /**
@@ -145,7 +180,7 @@ export class PostgresEngine {
    * @returns PostgresEngine instance from a knex instance
    */
   static async fromEngine(engine: knex.Knex) {
-    return new PostgresEngine(PostgresEngine._createKey, engine)
+    return new PostgresEngine(PostgresEngine._createKey, engine);
   }
 
   /**
@@ -155,27 +190,29 @@ export class PostgresEngine {
    * @param poolConfig Optional - Configuration pool to use in the Knex configuration
    * @returns PostgresEngine instance
    */
-  static async fromEngineArgs(url: string | knex.Knex.StaticConnectionConfig, poolConfig?: knex.Knex.PoolConfig) {
+  static async fromEngineArgs(
+    url: string | knex.Knex.StaticConnectionConfig,
+    poolConfig?: knex.Knex.PoolConfig
+  ) {
+    const driver = "postgresql+asyncpg";
 
-    const driver = 'postgresql+asyncpg';
-
-    if ((typeof url === "string") && !url.startsWith(driver)) {
+    if (typeof url === "string" && !url.startsWith(driver)) {
       throw Error("Driver must be type 'postgresql+asyncpg'");
     }
 
     const dbConfig: knex.Knex.Config = {
-      client: 'pg',
+      client: "pg",
       connection: url,
       acquireConnectionTimeout: 1000000,
       pool: {
         ...poolConfig,
-        acquireTimeoutMillis: 600000
-      }
+        acquireTimeoutMillis: 600000,
+      },
     };
 
-    const engine = knex(dbConfig)
+    const engine = knex(dbConfig);
 
-    return new PostgresEngine(PostgresEngine._createKey, engine)
+    return new PostgresEngine(PostgresEngine._createKey, engine);
   }
 
   /**
@@ -203,22 +240,26 @@ export class PostgresEngine {
       metadataJsonColumn = "langchain_metadata",
       idColumn = "langchain_id",
       overwriteExisting = false,
-      storeMetadata = true
-    }: VectorStoreTableArgs = {}): Promise<void> {
-
-    await this.pool.raw("CREATE EXTENSION IF NOT EXISTS vector")
+      storeMetadata = true,
+    }: VectorStoreTableArgs = {}
+  ): Promise<void> {
+    await this.pool.raw("CREATE EXTENSION IF NOT EXISTS vector");
 
     if (overwriteExisting) {
-      await this.pool.schema.withSchema(schemaName).dropTableIfExists(tableName);
+      await this.pool.schema
+        .withSchema(schemaName)
+        .dropTableIfExists(tableName);
     }
 
-    const idDataType = typeof idColumn === "string" ? "UUID" : idColumn.dataType;
-    const idColumnName = typeof idColumn === "string" ? idColumn : idColumn.name;
+    const idDataType =
+      typeof idColumn === "string" ? "UUID" : idColumn.dataType;
+    const idColumnName =
+      typeof idColumn === "string" ? idColumn : idColumn.name;
 
     let query = `CREATE TABLE ${schemaName}.${tableName}(
       ${idColumnName} ${idDataType} PRIMARY KEY,
       ${contentColumn} TEXT NOT NULL,
-      ${embeddingColumn} vector(${vectorSize}) NOT NULL`
+      ${embeddingColumn} vector(${vectorSize}) NOT NULL`;
 
     for (const column of metadataColumns) {
       const nullable = !column.nullable ? "NOT NULL" : "";
@@ -229,9 +270,9 @@ export class PostgresEngine {
       query += `,\n${metadataJsonColumn} JSON`;
     }
 
-    query += `\n);`
+    query += `\n);`;
 
-    await this.pool.raw(query)
+    await this.pool.raw(query);
   }
 
   /**
@@ -241,21 +282,24 @@ export class PostgresEngine {
    * @param schemaName Schema name to store chat history table
    */
 
-  async initChatHistoryTable(tableName: string, schemaName: string = "public"): Promise<void> {
+  async initChatHistoryTable(
+    tableName: string,
+    schemaName: string = "public"
+  ): Promise<void> {
     await this.pool.raw(
       `CREATE TABLE IF NOT EXISTS ${schemaName}.${tableName}(
       id SERIAL PRIMARY KEY,
       session_id TEXT NOT NULL,
       data JSONB NOT NULL,
       type TEXT NOT NULL);`
-    )
+    );
   }
 
   /**
    *  Dispose of connection pool
    */
   async closeConnection(): Promise<void> {
-    await this.pool.destroy()
+    await this.pool.destroy();
     if (PostgresEngine.connector !== undefined) {
       PostgresEngine.connector.close();
     }
@@ -263,7 +307,7 @@ export class PostgresEngine {
 
   // Just to test the connection to the database
   testConnection() {
-    const now = this.pool.raw('SELECT NOW() as currentTimestamp')
+    const now = this.pool.raw("SELECT NOW() as currentTimestamp");
     return now;
   }
 }

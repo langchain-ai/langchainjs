@@ -32,9 +32,10 @@ gcloud config set project YOUR-PROJECT-ID
 ```
 
 If you don't know your project ID, try the following:
-*   Run `gcloud config list`.
-*   Run `gcloud projects list`.
-*   See the support page: [Locate the project ID](https://support.google.com/googleapi/answer/7014113).
+
+- Run `gcloud config list`.
+- Run `gcloud projects list`.
+- See the support page: [Locate the project ID](https://support.google.com/googleapi/answer/7014113).
 
 ## Setting up a PostgresLoader instance
 
@@ -91,14 +92,21 @@ The loader returns a list of Documents from the table using the first column as 
 ```js
 const documentLoaderArgs: PostgresLoaderOptions = {
   tableName: "test_table_custom",
-  contentColumns: [ "fruit_name", "variety"],
-  metadataColumns: ["fruit_id", "quantity_in_stock", "price_per_unit", "organic"],
-  format: "text"
+  contentColumns: ["fruit_name", "variety"],
+  metadataColumns: [
+    "fruit_id",
+    "quantity_in_stock",
+    "price_per_unit",
+    "organic",
+  ],
+  format: "text",
 };
 
-const documentLoaderInstance = await PostgresLoader.create(PEInstance, documentLoaderArgs);
+const documentLoaderInstance = await PostgresLoader.create(
+  PEInstance,
+  documentLoaderArgs
+);
 ```
-
 
 ### Load Documents using a SQL query
 
@@ -107,12 +115,20 @@ The query parameter allows users to specify a custom SQL query which can include
 ```js
 const documentLoaderArgs: PostgresLoaderOptions = {
   query: "SELECT * FROM my_fruit_table",
-  contentColumns: [ "fruit_name", "variety"],
-  metadataColumns: ["fruit_id", "quantity_in_stock", "price_per_unit", "organic"],
-  format: "text"
+  contentColumns: ["fruit_name", "variety"],
+  metadataColumns: [
+    "fruit_id",
+    "quantity_in_stock",
+    "price_per_unit",
+    "organic",
+  ],
+  format: "text",
 };
 
-const documentLoaderInstance = await PostgresLoader.create(PEInstance, docucumetLoaderArgs);
+const documentLoaderInstance = await PostgresLoader.create(
+  PEInstance,
+  docucumetLoaderArgs
+);
 ```
 
 ### Set page content format
