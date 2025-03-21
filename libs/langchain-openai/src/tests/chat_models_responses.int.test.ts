@@ -11,7 +11,6 @@ import {
 import { tool } from "@langchain/core/tools";
 import { z } from "zod";
 import { ChatOpenAI } from "../chat_models.js";
-import { zodToJsonSchema } from "zod-to-json-schema";
 
 function assertResponse(message: BaseMessage | BaseMessageChunk | undefined) {
   if (message == null) throw new Error("`message` is null");
@@ -147,7 +146,7 @@ test("Test structured output", async () => {
     json_schema: {
       name: "get_output",
       description: "Get output for user",
-      schema: zodToJsonSchema(schema),
+      schema,
       strict: true,
     },
   };
@@ -188,7 +187,7 @@ test("Test function calling and structured output", async () => {
     json_schema: {
       name: "get_output",
       description: "Get output for user",
-      schema: zodToJsonSchema(schema),
+      schema,
       strict: true,
     },
   };
