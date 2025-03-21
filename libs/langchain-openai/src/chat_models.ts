@@ -249,7 +249,6 @@ function _convertMessagesToOpenAIResponsesParams(
             type: "computer_call_output",
             output,
             call_id: toolMessage.tool_call_id,
-            id: toolMessage.id,
           };
         }
 
