@@ -6925,6 +6925,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@google-cloud/cloud-sql-connector@npm:^1.6.0":
+  version: 1.6.1
+  resolution: "@google-cloud/cloud-sql-connector@npm:1.6.1"
+  dependencies:
+    "@googleapis/sqladmin": ^24.0.0
+    gaxios: ^6.1.1
+    google-auth-library: ^9.2.0
+    p-throttle: ^7.0.0
+  checksum: a39c93029ef0ca0462f3a4d0d5ef503cb2c5cd8ffa99952429336005b017933688909f6c937ac1f65ad2d5c2285f0c91c0f04781830b3fe8b8864abbaa495f56
+  languageName: node
+  linkType: hard
+
 "@google-cloud/firestore@npm:^7.1.0":
   version: 7.3.0
   resolution: "@google-cloud/firestore@npm:7.3.0"
@@ -7020,6 +7032,15 @@ __metadata:
   version: 0.7.1
   resolution: "@google/generative-ai@npm:0.7.1"
   checksum: 536c7c75545c93731f0ab1fa9be6c88c64ead6ab6b24e70763e592e163041444f9ae78e2095019cd0e27fc18cbdc1ecaf1fdfd3561ca0a61577f720ddbaba1f2
+  languageName: node
+  linkType: hard
+
+"@googleapis/sqladmin@npm:^24.0.0":
+  version: 24.0.0
+  resolution: "@googleapis/sqladmin@npm:24.0.0"
+  dependencies:
+    googleapis-common: ^7.0.0
+  checksum: b1c93d18b800ecd5af79dc6728e6b030f6918a1c5e2094d2dd7b460e3b2033cb9ce4f4ffe5b6155ecc2f699b8e4bdf0a94999786671b8fa05e1d8f3ce90cf466
   languageName: node
   linkType: hard
 
@@ -8983,7 +9004,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/core@workspace:*, @langchain/core@workspace:langchain-core":
+"@langchain/core@>=0.3.0 <0.4.0, @langchain/core@workspace:*, @langchain/core@workspace:langchain-core":
   version: 0.0.0-use.local
   resolution: "@langchain/core@workspace:langchain-core"
   dependencies:
@@ -9091,6 +9112,40 @@ __metadata:
     typescript: <5.2.0
   peerDependencies:
     "@langchain/core": ">=0.2.21 <0.4.0"
+  languageName: unknown
+  linkType: soft
+
+"@langchain/google-cloud-sql-pg@workspace:^, @langchain/google-cloud-sql-pg@workspace:libs/langchain-google-cloud-sql-pg":
+  version: 0.0.0-use.local
+  resolution: "@langchain/google-cloud-sql-pg@workspace:libs/langchain-google-cloud-sql-pg"
+  dependencies:
+    "@google-cloud/cloud-sql-connector": ^1.6.0
+    "@jest/globals": ^29.5.0
+    "@langchain/core": ">=0.3.0 <0.4.0"
+    "@langchain/scripts": ">=0.1.0 <0.2.0"
+    "@swc/core": ^1.3.90
+    "@swc/jest": ^0.2.29
+    "@tsconfig/recommended": ^1.0.3
+    "@typescript-eslint/eslint-plugin": ^6.12.0
+    "@typescript-eslint/parser": ^6.12.0
+    dotenv: ^16.3.1
+    dpdm: ^3.12.0
+    eslint: ^8.33.0
+    eslint-config-airbnb-base: ^15.0.0
+    eslint-config-prettier: ^8.6.0
+    eslint-plugin-import: ^2.27.5
+    eslint-plugin-no-instanceof: ^1.0.1
+    eslint-plugin-prettier: ^4.2.1
+    google-auth-library: ^9.15.0
+    jest: ^29.5.0
+    jest-environment-node: ^29.6.4
+    knex: ^3.1.0
+    prettier: ^2.8.3
+    release-it: ^15.10.1
+    rollup: ^4.5.2
+    ts-jest: ^29.1.0
+    typescript: <5.2.0
+    uuid: ^11.0.5
   languageName: unknown
   linkType: soft
 
@@ -18714,17 +18769,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"colorette@npm:2.0.19, colorette@npm:^2.0.19":
+  version: 2.0.19
+  resolution: "colorette@npm:2.0.19"
+  checksum: 888cf5493f781e5fcf54ce4d49e9d7d698f96ea2b2ef67906834bb319a392c667f9ec69f4a10e268d2946d13a9503d2d19b3abaaaf174e3451bfe91fb9d82427
+  languageName: node
+  linkType: hard
+
 "colorette@npm:^2.0.10":
   version: 2.0.20
   resolution: "colorette@npm:2.0.20"
   checksum: 0c016fea2b91b733eb9f4bcdb580018f52c0bc0979443dad930e5037a968237ac53d9beb98e218d2e9235834f8eebce7f8e080422d6194e957454255bde71d3d
-  languageName: node
-  linkType: hard
-
-"colorette@npm:^2.0.19":
-  version: 2.0.19
-  resolution: "colorette@npm:2.0.19"
-  checksum: 888cf5493f781e5fcf54ce4d49e9d7d698f96ea2b2ef67906834bb319a392c667f9ec69f4a10e268d2946d13a9503d2d19b3abaaaf174e3451bfe91fb9d82427
   languageName: node
   linkType: hard
 
@@ -20185,7 +20240,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"debug@npm:4, debug@npm:^4, debug@npm:^4.1.0, debug@npm:^4.1.1, debug@npm:^4.3.1, debug@npm:^4.3.2, debug@npm:^4.3.3, debug@npm:^4.3.4":
+"debug@npm:4, debug@npm:4.3.4, debug@npm:^4, debug@npm:^4.1.0, debug@npm:^4.1.1, debug@npm:^4.3.1, debug@npm:^4.3.2, debug@npm:^4.3.3, debug@npm:^4.3.4":
   version: 4.3.4
   resolution: "debug@npm:4.3.4"
   dependencies:
@@ -22548,6 +22603,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"esm@npm:^3.2.25":
+  version: 3.2.25
+  resolution: "esm@npm:3.2.25"
+  checksum: 978aabe2de83541c105605a6d60a26ed8e627ef6bb0a7605fe15a95bbdea6b8348bd045255cb22219c054dd09a81a94823df00843d9e97f42419c92015ce3a64
+  languageName: node
+  linkType: hard
+
 "esniff@npm:^2.0.1":
   version: 2.0.1
   resolution: "esniff@npm:2.0.1"
@@ -22756,6 +22818,7 @@ __metadata:
     "@langchain/core": "workspace:*"
     "@langchain/deepseek": "workspace:*"
     "@langchain/exa": "workspace:*"
+    "@langchain/google-cloud-sql-pg": "workspace:^"
     "@langchain/google-common": "workspace:*"
     "@langchain/google-genai": "workspace:*"
     "@langchain/google-vertexai": "workspace:*"
@@ -24293,6 +24356,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"getopts@npm:2.3.0":
+  version: 2.3.0
+  resolution: "getopts@npm:2.3.0"
+  checksum: bbb5fcef8d4a8582cf4499ea3fc492d95322df2184e65d550ddacede04871e7ba33194c7abd06a6c5d540de3b70112a16f988787e236e1c66b89521032b398ce
+  languageName: node
+  linkType: hard
+
 "git-up@npm:^7.0.0":
   version: 7.0.0
   resolution: "git-up@npm:7.0.0"
@@ -24633,7 +24703,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"google-auth-library@npm:^9.15.1, google-auth-library@npm:^9.6.3":
+"google-auth-library@npm:^9.15.0, google-auth-library@npm:^9.15.1, google-auth-library@npm:^9.2.0, google-auth-library@npm:^9.6.3":
   version: 9.15.1
   resolution: "google-auth-library@npm:9.15.1"
   dependencies:
@@ -25880,6 +25950,13 @@ __metadata:
   version: 1.4.0
   resolution: "interpret@npm:1.4.0"
   checksum: 2e5f51268b5941e4a17e4ef0575bc91ed0ab5f8515e3cf77486f7c14d13f3010df9c0959f37063dcc96e78d12dc6b0bb1b9e111cdfe69771f4656d2993d36155
+  languageName: node
+  linkType: hard
+
+"interpret@npm:^2.2.0":
+  version: 2.2.0
+  resolution: "interpret@npm:2.2.0"
+  checksum: f51efef7cb8d02da16408ffa3504cd6053014c5aeb7bb8c223727e053e4235bf565e45d67028b0c8740d917c603807aa3c27d7bd2f21bf20b6417e2bb3e5fd6e
   languageName: node
   linkType: hard
 
@@ -28292,6 +28369,45 @@ __metadata:
   version: 3.0.3
   resolution: "kleur@npm:3.0.3"
   checksum: df82cd1e172f957bae9c536286265a5cdbd5eeca487cb0a3b2a7b41ef959fc61f8e7c0e9aeea9c114ccf2c166b6a8dd45a46fd619c1c569d210ecd2765ad5169
+  languageName: node
+  linkType: hard
+
+"knex@npm:^3.1.0":
+  version: 3.1.0
+  resolution: "knex@npm:3.1.0"
+  dependencies:
+    colorette: 2.0.19
+    commander: ^10.0.0
+    debug: 4.3.4
+    escalade: ^3.1.1
+    esm: ^3.2.25
+    get-package-type: ^0.1.0
+    getopts: 2.3.0
+    interpret: ^2.2.0
+    lodash: ^4.17.21
+    pg-connection-string: 2.6.2
+    rechoir: ^0.8.0
+    resolve-from: ^5.0.0
+    tarn: ^3.0.2
+    tildify: 2.0.0
+  peerDependenciesMeta:
+    better-sqlite3:
+      optional: true
+    mysql:
+      optional: true
+    mysql2:
+      optional: true
+    pg:
+      optional: true
+    pg-native:
+      optional: true
+    sqlite3:
+      optional: true
+    tedious:
+      optional: true
+  bin:
+    knex: bin/cli.js
+  checksum: 3905f8d27960975f7f57f3f488d1ef3ccf47784acc8eb627e8a28cbbe1f296c6879c8ef0cbd9e17e867be80117d305cd948545f3fbd4c74b24c90d2413bbc021
   languageName: node
   linkType: hard
 
@@ -31535,6 +31651,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"p-throttle@npm:^7.0.0":
+  version: 7.0.0
+  resolution: "p-throttle@npm:7.0.0"
+  checksum: ede8b1444bcb9200ebb95415c5eb2fba301ab12de4a9cffe3b8f383ca640e6d52aed417ee0df6705217a8e5aa8faadc5169fc56be7e99d32d34b9a74727d1d4d
+  languageName: node
+  linkType: hard
+
 "p-timeout@npm:^3.2.0":
   version: 3.2.0
   resolution: "p-timeout@npm:3.2.0"
@@ -32027,6 +32150,13 @@ __metadata:
   version: 1.1.0
   resolution: "pg-cloudflare@npm:1.1.0"
   checksum: fca32af487feadf337baccceca4d2a6a43c6bbe324efcdf620ea581e958e70873cbf64424bd0861d37ecaf2cd3f33319fefb49018bcae5e909dea5f2c859698d
+  languageName: node
+  linkType: hard
+
+"pg-connection-string@npm:2.6.2":
+  version: 2.6.2
+  resolution: "pg-connection-string@npm:2.6.2"
+  checksum: 22265882c3b6f2320785378d0760b051294a684989163d5a1cde4009e64e84448d7bf67d9a7b9e7f69440c3ee9e2212f9aa10dd17ad6773f6143c6020cebbcb5
   languageName: node
   linkType: hard
 
@@ -33947,6 +34077,15 @@ __metadata:
   dependencies:
     resolve: ^1.1.6
   checksum: fe76bf9c21875ac16e235defedd7cbd34f333c02a92546142b7911a0f7c7059d2e16f441fe6fb9ae203f459c05a31b2bcf26202896d89e390eda7514d5d2702b
+  languageName: node
+  linkType: hard
+
+"rechoir@npm:^0.8.0":
+  version: 0.8.0
+  resolution: "rechoir@npm:0.8.0"
+  dependencies:
+    resolve: ^1.20.0
+  checksum: ad3caed8afdefbc33fbc30e6d22b86c35b3d51c2005546f4e79bcc03c074df804b3640ad18945e6bef9ed12caedc035655ec1082f64a5e94c849ff939dc0a788
   languageName: node
   linkType: hard
 
@@ -36780,6 +36919,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"tarn@npm:^3.0.2":
+  version: 3.0.2
+  resolution: "tarn@npm:3.0.2"
+  checksum: 27a69658f02504979c5b02e500522e78ec12ef893b90cb00fdef794f9d847a92ed78f6c0ad12e82b8919519bded6a8d6d0000442cd0c6d6ea83cd9b7297729af
+  languageName: node
+  linkType: hard
+
 "teeny-request@npm:^9.0.0":
   version: 9.0.0
   resolution: "teeny-request@npm:9.0.0"
@@ -36941,6 +37087,13 @@ __metadata:
   version: 1.1.0
   resolution: "thunky@npm:1.1.0"
   checksum: 993096c472b6b8f30e29dc777a8d17720e4cab448375041f20c0cb802a09a7fb2217f2a3e8cdc11851faa71c957e2db309357367fc9d7af3cb7a4d00f4b66034
+  languageName: node
+  linkType: hard
+
+"tildify@npm:2.0.0":
+  version: 2.0.0
+  resolution: "tildify@npm:2.0.0"
+  checksum: 0f5fee93624c4afdf75ee224c3b65aece4817ba5317fd70f49eaf084ea720d73556a6ef3f50079425a773ba3b93805b4524d14057841d4e4336516fdbe80635b
   languageName: node
   linkType: hard
 
@@ -38640,6 +38793,15 @@ __metadata:
   bin:
     uuid: dist/bin/uuid
   checksum: 4b81611ade2885d2313ddd8dc865d93d8dccc13ddf901745edca8f86d99bc46d7a330d678e7532e7ebf93ce616679fb19b2e3568873ac0c14c999032acb25869
+  languageName: node
+  linkType: hard
+
+"uuid@npm:^11.0.5":
+  version: 11.1.0
+  resolution: "uuid@npm:11.1.0"
+  bin:
+    uuid: dist/esm/bin/uuid
+  checksum: 840f19758543c4631e58a29439e51b5b669d5f34b4dd2700b6a1d15c5708c7a6e0c3e2c8c4a2eae761a3a7caa7e9884d00c86c02622ba91137bd3deade6b4b4a
   languageName: node
   linkType: hard
 
