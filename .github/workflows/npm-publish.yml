@@ -86,7 +86,7 @@ jobs:
         if: github.event_name == 'workflow_dispatch'
         run: |
           NEW_VERSION=$(node -p "require('./package.json').version")
-          git add package.json package-lock.json
+          git add package.json yarn.lock
           git commit -m "chore: bump version to v${NEW_VERSION} [skip ci]"
           git tag -a "v${NEW_VERSION}" -m "Release v${NEW_VERSION}"
           git push origin main
