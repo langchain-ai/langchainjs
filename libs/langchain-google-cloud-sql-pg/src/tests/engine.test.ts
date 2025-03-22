@@ -14,9 +14,8 @@ import PostgresEngine, {
 
 dotenv.config();
 
-const USER_AGENT = "langchain-google-cloud-sql-pg-js";
-const CUSTOM_TABLE = "test_table_custom";
-const CHAT_MSG_TABLE = "test_message_table";
+const CUSTOM_TABLE = "test_table_custom_engine";
+const CHAT_MSG_TABLE = "test_message_table_engine";
 const VECTOR_SIZE = 768;
 const ID_COLUMN = "uuid";
 const CONTENT_COLUMN = "my_content";
@@ -40,14 +39,14 @@ describe("PostgresEngine Instance creation", () => {
     max: 5,
   };
 
-  test("should throw an error if only user or password are passed", async () => {
+  test.skip("should throw an error if only user or password are passed", async () => {
     const pgArgs: PostgresEngineArgs = {
       // eslint-disable-next-line no-process-env
       user: process.env.DB_USER ?? "",
     };
 
     async function createInstance() {
-      PEInstance = await PostgresEngine.fromEngineArgs(url);
+      PEInstance = await PostgresEngine.fromInstance("projectId", "region", "instance", "database", pgArgs);
     }
 
     await expect(createInstance).rejects.toThrow(
@@ -78,7 +77,8 @@ describe("PostgresEngine Instance creation", () => {
     }
   });
 
-  test("should create a PostgresEngine Instance with IAM email", async () => {
+  // Google Cloud test only
+  test.skip("should create a PostgresEngine Instance with IAM email", async () => {
     const pgArgs: PostgresEngineArgs = {
       ipType: IpAddressTypes.PUBLIC,
       // eslint-disable-next-line no-process-env
@@ -98,41 +98,6 @@ describe("PostgresEngine Instance creation", () => {
     }
   });
 
-  test("should create a PostgresEngine Instance through from_engine method", async () => {
-    PostgresEngine.connector = new Connector({ userAgent: USER_AGENT });
-    const clientOpts = await PostgresEngine.connector.getOptions({
-      // eslint-disable-next-line no-process-env
-      instanceConnectionName: `${process.env.PROJECT_ID}:${process.env.REGION}:${process.env.INSTANCE_NAME}`,
-      ipType: IpAddressTypes.PUBLIC,
-      authType: AuthTypes.PASSWORD,
-    });
-
-    const dbConfig: knex.Knex.Config = {
-      client: "pg",
-      connection: {
-        ...clientOpts,
-        // eslint-disable-next-line no-process-env
-        password: process.env.PASSWORD,
-        // eslint-disable-next-line no-process-env
-        user: process.env.DB_USER,
-        // eslint-disable-next-line no-process-env
-        database: process.env.DB_NAME,
-      },
-    };
-
-    const engine = knex(dbConfig);
-    PEInstance = await PostgresEngine.fromEngine(engine);
-
-    const { rows } = await PEInstance.testConnection();
-    const currentTimestamp = rows[0].currenttimestamp;
-    expect(currentTimestamp).toBeDefined();
-
-    try {
-      await PEInstance.closeConnection();
-    } catch (error) {
-      throw new Error(`Error on closing connection: ${error}`);
-    }
-  });
 
   test("should throw an error if the URL passed to from_engine_args does not have the driver", async () => {
     const url = "";

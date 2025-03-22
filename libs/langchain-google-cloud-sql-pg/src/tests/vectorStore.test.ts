@@ -236,7 +236,7 @@ describe("VectorStore creation", () => {
   });
 
   afterAll(async () => {
-    await PEInstance.pool.raw(`DROP TABLE "${CUSTOM_TABLE}"`);
+    await PEInstance.pool.raw(`DROP TABLE IF EXISTS "${CUSTOM_TABLE}"`);
 
     try {
       await PEInstance.closeConnection();
