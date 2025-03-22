@@ -17,19 +17,19 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
+          cache: 'yarn'
 
       - name: Install dependencies
-        run: npm ci
+        run: yarn install --immutable
 
       - name: Lint
-        run: npm run lint
+        run: yarn lint
 
       - name: Type check
-        run: npm run build --noEmit
+        run: yarn build
 
       - name: Run tests
-        run: npm test
+        run: yarn test
 
   format-check:
     name: Format Check
@@ -42,10 +42,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
+          cache: 'yarn'
 
       - name: Install dependencies
-        run: npm ci
+        run: yarn install --immutable
 
       - name: Check formatting
         run: npx prettier --check "src/**/*.ts" "examples/**/*.ts"

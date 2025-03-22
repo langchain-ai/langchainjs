@@ -17,19 +17,19 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
+          cache: 'yarn'
 
       - name: Install dependencies
-        run: npm ci
+        run: yarn install --immutable
 
       - name: Lint
-        run: npm run lint
+        run: yarn lint
 
       - name: Build
-        run: npm run build
+        run: yarn build
 
       - name: Run tests
-        run: npm test
+        run: yarn test
 
   coverage:
     name: Coverage
@@ -42,13 +42,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
+          cache: 'yarn'
 
       - name: Install dependencies
-        run: npm ci
+        run: yarn install --immutable
 
       - name: Generate coverage report
-        run: npm test -- --coverage
+        run: yarn test -- --coverage
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3

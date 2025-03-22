@@ -16,8 +16,9 @@
     "useDefineForClassFields": true,
     "strictPropertyInitialization": false,
     "allowJs": true,
-    "strict": true
+    "strict": true,
+    "noEmit": true
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "__tests__/**/*"],
   "exclude": ["node_modules", "dist", "docs"]
 }

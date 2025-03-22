@@ -1,29 +1,31 @@
-import { Client } from '@modelcontextprotocol/sdk/client/index.js';
-import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
-import { SSEClientTransport } from '@modelcontextprotocol/sdk/client/sse.js';
-import type { StructuredToolInterface } from '@langchain/core/tools';
-import { loadMcpTools } from './tools.js';
-import * as fs from 'fs';
-import * as path from 'path';
-import debug from 'debug';
+import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
+import { SSEClientTransport } from "@modelcontextprotocol/sdk/client/sse.js";
+import type { StructuredToolInterface } from "@langchain/core/tools";
+import * as fs from "fs";
+import * as path from "path";
+import debug from "debug";
+import { loadMcpTools } from "./tools.js";
 
-const {
-  default: { name: packageName },
-} = await import('../package.json');
-const moduleName = 'client';
-
-const debugLog = debug(`${packageName}:${moduleName}`);
+// Read package name from package.json
+let debugLog: debug.Debugger;
+function getDebugLog() {
+  if (!debugLog) {
+    debugLog = debug("@langchain/mcp-adapters:client");
+  }
+  return debugLog;
+}
 
 /**
  * Configuration for stdio transport connection
  */
 export interface StdioConnection {
-  transport: 'stdio';
+  transport: "stdio";
   command: string;
   args: string[];
   env?: Record<string, string>;
   encoding?: string;
-  encodingErrorHandler?: 'strict' | 'ignore' | 'replace';
+  encodingErrorHandler?: "strict" | "ignore" | "replace";
   /**
    * Additional restart settings
    */
@@ -47,7 +49,7 @@ export interface StdioConnection {
  * Configuration for SSE transport connection
  */
 export interface SSEConnection {
-  transport: 'sse';
+  transport: "sse";
   url: string;
   headers?: Record<string, string>;
   useNodeEventSource?: boolean;
@@ -86,12 +88,9 @@ export interface MCPConfig {
  * Error class for MCP client operations
  */
 export class MCPClientError extends Error {
-  constructor(
-    message: string,
-    public readonly serverName?: string
-  ) {
+  constructor(message: string, public readonly serverName?: string) {
     super(message);
-    this.name = 'MCPClientError';
+    this.name = "MCPClientError";
   }
 }
 
@@ -100,10 +99,17 @@ export class MCPClientError extends Error {
  */
 export class MultiServerMCPClient {
   private clients: Map<string, Client> = new Map();
+
   private serverNameToTools: Map<string, StructuredToolInterface[]> = new Map();
+
   private connections?: Record<string, Connection>;
+
   private cleanupFunctions: Array<() => Promise<void>> = [];
-  private transportInstances: Map<string, StdioClientTransport | SSEClientTransport> = new Map();
+
+  private transportInstances: Map<
+    string,
+    StdioClientTransport | SSEClientTransport
+  > = new Map();
 
   /**
    * Create a new MultiServerMCPClient.
@@ -122,21 +128,20 @@ export class MultiServerMCPClient {
   /**
    * Try to load the default configuration file (mcp.json) from the root directory
    */
-  private static tryLoadDefaultConfig(): Record<string, Connection> | undefined {
-    try {
-      const defaultConfigPath = path.join(process.cwd(), 'mcp.json');
-      if (fs.existsSync(defaultConfigPath)) {
-        debugLog(
-          `INFO: Found default configuration at ${defaultConfigPath}, loading automatically`
-        );
-        const config = MultiServerMCPClient.loadConfigFromFile(defaultConfigPath);
-        return MultiServerMCPClient.processConnections(config.servers);
-      } else {
-        debugLog(`INFO: No default mcp.json found in root directory`);
-      }
-    } catch (error) {
-      debugLog(`WARN: Failed to load default configuration: ${error}`);
-      // Do not throw here, just continue with no configs
+  private static tryLoadDefaultConfig():
+    | Record<string, Connection>
+    | undefined {
+    const defaultConfigPath = path.join(process.cwd(), "mcp.json");
+    if (fs.existsSync(defaultConfigPath)) {
+      getDebugLog()(
+        `INFO: Found default configuration at ${defaultConfigPath}, loading automatically`
+      );
+      const config = MultiServerMCPClient.loadConfigFromFile(defaultConfigPath);
+      return MultiServerMCPClient.processConnections(config.servers);
+    } else {
+      getDebugLog()(`INFO: No default mcp.json found in root directory`);
+      // don't throw if there's no default config to load
+      return undefined;
     }
   }
 
@@ -147,21 +152,25 @@ export class MultiServerMCPClient {
    * @returns The parsed configuration
    */
   private static loadConfigFromFile(configPath: string): MCPConfig {
-    const configData = fs.readFileSync(configPath, 'utf8');
+    const configData = fs.readFileSync(configPath, "utf8");
     const config = JSON.parse(configData);
 
     // Validate that config has a servers property
-    if (!config || typeof config !== 'object' || !('servers' in config)) {
-      debugLog(`ERROR: Invalid MCP configuration from ${configPath}: missing 'servers' property`);
-      throw new MCPClientError(`Invalid MCP configuration: missing 'servers' property`);
+    if (!config || typeof config !== "object" || !("servers" in config)) {
+      getDebugLog()(
+        `ERROR: Invalid MCP configuration from ${configPath}: missing 'servers' property`
+      );
+      throw new MCPClientError(
+        `Invalid MCP configuration: missing 'servers' property`
+      );
     }
 
     // Process environment variables in the configuration
     MultiServerMCPClient.processEnvVarsInConfig(
       Object.fromEntries(
-        Object.entries(config.servers as Record<string, StdioConnection>).filter(
-          ([_, value]) => value.transport === 'stdio'
-        )
+        Object.entries(
+          config.servers as Record<string, StdioConnection>
+        ).filter(([_, value]) => value.transport === "stdio")
       )
     );
 
@@ -174,20 +183,28 @@ export class MultiServerMCPClient {
    *
    * @param servers - The servers configuration object
    */
-  private static processEnvVarsInConfig(servers: Record<string, StdioConnection>): void {
+  private static processEnvVarsInConfig(
+    servers: Record<string, StdioConnection>
+  ): void {
     for (const [serverName, config] of Object.entries(servers)) {
-      if (typeof config !== 'object' || config === null) continue;
+      if (typeof config !== "object" || config === null) continue;
 
       // Process env object if it exists
-      if (config.env && typeof config.env === 'object') {
+      if (config.env && typeof config.env === "object") {
         for (const [key, value] of Object.entries(config.env)) {
-          if (typeof value === 'string' && value.startsWith('${') && value.endsWith('}')) {
+          if (
+            typeof value === "string" &&
+            value.startsWith("${") &&
+            value.endsWith("}")
+          ) {
             const envVar = value.slice(2, -1);
             const envValue = process.env[envVar];
             if (envValue) {
               config.env[key] = envValue;
             } else {
-              debugLog(`WARN: Environment variable ${envVar} not found for server "${serverName}"`);
+              getDebugLog()(
+                `WARN: Environment variable ${envVar} not found for server "${serverName}"`
+              );
             }
           }
         }
@@ -204,16 +221,21 @@ export class MultiServerMCPClient {
    * @param obj - The object to process
    */
   private static processEnvVarsRecursively<T extends object>(obj: T): void {
-    if (typeof obj !== 'object' || obj === null) return;
+    if (typeof obj !== "object" || obj === null) return;
 
     for (const [key, value] of Object.entries(obj)) {
-      if (typeof value === 'string' && value.startsWith('${') && value.endsWith('}')) {
+      if (
+        typeof value === "string" &&
+        value.startsWith("${") &&
+        value.endsWith("}")
+      ) {
         const envVar = value.slice(2, -1);
         const envValue = process.env[envVar];
         if (envValue) {
+          // eslint-disable-next-line no-param-reassign
           obj[key as keyof T] = envValue as T[keyof T];
         }
-      } else if (typeof value === 'object' && value !== null && key !== 'env') {
+      } else if (typeof value === "object" && value !== null && key !== "env") {
         // Skip env object as it's handled separately
         MultiServerMCPClient.processEnvVarsRecursively(value);
       }
@@ -232,22 +254,20 @@ export class MultiServerMCPClient {
     const processedConnections: Record<string, Connection> = {};
 
     for (const [serverName, config] of Object.entries(connections)) {
-      if (typeof config !== 'object' || config === null) {
-        debugLog(`WARN: Invalid configuration for server "${serverName}". Skipping.`);
+      if (typeof config !== "object" || config === null) {
+        getDebugLog()(
+          `WARN: Invalid configuration for server "${serverName}". Skipping.`
+        );
         continue;
       }
 
       // Determine the connection type and process accordingly
       if (MultiServerMCPClient.isStdioConnection(config)) {
-        processedConnections[serverName] = MultiServerMCPClient.processStdioConfig(
-          serverName,
-          config
-        );
+        processedConnections[serverName] =
+          MultiServerMCPClient.processStdioConfig(serverName, config);
       } else if (MultiServerMCPClient.isSSEConnection(config)) {
-        processedConnections[serverName] = MultiServerMCPClient.processSSEConfig(
-          serverName,
-          config
-        );
+        processedConnections[serverName] =
+          MultiServerMCPClient.processSSEConfig(serverName, config);
       } else {
         throw new MCPClientError(
           `Server "${serverName}" has invalid or unsupported configuration. Skipping.`
@@ -265,11 +285,11 @@ export class MultiServerMCPClient {
     // When transport is missing, default to stdio if it has command and args
     // OR when transport is explicitly set to 'stdio'
     return (
-      typeof config === 'object' &&
+      typeof config === "object" &&
       config !== null &&
-      (!('transport' in config) || config.transport === 'stdio') &&
-      'command' in config &&
-      (!('args' in config) || Array.isArray(config.args))
+      (!("transport" in config) || config.transport === "stdio") &&
+      "command" in config &&
+      (!("args" in config) || Array.isArray(config.args))
     );
   }
 
@@ -279,12 +299,12 @@ export class MultiServerMCPClient {
   private static isSSEConnection(config: unknown): config is SSEConnection {
     // Only consider it an SSE connection if transport is explicitly set to 'sse'
     return (
-      typeof config === 'object' &&
+      typeof config === "object" &&
       config !== null &&
-      'transport' in config &&
-      config.transport === 'sse' &&
-      'url' in config &&
-      typeof config.url === 'string'
+      "transport" in config &&
+      config.transport === "sse" &&
+      "url" in config &&
+      typeof config.url === "string"
     );
   }
 
@@ -295,8 +315,10 @@ export class MultiServerMCPClient {
     serverName: string,
     config: Partial<StdioConnection>
   ): StdioConnection {
-    if (!config.command || typeof config.command !== 'string') {
-      throw new MCPClientError(`Missing or invalid command for server "${serverName}"`);
+    if (!config.command || typeof config.command !== "string") {
+      throw new MCPClientError(
+        `Missing or invalid command for server "${serverName}"`
+      );
     }
 
     if (config.args !== undefined && !Array.isArray(config.args)) {
@@ -305,7 +327,10 @@ export class MultiServerMCPClient {
       );
     }
 
-    if (config.args !== undefined && !config.args.every(arg => typeof arg === 'string')) {
+    if (
+      config.args !== undefined &&
+      !config.args.every((arg) => typeof arg === "string")
+    ) {
       throw new MCPClientError(
         `Invalid args for server "${serverName} - must be an array of strings`
       );
@@ -313,18 +338,12 @@ export class MultiServerMCPClient {
 
     // Always set transport to 'stdio' regardless of whether it was in the original config
     const stdioConfig: StdioConnection = {
-      transport: 'stdio',
+      transport: "stdio",
       command: config.command,
       args: config.args ?? [],
     };
 
-    if (config.env && typeof config.env !== 'object') {
-      throw new MCPClientError(
-        `Invalid env for server "${serverName} - must be an object of key-value pairs`
-      );
-    }
-
-    if (config.env && typeof config.env === 'object' && Array.isArray(config.env)) {
+    if (config.env && typeof config.env !== "object") {
       throw new MCPClientError(
         `Invalid env for server "${serverName} - must be an object of key-value pairs`
       );
@@ -332,8 +351,18 @@ export class MultiServerMCPClient {
 
     if (
       config.env &&
-      typeof config.env === 'object' &&
-      !Object.values(config.env).every(value => typeof value === 'string')
+      typeof config.env === "object" &&
+      Array.isArray(config.env)
+    ) {
+      throw new MCPClientError(
+        `Invalid env for server "${serverName} - must be an object of key-value pairs`
+      );
+    }
+
+    if (
+      config.env &&
+      typeof config.env === "object" &&
+      !Object.values(config.env).every((value) => typeof value === "string")
     ) {
       throw new MCPClientError(
         `Invalid env for server "${serverName} - must be an object of key-value pairs with string values`
@@ -341,41 +370,52 @@ export class MultiServerMCPClient {
     }
 
     // Add optional properties if they exist
-    if (config.env && typeof config.env === 'object') {
+    if (config.env && typeof config.env === "object") {
       stdioConfig.env = config.env;
     }
 
-    if (config.encoding !== undefined && typeof config.encoding !== 'string') {
-      throw new MCPClientError(`Invalid encoding for server "${serverName} - must be a string`);
+    if (config.encoding !== undefined && typeof config.encoding !== "string") {
+      throw new MCPClientError(
+        `Invalid encoding for server "${serverName} - must be a string`
+      );
     }
 
-    if (typeof config.encoding === 'string') {
+    if (typeof config.encoding === "string") {
       stdioConfig.encoding = config.encoding;
     }
 
     if (
       config.encodingErrorHandler !== undefined &&
-      !['strict', 'ignore', 'replace'].includes(config.encodingErrorHandler)
+      !["strict", "ignore", "replace"].includes(config.encodingErrorHandler)
     ) {
       throw new MCPClientError(
         `Invalid encodingErrorHandler for server "${serverName} - must be one of: strict, ignore, replace`
       );
     }
 
-    if (['strict', 'ignore', 'replace'].includes(config.encodingErrorHandler ?? '')) {
+    if (
+      ["strict", "ignore", "replace"].includes(
+        config.encodingErrorHandler ?? ""
+      )
+    ) {
       stdioConfig.encodingErrorHandler = config.encodingErrorHandler as
-        | 'strict'
-        | 'ignore'
-        | 'replace';
+        | "strict"
+        | "ignore"
+        | "replace";
     }
 
     // Add restart configuration if present
-    if (config.restart && typeof config.restart !== 'object') {
-      throw new MCPClientError(`Invalid restart for server "${serverName} - must be an object`);
+    if (config.restart && typeof config.restart !== "object") {
+      throw new MCPClientError(
+        `Invalid restart for server "${serverName} - must be an object`
+      );
     }
 
-    if (config.restart && typeof config.restart === 'object') {
-      if (config.restart.enabled !== undefined && typeof config.restart.enabled !== 'boolean') {
+    if (config.restart && typeof config.restart === "object") {
+      if (
+        config.restart.enabled !== undefined &&
+        typeof config.restart.enabled !== "boolean"
+      ) {
         throw new MCPClientError(
           `Invalid restart.enabled for server "${serverName} - must be a boolean`
         );
@@ -387,24 +427,27 @@ export class MultiServerMCPClient {
 
       if (
         config.restart.maxAttempts !== undefined &&
-        typeof config.restart.maxAttempts !== 'number'
+        typeof config.restart.maxAttempts !== "number"
       ) {
         throw new MCPClientError(
           `Invalid restart.maxAttempts for server "${serverName} - must be a number`
         );
       }
 
-      if (typeof config.restart.maxAttempts === 'number') {
+      if (typeof config.restart.maxAttempts === "number") {
         stdioConfig.restart.maxAttempts = config.restart.maxAttempts;
       }
 
-      if (config.restart.delayMs !== undefined && typeof config.restart.delayMs !== 'number') {
+      if (
+        config.restart.delayMs !== undefined &&
+        typeof config.restart.delayMs !== "number"
+      ) {
         throw new MCPClientError(
           `Invalid restart.delayMs for server "${serverName} - must be a number`
         );
       }
 
-      if (typeof config.restart.delayMs === 'number') {
+      if (typeof config.restart.delayMs === "number") {
         stdioConfig.restart.delayMs = config.restart.delayMs;
       }
     }
@@ -415,36 +458,51 @@ export class MultiServerMCPClient {
   /**
    * Process SSE connection configuration
    */
-  private static processSSEConfig(serverName: string, config: SSEConnection): SSEConnection {
-    if (!config.url || typeof config.url !== 'string') {
-      throw new MCPClientError(`Missing or invalid url for server "${serverName}"`);
+  private static processSSEConfig(
+    serverName: string,
+    config: SSEConnection
+  ): SSEConnection {
+    if (!config.url || typeof config.url !== "string") {
+      throw new MCPClientError(
+        `Missing or invalid url for server "${serverName}"`
+      );
     }
 
     try {
       const url = new URL(config.url);
-      if (!url.protocol.startsWith('http')) {
+      if (!url.protocol.startsWith("http")) {
         throw new MCPClientError(
           `Invalid url for server "${serverName} - must be a valid HTTP or HTTPS URL`
         );
       }
     } catch {
-      throw new MCPClientError(`Invalid url for server "${serverName} - must be a valid URL`);
+      throw new MCPClientError(
+        `Invalid url for server "${serverName} - must be a valid URL`
+      );
     }
 
-    if (!config.transport || config.transport !== 'sse') {
-      throw new MCPClientError(`Invalid transport for server "${serverName} - must be 'sse'`);
+    if (!config.transport || config.transport !== "sse") {
+      throw new MCPClientError(
+        `Invalid transport for server "${serverName} - must be 'sse'`
+      );
     }
 
     const sseConfig: SSEConnection = {
-      transport: 'sse',
+      transport: "sse",
       url: config.url,
     };
 
-    if (config.headers && typeof config.headers !== 'object') {
-      throw new MCPClientError(`Invalid headers for server "${serverName} - must be an object`);
+    if (config.headers && typeof config.headers !== "object") {
+      throw new MCPClientError(
+        `Invalid headers for server "${serverName} - must be an object`
+      );
     }
 
-    if (config.headers && typeof config.headers === 'object' && Array.isArray(config.headers)) {
+    if (
+      config.headers &&
+      typeof config.headers === "object" &&
+      Array.isArray(config.headers)
+    ) {
       throw new MCPClientError(
         `Invalid headers for server "${serverName} - must be an object of key-value pairs`
       );
@@ -452,8 +510,8 @@ export class MultiServerMCPClient {
 
     if (
       config.headers &&
-      typeof config.headers === 'object' &&
-      !Object.values(config.headers).every(value => typeof value === 'string')
+      typeof config.headers === "object" &&
+      !Object.values(config.headers).every((value) => typeof value === "string")
     ) {
       throw new MCPClientError(
         `Invalid headers for server "${serverName} - must be an object of key-value pairs with string values`
@@ -461,28 +519,36 @@ export class MultiServerMCPClient {
     }
 
     // Add optional headers if they exist
-    if (config.headers && typeof config.headers === 'object') {
+    if (config.headers && typeof config.headers === "object") {
       sseConfig.headers = config.headers;
     }
 
-    if (config.useNodeEventSource !== undefined && typeof config.useNodeEventSource !== 'boolean') {
+    if (
+      config.useNodeEventSource !== undefined &&
+      typeof config.useNodeEventSource !== "boolean"
+    ) {
       throw new MCPClientError(
         `Invalid useNodeEventSource for server "${serverName} - must be a boolean`
       );
     }
 
     // Add optional useNodeEventSource flag if it exists
-    if (typeof config.useNodeEventSource === 'boolean') {
+    if (typeof config.useNodeEventSource === "boolean") {
       sseConfig.useNodeEventSource = config.useNodeEventSource;
     }
 
-    if (config.reconnect && typeof config.reconnect !== 'object') {
-      throw new MCPClientError(`Invalid reconnect for server "${serverName} - must be an object`);
+    if (config.reconnect && typeof config.reconnect !== "object") {
+      throw new MCPClientError(
+        `Invalid reconnect for server "${serverName} - must be an object`
+      );
     }
 
     // Add reconnection configuration if present
-    if (config.reconnect && typeof config.reconnect === 'object') {
-      if (config.reconnect.enabled !== undefined && typeof config.reconnect.enabled !== 'boolean') {
+    if (config.reconnect && typeof config.reconnect === "object") {
+      if (
+        config.reconnect.enabled !== undefined &&
+        typeof config.reconnect.enabled !== "boolean"
+      ) {
         throw new MCPClientError(
           `Invalid reconnect.enabled for server "${serverName} - must be a boolean`
         );
@@ -494,24 +560,27 @@ export class MultiServerMCPClient {
 
       if (
         config.reconnect.maxAttempts !== undefined &&
-        typeof config.reconnect.maxAttempts !== 'number'
+        typeof config.reconnect.maxAttempts !== "number"
       ) {
         throw new MCPClientError(
           `Invalid reconnect.maxAttempts for server "${serverName} - must be a number`
         );
       }
 
-      if (typeof config.reconnect.maxAttempts === 'number') {
+      if (typeof config.reconnect.maxAttempts === "number") {
         sseConfig.reconnect.maxAttempts = config.reconnect.maxAttempts;
       }
 
-      if (config.reconnect.delayMs !== undefined && typeof config.reconnect.delayMs !== 'number') {
+      if (
+        config.reconnect.delayMs !== undefined &&
+        typeof config.reconnect.delayMs !== "number"
+      ) {
         throw new MCPClientError(
           `Invalid reconnect.delayMs for server "${serverName} - must be a number`
         );
       }
 
-      if (typeof config.reconnect.delayMs === 'number') {
+      if (typeof config.reconnect.delayMs === "number") {
         sseConfig.reconnect.delayMs = config.reconnect.delayMs;
       }
     }
@@ -538,13 +607,17 @@ export class MultiServerMCPClient {
           ...MultiServerMCPClient.processConnections(config.servers),
         };
       } else {
-        client.connections = MultiServerMCPClient.processConnections(config.servers);
+        client.connections = MultiServerMCPClient.processConnections(
+          config.servers
+        );
       }
 
-      debugLog(`INFO: Loaded MCP configuration from ${configPath}`);
+      getDebugLog()(`INFO: Loaded MCP configuration from ${configPath}`);
       return client;
     } catch (error) {
-      debugLog(`ERROR: Failed to load MCP configuration from ${configPath}: ${error}`);
+      getDebugLog()(
+        `ERROR: Failed to load MCP configuration from ${configPath}: ${error}`
+      );
       throw new MCPClientError(`Failed to load MCP configuration: ${error}`);
     }
   }
@@ -555,18 +628,22 @@ export class MultiServerMCPClient {
    * @returns A map of server names to arrays of tools
    * @throws {MCPClientError} If initialization fails
    */
-  async initializeConnections(): Promise<Map<string, StructuredToolInterface[]>> {
+  async initializeConnections(): Promise<
+    Map<string, StructuredToolInterface[]>
+  > {
     if (!this.connections || Object.keys(this.connections).length === 0) {
-      debugLog(`WARN: No connections to initialize`);
+      getDebugLog()(`WARN: No connections to initialize`);
       return new Map();
     }
 
     for (const [serverName, connection] of Object.entries(this.connections)) {
-      debugLog(`INFO: Initializing connection to server "${serverName}"...`);
+      getDebugLog()(
+        `INFO: Initializing connection to server "${serverName}"...`
+      );
 
-      if (connection.transport === 'stdio') {
+      if (connection.transport === "stdio") {
         await this.initializeStdioConnection(serverName, connection);
-      } else if (connection.transport === 'sse') {
+      } else if (connection.transport === "sse") {
         await this.initializeSSEConnection(serverName, connection);
       } else {
         // This should never happen due to the validation in the constructor
@@ -589,8 +666,10 @@ export class MultiServerMCPClient {
   ): Promise<void> {
     const { command, args, env, restart } = connection;
 
-    debugLog(
-      `DEBUG: Creating stdio transport for server "${serverName}" with command: ${command} ${args.join(' ')}`
+    getDebugLog()(
+      `DEBUG: Creating stdio transport for server "${serverName}" with command: ${command} ${args.join(
+        " "
+      )}`
     );
 
     const transport = new StdioClientTransport({
@@ -602,8 +681,8 @@ export class MultiServerMCPClient {
     this.transportInstances.set(serverName, transport);
 
     const client = new Client({
-      name: 'langchain-mcp-adapter',
-      version: '0.1.0',
+      name: "langchain-mcp-adapter",
+      version: "0.1.0",
     });
 
     try {
@@ -623,7 +702,9 @@ export class MultiServerMCPClient {
     this.clients.set(serverName, client);
 
     const cleanup = async () => {
-      debugLog(`DEBUG: Closing stdio transport for server "${serverName}"`);
+      getDebugLog()(
+        `DEBUG: Closing stdio transport for server "${serverName}"`
+      );
       await transport.close();
     };
 
@@ -640,9 +721,10 @@ export class MultiServerMCPClient {
     serverName: string,
     transport: StdioClientTransport,
     connection: StdioConnection,
-    restart: NonNullable<StdioConnection['restart']>
+    restart: NonNullable<StdioConnection["restart"]>
   ): void {
     const originalOnClose = transport.onclose;
+    // eslint-disable-next-line no-param-reassign, @typescript-eslint/no-misused-promises
     transport.onclose = async () => {
       if (originalOnClose) {
         await originalOnClose();
@@ -650,8 +732,15 @@ export class MultiServerMCPClient {
 
       // Only attempt restart if we haven't cleaned up
       if (this.clients.has(serverName)) {
-        debugLog(`INFO: Process for server "${serverName}" exited, attempting to restart...`);
-        await this.attemptReconnect(serverName, connection, restart.maxAttempts, restart.delayMs);
+        getDebugLog()(
+          `INFO: Process for server "${serverName}" exited, attempting to restart...`
+        );
+        await this.attemptReconnect(
+          serverName,
+          connection,
+          restart.maxAttempts,
+          restart.delayMs
+        );
       }
     };
   }
@@ -665,15 +754,22 @@ export class MultiServerMCPClient {
   ): Promise<void> {
     const { url, headers, useNodeEventSource, reconnect } = connection;
 
-    debugLog(`DEBUG: Creating SSE transport for server "${serverName}" with URL: ${url}`);
+    getDebugLog()(
+      `DEBUG: Creating SSE transport for server "${serverName}" with URL: ${url}`
+    );
 
     try {
-      const transport = await this.createSSETransport(serverName, url, headers, useNodeEventSource);
+      const transport = await this.createSSETransport(
+        serverName,
+        url,
+        headers,
+        useNodeEventSource
+      );
       this.transportInstances.set(serverName, transport);
 
       const client = new Client({
-        name: 'langchain-mcp-adapter',
-        version: '0.1.0',
+        name: "langchain-mcp-adapter",
+        version: "0.1.0",
       });
 
       try {
@@ -693,7 +789,9 @@ export class MultiServerMCPClient {
       this.clients.set(serverName, client);
 
       const cleanup = async () => {
-        debugLog(`DEBUG: Closing SSE transport for server "${serverName}"`);
+        getDebugLog()(
+          `DEBUG: Closing SSE transport for server "${serverName}"`
+        );
         await transport.close();
       };
 
@@ -723,18 +821,24 @@ export class MultiServerMCPClient {
       return new SSEClientTransport(new URL(url));
     }
 
-    debugLog(`DEBUG: Using custom headers for SSE transport to server "${serverName}"`);
+    getDebugLog()(
+      `DEBUG: Using custom headers for SSE transport to server "${serverName}"`
+    );
 
     // If useNodeEventSource is true, try Node.js implementations
     if (useNodeEventSource) {
-      return await this.createNodeEventSourceTransport(serverName, url, headers);
+      return await this.createNodeEventSourceTransport(
+        serverName,
+        url,
+        headers
+      );
     }
 
     // For browser environments, use the basic requestInit approach
-    debugLog(
+    getDebugLog()(
       `DEBUG: Using browser EventSource for server "${serverName}". Headers may not be applied correctly.`
     );
-    debugLog(
+    getDebugLog()(
       `DEBUG: For better headers support in browsers, consider using a custom SSE implementation.`
     );
 
@@ -753,11 +857,17 @@ export class MultiServerMCPClient {
   ): Promise<SSEClientTransport> {
     // First try to use extended-eventsource which has better headers support
     try {
-      const ExtendedEventSourceModule = await import('extended-eventsource');
+      const ExtendedEventSourceModule = await import("extended-eventsource");
       const ExtendedEventSource = ExtendedEventSourceModule.EventSource;
 
-      debugLog(`DEBUG: Using Extended EventSource for server "${serverName}"`);
-      debugLog(`DEBUG: Setting headers for Extended EventSource: ${JSON.stringify(headers)}`);
+      getDebugLog()(
+        `DEBUG: Using Extended EventSource for server "${serverName}"`
+      );
+      getDebugLog()(
+        `DEBUG: Setting headers for Extended EventSource: ${JSON.stringify(
+          headers
+        )}`
+      );
 
       // Override the global EventSource with the extended implementation
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -771,20 +881,25 @@ export class MultiServerMCPClient {
       });
     } catch (extendedError) {
       // Fall back to standard eventsource if extended-eventsource is not available
-      debugLog(
+      getDebugLog()(
         `DEBUG: Extended EventSource not available, falling back to standard EventSource: ${extendedError}`
       );
 
       try {
         // Dynamically import the eventsource package
-        const EventSourceModule = await import('eventsource');
+        // eslint-disable-next-line import/no-extraneous-dependencies
+        const EventSourceModule = await import("eventsource");
         const EventSource =
-          'default' in EventSourceModule
+          "default" in EventSourceModule
             ? EventSourceModule.default
             : EventSourceModule.EventSource;
 
-        debugLog(`DEBUG: Using Node.js EventSource for server "${serverName}"`);
-        debugLog(`DEBUG: Setting headers for EventSource: ${JSON.stringify(headers)}`);
+        getDebugLog()(
+          `DEBUG: Using Node.js EventSource for server "${serverName}"`
+        );
+        getDebugLog()(
+          `DEBUG: Setting headers for EventSource: ${JSON.stringify(headers)}`
+        );
 
         // Override the global EventSource with the Node.js implementation
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -796,7 +911,7 @@ export class MultiServerMCPClient {
           requestInit: { headers },
         });
       } catch (nodeError) {
-        debugLog(
+        getDebugLog()(
           `WARN: Failed to load EventSource packages for server "${serverName}". Headers may not be applied to SSE connection: ${nodeError}`
         );
 
@@ -815,9 +930,10 @@ export class MultiServerMCPClient {
     serverName: string,
     transport: SSEClientTransport,
     connection: SSEConnection,
-    reconnect: NonNullable<SSEConnection['reconnect']>
+    reconnect: NonNullable<SSEConnection["reconnect"]>
   ): void {
     const originalOnClose = transport.onclose;
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises, no-param-reassign
     transport.onclose = async () => {
       if (originalOnClose) {
         await originalOnClose();
@@ -825,7 +941,7 @@ export class MultiServerMCPClient {
 
       // Only attempt reconnect if we haven't cleaned up
       if (this.clients.has(serverName)) {
-        debugLog(
+        getDebugLog()(
           `INFO: SSE connection for server "${serverName}" closed, attempting to reconnect...`
         );
         await this.attemptReconnect(
@@ -841,14 +957,21 @@ export class MultiServerMCPClient {
   /**
    * Load tools for a specific server
    */
-  private async loadToolsForServer(serverName: string, client: Client): Promise<void> {
+  private async loadToolsForServer(
+    serverName: string,
+    client: Client
+  ): Promise<void> {
     try {
-      debugLog(`DEBUG: Loading tools for server "${serverName}"...`);
+      getDebugLog()(`DEBUG: Loading tools for server "${serverName}"...`);
       const tools = await loadMcpTools(serverName, client);
       this.serverNameToTools.set(serverName, tools);
-      debugLog(`INFO: Successfully loaded ${tools.length} tools from server "${serverName}"`);
+      getDebugLog()(
+        `INFO: Successfully loaded ${tools.length} tools from server "${serverName}"`
+      );
     } catch (error) {
-      throw new MCPClientError(`Failed to load tools from server "${serverName}": ${error}`);
+      throw new MCPClientError(
+        `Failed to load tools from server "${serverName}": ${error}`
+      );
     }
   }
 
@@ -873,39 +996,50 @@ export class MultiServerMCPClient {
     // Clean up previous connection resources
     this.cleanupServerResources(serverName);
 
-    while (!connected && (maxAttempts === undefined || attempts < maxAttempts)) {
-      attempts++;
-      debugLog(
-        `INFO: Reconnection attempt ${attempts}${maxAttempts ? `/${maxAttempts}` : ''} for server "${serverName}"`
+    while (
+      !connected &&
+      (maxAttempts === undefined || attempts < maxAttempts)
+    ) {
+      attempts += 1;
+      getDebugLog()(
+        `INFO: Reconnection attempt ${attempts}${
+          maxAttempts ? `/${maxAttempts}` : ""
+        } for server "${serverName}"`
       );
 
       try {
         // Wait before attempting to reconnect
         if (delayMs) {
-          await new Promise(resolve => setTimeout(resolve, delayMs));
+          await new Promise((resolve) => {
+            setTimeout(resolve, delayMs);
+          });
         }
 
         // Initialize just this connection based on its type
-        if (connection.transport === 'stdio') {
+        if (connection.transport === "stdio") {
           await this.initializeStdioConnection(serverName, connection);
-        } else if (connection.transport === 'sse') {
+        } else if (connection.transport === "sse") {
           await this.initializeSSEConnection(serverName, connection);
         }
 
         // Check if connected
         if (this.clients.has(serverName)) {
           connected = true;
-          debugLog(`INFO: Successfully reconnected to server "${serverName}"`);
+          getDebugLog()(
+            `INFO: Successfully reconnected to server "${serverName}"`
+          );
         }
       } catch (error) {
-        debugLog(
+        getDebugLog()(
           `ERROR: Failed to reconnect to server "${serverName}" (attempt ${attempts}): ${error}`
         );
       }
     }
 
     if (!connected) {
-      debugLog(`ERROR: Failed to reconnect to server "${serverName}" after ${attempts} attempts`);
+      getDebugLog()(
+        `ERROR: Failed to reconnect to server "${serverName}" after ${attempts} attempts`
+      );
     }
   }
 
@@ -951,7 +1085,9 @@ export class MultiServerMCPClient {
    * @param serverNames - Names of servers to get tools from
    * @returns A flattened array of tools from the specified servers
    */
-  private getToolsFromServers(serverNames: string[]): StructuredToolInterface[] {
+  private getToolsFromServers(
+    serverNames: string[]
+  ): StructuredToolInterface[] {
     const allTools: StructuredToolInterface[] = [];
     for (const serverName of serverNames) {
       const tools = this.serverNameToTools.get(serverName);
@@ -976,13 +1112,13 @@ export class MultiServerMCPClient {
    * Close all connections.
    */
   async close(): Promise<void> {
-    debugLog(`INFO: Closing all MCP connections...`);
+    getDebugLog()(`INFO: Closing all MCP connections...`);
 
     for (const cleanup of this.cleanupFunctions) {
       try {
         await cleanup();
       } catch (error) {
-        debugLog(`ERROR: Error during cleanup: ${error}`);
+        getDebugLog()(`ERROR: Error during cleanup: ${error}`);
       }
     }
 
@@ -991,7 +1127,7 @@ export class MultiServerMCPClient {
     this.serverNameToTools.clear();
     this.transportInstances.clear();
 
-    debugLog(`INFO: All MCP connections closed`);
+    getDebugLog()(`INFO: All MCP connections closed`);
   }
 
   /**
@@ -1009,11 +1145,11 @@ export class MultiServerMCPClient {
     command: string,
     args: string[],
     env?: Record<string, string>,
-    restart?: StdioConnection['restart']
+    restart?: StdioConnection["restart"]
   ): Promise<Map<string, StructuredToolInterface[]>> {
     const connections: Record<string, Connection> = {
       [serverName]: {
-        transport: 'stdio',
+        transport: "stdio",
         command,
         args,
         env,
@@ -1040,10 +1176,10 @@ export class MultiServerMCPClient {
     url: string,
     headers?: Record<string, string>,
     useNodeEventSource?: boolean,
-    reconnect?: SSEConnection['reconnect']
+    reconnect?: SSEConnection["reconnect"]
   ): Promise<Map<string, StructuredToolInterface[]>> {
     const connection: SSEConnection = {
-      transport: 'sse',
+      transport: "sse",
       url,
     };
 
@@ -1085,13 +1221,17 @@ export class MultiServerMCPClient {
           ...MultiServerMCPClient.processConnections(config.servers),
         };
       } else {
-        this.connections = MultiServerMCPClient.processConnections(config.servers);
+        this.connections = MultiServerMCPClient.processConnections(
+          config.servers
+        );
       }
 
-      debugLog(`INFO: Added MCP configuration from ${configPath}`);
+      getDebugLog()(`INFO: Added MCP configuration from ${configPath}`);
       return this;
     } catch (error) {
-      debugLog(`ERROR: Failed to add MCP configuration from ${configPath}: ${error}`);
+      getDebugLog()(
+        `ERROR: Failed to add MCP configuration from ${configPath}: ${error}`
+      );
       throw new MCPClientError(`Failed to add MCP configuration: ${error}`);
     }
   }
@@ -1102,8 +1242,11 @@ export class MultiServerMCPClient {
    * @param connections - Server connections to add
    * @returns This client instance for method chaining
    */
-  addConnections(connections: Record<string, Connection>): MultiServerMCPClient {
-    const processedConnections = MultiServerMCPClient.processConnections(connections);
+  addConnections(
+    connections: Record<string, Connection>
+  ): MultiServerMCPClient {
+    const processedConnections =
+      MultiServerMCPClient.processConnections(connections);
 
     // Merge with existing connections if any
     if (this.connections) {
@@ -1115,7 +1258,11 @@ export class MultiServerMCPClient {
       this.connections = processedConnections;
     }
 
-    debugLog(`INFO: Added ${Object.keys(processedConnections).length} connections to client`);
+    getDebugLog()(
+      `INFO: Added ${
+        Object.keys(processedConnections).length
+      } connections to client`
+    );
     return this;
   }
 
@@ -1127,7 +1274,7 @@ export class MultiServerMCPClient {
    */
   getServerForTool(toolName: string): string | undefined {
     for (const [serverName, tools] of this.serverNameToTools.entries()) {
-      if (tools.some(tool => tool.name === toolName)) {
+      if (tools.some((tool) => tool.name === toolName)) {
         return serverName;
       }
     }

@@ -23,14 +23,19 @@
  */
 
 /* eslint-disable no-console */
-import { ChatOpenAI } from '@langchain/openai';
-import { StateGraph, END, START, MessagesAnnotation } from '@langchain/langgraph';
-import { ToolNode } from '@langchain/langgraph/prebuilt';
-import { HumanMessage, AIMessage, BaseMessage } from '@langchain/core/messages';
-import dotenv from 'dotenv';
+import { ChatOpenAI } from "@langchain/openai";
+import {
+  StateGraph,
+  END,
+  START,
+  MessagesAnnotation,
+} from "@langchain/langgraph";
+import { ToolNode } from "@langchain/langgraph/prebuilt";
+import { HumanMessage, AIMessage, BaseMessage } from "@langchain/core/messages";
+import dotenv from "dotenv";
 
 // MCP client imports
-import { MultiServerMCPClient } from '../src/index.js';
+import { MultiServerMCPClient } from "../src/index.js";
 
 // Load environment variables from .env file
 dotenv.config();
@@ -43,41 +48,43 @@ async function runExample() {
   let client: MultiServerMCPClient | null = null;
 
   try {
-    console.log('Initializing MCP client...');
+    console.log("Initializing MCP client...");
 
     // Create a client with configurations for the math server only
     client = new MultiServerMCPClient({
       math: {
-        transport: 'stdio',
-        command: 'python',
-        args: ['./examples/math_server.py'],
+        transport: "stdio",
+        command: "python",
+        args: ["./examples/math_server.py"],
       },
     });
 
     // Initialize connections to the server
     await client.initializeConnections();
-    console.log('Connected to server');
+    console.log("Connected to server");
 
     // Connect to the math server
-    await client.connectToServerViaStdio('math', 'npx', [
-      '-y',
-      '@modelcontextprotocol/server-math',
+    await client.connectToServerViaStdio("math", "npx", [
+      "-y",
+      "@modelcontextprotocol/server-math",
     ]);
 
     // Get the tools (flattened array is the default now)
     const mcpTools = client.getTools();
 
     if (mcpTools.length === 0) {
-      throw new Error('No tools found');
+      throw new Error("No tools found");
     }
 
     console.log(
-      `Loaded ${mcpTools.length} MCP tools: ${mcpTools.map(tool => tool.name).join(', ')}`
+      `Loaded ${mcpTools.length} MCP tools: ${mcpTools
+        .map((tool) => tool.name)
+        .join(", ")}`
     );
 
     // Create an OpenAI model and bind the tools
     const model = new ChatOpenAI({
-      modelName: process.env.OPENAI_MODEL_NAME || 'gpt-4-turbo-preview',
+      modelName: process.env.OPENAI_MODEL_NAME || "gpt-4-turbo-preview",
       temperature: 0,
     }).bindTools(mcpTools);
 
@@ -87,7 +94,7 @@ async function runExample() {
     // ================================================
     // Create a LangGraph agent flow
     // ================================================
-    console.log('\n=== CREATING LANGGRAPH AGENT FLOW ===');
+    console.log("\n=== CREATING LANGGRAPH AGENT FLOW ===");
 
     /**
      * MessagesAnnotation provides a built-in state schema for handling chat messages.
@@ -99,7 +106,7 @@ async function runExample() {
 
     // Define the function that calls the model
     const llmNode = async (state: typeof MessagesAnnotation.State) => {
-      console.log('Calling LLM with messages:', state.messages.length);
+      console.log("Calling LLM with messages:", state.messages.length);
       const response = await model.invoke(state.messages);
       return { messages: [response] };
     };
@@ -108,30 +115,30 @@ async function runExample() {
     const workflow = new StateGraph(MessagesAnnotation)
 
       // Add the nodes to the graph
-      .addNode('llm', llmNode)
-      .addNode('tools', toolNode)
+      .addNode("llm", llmNode)
+      .addNode("tools", toolNode)
 
       // Add edges - these define how nodes are connected
       // START -> llm: Entry point to the graph
       // tools -> llm: After tools are executed, return to LLM for next step
-      .addEdge(START, 'llm')
-      .addEdge('tools', 'llm')
+      .addEdge(START, "llm")
+      .addEdge("tools", "llm")
 
       // Conditional routing to end or continue the tool loop
       // This is the core of the agent's decision-making process
-      .addConditionalEdges('llm', state => {
+      .addConditionalEdges("llm", (state) => {
         const lastMessage = state.messages[state.messages.length - 1];
 
         // If the last message has tool calls, we need to execute the tools
         // Cast to AIMessage to access tool_calls property
         const aiMessage = lastMessage as AIMessage;
         if (aiMessage.tool_calls && aiMessage.tool_calls.length > 0) {
-          console.log('Tool calls detected, routing to tools node');
-          return 'tools';
+          console.log("Tool calls detected, routing to tools node");
+          return "tools";
         }
 
         // If there are no tool calls, we're done
-        console.log('No tool calls, ending the workflow');
+        console.log("No tool calls, ending the workflow");
         return END;
       });
 
@@ -140,10 +147,10 @@ async function runExample() {
     const app = workflow.compile();
 
     // Define queries for testing
-    const queries = ['What is 5 + 3?', 'What is 7 * 9?'];
+    const queries = ["What is 5 + 3?", "What is 7 * 9?"];
 
     // Test the LangGraph agent with the queries
-    console.log('\n=== RUNNING LANGGRAPH AGENT ===');
+    console.log("\n=== RUNNING LANGGRAPH AGENT ===");
     for (const query of queries) {
       console.log(`\nQuery: ${query}`);
 
@@ -156,9 +163,13 @@ async function runExample() {
       // Display the result and all messages in the final state
       console.log(`\nFinal Messages (${result.messages.length}):`);
       result.messages.forEach((msg: BaseMessage, i: number) => {
-        const msgType = 'type' in msg ? msg.type : 'unknown';
+        const msgType = "type" in msg ? msg.type : "unknown";
         console.log(
-          `[${i}] ${msgType}: ${typeof msg.content === 'string' ? msg.content : JSON.stringify(msg.content)}`
+          `[${i}] ${msgType}: ${
+            typeof msg.content === "string"
+              ? msg.content
+              : JSON.stringify(msg.content)
+          }`
         );
       });
 
@@ -166,22 +177,22 @@ async function runExample() {
       console.log(`\nResult: ${finalMessage.content}`);
     }
   } catch (error) {
-    console.error('Error:', error);
+    console.error("Error:", error);
     process.exit(1); // Exit with error code
   } finally {
     // Close all client connections
     if (client) {
       await client.close();
-      console.log('\nClosed all MCP connections');
+      console.log("\nClosed all MCP connections");
     }
 
     // Exit process after a short delay to allow for cleanup
     setTimeout(() => {
-      console.log('Example completed, exiting process.');
+      console.log("Example completed, exiting process.");
       process.exit(0);
     }, 500);
   }
 }
 
 // Run the example
-runExample();
+runExample().catch(console.error);

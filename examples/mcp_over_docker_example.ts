@@ -11,22 +11,22 @@
  */
 
 /* eslint-disable no-console */
-import { MultiServerMCPClient } from '../src/index.js';
-import { runExample as runFileSystemExample } from './filesystem_langgraph_example.js';
+import { MultiServerMCPClient } from "../src/index.js";
+import { runExample as runFileSystemExample } from "./filesystem_langgraph_example.js";
 
 async function runExample() {
   const client = new MultiServerMCPClient({
     filesystem: {
-      transport: 'stdio',
-      command: 'docker',
+      transport: "stdio",
+      command: "docker",
       args: [
-        'run',
-        '-i',
-        '--rm',
-        '-v',
-        'mcp-filesystem-data:/projects',
-        'mcp/filesystem',
-        '/projects',
+        "run",
+        "-i",
+        "--rm",
+        "-v",
+        "mcp-filesystem-data:/projects",
+        "mcp/filesystem",
+        "/projects",
       ],
     },
   });
@@ -36,5 +36,5 @@ async function runExample() {
 
 const isMainModule = import.meta.url === `file://${process.argv[1]}`;
 if (isMainModule) {
-  runExample().catch(error => console.error('Setup error:', error));
+  runExample().catch((error) => console.error("Setup error:", error));
 }

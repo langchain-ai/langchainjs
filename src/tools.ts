@@ -1,36 +1,42 @@
-import { Client } from '@modelcontextprotocol/sdk/client/index.js';
+import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import type {
   CallToolResult,
   TextContent,
   ImageContent,
   EmbeddedResource,
   ReadResourceResult,
-} from '@modelcontextprotocol/sdk/types.js';
+  Tool as MCPTool,
+} from "@modelcontextprotocol/sdk/types.js";
 import {
   DynamicStructuredTool,
   type DynamicStructuredToolInput,
   type StructuredToolInterface,
-} from '@langchain/core/tools';
+} from "@langchain/core/tools";
 import {
   MessageContent,
   MessageContentComplex,
   MessageContentImageUrl,
   MessageContentText,
-} from '@langchain/core/messages';
-import { JSONSchema, JSONSchemaToZod } from '@dmitryrechkin/json-schema-to-zod';
+} from "@langchain/core/messages";
+import { JSONSchema, JSONSchemaToZod } from "@dmitryrechkin/json-schema-to-zod";
 
-import debug from 'debug';
-import { z } from 'zod';
+import debug from "debug";
 
-const {
-  default: { name: packageName },
-} = await import('../package.json');
-const moduleName = 'tools';
+// Replace direct initialization with lazy initialization
+let debugLog: debug.Debugger;
+function getDebugLog() {
+  if (!debugLog) {
+    debugLog = debug("@langchain/mcp-adapters:tools");
+  }
+  return debugLog;
+}
 
-const debugLog = debug(`${packageName}:${moduleName}`);
-
-export type CallToolResultContentType = CallToolResult['content'][number]['type'];
-export type CallToolResultContent = TextContent | ImageContent | EmbeddedResource;
+export type CallToolResultContentType =
+  CallToolResult["content"][number]["type"];
+export type CallToolResultContent =
+  | TextContent
+  | ImageContent
+  | EmbeddedResource;
 
 async function _embeddedResourceToArtifact(
   resource: EmbeddedResource,
@@ -41,12 +47,14 @@ async function _embeddedResourceToArtifact(
       uri: resource.resource.uri,
     });
 
-    return response.contents.map(content => ({
-      type: 'resource',
-      resource: {
-        ...content,
-      },
-    }));
+    return response.contents.map(
+      (content: ReadResourceResult["contents"][number]) => ({
+        type: "resource",
+        resource: {
+          ...content,
+        },
+      })
+    );
   }
   return [resource];
 }
@@ -57,7 +65,7 @@ async function _embeddedResourceToArtifact(
 export class ToolException extends Error {
   constructor(message: string) {
     super(message);
-    this.name = 'ToolException';
+    this.name = "ToolException";
   }
 }
 
@@ -88,39 +96,58 @@ async function _convertCallToolResult(
 
   if (result.isError) {
     throw new ToolException(
-      `MCP tool '${toolName}' on server '${serverName}' returned an error: ${result.content.map(content => content.text).join('\n')}`
+      `MCP tool '${toolName}' on server '${serverName}' returned an error: ${result.content
+        .map((content: CallToolResultContent) => content.text)
+        .join("\n")}`
     );
   }
 
-  const mcpTextAndImageContent: MessageContentComplex[] = result.content
-    .filter(content => content.type === 'text' || content.type === 'image')
-    .map(content => {
-      switch (content.type) {
-        case 'text':
-          return {
-            type: 'text',
-            text: content.text,
-          } as MessageContentText;
-        case 'image':
-          return {
-            type: 'image_url',
-            image_url: {
-              url: `data:${content.mimeType};base64,${content.data}`,
-            },
-          } as MessageContentImageUrl;
-      }
-    });
+  const mcpTextAndImageContent: MessageContentComplex[] = (
+    result.content.filter(
+      (content: CallToolResultContent) =>
+        content.type === "text" || content.type === "image"
+    ) as (TextContent | ImageContent)[]
+  ).map((content: TextContent | ImageContent) => {
+    switch (content.type) {
+      case "text":
+        return {
+          type: "text",
+          text: content.text,
+        } as MessageContentText;
+      case "image":
+        return {
+          type: "image_url",
+          image_url: {
+            url: `data:${content.mimeType};base64,${content.data}`,
+          },
+        } as MessageContentImageUrl;
+      default:
+        throw new ToolException(
+          `MCP tool '${toolName}' on server '${serverName}' returned an invalid result - expected a text or image content, but was ${
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (content as any).type
+          }`
+        );
+    }
+  });
 
   // Create the text content output
   const artifacts = (
     await Promise.all(
-      result.content
-        .filter(content => content.type === 'resource')
-        .map(content => _embeddedResourceToArtifact(content, client))
+      (
+        result.content.filter(
+          (content: CallToolResultContent) => content.type === "resource"
+        ) as EmbeddedResource[]
+      ).map((content: EmbeddedResource) =>
+        _embeddedResourceToArtifact(content, client)
+      )
     )
   ).flat();
 
-  if (mcpTextAndImageContent.length === 1 && mcpTextAndImageContent[0].type === 'text') {
+  if (
+    mcpTextAndImageContent.length === 1 &&
+    mcpTextAndImageContent[0].type === "text"
+  ) {
     return [mcpTextAndImageContent[0].text, artifacts];
   }
 
@@ -147,13 +174,14 @@ async function _callTool(
 ): Promise<[MessageContent, EmbeddedResource[]]> {
   let result: CallToolResult;
   try {
-    debugLog(`INFO: Calling tool ${toolName}(${JSON.stringify(args)})`);
+    getDebugLog()(`INFO: Calling tool ${toolName}(${JSON.stringify(args)})`);
     result = (await client.callTool({
       name: toolName,
       arguments: args,
     })) as CallToolResult;
   } catch (error) {
-    debugLog(`Error calling tool ${toolName}: ${String(error)}`);
+    getDebugLog()(`Error calling tool ${toolName}: ${String(error)}`);
+    // eslint-disable-next-line no-instanceof/no-instanceof
     if (error instanceof ToolException) {
       throw error;
     }
@@ -177,31 +205,34 @@ export async function loadMcpTools(
 ): Promise<StructuredToolInterface[]> {
   // Get tools in a single operation
   const toolsResponse = await client.listTools();
-  debugLog(`INFO: Found ${toolsResponse.tools?.length || 0} MCP tools`);
+  getDebugLog()(`INFO: Found ${toolsResponse.tools?.length || 0} MCP tools`);
 
   // Filter out tools without names and convert in a single map operation
   return (toolsResponse.tools || [])
-    .filter(tool => !!tool.name)
-    .map(tool => {
+    .filter((tool: MCPTool) => !!tool.name)
+    .map((tool: MCPTool) => {
       try {
         const dst = new DynamicStructuredTool({
           name: tool.name,
-          description: tool.description || '',
+          description: tool.description || "",
           schema: JSONSchemaToZod.convert(
-            (tool.inputSchema ?? { type: 'object', properties: {} }) as JSONSchema
+            (tool.inputSchema ?? {
+              type: "object",
+              properties: {},
+            }) as JSONSchema
           ),
-          responseFormat: 'content_and_artifact',
+          responseFormat: "content_and_artifact",
           func: _callTool.bind(
             null,
             serverName,
             tool.name,
             client
-          ) as DynamicStructuredToolInput<z.AnyZodObject>['func'],
+          ) as DynamicStructuredToolInput["func"],
         });
-        debugLog(`INFO: Successfully loaded tool: ${dst.name}`);
+        getDebugLog()(`INFO: Successfully loaded tool: ${dst.name}`);
         return dst;
       } catch (error) {
-        debugLog(`ERROR: Failed to load tool "${tool.name}":`, error);
+        getDebugLog()(`ERROR: Failed to load tool "${tool.name}":`, error);
         if (throwOnLoadError) {
           throw error;
         }

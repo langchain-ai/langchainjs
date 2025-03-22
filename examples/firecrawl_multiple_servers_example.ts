@@ -6,15 +6,15 @@
  */
 
 /* eslint-disable no-console */
-import { ChatOpenAI } from '@langchain/openai';
-import { createReactAgent } from '@langchain/langgraph/prebuilt';
-import { HumanMessage } from '@langchain/core/messages';
-import dotenv from 'dotenv';
-import fs from 'fs';
-import path from 'path';
+import { ChatOpenAI } from "@langchain/openai";
+import { createReactAgent } from "@langchain/langgraph/prebuilt";
+import { HumanMessage } from "@langchain/core/messages";
+import dotenv from "dotenv";
+import fs from "fs";
+import path from "path";
 
 // MCP client imports
-import { MultiServerMCPClient } from '../src/index.js';
+import { MultiServerMCPClient } from "../src/index.js";
 
 // Load environment variables from .env file
 dotenv.config();
@@ -22,8 +22,8 @@ dotenv.config();
 // Path for our multiple servers config file
 const multipleServersConfigPath = path.join(
   process.cwd(),
-  'examples',
-  'multiple_servers_config.json'
+  "examples",
+  "multiple_servers_config.json"
 );
 
 /**
@@ -34,25 +34,30 @@ function createMultipleServersConfigFile() {
     servers: {
       // Firecrawl server configuration
       firecrawl: {
-        transport: 'stdio',
-        command: 'npx',
-        args: ['-y', 'firecrawl-mcp'],
+        transport: "stdio",
+        command: "npx",
+        args: ["-y", "firecrawl-mcp"],
         env: {
-          FIRECRAWL_API_KEY: process.env.FIRECRAWL_API_KEY || '',
-          FIRECRAWL_RETRY_MAX_ATTEMPTS: '3',
+          FIRECRAWL_API_KEY: process.env.FIRECRAWL_API_KEY || "",
+          FIRECRAWL_RETRY_MAX_ATTEMPTS: "3",
         },
       },
       // Math server configuration
       math: {
-        transport: 'stdio',
-        command: 'python',
-        args: [path.join(process.cwd(), 'examples', 'math_server.py')],
+        transport: "stdio",
+        command: "python",
+        args: [path.join(process.cwd(), "examples", "math_server.py")],
       },
     },
   };
 
-  fs.writeFileSync(multipleServersConfigPath, JSON.stringify(configContent, null, 2));
-  console.log(`Created multiple servers configuration file at ${multipleServersConfigPath}`);
+  fs.writeFileSync(
+    multipleServersConfigPath,
+    JSON.stringify(configContent, null, 2)
+  );
+  console.log(
+    `Created multiple servers configuration file at ${multipleServersConfigPath}`
+  );
 }
 
 /**
@@ -66,36 +71,40 @@ async function runExample() {
     // Create the multiple servers configuration file
     createMultipleServersConfigFile();
 
-    console.log('Initializing MCP client from multiple servers configuration file...');
+    console.log(
+      "Initializing MCP client from multiple servers configuration file..."
+    );
 
     // Create a client from the configuration file
     client = MultiServerMCPClient.fromConfigFile(multipleServersConfigPath);
 
     // Initialize connections to all servers in the configuration
     await client.initializeConnections();
-    console.log('Connected to servers from multiple servers configuration');
+    console.log("Connected to servers from multiple servers configuration");
 
     // Get all tools from all servers
     const mcpTools = client.getTools();
 
     if (mcpTools.length === 0) {
-      throw new Error('No tools found');
+      throw new Error("No tools found");
     }
 
     console.log(
-      `Loaded ${mcpTools.length} MCP tools: ${mcpTools.map(tool => tool.name).join(', ')}`
+      `Loaded ${mcpTools.length} MCP tools: ${mcpTools
+        .map((tool) => tool.name)
+        .join(", ")}`
     );
 
     // Create an OpenAI model
     const model = new ChatOpenAI({
-      modelName: process.env.OPENAI_MODEL_NAME || 'gpt-4o',
+      modelName: process.env.OPENAI_MODEL_NAME || "gpt-4o",
       temperature: 0,
     });
 
     // ================================================
     // Create a React agent
     // ================================================
-    console.log('\n=== CREATING REACT AGENT ===');
+    console.log("\n=== CREATING REACT AGENT ===");
 
     // Create the React agent
     const agent = createReactAgent({
@@ -105,13 +114,13 @@ async function runExample() {
 
     // Define queries that will use both servers
     const queries = [
-      'What is 25 multiplied by 18?',
-      'Scrape the content from https://example.com and count how many paragraphs are there',
-      'If I have 42 items and each costs $7.50, what is the total cost?',
+      "What is 25 multiplied by 18?",
+      "Scrape the content from https://example.com and count how many paragraphs are there",
+      "If I have 42 items and each costs $7.50, what is the total cost?",
     ];
 
     // Test the React agent with the queries
-    console.log('\n=== RUNNING REACT AGENT ===');
+    console.log("\n=== RUNNING REACT AGENT ===");
 
     for (const query of queries) {
       console.log(`\nQuery: ${query}`);
@@ -126,28 +135,30 @@ async function runExample() {
       console.log(`\nResult: ${finalMessage.content}`);
     }
   } catch (error) {
-    console.error('Error:', error);
+    console.error("Error:", error);
     process.exit(1); // Exit with error code
   } finally {
     // Close all client connections
     if (client) {
       await client.close();
-      console.log('\nClosed all connections');
+      console.log("\nClosed all connections");
     }
 
     // Clean up our config file
     if (fs.existsSync(multipleServersConfigPath)) {
       fs.unlinkSync(multipleServersConfigPath);
-      console.log(`Cleaned up multiple servers configuration file at ${multipleServersConfigPath}`);
+      console.log(
+        `Cleaned up multiple servers configuration file at ${multipleServersConfigPath}`
+      );
     }
 
     // Exit process after a short delay to allow for cleanup
     setTimeout(() => {
-      console.log('Example completed, exiting process.');
+      console.log("Example completed, exiting process.");
       process.exit(0);
     }, 500);
   }
 }
 
 // Run the example
-runExample();
+runExample().catch(console.error);
