@@ -1441,3 +1441,7 @@ export function validateGeminiParams(params: GoogleAIModelParams): void {
 export function isModelGemini(modelName: string): boolean {
   return modelName.toLowerCase().startsWith("gemini");
 }
+
+export function isModelGemma(modelName: string): boolean {
+  return modelName.toLowerCase().startsWith("gemma");
+}

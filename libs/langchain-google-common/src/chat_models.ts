@@ -94,6 +94,10 @@ export class ChatConnection<AuthOptions> extends AbstractGoogleLLMConnection<
     } else if (this.modelName === "gemini-pro" && this.platform === "gai") {
       // on AI Studio gemini-pro is still pointing at gemini-1.0-pro-001
       return false;
+    } else if (this.modelFamily === "gemma") {
+      // At least as of 12 Mar 2025 gemma 3 on AIS, trying to use system instructions yields an error:
+      // "Developer instruction is not enabled for models/gemma-3-27b-it"
+      return false;
     }
     return true;
   }
