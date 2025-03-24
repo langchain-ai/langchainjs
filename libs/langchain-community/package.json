@@ -190,6 +190,7 @@
     "lunary": "^0.7.10",
     "mammoth": "^1.6.0",
     "mariadb": "^3.4.0",
+    "mem0ai": "^2.1.8",
     "mongodb": "^5.2.0",
     "mysql2": "^3.9.8",
     "neo4j-driver": "^5.17.0",
@@ -323,6 +324,7 @@
     "lunary": "^0.7.10",
     "mammoth": "^1.6.0",
     "mariadb": "^3.4.0",
+    "mem0ai": "^2.1.8",
     "mongodb": ">=5.2.0",
     "mysql2": "^3.9.8",
     "neo4j-driver": "*",
@@ -638,6 +640,9 @@
       "optional": true
     },
     "mariadb": {
+      "optional": true
+    },
+    "mem0ai": {
       "optional": true
     },
     "mongodb": {
@@ -2685,6 +2690,15 @@
       "import": "./memory/chat_memory.js",
       "require": "./memory/chat_memory.cjs"
     },
+    "./memory/mem0": {
+      "types": {
+        "import": "./memory/mem0.d.ts",
+        "require": "./memory/mem0.d.cts",
+        "default": "./memory/mem0.d.ts"
+      },
+      "import": "./memory/mem0.js",
+      "require": "./memory/mem0.cjs"
+    },
     "./memory/motorhead_memory": {
       "types": {
         "import": "./memory/motorhead_memory.d.ts",
@@ -4119,6 +4133,10 @@
     "memory/chat_memory.js",
     "memory/chat_memory.d.ts",
     "memory/chat_memory.d.cts",
+    "memory/mem0.cjs",
+    "memory/mem0.js",
+    "memory/mem0.d.ts",
+    "memory/mem0.d.cts",
     "memory/motorhead_memory.cjs",
     "memory/motorhead_memory.js",
     "memory/motorhead_memory.d.ts",
