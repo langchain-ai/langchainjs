@@ -189,7 +189,7 @@ export interface OpenAIChatInput extends OpenAIBaseInput {
    * Constrains effort on reasoning for reasoning models. Currently supported values are low, medium, and high.
    * Reducing reasoning effort can result in faster responses and fewer tokens used on reasoning in a response.
    */
-  reasoningEffort?: OpenAIClient.ChatCompletionReasoningEffort;
+  reasoningEffort?: OpenAIClient.Chat.ChatCompletionReasoningEffort;
 }
 
 export declare interface AzureOpenAIInput {

@@ -56,6 +56,7 @@ export * as chat_models__minimax from "../chat_models/minimax.js";
 export * as chat_models__moonshot from "../chat_models/moonshot.js";
 export * as chat_models__novita from "../chat_models/novita.js";
 export * as chat_models__ollama from "../chat_models/ollama.js";
+export * as chat_models__perplexity from "../chat_models/perplexity.js";
 export * as chat_models__togetherai from "../chat_models/togetherai.js";
 export * as chat_models__yandex from "../chat_models/yandex.js";
 export * as retrievers__bm25 from "../retrievers/bm25.js";
