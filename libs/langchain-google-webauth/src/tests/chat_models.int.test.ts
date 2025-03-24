@@ -950,10 +950,7 @@ describe.each(testGeminiModelNames)(
 
         test("image output", async () => {
           const model = newChatGoogle({
-            responseModalities: [
-              GoogleAIResponseModality.Text,
-              GoogleAIResponseModality.Image,
-            ],
+            responseModalities: ["TEXT", "IMAGE"],
           });
           const res = await model.invoke(
             "Draw an image of a red triangle on top of a blue box."
