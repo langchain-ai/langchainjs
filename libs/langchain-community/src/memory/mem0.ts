@@ -16,10 +16,7 @@ import {
   HumanMessage,
   SystemMessage,
 } from "@langchain/core/messages";
-import {
-  BaseChatMemory,
-  BaseChatMemoryInput,
-} from "./chat_memory.js";
+import { BaseChatMemory, BaseChatMemoryInput } from "./chat_memory.js";
 
 /**
  * Extracts and formats memory content into a system prompt
@@ -43,7 +40,7 @@ export const mem0MemoryContextToSystemPrompt = (memory: Memory[]): string => {
  * @returns HumanMessage containing formatted memory context
  */
 export const condenseMem0MemoryIntoHumanMessage = (
-  memory: Memory[],
+  memory: Memory[]
 ): HumanMessage => {
   const basePrompt =
     "These are the memories I have stored. Give more weightage to the question by users and try to answer that first. You have to modify your answer based on the memories I have provided. If the memories are irrelevant you can ignore them. Also don't reply to this section of the prompt, or the memories, they are only for your reference. The MEMORIES of the USER are: \n\n";
@@ -199,7 +196,7 @@ export class Mem0Memory extends BaseChatMemory implements Mem0MemoryInput {
     } catch (error) {
       console.error("Failed to initialize Mem0Client:", error);
       throw new Error(
-        "Failed to initialize Mem0Client. Please check your configuration.",
+        "Failed to initialize Mem0Client. Please check your configuration."
       );
     }
   }
@@ -249,9 +246,9 @@ export class Mem0Memory extends BaseChatMemory implements Mem0MemoryInput {
         ? getBufferString(
             mem0MemoryToMessages(memories),
             this.humanPrefix,
-            this.aiPrefix,
+            this.aiPrefix
           )
-        : (condenseMem0MemoryIntoHumanMessage(memories).content ?? ""),
+        : condenseMem0MemoryIntoHumanMessage(memories).content ?? "",
     };
   }
 
@@ -263,7 +260,7 @@ export class Mem0Memory extends BaseChatMemory implements Mem0MemoryInput {
    */
   async saveContext(
     inputValues: InputValues,
-    outputValues: OutputValues,
+    outputValues: OutputValues
   ): Promise<void> {
     const input = getInputValue(inputValues, this.inputKey);
     const output = getOutputValue(outputValues, this.outputKey);

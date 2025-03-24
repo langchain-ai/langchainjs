@@ -9,9 +9,9 @@ const memory = new Mem0Memory({
   apiKey: "your-api-key",
   sessionId: sessionId,
   memoryOptions: {
-    run_id: "run123" // Optional, if you want to save the conversation to a specific run.
-  }
-})
+    run_id: "run123", // Optional, if you want to save the conversation to a specific run.
+  },
+});
 
 const model = new ChatOpenAI({
   modelName: "gpt-3.5-turbo",
@@ -21,7 +21,9 @@ const model = new ChatOpenAI({
 const chain = new ConversationChain({ llm: model, memory });
 console.log("Memory Keys:", memory.memoryKeys);
 
-const res1 = await chain.invoke({ input: "Hi! I am Jim and I live in Finland" });
+const res1 = await chain.invoke({
+  input: "Hi! I am Jim and I live in Finland",
+});
 console.log({ res1 });
 /*
 {
