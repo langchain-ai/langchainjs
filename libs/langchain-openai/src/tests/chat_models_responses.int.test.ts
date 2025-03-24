@@ -237,6 +237,10 @@ test("Test reasoning", async () => {
   const response2 = await llmWithEffort.invoke("Hello");
   expect(response2).toBeInstanceOf(AIMessage);
   expect(response2.additional_kwargs.reasoning).toBeDefined();
+
+  const response3 = await llmWithEffort.invoke(["Hello", response2]);
+  expect(response3).toBeInstanceOf(AIMessage);
+  expect(response3.additional_kwargs.reasoning).toBeDefined();
 });
 
 test("Test stateful API", async () => {
@@ -372,19 +376,4 @@ test("Test computer call", async () => {
 
   computerCall = findComputerCall(aiMessage);
   expect(computerCall).toBeDefined();
-});
-
-test.only("Test refusal", async () => {
-  const llm = new ChatOpenAI({
-    modelName: "o1",
-    useResponsesApi: true,
-    modelKwargs: {
-      reasoning: {
-        effort: "medium",
-      },
-    },
-  });
-
-  const response = await llm.invoke("Solve advent of code 2023 day 3 in typescript");
-  console.dir(response, { depth: null });
 });

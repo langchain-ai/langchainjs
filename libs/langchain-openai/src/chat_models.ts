@@ -277,6 +277,61 @@ function _convertMessagesToOpenAIResponsesParams(
       if (role === "assistant") {
         const input: ResponsesInputItem[] = [];
 
+        // reasoning items
+        if (lcMsg.additional_kwargs.reasoning != null) {
+          type FindType<T, TType extends string> = T extends { type: TType }
+            ? T
+            : never;
+          type ReasoningItem = FindType<ResponsesInputItem, "reasoning">;
+
+          const isReasoningItem = (item: unknown): item is ReasoningItem =>
+            typeof item === "object" &&
+            item != null &&
+            "type" in item &&
+            item.type === "reasoning";
+
+          if (isReasoningItem(lcMsg.additional_kwargs.reasoning)) {
+            input.push(lcMsg.additional_kwargs.reasoning);
+          }
+        }
+
+        // ai content
+        let { content } = lcMsg;
+        if (lcMsg.additional_kwargs.refusal != null) {
+          if (typeof content === "string") {
+            content = [{ type: "output_text", text: content, annotations: [] }];
+          }
+          content = [
+            ...content,
+            { type: "refusal", refusal: lcMsg.additional_kwargs.refusal },
+          ];
+        }
+
+        input.push({
+          type: "message",
+          role: "assistant",
+          content:
+            typeof content === "string"
+              ? content
+              : content.flatMap((item) => {
+                  if (item.type === "text") {
+                    return {
+                      type: "output_text",
+                      text: item.text,
+                      // @ts-expect-error TODO: add types for `annotations`
+                      annotations: item.annotations ?? [],
+                    };
+                  }
+
+                  if (item.type === "output_text" || item.type === "refusal") {
+                    return item;
+                  }
+
+                  return [];
+                }),
+        });
+
+        // function tool calls and computer use tool calls
         const functionCallIds =
           // eslint-disable-next-line @typescript-eslint/no-use-before-define
           lcMsg.additional_kwargs[_FUNCTION_CALL_IDS_MAP_KEY] as
@@ -311,17 +366,6 @@ function _convertMessagesToOpenAIResponsesParams(
           );
         }
 
-        let { content } = lcMsg;
-        if (lcMsg.additional_kwargs.refusal != null) {
-          if (typeof content === "string") {
-            content = [{ type: "output_text", text: content, annotations: [] }];
-          }
-          content = [
-            ...content,
-            { type: "refusal", refusal: lcMsg.additional_kwargs.refusal },
-          ];
-        }
-
         if (lcMsg.additional_kwargs.tool_outputs != null) {
           const toolOutputs = lcMsg.additional_kwargs
             .tool_outputs as Array<ResponsesInputItem>;
@@ -332,30 +376,6 @@ function _convertMessagesToOpenAIResponsesParams(
 
           if (computerCalls.length > 0) input.push(...computerCalls);
         }
-
-        input.push({
-          type: "message",
-          role: "assistant",
-          content:
-            typeof content === "string"
-              ? content
-              : content.flatMap((item) => {
-                  if (item.type === "text") {
-                    return {
-                      type: "output_text",
-                      text: item.text,
-                      // @ts-expect-error TODO: add types for `annotations`
-                      annotations: item.annotations ?? [],
-                    };
-                  }
-
-                  if (item.type === "output_text" || item.type === "refusal") {
-                    return item;
-                  }
-
-                  return [];
-                }),
-        });
 
         return input;
       }
@@ -439,7 +459,6 @@ function _convertOpenAIResponsesMessageToBaseMessage(
     [_FUNCTION_CALL_IDS_MAP_KEY]?: Record<string, string>;
   } = {};
 
-  console.log(response.output);
   for (const item of response.output) {
     if (item.type === "message") {
       content.push(
