@@ -123,7 +123,7 @@ export interface GoogleAISafetySetting {
 
 export type GoogleAIResponseMimeType = "text/plain" | "application/json";
 
-export type GoogleAIModelModality = "TEXT" | "IMAGE" | "AUDIO";
+export type GoogleAIModelModality = "TEXT" | "IMAGE" | "AUDIO" | string;
 
 export interface GoogleAIModelParams {
   /** Model to use */
