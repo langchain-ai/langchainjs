@@ -123,6 +123,8 @@ export interface GoogleAISafetySetting {
 
 export type GoogleAIResponseMimeType = "text/plain" | "application/json";
 
+export type GoogleAIModelModality = "TEXT" | "IMAGE" | "AUDIO" | string;
+
 export interface GoogleAIModelParams {
   /** Model to use */
   model?: string;
@@ -229,6 +231,11 @@ export interface GoogleAIModelParams {
    * logprobs must be set to true if this parameter is used.
    */
   topLogprobs?: number;
+
+  /**
+   * The modalities of the response.
+   */
+  responseModalities?: GoogleAIModelModality[];
 }
 
 export type GoogleAIToolType = BindToolsInput | GeminiTool;
@@ -527,6 +534,7 @@ export interface GeminiGenerationConfig {
   responseMimeType?: GoogleAIResponseMimeType;
   responseLogprobs?: boolean;
   logprobs?: number;
+  responseModalities?: GoogleAIModelModality[];
 }
 
 export interface GeminiRequest {
@@ -557,6 +565,7 @@ export interface GeminiResponseCandidate {
   groundingMetadata?: GeminiGroundingMetadata;
   avgLogprobs?: number;
   logprobsResult: GeminiLogprobsResult;
+  finishMessage?: string;
 }
 
 interface GeminiResponsePromptFeedback {

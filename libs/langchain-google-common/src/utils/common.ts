@@ -159,6 +159,10 @@ export function copyAIModelParamsInto(
     options?.responseMimeType ??
     params?.responseMimeType ??
     target?.responseMimeType;
+  ret.responseModalities =
+    options?.responseModalities ??
+    params?.responseModalities ??
+    target?.responseModalities;
   ret.streaming = options?.streaming ?? params?.streaming ?? target?.streaming;
   const toolChoice = processToolChoice(
     options?.tool_choice,

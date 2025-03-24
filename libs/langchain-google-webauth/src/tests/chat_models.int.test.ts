@@ -13,6 +13,7 @@ import {
   MessageContentComplex,
   SystemMessage,
   ToolMessage,
+  MessageContentImageUrl,
 } from "@langchain/core/messages";
 import { BaseLanguageModelInput } from "@langchain/core/language_models/base";
 import { ChatPromptValue } from "@langchain/core/prompt_values";
@@ -910,5 +911,69 @@ describe.each(testGeminiModelNames)(
       }
       expect(finalMsg.content as string).toContain("Dodgers");
     });
+
+    const testMultimodalModelNames = [
+      {
+        modelName: "gemini-2.0-flash-exp-image-generation",
+        platformType: "gai",
+        apiVersion: "v1beta",
+      },
+      // Multimodal in Vertex AI is private preview currently
+    ];
+
+    describe.each(testMultimodalModelNames)(
+      "Webauth ($platformType) Gemini Multimodal ($modelName)",
+      ({ modelName, platformType, apiVersion }) => {
+        let recorder: GoogleRequestRecorder;
+        let callbacks: BaseCallbackHandler[];
+
+        function newChatGoogle(fields?: ChatGoogleInput): ChatGoogle {
+          // const logger = new GoogleRequestLogger();
+          recorder = new GoogleRequestRecorder();
+          callbacks = [recorder, new GoogleRequestLogger()];
+
+          const apiKey =
+            platformType === "gai"
+              ? getEnvironmentVariable("TEST_API_KEY")
+              : undefined;
+
+          return new ChatGoogle({
+            modelName,
+            platformType: platformType as GooglePlatformType,
+            apiVersion,
+            callbacks,
+            apiKey,
+            ...(fields ?? {}),
+          });
+        }
+
+        test("image output", async () => {
+          const model = newChatGoogle({
+            responseModalities: ["TEXT", "IMAGE"],
+          });
+          const res = await model.invoke(
+            "Draw an image of a red triangle on top of a blue box."
+          );
+
+          const content = res?.content;
+          expect(typeof content).toEqual("object");
+          expect(Array.isArray(content)).toEqual(true);
+          expect(content).toHaveLength(1);
+
+          const content0 = content[0];
+          expect(typeof content0).not.toEqual("string");
+
+          const mc = content0 as MessageContentImageUrl;
+          expect(mc).toHaveProperty("type");
+          expect(mc.type).toEqual("image_url");
+          expect(mc).toHaveProperty("image_url");
+          const url = (mc as MessageContentImageUrl).image_url as string;
+          expect(url).toMatch(/^data:image\/png;base64,/);
+
+          console.log(recorder.response);
+          console.log(JSON.stringify(res.content, null, 1));
+        });
+      }
+    );
   }
 );
