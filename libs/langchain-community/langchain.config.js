@@ -269,6 +269,7 @@ export const config = {
     "stores/message/zep_cloud": "stores/message/zep_cloud",
     // memory
     "memory/chat_memory": "memory/chat_memory",
+    "memory/mem0": "memory/mem0",
     "memory/motorhead_memory": "memory/motorhead_memory",
     "memory/zep": "memory/zep",
     "memory/zep_cloud": "memory/zep_cloud",
@@ -501,6 +502,7 @@ export const config = {
     "stores/message/xata",
     "stores/message/zep_cloud",
     // memory
+    "memory/mem0",
     "memory/motorhead_memory",
     "memory/zep",
     "memory/zep_cloud",

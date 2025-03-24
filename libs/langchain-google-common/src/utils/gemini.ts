@@ -1410,6 +1410,9 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     ) {
       ret.systemInstruction = systemInstruction;
     }
+    if (parameters.cachedContent) {
+      ret.cachedContent = parameters.cachedContent;
+    }
     return ret;
   }
 
@@ -1448,4 +1451,8 @@ export function validateGeminiParams(params: GoogleAIModelParams): void {
 
 export function isModelGemini(modelName: string): boolean {
   return modelName.toLowerCase().startsWith("gemini");
+}
+
+export function isModelGemma(modelName: string): boolean {
+  return modelName.toLowerCase().startsWith("gemma");
 }
