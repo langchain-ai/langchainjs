@@ -257,6 +257,17 @@ export interface GoogleAIModelRequestParams extends GoogleAIModelParams {
    * If empty, any one of the provided functions are called.
    */
   allowed_function_names?: string[];
+
+  /**
+   * Used to specify a previously created context cache to use with generation.
+   * For Vertex, this should be of the form:
+   * "projects/PROJECT_NUMBER/locations/LOCATION/cachedContents/CACHE_ID",
+   *
+   * See these guides for more information on how to use context caching:
+   * https://cloud.google.com/vertex-ai/generative-ai/docs/context-cache/context-cache-create
+   * https://cloud.google.com/vertex-ai/generative-ai/docs/context-cache/context-cache-use
+   */
+  cachedContent?: string;
 }
 
 export interface GoogleAIBaseLLMInput<AuthOptions>
@@ -530,6 +541,7 @@ export interface GeminiRequest {
   };
   safetySettings?: GeminiSafetySetting[];
   generationConfig?: GeminiGenerationConfig;
+  cachedContent?: string;
 }
 
 export interface GeminiResponseCandidate {

@@ -175,6 +175,10 @@ export function copyAIModelParamsInto(
     ret.tools = convertToGeminiTools(tools as Record<string, any>[]);
   }
 
+  if (options?.cachedContent) {
+    ret.cachedContent = options.cachedContent;
+  }
+
   return ret;
 }
 

@@ -316,7 +316,6 @@ export abstract class ChatGoogleBase<AuthOptions>
     runManager: CallbackManagerForLLMRun | undefined
   ): Promise<ChatResult> {
     const parameters = this.invocationParams(options);
-
     if (this.streaming) {
       const stream = this._streamResponseChunks(messages, options, runManager);
       let finalChunk: ChatGenerationChunk | null = null;
