@@ -140,7 +140,7 @@ export class AzureCosmosDBMongoDBVectorStore extends VectorStore {
     if (!dbConfig.client) {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       this.client = new MongoClient(connectionString!, {
-        appName: "LANGCHAIN_JS",
+        appName: "langchainjs",
       });
     }
 

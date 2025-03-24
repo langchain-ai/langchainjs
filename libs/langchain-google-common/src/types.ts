@@ -558,7 +558,7 @@ export interface GenerateContentResponseData {
   usageMetadata: Record<string, unknown>;
 }
 
-export type GoogleLLMModelFamily = null | "palm" | "gemini";
+export type GoogleLLMModelFamily = null | "palm" | "gemini" | "gemma";
 
 export type VertexModelFamily = GoogleLLMModelFamily | "claude";
 

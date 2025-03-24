@@ -344,7 +344,7 @@ export class AzureAISearchVectorStore extends VectorStore {
    * @param query Query text for the similarity search.
    * @param k=4 Number of nearest neighbors to return.
    * @param filter Optional filter options for the documents.
-   * @returns Promise that resolves to a list of documents and their corresponding similarity scores.
+   * @returns Promise that resolves to a list of documents.
    */
   async similaritySearch(
     query: string,

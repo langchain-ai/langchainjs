@@ -2690,6 +2690,15 @@
       "import": "./memory/chat_memory.js",
       "require": "./memory/chat_memory.cjs"
     },
+    "./memory/mem0": {
+      "types": {
+        "import": "./memory/mem0.d.ts",
+        "require": "./memory/mem0.d.cts",
+        "default": "./memory/mem0.d.ts"
+      },
+      "import": "./memory/mem0.js",
+      "require": "./memory/mem0.cjs"
+    },
     "./memory/motorhead_memory": {
       "types": {
         "import": "./memory/motorhead_memory.d.ts",
@@ -4124,6 +4133,10 @@
     "memory/chat_memory.js",
     "memory/chat_memory.d.ts",
     "memory/chat_memory.d.cts",
+    "memory/mem0.cjs",
+    "memory/mem0.js",
+    "memory/mem0.d.ts",
+    "memory/mem0.d.cts",
     "memory/motorhead_memory.cjs",
     "memory/motorhead_memory.js",
     "memory/motorhead_memory.d.ts",

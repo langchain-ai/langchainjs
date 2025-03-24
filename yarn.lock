@@ -7009,10 +7009,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@google/generative-ai@npm:^0.21.0":
-  version: 0.21.0
-  resolution: "@google/generative-ai@npm:0.21.0"
-  checksum: 91345a8399b5e71382193d0eac47a4b264613a9d7e48a431290b523e3fbb44a207a33bdead304f181987e5a0127a84168c4e21cf461c1087cd3b0ebc5125d13d
+"@google/generative-ai@npm:^0.24.0":
+  version: 0.24.0
+  resolution: "@google/generative-ai@npm:0.24.0"
+  checksum: d47c9303404015b1fc5060bb5b13f0cea9642b8988f6e2e1e2463978fa9541cc055c457f59b04f73c6d1c7fe69600311ed75c067fc1605ac57fcb3044e63c4c4
   languageName: node
   linkType: hard
 
@@ -9172,7 +9172,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@langchain/google-genai@workspace:libs/langchain-google-genai"
   dependencies:
-    "@google/generative-ai": ^0.21.0
+    "@google/generative-ai": ^0.24.0
     "@jest/globals": ^29.5.0
     "@langchain/core": "workspace:*"
     "@langchain/scripts": ">=0.1.0 <0.2.0"
@@ -31375,9 +31375,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"openai@npm:*":
-  version: 4.73.0
-  resolution: "openai@npm:4.73.0"
+"openai@npm:*, openai@npm:^4.87.3":
+  version: 4.87.3
+  resolution: "openai@npm:4.87.3"
   dependencies:
     "@types/node": ^18.11.18
     "@types/node-fetch": ^2.6.4
@@ -31387,13 +31387,16 @@ __metadata:
     formdata-node: ^4.3.2
     node-fetch: ^2.6.7
   peerDependencies:
+    ws: ^8.18.0
     zod: ^3.23.8
   peerDependenciesMeta:
+    ws:
+      optional: true
     zod:
       optional: true
   bin:
     openai: bin/cli
-  checksum: 499f20048a15e777a943c8eefc2ae1e1195a88ec2a61337d98233ae7f2c2cba3ff4f473e08bce25af38d24da3a3da2b3db077919ac104ff2449e246e895b5b62
+  checksum: 2cbb548c5b6dfa21c87b012fee81010925d8106626e4adc0ba86e2a5974aca3b5ec29e3ddc2f354d8c95e1d64da8d384f1495ceabbbf2948269fc2dab34bb3fc
   languageName: node
   linkType: hard
 
@@ -31471,31 +31474,6 @@ __metadata:
   bin:
     openai: bin/cli
   checksum: e311130e3b35a7dc924e7125cca3246b7ac958b3c451f2f4ef2cae72144c82429f9c6db7bf67059fc9e10f3911087ebf8a9a4b2919ac915235ed3c324897b146
-  languageName: node
-  linkType: hard
-
-"openai@npm:^4.87.3":
-  version: 4.87.3
-  resolution: "openai@npm:4.87.3"
-  dependencies:
-    "@types/node": ^18.11.18
-    "@types/node-fetch": ^2.6.4
-    abort-controller: ^3.0.0
-    agentkeepalive: ^4.2.1
-    form-data-encoder: 1.7.2
-    formdata-node: ^4.3.2
-    node-fetch: ^2.6.7
-  peerDependencies:
-    ws: ^8.18.0
-    zod: ^3.23.8
-  peerDependenciesMeta:
-    ws:
-      optional: true
-    zod:
-      optional: true
-  bin:
-    openai: bin/cli
-  checksum: 2cbb548c5b6dfa21c87b012fee81010925d8106626e4adc0ba86e2a5974aca3b5ec29e3ddc2f354d8c95e1d64da8d384f1495ceabbbf2948269fc2dab34bb3fc
   languageName: node
   linkType: hard
 
