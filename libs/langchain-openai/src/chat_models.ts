@@ -18,6 +18,7 @@ import {
   type BaseMessageFields,
   type MessageContent,
   type InvalidToolCall,
+  type MessageContentImageUrl,
 } from "@langchain/core/messages";
 import {
   ChatGenerationChunk,
@@ -168,13 +169,13 @@ export function _convertMessagesToOpenAIParams(
     }
     if (message.additional_kwargs.function_call != null) {
       completionParam.function_call = message.additional_kwargs.function_call;
-      completionParam.content = null;
+      completionParam.content = "";
     }
     if (isAIMessage(message) && !!message.tool_calls?.length) {
       completionParam.tool_calls = message.tool_calls.map(
         convertLangChainToolCallToOpenAI
       );
-      completionParam.content = null;
+      completionParam.content = "";
     } else {
       if (message.additional_kwargs.tool_calls != null) {
         completionParam.tool_calls = message.additional_kwargs.tool_calls;
@@ -231,18 +232,28 @@ function _convertMessagesToOpenAIResponsesParams(
             }
 
             if (Array.isArray(toolMessage.content)) {
-              return toolMessage.content.find(
+              const oaiScreenshot = toolMessage.content.find(
                 (i) => i.type === "computer_screenshot"
-              ) as {
-                type: "computer_screenshot";
-                image_url: string;
-              };
+              ) as { type: "computer_screenshot"; image_url: string };
+
+              if (oaiScreenshot) return oaiScreenshot;
+
+              const lcImage = toolMessage.content.find(
+                (i) => i.type === "image_url"
+              ) as MessageContentImageUrl;
+
+              if (lcImage) {
+                return {
+                  type: "computer_screenshot" as const,
+                  image_url:
+                    typeof lcImage.image_url === "string"
+                      ? lcImage.image_url
+                      : lcImage.image_url.url,
+                };
+              }
             }
 
-            return toolMessage.content as {
-              type: "computer_screenshot";
-              image_url: string;
-            };
+            throw new Error("Invalid computer call output");
           })();
 
           return {
@@ -264,38 +275,27 @@ function _convertMessagesToOpenAIResponsesParams(
       }
 
       if (role === "assistant") {
-        const functionCallIds =
-          // eslint-disable-next-line @typescript-eslint/no-use-before-define
-          lcMsg.additional_kwargs[_FUNCTION_CALL_IDS_MAP_KEY] as
-            | Record<string, string>
-            | undefined;
+        const input: ResponsesInputItem[] = [];
 
-        if (isAIMessage(lcMsg) && !!lcMsg.tool_calls?.length) {
-          return lcMsg.tool_calls.map(
-            (toolCall): ResponsesInputItem => ({
-              type: "function_call",
-              name: toolCall.name,
-              arguments: JSON.stringify(toolCall.args),
-              call_id: toolCall.id!,
-              // @ts-expect-error Might come from a non-Responses API message
-              id: functionCallIds?.[toolCall.id!],
-            })
-          );
+        // reasoning items
+        if (lcMsg.additional_kwargs.reasoning != null) {
+          type FindType<T, TType extends string> = T extends { type: TType }
+            ? T
+            : never;
+          type ReasoningItem = FindType<ResponsesInputItem, "reasoning">;
+
+          const isReasoningItem = (item: unknown): item is ReasoningItem =>
+            typeof item === "object" &&
+            item != null &&
+            "type" in item &&
+            item.type === "reasoning";
+
+          if (isReasoningItem(lcMsg.additional_kwargs.reasoning)) {
+            input.push(lcMsg.additional_kwargs.reasoning);
+          }
         }
 
-        if (lcMsg.additional_kwargs.tool_calls != null) {
-          return lcMsg.additional_kwargs.tool_calls.map(
-            (toolCall): ResponsesInputItem => ({
-              type: "function_call",
-              name: toolCall.function.name,
-              call_id: toolCall.id,
-              // @ts-expect-error Might come from a non-Responses API message
-              id: functionCallIds?.[toolCall.id],
-              arguments: toolCall.function.arguments,
-            })
-          );
-        }
-
+        // ai content
         let { content } = lcMsg;
         if (lcMsg.additional_kwargs.refusal != null) {
           if (typeof content === "string") {
@@ -307,7 +307,7 @@ function _convertMessagesToOpenAIResponsesParams(
           ];
         }
 
-        return {
+        input.push({
           type: "message",
           role: "assistant",
           content:
@@ -329,7 +329,55 @@ function _convertMessagesToOpenAIResponsesParams(
 
                   return [];
                 }),
-        };
+        });
+
+        // function tool calls and computer use tool calls
+        const functionCallIds =
+          // eslint-disable-next-line @typescript-eslint/no-use-before-define
+          lcMsg.additional_kwargs[_FUNCTION_CALL_IDS_MAP_KEY] as
+            | Record<string, string>
+            | undefined;
+
+        if (isAIMessage(lcMsg) && !!lcMsg.tool_calls?.length) {
+          input.push(
+            ...lcMsg.tool_calls.map(
+              (toolCall): ResponsesInputItem => ({
+                type: "function_call",
+                name: toolCall.name,
+                arguments: JSON.stringify(toolCall.args),
+                call_id: toolCall.id!,
+                // @ts-expect-error Might come from a non-Responses API message
+                id: functionCallIds?.[toolCall.id!],
+              })
+            )
+          );
+        } else if (lcMsg.additional_kwargs.tool_calls != null) {
+          input.push(
+            ...lcMsg.additional_kwargs.tool_calls.map(
+              (toolCall): ResponsesInputItem => ({
+                type: "function_call",
+                name: toolCall.function.name,
+                call_id: toolCall.id,
+                // @ts-expect-error Might come from a non-Responses API message
+                id: functionCallIds?.[toolCall.id],
+                arguments: toolCall.function.arguments,
+              })
+            )
+          );
+        }
+
+        if (lcMsg.additional_kwargs.tool_outputs != null) {
+          const toolOutputs = lcMsg.additional_kwargs
+            .tool_outputs as Array<ResponsesInputItem>;
+
+          const computerCalls = toolOutputs?.filter(
+            (item) => item.type === "computer_call"
+          );
+
+          if (computerCalls.length > 0) input.push(...computerCalls);
+        }
+
+        return input;
       }
 
       if (role === "user") {
@@ -404,6 +452,7 @@ function _convertOpenAIResponsesMessageToBaseMessage(
 
   const additional_kwargs: {
     [key: string]: unknown;
+    refusal?: string;
     reasoning?: unknown;
     tool_outputs?: unknown[];
     parsed?: unknown;
@@ -412,9 +461,8 @@ function _convertOpenAIResponsesMessageToBaseMessage(
 
   for (const item of response.output) {
     if (item.type === "message") {
-      // TODO: how to handle refusals?
       content.push(
-        ...item.content.map((part) => {
+        ...item.content.flatMap((part) => {
           if (part.type === "output_text") {
             if ("parsed" in part && part.parsed != null) {
               additional_kwargs.parsed = part.parsed;
@@ -425,6 +473,12 @@ function _convertOpenAIResponsesMessageToBaseMessage(
               annotations: part.annotations,
             };
           }
+
+          if (part.type === "refusal") {
+            additional_kwargs.refusal = part.refusal;
+            return [];
+          }
+
           return part;
         })
       );
@@ -516,7 +570,8 @@ function _convertOpenAIResponsesDeltaToBaseMessageChunk(
   } else if (
     chunk.type === "response.output_item.done" &&
     (chunk.item.type === "web_search_call" ||
-      chunk.item.type === "file_search_call")
+      chunk.item.type === "file_search_call" ||
+      chunk.item.type === "computer_call")
   ) {
     additional_kwargs.tool_outputs = [chunk.item];
   } else if (chunk.type === "response.created") {
@@ -1492,7 +1547,7 @@ export class ChatOpenAI<
     this.n = fields?.n ?? this.n;
     this.logitBias = fields?.logitBias;
     this.stop = fields?.stopSequences ?? fields?.stop;
-    this.stopSequences = this?.stop;
+    this.stopSequences = this.stop;
     this.user = fields?.user;
     this.__includeRawResponse = fields?.__includeRawResponse;
     this.audio = fields?.audio;
