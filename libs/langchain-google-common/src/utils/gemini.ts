@@ -1402,6 +1402,9 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     ) {
       ret.systemInstruction = systemInstruction;
     }
+    if (parameters.cachedContent) {
+      ret.cachedContent = parameters.cachedContent;
+    }
     return ret;
   }
 
