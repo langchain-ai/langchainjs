@@ -373,3 +373,18 @@ test("Test computer call", async () => {
   computerCall = findComputerCall(aiMessage);
   expect(computerCall).toBeDefined();
 });
+
+test.only("Test refusal", async () => {
+  const llm = new ChatOpenAI({
+    modelName: "o1",
+    useResponsesApi: true,
+    modelKwargs: {
+      reasoning: {
+        effort: "medium",
+      },
+    },
+  });
+
+  const response = await llm.invoke("Solve advent of code 2023 day 3 in typescript");
+  console.dir(response, { depth: null });
+});

@@ -432,17 +432,18 @@ function _convertOpenAIResponsesMessageToBaseMessage(
 
   const additional_kwargs: {
     [key: string]: unknown;
+    refusal?: string;
     reasoning?: unknown;
     tool_outputs?: unknown[];
     parsed?: unknown;
     [_FUNCTION_CALL_IDS_MAP_KEY]?: Record<string, string>;
   } = {};
 
+  console.log(response.output);
   for (const item of response.output) {
     if (item.type === "message") {
-      // TODO: how to handle refusals?
       content.push(
-        ...item.content.map((part) => {
+        ...item.content.flatMap((part) => {
           if (part.type === "output_text") {
             if ("parsed" in part && part.parsed != null) {
               additional_kwargs.parsed = part.parsed;
@@ -453,6 +454,12 @@ function _convertOpenAIResponsesMessageToBaseMessage(
               annotations: part.annotations,
             };
           }
+
+          if (part.type === "refusal") {
+            additional_kwargs.refusal = part.refusal;
+            return [];
+          }
+
           return part;
         })
       );
@@ -501,7 +508,6 @@ function _convertOpenAIResponsesMessageToBaseMessage(
 function _convertOpenAIResponsesDeltaToBaseMessageChunk(
   chunk: ResponseReturnStreamEvents
 ) {
-  console.log("chunk", chunk.type);
   const content: Record<string, unknown>[] = [];
   let generationInfo: Record<string, unknown> = {};
   let usage_metadata: UsageMetadata | undefined;
