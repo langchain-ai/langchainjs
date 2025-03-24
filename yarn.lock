@@ -7009,10 +7009,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@google/generative-ai@npm:^0.21.0":
-  version: 0.21.0
-  resolution: "@google/generative-ai@npm:0.21.0"
-  checksum: 91345a8399b5e71382193d0eac47a4b264613a9d7e48a431290b523e3fbb44a207a33bdead304f181987e5a0127a84168c4e21cf461c1087cd3b0ebc5125d13d
+"@google/generative-ai@npm:^0.24.0":
+  version: 0.24.0
+  resolution: "@google/generative-ai@npm:0.24.0"
+  checksum: d47c9303404015b1fc5060bb5b13f0cea9642b8988f6e2e1e2463978fa9541cc055c457f59b04f73c6d1c7fe69600311ed75c067fc1605ac57fcb3044e63c4c4
   languageName: node
   linkType: hard
 
@@ -9168,7 +9168,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@langchain/google-genai@workspace:libs/langchain-google-genai"
   dependencies:
-    "@google/generative-ai": ^0.21.0
+    "@google/generative-ai": ^0.24.0
     "@jest/globals": ^29.5.0
     "@langchain/core": "workspace:*"
     "@langchain/scripts": ">=0.1.0 <0.2.0"
