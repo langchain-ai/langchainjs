@@ -152,11 +152,8 @@ export abstract class ChatModelIntegrationTests<
     // Check that the result is an instance of the expected response type
     expect(result).toBeInstanceOf(this.invokeResponseType);
 
-    // Ensure that the content of the response is a string
-    expect(typeof result.content).toBe("string");
-
     // Verify that the response content is not empty
-    expect(result.content).not.toBe("");
+    expect(result.text).not.toBe("");
   }
 
   /**
@@ -181,9 +178,6 @@ export abstract class ChatModelIntegrationTests<
       // Verify each token is defined and of the correct type
       expect(token).toBeDefined();
       expect(token).toBeInstanceOf(AIMessageChunk);
-
-      // Ensure the content of each token is a string
-      expect(typeof token.content).toBe("string");
 
       // Keep track of the total number of characters
       numChars += token.content.length;
@@ -230,8 +224,7 @@ export abstract class ChatModelIntegrationTests<
       expect(result).toBeInstanceOf(this.invokeResponseType);
 
       // Ensure the content is a non-empty string
-      expect(typeof result.content).toBe("string");
-      expect(result.content).not.toBe("");
+      expect(result.text).not.toBe("");
     }
   }
 
@@ -339,11 +332,8 @@ export abstract class ChatModelIntegrationTests<
     // Check that the result is an instance of the expected response type
     expect(result).toBeInstanceOf(this.invokeResponseType);
 
-    // Ensure that the content of the response is a string
-    expect(typeof result.content).toBe("string");
-
     // Verify that the response content is not empty
-    expect(result.content).not.toBe("");
+    expect(result.text).not.toBe("");
   }
 
   /**
@@ -1152,7 +1142,6 @@ export abstract class ChatModelIntegrationTests<
     const result = await model.invoke([humanMessage], callOptions);
 
     // Verify that the result matches the cached value
-    expect(result.content).toBe(cacheValue[0].text);
     expect(result).toEqual(cachedMessage);
 
     // Ensure no additional cache entries were created

@@ -1,6 +1,6 @@
 {
   "name": "@langchain/community",
-  "version": "0.3.35",
+  "version": "0.3.36",
   "description": "Third-party integrations for LangChain.js",
   "type": "module",
   "engines": {
@@ -112,6 +112,7 @@
     "@tensorflow/tfjs-backend-cpu": "^3",
     "@tensorflow/tfjs-converter": "^3.6.0",
     "@tensorflow/tfjs-core": "^3.6.0",
+    "@testcontainers/mariadb": "^10.16.0",
     "@tsconfig/recommended": "^1.0.2",
     "@types/better-sqlite3": "^7.6.10",
     "@types/crypto-js": "^4.2.2",
@@ -188,6 +189,7 @@
     "lodash": "^4.17.21",
     "lunary": "^0.7.10",
     "mammoth": "^1.6.0",
+    "mariadb": "^3.4.0",
     "mongodb": "^5.2.0",
     "mysql2": "^3.9.8",
     "neo4j-driver": "^5.17.0",
@@ -320,6 +322,7 @@
     "lodash": "^4.17.21",
     "lunary": "^0.7.10",
     "mammoth": "^1.6.0",
+    "mariadb": "^3.4.0",
     "mongodb": ">=5.2.0",
     "mysql2": "^3.9.8",
     "neo4j-driver": "*",
@@ -632,6 +635,9 @@
       "optional": true
     },
     "mammoth": {
+      "optional": true
+    },
+    "mariadb": {
       "optional": true
     },
     "mongodb": {
@@ -1626,6 +1632,15 @@
       "import": "./vectorstores/libsql.js",
       "require": "./vectorstores/libsql.cjs"
     },
+    "./vectorstores/mariadb": {
+      "types": {
+        "import": "./vectorstores/mariadb.d.ts",
+        "require": "./vectorstores/mariadb.d.cts",
+        "default": "./vectorstores/mariadb.d.ts"
+      },
+      "import": "./vectorstores/mariadb.js",
+      "require": "./vectorstores/mariadb.cjs"
+    },
     "./vectorstores/milvus": {
       "types": {
         "import": "./vectorstores/milvus.d.ts",
@@ -2030,6 +2045,15 @@
       },
       "import": "./chat_models/ollama.js",
       "require": "./chat_models/ollama.cjs"
+    },
+    "./chat_models/perplexity": {
+      "types": {
+        "import": "./chat_models/perplexity.d.ts",
+        "require": "./chat_models/perplexity.d.cts",
+        "default": "./chat_models/perplexity.d.ts"
+      },
+      "import": "./chat_models/perplexity.js",
+      "require": "./chat_models/perplexity.cjs"
     },
     "./chat_models/portkey": {
       "types": {
@@ -3627,6 +3651,10 @@
     "vectorstores/libsql.js",
     "vectorstores/libsql.d.ts",
     "vectorstores/libsql.d.cts",
+    "vectorstores/mariadb.cjs",
+    "vectorstores/mariadb.js",
+    "vectorstores/mariadb.d.ts",
+    "vectorstores/mariadb.d.cts",
     "vectorstores/milvus.cjs",
     "vectorstores/milvus.js",
     "vectorstores/milvus.d.ts",
@@ -3807,6 +3835,10 @@
     "chat_models/ollama.js",
     "chat_models/ollama.d.ts",
     "chat_models/ollama.d.cts",
+    "chat_models/perplexity.cjs",
+    "chat_models/perplexity.js",
+    "chat_models/perplexity.d.ts",
+    "chat_models/perplexity.d.cts",
     "chat_models/portkey.cjs",
     "chat_models/portkey.js",
     "chat_models/portkey.d.ts",
