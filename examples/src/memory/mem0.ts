@@ -7,7 +7,7 @@ const sessionId = randomUUID(); // This should be unique for each user or each u
 
 const memory = new Mem0Memory({
   apiKey: "your-api-key",
-  sessionId: sessionId,
+  sessionId,
   memoryOptions: {
     run_id: "run123", // Optional, if you want to save the conversation to a specific run.
   },
