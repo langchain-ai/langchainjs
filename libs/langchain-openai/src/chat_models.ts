@@ -1492,7 +1492,7 @@ export class ChatOpenAI<
     this.n = fields?.n ?? this.n;
     this.logitBias = fields?.logitBias;
     this.stop = fields?.stopSequences ?? fields?.stop;
-    this.stopSequences = this?.stop;
+    this.stopSequences = this.stop;
     this.user = fields?.user;
     this.__includeRawResponse = fields?.__includeRawResponse;
     this.audio = fields?.audio;
