@@ -12,6 +12,17 @@ import { tool } from "@langchain/core/tools";
 import { z } from "zod";
 import { ChatOpenAI } from "../chat_models.js";
 
+async function concatStream(stream: Promise<AsyncIterable<AIMessageChunk>>) {
+  let full: AIMessageChunk | undefined;
+  for await (const c of await stream) {
+    expect(isAIMessageChunk(c)).toBe(true);
+    full = full?.concat(c) ?? c;
+  }
+
+  if (full == null) throw new Error("`full` is null");
+  return full;
+}
+
 function assertResponse(message: BaseMessage | BaseMessageChunk | undefined) {
   if (message == null) throw new Error("`message` is null");
   if (!isAIMessage(message)) throw new Error("Message is not an AIMessage");
@@ -71,14 +82,11 @@ test("Test with built-in web search", async () => {
   assertResponse(firstResponse);
 
   // Test streaming
-  let full: AIMessageChunk | undefined;
-  for await (const chunk of await llm.stream(
-    "What was a positive news story from today?",
-    { tools: [{ type: "web_search_preview" }] }
-  )) {
-    expect(isAIMessageChunk(chunk)).toBe(true);
-    full = full?.concat(chunk as AIMessageChunk) ?? chunk;
-  }
+  const full = await concatStream(
+    llm.stream("What was a positive news story from today?", {
+      tools: [{ type: "web_search_preview" }],
+    })
+  );
   assertResponse(full);
 
   // Use OpenAI's stateful API
@@ -126,11 +134,7 @@ test("Test function calling", async () => {
     { name: "multiply", args: { x: 5, y: 4 } },
   ]);
 
-  let full: AIMessageChunk | undefined;
-  for await (const chunk of await llm.stream("whats 5 * 4")) {
-    expect(isAIMessageChunk(chunk)).toBe(true);
-    full = full?.concat(chunk as AIMessageChunk) ?? chunk;
-  }
+  const full = await concatStream(llm.stream("whats 5 * 4"));
   expect(full?.tool_calls).toMatchObject([
     { name: "multiply", args: { x: 5, y: 4 } },
   ]);
@@ -162,13 +166,9 @@ test("Test structured output", async () => {
   expect(parsed.response).toBeDefined();
 
   // test stream
-  let full: AIMessageChunk | undefined;
-  for await (const chunk of await llm.stream("how are ya", {
-    response_format,
-  })) {
-    expect(isAIMessageChunk(chunk)).toBe(true);
-    full = full?.concat(chunk as AIMessageChunk) ?? chunk;
-  }
+  const full = await concatStream(
+    llm.stream("how are ya", { response_format })
+  );
   const parsedFull = schema.parse(JSON.parse(full?.text ?? ""));
   expect(parsedFull).toEqual(full?.additional_kwargs.parsed);
   expect(parsedFull.response).toBeDefined();
@@ -273,16 +273,103 @@ test("Test file search", async () => {
   });
   assertResponse(response);
 
-  let full: AIMessageChunk | undefined;
-  for await (const chunk of await llm.stream(
-    "What is deep research by OpenAI?",
-    { tools: [tool] }
-  )) {
-    expect(isAIMessageChunk(chunk)).toBe(true);
-    full = full?.concat(chunk as AIMessageChunk) ?? chunk;
-  }
+  const full = await concatStream(
+    llm.stream("What is deep research by OpenAI?", { tools: [tool] })
+  );
 
-  if (full == null) throw new Error("`full` is null");
   expect(isAIMessageChunk(full)).toBe(true);
   assertResponse(full);
+});
+
+test("Test computer call", async () => {
+  const fs = await import("node:fs/promises");
+  const url = await import("node:url");
+
+  const screenshot = await fs.readFile(
+    url.fileURLToPath(new URL("./data/screenshot.jpg", import.meta.url)),
+    { encoding: "base64" }
+  );
+
+  const findComputerCall = (
+    message: AIMessage | AIMessageChunk | undefined
+  ) => {
+    if (message == null) return undefined;
+    const toolOutputs = message.additional_kwargs.tool_outputs as
+      | { type: "computer_call"; call_id: string; action: { type: string } }[]
+      | undefined;
+
+    return toolOutputs?.find(
+      (toolOutput) => toolOutput.type === "computer_call"
+    );
+  };
+
+  const llm = new ChatOpenAI({ model: "computer-use-preview" }).bindTools([
+    {
+      type: "computer-preview",
+      display_width: 1024,
+      display_height: 768,
+      environment: "browser",
+    },
+  ]);
+
+  const humanMessage = {
+    type: "human" as const,
+    content: "Check the latest LangChain news on bing.com.",
+  };
+
+  // invoke
+  let aiMessage = await llm.invoke([humanMessage], { truncation: "auto" });
+  let computerCall = findComputerCall(aiMessage);
+  expect(computerCall).toBeDefined();
+
+  aiMessage = await llm.invoke(
+    [
+      humanMessage,
+      aiMessage,
+      {
+        type: "tool" as const,
+        additional_kwargs: { type: "computer_call_output" },
+        tool_call_id: computerCall!.call_id,
+        content: [
+          {
+            type: "image_url",
+            image_url: `data:image/png;base64,${screenshot}`,
+          },
+        ],
+      },
+    ],
+    { truncation: "auto" }
+  );
+  expect(computerCall).toBeDefined();
+
+  // streaming
+  aiMessage = await concatStream(
+    llm.stream([humanMessage], { truncation: "auto" })
+  );
+  computerCall = findComputerCall(aiMessage);
+  expect(computerCall).toBeDefined();
+
+  aiMessage = await concatStream(
+    llm.stream(
+      [
+        humanMessage,
+        aiMessage,
+        {
+          type: "tool",
+          tool_call_id: computerCall!.call_id,
+          additional_kwargs: { type: "computer_call_output" },
+          content: [
+            {
+              type: "image_url",
+              image_url: `data:image/png;base64,${screenshot}`,
+            },
+          ],
+        },
+      ],
+      { truncation: "auto" }
+    )
+  );
+
+  computerCall = findComputerCall(aiMessage);
+  expect(computerCall).toBeDefined();
 });

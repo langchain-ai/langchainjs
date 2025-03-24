@@ -18,6 +18,7 @@ import {
   type BaseMessageFields,
   type MessageContent,
   type InvalidToolCall,
+  type MessageContentImageUrl,
 } from "@langchain/core/messages";
 import {
   ChatGenerationChunk,
@@ -231,18 +232,28 @@ function _convertMessagesToOpenAIResponsesParams(
             }
 
             if (Array.isArray(toolMessage.content)) {
-              return toolMessage.content.find(
+              const oaiScreenshot = toolMessage.content.find(
                 (i) => i.type === "computer_screenshot"
-              ) as {
-                type: "computer_screenshot";
-                image_url: string;
-              };
+              ) as { type: "computer_screenshot"; image_url: string };
+
+              if (oaiScreenshot) return oaiScreenshot;
+
+              const lcImage = toolMessage.content.find(
+                (i) => i.type === "image_url"
+              ) as MessageContentImageUrl;
+
+              if (lcImage) {
+                return {
+                  type: "computer_screenshot" as const,
+                  image_url:
+                    typeof lcImage.image_url === "string"
+                      ? lcImage.image_url
+                      : lcImage.image_url.url,
+                };
+              }
             }
 
-            return toolMessage.content as {
-              type: "computer_screenshot";
-              image_url: string;
-            };
+            throw new Error("Invalid computer call output");
           })();
 
           return {
@@ -264,6 +275,8 @@ function _convertMessagesToOpenAIResponsesParams(
       }
 
       if (role === "assistant") {
+        const input: ResponsesInputItem[] = [];
+
         const functionCallIds =
           // eslint-disable-next-line @typescript-eslint/no-use-before-define
           lcMsg.additional_kwargs[_FUNCTION_CALL_IDS_MAP_KEY] as
@@ -271,28 +284,30 @@ function _convertMessagesToOpenAIResponsesParams(
             | undefined;
 
         if (isAIMessage(lcMsg) && !!lcMsg.tool_calls?.length) {
-          return lcMsg.tool_calls.map(
-            (toolCall): ResponsesInputItem => ({
-              type: "function_call",
-              name: toolCall.name,
-              arguments: JSON.stringify(toolCall.args),
-              call_id: toolCall.id!,
-              // @ts-expect-error Might come from a non-Responses API message
-              id: functionCallIds?.[toolCall.id!],
-            })
+          input.push(
+            ...lcMsg.tool_calls.map(
+              (toolCall): ResponsesInputItem => ({
+                type: "function_call",
+                name: toolCall.name,
+                arguments: JSON.stringify(toolCall.args),
+                call_id: toolCall.id!,
+                // @ts-expect-error Might come from a non-Responses API message
+                id: functionCallIds?.[toolCall.id!],
+              })
+            )
           );
-        }
-
-        if (lcMsg.additional_kwargs.tool_calls != null) {
-          return lcMsg.additional_kwargs.tool_calls.map(
-            (toolCall): ResponsesInputItem => ({
-              type: "function_call",
-              name: toolCall.function.name,
-              call_id: toolCall.id,
-              // @ts-expect-error Might come from a non-Responses API message
-              id: functionCallIds?.[toolCall.id],
-              arguments: toolCall.function.arguments,
-            })
+        } else if (lcMsg.additional_kwargs.tool_calls != null) {
+          input.push(
+            ...lcMsg.additional_kwargs.tool_calls.map(
+              (toolCall): ResponsesInputItem => ({
+                type: "function_call",
+                name: toolCall.function.name,
+                call_id: toolCall.id,
+                // @ts-expect-error Might come from a non-Responses API message
+                id: functionCallIds?.[toolCall.id],
+                arguments: toolCall.function.arguments,
+              })
+            )
           );
         }
 
@@ -307,7 +322,18 @@ function _convertMessagesToOpenAIResponsesParams(
           ];
         }
 
-        return {
+        if (lcMsg.additional_kwargs.tool_outputs != null) {
+          const toolOutputs = lcMsg.additional_kwargs
+            .tool_outputs as Array<ResponsesInputItem>;
+
+          const computerCalls = toolOutputs?.filter(
+            (item) => item.type === "computer_call"
+          );
+
+          if (computerCalls.length > 0) input.push(...computerCalls);
+        }
+
+        input.push({
           type: "message",
           role: "assistant",
           content:
@@ -329,7 +355,9 @@ function _convertMessagesToOpenAIResponsesParams(
 
                   return [];
                 }),
-        };
+        });
+
+        return input;
       }
 
       if (role === "user") {
@@ -473,6 +501,7 @@ function _convertOpenAIResponsesMessageToBaseMessage(
 function _convertOpenAIResponsesDeltaToBaseMessageChunk(
   chunk: ResponseReturnStreamEvents
 ) {
+  console.log("chunk", chunk.type);
   const content: Record<string, unknown>[] = [];
   let generationInfo: Record<string, unknown> = {};
   let usage_metadata: UsageMetadata | undefined;
@@ -516,7 +545,8 @@ function _convertOpenAIResponsesDeltaToBaseMessageChunk(
   } else if (
     chunk.type === "response.output_item.done" &&
     (chunk.item.type === "web_search_call" ||
-      chunk.item.type === "file_search_call")
+      chunk.item.type === "file_search_call" ||
+      chunk.item.type === "computer_call")
   ) {
     additional_kwargs.tool_outputs = [chunk.item];
   } else if (chunk.type === "response.created") {
