@@ -23,7 +23,6 @@ import {
 } from "@langchain/google-common/experimental/utils/media_core";
 import {
   GeminiTool,
-  GoogleAIResponseModality,
   GooglePlatformType,
   GoogleRequestLogger,
   GoogleRequestRecorder,
