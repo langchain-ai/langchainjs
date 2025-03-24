@@ -203,7 +203,7 @@ export abstract class ChatGoogleBase<AuthOptions>
   safetySettings: GoogleAISafetySetting[] = [];
 
   responseModalities?: GoogleAIModelModality[];
-  
+
   // May intentionally be undefined, meaning to compute this.
   convertSystemMessageToHumanContent: boolean | undefined;
 
