@@ -726,6 +726,7 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
 
   function responseToGenerationInfo(response: GoogleLLMResponse) {
     const data =
+      // eslint-disable-next-line no-nested-ternary
       Array.isArray(response.data) && response.data[0]
         ? response.data[0]
         : response.data &&

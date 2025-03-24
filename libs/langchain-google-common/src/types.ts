@@ -123,14 +123,7 @@ export interface GoogleAISafetySetting {
 
 export type GoogleAIResponseMimeType = "text/plain" | "application/json";
 
-export const GoogleAIResponseModality = {
-  Text: "TEXT",
-  Image: "IMAGE",
-  Audio: "AUDIO",
-};
-
-export type GoogleAIModelModality =
-  (typeof GoogleAIResponseModality)[keyof typeof GoogleAIResponseModality];
+export type GoogleAIModelModality = "TEXT" | "IMAGE" | "AUDIO";
 
 export interface GoogleAIModelParams {
   /** Model to use */
@@ -675,9 +668,3 @@ export interface GoogleAIAPIParams {
   apiName?: string;
   apiConfig?: GoogleAIAPIConfig;
 }
-
-export const GoogleAIResponseModality = {
-  Text: "TEXT",
-  Image: "IMAGE",
-  Audio: "AUDIO",
-};
