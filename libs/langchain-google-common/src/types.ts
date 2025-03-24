@@ -260,7 +260,8 @@ export interface GoogleAIModelRequestParams extends GoogleAIModelParams {
 
   /**
    * Used to specify a previously created context cache to use with generation.
-   * Should be of the form: "projects/PROJECT_NUMBER/locations/LOCATION/cachedContents/CACHE_ID",
+   * For Vertex, this should be of the form:
+   * "projects/PROJECT_NUMBER/locations/LOCATION/cachedContents/CACHE_ID",
    *
    * See these guides for more information on how to use context caching:
    * https://cloud.google.com/vertex-ai/generative-ai/docs/context-cache/context-cache-create
