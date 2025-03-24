@@ -1060,12 +1060,7 @@ function canUseMessagesApi(model: string): boolean {
   }
 
   if (modelProviderName === "cohere") {
-    if (model.includes("command-r-v1")) {
-      return true;
-    }
-    if (model.includes("command-r-plus-v1")) {
-      return true;
-    }
+    return true;
   }
 
   return false;
