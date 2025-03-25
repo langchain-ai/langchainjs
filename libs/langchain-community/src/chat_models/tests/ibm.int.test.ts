@@ -798,6 +798,7 @@ describe("Tests for chat", () => {
       const testModel = (
         model: BaseChatModel<BaseChatModelCallOptions, AIMessageChunk>
       ) => {
+        // eslint-disable-next-line no-instanceof/no-instanceof
         if (model instanceof BaseChatModel) return true;
         else throw new Error("Wrong model passed");
       };
