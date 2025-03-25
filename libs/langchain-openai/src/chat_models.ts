@@ -1465,7 +1465,7 @@ export class ChatOpenAI<
 
   presencePenalty?: number;
 
-  n = 1;
+  n?: number;
 
   logitBias?: Record<string, number>;
 
