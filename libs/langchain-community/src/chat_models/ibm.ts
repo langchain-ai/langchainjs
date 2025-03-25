@@ -268,8 +268,8 @@ function _convertDeltaToMessageChunk(
           index: number;
           type: "function";
         } => ({
-          ...toolCall,
           index,
+          ...toolCall,
           id: _convertToValidToolId(model ?? "", toolCall.id),
           type: "function",
         })
