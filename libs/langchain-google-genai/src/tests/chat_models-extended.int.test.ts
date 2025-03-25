@@ -10,7 +10,7 @@ const baseSchema = z.object({
 
 test("Google AI - Generate structured output without errors", async () => {
   const model = new ChatGoogleGenerativeAI({
-    model: "gemini-1.5-flash",
+    model: "gemini-2.0-flash",
     temperature: 0.7,
   });
   const structuredLlm = model.withStructuredOutput(baseSchema);
@@ -31,7 +31,7 @@ test("Google AI - Validate nested schema structures", async () => {
     }),
   });
   const model = new ChatGoogleGenerativeAI({
-    model: "gemini-1.5-flash",
+    model: "gemini-2.0-flash",
     temperature: 0.7,
   });
   const structuredLlm = model.withStructuredOutput(schema);
@@ -50,7 +50,7 @@ test("Google AI - Handle optional fields in schema", async () => {
     email: z.string().optional(),
   });
   const model = new ChatGoogleGenerativeAI({
-    model: "gemini-1.5-flash",
+    model: "gemini-2.0-flash",
     temperature: 0.7,
   });
   const structuredLlm = model.withStructuredOutput(schema);
@@ -72,7 +72,7 @@ test("Google AI - Validate schema with large payloads", async () => {
     email: z.string(),
   });
   const model = new ChatGoogleGenerativeAI({
-    model: "gemini-1.5-flash",
+    model: "gemini-2.0-flash",
     temperature: 0.7,
   });
   const structuredLlm = model.withStructuredOutput(schema);
@@ -104,7 +104,7 @@ test("Google AI - Handle schema with deeply nested structures", async () => {
     }),
   });
   const model = new ChatGoogleGenerativeAI({
-    model: "gemini-1.5-flash",
+    model: "gemini-2.0-flash",
     temperature: 0.7,
   });
   const structuredLlm = model.withStructuredOutput(schema);
@@ -126,7 +126,7 @@ test("Google AI - Handle schema with enum fields", async () => {
     role: z.enum(["admin", "editor", "viewer"]),
   });
   const model = new ChatGoogleGenerativeAI({
-    model: "gemini-1.5-flash",
+    model: "gemini-2.0-flash",
     temperature: 0.7,
   });
   const structuredLlm = model.withStructuredOutput(schema);

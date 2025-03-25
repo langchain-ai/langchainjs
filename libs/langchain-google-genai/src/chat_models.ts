@@ -1074,7 +1074,7 @@ export class ChatGoogleGenerativeAI
         tool_choice: functionName,
       });
     } else {
-      let jsonSchema = isZodSchema(schema)
+      const jsonSchema = isZodSchema(schema)
         ? zodToGenerativeAIParameters(schema)
         : schema;
       llm = this.bind({
