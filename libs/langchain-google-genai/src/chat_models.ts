@@ -10,6 +10,7 @@ import {
   ModelParams,
   RequestOptions,
   type CachedContent,
+  Schema,
 } from "@google/generative-ai";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {
@@ -37,7 +38,10 @@ import {
 } from "@langchain/core/runnables";
 import type { z } from "zod";
 import { isZodSchema } from "@langchain/core/utils/types";
-import { BaseLLMOutputParser } from "@langchain/core/output_parsers";
+import {
+  BaseLLMOutputParser,
+  JsonOutputParser,
+} from "@langchain/core/output_parsers";
 import { zodToGenerativeAIParameters } from "./utils/zod_to_genai_parameters.js";
 import {
   convertBaseMessagesToContent,
@@ -73,6 +77,11 @@ export interface GoogleGenerativeAIChatCallOptions
    * @default true
    */
   streamUsage?: boolean;
+
+  /**
+   * JSON schema to be returned by the model.
+   */
+  responseSchema?: Schema;
 }
 
 /**
@@ -82,21 +91,11 @@ export interface GoogleGenerativeAIChatInput
   extends BaseChatModelParams,
     Pick<GoogleGenerativeAIChatCallOptions, "streamUsage"> {
   /**
-   * @deprecated Use "model" instead.
-   *
-   * Model Name to use
-   *
-   * Alias for `model`
-   *
-   * Note: The format must follow the pattern - `{model}`
-   */
-  modelName?: string;
-  /**
    * Model Name to use
    *
    * Note: The format must follow the pattern - `{model}`
    */
-  model?: string;
+  model: string;
 
   /**
    * Controls the randomness of the output.
@@ -594,9 +593,7 @@ export class ChatGoogleGenerativeAI
     };
   }
 
-  modelName = "gemini-pro";
-
-  model = "gemini-pro";
+  model: string;
 
   temperature?: number; // default value chosen based on model
 
@@ -614,6 +611,8 @@ export class ChatGoogleGenerativeAI
 
   streaming = false;
 
+  json?: boolean;
+
   streamUsage = true;
 
   convertSystemMessageToHumanContent: boolean | undefined;
@@ -628,27 +627,23 @@ export class ChatGoogleGenerativeAI
     );
   }
 
-  constructor(fields?: GoogleGenerativeAIChatInput) {
-    super(fields ?? {});
+  constructor(fields: GoogleGenerativeAIChatInput) {
+    super(fields);
 
-    this.modelName =
-      fields?.model?.replace(/^models\//, "") ??
-      fields?.modelName?.replace(/^models\//, "") ??
-      this.model;
-    this.model = this.modelName;
+    this.model = fields.model.replace(/^models\//, "");
 
-    this.maxOutputTokens = fields?.maxOutputTokens ?? this.maxOutputTokens;
+    this.maxOutputTokens = fields.maxOutputTokens ?? this.maxOutputTokens;
 
     if (this.maxOutputTokens && this.maxOutputTokens < 0) {
       throw new Error("`maxOutputTokens` must be a positive integer");
     }
 
-    this.temperature = fields?.temperature ?? this.temperature;
+    this.temperature = fields.temperature ?? this.temperature;
     if (this.temperature && (this.temperature < 0 || this.temperature > 2)) {
       throw new Error("`temperature` must be in the range of [0.0,2.0]");
     }
 
-    this.topP = fields?.topP ?? this.topP;
+    this.topP = fields.topP ?? this.topP;
     if (this.topP && this.topP < 0) {
       throw new Error("`topP` must be a positive integer");
     }
@@ -657,14 +652,14 @@ export class ChatGoogleGenerativeAI
       throw new Error("`topP` must be below 1.");
     }
 
-    this.topK = fields?.topK ?? this.topK;
+    this.topK = fields.topK ?? this.topK;
     if (this.topK && this.topK < 0) {
       throw new Error("`topK` must be a positive integer");
     }
 
-    this.stopSequences = fields?.stopSequences ?? this.stopSequences;
+    this.stopSequences = fields.stopSequences ?? this.stopSequences;
 
-    this.apiKey = fields?.apiKey ?? getEnvironmentVariable("GOOGLE_API_KEY");
+    this.apiKey = fields.apiKey ?? getEnvironmentVariable("GOOGLE_API_KEY");
     if (!this.apiKey) {
       throw new Error(
         "Please set an API key for Google GenerativeAI " +
@@ -674,7 +669,7 @@ export class ChatGoogleGenerativeAI
       );
     }
 
-    this.safetySettings = fields?.safetySettings ?? this.safetySettings;
+    this.safetySettings = fields.safetySettings ?? this.safetySettings;
     if (this.safetySettings && this.safetySettings.length > 0) {
       const safetySettingsSet = new Set(
         this.safetySettings.map((s) => s.category)
@@ -686,28 +681,28 @@ export class ChatGoogleGenerativeAI
       }
     }
 
-    this.streaming = fields?.streaming ?? this.streaming;
+    this.streaming = fields.streaming ?? this.streaming;
+    this.json = fields.json;
 
     this.client = new GenerativeAI(this.apiKey).getGenerativeModel(
       {
         model: this.model,
         safetySettings: this.safetySettings as SafetySetting[],
         generationConfig: {
-          candidateCount: 1,
           stopSequences: this.stopSequences,
           maxOutputTokens: this.maxOutputTokens,
           temperature: this.temperature,
           topP: this.topP,
           topK: this.topK,
-          ...(fields?.json ? { responseMimeType: "application/json" } : {}),
+          ...(this.json ? { responseMimeType: "application/json" } : {}),
         },
       },
       {
-        apiVersion: fields?.apiVersion,
-        baseUrl: fields?.baseUrl,
+        apiVersion: fields.apiVersion,
+        baseUrl: fields.baseUrl,
       }
     );
-    this.streamUsage = fields?.streamUsage ?? this.streamUsage;
+    this.streamUsage = fields.streamUsage ?? this.streamUsage;
   }
 
   useCachedContent(
@@ -735,13 +730,13 @@ export class ChatGoogleGenerativeAI
     // This works on models from April 2024 and later
     //   Vertex AI: gemini-1.5-pro and gemini-1.0-002 and later
     //   AI Studio: gemini-1.5-pro-latest
-    if (this.modelName === "gemini-1.0-pro-001") {
+    if (this.model === "gemini-1.0-pro-001") {
       return false;
-    } else if (this.modelName.startsWith("gemini-pro-vision")) {
+    } else if (this.model.startsWith("gemini-pro-vision")) {
       return false;
-    } else if (this.modelName.startsWith("gemini-1.0-pro-vision")) {
+    } else if (this.model.startsWith("gemini-1.0-pro-vision")) {
       return false;
-    } else if (this.modelName === "gemini-pro") {
+    } else if (this.model === "gemini-pro") {
       // on AI Studio gemini-pro is still pointing at gemini-1.0-pro-001
       return false;
     }
@@ -787,6 +782,16 @@ export class ChatGoogleGenerativeAI
           allowedFunctionNames: options.allowedFunctionNames,
         })
       : undefined;
+
+    if (options?.responseSchema) {
+      this.client.generationConfig.responseSchema = options.responseSchema;
+      this.client.generationConfig.responseMimeType = "application/json";
+    } else {
+      this.client.generationConfig.responseSchema = undefined;
+      this.client.generationConfig.responseMimeType = this.json
+        ? "application/json"
+        : undefined;
+    }
 
     return {
       ...(toolsAndConfig?.tools ? { tools: toolsAndConfig.tools } : {}),
@@ -1008,64 +1013,75 @@ export class ChatGoogleGenerativeAI
     const includeRaw = config?.includeRaw;
     if (method === "jsonMode") {
       throw new Error(
-        `ChatGoogleGenerativeAI only supports "functionCalling" as a method.`
+        `ChatGoogleGenerativeAI only supports "jsonSchema" or "functionCalling" as a method.`
       );
     }
 
-    let functionName = name ?? "extract";
+    let llm;
     let outputParser: BaseLLMOutputParser<RunOutput>;
-    let tools: GoogleGenerativeAIFunctionDeclarationsTool[];
-    if (isZodSchema(schema)) {
-      const jsonSchema = zodToGenerativeAIParameters(schema);
-      tools = [
-        {
-          functionDeclarations: [
-            {
-              name: functionName,
-              description:
-                jsonSchema.description ?? "A function available to call.",
-              parameters: jsonSchema as GenerativeAIFunctionDeclarationSchema,
-            },
-          ],
-        },
-      ];
-      outputParser = new GoogleGenerativeAIToolsOutputParser<
-        z.infer<typeof schema>
-      >({
-        returnSingle: true,
-        keyName: functionName,
-        zodSchema: schema,
+    if (method === "functionCalling") {
+      let functionName = name ?? "extract";
+      let tools: GoogleGenerativeAIFunctionDeclarationsTool[];
+      if (isZodSchema(schema)) {
+        const jsonSchema = zodToGenerativeAIParameters(schema);
+        tools = [
+          {
+            functionDeclarations: [
+              {
+                name: functionName,
+                description:
+                  jsonSchema.description ?? "A function available to call.",
+                parameters: jsonSchema as GenerativeAIFunctionDeclarationSchema,
+              },
+            ],
+          },
+        ];
+        outputParser = new GoogleGenerativeAIToolsOutputParser<
+          z.infer<typeof schema>
+        >({
+          returnSingle: true,
+          keyName: functionName,
+          zodSchema: schema,
+        });
+      } else {
+        let geminiFunctionDefinition: GenerativeAIFunctionDeclaration;
+        if (
+          typeof schema.name === "string" &&
+          typeof schema.parameters === "object" &&
+          schema.parameters != null
+        ) {
+          geminiFunctionDefinition = schema as GenerativeAIFunctionDeclaration;
+          functionName = schema.name;
+        } else {
+          geminiFunctionDefinition = {
+            name: functionName,
+            description: schema.description ?? "",
+            parameters: schema as GenerativeAIFunctionDeclarationSchema,
+          };
+        }
+        tools = [
+          {
+            functionDeclarations: [geminiFunctionDefinition],
+          },
+        ];
+        outputParser = new GoogleGenerativeAIToolsOutputParser<RunOutput>({
+          returnSingle: true,
+          keyName: functionName,
+        });
+      }
+      llm = this.bind({
+        tools,
+        tool_choice: functionName,
       });
     } else {
-      let geminiFunctionDefinition: GenerativeAIFunctionDeclaration;
-      if (
-        typeof schema.name === "string" &&
-        typeof schema.parameters === "object" &&
-        schema.parameters != null
-      ) {
-        geminiFunctionDefinition = schema as GenerativeAIFunctionDeclaration;
-        functionName = schema.name;
-      } else {
-        geminiFunctionDefinition = {
-          name: functionName,
-          description: schema.description ?? "",
-          parameters: schema as GenerativeAIFunctionDeclarationSchema,
-        };
-      }
-      tools = [
-        {
-          functionDeclarations: [geminiFunctionDefinition],
-        },
-      ];
-      outputParser = new GoogleGenerativeAIToolsOutputParser<RunOutput>({
-        returnSingle: true,
-        keyName: functionName,
+      const jsonSchema = isZodSchema(schema)
+        ? zodToGenerativeAIParameters(schema)
+        : schema;
+      llm = this.bind({
+        responseSchema: jsonSchema as Schema,
       });
+      outputParser = new JsonOutputParser();
     }
-    const llm = this.bind({
-      tools,
-      tool_choice: functionName,
-    });
 
     if (!includeRaw) {
       return llm.pipe(outputParser).withConfig({
