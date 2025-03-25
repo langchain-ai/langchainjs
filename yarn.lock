@@ -8460,7 +8460,7 @@ __metadata:
     "@jest/globals": ^29.5.0
     "@lancedb/lancedb": ^0.13.0
     "@langchain/core": "workspace:*"
-    "@langchain/openai": ">=0.2.0 <0.5.0"
+    "@langchain/openai": ">=0.2.0 <0.6.0"
     "@langchain/scripts": ">=0.1.0 <0.2.0"
     "@langchain/standard-tests": 0.0.0
     "@layerup/layerup-security": ^1.5.12
@@ -9567,7 +9567,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/openai@>=0.1.0 <0.5.0, @langchain/openai@>=0.2.0 <0.5.0, @langchain/openai@^0.4.2, @langchain/openai@workspace:*, @langchain/openai@workspace:^, @langchain/openai@workspace:libs/langchain-openai":
+"@langchain/openai@>=0.1.0 <0.6.0, @langchain/openai@>=0.2.0 <0.6.0, @langchain/openai@workspace:*, @langchain/openai@workspace:^, @langchain/openai@workspace:libs/langchain-openai":
   version: 0.0.0-use.local
   resolution: "@langchain/openai@workspace:libs/langchain-openai"
   dependencies:
@@ -9601,6 +9601,20 @@ __metadata:
     "@langchain/core": ">=0.3.39 <0.4.0"
   languageName: unknown
   linkType: soft
+
+"@langchain/openai@npm:^0.4.2":
+  version: 0.4.9
+  resolution: "@langchain/openai@npm:0.4.9"
+  dependencies:
+    js-tiktoken: ^1.0.12
+    openai: ^4.87.3
+    zod: ^3.22.4
+    zod-to-json-schema: ^3.22.3
+  peerDependencies:
+    "@langchain/core": ">=0.3.39 <0.4.0"
+  checksum: 3219e960a459fd4e904a5c446a90fd7ff0c196b76af6f1be68af102280fe15cb766c403a4f09b37fed547819abc1f3143660dad919e2f79c0b3c30dc53ba9b2b
+  languageName: node
+  linkType: hard
 
 "@langchain/openai@npm:~0.3.0":
   version: 0.3.17
@@ -28395,7 +28409,7 @@ __metadata:
     "@langchain/groq": "*"
     "@langchain/mistralai": "*"
     "@langchain/ollama": "*"
-    "@langchain/openai": ">=0.1.0 <0.5.0"
+    "@langchain/openai": ">=0.1.0 <0.6.0"
     "@langchain/scripts": ">=0.1.0 <0.2.0"
     "@langchain/textsplitters": ">=0.0.0 <0.2.0"
     "@langchain/xai": "*"
