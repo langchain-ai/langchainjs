@@ -98,20 +98,36 @@ export function drawMermaid(
 
   const seenSubgraphs = new Set<string>();
 
+  // sort prefixes by path length for correct nesting
+  function sortPrefixesByDepth(prefixes: string[]): string[] {
+    return [...prefixes].sort((a, b) => {
+      return a.split(":").length - b.split(":").length;
+    });
+  }
+
   function addSubgraph(edges: Edge[], prefix: string): void {
     const selfLoop = edges.length === 1 && edges[0].source === edges[0].target;
     if (prefix && !selfLoop) {
       const subgraph = prefix.split(":").pop()!;
-      if (seenSubgraphs.has(subgraph)) {
-        throw new Error(
-          `Found duplicate subgraph '${subgraph}' -- this likely means that ` +
-            "you're reusing a subgraph node with the same name. " +
-            "Please adjust your graph to have subgraph nodes with unique names."
-        );
+
+      if (seenSubgraphs.has(prefix)) {
+        return;
       }
 
-      seenSubgraphs.add(subgraph);
+      seenSubgraphs.add(prefix);
       mermaidGraph += `\tsubgraph ${subgraph}\n`;
+    }
+
+    // all nested prefixes for this level, sorted by depth
+    const nestedPrefixes = sortPrefixesByDepth(
+      Object.keys(edgeGroups).filter(
+        (nestedPrefix) =>
+          nestedPrefix.startsWith(`${prefix}:`) && nestedPrefix !== prefix
+      )
+    );
+
+    for (const nestedPrefix of nestedPrefixes) {
+      addSubgraph(edgeGroups[nestedPrefix], nestedPrefix);
     }
 
     for (const edge of edges) {
@@ -142,13 +158,6 @@ export function drawMermaid(
       )}${edgeLabel}${_escapeNodeLabel(target)};\n`;
     }
 
-    // Recursively add nested subgraphs
-    for (const nestedPrefix in edgeGroups) {
-      if (nestedPrefix.startsWith(`${prefix}:`) && nestedPrefix !== prefix) {
-        addSubgraph(edgeGroups[nestedPrefix], nestedPrefix);
-      }
-    }
-
     if (prefix && !selfLoop) {
       mermaidGraph += "\tend\n";
     }
@@ -157,7 +166,7 @@ export function drawMermaid(
   // Start with the top-level edges (no common prefix)
   addSubgraph(edgeGroups[""] ?? [], "");
 
-  // Add remaining subgraphs
+  // Add remaining top-level subgraphs
   for (const prefix in edgeGroups) {
     if (!prefix.includes(":") && prefix !== "") {
       addSubgraph(edgeGroups[prefix], prefix);
