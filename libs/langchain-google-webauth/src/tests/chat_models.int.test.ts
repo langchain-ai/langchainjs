@@ -920,7 +920,6 @@ describe.each(testGeminiModelNames)(
       }
       expect(finalMsg.content as string).toContain("Dodgers");
     });
-
   }
 );
 
