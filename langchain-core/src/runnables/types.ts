@@ -77,6 +77,39 @@ export interface Node {
   metadata?: Record<string, any>;
 }
 
+/**
+ * Controls how the Runnable execution runtime responds to abort signals, including timeouts.
+ */
+export const OrchestratorAbortBehavior = {
+  /**
+   * The orchestrator will immediately throw on abort or timeout, abandoning any in-progress tasks.
+   * This is the default behavior of LangChain core.
+   */
+  THROW_IMMEDIATELY: "throw_immediately" as const,
+
+  /**
+   * Allow in-progress tasks to complete normally on abort or timeout, but throw if new tasks would
+   * start (including retries). In this mode, no promises are abandoned, so it is up to the task
+   * implementations to honor the abort signal for cancellations and timeout behavior to work as
+   * expected.
+   *
+   * This is the default behavior for LangGraph workflows. How this effects chains in LangChain will
+   * depend on the type of chain being executed. For streaming chains that work as a pipeline, this
+   * will behave identically to the {@link OrchestratorAbortBehavior.PASSTHROUGH} behavior. For
+   * chains that run sequentially, this will work as described in the paragraph above.
+   */
+  COMPLETE_PENDING: "complete_pending" as const,
+
+  /**
+   * Delegates abort handling completely to the tasks themselves. The execution layer will never
+   * throw due to an abort signal.
+   */
+  PASSTHROUGH: "passthrough" as const,
+};
+
+export type OrchestratorAbortBehavior =
+  (typeof OrchestratorAbortBehavior)[keyof typeof OrchestratorAbortBehavior];
+
 export interface RunnableConfig<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ConfigurableFieldType extends Record<string, any> = Record<string, any>
@@ -85,7 +118,6 @@ export interface RunnableConfig<
    * Runtime values for attributes previously made configurable on this Runnable,
    * or sub-Runnables.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   configurable?: ConfigurableFieldType;
 
   /**
@@ -107,4 +139,19 @@ export interface RunnableConfig<
    * @see https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal
    */
   signal?: AbortSignal;
+
+  /**
+   * Controls how the execution runtime responds to abort signals. This applies to both explicit
+   * aborts via AbortSignal and to implicit aborts, such as timeouts.
+   *
+   * This setting only affects Runnable orchestration behavior. Service implementations (like
+   * {@link ChatOpenAI}) should always cancel their operations and throw on abort, and they
+   * should do so without abandoning asynchronous operations that cannot be forcibly canceled.
+   *
+   * Default behavior depends on the orchestrator being used:
+   *
+   * - For chains in LangChain, this defaults to {@link OrchestratorAbortBehavior.THROW_IMMEDIATELY}
+   * - For LangGraph workflows, this defaults to {@link OrchestratorAbortBehavior.COMPLETE_PENDING}
+   */
+  orchestratorAbortBehavior?: OrchestratorAbortBehavior;
 }

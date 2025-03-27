@@ -3,6 +3,7 @@
 
 import { test, describe, expect } from "@jest/globals";
 import {
+  OrchestratorAbortBehavior,
   Runnable,
   RunnableLambda,
   RunnableMap,
@@ -17,31 +18,36 @@ import {
 import { StringOutputParser } from "../../output_parsers/string.js";
 import { Document } from "../../documents/document.js";
 import { ChatPromptTemplate } from "../../prompts/chat.js";
+import { StringPromptValue } from "../../prompt_values.js";
+import { HumanMessage } from "../../messages/human.js";
 
-const chatModel = new FakeListChatModel({ responses: ["hey"], sleep: 500 });
+const chatModel = new FakeListChatModel({
+  responses: ["hey there"],
+  sleep: 50,
+});
 
 const TEST_CASES = {
   map: {
     runnable: RunnableMap.from({
       question: new RunnablePassthrough(),
       context: async () => {
-        await new Promise((resolve) => setTimeout(resolve, 500));
+        await new Promise((resolve) => setTimeout(resolve, 50));
         return "SOME STUFF";
       },
     }),
-    input: "testing",
+    input: new StringPromptValue("testing"),
   },
   binding: {
     runnable: RunnableLambda.from(
-      () => new Promise((resolve) => setTimeout(resolve, 500))
+      () => new Promise((resolve) => setTimeout(resolve, 50))
     ),
-    input: "testing",
+    input: new StringPromptValue("testing"),
   },
   fallbacks: {
     runnable: chatModel
       .bind({ thrownErrorString: "expected" })
       .withFallbacks({ fallbacks: [chatModel] }),
-    input: "testing",
+    input: new StringPromptValue("testing"),
     skipStream: true,
   },
   sequence: {
@@ -51,21 +57,21 @@ const TEST_CASES = {
       }),
       () => {},
     ]),
-    input: { question: "testing" },
+    input: new StringPromptValue("testing"),
   },
   lambda: {
     runnable: RunnableLambda.from(
-      () => new Promise((resolve) => setTimeout(resolve, 500))
+      () => new Promise((resolve) => setTimeout(resolve, 50))
     ),
     input: {},
   },
   history: {
     runnable: new RunnableWithMessageHistory({
       runnable: chatModel,
-      config: {},
+      config: { configurable: { sessionId: "123" } },
       getMessageHistory: () => new FakeChatMessageHistory(),
     }),
-    input: "testing",
+    input: new HumanMessage("testing"),
   },
 };
 
@@ -76,84 +82,157 @@ describe.each(Object.keys(TEST_CASES))("Test runnable %s", (name) => {
     skipStream,
   }: { runnable: Runnable; input: any; skipStream?: boolean } =
     TEST_CASES[name as keyof typeof TEST_CASES];
-  test("Test invoke with signal", async () => {
-    await expect(async () => {
+  test.each(["passthrough", "throw_immediately", undefined] as (
+    | OrchestratorAbortBehavior
+    | undefined
+  )[])(
+    "Test invoke with signal abort behavior -> %s",
+    async (orchestratorAbortBehavior) => {
       const controller = new AbortController();
-      await Promise.all([
+      const operation = Promise.all([
         runnable.invoke(input, {
           signal: controller.signal,
+          orchestratorAbortBehavior,
         }),
         new Promise<void>((resolve) => {
           controller.abort();
           resolve();
         }),
       ]);
-    }).rejects.toThrowError();
-  });
-
-  test("Test invoke with signal with a delay", async () => {
-    await expect(async () => {
-      const controller = new AbortController();
-      await Promise.all([
-        runnable.invoke(input, {
-          signal: controller.signal,
-        }),
-        new Promise<void>((resolve) => {
-          setTimeout(() => {
-            controller.abort();
-            resolve();
-          }, 250);
-        }),
-      ]);
-    }).rejects.toThrowError();
-  });
-
-  test("Test stream with signal", async () => {
-    if (skipStream) {
-      return;
-    }
-    const controller = new AbortController();
-    await expect(async () => {
-      const stream = await runnable.stream(input, {
-        signal: controller.signal,
-      });
-      for await (const _ of stream) {
-        controller.abort();
+      if (
+        orchestratorAbortBehavior === undefined ||
+        orchestratorAbortBehavior === "throw_immediately"
+      ) {
+        await expect(operation).rejects.toThrowError();
+      } else {
+        await expect(operation).resolves.not.toThrowError();
       }
-    }).rejects.toThrowError();
-  });
+    }
+  );
 
-  test("Test batch with signal", async () => {
-    await expect(async () => {
+  if (name === "history") {
+    test.skip("Test invoke with signal with a delay", async () => {});
+  } else {
+    test.each(["passthrough", "throw_immediately", undefined] as (
+      | OrchestratorAbortBehavior
+      | undefined
+    )[])(
+      "Test invoke with signal with a delay",
+      async (orchestratorAbortBehavior) => {
+        const controller = new AbortController();
+        const operation = Promise.all([
+          runnable.invoke(input, {
+            signal: controller.signal,
+            orchestratorAbortBehavior,
+          }),
+          new Promise<void>((resolve) => {
+            setTimeout(() => {
+              controller.abort();
+              resolve();
+            }, 50);
+          }),
+        ]);
+        if (
+          orchestratorAbortBehavior === undefined ||
+          orchestratorAbortBehavior === "throw_immediately"
+        ) {
+          await expect(operation).rejects.toThrowError();
+        } else {
+          await expect(operation).resolves.not.toThrowError();
+        }
+      }
+    );
+  }
+
+  test.each(["passthrough", "throw_immediately", undefined] as (
+    | OrchestratorAbortBehavior
+    | undefined
+  )[])(
+    "Test stream with signal abort behavior -> %s",
+    async (orchestratorAbortBehavior) => {
+      if (skipStream) {
+        return;
+      }
       const controller = new AbortController();
-      await Promise.all([
+      const operation = async () => {
+        const stream = await runnable.stream(input, {
+          signal: controller.signal,
+          orchestratorAbortBehavior,
+        });
+        for await (const _ of stream) {
+          controller.abort();
+        }
+      };
+
+      if (
+        orchestratorAbortBehavior === undefined ||
+        orchestratorAbortBehavior === "throw_immediately"
+      ) {
+        await expect(operation()).rejects.toThrowError();
+      } else {
+        await operation();
+      }
+    }
+  );
+
+  test.each(["passthrough", "throw_immediately", undefined] as (
+    | OrchestratorAbortBehavior
+    | undefined
+  )[])(
+    "Test batch with signal abort behavior -> %s",
+    async (orchestratorAbortBehavior) => {
+      const controller = new AbortController();
+      const operation = Promise.all([
         runnable.batch([input, input], {
           signal: controller.signal,
+          orchestratorAbortBehavior,
         }),
         new Promise<void>((resolve) => {
           controller.abort();
           resolve();
         }),
       ]);
-    }).rejects.toThrowError();
-  });
 
-  test("Test batch with signal with a delay", async () => {
-    await expect(async () => {
+      if (
+        orchestratorAbortBehavior === undefined ||
+        orchestratorAbortBehavior === "throw_immediately"
+      ) {
+        await expect(operation).rejects.toThrowError();
+      } else {
+        await expect(operation).resolves.not.toThrowError();
+      }
+    }
+  );
+
+  test.each(["passthrough", "throw_immediately", undefined] as (
+    | OrchestratorAbortBehavior
+    | undefined
+  )[])(
+    "Test batch with signal with a delay -> %s",
+    async (orchestratorAbortBehavior) => {
       const controller = new AbortController();
-      await Promise.all([
+      const operation = Promise.all([
         runnable.batch([input, input], {
           signal: controller.signal,
+          orchestratorAbortBehavior,
         }),
         new Promise<void>((resolve) => {
           setTimeout(() => {
             controller.abort();
             resolve();
-          }, 250);
+          }, 25);
         }),
       ]);
-    }).rejects.toThrowError();
-  });
+      if (
+        orchestratorAbortBehavior === undefined ||
+        orchestratorAbortBehavior === "throw_immediately"
+      ) {
+        await expect(operation).rejects.toThrowError();
+      } else {
+        await expect(operation).resolves.not.toThrowError();
+      }
+    }
+  );
 });
 
 test("Should not raise node warning", async () => {

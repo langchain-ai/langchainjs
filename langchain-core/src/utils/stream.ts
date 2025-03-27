@@ -1,7 +1,7 @@
 import { pickRunnableConfigKeys } from "../runnables/config.js";
 import { AsyncLocalStorageProviderSingleton } from "../singletons/index.js";
 import type { IterableReadableStreamInterface } from "../types/_internal.js";
-import { raceWithSignal } from "./signal.js";
+import { checkAbortSignal, raceWithSignal } from "./signal.js";
 
 // Re-exported for backwards compatibility
 // Do NOT import this type from this file inside the project. Instead, always import from `types/_internal.js`
@@ -233,7 +233,12 @@ export class AsyncGeneratorWithSetup<
   }
 
   async next(...args: [] | [TNext]): Promise<IteratorResult<T>> {
-    this.signal?.throwIfAborted();
+    // We purposefully aren't checking the return value here, because we don't want to throw
+    // in the middle of a task when using OrchestratorAbortBehavior.COMPLETE_PENDING
+    checkAbortSignal({
+      ...(this.config ?? {}),
+      signal: this.signal,
+    });
 
     if (!this.firstResultUsed) {
       this.firstResultUsed = true;
@@ -246,7 +251,10 @@ export class AsyncGeneratorWithSetup<
       ),
       this.signal
         ? async () => {
-            return raceWithSignal(this.generator.next(...args), this.signal);
+            return raceWithSignal(this.generator.next(...args), {
+              ...(this.config ?? {}),
+              signal: this.signal,
+            });
           }
         : async () => {
             return this.generator.next(...args);
