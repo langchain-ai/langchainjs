@@ -49,8 +49,8 @@ export class PostgresChatMessageHistory extends BaseChatMessageHistory {
    *
    * @param {PostgresEngine} engine Postgres engine instance to use.
    * @param {string} sessionId Retrieve the table content with this session ID.
-   * @param {string} tableName Table name that stores that chat message history.
-   * @param {string} schemaName Schema name for the chat message history table. Default: "public".
+   * @param {string} tableName Table name that stores that chat message history. Parameter is not escaped. Do not use with end user input.
+   * @param {string} schemaName Schema name for the chat message history table. Default: "public". Parameter is not escaped. Do not use with end user input.
    * @returns PostgresChatMessageHistory instance.
    */
   static async initialize(

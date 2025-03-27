@@ -13,6 +13,12 @@ import PostgresVectorStore, {
   PostgresVectorStoreArgs,
   dbConfigArgs,
 } from "../vectorStore.js";
+import {
+  DEFAULT_INDEX_NAME_SUFFIX,
+  DistanceStrategy,
+  HNSWIndex,
+  IVFFlatIndex,
+} from "../indexes.js";
 
 dotenv.config();
 
@@ -26,6 +32,7 @@ const METADATA_COLUMNS = [
   new Column("source", "TEXT"),
 ];
 const STORE_METADATA = true;
+const DEFAULT_INDEX_NAME = CUSTOM_TABLE + DEFAULT_INDEX_NAME_SUFFIX;
 
 const embeddingService = new SyntheticEmbeddings({ vectorSize: VECTOR_SIZE });
 const texts = ["foo", "bar", "baz"];
@@ -416,6 +423,38 @@ describe("VectorStore methods", () => {
     const expected = new Document({ pageContent: "bar" });
 
     expect(results[0]).toMatchObject(expected);
+  });
+
+  test("applyVectorIndex - HNSWIndex", async () => {
+    const index = new HNSWIndex();
+    await vectorStoreInstance.applyVectorIndex(index);
+    const isValidIndex = await vectorStoreInstance.isValidIndex(
+      DEFAULT_INDEX_NAME
+    );
+
+    expect(isValidIndex).toBe(true);
+    await PEInstance.pool.raw(`DROP INDEX IF EXISTS ${DEFAULT_INDEX_NAME}`);
+  });
+
+  test("applyVectorIndex - IVFFlatIndex", async () => {
+    let index = new IVFFlatIndex({
+      distanceStrategy: DistanceStrategy.EUCLIDEAN,
+    });
+    await vectorStoreInstance.applyVectorIndex(index);
+    let isValidIVFFlatIndex = await vectorStoreInstance.isValidIndex(
+      DEFAULT_INDEX_NAME
+    );
+    expect(isValidIVFFlatIndex).toBe(true);
+
+    index = new IVFFlatIndex({
+      name: "secondindex",
+      distanceStrategy: DistanceStrategy.EUCLIDEAN,
+    });
+    await vectorStoreInstance.applyVectorIndex(index);
+    isValidIVFFlatIndex = await vectorStoreInstance.isValidIndex("secondindex");
+    expect(isValidIVFFlatIndex).toBe(true);
+    await PEInstance.pool.raw(`DROP INDEX IF EXISTS ${DEFAULT_INDEX_NAME}`);
+    await PEInstance.pool.raw(`DROP INDEX IF EXISTS secondindex`);
   });
 
   afterAll(async () => {

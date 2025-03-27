@@ -46,7 +46,13 @@ describe("PostgresEngine Instance creation", () => {
     };
 
     async function createInstance() {
-      PEInstance = await PostgresEngine.fromInstance("projectId", "region", "instance", "database", pgArgs);
+      PEInstance = await PostgresEngine.fromInstance(
+        "projectId",
+        "region",
+        "instance",
+        "database",
+        pgArgs
+      );
     }
 
     await expect(createInstance).rejects.toThrow(
@@ -97,7 +103,6 @@ describe("PostgresEngine Instance creation", () => {
       throw new Error(`Error on closing connection: ${error}`);
     }
   });
-
 
   test("should throw an error if the URL passed to from_engine_args does not have the driver", async () => {
     const url = "";

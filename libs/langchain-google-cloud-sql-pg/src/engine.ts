@@ -218,9 +218,9 @@ export class PostgresEngine {
   /**
    * Create a table for saving of vectors to be used with PostgresVectorStore.
    *
-   * @param tableName Postgres database table name
+   * @param tableName Postgres database table name. Parameter is not escaped. Do not use with end user input.
    * @param vectorSize Vector size for the embedding model to be used.
-   * @param schemaName The schema name to store Postgres database table. Default: "public".
+   * @param schemaName The schema name to store Postgres database table. Default: "public". Parameter is not escaped. Do not use with end user input.
    * @param contentColumn Name of the column to store document content. Default: "content".
    * @param embeddingColumn Name of the column to store vector embeddings. Default: "embedding".
    * @param metadataColumns Optional - A list of Columns to create for custom metadata. Default: [].
