@@ -433,7 +433,7 @@ describe("VectorStore methods", () => {
     );
 
     expect(isValidIndex).toBe(true);
-    await PEInstance.pool.raw(`DROP INDEX IF EXISTS ${DEFAULT_INDEX_NAME}`);
+    await vectorStoreInstance.dropVectorIndex();
   });
 
   test("applyVectorIndex - IVFFlatIndex", async () => {
@@ -453,8 +453,31 @@ describe("VectorStore methods", () => {
     await vectorStoreInstance.applyVectorIndex(index);
     isValidIVFFlatIndex = await vectorStoreInstance.isValidIndex("secondindex");
     expect(isValidIVFFlatIndex).toBe(true);
-    await PEInstance.pool.raw(`DROP INDEX IF EXISTS ${DEFAULT_INDEX_NAME}`);
-    await PEInstance.pool.raw(`DROP INDEX IF EXISTS secondindex`);
+    await vectorStoreInstance.dropVectorIndex("secondindex");
+    await vectorStoreInstance.dropVectorIndex();
+  });
+
+  test("reIndex", async () => {
+    let isValidIndex = await vectorStoreInstance.isValidIndex(
+      DEFAULT_INDEX_NAME
+    );
+    if (!isValidIndex) {
+      const index = new HNSWIndex();
+      await vectorStoreInstance.applyVectorIndex(index);
+    }
+    await vectorStoreInstance.reIndex();
+    await vectorStoreInstance.reIndex(DEFAULT_INDEX_NAME);
+    isValidIndex = await vectorStoreInstance.isValidIndex(DEFAULT_INDEX_NAME);
+    expect(isValidIndex).toBe(true);
+    await vectorStoreInstance.dropVectorIndex();
+  });
+
+  test("dropVectorIndex", async () => {
+    await vectorStoreInstance.dropVectorIndex();
+    const isValidIndex = await vectorStoreInstance.isValidIndex(
+      DEFAULT_INDEX_NAME
+    );
+    expect(isValidIndex).toBe(false);
   });
 
   afterAll(async () => {
