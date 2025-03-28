@@ -1,7 +1,7 @@
 import { test } from "@jest/globals";
 import * as dotenv from "dotenv";
 import { AIMessage, BaseMessage, HumanMessage } from "@langchain/core/messages";
-import PostgresEngine, { PostgresEngineArgs } from "../engine.js";
+import PostgresEngine from "../engine.js";
 import { PostgresChatMessageHistory } from "../chatMessageHistory.js";
 
 dotenv.config();
@@ -12,13 +12,6 @@ const USER = "myuser";
 const PASSWORD = "ChangeMe";
 const DATABASE_NAME = "api";
 const url = `postgresql+asyncpg://${USER}:${PASSWORD}@${HOST}:5432/${DATABASE_NAME}`;
-
-const pgArgs: PostgresEngineArgs = {
-  // eslint-disable-next-line no-process-env
-  user: process.env.DB_USER ?? "",
-  // eslint-disable-next-line no-process-env
-  password: process.env.PASSWORD ?? "",
-};
 
 describe("ChatMessageHistory creation", () => {
   let PEInstance: PostgresEngine;

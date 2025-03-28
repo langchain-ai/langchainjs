@@ -9,7 +9,7 @@ import {
 } from "./utils/utils.js";
 
 const DEFAULT_METADATA_COL = "langchain_metadata";
-type Row = { [key: string] };
+type Row = { [key: string]: string };
 
 // Options for PostgresLoader
 export interface PostgresLoaderOptions {
@@ -31,7 +31,7 @@ function parseDocFromRow(
   formatter: (row: Row, contentColumns: string[]) => string = textFormatter
 ): Document {
   const pageContent = formatter(row, contentColumns);
-  const metadata: { [key: string] } = {};
+  const metadata: { [key: string]: string } = {};
 
   if (metadataJsonColumn && row[metadataJsonColumn]) {
     Object.entries(row[metadataJsonColumn]).forEach(([k, v]) => {
@@ -183,49 +183,52 @@ export class PostgresLoader extends BaseDocumentLoader {
       queryStmt = `SELECT * FROM "${schemaName}"."${tableName}"`;
     }
 
+    let result;
     try {
-      const result = await engine.pool.raw(queryStmt);
-      const columnNames = result.fields.map(
-        (field: { name: string }) => field.name
+      result = await engine.pool.raw(queryStmt);
+    } catch (error) {
+      if (typeof error === "string") {
+        throw Error(error);
+      }
+    }
+    const columnNames = result.fields.map(
+      (field: { name: string }) => field.name
+    );
+
+    const contentColumnNames = contentColumns || [columnNames[0]];
+    const metadataColumnNames =
+      metadataColumns ||
+      columnNames.filter((col: string) => !contentColumnNames.includes(col));
+
+    if (metadataJsonColumn && !columnNames.includes(metadataJsonColumn)) {
+      throw new Error(
+        `Column ${metadataJsonColumn} not found in query result ${columnNames}.`
       );
+    }
+    let jsonColumnName = metadataJsonColumn;
+    if (!jsonColumnName && columnNames.includes(DEFAULT_METADATA_COL)) {
+      jsonColumnName = DEFAULT_METADATA_COL;
+    }
 
-      const contentColumnNames = contentColumns || [columnNames[0]];
-      const metadataColumnNames =
-        metadataColumns ||
-        columnNames.filter((col: string) => !contentColumnNames.includes(col));
-
-      if (metadataJsonColumn && !columnNames.includes(metadataJsonColumn)) {
+    const allNames = [
+      ...(contentColumnNames || []),
+      ...(metadataColumnNames || []),
+    ];
+    allNames.forEach((name) => {
+      if (!columnNames.includes(name)) {
         throw new Error(
-          `Column ${metadataJsonColumn} not found in query result ${columnNames}.`
+          `Column ${name} not found in query result ${columnNames}.`
         );
       }
-      let jsonColumnName = metadataJsonColumn;
-      if (!jsonColumnName && columnNames.includes(DEFAULT_METADATA_COL)) {
-        jsonColumnName = DEFAULT_METADATA_COL;
-      }
+    });
 
-      const allNames = [
-        ...(contentColumnNames || []),
-        ...(metadataColumnNames || []),
-      ];
-      allNames.forEach((name) => {
-        if (!columnNames.includes(name)) {
-          throw new Error(
-            `Column ${name} not found in query result ${columnNames}.`
-          );
-        }
-      });
-
-      return new PostgresLoader(engine, {
-        contentColumns: contentColumnNames,
-        metadataColumns: metadataColumnNames,
-        query: queryStmt,
-        formatter: formatFunc,
-        metadataJsonColumn: jsonColumnName,
-      });
-    } catch (error) {
-      throw Error(error);
-    }
+    return new PostgresLoader(engine, {
+      contentColumns: contentColumnNames,
+      metadataColumns: metadataColumnNames,
+      query: queryStmt,
+      formatter: formatFunc,
+      metadataJsonColumn: jsonColumnName,
+    });
   }
 
   async load(): Promise<Document[]> {
@@ -272,7 +275,9 @@ export class PostgresLoader extends BaseDocumentLoader {
         );
       }
     } catch (error) {
-      throw Error(error);
+      if (typeof error === "string") {
+        throw Error(error);
+      }
     }
   }
 }

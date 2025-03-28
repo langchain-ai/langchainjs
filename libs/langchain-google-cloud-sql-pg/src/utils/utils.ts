@@ -22,7 +22,8 @@ export const getIAMPrincipalEmail = async (
   const url = `https://oauth2.googleapis.com/tokeninfo?access_token=${accessToken}`;
   const clientResponse = await client
     .request({ url })
-    .then((res: { data }) => res.data);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .then((res: { data: any }) => res.data);
 
   if (!("email" in clientResponse)) {
     throw new Error(
@@ -34,7 +35,8 @@ export const getIAMPrincipalEmail = async (
   return email.replace(".gserviceaccount.com", "");
 };
 
-export const customZip = (...arrays) => {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const customZip = (...arrays: any[]) => {
   const minLength = Math.min(...arrays.map((arr) => arr.length));
   const result = [];
   for (let i = 0; i < minLength; i += 1) {
@@ -49,7 +51,7 @@ export const customZip = (...arrays) => {
 
 // txt document formatter.
 export function textFormatter(
-  row: { [key: string] },
+  row: { [key: string]: string },
   content_columns: string[]
 ): string {
   return content_columns
@@ -60,7 +62,7 @@ export function textFormatter(
 
 // CSV document formatter.
 export function csvFormatter(
-  row: { [key: string] },
+  row: { [key: string]: string },
   content_columns: string[]
 ): string {
   return content_columns
@@ -71,7 +73,7 @@ export function csvFormatter(
 
 // YAML document formatter
 export function yamlFormatter(
-  row: { [key: string] },
+  row: { [key: string]: string },
   content_columns: string[]
 ): string {
   return content_columns
@@ -82,10 +84,10 @@ export function yamlFormatter(
 
 // JSON document formatter
 export function jsonFormatter(
-  row: { [key: string] },
+  row: { [key: string]: string },
   content_columns: string[]
 ): string {
-  const dictionary: { [key: string] } = {};
+  const dictionary: { [key: string]: string } = {};
   for (const column of content_columns) {
     if (column in row) {
       dictionary[column] = row[column];

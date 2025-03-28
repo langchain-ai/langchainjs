@@ -106,7 +106,7 @@ export class PostgresChatMessageHistory extends BaseChatMessageHistory {
    */
   async getMessages(): Promise<BaseMessage[]> {
     const query = `SELECT data, type FROM "${this.schemaName}"."${this.tableName}" WHERE session_id = :session_id ORDER BY id;`;
-    const values: { [key: string] } = {
+    const values: { [key: string]: string } = {
       session_id: this.sessionId,
     };
     const items: StoredMessage[] = [];
@@ -132,7 +132,7 @@ export class PostgresChatMessageHistory extends BaseChatMessageHistory {
    */
   async addMessage(message: BaseMessage): Promise<void> {
     const query = `INSERT INTO "${this.schemaName}"."${this.tableName}"("session_id", "data", "type") VALUES (:session_id, :data, :type)`;
-    const values: { [key: string] } = {
+    const values: { [key: string]: string } = {
       session_id: this.sessionId,
       data: JSON.stringify(message.toDict()),
       type: message.getType(),
@@ -156,7 +156,7 @@ export class PostgresChatMessageHistory extends BaseChatMessageHistory {
    */
   async clear(): Promise<void> {
     const query = `DELETE FROM "${this.schemaName}"."${this.tableName}" WHERE session_id = :session_id;`;
-    const values: { [key: string] } = {
+    const values: { [key: string]: string } = {
       session_id: this.sessionId,
     };
 

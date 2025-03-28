@@ -1,8 +1,7 @@
 import { test } from "@jest/globals";
-import { Document, DocumentInterface } from "@langchain/core/documents";
 import * as dotenv from "dotenv";
 import { PostgresLoader, PostgresLoaderOptions } from "../loader.js";
-import PostgresEngine, { PostgresEngineArgs } from "../engine.js";
+import PostgresEngine from "../engine.js";
 
 dotenv.config();
 
@@ -18,38 +17,22 @@ const CONTENT_COLUMN = [
   "organic",
 ];
 const METADATA_COLUMNS = ["variety"];
-const FORMATTER = (row: { [key: string] }, content_columns: string[]): string =>
+const FORMATTER = (
+  row: { [key: string]: string },
+  content_columns: string[]
+): string =>
   content_columns
     .filter((column) => column in row)
     .map((column) => String(row[column]))
     .join(" ");
-const DEFAULT_METADATA_COL = "langchain_metadata";
 const HOST = "127.0.0.1";
 const USER = "myuser";
 const PASSWORD = "ChangeMe";
 const DATABASE_NAME = "api";
 const url = `postgresql+asyncpg://${USER}:${PASSWORD}@${HOST}:5432/${DATABASE_NAME}`;
 
-const pgArgs: PostgresEngineArgs = {
-  // eslint-disable-next-line no-process-env
-  user: process.env.DB_USER ?? "",
-  // eslint-disable-next-line no-process-env
-  password: process.env.PASSWORD ?? "",
-};
-
-const documentLoaderArgs: PostgresLoaderOptions = {
-  tableName: CUSTOM_TABLE,
-  schemaName: SCHEMA_NAME,
-  contentColumns: CONTENT_COLUMN,
-  metadataColumns: METADATA_COLUMNS,
-  format: "text",
-  query: "",
-  formatter: FORMATTER,
-};
-
 describe("Document loader creation", () => {
   let PEInstance: PostgresEngine;
-  let postgresLoaderInstance: PostgresLoader;
 
   beforeAll(async () => {
     PEInstance = await PostgresEngine.fromEngineArgs(url);
@@ -92,6 +75,7 @@ describe("Document loader creation", () => {
     };
 
     async function createInstance() {
+      // @ts-expect-error testing error
       await PostgresLoader.initialize(PEInstance, documentLoaderArgs);
     }
 

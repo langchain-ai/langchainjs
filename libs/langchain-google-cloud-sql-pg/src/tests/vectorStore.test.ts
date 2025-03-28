@@ -4,11 +4,7 @@ import { SyntheticEmbeddings } from "@langchain/core/utils/testing";
 import { v4 as uuidv4 } from "uuid";
 import * as dotenv from "dotenv";
 import { MaxMarginalRelevanceSearchOptions } from "@langchain/core/vectorstores";
-import PostgresEngine, {
-  Column,
-  PostgresEngineArgs,
-  VectorStoreTableArgs,
-} from "../engine.js";
+import PostgresEngine, { Column, VectorStoreTableArgs } from "../engine.js";
 import PostgresVectorStore, {
   PostgresVectorStoreArgs,
   dbConfigArgs,
@@ -36,7 +32,7 @@ const DEFAULT_INDEX_NAME = CUSTOM_TABLE + DEFAULT_INDEX_NAME_SUFFIX;
 
 const embeddingService = new SyntheticEmbeddings({ vectorSize: VECTOR_SIZE });
 const texts = ["foo", "bar", "baz"];
-const metadatas: Record[] = [];
+const metadatas: Record<string, string>[] = [];
 const docs: DocumentInterface[] = [];
 const embeddings = [];
 const HOST = "127.0.0.1";
@@ -46,13 +42,6 @@ const DATABASE_NAME = "api";
 const url = `postgresql+asyncpg://${USER}:${PASSWORD}@${HOST}:5432/${DATABASE_NAME}`;
 
 let vectorStoreInstance: PostgresVectorStore;
-
-const pgArgs: PostgresEngineArgs = {
-  // eslint-disable-next-line no-process-env
-  user: process.env.DB_USER ?? "",
-  // eslint-disable-next-line no-process-env
-  password: process.env.PASSWORD ?? "",
-};
 
 const vsTableArgs: VectorStoreTableArgs = {
   contentColumn: CONTENT_COLUMN,

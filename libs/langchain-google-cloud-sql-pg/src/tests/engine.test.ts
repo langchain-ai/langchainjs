@@ -1,9 +1,5 @@
 import { describe, expect, test } from "@jest/globals";
-import {
-  AuthTypes,
-  Connector,
-  IpAddressTypes,
-} from "@google-cloud/cloud-sql-connector";
+import { IpAddressTypes } from "@google-cloud/cloud-sql-connector";
 import knex from "knex";
 import * as dotenv from "dotenv";
 import PostgresEngine, {
@@ -63,14 +59,7 @@ describe("PostgresEngine Instance creation", () => {
   });
 
   test("should create a PostgresEngine Instance using user and password", async () => {
-    const pgArgs: PostgresEngineArgs = {
-      // eslint-disable-next-line no-process-env
-      user: process.env.DB_USER ?? "",
-      // eslint-disable-next-line no-process-env
-      password: process.env.PASSWORD ?? "",
-    };
-
-    PEInstance = await PostgresEngine.fromEngineArgs(url);
+    PEInstance = await PostgresEngine.fromEngineArgs(url, poolConfig);
 
     const { rows } = await PEInstance.testConnection();
     const currentTimestamp = rows[0].currenttimestamp;
@@ -91,7 +80,13 @@ describe("PostgresEngine Instance creation", () => {
       iamAccountEmail: process.env.EMAIL ?? "",
     };
 
-    PEInstance = await PostgresEngine.fromEngineArgs(url);
+    PEInstance = await PostgresEngine.fromInstance(
+      "projectId",
+      "region",
+      "instance",
+      "database",
+      pgArgs
+    );
 
     const { rows } = await PEInstance.testConnection();
     const currentTimestamp = rows[0].currenttimestamp;
@@ -121,13 +116,6 @@ describe("PostgresEngine - table initialization", () => {
   let PEInstance: PostgresEngine;
 
   beforeAll(async () => {
-    const pgArgs: PostgresEngineArgs = {
-      // eslint-disable-next-line no-process-env
-      user: process.env.DB_USER ?? "",
-      // eslint-disable-next-line no-process-env
-      password: process.env.PASSWORD ?? "",
-    };
-
     PEInstance = await PostgresEngine.fromEngineArgs(url);
   });
 
@@ -159,7 +147,7 @@ describe("PostgresEngine - table initialization", () => {
 
     const { rows } = await PEInstance.pool.raw(query);
 
-    rows.forEach((row, index: number) => {
+    rows.forEach((row: string, index: number) => {
       expect(row).toMatchObject(expected[index]);
     });
   });
@@ -177,7 +165,7 @@ describe("PostgresEngine - table initialization", () => {
 
     const { rows } = await PEInstance.pool.raw(query);
 
-    rows.forEach((row, index: number) => {
+    rows.forEach((row: string, index: number) => {
       expect(row).toMatchObject(expected[index]);
     });
   });

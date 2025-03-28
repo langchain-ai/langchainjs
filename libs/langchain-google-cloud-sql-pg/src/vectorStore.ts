@@ -11,7 +11,6 @@ import {
   DEFAULT_DISTANCE_STRATEGY,
   DEFAULT_INDEX_NAME_SUFFIX,
   DistanceStrategy,
-  ExactNearestNeighbor,
   QueryOptions,
 } from "./indexes.js";
 import PostgresEngine from "./engine.js";
@@ -36,6 +35,22 @@ export interface dbConfigArgs {
   engine: PostgresEngine;
   tableName: string;
   dbConfig?: PostgresVectorStoreArgs;
+}
+
+interface VSArgs {
+  engine: PostgresEngine;
+  tableName: string;
+  schemaName: string;
+  contentColumn: string;
+  embeddingColumn: string;
+  metadataColumns: Array<string>;
+  idColumn: string;
+  distanceStrategy: DistanceStrategy;
+  k: number;
+  fetchK: number;
+  lambdaMult: number;
+  metadataJsonColumn: string;
+  indexQueryOptions?: QueryOptions;
 }
 
 /**
@@ -201,8 +216,6 @@ export class PostgresVectorStore extends VectorStore {
 
   metadataColumns: Array<string>;
 
-  ignoreMetadataColumns: Array<string>;
-
   idColumn: string;
 
   metadataJsonColumn: string;
@@ -215,7 +228,7 @@ export class PostgresVectorStore extends VectorStore {
 
   lambdaMult: number;
 
-  indexQueryOptions: QueryOptions;
+  indexQueryOptions: QueryOptions | undefined;
 
   /**
    * Initializes a new vector store with embeddings and database configuration.
@@ -223,7 +236,7 @@ export class PostgresVectorStore extends VectorStore {
    * @param embeddings - Instance of `EmbeddingsInterface` used to embed queries.
    * @param dbConfig - Configuration settings for the database or storage system.
    */
-  constructor(embeddings: EmbeddingsInterface, dbConfig: Record) {
+  constructor(embeddings: EmbeddingsInterface, dbConfig: VSArgs) {
     super(embeddings, dbConfig);
     this.embeddings = embeddings;
     this.engine = dbConfig.engine;
@@ -234,7 +247,6 @@ export class PostgresVectorStore extends VectorStore {
     this.metadataColumns = dbConfig.metadataColumns
       ? dbConfig.metadataColumns
       : [];
-    this.ignoreMetadataColumns = dbConfig.ignoreMetadataColumns;
     this.idColumn = dbConfig.idColumn;
     this.metadataJsonColumn = dbConfig.metadataJsonColumn;
     this.distanceStrategy = dbConfig.distanceStrategy;
@@ -291,7 +303,7 @@ export class PostgresVectorStore extends VectorStore {
     const { rows } = await engine.pool.raw(
       `SELECT column_name, data_type FROM information_schema.columns WHERE table_name = '${tableName}' AND table_schema = '${schemaName}'`
     );
-    const columns: { [key: string] } = {};
+    const columns: { [key: string]: string } = {};
 
     for (const index in rows) {
       if (rows[index]) {
@@ -340,7 +352,7 @@ export class PostgresVectorStore extends VectorStore {
     }
 
     const allColumns = columns;
-    let allMetadataColumns: string[];
+    let allMetadataColumns: string[] = [];
     if (
       ignoreMetadataColumns !== undefined &&
       ignoreMetadataColumns.length > 0
@@ -361,7 +373,6 @@ export class PostgresVectorStore extends VectorStore {
       contentColumn,
       embeddingColumn,
       metadataColumns: allMetadataColumns,
-      ignoreMetadataColumns,
       idColumn,
       metadataJsonColumn: jsonColumn,
       distanceStrategy,
@@ -417,7 +428,7 @@ export class PostgresVectorStore extends VectorStore {
     options?: { ids?: string[] }
   ): Promise<string[] | void> {
     let ids: string[] = [];
-    const metadatas: Record[] = [];
+    const metadatas: Record<string, string>[] = [];
 
     if (vectors.length !== documents.length) {
       throw new Error(
@@ -457,7 +468,7 @@ export class PostgresVectorStore extends VectorStore {
           : "";
 
       let stmt = `INSERT INTO "${this.schemaName}"."${this.tableName}"("${this.idColumn}", "${this.contentColumn}", "${this.embeddingColumn}" ${metadataColNames}`;
-      const values: { [key: string] } = {
+      const values: { [key: string]: string | string[] } = {
         id,
         content: document.pageContent,
         embedding: `[${embedding.toString()}]`,
@@ -651,7 +662,7 @@ export class PostgresVectorStore extends VectorStore {
     name?: string,
     concurrently: boolean = false
   ): Promise<void> {
-    if (index.constructor.name === ExactNearestNeighbor) {
+    if (index.constructor.name === "ExactNearestNeighbor") {
       await this.dropVectorIndex();
       return;
     }
@@ -671,9 +682,11 @@ export class PostgresVectorStore extends VectorStore {
       }
     }
 
-    const stmt = `CREATE INDEX ${concurrently ? "CONCURRENTLY" : ""
-      } ${indexName} ON "${this.schemaName}"."${this.tableName}" USING ${index.indexType
-      } (${this.embeddingColumn} ${funct}) ${params} ${filter};`;
+    const stmt = `CREATE INDEX ${
+      concurrently ? "CONCURRENTLY" : ""
+    } ${indexName} ON "${this.schemaName}"."${this.tableName}" USING ${
+      index.indexType
+    } (${this.embeddingColumn} ${funct}) ${params} ${filter};`;
 
     await this.engine.pool.raw(stmt);
   }
