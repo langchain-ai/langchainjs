@@ -241,4 +241,22 @@ export abstract class Serializable implements SerializableInterface {
       id: this.lc_id,
     };
   }
+
+  ["~shallowClone"](): this {
+    const kwargs = Object.keys(this.lc_kwargs).reduce((acc, key) => {
+      acc[key] = key in this ? this[key as keyof this] : this.lc_kwargs[key];
+      return acc;
+    }, {} as SerializedFields);
+
+    for (
+      // eslint-disable-next-line @typescript-eslint/no-this-alias
+      let current = Object.getPrototypeOf(this);
+      current;
+      current = Object.getPrototypeOf(current)
+    ) {
+      Object.assign(kwargs, Reflect.get(current, "lc_attributes", this));
+    }
+
+    return new (this.constructor as new (...args: unknown[]) => this)(kwargs);
+  }
 }
