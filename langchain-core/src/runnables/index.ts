@@ -19,12 +19,13 @@ export {
   type RunnableToolLikeArgs,
 } from "./base.js";
 export {
+  type OrchestratorAbortBehavior,
   type RunnableBatchOptions,
+  type RunnableConfig,
   type RunnableInterface,
   type RunnableIOSchema,
 } from "./types.js";
 export {
-  type RunnableConfig,
   getCallbackManagerForConfig,
   patchConfig,
   ensureConfig,

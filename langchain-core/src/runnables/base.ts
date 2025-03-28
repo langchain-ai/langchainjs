@@ -6,10 +6,11 @@ import {
   type TraceableFunction,
   isTraceableFunction,
 } from "langsmith/singletons/traceable";
-import type {
-  RunnableInterface,
-  RunnableBatchOptions,
-  RunnableConfig,
+import {
+  type RunnableInterface,
+  type RunnableBatchOptions,
+  type RunnableConfig,
+  OrchestratorAbortBehavior,
 } from "./types.js";
 import { CallbackManagerForChainRun } from "../callbacks/manager.js";
 import {
@@ -34,7 +35,7 @@ import {
   pipeGeneratorWithSetup,
   AsyncGeneratorWithSetup,
 } from "../utils/stream.js";
-import { raceWithSignal } from "../utils/signal.js";
+import { checkAbortSignal, raceWithSignal } from "../utils/signal.js";
 import {
   DEFAULT_RECURSION_LIMIT,
   ensureConfig,
@@ -354,6 +355,7 @@ export abstract class Runnable<
         runId: options.runId,
         timeout: options.timeout,
         signal: options.signal,
+        orchestratorAbortBehavior: options.orchestratorAbortBehavior,
       });
     }
     const callOptions = { ...(options as Partial<CallOptions>) };
@@ -367,6 +369,7 @@ export abstract class Runnable<
     delete callOptions.runId;
     delete callOptions.timeout;
     delete callOptions.signal;
+    delete callOptions.orchestratorAbortBehavior;
     return [runnableConfig, callOptions];
   }
 
@@ -395,8 +398,13 @@ export abstract class Runnable<
     delete config.runId;
     let output;
     try {
+      // To support OrchestratorAbortBehavior.COMPLETE_PENDING, we need to check the signal here and
+      // throw if it aborted rather than starting additional tasks
+      if (checkAbortSignal(config)) {
+        config?.signal?.throwIfAborted();
+      }
       const promise = func.call(this, input, config, runManager);
-      output = await raceWithSignal(promise, options?.signal);
+      output = await raceWithSignal(promise, config);
     } catch (e) {
       await runManager?.handleChainError(e);
       throw e;
@@ -455,7 +463,7 @@ export abstract class Runnable<
         runManagers,
         batchOptions
       );
-      outputs = await raceWithSignal(promise, optionsList?.[0]?.signal);
+      outputs = await raceWithSignal(promise, optionsList?.[0]);
     } catch (e) {
       await Promise.all(
         runManagers.map((runManager) => runManager?.handleChainError(e))
@@ -515,6 +523,15 @@ export abstract class Runnable<
 
     let runManager: CallbackManagerForChainRun | undefined;
     try {
+      const resolvedOrchestratorAbortBehavior =
+        options?.orchestratorAbortBehavior ??
+        OrchestratorAbortBehavior.THROW_IMMEDIATELY;
+
+      const signal =
+        resolvedOrchestratorAbortBehavior ===
+        OrchestratorAbortBehavior.THROW_IMMEDIATELY
+          ? options?.signal
+          : undefined;
       const pipe = await pipeGeneratorWithSetup(
         transformer.bind(this),
         wrapInputForTracing(),
@@ -528,7 +545,7 @@ export abstract class Runnable<
             undefined,
             config.runName ?? this.getName()
           ),
-        options?.signal,
+        signal,
         config
       );
       delete config.runId;
@@ -1901,6 +1918,11 @@ export class RunnableSequence<
     let nextStepInput = input;
     let finalOutput: RunOutput;
     try {
+      // To support OrchestratorAbortBehavior.COMPLETE_PENDING, we need to check the signal here and
+      // throw if it aborted rather than starting additional tasks
+      if (checkAbortSignal(config)) {
+        config?.signal?.throwIfAborted();
+      }
       const initialSteps = [this.first, ...this.middle];
       for (let i = 0; i < initialSteps.length; i += 1) {
         const step = initialSteps[i];
@@ -1912,12 +1934,21 @@ export class RunnableSequence<
             ),
           })
         );
-        nextStepInput = await raceWithSignal(promise, options?.signal);
+        nextStepInput = await raceWithSignal(promise, config);
+        if (!isAsyncIterable(nextStepInput) && checkAbortSignal(config)) {
+          // To support OrchestratorAbortBehavior.COMPLETE_PENDING, we need to check the signal here
+          // and throw if it's aborted rather than starting additional tasks. We only do this if the
+          // previous step didn't return some streaming type, because we can't abandon tasks that are
+          // that are still in progress if OrchestratorAbortBehavior.COMPLETE_PENDING is set.
+          config?.signal?.throwIfAborted();
+        }
+      }
+      // To support OrchestratorAbortBehavior.COMPLETE_PENDING, we need to check the signal here and
+      // throw if it aborted rather than starting additional tasks
+      if (checkAbortSignal(config)) {
+        config?.signal?.throwIfAborted();
       }
       // TypeScript can't detect that the last output of the sequence returns RunOutput, so call it out of the loop here
-      if (options?.signal?.aborted) {
-        throw new Error("Aborted");
-      }
       finalOutput = await this.last.invoke(
         nextStepInput,
         patchConfig(config, {
@@ -1991,7 +2022,17 @@ export class RunnableSequence<
           }),
           batchOptions
         );
-        nextStepInputs = await raceWithSignal(promise, configList[0]?.signal);
+        nextStepInputs = await raceWithSignal(promise, configList[0]);
+        if (
+          !nextStepInputs.some(isAsyncIterable) &&
+          checkAbortSignal(configList[0])
+        ) {
+          // To support OrchestratorAbortBehavior.COMPLETE_PENDING, we need to check the signal here
+          // and throw if it's aborted rather than starting additional tasks. We only do this if the
+          // previous step didn't return some streaming type, because we can't abandon tasks that are
+          // that are still in progress if OrchestratorAbortBehavior.COMPLETE_PENDING is set.
+          configList[0]?.signal?.throwIfAborted();
+        }
       }
     } catch (e) {
       await Promise.all(
@@ -2029,6 +2070,12 @@ export class RunnableSequence<
       yield input;
     }
     try {
+      // To support OrchestratorAbortBehavior.COMPLETE_PENDING, we need to check the signal here and
+      // throw if it aborted rather than starting additional tasks
+      if (checkAbortSignal(options)) {
+        options?.signal?.throwIfAborted();
+      }
+
       let finalGenerator = steps[0].transform(
         inputGenerator(),
         patchConfig(otherOptions, {
@@ -2039,7 +2086,11 @@ export class RunnableSequence<
       );
       for (let i = 1; i < steps.length; i += 1) {
         const step = steps[i];
-        finalGenerator = await step.transform(
+        // We purposefully aren't checking the return value here, because we don't want to throw
+        // in the middle of a task when using OrchestratorAbortBehavior.COMPLETE_PENDING
+        checkAbortSignal(options);
+
+        finalGenerator = step.transform(
           finalGenerator,
           patchConfig(otherOptions, {
             callbacks: runManager?.getChild(
@@ -2049,7 +2100,10 @@ export class RunnableSequence<
         );
       }
       for await (const chunk of finalGenerator) {
-        options?.signal?.throwIfAborted();
+        // We purposefully aren't checking the return value here, because we don't want to throw
+        // in the middle of a task when using OrchestratorAbortBehavior.COMPLETE_PENDING
+        checkAbortSignal(options);
+
         yield chunk;
         if (concatSupported) {
           if (finalOutput === undefined) {
@@ -2239,6 +2293,11 @@ export class RunnableMap<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const output: Record<string, any> = {};
     try {
+      // To support OrchestratorAbortBehavior.COMPLETE_PENDING, we need to check the signal here and
+      // throw if it aborted rather than starting additional tasks
+      if (checkAbortSignal(config)) {
+        config?.signal?.throwIfAborted();
+      }
       const promises = Object.entries(this.steps).map(
         async ([key, runnable]) => {
           output[key] = await runnable.invoke(
@@ -2249,7 +2308,7 @@ export class RunnableMap<
           );
         }
       );
-      await raceWithSignal(Promise.all(promises), options?.signal);
+      await raceWithSignal(Promise.all(promises), options);
     } catch (e) {
       await runManager?.handleChainError(e);
       throw e;
@@ -2284,10 +2343,7 @@ export class RunnableMap<
     // until all iterators are done
     while (tasks.size) {
       const promise = Promise.race(tasks.values());
-      const { key, result, gen } = await raceWithSignal(
-        promise,
-        options?.signal
-      );
+      const { key, result, gen } = await raceWithSignal(promise, options);
       tasks.delete(key);
       if (!result.done) {
         yield { [key]: result.value } as unknown as RunOutput;
@@ -2363,7 +2419,7 @@ export class RunnableTraceable<RunInput, RunOutput> extends Runnable<
       input
     ) as Promise<RunOutput>;
 
-    return raceWithSignal(promise, config?.signal);
+    return raceWithSignal(promise, config);
   }
 
   async *_streamIterator(
@@ -2371,11 +2427,19 @@ export class RunnableTraceable<RunInput, RunOutput> extends Runnable<
     options?: Partial<RunnableConfig>
   ): AsyncGenerator<RunOutput> {
     const [config] = this._getOptionsList(options ?? {}, 1);
+
+    // To support OrchestratorAbortBehavior.COMPLETE_PENDING, we need to check the signal here and
+    // throw if it aborted rather than starting additional tasks
+    if (checkAbortSignal(config)) {
+      config?.signal?.throwIfAborted();
+    }
     const result = await this.invoke(input, options);
 
     if (isAsyncIterable(result)) {
       for await (const item of result) {
-        config?.signal?.throwIfAborted();
+        // We purposefully aren't checking the return value here, because we don't want to throw
+        // in the middle of a task when using OrchestratorAbortBehavior.COMPLETE_PENDING
+        checkAbortSignal(config);
         yield item as RunOutput;
       }
       return;
@@ -2383,7 +2447,9 @@ export class RunnableTraceable<RunInput, RunOutput> extends Runnable<
 
     if (isIterator(result)) {
       while (true) {
-        config?.signal?.throwIfAborted();
+        // We purposefully aren't checking the return value here, because we don't want to throw
+        // in the middle of a task when using OrchestratorAbortBehavior.COMPLETE_PENDING
+        checkAbortSignal(config);
         const state: IteratorResult<unknown> = result.next();
         if (state.done) break;
         yield state.value as RunOutput;
@@ -2566,10 +2632,20 @@ export class RunnableLambda<
         pickRunnableConfigKeys(childConfig),
         async () => {
           try {
+            // To support OrchestratorAbortBehavior.COMPLETE_PENDING, we need to check the signal here and
+            // throw if it aborted rather than starting additional tasks
+            if (checkAbortSignal(config)) {
+              config?.signal?.throwIfAborted();
+            }
             let output = await this.func(input, {
               ...childConfig,
             });
             if (output && Runnable.isRunnable(output)) {
+              // To support OrchestratorAbortBehavior.COMPLETE_PENDING, we need to check the signal here and
+              // throw if it aborted rather than starting additional tasks
+              if (checkAbortSignal(config)) {
+                config?.signal?.throwIfAborted();
+              }
               if (config?.recursionLimit === 0) {
                 throw new Error("Recursion limit reached.");
               }
@@ -2584,7 +2660,9 @@ export class RunnableLambda<
                 childConfig,
                 output
               )) {
-                config?.signal?.throwIfAborted();
+                // We purposefully aren't checking the return value here, because we don't want to throw
+                // in the middle of a task when using OrchestratorAbortBehavior.COMPLETE_PENDING
+                checkAbortSignal(config);
                 if (finalOutput === undefined) {
                   finalOutput = chunk as RunOutput;
                 } else {
@@ -2604,7 +2682,9 @@ export class RunnableLambda<
                 childConfig,
                 output
               )) {
-                config?.signal?.throwIfAborted();
+                // We purposefully aren't checking the return value here, because we don't want to throw
+                // in the middle of a task when using OrchestratorAbortBehavior.COMPLETE_PENDING
+                checkAbortSignal(config);
                 if (finalOutput === undefined) {
                   finalOutput = chunk as RunOutput;
                 } else {
@@ -2641,7 +2721,12 @@ export class RunnableLambda<
     config?: Partial<CallOptions>
   ): AsyncGenerator<RunOutput> {
     let finalChunk: RunInput | undefined;
+
     for await (const chunk of generator) {
+      // We purposefully aren't checking the return value here, because we don't want to throw
+      // in the middle of a task when using OrchestratorAbortBehavior.COMPLETE_PENDING
+      checkAbortSignal(config);
+
       if (finalChunk === undefined) {
         finalChunk = chunk;
       } else {
@@ -2654,10 +2739,18 @@ export class RunnableLambda<
         }
       }
     }
+
     const childConfig = patchConfig(config, {
       callbacks: runManager?.getChild(),
       recursionLimit: (config?.recursionLimit ?? DEFAULT_RECURSION_LIMIT) - 1,
     });
+
+    // To support OrchestratorAbortBehavior.COMPLETE_PENDING, we need to check the signal here and
+    // throw if it aborted rather than starting additional tasks
+    if (checkAbortSignal(config)) {
+      config?.signal?.throwIfAborted();
+    }
+
     const output = await new Promise<RunOutput | Runnable>(
       (resolve, reject) => {
         void AsyncLocalStorageProviderSingleton.runWithConfig(
@@ -2676,12 +2769,23 @@ export class RunnableLambda<
         );
       }
     );
+
     if (output && Runnable.isRunnable(output)) {
+      // To support OrchestratorAbortBehavior.COMPLETE_PENDING, we need to check the signal here and
+      // throw if it aborted rather than starting additional tasks
+      if (checkAbortSignal(config)) {
+        config?.signal?.throwIfAborted();
+      }
+
       if (config?.recursionLimit === 0) {
         throw new Error("Recursion limit reached.");
       }
+
       const stream = await output.stream(finalChunk as RunInput, childConfig);
       for await (const chunk of stream) {
+        // We purposefully aren't checking the return value here, because we don't want to throw
+        // in the middle of a task when using OrchestratorAbortBehavior.COMPLETE_PENDING
+        checkAbortSignal(config);
         yield chunk;
       }
     } else if (isAsyncIterable(output)) {
@@ -2689,12 +2793,16 @@ export class RunnableLambda<
         childConfig,
         output
       )) {
-        config?.signal?.throwIfAborted();
+        // We purposefully aren't checking the return value here, because we don't want to throw
+        // in the middle of a task when using OrchestratorAbortBehavior.COMPLETE_PENDING
+        checkAbortSignal(config);
         yield chunk as RunOutput;
       }
     } else if (isIterableIterator(output)) {
       for (const chunk of consumeIteratorInContext(childConfig, output)) {
-        config?.signal?.throwIfAborted();
+        // We purposefully aren't checking the return value here, because we don't want to throw
+        // in the middle of a task when using OrchestratorAbortBehavior.COMPLETE_PENDING
+        checkAbortSignal(config);
         yield chunk as RunOutput;
       }
     } else {
@@ -2884,30 +2992,44 @@ export class RunnableWithFallbacks<RunInput, RunOutput> extends Runnable<
     const childConfig = patchConfig(otherConfigFields, {
       callbacks: runManager?.getChild(),
     });
-    const res = await AsyncLocalStorageProviderSingleton.runWithConfig(
-      childConfig,
-      async () => {
-        let firstError;
-        for (const runnable of this.runnables()) {
-          config?.signal?.throwIfAborted();
-          try {
-            const output = await runnable.invoke(input, childConfig);
-            await runManager?.handleChainEnd(_coerceToDict(output, "output"));
-            return output;
-          } catch (e) {
-            if (firstError === undefined) {
-              firstError = e;
+
+    // To support OrchestratorAbortBehavior.COMPLETE_PENDING, we need to check the signal here and
+    // throw if it aborted rather than starting additional tasks
+    try {
+      if (checkAbortSignal(config)) {
+        config?.signal?.throwIfAborted();
+      }
+      const res = await AsyncLocalStorageProviderSingleton.runWithConfig(
+        childConfig,
+        async () => {
+          let firstError;
+          for (const runnable of this.runnables()) {
+            // To support OrchestratorAbortBehavior.COMPLETE_PENDING, we need to check the signal here and
+            // throw if it aborted rather than starting additional tasks
+            if (checkAbortSignal(config)) {
+              config?.signal?.throwIfAborted();
+            }
+            try {
+              const output = await runnable.invoke(input, childConfig);
+              await runManager?.handleChainEnd(_coerceToDict(output, "output"));
+              return output;
+            } catch (e) {
+              if (firstError === undefined) {
+                firstError = e;
+              }
             }
           }
+          if (firstError === undefined) {
+            throw new Error("No error stored at end of fallback.");
+          }
+          throw firstError;
         }
-        if (firstError === undefined) {
-          throw new Error("No error stored at end of fallback.");
-        }
-        await runManager?.handleChainError(firstError);
-        throw firstError;
-      }
-    );
-    return res;
+      );
+      return res;
+    } catch (e) {
+      await runManager?.handleChainError(e);
+      throw e;
+    }
   }
 
   async *_streamIterator(
@@ -2928,30 +3050,36 @@ export class RunnableWithFallbacks<RunInput, RunOutput> extends Runnable<
     );
     let firstError;
     let stream;
-    for (const runnable of this.runnables()) {
-      config?.signal?.throwIfAborted();
-      const childConfig = patchConfig(otherConfigFields, {
-        callbacks: runManager?.getChild(),
-      });
-      try {
-        const originalStream = await runnable.stream(input, childConfig);
-        stream = consumeAsyncIterableInContext(childConfig, originalStream);
-        break;
-      } catch (e) {
-        if (firstError === undefined) {
-          firstError = e;
-        }
-      }
-    }
-    if (stream === undefined) {
-      const error =
-        firstError ?? new Error("No error stored at end of fallback.");
-      await runManager?.handleChainError(error);
-      throw error;
-    }
     let output;
     try {
+      for (const runnable of this.runnables()) {
+        // To support OrchestratorAbortBehavior.COMPLETE_PENDING, we need to check the signal here and
+        // throw if it aborted rather than starting additional tasks
+        if (checkAbortSignal(config)) {
+          config?.signal?.throwIfAborted();
+        }
+        const childConfig = patchConfig(otherConfigFields, {
+          callbacks: runManager?.getChild(),
+        });
+        try {
+          const originalStream = await runnable.stream(input, childConfig);
+          stream = consumeAsyncIterableInContext(childConfig, originalStream);
+          break;
+        } catch (e) {
+          if (firstError === undefined) {
+            firstError = e;
+          }
+        }
+      }
+      if (stream === undefined) {
+        const error =
+          firstError ?? new Error("No error stored at end of fallback.");
+        throw error;
+      }
       for await (const chunk of stream) {
+        // We purposefully aren't checking the return value here, because we don't want to throw
+        // in the middle of a task when using OrchestratorAbortBehavior.COMPLETE_PENDING
+        checkAbortSignal(config);
         yield chunk;
         try {
           output = output === undefined ? output : concat(output, chunk);
@@ -3012,39 +3140,53 @@ export class RunnableWithFallbacks<RunInput, RunOutput> extends Runnable<
       })
     );
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let firstError: any;
-    for (const runnable of this.runnables()) {
-      configList[0].signal?.throwIfAborted();
-      try {
-        const outputs = await runnable.batch(
-          inputs,
-          runManagers.map((runManager, j) =>
-            patchConfig(configList[j], {
-              callbacks: runManager?.getChild(),
-            })
-          ),
-          batchOptions
-        );
-        await Promise.all(
-          runManagers.map((runManager, i) =>
-            runManager?.handleChainEnd(_coerceToDict(outputs[i], "output"))
-          )
-        );
-        return outputs;
-      } catch (e) {
-        if (firstError === undefined) {
-          firstError = e;
+    try {
+      // To support OrchestratorAbortBehavior.COMPLETE_PENDING, we need to check the signal here and
+      // throw if it aborted rather than starting additional tasks
+      if (checkAbortSignal(configList[0])) {
+        configList[0]?.signal?.throwIfAborted();
+      }
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let firstError: any;
+      for (const runnable of this.runnables()) {
+        // To support OrchestratorAbortBehavior.COMPLETE_PENDING, we need to check the signal here and
+        // throw if it aborted rather than starting additional tasks
+        if (checkAbortSignal(configList[0])) {
+          configList[0]?.signal?.throwIfAborted();
+        }
+        try {
+          const outputs = await runnable.batch(
+            inputs,
+            runManagers.map((runManager, j) =>
+              patchConfig(configList[j], {
+                callbacks: runManager?.getChild(),
+              })
+            ),
+            batchOptions
+          );
+          await Promise.all(
+            runManagers.map((runManager, i) =>
+              runManager?.handleChainEnd(_coerceToDict(outputs[i], "output"))
+            )
+          );
+          return outputs;
+        } catch (e) {
+          if (firstError === undefined) {
+            firstError = e;
+          }
         }
       }
+      if (!firstError) {
+        throw new Error("No error stored at end of fallbacks.");
+      }
+      throw firstError;
+    } catch (e) {
+      await Promise.all(
+        runManagers.map((runManager) => runManager?.handleChainError(e))
+      );
+      throw e;
     }
-    if (!firstError) {
-      throw new Error("No error stored at end of fallbacks.");
-    }
-    await Promise.all(
-      runManagers.map((runManager) => runManager?.handleChainError(firstError))
-    );
-    throw firstError;
   }
 }
 
