@@ -67,6 +67,7 @@ export const config = {
     "agents/toolkits/aws_sfn": "agents/toolkits/aws_sfn",
     "agents/toolkits/base": "agents/toolkits/base",
     "agents/toolkits/connery": "agents/toolkits/connery/index",
+    "agents/toolkits/ibm": "agents/toolkits/ibm",
     "agents/toolkits/stagehand": "agents/toolkits/stagehand",
     // embeddings
     "embeddings/alibaba_tongyi": "embeddings/alibaba_tongyi",
@@ -293,7 +294,8 @@ export const config = {
     "document_loaders/web/playwright": "document_loaders/web/playwright",
     "document_loaders/web/college_confidential":
       "document_loaders/web/college_confidential",
-    "document_loaders/web/google_cloud_storage": "document_loaders/web/google_cloud_storage",
+    "document_loaders/web/google_cloud_storage":
+      "document_loaders/web/google_cloud_storage",
     "document_loaders/web/gitbook": "document_loaders/web/gitbook",
     "document_loaders/web/hn": "document_loaders/web/hn",
     "document_loaders/web/imsdb": "document_loaders/web/imsdb",
@@ -356,6 +358,7 @@ export const config = {
     "tools/gmail",
     "tools/google_calendar",
     "agents/toolkits/aws_sfn",
+    "agents/toolkits/ibm",
     "agents/toolkits/stagehand",
     "callbacks/handlers/llmonitor",
     "callbacks/handlers/lunary",

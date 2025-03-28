@@ -80,7 +80,7 @@
     "@gradientai/nodejs-sdk": "^1.2.0",
     "@huggingface/inference": "^2.6.4",
     "@huggingface/transformers": "^3.2.3",
-    "@ibm-cloud/watsonx-ai": "^1.4.0",
+    "@ibm-cloud/watsonx-ai": "^1.6.4",
     "@jest/globals": "^29.5.0",
     "@lancedb/lancedb": "^0.13.0",
     "@langchain/core": "workspace:*",
@@ -1024,6 +1024,15 @@
       },
       "import": "./agents/toolkits/connery.js",
       "require": "./agents/toolkits/connery.cjs"
+    },
+    "./agents/toolkits/ibm": {
+      "types": {
+        "import": "./agents/toolkits/ibm.d.ts",
+        "require": "./agents/toolkits/ibm.d.cts",
+        "default": "./agents/toolkits/ibm.d.ts"
+      },
+      "import": "./agents/toolkits/ibm.js",
+      "require": "./agents/toolkits/ibm.cjs"
     },
     "./agents/toolkits/stagehand": {
       "types": {
@@ -3393,6 +3402,10 @@
     "agents/toolkits/connery.js",
     "agents/toolkits/connery.d.ts",
     "agents/toolkits/connery.d.cts",
+    "agents/toolkits/ibm.cjs",
+    "agents/toolkits/ibm.js",
+    "agents/toolkits/ibm.d.ts",
+    "agents/toolkits/ibm.d.cts",
     "agents/toolkits/stagehand.cjs",
     "agents/toolkits/stagehand.js",
     "agents/toolkits/stagehand.d.ts",

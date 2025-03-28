@@ -88,7 +88,7 @@ export interface WatsonxDeltaStream {
 
 export interface WatsonxCallParams
   extends Partial<
-    Omit<TextChatParams, "modelId" | "toolChoice" | "messages" | "headers">
+    Omit<TextChatParams, "modelId" | "toolChoice" | "messages">
   > {}
 
 export interface WatsonxCallDeployedParams extends DeploymentsTextChatParams {}
@@ -115,7 +115,7 @@ export interface ChatWatsonxInput
   extends BaseChatModelParams,
     WatsonxParams,
     WatsonxCallParams,
-    Neverify<Omit<DeploymentsTextChatParams, "signal">> {}
+    Neverify<Omit<DeploymentsTextChatParams, "signal" | "headers">> {}
 
 export interface ChatWatsonxDeployedInput
   extends BaseChatModelParams,
