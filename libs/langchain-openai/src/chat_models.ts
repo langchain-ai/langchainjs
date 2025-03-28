@@ -366,13 +366,26 @@ function _convertMessagesToOpenAIResponsesParams(
           );
         }
 
-        if (lcMsg.additional_kwargs.tool_outputs != null) {
-          const toolOutputs = lcMsg.additional_kwargs
-            .tool_outputs as Array<ResponsesInputItem>;
+        const toolOutputs = (
+          lcMsg.response_metadata.output as Array<ResponsesInputItem>
+        )?.length
+          ? lcMsg.response_metadata.output
+          : lcMsg.additional_kwargs.tool_outputs;
 
-          const computerCalls = toolOutputs?.filter(
+        if (toolOutputs != null) {
+          const castToolOutputs = toolOutputs as Array<ResponsesInputItem>;
+          const reasoningCalls = castToolOutputs?.filter(
+            (item) => item.type === "reasoning"
+          );
+
+          const computerCalls = castToolOutputs?.filter(
             (item) => item.type === "computer_call"
           );
+
+          // NOTE: Reasoning outputs must be passed to the model BEFORE computer calls.
+          if (reasoningCalls.length > 0 && computerCalls.length > 0) {
+            input.push(...reasoningCalls);
+          }
 
           if (computerCalls.length > 0) input.push(...computerCalls);
         }
