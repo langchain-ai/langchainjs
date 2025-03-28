@@ -55,9 +55,9 @@ export abstract class BaseIndex {
 
   constructor(
     name?: string,
-    partialIndexes?: string[],
     indexType: string = "base",
-    distanceStrategy: DistanceStrategy = DistanceStrategy.COSINE_DISTANCE
+    distanceStrategy: DistanceStrategy = DistanceStrategy.COSINE_DISTANCE,
+    partialIndexes?: string[],
   ) {
     this.name = name;
     this.indexType = indexType;
