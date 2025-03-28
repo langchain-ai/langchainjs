@@ -382,6 +382,7 @@ function _convertMessagesToOpenAIResponsesParams(
             (item) => item.type === "computer_call"
           );
 
+          // NOTE: Reasoning outputs must be passed to the model BEFORE computer calls.
           if (reasoningCalls.length > 0 && computerCalls.length > 0) {
             input.push(...reasoningCalls);
           }
