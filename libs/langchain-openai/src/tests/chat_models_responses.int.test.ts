@@ -379,7 +379,7 @@ test("Test computer call", async () => {
   expect(computerCall).toBeDefined();
 });
 
-test.only("it can handle passing back reasoning outputs alongside computer calls", async () => {
+test("it can handle passing back reasoning outputs alongside computer calls", async () => {
   const model = new ChatOpenAI({
     model: "computer-use-preview",
     useResponsesApi: true,
