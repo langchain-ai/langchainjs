@@ -203,7 +203,7 @@ export class JiraDocumentConverter {
     text += `Status: ${issue.fields.status.name}\n`;
     text += `Priority: ${issue.fields.priority.name}\n`;
     text += `Type: ${issue.fields.issuetype.name}\n`;
-    text += `Creator: ${issue.fields.creator.displayName}\n`;
+    text += `Creator: ${issue.fields.creator?.displayName}\n`;
 
     if (issue.fields.labels && issue.fields.labels.length > 0) {
       text += `Labels: ${issue.fields.labels.join(", ")}\n`;
@@ -238,7 +238,7 @@ export class JiraDocumentConverter {
       text += `Description: ${issue.fields.description}\n`;
     }
 
-    if (issue.fields.progress.percent) {
+    if (issue.fields.progress?.percent) {
       text += `Progress: ${issue.fields.progress.percent}%\n`;
     }
 
@@ -249,7 +249,7 @@ export class JiraDocumentConverter {
       })}\n`;
     }
 
-    if (issue.fields.subtasks.length > 0) {
+    if (issue.fields.subtasks?.length > 0) {
       text += `Subtasks:\n`;
       issue.fields.subtasks.forEach((subtask) => {
         text += `  - ${this.formatMainIssueInfoText({
@@ -259,7 +259,7 @@ export class JiraDocumentConverter {
       });
     }
 
-    if (issue.fields.issuelinks.length > 0) {
+    if (issue.fields.issuelinks?.length > 0) {
       text += `Issue Links:\n`;
       issue.fields.issuelinks.forEach((link) => {
         text += `  - ${link.type.name}\n`;
