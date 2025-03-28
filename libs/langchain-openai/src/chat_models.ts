@@ -384,7 +384,6 @@ function _convertMessagesToOpenAIResponsesParams(
 
           if (reasoningCalls.length > 0 && computerCalls.length > 0) {
             input.push(...reasoningCalls);
-          } else if (reasoningCalls.length > 0) {
           }
 
           if (computerCalls.length > 0) input.push(...computerCalls);
