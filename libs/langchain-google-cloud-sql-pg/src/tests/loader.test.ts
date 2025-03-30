@@ -29,7 +29,7 @@ const PASSWORD = "ChangeMe";
 const DATABASE_NAME = "api";
 const url = `postgresql+asyncpg://${USER}:${PASSWORD}@${HOST}:5432/${DATABASE_NAME}`;
 
-describe.skip("Document loader creation", () => {
+describe("Document loader creation", () => {
   let PEInstance: PostgresEngine;
 
   beforeAll(async () => {
