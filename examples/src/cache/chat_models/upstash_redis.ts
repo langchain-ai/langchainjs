@@ -7,6 +7,7 @@ const cache = new UpstashRedisCache({
     url: "UPSTASH_REDIS_REST_URL",
     token: "UPSTASH_REDIS_REST_TOKEN",
   },
+  ttl: 3600,
 });
 
 const model = new ChatOpenAI({ cache });

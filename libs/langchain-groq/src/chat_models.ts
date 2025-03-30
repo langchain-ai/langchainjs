@@ -1,4 +1,4 @@
-import { z } from "zod";
+import type { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { NewTokenIndices } from "@langchain/core/callbacks/base";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
@@ -85,15 +85,8 @@ export interface ChatGroqInput extends BaseChatModelParams {
   apiKey?: string;
   /**
    * The name of the model to use.
-   * Alias for `model`
-   * @default "mixtral-8x7b-32768"
    */
-  modelName?: string;
-  /**
-   * The name of the model to use.
-   * @default "mixtral-8x7b-32768"
-   */
-  model?: string;
+  model: string;
   /**
    * Up to 4 sequences where the API will stop generating further tokens. The
    * returned text will not contain the stop sequence.
@@ -119,6 +112,34 @@ export interface ChatGroqInput extends BaseChatModelParams {
    * This limits ensures computational efficiency and resource management.
    */
   maxTokens?: number;
+  /**
+   * Override the default base URL for the API
+   */
+  baseUrl?: string;
+  /**
+   * The maximum amount of time (in milliseconds) the client will wait for a response
+   */
+  timeout?: number;
+  /**
+   * HTTP agent used to manage connections
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  httpAgent?: any;
+  /**
+   * Custom fetch function implementation
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  fetch?: (...args: any) => any;
+
+  /**
+   * Default headers included with every request
+   */
+  defaultHeaders?: Record<string, string>;
+
+  /**
+   * Default query parameters included with every request
+   */
+  defaultQuery?: Record<string, string>;
 }
 
 type GroqRoleEnum = "system" | "assistant" | "user" | "function";
@@ -357,7 +378,7 @@ function _convertDeltaToMessageChunk(
  * import { ChatGroq } from '@langchain/groq';
  *
  * const llm = new ChatGroq({
- *   model: "mixtral-8x7b-32768",
+ *   model: "llama-3.3-70b-versatile",
  *   temperature: 0,
  *   // other params...
  * });
@@ -646,9 +667,7 @@ export class ChatGroq extends BaseChatModel<
 
   client: Groq;
 
-  modelName = "mixtral-8x7b-32768";
-
-  model = "mixtral-8x7b-32768";
+  model: string;
 
   temperature = 0.7;
 
@@ -678,31 +697,41 @@ export class ChatGroq extends BaseChatModel<
 
   lc_serializable = true;
 
-  constructor(fields?: ChatGroqInput) {
-    super(fields ?? {});
+  constructor(fields: ChatGroqInput) {
+    super(fields);
 
-    const apiKey = fields?.apiKey || getEnvironmentVariable("GROQ_API_KEY");
+    const apiKey = fields.apiKey || getEnvironmentVariable("GROQ_API_KEY");
     if (!apiKey) {
       throw new Error(
         `Groq API key not found. Please set the GROQ_API_KEY environment variable or provide the key into "apiKey"`
       );
     }
+    const defaultHeaders = {
+      "User-Agent": "langchainjs",
+      ...(fields.defaultHeaders ?? {}),
+    };
 
     this.client = new Groq({
       apiKey,
       dangerouslyAllowBrowser: true,
+      baseURL: fields.baseUrl,
+      timeout: fields.timeout,
+      httpAgent: fields.httpAgent,
+      fetch: fields.fetch,
+      maxRetries: 0,
+      defaultHeaders,
+      defaultQuery: fields.defaultQuery,
     });
     this.apiKey = apiKey;
-    this.temperature = fields?.temperature ?? this.temperature;
-    this.modelName = fields?.model ?? fields?.modelName ?? this.model;
-    this.model = this.modelName;
-    this.streaming = fields?.streaming ?? this.streaming;
+    this.temperature = fields.temperature ?? this.temperature;
+    this.model = fields.model;
+    this.streaming = fields.streaming ?? this.streaming;
     this.stop =
-      fields?.stopSequences ??
-      (typeof fields?.stop === "string" ? [fields.stop] : fields?.stop) ??
+      fields.stopSequences ??
+      (typeof fields.stop === "string" ? [fields.stop] : fields.stop) ??
       [];
     this.stopSequences = this.stop;
-    this.maxTokens = fields?.maxTokens;
+    this.maxTokens = fields.maxTokens;
   }
 
   getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {

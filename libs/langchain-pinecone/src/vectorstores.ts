@@ -21,7 +21,7 @@ import {
 import { chunkArray } from "@langchain/core/utils/chunk_array";
 import { maximalMarginalRelevance } from "@langchain/core/utils/math";
 
-// eslint-disable-next-line @typescript-eslint/ban-types, @typescript-eslint/no-explicit-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type PineconeMetadata = Record<string, any>;
 
 type HTTPHeaders = {
@@ -340,7 +340,17 @@ export class PineconeStore extends VectorStore {
     const chunkSize = 100;
     const chunkedVectors = chunkArray(pineconeVectors, chunkSize);
     const batchRequests = chunkedVectors.map((chunk) =>
-      this.caller.call(async () => namespace.upsert(chunk))
+      this.caller.call(async () => {
+        try {
+          await namespace.upsert(chunk);
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } catch (e: any) {
+          if (e.message.includes("404")) {
+            e.statusCode = 404;
+          }
+          throw e;
+        }
+      })
     );
 
     await Promise.all(batchRequests);
@@ -382,12 +392,16 @@ export class PineconeStore extends VectorStore {
     if (filter && this.filter) {
       throw new Error("cannot provide both `filter` and `this.filter`");
     }
-    const _filter = filter ?? this.filter;
+    let _filter = filter ?? this.filter;
 
     let optionsNamespace = this.namespace ?? "";
     if (_filter && "namespace" in _filter) {
       optionsNamespace = _filter.namespace;
       delete _filter.namespace;
+    }
+
+    if (Object.keys(_filter ?? {}).length === 0) {
+      _filter = undefined;
     }
 
     const namespace = this.pineconeIndex.namespace(optionsNamespace ?? "");
@@ -483,7 +497,7 @@ export class PineconeStore extends VectorStore {
     );
 
     const { matches = [] } = results;
-    const embeddingList = matches.map((match) => match.values);
+    const embeddingList = matches.map((match) => match.values!);
 
     const mmrIndexes = maximalMarginalRelevance(
       queryEmbedding,

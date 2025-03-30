@@ -56,7 +56,9 @@ export class GmailCreateDraft extends GmailBaseTool {
       bcc
     );
 
-    const response = await this.gmail.users.drafts.create({
+    const gmail = await this.getGmailClient();
+
+    const response = await gmail.users.drafts.create({
       userId: "me",
       requestBody: create_message,
     });

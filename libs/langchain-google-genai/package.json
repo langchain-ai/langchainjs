@@ -1,6 +1,6 @@
 {
   "name": "@langchain/google-genai",
-  "version": "0.1.5",
+  "version": "0.2.0",
   "description": "Google Generative AI integration for LangChain.js",
   "type": "module",
   "engines": {
@@ -35,7 +35,7 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@google/generative-ai": "^0.21.0",
+    "@google/generative-ai": "^0.24.0",
     "zod-to-json-schema": "^3.22.4"
   },
   "peerDependencies": {

@@ -57,6 +57,7 @@ export const config = {
     "tracers/run_collector": "tracers/run_collector",
     "tracers/tracer_langchain": "tracers/tracer_langchain",
     "tracers/tracer_langchain_v1": "tracers/tracer_langchain_v1",
+    "types/stream": "types/stream",
     "utils/async_caller": "utils/async_caller",
     "utils/chunk_array": "utils/chunk_array",
     "utils/env": "utils/env",

@@ -1,20 +1,47 @@
 import { type ClientOptions, AzureOpenAI as AzureOpenAIClient } from "openai";
 import { type BaseLLMParams } from "@langchain/core/language_models/llms";
+import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { OpenAI } from "../llms.js";
 import { OpenAIEndpointConfig, getEndpoint } from "../utils/azure.js";
 import type {
   OpenAIInput,
   AzureOpenAIInput,
   OpenAICoreRequestOptions,
-  LegacyOpenAIInput,
 } from "../types.js";
 
 export class AzureOpenAI extends OpenAI {
+  azureOpenAIApiVersion?: string;
+
+  azureOpenAIApiKey?: string;
+
+  azureADTokenProvider?: () => Promise<string>;
+
+  azureOpenAIApiInstanceName?: string;
+
+  azureOpenAIApiDeploymentName?: string;
+
+  azureOpenAIBasePath?: string;
+
+  azureOpenAIEndpoint?: string;
+
   get lc_aliases(): Record<string, string> {
     return {
+      ...super.lc_aliases,
       openAIApiKey: "openai_api_key",
       openAIApiVersion: "openai_api_version",
       openAIBasePath: "openai_api_base",
+      deploymentName: "deployment_name",
+      azureOpenAIEndpoint: "azure_endpoint",
+      azureOpenAIApiVersion: "openai_api_version",
+      azureOpenAIBasePath: "openai_api_base",
+      azureOpenAIApiDeploymentName: "deployment_name",
+    };
+  }
+
+  get lc_secrets(): { [key: string]: string } | undefined {
+    return {
+      ...super.lc_secrets,
+      azureOpenAIApiKey: "AZURE_OPENAI_API_KEY",
     };
   }
 
@@ -26,21 +53,45 @@ export class AzureOpenAI extends OpenAI {
       deploymentName?: string;
     } & Partial<AzureOpenAIInput> &
       BaseLLMParams & {
-        configuration?: ClientOptions & LegacyOpenAIInput;
+        configuration?: ClientOptions;
       }
   ) {
-    const newFields = fields ? { ...fields } : fields;
-    if (newFields) {
-      // don't rewrite the fields if they are already set
-      newFields.azureOpenAIApiDeploymentName =
-        newFields.azureOpenAIApiDeploymentName ?? newFields.deploymentName;
-      newFields.azureOpenAIApiKey =
-        newFields.azureOpenAIApiKey ?? newFields.openAIApiKey;
-      newFields.azureOpenAIApiVersion =
-        newFields.azureOpenAIApiVersion ?? newFields.openAIApiVersion;
-    }
+    super(fields);
 
-    super(newFields);
+    this.azureOpenAIApiDeploymentName =
+      (fields?.azureOpenAIApiCompletionsDeploymentName ||
+        fields?.azureOpenAIApiDeploymentName) ??
+      (getEnvironmentVariable("AZURE_OPENAI_API_COMPLETIONS_DEPLOYMENT_NAME") ||
+        getEnvironmentVariable("AZURE_OPENAI_API_DEPLOYMENT_NAME"));
+
+    this.azureOpenAIApiKey =
+      fields?.azureOpenAIApiKey ??
+      fields?.openAIApiKey ??
+      fields?.apiKey ??
+      getEnvironmentVariable("AZURE_OPENAI_API_KEY");
+
+    this.azureOpenAIApiInstanceName =
+      fields?.azureOpenAIApiInstanceName ??
+      getEnvironmentVariable("AZURE_OPENAI_API_INSTANCE_NAME");
+
+    this.azureOpenAIApiVersion =
+      fields?.azureOpenAIApiVersion ??
+      fields?.openAIApiVersion ??
+      getEnvironmentVariable("AZURE_OPENAI_API_VERSION");
+
+    this.azureOpenAIBasePath =
+      fields?.azureOpenAIBasePath ??
+      getEnvironmentVariable("AZURE_OPENAI_BASE_PATH");
+
+    this.azureOpenAIEndpoint =
+      fields?.azureOpenAIEndpoint ??
+      getEnvironmentVariable("AZURE_OPENAI_ENDPOINT");
+
+    this.azureADTokenProvider = fields?.azureADTokenProvider;
+
+    if (!this.azureOpenAIApiKey && !this.apiKey && !this.azureADTokenProvider) {
+      throw new Error("Azure OpenAI API key or Token Provider not found");
+    }
   }
 
   protected _getClientOptions(options: OpenAICoreRequestOptions | undefined) {

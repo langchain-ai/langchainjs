@@ -87,7 +87,7 @@ export class TogetherAIEmbeddings
 
   timeout?: number;
 
-  private embeddingsAPIUrl = "https://api.together.xyz/api/v1/embeddings";
+  private embeddingsAPIUrl = "https://api.together.xyz/v1/embeddings";
 
   constructor(fields?: Partial<TogetherAIEmbeddingsParams>) {
     super(fields ?? {});

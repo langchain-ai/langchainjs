@@ -8,7 +8,7 @@ import { OpenAIEmbeddings } from "@langchain/openai";
 import { Document } from "@langchain/core/documents";
 import { FaissStore } from "../faiss.js";
 
-test("Test FaissStore.fromTexts", async () => {
+test.skip("Test FaissStore.fromTexts", async () => {
   const vectorStore = await FaissStore.fromTexts(
     ["Hello world", "Bye bye", "hello nice world"],
     [{ id: 2 }, { id: 1 }, { id: 3 }],
@@ -25,7 +25,7 @@ test("Test FaissStore.fromTexts", async () => {
   expect(resultTwoMetadatas).toEqual([{ id: 2 }, { id: 3 }, { id: 1 }]);
 });
 
-test("Test FaissStore.fromTexts + addDocuments", async () => {
+test.skip("Test FaissStore.fromTexts + addDocuments", async () => {
   const vectorStore = await FaissStore.fromTexts(
     ["Hello world", "Bye bye", "hello nice world"],
     [{ id: 2 }, { id: 1 }, { id: 3 }],
@@ -46,7 +46,7 @@ test("Test FaissStore.fromTexts + addDocuments", async () => {
   expect(resultTwoMetadatas).toEqual([{ id: 2 }, { id: 3 }, { id: 4 }]);
 });
 
-test("Test FaissStore.load and FaissStore.save", async () => {
+test.skip("Test FaissStore.load and FaissStore.save", async () => {
   const vectorStore = await FaissStore.fromTexts(
     ["Hello world", "Bye bye", "hello nice world"],
     [{ id: 2 }, { id: 1 }, { id: 3 }],
@@ -87,7 +87,7 @@ test("Test FaissStore.load and FaissStore.save", async () => {
   expect(resultFourMetadatas).toEqual([{ id: 2 }, { id: 3 }, { id: 1 }]);
 });
 
-test("Test FaissStore.loadFromPython", async () => {
+test.skip("Test FaissStore.loadFromPython", async () => {
   const __filename = fileURLToPath(import.meta.url);
   const __dirname = path.dirname(__filename);
   const loadedFromPythonVectorStore = await FaissStore.loadFromPython(

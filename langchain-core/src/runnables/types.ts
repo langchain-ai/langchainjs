@@ -1,7 +1,7 @@
 import type { z } from "zod";
 import type { SerializableInterface } from "../load/serializable.js";
 import type { BaseCallbackConfig } from "../callbacks/manager.js";
-import type { IterableReadableStreamInterface } from "../types/stream.js";
+import type { IterableReadableStreamInterface } from "../types/_internal.js";
 
 export type RunnableBatchOptions = {
   /** @deprecated Pass in via the standard runnable config object instead */
