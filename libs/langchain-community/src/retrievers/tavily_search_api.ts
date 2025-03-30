@@ -16,6 +16,7 @@ export type TavilySearchAPIRetrieverFields = BaseRetrieverInput & {
   includeGeneratedAnswer?: boolean;
   includeRawContent?: boolean;
   includeImages?: boolean;
+  includeImageDescriptions?: boolean;
   searchDepth?: "basic" | "advanced";
   includeDomains?: string[];
   excludeDomains?: string[];
@@ -44,6 +45,8 @@ export class TavilySearchAPIRetriever extends BaseRetriever {
 
   includeImages = false;
 
+  includeImageDescriptions = false;
+
   searchDepth = "basic";
 
   includeDomains?: string[];
@@ -62,6 +65,7 @@ export class TavilySearchAPIRetriever extends BaseRetriever {
     this.includeRawContent =
       fields?.includeRawContent ?? this.includeRawContent;
     this.includeImages = fields?.includeImages ?? this.includeImages;
+    this.includeImageDescriptions = fields?.includeImageDescriptions ?? this.includeImageDescriptions;
     this.searchDepth = fields?.searchDepth ?? this.searchDepth;
     this.includeDomains = fields?.includeDomains ?? this.includeDomains;
     this.excludeDomains = fields?.excludeDomains ?? this.excludeDomains;
@@ -83,6 +87,7 @@ export class TavilySearchAPIRetriever extends BaseRetriever {
       include_answer: this.includeGeneratedAnswer,
       include_raw_content: this.includeRawContent,
       include_images: this.includeImages,
+      include_image_descriptions: this.includeImageDescriptions,
       max_results: this.k,
       search_depth: this.searchDepth,
       api_key: this.apiKey,
@@ -123,7 +128,7 @@ export class TavilySearchAPIRetriever extends BaseRetriever {
             ([k]) => !["content", "title", "url", "raw_content"].includes(k)
           )
         ),
-        images: json.images,
+        ...(this.includeImageDescriptions ? { images: json.images } : {}),
       };
       return new Document({ pageContent, metadata });
     });
