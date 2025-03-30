@@ -1,10 +1,8 @@
 import { test } from "@jest/globals";
-import * as dotenv from "dotenv";
+
 import { AIMessage, BaseMessage, HumanMessage } from "@langchain/core/messages";
 import PostgresEngine from "../engine.js";
 import { PostgresChatMessageHistory } from "../chat_message_history.js";
-
-dotenv.config();
 
 const CHAT_MSG_TABLE = "test_message_table";
 const HOST = "127.0.0.1";

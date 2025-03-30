@@ -1,9 +1,7 @@
 import { test } from "@jest/globals";
-import * as dotenv from "dotenv";
+
 import { PostgresLoader, PostgresLoaderOptions } from "../loader.js";
 import PostgresEngine from "../engine.js";
-
-dotenv.config();
 
 const SCHEMA_NAME = "public";
 const CUSTOM_TABLE = "test_table_custom";

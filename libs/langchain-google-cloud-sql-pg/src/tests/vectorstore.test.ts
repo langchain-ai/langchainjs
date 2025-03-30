@@ -2,7 +2,7 @@ import { test } from "@jest/globals";
 import { Document, DocumentInterface } from "@langchain/core/documents";
 import { SyntheticEmbeddings } from "@langchain/core/utils/testing";
 import { v4 as uuidv4 } from "uuid";
-import * as dotenv from "dotenv";
+
 import { MaxMarginalRelevanceSearchOptions } from "@langchain/core/vectorstores";
 import PostgresEngine, { Column, VectorStoreTableArgs } from "../engine.js";
 import PostgresVectorStore, {
@@ -15,8 +15,6 @@ import {
   HNSWIndex,
   IVFFlatIndex,
 } from "../indexes.js";
-
-dotenv.config();
 
 const CUSTOM_TABLE = "test_table_custom";
 const VECTOR_SIZE = 768;

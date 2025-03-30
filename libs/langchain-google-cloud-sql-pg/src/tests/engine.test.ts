@@ -1,14 +1,11 @@
 import { describe, expect, test } from "@jest/globals";
 import { IpAddressTypes } from "@google-cloud/cloud-sql-connector";
 import knex from "knex";
-import * as dotenv from "dotenv";
 import PostgresEngine, {
   PostgresEngineArgs,
   Column,
   VectorStoreTableArgs,
 } from "../engine.js";
-
-dotenv.config();
 
 const CUSTOM_TABLE = "test_table_custom_engine";
 const CHAT_MSG_TABLE = "test_message_table_engine";
