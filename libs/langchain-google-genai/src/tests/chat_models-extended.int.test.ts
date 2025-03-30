@@ -169,5 +169,4 @@ test("Google AI - Handle JSON schema", async () => {
   expect(result).toBeDefined();
   expect(result).toHaveProperty("reasoning");
   expect(result).toHaveProperty("score");
-  console.log(result);
 });
