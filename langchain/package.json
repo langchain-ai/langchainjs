@@ -540,7 +540,7 @@
     }
   },
   "dependencies": {
-    "@langchain/openai": ">=0.1.0 <0.5.0",
+    "@langchain/openai": ">=0.1.0 <0.6.0",
     "@langchain/textsplitters": ">=0.0.0 <0.2.0",
     "js-tiktoken": "^1.0.12",
     "js-yaml": "^4.1.0",

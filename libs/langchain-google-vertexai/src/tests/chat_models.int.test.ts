@@ -625,6 +625,22 @@ describe.each(testGeminiModelNames)("GAuth Gemini Chat (%s)", (modelName) => {
   });
 });
 
+test("Context caching", async () => {
+  const model = new ChatVertexAI({
+    model: "gemini-1.5-pro-002",
+    location: "us-east5",
+    temperature: 0,
+    maxRetries: 0,
+  });
+
+  const res = await model.invoke("What is in the content?", {
+    cachedContent:
+      "projects/570601939772/locations/us-east5/cachedContents/3718741839184920576",
+  });
+
+  console.log(JSON.stringify(res, null, 1));
+});
+
 describe("Express Gemini Chat", () => {
   // We don't do a lot of tests or across every model, since there are
   // pretty severe rate limits.

@@ -33,12 +33,14 @@ test("Google AI - `temperature` must be in range [0.0,2.0]", async () => {
     () =>
       new ChatGoogleGenerativeAI({
         temperature: -1.0,
+        model: "gemini-2.0-flash",
       })
   ).toThrow();
   expect(
     () =>
       new ChatGoogleGenerativeAI({
         temperature: 2.1,
+        model: "gemini-2.0-flash",
       })
   ).toThrow();
 });
@@ -48,6 +50,7 @@ test("Google AI - `maxOutputTokens` must be positive", async () => {
     () =>
       new ChatGoogleGenerativeAI({
         maxOutputTokens: -1,
+        model: "gemini-2.0-flash",
       })
   ).toThrow();
 });
@@ -57,6 +60,7 @@ test("Google AI - `topP` must be positive", async () => {
     () =>
       new ChatGoogleGenerativeAI({
         topP: -1,
+        model: "gemini-2.0-flash",
       })
   ).toThrow();
 });
@@ -66,6 +70,7 @@ test("Google AI - `topP` must be in the range [0,1]", async () => {
     () =>
       new ChatGoogleGenerativeAI({
         topP: 3,
+        model: "gemini-2.0-flash",
       })
   ).toThrow();
 });
@@ -75,6 +80,7 @@ test("Google AI - `topK` must be positive", async () => {
     () =>
       new ChatGoogleGenerativeAI({
         topK: -1,
+        model: "gemini-2.0-flash",
       })
   ).toThrow();
 });
@@ -83,6 +89,7 @@ test("Google AI - `safetySettings` category array must be unique", async () => {
   expect(
     () =>
       new ChatGoogleGenerativeAI({
+        model: "gemini-2.0-flash",
         safetySettings: [
           {
             category: "HARM_CATEGORY_HARASSMENT" as HarmCategory,

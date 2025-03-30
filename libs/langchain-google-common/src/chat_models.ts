@@ -53,6 +53,7 @@ import type {
   GeminiFunctionSchema,
   GoogleAIToolType,
   GeminiAPIConfig,
+  GoogleAIModelModality,
 } from "./types.js";
 import { zodToGeminiParameters } from "./utils/zod_to_gemini_parameters.js";
 
@@ -205,6 +206,8 @@ export abstract class ChatGoogleBase<AuthOptions>
 
   safetySettings: GoogleAISafetySetting[] = [];
 
+  responseModalities?: GoogleAIModelModality[];
+
   // May intentionally be undefined, meaning to compute this.
   convertSystemMessageToHumanContent: boolean | undefined;
 
@@ -316,7 +319,6 @@ export abstract class ChatGoogleBase<AuthOptions>
     runManager: CallbackManagerForLLMRun | undefined
   ): Promise<ChatResult> {
     const parameters = this.invocationParams(options);
-
     if (this.streaming) {
       const stream = this._streamResponseChunks(messages, options, runManager);
       let finalChunk: ChatGenerationChunk | null = null;
