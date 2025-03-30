@@ -42,7 +42,10 @@ import {
   BaseLLMOutputParser,
   JsonOutputParser,
 } from "@langchain/core/output_parsers";
-import { zodToGenerativeAIParameters } from "./utils/zod_to_genai_parameters.js";
+import {
+  zodToGenerativeAIParameters,
+  removeAdditionalProperties,
+} from "./utils/zod_to_genai_parameters.js";
 import {
   convertBaseMessagesToContent,
   convertResponseContentToChatGenerationChunk,
@@ -1051,12 +1054,17 @@ export class ChatGoogleGenerativeAI
           schema.parameters != null
         ) {
           geminiFunctionDefinition = schema as GenerativeAIFunctionDeclaration;
+          geminiFunctionDefinition.parameters = removeAdditionalProperties(
+            schema.parameters
+          ) as GenerativeAIFunctionDeclarationSchema;
           functionName = schema.name;
         } else {
           geminiFunctionDefinition = {
             name: functionName,
             description: schema.description ?? "",
-            parameters: schema as GenerativeAIFunctionDeclarationSchema,
+            parameters: removeAdditionalProperties(
+              schema
+            ) as GenerativeAIFunctionDeclarationSchema,
           };
         }
         tools = [
@@ -1076,7 +1084,7 @@ export class ChatGoogleGenerativeAI
     } else {
       const jsonSchema = isZodSchema(schema)
         ? zodToGenerativeAIParameters(schema)
-        : schema;
+        : removeAdditionalProperties(schema);
       llm = this.bind({
         responseSchema: jsonSchema as Schema,
       });
