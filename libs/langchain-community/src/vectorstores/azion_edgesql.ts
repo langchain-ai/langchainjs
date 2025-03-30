@@ -6,7 +6,7 @@ import {
   createDatabase,
   getTables,
   type AzionDatabaseResponse,
-  QueryResult
+  QueryResult,
 } from "azion/sql";
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { Document } from "@langchain/core/documents";
@@ -230,13 +230,10 @@ export class AzionVectorStore extends VectorStore {
    * @param {Object} options Optional parameters for adding the documents.
    * @returns A promise that resolves when the documents have been added.
    */
-  async addDocuments(
-    documents: Document[],
-    options?: { ids?: string[] | number[] }
-  ) {
+  async addDocuments(documents: Document[]) {
     const texts = documents.map((doc) => doc.pageContent);
     const embeddings = await this.embeddings.embedDocuments(texts);
-    return this.addVectors(embeddings, documents, options);
+    return this.addVectors(embeddings, documents);
   }
 
   /**
@@ -246,11 +243,7 @@ export class AzionVectorStore extends VectorStore {
    * @param {Object} options Optional parameters for adding the vectors.
    * @returns A promise that resolves with the IDs of the added vectors when the vectors have been added.
    */
-  async addVectors(
-    vectors: number[][],
-    documents: Document[],
-    options?: { ids?: string[] | number[] }
-  ) {
+  async addVectors(vectors: number[][], documents: Document[]) {
     const rows = await this.mapRowsFromDocuments(vectors, documents);
     const insertStatements = this.createStatements(rows);
     const chunks = this.createInsertChunks(insertStatements);
@@ -667,7 +660,9 @@ export class AzionVectorStore extends VectorStore {
     const fullTextQuery = `
       SELECT id, content, ${metadata}, rank as bm25_similarity
       FROM ${this.tableName}_fts  
-      WHERE ${filters} ${this.tableName}_fts MATCH '${this.convert2FTSQuery(query)}'
+      WHERE ${filters} ${this.tableName}_fts MATCH '${this.convert2FTSQuery(
+      query
+    )}'
       LIMIT ${kfts}`;
 
     const { data, error } = await useQuery(this.dbName, [fullTextQuery]);
@@ -755,7 +750,7 @@ export class AzionVectorStore extends VectorStore {
         }
       | undefined
   ): Error {
-    throw new Error(error?.message, { cause: error?.operation });
+    throw new Error(error?.message);
   }
 
   /**
@@ -980,17 +975,17 @@ export class AzionVectorStore extends VectorStore {
     }
     return "";
   }
-    /**
+  /**
    * Converts a query to a FTS query.
    * @param query The user query
    * @returns The converted FTS query
    */
-    protected convert2FTSQuery(query: string): string {
-      return query
-        .replace(/[^a-záàâãéèêíïóôõöúçñA-ZÁÀÂÃÉÈÊÍÏÓÔÕÖÚÇÑ0-9\s]/g, "") // Remove special chars keeping accents
-        .replace(/\s+/g, " ") // Remove multiple spaces
-        .trim() // Remove leading/trailing spaces
-        .split(" ")
-        .join(" OR ");
-    }
+  protected convert2FTSQuery(query: string): string {
+    return query
+      .replace(/[^a-záàâãéèêíïóôõöúçñA-ZÁÀÂÃÉÈÊÍÏÓÔÕÖÚÇÑ0-9\s]/g, "") // Remove special chars keeping accents
+      .replace(/\s+/g, " ") // Remove multiple spaces
+      .trim() // Remove leading/trailing spaces
+      .split(" ")
+      .join(" OR ");
+  }
 }

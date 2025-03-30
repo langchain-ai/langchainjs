@@ -1,14 +1,13 @@
 /* eslint-disable no-process-env */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
-import { AzionRetriever } from "./src/function/AzionRetriever";
+import { AzionRetriever } from "../azion_edgesql.js";
 import { jest, test, expect } from "@jest/globals";
 
 // Increase timeout to 30 seconds
 jest.setTimeout(30000);
 
 test("Azion search", async () => {
-  
   const embeddings = new OpenAIEmbeddings();
   const entityExtractor = new ChatOpenAI({
     modelName: "gpt-4o-mini",
@@ -18,10 +17,10 @@ test("Azion search", async () => {
     searchType: "hybrid",
     similarityK: 2,
     ftsK: 2,
-    dbName: 'langchain',
-    vectorTable:'documents',
-    ftsTable:'documents_fts',
-    entityExtractor:entityExtractor
+    dbName: "langchain",
+    vectorTable: "documents",
+    ftsTable: "documents_fts",
+    entityExtractor: entityExtractor,
   });
 
   expect(retrieverHybrid).toBeDefined();
@@ -34,10 +33,10 @@ test("Azion search", async () => {
     searchType: "similarity",
     similarityK: 2,
     ftsK: 2,
-    dbName: 'langchain',
-    vectorTable:'documents',
-    ftsTable:'documents_fts',
-    entityExtractor:entityExtractor
+    dbName: "langchain",
+    vectorTable: "documents",
+    ftsTable: "documents_fts",
+    entityExtractor: entityExtractor,
   });
 
   const results2 = await retrieverSimilarity.invoke("hello");
