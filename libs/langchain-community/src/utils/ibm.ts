@@ -200,3 +200,55 @@ export class WatsonxToolsOutputParser<
     return tool.args as T;
   }
 }
+
+export function jsonSchemaToZod(obj: WatsonXAI.JsonObject | undefined) {
+  if (obj?.properties && obj.type === "object") {
+    const shape: Record<string, any> = {};
+
+    Object.keys(obj.properties).forEach((key) => {
+      if (obj.properties) {
+        const prop = obj.properties[key];
+
+        let zodType;
+        if (prop.type === "string") {
+          zodType = z.string();
+          if (prop?.pattern) {
+            zodType = zodType.regex(prop.pattern, "Invalid pattern");
+          }
+        } else if (
+          prop.type === "number" ||
+          prop.type === "integer" ||
+          prop.type === "float"
+        ) {
+          zodType = z.number();
+          if (typeof prop?.minimum === "number") {
+            zodType = zodType.min(prop.minimum, {
+              message: `${key} must be at least ${prop.minimum}`,
+            });
+          }
+          if (prop?.maximum)
+            zodType = zodType.lte(prop.maximum, {
+              message: `${key} must be maximum of ${prop.maximum}`,
+            });
+        } else if (prop.type === "boolean") zodType = z.boolean();
+        else if (prop.type === "array")
+          zodType = z.array(jsonSchemaToZod(prop.items));
+        else if (prop.type === "object") {
+          zodType = jsonSchemaToZod(prop);
+        } else throw new Error(`Unsupported type: ${prop.type}`);
+
+        if (prop.description) {
+          zodType = zodType.describe(prop.description);
+        }
+
+        if (!obj.required?.includes(key)) {
+          zodType = zodType.optional();
+        }
+
+        shape[key] = zodType;
+      }
+    });
+    return z.object(shape);
+  }
+  throw new Error("Unsupported root schema type");
+}
