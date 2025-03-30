@@ -71,7 +71,7 @@ const documents = [document1, document2, document3];
 const ids = [uuidv4(), uuidv4(), uuidv4()];
 
 // Adding documents to the vectorStore
-await vectorStore.addDocuments(documents, { ids: ids });
+await vectorStore.addDocuments(documents, { ids });
 
 // Deleting a document
 const id1 = ids[0];
