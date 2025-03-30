@@ -51,19 +51,22 @@ export class TextLoader extends BaseDocumentLoader {
 
     if (typeof this.filePathOrBlob === "string") {
       const { readFile } = await TextLoader.imports();
-      const detectedEncodings: FileEncoding[] = await detectFileEncodings(this.filePathOrBlob)
+      const detectedEncodings: FileEncoding[] = await detectFileEncodings(
+        this.filePathOrBlob
+      );
 
       for (const encoding of detectedEncodings) {
         try {
           await readFile(this.filePathOrBlob, { encoding: encoding.encoding });
-          currentEncoding = encoding.encoding
-          break
-        }
-        catch (error) {
-          continue
+          currentEncoding = encoding.encoding;
+          break;
+        } catch (error) {
+          continue;
         }
       }
-      text = await readFile(this.filePathOrBlob, { encoding: currentEncoding }) as string;
+      text = (await readFile(this.filePathOrBlob, {
+        encoding: currentEncoding,
+      })) as string;
       metadata = { source: this.filePathOrBlob };
     } else {
       text = await this.filePathOrBlob.text();
@@ -85,9 +88,9 @@ export class TextLoader extends BaseDocumentLoader {
             parsed.length === 1
               ? metadata
               : {
-                ...metadata,
-                line: i + 1,
-              },
+                  ...metadata,
+                  line: i + 1,
+                },
         })
     );
   }
