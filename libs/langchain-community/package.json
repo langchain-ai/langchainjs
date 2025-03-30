@@ -76,6 +76,7 @@
     "@gomomento/sdk": "^1.51.1",
     "@gomomento/sdk-core": "^1.51.1",
     "@google-ai/generativelanguage": "^2.5.0",
+    "@google-cloud/bigquery": "^7.9.3",
     "@google-cloud/storage": "^7.15.2",
     "@gradientai/nodejs-sdk": "^1.2.0",
     "@huggingface/inference": "^2.6.4",
@@ -250,6 +251,7 @@
     "@gomomento/sdk": "^1.51.1",
     "@gomomento/sdk-core": "^1.51.1",
     "@google-ai/generativelanguage": "*",
+    "@google-cloud/bigquery": "^7.9.3",
     "@google-cloud/storage": "^6.10.1 || ^7.7.0",
     "@gradientai/nodejs-sdk": "^1.2.0",
     "@huggingface/inference": "^2.6.4",
@@ -427,6 +429,9 @@
       "optional": true
     },
     "@google-ai/generativelanguage": {
+      "optional": true
+    },
+    "@google-cloud/bigquery": {
       "optional": true
     },
     "@google-cloud/storage": {
@@ -1600,6 +1605,15 @@
       },
       "import": "./vectorstores/faiss.js",
       "require": "./vectorstores/faiss.cjs"
+    },
+    "./vectorstores/googlebigquery": {
+      "types": {
+        "import": "./vectorstores/googlebigquery.d.ts",
+        "require": "./vectorstores/googlebigquery.d.cts",
+        "default": "./vectorstores/googlebigquery.d.ts"
+      },
+      "import": "./vectorstores/googlebigquery.js",
+      "require": "./vectorstores/googlebigquery.cjs"
     },
     "./vectorstores/googlevertexai": {
       "types": {
@@ -3658,6 +3672,10 @@
     "vectorstores/faiss.js",
     "vectorstores/faiss.d.ts",
     "vectorstores/faiss.d.cts",
+    "vectorstores/googlebigquery.cjs",
+    "vectorstores/googlebigquery.js",
+    "vectorstores/googlebigquery.d.ts",
+    "vectorstores/googlebigquery.d.cts",
     "vectorstores/googlevertexai.cjs",
     "vectorstores/googlevertexai.js",
     "vectorstores/googlevertexai.d.ts",

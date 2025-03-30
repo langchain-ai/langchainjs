@@ -386,6 +386,10 @@ vectorstores/faiss.cjs
 vectorstores/faiss.js
 vectorstores/faiss.d.ts
 vectorstores/faiss.d.cts
+vectorstores/googlebigquery.cjs
+vectorstores/googlebigquery.js
+vectorstores/googlebigquery.d.ts
+vectorstores/googlebigquery.d.cts
 vectorstores/googlevertexai.cjs
 vectorstores/googlevertexai.js
 vectorstores/googlevertexai.d.ts

@@ -54,6 +54,7 @@ export const optionalImportEntrypoints: string[] = [
   "langchain_community/vectorstores/couchbase",
   "langchain_community/vectorstores/elasticsearch",
   "langchain_community/vectorstores/faiss",
+  "langchain_community/vectorstores/googlebigquery",
   "langchain_community/vectorstores/googlevertexai",
   "langchain_community/vectorstores/hnswlib",
   "langchain_community/vectorstores/hanavector",

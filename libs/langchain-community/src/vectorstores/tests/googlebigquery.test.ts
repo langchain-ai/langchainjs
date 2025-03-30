@@ -7,7 +7,7 @@ import {
 } from "@google-cloud/bigquery";
 import { Document } from "@langchain/core/documents";
 import { FakeEmbeddings } from "@langchain/core/utils/testing";
-import { GoogleBigQueryVectorSearch } from "../vectorstores.js";
+import { GoogleBigQueryVectorSearch } from "../googlebigquery.js";
 
 const embeddings = new FakeEmbeddings();
 const textKey = "text";

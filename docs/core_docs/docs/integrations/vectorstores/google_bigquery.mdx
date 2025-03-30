@@ -27,7 +27,7 @@ import Npm2Yarn from "@theme/Npm2Yarn";
 <IntegrationInstallTooltip></IntegrationInstallTooltip>
 
 <Npm2Yarn>
-  @langchain/google-bigquery @langchain/core @google-cloud/bigquery @langchain/openai
+  @langchain/community @langchain/core @google-cloud/bigquery @langchain/openai
 </Npm2Yarn>
 ```
 
@@ -54,7 +54,7 @@ Following provide the minimal initialization for setting up the `GoogleBigQueryV
 
 ```typescript
 import { BigQuery } from "@google-cloud/bigquery";
-import { GoogleBigQueryVectorSearch } from "@langchain/google-bigquery";
+import { GoogleBigQueryVectorSearch } from "@langchain/community/vectorstores/googlebigquery";
 import { OpenAIEmbeddings } from "@langchain/openai";
 
 const embeddings = new OpenAIEmbeddings({
