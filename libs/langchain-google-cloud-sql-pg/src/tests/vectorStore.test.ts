@@ -8,7 +8,7 @@ import PostgresEngine, { Column, VectorStoreTableArgs } from "../engine.js";
 import PostgresVectorStore, {
   PostgresVectorStoreArgs,
   dbConfigArgs,
-} from "../vectorStore.js";
+} from "../vectorstore.js";
 import {
   DEFAULT_INDEX_NAME_SUFFIX,
   DistanceStrategy,
