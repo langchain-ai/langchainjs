@@ -110,7 +110,11 @@ export function drawMermaid(
       const subgraph = prefix.split(":").pop()!;
 
       if (seenSubgraphs.has(prefix)) {
-        return;
+        throw new Error(
+          `Found duplicate subgraph '${subgraph}' at '${prefix} -- this likely means that ` +
+            "you're reusing a subgraph node with the same name. " +
+            "Please adjust your graph to have subgraph nodes with unique names."
+        );
       }
 
       seenSubgraphs.add(prefix);
@@ -121,7 +125,9 @@ export function drawMermaid(
     const nestedPrefixes = sortPrefixesByDepth(
       Object.keys(edgeGroups).filter(
         (nestedPrefix) =>
-          nestedPrefix.startsWith(`${prefix}:`) && nestedPrefix !== prefix
+          nestedPrefix.startsWith(`${prefix}:`) &&
+          nestedPrefix !== prefix &&
+          nestedPrefix.split(":").length === prefix.split(":").length + 1
       )
     );
 
