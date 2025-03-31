@@ -1023,7 +1023,7 @@ export class AzionVectorStore extends VectorStore {
     }
     return "";
   }
-  
+
   /**
    * Converts a query to a FTS query.
    * @param query The user query
