@@ -6,7 +6,8 @@ import {
   createDatabase,
   getTables,
   type AzionDatabaseResponse,
-  QueryResult
+  QueryResult,
+  getDatabase,
 } from "azion/sql";
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { Document } from "@langchain/core/documents";
@@ -44,13 +45,13 @@ export type Operator =
 
 /**
  * Interface for configuring the Azion vector store setup
- * @property {string[]} columns - Additional columns to create in the database table beyond the required ones
+ * @property {string[]} columns - Additional columns to create in the database table. If expandedMetadata is true, this is required.
  * @property {"vector" | "hybrid"} mode - The search mode to enable:
  *                                       "vector" - Only vector similarity search
  *                                       "hybrid" - Both vector and full-text search capabilities
  */
 interface AzionSetupOptions {
-  columns: string[];
+  columns?: string[];
   mode: "vector" | "hybrid";
 }
 
@@ -63,10 +64,9 @@ interface AzionSetupOptions {
 interface RowsInterface {
   content: string;
   embedding: number[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   metadata: Record<string, any>;
 }
-
-export type AzionMetadata = Record<string, any>;
 
 /**
  * Interface for the response returned when searching embeddings.
@@ -77,7 +77,7 @@ interface SearchEmbeddingsResponse {
   similarity: number;
   metadata: {
     searchtype: string;
-    [key: string]: any;
+    [key: string]: unknown;
   };
 }
 
@@ -124,7 +124,7 @@ interface SimilaritySearchOptions {
  */
 export interface AzionVectorStoreArgs {
   tableName: string;
-  filter?: AzionMetadata;
+  filter?: AzionFilter[];
   dbName: string;
   expandedMetadata?: boolean;
 }
@@ -144,12 +144,21 @@ export interface AzionVectorStoreArgs {
  *   mode: "hybrid"
  * });
  *
+ *
  * // OR: Initialize using the static create method
  * const vectorStore = await AzionVectorStore.initialize(embeddings, {
  *   dbName: "mydb",
  *   tableName: "documents"
  * }, {
  *   columns: ["topic", "language"],
+ *   mode: "hybrid"
+ * });
+ *
+ * By default, the columns are not expanded, meaning that the metadata is stored in a single column:
+ *
+ * // Setup database with hybrid search and metadata columns
+ * await vectorStore.setupDatabase({
+ *   columns: ["*"],
  *   mode: "hybrid"
  * });
  *
@@ -179,7 +188,7 @@ export interface AzionVectorStoreArgs {
 
 export class AzionVectorStore extends VectorStore {
   /** Type declaration for filter type */
-  declare FilterType: AzionMetadata;
+  declare FilterType: AzionFilter[];
 
   /** Name of the main table to store vectors and documents */
   tableName: string;
@@ -208,7 +217,7 @@ export class AzionVectorStore extends VectorStore {
    *   @param {string} args.dbName - Name of the database to create/use
    *   @param {string} args.tableName - Name of the table to create/use
    * @param {AzionSetupOptions} setupOptions - Database setup options:
-   *   @param {string[]} setupOptions.columns - Additional columns to create in the table beyond the required ones
+   *   @param {string[]} setupOptions.columns - Additional columns to create in the table beyond the required ones. If expandedMetadata is true, this is required.
    *   @param {"vector"|"hybrid"} setupOptions.mode - The search mode to enable:
    *     - "vector": Only vector similarity search capabilities
    *     - "hybrid": Both vector and full-text search capabilities
@@ -293,9 +302,12 @@ export class AzionVectorStore extends VectorStore {
   async setupDatabase(setupOptions: AzionSetupOptions): Promise<void> {
     const { columns, mode } = setupOptions;
 
+    if (this.expandedMetadata && !columns) {
+      throw new Error("Columns must be informed when using expanded metadata!");
+    }
+
     await this.handleDatabase();
-    await new Promise((resolve) => setTimeout(resolve, 15000));
-    console.log("Database created");
+
     await this.handleTables(mode, columns);
   }
 
@@ -307,7 +319,7 @@ export class AzionVectorStore extends VectorStore {
    */
   private async handleTables(
     mode: "vector" | "hybrid",
-    columns: string[]
+    columns: string[] | undefined
   ): Promise<void> {
     const { data: dataTables, error: errorTables } = await getTables(
       this.dbName
@@ -379,12 +391,39 @@ export class AzionVectorStore extends VectorStore {
 
     if (!dataGet?.databases?.find((db) => db.name === this.dbName)) {
       console.log("Creating database: ", this.dbName);
-      const { error: errorCreate } = await createDatabase(this.dbName, {
-        debug: true,
-      });
+      const { error: errorCreate } = await createDatabase(this.dbName);
+
+      await this.waitDatabaseCreation(this.dbName);
+
+      console.log(`Database ${this.dbName} created`);
 
       this.errorHandler(errorCreate, "Error creating database");
     }
+  }
+
+  /**
+   * Wait for the database to be created. Retry every 3 seconds until the database is created.
+   * @param databaseName {string} The database name
+   * @returns {Promise<void>}
+   */
+  private async waitDatabaseCreation(databaseName: string): Promise<string> {
+    let databaseStatus = "creating";
+    while (databaseStatus !== "created") {
+      const { data, error } = await getDatabase(databaseName);
+
+      if (error) {
+        throw error;
+      }
+
+      if (data && data.status === "created") {
+        databaseStatus = "created";
+      }
+
+      await new Promise((resolve) => {
+        setTimeout(resolve, 3000);
+      });
+    }
+    return "Created";
   }
 
   /**
@@ -395,20 +434,23 @@ export class AzionVectorStore extends VectorStore {
    */
   private async setupTables(
     mode: "vector" | "hybrid",
-    columns: string[]
+    columns: string[] | undefined
   ): Promise<AzionDatabaseResponse<string>> {
+    let createTableColumns = ",metadata JSON";
+
+    if (this.expandedMetadata && columns) {
+      createTableColumns =
+        columns.length > 0
+          ? "," + columns.map((key) => `${key} TEXT`).join(",")
+          : "";
+    }
+
     const createTableStatement = `
         CREATE TABLE ${this.tableName} (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             content TEXT NOT NULL,
             embedding F32_BLOB(${await this.getEmbeddingsDimensions()})
-            ${
-              this.expandedMetadata
-                ? columns.length > 0
-                  ? "," + columns.map((key) => `${key} TEXT`).join(",")
-                  : ""
-                : ",metadata JSON"
-            }
+            ${createTableColumns}
         );`;
 
     const createIndexStatement = `
@@ -416,38 +458,44 @@ export class AzionVectorStore extends VectorStore {
             libsql_vector_idx(embedding, 'metric=cosine', 'compress_neighbors=float8', 'max_neighbors=20')
         )`;
 
+    let createFtsColumns = ",metadata";
+    if (this.expandedMetadata && columns) {
+      createFtsColumns =
+        columns.length > 0
+          ? "," + columns.map((key) => `${key}`).join(",")
+          : "";
+    }
+
     const createFtsStatement = `
         CREATE VIRTUAL TABLE IF NOT EXISTS ${this.tableName}_fts USING fts5(
             content,
             id UNINDEXED
-            ${
-              this.expandedMetadata
-                ? columns.length > 0
-                  ? "," + columns.map((key) => `${key}`).join(",")
-                  : ""
-                : ",metadata"
-            },
+            ${createFtsColumns},
             tokenize = 'porter'
         )`;
+
+    let createTriggersColumns = ",metadata";
+    let insertTriggersValues = ",new.metadata";
+    let updateTriggersColumns = ",metadata = new.metadata";
+
+    if (this.expandedMetadata && columns) {
+      createTriggersColumns = columns.length > 0 ? "," + columns.join(",") : "";
+      insertTriggersValues =
+        columns.length > 0
+          ? "," + columns.map((key) => `new.${key}`).join(",")
+          : "";
+      updateTriggersColumns =
+        columns.length > 0
+          ? "," + columns.map((key) => `${key} = new.${key}`).join(",")
+          : "";
+    }
 
     const createTriggersStatements = [
       `CREATE TRIGGER IF NOT EXISTS insert_into_${this.tableName}_fts 
         AFTER INSERT ON ${this.tableName}
         BEGIN
-            INSERT INTO ${this.tableName}_fts(id, content ${
-        this.expandedMetadata
-          ? columns.length > 0
-            ? "," + columns.join(",")
-            : ""
-          : ",metadata"
-      })
-            VALUES(new.id, new.content ${
-              this.expandedMetadata
-                ? columns.length > 0
-                  ? "," + columns.map((key) => `new.${key}`).join(",")
-                  : ""
-                : ",new.metadata"
-            });
+            INSERT INTO ${this.tableName}_fts(id, content ${createTriggersColumns})
+            VALUES(new.id, new.content ${insertTriggersValues});
         END`,
 
       `CREATE TRIGGER IF NOT EXISTS update_${this.tableName}_fts 
@@ -455,13 +503,7 @@ export class AzionVectorStore extends VectorStore {
         BEGIN
             UPDATE ${this.tableName}_fts 
             SET content = new.content
-            ${
-              this.expandedMetadata
-                ? columns.length > 0
-                  ? "," + columns.map((key) => `${key} = new.${key}`).join(",")
-                  : ""
-                : ",metadata = new.metadata"
-            }
+            ${updateTriggersColumns}
             WHERE id = old.id;
         END`,
 
@@ -496,7 +538,7 @@ export class AzionVectorStore extends VectorStore {
   private async insertChunks(chunks: string[][]): Promise<void> {
     for (const chunk of chunks) {
       console.log("Inserting chunk", chunks.indexOf(chunk));
-      const { error } = await useExecute(this.dbName, chunk);
+      const { error } = await useExecute(this.dbName, chunk, { debug: true });
       this.errorHandler(error, "Error inserting chunk");
     }
     console.log("Chunks inserted!");
@@ -573,7 +615,7 @@ export class AzionVectorStore extends VectorStore {
   private createInsertChunks(statements: string[]): string[][] {
     const maxChunkLength = 1000;
     const maxMbSize = 0.8 * 1024 * 1024;
-    let insertChunk = [];
+    const insertChunk = [];
     let originalStatements = statements;
     const totalSize = this.getStringBytes(originalStatements.join(" "));
 
@@ -593,7 +635,7 @@ export class AzionVectorStore extends VectorStore {
           originalStatements = originalStatements.slice(1);
         } else {
           array.push(statement);
-          if (originalStatements.length == 1) {
+          if (originalStatements.length === 1) {
             insertChunk.push(array);
           }
           originalStatements = originalStatements.slice(1);
@@ -667,7 +709,9 @@ export class AzionVectorStore extends VectorStore {
     const fullTextQuery = `
       SELECT id, content, ${metadata}, rank as bm25_similarity
       FROM ${this.tableName}_fts  
-      WHERE ${filters} ${this.tableName}_fts MATCH '${this.convert2FTSQuery(query)}'
+      WHERE ${filters} ${this.tableName}_fts MATCH '${this.convert2FTSQuery(
+      query
+    )}'
       LIMIT ${kfts}`;
 
     const { data, error } = await useQuery(this.dbName, [fullTextQuery]);
@@ -755,7 +799,7 @@ export class AzionVectorStore extends VectorStore {
         }
       | undefined
   ): Error {
-    throw new Error(error?.message, { cause: error?.operation });
+    throw new Error(error?.message);
   }
 
   /**
@@ -805,14 +849,14 @@ export class AzionVectorStore extends VectorStore {
         ) {
           seenIds.add(result[0].id);
           uniqueResults.push(result);
-          similarityCount++;
+          similarityCount += 1;
         } else if (
           result[0].metadata.searchtype === "fulltextsearch" &&
           ftsCount < kfts
         ) {
           seenIds.add(result[0].id);
           uniqueResults.push(result);
-          ftsCount++;
+          ftsCount += 1;
         }
       }
       if (similarityCount + ftsCount === maxItems) break;
@@ -931,7 +975,10 @@ export class AzionVectorStore extends VectorStore {
    * @param {string[]} values The values.
    * @returns {string} The insert sql query.
    */
-  private createInsertString(columnNames: string[], values: any[]): string {
+  private createInsertString(
+    columnNames: string[],
+    values: (string | number[])[]
+  ): string {
     if (this.expandedMetadata) {
       const string = `INSERT INTO ${this.tableName} (${columnNames.join(", ")}) 
       VALUES (${values
@@ -965,8 +1012,11 @@ export class AzionVectorStore extends VectorStore {
    * @param {string} value The value to escape the quotes in.
    * @returns {string} The value with the quotes escaped.
    */
-  private escapeQuotes(value: string): string {
-    return value.replace(/'/g, " ").replace(/"/g, " ");
+  private escapeQuotes(value: string | number[]): string | number[] {
+    if (typeof value === "string") {
+      return value.replace(/'/g, " ").replace(/"/g, " ");
+    }
+    return value;
   }
 
   /**
@@ -980,17 +1030,18 @@ export class AzionVectorStore extends VectorStore {
     }
     return "";
   }
-    /**
+
+  /**
    * Converts a query to a FTS query.
    * @param query The user query
    * @returns The converted FTS query
    */
-    protected convert2FTSQuery(query: string): string {
-      return query
-        .replace(/[^a-záàâãéèêíïóôõöúçñA-ZÁÀÂÃÉÈÊÍÏÓÔÕÖÚÇÑ0-9\s]/g, "") // Remove special chars keeping accents
-        .replace(/\s+/g, " ") // Remove multiple spaces
-        .trim() // Remove leading/trailing spaces
-        .split(" ")
-        .join(" OR ");
-    }
+  protected convert2FTSQuery(query: string): string {
+    return query
+      .replace(/[^a-záàâãéèêíïóôõöúçñA-ZÁÀÂÃÉÈÊÍÏÓÔÕÖÚÇÑ0-9\s]/g, "") // Remove special chars keeping accents
+      .replace(/\s+/g, " ") // Remove multiple spaces
+      .trim() // Remove leading/trailing spaces
+      .split(" ")
+      .join(" OR ");
+  }
 }
