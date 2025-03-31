@@ -141,6 +141,7 @@
     "@zilliz/milvus2-sdk-node": ">=2.3.5",
     "apify-client": "^2.7.1",
     "assemblyai": "^4.6.0",
+    "azion": "^1.11.1",
     "better-sqlite3": "9.5.0",
     "cassandra-driver": "^4.7.2",
     "cborg": "^4.1.1",
@@ -290,6 +291,7 @@
     "@zilliz/milvus2-sdk-node": ">=2.3.5",
     "apify-client": "^2.7.1",
     "assemblyai": "^4.6.0",
+    "azion": "^1.11.1",
     "better-sqlite3": ">=9.4.0 <12.0.0",
     "cassandra-driver": "^4.7.2",
     "cborg": "^4.1.1",
@@ -541,6 +543,9 @@
       "optional": true
     },
     "assemblyai": {
+      "optional": true
+    },
+    "azion": {
       "optional": true
     },
     "better-sqlite3": {
@@ -1493,6 +1498,15 @@
       "import": "./vectorstores/astradb.js",
       "require": "./vectorstores/astradb.cjs"
     },
+    "./vectorstores/azion_edgesql": {
+      "types": {
+        "import": "./vectorstores/azion_edgesql.d.ts",
+        "require": "./vectorstores/azion_edgesql.d.cts",
+        "default": "./vectorstores/azion_edgesql.d.ts"
+      },
+      "import": "./vectorstores/azion_edgesql.js",
+      "require": "./vectorstores/azion_edgesql.cjs"
+    },
     "./vectorstores/azure_aisearch": {
       "types": {
         "import": "./vectorstores/azure_aisearch.d.ts",
@@ -2194,6 +2208,15 @@
       },
       "import": "./retrievers/arxiv.js",
       "require": "./retrievers/arxiv.cjs"
+    },
+    "./retrievers/azion_edgesql": {
+      "types": {
+        "import": "./retrievers/azion_edgesql.d.ts",
+        "require": "./retrievers/azion_edgesql.d.cts",
+        "default": "./retrievers/azion_edgesql.d.ts"
+      },
+      "import": "./retrievers/azion_edgesql.js",
+      "require": "./retrievers/azion_edgesql.cjs"
     },
     "./retrievers/bm25": {
       "types": {
@@ -3610,6 +3633,10 @@
     "vectorstores/astradb.js",
     "vectorstores/astradb.d.ts",
     "vectorstores/astradb.d.cts",
+    "vectorstores/azion_edgesql.cjs",
+    "vectorstores/azion_edgesql.js",
+    "vectorstores/azion_edgesql.d.ts",
+    "vectorstores/azion_edgesql.d.cts",
     "vectorstores/azure_aisearch.cjs",
     "vectorstores/azure_aisearch.js",
     "vectorstores/azure_aisearch.d.ts",
@@ -3922,6 +3949,10 @@
     "retrievers/arxiv.js",
     "retrievers/arxiv.d.ts",
     "retrievers/arxiv.d.cts",
+    "retrievers/azion_edgesql.cjs",
+    "retrievers/azion_edgesql.js",
+    "retrievers/azion_edgesql.d.ts",
+    "retrievers/azion_edgesql.d.cts",
     "retrievers/bm25.cjs",
     "retrievers/bm25.js",
     "retrievers/bm25.d.ts",
