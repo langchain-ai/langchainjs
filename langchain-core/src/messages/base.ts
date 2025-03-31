@@ -200,11 +200,21 @@ export abstract class BaseMessage
   }
 
   /**
-   * @deprecated
-   * Use {@link BaseMessage.content} instead.
+   * Get text content of the message.
    */
   get text(): string {
-    return typeof this.content === "string" ? this.content : "";
+    if (typeof this.content === "string") {
+      return this.content;
+    }
+
+    if (!Array.isArray(this.content)) return "";
+    return this.content
+      .map((c) => {
+        if (typeof c === "string") return c;
+        if (c.type === "text") return c.text;
+        return "";
+      })
+      .join("");
   }
 
   /** The content of the message. */

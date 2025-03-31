@@ -1,6 +1,6 @@
 {
   "name": "@langchain/qdrant",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "LangChain.js integration for the Qdrant vector database",
   "type": "module",
   "engines": {

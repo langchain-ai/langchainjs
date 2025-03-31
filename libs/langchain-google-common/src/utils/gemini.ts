@@ -725,10 +725,17 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
   }
 
   function responseToGenerationInfo(response: GoogleLLMResponse) {
-    if (!Array.isArray(response.data)) {
+    const data =
+      // eslint-disable-next-line no-nested-ternary
+      Array.isArray(response.data) && response.data[0]
+        ? response.data[0]
+        : response.data &&
+          (response.data as GenerateContentResponseData).candidates
+        ? (response.data as GenerateContentResponseData)
+        : undefined;
+    if (!data) {
       return {};
     }
-    const data = response.data[0];
     return {
       usage_metadata: {
         prompt_token_count: data.usageMetadata?.promptTokenCount,
@@ -745,6 +752,7 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
       citation_metadata: data.candidates[0]?.citationMetadata,
       grounding_metadata: data.candidates[0]?.groundingMetadata,
       finish_reason: data.candidates[0]?.finishReason,
+      finish_message: data.candidates[0]?.finishMessage,
       avgLogprobs: data.candidates[0]?.avgLogprobs,
       logprobs: candidateToLogprobs(data.candidates[0]),
     };
@@ -1213,6 +1221,7 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
       maxOutputTokens: parameters.maxOutputTokens,
       stopSequences: parameters.stopSequences,
       responseMimeType: parameters.responseMimeType,
+      responseModalities: parameters.responseModalities,
     };
 
     // Add the logprobs if explicitly set
@@ -1402,6 +1411,9 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     ) {
       ret.systemInstruction = systemInstruction;
     }
+    if (parameters.cachedContent) {
+      ret.cachedContent = parameters.cachedContent;
+    }
     return ret;
   }
 
@@ -1440,4 +1452,8 @@ export function validateGeminiParams(params: GoogleAIModelParams): void {
 
 export function isModelGemini(modelName: string): boolean {
   return modelName.toLowerCase().startsWith("gemini");
+}
+
+export function isModelGemma(modelName: string): boolean {
+  return modelName.toLowerCase().startsWith("gemma");
 }

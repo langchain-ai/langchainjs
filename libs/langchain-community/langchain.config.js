@@ -67,6 +67,7 @@ export const config = {
     "agents/toolkits/aws_sfn": "agents/toolkits/aws_sfn",
     "agents/toolkits/base": "agents/toolkits/base",
     "agents/toolkits/connery": "agents/toolkits/connery/index",
+    "agents/toolkits/ibm": "agents/toolkits/ibm",
     "agents/toolkits/stagehand": "agents/toolkits/stagehand",
     // embeddings
     "embeddings/alibaba_tongyi": "embeddings/alibaba_tongyi",
@@ -80,7 +81,8 @@ export const config = {
     "embeddings/gradient_ai": "embeddings/gradient_ai",
     "embeddings/hf": "embeddings/hf",
     "embeddings/hf_transformers": "embeddings/hf_transformers",
-    "embeddings/huggingface_transformers": "embeddings/huggingface_transformers",
+    "embeddings/huggingface_transformers":
+      "embeddings/huggingface_transformers",
     "embeddings/ibm": "embeddings/ibm",
     "embeddings/jina": "embeddings/jina",
     "embeddings/llama_cpp": "embeddings/llama_cpp",
@@ -138,6 +140,7 @@ export const config = {
     "vectorstores/hanavector": "vectorstores/hanavector",
     "vectorstores/lancedb": "vectorstores/lancedb",
     "vectorstores/libsql": "vectorstores/libsql",
+    "vectorstores/mariadb": "vectorstores/mariadb",
     "vectorstores/milvus": "vectorstores/milvus",
     "vectorstores/momento_vector_index": "vectorstores/momento_vector_index",
     "vectorstores/mongodb_atlas": "vectorstores/mongodb_atlas",
@@ -184,6 +187,7 @@ export const config = {
     "chat_models/moonshot": "chat_models/moonshot",
     "chat_models/novita": "chat_models/novita",
     "chat_models/ollama": "chat_models/ollama",
+    "chat_models/perplexity": "chat_models/perplexity",
     "chat_models/portkey": "chat_models/portkey",
     "chat_models/premai": "chat_models/premai",
     "chat_models/tencent_hunyuan": "chat_models/tencent_hunyuan/index",
@@ -266,6 +270,7 @@ export const config = {
     "stores/message/zep_cloud": "stores/message/zep_cloud",
     // memory
     "memory/chat_memory": "memory/chat_memory",
+    "memory/mem0": "memory/mem0",
     "memory/motorhead_memory": "memory/motorhead_memory",
     "memory/zep": "memory/zep",
     "memory/zep_cloud": "memory/zep_cloud",
@@ -289,7 +294,8 @@ export const config = {
     "document_loaders/web/playwright": "document_loaders/web/playwright",
     "document_loaders/web/college_confidential":
       "document_loaders/web/college_confidential",
-    "document_loaders/web/google_cloud_storage": "document_loaders/web/google_cloud_storage",
+    "document_loaders/web/google_cloud_storage":
+      "document_loaders/web/google_cloud_storage",
     "document_loaders/web/gitbook": "document_loaders/web/gitbook",
     "document_loaders/web/hn": "document_loaders/web/hn",
     "document_loaders/web/imsdb": "document_loaders/web/imsdb",
@@ -352,6 +358,7 @@ export const config = {
     "tools/gmail",
     "tools/google_calendar",
     "agents/toolkits/aws_sfn",
+    "agents/toolkits/ibm",
     "agents/toolkits/stagehand",
     "callbacks/handlers/llmonitor",
     "callbacks/handlers/lunary",
@@ -406,6 +413,7 @@ export const config = {
     "vectorstores/hanavector",
     "vectorstores/lancedb",
     "vectorstores/libsql",
+    "vectorstores/mariadb",
     "vectorstores/milvus",
     "vectorstores/momento_vector_index",
     "vectorstores/mongodb_atlas",
@@ -497,6 +505,7 @@ export const config = {
     "stores/message/xata",
     "stores/message/zep_cloud",
     // memory
+    "memory/mem0",
     "memory/motorhead_memory",
     "memory/zep",
     "memory/zep_cloud",

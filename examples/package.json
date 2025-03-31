@@ -95,6 +95,8 @@
     "js-yaml": "^4.1.0",
     "langchain": "workspace:*",
     "langsmith": ">=0.2.8 <0.4.0",
+    "mariadb": "^3.4.0",
+    "mem0ai": "^2.1.8",
     "mongodb": "^6.3.0",
     "pg": "^8.11.0",
     "pickleparser": "^0.2.1",

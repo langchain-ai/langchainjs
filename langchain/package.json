@@ -457,6 +457,7 @@
     "openai": "^4.41.1",
     "peggy": "^3.0.2",
     "prettier": "^2.8.3",
+    "reflect-metadata": "^0.2.2",
     "release-it": "^17.6.0",
     "rimraf": "^5.0.1",
     "rollup": "^3.19.1",
@@ -539,7 +540,7 @@
     }
   },
   "dependencies": {
-    "@langchain/openai": ">=0.1.0 <0.5.0",
+    "@langchain/openai": ">=0.1.0 <0.6.0",
     "@langchain/textsplitters": ">=0.0.0 <0.2.0",
     "js-tiktoken": "^1.0.12",
     "js-yaml": "^4.1.0",
