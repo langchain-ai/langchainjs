@@ -5,8 +5,6 @@ import { BaseRetriever, BaseRetrieverInput } from "@langchain/core/retrievers";
 import { SystemMessage, HumanMessage } from "@langchain/core/messages";
 import { BaseChatModel } from "@langchain/core/language_models/chat_models";
 
-export type AzionMetadata = Record<string, any>;
-
 /**
  * Represents a filter condition for querying the Azion database
  * @property operator - The comparison operator to use (e.g. =, !=, >, <, etc)
@@ -46,7 +44,7 @@ interface SearchEmbeddingsResponse {
   content: string;
   metadata: {
     searchtype: string;
-    [key: string]: any;
+    [key: string]: unknown;
   };
 }
 
@@ -207,10 +205,7 @@ export class AzionRetriever extends BaseRetriever {
   /** Whether the metadata is contained in a single column or multiple columns */
   expandedMetadata: boolean;
 
-  constructor(
-    embeddings: EmbeddingsInterface,
-    args: AzionRetrieverArgs
-  ) {
+  constructor(embeddings: EmbeddingsInterface, args: AzionRetrieverArgs) {
     super(args);
 
     this.ftsTable = args.ftsTable || "vectors_fts";
@@ -378,10 +373,7 @@ export class AzionRetriever extends BaseRetriever {
    * @param query The user query
    * @returns A promise that resolves with the extracted entities when the extraction is complete.
    */
-  protected async extractEntities(
-    query: string
-  ): Promise<string> {
-
+  protected async extractEntities(query: string): Promise<string> {
     if (!this.entityExtractor) {
       return this.convert2FTSQuery(query);
     }
@@ -424,7 +416,7 @@ export class AzionRetriever extends BaseRetriever {
       this.dbName,
       statements
     );
-    
+
     if (!response) {
       console.error("RESPONSE ERROR: ", errorQuery);
       throw this.searchError(errorQuery);
@@ -450,7 +442,7 @@ export class AzionRetriever extends BaseRetriever {
         }
       | undefined
   ): Error {
-    throw new Error(error?.message, { cause: error?.operation });
+    throw new Error(error?.message);
   }
 
   /**
@@ -493,14 +485,14 @@ export class AzionRetriever extends BaseRetriever {
         ) {
           seenIds.add(result.id);
           uniqueResults.push(result);
-          similarityCount++;
+          similarityCount += 1;
         } else if (
           result.metadata.searchtype === "fts" &&
           ftsCount < this.ftsK
         ) {
           seenIds.add(result.id);
           uniqueResults.push(result);
-          ftsCount++;
+          ftsCount += 1;
         }
       }
       if (similarityCount + ftsCount === maxItems) break;
