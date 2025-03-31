@@ -663,7 +663,7 @@ export class AzureAISearchVectorStore extends VectorStore {
         defaultConfigurationName: "semantic-search-config",
         configurations: [
           {
-            name: this.options.semanticConfigurationName,
+            name: "semantic-search-config",
             prioritizedFields: {
               contentFields: [
                 {
