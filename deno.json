@@ -28,7 +28,6 @@
     "readline": "https://deno.land/x/readline@v1.1.0/mod.ts",
     "uuid": "npm:/uuid",
     "youtubei.js": "npm:/youtubei.js",
-    "youtube-transcript": "npm:/youtube-transcript",
     "neo4j-driver": "npm:/neo4j-driver",
     "axios": "npm:/axios",
     "@mendable/firecrawl-js": "npm:/@mendable/firecrawl-js",

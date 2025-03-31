@@ -10,9 +10,17 @@ The Gmail Tool allows your agent to create and view messages from a linked email
 
 ## Setup
 
-You will need to get an API key from [Google here](https://developers.google.com/gmail/api/guides)
-and [enable the new Gmail API](https://console.cloud.google.com/apis/library/gmail.googleapis.com).
-Then, set the environment variables for `GMAIL_CLIENT_EMAIL`, and either `GMAIL_PRIVATE_KEY`, or `GMAIL_KEYFILE`.
+You can authenticate via two methods:
+
+1. Provide an access token, obtained via OAuth2 token exchange, to the credentials object.
+   This can be a string or a function so that token expiry and validation can be handled.
+   This can be done using an Identity Provider that supports getting access tokens from federated connections.
+   This is the most secure method as the access and scope will be limited to the specific end user.
+   This method will be more appropriate when using the tool in an application that is meant to be used by end
+   users with their own Gmail account.
+2. You will need to get an API key from [Google here](https://developers.google.com/gmail/api/guides)
+   and [enable the new Gmail API](https://console.cloud.google.com/apis/library/gmail.googleapis.com).
+   Then, set the environment variables for `GMAIL_CLIENT_EMAIL`, and either `GMAIL_PRIVATE_KEY`, or `GMAIL_KEYFILE`.
 
 To use the Gmail Tool you need to install the following official peer dependency:
 

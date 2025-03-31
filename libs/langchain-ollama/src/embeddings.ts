@@ -7,7 +7,7 @@ import { OllamaCamelCaseOptions } from "./types.js";
  * Interface for OllamaEmbeddings parameters. Extends EmbeddingsParams and
  * defines additional parameters specific to the OllamaEmbeddings class.
  */
-interface OllamaEmbeddingsParams extends EmbeddingsParams {
+export interface OllamaEmbeddingsParams extends EmbeddingsParams {
   /**
    * The Ollama model to use for embeddings.
    * @default "mxbai-embed-large"
@@ -35,7 +35,7 @@ interface OllamaEmbeddingsParams extends EmbeddingsParams {
   /**
    * Optional HTTP Headers to include in the request.
    */
-  headers?: Headers;
+  headers?: Headers | Record<string, string>;
 
   /**
    * Advanced Ollama API request parameters in camelCase, see
@@ -63,7 +63,7 @@ export class OllamaEmbeddings extends Embeddings {
 
     this.client = new Ollama({
       host: fields?.baseUrl,
-      headers: fields?.headers,
+      headers: fields?.headers ? new Headers(fields.headers) : undefined,
     });
     this.baseUrl = fields?.baseUrl ?? this.baseUrl;
 

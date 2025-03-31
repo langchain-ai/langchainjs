@@ -8,6 +8,7 @@ export interface AirtableRequestParams {
   view?: string;
   maxRecords?: number;
   filterByFormula?: string;
+  fields?: string[];
 }
 
 export interface AirtableLoaderOptions {
@@ -76,8 +77,8 @@ export class AirtableLoader extends BaseDocumentLoader {
 
     try {
       do {
-        const url = this.constructUrl(offset);
-        const data = await this.asyncCaller.call(() => this.fetchRecords(url));
+        const body = this.constructRequestBody(offset);
+        const data = await this.asyncCaller.call(() => this.fetchRecords(body));
         data.records.forEach((record: AirtableRecord) =>
           documents.push(this.createDocument(record))
         );
@@ -102,8 +103,8 @@ export class AirtableLoader extends BaseDocumentLoader {
     let offset: string | undefined;
     try {
       do {
-        const url = this.constructUrl(offset);
-        const data = await this.asyncCaller.call(() => this.fetchRecords(url));
+        const body = this.constructRequestBody(offset);
+        const data = await this.asyncCaller.call(() => this.fetchRecords(body));
 
         for (const record of data.records) {
           yield this.createDocument(record);
@@ -118,37 +119,35 @@ export class AirtableLoader extends BaseDocumentLoader {
   }
 
   /**
-   * Constructs the Airtable API request URL with pagination and query parameters.
+   * Constructs the request body for an API call.
    *
-   * @param offset - The pagination offset returned by the previous request.
-   * @returns A fully constructed URL for the API request.
+   * @param offset - An optional string representing the offset for pagination.
+   * @returns A record containing the combined properties of `kwargs` and the provided offset.
    */
-  private constructUrl(offset?: string): string {
-    const url = new URL(
-      `${AirtableLoader.BASE_URL}/${this.baseId}/${this.tableId}`
-    );
-    if (offset) url.searchParams.append("offset", offset);
-    if (this.kwargs.view) url.searchParams.append("view", this.kwargs.view);
-    if (this.kwargs.maxRecords)
-      url.searchParams.append("maxRecords", this.kwargs.maxRecords.toString());
-    if (this.kwargs.filterByFormula)
-      url.searchParams.append("filterByFormula", this.kwargs.filterByFormula);
-    return url.toString();
+  private constructRequestBody(offset?: string): Record<string, any> {
+    return { ...this.kwargs, offset };
   }
 
   /**
    * Sends the API request to Airtable and handles the response.
    * Includes a timeout to prevent hanging on unresponsive requests.
    *
-   * @param url - The Airtable API request URL.
+   * @param body - The request payload to be sent to the Airtable API.
    * @returns A promise that resolves to an AirtableResponse object.
+   * @throws Will throw an error if the Airtable API request fails.
    */
-  private async fetchRecords(url: string): Promise<AirtableResponse> {
+  private async fetchRecords(
+    body: Record<string, any>
+  ): Promise<AirtableResponse> {
+    const url = `${AirtableLoader.BASE_URL}/${this.baseId}/${this.tableId}/listRecords`;
     try {
       const response = await fetch(url, {
+        method: "POST",
         headers: {
           Authorization: `Bearer ${this.apiToken}`,
+          "Content-Type": "application/json",
         },
+        body: JSON.stringify(body),
       });
 
       if (!response.ok) {

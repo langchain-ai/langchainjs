@@ -1,9 +1,10 @@
 /* eslint-disable no-process-env */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { OpenAIEmbeddings } from "@langchain/openai";
-import { AzionVectorStore } from "@langchain/community/vectorstores/azion_edgesql";
 import { Document } from "@langchain/core/documents";
 import { jest, test, expect, describe, beforeAll } from "@jest/globals";
+
+import { AzionVectorStore } from "../azion_edgesql.js";
 
 // Increase timeout for database operations
 jest.setTimeout(60000);

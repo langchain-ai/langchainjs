@@ -1,7 +1,7 @@
 /* eslint-disable no-process-env */
-import { expect, test, beforeAll, afterEach } from "@jest/globals";
+import { afterEach, beforeAll, expect, test } from "@jest/globals";
 
-import { setContextVariable, registerConfigureHook } from "../../context.js";
+import { registerConfigureHook, setContextVariable } from "../../context.js";
 import { BaseCallbackHandler } from "../base.js";
 import { CallbackManager } from "../manager.js";
 
@@ -24,6 +24,20 @@ afterEach(() => {
 test("configure with empty array", async () => {
   const manager = CallbackManager.configure([]);
   expect(manager?.handlers.length).toBe(0);
+});
+
+test("configure with no arguments", async () => {
+  const manager = CallbackManager.configure();
+  expect(manager).toBe(undefined);
+});
+
+test("configure with no arguments but with handler", async () => {
+  setContextVariable("my_test_handler", handlerInstance);
+  registerConfigureHook({
+    contextVar: "my_test_handler",
+  });
+  const manager = CallbackManager.configure();
+  expect(manager?.handlers[0]).toBe(handlerInstance);
 });
 
 test("configure with one handler", async () => {

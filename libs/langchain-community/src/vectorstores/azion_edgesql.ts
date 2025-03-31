@@ -239,13 +239,10 @@ export class AzionVectorStore extends VectorStore {
    * @param {Object} options Optional parameters for adding the documents.
    * @returns A promise that resolves when the documents have been added.
    */
-  async addDocuments(
-    documents: Document[],
-    options?: { ids?: string[] | number[] }
-  ) {
+  async addDocuments(documents: Document[]) {
     const texts = documents.map((doc) => doc.pageContent);
     const embeddings = await this.embeddings.embedDocuments(texts);
-    return this.addVectors(embeddings, documents, options);
+    return this.addVectors(embeddings, documents);
   }
 
   /**
@@ -255,11 +252,7 @@ export class AzionVectorStore extends VectorStore {
    * @param {Object} options Optional parameters for adding the vectors.
    * @returns A promise that resolves with the IDs of the added vectors when the vectors have been added.
    */
-  async addVectors(
-    vectors: number[][],
-    documents: Document[],
-    options?: { ids?: string[] | number[] }
-  ) {
+  async addVectors(vectors: number[][], documents: Document[]) {
     const rows = await this.mapRowsFromDocuments(vectors, documents);
     const insertStatements = this.createStatements(rows);
     const chunks = this.createInsertChunks(insertStatements);
@@ -1030,7 +1023,7 @@ export class AzionVectorStore extends VectorStore {
     }
     return "";
   }
-
+  
   /**
    * Converts a query to a FTS query.
    * @param query The user query

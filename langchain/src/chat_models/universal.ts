@@ -40,6 +40,7 @@ const _SUPPORTED_PROVIDERS = [
   "azure_openai",
   "cohere",
   "google-vertexai",
+  "google-vertexai-web",
   "google-genai",
   "ollama",
   "together",
@@ -47,6 +48,9 @@ const _SUPPORTED_PROVIDERS = [
   "mistralai",
   "groq",
   "bedrock",
+  "cerebras",
+  "deepseek",
+  "xai",
 ] as const;
 
 export type ChatModelProvider = (typeof _SUPPORTED_PROVIDERS)[number];
@@ -73,6 +77,7 @@ async function _initChatModelHelper(
       `Unable to infer model provider for { model: ${model} }, please specify modelProvider directly.`
     );
   }
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { modelProvider: _unused, ...passedParams } = params;
 
   try {
@@ -97,6 +102,10 @@ async function _initChatModelHelper(
         const { ChatVertexAI } = await import("@langchain/google-vertexai");
         return new ChatVertexAI({ model, ...passedParams });
       }
+      case "google-vertexai-web": {
+        const { ChatVertexAI } = await import("@langchain/google-vertexai-web");
+        return new ChatVertexAI({ model, ...passedParams });
+      }
       case "google-genai": {
         const { ChatGoogleGenerativeAI } = await import(
           "@langchain/google-genai"
@@ -115,9 +124,21 @@ async function _initChatModelHelper(
         const { ChatGroq } = await import("@langchain/groq");
         return new ChatGroq({ model, ...passedParams });
       }
+      case "cerebras": {
+        const { ChatCerebras } = await import("@langchain/cerebras");
+        return new ChatCerebras({ model, ...passedParams });
+      }
       case "bedrock": {
         const { ChatBedrockConverse } = await import("@langchain/aws");
         return new ChatBedrockConverse({ model, ...passedParams });
+      }
+      case "deepseek": {
+        const { ChatDeepSeek } = await import("@langchain/deepseek");
+        return new ChatDeepSeek({ model, ...passedParams });
+      }
+      case "xai": {
+        const { ChatXAI } = await import("@langchain/xai");
+        return new ChatXAI({ model, ...passedParams });
       }
       case "fireworks": {
         const { ChatFireworks } = await import(
@@ -175,7 +196,12 @@ async function _initChatModelHelper(
  * _inferModelProvider("unknown-model"); // returns undefined
  */
 export function _inferModelProvider(modelName: string): string | undefined {
-  if (modelName.startsWith("gpt-3") || modelName.startsWith("gpt-4")) {
+  if (
+    modelName.startsWith("gpt-3") ||
+    modelName.startsWith("gpt-4") ||
+    modelName.startsWith("o1") ||
+    modelName.startsWith("o3")
+  ) {
     return "openai";
   } else if (modelName.startsWith("claude")) {
     return "anthropic";
@@ -580,12 +606,14 @@ export async function initChatModel<
  * @template {extends ConfigurableChatModelCallOptions = ConfigurableChatModelCallOptions} CallOptions - Call options for the model.
  *
  * @param {string | ChatModelProvider} [model] - The name of the model, e.g. "gpt-4", "claude-3-opus-20240229".
+ *   Can be prefixed with the model provider, e.g. "openai:gpt-4", "anthropic:claude-3-opus-20240229".
  * @param {Object} [fields] - Additional configuration options.
  * @param {string} [fields.modelProvider] - The model provider. Supported values include:
  *   - openai (@langchain/openai)
  *   - anthropic (@langchain/anthropic)
  *   - azure_openai (@langchain/openai)
  *   - google-vertexai (@langchain/google-vertexai)
+ *   - google-vertexai-web (@langchain/google-vertexai-web)
  *   - google-genai (@langchain/google-genai)
  *   - bedrock (@langchain/aws)
  *   - cohere (@langchain/cohere)
@@ -594,6 +622,9 @@ export async function initChatModel<
  *   - mistralai (@langchain/mistralai)
  *   - groq (@langchain/groq)
  *   - ollama (@langchain/ollama)
+ *   - cerebras (@langchain/cerebras)
+ *   - deepseek (@langchain/deepseek)
+ *   - xai (@langchain/xai)
  * @param {string[] | "any"} [fields.configurableFields] - Which model parameters are configurable:
  *   - undefined: No configurable fields.
  *   - "any": All fields are configurable. (See Security Note in description)
@@ -608,14 +639,12 @@ export async function initChatModel<
  * ```typescript
  * import { initChatModel } from "langchain/chat_models/universal";
  *
- * const gpt4 = await initChatModel("gpt-4", {
- *   modelProvider: "openai",
+ * const gpt4 = await initChatModel("openai:gpt-4", {
  *   temperature: 0.25,
  * });
  * const gpt4Result = await gpt4.invoke("what's your name");
  *
- * const claude = await initChatModel("claude-3-opus-20240229", {
- *   modelProvider: "anthropic",
+ * const claude = await initChatModel("anthropic:claude-3-opus-20240229", {
  *   temperature: 0.25,
  * });
  * const claudeResult = await claude.invoke("what's your name");
@@ -786,10 +815,20 @@ export async function initChatModel<
     configPrefix?: string;
   }
 ): Promise<_ConfigurableModel<RunInput, CallOptions>> {
-  const { configurableFields, configPrefix, modelProvider, ...params } = {
+  // eslint-disable-next-line prefer-const
+  let { configurableFields, configPrefix, modelProvider, ...params } = {
     configPrefix: "",
     ...(fields ?? {}),
   };
+  if (modelProvider === undefined && model?.includes(":")) {
+    const modelComponents = model.split(":", 2);
+    if (
+      _SUPPORTED_PROVIDERS.includes(modelComponents[0] as ChatModelProvider)
+    ) {
+      // eslint-disable-next-line no-param-reassign
+      [modelProvider, model] = modelComponents;
+    }
+  }
   let configurableFieldsCopy = Array.isArray(configurableFields)
     ? [...configurableFields]
     : configurableFields;

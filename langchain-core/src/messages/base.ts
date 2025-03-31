@@ -34,6 +34,7 @@ export type MessageType =
   | "human"
   | "ai"
   | "generic"
+  | "developer"
   | "system"
   | "function"
   | "tool"
@@ -106,6 +107,9 @@ export function mergeContent(
 ): MessageContent {
   // If first content is a string
   if (typeof firstContent === "string") {
+    if (firstContent === "") {
+      return secondContent;
+    }
     if (typeof secondContent === "string") {
       return firstContent + secondContent;
     } else {
@@ -120,6 +124,9 @@ export function mergeContent(
       ]
     );
   } else {
+    if (secondContent === "") {
+      return firstContent;
+    }
     // Otherwise, add the second content as a new element of the list
     return [...firstContent, { type: "text", text: secondContent }];
   }
@@ -193,11 +200,21 @@ export abstract class BaseMessage
   }
 
   /**
-   * @deprecated
-   * Use {@link BaseMessage.content} instead.
+   * Get text content of the message.
    */
   get text(): string {
-    return typeof this.content === "string" ? this.content : "";
+    if (typeof this.content === "string") {
+      return this.content;
+    }
+
+    if (!Array.isArray(this.content)) return "";
+    return this.content
+      .map((c) => {
+        if (typeof c === "string") return c;
+        if (c.type === "text") return c.text;
+        return "";
+      })
+      .join("");
   }
 
   /** The content of the message. */

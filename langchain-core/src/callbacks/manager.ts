@@ -303,7 +303,13 @@ export class CallbackManagerForLLMRun
     );
   }
 
-  async handleLLMError(err: Error | unknown): Promise<void> {
+  async handleLLMError(
+    err: Error | unknown,
+    _runId?: string,
+    _parentRunId?: string,
+    _tags?: string[],
+    extraParams?: Record<string, unknown>
+  ): Promise<void> {
     await Promise.all(
       this.handlers.map((handler) =>
         consumeCallback(async () => {
@@ -313,7 +319,8 @@ export class CallbackManagerForLLMRun
                 err,
                 this.runId,
                 this._parentRunId,
-                this.tags
+                this.tags,
+                extraParams
               );
             } catch (err) {
               const logFunction = handler.raiseError
@@ -332,7 +339,13 @@ export class CallbackManagerForLLMRun
     );
   }
 
-  async handleLLMEnd(output: LLMResult): Promise<void> {
+  async handleLLMEnd(
+    output: LLMResult,
+    _runId?: string,
+    _parentRunId?: string,
+    _tags?: string[],
+    extraParams?: Record<string, unknown>
+  ): Promise<void> {
     await Promise.all(
       this.handlers.map((handler) =>
         consumeCallback(async () => {
@@ -342,7 +355,8 @@ export class CallbackManagerForLLMRun
                 output,
                 this.runId,
                 this._parentRunId,
-                this.tags
+                this.tags,
+                extraParams
               );
             } catch (err) {
               const logFunction = handler.raiseError
@@ -1245,18 +1259,6 @@ export class CallbackManager
         }
       }
     }
-    if (inheritableTags || localTags) {
-      if (callbackManager) {
-        callbackManager.addTags(inheritableTags ?? []);
-        callbackManager.addTags(localTags ?? [], false);
-      }
-    }
-    if (inheritableMetadata || localMetadata) {
-      if (callbackManager) {
-        callbackManager.addMetadata(inheritableMetadata ?? {});
-        callbackManager.addMetadata(localMetadata ?? {}, false);
-      }
-    }
 
     for (const {
       contextVar,
@@ -1276,9 +1278,26 @@ export class CallbackManager
         handler = new (handlerClass as any)({});
       }
       if (handler !== undefined) {
-        if (!callbackManager?.handlers.some((h) => h.name === handler!.name)) {
-          callbackManager?.addHandler(handler, inheritable);
+        if (!callbackManager) {
+          callbackManager = new CallbackManager();
         }
+
+        if (!callbackManager.handlers.some((h) => h.name === handler!.name)) {
+          callbackManager.addHandler(handler, inheritable);
+        }
+      }
+    }
+
+    if (inheritableTags || localTags) {
+      if (callbackManager) {
+        callbackManager.addTags(inheritableTags ?? []);
+        callbackManager.addTags(localTags ?? [], false);
+      }
+    }
+    if (inheritableMetadata || localMetadata) {
+      if (callbackManager) {
+        callbackManager.addMetadata(inheritableMetadata ?? {});
+        callbackManager.addMetadata(localMetadata ?? {}, false);
       }
     }
 

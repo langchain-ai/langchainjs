@@ -298,7 +298,13 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     return run;
   }
 
-  async handleLLMEnd(output: LLMResult, runId: string): Promise<Run> {
+  async handleLLMEnd(
+    output: LLMResult,
+    runId: string,
+    _parentRunId?: string,
+    _tags?: string[],
+    extraParams?: Record<string, unknown>
+  ): Promise<Run> {
     const run = this.runMap.get(runId);
     if (!run || run?.run_type !== "llm") {
       throw new Error("No LLM run to end.");
@@ -309,12 +315,19 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       name: "end",
       time: new Date(run.end_time).toISOString(),
     });
+    run.extra = { ...run.extra, ...extraParams };
     await this.onLLMEnd?.(run);
     await this._endTrace(run);
     return run;
   }
 
-  async handleLLMError(error: unknown, runId: string): Promise<Run> {
+  async handleLLMError(
+    error: unknown,
+    runId: string,
+    _parentRunId?: string,
+    _tags?: string[],
+    extraParams?: Record<string, unknown>
+  ): Promise<Run> {
     const run = this.runMap.get(runId);
     if (!run || run?.run_type !== "llm") {
       throw new Error("No LLM run to end.");
@@ -325,6 +338,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       name: "error",
       time: new Date(run.end_time).toISOString(),
     });
+    run.extra = { ...run.extra, ...extraParams };
     await this.onLLMError?.(run);
     await this._endTrace(run);
     return run;

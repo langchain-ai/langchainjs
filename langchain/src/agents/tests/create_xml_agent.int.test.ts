@@ -2,7 +2,7 @@ import { test, expect } from "@jest/globals";
 import type { PromptTemplate } from "@langchain/core/prompts";
 import { ChatOpenAI } from "@langchain/openai";
 import { TavilySearchResults } from "../../util/testing/tools/tavily_search.js";
-import { pull } from "../../hub.js";
+import { pull } from "../../hub/index.js";
 import { AgentExecutor, createXmlAgent } from "../index.js";
 
 const tools = [new TavilySearchResults({ maxResults: 1 })];
@@ -10,7 +10,7 @@ const tools = [new TavilySearchResults({ maxResults: 1 })];
 test("createXmlAgent works", async () => {
   const prompt = await pull<PromptTemplate>("hwchase17/xml-agent-convo");
   const llm = new ChatOpenAI({
-    modelName: "gpt-4-turbo",
+    modelName: "gpt-4o-mini",
     temperature: 0,
   });
   const agent = await createXmlAgent({

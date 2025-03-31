@@ -1,11 +1,11 @@
 import { test, expect } from "@jest/globals";
-import { ChatOpenAI, OpenAIChat } from "@langchain/openai";
+import { ChatOpenAI } from "@langchain/openai";
 import { SystemMessage } from "@langchain/core/messages";
 import { ConversationSummaryMemory } from "../summary.js";
 
 test("Test summary memory", async () => {
   const memory = new ConversationSummaryMemory({
-    llm: new OpenAIChat({ modelName: "gpt-3.5-turbo", temperature: 0 }),
+    llm: new ChatOpenAI({ modelName: "gpt-3.5-turbo", temperature: 0 }),
   });
   expect(await memory.loadMemoryVariables({})).toEqual({
     history: "",
@@ -51,7 +51,7 @@ test("Test summary memory with chat model", async () => {
 
 test("Test summary memory return messages", async () => {
   const memory = new ConversationSummaryMemory({
-    llm: new OpenAIChat({ modelName: "gpt-3.5-turbo", temperature: 0 }),
+    llm: new ChatOpenAI({ modelName: "gpt-3.5-turbo", temperature: 0 }),
     returnMessages: true,
   });
   expect(await memory.loadMemoryVariables({})).toEqual({
