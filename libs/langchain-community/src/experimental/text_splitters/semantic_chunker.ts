@@ -12,12 +12,12 @@ type Sentence = {
 type SentenceWithCombinedSentence = Sentence & { combined_sentence: string }
 type SentenceWithEmbedding = Sentence & { combined_sentence_embedding: number[]; distance_to_next: number }
 
-function combineSentences(sentences: Sentence[], sentecesToCombine: number = 1) {
+function combineSentences(sentences: Sentence[], sentencesToCombine: number = 1) {
   /**
    * Combine sentences based on buffer size.
    *
    * @param sentences - List of sentences to combine.
-   * @param sentecesToCombine - Number of sentences to combine. Defaults to 1.
+   * @param sentencesToCombine - Number of sentences to combine. Defaults to 1.
    * @returns List of sentences with combined sentences.
    */
 
@@ -25,7 +25,7 @@ function combineSentences(sentences: Sentence[], sentecesToCombine: number = 1) 
     let combinedSentence = ""
 
     // Add sentences before the current one
-    for (let j = i - sentecesToCombine; j < i; j++) {
+    for (let j = i - sentencesToCombine; j < i; j++) {
       if (j >= 0) {
         combinedSentence += sentences[j].sentence + " "
       }
@@ -35,7 +35,7 @@ function combineSentences(sentences: Sentence[], sentecesToCombine: number = 1) 
     combinedSentence += sentences[i].sentence
 
     // Add sentences after the current one
-    for (let j = i + 1; j < i + 1 + sentecesToCombine; j++) {
+    for (let j = i + 1; j < i + 1 + sentencesToCombine; j++) {
       if (j < sentences.length) {
         combinedSentence += " " + sentences[j].sentence
       }
@@ -93,7 +93,7 @@ const BREAKPOINT_DEFAULTS: Record<BreakpointThresholdType, number> = {
 }
 
 interface SemanticChunkerOptions {
-  sentecesToCombine?: number
+  sentencesToCombine?: number
   sentenceSplitRegex?: RegExp
   addStartIndex?: boolean
   breakpointThresholdType?: BreakpointThresholdType
@@ -103,7 +103,7 @@ interface SemanticChunkerOptions {
 }
 
 export class SemanticChunker extends BaseDocumentTransformer {
-  private sentecesToCombine: number = 1
+  private sentencesToCombine: number = 1
   private sentenceSplitRegex: RegExp = new RegExp(`(?<=[.?!])\\s+`)
   private addStartIndex: boolean = false
   private breakpointThresholdType: BreakpointThresholdType = BreakpointThresholdType.PERCENTILE
@@ -118,7 +118,7 @@ export class SemanticChunker extends BaseDocumentTransformer {
     super()
 
     if (options) {
-      if (options.sentecesToCombine !== undefined) this.sentecesToCombine = options.sentecesToCombine
+      if (options.sentencesToCombine !== undefined) this.sentencesToCombine = options.sentencesToCombine
       if (options.sentenceSplitRegex !== undefined) this.sentenceSplitRegex = new RegExp(options.sentenceSplitRegex)
       if (options.addStartIndex !== undefined) this.addStartIndex = options.addStartIndex
       if (options.breakpointThresholdType !== undefined) {
@@ -196,7 +196,7 @@ export class SemanticChunker extends BaseDocumentTransformer {
   private async _calculateSentenceDistances(singleSentencesList: string[]): Promise<[number[], any[]]> {
     const sentences = combineSentences(
       singleSentencesList.map((sentence) => ({ sentence })),
-      this.sentecesToCombine
+      this.sentencesToCombine
     )
 
     const embeddings = await this.embeddings.embedDocuments(sentences.map((x) => x.combined_sentence))
