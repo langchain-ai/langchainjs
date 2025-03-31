@@ -444,6 +444,13 @@ export function convertToGenerativeAITools(
         (tool): GenerativeAIFunctionDeclaration => {
           if (isLangChainTool(tool)) {
             const jsonSchema = zodToGenerativeAIParameters(tool.schema);
+            if (jsonSchema.type === 'object' && 'properties' in jsonSchema && 
+                Object.keys(jsonSchema.properties).length === 0) {
+              return {
+                name: tool.name,
+                description: tool.description
+              };
+            }
             return {
               name: tool.name,
               description: tool.description,
