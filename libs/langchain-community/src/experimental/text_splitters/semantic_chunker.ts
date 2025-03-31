@@ -1,5 +1,6 @@
 import { BaseDocumentTransformer, Document } from "@langchain/core/documents"
 import { Embeddings } from "@langchain/core/embeddings"
+import { cosineSimilarity } from "@langchain/core/utils/math";
 
 type Sentence = {
   sentence: string
@@ -75,15 +76,6 @@ function calculateCosineDistances(sentences: SentenceWithEmbedding[]): [number[]
   }
 
   return [distances, sentences]
-}
-
-// Utility function for cosine similarity
-function cosineSimilarity(vecA: number[], vecB: number[]) {
-  const dotProduct = vecA.reduce((sum, a, i) => sum + a * vecB[i], 0)
-  const magnitudeA = Math.sqrt(vecA.reduce((sum, a) => sum + a * a, 0))
-  const magnitudeB = Math.sqrt(vecB.reduce((sum, b) => sum + b * b, 0))
-
-  return magnitudeA && magnitudeB ? dotProduct / (magnitudeA * magnitudeB) : 0
 }
 
 enum BreakpointThresholdType {
