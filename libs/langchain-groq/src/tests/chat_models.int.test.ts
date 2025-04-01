@@ -252,7 +252,7 @@ test("Groq can stream tool calls", async () => {
   expect(finalMessage.tool_calls?.[0].id).toBeDefined();
 });
 
-test.only("response metadata includes groq metadata", async () => {
+test("response metadata includes groq metadata", async () => {
   const model = new ChatGroq({
     model: "llama-3.3-70b-versatile",
   });
@@ -262,7 +262,7 @@ test.only("response metadata includes groq metadata", async () => {
   expect(res.response_metadata.x_groq?.id).toBeDefined();
 });
 
-test.only("response metadata includes groq metadata when streaming", async () => {
+test("response metadata includes groq metadata when streaming", async () => {
   const model = new ChatGroq({
     model: "llama-3.3-70b-versatile",
   });

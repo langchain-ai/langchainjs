@@ -987,7 +987,7 @@ export class ChatGroq extends BaseChatModel<
           message: groqResponseToChatMessage(
             part.message ?? { role: "assistant" },
             usageMetadata,
-            metadata,
+            metadata
           ),
         };
         generation.generationInfo = {
