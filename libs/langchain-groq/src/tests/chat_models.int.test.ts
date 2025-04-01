@@ -17,7 +17,6 @@ test("invoke", async () => {
   });
   const message = new HumanMessage("What color is the sky?");
   const res = await chat.invoke([message]);
-  // console.log({ res });
   expect(res.content.length).toBeGreaterThan(10);
 });
 
@@ -251,4 +250,28 @@ test("Groq can stream tool calls", async () => {
   expect(finalMessage.tool_calls?.[0].name).toBe("get_current_weather");
   expect(finalMessage.tool_calls?.[0].args).toHaveProperty("location");
   expect(finalMessage.tool_calls?.[0].id).toBeDefined();
+});
+
+test.only("response metadata includes groq metadata", async () => {
+  const model = new ChatGroq({
+    model: "llama-3.3-70b-versatile",
+  });
+  const message = new HumanMessage("What color is the sky?");
+  const res = await model.invoke([message]);
+  // console.dir(res, { depth: Infinity });
+  expect(res.response_metadata.x_groq?.id).toBeDefined();
+});
+
+test.only("response metadata includes groq metadata when streaming", async () => {
+  const model = new ChatGroq({
+    model: "llama-3.3-70b-versatile",
+  });
+  const message = new HumanMessage("What color is the sky?");
+  const stream = await model.stream([message]);
+  let finalRes: AIMessageChunk | undefined;
+  for await (const chunk of stream) {
+    finalRes = !finalRes ? chunk : concat(finalRes, chunk);
+  }
+  // console.dir(finalRes, { depth: Infinity });
+  expect(finalRes?.response_metadata.x_groq?.id).toBeDefined();
 });
