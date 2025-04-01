@@ -15,7 +15,7 @@ describe("ChatMessageHistory creation", () => {
   let PEInstance: PostgresEngine;
 
   beforeAll(async () => {
-    PEInstance = await PostgresEngine.fromEngineArgs(url);
+    PEInstance = await PostgresEngine.fromConnectionString(url);
 
     await PEInstance.pool.raw(`DROP TABLE IF EXISTS ${CHAT_MSG_TABLE}`);
   });
@@ -82,7 +82,7 @@ describe("ChatMessageHistory methods", () => {
   let historyInstance: PostgresChatMessageHistory;
 
   beforeAll(async () => {
-    PEInstance = await PostgresEngine.fromEngineArgs(url);
+    PEInstance = await PostgresEngine.fromConnectionString(url);
 
     await PEInstance.pool.raw(`DROP TABLE IF EXISTS ${CHAT_MSG_TABLE}`);
     await PEInstance.initChatHistoryTable(CHAT_MSG_TABLE);

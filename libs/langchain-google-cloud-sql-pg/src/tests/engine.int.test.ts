@@ -6,6 +6,8 @@ import PostgresEngine, {
   Column,
   VectorStoreTableArgs,
 } from "../engine.js";
+import { Client } from "pg";
+import { PostgreSqlContainer } from "@testcontainers/postgresql";
 
 const CUSTOM_TABLE = "test_table_custom_engine";
 const CHAT_MSG_TABLE = "test_message_table_engine";
@@ -23,6 +25,26 @@ const USER = "myuser";
 const PASSWORD = "ChangeMe";
 const DATABASE_NAME = "api";
 const url = `postgresql+asyncpg://${USER}:${PASSWORD}@${HOST}:5432/${DATABASE_NAME}`;
+let container: PostgreSqlContainer;
+let client: Client;
+
+beforeAll(async () => {
+  container = await new PostgreSqlContainer("pgvector/pgvector:pg16").start();
+
+  client = new Client({
+    host: container.getHost(),
+    port: container.getPort(),
+    database: container.getDatabase(),
+    user: container.getUsername(),
+    password: container.getPassword(),
+  });
+  await client.connect();
+});
+
+afterAll(async () => {
+  await client.end();
+  await container.stop();
+});
 
 describe("PostgresEngine Instance creation", () => {
   let PEInstance: PostgresEngine;
@@ -50,13 +72,13 @@ describe("PostgresEngine Instance creation", () => {
 
     await expect(createInstance).rejects.toThrow(
       "Only one of 'user' or 'password' were specified. Either " +
-        "both should be specified to use basic user/password " +
-        "authentication or neither for IAM DB authentication."
+      "both should be specified to use basic user/password " +
+      "authentication or neither for IAM DB authentication."
     );
   });
 
   test("should create a PostgresEngine Instance using user and password", async () => {
-    PEInstance = await PostgresEngine.fromEngineArgs(url, poolConfig);
+    PEInstance = await PostgresEngine.fromConnectionString(url, poolConfig);
 
     const { rows } = await PEInstance.testConnection();
     const currentTimestamp = rows[0].currenttimestamp;
@@ -100,7 +122,7 @@ describe("PostgresEngine Instance creation", () => {
     const url = "";
 
     async function createInstance() {
-      PEInstance = await PostgresEngine.fromEngineArgs(url);
+      PEInstance = await PostgresEngine.fromConnectionString(url);
     }
 
     await expect(createInstance).rejects.toThrow(
@@ -113,7 +135,7 @@ describe("PostgresEngine - table initialization", () => {
   let PEInstance: PostgresEngine;
 
   beforeAll(async () => {
-    PEInstance = await PostgresEngine.fromEngineArgs(url);
+    PEInstance = await PostgresEngine.fromConnectionString(url);
   });
 
   test("should create the vectorstore table", async () => {

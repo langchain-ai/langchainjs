@@ -68,7 +68,7 @@ describe("VectorStore creation", () => {
   let PEInstance: PostgresEngine;
 
   beforeAll(async () => {
-    PEInstance = await PostgresEngine.fromEngineArgs(url);
+    PEInstance = await PostgresEngine.fromConnectionString(url);
 
     await PEInstance.pool.raw(`DROP TABLE IF EXISTS ${CUSTOM_TABLE}`);
     await PEInstance.initVectorstoreTable(
@@ -244,7 +244,7 @@ describe("VectorStore methods", () => {
   let PEInstance: PostgresEngine;
 
   beforeAll(async () => {
-    PEInstance = await PostgresEngine.fromEngineArgs(url);
+    PEInstance = await PostgresEngine.fromConnectionString(url);
 
     await PEInstance.pool.raw(`DROP TABLE IF EXISTS "${CUSTOM_TABLE}"`);
     await PEInstance.initVectorstoreTable(

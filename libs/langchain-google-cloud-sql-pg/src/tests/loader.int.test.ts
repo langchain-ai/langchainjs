@@ -33,7 +33,7 @@ describe("Document loader creation", () => {
   let PEInstance: PostgresEngine;
 
   beforeAll(async () => {
-    PEInstance = await PostgresEngine.fromEngineArgs(url);
+    PEInstance = await PostgresEngine.fromConnectionString(url);
 
     await PEInstance.pool.raw(`DROP TABLE IF EXISTS "${CUSTOM_TABLE2}"`);
 
@@ -163,7 +163,7 @@ describe("Document loader methods", () => {
   let postgresLoaderInstance: PostgresLoader;
 
   beforeAll(async () => {
-    PEInstance = await PostgresEngine.fromEngineArgs(url);
+    PEInstance = await PostgresEngine.fromConnectionString(url);
 
     const documentLoaderArgs: PostgresLoaderOptions = {
       tableName: CUSTOM_TABLE,

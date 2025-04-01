@@ -74,13 +74,13 @@ export class PostgresChatMessageHistory extends BaseChatMessageHistory {
     if (!requiredColumns.every((x) => columnNames.includes(x))) {
       throw new Error(
         `Table '${schemaName}'.'${tableName}' has incorrect schema.
-        Got column names ${columnNames} but required column names ${requiredColumns}.\n
-        Please create table with following schema: \nCREATE TABLE '${schemaName}'.'${tableName}' (
-        \n    id SERIAL AUTO_INCREMENT PRIMARY KEY,
-        \n    session_id TEXT NOT NULL,
-        \n    data JSONB NOT NULL,
-        \n    type TEXT NOT NULL
-        \n);
+        Got column names ${columnNames} but required column names ${requiredColumns}.
+        Please create table with following schema: CREATE TABLE '${schemaName}'.'${tableName}' (
+            id SERIAL AUTO_INCREMENT PRIMARY KEY,
+            session_id TEXT NOT NULL,
+            data JSONB NOT NULL,
+            type TEXT NOT NULL
+        );
       `
       );
     }

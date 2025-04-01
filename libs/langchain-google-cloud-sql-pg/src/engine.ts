@@ -179,7 +179,7 @@ export class PostgresEngine {
    * @param engine knex instance
    * @returns PostgresEngine instance from a knex instance
    */
-  static async fromEngine(engine: knex.Knex) {
+  static async fromPool(engine: knex.Knex) {
     return new PostgresEngine(PostgresEngine._createKey, engine);
   }
 
@@ -190,7 +190,7 @@ export class PostgresEngine {
    * @param poolConfig Optional - Configuration pool to use in the Knex configuration
    * @returns PostgresEngine instance
    */
-  static async fromEngineArgs(
+  static async fromConnectionString(
     url: string | knex.Knex.StaticConnectionConfig,
     poolConfig?: knex.Knex.PoolConfig
   ) {
