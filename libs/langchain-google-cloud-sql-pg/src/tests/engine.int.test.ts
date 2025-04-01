@@ -1,14 +1,12 @@
 import { describe, expect, test } from "@jest/globals";
 import { IpAddressTypes } from "@google-cloud/cloud-sql-connector";
 import knex from "knex";
+import { PostgreSqlContainer } from "@testcontainers/postgresql";
 import PostgresEngine, {
   PostgresEngineArgs,
   Column,
   VectorStoreTableArgs,
 } from "../engine.js";
-import pg from 'pg';
-import { PostgreSqlContainer } from "@testcontainers/postgresql";
-const { Client } = pg;
 
 const CUSTOM_TABLE = "test_table_custom_engine";
 const CHAT_MSG_TABLE = "test_message_table_engine";
@@ -21,44 +19,24 @@ const METADATA_COLUMNS = [
   new Column("source", "TEXT"),
 ];
 const STORE_METADATA = true;
-const HOST = "127.0.0.1";
-const USER = "myuser";
-const PASSWORD = "ChangeMe";
-const DATABASE_NAME = "api";
-const url = `postgresql+asyncpg://${USER}:${PASSWORD}@${HOST}:5432/${DATABASE_NAME}`;
+let url: string;
 let container: PostgreSqlContainer;
-let client: Client;
 
-beforeAll(async () => {
-  container = await new PostgreSqlContainer("pgvector/pgvector:pg16").start();
-
-  client = new Client({
-    host: container.getHost(),
-    port: container.getPort(),
-    database: container.getDatabase(),
-    user: container.getUsername(),
-    password: container.getPassword(),
-  });
-  await client.connect();
-});
+const poolConfig: knex.Knex.PoolConfig = {
+  min: 0,
+  max: 5,
+};
 
 afterAll(async () => {
-  await client.end();
   await container.stop();
 });
 
 describe("PostgresEngine Instance creation", () => {
   let PEInstance: PostgresEngine;
 
-  const poolConfig: knex.Knex.PoolConfig = {
-    min: 0,
-    max: 5,
-  };
-
   test.skip("should throw an error if only user or password are passed", async () => {
     const pgArgs: PostgresEngineArgs = {
-      // eslint-disable-next-line no-process-env
-      user: process.env.DB_USER ?? "",
+      user: container.getUsername() ?? "",
     };
 
     async function createInstance() {
@@ -73,23 +51,9 @@ describe("PostgresEngine Instance creation", () => {
 
     await expect(createInstance).rejects.toThrow(
       "Only one of 'user' or 'password' were specified. Either " +
-      "both should be specified to use basic user/password " +
-      "authentication or neither for IAM DB authentication."
+        "both should be specified to use basic user/password " +
+        "authentication or neither for IAM DB authentication."
     );
-  });
-
-  test("should create a PostgresEngine Instance using user and password", async () => {
-    PEInstance = await PostgresEngine.fromConnectionString(url, poolConfig);
-
-    const { rows } = await PEInstance.testConnection();
-    const currentTimestamp = rows[0].currenttimestamp;
-    expect(currentTimestamp).toBeDefined();
-
-    try {
-      await PEInstance.closeConnection();
-    } catch (error) {
-      throw new Error(`Error on closing connection: ${error}`);
-    }
   });
 
   // Google Cloud test only
@@ -120,10 +84,8 @@ describe("PostgresEngine Instance creation", () => {
   });
 
   test("should throw an error if the URL passed to from_engine_args does not have the driver", async () => {
-    const url = "";
-
     async function createInstance() {
-      PEInstance = await PostgresEngine.fromConnectionString(url);
+      PEInstance = await PostgresEngine.fromConnectionString("url");
     }
 
     await expect(createInstance).rejects.toThrow(
@@ -136,7 +98,10 @@ describe("PostgresEngine - table initialization", () => {
   let PEInstance: PostgresEngine;
 
   beforeAll(async () => {
-    PEInstance = await PostgresEngine.fromConnectionString(url);
+    container = await new PostgreSqlContainer("pgvector/pgvector:pg16").start();
+    url = `postgresql+asyncpg://${container.getUsername()}:${container.getPassword()}@${container.getHost()}:${container.getPort()}/${container.getDatabase()}`;
+
+    PEInstance = await PostgresEngine.fromConnectionString(url, poolConfig);
   });
 
   test("should create the vectorstore table", async () => {

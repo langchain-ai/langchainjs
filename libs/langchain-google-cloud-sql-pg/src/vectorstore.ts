@@ -667,9 +667,10 @@ export class PostgresVectorStore extends VectorStore {
       return;
     }
 
-    const filter = index.partialIndexes
-      ? `WHERE (${index.partialIndexes})`
-      : "";
+    const filter =
+      index.partialIndexes && index.partialIndexes?.length > 0
+        ? `WHERE (${index.partialIndexes})`
+        : "";
     const params = `WITH ${index.indexOptions()}`;
     const funct = index.distanceStrategy.indexFunction;
 

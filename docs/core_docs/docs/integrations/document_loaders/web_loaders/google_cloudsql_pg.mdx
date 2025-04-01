@@ -102,7 +102,7 @@ const documentLoaderArgs: PostgresLoaderOptions = {
   format: "text",
 };
 
-const documentLoaderInstance = await PostgresLoader.create(
+const documentLoaderInstance = await PostgresLoader.initialize(
   PEInstance,
   documentLoaderArgs
 );
@@ -125,7 +125,7 @@ const documentLoaderArgs: PostgresLoaderOptions = {
   format: "text",
 };
 
-const documentLoaderInstance = await PostgresLoader.create(
+const documentLoaderInstance = await PostgresLoader.initialize(
   PEInstance,
   docucumetLoaderArgs
 );

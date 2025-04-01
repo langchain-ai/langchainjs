@@ -59,7 +59,7 @@ PASSWORD="your-database-password"
 ### Setting up an instance
 
 To instantiate a PostgresChatMessageHistory, you'll first need to create a database connection through the
-PostgresEngine, then initialize the chat history table and finally call the `.create()` method to instantiate
+PostgresEngine, then initialize the chat history table and finally call the `.initialize()` method to instantiate
 the chat message history.
 
 ```typescript
@@ -91,7 +91,7 @@ await engine.initChatHistoryTable("my_chat_history_table");
 
 // PostgresChatMessageHistory instantiation
 const historyInstance: PostgresChatMessageHistory =
-  await PostgresChatMessageHistory.create(
+  await PostgresChatMessageHistory.initialize(
     engine,
     "test",
     "my_chat_history_table"

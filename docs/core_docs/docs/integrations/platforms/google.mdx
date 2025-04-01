@@ -312,7 +312,7 @@ await engine.initChatHistoryTable("chat_message_table");
 Create a chat message history instance:
 
 ```typescript
-const historyInstance = await PostgresChatMessageHistory.create(
+const historyInstance = await PostgresChatMessageHistory.initialize(
   engine,
   "test",
   "chat_message_table"

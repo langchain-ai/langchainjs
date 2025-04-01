@@ -27,7 +27,7 @@ await engine.initChatHistoryTable("my_chat_history_table");
 
 // PostgresChatMessageHistory instantiation
 const historyInstance: PostgresChatMessageHistory =
-  await PostgresChatMessageHistory.create(
+  await PostgresChatMessageHistory.initialize(
     engine,
     "test",
     "my_chat_history_table"

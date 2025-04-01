@@ -4,6 +4,7 @@ import { SyntheticEmbeddings } from "@langchain/core/utils/testing";
 import { v4 as uuidv4 } from "uuid";
 
 import { MaxMarginalRelevanceSearchOptions } from "@langchain/core/vectorstores";
+import { PostgreSqlContainer } from "@testcontainers/postgresql";
 import PostgresEngine, { Column, VectorStoreTableArgs } from "../engine.js";
 import PostgresVectorStore, {
   PostgresVectorStoreArgs,
@@ -33,12 +34,8 @@ const texts = ["foo", "bar", "baz"];
 const metadatas: Record<string, string>[] = [];
 const docs: DocumentInterface[] = [];
 const embeddings = [];
-const HOST = "127.0.0.1";
-const USER = "myuser";
-const PASSWORD = "ChangeMe";
-const DATABASE_NAME = "api";
-const url = `postgresql+asyncpg://${USER}:${PASSWORD}@${HOST}:5432/${DATABASE_NAME}`;
-
+let url: string;
+let container: PostgreSqlContainer;
 let vectorStoreInstance: PostgresVectorStore;
 
 const vsTableArgs: VectorStoreTableArgs = {
@@ -63,6 +60,16 @@ for (let i = 0; i < texts.length; i += 1) {
   docs.push(new Document({ pageContent: texts[i], metadata: metadatas[i] }));
   embeddings.push(embeddingService.embedQuery(texts[i]));
 }
+
+beforeAll(async () => {
+  container = await new PostgreSqlContainer("pgvector/pgvector:pg16").start();
+
+  url = `postgresql+asyncpg://${container.getUsername()}:${container.getPassword()}@${container.getHost()}:${container.getPort()}/${container.getDatabase()}`;
+});
+
+afterAll(async () => {
+  await container.stop();
+});
 
 describe("VectorStore creation", () => {
   let PEInstance: PostgresEngine;

@@ -1,5 +1,5 @@
 import { test } from "@jest/globals";
-
+import { PostgreSqlContainer } from "@testcontainers/postgresql";
 import { PostgresLoader, PostgresLoaderOptions } from "../loader.js";
 import PostgresEngine from "../engine.js";
 
@@ -23,11 +23,18 @@ const FORMATTER = (
     .filter((column) => column in row)
     .map((column) => String(row[column]))
     .join(" ");
-const HOST = "127.0.0.1";
-const USER = "myuser";
-const PASSWORD = "ChangeMe";
-const DATABASE_NAME = "api";
-const url = `postgresql+asyncpg://${USER}:${PASSWORD}@${HOST}:5432/${DATABASE_NAME}`;
+
+let url: string;
+let container: PostgreSqlContainer;
+beforeAll(async () => {
+  container = await new PostgreSqlContainer("pgvector/pgvector:pg16").start();
+
+  url = `postgresql+asyncpg://${container.getUsername()}:${container.getPassword()}@${container.getHost()}:${container.getPort()}/${container.getDatabase()}`;
+});
+
+afterAll(async () => {
+  await container.stop();
+});
 
 describe("Document loader creation", () => {
   let PEInstance: PostgresEngine;

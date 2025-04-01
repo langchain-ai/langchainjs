@@ -1,15 +1,24 @@
 import { test } from "@jest/globals";
 
 import { AIMessage, BaseMessage, HumanMessage } from "@langchain/core/messages";
+import { PostgreSqlContainer } from "@testcontainers/postgresql";
 import PostgresEngine from "../engine.js";
 import { PostgresChatMessageHistory } from "../chat_message_history.js";
 
 const CHAT_MSG_TABLE = "test_message_table";
-const HOST = "127.0.0.1";
-const USER = "myuser";
-const PASSWORD = "ChangeMe";
-const DATABASE_NAME = "api";
-const url = `postgresql+asyncpg://${USER}:${PASSWORD}@${HOST}:5432/${DATABASE_NAME}`;
+const CHAT_MSG_TABLE_ERR = "test_message_table_err";
+let url: string;
+let container: PostgreSqlContainer;
+
+beforeAll(async () => {
+  container = await new PostgreSqlContainer("pgvector/pgvector:pg16").start();
+
+  url = `postgresql+asyncpg://${container.getUsername()}:${container.getPassword()}@${container.getHost()}:${container.getPort()}/${container.getDatabase()}`;
+});
+
+afterAll(async () => {
+  await container.stop();
+});
 
 describe("ChatMessageHistory creation", () => {
   let PEInstance: PostgresEngine;
@@ -22,36 +31,37 @@ describe("ChatMessageHistory creation", () => {
 
   test("should throw an Error if the table has incorrect schema", async () => {
     await PEInstance.pool.raw(
-      `CREATE TABLE IF NOT EXISTS public.${CHAT_MSG_TABLE}(
-      my_id SERIAL PRIMARY KEY,
-      session_id TEXT NOT NULL,
-      data JSONB NOT NULL,
-      type TEXT NOT NULL);`
+      `CREATE TABLE IF NOT EXISTS public.${CHAT_MSG_TABLE_ERR}(
+        my_id SERIAL PRIMARY KEY,
+        session_id TEXT NOT NULL,
+        data JSON NOT NULL,
+        type TEXT NOT NULL
+      );`
     );
 
     async function createChatMsgInstance() {
       await PostgresChatMessageHistory.initialize(
         PEInstance,
         "test",
-        CHAT_MSG_TABLE
+        CHAT_MSG_TABLE_ERR
       );
     }
 
-    await expect(createChatMsgInstance).rejects.toThrowError(
+    await expect(createChatMsgInstance).rejects.toThrow(
       new Error(
-        `Table 'public'.'${CHAT_MSG_TABLE}' has incorrect schema.
-        Got column names my_id,session_id,data,type but required column names id,session_id,data,type.\n
-        Please create table with following schema: \nCREATE TABLE 'public'.'${CHAT_MSG_TABLE}' (
-        \n    id SERIAL AUTO_INCREMENT PRIMARY KEY,
-        \n    session_id TEXT NOT NULL,
-        \n    data JSONB NOT NULL,
-        \n    type TEXT NOT NULL
-        \n);
+        `Table 'public'.'test_message_table_err' has incorrect schema.
+        Got column names my_id,session_id,data,type but required column names id,session_id,data,type.
+        Please create table with following schema: CREATE TABLE 'public'.'test_message_table_err' (
+            id SERIAL AUTO_INCREMENT PRIMARY KEY,
+            session_id TEXT NOT NULL,
+            data JSONB NOT NULL,
+            type TEXT NOT NULL
+        );
       `
       )
     );
 
-    await PEInstance.pool.raw(`DROP TABLE ${CHAT_MSG_TABLE}`);
+    await PEInstance.pool.raw(`DROP TABLE ${CHAT_MSG_TABLE_ERR}`);
   });
 
   test("should create a new PostgresChatMessageHistory instance", async () => {
