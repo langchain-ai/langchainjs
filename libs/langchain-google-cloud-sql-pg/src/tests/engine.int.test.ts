@@ -6,8 +6,9 @@ import PostgresEngine, {
   Column,
   VectorStoreTableArgs,
 } from "../engine.js";
-import { Client } from "pg";
+import pg from 'pg';
 import { PostgreSqlContainer } from "@testcontainers/postgresql";
+const { Client } = pg;
 
 const CUSTOM_TABLE = "test_table_custom_engine";
 const CHAT_MSG_TABLE = "test_message_table_engine";
