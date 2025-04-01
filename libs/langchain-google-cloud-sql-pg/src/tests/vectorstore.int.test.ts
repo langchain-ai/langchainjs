@@ -4,7 +4,10 @@ import { SyntheticEmbeddings } from "@langchain/core/utils/testing";
 import { v4 as uuidv4 } from "uuid";
 
 import { MaxMarginalRelevanceSearchOptions } from "@langchain/core/vectorstores";
-import { PostgreSqlContainer } from "@testcontainers/postgresql";
+import {
+  PostgreSqlContainer,
+  StartedPostgreSqlContainer,
+} from "@testcontainers/postgresql";
 import PostgresEngine, { Column, VectorStoreTableArgs } from "../engine.js";
 import PostgresVectorStore, {
   PostgresVectorStoreArgs,
@@ -35,7 +38,7 @@ const metadatas: Record<string, string>[] = [];
 const docs: DocumentInterface[] = [];
 const embeddings = [];
 let url: string;
-let container: PostgreSqlContainer;
+let container: StartedPostgreSqlContainer;
 let vectorStoreInstance: PostgresVectorStore;
 
 const vsTableArgs: VectorStoreTableArgs = {

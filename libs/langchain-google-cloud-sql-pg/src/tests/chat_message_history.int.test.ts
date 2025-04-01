@@ -1,14 +1,17 @@
 import { test } from "@jest/globals";
 
 import { AIMessage, BaseMessage, HumanMessage } from "@langchain/core/messages";
-import { PostgreSqlContainer } from "@testcontainers/postgresql";
+import {
+  PostgreSqlContainer,
+  StartedPostgreSqlContainer,
+} from "@testcontainers/postgresql";
 import PostgresEngine from "../engine.js";
 import { PostgresChatMessageHistory } from "../chat_message_history.js";
 
 const CHAT_MSG_TABLE = "test_message_table";
 const CHAT_MSG_TABLE_ERR = "test_message_table_err";
 let url: string;
-let container: PostgreSqlContainer;
+let container: StartedPostgreSqlContainer;
 
 beforeAll(async () => {
   container = await new PostgreSqlContainer("pgvector/pgvector:pg16").start();

@@ -1,5 +1,8 @@
 import { test } from "@jest/globals";
-import { PostgreSqlContainer } from "@testcontainers/postgresql";
+import {
+  PostgreSqlContainer,
+  StartedPostgreSqlContainer,
+} from "@testcontainers/postgresql";
 import { PostgresLoader, PostgresLoaderOptions } from "../loader.js";
 import PostgresEngine from "../engine.js";
 
@@ -25,7 +28,7 @@ const FORMATTER = (
     .join(" ");
 
 let url: string;
-let container: PostgreSqlContainer;
+let container: StartedPostgreSqlContainer;
 beforeAll(async () => {
   container = await new PostgreSqlContainer("pgvector/pgvector:pg16").start();
 

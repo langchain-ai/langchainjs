@@ -1,7 +1,10 @@
 import { describe, expect, test } from "@jest/globals";
 import { IpAddressTypes } from "@google-cloud/cloud-sql-connector";
 import knex from "knex";
-import { PostgreSqlContainer } from "@testcontainers/postgresql";
+import {
+  PostgreSqlContainer,
+  StartedPostgreSqlContainer,
+} from "@testcontainers/postgresql";
 import PostgresEngine, {
   PostgresEngineArgs,
   Column,
@@ -20,7 +23,7 @@ const METADATA_COLUMNS = [
 ];
 const STORE_METADATA = true;
 let url: string;
-let container: PostgreSqlContainer;
+let container: StartedPostgreSqlContainer;
 
 const poolConfig: knex.Knex.PoolConfig = {
   min: 0,
