@@ -10563,6 +10563,7 @@ __metadata:
     rollup: ^4.5.2
     ts-jest: ^29.1.0
     typescript: <5.2.0
+    uuid: ^11.1.0
     zod: ^3.22.4
     zod-to-json-schema: ^3.22.4
   peerDependencies:
@@ -42120,7 +42121,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"uuid@npm:^11.0.5":
+"uuid@npm:^11.0.5, uuid@npm:^11.1.0":
   version: 11.1.0
   resolution: "uuid@npm:11.1.0"
   bin:
