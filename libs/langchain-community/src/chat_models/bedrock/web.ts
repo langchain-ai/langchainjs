@@ -72,6 +72,7 @@ const ALLOWED_MODEL_PROVIDERS = [
   "cohere",
   "meta",
   "mistral",
+  "deepseek",
 ];
 
 const PRELUDE_TOTAL_LENGTH_BYTES = 4;
@@ -635,6 +636,10 @@ export class BedrockChat
     this.guardrailIdentifier =
       fields?.guardrailIdentifier ?? this.guardrailIdentifier;
     this.guardrailConfig = fields?.guardrailConfig;
+    // Permit Application Inference Profile override in fetch URL (expects to be url-encoded)
+    if (fields?.applicationInferenceProfile) {
+      this.model = fields?.applicationInferenceProfile;
+    }
   }
 
   override invocationParams(options?: this["ParsedCallOptions"]) {

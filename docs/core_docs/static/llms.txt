@@ -1,0 +1,426 @@
+# LangChain JavaScript
+
+This guide provides explanations of the key concepts behind the LangChain framework and AI applications more broadly.
+
+We recommend that you go through at least one of the [Tutorials](https://js.langchain.com/docs/tutorials/) before diving into the conceptual guide. This will provide practical context that will make it easier to understand the concepts discussed here.
+
+The conceptual guide does not cover step-by-step instructions or specific implementation examples — those are found in the [How-to guides](https://js.langchain.com/docs/how_to/) and [Tutorials](https://js.langchain.com/docs/tutorials/). For detailed reference material, please see the [API reference](https://api.js.langchain.com/).
+
+## Concepts
+
+- **[Why LangChain?](https://js.langchain.com/docs/concepts/why_langchain/)**: Overview of the value that LangChain provides.
+- **[Architecture](https://js.langchain.com/docs/concepts/architecture/)**: How packages are organized in the LangChain ecosystem.
+- **[Chat models](https://js.langchain.com/docs/concepts/chat_models/)**: LLMs exposed via a chat API that process sequences of messages as input and output a message.
+- **[Messages](https://js.langchain.com/docs/concepts/messages/)**: The unit of communication in chat models, used to represent model input and output.
+- **[Chat history](https://js.langchain.com/docs/concepts/chat_history/)**: A conversation represented as a sequence of messages, alternating between user messages and model responses.
+- **[Tools](https://js.langchain.com/docs/concepts/tools/)**: A function with an associated schema defining the function's name, description, and the arguments it accepts.
+- **[Tool calling](https://js.langchain.com/docs/concepts/tool_calling/)**: A type of chat model API that accepts tool schemas, along with messages, as input and returns invocations of those tools as part of the output message.
+- **[Structured output](https://js.langchain.com/docs/concepts/structured_outputs/)**: A technique to make a chat model respond in a structured format, such as JSON that matches a given schema.
+- **[Memory](https://langchain-ai.github.io/langgraphjs/concepts/memory/)**: Information about a conversation that is persisted so that it can be used in future conversations.
+- **[Multimodality](https://js.langchain.com/docs/concepts/multimodality/)**: The ability to work with data that comes in different forms, such as text, audio, images, and video.
+- **[Runnable interface](https://js.langchain.com/docs/concepts/runnables/)**: The base abstraction that many LangChain components and the LangChain Expression Language are built on.
+- **[Streaming](https://js.langchain.com/docs/concepts/streaming/)**: LangChain streaming APIs for surfacing results as they are generated.
+- **[LangChain Expression Language (LCEL)](https://js.langchain.com/docs/concepts/lcel/)**: A syntax for orchestrating LangChain components. Most useful for simpler applications.
+- **[Document loaders](https://js.langchain.com/docs/concepts/document_loaders/)**: Load a source as a list of documents.
+- **[Retrieval](https://js.langchain.com/docs/concepts/retrieval/)**: Information retrieval systems can retrieve structured or unstructured data from a datasource in response to a query.
+- **[Text splitters](https://js.langchain.com/docs/concepts/text_splitters/)**: Split long text into smaller chunks that can be individually indexed to enable granular retrieval.
+- **[Embedding models](https://js.langchain.com/docs/concepts/embedding_models/)**: Models that represent data such as text or images in a vector space.
+- **[Vector stores](https://js.langchain.com/docs/concepts/vectorstores/)**: Storage of and efficient search over vectors and associated metadata.
+- **[Retriever](https://js.langchain.com/docs/concepts/retrievers/)**: A component that returns relevant documents from a knowledge base in response to a query.
+- **[Retrieval Augmented Generation (RAG)](https://js.langchain.com/docs/concepts/rag/)**: A technique that enhances language models by combining them with external knowledge bases.
+- **[Agents](https://js.langchain.com/docs/concepts/agents/)**: Use a [language model](https://js.langchain.com/docs/concepts/chat_models/) to choose a sequence of actions to take. Agents can interact with external resources via [tool](https://js.langchain.com/docs/concepts/tools/).
+- **[Prompt templates](https://js.langchain.com/docs/concepts/prompt_templates/)**: Component for factoring out the static parts of a model "prompt" (usually a sequence of messages). Useful for serializing, versioning, and reusing these static parts.
+- **[Output parsers](https://js.langchain.com/docs/concepts/output_parsers/)**: Responsible for taking the output of a model and transforming it into a more suitable format for downstream tasks. Output parsers were primarily useful prior to the general availability of [tool calling](https://js.langchain.com/docs/concepts/tool_calling/) and [structured outputs](https://js.langchain.com/docs/concepts/structured_outputs/).
+- **[Few-shot prompting](https://js.langchain.com/docs/concepts/few_shot_prompting/)**: A technique for improving model performance by providing a few examples of the task to perform in the prompt.
+- **[Example selectors](https://js.langchain.com/docs/concepts/example_selectors/)**: Used to select the most relevant examples from a dataset based on a given input. Example selectors are used in few-shot prompting to select examples for a prompt.
+- **[Callbacks](https://js.langchain.com/docs/concepts/callbacks/)**: Callbacks enable the execution of custom auxiliary code in built-in components. Callbacks are used to stream outputs from LLMs in LangChain, trace the intermediate steps of an application, and more.
+- **[Tracing](https://js.langchain.com/docs/concepts/tracing/)**: The process of recording the steps that an application takes to go from input to output. Tracing is essential for debugging and diagnosing issues in complex applications.
+- **[Evaluation](https://js.langchain.com/docs/concepts/evaluation/)**: The process of assessing the performance and effectiveness of AI applications. This involves testing the model's responses against a set of predefined criteria or benchmarks to ensure it meets the desired quality standards and fulfills the intended purpose. This process is vital for building reliable applications.
+
+## Glossary
+
+- **[AIMessageChunk](https://js.langchain.com/docs/concepts/messages/#aimessagechunk)**: A partial response from an AI message. Used when streaming responses from a chat model.
+- **[AIMessage](https://js.langchain.com/docs/concepts/messages/#aimessage)**: Represents a complete response from an AI model.
+- **[StructuredTool](https://api.js.langchain.com/classes/_langchain_core.tools.StructuredTool.html/)**: The base class for all tools in LangChain.
+- **[batch](https://js.langchain.com/docs/concepts/runnables/)**: Use to execute a runnable with batch inputs a Runnable.
+- **[bindTools](https://js.langchain.com/docs/concepts/tool_calling/#tool-binding)**: Allows models to interact with tools.
+- **[Caching](https://js.langchain.com/docs/concepts/chat_models/#caching)**: Storing results to avoid redundant calls to a chat model.
+- **[Context window](https://js.langchain.com/docs/concepts/chat_models/#context-window)**: The maximum size of input a chat model can process.
+- **[Conversation patterns](https://js.langchain.com/docs/concepts/chat_history/#conversation-patterns)**: Common patterns in chat interactions.
+- **[Document](https://api.js.langchain.com/classes/_langchain_core.documents.Document.html/)**: LangChain's representation of a document.
+- **[Embedding models](https://js.langchain.com/docs/concepts/embedding_models/)**: Models that generate vector embeddings for various data types.
+- **[HumanMessage](https://js.langchain.com/docs/concepts/messages/#humanmessage)**: Represents a message from a human user.
+- **[input and output types](https://js.langchain.com/docs/concepts/runnables/#input-and-output-types)**: Types used for input and output in Runnables.
+- **[Integration packages](https://js.langchain.com/docs/concepts/architecture/#integration-packages)**: Third-party packages that integrate with LangChain.
+- **[invoke](https://js.langchain.com/docs/concepts/runnables/)**: A standard method to invoke a Runnable.
+- **[JSON mode](https://js.langchain.com/docs/concepts/structured_outputs/#json-mode)**: Returning responses in JSON format.
+- **[@langchain/community](https://js.langchain.com/docs/concepts/architecture/#langchaincommunity)**: Community-driven components for LangChain.
+- **[@langchain/core](https://js.langchain.com/docs/concepts/architecture/#langchaincore)**: Core langchain package. Includes base interfaces and in-memory implementations.
+- **[langchain](https://js.langchain.com/docs/concepts/architecture/#langchain)**: A package for higher level components (e.g., some pre-built chains).
+- **[@langchain/langgraph](https://js.langchain.com/docs/concepts/architecture/#langchainlanggraph)**: Powerful orchestration layer for LangChain. Use to build complex pipelines and workflows.
+- **[Managing chat history](https://js.langchain.com/docs/concepts/chat_history/#managing-chat-history)**: Techniques to maintain and manage the chat history.
+- **[OpenAI format](https://js.langchain.com/docs/concepts/messages/#openai-format)**: OpenAI's message format for chat models.
+- **[Propagation of RunnableConfig](https://js.langchain.com/docs/concepts/runnables/#propagation-of-runnableconfig)**: Propagating configuration through Runnables.
+- **[RemoveMessage](https://js.langchain.com/docs/concepts/messages/#removemessage)**: An abstraction used to remove a message from chat history, used primarily in LangGraph.
+- **[role](https://js.langchain.com/docs/concepts/messages/#role)**: Represents the role (e.g., user, assistant) of a chat message.
+- **[RunnableConfig](https://js.langchain.com/docs/concepts/runnables/#runnableconfig)**: Use to pass run time information to Runnables (e.g., `runName`, `runId`, `tags`, `metadata`, `maxConcurrency`, `recursionLimit`, `configurable`).
+- **[Standard parameters for chat models](https://js.langchain.com/docs/concepts/chat_models/#standard-parameters)**: Parameters such as API key, `temperature`, and `maxTokens`,
+- **[stream](https://js.langchain.com/docs/concepts/streaming/)**: Use to stream output from a Runnable or a graph.
+- **[Tokenization](https://js.langchain.com/docs/concepts/tokens/#how-tokens-work-in-language-models)**: The process of converting data into tokens and vice versa.
+- **[Tokens](https://js.langchain.com/docs/concepts/tokens/)**: The basic unit that a language model reads, processes, and generates under the hood.
+- **[Tool artifacts](https://js.langchain.com/docs/concepts/tools/#tool-artifacts)**: Add artifacts to the output of a tool that will not be sent to the model, but will be available for downstream processing.
+- **[Tool binding](https://js.langchain.com/docs/concepts/tool_calling/#tool-binding)**: Binding tools to models.
+- **[`tool`](https://js.langchain.com/docs/concepts/tools/)**: Function for creating tools in LangChain.
+- **[Toolkits](https://js.langchain.com/docs/concepts/tools/#toolkits)**: A collection of tools that can be used together.
+- **[ToolMessage](https://js.langchain.com/docs/concepts/messages/#toolmessage)**: Represents a message that contains the results of a tool execution.
+- **[Vector stores](https://js.langchain.com/docs/concepts/vectorstores/)**: Datastores specialized for storing and efficiently searching vector embeddings.
+- **[withStructuredOutput](https://js.langchain.com/docs/concepts/structured_outputs/#structured-output-method)**: A helper method for chat models that natively support [tool calling](https://js.langchain.com/docs/concepts/tool_calling/) to get structured output matching a given schema specified via Zod, JSON schema or a function.
+
+
+## Integrations
+
+### Chat Models
+
+Key chat model integrations include:
+
+- [BedrockChat](https://js.langchain.com/docs/integrations/chat/bedrock/)
+- [ChatBedrockConverse](https://js.langchain.com/docs/integrations/chat/bedrock_converse/)
+- [ChatAnthropic](https://js.langchain.com/docs/integrations/chat/anthropic/)
+- [ChatCloudflareWorkersAI](https://js.langchain.com/docs/integrations/chat/cloudflare_workersai/)
+- [ChatCohere](https://js.langchain.com/docs/integrations/chat/cohere/)
+- [ChatFireworks](https://js.langchain.com/docs/integrations/chat/fireworks/)
+- [ChatGoogleGenerativeAI](https://js.langchain.com/docs/integrations/chat/google_generativeai/)
+- [ChatVertexAI](https://js.langchain.com/docs/integrations/chat/google_vertex_ai/)
+- [ChatGroq](https://js.langchain.com/docs/integrations/chat/groq/)
+- [ChatMistralAI](https://js.langchain.com/docs/integrations/chat/mistral/)
+- [ChatOllama](https://js.langchain.com/docs/integrations/chat/ollama/)
+- [ChatOpenAI](https://js.langchain.com/docs/integrations/chat/openai/)
+- [ChatTogetherAI](https://js.langchain.com/docs/integrations/chat/togetherai/)
+- [ChatXAI](https://js.langchain.com/docs/integrations/chat/xai/)
+
+Other chat model integrations can be found at [chat model integrations](https://js.langchain.com/docs/integrations/chat/)
+
+## How-to guides
+
+Here you'll find answers to “How do I….?” types of questions.
+These guides are _goal-oriented_ and _concrete_; they're meant to help you complete a specific task.
+For conceptual explanations see [Conceptual Guides](https://js.langchain.com/docs/concepts/).
+For end-to-end walkthroughs see [Tutorials](https://js.langchain.com/docs/tutorials/).
+For comprehensive descriptions of every class and function see [API Reference](https://api.js.langchain.com/).
+
+### Installation
+
+- [How to: install LangChain packages](https://js.langchain.com/docs/how_to/installation/)
+
+### Key features
+
+This highlights functionality that is core to using LangChain.
+
+- [How to: return structured data from an LLM](https://js.langchain.com/docs/how_to/structured_output/)
+- [How to: use a chat model to call tools](https://js.langchain.com/docs/how_to/tool_calling/)
+- [How to: stream runnables](https://js.langchain.com/docs/how_to/streaming/)
+- [How to: debug your LLM apps](https://js.langchain.com/docs/how_to/debugging/)
+
+### LangChain Expression Language (LCEL)
+
+LangChain Expression Language is a way to create arbitrary custom chains. It is built on the [`Runnable`](https://api.js.langchain.com/classes/langchain_core.runnables.Runnable.html/) protocol.
+
+[**LCEL cheatsheet**](https://js.langchain.com/docs/how_to/lcel_cheatsheet/): For a quick overview of how to use the main LCEL primitives.
+
+- [How to: chain runnables](https://js.langchain.com/docs/how_to/sequence/)
+- [How to: stream runnables](https://js.langchain.com/docs/how_to/streaming/)
+- [How to: invoke runnables in parallel](https://js.langchain.com/docs/how_to/parallel/)
+- [How to: attach runtime arguments to a runnable](https://js.langchain.com/docs/how_to/binding/)
+- [How to: run custom functions](https://js.langchain.com/docs/how_to/functions/)
+- [How to: pass through arguments from one step to the next](https://js.langchain.com/docs/how_to/passthrough/)
+- [How to: add values to a chain's state](https://js.langchain.com/docs/how_to/assign/)
+- [How to: add message history](https://js.langchain.com/docs/how_to/message_history/)
+- [How to: route execution within a chain](https://js.langchain.com/docs/how_to/routing/)
+- [How to: add fallbacks](https://js.langchain.com/docs/how_to/fallbacks/)
+- [How to: cancel execution](https://js.langchain.com/docs/how_to/cancel_execution/)
+
+### Components
+
+These are the core building blocks you can use when building applications.
+
+#### Prompt templates
+
+[Prompt Templates](https://js.langchain.com/docs/concepts/prompt_templates/) are responsible for formatting user input into a format that can be passed to a language model.
+
+- [How to: use few shot examples](https://js.langchain.com/docs/how_to/few_shot_examples/)
+- [How to: use few shot examples in chat models](https://js.langchain.com/docs/how_to/few_shot_examples_chat/)
+- [How to: partially format prompt templates](https://js.langchain.com/docs/how_to/prompts_partial/)
+- [How to: compose prompts together](https://js.langchain.com/docs/how_to/prompts_composition/)
+
+#### Example selectors
+
+[Example Selectors](https://js.langchain.com/docs/concepts/example_selectors/) are responsible for selecting the correct few shot examples to pass to the prompt.
+
+- [How to: use example selectors](https://js.langchain.com/docs/how_to/example_selectors/)
+- [How to: select examples by length](https://js.langchain.com/docs/how_to/example_selectors_length_based/)
+- [How to: select examples by semantic similarity](https://js.langchain.com/docs/how_to/example_selectors_similarity/)
+- [How to: select examples from LangSmith few-shot datasets](https://js.langchain.com/docs/how_to/example_selectors_langsmith/)
+
+#### Chat models
+
+[Chat Models](https://js.langchain.com/docs/concepts/chat_models/) are newer forms of language models that take messages in and output a message.
+
+- [How to: do function/tool calling](https://js.langchain.com/docs/how_to/tool_calling/)
+- [How to: get models to return structured output](https://js.langchain.com/docs/how_to/structured_output/)
+- [How to: cache model responses](https://js.langchain.com/docs/how_to/chat_model_caching/)
+- [How to: create a custom chat model class](https://js.langchain.com/docs/how_to/custom_chat/)
+- [How to: get log probabilities](https://js.langchain.com/docs/how_to/logprobs/)
+- [How to: stream a response back](https://js.langchain.com/docs/how_to/chat_streaming/)
+- [How to: track token usage](https://js.langchain.com/docs/how_to/chat_token_usage_tracking/)
+- [How to: pass tool outputs to chat models](https://js.langchain.com/docs/how_to/tool_results_pass_to_model/)
+- [How to: stream tool calls](https://js.langchain.com/docs/how_to/tool_streaming/)
+- [How to: few shot prompt tool behavior](https://js.langchain.com/docs/how_to/tools_few_shot/)
+- [How to: force a specific tool call](https://js.langchain.com/docs/how_to/tool_choice/)
+- [How to: disable parallel tool calling](https://js.langchain.com/docs/how_to/tool_calling_parallel/)
+- [How to: init any model in one line](https://js.langchain.com/docs/how_to/chat_models_universal_init/)
+
+#### Messages
+
+[Messages](https://js.langchain.com/docs/concepts/###message-types) are the input and output of chat models. They have some `content` and a `role`, which describes the source of the message.
+
+- [How to: trim messages](https://js.langchain.com/docs/how_to/trim_messages/)
+- [How to: filter messages](https://js.langchain.com/docs/how_to/filter_messages/)
+- [How to: merge consecutive messages of the same type](https://js.langchain.com/docs/how_to/merge_message_runs/)
+
+#### LLMs
+
+What LangChain calls [LLMs](https://js.langchain.com/docs/concepts/text_llms/) are older forms of language models that take a string in and output a string.
+
+- [How to: cache model responses](https://js.langchain.com/docs/how_to/llm_caching/)
+- [How to: create a custom LLM class](https://js.langchain.com/docs/how_to/custom_llm/)
+- [How to: stream a response back](https://js.langchain.com/docs/how_to/streaming_llm/)
+- [How to: track token usage](https://js.langchain.com/docs/how_to/llm_token_usage_tracking/)
+
+#### Output parsers
+
+[Output Parsers](https://js.langchain.com/docs/concepts/output_parsers/) are responsible for taking the output of an LLM and parsing into more structured format.
+
+- [How to: use output parsers to parse an LLM response into structured format](https://js.langchain.com/docs/how_to/output_parser_structured/)
+- [How to: parse JSON output](https://js.langchain.com/docs/how_to/output_parser_json/)
+- [How to: parse XML output](https://js.langchain.com/docs/how_to/output_parser_xml/)
+- [How to: try to fix errors in output parsing](https://js.langchain.com/docs/how_to/output_parser_fixing/)
+
+#### Document loaders
+
+[Document Loaders](https://js.langchain.com/docs/concepts/document_loaders/) are responsible for loading documents from a variety of sources.
+
+- [How to: load CSV data](https://js.langchain.com/docs/how_to/document_loader_csv/)
+- [How to: load data from a directory](https://js.langchain.com/docs/how_to/document_loader_directory/)
+- [How to: load PDF files](https://js.langchain.com/docs/how_to/document_loader_pdf/)
+- [How to: write a custom document loader](https://js.langchain.com/docs/how_to/document_loader_custom/)
+- [How to: load HTML data](https://js.langchain.com/docs/how_to/document_loader_html/)
+- [How to: load Markdown data](https://js.langchain.com/docs/how_to/document_loader_markdown/)
+
+#### Text splitters
+
+[Text Splitters](https://js.langchain.com/docs/concepts/text_splitters/) take a document and split into chunks that can be used for retrieval.
+
+- [How to: recursively split text](https://js.langchain.com/docs/how_to/recursive_text_splitter/)
+- [How to: split by character](https://js.langchain.com/docs/how_to/character_text_splitter/)
+- [How to: split code](https://js.langchain.com/docs/how_to/code_splitter/)
+- [How to: split by tokens](https://js.langchain.com/docs/how_to/split_by_token/)
+
+#### Embedding models
+
+[Embedding Models](https://js.langchain.com/docs/concepts/embedding_models/) take a piece of text and create a numerical representation of it.
+
+- [How to: embed text data](https://js.langchain.com/docs/how_to/embed_text/)
+- [How to: cache embedding results](https://js.langchain.com/docs/how_to/caching_embeddings/)
+
+#### Vector stores
+
+[Vector stores](https://js.langchain.com/docs/concepts/#vectorstores) are databases that can efficiently store and retrieve embeddings.
+
+- [How to: create and query vector stores](https://js.langchain.com/docs/how_to/vectorstores/)
+
+#### Retrievers
+
+[Retrievers](https://js.langchain.com/docs/concepts/retrievers/) are responsible for taking a query and returning relevant documents.
+
+- [How to: use a vector store to retrieve data](https://js.langchain.com/docs/how_to/vectorstore_retriever/)
+- [How to: generate multiple queries to retrieve data for](https://js.langchain.com/docs/how_to/multiple_queries/)
+- [How to: use contextual compression to compress the data retrieved](https://js.langchain.com/docs/how_to/contextual_compression/)
+- [How to: write a custom retriever class](https://js.langchain.com/docs/how_to/custom_retriever/)
+- [How to: combine the results from multiple retrievers](https://js.langchain.com/docs/how_to/ensemble_retriever/)
+- [How to: generate multiple embeddings per document](https://js.langchain.com/docs/how_to/multi_vector/)
+- [How to: retrieve the whole document for a chunk](https://js.langchain.com/docs/how_to/parent_document_retriever/)
+- [How to: generate metadata filters](https://js.langchain.com/docs/how_to/self_query/)
+- [How to: create a time-weighted retriever](https://js.langchain.com/docs/how_to/time_weighted_vectorstore/)
+- [How to: reduce retrieval latency](https://js.langchain.com/docs/how_to/reduce_retrieval_latency/)
+
+#### Indexing
+
+Indexing is the process of keeping your vectorstore in-sync with the underlying data source.
+
+- [How to: reindex data to keep your vectorstore in-sync with the underlying data source](https://js.langchain.com/docs/how_to/indexing/)
+
+#### Tools
+
+LangChain [Tools](https://js.langchain.com/docs/concepts/tools/) contain a description of the tool (to pass to the language model) as well as the implementation of the function to call.
+
+- [How to: create tools](https://js.langchain.com/docs/how_to/custom_tools/)
+- [How to: use built-in tools and toolkits](https://js.langchain.com/docs/how_to/tools_builtin/)
+- [How to: use chat models to call tools](https://js.langchain.com/docs/how_to/tool_calling/)
+- [How to: pass tool outputs to chat models](https://js.langchain.com/docs/how_to/tool_results_pass_to_model/)
+- [How to: few shot prompt tool behavior](https://js.langchain.com/docs/how_to/tools_few_shot/)
+- [How to: pass run time values to tools](https://js.langchain.com/docs/how_to/tool_runtime/)
+- [How to: handle tool errors](https://js.langchain.com/docs/how_to/tools_error/)
+- [How to: force a specific tool call](https://js.langchain.com/docs/how_to/tool_choice/)
+- [How to: disable parallel tool calling](https://js.langchain.com/docs/how_to/tool_calling_parallel/)
+- [How to: access the `RunnableConfig` object within a custom tool](https://js.langchain.com/docs/how_to/tool_configure/)
+- [How to: stream events from child runs within a custom tool](https://js.langchain.com/docs/how_to/tool_stream_events/)
+- [How to: return artifacts from a tool](https://js.langchain.com/docs/how_to/tool_artifacts/)
+- [How to: convert Runnables to tools](https://js.langchain.com/docs/how_to/convert_runnable_to_tool/)
+- [How to: add ad-hoc tool calling capability to models](https://js.langchain.com/docs/how_to/tools_prompting/)
+
+#### Agents
+
+:::note
+
+For in depth how-to guides for agents, please check out [LangGraph](https://langchain-ai.github.io/langgraphjs/) documentation.
+
+:::
+
+- [How to: use legacy LangChain Agents (AgentExecutor)](https://js.langchain.com/docs/how_to/agent_executor/)
+- [How to: migrate from legacy LangChain agents to LangGraph](https://js.langchain.com/docs/how_to/migrate_agent/)
+
+#### Callbacks
+
+[Callbacks](https://js.langchain.com/docs/concepts/callbacks/) allow you to hook into the various stages of your LLM application's execution.
+
+- [How to: pass in callbacks at runtime](https://js.langchain.com/docs/how_to/callbacks_runtime/)
+- [How to: attach callbacks to a module](https://js.langchain.com/docs/how_to/callbacks_attach/)
+- [How to: pass callbacks into a module constructor](https://js.langchain.com/docs/how_to/callbacks_constructor/)
+- [How to: create custom callback handlers](https://js.langchain.com/docs/how_to/custom_callbacks/)
+- [How to: await callbacks in serverless environments](https://js.langchain.com/docs/how_to/callbacks_serverless/)
+- [How to: dispatch custom callback events](https://js.langchain.com/docs/how_to/callbacks_custom_events/)
+
+#### Custom
+
+All of LangChain components can easily be extended to support your own versions.
+
+- [How to: create a custom chat model class](https://js.langchain.com/docs/how_to/custom_chat/)
+- [How to: create a custom LLM class](https://js.langchain.com/docs/how_to/custom_llm/)
+- [How to: write a custom retriever class](https://js.langchain.com/docs/how_to/custom_retriever/)
+- [How to: write a custom document loader](https://js.langchain.com/docs/how_to/document_loader_custom/)
+- [How to: create custom callback handlers](https://js.langchain.com/docs/how_to/custom_callbacks/)
+- [How to: define a custom tool](https://js.langchain.com/docs/how_to/custom_tools/)
+- [How to: dispatch custom callback events](https://js.langchain.com/docs/how_to/callbacks_custom_events/)
+
+#### Generative UI
+
+- [How to: build an LLM generated UI](https://js.langchain.com/docs/how_to/generative_ui/)
+- [How to: stream agentic data to the client](https://js.langchain.com/docs/how_to/stream_agent_client/)
+- [How to: stream structured output to the client](https://js.langchain.com/docs/how_to/stream_tool_client/)
+
+#### Multimodal
+
+- [How to: pass multimodal data directly to models](https://js.langchain.com/docs/how_to/multimodal_inputs/)
+- [How to: use multimodal prompts](https://js.langchain.com/docs/how_to/multimodal_prompts/)
+- [How to: call tools with multimodal data](https://js.langchain.com/docs/how_to/tool_calls_multimodal/)
+
+### Use cases
+
+These guides cover use-case specific details.
+
+#### Q&A with RAG
+
+Retrieval Augmented Generation (RAG) is a way to connect LLMs to external sources of data.
+For a high-level tutorial on RAG, check out [this guide](https://js.langchain.com/docs/tutorials/rag/).
+
+- [How to: add chat history](https://js.langchain.com/docs/how_to/qa_chat_history_how_to/)
+- [How to: stream](https://js.langchain.com/docs/how_to/qa_streaming/)
+- [How to: return sources](https://js.langchain.com/docs/how_to/qa_sources/)
+- [How to: return citations](https://js.langchain.com/docs/how_to/qa_citations/)
+- [How to: do per-user retrieval](https://js.langchain.com/docs/how_to/qa_per_user/)
+
+#### Extraction
+
+Extraction is when you use LLMs to extract structured information from unstructured text.
+For a high level tutorial on extraction, check out [this guide](https://js.langchain.com/docs/tutorials/extraction/).
+
+- [How to: use reference examples](https://js.langchain.com/docs/how_to/extraction_examples/)
+- [How to: handle long text](https://js.langchain.com/docs/how_to/extraction_long_text/)
+- [How to: do extraction without using function calling](https://js.langchain.com/docs/how_to/extraction_parse/)
+
+#### Chatbots
+
+Chatbots involve using an LLM to have a conversation.
+For a high-level tutorial on building chatbots, check out [this guide](https://js.langchain.com/docs/tutorials/chatbot/).
+
+- [How to: manage memory](https://js.langchain.com/docs/how_to/chatbots_memory/)
+- [How to: do retrieval](https://js.langchain.com/docs/how_to/chatbots_retrieval/)
+- [How to: use tools](https://js.langchain.com/docs/how_to/chatbots_tools/)
+
+#### Query analysis
+
+Query Analysis is the task of using an LLM to generate a query to send to a retriever.
+For a high-level tutorial on query analysis, check out [this guide](https://js.langchain.com/docs/tutorials/rag/#query-analysis).
+
+- [How to: add examples to the prompt](https://js.langchain.com/docs/how_to/query_few_shot/)
+- [How to: handle cases where no queries are generated](https://js.langchain.com/docs/how_to/query_no_queries/)
+- [How to: handle multiple queries](https://js.langchain.com/docs/how_to/query_multiple_queries/)
+- [How to: handle multiple retrievers](https://js.langchain.com/docs/how_to/query_multiple_retrievers/)
+- [How to: construct filters](https://js.langchain.com/docs/how_to/query_constructing_filters/)
+- [How to: deal with high cardinality categorical variables](https://js.langchain.com/docs/how_to/query_high_cardinality/)
+
+#### Q&A over SQL + CSV
+
+You can use LLMs to do question answering over tabular data.
+For a high-level tutorial, check out [this guide](https://js.langchain.com/docs/tutorials/sql_qa/).
+
+- [How to: use prompting to improve results](https://js.langchain.com/docs/how_to/sql_prompting/)
+- [How to: do query validation](https://js.langchain.com/docs/how_to/sql_query_checking/)
+- [How to: deal with large databases](https://js.langchain.com/docs/how_to/sql_large_db/)
+
+#### Q&A over graph databases
+
+You can use an LLM to do question answering over graph databases.
+For a high-level tutorial, check out [this guide](https://js.langchain.com/docs/tutorials/graph/).
+
+- [How to: map values to a database](https://js.langchain.com/docs/how_to/graph_mapping/)
+- [How to: add a semantic layer over the database](https://js.langchain.com/docs/how_to/graph_semantic/)
+- [How to: improve results with prompting](https://js.langchain.com/docs/how_to/graph_prompting/)
+- [How to: construct knowledge graphs](https://js.langchain.com/docs/how_to/graph_constructing/)
+
+### [LangGraph.js](https://langchain-ai.github.io/langgraphjs/)
+
+LangGraph.js is an extension of LangChain aimed at
+building robust and stateful multi-actor applications with LLMs by modeling steps as edges and nodes in a graph.
+
+LangGraph.js documentation is currently hosted on a separate site.
+You can peruse [LangGraph.js how-to guides here](https://langchain-ai.github.io/langgraphjs/how-tos/).
+
+### [LangSmith](https://docs.smith.langchain.com/)
+
+LangSmith allows you to closely trace, monitor and evaluate your LLM application.
+It seamlessly integrates with LangChain and LangGraph.js, and you can use it to inspect and debug individual steps of your chains as you build.
+
+LangSmith documentation is hosted on a separate site.
+You can peruse [LangSmith how-to guides here](https://docs.smith.langchain.com/how_to_guides/), but we'll highlight a few sections that are particularly
+relevant to LangChain below:
+
+#### Evaluation
+
+<span data-heading-keywords="evaluation,evaluate"></span>
+
+Evaluating performance is a vital part of building LLM-powered applications.
+LangSmith helps with every step of the process from creating a dataset to defining metrics to running evaluators.
+
+To learn more, check out the [LangSmith evaluation how-to guides](https://docs.smith.langchain.com/how_to_guides/#evaluation).
+
+#### Tracing
+
+<span data-heading-keywords="trace,tracing"></span>
+
+Tracing gives you observability inside your chains and agents, and is vital in diagnosing issues.
+
+- [How to: trace with LangChain](https://docs.smith.langchain.com/how_to_guides/tracing/trace_with_langchain/)
+- [How to: add metadata and tags to traces](https://docs.smith.langchain.com/how_to_guides/tracing/trace_with_langchain/#add-metadata-and-tags-to-traces)
+
+You can see general tracing-related how-tos [in this section of the LangSmith docs](https://docs.smith.langchain.com/how_to_guides/tracing/).

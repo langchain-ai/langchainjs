@@ -138,7 +138,7 @@ function convertMessagesToDeepInfraParams(
       completionParam.tool_calls = message.tool_calls.map(
         convertLangChainToolCallToOpenAI
       );
-      completionParam.content = null;
+      completionParam.content = "";
     } else {
       if (message.additional_kwargs.tool_calls != null) {
         completionParam.tool_calls = message.additional_kwargs.tool_calls;

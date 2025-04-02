@@ -336,13 +336,13 @@ export class ChatMessagePromptTemplate<
     return new ChatMessage(await this.prompt.format(values), this.role);
   }
 
-  static fromTemplate(
-    template: string,
-    role: string,
-    options?: { templateFormat?: TemplateFormat }
-  ) {
+  static fromTemplate<
+    // eslint-disable-next-line @typescript-eslint/ban-types
+    RunInput extends InputValues = Symbol,
+    T extends string = string
+  >(template: T, role: string, options?: { templateFormat?: TemplateFormat }) {
     return new this(
-      PromptTemplate.fromTemplate(template, {
+      PromptTemplate.fromTemplate<RunInput, T>(template, {
         templateFormat: options?.templateFormat,
       }),
       role
