@@ -229,7 +229,6 @@ export class TavilySearchResults extends Tool {
     const body: Record<string, unknown> = {
       query: input,
       max_results: this.maxResults,
-      api_key: this.apiKey,
       include_images: this.includeImages,
       include_image_descriptions: this.includeImageDescriptions,
       include_answer: this.includeAnswer,
@@ -245,6 +244,7 @@ export class TavilySearchResults extends Tool {
       method: "POST",
       headers: {
         "content-type": "application/json",
+        authorization: `Bearer ${this.apiKey}`,
       },
       body: JSON.stringify({ ...body, ...this.kwargs }),
     });
