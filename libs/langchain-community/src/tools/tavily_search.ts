@@ -244,7 +244,7 @@ export class TavilySearchResults extends Tool {
       method: "POST",
       headers: {
         "content-type": "application/json",
-        "authorization": `Bearer ${this.apiKey}`,
+        authorization: `Bearer ${this.apiKey}`,
       },
       body: JSON.stringify({ ...body, ...this.kwargs }),
     });
