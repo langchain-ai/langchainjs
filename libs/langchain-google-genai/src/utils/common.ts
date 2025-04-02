@@ -446,7 +446,6 @@ export function convertResponseContentToChatGenerationChunk(
 
   const toolCallChunks: ToolCallChunk[] = [];
   if (functionCalls) {
-    console.log("FUNCTION CALLS", functionCalls);
     toolCallChunks.push(
       ...functionCalls.map((fc) => ({
         ...fc,
