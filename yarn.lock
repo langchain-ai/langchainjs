@@ -8217,6 +8217,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@google-cloud/cloud-sql-connector@npm:^1.6.0":
+  version: 1.7.0
+  resolution: "@google-cloud/cloud-sql-connector@npm:1.7.0"
+  dependencies:
+    "@googleapis/sqladmin": ^27.0.0
+    gaxios: ^6.1.1
+    google-auth-library: ^9.2.0
+    p-throttle: ^7.0.0
+  checksum: 7af138800facf832f35e5d995be6d8c2cd755ac9979b97064eba9bd8e53f8b8a472cd6e237e45c484e8f9eadd6504b746cc5d6393ff4a40dd1ed423d304589a7
+  languageName: node
+  linkType: hard
+
 "@google-cloud/firestore@npm:^7.1.0":
   version: 7.3.0
   resolution: "@google-cloud/firestore@npm:7.3.0"
@@ -8315,6 +8327,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@googleapis/sqladmin@npm:^27.0.0":
+  version: 27.0.0
+  resolution: "@googleapis/sqladmin@npm:27.0.0"
+  dependencies:
+    googleapis-common: ^7.0.0
+  checksum: 4d1cc97c82a72b66e6dc0ce2aabd38bdc3e373d2a7fd2224e1822d8f67235a05e1f29e61b20ec71cc34eb1c35a84a27950d66d7b010776e8eeddded7f44373da
+  languageName: node
+  linkType: hard
+
 "@gradientai/nodejs-sdk@npm:^1.2.0":
   version: 1.2.0
   resolution: "@gradientai/nodejs-sdk@npm:1.2.0"
@@ -8350,6 +8371,16 @@ __metadata:
     "@grpc/proto-loader": ^0.7.13
     "@js-sdsl/ordered-map": ^4.4.2
   checksum: 498d144016eac26fc069bc57d649bf4776ae6bd1a24e62823a8b07b7d39a4414caa72a799f8287278b79e11ec4ecf989dbac01518c3981d8f947db15916c6727
+  languageName: node
+  linkType: hard
+
+"@grpc/grpc-js@npm:^1.11.1":
+  version: 1.13.2
+  resolution: "@grpc/grpc-js@npm:1.13.2"
+  dependencies:
+    "@grpc/proto-loader": ^0.7.13
+    "@js-sdsl/ordered-map": ^4.4.2
+  checksum: 059b1e1ceabd45035d795b75bf1fc341abe1c544cd19ee30617fe5db9cbbf36328329c3bbe44f1bf01e5811bf006e3c267577c25ed5ccca018398e1d64a469b2
   languageName: node
   linkType: hard
 
@@ -10391,6 +10422,44 @@ __metadata:
     typescript: <5.2.0
   peerDependencies:
     "@langchain/core": ">=0.2.21 <0.4.0"
+  languageName: unknown
+  linkType: soft
+
+"@langchain/google-cloud-sql-pg@workspace:^, @langchain/google-cloud-sql-pg@workspace:libs/langchain-google-cloud-sql-pg":
+  version: 0.0.0-use.local
+  resolution: "@langchain/google-cloud-sql-pg@workspace:libs/langchain-google-cloud-sql-pg"
+  dependencies:
+    "@google-cloud/cloud-sql-connector": ^1.6.0
+    "@jest/globals": ^29.5.0
+    "@langchain/core": "workspace:*"
+    "@langchain/scripts": ">=0.1.0 <0.2.0"
+    "@swc/core": ^1.3.90
+    "@swc/jest": ^0.2.29
+    "@testcontainers/postgresql": ^10.23.0
+    "@tsconfig/recommended": ^1.0.3
+    "@types/pg": ^8
+    "@typescript-eslint/eslint-plugin": ^6.12.0
+    "@typescript-eslint/parser": ^6.12.0
+    dotenv: ^16.3.1
+    dpdm: ^3.12.0
+    eslint: ^8.33.0
+    eslint-config-airbnb-base: ^15.0.0
+    eslint-config-prettier: ^8.6.0
+    eslint-plugin-import: ^2.27.5
+    eslint-plugin-no-instanceof: ^1.0.1
+    eslint-plugin-prettier: ^4.2.1
+    google-auth-library: ^9.15.0
+    jest: ^29.5.0
+    jest-environment-node: ^29.6.4
+    knex: ^3.1.0
+    pg: ^8.14.1
+    prettier: ^2.8.3
+    release-it: ^15.10.1
+    rollup: ^4.5.2
+    testcontainers: ^10.23.0
+    ts-jest: ^29.1.0
+    typescript: <5.2.0
+    uuid: ^11.0.5
   languageName: unknown
   linkType: soft
 
@@ -15064,6 +15133,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@testcontainers/postgresql@npm:^10.23.0":
+  version: 10.23.0
+  resolution: "@testcontainers/postgresql@npm:10.23.0"
+  dependencies:
+    testcontainers: ^10.23.0
+  checksum: de8b1ff8d512bcf5ac25209ed4974ecced50af17ce195b935d87bf62a70d9f414fb508d81f04eae298d552a550e4837069a02d3b30ff44dc0d8afccc01290ea1
+  languageName: node
+  linkType: hard
+
 "@tinyhttp/content-disposition@npm:^2.2.0":
   version: 2.2.2
   resolution: "@tinyhttp/content-disposition@npm:2.2.2"
@@ -15324,6 +15402,17 @@ __metadata:
     "@types/node": "*"
     "@types/ssh2": "*"
   checksum: a59b7637de3a572bf4d41dc0cba3be75f14a734ae6e5f79c7f17dbfd1f100e507008f5a6b6aac657ccd13e67dd5d2cf6ee4608ded5ce97021737125d110a1d3b
+  languageName: node
+  linkType: hard
+
+"@types/dockerode@npm:^3.3.35":
+  version: 3.3.37
+  resolution: "@types/dockerode@npm:3.3.37"
+  dependencies:
+    "@types/docker-modem": "*"
+    "@types/node": "*"
+    "@types/ssh2": "*"
+  checksum: c568f57c3ea874ecc0e85378c389a8a6c4a90fd3a45b55ac9dbdd2f1843223b9d2cac7acf379faa94e14443a6a9332d1b3bdc15ff5db40363735e30f4019a4cf
   languageName: node
   linkType: hard
 
@@ -15969,6 +16058,17 @@ __metadata:
     pg-protocol: "*"
     pg-types: ^2.2.0
   checksum: ac145553a8ad2f357feacad1bceaf5d6ce904eb9d66233b84c469a2b4fa3738d4ebdf29b7ea45387be2d07f915fd873a229f90a2f766d7c377afa7c41fbcf8d1
+  languageName: node
+  linkType: hard
+
+"@types/pg@npm:^8":
+  version: 8.11.11
+  resolution: "@types/pg@npm:8.11.11"
+  dependencies:
+    "@types/node": "*"
+    pg-protocol: "*"
+    pg-types: ^4.0.1
+  checksum: 50c4a803484610388eed64b1339aab55f6f6493be6798fe560105a216e517a1ec23d4a7792ae2f963f3848b19d5071297d5dbed75f7457f4caa6790b9537c681
   languageName: node
   linkType: hard
 
@@ -20543,17 +20643,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"colorette@npm:2.0.19, colorette@npm:^2.0.19":
+  version: 2.0.19
+  resolution: "colorette@npm:2.0.19"
+  checksum: 888cf5493f781e5fcf54ce4d49e9d7d698f96ea2b2ef67906834bb319a392c667f9ec69f4a10e268d2946d13a9503d2d19b3abaaaf174e3451bfe91fb9d82427
+  languageName: node
+  linkType: hard
+
 "colorette@npm:^2.0.10":
   version: 2.0.20
   resolution: "colorette@npm:2.0.20"
   checksum: 0c016fea2b91b733eb9f4bcdb580018f52c0bc0979443dad930e5037a968237ac53d9beb98e218d2e9235834f8eebce7f8e080422d6194e957454255bde71d3d
-  languageName: node
-  linkType: hard
-
-"colorette@npm:^2.0.19":
-  version: 2.0.19
-  resolution: "colorette@npm:2.0.19"
-  checksum: 888cf5493f781e5fcf54ce4d49e9d7d698f96ea2b2ef67906834bb319a392c667f9ec69f4a10e268d2946d13a9503d2d19b3abaaaf174e3451bfe91fb9d82427
   languageName: node
   linkType: hard
 
@@ -22122,7 +22222,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"debug@npm:4, debug@npm:^4, debug@npm:^4.1.0, debug@npm:^4.1.1, debug@npm:^4.3.1, debug@npm:^4.3.2, debug@npm:^4.3.3, debug@npm:^4.3.4":
+"debug@npm:4, debug@npm:4.3.4, debug@npm:^4, debug@npm:^4.1.0, debug@npm:^4.1.1, debug@npm:^4.3.1, debug@npm:^4.3.2, debug@npm:^4.3.3, debug@npm:^4.3.4":
   version: 4.3.4
   resolution: "debug@npm:4.3.4"
   dependencies:
@@ -22756,6 +22856,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"docker-modem@npm:^5.0.6":
+  version: 5.0.6
+  resolution: "docker-modem@npm:5.0.6"
+  dependencies:
+    debug: ^4.1.1
+    readable-stream: ^3.5.0
+    split-ca: ^1.0.1
+    ssh2: ^1.15.0
+  checksum: 111b69a99b5eff10cc2a67b08c0de08bbd3ad7e351419a0b9716a72c23febca50f5cff03a93347f8c0386d7687af097b0a5bb9c33fbeab76e90b70068d1d5c49
+  languageName: node
+  linkType: hard
+
 "dockerode@npm:^3.3.5":
   version: 3.3.5
   resolution: "dockerode@npm:3.3.5"
@@ -22764,6 +22876,21 @@ __metadata:
     docker-modem: ^3.0.0
     tar-fs: ~2.0.1
   checksum: 7f6650422b07fa7ea9d5801f04b1a432634446b5fe37b995b8302b953b64e93abf1bb4596c2fb574ba47aafee685ef2ab959cc86c9654add5a26d09541bbbcc6
+  languageName: node
+  linkType: hard
+
+"dockerode@npm:^4.0.4":
+  version: 4.0.5
+  resolution: "dockerode@npm:4.0.5"
+  dependencies:
+    "@balena/dockerignore": ^1.0.2
+    "@grpc/grpc-js": ^1.11.1
+    "@grpc/proto-loader": ^0.7.13
+    docker-modem: ^5.0.6
+    protobufjs: ^7.3.2
+    tar-fs: ~2.1.2
+    uuid: ^10.0.0
+  checksum: 1e3086e31d9c56eec1153f531e9fe610e953635c464f3408d6da1a432e791178ecfe37b0a725191e220e9b9118f16b233f9e37c8dbeb99f9188b72a0f1fb5f04
   languageName: node
   linkType: hard
 
@@ -24682,6 +24809,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"esm@npm:^3.2.25":
+  version: 3.2.25
+  resolution: "esm@npm:3.2.25"
+  checksum: 978aabe2de83541c105605a6d60a26ed8e627ef6bb0a7605fe15a95bbdea6b8348bd045255cb22219c054dd09a81a94823df00843d9e97f42419c92015ce3a64
+  languageName: node
+  linkType: hard
+
 "esniff@npm:^2.0.1":
   version: 2.0.1
   resolution: "esniff@npm:2.0.1"
@@ -24901,6 +25035,7 @@ __metadata:
     "@langchain/core": "workspace:*"
     "@langchain/deepseek": "workspace:*"
     "@langchain/exa": "workspace:*"
+    "@langchain/google-cloud-sql-pg": "workspace:^"
     "@langchain/google-common": "workspace:*"
     "@langchain/google-genai": "workspace:*"
     "@langchain/google-vertexai": "workspace:*"
@@ -26424,6 +26559,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"get-port@npm:^7.1.0":
+  version: 7.1.0
+  resolution: "get-port@npm:7.1.0"
+  checksum: f4d23b43026124007663a899578cc87ff37bfcf645c5c72651e9810ebafc759857784e409fb8e0ada9b90e5c5db089b0ae2f5f6b49fba1ce2e0aff86094ab17d
+  languageName: node
+  linkType: hard
+
 "get-proto@npm:^1.0.0, get-proto@npm:^1.0.1":
   version: 1.0.1
   resolution: "get-proto@npm:1.0.1"
@@ -26538,6 +26680,13 @@ __metadata:
     debug: ^4.3.4
     fs-extra: ^11.2.0
   checksum: 3eda448a59fa1ba82ad4f252e58490fec586b644f2dc9c98ba3ab20e801ecc8a1bc1784829c474c9d188edb633d4dfd81c33894ca6117a33a16e8e013b41b40f
+  languageName: node
+  linkType: hard
+
+"getopts@npm:2.3.0":
+  version: 2.3.0
+  resolution: "getopts@npm:2.3.0"
+  checksum: bbb5fcef8d4a8582cf4499ea3fc492d95322df2184e65d550ddacede04871e7ba33194c7abd06a6c5d540de3b70112a16f988787e236e1c66b89521032b398ce
   languageName: node
   linkType: hard
 
@@ -26881,7 +27030,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"google-auth-library@npm:^9.15.1, google-auth-library@npm:^9.6.3":
+"google-auth-library@npm:^9.15.0, google-auth-library@npm:^9.15.1, google-auth-library@npm:^9.2.0, google-auth-library@npm:^9.6.3":
   version: 9.15.1
   resolution: "google-auth-library@npm:9.15.1"
   dependencies:
@@ -28207,6 +28356,13 @@ __metadata:
   version: 1.4.0
   resolution: "interpret@npm:1.4.0"
   checksum: 2e5f51268b5941e4a17e4ef0575bc91ed0ab5f8515e3cf77486f7c14d13f3010df9c0959f37063dcc96e78d12dc6b0bb1b9e111cdfe69771f4656d2993d36155
+  languageName: node
+  linkType: hard
+
+"interpret@npm:^2.2.0":
+  version: 2.2.0
+  resolution: "interpret@npm:2.2.0"
+  checksum: f51efef7cb8d02da16408ffa3504cd6053014c5aeb7bb8c223727e053e4235bf565e45d67028b0c8740d917c603807aa3c27d7bd2f21bf20b6417e2bb3e5fd6e
   languageName: node
   linkType: hard
 
@@ -30708,6 +30864,45 @@ __metadata:
   version: 3.0.3
   resolution: "kleur@npm:3.0.3"
   checksum: df82cd1e172f957bae9c536286265a5cdbd5eeca487cb0a3b2a7b41ef959fc61f8e7c0e9aeea9c114ccf2c166b6a8dd45a46fd619c1c569d210ecd2765ad5169
+  languageName: node
+  linkType: hard
+
+"knex@npm:^3.1.0":
+  version: 3.1.0
+  resolution: "knex@npm:3.1.0"
+  dependencies:
+    colorette: 2.0.19
+    commander: ^10.0.0
+    debug: 4.3.4
+    escalade: ^3.1.1
+    esm: ^3.2.25
+    get-package-type: ^0.1.0
+    getopts: 2.3.0
+    interpret: ^2.2.0
+    lodash: ^4.17.21
+    pg-connection-string: 2.6.2
+    rechoir: ^0.8.0
+    resolve-from: ^5.0.0
+    tarn: ^3.0.2
+    tildify: 2.0.0
+  peerDependenciesMeta:
+    better-sqlite3:
+      optional: true
+    mysql:
+      optional: true
+    mysql2:
+      optional: true
+    pg:
+      optional: true
+    pg-native:
+      optional: true
+    sqlite3:
+      optional: true
+    tedious:
+      optional: true
+  bin:
+    knex: bin/cli.js
+  checksum: 3905f8d27960975f7f57f3f488d1ef3ccf47784acc8eb627e8a28cbbe1f296c6879c8ef0cbd9e17e867be80117d305cd948545f3fbd4c74b24c90d2413bbc021
   languageName: node
   linkType: hard
 
@@ -34261,6 +34456,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"p-throttle@npm:^7.0.0":
+  version: 7.0.0
+  resolution: "p-throttle@npm:7.0.0"
+  checksum: ede8b1444bcb9200ebb95415c5eb2fba301ab12de4a9cffe3b8f383ca640e6d52aed417ee0df6705217a8e5aa8faadc5169fc56be7e99d32d34b9a74727d1d4d
+  languageName: node
+  linkType: hard
+
 "p-timeout@npm:^3.2.0":
   version: 3.2.0
   resolution: "p-timeout@npm:3.2.0"
@@ -34821,10 +35023,31 @@ __metadata:
   languageName: node
   linkType: hard
 
+"pg-cloudflare@npm:^1.1.1":
+  version: 1.1.1
+  resolution: "pg-cloudflare@npm:1.1.1"
+  checksum: 32aac06b5dc4588bbf78801b6267781bc7e13be672009df949d08e9627ba9fdc26924916665d4de99d47f9b0495301930547488dad889d826856976c7b3f3731
+  languageName: node
+  linkType: hard
+
+"pg-connection-string@npm:2.6.2":
+  version: 2.6.2
+  resolution: "pg-connection-string@npm:2.6.2"
+  checksum: 22265882c3b6f2320785378d0760b051294a684989163d5a1cde4009e64e84448d7bf67d9a7b9e7f69440c3ee9e2212f9aa10dd17ad6773f6143c6020cebbcb5
+  languageName: node
+  linkType: hard
+
 "pg-connection-string@npm:^2.6.0":
   version: 2.6.0
   resolution: "pg-connection-string@npm:2.6.0"
   checksum: 0262452638163c0b875495cfb82e363061cc8d560d3162143b1dfb63f70a666c7c52ba37e78054a3476de9a627faeec75f65445ba6fe065db068317ec84d3df8
+  languageName: node
+  linkType: hard
+
+"pg-connection-string@npm:^2.7.0":
+  version: 2.7.0
+  resolution: "pg-connection-string@npm:2.7.0"
+  checksum: 68015a8874b7ca5dad456445e4114af3d2602bac2fdb8069315ecad0ff9660ec93259b9af7186606529ac4f6f72a06831e6f20897a689b16cc7fda7ca0e247fd
   languageName: node
   linkType: hard
 
@@ -34860,10 +35083,26 @@ __metadata:
   languageName: node
   linkType: hard
 
+"pg-pool@npm:^3.8.0":
+  version: 3.8.0
+  resolution: "pg-pool@npm:3.8.0"
+  peerDependencies:
+    pg: ">=8.0"
+  checksum: bde2d6901f42591ee712646d114e73797f591a73a8ea6de3e208eb28a40e2fee6200dd9d5fad72e04b1a2477e3caab772a43d41e55b7c72fc5d82164b7fd1cb7
+  languageName: node
+  linkType: hard
+
 "pg-protocol@npm:*, pg-protocol@npm:^1.6.0":
   version: 1.6.0
   resolution: "pg-protocol@npm:1.6.0"
   checksum: e12662d2de2011e0c3a03f6a09f435beb1025acdc860f181f18a600a5495dc38a69d753bbde1ace279c8c442536af9c1a7c11e1d0fe3fad3aa1348b28d9d2683
+  languageName: node
+  linkType: hard
+
+"pg-protocol@npm:^1.8.0":
+  version: 1.8.0
+  resolution: "pg-protocol@npm:1.8.0"
+  checksum: eec936ad727312920fa32c2947cc7d0546626bcfe08ff9bc30ef6bb71cec2642d8f7537168536f7d7bb8143c71362873f7ba76eb5811b0121ad7bc8d19c6282d
   languageName: node
   linkType: hard
 
@@ -34916,6 +35155,28 @@ __metadata:
     pg-native:
       optional: true
   checksum: 30448ab90fca85c3cf6dfb79f351b759a8d5b384b89bc3b7e5ba6be7afaa0cd7422a3c770acb052d512dd6b1e03768e6d6a6674547ec4a21cb5870c7b72cc101
+  languageName: node
+  linkType: hard
+
+"pg@npm:^8.14.1":
+  version: 8.14.1
+  resolution: "pg@npm:8.14.1"
+  dependencies:
+    pg-cloudflare: ^1.1.1
+    pg-connection-string: ^2.7.0
+    pg-pool: ^3.8.0
+    pg-protocol: ^1.8.0
+    pg-types: ^2.1.0
+    pgpass: 1.x
+  peerDependencies:
+    pg-native: ">=3.0.1"
+  dependenciesMeta:
+    pg-cloudflare:
+      optional: true
+  peerDependenciesMeta:
+    pg-native:
+      optional: true
+  checksum: 86e6617ae8f2a526d0252fafc41df43c5a8973782d6aac7ad53950fe39ce96d04d895fc7d0576bae0d166b28802787ff2ff3687b56c3b668e2be1f9ae4df17e6
   languageName: node
   linkType: hard
 
@@ -36824,6 +37085,15 @@ __metadata:
   dependencies:
     resolve: ^1.1.6
   checksum: fe76bf9c21875ac16e235defedd7cbd34f333c02a92546142b7911a0f7c7059d2e16f441fe6fb9ae203f459c05a31b2bcf26202896d89e390eda7514d5d2702b
+  languageName: node
+  linkType: hard
+
+"rechoir@npm:^0.8.0":
+  version: 0.8.0
+  resolution: "rechoir@npm:0.8.0"
+  dependencies:
+    resolve: ^1.20.0
+  checksum: ad3caed8afdefbc33fbc30e6d22b86c35b3d51c2005546f4e79bcc03c074df804b3640ad18945e6bef9ed12caedc035655ec1082f64a5e94c849ff939dc0a788
   languageName: node
   linkType: hard
 
@@ -38933,7 +39203,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ssh2@npm:^1.11.0, ssh2@npm:^1.4.0":
+"ssh2@npm:^1.11.0, ssh2@npm:^1.15.0, ssh2@npm:^1.4.0":
   version: 1.16.0
   resolution: "ssh2@npm:1.16.0"
   dependencies:
@@ -39715,6 +39985,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"tar-fs@npm:~2.1.2":
+  version: 2.1.2
+  resolution: "tar-fs@npm:2.1.2"
+  dependencies:
+    chownr: ^1.1.1
+    mkdirp-classic: ^0.5.2
+    pump: ^3.0.0
+    tar-stream: ^2.1.4
+  checksum: 6b4fcd38a644b5cd3325f687b9f1f48cd19809b63cbc8376fe794f68361849a17120d036833b3a97de6acb1df588844476309b8c2d0bcaf53f19da2d56ac07de
+  languageName: node
+  linkType: hard
+
 "tar-stream@npm:^1.5.2":
   version: 1.6.2
   resolution: "tar-stream@npm:1.6.2"
@@ -39818,6 +40100,13 @@ __metadata:
     mkdirp: ^3.0.1
     yallist: ^5.0.0
   checksum: 8485350c0688331c94493031f417df069b778aadb25598abdad51862e007c39d1dd5310702c7be4a6784731a174799d8885d2fde0484269aea205b724d7b2ffa
+  languageName: node
+  linkType: hard
+
+"tarn@npm:^3.0.2":
+  version: 3.0.2
+  resolution: "tarn@npm:3.0.2"
+  checksum: 27a69658f02504979c5b02e500522e78ec12ef893b90cb00fdef794f9d847a92ed78f6c0ad12e82b8919519bded6a8d6d0000442cd0c6d6ea83cd9b7297729af
   languageName: node
   linkType: hard
 
@@ -39940,6 +40229,29 @@ __metadata:
   languageName: node
   linkType: hard
 
+"testcontainers@npm:^10.23.0":
+  version: 10.23.0
+  resolution: "testcontainers@npm:10.23.0"
+  dependencies:
+    "@balena/dockerignore": ^1.0.2
+    "@types/dockerode": ^3.3.35
+    archiver: ^7.0.1
+    async-lock: ^1.4.1
+    byline: ^5.0.0
+    debug: ^4.3.5
+    docker-compose: ^0.24.8
+    dockerode: ^4.0.4
+    get-port: ^7.1.0
+    proper-lockfile: ^4.1.2
+    properties-reader: ^2.3.0
+    ssh-remote-port-forward: ^1.0.4
+    tar-fs: ^3.0.6
+    tmp: ^0.2.3
+    undici: ^5.28.5
+  checksum: 0d5bd57258d75b807121d07cc63bb24fc7f821ff51452a5d3cf6881939f5814d4c43669f601dd7bf7ea1fa72e04bf6f49809b618908097030384d11277e1bcde
+  languageName: node
+  linkType: hard
+
 "text-decoder@npm:^1.1.0":
   version: 1.1.1
   resolution: "text-decoder@npm:1.1.1"
@@ -40018,6 +40330,13 @@ __metadata:
   version: 1.1.0
   resolution: "thunky@npm:1.1.0"
   checksum: 993096c472b6b8f30e29dc777a8d17720e4cab448375041f20c0cb802a09a7fb2217f2a3e8cdc11851faa71c957e2db309357367fc9d7af3cb7a4d00f4b66034
+  languageName: node
+  linkType: hard
+
+"tildify@npm:2.0.0":
+  version: 2.0.0
+  resolution: "tildify@npm:2.0.0"
+  checksum: 0f5fee93624c4afdf75ee224c3b65aece4817ba5317fd70f49eaf084ea720d73556a6ef3f50079425a773ba3b93805b4524d14057841d4e4336516fdbe80635b
   languageName: node
   linkType: hard
 
@@ -41802,7 +42121,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"uuid@npm:^11.1.0":
+"uuid@npm:^11.0.5, uuid@npm:^11.1.0":
   version: 11.1.0
   resolution: "uuid@npm:11.1.0"
   bin:

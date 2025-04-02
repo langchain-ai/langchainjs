@@ -1,7 +1,7 @@
 {
-  "name": "@langchain/groq",
-  "version": "0.2.1",
-  "description": "Groq integration for LangChain.js",
+  "name": "@langchain/google-cloud-sql-pg",
+  "version": "0.0.0",
+  "description": "LangChain.js integrations for Google Cloud SQL for PostgreSQL",
   "type": "module",
   "engines": {
     "node": ">=18"
@@ -12,9 +12,9 @@
     "type": "git",
     "url": "git@github.com:langchain-ai/langchainjs.git"
   },
-  "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-groq/",
+  "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-google-cloud-sql-pg/",
   "scripts": {
-    "build": "yarn turbo:command build:internal --filter=@langchain/groq",
+    "build": "yarn turbo:command build:internal --filter=@langchain/google-cloud-sql-pg",
     "build:internal": "yarn lc_build --create-entrypoints --pre --tree-shaking",
     "lint:eslint": "NODE_OPTIONS=--max-old-space-size=4096 eslint --cache --ext .ts,.js src/",
     "lint:dpdm": "dpdm --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
@@ -26,33 +26,27 @@
     "test:watch": "NODE_OPTIONS=--experimental-vm-modules jest --watch --testPathIgnorePatterns=\\.int\\.test.ts",
     "test:single": "NODE_OPTIONS=--experimental-vm-modules yarn run jest --config jest.config.cjs --testTimeout 100000",
     "test:int": "NODE_OPTIONS=--experimental-vm-modules jest --testPathPattern=\\.int\\.test.ts --testTimeout 100000 --maxWorkers=50%",
-    "test:standard:unit": "NODE_OPTIONS=--experimental-vm-modules jest --testPathPattern=\\.standard\\.test.ts --testTimeout 100000 --maxWorkers=50%",
-    "test:standard:int": "NODE_OPTIONS=--experimental-vm-modules jest --testPathPattern=\\.standard\\.int\\.test.ts --testTimeout 100000 --maxWorkers=50%",
-    "test:standard": "yarn test:standard:unit && yarn test:standard:int",
     "format": "prettier --config .prettierrc --write \"src\"",
     "format:check": "prettier --config .prettierrc --check \"src\""
   },
-  "author": "LangChain",
+  "author": "Google LLC",
   "license": "MIT",
   "dependencies": {
-    "@langchain/openai": "~0.3.0",
-    "groq-sdk": "^0.5.0",
-    "zod": "^3.22.4",
-    "zod-to-json-schema": "^3.22.5"
-  },
-  "peerDependencies": {
-    "@langchain/core": ">=0.2.21 <0.4.0"
+    "@google-cloud/cloud-sql-connector": "^1.6.0",
+    "@langchain/core": ">=0.3.0 <0.4.0",
+    "google-auth-library": "^9.15.0",
+    "knex": "^3.1.0",
+    "uuid": "^11.0.5"
   },
   "devDependencies": {
     "@jest/globals": "^29.5.0",
     "@langchain/core": "workspace:*",
-    "@langchain/openai": "workspace:^",
     "@langchain/scripts": ">=0.1.0 <0.2.0",
-    "@langchain/standard-tests": "0.0.0",
     "@swc/core": "^1.3.90",
     "@swc/jest": "^0.2.29",
+    "@testcontainers/postgresql": "^10.23.0",
     "@tsconfig/recommended": "^1.0.3",
-    "@types/uuid": "^9",
+    "@types/pg": "^8",
     "@typescript-eslint/eslint-plugin": "^6.12.0",
     "@typescript-eslint/parser": "^6.12.0",
     "dotenv": "^16.3.1",
@@ -65,9 +59,11 @@
     "eslint-plugin-prettier": "^4.2.1",
     "jest": "^29.5.0",
     "jest-environment-node": "^29.6.4",
+    "pg": "^8.14.1",
     "prettier": "^2.8.3",
-    "release-it": "^17.6.0",
+    "release-it": "^15.10.1",
     "rollup": "^4.5.2",
+    "testcontainers": "^10.23.0",
     "ts-jest": "^29.1.0",
     "typescript": "<5.2.0"
   },
