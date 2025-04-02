@@ -217,8 +217,8 @@ import { MatchingEngine } from "langchain/vectorstores/googlevertexai";
 
 ### Postgres Vector Store
 
-The [PostgresVectorStore](docs/integrations/vectorstores/google_cloudsql_pg) from the
-@langchain/google-cloud-sql-pg provides a way to use the CloudSQL for PostgresSQL to store
+The [PostgresVectorStore](/docs/integrations/vectorstores/google_cloudsql_pg) module from the
+[`@langchain/google-cloud-sql-pg`](https://www.npmjs.com/package/@langchain/google-cloud-sql-pg) package provides a way to use the CloudSQL for PostgresSQL to store
 vector embeddings using the class.
 
 ```bash
@@ -293,8 +293,8 @@ const tools = [new GoogleCustomSearch({})];
 
 ### Postgres Chat Message History
 
-The [PostgresChatMessageHistory](docs/integrations/memory/google_cloudsql_pg) from
-`@langchain/google-cloud-sql-pg` provides a way to use the CloudSQL for PostgresSQL to store messages and provide conversation history.
+The [PostgresChatMessageHistory](/docs/integrations/memory/google_cloudsql_pg) from
+the [`@langchain/google-cloud-sql-pg`](https://www.npmjs.com/package/@langchain/google-cloud-sql-pg) package provides a way to use the CloudSQL for PostgresSQL to store messages and provide conversation history.
 
 ```bash
 $ yarn add @langchain/google-cloud-sql-pg
@@ -323,7 +323,7 @@ const historyInstance = await PostgresChatMessageHistory.initialize(
 
 ### Postgres Loader
 
-The [PostgresLoader](docs/integrations/memory/google_cloudsql_pg) from
+The [PostgresLoader](/docs/integrations/memory/google_cloudsql_pg) from
 `@langchain/google-cloud-sql-pg` provides a way to use the CloudSQL for PostgresSQL to load data as LangChain `Document`s.
 
 _Note:_ See the [Postgres Vector Store](#Postgres Vector Store) section on this page to learn
