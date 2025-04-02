@@ -67,6 +67,7 @@ export const config = {
     "agents/toolkits/aws_sfn": "agents/toolkits/aws_sfn",
     "agents/toolkits/base": "agents/toolkits/base",
     "agents/toolkits/connery": "agents/toolkits/connery/index",
+    "agents/toolkits/ibm": "agents/toolkits/ibm",
     "agents/toolkits/stagehand": "agents/toolkits/stagehand",
     // embeddings
     "embeddings/alibaba_tongyi": "embeddings/alibaba_tongyi",
@@ -122,6 +123,7 @@ export const config = {
     // vectorstores
     "vectorstores/analyticdb": "vectorstores/analyticdb",
     "vectorstores/astradb": "vectorstores/astradb",
+    "vectorstores/azion_edgesql": "vectorstores/azion_edgesql",
     "vectorstores/azure_aisearch": "vectorstores/azure_aisearch",
     "vectorstores/azure_cosmosdb": "vectorstores/azure_cosmosdb",
     "vectorstores/cassandra": "vectorstores/cassandra",
@@ -204,6 +206,7 @@ export const config = {
     "retrievers/amazon_kendra": "retrievers/amazon_kendra",
     "retrievers/amazon_knowledge_base": "retrievers/amazon_knowledge_base",
     "retrievers/arxiv": "retrievers/arxiv",
+    "retrievers/azion_edgesql": "retrievers/azion_edgesql",
     "retrievers/bm25": "retrievers/bm25",
     "retrievers/chaindesk": "retrievers/chaindesk",
     "retrievers/databerry": "retrievers/databerry",
@@ -293,7 +296,8 @@ export const config = {
     "document_loaders/web/playwright": "document_loaders/web/playwright",
     "document_loaders/web/college_confidential":
       "document_loaders/web/college_confidential",
-    "document_loaders/web/google_cloud_storage": "document_loaders/web/google_cloud_storage",
+    "document_loaders/web/google_cloud_storage":
+      "document_loaders/web/google_cloud_storage",
     "document_loaders/web/gitbook": "document_loaders/web/gitbook",
     "document_loaders/web/hn": "document_loaders/web/hn",
     "document_loaders/web/imsdb": "document_loaders/web/imsdb",
@@ -356,6 +360,7 @@ export const config = {
     "tools/gmail",
     "tools/google_calendar",
     "agents/toolkits/aws_sfn",
+    "agents/toolkits/ibm",
     "agents/toolkits/stagehand",
     "callbacks/handlers/llmonitor",
     "callbacks/handlers/lunary",
@@ -393,6 +398,7 @@ export const config = {
     "llms/layerup_security",
     "vectorstores/analyticdb",
     "vectorstores/astradb",
+    "vectorstores/azion_edgesql",
     "vectorstores/azure_aisearch",
     "vectorstores/azure_cosmosdb",
     "vectorstores/cassandra",
@@ -452,6 +458,7 @@ export const config = {
     "retrievers/amazon_kendra",
     "retrievers/amazon_knowledge_base",
     "retrievers/arxiv",
+    "retrievers/azion_edgesql",
     "retrievers/dria",
     "retrievers/metal",
     "retrievers/supabase",

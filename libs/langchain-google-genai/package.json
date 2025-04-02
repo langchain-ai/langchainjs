@@ -1,6 +1,6 @@
 {
   "name": "@langchain/google-genai",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Google Generative AI integration for LangChain.js",
   "type": "module",
   "engines": {

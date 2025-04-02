@@ -139,3 +139,34 @@ test("Google AI - Handle schema with enum fields", async () => {
   expect(result).toHaveProperty("role");
   expect(["admin", "editor", "viewer"]).toContain(result.role);
 });
+
+test("Google AI - Handle JSON schema", async () => {
+  const schema = {
+    type: "object",
+    additionalProperties: false,
+    strict: true,
+    properties: {
+      reasoning: {
+        type: "string",
+        description:
+          "A human-readable explanation of the score. You MUST end the reasoning with a sentence that says: Thus, the score should be: SCORE_YOU_ASSIGN.",
+      },
+      score: {
+        type: "number",
+        description:
+          "A number that represents the degree to which the criteria in the prompt are met, from 0.0 to 1.0. 1.0 means the criteria are met perfectly. 0.0 means none of the criteria are met, 0.5 means exactly half of the criteria are met.",
+      },
+    },
+    required: ["reasoning", "score"],
+  };
+  const model = new ChatGoogleGenerativeAI({
+    model: "gemini-2.0-flash",
+    temperature: 0.7,
+  });
+  const structuredLlm = model.withStructuredOutput(schema);
+  const request = "Is the following correct?\nThe earth is flat.";
+  const result = await structuredLlm.invoke(request);
+  expect(result).toBeDefined();
+  expect(result).toHaveProperty("reasoning");
+  expect(result).toHaveProperty("score");
+});

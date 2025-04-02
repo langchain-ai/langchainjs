@@ -1,6 +1,6 @@
 {
   "name": "@langchain/community",
-  "version": "0.3.37",
+  "version": "0.3.38",
   "description": "Third-party integrations for LangChain.js",
   "type": "module",
   "engines": {
@@ -80,7 +80,7 @@
     "@gradientai/nodejs-sdk": "^1.2.0",
     "@huggingface/inference": "^2.6.4",
     "@huggingface/transformers": "^3.2.3",
-    "@ibm-cloud/watsonx-ai": "^1.4.0",
+    "@ibm-cloud/watsonx-ai": "^1.6.4",
     "@jest/globals": "^29.5.0",
     "@lancedb/lancedb": "^0.13.0",
     "@langchain/core": "workspace:*",
@@ -141,6 +141,7 @@
     "@zilliz/milvus2-sdk-node": ">=2.3.5",
     "apify-client": "^2.7.1",
     "assemblyai": "^4.6.0",
+    "azion": "^1.11.1",
     "better-sqlite3": "9.5.0",
     "cassandra-driver": "^4.7.2",
     "cborg": "^4.1.1",
@@ -290,6 +291,7 @@
     "@zilliz/milvus2-sdk-node": ">=2.3.5",
     "apify-client": "^2.7.1",
     "assemblyai": "^4.6.0",
+    "azion": "^1.11.1",
     "better-sqlite3": ">=9.4.0 <12.0.0",
     "cassandra-driver": "^4.7.2",
     "cborg": "^4.1.1",
@@ -541,6 +543,9 @@
       "optional": true
     },
     "assemblyai": {
+      "optional": true
+    },
+    "azion": {
       "optional": true
     },
     "better-sqlite3": {
@@ -1025,6 +1030,15 @@
       "import": "./agents/toolkits/connery.js",
       "require": "./agents/toolkits/connery.cjs"
     },
+    "./agents/toolkits/ibm": {
+      "types": {
+        "import": "./agents/toolkits/ibm.d.ts",
+        "require": "./agents/toolkits/ibm.d.cts",
+        "default": "./agents/toolkits/ibm.d.ts"
+      },
+      "import": "./agents/toolkits/ibm.js",
+      "require": "./agents/toolkits/ibm.cjs"
+    },
     "./agents/toolkits/stagehand": {
       "types": {
         "import": "./agents/toolkits/stagehand.d.ts",
@@ -1483,6 +1497,15 @@
       },
       "import": "./vectorstores/astradb.js",
       "require": "./vectorstores/astradb.cjs"
+    },
+    "./vectorstores/azion_edgesql": {
+      "types": {
+        "import": "./vectorstores/azion_edgesql.d.ts",
+        "require": "./vectorstores/azion_edgesql.d.cts",
+        "default": "./vectorstores/azion_edgesql.d.ts"
+      },
+      "import": "./vectorstores/azion_edgesql.js",
+      "require": "./vectorstores/azion_edgesql.cjs"
     },
     "./vectorstores/azure_aisearch": {
       "types": {
@@ -2185,6 +2208,15 @@
       },
       "import": "./retrievers/arxiv.js",
       "require": "./retrievers/arxiv.cjs"
+    },
+    "./retrievers/azion_edgesql": {
+      "types": {
+        "import": "./retrievers/azion_edgesql.d.ts",
+        "require": "./retrievers/azion_edgesql.d.cts",
+        "default": "./retrievers/azion_edgesql.d.ts"
+      },
+      "import": "./retrievers/azion_edgesql.js",
+      "require": "./retrievers/azion_edgesql.cjs"
     },
     "./retrievers/bm25": {
       "types": {
@@ -3393,6 +3425,10 @@
     "agents/toolkits/connery.js",
     "agents/toolkits/connery.d.ts",
     "agents/toolkits/connery.d.cts",
+    "agents/toolkits/ibm.cjs",
+    "agents/toolkits/ibm.js",
+    "agents/toolkits/ibm.d.ts",
+    "agents/toolkits/ibm.d.cts",
     "agents/toolkits/stagehand.cjs",
     "agents/toolkits/stagehand.js",
     "agents/toolkits/stagehand.d.ts",
@@ -3597,6 +3633,10 @@
     "vectorstores/astradb.js",
     "vectorstores/astradb.d.ts",
     "vectorstores/astradb.d.cts",
+    "vectorstores/azion_edgesql.cjs",
+    "vectorstores/azion_edgesql.js",
+    "vectorstores/azion_edgesql.d.ts",
+    "vectorstores/azion_edgesql.d.cts",
     "vectorstores/azure_aisearch.cjs",
     "vectorstores/azure_aisearch.js",
     "vectorstores/azure_aisearch.d.ts",
@@ -3909,6 +3949,10 @@
     "retrievers/arxiv.js",
     "retrievers/arxiv.d.ts",
     "retrievers/arxiv.d.cts",
+    "retrievers/azion_edgesql.cjs",
+    "retrievers/azion_edgesql.js",
+    "retrievers/azion_edgesql.d.ts",
+    "retrievers/azion_edgesql.d.cts",
     "retrievers/bm25.cjs",
     "retrievers/bm25.js",
     "retrievers/bm25.d.ts",

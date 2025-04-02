@@ -1,6 +1,6 @@
 {
   "name": "@langchain/groq",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Groq integration for LangChain.js",
   "type": "module",
   "engines": {
