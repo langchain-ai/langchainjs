@@ -775,9 +775,7 @@ test("calling tool with no args should work", async () => {
     model: "claude-3-7-sonnet-latest",
   });
   const sfWeatherTool = tool(
-    async ({}) => {
-      return "The weather is 80 degrees and sunny";
-    },
+    async () => "The weather is 80 degrees and sunny",
     {
       name: "sf_weather",
       description: "Get the weather in SF location",
@@ -786,7 +784,7 @@ test("calling tool with no args should work", async () => {
   );
   const llmWithTools = llm.bindTools([sfWeatherTool]);
   const result = await llmWithTools.invoke("What is the weather in SF?");
-  const nextMessage = await sfWeatherTool.invoke(result.tool_calls?.[0]);
+  const nextMessage = await sfWeatherTool.invoke(result.tool_calls![0]);
   const finalResult = await llmWithTools.invoke([
     {
       role: "user",
@@ -798,33 +796,33 @@ test("calling tool with no args should work", async () => {
   expect(finalResult.content).toContain("80");
 });
 
-test.skip("calling tool with no args in agent should work", async () => {
-  const { createReactAgent } = await import("@langchain/langgraph/prebuilt");
-  const llm = new ChatAnthropic({
-    model: "claude-3-7-sonnet-latest",
-  });
-  const sfWeatherTool = tool(
-    async ({}) => {
-      return "The weather is 80 degrees and sunny";
-    },
-    {
-      name: "sf_weather",
-      description: "Get the weather in SF location",
-      schema: z.object({}),
-    }
-  );
-  const agent = createReactAgent({
-    llm,
-    tools: [sfWeatherTool],
-  });
-  const result = await agent.invoke({
-    messages: [
-      {
-        role: "user",
-        content: "What is the weather in SF?",
-      },
-    ],
-  });
-  console.log(result);
-  expect(result.messages.at(-1)?.content).toContain("80");
-});
+// test.skip("calling tool with no args in agent should work", async () => {
+//   const { createReactAgent } = await import("@langchain/langgraph/prebuilt");
+//   const llm = new ChatAnthropic({
+//     model: "claude-3-7-sonnet-latest",
+//   });
+//   const sfWeatherTool = tool(
+//     async ({}) => {
+//       return "The weather is 80 degrees and sunny";
+//     },
+//     {
+//       name: "sf_weather",
+//       description: "Get the weather in SF location",
+//       schema: z.object({}),
+//     }
+//   );
+//   const agent = createReactAgent({
+//     llm,
+//     tools: [sfWeatherTool],
+//   });
+//   const result = await agent.invoke({
+//     messages: [
+//       {
+//         role: "user",
+//         content: "What is the weather in SF?",
+//       },
+//     ],
+//   });
+//   console.log(result);
+//   expect(result.messages.at(-1)?.content).toContain("80");
+// });
