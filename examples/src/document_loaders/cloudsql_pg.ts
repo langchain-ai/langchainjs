@@ -41,7 +41,7 @@ async function createPostgresLoader(PEInstance: PostgresEngine) {
     formatter: customFormatter, // or use format: "json" | "yaml" | "csv" | "text"
   };
 
-  const documentLoaderInstance = await PostgresLoader.create(
+  const documentLoaderInstance = await PostgresLoader.initialize(
     PEInstance,
     documentLoaderArgs
   );

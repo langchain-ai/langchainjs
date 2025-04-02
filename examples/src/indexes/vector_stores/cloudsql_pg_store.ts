@@ -44,7 +44,7 @@ await engine.initVectorstoreTable(
 const embeddingService = new SyntheticEmbeddings({ vectorSize: 768 });
 
 // PostgresVectorStore instantiation
-const vectorStore = await PostgresVectorStore.create(
+const vectorStore = await PostgresVectorStore.initialize(
   engine,
   embeddingService,
   "my_vector_store_table",

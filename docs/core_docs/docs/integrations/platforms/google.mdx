@@ -261,7 +261,7 @@ await engine.initVectorstoreTable(
 Create a vector store instance:
 
 ```typescript
-const vectorStore = await PostgresVectorStore.create(
+const vectorStore = await PostgresVectorStore.initialize(
   engine,
   embeddingService,
   "my_vector_store_table",
@@ -344,7 +344,7 @@ const documentLoaderArgs: PostgresLoaderOptions = {
   format: "text",
 };
 
-const documentLoaderInstance = await PostgresLoader.create(
+const documentLoaderInstance = await PostgresLoader.initialize(
   PEInstance,
   documentLoaderArgs
 );
