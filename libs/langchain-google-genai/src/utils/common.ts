@@ -149,7 +149,7 @@ export function convertMessageContentToParts(
       inferToolNameFromPreviousMessages(message, previousMessages);
     if (messageName === undefined) {
       throw new Error(
-        `Google requires a tool name for each tool call response, and we could not infer a called tool name for ToolMessage "${message.id}" from chat history. Please pass a "name" field into your ToolMessage explicitly.`
+        `Google requires a tool name for each tool call response, and we could not infer a called tool name for ToolMessage "${message.id}" from your passed messages. Please populate a "name" field on that ToolMessage explicitly.`
       );
     }
     functionResponses = [
