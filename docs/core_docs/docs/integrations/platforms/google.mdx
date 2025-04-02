@@ -212,7 +212,7 @@ PaLM models are no longer supported.
 > referred to as vector similarity-matching or an approximate nearest neighbor (ANN) service.
 
 ```typescript
-import { MatchingEngine } from "langchain/vectorstores/googlevertexai";
+import { MatchingEngine } from "@langchain/community/vectorstores/googlevertexai";
 ```
 
 ### Postgres Vector Store
@@ -279,7 +279,7 @@ const vectorStore = await PostgresVectorStore.initialize(
 There exists a `GoogleCustomSearch` utility which wraps this API. To import this utility:
 
 ```typescript
-import { GoogleCustomSearch } from "langchain/tools";
+import { GoogleCustomSearch } from "@langchain/community/tools/google_custom_search";
 ```
 
 We can easily load this wrapper as a Tool (to use with an Agent). We can do this with:
