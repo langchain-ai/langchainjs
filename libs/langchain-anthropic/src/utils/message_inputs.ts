@@ -183,7 +183,7 @@ function _formatContent(content: MessageContent) {
           try {
             contentPartCopy.input = JSON.parse(contentPartCopy.input);
           } catch {
-            // no-op
+            contentPartCopy.input = {};
           }
         }
 
