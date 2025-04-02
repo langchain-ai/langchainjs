@@ -189,7 +189,9 @@ test("convertMessageContentToParts correctly handles message types", () => {
     ),
   ];
   const messagesAsGoogleParts = messages
-    .map((msg) => convertMessageContentToParts(msg, false))
+    .map((msg, i) =>
+      convertMessageContentToParts(msg, false, messages.slice(0, i))
+    )
     .flat();
   // console.log(messagesAsGoogleParts);
   expect(messagesAsGoogleParts).toEqual([
