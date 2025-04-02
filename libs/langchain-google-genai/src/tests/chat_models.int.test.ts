@@ -787,6 +787,7 @@ test("calling tool with no args should work", async () => {
     },
   ]);
   const nextMessage = await sfWeatherTool.invoke(result.tool_calls![0]);
+  delete nextMessage.name; // Should work even if name is not present
   const finalResult = await llmWithTools.invoke([
     {
       role: "user",

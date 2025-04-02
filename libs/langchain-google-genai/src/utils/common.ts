@@ -111,7 +111,7 @@ function inferToolNameFromPreviousMessages(
     })
     .flat()
     .find((toolCall) => {
-      return toolCall.id === message.id;
+      return toolCall.id === message.tool_call_id;
     })?.name;
 }
 
