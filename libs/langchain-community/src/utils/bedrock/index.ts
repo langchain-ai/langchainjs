@@ -465,13 +465,12 @@ function parseMessage(responseBody: any, asChunk?: boolean): ChatGeneration {
       generationInfo,
     });
   } else {
-    // TODO: we are throwing away here the text response, as the interface of this method returns only one
     const toolCalls = extractToolCalls(responseBody.content);
 
     if (toolCalls.length > 0) {
       return {
         message: new AIMessage({
-          content: "",
+          content: responseBody.content,
           additional_kwargs: { id },
           tool_calls: toolCalls,
         }),

@@ -86,6 +86,13 @@ export type TavilySearchAPIRetrieverFields = ToolParams & {
    * @default 3
    */
   days?: number;
+
+  /**
+   * The base API url used for the Tavily Search API.
+   *
+   * @default "https://api.tavily.com"
+   */
+  apiUrl?: string;
 };
 
 /**
@@ -188,6 +195,8 @@ export class TavilySearchResults extends Tool {
 
   protected days?: number;
 
+  protected apiUrl?: string;
+
   constructor(fields?: TavilySearchAPIRetrieverFields) {
     super(fields);
     this.maxResults = fields?.maxResults ?? this.maxResults;
@@ -204,6 +213,7 @@ export class TavilySearchResults extends Tool {
     this.searchDepth = fields?.searchDepth ?? this.searchDepth;
     this.topic = fields?.topic ?? this.topic;
     this.days = fields?.days ?? this.days;
+    this.apiUrl = fields?.apiUrl ?? "https://api.tavily.com";
 
     if (this.apiKey === undefined) {
       throw new Error(
@@ -219,7 +229,6 @@ export class TavilySearchResults extends Tool {
     const body: Record<string, unknown> = {
       query: input,
       max_results: this.maxResults,
-      api_key: this.apiKey,
       include_images: this.includeImages,
       include_image_descriptions: this.includeImageDescriptions,
       include_answer: this.includeAnswer,
@@ -231,10 +240,11 @@ export class TavilySearchResults extends Tool {
       days: this.days,
     };
 
-    const response = await fetch("https://api.tavily.com/search", {
+    const response = await fetch(`${this.apiUrl}/search`, {
       method: "POST",
       headers: {
         "content-type": "application/json",
+        authorization: `Bearer ${this.apiKey}`,
       },
       body: JSON.stringify({ ...body, ...this.kwargs }),
     });

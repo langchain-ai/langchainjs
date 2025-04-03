@@ -13,10 +13,14 @@ import {
   AIMessageChunk,
   BaseMessage,
   ChatMessage,
+  ToolMessage,
+  ToolMessageChunk,
   MessageContent,
   MessageContentComplex,
   UsageMetadata,
+  isAIMessage,
   isBaseMessage,
+  isToolMessage,
 } from "@langchain/core/messages";
 import {
   ChatGeneration,
@@ -26,6 +30,7 @@ import {
 import { isLangChainTool } from "@langchain/core/utils/function_calling";
 import { isOpenAITool } from "@langchain/core/language_models/base";
 import { ToolCallChunk } from "@langchain/core/messages/tool";
+import { v4 as uuidv4 } from "uuid";
 import {
   jsonSchemaToGeminiParameters,
   zodToGenerativeAIParameters,
@@ -93,11 +98,33 @@ function messageContentMedia(content: MessageContentComplex): Part {
   throw new Error("Invalid media content");
 }
 
+function inferToolNameFromPreviousMessages(
+  message: ToolMessage | ToolMessageChunk,
+  previousMessages: BaseMessage[]
+): string | undefined {
+  return previousMessages
+    .map((msg) => {
+      if (isAIMessage(msg)) {
+        return msg.tool_calls ?? [];
+      }
+      return [];
+    })
+    .flat()
+    .find((toolCall) => {
+      return toolCall.id === message.tool_call_id;
+    })?.name;
+}
+
 export function convertMessageContentToParts(
   message: BaseMessage,
-  isMultimodalModel: boolean
+  isMultimodalModel: boolean,
+  previousMessages: BaseMessage[]
 ): Part[] {
-  if (typeof message.content === "string" && message.content !== "") {
+  if (
+    typeof message.content === "string" &&
+    message.content !== "" &&
+    !isToolMessage(message)
+  ) {
     return [{ text: message.content }];
   }
 
@@ -116,12 +143,23 @@ export function convertMessageContentToParts(
         args: tc.args,
       },
     }));
-  } else if (message.getType() === "tool" && message.name && message.content) {
+  } else if (isToolMessage(message) && message.content) {
+    const messageName =
+      message.name ??
+      inferToolNameFromPreviousMessages(message, previousMessages);
+    if (messageName === undefined) {
+      throw new Error(
+        `Google requires a tool name for each tool call response, and we could not infer a called tool name for ToolMessage "${message.id}" from your passed messages. Please populate a "name" field on that ToolMessage explicitly.`
+      );
+    }
     functionResponses = [
       {
         functionResponse: {
-          name: message.name,
-          response: message.content,
+          name: messageName,
+          response:
+            typeof message.content === "string"
+              ? { result: message.content }
+              : message.content,
         },
       },
     ];
@@ -229,7 +267,11 @@ export function convertBaseMessagesToContent(
         );
       }
 
-      const parts = convertMessageContentToParts(message, isMultimodalModel);
+      const parts = convertMessageContentToParts(
+        message,
+        isMultimodalModel,
+        messages.slice(0, index)
+      );
 
       if (acc.mergeWithPreviousContent) {
         const prevContent = acc.content[acc.content.length - 1];
@@ -326,10 +368,13 @@ export function mapGenerateContentResultToChatResult(
     text,
     message: new AIMessage({
       content,
-      tool_calls: functionCalls?.map((fc) => ({
-        ...fc,
-        type: "tool_call",
-      })),
+      tool_calls: functionCalls?.map((fc) => {
+        return {
+          ...fc,
+          type: "tool_call",
+          id: "id" in fc && typeof fc.id === "string" ? fc.id : uuidv4(),
+        };
+      }),
       additional_kwargs: {
         ...generationInfo,
       },
@@ -407,6 +452,7 @@ export function convertResponseContentToChatGenerationChunk(
         args: JSON.stringify(fc.args),
         index: extra.index,
         type: "tool_call_chunk" as const,
+        id: "id" in fc && typeof fc.id === "string" ? fc.id : uuidv4(),
       }))
     );
   }
@@ -444,6 +490,16 @@ export function convertToGenerativeAITools(
         (tool): GenerativeAIFunctionDeclaration => {
           if (isLangChainTool(tool)) {
             const jsonSchema = zodToGenerativeAIParameters(tool.schema);
+            if (
+              jsonSchema.type === "object" &&
+              "properties" in jsonSchema &&
+              Object.keys(jsonSchema.properties).length === 0
+            ) {
+              return {
+                name: tool.name,
+                description: tool.description,
+              };
+            }
             return {
               name: tool.name,
               description: tool.description,

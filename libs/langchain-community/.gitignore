@@ -130,6 +130,10 @@ agents/toolkits/connery.cjs
 agents/toolkits/connery.js
 agents/toolkits/connery.d.ts
 agents/toolkits/connery.d.cts
+agents/toolkits/ibm.cjs
+agents/toolkits/ibm.js
+agents/toolkits/ibm.d.ts
+agents/toolkits/ibm.d.cts
 agents/toolkits/stagehand.cjs
 agents/toolkits/stagehand.js
 agents/toolkits/stagehand.d.ts
@@ -334,6 +338,10 @@ vectorstores/astradb.cjs
 vectorstores/astradb.js
 vectorstores/astradb.d.ts
 vectorstores/astradb.d.cts
+vectorstores/azion_edgesql.cjs
+vectorstores/azion_edgesql.js
+vectorstores/azion_edgesql.d.ts
+vectorstores/azion_edgesql.d.cts
 vectorstores/azure_aisearch.cjs
 vectorstores/azure_aisearch.js
 vectorstores/azure_aisearch.d.ts
@@ -646,6 +654,10 @@ retrievers/arxiv.cjs
 retrievers/arxiv.js
 retrievers/arxiv.d.ts
 retrievers/arxiv.d.cts
+retrievers/azion_edgesql.cjs
+retrievers/azion_edgesql.js
+retrievers/azion_edgesql.d.ts
+retrievers/azion_edgesql.d.cts
 retrievers/bm25.cjs
 retrievers/bm25.js
 retrievers/bm25.d.ts
