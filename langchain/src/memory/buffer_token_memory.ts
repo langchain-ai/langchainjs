@@ -9,8 +9,8 @@ import { BaseChatMemory, BaseChatMemoryInput } from "./chat_memory.js";
 
 /**
  * Interface for the input parameters of the `BufferTokenMemory` class.
+ * @deprecated Will be removed in 1.0.0. Please see the migration guide at: https://js.langchain.com/docs/versions/migrating_memory/
  */
-
 export interface ConversationTokenBufferMemoryInput
   extends BaseChatMemoryInput {
   /* Prefix for human messages in the buffer. */
@@ -48,8 +48,8 @@ export interface ConversationTokenBufferMemoryInput
  * const result = await memory.loadMemoryVariables({});
  * console.log(result);
  * ```
+ * @deprecated Will be removed in 1.0.0. Please see the migration guide at: https://js.langchain.com/docs/versions/migrating_memory/
  */
-
 export class ConversationTokenBufferMemory
   extends BaseChatMemory
   implements ConversationTokenBufferMemoryInput
