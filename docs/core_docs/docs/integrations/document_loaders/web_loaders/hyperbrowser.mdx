@@ -1,28 +1,55 @@
 ---
-hide_table_of_contents: true
+sidebar_class_name: node-only
 ---
 
-import CodeBlock from "@theme/CodeBlock";
+# Hyperbrowser
 
-# Hyperbrowser Document Loader
+## Overview
 
-The Hyperbrowser document loader allows you to load web content into your LangChain application using Hyperbrowser's powerful web scraping and crawling capabilities. It supports both single-page scraping and multi-page crawling with various output formats.
+The Hyperbrowser document loader provides a way to load web content into your LangChain application using Hyperbrowser's cloud browser infrastructure. It supports:
+
+- Single-page scraping
+- Multi-page crawling
+- Multiple output formats (markdown, HTML, links)
+- Advanced browser automation features
+
+| Class | Package |  Local | [PY support](https://python.langchain.com/docs/integrations/document_loaders/hyperbrowser/)|
+| :---: | :---: |  :---: |  :---: |
+| HyperbrowserLoader | langchain-js | ❌ | ✅ |
 
 ## Setup
 
-You will need to get an API key from [Hyperbrowser](https://hyperbrowser.ai/). Then, set your API key as `HYPERBROWSER_API_KEY` or pass it in as an `apiKey` constructor argument.
+To access the Hyperbrowser Document Loader, you'll first need to install the @langchain/community package. You will also need a hyperbrowser account, and the associated API key. 
 
-## Usage
+### Credentials
 
-import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+You'll need a Hyperbrowser API key. Get one from [Hyperbrowser](https://hyperbrowser.ai/) and set it as an environment variable:
 
-<IntegrationInstallTooltip></IntegrationInstallTooltip>
+### Installation
+
+First, install the required packages:
 
 ```bash npm2yarn
 npm install @langchain/community @langchain/core @hyperbrowser/sdk
 ```
 
-### Single Page Scraping
+
+```bash
+export HYPERBROWSER_API_KEY="your-api-key"
+```
+
+Or pass it directly to the loader:
+
+```typescript
+const loader = new HyperbrowserLoader({
+  apiKey: "your-api-key",
+  // ... other options
+});
+```
+
+## Instantiation
+
+Load content from a single webpage:
 
 ```typescript
 import { HyperbrowserLoader } from "@langchain/community/document_loaders/web/hyperbrowser";
@@ -36,7 +63,11 @@ const loader = new HyperbrowserLoader({
 const docs = await loader.load();
 ```
 
-### Multi-page Crawling
+## Advanced Usage
+
+### Multi-page Loading
+
+Load content from multiple linked pages:
 
 ```typescript
 import { HyperbrowserLoader } from "@langchain/community/document_loaders/web/hyperbrowser";
@@ -45,41 +76,129 @@ const loader = new HyperbrowserLoader({
   url: "https://example.com",
   mode: "crawl",
   maxPages: 10,
-  outputFormat: ["markdown"],
-  sessionOptions: {
-    useProxy: false,
-    solveCaptchas: false,
-    acceptCookies: false,
-    useStealth: false
-  }
+  outputFormat: ["markdown"]
 });
 
 const docs = await loader.load();
 ```
 
-## Configuration Options
+### Different Output Formats
 
-### Mode
-- `scrape`: Extract content from a single webpage
-- `crawl`: Systematically explore and extract content from multiple linked pages
+```typescript
+// Markdown output
+const markdownLoader = new HyperbrowserLoader({
+  url: "https://example.com",
+  mode: "scrape",
+  outputFormat: ["markdown"]
+});
 
-### Output Formats
-- `markdown`: Clean, formatted text
-- `html`: Raw HTML content
-- `links`: Extract all links from the page
-- `screenshot`: Capture page screenshots
+// HTML output
+const htmlLoader = new HyperbrowserLoader({
+  url: "https://example.com",
+  mode: "scrape",
+  outputFormat: ["html"]
+});
 
-### Session Options
-A partial list of parameters is provided here - 
+// Multiple formats
+const multiFormatLoader = new HyperbrowserLoader({
+  url: "https://example.com",
+  mode: "scrape",
+  outputFormat: ["markdown", "html", "links"]
+});
+```
 
-- `useProxy`: Use a proxy for accessing websites
-- `solveCaptchas`: Automatically solve CAPTCHA challenges
-- `acceptCookies`: Handle cookie consent popups
+### With Session Options
 
-A more comprehensive list of params can be found [on our docs](https://docs.hyperbrowser.ai/reference/api-reference/sessions#api-session)
+```typescript
+const loader = new HyperbrowserLoader({
+  url: "https://example.com",
+  mode: "scrape",
+  outputFormat: ["markdown"],
+  sessionOptions: {
+    useProxy: true,
+    solveCaptchas: true,
+    acceptCookies: true,
+    useStealth: true
+  }
+});
+```
 
-### Additional Options
-- `maxPages`: Maximum number of pages to crawl (only applicable in crawl mode)
+## Parameters
+
+### Required Parameters
+
+| Parameter | Type | Description |
+| --------- | ---- | ----------- |
+| `url` | `string` | The URL to scrape or crawl |
+| `mode` | `"scrape" \| "crawl"` | Whether to scrape a single page or crawl multiple pages |
+
+### Optional Parameters
+
+| Parameter | Type | Default | Description |
+| --------- | ---- | ------- | ----------- |
+| `outputFormat` | `Array<"markdown" \| "html" \| "links" \| "screenshot">` | `["markdown"]` | Desired output formats |
+| `maxPages` | `number` | `10` | Maximum pages to crawl (crawl mode only) |
+| `sessionOptions` | `object` | See below | Browser session configuration |
+
+#### Session Options
+
+```typescript
+interface SessionOptions {
+  useProxy?: boolean;      // Use a proxy for access
+  solveCaptchas?: boolean; // Auto-solve CAPTCHAs
+  acceptCookies?: boolean; // Handle cookie popups
+  useStealth?: boolean;    // Enable stealth mode
+}
+```
+
+## Document Schema
+
+Each document in the returned array has this structure:
+
+```typescript
+interface Document {
+  pageContent: string;  // The extracted content in specified format
+  metadata: {
+    source: string;     // The URL of the page
+    timestamp?: string; // When the page was scraped
+    title?: string;     // Page title if available
+    // ... other metadata from the page
+  };
+}
+```
+
+Example document:
+
+```typescript
+{
+  pageContent: "# Main Title\n\nArticle content here...",
+  metadata: {
+    source: "https://example.com/article",
+    timestamp: "2024-03-20T10:30:00Z",
+    title: "Example Article"
+  }
+}
+```
+
+## Metadata Handling
+
+The loader automatically extracts and includes metadata:
+
+```typescript
+const loader = new HyperbrowserLoader({
+  url: "https://example.com",
+  mode: "scrape",
+  outputFormat: ["markdown"]
+});
+
+const docs = await loader.load();
+console.log(docs[0].metadata);
+// {
+//   source: "https://example.com",
+//   timestamp: "2024-03-20T10:30:00Z",
+//   title: "Example Page Title"
+// }
+```
 
 ## Related
 

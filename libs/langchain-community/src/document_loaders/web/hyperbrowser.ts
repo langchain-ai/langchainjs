@@ -90,7 +90,7 @@ export class HyperbrowserLoader extends BaseDocumentLoader {
     this.mode = mode;
     this.maxPages = maxPages;
     this.outputFormat = outputFormat;
-    this.sessionOptions = sessionOptions    ;
+    this.sessionOptions = sessionOptions;
   }
 
   /**
@@ -151,6 +151,7 @@ export class HyperbrowserLoader extends BaseDocumentLoader {
               pageContent: this.extractContent(page),
               metadata: {
                 source: page.url || this.url,
+                pageMeta: page.metadata,
               },
             })
         );
