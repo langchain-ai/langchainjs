@@ -86,7 +86,6 @@ test("Test LangChain Hub while loading OpenAI model with dynamic imports", async
     question:
       "Generate JSON",
   });
-  console.log(res);
   expect(res).toBeInstanceOf(AIMessage);
   expect(typeof JSON.parse(res.content)).toEqual("object");
 });
