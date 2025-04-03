@@ -1,4 +1,5 @@
 import { Hyperbrowser } from "@hyperbrowser/sdk";
+import type { CreateSessionParams } from "@hyperbrowser/sdk/types";
 import { ScrapeJobData, CrawledPage } from "@hyperbrowser/sdk/types";
 import { Document, type DocumentInterface } from "@langchain/core/documents";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
@@ -64,12 +65,7 @@ export class HyperbrowserLoader extends BaseDocumentLoader {
   private mode: "crawl" | "scrape";
   private maxPages: number;
   private outputFormat: Array<"markdown" | "html" | "links" | "screenshot">;
-  private sessionOptions: {
-    useProxy: boolean;
-    solveCaptchas: boolean;
-    acceptCookies: boolean;
-    useStealth: boolean;
-  };
+  private sessionOptions?: CreateSessionParams;
 
   constructor(params: HyperbrowserLoaderParameters) {
     super();
@@ -80,12 +76,7 @@ export class HyperbrowserLoader extends BaseDocumentLoader {
       mode = "scrape",
       maxPages = 10,
       outputFormat = ["markdown"],
-      sessionOptions = {
-        useProxy: false,
-        solveCaptchas: false,
-        acceptCookies: false,
-        useStealth: false,
-      },
+      sessionOptions,
     } = params;
 
     if (!apiKey) {
@@ -99,12 +90,7 @@ export class HyperbrowserLoader extends BaseDocumentLoader {
     this.mode = mode;
     this.maxPages = maxPages;
     this.outputFormat = outputFormat;
-    this.sessionOptions = {
-      useProxy: sessionOptions.useProxy,
-      solveCaptchas: sessionOptions.solveCaptchas,
-      acceptCookies: sessionOptions.acceptCookies,
-      useStealth: sessionOptions.useStealth,
-    };
+    this.sessionOptions = sessionOptions    ;
   }
 
   /**

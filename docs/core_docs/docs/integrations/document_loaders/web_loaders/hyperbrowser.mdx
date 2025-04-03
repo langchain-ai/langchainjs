@@ -30,13 +30,7 @@ import { HyperbrowserLoader } from "@langchain/community/document_loaders/web/hy
 const loader = new HyperbrowserLoader({
   url: "https://example.com",
   mode: "scrape",
-  outputFormat: ["markdown"],
-  sessionOptions: {
-    useProxy: false,
-    solveCaptchas: false,
-    acceptCookies: false,
-    useStealth: false
-  }
+  outputFormat: ["markdown"]
 });
 
 const docs = await loader.load();
@@ -76,10 +70,13 @@ const docs = await loader.load();
 - `screenshot`: Capture page screenshots
 
 ### Session Options
+A partial list of parameters is provided here - 
+
 - `useProxy`: Use a proxy for accessing websites
 - `solveCaptchas`: Automatically solve CAPTCHA challenges
 - `acceptCookies`: Handle cookie consent popups
-- `useStealth`: Enable stealth mode to avoid detection
+
+A more comprehensive list of params can be found [on our docs](https://docs.hyperbrowser.ai/reference/api-reference/sessions#api-session)
 
 ### Additional Options
 - `maxPages`: Maximum number of pages to crawl (only applicable in crawl mode)
