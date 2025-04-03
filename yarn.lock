@@ -8540,6 +8540,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@hyperbrowser/sdk@npm:^0.42.0":
+  version: 0.42.0
+  resolution: "@hyperbrowser/sdk@npm:0.42.0"
+  dependencies:
+    form-data: ^4.0.1
+    node-fetch: 2.7.0
+    zod: ^3.24.1
+    zod-to-json-schema: ^3.24.1
+  checksum: d2e5f69aa2a25645895b8501f71a7b773b03a8f7d8d82cc325929d8c9df70a6057d600d195b0a0b56ef923dba2d00f0f533cddf87b3c772e4e2f79883c763b35
+  languageName: node
+  linkType: hard
+
 "@iarna/toml@npm:2.2.5":
   version: 2.2.5
   resolution: "@iarna/toml@npm:2.2.5"
@@ -9779,6 +9791,7 @@ __metadata:
     "@gradientai/nodejs-sdk": ^1.2.0
     "@huggingface/inference": ^2.6.4
     "@huggingface/transformers": ^3.2.3
+    "@hyperbrowser/sdk": ^0.42.0
     "@ibm-cloud/watsonx-ai": ^1.6.4
     "@jest/globals": ^29.5.0
     "@lancedb/lancedb": ^0.13.0
@@ -9963,6 +9976,7 @@ __metadata:
     "@gradientai/nodejs-sdk": ^1.2.0
     "@huggingface/inference": ^2.6.4
     "@huggingface/transformers": ^3.2.3
+    "@hyperbrowser/sdk": "*"
     "@ibm-cloud/watsonx-ai": "*"
     "@lancedb/lancedb": ^0.12.0
     "@langchain/core": ">=0.2.21 <0.4.0"
@@ -10120,6 +10134,8 @@ __metadata:
     "@huggingface/inference":
       optional: true
     "@huggingface/transformers":
+      optional: true
+    "@hyperbrowser/sdk":
       optional: true
     "@lancedb/lancedb":
       optional: true
@@ -23705,6 +23721,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"es-set-tostringtag@npm:^2.1.0":
+  version: 2.1.0
+  resolution: "es-set-tostringtag@npm:2.1.0"
+  dependencies:
+    es-errors: ^1.3.0
+    get-intrinsic: ^1.2.6
+    has-tostringtag: ^1.0.2
+    hasown: ^2.0.2
+  checksum: 789f35de4be3dc8d11fdcb91bc26af4ae3e6d602caa93299a8c45cf05d36cc5081454ae2a6d3afa09cceca214b76c046e4f8151e092e6fc7feeb5efb9e794fc6
+  languageName: node
+  linkType: hard
+
 "es-shim-unscopables@npm:^1.0.0":
   version: 1.0.0
   resolution: "es-shim-unscopables@npm:1.0.0"
@@ -26125,6 +26153,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"form-data@npm:^4.0.1":
+  version: 4.0.2
+  resolution: "form-data@npm:4.0.2"
+  dependencies:
+    asynckit: ^0.4.0
+    combined-stream: ^1.0.8
+    es-set-tostringtag: ^2.1.0
+    mime-types: ^2.1.12
+  checksum: e887298b22c13c7c9c5a8ba3716f295a479a13ca78bfd855ef11cbce1bcf22bc0ae2062e94808e21d46e5c667664a1a1a8a7f57d7040193c1fefbfb11af58aab
+  languageName: node
+  linkType: hard
+
 "formdata-node@npm:^4.3.2":
   version: 4.4.1
   resolution: "formdata-node@npm:4.4.1"
@@ -26520,7 +26560,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"get-intrinsic@npm:^1.2.5, get-intrinsic@npm:^1.3.0":
+"get-intrinsic@npm:^1.2.5, get-intrinsic@npm:^1.2.6, get-intrinsic@npm:^1.3.0":
   version: 1.3.0
   resolution: "get-intrinsic@npm:1.3.0"
   dependencies:
