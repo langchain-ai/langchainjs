@@ -82,6 +82,10 @@ tools/google_scholar.cjs
 tools/google_scholar.js
 tools/google_scholar.d.ts
 tools/google_scholar.d.cts
+tools/hyperbrowser.cjs
+tools/hyperbrowser.js
+tools/hyperbrowser.d.ts
+tools/hyperbrowser.d.cts
 tools/ifttt.cjs
 tools/ifttt.js
 tools/ifttt.d.ts

@@ -927,6 +927,15 @@
       "import": "./tools/google_scholar.js",
       "require": "./tools/google_scholar.cjs"
     },
+    "./tools/hyperbrowser": {
+      "types": {
+        "import": "./tools/hyperbrowser.d.ts",
+        "require": "./tools/hyperbrowser.d.cts",
+        "default": "./tools/hyperbrowser.d.ts"
+      },
+      "import": "./tools/hyperbrowser.js",
+      "require": "./tools/hyperbrowser.cjs"
+    },
     "./tools/ifttt": {
       "types": {
         "import": "./tools/ifttt.d.ts",
@@ -2924,6 +2933,15 @@
       },
       "import": "./document_loaders/web/hn.js",
       "require": "./document_loaders/web/hn.cjs"
+    },
+    "./document_loaders/web/hyperbrowser": {
+      "types": {
+        "import": "./document_loaders/web/hyperbrowser.d.ts",
+        "require": "./document_loaders/web/hyperbrowser.d.cts",
+        "default": "./document_loaders/web/hyperbrowser.d.ts"
+      },
+      "import": "./document_loaders/web/hyperbrowser.js",
+      "require": "./document_loaders/web/hyperbrowser.cjs"
     },
     "./document_loaders/web/imsdb": {
       "types": {
