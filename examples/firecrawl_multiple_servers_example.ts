@@ -10,55 +10,32 @@ import { ChatOpenAI } from "@langchain/openai";
 import { createReactAgent } from "@langchain/langgraph/prebuilt";
 import { HumanMessage } from "@langchain/core/messages";
 import dotenv from "dotenv";
-import fs from "fs";
-import path from "path";
 
-// MCP client imports
-import { MultiServerMCPClient } from "../src/index.js";
+import { Connection, MultiServerMCPClient } from "../src/index.js";
 
 // Load environment variables from .env file
 dotenv.config();
 
-// Path for our multiple servers config file
-const multipleServersConfigPath = path.join(
-  process.cwd(),
-  "examples",
-  "multiple_servers_config.json"
-);
-
 /**
- * Create a configuration file for multiple MCP servers
+ * Configuration for multiple MCP servers
  */
-function createMultipleServersConfigFile() {
-  const configContent = {
-    servers: {
-      // Firecrawl server configuration
-      firecrawl: {
-        transport: "stdio",
-        command: "npx",
-        args: ["-y", "firecrawl-mcp"],
-        env: {
-          FIRECRAWL_API_KEY: process.env.FIRECRAWL_API_KEY || "",
-          FIRECRAWL_RETRY_MAX_ATTEMPTS: "3",
-        },
-      },
-      // Math server configuration
-      math: {
-        transport: "stdio",
-        command: "python",
-        args: [path.join(process.cwd(), "examples", "math_server.py")],
-      },
+const multipleServersConfig: Record<string, Connection> = {
+  firecrawl: {
+    transport: "stdio",
+    command: "npx",
+    args: ["-y", "firecrawl-mcp"],
+    env: {
+      FIRECRAWL_API_KEY: process.env.FIRECRAWL_API_KEY || "",
+      FIRECRAWL_RETRY_MAX_ATTEMPTS: "3",
     },
-  };
-
-  fs.writeFileSync(
-    multipleServersConfigPath,
-    JSON.stringify(configContent, null, 2)
-  );
-  console.log(
-    `Created multiple servers configuration file at ${multipleServersConfigPath}`
-  );
-}
+  },
+  // Math server configuration
+  math: {
+    transport: "stdio",
+    command: "npx",
+    args: ["-y", "@modelcontextprotocol/server-math"],
+  },
+};
 
 /**
  * Example demonstrating how to use multiple MCP servers with React agent
@@ -68,22 +45,17 @@ async function runExample() {
   let client: MultiServerMCPClient | null = null;
 
   try {
-    // Create the multiple servers configuration file
-    createMultipleServersConfigFile();
-
     console.log(
-      "Initializing MCP client from multiple servers configuration file..."
+      "Initializing MCP client from multiple servers configuration..."
     );
 
     // Create a client from the configuration file
-    client = MultiServerMCPClient.fromConfigFile(multipleServersConfigPath);
+    client = new MultiServerMCPClient(multipleServersConfig);
 
-    // Initialize connections to all servers in the configuration
-    await client.initializeConnections();
     console.log("Connected to servers from multiple servers configuration");
 
     // Get all tools from all servers
-    const mcpTools = client.getTools();
+    const mcpTools = await client.getTools();
 
     if (mcpTools.length === 0) {
       throw new Error("No tools found");
@@ -143,20 +115,6 @@ async function runExample() {
       await client.close();
       console.log("\nClosed all connections");
     }
-
-    // Clean up our config file
-    if (fs.existsSync(multipleServersConfigPath)) {
-      fs.unlinkSync(multipleServersConfigPath);
-      console.log(
-        `Cleaned up multiple servers configuration file at ${multipleServersConfigPath}`
-      );
-    }
-
-    // Exit process after a short delay to allow for cleanup
-    setTimeout(() => {
-      console.log("Example completed, exiting process.");
-      process.exit(0);
-    }, 500);
   }
 }
 

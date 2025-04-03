@@ -200,6 +200,44 @@ async function _callTool(
   return _convertCallToolResult(serverName, toolName, result, client);
 }
 
+export type LoadMcpToolsOptions = {
+  /**
+   * If true, throw an error if a tool fails to load.
+   *
+   * @default true
+   */
+  throwOnLoadError?: boolean;
+
+  /**
+   * If true, the tool name will be prefixed with the server name followed by a double underscore.
+   * This is useful if you want to avoid tool name collisions across servers.
+   *
+   * @default false
+   */
+  prefixToolNameWithServerName?: boolean;
+
+  /**
+   * An additional prefix to add to the tool name. Will be added at the very beginning of the tool
+   * name, separated by a double underscore.
+   *
+   * For example, if `additionalToolNamePrefix` is `"mcp"`, and `prefixToolNameWithServerName` is
+   * `true`, the tool name `"my-tool"` provided by server `"my-server"` will become
+   * `"mcp__my-server__my-tool"`.
+   *
+   * Similarly, if `additionalToolNamePrefix` is `mcp` and `prefixToolNameWithServerName` is false,
+   * the tool name would be `"mcp__my-tool"`.
+   *
+   * @default ""
+   */
+  additionalToolNamePrefix?: string;
+};
+
+const defaultLoadMcpToolsOptions: LoadMcpToolsOptions = {
+  throwOnLoadError: true,
+  prefixToolNameWithServerName: false,
+  additionalToolNamePrefix: "",
+};
+
 /**
  * Load all tools from an MCP client.
  *
@@ -210,11 +248,26 @@ async function _callTool(
 export async function loadMcpTools(
   serverName: string,
   client: Client,
-  throwOnLoadError: boolean = true
+  options?: LoadMcpToolsOptions
 ): Promise<StructuredToolInterface[]> {
+  const {
+    throwOnLoadError,
+    prefixToolNameWithServerName,
+    additionalToolNamePrefix,
+  } = {
+    ...defaultLoadMcpToolsOptions,
+    ...(options ?? {}),
+  };
+
   // Get tools in a single operation
   const toolsResponse = await client.listTools();
   getDebugLog()(`INFO: Found ${toolsResponse.tools?.length || 0} MCP tools`);
+
+  const initialPrefix = additionalToolNamePrefix
+    ? `${additionalToolNamePrefix}__`
+    : "";
+  const serverPrefix = prefixToolNameWithServerName ? `${serverName}__` : "";
+  const toolNamePrefix = `${initialPrefix}${serverPrefix}`;
 
   // Filter out tools without names and convert in a single map operation
   return (
@@ -224,7 +277,7 @@ export async function loadMcpTools(
         .map(async (tool: MCPTool) => {
           try {
             const dst = new DynamicStructuredTool({
-              name: tool.name,
+              name: `${toolNamePrefix}${tool.name}`,
               description: tool.description || "",
               schema: await convertSchema(
                 (tool.inputSchema ?? {

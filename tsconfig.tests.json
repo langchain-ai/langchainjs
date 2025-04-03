@@ -19,6 +19,6 @@
     "strict": true,
     "noEmit": true
   },
-  "include": ["src/**/*", "__tests__/**/*"],
-  "exclude": ["node_modules", "dist", "docs"]
+  "include": ["src/**/*.ts", "__tests__/**/*.ts"],
+  "exclude": ["node_modules", "dist", "docs", "coverage"]
 }

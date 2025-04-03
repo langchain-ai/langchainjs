@@ -10,7 +10,7 @@
  * - Built-in persistence capabilities
  *
  * In this example, we:
- * 1. Set up an MCP client to connect to a Python-based math server
+ * 1. Set up an MCP client to connect to the MCP Math server reference example
  * 2. Create a LangGraph workflow with two nodes: one for the LLM and one for tools
  * 3. Define the edges and conditional routing between the nodes
  * 4. Execute the workflow with example queries
@@ -54,23 +54,13 @@ async function runExample() {
     client = new MultiServerMCPClient({
       math: {
         transport: "stdio",
-        command: "python",
-        args: ["./examples/math_server.py"],
+        command: "npx",
+        args: ["-y", "@modelcontextprotocol/server-math"],
       },
     });
 
-    // Initialize connections to the server
-    await client.initializeConnections();
-    console.log("Connected to server");
-
-    // Connect to the math server
-    await client.connectToServerViaStdio("math", "npx", [
-      "-y",
-      "@modelcontextprotocol/server-math",
-    ]);
-
     // Get the tools (flattened array is the default now)
-    const mcpTools = client.getTools();
+    const mcpTools = await client.getTools();
 
     if (mcpTools.length === 0) {
       throw new Error("No tools found");

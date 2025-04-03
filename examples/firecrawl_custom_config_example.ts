@@ -9,44 +9,26 @@
 import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage } from "@langchain/core/messages";
 import dotenv from "dotenv";
-import * as fs from "fs";
-import * as path from "path";
 import { createReactAgent } from "@langchain/langgraph/prebuilt";
 
 // MCP client imports
-import { MultiServerMCPClient } from "../src/index.js";
+import { Connection, MultiServerMCPClient } from "../src/index.js";
 
 // Load environment variables from .env file
 dotenv.config();
 
 /**
- * Create a custom configuration file for Firecrawl
+ * A custom configuration for Firecrawl
  */
-function createConfigFile(): string {
-  const configPath = path.join(
-    process.cwd(),
-    "examples",
-    "firecrawl_config.json"
-  );
-
-  // Configuration for the Firecrawl server
-  const config = {
-    servers: {
-      firecrawl: {
-        transport: "sse",
-        url: process.env.FIRECRAWL_SERVER_URL || "http://localhost:8000/v1/mcp",
-        headers: {
-          Authorization: `Bearer ${process.env.FIRECRAWL_API_KEY || "demo"}`,
-        },
-      },
+const config: Record<string, Connection> = {
+  firecrawl: {
+    transport: "sse",
+    url: process.env.FIRECRAWL_SERVER_URL || "http://localhost:8000/v1/mcp",
+    headers: {
+      Authorization: `Bearer ${process.env.FIRECRAWL_API_KEY || "demo"}`,
     },
-  };
-
-  // Write the configuration to a file
-  fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
-
-  return configPath;
-}
+  },
+};
 
 /**
  * Example demonstrating loading from custom configuration
@@ -61,23 +43,12 @@ async function runExample() {
   }, 30000);
 
   try {
-    // Create a custom configuration file
-    const configPath = createConfigFile();
-    console.log(`Created custom configuration file at: ${configPath}`);
-
     // Initialize the MCP client with the custom configuration
-    console.log("Initializing MCP client from custom configuration file...");
-    client = MultiServerMCPClient.fromConfigFile(configPath);
-
-    // Connect to the servers
-    await client.initializeConnections();
-    console.log("Connected to servers from custom configuration");
+    console.log("Initializing MCP client from custom configuration...");
+    client = new MultiServerMCPClient(config);
 
     // Get Firecrawl tools specifically
-    const mcpTools = client.getTools();
-    const firecrawlTools = mcpTools.filter(
-      (tool) => client!.getServerForTool(tool.name) === "firecrawl"
-    );
+    const firecrawlTools = await client.getTools("firecrawl");
 
     if (firecrawlTools.length === 0) {
       throw new Error("No Firecrawl tools found");
@@ -114,10 +85,6 @@ async function runExample() {
 
     // Clear the timeout since the example completed successfully
     clearTimeout(timeout);
-
-    // Clean up the temporary configuration file
-    fs.unlinkSync(configPath);
-    console.log("Removed temporary configuration file");
   } catch (error) {
     console.error("Error in example:", error);
   } finally {

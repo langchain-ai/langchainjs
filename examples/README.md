@@ -1,70 +1,36 @@
 # LangChainJS-MCP-Adapters Examples
 
-This directory contains examples demonstrating how to use the LangChainJS-MCP-Adapters library with various MCP servers, with a focus on the Firecrawl MCP server.
+This directory contains examples demonstrating how to use the `@langchain/mcp-adapters` library with various MCP servers
 
 ## Running the Examples
 
-We've added dedicated npm scripts to make it easy to run the examples:
-
 ```bash
 # Build all examples
-npm run build:examples
+yarn build:examples
 
-# Run specific examples
-npm run example:default    # Uses automatic loading from mcp.json
-npm run example:custom     # Uses a custom configuration file
-npm run example:multiple   # Uses multiple MCP servers from a config file
-npm run example:mixed      # Loads one server from config and another directly in code
-npm run example:enhanced   # Demonstrates all enhanced configuration features
+# Run specific example
+cd examples && npx -y tsx firecrawl_custom_config_example.ts
 ```
 
 ## Example Descriptions
 
-### 1. Default Configuration (`firecrawl_default_config_example.ts`)
+###  Filesystem LangGraph Example (`filesystem_langgraph_example.ts`)
+Demonstrates using the Filesystem MCP server with LangGraph to create a structured workflow for complex file operations. The example creates a graph-based agent that can perform various file operations like creating multiple files, reading files, creating directory structures, and organizing files.
 
-Demonstrates the automatic loading of MCP server configurations from the default `mcp.json` file in the root directory. This example showcases how to:
+###  Firecrawl - Custom Configuration (`firecrawl_custom_config_example.ts`)
+Shows how to initialize the Firecrawl MCP server with a custom configuration. The example sets up a connection to Firecrawl using SSE transport, loads tools from the server, and creates a React agent to perform web scraping tasks and find news about artificial intelligence.
 
-- Create a client that automatically loads from `mcp.json`
-- Initialize connections to all servers in the configuration
-- Filter tools by server name
-- Use tools with LangGraph
+###  Firecrawl - Multiple Servers (`firecrawl_multiple_servers_example.ts`)
+Demonstrates how to use multiple MCP servers simultaneously by configuring both Firecrawl for web scraping and a Math server for calculations. The example creates a React agent that can use tools from both servers to answer queries involving both math calculations and web content retrieval.
 
-### 2. Custom Configuration (`firecrawl_custom_config_example.ts`)
+###  LangGraph - Complex Config (`langgraph_complex_config_example.ts`)
+Illustrates using different configuration files to set up connections to MCP servers, with a focus on the Math server. This example shows how to parse JSON configuration files, connect to a Math server directly, and create a LangGraph workflow that can perform mathematical operations using MCP tools.
 
-Shows how to create and use a custom configuration file specifically for the Firecrawl server. This example:
+###  LangGraph - Simple Config (`langgraph_example.ts`)
+Shows a straightforward integration of LangGraph with MCP tools, creating a flexible agent workflow. The example demonstrates how to set up a graph-based structure with separate nodes for LLM reasoning and tool execution, with conditional routing between nodes based on whether tool calls are needed.
 
-- Creates a custom configuration file
-- Initializes the client from this file
-- Shows environment variable configuration
-
-### 3. Multiple Servers (`firecrawl_multiple_servers_example.ts`)
-
-Demonstrates loading multiple MCP servers (Firecrawl and Math) from a single configuration file. This example:
-
-- Creates a configuration with multiple servers
-- Loads and uses tools from different servers in the same agent
-
-### 4. Mixed Loading (`firecrawl_mixed_loading_example.ts`)
-
-Shows a mixed approach to loading MCP servers - one from a configuration file and another directly in code. This example:
-
-- Loads the math server from a config file
-- Adds the Firecrawl server via direct code
-- Works with tools from both servers
-
-### 5. Enhanced Configuration (`firecrawl_enhanced_config_example.ts`)
-
-Showcases all the enhanced configuration features, including:
-
-- Automatic loading from the default configuration
-- Adding multiple configuration sources
-- Environment variable substitution
-- Adding servers directly in code
-
-## Configuration Files
-
-- `mcp.json` - Default configuration file in the root directory
-- Custom configuration files created in the examples
+###  Launching a Containerized MCP Server (`mcp_over_docker_example.ts`)
+Shows how to run an MCP server inside a Docker container. This example configures a connection to a containerized Filesystem MCP server with appropriate volume mounting, demonstrating how to use Docker to isolate and run MCP servers while still allowing file operations.
 
 ## Requirements
 

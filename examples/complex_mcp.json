@@ -1,12 +1,8 @@
 {
   "servers": {
     "math": {
-      "command": "python",
-      "args": ["./examples/math_server.py"],
-      "env": {
-        "DEBUG": "true",
-        "PYTHONPATH": "./examples"
-      }
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-math"],
     },
     "weather": {
       "transport": "sse",

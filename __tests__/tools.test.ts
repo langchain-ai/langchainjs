@@ -1,16 +1,21 @@
-import { describe, test, expect, beforeEach, vi, MockedObject } from 'vitest';
-import type { Client } from '@modelcontextprotocol/sdk/client/index.js';
-import type { StructuredTool } from '@langchain/core/tools';
+import { describe, test, expect, beforeEach, vi, MockedObject } from "vitest";
+import type { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import type { StructuredTool } from "@langchain/core/tools";
 import type {
   EmbeddedResource,
   ImageContent,
   TextContent,
-} from '@modelcontextprotocol/sdk/types.js';
-import type { AIMessage, MessageContentComplex, ToolMessage } from '@langchain/core/messages';
-const { loadMcpTools } = await import('../src/tools.js');
+} from "@modelcontextprotocol/sdk/types.js";
+import type {
+  AIMessage,
+  MessageContentComplex,
+  ToolMessage,
+} from "@langchain/core/messages";
+
+const { loadMcpTools } = await import("../src/tools.js");
 
 // Create a mock client
-describe('Simplified Tool Adapter Tests', () => {
+describe("Simplified Tool Adapter Tests", () => {
   let mockClient: MockedObject<Client>;
 
   beforeEach(() => {
@@ -22,36 +27,39 @@ describe('Simplified Tool Adapter Tests', () => {
     vi.clearAllMocks();
   });
 
-  describe('loadMcpTools', () => {
-    test('should load all tools from client', async () => {
+  describe("loadMcpTools", () => {
+    test("should load all tools from client", async () => {
       // Set up mock response
       mockClient.listTools.mockReturnValueOnce(
         Promise.resolve({
           tools: [
             {
-              name: 'tool1',
-              description: 'Tool 1',
-              inputSchema: { type: 'object', properties: {}, required: [] },
+              name: "tool1",
+              description: "Tool 1",
+              inputSchema: { type: "object", properties: {}, required: [] },
             },
             {
-              name: 'tool2',
-              description: 'Tool 2',
-              inputSchema: { type: 'object', properties: {}, required: [] },
+              name: "tool2",
+              description: "Tool 2",
+              inputSchema: { type: "object", properties: {}, required: [] },
             },
           ],
         })
       );
 
       // Load tools
-      const tools = await loadMcpTools('mockServer(should load all tools)', mockClient as Client);
+      const tools = await loadMcpTools(
+        "mockServer(should load all tools)",
+        mockClient as Client
+      );
 
       // Verify results
       expect(tools.length).toBe(2);
-      expect(tools[0].name).toBe('tool1');
-      expect(tools[1].name).toBe('tool2');
+      expect(tools[0].name).toBe("tool1");
+      expect(tools[1].name).toBe("tool2");
     });
 
-    test('should handle empty tool list', async () => {
+    test("should handle empty tool list", async () => {
       // Set up mock response
       mockClient.listTools.mockReturnValueOnce(
         Promise.resolve({
@@ -61,7 +69,7 @@ describe('Simplified Tool Adapter Tests', () => {
 
       // Load tools
       const tools = await loadMcpTools(
-        'mockServer(should handle empty tool list)',
+        "mockServer(should handle empty tool list)",
         mockClient as Client
       );
 
@@ -69,25 +77,25 @@ describe('Simplified Tool Adapter Tests', () => {
       expect(tools.length).toBe(0);
     });
 
-    test('should filter out tools without names', async () => {
+    test("should filter out tools without names", async () => {
       // Set up mock response
       mockClient.listTools.mockReturnValueOnce(
         // @ts-expect-error - Purposefully dropped name field on one of the tools, should be type error.
         Promise.resolve({
           tools: [
             {
-              name: 'tool1',
-              description: 'Tool 1',
-              inputSchema: { type: 'object', properties: {}, required: [] },
+              name: "tool1",
+              description: "Tool 1",
+              inputSchema: { type: "object", properties: {}, required: [] },
             },
             {
-              description: 'No name tool',
-              inputSchema: { type: 'object', properties: {}, required: [] },
+              description: "No name tool",
+              inputSchema: { type: "object", properties: {}, required: [] },
             },
             {
-              name: 'tool2',
-              description: 'Tool 2',
-              inputSchema: { type: 'object', properties: {}, required: [] },
+              name: "tool2",
+              description: "Tool 2",
+              inputSchema: { type: "object", properties: {}, required: [] },
             },
           ],
         })
@@ -95,30 +103,30 @@ describe('Simplified Tool Adapter Tests', () => {
 
       // Load tools
       const tools = await loadMcpTools(
-        'mockServer(should filter out tools without names)',
+        "mockServer(should filter out tools without names)",
         mockClient as Client
       );
 
       // Verify results
       expect(tools.length).toBe(2);
-      expect(tools[0].name).toBe('tool1');
-      expect(tools[1].name).toBe('tool2');
+      expect(tools[0].name).toBe("tool1");
+      expect(tools[1].name).toBe("tool2");
     });
 
-    test('should load tools with specified response format', async () => {
+    test("should load tools with specified response format", async () => {
       // Set up mock response with input schema
       mockClient.listTools.mockReturnValueOnce(
         Promise.resolve({
           tools: [
             {
-              name: 'tool1',
-              description: 'Tool 1',
+              name: "tool1",
+              description: "Tool 1",
               inputSchema: {
-                type: 'object',
+                type: "object",
                 properties: {
-                  input: { type: 'string' },
+                  input: { type: "string" },
                 },
-                required: ['input'],
+                required: ["input"],
               },
             },
           ],
@@ -127,57 +135,63 @@ describe('Simplified Tool Adapter Tests', () => {
 
       // Load tools with content_and_artifact response format
       const tools = await loadMcpTools(
-        'mockServer(should load tools with specified response format)',
+        "mockServer(should load tools with specified response format)",
         mockClient as Client
       );
 
       // Verify tool was loaded
       expect(tools.length).toBe(1);
-      expect((tools[0] as StructuredTool).responseFormat).toBe('content_and_artifact');
+      expect((tools[0] as StructuredTool).responseFormat).toBe(
+        "content_and_artifact"
+      );
 
       // Mock the call result to check response format handling
       const mockImageContent: ImageContent = {
-        type: 'image',
-        data: 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', // valid grayscale PNG image
-        mimeType: 'image/png',
+        type: "image",
+        data: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==", // valid grayscale PNG image
+        mimeType: "image/png",
       };
 
       const mockTextContent: TextContent = {
-        type: 'text',
-        text: 'Here is your image',
+        type: "text",
+        text: "Here is your image",
       };
 
       const mockEmbeddedResourceContent: EmbeddedResource = {
-        type: 'resource',
+        type: "resource",
         resource: {
-          text: 'Here is your image',
-          uri: 'test-data://test-artifact',
-          mimeType: 'text/plain',
+          text: "Here is your image",
+          uri: "test-data://test-artifact",
+          mimeType: "text/plain",
         },
       };
 
-      const mockContent = [mockTextContent, mockImageContent, mockEmbeddedResourceContent];
+      const mockContent = [
+        mockTextContent,
+        mockImageContent,
+        mockEmbeddedResourceContent,
+      ];
 
       const expectedContentBlocks: MessageContentComplex[] = [
         {
-          type: 'text',
-          text: 'Here is your image',
+          type: "text",
+          text: "Here is your image",
         },
         {
-          type: 'image_url',
+          type: "image_url",
           image_url: {
-            url: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
+            url: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
           },
         },
       ];
 
       const expectedArtifacts = [
         {
-          type: 'resource',
+          type: "resource",
           resource: {
-            text: 'Here is your image',
-            uri: 'test-data://test-artifact',
-            mimeType: 'text/plain',
+            text: "Here is your image",
+            uri: "test-data://test-artifact",
+            mimeType: "text/plain",
           },
         },
       ];
@@ -189,16 +203,16 @@ describe('Simplified Tool Adapter Tests', () => {
       );
 
       // Invoke the tool with proper input matching the schema
-      const result = await tools[0].invoke({ input: 'test input' });
+      const result = await tools[0].invoke({ input: "test input" });
 
       // Verify the result
       expect(result).toEqual(expectedContentBlocks);
 
-      const toolCall: NonNullable<AIMessage['tool_calls']>[number] = {
-        args: { input: 'test input' },
-        name: 'tool1',
-        id: 'tool_call_id_123',
-        type: 'tool_call',
+      const toolCall: NonNullable<AIMessage["tool_calls"]>[number] = {
+        args: { input: "test input" },
+        name: "mcp__mockServer(should load tools with specified response format)__tool1",
+        id: "tool_call_id_123",
+        type: "tool_call",
       };
 
       // call the tool directly via invoke

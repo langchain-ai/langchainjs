@@ -24,6 +24,15 @@ module.exports = {
   ],
   rules: {
     "no-instanceof/no-instanceof": 2,
+    "@typescript-eslint/naming-convention": [
+      "error",
+      {
+        "selector": "memberLike",
+        "modifiers": ["private"],
+        "format": ["camelCase"],
+        "leadingUnderscore": "require"
+      }
+    ],
     "@typescript-eslint/explicit-module-boundary-types": 0,
     "@typescript-eslint/no-empty-function": 0,
     "@typescript-eslint/no-shadow": 0,
@@ -38,7 +47,7 @@ module.exports = {
     "import/extensions": [2, "ignorePackages"],
     "import/no-extraneous-dependencies": [
       "error",
-      { devDependencies: ["**/*.test.ts", "examples/**/*.ts"] },
+      { devDependencies: ["**/*.test.ts", "__tests__/**/*.ts", "examples/**/*.ts"] },
     ],
     "import/no-unresolved": 0,
     "import/prefer-default-export": 0,

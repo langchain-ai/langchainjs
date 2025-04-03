@@ -11,8 +11,8 @@
     },
     "math-server": {
       "transport": "stdio",
-      "command": "python",
-      "args": ["./math_server.py"]
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-math"]
     }
   }
 }

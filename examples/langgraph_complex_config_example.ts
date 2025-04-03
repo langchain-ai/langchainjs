@@ -95,23 +95,17 @@ async function runConfigTest() {
     // Step 3: Connect directly to the math server using explicit path
     console.log("Connecting to math server directly...");
 
-    // Define the python executable (use 'python3' on systems where 'python' might not be in PATH)
-    const pythonCmd = process.platform === "win32" ? "python" : "python3";
-
     // Create a client with the math server only
     const client = new MultiServerMCPClient({
       math: {
         transport: "stdio",
-        command: pythonCmd,
-        args: [path.join(process.cwd(), "examples", "math_server.py")],
+        command: "npx",
+        args: ["-y", "@modelcontextprotocol/server-math"],
       },
     });
 
-    // Initialize connection to the math server
-    await client.initializeConnections();
-
     // Get tools from the math server
-    const mcpTools = client.getTools();
+    const mcpTools = await client.getTools();
     console.log(`Loaded ${mcpTools.length} tools from math server`);
 
     // Log the names of available tools

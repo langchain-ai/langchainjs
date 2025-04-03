@@ -59,12 +59,10 @@ export async function runExample(client?: MultiServerMCPClient) {
         },
       });
 
-    // Initialize connections to the server
-    await client.initializeConnections();
     console.log("Connected to server");
 
     // Get all tools (flattened array is the default now)
-    const mcpTools = client.getTools();
+    const mcpTools = await client.getTools();
 
     if (mcpTools.length === 0) {
       throw new Error("No tools found");
