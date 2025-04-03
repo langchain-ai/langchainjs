@@ -78,6 +78,20 @@ test("Test LangChain Hub while loading model", async () => {
   expect(res).toBeInstanceOf(AIMessage);
 });
 
+test("Test LangChain Hub while loading OpenAI model with dynamic imports", async () => {
+  const pulledPrompt = await nodePull("jacob/langchainjs-openai", {
+    includeModel: true,
+  });
+  const res = await pulledPrompt.invoke({
+    question:
+      "Generate JSON",
+  });
+  console.log(res);
+  expect(res).toBeInstanceOf(AIMessage);
+  expect(typeof JSON.parse(res.content)).toEqual("object");
+});
+
+
 test("Test LangChain Hub while loading model with dynamic imports", async () => {
   const pulledPrompt = await nodePull("jacob/groq-test", {
     includeModel: true,
