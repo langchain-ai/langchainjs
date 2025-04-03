@@ -20,6 +20,7 @@ Create agents that can:
 - Get financial insights
 
 ### How it works
+
 GOAT leverages blockchains, cryptocurrencies (such as stablecoins), and wallets as the infrastructure to enable agents to become economic actors:
 
 1. Give your agent a [wallet](https://github.com/goat-sdk/goat/tree/main#chains-and-wallets)
@@ -39,7 +40,6 @@ If you don't find what you need on our more than 200 integrations you can easily
 - Integrate a new agent framework
 
 See how to do it [here](https://github.com/goat-sdk/goat/tree/main#-contributing).
-
 
 ## Setup
 
@@ -77,21 +77,33 @@ import { PEPE, USDC, erc20 } from "@goat-sdk/plugin-erc20";
 import { sendETH } from "@goat-sdk/wallet-evm";
 import { viem } from "@goat-sdk/wallet-viem";
 
+import { ChatOpenAI } from "@langchain/openai";
+import { createReactAgent } from "@langchain/langgraph/prebuilt";
+
 // 1. Create a wallet client
-const account = privateKeyToAccount(process.env.WALLET_PRIVATE_KEY as `0x${string}`);
+const account = privateKeyToAccount(
+  process.env.WALLET_PRIVATE_KEY as `0x${string}`
+);
 
 const walletClient = createWalletClient({
-    account: account,
-    transport: http(process.env.RPC_PROVIDER_URL),
-    chain: baseSepolia,
+  account: account,
+  transport: http(process.env.RPC_PROVIDER_URL),
+  chain: baseSepolia,
 });
 
+// 2. Set up the tools
 const tools = await getOnChainTools({
-    wallet: viem(walletClient),
-    plugins: [sendETH(), erc20({ tokens: [USDC, PEPE] })],
+  wallet: viem(walletClient),
+  plugins: [sendETH(), erc20({ tokens: [USDC, PEPE] })],
 });
-```
 
+// 3. Create the agent
+const model = new ChatOpenAI({
+  model: "gpt-4o",
+});
+
+const agent = createReactAgent({ llm: model, tools: tools });
+```
 
 ## Related
 
