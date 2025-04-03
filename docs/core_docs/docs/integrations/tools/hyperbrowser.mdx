@@ -1,0 +1,184 @@
+---
+hide_table_of_contents: true
+---
+
+import CodeBlock from "@theme/CodeBlock";
+
+# Hyperbrowser Tools
+
+The Hyperbrowser tools allow your agent to interact with web browsers in a variety of ways, including scraping web pages, crawling websites, and automating browser interactions. These tools provide powerful capabilities for web automation, data extraction, and browser-based tasks.
+
+## Setup
+
+You will need to get an API key from [Hyperbrowser](https://app.hyperbrowser.ai/). Then, set your API key as `HYPERBROWSER_API_KEY` or pass it in as an `apiKey` constructor argument to any of the Hyperbrowser tools.
+
+## Available Tools
+
+Hyperbrowser provides several specialized tools:
+
+1. **Scraping Tool**: Extract content from a single webpage in various formats (markdown, HTML, links)
+2. **Crawling Tool**: Systematically explore and scrape content from multiple linked pages
+3. **Structured Extraction Tool**: Perform structured extraction from a webpage to get formatted data.
+4. **Browser Use Tool**: Perform automated browser interactions with explicit instructions. Uses the Browser-Use agent
+5. **Claude Computer Use Tool**: Perform automated browser interactions with explicit instructions. Uses the Claude Computer-Use agent
+6. **OpenAI Computer Use Tool**: Perform automated browser interactions with explicit instructions. Uses the OpenAI CUA agent
+
+## Usage
+
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/openai @langchain/community @langchain/core @hyperbrowser/sdk
+```
+
+### Examples
+
+#### Scraping Tool
+```typescript
+import { HyperbrowserScrapingTool } from "@langchain/community/tools/hyperbrowser";
+
+const scrapingTool = new HyperbrowserScrapingTool();
+
+// Scrape a webpage in multiple formats
+const result = await scrapingTool.invoke({
+  url: "https://example.com",
+  scrapeOptions: {
+    formats: ["markdown", "html", "links"]
+  },
+  sessionOptions: {
+    useProxy: false,
+    solveCaptchas: false
+  }
+});
+```
+
+#### Crawling Tool
+```typescript
+import { HyperbrowserCrawlTool } from "@langchain/community/tools/hyperbrowser";
+
+const crawlTool = new HyperbrowserCrawlTool();
+
+// Crawl multiple pages starting from a URL
+const result = await crawlTool.invoke({
+  url: "https://example.com",
+  maxPages: 5,
+  scrapeOptions: {
+    formats: ["markdown"]
+  },
+  sessionOptions: {
+    useProxy: false,
+    solveCaptchas: false
+  }
+});
+```
+
+#### Structured Extraction Tool
+```typescript
+import { HyperbrowserExtractTool } from "@langchain/community/tools/hyperbrowser";
+import { z } from "zod";
+
+const extractTool = new HyperbrowserExtractTool();
+
+// Define the schema using Zod
+const articleSchema = z.object({
+  title: z.string().describe("The main title of the article"),
+  author: z.string().describe("The author of the article"),
+  publishDate: z.string().optional().describe("The publication date if available"),
+  content: z.string().describe("The main content of the article")
+});
+
+// Extract structured data from a webpage
+const result = await extractTool.invoke({
+  url: "https://example.com",
+  extractOptions: {
+    prompt: "Extract the article information",
+    schema: articleSchema
+  },
+  sessionOptions: {
+    useProxy: false,
+    solveCaptchas: false
+  }
+});
+```
+
+#### Browser Use Tool
+```typescript
+import { HyperbrowserBrowserUseTool } from "@langchain/community/tools/hyperbrowser";
+
+const browserUseTool = new HyperbrowserBrowserUseTool();
+
+// Perform a specific browser interaction
+const result = await browserUseTool.invoke({
+  task: "Navigate to example.com and click the first link in the navigation menu",
+  maxSteps: 3,
+  sessionOptions: {
+    useProxy: false,
+    solveCaptchas: false
+  }
+});
+```
+
+#### Claude Computer Use Tool
+```typescript
+import { HyperbrowserClaudeComputerUseTool } from "@langchain/community/tools/hyperbrowser";
+
+const claudeTool = new HyperbrowserClaudeComputerUseTool();
+
+// Perform complex browser interaction using Claude
+const result = await claudeTool.invoke({
+  task: "Go to example.com, find all articles about AI, and extract their titles and publication dates",
+  maxSteps: 5,
+  sessionOptions: {
+    useProxy: false,
+    solveCaptchas: false
+  }
+});
+```
+
+#### OpenAI Computer Use Tool
+```typescript
+import { HyperbrowserOpenAIComputerUseTool } from "@langchain/community/tools/hyperbrowser";
+
+const openAITool = new HyperbrowserOpenAIComputerUseTool();
+
+// Perform browser interaction using OpenAI
+const result = await openAITool.invoke({
+  task: "Visit example.com and fill out the contact form with test data",
+  maxSteps: 4,
+  sessionOptions: {
+    useProxy: false,
+    solveCaptchas: false
+  }
+});
+```
+
+## Advanced Features
+
+### Session Options
+
+All Hyperbrowser tools support various session options for handling different web scenarios:
+
+- `useProxy`: Use a proxy for accessing websites
+- `solveCaptchas`: Automatically solve CAPTCHA challenges
+- `acceptCookies`: Handle cookie consent popups
+- `useStealth`: Enable stealth mode to avoid detection
+
+### For scraping, and crawling
+
+#### Output Formats
+
+When scraping or crawling, you can specify multiple output formats:
+
+- `markdown`: Clean, formatted text
+- `html`: Raw HTML content
+- `links`: Extract all links from the page
+- `screenshot`: Capture page screenshots
+
+## Related
+
+- Tool [conceptual guide](/docs/concepts/tools)
+- Tool [how-to guides](/docs/how_to/#tools)
+- [Hyperbrowser Docs](https://docs.hyperbrowser.ai)
+- [Hyperbrowser Document Loader](/docs/integrations/document_loaders/web_loaders/hyperbrowser) 

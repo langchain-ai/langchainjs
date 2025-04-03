@@ -1,0 +1,90 @@
+---
+hide_table_of_contents: true
+---
+
+import CodeBlock from "@theme/CodeBlock";
+
+# Hyperbrowser Document Loader
+
+The Hyperbrowser document loader allows you to load web content into your LangChain application using Hyperbrowser's powerful web scraping and crawling capabilities. It supports both single-page scraping and multi-page crawling with various output formats.
+
+## Setup
+
+You will need to get an API key from [Hyperbrowser](https://hyperbrowser.ai/). Then, set your API key as `process.env.HYPERBROWSER_API_KEY` or pass it in as an `apiKey` constructor argument.
+
+## Usage
+
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/community @langchain/core @hyperbrowser/sdk
+```
+
+### Single Page Scraping
+
+```typescript
+import { HyperbrowserLoader } from "@langchain/community/document_loaders/web/hyperbrowser";
+
+const loader = new HyperbrowserLoader({
+  url: "https://example.com",
+  mode: "scrape",
+  outputFormat: ["markdown"],
+  sessionOptions: {
+    useProxy: false,
+    solveCaptchas: false,
+    acceptCookies: false,
+    useStealth: false
+  }
+});
+
+const docs = await loader.load();
+```
+
+### Multi-page Crawling
+
+```typescript
+import { HyperbrowserLoader } from "@langchain/community/document_loaders/web/hyperbrowser";
+
+const loader = new HyperbrowserLoader({
+  url: "https://example.com",
+  mode: "crawl",
+  maxPages: 10,
+  outputFormat: ["markdown"],
+  sessionOptions: {
+    useProxy: false,
+    solveCaptchas: false,
+    acceptCookies: false,
+    useStealth: false
+  }
+});
+
+const docs = await loader.load();
+```
+
+## Configuration Options
+
+### Mode
+- `scrape`: Extract content from a single webpage
+- `crawl`: Systematically explore and extract content from multiple linked pages
+
+### Output Formats
+- `markdown`: Clean, formatted text
+- `html`: Raw HTML content
+- `links`: Extract all links from the page
+- `screenshot`: Capture page screenshots
+
+### Session Options
+- `useProxy`: Use a proxy for accessing websites
+- `solveCaptchas`: Automatically solve CAPTCHA challenges
+- `acceptCookies`: Handle cookie consent popups
+- `useStealth`: Enable stealth mode to avoid detection
+
+### Additional Options
+- `maxPages`: Maximum number of pages to crawl (only applicable in crawl mode)
+
+## Related
+
+- [Web Scraping guide](/docs/use_cases/web_scraping)
+- [Document Loaders conceptual guide](/docs/modules/data_connection/document_loaders/) 
