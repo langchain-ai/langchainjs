@@ -1,0 +1,261 @@
+---
+sidebar_class_name: node-only
+---
+
+# Hyperbrowser
+
+## Overview
+
+The Hyperbrowser tools provide a way to interact with web browsers programmatically, enabling web scraping, crawling, and browser automation capabilities along with powerful browser agents.
+
+| Tool Class | Package | [Python Support](https://python.langchain.com/docs/integrations/tools/hyperbrowser) |
+| :---: | :---: | :---: |
+| HyperbrowserScrapingTool | langchain-js | ✅ |
+| HyperbrowserCrawlTool | langchain-js | ✅ |
+| HyperbrowserExtractTool | langchain-js | ✅ |
+| HyperbrowserBrowserUseTool | langchain-js | ✅ |
+| HyperbrowserClaudeComputerUseTool | langchain-js | ✅ |
+| HyperbrowserOpenAIComputerUseTool | langchain-js | ✅ |
+
+## Installation
+
+
+
+## Setup
+
+The hyperbrowser tools integration lives in the `@langchain/community` package.
+
+```bash npm2yarn
+npm install @langchain/community @langchain/core @hyperbrowser/sdk
+```
+
+### Credentials
+
+You'll need a Hyperbrowser API key. Get one from [Hyperbrowser](https://app.hyperbrowser.ai/) and set it as an environment variable:
+
+```bash
+export HYPERBROWSER_API_KEY="your-api-key"
+```
+
+It's also helpful (but not needed) to set up LangSmith for best-in-class observability:
+
+```bash
+process.env.LANGSMITH_TRACING="true"
+process.env.LANGSMITH_API_KEY="your-api-key"
+```
+
+## Instantiation
+
+You can import and instantiate an instance of one of the Hyperbrowser tool like this:
+
+``` typescript
+import { HyperbrowserScrapingTool } from "@langchain/community/tools/hyperbrowser"
+
+const tool = new HyperbrowserScrapingTool({})
+```
+
+
+### Invocation
+Invoke directly with args
+
+```typescript
+const result = await tool.invoke({
+  url: "https://example.com",
+  scrapeOptions: {
+    formats: ["markdown"],
+  },
+  sessionOptions: {
+    useProxy: false,
+    solveCaptchas: false,
+  },
+});
+```
+
+## Agents
+
+For guides on how to use LangChain tools in agents, see the LangGraph.js docs.
+
+
+## Tools
+
+### Web Automation Tools
+
+These tools provide core web automation capabilities for scraping, crawling, and structured data extraction.
+
+#### HyperbrowserScrapingTool
+
+Tool for extracting content from a single webpage in various formats.
+
+```typescript
+import { HyperbrowserScrapingTool } from "@langchain/community/tools/hyperbrowser";
+
+const tool = new HyperbrowserScrapingTool();
+
+const result = await tool.invoke({
+  url: "https://example.com",
+  scrapeOptions: {
+    formats: ["markdown", "html", "links"]
+  },
+  sessionOptions: {
+    useProxy: false,
+    solveCaptchas: false
+  }
+});
+```
+
+#### HyperbrowserCrawlTool
+
+Tool for systematically exploring and extracting content from multiple linked pages.
+
+```typescript
+import { HyperbrowserCrawlTool } from "@langchain/community/tools/hyperbrowser";
+
+const tool = new HyperbrowserCrawlTool();
+
+const result = await tool.invoke({
+  url: "https://example.com",
+  maxPages: 5,
+  scrapeOptions: {
+    formats: ["markdown"]
+  },
+  sessionOptions: {
+    useProxy: false,
+    solveCaptchas: false
+  }
+});
+```
+
+#### HyperbrowserExtractTool
+
+Tool for extracting structured data from webpages using schemas.
+
+```typescript
+import { HyperbrowserExtractTool } from "@langchain/community/tools/hyperbrowser";
+import { z } from "zod";
+
+const tool = new HyperbrowserExtractTool();
+
+const articleSchema = z.object({
+  title: z.string().describe("The main title of the article"),
+  author: z.string().describe("The author of the article"),
+  publishDate: z.string().optional().describe("The publication date if available")
+});
+
+const result = await tool.invoke({
+  url: "https://example.com",
+  extractOptions: {
+    prompt: "Extract the article information",
+    schema: articleSchema
+  }
+});
+```
+
+### Browser Agents
+
+These tools provide advanced browser automation capabilities using different AI models for complex interactions.
+
+#### HyperbrowserBrowserUseTool
+
+Fast, efficient browser automation tool optimized for explicit instructions.
+
+```typescript
+import { HyperbrowserBrowserUseTool } from "@langchain/community/tools/hyperbrowser";
+
+const tool = new HyperbrowserBrowserUseTool();
+
+const result = await tool.invoke({
+  task: "Navigate to example.com and click the first link in the navigation menu",
+  maxSteps: 3
+});
+```
+
+#### HyperbrowserClaudeComputerUseTool
+
+Advanced browser automation using Claude's sophisticated reasoning for complex tasks.
+
+```typescript
+import { HyperbrowserClaudeComputerUseTool } from "@langchain/community/tools/hyperbrowser";
+
+const tool = new HyperbrowserClaudeComputerUseTool();
+
+const result = await tool.invoke({
+  task: "Go to hackernews, find all the latest articles about AI, and extract their titles",
+  maxSteps: 5
+});
+```
+
+#### HyperbrowserOpenAIComputerUseTool
+
+Reliable browser automation using OpenAI's capabilities for general-purpose tasks.
+
+```typescript
+import { HyperbrowserOpenAIComputerUseTool } from "@langchain/community/tools/hyperbrowser";
+
+const tool = new HyperbrowserOpenAIComputerUseTool();
+
+const result = await tool.invoke({
+  task: "Visit example.com and fill out the contact form with test data",
+  maxSteps: 4
+});
+```
+
+## Parameters
+
+### Common Parameters
+
+All tools accept these common parameters:
+
+| Parameter | Type | Description |
+| --------- | ---- | ----------- |
+| `sessionOptions` | `object` | Browser session configuration |
+
+Session Options supports two parameters:
+
+```typescript
+interface SessionOptions {
+  useProxy: boolean,
+  solveCaptchas: boolean,
+}
+```
+
+Browser session configuration options including proxy settings, CAPTCHA solving, cookie handling, and stealth mode. Controls how the browser behaves during the session.
+
+### Tool-specific Parameters
+
+#### Scraping & Crawling Tools
+| Parameter | Type | Description |
+| --------- | ---- | ----------- |
+| `url` | `string` | The URL to scrape/crawl |
+| `formats` | `Array<"markdown" \| "html" \| "links" \| "screenshot">` | Output formats |
+| `maxPages` | `number` | Maximum pages to crawl (crawl tool only) |
+
+#### Extract Tool
+| Parameter | Type | Description |
+| --------- | ---- | ----------- |
+| `url` | `string` | The URL of the page to extract data from |
+| `extractOptions` | `object` | Extraction configuration with either prompt or schema |
+| `extractOptions.prompt` | `string` | Instructions on what to extract. Prefer providing the schema so that data is in a known structured format. Can be used to augment the schema. |
+| `extractOptions.schema` | `object` | JSON Schema format for structured extraction. Prefer this to the schema. |
+
+#### Browser Automation Tools
+| Parameter | Type | Description |
+| --------- | ---- | ----------- |
+| `task` | `string` | Description of the automation task |
+| `maxSteps` | `number` | Maximum number of automation steps |
+
+#### Response
+
+Each tool returns a structured response:
+
+```typescript
+interface ToolResponse {
+  data?: any;      // The extracted/processed data
+  error?: string;  // Error message if something went wrong
+}
+```
+
+## Additional Resources
+
+- [Hyperbrowser Documentation](https://docs.hyperbrowser.ai)
+- [Document Loader Integration](/docs/integrations/document_loaders/web_loaders/hyperbrowser)
+- [Tool Concepts](/docs/concepts/tools) 

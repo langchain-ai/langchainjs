@@ -80,6 +80,7 @@
     "@gradientai/nodejs-sdk": "^1.2.0",
     "@huggingface/inference": "^2.6.4",
     "@huggingface/transformers": "^3.2.3",
+    "@hyperbrowser/sdk": "^0.42.0",
     "@ibm-cloud/watsonx-ai": "^1.6.4",
     "@jest/globals": "^29.5.0",
     "@lancedb/lancedb": "^0.13.0",
@@ -255,6 +256,7 @@
     "@gradientai/nodejs-sdk": "^1.2.0",
     "@huggingface/inference": "^2.6.4",
     "@huggingface/transformers": "^3.2.3",
+    "@hyperbrowser/sdk": "^0.42.0",
     "@ibm-cloud/watsonx-ai": "*",
     "@lancedb/lancedb": "^0.12.0",
     "@langchain/core": ">=0.2.21 <0.4.0",
@@ -441,6 +443,9 @@
       "optional": true
     },
     "@huggingface/transformers": {
+      "optional": true
+    },
+    "@hyperbrowser/sdk": {
       "optional": true
     },
     "@lancedb/lancedb": {
@@ -921,6 +926,15 @@
       },
       "import": "./tools/google_scholar.js",
       "require": "./tools/google_scholar.cjs"
+    },
+    "./tools/hyperbrowser": {
+      "types": {
+        "import": "./tools/hyperbrowser.d.ts",
+        "require": "./tools/hyperbrowser.d.cts",
+        "default": "./tools/hyperbrowser.d.ts"
+      },
+      "import": "./tools/hyperbrowser.js",
+      "require": "./tools/hyperbrowser.cjs"
     },
     "./tools/ifttt": {
       "types": {
@@ -2919,6 +2933,15 @@
       },
       "import": "./document_loaders/web/hn.js",
       "require": "./document_loaders/web/hn.cjs"
+    },
+    "./document_loaders/web/hyperbrowser": {
+      "types": {
+        "import": "./document_loaders/web/hyperbrowser.d.ts",
+        "require": "./document_loaders/web/hyperbrowser.d.cts",
+        "default": "./document_loaders/web/hyperbrowser.d.ts"
+      },
+      "import": "./document_loaders/web/hyperbrowser.js",
+      "require": "./document_loaders/web/hyperbrowser.cjs"
     },
     "./document_loaders/web/imsdb": {
       "types": {

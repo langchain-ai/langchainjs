@@ -8,6 +8,7 @@
   "../../langchain/src/tools/gmail.ts",
   "../../langchain/src/tools/google_places.ts",
   "../../langchain/src/tools/google_trends.ts",
+  "../../langchain/src/tools/hyperbrowser.ts",
   "../../langchain/src/embeddings/bedrock.ts",
   "../../langchain/src/embeddings/cloudflare_workersai.ts",
   "../../langchain/src/embeddings/ollama.ts",
