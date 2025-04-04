@@ -23,6 +23,7 @@ This library provides a lightweight wrapper that makes [Anthropic Model Context 
 
   - Compatible with LangChain.js and LangGraph.js
   - Optimized for OpenAI, Anthropic, and Google models
+  - Supports rich content responses including text, images, and embedded resources
 
 - 🛠️ **Development Features**
   - Uses `debug` package for debug logging
@@ -87,8 +88,15 @@ try {
   // Connect to the transport
   await client.connect(transport);
 
-  // Get tools
-  const tools = await loadMcpTools("math", client);
+  // Get tools with custom configuration
+  const tools = await loadMcpTools("math", client, {
+    // Whether to throw errors if a tool fails to load (optional, default: true)
+    throwOnLoadError: true,
+    // Whether to prefix tool names with the server name (optional, default: false)
+    prefixToolNameWithServerName: false,
+    // Optional additional prefix for tool names (optional, default: "")
+    additionalToolNamePrefix: "",
+  });
 
   // Create and run the agent
   const agent = createReactAgent({ llm: model, tools });
@@ -117,19 +125,50 @@ import { createReactAgent } from "@langchain/langgraph/prebuilt";
 
 // Create client and connect to server
 const client = new MultiServerMCPClient({
-  // adds a STDIO connection to a server named "math"
-  math: {
-    transport: "stdio",
-    command: "npx",
-    args: ["-y", "@modelcontextprotocol/server-math"],
-  },
+  // Global tool configuration options
+  // Whether to throw on errors if a tool fails to load (optional, default: true)
+  throwOnLoadError: true,
+  // Whether to prefix tool names with the server name (optional, default: true)
+  prefixToolNameWithServerName: true,
+  // Optional additional prefix for tool names (optional, default: "mcp")
+  additionalToolNamePrefix: "mcp",
 
-  // add additional servers by adding more keys to the config
-  // here's a filesystem server
-  filesystem: {
-    transport: "stdio",
-    command: "npx",
-    args: ["-y", "@modelcontextprotocol/server-filesystem"],
+  // Server configuration
+  mcpServers: {
+    // adds a STDIO connection to a server named "math"
+    math: {
+      transport: "stdio",
+      command: "npx",
+      args: ["-y", "@modelcontextprotocol/server-math"],
+      // Restart configuration for stdio transport
+      restart: {
+        enabled: true,
+        maxAttempts: 3,
+        delayMs: 1000,
+      },
+    },
+
+    // here's a filesystem server
+    filesystem: {
+      transport: "stdio",
+      command: "npx",
+      args: ["-y", "@modelcontextprotocol/server-filesystem"],
+    },
+
+    // SSE transport example with reconnection configuration
+    weather: {
+      transport: "sse",
+      url: "https://example.com/mcp-weather",
+      headers: {
+        Authorization: "Bearer token123",
+      },
+      useNodeEventSource: true,
+      reconnect: {
+        enabled: true,
+        maxAttempts: 5,
+        delayMs: 2000,
+      },
+    },
   },
 });
 
@@ -148,17 +187,175 @@ const agent = createReactAgent({
 });
 
 // Run the agent
-const mathResponse = await agent.invoke({
-  messages: [{ role: "user", content: "what's (3 + 5) x 12?" }],
-});
-const weatherResponse = await agent.invoke({
-  messages: [{ role: "user", content: "what is the weather in nyc?" }],
-});
+try {
+  const mathResponse = await agent.invoke({
+    messages: [{ role: "user", content: "what's (3 + 5) x 12?" }],
+  });
+  console.log(mathResponse);
+} catch (error) {
+  console.error("Error during agent execution:", error);
+  // Tools throw ToolException for tool-specific errors
+  if (error.name === "ToolException") {
+    console.error("Tool execution failed:", error.message);
+  }
+}
 
 await client.close();
 ```
 
 For more detailed examples, see the [examples](./examples) directory.
+
+## Tool Configuration Options
+
+When loading MCP tools either directly through `loadMcpTools` or via `MultiServerMCPClient`, you can configure the following options:
+
+| Option                         | Type    | Default | Description                                                                          |
+| ------------------------------ | ------- | ------- | ------------------------------------------------------------------------------------ |
+| `throwOnLoadError`             | boolean | `true`  | Whether to throw an error if a tool fails to load                                    |
+| `prefixToolNameWithServerName` | boolean | `false` | If true, prefixes all tool names with the server name (e.g., `serverName__toolName`) |
+| `additionalToolNamePrefix`     | string  | `""`    | Additional prefix to add to tool names (e.g., `prefix__serverName__toolName`)        |
+
+## Response Handling
+
+MCP tools return results in the `content_and_artifact` format which can include:
+
+- **Text content**: Plain text responses
+- **Image content**: Base64-encoded images with MIME type
+- **Embedded resources**: Files, structured data, or other resources
+
+Example for handling different content types:
+
+```ts
+const tool = tools.find((t) => t.name === "mcp__math__calculate");
+const result = await tool.invoke({ expression: "(3 + 5) * 12" });
+
+// Result format: [content, artifacts]
+// - content: string | MessageContentComplex[]
+// - artifacts: EmbeddedResource[]
+
+const [textContent, artifacts] = result;
+
+// Handle text content
+if (typeof textContent === "string") {
+  console.log("Result:", textContent);
+} else {
+  // Handle complex content (text + images)
+  textContent.forEach((item) => {
+    if (item.type === "text") {
+      console.log("Text:", item.text);
+    } else if (item.type === "image_url") {
+      console.log("Image URL:", item.image_url.url);
+    }
+  });
+}
+
+// Handle artifacts if needed
+if (artifacts.length > 0) {
+  console.log("Received artifacts:", artifacts);
+}
+```
+
+## Reconnection Strategies
+
+Both transport types support automatic reconnection:
+
+### Stdio Transport Restart
+
+```ts
+{
+  transport: "stdio",
+  command: "npx",
+  args: ["-y", "@modelcontextprotocol/server-math"],
+  restart: {
+    enabled: true,      // Enable automatic restart
+    maxAttempts: 3,     // Maximum restart attempts
+    delayMs: 1000       // Delay between attempts in ms
+  }
+}
+```
+
+### SSE Transport Reconnect
+
+```ts
+{
+  transport: "sse",
+  url: "https://example.com/mcp-server",
+  headers: { "Authorization": "Bearer token123" },
+  useNodeEventSource: true,
+  reconnect: {
+    enabled: true,      // Enable automatic reconnection
+    maxAttempts: 5,     // Maximum reconnection attempts
+    delayMs: 2000       // Delay between attempts in ms
+  }
+}
+```
+
+## Error Handling
+
+The library provides different error types to help with debugging:
+
+- **MCPClientError**: For client connection and initialization issues
+- **ToolException**: For errors during tool execution
+- **ZodError**: For configuration validation errors (invalid connection settings, etc.)
+
+Example error handling:
+
+```ts
+try {
+  const client = new MultiServerMCPClient({
+    math: {
+      transport: "stdio",
+      command: "npx",
+      args: ["-y", "@modelcontextprotocol/server-math"],
+    },
+  });
+
+  const tools = await client.getTools();
+  const result = await tools[0].invoke({ expression: "1 + 2" });
+} catch (error) {
+  if (error.name === "MCPClientError") {
+    // Handle connection issues
+    console.error(`Connection error (${error.serverName}):`, error.message);
+  } else if (error.name === "ToolException") {
+    // Handle tool execution errors
+    console.error("Tool execution failed:", error.message);
+  } else if (error.name === "ZodError") {
+    // Handle configuration validation errors
+    console.error("Configuration error:", error.issues);
+    // Zod errors contain detailed information about what went wrong
+    error.issues.forEach((issue) => {
+      console.error(`- Path: ${issue.path.join(".")}, Error: ${issue.message}`);
+    });
+  } else {
+    // Handle other errors
+    console.error("Unexpected error:", error);
+  }
+}
+```
+
+### Common Zod Validation Errors
+
+The library uses Zod for validating configuration. Here are some common validation errors:
+
+- **Missing required parameters**: For example, omitting `command` for stdio transport or `url` for SSE transport
+- **Invalid parameter types**: For example, providing a number where a string is expected
+- **Invalid connection configuration**: For example, using an invalid URL format for SSE transport
+
+Example Zod error for an invalid SSE URL:
+
+```json
+{
+  "issues": [
+    {
+      "code": "invalid_string",
+      "validation": "url",
+      "path": ["mcpServers", "weather", "url"],
+      "message": "Invalid url"
+    }
+  ],
+  "name": "ZodError"
+}
+```
 
 ## Browser Environments
 
