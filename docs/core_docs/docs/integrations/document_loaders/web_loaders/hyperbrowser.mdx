@@ -117,8 +117,7 @@ const loader = new HyperbrowserLoader({
   sessionOptions: {
     useProxy: true,
     solveCaptchas: true,
-    acceptCookies: true,
-    useStealth: true
+    ...
   }
 });
 ```
@@ -138,18 +137,7 @@ const loader = new HyperbrowserLoader({
 | --------- | ---- | ------- | ----------- |
 | `outputFormat` | `Array<"markdown" \| "html" \| "links" \| "screenshot">` | `["markdown"]` | Desired output formats |
 | `maxPages` | `number` | `10` | Maximum pages to crawl (crawl mode only) |
-| `sessionOptions` | `object` | See below | Browser session configuration |
-
-#### Session Options
-
-```typescript
-interface SessionOptions {
-  useProxy?: boolean;      // Use a proxy for access
-  solveCaptchas?: boolean; // Auto-solve CAPTCHAs
-  acceptCookies?: boolean; // Handle cookie popups
-  useStealth?: boolean;    // Enable stealth mode
-}
-```
+| `sessionOptions` | `object` | See below | A complete list of options can be found on our [docs](https://docs.hyperbrowser.ai/reference/api-reference/sessions#api-session)|
 
 ## Document Schema
 
