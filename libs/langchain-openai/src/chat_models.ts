@@ -393,44 +393,45 @@ function _convertMessagesToOpenAIResponsesParams(
         return input;
       }
 
-      if (role === "user") {
-        return {
-          type: "message",
-          role: "user",
-          content:
-            typeof lcMsg.content === "string"
-              ? lcMsg.content
-              : lcMsg.content.flatMap((item) => {
-                  if (item.type === "text") {
-                    return { type: "input_text", text: item.text };
-                  }
+      const content =
+        typeof lcMsg.content === "string"
+          ? lcMsg.content
+          : lcMsg.content.flatMap((item) => {
+              if (item.type === "text") {
+                return { type: "input_text", text: item.text };
+              }
 
-                  if (item.type === "image_url") {
-                    const image_url =
-                      typeof item.image_url === "string"
-                        ? item.image_url
-                        : item.image_url.url;
-                    const detail =
-                      typeof item.image_url === "string"
-                        ? "auto"
-                        : item.image_url.detail;
+              if (item.type === "image_url") {
+                const image_url =
+                  typeof item.image_url === "string"
+                    ? item.image_url
+                    : item.image_url.url;
+                const detail =
+                  typeof item.image_url === "string"
+                    ? "auto"
+                    : item.image_url.detail;
 
-                    return { type: "input_image", image_url, detail };
-                  }
+                return { type: "input_image", image_url, detail };
+              }
 
-                  if (
-                    item.type === "input_text" ||
-                    item.type === "input_image" ||
-                    item.type === "input_file"
-                  ) {
-                    return item;
-                  }
+              if (
+                item.type === "input_text" ||
+                item.type === "input_image" ||
+                item.type === "input_file"
+              ) {
+                return item;
+              }
 
-                  return [];
-                }),
-        };
+              return [];
+            });
+
+      if (role === "user" || role === "system" || role === "developer") {
+        return { type: "message", role, content };
       }
 
+      console.warn(
+        `Unsupported role found when converting to OpenAI Responses API: ${role}`
+      );
       return [];
     }
   );
