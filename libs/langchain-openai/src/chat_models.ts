@@ -1568,13 +1568,14 @@ export class ChatOpenAI<
     this.reasoningEffort = fields?.reasoningEffort;
     this.maxTokens = fields?.maxCompletionTokens ?? fields?.maxTokens;
     this.useResponsesApi = fields?.useResponsesApi ?? this.useResponsesApi;
-
-    if (this.model === "o1") {
-      this.disableStreaming = true;
-    }
+    this.disableStreaming = fields?.disableStreaming ?? this.disableStreaming;
+    if (this.model === "o1") this.disableStreaming = true;
 
     this.streaming = fields?.streaming ?? false;
+    if (this.disableStreaming) this.streaming = false;
+
     this.streamUsage = fields?.streamUsage ?? this.streamUsage;
+    if (this.disableStreaming) this.streamUsage = false;
 
     this.clientConfig = {
       apiKey: this.apiKey,
