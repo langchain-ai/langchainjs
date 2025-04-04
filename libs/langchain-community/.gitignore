@@ -942,6 +942,10 @@ document_loaders/web/cheerio.cjs
 document_loaders/web/cheerio.js
 document_loaders/web/cheerio.d.ts
 document_loaders/web/cheerio.d.cts
+document_loaders/web/dropbox.cjs
+document_loaders/web/dropbox.js
+document_loaders/web/dropbox.d.ts
+document_loaders/web/dropbox.d.cts
 document_loaders/web/html.cjs
 document_loaders/web/html.js
 document_loaders/web/html.d.ts
