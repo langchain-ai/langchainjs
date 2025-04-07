@@ -33,7 +33,7 @@ import { ToolCallChunk } from "@langchain/core/messages/tool";
 import { v4 as uuidv4 } from "uuid";
 import {
   jsonSchemaToGeminiParameters,
-  zodToGenerativeAIParameters,
+  schemaToGenerativeAIParameters,
 } from "./zod_to_genai_parameters.js";
 import { GoogleGenerativeAIToolType } from "../types.js";
 
@@ -489,7 +489,7 @@ export function convertToGenerativeAITools(
       functionDeclarations: tools.map(
         (tool): GenerativeAIFunctionDeclaration => {
           if (isLangChainTool(tool)) {
-            const jsonSchema = zodToGenerativeAIParameters(tool.schema);
+            const jsonSchema = schemaToGenerativeAIParameters(tool.schema);
             if (
               jsonSchema.type === "object" &&
               "properties" in jsonSchema &&

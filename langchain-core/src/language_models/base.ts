@@ -19,6 +19,7 @@ import { AsyncCaller, AsyncCallerParams } from "../utils/async_caller.js";
 import { encodingForModel } from "../utils/tiktoken.js";
 import { Runnable, type RunnableInterface } from "../runnables/base.js";
 import { RunnableConfig } from "../runnables/config.js";
+import { JSONSchema } from "../utils/json_schema.js";
 
 // https://www.npmjs.com/package/js-tiktoken
 
@@ -226,7 +227,7 @@ export interface FunctionDefinition {
    * To describe a function that accepts no parameters, provide the value
    * `{"type": "object", "properties": {}}`.
    */
-  parameters: Record<string, unknown>;
+  parameters: Record<string, unknown> | JSONSchema;
 
   /**
    * A description of what the function does, used by the model to choose when and

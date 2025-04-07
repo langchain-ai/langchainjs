@@ -1,6 +1,6 @@
 import { ChatVertexAI } from "@langchain/google-vertexai";
 import { type GeminiTool } from "@langchain/google-vertexai/types";
-import { zodToGeminiParameters } from "@langchain/google-vertexai/utils";
+import { schemaToGeminiParameters } from "@langchain/google-vertexai/utils";
 import { z } from "zod";
 // Or, if using the web entrypoint:
 // import { ChatVertexAI } from "@langchain/google-vertexai-web";
@@ -18,7 +18,7 @@ const geminiCalculatorTool: GeminiTool = {
     {
       name: "calculator",
       description: "A simple calculator tool",
-      parameters: zodToGeminiParameters(calculatorSchema),
+      parameters: schemaToGeminiParameters(calculatorSchema),
     },
   ],
 };

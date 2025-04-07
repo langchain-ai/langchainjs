@@ -26,8 +26,9 @@ import type {
 } from "@aws-sdk/client-bedrock-runtime";
 import type { DocumentType as __DocumentType } from "@smithy/types";
 import { isLangChainTool } from "@langchain/core/utils/function_calling";
-import { zodToJsonSchema } from "zod-to-json-schema";
 import { ChatGenerationChunk } from "@langchain/core/outputs";
+import { isZodSchema } from "@langchain/core/utils/types";
+import { zodToJsonSchema } from "zod-to-json-schema";
 import {
   ChatBedrockConverseToolType,
   BedrockToolChoice,
@@ -288,7 +289,9 @@ export function convertToConverseTools(
         name: tool.name,
         description: tool.description,
         inputSchema: {
-          json: zodToJsonSchema(tool.schema) as __DocumentType,
+          json: (isZodSchema(tool.schema)
+            ? zodToJsonSchema(tool.schema)
+            : tool.schema) as __DocumentType,
         },
       },
     }));
