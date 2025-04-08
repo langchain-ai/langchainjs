@@ -11,6 +11,7 @@ import type {
   StandardFileBlock,
 } from "@langchain/core/messages";
 import {
+  mergeMessageRuns,
   AIMessage,
   AIMessageChunk,
   ToolMessage,
@@ -470,7 +471,9 @@ export function convertToConverseMessages(messages: BaseMessage[]): {
   converseMessages: BedrockMessage[];
   converseSystem: BedrockSystemContentBlock[];
 } {
-  const converseSystem: BedrockSystemContentBlock[] = messages
+  const mergedMessages = mergeMessageRuns(messages);
+
+  const converseSystem: BedrockSystemContentBlock[] = mergedMessages
     .filter((msg) => msg._getType() === "system")
     .map((msg) => convertSystemMessageToConverseMessage(msg));
 
