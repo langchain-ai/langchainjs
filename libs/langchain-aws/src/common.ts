@@ -4,6 +4,7 @@ import type {
   UsageMetadata,
 } from "@langchain/core/messages";
 import {
+  mergeMessageRuns,
   AIMessage,
   AIMessageChunk,
   ToolMessage,
@@ -72,7 +73,9 @@ export function convertToConverseMessages(messages: BaseMessage[]): {
   converseMessages: BedrockMessage[];
   converseSystem: BedrockSystemContentBlock[];
 } {
-  const converseSystem: BedrockSystemContentBlock[] = messages
+  const mergedMessages = mergeMessageRuns(messages);
+
+  const converseSystem: BedrockSystemContentBlock[] = mergedMessages
     .filter((msg) => msg._getType() === "system")
     .map((msg) => {
       if (typeof msg.content === "string") {
@@ -84,7 +87,7 @@ export function convertToConverseMessages(messages: BaseMessage[]): {
         "System message content must be either a string, or a content array containing a single text object."
       );
     });
-  const converseMessages: BedrockMessage[] = messages
+  const converseMessages: BedrockMessage[] = mergedMessages
     .filter((msg) => msg._getType() !== "system")
     .map((msg) => {
       if (msg._getType() === "ai") {
