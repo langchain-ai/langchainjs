@@ -137,7 +137,7 @@ const config = {
     ({
       announcementBar: {
         content:
-          '<strong class="announcement-bar-text">Join us at <a href="https://interrupt.langchain.com/" target="_blank" rel="noopener noreferrer"> Interrupt: The Agent AI Conference by LangChain</a> on May 13 & 14 in San Francisco!</strong>',
+          '<strong class="announcement-bar-text">Help us build the JS tools that power AI apps at companies like Replit, Uber, LinkedIn, GitLab, and more. <a id="js_job_link" href="https://www.linkedin.com/jobs/view/4167322504/" target="_blank">Join our team!</a></strong>',
         backgroundColor: "#d0c9fe",
       },
       prism: {
