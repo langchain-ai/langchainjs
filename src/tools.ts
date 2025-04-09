@@ -18,18 +18,7 @@ import {
   MessageContentImageUrl,
   MessageContentText,
 } from "@langchain/core/messages";
-import type { JSONSchema } from "@dmitryrechkin/json-schema-to-zod";
-import type { ZodSchema } from "zod";
 import debug from "debug";
-
-let JSONSchemaToZod: { convert: (schema: JSONSchema) => ZodSchema } | undefined;
-
-async function convertSchema(schema: JSONSchema): Promise<ZodSchema> {
-  if (!JSONSchemaToZod) {
-    ({ JSONSchemaToZod } = await import("@dmitryrechkin/json-schema-to-zod"));
-  }
-  return JSONSchemaToZod.convert(schema);
-}
 
 // Replace direct initialization with lazy initialization
 let debugLog: debug.Debugger;
@@ -279,12 +268,7 @@ export async function loadMcpTools(
             const dst = new DynamicStructuredTool({
               name: `${toolNamePrefix}${tool.name}`,
               description: tool.description || "",
-              schema: await convertSchema(
-                (tool.inputSchema ?? {
-                  type: "object",
-                  properties: {},
-                }) as JSONSchema
-              ),
+              schema: tool.inputSchema,
               responseFormat: "content_and_artifact",
               func: _callTool.bind(
                 null,

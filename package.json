@@ -52,16 +52,16 @@
     "zod": "^3.24.2"
   },
   "peerDependencies": {
-    "@langchain/core": "^0.3.40"
+    "@langchain/core": "^0.3.44"
   },
   "optionalDependencies": {
     "extended-eventsource": "^1.x"
   },
   "devDependencies": {
     "@eslint/js": "^9.21.0",
-    "@langchain/core": "^0.3.43",
+    "@langchain/core": "^0.3.44",
     "@langchain/langgraph": "^0.2.62",
-    "@langchain/openai": "^0.5.2",
+    "@langchain/openai": "^0.5.5",
     "@langchain/scripts": "^0.1.3",
     "@tsconfig/recommended": "^1.0.8",
     "@types/debug": "^4.1.12",
@@ -91,7 +91,8 @@
     "vitest": "^3.1.1"
   },
   "resolutions": {
-    "typescript": "4.9.5"
+    "typescript": "4.9.5",
+    "uuid": "^11.0.0"
   },
   "engines": {
     "node": ">=18"

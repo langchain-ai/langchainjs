@@ -1,6 +1,9 @@
 import { describe, test, expect, beforeEach, vi, MockedObject } from "vitest";
 import type { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import type { StructuredTool } from "@langchain/core/tools";
+import {
+  StructuredTool,
+  ToolInputParsingException,
+} from "@langchain/core/tools";
 import type {
   EmbeddedResource,
   ImageContent,
@@ -57,6 +60,74 @@ describe("Simplified Tool Adapter Tests", () => {
       expect(tools.length).toBe(2);
       expect(tools[0].name).toBe("tool1");
       expect(tools[1].name).toBe("tool2");
+    });
+
+    test("should validate tool input against input schema", async () => {
+      // Set up mock response
+      mockClient.listTools.mockReturnValueOnce(
+        Promise.resolve({
+          tools: [
+            {
+              name: "weather",
+              description: "Get the weather for a given city",
+              inputSchema: {
+                type: "object",
+                properties: {
+                  city: { type: "string" },
+                },
+                required: ["city"],
+              },
+            },
+          ],
+        })
+      );
+
+      mockClient.callTool.mockImplementation((params) => {
+        // should not be called if input is invalid
+        const args = params.arguments as { city: string };
+        expect(args.city).toBeDefined();
+        expect(typeof args.city).toBe("string");
+
+        return Promise.resolve({
+          content: [
+            {
+              type: "text",
+              text: `It is currently 70 degrees and cloudy in ${args.city}.`,
+            },
+          ],
+        });
+      });
+
+      // Load tools
+      const tools = await loadMcpTools(
+        "mockServer(should validate tool input against input schema)",
+        mockClient as Client
+      );
+
+      // Verify results
+      expect(tools.length).toBe(1);
+      expect(tools[0].name).toBe("weather");
+
+      const weatherTool = tools[0];
+
+      // should not invoke the tool when input is invalid
+      await expect(
+        weatherTool.invoke({ location: "New York" })
+      ).rejects.toThrow(ToolInputParsingException);
+
+      expect(mockClient.callTool).not.toHaveBeenCalled();
+
+      // should invoke the tool when input is valid
+      await expect(weatherTool.invoke({ city: "New York" })).resolves.toEqual(
+        "It is currently 70 degrees and cloudy in New York."
+      );
+
+      expect(mockClient.callTool).toHaveBeenCalledWith({
+        arguments: {
+          city: "New York",
+        },
+        name: "weather",
+      });
     });
 
     test("should handle empty tool list", async () => {

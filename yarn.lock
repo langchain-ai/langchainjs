@@ -438,9 +438,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@langchain/core@npm:^0.3.43":
-  version: 0.3.43
-  resolution: "@langchain/core@npm:0.3.43"
+"@langchain/core@npm:^0.3.44":
+  version: 0.3.44
+  resolution: "@langchain/core@npm:0.3.44"
   dependencies:
     "@cfworker/json-schema": ^4.0.2
     ansi-styles: ^5.0.0
@@ -454,7 +454,7 @@ __metadata:
     uuid: ^10.0.0
     zod: ^3.22.4
     zod-to-json-schema: ^3.22.3
-  checksum: 5e5e9cd1ce39891177bc1d0d240785b60edeb0f9d53bb78a2ce394adf6fd15b972b63fb7a9d13c1f7b1341c79631baaa77225f6df36f509d0a606fb350f1d60f
+  checksum: d517305ec4fa0b0924b0224d3876eff621bbf97c673819910c53920d9c614db2c2293dc4b14ff408f517183b2aff9c7ea5a37eb2c4b8926b0c7605ca72b9f3cb
   languageName: node
   linkType: hard
 
@@ -513,9 +513,9 @@ __metadata:
   dependencies:
     "@dmitryrechkin/json-schema-to-zod": ^1.0.1
     "@eslint/js": ^9.21.0
-    "@langchain/core": ^0.3.43
+    "@langchain/core": ^0.3.44
     "@langchain/langgraph": ^0.2.62
-    "@langchain/openai": ^0.5.2
+    "@langchain/openai": ^0.5.5
     "@langchain/scripts": ^0.1.3
     "@modelcontextprotocol/sdk": ^1.7.0
     "@tsconfig/recommended": ^1.0.8
@@ -548,16 +548,16 @@ __metadata:
     vitest: ^3.1.1
     zod: ^3.24.2
   peerDependencies:
-    "@langchain/core": ^0.3.40
+    "@langchain/core": ^0.3.44
   dependenciesMeta:
     extended-eventsource:
       optional: true
   languageName: unknown
   linkType: soft
 
-"@langchain/openai@npm:^0.5.2":
-  version: 0.5.2
-  resolution: "@langchain/openai@npm:0.5.2"
+"@langchain/openai@npm:^0.5.5":
+  version: 0.5.5
+  resolution: "@langchain/openai@npm:0.5.5"
   dependencies:
     js-tiktoken: ^1.0.12
     openai: ^4.87.3
@@ -565,7 +565,7 @@ __metadata:
     zod-to-json-schema: ^3.22.3
   peerDependencies:
     "@langchain/core": ">=0.3.39 <0.4.0"
-  checksum: 34c941c0d086b2e575e781506765322aac3bc54af2f0086aa51ca759a46d2c8b2bc20b7e3f618f71e6d73d97815b65bc057bf982a9f6719d4a46059cc3244d3a
+  checksum: 45268375ee66f847a4b5ce64dbca86ad8ad07f0c6c6c9e23c50851f7abd501f841806aac7fb08c2213e6f2ef9f7ca3373243ff59e695626be22752114bfee142
   languageName: node
   linkType: hard
 
@@ -7730,21 +7730,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"uuid@npm:^10.0.0":
-  version: 10.0.0
-  resolution: "uuid@npm:10.0.0"
+"uuid@npm:^11.0.0":
+  version: 11.1.0
+  resolution: "uuid@npm:11.1.0"
   bin:
-    uuid: dist/bin/uuid
-  checksum: 4b81611ade2885d2313ddd8dc865d93d8dccc13ddf901745edca8f86d99bc46d7a330d678e7532e7ebf93ce616679fb19b2e3568873ac0c14c999032acb25869
-  languageName: node
-  linkType: hard
-
-"uuid@npm:^9.0.0":
-  version: 9.0.1
-  resolution: "uuid@npm:9.0.1"
-  bin:
-    uuid: dist/bin/uuid
-  checksum: 39931f6da74e307f51c0fb463dc2462807531dc80760a9bff1e35af4316131b4fc3203d16da60ae33f07fdca5b56f3f1dd662da0c99fea9aaeab2004780cc5f4
+    uuid: dist/esm/bin/uuid
+  checksum: 840f19758543c4631e58a29439e51b5b669d5f34b4dd2700b6a1d15c5708c7a6e0c3e2c8c4a2eae761a3a7caa7e9884d00c86c02622ba91137bd3deade6b4b4a
   languageName: node
   linkType: hard
 

@@ -10,7 +10,7 @@
  * - Built-in persistence capabilities
  *
  * In this example, we:
- * 1. Set up an MCP client to connect to the MCP Math server reference example
+ * 1. Set up an MCP client to connect to the MCP everything server reference example
  * 2. Create a LangGraph workflow with two nodes: one for the LLM and one for tools
  * 3. Define the edges and conditional routing between the nodes
  * 4. Execute the workflow with example queries
@@ -42,7 +42,7 @@ dotenv.config();
 
 /**
  * Example demonstrating how to use MCP tools with LangGraph agent flows
- * This example connects to a math server and uses its tools
+ * This example connects to a everything server and uses its tools
  */
 async function runExample() {
   let client: MultiServerMCPClient | null = null;
@@ -50,12 +50,12 @@ async function runExample() {
   try {
     console.log("Initializing MCP client...");
 
-    // Create a client with configurations for the math server only
+    // Create a client with configurations for the everything server only
     client = new MultiServerMCPClient({
-      math: {
+      everything: {
         transport: "stdio",
         command: "npx",
-        args: ["-y", "@modelcontextprotocol/server-math"],
+        args: ["-y", "@modelcontextprotocol/server-everything"],
       },
     });
 
@@ -137,7 +137,9 @@ async function runExample() {
     const app = workflow.compile();
 
     // Define queries for testing
-    const queries = ["What is 5 + 3?", "What is 7 * 9?"];
+    const queries = [
+      "If Sally has 420324 apples and mark steals 7824 of them, how many does she have left?",
+    ];
 
     // Test the LangGraph agent with the queries
     console.log("\n=== RUNNING LANGGRAPH AGENT ===");
