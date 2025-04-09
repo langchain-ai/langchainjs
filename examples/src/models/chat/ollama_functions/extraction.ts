@@ -32,10 +32,7 @@ const model = new OllamaFunctions({
     {
       name: "information_extraction",
       description: "Extracts the relevant information from the passage.",
-      parameters: {
-        type: "object",
-        properties: zodToJsonSchema(schema),
-      },
+      parameters: zodToJsonSchema(schema),
     },
   ],
   function_call: {

@@ -741,9 +741,9 @@ export class ChatAnthropicMessages<
         return {
           name: tool.name,
           description: tool.description,
-          input_schema: zodToJsonSchema(
-            tool.schema
-          ) as Anthropic.Messages.Tool.InputSchema,
+          input_schema: (isZodSchema(tool.schema)
+            ? zodToJsonSchema(tool.schema)
+            : tool.schema) as Anthropic.Messages.Tool.InputSchema,
         };
       }
       throw new Error(

@@ -1,8 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Cohere, CohereClient } from "cohere-ai";
 import { ToolResult } from "cohere-ai/api/index.js";
-
-import { zodToJsonSchema } from "zod-to-json-schema";
 import {
   AIMessage,
   type BaseMessage,
@@ -37,6 +35,8 @@ import {
 } from "@langchain/core/messages/tool";
 import * as uuid from "uuid";
 import { Runnable } from "@langchain/core/runnables";
+import { isZodSchema } from "@langchain/core/utils/types";
+import { zodToJsonSchema } from "zod-to-json-schema";
 import { CohereClientOptions, getCohereClient } from "./client.js";
 
 type ChatCohereToolType = BindToolsInput | Cohere.Tool;
@@ -255,7 +255,9 @@ function _formatToolsToCohere(
     });
   } else if (tools.every(isLangChainTool)) {
     return tools.map((tool) => {
-      const parameterDefinitionsFromZod = zodToJsonSchema(tool.schema);
+      const parameterDefinitionsFromZod = isZodSchema(tool.schema)
+        ? zodToJsonSchema(tool.schema)
+        : tool.schema;
       return {
         name: tool.name,
         description: tool.description ?? "",

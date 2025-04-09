@@ -55,7 +55,7 @@ import {
   GoogleAIToolType,
   GeminiSearchToolAttributes,
 } from "../types.js";
-import { zodToGeminiParameters } from "./zod_to_gemini_parameters.js";
+import { schemaToGeminiParameters } from "./zod_to_gemini_parameters.js";
 
 export interface FunctionCall {
   name: string;
@@ -1294,7 +1294,7 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
   function structuredToolToFunctionDeclaration(
     tool: StructuredToolParams
   ): GeminiFunctionDeclaration {
-    const jsonSchema = zodToGeminiParameters(tool.schema);
+    const jsonSchema = schemaToGeminiParameters(tool.schema);
     return {
       name: tool.name,
       description: tool.description ?? `A function available to call.`,
