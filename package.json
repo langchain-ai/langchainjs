@@ -46,7 +46,6 @@
   "author": "Ravi Kiran Vemula",
   "license": "MIT",
   "dependencies": {
-    "@dmitryrechkin/json-schema-to-zod": "^1.0.1",
     "@modelcontextprotocol/sdk": "^1.7.0",
     "debug": "^4.4.0",
     "zod": "^3.24.2"

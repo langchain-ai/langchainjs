@@ -84,15 +84,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@dmitryrechkin/json-schema-to-zod@npm:^1.0.1":
-  version: 1.0.1
-  resolution: "@dmitryrechkin/json-schema-to-zod@npm:1.0.1"
-  dependencies:
-    zod: ^3.23.8
-  checksum: 17f0aad4e2c20bb521362bd14a3a184337f220c10cd81a71572fa8c82b1d71007c3b513f1360de4392a221d6a9c905ec51cafcc9592e3cf8b2c36d84760cea94
-  languageName: node
-  linkType: hard
-
 "@esbuild/aix-ppc64@npm:0.25.2":
   version: 0.25.2
   resolution: "@esbuild/aix-ppc64@npm:0.25.2"
@@ -511,7 +502,6 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@langchain/mcp-adapters@workspace:."
   dependencies:
-    "@dmitryrechkin/json-schema-to-zod": ^1.0.1
     "@eslint/js": ^9.21.0
     "@langchain/core": ^0.3.44
     "@langchain/langgraph": ^0.2.62
