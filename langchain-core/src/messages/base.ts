@@ -179,6 +179,23 @@ function stringifyWithDepthLimit(obj: any, depthLimit: number): string {
 }
 
 /**
+ * A call to a tool.
+ * @property {string} name - The name of the tool to be called
+ * @property {Record<string, any>} args - The arguments to the tool call
+ * @property {string} [id] - If provided, an identifier associated with the tool call
+ */
+export type ToolCall = {
+  name: string;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  args: Record<string, any>;
+
+  id?: string;
+
+  type?: "tool_call";
+};
+
+/**
  * Base class for all types of messages in a conversation. It includes
  * properties like `content`, `name`, and `additional_kwargs`. It also
  * includes methods like `toDict()` and `_getType()`.
@@ -234,6 +251,8 @@ export abstract class BaseMessage
    * provided by the provider/model which created the message.
    */
   id?: string;
+
+  tool_calls?: never | ToolCall[];
 
   /**
    * @deprecated Use .getType() instead or import the proper typeguard.
@@ -474,6 +493,76 @@ export function _mergeObj<T = any>(
 }
 
 /**
+ * A chunk of a tool call (e.g., as part of a stream).
+ * When merging ToolCallChunks (e.g., via AIMessageChunk.__add__),
+ * all string attributes are concatenated. Chunks are only merged if their
+ * values of `index` are equal and not None.
+ *
+ * @example
+ * ```ts
+ * const leftChunks = [
+ *   {
+ *     name: "foo",
+ *     args: '{"a":',
+ *     index: 0
+ *   }
+ * ];
+ *
+ * const leftAIMessageChunk = new AIMessageChunk({
+ *   content: "",
+ *   tool_call_chunks: leftChunks
+ * });
+ *
+ * const rightChunks = [
+ *   {
+ *     name: undefined,
+ *     args: '1}',
+ *     index: 0
+ *   }
+ * ];
+ *
+ * const rightAIMessageChunk = new AIMessageChunk({
+ *   content: "",
+ *   tool_call_chunks: rightChunks
+ * });
+ *
+ * const result = leftAIMessageChunk.concat(rightAIMessageChunk);
+ * // result.tool_call_chunks is equal to:
+ * // [
+ * //   {
+ * //     name: "foo",
+ * //     args: '{"a":1}'
+ * //     index: 0
+ * //   }
+ * // ]
+ * ```
+ *
+ * @property {string} [name] - If provided, a substring of the name of the tool to be called
+ * @property {string} [args] - If provided, a JSON substring of the arguments to the tool call
+ * @property {string} [id] - If provided, a substring of an identifier for the tool call
+ * @property {number} [index] - If provided, the index of the tool call in a sequence
+ */
+export type ToolCallChunk = {
+  name?: string;
+
+  args?: string;
+
+  id?: string;
+
+  index?: number;
+
+  type?: "tool_call_chunk";
+};
+
+export type InvalidToolCall = {
+  name?: string;
+  args?: string;
+  id?: string;
+  error?: string;
+  type?: "invalid_tool_call";
+};
+
+/**
  * Represents a chunk of a message, which can be concatenated with other
  * message chunks. It includes a method `_merge_kwargs_dict()` for merging
  * additional keyword arguments from another `BaseMessageChunk` into this
@@ -481,6 +570,10 @@ export function _mergeObj<T = any>(
  * of `BaseMessageChunk` instances.
  */
 export abstract class BaseMessageChunk extends BaseMessage {
+  tool_call_chunks?: never | ToolCallChunk[];
+
+  invalid_tool_calls?: never | InvalidToolCall[];
+
   abstract concat(chunk: BaseMessageChunk): BaseMessageChunk;
 }
 
