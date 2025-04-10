@@ -120,17 +120,17 @@ export function convertMessageContentToParts(
   isMultimodalModel: boolean,
   previousMessages: BaseMessage[]
 ): Part[] {
+  let functionCalls: FunctionCallPart[] = [];
+  let functionResponses: FunctionResponsePart[] = [];
+  let messageParts: Part[] = [];
+
   if (
     typeof message.content === "string" &&
     message.content !== "" &&
     !isToolMessage(message)
   ) {
-    return [{ text: message.content }];
+    messageParts.push({ text: message.content });
   }
-
-  let functionCalls: FunctionCallPart[] = [];
-  let functionResponses: FunctionResponsePart[] = [];
-  let messageParts: Part[] = [];
 
   if (
     "tool_calls" in message &&
@@ -143,7 +143,9 @@ export function convertMessageContentToParts(
         args: tc.args,
       },
     }));
-  } else if (isToolMessage(message) && message.content) {
+  }
+
+  if (isToolMessage(message) && message.content) {
     const messageName =
       message.name ??
       inferToolNameFromPreviousMessages(message, previousMessages);
@@ -163,8 +165,10 @@ export function convertMessageContentToParts(
         },
       },
     ];
-  } else if (Array.isArray(message.content)) {
-    messageParts = message.content.map((c) => {
+  }
+
+  if (!isToolMessage(message) && Array.isArray(message.content)) {
+    const complexParts = message.content.map((c) => {
       if (c.type === "text") {
         return {
           text: c.text,
@@ -232,6 +236,7 @@ export function convertMessageContentToParts(
       }
       throw new Error(`Unknown content type ${(c as { type: string }).type}`);
     });
+    messageParts = [...messageParts, ...complexParts];
   }
 
   return [...messageParts, ...functionCalls, ...functionResponses];
