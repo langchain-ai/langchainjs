@@ -422,7 +422,6 @@ export class PGVectorStore extends VectorStore {
    * Constructs the SQL query for inserting rows into the specified table.
    *
    * @param rows - The rows of data to be inserted, consisting of values and records.
-   * @param chunkIndex - The starting index for generating query placeholders based on chunk positioning.
    * @returns The complete SQL INSERT INTO query string.
    */
   private async buildInsertQuery(rows: (string | Record<string, unknown>)[][]) {
