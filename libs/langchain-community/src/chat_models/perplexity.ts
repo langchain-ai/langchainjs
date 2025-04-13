@@ -168,6 +168,7 @@ export class ChatPerplexity
     this.client = new OpenAI({
       apiKey: this.apiKey,
       baseURL: "https://api.perplexity.ai",
+      dangerouslyAllowBrowser: true,
     });
   }
 
