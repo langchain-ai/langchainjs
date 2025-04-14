@@ -7064,7 +7064,7 @@ __metadata:
     "@baiducloud/qianfan": ^0.1.6
     "@jest/globals": ^29.5.0
     "@langchain/core": "workspace:*"
-    "@langchain/openai": ~0.3.0
+    "@langchain/openai": ^0.5.5
     "@langchain/scripts": ">=0.1.0 <0.2.0"
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
@@ -7826,7 +7826,7 @@ __metadata:
   dependencies:
     "@jest/globals": ^29.5.0
     "@langchain/core": "workspace:*"
-    "@langchain/openai": ^0.4.2
+    "@langchain/openai": ^0.5.5
     "@langchain/scripts": ">=0.1.0 <0.2.0"
     "@langchain/standard-tests": "workspace:*"
     "@swc/core": ^1.3.90
@@ -8397,7 +8397,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/openai@>=0.1.0 <0.6.0, @langchain/openai@>=0.2.0 <0.6.0, @langchain/openai@workspace:*, @langchain/openai@workspace:^, @langchain/openai@workspace:libs/langchain-openai":
+"@langchain/openai@>=0.1.0 <0.6.0, @langchain/openai@>=0.2.0 <0.6.0, @langchain/openai@^0.5.5, @langchain/openai@workspace:*, @langchain/openai@workspace:^, @langchain/openai@workspace:libs/langchain-openai":
   version: 0.0.0-use.local
   resolution: "@langchain/openai@workspace:libs/langchain-openai"
   dependencies:
@@ -8419,7 +8419,7 @@ __metadata:
     jest: ^29.5.0
     jest-environment-node: ^29.6.4
     js-tiktoken: ^1.0.12
-    openai: ^4.87.3
+    openai: ^4.93.0
     prettier: ^2.8.3
     release-it: ^18.1.2
     rimraf: ^5.0.1
@@ -8431,34 +8431,6 @@ __metadata:
     "@langchain/core": ">=0.3.39 <0.4.0"
   languageName: unknown
   linkType: soft
-
-"@langchain/openai@npm:^0.4.2":
-  version: 0.4.9
-  resolution: "@langchain/openai@npm:0.4.9"
-  dependencies:
-    js-tiktoken: ^1.0.12
-    openai: ^4.87.3
-    zod: ^3.22.4
-    zod-to-json-schema: ^3.22.3
-  peerDependencies:
-    "@langchain/core": ">=0.3.39 <0.4.0"
-  checksum: 3219e960a459fd4e904a5c446a90fd7ff0c196b76af6f1be68af102280fe15cb766c403a4f09b37fed547819abc1f3143660dad919e2f79c0b3c30dc53ba9b2b
-  languageName: node
-  linkType: hard
-
-"@langchain/openai@npm:~0.3.0":
-  version: 0.3.17
-  resolution: "@langchain/openai@npm:0.3.17"
-  dependencies:
-    js-tiktoken: ^1.0.12
-    openai: ^4.77.0
-    zod: ^3.22.4
-    zod-to-json-schema: ^3.22.3
-  peerDependencies:
-    "@langchain/core": ">=0.3.29 <0.4.0"
-  checksum: af88894dcfa8381c0b0df924e085796995f5d5ba2a2657ea72b4181b35c5d92b0040c5cf305378c1f48a8f1f04d4a3b0b29ba1d84f80cedf5dab8bc46d7d5c6c
-  languageName: node
-  linkType: hard
 
 "@langchain/pinecone@workspace:*, @langchain/pinecone@workspace:libs/langchain-pinecone":
   version: 0.0.0-use.local
@@ -27715,9 +27687,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"openai@npm:*, openai@npm:^4.32.1, openai@npm:^4.41.1, openai@npm:^4.77.0, openai@npm:^4.87.3":
-  version: 4.87.3
-  resolution: "openai@npm:4.87.3"
+"openai@npm:*, openai@npm:^4.32.1, openai@npm:^4.41.1, openai@npm:^4.93.0":
+  version: 4.93.0
+  resolution: "openai@npm:4.93.0"
   dependencies:
     "@types/node": ^18.11.18
     "@types/node-fetch": ^2.6.4
@@ -27736,7 +27708,7 @@ __metadata:
       optional: true
   bin:
     openai: bin/cli
-  checksum: 2cbb548c5b6dfa21c87b012fee81010925d8106626e4adc0ba86e2a5974aca3b5ec29e3ddc2f354d8c95e1d64da8d384f1495ceabbbf2948269fc2dab34bb3fc
+  checksum: 39fa6635475590c05c5fcb1fd07708c8f23d430dad36037c49fe25020ada0a4a36801e5c443669acd8f947d52005e3b7cf0215ca4b76262007f9b1ea3c916a68
   languageName: node
   linkType: hard
 
