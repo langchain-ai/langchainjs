@@ -1,9 +1,10 @@
 import * as uuid from "uuid";
-import type {
+import {
   WeaviateClient,
   WeaviateObject,
-  WhereFilter,
-} from "weaviate-ts-client";
+  Filters,
+  FilterValue,
+} from "weaviate-client";
 import {
   MaxMarginalRelevanceSearchOptions,
   VectorStore,
@@ -81,7 +82,7 @@ interface ResultRow {
  */
 export interface WeaviateFilter {
   distance?: number;
-  where: WhereFilter;
+  where: FilterValue;
 }
 
 /**
@@ -149,7 +150,7 @@ export class WeaviateStore extends VectorStore {
     options?: { ids?: string[] }
   ) {
     const documentIds = options?.ids ?? documents.map((_) => uuid.v4());
-    const batch: WeaviateObject[] = documents.map((document, index) => {
+    const batch: WeaviateObject<Record<string, any>>[] = documents.map((document, index) => {
       if (Object.hasOwn(document.metadata, "id"))
         throw new Error(
           "Document inserted to Weaviate vectorstore should not have `id` in their metadata."
@@ -159,8 +160,11 @@ export class WeaviateStore extends VectorStore {
       return {
         ...(this.tenant ? { tenant: this.tenant } : {}),
         class: this.indexName,
-        id: documentIds[index],
+        uuid: documentIds[index],
         vector: vectors[index],
+        vectors : {ANY_ADDITIONAL_PROPERTY: vectors[index]},
+        metadata : {},
+        references : {},
         properties: {
           [this.textKey]: document.pageContent,
           ...flattenedMetadata,
@@ -169,30 +173,21 @@ export class WeaviateStore extends VectorStore {
     });
 
     try {
-      const responses = await this.client.batch
-        .objectsBatcher()
-        .withObjects(...batch)
-        .do();
-      // if storing vectors fails, we need to know why
-      const errorMessages: string[] = [];
-      responses.forEach((response) => {
-        if (response?.result?.errors?.error) {
-          errorMessages.push(
-            ...response.result.errors.error.map(
-              (err) =>
-                err.message ??
-                "!! Unfortunately no error message was presented in the API response !!"
-            )
-          );
-        }
-      });
-      if (errorMessages.length > 0) {
-        throw new Error(errorMessages.join("\n"));
+      const collection = this.client.collections.get(this.indexName)
+      const response = await collection.data.insertMany(batch);
+
+      console.log(`Successfully imported batch of ${Object.keys(response.uuids).length} items`);
+      if (response.hasErrors) {
+        console.log("this the error", response.errors);
+        throw new Error("Error in batch import!");
       }
-    } catch (e) {
-      throw Error(`Error adding vectors: ${e}`);
-    }
-    return documentIds;
+      
+      return Object.keys(response.uuids);
+
+    } catch (error) {
+      console.error('Error importing batch:', error);
+      throw error;
+    }  
   }
 
   /**
@@ -223,30 +218,20 @@ export class WeaviateStore extends VectorStore {
   }): Promise<void> {
     const { ids, filter } = params;
 
+    const collection = this.client.collections.get(this.indexName)
     if (ids && ids.length > 0) {
       for (const id of ids) {
-        let deleter = this.client.data
-          .deleter()
-          .withClassName(this.indexName)
-          .withId(id);
-
+        collection.data.deleteById(id);
         if (this.tenant) {
-          deleter = deleter.withTenant(this.tenant);
+          collection.withTenant(this.tenant).data.deleteById(id);
         }
-
-        await deleter.do();
       }
     } else if (filter) {
-      let batchDeleter = this.client.batch
-        .objectsBatchDeleter()
-        .withClassName(this.indexName)
-        .withWhere(filter.where);
-
+      collection.data.deleteMany(filter.where);
       if (this.tenant) {
-        batchDeleter = batchDeleter.withTenant(this.tenant);
+        collection.withTenant(this.tenant).data.deleteMany(filter.where);
       }
 
-      await batchDeleter.do();
     } else {
       throw new Error(
         `This method requires either "ids" or "filter" to be set in the input object`
@@ -291,43 +276,32 @@ export class WeaviateStore extends VectorStore {
     filter?: WeaviateFilter
   ): Promise<[Document, number, number[]][]> {
     try {
-      let builder = this.client.graphql
-        .get()
-        .withClassName(this.indexName)
-        .withFields(
-          `${this.queryAttrs.join(" ")} _additional { distance vector id }`
-        )
-        .withNearVector({
-          vector: query,
-          distance: filter?.distance,
-        })
-        .withLimit(k);
+      const collection = this.client.collections.get(this.indexName)
+      var result = await collection.query.nearVector(query, {
+        filters: filter?.where,
+        limit: k,
+        returnMetadata: ['distance', 'score']
+      })
 
       if (this.tenant) {
-        builder = builder.withTenant(this.tenant);
+        result = await collection.withTenant(this.tenant).query.nearVector(query, {
+          filters: filter?.where,
+          limit: k,
+          returnMetadata: ['distance', 'score']
+        })
       }
-
-      if (filter?.where) {
-        builder = builder.withWhere(filter.where);
-      }
-
-      const result = await builder.do();
 
       const documents: [Document, number, number[]][] = [];
-      for (const data of result.data.Get[this.indexName]) {
-        const { [this.textKey]: text, _additional, ...rest }: ResultRow = data;
 
+      for (let data of result.objects) {
         documents.push([
           new Document({
-            pageContent: text,
-            metadata: {
-              ...rest,
-              collectionName: this.indexName,
-            },
-            id: _additional.id,
+            pageContent: JSON.stringify(data.properties, null, 2),
+            metadata: data.metadata,
+            id: data.uuid,
           }),
-          _additional.distance,
-          _additional.vector,
+          data.metadata?.distance ?? 0,
+          Object.values(data.vectors)[0],
         ]);
       }
       return documents;
