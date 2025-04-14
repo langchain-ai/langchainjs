@@ -10142,7 +10142,7 @@ __metadata:
     typeorm: ^0.3.20
     typescript: ~5.1.6
     typesense: ^1.5.3
-    usearch: ^1.1.1
+    usearch: ^2.17.1
     uuid: ^10.0.0
     voy-search: 0.6.2
     weaviate-ts-client: ^1.4.0
@@ -15914,13 +15914,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:^20.4.5":
-  version: 20.4.8
-  resolution: "@types/node@npm:20.4.8"
-  checksum: 86a3963c0c7af3410553d1dfa4b018a20b3cb3ab4d8e8ffe27408b6338c5de0374b0bf379bc705da2205b466daa751ccfe062f453ba9bde34fdb0e5163ca6a68
-  languageName: node
-  linkType: hard
-
 "@types/node@npm:^20.8.10":
   version: 20.16.10
   resolution: "@types/node@npm:20.16.10"
@@ -18963,13 +18956,6 @@ __metadata:
   dependencies:
     file-uri-to-path: 1.0.0
   checksum: 65b6b48095717c2e6105a021a7da4ea435aa8d3d3cd085cb9e85bcb6e5773cf318c4745c3f7c504412855940b585bdf9b918236612a1c7a7942491de176f1ae7
-  languageName: node
-  linkType: hard
-
-"bindings@npm:~1.2.1":
-  version: 1.2.1
-  resolution: "bindings@npm:1.2.1"
-  checksum: fb542a5721cbeb0a75607a0447ac4d12e3ba8fe12ddf2adbe76814fa9cf3d1236a03ab51d55a7fef1b2d1d9917f4315e8b1cf8b74ff21a6cf9e722e7e363ba5f
   languageName: node
   linkType: hard
 
@@ -32598,15 +32584,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"node-addon-api@npm:^3.0.0":
-  version: 3.2.1
-  resolution: "node-addon-api@npm:3.2.1"
-  dependencies:
-    node-gyp: latest
-  checksum: 2369986bb0881ccd9ef6bacdf39550e07e089a9c8ede1cbc5fc7712d8e2faa4d50da0e487e333d4125f8c7a616c730131d1091676c9d499af1d74560756b4a18
-  languageName: node
-  linkType: hard
-
 "node-addon-api@npm:^4.2.0":
   version: 4.3.0
   resolution: "node-addon-api@npm:4.3.0"
@@ -32762,6 +32739,17 @@ __metadata:
     node-gyp-build-optional: optional.js
     node-gyp-build-test: build-test.js
   checksum: b82a56f866034b559dd3ed1ad04f55b04ae381b22ec2affe74b488d1582473ca6e7f85fccf52da085812d3de2b0bf23109e752a57709ac7b9963951c710fea40
+  languageName: node
+  linkType: hard
+
+"node-gyp-build@npm:^4.8.0":
+  version: 4.8.4
+  resolution: "node-gyp-build@npm:4.8.4"
+  bin:
+    node-gyp-build: bin.js
+    node-gyp-build-optional: optional.js
+    node-gyp-build-test: build-test.js
+  checksum: 8b81ca8ffd5fa257ad8d067896d07908a36918bc84fb04647af09d92f58310def2d2b8614d8606d129d9cd9b48890a5d2bec18abe7fcff54818f72bedd3a7d74
   languageName: node
   linkType: hard
 
@@ -41094,15 +41082,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"usearch@npm:^1.1.1":
-  version: 1.1.1
-  resolution: "usearch@npm:1.1.1"
+"usearch@npm:^2.17.1":
+  version: 2.17.1
+  resolution: "usearch@npm:2.17.1"
   dependencies:
-    "@types/node": ^20.4.5
-    bindings: ~1.2.1
-    node-addon-api: ^3.0.0
+    bindings: ^1.5.0
+    node-addon-api: ^8.0.0
     node-gyp: latest
-  checksum: e8715ffbc9377958677c45656d01479131e0692d7e6857427712f4bb5ff116e094d9e71cd97585264ec4af43e5695dba7dc287e853599a6aee10ab6075ad4cb8
+    node-gyp-build: ^4.8.0
+  checksum: 6297a531887ce89b5358cff0985a85df23112f1eeaf7d63f013d1e6ef8aba52ddbc306856ff5bd17e9925b7846039f0b9a3456d9808177e7941b096790a26d7c
   languageName: node
   linkType: hard
 
