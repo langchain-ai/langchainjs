@@ -2,8 +2,8 @@ import * as uuid from "uuid";
 import type {
   WeaviateClient,
   WeaviateObject,
-  WhereFilter,
-} from "weaviate-ts-client";
+  Filters,
+} from "weaviate-client";
 import {
   MaxMarginalRelevanceSearchOptions,
   VectorStore,
@@ -88,7 +88,7 @@ interface ResultRow {
  */
 export interface WeaviateFilter {
   distance?: number;
-  where: WhereFilter;
+  where: Filters;
 }
 
 /**

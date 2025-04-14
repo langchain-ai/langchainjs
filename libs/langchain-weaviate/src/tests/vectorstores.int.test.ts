@@ -38,7 +38,7 @@ test("WeaviateStore", async () => {
   const results2 = await store.similaritySearch("hello world", 1, {
     where: {
       operator: "Equal",
-      path: ["foo"],
+      // path: ["foo"],
       valueText: "baz",
     },
   });

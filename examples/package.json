@@ -110,7 +110,7 @@
     "typesense": "^1.5.3",
     "uuid": "^10.0.0",
     "voy-search": "0.6.2",
-    "weaviate-ts-client": "^2.0.0",
+    "weaviate-client": "^3.5.2",
     "zod": "^3.22.4",
     "zod-to-json-schema": "^3.22.3"
   },
