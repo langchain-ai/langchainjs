@@ -695,6 +695,11 @@ describe.each(testAnthropicModelNames)(
       callbacks = [recorder, new GoogleRequestLogger()];
     });
 
+    afterEach(() => {
+      // restore any spy created with spyOn
+      jest.restoreAllMocks();
+    });
+
     test("invoke", async () => {
       const model = new ChatVertexAI({
         modelName,
@@ -720,7 +725,7 @@ describe.each(testAnthropicModelNames)(
       console.log(aiMessage.lc_kwargs);
     });
 
-    test.only("system", async () => {
+    test("system", async () => {
       const consoleWarn = jest.spyOn(console, "warn");
       const model = new ChatVertexAI({
         modelName,
