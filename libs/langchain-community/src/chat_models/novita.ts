@@ -11,24 +11,8 @@ import {
 } from "@langchain/openai";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 
-type NovitaUnsupportedArgs =
-  | "frequencyPenalty"
-  | "presencePenalty"
-  | "logitBias"
-  | "functions";
-
-type NovitaUnsupportedCallOptions = "functions" | "function_call";
-
-export interface ChatNovitaCallOptions
-  extends Omit<ChatOpenAICallOptions, NovitaUnsupportedCallOptions> {
-  response_format: {
-    type: "json_object";
-    schema: Record<string, unknown>;
-  };
-}
-
 export interface ChatNovitaInput
-  extends Omit<OpenAIChatInput, "openAIApiKey" | NovitaUnsupportedArgs>,
+  extends Omit<OpenAIChatInput, "openAIApiKey">,
     BaseChatModelParams {
   /**
    * Novita API key
@@ -45,7 +29,7 @@ export interface ChatNovitaInput
 /**
  * Novita chat model implementation
  */
-export class ChatNovitaAI extends ChatOpenAI<ChatNovitaCallOptions> {
+export class ChatNovitaAI extends ChatOpenAI<ChatOpenAICallOptions> {
   static lc_name() {
     return "ChatNovita";
   }
@@ -65,7 +49,7 @@ export class ChatNovitaAI extends ChatOpenAI<ChatNovitaCallOptions> {
 
   constructor(
     fields?: Partial<
-      Omit<OpenAIChatInput, "openAIApiKey" | NovitaUnsupportedArgs>
+      Omit<OpenAIChatInput, "openAIApiKey">
     > &
       BaseChatModelParams & {
         novitaApiKey?: string;
@@ -85,7 +69,7 @@ export class ChatNovitaAI extends ChatOpenAI<ChatNovitaCallOptions> {
 
     super({
       ...fields,
-      model: fields?.model || "gryphe/mythomax-l2-13b",
+      model: fields?.model || "qwen/qwen-2.5-72b-instruct",
       apiKey: novitaApiKey,
       configuration: {
         baseURL: "https://api.novita.ai/v3/openai/",
@@ -133,15 +117,33 @@ export class ChatNovitaAI extends ChatOpenAI<ChatNovitaCallOptions> {
     | AsyncIterable<OpenAIClient.Chat.Completions.ChatCompletionChunk>
     | OpenAIClient.Chat.Completions.ChatCompletion
   > {
-    delete request.frequency_penalty;
-    delete request.presence_penalty;
-    delete request.logit_bias;
-    delete request.functions;
-
-    if (request.stream === true) {
-      return super.completionWithRetry(request, options);
+    if (request.response_format) {
+      if (request.response_format.type === "json_object") {
+        request.response_format = {
+          type: "json_object",
+        };
+      } else if ('json_schema' in request.response_format) {
+        const json_schema = request.response_format.json_schema;
+        request.response_format = {
+          type: "json_schema",
+          json_schema,
+        };
+      }
     }
 
-    return super.completionWithRetry(request, options);
+    if (!request.model) {
+      request.model = "qwen/qwen-2.5-72b-instruct";
+    }
+
+    try {
+      if (request.stream === true) {
+        return super.completionWithRetry(request, options);
+      }
+
+      return super.completionWithRetry(request, options);
+    } catch (error: any) {
+      console.error("Novita API call failed:", error.message || error);
+      throw error;
+    }
   }
 }
