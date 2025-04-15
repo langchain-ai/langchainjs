@@ -41,8 +41,7 @@ export interface LangChainTracerFields extends BaseCallbackHandlerInput {
 
 export class LangChainTracer
   extends BaseTracer
-  implements LangChainTracerFields
-{
+  implements LangChainTracerFields {
   name = "langchain_tracer";
 
   projectName?: string;
@@ -84,7 +83,7 @@ export class LangChainTracer
     };
   }
 
-  protected async persistRun(_run: Run): Promise<void> {}
+  protected async persistRun(_run: Run): Promise<void> { }
 
   async onRunCreate(run: Run): Promise<void> {
     const persistedRun: RunCreate2 = await this._convertToCreate(
@@ -105,6 +104,7 @@ export class LangChainTracer
       dotted_order: run.dotted_order,
       parent_run_id: run.parent_run_id,
       extra: run.extra,
+      session_name: this.projectName,
     };
     await this.client.updateRun(run.id, runUpdate);
   }
