@@ -721,15 +721,15 @@ describe.each(testAnthropicModelNames)(
     });
 
     test.only("system", async () => {
-      const consoleWarn = jest.spyOn(console, 'warn');
+      const consoleWarn = jest.spyOn(console, "warn");
       const model = new ChatVertexAI({
         modelName,
         callbacks,
       });
 
       const messages = [
-        new SystemMessage('Answer only in italian'),
-        new HumanMessage('What is the moon?')
+        new SystemMessage("Answer only in italian"),
+        new HumanMessage("What is the moon?"),
       ];
 
       const res = await model.invoke(messages);
@@ -737,7 +737,7 @@ describe.each(testAnthropicModelNames)(
       expect(res._getType()).toEqual("ai");
 
       expect(consoleWarn).not.toHaveBeenCalled();
-    })
+    });
 
     test("stream", async () => {
       const model = new ChatVertexAI({
