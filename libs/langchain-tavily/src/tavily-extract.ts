@@ -3,7 +3,7 @@ import { StructuredTool, ToolParams } from "@langchain/core/tools";
 import { z } from "zod";
 import {
   TavilyExtractAPIWrapper,
-  TavilyExtractResponseSchema,
+  type TavilyExtractResponse,
 } from "./utils.js";
 
 export type ExtractDepth = "basic" | "advanced";
@@ -118,7 +118,7 @@ export class TavilyExtract extends StructuredTool {
   async _call(
     input: z.infer<(typeof this)["schema"]>,
     _runManager?: CallbackManagerForToolRun
-  ): Promise<z.infer<typeof TavilyExtractResponseSchema> | { error: string }> {
+  ): Promise<TavilyExtractResponse | { error: string }> {
     try {
       const {
         urls,

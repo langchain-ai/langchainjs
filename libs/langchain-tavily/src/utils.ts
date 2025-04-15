@@ -1,61 +1,60 @@
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
-import { z } from "zod";
 
 const TAVILY_BASE_URL = "https://api.tavily.com";
 
-const TavilyExtractParamsSchema = z.object({
-  urls: z.array(z.string()),
-  includeImages: z.boolean().optional(),
-  extractDepth: z.enum(["basic", "advanced"]).optional(),
-});
+export interface TavilyExtractParams {
+  urls: string[];
+  includeImages?: boolean;
+  extractDepth?: "basic" | "advanced";
+}
 
-export const TavilySearchParamsSchema = z.object({
-  query: z.string(),
-  maxResults: z.number().int().positive().optional(),
-  searchDepth: z.enum(["basic", "advanced"]).optional(),
-  includeDomains: z.array(z.string()).optional(),
-  excludeDomains: z.array(z.string()).optional(),
-  includeAnswer: z.boolean().optional(),
-  includeRawContent: z.boolean().optional(),
-  includeImages: z.boolean().optional(),
-  includeImageDescriptions: z.boolean().optional(),
-  topic: z.enum(["general", "news", "finance"]).optional(),
-  timeRange: z.enum(["day", "week", "month", "year"]).optional(),
-});
+export interface TavilySearchParams {
+  query: string;
+  maxResults?: number;
+  searchDepth?: "basic" | "advanced";
+  includeDomains?: string[];
+  excludeDomains?: string[];
+  includeAnswer?: boolean;
+  includeRawContent?: boolean;
+  includeImages?: boolean;
+  includeImageDescriptions?: boolean;
+  topic?: "general" | "news" | "finance";
+  timeRange?: "day" | "week" | "month" | "year";
+}
 
-export const TavilyExtractResponseSchema = z.object({
-  results: z.array(
-    z.object({
-      url: z.string().url(),
-      raw_content: z.string(),
-      images: z.array(z.string().url()),
-    })
-  ),
-  failed_results: z.array(
-    z.object({
-      url: z.string().url(),
-      error: z.string(),
-    })
-  ),
-  response_time: z.number().positive(),
-});
+export interface TavilyExtractResult {
+  url: string;
+  raw_content: string;
+  images: string[];
+}
 
-export const TavilySearchResponseSchema = z.object({
-  query: z.string(),
-  follow_up_questions: z.array(z.string()).nullable(),
-  answer: z.string().nullable(),
-  images: z.array(z.string().url()),
-  results: z.array(
-    z.object({
-      title: z.string(),
-      url: z.string().url(),
-      content: z.string(),
-      score: z.number(),
-      raw_content: z.string().nullable(),
-    })
-  ),
-  response_time: z.number().positive(),
-});
+export interface TavilyFailedResult {
+  url: string;
+  error: string;
+}
+
+export interface TavilyExtractResponse {
+  results: TavilyExtractResult[];
+  failed_results: TavilyFailedResult[];
+  response_time: number;
+}
+
+export interface TavilySearchResult {
+  title: string;
+  url: string;
+  content: string;
+  score: number;
+  raw_content: string | null;
+}
+
+export interface TavilySearchResponse {
+  query: string;
+  follow_up_questions: string[] | null;
+  answer: string | null;
+  images: string[];
+  results: TavilySearchResult[];
+  response_time: number;
+}
 
 export class TavilySearchAPIWrapper {
   tavilyApiKey?: string;
@@ -71,9 +70,7 @@ export class TavilySearchAPIWrapper {
     this.tavilyApiKey = apiKey;
   }
 
-  async rawResults(
-    params: z.infer<typeof TavilySearchParamsSchema>
-  ): Promise<z.infer<typeof TavilySearchResponseSchema>> {
+  async rawResults(params: TavilySearchParams): Promise<TavilySearchResponse> {
     const headers = {
       Authorization: `Bearer ${this.tavilyApiKey}`,
       "Content-Type": "application/json",
@@ -111,8 +108,8 @@ export class TavilyExtractAPIWrapper {
   }
 
   async rawResults(
-    params: z.infer<typeof TavilyExtractParamsSchema>
-  ): Promise<z.infer<typeof TavilyExtractResponseSchema>> {
+    params: TavilyExtractParams
+  ): Promise<TavilyExtractResponse> {
     const headers = {
       Authorization: `Bearer ${this.tavilyApiKey}`,
       "Content-Type": "application/json",
