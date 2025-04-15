@@ -720,6 +720,25 @@ describe.each(testAnthropicModelNames)(
       console.log(aiMessage.lc_kwargs);
     });
 
+    test.only("system", async () => {
+      const consoleWarn = jest.spyOn(console, 'warn');
+      const model = new ChatVertexAI({
+        modelName,
+        callbacks,
+      });
+
+      const messages = [
+        new SystemMessage('Answer only in italian'),
+        new HumanMessage('What is the moon?')
+      ];
+
+      const res = await model.invoke(messages);
+      expect(res).toBeDefined();
+      expect(res._getType()).toEqual("ai");
+
+      expect(consoleWarn).not.toHaveBeenCalled();
+    })
+
     test("stream", async () => {
       const model = new ChatVertexAI({
         modelName,
