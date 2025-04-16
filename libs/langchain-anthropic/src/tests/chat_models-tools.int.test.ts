@@ -15,6 +15,7 @@ import { zodToJsonSchema } from "zod-to-json-schema";
 import { RunnableLambda } from "@langchain/core/runnables";
 import { ChatAnthropic } from "../chat_models.js";
 import { AnthropicToolResponse } from "../types.js";
+import { _convertMessagesToAnthropicPayload } from "../utils/message_inputs.js";
 
 const zodSchema = z
   .object({
@@ -685,6 +686,31 @@ test("Can call and use two tool calls at once", async () => {
   ]);
 
   expect(result2.content.length).toBeGreaterThan(5);
+});
+
+test("converting messages doesn't drop tool input", async () => {
+  const tool = {
+    name: "generate_random_joke",
+    description: "Generate a random joke.",
+    schema: z.object({
+      prompt: z.string().describe("The prompt to generate the joke for."),
+    }),
+  };
+  const largeModel = new ChatAnthropic({
+    model: "claude-3-5-sonnet-latest",
+    temperature: 0,
+  }).bindTools([tool]);
+
+  const inputMessage = new HumanMessage(
+    "Generate three (3) random jokes. Please use the generate_random_joke tool, and call it three times in your response to me. Ensure you call the tool three times before responding to me. This is very important."
+  );
+
+  const result = await largeModel.invoke([inputMessage]);
+  expect(result.tool_calls).toHaveLength(3);
+
+  const converted = _convertMessagesToAnthropicPayload([result]);
+  // @ts-expect-error We're forcing this type in the conversion function.
+  expect(converted.messages[0].content[1].input.prompt).toBeDefined();
 });
 
 test("structured output with thinking enabled", async () => {
