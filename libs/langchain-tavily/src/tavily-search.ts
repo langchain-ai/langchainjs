@@ -86,142 +86,194 @@ export type TavilySearchAPIRetrieverFields = ToolParams & {
    * @default "general"
    */
   timeRange?: TimeRange;
+
+  /**
+   * The name of the tool.
+   *
+   * @default "tavily_search"
+   */
+  name?: string;
+
+  /**
+   * The description of the tool.
+   *
+   * @default "A search engine optimized for comprehensive, accurate, and trusted results. Useful for when you need to answer questions about current events. Input should be a search query."
+   */
+  description?: string;
+  /**
+   * Whether to return the tool's output directly.
+   *
+   * Setting this to true means that after the tool is called,
+   * an agent should stop looping.
+   *
+   * @default false
+   */
+  returnDirect?: boolean;
+
+  /**
+   * An API wrapper that can be used to interact with the Tavily Search API. Useful for testing.
+   *
+   * If specified, the tool will use this API wrapper instead of creating a new one, and fields used
+   * in API Wrapper initialization, like {@link TavilySearchAPIRetrieverFields.tavilyApiKey}, will be
+   * ignored.
+   */
+  apiWrapper?: TavilySearchAPIWrapper;
 };
 
 function generateSuggestions(params: Record<string, unknown>): string[] {
   const suggestions: string[] = [];
 
-  const { search_depth, exclude_domains, include_domains, time_range, topic } =
+  const { timeRange, includeDomains, excludeDomains, searchDepth, topic } =
     params;
 
-  if (time_range) {
+  if (timeRange) {
     suggestions.push("Remove time_range argument");
   }
   if (
-    include_domains &&
-    Array.isArray(include_domains) &&
-    include_domains.length > 0
+    includeDomains &&
+    Array.isArray(includeDomains) &&
+    includeDomains.length > 0
   ) {
     suggestions.push("Remove include_domains argument");
   }
   if (
-    exclude_domains &&
-    Array.isArray(exclude_domains) &&
-    exclude_domains.length > 0
+    excludeDomains &&
+    Array.isArray(excludeDomains) &&
+    excludeDomains.length > 0
   ) {
     suggestions.push("Remove exclude_domains argument");
   }
-  if (search_depth === "basic") {
+  if (searchDepth === "basic") {
     suggestions.push(
       "Try a more detailed search using 'advanced' search_depth"
     );
   }
-  if (topic !== "general") {
+  if (topic && topic !== "general") {
     suggestions.push("Try a general search using 'general' topic");
   }
 
   return suggestions;
 }
 
-export class TavilySearch extends StructuredTool {
+const inputSchema = z.object({
+  query: z.string().describe("Search query to look up"),
+  includeDomains: z
+    .array(z.string())
+    .optional()
+    .describe(
+      `A list of domains to restrict search results to.
+
+Use this parameter when:
+1. The user explicitly requests information from specific websites (e.g., "Find climate data from nasa.gov")
+2. The user mentions an organization or company without specifying the domain (e.g., "Find information about iPhones from Apple")
+
+In both cases, you should determine the appropriate domains (e.g., ["nasa.gov"] or ["apple.com"]) and set this parameter.
+
+Results will ONLY come from the specified domains - no other sources will be included.
+Default is None (no domain restriction).`
+    ),
+  excludeDomains: z
+    .array(z.string())
+    .optional()
+    .describe(
+      `A list of domains to exclude from search results.
+
+Use this parameter when:
+1. The user explicitly requests to avoid certain websites (e.g., "Find information about climate change but not from twitter.com")
+2. The user mentions not wanting results from specific organizations without naming the domain (e.g., "Find phone reviews but nothing from Apple")
+
+In both cases, you should determine the appropriate domains to exclude (e.g., ["twitter.com"] or ["apple.com"]) and set this parameter.
+
+Results will filter out all content from the specified domains.
+Default is None (no domain exclusion).`
+    ),
+  searchDepth: z
+    .enum(["basic", "advanced"])
+    .optional()
+    .describe(
+      `Controls search thoroughness and result comprehensiveness.
+
+Use "basic" for simple queries requiring quick, straightforward answers.
+
+Use "advanced" (default) for complex queries, specialized topics, 
+rare information, or when in-depth analysis is needed.`
+    ),
+  includeImages: z
+    .boolean()
+    .optional()
+    .describe(
+      `Determines if the search returns relevant images along with text results.
+
+Set to True when the user explicitly requests visuals or when images would 
+significantly enhance understanding (e.g., "Show me what black holes look like," 
+"Find pictures of Renaissance art").
+
+Leave as False (default) for most informational queries where text is sufficient.`
+    ),
+  timeRange: z
+    .enum(["day", "week", "month", "year"])
+    .optional()
+    .describe(
+      `Limits results to content published within a specific timeframe.
+
+ONLY set this when the user explicitly mentions a time period 
+(e.g., "latest AI news," "articles from last week").
+
+For less popular or niche topics, use broader time ranges 
+("month" or "year") to ensure sufficient relevant results.
+
+Options: "day" (24h), "week" (7d), "month" (30d), "year" (365d).
+
+Default is None.`
+    ),
+  topic: z
+    .enum(["general", "news", "finance"])
+    .optional()
+    .describe(
+      `Specifies search category for optimized results.
+
+Use "general" (default) for most queries, INCLUDING those with terms like 
+"latest," "newest," or "recent" when referring to general information.
+
+Use "finance" for markets, investments, economic data, or financial news.
+
+Use "news" ONLY for politics, sports, or major current events covered by 
+mainstream media - NOT simply because a query asks for "new" information.`
+    ),
+});
+
+/**
+ * A Tool for performing searches with the Tavily Search API and retrieving
+ * the results. Extends the StructuredTool class. It includes optional
+ * parameters for refining search results, such as specifying domains,
+ * search depth, and time ranges.
+ *
+ * Authentication is handled via an API key, which can be passed during
+ * instantiation or set as an environment variable `TAVILY_API_KEY`.
+ *
+ * Example:
+ * ```typescript
+ * const tool = new TavilySearch({
+ *   maxResults: 3,
+ *   tavilyApiKey: "YOUR_API_KEY"
+ * });
+ * const results = await tool.invoke({ query: "latest AI news" });
+ * console.log(results);
+ * ```
+ */
+export class TavilySearch extends StructuredTool<typeof inputSchema> {
   static lc_name(): string {
     return "TavilySearch";
   }
 
-  description =
-    "A search engine optimized for comprehensive, accurate, and trusted results. Useful for when you need to answer questions about current events. Input should be a search query.";
+  override description: string =
+    "A search engine optimized for comprehensive, accurate, and trusted " +
+    "results. Useful for when you need to answer questions about current " +
+    "events. Input should be a search query.";
 
-  name = "tavily_search";
+  override name: string = "tavily_search";
 
-  schema = z.object({
-    query: z.string().describe("Search query to look up"),
-    includeDomains: z
-      .array(z.string())
-      .optional()
-      .default([])
-      .describe(
-        `A list of domains to restrict search results to.
-      
-      Use this parameter when:
-      1. The user explicitly requests information from specific websites (e.g., "Find climate data from nasa.gov")
-      2. The user mentions an organization or company without specifying the domain (e.g., "Find information about iPhones from Apple")
-      
-      In both cases, you should determine the appropriate domains (e.g., ["nasa.gov"] or ["apple.com"]) and set this parameter.
-      
-      Results will ONLY come from the specified domains - no other sources will be included.
-      Default is None (no domain restriction).`
-      ),
-    excludeDomains: z
-      .array(z.string())
-      .optional()
-      .default([])
-      .describe(
-        `A list of domains to exclude from search results.
-      
-      Use this parameter when:
-      1. The user explicitly requests to avoid certain websites (e.g., "Find information about climate change but not from twitter.com")
-      2. The user mentions not wanting results from specific organizations without naming the domain (e.g., "Find phone reviews but nothing from Apple")
-      
-      In both cases, you should determine the appropriate domains to exclude (e.g., ["twitter.com"] or ["apple.com"]) and set this parameter.
-      
-      Results will filter out all content from the specified domains.
-      Default is None (no domain exclusion).`
-      ),
-    searchDepth: z
-      .enum(["basic", "advanced"])
-      .default("basic")
-      .describe(
-        `Controls search thoroughness and result comprehensiveness.
-      
-      Use "basic" for simple queries requiring quick, straightforward answers.
-      
-      Use "advanced" (default) for complex queries, specialized topics, 
-      rare information, or when in-depth analysis is needed.`
-      ),
-    includeImages: z
-      .boolean()
-      .optional()
-      .default(false)
-      .describe(
-        `Determines if the search returns relevant images along with text results.
-      
-      Set to True when the user explicitly requests visuals or when images would 
-      significantly enhance understanding (e.g., "Show me what black holes look like," 
-      "Find pictures of Renaissance art").
-      
-      Leave as False (default) for most informational queries where text is sufficient.`
-      ),
-    timeRange: z
-      .enum(["day", "week", "month", "year"])
-      .optional()
-      .describe(
-        `Limits results to content published within a specific timeframe.
-      
-      ONLY set this when the user explicitly mentions a time period 
-      (e.g., "latest AI news," "articles from last week").
-      
-      For less popular or niche topics, use broader time ranges 
-      ("month" or "year") to ensure sufficient relevant results.
-      
-      Options: "day" (24h), "week" (7d), "month" (30d), "year" (365d).
-      
-      Default is None.`
-      ),
-    topic: z
-      .enum(["general", "news", "finance"])
-      .default("general")
-      .describe(
-        `Specifies search category for optimized results.
-      
-      Use "general" (default) for most queries, INCLUDING those with terms like 
-      "latest," "newest," or "recent" when referring to general information.
-      
-      Use "finance" for markets, investments, economic data, or financial news.
-      
-      Use "news" ONLY for politics, sports, or major current events covered by 
-      mainstream media - NOT simply because a query asks for "new" information.`
-      ),
-  });
+  override schema = inputSchema;
 
   maxResults = 5;
 
@@ -251,10 +303,27 @@ export class TavilySearch extends StructuredTool {
 
   apiWrapper: TavilySearchAPIWrapper;
 
+  /**
+   * Constructs a new instance of the TavilySearch tool.
+   * @param params Optional configuration parameters for the tool.
+   *               Includes options like `maxResults`, `tavilyApiKey`,
+   *               `includeImages`, `includeAnswer`, `searchDepth`, etc.
+   *               See {@link TavilySearchAPIRetrieverFields} for details.
+   */
   constructor(params: TavilySearchAPIRetrieverFields = {}) {
     super(params);
 
-    if (params.tavilyApiKey) {
+    if (params.name) {
+      this.name = params.name;
+    }
+
+    if (params.description) {
+      this.description = params.description;
+    }
+
+    if (params.apiWrapper) {
+      this.apiWrapper = params.apiWrapper;
+    } else if (params.tavilyApiKey) {
       this.apiWrapper = new TavilySearchAPIWrapper({
         tavilyApiKey: params.tavilyApiKey,
       });
@@ -275,21 +344,11 @@ export class TavilySearch extends StructuredTool {
   }
 
   async _call(
-    input: z.infer<(typeof this)["schema"]>,
+    input: z.infer<typeof inputSchema>,
     _runManager?: CallbackManagerForToolRun
   ): Promise<TavilySearchResponse | { error: string }> {
     try {
       const {
-        query,
-        includeDomains = this.includeDomains,
-        excludeDomains = this.excludeDomains,
-        searchDepth = this.searchDepth,
-        includeImages = this.includeImages,
-        timeRange = this.timeRange,
-        topic = this.topic,
-      } = input;
-
-      const rawResults = await this.apiWrapper.rawResults({
         query,
         includeDomains,
         excludeDomains,
@@ -297,6 +356,24 @@ export class TavilySearch extends StructuredTool {
         includeImages,
         timeRange,
         topic,
+      } = input;
+
+      // Apply defaults using the nullish coalescing pattern
+      const effectiveIncludeDomains = includeDomains ?? this.includeDomains;
+      const effectiveExcludeDomains = excludeDomains ?? this.excludeDomains;
+      const effectiveSearchDepth = searchDepth ?? this.searchDepth;
+      const effectiveIncludeImages = includeImages ?? this.includeImages;
+      const effectiveTimeRange = timeRange ?? this.timeRange;
+      const effectiveTopic = topic ?? this.topic;
+
+      const rawResults = await this.apiWrapper.rawResults({
+        query,
+        includeDomains: effectiveIncludeDomains,
+        excludeDomains: effectiveExcludeDomains,
+        searchDepth: effectiveSearchDepth,
+        includeImages: effectiveIncludeImages,
+        timeRange: effectiveTimeRange,
+        topic: effectiveTopic,
         maxResults: this.maxResults,
         includeAnswer: this.includeAnswer,
         includeRawContent: this.includeRawContent,
@@ -311,11 +388,11 @@ export class TavilySearch extends StructuredTool {
         rawResults.results.length === 0
       ) {
         const searchParams = {
-          timeRange,
-          includeDomains,
-          searchDepth,
-          excludeDomains,
-          topic,
+          timeRange: effectiveTimeRange,
+          includeDomains: effectiveIncludeDomains,
+          excludeDomains: effectiveExcludeDomains,
+          searchDepth: effectiveSearchDepth,
+          topic: effectiveTopic,
         };
         const suggestions = generateSuggestions(searchParams);
 

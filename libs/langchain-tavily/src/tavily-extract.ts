@@ -33,6 +33,38 @@ export type TavilyExtractAPIRetrieverFields = ToolParams & {
    * @default false
    */
   includeImages?: boolean;
+
+  /**
+   * The name of the tool.
+   *
+   * @default "tavily_extract"
+   */
+  name?: string;
+
+  /**
+   * The description of the tool.
+   *
+   * @default "Extracts comprehensive content from web pages based on provided URLs. Useful for when you need to answer questions about current events. Input should be a list of one or more URLs."
+   */
+  description?: string;
+  /**
+   * Whether to return the tool's output directly.
+   *
+   * Setting this to true means that after the tool is called,
+   * an agent should stop looping.
+   *
+   * @default false
+   */
+  returnDirect?: boolean;
+
+  /**
+   * An API wrapper that can be used to interact with the Tavily Extract API. Useful for testing.
+   *
+   * If specified, the tool will use this API wrapper instead of creating a new one, and fields used
+   * in API Wrapper initialization, like {@link TavilyExtractAPIRetrieverFields.tavilyApiKey}, will be
+   * ignored.
+   */
+  apiWrapper?: TavilyExtractAPIWrapper;
 };
 
 function generateSuggestions(params: Record<string, unknown>): string[] {
@@ -49,14 +81,42 @@ function generateSuggestions(params: Record<string, unknown>): string[] {
   return suggestions;
 }
 
-export class TavilyExtract extends StructuredTool {
+const inputSchema = z.object({
+  urls: z.array(z.string()).describe("List of URLs to extract"),
+  extractDepth: z
+    .enum(["basic", "advanced"])
+    .optional()
+    .describe(
+      `Controls the thoroughness of web content extraction.
+
+Use "basic" for faster extraction of main text content.
+
+Use "advanced" (default) to retrieve comprehensive content including 
+tables and embedded elements. Always use "advanced" for LinkedIn 
+and YouTube URLs for optimal results.
+
+Better for complex websites but may increase response time.`
+    ),
+  includeImages: z
+    .boolean()
+    .optional()
+    .describe(
+      `Determines whether to extract and include images from the source URLs.
+
+Set to True when visualizations are needed for better context or understanding.
+
+Default is False (extracts text content only).`
+    ),
+});
+
+export class TavilyExtract extends StructuredTool<typeof inputSchema> {
   static lc_name() {
     return "tavily_extract";
   }
 
-  name: "tavily_extract";
+  override name: string = "tavily_extract";
 
-  description =
+  override description: string =
     "Extracts comprehensive content from web pages based on provided URLs. " +
     "This tool retrieves raw text of a web page, with an option to include images. " +
     "It supports two extraction depths: 'basic' for standard text extraction and " +
@@ -65,34 +125,7 @@ export class TavilyExtract extends StructuredTool {
     "and automated information retrieval, this endpoint seamlessly integrates into " +
     "your content processing pipeline. Input should be a list of one or more URLs.";
 
-  schema = z.object({
-    urls: z.array(z.string()).describe("List of URLs to extract"),
-    extractDepth: z
-      .enum(["basic", "advanced"])
-      .default("basic")
-      .describe(
-        `Controls the thoroughness of web content extraction.
-      
-      Use "basic" for faster extraction of main text content.
-      
-      Use "advanced" (default) to retrieve comprehensive content including 
-      tables and embedded elements. Always use "advanced" for LinkedIn 
-      and YouTube URLs for optimal results.
-      
-      Better for complex websites but may increase response time.`
-      ),
-    includeImages: z
-      .boolean()
-      .optional()
-      .default(false)
-      .describe(
-        `Determines whether to extract and include images from the source URLs.
-      
-      Set to True when visualizations are needed for better context or understanding.
-      
-      Default is False (extracts text content only).`
-      ),
-  });
+  override schema = inputSchema;
 
   extractDepthDefault: ExtractDepth;
 
@@ -103,7 +136,17 @@ export class TavilyExtract extends StructuredTool {
   constructor(params: TavilyExtractAPIRetrieverFields = {}) {
     super(params);
 
-    if (params.tavilyApiKey) {
+    if (typeof params.name === "string") {
+      this.name = params.name;
+    }
+
+    if (typeof params.description === "string") {
+      this.description = params.description;
+    }
+
+    if (params.apiWrapper) {
+      this.apiWrapper = params.apiWrapper;
+    } else if (params.tavilyApiKey) {
       this.apiWrapper = new TavilyExtractAPIWrapper({
         tavilyApiKey: params.tavilyApiKey,
       });
@@ -116,20 +159,19 @@ export class TavilyExtract extends StructuredTool {
   }
 
   async _call(
-    input: z.infer<(typeof this)["schema"]>,
+    input: z.infer<typeof inputSchema>,
     _runManager?: CallbackManagerForToolRun
   ): Promise<TavilyExtractResponse | { error: string }> {
     try {
-      const {
-        urls,
-        extractDepth = this.extractDepthDefault,
-        includeImages = this.includeImagesDefault,
-      } = input;
+      const { urls, extractDepth, includeImages } = input;
+
+      const effectiveExtractDepth = extractDepth ?? this.extractDepthDefault;
+      const effectiveIncludeImages = includeImages ?? this.includeImagesDefault;
 
       const rawResults = await this.apiWrapper.rawResults({
         urls,
-        extractDepth,
-        includeImages,
+        extractDepth: effectiveExtractDepth,
+        includeImages: effectiveIncludeImages,
       });
 
       if (
@@ -143,8 +185,8 @@ export class TavilyExtract extends StructuredTool {
           rawResults.failed_results.length === urls.length)
       ) {
         const searchParams = {
-          extractDepth,
-          includeImages,
+          extractDepth: effectiveExtractDepth,
+          includeImages: effectiveIncludeImages,
         };
         const suggestions = generateSuggestions(searchParams);
 
