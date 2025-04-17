@@ -216,7 +216,8 @@ export class OpenAIEmbeddings
 
       this.client = new OpenAIClient(params);
     }
-    const requestOptions: OpenAICoreRequestOptions = {};
+    const requestOptions: OpenAICoreRequestOptions<OpenAIClient.EmbeddingCreateParams> =
+      {};
     return this.caller.call(async () => {
       try {
         const res = await this.client.embeddings.create(

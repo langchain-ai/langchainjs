@@ -695,6 +695,11 @@ describe.each(testAnthropicModelNames)(
       callbacks = [recorder, new GoogleRequestLogger()];
     });
 
+    afterEach(() => {
+      // restore any spy created with spyOn
+      jest.restoreAllMocks();
+    });
+
     test("invoke", async () => {
       const model = new ChatVertexAI({
         modelName,
@@ -718,6 +723,25 @@ describe.each(testAnthropicModelNames)(
 
       console.log(JSON.stringify(aiMessage, null, 1));
       console.log(aiMessage.lc_kwargs);
+    });
+
+    test("system", async () => {
+      const consoleWarn = jest.spyOn(console, "warn");
+      const model = new ChatVertexAI({
+        modelName,
+        callbacks,
+      });
+
+      const messages = [
+        new SystemMessage("Answer only in italian"),
+        new HumanMessage("What is the moon?"),
+      ];
+
+      const res = await model.invoke(messages);
+      expect(res).toBeDefined();
+      expect(res._getType()).toEqual("ai");
+
+      expect(consoleWarn).not.toHaveBeenCalled();
     });
 
     test("stream", async () => {

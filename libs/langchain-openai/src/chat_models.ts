@@ -346,7 +346,6 @@ function _convertMessagesToOpenAIResponsesParams(
                 name: toolCall.name,
                 arguments: JSON.stringify(toolCall.args),
                 call_id: toolCall.id!,
-                // @ts-expect-error Might come from a non-Responses API message
                 id: functionCallIds?.[toolCall.id!],
               })
             )
@@ -358,7 +357,6 @@ function _convertMessagesToOpenAIResponsesParams(
                 type: "function_call",
                 name: toolCall.function.name,
                 call_id: toolCall.id,
-                // @ts-expect-error Might come from a non-Responses API message
                 id: functionCallIds?.[toolCall.id],
                 arguments: toolCall.function.arguments,
               })
@@ -518,7 +516,9 @@ function _convertOpenAIResponsesMessageToBaseMessage(
       }
 
       additional_kwargs[_FUNCTION_CALL_IDS_MAP_KEY] ??= {};
-      additional_kwargs[_FUNCTION_CALL_IDS_MAP_KEY][item.call_id] = item.id;
+      if (item.id) {
+        additional_kwargs[_FUNCTION_CALL_IDS_MAP_KEY][item.call_id] = item.id;
+      }
     } else if (item.type === "reasoning") {
       additional_kwargs.reasoning = item;
     } else {
