@@ -68,6 +68,7 @@ const testGeminiModelNames = [
   ["gemini-2.0-flash-001"],
   ["gemini-2.0-flash-lite-001"],
   // ["gemini-2.0-flash-thinking-exp-1219"],
+  ["gemini-2.5-pro-exp-03-25"],
 ];
 
 /*
@@ -77,6 +78,7 @@ const testGeminiModelNames = [
 const testGeminiModelDelay: Record<string, number> = {
   "gemini-2.0-flash-exp": 5000,
   "gemini-2.0-flash-thinking-exp-1219": 5000,
+  "gemini-2.5-pro-exp-03-25": 5000,
 };
 
 describe.each(testGeminiModelNames)("GAuth Gemini Chat (%s)", (modelName) => {
@@ -369,7 +371,6 @@ describe.each(testGeminiModelNames)("GAuth Gemini Chat (%s)", (modelName) => {
   test("Stream token count usage_metadata", async () => {
     const model = new ChatVertexAI({
       temperature: 0,
-      maxOutputTokens: 10,
       modelName,
     });
     let res: AIMessageChunk | null = null;
@@ -417,7 +418,6 @@ describe.each(testGeminiModelNames)("GAuth Gemini Chat (%s)", (modelName) => {
   test("Invoke token count usage_metadata", async () => {
     const model = new ChatVertexAI({
       temperature: 0,
-      maxOutputTokens: 10,
       modelName,
     });
     const res = await model.invoke("Why is the sky blue? Be concise.");
@@ -435,7 +435,6 @@ describe.each(testGeminiModelNames)("GAuth Gemini Chat (%s)", (modelName) => {
 
   test("Streaming true constructor param will stream", async () => {
     const modelWithStreaming = new ChatVertexAI({
-      maxOutputTokens: 50,
       streaming: true,
       modelName,
     });

@@ -344,12 +344,11 @@ const testGeminiModelNames = [
     platformType: "gai",
     apiVersion: "v1beta",
   },
-  // Gemini 2.5 not available on Vertex yet
-  // {
-  //   modelName: "gemini-2.5-pro-exp-03-25",
-  //   platformType: "gai",
-  //   apiVersion: "v1beta",
-  // },
+  {
+    modelName: "gemini-2.5-pro-exp-03-25",
+    platformType: "gcp",
+    apiVersion: "v1",
+  },
 
   // Flash Thinking doesn't have functions or other features
   // {modelName: "gemini-2.0-flash-thinking-exp", platformType: "gai"},
