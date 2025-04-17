@@ -1,6 +1,6 @@
 {
   "name": "@langchain/tavily",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Tavily integration for LangChain.js",
   "type": "module",
   "engines": {
