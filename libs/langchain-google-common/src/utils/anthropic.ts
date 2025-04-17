@@ -618,6 +618,9 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
         return aiMessageToAnthropicMessage(base as AIMessage);
       case "tool":
         return toolMessageToAnthropicMessage(base as ToolMessage);
+      case "system":
+        //  System messages are handled in formatSystem()
+        return undefined;
       default:
         console.warn(`Unknown BaseMessage type: ${type}`, base);
         return undefined;
