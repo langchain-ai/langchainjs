@@ -42,7 +42,10 @@ import {
   BaseLLMOutputParser,
   JsonOutputParser,
 } from "@langchain/core/output_parsers";
-import { zodToGenerativeAIParameters } from "./utils/zod_to_genai_parameters.js";
+import {
+  schemaToGenerativeAIParameters,
+  removeAdditionalProperties,
+} from "./utils/zod_to_genai_parameters.js";
 import {
   convertBaseMessagesToContent,
   convertResponseContentToChatGenerationChunk,
@@ -1023,7 +1026,7 @@ export class ChatGoogleGenerativeAI
       let functionName = name ?? "extract";
       let tools: GoogleGenerativeAIFunctionDeclarationsTool[];
       if (isZodSchema(schema)) {
-        const jsonSchema = zodToGenerativeAIParameters(schema);
+        const jsonSchema = schemaToGenerativeAIParameters(schema);
         tools = [
           {
             functionDeclarations: [
@@ -1051,12 +1054,17 @@ export class ChatGoogleGenerativeAI
           schema.parameters != null
         ) {
           geminiFunctionDefinition = schema as GenerativeAIFunctionDeclaration;
+          geminiFunctionDefinition.parameters = removeAdditionalProperties(
+            schema.parameters
+          ) as GenerativeAIFunctionDeclarationSchema;
           functionName = schema.name;
         } else {
           geminiFunctionDefinition = {
             name: functionName,
             description: schema.description ?? "",
-            parameters: schema as GenerativeAIFunctionDeclarationSchema,
+            parameters: removeAdditionalProperties(
+              schema
+            ) as GenerativeAIFunctionDeclarationSchema,
           };
         }
         tools = [
@@ -1074,9 +1082,7 @@ export class ChatGoogleGenerativeAI
         tool_choice: functionName,
       });
     } else {
-      const jsonSchema = isZodSchema(schema)
-        ? zodToGenerativeAIParameters(schema)
-        : schema;
+      const jsonSchema = schemaToGenerativeAIParameters(schema);
       llm = this.bind({
         responseSchema: jsonSchema as Schema,
       });

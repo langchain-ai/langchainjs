@@ -36,7 +36,7 @@ import {
   isStructuredTool,
 } from "@langchain/core/utils/function_calling";
 import { zodToJsonSchema } from "zod-to-json-schema";
-
+import { isZodSchema } from "@langchain/core/utils/types";
 import type { SerializedFields } from "../../load/map_keys.js";
 import {
   BaseBedrockInput,
@@ -143,7 +143,9 @@ function formatTools(tools: BedrockChatCallOptions["tools"]): AnthropicTool[] {
     return tools.map((tc) => ({
       name: tc.name,
       description: tc.description,
-      input_schema: zodToJsonSchema(tc.schema),
+      input_schema: isZodSchema(tc.schema)
+        ? zodToJsonSchema(tc.schema)
+        : tc.schema,
     }));
   }
   if (tools.every(isOpenAITool)) {

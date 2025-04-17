@@ -14,7 +14,7 @@ import {
 } from "../types.js";
 import {
   jsonSchemaToGeminiParameters,
-  zodToGeminiParameters,
+  schemaToGeminiParameters,
 } from "./zod_to_gemini_parameters.js";
 import { isModelClaude, validateClaudeParams } from "./anthropic.js";
 
@@ -97,7 +97,7 @@ export function convertToGeminiTools(tools: GoogleAIToolType[]): GeminiTool[] {
           ...funcs
         );
       } else if (isLangChainTool(tool)) {
-        const jsonSchema = zodToGeminiParameters(tool.schema);
+        const jsonSchema = schemaToGeminiParameters(tool.schema);
         geminiTools[functionDeclarationsIndex].functionDeclarations!.push({
           name: tool.name,
           description: tool.description ?? `A function available to call.`,

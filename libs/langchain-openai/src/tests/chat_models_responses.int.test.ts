@@ -11,6 +11,7 @@ import {
 import { tool } from "@langchain/core/tools";
 import { z } from "zod";
 import { ChatOpenAI } from "../chat_models.js";
+import { REASONING_OUTPUT_MESSAGES } from "./data/computer-use-inputs.js";
 
 async function concatStream(stream: Promise<AsyncIterable<AIMessageChunk>>) {
   let full: AIMessageChunk | undefined;
@@ -376,4 +377,30 @@ test("Test computer call", async () => {
 
   computerCall = findComputerCall(aiMessage);
   expect(computerCall).toBeDefined();
+});
+
+test("it can handle passing back reasoning outputs alongside computer calls", async () => {
+  const model = new ChatOpenAI({
+    model: "computer-use-preview",
+    useResponsesApi: true,
+  })
+    .bindTools([
+      {
+        type: "computer_use_preview",
+        display_width: 1024,
+        display_height: 768,
+        environment: "browser",
+      },
+    ])
+    .bind({
+      truncation: "auto",
+    });
+
+  // The REASONING_OUTPUT_MESSAGES array contains a series of messages, which include
+  // one AI message that has both a reasoning output and a computer call.
+  // This test ensures we pass the reasoning output back to the model, as the OpenAI API
+  // requires it's passed back if managing the messages history manually.
+  const response = await model.invoke(REASONING_OUTPUT_MESSAGES);
+
+  expect(response).toBeDefined();
 });

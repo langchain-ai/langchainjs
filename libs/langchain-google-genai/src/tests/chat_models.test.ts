@@ -182,14 +182,16 @@ test("convertMessageContentToParts correctly handles message types", () => {
         },
       ],
     }),
-    new ToolMessage(
-      "{ weather: '28 °C', location: 'New York, NY' }",
-      "get_current_weather",
-      "123"
-    ),
+    new ToolMessage({
+      content: "{ weather: '28 °C', location: 'New York, NY' }",
+      name: "get_current_weather",
+      tool_call_id: "123",
+    }),
   ];
   const messagesAsGoogleParts = messages
-    .map((msg) => convertMessageContentToParts(msg, false))
+    .map((msg, i) =>
+      convertMessageContentToParts(msg, false, messages.slice(0, i))
+    )
     .flat();
   // console.log(messagesAsGoogleParts);
   expect(messagesAsGoogleParts).toEqual([
@@ -203,7 +205,12 @@ test("convertMessageContentToParts correctly handles message types", () => {
         },
       },
     },
-    { text: "{ weather: '28 °C', location: 'New York, NY' }" },
+    {
+      functionResponse: {
+        name: "get_current_weather",
+        response: { result: "{ weather: '28 °C', location: 'New York, NY' }" },
+      },
+    },
   ]);
 });
 
@@ -227,7 +234,11 @@ test("convertBaseMessagesToContent correctly creates properly formatted content"
         },
       ],
     }),
-    new ToolMessage(toolResponse, toolName, toolId),
+    new ToolMessage({
+      content: toolResponse,
+      name: toolName,
+      tool_call_id: toolId,
+    }),
   ];
 
   const messagesAsGoogleContent = convertBaseMessagesToContent(messages, false);
@@ -256,7 +267,14 @@ test("convertBaseMessagesToContent correctly creates properly formatted content"
     },
     {
       role: "user",
-      parts: [{ text: toolResponse }],
+      parts: [
+        {
+          functionResponse: {
+            name: toolName,
+            response: { result: toolResponse },
+          },
+        },
+      ],
     },
   ]);
 });

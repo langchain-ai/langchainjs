@@ -1,4 +1,4 @@
-import usearch from "usearch";
+import { Index, MetricKind, ScalarKind } from "usearch";
 import * as uuid from "uuid";
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { SaveableVectorStore } from "@langchain/core/vectorstores";
@@ -12,7 +12,7 @@ import { SynchronousInMemoryDocstore } from "../stores/doc/in_memory.js";
  */
 export interface USearchArgs {
   docstore?: SynchronousInMemoryDocstore;
-  index?: usearch.Index;
+  index?: Index;
   mapping?: Record<number, string>;
 }
 
@@ -22,7 +22,7 @@ export interface USearchArgs {
  * similarity searches, and saving the index.
  */
 export class USearch extends SaveableVectorStore {
-  _index?: usearch.Index;
+  _index?: Index;
 
   _mapping: Record<number, string>;
 
@@ -57,7 +57,7 @@ export class USearch extends SaveableVectorStore {
     );
   }
 
-  public get index(): usearch.Index {
+  public get index(): Index {
     if (!this._index) {
       throw new Error(
         "Vector store not initialised yet. Try calling `fromTexts` or `fromDocuments` first."
@@ -66,7 +66,7 @@ export class USearch extends SaveableVectorStore {
     return this._index;
   }
 
-  private set index(index: usearch.Index) {
+  private set index(index: Index) {
     this._index = index;
   }
 
@@ -86,14 +86,10 @@ export class USearch extends SaveableVectorStore {
     }
     const dv = vectors[0].length;
     if (!this._index) {
-      this._index = new usearch.Index({
-        metric: "l2sq",
-        connectivity: BigInt(16),
-        dimensions: BigInt(dv),
-      });
+      this._index = new Index(dv, MetricKind.L2sq, ScalarKind.F32, 16);
     }
     const d = this.index.dimensions();
-    if (BigInt(dv) !== d) {
+    if (dv !== d) {
       throw new Error(
         `Vectors must have the same length as the number of dimensions (${d})`
       );
@@ -122,7 +118,7 @@ export class USearch extends SaveableVectorStore {
    */
   async similaritySearchVectorWithScore(query: number[], k: number) {
     const d = this.index.dimensions();
-    if (BigInt(query.length) !== d) {
+    if (query.length !== d) {
       throw new Error(
         `Query vector must have the same length as the number of dimensions (${d})`
       );
@@ -135,10 +131,14 @@ export class USearch extends SaveableVectorStore {
       // eslint-disable-next-line no-param-reassign
       k = Number(total);
     }
-    const result = this.index.search(new Float32Array(query), BigInt(k));
+    const result = this.index.search(new Float32Array(query), k);
 
     const return_list: [Document, number][] = [];
-    for (let i = 0; i < result.count; i += 1) {
+    for (
+      let i = 0;
+      i < result.keys.length && i < result.distances.length;
+      i += 1
+    ) {
       const uuid = this._mapping[Number(result.keys[i])];
       return_list.push([this.docstore.search(uuid), result.distances[i]]);
     }

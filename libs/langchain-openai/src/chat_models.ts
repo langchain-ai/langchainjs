@@ -346,7 +346,6 @@ function _convertMessagesToOpenAIResponsesParams(
                 name: toolCall.name,
                 arguments: JSON.stringify(toolCall.args),
                 call_id: toolCall.id!,
-                // @ts-expect-error Might come from a non-Responses API message
                 id: functionCallIds?.[toolCall.id!],
               })
             )
@@ -358,7 +357,6 @@ function _convertMessagesToOpenAIResponsesParams(
                 type: "function_call",
                 name: toolCall.function.name,
                 call_id: toolCall.id,
-                // @ts-expect-error Might come from a non-Responses API message
                 id: functionCallIds?.[toolCall.id],
                 arguments: toolCall.function.arguments,
               })
@@ -366,13 +364,26 @@ function _convertMessagesToOpenAIResponsesParams(
           );
         }
 
-        if (lcMsg.additional_kwargs.tool_outputs != null) {
-          const toolOutputs = lcMsg.additional_kwargs
-            .tool_outputs as Array<ResponsesInputItem>;
+        const toolOutputs = (
+          lcMsg.response_metadata.output as Array<ResponsesInputItem>
+        )?.length
+          ? lcMsg.response_metadata.output
+          : lcMsg.additional_kwargs.tool_outputs;
 
-          const computerCalls = toolOutputs?.filter(
+        if (toolOutputs != null) {
+          const castToolOutputs = toolOutputs as Array<ResponsesInputItem>;
+          const reasoningCalls = castToolOutputs?.filter(
+            (item) => item.type === "reasoning"
+          );
+
+          const computerCalls = castToolOutputs?.filter(
             (item) => item.type === "computer_call"
           );
+
+          // NOTE: Reasoning outputs must be passed to the model BEFORE computer calls.
+          if (reasoningCalls.length > 0 && computerCalls.length > 0) {
+            input.push(...reasoningCalls);
+          }
 
           if (computerCalls.length > 0) input.push(...computerCalls);
         }
@@ -380,44 +391,45 @@ function _convertMessagesToOpenAIResponsesParams(
         return input;
       }
 
-      if (role === "user") {
-        return {
-          type: "message",
-          role: "user",
-          content:
-            typeof lcMsg.content === "string"
-              ? lcMsg.content
-              : lcMsg.content.flatMap((item) => {
-                  if (item.type === "text") {
-                    return { type: "input_text", text: item.text };
-                  }
+      const content =
+        typeof lcMsg.content === "string"
+          ? lcMsg.content
+          : lcMsg.content.flatMap((item) => {
+              if (item.type === "text") {
+                return { type: "input_text", text: item.text };
+              }
 
-                  if (item.type === "image_url") {
-                    const image_url =
-                      typeof item.image_url === "string"
-                        ? item.image_url
-                        : item.image_url.url;
-                    const detail =
-                      typeof item.image_url === "string"
-                        ? "auto"
-                        : item.image_url.detail;
+              if (item.type === "image_url") {
+                const image_url =
+                  typeof item.image_url === "string"
+                    ? item.image_url
+                    : item.image_url.url;
+                const detail =
+                  typeof item.image_url === "string"
+                    ? "auto"
+                    : item.image_url.detail;
 
-                    return { type: "input_image", image_url, detail };
-                  }
+                return { type: "input_image", image_url, detail };
+              }
 
-                  if (
-                    item.type === "input_text" ||
-                    item.type === "input_image" ||
-                    item.type === "input_file"
-                  ) {
-                    return item;
-                  }
+              if (
+                item.type === "input_text" ||
+                item.type === "input_image" ||
+                item.type === "input_file"
+              ) {
+                return item;
+              }
 
-                  return [];
-                }),
-        };
+              return [];
+            });
+
+      if (role === "user" || role === "system" || role === "developer") {
+        return { type: "message", role, content };
       }
 
+      console.warn(
+        `Unsupported role found when converting to OpenAI Responses API: ${role}`
+      );
       return [];
     }
   );
@@ -504,7 +516,9 @@ function _convertOpenAIResponsesMessageToBaseMessage(
       }
 
       additional_kwargs[_FUNCTION_CALL_IDS_MAP_KEY] ??= {};
-      additional_kwargs[_FUNCTION_CALL_IDS_MAP_KEY][item.call_id] = item.id;
+      if (item.id) {
+        additional_kwargs[_FUNCTION_CALL_IDS_MAP_KEY][item.call_id] = item.id;
+      }
     } else if (item.type === "reasoning") {
       additional_kwargs.reasoning = item;
     } else {
@@ -1555,13 +1569,14 @@ export class ChatOpenAI<
     this.reasoningEffort = fields?.reasoningEffort;
     this.maxTokens = fields?.maxCompletionTokens ?? fields?.maxTokens;
     this.useResponsesApi = fields?.useResponsesApi ?? this.useResponsesApi;
-
-    if (this.model === "o1") {
-      this.disableStreaming = true;
-    }
+    this.disableStreaming = fields?.disableStreaming ?? this.disableStreaming;
+    if (this.model === "o1") this.disableStreaming = true;
 
     this.streaming = fields?.streaming ?? false;
+    if (this.disableStreaming) this.streaming = false;
+
     this.streamUsage = fields?.streamUsage ?? this.streamUsage;
+    if (this.disableStreaming) this.streamUsage = false;
 
     this.clientConfig = {
       apiKey: this.apiKey,

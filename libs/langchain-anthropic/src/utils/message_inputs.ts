@@ -180,10 +180,12 @@ function _formatContent(content: MessageContent) {
 
         if ("input" in contentPartCopy) {
           // Anthropic tool use inputs should be valid objects, when applicable.
-          try {
-            contentPartCopy.input = JSON.parse(contentPartCopy.input);
-          } catch {
-            // no-op
+          if (typeof contentPartCopy.input === "string") {
+            try {
+              contentPartCopy.input = JSON.parse(contentPartCopy.input);
+            } catch {
+              contentPartCopy.input = {};
+            }
           }
         }
 
