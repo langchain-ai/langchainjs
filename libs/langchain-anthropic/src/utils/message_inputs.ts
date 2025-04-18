@@ -26,20 +26,39 @@ import {
 function _formatImage(imageUrl: string) {
   const regex = /^data:(image\/.+);base64,(.+)$/;
   const match = imageUrl.match(regex);
-  if (match === null) {
+
+  // Check if the imageUrl is a data URI
+  if (match) {
+    return {
+      type: "base64",
+      media_type: match[1] ?? "",
+      data: match[2] ?? "",
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any;
+  }
+
+  // Check if the imageUrl is a URL
+  try {
+    // Check if the imageUrl is a valid URL.
+    // If it is, then we assume it is a URL reference.
+    // We don't need to check the media type here.
+    // https://docs.anthropic.com/en/api/messages-examples#vision
+    new URL(imageUrl);
+    return {
+      type: "url",
+      url: imageUrl,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any;
+  } catch (e) {
+    // If it's not a valid URL, throw an error
     throw new Error(
       [
-        "Anthropic only supports base64-encoded images currently.",
-        "Example: data:image/png;base64,/9j/4AAQSk...",
+        "Anthropic only supports base64-encoded images or image URLs.",
+        "Example base64: data:image/png;base64,/9j/4AAQSk...",
+        "Example URL: https://example.com/image.png",
       ].join("\n\n")
     );
   }
-  return {
-    type: "base64",
-    media_type: match[1] ?? "",
-    data: match[2] ?? "",
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } as any;
 }
 
 function _ensureMessageContents(
