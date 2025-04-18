@@ -725,7 +725,7 @@ function _convertChatOpenAIToolTypeToOpenAITool(
 }
 
 function isReasoningModel(model?: string) {
-  return model?.startsWith("o1") || model?.startsWith("o3");
+  return model?.startsWith("o1") || model?.startsWith("o3") || model?.startsWith("o4");
 }
 
 // TODO: Use the base structured output options param in next breaking release.
