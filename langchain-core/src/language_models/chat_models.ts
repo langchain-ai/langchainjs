@@ -132,40 +132,6 @@ export function createChatMessageChunkEncoderStream() {
   });
 }
 
-/**
- * 
-def _format_for_tracing(messages: list[BaseMessage]) -> list[BaseMessage]:
-    """Format messages for tracing in on_chat_model_start.
-    For backward compatibility, we update image content blocks to OpenAI Chat
-    Completions format.
-    Args:
-        messages: List of messages to format.
-    Returns:
-        List of messages formatted for tracing.
-    """
-    messages_to_trace = []
-    for message in messages:
-        message_to_trace = message
-        if isinstance(message.content, list):
-            for idx, block in enumerate(message.content):
-                if (
-                    isinstance(block, dict)
-                    and block.get("type") == "image"
-                    and is_data_content_block(block)
-                ):
-                    if message_to_trace is message:
-                        message_to_trace = message.model_copy()
-                        # Also shallow-copy content
-                        message_to_trace.content = list(message_to_trace.content)
-
-                    message_to_trace.content[idx] = (  # type: ignore[index]  # mypy confused by .model_copy
-                        convert_to_openai_image_block(block)
-                    )
-        messages_to_trace.append(message_to_trace)
-
-    return messages_to_trace
- */
-
 function _formatForTracing(messages: BaseMessage[]): BaseMessage[] {
   const messagesToTrace: BaseMessage[] = [];
   for (const message of messages) {
