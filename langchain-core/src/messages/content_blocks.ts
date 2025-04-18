@@ -47,7 +47,7 @@ export function isDataContentBlock(
 }
 
 export function convertToOpenAIImageBlock(
-  content_block: object
+  content_block: DataContentBlock
 ): Record<string, unknown> {
   if (isDataContentBlock(content_block)) {
     if (content_block.source_type === "url") {
