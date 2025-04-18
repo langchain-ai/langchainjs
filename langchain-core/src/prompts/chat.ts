@@ -356,7 +356,7 @@ interface _TextTemplateParam {
   text?: string | Record<string, any>;
 }
 
-function isTextTemplateParam(param: object): param is _TextTemplateParam {
+function isTextTemplateParam(param: unknown): param is _TextTemplateParam {
   if (param === null || typeof param !== "object" || Array.isArray(param)) {
     return false;
   }
@@ -372,7 +372,7 @@ interface _ImageTemplateParam {
   image_url?: string | Record<string, any>;
 }
 
-function isImageTemplateParam(param: object): param is _ImageTemplateParam {
+function isImageTemplateParam(param: unknown): param is _ImageTemplateParam {
   if (param === null || typeof param !== "object" || Array.isArray(param)) {
     return false;
   }
