@@ -8,3 +8,4 @@ export * from "./string.js";
 export * from "./template.js";
 export * from "./image.js";
 export * from "./structured.js";
+export * from "./dict.js";
