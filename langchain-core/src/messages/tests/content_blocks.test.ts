@@ -2,6 +2,8 @@ import { describe, it, expect } from "@jest/globals";
 import {
   isDataContentBlock,
   convertToOpenAIImageBlock,
+  URLContentBlock,
+  Base64ContentBlock,
 } from "../content_blocks.js";
 
 describe("isDataContentBlock", () => {
@@ -59,7 +61,7 @@ describe("isDataContentBlock", () => {
 
 describe("convertToOpenAIImageBlock", () => {
   it("should convert a valid DataContentBlock to OpenAI image block", () => {
-    const inputBlock = {
+    const inputBlock: URLContentBlock = {
       type: "image",
       source_type: "url",
       url: "https://...",
@@ -72,7 +74,7 @@ describe("convertToOpenAIImageBlock", () => {
     const result = convertToOpenAIImageBlock(inputBlock);
     expect(result).toEqual(expected);
 
-    const inputBlock2 = {
+    const inputBlock2: Base64ContentBlock = {
       type: "image",
       source_type: "base64",
       data: "<base64 data>",
