@@ -340,6 +340,16 @@ const testGeminiModelNames = [
     apiVersion: "v1",
   },
   {
+    modelName: "gemini-2.5-flash-preview-04-17",
+    platformType: "gai",
+    apiVersion: "v1beta",
+  },
+  {
+    modelName: "gemini-2.5-flash-preview-04-17",
+    platformType: "gcp",
+    apiVersion: "v1",
+  },
+  {
     modelName: "gemini-2.5-pro-exp-03-25",
     platformType: "gai",
     apiVersion: "v1beta",
@@ -363,6 +373,7 @@ const testGeminiModelDelay: Record<string, number> = {
   "gemini-2.0-flash-exp": 10000,
   "gemini-2.0-flash-thinking-exp-1219": 10000,
   "gemini-2.5-pro-exp-03-25": 10000,
+  "gemini-2.5-flash-preview-04-17": 10000,
 };
 
 describe.each(testGeminiModelNames)(
