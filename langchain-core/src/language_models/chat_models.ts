@@ -11,6 +11,9 @@ import {
   isAIMessageChunk,
   isBaseMessage,
   isAIMessage,
+  convertToOpenAIImageBlock,
+  isURLContentBlock,
+  isBase64ContentBlock,
 } from "../messages/index.js";
 import type { BasePromptValueInterface } from "../prompt_values.js";
 import {
@@ -128,6 +131,34 @@ export function createChatMessageChunkEncoderStream() {
       );
     },
   });
+}
+
+function _formatForTracing(messages: BaseMessage[]): BaseMessage[] {
+  const messagesToTrace: BaseMessage[] = [];
+  for (const message of messages) {
+    let messageToTrace = message;
+    if (Array.isArray(message.content)) {
+      for (let idx = 0; idx < message.content.length; idx++) {
+        const block = message.content[idx];
+        if (isURLContentBlock(block) || isBase64ContentBlock(block)) {
+          if (messageToTrace === message) {
+            // Also shallow-copy content
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            messageToTrace = new (message.constructor as any)({
+              ...messageToTrace,
+              content: [
+                ...message.content.slice(0, idx),
+                convertToOpenAIImageBlock(block),
+                ...message.content.slice(idx + 1),
+              ],
+            });
+          }
+        }
+      }
+    }
+    messagesToTrace.push(messageToTrace);
+  }
+  return messagesToTrace;
 }
 
 export type LangSmithParams = {
@@ -265,7 +296,7 @@ export abstract class BaseChatModel<
       };
       const runManagers = await callbackManager_?.handleChatModelStart(
         this.toJSON(),
-        [messages],
+        [_formatForTracing(messages)],
         runnableConfig.runId,
         undefined,
         extra,
@@ -380,7 +411,7 @@ export abstract class BaseChatModel<
       };
       runManagers = await callbackManager_?.handleChatModelStart(
         this.toJSON(),
-        baseMessages,
+        baseMessages.map(_formatForTracing),
         handledOptions.runId,
         undefined,
         extra,
@@ -554,7 +585,7 @@ export abstract class BaseChatModel<
     };
     const runManagers = await callbackManager_?.handleChatModelStart(
       this.toJSON(),
-      baseMessages,
+      baseMessages.map(_formatForTracing),
       handledOptions.runId,
       undefined,
       extra,
