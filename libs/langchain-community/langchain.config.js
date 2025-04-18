@@ -128,6 +128,7 @@ export const config = {
     "vectorstores/azure_cosmosdb": "vectorstores/azure_cosmosdb",
     "vectorstores/cassandra": "vectorstores/cassandra",
     "vectorstores/chroma": "vectorstores/chroma",
+    "vectorstores/chromia": "vectorstores/chromia",
     "vectorstores/clickhouse": "vectorstores/clickhouse",
     "vectorstores/closevector/node": "vectorstores/closevector/node",
     "vectorstores/closevector/web": "vectorstores/closevector/web",
