@@ -11,8 +11,9 @@ import {
   isAIMessageChunk,
   isBaseMessage,
   isAIMessage,
-  isDataContentBlock,
   convertToOpenAIImageBlock,
+  isURLContentBlock,
+  isBase64ContentBlock,
 } from "../messages/index.js";
 import type { BasePromptValueInterface } from "../prompt_values.js";
 import {
@@ -139,12 +140,7 @@ function _formatForTracing(messages: BaseMessage[]): BaseMessage[] {
     if (Array.isArray(message.content)) {
       for (let idx = 0; idx < message.content.length; idx++) {
         const block = message.content[idx];
-        if (
-          typeof block === "object" &&
-          block !== null &&
-          block.type === "image" &&
-          isDataContentBlock(block)
-        ) {
+        if (isURLContentBlock(block) || isBase64ContentBlock(block)) {
           if (messageToTrace === message) {
             // Also shallow-copy content
             // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -1,5 +1,6 @@
 export interface BaseDataContentBlock {
   mime_type?: string;
+  metadata?: Record<string, unknown>;
 }
 
 export interface URLContentBlock extends BaseDataContentBlock {
@@ -46,8 +47,40 @@ export function isDataContentBlock(
   );
 }
 
+export function isURLContentBlock(
+  content_block: object
+): content_block is URLContentBlock {
+  return (
+    isDataContentBlock(content_block) && content_block.source_type === "url"
+  );
+}
+
+export function isBase64ContentBlock(
+  content_block: object
+): content_block is Base64ContentBlock {
+  return (
+    isDataContentBlock(content_block) && content_block.source_type === "base64"
+  );
+}
+
+export function isPlainTextContentBlock(
+  content_block: object
+): content_block is PlainTextContentBlock {
+  return (
+    isDataContentBlock(content_block) && content_block.source_type === "text"
+  );
+}
+
+export function isIDContentBlock(
+  content_block: object
+): content_block is IDContentBlock {
+  return (
+    isDataContentBlock(content_block) && content_block.source_type === "id"
+  );
+}
+
 export function convertToOpenAIImageBlock(
-  content_block: DataContentBlock
+  content_block: URLContentBlock | Base64ContentBlock
 ): Record<string, unknown> {
   if (isDataContentBlock(content_block)) {
     if (content_block.source_type === "url") {
