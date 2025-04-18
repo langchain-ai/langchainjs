@@ -357,7 +357,14 @@ interface _TextTemplateParam {
 }
 
 function isTextTemplateParam(param: object): param is _TextTemplateParam {
-  return "text" in param;
+  if (param === null || typeof param !== "object" || Array.isArray(param)) {
+    return false;
+  }
+  return (
+    Object.keys(param).length === 1 &&
+    "text" in param &&
+    typeof param.text === "string"
+  );
 }
 
 interface _ImageTemplateParam {
@@ -366,6 +373,9 @@ interface _ImageTemplateParam {
 }
 
 function isImageTemplateParam(param: object): param is _ImageTemplateParam {
+  if (param === null || typeof param !== "object" || Array.isArray(param)) {
+    return false;
+  }
   return (
     "image_url" in param &&
     (typeof param.image_url === "string" ||

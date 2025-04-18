@@ -712,15 +712,13 @@ test("Multi part chat prompt template with dicts", async () => {
             additional_options: {},
             prompt: [
               {
-                id: ["langchain_core", "prompts", "prompt", "PromptTemplate"],
+                id: ["langchain_core", "prompts", "dict", "DictPromptTemplate"],
                 kwargs: {
-                  additional_content_fields: {
+                  template: {
                     cache_control: { type: "ephemeral" },
                     text: "{text1}",
                     type: "text",
                   },
-                  input_variables: ["text1"],
-                  template: "{text1}",
                   template_format: "f-string",
                 },
                 lc: 1,
