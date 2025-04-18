@@ -11,6 +11,8 @@ import {
   isAIMessageChunk,
   isBaseMessage,
   isAIMessage,
+  isDataContentBlock,
+  convertToOpenAIImageBlock,
 } from "../messages/index.js";
 import type { BasePromptValueInterface } from "../prompt_values.js";
 import {
@@ -128,6 +130,73 @@ export function createChatMessageChunkEncoderStream() {
       );
     },
   });
+}
+
+/**
+ * 
+def _format_for_tracing(messages: list[BaseMessage]) -> list[BaseMessage]:
+    """Format messages for tracing in on_chat_model_start.
+    For backward compatibility, we update image content blocks to OpenAI Chat
+    Completions format.
+    Args:
+        messages: List of messages to format.
+    Returns:
+        List of messages formatted for tracing.
+    """
+    messages_to_trace = []
+    for message in messages:
+        message_to_trace = message
+        if isinstance(message.content, list):
+            for idx, block in enumerate(message.content):
+                if (
+                    isinstance(block, dict)
+                    and block.get("type") == "image"
+                    and is_data_content_block(block)
+                ):
+                    if message_to_trace is message:
+                        message_to_trace = message.model_copy()
+                        # Also shallow-copy content
+                        message_to_trace.content = list(message_to_trace.content)
+
+                    message_to_trace.content[idx] = (  # type: ignore[index]  # mypy confused by .model_copy
+                        convert_to_openai_image_block(block)
+                    )
+        messages_to_trace.append(message_to_trace)
+
+    return messages_to_trace
+ */
+
+function _formatForTracing(messages: BaseMessage[]): BaseMessage[] {
+  const messagesToTrace: BaseMessage[] = [];
+  for (const message of messages) {
+    let messageToTrace = message;
+    if (Array.isArray(message.content)) {
+      for (let idx = 0; idx < message.content.length; idx++) {
+        const block = message.content[idx];
+        if (
+          typeof block === "object" &&
+          block !== null &&
+          block.type === "image" &&
+          isDataContentBlock(block)
+        ) {
+          if (messageToTrace === message) {
+            // Also shallow-copy content
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            messageToTrace = new (message.constructor as any)({
+              ...messageToTrace,
+              content: [
+                ...message.content.slice(0, idx),
+                convertToOpenAIImageBlock(block),
+                ...message.content.slice(idx + 1),
+              ],
+            });
+          }
+        }
+      }
+    }
+    messagesToTrace.push(messageToTrace);
+  }
+  return messagesToTrace;
 }
 
 export type LangSmithParams = {
@@ -265,7 +334,7 @@ export abstract class BaseChatModel<
       };
       const runManagers = await callbackManager_?.handleChatModelStart(
         this.toJSON(),
-        [messages],
+        [_formatForTracing(messages)],
         runnableConfig.runId,
         undefined,
         extra,
@@ -380,7 +449,7 @@ export abstract class BaseChatModel<
       };
       runManagers = await callbackManager_?.handleChatModelStart(
         this.toJSON(),
-        baseMessages,
+        baseMessages.map(_formatForTracing),
         handledOptions.runId,
         undefined,
         extra,
@@ -554,7 +623,7 @@ export abstract class BaseChatModel<
     };
     const runManagers = await callbackManager_?.handleChatModelStart(
       this.toJSON(),
-      baseMessages,
+      baseMessages.map(_formatForTracing),
       handledOptions.runId,
       undefined,
       extra,
