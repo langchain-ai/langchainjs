@@ -1235,6 +1235,14 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
       }
     }
 
+    // Add thinking configuration if explicitly set
+    if (typeof parameters.maxReasoningTokens !== "undefined") {
+      ret.thinkingConfig = {
+        thinkingBudget: parameters.maxReasoningTokens,
+        includeThoughts: true,
+      }
+    }
+
     // Remove any undefined properties, so we don't send them
     let attribute: keyof GeminiGenerationConfig;
     for (attribute in ret) {

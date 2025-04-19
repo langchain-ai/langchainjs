@@ -930,6 +930,32 @@ describe.each(testGeminiModelNames)(
       }
       expect(finalMsg.content as string).toContain("Dodgers");
     });
+
+    test("reasoning", async () => {
+      const model = newChatGoogle({
+        maxReasoningTokens: 12000,
+      });
+      const res = await model.invoke("You roll two dice. What’s the probability they add up to 7? Give me just the answer - do not explain.");
+      console.log(res);
+      expect(res.content).toMatch(/^1\/6/);
+    });
+
+    test("reasoning default", async () => {
+      const model = newChatGoogle({
+      });
+      const res = await model.invoke("You roll two dice. What’s the probability they add up to 7? Give me just the answer - do not explain.");
+      console.log(res);
+      expect(res.content).toMatch(/^1\/6/);
+    });
+
+    test("reasoning off", async () => {
+      const model = newChatGoogle({
+        maxReasoningTokens: 0,
+      });
+      const res = await model.invoke("You roll two dice. What’s the probability they add up to 7? Give me just the answer - do not explain.");
+      console.log(res);
+      expect(res.content).toMatch(/^1\/6/);
+    });
   }
 );
 

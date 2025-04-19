@@ -125,6 +125,11 @@ export type GoogleAIResponseMimeType = "text/plain" | "application/json";
 
 export type GoogleAIModelModality = "TEXT" | "IMAGE" | "AUDIO" | string;
 
+export interface GoogleThinkingConfig {
+  thinkingBudget?: number;
+  includeThoughts?: boolean;
+}
+
 export interface GoogleAIModelParams {
   /** Model to use */
   model?: string;
@@ -139,8 +144,26 @@ export interface GoogleAIModelParams {
 
   /**
    * Maximum number of tokens to generate in the completion.
+   * This may include reasoning tokens (for backwards compatibility).
    */
   maxOutputTokens?: number;
+
+
+  /**
+   * The maximum number of the output tokens that will be used
+   * for the "thinking" or "reasoning" stages.
+   */
+  maxReasoningTokens?: number;
+
+  /**
+   * An alias for "maxReasoningTokens"
+   */
+  thinkingBudget?: number;
+
+  /**
+   * An OpenAI compatible parameter that will map to "maxReasoningTokens"
+   */
+  reasoningEffort?: "low" | "medium" | "high";
 
   /**
    * Top-p changes how the model selects tokens for output.
@@ -535,6 +558,7 @@ export interface GeminiGenerationConfig {
   responseLogprobs?: boolean;
   logprobs?: number;
   responseModalities?: GoogleAIModelModality[];
+  thinkingConfig?: GoogleThinkingConfig;
 }
 
 export interface GeminiRequest {
