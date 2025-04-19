@@ -5,7 +5,6 @@ import {
   type FunctionDeclarationsTool as GoogleGenerativeAIFunctionDeclarationsTool,
   type FunctionDeclaration as GenerativeAIFunctionDeclaration,
   POSSIBLE_ROLES,
-  FunctionResponsePart,
   FunctionCallPart,
 } from "@google/generative-ai";
 import {
@@ -121,30 +120,7 @@ export function convertMessageContentToParts(
   isMultimodalModel: boolean,
   previousMessages: BaseMessage[]
 ): Part[] {
-  if (
-    typeof message.content === "string" &&
-    message.content !== "" &&
-    !isToolMessage(message)
-  ) {
-    return [{ text: message.content }];
-  }
-
-  let functionCalls: FunctionCallPart[] = [];
-  let functionResponses: FunctionResponsePart[] = [];
-  let messageParts: Part[] = [];
-
-  if (
-    "tool_calls" in message &&
-    Array.isArray(message.tool_calls) &&
-    message.tool_calls.length > 0
-  ) {
-    functionCalls = message.tool_calls.map((tc) => ({
-      functionCall: {
-        name: tc.name,
-        args: tc.args,
-      },
-    }));
-  } else if (isToolMessage(message) && message.content) {
+  if (isToolMessage(message)) {
     const messageName =
       message.name ??
       inferToolNameFromPreviousMessages(message, previousMessages);
@@ -153,7 +129,7 @@ export function convertMessageContentToParts(
         `Google requires a tool name for each tool call response, and we could not infer a called tool name for ToolMessage "${message.id}" from your passed messages. Please populate a "name" field on that ToolMessage explicitly.`
       );
     }
-    functionResponses = [
+    return [
       {
         functionResponse: {
           name: messageName,
@@ -164,23 +140,24 @@ export function convertMessageContentToParts(
         },
       },
     ];
-  } else if (Array.isArray(message.content)) {
-    messageParts = message.content.map((c) => {
-      if (c.type === "text") {
-        return {
-          text: c.text,
-        };
-      } else if (c.type === "executableCode") {
-        return {
-          executableCode: c.executableCode,
-        };
-      } else if (c.type === "codeExecutionResult") {
-        return {
-          codeExecutionResult: c.codeExecutionResult,
-        };
-      }
+  }
 
-      if (c.type === "image_url") {
+  let functionCalls: FunctionCallPart[] = [];
+  const messageParts: Part[] = [];
+
+  if (typeof message.content === "string" && message.content) {
+    messageParts.push({ text: message.content });
+  }
+
+  if (Array.isArray(message.content)) {
+    message.content.forEach((c) => {
+      if (c.type === "text") {
+        messageParts.push({ text: c.text });
+      } else if (c.type === "executableCode") {
+        messageParts.push({ executableCode: c.executableCode });
+      } else if (c.type === "codeExecutionResult") {
+        messageParts.push({ codeExecutionResult: c.codeExecutionResult });
+      } else if (c.type === "image_url") {
         if (!isMultimodalModel) {
           throw new Error(`This model does not support images`);
         }
@@ -202,21 +179,21 @@ export function convertMessageContentToParts(
           throw new Error("Please provide image as base64 encoded data URL");
         }
 
-        return {
+        messageParts.push({
           inlineData: {
             data,
             mimeType,
           },
-        };
+        });
       } else if (c.type === "media") {
-        return messageContentMedia(c);
+        messageParts.push(messageContentMedia(c));
       } else if (c.type === "tool_use") {
-        return {
+        functionCalls.push({
           functionCall: {
             name: c.name,
             args: c.input,
           },
-        };
+        });
       } else if (
         c.type?.includes("/") &&
         // Ensure it's a single slash.
@@ -224,18 +201,36 @@ export function convertMessageContentToParts(
         "data" in c &&
         typeof c.data === "string"
       ) {
-        return {
+        messageParts.push({
           inlineData: {
             mimeType: c.type,
             data: c.data,
           },
-        };
+        });
+      } else if ("functionCall" in c) {
+        // No action needed here — function calls will be added later from message.tool_calls
+      } else {
+        if ("type" in c) {
+          throw new Error(`Unknown content type ${c.type}`);
+        } else {
+          throw new Error(`Unknown content ${JSON.stringify(c)}`);
+        }
       }
-      throw new Error(`Unknown content type ${(c as { type: string }).type}`);
     });
   }
 
-  return [...messageParts, ...functionCalls, ...functionResponses];
+  if (isAIMessage(message) && message.tool_calls?.length) {
+    functionCalls = message.tool_calls.map((tc) => {
+      return {
+        functionCall: {
+          name: tc.name,
+          args: tc.args,
+        },
+      };
+    });
+  }
+
+  return [...messageParts, ...functionCalls];
 }
 
 export function convertBaseMessagesToContent(
