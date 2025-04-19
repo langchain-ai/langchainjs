@@ -7,8 +7,6 @@ export * from "./system.js";
 export * from "./utils.js";
 export * from "./transformers.js";
 export * from "./modifier.js";
-// TODO: Use a star export when we deprecate the
-// existing "ToolCall" type in "base.js".
 export {
   type ToolMessageFieldsWithToolCallId,
   ToolMessage,
