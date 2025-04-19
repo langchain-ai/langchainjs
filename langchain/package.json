@@ -544,6 +544,7 @@
     "@langchain/textsplitters": ">=0.0.0 <0.2.0",
     "js-tiktoken": "^1.0.12",
     "js-yaml": "^4.1.0",
+    "jschardet": "^3.1.4",
     "jsonpointer": "^5.0.1",
     "langsmith": "^0.3.16",
     "openapi-types": "^12.1.3",
