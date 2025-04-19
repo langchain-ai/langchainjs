@@ -4161,6 +4161,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@chromia/asn1@npm:^1.0.1":
+  version: 1.0.1
+  resolution: "@chromia/asn1@npm:1.0.1"
+  dependencies:
+    bn.js: ^4.0.0
+    inherits: ^2.0.1
+    minimalistic-assert: ^1.0.0
+    safer-buffer: ^2.1.0
+  checksum: 6e36b7f76762a3051630d7119d6c06ee12d49455e3da810db3e2cf87f39924d645fd69a6b7796598926465ce1bef7aa6dc5dc8b59bad5475fa39a13a94a3056c
+  languageName: node
+  linkType: hard
+
 "@clickhouse/client-common@npm:0.2.5":
   version: 0.2.5
   resolution: "@clickhouse/client-common@npm:0.2.5"
@@ -7375,6 +7387,7 @@ __metadata:
     pickleparser: ^0.2.1
     playwright: ^1.32.1
     portkey-ai: ^0.1.11
+    postchain-client: ^1.21.1
     prettier: ^2.8.3
     puppeteer: ^22.0.0
     pyodide: ^0.26.2
@@ -7511,6 +7524,7 @@ __metadata:
     pickleparser: ^0.2.1
     playwright: ^1.32.1
     portkey-ai: ^0.1.11
+    postchain-client: ^1.21.1
     puppeteer: "*"
     pyodide: ">=0.24.1 <0.27.0"
     redis: "*"
@@ -7744,6 +7758,8 @@ __metadata:
     playwright:
       optional: true
     portkey-ai:
+      optional: true
+    postchain-client:
       optional: true
     puppeteer:
       optional: true
@@ -12389,6 +12405,15 @@ __metadata:
   dependencies:
     "@types/node": "*"
   checksum: 1e3c743f9bf23233ee6a51df4bbe8e9ba3d90c03e70b9ffe96e8c97174405c90a9672ec215c4d9c192ae7b7928bd0c0c83828f54d55ca55ea2642443c4cee422
+  languageName: node
+  linkType: hard
+
+"@types/bn.js@npm:^5.1.1":
+  version: 5.1.6
+  resolution: "@types/bn.js@npm:5.1.6"
+  dependencies:
+    "@types/node": "*"
+  checksum: 887411126d40e3d28aef2df8075cda2832db2b0e926bb4046039bbb026f2e3cfbcf1a3ce90bd935be0fcc039f8009e32026dfbb84a11c1f5d051cd7f8194ba23
   languageName: node
   linkType: hard
 
@@ -17636,7 +17661,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"crypto-browserify@npm:^3.12.1":
+"crypto-browserify@npm:^3.12.0, crypto-browserify@npm:^3.12.1":
   version: 3.12.1
   resolution: "crypto-browserify@npm:3.12.1"
   dependencies:
@@ -19347,7 +19372,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"elliptic@npm:^6.5.3, elliptic@npm:^6.5.5":
+"elliptic@npm:^6.5.3, elliptic@npm:^6.5.5, elliptic@npm:^6.5.7":
   version: 6.6.1
   resolution: "elliptic@npm:6.6.1"
   dependencies:
@@ -20711,6 +20736,7 @@ __metadata:
     mongodb: ^6.3.0
     pg: ^8.11.0
     pickleparser: ^0.2.1
+    postchain-client: ^1.21.1
     prettier: ^2.8.3
     prisma: ^4.11.0
     readline: ^1.3.0
@@ -27732,6 +27758,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"node-addon-api@npm:^5.0.0":
+  version: 5.1.0
+  resolution: "node-addon-api@npm:5.1.0"
+  dependencies:
+    node-gyp: latest
+  checksum: 2508bd2d2981945406243a7bd31362fc7af8b70b8b4d65f869c61731800058fb818cc2fd36c8eac714ddd0e568cc85becf5e165cebbdf7b5024d5151bbc75ea1
+  languageName: node
+  linkType: hard
+
 "node-addon-api@npm:^7.0.0":
   version: 7.0.0
   resolution: "node-addon-api@npm:7.0.0"
@@ -27858,7 +27893,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"node-gyp-build@npm:^4.3.0, node-gyp-build@npm:^4.8.0":
+"node-gyp-build@npm:^4.2.0, node-gyp-build@npm:^4.3.0, node-gyp-build@npm:^4.8.0":
   version: 4.8.4
   resolution: "node-gyp-build@npm:4.8.4"
   bin:
@@ -29609,6 +29644,24 @@ __metadata:
   version: 1.0.0
   resolution: "possible-typed-array-names@npm:1.0.0"
   checksum: b32d403ece71e042385cc7856385cecf1cd8e144fa74d2f1de40d1e16035dba097bc189715925e79b67bdd1472796ff168d3a90d296356c9c94d272d5b95f3ae
+  languageName: node
+  linkType: hard
+
+"postchain-client@npm:^1.21.1":
+  version: 1.22.0
+  resolution: "postchain-client@npm:1.22.0"
+  dependencies:
+    "@chromia/asn1": ^1.0.1
+    "@types/bn.js": ^5.1.1
+    crypto-browserify: ^3.12.0
+    lodash: ^4.17.21
+    secp256k1: ^4.0.4
+    stream-browserify: ^3.0.0
+    zod: ^3.22.4
+  peerDependencies:
+    buffer: ^5.x || ^6.x
+    events: ^3.3.0
+  checksum: e828198c32f743b14bbcc1f714874d31d03e77fdedb0fd8e5fd8d966dfea4d373a72730ce161d1155db0f64c347e8ddf43fda80ba22c381929e821d12bedb07c
   languageName: node
   linkType: hard
 
@@ -32076,7 +32129,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"safer-buffer@npm:>= 2.1.2 < 3, safer-buffer@npm:>= 2.1.2 < 3.0.0, safer-buffer@npm:~2.1.0":
+"safer-buffer@npm:>= 2.1.2 < 3, safer-buffer@npm:>= 2.1.2 < 3.0.0, safer-buffer@npm:^2.1.0, safer-buffer@npm:~2.1.0":
   version: 2.1.2
   resolution: "safer-buffer@npm:2.1.2"
   checksum: cab8f25ae6f1434abee8d80023d7e72b598cf1327164ddab31003c51215526801e40b66c5e65d658a0af1e9d6478cadcb4c745f4bd6751f97d8644786c0978b0
@@ -32178,6 +32231,18 @@ __metadata:
     ajv-formats: ^2.1.1
     ajv-keywords: ^5.1.0
   checksum: 3dbd9056727c871818eaf3cabeeb5c9e173ae2b17bbf2a9c7a2e49c220fa1a580e44df651c876aea3b4926cecf080730a39e28202cb63f2b68d99872b49cd37a
+  languageName: node
+  linkType: hard
+
+"secp256k1@npm:^4.0.4":
+  version: 4.0.4
+  resolution: "secp256k1@npm:4.0.4"
+  dependencies:
+    elliptic: ^6.5.7
+    node-addon-api: ^5.0.0
+    node-gyp: latest
+    node-gyp-build: ^4.2.0
+  checksum: 9314ddcd27506c5f8d9b21a2c131c62464762f597b82fe48ba89b50149ec95cd566d6ad2d4a922553dd0a8b4b14c1ccd83283f487229a941b6c7c02361ef5177
   languageName: node
   linkType: hard
 
