@@ -160,6 +160,7 @@
     "dotenv": "^16.0.3",
     "dpdm": "^3.12.0",
     "dria": "^0.0.3",
+    "dropbox": "^10.34.0",
     "duck-duck-scrape": "^2.2.5",
     "epub2": "^3.0.1",
     "eslint": "^8.33.0",
@@ -306,6 +307,7 @@
     "d3-dsv": "^2.0.0",
     "discord.js": "^14.14.1",
     "dria": "^0.0.3",
+    "dropbox": "^10.34.0",
     "duck-duck-scrape": "^2.2.5",
     "epub2": "^3.0.1",
     "fast-xml-parser": "*",
@@ -588,6 +590,9 @@
       "optional": true
     },
     "dria": {
+      "optional": true
+    },
+    "dropbox": {
       "optional": true
     },
     "duck-duck-scrape": {
@@ -2857,6 +2862,15 @@
       "import": "./document_loaders/web/cheerio.js",
       "require": "./document_loaders/web/cheerio.cjs"
     },
+    "./document_loaders/web/dropbox": {
+      "types": {
+        "import": "./document_loaders/web/dropbox.d.ts",
+        "require": "./document_loaders/web/dropbox.d.cts",
+        "default": "./document_loaders/web/dropbox.d.ts"
+      },
+      "import": "./document_loaders/web/dropbox.js",
+      "require": "./document_loaders/web/dropbox.cjs"
+    },
     "./document_loaders/web/html": {
       "types": {
         "import": "./document_loaders/web/html.d.ts",
@@ -4237,6 +4251,10 @@
     "document_loaders/web/cheerio.js",
     "document_loaders/web/cheerio.d.ts",
     "document_loaders/web/cheerio.d.cts",
+    "document_loaders/web/dropbox.cjs",
+    "document_loaders/web/dropbox.js",
+    "document_loaders/web/dropbox.d.ts",
+    "document_loaders/web/dropbox.d.cts",
     "document_loaders/web/html.cjs",
     "document_loaders/web/html.js",
     "document_loaders/web/html.d.ts",
