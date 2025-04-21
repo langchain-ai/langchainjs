@@ -39,13 +39,13 @@ export abstract class BasePinataTool extends StructuredTool {
 
     if (!pinataJwt && !pinataClient) {
       throw new Error(
-        "Pinata JWT or a pre-initialized PinataClient is required, but neither was provided.",
+        "Pinata JWT or a pre-initialized PinataClient is required, but neither was provided."
       );
     }
 
     if (!pinataGateway && !pinataClient) {
       throw new Error(
-        "Pinata Gateway must be provided manually if a PinataClient is not provided.",
+        "Pinata Gateway must be provided manually if a PinataClient is not provided."
       );
     }
 

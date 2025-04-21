@@ -8,25 +8,25 @@ export const PinataUploadFileSchema = z.object({
   url: z
     .string()
     .describe(
-      "A publicly accessible URL to the file you want to upload to IPFS via Pinata.",
+      "A publicly accessible URL to the file you want to upload to IPFS via Pinata."
     ),
   group: z
     .string()
     .optional()
     .describe(
-      "Optional group ID to associate the uploaded file with an existing group on Pinata.",
+      "Optional group ID to associate the uploaded file with an existing group on Pinata."
     ),
   keyvalues: z
     .record(z.string())
     .optional()
     .describe(
-      'Optional metadata as a JSON object with string keys and string values. Example: { "env": "prod", "version": "v1.0.0" }',
+      'Optional metadata as a JSON object with string keys and string values. Example: { "env": "prod", "version": "v1.0.0" }'
     ),
   name: z
     .string()
     .optional()
     .describe(
-      "Optional custom filename for the uploaded file. If omitted, Pinata will use the default name from the URL.",
+      "Optional custom filename for the uploaded file. If omitted, Pinata will use the default name from the URL."
     ),
 });
 
@@ -45,7 +45,7 @@ export const PinataQueryFileSchema = z.object({
     .string()
     .optional()
     .describe(
-      "A specific group ID where the file is stored to filter the query result.",
+      "A specific group ID where the file is stored to filter the query result."
     ),
   cid: z
     .string()
@@ -55,13 +55,13 @@ export const PinataQueryFileSchema = z.object({
     .string()
     .optional()
     .describe(
-      "A specific mime type of the file to filter the query result. Example: `image/png`.",
+      "A specific mime type of the file to filter the query result. Example: `image/png`."
     ),
   keyvalues: z
     .record(z.string())
     .optional()
     .describe(
-      'Keyvalue pairs in metadata to filter the query result. Example: { "env": "prod" }.',
+      'Keyvalue pairs in metadata to filter the query result. Example: { "env": "prod" }.'
     ),
   order: z
     .enum(["ASC", "DESC"])
@@ -72,13 +72,13 @@ export const PinataQueryFileSchema = z.object({
     .min(1, { message: "Value must be greater than or equal to 1" })
     .optional()
     .describe(
-      "A number limit of the returned query result. Should be greater than or equal to 1.",
+      "A number limit of the returned query result. Should be greater than or equal to 1."
     ),
   cidPending: z
     .boolean()
     .optional()
     .describe(
-      "If true, only files where CID is still pending will be returned.",
+      "If true, only files where CID is still pending will be returned."
     ),
 });
 
