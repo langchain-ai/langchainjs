@@ -137,7 +137,7 @@ const config = {
     ({
       announcementBar: {
         content:
-          '<strong class="announcement-bar-text">Join us at <a href="https://interrupt.langchain.com/" target="_blank" rel="noopener noreferrer"> Interrupt: The Agent AI Conference by LangChain</a> on May 13 & 14 in San Francisco!</strong>',
+          '<strong class="announcement-bar-text">Help us build the JS tools that power AI apps at companies like Replit, Uber, LinkedIn, GitLab, and more. <a id="js_job_link" href="https://jobs.ashbyhq.com/langchain/05efa205-8560-43fd-bfcc-3f7697561cfb?utm_source=https%3A%2F%2Fjs.langchain.com%2F&utm_campaign=langchainjs_docs" target="_blank">Join our team!</a></strong>',
         backgroundColor: "#d0c9fe",
       },
       prism: {
@@ -318,6 +318,7 @@ const config = {
 
   scripts: [
     baseUrl + "js/google_analytics.js",
+    baseUrl + "js/job_link.js",
     {
       src: "https://www.googletagmanager.com/gtag/js?id=G-TVSL7JBE9Y",
       async: true,

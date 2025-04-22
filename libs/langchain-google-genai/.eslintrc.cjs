@@ -61,6 +61,7 @@ module.exports = {
     "func-names": 0,
     "no-lonely-if": 0,
     "prefer-rest-params": 0,
+    "arrow-body-style": 0,
     "new-cap": ["error", { properties: false, capIsNew: false }],
   },
   overrides: [

@@ -22,7 +22,7 @@ const personJSONSchema = {
     },
   },
   required: ["name", "age"],
-};
+} as const;
 
 const personDetailsFunction = {
   name: "get_person_details",

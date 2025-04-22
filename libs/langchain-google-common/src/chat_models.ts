@@ -55,7 +55,7 @@ import type {
   GeminiAPIConfig,
   GoogleAIModelModality,
 } from "./types.js";
-import { zodToGeminiParameters } from "./utils/zod_to_gemini_parameters.js";
+import { schemaToGeminiParameters } from "./utils/zod_to_gemini_parameters.js";
 
 export class ChatConnection<AuthOptions> extends AbstractGoogleLLMConnection<
   BaseMessage[],
@@ -467,7 +467,7 @@ export abstract class ChatGoogleBase<AuthOptions>
     let outputParser: BaseLLMOutputParser<RunOutput>;
     let tools: GeminiTool[];
     if (isZodSchema(schema)) {
-      const jsonSchema = zodToGeminiParameters(schema);
+      const jsonSchema = schemaToGeminiParameters(schema);
       tools = [
         {
           functionDeclarations: [

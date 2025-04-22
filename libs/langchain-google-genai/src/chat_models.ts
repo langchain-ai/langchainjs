@@ -43,7 +43,7 @@ import {
   JsonOutputParser,
 } from "@langchain/core/output_parsers";
 import {
-  zodToGenerativeAIParameters,
+  schemaToGenerativeAIParameters,
   removeAdditionalProperties,
 } from "./utils/zod_to_genai_parameters.js";
 import {
@@ -1026,7 +1026,7 @@ export class ChatGoogleGenerativeAI
       let functionName = name ?? "extract";
       let tools: GoogleGenerativeAIFunctionDeclarationsTool[];
       if (isZodSchema(schema)) {
-        const jsonSchema = zodToGenerativeAIParameters(schema);
+        const jsonSchema = schemaToGenerativeAIParameters(schema);
         tools = [
           {
             functionDeclarations: [
@@ -1082,9 +1082,7 @@ export class ChatGoogleGenerativeAI
         tool_choice: functionName,
       });
     } else {
-      const jsonSchema = isZodSchema(schema)
-        ? zodToGenerativeAIParameters(schema)
-        : removeAdditionalProperties(schema);
+      const jsonSchema = schemaToGenerativeAIParameters(schema);
       llm = this.bind({
         responseSchema: jsonSchema as Schema,
       });
