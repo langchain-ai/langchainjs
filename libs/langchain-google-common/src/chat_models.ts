@@ -53,8 +53,9 @@ import type {
   GeminiFunctionSchema,
   GoogleAIToolType,
   GeminiAPIConfig,
+  GoogleAIModelModality,
 } from "./types.js";
-import { zodToGeminiParameters } from "./utils/zod_to_gemini_parameters.js";
+import { schemaToGeminiParameters } from "./utils/zod_to_gemini_parameters.js";
 
 export class ChatConnection<AuthOptions> extends AbstractGoogleLLMConnection<
   BaseMessage[],
@@ -93,6 +94,10 @@ export class ChatConnection<AuthOptions> extends AbstractGoogleLLMConnection<
       return false;
     } else if (this.modelName === "gemini-pro" && this.platform === "gai") {
       // on AI Studio gemini-pro is still pointing at gemini-1.0-pro-001
+      return false;
+    } else if (this.modelFamily === "gemma") {
+      // At least as of 12 Mar 2025 gemma 3 on AIS, trying to use system instructions yields an error:
+      // "Developer instruction is not enabled for models/gemma-3-27b-it"
       return false;
     }
     return true;
@@ -200,6 +205,8 @@ export abstract class ChatGoogleBase<AuthOptions>
   topLogprobs: number = 0;
 
   safetySettings: GoogleAISafetySetting[] = [];
+
+  responseModalities?: GoogleAIModelModality[];
 
   // May intentionally be undefined, meaning to compute this.
   convertSystemMessageToHumanContent: boolean | undefined;
@@ -312,7 +319,6 @@ export abstract class ChatGoogleBase<AuthOptions>
     runManager: CallbackManagerForLLMRun | undefined
   ): Promise<ChatResult> {
     const parameters = this.invocationParams(options);
-
     if (this.streaming) {
       const stream = this._streamResponseChunks(messages, options, runManager);
       let finalChunk: ChatGenerationChunk | null = null;
@@ -461,7 +467,7 @@ export abstract class ChatGoogleBase<AuthOptions>
     let outputParser: BaseLLMOutputParser<RunOutput>;
     let tools: GeminiTool[];
     if (isZodSchema(schema)) {
-      const jsonSchema = zodToGeminiParameters(schema);
+      const jsonSchema = schemaToGeminiParameters(schema);
       tools = [
         {
           functionDeclarations: [

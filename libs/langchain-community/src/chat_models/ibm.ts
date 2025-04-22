@@ -88,7 +88,7 @@ export interface WatsonxDeltaStream {
 
 export interface WatsonxCallParams
   extends Partial<
-    Omit<TextChatParams, "modelId" | "toolChoice" | "messages" | "headers">
+    Omit<TextChatParams, "modelId" | "toolChoice" | "messages">
   > {}
 
 export interface WatsonxCallDeployedParams extends DeploymentsTextChatParams {}
@@ -115,7 +115,7 @@ export interface ChatWatsonxInput
   extends BaseChatModelParams,
     WatsonxParams,
     WatsonxCallParams,
-    Neverify<DeploymentsTextChatParams> {}
+    Neverify<Omit<DeploymentsTextChatParams, "signal" | "headers">> {}
 
 export interface ChatWatsonxDeployedInput
   extends BaseChatModelParams,
@@ -268,8 +268,8 @@ function _convertDeltaToMessageChunk(
           index: number;
           type: "function";
         } => ({
-          ...toolCall,
           index,
+          ...toolCall,
           id: _convertToValidToolId(model ?? "", toolCall.id),
           type: "function",
         })
@@ -465,11 +465,6 @@ export class ChatWatsonx<
     )
       throw new Error("Maximum 1 id type can be specified per instance");
 
-    if (!("projectId" in fields || "spaceId" in fields || "idOrName" in fields))
-      throw new Error(
-        "No id specified! At least id of 1 type has to be specified"
-      );
-
     if ("model" in fields) {
       this.projectId = fields?.projectId;
       this.spaceId = fields?.spaceId;
@@ -564,13 +559,18 @@ export class ChatWatsonx<
   scopeId():
     | { idOrName: string }
     | { projectId: string; modelId: string }
-    | { spaceId: string; modelId: string } {
+    | { spaceId: string; modelId: string }
+    | { modelId: string } {
     if (this.projectId && this.model)
       return { projectId: this.projectId, modelId: this.model };
     else if (this.spaceId && this.model)
       return { spaceId: this.spaceId, modelId: this.model };
     else if (this.idOrName) return { idOrName: this.idOrName };
-    else throw new Error("No scope id provided");
+    else if (this.model)
+      return {
+        modelId: this.model,
+      };
+    else throw new Error("No id or model provided!");
   }
 
   async completionWithRetry<T>(

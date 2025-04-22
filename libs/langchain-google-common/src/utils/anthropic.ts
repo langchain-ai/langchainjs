@@ -13,6 +13,7 @@ import {
   MessageContentImageUrl,
   AIMessageFields,
   AIMessageChunkFields,
+  AIMessage,
 } from "@langchain/core/messages";
 import {
   ToolCall,
@@ -22,14 +23,19 @@ import {
 import {
   AnthropicAPIConfig,
   AnthropicContent,
+  AnthropicContentRedactedThinking,
   AnthropicContentText,
+  AnthropicContentThinking,
   AnthropicContentToolUse,
   AnthropicMessage,
   AnthropicMessageContent,
   AnthropicMessageContentImage,
+  AnthropicMessageContentRedactedThinking,
   AnthropicMessageContentText,
+  AnthropicMessageContentThinking,
   AnthropicMessageContentToolResult,
   AnthropicMessageContentToolResultContent,
+  AnthropicMessageContentToolUse,
   AnthropicRequest,
   AnthropicRequestSettings,
   AnthropicResponseData,
@@ -128,6 +134,24 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
     };
   }
 
+  function thinkingContentToMessageFields(
+    thinkingContent: AnthropicContentThinking
+  ): AIMessageFields {
+    // TODO: Once a reasoning/thinking type is defined in LangChain, use it
+    return {
+      content: [thinkingContent],
+    };
+  }
+
+  function redactedThinkingContentToMessageFields(
+    thinkingContent: AnthropicContentRedactedThinking
+  ): AIMessageFields {
+    // TODO: Once a reasoning/thinking type is defined in LangChain, use it
+    return {
+      content: [thinkingContent],
+    };
+  }
+
   function anthropicContentToMessageFields(
     anthropicContent: AnthropicContent
   ): AIMessageFields | undefined {
@@ -137,7 +161,12 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
         return textContentToMessageFields(anthropicContent);
       case "tool_use":
         return toolUseContentToMessageFields(anthropicContent);
+      case "thinking":
+        return thinkingContentToMessageFields(anthropicContent);
+      case "redacted_thinking":
+        return redactedThinkingContentToMessageFields(anthropicContent);
       default:
+        console.error(`Unknown message type: ${type}`, anthropicContent);
         return undefined;
     }
   }
@@ -451,6 +480,29 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
     };
   }
 
+  function thinkingContentToAnthropicContent(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    content: Record<string, any>
+  ): AnthropicMessageContentThinking | undefined {
+    // TODO: Once a Langchain Thinking type is defined, use it
+    return {
+      type: "thinking",
+      thinking: content.thinking,
+      signature: content.signature,
+    };
+  }
+
+  function redactedThinkingContentToAnthropicContent(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    content: Record<string, any>
+  ): AnthropicMessageContentRedactedThinking | undefined {
+    // TODO: Once a Langchain Thinking type is defined, use it
+    return {
+      type: "redacted_thinking",
+      data: content.data,
+    };
+  }
+
   function contentComplexToAnthropicContent(
     content: MessageContentComplex
   ): AnthropicMessageContent | undefined {
@@ -462,8 +514,16 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
         return imageContentToAnthropicContent(
           content as MessageContentImageUrl
         );
+      case "thinking":
+        return thinkingContentToAnthropicContent(
+          content as Record<string, unknown>
+        );
+      case "redacted_thinking":
+        return redactedThinkingContentToAnthropicContent(
+          content as Record<string, unknown>
+        );
       default:
-        console.warn(`Unexpected content type: ${type}`);
+        console.warn(`Unexpected content type: ${type}`, content);
         return undefined;
     }
   }
@@ -485,6 +545,26 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
     return ret;
   }
 
+  function toolCallToAnthropicContent(
+    toolCall: ToolCall
+  ): AnthropicMessageContentToolUse {
+    return {
+      type: "tool_use",
+      id: toolCall.id!,
+      name: toolCall.name,
+      input: toolCall.args,
+    };
+  }
+
+  function toolCallsToAnthropicContent(
+    toolCalls: ToolCall[] | undefined
+  ): AnthropicMessageContentToolUse[] {
+    if (toolCalls === undefined) {
+      return [];
+    }
+    return toolCalls.map(toolCallToAnthropicContent);
+  }
+
   function baseRoleToAnthropicMessage(
     base: BaseMessage,
     role: string
@@ -494,6 +574,18 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
       role,
       content,
     };
+  }
+
+  function aiMessageToAnthropicMessage(base: AIMessage): AnthropicMessage {
+    const ret = baseRoleToAnthropicMessage(base, "assistant");
+
+    const toolContent = toolCallsToAnthropicContent(base.tool_calls);
+    if (toolContent.length > 0) {
+      const content = ret.content as AnthropicMessageContent[];
+      ret.content = [...content, ...toolContent];
+    }
+
+    return ret;
   }
 
   function toolMessageToAnthropicMessage(base: ToolMessage): AnthropicMessage {
@@ -523,10 +615,14 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
       case "human":
         return baseRoleToAnthropicMessage(base, "user");
       case "ai":
-        return baseRoleToAnthropicMessage(base, "assistant");
+        return aiMessageToAnthropicMessage(base as AIMessage);
       case "tool":
         return toolMessageToAnthropicMessage(base as ToolMessage);
+      case "system":
+        //  System messages are handled in formatSystem()
+        return undefined;
       default:
+        console.warn(`Unknown BaseMessage type: ${type}`, base);
         return undefined;
     }
   }
@@ -695,6 +791,9 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
     }
     if (system?.length) {
       ret.system = system;
+    }
+    if (config?.thinking) {
+      ret.thinking = config?.thinking;
     }
 
     return ret;

@@ -141,24 +141,22 @@ describe("LLM unit tests", () => {
 
       testProperties(instance, testProps);
     });
-  });
 
-  describe("Negative tests", () => {
     test("Missing id", async () => {
       const testProps: ChatWatsonxInput = {
         model: "mistralai/mistral-large",
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
       };
-      expect(
-        () =>
-          new ChatWatsonx({
-            ...testProps,
-            ...fakeAuthProp,
-          })
-      ).toThrowError();
+      const intance = new ChatWatsonx({
+        ...testProps,
+        ...fakeAuthProp,
+      });
+      expect(intance).toBeDefined();
     });
+  });
 
+  describe("Negative tests", () => {
     test("Missing other props", async () => {
       // @ts-expect-error Intentionally passing not enough parameters
       const testPropsProjectId: ChatWatsonxInput = {

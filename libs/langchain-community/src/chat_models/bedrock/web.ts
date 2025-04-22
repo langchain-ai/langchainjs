@@ -36,7 +36,7 @@ import {
   isStructuredTool,
 } from "@langchain/core/utils/function_calling";
 import { zodToJsonSchema } from "zod-to-json-schema";
-
+import { isZodSchema } from "@langchain/core/utils/types";
 import type { SerializedFields } from "../../load/map_keys.js";
 import {
   BaseBedrockInput,
@@ -72,6 +72,7 @@ const ALLOWED_MODEL_PROVIDERS = [
   "cohere",
   "meta",
   "mistral",
+  "deepseek",
 ];
 
 const PRELUDE_TOTAL_LENGTH_BYTES = 4;
@@ -142,7 +143,9 @@ function formatTools(tools: BedrockChatCallOptions["tools"]): AnthropicTool[] {
     return tools.map((tc) => ({
       name: tc.name,
       description: tc.description,
-      input_schema: zodToJsonSchema(tc.schema),
+      input_schema: isZodSchema(tc.schema)
+        ? zodToJsonSchema(tc.schema)
+        : tc.schema,
     }));
   }
   if (tools.every(isOpenAITool)) {
@@ -635,6 +638,10 @@ export class BedrockChat
     this.guardrailIdentifier =
       fields?.guardrailIdentifier ?? this.guardrailIdentifier;
     this.guardrailConfig = fields?.guardrailConfig;
+    // Permit Application Inference Profile override in fetch URL (expects to be url-encoded)
+    if (fields?.applicationInferenceProfile) {
+      this.model = fields?.applicationInferenceProfile;
+    }
   }
 
   override invocationParams(options?: this["ParsedCallOptions"]) {

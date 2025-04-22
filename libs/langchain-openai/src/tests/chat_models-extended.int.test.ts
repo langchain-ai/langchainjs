@@ -111,6 +111,15 @@ test("Test ChatOpenAI streaming logprobs", async () => {
   expect(res.response_metadata.logprobs.content.length).toBeGreaterThan(0);
 });
 
+test("Test ChatOpenAI with search preview model", async () => {
+  const model = new ChatOpenAI({
+    maxTokens: 50,
+    modelName: "gpt-4o-search-preview",
+  });
+  const res = await model.invoke("Print hello world.");
+  expect(res.content).toBeDefined();
+});
+
 test("Test ChatOpenAI tool calling with ToolMessages", async () => {
   function getCurrentWeather(location: string) {
     if (location.toLowerCase().includes("tokyo")) {

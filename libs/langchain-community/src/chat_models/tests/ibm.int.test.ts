@@ -16,6 +16,7 @@ import {
   BaseChatModel,
   BaseChatModelCallOptions,
 } from "@langchain/core/language_models/chat_models";
+import { concat } from "@langchain/core/utils/stream";
 import { ChatWatsonx } from "../ibm.js";
 
 describe("Tests for chat", () => {
@@ -504,6 +505,23 @@ describe("Tests for chat", () => {
         res.usage_metadata.input_tokens + res.usage_metadata.output_tokens
       );
     });
+    test("with n>1", async () => {
+      const service = new ChatWatsonx({
+        model: "meta-llama/llama-3-1-70b-instruct",
+        version: "2024-05-31",
+        serviceUrl: process.env.WATSONX_AI_SERVICE_URL ?? "testString",
+        projectId: process.env.WATSONX_AI_PROJECT_ID ?? "testString",
+        n: 2,
+      });
+
+      const stream = await service.stream("Hello. How are you?");
+      const result = ["", ""];
+      for await (const chunk of stream) {
+        result[chunk.response_metadata.completion] += chunk.content;
+        expect(typeof chunk.content).toBe("string");
+      }
+      result.forEach((item) => expect(typeof item).toBe("string"));
+    });
   });
 
   describe("Test tool usage", () => {
@@ -565,7 +583,7 @@ describe("Tests for chat", () => {
     });
     test("Passing tool to chat model extended", async () => {
       const service = new ChatWatsonx({
-        model: "mistralai/mistral-large",
+        model: "meta-llama/llama-3-1-70b-instruct",
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL ?? "testString",
         projectId: process.env.WATSONX_AI_PROJECT_ID ?? "testString",
@@ -620,8 +638,8 @@ describe("Tests for chat", () => {
       for (const tool_call of res.tool_calls) {
         expect(tool_call.name).toBe("calculator");
         expect(typeof tool_call.args?.operation).toBe("string");
-        expect(typeof tool_call.args?.number1).toBe("number");
-        expect(typeof tool_call.args?.number2).toBe("number");
+        expect(typeof tool_call.args?.number1).toBe("string");
+        expect(typeof tool_call.args?.number2).toBe("string");
       }
     });
     test("Binding model-specific formats", async () => {
@@ -717,6 +735,57 @@ describe("Tests for chat", () => {
       expect(res.tool_calls[0].args.a).not.toBe(res.tool_calls[1].args.a);
       expect(res.tool_calls[0].args.b).not.toBe(res.tool_calls[1].args.b);
     });
+    test("Passing tool to chat model and invoking the tools with stream", async () => {
+      const service = new ChatWatsonx({
+        model: "mistralai/mistral-large",
+        version: "2024-05-31",
+        serviceUrl: process.env.WATSONX_AI_SERVICE_URL ?? "testString",
+        projectId: process.env.WATSONX_AI_PROJECT_ID ?? "testString",
+      });
+      const addTool = tool(
+        async (input) => {
+          return Number(input.a) + Number(input.b);
+        },
+        {
+          name: "add",
+          description: "Adds a and b.",
+          schema: z.object({
+            a: z.string(),
+            b: z.string(),
+          }),
+        }
+      );
+
+      const multiplyTool = tool(
+        async (input) => {
+          return Number(input.a) * Number(input.b);
+        },
+        {
+          name: "multiply",
+          description: "Multiplies a and b.",
+          schema: z.object({
+            a: z.string(),
+            b: z.string(),
+          }),
+        }
+      );
+      const tools = [addTool, multiplyTool];
+      const modelWithTools = service.bindTools(tools);
+      const messages = [
+        new HumanMessage(
+          "You are bad at calculations and need to use calculator at all times. What is 3 * 12? Also, what is 11 + 49?"
+        ),
+      ];
+      const res = await modelWithTools.stream(messages);
+      let toolMessage: AIMessageChunk | undefined;
+      for await (const chunk of res) {
+        toolMessage =
+          toolMessage !== undefined ? concat(toolMessage, chunk) : chunk;
+      }
+      expect(toolMessage).toBeInstanceOf(AIMessageChunk);
+      expect(toolMessage?.tool_calls).toBeDefined();
+      expect(toolMessage?.tool_calls?.length).toBeGreaterThan(1);
+    });
     test("React agent creation", async () => {
       const model = new ChatWatsonx({
         projectId: process.env.WATSONX_AI_PROJECT_ID,
@@ -767,7 +836,6 @@ describe("Tests for chat", () => {
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL ?? "testString",
         projectId: process.env.WATSONX_AI_PROJECT_ID ?? "testString",
-        temperature: 0.2,
       });
       const joke = z.object({
         setup: z.string().describe("The setup of the joke"),

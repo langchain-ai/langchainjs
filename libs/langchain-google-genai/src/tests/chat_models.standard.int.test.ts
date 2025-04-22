@@ -18,13 +18,14 @@ class ChatGoogleGenerativeAIStandardIntegrationTests extends ChatModelIntegratio
       );
     }
     super({
-      Cls: ChatGoogleGenerativeAI,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      Cls: ChatGoogleGenerativeAI as any,
       chatModelHasToolCalling: true,
       chatModelHasStructuredOutput: true,
       supportsParallelToolCalls: true,
       constructorArgs: {
         maxRetries: 1,
-        model: "gemini-1.5-pro",
+        model: "gemini-2.0-flash",
       },
     });
   }

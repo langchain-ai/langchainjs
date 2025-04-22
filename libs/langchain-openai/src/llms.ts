@@ -182,7 +182,7 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
     this.bestOf = fields?.bestOf ?? this.bestOf;
     this.logitBias = fields?.logitBias;
     this.stop = fields?.stopSequences ?? fields?.stop;
-    this.stopSequences = fields?.stopSequences;
+    this.stopSequences = this.stop;
     this.user = fields?.user;
 
     this.streaming = fields?.streaming ?? false;
