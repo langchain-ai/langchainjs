@@ -2,13 +2,20 @@
  * This util file contains functions for converting LangChain messages to Anthropic messages.
  */
 import {
-  BaseMessage,
-  SystemMessage,
+  type BaseMessage,
+  type SystemMessage,
   HumanMessage,
-  AIMessage,
-  ToolMessage,
-  MessageContent,
+  type AIMessage,
+  type ToolMessage,
+  type MessageContent,
   isAIMessage,
+  type StandardContentBlockConverter,
+  type StandardTextBlock,
+  type StandardImageBlock,
+  type StandardFileBlock,
+  MessageContentComplex,
+  isDataContentBlock,
+  convertToProviderContentBlock,
 } from "@langchain/core/messages";
 import { ToolCall } from "@langchain/core/messages/tool";
 import {
@@ -58,7 +65,7 @@ function _ensureMessageContents(
           previousMessage.content[0].type === "tool_result"
         ) {
           // If the previous message was a tool result, we merge this tool message into it.
-          previousMessage.content.push({
+          (previousMessage.content as MessageContentComplex[]).push({
             type: "tool_result",
             content: message.content,
             tool_use_id: (message as ToolMessage).tool_call_id,
@@ -111,6 +118,200 @@ export function _convertLangChainToolCallToAnthropic(
   };
 }
 
+const standardContentBlockConverter: StandardContentBlockConverter<{
+  text: AnthropicTextBlockParam;
+  image: AnthropicImageBlockParam;
+  file: AnthropicDocumentBlockParam;
+}> = {
+  providerName: "anthropic",
+
+  fromStandardTextBlock(block: StandardTextBlock): AnthropicTextBlockParam {
+    return {
+      type: "text",
+      text: block.text,
+      ...("citations" in (block.metadata ?? {})
+        ? { citations: block.metadata!.citations }
+        : {}),
+      ...("cache_control" in (block.metadata ?? {})
+        ? { cache_control: block.metadata!.cache_control }
+        : {}),
+    } as AnthropicTextBlockParam;
+  },
+
+  fromStandardImageBlock(block: StandardImageBlock): AnthropicImageBlockParam {
+    if (block.source_type === "url") {
+      const regex = /^data:(image\/.+);base64,(.+)$/;
+      const match = block.url.match(regex);
+      if (match === null) {
+        return {
+          type: "image",
+          source: {
+            type: "url",
+            url: block.url,
+            media_type: block.mime_type ?? "",
+          },
+          ...("cache_control" in (block.metadata ?? {})
+            ? { cache_control: block.metadata!.cache_control }
+            : {}),
+        } as AnthropicImageBlockParam;
+      } else {
+        return {
+          type: "image",
+          source: {
+            type: "base64",
+            data: match[2],
+            media_type: match[1] ?? "",
+          },
+          ...("cache_control" in (block.metadata ?? {})
+            ? { cache_control: block.metadata!.cache_control }
+            : {}),
+        } as AnthropicImageBlockParam;
+      }
+    } else {
+      if (block.source_type === "base64") {
+        return {
+          type: "image",
+          source: {
+            type: "base64",
+            data: block.data,
+            media_type: block.mime_type ?? "",
+          },
+          ...("cache_control" in (block.metadata ?? {})
+            ? { cache_control: block.metadata!.cache_control }
+            : {}),
+        } as AnthropicImageBlockParam;
+      } else {
+        throw new Error(`Unsupported image source type: ${block.source_type}`);
+      }
+    }
+  },
+
+  fromStandardFileBlock(block: StandardFileBlock): AnthropicDocumentBlockParam {
+    const mime_type = (block.mime_type ?? "").split(";")[0];
+
+    if (block.source_type === "url") {
+      if (mime_type === "application/pdf" || mime_type === "") {
+        return {
+          type: "document",
+          source: {
+            type: "url",
+            url: block.url,
+            media_type: block.mime_type ?? "",
+          },
+          ...("cache_control" in (block.metadata ?? {})
+            ? { cache_control: block.metadata!.cache_control }
+            : {}),
+          ...("citations" in (block.metadata ?? {})
+            ? { citations: block.metadata!.citations }
+            : {}),
+          ...("context" in (block.metadata ?? {})
+            ? { context: block.metadata!.context }
+            : {}),
+          ...("title" in (block.metadata ?? {})
+            ? { title: block.metadata!.title }
+            : {}),
+        } as AnthropicDocumentBlockParam;
+      }
+      throw new Error(
+        `Unsupported file mime type for file url source: ${block.mime_type}`
+      );
+    } else if (block.source_type === "text") {
+      if (mime_type === "text/plain" || mime_type === "") {
+        return {
+          type: "document",
+          source: {
+            type: "text",
+            data: block.text,
+            media_type: block.mime_type ?? "",
+          },
+          ...("cache_control" in (block.metadata ?? {})
+            ? { cache_control: block.metadata!.cache_control }
+            : {}),
+          ...("citations" in (block.metadata ?? {})
+            ? { citations: block.metadata!.citations }
+            : {}),
+          ...("context" in (block.metadata ?? {})
+            ? { context: block.metadata!.context }
+            : {}),
+          ...("title" in (block.metadata ?? {})
+            ? { title: block.metadata!.title }
+            : {}),
+        } as AnthropicDocumentBlockParam;
+      } else {
+        throw new Error(
+          `Unsupported file mime type for file text source: ${block.mime_type}`
+        );
+      }
+    } else if (block.source_type === "base64") {
+      if (mime_type === "application/pdf" || mime_type === "") {
+        return {
+          type: "document",
+          source: {
+            type: "base64",
+            data: block.data,
+            media_type: "application/pdf",
+          },
+          ...("cache_control" in (block.metadata ?? {})
+            ? { cache_control: block.metadata!.cache_control }
+            : {}),
+          ...("citations" in (block.metadata ?? {})
+            ? { citations: block.metadata!.citations }
+            : {}),
+          ...("context" in (block.metadata ?? {})
+            ? { context: block.metadata!.context }
+            : {}),
+          ...("title" in (block.metadata ?? {})
+            ? { title: block.metadata!.title }
+            : {}),
+        } as AnthropicDocumentBlockParam;
+      } else if (
+        ["image/jpeg", "image/png", "image/gif", "image/webp"].includes(
+          mime_type
+        )
+      ) {
+        return {
+          type: "document",
+          source: {
+            type: "content",
+            content: [
+              {
+                type: "image",
+                source: {
+                  type: "base64",
+                  data: block.data,
+                  media_type: mime_type as
+                    | "image/jpeg"
+                    | "image/png"
+                    | "image/gif"
+                    | "image/webp",
+                },
+              },
+            ],
+          },
+          ...("cache_control" in (block.metadata ?? {})
+            ? { cache_control: block.metadata!.cache_control }
+            : {}),
+          ...("citations" in (block.metadata ?? {})
+            ? { citations: block.metadata!.citations }
+            : {}),
+          ...("context" in (block.metadata ?? {})
+            ? { context: block.metadata!.context }
+            : {}),
+          ...("title" in (block.metadata ?? {})
+            ? { title: block.metadata!.title }
+            : {}),
+        } as AnthropicDocumentBlockParam;
+      } else {
+        throw new Error(
+          `Unsupported file mime type for file base64 source: ${block.mime_type}`
+        );
+      }
+    } else {
+      throw new Error(`Unsupported file source type: ${block.source_type}`);
+    }
+  },
+};
+
 function _formatContent(content: MessageContent) {
   const toolTypes = ["tool_use", "tool_result", "input_json_delta"];
   const textTypes = ["text", "text_delta"];
@@ -119,6 +320,13 @@ function _formatContent(content: MessageContent) {
     return content;
   } else {
     const contentBlocks = content.map((contentPart) => {
+      if (isDataContentBlock(contentPart)) {
+        return convertToProviderContentBlock(
+          contentPart,
+          standardContentBlockConverter
+        );
+      }
+
       const cacheControl =
         "cache_control" in contentPart ? contentPart.cache_control : undefined;
 
