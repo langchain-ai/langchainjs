@@ -238,7 +238,10 @@ interface ConfigurableModelFields extends BaseChatModelParams {
   queuedMethodOperations?: Record<string, any>;
 }
 
-class _ConfigurableModel<
+/**
+ * Internal class used to create chat models.
+ */
+export class _ConfigurableModel<
   RunInput extends BaseLanguageModelInput = BaseLanguageModelInput,
   CallOptions extends ConfigurableChatModelCallOptions = ConfigurableChatModelCallOptions
 > extends BaseChatModel<CallOptions, AIMessageChunk> {
