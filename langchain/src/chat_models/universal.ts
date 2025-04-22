@@ -241,7 +241,7 @@ interface ConfigurableModelFields extends BaseChatModelParams {
 /**
  * Internal class used to create chat models.
  */
-export class _ConfigurableModel<
+export class ConfigurableModel<
   RunInput extends BaseLanguageModelInput = BaseLanguageModelInput,
   CallOptions extends ConfigurableChatModelCallOptions = ConfigurableChatModelCallOptions
 > extends BaseChatModel<CallOptions, AIMessageChunk> {
@@ -337,9 +337,9 @@ export class _ConfigurableModel<
     tools: BindToolsInput[],
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     params?: Record<string, any>
-  ): _ConfigurableModel<RunInput, CallOptions> {
+  ): ConfigurableModel<RunInput, CallOptions> {
     this._queuedMethodOperations.bindTools = [tools, params];
-    return new _ConfigurableModel<RunInput, CallOptions>({
+    return new ConfigurableModel<RunInput, CallOptions>({
       defaultConfig: this._defaultConfig,
       configurableFields: this._configurableFields,
       configPrefix: this._configPrefix,
@@ -353,7 +353,7 @@ export class _ConfigurableModel<
     ...args
   ): ReturnType<BaseChatModel["withStructuredOutput"]> => {
     this._queuedMethodOperations.withStructuredOutput = [schema, ...args];
-    return new _ConfigurableModel<RunInput, CallOptions>({
+    return new ConfigurableModel<RunInput, CallOptions>({
       defaultConfig: this._defaultConfig,
       configurableFields: this._configurableFields,
       configPrefix: this._configPrefix,
@@ -414,7 +414,7 @@ export class _ConfigurableModel<
       )
     );
 
-    const newConfigurableModel = new _ConfigurableModel<RunInput, CallOptions>({
+    const newConfigurableModel = new ConfigurableModel<RunInput, CallOptions>({
       defaultConfig: { ...this._defaultConfig, ...modelParams },
       configurableFields: Array.isArray(this._configurableFields)
         ? [...this._configurableFields]
@@ -567,7 +567,7 @@ export async function initChatModel<
     configurableFields?: never;
     configPrefix?: string;
   }
-): Promise<_ConfigurableModel<RunInput, CallOptions>>;
+): Promise<ConfigurableModel<RunInput, CallOptions>>;
 
 export async function initChatModel<
   RunInput extends BaseLanguageModelInput = BaseLanguageModelInput,
@@ -580,7 +580,7 @@ export async function initChatModel<
     configurableFields?: never;
     configPrefix?: string;
   }
-): Promise<_ConfigurableModel<RunInput, CallOptions>>;
+): Promise<ConfigurableModel<RunInput, CallOptions>>;
 
 export async function initChatModel<
   RunInput extends BaseLanguageModelInput = BaseLanguageModelInput,
@@ -593,7 +593,7 @@ export async function initChatModel<
     configurableFields?: ConfigurableFields;
     configPrefix?: string;
   }
-): Promise<_ConfigurableModel<RunInput, CallOptions>>;
+): Promise<ConfigurableModel<RunInput, CallOptions>>;
 
 // ################################# FOR CONTRIBUTORS #################################
 //
@@ -635,7 +635,7 @@ export async function initChatModel<
  *   - string[]: Specified fields are configurable.
  * @param {string} [fields.configPrefix] - Prefix for configurable fields at runtime.
  * @param {Record<string, any>} [fields.params] - Additional keyword args to pass to the ChatModel constructor.
- * @returns {Promise<_ConfigurableModel<RunInput, CallOptions>>} A class which extends BaseChatModel.
+ * @returns {Promise<ConfigurableModel<RunInput, CallOptions>>} A class which extends BaseChatModel.
  * @throws {Error} If modelProvider cannot be inferred or isn't supported.
  * @throws {Error} If the model provider integration package is not installed.
  *
@@ -818,7 +818,7 @@ export async function initChatModel<
     configurableFields?: string[] | "any";
     configPrefix?: string;
   }
-): Promise<_ConfigurableModel<RunInput, CallOptions>> {
+): Promise<ConfigurableModel<RunInput, CallOptions>> {
   // eslint-disable-next-line prefer-const
   let { configurableFields, configPrefix, modelProvider, ...params } = {
     configPrefix: "",
@@ -852,7 +852,7 @@ export async function initChatModel<
   const paramsCopy: Record<string, any> = { ...params };
 
   if (configurableFieldsCopy === undefined) {
-    return new _ConfigurableModel<RunInput, CallOptions>({
+    return new ConfigurableModel<RunInput, CallOptions>({
       defaultConfig: {
         ...paramsCopy,
         model,
@@ -867,7 +867,7 @@ export async function initChatModel<
     if (modelProvider) {
       paramsCopy.modelProvider = modelProvider;
     }
-    return new _ConfigurableModel<RunInput, CallOptions>({
+    return new ConfigurableModel<RunInput, CallOptions>({
       defaultConfig: paramsCopy,
       configPrefix,
       configurableFields: configurableFieldsCopy,
