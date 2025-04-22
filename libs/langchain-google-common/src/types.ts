@@ -148,7 +148,6 @@ export interface GoogleAIModelParams {
    */
   maxOutputTokens?: number;
 
-
   /**
    * The maximum number of the output tokens that will be used
    * for the "thinking" or "reasoning" stages.

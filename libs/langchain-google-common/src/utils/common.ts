@@ -118,16 +118,23 @@ export function convertToGeminiTools(tools: GoogleAIToolType[]): GeminiTool[] {
   return geminiTools;
 }
 
-function reasoningEffortToReasoningTokens(_modelName?: string, effort?: string): number | undefined {
+function reasoningEffortToReasoningTokens(
+  _modelName?: string,
+  effort?: string
+): number | undefined {
   if (effort === undefined) {
     return undefined;
   }
-  const maxEffort = 24 * 1024;  // Max for Gemini 2.5 Flash
+  const maxEffort = 24 * 1024; // Max for Gemini 2.5 Flash
   switch (effort) {
-    case "low": return maxEffort / 3;
-    case "medium": return (2 * maxEffort) / 3;
-    case "high": return maxEffort;
-    default: return undefined;
+    case "low":
+      return maxEffort / 3;
+    case "medium":
+      return (2 * maxEffort) / 3;
+    case "high":
+      return maxEffort;
+    default:
+      return undefined;
   }
 }
 
@@ -149,14 +156,14 @@ export function copyAIModelParamsInto(
     target.maxOutputTokens;
   ret.maxReasoningTokens =
     options?.maxReasoningTokens ??
-      params?.maxReasoningTokens ??
-      target?.maxReasoningTokens ??
-      options?.thinkingBudget ??
-      params?.thinkingBudget ??
-      target?.thinkingBudget ??
-      reasoningEffortToReasoningTokens(ret.modelName, params?.reasoningEffort) ??
-      reasoningEffortToReasoningTokens(ret.modelName, target?.reasoningEffort) ??
-      reasoningEffortToReasoningTokens(ret.modelName, options?.reasoningEffort);
+    params?.maxReasoningTokens ??
+    target?.maxReasoningTokens ??
+    options?.thinkingBudget ??
+    params?.thinkingBudget ??
+    target?.thinkingBudget ??
+    reasoningEffortToReasoningTokens(ret.modelName, params?.reasoningEffort) ??
+    reasoningEffortToReasoningTokens(ret.modelName, target?.reasoningEffort) ??
+    reasoningEffortToReasoningTokens(ret.modelName, options?.reasoningEffort);
   ret.topP = options?.topP ?? params?.topP ?? target.topP;
   ret.topK = options?.topK ?? params?.topK ?? target.topK;
   ret.presencePenalty =

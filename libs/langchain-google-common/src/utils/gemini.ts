@@ -1240,7 +1240,7 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
       ret.thinkingConfig = {
         thinkingBudget: parameters.maxReasoningTokens,
         includeThoughts: true,
-      }
+      };
     }
 
     // Remove any undefined properties, so we don't send them
@@ -1447,7 +1447,9 @@ export function validateGeminiParams(params: GoogleAIModelParams): void {
     }
     if (typeof params.maxOutputTokens !== "undefined") {
       if (params.maxReasoningTokens >= params.maxOutputTokens) {
-        throw new Error("`maxOutputTokens` must be greater than `maxReasoningTokens`");
+        throw new Error(
+          "`maxOutputTokens` must be greater than `maxReasoningTokens`"
+        );
       }
     }
   }

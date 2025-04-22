@@ -531,7 +531,7 @@ describe("Mock ChatGoogle - Gemini", () => {
     expect(caught).toBeTruthy();
   });
 
-  test("1. Reasoning - default off", async() => {
+  test("1. Reasoning - default off", async () => {
     const record: Record<string, any> = {};
     const projectId = mockId();
     const authOptions: MockClientAuthInfo = {
@@ -542,7 +542,9 @@ describe("Mock ChatGoogle - Gemini", () => {
     const model = new ChatGoogle({
       authOptions,
     });
-    await model.invoke("You roll two dice. What’s the probability they add up to 7?");
+    await model.invoke(
+      "You roll two dice. What’s the probability they add up to 7?"
+    );
 
     expect(record.opts).toBeDefined();
     expect(record.opts.data).toBeDefined();
@@ -552,7 +554,7 @@ describe("Mock ChatGoogle - Gemini", () => {
     expect(data.generationConfig).not.toHaveProperty("thinkingConfig");
   });
 
-  test("1. Reasoning - standard settings", async() => {
+  test("1. Reasoning - standard settings", async () => {
     const record: Record<string, any> = {};
     const projectId = mockId();
     const authOptions: MockClientAuthInfo = {
@@ -564,7 +566,9 @@ describe("Mock ChatGoogle - Gemini", () => {
       authOptions,
       maxReasoningTokens: 100,
     });
-    await model.invoke("You roll two dice. What’s the probability they add up to 7?");
+    await model.invoke(
+      "You roll two dice. What’s the probability they add up to 7?"
+    );
 
     expect(record.opts).toBeDefined();
     expect(record.opts.data).toBeDefined();
@@ -577,8 +581,7 @@ describe("Mock ChatGoogle - Gemini", () => {
     expect(thinkingConfig.thinkingBudget).toEqual(100);
   });
 
-
-  test("1. Reasoning - google settings", async() => {
+  test("1. Reasoning - google settings", async () => {
     const record: Record<string, any> = {};
     const projectId = mockId();
     const authOptions: MockClientAuthInfo = {
@@ -590,7 +593,9 @@ describe("Mock ChatGoogle - Gemini", () => {
       authOptions,
       thinkingBudget: 120,
     });
-    await model.invoke("You roll two dice. What’s the probability they add up to 7?");
+    await model.invoke(
+      "You roll two dice. What’s the probability they add up to 7?"
+    );
 
     expect(record.opts).toBeDefined();
     expect(record.opts.data).toBeDefined();
@@ -603,7 +608,7 @@ describe("Mock ChatGoogle - Gemini", () => {
     expect(thinkingConfig.thinkingBudget).toEqual(120);
   });
 
-  test("1. Reasoning - openAI settings", async() => {
+  test("1. Reasoning - openAI settings", async () => {
     const record: Record<string, any> = {};
     const projectId = mockId();
     const authOptions: MockClientAuthInfo = {
@@ -616,7 +621,9 @@ describe("Mock ChatGoogle - Gemini", () => {
       modelName: "gemini-2.5-flex-preview-04-17",
       reasoningEffort: "low",
     });
-    await model.invoke("You roll two dice. What’s the probability they add up to 7?");
+    await model.invoke(
+      "You roll two dice. What’s the probability they add up to 7?"
+    );
 
     expect(record.opts).toBeDefined();
     expect(record.opts.data).toBeDefined();
