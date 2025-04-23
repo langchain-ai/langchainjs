@@ -2170,7 +2170,7 @@ Extraction path: {extractionPath}`,
           {
             type: "file",
             source_type: "url",
-            data: TEST_FILE_TEXT_DATA_URL,
+            url: TEST_FILE_TEXT_DATA_URL,
             mime_type: "text/plain",
             metadata: { filename: "hello.txt" },
           },
