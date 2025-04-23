@@ -121,6 +121,31 @@ export type StructuredToolCallInput<
   | ToolCall;
 
 /**
+ * An input schema type for tools that accept a single string input.
+ *
+ * This schema defines a tool that takes an optional string parameter named "input".
+ * It uses Zod's effects to transform the input and strip any extra properties.
+ *
+ * This is primarily used for creating simple string-based tools where the LLM
+ * only needs to provide a single text value as input to the tool.
+ */
+export type StringInputToolSchema = z.ZodEffects<
+  z.ZodObject<
+    { input: z.ZodOptional<z.ZodString> },
+    "strip",
+    z.ZodTypeAny,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    any,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    any
+  >,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  any,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  any
+>;
+
+/**
  * Interface that defines the shape of a LangChain structured tool.
  *
  * A structured tool is a tool that uses a schema to define the structure of the arguments that the
@@ -134,10 +159,11 @@ export interface StructuredToolInterface<
     | ZodObjectAny
     | z.ZodEffects<ZodObjectAny>
     | JSONSchema,
-  SchemaInputT = ToolInputSchemaInputType<SchemaT>
+  SchemaInputT = ToolInputSchemaInputType<SchemaT>,
+  ToolOutputT = ToolReturnType
 > extends RunnableInterface<
     StructuredToolCallInput<SchemaT, SchemaInputT>,
-    ToolReturnType
+    ToolOutputT
   > {
   lc_namespace: string[];
 
@@ -162,7 +188,7 @@ export interface StructuredToolInterface<
     configArg?: Callbacks | RunnableConfig,
     /** @deprecated */
     tags?: string[]
-  ): Promise<ToolReturnType>;
+  ): Promise<ToolOutputT>;
 
   /**
    * The name of the tool.
@@ -194,8 +220,9 @@ export interface ToolInterface<
     | ZodObjectAny
     | z.ZodEffects<ZodObjectAny>
     | JSONSchema,
-  SchemaInputT = ToolInputSchemaInputType<SchemaT>
-> extends StructuredToolInterface<SchemaT, SchemaInputT> {
+  SchemaInputT = ToolInputSchemaInputType<SchemaT>,
+  ToolOutputT = ToolReturnType
+> extends StructuredToolInterface<SchemaT, SchemaInputT, ToolOutputT> {
   /**
    * @deprecated Use .invoke() instead. Will be removed in 0.3.0.
    *
@@ -209,7 +236,7 @@ export interface ToolInterface<
     // TODO: shouldn't this be narrowed based on SchemaT?
     arg: string | undefined | SchemaInputT | ToolCall,
     callbacks?: Callbacks | RunnableConfig
-  ): Promise<ToolReturnType>;
+  ): Promise<ToolOutputT>;
 }
 
 /**
@@ -231,12 +258,13 @@ export interface BaseDynamicToolInput extends ToolParams {
 /**
  * Interface for the input parameters of the DynamicTool class.
  */
-export interface DynamicToolInput extends BaseDynamicToolInput {
+export interface DynamicToolInput<ToolOutputT = ToolReturnType>
+  extends BaseDynamicToolInput {
   func: (
     input: string,
     runManager?: CallbackManagerForToolRun,
     config?: ToolRunnableConfig
-  ) => Promise<ToolReturnType>;
+  ) => Promise<ToolOutputT>;
 }
 
 /**
@@ -247,7 +275,8 @@ export interface DynamicToolInput extends BaseDynamicToolInput {
  */
 export interface DynamicStructuredToolInput<
   SchemaT extends ToolInputSchemaBase = ZodObjectAny,
-  SchemaOutputT = ToolInputSchemaOutputType<SchemaT>
+  SchemaOutputT = ToolInputSchemaOutputType<SchemaT>,
+  ToolOutputT = ToolReturnType
 > extends BaseDynamicToolInput {
   /**
    * Tool handler function - the function that will be called when the tool is invoked.
@@ -263,7 +292,7 @@ export interface DynamicStructuredToolInput<
       : SchemaOutputT,
     runManager?: CallbackManagerForToolRun,
     config?: RunnableConfig
-  ) => Promise<ToolReturnType>;
+  ) => Promise<ToolOutputT>;
   schema: SchemaT extends ZodObjectAny ? SchemaT : SchemaT;
 }
 
