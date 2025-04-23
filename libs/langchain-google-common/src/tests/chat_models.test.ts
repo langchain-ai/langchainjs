@@ -84,6 +84,21 @@ describe("Mock ChatGoogle - Gemini", () => {
       });
       expect(model).toBeNull(); // For linting. Should never reach.
     }).toThrowError(/topK/);
+
+    expect(() => {
+      const model = new ChatGoogle({
+        maxReasoningTokens: -1000,
+      });
+      expect(model).toBeNull(); // For linting. Should never reach.
+    }).toThrowError(/maxReasoningTokens.*non-negative/);
+
+    expect(() => {
+      const model = new ChatGoogle({
+        maxOutputTokens: 500,
+        maxReasoningTokens: 1000,
+      });
+      expect(model).toBeNull(); // For linting. Should never reach.
+    }).toThrowError(/maxOutputTokens.*maxReasoningTokens/);
   });
 
   test("user agent header", async () => {
@@ -514,6 +529,111 @@ describe("Mock ChatGoogle - Gemini", () => {
       caught = true;
     }
     expect(caught).toBeTruthy();
+  });
+
+  test("1. Reasoning - default off", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-1-mock.json",
+    };
+    const model = new ChatGoogle({
+      authOptions,
+    });
+    await model.invoke(
+      "You roll two dice. What’s the probability they add up to 7?"
+    );
+
+    expect(record.opts).toBeDefined();
+    expect(record.opts.data).toBeDefined();
+    const { data } = record.opts;
+
+    expect(data).toHaveProperty("generationConfig");
+    expect(data.generationConfig).not.toHaveProperty("thinkingConfig");
+  });
+
+  test("1. Reasoning - standard settings", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-1-mock.json",
+    };
+    const model = new ChatGoogle({
+      authOptions,
+      maxReasoningTokens: 100,
+    });
+    await model.invoke(
+      "You roll two dice. What’s the probability they add up to 7?"
+    );
+
+    expect(record.opts).toBeDefined();
+    expect(record.opts.data).toBeDefined();
+    const { data } = record.opts;
+
+    expect(data).toHaveProperty("generationConfig");
+    expect(data.generationConfig).toHaveProperty("thinkingConfig");
+    const { thinkingConfig } = data.generationConfig;
+    expect(thinkingConfig).toHaveProperty("thinkingBudget");
+    expect(thinkingConfig.thinkingBudget).toEqual(100);
+  });
+
+  test("1. Reasoning - google settings", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-1-mock.json",
+    };
+    const model = new ChatGoogle({
+      authOptions,
+      thinkingBudget: 120,
+    });
+    await model.invoke(
+      "You roll two dice. What’s the probability they add up to 7?"
+    );
+
+    expect(record.opts).toBeDefined();
+    expect(record.opts.data).toBeDefined();
+    const { data } = record.opts;
+
+    expect(data).toHaveProperty("generationConfig");
+    expect(data.generationConfig).toHaveProperty("thinkingConfig");
+    const { thinkingConfig } = data.generationConfig;
+    expect(thinkingConfig).toHaveProperty("thinkingBudget");
+    expect(thinkingConfig.thinkingBudget).toEqual(120);
+  });
+
+  test("1. Reasoning - openAI settings", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-1-mock.json",
+    };
+    const model = new ChatGoogle({
+      authOptions,
+      modelName: "gemini-2.5-flex-preview-04-17",
+      reasoningEffort: "low",
+    });
+    await model.invoke(
+      "You roll two dice. What’s the probability they add up to 7?"
+    );
+
+    expect(record.opts).toBeDefined();
+    expect(record.opts.data).toBeDefined();
+    const { data } = record.opts;
+
+    expect(data).toHaveProperty("generationConfig");
+    expect(data.generationConfig).toHaveProperty("thinkingConfig");
+    const { thinkingConfig } = data.generationConfig;
+    expect(thinkingConfig).toHaveProperty("thinkingBudget");
+    expect(thinkingConfig.thinkingBudget).toEqual(8192);
   });
 
   test("2. Safety - settings", async () => {

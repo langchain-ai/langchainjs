@@ -1235,6 +1235,14 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
       }
     }
 
+    // Add thinking configuration if explicitly set
+    if (typeof parameters.maxReasoningTokens !== "undefined") {
+      ret.thinkingConfig = {
+        thinkingBudget: parameters.maxReasoningTokens,
+        includeThoughts: true,
+      };
+    }
+
     // Remove any undefined properties, so we don't send them
     let attribute: keyof GeminiGenerationConfig;
     for (attribute in ret) {
@@ -1432,6 +1440,18 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
 export function validateGeminiParams(params: GoogleAIModelParams): void {
   if (params.maxOutputTokens && params.maxOutputTokens < 0) {
     throw new Error("`maxOutputTokens` must be a positive integer");
+  }
+  if (typeof params.maxReasoningTokens !== "undefined") {
+    if (params.maxReasoningTokens < 0) {
+      throw new Error("`maxReasoningTokens` must be non-negative integer");
+    }
+    if (typeof params.maxOutputTokens !== "undefined") {
+      if (params.maxReasoningTokens >= params.maxOutputTokens) {
+        throw new Error(
+          "`maxOutputTokens` must be greater than `maxReasoningTokens`"
+        );
+      }
+    }
   }
 
   if (
