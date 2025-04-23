@@ -4,21 +4,21 @@ import {
   mergeContent,
   _mergeDicts,
   type MessageType,
-  type MessageContent,
   type BaseMessageFields,
+  type MessageContentComplex,
 } from "./base.js";
 
 import type { DataContentBlock } from "./content_blocks.js";
 
 export type HumanMessageFields = BaseMessageFields & {
-  content: DataContentBlock[] | MessageContent;
+  content: string | (MessageContentComplex | DataContentBlock)[];
 };
 
 /**
  * Represents a human message in a conversation.
  */
 export class HumanMessage extends BaseMessage {
-  declare content: DataContentBlock[] | MessageContent;
+  declare content: string | (MessageContentComplex | DataContentBlock)[];
 
   static lc_name() {
     return "HumanMessage";
@@ -42,7 +42,7 @@ export class HumanMessage extends BaseMessage {
  * other human message chunks.
  */
 export class HumanMessageChunk extends BaseMessageChunk {
-  declare content: DataContentBlock[] | MessageContent;
+  declare content: string | (MessageContentComplex | DataContentBlock)[];
 
   static lc_name() {
     return "HumanMessageChunk";
