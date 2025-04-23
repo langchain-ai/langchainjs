@@ -240,6 +240,8 @@ interface ConfigurableModelFields extends BaseChatModelParams {
 
 /**
  * Internal class used to create chat models.
+ *
+ * @internal
  */
 export class ConfigurableModel<
   RunInput extends BaseLanguageModelInput = BaseLanguageModelInput,
