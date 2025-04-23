@@ -72,7 +72,7 @@ export abstract class StructuredTool<
   ToolOutputT = ToolReturnType
 > extends BaseLangChain<
   StructuredToolCallInput<SchemaT, SchemaInputT>,
-  ToolOutputT
+  ToolOutputT | ToolMessage
 > {
   abstract name: string;
 
@@ -125,10 +125,10 @@ export abstract class StructuredTool<
    * @param config Optional configuration for the tool.
    * @returns A Promise that resolves with a string.
    */
-  async invoke(
-    input: StructuredToolCallInput<SchemaT, SchemaInputT>,
+  async invoke<TInput extends StructuredToolCallInput<SchemaT, SchemaInputT>>(
+    input: TInput,
     config?: RunnableConfig
-  ): Promise<ToolOutputT> {
+  ): Promise<TInput extends ToolCall ? ToolMessage : ToolOutputT> {
     let tool_call_id: string | undefined;
     let toolInput: Exclude<
       StructuredToolCallInput<SchemaT, SchemaInputT>,
@@ -157,7 +157,9 @@ export abstract class StructuredTool<
       >;
     }
 
-    return this.call(toolInput, enrichedConfig);
+    return this.call(toolInput, enrichedConfig) as Promise<
+      TInput extends ToolCall ? ToolMessage : ToolOutputT
+    >;
   }
 
   /**
@@ -176,7 +178,7 @@ export abstract class StructuredTool<
     configArg?: Callbacks | ToolRunnableConfig,
     /** @deprecated */
     tags?: string[]
-  ): Promise<ToolOutputT> {
+  ): Promise<ToolMessage | ToolOutputT> {
     let parsed = arg;
     if (isZodSchema(this.schema)) {
       try {
@@ -289,7 +291,7 @@ export abstract class Tool<ToolOutputT = ToolReturnType> extends StructuredTool<
   call(
     arg: string | undefined | z.input<this["schema"]> | ToolCall,
     callbacks?: Callbacks | RunnableConfig
-  ): Promise<ToolOutputT> {
+  ): Promise<ToolMessage | ToolOutputT> {
     return super.call(
       typeof arg === "string" || !arg ? { input: arg } : arg,
       callbacks
@@ -327,7 +329,7 @@ export class DynamicTool<
   async call(
     arg: string | undefined | z.input<this["schema"]> | ToolCall,
     configArg?: ToolRunnableConfig | Callbacks
-  ): Promise<ToolOutputT> {
+  ): Promise<ToolMessage | ToolOutputT> {
     const config = parseCallbackConfigArg(configArg);
     if (config.runName === undefined) {
       config.runName = this.name;
@@ -391,7 +393,7 @@ export class DynamicStructuredTool<
     configArg?: RunnableConfig | Callbacks,
     /** @deprecated */
     tags?: string[]
-  ): Promise<ToolOutputT> {
+  ): Promise<ToolMessage | ToolOutputT> {
     const config = parseCallbackConfigArg(configArg);
     if (config.runName === undefined) {
       config.runName = this.name;
@@ -629,12 +631,12 @@ export function tool<
           >;
 }
 
-function _formatToolOutput(params: {
-  content: unknown;
+function _formatToolOutput<TOutput extends ToolReturnType>(params: {
+  content: TOutput;
   name: string;
   artifact?: unknown;
   toolCallId?: string;
-}): ToolReturnType {
+}): ToolMessage | TOutput {
   const { content, artifact, toolCallId } = params;
   if (toolCallId && !isDirectToolOutput(content)) {
     if (

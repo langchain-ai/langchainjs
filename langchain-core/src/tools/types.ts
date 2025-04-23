@@ -13,7 +13,7 @@ import {
   RunnableToolLike,
   type RunnableInterface,
 } from "../runnables/base.js";
-import type { ToolCall } from "../messages/tool.js";
+import type { ToolCall, ToolMessage } from "../messages/tool.js";
 import type { MessageContent } from "../messages/base.js";
 import { isZodSchema } from "../utils/types/is_zod_schema.js";
 import { JSONSchema } from "../utils/json_schema.js";
@@ -183,12 +183,12 @@ export interface StructuredToolInterface<
    * @param tags Optional tags for the tool.
    * @returns A Promise that resolves with a string.
    */
-  call(
-    arg: StructuredToolCallInput<SchemaT, SchemaInputT>,
+  call<TArg extends StructuredToolCallInput<SchemaT, SchemaInputT>>(
+    arg: TArg,
     configArg?: Callbacks | RunnableConfig,
     /** @deprecated */
     tags?: string[]
-  ): Promise<ToolOutputT>;
+  ): Promise<TArg extends ToolCall ? ToolMessage : ToolOutputT>;
 
   /**
    * The name of the tool.
@@ -232,11 +232,11 @@ export interface ToolInterface<
    * @param callbacks Optional callbacks for the tool.
    * @returns A Promise that resolves with a string.
    */
-  call(
+  call<TArg extends string | undefined | SchemaInputT | ToolCall>(
     // TODO: shouldn't this be narrowed based on SchemaT?
-    arg: string | undefined | SchemaInputT | ToolCall,
+    arg: TArg,
     callbacks?: Callbacks | RunnableConfig
-  ): Promise<ToolOutputT>;
+  ): Promise<TArg extends ToolCall ? ToolMessage : ToolOutputT>;
 }
 
 /**
