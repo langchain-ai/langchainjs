@@ -1,4 +1,10 @@
 import { type ClientOptions, OpenAI as OpenAIClient } from "openai";
+import type {
+  ChatCompletionContentPartText,
+  ChatCompletionContentPartImage,
+  ChatCompletionContentPartInputAudio,
+  ChatCompletionContentPart,
+} from "openai/resources/chat/completions";
 
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {
@@ -19,6 +25,11 @@ import {
   type MessageContent,
   type InvalidToolCall,
   type MessageContentImageUrl,
+  StandardContentBlockConverter,
+  parseBase64DataUrl,
+  parseMimeType,
+  convertToProviderContentBlock,
+  isDataContentBlock,
 } from "@langchain/core/messages";
 import {
   ChatGenerationChunk,
@@ -148,6 +159,174 @@ export function messageToOpenAIRole(message: BaseMessage): OpenAIRoleEnum {
   }
 }
 
+const completionsApiContentBlockConverter: StandardContentBlockConverter<{
+  text: ChatCompletionContentPartText;
+  image: ChatCompletionContentPartImage;
+  audio: ChatCompletionContentPartInputAudio;
+  file: ChatCompletionContentPart.File;
+}> = {
+  providerName: "ChatOpenAI",
+
+  fromStandardTextBlock(block) {
+    return { type: "text", text: block.text };
+  },
+
+  fromStandardImageBlock(block) {
+    if (block.source_type === "url") {
+      return {
+        type: "image_url",
+        image_url: {
+          url: block.url,
+          ...(block.metadata?.detail
+            ? { detail: block.metadata.detail as "auto" | "low" | "high" }
+            : {}),
+        },
+      };
+    }
+
+    if (block.source_type === "base64") {
+      const url = `data:${block.mime_type ?? ""};base64,${block.data}`;
+      return {
+        type: "image_url",
+        image_url: {
+          url,
+          ...(block.metadata?.detail
+            ? { detail: block.metadata.detail as "auto" | "low" | "high" }
+            : {}),
+        },
+      };
+    }
+
+    throw new Error(
+      `Image content blocks with source_type ${block.source_type} are not supported for ChatOpenAI`
+    );
+  },
+
+  fromStandardAudioBlock(block) {
+    if (block.source_type === "url") {
+      const data = parseBase64DataUrl({ dataUrl: block.url });
+      if (!data) {
+        throw new Error(
+          `URL audio blocks with source_type ${block.source_type} must be formatted as a data URL for ChatOpenAI`
+        );
+      }
+
+      const rawMimeType = data.mime_type || block.mime_type || "";
+      let mimeType: { type: string; subtype: string };
+
+      try {
+        mimeType = parseMimeType(rawMimeType);
+      } catch {
+        throw new Error(
+          `Audio blocks with source_type ${block.source_type} must have mime type of audio/wav or audio/mp3`
+        );
+      }
+
+      if (
+        mimeType.type !== "audio" ||
+        (mimeType.subtype !== "wav" && mimeType.subtype !== "mp3")
+      ) {
+        throw new Error(
+          `Audio blocks with source_type ${block.source_type} must have mime type of audio/wav or audio/mp3`
+        );
+      }
+
+      return {
+        type: "input_audio",
+        input_audio: {
+          format: mimeType.subtype,
+          data: data.data,
+        },
+      };
+    }
+
+    if (block.source_type === "base64") {
+      let mimeType: { type: string; subtype: string };
+
+      try {
+        mimeType = parseMimeType(block.mime_type ?? "");
+      } catch {
+        throw new Error(
+          `Audio blocks with source_type ${block.source_type} must have mime type of audio/wav or audio/mp3`
+        );
+      }
+
+      if (
+        mimeType.type !== "audio" ||
+        (mimeType.subtype !== "wav" && mimeType.subtype !== "mp3")
+      ) {
+        throw new Error(
+          `Audio blocks with source_type ${block.source_type} must have mime type of audio/wav or audio/mp3`
+        );
+      }
+
+      return {
+        type: "input_audio",
+        input_audio: {
+          format: mimeType.subtype,
+          data: block.data,
+        },
+      };
+    }
+
+    throw new Error(
+      `Audio content blocks with source_type ${block.source_type} are not supported for ChatOpenAI`
+    );
+  },
+
+  fromStandardFileBlock(block) {
+    if (block.source_type === "url") {
+      const data = parseBase64DataUrl({ dataUrl: block.url });
+      if (!data) {
+        throw new Error(
+          `URL file blocks with source_type ${block.source_type} must be formatted as a data URL for ChatOpenAI`
+        );
+      }
+
+      return {
+        type: "file",
+        file: {
+          file_data: block.url, // formatted as base64 data URL
+          ...(block.metadata?.filename || block.metadata?.name
+            ? {
+                filename: (block.metadata?.filename ||
+                  block.metadata?.name) as string,
+              }
+            : {}),
+        },
+      };
+    }
+
+    if (block.source_type === "base64") {
+      return {
+        type: "file",
+        file: {
+          file_data: `data:${block.mime_type ?? ""};base64,${block.data}`,
+          ...(block.metadata?.filename || block.metadata?.name
+            ? {
+                filename: (block.metadata?.filename ||
+                  block.metadata?.name) as string,
+              }
+            : {}),
+        },
+      };
+    }
+
+    if (block.source_type === "id") {
+      return {
+        type: "file",
+        file: {
+          file_id: block.id,
+        },
+      };
+    }
+
+    throw new Error(
+      `File content blocks with source_type ${block.source_type} are not supported for ChatOpenAI`
+    );
+  },
+};
+
 // Used in LangSmith, export is important here
 export function _convertMessagesToOpenAIParams(
   messages: BaseMessage[],
@@ -159,10 +338,23 @@ export function _convertMessagesToOpenAIParams(
     if (role === "system" && isReasoningModel(model)) {
       role = "developer";
     }
+
+    const content =
+      typeof message.content === "string"
+        ? message.content
+        : message.content.map((m) => {
+            if (isDataContentBlock(m)) {
+              return convertToProviderContentBlock(
+                m,
+                completionsApiContentBlockConverter
+              );
+            }
+            return m;
+          });
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const completionParam: Record<string, any> = {
       role,
-      content: message.content,
+      content,
     };
     if (message.name != null) {
       completionParam.name = message.name;
@@ -395,6 +587,13 @@ function _convertMessagesToOpenAIResponsesParams(
         typeof lcMsg.content === "string"
           ? lcMsg.content
           : lcMsg.content.flatMap((item) => {
+              if (isDataContentBlock(item)) {
+                return convertToProviderContentBlock(
+                  item,
+                  completionsApiContentBlockConverter
+                );
+              }
+
               if (item.type === "text") {
                 return { type: "input_text", text: item.text };
               }
