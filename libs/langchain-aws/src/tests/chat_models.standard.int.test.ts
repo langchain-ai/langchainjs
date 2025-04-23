@@ -26,6 +26,11 @@ class ChatBedrockConverseStandardIntegrationTests extends ChatModelIntegrationTe
           accessKeyId: process.env.BEDROCK_AWS_ACCESS_KEY_ID,
         },
       },
+      supportsStandardContentType: {
+        text: true,
+        image: ["base64", "dataUrl"],
+        file: ["dataUrl", "url"],
+      },
     });
   }
 
