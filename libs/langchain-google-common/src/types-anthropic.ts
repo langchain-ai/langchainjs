@@ -16,11 +16,16 @@ export interface AnthropicMessageContentText
 export interface AnthropicMessageContentImage
   extends AnthropicMessageContentBase {
   type: "image";
-  source: {
-    type: "base64" | string;
-    media_type: string;
-    data: string;
-  };
+  source:
+    | {
+        type: "base64" | string;
+        media_type?: string;
+        data: string;
+      }
+    | {
+        type: "url" | string;
+        url: string;
+      };
 }
 
 export interface AnthropicMessageContentThinking
@@ -30,6 +35,50 @@ export interface AnthropicMessageContentThinking
   signature: string;
 }
 
+export interface AnthropicMessageContentDocument
+  extends AnthropicMessageContentBase {
+  type: "document";
+  source:
+    | {
+        type: "base64" | "text" | string;
+        media_type?: "application/pdf" | "text/plain" | string;
+        data: string;
+      }
+    | {
+        type: "url" | string;
+        url: string;
+      }
+    | {
+        type: "content" | string;
+        content: {
+          type: "image" | string;
+          source:
+            | {
+                type: "base64" | string;
+                data: string;
+                media_type?:
+                  | "image/jpeg"
+                  | "image/png"
+                  | "image/gif"
+                  | "image/webp"
+                  | string;
+              }
+            | {
+                type: "url" | string;
+                url: string;
+              }
+            | {
+                type: "text" | string;
+                text: string;
+              };
+        }[];
+      };
+  citations?: {
+    enabled?: boolean;
+  };
+  context?: string;
+  title?: string;
+}
 export interface AnthropicMessageContentRedactedThinking
   extends AnthropicMessageContentBase {
   type: "redacted_thinking";
