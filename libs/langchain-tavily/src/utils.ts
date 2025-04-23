@@ -320,7 +320,10 @@ abstract class BaseTavilyAPIWrapper {
    * @returns The parameters with snake_case keys
    */
   protected convertCamelToSnakeCase(
-    params: Record<keyof TavilySearchParams | keyof TavilyExtractParams, any>
+    params: Record<
+      keyof TavilySearchParams | keyof TavilyExtractParams,
+      unknown
+    >
   ) {
     return Object.entries(params).reduce((result, [key, value]) => {
       if (value === undefined) {
@@ -329,7 +332,7 @@ abstract class BaseTavilyAPIWrapper {
       // Use explicit mapping for known keys, fall back to generic default key
       const newKey = this.camelToSnakeMap[key] || key;
       return { ...result, [newKey]: value };
-    }, {} as Record<keyof TavilySearchParams | keyof TavilyExtractParams, any>);
+    }, {} as Record<keyof TavilySearchParams | keyof TavilyExtractParams, unknown>);
   }
 }
 

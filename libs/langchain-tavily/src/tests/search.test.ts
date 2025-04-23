@@ -344,14 +344,15 @@ describe("TavilySearch", () => {
   test("converts camelCase parameters to snake_case in API requests", async () => {
     // Mock fetch to intercept the actual API request
     const originalFetch = global.fetch;
-    const mockFetch = jest.fn().mockImplementation(() => 
+    const mockFetch = jest.fn().mockImplementation(() =>
       Promise.resolve({
         ok: true,
-        json: () => Promise.resolve({ 
-          query: "test query",
-          results: [],
-          response_time: 0.5
-        }),
+        json: () =>
+          Promise.resolve({
+            query: "test query",
+            results: [],
+            response_time: 0.5,
+          }),
       } as Response)
     );
     global.fetch = mockFetch as typeof fetch;
@@ -359,7 +360,7 @@ describe("TavilySearch", () => {
     try {
       // Create a wrapper with test API key
       const wrapper = new TavilySearchAPIWrapper({ tavilyApiKey: "test-key" });
-      
+
       // Call with camelCase parameters
       await wrapper.rawResults({
         query: "test query",
@@ -367,22 +368,22 @@ describe("TavilySearch", () => {
         searchDepth: "advanced",
         includeImages: true,
         timeRange: "week",
-      } as any);
+      });
 
       // Verify the parameters in the request body
       expect(mockFetch).toHaveBeenCalled();
-      
+
       // Get the body from the mock call
       const requestInit = mockFetch.mock.calls[0][1] as RequestInit;
       const bodyString = requestInit.body as string;
       const requestBody = JSON.parse(bodyString);
-      
+
       // Check that parameters were converted to snake_case
       expect(requestBody.include_domains).toEqual(["example.com"]);
       expect(requestBody.search_depth).toBe("advanced");
       expect(requestBody.include_images).toBe(true);
       expect(requestBody.time_range).toBe("week");
-      
+
       // Original camelCase keys should not be present
       expect(requestBody.includeDomains).toBeUndefined();
       expect(requestBody.searchDepth).toBeUndefined();
