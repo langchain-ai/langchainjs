@@ -6,14 +6,19 @@ import {
   BaseMessage,
   BaseMessageChunk,
   BaseMessageFields,
+  DataContentBlock,
   MessageContent,
   MessageContentComplex,
   MessageContentImageUrl,
   MessageContentText,
+  type StandardContentBlockConverter,
   SystemMessage,
   ToolMessage,
   UsageMetadata,
   isAIMessage,
+  parseBase64DataUrl,
+  isDataContentBlock,
+  convertToProviderContentBlock,
 } from "@langchain/core/messages";
 import {
   ChatGeneration,
@@ -299,6 +304,123 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     );
   }
 
+  const standardContentBlockConverter: StandardContentBlockConverter<{
+    text: GeminiPartText;
+    image: GeminiPartFileData | GeminiPartInlineData;
+    audio: GeminiPartFileData | GeminiPartInlineData;
+    file: GeminiPartFileData | GeminiPartInlineData | GeminiPartText;
+  }> = {
+    providerName: "Google Gemini",
+
+    fromStandardTextBlock(block) {
+      return {
+        text: block.text,
+      };
+    },
+
+    fromStandardImageBlock(block): GeminiPartFileData | GeminiPartInlineData {
+      if (block.source_type === "url") {
+        const data = parseBase64DataUrl({ dataUrl: block.url });
+        if (data) {
+          return {
+            inlineData: {
+              mimeType: data.mime_type,
+              data: data.data,
+            },
+          };
+        } else {
+          return {
+            fileData: {
+              mimeType: block.mime_type ?? "",
+              fileUri: block.url,
+            },
+          };
+        }
+      }
+
+      if (block.source_type === "base64") {
+        return {
+          inlineData: {
+            mimeType: block.mime_type ?? "",
+            data: block.data,
+          },
+        };
+      }
+
+      throw new Error(`Unsupported source type: ${block.source_type}`);
+    },
+
+    fromStandardAudioBlock(block): GeminiPartFileData | GeminiPartInlineData {
+      if (block.source_type === "url") {
+        const data = parseBase64DataUrl({ dataUrl: block.url });
+        if (data) {
+          return {
+            inlineData: {
+              mimeType: data.mime_type,
+              data: data.data,
+            },
+          };
+        } else {
+          return {
+            fileData: {
+              mimeType: block.mime_type ?? "",
+              fileUri: block.url,
+            },
+          };
+        }
+      }
+
+      if (block.source_type === "base64") {
+        return {
+          inlineData: {
+            mimeType: block.mime_type ?? "",
+            data: block.data,
+          },
+        };
+      }
+
+      throw new Error(`Unsupported source type: ${block.source_type}`);
+    },
+
+    fromStandardFileBlock(
+      block
+    ): GeminiPartFileData | GeminiPartInlineData | GeminiPartText {
+      if (block.source_type === "text") {
+        return {
+          text: block.text,
+        };
+      }
+      if (block.source_type === "url") {
+        const data = parseBase64DataUrl({ dataUrl: block.url });
+        if (data) {
+          return {
+            inlineData: {
+              mimeType: data.mime_type,
+              data: data.data,
+            },
+          };
+        } else {
+          return {
+            fileData: {
+              mimeType: block.mime_type ?? "",
+              fileUri: block.url,
+            },
+          };
+        }
+      }
+
+      if (block.source_type === "base64") {
+        return {
+          inlineData: {
+            mimeType: block.mime_type ?? "",
+            data: block.data,
+          },
+        };
+      }
+      throw new Error(`Unsupported source type: ${block.source_type}`);
+    },
+  };
+
   async function messageContentComplexToPart(
     content: MessageContentComplex
   ): Promise<GeminiPart | null> {
@@ -329,7 +451,11 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
   async function messageContentComplexToParts(
     content: MessageContentComplex[]
   ): Promise<(GeminiPart | null)[]> {
-    const contents = content.map(messageContentComplexToPart);
+    const contents = content.map((m) =>
+      isDataContentBlock(m)
+        ? convertToProviderContentBlock(m, standardContentBlockConverter)
+        : messageContentComplexToPart(m)
+    );
     return Promise.all(contents);
   }
 
@@ -442,8 +568,13 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     const contentStr =
       typeof message.content === "string"
         ? message.content
-        : message.content.reduce(
-            (acc: string, content: MessageContentComplex) => {
+        : (
+            message.content as (MessageContentComplex | DataContentBlock)[]
+          ).reduce(
+            (
+              acc: string,
+              content: MessageContentComplex | DataContentBlock
+            ) => {
               if (content.type === "text") {
                 return acc + content.text;
               } else {
