@@ -2,6 +2,7 @@ import type {
   MessageContentComplex,
   BaseMessage,
   UsageMetadata,
+  DataContentBlock,
 } from "@langchain/core/messages";
 import {
   AIMessage,
@@ -23,6 +24,7 @@ import type {
   ReasoningContentBlock,
   ReasoningContentBlockDelta,
   ReasoningTextBlock,
+  ToolResultContentBlock,
 } from "@aws-sdk/client-bedrock-runtime";
 import type { DocumentType as __DocumentType } from "@smithy/types";
 import { isLangChainTool } from "@langchain/core/utils/function_calling";
@@ -223,11 +225,11 @@ export function convertToConverseMessages(messages: BaseMessage[]): {
               {
                 toolResult: {
                   toolUseId: castMsg.tool_call_id,
-                  content: [
-                    {
-                      json: castMsg.content,
-                    },
-                  ],
+                  content: (
+                    msg.content as (MessageContentComplex | DataContentBlock)[]
+                  ).map(
+                    (c) => ({ json: c } as ToolResultContentBlock.JsonMember)
+                  ),
                 },
               },
             ],
