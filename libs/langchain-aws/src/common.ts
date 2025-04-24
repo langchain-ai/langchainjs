@@ -91,7 +91,7 @@ const standardContentBlockConverter: StandardContentBlockConverter<{
     } else if (block.source_type === "base64") {
       if (block.mime_type) {
         const parsedMimeType = parseMimeType(block.mime_type);
-        format = parsedMimeType.type as ImageFormat;
+        format = parsedMimeType.subtype as ImageFormat;
       }
 
       if (format && !["gif", "jpeg", "png", "webp"].includes(format)) {
@@ -134,14 +134,15 @@ const standardContentBlockConverter: StandardContentBlockConverter<{
       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
         "xlsx",
     };
+    const name: string | undefined =
+      (block.metadata?.name ??
+      block.metadata?.filename ??
+      block.metadata?.title) as string | undefined;
 
     if (block.source_type === "text") {
       return {
         document: {
-          name:
-            typeof block.metadata?.name === "string"
-              ? block.metadata.name
-              : undefined,
+          name,
           format: "txt",
           source: {
             bytes: new TextEncoder().encode(block.text),
@@ -157,16 +158,15 @@ const standardContentBlockConverter: StandardContentBlockConverter<{
       });
 
       if (parsedData) {
-        const parsedMimeType = parseMimeType(parsedData.mime_type);
+        const parsedMimeType = parseMimeType(parsedData.mime_type ?? block.mime_type);
+        const mimeType = `${parsedMimeType.type}/${parsedMimeType.subtype}`;
+        const format = mimeTypeToDocumentFormat[
+          mimeType as keyof typeof mimeTypeToDocumentFormat
+        ] as DocumentFormat | undefined;
         return {
           document: {
-            name:
-              typeof block.metadata?.name === "string"
-                ? block.metadata.name
-                : undefined,
-            format: mimeTypeToDocumentFormat[
-              parsedMimeType.type as keyof typeof mimeTypeToDocumentFormat
-            ] as DocumentFormat | undefined,
+            name,
+            format,
             source: {
               bytes: parsedData.data,
             },
@@ -183,17 +183,20 @@ const standardContentBlockConverter: StandardContentBlockConverter<{
 
       if (block.mime_type) {
         const parsedMimeType = parseMimeType(block.mime_type);
+        const mimeType = `${parsedMimeType.type}/${parsedMimeType.subtype}`;
         format = mimeTypeToDocumentFormat[
-          parsedMimeType.type as keyof typeof mimeTypeToDocumentFormat
+          mimeType as keyof typeof mimeTypeToDocumentFormat
         ] as DocumentFormat | undefined;
+        if (format === undefined) {
+          throw new Error(
+            `Unsupported file mime type: "${block.mime_type}" ChatBedrockConverse only supports ${Object.keys(mimeTypeToDocumentFormat).join(", ")} formats.`
+          );
+        }
       }
 
       return {
         document: {
-          name:
-            typeof block.metadata?.name === "string"
-              ? block.metadata.name
-              : undefined,
+          name,
           format,
           source: {
             bytes: Uint8Array.from(atob(block.data), (c) => c.charCodeAt(0)),
