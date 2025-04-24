@@ -6947,7 +6947,7 @@ __metadata:
     zod: ^3.22.4
     zod-to-json-schema: ^3.22.5
   peerDependencies:
-    "@langchain/core": ">=0.3.41 <0.4.0"
+    "@langchain/core": ">=0.3.48 <0.4.0"
   languageName: unknown
   linkType: soft
 
