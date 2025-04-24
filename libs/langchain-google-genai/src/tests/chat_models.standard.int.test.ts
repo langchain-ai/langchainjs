@@ -33,7 +33,6 @@ class ChatGoogleGenerativeAIStandardIntegrationTests extends ChatModelIntegratio
         image: ["base64", "url", "dataUrl"],
         file: ["base64", "url", "dataUrl"],
       },
-
     });
   }
 

@@ -134,8 +134,7 @@ const standardContentBlockConverter: StandardContentBlockConverter<{
       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
         "xlsx",
     };
-    const name: string | undefined =
-      (block.metadata?.name ??
+    const name: string | undefined = (block.metadata?.name ??
       block.metadata?.filename ??
       block.metadata?.title) as string | undefined;
 
@@ -158,7 +157,9 @@ const standardContentBlockConverter: StandardContentBlockConverter<{
       });
 
       if (parsedData) {
-        const parsedMimeType = parseMimeType(parsedData.mime_type ?? block.mime_type);
+        const parsedMimeType = parseMimeType(
+          parsedData.mime_type ?? block.mime_type
+        );
         const mimeType = `${parsedMimeType.type}/${parsedMimeType.subtype}`;
         const format = mimeTypeToDocumentFormat[
           mimeType as keyof typeof mimeTypeToDocumentFormat
@@ -189,7 +190,11 @@ const standardContentBlockConverter: StandardContentBlockConverter<{
         ] as DocumentFormat | undefined;
         if (format === undefined) {
           throw new Error(
-            `Unsupported file mime type: "${block.mime_type}" ChatBedrockConverse only supports ${Object.keys(mimeTypeToDocumentFormat).join(", ")} formats.`
+            `Unsupported file mime type: "${
+              block.mime_type
+            }" ChatBedrockConverse only supports ${Object.keys(
+              mimeTypeToDocumentFormat
+            ).join(", ")} formats.`
           );
         }
       }

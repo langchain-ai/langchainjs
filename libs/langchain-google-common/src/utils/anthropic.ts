@@ -560,52 +560,59 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
       };
     },
 
-  fromStandardImageBlock(block: StandardImageBlock): AnthropicMessageContentImage {
-    if (block.source_type === "url") {
-      const data = parseBase64DataUrl({ dataUrl: block.url, asTypedArray: false });
-      if (data) {
-        return {
-          type: "image",
-          source: {
-            type: "base64",
-            data: data.data,
-            media_type: data.mime_type,
-          },
-          ...("cache_control" in (block.metadata ?? {})
-            ? { cache_control: block.metadata!.cache_control }
-            : {}),
-        } as AnthropicMessageContentImage;
+    fromStandardImageBlock(
+      block: StandardImageBlock
+    ): AnthropicMessageContentImage {
+      if (block.source_type === "url") {
+        const data = parseBase64DataUrl({
+          dataUrl: block.url,
+          asTypedArray: false,
+        });
+        if (data) {
+          return {
+            type: "image",
+            source: {
+              type: "base64",
+              data: data.data,
+              media_type: data.mime_type,
+            },
+            ...("cache_control" in (block.metadata ?? {})
+              ? { cache_control: block.metadata!.cache_control }
+              : {}),
+          } as AnthropicMessageContentImage;
+        } else {
+          return {
+            type: "image",
+            source: {
+              type: "url",
+              url: block.url,
+              media_type: block.mime_type ?? "",
+            },
+            ...("cache_control" in (block.metadata ?? {})
+              ? { cache_control: block.metadata!.cache_control }
+              : {}),
+          } as AnthropicMessageContentImage;
+        }
       } else {
-        return {
-          type: "image",
-          source: {
-            type: "url",
-            url: block.url,
-            media_type: block.mime_type ?? "",
-          },
-          ...("cache_control" in (block.metadata ?? {})
-            ? { cache_control: block.metadata!.cache_control }
-            : {}),
-        } as AnthropicMessageContentImage;
+        if (block.source_type === "base64") {
+          return {
+            type: "image",
+            source: {
+              type: "base64",
+              data: block.data,
+              media_type: block.mime_type ?? "",
+            },
+            ...("cache_control" in (block.metadata ?? {})
+              ? { cache_control: block.metadata!.cache_control }
+              : {}),
+          } as AnthropicMessageContentImage;
+        } else {
+          throw new Error(
+            `Unsupported image source type: ${block.source_type}`
+          );
+        }
       }
-    } else {
-      if (block.source_type === "base64") {
-        return {
-          type: "image",
-          source: {
-            type: "base64",
-            data: block.data,
-            media_type: block.mime_type ?? "",
-          },
-          ...("cache_control" in (block.metadata ?? {})
-            ? { cache_control: block.metadata!.cache_control }
-            : {}),
-        } as AnthropicMessageContentImage;
-      } else {
-        throw new Error(`Unsupported image source type: ${block.source_type}`);
-      }
-    }
-  },
+    },
 
     fromStandardFileBlock(
       block: StandardFileBlock

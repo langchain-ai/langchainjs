@@ -141,7 +141,10 @@ const standardContentBlockConverter: StandardContentBlockConverter<{
 
   fromStandardImageBlock(block: StandardImageBlock): AnthropicImageBlockParam {
     if (block.source_type === "url") {
-      const data = parseBase64DataUrl({ dataUrl: block.url, asTypedArray: false });
+      const data = parseBase64DataUrl({
+        dataUrl: block.url,
+        asTypedArray: false,
+      });
       if (data) {
         return {
           type: "image",

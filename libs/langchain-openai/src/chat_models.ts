@@ -302,7 +302,9 @@ const completionsApiContentBlockConverter: StandardContentBlockConverter<{
         type: "file",
         file: {
           file_data: `data:${block.mime_type ?? ""};base64,${block.data}`,
-          ...(block.metadata?.filename || block.metadata?.name || block.metadata?.title
+          ...(block.metadata?.filename ||
+          block.metadata?.name ||
+          block.metadata?.title
             ? {
                 filename: (block.metadata?.filename ||
                   block.metadata?.name ||
