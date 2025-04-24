@@ -1,4 +1,5 @@
 import type { OpenAI as OpenAIClient } from "openai";
+import type { RequestOptions as _OpenAICoreRequestOptions } from "openai/core";
 import type {
   ResponseFormatText,
   ResponseFormatJSONObject,
@@ -100,23 +101,8 @@ export declare interface OpenAIBaseInput {
   apiKey?: string;
 }
 
-// TODO use OpenAI.Core.RequestOptions when SDK is updated to make it available
-export type OpenAICoreRequestOptions<
-  Req extends object = Record<string, unknown>
-> = {
-  path?: string;
-  query?: Req | undefined;
-  body?: Req | undefined;
-  headers?: Record<string, string | null | undefined> | undefined;
-
-  maxRetries?: number;
-  stream?: boolean | undefined;
-  timeout?: number;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  httpAgent?: any;
-  signal?: AbortSignal | undefined | null;
-  idempotencyKey?: string;
-};
+export type OpenAICoreRequestOptions<Req = Record<string, unknown>> =
+  _OpenAICoreRequestOptions<Req>;
 
 export interface OpenAICallOptions extends BaseLanguageModelCallOptions {
   /**

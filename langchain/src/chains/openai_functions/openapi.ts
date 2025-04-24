@@ -210,7 +210,7 @@ export function convertOpenAPISchemaToJSONSchema(
  * @param spec The OpenAPI specification to convert.
  * @returns An object containing the OpenAI functions derived from the OpenAPI specification and a default execution method.
  */
-function convertOpenAPISpecToOpenAIFunctions(spec: OpenAPISpec): {
+export function convertOpenAPISpecToOpenAIFunctions(spec: OpenAPISpec): {
   openAIFunctions: OpenAIClient.Chat.ChatCompletionCreateParams.Function[];
   defaultExecutionMethod?: OpenAPIExecutionMethod;
 } {
