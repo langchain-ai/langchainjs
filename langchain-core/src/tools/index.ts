@@ -40,7 +40,7 @@ import type {
   DynamicStructuredToolInput,
   ZodObjectAny,
   StringInputToolSchema,
-  ToolCallInput,
+  ToolInterface,
 } from "./types.js";
 import { type JSONSchema, validatesOnlyStrings } from "../utils/json_schema.js";
 
@@ -72,14 +72,17 @@ export { ToolInputParsingException };
  * Base class for Tools that accept input of any shape defined by a Zod schema.
  */
 export abstract class StructuredTool<
-  SchemaT extends ToolInputSchemaBase = ZodObjectAny,
-  SchemaOutputT = ToolInputSchemaOutputType<SchemaT>,
-  SchemaInputT = ToolInputSchemaInputType<SchemaT>,
-  ToolOutputT = ToolReturnType
-> extends BaseLangChain<
-  StructuredToolCallInput<SchemaT, SchemaInputT>,
-  ToolOutputT | ToolMessage
-> {
+    SchemaT extends ToolInputSchemaBase = ToolInputSchemaBase,
+    SchemaOutputT = ToolInputSchemaOutputType<SchemaT>,
+    SchemaInputT = ToolInputSchemaInputType<SchemaT>,
+    ToolOutputT = ToolReturnType
+  >
+  extends BaseLangChain<
+    StructuredToolCallInput<SchemaT, SchemaInputT>,
+    ToolOutputT | ToolMessage
+  >
+  implements StructuredToolInterface<SchemaT, SchemaInputT, ToolOutputT>
+{
   abstract name: string;
 
   abstract description: string;
@@ -135,7 +138,6 @@ export abstract class StructuredTool<
     input: TInput,
     config?: RunnableConfig
   ): Promise<TInput extends ToolCall ? ToolMessage : ToolOutputT> {
-    let tool_call_id: string | undefined;
     let toolInput: Exclude<
       StructuredToolCallInput<SchemaT, SchemaInputT>,
       ToolCall
@@ -143,7 +145,6 @@ export abstract class StructuredTool<
 
     let enrichedConfig: ToolRunnableConfig = ensureConfig(config);
     if (_isToolCall(input)) {
-      tool_call_id = input.id;
       toolInput = input.args as Exclude<
         StructuredToolCallInput<SchemaT, SchemaInputT>,
         ToolCall
@@ -151,10 +152,6 @@ export abstract class StructuredTool<
       enrichedConfig = {
         ...enrichedConfig,
         toolCall: input,
-        configurable: {
-          ...enrichedConfig.configurable,
-          tool_call_id,
-        },
       };
     } else {
       toolInput = input as Exclude<
@@ -179,25 +176,45 @@ export abstract class StructuredTool<
    * @param tags Optional tags for the tool.
    * @returns A Promise that resolves with a string.
    */
-  async call<TArg extends StructuredToolCallInput<SchemaT, SchemaInputT>>(
+  async call<
+    TArg extends StructuredToolCallInput<SchemaT, SchemaInputT>,
+    TConfig extends Callbacks | ToolRunnableConfig | undefined
+  >(
     arg: TArg,
-    configArg?: Callbacks | ToolRunnableConfig,
+    configArg?: TConfig,
     /** @deprecated */
     tags?: string[]
-  ): Promise<TArg extends ToolCall ? ToolMessage : ToolOutputT> {
-    let parsed: StructuredToolCallInput<SchemaT, SchemaInputT> = arg;
+  ): Promise<
+    TArg extends ToolCall
+      ? ToolMessage
+      : TConfig extends ToolRunnableConfig & { toolCall: ToolCall }
+      ? ToolMessage
+      : ToolOutputT
+  > {
+    // Determine the actual input that needs parsing/validation.
+    // If arg is a ToolCall, use its args; otherwise, use arg directly.
+    const inputForValidation = _isToolCall(arg) ? arg.args : arg;
+
+    let parsed: SchemaOutputT; // This will hold the successfully parsed input of the expected output type.
     if (isZodSchema(this.schema)) {
       try {
-        parsed = await (this.schema as z.ZodSchema).parseAsync(arg);
+        // Validate the inputForValidation - TS needs help here as it can't exclude ToolCall based on the check
+        parsed = await (this.schema as z.ZodSchema).parseAsync(
+          inputForValidation as Exclude<TArg, ToolCall>
+        );
       } catch (e) {
         let message = `Received tool input did not match expected schema`;
         if (this.verboseParsingErrors) {
           message = `${message}\nDetails: ${(e as Error).message}`;
         }
+        // Pass the original raw input arg to the exception
         throw new ToolInputParsingException(message, JSON.stringify(arg));
       }
     } else {
-      const result = validate(arg, this.schema as ValidationSchema);
+      const result = validate(
+        inputForValidation,
+        this.schema as ValidationSchema
+      );
       if (!result.valid) {
         let message = `Received tool input did not match expected schema`;
         if (this.verboseParsingErrors) {
@@ -205,8 +222,12 @@ export abstract class StructuredTool<
             .map((e) => `${e.keywordLocation}: ${e.error}`)
             .join("\n")}`;
         }
+        // Pass the original raw input arg to the exception
         throw new ToolInputParsingException(message, JSON.stringify(arg));
       }
+      // Assign the validated input to parsed
+      // We cast here because validate() doesn't narrow the type sufficiently for TS, but we know it's valid.
+      parsed = inputForValidation as SchemaOutputT;
     }
 
     const config = parseCallbackConfigArg(configArg);
@@ -221,7 +242,8 @@ export abstract class StructuredTool<
     );
     const runManager = await callbackManager_?.handleToolStart(
       this.toJSON(),
-      typeof parsed === "string" ? parsed : JSON.stringify(parsed),
+      // Log the original raw input arg
+      typeof arg === "string" ? arg : JSON.stringify(arg),
       config.runId,
       undefined,
       undefined,
@@ -231,7 +253,8 @@ export abstract class StructuredTool<
     delete config.runId;
     let result;
     try {
-      result = await this._call(parsed as SchemaOutputT, runManager, config);
+      // Pass the correctly typed parsed input to _call
+      result = await this._call(parsed, runManager, config);
     } catch (e) {
       await runManager?.handleToolError(e);
       throw e;
@@ -253,9 +276,20 @@ export abstract class StructuredTool<
     }
 
     let toolCallId: string | undefined;
-    if (config && "configurable" in config) {
-      toolCallId = (config.configurable as Record<string, string | undefined>)
-        .tool_call_id;
+    // Extract toolCallId ONLY if the original arg was a ToolCall
+    if (_isToolCall(arg)) {
+      toolCallId = arg.id;
+    }
+    // Or if it was provided in the config's toolCall property
+    if (
+      !toolCallId &&
+      config &&
+      typeof config === "object" &&
+      "toolCall" in config &&
+      config.toolCall
+    ) {
+      // We've checked toolCall exists, assert the type to access .id
+      toolCallId = (config as ToolRunnableConfig).toolCall?.id;
     }
     const formattedOutput = _formatToolOutput({
       content,
@@ -264,19 +298,32 @@ export abstract class StructuredTool<
       name: this.name,
     });
     await runManager?.handleToolEnd(formattedOutput);
-    return formattedOutput;
+    // Assert based on the new conditional type
+    return formattedOutput as TArg extends ToolCall
+      ? ToolMessage
+      : TConfig extends ToolRunnableConfig & { toolCall: ToolCall }
+      ? ToolMessage
+      : ToolOutputT;
   }
 }
 
 /**
  * Base class for Tools that accept input as a string.
  */
-export abstract class Tool<ToolOutputT = ToolReturnType> extends StructuredTool<
-  StringInputToolSchema,
-  ToolInputSchemaOutputType<StringInputToolSchema>,
-  ToolInputSchemaInputType<StringInputToolSchema>,
-  ToolOutputT
-> {
+export abstract class Tool<ToolOutputT = ToolReturnType>
+  extends StructuredTool<
+    StringInputToolSchema,
+    ToolInputSchemaOutputType<StringInputToolSchema>,
+    ToolInputSchemaInputType<StringInputToolSchema>,
+    ToolOutputT
+  >
+  implements
+    ToolInterface<
+      StringInputToolSchema,
+      ToolInputSchemaInputType<StringInputToolSchema>,
+      ToolOutputT
+    >
+{
   schema = z
     .object({ input: z.string().optional() })
     .transform((obj) => obj.input);
@@ -294,13 +341,33 @@ export abstract class Tool<ToolOutputT = ToolReturnType> extends StructuredTool<
    * @param callbacks Optional callbacks for the tool.
    * @returns A Promise that resolves with a string.
    */
-  call<TArg extends ToolCallInput>(
-    arg?: TArg,
-    callbacks?: Callbacks | RunnableConfig
-  ): Promise<TArg extends ToolCall ? ToolMessage : ToolOutputT> {
-    const input: ToolCallInput =
-      typeof arg === "string" || !arg ? { input: arg } : arg;
-    return super.call<TArg>(input, callbacks);
+  // Match the base class signature including the generics and conditional return type
+  call<
+    TArg extends string | undefined | z.input<this["schema"]> | ToolCall,
+    TConfig extends Callbacks | ToolRunnableConfig | undefined
+  >(
+    arg: TArg,
+    callbacks?: TConfig
+  ): Promise<
+    TArg extends ToolCall
+      ? ToolMessage
+      : TConfig extends ToolRunnableConfig & { toolCall: ToolCall }
+      ? ToolMessage
+      : ToolOutputT
+  > {
+    // Prepare the input for the base class call method.
+    // If arg is string or undefined, wrap it; otherwise, pass ToolCall or { input: ... } directly.
+    const structuredArg =
+      typeof arg === "string" || arg == null ? { input: arg } : arg;
+
+    // Ensure TConfig is passed to super.call
+    return super.call(structuredArg, callbacks) as Promise<
+      TArg extends ToolCall
+        ? ToolMessage
+        : TConfig extends ToolRunnableConfig & { toolCall: ToolCall }
+        ? ToolMessage
+        : ToolOutputT
+    >;
   }
 }
 
@@ -331,20 +398,31 @@ export class DynamicTool<
   /**
    * @deprecated Use .invoke() instead. Will be removed in 0.3.0.
    */
-  call<TArg extends ToolCallInput>(
-    arg?: TArg,
-    configArg?: Callbacks | ToolRunnableConfig
-  ): Promise<TArg extends ToolCall ? ToolMessage : ToolOutputT> {
+  async call<
+    TArg extends string | undefined | z.input<this["schema"]> | ToolCall,
+    TConfig extends ToolRunnableConfig | Callbacks | undefined
+  >(
+    arg: TArg,
+    configArg?: TConfig
+  ): Promise<
+    TArg extends ToolCall
+      ? ToolMessage
+      : TConfig extends ToolRunnableConfig & { toolCall: ToolCall }
+      ? ToolMessage
+      : ToolOutputT
+  > {
     const config = parseCallbackConfigArg(configArg);
     if (config.runName === undefined) {
       config.runName = this.name;
     }
-    return super.call(arg, config);
+    // Call the Tool class's call method, passing generics through
+    // Cast config to TConfig to satisfy the super.call signature
+    return super.call<TArg, TConfig>(arg, config as TConfig);
   }
 
   /** @ignore */
   async _call(
-    input: string,
+    input: string, // DynamicTool's _call specifically expects a string after schema transformation
     runManager?: CallbackManagerForToolRun,
     parentConfig?: ToolRunnableConfig
   ): Promise<ToolOutputT> {
@@ -362,7 +440,7 @@ export class DynamicTool<
  * input if JSON schema is passed.
  */
 export class DynamicStructuredTool<
-  SchemaT extends ToolInputSchemaBase = ZodObjectAny,
+  SchemaT extends ToolInputSchemaBase = ToolInputSchemaBase,
   SchemaOutputT = ToolInputSchemaOutputType<SchemaT>,
   SchemaInputT = ToolInputSchemaInputType<SchemaT>,
   ToolOutputT = ToolReturnType
@@ -393,18 +471,30 @@ export class DynamicStructuredTool<
   /**
    * @deprecated Use .invoke() instead. Will be removed in 0.3.0.
    */
-  async call<TArg extends StructuredToolCallInput<SchemaT, SchemaInputT>>(
+  // Match the base class signature
+  async call<
+    TArg extends StructuredToolCallInput<SchemaT, SchemaInputT>,
+    TConfig extends RunnableConfig | Callbacks | undefined
+  >(
     arg: TArg,
-    configArg?: RunnableConfig | Callbacks,
+    configArg?: TConfig,
     /** @deprecated */
     tags?: string[]
-  ): Promise<TArg extends ToolCall ? ToolMessage : ToolOutputT> {
+  ): Promise<
+    TArg extends ToolCall
+      ? ToolMessage
+      : TConfig extends ToolRunnableConfig & { toolCall: ToolCall }
+      ? ToolMessage
+      : ToolOutputT
+  > {
     const config = parseCallbackConfigArg(configArg);
     if (config.runName === undefined) {
       config.runName = this.name;
     }
 
-    return super.call(arg, config, tags);
+    // Call the base class method, passing generics through
+    // Cast config to TConfig to satisfy the super.call signature
+    return super.call<TArg, TConfig>(arg, config as TConfig, tags);
   }
 
   protected _call(
@@ -435,10 +525,12 @@ export abstract class BaseToolkit {
  * Parameters for the tool function.
  * Schema can be provided as Zod or JSON schema.
  * Both schema types will be validated.
- * @template {ZodObjectAny | z.ZodString | JSONSchema = ZodObjectAny} RunInput The input schema for the tool. Either any Zod object, a Zod string, or JSON schema.
+ * @template {ToolInputSchemaBase} RunInput The input schema for the tool.
  */
 interface ToolWrapperParams<
-  RunInput extends ZodObjectAny | z.ZodString | JSONSchema = ZodObjectAny
+  RunInput extends ToolInputSchemaBase | undefined =
+    | ToolInputSchemaBase
+    | undefined
 > extends ToolParams {
   /**
    * The name of the tool. If using with an LLM, this
@@ -481,7 +573,7 @@ interface ToolWrapperParams<
  * Schema can be provided as Zod or JSON schema, and both will be validated.
  *
  * @function
- * @template {ZodObjectAny | z.ZodString | JSONSchema = ZodObjectAny} SchemaT The input schema for the tool. Either any Zod object, a Zod string, or JSON schema instance.
+ * @template {ToolInputSchemaBase} SchemaT The input schema for the tool.
  * @template {ToolReturnType} ToolOutputT The output type of the tool.
  *
  * @param {RunnableFunc<z.output<SchemaT>, ToolOutputT>} func - The function to invoke when the tool is called.
