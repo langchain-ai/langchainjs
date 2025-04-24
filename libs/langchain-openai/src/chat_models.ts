@@ -167,11 +167,11 @@ const completionsApiContentBlockConverter: StandardContentBlockConverter<{
 }> = {
   providerName: "ChatOpenAI",
 
-  fromStandardTextBlock(block) {
+  fromStandardTextBlock(block): ChatCompletionContentPartText {
     return { type: "text", text: block.text };
   },
 
-  fromStandardImageBlock(block) {
+  fromStandardImageBlock(block): ChatCompletionContentPartImage {
     if (block.source_type === "url") {
       return {
         type: "image_url",
@@ -202,7 +202,7 @@ const completionsApiContentBlockConverter: StandardContentBlockConverter<{
     );
   },
 
-  fromStandardAudioBlock(block) {
+  fromStandardAudioBlock(block): ChatCompletionContentPartInputAudio {
     if (block.source_type === "url") {
       const data = parseBase64DataUrl({ dataUrl: block.url });
       if (!data) {
@@ -274,7 +274,7 @@ const completionsApiContentBlockConverter: StandardContentBlockConverter<{
     );
   },
 
-  fromStandardFileBlock(block) {
+  fromStandardFileBlock(block): ChatCompletionContentPart.File {
     if (block.source_type === "url") {
       const data = parseBase64DataUrl({ dataUrl: block.url });
       if (!data) {
@@ -302,10 +302,11 @@ const completionsApiContentBlockConverter: StandardContentBlockConverter<{
         type: "file",
         file: {
           file_data: `data:${block.mime_type ?? ""};base64,${block.data}`,
-          ...(block.metadata?.filename || block.metadata?.name
+          ...(block.metadata?.filename || block.metadata?.name || block.metadata?.title
             ? {
                 filename: (block.metadata?.filename ||
-                  block.metadata?.name) as string,
+                  block.metadata?.name ||
+                  block.metadata?.title) as string,
               }
             : {}),
         },
