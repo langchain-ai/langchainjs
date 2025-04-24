@@ -21,6 +21,7 @@ import {
   DataContentBlock,
   isDataContentBlock,
   convertToProviderContentBlock,
+  parseBase64DataUrl,
 } from "@langchain/core/messages";
 import {
   ToolCall,
@@ -559,66 +560,52 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
       };
     },
 
-    fromStandardImageBlock(
-      block: StandardImageBlock
-    ): AnthropicMessageContentImage {
-      if (block.source_type === "url") {
-        const regex = /^data:(image\/.+);base64,(.+)$/;
-        const match = block.url.match(regex);
-        if (match === null) {
-          return {
-            type: "image",
-            source: {
-              type: "url",
-              url: block.url,
-              media_type: block.mime_type ?? "",
-            },
-            ...("cache_control" in (block.metadata ?? {})
-              ? {
-                  cache_control: block.metadata!
-                    .cache_control as AnthropicCacheControl,
-                }
-              : {}),
-          };
-        } else {
-          return {
-            type: "image",
-            source: {
-              type: "base64",
-              data: match[2],
-              media_type: match[1] ?? "",
-            },
-            ...("cache_control" in (block.metadata ?? {})
-              ? {
-                  cache_control: block.metadata!
-                    .cache_control as AnthropicCacheControl,
-                }
-              : {}),
-          };
-        }
+  fromStandardImageBlock(block: StandardImageBlock): AnthropicMessageContentImage {
+    if (block.source_type === "url") {
+      const data = parseBase64DataUrl({ dataUrl: block.url, asTypedArray: false });
+      if (data) {
+        return {
+          type: "image",
+          source: {
+            type: "base64",
+            data: data.data,
+            media_type: data.mime_type,
+          },
+          ...("cache_control" in (block.metadata ?? {})
+            ? { cache_control: block.metadata!.cache_control }
+            : {}),
+        } as AnthropicMessageContentImage;
       } else {
-        if (block.source_type === "base64") {
-          return {
-            type: "image",
-            source: {
-              type: "base64",
-              data: block.data,
-              media_type: block.mime_type ?? "",
-            },
-            ...("cache_control" in (block.metadata ?? {})
-              ? {
-                  cache_control: block.metadata!
-                    .cache_control as AnthropicCacheControl,
-                }
-              : {}),
-          };
-        } else {
-          throw new Error(
-            `Unsupported image source type: ${block.source_type}`
-          );
-        }
+        return {
+          type: "image",
+          source: {
+            type: "url",
+            url: block.url,
+            media_type: block.mime_type ?? "",
+          },
+          ...("cache_control" in (block.metadata ?? {})
+            ? { cache_control: block.metadata!.cache_control }
+            : {}),
+        } as AnthropicMessageContentImage;
       }
-    },
+    } else {
+      if (block.source_type === "base64") {
+        return {
+          type: "image",
+          source: {
+            type: "base64",
+            data: block.data,
+            media_type: block.mime_type ?? "",
+          },
+          ...("cache_control" in (block.metadata ?? {})
+            ? { cache_control: block.metadata!.cache_control }
+            : {}),
+        } as AnthropicMessageContentImage;
+      } else {
+        throw new Error(`Unsupported image source type: ${block.source_type}`);
+      }
+    }
+  },
 
     fromStandardFileBlock(
       block: StandardFileBlock
