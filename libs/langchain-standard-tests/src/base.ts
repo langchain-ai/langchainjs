@@ -28,6 +28,12 @@ export type BaseChatModelsTestsFields<
   chatModelHasToolCalling: boolean;
   chatModelHasStructuredOutput: boolean;
   constructorArgs: ConstructorArgs;
+  supportsStandardContentType?: Partial<{
+    text: boolean;
+    image: ("url" | "dataUrl" | "base64" | "id")[];
+    audio: ("url" | "dataUrl" | "base64" | "id")[];
+    file: ("url" | "dataUrl" | "base64" | "id")[];
+  }>;
 };
 
 export class BaseChatModelsTests<
@@ -49,6 +55,13 @@ export class BaseChatModelsTests<
 
   constructorArgs: ConstructorArgs;
 
+  supportsStandardContentType?: Partial<{
+    text: boolean;
+    image: ("url" | "dataUrl" | "base64" | "id")[];
+    audio: ("url" | "dataUrl" | "base64" | "id")[];
+    file: ("url" | "dataUrl" | "base64" | "id")[];
+  }>;
+
   constructor(
     fields: BaseChatModelsTestsFields<
       CallOptions,
@@ -60,6 +73,7 @@ export class BaseChatModelsTests<
     this.chatModelHasToolCalling = fields.chatModelHasToolCalling;
     this.chatModelHasStructuredOutput = fields.chatModelHasStructuredOutput;
     this.constructorArgs = fields.constructorArgs;
+    this.supportsStandardContentType = fields.supportsStandardContentType;
   }
 
   get multipleApiKeysRequiredMessage(): string {
