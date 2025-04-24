@@ -16,6 +16,7 @@ import {
   MessageContentComplex,
   isDataContentBlock,
   convertToProviderContentBlock,
+  parseBase64DataUrl,
 } from "@langchain/core/messages";
 import { ToolCall } from "@langchain/core/messages/tool";
 import {
@@ -140,15 +141,14 @@ const standardContentBlockConverter: StandardContentBlockConverter<{
 
   fromStandardImageBlock(block: StandardImageBlock): AnthropicImageBlockParam {
     if (block.source_type === "url") {
-      const regex = /^data:(image\/.+);base64,(.+)$/;
-      const match = block.url.match(regex);
-      if (match === null) {
+      const data = parseBase64DataUrl({ dataUrl: block.url, asTypedArray: false });
+      if (data) {
         return {
           type: "image",
           source: {
-            type: "url",
-            url: block.url,
-            media_type: block.mime_type ?? "",
+            type: "base64",
+            data: data.data,
+            media_type: data.mime_type,
           },
           ...("cache_control" in (block.metadata ?? {})
             ? { cache_control: block.metadata!.cache_control }
@@ -158,9 +158,9 @@ const standardContentBlockConverter: StandardContentBlockConverter<{
         return {
           type: "image",
           source: {
-            type: "base64",
-            data: match[2],
-            media_type: match[1] ?? "",
+            type: "url",
+            url: block.url,
+            media_type: block.mime_type ?? "",
           },
           ...("cache_control" in (block.metadata ?? {})
             ? { cache_control: block.metadata!.cache_control }
